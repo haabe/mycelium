@@ -9,6 +9,11 @@ Thumbs.db
 .vscode/
 .idea/
 
+# Claude Code local settings (per-developer overrides, never committed)
+# NOTE: .claude/settings.json IS committed -- it's the shared hook config.
+# .claude/settings.local.json is for personal permission overrides.
+.claude/settings.local.json
+
 # JiT generated files (stack-specific, regenerated per project)
 .claude/jit-tooling/active-stack.yml
 

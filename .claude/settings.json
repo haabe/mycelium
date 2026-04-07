@@ -1,0 +1,93 @@
+{
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": [
+      "Write(.claude/**)",
+      "Edit(.claude/**)",
+      "Write(src/**)",
+      "Write(scripts/**)",
+      "Write(docs/**)",
+      "Write(public/**)",
+      "Edit(src/**)",
+      "Edit(scripts/**)",
+      "Edit(docs/**)",
+      "Edit(public/**)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git checkout:*)",
+      "Bash(git branch:*)",
+      "Bash(git stash:*)",
+      "Bash(git fetch:*)",
+      "Bash(git pull:*)",
+      "Bash(mkdir:*)",
+      "Bash(chmod:*)",
+      "WebSearch"
+    ],
+    "ask": [
+      "Bash(git push:*)",
+      "Bash(git reset:*)"
+    ],
+    "deny": [
+      "Bash(rm -rf:*)",
+      "Bash(sudo:*)",
+      "Bash(git push --force:*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/gate.sh",
+            "timeout": 5,
+            "statusMessage": "Mycelium preflight gate + secret scan"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/post-write-nudge.sh",
+            "timeout": 3,
+            "statusMessage": "Mycelium post-write check"
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "REFLEXION REQUIRED: A command failed.\n\nTool: $TOOL\nArguments: $ARGUMENTS\n\nAnalyze this failure:\n1. What failed and why?\n2. Is this a known pattern from .claude/memory/corrections.md?\n3. What is the root cause (not just the symptom)?\n4. What specific fix is needed?\n5. Should this be logged as a new correction?\n\nDo NOT retry blindly. Diagnose first.",
+            "timeout": 15,
+            "statusMessage": "Reflexion: analyzing failure..."
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/stop-check.sh",
+            "timeout": 5,
+            "statusMessage": "Mycelium guardrail check"
+          }
+        ]
+      }
+    ]
+  }
+}
