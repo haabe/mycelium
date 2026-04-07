@@ -8,11 +8,12 @@ Hooks are registered in `.claude/settings.json` (shared, committed to git). Pers
 Layer 1: PreToolUse gate     (command, ~30 tokens)  — Blocks bad writes before they happen
 Layer 2: PostToolUse nudge   (command, ~50 tokens)  — Context-aware reminders after changes
 Layer 3: PostToolUseFailure  (prompt, ~200 tokens)  — Reflexion analysis on failures
-Layer 4: Stop check          (command, ~50 tokens)  — Guardrail compliance at session end
-Layer 5: Skill-level gates   (on-demand, varies)    — Full theory gate evaluation
+Layer 4: Stop check          (command, ~50 tokens)  — Guardrail + feedback loop compliance
+Layer 5: SessionStart check  (command, ~50 tokens)  — Overdue strategic loop reminders
+Layer 6: Skill-level gates   (on-demand, varies)    — Full theory gate evaluation
 ```
 
-Total hook overhead: ~5,500 tokens/session (negligible vs typical 50K-200K session).
+Total hook overhead: ~6,000 tokens/session (negligible vs typical 50K-200K session).
 
 ## Active Hooks
 
@@ -61,11 +62,23 @@ Prevents blind retry. Diagnosis first, then fix.
 **Checks**:
 - If active diamond is L4 Delivery but `threat-model.yml` is empty -> GUARDRAIL WARNING with `/threat-model` suggestion
 - If Downe's 15 principles all "not-assessed" -> GUARDRAIL WARNING with `/service-check` suggestion
+- If BVSSH or DORA checks are overdue (>30 days) -> FEEDBACK LOOP WARNING with skill suggestion
 - Corrections and decisions count for session summary
 
 Returns warnings via `additionalContext` (does not block). This is the "hybrid" pattern: hook detects the condition, injects a message that tells Claude to run the appropriate skill.
 
-### Layer 5: Skill-Level Gates (not hooks)
+### Layer 5: SessionStart (`session-start.sh`)
+**Triggers**: When a session starts or resumes
+**Matcher**: `startup|resume`
+**Type**: `command` (5s timeout)
+**Checks**:
+- If BVSSH health check is overdue (>30 days or never done) -> Reminder to run `/bvssh-check`
+- If DORA metrics are overdue (>30 days since last measurement) -> Reminder to run `/dora-check`
+- Reports corrections count for awareness
+
+Returns `additionalContext` so the agent knows about overdue strategic feedback loops from the start of the session. Part of the four-speed feedback loop system (see `.claude/engine/feedback-loops.md`).
+
+### Layer 6: Skill-Level Gates (not hooks)
 **Triggers**: When `/diamond-progress` is explicitly invoked
 **Does**: Full theory gate evaluation across all 11 gates (Evidence, Four Risks, JTBD, Cynefin, Bias, Security, Privacy, BVSSH, Service Quality, DORA, Corrections). Requires judgment, context, and multiple canvas file reads.
 

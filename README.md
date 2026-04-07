@@ -1,10 +1,10 @@
 # Mycelium
 
-**Theory-guided agentic product development for Claude Code.** *v0.3.1*
+**Theory-guided agentic product development for Claude Code.** *v0.4.0*
 
 Like nature's mycelium network -- the invisible intelligence that connects trees, shares nutrients, adapts to conditions, and makes the whole forest ecosystem stronger -- Mycelium connects product development theories, shares learning across sessions, adapts to any tech stack, and makes your product development practice stronger.
 
-Mycelium is an open-source harnessing system that guides AI agents through proper incremental product development using best practices from 17+ established frameworks and books. It prevents the agent from going haywire by enforcing theory-guided decision gates, reflexion loops, cognitive bias checks, and quality guardrails at every stage.
+Mycelium is an open-source harnessing system that guides AI agents through proper incremental product development using best practices from 20+ established frameworks and books. It prevents the agent from going haywire by enforcing theory-guided decision gates, feedback loops at four speeds, reflexion loops, cognitive bias checks, and quality guardrails at every stage.
 
 ## The Problem
 
@@ -132,10 +132,26 @@ Mycelium enforces guardrails through hooks that fire automatically at different 
 | 1. PreToolUse gate | Before code edits | Preflight check + secret detection (blocks hardcoded API keys, tokens) | ~30 tokens |
 | 2. PostToolUse nudge | After code edits | Context-aware reminders (a11y for UI files, OWASP for API files) | ~50 tokens |
 | 3. PostToolUseFailure | After failures | Reflexion analysis: diagnose root cause before retrying | ~200 tokens |
-| 4. Stop check | Session end | Canvas gap detection, missing threat-model/services warnings | ~50 tokens |
-| 5. Skill-level gates | On demand | Full 11-gate theory evaluation via `/diamond-progress` | varies |
+| 4. Stop check | Session end | Canvas gap detection, overdue feedback loop warnings | ~50 tokens |
+| 5. SessionStart check | Session start/resume | Reminds about overdue strategic reviews (BVSSH, DORA) | ~50 tokens |
+| 6. Skill-level gates | On demand | Full 11-gate theory evaluation via `/diamond-progress` | varies |
 
-Total overhead: ~5,500 tokens/session (negligible vs typical 50K-200K sessions).
+Total overhead: ~6,000 tokens/session (negligible vs typical 50K-200K sessions).
+
+### Four-Speed Feedback Loop System
+
+Based on Gene Kim's Three Ways, Argyris's double-loop learning, and Meadows's leverage points:
+
+| Loop | Speed | Purpose | Key Mechanisms |
+|------|-------|---------|---------------|
+| **1. Immediate** | Seconds | Fix the error (single-loop) | Reflexion, secret detection, corrections matching |
+| **2. Incremental** | Hours/days | Improve the process (single-loop + memory) | Phase learnings, DORA metrics, retrospectives |
+| **3. Strategic** | Weekly/monthly | Question the assumptions (double-loop) | BVSSH health, North Star trajectory, Wardley refresh |
+| **4. Transformative** | Quarterly | Improve the system itself (triple-loop) | Eval benchmarks, prompt optimization |
+
+Run `/feedback-review` to check health across all loops. Includes regression warning triggers (e.g., "DORA declined twice in a row") and Goodhart's Law protection (counter-metrics for every tracked metric).
+
+**The L5 -> L2 feedback loop**: After launch, market signals feed back into new L2 Opportunity diamonds, closing the full cycle: Purpose -> Strategy -> Discovery -> Solution -> Delivery -> Market -> Discovery.
 
 ### Self-Learning
 
@@ -160,7 +176,7 @@ Mycelium communicates in human language, not framework jargon:
 - **Quarterly**: North Star review, strategic landscape refresh, eval benchmarks
 - **Escape hatch**: Documented bypass process for emergencies (production incidents, hotfixes) with mandatory payback
 
-## Skills Reference (33 skills)
+## Skills Reference (34 skills)
 
 ### Onboarding & Assessment
 | Skill | When to Use |
@@ -220,6 +236,7 @@ Mycelium communicates in human language, not framework jargon:
 ### Self-Improvement
 | Skill | When to Use |
 |-------|------------|
+| `/feedback-review` | Aggregate all feedback signals, check health across 4 loops |
 | `/eval-runner` | Run benchmark scenarios |
 | `/prompt-optimizer` | A/B test instruction changes |
 
@@ -246,6 +263,10 @@ Mycelium communicates in human language, not framework jargon:
 | Behavioral Science / Cognitive Biases | Shotton, Kahneman | All stages: Bias mitigation, ethical design |
 | Double Diamond | Design Council | Core: Diverge/converge pattern at every scale |
 | BVSSH | Smart | Cross-cutting: Holistic outcome measurement |
+| Three Ways of DevOps | Kim | Feedback loops: flow, amplify feedback, continuous learning |
+| Double/Triple-Loop Learning | Argyris | Self-learning: single-loop (fix), double-loop (question), triple-loop (transform) |
+| Leverage Points | Meadows | Systems thinking: where to intervene for maximum effect |
+| Goodhart's Law | Goodhart | Measurement discipline: counter-metrics prevent gaming |
 
 ## Usage Modes
 
@@ -292,7 +313,7 @@ Universal principles (DRY, KISS, testing pyramid, OWASP) apply to all stacks. Sp
 
 ```
 your-project/
-  CLAUDE.md                    # Root Mycelium agent instructions (v0.3.1)
+  CLAUDE.md                    # Root Mycelium agent instructions (v0.4.0)
   .claude/
     settings.json              # Shared hook config + permissions (committed)
     engine/                    # Diamond rules, theory gates, confidence thresholds, Cynefin routing
@@ -301,8 +322,8 @@ your-project/
     harness/                   # Guardrails, anti-patterns, biases, security, engineering principles
     memory/                    # Corrections, patterns, product journal, delivery journal
     domains/                   # Phase-specific agent behavior (discovery/delivery/quality)
-    skills/                    # 33 invocable skills
-    hooks/                     # 5-layer enforcement (gate, nudge, reflexion, stop-check)
+    skills/                    # 34 invocable skills
+    hooks/                     # 6-layer enforcement (gate, nudge, reflexion, stop-check, session-start, skill-gates)
     orchestration/             # Solo/team modes, agent teams, fan-out, operations, escape hatch
     jit-tooling/               # Language-agnostic delivery tooling + polyglot detection
     evals/                     # 6 benchmark scenarios + results

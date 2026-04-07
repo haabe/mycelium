@@ -6,6 +6,8 @@ Day-to-day, week-to-week, and month-to-month guidance for maintaining a healthy 
 
 When starting a new session on an existing Mycelium project:
 
+**Note**: The SessionStart hook (`session-start.sh`) automatically checks for overdue strategic feedback loops (BVSSH, DORA) and reminds you at the start of every session.
+
 1. Run `/diamond-assess` -- see current state in plain language
 2. Read the output: which diamonds are active, what phase each is in, what's recommended
 3. If multiple diamonds are active, prioritize:
@@ -23,6 +25,7 @@ When starting a new session on an existing Mycelium project:
 | Assess diamond state | Start of week | `/diamond-assess` |
 | Update active canvas files | As evidence changes | `/canvas-update` |
 | Check delivery health | During delivery | `/dora-check` |
+| Feedback loop health | Weekly | `/feedback-review` |
 
 ## Monthly Routine
 
@@ -40,6 +43,8 @@ When starting a new session on an existing Mycelium project:
 | North Star metric review | Quarterly | Review `canvas/north-star.yml` |
 | Strategic landscape refresh | Quarterly | `/wardley-map` full refresh |
 | Purpose validation | Quarterly | Re-read `canvas/purpose.yml`, challenge with `/devils-advocate` |
+| Eval benchmark run | Quarterly | `/eval-runner run-all` |
+| Comprehensive feedback review | Quarterly | `/feedback-review` (full Loop 4 check) |
 | Eval benchmark | Quarterly | `/eval-runner run-all` |
 
 ## Diamond Lifecycle Management

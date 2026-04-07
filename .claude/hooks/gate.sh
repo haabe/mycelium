@@ -2,7 +2,7 @@
 # Mycelium PreToolUse gate
 # Lightweight check before code changes. Exit 0 = allow, Exit 2 = block.
 #
-# Layer 1 of Mycelium's 5-layer enforcement architecture.
+# Layer 1 of Mycelium's 6-layer enforcement architecture.
 # Fires on every Write/Edit/MultiEdit to source code.
 #
 # Checks:
