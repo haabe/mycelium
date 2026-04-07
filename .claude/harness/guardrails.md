@@ -62,6 +62,14 @@ Collect only the data that is strictly necessary for the current purpose. If you
 HTTPS, authentication required, least privilege, sessions expire, CORS restricted, CSP enabled. Users must opt INTO less security, never opt OUT of it.
 *Source: OWASP Secure by Design, Cavoukian (Privacy by Design Principle 2)*
 
+**G-S7: Always disclose AI nature in user-facing systems** `ENFORCED`
+If the product being built will interact directly with people, it must clearly disclose that users are interacting with an AI system. This is required by EU AI Act Article 50 (effective 2 August 2026) and is good practice regardless of jurisdiction. Do not disguise AI as human.
+*Source: EU AI Act Article 50, Downe (Good Services Principle 3: Set expectations)*
+
+**G-S8: Always assess EU AI Act risk classification for AI-powered products** `ADVISORY`
+Before delivering an AI-powered product, assess whether it falls into a high-risk category under Annex III (biometrics, critical infrastructure, employment, credit scoring, law enforcement, etc.). If it does, conformity assessment and extensive documentation requirements apply. This is a regulatory awareness check, not legal certification.
+*Source: EU AI Act (Regulation 2024/1689), Annex III*
+
 ## Delivery Guardrails
 
 **G-V1: Never commit delivery code without running the validation suite** `ENFORCED`

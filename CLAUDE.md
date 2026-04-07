@@ -91,6 +91,7 @@ Every diamond transition must pass ALL applicable gates. See `.claude/engine/the
 | Service Quality | Do Downe's 15 principles pass? | Downe (Good Services) |
 | DORA | Are delivery metrics healthy? | Forsgren (Accelerate) |
 | Corrections | Have past mistakes been reviewed? | Mycelium self-learning |
+| Regulatory | Has EU AI Act risk classification been assessed? | EU AI Act (2024/1689) |
 
 ## The Canvas (Source of Truth)
 

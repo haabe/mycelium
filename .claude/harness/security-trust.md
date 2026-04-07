@@ -140,3 +140,58 @@ Apply for every feature implementation:
 - [ ] Dependencies scanned and clean
 - [ ] Error handling does not leak information
 - [ ] Logging does not include secrets or PII
+
+---
+
+## Regulatory Awareness: EU AI Act (Regulation 2024/1689)
+
+**Mycelium itself is not regulated** by the EU AI Act -- it is configuration files, not an AI system. However, products built WITH Mycelium may be regulated. This section helps users assess their obligations.
+
+### When Does the EU AI Act Apply?
+
+Your product likely falls under the Act if it:
+- Uses AI to make or inform decisions about people
+- Interacts directly with users (chatbots, assistants, recommendations)
+- Generates synthetic content (text, images, audio, video)
+- Operates in the EU market or affects EU residents
+
+### Risk Classification (Annex III High-Risk Categories)
+
+Assess at L3 (Solution) whether your product falls into any high-risk category:
+
+| Category | Examples | Obligations |
+|----------|---------|------------|
+| Biometric identification | Face recognition, voice identification | Conformity assessment, registration, human oversight |
+| Critical infrastructure | Energy, water, transport management | Full compliance suite |
+| Education | Admissions scoring, exam assessment | Transparency, fairness, human oversight |
+| Employment | CV screening, interview analysis, performance evaluation | Non-discrimination, transparency, human oversight |
+| Essential services | Credit scoring, insurance pricing, social benefits | Fairness, explainability, human oversight |
+| Law enforcement | Predictive policing, evidence analysis | Strict oversight, fundamental rights assessment |
+| Migration | Visa/asylum processing, border surveillance | Fundamental rights, human oversight |
+| Justice | Sentencing assistance, case analysis | Human oversight, explainability |
+
+### Article 50 Transparency (Effective 2 August 2026)
+
+If your product does any of the following, transparency disclosure is REQUIRED:
+- **Interacts with people**: Must inform users they are interacting with AI
+- **Generates synthetic content**: Must machine-mark outputs as AI-generated
+- **Creates deepfakes**: Must disclose artificial generation/manipulation
+- **Generates text for public information**: Must label as AI-generated
+
+### How Mycelium Helps
+
+Mycelium's existing mechanisms already support many EU AI Act requirements:
+- **Human oversight**: Theory gates require human approval for high-stakes transitions
+- **Risk management**: STRIDE threat modeling, privacy assessment, bias checks
+- **Documentation**: Canvas files + decision log create audit trail
+- **Transparency**: Downe's principles require clear communication to users
+- **Bias mitigation**: Cognitive bias checks at every stage
+
+### What Mycelium Does NOT Do
+
+- Mycelium does not certify EU AI Act compliance
+- Mycelium does not replace legal counsel
+- Mycelium does not perform conformity assessments
+- Risk classification is an awareness prompt, not a legal determination
+
+**For actual compliance decisions, consult qualified EU AI law counsel.**

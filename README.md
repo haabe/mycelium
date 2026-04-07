@@ -330,6 +330,20 @@ your-project/
     optimization/              # Prompt A/B testing baselines + variants
 ```
 
+## Regulatory Awareness: EU AI Act
+
+**Mycelium itself is not regulated** by the EU AI Act (Regulation 2024/1689). It is configuration files, not an AI system under Article 3(1). It is protected as an open-source component under Article 25(4) and Recital 102.
+
+**However, products built WITH Mycelium may be regulated.** If you're building an AI-powered product that makes decisions about people, interacts with users, or operates in the EU market, you should assess your obligations:
+
+- **High-risk systems** (employment, credit scoring, healthcare, education, law enforcement) require conformity assessments, documentation, and human oversight
+- **User-facing AI** must disclose its AI nature (Article 50, effective August 2026)
+- **Generative AI** must mark synthetic content as AI-generated
+
+Mycelium includes a **Regulatory Gate** in its theory gates that prompts you to assess risk classification at the L3 Solution stage. See `.claude/harness/security-trust.md` for the full regulatory awareness guide.
+
+**Mycelium does not certify EU AI Act compliance. For compliance decisions, consult qualified EU AI law counsel.**
+
 ## Contributing
 
 Contributions are welcome. Mycelium is built on open product development theory -- if you see a gap in the frameworks, a missing bias, an incomplete guardrail, or a better way to harness agent behavior, please open an issue or PR.

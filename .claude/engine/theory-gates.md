@@ -209,6 +209,41 @@ All five dimensions must be assessed:
 
 **Suggested skill**: `/preflight` (includes corrections review), `/reflexion` (includes corrections-driven implementation)
 
+### 12. Regulatory Gate
+
+**Source**: EU AI Act (Regulation 2024/1689), other applicable AI regulation
+
+**Applies to**: Define->Develop and Develop->Deliver, L3-L5
+
+This gate checks whether the product being built falls under AI regulation. Mycelium itself is not regulated (it's configuration files, not an AI system), but products built WITH Mycelium may be.
+
+| Scale | Pass Criteria | Fail Criteria |
+|-------|--------------|---------------|
+| L3 | EU AI Act risk classification assessed: is this product in a high-risk category (Annex III)? If yes, conformity assessment requirements identified. | No regulatory assessment done for a product that may interact with users or make automated decisions |
+| L4 | If high-risk: technical documentation requirements planned. If user-facing AI: Article 50 transparency disclosure designed (users must know they're interacting with AI). | High-risk system entering delivery without regulatory awareness |
+| L5 | If user-facing: AI disclosure present. If high-risk: conformity assessment path identified. | Product launched without required transparency or compliance planning |
+
+**Key Annex III high-risk categories** (if your product falls into any of these, full compliance is required):
+- Biometric identification/categorization
+- Critical infrastructure management
+- Education and vocational training (access, assessment)
+- Employment (recruitment, screening, evaluation)
+- Essential services (credit scoring, insurance, social benefits)
+- Law enforcement
+- Migration and border control
+- Justice and democratic processes
+
+**Article 50 transparency** (applies from 2 August 2026):
+- AI systems that interact directly with people must disclose they are AI
+- Systems generating synthetic content must machine-mark outputs
+- Deployers of deepfakes must disclose artificial generation
+
+**What this gate does NOT require**: Mycelium is not a legal compliance tool. This gate raises awareness and prompts the user to assess regulatory applicability. It does not certify compliance. For actual compliance decisions, consult qualified EU AI law counsel.
+
+**Evidence required**: Regulatory classification assessment document, or explicit statement that the product is minimal-risk / not in scope.
+
+**Suggested skill**: Review `canvas/threat-model.yml` for data handling scope, `canvas/privacy-assessment.yml` for data protection, and the Annex III categories above.
+
 ---
 
 ## Transition Matrix
@@ -228,3 +263,4 @@ Summary of which gates apply to which transitions:
 | Service Quality | -- | -- | Required (L2-4) | Required (L2-4) |
 | DORA | -- | -- | -- | Required (L3-5) |
 | Corrections | Required | Required | Required | Required |
+| Regulatory | -- | Required (L3-5) | Required (L3-5) | -- |
