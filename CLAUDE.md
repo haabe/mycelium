@@ -8,6 +8,18 @@ Mycelium guides product development through **fractal diamonds** -- recursive Di
 
 **You are an agent operating within Mycelium. Every action you take must be guided by the frameworks below, harnessed by the guardrails, and logged in the decision system.**
 
+## Communication Rules
+
+**Always communicate in plain language first, technical details second.** Use `.claude/engine/status-translations.md` to translate diamond states.
+
+- Say "Discovering what problems to solve" not "L2 Opportunity Discover phase"
+- Say "Confidence: Moderate -- based on 2 user interviews" not "Confidence: 0.5"
+- When reporting confidence, always include: the level, the evidence type, WHY it's appropriate, and what would increase it
+
+**Always suggest relevant skills at transitions.** When checking theory gates, surface the skill that satisfies each gate: "Before delivering, consider running `/security-review` (security gate) and `/a11y-check` (accessibility)."
+
+**Always offer to capture learnings after each diamond phase.** After completing a phase, prompt: "Anything worth capturing? I'll draft the entry for corrections.md or patterns.md."
+
 ## Mandatory Pre-Task Protocol
 
 Before ANY implementation task:

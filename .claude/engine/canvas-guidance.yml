@@ -1,0 +1,89 @@
+# Canvas Guidance by Project Type
+# Determines which canvas files are required, recommended, or optional
+# Set during /interview based on project classification
+
+project_types:
+
+  solo_hobby:
+    description: "Personal project, learning exercise, or hobby. Single developer, no commercial intent."
+    required:
+      - purpose.yml        # Always know WHY you're building
+      - north-star.yml     # Define what success looks like
+      - opportunities.yml  # Map what to build (even for small projects)
+      - gist.yml           # Plan your goals and ideas
+    recommended:
+      - jobs-to-be-done.yml  # Deeper need understanding
+      - user-needs.yml       # User needs beyond your own assumptions
+    optional:
+      - landscape.yml        # Not needed without competitors
+      - team-shape.yml       # Solo, no team to shape
+      - services.yml         # Lightweight projects may not need formal service check
+      - go-to-market.yml     # No go-to-market for hobby
+      - dora-metrics.yml     # No delivery metrics for hobby
+      - threat-model.yml     # Only if handling user data
+      - privacy-assessment.yml # Only if collecting data
+      - trust-signals.yml    # No trust architecture for personal project
+      - bvssh-health.yml     # Lightweight self-check sufficient
+
+  solo_product:
+    description: "Solo developer building a real product. May have users, may generate revenue."
+    required:
+      - purpose.yml
+      - north-star.yml
+      - opportunities.yml
+      - gist.yml
+      - jobs-to-be-done.yml
+      - user-needs.yml
+      - threat-model.yml     # Products need security thinking
+      - services.yml         # Products need service quality
+    recommended:
+      - privacy-assessment.yml
+      - dora-metrics.yml
+      - landscape.yml
+      - go-to-market.yml
+    optional:
+      - team-shape.yml
+      - trust-signals.yml
+      - bvssh-health.yml
+
+  team_startup:
+    description: "Small team (2-10) building a product. Likely has users, revenue goals, competitive landscape."
+    required:
+      - purpose.yml
+      - north-star.yml
+      - opportunities.yml
+      - gist.yml
+      - jobs-to-be-done.yml
+      - user-needs.yml
+      - threat-model.yml
+      - services.yml
+      - team-shape.yml       # Team structure matters
+      - go-to-market.yml     # Need to reach users
+      - landscape.yml        # Competitive awareness
+    recommended:
+      - privacy-assessment.yml
+      - dora-metrics.yml
+      - bvssh-health.yml
+      - trust-signals.yml
+    optional: []
+
+  team_enterprise:
+    description: "Larger team or enterprise product. Regulatory requirements, compliance needs, multiple stakeholders."
+    required:
+      - purpose.yml
+      - north-star.yml
+      - opportunities.yml
+      - gist.yml
+      - jobs-to-be-done.yml
+      - user-needs.yml
+      - threat-model.yml
+      - services.yml
+      - team-shape.yml
+      - go-to-market.yml
+      - landscape.yml
+      - privacy-assessment.yml  # Compliance requires this
+      - dora-metrics.yml        # Delivery performance tracked
+      - bvssh-health.yml        # Holistic health monitoring
+      - trust-signals.yml       # Trust architecture for enterprise
+    recommended: []
+    optional: []

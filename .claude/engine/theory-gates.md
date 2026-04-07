@@ -11,7 +11,10 @@ Gate Name
   Pass criteria: [specific, measurable]
   Fail criteria: [what constitutes failure]
   Evidence required: [what artifacts demonstrate pass]
+  Suggested skill: [skill to run to satisfy this gate]
 ```
+
+**IMPORTANT**: When checking gates during `/diamond-progress`, always surface the suggested skill for each gate. Say: "This transition requires a security check. Run `/security-review` to satisfy the Security Gate."
 
 ---
 
@@ -34,6 +37,8 @@ Gate Name
 
 **Evidence required**: Interview transcripts, analytics screenshots, research synthesis documents, test results.
 
+**Suggested skill**: `/user-interview` (for gathering evidence), `/assumption-test` (for validating evidence)
+
 ### 2. Four Risks Gate
 
 **Source**: Cagan (Inspired, Empowered)
@@ -51,6 +56,8 @@ All four risks must be assessed:
 
 **Evidence required**: User research findings, usability test results, technical spike outcomes, business model canvas or viability assessment.
 
+**Suggested skill**: `/assumption-test` (for testing each risk dimension)
+
 ### 3. JTBD Gate
 
 **Source**: Christensen (Competing Against Luck)
@@ -65,6 +72,8 @@ All four risks must be assessed:
 
 **Evidence required**: JTBD statements with all three dimensions (functional, emotional, social), linked to interview data.
 
+**Suggested skill**: `/jtbd-map`
+
 ### 4. Cynefin Gate
 
 **Source**: Snowden (Cynefin framework)
@@ -78,6 +87,8 @@ All four risks must be assessed:
 | If Complex, experiments designed with clear learning goals | Attempting to plan/predict outcomes in complex domain |
 
 **Evidence required**: Cynefin classification document with rationale, method selection justification.
+
+**Suggested skill**: `/cynefin-classify`
 
 ### 5. Bias Gate
 
@@ -94,6 +105,8 @@ All four risks must be assessed:
 
 **Evidence required**: Completed bias checklist, documented mitigation actions.
 
+**Suggested skill**: `/bias-check`
+
 ### 6. Security Gate
 
 **Source**: OWASP, STRIDE
@@ -108,6 +121,8 @@ All four risks must be assessed:
 
 **Evidence required**: STRIDE analysis, security review checklist, dependency scan results, SAST/DAST results.
 
+**Suggested skill**: `/threat-model` (for STRIDE analysis), `/security-review` (for code-level review)
+
 ### 7. Privacy Gate
 
 **Source**: GDPR, Privacy by Design (Cavoukian)
@@ -121,6 +136,8 @@ All four risks must be assessed:
 | L4 | Consent mechanisms implemented; data retention defined; right to deletion supported | No consent flow; unlimited retention |
 
 **Evidence required**: Data flow diagram, DPIA document, consent mechanism design, retention policy.
+
+**Suggested skill**: `/privacy-check`
 
 ### 8. BVSSH Gate
 
@@ -140,6 +157,8 @@ All five dimensions must be assessed:
 
 **Evidence required**: Metrics dashboard, team health check, DORA metrics comparison.
 
+**Suggested skill**: `/bvssh-check`
+
 ### 9. Service Quality Gate
 
 **Source**: Downe (Good Services)
@@ -154,6 +173,8 @@ All five dimensions must be assessed:
 | Minimum possible steps to complete the outcome | Unnecessary steps in the flow |
 
 **Evidence required**: Completed service-check skill output, user journey map, accessibility audit.
+
+**Suggested skill**: `/service-check` (for Downe's 15 principles), `/a11y-check` (for accessibility)
 
 ### 10. DORA Gate
 
@@ -170,6 +191,8 @@ All five dimensions must be assessed:
 
 **Evidence required**: DORA metrics dashboard, deployment logs, incident records.
 
+**Suggested skill**: `/dora-check`
+
 ### 11. Corrections Gate
 
 **Source**: Mycelium (internal learning loop)
@@ -183,6 +206,8 @@ All five dimensions must be assessed:
 | Any new mistakes documented with prevention strategy | Mistakes occurred but not logged |
 
 **Evidence required**: Timestamp of corrections.md review, new entries if applicable.
+
+**Suggested skill**: `/preflight` (includes corrections review), `/reflexion` (includes corrections-driven implementation)
 
 ---
 

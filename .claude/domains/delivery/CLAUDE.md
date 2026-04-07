@@ -94,22 +94,25 @@ Non-negotiable baseline:
 
 ## Reflexion Loop
 
-Self-correcting implementation pattern (max 3 iterations):
+**MANDATORY for all non-trivial code changes.** Use `/reflexion` skill explicitly -- do not implement informally. The loop exists to catch mistakes before they compound.
 
 ```
-1. IMPLEMENT -- Write code according to spec
-2. VALIDATE  -- Run tests, linting, type checks, security scans
-3. CRITIQUE  -- Review own output for:
-                - Engineering principle violations
-                - Missing edge cases
-                - Security gaps
-                - Accessibility issues
-                - Unnecessary complexity
+1. IMPLEMENT -- Write code (apply corrections.md proactively)
+2. VALIDATE  -- Run full validation suite (tests, types, lint, security)
+3. CRITIQUE  -- Structured self-review:
+                - Engineering violations (DRY, KISS, YAGNI, SOLID)?
+                - Missing edge cases or error states (Downe P10)?
+                - Security gaps (OWASP)?
+                - Accessibility (WCAG 2.1 AA)?
+                - Unnecessary complexity (KISS)?
+                - Is this the SIMPLEST solution?
 4. RETRY     -- If issues found, fix and return to step 2
                If 3 iterations reached, escalate for review
 ```
 
-Each iteration must show measurable improvement. If the same issue recurs, investigate root cause.
+**When validation fails**: PostToolUseFailure hook triggers automatically. Follow its analysis. Do NOT retry blindly -- diagnose root cause first, check corrections.md, then fix.
+
+**After success**: If corrections needed (iterations > 1), add to corrections.md. Offer to capture pattern in patterns.md. Update delivery journal.
 
 ## Definition of Done
 

@@ -14,9 +14,10 @@ Progress a diamond through phases with full theory gate validation.
 2. **Run all required theory gates** (per theory-gates.md transition matrix):
    - For each gate:
      a. State the gate name and source theory.
-     b. Evaluate pass criteria against available evidence.
-     c. Record Pass / Fail / Insufficient Evidence.
-     d. If Fail: document what is missing and what action would resolve it.
+     b. **Surface the suggested skill**: "Run `/skill-name` to satisfy this gate."
+     c. Evaluate pass criteria against available evidence.
+     d. Record Pass / Fail / Insufficient Evidence.
+     e. If Fail: document what is missing, recommend the skill to run, and do NOT proceed.
 
 3. **Calculate confidence**:
    - Apply scoring rules from confidence-thresholds.yml.
@@ -36,14 +37,25 @@ Progress a diamond through phases with full theory gate validation.
    - Confidence below threshold = **NEEDS EVIDENCE** (list what would help)
 
 8. **If progressing**:
-   - Update diamond state.
+   - Update diamond state in active.yml.
    - Log transition in decision-log.md.
    - Update product-journal.md.
    - Identify if child diamonds should be spawned.
+   - **Capture learnings**: "This phase is complete. Anything worth capturing?"
+     - Draft corrections.md entry if mistakes were made
+     - Draft patterns.md entry if a reusable pattern was discovered
+     - Draft delivery-journal.md entry if this was a delivery phase
+     - Present drafts to user for confirmation before saving
 
 9. **If blocked or needs evidence**:
-   - Recommend specific next actions.
+   - Report in plain language: "Can't progress yet because [reason in plain language]."
+   - List each failed gate with its suggested skill: "Run `/threat-model` to satisfy the Security Gate."
    - Do not progress. Stay in current phase.
+
+10. **Always communicate in plain language**:
+    - Use status-translations.md for all state descriptions
+    - Include contextual confidence explanation (not just the number)
+    - Suggest specific skills for any gaps found
 
 ## Theory Citations
 - Torres: Evidence requirements

@@ -51,6 +51,31 @@ Progressive onboarding through structured discovery conversation.
 - Strategic context summary
 - Initial opportunity areas (from what was shared, not assumed)
 
+## Phase 6: Project Classification (NEW in v0.2)
+
+At the end of the interview, classify the project to determine which canvas files are required:
+
+Ask: "Let me understand the project scope to tailor the framework:"
+- Is this a solo or team project?
+- Is this a hobby/learning project, a real product, or enterprise?
+- Will it have external users?
+- Will it handle user data?
+
+Classify into one of:
+- **solo_hobby**: Personal project, no commercial intent
+- **solo_product**: Solo developer, real product with users
+- **team_startup**: Small team (2-10), product with users/revenue
+- **team_enterprise**: Larger team, regulatory/compliance needs
+
+Load canvas guidance from `.claude/engine/canvas-guidance.yml` for the classified type.
+
+Report to user: "Based on this being a [type] project, here's what we'll focus on:"
+- **Required canvas files**: [list] -- "These will be populated as we work."
+- **Recommended**: [list] -- "Worth doing if time allows."
+- **Optional**: [list] -- "You can skip these for this project type."
+
+Store classification in `diamonds/active.yml` as `project_type`.
+
 ## Theory Citations
 
 - Sinek: Start with Why (purpose)

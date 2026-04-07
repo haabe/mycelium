@@ -41,28 +41,52 @@ Evaluate current diamond state and recommend next action.
    - If anti-patterns detected: recommend corrective actions
    - If regression needed: recommend which phase to return to and why
 
-## Output
+8. **Play devil's advocate**: Before recommending progression, ask:
+   - What are we most likely wrong about?
+   - What evidence have we dismissed?
+   - Is there a simpler path we're overlooking?
+
+## Output Format
+
+**ALWAYS output in plain language first, then technical details.**
+Use `.claude/engine/status-translations.md` for translations.
 
 ```
-## Diamond Assessment: [ID]
-- Scale: [L0-L5]
-- Phase: [current]
-- Confidence: [score] / [threshold]
+## Where We Are
 
-### Theory Gate Status
-| Gate | Status | Notes |
-|------|--------|-------|
-| ... | Pass/Fail/N/A | ... |
+Current focus: [plain-language description from status-translations.md]
+  [1-2 sentences of context]
+  Confidence: [plain word] ([number], [Gilad level]) -- [why this level, what would increase it]
 
-### Anti-Patterns Detected
-- [any detected patterns]
+## Progress
 
-### Recommendation
-[specific next action with rationale]
+[N] of [M] diamonds complete:
+  [Name]: [STATUS] -- [plain-language one-liner]
+  [Name]: [STATUS] -- [plain-language one-liner]
+
+## Theory Gate Check (for next transition)
+
+| Gate | Status | Suggested Skill |
+|------|--------|----------------|
+| Evidence | Pass/Fail | /user-interview or /assumption-test |
+| Four Risks | Pass/Fail | /assumption-test |
+| ... | ... | ... |
+
+## What I'd Challenge (Devil's Advocate)
+- [Key assumption to question]
+- [Evidence gap to flag]
+
+## Recommended Next Step
+[Plain-language recommendation with theory justification]
+
+Suggested actions:
+  - /skill-name -- [why this is relevant now]
+  - /skill-name -- [why this is relevant now]
 ```
 
 ## Theory Citations
 - Torres: Evidence-based progression
-- Gilad: Confidence scoring
+- Gilad: Confidence scoring with contextual explanation
 - Cagan: Four risks assessment
 - Snowden: Cynefin classification
+- Shotton/Kahneman: Devil's advocate bias check
