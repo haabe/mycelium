@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.3.1 -- Canvas-guided, theory-gated, self-learning.*
+*Version 0.4.0 -- Canvas-guided, theory-gated, self-learning, feedback-driven.*
 
 Mycelium is a harnessing system for AI-assisted product development. Like nature's mycelium network, it connects theories, shares learning, adapts to conditions, and makes the whole ecosystem stronger.
 
@@ -130,6 +130,15 @@ Successful patterns to reuse. Captured from delivery and discovery successes.
 ### Decision Log (`.claude/harness/decision-log.md`)
 Every significant decision with: context, alternatives considered, theory that guided it, evidence, confidence level.
 
+### Feedback Loops (`.claude/engine/feedback-loops.md`)
+Four-speed feedback system based on Gene Kim's Three Ways, Argyris's double-loop learning, and Meadows's leverage points:
+- **Loop 1 (Immediate)**: Reflexion, secret detection, corrections matching -- seconds
+- **Loop 2 (Incremental)**: Phase learnings, DORA metrics, retrospectives -- hours/days
+- **Loop 3 (Strategic)**: BVSSH health, North Star trajectory, Wardley refresh -- weekly/monthly
+- **Loop 4 (Transformative)**: Eval benchmarks, prompt optimization, system improvement -- quarterly
+
+Run `/feedback-review` to check health across all loops. SessionStart and Stop hooks monitor for overdue strategic checks.
+
 ### Reflexion Loop
 When implementing (delivery phase):
 1. Implement the solution
@@ -257,6 +266,7 @@ Invoke skills with `/skill-name`. All 32 skills:
 ### Self-Improvement Skills
 | Skill | When to Use |
 |-------|------------|
+| `/feedback-review` | Aggregate all feedback loop signals, check health, flag regressions |
 | `/eval-runner` | Run benchmark scenarios to measure agent effectiveness |
 | `/prompt-optimizer` | A/B test instruction changes against eval baselines |
 

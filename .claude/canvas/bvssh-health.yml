@@ -45,4 +45,16 @@ anti_patterns_detected: []
 #   evidence: ""
 #   date: ""
 
+# Trend tracking: Record last 3-5 assessments for trajectory.
+# Updated by /bvssh-check and /feedback-review skills.
+# KEY WARNING: If Sooner is improving while Safer or Happier are declining,
+# this is the core BVSSH anti-pattern (trading safety/wellbeing for speed).
+assessment_history: []
+# - date: "YYYY-MM-DD"
+#   better: "improving|stable|declining"
+#   value: "improving|stable|declining"
+#   sooner: "improving|stable|declining"
+#   safer: "improving|stable|declining"
+#   happier: "improving|stable|declining"
+
 last_assessed: null

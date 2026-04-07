@@ -33,4 +33,33 @@ Use biases ETHICALLY to help users understand value:
 - **Framing**: Position the benefit, not just the feature
 - **Never**: Confirmshaming, hidden costs, forced continuity, misdirection
 
-Update canvas/go-to-market.yml with tier classification and launch plan.
+## Canvas Output
+Update `canvas/go-to-market.yml` with tier classification and launch plan.
+
+## After Launch: The L5 -> L2 Feedback Loop
+
+**This is critical.** After launch, market feedback must flow back into discovery:
+
+1. **Capture market signals** (within 2-4 weeks post-launch):
+   - User feedback (support tickets, reviews, social media)
+   - Adoption data (feature usage, retention, conversion)
+   - Win/loss analysis (for sales-led products)
+   - NPS/CSAT changes
+
+2. **Evaluate against L2 assumptions**:
+   - Do the signals confirm the L2 opportunity we solved for?
+   - Are there NEW needs we didn't anticipate?
+   - Did users "hire" the product for a different job than expected? (JTBD)
+
+3. **Feed back into discovery**:
+   - If signals confirm: update confidence scores, celebrate validated learning
+   - If signals reveal NEW opportunities: **spawn a new L2 Opportunity diamond** with market evidence as the starting data
+   - If signals contradict: flag for diamond regression, update corrections.md
+
+This closes the full Mycelium loop: Purpose -> Strategy -> Discovery -> Solution -> Delivery -> **Market -> Discovery**.
+
+## Theory Citations
+- Lauchengco: Loved (launch tier classification, positioning)
+- Shotton: Choice Factory (ethical behavioral science in positioning)
+- Kim: Three Ways (Second Way -- amplify feedback loops right-to-left)
+- Torres: Continuous Discovery (market signals feed back into OST)

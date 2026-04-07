@@ -5,8 +5,9 @@
 #
 # Checks:
 # 1. If delivering code but required canvas files are empty templates
-# 2. If session modified UI files but no a11y check evidence
-# 3. Corrections count for session summary
+# 2. Corrections count for session summary
+# 3. Decision log check
+# 4. Overdue feedback loops (BVSSH, DORA) -- from feedback-loops.md
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-.}"
 CANVAS_DIR="$PROJECT_DIR/.claude/canvas"
@@ -61,6 +62,53 @@ fi
 DECISIONS_COUNT=0
 if [ -f "$PROJECT_DIR/.claude/harness/decision-log.md" ]; then
   DECISIONS_COUNT=$(grep -c '^### ' "$PROJECT_DIR/.claude/harness/decision-log.md" 2>/dev/null || echo "0")
+fi
+
+# ============================================================
+# CHECK 4: Overdue feedback loops (Loop 3 cadence from feedback-loops.md)
+# ============================================================
+if [ -f "$CANVAS_DIR/bvssh-health.yml" ]; then
+  BVSSH_OVERDUE=$(python3 -c "
+import yaml, sys
+from datetime import datetime, timezone
+try:
+  with open(sys.argv[1]) as f:
+    data = yaml.safe_load(f) or {}
+  last = data.get('last_assessed')
+  if not last or last in ('null', 'None', None):
+    print('never')
+  else:
+    d = datetime.fromisoformat(str(last).replace('Z','+00:00'))
+    days = (datetime.now(timezone.utc) - d).days
+    print('overdue' if days > 30 else 'ok')
+except: print('unknown')
+" "$CANVAS_DIR/bvssh-health.yml" 2>/dev/null || echo "unknown")
+
+  if [ "$BVSSH_OVERDUE" = "overdue" ] || [ "$BVSSH_OVERDUE" = "never" ]; then
+    WARNINGS="${WARNINGS}FEEDBACK LOOP: BVSSH health check overdue (monthly cadence). Run /bvssh-check. "
+  fi
+fi
+
+if [ -f "$CANVAS_DIR/dora-metrics.yml" ]; then
+  DORA_OVERDUE=$(python3 -c "
+import yaml, sys
+from datetime import datetime, timezone
+try:
+  with open(sys.argv[1]) as f:
+    data = yaml.safe_load(f) or {}
+  last = data.get('last_measured')
+  if not last or last in ('null', 'None', None):
+    print('ok')  # Don't nag if never measured -- SessionStart handles that
+  else:
+    d = datetime.fromisoformat(str(last).replace('Z','+00:00'))
+    days = (datetime.now(timezone.utc) - d).days
+    print('overdue' if days > 30 else 'ok')
+except: print('unknown')
+" "$CANVAS_DIR/dora-metrics.yml" 2>/dev/null || echo "unknown")
+
+  if [ "$DORA_OVERDUE" = "overdue" ]; then
+    WARNINGS="${WARNINGS}FEEDBACK LOOP: DORA metrics overdue (monthly cadence). Run /dora-check. "
+  fi
 fi
 
 # ============================================================

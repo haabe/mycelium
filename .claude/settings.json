@@ -84,7 +84,20 @@
             "type": "command",
             "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/stop-check.sh",
             "timeout": 5,
-            "statusMessage": "Mycelium guardrail check"
+            "statusMessage": "Mycelium guardrail + feedback loop check"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session-start.sh",
+            "timeout": 5,
+            "statusMessage": "Mycelium feedback loop check"
           }
         ]
       }

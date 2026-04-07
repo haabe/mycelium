@@ -33,4 +33,19 @@ guardrails: []
 # - name: ""
 #   threshold: ""  # e.g., "NPS must stay above 40"
 
+# Trend tracking: Record last 3-5 data points to see trajectory, not just snapshots.
+# Updated by /feedback-review skill.
+metric_trend: []
+# - date: "YYYY-MM-DD"
+#   value: null
+
+# Goodhart's Law warning (from feedback-loops.md):
+# If the North Star metric is improving but guardrail metrics are declining,
+# the improvement may be artificial. Always check counter-metrics.
+# Example: MAU increasing but NPS dropping = growth without value.
+goodhart_check:
+  last_checked: null
+  counter_metric_divergence_detected: false
+  notes: ""
+
 last_updated: null

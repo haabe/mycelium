@@ -60,4 +60,23 @@ capabilities:
     transformational_leadership: null
     job_satisfaction: null
 
+# Trend tracking: Record last 3-5 measurements to see trajectory.
+# Updated by /dora-check and /feedback-review skills.
+measurement_history: []
+# - date: "YYYY-MM-DD"
+#   deployment_frequency: ""
+#   lead_time: ""
+#   change_failure_rate: ""
+#   time_to_restore: ""
+#   overall: ""
+
+# Goodhart's Law warning:
+# If deployment frequency is rising but change failure rate is ALSO rising,
+# the team is shipping faster but less safely. This is a false improvement.
+# Always check the pair: frequency + CFR, lead time + CFR.
+goodhart_check:
+  last_checked: null
+  counter_metric_divergence_detected: false
+  notes: ""
+
 last_measured: null
