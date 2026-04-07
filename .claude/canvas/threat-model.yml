@@ -1,0 +1,51 @@
+# STRIDE Threat Model Canvas — OWASP
+# Source: OWASP STRIDE, Microsoft SDL
+# Populated through: /threat-model skill
+
+components: []
+# - name: ""
+#   description: ""
+#   data_handled: []  # What data types flow through this component
+#   stride_assessment:
+#     spoofing:
+#       threat: ""  # Can someone pretend to be someone else?
+#       mitigation: ""
+#       risk_level: low|medium|high|critical
+#     tampering:
+#       threat: ""  # Can data be modified in transit/at rest?
+#       mitigation: ""
+#       risk_level: low|medium|high|critical
+#     repudiation:
+#       threat: ""  # Can actions be denied?
+#       mitigation: ""
+#       risk_level: low|medium|high|critical
+#     information_disclosure:
+#       threat: ""  # Can data leak to unauthorized parties?
+#       mitigation: ""
+#       risk_level: low|medium|high|critical
+#     denial_of_service:
+#       threat: ""  # Can the service be made unavailable?
+#       mitigation: ""
+#       risk_level: low|medium|high|critical
+#     elevation_of_privilege:
+#       threat: ""  # Can users gain unauthorized access?
+#       mitigation: ""
+#       risk_level: low|medium|high|critical
+#   overall_risk: low|medium|high|critical
+#   last_assessed: null
+
+data_classification:
+  types: []
+  # - name: ""
+  #   sensitivity: public|internal|confidential|restricted
+  #   pii: false
+  #   regulatory: []  # GDPR|HIPAA|SOC2|PCI-DSS
+  sensitivity_levels: [public, internal, confidential, restricted]
+
+security_requirements: []
+# - requirement: ""
+#   category: authentication|authorization|encryption|input_validation|logging
+#   priority: must|should|could
+#   status: implemented|planned|not-started
+
+last_updated: null

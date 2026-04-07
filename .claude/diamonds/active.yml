@@ -1,0 +1,26 @@
+# Mycelium Active Diamonds
+# Tracks all currently active diamonds across all scales.
+# Updated by /diamond-progress and /diamond-assess skills.
+
+# Diamonds are created when:
+# - /interview completes (creates L0)
+# - A parent diamond spawns a child (e.g., L0 -> L1)
+# - A user explicitly starts a new diamond
+
+active_diamonds: []
+# Each diamond entry:
+# - id: unique identifier (e.g., "l0-purpose", "l2-opportunity-search-ux")
+# - scale: L0|L1|L2|L3|L4|L5
+# - phase: discover|define|develop|deliver
+# - name: human-readable name
+# - parent_id: null for L0, parent diamond id otherwise
+# - confidence: 0.0-1.0
+# - evidence_type: speculation|anecdotal|data-supported|test-validated|launch-validated
+# - cynefin_domain: clear|complicated|complex|chaotic|disorder
+# - canvas_refs: list of canvas files this diamond reads/writes
+# - created_at: ISO timestamp
+# - last_progressed: ISO timestamp
+# - theory_gates_status: map of gate name -> pass|fail|not-checked
+# - notes: free text
+
+last_updated: null

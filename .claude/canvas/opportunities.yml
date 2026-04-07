@@ -1,0 +1,55 @@
+# Opportunity Solution Tree Canvas — Teresa Torres
+# Source: "Continuous Discovery Habits"
+# Populated through: /ost-builder skill
+
+# Root: The desired outcome (from North Star input metrics)
+desired_outcome:
+  metric: ""  # Which input metric this tree targets
+  current_value: null
+  target_value: null
+
+# Opportunities: Customer needs/pain points discovered through research
+# Structure is a tree: opportunities can have sub-opportunities
+opportunities: []
+# - name: ""
+#   description: ""
+#   type: functional|emotional|social  # JTBD dimension (Christensen)
+#   evidence:
+#     type: anecdotal|data-supported|test-validated
+#     sources: []  # What research surfaced this opportunity
+#     interview_count: 0  # How many interviews mentioned this
+#   frequency: low|medium|high  # How many users experience this
+#   impact: low|medium|high  # How much it matters to users
+#   strategic_alignment: low|medium|high  # Does it serve our North Star?
+#   cynefin_domain: clear|complicated|complex  # Snowden
+#   sub_opportunities: []  # Nested opportunities (same structure)
+#   solutions: []
+#     # - name: ""
+#     #   description: ""
+#     #   ice_score:
+#     #     impact: 0  # 1-10
+#     #     confidence: 0  # 1-10 (mapped to Gilad's evidence levels)
+#     #     ease: 0  # 1-10
+#     #     total: 0  # (I+C+E)/3 or I*C*E depending on preference
+#     #   confidence_level: 0.1  # Gilad's meter: 0.1 speculation -> 0.9 launch-validated
+#     #   assumptions: []
+#     #     # - statement: ""
+#     #     #   type: desirability|usability|feasibility|viability|ethical
+#     #     #   importance: low|medium|high
+#     #     #   evidence: low|medium|high
+#     #     #   tested: false
+#     #     #   result: ""
+#     #   experiments: []
+#     #     # - hypothesis: ""
+#     #     #   method: ""  # survey|fake-door|prototype|concierge|wizard-of-oz|a-b-test|data-mining
+#     #     #   success_criteria: ""
+#     #     #   result: ""
+#     #     #   confidence_delta: 0  # How much did confidence change?
+
+# Bias check record: Was bias checklist reviewed before research?
+bias_checks: []
+# - date: ""
+#   biases_mitigated: []
+#   research_design_adjustments: []
+
+last_updated: null

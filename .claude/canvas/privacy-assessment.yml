@@ -1,0 +1,61 @@
+# Privacy by Design Assessment Canvas — Ann Cavoukian / GDPR Article 25
+# Source: 7 Foundational Principles of Privacy by Design, GDPR
+# Populated through: /privacy-check skill
+
+# The 7 Privacy by Design Principles
+principles:
+  proactive_not_reactive:
+    description: "Prevent privacy issues before they occur"
+    assessment: not-assessed  # pass|partial|fail|not-assessed
+    evidence: ""
+  privacy_as_default:
+    description: "Privacy protection is automatic, no user action needed"
+    assessment: not-assessed
+    evidence: ""
+  privacy_embedded:
+    description: "Privacy is embedded into design, not added on"
+    assessment: not-assessed
+    evidence: ""
+  full_functionality:
+    description: "Privacy AND functionality, not either/or"
+    assessment: not-assessed
+    evidence: ""
+  end_to_end_security:
+    description: "Full lifecycle protection from collection to deletion"
+    assessment: not-assessed
+    evidence: ""
+  visibility_transparency:
+    description: "Operations are visible and verifiable"
+    assessment: not-assessed
+    evidence: ""
+  respect_for_users:
+    description: "User interests are paramount"
+    assessment: not-assessed
+    evidence: ""
+
+# Data inventory: What data, why, how long, who accesses
+data_inventory: []
+# - data_type: ""
+#   purpose: ""  # Why is this collected?
+#   necessity: ""  # Why is this NECESSARY? (data minimization)
+#   retention_period: ""
+#   access_controls: []  # Who can access this?
+#   encryption: at_rest|in_transit|both|none
+#   deletion_mechanism: ""  # How is it deleted when no longer needed?
+
+# DPIA (Data Protection Impact Assessment)
+dpia_required: null  # true|false
+dpia_rationale: ""
+# DPIA triggers: large-scale processing of sensitive data, automated decision-making,
+# systematic monitoring, innovative technology, data matching/combining
+
+consent_mechanisms: []
+# - data_type: ""
+#   consent_type: explicit|implicit|legitimate_interest
+#   withdrawal_mechanism: ""
+
+data_minimization_check:
+  all_data_necessary: null  # true|false
+  items_to_remove: []  # Data being collected that isn't strictly necessary
+
+last_assessed: null

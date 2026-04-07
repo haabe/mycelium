@@ -1,0 +1,159 @@
+# Confidence Thresholds
+# Per-scale confidence requirements for diamond progression
+
+scales:
+  L0:
+    name: Purpose
+    confidence_threshold: 0.9
+    required_evidence:
+      - market_research
+      - competitive_analysis
+      - stakeholder_alignment
+      - vision_document
+    required_theory_gates:
+      - evidence
+      - bias
+      - corrections
+    human_approval:
+      discover_to_define: required
+      define_to_develop: required
+      develop_to_deliver: required
+      deliver_to_complete: required
+    notes: "Purpose-level decisions are foundational. Highest bar for evidence and approval."
+
+  L1:
+    name: Strategy
+    confidence_threshold: 0.85
+    required_evidence:
+      - user_research_synthesis
+      - opportunity_sizing
+      - strategic_alignment_check
+      - wardley_map
+    required_theory_gates:
+      - evidence
+      - four_risks
+      - jtbd
+      - cynefin
+      - bias
+      - bvssh
+      - corrections
+    human_approval:
+      discover_to_define: required
+      define_to_develop: required
+      develop_to_deliver: required
+      deliver_to_complete: recommended
+    notes: "Strategic bets require strong evidence and multi-dimensional risk assessment."
+
+  L2:
+    name: Opportunity
+    confidence_threshold: 0.8
+    required_evidence:
+      - interview_data_min_5
+      - triangulated_findings
+      - jtbd_map
+      - opportunity_tree_node
+    required_theory_gates:
+      - evidence
+      - four_risks
+      - jtbd
+      - cynefin
+      - bias
+      - privacy
+      - service_quality
+      - corrections
+    human_approval:
+      discover_to_define: required
+      define_to_develop: recommended
+      develop_to_deliver: recommended
+      deliver_to_complete: optional
+    notes: "Opportunity validation requires rich qualitative evidence."
+
+  L3:
+    name: Solution
+    confidence_threshold: 0.75
+    required_evidence:
+      - prototype_feedback
+      - usability_test_results
+      - technical_feasibility_spike
+      - security_threat_model
+    required_theory_gates:
+      - evidence
+      - four_risks
+      - cynefin
+      - bias
+      - security
+      - privacy
+      - service_quality
+      - corrections
+    human_approval:
+      discover_to_define: recommended
+      define_to_develop: recommended
+      develop_to_deliver: optional
+      deliver_to_complete: optional
+    notes: "Solutions must be validated against all four Cagan risks."
+
+  L4:
+    name: Feature
+    confidence_threshold: 0.7
+    required_evidence:
+      - acceptance_criteria
+      - test_cases
+      - security_review
+      - accessibility_check
+    required_theory_gates:
+      - evidence
+      - bias
+      - security
+      - service_quality
+      - dora
+      - corrections
+    human_approval:
+      discover_to_define: optional
+      define_to_develop: optional
+      develop_to_deliver: optional
+      deliver_to_complete: optional
+    notes: "Features should flow quickly. Approval needed mainly for novel or risky items."
+
+  L5:
+    name: Task
+    confidence_threshold: 0.6
+    required_evidence:
+      - test_results
+      - lint_clean
+      - security_scan_clean
+    required_theory_gates:
+      - evidence
+      - security
+      - dora
+      - corrections
+    human_approval:
+      discover_to_define: not_required
+      define_to_develop: not_required
+      develop_to_deliver: not_required
+      deliver_to_complete: not_required
+    notes: "Tasks are atomic. Agent can progress autonomously with passing gates."
+
+# Confidence scoring rules
+scoring:
+  evidence_weight: 0.4
+  theory_gate_weight: 0.3
+  validation_weight: 0.2
+  peer_review_weight: 0.1
+
+  # How evidence types contribute to confidence
+  evidence_values:
+    direct_user_research: 0.3
+    behavioral_data: 0.25
+    quantitative_analysis: 0.2
+    expert_assessment: 0.15
+    stakeholder_input: 0.1
+    assumption: 0.0
+
+  # Minimum evidence sources per scale
+  min_sources:
+    L0: 5
+    L1: 4
+    L2: 3
+    L3: 2
+    L4: 2
+    L5: 1

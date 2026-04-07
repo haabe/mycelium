@@ -1,0 +1,36 @@
+# Team Topologies Canvas — Skelton & Pais
+# Source: "Team Topologies"
+# Populated through: /team-shape skill
+
+teams: []
+# - name: ""
+#   type: stream-aligned|enabling|complicated-subsystem|platform
+#   focus: ""  # What user journey, capability, or platform this team owns
+#   size: 0  # Target: 5-9 (Dunbar-based)
+#   interaction_modes: {}
+#     # other_team_name: collaboration|x-as-a-service|facilitating
+
+cognitive_load_assessment:
+  # Per-team cognitive load evaluation
+  # Three types: intrinsic (problem complexity), extraneous (bad tools/processes), germane (learning)
+  teams: []
+  # - name: ""
+  #   intrinsic_load: low|medium|high
+  #   extraneous_load: low|medium|high  # Should be minimized
+  #   germane_load: low|medium|high  # Should be encouraged
+  #   overloaded: false
+  #   recommendations: []
+
+# Conway's Law check: Does architecture mirror team structure intentionally?
+conways_law_check:
+  intentional_alignment: null  # true|false
+  architecture_matches_teams: null  # true|false
+  issues: []
+
+# Security boundary alignment: Do team boundaries align with security boundaries?
+security_alignment:
+  auth_team_separated: null  # Team owning auth is separate from feature teams
+  data_access_boundaries_clear: null
+  issues: []
+
+last_assessed: null

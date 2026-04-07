@@ -1,0 +1,40 @@
+# BVSSH Health Canvas — Jonathan Smart
+# Source: "Better Value Sooner Safer Happier"
+# Populated through: /bvssh-check skill
+
+better:
+  description: "Quality, compliance, sustainability outcomes"
+  metrics: []
+  current_state: ""
+  trend: ""  # improving|stable|declining
+
+value:
+  description: "Desirable outcomes for customers and organization"
+  metrics: []
+  current_state: ""
+  trend: ""
+
+sooner:
+  description: "Time to value, flow efficiency, lead time"
+  metrics: []
+  current_state: ""
+  trend: ""
+
+safer:
+  description: "Governance, risk, compliance, security, resilience"
+  metrics: []
+  current_state: ""
+  trend: ""
+
+happier:
+  description: "Team wellbeing, customer satisfaction, societal impact"
+  metrics: []
+  current_state: ""
+  trend: ""
+
+anti_patterns_detected: []
+# - pattern: "MORF (Measures of Random Functioning)"
+#   evidence: ""
+#   date: ""
+
+last_assessed: null

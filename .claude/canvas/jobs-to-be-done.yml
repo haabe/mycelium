@@ -1,0 +1,34 @@
+# Jobs to be Done Canvas — Clayton Christensen / Tony Ulwick
+# Source: "The Innovator's Dilemma", Outcome-Driven Innovation
+# Populated through: /jtbd-map skill and /interview
+
+# Jobs: What users are "hiring" this product to do
+jobs: []
+# - job_statement: "When [situation], I want to [motivation], so I can [expected outcome]"
+#   type: functional|emotional|social
+#   # Functional: What they need to accomplish practically
+#   # Emotional: How they need to feel (confident, in control, relieved)
+#   # Social: How it affects relationships/status (look competent, be respected)
+#   hiring_criteria: []  # What makes users "hire" a solution for this job
+#   firing_criteria: []  # What makes users "fire" (abandon) a solution
+#   current_solutions: []  # What are they using now? (including non-consumption)
+#   underserved_outcomes: []
+#     # - outcome: ""
+#     #   importance: 1-10
+#     #   satisfaction_with_current: 1-10
+#     #   opportunity_score: 0  # importance + (importance - satisfaction)
+#   evidence_sources: []
+#     # - type: interview|observation|behavioral_data
+#     #   summary: ""
+#     #   date: ""
+
+# Non-consumption: Users who have the job but aren't using ANY solution
+# Often the biggest opportunity (Christensen's insight)
+non_consumption:
+  identified: false
+  segments: []
+  # - description: ""
+  #   barrier: ""  # Why aren't they using existing solutions?
+  #   evidence: ""
+
+last_updated: null

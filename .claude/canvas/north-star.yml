@@ -1,0 +1,36 @@
+# North Star Framework Canvas
+# Source: Amplitude North Star Framework, Sean Ellis
+# Populated through: /interview skill (Phase 2)
+
+# The single metric that captures the core value users get from the product.
+# Must be: a leading indicator, actionable, value-expressing, measurable.
+metric:
+  name: ""
+  definition: ""  # Precise measurement definition
+  current_value: null
+  target_value: null
+  measurement_frequency: "weekly"
+
+# Input metrics: 3-5 levers that directly drive the North Star.
+# Each should be ownable by a team and directly influenceable.
+input_metrics: []
+# - name: ""
+#   definition: ""
+#   owner: ""  # Team or person responsible
+#   current_value: null
+#   target_value: null
+#   category: "acquisition|activation|engagement|retention|expansion"
+
+# Trust dimension: How trust/safety is measured.
+# Not optional — trust is part of the growth model.
+trust_dimension:
+  metric: ""
+  current_value: null
+  target_value: null
+
+# Guardrail metrics: Things that must NOT degrade while optimizing the North Star.
+guardrails: []
+# - name: ""
+#   threshold: ""  # e.g., "NPS must stay above 40"
+
+last_updated: null

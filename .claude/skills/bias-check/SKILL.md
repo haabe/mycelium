@@ -1,0 +1,49 @@
+---
+name: bias-check
+description: "Use before any research activity or significant decision. Reviews cognitive biases relevant to the current stage."
+---
+
+# Bias Check Skill
+
+Pre-research and pre-decision bias review.
+
+## Workflow
+
+1. **Identify context**: What stage (L0-L5)? What activity (research, decision, evaluation)?
+
+2. **Load stage-specific checklist** from cognitive-biases.md for the current scale.
+
+3. **For each bias on the checklist**:
+   - Is this bias likely active in the current situation? (Yes/No/Maybe)
+   - If Yes/Maybe: What specific mitigation will be applied?
+   - Document the assessment.
+
+4. **Check agent's own biases** (from cognitive-biases.md agent section):
+   - Sycophancy: Am I agreeing with the user when evidence says otherwise?
+   - Recency: Am I overweighting recent context over earlier evidence?
+   - Pattern matching: Am I assuming this is like something I've seen before without checking?
+   - Completionism: Am I filling gaps with speculation rather than acknowledging uncertainty?
+
+5. **Output bias briefing**:
+   ```
+   ## Bias Check: [Activity]
+   Stage: [L0-L5]
+
+   ### Active Risks
+   | Bias | Risk Level | Mitigation |
+   |------|-----------|------------|
+   | ...  | High/Med/Low | ... |
+
+   ### Agent Self-Check
+   - Sycophancy: [OK/Risk]
+   - Recency: [OK/Risk]
+   - Pattern matching: [OK/Risk]
+   - Completionism: [OK/Risk]
+
+   ### Proceed? [Yes / Yes with caution / Pause and address]
+   ```
+
+## Theory Citations
+- Kahneman: Thinking, Fast and Slow (System 1/System 2)
+- Shotton: The Choice Factory (behavioral biases in decision-making)
+- Torres: Continuous Discovery Habits (bias in research)

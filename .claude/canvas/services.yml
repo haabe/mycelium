@@ -1,0 +1,127 @@
+# Good Services 15 Principles Canvas — Lou Downe
+# Source: "Good Services: How to Design Services that Work"
+# Populated through: /service-check skill
+
+principles:
+  - id: 1
+    name: "Be easy to find"
+    description: "Findable using the language users naturally use"
+    assessment: not-assessed  # pass|partial|fail|not-assessed
+    evidence: ""
+    issues: []
+    last_checked: null
+
+  - id: 2
+    name: "Clearly explain its purpose"
+    description: "Users understand what it does, who it's for, what they'll get"
+    assessment: not-assessed
+    evidence: ""
+    issues: []
+    last_checked: null
+
+  - id: 3
+    name: "Set expectations"
+    description: "Clear about what's expected of users, how long things take, what happens at each stage"
+    assessment: not-assessed
+    evidence: ""
+    issues: []
+    last_checked: null
+
+  - id: 4
+    name: "Enable completion"
+    description: "Helps ALL users achieve their goal, including edge cases and accessibility needs"
+    assessment: not-assessed
+    evidence: ""
+    issues: []
+    last_checked: null
+
+  - id: 5
+    name: "Work familiarly"
+    description: "Uses conventions and patterns users already understand"
+    assessment: not-assessed
+    evidence: ""
+    issues: []
+    last_checked: null
+
+  - id: 6
+    name: "Require no prior knowledge"
+    description: "No jargon, no assumed understanding of internal structures"
+    assessment: not-assessed
+    evidence: ""
+    issues: []
+    last_checked: null
+
+  - id: 7
+    name: "Be agnostic of org structures"
+    description: "Users never see internal team/department boundaries"
+    assessment: not-assessed
+    evidence: ""
+    issues: []
+    last_checked: null
+
+  - id: 8
+    name: "Require minimum steps"
+    description: "Every step is an opportunity for failure — reduce ruthlessly"
+    assessment: not-assessed
+    evidence: ""
+    issues: []
+    last_checked: null
+
+  - id: 9
+    name: "Be consistent"
+    description: "Visual design, language, interactions consistent throughout"
+    assessment: not-assessed
+    evidence: ""
+    issues: []
+    last_checked: null
+
+  - id: 10
+    name: "Have no dead ends"
+    description: "Every state offers a clear next action. Error states are designed states."
+    assessment: not-assessed
+    evidence: ""
+    issues: []
+    last_checked: null
+
+  - id: 11
+    name: "Be usable by everyone"
+    description: "Equally usable regardless of ability, context, or device. Beyond WCAG — genuine equity."
+    assessment: not-assessed
+    evidence: ""
+    issues: []
+    last_checked: null
+
+  - id: 12
+    name: "Encourage right behaviours"
+    description: "Makes the right thing the easiest thing to do"
+    assessment: not-assessed
+    evidence: ""
+    issues: []
+    last_checked: null
+
+  - id: 13
+    name: "Respond to change"
+    description: "Can adapt to policy changes, evolving needs, technology shifts without rebuild"
+    assessment: not-assessed
+    evidence: ""
+    issues: []
+    last_checked: null
+
+  - id: 14
+    name: "Explain decisions"
+    description: "When the service decides something (approved/denied/delayed), explains why and what recourse exists"
+    assessment: not-assessed
+    evidence: ""
+    issues: []
+    last_checked: null
+
+  - id: 15
+    name: "Make it easy to get human help"
+    description: "Clear path to a human for complex, sensitive, or unusual situations"
+    assessment: not-assessed
+    evidence: ""
+    issues: []
+    last_checked: null
+
+overall_score: null  # Count of pass/total assessed
+last_assessed: null

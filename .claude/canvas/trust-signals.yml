@@ -1,0 +1,44 @@
+# Trust Signals Canvas — Digital Trust Architecture
+# Source: Privacy by Design, Ethical Design, Digital Trust principles
+# Populated through: L5 Market diamond and /privacy-check skill
+
+transparency: []
+# - mechanism: ""  # e.g., "Privacy policy", "Data usage dashboard", "Algorithmic transparency"
+#   description: ""
+#   status: implemented|planned|not-started
+
+security_certifications: []
+# - name: ""  # e.g., SOC2, ISO 27001, GDPR compliance
+#   status: achieved|in-progress|planned
+#   valid_until: null
+
+privacy_communications: []
+# - channel: ""  # e.g., "Privacy policy page", "In-app privacy center", "Email notifications"
+#   content: ""
+#   user_accessible: true
+
+user_control: []
+# - control: ""  # e.g., "Data export", "Account deletion", "Consent management", "Communication preferences"
+#   status: implemented|planned|not-started
+
+ethical_commitments: []
+# - commitment: ""  # e.g., "No selling of user data", "No dark patterns", "Algorithmic fairness"
+#   enforcement: ""  # How is this enforced?
+
+# Responsible use of behavioral science (Shotton)
+behavioral_ethics:
+  biases_used_for_users: []  # Biases leveraged to HELP users make better decisions
+  # - bias: "social_proof"
+  #   application: "Show how many users chose the privacy-protective option"
+  dark_patterns_prohibited: []  # Patterns explicitly banned
+  # - "Confirmshaming"
+  # - "Hidden costs"
+  # - "Forced continuity"
+  # - "Misdirection"
+
+trust_metrics:
+  nps: null
+  trust_score: null
+  privacy_satisfaction: null
+
+last_assessed: null

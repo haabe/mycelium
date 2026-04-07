@@ -1,0 +1,30 @@
+# User Needs Mapping Canvas — Rich Allen
+# Source: User Needs Mapping (connected to Wardley Mapping & Team Topologies)
+# Populated through: /interview and discovery work
+
+user_types: []
+# - name: ""
+#   description: ""
+#   context: ""  # In what context do they interact with the product?
+
+needs: []
+# - user_type: ""
+#   need_statement: "As a [user_type], I need to [action], so that [outcome]"
+#   type: functional|emotional|social  # JTBD dimensions (Christensen)
+#   importance: 1-10  # How important is this to the user?
+#   current_satisfaction: 1-10  # How well are current solutions meeting this?
+#   state: met|underserved|overserved|unrecognized
+#   evidence_sources: []
+#     # - type: "interview|survey|behavioral_data|support_tickets"
+#     #   summary: ""
+#     #   date: ""
+
+# Opportunity areas: Clusters of underserved, high-importance needs
+# These feed into the OST (canvas/opportunities.yml)
+opportunity_areas: []
+# - name: ""
+#   needs_included: []  # References to needs above
+#   underserved_score: 0  # importance - current_satisfaction
+#   strategic_fit: ""
+
+last_updated: null

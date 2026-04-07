@@ -1,0 +1,59 @@
+# Go-to-Market Canvas — Martina Lauchengco
+# Source: "Loved: How to Rethink Marketing for Tech Products"
+# Populated through: /launch-tier skill and L5 Market diamond work
+
+positioning:
+  target_customer: ""
+  category: ""  # What category does the product compete in?
+  key_benefit: ""
+  differentiators: []
+  proof_points: []
+  # Messaging framework: "For [target] who [need], [product] is a [category] that [benefit]. Unlike [alternatives], [product] [differentiator]."
+  messaging_statement: ""
+
+messaging_framework:
+  headline: ""
+  subhead: ""
+  proof_points: []
+
+gtm_motion: ""  # product-led|sales-led|channel-led|community-led|hybrid
+
+launch_tier: null  # 1 (major) | 2 (significant) | 3 (incremental)
+# Tier 1: Full cross-functional effort, press, events, campaigns
+# Tier 2: Blog, targeted campaigns, sales enablement
+# Tier 3: Release notes, in-product, knowledge base
+
+buyer_personas: []
+# - name: ""
+#   role: ""
+#   buying_criteria: []
+#   objections: []
+#   channels: []  # Where do they get information?
+
+competitive_intelligence: []
+# - competitor: ""
+#   strengths: []
+#   weaknesses: []
+#   our_differentiator: ""
+#   last_analyzed: null
+
+win_loss_analysis: []
+# - date: ""
+#   outcome: win|loss
+#   reason: ""
+#   competitor_involved: ""
+#   lessons: ""
+
+launch_plan:
+  pre_launch: []
+  launch_day: []
+  post_launch: []
+
+# Behavioral science in positioning (Shotton)
+# Using biases ethically to HELP users make good decisions
+behavioral_tactics: []
+# - bias_leveraged: "social_proof|anchoring|framing|scarcity"
+#   application: ""
+#   ethical_check: ""  # Does this help or manipulate the user?
+
+last_updated: null

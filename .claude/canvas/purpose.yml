@@ -1,0 +1,33 @@
+# Purpose Canvas — Sinek's Golden Circle
+# Source: "Start with Why" by Simon Sinek
+# Populated through: /interview skill (Phase 1)
+
+# WHY: The organization's purpose, cause, or belief.
+# Not "to make money" — that's a result, not a cause.
+why: ""
+
+# HOW: Guiding principles that differentiate your approach.
+# 3-5 principles that express HOW you live your Why.
+how: []
+# - principle: ""
+#   description: ""
+
+# WHAT: Products, services, or offerings that express the Why.
+what: []
+# - name: ""
+#   description: ""
+
+# Ethical boundaries: What this product will NEVER do.
+# Defined at purpose level — non-negotiable.
+ethical_boundaries: []
+# - ""
+
+# Evidence: What supports this purpose statement?
+evidence:
+  sources: []
+  # - type: "founder_interview|user_research|market_analysis"
+  #   summary: ""
+  #   date: ""
+  confidence: 0.0  # Gilad's confidence meter (0.1-0.9)
+
+last_validated: null

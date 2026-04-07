@@ -1,0 +1,33 @@
+# Wardley Map Canvas — Simon Wardley
+# Source: Wardley Mapping methodology
+# Populated through: /wardley-map skill
+
+# User needs at the top of the value chain (most visible to users)
+user_needs: []
+# - name: ""
+#   description: ""
+
+# Components in the value chain
+components: []
+# - name: ""
+#   visibility: high|medium|low  # Y-axis: how visible to end user
+#   evolution_stage: genesis|custom|product|commodity  # X-axis
+#   cynefin_domain: complex|complicated|clear  # Mapped from evolution
+#   dependencies: []  # Other component names this depends on
+#   strategic_play: ""  # build|buy|partner|outsource
+#   notes: ""
+
+# Components actively evolving (moving right on the map)
+movements: []
+# - component: ""
+#   from: "custom"
+#   toward: "product"
+#   driver: ""  # What's causing this evolution
+
+# Strategic gameplay options identified from the map
+gameplay: []
+# - type: "open_source|ecosystem|tower_and_moat|co_opt"
+#   description: ""
+#   components_affected: []
+
+last_updated: null

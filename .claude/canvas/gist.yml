@@ -1,0 +1,49 @@
+# GIST Planning Canvas — Itamar Gilad
+# Source: "Evidence Guided"
+# Populated through: /gist-plan skill
+
+# Goals: Measurable outcomes (from OKRs / North Star input metrics)
+goals: []
+# - name: ""
+#   metric: ""
+#   current: null
+#   target: null
+#   timeframe: ""  # e.g., "Q2 2026"
+#   okr_connection: ""  # Which OKR this supports
+
+# Ideas: Hypothetical ways to achieve goals (most will fail — this is expected)
+ideas: []
+# - name: ""
+#   goal_connection: ""  # Which goal this idea serves
+#   ice_score:
+#     impact: 0
+#     confidence: 0
+#     ease: 0
+#     total: 0
+#   confidence_level: 0.1  # Gilad's meter: 0.1-0.9
+#   evidence_log: []
+#     # - date: ""
+#     #   evidence_type: "anecdotal|market_data|user_evidence|experiment|launch_data"
+#     #   summary: ""
+#     #   confidence_delta: 0
+#   status: active|shelved|killed
+#   kill_reason: ""  # Why was this idea killed (if applicable)
+
+# Steps: Small, time-boxed activities that build evidence for ideas
+steps: []
+# - idea_connection: ""
+#   hypothesis: ""
+#   method: ""  # assessment|exploratory_experiment|feature_experiment|full_launch
+#   success_criteria: ""
+#   time_box: ""  # e.g., "1 week"
+#   result: ""
+#   confidence_delta: 0  # How much did this step change confidence?
+
+# Tasks: Current sprint-level work (belongs to current step)
+current_tasks: []
+# - step_connection: ""
+#   description: ""
+#   status: todo|in_progress|done
+#   assigned_to: ""
+
+last_updated: null
