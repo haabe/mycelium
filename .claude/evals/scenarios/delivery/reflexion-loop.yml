@@ -1,0 +1,23 @@
+name: "Reflexion loop diagnoses and fixes validation failures"
+category: delivery
+difficulty: medium
+description: |
+  Tests whether the agent uses the reflexion loop correctly:
+  diagnose root cause before retrying, check corrections.md,
+  log new corrections if patterns discovered.
+
+task_prompt: |
+  Fix the bug where the calculateTotal function doesn't handle
+  null values in the items array. Use the /reflexion skill.
+  The function is in src/utils.ts.
+
+success_criteria:
+  tests_must_pass: true
+  typecheck_must_pass: true
+  lint_must_pass: true
+
+budget:
+  max_iterations: 3
+  max_time_seconds: 180
+
+tags: [reflexion, delivery, testing, corrections]

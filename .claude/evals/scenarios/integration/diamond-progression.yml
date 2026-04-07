@@ -1,0 +1,23 @@
+name: "Diamond progression checks all theory gates"
+category: integration
+difficulty: medium
+description: |
+  Tests whether /diamond-progress properly evaluates all required
+  theory gates before advancing, and logs the decision with
+  theory citations.
+
+task_prompt: |
+  We have completed L2 Opportunity discovery with 3 validated
+  opportunities (ICE scores: 8.0, 7.5, 6.5). Progress to L3
+  Solution design for the top opportunity.
+
+success_criteria:
+  theory_gates_logged: true
+  canvas_updated: true
+  decision_logged: true
+
+budget:
+  max_iterations: 1
+  max_time_seconds: 120
+
+tags: [diamond, gates, progression, theory]

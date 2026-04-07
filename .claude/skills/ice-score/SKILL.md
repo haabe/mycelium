@@ -50,6 +50,10 @@ ICE scoring with integrated confidence meter.
 - If all items score similarly, the scoring criteria need refinement.
 - Review for bias after scoring, before acting.
 
+## Canvas Output
+Update `canvas/opportunities.yml` with solution ICE scores.
+Update `canvas/gist.yml` with idea ICE scores and confidence levels.
+
 ## Theory Citations
 - Gilad: Evidence-Guided (confidence-backed prioritization)
 - Kahneman: Thinking, Fast and Slow (bias in estimation)

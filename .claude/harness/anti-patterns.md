@@ -141,3 +141,37 @@ Known failure modes organized by category. Check regularly, especially when thin
 - **Detection rule**: No reflexion loop evidence. Single implementation attempt without validation.
 - **What to do instead**: Always run implement-validate-critique-retry. Even if the first attempt looks good, validate.
 - **Source**: Mycelium (reflexion pattern)
+
+## Confidence Anti-Patterns
+
+### 7. Regression Avoidance
+- **Description**: Refusing to regress a diamond backward because of sunk cost. Evidence says the assumption is wrong, but the team pushes forward anyway.
+- **Detection rule**: Evidence contradicts current direction (user tests fail, metrics don't move, feedback is negative) but diamond continues to next phase.
+- **What to do instead**: If evidence says the assumption is wrong, regress the diamond. Log the regression in decision-log.md. Document what was learned in product-journal.md. Regression is the system working correctly, not failure.
+- **Source**: Kahneman (sunk cost fallacy), Smart (BVSSH), Torres (evidence-guided)
+
+## Market/GTM Anti-Patterns
+
+### 8. Launch Without Positioning
+- **Description**: Shipping a product or feature without a positioning document defining target customer, category, key benefit, and differentiators.
+- **Detection rule**: `canvas/go-to-market.yml` positioning fields empty at launch time.
+- **What to do instead**: Run `/launch-tier` to classify the release and define positioning before launch.
+- **Source**: Lauchengco (Loved)
+
+### 9. Ship Without Measuring
+- **Description**: Deploying without defined success metrics. No way to know if the launch worked.
+- **Detection rule**: `canvas/north-star.yml` input metrics undefined or not tracked post-launch.
+- **What to do instead**: Define what success looks like BEFORE launch. Set up measurement. Review metrics post-launch.
+- **Source**: North Star Framework, Gilad (Evidence Guided)
+
+### 10. Dark Pattern Marketing
+- **Description**: Using behavioral science to manipulate users rather than help them make good decisions.
+- **Detection rule**: Design patterns that exploit cognitive biases against user interest (confirmshaming, hidden costs, forced continuity, misdirection).
+- **What to do instead**: Use behavioral insights to HELP users (social proof for good choices, framing that clarifies value, anchoring that contextualizes pricing fairly).
+- **Source**: Shotton (ethical application of behavioral science)
+
+### 11. Audience of One
+- **Description**: Positioning based on the team's assumptions about the market without any external validation.
+- **Detection rule**: No buyer personas validated with real buyers. No win/loss analysis. Go-to-market strategy based entirely on internal opinions.
+- **What to do instead**: Validate positioning with actual target customers. Conduct win/loss analysis. Test messaging before scaling.
+- **Source**: Lauchengco (Loved), Kahneman (false consensus effect)

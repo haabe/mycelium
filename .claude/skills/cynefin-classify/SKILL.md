@@ -45,6 +45,10 @@ Classify problem domain and route to appropriate methods.
    - [what would indicate we got it wrong]
    ```
 
+## Canvas Output
+Update `.claude/diamonds/active.yml` with the `cynefin_domain` field for the relevant diamond.
+If Wardley mapping was referenced, update `.claude/canvas/landscape.yml` component evolution stages.
+
 ## Theory Citations
 - Snowden: Cynefin framework
 - Wardley: Evolution mapping

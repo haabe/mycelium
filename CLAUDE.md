@@ -1,5 +1,7 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
+*Version 0.3.0 -- Canvas-guided, theory-gated, self-learning.*
+
 Mycelium is a harnessing system for AI-assisted product development. Like nature's mycelium network, it connects theories, shares learning, adapts to conditions, and makes the whole ecosystem stronger.
 
 ## How This System Works
@@ -83,7 +85,8 @@ Every diamond transition must pass ALL applicable gates. See `.claude/engine/the
 | JTBD | Have emotional and social dimensions been mapped, not just functional? | Christensen |
 | Cynefin | Is the domain classified? Is the method appropriate? | Snowden |
 | Bias Check | Was research designed to mitigate cognitive biases? | Shotton, Kahneman |
-| Security | Has threat modeling been done? Privacy assessed? | OWASP (STRIDE), GDPR (PbD) |
+| Security | Has threat modeling been done? | OWASP (STRIDE) |
+| Privacy | Has privacy been assessed? Data minimized? | Cavoukian (PbD), GDPR |
 | BVSSH | Does this align with Better, Value, Sooner, Safer, Happier? | Smart |
 | Service Quality | Do Downe's 15 principles pass? | Downe (Good Services) |
 | DORA | Are delivery metrics healthy? | Forsgren (Accelerate) |
@@ -190,28 +193,67 @@ See `.claude/orchestration/agent-teams.md` for patterns.
 
 ## Skills Reference
 
-Invoke skills with `/skill-name`. Key skills:
+Invoke skills with `/skill-name`. All 32 skills:
 
+### Onboarding & Assessment
 | Skill | When to Use |
 |-------|------------|
-| `/interview` | Onboarding: establish purpose, vision, North Star |
-| `/diamond-assess` | Check current state, get recommended next action |
-| `/diamond-progress` | Move a diamond forward (runs all theory gates) |
-| `/cynefin-classify` | Classify a problem's domain (Clear/Complicated/Complex/Chaotic) |
-| `/ost-builder` | Build or update Opportunity Solution Tree |
+| `/interview` | Onboarding: establish purpose, vision, North Star, project type |
+| `/diamond-assess` | Check current state, get recommended next action (plain language) |
+| `/diamond-progress` | Move a diamond forward (runs all theory gates, suggests skills) |
+
+### Discovery Skills
+| Skill | When to Use |
+|-------|------------|
+| `/user-interview` | Torres-style story-based interviews with bias mitigation |
+| `/ost-builder` | Build or update Opportunity Solution Tree from research |
+| `/jtbd-map` | Map Jobs to be Done (functional, emotional, social) |
+| `/assumption-test` | Design smallest viable test to validate an assumption |
+| `/cynefin-classify` | Classify problem domain (Clear/Complicated/Complex/Chaotic) |
+| `/wardley-map` | Create or update Wardley Map of value chain |
 | `/ice-score` | Score and prioritize ideas with confidence meter |
+| `/gist-plan` | GIST planning: goals, ideas, steps, tasks |
+
+### Quality & Governance Skills
+| Skill | When to Use |
+|-------|------------|
 | `/bias-check` | Review cognitive biases before research/decisions |
-| `/threat-model` | STRIDE threat modeling for a component/solution |
-| `/reflexion` | Self-correcting implementation loop |
-| `/preflight` | Pre-code validation checklist |
+| `/devils-advocate` | Systematically challenge assumptions before major decisions |
 | `/bvssh-check` | Holistic health evaluation (Better, Value, Sooner, Safer, Happier) |
-| `/service-check` | Evaluate against Downe's 15 principles |
-| `/dora-check` | Delivery performance metrics assessment |
+| `/service-check` | Evaluate against Downe's 15 Good Services principles |
+| `/threat-model` | STRIDE threat modeling for a component/solution |
+| `/privacy-check` | Privacy by Design / GDPR assessment |
+| `/security-review` | OWASP secure design review for code and architecture |
+| `/a11y-check` | Accessibility audit (WCAG 2.1 AA) |
+
+### Delivery Skills
+| Skill | When to Use |
+|-------|------------|
 | `/delivery-bootstrap` | Auto-detect tech stack and set up delivery tooling |
+| `/preflight` | Pre-code validation checklist |
+| `/reflexion` | Self-correcting implementation loop (implement/validate/critique/retry) |
 | `/definition-of-done` | Verify increment satisfies all DoD criteria |
-| `/a11y-check` | Accessibility audit |
-| `/devils-advocate` | Systematically challenge current assumptions |
+| `/dora-check` | Delivery performance metrics assessment |
 | `/retrospective` | Post-delivery learning capture |
+
+### Market & Go-to-Market Skills
+| Skill | When to Use |
+|-------|------------|
+| `/launch-tier` | Classify releases into tiers and plan go-to-market |
+| `/team-shape` | Team Topologies assessment (cognitive load, interaction modes) |
+
+### Canvas & Orchestration Skills
+| Skill | When to Use |
+|-------|------------|
+| `/canvas-update` | Update canvas sections with new evidence |
+| `/canvas-sync` | Synchronize canvas state across team sessions via git |
+| `/fan-out` | Parallel agent orchestration for OST exploration |
+
+### Self-Improvement Skills
+| Skill | When to Use |
+|-------|------------|
+| `/eval-runner` | Run benchmark scenarios to measure agent effectiveness |
+| `/prompt-optimizer` | A/B test instruction changes against eval baselines |
 
 ## Getting Started
 

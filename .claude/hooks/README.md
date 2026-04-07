@@ -98,3 +98,8 @@ Key ones for Mycelium:
 - `SessionStart` -- Can inject session context
 
 Full reference: https://code.claude.com/docs/en/hooks
+
+## Helper Scripts (Not Standalone Hooks)
+
+### preflight.sh
+Called BY `gate.sh` when the preflight stamp is expired/missing. Creates a stamp file with corrections.md hash and timestamp. NOT a standalone hook -- it's a helper that gate.sh invokes internally. Users can also run it manually: `bash .claude/hooks/preflight.sh`

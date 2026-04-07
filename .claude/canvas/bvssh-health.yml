@@ -32,8 +32,16 @@ happier:
   current_state: ""
   trend: ""
 
+# Anti-patterns from Smart (BVSSH):
+# MORF = "Measures of Random Functioning" -- tracking metrics that don't connect to
+# actual outcomes (e.g., story points, velocity, lines of code). Replace with
+# outcome metrics that connect to BVSSH dimensions.
+# Other anti-patterns: Big-bang transformations, mandating one framework,
+# focusing on output velocity over outcome value, reorganizing without
+# changing ways of working.
 anti_patterns_detected: []
 # - pattern: "MORF (Measures of Random Functioning)"
+#   description: "Tracking velocity instead of outcome metrics"
 #   evidence: ""
 #   date: ""
 

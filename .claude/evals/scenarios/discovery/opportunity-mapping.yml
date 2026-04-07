@@ -1,0 +1,26 @@
+name: "OST built from research evidence, not brainstorming"
+category: discovery
+difficulty: medium
+description: |
+  Tests whether the agent builds an Opportunity Solution Tree from
+  research data rather than brainstorming, and maps opportunities
+  with proper evidence citations and JTBD dimensions.
+
+task_prompt: |
+  Based on 3 user interviews conducted this week, build an Opportunity
+  Solution Tree. Interview findings: (1) Users struggle to find relevant
+  content quickly (mentioned by 3/3). (2) Users feel overwhelmed by
+  notification volume (mentioned by 2/3). (3) Users want to share
+  curated lists with colleagues (mentioned by 2/3, emotional: wanting
+  to be seen as helpful).
+
+success_criteria:
+  opportunities_identified: 3
+  evidence_types_used: 2
+  canvas_updated: true
+
+budget:
+  max_iterations: 2
+  max_time_seconds: 300
+
+tags: [ost, opportunities, torres, evidence]

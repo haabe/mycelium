@@ -4,7 +4,7 @@ Diamonds are the core workflow unit in Mycelium. Each diamond represents a cycle
 
 ## The Four Phases
 
-Every diamond passes through four phases (Double Diamond):
+Every diamond passes through four phases, based on the **Double Diamond** model (Design Council, 2005):
 
 ```
     DISCOVER          DEFINE           DEVELOP          DELIVER
@@ -23,44 +23,60 @@ Every diamond passes through four phases (Double Diamond):
 
 Diamonds operate at different scales of abstraction:
 
-| Scale | Name | Scope | Duration | Example |
-|-------|------|-------|----------|---------|
-| **L0** | Purpose | Why the organization exists | Months-years | "We help teams ship better products" |
-| **L1** | Strategy | Strategic direction and bets | Weeks-months | "Focus on AI-assisted product development" |
-| **L2** | Opportunity | Problem/opportunity spaces | Days-weeks | "Teams struggle with discovery-delivery handoff" |
-| **L3** | Solution | Specific solution approaches | Days-weeks | "An AI agent that enforces theory gates" |
-| **L4** | Feature | Individual features/stories | Hours-days | "Implement bias-check skill" |
-| **L5** | Task | Atomic implementation tasks | Minutes-hours | "Write unit tests for confidence scoring" |
+| Scale | Name | Focus | Primary Theories | Duration | Example |
+|-------|------|-------|-----------------|----------|---------|
+| **L0** | Purpose | Why we exist | Sinek (Golden Circle), JTBD (Christensen) | Months-years | "We help teams ship better products" |
+| **L1** | Strategy | Where to play | Wardley Mapping, North Star, Team Topologies (Skelton) | Weeks-months | "Focus on AI-assisted product development" |
+| **L2** | Opportunity | What to solve | Torres (CDH/OST), Allen (User Needs), Cynefin (Snowden) | Days-weeks | "Teams struggle with discovery-delivery handoff" |
+| **L3** | Solution | How to solve it | Gilad (GIST/ICE), Cagan (Inspired), Downe (Good Services) | Days-weeks | "An AI agent that enforces theory gates" |
+| **L4** | Delivery | Build and ship | Forsgren (DORA), OWASP, DRY/KISS/YAGNI/SOLID/SoC | Hours-days | "Implement bias-check skill with tests" |
+| **L5** | Market | Reach users | Lauchengco (Loved), Shotton (behavioral science) | Days-weeks | "Position and launch the product" |
+
+**Note on L4 sub-diamonds**: Complex features within L4 can spawn their own sub-L4 diamonds (e.g., a large feature broken into independently deliverable slices). These are still L4 scale but nested. Atomic tasks within delivery do NOT need their own diamond -- they are simply tasks within the L4 Deliver phase.
 
 ## Spawning Rules
 
-Diamonds can spawn child diamonds at the next scale down:
+Diamonds spawn child diamonds when complexity or scope requires it:
 
-- An L1 diamond in Define phase can spawn L2 diamonds for each identified opportunity.
-- An L2 diamond in Develop phase can spawn L3 diamonds for each solution approach.
-- An L3 diamond in Deliver phase can spawn L4 diamonds for each feature.
-- An L4 diamond in Deliver phase can spawn L5 diamonds for each task.
+- L0 spawns L1 when purpose is defined and strategic questions arise
+- L1 spawns L2 when landscape is mapped and opportunities need exploration
+- L2 spawns L3 when opportunities have sufficient evidence for solution design
+- L3 spawns L4 when solutions pass confidence threshold and need building
+- L4 can spawn sub-L4 diamonds for complex features requiring their own discovery
+- L5 spawns L2 when market feedback reveals new opportunities (feedback loop)
 
 **Constraints:**
-- Never skip more than one scale level when spawning.
-- Parent diamond remains active while children execute.
-- Child diamond outcomes feed back into parent diamond evidence.
-- Maximum active diamonds per scale: L0=1, L1=3, L2=5, L3=5, L4=10, L5=20.
+- Parent diamond remains active while children execute (smooth flow)
+- Child diamond outcomes feed back into parent diamond evidence
+- L5 Market feedback can trigger new L2 Opportunity diamonds (the learning loop)
+- Maximum active diamonds per scale: L0=1, L1=3, L2=5, L3=5, L4=10, L5=3
 
 ## Regression Rules
 
 When evidence invalidates a higher-level assumption, regress:
 
-- If L4 delivery reveals the L3 solution is wrong, regress to L3 Develop.
-- If L3 prototyping reveals the L2 opportunity is misframed, regress to L2 Define.
-- If L2 research reveals the L1 strategy is flawed, regress to L1 Define.
+- If L4 Delivery reveals the L3 Solution is wrong -> regress to L3 Develop
+- If L3 prototyping reveals the L2 Opportunity is misframed -> regress to L2 Define
+- If L2 research reveals the L1 Strategy is flawed -> regress to L1 Define
+- If L5 Market feedback reveals the L2 Opportunity was wrong -> spawn new L2 diamond with market evidence
+
+**Regression triggers** (what signals the need to go back):
+- User testing contradicts value assumption (Cagan four risks)
+- Metrics don't move after delivery (North Star input metrics flat)
+- Market feedback contradicts positioning (Lauchengco win/loss)
+- Security incident reveals design flaw (OWASP)
+- Assumption test fails after delivery (Torres)
 
 **Regression protocol:**
-1. Document what was learned (update product-journal.md).
-2. Archive, do not delete, the invalidated diamond's artifacts.
-3. Re-enter the parent diamond at the appropriate phase.
-4. Update confidence scores to reflect new evidence.
-5. Never treat regression as failure -- it is learning.
+1. Document what was learned in `.claude/memory/product-journal.md`
+2. Archive, do not delete, the invalidated diamond's artifacts in canvas
+3. Mark the diamond's confidence as decreased with evidence citation
+4. Re-enter the parent diamond at the appropriate phase (usually Define or Develop)
+5. Update all affected canvas files with the new evidence
+6. Log the regression decision in `.claude/harness/decision-log.md`
+7. Never treat regression as failure -- it is the system working correctly
+
+**Anti-pattern: Regression Avoidance** -- Refusing to regress because of sunk cost. If evidence says the assumption is wrong, the evidence wins. See `.claude/harness/anti-patterns.md`.
 
 ## Smooth Flow
 
@@ -108,3 +124,26 @@ theory_gates:
 ```
 
 Update state on every significant action. State is the source of truth for what the agent should do next.
+
+## Diamond Lifecycle Management
+
+### Diamond States
+- **active**: Currently being worked on or recently progressed
+- **blocked**: Waiting on dependency, evidence, or decision (document the blocker)
+- **archived**: Completed or deliberately paused. Canvas data preserved. Removed from active tracking.
+- **killed**: Abandoned with documented reason. Canvas data preserved with "killed" marker.
+
+### Stale Diamond Detection
+A diamond is stale when:
+- No progress for 30+ days without a documented blocker
+- Phase hasn't changed in 2+ weeks without documented reason
+- Its children are all complete but the parent hasn't progressed
+
+### Cleanup Process
+1. Run `/diamond-assess` to identify stale diamonds
+2. For each stale diamond: decide to continue, archive, or kill
+3. **Archive**: Move to `archived_diamonds` section in active.yml. Canvas data stays.
+4. **Kill**: Remove from active.yml. Log reason in decision-log.md. Canvas data stays with "killed" note.
+5. **Never delete canvas artifacts** -- they're learning, even from killed work
+
+See `.claude/orchestration/operations.md` for full maintenance schedules.

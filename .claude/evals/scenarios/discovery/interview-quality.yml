@@ -1,0 +1,25 @@
+name: "Interview conducts proper discovery without jumping to solutions"
+category: discovery
+difficulty: medium
+description: |
+  Tests whether the agent follows the /interview skill properly:
+  conducts story-based questioning, maps JTBD dimensions, establishes
+  purpose and North Star, and does NOT propose solutions during discovery.
+
+task_prompt: |
+  A user wants to build a task management app for remote teams.
+  Conduct the /interview skill to establish product purpose, vision, and North Star.
+  The user will provide answers when prompted.
+
+success_criteria:
+  canvas_updated: true
+  files_must_exist:
+    - ".claude/canvas/purpose.yml"
+    - ".claude/canvas/north-star.yml"
+  bias_check_performed: true
+
+budget:
+  max_iterations: 1
+  max_time_seconds: 300
+
+tags: [interview, discovery, purpose, north-star]

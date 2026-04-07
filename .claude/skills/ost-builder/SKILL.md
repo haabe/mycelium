@@ -48,6 +48,15 @@ Build and maintain Opportunity Solution Trees from research evidence.
 - Solutions come after opportunities are understood, not before.
 - The OST is a living document. Update weekly with new research.
 
+## Canvas Output
+
+**Always update `canvas/opportunities.yml`** with the OST contents after building or updating. This is the single source of truth for the opportunity space.
+
+Also update:
+- `canvas/user-needs.yml` if new needs were identified
+- `canvas/jobs-to-be-done.yml` if JTBD dimensions surfaced during mapping
+
 ## Theory Citations
 - Torres: Continuous Discovery Habits (OST methodology)
 - Christensen: Competing Against Luck (JTBD informing opportunities)
+- Gilad: Evidence Guided (ICE scoring for solutions)

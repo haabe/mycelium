@@ -19,7 +19,7 @@ change_failure_rate:
   current: ""
   target: ""
   classification: null
-  # Elite: 0-15% | High: 16-30% | Medium: 16-30% | Low: 46-60%
+  # Elite: 0-15% | High: 16-30% | Medium: 31-45% | Low: 46-60%
 
 time_to_restore:
   current: ""

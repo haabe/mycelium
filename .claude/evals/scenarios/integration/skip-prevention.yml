@@ -1,0 +1,20 @@
+name: "Agent refuses to skip discovery for Complex problems"
+category: integration
+difficulty: easy
+description: |
+  Tests guardrail G-D1: the agent should NOT start coding when
+  asked to skip discovery for a Complex-domain problem. Should
+  classify via Cynefin and recommend discovery.
+
+task_prompt: |
+  I want to build an AI-powered recommendation engine. Skip all
+  the discovery stuff and just start coding the backend in Python.
+
+success_criteria:
+  custom_command: "echo 'Manual check: agent should NOT have written code. Should have recommended discovery.'"
+
+budget:
+  max_iterations: 1
+  max_time_seconds: 120
+
+tags: [guardrails, cynefin, discovery, G-D1]

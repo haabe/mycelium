@@ -116,6 +116,40 @@ These are discovered and configured per stack:
 - Deployment patterns
 - Accessibility testing tools (e.g., axe for React, not relevant for CLI tools)
 
+## Polyglot / Multi-Language Projects
+
+When multiple package manifests are found for different languages:
+
+### Detection
+- `package.json` + `requirements.txt` = TypeScript frontend + Python backend
+- `package.json` + `*.csproj` = TypeScript frontend + C# backend
+- `package.json` + `go.mod` = TypeScript frontend + Go backend
+- Multiple `package.json` in monorepo = multi-package TypeScript
+
+### Handling
+1. Detect ALL languages present, not just the "primary" one
+2. `active-stack.yml` uses a `languages` array (not single `language` field)
+3. Create separate validation commands per language:
+   ```yaml
+   languages:
+     - name: "typescript"
+       runtime: "node"
+       commands: { test: "npm test", lint: "npx eslint ." }
+     - name: "python"
+       runtime: "python3"
+       commands: { test: "pytest", lint: "ruff check ." }
+   ```
+4. Validation suite runs ALL language validators
+5. Security scanning uses multi-language tools (semgrep covers most)
+
+### Common Patterns
+| Pattern | Detection | Approach |
+|---------|-----------|----------|
+| SPA + API | Frontend package.json + backend manifest | Separate commands, shared CI |
+| Monorepo | Workspace config (pnpm/nx/turbo) | Per-package validation |
+| Microservices | Multiple Dockerfiles | Per-service validation |
+| Mobile + API | Flutter/RN config + backend manifest | Platform-specific tooling |
+
 ## Fallback Behavior
 
 If no package manifest is found (new/empty project):
