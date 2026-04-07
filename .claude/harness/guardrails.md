@@ -2,17 +2,27 @@
 
 Hard constraints that override confidence scores, user requests, and agent judgment. These are non-negotiable.
 
-## Enforcement Levels
+## Three-Tier Enforcement
 
-Each guardrail is marked as:
-- **ENFORCED**: Checked by hooks/gate.sh or diamond-progress. Blocks progression if violated.
-- **ADVISORY**: Agent should follow, but violation doesn't block. Logged as a warning.
+Each guardrail has one of three enforcement levels:
 
-The distinction matters: enforced guardrails prevent mistakes mechanically. Advisory guardrails rely on agent discipline and user awareness.
+### `BLOCKED` — Mechanically prevented
+The action cannot happen. gate.sh returns exit 2 (deny). The agent cannot proceed regardless of intent.
+*Used for: security violations that must never reach disk (secrets, credentials).*
+
+### `GATED` — Diamond progression blocked
+The agent can write code, but `/diamond-progress` will refuse to advance Deliver->Complete if this guardrail is unsatisfied. The stop-check hook also escalates these as warnings.
+*Used for: quality requirements that must be met before shipping (tests, a11y, services, threat modeling for applicable work).*
+
+### `ADVISORY` — Nudged, not blocked
+The agent should follow this, and post-write-nudge reminds about it, but violation doesn't prevent progression. Logged for awareness.
+*Used for: engineering best practices, bias awareness, stylistic preferences.*
+
+The distinction matters: BLOCKED prevents the action. GATED prevents declaring done. ADVISORY guides but doesn't prevent.
 
 ## Discovery Guardrails
 
-**G-D1: Never skip discovery for Complex-domain problems** `ENFORCED`
+**G-D1: Never skip discovery for Complex-domain problems** `GATED`
 Complex problems (Cynefin) require probe-sense-respond. Applying best practices or expert analysis to Complex problems will produce wrong answers with false confidence.
 *Source: Snowden (Cynefin), Smart (BVSSH)*
 
@@ -38,19 +48,19 @@ User needs have three dimensions: functional (what they need to do), emotional (
 
 ## Security & Trust Guardrails
 
-**G-S1: Never store, log, or transmit user secrets in plaintext** `ENFORCED`
+**G-S1: Never store, log, or transmit user secrets in plaintext** `BLOCKED`
 Credentials, tokens, API keys, passwords must be encrypted at rest and in transit. Never commit them to version control. Never include them in error messages or logs.
 *Source: OWASP Secure by Design*
 
-**G-S2: Never skip threat modeling when a solution handles user data** `ENFORCED`
-Before selecting a solution that processes, stores, or transmits user data, run STRIDE threat modeling. Document threats and mitigations in `canvas/threat-model.yml`.
+**G-S2: Never skip threat modeling when a solution handles user data or requires system permissions** `GATED`
+Before selecting a solution that processes, stores, or transmits user data, OR that requires system permissions (Accessibility, Camera, Contacts, Location, Files, Network, Bluetooth), run STRIDE threat modeling. Permission-requiring APIs are security surfaces even when no user data is involved. Document threats and mitigations in `canvas/threat-model.yml`.
 *Source: OWASP STRIDE, Microsoft SDL*
 
-**G-S3: Never add a data collection point without Privacy by Design assessment** `ENFORCED`
+**G-S3: Never add a data collection point without Privacy by Design assessment** `GATED`
 Every new piece of data collected must pass: Is it necessary? Is collection minimized? Is consent obtained? Is there a retention policy? Is there a deletion mechanism?
 *Source: Cavoukian (Privacy by Design), GDPR Article 25*
 
-**G-S4: Never ship without input validation on all external inputs** `ENFORCED`
+**G-S4: Never ship without input validation on all external inputs** `GATED`
 All data from external sources (user input, APIs, file uploads, URL parameters, headers, cookies) must be validated, sanitized, and escaped before use.
 *Source: OWASP Top 10, OWASP Secure by Design*
 
@@ -62,7 +72,7 @@ Collect only the data that is strictly necessary for the current purpose. If you
 HTTPS, authentication required, least privilege, sessions expire, CORS restricted, CSP enabled. Users must opt INTO less security, never opt OUT of it.
 *Source: OWASP Secure by Design, Cavoukian (Privacy by Design Principle 2)*
 
-**G-S7: Always disclose AI nature in user-facing systems** `ENFORCED`
+**G-S7: Always disclose AI nature in user-facing systems** `GATED`
 If the product being built will interact directly with people, it must clearly disclose that users are interacting with an AI system. This is required by EU AI Act Article 50 (effective 2 August 2026) and is good practice regardless of jurisdiction. Do not disguise AI as human.
 *Source: EU AI Act Article 50, Downe (Good Services Principle 3: Set expectations)*
 
@@ -72,11 +82,11 @@ Before delivering an AI-powered product, assess whether it falls into a high-ris
 
 ## Delivery Guardrails
 
-**G-V1: Never commit delivery code without running the validation suite** `ENFORCED`
+**G-V1: Never commit delivery code without running the validation suite** `GATED`
 Every code change must pass: tests, type checking, linting, dead code detection, and security scanning before being considered complete.
 *Source: Forsgren (Accelerate), n-trax reflexion pattern*
 
-**G-V2: Never ship without checking Downe's 15 principles** `ENFORCED`
+**G-V2: Never ship user-facing work without checking Downe's 15 principles** `GATED`
 For any user-facing work, evaluate against the relevant Good Services principles. Pay special attention to: no dead ends (P10), usable by everyone (P11), explains decisions (P14), easy to get human help (P15).
 *Source: Downe (Good Services)*
 
@@ -96,21 +106,21 @@ When multiple approaches solve the problem, choose the simplest one. Complexity 
 Business logic, data access, presentation, and infrastructure must be separated. No layer should have knowledge of another layer's implementation details. Depend on abstractions, not concretions.
 *Source: SoC (Dijkstra), SOLID (Martin), Clean Architecture*
 
-**G-V7: Always write tests alongside implementation** `ENFORCED`
+**G-V7: Always write tests alongside implementation** `GATED`
 Tests are not an afterthought. Write them first (TDD) or alongside the implementation. Never defer testing to "later." Tests document behavior and prevent regression.
 *Source: Forsgren (Accelerate), TDD (Beck)*
 
-**G-V8: Always ensure accessibility from the start** `ENFORCED`
+**G-V8: Always ensure accessibility for user-facing work** `GATED`
 Accessibility is a design constraint, not a polish step. Semantic HTML, ARIA labels, keyboard navigation, color contrast, screen reader compatibility must be built in, not retrofitted.
 *Source: Downe (Good Services Principle 11), WCAG 2.1 AA*
 
-**G-V9: Always design error states** `ENFORCED`
+**G-V9: Always design error states** `GATED`
 Every user flow must have designed error, empty, and loading states. Error messages must be helpful (what happened, what the user can do). Never show raw technical errors to users.
 *Source: Downe (Good Services Principles 10, 14)*
 
 ## Process Guardrails
 
-**G-P1: Never progress a diamond without updating the canvas** `ENFORCED`
+**G-P1: Never progress a diamond without updating the canvas** `GATED`
 Every diamond transition must be reflected in the appropriate canvas files. The canvas is the single source of truth -- if it's not in the canvas, it didn't happen.
 
 **G-P2: Never ignore BVSSH dimensions** `ADVISORY`
@@ -120,10 +130,10 @@ When evaluating progress, check ALL five dimensions. Do not sacrifice Safer or H
 **G-P3: Always cite which theory informed a decision** `ADVISORY`
 Every significant decision in the decision log must reference the specific theory/framework that guided it. This creates accountability and enables review.
 
-**G-P4: Always log decisions in the decision log** `ENFORCED`
+**G-P4: Always log decisions in the decision log** `GATED`
 No significant decision (diamond transition, solution selection, architecture choice, scope change) happens without a logged entry in `.claude/harness/decision-log.md`.
 
-**G-P5: Always read corrections.md before implementation tasks** `ENFORCED`
+**G-P5: Always read corrections.md before implementation tasks** `BLOCKED`
 Past mistakes are expensive lessons. Reading them costs seconds. Not reading them costs hours.
 *Source: Mycelium self-learning, n-trax reflexion pattern*
 

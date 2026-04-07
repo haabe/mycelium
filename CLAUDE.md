@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.4.0 -- Canvas-guided, theory-gated, self-learning, feedback-driven.*
+*Version 0.5.0 -- Canvas-guided, theory-gated, self-learning, feedback-driven.*
 
 Mycelium is a harnessing system for AI-assisted product development. Like nature's mycelium network, it connects theories, shares learning, adapts to conditions, and makes the whole ecosystem stronger.
 
@@ -87,7 +87,7 @@ Every diamond transition must pass ALL applicable gates. See `.claude/engine/the
 | Bias Check | Was research designed to mitigate cognitive biases? | Shotton, Kahneman |
 | Security | Has threat modeling been done? | OWASP (STRIDE) |
 | Privacy | Has privacy been assessed? Data minimized? | Cavoukian (PbD), GDPR |
-| BVSSH | Does this align with Better, Value, Sooner, Safer, Happier? | Smart |
+| BVSSH | Better, Value, Sooner, Safer, Happier? (required at delivery completion) | Smart |
 | Service Quality | Do Downe's 15 principles pass? | Downe (Good Services) |
 | DORA | Are delivery metrics healthy? | Forsgren (Accelerate) |
 | Corrections | Have past mistakes been reviewed? | Mycelium self-learning |
@@ -106,7 +106,10 @@ All product knowledge lives in `.claude/canvas/*.yml`. These files are:
 ## Harnessing System
 
 ### Guardrails (`.claude/harness/guardrails.md`)
-Hard constraints that the agent MUST NEVER violate. These override confidence scores, user requests, and agent judgment. Read them before every task.
+Three-tier enforcement system:
+- **BLOCKED**: Mechanically prevented by hooks (secrets detection). Cannot happen.
+- **GATED**: Checked by `/diamond-progress` at Deliver->Complete. Can write code, but cannot mark done until satisfied (tests, a11y, services, threat model, BVSSH, decision log).
+- **ADVISORY**: Nudged by hooks, not blocking. Engineering best practices and bias awareness.
 
 ### Anti-Patterns (`.claude/harness/anti-patterns.md`)
 Known failure modes with detection rules. If you catch yourself falling into one, stop and self-correct.

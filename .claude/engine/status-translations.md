@@ -77,3 +77,39 @@ When a diamond is skipped, always explain in plain language:
 - WHEN it might become relevant
 
 Example: "Strategy mapping skipped -- for a solo hobby project, strategic portfolio management would be gold-plating. Would become relevant if this grows into a product with multiple user segments."
+
+## Delivery-Phase Quality Expectations
+
+When reporting status during delivery phases, include what quality checks apply RIGHT NOW based on what the developer is working on:
+
+| Working On | What's Expected |
+|-----------|----------------|
+| Writing UI code | "Tests alongside. Accessibility built in. Error states designed. Semantic markup." |
+| Writing API/backend code | "Input validation on all endpoints. Auth checks. No secrets. Tests alongside." |
+| Writing tests | "Good. Cover happy path, edge cases, and error paths." |
+| Preparing to complete delivery | "Run /diamond-progress for the executable DoD checklist. Tests must pass. Services checked if user-facing. BVSSH quick-check required." |
+| Fixing a bug | "Use /reflexion. Diagnose root cause first. Log correction after fix." |
+
+This makes current expectations visible without the developer needing to remember all guardrails.
+
+## Completion Readiness Summary
+
+When a developer asks "am I done?" or when approaching Deliver->Complete:
+
+```
+Ready to mark this delivery complete?
+
+GATED (must pass to complete):
+  □ Tests exist and pass
+  □ Type checking clean (if applicable)
+  □ No secrets in code
+  □ [If user-facing]: Services checked + a11y assessed
+  □ [If data/permissions]: Threat model done
+  □ Decision logged
+  □ BVSSH quick-check answered
+
+PROMPTED (should do, won't block):
+  □ Delivery journal updated
+  □ Patterns captured
+  □ Retrospective done
+```

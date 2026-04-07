@@ -1,6 +1,11 @@
-# Canvas Guidance by Project Type
-# Determines which canvas files are required, recommended, or optional
-# Set during /interview based on project classification
+# Canvas Guidance: Two Dimensions
+# Dimension 1: Project type (determines strategic ceremony level)
+# Dimension 2: Delivery type (determines quality requirements)
+# Set during /interview and /delivery-bootstrap based on classification
+#
+# KEY RULE: Delivery type overrides project type for quality items.
+# A solo_hobby project that is user_facing MUST check services.yml + a11y.
+# Project type only makes STRATEGIC canvases optional (GTM, team shape, landscape).
 
 project_types:
 
@@ -87,3 +92,73 @@ project_types:
       - trust-signals.yml       # Trust architecture for enterprise
     recommended: []
     optional: []
+
+# ============================================================
+# Dimension 2: Delivery Type (quality requirements)
+# These override project_type for quality-related canvases.
+# Detected by /delivery-bootstrap from file patterns.
+# ============================================================
+
+delivery_types:
+
+  user_facing:
+    description: "Has a UI that humans interact with (web app, desktop app, mobile app)"
+    detection_patterns:
+      - "*.tsx, *.jsx, *.vue, *.svelte, *.html"     # Web UI
+      - "*.swift (with SwiftUI), *.xib, *.storyboard" # macOS/iOS UI
+      - "*.xaml, *.razor"                              # .NET UI
+      - "*.kt (with Compose), *.xml (Android layout)"  # Android UI
+      - "*.dart (with Flutter widgets)"                # Flutter UI
+    always_required_regardless_of_project_type:
+      - services.yml         # Downe's 15 principles (G-V2 GATED)
+      - "a11y assessment"    # WCAG 2.1 AA (G-V8 GATED)
+      - "error state design" # Downe P10 (G-V9 GATED)
+    always_required_at_delivery_completion:
+      - "tests exist"        # G-V7 GATED
+      - "BVSSH quick-check"  # Smart (Fix 6)
+
+  api_service:
+    description: "Backend service with API endpoints"
+    detection_patterns:
+      - "*/api/*, */routes/*, */controllers/*, */handlers/*"
+      - "*/middleware/*, */graphql/*"
+      - "Dockerfile, docker-compose.yml with service definitions"
+    always_required_regardless_of_project_type:
+      - threat-model.yml     # STRIDE for all endpoints (G-S2 GATED)
+      - "input validation"   # OWASP (G-S4 GATED)
+    always_required_at_delivery_completion:
+      - "tests exist"        # G-V7 GATED
+      - "BVSSH quick-check"  # Smart
+
+  library:
+    description: "Reusable library or package"
+    detection_patterns:
+      - "exports/index pattern, no UI files"
+      - "lib/ or src/ with public API, no application entry point"
+    always_required_regardless_of_project_type:
+      - "tests exist"        # Libraries MUST be tested (G-V7 GATED)
+    always_required_at_delivery_completion:
+      - "BVSSH quick-check"
+
+  cli_tool:
+    description: "Command-line interface tool"
+    detection_patterns:
+      - "argument parsing (yargs, commander, argparse, clap)"
+      - "bin/ directory, executable entry point"
+    always_required_regardless_of_project_type:
+      - "input validation"   # CLI args are external input (G-S4 GATED)
+      - "tests exist"        # G-V7 GATED
+    always_required_at_delivery_completion:
+      - "BVSSH quick-check"
+
+  permission_requiring:
+    description: "Uses system permissions (Accessibility, Camera, Contacts, Location, etc.)"
+    detection_patterns:
+      - "AXUIElement, Accessibility API"
+      - "Camera, AVCaptureSession"
+      - "Contacts, CNContactStore"
+      - "Location, CLLocationManager"
+      - "File system access beyond app sandbox"
+    always_required_regardless_of_project_type:
+      - threat-model.yml     # STRIDE for permission misuse (G-S2 GATED)
+    note: "This type is additive -- a user_facing app that also requires permissions gets BOTH sets of requirements."

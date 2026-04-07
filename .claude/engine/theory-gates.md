@@ -143,9 +143,9 @@ All four risks must be assessed:
 
 **Source**: Smart (Sooner Safer Happier)
 
-**Applies to**: Deliver->Complete, all scales
+**Applies to**: Deliver->Complete, all scales. **GATED** -- diamond-progress requires a BVSSH quick-check (even brief) before allowing delivery completion. This ensures holistic health is assessed for every delivery, not just on a monthly cadence.
 
-All five dimensions must be assessed:
+All five dimensions must be assessed (even a one-sentence answer per dimension is sufficient for a quick-check):
 
 | Dimension | Pass Criteria | Fail Criteria |
 |-----------|--------------|---------------|

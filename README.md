@@ -1,6 +1,6 @@
 # Mycelium
 
-**Theory-guided agentic product development for Claude Code.** *v0.4.0*
+**Theory-guided agentic product development for Claude Code.** *v0.5.0*
 
 Like nature's mycelium network -- the invisible intelligence that connects trees, shares nutrients, adapts to conditions, and makes the whole forest ecosystem stronger -- Mycelium connects product development theories, shares learning across sessions, adapts to any tech stack, and makes your product development practice stronger.
 
@@ -110,9 +110,10 @@ Canvas files are committed to git. They ARE your product documentation. Not all 
 
 ### Harnessing System (What Prevents the Agent from Going Haywire)
 
-**Guardrails** (`.claude/harness/guardrails.md`) -- 22 hard constraints, each marked as **ENFORCED** (mechanically blocked) or **ADVISORY** (agent discipline):
-- 12 ENFORCED: security, validation, accessibility, corrections review, canvas updates, decision logging
-- 10 ADVISORY: engineering principles (DRY, KISS), bias checks, BVSSH, devil's advocate
+**Guardrails** (`.claude/harness/guardrails.md`) -- 24 constraints across three enforcement tiers:
+- **BLOCKED** (2): Mechanically prevented by hooks. Secrets in code (G-S1), stale corrections (G-P5).
+- **GATED** (12): `/diamond-progress` refuses to complete delivery until satisfied. Tests, a11y, services quality, threat modeling, input validation, BVSSH, decision logging, error states, canvas updates, AI disclosure, regulatory awareness, privacy.
+- **ADVISORY** (10): Nudged by hooks, not blocking. Engineering principles (DRY, KISS, YAGNI), bias checks, data minimization, secure defaults, theory citations, devil's advocate.
 
 **Anti-Patterns** (`.claude/harness/anti-patterns.md`) -- 11 known failure modes across discovery, confidence, security, delivery, and market/GTM:
 - "Solution-first thinking", "Confidence inflation", "Security-later", "Dark pattern marketing", "Regression avoidance", and more
@@ -313,7 +314,7 @@ Universal principles (DRY, KISS, testing pyramid, OWASP) apply to all stacks. Sp
 
 ```
 your-project/
-  CLAUDE.md                    # Root Mycelium agent instructions (v0.4.0)
+  CLAUDE.md                    # Root Mycelium agent instructions (v0.5.0)
   .claude/
     settings.json              # Shared hook config + permissions (committed)
     engine/                    # Diamond rules, theory gates, confidence thresholds, Cynefin routing
