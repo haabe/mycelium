@@ -76,6 +76,20 @@ Report to user: "Based on this being a [type] project, here's what we'll focus o
 
 Store classification in `diamonds/active.yml` as `project_type`.
 
+## After the Interview: What Happens Next
+
+The interview creates an **L0 Purpose diamond** in Discover phase. Here's the bridge to ongoing work:
+
+1. **Tell the user**: "Interview complete. I've created your L0 Purpose diamond and populated the initial canvas files."
+2. **Suggest next step**: "Run `/diamond-assess` to see your starting state and what to work on next."
+3. **The typical flow from here**:
+   - `/diamond-progress` to advance L0 through its phases
+   - L0 spawns L1 (Strategy) when purpose is solid -- unless project type is solo_hobby (skip L1, go to L2)
+   - L1 spawns L2 (Opportunity) when landscape is mapped
+   - Each progression runs theory gates automatically
+
+**Do NOT leave the user without a clear next action.** Always end the interview with a specific recommendation.
+
 ## Theory Citations
 
 - Sinek: Start with Why (purpose)

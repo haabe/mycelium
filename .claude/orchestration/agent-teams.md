@@ -125,7 +125,7 @@ Workers in separate worktrees can still have logical dependencies (shared databa
 
 To enable Agent Teams (experimental feature):
 ```json
-// In .claude/settings.local.json or environment
+// In .claude/settings.json (shared) or .claude/settings.local.json (personal override)
 {
   "env": {
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"

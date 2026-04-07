@@ -1,6 +1,6 @@
 # Mycelium
 
-**Theory-guided agentic product development for Claude Code.**
+**Theory-guided agentic product development for Claude Code.** *v0.3.1*
 
 Like nature's mycelium network -- the invisible intelligence that connects trees, shares nutrients, adapts to conditions, and makes the whole forest ecosystem stronger -- Mycelium connects product development theories, shares learning across sessions, adapts to any tech stack, and makes your product development practice stronger.
 
@@ -41,13 +41,13 @@ Then start Claude Code and run:
 /interview
 ```
 
-The interview skill will guide you through establishing your product's purpose, vision, North Star metric, and strategic landscape.
+The interview skill guides you through establishing your product's purpose, vision, North Star metric, strategic landscape, and classifies your project type to determine which canvas files matter.
 
 ## How It Works
 
 ### Fractal Diamonds
 
-Mycelium guides development through **fractal diamonds** -- recursive Discover/Define/Develop/Deliver cycles that operate at every scale:
+Mycelium guides development through **fractal diamonds** -- recursive Discover/Define/Develop/Deliver cycles (based on the Double Diamond by the Design Council) that operate at every scale:
 
 ```
 L0: Purpose     "Why do we exist?"           (Sinek, Christensen)
@@ -62,24 +62,27 @@ Each diamond has four phases: **Discover** (diverge) -> **Define** (converge) ->
 
 Diamonds spawn child diamonds when complexity requires it. Parent diamonds continue while children execute. If delivery reveals a bad assumption, the diamond **regresses** back with new evidence. This creates smooth flow from idea to delivery without artificial phase breaks.
 
-### Theory Gates
+Diamond lifecycle: diamonds can be **active**, **blocked**, **archived**, or **killed**. Stale diamonds (30+ days without progress) are flagged for review.
+
+### Theory Gates (11 gates)
 
 Every diamond transition must pass **theory gates** -- not just a confidence score, but evidence checks grounded in specific frameworks:
 
-| Gate | What It Checks | Source |
-|------|---------------|--------|
-| Evidence | Research-backed? Multiple sources? | Torres, Gilad |
-| Four Risks | Value, usability, feasibility, viability assessed? | Cagan |
-| JTBD | Emotional and social dimensions mapped? | Christensen |
-| Cynefin | Domain classified? Method appropriate? | Snowden |
-| Bias Check | Research designed to mitigate cognitive biases? | Shotton, Kahneman |
-| Security | Threat model updated? Privacy assessed? | OWASP, GDPR |
-| BVSSH | Aligned with Better, Value, Sooner, Safer, Happier? | Smart |
-| Service Quality | Downe's 15 principles checked? | Downe |
-| DORA | Delivery metrics healthy? | Forsgren |
-| Corrections | Past mistakes reviewed? | Mycelium self-learning |
+| Gate | What It Checks | Source | Suggested Skill |
+|------|---------------|--------|----------------|
+| Evidence | Research-backed? Multiple sources? | Torres, Gilad | `/user-interview`, `/assumption-test` |
+| Four Risks | Value, usability, feasibility, viability assessed? | Cagan | `/assumption-test` |
+| JTBD | Emotional and social dimensions mapped? | Christensen | `/jtbd-map` |
+| Cynefin | Domain classified? Method appropriate? | Snowden | `/cynefin-classify` |
+| Bias Check | Research designed to mitigate cognitive biases? | Shotton, Kahneman | `/bias-check` |
+| Security | Threat model updated? | OWASP (STRIDE) | `/threat-model`, `/security-review` |
+| Privacy | Privacy assessed? Data minimized? | Cavoukian (PbD), GDPR | `/privacy-check` |
+| BVSSH | Aligned with Better, Value, Sooner, Safer, Happier? | Smart | `/bvssh-check` |
+| Service Quality | Downe's 15 principles checked? | Downe | `/service-check`, `/a11y-check` |
+| DORA | Delivery metrics healthy? | Forsgren | `/dora-check` |
+| Corrections | Past mistakes reviewed? | Mycelium self-learning | `/preflight`, `/reflexion` |
 
-If ANY gate fails, the agent reports which gates failed, cites the theory, and recommends the smallest action to satisfy each -- but does NOT proceed.
+If ANY gate fails, the agent reports which gates failed, cites the theory, **suggests the skill to run**, and recommends the smallest action to satisfy each -- but does NOT proceed.
 
 ### The Canvas (Source of Truth)
 
@@ -103,71 +106,120 @@ All product knowledge lives in `.claude/canvas/*.yml` -- 15 structured YAML file
 | `trust-signals.yml` | Trust architecture, transparency | Digital Trust |
 | `jobs-to-be-done.yml` | JTBD map (functional/emotional/social) | Christensen |
 
-Canvas files are committed to git. They ARE your product documentation. In team settings, canvas updates are PR-reviewed like code changes.
+Canvas files are committed to git. They ARE your product documentation. Not all canvas files are required for every project -- the `/interview` skill classifies your project type (solo hobby, solo product, team startup, team enterprise) and tells you which canvas files to focus on.
 
 ### Harnessing System (What Prevents the Agent from Going Haywire)
 
-**Guardrails** (`.claude/harness/guardrails.md`) -- Hard constraints that override confidence scores. Examples:
-- Never skip discovery for Complex-domain problems
-- Never commit code without running validation
-- Never ship without checking accessibility (WCAG 2.1 AA)
-- Never add data collection without Privacy by Design assessment
-- Always run bias checklist before conducting research
+**Guardrails** (`.claude/harness/guardrails.md`) -- 22 hard constraints, each marked as **ENFORCED** (mechanically blocked) or **ADVISORY** (agent discipline):
+- 12 ENFORCED: security, validation, accessibility, corrections review, canvas updates, decision logging
+- 10 ADVISORY: engineering principles (DRY, KISS), bias checks, BVSSH, devil's advocate
 
-**Anti-Patterns** (`.claude/harness/anti-patterns.md`) -- Known failure modes with detection rules:
-- "Solution-first thinking" -- proposing solutions before mapping opportunities
-- "Confidence inflation" -- self-assigning high confidence without evidence
-- "Security-later" -- deferring security to after delivery
-- "Dark pattern design" -- using behavioral science to manipulate users
+**Anti-Patterns** (`.claude/harness/anti-patterns.md`) -- 11 known failure modes across discovery, confidence, security, delivery, and market/GTM:
+- "Solution-first thinking", "Confidence inflation", "Security-later", "Dark pattern marketing", "Regression avoidance", and more
 
-**Cognitive Biases** (`.claude/harness/cognitive-biases.md`) -- Per-stage bias checklist based on Shotton and Kahneman. The agent reviews relevant biases before research, interviews, decisions, and design.
+**Cognitive Biases** (`.claude/harness/cognitive-biases.md`) -- Per-stage bias checklist based on Shotton and Kahneman. 20+ biases mapped across L0-L5 including agent's own biases.
 
 **Security & Trust** (`.claude/harness/security-trust.md`) -- Per-stage security requirements from OWASP, STRIDE, and Privacy by Design.
 
-**Engineering Principles** (`.claude/harness/engineering-principles.md`) -- Explicit rules for DRY, KISS, YAGNI, SoC, SOLID, and Law of Demeter.
+**Engineering Principles** (`.claude/harness/engineering-principles.md`) -- Explicit rules for DRY, KISS, YAGNI, SoC, SOLID, Law of Demeter, Clean Code.
+
+### 5-Layer Hook Enforcement
+
+Mycelium enforces guardrails through hooks that fire automatically at different points:
+
+| Layer | Event | What It Does | Cost |
+|-------|-------|-------------|------|
+| 1. PreToolUse gate | Before code edits | Preflight check + secret detection (blocks hardcoded API keys, tokens) | ~30 tokens |
+| 2. PostToolUse nudge | After code edits | Context-aware reminders (a11y for UI files, OWASP for API files) | ~50 tokens |
+| 3. PostToolUseFailure | After failures | Reflexion analysis: diagnose root cause before retrying | ~200 tokens |
+| 4. Stop check | Session end | Canvas gap detection, missing threat-model/services warnings | ~50 tokens |
+| 5. Skill-level gates | On demand | Full 11-gate theory evaluation via `/diamond-progress` | varies |
+
+Total overhead: ~5,500 tokens/session (negligible vs typical 50K-200K sessions).
 
 ### Self-Learning
 
-Borrowed from production-tested patterns:
-
-- **Corrections Memory** -- Accumulated learning from mistakes. Read before every task.
-- **Pattern Library** -- Successful patterns to reuse.
+- **Corrections Memory** -- Accumulated learning from mistakes. Read before every task. Pruned when > 30 entries.
+- **Pattern Library** -- Successful patterns to reuse across diamonds.
 - **Reflexion Loop** -- Implement, validate, self-critique, retry (max 3 iterations).
-- **Eval Benchmarks** -- Periodic self-assessment against scenarios.
-- **Prompt Optimization** -- A/B testing of instruction changes against baselines.
+- **Eval Benchmarks** -- 6 scenarios across discovery, delivery, and integration categories.
+- **Prompt Optimization** -- A/B testing of instruction changes against eval baselines.
 
-## Skills Reference
+### Plain-Language Communication
 
+Mycelium communicates in human language, not framework jargon:
+- "Discovering what problems to solve" not "L2 Opportunity Discover phase"
+- "Confidence: Moderate -- based on 2 user interviews" not "Confidence: 0.5"
+- After each phase, the agent offers to capture learnings
+
+### Operations & Maintenance
+
+- **Day-to-day**: Session resumption via `/diamond-assess`, corrections review via hooks
+- **Weekly**: Diamond state review, canvas updates
+- **Monthly**: BVSSH health check, Wardley map review, stale diamond cleanup
+- **Quarterly**: North Star review, strategic landscape refresh, eval benchmarks
+- **Escape hatch**: Documented bypass process for emergencies (production incidents, hotfixes) with mandatory payback
+
+## Skills Reference (33 skills)
+
+### Onboarding & Assessment
 | Skill | When to Use |
 |-------|------------|
-| `/interview` | Onboarding: establish purpose, vision, North Star |
-| `/diamond-assess` | Check current state, get recommended next action |
-| `/diamond-progress` | Move a diamond forward (runs all theory gates) |
-| `/cynefin-classify` | Classify a problem's domain |
-| `/ost-builder` | Build or update Opportunity Solution Tree |
-| `/ice-score` | Score and prioritize ideas with confidence meter |
+| `/interview` | Onboarding: purpose, vision, North Star, project classification |
+| `/diamond-assess` | Current state in plain language, recommended next action |
+| `/diamond-progress` | Move diamond forward with theory gates + skill suggestions |
+
+### Discovery
+| Skill | When to Use |
+|-------|------------|
+| `/user-interview` | Torres-style story-based interviews with bias mitigation |
+| `/user-needs-map` | Allen's methodology: map needs independently of solutions |
+| `/ost-builder` | Build/update Opportunity Solution Tree from research |
+| `/jtbd-map` | Jobs to be Done (functional, emotional, social) |
+| `/assumption-test` | Design smallest viable test for an assumption |
+| `/cynefin-classify` | Classify problem domain |
+| `/wardley-map` | Create/update Wardley Map of value chain |
+| `/ice-score` | Prioritize with ICE scoring + confidence meter |
+| `/gist-plan` | GIST planning: goals, ideas, steps, tasks |
+
+### Quality & Governance
+| Skill | When to Use |
+|-------|------------|
 | `/bias-check` | Review cognitive biases before research/decisions |
+| `/devils-advocate` | Challenge assumptions before major decisions |
+| `/bvssh-check` | Holistic BVSSH health evaluation |
+| `/service-check` | Downe's 15 Good Services principles |
 | `/threat-model` | STRIDE threat modeling |
 | `/privacy-check` | Privacy by Design / GDPR assessment |
-| `/reflexion` | Self-correcting implementation loop |
-| `/preflight` | Pre-code validation checklist |
-| `/delivery-bootstrap` | Auto-detect tech stack and set up tooling |
-| `/definition-of-done` | Verify increment satisfies all DoD criteria |
-| `/bvssh-check` | Holistic health evaluation |
-| `/service-check` | Evaluate against Downe's 15 principles |
-| `/dora-check` | Delivery performance metrics |
-| `/a11y-check` | Accessibility audit (WCAG 2.1 AA) |
 | `/security-review` | OWASP secure design review |
-| `/devils-advocate` | Systematically challenge assumptions |
+| `/a11y-check` | Accessibility audit (WCAG 2.1 AA) |
+
+### Delivery
+| Skill | When to Use |
+|-------|------------|
+| `/delivery-bootstrap` | Auto-detect tech stack, set up tooling |
+| `/preflight` | Pre-code validation checklist |
+| `/reflexion` | Self-correcting implementation loop |
+| `/definition-of-done` | Verify all DoD criteria |
+| `/dora-check` | DORA delivery performance metrics |
 | `/retrospective` | Post-delivery learning capture |
-| `/wardley-map` | Strategic landscape mapping |
-| `/jtbd-map` | Jobs to be Done mapping |
-| `/assumption-test` | Design smallest viable assumption test |
-| `/user-interview` | Torres-style story-based interview guide |
-| `/gist-plan` | GIST planning workflow |
-| `/launch-tier` | Classify releases + plan go-to-market |
+
+### Market & Organization
+| Skill | When to Use |
+|-------|------------|
+| `/launch-tier` | Classify releases, plan go-to-market |
 | `/team-shape` | Team Topologies assessment |
+
+### Canvas & Orchestration
+| Skill | When to Use |
+|-------|------------|
+| `/canvas-update` | Update canvas with new evidence |
+| `/canvas-sync` | Synchronize canvas across team via git |
 | `/fan-out` | Parallel agent orchestration for OST exploration |
+
+### Self-Improvement
+| Skill | When to Use |
+|-------|------------|
 | `/eval-runner` | Run benchmark scenarios |
 | `/prompt-optimizer` | A/B test instruction changes |
 
@@ -227,11 +279,11 @@ Workers get read-only canvas access and worktree isolation. Only the lead agent 
 
 ## JiT Tooling (Language-Agnostic)
 
-Mycelium works with **any** tech stack. When delivery begins:
+Mycelium works with **any** tech stack, including polyglot/multi-language projects. When delivery begins:
 
-1. Auto-detects language, framework, project shape, existing tooling
-2. Generates stack-appropriate validation commands
-3. Configures security scanning for the detected stack
+1. Auto-detects languages, frameworks, project shape (single app, monorepo, multi-service), existing tooling
+2. Generates stack-appropriate validation commands, linting, testing
+3. Configures security scanning for detected stack(s)
 4. Agent asks user to confirm before proceeding
 
 Universal principles (DRY, KISS, testing pyramid, OWASP) apply to all stacks. Specific tooling (test runners, linters, formatters) is discovered per project.
@@ -240,21 +292,21 @@ Universal principles (DRY, KISS, testing pyramid, OWASP) apply to all stacks. Sp
 
 ```
 your-project/
-  CLAUDE.md                    # Root Mycelium agent instructions
+  CLAUDE.md                    # Root Mycelium agent instructions (v0.3.1)
   .claude/
-    engine/                    # Diamond engine rules + theory gates
+    settings.json              # Shared hook config + permissions (committed)
+    engine/                    # Diamond rules, theory gates, confidence thresholds, Cynefin routing
     canvas/                    # 15 YAML source-of-truth files
     diamonds/                  # Active diamond state tracking
-    harness/                   # Guardrails, anti-patterns, biases, security, principles
-    memory/                    # Corrections, patterns, journals
+    harness/                   # Guardrails, anti-patterns, biases, security, engineering principles
+    memory/                    # Corrections, patterns, product journal, delivery journal
     domains/                   # Phase-specific agent behavior (discovery/delivery/quality)
-    skills/                    # 32 invocable skills
-    hooks/                     # PreToolUse gate, PostToolUseFailure reflexion
-    orchestration/             # Solo/team modes, agent teams, fan-out
-    jit-tooling/               # Language-agnostic delivery tooling
-    evals/                     # Benchmark scenarios + results
-    optimization/              # Prompt A/B testing
-    settings.local.json        # Claude Code permissions + hooks
+    skills/                    # 33 invocable skills
+    hooks/                     # 5-layer enforcement (gate, nudge, reflexion, stop-check)
+    orchestration/             # Solo/team modes, agent teams, fan-out, operations, escape hatch
+    jit-tooling/               # Language-agnostic delivery tooling + polyglot detection
+    evals/                     # 6 benchmark scenarios + results
+    optimization/              # Prompt A/B testing baselines + variants
 ```
 
 ## Contributing
@@ -265,7 +317,7 @@ Contributions are welcome. Mycelium is built on open product development theory 
 - New skills for frameworks not yet integrated
 - JiT tooling improvements for specific tech stacks
 - Eval scenarios that test agent harnessing quality
-- Translations of canvas templates
+- Hook enforcement patterns for new Claude Code events
 - Integration patterns with other AI coding tools
 
 ## License

@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.3.0 -- Canvas-guided, theory-gated, self-learning.*
+*Version 0.3.1 -- Canvas-guided, theory-gated, self-learning.*
 
 Mycelium is a harnessing system for AI-assisted product development. Like nature's mycelium network, it connects theories, shares learning, adapts to conditions, and makes the whole ecosystem stronger.
 
@@ -179,6 +179,11 @@ See `.claude/jit-tooling/detector.md` for detection rules.
 - Use Agent Teams or worktrees for parallel delivery work
 
 See `.claude/orchestration/modes.md` for complete patterns.
+
+## Operations & Maintenance
+
+- **Day-to-day**: `.claude/orchestration/operations.md` -- Session resumption, canvas maintenance, diamond lifecycle, memory pruning, weekly/monthly/quarterly routines
+- **Escape hatch**: `.claude/orchestration/escape-hatch.md` -- When and how to legitimately bypass the full process (production incidents, hotfixes, trivial changes). Must be documented and paid back.
 
 ## Agent Orchestration
 

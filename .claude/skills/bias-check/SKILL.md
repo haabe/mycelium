@@ -43,6 +43,9 @@ Pre-research and pre-decision bias review.
    ### Proceed? [Yes / Yes with caution / Pause and address]
    ```
 
+## Canvas Output
+Record bias check in `canvas/opportunities.yml` under `bias_checks` section with date, biases mitigated, and research design adjustments made.
+
 ## Theory Citations
 - Kahneman: Thinking, Fast and Slow (System 1/System 2)
 - Shotton: The Choice Factory (behavioral biases in decision-making)

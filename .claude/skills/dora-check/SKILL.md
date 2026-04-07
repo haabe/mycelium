@@ -58,6 +58,9 @@ Assess the four key DORA metrics.
    3. [specific action]
    ```
 
+## Canvas Output
+**Always update** `canvas/dora-metrics.yml` with assessed metrics, classifications, and capability scores.
+
 ## Theory Citations
 - Forsgren, Humble, Kim: Accelerate (DORA metrics)
 - Smart: Sooner Safer Happier (flow optimization)

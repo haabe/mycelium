@@ -2,7 +2,7 @@
 
 ## 5-Layer Enforcement Architecture
 
-Hooks are registered in `.claude/settings.local.json` under the `"hooks"` key. Mycelium uses a layered approach where faster/cheaper hooks run first, and expensive semantic checks are reserved for skill-level invocation.
+Hooks are registered in `.claude/settings.json` (shared, committed to git). Personal overrides go in `.claude/settings.local.json` (gitignored). Mycelium uses a layered approach where faster/cheaper hooks run first, and expensive semantic checks are reserved for skill-level invocation.
 
 ```
 Layer 1: PreToolUse gate     (command, ~30 tokens)  — Blocks bad writes before they happen

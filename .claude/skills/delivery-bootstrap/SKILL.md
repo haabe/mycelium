@@ -69,6 +69,10 @@ Just-in-Time tech stack detection and setup.
 - Be language-agnostic in principles, language-specific in implementation.
 - If tooling is broken, flag it rather than silently working around it.
 
+## Canvas Output
+Create/update `.claude/jit-tooling/active-stack.yml` with detected stack configuration.
+See `.claude/jit-tooling/active-stack.example.yml` for the expected format.
+
 ## Theory Citations
 - Forsgren: Accelerate (tooling and automation)
 - Smart: Sooner Safer Happier (remove friction)

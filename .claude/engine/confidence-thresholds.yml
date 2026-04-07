@@ -157,3 +157,33 @@ scoring:
     L3: 2
     L4: 2
     L5: 1
+
+# ============================================================
+# Confidence Explanation Templates (for human-readable reporting)
+# When reporting confidence, ALWAYS use these templates.
+# ============================================================
+confidence_explanations:
+  0.1:
+    label: "Speculation"
+    template: "Just an idea -- no evidence yet. Based on intuition or a single anecdote."
+    what_increases_it: "Any structured research: interviews, data analysis, competitive review."
+  0.3:
+    label: "Anecdotal"
+    template: "Some signals support this, but not validated. Based on a few data points or informal feedback."
+    what_increases_it: "Structured interviews (3+), quantitative data, or formal competitive analysis."
+  0.5:
+    label: "Data-supported"
+    template: "Data supports this direction. Multiple evidence sources agree, though not yet tested directly."
+    what_increases_it: "Direct testing: prototype tests, A/B experiments, concierge validation."
+  0.7:
+    label: "Test-validated"
+    template: "Tested and confirmed. User tests, experiments, or prototypes show positive results."
+    what_increases_it: "Scale testing: broader user base, production metrics, sustained usage patterns."
+  0.9:
+    label: "Launch-validated"
+    template: "Proven in production. Real users, real metrics, sustained over time."
+    what_increases_it: "This is the highest practical level. Maintain through continuous measurement."
+
+# When adapting thresholds for context (e.g., solo hobby project),
+# always document the adaptation in decision-log.md:
+# "Threshold adapted from 0.9 to 0.6 because [reason]. Would increase with [action]."
