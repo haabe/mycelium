@@ -1,0 +1,27 @@
+name: Validate Template Integrity
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.claude/**'
+      - '*.md'
+      - 'tests/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - '.claude/**'
+      - '*.md'
+      - 'tests/**'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install PyYAML
+        run: pip install pyyaml
+
+      - name: Run template validation
+        run: bash tests/validate-template.sh

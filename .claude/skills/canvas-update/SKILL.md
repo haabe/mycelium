@@ -29,6 +29,7 @@ description: "Update canvas sections with new evidence. Ensures canvas stays cur
 | Privacy assessment | privacy-assessment.yml | GDPR/PbD |
 | Trust architecture | trust-signals.yml | Digital Trust |
 | Jobs to be done | jobs-to-be-done.yml | Christensen |
+| Bounded contexts | bounded-contexts.yml | Evans (DDD) |
 | Value stream map | value-stream.yml | Rother & Shook (VSM) |
 
 ## Workflow

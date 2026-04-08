@@ -118,7 +118,7 @@ Canvas files are committed to git. They ARE your product documentation. Not all 
 - **GATED** (13): `/diamond-progress` refuses to complete delivery until satisfied. Tests, a11y, usability (Nielsen), services quality (Downe), threat modeling, input validation, BVSSH, decision logging, error states, canvas updates, AI disclosure, regulatory awareness, privacy.
 - **ADVISORY** (15): Nudged by hooks, not blocking. Engineering principles (DRY, KISS, YAGNI, XP values), bias checks, data minimization, secure defaults, theory citations, devil's advocate, BVSSH dimensions, sustainable pace.
 
-**Anti-Patterns** (`.claude/harness/anti-patterns.md`) -- 16 known failure modes across discovery, confidence, security, delivery, market/GTM, and strategic systems thinking:
+**Anti-Patterns** (`.claude/harness/anti-patterns.md`) -- 32 known failure modes across discovery, confidence, security, delivery, market/GTM, and strategic systems thinking:
 - "Solution-first thinking", "Confidence inflation", "Security-later", "Dark pattern marketing", "Regression avoidance", and more
 
 **Cognitive Biases** (`.claude/harness/cognitive-biases.md`) -- Per-stage bias checklist based on Shotton and Kahneman. 20+ biases mapped across L0-L5 including agent's own biases.
@@ -364,6 +364,16 @@ Mycelium includes a **Regulatory Gate** in its theory gates that prompts you to 
 ## Contributing
 
 Contributions are welcome. Mycelium is built on open product development theory -- if you see a gap in the frameworks, a missing bias, an incomplete guardrail, or a better way to harness agent behavior, please open an issue or PR.
+
+### Validating Changes
+
+Before submitting a PR, run the structural integrity validation:
+
+```bash
+bash tests/validate-template.sh
+```
+
+This checks that all cross-references, counts, versions, and file structures are consistent. It also runs in CI on every push and PR.
 
 ### Areas for Contribution
 - New skills for frameworks not yet integrated
