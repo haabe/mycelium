@@ -152,6 +152,23 @@ Build observable systems from the start:
 - **Error tracking**: Capture stack traces, context, affected users. Deduplicate. Alert on new error types.
 - **Distributed tracing**: Trace requests across service boundaries. Identify bottlenecks.
 
+## The Shifting Bottleneck (APEX / LinearB)
+
+**"Faster coding doesn't mean faster delivery."**
+
+AI agents accelerate code generation, but the bottleneck often shifts to review, testing, and integration. Watch for:
+
+- **Review queue growth**: If PRs wait longer as coding gets faster, the bottleneck has moved
+- **AI rework rate**: If AI-generated code is rewritten within 21 days at >30%, AI quality is insufficient
+- **Acceptance rate gap**: Industry benchmark shows AI PR acceptance at 32.7% vs human at 84.4% (LinearB 2026)
+- **Review wait ratio**: AI PRs wait 4.6x longer before first review (LinearB 2026)
+
+When you detect this pattern: reduce PR size, add automated review gates, improve AI context (better corrections.md, sharper canvas), or increase review capacity.
+
+Track APEX metrics in `canvas/dora-metrics.yml` under the `apex` section.
+
+*Source: LinearB APEX Framework (AI Leverage, Predictability, Efficiency, Developer Experience)*
+
 ## JiT (Just-in-Time) Tooling
 
 Auto-detect the technology stack and apply appropriate tooling:

@@ -1,6 +1,6 @@
 # Mycelium
 
-**Theory-guided agentic product development for Claude Code.** *v0.5.0*
+**Theory-guided agentic product development for Claude Code.** *v0.5.1*
 
 Like nature's mycelium network -- the invisible intelligence that connects trees, shares nutrients, adapts to conditions, and makes the whole forest ecosystem stronger -- Mycelium connects product development theories, shares learning across sessions, adapts to any tech stack, and makes your product development practice stronger.
 
@@ -268,6 +268,7 @@ Mycelium communicates in human language, not framework jargon:
 | Double/Triple-Loop Learning | Argyris | Self-learning: single-loop (fix), double-loop (question), triple-loop (transform) |
 | Leverage Points | Meadows | Systems thinking: where to intervene for maximum effect |
 | Goodhart's Law | Goodhart | Measurement discipline: counter-metrics prevent gaming |
+| APEX Framework | LinearB | AI-era delivery: AI leverage, predictability, efficiency, developer experience |
 
 ## Usage Modes
 
@@ -314,7 +315,7 @@ Universal principles (DRY, KISS, testing pyramid, OWASP) apply to all stacks. Sp
 
 ```
 your-project/
-  CLAUDE.md                    # Root Mycelium agent instructions (v0.5.0)
+  CLAUDE.md                    # Root Mycelium agent instructions (v0.5.1)
   .claude/
     settings.json              # Shared hook config + permissions (committed)
     engine/                    # Diamond rules, theory gates, confidence thresholds, Cynefin routing

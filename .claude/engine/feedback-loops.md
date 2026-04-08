@@ -82,6 +82,9 @@ When feedback signals indicate the current direction is wrong, the system should
 | Confidence hasn't increased in 3+ GIST steps | "Evidence isn't building. The opportunity framing may be wrong." | Run /devils-advocate, consider L3->L2 regression |
 | NPS/CSAT dropping post-launch | "Users aren't happy with what was delivered." | Capture feedback, spawn new L2 opportunity diamond |
 | Same correction logged 3+ times | "This keeps happening. The prevention rule isn't working." | Graduate correction to guardrail or anti-pattern |
+| AI rework rate > 30% | "AI-generated code is being rewritten too frequently." | Review AI prompt quality, consider more specific instructions |
+| Review wait time increasing while coding speed increases | "THE SHIFTING BOTTLENECK (APEX): AI is generating code faster but the review pipeline can't keep up." | Add reviewers, automate review gates, reduce PR size |
+| AI PR acceptance rate declining | "AI suggestions are becoming less useful. Context may be stale." | Refresh corrections.md, update canvas context, re-run /delivery-bootstrap |
 | BVSSH Safer declining while Sooner improving | "Trading safety for speed. This is the BVSSH anti-pattern Smart warns about." | Run /bvssh-check, pause delivery to address safety |
 
 ## The L5 -> L2 Feedback Loop
@@ -117,6 +120,8 @@ Every metric in Mycelium must have a **counter-metric** to prevent gaming:
 | Test coverage | Write meaningless tests | Mutation testing score or defect leakage |
 | Diamond velocity | Rush through gates | Regression rate (how often do diamonds regress?) |
 | Correction count | Log trivial corrections | Correction IMPACT (did prevention rules prevent recurrence?) |
+| AI coding speed | Generate code without review capacity | Review wait time + AI rework rate (APEX shifting bottleneck) |
+| AI PR volume | Flood the review pipeline | AI PR acceptance rate + merge time vs human (APEX) |
 
 **Rule**: Never optimize a single metric in isolation. Always check its counter-metric. If both move in the right direction, the improvement is real.
 

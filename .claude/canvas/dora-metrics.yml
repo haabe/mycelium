@@ -79,4 +79,43 @@ goodhart_check:
   counter_metric_divergence_detected: false
   notes: ""
 
+# ============================================================
+# APEX Metrics (LinearB) — AI-Era Delivery Measurement
+# Source: LinearB APEX Framework (2026)
+# "Faster coding doesn't mean faster delivery."
+# ============================================================
+
+apex:
+  ai_leverage:
+    description: "How effectively is AI being used in the development process?"
+    ai_pr_percentage: null        # % of PRs that are AI-generated or AI-assisted
+    ai_acceptance_rate: null      # % of AI suggestions accepted (benchmark: 32.7%)
+    ai_vs_human_merge_time: null  # Ratio of AI PR merge time to human PR merge time
+    ai_rework_rate: null          # % of AI code rewritten within 21 days
+    # Benchmark: AI acceptance rate is 32.7% vs 84.4% for human code (LinearB 2026)
+
+  predictability:
+    description: "Does AI-accelerated development maintain reliable delivery?"
+    planning_accuracy: null       # % of planned stories completed per sprint
+    rework_rate: null             # % of code rewritten within 21 days (all code)
+    # Warning: If planning accuracy drops as AI usage increases, AI is adding
+    # unpredictability to the delivery pipeline.
+
+  efficiency:
+    description: "Is the team actually faster end-to-end, or has the bottleneck shifted?"
+    cycle_time: null              # End-to-end time from work start to production
+    review_wait_time: null        # Time PRs wait before first review
+    ai_review_wait_ratio: null    # AI PR review wait vs human PR review wait (benchmark: 4.6x)
+    # THE SHIFTING BOTTLENECK: If AI generates code faster but review queues grow,
+    # the bottleneck has moved from coding to review. Measure the whole pipeline.
+
+  developer_experience:
+    description: "Are developers thriving or burning out from AI-driven changes?"
+    satisfaction_score: null       # Developer satisfaction (survey-based)
+    cognitive_load: null           # Perceived cognitive load (survey-based)
+    burnout_indicators: null       # Burnout signals (survey or behavioral)
+    # Maps to BVSSH "Happier" dimension (Smart)
+
+  last_assessed: null
+
 last_measured: null

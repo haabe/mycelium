@@ -1,6 +1,8 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.5.0 -- Canvas-guided, theory-gated, self-learning, feedback-driven.*
+*Version 0.5.1 -- Canvas-guided, theory-gated, self-learning, feedback-driven.*
+
+<!-- APEX-aware: DORA + LinearB APEX metrics for AI-era delivery measurement -->
 
 Mycelium is a harnessing system for AI-assisted product development. Like nature's mycelium network, it connects theories, shares learning, adapts to conditions, and makes the whole ecosystem stronger.
 
@@ -89,7 +91,7 @@ Every diamond transition must pass ALL applicable gates. See `.claude/engine/the
 | Privacy | Has privacy been assessed? Data minimized? | Cavoukian (PbD), GDPR |
 | BVSSH | Better, Value, Sooner, Safer, Happier? (required at delivery completion) | Smart |
 | Service Quality | Do Downe's 15 principles pass? | Downe (Good Services) |
-| DORA | Are delivery metrics healthy? | Forsgren (Accelerate) |
+| DORA | Are delivery metrics healthy? Is the bottleneck shifting? | Forsgren (Accelerate), LinearB (APEX) |
 | Corrections | Have past mistakes been reviewed? | Mycelium self-learning |
 | Regulatory | Has EU AI Act risk classification been assessed? | EU AI Act (2024/1689) |
 
