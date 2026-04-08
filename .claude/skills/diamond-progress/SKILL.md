@@ -88,6 +88,8 @@ When transitioning from Deliver to Complete, run this checklist. Items marked `G
 - If all 15 are "not-assessed": **GATE FAILED** -- "Run /service-check before completing."
 - Check: Has accessibility been considered? (any evidence of a11y work)
 - If no evidence: **GATE FAILED** -- "Run /a11y-check for user-facing work."
+- Check: Has usability been evaluated? (Nielsen's 10 heuristics via /usability-check)
+- If no evidence: **GATE FAILED** -- "Run /usability-check for user-facing interfaces." (G-V10)
 
 **For api_service or permission_requiring work (G-S2 GATED)**:
 - Check: Does threat-model.yml have components listed?

@@ -177,3 +177,25 @@ Reference guide for all engineering decisions. Apply consistently, violate consc
 - Try-catch blocks that catch and ignore.
 
 **Exceptions**: Performance-critical code may sacrifice readability. Document the trade-off and keep a readable version available for understanding.
+
+---
+
+## XP Values (Beck)
+
+Extreme Programming's five values reinforce the principles above:
+
+- **Communication**: Make thinking visible. Canvas, decision log, corrections -- all forms of communication.
+- **Simplicity**: Do the simplest thing that works (= KISS). Build only what's needed now (= YAGNI).
+- **Feedback**: Tight feedback loops at every level. Tests, validation, reflexion, DORA metrics.
+- **Courage**: Refactor fearlessly when design is wrong. Regress diamonds when evidence says so. Delete code that's not earning its keep.
+- **Respect**: Sustainable pace. No chronic overtime. BVSSH "Happier" dimension.
+
+### TDD: Test-First as Target Practice
+
+Test-first (write the test, then the code) is the target practice. Test-alongside satisfies G-V7 but misses TDD's design benefits. In the AI era, agents generate code with unknown quality -- the test suite is the safety net.
+
+### Refactoring as Continuous Practice
+
+After each delivery increment, look for: duplicated logic (DRY), unnecessary complexity (KISS), poor naming (Clean Code), tight coupling (LoD). Refactoring is engineering discipline, not optional polish.
+
+*Source: Beck (XP, TDD), Fowler (Refactoring)*

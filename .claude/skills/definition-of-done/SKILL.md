@@ -44,6 +44,7 @@ DoD checklist enforcement.
 - [ ] Color contrast meets WCAG 2.1 AA (4.5:1 normal, 3:1 large)
 - [ ] Screen reader announces content correctly
 - [ ] Focus management correct for dynamic content
+- [ ] Usability heuristics evaluated (Nielsen's 10 via /usability-check)
 
 ### Documentation
 - [ ] API documentation updated (if API changed)

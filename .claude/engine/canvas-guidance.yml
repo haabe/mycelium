@@ -70,6 +70,7 @@ project_types:
       - dora-metrics.yml
       - bvssh-health.yml
       - trust-signals.yml
+      - bounded-contexts.yml  # DDD: important once team has multiple services/domains
     optional: []
 
   team_enterprise:
@@ -90,6 +91,7 @@ project_types:
       - dora-metrics.yml        # Delivery performance tracked
       - bvssh-health.yml        # Holistic health monitoring
       - trust-signals.yml       # Trust architecture for enterprise
+      - bounded-contexts.yml   # DDD: required for multi-team architecture
     recommended: []
     optional: []
 
@@ -111,6 +113,7 @@ delivery_types:
       - "*.dart (with Flutter widgets)"                # Flutter UI
     always_required_regardless_of_project_type:
       - services.yml         # Downe's 15 principles (G-V2 GATED)
+      - "usability check"    # Nielsen's 10 heuristics (G-V10 GATED)
       - "a11y assessment"    # WCAG 2.1 AA (G-V8 GATED)
       - "error state design" # Downe P10 (G-V9 GATED)
     always_required_at_delivery_completion:

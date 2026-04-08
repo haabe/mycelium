@@ -39,4 +39,14 @@ Between each pair of collaborating teams:
 - Collaboration lasting > 1 quarter -> should evolve to X-as-a-Service
 - Stream-aligned team with > 2 cross-team dependencies -> architecture needs decoupling
 
-Update canvas/team-shape.yml with assessment results.
+### 5. Bounded Context Alignment (DDD)
+If the product has multiple domains or services:
+- Are bounded contexts identified? (Check canvas/bounded-contexts.yml)
+- Does each stream-aligned team own a coherent bounded context?
+- If a context is split across teams: handoff friction. Fix team boundaries.
+- If a team owns unrelated contexts: cognitive overload. Split the team or contexts.
+- Context map relationships should match team interaction modes:
+  Partnership = Collaboration, Customer-Supplier = X-as-a-Service, ACL = translation layer
+*Source: Evans (DDD), "Architecture for Flow" (DDD + Wardley + Team Topologies)*
+
+Update canvas/team-shape.yml and canvas/bounded-contexts.yml with assessment results.

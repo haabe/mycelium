@@ -56,7 +56,14 @@ Also update:
 - `canvas/user-needs.yml` if new needs were identified
 - `canvas/jobs-to-be-done.yml` if JTBD dimensions surfaced during mapping
 
+## Lean UX Connection
+
+When generating solution ideas for leaf opportunities, frame each as a Lean UX hypothesis:
+"We believe [outcome] for [users] if [change]." This makes the solution testable via `/assumption-test`.
+Flow: Opportunity (research) -> Solution hypothesis (Lean UX) -> Assumption test (smallest viable test).
+
 ## Theory Citations
 - Torres: Continuous Discovery Habits (OST methodology)
 - Christensen: Competing Against Luck (JTBD informing opportunities)
 - Gilad: Evidence Guided (ICE scoring for solutions)
+- Gothelf: Lean UX (hypothesis-driven solution framing)

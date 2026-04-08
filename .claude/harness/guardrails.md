@@ -118,6 +118,10 @@ Accessibility is a design constraint, not a polish step. Semantic HTML, ARIA lab
 Every user flow must have designed error, empty, and loading states. Error messages must be helpful (what happened, what the user can do). Never show raw technical errors to users.
 *Source: Downe (Good Services Principles 10, 14)*
 
+**G-V10: Always check usability heuristics for user-facing interfaces** `GATED`
+Before marking user-facing delivery complete, evaluate against Nielsen's 10 usability heuristics. Interface-level quality (Nielsen) complements service-level quality (Downe G-V2). Run `/usability-check`.
+*Source: Nielsen (10 Usability Heuristics, 1994)*
+
 ## Process Guardrails
 
 **G-P1: Never progress a diamond without updating the canvas** `GATED`

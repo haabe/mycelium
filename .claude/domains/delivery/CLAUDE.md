@@ -50,12 +50,16 @@ Target distribution:
 
 ### TDD Practice
 
-Write tests alongside code, not after:
+**Test-FIRST is the target practice.** Test-alongside satisfies the G-V7 guardrail minimum but misses the design benefits of TDD.
+
+Why test-first matters MORE with AI agents: AI generates code with unknown quality patterns. The test suite is the safety net that catches what review might miss. In the AI era, less testing = more risk.
 
 1. Write a failing test that describes the desired behavior.
 2. Write the minimum code to make it pass.
 3. Refactor while keeping tests green.
 4. Repeat.
+
+*Source: Beck (TDD, XP)*
 
 ## Security (OWASP)
 
@@ -81,6 +85,28 @@ Non-negotiable baseline:
 - **Screen reader support**: Meaningful alt text. Aria-labels. Live regions for dynamic content.
 - **Motion**: Respect prefers-reduced-motion. No auto-playing animations.
 - **Forms**: Associated labels. Error messages linked to fields. Clear instructions.
+
+## Domain-Driven Design (DDD) for Architecture
+
+When decomposing a solution into modules or services (L3->L4 transition):
+
+- **Identify bounded contexts**: Each context has its own domain model and ubiquitous language. Map them in `canvas/bounded-contexts.yml`.
+- **Ubiquitous language**: Use the same terms in code that domain experts use. The canvas IS the shared vocabulary.
+- **Context mapping**: Define relationships between contexts (partnership, customer-supplier, ACL). These determine integration patterns.
+- **Team alignment**: Stream-aligned teams (Team Topologies) should align with bounded contexts. If they don't, Conway's Law works against you.
+- **For solo developers**: Think in terms of modules/namespaces rather than services. The DDD principle still applies -- clean boundaries reduce cognitive load.
+
+*Source: Evans (Domain-Driven Design), "Architecture for Flow" (DDD + Wardley + Team Topologies)*
+
+## AI as Pair Partner
+
+The AI agent IS your pair partner. Leverage this:
+- **Real-time review**: The agent sees every line of code as it's written. Ask it to challenge your approach.
+- **Knowledge transfer**: The agent has read corrections.md, patterns.md, and the full canvas. It knows the project context.
+- **Bias check**: The agent can catch confirmation bias, anchoring, and sunk cost fallacy in real-time if prompted.
+- **Test generation**: Pair with the agent on TDD -- describe the behavior, let it write the test, then implement.
+
+*Source: Beck (XP Pair Programming, adapted for AI-assisted development)*
 
 ## Agile/DevOps Practices
 
@@ -151,6 +177,26 @@ Build observable systems from the start:
 - **Metrics**: Track request rate, error rate, duration (RED). Track utilization, saturation, errors (USE). Business metrics too.
 - **Error tracking**: Capture stack traces, context, affected users. Deduplicate. Alert on new error types.
 - **Distributed tracing**: Trace requests across service boundaries. Identify bottlenecks.
+
+## SRE: Error Budgets and SLIs/SLOs
+
+For products with reliability requirements:
+
+- **Define SLIs** (Service Level Indicators): measurable aspects of service health (availability, latency, error rate, throughput)
+- **Set SLOs** (Service Level Objectives): target thresholds for each SLI (e.g., 99.9% availability)
+- **Track Error Budgets**: The allowed amount of unreliability (1 - SLO). When budget is depleted, feature work pauses and reliability work takes priority.
+
+Error budgets are the social contract: reliability earns the right to ship features faster. Track in `canvas/dora-metrics.yml` under the `sre` section. This connects to BVSSH Safer dimension.
+
+*Source: Beyer, Jones, Petoff, Murphy (Site Reliability Engineering, Google)*
+
+## Usability for User-Facing Work
+
+For any user-facing delivery, two quality layers apply:
+- **Service quality** (Downe's 15 principles): end-to-end service design. Run `/service-check`.
+- **Interface quality** (Nielsen's 10 heuristics): screen-level usability. Run `/usability-check`.
+
+Both are GATED -- delivery cannot be marked complete without them for user-facing work.
 
 ## The Shifting Bottleneck (APEX / LinearB)
 

@@ -25,6 +25,7 @@ safer:
   metrics: []
   current_state: ""
   trend: ""
+  error_budget_status: null  # healthy|warning|depleted (from dora-metrics.yml SRE section)
 
 happier:
   description: "Team wellbeing, customer satisfaction, societal impact"

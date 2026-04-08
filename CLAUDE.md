@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.5.1 -- Canvas-guided, theory-gated, self-learning, feedback-driven.*
+*Version 0.6.0 -- Canvas-guided, theory-gated, self-learning, feedback-driven.*
 
 <!-- APEX-aware: DORA + LinearB APEX metrics for AI-era delivery measurement -->
 
@@ -90,8 +90,8 @@ Every diamond transition must pass ALL applicable gates. See `.claude/engine/the
 | Security | Has threat modeling been done? | OWASP (STRIDE) |
 | Privacy | Has privacy been assessed? Data minimized? | Cavoukian (PbD), GDPR |
 | BVSSH | Better, Value, Sooner, Safer, Happier? (required at delivery completion) | Smart |
-| Service Quality | Do Downe's 15 principles pass? | Downe (Good Services) |
-| DORA | Are delivery metrics healthy? Is the bottleneck shifting? | Forsgren (Accelerate), LinearB (APEX) |
+| Service Quality | Do Downe's 15 principles pass? Nielsen's 10 heuristics? | Downe (Good Services), Nielsen |
+| DORA | Are delivery metrics healthy? Error budget status? Bottleneck shifting? | Forsgren (Accelerate), LinearB (APEX), SRE (Beyer) |
 | Corrections | Have past mistakes been reviewed? | Mycelium self-learning |
 | Regulatory | Has EU AI Act risk classification been assessed? | EU AI Act (2024/1689) |
 
@@ -213,7 +213,7 @@ See `.claude/orchestration/agent-teams.md` for patterns.
 
 ## Skills Reference
 
-Invoke skills with `/skill-name`. All 32 skills:
+Invoke skills with `/skill-name`. All 35 skills:
 
 ### Onboarding & Assessment
 | Skill | When to Use |
@@ -226,6 +226,7 @@ Invoke skills with `/skill-name`. All 32 skills:
 | Skill | When to Use |
 |-------|------------|
 | `/user-interview` | Torres-style story-based interviews with bias mitigation |
+| `/user-needs-map` | Map user needs independently of solutions (Allen methodology) |
 | `/ost-builder` | Build or update Opportunity Solution Tree from research |
 | `/jtbd-map` | Map Jobs to be Done (functional, emotional, social) |
 | `/assumption-test` | Design smallest viable test to validate an assumption |
@@ -244,6 +245,7 @@ Invoke skills with `/skill-name`. All 32 skills:
 | `/threat-model` | STRIDE threat modeling for a component/solution |
 | `/privacy-check` | Privacy by Design / GDPR assessment |
 | `/security-review` | OWASP secure design review for code and architecture |
+| `/usability-check` | Evaluate against Nielsen's 10 usability heuristics (interface-level) |
 | `/a11y-check` | Accessibility audit (WCAG 2.1 AA) |
 
 ### Delivery Skills

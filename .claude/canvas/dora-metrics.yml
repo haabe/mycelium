@@ -118,4 +118,32 @@ apex:
 
   last_assessed: null
 
+# ============================================================
+# SRE Metrics — Error Budgets, SLIs, SLOs
+# Source: Beyer et al. (Site Reliability Engineering, Google)
+# "Error budgets are the social contract: reliability earns
+#  the right to ship features faster."
+# ============================================================
+
+sre:
+  services: []
+  # - name: ""
+  #   slis: []
+  #     # - name: "availability"
+  #     #   definition: "% of requests returning non-5xx in 5-minute window"
+  #     #   current_value: null
+  #   slos: []
+  #     # - sli: "availability"
+  #     #   target: "99.9%"
+  #   error_budget:
+  #     total: null               # 1 - SLO (e.g., 0.1% for 99.9% SLO)
+  #     consumed: null
+  #     remaining_percent: null
+  #     status: null              # healthy (>50%) | warning (<25%) | depleted (0%)
+  error_budget_policy:
+    when_healthy: "Ship features. Error budget available for innovation risk."
+    when_warning: "Slow down. Increase testing. Review recent changes."
+    when_depleted: "Feature freeze. All effort on reliability until budget recovers."
+  last_assessed: null
+
 last_measured: null

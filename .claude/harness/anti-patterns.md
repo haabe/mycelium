@@ -175,3 +175,9 @@ Known failure modes organized by category. Check regularly, especially when thin
 - **Detection rule**: No buyer personas validated with real buyers. No win/loss analysis. Go-to-market strategy based entirely on internal opinions.
 - **What to do instead**: Validate positioning with actual target customers. Conduct win/loss analysis. Test messaging before scaling.
 - **Source**: Lauchengco (Loved), Kahneman (false consensus effect)
+
+### 12. Test-Last Development
+- **Description**: Writing all code first, then adding tests as an afterthought -- or not at all. Both Mycelium pilot projects exhibited this pattern.
+- **Detection rule**: Test files created in a separate commit after source files. Or: source files exist with no corresponding test files at delivery completion.
+- **What to do instead**: Write tests first (TDD) or at minimum alongside implementation. The G-V7 guardrail requires tests to exist before delivery completion (GATED).
+- **Source**: Beck (XP/TDD), Forsgren (Accelerate -- test automation is a key capability), both Mycelium pilot post-mortems

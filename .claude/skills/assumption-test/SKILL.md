@@ -46,7 +46,9 @@ Plot each assumption on:
 ## Step 4: Define Success Criteria
 
 Before running the test, write:
-- **Hypothesis**: "We believe [assumption] because [rationale]"
+- **Hypothesis** (Lean UX format, preferred for desirability/usability):
+  "We believe [outcome] will be achieved for [users] if they successfully [change/action]."
+  For feasibility/viability: "We believe [assumption] because [rationale]."
 - **Method**: Which test type and how
 - **Success looks like**: Specific, measurable outcome (e.g., ">60% of survey respondents say X")
 - **Failure looks like**: What would make us abandon this assumption

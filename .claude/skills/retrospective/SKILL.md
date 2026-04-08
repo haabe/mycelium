@@ -32,6 +32,24 @@ Run after every completed delivery diamond or significant milestone. Source: For
 - **Safer**: Did we maintain security and trust?
 - **Happier**: How is team satisfaction?
 
+## Blameless Post-Mortem Format (SRE)
+
+For incidents or significant failures, use the SRE blameless post-mortem:
+1. **Timeline**: What happened, when, in what order
+2. **Impact**: Who was affected, how severely, for how long
+3. **Contributing factors**: What conditions led to this (NOT "who caused it")
+4. **Root cause**: The systemic issue, not the human action
+5. **Action items**: Specific, assigned, time-bound improvements
+6. **What went well**: What prevented it from being worse
+
+Rule: No blame. Focus on the system, not the person. *Source: Beyer et al. (SRE)*
+
+## Refactoring Prompt
+
+After delivery retrospective, always ask:
+- "Are there refactoring opportunities? Duplicated logic (DRY)? Unnecessary complexity (KISS)?"
+*Source: Beck (XP), Fowler (Refactoring)*
+
 ## Output
 1. Update `.claude/memory/corrections.md` with new corrections
 2. Update `.claude/memory/patterns.md` with new patterns

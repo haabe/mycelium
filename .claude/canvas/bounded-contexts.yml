@@ -1,0 +1,44 @@
+# Bounded Contexts Canvas — Eric Evans (Domain-Driven Design)
+# Source: "Domain-Driven Design" by Eric Evans, "Architecture for Flow" (DDD + Wardley + Team Topologies)
+# Populated through: L3 Solution design, /delivery-bootstrap, /team-shape
+#
+# Optional for solo_hobby/solo_product. Recommended for team_startup. Required for team_enterprise.
+# Stream-aligned teams (Team Topologies) should align with bounded contexts.
+# If architecture doesn't mirror team structure, Conway's Law works against you.
+
+contexts: []
+# - name: ""                    # e.g., "Order Management", "User Authentication"
+#   description: ""             # What this context is responsible for
+#   ubiquitous_language: []     # Key terms with definitions (the shared vocabulary)
+#     # - term: ""
+#     #   definition: ""
+#   owning_team: ""             # Which team owns this context (maps to team-shape.yml)
+#   type: core|supporting|generic  # Core = competitive advantage, Supporting = necessary but not differentiating, Generic = commodity
+#   evolution_stage: ""         # From landscape.yml Wardley map (genesis/custom/product/commodity)
+
+# Context Map: Relationships between bounded contexts
+# These determine integration patterns and team interaction modes
+context_map: []
+# - upstream: ""                # Context name
+#   downstream: ""              # Context name
+#   relationship: ""            # One of:
+#     # partnership:         Two contexts succeed or fail together (high coupling, collaboration mode)
+#     # shared_kernel:       Small shared model managed jointly (careful, creates coupling)
+#     # customer_supplier:   Upstream serves downstream's needs (negotiated interface)
+#     # conformist:          Downstream adopts upstream model as-is (no negotiation)
+#     # anti_corruption_layer: Translation layer protecting downstream from upstream changes
+#     # open_host_service:   Well-defined protocol/API for integration
+#     # published_language:  Shared interchange format (e.g., JSON schema, protobuf)
+#   notes: ""
+
+# Alignment check: Do bounded contexts align with team boundaries?
+# From Team Topologies: each stream-aligned team should own one coherent bounded context.
+# If a team owns multiple unrelated contexts, cognitive load is too high.
+# If a context is split across teams, handoffs will create friction.
+alignment_check:
+  contexts_match_teams: null    # true/false
+  issues: []
+  # - "Context X is owned by two teams -- creates integration friction"
+  # - "Team Y owns three unrelated contexts -- cognitive overload"
+
+last_updated: null

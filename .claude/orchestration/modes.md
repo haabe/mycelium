@@ -17,6 +17,15 @@ A single developer interacting with the Mycelium agent.
 3. Canvas files are your documentation
 4. Commit canvas changes alongside code changes
 
+### The Agent as Your Pair Partner (XP)
+The AI agent IS your pair partner. Unlike human pairing, the agent:
+- Has read all corrections.md, patterns.md, and the full canvas -- it knows the project context
+- Can challenge your assumptions in real-time (ask it to play devil's advocate)
+- Can generate tests while you describe behavior (TDD pairing)
+- Never gets tired, never has ego, never goes on vacation
+
+Use this: before implementing, describe what you want to build. Let the agent write the test. Then implement. This is TDD pairing at its best.
+
 ### Tips
 - Don't skip discovery diamonds even as a solo developer -- bias is strongest when unchecked
 - Use `/devils-advocate` before major decisions -- you don't have teammates to challenge you

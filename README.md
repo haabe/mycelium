@@ -1,10 +1,10 @@
 # Mycelium
 
-**Theory-guided agentic product development for Claude Code.** *v0.5.1*
+**Theory-guided agentic product development for Claude Code.** *v0.6.0*
 
 Like nature's mycelium network -- the invisible intelligence that connects trees, shares nutrients, adapts to conditions, and makes the whole forest ecosystem stronger -- Mycelium connects product development theories, shares learning across sessions, adapts to any tech stack, and makes your product development practice stronger.
 
-Mycelium is an open-source harnessing system that guides AI agents through proper incremental product development using best practices from 20+ established frameworks and books. It prevents the agent from going haywire by enforcing theory-guided decision gates, feedback loops at four speeds, reflexion loops, cognitive bias checks, and quality guardrails at every stage.
+Mycelium is an open-source harnessing system that guides AI agents through proper incremental product development using best practices from 25+ established frameworks and books. It prevents the agent from going haywire by enforcing theory-guided decision gates, feedback loops at four speeds, reflexion loops, cognitive bias checks, and quality guardrails at every stage.
 
 ## The Problem
 
@@ -110,10 +110,10 @@ Canvas files are committed to git. They ARE your product documentation. Not all 
 
 ### Harnessing System (What Prevents the Agent from Going Haywire)
 
-**Guardrails** (`.claude/harness/guardrails.md`) -- 24 constraints across three enforcement tiers:
+**Guardrails** (`.claude/harness/guardrails.md`) -- 30 constraints across three enforcement tiers:
 - **BLOCKED** (2): Mechanically prevented by hooks. Secrets in code (G-S1), stale corrections (G-P5).
-- **GATED** (12): `/diamond-progress` refuses to complete delivery until satisfied. Tests, a11y, services quality, threat modeling, input validation, BVSSH, decision logging, error states, canvas updates, AI disclosure, regulatory awareness, privacy.
-- **ADVISORY** (10): Nudged by hooks, not blocking. Engineering principles (DRY, KISS, YAGNI), bias checks, data minimization, secure defaults, theory citations, devil's advocate.
+- **GATED** (13): `/diamond-progress` refuses to complete delivery until satisfied. Tests, a11y, usability (Nielsen), services quality (Downe), threat modeling, input validation, BVSSH, decision logging, error states, canvas updates, AI disclosure, regulatory awareness, privacy.
+- **ADVISORY** (15): Nudged by hooks, not blocking. Engineering principles (DRY, KISS, YAGNI, XP values), bias checks, data minimization, secure defaults, theory citations, devil's advocate, BVSSH dimensions, sustainable pace.
 
 **Anti-Patterns** (`.claude/harness/anti-patterns.md`) -- 11 known failure modes across discovery, confidence, security, delivery, and market/GTM:
 - "Solution-first thinking", "Confidence inflation", "Security-later", "Dark pattern marketing", "Regression avoidance", and more
@@ -177,7 +177,7 @@ Mycelium communicates in human language, not framework jargon:
 - **Quarterly**: North Star review, strategic landscape refresh, eval benchmarks
 - **Escape hatch**: Documented bypass process for emergencies (production incidents, hotfixes) with mandatory payback
 
-## Skills Reference (34 skills)
+## Skills Reference (35 skills)
 
 ### Onboarding & Assessment
 | Skill | When to Use |
@@ -209,6 +209,7 @@ Mycelium communicates in human language, not framework jargon:
 | `/threat-model` | STRIDE threat modeling |
 | `/privacy-check` | Privacy by Design / GDPR assessment |
 | `/security-review` | OWASP secure design review |
+| `/usability-check` | Nielsen's 10 usability heuristics (interface-level) |
 | `/a11y-check` | Accessibility audit (WCAG 2.1 AA) |
 
 ### Delivery
@@ -269,6 +270,11 @@ Mycelium communicates in human language, not framework jargon:
 | Leverage Points | Meadows | Systems thinking: where to intervene for maximum effect |
 | Goodhart's Law | Goodhart | Measurement discipline: counter-metrics prevent gaming |
 | APEX Framework | LinearB | AI-era delivery: AI leverage, predictability, efficiency, developer experience |
+| 10 Usability Heuristics | Nielsen | Interface-level usability (complements Downe's service-level quality) |
+| Domain-Driven Design | Evans | Bounded contexts, ubiquitous language, context mapping for architecture |
+| Extreme Programming | Beck | TDD, pair programming, refactoring, sustainable pace, courage |
+| Site Reliability Engineering | Beyer et al. | Error budgets, SLIs/SLOs, blameless post-mortems, toil reduction |
+| Lean UX | Gothelf, Seiden | Hypothesis-driven design, outcomes over outputs, design validation |
 
 ## Usage Modes
 
@@ -315,7 +321,7 @@ Universal principles (DRY, KISS, testing pyramid, OWASP) apply to all stacks. Sp
 
 ```
 your-project/
-  CLAUDE.md                    # Root Mycelium agent instructions (v0.5.1)
+  CLAUDE.md                    # Root Mycelium agent instructions (v0.6.0)
   .claude/
     settings.json              # Shared hook config + permissions (committed)
     engine/                    # Diamond rules, theory gates, confidence thresholds, Cynefin routing
@@ -324,7 +330,7 @@ your-project/
     harness/                   # Guardrails, anti-patterns, biases, security, engineering principles
     memory/                    # Corrections, patterns, product journal, delivery journal
     domains/                   # Phase-specific agent behavior (discovery/delivery/quality)
-    skills/                    # 34 invocable skills
+    skills/                    # 35 invocable skills
     hooks/                     # 6-layer enforcement (gate, nudge, reflexion, stop-check, session-start, skill-gates)
     orchestration/             # Solo/team modes, agent teams, fan-out, operations, escape hatch
     jit-tooling/               # Language-agnostic delivery tooling + polyglot detection

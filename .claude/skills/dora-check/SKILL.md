@@ -98,14 +98,29 @@ Assess the four APEX pillars to detect AI-era delivery problems:
 3. [specific action]
 ```
 
+## Part 3: SRE Metrics (Error Budgets)
+
+If SLIs/SLOs defined in `canvas/dora-metrics.yml` sre section:
+- Review each service's SLI values against SLO targets
+- Calculate error budget remaining: (SLO - actual) / (1 - SLO) * 100%
+- **Healthy** (>50%): Ship features. Budget available.
+- **Warning** (<25%): Slow down. Increase testing.
+- **Depleted** (0%): Feature freeze. Reliability takes priority.
+
+Error budgets are the social contract: reliability earns the right to ship faster. Connects to BVSSH Safer.
+
+If NOT defined: "Consider defining SLIs/SLOs to balance velocity with reliability."
+
 ## Canvas Output
 **Always update** `canvas/dora-metrics.yml` with:
 - DORA metrics, classifications, and capability scores
 - APEX section: ai_leverage, predictability, efficiency, developer_experience
+- SRE section: SLI/SLO status, error budget remaining
 - Measurement history for trend tracking
 
 ## Theory Citations
 - Forsgren, Humble, Kim: Accelerate (DORA metrics)
 - LinearB: APEX Framework (AI-era delivery measurement)
+- Beyer, Jones, Petoff, Murphy: Site Reliability Engineering (error budgets, SLIs/SLOs)
 - Smart: BVSSH (holistic flow optimization — APEX X maps to Happier)
 - Kim: Three Ways (Second Way — amplify feedback loops, detect shifting bottlenecks)

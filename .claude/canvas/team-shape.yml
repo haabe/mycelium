@@ -33,4 +33,11 @@ security_alignment:
   data_access_boundaries_clear: null
   issues: []
 
+# Bounded context alignment (DDD - Evans)
+# Stream-aligned teams should own coherent bounded contexts.
+# See canvas/bounded-contexts.yml for context map.
+bounded_context_alignment:
+  contexts_match_teams: null  # true/false
+  issues: []
+
 last_assessed: null

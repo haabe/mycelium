@@ -86,6 +86,7 @@ When feedback signals indicate the current direction is wrong, the system should
 | Review wait time increasing while coding speed increases | "THE SHIFTING BOTTLENECK (APEX): AI is generating code faster but the review pipeline can't keep up." | Add reviewers, automate review gates, reduce PR size |
 | AI PR acceptance rate declining | "AI suggestions are becoming less useful. Context may be stale." | Refresh corrections.md, update canvas context, re-run /delivery-bootstrap |
 | BVSSH Safer declining while Sooner improving | "Trading safety for speed. This is the BVSSH anti-pattern Smart warns about." | Run /bvssh-check, pause delivery to address safety |
+| SRE error budget depleted | "Reliability budget consumed. Feature work should pause until budget recovers." | Run /dora-check SRE section, enforce error budget policy, focus on stability |
 
 ## The L5 -> L2 Feedback Loop
 

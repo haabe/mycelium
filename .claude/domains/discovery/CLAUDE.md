@@ -134,6 +134,16 @@ Interview data is PII. Treat it accordingly:
 - Define data retention and deletion policies before research begins.
 - Obtain informed consent for all research activities.
 
+### 11. Lean UX Hypothesis Format
+
+When moving from discovery to solution framing, express solutions as Lean UX hypotheses:
+
+**Format**: "We believe [outcome] will be achieved for [users] if they successfully [change/action]."
+
+This makes assumptions explicit and testable. Every hypothesis must be validated through `/assumption-test` before significant investment. The Lean UX format is preferred for desirability/usability assumptions. For feasibility/viability: "We believe [assumption] because [rationale]."
+
+*Source: Gothelf & Seiden (Lean UX)*
+
 ## What NOT To Do
 
 - **Do not propose solutions during discovery.** Discovery produces understanding, not designs.

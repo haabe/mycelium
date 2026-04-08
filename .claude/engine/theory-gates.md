@@ -31,7 +31,7 @@ Gate Name
 | L0 | Market research, competitive analysis, stakeholder interviews documented | Assumptions stated without supporting data |
 | L1 | Strategic evidence from multiple sources; quantified opportunity size | Strategy based on opinion or single data point |
 | L2 | 5+ user interviews with triangulated findings; behavioral data | Fewer than 3 evidence sources; no triangulation |
-| L3 | Prototype tested with users; measurable feedback collected | Solution chosen without user validation |
+| L3 | Prototype tested with users; measurable feedback collected. Design hypotheses validated using Lean UX format (Gothelf). If multi-domain: bounded contexts identified (DDD/Evans). | Solution chosen without user validation |
 | L4 | Acceptance criteria defined with measurable outcomes | Vague or missing acceptance criteria |
 | L5 | Test cases written before or alongside implementation | No tests; untested code |
 
@@ -159,11 +159,15 @@ All five dimensions must be assessed (even a one-sentence answer per dimension i
 
 **Suggested skill**: `/bvssh-check`
 
-### 9. Service Quality Gate
+### 9. Service & Usability Quality Gate
 
-**Source**: Downe (Good Services)
+**Source**: Downe (Good Services), Nielsen (10 Usability Heuristics)
 
 **Applies to**: Develop->Deliver and Deliver->Complete, L2-L4
+
+Two quality layers for user-facing work:
+
+**Service Quality (Downe -- end-to-end service design)**:
 
 | Pass Criteria | Fail Criteria |
 |--------------|---------------|
@@ -172,9 +176,18 @@ All five dimensions must be assessed (even a one-sentence answer per dimension i
 | Accessible to all users equally | Accessibility not tested |
 | Minimum possible steps to complete the outcome | Unnecessary steps in the flow |
 
-**Evidence required**: Completed service-check skill output, user journey map, accessibility audit.
+**Interface Usability (Nielsen -- screen-level interaction design)**:
 
-**Suggested skill**: `/service-check` (for Downe's 15 principles), `/a11y-check` (for accessibility)
+| Pass Criteria | Fail Criteria |
+|--------------|---------------|
+| Interface evaluated against Nielsen's 10 heuristics | No usability review for user-facing work |
+| System status visible to users | Users don't know what's happening |
+| Error messages constructive and plain-language | Raw error codes shown to users |
+| Consistency maintained (internal + platform conventions) | Inconsistent patterns across screens |
+
+**Evidence required**: Completed service-check output, usability-check output, user journey map, accessibility audit.
+
+**Suggested skill**: `/service-check` (Downe's 15 principles), `/usability-check` (Nielsen's 10 heuristics), `/a11y-check` (WCAG 2.1 AA accessibility)
 
 ### 10. DORA Gate
 

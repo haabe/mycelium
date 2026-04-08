@@ -39,10 +39,12 @@ For each dimension, assess current state:
 - [ ] Risk being actively managed (not ignored)?
 - [ ] Rollback capability tested?
 - [ ] No new single points of failure?
+- [ ] Error budget healthy? (SRE -- check dora-metrics.yml sre section)
 - Evidence: [cite specific metrics or observations]
 
 ### Happier
-- [ ] Team working at sustainable pace?
+- [ ] Team working at sustainable pace? No chronic overtime? (XP -- Beck)
+- [ ] AI tools helping or adding cognitive load? (APEX DevX)
 - [ ] No signs of burnout?
 - [ ] Team has autonomy and purpose?
 - [ ] Users expressing satisfaction?

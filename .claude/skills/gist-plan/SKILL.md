@@ -34,6 +34,7 @@ Use `/ice-score` to prioritize. Key insight from Gilad:
 - Steps follow a confidence ladder: assessment -> exploratory experiment -> feature experiment -> launch
 - Each step produces evidence that increases or decreases confidence
 - If evidence is negative: pivot or kill the idea (sunk cost is irrelevant)
+- For user-facing ideas, frame hypotheses in Lean UX format: "We believe [outcome] for [users] if [change]." (Gothelf)
 
 ### 5. Execute Tasks (Sprint-level)
 - Tasks belong to the CURRENT step only

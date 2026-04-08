@@ -101,3 +101,8 @@ When quality signals indicate problems:
 3. Propose a concrete remediation.
 4. If remediation is beyond current scope, log in corrections.md and continue with mitigation.
 5. Never silently accept quality degradation.
+
+### Additional Quality Signals
+
+- **Error budget health** (SRE): Is the error budget being consumed faster than expected? When depleted, BVSSH Safer is failing. See `canvas/dora-metrics.yml` SRE section.
+- **Usability heuristics** (Nielsen): For user-facing work, Nielsen's 10 heuristics complement Downe's 15 principles at the interface level. Run `/usability-check`.
