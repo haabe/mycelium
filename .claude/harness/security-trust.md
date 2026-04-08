@@ -187,6 +187,20 @@ Mycelium's existing mechanisms already support many EU AI Act requirements:
 - **Transparency**: Downe's principles require clear communication to users
 - **Bias mitigation**: Cognitive bias checks at every stage
 
+### Human Oversight: Authority/Time/Understanding Triad
+
+When designing human oversight for AI systems (required for high-risk systems under the EU AI Act), verify that human-in-the-loop mechanisms satisfy all three conditions of meaningful oversight:
+
+| Condition | Test | Failure Mode |
+|-----------|------|-------------|
+| **Authority** | Can the human actually override, pause, or shut down the AI decision? | Rubber-stamp oversight -- human sees output but cannot change it |
+| **Time** | Does the human have enough time to review before the decision takes effect? | Speed-trap oversight -- decision executes before review is possible |
+| **Understanding** | Does the human have the context and expertise to evaluate the AI output? | Complexity-trap oversight -- human approves what they cannot comprehend |
+
+All three must be present simultaneously. If any condition fails, the human oversight is performative, not meaningful. Assess at L3-L4 when designing review workflows for AI-assisted decisions.
+
+*Source: Bannerman (Human-in-the-Loop Framework -- teybannerman.com)*
+
 ### What Mycelium Does NOT Do
 
 - Mycelium does not certify EU AI Act compliance

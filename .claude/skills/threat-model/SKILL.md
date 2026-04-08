@@ -36,6 +36,12 @@ STRIDE threat modeling for secure design.
    - Recommended mitigations
    - Residual risk after mitigation
 
+   **For AI-powered systems**: Extend STRIDE with AI-specific threat dimensions:
+   - **Autonomy risk**: Can the AI take actions beyond its intended scope?
+   - **Oversight gap**: Is human-in-the-loop oversight meaningful? (Test Authority/Time/Understanding per Bannerman's triad -- see security-trust.md)
+   - **Feedback poisoning**: Can adversarial inputs degrade the system over time?
+   - **Opacity risk**: Can decisions be explained to affected parties?
+
 5. **Output**:
    ```
    ## Threat Model: [System/Feature]

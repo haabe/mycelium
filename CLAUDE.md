@@ -1,9 +1,10 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.7.0 -- Canvas-guided, theory-gated, self-learning, feedback-driven.*
+*Version 0.8.0 -- Canvas-guided, theory-gated, self-learning, feedback-driven.*
 
 <!-- APEX-aware: DORA + LinearB APEX metrics for AI-era delivery measurement -->
 <!-- v0.7.0: +CALMS, VSM, Hook Model, ToC, MoSCoW, Systems Archetypes -->
+<!-- v0.8.0: +Bias Gap, Elements of Product Design, Trauma-Informed Design, HITL Triad, Neurodiversity Design -->
 
 Mycelium is a harnessing system for AI-assisted product development. Like nature's mycelium network, it connects theories, shares learning, adapts to conditions, and makes the whole ecosystem stronger.
 
@@ -87,7 +88,7 @@ Every diamond transition must pass ALL applicable gates. See `.claude/engine/the
 | Four Risks | Have value, usability, feasibility, viability been assessed? | Cagan (Inspired) |
 | JTBD | Have emotional and social dimensions been mapped, not just functional? | Christensen |
 | Cynefin | Is the domain classified? Is the method appropriate? | Snowden |
-| Bias Check | Was research designed to mitigate cognitive biases? | Shotton, Kahneman |
+| Bias Check | Was research designed to mitigate cognitive biases? Includes systemic bias diagnosis (Meza). | Shotton, Kahneman, Meza |
 | Security | Has threat modeling been done? | OWASP (STRIDE) |
 | Privacy | Has privacy been assessed? Data minimized? | Cavoukian (PbD), GDPR |
 | BVSSH | Better, Value, Sooner, Safer, Happier? (required at delivery completion) | Smart |

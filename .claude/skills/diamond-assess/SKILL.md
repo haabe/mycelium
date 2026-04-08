@@ -31,6 +31,7 @@ Evaluate current diamond state and recommend next action.
    - Reference anti-patterns.md
    - Flag any detected failure modes
    - For L1/L2 diamonds: also check for **system archetypes** (Senge) — Fixes That Fail, Shifting the Burden, Limits to Growth, Eroding Goals
+   - At L3->L4 transitions: also run the **Design Completeness Check** (quality/CLAUDE.md) to verify all layers of the product design stack have evidence. Source: Mill, building on Garrett.
 
 6. **Check corrections.md**:
    - Any relevant past mistakes to avoid?

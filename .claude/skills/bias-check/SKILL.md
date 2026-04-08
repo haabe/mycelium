@@ -43,6 +43,21 @@ Pre-research and pre-decision bias review.
    ### Proceed? [Yes / Yes with caution / Pause and address]
    ```
 
+6. **System-level bias diagnosis** (ADVISORY):
+   Before attributing resistance or poor outcomes to cognitive bias, check if the "bias" is actually a rational response to a badly designed system. Ask:
+
+   | Phase | System Question | If Yes: Fix the System, Not the Person |
+   |-------|----------------|---------------------------------------|
+   | Awareness | Does the person know the desired behavior? | Fix communication, not cognition |
+   | Motivation | Does the system reward the desired behavior? | Fix incentives, not mindset |
+   | Ability | Can the person realistically do it? | Fix resources/process, not training |
+   | Reinforcement | Is the behavior sustained by the environment? | Fix feedback loops, not habits |
+   | Sustainability | Can it persist without ongoing intervention? | Fix structure, not willpower |
+
+   If 2+ phases point to systemic causes, the primary intervention is system redesign, not individual debiasing. Update the bias briefing output above to flag the system-level root cause.
+
+   *Source: Meza (The Bias Gap -- aimforbehavior.com)*
+
 ## Canvas Output
 Record bias check in `canvas/opportunities.yml` under `bias_checks` section with date, biases mitigated, and research design adjustments made.
 
@@ -50,3 +65,4 @@ Record bias check in `canvas/opportunities.yml` under `bias_checks` section with
 - Kahneman: Thinking, Fast and Slow (System 1/System 2)
 - Shotton: The Choice Factory (behavioral biases in decision-making)
 - Torres: Continuous Discovery Habits (bias in research)
+- Meza: The Bias Gap (systemic bias reframing -- when "bias" is a rational response to a badly designed system)

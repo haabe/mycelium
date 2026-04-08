@@ -97,3 +97,21 @@ Review the relevant stage checklist before every research activity, decision poi
 ### Anchoring to Training Data
 - **Description**: Defaulting to common patterns from training data rather than adapting to the specific project context.
 - **Mitigation**: Read project-specific files (corrections.md, patterns.md) first. Adapt recommendations to the actual context.
+
+## Systemic Bias: When "Bias" Is a Rational Response
+
+Before attributing behavior to cognitive bias, assess whether the environment is creating the observed pattern. What looks like irrational bias is often a rational response to a badly designed system.
+
+*Source: Meza (The Bias Gap -- aimforbehavior.com)*
+
+### The 5-Phase Systemic Check
+
+| Phase | System Question | If Yes |
+|-------|----------------|--------|
+| **Awareness** | Does the person know the desired behavior? | Fix communication, not cognition |
+| **Motivation** | Does the system reward the desired behavior? | Fix incentives, not mindset |
+| **Ability** | Can the person realistically perform the desired behavior? | Fix resources/process, not training |
+| **Reinforcement** | Is the desired behavior sustained by the environment? | Fix feedback loops, not habits |
+| **Sustainability** | Can the behavior persist without ongoing intervention? | Fix structure, not willpower |
+
+**Rule**: If 2+ phases point to systemic causes, the primary intervention is system redesign, not individual debiasing. This connects to Senge's systems archetypes (anti-patterns.md) and Meadows's leverage points.

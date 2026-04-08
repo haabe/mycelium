@@ -65,3 +65,9 @@ Evaluate user-facing work against WCAG 2.1 AA. Accessibility is a design constra
 - Before PR: full automated scan
 - Before release: manual screen reader test of critical journeys
 - After design changes: re-audit affected components
+
+## Sensitive Context Note
+For products handling sensitive user contexts (health, finance, domestic violence, government services), also review trauma-informed design principles in `domains/quality/CLAUDE.md`. Source: Hussain (Chayn), built on SAMHSA's 6 Principles (2014).
+
+## Neurodiversity Considerations
+For information-dense or learning-oriented products, supplement WCAG with the Neurodiversity Design System (neurodiversity.design, Soward). Its 8 principle categories with neurotype-to-UI-element matrix address cognitive accessibility needs that WCAG does not fully cover (e.g., font shapes for dyslexia, number formatting for dyscalculia, animation controls for ADHD).

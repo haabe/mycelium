@@ -106,3 +106,39 @@ When quality signals indicate problems:
 
 - **Error budget health** (SRE): Is the error budget being consumed faster than expected? When depleted, BVSSH Safer is failing. See `canvas/dora-metrics.yml` SRE section.
 - **Usability heuristics** (Nielsen): For user-facing work, Nielsen's 10 heuristics complement Downe's 15 principles at the interface level. Run `/usability-check`.
+
+### Design Completeness Check (ADVISORY)
+
+Before considering a solution fully designed, verify coverage across the full product design stack. Design happens across a knowledge stack (understanding reality) and a decision stack (shaping the solution). "UX debt" occurs when upper layers don't map well to layers below.
+
+| Stack | Layer | Maps to Scale | Key Question |
+|-------|-------|--------------|--------------|
+| **Knowledge** | Reality | L2 (Opportunity) | Have we observed actual user behavior in context? |
+| **Knowledge** | Problem Domain | L2-L3 | Have we modeled the problem domain accurately? |
+| **Knowledge** | User Needs | L2-L3 | Are needs mapped independently of solutions? |
+| **Decision** | Strategy | L1-L3 | Does the strategy connect purpose to solution? |
+| **Decision** | Conceptual Model | L3-L4 | Will users form the right mental model? |
+| **Decision** | Interaction & Flow | L4 | Are interactions intuitive and consistent? |
+| **Decision** | Surface (UI) | L4 | Does visual design support comprehension? |
+
+Use at L3->L4 transitions as a completeness review. If any layer has no evidence, investigate whether the gap matters for this specific product context. Many teams over-invest in Surface while under-investing in Conceptual Model and Strategy.
+
+*Source: Mill (Elements of Product Design -- jamiemill.com), building on Garrett (The Elements of User Experience, 2000)*
+
+### Trauma-Informed Design (ADVISORY -- sensitive contexts only)
+
+**Activates when**: Product handles health, finance, domestic violence, government services, mental health, or addiction recovery contexts. Detected via `sensitive_context` delivery type in canvas-guidance.yml.
+
+**5-Point Check**:
+
+| # | Check | Pass Criteria |
+|---|-------|--------------|
+| 1 | Safety exits exist | User can leave any flow without penalty, data loss, or explanation required |
+| 2 | No re-traumatizing content | Language, imagery, and flows reviewed for potential harm; no forced retelling of traumatic events |
+| 3 | User agency preserved | User controls pace, disclosure level, and data sharing; no coercion by design |
+| 4 | Privacy beyond minimum | Data protection exceeds legal minimum; assume breach = physical danger for this population |
+| 5 | Hope-oriented framing | Content frames forward progress, not deficit; avoids labeling or pathologizing users |
+
+If this check is active, it supplements (does not replace) the standard quality checks above. Trauma-informed design is not about making products "soft" -- it is about not causing harm to people who are already in a vulnerable state.
+
+*Source: Hussain (Chayn -- trauma-informed design whitepaper, 2023), built on SAMHSA's 6 Principles of Trauma-Informed Care (2014)*

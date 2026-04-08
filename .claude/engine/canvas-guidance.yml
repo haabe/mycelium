@@ -165,3 +165,18 @@ delivery_types:
     always_required_regardless_of_project_type:
       - threat-model.yml     # STRIDE for permission misuse (G-S2 GATED)
     note: "This type is additive -- a user_facing app that also requires permissions gets BOTH sets of requirements."
+
+  sensitive_context:
+    description: "Product handles sensitive user contexts: health, finance, domestic violence, government services, mental health, addiction recovery"
+    detection_patterns:
+      - "Health data handling, patient records, clinical workflows"
+      - "Domestic violence support, crisis services, survivor resources"
+      - "Government benefits, social services, immigration"
+      - "Financial hardship, debt management, poverty support"
+      - "Mental health, addiction, trauma recovery"
+    always_required_regardless_of_project_type:
+      - "trauma-informed design review"  # 5-point check in quality/CLAUDE.md (ADVISORY)
+    always_required_at_delivery_completion:
+      - "safety exits exist"             # Users can leave without completing
+      - "no re-traumatizing content"     # Content reviewed for harm potential
+    note: "This type is additive -- a user_facing app that also handles sensitive contexts gets BOTH sets of requirements. Source: Hussain (Chayn), built on SAMHSA's 6 Principles (2014)."
