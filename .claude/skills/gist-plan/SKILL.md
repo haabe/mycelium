@@ -30,11 +30,17 @@ Use `/ice-score` to prioritize. Key insight from Gilad:
 
 ### 4. Design Steps (per top idea)
 - Steps are small, time-boxed activities that build evidence
-- Each step has: hypothesis, method, success criteria
+- Each step has: hypothesis, method, success criteria, **MoSCoW priority**
+- Tag each step as **Must** / **Should** / **Could** / **Won't** (DSDM):
+  - **Must**: Non-negotiable. Delivery fails without this. All GATED checks apply.
+  - **Should**: Important. Ship if time allows. All GATED checks apply.
+  - **Could**: Nice-to-have. Cut first when timebox runs out. ADVISORY checks only.
+  - **Won't**: Explicitly out of scope for this cycle. Documented for future reference.
 - Steps follow a confidence ladder: assessment -> exploratory experiment -> feature experiment -> launch
 - Each step produces evidence that increases or decreases confidence
 - If evidence is negative: pivot or kill the idea (sunk cost is irrelevant)
 - For user-facing ideas, frame hypotheses in Lean UX format: "We believe [outcome] for [users] if [change]." (Gothelf)
+- **When a delivery timebox is exceeded**: Flex scope using MoSCoW — cut Could/Won't before compromising Must/Should
 
 ### 5. Execute Tasks (Sprint-level)
 - Tasks belong to the CURRENT step only
@@ -47,6 +53,9 @@ After each step completes:
 - Re-rank ideas
 - Kill ideas below threshold
 - Surface new ideas from discovery work
+
+### Shape Up: Appetite Over Estimates
+Instead of asking "how long will this take?", ask "how much is this worth?" (Shape Up by Basecamp). Set an **appetite** — the maximum time you're willing to invest — then design the solution to fit within it. If the solution can't fit, narrow the scope, don't extend the timebox. This connects naturally to MoSCoW: appetite defines the timebox, MoSCoW decides what fits within it.
 
 ## Anti-Pattern: The Feature Roadmap
 If your GIST board looks like a feature list with dates, you're doing it wrong. Goals are outcomes, ideas are hypotheses, steps are experiments.

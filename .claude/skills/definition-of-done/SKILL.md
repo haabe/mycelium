@@ -69,6 +69,12 @@ DoD checklist enforcement.
 - [ ] BVSSH check: this delivery makes things Better, more Valuable, Sooner, Safer, Happier
 - [ ] delivery-journal.md updated
 
+### MoSCoW Scope Compliance (DSDM)
+- [ ] All **Must-have** items pass ALL GATED checks above
+- [ ] All **Should-have** items pass ALL GATED checks above
+- [ ] **Could-have** items pass ADVISORY checks only (acceptable to ship without full GATED compliance)
+- [ ] **Won't-have** items documented for future reference (not silently dropped)
+
 ## Outcome
 - **DONE**: All required items checked. Proceed.
 - **NOT DONE**: List failing items. Address before marking complete.

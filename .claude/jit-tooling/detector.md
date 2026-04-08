@@ -150,6 +150,20 @@ When multiple package manifests are found for different languages:
 | Microservices | Multiple Dockerfiles | Per-service validation |
 | Mobile + API | Flutter/RN config + backend manifest | Platform-specific tooling |
 
+## GitOps / Infrastructure-as-Code Detection
+
+When Kubernetes or infrastructure manifests are detected:
+
+| File Found | Stack |
+|-----------|-------|
+| `argocd-*.yml`, `applicationset.yml` | ArgoCD (GitOps) |
+| `flux-system/`, `gotk-components.yml` | Flux (GitOps) |
+| `terraform/`, `*.tf` | Terraform |
+| `pulumi/`, `Pulumi.yaml` | Pulumi |
+| `helmfile.yaml`, `Chart.yaml` | Helm |
+
+For GitOps projects, the canvas system's git-based workflow aligns naturally — treat infrastructure definitions with the same evidence-based change process as product canvas files.
+
 ## Fallback Behavior
 
 If no package manifest is found (new/empty project):

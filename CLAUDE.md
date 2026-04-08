@@ -1,8 +1,9 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.6.0 -- Canvas-guided, theory-gated, self-learning, feedback-driven.*
+*Version 0.7.0 -- Canvas-guided, theory-gated, self-learning, feedback-driven.*
 
 <!-- APEX-aware: DORA + LinearB APEX metrics for AI-era delivery measurement -->
+<!-- v0.7.0: +CALMS, VSM, Hook Model, ToC, MoSCoW, Systems Archetypes -->
 
 Mycelium is a harnessing system for AI-assisted product development. Like nature's mycelium network, it connects theories, shares learning, adapts to conditions, and makes the whole ecosystem stronger.
 
@@ -42,7 +43,7 @@ Before ANY implementation task:
 | L1: Strategy | Where to play | Wardley Mapping, North Star, Team Topologies (Skelton) | `canvas/landscape.yml`, `canvas/north-star.yml`, `canvas/team-shape.yml` |
 | L2: Opportunity | What to solve | Torres (CDH/OST), Allen (User Needs Mapping), Cynefin | `canvas/opportunities.yml`, `canvas/user-needs.yml` |
 | L3: Solution | How to solve it | Gilad (GIST/ICE), Cagan (Inspired), Downe (Good Services) | `canvas/gist.yml`, `canvas/services.yml` |
-| L4: Delivery | Build and ship | Forsgren (DORA), OWASP, DRY/KISS/YAGNI/SOLID/SoC | `canvas/dora-metrics.yml`, `canvas/threat-model.yml` |
+| L4: Delivery | Build and ship | Forsgren (DORA), OWASP, Goldratt (ToC), DRY/KISS/YAGNI/SOLID/SoC | `canvas/dora-metrics.yml`, `canvas/threat-model.yml`, `canvas/value-stream.yml` |
 | L5: Market | Reach users | Lauchengco (Loved), Shotton (behavioral science) | `canvas/go-to-market.yml`, `canvas/trust-signals.yml` |
 
 ### Diamond Phases (within each scale)
@@ -92,6 +93,7 @@ Every diamond transition must pass ALL applicable gates. See `.claude/engine/the
 | BVSSH | Better, Value, Sooner, Safer, Happier? (required at delivery completion) | Smart |
 | Service Quality | Do Downe's 15 principles pass? Nielsen's 10 heuristics? | Downe (Good Services), Nielsen |
 | DORA | Are delivery metrics healthy? Error budget status? Bottleneck shifting? | Forsgren (Accelerate), LinearB (APEX), SRE (Beyer) |
+| CALMS | Is DevOps culture healthy? Culture, Automation, Lean, Measurement, Sharing? | Humble (CALMS) |
 | Corrections | Have past mistakes been reviewed? | Mycelium self-learning |
 | Regulatory | Has EU AI Act risk classification been assessed? | EU AI Act (2024/1689) |
 

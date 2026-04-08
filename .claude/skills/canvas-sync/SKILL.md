@@ -30,3 +30,6 @@ git commit -m "canvas: [brief description of what changed and why]"
 - Same file, different sections: usually auto-merges
 - Same field conflicting: person with MORE evidence wins
 - When uncertain: discuss as team, log decision
+
+### GitOps Principle
+The canvas system IS GitOps for product knowledge — git is the single source of truth, changes are declarative (YAML), and updates flow through version control with review. For infrastructure GitOps (ArgoCD, Flux), see JiT tooling detection for Kubernetes/infrastructure-as-code projects.

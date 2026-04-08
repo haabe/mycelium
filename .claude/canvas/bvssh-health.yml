@@ -58,4 +58,30 @@ assessment_history: []
 #   safer: "improving|stable|declining"
 #   happier: "improving|stable|declining"
 
+# CALMS Culture Assessment — Jez Humble
+# DORA measures delivery OUTCOMES. CALMS explains WHY those outcomes are what they are.
+# Populated through: /bvssh-check skill (CALMS section)
+calms_assessment:
+  culture:
+    description: "Learning culture, psychological safety, blameless post-mortems"
+    status: ""  # green|amber|red
+    evidence: ""
+  automation:
+    description: "Test, deploy, provision automation maturity"
+    status: ""
+    evidence: ""
+  lean:
+    description: "Small batches, WIP limits, waste reduction"
+    status: ""
+    evidence: ""
+  measurement:
+    description: "Outcomes over outputs, DORA/BVSSH over velocity/story points"
+    status: ""
+    evidence: ""
+  sharing:
+    description: "Cross-team knowledge sharing, breaking silos"
+    status: ""
+    evidence: ""
+  last_assessed: null
+
 last_assessed: null

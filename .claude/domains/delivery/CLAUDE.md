@@ -160,6 +160,20 @@ A feature/story is done when ALL of the following are true:
 - [ ] Deployed to staging and smoke tested
 - [ ] BVSSH check passed
 
+## CALMS Culture Assessment (Humble)
+
+DORA measures delivery OUTCOMES. CALMS explains WHY those outcomes are what they are. Assess periodically alongside BVSSH:
+
+- **Culture**: Learning culture vs blame culture. Blameless post-mortems. Psychological safety.
+- **Automation**: Test, deploy, provision automation maturity. Manual = error-prone.
+- **Lean**: Small batches, WIP limits, waste identification. Watch for big-batch waterfall.
+- **Measurement**: Outcomes (DORA, BVSSH) over outputs (velocity, story points). Avoid MORF anti-pattern.
+- **Sharing**: Cross-team knowledge sharing. Break silos. Collective code ownership.
+
+If DORA metrics are poor, check CALMS to find the cultural root cause. If DORA is good but CALMS is weak, the performance is fragile and won't survive team changes.
+
+*Source: Humble (CALMS DevOps Culture Framework)*
+
 ## DORA Metrics Tracking
 
 Track and optimize the four key metrics (Forsgren):
@@ -168,6 +182,22 @@ Track and optimize the four key metrics (Forsgren):
 - **Lead Time for Changes**: Time from commit to production. Target: less than one hour.
 - **Change Failure Rate**: Percentage of deployments causing failure. Target: 0-15%.
 - **Mean Time to Recovery**: Time to restore service after failure. Target: less than one hour.
+
+## Theory of Constraints: Fixing Bottlenecks (Goldratt)
+
+When DORA/APEX metrics identify a bottleneck, apply Goldratt's Five Focusing Steps:
+
+1. **Identify** the constraint: Which stage in the value stream has the longest wait time or lowest throughput?
+2. **Exploit** the constraint: Maximize output of the bottleneck without adding resources (remove waste, eliminate interruptions, batch efficiently).
+3. **Subordinate** everything else: Non-bottleneck stages should produce only what the bottleneck can absorb. Overproduction upstream just creates queues.
+4. **Elevate** the constraint: If exploitation isn't enough, invest in increasing capacity (more reviewers, better tooling, automation).
+5. **Repeat**: Once the constraint is broken, a NEW constraint emerges. Go back to step 1.
+
+**Key insight for AI-assisted delivery**: When AI accelerates coding (APEX), the bottleneck typically shifts to review/testing/deployment. Don't add more AI coding — fix the review pipeline.
+
+Use `canvas/value-stream.yml` to visualize the full flow and identify where the constraint lives.
+
+*Source: Goldratt (The Goal, Theory of Constraints)*
 
 ## Observability
 
@@ -214,6 +244,14 @@ When you detect this pattern: reduce PR size, add automated review gates, improv
 Track APEX metrics in `canvas/dora-metrics.yml` under the `apex` section.
 
 *Source: LinearB APEX Framework (AI Leverage, Predictability, Efficiency, Developer Experience)*
+
+## Component Architecture for UI Projects (Frost — Atomic Design)
+
+For UI-heavy projects, consider Frost's Atomic Design hierarchy when structuring components: Atoms (buttons, inputs) -> Molecules (search bar) -> Organisms (header) -> Templates (page layouts) -> Pages. This is a recommended practice for design system organization, not a Mycelium requirement.
+
+## Chaos Engineering for Production-Ready Products (SRE)
+
+For products with reliability requirements in production: consider deliberate failure injection (chaos engineering) to test resilience. Shut down random instances, inject latency, simulate network partitions. Only relevant for production-grade systems with SLOs defined — not for discovery-through-first-delivery stages.
 
 ## JiT (Just-in-Time) Tooling
 

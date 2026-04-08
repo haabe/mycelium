@@ -51,6 +51,19 @@ For each dimension, assess current state:
 - [ ] Learning happening continuously?
 - Evidence: [cite specific metrics or observations]
 
+### CALMS Culture Assessment (Humble)
+
+Assess the five cultural dimensions that explain WHY DORA outcomes are what they are:
+
+- [ ] **Culture**: Is there a learning culture? Blameless post-mortems? Psychological safety? Or blame-and-fear?
+- [ ] **Automation**: Are repetitive tasks automated (testing, deployment, provisioning)? Or manual and error-prone?
+- [ ] **Lean**: Are batch sizes small? WIP limited? Waste actively identified and removed? Or big-batch waterfall?
+- [ ] **Measurement**: Are you measuring outcomes (DORA, BVSSH) or outputs (velocity, story points)? Watch for MORF anti-pattern.
+- [ ] **Sharing**: Is knowledge shared across teams? Cross-functional collaboration? Or siloed expertise?
+- Evidence: [cite specific observations or team feedback]
+
+**Interpreting CALMS with DORA**: DORA tells you WHAT your delivery performance is. CALMS explains WHY. If DORA metrics are poor, CALMS identifies the cultural root cause. If DORA is good but CALMS is weak, the performance is fragile.
+
 ## Output
 
 ```
@@ -66,9 +79,19 @@ Diamond: [ID if applicable]
 | Safer | Green/Amber/Red | Improving/Stable/Declining | ... |
 | Happier | Green/Amber/Red | Improving/Stable/Declining | ... |
 
+### CALMS Culture Health
+| Dimension | Status | Key Signal |
+|-----------|--------|-----------|
+| Culture | Green/Amber/Red | ... |
+| Automation | Green/Amber/Red | ... |
+| Lean | Green/Amber/Red | ... |
+| Measurement | Green/Amber/Red | ... |
+| Sharing | Green/Amber/Red | ... |
+
 Overall: [summary and recommended actions]
 ```
 
 ## Theory Citations
 - Smart: Sooner Safer Happier (BVSSH framework)
+- Humble: CALMS (DevOps culture assessment -- explains WHY DORA outcomes are what they are)
 - Forsgren: Accelerate (metrics alignment)

@@ -33,6 +33,7 @@ When starting a new session on an existing Mycelium project:
 |----------|-----------|-------|
 | BVSSH health check | Monthly | `/bvssh-check` |
 | Wardley map review | Monthly | `/wardley-map` |
+| Value stream review | Monthly (if mapped) | `/dora-check` + `canvas/value-stream.yml` |
 | Stale diamond cleanup | Monthly | See Diamond Lifecycle below |
 | Corrections pruning | When > 30 entries | See Memory Maintenance below |
 

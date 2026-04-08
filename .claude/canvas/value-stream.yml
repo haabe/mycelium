@@ -1,0 +1,81 @@
+# Value Stream Map — Rother & Shook (Learning to See)
+# Applied to software by Smart (BVSSH)
+# Populated through: /dora-check skill (when bottlenecks detected)
+# Optional canvas: recommended for team_startup+, optional for solo
+
+# The value stream maps the end-to-end flow from idea to production.
+# DORA tells you WHAT's slow. APEX tells you WHERE the bottleneck shifted.
+# VSM shows the ENTIRE flow with wait times and handoffs, making bottlenecks visible.
+
+stages:
+  - name: "Idea"
+    description: "Problem identified, opportunity framed"
+    process_time: ""  # Active work time (e.g., "2 days")
+    wait_time: ""     # Queue/wait time before next stage (e.g., "5 days")
+    handoffs: 0       # Number of handoffs to reach next stage
+    bottleneck: false  # Is this stage currently the constraint?
+    notes: ""
+
+  - name: "Discovery"
+    description: "User research, problem validation, OST construction"
+    process_time: ""
+    wait_time: ""
+    handoffs: 0
+    bottleneck: false
+    notes: ""
+
+  - name: "Solution Design"
+    description: "Solution framing, prototyping, assumption testing"
+    process_time: ""
+    wait_time: ""
+    handoffs: 0
+    bottleneck: false
+    notes: ""
+
+  - name: "Development"
+    description: "Implementation, testing, code review"
+    process_time: ""
+    wait_time: ""
+    handoffs: 0
+    bottleneck: false
+    notes: ""
+
+  - name: "Deployment"
+    description: "CI/CD, staging, production release"
+    process_time: ""
+    wait_time: ""
+    handoffs: 0
+    bottleneck: false
+    notes: ""
+
+  - name: "Production"
+    description: "Live, monitored, feedback collection"
+    process_time: ""
+    wait_time: ""
+    handoffs: 0
+    bottleneck: false
+    notes: ""
+
+  - name: "Market"
+    description: "User adoption, feedback loops, L5->L2 cycle"
+    process_time: ""
+    wait_time: ""
+    handoffs: 0
+    bottleneck: false
+    notes: ""
+
+# Derived metrics (calculated from stage data)
+total_lead_time: ""    # Sum of all process_time + wait_time
+total_process_time: "" # Sum of process_time only
+flow_efficiency: ""    # process_time / lead_time * 100 (target: >25%)
+total_handoffs: 0      # Sum of all handoffs (fewer = better)
+
+# Improvement actions identified from the map
+improvement_actions: []
+# - stage: "Development"
+#   problem: "Code review wait time averaging 3 days"
+#   action: "Add automated review gates, reduce PR size"
+#   priority: "high"
+#   date_identified: ""
+
+last_mapped: null

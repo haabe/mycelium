@@ -87,6 +87,7 @@ Optimize for flow across diamonds:
 - **Small batches**: Prefer many small diamonds over few large ones.
 - **Unblock first**: If a diamond is blocked, resolve the blocker before starting new work.
 - **Minimize handoffs**: Same agent/team should own a diamond from Discover through Deliver when possible.
+- **Scope flexing with MoSCoW (DSDM)**: When a delivery timebox is exceeded, flex scope — cut Could/Won't items before compromising Must/Should. Never cut quality to meet a deadline; cut scope instead. See `/gist-plan` for MoSCoW tagging of steps.
 
 ## Phase Transitions Require Theory Gates
 
@@ -147,3 +148,9 @@ A diamond is stale when:
 5. **Never delete canvas artifacts** -- they're learning, even from killed work
 
 See `.claude/orchestration/operations.md` for full maintenance schedules.
+
+## Relationship to Other Methodologies
+
+- **Disciplined Agile (DA)**: Mycelium's Cynefin-based domain routing + canvas-guidance project type classification IS DA's "Choose Your WoW" implemented for agentic development. The diamond engine adapts method to context, which is the core DA principle.
+- **Feature-Driven Development (FDD)**: FDD's five processes (develop model, build feature list, plan by feature, design by feature, build by feature) map directly to diamond phases. Already covered by the diamond engine.
+- **Kanban WIP Limits**: Maximum 2 active L4 delivery diamonds simultaneously. If both are blocked, resolve blockers before starting a third. This prevents context-switching overhead from degrading delivery quality.

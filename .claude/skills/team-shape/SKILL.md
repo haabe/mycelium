@@ -49,4 +49,7 @@ If the product has multiple domains or services:
   Partnership = Collaboration, Customer-Supplier = X-as-a-Service, ACL = translation layer
 *Source: Evans (DDD), "Architecture for Flow" (DDD + Wardley + Team Topologies)*
 
+### 6. Capability Gap Diagnosis (DASA)
+When DORA metrics indicate capability gaps, use the DASA DevOps Competency Framework's 12 skill areas to identify which team skills need development (e.g., courage, teambuilding, continuous improvement, business value optimization).
+
 Update canvas/team-shape.yml and canvas/bounded-contexts.yml with assessment results.

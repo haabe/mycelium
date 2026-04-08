@@ -34,6 +34,7 @@ steps: []
 # - idea_connection: ""
 #   hypothesis: ""
 #   method: ""  # assessment|exploratory_experiment|feature_experiment|full_launch
+#   priority: ""  # must|should|could|wont (MoSCoW — DSDM)
 #   success_criteria: ""
 #   time_box: ""  # e.g., "1 week"
 #   result: ""

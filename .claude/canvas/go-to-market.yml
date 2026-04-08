@@ -56,4 +56,20 @@ behavioral_tactics: []
 #   application: ""
 #   ethical_check: ""  # Does this help or manipulate the user?
 
+# Ethical Engagement Design — Nir Eyal (Hooked)
+# For products that need user retention/habit formation
+# Populated through: /launch-tier skill (Hook Canvas section)
+engagement_design:
+  hook_canvas:
+    trigger: ""         # What prompts engagement (external: notification, internal: emotion)
+    action: ""          # Simplest behavior in anticipation of reward
+    variable_reward: "" # Reward type: tribe (social), hunt (resources), self (mastery)
+    investment: ""      # User work that improves next cycle (data, content, reputation)
+  manipulation_matrix:
+    improves_user_life: null   # true|false -- Does this materially improve the user's life?
+    maker_uses_it: null        # true|false -- Would you use it yourself?
+    classification: ""         # facilitator|entertainer|peddler|dealer
+    # Only "facilitator" should be built without reservation.
+    # "dealer" = unethical, do not build. See anti-pattern #10.
+
 last_updated: null

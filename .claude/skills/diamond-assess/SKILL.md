@@ -30,6 +30,7 @@ Evaluate current diamond state and recommend next action.
 5. **Check for anti-patterns**:
    - Reference anti-patterns.md
    - Flag any detected failure modes
+   - For L1/L2 diamonds: also check for **system archetypes** (Senge) — Fixes That Fail, Shifting the Burden, Limits to Growth, Eroding Goals
 
 6. **Check corrections.md**:
    - Any relevant past mistakes to avoid?

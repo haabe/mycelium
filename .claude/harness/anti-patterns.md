@@ -176,6 +176,38 @@ Known failure modes organized by category. Check regularly, especially when thin
 - **What to do instead**: Validate positioning with actual target customers. Conduct win/loss analysis. Test messaging before scaling.
 - **Source**: Lauchengco (Loved), Kahneman (false consensus effect)
 
+## Strategic Anti-Patterns (Systems Thinking — Senge)
+
+These are systemic organizational traps from Senge's "The Fifth Discipline." They manifest at L1/L2 strategic scales and are harder to detect than tactical anti-patterns because they feel like rational responses in the moment.
+
+### 13. Fixes That Fail
+- **Description**: A fix addresses symptoms but creates unintended side effects that eventually make the original problem worse. The fix becomes the new problem.
+- **Detection rule**: The same problem recurs after being "fixed." Each fix is bigger than the last. Side effects appear in related systems.
+- **Examples**: Adding more process to fix quality issues (slows delivery, causes shortcuts). Using AI to speed up code generation without improving review capacity (creates bigger review backlog). Adding more meetings to fix communication problems (reduces time for actual work).
+- **What to do instead**: Map the full causal loop before fixing. Ask "What are the second-order effects of this fix?" Use `/devils-advocate` to challenge the proposed solution. Check if the "fix" appeared in a previous retrospective as a problem.
+- **Source**: Senge (The Fifth Discipline)
+
+### 14. Shifting the Burden
+- **Description**: A quick symptomatic fix undermines the motivation to develop a fundamental solution. Over time, the fundamental solution atrophies while dependence on the symptomatic fix grows.
+- **Examples**: Using AI to paper over broken processes instead of fixing the root cause. Relying on heroic individuals instead of building systemic capability. Using workarounds instead of fixing the platform.
+- **Detection rule**: The same workaround is applied repeatedly. The fundamental capability (testing, architecture, process) degrades over time. Team says "we'll fix it properly later" but never does.
+- **What to do instead**: Identify the fundamental solution and invest in it, even if slower. Time-box the symptomatic fix with an explicit payback plan (see escape-hatch.md). Track workaround frequency as a health signal.
+- **Source**: Senge (The Fifth Discipline)
+
+### 15. Limits to Growth
+- **Description**: A reinforcing process of growth hits a balancing constraint that slows or reverses growth. The natural response (push harder on the growth engine) makes things worse because the constraint is the bottleneck, not the engine.
+- **Examples**: Shipping features faster but degrading quality until users churn. Scaling the team but not the architecture, creating coordination overhead. Growing the product surface area without growing support/docs/onboarding.
+- **Detection rule**: Growth metrics plateau or reverse despite increased effort. BVSSH dimensions diverge (Sooner improving while Better/Safer/Happier decline). DORA lead time increases as team size increases.
+- **What to do instead**: Identify the limiting factor (the constraint) and address it directly. Apply Theory of Constraints Five Focusing Steps (Goldratt). Don't push harder on the growth engine — relieve the constraint.
+- **Source**: Senge (The Fifth Discipline), connects to Goldratt (ToC)
+
+### 16. Eroding Goals
+- **Description**: When a gap exists between the goal and reality, the team lowers the goal instead of improving performance. Standards gradually erode.
+- **Examples**: Relaxing test coverage requirements because "we're behind schedule." Accepting increasingly longer lead times as "normal." Reducing accessibility requirements for "just this release." Lowering DORA targets after missing them.
+- **Detection rule**: Goals/targets trend downward over successive reviews. Definition of Done items are waived "just this once" repeatedly. "Good enough" replaces "meets the standard."
+- **What to do instead**: Hold the standard. Flex scope (MoSCoW), not quality. If a standard can't be met, investigate why — the answer is usually a systemic constraint, not an unrealistic standard.
+- **Source**: Senge (The Fifth Discipline)
+
 ### 12. Test-Last Development
 - **Description**: Writing all code first, then adding tests as an afterthought -- or not at all. Both Mycelium pilot projects exhibited this pattern.
 - **Detection rule**: Test files created in a separate commit after source files. Or: source files exist with no corresponding test files at delivery completion.

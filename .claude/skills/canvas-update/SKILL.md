@@ -29,6 +29,7 @@ description: "Update canvas sections with new evidence. Ensures canvas stays cur
 | Privacy assessment | privacy-assessment.yml | GDPR/PbD |
 | Trust architecture | trust-signals.yml | Digital Trust |
 | Jobs to be done | jobs-to-be-done.yml | Christensen |
+| Value stream map | value-stream.yml | Rother & Shook (VSM) |
 
 ## Workflow
 1. Identify which canvas file(s) need updating

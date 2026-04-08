@@ -144,6 +144,11 @@ This makes assumptions explicit and testable. Every hypothesis must be validated
 
 *Source: Gothelf & Seiden (Lean UX)*
 
+### 12. Design Thinking Techniques (Optional Supplements)
+
+- **"How Might We" (HMW) reframing**: When synthesizing research findings into opportunity statements, optionally reframe as "How might we [address need] for [users] so that [outcome]?" This is a lightweight complement to OST opportunity framing, not a replacement.
+- **Empathy Maps**: As a supplement to JTBD mapping, empathy maps (Says/Thinks/Does/Feels quadrants) can help synthesize interview data into a richer picture of user context. Use alongside, not instead of, the JTBD canvas.
+
 ## What NOT To Do
 
 - **Do not propose solutions during discovery.** Discovery produces understanding, not designs.

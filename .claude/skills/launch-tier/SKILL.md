@@ -36,6 +36,33 @@ Use biases ETHICALLY to help users understand value:
 ## Canvas Output
 Update `canvas/go-to-market.yml` with tier classification and launch plan.
 
+## Ethical Engagement Design (Eyal -- Hook Model)
+
+For products that need user retention, design engagement ethically using the Hook Canvas:
+
+### Hook Canvas
+Map the four components of habit formation:
+- **Trigger**: What prompts the user to engage? (External: notification, email. Internal: emotion, routine.)
+- **Action**: What is the simplest behavior in anticipation of reward? (Must be easier than thinking.)
+- **Variable Reward**: What reward satisfies the user's need while leaving them wanting more? (Tribe: social, Hunt: resources, Self: mastery.)
+- **Investment**: What bit of work does the user put in that improves the next cycle? (Data, content, reputation, skill.)
+
+### Manipulation Matrix (Ethical Gate — ADVISORY)
+Before implementing engagement design, answer honestly:
+1. **Does it materially improve the user's life?** (Not just "engagement" — actual value.)
+2. **Would you use it yourself?** (The maker's test.)
+
+| | User Benefits | User Doesn't Benefit |
+|---|---|---|
+| **Maker Uses It** | **Facilitator** (ethical) | **Entertainer** (proceed with caution) |
+| **Maker Doesn't Use It** | **Peddler** (risky) | **Dealer** (unethical — do not build) |
+
+Only **Facilitator** products should be built without reservation. Entertainers need honest self-assessment. Peddlers and Dealers trigger anti-pattern #10 (Dark Pattern Marketing).
+
+Update `canvas/go-to-market.yml` engagement_design section with Hook Canvas results.
+
+*Source: Eyal (Hooked), with ethical framework from the Manipulation Matrix*
+
 ## After Launch: The L5 -> L2 Feedback Loop
 
 **This is critical.** After launch, market feedback must flow back into discovery:

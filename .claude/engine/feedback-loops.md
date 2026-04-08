@@ -87,6 +87,7 @@ When feedback signals indicate the current direction is wrong, the system should
 | AI PR acceptance rate declining | "AI suggestions are becoming less useful. Context may be stale." | Refresh corrections.md, update canvas context, re-run /delivery-bootstrap |
 | BVSSH Safer declining while Sooner improving | "Trading safety for speed. This is the BVSSH anti-pattern Smart warns about." | Run /bvssh-check, pause delivery to address safety |
 | SRE error budget depleted | "Reliability budget consumed. Feature work should pause until budget recovers." | Run /dora-check SRE section, enforce error budget policy, focus on stability |
+| Same bottleneck persists after 2+ improvement attempts | "FIX THAT FAILED (Senge): The fix addressed symptoms, not root cause. The bottleneck returns." | Apply ToC Five Focusing Steps (Goldratt): Identify -> Exploit -> Subordinate -> Elevate -> Repeat. Map the value stream to find the real constraint. |
 
 ## The L5 -> L2 Feedback Loop
 

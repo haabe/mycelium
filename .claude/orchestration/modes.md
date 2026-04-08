@@ -80,6 +80,10 @@ No conflicts because different diamonds touch different canvas sections.
 
 The onboarding IS reading the canvas. No separate onboarding docs needed.
 
+## SAFe Continuous Delivery Pipeline (CDP) Mapping
+
+For teams considering enterprise scaling frameworks: SAFe's Continuous Delivery Pipeline (Explore -> Integrate -> Deploy -> Release) maps to Mycelium's diamond phases: Explore = Discover/Define, Integrate = Develop, Deploy = Deliver, Release = L5 Market. Mycelium already covers the substance — SAFe CDP provides familiar terminology for enterprise contexts.
+
 ## Scaling Patterns
 
 | Team Size | Orchestration | Canvas Management | Agent Pattern |
