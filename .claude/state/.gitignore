@@ -1,0 +1,6 @@
+# Runtime state — not committed to version control
+# This directory holds ephemeral state that the hooks + skills update during sessions
+# Canonical state lives in .claude/diamonds/active.yml and .claude/canvas/
+*
+!.gitignore
+!README.md

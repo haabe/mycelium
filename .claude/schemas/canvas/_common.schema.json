@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mycelium.dev/schemas/canvas/_common.schema.json",
+  "title": "Mycelium Canvas Common Definitions",
+  "description": "Shared $defs for canvas YAML schemas. Provenance, trace edges, confidence enums, ISO timestamps.",
+  "$defs": {
+    "evidence_type": {
+      "type": "string",
+      "enum": [
+        "speculation",
+        "anecdotal",
+        "data-supported",
+        "test-validated",
+        "launch-validated"
+      ],
+      "description": "Gilad's evidence ladder. Match the level of evidence to the claim — never overclaim."
+    },
+    "confidence": {
+      "oneOf": [
+        {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0
+        },
+        {
+          "$ref": "#/$defs/evidence_type"
+        }
+      ],
+      "description": "Either a float 0.0-1.0 (Gilad confidence meter) or one of the evidence_type enum values."
+    },
+    "iso_timestamp": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}([Tt][0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?(Z|[+-][0-9]{2}:[0-9]{2})?)?$",
+      "description": "ISO 8601 date or datetime"
+    },
+    "provenance": {
+      "type": "object",
+      "description": "Per-entry provenance for high-stakes canvas claims. Documents the evidence behind each claim so canvas-as-source-of-truth doesn't drift toward confident speculation.",
+      "properties": {
+        "evidence_type": {
+          "$ref": "#/$defs/evidence_type"
+        },
+        "evidence_sources": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Identifiers for the evidence: interview IDs, research brief refs, external URLs, behavioral data sources, etc.",
+          "minItems": 0
+        },
+        "captured_at": {
+          "$ref": "#/$defs/iso_timestamp"
+        },
+        "confidence": {
+          "$ref": "#/$defs/confidence"
+        }
+      },
+      "required": ["evidence_type", "evidence_sources"],
+      "additionalProperties": false
+    },
+    "trace_edge": {
+      "type": "object",
+      "description": "A directed edge in the canvas trace graph. Mirrors BDSK's 10 canonical edge types.",
+      "properties": {
+        "target_id": {
+          "type": "string",
+          "description": "Identifier of the linked artifact (canvas section, decision log entry, eval scenario, etc.)"
+        },
+        "edge": {
+          "type": "string",
+          "enum": [
+            "depends_on",
+            "derived_from",
+            "constrains",
+            "implements",
+            "proves",
+            "evaluates",
+            "produced_by",
+            "supersedes",
+            "escalates_to",
+            "waives"
+          ],
+          "description": "Canonical edge type. Borrowed from BDSK's trace.upstream model (Daniel Bentes feedback)."
+        }
+      },
+      "required": ["target_id", "edge"],
+      "additionalProperties": false
+    },
+    "trace": {
+      "type": "object",
+      "description": "Bidirectional trace links for an artifact. Optional for most canvas entries; required for high-stakes entries.",
+      "properties": {
+        "upstream": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/trace_edge"
+          }
+        },
+        "downstream": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/trace_edge"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "schema_version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Canvas schema version. Increment on breaking changes (additive changes do not require a bump)."
+    }
+  }
+}

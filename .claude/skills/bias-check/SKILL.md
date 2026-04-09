@@ -43,7 +43,7 @@ Pre-research and pre-decision bias review.
    ### Proceed? [Yes / Yes with caution / Pause and address]
    ```
 
-6. **System-level bias diagnosis** (ADVISORY):
+6. **System-level bias diagnosis** (NUDGE):
    Before attributing resistance or poor outcomes to cognitive bias, check if the "bias" is actually a rational response to a badly designed system. Ask:
 
    | Phase | System Question | If Yes: Fix the System, Not the Person |

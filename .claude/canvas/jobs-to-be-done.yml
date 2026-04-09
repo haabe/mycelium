@@ -1,26 +1,31 @@
 # Jobs to be Done Canvas — Clayton Christensen / Tony Ulwick
 # Source: "The Innovator's Dilemma", Outcome-Driven Innovation
 # Populated through: /jtbd-map skill and /interview
+# Schema: .claude/schemas/canvas/jobs-to-be-done.schema.json
+# Validation: each job MUST include provenance (functional/emotional/social claims need interview backing)
+
+schema_version: 1
 
 # Jobs: What users are "hiring" this product to do
+# REQUIRED for each entry: provenance
 jobs: []
-# - job_statement: "When [situation], I want to [motivation], so I can [expected outcome]"
-#   type: functional|emotional|social
-#   # Functional: What they need to accomplish practically
-#   # Emotional: How they need to feel (confident, in control, relieved)
-#   # Social: How it affects relationships/status (look competent, be respected)
-#   hiring_criteria: []  # What makes users "hire" a solution for this job
-#   firing_criteria: []  # What makes users "fire" (abandon) a solution
-#   current_solutions: []  # What are they using now? (including non-consumption)
+# - id: job-001
+#   situation: "When I'm reviewing AI-generated code at 4pm under deadline pressure"
+#   motivation: "I want to verify the changes don't break anything I care about"
+#   expected_outcome: "so I can ship without spending an hour I don't have"
+#   functional: "Run tests + see diff against acceptance criteria"
+#   emotional: "Feel confident the code is safe to merge, not anxious"
+#   social: "Look like a thoughtful reviewer to the team, not a rubber-stamper"
+#   hiring_criteria: []
+#   firing_criteria: []
+#   current_solutions: []
 #   underserved_outcomes: []
-#     # - outcome: ""
-#     #   importance: 1-10
-#     #   satisfaction_with_current: 1-10
-#     #   opportunity_score: 0  # importance + (importance - satisfaction)
-#   evidence_sources: []
-#     # - type: interview|observation|behavioral_data
-#     #   summary: ""
-#     #   date: ""
+#   provenance:                   # REQUIRED
+#     evidence_type: anecdotal
+#     evidence_sources:
+#       - "interview-2026-04-09-engineer-002"
+#     captured_at: "2026-04-09T14:30:00Z"
+#     confidence: 0.3
 
 # Non-consumption: Users who have the job but aren't using ANY solution
 # Often the biggest opportunity (Christensen's insight)

@@ -1,6 +1,10 @@
 # Wardley Map Canvas — Simon Wardley
 # Source: Wardley Mapping methodology
 # Populated through: /wardley-map skill
+# Schema: .claude/schemas/canvas/landscape.schema.json
+# Validation: each component MUST include provenance (positioning carries strategic weight)
+
+schema_version: 1
 
 # User needs at the top of the value chain (most visible to users)
 user_needs: []
@@ -8,14 +12,23 @@ user_needs: []
 #   description: ""
 
 # Components in the value chain
+# REQUIRED for each component: name, provenance
 components: []
-# - name: ""
+# - id: comp-001
+#   name: ""
 #   visibility: high|medium|low  # Y-axis: how visible to end user
 #   evolution_stage: genesis|custom|product|commodity  # X-axis
 #   cynefin_domain: complex|complicated|clear  # Mapped from evolution
 #   dependencies: []  # Other component names this depends on
 #   strategic_play: ""  # build|buy|partner|outsource
 #   notes: ""
+#   provenance:                   # REQUIRED — see _common.schema.json#/$defs/provenance
+#     evidence_type: data-supported
+#     evidence_sources:
+#       - "competitive-research-2026-04-09.md"
+#       - "https://example.com/market-report"
+#     captured_at: "2026-04-09T14:30:00Z"
+#     confidence: 0.5
 
 # Components actively evolving (moving right on the map)
 movements: []

@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mycelium.dev/schemas/canvas/jobs-to-be-done.schema.json",
+  "title": "Jobs to be Done Canvas",
+  "description": "Christensen JTBD — functional, emotional, social dimensions. Each job requires provenance because all three dimensions need interview backing.",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "$ref": "_common.schema.json#/$defs/schema_version"
+    },
+    "jobs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "situation": {"type": "string"},
+          "motivation": {"type": "string"},
+          "expected_outcome": {"type": "string"},
+          "functional": {"type": "string"},
+          "emotional": {"type": "string"},
+          "social": {"type": "string"},
+          "provenance": {
+            "$ref": "_common.schema.json#/$defs/provenance"
+          },
+          "trace": {
+            "$ref": "_common.schema.json#/$defs/trace"
+          }
+        },
+        "required": ["provenance"],
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

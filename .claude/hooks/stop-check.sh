@@ -51,17 +51,28 @@ fi
 # ============================================================
 # CHECK 2: Corrections count summary
 # ============================================================
+# Count ### headings OUTSIDE code blocks (template includes an example heading
+# inside a ```...``` fence that must not be counted as a real correction)
 CORRECTIONS_COUNT=0
 if [ -f "$PROJECT_DIR/.claude/memory/corrections.md" ]; then
-  CORRECTIONS_COUNT=$(grep -c '^### ' "$PROJECT_DIR/.claude/memory/corrections.md" 2>/dev/null || echo 0)
+  CORRECTIONS_COUNT=$(awk '
+    /^```/ { in_code = !in_code; next }
+    !in_code && /^### / { count++ }
+    END { print count+0 }
+  ' "$PROJECT_DIR/.claude/memory/corrections.md" 2>/dev/null || echo 0)
 fi
 
 # ============================================================
 # CHECK 3: Decision log check
 # ============================================================
+# Count ### headings OUTSIDE code blocks (same template-scaffolding concern)
 DECISIONS_COUNT=0
 if [ -f "$PROJECT_DIR/.claude/harness/decision-log.md" ]; then
-  DECISIONS_COUNT=$(grep -c '^### ' "$PROJECT_DIR/.claude/harness/decision-log.md" 2>/dev/null || echo "0")
+  DECISIONS_COUNT=$(awk '
+    /^```/ { in_code = !in_code; next }
+    !in_code && /^### / { count++ }
+    END { print count+0 }
+  ' "$PROJECT_DIR/.claude/harness/decision-log.md" 2>/dev/null || echo "0")
 fi
 
 # ============================================================
@@ -109,6 +120,21 @@ except: print('unknown')
   if [ "$DORA_OVERDUE" = "overdue" ]; then
     WARNINGS="${WARNINGS}FEEDBACK LOOP: DORA metrics overdue (monthly cadence). Run /dora-check. "
   fi
+fi
+
+# ============================================================
+# CHECK 5: Direct diamond state edits (observability from diamond-state-audit.sh)
+# ============================================================
+# Count entries in the audit log for this session. If > 0, surface a reminder
+# that /diamond-progress is the idiomatic path for diamond state transitions.
+DIAMOND_DIRECT_EDITS=0
+AUDIT_LOG="$PROJECT_DIR/.claude/state/diamond-state-audit.jsonl"
+if [ -f "$AUDIT_LOG" ]; then
+  DIAMOND_DIRECT_EDITS=$(wc -l < "$AUDIT_LOG" 2>/dev/null | tr -d ' ' || echo 0)
+fi
+
+if [ "$DIAMOND_DIRECT_EDITS" -gt 0 ]; then
+  WARNINGS="${WARNINGS}OBSERVABILITY: ${DIAMOND_DIRECT_EDITS} direct diamond state edit(s) this session (outside /diamond-progress). Verify these were intentional -- /diamond-progress is the idiomatic path for gate evaluation and phase transitions. See .claude/state/diamond-state-audit.jsonl for details. "
 fi
 
 # ============================================================

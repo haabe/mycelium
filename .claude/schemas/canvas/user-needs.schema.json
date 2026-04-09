@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mycelium.dev/schemas/canvas/user-needs.schema.json",
+  "title": "User Needs Canvas",
+  "description": "Indi Allen User Needs Mapping — needs discovered independently of solutions. Each need requires provenance.",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "$ref": "_common.schema.json#/$defs/schema_version"
+    },
+    "needs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "statement": {"type": "string"},
+          "user_type": {"type": "string"},
+          "level": {"type": "string", "enum": ["goal", "activity", "task"]},
+          "provenance": {
+            "$ref": "_common.schema.json#/$defs/provenance"
+          },
+          "trace": {
+            "$ref": "_common.schema.json#/$defs/trace"
+          }
+        },
+        "required": ["statement", "provenance"],
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

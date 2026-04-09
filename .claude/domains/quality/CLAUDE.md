@@ -107,7 +107,7 @@ When quality signals indicate problems:
 - **Error budget health** (SRE): Is the error budget being consumed faster than expected? When depleted, BVSSH Safer is failing. See `canvas/dora-metrics.yml` SRE section.
 - **Usability heuristics** (Nielsen): For user-facing work, Nielsen's 10 heuristics complement Downe's 15 principles at the interface level. Run `/usability-check`.
 
-### Design Completeness Check (ADVISORY)
+### Design Completeness Check (NUDGE)
 
 Before considering a solution fully designed, verify coverage across the full product design stack. Design happens across a knowledge stack (understanding reality) and a decision stack (shaping the solution). "UX debt" occurs when upper layers don't map well to layers below.
 
@@ -125,7 +125,7 @@ Use at L3->L4 transitions as a completeness review. If any layer has no evidence
 
 *Source: Mill (Elements of Product Design -- jamiemill.com), building on Garrett (The Elements of User Experience, 2000)*
 
-### Trauma-Informed Design (ADVISORY -- sensitive contexts only)
+### Trauma-Informed Design (NUDGE -- sensitive contexts only)
 
 **Activates when**: Product handles health, finance, domestic violence, government services, mental health, or addiction recovery contexts. Detected via `sensitive_context` delivery type in canvas-guidance.yml.
 

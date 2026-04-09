@@ -70,9 +70,15 @@ fi
 # ============================================================
 # CHECK 3: Corrections count (awareness)
 # ============================================================
+# Count ### headings OUTSIDE code blocks (the template includes an example
+# heading inside a ```...``` fence that must not be counted as a real correction)
 CORRECTIONS_COUNT=0
 if [ -f "$PROJECT_DIR/.claude/memory/corrections.md" ]; then
-  CORRECTIONS_COUNT=$(grep -c '^### ' "$PROJECT_DIR/.claude/memory/corrections.md" 2>/dev/null || echo 0)
+  CORRECTIONS_COUNT=$(awk '
+    /^```/ { in_code = !in_code; next }
+    !in_code && /^### / { count++ }
+    END { print count+0 }
+  ' "$PROJECT_DIR/.claude/memory/corrections.md" 2>/dev/null || echo 0)
 fi
 
 # ============================================================

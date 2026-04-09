@@ -96,6 +96,47 @@ project_types:
     optional: []
 
 # ============================================================
+# Dimension 1b: Dogfood Modifier (orthogonal to project_type)
+# ============================================================
+# When a project is primarily a vehicle for learning/testing Mycelium itself,
+# set `dogfood: true` in diamonds/active.yml. The object project (macos-fileviewer,
+# cli tool, web app, etc.) is the VEHICLE; the real goal is exercising the
+# framework and capturing gaps.
+#
+# When dogfood is true, Mycelium interprets theory gates and evidence
+# requirements more loosely:
+#
+# - Mocked personas (via /mocked-persona-interview) become acceptable
+#   evidence, with evidence_type: speculation and honest stop conditions.
+# - "Validation appears to fail" becomes a Mycelium learning documented in
+#   .claude/evals/dogfood-reports/, not a project death.
+# - Theory gates relax: the Evidence gate accepts "documented Mycelium
+#   learning" as substitute for real user research.
+# - BVSSH gate becomes self-attestation rather than stakeholder validation.
+# - The object project's L4 delivery may be deferred or skipped entirely.
+#
+# Dogfood mode is an ADDITIVE modifier, not a 5th project_type. A dogfood
+# project is still solo_hobby or solo_product underneath — the modifier
+# just softens the evidence requirements and opens the mocked-persona path.
+
+dogfood_modifier:
+  description: "Flag that this project is primarily a vehicle for testing/learning Mycelium itself"
+  stored_as: "diamonds/active.yml :: dogfood: true"
+  detected_via: "/interview Phase 6 question: 'Is this primarily a real product, or are you using this as a vehicle to test/learn Mycelium itself?'"
+  effects_when_true:
+    - "Mocked personas via /mocked-persona-interview are acceptable evidence"
+    - "evidence_type: speculation is honest — do not over-inflate"
+    - "Stop conditions become Mycelium learnings, not project deaths"
+    - "Framework gaps are captured in .claude/evals/dogfood-reports/"
+    - "L4 Delivery of the object project may be deferred indefinitely"
+    - "The real deliverable is the dogfood report, not the object project"
+  references:
+    - ".claude/evals/dogfood-reports/README.md"
+    - ".claude/evals/dogfood-reports/2026-04-09-macos-fileviewer.md"
+    - ".claude/skills/mocked-persona-interview/SKILL.md"
+  source: "Dogfood finding G1 from the macos-fileviewer session (2026-04-09). See report for the inventing-discipline-in-the-moment pattern that prompted this mode."
+
+# ============================================================
 # Dimension 2: Delivery Type (quality requirements)
 # These override project_type for quality-related canvases.
 # Detected by /delivery-bootstrap from file patterns.
@@ -112,12 +153,12 @@ delivery_types:
       - "*.kt (with Compose), *.xml (Android layout)"  # Android UI
       - "*.dart (with Flutter widgets)"                # Flutter UI
     always_required_regardless_of_project_type:
-      - services.yml         # Downe's 15 principles (G-V2 GATED)
-      - "usability check"    # Nielsen's 10 heuristics (G-V10 GATED)
-      - "a11y assessment"    # WCAG 2.1 AA (G-V8 GATED)
-      - "error state design" # Downe P10 (G-V9 GATED)
+      - services.yml         # Downe's 15 principles (G-V2 REVIEW)
+      - "usability check"    # Nielsen's 10 heuristics (G-V10 REVIEW)
+      - "a11y assessment"    # WCAG 2.1 AA (G-V8 REVIEW)
+      - "error state design" # Downe P10 (G-V9 REVIEW)
     always_required_at_delivery_completion:
-      - "tests exist"        # G-V7 GATED
+      - "tests exist"        # G-V7 REVIEW
       - "BVSSH quick-check"  # Smart (Fix 6)
 
   api_service:
@@ -127,10 +168,10 @@ delivery_types:
       - "*/middleware/*, */graphql/*"
       - "Dockerfile, docker-compose.yml with service definitions"
     always_required_regardless_of_project_type:
-      - threat-model.yml     # STRIDE for all endpoints (G-S2 GATED)
-      - "input validation"   # OWASP (G-S4 GATED)
+      - threat-model.yml     # STRIDE for all endpoints (G-S2 REVIEW)
+      - "input validation"   # OWASP (G-S4 REVIEW)
     always_required_at_delivery_completion:
-      - "tests exist"        # G-V7 GATED
+      - "tests exist"        # G-V7 REVIEW
       - "BVSSH quick-check"  # Smart
 
   library:
@@ -139,7 +180,7 @@ delivery_types:
       - "exports/index pattern, no UI files"
       - "lib/ or src/ with public API, no application entry point"
     always_required_regardless_of_project_type:
-      - "tests exist"        # Libraries MUST be tested (G-V7 GATED)
+      - "tests exist"        # Libraries MUST be tested (G-V7 REVIEW)
     always_required_at_delivery_completion:
       - "BVSSH quick-check"
 
@@ -149,8 +190,8 @@ delivery_types:
       - "argument parsing (yargs, commander, argparse, clap)"
       - "bin/ directory, executable entry point"
     always_required_regardless_of_project_type:
-      - "input validation"   # CLI args are external input (G-S4 GATED)
-      - "tests exist"        # G-V7 GATED
+      - "input validation"   # CLI args are external input (G-S4 REVIEW)
+      - "tests exist"        # G-V7 REVIEW
     always_required_at_delivery_completion:
       - "BVSSH quick-check"
 
@@ -163,7 +204,7 @@ delivery_types:
       - "Location, CLLocationManager"
       - "File system access beyond app sandbox"
     always_required_regardless_of_project_type:
-      - threat-model.yml     # STRIDE for permission misuse (G-S2 GATED)
+      - threat-model.yml     # STRIDE for permission misuse (G-S2 REVIEW)
     note: "This type is additive -- a user_facing app that also requires permissions gets BOTH sets of requirements."
 
   sensitive_context:
@@ -175,7 +216,7 @@ delivery_types:
       - "Financial hardship, debt management, poverty support"
       - "Mental health, addiction, trauma recovery"
     always_required_regardless_of_project_type:
-      - "trauma-informed design review"  # 5-point check in quality/CLAUDE.md (ADVISORY)
+      - "trauma-informed design review"  # 5-point check in quality/CLAUDE.md (NUDGE)
     always_required_at_delivery_completion:
       - "safety exits exist"             # Users can leave without completing
       - "no re-traumatizing content"     # Content reviewed for harm potential

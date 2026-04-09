@@ -1,7 +1,25 @@
 # STRIDE Threat Model Canvas — OWASP
 # Source: OWASP STRIDE, Microsoft SDL
 # Populated through: /threat-model skill
+# Schema: .claude/schemas/canvas/threat-model.schema.json
+# Validation: each threat MUST include provenance (distinguishes hypothetical from observed threats)
 
+schema_version: 1
+
+# Per-threat list with provenance — REQUIRED for each entry: description, provenance
+threats: []
+# - id: threat-001
+#   category: spoofing|tampering|repudiation|info_disclosure|denial_of_service|elevation_of_privilege
+#   description: "Attacker forges API auth token via session prediction"
+#   severity: low|medium|high|critical
+#   provenance:                   # REQUIRED
+#     evidence_type: speculation   # Most threats are speculation until tested; use test-validated for pen-tested threats
+#     evidence_sources:
+#       - "STRIDE walkthrough 2026-04-09"
+#     captured_at: "2026-04-09T14:30:00Z"
+#     confidence: 0.4
+
+# Component-level threat assessments (existing structure preserved for compatibility)
 components: []
 # - name: ""
 #   description: ""

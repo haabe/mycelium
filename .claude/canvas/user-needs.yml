@@ -1,23 +1,36 @@
 # User Needs Mapping Canvas — Rich Allen
 # Source: User Needs Mapping (connected to Wardley Mapping & Team Topologies)
 # Populated through: /interview and discovery work
+# Schema: .claude/schemas/canvas/user-needs.schema.json
+# Validation: each need entry MUST include provenance (v0.9.0)
+
+schema_version: 1
 
 user_types: []
 # - name: ""
 #   description: ""
 #   context: ""  # In what context do they interact with the product?
 
+# REQUIRED for each need entry: statement, provenance
 needs: []
-# - user_type: ""
-#   need_statement: "As a [user_type], I need to [action], so that [outcome]"
+# - id: need-001
+#   statement: "As a [user_type], I need to [action], so that [outcome]"
+#   user_type: ""
+#   level: goal|activity|task         # Allen's hierarchy
 #   type: functional|emotional|social  # JTBD dimensions (Christensen)
-#   importance: 1-10  # How important is this to the user?
-#   current_satisfaction: 1-10  # How well are current solutions meeting this?
+#   importance: 1-10
+#   current_satisfaction: 1-10
 #   state: met|underserved|overserved|unrecognized
-#   evidence_sources: []
-#     # - type: "interview|survey|behavioral_data|support_tickets"
-#     #   summary: ""
-#     #   date: ""
+#   provenance:                   # REQUIRED — see _common.schema.json#/$defs/provenance
+#     evidence_type: anecdotal
+#     evidence_sources:
+#       - "interview-2026-04-09-user-001"
+#     captured_at: "2026-04-09T14:30:00Z"
+#     confidence: 0.3
+#   trace:                        # OPTIONAL
+#     downstream:
+#       - target_id: "opportunities#opp-001"
+#         edge: derived_from
 
 # Opportunity areas: Clusters of underserved, high-importance needs
 # These feed into the OST (canvas/opportunities.yml)

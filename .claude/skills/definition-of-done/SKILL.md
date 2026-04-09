@@ -70,9 +70,9 @@ DoD checklist enforcement.
 - [ ] delivery-journal.md updated
 
 ### MoSCoW Scope Compliance (DSDM)
-- [ ] All **Must-have** items pass ALL GATED checks above
-- [ ] All **Should-have** items pass ALL GATED checks above
-- [ ] **Could-have** items pass ADVISORY checks only (acceptable to ship without full GATED compliance)
+- [ ] All **Must-have** items pass ALL REVIEW checks above
+- [ ] All **Should-have** items pass ALL REVIEW checks above
+- [ ] **Could-have** items pass NUDGE-only checks (acceptable to ship without full REVIEW compliance)
 - [ ] **Won't-have** items documented for future reference (not silently dropped)
 
 ## Outcome

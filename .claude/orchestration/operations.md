@@ -48,6 +48,38 @@ When starting a new session on an existing Mycelium project:
 | Comprehensive feedback review | Quarterly | `/feedback-review` (full Loop 4 check) |
 | Eval benchmark | Quarterly | `/eval-runner run-all` |
 
+## Release Checklist (per minor version)
+
+Run before tagging each minor release (v0.x.0). The manual dogfood session is the most important item — it catches emergent framework gaps that automated evals miss.
+
+| # | Step | Required? |
+|---|---|---|
+| 1 | `bash tests/validate-template.sh` passes 13/13 | YES |
+| 2 | `python3 .claude/scripts/validate_canvas.py` passes (CI-only, requires `pip install -r requirements-ci.txt`) | YES |
+| 3 | `/eval-runner run-all` passes all scenarios (scenarios/discovery, delivery, integration, adversarial) | YES |
+| 4 | Version bumped consistently in CLAUDE.md and README.md | YES |
+| 5 | `/feedback-review` health check — no regressions across Loop 1-4 | YES |
+| 6 | **Manual dogfood session**: run Mycelium end-to-end on a fictional product (different shape than previous sessions), file a dogfood report in `.claude/evals/dogfood-reports/YYYY-MM-DD-<project-name>.md` | YES |
+| 7 | Update `CONTRIBUTORS.md` with any new feedback sources that shaped this version | If applicable |
+| 8 | Clear `.claude/state/*.jsonl` audit logs before committing (they are gitignored, but check) | YES |
+
+### Why the Manual Dogfood Session Matters
+
+Automated evals test known failure modes. Manual dogfood sessions catch **unknown** failure modes — the emergent gaps that only surface when multiple skills, gates, and hooks interact in an unfamiliar product shape. The macos-fileviewer session (2026-04-09) that surfaced 12 framework gaps is the proof. Per LangChain's 2025 agent eval guidance: "dogfooding with rapid iteration" is one of three canonical eval sources alongside public benchmarks and hand-crafted tests.
+
+**Pick a product shape that's different from the last session.** If macos-fileviewer was a native app, try a CLI tool next. Then a web service. Then a data pipeline. Rotation surfaces different framework gaps.
+
+**Use the template at `.claude/evals/dogfood-reports/README.md`** for report structure. The goal is not to ship the product — the goal is to surface framework gaps and document them.
+
+### Dogfood Session Budget
+
+- **Time**: 3-5 hours of agent + research time, typically 10-15 turns
+- **Output**: a dogfood report in `.claude/evals/dogfood-reports/`
+- **Deliverable**: top 3-5 tightening recommendations, ranked by value/cost
+- **Success criterion**: at least 3 specific, actionable framework improvements identified (even if small)
+
+If a dogfood session surfaces zero gaps, that's a signal to make the session harder (pick a more unusual product shape, introduce more ambiguity, plant adversarial constraints).
+
 ## Diamond Lifecycle Management
 
 ### Diamond States

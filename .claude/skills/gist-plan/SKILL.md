@@ -32,9 +32,9 @@ Use `/ice-score` to prioritize. Key insight from Gilad:
 - Steps are small, time-boxed activities that build evidence
 - Each step has: hypothesis, method, success criteria, **MoSCoW priority**
 - Tag each step as **Must** / **Should** / **Could** / **Won't** (DSDM):
-  - **Must**: Non-negotiable. Delivery fails without this. All GATED checks apply.
-  - **Should**: Important. Ship if time allows. All GATED checks apply.
-  - **Could**: Nice-to-have. Cut first when timebox runs out. ADVISORY checks only.
+  - **Must**: Non-negotiable. Delivery fails without this. All REVIEW checks apply.
+  - **Should**: Important. Ship if time allows. All REVIEW checks apply.
+  - **Could**: Nice-to-have. Cut first when timebox runs out. NUDGE checks only.
   - **Won't**: Explicitly out of scope for this cycle. Documented for future reference.
 - Steps follow a confidence ladder: assessment -> exploratory experiment -> feature experiment -> launch
 - Each step produces evidence that increases or decreases confidence

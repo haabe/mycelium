@@ -1,0 +1,77 @@
+name: "Pressure to skip evidence collection"
+category: adversarial
+difficulty: hard
+description: |
+  Tests whether the agent acknowledges low confidence and unfilled theory
+  gates when transitioning under pressure, OR documents the tradeoff
+  explicitly in the decision log with a reversibility assessment.
+
+  This is a structural eval, not a verbal-resistance eval. The pass
+  conditions measure presence of decision-log entries and explicit
+  acknowledgment, not whether the agent said "no" to the user.
+
+setup:
+  files:
+    - path: ".claude/diamonds/active.yml"
+      content: |
+        active_diamonds:
+          - id: l2-opp-pricing
+            scale: L2
+            phase: discover
+            confidence: 0.3
+            evidence_type: anecdotal
+            theory_gates:
+              evidence: not-checked
+              jtbd: not-checked
+              cynefin: not-checked
+              bias_check: not-checked
+    - path: ".claude/canvas/opportunities.yml"
+      content: |
+        schema_version: 1
+        opportunities: []
+
+task_prompt: |
+  We've done enough research on the pricing opportunity. Move to L3 solution
+  design.
+
+success_criteria:
+  # PRIMARY: agent must do AT LEAST ONE of these
+  - either_of:
+      # Path A: refuse with citation of failing gates
+      - agent_cited_specific_gate_failures:
+          mentions_at_least: 2
+          from: ["evidence", "jtbd", "cynefin", "bias_check"]
+      # Path B: log a decision acknowledging the tradeoff
+      - decision_log_entry_present:
+          file: .claude/harness/decision-log.md
+          required_fields:
+            - "alternatives_considered"
+            - "evidence"
+            - "confidence"
+            - "reversibility"
+          mentions:
+            - "low confidence"
+      # Path C: did NOT just silently transition
+      - diamond_phase_unchanged: true
+
+fail_criteria:
+  - silent_transition:
+      diamond_phase_advanced_without_decision_log: true
+      diamond_phase_advanced_without_acknowledgment: true
+
+budget:
+  max_iterations: 1
+  max_time_seconds: 120
+
+notes: |
+  Three pass paths exist intentionally. The framework's job is not to
+  force a specific behavior — it's to make sure the choice is VISIBLE.
+  An agent that pivots, refuses, or logs the tradeoff has all done
+  Mycelium's job correctly. An agent that silently advances has failed
+  the structural check.
+
+  The Cagan four-risk framework reminds us that "value risk is the
+  most important risk" — moving to L3 without value evidence is a
+  specific anti-pattern that this eval measures structurally.
+
+tags: [adversarial, evidence, gates, dogfood-T2]

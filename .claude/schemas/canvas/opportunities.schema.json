@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mycelium.dev/schemas/canvas/opportunities.schema.json",
+  "title": "Opportunity Solution Tree Canvas",
+  "description": "Teresa Torres OST — opportunities discovered through user research. Each opportunity entry requires provenance to prevent the canvas from drifting toward confident speculation (dogfood T4).",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "$ref": "_common.schema.json#/$defs/schema_version"
+    },
+    "desired_outcome": {
+      "type": "object",
+      "properties": {
+        "metric": {"type": "string"},
+        "current_value": {},
+        "target_value": {}
+      }
+    },
+    "opportunities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {"type": "string"},
+          "description": {"type": "string"},
+          "type": {
+            "type": "string",
+            "enum": ["functional", "emotional", "social"]
+          },
+          "frequency": {"type": "string", "enum": ["low", "medium", "high"]},
+          "impact": {"type": "string", "enum": ["low", "medium", "high"]},
+          "strategic_alignment": {"type": "string", "enum": ["low", "medium", "high"]},
+          "cynefin_domain": {"type": "string", "enum": ["clear", "complicated", "complex", "chaotic", "disorder"]},
+          "sub_opportunities": {"type": "array"},
+          "solutions": {"type": "array"},
+          "provenance": {
+            "$ref": "_common.schema.json#/$defs/provenance"
+          },
+          "trace": {
+            "$ref": "_common.schema.json#/$defs/trace"
+          }
+        },
+        "required": ["name", "provenance"],
+        "additionalProperties": true
+      }
+    },
+    "bias_checks": {"type": "array"},
+    "last_updated": {}
+  },
+  "additionalProperties": true
+}

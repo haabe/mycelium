@@ -47,7 +47,7 @@ Map the four components of habit formation:
 - **Variable Reward**: What reward satisfies the user's need while leaving them wanting more? (Tribe: social, Hunt: resources, Self: mastery.)
 - **Investment**: What bit of work does the user put in that improves the next cycle? (Data, content, reputation, skill.)
 
-### Manipulation Matrix (Ethical Gate — ADVISORY)
+### Manipulation Matrix (Ethical Gate — NUDGE)
 Before implementing engagement design, answer honestly:
 1. **Does it materially improve the user's life?** (Not just "engagement" — actual value.)
 2. **Would you use it yourself?** (The maker's test.)

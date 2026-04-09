@@ -7,12 +7,16 @@ on:
       - '.claude/**'
       - '*.md'
       - 'tests/**'
+      - 'requirements-ci.txt'
+      - '.github/workflows/validate.yml'
   pull_request:
     branches: [main]
     paths:
       - '.claude/**'
       - '*.md'
       - 'tests/**'
+      - 'requirements-ci.txt'
+      - '.github/workflows/validate.yml'
 
 jobs:
   validate:
@@ -20,8 +24,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install PyYAML
-        run: pip install pyyaml
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
 
-      - name: Run template validation
+      - name: Install CI dependencies
+        run: pip install -r requirements-ci.txt
+
+      - name: Run structural integrity validation
         run: bash tests/validate-template.sh
+
+      - name: Run canvas schema + trace validation
+        run: python3 .claude/scripts/validate_canvas.py

@@ -1,0 +1,17 @@
+# Mycelium CI dependencies
+#
+# These packages are installed in CI ONLY (GitHub Actions workflow), not in
+# runtime hooks. Runtime hooks use Python stdlib only — no third-party deps.
+#
+# Why the split:
+# - Runtime hooks fire on every Edit/Write and must work with zero setup.
+#   Requiring users to `pip install` would be a footgun.
+# - CI runs in a controlled environment where `pip install` is acceptable.
+#   Schema validation, trace edge resolution, and DAG cycle detection live in CI.
+#
+# See .claude/scripts/validate_canvas.py for the validator that uses these.
+# See .claude/state/README.md for the dependency philosophy.
+
+PyYAML>=6.0
+jsonschema>=4.18.0
+referencing>=0.30.0

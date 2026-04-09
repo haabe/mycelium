@@ -99,7 +99,7 @@ When a developer asks "am I done?" or when approaching Deliver->Complete:
 ```
 Ready to mark this delivery complete?
 
-GATED (must pass to complete):
+REVIEW (must pass to complete):
   □ Tests exist and pass
   □ Type checking clean (if applicable)
   □ No secrets in code

@@ -49,7 +49,34 @@ Diamonds spawn child diamonds when complexity or scope requires it:
 - Parent diamond remains active while children execute (smooth flow)
 - Child diamond outcomes feed back into parent diamond evidence
 - L5 Market feedback can trigger new L2 Opportunity diamonds (the learning loop)
-- Maximum active diamonds per scale: L0=1, L1=3, L2=5, L3=5, L4=10, L5=3
+
+## WIP Limits (single source of truth)
+
+Two limits apply: a hard ceiling per scale and a working WIP limit per scale.
+
+**Hard ceiling per scale** (architectural maximum — cannot exceed):
+
+| Scale | Max active | Rationale |
+|---|---|---|
+| L0 Purpose | 1 | A product has one purpose |
+| L1 Strategy | 3 | Multiple strategic experiments are valid (e.g., Wardley + Team Topologies + Market) |
+| L2 Opportunity | 5 | OST exploration benefits from breadth |
+| L3 Solution | 5 | Multiple solution candidates per opportunity is valid |
+| L4 Delivery | 10 | Hard ceiling — never exceed even briefly |
+| L5 Market | 3 | Multiple launch tiers can run in parallel |
+
+**Working WIP limit per scale** (recommended for healthy flow — exceed only with explicit rationale):
+
+| Scale | Working WIP | Rationale |
+|---|---|---|
+| L0 Purpose | 1 | Always 1 |
+| L1 Strategy | 1 | Focus one strategic bet at a time |
+| L2 Opportunity | 2 | Explore at most 2 opportunities concurrently |
+| L3 Solution | 2 | Compare at most 2 solution candidates concurrently |
+| L4 Delivery | 2 | Maximum 2 active L4 delivery diamonds. If both are blocked, resolve blockers before starting a third. Prevents context-switching overhead. |
+| L5 Market | 1 | One launch at a time |
+
+**Why two limits**: the hard ceiling prevents architectural collapse; the working WIP enforces healthy flow. Working WIP can be temporarily exceeded under documented exceptions (e.g., a hotfix L4 alongside an in-progress feature L4), but the hard ceiling never moves.
 
 ## Regression Rules
 
@@ -82,7 +109,7 @@ When evidence invalidates a higher-level assumption, regress:
 
 Optimize for flow across diamonds:
 
-- **WIP limits**: Maximum 1 diamond in active focus per scale level at a time.
+- **WIP limits**: Per the WIP table above. Working WIP is 1-2 per scale; hard ceiling is higher (see WIP Limits section). When in doubt, focus.
 - **Pull, don't push**: Start new diamonds only when capacity allows.
 - **Small batches**: Prefer many small diamonds over few large ones.
 - **Unblock first**: If a diamond is blocked, resolve the blocker before starting new work.
@@ -153,4 +180,4 @@ See `.claude/orchestration/operations.md` for full maintenance schedules.
 
 - **Disciplined Agile (DA)**: Mycelium's Cynefin-based domain routing + canvas-guidance project type classification IS DA's "Choose Your WoW" implemented for agentic development. The diamond engine adapts method to context, which is the core DA principle.
 - **Feature-Driven Development (FDD)**: FDD's five processes (develop model, build feature list, plan by feature, design by feature, build by feature) map directly to diamond phases. Already covered by the diamond engine.
-- **Kanban WIP Limits**: Maximum 2 active L4 delivery diamonds simultaneously. If both are blocked, resolve blockers before starting a third. This prevents context-switching overhead from degrading delivery quality.
+- **Kanban WIP Limits**: See the WIP Limits section above for the canonical table. The L4 working limit (2) is the most-cited example because L4 delivery work has the highest context-switching cost.

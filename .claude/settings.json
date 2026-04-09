@@ -46,6 +46,12 @@
             "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/gate.sh",
             "timeout": 5,
             "statusMessage": "Mycelium preflight gate + secret scan"
+          },
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/scope-gate.sh",
+            "timeout": 5,
+            "statusMessage": "Mycelium scope enforcement"
           }
         ]
       }
@@ -59,6 +65,18 @@
             "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/post-write-nudge.sh",
             "timeout": 3,
             "statusMessage": "Mycelium post-write check"
+          },
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/change-log.sh",
+            "timeout": 3,
+            "statusMessage": "Mycelium change log"
+          },
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/diamond-state-audit.sh",
+            "timeout": 3,
+            "statusMessage": "Mycelium diamond state audit"
           }
         ]
       }
@@ -68,10 +86,10 @@
         "matcher": "Bash",
         "hooks": [
           {
-            "type": "prompt",
-            "prompt": "REFLEXION REQUIRED: A command failed.\n\nTool: $TOOL\nArguments: $ARGUMENTS\n\nAnalyze this failure:\n1. What failed and why?\n2. Is this a known pattern from .claude/memory/corrections.md?\n3. What is the root cause (not just the symptom)?\n4. What specific fix is needed?\n5. Should this be logged as a new correction?\n\nDo NOT retry blindly. Diagnose first.\n\nAfter fixing: draft a corrections.md entry with the mistake, correction, and prevention rule. Ask: 'Could this be generalized as a pattern in patterns.md?'",
-            "timeout": 15,
-            "statusMessage": "Reflexion: analyzing failure..."
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/reflexion-gate.sh",
+            "timeout": 10,
+            "statusMessage": "Reflexion: checking failure relevance..."
           }
         ]
       }

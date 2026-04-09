@@ -1,11 +1,14 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.8.1 -- Canvas-guided, theory-gated, self-learning, feedback-driven.*
+*Version 0.10.0 -- Canvas-guided, theory-gated, self-learning, feedback-driven.*
 
 <!-- APEX-aware: DORA + LinearB APEX metrics for AI-era delivery measurement -->
 <!-- v0.7.0: +CALMS, VSM, Hook Model, ToC, MoSCoW, Systems Archetypes -->
 <!-- v0.8.0: +Bias Gap, Elements of Product Design, Trauma-Informed Design, HITL Triad, Neurodiversity Design -->
 <!-- v0.8.1: SDD positioning (constraint-based spec-driven development) + BDD historical acknowledgment -->
+<!-- v0.8.2: bug fix (corrections counter), reflexion hook scope fix, dogfood report lifted, two-memory-system docs, CONTRIBUTORS.md -->
+<!-- v0.9.0: Computational Enforcement Layer — scope-gate hook, change-log + diamond-state-audit observability, JSON canvas schemas + DAG validator, trace edges on 6 high-stakes canvases, gate rename (BLOCK/REVIEW/NUDGE), theory-tensions.md, 3 adversarial evals, fail-closed policy, WIP limits reconciled -->
+<!-- v0.10.0: Skills + structural additions — /mocked-persona-interview (36th skill), /diamond-progress pivot/park/kill subcommands, dogfood modifier, post-write-nudge skill auto-suggest for all 17 canvas files + synthesis nudge, release checklist with manual dogfood session, synaptiai outreach draft -->
 
 Mycelium is a harnessing system for AI-assisted product development. Like nature's mycelium network, it connects theories, shares learning, adapts to conditions, and makes the whole ecosystem stronger.
 
@@ -113,9 +116,9 @@ All product knowledge lives in `.claude/canvas/*.yml`. These files are:
 
 ### Guardrails (`.claude/harness/guardrails.md`)
 Three-tier enforcement system:
-- **BLOCKED**: Mechanically prevented by hooks (secrets detection). Cannot happen.
-- **GATED**: Checked by `/diamond-progress` at Deliver->Complete. Can write code, but cannot mark done until satisfied (tests, a11y, services, threat model, BVSSH, decision log).
-- **ADVISORY**: Nudged by hooks, not blocking. Engineering best practices and bias awareness.
+- **BLOCK**: Mechanically prevented by hooks (secrets detection). Cannot happen.
+- **REVIEW**: Checked by `/diamond-progress` at Deliver->Complete. Can write code, but cannot mark done until satisfied (tests, a11y, services, threat model, BVSSH, decision log).
+- **NUDGE**: Nudged by hooks, not blocking. Engineering best practices and bias awareness.
 
 ### Anti-Patterns (`.claude/harness/anti-patterns.md`)
 Known failure modes with detection rules. If you catch yourself falling into one, stop and self-correct.
@@ -130,6 +133,23 @@ Per-stage security requirements. Security is designed in, not bolted on.
 DRY, KISS, YAGNI, SoC, SOLID, LoD -- explicit rules for all delivery work.
 
 ## Self-Learning System
+
+### Two Memory Systems — Important Distinction
+
+Mycelium interacts with two separate memory systems. They serve different purposes and should not be confused.
+
+| System | Location | Scope | Committed to git? |
+|---|---|---|---|
+| **Project memory** | `.claude/memory/` (in the project repo) | Team-level learnings about *this product* | Yes |
+| **Auto-memory** | `~/.claude/projects/<id>/memory/` (in user home) | Per-session continuity between you and the agent | No (user-local) |
+
+**Routing rule**: When you learn something, decide where it belongs:
+
+- **Project-team learnings** → project memory (`.claude/memory/corrections.md`, `patterns.md`, `product-journal.md`, `delivery-journal.md`). Visible to other team members. Survives repo clones. Example: "input validation was missed on the /webhooks endpoint."
+- **Agent-user learnings** → auto-memory. Private to your session. Does not survive if the user switches machines. Example: "the user prefers concise summaries over bullet lists."
+- **Hardware/environment failures** → neither. These are session-local noise, not learnings.
+
+The reflexion hook (PostToolUseFailure) is scoped to **project-relevant failures only** — it should not log entries to project memory for failures caused by agent self-inflicted tool errors or environment issues outside the project directory.
 
 ### Corrections Memory (`.claude/memory/corrections.md`)
 Accumulated learning from mistakes. **Read before every implementation task.** Apply prevention rules proactively.
@@ -217,7 +237,7 @@ See `.claude/orchestration/agent-teams.md` for patterns.
 
 ## Skills Reference
 
-Invoke skills with `/skill-name`. All 35 skills:
+Invoke skills with `/skill-name`. All 36 skills:
 
 ### Onboarding & Assessment
 | Skill | When to Use |
@@ -230,6 +250,7 @@ Invoke skills with `/skill-name`. All 35 skills:
 | Skill | When to Use |
 |-------|------------|
 | `/user-interview` | Torres-style story-based interviews with bias mitigation |
+| `/mocked-persona-interview` | Disciplined mocked personas for solo/hobby/dogfood projects (v0.10) |
 | `/user-needs-map` | Map user needs independently of solutions (Allen methodology) |
 | `/ost-builder` | Build or update Opportunity Solution Tree from research |
 | `/jtbd-map` | Map Jobs to be Done (functional, emotional, social) |

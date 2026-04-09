@@ -1,6 +1,10 @@
 # Opportunity Solution Tree Canvas — Teresa Torres
 # Source: "Continuous Discovery Habits"
 # Populated through: /ost-builder skill
+# Schema: .claude/schemas/canvas/opportunities.schema.json
+# Validation: each opportunity entry MUST include provenance (v0.9.0)
+
+schema_version: 1
 
 # Root: The desired outcome (from North Star input metrics)
 desired_outcome:
@@ -10,20 +14,32 @@ desired_outcome:
 
 # Opportunities: Customer needs/pain points discovered through research
 # Structure is a tree: opportunities can have sub-opportunities
+# REQUIRED for each entry: name, provenance
 opportunities: []
-# - name: ""
+# - id: opp-001
+#   name: ""
 #   description: ""
 #   type: functional|emotional|social  # JTBD dimension (Christensen)
-#   evidence:
-#     type: anecdotal|data-supported|test-validated
-#     sources: []  # What research surfaced this opportunity
-#     interview_count: 0  # How many interviews mentioned this
 #   frequency: low|medium|high  # How many users experience this
 #   impact: low|medium|high  # How much it matters to users
 #   strategic_alignment: low|medium|high  # Does it serve our North Star?
 #   cynefin_domain: clear|complicated|complex  # Snowden
 #   sub_opportunities: []  # Nested opportunities (same structure)
 #   solutions: []
+#   provenance:                   # REQUIRED — see _common.schema.json#/$defs/provenance
+#     evidence_type: data-supported   # speculation|anecdotal|data-supported|test-validated|launch-validated
+#     evidence_sources:
+#       - "interview-2026-04-09-user-001"
+#       - "research-brief-2026-04-09.md"
+#     captured_at: "2026-04-09T14:30:00Z"
+#     confidence: 0.5
+#   trace:                        # OPTIONAL — links to related artifacts
+#     upstream:
+#       - target_id: "user-needs#need-001"
+#         edge: derived_from
+#     downstream:
+#       - target_id: "gist#idea-001"
+#         edge: implements
 #     # - name: ""
 #     #   description: ""
 #     #   ice_score:

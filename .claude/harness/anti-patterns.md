@@ -211,5 +211,5 @@ These are systemic organizational traps from Senge's "The Fifth Discipline." The
 ### 12. Test-Last Development
 - **Description**: Writing all code first, then adding tests as an afterthought -- or not at all. Both Mycelium pilot projects exhibited this pattern.
 - **Detection rule**: Test files created in a separate commit after source files. Or: source files exist with no corresponding test files at delivery completion.
-- **What to do instead**: Write tests first (TDD) or at minimum alongside implementation. The G-V7 guardrail requires tests to exist before delivery completion (GATED).
+- **What to do instead**: Write tests first (TDD) or at minimum alongside implementation. The G-V7 guardrail requires tests to exist before delivery completion (REVIEW).
 - **Source**: Beck (XP/TDD), Forsgren (Accelerate -- test automation is a key capability), both Mycelium pilot post-mortems

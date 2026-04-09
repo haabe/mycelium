@@ -226,7 +226,7 @@ For any user-facing delivery, two quality layers apply:
 - **Service quality** (Downe's 15 principles): end-to-end service design. Run `/service-check`.
 - **Interface quality** (Nielsen's 10 heuristics): screen-level usability. Run `/usability-check`.
 
-Both are GATED -- delivery cannot be marked complete without them for user-facing work.
+Both are REVIEW -- delivery cannot be marked complete without them for user-facing work.
 
 ## The Shifting Bottleneck (APEX / LinearB)
 

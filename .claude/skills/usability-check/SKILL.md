@@ -8,7 +8,7 @@ description: "Evaluate user-facing interfaces against Nielsen's 10 Usability Heu
 Evaluate interface-level usability using Jakob Nielsen's 10 heuristics (1994). This complements Downe's 15 Good Services principles: Downe checks end-to-end SERVICE quality, Nielsen checks screen-level INTERFACE quality. Both are needed for user-facing work.
 
 ## When to Use
-- During L4 Delivery for any user-facing work (GATED via G-V10)
+- During L4 Delivery for any user-facing work (REVIEW via G-V10)
 - After UI implementation, before marking delivery complete
 - When users report confusion or friction
 

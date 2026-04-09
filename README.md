@@ -1,6 +1,6 @@
 # Mycelium
 
-**Theory-guided agentic product development for Claude Code.** *v0.8.1*
+**Theory-guided agentic product development for Claude Code.** *v0.10.0*
 
 Mycelium is a **constraint-based implementation of spec-driven development (SDD)** for AI coding agents. Where workflow-SDD tools (Kiro, Spec Kit) generate sequential spec files before coding, Mycelium distributes specifications across living canvas files, theory gates, and hooks that constrain the agent in real time. The canvas IS the spec.
 
@@ -116,9 +116,9 @@ Canvas files are committed to git. They ARE your product documentation. Not all 
 ### Harnessing System (What Prevents the Agent from Going Haywire)
 
 **Guardrails** (`.claude/harness/guardrails.md`) -- 30 constraints across three enforcement tiers:
-- **BLOCKED** (2): Mechanically prevented by hooks. Secrets in code (G-S1), stale corrections (G-P5).
-- **GATED** (13): `/diamond-progress` refuses to complete delivery until satisfied. Tests, a11y, usability (Nielsen), services quality (Downe), threat modeling, input validation, BVSSH, decision logging, error states, canvas updates, AI disclosure, regulatory awareness, privacy.
-- **ADVISORY** (15): Nudged by hooks, not blocking. Engineering principles (DRY, KISS, YAGNI, XP values), bias checks, data minimization, secure defaults, theory citations, devil's advocate, BVSSH dimensions, sustainable pace.
+- **BLOCK** (2): Mechanically prevented by hooks. Secrets in code (G-S1), stale corrections (G-P5).
+- **REVIEW** (13): `/diamond-progress` refuses to complete delivery until satisfied. Tests, a11y, usability (Nielsen), services quality (Downe), threat modeling, input validation, BVSSH, decision logging, error states, canvas updates, AI disclosure, regulatory awareness, privacy.
+- **NUDGE** (15): Nudged by hooks, not blocking. Engineering principles (DRY, KISS, YAGNI, XP values), bias checks, data minimization, secure defaults, theory citations, devil's advocate, BVSSH dimensions, sustainable pace.
 
 **Anti-Patterns** (`.claude/harness/anti-patterns.md`) -- 32 known failure modes across discovery, confidence, security, delivery, market/GTM, and strategic systems thinking:
 - "Solution-first thinking", "Confidence inflation", "Security-later", "Dark pattern marketing", "Regression avoidance", and more
@@ -182,7 +182,7 @@ Mycelium communicates in human language, not framework jargon:
 - **Quarterly**: North Star review, strategic landscape refresh, eval benchmarks
 - **Escape hatch**: Documented bypass process for emergencies (production incidents, hotfixes) with mandatory payback
 
-## Skills Reference (35 skills)
+## Skills Reference (36 skills)
 
 ### Onboarding & Assessment
 | Skill | When to Use |
@@ -195,6 +195,7 @@ Mycelium communicates in human language, not framework jargon:
 | Skill | When to Use |
 |-------|------------|
 | `/user-interview` | Torres-style story-based interviews with bias mitigation |
+| `/mocked-persona-interview` | Disciplined mocked personas for solo/hobby/dogfood projects (speculation-tagged, stop-condition gated) |
 | `/user-needs-map` | Allen's methodology: map needs independently of solutions |
 | `/ost-builder` | Build/update Opportunity Solution Tree from research |
 | `/jtbd-map` | Jobs to be Done (functional, emotional, social) |
@@ -339,7 +340,7 @@ Universal principles (DRY, KISS, testing pyramid, OWASP) apply to all stacks. Sp
 
 ```
 your-project/
-  CLAUDE.md                    # Root Mycelium agent instructions (v0.8.1)
+  CLAUDE.md                    # Root Mycelium agent instructions (v0.10.0)
   .claude/
     settings.json              # Shared hook config + permissions (committed)
     engine/                    # Diamond rules, theory gates, confidence thresholds, Cynefin routing
@@ -369,6 +370,14 @@ your-project/
 Mycelium includes a **Regulatory Gate** in its theory gates that prompts you to assess risk classification at the L3 Solution stage. See `.claude/harness/security-trust.md` for the full regulatory awareness guide.
 
 **Mycelium does not certify EU AI Act compliance. For compliance decisions, consult qualified EU AI law counsel.**
+
+## Acknowledgments
+
+Mycelium is substantially shaped by community feedback. See [CONTRIBUTORS.md](CONTRIBUTORS.md) for detailed credits.
+
+**v0.9.0 was shaped by:**
+- **Simon Rohrer** — named the core weakness (inferential vs computational enforcement), referenced [Böckeler's harness engineering article](https://martinfowler.com/articles/harness-engineering.html)
+- **Daniel Bentes** — provided the comparison with [BDSK (synaptiai/bdsk)](https://github.com/synaptiai/bdsk) that clarified upstream thinking vs downstream enforcement
 
 ## Contributing
 

@@ -69,12 +69,25 @@ Classify into one of:
 
 Load canvas guidance from `.claude/engine/canvas-guidance.yml` for the classified type.
 
-Report to user: "Based on this being a [type] project, here's what we'll focus on:"
+**Also ask the dogfood question**:
+
+> "Is this primarily a real product that you intend to ship, or are you using this project mostly as a vehicle to test and learn Mycelium itself?"
+
+If the user says it's primarily about learning Mycelium:
+- Set `dogfood: true` in `diamonds/active.yml` (in addition to `project_type`)
+- Explain what this enables: mocked personas via `/mocked-persona-interview`, honest stop conditions, dogfood reports as the real deliverable
+- Reference `.claude/evals/dogfood-reports/README.md` for the pattern
+- Note that theory gates will accept "documented Mycelium learning" as evidence in place of user research
+
+See `.claude/engine/canvas-guidance.yml#dogfood_modifier` for the full effect list.
+
+Report to user: "Based on this being a [type] project [+ dogfood modifier if applicable], here's what we'll focus on:"
 - **Required canvas files**: [list] -- "These will be populated as we work."
 - **Recommended**: [list] -- "Worth doing if time allows."
 - **Optional**: [list] -- "You can skip these for this project type."
+- **If dogfood**: "Mocked personas are acceptable via `/mocked-persona-interview`. The real deliverable is a dogfood report at session end."
 
-Store classification in `diamonds/active.yml` as `project_type`.
+Store classification in `diamonds/active.yml` as `project_type`. If dogfood, also store `dogfood: true`.
 
 ## After the Interview: What Happens Next
 

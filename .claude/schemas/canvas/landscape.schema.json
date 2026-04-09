@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mycelium.dev/schemas/canvas/landscape.schema.json",
+  "title": "Wardley Map Canvas",
+  "description": "Wardley Mapping — components positioned by visibility and evolution. Components require provenance because positioning carries strategic weight.",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "$ref": "_common.schema.json#/$defs/schema_version"
+    },
+    "components": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "name": {"type": "string"},
+          "evolution_stage": {
+            "type": "string",
+            "enum": ["genesis", "custom", "product", "commodity"]
+          },
+          "visibility": {"type": "string", "enum": ["high", "medium", "low"]},
+          "provenance": {
+            "$ref": "_common.schema.json#/$defs/provenance"
+          },
+          "trace": {
+            "$ref": "_common.schema.json#/$defs/trace"
+          }
+        },
+        "required": ["name", "provenance"],
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,6 +1,9 @@
 # Go-to-Market Canvas — Martina Lauchengco
 # Source: "Loved: How to Rethink Marketing for Tech Products"
 # Populated through: /launch-tier skill and L5 Market diamond work
+# Schema: .claude/schemas/canvas/go-to-market.schema.json
+
+schema_version: 1
 
 positioning:
   target_customer: ""
@@ -23,19 +26,37 @@ launch_tier: null  # 1 (major) | 2 (significant) | 3 (incremental)
 # Tier 2: Blog, targeted campaigns, sales enablement
 # Tier 3: Release notes, in-product, knowledge base
 
+# buyer_personas and competitive_intelligence entries MUST include provenance (v0.9.0)
+# Schema: .claude/schemas/canvas/go-to-market.schema.json
+
 buyer_personas: []
-# - name: ""
+# - id: persona-001
+#   name: ""
 #   role: ""
 #   buying_criteria: []
 #   objections: []
 #   channels: []  # Where do they get information?
+#   provenance:                   # REQUIRED
+#     evidence_type: data-supported
+#     evidence_sources:
+#       - "win-loss-interviews-q1-2026.md"
+#     captured_at: "2026-04-09T14:30:00Z"
+#     confidence: 0.5
 
 competitive_intelligence: []
-# - competitor: ""
+# - id: comp-int-001
+#   competitor: ""
 #   strengths: []
 #   weaknesses: []
 #   our_differentiator: ""
 #   last_analyzed: null
+#   provenance:                   # REQUIRED
+#     evidence_type: data-supported
+#     evidence_sources:
+#       - "https://competitor-website.example/changelog"
+#       - "win-loss-interviews-q1-2026.md"
+#     captured_at: "2026-04-09T14:30:00Z"
+#     confidence: 0.6
 
 win_loss_analysis: []
 # - date: ""
