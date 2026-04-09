@@ -1,10 +1,11 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.8.0 -- Canvas-guided, theory-gated, self-learning, feedback-driven.*
+*Version 0.8.1 -- Canvas-guided, theory-gated, self-learning, feedback-driven.*
 
 <!-- APEX-aware: DORA + LinearB APEX metrics for AI-era delivery measurement -->
 <!-- v0.7.0: +CALMS, VSM, Hook Model, ToC, MoSCoW, Systems Archetypes -->
 <!-- v0.8.0: +Bias Gap, Elements of Product Design, Trauma-Informed Design, HITL Triad, Neurodiversity Design -->
+<!-- v0.8.1: SDD positioning (constraint-based spec-driven development) + BDD historical acknowledgment -->
 
 Mycelium is a harnessing system for AI-assisted product development. Like nature's mycelium network, it connects theories, shares learning, adapts to conditions, and makes the whole ecosystem stronger.
 

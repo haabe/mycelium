@@ -1,10 +1,12 @@
 # Mycelium
 
-**Theory-guided agentic product development for Claude Code.** *v0.8.0*
+**Theory-guided agentic product development for Claude Code.** *v0.8.1*
+
+Mycelium is a **constraint-based implementation of spec-driven development (SDD)** for AI coding agents. Where workflow-SDD tools (Kiro, Spec Kit) generate sequential spec files before coding, Mycelium distributes specifications across living canvas files, theory gates, and hooks that constrain the agent in real time. The canvas IS the spec.
 
 Like nature's mycelium network -- the invisible intelligence that connects trees, shares nutrients, adapts to conditions, and makes the whole forest ecosystem stronger -- Mycelium connects product development theories, shares learning across sessions, adapts to any tech stack, and makes your product development practice stronger.
 
-Mycelium is an open-source harnessing system that guides AI agents through proper incremental product development using best practices from 40+ established frameworks and books. It prevents the agent from going haywire by enforcing theory-guided decision gates, feedback loops at four speeds, reflexion loops, cognitive bias checks, and quality guardrails at every stage.
+Built on 42+ established frameworks and books, Mycelium prevents AI agents from going haywire by enforcing theory-guided decision gates, feedback loops at four speeds, reflexion loops, cognitive bias checks, and quality guardrails at every stage.
 
 ## The Problem
 
@@ -289,6 +291,8 @@ Mycelium communicates in human language, not framework jargon:
 | Trauma-Informed Design | Hussain (Chayn), SAMHSA | Sensitive contexts: Safety, agency, privacy for vulnerable users |
 | Human-in-the-Loop (Authority/Time/Understanding) | Bannerman | L3-L4: Meaningful human oversight for AI products |
 | Neurodiversity Design System | Soward | L4: Neurotype-inclusive UI design beyond WCAG |
+| Behavior-Driven Development | North (2006) | Historical precursor: executable behavioral specs as shared language; influenced SDD |
+| Spec-Driven Development | Fowler, Bockeler (2025) | Core positioning: Mycelium implements SDD as a constraint system at the spec-anchored level |
 
 ## Usage Modes
 
@@ -335,7 +339,7 @@ Universal principles (DRY, KISS, testing pyramid, OWASP) apply to all stacks. Sp
 
 ```
 your-project/
-  CLAUDE.md                    # Root Mycelium agent instructions (v0.8.0)
+  CLAUDE.md                    # Root Mycelium agent instructions (v0.8.1)
   .claude/
     settings.json              # Shared hook config + permissions (committed)
     engine/                    # Diamond rules, theory gates, confidence thresholds, Cynefin routing
