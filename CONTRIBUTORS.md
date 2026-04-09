@@ -29,46 +29,24 @@ The 40+ frameworks Mycelium integrates are credited in the *Theories & Framework
 
 ---
 
-## Planned Outreach
+## Outreach History
 
 ### synaptiai (BDSK)
 
-**Status**: Draft ready. Not yet sent.
+**Status**: Sent 2026-04-09. Issue: [synaptiai/bdsk#6](https://github.com/synaptiai/bdsk/issues/6)
 
-**Context**: BDSK is architecturally complementary to Mycelium. Daniel Bentes's comparison (see above) showed that Mycelium ensures upstream thinking discipline while BDSK ensures downstream execution enforcement. v0.9.0 adopted several BDSK-inspired patterns (scope enforcement hook, state files, trace edges, change log). It would be valuable to reach out for cross-pollination.
+**Context**: BDSK is architecturally complementary to Mycelium. Daniel Bentes's comparison (see above) showed that Mycelium ensures upstream thinking discipline while BDSK ensures downstream execution enforcement. v0.9.0 adopted several BDSK-inspired patterns (scope enforcement hook, state files, trace edges, change log). The outreach was a thank-you + a proposal to explore cross-pollination.
 
-**Draft message** (GitHub issue on synaptiai/bdsk, or email if a contact is available):
+**What was proposed**:
+1. Cross-reference in Mycelium's README pointing at BDSK as a complementary project
+2. Shared document articulating the upstream-thinking / downstream-enforcement division of labor
+3. Compare notes on Böckeler's computational vs inferential distinction
 
-> Subject: BDSK + Mycelium: complementary harness engineering approaches
->
-> Hi,
->
-> I'm the author of [Mycelium](https://github.com/haabe/mycelium), a theory-guided product development harness for Claude Code. A contributor (Daniel Bentes) recently pointed me at BDSK in the context of comparing harness engineering approaches, and I spent several hours reading your architecture in depth.
->
-> The framing that emerged from the comparison: **Mycelium ensures you think about the right things before deciding; BDSK ensures the code respects what was decided.** Mycelium is strong upstream (40+ product development theories, evidence-gated discovery, bias checks, corrections memory, dogfood reports) and was weak downstream (mostly inferential enforcement). BDSK is the opposite — strong computational enforcement via scope hooks, trace edges, and the 8-phase validator, but fewer upstream thinking tools.
->
-> Mycelium v0.9.0 adopted several BDSK-inspired patterns explicitly:
-> - PreToolUse scope enforcement hook (modeled on `check-scope.sh`)
-> - `.claude/state/` runtime state directory with JSON files
-> - JSONL change log audit trail
-> - JSON schemas for canvas files with DAG cycle detection via Kahn's algorithm
-> - Trace edges (`upstream`/`downstream`) with 10 canonical edge types on high-stakes canvas entries
-> - Fail-closed hook policy
->
-> We credited BDSK and your project in our CONTRIBUTORS.md and v0.9.0 release notes.
->
-> Daniel also suggested five things BDSK could adopt from Mycelium — an anti-pattern catalog as `codegen_policy`, evidence-based gating with `evidence_refs`, bias checks as a pre-approval step, self-learning `corrections/` memory, and multi-speed feedback loops. I'm not suggesting you should adopt any of them — just surfacing them in case they're useful.
->
-> If you're open to it, I'd love to:
-> 1. Add a cross-reference in Mycelium's README pointing at BDSK as a complementary project
-> 2. Discuss whether there's value in a shared document articulating the upstream/downstream division of labor
-> 3. Compare notes on the Böckeler "computational vs inferential" distinction, which seems to be the common theoretical ground
->
-> Either way, thank you for the architecture — it solved a problem I'd been wrestling with, and the comparison prompted v0.9.0's entire direction.
->
-> Best,
-> [Your name]
+**Response**: [pending — check the issue thread]
 
-**How to send**: Open an issue at https://github.com/synaptiai/bdsk/issues, copy the draft above, and personalize the signature. Don't delete this draft from CONTRIBUTORS.md after sending — mark the status as "sent" with the date and link to the issue, so future versions of Mycelium can see the outreach history.
+**How to handle a response**:
+- If synaptiai accepts (1): add a cross-reference in README.md under the "Related projects" section (create if needed) pointing at https://github.com/synaptiai/bdsk with a one-line summary of the complementarity
+- If synaptiai is open to (2): the division-of-labor document is a good candidate for a shared GitHub repo or a post on martinfowler.com's harness engineering thread; log any follow-up discussion here
+- If synaptiai declines or doesn't respond: no action needed. Mycelium's credit in CONTRIBUTORS.md and release notes stands regardless.
 
-**When to send**: After v0.10.0 is tagged and pushed. The outreach has more weight when backed by a released version that actually implements BDSK-inspired patterns.
+**Full sent text**: archived in the issue body at the link above. The draft that preceded it is preserved in git history of this file (pre-commit `[next hash]`).
