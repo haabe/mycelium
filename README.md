@@ -97,7 +97,7 @@ If ANY gate fails, the agent reports which gates failed, cites the theory, **sug
 
 ### The Canvas (Source of Truth)
 
-All product knowledge lives in `.claude/canvas/*.yml` -- 17 structured YAML files that serve as the single source of truth:
+All product knowledge lives in `.claude/canvas/*.yml` -- 21 structured YAML files that serve as the single source of truth:
 
 | Canvas File | What It Captures | Source Theory |
 |-------------|-----------------|---------------|
@@ -118,8 +118,12 @@ All product knowledge lives in `.claude/canvas/*.yml` -- 17 structured YAML file
 | `jobs-to-be-done.yml` | JTBD map (functional/emotional/social) | Christensen |
 | `bounded-contexts.yml` | DDD bounded contexts and context map | Evans (DDD) |
 | `value-stream.yml` | End-to-end flow, wait times, bottlenecks | Rother & Shook (VSM) |
+| `content-metrics.yml` | Content delivery metrics (courses, publications, media) | v0.11.0 |
+| `ai-tool-metrics.yml` | AI tool delivery metrics (prompts, models, agents) | v0.11.0 |
+| `service-metrics.yml` | Service delivery metrics (consulting, coaching) | v0.11.0 |
+| `human-tasks.yml` | Offline human task tracking (interviews, outreach) | v0.11.0 |
 
-Canvas files are committed to git. They ARE your product documentation. Not all canvas files are required for every project -- the `/interview` skill classifies your project type (solo hobby, solo product, team startup, team enterprise) and tells you which canvas files to focus on.
+Canvas files are committed to git. They ARE your product documentation. Not all canvas files are required for every project -- the `/interview` skill classifies your project type and product type, then tells you which canvas files to focus on.
 
 ### Harnessing System (What Prevents the Agent from Going Haywire)
 
@@ -190,7 +194,7 @@ Mycelium communicates in human language, not framework jargon:
 - **Quarterly**: North Star review, strategic landscape refresh, eval benchmarks
 - **Escape hatch**: Documented bypass process for emergencies (production incidents, hotfixes) with mandatory payback
 
-## Skills Reference (36 skills)
+## Skills Reference (38 skills)
 
 ### Onboarding & Assessment
 | Skill | When to Use |
@@ -212,6 +216,8 @@ Mycelium communicates in human language, not framework jargon:
 | `/wardley-map` | Create/update Wardley Map of value chain |
 | `/ice-score` | Prioritize with ICE scoring + confidence meter |
 | `/gist-plan` | GIST planning: goals, ideas, steps, tasks |
+| `/handoff` | Generate structured handoff for offline human tasks |
+| `/log-evidence` | Record findings from completed offline conversations |
 
 ### Quality & Governance
 | Skill | When to Use |
@@ -352,12 +358,12 @@ your-project/
   .claude/
     settings.json              # Shared hook config + permissions (committed)
     engine/                    # Diamond rules, theory gates, confidence thresholds, Cynefin routing
-    canvas/                    # 17 YAML source-of-truth files
+    canvas/                    # 21 YAML source-of-truth files
     diamonds/                  # Active diamond state tracking
     harness/                   # Guardrails, anti-patterns, biases, security, engineering principles
     memory/                    # Corrections, patterns, product journal, delivery journal
     domains/                   # Phase-specific agent behavior (discovery/delivery/quality)
-    skills/                    # 35 invocable skills
+    skills/                    # 38 invocable skills
     hooks/                     # 6-layer enforcement (gate, nudge, reflexion, stop-check, session-start, skill-gates)
     orchestration/             # Solo/team modes, agent teams, fan-out, operations, escape hatch
     jit-tooling/               # Language-agnostic delivery tooling + polyglot detection

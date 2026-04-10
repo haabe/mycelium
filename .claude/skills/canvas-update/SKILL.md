@@ -31,6 +31,10 @@ description: "Update canvas sections with new evidence. Ensures canvas stays cur
 | Jobs to be done | jobs-to-be-done.yml | Christensen |
 | Bounded contexts | bounded-contexts.yml | Evans (DDD) |
 | Value stream map | value-stream.yml | Rother & Shook (VSM) |
+| Content delivery metrics | content-metrics.yml | v0.11.0 |
+| AI tool delivery metrics | ai-tool-metrics.yml | v0.11.0 |
+| Service delivery metrics | service-metrics.yml | v0.11.0 |
+| Human task tracking | human-tasks.yml | v0.11.0 |
 
 ## Workflow
 1. Identify which canvas file(s) need updating

@@ -206,9 +206,9 @@ check_skill_count_claude() {
     local disk_count
     disk_count=$(find .claude/skills -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
 
-    # Match: "All 35 skills:"
+    # Match: "All 38 skills are auto-discovered" (v0.11.0+) or "All 38 skills:" (pre-v0.11.0)
     local claude_count
-    claude_count=$(grep "All .* skills:" CLAUDE.md | sed 's/.*All //' | sed 's/ skills:.*//' || echo "0")
+    claude_count=$(grep -E "All [0-9]+ skills" CLAUDE.md | head -1 | sed 's/.*All //' | sed 's/ skills.*//' || echo "0")
 
     if [ -z "$claude_count" ] || [ "$claude_count" = "0" ]; then
         fail "Could not find skill count in CLAUDE.md"
@@ -254,24 +254,35 @@ check_skill_frontmatter() {
 }
 
 # ============================================================
-# CHECK 9: Every skill directory is listed in CLAUDE.md
+# CHECK 9: Skills are discoverable (auto-discovery or listed)
 # ============================================================
 check_skills_in_claude_md() {
-    section "Check 9: Skills listed in CLAUDE.md"
+    section "Check 9: Skills discoverable from CLAUDE.md"
 
-    local missing=0
-    for dir in .claude/skills/*/; do
-        local skill_name
-        skill_name=$(basename "$dir")
-        # Skills are referenced as /skill-name in CLAUDE.md
-        if ! grep -q "/$skill_name" CLAUDE.md; then
-            fail "Skill $skill_name not referenced in CLAUDE.md"
-            missing=$((missing + 1))
+    # v0.11.0+: skills are auto-discovered from SKILL.md frontmatter.
+    # CLAUDE.md declares this with "auto-discovered" and points to .claude/skills/.
+    # Check that the auto-discovery declaration exists OR that all skills are individually listed.
+    if grep -q "auto-discovered" CLAUDE.md; then
+        # Verify CLAUDE.md points to the skills directory
+        if grep -q ".claude/skills/" CLAUDE.md; then
+            pass "CLAUDE.md declares skills as auto-discovered from .claude/skills/"
+        else
+            fail "CLAUDE.md says auto-discovered but doesn't reference .claude/skills/ path"
         fi
-    done
-
-    if [ "$missing" -eq 0 ]; then
-        pass "All skill directories are listed in CLAUDE.md"
+    else
+        # Fallback: check individual skill references (pre-v0.11.0 behavior)
+        local missing=0
+        for dir in .claude/skills/*/; do
+            local skill_name
+            skill_name=$(basename "$dir")
+            if ! grep -q "/$skill_name" CLAUDE.md; then
+                fail "Skill $skill_name not referenced in CLAUDE.md"
+                missing=$((missing + 1))
+            fi
+        done
+        if [ "$missing" -eq 0 ]; then
+            pass "All skill directories are listed in CLAUDE.md"
+        fi
     fi
 }
 
