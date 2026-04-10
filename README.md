@@ -45,13 +45,22 @@ Then start Claude Code and run:
 
 The interview skill guides you through establishing your product's purpose, vision, North Star metric, strategic landscape, and classifies your project type to determine which canvas files matter.
 
-## Upgrading Mid-Project
+## Upgrading
 
-Mycelium is not a software library -- it's a set of instructions that reshape agent behavior on every session start. There is no compilation step or type checker that catches mismatches between your existing work and new version expectations. The agent simply starts applying updated rules.
+Mycelium is not a software library -- it's a set of instructions that reshape agent behavior on every session start. Upgrading replaces framework files (skills, engine rules, hooks) while preserving your project state (canvas data, diamond state, decisions, memory).
 
-If you upgrade while diamonds are active, gates may become stricter, new fields may be expected on canvas data, and thresholds may shift. A diamond that was ready to progress under the old version may be blocked under the new one -- not because anything changed in your work, but because the rules changed around it.
+**Automated upgrade** (recommended):
 
-**After upgrading**: Run `/diamond-assess` to see your diamonds through the new version's lens before attempting `/diamond-progress`. Check the version changelog comments at the top of CLAUDE.md for specific changes that affect in-progress work.
+```bash
+bash scripts/upgrade.sh          # upgrade to latest
+bash scripts/upgrade.sh v0.12.0  # upgrade to specific version
+```
+
+The script reads `.claude/manifest.yml` to distinguish framework files from project state. It will never overwrite your populated canvas files, diamond state, decision log, or memory. It requires a clean git state (commit first) so you can revert if anything goes wrong.
+
+**After upgrading**: Run `/diamond-assess` to see your diamonds through the new version's lens. Gates may have become stricter or new fields may be expected -- this is intentional, and `/diamond-assess` will tell you what needs attention.
+
+**Manual upgrade**: See the upgrade checklist in `.claude/manifest.yml` for which files to replace vs preserve.
 
 ## How It Works
 

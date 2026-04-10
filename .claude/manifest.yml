@@ -1,0 +1,61 @@
+# Mycelium File Manifest
+# Classifies every file as framework (safe to replace) or project state (never overwrite).
+# Used by scripts/upgrade.sh to perform safe upgrades.
+
+# Framework files — always replaced during upgrade.
+# These contain Mycelium instructions, not project data.
+framework:
+  top_level:
+    - CLAUDE.md
+    - README.md
+    - CONTRIBUTORS.md
+    - LICENSE
+    - requirements-ci.txt
+  directories:
+    - .claude/engine/
+    - .claude/skills/
+    - .claude/hooks/
+    - .claude/domains/
+    - .claude/orchestration/
+    - .claude/jit-tooling/
+    - .claude/schemas/
+    - .claude/scripts/
+    - .claude/optimization/
+    - .github/
+    - tests/
+  single_files:
+    - .claude/settings.json
+    - .claude/manifest.yml
+
+# Harness files — framework templates that coexist with project data.
+# Replace framework files, preserve project data files.
+harness_framework:
+  - .claude/harness/anti-patterns.md
+  - .claude/harness/cognitive-biases.md
+  - .claude/harness/engineering-principles.md
+  - .claude/harness/guardrails.md
+  - .claude/harness/security-trust.md
+  - .claude/harness/theory-tensions.md
+
+# Project state — NEVER overwrite if they exist.
+# These contain the user's work product.
+project_state:
+  - .claude/harness/decision-log.md
+  - .claude/diamonds/active.yml
+  - .claude/memory/
+  - .claude/state/
+  - .claude/settings.local.json
+
+# Canvas templates — add new files only, NEVER overwrite existing.
+# Existing files contain populated project data.
+canvas_templates:
+  - .claude/canvas/*.yml
+
+# Evals — mixed. Framework scenarios are replaced, but project-specific
+# dogfood reports and results are preserved.
+evals:
+  replace:
+    - .claude/evals/scenarios/
+  preserve:
+    - .claude/evals/dogfood-reports/
+    - .claude/evals/results/
