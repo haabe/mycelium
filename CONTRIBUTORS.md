@@ -8,6 +8,10 @@ Mycelium is shaped by the product development community. The following people co
 
 **Daniel Bentes** — Provided the architectural comparison between Mycelium and [BDSK (synaptiai/bdsk)](https://github.com/synaptiai/bdsk), clarifying the division of labor: Mycelium ensures you think about the right things before deciding; BDSK ensures the code respects what was decided. Directly shaped the v0.9.0 computational enforcement layer — scope hooks, state files, trace edges, schema validation.
 
+## v0.11.0 — Product-Type-Agnostic Delivery
+
+**Linda Maria Sneve** — Asked the question no one inside the project had considered: "How can I use Mycelium for non-software products — courses, ebooks, videos, AI tools?" This prompted the entire product_type dimension: 6 product types, 3 new delivery metrics canvases, conditional theory gates, product-type Definition of Done variants, non-software delivery guidance, and product-type-specific launch channels. Made Mycelium's largest structural expansion since v0.9.0.
+
 ---
 
 ## How Mycelium Uses Feedback
