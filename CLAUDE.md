@@ -321,3 +321,11 @@ If the canvas is populated (continuing work), start with:
 ```
 
 The system will guide you from there.
+
+## Upgrading Mid-Project
+
+Mycelium reshapes agent behavior on every session start. Unlike software libraries, there is no compilation step or type checker that catches mismatches between your existing canvas state and new version expectations -- the agent simply starts applying updated rules to your in-progress work.
+
+If you upgrade while diamonds are active, gates may become stricter, new fields may be expected on canvas data, and thresholds may shift. A diamond that was ready to progress under the old version may be blocked under the new one -- not because anything changed in your work, but because the rules changed around it.
+
+**After upgrading**: Run `/diamond-assess` to see your diamonds through the new version's lens before attempting `/diamond-progress`. Check the version changelog comments at the top of this file for specific changes that affect in-progress work.
