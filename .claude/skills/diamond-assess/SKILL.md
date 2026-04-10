@@ -19,12 +19,17 @@ Evaluate current diamond state and recommend next action.
 
 3. **Check theory gates for next transition**:
    - Reference theory-gates.md for the current transition
-   - Evaluate each applicable gate: Pass / Fail / Insufficient Evidence
+   - Check `product_type` from `diamonds/active.yml` -- gates conditioned on product_type include:
+     - **Security Gate**: full OWASP for software/ai_tool; platform-only for content; infra-only for service
+     - **Delivery Metrics Gate**: routes to product-type-appropriate metrics canvas
+     - **Service Quality Gate**: Downe applies to consumption experience for all product types; Nielsen only for digital interfaces
+   - Evaluate each applicable gate: Pass / Fail / Insufficient Evidence / N/A (if gate doesn't apply to this product_type)
    - Document what is missing for failed gates
 
 4. **Check confidence threshold**:
    - Reference confidence-thresholds.yml for the current scale
-   - Compare current confidence to required threshold
+   - Apply `project_type_adaptations` to compute effective threshold (see confidence-thresholds.yml)
+   - Compare current confidence to the **effective** threshold
    - Identify what would increase confidence
 
 5. **Check for anti-patterns**:

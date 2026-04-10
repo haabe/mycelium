@@ -1,0 +1,77 @@
+# Service Delivery Metrics
+# For service offerings: consulting, coaching, agency, freelance, productized services
+# Measures client throughput, satisfaction, and delivery repeatability.
+#
+# Product type: service_offering
+
+schema_version: 1
+
+# ============================================================
+# Client Throughput (analogous to DORA Deployment Frequency)
+# ============================================================
+client_throughput:
+  current: null              # e.g., "3 clients/month", "10 engagements/quarter"
+  target: null
+  classification: null       # consistent|improving|declining
+
+# ============================================================
+# Delivery Lead Time (analogous to DORA Lead Time for Changes)
+# ============================================================
+delivery_lead_time:
+  current: null              # time from client engagement start to delivery, e.g., "2 weeks"
+  target: null
+  bottleneck: null           # e.g., "client feedback turnaround", "research phase"
+
+# ============================================================
+# Client Satisfaction (analogous to quality metrics)
+# ============================================================
+client_satisfaction:
+  nps: null                  # Net Promoter Score (-100 to 100)
+  csat: null                 # Customer Satisfaction Score (1-5 or %)
+  retention_rate: null       # % of clients who return or renew
+  referral_rate: null        # % of clients who refer others
+
+# ============================================================
+# Delivery Repeatability (service-specific quality indicator)
+# ============================================================
+repeatability:
+  documented: false          # is the delivery workflow documented?
+  templated: false           # are deliverables templated?
+  onboarding_tested: false   # has client onboarding been tested?
+  score: null                # 1-5 self-assessment of how repeatable the service is
+
+# ============================================================
+# Time to First Value (TTFV)
+# ============================================================
+# How quickly a client receives meaningful value after engaging.
+time_to_first_value:
+  current: null              # e.g., "1 week" (first deliverable), "1 day" (kickoff + quick win)
+  target: null
+  bottleneck: null           # e.g., "client onboarding", "scope definition", "scheduling"
+
+# ============================================================
+# Acquisition & Conversion (client-side funnel)
+# ============================================================
+acquisition:
+  conversion_rate: null      # % of leads/inquiries that become paying clients
+  cost_per_acquisition: null # cost to acquire one client
+  proposal_win_rate: null    # % of proposals that convert (service-specific)
+
+# ============================================================
+# Revenue & Retention (business health)
+# ============================================================
+revenue:
+  refund_rate: null           # % of engagements refunded or disputed. Target: < 5%.
+  customer_lifetime_value: null
+  churn_rate: null            # for retainer/subscription services: % who cancel per period
+  net_revenue_retention: null # target: > 100%
+
+# ============================================================
+# Quality Review
+# ============================================================
+quality_review:
+  service_blueprint_reviewed: false  # end-to-end service flow mapped
+  pricing_validated: false           # pricing tested against market
+  delivery_workflow_tested: false    # at least one end-to-end delivery completed
+
+last_measured: null

@@ -29,6 +29,7 @@ project_types:
       - privacy-assessment.yml # Only if collecting data
       - trust-signals.yml    # No trust architecture for personal project
       - bvssh-health.yml     # Lightweight self-check sufficient
+      - human-tasks.yml      # Optional for hobby projects
 
   solo_product:
     description: "Solo developer building a real product. May have users, may generate revenue."
@@ -46,6 +47,7 @@ project_types:
       - dora-metrics.yml
       - landscape.yml
       - go-to-market.yml
+      - human-tasks.yml      # Track offline evidence-gathering tasks
     optional:
       - team-shape.yml
       - trust-signals.yml
@@ -71,6 +73,7 @@ project_types:
       - bvssh-health.yml
       - trust-signals.yml
       - bounded-contexts.yml  # DDD: important once team has multiple services/domains
+      - human-tasks.yml      # Track offline evidence-gathering tasks
     optional: []
 
   team_enterprise:
@@ -92,6 +95,7 @@ project_types:
       - bvssh-health.yml        # Holistic health monitoring
       - trust-signals.yml       # Trust architecture for enterprise
       - bounded-contexts.yml   # DDD: required for multi-team architecture
+      - human-tasks.yml        # Track offline evidence-gathering tasks
     recommended: []
     optional: []
 
@@ -132,12 +136,103 @@ dogfood_modifier:
     - "The real deliverable is the dogfood report, not the object project"
   references:
     - ".claude/evals/dogfood-reports/README.md"
-    - ".claude/evals/dogfood-reports/2026-04-09-macos-fileviewer.md"
+    - ".claude/evals/dogfood-reports/README.md"
     - ".claude/skills/mocked-persona-interview/SKILL.md"
-  source: "Dogfood finding G1 from the macos-fileviewer session (2026-04-09). See report for the inventing-discipline-in-the-moment pattern that prompted this mode."
+  source: "Dogfood finding G1 from the first dogfood session (2026-04-09). The session revealed that meta-projects need explicit framework support — without it, agents invent discipline on the spot."
 
 # ============================================================
-# Dimension 2: Delivery Type (quality requirements)
+# Dimension 2: Product Type (v0.11.0)
+# Determines which delivery profile, metrics canvas, and quality
+# frameworks apply. Orthogonal to project_type (solo/team) and
+# delivery_type (UI/API/CLI). Set during /interview Phase 6.
+# Stored in diamonds/active.yml as product_type.
+# ============================================================
+
+product_types:
+
+  software:
+    description: "Code-based product: web app, mobile app, API, CLI, library, desktop app"
+    detection: "Package manifests (package.json, Cargo.toml, etc.), source code files, build tools"
+    delivery_profile: software
+    delivery_canvas: dora-metrics.yml
+    quality_frameworks:
+      - OWASP                 # Security
+      - WCAG                  # Accessibility (if user-facing)
+      - testing_pyramid       # Unit/integration/e2e
+      - DORA                  # Deployment metrics
+    notes: "Default. All existing Mycelium L4/L5 behavior applies unchanged."
+
+  content_course:
+    description: "Educational content: online course, workshop, certification program, tutorial series"
+    detection: "Curriculum outline, lesson plans, LMS config (Teachable, Thinkific, Udemy), video scripts with learning objectives"
+    delivery_profile: content
+    delivery_canvas: content-metrics.yml
+    quality_frameworks:
+      - instructional_design  # Bloom's taxonomy, learning objectives alignment
+      - accessibility_content # Captions, transcripts, alt text, readable typography
+      - content_review        # SME review, fact-checking, no unsupported claims
+
+  content_publication:
+    description: "Written content: ebook, newsletter, documentation, knowledge base, blog"
+    detection: "Manuscript files, chapter outlines, editorial calendar, *.epub, *.docx with chapter structure"
+    delivery_profile: content
+    delivery_canvas: content-metrics.yml
+    quality_frameworks:
+      - editorial_review      # Factual accuracy, style consistency, source attribution
+      - accessibility_content # Alt text, readable typography, structured headings
+
+  content_media:
+    description: "Media content: video series, podcast, YouTube channel, audio course"
+    detection: "Video scripts, *.srt/*.vtt subtitle files, episode outlines, podcast RSS, media production pipeline"
+    delivery_profile: content
+    delivery_canvas: content-metrics.yml
+    quality_frameworks:
+      - production_quality    # Audio/video quality, editing, pacing
+      - accessibility_content # Captions, audio descriptions, transcripts
+
+  ai_tool:
+    description: "AI-powered tool: prompt library, fine-tuned model, AI agent, workflow automation, chatbot"
+    detection: "Prompt templates, *.prompt files, agent definitions, model configs, API integration code importing anthropic/openai"
+    delivery_profile: ai_tool
+    delivery_canvas: ai-tool-metrics.yml
+    quality_frameworks:
+      - prompt_quality        # Evaluation, testing, consistency measurement
+      - ai_safety             # Bias testing, red-teaming, harmful output prevention
+      - OWASP                 # If has API surface
+      - regulatory            # EU AI Act applies
+
+  service_offering:
+    description: "Service business: consulting, coaching, agency, freelance, productized service"
+    detection: "Service blueprints, pricing documents, client onboarding docs, proposal templates"
+    delivery_profile: service
+    delivery_canvas: service-metrics.yml
+    quality_frameworks:
+      - service_blueprint     # End-to-end service flow mapping
+      - client_satisfaction   # NPS/CSAT tracking
+
+# ============================================================
+# How Product Type and Delivery Type Interact (v0.11.0)
+# ============================================================
+# Product type and delivery type are COMPLEMENTARY, not competing:
+#   - Product type determines the METRICS CANVAS (what you measure)
+#   - Delivery type determines QUALITY FRAMEWORKS (what standards apply)
+#   - Both apply simultaneously
+#
+# Example: content_course delivered via a web platform
+#   -> product_type: content_course -> uses content-metrics.yml, instructional design
+#   -> delivery_type: user_facing -> ALSO requires services.yml, a11y, usability check
+#   The content quality gates check the CONTENT; the delivery type gates check the PLATFORM.
+#
+# Example: ai_tool with API endpoints
+#   -> product_type: ai_tool -> uses ai-tool-metrics.yml, prompt quality, safety
+#   -> delivery_type: api_service -> ALSO requires threat-model.yml, input validation
+#   The ai_tool gates check prompt/model quality; the delivery type gates check the API.
+#
+# Rule: delivery type quality requirements are ADDITIVE to product type requirements.
+# ============================================================
+
+# ============================================================
+# Dimension 3: Delivery Type (quality requirements)
 # These override project_type for quality-related canvases.
 # Detected by /delivery-bootstrap from file patterns.
 # ============================================================

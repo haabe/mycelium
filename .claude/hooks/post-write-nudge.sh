@@ -53,6 +53,18 @@ case "$FILE_PATH" in
   *".claude/canvas/dora-metrics.yml"*)
     NUDGE="DORA metrics canvas edited. Consider /dora-check for Forsgren's four + APEX metrics. Remember Loop 3 cadence: per delivery cycle."
     ;;
+  *".claude/canvas/content-metrics.yml"*)
+    NUDGE="Content metrics canvas edited. Consider /dora-check (auto-routes to content assessment). Track publication cadence, revision rate, engagement."
+    ;;
+  *".claude/canvas/ai-tool-metrics.yml"*)
+    NUDGE="AI tool metrics canvas edited. Consider /dora-check (auto-routes to AI assessment). Track eval scores, safety, bias assessment."
+    ;;
+  *".claude/canvas/service-metrics.yml"*)
+    NUDGE="Service metrics canvas edited. Consider /dora-check (auto-routes to service assessment). Track client throughput, satisfaction, repeatability."
+    ;;
+  *".claude/canvas/human-tasks.yml"*)
+    NUDGE="Human tasks canvas edited. Pending tasks? Run /log-evidence when offline work is complete."
+    ;;
   *".claude/canvas/bvssh-health.yml"*)
     NUDGE="BVSSH canvas edited. Consider /bvssh-check for the five dimensions assessment (Smart). CALMS culture section supplements DORA."
     ;;

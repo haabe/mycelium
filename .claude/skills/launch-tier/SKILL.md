@@ -22,9 +22,25 @@ Every release gets classified before planning begins. Source: Lauchengco (Loved)
 
 ## Per-Tier Activities
 
+### Software (default)
 **Tier 1**: Press, events, campaigns, sales enablement, analyst briefings, customer advisory
 **Tier 2**: Blog post, targeted campaigns, sales enablement update, in-product announcement
 **Tier 3**: Release notes, changelog, in-product notification, knowledge base update
+
+### Content Products (courses, publications, media) (v0.11.0)
+**Tier 1**: Platform launch (new course on marketplace), PR/media coverage, launch webinar, guest appearances
+**Tier 2**: New module/section, cross-promotion, community announcement, guest post
+**Tier 3**: Content update, errata fix, supplementary material, minor revision
+
+### AI Tools (v0.11.0)
+**Tier 1**: Public launch, ProductHunt/HackerNews, documentation site, demo video
+**Tier 2**: New capability/model, integration partnership, case study
+**Tier 3**: Prompt improvement, model update, bug fix, eval result improvement
+
+### Service Offerings (v0.11.0)
+**Tier 1**: New service line launch, case study PR, conference talk, partnership announcement
+**Tier 2**: New package/tier, testimonial campaign, process improvement announcement
+**Tier 3**: Pricing update, workflow refinement, expanded availability
 
 ## Behavioral Science in Positioning (Shotton)
 Use biases ETHICALLY to help users understand value:
@@ -67,11 +83,13 @@ Update `canvas/go-to-market.yml` engagement_design section with Hook Canvas resu
 
 **This is critical.** After launch, market feedback must flow back into discovery:
 
-1. **Capture market signals** (within 2-4 weeks post-launch):
-   - User feedback (support tickets, reviews, social media)
-   - Adoption data (feature usage, retention, conversion)
-   - Win/loss analysis (for sales-led products)
-   - NPS/CSAT changes
+1. **Capture market signals** (within 2-4 weeks post-launch).
+   Check the product-type-appropriate metrics canvas via `/dora-check`:
+
+   **Software**: feature usage, retention, conversion, support tickets, NPS/CSAT
+   **Content**: refund rate, completion rate, drop-off points, return rate, reviews, NPS
+   **AI tool**: task success rate, retention, DAU, refund rate, user feedback
+   **Service**: client satisfaction (NPS/CSAT), referral rate, retention, delivery lead time feedback
 
 2. **Evaluate against L2 assumptions**:
    - Do the signals confirm the L2 opportunity we solved for?

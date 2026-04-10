@@ -1,0 +1,74 @@
+# AI Tool Delivery Metrics
+# For AI-powered products: prompt libraries, agents, fine-tuned models, workflow automation
+# Measures prompt quality, safety, and regulatory compliance rather than deployment frequency.
+#
+# Product type: ai_tool
+
+schema_version: 1
+
+# ============================================================
+# Prompt / Model Quality
+# ============================================================
+prompt_quality:
+  evaluation_method: null    # manual, automated eval, LLM-as-judge, human rater panel
+  accuracy_score: null       # % of outputs meeting quality criteria
+  consistency_score: null    # same input -> similar outputs (measure of variance)
+  safety_score: null         # % of adversarial inputs handled correctly (red-team results)
+  last_evaluated: null
+
+# ============================================================
+# Model Metrics (if fine-tuned or custom model)
+# ============================================================
+model_metrics:
+  model_id: null             # e.g., "claude-sonnet-4-5-20250514", "gpt-4o", custom model ID
+  version: null              # prompt version or model version
+  training_data_provenance: null  # where training data came from, consent status
+  bias_assessment: null      # results of bias testing (demographic, cultural, etc.)
+  last_assessed: null
+
+# ============================================================
+# Deployment & Versioning
+# ============================================================
+deployment:
+  method: null               # API, embedded, agent framework, manual copy-paste, marketplace
+  versioning: null           # how prompt/model versions are tracked (git, registry, manual)
+  rollback_capability: false # can you revert to a previous prompt/model version?
+
+# ============================================================
+# Time to First Value (TTFV)
+# ============================================================
+# How quickly a user gets useful output after first accessing the tool.
+# For AI tools: time from signup/install to first successful task completion.
+time_to_first_value:
+  current: null              # e.g., "30 seconds" (paste prompt, get result), "5 minutes" (configure + first run)
+  target: null
+  bottleneck: null           # e.g., "API key setup", "onboarding flow", "first prompt guidance"
+
+# ============================================================
+# Usage & Retention (customer-side)
+# ============================================================
+usage:
+  daily_active_users: null   # DAU (if applicable)
+  task_success_rate: null    # % of user tasks that produce a satisfactory result
+  retention_rate: null       # % of users who return after first use (7-day, 30-day)
+  drop_off_points: []        # where users abandon (e.g., "onboarding", "first complex prompt", "pricing wall")
+
+# ============================================================
+# Revenue & Retention (business health)
+# ============================================================
+revenue:
+  refund_rate: null           # % of purchases refunded. Target: < 5%.
+  customer_lifetime_value: null
+  churn_rate: null            # for subscriptions: % who cancel per period
+  net_revenue_retention: null # target: > 100%
+
+# ============================================================
+# Regulatory Compliance (EU AI Act + applicable regulation)
+# ============================================================
+regulatory:
+  eu_ai_act_risk_level: null         # minimal|limited|high|unacceptable
+  transparency_disclosure: false     # Article 50: users know they're interacting with AI
+  human_oversight_mechanism: null    # how humans can intervene in AI decisions
+  data_protection_assessment: false  # DPIA completed if processing personal data
+
+last_measured: null

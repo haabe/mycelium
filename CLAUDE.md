@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.10.0 -- Canvas-guided, theory-gated, self-learning, feedback-driven.*
+*Version 0.11.0 -- Product-type-agnostic, evidence-ratio-aware, human-handoff-enabled.*
 
 <!-- APEX-aware: DORA + LinearB APEX metrics for AI-era delivery measurement -->
 <!-- v0.7.0: +CALMS, VSM, Hook Model, ToC, MoSCoW, Systems Archetypes -->
@@ -9,6 +9,7 @@
 <!-- v0.8.2: bug fix (corrections counter), reflexion hook scope fix, dogfood report lifted, two-memory-system docs, CONTRIBUTORS.md -->
 <!-- v0.9.0: Computational Enforcement Layer — scope-gate hook, change-log + diamond-state-audit observability, JSON canvas schemas + DAG validator, trace edges on 6 high-stakes canvases, gate rename (BLOCK/REVIEW/NUDGE), theory-tensions.md, 3 adversarial evals, fail-closed policy, WIP limits reconciled -->
 <!-- v0.10.0: Skills + structural additions — /mocked-persona-interview (36th skill), /diamond-progress pivot/park/kill subcommands, dogfood modifier, post-write-nudge skill auto-suggest for all 17 canvas files + synthesis nudge, release checklist with manual dogfood session, synaptiai outreach draft -->
+<!-- v0.11.0: Dogfood-driven improvements — External evidence ratio gate (source_classes in provenance, Evidence Gate source ratio sub-check, SessionStart check), human task handoff (/handoff + /log-evidence skills, human-tasks.yml canvas), threshold adaptation rules (project_type_adaptations in confidence-thresholds.yml with NO_REDUCTION anti-gaming), non-software product support (product_type dimension: content_course, content_publication, content_media, ai_tool, service_offering + content-metrics.yml, ai-tool-metrics.yml, service-metrics.yml + conditional theory gates, DoD, detector, delivery domain, launch-tier). Non-software product support prompted by Linda Maria Sneve. -->
 
 Mycelium is a harnessing system for AI-assisted product development. Like nature's mycelium network, it connects theories, shares learning, adapts to conditions, and makes the whole ecosystem stronger.
 
@@ -51,6 +52,8 @@ Before ANY implementation task:
 | L4: Delivery | Build and ship | Forsgren (DORA), OWASP, Goldratt (ToC), DRY/KISS/YAGNI/SOLID/SoC | `canvas/dora-metrics.yml`, `canvas/threat-model.yml`, `canvas/value-stream.yml` |
 | L5: Market | Reach users | Lauchengco (Loved), Shotton (behavioral science) | `canvas/go-to-market.yml`, `canvas/trust-signals.yml` |
 
+**Product type** (v0.11.0): L0-L3 are product-agnostic. L4 and L5 adapt to the `product_type` set during `/interview`: software (default), content_course, content_publication, content_media, ai_tool, service_offering. Each product type has its own delivery metrics canvas and quality frameworks. See `canvas-guidance.yml#product_types`.
+
 ### Diamond Phases (within each scale)
 
 Each diamond has four phases. The transition between phases is **gated by theory checks**, not just confidence scores.
@@ -88,7 +91,7 @@ Every diamond transition must pass ALL applicable gates. See `.claude/engine/the
 
 | Gate | What It Checks | Source Theory |
 |------|---------------|---------------|
-| Evidence | Is there research-backed evidence? Multiple sources? | Torres (CDH), Gilad (Evidence Guided) |
+| Evidence | Is there research-backed evidence? Multiple sources? External evidence ratio? | Torres (CDH), Gilad (Evidence Guided) |
 | Four Risks | Have value, usability, feasibility, viability been assessed? | Cagan (Inspired) |
 | JTBD | Have emotional and social dimensions been mapped, not just functional? | Christensen |
 | Cynefin | Is the domain classified? Is the method appropriate? | Snowden |
@@ -97,7 +100,7 @@ Every diamond transition must pass ALL applicable gates. See `.claude/engine/the
 | Privacy | Has privacy been assessed? Data minimized? | Cavoukian (PbD), GDPR |
 | BVSSH | Better, Value, Sooner, Safer, Happier? (required at delivery completion) | Smart |
 | Service Quality | Do Downe's 15 principles pass? Nielsen's 10 heuristics? | Downe (Good Services), Nielsen |
-| DORA | Are delivery metrics healthy? Error budget status? Bottleneck shifting? | Forsgren (Accelerate), LinearB (APEX), SRE (Beyer) |
+| Delivery Metrics | Are delivery metrics healthy? Product-type-routed: DORA (software), content/AI/service metrics. | Forsgren (Accelerate), LinearB (APEX), SRE (Beyer) |
 | CALMS | Is DevOps culture healthy? Culture, Automation, Lean, Measurement, Sharing? | Humble (CALMS) |
 | Corrections | Have past mistakes been reviewed? | Mycelium self-learning |
 | Regulatory | Has EU AI Act risk classification been assessed? | EU AI Act (2024/1689) |
@@ -237,7 +240,7 @@ See `.claude/orchestration/agent-teams.md` for patterns.
 
 ## Skills Reference
 
-Invoke skills with `/skill-name`. All 36 skills:
+Invoke skills with `/skill-name`. All 38 skills:
 
 ### Onboarding & Assessment
 | Skill | When to Use |
@@ -259,6 +262,8 @@ Invoke skills with `/skill-name`. All 36 skills:
 | `/wardley-map` | Create or update Wardley Map of value chain |
 | `/ice-score` | Score and prioritize ideas with confidence meter |
 | `/gist-plan` | GIST planning: goals, ideas, steps, tasks |
+| `/handoff` | Generate structured handoff for offline human tasks (v0.11) |
+| `/log-evidence` | Record findings from completed offline conversations (v0.11) |
 
 ### Quality & Governance Skills
 | Skill | When to Use |
@@ -277,10 +282,10 @@ Invoke skills with `/skill-name`. All 36 skills:
 | Skill | When to Use |
 |-------|------------|
 | `/delivery-bootstrap` | Auto-detect tech stack and set up delivery tooling |
-| `/preflight` | Pre-code validation checklist |
+| `/preflight` | Pre-delivery validation checklist |
 | `/reflexion` | Self-correcting implementation loop (implement/validate/critique/retry) |
 | `/definition-of-done` | Verify increment satisfies all DoD criteria |
-| `/dora-check` | Delivery performance metrics assessment |
+| `/dora-check` | Delivery health metrics (product-type-routed) |
 | `/retrospective` | Post-delivery learning capture |
 
 ### Market & Go-to-Market Skills

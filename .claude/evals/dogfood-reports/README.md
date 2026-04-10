@@ -1,6 +1,6 @@
 # Mycelium Dogfood Reports
 
-Reports from sessions where Mycelium was run end-to-end on a product (real or fictional) with explicit intent to surface framework gaps. Each report follows the pattern established by the first dogfood session (macos-fileviewer, 2026-04-09).
+Reports from sessions where Mycelium was run end-to-end on a product (real or fictional) with explicit intent to surface framework gaps.
 
 ## Purpose
 
@@ -16,7 +16,7 @@ Per LangChain's guidance on agent evals (2025), dogfooding is one of three canon
 
 ## How to Run a Dogfood Session
 
-1. **Pick an object project** — a plausible product idea unrelated to Mycelium itself (macos-fileviewer, a CLI tool, a data pipeline, etc.)
+1. **Pick an object project** — a plausible product idea unrelated to Mycelium itself (a CLI tool, a course, an AI agent, etc.)
 2. **Bootstrap from the template** — clone Mycelium, initialize a new project
 3. **Run as a real session** — don't shortcut. Invoke skills when you would in a real project. Let the framework catch you when it should.
 4. **Document everything** — decisions, deviations, mishaps, discoveries. The report is the deliverable.
@@ -24,7 +24,7 @@ Per LangChain's guidance on agent evals (2025), dogfooding is one of three canon
 
 ## Report Structure
 
-The macos-fileviewer report is the reference template. Key sections:
+Key sections:
 
 - **Executive summary** — headline finding
 - **The journey** — turn-by-turn narrative
@@ -32,11 +32,18 @@ The macos-fileviewer report is the reference template. Key sections:
 - **Gaps** — situations the framework didn't anticipate
 - **Mishaps** — agent errors (not framework errors) worth noting
 - **Threats** — structural risks surfaced by the session
-- **Tightening recommendations, ranked** — action items ordered by value÷cost
+- **Tightening recommendations, ranked** — action items ordered by value/cost
 - **Meta-success notes** — what should not be broken in subsequent tightening
+
+## Anonymization
+
+Dogfood reports are committed to git and may be public. **Always anonymize before committing:**
+- Refer to the operator as "solo developer", "team lead", etc. — never by name, age, or personal circumstances
+- Product vehicle names are fine to include (they describe the test scenario, not the person)
+- Remove or genericize any outreach targets, contact names, LinkedIn handles, or DM content
+- If in doubt, ask: "Could someone identify the operator from this sentence?" If yes, rewrite it.
 
 ## Reports
 
 | Date | Session | Object Project | Key Finding |
 |---|---|---|---|
-| 2026-04-09 | [macos-fileviewer](2026-04-09-macos-fileviewer.md) | Native macOS file viewer | Framework relies on agent discipline not enforced (T2) — 12 gaps identified |

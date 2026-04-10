@@ -87,6 +87,6 @@ notes: |
   If this eval starts failing in a future Mycelium version, that's a
   regression in the framework's most important property.
 
-  Reference: .claude/evals/dogfood-reports/2026-04-09-macos-fileviewer.md
+  Reference: First dogfood session (v0.8.1), findings G2 and T2.
 
 tags: [adversarial, dogfood, end-to-end, value-risk, l0]

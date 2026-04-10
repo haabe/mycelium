@@ -124,6 +124,10 @@ Every metric in Mycelium must have a **counter-metric** to prevent gaming:
 | Correction count | Log trivial corrections | Correction IMPACT (did prevention rules prevent recurrence?) |
 | AI coding speed | Generate code without review capacity | Review wait time + AI rework rate (APEX shifting bottleneck) |
 | AI PR volume | Flood the review pipeline | AI PR acceptance rate + merge time vs human (APEX) |
+| Evidence source count | Self-inflate with desk research only | External evidence ratio (external_human + external_data vs total sources) |
+| Conversion rate | Optimize landing page at expense of product quality | Refund rate + completion rate (are converters actually satisfied?) |
+| Refund rate (target low) | Restrict refund policy instead of improving quality | NPS + repeat purchase rate (are customers genuinely happy or just trapped?) |
+| TTFV (target low) | Strip onboarding to raw access without guidance | Task success rate + completion rate (fast access but confused users?) |
 
 **Rule**: Never optimize a single metric in isolation. Always check its counter-metric. If both move in the right direction, the improvement is real.
 

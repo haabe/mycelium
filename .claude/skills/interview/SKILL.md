@@ -56,6 +56,20 @@ Progressive onboarding through structured discovery conversation.
 At the end of the interview, classify the project to determine which canvas files are required:
 
 Ask: "Let me understand the project scope to tailor the framework:"
+
+**Product type** (v0.11.0 -- ask first, determines delivery profile):
+- "What type of product are you building?"
+  - Software (app, API, tool, library)
+  - Online course or educational content
+  - Written publication (ebook, newsletter, docs)
+  - Media content (video, podcast, audio)
+  - AI tool or agent (prompts, fine-tuned models, AI workflows)
+  - Service offering (consulting, coaching, agency)
+  - Other (describe)
+
+Store as `product_type` on the L0 diamond entry in `diamonds/active.yml` (per-diamond field, not root-level). Child diamonds inherit product_type from their parent unless overridden. Load delivery profile from `canvas-guidance.yml#product_types`.
+
+**Project scope**:
 - Is this a solo or team project?
 - Is this a hobby/learning project, a real product, or enterprise?
 - Will it have external users?
@@ -88,6 +102,26 @@ Report to user: "Based on this being a [type] project [+ dogfood modifier if app
 - **If dogfood**: "Mocked personas are acceptable via `/mocked-persona-interview`. The real deliverable is a dogfood report at session end."
 
 Store classification in `diamonds/active.yml` as `project_type`. If dogfood, also store `dogfood: true`.
+
+### Threshold Implications (v0.11.0)
+
+After classifying project_type (and dogfood status), inform the user of threshold adaptations from `confidence-thresholds.yml#project_type_adaptations`:
+
+"Based on your project type, confidence thresholds are adapted:
+- L0 Purpose: [base] -> [effective] (base [base] x [project_type multiplier] [x dogfood multiplier if applicable])
+- L1 Strategy: [base] -> [effective]
+- ... (list all scales)
+- [If dogfood: 'Dogfood mode stacks an additional 0.8x multiplier. Example: solo_product (0.85) x dogfood (0.8) = 0.68 effective multiplier. L0: 0.9 x 0.68 = 0.612.']
+- This means you need [plain language: 'less formal evidence' / 'the same rigor as a full team'] to progress diamonds.
+- Note: evidence quality and external evidence requirements are NOT reduced -- you still need at least one real human conversation before shipping purpose or opportunity diamonds."
+
+**Canvas setup**: Based on the product_type, create the appropriate delivery metrics canvas:
+- software -> `canvas/dora-metrics.yml` (already exists as template)
+- content_course/content_publication/content_media -> `canvas/content-metrics.yml`
+- ai_tool -> `canvas/ai-tool-metrics.yml`
+- service_offering -> `canvas/service-metrics.yml`
+
+Tell the user: "I've set up [canvas name] for tracking your delivery metrics. When you reach L4, run `/dora-check` to assess delivery health."
 
 ## After the Interview: What Happens Next
 

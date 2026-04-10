@@ -22,5 +22,16 @@ active_diamonds: []
 # - last_progressed: ISO timestamp
 # - theory_gates_status: map of gate name -> pass|fail|not-checked
 # - notes: free text
+# - product_type: software|content_course|content_publication|content_media|ai_tool|service_offering (v0.11.0, per-diamond)
+#
+# Root-level fields (set during /interview Phase 6):
+# - project_type: solo_hobby|solo_product|team_startup|team_enterprise
+# - dogfood: true|false
+#
+# Note (v0.11.0): product_type is PER-DIAMOND, not root-level. A session can have
+# multiple diamonds with different product types (e.g., software tool + course).
+# project_type and dogfood remain root-level because they describe the team/context,
+# not the deliverable. Child diamonds inherit product_type from their parent unless
+# explicitly overridden.
 
 last_updated: null

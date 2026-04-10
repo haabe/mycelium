@@ -2,11 +2,11 @@
 
 ## Purpose
 
-Deliver validated solutions with engineering excellence, safety, and continuous learning. Every line of code should be intentional, tested, secure, and accessible.
+Deliver validated solutions with quality, safety, and continuous learning. Every deliverable -- whether code, content, prompt, or service step -- should be intentional, validated, secure where applicable, and accessible.
 
 ## Pre-Implementation Checklist
 
-Before writing any code:
+Before starting delivery work:
 
 1. **Read corrections.md** -- learn from past mistakes before repeating them.
 2. **Run preflight skill** -- validate that prerequisites are met.
@@ -29,7 +29,15 @@ Apply consistently. See `engineering-principles.md` for full details.
 | **LoD** | Law of Demeter. Talk only to immediate friends. |
 | **Clean Code** | Readable, intention-revealing, well-named, small functions. |
 
+## Product Type Awareness (v0.11.0)
+
+This delivery domain was originally written for software products. Since v0.11.0, Mycelium supports non-software product types (courses, publications, media, AI tools, services). Sections below are marked with their applicable product types. For non-software product types, see the **Non-Software Delivery** section at the end of this file.
+
+Check `diamonds/active.yml` for `product_type` to determine which sections apply.
+
 ## Testing Pyramid
+
+**Applies to: software, ai_tool (for code components)**
 
 Target distribution:
 
@@ -63,6 +71,8 @@ Why test-first matters MORE with AI agents: AI generates code with unknown quali
 
 ## Security (OWASP)
 
+**Applies to: software, ai_tool (if API surface), service_offering (if digital infrastructure). For content products, security applies only to the distribution platform (LMS, paywall, hosting), not the content itself.**
+
 Apply at every stage of delivery:
 
 - **Input validation**: Validate all input on the server side. Allowlist over denylist. Validate type, length, range, format.
@@ -76,7 +86,9 @@ Apply at every stage of delivery:
 
 ## Accessibility (WCAG 2.1 AA)
 
-Non-negotiable baseline:
+**Applies to: all product types. For software: full WCAG 2.1 AA below. For content products: captions, transcripts, alt text, readable typography, structured headings. For service offerings: accessible client-facing materials.**
+
+Non-negotiable baseline (software):
 
 - **Semantic HTML**: Use correct elements (nav, main, article, button, etc.). Headings in order.
 - **ARIA**: Use ARIA attributes only when semantic HTML is insufficient. Prefer native semantics.
@@ -176,6 +188,8 @@ If DORA metrics are poor, check CALMS to find the cultural root cause. If DORA i
 
 ## DORA Metrics Tracking
 
+**Applies to: software. For other product types, use the appropriate metrics canvas: content-metrics.yml (content), ai-tool-metrics.yml (AI tools), service-metrics.yml (services). See theory-gates.md Gate 10 for the product-type routing table.**
+
 Track and optimize the four key metrics (Forsgren):
 
 - **Deployment Frequency**: How often code reaches production. Target: on-demand (multiple times per day).
@@ -271,5 +285,63 @@ After every delivery cycle:
 2. **Update patterns.md** -- New patterns discovered, existing patterns refined.
 3. **Run retrospective** -- What went well, what didn't, what to change.
 4. **BVSSH check** -- Is this delivery Better Value Sooner Safer Happier? If not, why?
-5. **Review DORA metrics** -- Did this cycle improve or degrade our metrics?
+5. **Review delivery metrics** -- Did this cycle improve or degrade our metrics? (DORA for software, product-type-appropriate metrics for others)
 6. **Update corrections.md** -- Any mistakes made? Document for future prevention.
+
+---
+
+## Non-Software Delivery (v0.11.0)
+
+The sections above are primarily software-oriented. For non-software product types, the following delivery guidance applies. The principles are the same (deliver with quality, measure cadence, learn from mistakes) but the specific practices differ.
+
+### Content Delivery (content_course, content_publication, content_media)
+
+**Pre-production checklist**:
+1. Read corrections.md -- learn from past content mistakes.
+2. Verify learning objectives / editorial brief -- what should the audience take away?
+3. Confirm smallest publishable unit -- what is the thinnest piece that delivers value? Publish that first.
+4. Check existing content for consistency -- terminology, style, formatting.
+
+**Quality practices**:
+- **SME review**: Have a subject matter expert review factual claims. For solo creators, use a self-review checklist.
+- **Fact-checking**: Verify statistics, quotes, and claims. Link to sources.
+- **Accessibility**: Captions for video, transcripts for audio, alt text for images, readable typography.
+- **Style consistency**: Same tone, terminology, and formatting throughout.
+- **Learning objectives** (courses): Each module maps to a Bloom's taxonomy level. Assessments match objectives.
+
+**Delivery cadence**: Track in content-metrics.yml. Aim for consistent publication cadence. Measure revision rate as your "change failure rate."
+
+**Reflexion loop for content**: Write -> Review (self or SME) -> Revise -> Publish. If significant revision needed post-publish, log in corrections.md.
+
+### AI Tool Delivery (ai_tool)
+
+**Pre-implementation checklist**:
+1. Read corrections.md -- previous prompt/model failures.
+2. Define eval criteria -- what does "good output" look like?
+3. Design test cases BEFORE writing prompts (test-first applies to prompts too).
+4. Check EU AI Act risk classification.
+
+**Quality practices**:
+- **Evaluation**: Automated evals where possible. LLM-as-judge for subjective quality. Human review for safety.
+- **Red-teaming**: Adversarial inputs, jailbreak attempts, edge cases (empty, very long, multilingual).
+- **Bias testing**: Test across demographic groups, cultural contexts, domain-specific sensitive topics.
+- **Versioning**: Track prompt versions in git. Tag releases. Maintain rollback capability.
+- **Transparency**: If user-facing, disclose AI nature (EU AI Act Article 50).
+
+**Delivery cadence**: Track in ai-tool-metrics.yml. Measure eval frequency and safety score trends.
+
+### Service Delivery (service_offering)
+
+**Pre-delivery checklist**:
+1. Read corrections.md -- previous client delivery issues.
+2. Review service blueprint -- is the end-to-end client journey mapped?
+3. Confirm pricing is current and competitive.
+4. Check client onboarding materials are ready.
+
+**Quality practices**:
+- **Service blueprinting**: Map the full client journey (Downe's principles apply here).
+- **Client onboarding**: Test the onboarding flow before using it with real clients.
+- **Delivery documentation**: Document the delivery workflow so it's repeatable.
+- **Feedback loops**: Collect client feedback after every engagement.
+
+**Delivery cadence**: Track in service-metrics.yml. Measure client throughput and satisfaction trends.

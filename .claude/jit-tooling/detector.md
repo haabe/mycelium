@@ -21,6 +21,28 @@ Mycelium is language-agnostic. When a delivery diamond begins, the agent auto-de
 | `composer.json` | PHP |
 | `pubspec.yaml` | Dart / Flutter |
 
+### Step 1b: Scan for Non-Software Product Indicators (v0.11.0)
+
+If no software package manifests are found, OR if the user specified a non-software `product_type` during `/interview`, check for these patterns:
+
+| File/Pattern Found | Product Type | Delivery Canvas |
+|-------------------|--------------|-----------------|
+| Curriculum outline, lesson plans, `*.lms`, Teachable/Thinkific config, learning objectives doc | `content_course` | content-metrics.yml |
+| `manuscript/`, `chapters/`, `*.epub`, `*.docx` with chapter structure, editorial calendar | `content_publication` | content-metrics.yml |
+| Video scripts, `*.srt`, `*.vtt`, episode outlines, podcast RSS, media production pipeline | `content_media` | content-metrics.yml |
+| Prompt templates, `*.prompt`, agent definitions, model configs, fine-tuning scripts | `ai_tool` | ai-tool-metrics.yml |
+| Service blueprints, pricing docs, client onboarding docs, proposal templates | `service_offering` | service-metrics.yml |
+
+If non-software indicators are found:
+1. Set `product_type` in `active-stack.yml`
+2. Skip software-specific tooling detection (Steps 3-6 for test runners, linters, etc.)
+3. Instead, configure product-type-appropriate validation:
+   - **Content**: spell checker, readability scorer, link checker, accessibility scanner (captions/alt text)
+   - **AI tool**: eval harness, red-team script, bias testing framework
+   - **Service**: no automated tooling (service quality is assessed via `/service-check`)
+
+If BOTH software and non-software indicators are found (e.g., an AI tool with a web frontend), detect as a **hybrid**: set `product_type: ai_tool` (or whichever non-software type) but also detect the software stack for the code components. Both sets of quality frameworks apply.
+
 ### Step 2: Identify Project Shape
 
 | Signal | Classification |
@@ -90,18 +112,22 @@ After detection, present findings and ask user to confirm/adjust:
 - "I'll use [test command] for testing. Should I adjust?"
 - "No security scanning detected. Should I set up [recommended tool]?"
 
-## What Stays Universal (All Stacks)
+## What Stays Universal (All Product Types)
 
-These apply regardless of detected stack:
+These apply regardless of detected stack or product_type:
 - Diamond engine and all discovery/strategy frameworks
-- DORA metrics (measured at git/deployment level)
-- Definition of Done checklist (adapted per stack)
-- OWASP/STRIDE security principles
-- Downe's 15 service design principles
-- DRY, KISS, YAGNI, SoC, SOLID (language-agnostic concepts)
-- WCAG accessibility standards
-- Reflexion loop pattern (validate -> critique -> retry)
+- Delivery metrics gate (product-type-routed: DORA for software, content-metrics for content, etc.)
+- Definition of Done checklist (adapted per product_type -- see definition-of-done.md)
+- Downe's 15 service design principles (applied to the consumption experience for all product types)
+- DRY, KISS, YAGNI, SoC, SOLID (product-type-agnostic concepts -- see engineering-principles.md)
+- Reflexion loop pattern (validate -> critique -> retry -- adapted per product_type)
 - Corrections memory and pattern library
+
+These apply conditionally based on product_type:
+- OWASP/STRIDE security principles (software, ai_tool, service with digital infra)
+- WCAG 2.1 AA accessibility (software UI); content accessibility for courses/publications/media
+- DORA metrics specifically (software only; other product types use their own metrics canvas)
+- Testing pyramid (software, ai_tool code components)
 
 ## What Varies (Stack-Specific)
 

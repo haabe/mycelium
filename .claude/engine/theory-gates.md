@@ -33,11 +33,36 @@ Gate Name
 | L2 | 5+ user interviews with triangulated findings; behavioral data | Fewer than 3 evidence sources; no triangulation |
 | L3 | Prototype tested with users; measurable feedback collected. Design hypotheses validated using Lean UX format (Gothelf). If multi-domain: bounded contexts identified (DDD/Evans). | Solution chosen without user validation |
 | L4 | Acceptance criteria defined with measurable outcomes | Vague or missing acceptance criteria |
-| L5 | Test cases written before or alongside implementation | No tests; untested code |
+| L5 (software) | Test cases written before or alongside implementation | No tests; untested code |
+| L5 (content) | Content reviewed against objectives; accessibility verified | Unreviewed content; missing captions/alt text |
+| L5 (ai_tool) | Eval cases passing; safety checks clean | No evaluation; untested prompts/models |
+| L5 (service) | Delivery step documented and repeatable | Undocumented delivery process |
 
 **Evidence required**: Interview transcripts, analytics screenshots, research synthesis documents, test results.
 
 **Suggested skill**: `/user-interview` (for gathering evidence), `/assumption-test` (for validating evidence)
+
+#### Source Ratio Sub-Check (v0.11.0)
+
+Evidence sources in canvas provenance objects carry an optional `source_classes` field (see `_common.schema.json`). This sub-check prevents the Goodhart trap where confidence climbs on desk research alone while zero external human voices are heard.
+
+**Classification**: `external_human` (real user interview, stakeholder conversation, survey response, usability test), `external_data` (third-party analytics, behavioral data, market data), `internal_desk` (desk research, competitive analysis, brainstorming), `internal_simulated` (mocked persona interview, thought experiment). Unclassified sources default to `internal_desk`.
+
+**Enforcement levels**:
+
+| Transition | Scales | Level | Behavior |
+|-----------|--------|-------|----------|
+| Discover->Define | L0-L2 | -- | No check (discovery is exploratory) |
+| Define->Develop | L0-L2 | NUDGE | If zero `external_human` or `external_data` sources across all canvas provenance for this diamond: warn. "All evidence is desk-derived. Consider `/handoff` to plan an external conversation or `/user-interview` to conduct one." |
+| Develop->Deliver | L0, L2 | REVIEW | Blocks progression. Purpose (L0) is foundational -- shipping it without any external voice means the entire product is built on unvalidated assumptions. Opportunity (L2) without external validation is the core Goodhart trap. |
+| Develop->Deliver | L1 | NUDGE | Warn but don't block. Strategy can sometimes proceed on desk research (competitive analysis, Wardley mapping) if the project type warrants it. |
+| All other transitions | L3-L5 | -- | No source ratio check (delivery-level evidence is validation results, not user research) |
+
+**Dogfood modifier**: When `dogfood: true` in `diamonds/active.yml`, the L0/L2 REVIEW gate accepts `internal_simulated` (mocked persona) as ONE of the required external sources -- but still requires at least one source classified as `external_human` or `external_data` before clearing the REVIEW. This means dogfood projects can use mocked personas to supplement real evidence, but cannot replace it entirely. The dogfood report's #1 finding was that the system under-pushes for external evidence; weakening this gate would make that problem worse.
+
+**Anti-gaming rule**: `internal_simulated` (mocked persona interviews) does NOT count as external evidence, even though it simulates external perspectives. The system pushes toward real human contact.
+
+**Suggested skill**: `/handoff` (to plan an external evidence-gathering task), `/log-evidence` (to record findings from completed conversations)
 
 ### 2. Four Risks Gate
 
@@ -113,6 +138,11 @@ All four risks must be assessed:
 
 **Applies to**: Develop->Deliver and Deliver->Complete, L3-L5
 
+**Product type conditioning** (v0.11.0):
+- **software, ai_tool**: Full OWASP + STRIDE as below
+- **content_course, content_publication, content_media**: Security applies only to the distribution platform (LMS, paywall, hosting), not the content itself. If content is self-hosted or behind access control, STRIDE applies to the access control mechanism.
+- **service_offering**: STRIDE applies to any digital infrastructure used to deliver the service (client portal, scheduling system, data storage). If purely offline service, this gate is N/A.
+
 | Scale | Pass Criteria | Fail Criteria |
 |-------|--------------|---------------|
 | L3 | STRIDE threat model completed; security architecture reviewed | No threat analysis |
@@ -165,6 +195,8 @@ All five dimensions must be assessed (even a one-sentence answer per dimension i
 
 **Applies to**: Develop->Deliver and Deliver->Complete, L2-L4
 
+**Product type note** (v0.11.0): Downe's 15 principles apply to ALL product types, not just software. For content products, "service" means the learning/reading/viewing experience. For service offerings, it means the client delivery experience. Nielsen's heuristics apply only to digital interfaces.
+
 Two quality layers for user-facing work:
 
 **Service Quality (Downe -- end-to-end service design)**:
@@ -189,22 +221,32 @@ Two quality layers for user-facing work:
 
 **Suggested skill**: `/service-check` (Downe's 15 principles), `/usability-check` (Nielsen's 10 heuristics), `/a11y-check` (WCAG 2.1 AA accessibility)
 
-### 10. DORA Gate
+### 10. DORA / Delivery Metrics Gate
 
 **Source**: Forsgren (Accelerate)
 
 **Applies to**: Deliver->Complete, L3-L5
 
-| Pass Criteria | Fail Criteria |
-|--------------|---------------|
-| Deployment frequency maintained or improved | Deployments less frequent than baseline |
-| Lead time for changes within target | Lead time increased beyond target |
-| Change failure rate within target | Failure rate exceeds 15% |
-| MTTR within target | Recovery time exceeds target |
+**Product type routing** (v0.11.0): This gate measures delivery health using the metrics canvas appropriate for the product type. The principle is the same (are you delivering at a sustainable cadence with acceptable quality?) but the specific metrics differ.
 
-**Evidence required**: DORA metrics dashboard, deployment logs, incident records.
+| Product Type | Metrics Canvas | Key Metrics |
+|-------------|---------------|-------------|
+| software | dora-metrics.yml | Deployment frequency, lead time, change failure rate, MTTR |
+| content_* | content-metrics.yml | Publication cadence, production lead time, revision rate, completion rate |
+| ai_tool | ai-tool-metrics.yml | Eval frequency, prompt version cadence, safety score, bias assessment |
+| service_offering | service-metrics.yml | Client throughput, delivery lead time, client satisfaction, repeatability |
 
-**Suggested skill**: `/dora-check`
+**Pass criteria** (universal across product types):
+- Delivery cadence maintained or improved
+- Lead time within target
+- Quality/failure rate within target
+- Recovery/revision capability demonstrated
+
+**Fail criteria**: Cadence declining, lead time increasing, quality degrading without a plan.
+
+**Evidence required**: Product-type-appropriate metrics canvas populated with current measurements.
+
+**Suggested skill**: `/dora-check` (auto-routes to product-type-appropriate assessment)
 
 ### 11. Corrections Gate
 
@@ -274,6 +316,8 @@ Summary of which gates apply to which transitions:
 | Privacy | -- | Required (L2-4) | Required (L2-4) | -- |
 | BVSSH | -- | -- | -- | Required |
 | Service Quality | -- | -- | Required (L2-4) | Required (L2-4) |
-| DORA | -- | -- | -- | Required (L3-5) |
+| Delivery Metrics | -- | -- | -- | Required (L3-5) |
 | Corrections | Required | Required | Required | Required |
 | Regulatory | -- | Required (L3-5) | Required (L3-5) | -- |
+
+**Product type conditioning** (v0.11.0): Gates marked with product_type conditions (Security, DORA/Delivery Metrics, Service Quality) use the delivery profile from `canvas-guidance.yml#product_types`. The `product_type` is set during `/interview` Phase 6 and stored in `diamonds/active.yml`. When checking these gates, always verify which product_type applies before evaluating pass criteria.

@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mycelium.dev/schemas/canvas/ai-tool-metrics.schema.json",
+  "title": "AI Tool Delivery Metrics Canvas",
+  "description": "Delivery metrics for AI-powered products (prompt libraries, agents, fine-tuned models). Measures prompt quality, safety, and regulatory compliance.",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "$ref": "_common.schema.json#/$defs/schema_version"
+    },
+    "prompt_quality": {
+      "type": "object",
+      "properties": {
+        "evaluation_method": {"type": ["string", "null"]},
+        "accuracy_score": {"type": ["number", "null"]},
+        "consistency_score": {"type": ["number", "null"]},
+        "safety_score": {"type": ["number", "null"]},
+        "last_evaluated": {
+          "oneOf": [
+            {"$ref": "_common.schema.json#/$defs/iso_timestamp"},
+            {"type": "null"}
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "model_metrics": {
+      "type": "object",
+      "properties": {
+        "model_id": {"type": ["string", "null"]},
+        "version": {"type": ["string", "null"]},
+        "training_data_provenance": {"type": ["string", "null"]},
+        "bias_assessment": {"type": ["string", "null"]},
+        "last_assessed": {
+          "oneOf": [
+            {"$ref": "_common.schema.json#/$defs/iso_timestamp"},
+            {"type": "null"}
+          ]
+        }
+      },
+      "additionalProperties": true
+    },
+    "time_to_first_value": {
+      "type": "object",
+      "properties": {
+        "current": {"type": ["string", "null"]},
+        "target": {"type": ["string", "null"]},
+        "bottleneck": {"type": ["string", "null"]}
+      },
+      "additionalProperties": true
+    },
+    "usage": {
+      "type": "object",
+      "properties": {
+        "daily_active_users": {"type": ["number", "null"]},
+        "task_success_rate": {"type": ["number", "null"]},
+        "retention_rate": {"type": ["number", "null"]},
+        "drop_off_points": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      },
+      "additionalProperties": true
+    },
+    "revenue": {
+      "type": "object",
+      "properties": {
+        "refund_rate": {"type": ["number", "null"]},
+        "customer_lifetime_value": {"type": ["number", "null"]},
+        "churn_rate": {"type": ["number", "null"]},
+        "net_revenue_retention": {"type": ["number", "null"]}
+      },
+      "additionalProperties": true
+    },
+    "deployment": {
+      "type": "object",
+      "properties": {
+        "method": {"type": ["string", "null"]},
+        "versioning": {"type": ["string", "null"]},
+        "rollback_capability": {"type": "boolean"}
+      },
+      "additionalProperties": true
+    },
+    "regulatory": {
+      "type": "object",
+      "properties": {
+        "eu_ai_act_risk_level": {
+          "type": ["string", "null"],
+          "enum": ["minimal", "limited", "high", "unacceptable", null]
+        },
+        "transparency_disclosure": {"type": "boolean"},
+        "human_oversight_mechanism": {"type": ["string", "null"]},
+        "data_protection_assessment": {"type": "boolean"}
+      },
+      "additionalProperties": true
+    },
+    "last_measured": {
+      "oneOf": [
+        {"$ref": "_common.schema.json#/$defs/iso_timestamp"},
+        {"type": "null"}
+      ]
+    }
+  },
+  "additionalProperties": true
+}

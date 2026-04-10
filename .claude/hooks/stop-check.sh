@@ -100,8 +100,32 @@ except: print('unknown')
   fi
 fi
 
-if [ -f "$CANVAS_DIR/dora-metrics.yml" ]; then
-  DORA_OVERDUE=$(python3 -c "
+# Delivery metrics check -- routes to product-type-appropriate canvas (v0.11.0)
+METRICS_CANVAS_STOP=""
+PRODUCT_TYPE_STOP=$(python3 -c "
+import yaml, sys
+try:
+  with open(sys.argv[1]) as f:
+    data = yaml.safe_load(f) or {}
+  diamonds = data.get('active_diamonds', [])
+  for d in diamonds:
+    pt = d.get('product_type')
+    if pt:
+      print(pt)
+      sys.exit(0)
+  print(data.get('product_type', 'software') or 'software')
+except: print('software')
+" "$PROJECT_DIR/.claude/diamonds/active.yml" 2>/dev/null || echo "software")
+
+case "$PRODUCT_TYPE_STOP" in
+  content_course|content_publication|content_media) METRICS_CANVAS_STOP="$CANVAS_DIR/content-metrics.yml" ;;
+  ai_tool) METRICS_CANVAS_STOP="$CANVAS_DIR/ai-tool-metrics.yml" ;;
+  service_offering) METRICS_CANVAS_STOP="$CANVAS_DIR/service-metrics.yml" ;;
+  *) METRICS_CANVAS_STOP="$CANVAS_DIR/dora-metrics.yml" ;;
+esac
+
+if [ -f "$METRICS_CANVAS_STOP" ]; then
+  METRICS_OVERDUE=$(python3 -c "
 import yaml, sys
 from datetime import datetime, timezone
 try:
@@ -115,10 +139,10 @@ try:
     days = (datetime.now(timezone.utc) - d).days
     print('overdue' if days > 30 else 'ok')
 except: print('unknown')
-" "$CANVAS_DIR/dora-metrics.yml" 2>/dev/null || echo "unknown")
+" "$METRICS_CANVAS_STOP" 2>/dev/null || echo "unknown")
 
-  if [ "$DORA_OVERDUE" = "overdue" ]; then
-    WARNINGS="${WARNINGS}FEEDBACK LOOP: DORA metrics overdue (monthly cadence). Run /dora-check. "
+  if [ "$METRICS_OVERDUE" = "overdue" ]; then
+    WARNINGS="${WARNINGS}FEEDBACK LOOP: Delivery metrics overdue (monthly cadence). Review delivery health. "
   fi
 fi
 

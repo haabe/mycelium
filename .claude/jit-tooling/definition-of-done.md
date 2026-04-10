@@ -64,3 +64,62 @@ Not every item applies to every increment. Use judgment:
 - Internal tool: lighter service quality standards
 - Security-critical feature: heavier security review
 - Prototype/experiment: lighter overall (but NEVER skip security)
+
+## Product Type Variants (v0.11.0)
+
+The checklist above is written for software products. For non-software product types, use the appropriate variant below. Items from the universal checklist (Delivery Health, Documentation) still apply.
+
+### Content Products (content_course, content_publication, content_media)
+
+Replace Code Quality and Testing with:
+- [ ] Content reviewed by subject matter expert (or self-review with checklist)
+- [ ] No factual errors or unsupported claims
+- [ ] Sources attributed where applicable
+- [ ] Consistent formatting, style, and terminology throughout
+- [ ] Learning objectives met (courses: aligned to Bloom's taxonomy level)
+
+Replace Accessibility with:
+- [ ] Captions/subtitles for video content
+- [ ] Transcripts for audio content
+- [ ] Alt text for all images and diagrams
+- [ ] Readable typography (sufficient size, contrast, line spacing)
+- [ ] Structured headings for navigation
+
+Replace Security with:
+- [ ] If behind paywall/LMS: access control tested
+- [ ] No personal data collected without consent
+- [ ] No secrets in published content (API keys in tutorials, etc.)
+
+Replace Delivery Health with:
+- [ ] Publication cadence not degraded
+- [ ] Content metrics updated in content-metrics.yml
+- [ ] Corrections.md updated if content errors were found
+
+### AI Tools (ai_tool)
+
+Replace Testing with:
+- [ ] Prompt/model evaluated against test cases (accuracy, consistency)
+- [ ] Red-team testing completed (adversarial inputs, jailbreak attempts, harmful output)
+- [ ] Bias assessment completed (demographic, cultural, domain-specific)
+- [ ] Output variance within acceptable bounds
+- [ ] Edge cases tested (empty input, very long input, multilingual, ambiguous)
+
+Add:
+- [ ] EU AI Act risk classification assessed (Annex III categories)
+- [ ] If user-facing AI: transparency disclosure present (Article 50)
+- [ ] Model/prompt version tracked and rollback possible
+- [ ] Training data provenance documented (if fine-tuned)
+
+### Service Offerings (service_offering)
+
+Replace Code Quality and Testing with:
+- [ ] Service blueprint reviewed (end-to-end client journey mapped)
+- [ ] Client onboarding flow tested (at least one real or simulated run-through)
+- [ ] Pricing validated against market (competitive analysis or client feedback)
+- [ ] Delivery workflow documented and repeatable
+- [ ] Handoff points clearly defined (where client action is needed)
+
+Replace Delivery Health with:
+- [ ] Service metrics updated in service-metrics.yml
+- [ ] Client satisfaction measured (even informal feedback counts)
+- [ ] Corrections.md updated if delivery issues found

@@ -86,16 +86,16 @@ Before delivering an AI-powered product, assess whether it falls into a high-ris
 
 ## Delivery Guardrails
 
-**G-V1: Never commit delivery code without running the validation suite** `REVIEW`
-Every code change must pass: tests, type checking, linting, dead code detection, and security scanning before being considered complete.
+**G-V1: Never mark delivery complete without running the validation suite** `REVIEW`
+Every deliverable must pass its product-type-appropriate validation before being considered complete. Software: tests, type checking, linting, security scanning. Content: quality review, fact-check, accessibility (captions/alt text). AI tool: eval test cases, safety checks, bias assessment. Service: service blueprint walkthrough, documentation review.
 *Source: Forsgren (Accelerate), n-trax reflexion pattern*
 
 **G-V2: Never ship user-facing work without checking Downe's 15 principles** `REVIEW`
 For any user-facing work, evaluate against the relevant Good Services principles. Pay special attention to: no dead ends (P10), usable by everyone (P11), explains decisions (P14), easy to get human help (P15).
 *Source: Downe (Good Services)*
 
-**G-V3: Never duplicate logic** `NUDGE`
-Before writing new code, check for existing implementations. Extract shared logic into well-named, single-responsibility functions. Every piece of knowledge must have a single, unambiguous representation.
+**G-V3: Never duplicate logic or content** `NUDGE`
+Before creating new deliverables, check for existing implementations or content. Extract shared logic into reusable components (code: functions/modules; content: templates/modules; services: documented workflows). Every piece of knowledge must have a single, unambiguous representation.
 *Source: DRY (Hunt & Thomas, The Pragmatic Programmer)*
 
 **G-V4: Never add speculative features or abstractions** `NUDGE`
@@ -110,8 +110,8 @@ When multiple approaches solve the problem, choose the simplest one. Complexity 
 Business logic, data access, presentation, and infrastructure must be separated. No layer should have knowledge of another layer's implementation details. Depend on abstractions, not concretions.
 *Source: SoC (Dijkstra), SOLID (Martin), Clean Architecture*
 
-**G-V7: Always write tests alongside implementation** `REVIEW`
-Tests are not an afterthought. Write them first (TDD) or alongside the implementation. Never defer testing to "later." Tests document behavior and prevent regression.
+**G-V7: Always validate alongside implementation** `REVIEW`
+Validation is not an afterthought. Software: write tests first (TDD) or alongside code. Content: review against objectives during production, not after. AI tools: define eval cases before writing prompts. Never defer validation to "later." Validation documents expected behavior and prevents regression.
 *Source: Forsgren (Accelerate), TDD (Beck)*
 
 **G-V8: Always ensure accessibility for user-facing work** `REVIEW`

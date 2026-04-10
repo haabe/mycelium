@@ -1,0 +1,97 @@
+# Content Delivery Metrics
+# Replaces dora-metrics.yml for content product types (courses, publications, media)
+# Measures production cadence, quality, and engagement rather than deployment frequency.
+#
+# Product types: content_course, content_publication, content_media
+
+schema_version: 1
+
+# ============================================================
+# Production Cadence (analogous to DORA Deployment Frequency)
+# ============================================================
+publication_cadence:
+  current: null              # e.g., "2 lessons/week", "1 chapter/month", "1 episode/week"
+  target: null
+  classification: null       # consistent|improving|declining
+  measurement_period: null   # e.g., "last 4 weeks"
+
+# ============================================================
+# Production Lead Time (analogous to DORA Lead Time for Changes)
+# ============================================================
+production_lead_time:
+  current: null              # time from idea/outline to published, e.g., "5 days"
+  target: null
+  bottleneck: null           # e.g., "editing", "recording", "review"
+
+# ============================================================
+# Revision Rate (analogous to DORA Change Failure Rate)
+# ============================================================
+revision_rate:
+  current: null              # % of published content requiring significant revision
+  target: null               # e.g., "< 10%"
+  recent_revisions: []       # list of what was revised and why
+
+# ============================================================
+# Completion Rate (content-specific: % of planned content completed)
+# ============================================================
+completion_rate:
+  current: null              # % of planned content actually completed on schedule
+  target: null
+  planned_items: null        # e.g., "12 lessons" or "8 chapters"
+  completed_items: null
+
+# ============================================================
+# Engagement Metrics (content-specific quality indicators)
+# ============================================================
+engagement:
+  completion_rate: null      # for courses: % of enrolled who finish
+  satisfaction_score: null   # NPS, CSAT, star rating, review average
+  return_rate: null          # for recurring content: % who return for next piece
+  referral_rate: null        # % who recommend to others
+  drop_off_points: []        # where users abandon content (e.g., "lesson 3", "chapter 5", "minute 12")
+  # Drop-off analysis is more actionable than completion rate alone.
+  # Pattern: if >30% drop at same point, the content has a structural problem there.
+
+# ============================================================
+# Time to First Value (TTFV)
+# ============================================================
+# How quickly a buyer accesses and gets value after purchase.
+# Distinct from production_lead_time (how fast we produce).
+# TTFV is the customer's experience: purchase -> first "aha" moment.
+time_to_first_value:
+  current: null              # e.g., "< 1 minute" (instant download), "2 hours" (first lesson + exercise)
+  target: null
+  bottleneck: null           # e.g., "email delivery delay", "account creation", "LMS onboarding"
+  # Lower TTFV = lower refund risk. Aim for immediate access where possible.
+
+# ============================================================
+# Acquisition & Conversion (customer-side funnel)
+# ============================================================
+# Producer metrics (above) measure how well we make the product.
+# Customer metrics (below) measure how well we sell and retain.
+acquisition:
+  conversion_rate: null      # % of visitors/leads who purchase
+  cost_per_acquisition: null # cost to acquire one paying customer
+  traffic_to_lead_ratio: null # % of visitors who become leads (email, trial, etc.)
+  cart_abandonment_rate: null # % who start purchase but don't complete (if applicable)
+
+# ============================================================
+# Revenue & Retention (business health)
+# ============================================================
+revenue:
+  refund_rate: null           # % of purchases refunded -- the most honest quality signal. Target: < 5%.
+  customer_lifetime_value: null # average revenue per customer over their lifetime
+  churn_rate: null            # for subscriptions: % who cancel per period
+  net_revenue_retention: null # for subscriptions: revenue retained from existing customers (target: > 100%)
+
+# ============================================================
+# Quality Review Checklist
+# ============================================================
+quality_review:
+  sme_reviewed: false        # subject matter expert reviewed (or self-review with checklist)
+  accessibility_checked: false  # captions, transcripts, alt text for images
+  fact_checked: false        # no factual errors or unsupported claims
+  style_consistent: false    # formatting, terminology, tone consistent
+  learning_objectives_met: false  # courses: aligned to stated objectives
+
+last_measured: null

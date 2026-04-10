@@ -21,7 +21,13 @@ Progress a diamond through phases with full theory gate validation. At delivery 
 
 3. **Calculate confidence**:
    - Apply scoring rules from confidence-thresholds.yml.
-   - Compare to threshold for this scale.
+   - Look up `project_type` and `dogfood` from `diamonds/active.yml`.
+   - Apply `project_type_adaptations` from confidence-thresholds.yml:
+     - `effective_threshold = base_threshold * threshold_multiplier`
+     - If `dogfood: true`: `effective_threshold *= dogfood_modifier.additional_threshold_multiplier`
+     - `effective_min_sources = ceil(base_min_sources * min_sources_multiplier)`
+   - Compare confidence to the **effective** threshold (not the base).
+   - Report both: "Confidence: 0.55. Effective threshold: 0.57 (base 0.85, adapted for solo_product). Needs: one more evidence source to cross."
 
 4. **Check human approval requirement**:
    - Per confidence-thresholds.yml, is human approval required/recommended/optional?
@@ -40,7 +46,7 @@ Progress a diamond through phases with full theory gate validation. At delivery 
 
 9. **If progressing**:
    - Update diamond state in active.yml.
-   - Log transition in decision-log.md.
+   - Log transition in decision-log.md. If threshold was adapted, include: "Threshold adapted from [base] to [effective] because project_type=[type]. Would increase with [action]."
    - Update product-journal.md.
    - Identify if child diamonds should be spawned.
    - **Capture learnings** (see Learning Capture section below)
@@ -63,6 +69,10 @@ When transitioning from Deliver to Complete, run this checklist. Items marked `R
 
 ### Auto-Checked (Machine Verifiable)
 
+Check `product_type` from `diamonds/active.yml` to determine which auto-checks apply.
+
+**For software and ai_tool (code components):**
+
 **Testing (G-V7 REVIEW)**:
 - Check: Do test files exist? (glob for *.test.*, *.spec.*, Tests/*, __tests__/*)
 - If no tests AND project has source files: **GATE FAILED**
@@ -77,8 +87,25 @@ When transitioning from Deliver to Complete, run this checklist. Items marked `R
 - Check: If linter config exists (.eslintrc, biome.json, .swiftlint.yml, ruff.toml): run it
 - If lint errors: **GATE FAILED**
 
+**For content products (content_course, content_publication, content_media):**
+
+**Content Quality (REVIEW)**:
+- Check: Are `content-metrics.yml#quality_review` flags all true? (sme_reviewed, accessibility_checked, fact_checked, style_consistent, learning_objectives_met)
+- If any flag is false: **GATE FAILED** -- "Content quality review incomplete. Set the relevant flags in content-metrics.yml after completing review."
+- Fallback: If content-metrics.yml doesn't exist yet, ask: "Has content been reviewed? Create content-metrics.yml and mark quality_review flags."
+
+**For ai_tool:**
+
+**Eval & Safety (REVIEW)**:
+- Check: Are `ai-tool-metrics.yml#prompt_quality` fields populated (not null)? Specifically: accuracy_score, consistency_score, safety_score.
+- If any are null: **GATE FAILED** -- "Prompt/model must be evaluated. Populate accuracy_score, consistency_score, and safety_score in ai-tool-metrics.yml."
+- Check: Is `ai-tool-metrics.yml#prompt_quality.last_evaluated` set?
+- If null: **GATE FAILED** -- "No evaluation timestamp. Run eval and record the date."
+
+**For all product types:**
+
 **Secrets (G-S1 BLOCK)**:
-- Check: Scan all src/ files for secret patterns (same as gate.sh)
+- Check: Scan all project files for secret patterns (same as gate.sh)
 - If secrets found: **GATE FAILED**
 
 ### Delivery-Type Dependent (from canvas-guidance.yml)
@@ -106,12 +133,35 @@ When transitioning from Deliver to Complete, run this checklist. Items marked `R
 - If no entry since diamond was created: **GATE FAILED** -- "Log the delivery decision."
 
 **BVSSH Quick-Check (Smart -- Fix 6)**:
-- Prompt the user/agent with a lightweight 5-question check:
-  - "Better: Did quality improve or degrade with this delivery?"
-  - "Value: Did we deliver actual user value?"
-  - "Sooner: Was flow efficient? Any unnecessary delays?"
-  - "Safer: Did we maintain security and trust?"
-  - "Happier: How is satisfaction (team or personal)?"
+- Prompt the user/agent with product-type-appropriate questions:
+
+  **Software:**
+  - "Better: Did code quality improve or degrade?"
+  - "Value: Did we deliver measurable user value?"
+  - "Sooner: Was deployment flow efficient? Any unnecessary delays?"
+  - "Safer: Did we maintain security, reliability, and trust?"
+  - "Happier: How is developer/team satisfaction?"
+
+  **Content (course, publication, media):**
+  - "Better: Did content quality and learning outcomes improve?"
+  - "Value: Will this content help the audience accomplish their goal?"
+  - "Sooner: Was production cadence maintained? Any bottlenecks?"
+  - "Safer: Is the content accurate, accessible, and free from harm?"
+  - "Happier: How is creator satisfaction? Audience sentiment?"
+
+  **AI tool:**
+  - "Better: Did eval scores improve? Is output quality higher?"
+  - "Value: Does the tool reliably help users accomplish their task?"
+  - "Sooner: Was the prompt/model iteration cycle efficient?"
+  - "Safer: Are safety scores acceptable? Bias assessed? Regulatory status current?"
+  - "Happier: How is the builder's satisfaction? User feedback positive?"
+
+  **Service offering:**
+  - "Better: Did delivery quality improve? Client satisfaction up?"
+  - "Value: Did the client get measurable value from the engagement?"
+  - "Sooner: Was delivery lead time acceptable? Any waiting waste?"
+  - "Safer: Were commitments met? Trust maintained? No scope creep harm?"
+  - "Happier: How is your satisfaction as a service provider? Client sentiment?"
 - Record in bvssh-health.yml assessment_history
 - **REVIEW**: Must answer all 5 (even briefly) before completing
 

@@ -31,7 +31,10 @@ When reporting diamond state to the user, ALWAYS translate technical taxonomy to
 | L2 Opportunity - Discover | "Mapping what users actually need. Conducting interviews, analyzing data, building the opportunity tree." |
 | L2 Opportunity - Define | "Prioritizing which problems to solve first. Scoring opportunities by impact, confidence, and strategic fit." |
 | L3 Solution - Develop | "Designing solutions for [opportunity name]. Comparing [N] approaches, testing assumptions." |
-| L4 Delivery - Deliver | "Building [feature name]. Writing code, tests, and documentation. Validating against acceptance criteria." |
+| L4 Delivery - Deliver (software) | "Building [feature name]. Writing code, tests, and documentation. Validating against acceptance criteria." |
+| L4 Delivery - Deliver (content) | "Producing [content name]. Writing, reviewing, and publishing. Validating against learning objectives or editorial standards." |
+| L4 Delivery - Deliver (ai_tool) | "Building [tool name]. Writing prompts, running evaluations, and testing safety. Validating against quality criteria." |
+| L4 Delivery - Deliver (service) | "Delivering [service name]. Executing the service blueprint, documenting the workflow, and gathering client feedback." |
 | L5 Market - Discover | "Understanding how to reach users. Analyzing channels, competitors, and positioning options." |
 
 ## Confidence Translations

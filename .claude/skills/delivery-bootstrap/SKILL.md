@@ -9,13 +9,23 @@ Just-in-Time tech stack detection and setup.
 
 ## Workflow
 
-1. **Scan project root** for technology indicators:
+1. **Check product_type** from `diamonds/active.yml`:
+   - If `product_type` is set (from `/interview`), use it to determine the delivery profile.
+   - If not set, scan for indicators per `detector.md` Step 1b:
+     - Curriculum/lesson plans, LMS config -> `content_course`
+     - Manuscript/chapters, editorial calendar -> `content_publication`
+     - Video scripts, subtitle files, podcast RSS -> `content_media`
+     - Prompt templates, model configs, agent definitions -> `ai_tool`
+     - Service blueprints, pricing docs -> `service_offering`
+   - If non-software product_type detected: skip software tooling detection (Steps 2-3 below), configure product-type-appropriate validation instead, and proceed to Step 4.
+
+1b. **Scan project root** for technology indicators (software and ai_tool with code):
    - Package files: package.json, Cargo.toml, go.mod, requirements.txt, pyproject.toml, Gemfile, pom.xml, build.gradle
    - Config files: tsconfig.json, .eslintrc, .prettierrc, rustfmt.toml, .editorconfig
    - CI/CD: .github/workflows, .gitlab-ci.yml, Jenkinsfile, Dockerfile
    - Framework indicators: next.config.js, nuxt.config.ts, angular.json, etc.
 
-2. **Identify stack components**:
+2. **Identify stack components** (software/ai_tool with code):
    - Language(s) and version(s)
    - Framework(s)
    - Package manager

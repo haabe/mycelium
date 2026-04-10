@@ -96,42 +96,65 @@ scales:
     name: Feature
     confidence_threshold: 0.7
     required_evidence:
-      - acceptance_criteria
-      - test_cases
-      - security_review
-      - accessibility_check
+      software:
+        - acceptance_criteria
+        - test_cases
+        - security_review
+        - accessibility_check
+      content:
+        - acceptance_criteria
+        - quality_review          # SME or self-review checklist
+        - accessibility_check     # captions, alt text, readable typography
+      ai_tool:
+        - acceptance_criteria
+        - eval_results            # prompt/model evaluation against test cases
+        - safety_review           # red-team + bias assessment
+        - regulatory_classification  # EU AI Act risk level
+      service_offering:
+        - acceptance_criteria
+        - service_blueprint_review
+        - client_onboarding_test
     required_theory_gates:
       - evidence
       - bias
-      - security
+      - security              # conditioned on product_type in theory-gates.md
       - service_quality
-      - dora
+      - delivery_metrics      # was: dora. Routed to product-type-appropriate metrics.
       - corrections
     human_approval:
       discover_to_define: optional
       define_to_develop: optional
       develop_to_deliver: optional
       deliver_to_complete: optional
-    notes: "Features should flow quickly. Approval needed mainly for novel or risky items."
+    notes: "Features should flow quickly. Approval needed mainly for novel or risky items. Required evidence varies by product_type."
 
   L5:
     name: Task
     confidence_threshold: 0.6
     required_evidence:
-      - test_results
-      - lint_clean
-      - security_scan_clean
+      software:
+        - test_results
+        - lint_clean
+        - security_scan_clean
+      content:
+        - content_reviewed        # factual accuracy, style consistency
+        - accessibility_verified  # captions/alt text present
+      ai_tool:
+        - eval_passing            # automated or manual eval results
+        - safety_check_clean      # no harmful outputs in test cases
+      service_offering:
+        - delivery_step_documented
     required_theory_gates:
       - evidence
-      - security
-      - dora
+      - security              # conditioned on product_type in theory-gates.md
+      - delivery_metrics      # was: dora. Routed to product-type-appropriate metrics.
       - corrections
     human_approval:
       discover_to_define: not_required
       define_to_develop: not_required
       develop_to_deliver: not_required
       deliver_to_complete: not_required
-    notes: "Tasks are atomic. Agent can progress autonomously with passing gates."
+    notes: "Tasks are atomic. Agent can progress autonomously with passing gates. Required evidence varies by product_type."
 
 # Confidence scoring rules
 scoring:
@@ -184,6 +207,75 @@ confidence_explanations:
     template: "Proven in production. Real users, real metrics, sustained over time."
     what_increases_it: "This is the highest practical level. Maintain through continuous measurement."
 
-# When adapting thresholds for context (e.g., solo hobby project),
-# always document the adaptation in decision-log.md:
-# "Threshold adapted from 0.9 to 0.6 because [reason]. Would increase with [action]."
+# ============================================================
+# Project Type Adaptations (v0.11.0)
+# ============================================================
+# Adaptations lower the THRESHOLD (how much evidence you need)
+# but NEVER lower the EVIDENCE QUALITY requirements (source diversity, external ratio).
+# Every adaptation MUST be logged in decision-log.md with specific rationale.
+#
+# Usage: effective_threshold = base_threshold * threshold_multiplier
+#        If dogfood: effective_threshold *= dogfood_modifier.additional_threshold_multiplier
+#        effective_min_sources = ceil(base_min_sources * min_sources_multiplier)
+
+project_type_adaptations:
+  solo_hobby:
+    threshold_multiplier: 0.7    # e.g., L0: 0.9 * 0.7 = 0.63
+    min_sources_multiplier: 0.5  # e.g., L0: ceil(5 * 0.5) = 3
+    human_approval_override:
+      discover_to_define: optional
+      define_to_develop: optional
+      develop_to_deliver: optional
+      deliver_to_complete: optional
+    external_evidence_min: NO_REDUCTION
+    notes: "Solo hobby lowers the bar for evidence quantity but not quality. External evidence requirements are maintained."
+
+  solo_product:
+    threshold_multiplier: 0.85   # e.g., L0: 0.9 * 0.85 = 0.765
+    min_sources_multiplier: 0.75 # e.g., L0: ceil(5 * 0.75) = 4
+    human_approval_override:
+      discover_to_define: recommended
+      define_to_develop: recommended
+      develop_to_deliver: optional
+      deliver_to_complete: optional
+    external_evidence_min: NO_REDUCTION
+    notes: "Solo products need real evidence but the bar is slightly lower than team projects."
+
+  team_startup:
+    threshold_multiplier: 1.0
+    min_sources_multiplier: 1.0
+    human_approval_override: null  # use defaults from scales section
+    external_evidence_min: NO_REDUCTION
+    notes: "Team startups use default thresholds. Teams have the capacity for full evidence gathering."
+
+  team_enterprise:
+    threshold_multiplier: 1.0
+    min_sources_multiplier: 1.0
+    human_approval_override: null
+    external_evidence_min: NO_REDUCTION
+    notes: "Enterprise uses default or stricter thresholds. Regulatory requirements may add further gates."
+
+  dogfood_modifier:
+    additional_threshold_multiplier: 0.8  # stacks multiplicatively with project_type
+    # e.g., solo_product (0.85) + dogfood (0.8) = 0.68 effective multiplier
+    # e.g., solo_hobby (0.7) + dogfood (0.8) = 0.56 effective multiplier
+    external_evidence_min: NO_REDUCTION  # even dogfood projects track evidence honestly
+    notes: "Dogfood projects further reduce thresholds because iteration cycles are faster and blast radius is lower. The real deliverable is Mycelium learnings, not the object product."
+
+# Anti-gaming rule: external_evidence_min: NO_REDUCTION means that the
+# external evidence ratio gate (theory-gates.md Evidence Gate) is never
+# lowered by project_type adaptations. You can lower HOW MUCH evidence
+# you need, but not WHERE it comes from.
+#
+# What the Evidence Gate actually enforces (theory-gates.md):
+# - At L0/L2 Develop->Deliver: REVIEW if zero external_human sources (blocks progression)
+# - At L0-L2 Define->Develop: NUDGE if zero external_human sources (warns only)
+# - Dogfood projects: mocked personas (internal_simulated) supplement but don't replace
+#   external_human -- still need at least one real conversation for REVIEW gates.
+#
+# The min_sources_multiplier reduces HOW MANY total sources you need,
+# but every adaptation MUST still satisfy the Evidence Gate source ratio check.
+# Coverage rule: required_evidence items define WHAT must be covered,
+# min_sources defines HOW MANY distinct sources. A single source can cover
+# multiple required_evidence items (e.g., one interview covers market_research
+# + stakeholder_alignment), but each required_evidence item must be addressed.

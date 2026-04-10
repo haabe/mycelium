@@ -31,7 +31,7 @@ Single-place health check across all Mycelium feedback loops. Run periodically o
 Read canvas trend data and check cadence:
 - **BVSSH**: Last assessed when? Any dimension declining? (Check `bvssh-health.yml` trend fields)
 - **North Star**: Are input metrics moving? Flat for 2+ months = strategic concern.
-- **DORA**: Any metric degrading? (Check `dora-metrics.yml` trend fields)
+- **Delivery metrics**: Any metric degrading? Check the product-type-appropriate canvas: `dora-metrics.yml` (software), `content-metrics.yml` (content), `ai-tool-metrics.yml` (ai_tool), `service-metrics.yml` (service).
 - **Wardley Map**: Last refreshed when? Stale > 3 months = risk of strategic blind spot.
 - **Corrections themes**: Are the same types of mistakes recurring? (Pattern = graduate to guardrail)
 
@@ -54,6 +54,7 @@ For each active metric, verify its counter-metric:
 - Confidence score up BUT evidence type hasn't changed? -> Inflation
 - Test coverage up BUT defect leakage unchanged? -> Meaningless tests
 - Diamond velocity up BUT regression rate also up? -> Rushing through gates
+- Evidence source count up BUT external evidence ratio declining? -> Internal echo chamber risk. Suggest `/handoff` to plan external conversations.
 
 ## Output Format
 

@@ -1,0 +1,44 @@
+# Human Task Tracker
+# Tasks that require offline human action (conversations, observations, tests)
+# Created by: /handoff skill
+# Consumed by: /log-evidence skill, session-start.sh hook
+#
+# This canvas file bridges the gap between agent-executable work (skills, canvas updates)
+# and human-executable work (interviews, competitor testing, outreach). Without it,
+# canvas work is over-rewarded vs. external evidence gathering (dogfood report 2.6).
+
+schema_version: 1
+
+pending_tasks: []
+# Example entry:
+# - id: ht-001
+#   type: interview            # interview|observation|survey|usability_test|stakeholder_meeting|experiential_research
+#   objective: "Validate that solo developers actually struggle with QuickLook for code files"
+#   target_persona: "Solo developer who uses terminal daily but occasionally needs to preview files visually"
+#   key_questions:
+#     - "Tell me about the last time you needed to preview a file outside your editor."
+#     - "What was frustrating about that experience?"
+#     - "How do you handle that today?"
+#   success_criteria: "Learned at least one unexpected workaround or JTBD"
+#   created_at: "2026-04-10T14:00:00Z"
+#   diamond_ref: "l2-opportunity-search-ux"
+#   canvas_refs:
+#     - "opportunities.yml#opp-001"
+#   status: pending             # pending|in_progress|completed|cancelled
+#   priority: high              # high|medium|low
+#   capture_template: |
+#     Date:
+#     Person (role, not name):
+#     Key quotes:
+#     Surprising finding:
+#     JTBD signal (functional/emotional/social):
+#     Follow-up needed:
+
+completed_tasks: []
+# Example entry:
+# - id: ht-001
+#   completed_at: "2026-04-11T09:30:00Z"
+#   evidence_logged_to:
+#     - "opportunities.yml#opp-001"
+#   key_findings: "User actually uses a custom Alfred workflow, not QuickLook. Emotional job: feeling competent, not slow."
+#   source_class: external_human
