@@ -1,49 +1,46 @@
 # Mycelium
 
-**Theory-guided agentic product development for Claude Code.** *v0.11.0*
+**Your AI agent's product thinking partner.** *v0.11.0*
 
-Mycelium is a **constraint-based implementation of spec-driven development (SDD)** for AI coding agents. Where workflow-SDD tools (Kiro, Spec Kit) generate sequential spec files before coding, Mycelium distributes specifications across living canvas files, theory gates, and hooks that constrain the agent in real time. The canvas IS the spec.
+Mycelium ensures you build the right thing — not just build the thing right. It guides AI agents through structured discovery, strategy, and delivery using 42+ established product frameworks, 12 theory gates, and 38 skills. Drop it into any Claude Code project and run `/interview`.
 
-Like nature's mycelium network -- the invisible intelligence that connects trees, shares nutrients, adapts to conditions, and makes the whole forest ecosystem stronger -- Mycelium connects product development theories, shares learning across sessions, adapts to any tech stack, and makes your product development practice stronger.
+```bash
+npx degit haabe/mycelium my-project && cd my-project
+# Start Claude Code, then:
+/interview
+```
 
-Built on 42+ established frameworks and books, Mycelium prevents AI agents from going haywire by enforcing theory-guided decision gates, feedback loops at four speeds, reflexion loops, cognitive bias checks, and quality guardrails at every stage.
+Works for **software, online courses, AI tools, and services**. One command to start. The agent handles the rest.
 
-## The Problem
+### What It Catches
 
-AI coding agents are powerful but unguided. They'll jump from an idea to code without discovery, skip security considerations, ignore accessibility, repeat past mistakes, and inflate their own confidence. Mycelium solves this by encoding decades of product development wisdom into a structured agent harness.
+In its first dogfood session, Mycelium forced a strategic pivot before any code was written — the founder's original positioning was invalidated by evidence the framework required them to gather. Without it, that mistake would have shipped.
+
+### Why It Exists
+
+AI coding agents are powerful but unguided. They'll jump from an idea to code without discovery, skip security, ignore accessibility, repeat past mistakes, and inflate their own confidence. Spec-driven tools (Kiro, Spec Kit) help structure the coding — but they start at "what to build," never "should you build it." Mycelium starts earlier and stays longer.
 
 ## Quick Start
 
 ### New Project
 
-Click **"Use this template"** on GitHub to create a new repo with Mycelium pre-installed, or:
+Click **"Use this template"** on GitHub, or:
 
 ```bash
 npx degit haabe/mycelium my-project
 cd my-project
 ```
 
-Then start Claude Code and run:
-```
-/interview
-```
+Then start Claude Code and run `/interview`. The agent guides you through purpose, vision, users, strategy, and classifies your project to determine what matters.
 
 ### Existing Project
 
-Copy Mycelium into your project:
-
 ```bash
-# From your project root:
 npx degit haabe/mycelium/CLAUDE.md ./CLAUDE.md
 npx degit haabe/mycelium/.claude ./.claude
 ```
 
-Then start Claude Code and run:
-```
-/interview
-```
-
-The interview skill guides you through establishing your product's purpose, vision, North Star metric, strategic landscape, and classifies your project type to determine which canvas files matter.
+Then start Claude Code and run `/interview`.
 
 ## Upgrading
 
