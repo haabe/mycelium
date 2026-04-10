@@ -2,20 +2,7 @@
 
 *Version 0.11.0 -- Product-type-agnostic, evidence-ratio-aware, human-handoff-enabled.*
 
-<!-- APEX-aware: DORA + LinearB APEX metrics for AI-era delivery measurement -->
-<!-- v0.7.0: +CALMS, VSM, Hook Model, ToC, MoSCoW, Systems Archetypes -->
-<!-- v0.8.0: +Bias Gap, Elements of Product Design, Trauma-Informed Design, HITL Triad, Neurodiversity Design -->
-<!-- v0.8.1: SDD positioning (constraint-based spec-driven development) + BDD historical acknowledgment -->
-<!-- v0.8.2: bug fix (corrections counter), reflexion hook scope fix, dogfood report lifted, two-memory-system docs, CONTRIBUTORS.md -->
-<!-- v0.9.0: Computational Enforcement Layer — scope-gate hook, change-log + diamond-state-audit observability, JSON canvas schemas + DAG validator, trace edges on 6 high-stakes canvases, gate rename (BLOCK/REVIEW/NUDGE), theory-tensions.md, 3 adversarial evals, fail-closed policy, WIP limits reconciled -->
-<!-- v0.10.0: Skills + structural additions — /mocked-persona-interview (36th skill), /diamond-progress pivot/park/kill subcommands, dogfood modifier, post-write-nudge skill auto-suggest for all 17 canvas files + synthesis nudge, release checklist with manual dogfood session, synaptiai outreach draft -->
-<!-- v0.11.0: Dogfood-driven improvements — External evidence ratio gate (source_classes in provenance, Evidence Gate source ratio sub-check, SessionStart check), human task handoff (/handoff + /log-evidence skills, human-tasks.yml canvas), threshold adaptation rules (project_type_adaptations in confidence-thresholds.yml with NO_REDUCTION anti-gaming), non-software product support (product_type dimension: content_course, content_publication, content_media, ai_tool, service_offering + content-metrics.yml, ai-tool-metrics.yml, service-metrics.yml + conditional theory gates, DoD, detector, delivery domain, launch-tier). Non-software product support prompted by Linda Maria Sneve. -->
-
-Mycelium is a harnessing system for AI-assisted product development. Like nature's mycelium network, it connects theories, shares learning, adapts to conditions, and makes the whole ecosystem stronger.
-
-## How This System Works
-
-Mycelium guides product development through **fractal diamonds** -- recursive Discover/Define/Develop/Deliver cycles that operate at every scale, from defining your organization's purpose down to implementing individual features. Each diamond is theory-guided, evidence-gated, and self-correcting.
+Mycelium is a harnessing system for AI-assisted product development. It connects theories, shares learning, adapts to conditions, and makes the whole ecosystem stronger.
 
 **You are an agent operating within Mycelium. Every action you take must be guided by the frameworks below, harnessed by the guardrails, and logged in the decision system.**
 
@@ -52,58 +39,25 @@ Before ANY implementation task:
 | L4: Delivery | Build and ship | Forsgren (DORA), OWASP, Goldratt (ToC), DRY/KISS/YAGNI/SOLID/SoC | `canvas/dora-metrics.yml`, `canvas/threat-model.yml`, `canvas/value-stream.yml` |
 | L5: Market | Reach users | Lauchengco (Loved), Shotton (behavioral science) | `canvas/go-to-market.yml`, `canvas/trust-signals.yml` |
 
-**Product type** (v0.11.0): L0-L3 are product-agnostic. L4 and L5 adapt to the `product_type` set during `/interview`: software (default), content_course, content_publication, content_media, ai_tool, service_offering. Each product type has its own delivery metrics canvas and quality frameworks. See `canvas-guidance.yml#product_types`.
+L0-L3 are product-agnostic. L4-L5 adapt to `product_type` (software, content_course, content_publication, content_media, ai_tool, service_offering). See `canvas-guidance.yml#product_types`.
 
-### Diamond Phases (within each scale)
+### Diamond Phases
 
-Each diamond has four phases. The transition between phases is **gated by theory checks**, not just confidence scores.
-
+Each diamond has four phases, gated by theory checks:
 1. **Discover** (diverge) -- Explore broadly. Gather evidence. Challenge assumptions.
 2. **Define** (converge) -- Synthesize discoveries. Narrow focus. Frame the problem/opportunity.
 3. **Develop** (diverge) -- Generate multiple solutions. Ideate. Prototype.
 4. **Deliver** (converge) -- Validate, build, ship, measure.
 
-See `.claude/engine/diamond-rules.md` for full transition rules.
+Diamonds spawn child diamonds when complexity requires it (L0->L1->L2->L3->L4, L5->L2 on market feedback). Parents continue while children execute. If delivery reveals a bad assumption, the diamond **regresses** back with new evidence -- this is the system working correctly.
 
-### Fractal Property
-
-Diamonds spawn child diamonds when complexity requires it:
-- L0 spawns L1 when purpose is defined
-- L1 spawns L2 when strategic landscape is mapped
-- L2 spawns L3 when opportunities have sufficient evidence
-- L3 spawns L4 when solutions pass confidence threshold
-- L4 can spawn sub-L4 diamonds for complex features
-- L5 spawns L2 when market feedback reveals new opportunities
-
-**Smooth flow**: Parent diamonds don't stop when children spawn. L2 can continue discovering while L3 works on a previously-identified opportunity.
-
-### Diamond Regression
-
-If delivery reveals a bad assumption, the diamond **regresses** back to its discovery phase with new evidence. This is not failure -- it's the system working correctly.
+See `.claude/engine/diamond-rules.md` for full transition rules, WIP limits, and lifecycle management.
 
 ## Theory Gates (Decision Checkpoints)
 
-Every diamond transition must pass ALL applicable gates. See `.claude/engine/theory-gates.md` for complete rules.
+Every diamond transition must pass applicable gates from: Evidence, Four Risks, JTBD, Cynefin, Bias, Security, Privacy, BVSSH, Service Quality, Delivery Metrics, Corrections, Regulatory. See `.claude/engine/theory-gates.md` for complete definitions, pass/fail criteria, and suggested skills.
 
 **You cannot progress a diamond by saying "I'm confident enough." You must demonstrate evidence that satisfies each gate.**
-
-### Gate Categories
-
-| Gate | What It Checks | Source Theory |
-|------|---------------|---------------|
-| Evidence | Is there research-backed evidence? Multiple sources? External evidence ratio? | Torres (CDH), Gilad (Evidence Guided) |
-| Four Risks | Have value, usability, feasibility, viability been assessed? | Cagan (Inspired) |
-| JTBD | Have emotional and social dimensions been mapped, not just functional? | Christensen |
-| Cynefin | Is the domain classified? Is the method appropriate? | Snowden |
-| Bias Check | Was research designed to mitigate cognitive biases? Includes systemic bias diagnosis (Meza). | Shotton, Kahneman, Meza |
-| Security | Has threat modeling been done? | OWASP (STRIDE) |
-| Privacy | Has privacy been assessed? Data minimized? | Cavoukian (PbD), GDPR |
-| BVSSH | Better, Value, Sooner, Safer, Happier? (required at delivery completion) | Smart |
-| Service Quality | Do Downe's 15 principles pass? Nielsen's 10 heuristics? | Downe (Good Services), Nielsen |
-| Delivery Metrics | Are delivery metrics healthy? Product-type-routed: DORA (software), content/AI/service metrics. | Forsgren (Accelerate), LinearB (APEX), SRE (Beyer) |
-| CALMS | Is DevOps culture healthy? Culture, Automation, Lean, Measurement, Sharing? | Humble (CALMS) |
-| Corrections | Have past mistakes been reviewed? | Mycelium self-learning |
-| Regulatory | Has EU AI Act risk classification been assessed? | EU AI Act (2024/1689) |
 
 ## The Canvas (Source of Truth)
 
@@ -117,77 +71,32 @@ All product knowledge lives in `.claude/canvas/*.yml`. These files are:
 
 ## Harnessing System
 
-### Guardrails (`.claude/harness/guardrails.md`)
-Three-tier enforcement system:
-- **BLOCK**: Mechanically prevented by hooks (secrets detection). Cannot happen.
-- **REVIEW**: Checked by `/diamond-progress` at Deliver->Complete. Can write code, but cannot mark done until satisfied (tests, a11y, services, threat model, BVSSH, decision log).
-- **NUDGE**: Nudged by hooks, not blocking. Engineering best practices and bias awareness.
-
-### Anti-Patterns (`.claude/harness/anti-patterns.md`)
-Known failure modes with detection rules. If you catch yourself falling into one, stop and self-correct.
-
-### Cognitive Biases (`.claude/harness/cognitive-biases.md`)
-Per-stage bias checklist. Review before conducting research, making decisions, or designing solutions.
-
-### Security & Trust (`.claude/harness/security-trust.md`)
-Per-stage security requirements. Security is designed in, not bolted on.
-
-### Engineering Principles (`.claude/harness/engineering-principles.md`)
-DRY, KISS, YAGNI, SoC, SOLID, LoD -- explicit rules for all delivery work.
+- **Guardrails** (`.claude/harness/guardrails.md`): Three-tier enforcement -- BLOCK (mechanically prevented), REVIEW (gates progression), NUDGE (advised, not blocking).
+- **Anti-Patterns** (`.claude/harness/anti-patterns.md`): Known failure modes with detection rules. Stop and self-correct if you catch yourself in one.
+- **Cognitive Biases** (`.claude/harness/cognitive-biases.md`): Per-stage bias checklist.
+- **Security & Trust** (`.claude/harness/security-trust.md`): Per-stage security requirements.
+- **Engineering Principles** (`.claude/harness/engineering-principles.md`): DRY, KISS, YAGNI, SoC, SOLID, LoD.
 
 ## Self-Learning System
 
-### Two Memory Systems — Important Distinction
-
-Mycelium interacts with two separate memory systems. They serve different purposes and should not be confused.
+### Two Memory Systems -- Important Distinction
 
 | System | Location | Scope | Committed to git? |
 |---|---|---|---|
 | **Project memory** | `.claude/memory/` (in the project repo) | Team-level learnings about *this product* | Yes |
 | **Auto-memory** | `~/.claude/projects/<id>/memory/` (in user home) | Per-session continuity between you and the agent | No (user-local) |
 
-**Routing rule**: When you learn something, decide where it belongs:
+**Routing rule**: Project-team learnings -> project memory. Agent-user learnings -> auto-memory. Hardware/environment failures -> neither.
 
-- **Project-team learnings** → project memory (`.claude/memory/corrections.md`, `patterns.md`, `product-journal.md`, `delivery-journal.md`). Visible to other team members. Survives repo clones. Example: "input validation was missed on the /webhooks endpoint."
-- **Agent-user learnings** → auto-memory. Private to your session. Does not survive if the user switches machines. Example: "the user prefers concise summaries over bullet lists."
-- **Hardware/environment failures** → neither. These are session-local noise, not learnings.
+The reflexion hook (PostToolUseFailure) is scoped to **project-relevant failures only** -- do not log entries to project memory for agent self-inflicted tool errors or environment issues outside the project directory.
 
-The reflexion hook (PostToolUseFailure) is scoped to **project-relevant failures only** — it should not log entries to project memory for failures caused by agent self-inflicted tool errors or environment issues outside the project directory.
-
-### Corrections Memory (`.claude/memory/corrections.md`)
-Accumulated learning from mistakes. **Read before every implementation task.** Apply prevention rules proactively.
-
-### Pattern Library (`.claude/memory/patterns.md`)
-Successful patterns to reuse. Captured from delivery and discovery successes.
-
-### Decision Log (`.claude/harness/decision-log.md`)
-Every significant decision with: context, alternatives considered, theory that guided it, evidence, confidence level.
-
-### Feedback Loops (`.claude/engine/feedback-loops.md`)
-Four-speed feedback system based on Gene Kim's Three Ways, Argyris's double-loop learning, and Meadows's leverage points:
-- **Loop 1 (Immediate)**: Reflexion, secret detection, corrections matching -- seconds
-- **Loop 2 (Incremental)**: Phase learnings, DORA metrics, retrospectives -- hours/days
-- **Loop 3 (Strategic)**: BVSSH health, North Star trajectory, Wardley refresh -- weekly/monthly
-- **Loop 4 (Transformative)**: Eval benchmarks, prompt optimization, system improvement -- quarterly
-
-Run `/feedback-review` to check health across all loops. SessionStart and Stop hooks monitor for overdue strategic checks.
-
-### Reflexion Loop
-When implementing (delivery phase):
-1. Implement the solution
-2. Run validation suite
-3. If fails: structured self-critique (what failed, why, root cause, fix)
-4. Apply fix, retry (max 3 iterations)
-5. On success: capture patterns/corrections if learned something new
-6. On failure after 3: report to user with full analysis
-
-See `.claude/skills/reflexion/SKILL.md` for complete workflow.
-
-### Eval Benchmarks (`.claude/evals/`)
-Periodic self-assessment against scenarios. Measures pass rate, iterations needed, time.
-
-### Prompt Optimization (`.claude/optimization/`)
-A/B testing of Mycelium instruction changes against eval baselines.
+### Key Artifacts
+- **Corrections** (`.claude/memory/corrections.md`): Accumulated learning from mistakes. **Read before every task.**
+- **Patterns** (`.claude/memory/patterns.md`): Successful patterns to reuse.
+- **Decision Log** (`.claude/harness/decision-log.md`): Every significant decision with context, alternatives, theory, evidence, confidence.
+- **Feedback Loops** (`.claude/engine/feedback-loops.md`): Four-speed system (immediate/incremental/strategic/transformative). Run `/feedback-review` to check health.
+- **Reflexion Loop**: Implement -> validate -> self-critique -> retry (max 3). See `.claude/skills/reflexion/SKILL.md`.
+- **Eval Benchmarks** (`.claude/evals/`): Periodic self-assessment against scenarios.
 
 ## Domain Contexts
 
@@ -199,114 +108,22 @@ Load the appropriate context based on current diamond phase:
 
 ## JiT Tooling
 
-Mycelium is **language-agnostic**. When a delivery diamond begins:
-1. Auto-detect the tech stack from project files
-2. Generate stack-appropriate validation commands, linters, test runners
-3. Configure security scanning for the detected stack
-4. The agent asks the user to confirm/adjust before proceeding
+Mycelium is **language-agnostic** and **product-type-agnostic**. When a delivery diamond begins, auto-detect the tech stack (or product type), generate appropriate validation, and confirm with the user. See `.claude/jit-tooling/detector.md`.
 
-See `.claude/jit-tooling/detector.md` for detection rules.
+## Usage & Orchestration
 
-## Usage Modes
+Solo developers use canvas as shared memory with the agent. Teams commit canvas to git as shared product documentation. For parallel exploration, use `/fan-out` with worktree-isolated worker agents.
 
-### Solo Developer
-- You interact directly with the agent
-- Canvas is your shared memory with the agent
-- Decision log is your cross-session continuity
-
-### Team
-- Canvas files are committed to git -- they ARE the team's product documentation
-- Any team member's agent session reads the same canvas
-- Canvas updates are PR-reviewed like code
-- Use Agent Teams or worktrees for parallel delivery work
-
-See `.claude/orchestration/modes.md` for complete patterns.
+See `.claude/orchestration/modes.md` for usage patterns and `.claude/orchestration/agent-teams.md` for parallel orchestration.
 
 ## Operations & Maintenance
 
-- **Day-to-day**: `.claude/orchestration/operations.md` -- Session resumption, canvas maintenance, diamond lifecycle, memory pruning, weekly/monthly/quarterly routines
-- **Escape hatch**: `.claude/orchestration/escape-hatch.md` -- When and how to legitimately bypass the full process (production incidents, hotfixes, trivial changes). Must be documented and paid back.
+- **Day-to-day**: `.claude/orchestration/operations.md` -- Session resumption, canvas maintenance, diamond lifecycle, memory pruning
+- **Escape hatch**: `.claude/orchestration/escape-hatch.md` -- Legitimate process bypass for emergencies. Must be documented and paid back.
 
-## Agent Orchestration
+## Skills
 
-For parallel OST exploration (multiple solutions tested simultaneously):
-- Lead agent manages diamond state and canvas
-- Worker agents (subagents/Agent Teams) each explore one solution branch
-- Workers get worktree isolation (their own branch)
-- Workers read canvas (read-only) for alignment
-- Lead agent collects results, updates ICE scores, picks winners
-
-See `.claude/orchestration/agent-teams.md` for patterns.
-
-## Skills Reference
-
-Invoke skills with `/skill-name`. All 38 skills:
-
-### Onboarding & Assessment
-| Skill | When to Use |
-|-------|------------|
-| `/interview` | Onboarding: establish purpose, vision, North Star, project type |
-| `/diamond-assess` | Check current state, get recommended next action (plain language) |
-| `/diamond-progress` | Move a diamond forward (runs all theory gates, suggests skills) |
-
-### Discovery Skills
-| Skill | When to Use |
-|-------|------------|
-| `/user-interview` | Torres-style story-based interviews with bias mitigation |
-| `/mocked-persona-interview` | Disciplined mocked personas for solo/hobby/dogfood projects (v0.10) |
-| `/user-needs-map` | Map user needs independently of solutions (Allen methodology) |
-| `/ost-builder` | Build or update Opportunity Solution Tree from research |
-| `/jtbd-map` | Map Jobs to be Done (functional, emotional, social) |
-| `/assumption-test` | Design smallest viable test to validate an assumption |
-| `/cynefin-classify` | Classify problem domain (Clear/Complicated/Complex/Chaotic) |
-| `/wardley-map` | Create or update Wardley Map of value chain |
-| `/ice-score` | Score and prioritize ideas with confidence meter |
-| `/gist-plan` | GIST planning: goals, ideas, steps, tasks |
-| `/handoff` | Generate structured handoff for offline human tasks (v0.11) |
-| `/log-evidence` | Record findings from completed offline conversations (v0.11) |
-
-### Quality & Governance Skills
-| Skill | When to Use |
-|-------|------------|
-| `/bias-check` | Review cognitive biases before research/decisions |
-| `/devils-advocate` | Systematically challenge assumptions before major decisions |
-| `/bvssh-check` | Holistic health evaluation (Better, Value, Sooner, Safer, Happier) |
-| `/service-check` | Evaluate against Downe's 15 Good Services principles |
-| `/threat-model` | STRIDE threat modeling for a component/solution |
-| `/privacy-check` | Privacy by Design / GDPR assessment |
-| `/security-review` | OWASP secure design review for code and architecture |
-| `/usability-check` | Evaluate against Nielsen's 10 usability heuristics (interface-level) |
-| `/a11y-check` | Accessibility audit (WCAG 2.1 AA) |
-
-### Delivery Skills
-| Skill | When to Use |
-|-------|------------|
-| `/delivery-bootstrap` | Auto-detect tech stack and set up delivery tooling |
-| `/preflight` | Pre-delivery validation checklist |
-| `/reflexion` | Self-correcting implementation loop (implement/validate/critique/retry) |
-| `/definition-of-done` | Verify increment satisfies all DoD criteria |
-| `/dora-check` | Delivery health metrics (product-type-routed) |
-| `/retrospective` | Post-delivery learning capture |
-
-### Market & Go-to-Market Skills
-| Skill | When to Use |
-|-------|------------|
-| `/launch-tier` | Classify releases into tiers and plan go-to-market |
-| `/team-shape` | Team Topologies assessment (cognitive load, interaction modes) |
-
-### Canvas & Orchestration Skills
-| Skill | When to Use |
-|-------|------------|
-| `/canvas-update` | Update canvas sections with new evidence |
-| `/canvas-sync` | Synchronize canvas state across team sessions via git |
-| `/fan-out` | Parallel agent orchestration for OST exploration |
-
-### Self-Improvement Skills
-| Skill | When to Use |
-|-------|------------|
-| `/feedback-review` | Aggregate all feedback loop signals, check health, flag regressions |
-| `/eval-runner` | Run benchmark scenarios to measure agent effectiveness |
-| `/prompt-optimizer` | A/B test instruction changes against eval baselines |
+All 38 skills are auto-discovered from `.claude/skills/*/SKILL.md`. Suggested skills are surfaced at diamond transitions by `/diamond-progress` and `/diamond-assess`, and contextually by hooks. Type `/` to see the current list.
 
 ## Getting Started
 
