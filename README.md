@@ -1,6 +1,6 @@
 # Mycelium
 
-**Theory-guided agentic product development for Claude Code.** *v0.10.0*
+**Theory-guided agentic product development for Claude Code.** *v0.11.0*
 
 Mycelium is a **constraint-based implementation of spec-driven development (SDD)** for AI coding agents. Where workflow-SDD tools (Kiro, Spec Kit) generate sequential spec files before coding, Mycelium distributes specifications across living canvas files, theory gates, and hooks that constrain the agent in real time. The canvas IS the spec.
 
@@ -44,6 +44,14 @@ Then start Claude Code and run:
 ```
 
 The interview skill guides you through establishing your product's purpose, vision, North Star metric, strategic landscape, and classifies your project type to determine which canvas files matter.
+
+## Upgrading Mid-Project
+
+Mycelium is not a software library -- it's a set of instructions that reshape agent behavior on every session start. There is no compilation step or type checker that catches mismatches between your existing work and new version expectations. The agent simply starts applying updated rules.
+
+If you upgrade while diamonds are active, gates may become stricter, new fields may be expected on canvas data, and thresholds may shift. A diamond that was ready to progress under the old version may be blocked under the new one -- not because anything changed in your work, but because the rules changed around it.
+
+**After upgrading**: Run `/diamond-assess` to see your diamonds through the new version's lens before attempting `/diamond-progress`. Check the version changelog comments at the top of CLAUDE.md for specific changes that affect in-progress work.
 
 ## How It Works
 
