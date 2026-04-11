@@ -125,3 +125,32 @@ principles:
 
 overall_score: null  # Count of pass/total assessed
 last_assessed: null
+
+# ============================================================
+# Core Pages — Are Halland (The Core Model)
+# Optional extension for content-heavy products (content_course,
+# content_publication, content_media, service_offering with web presence).
+# Maps pages where user tasks and business objectives intersect,
+# then designs navigation pathways around them.
+# Source: Halland, "The Core Model" (2007, thecoremodel.com)
+# ============================================================
+
+core_pages: []
+# - id: core-001
+#   page: ""                    # Name or URL of the core page
+#   business_objectives: []     # Which business goals this page serves
+#   user_tasks: []              # Which user tasks this page fulfils
+#   inward_paths:               # How users actually arrive at this page
+#     - channel: ""             # e.g. organic_search, direct_link, referral, homepage_nav
+#       search_terms: []        # What users search for (if organic)
+#       notes: ""
+#   core_content: []            # Essential content needed to fulfil both user and business goals
+#   forward_paths:              # Where users go next — must be contextually appropriate
+#     - destination: ""         # Page or action the user is guided toward
+#       context: ""             # Why this path makes sense given the user's state
+#       sensitivity_note: ""    # Any emotional/contextual sensitivity (Halland: "don't be rude")
+#   provenance:                 # REQUIRED — see _common.schema.json#/$defs/provenance
+#     evidence_type: anecdotal
+#     evidence_sources: []
+#     captured_at: null
+#     confidence: 0.3

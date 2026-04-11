@@ -197,6 +197,8 @@ All five dimensions must be assessed (even a one-sentence answer per dimension i
 
 **Product type note** (v0.11.0): Downe's 15 principles apply to ALL product types, not just software. For content products, "service" means the learning/reading/viewing experience. For service offerings, it means the client delivery experience. Nielsen's heuristics apply only to digital interfaces.
 
+**Core Model nudge** (v0.11.1): For `content_course`, `content_publication`, `content_media`, and `service_offering` product types, this gate includes a NUDGE at the **Develop->Deliver** transition: "Content-heavy product detected. Consider mapping core pages (inward paths, core content, forward paths) in `services.yml#core_pages` per Halland's Core Model. This helps ensure no dead ends (Downe P10) and that users find what they need through natural pathways." This is advisory, not blocking — skip it if the product has no web presence or page-based content architecture.
+
 Two quality layers for user-facing work:
 
 **Service Quality (Downe -- end-to-end service design)**:
