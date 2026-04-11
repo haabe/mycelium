@@ -1,6 +1,6 @@
 # Mycelium
 
-**Your AI agent's product thinking partner.** *v0.11.0*
+**Your AI agent's product thinking partner.** *v0.11.1*
 
 Mycelium ensures you build the right thing — not just build the thing right. It guides AI agents through structured discovery, strategy, and delivery using 42+ established product frameworks, 12 theory gates, and 38 skills. Drop it into any Claude Code project and run `/interview`.
 

@@ -48,7 +48,11 @@ file_path = tool_input.get('file_path', '')
 if not file_path:
     sys.exit(0)
 
-if '/.claude/diamonds/' not in file_path and '.claude/diamonds/' not in file_path:
+# Normalize: ensure leading / so patterns match relative paths too
+if not file_path.startswith('/'):
+    file_path = '/' + file_path
+
+if '/.claude/diamonds/' not in file_path:
     sys.exit(0)
 
 tool_name = data.get('tool_name', 'unknown')

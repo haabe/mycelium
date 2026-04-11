@@ -323,3 +323,134 @@ Summary of which gates apply to which transitions:
 | Regulatory | -- | Required (L3-5) | Required (L3-5) | -- |
 
 **Product type conditioning** (v0.11.0): Gates marked with product_type conditions (Security, DORA/Delivery Metrics, Service Quality) use the delivery profile from `canvas-guidance.yml#product_types`. The `product_type` is set during `/interview` Phase 6 and stored in `diamonds/active.yml`. When checking these gates, always verify which product_type applies before evaluating pass criteria.
+
+---
+
+## Scale × Transition Applicability Matrix (v0.11.1)
+
+Use this matrix to determine exactly which gates to evaluate for a given scale and transition. "R" = Required, "--" = Not applicable. When initializing `theory_gates_status` in `active.yml`, include all gates marked "R" for the diamond's scale at any transition.
+
+### L0 Purpose
+
+| Gate | Disc->Def | Def->Dev | Dev->Del | Del->Comp |
+|------|-----------|----------|----------|-----------|
+| Evidence | R | R | R | R |
+| Four Risks | -- | -- | -- | -- |
+| JTBD | -- | -- | -- | -- |
+| Cynefin | -- | R | -- | -- |
+| Bias | R | R | R | R |
+| Security | -- | -- | -- | -- |
+| Privacy | -- | -- | -- | -- |
+| BVSSH | -- | -- | -- | R |
+| Service Quality | -- | -- | -- | -- |
+| Delivery Metrics | -- | -- | -- | -- |
+| Corrections | R | R | R | R |
+| Regulatory | -- | -- | -- | -- |
+
+**Applicable gates**: Evidence, Cynefin, Bias, BVSSH, Corrections (5 gates)
+
+### L1 Strategy
+
+| Gate | Disc->Def | Def->Dev | Dev->Del | Del->Comp |
+|------|-----------|----------|----------|-----------|
+| Evidence | R | R | R | R |
+| Four Risks | -- | R | R | -- |
+| JTBD | R | R | -- | -- |
+| Cynefin | -- | R | -- | -- |
+| Bias | R | R | R | R |
+| Security | -- | -- | -- | -- |
+| Privacy | -- | -- | -- | -- |
+| BVSSH | -- | -- | -- | R |
+| Service Quality | -- | -- | -- | -- |
+| Delivery Metrics | -- | -- | -- | -- |
+| Corrections | R | R | R | R |
+| Regulatory | -- | -- | -- | -- |
+
+**Applicable gates**: Evidence, Four Risks, JTBD, Cynefin, Bias, BVSSH, Corrections (7 gates)
+
+### L2 Opportunity
+
+| Gate | Disc->Def | Def->Dev | Dev->Del | Del->Comp |
+|------|-----------|----------|----------|-----------|
+| Evidence | R | R | R | R |
+| Four Risks | -- | R | R | -- |
+| JTBD | R | R | -- | -- |
+| Cynefin | -- | R | -- | -- |
+| Bias | R | R | R | R |
+| Security | -- | -- | -- | -- |
+| Privacy | -- | R | R | -- |
+| BVSSH | -- | -- | -- | R |
+| Service Quality | -- | -- | R | R |
+| Delivery Metrics | -- | -- | -- | -- |
+| Corrections | R | R | R | R |
+| Regulatory | -- | -- | -- | -- |
+
+**Applicable gates**: Evidence, Four Risks, JTBD, Cynefin, Bias, Privacy, BVSSH, Service Quality, Corrections (9 gates)
+
+### L3 Solution
+
+| Gate | Disc->Def | Def->Dev | Dev->Del | Del->Comp |
+|------|-----------|----------|----------|-----------|
+| Evidence | R | R | R | R |
+| Four Risks | -- | R | R | -- |
+| JTBD | R | R | -- | -- |
+| Cynefin | -- | R | -- | -- |
+| Bias | R | R | R | R |
+| Security | -- | -- | R | R |
+| Privacy | -- | R | R | -- |
+| BVSSH | -- | -- | -- | R |
+| Service Quality | -- | -- | R | R |
+| Delivery Metrics | -- | -- | -- | R |
+| Corrections | R | R | R | R |
+| Regulatory | -- | R | R | -- |
+
+**Applicable gates**: All 12 gates
+
+### L4 Delivery
+
+| Gate | Disc->Def | Def->Dev | Dev->Del | Del->Comp |
+|------|-----------|----------|----------|-----------|
+| Evidence | R | R | R | R |
+| Four Risks | -- | R | R | -- |
+| JTBD | -- | -- | -- | -- |
+| Cynefin | -- | R | -- | -- |
+| Bias | R | R | R | R |
+| Security | -- | -- | R | R |
+| Privacy | -- | R | R | -- |
+| BVSSH | -- | -- | -- | R |
+| Service Quality | -- | -- | R | R |
+| Delivery Metrics | -- | -- | -- | R |
+| Corrections | R | R | R | R |
+| Regulatory | -- | R | R | -- |
+
+**Applicable gates**: Evidence, Four Risks, Cynefin, Bias, Security, Privacy, BVSSH, Service Quality, Delivery Metrics, Corrections, Regulatory (11 gates — all except JTBD)
+
+### L5 Market
+
+| Gate | Disc->Def | Def->Dev | Dev->Del | Del->Comp |
+|------|-----------|----------|----------|-----------|
+| Evidence | R | R | R | R |
+| Four Risks | -- | -- | -- | -- |
+| JTBD | -- | -- | -- | -- |
+| Cynefin | -- | R | -- | -- |
+| Bias | R | R | R | R |
+| Security | -- | -- | R | R |
+| Privacy | -- | -- | -- | -- |
+| BVSSH | -- | -- | -- | R |
+| Service Quality | -- | -- | -- | -- |
+| Delivery Metrics | -- | -- | -- | R |
+| Corrections | R | R | R | R |
+| Regulatory | -- | R | R | -- |
+
+**Applicable gates**: Evidence, Cynefin, Bias, Security, BVSSH, Delivery Metrics, Corrections, Regulatory (8 gates)
+
+### Quick Reference: Gates per Scale (for `theory_gates_status` initialization)
+
+| Scale | Total Gates | Gate Names |
+|-------|-----------|------------|
+| L0 | 5 | Evidence, Cynefin, Bias, BVSSH, Corrections |
+| L1 | 7 | Evidence, Four Risks, JTBD, Cynefin, Bias, BVSSH, Corrections |
+| L2 | 9 | Evidence, Four Risks, JTBD, Cynefin, Bias, Privacy, BVSSH, Service Quality, Corrections |
+| L3 | 12 | All gates |
+| L4 | 11 | All except JTBD |
+| L5 | 8 | Evidence, Cynefin, Bias, Security, BVSSH, Delivery Metrics, Corrections, Regulatory |

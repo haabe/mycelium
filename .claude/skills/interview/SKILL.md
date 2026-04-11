@@ -127,6 +127,39 @@ Tell the user: "I've set up [canvas name] for tracking your delivery metrics. Wh
 
 The interview creates an **L0 Purpose diamond** in Discover phase. Here's the bridge to ongoing work:
 
+### Decision Log Entry (v0.11.1)
+
+Write a decision-log entry for the interview itself. The interview shapes all downstream work — it is the most foundational decision in the project lifecycle. Log entry must include:
+- **Decision**: "Conducted initial product interview. Established purpose, JTBD, north star, landscape, and classification."
+- **Theory**: Sinek (purpose), Christensen (JTBD), Torres (opportunity identification), Wardley (landscape)
+- **Evidence**: Summary of key inputs from the user (problem statement, target users, strategic bets)
+- **Confidence**: The initial diamond confidence (typically 0.2-0.35 for a first interview)
+- **Alternatives considered**: N/A for initial interview (but note if the user considered alternative framings)
+- **Classification rationale**: Why this project_type and dogfood status were chosen
+
+### Theory Gates Initialization (v0.11.1)
+
+When creating the L0 diamond in `active.yml`, initialize `theory_gates_status` with ALL applicable gates for the diamond's scale. Use the Quick Reference table in `theory-gates.md#quick-reference-gates-per-scale-for-theory_gates_status-initialization`:
+
+| Scale | Gates to Initialize |
+|-------|-------------------|
+| L0 | evidence, cynefin, bias, bvssh, corrections |
+| L1 | evidence, four_risks, jtbd, cynefin, bias, bvssh, corrections |
+| L2 | evidence, four_risks, jtbd, cynefin, bias, privacy, bvssh, service_quality, corrections |
+| L3 | All 12 gates |
+| L4 | All except jtbd (11 gates) |
+| L5 | evidence, cynefin, bias, security, bvssh, delivery_metrics, corrections, regulatory |
+
+Set each to `pending`. Example for L0:
+```yaml
+theory_gates_status:
+  evidence: pending
+  cynefin: pending
+  bias: pending
+  bvssh: pending
+  corrections: pending
+```
+
 1. **Tell the user**: "Interview complete. I've created your L0 Purpose diamond and populated the initial canvas files."
 2. **Suggest next step**: "Run `/diamond-assess` to see your starting state and what to work on next."
 3. **The typical flow from here**:

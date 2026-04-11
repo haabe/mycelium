@@ -190,10 +190,19 @@ confidence_explanations:
     label: "Speculation"
     template: "Just an idea -- no evidence yet. Based on intuition or a single anecdote."
     what_increases_it: "Any structured research: interviews, data analysis, competitive review."
+    # v0.11.1: Edge case guidance (dogfood report M2)
+    edge_cases:
+      - "Founder describing their own problem = speculation (not anecdotal). The founder IS the assumption — they cannot validate themselves."
+      - "Mocked persona interviews = always speculation, regardless of how many personas."
+      - "Single informal conversation with a friend = speculation (not anecdotal). One non-structured data point lacks triangulation."
   0.3:
     label: "Anecdotal"
     template: "Some signals support this, but not validated. Based on a few data points or informal feedback."
     what_increases_it: "Structured interviews (3+), quantitative data, or formal competitive analysis."
+    edge_cases:
+      - "2+ structured interviews with distinct non-founder users = anecdotal."
+      - "Competitive analysis alone (no user voice) = anecdotal only if triangulated with at least one other source type."
+      - "Demo reactions from friendly contacts = anecdotal at best (bias risk: friendly audience). Note the bias in provenance."
   0.5:
     label: "Data-supported"
     template: "Data supports this direction. Multiple evidence sources agree, though not yet tested directly."
@@ -261,6 +270,12 @@ project_type_adaptations:
     # e.g., solo_hobby (0.7) + dogfood (0.8) = 0.56 effective multiplier
     external_evidence_min: NO_REDUCTION  # even dogfood projects track evidence honestly
     notes: "Dogfood projects further reduce thresholds because iteration cycles are faster and blast radius is lower. The real deliverable is Mycelium learnings, not the object product."
+    # v0.11.1: Confidence transferability warning (dogfood report T3)
+    # With solo_product × dogfood, L0 threshold drops from 0.9 to 0.612 — a 32% reduction.
+    # Confidence levels achieved in dogfood mode are NOT transferable to production decisions.
+    # If a dogfood project transitions to a real product, re-evaluate all diamond confidence
+    # levels against production thresholds (remove dogfood modifier) before making ship decisions.
+    transferability_warning: "Confidence levels achieved in dogfood mode reflect reduced thresholds. If this project transitions from dogfood to production, all diamond confidence levels must be re-evaluated against production thresholds (without the dogfood modifier). A diamond that passes at 0.612 in dogfood mode would need 0.9 in production."
 
 # Anti-gaming rule: external_evidence_min: NO_REDUCTION means that the
 # external evidence ratio gate (theory-gates.md Evidence Gate) is never

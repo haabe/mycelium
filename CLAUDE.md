@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.11.0 -- Product-type-agnostic, evidence-ratio-aware, human-handoff-enabled.*
+*Version 0.11.1 -- Dogfood-hardened: path normalization, gate applicability matrix, evidence-type edge cases.*
 
 Mycelium is a harnessing system for AI-assisted product development. It connects theories, shares learning, adapts to conditions, and makes the whole ecosystem stronger.
 

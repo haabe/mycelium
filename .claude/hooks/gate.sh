@@ -19,8 +19,15 @@ INPUT=$(cat)
 TOOL_NAME=$(echo "$INPUT" | python3 -c 'import sys,json;print(json.load(sys.stdin).get("tool_name",""))' 2>/dev/null || echo "")
 FILE_PATH=$(echo "$INPUT" | python3 -c 'import sys,json;d=json.load(sys.stdin);ti=d.get("tool_input",{});print(ti.get("file_path",ti.get("file","")))' 2>/dev/null || echo "")
 
+# Normalize path: ensure leading / so patterns match consistently
+# Claude Code may pass relative paths (e.g., "src/foo.js") or absolute paths.
+case "$FILE_PATH" in
+  /*) ;; # already absolute
+  *)  FILE_PATH="/$FILE_PATH" ;; # prepend / so "/src/" patterns match "src/..."
+esac
+
 # Always allow .claude/ edits (config/harness/canvas changes)
-case "$FILE_PATH" in *".claude/"*) exit 0;; esac
+case "$FILE_PATH" in *"/.claude/"*) exit 0;; esac
 
 # Only gate source code paths
 case "$FILE_PATH" in

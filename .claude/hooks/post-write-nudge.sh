@@ -16,6 +16,12 @@ INPUT=$(cat)
 
 FILE_PATH=$(echo "$INPUT" | python3 -c 'import sys,json;d=json.load(sys.stdin);ti=d.get("tool_input",{});print(ti.get("file_path",ti.get("file","")))' 2>/dev/null || echo "")
 
+# Normalize path: ensure leading / so patterns match consistently
+case "$FILE_PATH" in
+  /*) ;; # already absolute
+  *)  FILE_PATH="/$FILE_PATH" ;;
+esac
+
 # Build context-aware nudge
 NUDGE=""
 
@@ -90,6 +96,20 @@ case "$FILE_PATH" in
     NUDGE="Value stream canvas edited. Consider /dora-check — VSM is most useful when APEX or DORA metrics indicate a bottleneck shift."
     ;;
 esac
+
+# v0.11.1: Canvas schema validation nudge (dogfood G5)
+# Remind to validate canvas files against JSON schemas after edits.
+if [ -n "$NUDGE" ]; then
+  case "$FILE_PATH" in
+    *".claude/canvas/"*.yml)
+      BASENAME=$(basename "$FILE_PATH" .yml)
+      SCHEMA_FILE="$PROJECT_DIR/.claude/schemas/canvas/${BASENAME}.schema.json"
+      if [ -f "$SCHEMA_FILE" ]; then
+        NUDGE="${NUDGE} Schema exists at schemas/canvas/${BASENAME}.schema.json — validate with validate_canvas.py."
+      fi
+      ;;
+  esac
+fi
 
 # ============================================================
 # v0.10: Research synthesis nudge (dogfood G3)
