@@ -6,7 +6,7 @@ on:
     paths:
       - '.claude/**'
       - '*.md'
-      - 'tests/**'
+      - '.claude/tests/**'
       - 'requirements-ci.txt'
       - '.github/workflows/validate.yml'
   pull_request:
@@ -14,7 +14,7 @@ on:
     paths:
       - '.claude/**'
       - '*.md'
-      - 'tests/**'
+      - '.claude/tests/**'
       - 'requirements-ci.txt'
       - '.github/workflows/validate.yml'
 
@@ -33,7 +33,7 @@ jobs:
         run: pip install -r requirements-ci.txt
 
       - name: Run structural integrity validation
-        run: bash tests/validate-template.sh
+        run: bash .claude/tests/validate-template.sh
 
       - name: Run canvas schema + trace validation
         run: python3 .claude/scripts/validate_canvas.py

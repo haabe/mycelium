@@ -1,6 +1,6 @@
 # Mycelium File Manifest
 # Classifies every file as framework (safe to replace) or project state (never overwrite).
-# Used by scripts/upgrade.sh to perform safe upgrades.
+# Used by .claude/scripts/upgrade.sh to perform safe upgrades.
 
 # Framework files — always replaced during upgrade.
 # These contain Mycelium instructions, not project data.
@@ -21,8 +21,9 @@ framework:
     - .claude/schemas/
     - .claude/scripts/
     - .claude/optimization/
+    - .claude/tests/
+    - .claude/auto-dogfood/
     - .github/
-    - tests/
   single_files:
     - .claude/settings.json
     - .claude/manifest.yml

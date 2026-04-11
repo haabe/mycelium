@@ -5,8 +5,8 @@
 # Reads .claude/manifest.yml to distinguish framework files from project data.
 #
 # Usage:
-#   bash scripts/upgrade.sh              # upgrade to latest (main branch)
-#   bash scripts/upgrade.sh v0.12.0      # upgrade to specific tag/branch
+#   bash .claude/scripts/upgrade.sh              # upgrade to latest (main branch)
+#   bash .claude/scripts/upgrade.sh v0.12.0      # upgrade to specific tag/branch
 #
 # Prerequisites: git, npx (Node.js)
 #
@@ -29,7 +29,7 @@
 
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$REPO_ROOT"
 
 VERSION="${1:-main}"
@@ -192,7 +192,7 @@ echo ""
 info "Running validation..."
 echo ""
 
-if bash tests/validate-template.sh; then
+if bash .claude/tests/validate-template.sh; then
     echo ""
     info "Validation passed."
 else

@@ -1,0 +1,105 @@
+name: "CLI task manager — solo_product — value-risk failure"
+category: dogfood
+type: full-session
+difficulty: medium
+
+product:
+  name: "Tasq"
+  type: software
+  description: |
+    A CLI task manager with natural language input. Type things like
+    'tasq add fix the login bug by friday' and it parses the task,
+    priority, and deadline from natural language using local NLP.
+  pitch: |
+    I want to build a CLI task manager where you can type things like
+    'tasq add fix the login bug by friday' and it parses the task,
+    priority, and deadline from natural language. No cloud, everything
+    local. I'm a backend dev and I live in the terminal.
+
+persona:
+  name: "Jordan"
+  role: "Senior backend developer, 8 years experience"
+  style: "Pragmatic, skeptical of AI hype, values simplicity over cleverness"
+  knowledge: "Strong CLI user, has used Taskwarrior and todo.txt extensively"
+  answers:
+    purpose: |
+      The problem is context-switching. Every task manager I've tried
+      makes me fill out forms — project, priority, tags, due date. I just
+      want to type what I'm thinking and have it parsed. Taskwarrior is
+      great but the syntax is rigid — 'task add project:myapp priority:H
+      due:friday fix login bug'. I want to just say 'fix the login bug
+      by friday, high priority' and have it work.
+    users: |
+      Developers who live in the terminal. Specifically the kind who
+      already use Taskwarrior or todo.txt but find them too rigid.
+      Probably 25-45 age range, mostly backend/infra engineers who have
+      strong opinions about their toolchain.
+    north_star: |
+      Tasks captured per day? No, actually — time from thought to captured
+      task. If someone thinks 'I need to fix that bug' and it takes them
+      3 seconds to capture it vs 15 seconds, that's the metric. Call it
+      'capture latency'.
+    landscape: |
+      Taskwarrior is the main competitor. todo.txt is simpler but more
+      basic. There are GUI apps like Todoist and Things but those aren't
+      in the terminal. The unique angle is NLP parsing — nobody does that
+      well in a CLI context. The risk is that NLP parsing needs to be
+      really accurate or it's worse than explicit syntax.
+    current_state: |
+      I have a rough prototype that uses a local transformer model for
+      parsing. It works about 70% of the time on simple inputs. Haven't
+      shown it to anyone yet. It's a hobby project right now but I think
+      it could be a real tool if the parsing gets good enough.
+
+project_type: solo_product
+dogfood: true
+
+planted_failures:
+  - type: value-risk
+    trigger: mocked-persona-interview
+    description: |
+      Modal user (power Taskwarrior user) hard-rejects: "I already have
+      aliases and shell functions that do this faster than any NLP parser.
+      The parser will misinterpret my dates and I'll miss deadlines.
+      Hard pass — I trust explicit syntax over AI guessing."
+      Adversarial user (terminal purist) rejects: "Yet another tool that
+      adds a dependency. Taskwarrior works. I don't need AI in my task list."
+      Cost-conscious user rejects: "Running a local transformer model for
+      task parsing? That's massive overkill. I'd rather type 5 extra
+      characters than wait 2 seconds for inference."
+    personas_rejecting: [modal, adversarial, cost-conscious]
+
+journey:
+  - skill: interview
+    rounds: 2
+  - skill: diamond-assess
+  - skill: diamond-progress
+    expect_blocked: true
+  - skill: mocked-persona-interview
+    planted_failure: value-risk
+  - skill: diamond-assess
+
+success_criteria:
+  # Interview completeness
+  - canvas_populated: [purpose.yml, jobs-to-be-done.yml, north-star.yml]
+  - diamond_created: {scale: L0, phase: discover}
+  - classification_correct: {product_type: software, project_type: solo_product}
+
+  # Gate enforcement
+  - progression_blocked: {reason: "insufficient evidence"}
+
+  # Value-risk handling
+  - confidence_decreased: true
+  - decision_log_contains: ["stop condition", "value risk"]
+  - decision_log_honest: true
+  - diamond_not_advanced: true
+
+  # Hook correctness
+  - hooks_no_errors: true
+
+budget:
+  max_rounds: 12
+  max_time_seconds: 600
+  model_overrides:
+    mycelium_agent: sonnet
+    user_simulator: haiku

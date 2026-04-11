@@ -43,6 +43,10 @@ Dogfood reports are committed to git and may be public. **Always anonymize befor
 - Remove or genericize any outreach targets, contact names, LinkedIn handles, or DM content
 - If in doubt, ask: "Could someone identify the operator from this sentence?" If yes, rewrite it.
 
+## Automated Dogfood
+
+For automated agent-to-agent dogfood testing, see `.claude/auto-dogfood/`. The orchestrator runs full-session scenarios with planted failure conditions and evaluates the framework's safety properties programmatically. Manual dogfood sessions (documented here) remain valuable for discovering gaps that automated sessions miss.
+
 ## Reports
 
 | Date | Session | Object Project | Key Finding |

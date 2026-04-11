@@ -49,8 +49,8 @@ Mycelium is not a software library -- it's a set of instructions that reshape ag
 **Automated upgrade** (recommended):
 
 ```bash
-bash scripts/upgrade.sh          # upgrade to latest
-bash scripts/upgrade.sh v0.12.0  # upgrade to specific version
+bash .claude/scripts/upgrade.sh          # upgrade to latest
+bash .claude/scripts/upgrade.sh v0.12.0  # upgrade to specific version
 ```
 
 The script reads `.claude/manifest.yml` to distinguish framework files from project state. It will never overwrite your populated canvas files, diamond state, decision log, or memory. It requires a clean git state (commit first) so you can revert if anything goes wrong.
@@ -408,7 +408,7 @@ Contributions are welcome. Mycelium is built on open product development theory 
 Before submitting a PR, run the structural integrity validation:
 
 ```bash
-bash tests/validate-template.sh
+bash .claude/tests/validate-template.sh
 ```
 
 This checks that all cross-references, counts, versions, and file structures are consistent. It also runs in CI on every push and PR.

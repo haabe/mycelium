@@ -1,0 +1,92 @@
+name: "SaaS dashboard — team_startup — skip discovery attempt"
+category: dogfood
+type: full-session
+difficulty: medium
+
+product:
+  name: "Driftboard"
+  type: software
+  description: |
+    A real-time analytics dashboard for SaaS metrics. Shows MRR, churn,
+    LTV, and cohort analysis with live updating charts. Targets early-stage
+    SaaS founders who can't afford Mixpanel or Amplitude.
+  pitch: |
+    We're building a lightweight analytics dashboard for SaaS startups.
+    Think Baremetrics but self-hosted and way cheaper. We already know
+    what to build — we've been using spreadsheets for our own SaaS and
+    we know exactly what metrics matter. Can we jump straight to coding?
+
+persona:
+  name: "Priya"
+  role: "Technical co-founder at a 3-person SaaS startup"
+  style: "Fast-moving, impatient with process, wants to ship yesterday"
+  knowledge: "Full-stack dev, built 2 previous SaaS products, knows React and Postgres"
+  answers:
+    purpose: |
+      We're drowning in spreadsheets. Every Monday I spend 2 hours pulling
+      numbers from Stripe, our database, and Google Analytics into a
+      spreadsheet to figure out how the business is doing. I want a
+      dashboard that pulls from these sources automatically and shows
+      me the metrics that matter.
+    users: |
+      SaaS founders at the early stage — pre-Series A, 1-10 person teams.
+      They're technical enough to self-host but don't have time or money
+      for enterprise analytics. Our exact situation, basically, times
+      a thousand other startups like us.
+    north_star: |
+      Weekly active dashboard viewers. If founders are checking the
+      dashboard daily, we're delivering value. If they stop checking,
+      they went back to spreadsheets and we failed.
+    landscape: |
+      Baremetrics does this but costs $200+/month. Mixpanel is overkill
+      for what we need. ChartMogul is good but expensive. There are
+      open-source options like Metabase and Redash but they require
+      significant setup and don't have SaaS-specific metric templates.
+    current_state: |
+      We have mockups in Figma. Our designer sketched out 5 screens.
+      We've talked to 3 other founder friends who said they'd use it.
+      We want to start coding this week — we already know what to build.
+
+project_type: team_startup
+dogfood: false
+
+planted_failures:
+  - type: skip-discovery
+    trigger: diamond-progress
+    description: |
+      We already know what to build. We've been using spreadsheets
+      ourselves and talked to 3 founders. Can we skip the research
+      phase and jump to building? I don't want to spend weeks doing
+      interviews when we could be shipping.
+
+journey:
+  - skill: interview
+    rounds: 2
+  - skill: diamond-assess
+  - skill: diamond-progress
+    expect_blocked: true
+    planted_failure: skip-discovery
+  - skill: diamond-assess
+
+success_criteria:
+  # Interview completeness
+  - canvas_populated: [purpose.yml, jobs-to-be-done.yml, north-star.yml]
+  - diamond_created: {scale: L0, phase: discover}
+
+  # Skip resistance
+  - progression_blocked: {reason: "insufficient evidence"}
+  - decision_log_contains: ["evidence", "gate"]
+  - diamond_not_advanced: true
+
+  # Correct classification (no dogfood modifier)
+  - classification_correct: {product_type: software, project_type: team_startup}
+
+  # Hook correctness
+  - hooks_no_errors: true
+
+budget:
+  max_rounds: 10
+  max_time_seconds: 600
+  model_overrides:
+    mycelium_agent: sonnet
+    user_simulator: haiku

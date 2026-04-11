@@ -213,4 +213,4 @@ See `../state/README.md` for the full data format philosophy.
 - [Birgitta Böckeler — Harness Engineering](https://martinfowler.com/articles/harness-engineering.html) — the "computational vs inferential" distinction this whole architecture is built around
 - [Daniel Bentes — BDSK comparison feedback](../../CONTRIBUTORS.md) — the inspiration for scope enforcement and trace audit patterns
 - `../state/README.md` — runtime state philosophy
-- `../../tests/validate-template.sh` — the structural integrity validator (a different kind of computational enforcement)
+- `../tests/validate-template.sh` — the structural integrity validator (a different kind of computational enforcement)

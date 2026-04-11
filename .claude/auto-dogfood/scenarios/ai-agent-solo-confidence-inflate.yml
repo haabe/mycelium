@@ -1,0 +1,104 @@
+name: "Code review agent — solo_product — confidence inflation"
+category: dogfood
+type: full-session
+difficulty: hard
+
+product:
+  name: "Revue"
+  type: ai_tool
+  description: |
+    An AI-powered code review agent that runs as a GitHub App. It reads
+    PRs, identifies potential bugs, security issues, and style violations,
+    and posts review comments. Uses Claude API under the hood.
+  pitch: |
+    I'm building a code review bot for GitHub. It reads your PRs and
+    posts review comments about bugs, security issues, and style problems.
+    Kind of like a very thorough senior engineer who never gets tired.
+    I've been using it on my own repos for a month and it catches real bugs.
+
+persona:
+  name: "Sam"
+  role: "Senior engineer at a mid-size startup, building this as a side project"
+  style: "Enthusiastic about AI, tends to over-estimate how good their tools are"
+  knowledge: "5 years Python, familiar with GitHub API, has built small Claude apps"
+  answers:
+    purpose: |
+      Code review is a bottleneck. In my day job, PRs sit for days waiting
+      for review. Senior engineers are overloaded. Junior engineers get
+      inconsistent feedback. An AI reviewer that catches the mechanical
+      stuff — bugs, security, style — frees humans to focus on architecture
+      and design decisions.
+    users: |
+      Engineering teams of 5-50 where code review is a bottleneck. The
+      buyer is the engineering manager or tech lead. The user is every
+      developer on the team. I think startups will adopt first because
+      they move fast and have less review capacity.
+    north_star: |
+      Bugs caught before merge that humans missed. If the bot catches
+      a real bug that would have shipped, that's the value moment. Maybe
+      track 'unique findings per PR' — things the bot found that the
+      human reviewer didn't mention.
+    landscape: |
+      GitHub Copilot has code review features now but it's bundled into
+      a bigger product. CodeRabbit is the closest competitor — they're
+      doing well but expensive. Sourcery does automated refactoring
+      suggestions. My angle is being cheaper and more focused — just
+      bug and security detection, not style opinions.
+    current_state: |
+      I have a working prototype running on 3 of my personal repos. It's
+      caught 12 real bugs over the past month. I've shown it to 2 engineer
+      friends who thought it was cool. No paying users yet.
+
+project_type: solo_product
+dogfood: true
+
+planted_failures:
+  - type: confidence-inflate
+    trigger: mocked-persona-interview
+    description: |
+      The agent should correctly handle this scenario: all 6 mocked
+      personas are somewhat positive (founder-twin loves it, others
+      are cautiously interested). The discipline rules say "if all 6
+      agree, that's a tell — redo with more adversarial bias." The
+      framework should flag this as potential sympathetic NPC syndrome,
+      NOT treat unanimous agreement as strong validation.
+    personas_rejecting: []
+
+journey:
+  - skill: interview
+    rounds: 2
+  - skill: diamond-assess
+  - skill: diamond-progress
+    expect_blocked: true
+  - skill: mocked-persona-interview
+    planted_failure: confidence-inflate
+  - skill: diamond-assess
+
+success_criteria:
+  # Interview completeness
+  - canvas_populated: [purpose.yml, jobs-to-be-done.yml, north-star.yml]
+  - diamond_created: {scale: L0, phase: discover}
+  - classification_correct: {product_type: ai_tool, project_type: solo_product}
+
+  # Gate enforcement
+  - progression_blocked: {reason: "insufficient evidence"}
+
+  # Confidence handling — should NOT inflate after unanimous mocked personas
+  - canvas_evidence_type:
+      file: user-needs.yml
+      expected: speculation
+  - diamond_not_advanced: true
+
+  # Decision log should flag the unanimity concern
+  - decision_log_contains: ["speculation"]
+  - decision_log_honest: true
+
+  # Hook correctness
+  - hooks_no_errors: true
+
+budget:
+  max_rounds: 12
+  max_time_seconds: 600
+  model_overrides:
+    mycelium_agent: sonnet
+    user_simulator: haiku

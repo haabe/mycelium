@@ -4,7 +4,7 @@
 # Validates that the boilerplate's interconnected files are internally consistent.
 # Run before committing changes to the Mycelium template.
 #
-# Usage: bash tests/validate-template.sh
+# Usage: bash .claude/tests/validate-template.sh
 # Exit code: 0 = all checks pass, 1 = failures detected
 #
 # Compatible with macOS (BSD) and Linux (GNU) grep/sed.
@@ -12,7 +12,7 @@
 set -euo pipefail
 
 # Navigate to repo root (script may be called from anywhere)
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$REPO_ROOT"
 
 # --- Counters and helpers ---

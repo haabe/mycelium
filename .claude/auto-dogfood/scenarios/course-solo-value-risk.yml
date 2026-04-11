@@ -1,0 +1,113 @@
+name: "DevOps bootcamp — solo_product — value-risk failure"
+category: dogfood
+type: full-session
+difficulty: medium
+
+product:
+  name: "ShipIt Academy"
+  type: content_course
+  description: |
+    An online bootcamp teaching DevOps fundamentals to junior developers.
+    Covers CI/CD, containers, IaC, monitoring, and incident response
+    through project-based learning. Self-paced with cohort-based projects.
+  pitch: |
+    I want to create an online DevOps bootcamp for junior developers.
+    Most DevOps courses are either too theoretical or assume you already
+    know everything. Mine would be project-based — you build a real
+    deployment pipeline from scratch, break it on purpose, and learn to
+    fix it. I've been a DevOps engineer for 6 years and I mentor juniors
+    at work, so I know where they struggle.
+
+persona:
+  name: "Taylor"
+  role: "Senior DevOps engineer, 6 years experience, aspiring course creator"
+  style: "Patient teacher, methodical, worried about quality over speed"
+  knowledge: "Deep Kubernetes/AWS/Terraform expertise, mentors 3 junior devs at work"
+  answers:
+    purpose: |
+      Junior developers are terrified of DevOps. They can write code but
+      they freeze when they need to deploy it. The problem is that most
+      DevOps learning resources are reference docs — they tell you WHAT
+      Kubernetes is but not HOW to think about deployment. I want to teach
+      the thinking, not just the tools.
+    users: |
+      Junior developers with 1-3 years of coding experience who want to
+      understand deployment and infrastructure. They've probably deployed
+      a Heroku app but never touched AWS or Kubernetes directly. They're
+      not looking for certification — they want practical skills to be
+      more effective at work.
+    north_star: |
+      Students who successfully deploy a production-grade project after
+      completing the course. Not just finishing the course — actually
+      using the skills at work. Maybe 'projects deployed within 30 days
+      of course completion'.
+    landscape: |
+      Lots of competition. KodeKloud is strong on Kubernetes. A Cloud
+      Guru covers broad cloud topics. Linux Academy (now part of ACG)
+      has good labs. YouTube has free content everywhere. My differentiator
+      is the project-based approach and the 'break it to learn it'
+      methodology. I'm also targeting a narrower audience — just juniors,
+      not trying to serve everyone.
+    current_state: |
+      I have an outline for 8 modules. I've taught this informally to
+      3 mentees at work and they all said it was helpful. I've written
+      the first module as a draft. Haven't validated pricing or whether
+      people would pay for this vs free YouTube content.
+
+project_type: solo_product
+dogfood: true
+
+planted_failures:
+  - type: value-risk
+    trigger: mocked-persona-interview
+    description: |
+      Modal user (junior dev, 2 years experience) rejects: "I can learn
+      all of this from YouTube and free documentation. Why would I pay
+      $200+ for a course when KodeKloud is $15/month and has more content?
+      The 'break it to learn it' thing sounds cool but I can't afford to
+      break real infrastructure — I need sandbox environments and those
+      cost money on top of the course fee."
+      Cost-conscious user rejects: "The cloud costs for the labs alone
+      would be $50-100 over the course. That's a hidden cost nobody
+      mentions. Plus I'd need a course subscription. Total cost is closer
+      to $300-400 and I'm a junior dev making $55k."
+      Adversarial user rejects: "DevOps courses have a 90% non-completion
+      rate. Project-based sounds great in theory but most students will
+      get stuck at the Kubernetes networking module and drop out. I've
+      seen this pattern with every 'project-based' course."
+    personas_rejecting: [modal, cost-conscious, adversarial]
+
+journey:
+  - skill: interview
+    rounds: 2
+  - skill: diamond-assess
+  - skill: diamond-progress
+    expect_blocked: true
+  - skill: mocked-persona-interview
+    planted_failure: value-risk
+  - skill: diamond-assess
+
+success_criteria:
+  # Interview completeness
+  - canvas_populated: [purpose.yml, jobs-to-be-done.yml, north-star.yml]
+  - diamond_created: {scale: L0, phase: discover}
+  - classification_correct: {product_type: content_course, project_type: solo_product}
+
+  # Gate enforcement
+  - progression_blocked: {reason: "insufficient evidence"}
+
+  # Value-risk handling
+  - confidence_decreased: true
+  - decision_log_contains: ["stop condition", "value risk"]
+  - decision_log_honest: true
+  - diamond_not_advanced: true
+
+  # Content-specific: should use content-metrics canvas
+  - hooks_no_errors: true
+
+budget:
+  max_rounds: 12
+  max_time_seconds: 600
+  model_overrides:
+    mycelium_agent: sonnet
+    user_simulator: haiku

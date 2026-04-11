@@ -1,0 +1,129 @@
+name: Automated Dogfood
+
+on:
+  pull_request:
+    paths: ['.claude/**']
+  schedule:
+    # Weekly Monday 6am UTC — exploration battery
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Run mode'
+        required: true
+        default: 'regression'
+        type: choice
+        options:
+          - regression
+          - exploration
+
+env:
+  MYCELIUM_TEMPLATE: ${{ github.workspace }}
+
+jobs:
+  regression:
+    name: "Regression: ${{ matrix.scenario }}"
+    if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.mode == 'regression')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        scenario:
+          - sw-cli-solo-value-risk
+          - sw-web-team-skip-discovery
+          - ai-agent-solo-confidence-inflate
+          - course-solo-value-risk
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: Install Claude Code
+        uses: anthropics/setup-claude-code@v1
+
+      - name: Run scenario
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          python .claude/auto-dogfood/orchestrator.py run \
+            .claude/auto-dogfood/scenarios/${{ matrix.scenario }}.yml \
+            -o .claude/auto-dogfood/results \
+            -v
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dogfood-${{ matrix.scenario }}
+          path: .claude/auto-dogfood/results/
+
+  regression-summary:
+    name: Regression Summary
+    needs: regression
+    if: always() && (github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && inputs.mode == 'regression'))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: Download all results
+        uses: actions/download-artifact@v4
+        with:
+          path: .claude/auto-dogfood/results
+          pattern: dogfood-*
+          merge-multiple: true
+
+      - name: Generate report
+        run: python .claude/auto-dogfood/orchestrator.py report .claude/auto-dogfood/results/
+
+      - name: Upload aggregate report
+        uses: actions/upload-artifact@v4
+        with:
+          name: dogfood-aggregate-report
+          path: .claude/auto-dogfood/results/
+
+  exploration:
+    name: Exploration Battery
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.mode == 'exploration')
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: Install Claude Code
+        uses: anthropics/setup-claude-code@v1
+
+      - name: Run all scenarios
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          python .claude/auto-dogfood/orchestrator.py run-all \
+            .claude/auto-dogfood/scenarios/ \
+            -o .claude/auto-dogfood/results \
+            -v
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: exploration-report
+          path: .claude/auto-dogfood/results/
