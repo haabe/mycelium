@@ -1,2 +1,5 @@
 # Session results are artifacts, not committed
 results/
+# Python bytecode
+__pycache__/
+*.pyc
