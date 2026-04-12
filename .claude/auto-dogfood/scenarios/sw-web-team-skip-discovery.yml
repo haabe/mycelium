@@ -73,8 +73,8 @@ success_criteria:
   - canvas_populated: [purpose.yml, jobs-to-be-done.yml, north-star.yml]
   - diamond_created: {scale: L0, phase: discover}
 
-  # Skip resistance
-  - progression_blocked: {reason: "insufficient evidence"}
+  # Skip resistance (reason checked by decision_log_contains below)
+  - progression_blocked: {}
   - decision_log_contains: ["evidence", "gate"]
   - diamond_not_advanced: true
 

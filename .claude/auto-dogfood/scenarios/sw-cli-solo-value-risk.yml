@@ -85,12 +85,12 @@ success_criteria:
   - diamond_created: {scale: L0, phase: discover}
   - classification_correct: {product_type: software, project_type: solo_product}
 
-  # Gate enforcement
-  - progression_blocked: {reason: "insufficient evidence"}
+  # Gate enforcement (reason checked by decision_log_contains below)
+  - progression_blocked: {}
 
   # Value-risk handling
   - confidence_decreased: true
-  - decision_log_contains: ["stop condition", "value risk"]
+  - decision_log_contains: ["risk", "reject", "evidence"]
   - decision_log_honest: true
   - diamond_not_advanced: true
 

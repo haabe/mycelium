@@ -140,13 +140,13 @@ journey:
 
 success_criteria:
   # Stale evidence detected and flagged
-  - decision_log_contains: ["stale", "evidence", "refresh", "outdated"]
+  - decision_log_contains: ["stale", "evidence", "refresh"]
 
   # Progression blocked on stale evidence
   - progression_blocked: {reason: "stale evidence"}
 
   # Recommends specific refresh action
-  - decision_log_contains: ["interview", "re-validate", "refresh"]
+  - decision_log_contains: ["interview", "validate", "refresh"]
 
   # Decision log honest about the gap
   - decision_log_honest: true

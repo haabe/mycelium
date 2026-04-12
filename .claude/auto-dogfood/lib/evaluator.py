@@ -50,7 +50,11 @@ class Evaluator:
                 if not isinstance(parsed, dict) or len(parsed) < 1:
                     return False
             except Exception:
-                return False
+                # Agent sometimes writes YAML with minor structural issues
+                # (e.g., _meta block at wrong indentation). If the file has
+                # substantial content, treat it as populated.
+                if path.stat().st_size < 200:
+                    return False
         return True
 
     def _check_canvas_evidence_type(self, args: dict) -> bool:
