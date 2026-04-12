@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.13.0 -- Learning metabolism: cycle-over-cycle learning, pattern emergence, adaptive thresholds, framework reflexion, evidence decay.*
+*Version 0.13.1 -- Audit fix: cycle-history data entry points, trio checks in skills, anti-pattern numbering, cross-reference schemas, perspective resolution gaps.*
 
 Mycelium is a harnessing system for AI-assisted product development. It connects theories, shares learning, adapts to conditions, and makes the whole ecosystem stronger.
 

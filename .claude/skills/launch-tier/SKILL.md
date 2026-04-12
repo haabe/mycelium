@@ -103,6 +103,19 @@ Update `canvas/go-to-market.yml` engagement_design section with Hook Canvas resu
 
 This closes the full Mycelium loop: Purpose -> Strategy -> Discovery -> Solution -> Delivery -> **Market -> Discovery**.
 
+## Cycle History Recording
+
+After launch feedback is captured (L5 → L2 loop), update the cycle record in `canvas/cycle-history.yml`:
+
+1. Find the cycle record for this leaf (created by `/retrospective` at delivery completion)
+2. Add **actual** market outcomes: user metrics, adoption data, NPS/CSAT, revenue impact
+3. Update the calibration section: compare predicted value/usability risk against actual market reception
+4. If market signals contradict the original L2 opportunity assumptions, note this as calibration data
+
+If no cycle record exists yet (leaf went directly to market without retrospective), create one now.
+
+This closes the data loop: predicted ICE → actual delivery metrics → actual market outcomes → calibration for future scoring.
+
 ## Theory Citations
 - Lauchengco: Loved (launch tier classification, positioning)
 - Shotton: Choice Factory (ethical behavioral science in positioning)

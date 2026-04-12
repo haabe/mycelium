@@ -22,7 +22,7 @@ perspectives:
   product: "Position and evidence"
   design: "Position and evidence"
   engineering: "Position and evidence"
-conflict_type: value-vs-feasibility | usability-vs-feasibility | value-vs-viability | three-way
+conflict_type: value-vs-feasibility | usability-vs-feasibility | value-vs-viability | usability-vs-viability | three-way
 ```
 
 Never resolve implicitly. If a perspective was overridden, the record must show it and why.
@@ -43,6 +43,11 @@ Design wants a better experience, but engineering says it's expensive.
 Users want it, but business/legal/ethical constraints say no.
 
 **Resolution path**: Business constraints generally win unless user evidence is overwhelming (≥3 independent sources showing strong need). If constraints win, document clearly — the user need doesn't disappear, it waits for constraints to change. If user evidence is overwhelming, escalate: the business constraint itself may need re-evaluation.
+
+### Usability vs Viability
+Design wants a better experience, but business/legal/ethical constraints prevent it.
+
+**Resolution path**: Can the experience be redesigned within the constraints? Often the constraint itself suggests a design direction (e.g., GDPR consent flows can be designed well, not just bolted on). If constraints are hard legal requirements, design works within them. If constraints are business policy, and usability evidence is strong (≥2 user tests showing failure), escalate: the policy may need re-evaluation.
 
 ### Three-Way Disagreement
 All three perspectives see different problems with the solution.

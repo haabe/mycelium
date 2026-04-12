@@ -9,6 +9,7 @@ schema_version: 1
 # Per-threat list with provenance — REQUIRED for each entry: description, provenance
 threats: []
 # - id: threat-001
+#   solution_id: ""        # OST leaf or GIST idea this threat applies to (cross-ref to leaf lifecycle)
 #   category: spoofing|tampering|repudiation|info_disclosure|denial_of_service|elevation_of_privilege
 #   description: "Attacker forges API auth token via session prediction"
 #   severity: low|medium|high|critical

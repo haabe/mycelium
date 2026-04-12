@@ -46,6 +46,12 @@ Evaluate current diamond state and recommend next action.
 7. **Check corrections.md**:
    - Any relevant past mistakes to avoid?
 
+7b. **Check trio perspective coverage** (Torres Product Trio):
+   - For the current diamond phase, verify all three perspectives (product/design/engineering) have been applied.
+   - Reference `engine/theory-gates.md` §Trio Perspective Requirement for the per-scale coverage matrix.
+   - Flag any missing perspectives as a gap: "Design perspective not yet applied at L[X]. Consider running `/usability-check` or `/service-check`."
+   - If perspectives are in conflict, recommend `engine/perspective-resolution.md`.
+
 8. **Coaching check** (Rother's Coaching Kata):
    Surface these five questions in the output to prompt the human's thinking:
    1. What is the **target condition** for this diamond? (What does "done" look like?)
@@ -70,7 +76,7 @@ Evaluate current diamond state and recommend next action.
 
 11. **Report harness thickness** (informational):
     - Count: total skills, active guardrails, mandatory reads, hooks, theory gates
-    - Current: 41 skills, 29 guardrails, 4 mandatory reads, 5 hook layers, 12 gates
+    - Current: 42 skills, 32 guardrails, 4 mandatory reads, 5 hook layers, 12 gates
     - If thickness has increased since last assess, note it
     - This is observability, not a gate — purely informational
     - *Source: Pachaar ("scaffolding should decrease as models improve")*

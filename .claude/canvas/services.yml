@@ -6,6 +6,16 @@
 # See: .claude/engine/leaf-lifecycle.md Phase 6 (Bounded Context)
 # - gist_id: ""          # GIST idea this service implements (e.g., "idea-001")
 
+# Service entries (bounded contexts for software, content architecture for content products)
+services: []
+# - id: svc-001
+#   name: ""
+#   gist_id: ""           # GIST idea this service implements (e.g., "idea-001")
+#   description: ""
+#   bounded_context: ""   # DDD bounded context name (software only)
+#   cynefin_domain: ""    # clear|complicated|complex|chaotic (from /cynefin-classify)
+#   created_at: null
+
 principles:
   - id: 1
     name: "Be easy to find"

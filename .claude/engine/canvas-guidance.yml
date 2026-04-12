@@ -84,6 +84,9 @@ project_types:
       - trust-signals.yml    # No trust architecture for personal project
       - bvssh-health.yml     # Lightweight self-check sufficient
       - human-tasks.yml      # Optional for hobby projects
+      - archived-solutions.yml  # Created automatically when leaves are discarded
+      - cycle-history.yml       # Created automatically by /retrospective and /launch-tier
+      - thresholds.yml          # Created by /framework-health after 10+ cycles
 
   solo_product:
     description: "Solo developer building a real product. May have users, may generate revenue."
@@ -102,6 +105,9 @@ project_types:
       - landscape.yml
       - go-to-market.yml
       - human-tasks.yml      # Track offline evidence-gathering tasks
+      - archived-solutions.yml  # Created automatically when leaves are discarded
+      - cycle-history.yml       # Created automatically by /retrospective and /launch-tier
+      - thresholds.yml          # Created by /framework-health after 10+ cycles
     optional:
       - team-shape.yml
       - trust-signals.yml
@@ -128,6 +134,9 @@ project_types:
       - trust-signals.yml
       - bounded-contexts.yml  # DDD: important once team has multiple services/domains
       - human-tasks.yml      # Track offline evidence-gathering tasks
+      - archived-solutions.yml  # Created automatically when leaves are discarded
+      - cycle-history.yml       # Created automatically by /retrospective and /launch-tier
+      - thresholds.yml          # Created by /framework-health after 10+ cycles
     optional: []
 
   team_enterprise:
@@ -150,6 +159,9 @@ project_types:
       - trust-signals.yml       # Trust architecture for enterprise
       - bounded-contexts.yml   # DDD: required for multi-team architecture
       - human-tasks.yml        # Track offline evidence-gathering tasks
+      - archived-solutions.yml  # Created automatically when leaves are discarded
+      - cycle-history.yml       # Created automatically by /retrospective and /launch-tier
+      - thresholds.yml          # Created by /framework-health after 10+ cycles
     recommended: []
     optional: []
 

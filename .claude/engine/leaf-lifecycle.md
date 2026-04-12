@@ -181,6 +181,34 @@ When a leaf is killed at any phase, it is archived — never deleted.
 
 ---
 
+## Cycle Recording at Terminal States
+
+Every leaf that reaches a terminal state (shipped, discarded, or market-rejected) MUST create or update a record in `canvas/cycle-history.yml`. This is the data input for the learning metabolism.
+
+### When to Record
+
+| Terminal State | Trigger | Skill Responsible |
+|---------------|---------|-------------------|
+| Shipped (Phase 9 complete) | Delivery diamond completes | `/retrospective` |
+| Launched (Phase 10 feedback captured) | Market feedback collected | `/launch-tier` |
+| Discarded (any phase) | Leaf archived | The skill performing the archive (manual or `/diamond-progress kill`) |
+
+### What to Record
+
+- **Predicted**: ICE score, feasibility risk level, estimated effort (captured at Phase 3/5)
+- **Actual**: Outcome, actual effort, DORA metrics, user metrics (captured at Phase 9/10)
+- **Calibration**: Delta between predicted and actual for each dimension
+
+### Why This Matters
+
+Without cycle records, the following systems have no data:
+- **Adaptive thresholds** (`engine/adaptive-thresholds.md`) — cannot calibrate ICE threshold
+- **Pattern detector** (`engine/pattern-detector.md`) — cannot identify correlations
+- **Framework reflexion** (`engine/framework-reflexion.md`) — cannot measure cycle velocity or confidence calibration
+- **Evidence decay** (`engine/evidence-decay.md`) — cannot calibrate staleness thresholds
+
+---
+
 ## WIP and Flow
 
 Leaf WIP follows diamond WIP limits from `diamond-rules.md`:

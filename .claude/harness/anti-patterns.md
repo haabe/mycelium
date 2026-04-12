@@ -142,7 +142,7 @@ Known failure modes organized by category. Check regularly, especially when thin
 - **What to do instead**: Always run implement-validate-critique-retry. Even if the first attempt looks good, validate.
 - **Source**: Mycelium (reflexion pattern)
 
-## Confidence Anti-Patterns
+## Delivery Anti-Patterns (continued)
 
 ### 7. Regression Avoidance
 - **Description**: Refusing to regress a diamond backward because of sunk cost. Evidence says the assumption is wrong, but the team pushes forward anyway.
@@ -208,7 +208,7 @@ These are systemic organizational traps from Senge's "The Fifth Discipline." The
 - **What to do instead**: Hold the standard. Flex scope (MoSCoW), not quality. If a standard can't be met, investigate why — the answer is usually a systemic constraint, not an unrealistic standard.
 - **Source**: Senge (The Fifth Discipline)
 
-### 12. Test-Last Development
+### 17. Test-Last Development (Delivery)
 - **Description**: Writing all code first, then adding tests as an afterthought -- or not at all. Both Mycelium pilot projects exhibited this pattern.
 - **Detection rule**: Test files created in a separate commit after source files. Or: source files exist with no corresponding test files at delivery completion.
 - **What to do instead**: Write tests first (TDD) or at minimum alongside implementation. The G-V7 guardrail requires tests to exist before delivery completion (REVIEW).
@@ -245,6 +245,12 @@ These are systemic organizational traps from Senge's "The Fifth Discipline." The
 - **Detection rule**: `canvas/archived-solutions.yml` entry has `segments_checked` with only one segment, and `reason` is `low-ice-score`.
 - **What to do instead**: Before discarding for low ICE, evaluate whether the solution serves a different segment where it might score higher. See `engine/leaf-lifecycle.md` Discard Decision Rules.
 - **Source**: Torres (CDH — solutions serve different user needs), Mycelium leaf lifecycle
+
+### 6. Perspective Suppression
+- **Description**: Resolving a trio conflict by ignoring a perspective entirely rather than using the perspective resolution framework. Common forms: "Engineering will figure it out" (suppresses feasibility), "Users will learn" (suppresses usability), "We'll find the users later" (suppresses value), "Legal won't notice" (suppresses viability).
+- **Detection rule**: Decision log entry shows a perspective conflict resolved with fewer than 3 perspectives documented. Or gate check has a missing perspective without explicit "N/A: [reason]" justification.
+- **What to do instead**: Use the perspective resolution framework (`engine/perspective-resolution.md`). If a perspective is overridden, document why with evidence in the decision log and tag it as a risk to monitor.
+- **Source**: Torres (Product Trio), Cagan (Empowered), Mycelium perspective resolution framework
 
 ## Cognitive & Drift Anti-Patterns
 

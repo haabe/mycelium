@@ -90,9 +90,24 @@ After delivery retrospective, always ask:
 - "Are there refactoring opportunities? Duplicated logic (DRY)? Unnecessary complexity (KISS)?"
 *Source: Beck (XP), Fowler (Refactoring)*
 
+## Cycle History Recording
+
+After every completed delivery increment, record the cycle in `canvas/cycle-history.yml`:
+
+1. Create a cycle record with the leaf_id, opportunity_id, and diamond_id
+2. Record **predicted** values: ICE score at time of GIST entry, feasibility risk level, estimated effort
+3. Record **actual** values: outcome (shipped/partial/failed), actual effort, DORA metrics from `/dora-check`, user metrics post-launch
+4. Compute **calibration** deltas: ICE accuracy (predicted vs actual), effort accuracy, risk accuracy per dimension
+5. Note any learnings that should inform future scoring
+
+This data feeds the learning metabolism (see `engine/cycle-learning.md`). Without it, adaptive thresholds and pattern detection have no input data.
+
+**Trigger rule**: Every 5th cycle recorded, prompt: "5 cycles since last review. Run `/framework-health` to check calibration?"
+
 ## Output
 1. Update `.claude/memory/corrections.md` with new corrections
 2. Update `.claude/memory/patterns.md` with new patterns
 3. Update `.claude/memory/delivery-journal.md` with retrospective entry
 4. Update canvas/bvssh-health.yml if dimensions changed
 5. Log in decision-log.md
+6. Record cycle in `canvas/cycle-history.yml` (see Cycle History Recording above)

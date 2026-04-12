@@ -37,6 +37,13 @@ Progress a diamond through phases with full theory gate validation. At delivery 
 
 6. **Run corrections check**: Review corrections.md for relevant entries.
 
+6b. **Check trio perspective coverage** (Torres Product Trio):
+   - For each gate evaluated in step 2, verify all three perspectives (product/design/engineering) are documented.
+   - Each perspective must have evidence or an explicit "N/A: [reason]" justification.
+   - Missing perspectives without justification = **GATE FAILED** (Perspective Skip anti-pattern).
+   - See `engine/theory-gates.md` §Trio Perspective Requirement for per-scale guidance.
+   - If perspectives conflict, apply `engine/perspective-resolution.md` before progressing.
+
 7. **If transition is Deliver -> Complete: RUN EXECUTABLE DoD CHECKLIST** (see below)
 
 8. **Decision**:
@@ -249,6 +256,7 @@ Use when the diamond cannot be rescued via pivot or park. Example: the opportuni
    - Add `killed_at`, `killed_reason`, `learnings` fields
 5. Do NOT delete canvas artifacts associated with the killed diamond — they are learning for future work
 6. Capture the learning in `memory/patterns.md` and `memory/corrections.md` as appropriate
+7. **Record cycle in `canvas/cycle-history.yml`**: Killed diamonds are terminal states. Record predicted ICE/effort, actual outcome as "killed", reason, and phase at kill. This feeds adaptive thresholds and pattern detection.
 
 ### Dogfood Mode Modifier (from canvas-guidance.yml)
 
