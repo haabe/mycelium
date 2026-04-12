@@ -1,8 +1,8 @@
 # Mycelium
 
-**Your AI agent's product thinking partner.** *v0.11.1*
+**Your AI agent's product thinking partner.** *v0.11.4*
 
-Mycelium ensures you build the right thing — not just build the thing right. It guides AI agents through structured discovery, strategy, and delivery using 42+ established product frameworks, 12 theory gates, and 38 skills. Drop it into any Claude Code project and run `/interview`.
+Mycelium ensures you build the right thing — not just build the thing right. It guides AI agents through structured discovery, strategy, and delivery using 42+ established product frameworks, 12 theory gates, and 41 skills. Drop it into any Claude Code project and run `/interview`.
 
 ```bash
 npx degit haabe/mycelium my-project && cd my-project
@@ -138,7 +138,7 @@ Canvas files are committed to git. They ARE your product documentation. Not all 
 - **REVIEW** (13): `/diamond-progress` refuses to complete delivery until satisfied. Tests, a11y, usability (Nielsen), services quality (Downe), threat modeling, input validation, BVSSH, decision logging, error states, canvas updates, AI disclosure, regulatory awareness, privacy.
 - **NUDGE** (15): Nudged by hooks, not blocking. Engineering principles (DRY, KISS, YAGNI, XP values), bias checks, data minimization, secure defaults, theory citations, devil's advocate, BVSSH dimensions, sustainable pace.
 
-**Anti-Patterns** (`.claude/harness/anti-patterns.md`) -- 32 known failure modes across discovery, confidence, security, delivery, market/GTM, and strategic systems thinking:
+**Anti-Patterns** (`.claude/harness/anti-patterns.md`) -- 34 known failure modes across discovery, confidence, security, delivery, market/GTM, strategic systems thinking, and cognitive drift:
 - "Solution-first thinking", "Confidence inflation", "Security-later", "Dark pattern marketing", "Regression avoidance", and more
 
 **Cognitive Biases** (`.claude/harness/cognitive-biases.md`) -- Per-stage bias checklist based on Shotton and Kahneman. 20+ biases mapped across L0-L5 including agent's own biases.
@@ -200,7 +200,7 @@ Mycelium communicates in human language, not framework jargon:
 - **Quarterly**: North Star review, strategic landscape refresh, eval benchmarks
 - **Escape hatch**: Documented bypass process for emergencies (production incidents, hotfixes) with mandatory payback
 
-## Skills Reference (38 skills)
+## Skills Reference (41 skills)
 
 ### Onboarding & Assessment
 | Skill | When to Use |
@@ -237,6 +237,7 @@ Mycelium communicates in human language, not framework jargon:
 | `/security-review` | OWASP secure design review |
 | `/usability-check` | Nielsen's 10 usability heuristics (interface-level) |
 | `/a11y-check` | Accessibility audit (WCAG 2.1 AA) |
+| `/regulatory-review` | EU AI Act risk classification and transparency assessment |
 
 ### Delivery
 | Skill | When to Use |
@@ -258,6 +259,7 @@ Mycelium communicates in human language, not framework jargon:
 | Skill | When to Use |
 |-------|------------|
 | `/canvas-update` | Update canvas with new evidence |
+| `/canvas-health` | Lint canvas for staleness, missing fields, inconsistencies |
 | `/canvas-sync` | Synchronize canvas across team via git |
 | `/fan-out` | Parallel agent orchestration for OST exploration |
 
@@ -266,6 +268,7 @@ Mycelium communicates in human language, not framework jargon:
 |-------|------------|
 | `/feedback-review` | Aggregate all feedback signals, check health across 4 loops |
 | `/eval-runner` | Run benchmark scenarios |
+| `/corrections-audit` | Analyze correction trends, graduate repeats to guardrails |
 | `/prompt-optimizer` | A/B test instruction changes |
 
 ## Theories & Frameworks Integrated
@@ -369,7 +372,7 @@ your-project/
     harness/                   # Guardrails, anti-patterns, biases, security, engineering principles
     memory/                    # Corrections, patterns, product journal, delivery journal
     domains/                   # Phase-specific agent behavior (discovery/delivery/quality)
-    skills/                    # 38 invocable skills
+    skills/                    # 39 invocable skills
     hooks/                     # 6-layer enforcement (gate, nudge, reflexion, stop-check, session-start, skill-gates)
     orchestration/             # Solo/team modes, agent teams, fan-out, operations, escape hatch
     jit-tooling/               # Language-agnostic delivery tooling + polyglot detection

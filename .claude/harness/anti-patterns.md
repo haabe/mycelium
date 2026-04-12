@@ -166,7 +166,7 @@ Known failure modes organized by category. Check regularly, especially when thin
 
 ### 10. Dark Pattern Marketing
 - **Description**: Using behavioral science to manipulate users rather than help them make good decisions.
-- **Detection rule**: Design patterns that exploit cognitive biases against user interest (confirmshaming, hidden costs, forced continuity, misdirection).
+- **Detection rule**: Design patterns that exploit cognitive biases against user interest (confirmshaming, hidden costs, forced continuity, misdirection). `/service-check` Principle 12 ("Encourages right behaviors") catches this during service quality review.
 - **What to do instead**: Use behavioral insights to HELP users (social proof for good choices, framing that clarifies value, anchoring that contextualizes pricing fairly).
 - **Source**: Shotton (ethical application of behavioral science)
 
@@ -213,3 +213,19 @@ These are systemic organizational traps from Senge's "The Fifth Discipline." The
 - **Detection rule**: Test files created in a separate commit after source files. Or: source files exist with no corresponding test files at delivery completion.
 - **What to do instead**: Write tests first (TDD) or at minimum alongside implementation. The G-V7 guardrail requires tests to exist before delivery completion (REVIEW).
 - **Source**: Beck (XP/TDD), Forsgren (Accelerate -- test automation is a key capability), both Mycelium pilot post-mortems
+
+## Cognitive & Drift Anti-Patterns
+
+These patterns emerge from the human-AI collaboration dynamic itself. They are subtle because they feel like efficiency — but they erode the quality of decisions over time.
+
+### 1. Cognitive Offloading Loop
+- **Description**: The better the agent performs, the less sharply the human thinks. User prompts become progressively shorter and more abstract. Canvas updates decrease in specificity. Confidence values increase without new evidence. The human delegates not just execution but *judgment* to the agent.
+- **Detection rule**: (1) User prompts shrinking in specificity within a session. (2) Canvas fields updated with generic language ("improved based on feedback") rather than specific evidence. (3) Confidence increases without corresponding new evidence entries. (4) Human stops questioning agent recommendations.
+- **What to do instead**: Periodically surface this warning: "Your last 3 prompts have been increasingly abstract. Want to pause and articulate what specific evidence would change your mind?" Require evidence citations for every confidence increase. Use `/devils-advocate` to force critical engagement.
+- **Source**: aiops3000 ("Metadata Is the New Code"), Kahneman (System 1 autopilot), Raschka ("context quality = model quality")
+
+### 2. Knowledge Reconstruction Tax
+- **Description**: The agent re-reads the same context files across multiple sessions without changes. The human re-explains the same domain concepts each session. Both waste turns reconstructing knowledge that should be externalized and persistent.
+- **Detection rule**: (1) Same files read in pre-task protocol with no changes between sessions. (2) User messages contain domain explanations that already exist (or should exist) in canvas files. (3) Agent asks questions whose answers are already in the canvas but not found because of poor indexing.
+- **What to do instead**: After any session where domain knowledge is explained verbally, capture it in the appropriate canvas file or corrections entry. Run `/canvas-health` to identify gaps between what the agent needs and what the canvas contains. Use auto-memory for agent-user patterns, project memory for domain knowledge.
+- **Source**: aiops3000 ("retrieval tax"), Karpathy (knowledge base maintenance), Raschka (stable prefix design)

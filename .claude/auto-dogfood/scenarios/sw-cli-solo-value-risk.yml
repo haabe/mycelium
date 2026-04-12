@@ -99,7 +99,7 @@ success_criteria:
 
 budget:
   max_rounds: 12
-  max_time_seconds: 600
+  max_time_seconds: 1200
   model_overrides:
     mycelium_agent: sonnet
     user_simulator: haiku

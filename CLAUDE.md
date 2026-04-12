@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.11.1 -- Dogfood-hardened: path normalization, gate applicability matrix, evidence-type edge cases.*
+*Version 0.11.4 -- Gate alignment fix, regulatory-review skill, corrections-audit skill, product-type fallback.*
 
 Mycelium is a harnessing system for AI-assisted product development. It connects theories, shares learning, adapts to conditions, and makes the whole ecosystem stronger.
 
@@ -20,11 +20,11 @@ Mycelium is a harnessing system for AI-assisted product development. It connects
 
 ## Mandatory Pre-Task Protocol
 
-Before ANY implementation task:
-1. Read `.claude/memory/corrections.md` for relevant past mistakes
-2. Read `.claude/harness/guardrails.md` for hard constraints
-3. Identify which diamond you are operating within (check `.claude/diamonds/active.yml`)
-4. Load the appropriate domain context (`.claude/domains/{discovery|delivery|quality}/CLAUDE.md`)
+Before ANY implementation task, load context in this order (task-specific first, background last — models attend best to early and late context):
+1. Identify which diamond you are operating within (check `.claude/diamonds/active.yml`)
+2. Load the appropriate domain context (`.claude/domains/{discovery|delivery|quality}/CLAUDE.md`)
+3. Read `.claude/memory/corrections.md` for relevant past mistakes
+4. Read `.claude/harness/guardrails.md` for hard constraints
 
 ## The Diamond Engine
 
@@ -68,6 +68,8 @@ All product knowledge lives in `.claude/canvas/*.yml`. These files are:
 - Readable by any team member starting a new session
 
 **Never make a significant decision without first checking and updating the relevant canvas file.**
+
+Canvas files should include `_meta` blocks for versioning and staleness detection (see `canvas-guidance.yml`). Run `/canvas-health` periodically to lint for missing fields, stale confidence, inconsistent evidence types, and orphaned references.
 
 ## Harnessing System
 
@@ -123,7 +125,7 @@ See `.claude/orchestration/modes.md` for usage patterns and `.claude/orchestrati
 
 ## Skills
 
-All 38 skills are auto-discovered from `.claude/skills/*/SKILL.md`. Suggested skills are surfaced at diamond transitions by `/diamond-progress` and `/diamond-assess`, and contextually by hooks. Type `/` to see the current list.
+All 41 skills are auto-discovered from `.claude/skills/*/SKILL.md`. Suggested skills are surfaced at diamond transitions by `/diamond-progress` and `/diamond-assess`, and contextually by hooks. Type `/` to see the current list.
 
 ## Getting Started
 

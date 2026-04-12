@@ -176,6 +176,23 @@ A diamond is stale when:
 
 See `.claude/orchestration/operations.md` for full maintenance schedules.
 
+## Human Actions at Phase Transitions
+
+Each diamond transition involves both agent and human actions. The agent executes skills and checks gates. The human participates through these actions (from AI Interaction Atlas's 23 human action primitives):
+
+| Transition | Human Actions | Agent Actions |
+|------------|--------------|---------------|
+| → Discover | **Provide-evidence**: share context, domain knowledge, existing research | Run /interview, /user-interview, /bias-check |
+| Discover → Define | **Validate**: confirm findings match reality. **Correct**: fix misinterpretations | Run /diamond-progress, /ost-builder |
+| Define → Develop | **Approve**: accept problem framing. **Prioritize**: select which opportunities to pursue | Run /ice-score, /gist-plan |
+| Develop → Deliver | **Delegate**: hand off implementation decisions. **Review**: check solution design | Run /preflight, /delivery-bootstrap |
+| Deliver → Complete | **Accept**: confirm deliverable meets standards. **Escalate**: flag issues for re-work | Run /diamond-progress, /definition-of-done |
+| Regression (any) | **Override**: force regression with evidence. **Provide-evidence**: explain what changed | Run /diamond-progress (backward) |
+
+**Key principle**: The human actions column defines what the framework EXPECTS from the human at each point. If the human is not performing these actions, the Cognitive Offloading Loop anti-pattern may be emerging.
+
+*Source: AI Interaction Atlas (23 human actions), adapted for Mycelium's diamond model*
+
 ## Relationship to Other Methodologies
 
 - **Disciplined Agile (DA)**: Mycelium's Cynefin-based domain routing + canvas-guidance project type classification IS DA's "Choose Your WoW" implemented for agentic development. The diamond engine adapts method to context, which is the core DA principle.

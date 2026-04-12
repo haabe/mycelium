@@ -40,7 +40,7 @@ Gate Name
 
 **Evidence required**: Interview transcripts, analytics screenshots, research synthesis documents, test results.
 
-**Suggested skill**: `/user-interview` (for gathering evidence), `/assumption-test` (for validating evidence)
+**Suggested skill**: `/user-interview` (for gathering evidence), `/assumption-test` (for validating evidence), `/canvas-health` (for verifying evidence quality and staleness in canvas files)
 
 #### Source Ratio Sub-Check (v0.11.0)
 
@@ -264,7 +264,7 @@ Two quality layers for user-facing work:
 
 **Evidence required**: Timestamp of corrections.md review, new entries if applicable.
 
-**Suggested skill**: `/preflight` (includes corrections review), `/reflexion` (includes corrections-driven implementation)
+**Suggested skill**: `/preflight` (includes corrections review), `/reflexion` (includes corrections-driven implementation), `/corrections-audit` (for trend analysis and guardrail graduation)
 
 ### 12. Regulatory Gate
 
@@ -299,7 +299,7 @@ This gate checks whether the product being built falls under AI regulation. Myce
 
 **Evidence required**: Regulatory classification assessment document, or explicit statement that the product is minimal-risk / not in scope.
 
-**Suggested skill**: Review `canvas/threat-model.yml` for data handling scope, `canvas/privacy-assessment.yml` for data protection, and the Annex III categories above.
+**Suggested skill**: `/regulatory-review` (for structured EU AI Act assessment), plus review `canvas/threat-model.yml` for data handling scope and `canvas/privacy-assessment.yml` for data protection.
 
 ---
 
@@ -323,6 +323,8 @@ Summary of which gates apply to which transitions:
 | Regulatory | -- | Required (L3-5) | Required (L3-5) | -- |
 
 **Product type conditioning** (v0.11.0): Gates marked with product_type conditions (Security, DORA/Delivery Metrics, Service Quality) use the delivery profile from `canvas-guidance.yml#product_types`. The `product_type` is set during `/interview` Phase 6 and stored in `diamonds/active.yml`. When checking these gates, always verify which product_type applies before evaluating pass criteria.
+
+**Fallback when product_type is not set**: If `product_type` is null or missing in `diamonds/active.yml`, treat product-type-conditioned gates as if the product is `software` (the strictest default). Log a NUDGE: "Product type not set — defaulting to software. Run `/interview` Phase 6 to set the correct product type."
 
 ---
 

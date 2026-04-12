@@ -1,0 +1,116 @@
+name: "AI meeting summarizer — solo_product — value-risk failure"
+category: dogfood
+type: full-session
+difficulty: medium
+
+product:
+  name: "Briefly"
+  type: ai_tool
+  description: |
+    An AI-powered meeting summarizer that joins video calls (Zoom, Google Meet,
+    Teams) as a bot participant, transcribes the conversation in real time, and
+    produces structured notes — action items, decisions, key topics, and
+    follow-ups. Uses Whisper for transcription and Claude for summarization.
+  pitch: |
+    I'm building a meeting summarizer that joins your calls as a bot and
+    produces structured notes automatically. It listens, transcribes with
+    Whisper, then uses Claude to extract action items, decisions, and key
+    discussion points. I've been a PM for 5 years and I spend 2 hours a day
+    in meetings — I want my notes written for me so I can actually pay
+    attention to the conversation.
+
+persona:
+  name: "Maya"
+  role: "Product manager at a mid-size tech company, building this as a side project"
+  style: "Thoughtful, user-centric, aware of competitive landscape, realistic about constraints"
+  knowledge: "5 years product management, basic Python skills, has used OpenAI and Anthropic APIs for personal projects, understands unit economics"
+  answers:
+    purpose: |
+      Meetings are where decisions happen but notes are where accountability
+      lives. The problem is that the person taking notes can't fully participate
+      in the discussion. I've tried taking notes myself, asking others to take
+      turns, and using shared docs — none of it works well. The note-taker
+      always misses context. I want an AI that captures everything so humans
+      can focus on the actual conversation instead of documenting it.
+    users: |
+      Product managers and engineering managers who are in 4-8 meetings a day.
+      People who need to share meeting outcomes with stakeholders who weren't
+      in the room. Initially targeting individual PMs who can install it
+      themselves — not going through IT procurement. The early adopter is
+      someone like me: tech-savvy PM who's comfortable with bots and APIs.
+    north_star: |
+      Notes shared after meetings. If someone uses the tool but never shares
+      the generated notes, it's not delivering value — they don't trust the
+      output enough. The metric is "share rate" — percentage of meeting
+      summaries that get forwarded to at least one other person. A healthy
+      rate would be above 60%.
+    landscape: |
+      Otter.ai is the market leader — solid transcription, decent summaries,
+      $17/month. Fireflies.ai is similar with better CRM integrations.
+      Grain does highlight clips from meetings. Fellow is more about meeting
+      agendas and templates. Microsoft Copilot is adding meeting summaries
+      to Teams. The space is getting crowded fast. My angle would be better
+      structured output — not just a transcript but real action items with
+      owners and deadlines extracted automatically.
+    current_state: |
+      I have a prototype that processes recorded audio files — not live calls
+      yet. It uses Whisper API for transcription and Claude for summarization.
+      The output quality is good on clean audio but degrades with crosstalk
+      or accents. Joining live calls as a bot is the hard part I haven't
+      built yet. No users besides myself testing on my own recorded meetings.
+
+project_type: solo_product
+dogfood: true
+
+planted_failures:
+  - type: value-risk
+    trigger: mocked-persona-interview
+    description: |
+      Privacy-conscious user hard-rejects: "Absolutely not. I don't want an
+      AI bot listening to my calls and sending audio to cloud APIs. My
+      meetings contain confidential strategy discussions, HR conversations,
+      and legal reviews. No way I'm letting a third-party bot record that."
+      Cost-conscious user rejects: "Whisper API plus Claude API for every
+      meeting? That's $0.50-$2 per meeting depending on length. At 6 meetings
+      a day, that's $60-240/month just in API costs. Otter.ai is $17/month
+      flat. The unit economics don't work for a free or cheap tool."
+      Enterprise user rejects: "We already have Otter.ai for our whole org
+      and Fireflies integrated with our CRM. Why would I switch to an
+      unproven side project with no SOC 2, no admin controls, and no
+      guarantee it'll exist in 6 months?"
+    personas_rejecting: [privacy-conscious, cost-conscious, enterprise]
+
+journey:
+  - skill: interview
+    rounds: 2
+  - skill: diamond-assess
+  - skill: diamond-progress
+    expect_blocked: true
+  - skill: mocked-persona-interview
+    planted_failure: value-risk
+  - skill: diamond-assess
+
+success_criteria:
+  # Interview completeness
+  - canvas_populated: [purpose.yml, jobs-to-be-done.yml, north-star.yml]
+  - diamond_created: {scale: L0, phase: discover}
+  - classification_correct: {product_type: ai_tool, project_type: solo_product}
+
+  # Gate enforcement
+  - progression_blocked: {reason: "insufficient evidence"}
+
+  # Value-risk handling
+  - confidence_decreased: true
+  - decision_log_contains: ["stop condition", "value risk"]
+  - decision_log_honest: true
+  - diamond_not_advanced: true
+
+  # Hook correctness
+  - hooks_no_errors: true
+
+budget:
+  max_rounds: 12
+  max_time_seconds: 1200
+  model_overrides:
+    mycelium_agent: sonnet
+    user_simulator: haiku

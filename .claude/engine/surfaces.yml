@@ -1,0 +1,108 @@
+# Mycelium Surface Inventory
+# Catalogs all configurable surfaces — the parts of the framework that
+# affect agent behavior and can be tuned for optimization.
+#
+# Source: LangChain "Better Harness" (editable surfaces concept)
+
+surfaces:
+
+  prompts:
+    description: "Natural language instructions that shape agent reasoning"
+    items:
+      - path: CLAUDE.md
+        type: root-prompt
+        impact: high
+        change_frequency: low
+        note: "Changes here affect every agent session"
+      - path: .claude/skills/*/SKILL.md
+        type: skill-prompt
+        count: 41
+        impact: medium
+        change_frequency: medium
+        note: "Each skill defines a specific workflow"
+      - path: .claude/domains/*/CLAUDE.md
+        type: domain-context
+        count: 3
+        impact: medium
+        change_frequency: low
+        note: "Discovery, delivery, quality domain contexts"
+
+  configs:
+    description: "Structured data that controls framework behavior"
+    items:
+      - path: .claude/engine/canvas-guidance.yml
+        type: schema
+        impact: high
+        change_frequency: low
+        note: "Defines project types, product types, canvas requirements"
+      - path: .claude/engine/confidence-thresholds.yml
+        type: threshold
+        impact: high
+        change_frequency: low
+        note: "Controls when diamonds can progress"
+      - path: .claude/engine/theory-gates.md
+        type: gate-definition
+        impact: high
+        change_frequency: low
+        note: "12 theory gates that control phase transitions"
+      - path: .claude/engine/diamond-rules.md
+        type: lifecycle
+        impact: high
+        change_frequency: low
+        note: "Diamond state machine rules"
+
+  rules:
+    description: "Constraints and guardrails that bound agent behavior"
+    items:
+      - path: .claude/harness/guardrails.md
+        type: constraint
+        impact: high
+        change_frequency: low
+        note: "BLOCK/REVIEW/NUDGE rules"
+      - path: .claude/harness/anti-patterns.md
+        type: detection
+        impact: medium
+        change_frequency: medium
+        note: "Known failure modes with detection rules"
+      - path: .claude/harness/cognitive-biases.md
+        type: awareness
+        impact: low
+        change_frequency: low
+        note: "Per-stage bias checklists"
+
+  hooks:
+    description: "Executable code that fires at specific events"
+    items:
+      - path: .claude/hooks/
+        type: hook-scripts
+        impact: high
+        change_frequency: low
+        note: "PreToolUse, PostToolUse, Stop hooks"
+
+  memory:
+    description: "Accumulated learning from past sessions"
+    items:
+      - path: .claude/memory/corrections.md
+        type: learning
+        impact: medium
+        change_frequency: high
+        note: "Read before every task (G-P5 BLOCK)"
+      - path: .claude/memory/patterns.md
+        type: learning
+        impact: low
+        change_frequency: medium
+        note: "Successful patterns to reuse"
+
+  templates:
+    description: "Starter content for new canvas files"
+    items:
+      - path: .claude/canvas/*.yml
+        type: canvas-template
+        impact: medium
+        change_frequency: high
+        note: "Project state — populated by skills, never auto-replaced"
+
+summary:
+  total_surfaces: 10
+  high_impact: 6
+  note: "High-impact surfaces should be changed via /prompt-optimizer with eval benchmarks"

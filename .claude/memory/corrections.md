@@ -1,5 +1,9 @@
 # Corrections Log
 
+## TL;DR
+
+_No corrections logged yet. This section will contain a compact summary of the most impactful corrections for quick pre-task scanning. Deep-read below only when working in a relevant scope._
+
 ## Format
 
 Each correction entry follows this structure:

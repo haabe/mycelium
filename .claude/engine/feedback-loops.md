@@ -30,8 +30,9 @@ Feedback loops are how Mycelium learns, corrects, and improves. They operate at 
 | Assumption test result | Experiment outcome | Update ICE scores, confidence levels | /ice-score, /canvas-update |
 | User interview complete | Research session | Update OST, user needs, JTBD | Interview snapshot -> canvas |
 | Code review findings | Peer review | Update patterns or corrections | Manual -> corrections.md |
+| Corrections accumulating | 3+ corrections logged | Trend analysis, graduation candidates | /corrections-audit |
 
-**Health signal**: If confidence isn't increasing after 3+ incremental loops on the same diamond, escalate to Loop 3 (the assumptions may be wrong).
+**Health signal**: If confidence isn't increasing after 3+ incremental loops on the same diamond, escalate to Loop 3 (the assumptions may be wrong). If the same correction category appears 3+ times, run `/corrections-audit` to check for guardrail graduation.
 
 **Cadence**: After every diamond phase transition and every delivery increment.
 

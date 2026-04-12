@@ -1,0 +1,93 @@
+name: "REST API bookmark manager — solo_product — happy path progression"
+category: dogfood
+type: full-session
+difficulty: easy
+
+product:
+  name: "Pinmark"
+  type: software
+  description: |
+    A REST API for bookmark management with tagging, full-text search, and
+    browser extension support. Users save URLs with metadata, organize them
+    into collections, and search across everything. Self-hosted, SQLite-backed,
+    single binary deployment.
+  pitch: |
+    I want to build a self-hosted bookmark API. I save dozens of links a day
+    from Hacker News, Twitter, and Slack — articles, docs, GitHub repos — and
+    I can never find them again. Browser bookmarks are a graveyard. I want a
+    simple REST API that stores URLs with tags and full-text search, plus a
+    browser extension that sends links to it with one click.
+
+persona:
+  name: "Alex"
+  role: "Backend engineer, 6 years experience, building this as a side project"
+  style: "Methodical, evidence-oriented, comfortable with structured process"
+  knowledge: "Strong in Go and PostgreSQL, has built several REST APIs professionally, familiar with product thinking from reading Shape Up"
+  answers:
+    purpose: |
+      I lose links constantly. I bookmark things in Firefox but never organize
+      them. I star things on GitHub but forget why. I save Slack messages but
+      can't search across them. The core problem is fragmented link storage —
+      every platform has its own save feature but none of them talk to each
+      other. I want one place where everything lands, with good search and
+      tagging so I can actually retrieve things months later.
+    users: |
+      Developers and knowledge workers who consume a lot of online content.
+      People who read Hacker News, follow RSS feeds, browse documentation
+      daily. Initially just me and maybe 20-30 people in my developer
+      community on Discord. Not targeting non-technical users — this is
+      API-first, and the browser extension is a thin client.
+    north_star: |
+      Bookmarks retrieved via search divided by bookmarks saved. If people
+      save links but never search for them, the tool failed — it's just
+      another graveyard. A healthy ratio would be 0.3 or higher, meaning
+      roughly a third of saved bookmarks get looked up again. Call it
+      "retrieval rate."
+    landscape: |
+      Pinboard is the closest competitor — simple, paid, API-available. But
+      it's a one-person project with uncertain maintenance. Raindrop.io is
+      polished but cloud-only and expensive for teams. Pocket is read-later
+      focused, not bookmark management. Shaarli is self-hosted but PHP and
+      feels dated. My angle is a modern, single-binary Go API with SQLite
+      — zero ops, runs on a Raspberry Pi, and a clean REST interface that
+      any tool can integrate with.
+    current_state: |
+      I have a design doc with the API schema and a rough OpenAPI spec. No
+      code yet beyond a hello-world Go module. I've talked to 4 people in
+      my Discord who said they'd use it, but that's just casual conversation
+      — no structured validation. I want to make sure I'm solving a real
+      problem before I write a bunch of code.
+
+project_type: solo_product
+dogfood: true
+
+planted_failures: []
+
+journey:
+  - skill: interview
+    rounds: 2
+  - skill: diamond-assess
+  - skill: diamond-progress
+    expect_blocked: true
+  - skill: diamond-assess
+
+success_criteria:
+  # Interview completeness
+  - canvas_populated: [purpose.yml, jobs-to-be-done.yml, north-star.yml]
+  - diamond_created: {scale: L0, phase: discover}
+  - classification_correct: {product_type: software, project_type: solo_product}
+
+  # Gate enforcement — even a good product can't skip gates
+  - progression_blocked: {reason: "insufficient evidence"}
+  - decision_log_contains: ["gate", "evidence"]
+  - diamond_not_advanced: true
+
+  # Hook correctness
+  - hooks_no_errors: true
+
+budget:
+  max_rounds: 12
+  max_time_seconds: 1200
+  model_overrides:
+    mycelium_agent: sonnet
+    user_simulator: haiku

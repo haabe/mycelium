@@ -38,20 +38,32 @@ Evaluate current diamond state and recommend next action.
    - For L1/L2 diamonds: also check for **system archetypes** (Senge) — Fixes That Fail, Shifting the Burden, Limits to Growth, Eroding Goals
    - At L3->L4 transitions: also run the **Design Completeness Check** (quality/CLAUDE.md) to verify all layers of the product design stack have evidence. Source: Mill, building on Garrett.
 
-6. **Check corrections.md**:
+6. **Check canvas health**:
+   - Run the `/canvas-health` checks inline: missing required files, stale confidence, inconsistent evidence types
+   - Report any critical or warning-level findings
+   - This catches silent canvas degradation before it affects progression decisions
+
+7. **Check corrections.md**:
    - Any relevant past mistakes to avoid?
 
-7. **Recommend next action**:
+8. **Recommend next action**:
    - If all gates pass and confidence meets threshold: recommend transition to next phase
    - If gates fail: recommend specific actions to address failures
    - If confidence is low: recommend evidence-gathering activities
    - If anti-patterns detected: recommend corrective actions
    - If regression needed: recommend which phase to return to and why
 
-8. **Play devil's advocate**: Before recommending progression, ask:
+9. **Play devil's advocate**: Before recommending progression, ask:
    - What are we most likely wrong about?
    - What evidence have we dismissed?
    - Is there a simpler path we're overlooking?
+
+10. **Report harness thickness** (informational):
+    - Count: total skills, active guardrails, mandatory reads, hooks, theory gates
+    - Current: 41 skills, 29 guardrails, 4 mandatory reads, 5 hook layers, 12 gates
+    - If thickness has increased since last assess, note it
+    - This is observability, not a gate — purely informational
+    - *Source: Pachaar ("scaffolding should decrease as models improve")*
 
 ## Output Format
 

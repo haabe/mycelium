@@ -12,14 +12,16 @@ scales:
       - vision_document
     required_theory_gates:
       - evidence
+      - cynefin
       - bias
+      - bvssh
       - corrections
     human_approval:
       discover_to_define: required
       define_to_develop: required
       develop_to_deliver: required
       deliver_to_complete: required
-    notes: "Purpose-level decisions are foundational. Highest bar for evidence and approval."
+    notes: "Purpose-level decisions are foundational. Highest bar for evidence and approval. Gates must match theory-gates.md L0 matrix."
 
   L1:
     name: Strategy
@@ -59,6 +61,7 @@ scales:
       - cynefin
       - bias
       - privacy
+      - bvssh
       - service_quality
       - corrections
     human_approval:
@@ -66,7 +69,7 @@ scales:
       define_to_develop: recommended
       develop_to_deliver: recommended
       deliver_to_complete: optional
-    notes: "Opportunity validation requires rich qualitative evidence."
+    notes: "Opportunity validation requires rich qualitative evidence. Gates must match theory-gates.md L2 matrix."
 
   L3:
     name: Solution
@@ -79,18 +82,22 @@ scales:
     required_theory_gates:
       - evidence
       - four_risks
+      - jtbd
       - cynefin
       - bias
       - security
       - privacy
+      - bvssh
       - service_quality
+      - delivery_metrics
       - corrections
+      - regulatory
     human_approval:
       discover_to_define: recommended
       define_to_develop: recommended
       develop_to_deliver: optional
       deliver_to_complete: optional
-    notes: "Solutions must be validated against all four Cagan risks."
+    notes: "Solutions must be validated against all four Cagan risks. L3 is the only scale requiring all 12 gates."
 
   L4:
     name: Feature
@@ -116,17 +123,22 @@ scales:
         - client_onboarding_test
     required_theory_gates:
       - evidence
+      - four_risks
+      - cynefin
       - bias
       - security              # conditioned on product_type in theory-gates.md
+      - privacy
+      - bvssh
       - service_quality
       - delivery_metrics      # was: dora. Routed to product-type-appropriate metrics.
       - corrections
+      - regulatory
     human_approval:
       discover_to_define: optional
       define_to_develop: optional
       develop_to_deliver: optional
       deliver_to_complete: optional
-    notes: "Features should flow quickly. Approval needed mainly for novel or risky items. Required evidence varies by product_type."
+    notes: "Features should flow quickly. Approval needed mainly for novel or risky items. Required evidence varies by product_type. All gates except JTBD apply at L4."
 
   L5:
     name: Task
@@ -146,9 +158,13 @@ scales:
         - delivery_step_documented
     required_theory_gates:
       - evidence
+      - cynefin
+      - bias
       - security              # conditioned on product_type in theory-gates.md
+      - bvssh
       - delivery_metrics      # was: dora. Routed to product-type-appropriate metrics.
       - corrections
+      - regulatory
     human_approval:
       discover_to_define: not_required
       define_to_develop: not_required
