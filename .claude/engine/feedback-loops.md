@@ -160,6 +160,11 @@ Every metric in Mycelium must have a **counter-metric** to prevent gaming:
 | SessionStart | Loop 3 | **New**: remind about overdue strategic reviews |
 | Eval benchmarks | Loop 4 | Add trend comparison (current vs last baseline) |
 | Prompt optimization | Loop 4 | No change needed |
+| Cycle history | Loop 2 | Records every completed/discarded leaf for calibration |
+| Pattern detector | Loop 3 | Surfaces systemic patterns from cycle data |
+| Adaptive thresholds | Loop 3-4 | Calibrates ICE threshold, confidence factor from historical data |
+| Framework reflexion | Loop 4 | Quarterly self-assessment of process effectiveness |
+| Evidence decay | Loop 2-3 | Degrades confidence on stale evidence, triggers refresh |
 | /retrospective | Loop 2-3 | No change needed |
 | DORA metrics | Loop 2-3 | **Enhanced**: add trend fields for trajectory |
 | BVSSH check | Loop 3 | **Enhanced**: add trend fields for trajectory |

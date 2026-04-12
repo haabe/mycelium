@@ -1,0 +1,40 @@
+# Adaptive Thresholds Canvas
+# Configurable thresholds that calibrate from cycle data over time.
+# See: .claude/engine/adaptive-thresholds.md
+# Populated through: /framework-health skill (calibration protocol)
+
+schema_version: 1
+
+thresholds:
+  ice_advance:
+    default: 100
+    calibrated: null
+    calibrated_at: null
+    based_on_n: 0
+    minimum_n: 10
+    bounds: {min: 50, max: 300}
+
+  confidence_calibration:
+    default: 1.0  # No deflation (1.0 = no adjustment)
+    calibrated: null
+    calibrated_at: null
+    based_on_n: 0
+    minimum_n: 10
+    bounds: {min: 0.5, max: 1.2}
+
+  evidence_staleness:
+    user_needs: {default_days: 90, calibrated_days: null, based_on_n: 0, minimum_n: 10}
+    competitive: {default_days: 90, calibrated_days: null, based_on_n: 0, minimum_n: 10}
+    strategic: {default_days: 180, calibrated_days: null, based_on_n: 0, minimum_n: 10}
+    feasibility: {default_days: 120, calibrated_days: null, based_on_n: 0, minimum_n: 10}
+    delivery_metrics: {default_days: 30, calibrated_days: null, based_on_n: 0, minimum_n: 10}
+
+  bakeoff_delta:
+    default: 0.20
+    calibrated: null
+    calibrated_at: null
+    based_on_n: 0
+    minimum_n: 5
+    bounds: {min: 0.10, max: 0.40}
+
+last_calibrated: null

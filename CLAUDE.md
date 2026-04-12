@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.12.0 -- Leaf lifecycle pipeline, trio perspectives at all scales, perspective resolution, leaf bakeoff, framework disconnections closed.*
+*Version 0.13.0 -- Learning metabolism: cycle-over-cycle learning, pattern emergence, adaptive thresholds, framework reflexion, evidence decay.*
 
 Mycelium is a harnessing system for AI-assisted product development. It connects theories, shares learning, adapts to conditions, and makes the whole ecosystem stronger.
 
@@ -115,6 +115,18 @@ The reflexion hook (PostToolUseFailure) is scoped to **project-relevant failures
 - **Feedback Loops** (`.claude/engine/feedback-loops.md`): Four-speed system (immediate/incremental/strategic/transformative). Run `/feedback-review` to check health.
 - **Reflexion Loop**: Implement -> validate -> self-critique -> retry (max 3). See `.claude/skills/reflexion/SKILL.md`.
 - **Eval Benchmarks** (`.claude/evals/`): Periodic self-assessment against scenarios.
+- **Cycle History** (`.claude/canvas/cycle-history.yml`): Completed leaf lifecycle outcomes for calibration. See `.claude/engine/cycle-learning.md`.
+- **Adaptive Thresholds** (`.claude/canvas/thresholds.yml`): Calibrated thresholds that improve from data. See `.claude/engine/adaptive-thresholds.md`.
+
+### Learning Metabolism (Self-Improving System)
+
+Mycelium gets smarter over time through five learning mechanisms:
+
+1. **Cycle Learning** (`.claude/engine/cycle-learning.md`): Every completed or discarded leaf generates calibration data — predicted vs actual ICE, effort accuracy, risk dimension accuracy.
+2. **Pattern Emergence** (`.claude/engine/pattern-detector.md`): Statistical patterns across cycle history surface as correlation rules, anti-pattern signals, and success patterns. Woven into `/retrospective` and `/diamond-assess`.
+3. **Adaptive Thresholds** (`.claude/engine/adaptive-thresholds.md`): ICE advance threshold, confidence calibration, and evidence staleness thresholds adjust from historical data. Defaults until N=10 cycles.
+4. **Framework Reflexion** (`.claude/engine/framework-reflexion.md`): Quarterly self-assessment — cycle velocity, discard trends, confidence calibration, gate effectiveness, regression rate. Run `/framework-health`.
+5. **Evidence Decay** (`.claude/engine/evidence-decay.md`): Evidence ages. Confidence degrades over time unless refreshed. `/canvas-health` flags stale evidence.
 
 ## Domain Contexts
 
@@ -141,7 +153,7 @@ See `.claude/orchestration/modes.md` for usage patterns and `.claude/orchestrati
 
 ## Skills
 
-All 41 skills are auto-discovered from `.claude/skills/*/SKILL.md`. Suggested skills are surfaced at diamond transitions by `/diamond-progress` and `/diamond-assess`, and contextually by hooks. Type `/` to see the current list.
+All 42 skills are auto-discovered from `.claude/skills/*/SKILL.md`. Suggested skills are surfaced at diamond transitions by `/diamond-progress` and `/diamond-assess`, and contextually by hooks. Type `/` to see the current list.
 
 ## Getting Started
 

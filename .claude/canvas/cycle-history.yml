@@ -1,0 +1,47 @@
+# Cycle History Canvas — Process Learning Data
+# Tracks completed and discarded leaf lifecycle outcomes for calibration.
+# See: .claude/engine/cycle-learning.md
+# Populated through: /retrospective, /ice-score (on discard), /launch-tier (on launch)
+
+schema_version: 1
+
+cycles: []
+# - cycle_id: cycle-001
+#   leaf_id: opp-001-sol-A
+#   opportunity_id: opp-001
+#   started_at: null
+#   completed_at: null
+#   terminal_state: launched|archived|killed
+#   predicted:
+#     ice_score: {i: 0, c: 0, e: 0, total: 0}
+#     feasibility_risk: low|medium|high
+#     estimated_effort: ""
+#   actual:
+#     outcome: success|partial|failure
+#     actual_effort: ""
+#     dora_metrics: {}
+#     user_metrics: {}
+#   calibration:
+#     ice_accuracy: 0
+#     effort_accuracy: ""
+#     risk_accuracy: ""
+#   learnings:
+#     process: ""
+#     domain: ""
+#     framework: ""
+#   discard_reason: ""
+#   discard_phase: null
+
+# Aggregate calibration stats (updated by /framework-health)
+calibration_summary:
+  total_cycles: 0
+  launched: 0
+  archived: 0
+  killed: 0
+  avg_ice_accuracy: null
+  avg_effort_accuracy: null
+  most_wrong_risk_dimension: null
+  avg_discard_phase: null
+  last_post_mortem: null
+
+last_updated: null
