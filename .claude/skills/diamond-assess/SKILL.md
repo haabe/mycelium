@@ -62,19 +62,24 @@ Evaluate current diamond state and recommend next action.
    The coach (human) should answer these, not the agent. The agent surfaces them.
    *Source: Rother (Toyota Kata) — the 5 questions install scientific thinking as a daily habit.*
 
-9. **Recommend next action**:
+9. **Log assessment in decision-log.md** (MANDATORY):
+   - APPEND a `### Diamond Assessment` entry to `harness/decision-log.md`
+   - Include: diamond ID and scale, gates passed/failed, current confidence with rationale, evidence gaps
+   - This log entry is essential for auditability — every assessment should be documented
+
+10. **Recommend next action**:
    - If all gates pass and confidence meets threshold: recommend transition to next phase
    - If gates fail: recommend specific actions to address failures
    - If confidence is low: recommend evidence-gathering activities
    - If anti-patterns detected: recommend corrective actions
    - If regression needed: recommend which phase to return to and why
 
-10. **Play devil's advocate**: Before recommending progression, ask:
+11. **Play devil's advocate**: Before recommending progression, ask:
     - What are we most likely wrong about?
     - What evidence have we dismissed?
     - Is there a simpler path we're overlooking?
 
-11. **Report harness thickness** (informational):
+12. **Report harness thickness** (informational):
     - Count: total skills, active guardrails, mandatory reads, hooks, theory gates
     - Current: 42 skills, 32 guardrails, 4 mandatory reads, 5 hook layers, 12 gates
     - If thickness has increased since last assess, note it

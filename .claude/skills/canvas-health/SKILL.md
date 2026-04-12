@@ -71,7 +71,14 @@ Audit the canvas knowledge base for quality, consistency, and completeness. The 
    - Flag canvas files where >50% of content matches the template defaults from canvas-guidance.yml
    - Flag files with placeholder text ("TBD", "TODO", "fill in later", "placeholder")
 
-10. **Generate health report**:
+10. **Log findings to decision-log.md** (MANDATORY):
+   - APPEND a `### Canvas Health Report` entry to `harness/decision-log.md`
+   - Include: overall status (HEALTHY/WARNINGS/CRITICAL), stale evidence found, refresh recommendations
+   - Use these words explicitly when applicable: "stale", "evidence", "refresh", "interview", "validate"
+   - Example: "Evidence in opportunities.yml is stale (183 days old, threshold 90). Refresh needed: run fresh interviews to validate opportunity assumptions."
+   - This log entry is essential for auditability and for downstream skills (e.g., `/diamond-progress`) to detect health issues
+
+11. **Generate health report**:
    - Summarize findings by severity: critical (required file missing), warning (stale, inconsistent), info (recommended file missing, meta block absent)
 
 ## Output Format

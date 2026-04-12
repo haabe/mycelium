@@ -22,8 +22,8 @@ Mycelium is a harnessing system for AI-assisted product development. It connects
 
 Before ANY implementation task, load context in this order (task-specific first, background last — models attend best to early and late context):
 1. Identify which diamond you are operating within (check `.claude/diamonds/active.yml`)
-2. Load the appropriate domain context (`.claude/domains/{discovery|delivery|quality}/CLAUDE.md`)
-3. Read `.claude/memory/corrections.md` for relevant past mistakes
+2. Load the appropriate domain context (`.claude/domains/{discovery|delivery|quality}/CLAUDE.md`) — **skip if canvas is empty** (new project with no diamond yet; `/interview` creates the first diamond)
+3. Read `.claude/memory/corrections.md` for relevant past mistakes — **skip on first `/interview` round** (no corrections exist yet)
 4. Read `.claude/harness/guardrails.md` for hard constraints
 
 ## The Diamond Engine

@@ -79,6 +79,16 @@ Update `canvas/go-to-market.yml` engagement_design section with Hook Canvas resu
 
 *Source: Eyal (Hooked), with ethical framework from the Manipulation Matrix*
 
+## Pre-Launch Bias Check
+
+Before classifying a launch tier, run `/bias-check` for L5-specific biases:
+- **Optimism bias**: Are we overweighting positive signals and ignoring negative ones?
+- **Confirmation bias**: Are we seeking validation that "it's ready to ship" rather than honestly assessing market readiness?
+- **Anchoring**: Are we fixated on the initial positioning without considering what evidence now suggests?
+- **Sunk cost fallacy**: Are we launching because we've invested too much to stop, not because the market signals are positive?
+
+If `/bias-check` reveals significant biases, address them before finalizing the launch tier.
+
 ## After Launch: The L5 -> L2 Feedback Loop
 
 **This is critical.** After launch, market feedback must flow back into discovery:

@@ -32,6 +32,12 @@ SKILL_OUTPUTS = {
     "diamond-assess": {
         "files": [
             "diamonds/active.yml",
+            "harness/decision-log.md",
+        ],
+    },
+    "canvas-health": {
+        "files": [
+            "harness/decision-log.md",
         ],
     },
     "diamond-progress": {
@@ -197,7 +203,8 @@ def build_mycelium_prompt(
     current_decision_log = _read_workdir_file(workdir, "harness/decision-log.md", max_chars=2000)
 
     # Conditional pre-reads: discovery skills need opportunities, delivery needs gist
-    discovery_skills = {"ost-builder", "ice-score", "assumption-test", "diamond-assess", "bias-check"}
+    discovery_skills = {"ost-builder", "ice-score", "assumption-test", "diamond-assess", "bias-check",
+                        "canvas-health"}
     delivery_skills = {"delivery-bootstrap", "reflexion", "dora-check", "retrospective",
                        "definition-of-done", "bvssh-check", "corrections-audit"}
     strategy_skills = {"wardley-map", "team-shape", "jtbd-map"}
@@ -225,6 +232,8 @@ def build_mycelium_prompt(
         task_block = _interview_task(scenario, user_response)
     elif skill == "mocked-persona-interview":
         task_block = _mocked_persona_task(scenario, planted_failure)
+    elif skill == "canvas-health":
+        task_block = _canvas_health_task(scenario)
     elif skill == "diamond-assess":
         task_block = _diamond_assess_task(scenario)
     elif skill == "diamond-progress":
@@ -471,6 +480,39 @@ Write these files IN THIS ORDER (decision log FIRST):
 3. canvas/jobs-to-be-done.yml — update with persona validation results"""
 
 
+def _canvas_health_task(scenario: Scenario) -> str:
+    """Build canvas-health task — lint canvas files for staleness and quality."""
+    return f"""Run a canvas health check. Audit canvas files for staleness, missing fields,
+inconsistent evidence types, and orphaned references.
+
+Check each canvas file for:
+1. **File presence**: Are required canvas files present and non-empty?
+2. **_meta blocks**: Do files have version, last_validated, evidence_type?
+3. **Confidence consistency**: Is confidence > 0.5 supported by strong evidence types?
+4. **Evidence freshness**: Check `captured_at` or `validated_at` dates on all evidence.
+   - User needs/interviews: stale after 90 days
+   - Competitive intelligence: stale after 90 days
+   - Strategic assumptions: stale after 180 days
+   - Technical feasibility: stale after 120 days
+   If evidence is past its staleness threshold, flag it clearly.
+5. **Cross-reference integrity**: Do referenced IDs resolve to actual entries?
+
+IMPORTANT: You MUST write your findings to harness/decision-log.md.
+APPEND a ### entry titled "### Canvas Health Report" that includes:
+- Overall health status (HEALTHY / WARNINGS / CRITICAL)
+- Any "stale" evidence found (use the word "stale" explicitly)
+- Recommended "refresh" actions (use the word "refresh" explicitly)
+- If evidence needs updating, say "interview" or "validate" to recommend next steps
+- Specific file names and what needs attention
+
+Example entry format:
+### Canvas Health Report
+**Status**: WARNINGS
+**Stale evidence**: opportunities.yml evidence captured 2025-10-12 is 183 days old (threshold: 90 days).
+**Refresh needed**: Run fresh user interviews to validate opportunity assumptions. Current evidence is stale.
+**Action**: Schedule interview sessions to refresh and validate the opportunity evidence."""
+
+
 def _diamond_assess_task(scenario: Scenario) -> str:
     """Build diamond-assess task instructions."""
     return f"""Assess current diamond state and update active.yml.
@@ -494,6 +536,10 @@ bump the confidence up from its current value.
 
 Do NOT change the phase unless you have clear evidence that ALL gates for the current phase are passed.
 A diamond in "discover" should stay in "discover" unless evidence warrants advancement.
+
+IMPORTANT: APPEND a summary to harness/decision-log.md with a ### entry titled "### Diamond Assessment".
+Include: which gates passed/failed, current confidence with rationale, and recommended next steps.
+This is important for auditability — every assessment should be logged.
 
 Write diamonds/active.yml preserving all existing diamonds. Update the active (non-complete) diamond's
 confidence and gate status to reflect current evidence. Keep completed diamonds as phase: complete.
