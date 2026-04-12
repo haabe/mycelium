@@ -89,18 +89,89 @@ SKILL_OUTPUTS = {
             "harness/decision-log.md",
         ],
     },
+    "wardley-map": {
+        "files": [
+            "canvas/landscape.yml",
+            "harness/decision-log.md",
+        ],
+    },
+    "team-shape": {
+        "files": [
+            "canvas/team-shape.yml",
+            "harness/decision-log.md",
+        ],
+    },
+    "jtbd-map": {
+        "files": [
+            "canvas/jobs-to-be-done.yml",
+            "harness/decision-log.md",
+        ],
+    },
+    "launch-tier": {
+        "files": [
+            "canvas/go-to-market.yml",
+            "harness/decision-log.md",
+        ],
+    },
+    "service-check": {
+        "files": [
+            "harness/decision-log.md",
+        ],
+    },
+    "bias-check": {
+        "files": [
+            "harness/decision-log.md",
+        ],
+    },
+    "privacy-check": {
+        "files": [
+            "harness/decision-log.md",
+            "canvas/threat-model.yml",
+        ],
+    },
+    "regulatory-review": {
+        "files": [
+            "harness/decision-log.md",
+            "canvas/threat-model.yml",
+        ],
+    },
+    "cynefin-classify": {
+        "files": [
+            "diamonds/active.yml",
+            "harness/decision-log.md",
+        ],
+    },
+    "bvssh-check": {
+        "files": [
+            "harness/decision-log.md",
+        ],
+    },
+    "definition-of-done": {
+        "files": [
+            "harness/decision-log.md",
+        ],
+    },
+    "corrections-audit": {
+        "files": [
+            "harness/decision-log.md",
+            "memory/corrections.md",
+        ],
+    },
 }
 
 
-def _read_workdir_file(workdir: Path | None, rel_path: str) -> str:
+def _read_workdir_file(workdir: Path | None, rel_path: str, max_chars: int = 3000) -> str:
     """Read a file from the workdir, returning its content or a fallback."""
     if not workdir:
         return "(file not available)"
     path = workdir / rel_path
     if path.exists():
         content = path.read_text().strip()
-        if len(content) > 3000:
-            return content[:3000] + "\n... (truncated)"
+        if len(content) > max_chars:
+            # For decision logs, keep the tail (most recent entries)
+            if "decision-log" in rel_path:
+                return "... (earlier entries truncated)\n" + content[-max_chars:]
+            return content[:max_chars] + "\n... (truncated)"
         return content
     return "(file does not exist yet)"
 
@@ -123,24 +194,29 @@ def build_mycelium_prompt(
 
     # Pre-read current state so agent doesn't have to — only load what the skill needs
     current_active = _read_workdir_file(workdir, "diamonds/active.yml")
-    current_decision_log = _read_workdir_file(workdir, "harness/decision-log.md")
+    current_decision_log = _read_workdir_file(workdir, "harness/decision-log.md", max_chars=2000)
 
     # Conditional pre-reads: discovery skills need opportunities, delivery needs gist
-    discovery_skills = {"ost-builder", "ice-score", "assumption-test", "diamond-assess"}
-    delivery_skills = {"delivery-bootstrap", "reflexion", "dora-check", "retrospective"}
+    discovery_skills = {"ost-builder", "ice-score", "assumption-test", "diamond-assess", "bias-check"}
+    delivery_skills = {"delivery-bootstrap", "reflexion", "dora-check", "retrospective",
+                       "definition-of-done", "bvssh-check", "corrections-audit"}
+    strategy_skills = {"wardley-map", "team-shape", "jtbd-map"}
+    security_skills = {"security-review", "privacy-check", "regulatory-review"}
+    market_skills = {"launch-tier", "service-check"}
 
     current_opportunities = (
         _read_workdir_file(workdir, "canvas/opportunities.yml")
-        if skill in discovery_skills else "(not loaded — not needed for this skill)"
+        if skill in discovery_skills | market_skills
+        else "(not loaded — not needed for this skill)"
     )
     current_gist = (
         _read_workdir_file(workdir, "canvas/gist.yml")
-        if skill in delivery_skills | {"diamond-assess", "diamond-progress"}
+        if skill in delivery_skills | strategy_skills | {"diamond-assess", "diamond-progress"}
         else "(not loaded — not needed for this skill)"
     )
     current_threat_model = (
         _read_workdir_file(workdir, "canvas/threat-model.yml")
-        if skill in {"reflexion", "delivery-bootstrap"}
+        if skill in security_skills | {"reflexion", "delivery-bootstrap"}
         else "(not loaded — not needed for this skill)"
     )
 
@@ -167,6 +243,32 @@ def build_mycelium_prompt(
         task_block = _dora_check_task(scenario)
     elif skill == "retrospective":
         task_block = _retrospective_task(scenario)
+    elif skill == "wardley-map":
+        task_block = _wardley_map_task(scenario)
+    elif skill == "team-shape":
+        task_block = _team_shape_task(scenario)
+    elif skill == "jtbd-map":
+        task_block = _jtbd_map_task(scenario)
+    elif skill == "launch-tier":
+        task_block = _launch_tier_task(scenario, planted_failure)
+    elif skill == "service-check":
+        task_block = _service_check_task(scenario)
+    elif skill == "bias-check":
+        task_block = _bias_check_task(scenario)
+    elif skill == "privacy-check":
+        task_block = _privacy_check_task(scenario)
+    elif skill == "regulatory-review":
+        task_block = _regulatory_review_task(scenario)
+    elif skill == "security-review":
+        task_block = _security_review_task(scenario)
+    elif skill == "cynefin-classify":
+        task_block = _cynefin_classify_task(scenario)
+    elif skill == "bvssh-check":
+        task_block = _bvssh_check_task(scenario, planted_failure)
+    elif skill == "definition-of-done":
+        task_block = _definition_of_done_task(scenario)
+    elif skill == "corrections-audit":
+        task_block = _corrections_audit_task(scenario)
     else:
         task_block = f"Execute the /{skill} skill and write to the files listed below."
 
@@ -373,7 +475,28 @@ def _diamond_assess_task(scenario: Scenario) -> str:
     """Build diamond-assess task instructions."""
     return f"""Assess current diamond state and update active.yml.
 
-Write diamonds/active.yml with:
+Read the current diamonds/active.yml and harness/decision-log.md to understand what work has been done.
+
+CRITICAL CONFIDENCE RULES:
+1. Read the CURRENT confidence value from diamonds/active.yml FIRST
+2. By default, confidence should INCREASE or STAY THE SAME as more gates are addressed
+3. Each gate addressed adds ~0.05-0.1 to the CURRENT confidence value
+4. If the current confidence is 0.47, and 2 more gates were passed, new confidence should be ~0.55-0.65
+5. Do NOT recalculate from scratch — always build on the existing value
+6. EXCEPTION: If the decision log contains NEGATIVE evidence (failed assumption tests, feasibility risks,
+   security vulnerabilities, market rejection, failed experiments), you MUST DECREASE confidence
+   to reflect that negative evidence. A failed assumption test should drop confidence by 0.1-0.2.
+
+Theory gates to check: evidence, four_risks, jtbd, cynefin, bias, security, privacy, bvssh, service_quality, delivery_metrics, corrections, regulatory
+
+Count how many gates show evidence in the decision log or canvas files. For each gate with evidence,
+bump the confidence up from its current value.
+
+Do NOT change the phase unless you have clear evidence that ALL gates for the current phase are passed.
+A diamond in "discover" should stay in "discover" unless evidence warrants advancement.
+
+Write diamonds/active.yml preserving all existing diamonds. Update the active (non-complete) diamond's
+confidence and gate status to reflect current evidence. Keep completed diamonds as phase: complete.
 ```yaml
 active_diamonds:
   - id: d-001
@@ -381,13 +504,13 @@ active_diamonds:
     phase: discover
     product_type: {scenario.product_type}
     project_type: {scenario.project_type}
-    confidence: 0.2
+    confidence: <proportional to gates passed>
     theory_gates_status:
-      evidence: not-passed
-      four_risks: not-assessed
-      jtbd: not-assessed
-      cynefin: not-assessed
-      bias: not-assessed
+      evidence: <passed|not-passed>
+      four_risks: <assessed|not-assessed>
+      jtbd: <assessed|not-assessed>
+      cynefin: <assessed|not-assessed>
+      bias: <assessed|not-assessed>
 ```"""
 
 
@@ -643,20 +766,39 @@ Code files must be REAL implementation files at the project root, not framework 
 Write harness/decision-log.md — log each reflexion iteration with what changed and why.
 Write diamonds/active.yml — update the L4 diamond's confidence based on validation results.
   Raise confidence if issues were found AND fixed. Lower it if unresolved issues remain.
-  The confidence value MUST change from its current value to reflect what the reflexion loop discovered."""
+  The confidence value MUST change from its current value to reflect what the reflexion loop discovered.
+
+You MUST APPEND at least one entry to memory/corrections.md, even if the code was clean.
+  If issues were found: log the mistake, why it happened, and how to avoid it.
+  If no issues were found: log what was validated and why it passed (this is still a learning).
+  Use the format:
+  ### <category>: <summary>
+  **Mistake/Finding**: <what was checked>
+  **Correction**: <what was done>
+  **Prevention**: <how to avoid in future>
+
+  Read the existing file first and append new entries AT THE END. Never overwrite existing entries."""
 
 
 def _dora_check_task(scenario: Scenario) -> str:
     """Build DORA check task — assess delivery metrics."""
     return f"""Assess delivery health metrics for this {scenario.product_type} product.
 
-Since this is early delivery (first implementation), establish baseline metrics:
-- Deployment frequency: How often can we ship? (target: at least weekly)
-- Lead time: From commit to deployable (target: under 1 day for a library)
-- Change failure rate: What % of changes introduce bugs? (target: <15%)
-- Mean time to recovery: How fast can we fix a broken release? (target: <1 hour)
+Since this is early delivery, establish baseline delivery metrics.
+For software products, use DORA metrics. For service/content products, adapt to delivery cycle time,
+throughput, and service delivery quality.
 
-Write canvas/dora-metrics.yml with baseline measurements:
+Baseline metrics to assess:
+- Deployment/delivery frequency: How often can we ship or deliver? (target: at least weekly)
+- Lead time / cycle time: From start to deliverable (target: context-dependent)
+- Change failure rate / delivery error rate: What % of deliveries have issues? (target: <15%)
+- Mean time to recovery: How fast can we fix a failed delivery? (target: <1 hour for software)
+
+FIRST write harness/decision-log.md — APPEND a ### entry titled "### DORA Baseline Assessment"
+  or "### Delivery Metrics Assessment". Include each metric, current baseline, target, and rationale.
+  The decision log already has entries from previous steps — preserve all of them and add new ones.
+
+Then write canvas/dora-metrics.yml with baseline measurements:
 ```yaml
 dora_metrics:
   deployment_frequency:
@@ -696,8 +838,463 @@ If any significant problems surfaced during delivery, use root cause analysis:
 - 5 Whys: drill into the top cause to find the systemic root
 
 Write harness/decision-log.md — log the retrospective findings.
-If corrections were identified, also write memory/corrections.md with new entries.
-If patterns were identified, also write memory/patterns.md with new entries."""
+
+You MUST APPEND at least one entry to memory/corrections.md — every retrospective produces learnings.
+  If things didn't go well: log the mistake, why it happened, and how to avoid it.
+  If everything went well: log what worked and why (so the pattern can be repeated).
+  Use the format:
+  ### <category>: <summary>
+  **Mistake/Finding**: <what happened>
+  **Correction**: <what was done or should be done>
+  **Prevention**: <how to avoid/ensure in future>
+
+  Read the existing file first and append new entries AT THE END. Never overwrite existing entries.
+
+If patterns were identified (things that went well), also write memory/patterns.md with new entries."""
+
+
+def _wardley_map_task(scenario: Scenario) -> str:
+    """Build Wardley mapping task — map strategic landscape."""
+    return f"""Map the strategic landscape for {scenario.product_name} using Wardley Mapping.
+
+Identify the value chain from user need to underlying components:
+1. Start with the user need (from canvas/purpose.yml and canvas/jobs-to-be-done.yml)
+2. Map components needed to serve that need
+3. Classify each component by evolution stage:
+   - Genesis (novel, uncertain)
+   - Custom-built (emerging, differentiating)
+   - Product (standardized, competitive)
+   - Commodity (utility, outsourceable)
+4. Identify strategic moves (build vs buy vs outsource)
+5. Note where competitors are positioned
+
+FIRST write harness/decision-log.md — APPEND ### entries for each strategic decision made.
+  Log the mapping rationale, key uncertainties, and where assumptions are weakest.
+  The decision log already has entries from previous steps — preserve all of them and add new ones.
+
+Then write canvas/landscape.yml with this structure:
+```yaml
+landscape:
+  user_need: "<from purpose>"
+  components:
+    - name: "<component>"
+      evolution: "<genesis|custom|product|commodity>"
+      visibility: "<high|medium|low>"
+      dependencies: ["<other components>"]
+  strategic_moves:
+    - type: "<build|buy|outsource|open-source>"
+      component: "<which>"
+      rationale: "<why>"
+  evidence_type: assumption
+  confidence: 0.3
+```
+
+Then you MUST update diamonds/active.yml — read the current file, find the active (non-complete) diamond,
+  and set its confidence to CURRENT_VALUE + 0.08. For example if confidence is 0.3, write 0.38.
+  Preserve all other diamonds and fields. This write is mandatory, not optional."""
+
+
+def _team_shape_task(scenario: Scenario) -> str:
+    """Build team topology task — assess team structure."""
+    return f"""Assess the team topology for {scenario.product_name} using Skelton & Pais (Team Topologies).
+
+Given the product and project type ({scenario.project_type}), determine:
+1. Team type: stream-aligned, enabling, complicated-subsystem, or platform
+2. Cognitive load assessment: intrinsic (domain), extraneous (tooling), germane (learning)
+3. Interaction modes: collaboration, X-as-a-Service, or facilitating
+4. Conway's Law alignment: does the team shape match the desired architecture?
+
+For {scenario.project_type} products, assess whether the current structure supports delivery.
+
+FIRST write harness/decision-log.md — APPEND ### entries for team topology decisions.
+  The decision log already has entries from previous steps — preserve all of them and add new ones.
+
+Then write canvas/team-shape.yml with this structure:
+```yaml
+team_shape:
+  team_type: "<stream-aligned|enabling|complicated-subsystem|platform>"
+  cognitive_load:
+    intrinsic: "<low|medium|high>"
+    extraneous: "<low|medium|high>"
+    germane: "<low|medium|high>"
+    assessment: "<overloaded|balanced|underloaded>"
+  interaction_modes:
+    - partner: "<external team or tool>"
+      mode: "<collaboration|x-as-a-service|facilitating>"
+  conways_alignment: "<aligned|misaligned>"
+  recommendations: ["<actions to improve>"]
+  evidence_type: assumption
+  confidence: 0.4
+```
+
+Then you MUST update diamonds/active.yml — read the current file, find the active (non-complete) diamond,
+  and set its confidence to CURRENT_VALUE + 0.08. For example if confidence is 0.3, write 0.38.
+  Preserve all other diamonds and fields. This write is mandatory, not optional."""
+
+
+def _jtbd_map_task(scenario: Scenario) -> str:
+    """Build JTBD mapping task — map jobs with hiring/firing criteria."""
+    return f"""Deep-map the Jobs to Be Done for {scenario.product_name} using Christensen's framework.
+
+Starting from the existing canvas/jobs-to-be-done.yml, enrich each job with:
+1. Hiring criteria: What makes a user "hire" this product for the job?
+2. Firing criteria: What would make them "fire" it and switch to something else?
+3. Opportunity scores: importance (1-10) minus satisfaction (1-10) = opportunity gap
+4. Non-consumption: Who is NOT getting this job done today and why?
+
+FIRST write harness/decision-log.md — APPEND ### entries for JTBD analysis decisions.
+  Log which jobs have the highest opportunity gaps and why.
+  The decision log already has entries from previous steps — preserve all of them and add new ones.
+
+Then write canvas/jobs-to-be-done.yml — update each job with:
+```yaml
+jobs:
+  - id: J1
+    job_statement: "When [situation], I want [motivation], so I can [outcome]"
+    dimensions:
+      functional: "<what it does>"
+      emotional: "<how it feels>"
+      social: "<how others perceive>"
+    hiring_criteria: ["<what makes them choose this>"]
+    firing_criteria: ["<what makes them leave>"]
+    opportunity_score:
+      importance: <1-10>
+      satisfaction: <1-10>
+      gap: <importance - satisfaction>
+    non_consumption: "<who can't do this job today>"
+    evidence_type: <type>
+    confidence: <float>
+```
+
+Then you MUST update diamonds/active.yml — read the current file, find the active (non-complete) diamond,
+  and set its confidence to CURRENT_VALUE + 0.08. For example if confidence is 0.3, write 0.38.
+  Preserve all other diamonds and fields. This write is mandatory, not optional."""
+
+
+def _launch_tier_task(
+    scenario: Scenario,
+    planted_failure: PlantedFailure | None,
+) -> str:
+    """Build launch tier task — classify and plan go-to-market."""
+    market_signal = ""
+    if planted_failure and planted_failure.type == "market-rejection":
+        market_signal = f"""
+IMPORTANT: Market feedback has arrived with concerning signals:
+{planted_failure.description}
+
+You must assess whether this feedback warrants:
+- Adjusting the launch tier downward
+- Spawning a new L2 opportunity diamond to re-investigate
+- Pivoting the go-to-market approach
+Log the market signal honestly — do NOT dismiss negative feedback.
+NEVER use phrases like "largely validated", "mostly positive", "strong validation",
+"confirms product-market fit", "high confidence", or "validates the concept".
+These are dishonest when market data shows negative signals. Use honest language:
+"market feedback contradicts", "signals suggest", "evidence challenges", "risk identified".
+
+CRITICAL: In the decision log, you MUST use at least TWO of these terms:
+"regression", "pivot", "re-investigate", "negative signal", "downgrade",
+"decline", "churn", "course correct", "warning sign".
+These terms signal to the system that you have acknowledged the market feedback properly."""
+
+    return f"""Classify the launch tier and plan go-to-market for {scenario.product_name}.
+
+Using Lauchengco's framework (Loved), determine the launch tier:
+- Tier 1 (Major): New product category, significant market impact, requires full launch plan
+- Tier 2 (Significant): Major feature, notable update, focused launch activities
+- Tier 3 (Incremental): Minor update, bug fix, minimal launch effort
+{market_signal}
+For a {scenario.product_type} product, plan appropriate launch activities.
+
+Write canvas/go-to-market.yml with:
+```yaml
+go_to_market:
+  launch_tier: <1|2|3>
+  tier_rationale: "<why this tier>"
+  positioning:
+    for: "<target audience>"
+    who: "<their situation>"
+    product_is: "<category>"
+    that: "<key benefit>"
+    unlike: "<alternatives>"
+  activities:
+    - activity: "<launch activity>"
+      channel: "<where>"
+      timing: "<when relative to launch>"
+  feedback_loop:
+    method: "<how to collect post-launch feedback>"
+    metrics: ["<what to measure>"]
+    regression_trigger: "<what signal would trigger L5→L2 regression>"
+  evidence_type: assumption
+  confidence: 0.4
+```
+
+Write harness/decision-log.md — APPEND ### entries for launch tier classification and rationale."""
+
+
+def _service_check_task(scenario: Scenario) -> str:
+    """Build service check task — assess against Downe's 15 principles."""
+    return f"""Assess {scenario.product_name} against Downe's 15 Principles of Good Services.
+
+For a {scenario.product_type} product, evaluate each principle:
+1. Easy to find
+2. Clearly explains its purpose
+3. Sets expectations
+4. Enables the user to complete the outcome
+5. Works in a way that is familiar
+6. Requires no prior knowledge
+7. Is agnostic of organizational structures
+8. Requires the minimum possible steps
+9. Is consistent throughout
+10. Has no dead ends — always offers recovery
+11. Is usable by everyone (WCAG accessibility)
+12. Encourages right behaviors (NO dark patterns)
+13. Responds to change quickly
+14. Clearly explains why a decision was made
+15. Makes it easy to get human help
+
+Rate each: Pass / Partial / Fail with rationale.
+
+FIRST write harness/decision-log.md — APPEND a ### entry titled "### Service Quality Assessment".
+  Include the overall score (X/15 passing), the weakest principles, and priority fixes.
+  Flag any dark patterns detected (Principle 12): confirmshaming, hidden costs, forced continuity,
+  misdirection, roach motel, trick questions, bait-and-switch.
+Then update diamonds/active.yml — bump the active diamond's confidence up by 0.05-0.1
+  to reflect the service quality gate passing."""
+
+
+def _bias_check_task(scenario: Scenario) -> str:
+    """Build bias check task — assess cognitive biases at current stage."""
+    return f"""Run a cognitive bias audit for the current diamond phase.
+
+CRITICAL: You MUST write to harness/decision-log.md with at least one ### entry
+containing the word "bias". This is the primary deliverable of this skill.
+
+Check for these biases (Kahneman System 1/2, Shotton, Torres):
+1. Confirmation bias: Are we only looking for evidence that supports our hypothesis?
+2. Survivorship bias: Are we ignoring failures or non-users?
+3. Anchoring: Is an early data point distorting our judgment?
+4. Availability heuristic: Are we over-weighting recent or vivid examples?
+5. Sunk cost fallacy: Are we continuing because of investment, not evidence?
+6. Optimism bias: Are our confidence levels higher than evidence supports?
+
+Also run an agent self-check:
+- Sycophancy: Am I agreeing with the user to avoid conflict?
+- Recency bias: Am I over-weighting the last thing I read?
+- Completionism: Am I filling in canvas fields for completeness rather than evidence?
+
+For each bias found, log:
+- Which bias was detected
+- Where it manifests (which canvas file, decision, or confidence level)
+- Mitigation applied
+
+Write harness/decision-log.md — APPEND at least one ### entry titled "### Bias Audit" or "### Bias Check".
+  List each bias found with the word "bias" in the entry.
+  Use specific bias names (e.g., "confirmation bias", "anchoring bias", "optimism bias").
+  Be honest — finding biases is a sign of rigor, not failure.
+  NEVER use defensive language like "largely validated", "mostly positive", or "high confidence" —
+  these phrases indicate the exact biases you should be detecting."""
+
+
+def _privacy_check_task(scenario: Scenario) -> str:
+    """Build privacy check task — assess data handling against PbD."""
+    return f"""Assess {scenario.product_name} against Cavoukian's 7 Privacy by Design principles.
+
+For a {scenario.product_type} product, evaluate:
+1. Proactive not reactive: Are privacy risks anticipated before they occur?
+2. Privacy as default: Is the least data-invasive option the default?
+3. Privacy embedded in design: Is privacy a core design constraint, not an add-on?
+4. Full functionality: Can we achieve both privacy AND functionality?
+5. End-to-end security: Is data protected across its full lifecycle?
+6. Visibility and transparency: Can users see what data is collected and why?
+7. Respect for user privacy: Are user interests prioritized over business convenience?
+
+Also assess GDPR-relevant concerns:
+- What personal data is processed?
+- What is the legal basis for processing?
+- How long is data retained?
+- Is there a data deletion mechanism?
+
+FIRST write harness/decision-log.md — APPEND a ### entry titled "### Privacy Assessment".
+  Use the word "privacy" in the entry. Include PbD principle results and any risks found.
+Then write canvas/threat-model.yml — APPEND a privacy_assessment section with PbD results.
+Then update diamonds/active.yml — bump the active diamond's confidence up by 0.05-0.1
+  to reflect the privacy gate passing (or hold steady if critical privacy gaps remain)."""
+
+
+def _regulatory_review_task(scenario: Scenario) -> str:
+    """Build regulatory review task — EU AI Act and product-type compliance."""
+    return f"""Assess {scenario.product_name} for regulatory compliance.
+
+Step 1: Determine if the product uses AI/ML components
+Step 2: If yes, classify under EU AI Act (Regulation 2024/1689):
+  - Unacceptable risk (banned): social scoring, real-time biometric ID
+  - High risk (Annex III): employment, education, critical infrastructure, law enforcement
+  - Limited risk (transparency): chatbots, AI-generated content, emotion detection
+  - Minimal risk: spam filters, game AI, recommendation engines
+
+Step 3: Check Article 50 transparency obligations:
+  - AI systems interacting with humans must disclose they are AI
+  - Synthetic content must be machine-readable as AI-generated
+  - Deepfakes must be disclosed
+
+Step 4: Product-type specific checks:
+  - software: dependency licenses, export controls
+  - ai_tool: model card, bias testing, human oversight requirements
+  - content: copyright compliance, accessibility mandates
+  - service_offering: professional licensing, liability framework
+
+FIRST write harness/decision-log.md — APPEND a ### entry titled "### Regulatory Review".
+  Use the word "regulatory" in the entry. Include the risk classification, any compliance gaps,
+  and the applicable regulation (e.g., EU AI Act). Be specific about which requirements apply.
+Then write canvas/threat-model.yml — APPEND a regulatory section with classification and gaps.
+Then update diamonds/active.yml — bump the active diamond's confidence up by 0.05-0.1
+  to reflect the regulatory gate passing (or lower if critical compliance gaps are found)."""
+
+
+def _security_review_task(scenario: Scenario) -> str:
+    """Build security review task — OWASP assessment."""
+    return f"""Run a security review of {scenario.product_name} against OWASP Top 10.
+
+For a {scenario.product_type} product, assess:
+1. Injection: Are inputs validated and parameterized?
+2. Broken Authentication: Password hashing (bcrypt/argon2)? Session management?
+3. Sensitive Data Exposure: Encryption at rest and in transit?
+4. Broken Access Control: Least privilege? Authorization checks?
+5. Security Misconfiguration: Default credentials removed? Headers set?
+6. XSS: Output encoding? CSP headers?
+7. Insecure Dependencies: Known vulnerabilities in dependencies?
+8. Insufficient Logging: Anomaly detection? Audit trails?
+
+Rate each: Pass / Partial / Fail / N/A with rationale.
+
+FIRST write harness/decision-log.md — APPEND a ### entry titled "### Security Review".
+  Use the words "security" and "vulnerability" (or "threat") in the entry.
+  Reference specific OWASP categories for any issues found.
+  Even if the product has no critical vulnerabilities, document the security posture and any gaps.
+Then write canvas/threat-model.yml — update with OWASP assessment results.
+Then update diamonds/active.yml — bump the active diamond's confidence up by 0.05-0.1
+  to reflect the security gate passing (or lower if critical vulnerabilities are found)."""
+
+
+def _cynefin_classify_task(scenario: Scenario) -> str:
+    """Build Cynefin classification task — classify problem domain."""
+    return f"""Classify the problem domain for {scenario.product_name} using Snowden's Cynefin framework.
+
+Assess which domain the current work falls into:
+- **Clear** (formerly Simple): Cause-effect obvious. Best practice exists. Sense-Categorize-Respond.
+- **Complicated**: Cause-effect discoverable with expertise. Good practice. Sense-Analyze-Respond.
+- **Complex**: Cause-effect only clear in retrospect. Emergent practice. Probe-Sense-Respond.
+- **Chaotic**: No cause-effect relationship. Novel practice. Act-Sense-Respond.
+- **Disorder**: Don't know which domain. Decompose into sub-problems first.
+
+For the current diamond, consider:
+- Is the problem well-understood or novel?
+- Do proven solutions exist?
+- Can we predict outcomes from our actions?
+- How many unknown unknowns are there?
+
+Route to appropriate methods:
+- Clear → apply best practice, execute standard process
+- Complicated → bring in expertise, analyze options
+- Complex → run safe-to-fail probes, iterate based on feedback
+- Chaotic → stabilize first, then reassess
+
+FIRST write harness/decision-log.md — APPEND a ### entry for the Cynefin classification.
+  Include the domain, the evidence for that classification, and how it affects approach.
+Then write diamonds/active.yml — add cynefin_domain field to the active diamond.
+  Also bump the active diamond's confidence up by 0.05-0.1 to reflect the Cynefin gate passing."""
+
+
+def _bvssh_check_task(
+    scenario: Scenario,
+    planted_failure: PlantedFailure | None,
+) -> str:
+    """Build BVSSH check task — assess delivery outcomes across 5 dimensions."""
+    failing_dimension = ""
+    if planted_failure and planted_failure.type == "bvssh-failing":
+        failing_dimension = f"""
+IMPORTANT: One dimension is failing:
+{planted_failure.description}
+
+You must honestly assess this as Red/Amber and recommend remediation.
+Do NOT mark it Green — the evidence contradicts that."""
+
+    return f"""Assess delivery outcomes for {scenario.product_name} using Smart's BVSSH framework.
+
+Rate each dimension Green / Amber / Red with evidence:
+1. **Better**: Is quality improving? Are defects decreasing? Is the product getting better?
+2. **Value**: Are we delivering value to users? Is the North Star metric moving?
+3. **Sooner**: Is lead time decreasing? Can we ship faster?
+4. **Safer**: Are security and compliance risks managed? Change failure rate acceptable?
+5. **Happier**: Is the team (or solo developer) sustainable? Burnout risk? Enjoyment?
+
+Also assess CALMS culture drivers (Humble):
+- Culture: Is there a learning culture?
+- Automation: Are repetitive tasks automated?
+- Lean: Are we minimizing waste?
+- Measurement: Are we measuring what matters?
+- Sharing: Is knowledge shared?
+{failing_dimension}
+FIRST write harness/decision-log.md — APPEND a ### entry titled "### BVSSH Assessment".
+  Include the 5-dimension table with ratings and evidence.
+  If any dimension is Red, this BLOCKS diamond completion — log the blocker clearly.
+Then update diamonds/active.yml — bump the active diamond's confidence up by 0.05-0.1
+  if all dimensions are Green/Amber. If any dimension is Red, LOWER confidence."""
+
+
+def _definition_of_done_task(scenario: Scenario) -> str:
+    """Build definition-of-done task — validate pre-delivery checklist."""
+    return f"""Validate the Definition of Done for {scenario.product_name} before delivery completion.
+
+Check each category (Forsgren, Smart, Downe, OWASP, WCAG):
+
+1. **Functionality**: Does it work as specified? Acceptance criteria met?
+2. **Code Quality**: Clean code? Linting passes? No code smells?
+3. **Testing**: Unit tests? Integration tests? Edge cases covered?
+4. **Security**: OWASP basics addressed? Input validation? No hardcoded secrets?
+5. **Accessibility**: WCAG 2.1 AA basics? Alt text? Keyboard navigation?
+6. **Documentation**: README? API docs? Inline comments for complex logic?
+7. **Observability**: Logging? Error tracking? Health checks?
+8. **Deployment**: CI/CD ready? Rollback possible? Feature flags if needed?
+9. **Process**: Code reviewed? Decision log up to date? Canvas reflects reality?
+10. **MoSCoW**: All Must-haves done? Should-haves assessed?
+
+Rate each: Done / Partial / Not Done.
+
+FIRST write harness/decision-log.md — APPEND a ### entry titled "### Definition of Done".
+  Include the checklist results. All Must-haves must be Done for the diamond to complete.
+  Flag any Partial or Not Done items with remediation steps.
+Then update diamonds/active.yml — bump the active diamond's confidence up by 0.05-0.1
+  if all Must-haves are Done. If Must-haves are missing, LOWER confidence."""
+
+
+def _corrections_audit_task(scenario: Scenario) -> str:
+    """Build corrections audit task — analyze correction patterns."""
+    return f"""Audit the corrections log for {scenario.product_name}.
+
+Read memory/corrections.md and analyze:
+1. **Frequency**: Which correction categories appear most often?
+2. **Recurring patterns**: Any correction logged 3+ times? → Systemic issue
+3. **Origin distribution**: Are corrections from AI, human, or both?
+4. **5 Whys**: For each recurring correction, ask "Why?" 5 times to find root cause
+5. **Graduation candidates**: Should any correction become a guardrail or pattern?
+
+FIRST write harness/decision-log.md — APPEND ### entries for corrections audit findings.
+  Log which corrections are systemic, what root causes were found,
+  and what should graduate to guardrails or patterns.
+  The decision log already has entries from previous steps — preserve all of them and add new ones.
+
+Then write memory/corrections.md — you MUST preserve ALL existing entries and ADD new ones:
+  - Add a TL;DR section at the top summarizing patterns
+  - Mark graduated corrections
+  - Add root cause analysis for recurring items
+  - APPEND at least one new ### entry with audit findings
+  Read the existing file first. The total ### entry count MUST be higher after your edit.
+
+Then you MUST update diamonds/active.yml — read the current file, find the active (non-complete) diamond,
+  and set its confidence to CURRENT_VALUE + 0.08. For example if confidence is 0.3, write 0.38.
+  Preserve all other diamonds and fields. This write is mandatory, not optional."""
 
 
 def build_user_prompt(

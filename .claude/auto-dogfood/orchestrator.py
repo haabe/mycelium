@@ -140,6 +140,20 @@ class DogfoodSession:
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_text(content)
 
+        # Snapshot initial diamond phases for diamond_not_advanced evaluator
+        active_path = workdir / "diamonds" / "active.yml"
+        if active_path.exists():
+            try:
+                active_data = yaml.safe_load(active_path.read_text()) or {}
+                initial_phases = {}
+                for d in active_data.get("active_diamonds", []):
+                    if d.get("id"):
+                        initial_phases[d["id"]] = d.get("phase", "discover")
+                phases_file = workdir / "diamonds" / "initial_phases.yml"
+                phases_file.write_text(yaml.dump(initial_phases))
+            except Exception:
+                pass
+
         # Keep the REAL settings.json and CLAUDE.md — the dogfood must test
         # the actual framework, not a stripped-down version. The test harness
         # must work within the framework's constraints (hooks, permissions,
@@ -248,6 +262,19 @@ class DogfoodSession:
         "reflexion": 30,
         "dora-check": 15,
         "retrospective": 15,
+        "wardley-map": 20,
+        "team-shape": 15,
+        "jtbd-map": 15,
+        "launch-tier": 15,
+        "service-check": 15,
+        "bias-check": 15,
+        "privacy-check": 15,
+        "regulatory-review": 15,
+        "security-review": 15,
+        "cynefin-classify": 10,
+        "bvssh-check": 15,
+        "definition-of-done": 15,
+        "corrections-audit": 15,
     }
 
     SKILL_TIMEOUTS = {
@@ -262,6 +289,19 @@ class DogfoodSession:
         "reflexion": 600,
         "dora-check": 120,
         "retrospective": 180,
+        "wardley-map": 180,
+        "team-shape": 120,
+        "jtbd-map": 120,
+        "launch-tier": 120,
+        "service-check": 120,
+        "bias-check": 120,
+        "privacy-check": 120,
+        "regulatory-review": 120,
+        "security-review": 120,
+        "cynefin-classify": 90,
+        "bvssh-check": 120,
+        "definition-of-done": 120,
+        "corrections-audit": 120,
     }
 
     def _run_round(
@@ -495,6 +535,30 @@ class DogfoodSession:
                 proposals.append("Framework: corrections.md not updated after retrospective. Check /retrospective prompt for correction logging instructions.")
             elif criterion == "dora_logged":
                 proposals.append("Framework: DORA assessment not logged in decision log. Check /dora-check prompt for decision log append instructions.")
+            elif criterion == "wardley_map_populated":
+                proposals.append("Framework: Wardley map not written. Check /wardley-map prompt for landscape.yml generation instructions.")
+            elif criterion == "team_shape_populated":
+                proposals.append("Framework: team shape not assessed. Check /team-shape prompt for team-shape.yml generation.")
+            elif criterion == "jtbd_mapped":
+                proposals.append("Framework: JTBD not enriched. Check /jtbd-map prompt for hiring/firing/opportunity score instructions.")
+            elif criterion == "launch_tier_classified":
+                proposals.append("Framework: launch tier not set. Check /launch-tier prompt for go-to-market.yml generation.")
+            elif criterion == "cynefin_classified":
+                proposals.append("Framework: Cynefin domain not classified. Check /cynefin-classify prompt for domain assignment.")
+            elif criterion == "bvssh_assessed":
+                proposals.append("Framework: BVSSH not assessed. Check /bvssh-check prompt for dimension evaluation.")
+            elif criterion == "privacy_assessed":
+                proposals.append("Framework: privacy not assessed. Check /privacy-check prompt for PbD evaluation.")
+            elif criterion == "regulatory_assessed":
+                proposals.append("Framework: regulatory review not done. Check /regulatory-review prompt for compliance assessment.")
+            elif criterion == "service_quality_checked":
+                proposals.append("Framework: service quality not checked. Check /service-check prompt for Downe's 15 principles.")
+            elif criterion == "bias_checked":
+                proposals.append("Framework: bias check not run. Check /bias-check prompt for cognitive bias audit.")
+            elif criterion == "dod_checked":
+                proposals.append("Framework: DoD not validated. Check /definition-of-done prompt for checklist instructions.")
+            elif criterion == "market_regression_logged":
+                proposals.append("Framework: market regression not considered. Check /launch-tier prompt for regression trigger handling.")
             else:
                 proposals.append(f"Unknown criterion '{criterion}' failed. Manual investigation needed.")
         return proposals

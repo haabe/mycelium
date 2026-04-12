@@ -1,0 +1,203 @@
+name: "Consulting service — team_startup — multi-scale L2 opportunity to L4 delivery"
+category: dogfood
+type: full-session
+difficulty: hard
+
+product:
+  name: "ShipShape"
+  type: service_offering
+  description: |
+    A DevOps consulting service for startups. Helps engineering teams set up
+    CI/CD, observability, and incident response. Packages: Assessment ($5k),
+    Implementation ($15k), Ongoing ($3k/mo retainer). Team of 3 consultants.
+  pitch: |
+    We're 3 senior DevOps engineers who left BigCorp to consult for startups.
+    Most startups have terrible deployment practices — manual deploys, no
+    monitoring, no incident playbooks. We fix that in 2-4 weeks. We need
+    to validate which service package has the most demand and start delivering.
+
+persona:
+  name: "Jordan"
+  role: "Co-founder, 10 years DevOps/SRE, leads a team of 3 consultants"
+  style: "Collaborative, evidence-driven, respects team input, moves fast"
+  knowledge: "Deep DevOps/SRE, startup ecosystem, service design, basic business operations"
+  answers:
+    purpose: |
+      Startups waste months on bad deployment practices. We've seen it
+      at 3 companies. Manual deploys cause outages, no monitoring means
+      you find out from customers, no incident response means panic.
+      We can fix this systematically in weeks, not months.
+    users: |
+      Seed to Series B startups with 5-30 engineers. They've outgrown
+      "deploy from laptop" but haven't hired a dedicated DevOps person.
+      CTO or lead engineer is the buyer. They need it now, not next quarter.
+    north_star: |
+      Client DORA metric improvement. If we measurably improve their
+      deployment frequency and reduce change failure rate, that's the
+      proof. Secondary: NPS from engaged clients.
+    landscape: |
+      Big consultancies (too expensive, too slow), freelance DevOps
+      (inconsistent quality), platform engineering tools like Humanitec
+      (DIY, not service). Our angle: startup-native, fixed-scope packages,
+      measurable outcomes in 2-4 weeks.
+    current_state: |
+      3 consultants, 2 completed assessments (unpaid pilots), 1 paid
+      implementation engagement ($15k). Pipeline of 8 warm leads from
+      our network. We think Assessment is the entry point but haven't
+      validated which package drives the most long-term value.
+
+project_type: team_startup
+dogfood: true
+
+initial_state:
+  canvas/purpose.yml: |
+    purpose:
+      problem_statement: "Startups waste engineering time on broken deployment practices but can't afford or attract dedicated DevOps hires"
+      target_users: "Seed to Series B startups, 5-30 engineers, no dedicated DevOps"
+      why_now: "Platform engineering trending but tools alone don't solve process problems"
+      current_alternatives: "Big consultancies, freelance DevOps, DIY platform tools"
+      evidence_type: interview
+      confidence: 0.65
+  canvas/jobs-to-be-done.yml: |
+    jobs:
+      - id: J1
+        job_statement: "When we're shipping too slowly and breaking things, I want expert help setting up proper DevOps practices, so my engineers can ship confidently without a dedicated DevOps hire"
+        dimensions:
+          functional: "Set up CI/CD, monitoring, and incident response in 2-4 weeks"
+          emotional: "Feel confident in our deployment process"
+          social: "Show the board we're operating professionally"
+        evidence_type: interview
+        confidence: 0.6
+  canvas/north-star.yml: |
+    north_star:
+      metric: "Client DORA metric improvement"
+      input_metrics:
+        - name: "Client deployment frequency improvement"
+          description: "Before/after deployment frequency for engaged clients"
+        - name: "Client NPS"
+          description: "How likely to recommend ShipShape"
+      evidence_type: interview
+      confidence: 0.5
+  canvas/opportunities.yml: |
+    opportunities:
+      - id: O1
+        opportunity: "Startups need DevOps help but find consultancies too expensive and slow"
+        solutions:
+          - id: S1
+            name: "Fixed-scope Assessment package ($5k, 1 week)"
+            hypothesis: "Startups will pay $5k for a clear DevOps roadmap if it's delivered in 1 week"
+            riskiest_assumption: "CTOs will pay for assessment without guaranteed implementation"
+            assumption_type: desirability
+            ice_score: {impact: 6, confidence: 5, ease: 8, total: 6.3}
+          - id: S2
+            name: "Implementation package ($15k, 2-4 weeks)"
+            hypothesis: "Startups will pay $15k for hands-on CI/CD + monitoring setup"
+            riskiest_assumption: "Startups have budget for $15k consulting engagement"
+            assumption_type: viability
+            ice_score: {impact: 8, confidence: 4, ease: 5, total: 5.7}
+          - id: S3
+            name: "Ongoing retainer ($3k/mo)"
+            hypothesis: "Clients who complete implementation will retain for ongoing support"
+            riskiest_assumption: "Clients need ongoing DevOps support after initial setup"
+            assumption_type: desirability
+            ice_score: {impact: 9, confidence: 3, ease: 4, total: 5.3}
+        confidence: 0.5
+        evidence_type: interview
+  canvas/gist.yml: |
+    gist:
+      goal: "Validate and deliver the Assessment package as the entry-point service"
+      ideas:
+        - id: I1
+          name: "Productized Assessment with templated deliverables"
+          ice_score: {impact: 6, confidence: 5, ease: 8}
+      steps:
+        - id: S1
+          name: "Define assessment methodology and deliverable template"
+          status: complete
+        - id: S2
+          name: "Pilot with 2 startups (unpaid)"
+          status: complete
+        - id: S3
+          name: "Deliver first paid assessment"
+          status: in-progress
+        - id: S4
+          name: "Collect feedback and iterate"
+          status: planned
+  canvas/team-shape.yml: |
+    team_shape:
+      team_type: stream-aligned
+      cognitive_load:
+        intrinsic: medium
+        extraneous: high
+        germane: medium
+        assessment: "overloaded — 3 people doing consulting, sales, and operations"
+      interaction_modes:
+        - partner: "client engineering teams"
+          mode: collaboration
+      evidence_type: assumption
+      confidence: 0.4
+  diamonds/active.yml: |
+    active_diamonds:
+      - id: d-001
+        scale: L0
+        phase: complete
+        product_type: service_offering
+        project_type: team_startup
+        confidence: 0.65
+      - id: d-002
+        scale: L2
+        phase: complete
+        product_type: service_offering
+        project_type: team_startup
+        confidence: 0.55
+      - id: d-003
+        scale: L3
+        phase: complete
+        product_type: service_offering
+        project_type: team_startup
+        confidence: 0.5
+      - id: d-004
+        scale: L4
+        phase: develop
+        product_type: service_offering
+        project_type: team_startup
+        confidence: 0.4
+        parent: d-003
+        theory_gates_status:
+          evidence: not-passed
+          four_risks: not-assessed
+          jtbd: passed
+          cynefin: not-assessed
+          bias: not-assessed
+          security: not-assessed
+          privacy: not-assessed
+          bvssh: not-assessed
+          service_quality: not-assessed
+          delivery_metrics: not-assessed
+          corrections: not-assessed
+          regulatory: not-assessed
+
+planted_failures: []
+
+journey:
+  - skill: cynefin-classify
+  - skill: service-check
+  - skill: delivery-bootstrap
+  - skill: dora-check
+  - skill: diamond-assess
+
+success_criteria:
+  - cynefin_classified: true
+  - service_quality_checked: true
+  - canvas_populated: [dora-metrics.yml]
+  - dora_logged: true
+  - decision_log_contains: ["cynefin", "service", "delivery", "dora"]
+  - decision_log_honest: true
+  - hooks_no_errors: true
+
+budget:
+  max_rounds: 22
+  max_time_seconds: 3000
+  model_overrides:
+    mycelium_agent: sonnet
+    user_simulator: haiku

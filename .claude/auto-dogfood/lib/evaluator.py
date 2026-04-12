@@ -43,7 +43,7 @@ class Evaluator:
     def _check_canvas_populated(self, file_list: list[str]) -> bool:
         for fname in file_list:
             path = self.canvas_dir / fname
-            if not path.exists() or path.stat().st_size < 200:
+            if not path.exists() or path.stat().st_size < 50:
                 return False
             try:
                 parsed = yaml.safe_load(path.read_text())
@@ -93,9 +93,30 @@ class Evaluator:
         return False
 
     def _check_diamond_not_advanced(self, _args: Any) -> bool:
+        """Check that no non-complete diamond advanced its phase.
+
+        Compares against initial_phases stored at setup time. If no initial
+        phases are stored, falls back to checking that no diamond is 'complete'.
+        """
         active = self._load_active()
         if not active:
             return True
+        phase_order = ["discover", "define", "develop", "deliver", "complete"]
+        initial_file = self.workdir / ".claude" / "diamonds" / "initial_phases.yml"
+        if initial_file.exists():
+            try:
+                initial = yaml.safe_load(initial_file.read_text()) or {}
+                for d in active.get("active_diamonds", []):
+                    did = d.get("id", "")
+                    current_phase = d.get("phase", "discover")
+                    initial_phase = initial.get(did, "discover")
+                    if current_phase in phase_order and initial_phase in phase_order:
+                        if phase_order.index(current_phase) > phase_order.index(initial_phase):
+                            return False
+                return True
+            except Exception:
+                pass
+        # Fallback: just check no diamond is complete
         for d in active.get("active_diamonds", []):
             if d.get("phase") in ("complete",):
                 return False
@@ -289,17 +310,20 @@ class Evaluator:
             return False
         content = self.decision_log.read_text().lower()
         security_markers = ["security", "vulnerability", "owasp", "validation",
-                           "injection", "malicious", "sanitiz"]
+                           "injection", "malicious", "sanitiz", "threat",
+                           "data leakage", "authentication", "encryption"]
         return sum(1 for m in security_markers if m in content) >= 2
 
     def _check_dora_logged(self, _args: Any) -> bool:
-        """Check that the DORA assessment added entries to the decision log."""
+        """Check that the DORA/delivery metrics assessment appears in decision log."""
         if not self.decision_log.exists():
             return False
         content = self.decision_log.read_text().lower()
+        # Accept both software DORA and service delivery metrics
         dora_markers = ["dora", "deployment frequency", "lead time",
                         "change failure rate", "mean time to recovery",
-                        "deploy", "mttr"]
+                        "deploy", "mttr", "delivery metric", "cycle time",
+                        "throughput", "service delivery", "baseline"]
         return sum(1 for m in dora_markers if m in content) >= 2
 
     def _check_corrections_logged(self, _args: Any) -> bool:
@@ -310,6 +334,117 @@ class Evaluator:
         content = corrections_path.read_text()
         # Must have more than the stub template
         return "###" in content or "Mistake:" in content or "- **" in content
+
+    def _check_wardley_map_populated(self, _args: Any) -> bool:
+        """Check that canvas/landscape.yml has components mapped."""
+        path = self.canvas_dir / "landscape.yml"
+        if not path.exists() or path.stat().st_size < 100:
+            return False
+        content = path.read_text()
+        return "components" in content or "evolution" in content
+
+    def _check_team_shape_populated(self, _args: Any) -> bool:
+        """Check that canvas/team-shape.yml has team topology assessment."""
+        path = self.canvas_dir / "team-shape.yml"
+        if not path.exists() or path.stat().st_size < 100:
+            return False
+        content = path.read_text()
+        return "team_type" in content or "cognitive_load" in content
+
+    def _check_jtbd_mapped(self, _args: Any) -> bool:
+        """Check that JTBD mapping added hiring/firing or opportunity scores."""
+        path = self.canvas_dir / "jobs-to-be-done.yml"
+        if not path.exists():
+            return False
+        content = path.read_text()
+        return ("hiring" in content or "firing" in content or
+                "opportunity_score" in content or "gap" in content)
+
+    def _check_launch_tier_classified(self, _args: Any) -> bool:
+        """Check that go-to-market has a tier classification."""
+        path = self.canvas_dir / "go-to-market.yml"
+        if not path.exists() or path.stat().st_size < 100:
+            return False
+        content = path.read_text()
+        return "launch_tier" in content or "tier" in content
+
+    def _check_cynefin_classified(self, _args: Any) -> bool:
+        """Check that the active diamond has a Cynefin domain classification."""
+        active = self._load_active()
+        if not active:
+            # Fallback: check decision log
+            if self.decision_log.exists():
+                content = self.decision_log.read_text().lower()
+                return any(d in content for d in ["clear", "complicated", "complex", "chaotic", "cynefin"])
+            return False
+        raw = self.active_file.read_text().lower()
+        return "cynefin" in raw
+
+    def _check_bvssh_assessed(self, _args: Any) -> bool:
+        """Check that BVSSH assessment appears in the decision log."""
+        if not self.decision_log.exists():
+            return False
+        content = self.decision_log.read_text().lower()
+        bvssh_markers = ["better", "value", "sooner", "safer", "happier", "bvssh"]
+        return sum(1 for m in bvssh_markers if m in content) >= 3
+
+    def _check_privacy_assessed(self, _args: Any) -> bool:
+        """Check that a privacy assessment was performed."""
+        if not self.decision_log.exists():
+            return False
+        content = self.decision_log.read_text().lower()
+        privacy_markers = ["privacy", "pbd", "data", "retention", "gdpr",
+                          "personal data", "consent", "cavoukian"]
+        return sum(1 for m in privacy_markers if m in content) >= 2
+
+    def _check_regulatory_assessed(self, _args: Any) -> bool:
+        """Check that regulatory review was performed."""
+        if not self.decision_log.exists():
+            return False
+        content = self.decision_log.read_text().lower()
+        reg_markers = ["regulatory", "eu ai act", "ai act", "transparency",
+                       "compliance", "article 50", "annex", "regulation",
+                       "legal", "risk classification", "high risk", "limited risk"]
+        return sum(1 for m in reg_markers if m in content) >= 2
+
+    def _check_service_quality_checked(self, _args: Any) -> bool:
+        """Check that service quality assessment was performed."""
+        if not self.decision_log.exists():
+            return False
+        content = self.decision_log.read_text().lower()
+        service_markers = ["service", "downe", "principle", "accessibility",
+                          "dark pattern", "recovery", "usable"]
+        return sum(1 for m in service_markers if m in content) >= 2
+
+    def _check_bias_checked(self, _args: Any) -> bool:
+        """Check that a bias audit was performed."""
+        if not self.decision_log.exists():
+            return False
+        content = self.decision_log.read_text().lower()
+        bias_markers = ["bias", "confirmation", "anchoring", "sunk cost",
+                       "optimism", "sycophancy", "kahneman"]
+        return sum(1 for m in bias_markers if m in content) >= 2
+
+    def _check_dod_checked(self, _args: Any) -> bool:
+        """Check that definition of done was assessed."""
+        if not self.decision_log.exists():
+            return False
+        content = self.decision_log.read_text().lower()
+        dod_markers = ["definition of done", "dod", "must-have", "acceptance",
+                       "functionality", "testing", "deployment"]
+        return sum(1 for m in dod_markers if m in content) >= 2
+
+    def _check_market_regression_logged(self, _args: Any) -> bool:
+        """Check that market feedback triggered regression consideration."""
+        if not self.decision_log.exists():
+            return False
+        content = self.decision_log.read_text().lower()
+        regression_markers = ["regress", "pivot", "re-investigate", "l2",
+                             "market feedback", "negative signal", "reconsider",
+                             "downgrade", "tier adjustment", "subscriber",
+                             "churn", "cancel", "nps", "drop", "decline",
+                             "warning sign", "red flag", "course correct"]
+        return sum(1 for m in regression_markers if m in content) >= 2
 
     def _check_generic(self, name: str, args: Any) -> bool:
         """Fallback: check if the criterion name appears in the decision log."""

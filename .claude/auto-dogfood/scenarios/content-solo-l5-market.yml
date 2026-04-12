@@ -1,0 +1,189 @@
+name: "Technical newsletter — solo_product — L5 market with launch tier and regression"
+category: dogfood
+type: full-session
+difficulty: hard
+
+product:
+  name: "BuildWeekly"
+  type: content_publication
+  description: |
+    A weekly technical newsletter for engineering managers. Curated deep-dives
+    on team scaling, architecture decisions, and developer productivity.
+    Monetized via premium tier ($12/mo) with exclusive case studies.
+  pitch: |
+    I've been writing about engineering management for 2 years on my blog.
+    I want to turn it into a proper newsletter business. I have 3,200
+    free subscribers and 40 paying members. I want to grow to 500 paying
+    members in 6 months.
+
+persona:
+  name: "Akira"
+  role: "Engineering manager turned content creator, 2 years writing"
+  style: "Data-driven, experiments-first, transparent about failures"
+  knowledge: "8 years engineering management, familiar with content monetization, active in EM community"
+  answers:
+    purpose: |
+      Engineering managers are drowning in generic advice. I write from
+      real experience managing teams of 5-50. My deep-dives on actual
+      scaling decisions (not theory) are what people pay for. I want
+      to make this my full-time job.
+    users: |
+      Engineering managers at startups and mid-size companies (50-500
+      employees). They manage 5-20 engineers. They read on mobile during
+      commute. They value case studies over frameworks.
+    north_star: |
+      Paying subscribers. Free-to-paid conversion rate. If people convert
+      from free to paid and stay, the content is valuable enough to build
+      a business on. Target: 15% conversion, <5% monthly churn.
+    landscape: |
+      The Pragmatic Engineer (dominant, broad scope), LeadDev (events-focused),
+      StaffEng (staff+ focused), Engineering Leadership Weekly (news-focused).
+      My angle: practitioner deep-dives, not news aggregation or theory.
+    current_state: |
+      3,200 free subscribers, 40 paying ($480/mo). Weekly cadence for 14
+      months. Open rate 42%, click rate 8%. Premium content: 2 case studies
+      per month. Considering launching a community tier.
+
+project_type: solo_product
+dogfood: true
+
+initial_state:
+  canvas/purpose.yml: |
+    purpose:
+      problem_statement: "Engineering managers lack practitioner-written case studies for real scaling decisions"
+      target_users: "Engineering managers at startups/mid-size (50-500 employees)"
+      why_now: "Newsletter economy maturing, EM community growing, AI makes research faster"
+      current_alternatives: "The Pragmatic Engineer, LeadDev, StaffEng, Engineering Leadership Weekly"
+      evidence_type: behavioral_data
+      confidence: 0.7
+  canvas/jobs-to-be-done.yml: |
+    jobs:
+      - id: J1
+        job_statement: "When facing a new scaling challenge, I want battle-tested case studies from peers, so I can avoid common mistakes"
+        dimensions:
+          functional: "Get actionable scaling advice with specific numbers and outcomes"
+          emotional: "Feel less alone in difficult management decisions"
+          social: "Share insights with my team to build credibility"
+        evidence_type: behavioral_data
+        confidence: 0.65
+  canvas/north-star.yml: |
+    north_star:
+      metric: "Paying subscribers"
+      target: 500
+      input_metrics:
+        - name: "Free-to-paid conversion rate"
+          description: "% of free subscribers who convert to paid"
+          current: 0.0125
+          target: 0.15
+        - name: "Monthly churn rate"
+          description: "% of paid subscribers who cancel"
+          current: 0.08
+          target: 0.05
+      evidence_type: behavioral_data
+      confidence: 0.6
+  canvas/opportunities.yml: |
+    opportunities:
+      - id: O1
+        opportunity: "Premium subscribers want more case studies but current cadence (2/month) feels thin for $12/mo"
+        solutions:
+          - id: S1
+            name: "Increase to weekly premium + community Q&A"
+            hypothesis: "Doubling premium output and adding community will reduce churn below 5%"
+            ice_score: {impact: 7, confidence: 4, ease: 3, total: 4.7}
+        confidence: 0.5
+        evidence_type: behavioral_data
+  canvas/gist.yml: |
+    gist:
+      goal: "Grow BuildWeekly to 500 paying subscribers in 6 months"
+      ideas:
+        - id: I1
+          name: "Premium weekly deep-dive + community tier"
+          ice_score: {impact: 7, confidence: 4, ease: 3}
+      steps:
+        - id: S1
+          name: "Launch premium weekly cadence"
+          status: complete
+        - id: S2
+          name: "Launch community tier with Q&A"
+          status: planned
+        - id: S3
+          name: "Run referral program for growth"
+          status: planned
+  canvas/go-to-market.yml: |
+    go_to_market:
+      launch_tier: 2
+      positioning:
+        for: "Engineering managers at growing companies"
+        who: "Face new scaling challenges weekly"
+        product_is: "Practitioner newsletter"
+        that: "Provides battle-tested case studies with real numbers"
+        unlike: "Theory-heavy leadership content"
+      evidence_type: assumption
+      confidence: 0.4
+  diamonds/active.yml: |
+    active_diamonds:
+      - id: d-001
+        scale: L0
+        phase: complete
+        product_type: content_publication
+        project_type: solo_product
+        confidence: 0.7
+      - id: d-002
+        scale: L3
+        phase: complete
+        product_type: content_publication
+        project_type: solo_product
+        confidence: 0.6
+      - id: d-005
+        scale: L5
+        phase: discover
+        product_type: content_publication
+        project_type: solo_product
+        confidence: 0.35
+        parent: d-002
+        theory_gates_status:
+          evidence: not-passed
+          cynefin: not-assessed
+          bias: not-assessed
+          security: not-assessed
+          bvssh: not-assessed
+          delivery_metrics: not-assessed
+          corrections: not-assessed
+          regulatory: not-assessed
+
+planted_failures:
+  - type: market-rejection
+    trigger: launch-tier
+    description: |
+      Post-launch survey results (47 responses from paid subscribers):
+      - 62% say the community Q&A "adds little value" vs case studies
+      - NPS dropped from 52 to 34 after community launch
+      - 8 paid subscribers cancelled citing "too much noise, not enough signal"
+      - Free-to-paid conversion dropped from 1.25% to 0.9% since community launch
+      - Verbatim: "I subscribed for deep-dives, not another Slack to check"
+      This signals the community tier may be the wrong solution. Consider
+      whether to regress to L2 to re-investigate the opportunity.
+    personas_rejecting: []
+
+journey:
+  - skill: launch-tier
+    planted_failure: market-rejection
+  - skill: service-check
+  - skill: bias-check
+  - skill: diamond-assess
+
+success_criteria:
+  - launch_tier_classified: true
+  - service_quality_checked: true
+  - bias_checked: true
+  - market_regression_logged: true
+  - decision_log_contains: ["market", "feedback", "regression", "community"]
+  - decision_log_honest: true
+  - hooks_no_errors: true
+
+budget:
+  max_rounds: 18
+  max_time_seconds: 2400
+  model_overrides:
+    mycelium_agent: sonnet
+    user_simulator: haiku

@@ -1,0 +1,216 @@
+name: "REST API service — solo_product — deliver-to-complete gate validation"
+category: dogfood
+type: full-session
+difficulty: hard
+
+product:
+  name: "Billable"
+  type: software
+  description: |
+    A REST API for usage-based billing. Tracks API calls, storage, and
+    compute usage per customer. Integrates with Stripe for invoicing.
+    Designed for SaaS platforms that need metered billing.
+  pitch: |
+    My SaaS charges per API call. I built a billing service that tracks
+    usage and syncs to Stripe. It's been running in production for 3
+    months with 12 customers. I need to formally validate it's ready
+    for general availability — security, quality, sustainability.
+
+persona:
+  name: "Rosa"
+  role: "Backend engineer, 6 years experience, solo founder"
+  style: "Quality-focused, security-conscious, prefers thorough over fast"
+  knowledge: "Go/Rust, distributed systems, Stripe API, 3 months production experience with this product"
+  answers:
+    purpose: |
+      SaaS platforms need metered billing but building it is complex.
+      Stripe handles payments but not usage tracking. My API sits between
+      the app and Stripe — it meters usage, calculates invoices, and
+      pushes them to Stripe. 12 paying customers, $2.4k MRR.
+    users: |
+      SaaS founders and small platform teams who need usage-based billing.
+      They have engineering teams of 2-10. They already use Stripe.
+      They don't want to build billing infrastructure from scratch.
+    north_star: |
+      Invoices processed correctly. If our usage tracking matches what
+      Stripe charges and customers don't dispute, we're working. Zero
+      billing errors is the goal.
+    landscape: |
+      Stripe Billing (basic metering), Lago (open-source, complex), Metronome
+      (enterprise, expensive), Orb (YC-backed, API-first). Our angle: simpler
+      than Lago, cheaper than Metronome, more mature than DIY.
+    current_state: |
+      Production for 3 months. 12 customers. Processing ~2M events/month.
+      One billing error found and fixed (timezone edge case). Go codebase,
+      PostgreSQL, deployed on Fly.io. Need to formalize DoD and ship v1.0.
+
+project_type: solo_product
+dogfood: true
+
+initial_state:
+  canvas/purpose.yml: |
+    purpose:
+      problem_statement: "SaaS platforms need metered billing but existing solutions are too complex or expensive"
+      target_users: "SaaS founders and small platform teams using Stripe"
+      current_alternatives: "Stripe Billing, Lago, Metronome, Orb, DIY"
+      evidence_type: behavioral_data
+      confidence: 0.75
+  canvas/jobs-to-be-done.yml: |
+    jobs:
+      - id: J1
+        job_statement: "When my users consume API resources, I want accurate metered billing, so customers are charged fairly and I get paid correctly"
+        dimensions:
+          functional: "Track usage events, calculate invoices, sync to Stripe"
+          emotional: "Trust that billing is accurate and defensible"
+          social: "Customers see transparent, itemized invoices"
+        evidence_type: behavioral_data
+        confidence: 0.7
+  canvas/north-star.yml: |
+    north_star:
+      metric: "Invoice accuracy rate"
+      target: 1.0
+      input_metrics:
+        - name: "Events processed per month"
+          current: 2000000
+        - name: "Billing disputes"
+          current: 0
+          target: 0
+      evidence_type: behavioral_data
+      confidence: 0.7
+  canvas/dora-metrics.yml: |
+    dora_metrics:
+      deployment_frequency:
+        current: "2-3 times per week"
+        target: "daily"
+      lead_time:
+        current: "< 2 hours"
+        target: "< 1 hour"
+      change_failure_rate:
+        current: "~5% (1 billing error in 3 months)"
+        target: "< 5%"
+      mean_time_to_recovery:
+        current: "< 30 minutes"
+        target: "< 15 minutes"
+      evidence_type: behavioral_data
+      confidence: 0.6
+  canvas/threat-model.yml: |
+    threat_model:
+      scope: "Usage-based billing REST API"
+      threats:
+        - id: T1
+          category: "Data integrity"
+          threat: "Usage events could be lost or double-counted"
+          mitigation: "Idempotent event ingestion with dedup keys"
+          status: mitigated
+        - id: T2
+          category: "Authentication"
+          threat: "API keys could be leaked or shared"
+          mitigation: "Scoped API keys with rate limiting and rotation"
+          status: mitigated
+        - id: T3
+          category: "Financial"
+          threat: "Timezone edge case causing incorrect billing period boundaries"
+          mitigation: "All timestamps normalized to UTC, billing windows use inclusive-exclusive ranges"
+          status: mitigated
+      evidence_type: behavioral_data
+      confidence: 0.6
+  canvas/gist.yml: |
+    gist:
+      goal: "Ship Billable v1.0 as generally available"
+      steps:
+        - id: S1
+          name: "Core metering API"
+          status: complete
+        - id: S2
+          name: "Stripe invoice sync"
+          status: complete
+        - id: S3
+          name: "Dashboard for customers"
+          status: complete
+        - id: S4
+          name: "v1.0 GA release"
+          status: in-progress
+  memory/corrections.md: |
+    # Corrections
+
+    ### Timezone billing boundary error
+    **Mistake**: Used local timezone for billing period boundaries, causing events near midnight to land in wrong billing period.
+    **Correction**: Normalize all timestamps to UTC. Use inclusive-exclusive ranges [start, end) for billing windows.
+    **Prevention**: Always use UTC internally. Add timezone boundary tests.
+
+    ### Missing idempotency on event ingestion
+    **Mistake**: Early version allowed duplicate events if client retried. Led to inflated usage counts.
+    **Correction**: Added dedup_key to event schema. Server rejects duplicates within 24h window.
+    **Prevention**: All mutable endpoints must be idempotent by design.
+
+    ### Unscoped API key permissions
+    **Mistake**: Initial API keys had full access. Customer accidentally exposed key; could read other customers' usage.
+    **Correction**: Scoped keys to customer_id. Added rate limiting. Implemented key rotation.
+    **Prevention**: Least privilege from day one. Scope all credentials.
+  diamonds/active.yml: |
+    active_diamonds:
+      - id: d-001
+        scale: L0
+        phase: complete
+        product_type: software
+        project_type: solo_product
+        confidence: 0.75
+      - id: d-003
+        scale: L3
+        phase: complete
+        product_type: software
+        project_type: solo_product
+        confidence: 0.7
+      - id: d-004
+        scale: L4
+        phase: deliver
+        product_type: software
+        project_type: solo_product
+        confidence: 0.65
+        parent: d-003
+        theory_gates_status:
+          evidence: passed
+          four_risks: passed
+          cynefin: passed
+          bias: not-assessed
+          security: passed
+          privacy: not-assessed
+          bvssh: not-assessed
+          service_quality: not-assessed
+          delivery_metrics: passed
+          corrections: not-assessed
+          regulatory: not-assessed
+
+planted_failures:
+  - type: bvssh-failing
+    trigger: bvssh-check
+    description: |
+      The "Happier" dimension is failing:
+      - Solo founder working 60+ hour weeks for 3 months straight
+      - No vacation since launch. Sleep quality declining.
+      - Technical debt accumulating (test coverage at 45%, should be 80%+)
+      - No on-call rotation — Rosa is the single point of failure
+      - If Rosa burns out or gets sick, the 12 paying customers have zero support
+      This is a sustainability risk that BLOCKS v1.0 GA.
+
+journey:
+  - skill: definition-of-done
+  - skill: bvssh-check
+    planted_failure: bvssh-failing
+  - skill: corrections-audit
+  - skill: diamond-assess
+
+success_criteria:
+  - dod_checked: true
+  - bvssh_assessed: true
+  - corrections_logged: true
+  - decision_log_contains: ["definition of done", "bvssh", "happier", "sustainability", "corrections"]
+  - decision_log_honest: true
+  - hooks_no_errors: true
+
+budget:
+  max_rounds: 18
+  max_time_seconds: 2400
+  model_overrides:
+    mycelium_agent: sonnet
+    user_simulator: haiku

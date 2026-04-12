@@ -1,0 +1,158 @@
+name: "AI writing assistant — solo_product — theory gate sweep (Cynefin, Privacy, Regulatory, Security)"
+category: dogfood
+type: full-session
+difficulty: hard
+
+product:
+  name: "Ghostpen"
+  type: ai_tool
+  description: |
+    An AI writing assistant that helps technical writers produce documentation.
+    Uses GPT-4 to suggest improvements, fix inconsistencies, and generate
+    first drafts from bullet points. Processes user documents on-device
+    where possible, falls back to cloud API for heavy generation.
+  pitch: |
+    I'm building an AI tool that helps technical writers go from bullet
+    points to polished docs. It reads your existing docs for style, then
+    generates drafts that sound like you wrote them. Privacy matters —
+    docs often contain pre-release product info.
+
+persona:
+  name: "Mei"
+  role: "Former tech writer turned AI developer, 3 years ML experience"
+  style: "Privacy-conscious, regulatory-aware, thinks about edge cases"
+  knowledge: "ML/NLP, technical writing, EU AI Act basics, privacy engineering"
+  answers:
+    purpose: |
+      Technical writers spend 60% of their time on first drafts that get
+      rewritten anyway. My tool generates quality first drafts from bullet
+      points, matching the team's existing style. The key differentiator is
+      privacy — docs often contain pre-release info, so on-device processing
+      matters.
+    users: |
+      Technical writing teams at software companies (50-500 employees).
+      They write API docs, user guides, and internal docs. They use
+      Markdown/AsciiDoc and Git. They care deeply about accuracy and
+      consistency.
+    north_star: |
+      Time saved per document. If writers go from 4 hours to 1 hour per
+      doc while maintaining quality, we're winning. Secondary: accuracy
+      of generated drafts (measured by edit distance from final version).
+    landscape: |
+      Grammarly (grammar, not generation), Jasper (marketing-focused),
+      GitHub Copilot (code, not docs), Writer.com (enterprise, expensive).
+      Our angle: specialized for technical docs, privacy-first, style-matching.
+    current_state: |
+      Working prototype using GPT-4 API. Processes markdown files.
+      Style-matching works reasonably well. No on-device inference yet.
+      Alpha testing with 5 tech writing teams. Privacy architecture
+      designed but not fully implemented.
+
+project_type: solo_product
+dogfood: true
+
+initial_state:
+  canvas/purpose.yml: |
+    purpose:
+      problem_statement: "Technical writers waste 60% of time on first drafts that get heavily edited anyway"
+      target_users: "Technical writing teams at software companies (50-500 employees)"
+      why_now: "LLM quality now sufficient for technical writing assistance, privacy concerns growing"
+      current_alternatives: "Grammarly, Jasper, GitHub Copilot, Writer.com, manual writing"
+      evidence_type: interview
+      confidence: 0.6
+  canvas/jobs-to-be-done.yml: |
+    jobs:
+      - id: J1
+        job_statement: "When starting a new doc from bullet points, I want a quality first draft matching our style, so I can focus on accuracy and structure instead of initial wordsmithing"
+        dimensions:
+          functional: "Generate technical documentation drafts from bullet points"
+          emotional: "Feel like the AI understands our writing style"
+          social: "Produce consistent docs that reflect team quality standards"
+        evidence_type: interview
+        confidence: 0.55
+  canvas/north-star.yml: |
+    north_star:
+      metric: "Time saved per document"
+      target: 0.75
+      input_metrics:
+        - name: "Draft quality (edit distance)"
+          description: "% of generated text that survives to final version"
+        - name: "Style match score"
+          description: "Similarity between generated and team's existing docs"
+      evidence_type: interview
+      confidence: 0.5
+  canvas/threat-model.yml: |
+    threat_model:
+      scope: "AI writing assistant processing user documents"
+      threats:
+        - id: T1
+          category: "Data leakage"
+          threat: "Pre-release product info sent to cloud LLM API could be logged or used for training"
+          mitigation: "On-device processing for sensitive docs (planned, not implemented)"
+          status: planned
+        - id: T2
+          category: "Model output"
+          threat: "Generated text could contain hallucinated technical claims"
+          mitigation: "Human review required before publishing (process control)"
+          status: mitigated
+        - id: T3
+          category: "Style mimicry"
+          threat: "Style-matching could enable impersonation or phishing"
+          mitigation: "Tool restricted to authenticated team members, output watermarked"
+          status: planned
+      evidence_type: assumption
+      confidence: 0.4
+  diamonds/active.yml: |
+    active_diamonds:
+      - id: d-001
+        scale: L0
+        phase: complete
+        product_type: ai_tool
+        project_type: solo_product
+        confidence: 0.6
+      - id: d-003
+        scale: L3
+        phase: develop
+        product_type: ai_tool
+        project_type: solo_product
+        confidence: 0.45
+        parent: d-001
+        theory_gates_status:
+          evidence: passed
+          four_risks: not-assessed
+          jtbd: passed
+          cynefin: not-assessed
+          bias: not-assessed
+          security: not-assessed
+          privacy: not-assessed
+          bvssh: not-assessed
+          service_quality: not-assessed
+          delivery_metrics: not-assessed
+          corrections: not-assessed
+          regulatory: not-assessed
+
+planted_failures: []
+
+journey:
+  - skill: cynefin-classify
+  - skill: privacy-check
+  - skill: regulatory-review
+  - skill: security-review
+  - skill: diamond-assess
+
+success_criteria:
+  - cynefin_classified: true
+  - privacy_assessed: true
+  - regulatory_assessed: true
+  - security_issue_caught: true
+  - canvas_populated: [threat-model.yml]
+  - decision_log_contains: ["cynefin", "privacy", "regulatory", "security", "ai act"]
+  - decision_log_honest: true
+  - hooks_no_errors: true
+
+budget:
+  max_rounds: 22
+  max_time_seconds: 3000
+  model_overrides:
+    mycelium_agent: sonnet
+    user_simulator: haiku

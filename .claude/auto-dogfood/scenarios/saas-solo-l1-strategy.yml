@@ -1,0 +1,136 @@
+name: "SaaS analytics platform — solo_product — L1 strategy with Wardley mapping"
+category: dogfood
+type: full-session
+difficulty: hard
+
+product:
+  name: "Metriq"
+  type: software
+  description: |
+    A lightweight analytics platform for indie SaaS founders. Tracks key
+    metrics (MRR, churn, LTV) from Stripe webhooks. Self-hosted, privacy-first
+    alternative to Baremetrics/ChartMogul. Single Docker container deployment.
+  pitch: |
+    I'm an indie SaaS founder running 3 small products. I need to know my
+    MRR, churn, and LTV without sending my Stripe data to a third party.
+    I want something I can self-host, that just reads Stripe webhooks and
+    gives me a clean dashboard. No tracking pixels, no user analytics —
+    just my business metrics.
+
+persona:
+  name: "Sven"
+  role: "Indie SaaS founder, 4 years solo bootstrapping"
+  style: "Strategic thinker, methodical, values long-term sustainability over speed"
+  knowledge: "Full-stack developer, runs 3 SaaS products (combined $8k MRR), familiar with competitive landscape"
+  answers:
+    purpose: |
+      My Stripe data is my most sensitive business data. I don't want to
+      send it to Baremetrics or ChartMogul. I need MRR, churn, and LTV
+      calculated correctly from raw webhook events. Self-hosted in my
+      existing Docker infrastructure.
+    users: |
+      Indie SaaS founders and small bootstrapped teams who care about
+      data sovereignty. Maybe 500-1000 potential users in the indie maker
+      community. They already have Stripe, Docker, and basic DevOps skills.
+    north_star: |
+      Active self-hosted instances. If people deploy and keep using it
+      month over month, we're providing value. Secondary: time from
+      Stripe event to dashboard update (latency).
+    landscape: |
+      Baremetrics ($108/mo), ChartMogul ($99/mo), ProfitWell (free but
+      acquired by Paddle), Stripe's built-in analytics (basic).
+      Differentiator: self-hosted, open source, zero data sharing.
+      Risk: Stripe improves their built-in analytics enough.
+    current_state: |
+      I have a prototype that reads Stripe webhooks and stores events in
+      SQLite. No dashboard yet. No churn calculation. Just raw event
+      storage. I've validated the idea in 2 indie maker communities —
+      about 30 people expressed interest.
+
+project_type: solo_product
+dogfood: true
+
+initial_state:
+  canvas/purpose.yml: |
+    purpose:
+      problem_statement: "Indie SaaS founders must share sensitive Stripe data with third parties to get basic business metrics"
+      target_users: "Bootstrapped SaaS founders who value data sovereignty"
+      why_now: "Growing privacy awareness + indie maker community growth"
+      current_alternatives: "Baremetrics ($108/mo), ChartMogul ($99/mo), ProfitWell (acquired), Stripe built-in (basic)"
+      evidence_type: interview
+      confidence: 0.65
+  canvas/jobs-to-be-done.yml: |
+    jobs:
+      - id: J1
+        job_statement: "When I check my business health weekly, I want accurate MRR/churn/LTV numbers, so I can make informed decisions about my SaaS products"
+        dimensions:
+          functional: "Calculate MRR, churn rate, and LTV from Stripe events"
+          emotional: "Feel confident my numbers are accurate and private"
+          social: "Be a responsible data steward for my customers"
+        evidence_type: interview
+        confidence: 0.6
+      - id: J2
+        job_statement: "When an investor asks about my metrics, I want to share a clean dashboard, so I look professional without exposing raw Stripe data"
+        dimensions:
+          functional: "Generate shareable dashboard views"
+          emotional: "Feel prepared and professional"
+          social: "Project credibility to stakeholders"
+        evidence_type: interview
+        confidence: 0.5
+  canvas/north-star.yml: |
+    north_star:
+      metric: "Active self-hosted instances"
+      input_metrics:
+        - name: "Webhook processing latency"
+          description: "Time from Stripe event to dashboard update"
+        - name: "Metric accuracy"
+          description: "MRR/churn calculation matches manual verification"
+      evidence_type: interview
+      confidence: 0.55
+  diamonds/active.yml: |
+    active_diamonds:
+      - id: d-001
+        scale: L0
+        phase: complete
+        product_type: software
+        project_type: solo_product
+        confidence: 0.65
+      - id: d-002
+        scale: L1
+        phase: discover
+        product_type: software
+        project_type: solo_product
+        confidence: 0.3
+        parent: d-001
+        theory_gates_status:
+          evidence: not-passed
+          four_risks: not-assessed
+          jtbd: not-assessed
+          cynefin: not-assessed
+          bias: not-assessed
+          bvssh: not-assessed
+          corrections: not-assessed
+
+planted_failures: []
+
+journey:
+  - skill: wardley-map
+  - skill: jtbd-map
+  - skill: team-shape
+  - skill: diamond-assess
+
+success_criteria:
+  - wardley_map_populated: true
+  - jtbd_mapped: true
+  - team_shape_populated: true
+  - canvas_populated: [landscape.yml, team-shape.yml]
+  - decision_log_contains: ["strategy", "wardley", "component", "team"]
+  - decision_log_honest: true
+  - hooks_no_errors: true
+
+budget:
+  max_rounds: 18
+  max_time_seconds: 2400
+  model_overrides:
+    mycelium_agent: sonnet
+    user_simulator: haiku
