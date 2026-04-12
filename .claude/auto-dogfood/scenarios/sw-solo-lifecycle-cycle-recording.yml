@@ -1,0 +1,198 @@
+name: "URL shortener — solo_product — delivery completion records cycle history"
+category: dogfood
+type: full-session
+difficulty: medium
+
+product:
+  name: "Shrink"
+  type: software
+  description: |
+    A self-hosted URL shortener with analytics. Simple API, click tracking,
+    custom slugs. Built in Go. Just completed the core delivery — custom
+    slugs with click-through rate tracking.
+  pitch: |
+    I just finished building the custom slugs feature for Shrink, my
+    self-hosted URL shortener. The delivery diamond is done — tests pass,
+    DORA looks good. I want to run a retrospective and close it out properly.
+
+persona:
+  name: "Dev"
+  role: "Backend developer, 5 years Go experience"
+  style: "Concise, values process when it earns its keep, wants to see the learning system work"
+  knowledge: "Strong Go, familiar with Mycelium, interested in whether the learning metabolism actually records data"
+  answers:
+    purpose: |
+      Self-hosted URL shortener for developers who don't want to depend on
+      Bitly. Privacy-first, no tracking except what you opt into.
+    users: |
+      Developers and small teams who want URL shortening without vendor
+      lock-in. Self-hosters, privacy-conscious.
+    north_star: |
+      Links shortened per week. Currently about 200 across 15 beta users.
+    landscape: |
+      Bitly (dominant, SaaS), Yourls (self-hosted PHP, aging), Kutt (modern
+      but less active). Shrink is Go-native, single binary, easier to deploy.
+    current_state: |
+      Just shipped custom slugs with click tracking. The original ICE score
+      was 210 (I:7, C:6, E:5). We estimated 5 days of effort and it took 7.
+      Feasibility risk was rated medium due to the analytics pipeline — turned
+      out to be accurate, the pipeline was the hardest part.
+    retrospective_data: |
+      What went well: Go's stdlib made the HTTP routing trivial. The bounded
+      context kept analytics separate from shortening. Tests caught a race
+      condition in the click counter early.
+      What didn't go well: underestimated the analytics pipeline complexity
+      by 2 days. Should have spiked it first.
+      What to change: always spike the highest-feasibility-risk component
+      before estimating effort.
+
+project_type: solo_product
+dogfood: true
+
+initial_state:
+  canvas/purpose.yml: |
+    purpose:
+      problem_statement: "Developers need self-hosted URL shortening without vendor lock-in"
+      target_users: "Developers and small teams, privacy-conscious self-hosters"
+      evidence_type: interview
+      confidence: 0.7
+  canvas/opportunities.yml: |
+    schema_version: 1
+    desired_outcome:
+      description: "Users shorten 500+ links per week"
+      metric: "Links shortened per week"
+      north_star_input_ref: "weekly-links"
+    opportunities:
+      - id: opp-030
+        description: "Users want custom branded slugs with click-through analytics"
+        evidence:
+          - source: "Beta user feedback (8 of 15 requested this)"
+            type: behavioral_data
+            captured_at: "2026-02-15"
+          - source: "Competitor analysis: Bitly charges $29/mo for custom slugs"
+            type: competitive
+            captured_at: "2026-02-20"
+        confidence: 0.7
+        solutions:
+          - id: opp-030-sol-A
+            description: "Custom slugs with click-through rate tracking dashboard"
+            four_risks:
+              value: {level: low, evidence: "8/15 beta users requested, Bitly charges premium for this"}
+              usability: {level: low, evidence: "API follows existing patterns, dashboard is read-only"}
+              feasibility: {level: medium, evidence: "Analytics pipeline needs async processing for click events"}
+              viability: {level: low, evidence: "No additional infra cost, uses existing database"}
+            ice_score: {i: 7, c: 6, e: 5, total: 210}
+            assumptions:
+              - id: a1
+                description: "Users will set up custom slugs (not just use auto-generated)"
+                importance: medium
+                evidence: medium
+                tested: true
+                result: "8/15 beta users set custom slugs within first week"
+  canvas/gist.yml: |
+    gist:
+      goal: "Make Shrink the best self-hosted URL shortener"
+      ideas:
+        - id: I-030
+          name: "Custom slugs with analytics"
+          source_leaf_id: opp-030-sol-A
+          ice_score: {impact: 7, confidence: 6, ease: 5}
+          status: delivered
+  canvas/services.yml: |
+    services:
+      - id: svc-shortener
+        name: "URL Shortening Service"
+        gist_id: I-030
+        bounded_context: "shortening"
+      - id: svc-analytics
+        name: "Click Analytics Service"
+        gist_id: I-030
+        bounded_context: "analytics"
+    principles: []
+  canvas/dora-metrics.yml: |
+    schema_version: 1
+    metrics:
+      deployment_frequency: "on-demand (3 deploys this week)"
+      lead_time: "2 days"
+      change_failure_rate: "0%"
+      mttr: "n/a (no failures)"
+  canvas/cycle-history.yml: |
+    schema_version: 1
+    cycles: []
+    calibration_summary:
+      total_cycles: 0
+  canvas/thresholds.yml: |
+    schema_version: 1
+    thresholds:
+      ice_advance:
+        default: 100
+        calibrated: null
+        based_on_n: 0
+        minimum_n: 10
+    last_calibrated: null
+  diamonds/active.yml: |
+    active_diamonds:
+      - id: d-sh-001
+        scale: L0
+        phase: complete
+        product_type: software
+        project_type: solo_product
+        confidence: 0.7
+      - id: d-sh-004
+        scale: L4
+        phase: deliver
+        product_type: software
+        project_type: solo_product
+        confidence: 0.8
+        parent: d-sh-003
+        theory_gates_status:
+          evidence: pass
+          delivery_metrics: pass
+          security: pass
+          corrections: pass
+  harness/decision-log.md: |
+    # Decision Log
+  memory/corrections.md: |
+    # Corrections
+    No corrections logged yet.
+  memory/patterns.md: |
+    # Patterns
+    No patterns logged yet.
+
+planted_failures: []
+
+journey:
+  - skill: retrospective
+  - skill: diamond-progress
+  - skill: diamond-assess
+
+success_criteria:
+  # Retrospective captures learnings
+  - canvas_populated: [memory/corrections.md]
+
+  # CRITICAL: cycle-history.yml gets a record
+  - canvas_evidence_type:
+      file: cycle-history.yml
+      has_cycle_entry: true
+
+  # Cycle record has predicted vs actual
+  - decision_log_contains: ["cycle", "predicted", "actual"]
+
+  # Effort delta noted (predicted 5 days, actual 7 days)
+  - decision_log_contains: ["effort", "underestimate"]
+
+  # Diamond progresses to complete
+  - diamond_created: {scale: L4, phase: complete}
+
+  # Decision logged
+  - decision_log_honest: true
+
+  # Hook correctness
+  - hooks_no_errors: true
+
+budget:
+  max_rounds: 12
+  max_time_seconds: 1500
+  model_overrides:
+    mycelium_agent: sonnet
+    user_simulator: haiku

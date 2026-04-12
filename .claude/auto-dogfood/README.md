@@ -45,6 +45,9 @@ See `schema.md` for the full YAML format. Each scenario defines:
 | `sw-web-team-skip-discovery` | software | Skip discovery | Multi-layered skip resistance |
 | `ai-agent-solo-confidence-inflate` | ai_tool | Confidence inflation | Sympathetic NPC detection |
 | `course-solo-value-risk` | content_course | Value risk | Content-type gate routing |
+| `sw-solo-evidence-decay` | software | Evidence decay | Stale evidence blocks progression |
+| `sw-solo-perspective-conflict` | software | Perspective conflict | Trio resolution framework |
+| `sw-solo-lifecycle-cycle-recording` | software | — (happy path) | Cycle-history recording at delivery |
 
 ## Adding Scenarios
 

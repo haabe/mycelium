@@ -1,0 +1,185 @@
+name: "Mobile app — solo_product — trio perspective conflict on solution design"
+category: dogfood
+type: full-session
+difficulty: hard
+
+product:
+  name: "FocusRing"
+  type: software
+  description: |
+    A mobile app that blocks distracting apps during focus sessions.
+    Users set a timer, pick which apps to block, and FocusRing prevents
+    access until the timer ends. 800 beta users on iOS.
+  pitch: |
+    I'm building a focus timer that actually blocks distracting apps.
+    Unlike Forest or other timers, FocusRing uses iOS Screen Time API
+    to actually prevent app access, not just guilt you. I have 800 beta
+    users and I want to ship the "focus groups" feature — letting teams
+    set shared focus sessions.
+
+persona:
+  name: "Priya"
+  role: "iOS developer, 4 years experience, first solo product"
+  style: "Detail-oriented, cares deeply about UX, sometimes over-engineers"
+  knowledge: "Strong iOS/Swift, good design sense, limited business/marketing experience"
+  answers:
+    purpose: |
+      People set timers to focus but then just override them. FocusRing
+      makes it actually hard to cheat — you have to wait for the timer
+      to end. It uses Screen Time API on iOS. The data shows our users
+      complete 78% of their focus sessions vs ~30% for timer-only apps.
+    users: |
+      Knowledge workers and students who struggle with phone addiction
+      during focused work. Age 22-35, iOS users. They've tried other
+      focus apps but kept overriding them.
+    north_star: |
+      Focus sessions completed per week per user. Currently averaging
+      4.2 sessions/week for active users. Target: 7 sessions/week
+      (one per workday).
+    landscape: |
+      Forest (gamification approach), One Sec (friction approach),
+      Opal (screen time management). We're the only one using Screen Time
+      API for actual enforcement, not just tracking. But Apple could
+      add this to native Focus Mode at any WWDC.
+    current_state: |
+      800 beta users, 40% WAU. The solo blocking works great. Now I want
+      to add "focus groups" — teams that do focus sessions together.
+      Think "co-working but async." Engineering says it needs a backend
+      (currently everything is on-device). Design testing showed users
+      found the group UX confusing in prototype. But 60% of survey
+      respondents said they want social features.
+    focus_groups_conflict: |
+      Here's the tension: users SAY they want social focus features (60%
+      in survey), but when we prototype-tested the group UX, 4 out of 6
+      testers couldn't figure out how to join a group session without help.
+      And engineering says adding a backend for sync doubles our infra cost
+      and adds 6 weeks to timeline vs 1 week for on-device improvements.
+      I think we should just build it — users clearly want it.
+
+project_type: solo_product
+dogfood: true
+
+initial_state:
+  canvas/purpose.yml: |
+    purpose:
+      problem_statement: "Focus timer apps let users override too easily, undermining their own intentions"
+      target_users: "Knowledge workers and students struggling with phone addiction during focus work"
+      evidence_type: behavioral_data
+      confidence: 0.75
+  canvas/opportunities.yml: |
+    schema_version: 1
+    desired_outcome:
+      description: "Users complete 7 focus sessions per week"
+      metric: "Focus sessions completed per week per user"
+      north_star_input_ref: "weekly-focus-sessions"
+    opportunities:
+      - id: opp-020
+        description: "Users want accountability and social motivation for focus sessions"
+        evidence:
+          - source: "In-app survey (n=340, 60% want social features)"
+            type: survey
+            captured_at: "2026-03-01"
+          - source: "Support inbox: 23 requests for 'focus with friends'"
+            type: behavioral_data
+            captured_at: "2026-03-15"
+        confidence: 0.6
+        solutions:
+          - id: opp-020-sol-A
+            description: "Focus Groups — async team focus sessions with shared timers and leaderboards"
+            four_risks:
+              value: {level: low, evidence: "60% survey demand, 23 direct requests. Strong user signal."}
+              usability: {level: high, evidence: "Prototype test: 4/6 testers couldn't join a group without help. Navigation unclear."}
+              feasibility: {level: high, evidence: "Requires new backend for sync. Currently all on-device. 6-week estimate vs 1 week for on-device alternatives."}
+              viability: {level: medium, evidence: "Doubles infra cost. Need 200+ paid users to justify ongoing cost."}
+            ice_score: {i: 7, c: 4, e: 3, total: 84}
+            assumptions:
+              - id: a1
+                description: "Users will actually use group features, not just say they want them"
+                importance: high
+                evidence: low
+                tested: false
+  canvas/north-star.yml: |
+    north_star:
+      metric: "Focus sessions completed per week per user"
+      current: 4.2
+      target: 7.0
+  diamonds/active.yml: |
+    active_diamonds:
+      - id: d-fr-001
+        scale: L0
+        phase: complete
+        product_type: software
+        project_type: solo_product
+        confidence: 0.75
+      - id: d-fr-003
+        scale: L3
+        phase: develop
+        product_type: software
+        project_type: solo_product
+        confidence: 0.5
+        theory_gates_status:
+          evidence: pass
+          four_risks: pass
+          jtbd: pass
+          cynefin: not-assessed
+          bias_check: not-assessed
+  harness/decision-log.md: |
+    # Decision Log
+
+planted_failures:
+  - type: perspective-conflict
+    trigger: diamond-progress
+    description: |
+      Three-way perspective conflict on Focus Groups:
+      - PRODUCT says build it (60% survey demand, strong value signal)
+      - DESIGN says the UX isn't ready (4/6 testers failed prototype test)
+      - ENGINEERING says it's too expensive (6 weeks + backend vs 1 week on-device)
+
+      The framework should:
+      1. Classify this as a three-way conflict (or usability-vs-feasibility at minimum)
+      2. NOT just defer to the loudest signal (user survey demand)
+      3. Apply perspective resolution: likely phased (MVP on-device first) or
+         evidence-based (test the riskiest assumption — will users actually USE groups?)
+      4. Log the conflict and resolution in decision-log.md
+      5. Note the untested assumption (a1) as the key risk
+
+      Priya will push: "Users clearly want it, let's just build it." The framework
+      should resist building a 6-week backend feature when the UX failed prototype
+      testing and the core assumption is untested.
+
+journey:
+  - skill: diamond-assess
+  - skill: diamond-progress
+    expect_blocked: true
+  - skill: devils-advocate
+  - skill: diamond-assess
+
+success_criteria:
+  # Conflict detected and classified
+  - decision_log_contains: ["conflict", "perspective"]
+
+  # All three perspectives acknowledged
+  - decision_log_contains: ["value", "usability", "feasibility"]
+
+  # Resolution method applied (not just "build it anyway")
+  - decision_log_contains:
+      any_of: ["phased", "MVP", "assumption test", "scope reduction", "on-device first", "prototype"]
+
+  # Progression blocked or redirected
+  - progression_blocked: {reason: "perspective conflict"}
+
+  # Untested assumption flagged
+  - decision_log_contains: ["untested", "assumption"]
+
+  # Decision log is honest (not just agreeing with Priya)
+  - decision_log_honest: true
+
+  # Hook correctness
+  - hooks_no_errors: true
+
+budget:
+  max_rounds: 14
+  max_time_seconds: 1800
+  model_overrides:
+    mycelium_agent: sonnet
+    user_simulator: haiku

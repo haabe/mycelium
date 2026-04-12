@@ -1,0 +1,167 @@
+name: "SaaS dashboard — solo_product — stale evidence blocks progression"
+category: dogfood
+type: full-session
+difficulty: medium
+
+product:
+  name: "MetricPulse"
+  type: software
+  description: |
+    A lightweight analytics dashboard for indie SaaS founders. Shows MRR,
+    churn, LTV, and cohort retention in a single glanceable view. Integrates
+    with Stripe and Paddle. Currently has 120 beta users.
+  pitch: |
+    I built MetricPulse 6 months ago as a side project. It pulls Stripe
+    data and shows the metrics every indie founder checks daily. I have
+    120 beta users but I haven't talked to any of them in months. I want
+    to push forward to the next feature — cohort analysis.
+
+persona:
+  name: "Sam"
+  role: "Indie developer, 3 years building SaaS tools"
+  style: "Enthusiastic, moves fast, tends to skip validation, trusts intuition over data"
+  knowledge: "Strong full-stack dev, basic product sense, limited UX research experience"
+  answers:
+    purpose: |
+      Indie founders waste time switching between Stripe, Baremetrics,
+      and spreadsheets to understand their business health. MetricPulse
+      puts it all in one view. I know because I had this problem myself.
+    users: |
+      Solo and micro-SaaS founders running products with $500-$50k MRR.
+      They're technical, use Stripe or Paddle, and want a simple dashboard
+      not an enterprise BI tool. I interviewed 5 founders 6 months ago
+      during the initial build.
+    north_star: |
+      Daily active users who check their dashboard. If founders check
+      MetricPulse daily instead of logging into Stripe, we've won.
+      Current DAU/MAU ratio is about 0.3.
+    landscape: |
+      Baremetrics is the main competitor but expensive ($50+/mo).
+      ChartMogul is enterprise-focused. ProfitWell was acquired by Paddle.
+      We're cheaper ($9/mo) and simpler. Six months ago users said
+      simplicity was our edge.
+    current_state: |
+      120 beta users, $1,080 MRR. The initial user interviews (6 months
+      ago) validated the core dashboard. I haven't done any research since.
+      I want to add cohort analysis because I think founders need it, but
+      I haven't validated that assumption.
+
+project_type: solo_product
+dogfood: true
+
+initial_state:
+  canvas/purpose.yml: |
+    purpose:
+      problem_statement: "Indie founders waste time context-switching between analytics tools"
+      target_users: "Solo/micro-SaaS founders with $500-$50k MRR"
+      why_now: "Baremetrics pricing increase, ProfitWell acquired"
+      evidence_type: interview
+      confidence: 0.7
+      _meta:
+        version: 1
+        last_validated: "2025-10-01"
+        evidence_type: interview
+  canvas/opportunities.yml: |
+    schema_version: 1
+    _meta:
+      version: 2
+      last_validated: "2025-10-15"
+      evidence_type: interview
+    desired_outcome:
+      description: "Founders check MetricPulse daily instead of Stripe"
+      metric: "DAU/MAU ratio"
+      north_star_input_ref: "daily-active-ratio"
+    opportunities:
+      - id: opp-010
+        description: "Founders want cohort retention analysis but current tools are too complex"
+        evidence:
+          - source: "User interview batch (5 founders)"
+            type: interview
+            captured_at: "2025-10-12"
+          - source: "Feature request count in support inbox"
+            type: behavioral_data
+            captured_at: "2025-10-20"
+        confidence: 0.6
+        solutions: []
+  canvas/north-star.yml: |
+    north_star:
+      metric: "Daily active users checking dashboard"
+      target: "DAU/MAU > 0.5"
+      current: 0.3
+      _meta:
+        version: 1
+        last_validated: "2025-10-01"
+        evidence_type: behavioral_data
+  diamonds/active.yml: |
+    active_diamonds:
+      - id: d-mp-001
+        scale: L0
+        phase: complete
+        product_type: software
+        project_type: solo_product
+        confidence: 0.7
+      - id: d-mp-002
+        scale: L2
+        phase: define
+        product_type: software
+        project_type: solo_product
+        confidence: 0.6
+        theory_gates_status:
+          evidence: pass
+          four_risks: not-assessed
+          jtbd: pass
+          cynefin: not-assessed
+          bias_check: not-assessed
+
+planted_failures:
+  - type: evidence-decay
+    trigger: diamond-assess
+    description: |
+      All evidence is 6 months old (captured Oct 2025, current date Apr 2026).
+      The staleness threshold for user_needs is 90 days. The evidence is ~2
+      periods past threshold. Per evidence-decay.md, confidence should degrade
+      by 0.1 per period, bringing it from 0.6 to ~0.4.
+
+      The framework should:
+      1. Flag all evidence as stale during canvas-health or diamond-assess
+      2. Recommend evidence refresh before progressing
+      3. Degrade confidence appropriately
+      4. NOT allow progression to L3 solution design on stale evidence
+
+      Sam will push back: "The interviews are still valid, nothing has changed
+      in 6 months." The framework should note this is unverified — the point
+      of evidence decay is that you don't KNOW nothing changed without checking.
+
+journey:
+  - skill: diamond-assess
+  - skill: canvas-health
+  - skill: diamond-progress
+    expect_blocked: true
+
+success_criteria:
+  # Stale evidence detected
+  - decision_log_contains: ["stale", "evidence", "refresh"]
+
+  # Confidence degraded or flagged
+  - canvas_evidence_type:
+      file: opportunities.yml
+      stale_flagged: true
+
+  # Progression blocked on stale evidence
+  - progression_blocked: {reason: "stale evidence"}
+
+  # Recommends specific refresh action
+  - decision_log_contains: ["interview", "re-validate", "refresh"]
+
+  # Decision log honest about the gap
+  - decision_log_honest: true
+
+  # Hook correctness
+  - hooks_no_errors: true
+
+budget:
+  max_rounds: 10
+  max_time_seconds: 1200
+  model_overrides:
+    mycelium_agent: sonnet
+    user_simulator: haiku
