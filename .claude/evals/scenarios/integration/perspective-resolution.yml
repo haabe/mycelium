@@ -1,0 +1,108 @@
+name: "Trio conflict resolved through framework, not suppressed"
+category: integration
+difficulty: hard
+description: |
+  Tests that when product, design, and engineering perspectives conflict,
+  the agent uses the perspective resolution framework (classify conflict,
+  apply resolution methods) rather than silently suppressing a perspective.
+
+  Source: engine/perspective-resolution.md, harness/anti-patterns.md
+  §Perspective Suppression
+
+setup:
+  files:
+    - path: ".claude/diamonds/active.yml"
+      content: |
+        active_diamonds:
+          - id: l3-notifications
+            scale: L3
+            phase: develop
+            confidence: 0.6
+            evidence_type: interview
+            dogfood: false
+            product_type: software
+            project_type: solo_product
+    - path: ".claude/canvas/opportunities.yml"
+      content: |
+        schema_version: 1
+        opportunities:
+          - id: opp-005
+            description: "Users miss important updates because they don't check the app daily"
+            solutions:
+              - id: opp-005-sol-A
+                description: "Real-time push notifications for critical updates"
+                four_risks:
+                  value: {level: low, evidence: "7/10 interview participants said they want notifications"}
+                  usability: {level: high, evidence: "Design review: notification fatigue is a major risk. Users in testing disabled notifications within 2 days. Design recommends digest-based approach instead."}
+                  feasibility: {level: high, evidence: "Engineering: real-time push requires new infrastructure (WebSocket server, push notification service). Estimated 3 weeks. Digest approach is 3 days with existing email pipeline."}
+                  viability: {level: low, evidence: "Aligns with retention north star"}
+                ice_score: {i: 7, c: 5, e: 3, total: 105}
+                assumptions:
+                  - id: a1
+                    description: "Users will keep notifications enabled"
+                    importance: high
+                    evidence: low
+                    tested: false
+    - path: ".claude/harness/decision-log.md"
+      content: |
+        # Decision Log
+
+task_prompt: |
+  Let's move forward with the push notifications solution (opp-005-sol-A).
+  Design says users will get notification fatigue and recommends a digest
+  approach instead. Engineering says real-time push is 3 weeks vs 3 days
+  for digest. But users clearly want real-time — 7 out of 10 said so.
+  What should we do?
+
+success_criteria:
+  # Agent classifies the conflict type
+  - conflict_classified:
+      mentions_any: ["value vs feasibility", "usability vs feasibility", "conflict", "perspectives disagree", "trio"]
+
+  # Agent applies resolution method (not just picks a side)
+  - resolution_method_applied:
+      mentions_any_of:
+        - ["constraint-based", "phased", "evidence-based", "scope reduction"]
+        - ["phase 1", "MVP", "digest first", "start with", "then iterate"]
+        - ["test the assumption", "validate", "cheapest test"]
+
+  # All three perspectives acknowledged (not suppressed)
+  - all_perspectives_present:
+      mentions_product: true   # user value / demand
+      mentions_design: true    # notification fatigue / usability
+      mentions_engineering: true  # effort / infrastructure cost
+
+  # Decision logged
+  - decision_logged:
+      file: .claude/harness/decision-log.md
+      has_new_entry: true
+      entry_mentions_perspectives: true
+
+fail_criteria:
+  - perspective_suppressed:
+      one_perspective_ignored: true
+      no_mention_of_conflict_resolution: true
+  - just_picked_a_side:
+      recommends_one_option_without_framework: true
+      no_resolution_method_cited: true
+
+budget:
+  max_iterations: 1
+  max_time_seconds: 150
+
+notes: |
+  This scenario is designed with a realistic three-way tension:
+  - Product: users want real-time (value evidence is strong)
+  - Design: real-time causes fatigue (usability risk is high)
+  - Engineering: real-time is expensive (feasibility risk is high)
+
+  The correct resolution likely involves phased delivery: start with
+  digest (low feasibility risk, addresses usability concern), then
+  test whether users actually need real-time. This tests that the
+  agent doesn't just defer to the loudest signal (user demand) but
+  applies the structured resolution framework.
+
+  The untested assumption (a1: "users will keep notifications enabled")
+  is the key — if they won't, the entire value proposition collapses.
+
+tags: [integration, trio, perspective-resolution, conflict, decision-log, v0.12]

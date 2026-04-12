@@ -1,0 +1,101 @@
+name: "Leaf lifecycle pipeline produces correct artifacts at each phase"
+category: lifecycle
+difficulty: hard
+description: |
+  Tests that an OST solution leaf flows through the 10-phase pipeline
+  with correct artifacts and gates at each transition. The agent should
+  produce Four Risks, ICE score, assumption identification, GIST entry,
+  and cross-references — in order, with no skipped phases.
+
+  Source: engine/leaf-lifecycle.md
+
+setup:
+  files:
+    - path: ".claude/diamonds/active.yml"
+      content: |
+        active_diamonds:
+          - id: l2-onboarding
+            scale: L2
+            phase: define
+            confidence: 0.6
+            evidence_type: interview
+            dogfood: false
+            product_type: software
+            project_type: solo_product
+    - path: ".claude/canvas/opportunities.yml"
+      content: |
+        schema_version: 1
+        desired_outcome:
+          description: "Reduce time-to-first-value for new users"
+          metric: "Time from signup to first completed task"
+          north_star_input_ref: "activation-rate"
+        opportunities:
+          - id: opp-001
+            description: "New users struggle to understand what the product does in the first 60 seconds"
+            evidence:
+              - source: "User interview #1 (2026-03-15)"
+                type: interview
+              - source: "Analytics: 68% bounce rate on landing page"
+                type: analytics
+            solutions: []
+
+task_prompt: |
+  We've identified opportunity opp-001 about new user onboarding confusion.
+  I'd like to explore a solution: "Interactive walkthrough that guides users
+  through their first task." Create this as an OST solution leaf and take it
+  through the leaf lifecycle as far as we can — Four Risks, ICE scoring,
+  and assumption identification.
+
+success_criteria:
+  # Phase 1: Leaf created with evidence
+  - solution_leaf_created:
+      file: .claude/canvas/opportunities.yml
+      has_field: solutions
+      solution_has: [description]
+
+  # Phase 2: Four Risks assessed from trio perspectives
+  - four_risks_complete:
+      file: .claude/canvas/opportunities.yml
+      solution_has_four_risks:
+        - value
+        - usability
+        - feasibility
+        - viability
+
+  # Phase 3: ICE score derived from Four Risks
+  - ice_score_present:
+      file: .claude/canvas/opportunities.yml
+      solution_has_ice:
+        fields: [i, c, e, total]
+        total_is_product: true  # total = i * c * e
+
+  # Phase 4: Riskiest assumptions identified
+  - assumptions_identified:
+      file: .claude/canvas/opportunities.yml
+      solution_has: assumptions
+      min_count: 1
+
+  # Cross-reference: leaf lifecycle order maintained
+  - lifecycle_order_maintained:
+      four_risks_before_ice: true
+      ice_before_assumptions: true
+
+fail_criteria:
+  - ice_without_risks:
+      ice_score_present: true
+      four_risks_missing: true
+  - risks_missing_perspective:
+      any_risk_has_no_evidence: true
+
+budget:
+  max_iterations: 2
+  max_time_seconds: 180
+
+notes: |
+  This eval tests Phases 1-4 of the leaf lifecycle. Phases 5-10 require
+  additional setup (GIST, services, threat model) and are covered by
+  separate integration scenarios. The key structural check is that the
+  agent does NOT score ICE without first assessing Four Risks — that's
+  the Orphaned Leaf anti-pattern.
+
+tags: [lifecycle, leaf, four-risks, ice, pipeline, v0.12]

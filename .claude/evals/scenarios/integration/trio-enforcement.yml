@@ -1,0 +1,91 @@
+name: "Diamond progression blocks when trio perspective is missing"
+category: integration
+difficulty: medium
+description: |
+  Tests that /diamond-progress enforces the Torres Product Trio requirement:
+  all three perspectives (product/design/engineering) must be documented at
+  each gate check. When a perspective is missing without N/A justification,
+  progression should be blocked.
+
+  Source: engine/theory-gates.md §Trio Perspective Requirement,
+  skills/diamond-progress/SKILL.md step 6b
+
+setup:
+  files:
+    - path: ".claude/diamonds/active.yml"
+      content: |
+        active_diamonds:
+          - id: l3-search
+            scale: L3
+            phase: define
+            confidence: 0.65
+            evidence_type: interview
+            dogfood: false
+            product_type: software
+            project_type: solo_product
+            theory_gates:
+              evidence: pass
+              four_risks: pass
+              jtbd: pass
+              cynefin: pass
+              bias_check: pass
+    - path: ".claude/canvas/opportunities.yml"
+      content: |
+        schema_version: 1
+        opportunities:
+          - id: opp-002
+            description: "Users can't find relevant content quickly"
+            solutions:
+              - id: opp-002-sol-A
+                description: "Full-text search with fuzzy matching"
+                four_risks:
+                  value: {level: low, evidence: "3 interviews confirmed search is #1 pain point"}
+                  usability: {level: medium, evidence: "No usability testing yet — design perspective missing"}
+                  feasibility: {level: low, evidence: "Existing library supports fuzzy search"}
+                  viability: {level: low, evidence: "Aligns with north star activation metric"}
+                ice_score: {i: 8, c: 5, e: 7, total: 280}
+    - path: ".claude/harness/decision-log.md"
+      content: |
+        # Decision Log
+
+task_prompt: |
+  Progress the L3 search diamond from Define to Develop. The solution
+  looks solid — all theory gates passed in the last assessment.
+
+success_criteria:
+  # Agent should flag the missing design perspective
+  - either_of:
+      # Path A: Block progression citing missing design perspective
+      - mentions_missing_perspective:
+          mentions_any: ["design perspective", "usability", "trio", "perspective skip", "no usability testing"]
+          blocks_progression: true
+
+      # Path B: Explicitly document N/A justification for design
+      - na_justification_logged:
+          file: .claude/harness/decision-log.md
+          mentions: ["design", "N/A", "justification"]
+
+  # Must NOT silently progress
+  - diamond_not_advanced_silently:
+      phase_unchanged_or_decision_logged: true
+
+fail_criteria:
+  - silent_progression:
+      diamond_advanced_to_develop: true
+      no_mention_of_missing_perspective: true
+  - perspective_skip_undetected:
+      usability_has_no_test_evidence: true
+      no_flag_raised: true
+
+budget:
+  max_iterations: 1
+  max_time_seconds: 120
+
+notes: |
+  The setup intentionally includes a usability risk assessment that says
+  "No usability testing yet — design perspective missing." A good agent
+  should catch this as an incomplete trio check and either block or
+  require justification. This tests both the trio enforcement step (6b)
+  and the Perspective Skip anti-pattern detection.
+
+tags: [trio, perspectives, gates, enforcement, anti-pattern, v0.12]

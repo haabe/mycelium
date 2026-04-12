@@ -1,0 +1,116 @@
+name: "Terminal states create cycle-history records"
+category: lifecycle
+difficulty: medium
+description: |
+  Tests that when a leaf reaches a terminal state (delivery complete),
+  the agent records a cycle in canvas/cycle-history.yml with predicted
+  vs actual data. This is the data entry point for the entire learning
+  metabolism — without it, adaptive thresholds, pattern detection, and
+  framework reflexion have no input.
+
+  Source: engine/leaf-lifecycle.md §Cycle Recording at Terminal States,
+  engine/cycle-learning.md, skills/retrospective/SKILL.md
+
+setup:
+  files:
+    - path: ".claude/diamonds/active.yml"
+      content: |
+        active_diamonds:
+          - id: l4-auth
+            scale: L4
+            phase: deliver
+            confidence: 0.8
+            evidence_type: test-validated
+            dogfood: false
+            product_type: software
+            project_type: solo_product
+    - path: ".claude/canvas/opportunities.yml"
+      content: |
+        schema_version: 1
+        opportunities:
+          - id: opp-003
+            description: "Users need secure authentication"
+            solutions:
+              - id: opp-003-sol-A
+                description: "OAuth2 with PKCE flow"
+                four_risks:
+                  value: {level: low, evidence: "Users requested SSO in 4 interviews"}
+                  usability: {level: low, evidence: "Prototype tested with 3 users"}
+                  feasibility: {level: medium, evidence: "Spike completed, 3-day estimate"}
+                  viability: {level: low, evidence: "Aligns with security requirements"}
+                ice_score: {i: 8, c: 7, e: 6, total: 336}
+    - path: ".claude/canvas/cycle-history.yml"
+      content: |
+        schema_version: 1
+        cycles: []
+        calibration_summary:
+          total_cycles: 0
+    - path: ".claude/canvas/dora-metrics.yml"
+      content: |
+        schema_version: 1
+        metrics:
+          deployment_frequency: "on-demand"
+          lead_time: "2 days"
+          change_failure_rate: "5%"
+          mttr: "30 minutes"
+    - path: ".claude/harness/decision-log.md"
+      content: |
+        # Decision Log
+    - path: ".claude/memory/corrections.md"
+      content: |
+        # Corrections
+        No corrections logged yet.
+
+task_prompt: |
+  The L4 auth delivery diamond is complete — OAuth2 with PKCE is
+  implemented and tested. Run a retrospective on this delivery.
+  The actual effort was 4 days (vs 3-day estimate). All tests pass.
+  DORA metrics look healthy.
+
+success_criteria:
+  # Cycle record created
+  - cycle_record_exists:
+      file: .claude/canvas/cycle-history.yml
+      has_entry_with:
+        leaf_id: "opp-003-sol-A"
+
+  # Predicted values recorded
+  - predicted_recorded:
+      file: .claude/canvas/cycle-history.yml
+      entry_has_predicted:
+        ice_score: true
+        feasibility_risk: true
+        effort: true
+
+  # Actual values recorded
+  - actual_recorded:
+      file: .claude/canvas/cycle-history.yml
+      entry_has_actual:
+        outcome: true
+        effort: true
+
+  # Calibration delta computed
+  - calibration_present:
+      file: .claude/canvas/cycle-history.yml
+      entry_has: calibration
+
+fail_criteria:
+  - no_cycle_record:
+      file: .claude/canvas/cycle-history.yml
+      cycles_empty: true
+  - retrospective_without_recording:
+      corrections_or_patterns_updated: true
+      cycle_history_empty: true
+
+budget:
+  max_iterations: 2
+  max_time_seconds: 180
+
+notes: |
+  This eval verifies the CRITICAL audit finding: that /retrospective
+  actually writes to cycle-history.yml. The learning metabolism is
+  dead without this data flow. The agent should record the predicted
+  ICE (336), predicted effort (3 days), actual effort (4 days), and
+  compute the effort accuracy delta.
+
+tags: [lifecycle, cycle-history, learning, retrospective, v0.13]

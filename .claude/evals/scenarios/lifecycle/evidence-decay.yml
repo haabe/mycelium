@@ -1,0 +1,93 @@
+name: "Stale evidence triggers confidence degradation"
+category: lifecycle
+difficulty: medium
+description: |
+  Tests that the agent detects stale evidence and degrades confidence
+  appropriately. When evidence is older than the staleness threshold
+  for its category, the agent should flag it and reduce confidence
+  rather than treating it as current.
+
+  Source: engine/evidence-decay.md, skills/canvas-health/SKILL.md step 7
+
+setup:
+  files:
+    - path: ".claude/diamonds/active.yml"
+      content: |
+        active_diamonds:
+          - id: l2-retention
+            scale: L2
+            phase: define
+            confidence: 0.7
+            evidence_type: interview
+            dogfood: false
+            product_type: software
+            project_type: solo_product
+    - path: ".claude/canvas/opportunities.yml"
+      content: |
+        schema_version: 1
+        _meta:
+          version: 3
+          last_validated: "2025-12-01"
+          evidence_type: interview
+        opportunities:
+          - id: opp-004
+            description: "Users churn after 30 days because onboarding doesn't stick"
+            evidence:
+              - source: "User interview batch (5 users)"
+                type: interview
+                captured_at: "2025-10-15"
+              - source: "Cohort analysis: 30-day retention"
+                type: analytics
+                captured_at: "2025-11-01"
+            confidence: 0.7
+            solutions: []
+    - path: ".claude/canvas/north-star.yml"
+      content: |
+        schema_version: 1
+        north_star:
+          metric: "Weekly active users completing ≥1 task"
+          _meta:
+            last_validated: "2025-09-01"
+
+task_prompt: |
+  Assess the current state of our L2 retention diamond. We want to
+  progress to solution design. Today is 2026-04-12.
+
+success_criteria:
+  # Agent flags stale evidence (interviews from Oct 2025 = 6 months old,
+  # threshold for user_needs is 90 days)
+  - either_of:
+      - stale_evidence_flagged:
+          mentions_any: ["stale", "outdated", "old evidence", "months ago", "refresh", "decay", "aged"]
+          references_threshold: true
+
+      - confidence_degraded:
+          recommends_lower_confidence: true
+          original_confidence: 0.7
+
+  # Agent should recommend evidence refresh
+  - refresh_recommended:
+      mentions_any: ["refresh", "re-interview", "new research", "update evidence", "re-validate"]
+
+fail_criteria:
+  - stale_evidence_ignored:
+      progresses_without_flagging_staleness: true
+      treats_6_month_interviews_as_current: true
+
+budget:
+  max_iterations: 1
+  max_time_seconds: 120
+
+notes: |
+  The evidence in this scenario is deliberately stale:
+  - User interviews from Oct 2025 (6 months, threshold is 90 days)
+  - Analytics from Nov 2025 (5 months, threshold is 90 days)
+  - North star last validated Sep 2025 (7 months, threshold is 180 days)
+
+  A good agent should flag ALL of these as stale and recommend
+  refreshing before progressing to L3. Per evidence-decay.md,
+  confidence should degrade by 0.1 per period past threshold.
+  The interviews are ~2 periods past (6mo / 90d = 2), so confidence
+  should drop from 0.7 to ~0.5.
+
+tags: [lifecycle, evidence-decay, staleness, confidence, canvas-health, v0.13]
