@@ -573,23 +573,17 @@ For perspective conflicts:
 Write harness/decision-log.md with your full analysis. Update diamonds/active.yml if needed.
 Do NOT simply list unassessed gates — the perspective conflict is the primary issue."""
 
-    return f"""Evaluate theory gates and attempt to progress the diamond.
+    return f"""Evaluate theory gates and attempt to progress the active diamond.
 
-Gates will fail — we're early in discovery. Write BOTH files (decision log FIRST):
+Read diamonds/active.yml to identify the current phase. Read canvas/opportunities.yml for evidence details.
+Check theory gates against the available evidence. If any gates fail, block progression.
 
-1. harness/decision-log.md — Write this COMPLETE file:
+Pay special attention to evidence staleness: check `captured_at` dates on all evidence in opportunities.yml.
+If evidence is older than 90 days (for user needs) or 180 days (for strategy), flag it as stale.
+Stale evidence should block progression — recommend re-validation (e.g., fresh interviews, updated data).
 
-# Decision Log
-
-Decisions are logged below.
-
-### Decision: Block progression — theory gates not satisfied
-
-**Context**: Attempted to advance diamond from discover phase.
-**Decision**: Blocked advancement. Insufficient evidence to pass gates.
-**Evidence**: Evidence gate not passed — need structured validation beyond initial interview.
-**Gates blocking**: Evidence gate, JTBD gate
-"""
+APPEND your decision to harness/decision-log.md (do NOT overwrite existing entries).
+Update diamonds/active.yml if the phase or confidence changes."""
 
 
 def _ost_builder_task(scenario: Scenario) -> str:
