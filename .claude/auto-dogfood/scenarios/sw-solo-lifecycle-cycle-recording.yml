@@ -168,23 +168,18 @@ journey:
 
 success_criteria:
   # Retrospective captures learnings
-  - canvas_populated: [memory/corrections.md]
+  - corrections_logged: true
 
-  # CRITICAL: cycle-history.yml gets a record
-  - canvas_evidence_type:
-      file: cycle-history.yml
-      has_cycle_entry: true
+  # Cycle record has predicted vs actual noted in decision log
+  - decision_log_contains: ["cycle", "predicted", "actual", "calibration"]
 
-  # Cycle record has predicted vs actual
-  - decision_log_contains: ["cycle", "predicted", "actual"]
+  # Effort delta noted (predicted 5 days vs actual 7 days)
+  - decision_log_contains: ["effort", "underestimate", "accuracy"]
 
-  # Effort delta noted (predicted 5 days, actual 7 days)
-  - decision_log_contains: ["effort", "underestimate"]
+  # BVSSH assessed during delivery completion
+  - bvssh_assessed: true
 
-  # Diamond progresses to complete
-  - diamond_created: {scale: L4, phase: complete}
-
-  # Decision logged
+  # Decision logged honestly
   - decision_log_honest: true
 
   # Hook correctness

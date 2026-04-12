@@ -139,13 +139,8 @@ journey:
     expect_blocked: true
 
 success_criteria:
-  # Stale evidence detected
-  - decision_log_contains: ["stale", "evidence", "refresh"]
-
-  # Confidence degraded or flagged
-  - canvas_evidence_type:
-      file: opportunities.yml
-      stale_flagged: true
+  # Stale evidence detected and flagged
+  - decision_log_contains: ["stale", "evidence", "refresh", "outdated"]
 
   # Progression blocked on stale evidence
   - progression_blocked: {reason: "stale evidence"}

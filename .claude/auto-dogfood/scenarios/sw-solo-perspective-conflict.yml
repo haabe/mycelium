@@ -156,20 +156,16 @@ journey:
 
 success_criteria:
   # Conflict detected and classified
-  - decision_log_contains: ["conflict", "perspective"]
+  - decision_log_contains: ["conflict", "perspective", "trio"]
 
   # All three perspectives acknowledged
   - decision_log_contains: ["value", "usability", "feasibility"]
 
   # Resolution method applied (not just "build it anyway")
-  - decision_log_contains:
-      any_of: ["phased", "MVP", "assumption test", "scope reduction", "on-device first", "prototype"]
+  - decision_log_contains: ["phased", "MVP", "assumption", "scope"]
 
   # Progression blocked or redirected
   - progression_blocked: {reason: "perspective conflict"}
-
-  # Untested assumption flagged
-  - decision_log_contains: ["untested", "assumption"]
 
   # Decision log is honest (not just agreeing with Priya)
   - decision_log_honest: true

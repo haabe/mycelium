@@ -7,30 +7,65 @@ description: "Structured retrospective after completing a delivery increment or 
 
 Run after every completed delivery diamond or significant milestone. Source: Forsgren (learning culture).
 
-## Format
+## Workflow
 
-### 1. What Went Well?
+Run these steps IN ORDER. Do not skip any step.
+
+### Step 1. What Went Well?
 - Which patterns from patterns.md were reused successfully?
 - What new approaches worked?
 - Where did the theory gates catch a real problem?
 
-### 2. What Didn't Go Well?
+### Step 2. What Didn't Go Well?
 - What mistakes were made? (Add to corrections.md)
 - Where did we skip a guardrail and regret it?
 - What took longer than expected and why?
 
-### 3. What Should Change?
+### Step 3. What Should Change?
 - New corrections to add
 - New patterns to capture
 - Process improvements
 - Guardrail adjustments
 
-### 4. BVSSH Dimension Check
+### Step 4. BVSSH Dimension Check
 - **Better**: Did quality improve or degrade?
 - **Value**: Did we deliver actual user value?
 - **Sooner**: Was our flow efficient?
 - **Safer**: Did we maintain security and trust?
 - **Happier**: How is team satisfaction?
+
+### Step 5. Record Cycle in `canvas/cycle-history.yml` (MANDATORY)
+
+**This step is critical.** Without it, the learning metabolism has no data.
+
+Find the leaf_id and opportunity_id for the delivered solution (from `canvas/opportunities.yml` or `canvas/gist.yml`). Then write a cycle record:
+
+```yaml
+- cycle_id: cycle-NNN
+  leaf_id: "opp-XXX-sol-X"         # From opportunities.yml
+  opportunity_id: "opp-XXX"         # Parent opportunity
+  diamond_id: "d-XXX"               # From diamonds/active.yml
+  completed_at: "YYYY-MM-DDTHH:MM:SSZ"
+  outcome: shipped | partial | failed | discarded
+  predicted:
+    ice_score: {i: X, c: X, e: X, total: XXX}  # ICE at time of scoring
+    feasibility_risk: low | medium | high        # From four_risks
+    effort_estimate: "X days/weeks"              # Original estimate
+  actual:
+    effort: "X days/weeks"                       # How long it actually took
+    dora:                                        # From /dora-check or known metrics
+      deploy_frequency: "..."
+      lead_time: "..."
+      change_failure_rate: "..."
+      mttr: "..."
+  calibration:
+    ice_accuracy: "predicted XXX vs actual [outcome description]"
+    effort_accuracy: "predicted X days vs actual X days (delta: +/-X)"
+    risk_accuracy: "feasibility was [predicted] — actual was [description]"
+  learnings: "Key learning from this cycle"
+```
+
+Update `calibration_summary.total_cycles` count. If total_cycles reaches a multiple of 5, prompt: "5 cycles since last review. Run `/framework-health` to check calibration?"
 
 ## Root Cause Analysis (when "What Didn't Go Well" surfaces a significant problem)
 
@@ -89,20 +124,6 @@ Rule: No blame. Focus on the system, not the person. *Source: Beyer et al. (SRE)
 After delivery retrospective, always ask:
 - "Are there refactoring opportunities? Duplicated logic (DRY)? Unnecessary complexity (KISS)?"
 *Source: Beck (XP), Fowler (Refactoring)*
-
-## Cycle History Recording
-
-After every completed delivery increment, record the cycle in `canvas/cycle-history.yml`:
-
-1. Create a cycle record with the leaf_id, opportunity_id, and diamond_id
-2. Record **predicted** values: ICE score at time of GIST entry, feasibility risk level, estimated effort
-3. Record **actual** values: outcome (shipped/partial/failed), actual effort, DORA metrics from `/dora-check`, user metrics post-launch
-4. Compute **calibration** deltas: ICE accuracy (predicted vs actual), effort accuracy, risk accuracy per dimension
-5. Note any learnings that should inform future scoring
-
-This data feeds the learning metabolism (see `engine/cycle-learning.md`). Without it, adaptive thresholds and pattern detection have no input data.
-
-**Trigger rule**: Every 5th cycle recorded, prompt: "5 cycles since last review. Run `/framework-health` to check calibration?"
 
 ## Output
 1. Update `.claude/memory/corrections.md` with new corrections

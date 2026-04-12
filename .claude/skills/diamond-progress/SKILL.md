@@ -37,12 +37,25 @@ Progress a diamond through phases with full theory gate validation. At delivery 
 
 6. **Run corrections check**: Review corrections.md for relevant entries.
 
-6b. **Check trio perspective coverage** (Torres Product Trio):
+6b. **Check trio perspective coverage and resolve conflicts** (Torres Product Trio):
    - For each gate evaluated in step 2, verify all three perspectives (product/design/engineering) are documented.
    - Each perspective must have evidence or an explicit "N/A: [reason]" justification.
    - Missing perspectives without justification = **GATE FAILED** (Perspective Skip anti-pattern).
    - See `engine/theory-gates.md` §Trio Perspective Requirement for per-scale guidance.
-   - If perspectives conflict, apply `engine/perspective-resolution.md` before progressing.
+
+   **Perspective conflict detection**: If TWO OR MORE risk dimensions from Four Risks are rated HIGH, or if perspectives directly contradict each other (e.g., value says "build it" but usability/feasibility say "don't"), this is a **perspective conflict**. Do NOT treat it as a simple gate failure. Instead:
+
+   1. **Name the conflict explicitly** in the decision log: "Perspective conflict: [type]" — use the vocabulary from `engine/perspective-resolution.md` (value-vs-feasibility, usability-vs-feasibility, value-vs-viability, usability-vs-viability, three-way).
+   2. **Classify the conflict type** per the resolution framework.
+   3. **Apply the resolution methods in order of preference**:
+      - Constraint-based: Can all three perspectives be satisfied within acceptable thresholds?
+      - Phased: Can we deliver in stages? (Phase 1 = MVP addressing highest risk, Phase 2 = polish)
+      - Evidence-based: Can we test the disputed dimension? (Run `/assumption-test` on the riskiest assumption)
+      - Scope reduction: Can we remove features until all perspectives align?
+   4. **Log the resolution** in decision-log.md with the conflict type, each perspective's position, the resolution method chosen, and why.
+   5. **Block progression** until the conflict is resolved through one of these methods. Report: "Progression blocked: perspective conflict ([type]). Recommended resolution: [method]."
+
+   The perspective resolution framework (`engine/perspective-resolution.md`) is the authoritative reference. The anti-pattern to avoid is Perspective Suppression — resolving a conflict by ignoring one perspective.
 
 7. **If transition is Deliver -> Complete: RUN EXECUTABLE DoD CHECKLIST** (see below)
 
