@@ -42,21 +42,39 @@ opportunities: []
 #         edge: implements
 #     # - name: ""
 #     #   description: ""
-#     #   ice_score:
-#     #     impact: 0  # 1-10
-#     #     confidence: 0  # 1-10 (mapped to Gilad's evidence levels)
-#     #     ease: 0  # 1-10
-#     #     total: 0  # (I+C+E)/3 or I*C*E depending on preference
-#     #   confidence_level: 0.1  # Gilad's meter: 0.1 speculation -> 0.9 launch-validated
-#     #   assumptions: []
+#     #   four_risks:  # Torres Product Trio — each assessed from its perspective
+#     #     value:         # Product lens: do users want/need this?
+#     #       assessment: ""
+#     #       evidence: ""
+#     #       risk_level: low|medium|high
+#     #     usability:     # Design lens: can users figure it out?
+#     #       assessment: ""
+#     #       evidence: ""
+#     #       risk_level: low|medium|high
+#     #     feasibility:   # Engineering lens: can we build it?
+#     #       assessment: ""
+#     #       evidence: ""
+#     #       risk_level: low|medium|high
+#     #     viability:     # Cross-cutting: does it align with business/legal/ethical?
+#     #       assessment: ""
+#     #       evidence: ""
+#     #       risk_level: low|medium|high
+#     #   ice_score:  # Derived FROM the four risks, not independent of them
+#     #     impact: 0  # 1-10, informed by value + usability + viability risk assessments
+#     #     confidence: 0  # 1-10, Gilad's evidence levels — how tested are the risk assessments?
+#     #     ease: 0  # 1-10, informed by feasibility risk assessment
+#     #     total: 0  # I*C*E
+#     #     rationale: ""  # How the four risks informed these scores
+#     #   assumptions: []  # Riskiest unknowns from the four risks — what to test first
 #     #     # - statement: ""
-#     #     #   type: desirability|usability|feasibility|viability|ethical
+#     #     #   risk_dimension: value|usability|feasibility|viability|ethical
 #     #     #   importance: low|medium|high
 #     #     #   evidence: low|medium|high
 #     #     #   tested: false
 #     #     #   result: ""
 #     #   experiments: []
 #     #     # - hypothesis: ""
+#     #     #   risk_dimension: value|usability|feasibility|viability  # Which risk this tests
 #     #     #   method: ""  # survey|fake-door|prototype|concierge|wizard-of-oz|a-b-test|data-mining
 #     #     #   success_criteria: ""
 #     #     #   result: ""
