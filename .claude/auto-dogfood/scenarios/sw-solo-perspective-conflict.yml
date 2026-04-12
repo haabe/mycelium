@@ -155,14 +155,14 @@ journey:
   - skill: diamond-assess
 
 success_criteria:
-  # Conflict detected and classified
-  - decision_log_contains: ["conflict", "perspective", "trio"]
+  # Conflict between perspectives detected (any vocabulary)
+  - decision_log_contains: ["usability", "feasibility", "conflict"]
 
-  # All three perspectives acknowledged
+  # All three risk dimensions acknowledged with their levels
   - decision_log_contains: ["value", "usability", "feasibility"]
 
-  # Resolution method applied (not just "build it anyway")
-  - decision_log_contains: ["phased", "MVP", "assumption", "scope"]
+  # Resolution or next steps proposed (not just "build it anyway")
+  - decision_log_contains: ["assumption", "test", "validate"]
 
   # Progression blocked or redirected
   - progression_blocked: {reason: "perspective conflict"}

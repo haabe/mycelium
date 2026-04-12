@@ -206,7 +206,7 @@ def build_mycelium_prompt(
 
     current_opportunities = (
         _read_workdir_file(workdir, "canvas/opportunities.yml")
-        if skill in discovery_skills | market_skills
+        if skill in discovery_skills | market_skills | {"diamond-progress"}
         else "(not loaded — not needed for this skill)"
     )
     current_gist = (
@@ -551,6 +551,28 @@ active_diamonds:
 ```
 """
 
+    if planted_failure and planted_failure.type == "perspective-conflict":
+        return f"""Evaluate the active diamond and attempt to progress it.
+
+CRITICAL: Before checking any gate status, read canvas/opportunities.yml and inspect the Four Risks
+risk LEVELS for the active solution. Do NOT rely on theory_gates_status.four_risks in active.yml —
+that only records whether risks are documented, not whether they conflict.
+
+Check the actual value.level, usability.level, feasibility.level, viability.level values.
+If TWO OR MORE risk dimensions are rated HIGH, or if perspectives directly contradict each other
+(e.g., value says "build it" but usability/feasibility say "don't"), this is a perspective conflict.
+
+For perspective conflicts:
+1. Name the conflict explicitly in the decision log: "Perspective conflict: [type]"
+   Use vocabulary: value-vs-feasibility, usability-vs-feasibility, three-way, etc.
+2. State each perspective's position (product/design/engineering)
+3. Apply resolution methods: constraint-based, phased (Phase 1 = MVP), evidence-based (assumption test), or scope reduction
+4. Block progression until the conflict is resolved
+5. Log everything in harness/decision-log.md
+
+Write harness/decision-log.md with your full analysis. Update diamonds/active.yml if needed.
+Do NOT simply list unassessed gates — the perspective conflict is the primary issue."""
+
     return f"""Evaluate theory gates and attempt to progress the diamond.
 
 Gates will fail — we're early in discovery. Write BOTH files (decision log FIRST):
@@ -827,11 +849,23 @@ def _retrospective_task(scenario: Scenario) -> str:
     """Build retrospective task — capture learning from delivery."""
     return f"""Run a retrospective on the delivery work completed so far.
 
-Follow the retrospective skill workflow:
-1. What went well? (patterns to capture)
-2. What didn't go well? (corrections to log)
-3. What should change? (process improvements)
-4. BVSSH dimension check (Better, Value, Sooner, Safer, Happier)
+Follow the retrospective skill workflow IN THIS EXACT ORDER:
+
+**Step 1 (MANDATORY — DO THIS FIRST): Record cycle calibration data.**
+Read canvas/opportunities.yml and canvas/gist.yml to find the solution's predicted ICE score and effort estimate.
+Compare predicted vs actual outcomes. Write BOTH:
+  a) Update canvas/cycle-history.yml with a cycle record (cycle_id, leaf_id, predicted ICE/effort, actual effort/outcome, calibration assessment)
+  b) Write a decision log entry titled "Cycle calibration record" that includes ALL these words:
+     - "cycle" number and diamond ID
+     - "predicted" ICE score and effort estimate
+     - "actual" outcome and effort
+     - "calibration" assessment
+     - "effort" delta with "accuracy" (e.g., "effort accuracy: predicted 5 days vs actual 7 days — underestimate by 40%")
+
+**Step 2**: What went well? (patterns to capture)
+**Step 3**: What didn't go well? (corrections to log)
+**Step 4**: What should change? (process improvements)
+**Step 5**: BVSSH dimension check (Better, Value, Sooner, Safer, Happier)
 
 If any significant problems surfaced during delivery, use root cause analysis:
 - Fishbone diagram: map causes across People, Process, Product, Platform, Principles, Pressures

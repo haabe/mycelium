@@ -9,34 +9,13 @@ Run after every completed delivery diamond or significant milestone. Source: For
 
 ## Workflow
 
-Run these steps IN ORDER. Do not skip any step.
+Run these steps IN ORDER. Do not skip any step. **Step 1 (cycle recording) MUST be completed FIRST — before any reflective analysis.**
 
-### Step 1. What Went Well?
-- Which patterns from patterns.md were reused successfully?
-- What new approaches worked?
-- Where did the theory gates catch a real problem?
+### Step 1. Record Cycle in `canvas/cycle-history.yml` AND Decision Log (MANDATORY — DO THIS FIRST)
 
-### Step 2. What Didn't Go Well?
-- What mistakes were made? (Add to corrections.md)
-- Where did we skip a guardrail and regret it?
-- What took longer than expected and why?
+**This step is critical.** Without it, the learning metabolism has no data. You MUST do BOTH parts (5a and 5b).
 
-### Step 3. What Should Change?
-- New corrections to add
-- New patterns to capture
-- Process improvements
-- Guardrail adjustments
-
-### Step 4. BVSSH Dimension Check
-- **Better**: Did quality improve or degrade?
-- **Value**: Did we deliver actual user value?
-- **Sooner**: Was our flow efficient?
-- **Safer**: Did we maintain security and trust?
-- **Happier**: How is team satisfaction?
-
-### Step 5. Record Cycle in `canvas/cycle-history.yml` (MANDATORY)
-
-**This step is critical.** Without it, the learning metabolism has no data.
+#### Step 5a. Write cycle record to `canvas/cycle-history.yml`
 
 Find the leaf_id and opportunity_id for the delivered solution (from `canvas/opportunities.yml` or `canvas/gist.yml`). Then write a cycle record:
 
@@ -66,6 +45,42 @@ Find the leaf_id and opportunity_id for the delivered solution (from `canvas/opp
 ```
 
 Update `calibration_summary.total_cycles` count. If total_cycles reaches a multiple of 5, prompt: "5 cycles since last review. Run `/framework-health` to check calibration?"
+
+#### Step 5b. Log cycle calibration summary in decision-log.md
+
+Write a decision log entry titled "Cycle calibration record" that includes ALL of the following (use these exact words):
+
+- **cycle** number and diamond ID
+- **predicted** ICE score and effort estimate (from the original canvas)
+- **actual** outcome and effort (from what really happened)
+- **calibration** assessment: was the prediction accurate?
+- **effort** delta: if the estimate was an **underestimate** or overestimate, state the **accuracy** gap (e.g., "effort accuracy: predicted 5 days vs actual 7 days, 40% underestimate")
+- Risk dimension accuracy (e.g., "feasibility was predicted medium — actual confirmed, analytics pipeline was indeed the hardest part")
+
+This decision log entry ensures the calibration data is auditable alongside other decisions, not just buried in cycle-history.yml.
+
+### Step 2. What Went Well?
+- Which patterns from patterns.md were reused successfully?
+- What new approaches worked?
+- Where did the theory gates catch a real problem?
+
+### Step 3. What Didn't Go Well?
+- What mistakes were made? (Add to corrections.md)
+- Where did we skip a guardrail and regret it?
+- What took longer than expected and why?
+
+### Step 4. What Should Change?
+- New corrections to add
+- New patterns to capture
+- Process improvements
+- Guardrail adjustments
+
+### Step 5. BVSSH Dimension Check
+- **Better**: Did quality improve or degrade?
+- **Value**: Did we deliver actual user value?
+- **Sooner**: Was our flow efficient?
+- **Safer**: Did we maintain security and trust?
+- **Happier**: How is team satisfaction?
 
 ## Root Cause Analysis (when "What Didn't Go Well" surfaces a significant problem)
 

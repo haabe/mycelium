@@ -1,8 +1,8 @@
 # Mycelium
 
-**Your AI agent's product thinking partner.** *v0.11.4*
+**Your AI agent's product thinking partner.** *v0.13.1*
 
-Mycelium ensures you build the right thing — not just build the thing right. It guides AI agents through structured discovery, strategy, and delivery using 42+ established product frameworks, 12 theory gates, and 41 skills. Drop it into any Claude Code project and run `/interview`.
+Mycelium ensures you build the right thing — not just build the thing right. It guides AI agents through structured discovery, strategy, and delivery using 42+ established product frameworks, 12 theory gates, and 42 skills. Drop it into any Claude Code project and run `/interview`.
 
 ```bash
 npx degit haabe/mycelium my-project && cd my-project
@@ -103,7 +103,7 @@ If ANY gate fails, the agent reports which gates failed, cites the theory, **sug
 
 ### The Canvas (Source of Truth)
 
-All product knowledge lives in `.claude/canvas/*.yml` -- 21 structured YAML files that serve as the single source of truth:
+All product knowledge lives in `.claude/canvas/*.yml` -- 24 structured YAML files that serve as the single source of truth:
 
 | Canvas File | What It Captures | Source Theory |
 |-------------|-----------------|---------------|
@@ -128,6 +128,9 @@ All product knowledge lives in `.claude/canvas/*.yml` -- 21 structured YAML file
 | `ai-tool-metrics.yml` | AI tool delivery metrics (prompts, models, agents) | v0.11.0 |
 | `service-metrics.yml` | Service delivery metrics (consulting, coaching) | v0.11.0 |
 | `human-tasks.yml` | Offline human task tracking (interviews, outreach) | v0.11.0 |
+| `archived-solutions.yml` | Discarded/killed solution leaves with evidence snapshots | v0.12.0 |
+| `cycle-history.yml` | Completed leaf lifecycle outcomes for calibration | v0.12.0 |
+| `thresholds.yml` | Adaptive thresholds calibrated from historical data | v0.12.0 |
 
 Canvas files are committed to git. They ARE your product documentation. Not all canvas files are required for every project -- the `/interview` skill classifies your project type and product type, then tells you which canvas files to focus on.
 
@@ -138,7 +141,7 @@ Canvas files are committed to git. They ARE your product documentation. Not all 
 - **REVIEW** (13): `/diamond-progress` refuses to complete delivery until satisfied. Tests, a11y, usability (Nielsen), services quality (Downe), threat modeling, input validation, BVSSH, decision logging, error states, canvas updates, AI disclosure, regulatory awareness, privacy.
 - **NUDGE** (15): Nudged by hooks, not blocking. Engineering principles (DRY, KISS, YAGNI, XP values), bias checks, data minimization, secure defaults, theory citations, devil's advocate, BVSSH dimensions, sustainable pace.
 
-**Anti-Patterns** (`.claude/harness/anti-patterns.md`) -- 34 known failure modes across discovery, confidence, security, delivery, market/GTM, strategic systems thinking, and cognitive drift:
+**Anti-Patterns** (`.claude/harness/anti-patterns.md`) -- 40 known failure modes across discovery, confidence, security, delivery, market/GTM, strategic systems thinking, cognitive drift, and leaf lifecycle:
 - "Solution-first thinking", "Confidence inflation", "Security-later", "Dark pattern marketing", "Regression avoidance", and more
 
 **Cognitive Biases** (`.claude/harness/cognitive-biases.md`) -- Per-stage bias checklist based on Shotton and Kahneman. 20+ biases mapped across L0-L5 including agent's own biases.
@@ -200,7 +203,7 @@ Mycelium communicates in human language, not framework jargon:
 - **Quarterly**: North Star review, strategic landscape refresh, eval benchmarks
 - **Escape hatch**: Documented bypass process for emergencies (production incidents, hotfixes) with mandatory payback
 
-## Skills Reference (41 skills)
+## Skills Reference (42 skills)
 
 ### Onboarding & Assessment
 | Skill | When to Use |
@@ -369,12 +372,12 @@ your-project/
   .claude/
     settings.json              # Shared hook config + permissions (committed)
     engine/                    # Diamond rules, theory gates, confidence thresholds, Cynefin routing
-    canvas/                    # 21 YAML source-of-truth files
+    canvas/                    # 24 YAML source-of-truth files
     diamonds/                  # Active diamond state tracking
     harness/                   # Guardrails, anti-patterns, biases, security, engineering principles
     memory/                    # Corrections, patterns, product journal, delivery journal
     domains/                   # Phase-specific agent behavior (discovery/delivery/quality)
-    skills/                    # 39 invocable skills
+    skills/                    # 42 invocable skills
     hooks/                     # 6-layer enforcement (gate, nudge, reflexion, stop-check, session-start, skill-gates)
     orchestration/             # Solo/team modes, agent teams, fan-out, operations, escape hatch
     jit-tooling/               # Language-agnostic delivery tooling + polyglot detection
