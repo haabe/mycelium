@@ -66,22 +66,24 @@ Evidence sources in canvas provenance objects carry an optional `source_classes`
 
 ### 2. Four Risks Gate
 
-**Source**: Cagan (Inspired, Empowered)
+**Source**: Cagan (Inspired, Empowered), Torres (Product Trio perspective requirement)
 
 **Applies to**: Define->Develop and Develop->Deliver transitions, L1-L4
 
-All four risks must be assessed:
+All four risks must be assessed, and the assessment must demonstrate that **three distinct perspectives** were applied (Torres's Product Trio). Each risk maps to a primary perspective — a single-lens assessment does not pass.
 
-| Risk | Pass Criteria | Fail Criteria |
-|------|--------------|---------------|
-| **Value** | Evidence that users want/need this (not just stakeholder opinion) | No user validation; only internal demand |
-| **Usability** | Users can figure out how to use it (tested, not assumed) | No usability testing; assumed "intuitive" |
-| **Feasibility** | Engineering confirms buildable within constraints | No technical assessment; unknown dependencies |
-| **Business Viability** | Aligns with business model, legal, ethical constraints | Conflicts with business constraints; legal risk unassessed |
+| Risk | Perspective | Pass Criteria | Fail Criteria |
+|------|------------|--------------|---------------|
+| **Value** | Product (PM) | Evidence that users want/need this (not just stakeholder opinion). Grounded in user research, JTBD, or opportunity scoring. | No user validation; only internal demand; assessed purely from technical feasibility |
+| **Usability** | Design (UX) | Users can figure out how to use it (tested, not assumed). Assessed through user flows, prototypes, or heuristic evaluation. | No usability testing; assumed "intuitive"; assessed only as "we'll make it simple" |
+| **Feasibility** | Engineering (Dev) | Engineering confirms buildable within constraints. Specific technical risks identified, dependencies mapped, spike results documented. | No technical assessment; unknown dependencies; hand-waved as "straightforward" |
+| **Business Viability** | Cross-cutting | Aligns with business model, legal, ethical constraints | Conflicts with business constraints; legal risk unassessed |
 
-**Evidence required**: User research findings, usability test results, technical spike outcomes, business model canvas or viability assessment.
+**Perspective rule**: Each of the three perspectives (product, design, engineering) must produce at least one distinct piece of evidence or assessment. A single combined statement like "this is valuable, usable, and feasible" fails — it indicates one perspective was applied and the others were assumed. For solo developers, the three perspectives must still be applied sequentially as distinct evaluation passes, not collapsed into one.
 
-**Suggested skill**: `/assumption-test` (for testing each risk dimension)
+**Evidence required**: User research findings (product lens), usability test results or heuristic evaluation (design lens), technical spike outcomes or dependency analysis (engineering lens), business model canvas or viability assessment (cross-cutting).
+
+**Suggested skill**: `/assumption-test` (for testing each risk dimension), `/usability-check` (design lens), `/devils-advocate` (challenge single-lens thinking)
 
 ### 3. JTBD Gate
 
