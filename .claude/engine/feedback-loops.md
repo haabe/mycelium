@@ -90,6 +90,21 @@ When feedback signals indicate the current direction is wrong, the system should
 | SRE error budget depleted | "Reliability budget consumed. Feature work should pause until budget recovers." | Run /dora-check SRE section, enforce error budget policy, focus on stability |
 | Same bottleneck persists after 2+ improvement attempts | "FIX THAT FAILED (Senge): The fix addressed symptoms, not root cause. The bottleneck returns." | Apply ToC Five Focusing Steps (Goldratt): Identify -> Exploit -> Subordinate -> Elevate -> Repeat. Map the value stream to find the real constraint. |
 
+## DORA → Feasibility Feedback Loop
+
+DORA metrics from completed deliveries should feed back into feasibility risk assessments for future solutions. This closes the loop between "how hard we thought it would be" and "how hard it actually was."
+
+| DORA Signal | Feedback Into | Action |
+|-------------|---------------|--------|
+| Deploy frequency dropped after shipping solution X | Feasibility risk assessment for similar solutions | Increase default feasibility risk for solutions in the same domain/pattern |
+| Lead time increased for solution type Y | ICE ease scoring | Reduce ease scores for similar solution types |
+| Change failure rate high for pattern Z | Four Risks feasibility dimension | Flag pattern Z as high feasibility risk in future assessments |
+| MTTR acceptable for solution W | Feasibility risk positive signal | Note that this solution type is operationally manageable |
+
+**Mechanism**: After each `/dora-check`, compare actual delivery metrics with the original ICE ease score and feasibility risk assessment. Log significant deviations (>2 points on ICE ease scale) in `corrections.md` as calibration data.
+
+**Skill integration**: `/dora-check` should surface this comparison. `/ice-score` should check for relevant DORA calibration data in corrections.md before scoring ease.
+
 ## The L5 -> L2 Feedback Loop
 
 When market/launch feedback reveals new user needs or invalidates assumptions:

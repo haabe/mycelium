@@ -157,6 +157,19 @@ Wardley map evolution stages roughly correlate:
 
 **Important:** This mapping is a heuristic, not a rule. A genesis-stage component might have Clear sub-problems (e.g., its deployment pipeline), and a commodity component might face Complex challenges (e.g., migrating between commodity providers).
 
+## Cynefin → Solution Approach Routing
+
+When generating solutions for OST leaves (Phase 5-6 of leaf lifecycle), the Cynefin domain of the parent opportunity determines the approach:
+
+| Domain | Solution Approach | What This Means for OST Leaves |
+|--------|------------------|-------------------------------|
+| Clear | Apply known patterns. Solution is straightforward. | ICE ease should be high. Four Risks feasibility should be low risk. Standard delivery. |
+| Complicated | Expert analysis. Multiple valid solutions. | Run technical spikes. ICE ease depends on spike results. Compare solutions via bakeoff. |
+| Complex | Probe-sense-respond. Design experiments, not full solutions. | Each solution leaf IS an experiment. Assumption testing is mandatory. Multiple small bets. Do NOT design a full solution — design a probe. |
+| Chaotic | Stabilize first. | Not appropriate for OST leaf generation. Stabilize, then reclassify to Complex/Complicated. |
+
+**Key rule**: Complex-domain opportunities MUST NOT produce fully-designed solutions. They produce probes (experiments). If `/ost-builder` detects a Complex-classified opportunity generating detailed solutions, flag it: "This opportunity is in the Complex domain. Solutions should be framed as experiments (probe-sense-respond), not detailed designs."
+
 ## Decision Flow
 
 ```

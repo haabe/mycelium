@@ -70,6 +70,18 @@ launch_plan:
   launch_day: []
   post_launch: []
 
+# Market feedback loop — connects launch outcomes back to OST opportunities.
+# See: .claude/engine/leaf-lifecycle.md Phase 10 (Launch + Market Feedback)
+# See: .claude/engine/feedback-loops.md (L5 → L2 Feedback Loop)
+feedback_loop: []
+# - source_leaf_id: ""        # Original OST leaf that was delivered
+#   launch_date: null
+#   success_criteria: ""       # Defined pre-launch
+#   outcome: confirmed|contradicted|mixed
+#   evidence: ""               # What the market data showed
+#   action_taken: ""           # iterate|regress-to-L3|spawn-L2|no-action
+#   spawned_diamond_id: ""     # If a new L2 was spawned, its ID
+
 # Behavioral science in positioning (Shotton)
 # Using biases ethically to HELP users make good decisions
 behavioral_tactics: []

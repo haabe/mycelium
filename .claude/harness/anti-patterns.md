@@ -214,6 +214,38 @@ These are systemic organizational traps from Senge's "The Fifth Discipline." The
 - **What to do instead**: Write tests first (TDD) or at minimum alongside implementation. The G-V7 guardrail requires tests to exist before delivery completion (REVIEW).
 - **Source**: Beck (XP/TDD), Forsgren (Accelerate -- test automation is a key capability), both Mycelium pilot post-mortems
 
+## Leaf Lifecycle Anti-Patterns
+
+### 1. Orphaned Leaf
+- **Description**: A solution leaf has Four Risks assessment but no ICE score (or vice versa). The pipeline was started but not completed.
+- **Detection rule**: `canvas/opportunities.yml` contains a solution with `four_risks` populated but `ice_score` empty, or `ice_score` populated but `four_risks` empty.
+- **What to do instead**: Complete the pipeline. Four Risks → ICE → assumptions. Never score without risk assessment; never assess without scoring.
+- **Source**: Torres (CDH), Gilad (Evidence Guided), Mycelium leaf lifecycle
+
+### 2. Perspective Skip
+- **Description**: A theory gate was passed without all three trio perspectives (product/design/engineering) documented. One or more perspectives were silently omitted.
+- **Detection rule**: Gate check log has fewer than 3 perspective entries. Or a perspective is missing without an explicit "N/A: [reason]" justification.
+- **What to do instead**: Every gate check must state all three perspectives. Omission requires explicit justification. See `engine/perspective-resolution.md`.
+- **Source**: Torres (Product Trio), Cagan (Empowered)
+
+### 3. Zombie Solution
+- **Description**: An archived solution is still referenced by an active GIST entry. The GIST idea points to a dead leaf.
+- **Detection rule**: `canvas/gist.yml` has an idea with `source_leaf_id` that appears in `canvas/archived-solutions.yml`.
+- **What to do instead**: When archiving a leaf, also shelve or kill the corresponding GIST idea. `/canvas-health` should flag zombie references.
+- **Source**: Mycelium leaf lifecycle
+
+### 4. Implicit Handoff
+- **Description**: Transition between leaf lifecycle phases without an explicit artifact and gate check. The leaf "jumped" from OST to delivery without the intermediate steps.
+- **Detection rule**: GIST idea has no `source_leaf_id`. Service entry has no `gist_id`. Threat model has no `solution_id`. Any missing link in the cross-reference chain.
+- **What to do instead**: Every lifecycle phase transition produces an artifact and checks a gate. See `engine/leaf-lifecycle.md` for the complete chain.
+- **Source**: Mycelium leaf lifecycle
+
+### 5. Score-Only Discard
+- **Description**: A leaf was discarded solely based on its ICE score without checking if a different user segment would benefit from it.
+- **Detection rule**: `canvas/archived-solutions.yml` entry has `segments_checked` with only one segment, and `reason` is `low-ice-score`.
+- **What to do instead**: Before discarding for low ICE, evaluate whether the solution serves a different segment where it might score higher. See `engine/leaf-lifecycle.md` Discard Decision Rules.
+- **Source**: Torres (CDH — solutions serve different user needs), Mycelium leaf lifecycle
+
 ## Cognitive & Drift Anti-Patterns
 
 These patterns emerge from the human-AI collaboration dynamic itself. They are subtle because they feel like efficiency — but they erode the quality of decisions over time.

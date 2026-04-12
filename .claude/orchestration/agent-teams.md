@@ -45,6 +45,12 @@ Lead Agent (main session)
 - ONLY the lead agent updates canvas and diamond state
 - Each worker gets clear deliverables and time bounds
 
+### Leaf Bakeoff (Structured A/B Testing)
+
+When multiple OST leaves compete for the same opportunity, use the **leaf bakeoff protocol** for structured comparison. Each worker returns a scorecard; the lead agent applies winner selection rules.
+
+See `.claude/orchestration/leaf-bakeoff.md` for: scorecard format, winner selection rules (clear winner, close race, segment split, both fail), loser archival, and anti-patterns.
+
 ## Pattern 2: Parallel Delivery (Feature Implementation)
 
 When a delivery diamond has independent work items:

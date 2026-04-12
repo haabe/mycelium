@@ -5,8 +5,8 @@ Hard constraints that override confidence scores, user requests, and agent judgm
 ## TL;DR
 
 **BLOCK** (mechanical): G-S1 (no plaintext secrets), G-P5 (read corrections.md before implementation).
-**REVIEW** (gates progression): G-D1 (no skipping discovery for complex domains), G-S2 (threat model for user data/permissions), G-S3 (privacy assessment for data collection), G-S4 (input validation), G-S7 (AI disclosure), G-V1 (validation suite), G-V2 (Downe's 15), G-V7 (tests alongside code), G-V8 (a11y), G-V9 (error states), G-V10 (usability heuristics), G-P1 (canvas updated at transitions), G-P4 (decision log).
-**NUDGE** (advised): Everything else — evidence quality, bias checks, engineering principles, BVSSH.
+**REVIEW** (gates progression): G-D1 (no skipping discovery for complex domains), G-S2 (threat model for user data/permissions), G-S3 (privacy assessment for data collection), G-S4 (input validation), G-S7 (AI disclosure), G-V1 (validation suite), G-V2 (Downe's 15), G-V7 (tests alongside code), G-V8 (a11y), G-V9 (error states), G-V10 (usability heuristics), G-L1 (leaf pipeline complete before L4), G-L2 (GIST traces to scored leaf), G-P1 (canvas updated at transitions), G-P4 (decision log).
+**NUDGE** (advised): G-L3 (segment check before archiving), everything else — evidence quality, bias checks, engineering principles, BVSSH.
 
 **Constraint types**: Each guardrail is tagged by what it protects — `safety`, `quality`, `scope`, `privacy`, `regulatory`, `ethical`. Inspired by AI Interaction Atlas's 37-constraint taxonomy.
 
@@ -133,6 +133,20 @@ Every user flow must have designed error, empty, and loading states. Error messa
 **G-V10: Always check usability heuristics for user-facing interfaces** `REVIEW` `quality`
 Before marking user-facing delivery complete, evaluate against Nielsen's 10 usability heuristics. Interface-level quality (Nielsen) complements service-level quality (Downe G-V2). Run `/usability-check`.
 *Source: Nielsen (10 Usability Heuristics, 1994)*
+
+## Leaf Lifecycle Guardrails
+
+**G-L1: Every solution leaf must have Four Risks → ICE → assumption identification before entering L4** `REVIEW` `quality`
+The leaf lifecycle pipeline must be complete before spawning a delivery diamond. A leaf without risk assessment and scoring is an unvalidated guess entering production.
+*Source: Torres (CDH), Cagan (Four Risks), Gilad (ICE), Mycelium leaf lifecycle*
+
+**G-L2: Every GIST entry must trace back to a scored OST leaf** `REVIEW` `quality`
+GIST ideas don't appear from thin air. Every idea must have a `source_leaf_id` referencing an OST leaf that has passed ICE threshold. Ideas without provenance bypass the evidence pipeline.
+*Source: Gilad (Evidence Guided), Torres (CDH), Mycelium leaf lifecycle*
+
+**G-L3: Before archiving a solution, check if it serves an unexamined segment** `NUDGE` `quality`
+A solution that scores poorly for one segment might score well for another. Before discarding, evaluate `target_segments`. This prevents premature discard of segment-viable solutions.
+*Source: Torres (CDH), Mycelium leaf lifecycle*
 
 ## Process Guardrails
 

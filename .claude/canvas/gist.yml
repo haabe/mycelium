@@ -12,8 +12,11 @@ goals: []
 #   okr_connection: ""  # Which OKR this supports
 
 # Ideas: Hypothetical ways to achieve goals (most will fail — this is expected)
+# Each idea should trace back to an OST solution leaf that passed ICE threshold.
+# See: .claude/engine/leaf-lifecycle.md Phase 5 (GIST Entry)
 ideas: []
 # - name: ""
+#   source_leaf_id: ""   # OST leaf this idea originated from (e.g., "opp-001-sol-A")
 #   goal_connection: ""  # Which goal this idea serves
 #   ice_score:
 #     impact: 0

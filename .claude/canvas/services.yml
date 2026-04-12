@@ -2,6 +2,10 @@
 # Source: "Good Services: How to Design Services that Work"
 # Populated through: /service-check skill
 
+# Bounded contexts / service entries trace back to GIST ideas.
+# See: .claude/engine/leaf-lifecycle.md Phase 6 (Bounded Context)
+# - gist_id: ""          # GIST idea this service implements (e.g., "idea-001")
+
 principles:
   - id: 1
     name: "Be easy to find"

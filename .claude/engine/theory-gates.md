@@ -18,6 +18,34 @@ Gate Name
 
 ---
 
+## Trio Perspective Requirement (Torres Product Trio)
+
+Every gate check should consider three perspectives: **Product** (PM), **Design** (UX), and **Engineering** (Dev). Not every perspective applies at every gate — but omission must be explicit ("N/A: [reason]"), not silent.
+
+The trio coverage varies by diamond scale. Where a perspective is currently weak or missing, specific guidance is provided below.
+
+### Trio Coverage by Scale
+
+| Scale | Product | Design | Engineering | Notes |
+|-------|---------|--------|-------------|-------|
+| L0 Purpose | Strong | **Add**: Experience vision, emotional job framing | **Add**: Technical capability requirements, constraint mapping | Design asks "How will users experience this purpose?" Engineering asks "What does this purpose require technically?" |
+| L1 Strategy | Strong | Weak (implicit in interviews) | **Add**: Technology landscape, Wardley evolution stages | Engineering should assess what tech enables/constrains the strategy |
+| L2 Opportunity | Strong | **Add**: Design research (observation, contextual inquiry) | **Add**: Technical discovery (what's possible, what's expensive) | Both perspectives should inform opportunity framing, not just product |
+| L3 Solution | Strong | Strong | Weak (spikes are post-hoc) | Engineering spikes should happen DURING ideation, not after. Feasibility informs solution design. |
+| L4 Delivery | Strong | Strong | Strong | Most complete coverage across all three perspectives |
+| L5 Market | Strong | **Add**: Brand/positioning validation, visual identity review | Moderate | Design should validate user-facing messaging and visual coherence |
+
+### How to Apply
+
+When checking gates during `/diamond-progress`, for each applicable gate:
+1. State the **product perspective** assessment (or N/A with reason)
+2. State the **design perspective** assessment (or N/A with reason)
+3. State the **engineering perspective** assessment (or N/A with reason)
+
+For solo developers: apply perspectives sequentially as distinct evaluation passes, not collapsed into one. See `.claude/engine/perspective-resolution.md` for when perspectives conflict.
+
+---
+
 ## Gate Definitions
 
 ### 1. Evidence Gate
@@ -265,8 +293,16 @@ Two quality layers for user-facing work:
 | corrections.md reviewed before work began | Corrections not consulted |
 | No previously-documented mistakes repeated | Known mistake pattern detected |
 | Any new mistakes documented with prevention strategy | Mistakes occurred but not logged |
+| Corrections filtered for relevance to current diamond scale and opportunity area | Generic "I read corrections.md" without identifying relevant entries |
 
-**Evidence required**: Timestamp of corrections.md review, new entries if applicable.
+**Relevance filtering**: When reviewing corrections.md, filter for entries relevant to:
+1. The current **diamond scale** (L0-L5) — an L4 delivery correction is less relevant during L2 discovery
+2. The current **opportunity area** — corrections about API design are less relevant when working on user research
+3. The current **solution domain** — corrections about feasibility estimation are highly relevant during ICE scoring
+
+The goal is not to read every correction every time, but to surface the corrections most likely to prevent repeating a mistake in the current context.
+
+**Evidence required**: Timestamp of corrections.md review, specific entries identified as relevant, new entries if applicable.
 
 **Suggested skill**: `/preflight` (includes corrections review), `/reflexion` (includes corrections-driven implementation), `/corrections-audit` (for trend analysis and guardrail graduation)
 
@@ -355,6 +391,11 @@ Use this matrix to determine exactly which gates to evaluate for a given scale a
 
 **Applicable gates**: Evidence, Cynefin, Bias, BVSSH, Corrections (5 gates)
 
+**Trio guidance for L0**:
+- **Product**: Why does this purpose matter to users? What jobs does it serve? (Strong — already core to L0)
+- **Design**: How will users experience this purpose? What emotional and social dimensions does the purpose address? Frame the purpose as a user experience vision, not just a business statement.
+- **Engineering**: What technical capabilities does this purpose require? What constraints does it impose on future architecture? Early technical framing prevents L3/L4 surprises.
+
 ### L1 Strategy
 
 | Gate | Disc->Def | Def->Dev | Dev->Del | Del->Comp |
@@ -373,6 +414,11 @@ Use this matrix to determine exactly which gates to evaluate for a given scale a
 | Regulatory | -- | -- | -- | -- |
 
 **Applicable gates**: Evidence, Four Risks, JTBD, Cynefin, Bias, BVSSH, Corrections (7 gates)
+
+**Trio guidance for L1**:
+- **Product**: Where should we play? What's the strategic opportunity? (Strong — already core to L1)
+- **Design**: What does the user research reveal about unmet experience gaps? Are interview insights being examined for design implications, not just product implications?
+- **Engineering**: What does the technology landscape enable or constrain? Wardley evolution stages of key components. Technical feasibility should inform strategic bets, not just follow them. Add to `/wardley-map` skill.
 
 ### L2 Opportunity
 
@@ -393,6 +439,11 @@ Use this matrix to determine exactly which gates to evaluate for a given scale a
 
 **Applicable gates**: Evidence, Four Risks, JTBD, Cynefin, Bias, Privacy, BVSSH, Service Quality, Corrections (9 gates)
 
+**Trio guidance for L2**:
+- **Product**: What problems are worth solving? What does the research say about user needs? (Strong — already core to L2)
+- **Design**: Dedicated design research — not just interview analysis but observation, contextual inquiry, journey mapping. Design perspective surfaces usability and emotional dimensions that product-only analysis misses. Add to `/ost-builder` workflow.
+- **Engineering**: Technical discovery — what's technically possible, what's expensive, what emerging capabilities change the opportunity space? Engineering perspective prevents framing opportunities that are technically infeasible.
+
 ### L3 Solution
 
 | Gate | Disc->Def | Def->Dev | Dev->Del | Del->Comp |
@@ -411,6 +462,11 @@ Use this matrix to determine exactly which gates to evaluate for a given scale a
 | Regulatory | -- | R | R | -- |
 
 **Applicable gates**: All 12 gates
+
+**Trio guidance for L3**:
+- **Product**: Does the solution address the validated opportunity? Is there evidence users want this? (Strong)
+- **Design**: Is the solution usable? Has it been evaluated with prototypes or heuristic review? (Strong)
+- **Engineering**: Engineering spikes should happen DURING ideation, not after. If feasibility risk is medium or high, spike results must exist before ICE scoring. Feasibility informs solution design — it's not a post-hoc constraint. Add to `/ice-score`: feasibility assessment must include spike results if feasibility risk > medium.
 
 ### L4 Delivery
 
@@ -431,6 +487,11 @@ Use this matrix to determine exactly which gates to evaluate for a given scale a
 
 **Applicable gates**: Evidence, Four Risks, Cynefin, Bias, Security, Privacy, BVSSH, Service Quality, Delivery Metrics, Corrections, Regulatory (11 gates — all except JTBD)
 
+**Trio guidance for L4**:
+- **Product**: Are acceptance criteria aligned with user value? Does the deliverable match what was validated in L3? (Strong)
+- **Design**: Is the implementation meeting usability standards? Are error states, loading states, and edge cases designed? Run `/usability-check` and `/a11y-check`. (Strong)
+- **Engineering**: Is the code clean, tested, secure, and performant? DORA metrics healthy? Dependencies scanned? (Strong — this is engineering's home scale)
+
 ### L5 Market
 
 | Gate | Disc->Def | Def->Dev | Dev->Del | Del->Comp |
@@ -449,6 +510,11 @@ Use this matrix to determine exactly which gates to evaluate for a given scale a
 | Regulatory | -- | R | R | -- |
 
 **Applicable gates**: Evidence, Cynefin, Bias, Security, BVSSH, Delivery Metrics, Corrections, Regulatory (8 gates)
+
+**Trio guidance for L5**:
+- **Product**: Is the positioning aligned with validated user needs? Does the GTM motion match the buyer journey? (Strong)
+- **Design**: Brand and positioning validation — does the visual identity, messaging, and user-facing presentation cohere? Is the landing/onboarding experience designed, not just written? Design should validate that the market-facing artifacts meet the same quality bar as the product itself.
+- **Engineering**: Is telemetry in place to measure launch success? Are infrastructure and scalability considerations addressed for the expected launch load? (Moderate — usually covered)
 
 ### Quick Reference: Gates per Scale (for `theory_gates_status` initialization)
 

@@ -21,6 +21,8 @@ Build and maintain Opportunity Solution Trees from research evidence.
    - Look for frequency across interviews, not just intensity in one.
 
 4. **Structure hierarchically**: Group related opportunities. Identify parent-child relationships.
+   - Before structuring, ensure each opportunity has been examined from **all three trio perspectives** (product, design, engineering). Product lens sees user value; design lens sees experience gaps; engineering lens sees technical constraints or enablers.
+   - Classify each opportunity's **Cynefin domain** (clear/complicated/complex). Complex-domain opportunities must produce probes (experiments), not fully-designed solutions. See `engine/cynefin-routing.md`.
 
 5. **For each leaf opportunity**, generate solution ideas:
    - Multiple solutions per opportunity.

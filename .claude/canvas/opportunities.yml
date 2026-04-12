@@ -7,8 +7,14 @@
 schema_version: 1
 
 # Root: The desired outcome (from North Star input metrics)
+# VALIDATION: desired_outcome.metric MUST reference a specific input metric
+# from canvas/north-star.yml#input_metrics. If it doesn't match any, either:
+#   1. Add the metric to north-star.yml first, or
+#   2. Document why this OST targets an outcome outside the North Star model.
+# This ensures every OST tree is connected to the product's core value model.
 desired_outcome:
-  metric: ""  # Which input metric this tree targets
+  metric: ""  # Which input metric this tree targets (must match north-star.yml)
+  north_star_input_ref: ""  # Exact name from north-star.yml#input_metrics
   current_value: null
   target_value: null
 
@@ -40,6 +46,7 @@ opportunities: []
 #     downstream:
 #       - target_id: "gist#idea-001"
 #         edge: implements
+#   solutions: []                  # Solution leaves — each assessed via leaf lifecycle
 #     # - name: ""
 #     #   description: ""
 #     #   four_risks:  # Torres Product Trio — each assessed from its perspective
@@ -72,6 +79,10 @@ opportunities: []
 #     #     #   evidence: low|medium|high
 #     #     #   tested: false
 #     #     #   result: ""
+#     #   target_segments: []  # Which user segments this solution serves
+#     #     # - segment_id: ""
+#     #     #   four_risks: {}   # Segment-specific risk assessment (if different from default)
+#     #     #   ice_score: {}    # Segment-specific ICE (if different from default)
 #     #   experiments: []
 #     #     # - hypothesis: ""
 #     #     #   risk_dimension: value|usability|feasibility|viability  # Which risk this tests

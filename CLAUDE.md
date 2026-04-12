@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.11.4 -- Gate alignment fix, regulatory-review skill, corrections-audit skill, product-type fallback.*
+*Version 0.12.0 -- Leaf lifecycle pipeline, trio perspectives at all scales, perspective resolution, leaf bakeoff, framework disconnections closed.*
 
 Mycelium is a harnessing system for AI-assisted product development. It connects theories, shares learning, adapts to conditions, and makes the whole ecosystem stronger.
 
@@ -52,6 +52,22 @@ Each diamond has four phases, gated by theory checks:
 Diamonds spawn child diamonds when complexity requires it (L0->L1->L2->L3->L4, L5->L2 on market feedback). Parents continue while children execute. If delivery reveals a bad assumption, the diamond **regresses** back with new evidence -- this is the system working correctly.
 
 See `.claude/engine/diamond-rules.md` for full transition rules, WIP limits, and lifecycle management.
+
+### OST Leaf Lifecycle
+
+Every OST solution leaf follows a 10-phase pipeline from creation to market feedback. Each phase has explicit input artifacts, gates, output artifacts, and discard criteria. The pipeline is:
+
+**OST Leaf → Four Risks → ICE Score → Assumption Test → GIST Entry → Bounded Context → Threat Model → Preflight → Delivery Diamond → Launch + Feedback**
+
+See `.claude/engine/leaf-lifecycle.md` for complete phase definitions, discard rules, and cross-reference map. Archived leaves go to `canvas/archived-solutions.yml`.
+
+### Perspective Resolution
+
+When product, design, and engineering perspectives conflict, use the structured resolution framework. See `.claude/engine/perspective-resolution.md`.
+
+### Leaf Bakeoff (Parallel A/B Testing)
+
+When multiple leaves compete for the same opportunity, use the bakeoff protocol for structured comparison. See `.claude/orchestration/leaf-bakeoff.md`.
 
 ## Theory Gates (Decision Checkpoints)
 

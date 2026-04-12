@@ -20,8 +20,11 @@ threats: []
 #     confidence: 0.4
 
 # Component-level threat assessments (existing structure preserved for compatibility)
+# Each component should reference the solution it protects.
+# See: .claude/engine/leaf-lifecycle.md Phase 7 (Threat Model)
 components: []
 # - name: ""
+#   solution_id: ""  # OST leaf or GIST idea this threat model covers
 #   description: ""
 #   data_handled: []  # What data types flow through this component
 #   stride_assessment:

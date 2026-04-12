@@ -41,4 +41,14 @@ trust_metrics:
   trust_score: null
   privacy_satisfaction: null
 
+# Market validation backlink — trust signals validate/invalidate L3 value risk assessments.
+# See: .claude/engine/leaf-lifecycle.md Phase 10 (Launch + Market Feedback)
+# When trust metrics change post-launch, update the original OST leaf's value risk evidence.
+value_risk_validation: []
+# - source_leaf_id: ""          # OST leaf whose value risk this validates
+#   trust_signal: ""             # Which trust metric changed
+#   direction: improved|declined|stable
+#   evidence: ""                 # What the data showed
+#   value_risk_update: ""        # How this changes the leaf's value risk assessment
+
 last_assessed: null

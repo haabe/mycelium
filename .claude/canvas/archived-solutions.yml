@@ -1,0 +1,29 @@
+# Archived Solutions Canvas
+# Dead leaves from the OST lifecycle. Never deleted — they are learning.
+# See: .claude/engine/leaf-lifecycle.md (Discard and Archive Protocol)
+# Populated through: /ost-builder, /ice-score, /assumption-test, /gist-plan (on discard)
+
+schema_version: 1
+
+archived: []
+# - leaf_id: opp-001-sol-A
+#   opportunity_id: opp-001
+#   archived_at: "2026-04-12T10:00:00Z"
+#   archived_at_phase: 5        # Lifecycle phase number (1-10)
+#   reason: low-ice-score        # low-ice-score|failed-assumption|feasibility-block|viability-block|superseded|market-rejection
+#   ice_score_at_archive:
+#     impact: 3
+#     confidence: 4
+#     ease: 2
+#     total: 24
+#   four_risks_snapshot:
+#     value: {level: medium, summary: ""}
+#     usability: {level: high, summary: ""}
+#     feasibility: {level: high, summary: ""}
+#     viability: {level: low, summary: ""}
+#   evidence_snapshot: ""        # Key evidence at time of archival
+#   segments_checked: []         # Which user segments were evaluated before discarding
+#   revival_conditions: ""       # Under what conditions this leaf could be revived
+#   decision_log_ref: ""         # Reference to decision-log.md entry
+
+last_updated: null
