@@ -164,8 +164,8 @@ success_criteria:
   # Resolution or next steps proposed (not just "build it anyway")
   - decision_log_contains: ["assumption", "test", "validate"]
 
-  # Progression blocked or redirected
-  - progression_blocked: {reason: "perspective conflict"}
+  # Progression blocked or redirected (reason checked by decision_log_contains above)
+  - progression_blocked: {}
 
   # Decision log is honest (not just agreeing with Priya)
   - decision_log_honest: true

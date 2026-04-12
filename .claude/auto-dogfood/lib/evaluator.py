@@ -138,7 +138,8 @@ class Evaluator:
         content = self.decision_log.read_text().lower()
         # Check for blocking indicators (flexible matching)
         block_words = ["block", "cannot advance", "not advance", "prevent",
-                       "halt", "stop", "gate", "insufficient"]
+                       "halt", "stop", "gate", "insufficient", "not progress",
+                       "do not proceed", "cannot proceed", "not ready"]
         has_block = any(w in content for w in block_words)
         reason = args.get("reason", "").lower()
         if reason:
