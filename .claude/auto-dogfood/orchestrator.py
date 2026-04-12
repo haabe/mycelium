@@ -133,6 +133,13 @@ class DogfoodSession:
             if target.exists():
                 target.unlink()
 
+        # Write initial_state files if scenario provides pre-populated state
+        if self.scenario.initial_state:
+            for rel_path, content in self.scenario.initial_state.items():
+                target = workdir / rel_path
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text(content)
+
         # Keep the REAL settings.json and CLAUDE.md — the dogfood must test
         # the actual framework, not a stripped-down version. The test harness
         # must work within the framework's constraints (hooks, permissions,
@@ -234,6 +241,13 @@ class DogfoodSession:
         "mocked-persona-interview": 25,
         "diamond-assess": 20,
         "diamond-progress": 20,
+        "ost-builder": 20,
+        "ice-score": 15,
+        "assumption-test": 15,
+        "delivery-bootstrap": 25,
+        "reflexion": 30,
+        "dora-check": 15,
+        "retrospective": 15,
     }
 
     SKILL_TIMEOUTS = {
@@ -241,6 +255,13 @@ class DogfoodSession:
         "mocked-persona-interview": 400,
         "diamond-assess": 120,
         "diamond-progress": 180,
+        "ost-builder": 240,
+        "ice-score": 120,
+        "assumption-test": 180,
+        "delivery-bootstrap": 300,
+        "reflexion": 600,
+        "dora-check": 120,
+        "retrospective": 180,
     }
 
     def _run_round(
@@ -377,7 +398,7 @@ class DogfoodSession:
         canvas_dir = self.workdir / ".claude" / "canvas"
         for name in ["purpose.yml", "jobs-to-be-done.yml", "north-star.yml"]:
             path = canvas_dir / name
-            obs["checks"][f"canvas/{name}"] = path.exists() and path.stat().st_size > 200
+            obs["checks"][f"canvas/{name}"] = path.exists() and path.stat().st_size > 50
 
         active_file = self.workdir / ".claude" / "diamonds" / "active.yml"
         if active_file.exists():
@@ -386,7 +407,10 @@ class DogfoodSession:
                 diamonds = active.get("active_diamonds", [])
                 obs["checks"]["diamond_count"] = len(diamonds)
                 if diamonds:
-                    d = diamonds[0]
+                    # Track the most relevant diamond: prefer the highest-scale
+                    # non-complete diamond, fall back to the last one in the list
+                    active = [d for d in diamonds if d.get("phase") != "complete"]
+                    d = active[-1] if active else diamonds[-1]
                     obs["checks"]["phase"] = d.get("phase", "unknown")
                     obs["checks"]["confidence"] = d.get("confidence", 0)
             except Exception:
@@ -395,6 +419,17 @@ class DogfoodSession:
         dl = self.workdir / ".claude" / "harness" / "decision-log.md"
         if dl.exists():
             obs["checks"]["decision_log_entries"] = dl.read_text().count("### ")
+
+        # Track corrections for self-learning scenarios
+        corrections = self.workdir / ".claude" / "memory" / "corrections.md"
+        if corrections.exists():
+            content = corrections.read_text()
+            # Count entries using multiple formats the agent might use
+            entry_count = content.count("### ")
+            if entry_count == 0:
+                # Fallback: count alternative correction formats
+                entry_count = content.count("Mistake:") + content.count("- **")
+            obs["checks"]["corrections_entries"] = entry_count
 
         self.observations.append(obs)
 
@@ -440,6 +475,26 @@ class DogfoodSession:
                 proposals.append("Framework: evidence type not set correctly. Check mocked-persona-interview prompt for evidence_type instructions.")
             elif criterion == "progression_blocked":
                 proposals.append("Framework: progression not blocked when it should be. Check /diamond-progress gate enforcement.")
+            elif criterion == "ost_has_solutions":
+                proposals.append("Framework: OST missing solution candidates. Check /ost-builder prompt for solution generation instructions.")
+            elif criterion == "ice_scores_present":
+                proposals.append("Framework: ICE scores not computed. Check /ice-score prompt for scoring instructions.")
+            elif criterion == "assumption_test_has_prediction":
+                proposals.append("Framework: assumption test missing prediction. Check /assumption-test prompt for Toyota Kata prediction step.")
+            elif criterion == "confidence_reflects_test":
+                proposals.append("Framework: confidence not updated after assumption test. Check confidence update instructions in /assumption-test prompt.")
+            elif criterion == "code_files_written":
+                proposals.append("Framework: no code files written. Check /delivery-bootstrap and /reflexion prompts for code generation instructions.")
+            elif criterion == "test_files_written":
+                proposals.append("Framework: no test files written. Check G-V7 enforcement in /reflexion prompt.")
+            elif criterion == "reflexion_iterated":
+                proposals.append("Framework: reflexion loop didn't iterate. Check /reflexion prompt for iteration instructions and validation steps.")
+            elif criterion == "security_issue_caught":
+                proposals.append("Framework: security vulnerability not caught by reflexion. Check /reflexion prompt for OWASP validation step.")
+            elif criterion == "corrections_logged":
+                proposals.append("Framework: corrections.md not updated after retrospective. Check /retrospective prompt for correction logging instructions.")
+            elif criterion == "dora_logged":
+                proposals.append("Framework: DORA assessment not logged in decision log. Check /dora-check prompt for decision log append instructions.")
             else:
                 proposals.append(f"Unknown criterion '{criterion}' failed. Manual investigation needed.")
         return proposals

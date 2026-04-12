@@ -207,6 +207,110 @@ class Evaluator:
         content = self.decision_log.read_text().lower()
         return "g-s1" in content or "secret" in content
 
+    def _check_ost_has_solutions(self, args: dict) -> bool:
+        """Check that the OST has solution candidates under opportunities."""
+        path = self.canvas_dir / "opportunities.yml"
+        if not path.exists():
+            return False
+        try:
+            parsed = yaml.safe_load(path.read_text())
+            if not isinstance(parsed, dict):
+                return False
+            opps = parsed.get("opportunities", [])
+            min_solutions = args.get("min_solutions", 2)
+            total_solutions = 0
+            for opp in opps:
+                if isinstance(opp, dict):
+                    solutions = opp.get("solutions", [])
+                    total_solutions += len(solutions) if isinstance(solutions, list) else 0
+            return total_solutions >= min_solutions
+        except Exception:
+            return False
+
+    def _check_ice_scores_present(self, _args: Any) -> bool:
+        """Check that solutions in opportunities.yml have ICE scores."""
+        path = self.canvas_dir / "opportunities.yml"
+        if not path.exists():
+            return False
+        content = path.read_text()
+        # Check for ICE score markers (flexible — YAML structure or text)
+        return "ice_score" in content or "impact" in content and "confidence" in content
+
+    def _check_assumption_test_has_prediction(self, _args: Any) -> bool:
+        """Check that the assumption test includes a prediction (Toyota Kata)."""
+        if not self.decision_log.exists():
+            return False
+        content = self.decision_log.read_text().lower()
+        prediction_markers = ["i expect", "prediction", "expected", "i'd be surprised"]
+        return any(m in content for m in prediction_markers)
+
+    def _check_confidence_reflects_test(self, _args: Any) -> bool:
+        """Check that confidence changed after assumption test results."""
+        active = self._load_active()
+        if not active:
+            return False
+        for d in active.get("active_diamonds", []):
+            # After a failed assumption test, confidence should decrease
+            conf = d.get("confidence", 1.0)
+            if conf < 0.5:  # Lower than initial state
+                return True
+        return False
+
+    def _check_code_files_written(self, args: dict) -> bool:
+        """Check that code files matching a pattern exist in the workdir."""
+        import glob
+        pattern = args.get("pattern", "*.go")
+        min_count = args.get("min_count", 1)
+        matches = glob.glob(str(self.workdir / "**" / pattern), recursive=True)
+        return len(matches) >= min_count
+
+    def _check_test_files_written(self, args: dict) -> bool:
+        """Check that test files matching a pattern exist in the workdir."""
+        import glob
+        pattern = args.get("pattern", "*_test.go")
+        min_count = args.get("min_count", 1)
+        matches = glob.glob(str(self.workdir / "**" / pattern), recursive=True)
+        return len(matches) >= min_count
+
+    def _check_reflexion_iterated(self, args: dict) -> bool:
+        """Check that the reflexion loop ran multiple iterations."""
+        if not self.decision_log.exists():
+            return False
+        content = self.decision_log.read_text().lower()
+        min_iterations = args.get("min_iterations", 2)
+        # Count iteration markers
+        iteration_markers = ["iteration", "reflexion", "retry", "self-critique", "validate"]
+        marker_count = sum(content.count(m) for m in iteration_markers)
+        return marker_count >= min_iterations
+
+    def _check_security_issue_caught(self, _args: Any) -> bool:
+        """Check that a security issue was identified and logged."""
+        if not self.decision_log.exists():
+            return False
+        content = self.decision_log.read_text().lower()
+        security_markers = ["security", "vulnerability", "owasp", "validation",
+                           "injection", "malicious", "sanitiz"]
+        return sum(1 for m in security_markers if m in content) >= 2
+
+    def _check_dora_logged(self, _args: Any) -> bool:
+        """Check that the DORA assessment added entries to the decision log."""
+        if not self.decision_log.exists():
+            return False
+        content = self.decision_log.read_text().lower()
+        dora_markers = ["dora", "deployment frequency", "lead time",
+                        "change failure rate", "mean time to recovery",
+                        "deploy", "mttr"]
+        return sum(1 for m in dora_markers if m in content) >= 2
+
+    def _check_corrections_logged(self, _args: Any) -> bool:
+        """Check that corrections.md has new entries."""
+        corrections_path = self.workdir / ".claude" / "memory" / "corrections.md"
+        if not corrections_path.exists():
+            return False
+        content = corrections_path.read_text()
+        # Must have more than the stub template
+        return "###" in content or "Mistake:" in content or "- **" in content
+
     def _check_generic(self, name: str, args: Any) -> bool:
         """Fallback: check if the criterion name appears in the decision log."""
         if not self.decision_log.exists():

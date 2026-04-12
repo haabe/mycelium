@@ -47,6 +47,7 @@ class Scenario:
     model_mycelium: str
     model_user: str
     difficulty: str = "medium"
+    initial_state: dict[str, str] = field(default_factory=dict)
 
     @classmethod
     def load(cls, path: str | Path) -> "Scenario":
@@ -101,6 +102,7 @@ class Scenario:
             model_mycelium=models.get("mycelium_agent", "sonnet"),
             model_user=models.get("user_simulator", "haiku"),
             difficulty=data.get("difficulty", "medium"),
+            initial_state=data.get("initial_state", {}),
         )
 
     def get_failure_for_skill(self, skill: str) -> PlantedFailure | None:

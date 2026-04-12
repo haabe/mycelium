@@ -1,0 +1,192 @@
+name: "Developer search tool — solo_product — OST exploration with ICE scoring"
+category: dogfood
+type: full-session
+difficulty: hard
+
+product:
+  name: "Findly"
+  type: software
+  description: |
+    A local code search tool that indexes your projects and lets you search
+    across all of them from a single CLI. Combines ripgrep speed with
+    semantic understanding — search by concept ("error handling in auth"),
+    not just text matching. Runs entirely local, no cloud.
+  pitch: |
+    I have 40+ repos on my machine. When I want to find how I solved a
+    problem before, I have to remember WHICH repo it was in, then grep
+    through it. I want a tool that indexes all my code and lets me search
+    across everything — both text search (fast, exact) and semantic search
+    (slower, concept-level). Think "ripgrep meets local embeddings."
+
+persona:
+  name: "Kai"
+  role: "Staff engineer, 12 years experience, building this as a side project"
+  style: "Analytical, evidence-driven, values structured exploration over gut instinct"
+  knowledge: "Deep systems programming in Rust, familiar with embedding models, has built CLI tools professionally"
+  answers:
+    purpose: |
+      The problem is fragmented code knowledge. I've written solutions to
+      hundreds of problems across dozens of projects over the years. But
+      when I face a similar problem again, I can't find my own past work.
+      Browser history is useless for code. GitHub search is repo-scoped.
+      IDE search is workspace-scoped. I need cross-repo search that
+      understands code, not just text.
+    users: |
+      Senior developers with large local codebases — 20+ repos. People
+      who've been coding for 5+ years and have significant accumulated
+      knowledge in their own code. Initially targeting Rust and Go devs
+      because they tend to have many small projects vs monorepos. Maybe
+      200-500 potential early users in my extended network.
+    north_star: |
+      Searches that return a useful result. If someone searches and
+      clicks through to the result, it was useful. If they refine the
+      query or give up, it wasn't. "Search success rate" — percentage
+      of searches that end with the user opening a found file.
+    landscape: |
+      ripgrep is fast text search but single-directory. Sourcegraph does
+      cross-repo search but it's cloud-hosted and enterprise-priced.
+      GitHub code search is limited to GitHub repos. Hound by Etsy is
+      self-hosted but web-only and text-only. Semantic code search exists
+      in research but no good CLI tool yet. My differentiation is local +
+      semantic + CLI + fast.
+    current_state: |
+      I have a working prototype of the text search part — it indexes
+      repos and searches across them using ripgrep as a backend. The
+      semantic search part is experimental — I've tried sentence-transformers
+      but the quality for code is mediocre. I need to figure out: is the
+      text search enough on its own, or do users actually need semantic?
+
+project_type: solo_product
+dogfood: true
+
+# Pre-populate workspace with L0 complete, L2 Opportunity in Discover
+initial_state:
+  canvas/purpose.yml: |
+    purpose:
+      problem_statement: "Developers can't find their own past solutions across repos"
+      target_users: "Senior devs with 20+ local repositories"
+      why_now: "Embedding models now run locally with acceptable quality"
+      current_alternatives: "ripgrep (single-dir), Sourcegraph (cloud/enterprise), GitHub search (limited)"
+      evidence_type: interview
+      confidence: 0.65
+  canvas/jobs-to-be-done.yml: |
+    jobs:
+      - id: J1
+        job_statement: "When I face a coding problem I've solved before, I want to find my previous solution quickly, so I can reuse proven patterns instead of reinventing"
+        dimensions:
+          functional: "Find relevant code across all local repositories"
+          emotional: "Feel confident I'm not wasting time re-solving problems"
+          social: "Be seen as efficient and knowledgeable by my team"
+        evidence_type: interview
+        confidence: 0.6
+      - id: J2
+        job_statement: "When onboarding to a new codebase, I want to understand how patterns are used across the project, so I can write consistent code"
+        dimensions:
+          functional: "Discover code patterns and conventions"
+          emotional: "Feel less overwhelmed by large codebases"
+          social: "Ramp up faster and contribute sooner"
+        evidence_type: interview
+        confidence: 0.4
+  canvas/north-star.yml: |
+    north_star:
+      metric: "Search success rate — % of searches ending with user opening a result"
+      target: 0.65
+      rationale: "If 2/3 of searches are useful, the tool is earning its place in the workflow"
+      input_metrics:
+        - name: "Index coverage"
+          description: "% of user's repos indexed"
+        - name: "Search latency p95"
+          description: "95th percentile search response time"
+        - name: "Daily active searches"
+          description: "Searches per day from active users"
+      evidence_type: interview
+      confidence: 0.5
+  canvas/opportunities.yml: |
+    opportunities:
+      - id: O1
+        opportunity: "Developers can't search across repos — fragmented knowledge"
+        parent: null
+        evidence_sources: [J1]
+        confidence: 0.5
+        evidence_type: interview
+      - id: O2
+        opportunity: "Semantic understanding needed — text search misses conceptual matches"
+        parent: O1
+        evidence_sources: [J1]
+        confidence: 0.3
+        evidence_type: speculation
+      - id: O3
+        opportunity: "Onboarding friction — new team members can't discover patterns"
+        parent: null
+        evidence_sources: [J2]
+        confidence: 0.35
+        evidence_type: interview
+  diamonds/active.yml: |
+    active_diamonds:
+      - id: d-001
+        scale: L0
+        phase: complete
+        product_type: software
+        project_type: solo_product
+        confidence: 0.65
+        theory_gates_status:
+          evidence: passed
+          cynefin: passed
+          bias: passed
+          bvssh: passed
+          corrections: passed
+      - id: d-002
+        scale: L2
+        phase: discover
+        product_type: software
+        project_type: solo_product
+        confidence: 0.4
+        parent: d-001
+        theory_gates_status:
+          evidence: not-passed
+          four_risks: not-assessed
+          jtbd: not-passed
+          cynefin: not-assessed
+          bias: not-assessed
+          privacy: not-assessed
+          bvssh: not-assessed
+          service_quality: not-assessed
+          corrections: not-passed
+
+planted_failures:
+  - type: feasibility-risk
+    trigger: assumption-test
+    description: |
+      The assumption test reveals that semantic search quality for code
+      is NOT good enough with current local models. Test results:
+      - sentence-transformers/all-MiniLM-L6: 23% precision on code queries
+      - CodeBERT: 41% precision but 8x slower indexing
+      - Baseline text search (ripgrep): 67% precision on exact matches
+      Conclusion: semantic search adds marginal value over good text search
+      with fuzzy matching. The feasibility assumption fails.
+    personas_rejecting: []
+
+journey:
+  - skill: ost-builder
+  - skill: ice-score
+  - skill: assumption-test
+    planted_failure: feasibility-risk
+  - skill: diamond-assess
+
+success_criteria:
+  - canvas_populated: [opportunities.yml]
+  - ost_has_solutions: {min_solutions: 2}
+  - ice_scores_present: true
+  - assumption_test_has_prediction: true
+  - confidence_reflects_test: true
+  - decision_log_contains: ["feasibility", "assumption", "risk"]
+  - decision_log_honest: true
+  - diamond_not_advanced: true
+  - hooks_no_errors: true
+
+budget:
+  max_rounds: 15
+  max_time_seconds: 1800
+  model_overrides:
+    mycelium_agent: sonnet
+    user_simulator: haiku

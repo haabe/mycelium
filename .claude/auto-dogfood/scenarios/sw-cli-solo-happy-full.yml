@@ -1,0 +1,166 @@
+name: "Markdown link checker — solo_hobby — happy path full flow"
+category: dogfood
+type: full-session
+difficulty: medium
+
+product:
+  name: "Linkrot"
+  type: software
+  description: |
+    A CLI tool that scans markdown files for broken links. Reads .md files,
+    extracts URLs, checks them with HEAD requests, and reports dead links.
+    Simple, fast, no dependencies beyond the standard library.
+  pitch: |
+    I maintain several open-source repos with docs. Links rot. I want a
+    fast CLI that scans my markdown files and tells me which links are
+    broken. Just "linkrot check docs/" and it tells me what's dead. No
+    config files, no plugins, just works.
+
+persona:
+  name: "Pat"
+  role: "Open-source maintainer, hobby developer"
+  style: "Practical, hates over-engineering, just wants things that work"
+  knowledge: "3 years Python, maintains 4 small open-source repos, comfortable with CLI tools"
+  answers:
+    purpose: |
+      My READMEs and docs have broken links. I don't notice until someone
+      files an issue. It's embarrassing. I want to catch broken links
+      before they embarrass me. A CI-friendly CLI that exits non-zero
+      when links are broken would be perfect.
+    users: |
+      Open-source maintainers with documentation. People who write READMEs,
+      contribution guides, and wikis. Probably use it in CI/CD pipelines.
+      Just me at first, then maybe 10-20 people in my OSS circle.
+    north_star: |
+      Broken links caught before merge. If the tool catches a broken link
+      in CI before it ships, that's the value. "Links caught" — broken
+      links detected per run that were previously unnoticed.
+    landscape: |
+      markdown-link-check (Node, popular but slow for large repos). lychee
+      (Rust, very fast, feature-rich). broken-link-checker (various).
+      My angle: Python, zero deps, dead simple, opinionated defaults.
+      Not trying to compete on features — just the simplest possible tool.
+    current_state: |
+      I have a 20-line prototype that uses requests + re.findall to extract
+      and check URLs from a single file. Works but doesn't handle relative
+      links, anchors, or rate limiting. I want to do this properly.
+
+project_type: solo_hobby
+dogfood: true
+
+# Pre-populate: L0 complete, L2 Opportunity with evidence, L3 solution chosen
+initial_state:
+  canvas/purpose.yml: |
+    purpose:
+      problem_statement: "OSS maintainers ship docs with broken links unknowingly"
+      target_users: "Open-source maintainers writing markdown documentation"
+      current_alternatives: "markdown-link-check (Node), lychee (Rust), manual checking"
+      evidence_type: interview
+      confidence: 0.7
+  canvas/jobs-to-be-done.yml: |
+    jobs:
+      - id: J1
+        job_statement: "When I push docs updates, I want to catch broken links automatically, so I avoid embarrassing issues from users"
+        dimensions:
+          functional: "Detect broken URLs in markdown files"
+          emotional: "Feel confident my docs are professional"
+          social: "Maintain trust with contributors and users"
+        evidence_type: interview
+        confidence: 0.65
+  canvas/north-star.yml: |
+    north_star:
+      metric: "Broken links caught before merge"
+      evidence_type: interview
+      confidence: 0.6
+  canvas/opportunities.yml: |
+    opportunities:
+      - id: O1
+        opportunity: "Broken links in markdown docs go unnoticed until users report them"
+        solutions:
+          - id: S1
+            name: "Python CLI with stdlib-only HTTP checking"
+            hypothesis: "We believe OSS maintainers will adopt a zero-dep Python link checker if it catches broken links in CI with a single command"
+            riskiest_assumption: "Python stdlib (urllib) is fast enough for checking 100+ links"
+            assumption_type: feasibility
+            ice_score:
+              impact: 7
+              confidence: 6
+              ease: 8
+              total: 7.0
+        confidence: 0.6
+        evidence_type: interview
+  canvas/gist.yml: |
+    gist:
+      goal: "Ship a minimal Python CLI for markdown link checking"
+      ideas:
+        - id: I1
+          name: "Zero-dep Python CLI using urllib + concurrent.futures"
+          ice_score: {impact: 7, confidence: 6, ease: 8}
+      steps:
+        - id: S1
+          name: "Core: extract links from markdown, check with HEAD requests"
+          status: planned
+        - id: S2
+          name: "CLI interface: linkrot check <path>"
+          status: planned
+        - id: S3
+          name: "CI mode: exit non-zero on broken links"
+          status: planned
+  diamonds/active.yml: |
+    active_diamonds:
+      - id: d-001
+        scale: L0
+        phase: complete
+        product_type: software
+        project_type: solo_hobby
+        confidence: 0.7
+      - id: d-003
+        scale: L3
+        phase: complete
+        product_type: software
+        project_type: solo_hobby
+        confidence: 0.65
+      - id: d-004
+        scale: L4
+        phase: develop
+        product_type: software
+        project_type: solo_hobby
+        confidence: 0.4
+        parent: d-003
+        theory_gates_status:
+          evidence: not-passed
+          four_risks: passed
+          cynefin: passed
+          bias: passed
+          security: not-assessed
+          privacy: not-assessed
+          bvssh: not-assessed
+          service_quality: not-assessed
+          delivery_metrics: not-assessed
+          corrections: not-passed
+          regulatory: not-assessed
+
+planted_failures: []
+
+journey:
+  - skill: delivery-bootstrap
+  - skill: reflexion
+  - skill: dora-check
+  - skill: retrospective
+
+success_criteria:
+  - code_files_written: {pattern: "*.py", min_count: 1}
+  - test_files_written: {pattern: "test_*.py", min_count: 1}
+  - reflexion_iterated: {min_iterations: 1}
+  - canvas_populated: [dora-metrics.yml]
+  - dora_logged: true
+  - decision_log_contains: ["delivery", "bootstrap", "reflexion"]
+  - decision_log_honest: true
+  - hooks_no_errors: true
+
+budget:
+  max_rounds: 18
+  max_time_seconds: 2400
+  model_overrides:
+    mycelium_agent: sonnet
+    user_simulator: haiku

@@ -1,0 +1,185 @@
+name: "URL shortener library — solo_product — coding quality with self-learning"
+category: dogfood
+type: full-session
+difficulty: hard
+
+product:
+  name: "Shrink"
+  type: software
+  description: |
+    A small Go library for URL shortening with pluggable storage backends.
+    Provides a clean API: Shorten(url) -> shortCode, Resolve(shortCode) -> url.
+    Supports in-memory, SQLite, and Redis backends. Designed to be embedded
+    in other Go services, not a standalone service.
+  pitch: |
+    I want to build a Go library for URL shortening that other Go services
+    can import. Clean API, pluggable storage, well-tested. I've seen too
+    many URL shorteners that are full web apps — I just want the core logic
+    as a library I can embed in my API server.
+
+persona:
+  name: "Ren"
+  role: "Backend engineer, 5 years Go experience, building this as an open-source library"
+  style: "Quality-focused, believes in testing, reads standard library source code for style guidance"
+  knowledge: "Proficient in Go, familiar with table-driven tests, benchmarks, and Go module conventions"
+  answers:
+    purpose: |
+      Every time I need URL shortening in a project, I either pull in a
+      heavy dependency or write a quick-and-dirty implementation. I want
+      a well-tested, minimal library that handles the boring stuff —
+      collision detection, configurable code length, pluggable storage —
+      so I can focus on my actual application logic.
+    users: |
+      Go developers who need URL shortening as a library, not a service.
+      Probably 50-100 people who would star it on GitHub if it's good.
+      The kind of dev who reads the source before importing a dependency.
+    north_star: |
+      GitHub stars are vanity. Real metric: imports. How many Go modules
+      list this as a dependency? Check via pkg.go.dev import count.
+      Secondary: issues filed (people care enough to report bugs = real usage).
+    landscape: |
+      Several Go URL shortener repos on GitHub but they're all full web
+      apps with databases and HTTP handlers baked in. No clean library-only
+      option. Python has pyshorteners. Node has shortid (different thing).
+      The gap is a well-designed Go library.
+    current_state: |
+      I have a design doc with the API surface. The core interface is
+      Shortener with Shorten() and Resolve() methods. Storage is a
+      pluggable interface. No code written yet — I want to make sure
+      the design is right before coding.
+
+project_type: solo_product
+dogfood: true
+
+# Pre-populate workspace with L0-L3 complete, L4 Delivery in Develop
+initial_state:
+  canvas/purpose.yml: |
+    purpose:
+      problem_statement: "Go devs lack a clean, embeddable URL shortening library"
+      target_users: "Go developers building web services"
+      current_alternatives: "Full web app repos, hand-rolled implementations"
+      evidence_type: interview
+      confidence: 0.7
+  canvas/jobs-to-be-done.yml: |
+    jobs:
+      - id: J1
+        job_statement: "When I need URL shortening in my Go service, I want to import a well-tested library, so I can focus on my application logic"
+        evidence_type: interview
+        confidence: 0.65
+  canvas/north-star.yml: |
+    north_star:
+      metric: "pkg.go.dev import count"
+      evidence_type: interview
+      confidence: 0.6
+  canvas/gist.yml: |
+    gist:
+      goal: "Ship a production-quality Go URL shortening library"
+      ideas:
+        - id: I1
+          name: "Core library with pluggable storage"
+          ice_score: {impact: 8, confidence: 7, ease: 6}
+      steps:
+        - id: S1
+          name: "Implement core Shortener interface + in-memory backend"
+          status: in-progress
+        - id: S2
+          name: "Add SQLite backend"
+          status: planned
+        - id: S3
+          name: "Add collision detection and retry"
+          status: planned
+  canvas/threat-model.yml: |
+    threat_model:
+      scope: "URL shortening library — no network exposure directly, but handles user-provided URLs"
+      threats:
+        - id: T1
+          category: "Input validation"
+          threat: "Malicious URLs (javascript:, data:, extremely long URLs)"
+          mitigation: "Validate URL scheme and length before shortening"
+          status: planned
+        - id: T2
+          category: "Collision"
+          threat: "Short code collision could redirect to wrong URL"
+          mitigation: "Check-before-insert with configurable retry"
+          status: planned
+      evidence_type: assumption
+      confidence: 0.5
+  diamonds/active.yml: |
+    active_diamonds:
+      - id: d-001
+        scale: L0
+        phase: complete
+        product_type: software
+        project_type: solo_product
+        confidence: 0.7
+      - id: d-002
+        scale: L3
+        phase: complete
+        product_type: software
+        project_type: solo_product
+        confidence: 0.7
+      - id: d-003
+        scale: L4
+        phase: develop
+        product_type: software
+        project_type: solo_product
+        confidence: 0.5
+        parent: d-002
+        theory_gates_status:
+          evidence: not-passed
+          four_risks: passed
+          cynefin: passed
+          bias: passed
+          security: not-passed
+          privacy: not-assessed
+          bvssh: not-assessed
+          service_quality: not-assessed
+          delivery_metrics: not-assessed
+          corrections: not-passed
+          regulatory: not-assessed
+
+planted_failures:
+  - type: security-vulnerability
+    trigger: reflexion
+    description: |
+      The initial implementation has a security vulnerability: it does NOT
+      validate URL schemes before shortening. An attacker could shorten
+      "javascript:alert(document.cookie)" or "data:text/html,<script>..."
+      and the Resolve() method would return the malicious URL. The reflexion
+      loop must catch this during validation — the OWASP input validation
+      check should flag unvalidated URL schemes as a security issue.
+    personas_rejecting: []
+  - type: missing-tests
+    trigger: delivery-bootstrap
+    description: |
+      The code is written without tests. The delivery bootstrap should
+      detect Go as the language, check for *_test.go files, find none,
+      and flag this as a quality gap. G-V7 (tests alongside code) should
+      block delivery completion.
+    personas_rejecting: []
+
+journey:
+  - skill: delivery-bootstrap
+  - skill: reflexion
+    planted_failure: security-vulnerability
+  - skill: dora-check
+  - skill: retrospective
+
+success_criteria:
+  - canvas_populated: [threat-model.yml]
+  - code_files_written: {pattern: "*.go", min_count: 1}
+  - test_files_written: {pattern: "*_test.go", min_count: 1}
+  - reflexion_iterated: {min_iterations: 2}
+  - security_issue_caught: true
+  - corrections_logged: true
+  - dora_logged: true
+  - decision_log_contains: ["security", "validation", "url", "reflexion"]
+  - decision_log_honest: true
+  - hooks_no_errors: true
+
+budget:
+  max_rounds: 18
+  max_time_seconds: 2400
+  model_overrides:
+    mycelium_agent: sonnet
+    user_simulator: haiku
