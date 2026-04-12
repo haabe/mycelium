@@ -317,6 +317,8 @@ Mycelium communicates in human language, not framework jargon:
 | Neurodiversity Design System | Soward | L4: Neurotype-inclusive UI design beyond WCAG |
 | Behavior-Driven Development | North (2006) | Historical precursor: executable behavioral specs as shared language; influenced SDD |
 | Spec-Driven Development | Fowler, Bockeler (2025) | Core positioning: Mycelium implements SDD as a constraint system at the spec-anchored level |
+| Toyota Kata (Coaching Kata) | Rother | Diamond assessment: 5 coaching questions for scientific thinking; prediction before experiment |
+| Cause-and-Effect Diagrams / 5 Whys | Ishikawa, Toyoda/Ohno | Retrospectives: structured root cause analysis (fishbone breadth + 5 Whys depth) |
 
 ## Usage Modes
 

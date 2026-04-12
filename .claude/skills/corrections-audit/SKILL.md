@@ -35,16 +35,23 @@ Analyze corrections.md for trends, recurring patterns, and actionable insights.
    - If human-written corrections dominate (>60%): flag for process/training improvement
    - If ai-assisted is high: check if the AI contribution or the human contribution caused the issue
 
-5. **Identify graduation candidates**:
+5. **Root-cause recurring corrections** (5 Whys):
+   For each correction that appears 3+ times, apply 5 Whys to find the systemic root:
+   - Why did this happen? -> Why did that happen? -> ... -> [systemic root cause]
+   - Stop when you reach something changeable: a guardrail, gate, process step, or prompt instruction
+   - Anti-pattern: stopping at "human error" or "agent didn't follow instructions" — ask why the system allowed it
+   *Source: Toyoda/Ohno (5 Whys), adapted for agentic workflows.*
+
+6. **Identify graduation candidates**:
    - Correction logged 3+ times with same root cause -> propose new guardrail (draft G-XX entry)
    - Correction reveals a failure mode not in anti-patterns.md -> propose new anti-pattern entry
    - Correction reveals a successful mitigation -> propose new pattern in patterns.md
 
-6. **Update TL;DR section**:
+7. **Update TL;DR section**:
    - Regenerate the TL;DR in corrections.md with the top 5 most impactful corrections
    - Impact = frequency x severity (blocking vs. quality vs. cosmetic)
 
-7. **Recommend actions**:
+8. **Recommend actions**:
    - For each graduation candidate: specific guardrail text, tier, and constraint type
    - For failed preventions: what went wrong and what stronger mechanism to use
    - For origin imbalances: specific context improvements

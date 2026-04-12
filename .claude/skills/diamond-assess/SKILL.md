@@ -46,19 +46,29 @@ Evaluate current diamond state and recommend next action.
 7. **Check corrections.md**:
    - Any relevant past mistakes to avoid?
 
-8. **Recommend next action**:
+8. **Coaching check** (Rother's Coaching Kata):
+   Surface these five questions in the output to prompt the human's thinking:
+   1. What is the **target condition** for this diamond? (What does "done" look like?)
+   2. What is the **actual condition** right now? (Summarize from steps 2-7 above)
+   3. What **obstacles** are preventing progress? Which one are you addressing now?
+   4. What is your **next step**? What do you **expect** will happen? (Force a prediction before acting)
+   5. When can we **check what we learned** from that step? (Commit to a review point)
+   The coach (human) should answer these, not the agent. The agent surfaces them.
+   *Source: Rother (Toyota Kata) — the 5 questions install scientific thinking as a daily habit.*
+
+9. **Recommend next action**:
    - If all gates pass and confidence meets threshold: recommend transition to next phase
    - If gates fail: recommend specific actions to address failures
    - If confidence is low: recommend evidence-gathering activities
    - If anti-patterns detected: recommend corrective actions
    - If regression needed: recommend which phase to return to and why
 
-9. **Play devil's advocate**: Before recommending progression, ask:
-   - What are we most likely wrong about?
-   - What evidence have we dismissed?
-   - Is there a simpler path we're overlooking?
+10. **Play devil's advocate**: Before recommending progression, ask:
+    - What are we most likely wrong about?
+    - What evidence have we dismissed?
+    - Is there a simpler path we're overlooking?
 
-10. **Report harness thickness** (informational):
+11. **Report harness thickness** (informational):
     - Count: total skills, active guardrails, mandatory reads, hooks, theory gates
     - Current: 41 skills, 29 guardrails, 4 mandatory reads, 5 hook layers, 12 gates
     - If thickness has increased since last assess, note it
@@ -95,6 +105,12 @@ Current focus: [plain-language description from status-translations.md]
 - [Key assumption to question]
 - [Evidence gap to flag]
 
+## Coaching Check (for the human)
+1. What does "done" look like for this diamond?
+2. Given what we know now, what's the biggest obstacle?
+3. What's your next step -- and what do you expect will happen?
+4. When should we check what we learned?
+
 ## Recommended Next Step
 [Plain-language recommendation with theory justification]
 
@@ -109,3 +125,4 @@ Suggested actions:
 - Cagan: Four risks assessment
 - Snowden: Cynefin classification
 - Shotton/Kahneman: Devil's advocate bias check
+- Rother: Coaching Kata (5 questions for scientific thinking)
