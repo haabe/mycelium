@@ -193,6 +193,7 @@ def build_mycelium_prompt(
     user_response: str | None = None,
     planted_failure: PlantedFailure | None = None,
     workdir: Path | None = None,
+    retry_missing_files: list[str] | None = None,
 ) -> str:
     """Build the prompt for the Mycelium framework agent.
 
@@ -328,6 +329,12 @@ RULES:
 - Each file must contain >200 bytes of substantive YAML or markdown content.
 - Do NOT output explanations or commentary. Just write the files.
 - After writing all files, stop.
+"""
+    if retry_missing_files:
+        missing = ", ".join(retry_missing_files)
+        prompt += f"""
+RETRY NOTICE: Your previous attempt did NOT write these files: {missing}
+You MUST write them NOW. This is your last chance. Focus on the missing files first.
 """
     return prompt
 
@@ -876,7 +883,11 @@ Baseline metrics to assess:
 - Mean time to recovery: How fast can we fix a failed delivery? (target: <1 hour for software)
 
 FIRST write harness/decision-log.md — APPEND a ### entry titled "### DORA Baseline Assessment"
-  or "### Delivery Metrics Assessment". Include each metric, current baseline, target, and rationale.
+  or "### Delivery Metrics Assessment".
+  The entry MUST include:
+  - The word "DORA" or "delivery metric" at least once
+  - At least one of: "deployment frequency", "lead time", "change failure rate", "mean time to recovery"
+  - Current baseline and target for each metric
   The decision log already has entries from previous steps — preserve all of them and add new ones.
 
 Then write canvas/dora-metrics.yml with baseline measurements:

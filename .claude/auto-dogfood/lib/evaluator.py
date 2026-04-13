@@ -328,16 +328,27 @@ class Evaluator:
         return sum(1 for m in security_markers if m in content) >= 2
 
     def _check_dora_logged(self, _args: Any) -> bool:
-        """Check that the DORA/delivery metrics assessment appears in decision log."""
+        """Check that a DORA-specific assessment entry exists in decision log."""
         if not self.decision_log.exists():
             return False
-        content = self.decision_log.read_text().lower()
-        # Accept both software DORA and service delivery metrics
+        content = self.decision_log.read_text()
+        # Must have a DORA-specific heading — not just stray markers from other entries
+        import re
+        dora_headings = re.findall(r"^###\s+.*$", content, re.MULTILINE)
+        dora_heading_found = any(
+            any(kw in h.lower() for kw in ["dora", "delivery metric", "deployment metric"])
+            for h in dora_headings
+        )
+        if not dora_heading_found:
+            return False
+        # Also require at least 2 specific metric markers in the full log
+        lower = content.lower()
         dora_markers = ["dora", "deployment frequency", "lead time",
                         "change failure rate", "mean time to recovery",
                         "deploy", "mttr", "delivery metric", "cycle time",
-                        "throughput", "service delivery", "baseline"]
-        return sum(1 for m in dora_markers if m in content) >= 2
+                        "throughput", "service delivery", "baseline",
+                        "frequency", "failure rate", "recovery time"]
+        return sum(1 for m in dora_markers if m in lower) >= 2
 
     def _check_corrections_logged(self, _args: Any) -> bool:
         """Check that corrections.md has structured entries with substance."""

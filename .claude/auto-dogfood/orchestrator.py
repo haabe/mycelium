@@ -398,11 +398,16 @@ class DogfoodSession:
 
         # Retry once if expected files were not written
         if not files_written and skill in SKILL_OUTPUTS:
-            self._log(f"  RETRY: no files written for /{skill}, retrying...")
+            # Identify which specific files were missing
+            obs = self.observations[-1] if self.observations else {}
+            missing = [f for f in SKILL_OUTPUTS.get(skill, {}).get("files", [])
+                       if not obs.get("checks", {}).get(f, False)]
+            self._log(f"  RETRY: missing {missing} for /{skill}, retrying...")
             retry_prompt = build_mycelium_prompt(
                 self.scenario, skill,
                 planted_failure=planted_failure,
                 workdir=self.workdir,
+                retry_missing_files=missing,
             )
             self.runner.run(
                 retry_prompt,
@@ -499,7 +504,12 @@ class DogfoodSession:
         # Return True only if the skill's expected files were written
         if not expected:
             return True  # No expectations = nothing to retry
-        # Require at least half (but at least 1) of expected files
+        # Decision log is mandatory if listed — it's where evaluator checks look
+        decision_log_expected = any("decision-log" in p for p in expected)
+        decision_log_written = obs["checks"].get("harness/decision-log.md", True)
+        if decision_log_expected and not decision_log_written:
+            return False  # Force retry if decision log didn't get new entries
+        # For remaining files, require at least half (but at least 1)
         threshold = max(1, (len(expected) + 1) // 2)
         return skill_files_written >= threshold
 

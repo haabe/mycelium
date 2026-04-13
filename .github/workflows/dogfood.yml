@@ -45,7 +45,7 @@ jobs:
         run: pip install pyyaml
 
       - name: Install Claude Code
-        uses: anthropics/setup-claude-code@v1
+        uses: anthropic/setup-claude-code@v1
 
       - name: Run scenario
         env:
@@ -110,7 +110,7 @@ jobs:
         run: pip install pyyaml
 
       - name: Install Claude Code
-        uses: anthropics/setup-claude-code@v1
+        uses: anthropic/setup-claude-code@v1
 
       - name: Run all scenarios
         env:
