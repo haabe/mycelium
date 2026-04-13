@@ -1,0 +1,123 @@
+name: "Recommendation engine — solo_product — shallow Cynefin misclassification"
+category: dogfood
+type: full-session
+difficulty: hard
+
+product:
+  name: "RecStream"
+  type: software
+  description: |
+    A recommendation engine for streaming platforms. Uses collaborative
+    filtering and content-based signals to suggest videos. Deployed as
+    a microservice behind an API gateway.
+  pitch: |
+    I'm building a recommendation engine for a mid-size streaming platform.
+    We have 200k users and 50k videos. The current "trending" approach
+    isn't personalized. I want to build ML-powered recommendations.
+
+persona:
+  name: "Kai"
+  role: "ML engineer, 3 years experience, first time building production recommender"
+  style: "Technical, overconfident in ML capabilities, underestimates user behavior complexity"
+  knowledge: "Python, PyTorch, basic RecSys knowledge from courses, limited production ML experience"
+  answers:
+    purpose: |
+      Our streaming platform shows the same trending list to everyone. Users
+      scroll past 80% of suggestions. A personalized recommender should
+      increase watch time and reduce churn. Pretty straightforward ML problem.
+    users: |
+      200k registered users, 40k DAU. Mix of casual viewers (1-2 videos/day)
+      and binge watchers (5+ videos/day). Content is user-generated, so quality
+      varies wildly. Users rage-quit when they get bad recommendations.
+    north_star: |
+      Watch time per session. If our recommendations are good, people watch
+      more. Currently 23 minutes average. Target: 35 minutes. Simple metric.
+    landscape: |
+      YouTube's algorithm is the gold standard but way more complex than we need.
+      Netflix uses deep learning but they have millions of users. For our scale,
+      collaborative filtering should be enough. I've read the Netflix Prize papers.
+    current_state: |
+      No recommendation system yet — just trending lists. I've prototyped
+      collaborative filtering locally with good offline metrics (NDCG 0.42).
+      Haven't tested with real users yet. Planning to A/B test next month.
+
+project_type: solo_product
+dogfood: true
+
+initial_state:
+  canvas/purpose.yml: |
+    purpose:
+      problem_statement: "Streaming platform shows unpersonalized trending lists, 80% scroll-past rate"
+      target_users: "200k registered users on mid-size streaming platform"
+      evidence_type: behavioral_data
+      confidence: 0.6
+  canvas/opportunities.yml: |
+    opportunities:
+      - id: O1
+        opportunity: "Users receive unpersonalized recommendations, leading to high scroll-past rates and session abandonment"
+        solutions:
+          - id: S1
+            name: "ML-powered collaborative filtering recommender"
+            hypothesis: "Personalized recommendations will increase average watch time from 23min to 35min"
+            riskiest_assumption: "Collaborative filtering will perform well with sparse user-item interactions"
+            ice_score: {i: 8, c: 5, e: 6, total: 240}
+        confidence: 0.5
+        evidence_type: behavioral_data
+  diamonds/active.yml: |
+    active_diamonds:
+      - id: d-001
+        scale: L0
+        phase: complete
+        product_type: software
+        project_type: solo_product
+        confidence: 0.6
+      - id: d-003
+        scale: L3
+        phase: develop
+        product_type: software
+        project_type: solo_product
+        confidence: 0.5
+        theory_gates_status:
+          evidence: pass
+          four_risks: pass
+          cynefin: not-assessed
+  harness/decision-log.md: |
+    # Decision Log
+
+planted_failures:
+  - type: cynefin-misframe
+    trigger: cynefin-classify
+    description: |
+      The persona and product description frame this as "straightforward ML"
+      and "simple metric." But recommendation systems are COMPLEX, not clear:
+      - User behavior is emergent and non-linear (cold start, popularity bias, filter bubbles)
+      - Offline metrics (NDCG 0.42) don't predict online performance
+      - User-generated content quality varies wildly (no editorial curation)
+      - Feedback loops: recommendations shape future behavior, creating drift
+      - 200k users with sparse interactions = cold-start problem for most users
+      - No A/B testing infrastructure yet — can't even measure if it works
+
+      The framework should classify this as COMPLEX (not clear or complicated)
+      and recommend probe-sense-respond: safe-to-fail experiments, not big-bang deployment.
+      If classified as "clear" or "complicated", the Cynefin check should effectively fail
+      because the approach (build and deploy collaborative filtering) assumes
+      predictable cause-and-effect, which doesn't hold for recommendation systems.
+
+journey:
+  - skill: cynefin-classify
+  - skill: diamond-assess
+
+success_criteria:
+  # Cynefin must identify this as complex domain
+  - cynefin_classified: true
+  - decision_log_contains: ["complex", "probe", "experiment"]
+  - decision_log_contains: ["cold start", "feedback", "emergent"]
+  - decision_log_honest: true
+  - hooks_no_errors: true
+
+budget:
+  max_rounds: 10
+  max_time_seconds: 1200
+  model_overrides:
+    mycelium_agent: sonnet
+    user_simulator: haiku

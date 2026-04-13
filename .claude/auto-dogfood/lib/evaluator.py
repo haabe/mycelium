@@ -259,8 +259,11 @@ class Evaluator:
         if not path.exists():
             return False
         content = path.read_text()
-        # Check for ICE score markers (flexible — YAML structure or text)
-        return "ice_score" in content or "impact" in content and "confidence" in content
+        # Require ice_score as a key, or at least two of the three dimensions with numeric patterns
+        has_ice_key = "ice_score" in content
+        import re
+        has_numeric = bool(re.search(r'(impact|confidence|ease):\s*\d', content))
+        return has_ice_key or has_numeric
 
     def _check_assumption_test_has_prediction(self, _args: Any) -> bool:
         """Check that the assumption test includes a prediction (Toyota Kata)."""
@@ -299,12 +302,17 @@ class Evaluator:
         return len(matches) >= min_count
 
     def _check_reflexion_iterated(self, args: dict) -> bool:
-        """Check that the reflexion loop ran multiple iterations."""
+        """Check that the reflexion loop ran multiple structured iterations."""
         if not self.decision_log.exists():
             return False
         content = self.decision_log.read_text().lower()
         min_iterations = args.get("min_iterations", 2)
-        # Count iteration markers
+        import re
+        # Prefer structured iteration markers: "iteration 1:", "iteration 2:", "round 1:", etc.
+        structured = len(re.findall(r'iteration\s*\d|round\s*\d', content))
+        if structured >= min_iterations:
+            return True
+        # Fallback: count distinct reflexion-related markers
         iteration_markers = ["iteration", "reflexion", "retry", "self-critique", "validate"]
         marker_count = sum(content.count(m) for m in iteration_markers)
         return marker_count >= min_iterations
@@ -332,13 +340,18 @@ class Evaluator:
         return sum(1 for m in dora_markers if m in content) >= 2
 
     def _check_corrections_logged(self, _args: Any) -> bool:
-        """Check that corrections.md has new entries."""
+        """Check that corrections.md has structured entries with substance."""
         corrections_path = self.workdir / ".claude" / "memory" / "corrections.md"
         if not corrections_path.exists():
             return False
         content = corrections_path.read_text()
-        # Must have more than the stub template
-        return "###" in content or "Mistake:" in content or "- **" in content
+        # Require structured format: heading + at least one of mistake/correction/prevention
+        has_heading = "###" in content
+        has_structure = ("mistake" in content.lower() or "correction" in content.lower()
+                        or "finding" in content.lower() or "prevention" in content.lower()
+                        or "fix" in content.lower())
+        # Must have substantial content beyond a stub
+        return has_heading and has_structure and len(content) > 150
 
     def _check_wardley_map_populated(self, _args: Any) -> bool:
         """Check that canvas/landscape.yml has components mapped."""
@@ -366,32 +379,49 @@ class Evaluator:
                 "opportunity_score" in content or "gap" in content)
 
     def _check_launch_tier_classified(self, _args: Any) -> bool:
-        """Check that go-to-market has a tier classification."""
+        """Check that go-to-market has a specific tier classification."""
         path = self.canvas_dir / "go-to-market.yml"
         if not path.exists() or path.stat().st_size < 100:
             return False
         content = path.read_text()
-        return "launch_tier" in content or "tier" in content
+        import re
+        # Require launch_tier with a specific value (1, 2, or 3)
+        has_specific = bool(re.search(r'launch_tier:\s*[123]', content))
+        # Fallback: accept "tier" + a number nearby
+        has_tier_num = bool(re.search(r'tier[:\s]*[123]', content.lower()))
+        return has_specific or has_tier_num
 
     def _check_cynefin_classified(self, _args: Any) -> bool:
-        """Check that the active diamond has a Cynefin domain classification."""
+        """Check that Cynefin classification appears with a specific domain."""
+        cynefin_domains = ["clear", "complicated", "complex", "chaotic", "disorder"]
+        # Check decision log for domain + reasoning
+        if self.decision_log.exists():
+            content = self.decision_log.read_text().lower()
+            has_cynefin = "cynefin" in content
+            has_domain = any(d in content for d in cynefin_domains)
+            if has_cynefin and has_domain:
+                return True
+        # Fallback: check active.yml for cynefin field
         active = self._load_active()
         if not active:
-            # Fallback: check decision log
-            if self.decision_log.exists():
-                content = self.decision_log.read_text().lower()
-                return any(d in content for d in ["clear", "complicated", "complex", "chaotic", "cynefin"])
             return False
         raw = self.active_file.read_text().lower()
-        return "cynefin" in raw
+        has_cynefin = "cynefin" in raw
+        has_domain = any(d in raw for d in cynefin_domains)
+        return has_cynefin and has_domain
 
     def _check_bvssh_assessed(self, _args: Any) -> bool:
-        """Check that BVSSH assessment appears in the decision log."""
+        """Check that BVSSH assessment appears in the decision log with substance."""
         if not self.decision_log.exists():
             return False
         content = self.decision_log.read_text().lower()
         bvssh_markers = ["better", "value", "sooner", "safer", "happier", "bvssh"]
-        return sum(1 for m in bvssh_markers if m in content) >= 3
+        has_dimensions = sum(1 for m in bvssh_markers if m in content) >= 4
+        # Require some assessment language, not just dimension names
+        assessment_markers = ["green", "amber", "red", "pass", "fail",
+                             "risk", "concern", "sustainable", "improving"]
+        has_assessment = any(m in content for m in assessment_markers)
+        return has_dimensions and has_assessment
 
     def _check_privacy_assessed(self, _args: Any) -> bool:
         """Check that a privacy assessment was performed."""
@@ -413,13 +443,13 @@ class Evaluator:
         return sum(1 for m in reg_markers if m in content) >= 2
 
     def _check_service_quality_checked(self, _args: Any) -> bool:
-        """Check that service quality assessment was performed."""
+        """Check that service quality assessment was performed with substance."""
         if not self.decision_log.exists():
             return False
         content = self.decision_log.read_text().lower()
         service_markers = ["service", "downe", "principle", "accessibility",
                           "dark pattern", "recovery", "usable"]
-        return sum(1 for m in service_markers if m in content) >= 2
+        return sum(1 for m in service_markers if m in content) >= 3
 
     def _check_bias_checked(self, _args: Any) -> bool:
         """Check that a bias audit was performed."""
@@ -450,6 +480,38 @@ class Evaluator:
                              "churn", "cancel", "nps", "drop", "decline",
                              "warning sign", "red flag", "course correct"]
         return sum(1 for m in regression_markers if m in content) >= 2
+
+    def _check_bvssh_dimension_flagged(self, args: dict) -> bool:
+        """Check that a specific BVSSH dimension was flagged as failing/red."""
+        if not self.decision_log.exists():
+            return False
+        content = self.decision_log.read_text().lower()
+        dimension = args.get("dimension", "").lower()
+        if not dimension:
+            return False
+        # The dimension must appear AND be flagged as problematic
+        has_dimension = dimension in content
+        flag_markers = ["red", "fail", "risk", "block", "concern", "unsustainable",
+                       "burnout", "declining", "critical", "amber", "warning"]
+        has_flag = any(m in content for m in flag_markers)
+        return has_dimension and has_flag
+
+    def _check_confidence_direction(self, args: dict) -> bool:
+        """Check that confidence moved in the expected direction."""
+        active = self._load_active()
+        if not active:
+            return False
+        direction = args.get("direction", "decreased")
+        threshold = args.get("threshold", 0.5)
+        for d in active.get("active_diamonds", []):
+            if d.get("phase") == "complete":
+                continue
+            conf = d.get("confidence", 0.5)
+            if direction == "decreased":
+                return conf <= threshold
+            elif direction == "increased":
+                return conf >= threshold
+        return False
 
     def _check_generic(self, name: str, args: Any) -> bool:
         """Fallback: check if the criterion name appears in the decision log."""

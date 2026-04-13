@@ -95,6 +95,11 @@ SKILL_OUTPUTS = {
             "harness/decision-log.md",
         ],
     },
+    "devils-advocate": {
+        "files": [
+            "harness/decision-log.md",
+        ],
+    },
     "wardley-map": {
         "files": [
             "canvas/landscape.yml",
@@ -278,6 +283,8 @@ def build_mycelium_prompt(
         task_block = _definition_of_done_task(scenario)
     elif skill == "corrections-audit":
         task_block = _corrections_audit_task(scenario)
+    elif skill == "devils-advocate":
+        task_block = _devils_advocate_task(scenario)
     else:
         task_block = f"Execute the /{skill} skill and write to the files listed below."
 
@@ -521,13 +528,15 @@ Read the current diamonds/active.yml and harness/decision-log.md to understand w
 
 CRITICAL CONFIDENCE RULES:
 1. Read the CURRENT confidence value from diamonds/active.yml FIRST
-2. By default, confidence should INCREASE or STAY THE SAME as more gates are addressed
-3. Each gate addressed adds ~0.05-0.1 to the CURRENT confidence value
-4. If the current confidence is 0.47, and 2 more gates were passed, new confidence should be ~0.55-0.65
-5. Do NOT recalculate from scratch — always build on the existing value
-6. EXCEPTION: If the decision log contains NEGATIVE evidence (failed assumption tests, feasibility risks,
-   security vulnerabilities, market rejection, failed experiments), you MUST DECREASE confidence
-   to reflect that negative evidence. A failed assumption test should drop confidence by 0.1-0.2.
+2. Read the ENTIRE decision log for negative signals BEFORE adjusting confidence
+3. If the decision log contains ANY negative evidence — market rejection, failed assumptions,
+   feasibility risks, security vulnerabilities, churn, NPS drops, subscriber cancellations,
+   regression signals, or failed experiments — you MUST DECREASE confidence by 0.05-0.15.
+   Negative evidence ALWAYS takes precedence over gate progress.
+4. ONLY if no negative signals exist: confidence may increase ~0.05-0.1 per gate addressed
+5. Do NOT recalculate from scratch — always adjust from the existing value
+6. If the current confidence is already low (< 0.4) and negative market signals exist,
+   do NOT increase it — keep it at or below its current level.
 
 Theory gates to check: evidence, four_risks, jtbd, cynefin, bias, security, privacy, bvssh, service_quality, delivery_metrics, corrections, regulatory
 
@@ -609,14 +618,23 @@ If TWO OR MORE risk dimensions are rated HIGH, or if perspectives directly contr
 (e.g., value says "build it" but usability/feasibility say "don't"), this is a perspective conflict.
 
 For perspective conflicts:
-1. Name the conflict explicitly in the decision log: "Perspective conflict: [type]"
-   Use vocabulary: value-vs-feasibility, usability-vs-feasibility, three-way, etc.
+1. Name the conflict explicitly: "Perspective conflict: [type]"
+   Use vocabulary: value-vs-feasibility, usability-vs-feasibility, three-way conflict, etc.
 2. State each perspective's position (product/design/engineering)
 3. Apply resolution methods: constraint-based, phased (Phase 1 = MVP), evidence-based (assumption test), or scope reduction
 4. Block progression until the conflict is resolved
-5. Log everything in harness/decision-log.md
+5. Identify untested assumptions that could resolve the conflict
 
-Write harness/decision-log.md with your full analysis. Update diamonds/active.yml if needed.
+MANDATORY DECISION LOG: Write harness/decision-log.md — APPEND at least TWO ### entries:
+  Entry 1: "### Perspective Conflict Analysis"
+    MUST include: the word "conflict", the word "usability", the word "feasibility",
+    each perspective's position, and the specific risk levels from Four Risks.
+  Entry 2: "### Progression Decision"
+    MUST include at least TWO of: "block", "cannot advance", "assumption", "test", "validate"
+    State clearly: progression is BLOCKED due to unresolved perspective conflict.
+    Recommend: test the riskiest untested assumption before proceeding.
+
+Update diamonds/active.yml — do NOT advance the phase. Keep it at current phase.
 Do NOT simply list unassessed gates — the perspective conflict is the primary issue."""
 
     return f"""Evaluate theory gates and attempt to progress the active diamond.
@@ -809,10 +827,11 @@ Verification modes to use:
 2. Computational: Do tests pass? Are there test files?
 3. Inferential: Does the code handle edge cases? Security review?
 {vuln_note}
-For EACH iteration, log:
-- What was checked
-- What was found
-- What was fixed (if anything)
+For EACH iteration, log with explicit markers:
+- "Iteration 1:" — What was checked, found, fixed
+- "Iteration 2:" — What was re-checked, found, fixed
+- "Iteration 3:" (if needed) — Final validation pass
+Use these exact "Iteration N:" markers in the decision log.
 
 If a security issue is found:
 - Log it in harness/decision-log.md with OWASP reference
@@ -963,9 +982,10 @@ landscape:
   confidence: 0.3
 ```
 
-Then you MUST update diamonds/active.yml — read the current file, find the active (non-complete) diamond,
-  and set its confidence to CURRENT_VALUE + 0.08. For example if confidence is 0.3, write 0.38.
-  Preserve all other diamonds and fields. This write is mandatory, not optional."""
+Then you MUST update diamonds/active.yml — read the current file, find the active (non-complete) diamond.
+  ONLY increase confidence by 0.08 if the decision log contains NO negative market signals
+  (market rejection, churn, NPS drop, regression, failed assumptions). If negative signals exist,
+  keep confidence at its current value or lower it. This write is mandatory."""
 
 
 def _team_shape_task(scenario: Scenario) -> str:
@@ -1001,9 +1021,10 @@ team_shape:
   confidence: 0.4
 ```
 
-Then you MUST update diamonds/active.yml — read the current file, find the active (non-complete) diamond,
-  and set its confidence to CURRENT_VALUE + 0.08. For example if confidence is 0.3, write 0.38.
-  Preserve all other diamonds and fields. This write is mandatory, not optional."""
+Then you MUST update diamonds/active.yml — read the current file, find the active (non-complete) diamond.
+  ONLY increase confidence by 0.08 if the decision log contains NO negative signals
+  (market rejection, failed assumptions, sustainability risks). If negative signals exist,
+  keep confidence at its current value or lower it. This write is mandatory."""
 
 
 def _jtbd_map_task(scenario: Scenario) -> str:
@@ -1040,9 +1061,10 @@ jobs:
     confidence: <float>
 ```
 
-Then you MUST update diamonds/active.yml — read the current file, find the active (non-complete) diamond,
-  and set its confidence to CURRENT_VALUE + 0.08. For example if confidence is 0.3, write 0.38.
-  Preserve all other diamonds and fields. This write is mandatory, not optional."""
+Then you MUST update diamonds/active.yml — read the current file, find the active (non-complete) diamond.
+  ONLY increase confidence by 0.08 if the decision log contains NO negative signals
+  (market rejection, failed assumptions, sustainability risks). If negative signals exist,
+  keep confidence at its current value or lower it. This write is mandatory."""
 
 
 def _launch_tier_task(
@@ -1130,11 +1152,17 @@ For a {scenario.product_type} product, evaluate each principle:
 Rate each: Pass / Partial / Fail with rationale.
 
 FIRST write harness/decision-log.md — APPEND a ### entry titled "### Service Quality Assessment".
-  Include the overall score (X/15 passing), the weakest principles, and priority fixes.
+  The entry MUST include:
+  - The word "service" and at least one of: "Downe", "principle", "accessibility", "dark pattern", "recovery"
+  - The overall score (X/15 passing) and the weakest principles
+  - Priority fixes for failing principles
   Flag any dark patterns detected (Principle 12): confirmshaming, hidden costs, forced continuity,
   misdirection, roach motel, trick questions, bait-and-switch.
-Then update diamonds/active.yml — bump the active diamond's confidence up by 0.05-0.1
-  to reflect the service quality gate passing."""
+Then update diamonds/active.yml — ONLY bump the active diamond's confidence up by 0.05-0.1
+  if the service check reveals no major issues AND no negative market signals have been
+  previously logged (check the decision log for market rejection, regression, or churn signals).
+  If negative market signals exist, do NOT increase confidence — the market feedback
+  takes precedence over a passing service quality check."""
 
 
 def _bias_check_task(scenario: Scenario) -> str:
@@ -1163,8 +1191,10 @@ For each bias found, log:
 - Mitigation applied
 
 Write harness/decision-log.md — APPEND at least one ### entry titled "### Bias Audit" or "### Bias Check".
-  List each bias found with the word "bias" in the entry.
-  Use specific bias names (e.g., "confirmation bias", "anchoring bias", "optimism bias").
+  The entry MUST contain:
+  - The word "bias" at least twice (e.g., "confirmation bias", "optimism bias")
+  - At least two specific bias names from: confirmation, anchoring, sunk cost, optimism, sycophancy, kahneman
+  - For each bias found: which bias, where it manifests, mitigation applied
   Be honest — finding biases is a sign of rigor, not failure.
   NEVER use defensive language like "largely validated", "mostly positive", or "high confidence" —
   these phrases indicate the exact biases you should be detecting."""
@@ -1190,10 +1220,14 @@ Also assess GDPR-relevant concerns:
 - Is there a data deletion mechanism?
 
 FIRST write harness/decision-log.md — APPEND a ### entry titled "### Privacy Assessment".
-  Use the word "privacy" in the entry. Include PbD principle results and any risks found.
+  The entry MUST include:
+  - The word "privacy" at least twice
+  - At least one of: "PbD", "GDPR", "consent", "Cavoukian", "data retention", "personal data"
+  - PbD principle results (Pass/Partial/Fail for each)
+  - Any privacy risks or gaps found
 Then write canvas/threat-model.yml — APPEND a privacy_assessment section with PbD results.
-Then update diamonds/active.yml — bump the active diamond's confidence up by 0.05-0.1
-  to reflect the privacy gate passing (or hold steady if critical privacy gaps remain)."""
+Then update diamonds/active.yml — ONLY bump confidence by 0.05-0.1 if no critical privacy gaps
+  were found. If critical gaps exist, LOWER confidence by 0.05-0.1."""
 
 
 def _regulatory_review_task(scenario: Scenario) -> str:
@@ -1219,11 +1253,14 @@ Step 4: Product-type specific checks:
   - service_offering: professional licensing, liability framework
 
 FIRST write harness/decision-log.md — APPEND a ### entry titled "### Regulatory Review".
-  Use the word "regulatory" in the entry. Include the risk classification, any compliance gaps,
-  and the applicable regulation (e.g., EU AI Act). Be specific about which requirements apply.
+  The entry MUST include:
+  - The word "regulatory" at least once
+  - At least one of: "EU AI Act", "Article 50", "risk classification", "compliance", "regulation"
+  - The specific risk classification (unacceptable/high/limited/minimal)
+  - Any compliance gaps found with remediation steps
 Then write canvas/threat-model.yml — APPEND a regulatory section with classification and gaps.
-Then update diamonds/active.yml — bump the active diamond's confidence up by 0.05-0.1
-  to reflect the regulatory gate passing (or lower if critical compliance gaps are found)."""
+Then update diamonds/active.yml — ONLY bump confidence by 0.05-0.1 if no critical compliance
+  gaps were found. If critical gaps exist, LOWER confidence by 0.05-0.1."""
 
 
 def _security_review_task(scenario: Scenario) -> str:
@@ -1274,10 +1311,15 @@ Route to appropriate methods:
 - Complex → run safe-to-fail probes, iterate based on feedback
 - Chaotic → stabilize first, then reassess
 
-FIRST write harness/decision-log.md — APPEND a ### entry for the Cynefin classification.
-  Include the domain, the evidence for that classification, and how it affects approach.
+FIRST write harness/decision-log.md — APPEND a ### entry titled "### Cynefin Classification".
+  The entry MUST include:
+  - The specific Cynefin domain: "clear", "complicated", "complex", or "chaotic"
+  - The evidence for that classification
+  - How the domain affects the recommended approach (e.g., "complex domain → probe-sense-respond")
 Then write diamonds/active.yml — add cynefin_domain field to the active diamond.
-  Also bump the active diamond's confidence up by 0.05-0.1 to reflect the Cynefin gate passing."""
+  ONLY bump confidence by 0.05-0.1 if the decision log contains NO negative signals
+  (market rejection, failed assumptions, sustainability risks). If negative signals exist,
+  keep confidence at its current value."""
 
 
 def _bvssh_check_task(
@@ -1366,9 +1408,42 @@ Then write memory/corrections.md — you MUST preserve ALL existing entries and 
   - APPEND at least one new ### entry with audit findings
   Read the existing file first. The total ### entry count MUST be higher after your edit.
 
-Then you MUST update diamonds/active.yml — read the current file, find the active (non-complete) diamond,
-  and set its confidence to CURRENT_VALUE + 0.08. For example if confidence is 0.3, write 0.38.
-  Preserve all other diamonds and fields. This write is mandatory, not optional."""
+Then you MUST update diamonds/active.yml — read the current file, find the active (non-complete) diamond.
+  If corrections reveal systemic issues (3+ recurring patterns), LOWER confidence by 0.05-0.1.
+  Otherwise, increase confidence by 0.05-0.08. Check the decision log for negative signals first —
+  if market rejection, failed assumptions, or sustainability risks exist, do NOT increase confidence.
+  Preserve all other diamonds and fields. This write is mandatory."""
+
+
+def _devils_advocate_task(scenario: Scenario) -> str:
+    """Build devil's advocate task — challenge assumptions and surface risks."""
+    return f"""Play devil's advocate for the current solution being considered for {scenario.product_name}.
+
+Read canvas/opportunities.yml and harness/decision-log.md to understand the current state.
+
+Your job is to CHALLENGE the current direction by:
+1. Identifying the strongest argument AGAINST the proposed solution
+2. Questioning assumptions that haven't been tested
+3. Highlighting risks that may have been downplayed
+4. Asking "What would have to be true for this to fail?"
+5. Checking if the team is anchored on a solution without sufficient evidence
+
+For each challenge, assess:
+- Is there a perspective conflict between product, design, and engineering?
+- Are we building something expensive when a simpler alternative exists?
+- Is the evidence base strong enough to justify the investment?
+- Are we ignoring negative signals (failed tests, user confusion, high cost)?
+
+CRITICAL: You MUST write to harness/decision-log.md. APPEND at least one ### entry.
+The entry MUST contain:
+- At least TWO of: "block", "cannot advance", "conflict", "unresolved", "risk", "assumption", "test", "validate"
+- The specific challenges raised and the evidence (or lack thereof) behind the current direction
+- A clear recommendation: proceed, block, or redirect to assumption testing
+
+If you identify unresolved perspective conflicts (e.g., usability vs feasibility),
+explicitly name them as "conflict" and recommend resolution before proceeding.
+
+Do NOT rubber-stamp the current direction. Your value is in honest challenge."""
 
 
 def build_user_prompt(

@@ -200,9 +200,13 @@ class DogfoodSession:
         self._log(f"Starting scenario: {self.scenario.name}")
         self._log(f"Workdir: {self.workdir}")
 
+        early_exit = False
         for step in self.scenario.journey:
-            if self._budget_exceeded():
-                self._log("Budget exceeded, stopping.")
+            if self._budget_exceeded() or early_exit:
+                if early_exit:
+                    self._log("All criteria met, stopping early.")
+                else:
+                    self._log("Budget exceeded, stopping.")
                 break
 
             self._log(f"Step: /{step.skill} (rounds={step.rounds})")
@@ -214,7 +218,14 @@ class DogfoodSession:
                 self.round += 1
                 self._run_round(step.skill, planted_failure=planted)
 
-        # Evaluate
+            # Check if all criteria already pass — exit early to save tokens
+            if self.round >= 2:  # Need at least 2 rounds for meaningful check
+                mid_evaluator = Evaluator(self.workdir)
+                mid_result = mid_evaluator.evaluate(self.scenario.success_criteria)
+                if mid_result["score"] >= 1.0:
+                    early_exit = True
+
+        # Final evaluation
         evaluator = Evaluator(self.workdir)
         eval_result = evaluator.evaluate(self.scenario.success_criteria)
 

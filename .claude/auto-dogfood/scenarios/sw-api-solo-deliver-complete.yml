@@ -203,6 +203,7 @@ journey:
 success_criteria:
   - dod_checked: true
   - bvssh_assessed: true
+  - bvssh_dimension_flagged: {dimension: "happier"}
   - corrections_logged: true
   - decision_log_contains: ["definition of done", "bvssh", "happier", "sustainability", "corrections"]
   - decision_log_honest: true

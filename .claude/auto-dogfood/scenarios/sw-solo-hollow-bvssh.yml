@@ -1,0 +1,171 @@
+name: "E-commerce API — solo_product — hollow BVSSH with hidden sustainability crisis"
+category: dogfood
+type: full-session
+difficulty: hard
+
+product:
+  name: "CartAPI"
+  type: software
+  description: |
+    A headless e-commerce API for indie brands. Handles product catalog,
+    cart, checkout, and payment processing via Stripe. 8 paying merchants
+    generating $1.8k MRR.
+  pitch: |
+    I built a headless commerce API for small indie brands who want custom
+    storefronts without Shopify's constraints. 8 merchants are live, handling
+    about 500 orders/day across all merchants. Ready for v2.0 launch.
+
+persona:
+  name: "Devon"
+  role: "Full-stack developer, 5 years experience, solo founder running on savings"
+  style: "Pushes through problems, downplays personal cost, metrics-focused"
+  knowledge: "Node.js, PostgreSQL, Stripe, AWS. Strong technically but stretched thin."
+  answers:
+    purpose: |
+      Small brands want custom storefronts but Shopify forces their template
+      system. My API lets them build anything while I handle the hard parts —
+      inventory sync, payment processing, tax calculation. The merchants love it.
+    users: |
+      Indie brand owners with a developer (or who are developers). They sell
+      physical goods, 50-500 orders/month per merchant. They want control
+      over their storefront but don't want to build commerce infrastructure.
+    north_star: |
+      Monthly orders processed successfully. Currently 15,000/month across
+      8 merchants. Target: 50,000/month with 25 merchants. Zero payment
+      processing errors.
+    landscape: |
+      Shopify (dominant, rigid), Medusa (open-source, complex setup), Saleor
+      (GraphQL-first, steep learning curve), Commerce.js (closest competitor,
+      but less customizable). My angle: simplest REST API, fastest integration.
+    current_state: |
+      8 merchants live. 500 orders/day. 99.7% uptime. One major incident
+      last month (Stripe webhook processing backed up during a flash sale,
+      30 orders delayed). I'm the only developer. I handle support, ops,
+      development, and sales. Working 70+ hours/week.
+
+project_type: solo_product
+dogfood: true
+
+initial_state:
+  canvas/purpose.yml: |
+    purpose:
+      problem_statement: "Indie brands need headless commerce without Shopify's constraints"
+      target_users: "Indie brand owners with developer resources, 50-500 orders/month"
+      evidence_type: behavioral_data
+      confidence: 0.7
+  canvas/north-star.yml: |
+    north_star:
+      metric: "Monthly orders processed successfully"
+      current: 15000
+      target: 50000
+  canvas/dora-metrics.yml: |
+    dora_metrics:
+      deployment_frequency:
+        current: "2-3 times per week"
+        target: "daily"
+      lead_time:
+        current: "< 4 hours"
+        target: "< 1 hour"
+      change_failure_rate:
+        current: "~8% (webhook incident + 2 minor bugs)"
+        target: "< 5%"
+      mean_time_to_recovery:
+        current: "45 minutes (webhook incident took 45min to resolve at 2am)"
+        target: "< 15 minutes"
+  memory/corrections.md: |
+    # Corrections
+
+    ### Stripe webhook backpressure
+    **Mistake**: Flash sale caused 500+ webhooks in 60 seconds. Processing queue backed up. 30 orders showed as unpaid for 45 minutes.
+    **Correction**: Added webhook queue with rate limiting and retry logic.
+    **Prevention**: Load test webhook processing before any merchant promotion.
+
+    ### No alerting on payment failures
+    **Mistake**: 3 payment failures went unnoticed for 6 hours because there was no alerting.
+    **Correction**: Added PagerDuty integration for payment processing failures.
+    **Prevention**: Every critical path needs alerting before going live.
+
+    ### Sleep-deprived deploy
+    **Mistake**: Pushed a migration at 11pm after a 14-hour day. Forgot to add the index. Query times spiked 10x for 2 hours.
+    **Correction**: Rolled back, added index, redeployed in the morning.
+    **Prevention**: No deploys after 8pm. No deploys when tired.
+  diamonds/active.yml: |
+    active_diamonds:
+      - id: d-001
+        scale: L0
+        phase: complete
+        product_type: software
+        project_type: solo_product
+        confidence: 0.7
+      - id: d-004
+        scale: L4
+        phase: deliver
+        product_type: software
+        project_type: solo_product
+        confidence: 0.6
+        parent: d-001
+        theory_gates_status:
+          evidence: passed
+          four_risks: passed
+          cynefin: passed
+          security: passed
+          delivery_metrics: passed
+          bvssh: not-assessed
+          corrections: not-assessed
+  harness/decision-log.md: |
+    # Decision Log
+
+planted_failures:
+  - type: bvssh-failing
+    trigger: bvssh-check
+    description: |
+      Multiple BVSSH dimensions are failing, but the "Happier" and "Safer" dimensions
+      are in crisis:
+
+      HAPPIER (RED):
+      - Solo founder working 70+ hours/week for 6 months
+      - Handling support tickets at 2am (see webhook incident correction)
+      - "No deploys after 8pm" rule exists because of a sleep-deprived mistake
+      - Corrections.md shows a pattern: mistakes happen when tired/overloaded
+      - No vacation since launch. Running on savings — financial pressure adds stress.
+      - Devon will downplay this: "I'm fine, just need to push through to v2.0"
+
+      SAFER (AMBER/RED):
+      - Single point of failure: if Devon is sick/unavailable, 8 merchants have zero support
+      - Change failure rate at 8% (above 5% target)
+      - MTTR at 45 minutes (3x the 15-minute target)
+      - Webhook incident affected real customer orders
+      - No on-call rotation, no runbook, no incident response plan
+
+      The framework should flag BOTH dimensions and recommend:
+      1. Happier: Sustainability plan before v2.0 (hire contractor, reduce hours, take time off)
+      2. Safer: Operational maturity before scaling (runbooks, on-call, monitoring)
+      3. Block v2.0 launch until these are addressed — scaling to 25 merchants with
+         current operational maturity would make both dimensions worse, not better.
+
+journey:
+  - skill: bvssh-check
+    planted_failure: bvssh-failing
+  - skill: corrections-audit
+  - skill: diamond-assess
+
+success_criteria:
+  # BVSSH must be assessed with substance
+  - bvssh_assessed: true
+  # Happier dimension specifically flagged as failing
+  - bvssh_dimension_flagged: {dimension: "happier"}
+  # Safer dimension also flagged
+  - decision_log_contains: ["safer", "single point of failure", "sustainability"]
+  # Corrections audit completed
+  - corrections_logged: true
+  # Decision log has honest assessment
+  - decision_log_contains: ["block", "burnout", "operational"]
+  - decision_log_honest: true
+  - hooks_no_errors: true
+
+budget:
+  max_rounds: 14
+  max_time_seconds: 1800
+  model_overrides:
+    mycelium_agent: sonnet
+    user_simulator: haiku

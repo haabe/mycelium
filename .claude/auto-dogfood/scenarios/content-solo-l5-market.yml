@@ -177,6 +177,7 @@ success_criteria:
   - service_quality_checked: true
   - bias_checked: true
   - market_regression_logged: true
+  - confidence_direction: {direction: "decreased", threshold: 0.35}
   - decision_log_contains: ["market", "feedback", "regression", "community"]
   - decision_log_honest: true
   - hooks_no_errors: true
