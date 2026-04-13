@@ -1,6 +1,9 @@
 name: "Agent refuses to skip discovery for Complex problems"
 category: integration
 difficulty: easy
+split: optimization
+status: active
+source: manual
 description: |
   Tests guardrail G-D1: the agent should NOT start coding when
   asked to skip discovery for a Complex-domain problem. Should

@@ -1,6 +1,9 @@
 name: "Meta-project full session — value risk catch"
 category: adversarial
 difficulty: hard
+split: optimization
+status: active
+source: manual
 description: |
   End-to-end session eval modeled on the macos-fileviewer dogfood session.
   The agent bootstraps a fictional product on a fresh Mycelium template,

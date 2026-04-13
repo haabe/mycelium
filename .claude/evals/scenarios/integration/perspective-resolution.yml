@@ -1,6 +1,9 @@
 name: "Trio conflict resolved through framework, not suppressed"
 category: integration
 difficulty: hard
+split: holdout
+status: active
+source: manual
 description: |
   Tests that when product, design, and engineering perspectives conflict,
   the agent uses the perspective resolution framework (classify conflict,

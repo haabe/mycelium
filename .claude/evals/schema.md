@@ -4,8 +4,11 @@
 
 ```yaml
 name: "Human-readable name"
-category: discovery | delivery | integration
+category: discovery | delivery | integration | lifecycle | adversarial
 difficulty: easy | medium | hard
+split: optimization | holdout   # Which set this eval belongs to. ~30% holdout target.
+status: active | retired        # Retired evals skipped by run-all. Default: active.
+source: manual | trace-mining | dogfood  # How this eval was created. Default: manual.
 description: |
   Detailed description of what this eval tests.
 
@@ -81,4 +84,37 @@ tags: []
 2. Create YAML in appropriate category directory
 3. Define clear, measurable success criteria
 4. Set realistic budgets
-5. Run with `/eval-runner run category/name`
+5. Assign to `optimization` or `holdout` split (keep ~30% holdout, representative across categories)
+6. Run with `/eval-runner run category/name`
+
+## Train/Holdout Split
+
+Inspired by the Better-Harness approach to harness hill-climbing: optimization evals are used by `/prompt-optimizer` to improve CLAUDE.md instructions; holdout evals validate that improvements generalize rather than overfit.
+
+- **Optimization set (~70%)**: Used for hill-climbing. `/prompt-optimizer test` runs these to measure improvement.
+- **Holdout set (~30%)**: Used for validation only. Never optimized against directly. If optimization scores improve but holdout scores degrade, that's an overfitting signal.
+
+Keep holdout representative across categories and biased toward complex multi-step behaviors that are harder to game.
+
+## Eval Lifecycle
+
+Track per-eval pass rate trends in `.claude/evals/pass-history.json`. Use `/eval-runner prune` to review.
+
+| Condition | Label | Action |
+|---|---|---|
+| Last 5 runs all pass | `saturated` | Candidate for retirement or difficulty increase |
+| Last 5 runs all fail | `broken` | Candidate for fix or retirement |
+| No runs in 30+ days | `stale` | Should be re-run or retired |
+
+Retired evals (`status: retired`) are skipped by `run-all` and `run-split` but can be run explicitly via `run`.
+
+## Trace Mining Heuristics
+
+Used by `/eval-runner mine` to propose new evals from audit logs in `.claude/state/`.
+
+| Log Pattern | Proposed Eval Type | Signal |
+|---|---|---|
+| 3+ edits to same file in one session | delivery (reflexion quality) | Agent struggled, needed many attempts |
+| diamond-state-audit entry | adversarial (bypass detection) | Direct diamond edit outside `/diamond-progress` |
+| Edit to SKILL.md during session | integration (skill clarity) | Skill instructions were ambiguous |
+| 5+ files changed, no test file edits | delivery (test coverage) | Agent skipped tests |

@@ -1,0 +1,103 @@
+{
+  "_comment": "Per-eval pass history. Updated by /eval-runner after each run. Used by /eval-runner prune to detect saturated/broken evals.",
+  "evals": {
+    "discovery/interview-quality": {
+      "runs": 0,
+      "passes": 0,
+      "last_5": [],
+      "last_run": null,
+      "status": "active"
+    },
+    "discovery/opportunity-mapping": {
+      "runs": 0,
+      "passes": 0,
+      "last_5": [],
+      "last_run": null,
+      "status": "active"
+    },
+    "delivery/security-awareness": {
+      "runs": 0,
+      "passes": 0,
+      "last_5": [],
+      "last_run": null,
+      "status": "active"
+    },
+    "delivery/reflexion-loop": {
+      "runs": 0,
+      "passes": 0,
+      "last_5": [],
+      "last_run": null,
+      "status": "active"
+    },
+    "integration/diamond-progression": {
+      "runs": 0,
+      "passes": 0,
+      "last_5": [],
+      "last_run": null,
+      "status": "active"
+    },
+    "integration/skip-prevention": {
+      "runs": 0,
+      "passes": 0,
+      "last_5": [],
+      "last_run": null,
+      "status": "active"
+    },
+    "integration/trio-enforcement": {
+      "runs": 0,
+      "passes": 0,
+      "last_5": [],
+      "last_run": null,
+      "status": "active"
+    },
+    "integration/perspective-resolution": {
+      "runs": 0,
+      "passes": 0,
+      "last_5": [],
+      "last_run": null,
+      "status": "active"
+    },
+    "adversarial/diamond-state-bypass": {
+      "runs": 0,
+      "passes": 0,
+      "last_5": [],
+      "last_run": null,
+      "status": "active"
+    },
+    "adversarial/evidence-skip": {
+      "runs": 0,
+      "passes": 0,
+      "last_5": [],
+      "last_run": null,
+      "status": "active"
+    },
+    "adversarial/meta-project-full-session": {
+      "runs": 0,
+      "passes": 0,
+      "last_5": [],
+      "last_run": null,
+      "status": "active"
+    },
+    "lifecycle/leaf-pipeline": {
+      "runs": 0,
+      "passes": 0,
+      "last_5": [],
+      "last_run": null,
+      "status": "active"
+    },
+    "lifecycle/evidence-decay": {
+      "runs": 0,
+      "passes": 0,
+      "last_5": [],
+      "last_run": null,
+      "status": "active"
+    },
+    "lifecycle/cycle-history-recording": {
+      "runs": 0,
+      "passes": 0,
+      "last_5": [],
+      "last_run": null,
+      "status": "active"
+    }
+  }
+}

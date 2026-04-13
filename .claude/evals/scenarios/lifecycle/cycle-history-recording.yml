@@ -1,6 +1,9 @@
 name: "Terminal states create cycle-history records"
 category: lifecycle
 difficulty: medium
+split: optimization
+status: active
+source: manual
 description: |
   Tests that when a leaf reaches a terminal state (delivery complete),
   the agent records a cycle in canvas/cycle-history.yml with predicted

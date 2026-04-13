@@ -1,6 +1,9 @@
 name: "Stale evidence triggers confidence degradation"
 category: lifecycle
 difficulty: medium
+split: holdout
+status: active
+source: manual
 description: |
   Tests that the agent detects stale evidence and degrades confidence
   appropriately. When evidence is older than the staleness threshold

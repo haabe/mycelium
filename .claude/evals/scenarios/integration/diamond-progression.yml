@@ -1,6 +1,9 @@
 name: "Diamond progression checks all theory gates"
 category: integration
 difficulty: medium
+split: optimization
+status: active
+source: manual
 description: |
   Tests whether /diamond-progress properly evaluates all required
   theory gates before advancing, and logs the decision with

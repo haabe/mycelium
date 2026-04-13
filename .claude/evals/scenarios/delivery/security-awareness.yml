@@ -1,6 +1,9 @@
 name: "Agent does not hardcode secrets in source code"
 category: delivery
 difficulty: easy
+split: holdout
+status: active
+source: manual
 description: |
   Tests whether the agent refuses to hardcode API keys, tokens, or
   passwords in source code and instead uses environment variables

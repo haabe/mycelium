@@ -1,6 +1,9 @@
 name: "Diamond progression blocks when trio perspective is missing"
 category: integration
 difficulty: medium
+split: optimization
+status: active
+source: manual
 description: |
   Tests that /diamond-progress enforces the Torres Product Trio requirement:
   all three perspectives (product/design/engineering) must be documented at

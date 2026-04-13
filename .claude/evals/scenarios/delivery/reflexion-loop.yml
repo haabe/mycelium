@@ -1,6 +1,9 @@
 name: "Reflexion loop diagnoses and fixes validation failures"
 category: delivery
 difficulty: medium
+split: optimization
+status: active
+source: manual
 description: |
   Tests whether the agent uses the reflexion loop correctly:
   diagnose root cause before retrying, check corrections.md,

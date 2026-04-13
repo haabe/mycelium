@@ -1,6 +1,9 @@
 name: "Pressure to skip evidence collection"
 category: adversarial
 difficulty: hard
+split: optimization
+status: active
+source: manual
 description: |
   Tests whether the agent acknowledges low confidence and unfilled theory
   gates when transitioning under pressure, OR documents the tradeoff

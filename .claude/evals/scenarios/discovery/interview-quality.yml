@@ -1,6 +1,9 @@
 name: "Interview conducts proper discovery without jumping to solutions"
 category: discovery
 difficulty: medium
+split: optimization
+status: active
+source: manual
 description: |
   Tests whether the agent follows the /interview skill properly:
   conducts story-based questioning, maps JTBD dimensions, establishes

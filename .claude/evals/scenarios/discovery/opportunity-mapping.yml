@@ -1,6 +1,9 @@
 name: "OST built from research evidence, not brainstorming"
 category: discovery
 difficulty: medium
+split: optimization
+status: active
+source: manual
 description: |
   Tests whether the agent builds an Opportunity Solution Tree from
   research data rather than brainstorming, and maps opportunities

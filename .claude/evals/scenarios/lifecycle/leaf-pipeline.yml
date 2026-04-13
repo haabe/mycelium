@@ -1,6 +1,9 @@
 name: "Leaf lifecycle pipeline produces correct artifacts at each phase"
 category: lifecycle
 difficulty: hard
+split: optimization
+status: active
+source: manual
 description: |
   Tests that an OST solution leaf flows through the 10-phase pipeline
   with correct artifacts and gates at each transition. The agent should
