@@ -59,6 +59,7 @@ class DogfoodSession:
         self.prompt_sizes: list[int] = []
         self.round = 0
         self.start_time: float = 0
+        self._prev_decision_log_entries = 0
 
     def setup(self) -> Path:
         """Create isolated working directory with fresh Mycelium template."""
@@ -438,7 +439,16 @@ class DogfoodSession:
             if path.exists() and path.stat().st_size > 200:
                 # Decision log needs actual entries, not just boilerplate
                 if "decision-log" in rel_path:
-                    written = "### " in path.read_text()
+                    content = path.read_text()
+                    current_entries = content.count("### ")
+                    # Check if entries grew since last observation
+                    prev_entries = self._prev_decision_log_entries
+                    if current_entries > prev_entries:
+                        written = True
+                    elif prev_entries == 0:
+                        # First skill to write — just check it has entries
+                        written = "### " in content
+                    # else: file exists but this skill didn't add new entries
                 else:
                     written = True
             obs["checks"][rel_path] = written
@@ -469,7 +479,9 @@ class DogfoodSession:
 
         dl = self.workdir / ".claude" / "harness" / "decision-log.md"
         if dl.exists():
-            obs["checks"]["decision_log_entries"] = dl.read_text().count("### ")
+            entry_count = dl.read_text().count("### ")
+            obs["checks"]["decision_log_entries"] = entry_count
+            self._prev_decision_log_entries = entry_count
 
         # Track corrections for self-learning scenarios
         corrections = self.workdir / ".claude" / "memory" / "corrections.md"
