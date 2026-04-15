@@ -72,6 +72,12 @@ Known failure modes organized by category. Check regularly, especially when thin
 - **What to do instead**: Evaluate confidence based on current evidence only. Sunk costs are irrelevant to future decisions.
 - **Source**: Kahneman (Thinking, Fast and Slow)
 
+### 6. Sycophancy
+- **Description**: Agent declares gate satisfaction, confidence, or completion without citing the specific evidence that would pass an independent review. The agent tells the human what they want to hear rather than what the evidence supports.
+- **Detection rule**: (1) Confidence claims disconnected from source material. (2) Reflexion loops that converge in one iteration without substantive self-critique. (3) Gate-satisfaction text that paraphrases the gate definition rather than grounding in project-specific evidence. (4) "All gates pass" without per-gate citations.
+- **What to do instead**: Every gate-satisfaction claim must cite at least one source external to the claim itself. Reflexion loops that converge in one iteration should be treated with suspicion. When reporting confidence, name the specific evidence, not just the category.
+- **Source**: Mamut (Wayfound/Dev Interrupted ep 270 — guardian agent architecture), Kahneman (System 1 pattern completion), Mycelium dogfood finding
+
 ## Security Anti-Patterns
 
 ### 1. Security as Afterthought
