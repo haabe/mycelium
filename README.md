@@ -1,8 +1,10 @@
 # Mycelium
 
-**Your AI agent's product thinking partner.** *v0.13.1*
+**Build the right thing the right way.**
 
-Mycelium ensures you build the right thing — not just build the thing right. It guides AI agents through structured discovery, strategy, and delivery using 42+ established product frameworks, 12 theory gates, and 42 skills. Drop it into any Claude Code project and run `/interview`.
+AI agents are great at building. They're terrible at knowing *what* to build. They'll jump from an idea to code without discovery, skip security, ignore accessibility, and inflate their own confidence. Spec-driven tools help structure the coding — but they start at "what to build," never "should you build it?"
+
+Mycelium is the only AI harness that guides the full journey from *"should we build this?"* to *"did it work?"* — powered by 30+ established product frameworks, connected by theory gates so critical steps can't be skipped.
 
 ```bash
 npx degit haabe/mycelium my-project && cd my-project
@@ -10,15 +12,153 @@ npx degit haabe/mycelium my-project && cd my-project
 /interview
 ```
 
-Works for **software, online courses, AI tools, and services**. One command to start. The agent handles the rest.
+## Who It's For
 
-### What It Catches
+**Builders** — solo developers or small teams using AI agents to build products. If you can't afford to burn runway on the wrong thing, Mycelium helps you find the right thing before you build it.
+
+Works for **software, online courses, AI tools, and services**. One command to start. The agent guides you from there.
+
+## What It Feels Like
+
+Mycelium isn't 42 skills dumped on you at once. It's three modes that show up at the right time:
+
+| When | Experience | Example |
+|------|-----------|---------|
+| **During a phase** | Mentor | "Have you considered who your real user is? Here's what the research says about purpose statements." |
+| **At boundaries** | Guardrail | "You're about to skip the bias check. The evidence gate requires this before progressing." |
+| **At transitions** | Checklist | "Before moving forward: evidence ✓, bias check ✗, corrections ✓" |
+
+You're in control. The agent surfaces what matters, catches you when you drift, and confirms readiness when you're done. A small project sees fewer gates and lighter guidance. A complex product gets the full treatment. The process is proportionate to the stakes.
+
+## What It Catches
 
 In its first dogfood session, Mycelium forced a strategic pivot before any code was written — the founder's original positioning was invalidated by evidence the framework required them to gather. Without it, that mistake would have shipped.
 
-### Why It Exists
+## How It Works
 
-AI coding agents are powerful but unguided. They'll jump from an idea to code without discovery, skip security, ignore accessibility, repeat past mistakes, and inflate their own confidence. Spec-driven tools (Kiro, Spec Kit) help structure the coding — but they start at "what to build," never "should you build it." Mycelium starts earlier and stays longer.
+### The Flow
+
+Mycelium has two building blocks that work together:
+
+- **Scales** answer *"What am I deciding?"* — from the big picture down to details
+- **Diamonds** answer *"How do I decide?"* — the same four-phase cycle at every scale
+
+#### The Journey: Scales × Diamonds
+
+```mermaid
+graph LR
+    L0["🎯 L0: Purpose<br/><i>Why do we exist?</i>"]
+    L1["🗺️ L1: Strategy<br/><i>Where do we play?</i>"]
+    L2["🔍 L2: Opportunity<br/><i>What problem to solve?</i>"]
+    L3["💡 L3: Solution<br/><i>How to solve it?</i>"]
+    L4["🔨 L4: Delivery<br/><i>Build and ship</i>"]
+    L5["🚀 L5: Market<br/><i>Reach users</i>"]
+
+    L0 --> L1 --> L2
+    L2 -->|"OST"| OPP1["Opportunity A"] --> SOL1["Solution 1"] -->|"winner"| L3
+    OPP1 --> SOL2["Solution 2"]
+    L2 -->|"OST"| OPP2["Opportunity B"] --> SOL3["Solution 3"]
+    L3 --> L4 --> L5
+    L5 -.->|"market feedback"| L2
+```
+
+#### Every Scale Runs the Same Diamond
+
+```mermaid
+graph LR
+    D1["◇ Discover<br/><i>explore broadly</i>"]
+    D2["◆ Define<br/><i>narrow focus</i>"]
+    D3["◇ Develop<br/><i>generate solutions</i>"]
+    D4["◆ Deliver<br/><i>build & validate</i>"]
+    D1 -->|"gate"| D2
+    D2 -->|"gate"| D3
+    D3 -->|"gate"| D4
+    D4 -.->|"regress if<br/>evidence says so"| D1
+```
+
+**Scales** flow top-to-bottom. Each scale spawns the next when it's ready:
+
+| Scale | Question | Key Theories |
+|-------|----------|-------------|
+| L0: Purpose | "Why do we exist?" | Sinek, Christensen |
+| L1: Strategy | "Where do we play?" | Wardley, North Star, Skelton |
+| L2: Opportunity | "What problem to solve?" | Torres, Allen, Cynefin |
+| L3: Solution | "How to solve it?" | Gilad, Cagan, Downe |
+| L4: Delivery | "Build and ship" | Forsgren, OWASP, SOLID |
+| L5: Market | "Reach users" | Lauchengco, Shotton |
+
+**Not all scales are required.** A weekend project might skip L1 Strategy entirely. A small bet might start at L2 Opportunity and go straight to L4 Delivery. `/interview` classifies your project and tells you which scales matter — the system scales to your project, not the other way around.
+
+**Diamonds** run at every scale — the same four phases: **Discover** (explore broadly) → **Define** (narrow focus) → **Develop** (generate solutions) → **Deliver** (build & validate). Each transition must pass theory gates.
+
+**The OST bridge**: At L2, discovery produces an Opportunity Solution Tree (Torres). Multiple opportunities are found, multiple solutions are generated for each. Solutions compete — the winner spawns an L3 Solution diamond. Losers are archived with evidence, not deleted.
+
+**The feedback loop**: After L5 Market, real-world signals feed back into new L2 Opportunity diamonds. Purpose → Strategy → Discovery → Solution → Delivery → Market → Discovery. The cycle never truly ends.
+
+If delivery reveals a bad assumption, the diamond **regresses** back with new evidence. This is the system working correctly, not failing.
+
+### Theory Gates
+
+Every diamond transition must pass theory gates — evidence checks grounded in specific frameworks. Not "I'm confident enough," but "here's the evidence":
+
+| Gate | In Plain English | Suggested Skill |
+|------|-----------------|----------------|
+| Evidence | Do you have real data, not just assumptions? | `/user-interview`, `/assumption-test` |
+| Four Risks | Is it valuable, usable, buildable, and viable? | `/assumption-test` |
+| Jobs to be Done | Do you understand what users actually need — practically, emotionally, socially? | `/jtbd-map` |
+| Domain Fit | Is your approach appropriate for the type of problem? | `/cynefin-classify` |
+| Bias | Are you seeing clearly, or fooling yourself? | `/bias-check` |
+| Security | Could this be attacked? Have you checked? | `/threat-model`, `/security-review` |
+| Privacy | Are you collecting only what you need and respecting user rights? | `/privacy-check` |
+| Outcomes | Is the result better, more valuable, faster, safer, and sustainable? | `/bvssh-check` |
+| Service Quality | Does it work well as a service? Is it accessible? | `/service-check`, `/a11y-check` |
+| Delivery Health | Are you shipping at a healthy pace? | `/dora-check` |
+| Learning | Have you checked what went wrong last time? | `/preflight`, `/reflexion` |
+| Regulatory | Does this need to comply with AI regulation? | `/regulatory-review` |
+
+Not all gates apply at every scale. L0 Purpose checks 5 gates. L4 Delivery checks 11. The system tells you which ones matter right now. You don't need to know the underlying frameworks — the agent explains each gate when it's relevant.
+
+If a gate fails, the agent tells you what's missing, cites the theory, suggests the skill to run — and does not proceed.
+
+### The Canvas
+
+All product knowledge lives in `.claude/canvas/*.yml` — structured YAML files committed to git. They're your single source of truth and your product documentation:
+
+| Canvas | What It Captures | Theory |
+|--------|-----------------|--------|
+| `purpose.yml` | Why/How/What, who it's for | Sinek |
+| `north-star.yml` | Key metric + input metrics | North Star |
+| `jobs-to-be-done.yml` | User jobs (functional/emotional/social) | Christensen |
+| `landscape.yml` | Strategic landscape, competitors | Wardley |
+| `opportunities.yml` | Opportunity Solution Tree | Torres |
+| `gist.yml` | Goals, Ideas, Steps, Tasks | Gilad |
+| `services.yml` | 15 service quality principles | Downe |
+| `threat-model.yml` | STRIDE threat model | OWASP |
+| `dora-metrics.yml` | Delivery performance | Forsgren |
+| `go-to-market.yml` | Positioning, launch tiers | Lauchengco |
+| ... | 14 more canvas files | Various |
+
+Not all canvas files are needed for every project. `/interview` classifies your project and tells you which ones to focus on.
+
+### Self-Learning
+
+Mycelium gets smarter with each project cycle:
+
+- **Corrections** — learns from mistakes so they're not repeated
+- **Patterns** — captures what worked for reuse
+- **Adaptive thresholds** — calibrates confidence scoring from historical data
+- **Reflexion loops** — implement, validate, self-critique, retry
+- **Evidence decay** — flags stale evidence so decisions stay current
+
+### Harnessing (What Prevents the Agent from Going Haywire)
+
+Three enforcement tiers, 30 constraints:
+
+- **BLOCK** (2): Mechanically prevented. Secrets in code, stale corrections.
+- **REVIEW** (13): Gates delivery completion. Tests, accessibility, security, BVSSH, decision logging.
+- **NUDGE** (15): Surfaced by hooks, not blocking. Engineering principles, bias checks, devil's advocate.
+
+Plus 5 hook layers that fire automatically — from secret detection before code edits (~30 tokens) to theory gate evaluation on demand. Total overhead: ~6,000 tokens/session.
 
 ## Quick Start
 
@@ -31,7 +171,7 @@ npx degit haabe/mycelium my-project
 cd my-project
 ```
 
-Then start Claude Code and run `/interview`. The agent guides you through purpose, vision, users, strategy, and classifies your project to determine what matters.
+Then start Claude Code and run `/interview`. The agent guides you through purpose, vision, users, and classifies your project.
 
 ### Existing Project
 
@@ -42,166 +182,24 @@ npx degit haabe/mycelium/.claude ./.claude
 
 Then start Claude Code and run `/interview`.
 
+### Resuming Work
+
+```
+/diamond-assess
+```
+
+The agent reads your canvas state and tells you where you are and what to do next.
+
 ## Upgrading
 
-Mycelium is not a software library -- it's a set of instructions that reshape agent behavior on every session start. Upgrading replaces framework files (skills, engine rules, hooks) while preserving your project state (canvas data, diamond state, decisions, memory).
-
-**Automated upgrade** (recommended):
+Mycelium is not a software library — it's instructions that reshape agent behavior. Upgrading replaces framework files while preserving your project state (canvas, diamonds, decisions, memory).
 
 ```bash
-bash .claude/scripts/upgrade.sh          # upgrade to latest
-bash .claude/scripts/upgrade.sh v0.12.0  # upgrade to specific version
+bash .claude/scripts/upgrade.sh          # latest
+bash .claude/scripts/upgrade.sh v0.12.0  # specific version
 ```
 
-The script reads `.claude/manifest.yml` to distinguish framework files from project state. It will never overwrite your populated canvas files, diamond state, decision log, or memory. It requires a clean git state (commit first) so you can revert if anything goes wrong.
-
-**After upgrading**: Run `/diamond-assess` to see your diamonds through the new version's lens. Gates may have become stricter or new fields may be expected -- this is intentional, and `/diamond-assess` will tell you what needs attention.
-
-**Manual upgrade**: See the upgrade checklist in `.claude/manifest.yml` for which files to replace vs preserve.
-
-## How It Works
-
-### Fractal Diamonds
-
-Mycelium guides development through **fractal diamonds** -- recursive Discover/Define/Develop/Deliver cycles (based on the Double Diamond by the Design Council) that operate at every scale:
-
-```
-L0: Purpose     "Why do we exist?"           (Sinek, Christensen)
-L1: Strategy    "Where do we play?"          (Wardley, North Star, Skelton)
-L2: Opportunity "What problem to solve?"     (Torres, Allen, Cynefin)
-L3: Solution    "How to solve it?"           (Gilad, Cagan, Downe)
-L4: Delivery    "Build and ship"             (Forsgren, OWASP, SOLID)
-L5: Market      "Reach users"               (Lauchengco, Shotton)
-```
-
-Each diamond has four phases: **Discover** (diverge) -> **Define** (converge) -> **Develop** (diverge) -> **Deliver** (converge).
-
-Diamonds spawn child diamonds when complexity requires it. Parent diamonds continue while children execute. If delivery reveals a bad assumption, the diamond **regresses** back with new evidence. This creates smooth flow from idea to delivery without artificial phase breaks.
-
-Diamond lifecycle: diamonds can be **active**, **blocked**, **archived**, or **killed**. Stale diamonds (30+ days without progress) are flagged for review.
-
-### Theory Gates (12 gates)
-
-Every diamond transition must pass **theory gates** -- not just a confidence score, but evidence checks grounded in specific frameworks:
-
-| Gate | What It Checks | Source | Suggested Skill |
-|------|---------------|--------|----------------|
-| Evidence | Research-backed? Multiple sources? | Torres, Gilad | `/user-interview`, `/assumption-test` |
-| Four Risks | Value, usability, feasibility, viability assessed? | Cagan | `/assumption-test` |
-| JTBD | Emotional and social dimensions mapped? | Christensen | `/jtbd-map` |
-| Cynefin | Domain classified? Method appropriate? | Snowden | `/cynefin-classify` |
-| Bias Check | Research designed to mitigate cognitive biases? | Shotton, Kahneman | `/bias-check` |
-| Security | Threat model updated? | OWASP (STRIDE) | `/threat-model`, `/security-review` |
-| Privacy | Privacy assessed? Data minimized? | Cavoukian (PbD), GDPR | `/privacy-check` |
-| BVSSH | Aligned with Better, Value, Sooner, Safer, Happier? | Smart | `/bvssh-check` |
-| Service Quality | Downe's 15 principles checked? | Downe | `/service-check`, `/a11y-check` |
-| DORA | Delivery metrics healthy? | Forsgren | `/dora-check` |
-| CALMS | DevOps culture healthy? | Humble | `/bvssh-check` |
-| Corrections | Past mistakes reviewed? | Mycelium self-learning | `/preflight`, `/reflexion` |
-
-If ANY gate fails, the agent reports which gates failed, cites the theory, **suggests the skill to run**, and recommends the smallest action to satisfy each -- but does NOT proceed.
-
-### The Canvas (Source of Truth)
-
-All product knowledge lives in `.claude/canvas/*.yml` -- 24 structured YAML files that serve as the single source of truth:
-
-| Canvas File | What It Captures | Source Theory |
-|-------------|-----------------|---------------|
-| `purpose.yml` | Why/How/What, ethical boundaries | Sinek |
-| `north-star.yml` | North Star metric + input metrics | North Star Framework |
-| `bvssh-health.yml` | Better/Value/Sooner/Safer/Happier | Smart |
-| `landscape.yml` | Wardley Map components + evolution | Wardley |
-| `team-shape.yml` | Team types, cognitive load, interactions | Skelton |
-| `opportunities.yml` | Opportunity Solution Tree | Torres |
-| `user-needs.yml` | User needs map (functional/emotional/social) | Allen |
-| `gist.yml` | Goals, Ideas, Steps, Tasks | Gilad |
-| `services.yml` | 15 Good Services principles assessment | Downe |
-| `go-to-market.yml` | Positioning, launch tiers, GTM motion | Lauchengco |
-| `dora-metrics.yml` | Four key delivery metrics | Forsgren |
-| `threat-model.yml` | STRIDE threat model per component | OWASP |
-| `privacy-assessment.yml` | Privacy by Design / GDPR assessment | Cavoukian |
-| `trust-signals.yml` | Trust architecture, transparency | Digital Trust |
-| `jobs-to-be-done.yml` | JTBD map (functional/emotional/social) | Christensen |
-| `bounded-contexts.yml` | DDD bounded contexts and context map | Evans (DDD) |
-| `value-stream.yml` | End-to-end flow, wait times, bottlenecks | Rother & Shook (VSM) |
-| `content-metrics.yml` | Content delivery metrics (courses, publications, media) | v0.11.0 |
-| `ai-tool-metrics.yml` | AI tool delivery metrics (prompts, models, agents) | v0.11.0 |
-| `service-metrics.yml` | Service delivery metrics (consulting, coaching) | v0.11.0 |
-| `human-tasks.yml` | Offline human task tracking (interviews, outreach) | v0.11.0 |
-| `archived-solutions.yml` | Discarded/killed solution leaves with evidence snapshots | v0.12.0 |
-| `cycle-history.yml` | Completed leaf lifecycle outcomes for calibration | v0.12.0 |
-| `thresholds.yml` | Adaptive thresholds calibrated from historical data | v0.12.0 |
-
-Canvas files are committed to git. They ARE your product documentation. Not all canvas files are required for every project -- the `/interview` skill classifies your project type and product type, then tells you which canvas files to focus on.
-
-### Harnessing System (What Prevents the Agent from Going Haywire)
-
-**Guardrails** (`.claude/harness/guardrails.md`) -- 30 constraints across three enforcement tiers:
-- **BLOCK** (2): Mechanically prevented by hooks. Secrets in code (G-S1), stale corrections (G-P5).
-- **REVIEW** (13): `/diamond-progress` refuses to complete delivery until satisfied. Tests, a11y, usability (Nielsen), services quality (Downe), threat modeling, input validation, BVSSH, decision logging, error states, canvas updates, AI disclosure, regulatory awareness, privacy.
-- **NUDGE** (15): Nudged by hooks, not blocking. Engineering principles (DRY, KISS, YAGNI, XP values), bias checks, data minimization, secure defaults, theory citations, devil's advocate, BVSSH dimensions, sustainable pace.
-
-**Anti-Patterns** (`.claude/harness/anti-patterns.md`) -- 40 known failure modes across discovery, confidence, security, delivery, market/GTM, strategic systems thinking, cognitive drift, and leaf lifecycle:
-- "Solution-first thinking", "Confidence inflation", "Security-later", "Dark pattern marketing", "Regression avoidance", and more
-
-**Cognitive Biases** (`.claude/harness/cognitive-biases.md`) -- Per-stage bias checklist based on Shotton and Kahneman. 20+ biases mapped across L0-L5 including agent's own biases.
-
-**Security & Trust** (`.claude/harness/security-trust.md`) -- Per-stage security requirements from OWASP, STRIDE, and Privacy by Design.
-
-**Engineering Principles** (`.claude/harness/engineering-principles.md`) -- Explicit rules for DRY, KISS, YAGNI, SoC, SOLID, Law of Demeter, Clean Code.
-
-### 5-Layer Hook Enforcement
-
-Mycelium enforces guardrails through hooks that fire automatically at different points:
-
-| Layer | Event | What It Does | Cost |
-|-------|-------|-------------|------|
-| 1. PreToolUse gate | Before code edits | Preflight check + secret detection (blocks hardcoded API keys, tokens) | ~30 tokens |
-| 2. PostToolUse nudge | After code edits | Context-aware reminders (a11y for UI files, OWASP for API files) | ~50 tokens |
-| 3. PostToolUseFailure | After failures | Reflexion analysis: diagnose root cause before retrying | ~200 tokens |
-| 4. Stop check | Session end | Canvas gap detection, overdue feedback loop warnings | ~50 tokens |
-| 5. SessionStart check | Session start/resume | Reminds about overdue strategic reviews (BVSSH, DORA) | ~50 tokens |
-| 6. Skill-level gates | On demand | Full 11-gate theory evaluation via `/diamond-progress` | varies |
-
-Total overhead: ~6,000 tokens/session (negligible vs typical 50K-200K sessions).
-
-### Four-Speed Feedback Loop System
-
-Based on Gene Kim's Three Ways, Argyris's double-loop learning, and Meadows's leverage points:
-
-| Loop | Speed | Purpose | Key Mechanisms |
-|------|-------|---------|---------------|
-| **1. Immediate** | Seconds | Fix the error (single-loop) | Reflexion, secret detection, corrections matching |
-| **2. Incremental** | Hours/days | Improve the process (single-loop + memory) | Phase learnings, DORA metrics, retrospectives |
-| **3. Strategic** | Weekly/monthly | Question the assumptions (double-loop) | BVSSH health, North Star trajectory, Wardley refresh |
-| **4. Transformative** | Quarterly | Improve the system itself (triple-loop) | Eval benchmarks, prompt optimization |
-
-Run `/feedback-review` to check health across all loops. Includes regression warning triggers (e.g., "DORA declined twice in a row") and Goodhart's Law protection (counter-metrics for every tracked metric).
-
-**The L5 -> L2 feedback loop**: After launch, market signals feed back into new L2 Opportunity diamonds, closing the full cycle: Purpose -> Strategy -> Discovery -> Solution -> Delivery -> Market -> Discovery.
-
-### Self-Learning
-
-- **Corrections Memory** -- Accumulated learning from mistakes. Read before every task. Pruned when > 30 entries.
-- **Pattern Library** -- Successful patterns to reuse across diamonds.
-- **Reflexion Loop** -- Implement, validate, self-critique, retry (max 3 iterations).
-- **Eval Benchmarks** -- 6 scenarios across discovery, delivery, and integration categories.
-- **Prompt Optimization** -- A/B testing of instruction changes against eval baselines.
-
-### Plain-Language Communication
-
-Mycelium communicates in human language, not framework jargon:
-- "Discovering what problems to solve" not "L2 Opportunity Discover phase"
-- "Confidence: Moderate -- based on 2 user interviews" not "Confidence: 0.5"
-- After each phase, the agent offers to capture learnings
-
-### Operations & Maintenance
-
-- **Day-to-day**: Session resumption via `/diamond-assess`, corrections review via hooks
-- **Weekly**: Diamond state review, canvas updates
-- **Monthly**: BVSSH health check, Wardley map review, stale diamond cleanup
-- **Quarterly**: North Star review, strategic landscape refresh, eval benchmarks
-- **Escape hatch**: Documented bypass process for emergencies (production incidents, hotfixes) with mandatory payback
+After upgrading, run `/diamond-assess` to see your work through the new version's lens.
 
 ## Skills Reference (42 skills)
 
@@ -209,24 +207,24 @@ Mycelium communicates in human language, not framework jargon:
 | Skill | When to Use |
 |-------|------------|
 | `/interview` | Onboarding: purpose, vision, North Star, project classification |
-| `/diamond-assess` | Current state in plain language, recommended next action |
-| `/diamond-progress` | Move diamond forward with theory gates + skill suggestions |
+| `/diamond-assess` | Current state, recommended next action |
+| `/diamond-progress` | Move diamond forward with theory gates |
 
 ### Discovery
 | Skill | When to Use |
 |-------|------------|
-| `/user-interview` | Torres-style story-based interviews with bias mitigation |
-| `/mocked-persona-interview` | Disciplined mocked personas for solo/hobby/dogfood projects (speculation-tagged, stop-condition gated) |
-| `/user-needs-map` | Allen's methodology: map needs independently of solutions |
-| `/ost-builder` | Build/update Opportunity Solution Tree from research |
-| `/jtbd-map` | Jobs to be Done (functional, emotional, social) |
+| `/user-interview` | Story-based interviews with bias mitigation |
+| `/mocked-persona-interview` | Disciplined mocked personas (speculation-tagged) |
+| `/user-needs-map` | Map needs independently of solutions |
+| `/ost-builder` | Build Opportunity Solution Tree from research |
+| `/jtbd-map` | Jobs to be Done mapping |
 | `/assumption-test` | Design smallest viable test for an assumption |
 | `/cynefin-classify` | Classify problem domain |
-| `/wardley-map` | Create/update Wardley Map of value chain |
-| `/ice-score` | Prioritize with ICE scoring + confidence meter |
+| `/wardley-map` | Strategic landscape mapping |
+| `/ice-score` | ICE scoring with evidence-backed confidence |
 | `/gist-plan` | GIST planning: goals, ideas, steps, tasks |
-| `/handoff` | Generate structured handoff for offline human tasks |
-| `/log-evidence` | Record findings from completed offline conversations |
+| `/handoff` | Structured handoff for offline human tasks |
+| `/log-evidence` | Record findings from completed conversations |
 
 ### Quality & Governance
 | Skill | When to Use |
@@ -234,13 +232,13 @@ Mycelium communicates in human language, not framework jargon:
 | `/bias-check` | Review cognitive biases before research/decisions |
 | `/devils-advocate` | Challenge assumptions before major decisions |
 | `/bvssh-check` | Holistic BVSSH health evaluation |
-| `/service-check` | Downe's 15 Good Services principles |
+| `/service-check` | Downe's 15 service principles |
 | `/threat-model` | STRIDE threat modeling |
 | `/privacy-check` | Privacy by Design / GDPR assessment |
 | `/security-review` | OWASP secure design review |
-| `/usability-check` | Nielsen's 10 usability heuristics (interface-level) |
+| `/usability-check` | Nielsen's 10 usability heuristics |
 | `/a11y-check` | Accessibility audit (WCAG 2.1 AA) |
-| `/regulatory-review` | EU AI Act risk classification and transparency assessment |
+| `/regulatory-review` | EU AI Act risk classification |
 
 ### Delivery
 | Skill | When to Use |
@@ -249,7 +247,7 @@ Mycelium communicates in human language, not framework jargon:
 | `/preflight` | Pre-code validation checklist |
 | `/reflexion` | Self-correcting implementation loop |
 | `/definition-of-done` | Verify all DoD criteria |
-| `/dora-check` | DORA delivery performance metrics |
+| `/dora-check` | Delivery performance metrics |
 | `/retrospective` | Post-delivery learning capture |
 
 ### Market & Organization
@@ -262,171 +260,151 @@ Mycelium communicates in human language, not framework jargon:
 | Skill | When to Use |
 |-------|------------|
 | `/canvas-update` | Update canvas with new evidence |
-| `/canvas-health` | Lint canvas for staleness, missing fields, inconsistencies |
+| `/canvas-health` | Lint canvas for staleness, missing fields |
 | `/canvas-sync` | Synchronize canvas across team via git |
-| `/fan-out` | Parallel agent orchestration for OST exploration |
+| `/fan-out` | Parallel agent orchestration |
 
 ### Self-Improvement
 | Skill | When to Use |
 |-------|------------|
-| `/feedback-review` | Aggregate all feedback signals, check health across 4 loops |
+| `/feedback-review` | Aggregate feedback signals, check health |
 | `/eval-runner` | Run benchmark scenarios |
-| `/corrections-audit` | Analyze correction trends, graduate repeats to guardrails |
+| `/corrections-audit` | Analyze correction trends |
 | `/prompt-optimizer` | A/B test instruction changes |
-
-## Theories & Frameworks Integrated
-
-| Theory/Framework | Author(s) | Applied To |
-|-----------------|-----------|------------|
-| Golden Circle (Start with Why) | Sinek | L0: Purpose, mission, values |
-| Jobs to be Done | Christensen, Ulwick | L0-L2: Functional/emotional/social needs |
-| Wardley Mapping | Wardley | L1: Strategic landscape, evolution |
-| North Star Framework | Ellis, Amplitude | L1: Key metric + input metrics |
-| Team Topologies | Skelton, Pais | L1: Team structure, cognitive load |
-| Continuous Discovery Habits / OST | Torres | L2: Opportunity discovery, assumption testing |
-| User Needs Mapping | Allen | L2: User needs independent of solutions |
-| Cynefin Framework | Snowden | L2-L4: Domain classification, method selection |
-| GIST Planning / ICE Scoring | Gilad | L3: Evidence-guided prioritization |
-| Inspired / Empowered | Cagan | L3: Four risks, empowered teams |
-| Good Services (15 Principles) | Downe | L3-L4: Service design quality |
-| Accelerate / DORA Metrics | Forsgren, Humble, Kim | L4: Delivery performance measurement |
-| OWASP Secure by Design / STRIDE | OWASP, Microsoft | L4: Security throughout lifecycle |
-| Privacy by Design | Cavoukian, GDPR | L3-L4: Privacy as default |
-| DRY, KISS, YAGNI, SOLID, SoC | Various | L4: Engineering principles |
-| Loved (Product Marketing) | Lauchengco | L5: Positioning, go-to-market |
-| Behavioral Science / Cognitive Biases | Shotton, Kahneman | All stages: Bias mitigation, ethical design |
-| Double Diamond | Design Council | Core: Diverge/converge pattern at every scale |
-| BVSSH | Smart | Cross-cutting: Holistic outcome measurement |
-| Three Ways of DevOps | Kim | Feedback loops: flow, amplify feedback, continuous learning |
-| Double/Triple-Loop Learning | Argyris | Self-learning: single-loop (fix), double-loop (question), triple-loop (transform) |
-| Leverage Points | Meadows | Systems thinking: where to intervene for maximum effect |
-| Goodhart's Law | Goodhart | Measurement discipline: counter-metrics prevent gaming |
-| APEX Framework | LinearB | AI-era delivery: AI leverage, predictability, efficiency, developer experience |
-| 10 Usability Heuristics | Nielsen | Interface-level usability (complements Downe's service-level quality) |
-| Domain-Driven Design | Evans | Bounded contexts, ubiquitous language, context mapping for architecture |
-| Extreme Programming | Beck | TDD, pair programming, refactoring, sustainable pace, courage |
-| Site Reliability Engineering | Beyer et al. | Error budgets, SLIs/SLOs, blameless post-mortems, toil reduction |
-| Lean UX | Gothelf, Seiden | Hypothesis-driven design, outcomes over outputs, design validation |
-| CALMS | Humble | DevOps culture assessment: Culture, Automation, Lean, Measurement, Sharing |
-| Value Stream Mapping | Rother, Shook | End-to-end flow visualization, wait times, bottleneck identification |
-| Hooked (Hook Model) | Eyal | Ethical engagement design: Trigger, Action, Variable Reward, Investment |
-| Theory of Constraints | Goldratt | Five Focusing Steps for bottleneck resolution |
-| MoSCoW Prioritization | DSDM | Scope flexing: Must/Should/Could/Won't when timeboxes run out |
-| The Fifth Discipline | Senge | Systems thinking archetypes: Fixes That Fail, Shifting the Burden, Limits to Growth, Eroding Goals |
-| The Bias Gap | Meza | All stages: Systemic bias diagnosis before individual debiasing |
-| Elements of Product Design | Mill, Garrett | L2-L4: Design completeness across knowledge and decision stacks |
-| Trauma-Informed Design | Hussain (Chayn), SAMHSA | Sensitive contexts: Safety, agency, privacy for vulnerable users |
-| Human-in-the-Loop (Authority/Time/Understanding) | Bannerman | L3-L4: Meaningful human oversight for AI products |
-| Neurodiversity Design System | Soward | L4: Neurotype-inclusive UI design beyond WCAG |
-| Behavior-Driven Development | North (2006) | Historical precursor: executable behavioral specs as shared language; influenced SDD |
-| Spec-Driven Development | Fowler, Bockeler (2025) | Core positioning: Mycelium implements SDD as a constraint system at the spec-anchored level |
-| Toyota Kata (Coaching Kata) | Rother | Diamond assessment: 5 coaching questions for scientific thinking; prediction before experiment |
-| Cause-and-Effect Diagrams / 5 Whys | Ishikawa, Toyoda/Ohno | Retrospectives: structured root cause analysis (fishbone breadth + 5 Whys depth) |
 
 ## Usage Modes
 
 ### Solo Developer
-- Canvas is your shared memory with the agent
-- Decision log provides cross-session continuity
-- The agent is your product thinking partner
-- Run `/diamond-assess` to continue where you left off
+
+One builder, one agent, one canvas. The agent is your product thinking partner — it remembers context between sessions so you don't have to.
+
+```mermaid
+graph LR
+    YOU["👤 You"]
+    AGENT["🤖 Agent"]
+    CANVAS["📋 Canvas<br/><i>shared memory</i>"]
+    DECISIONS["📝 Decision Log<br/><i>cross-session continuity</i>"]
+    CORRECTIONS["🧠 Corrections<br/><i>learned mistakes</i>"]
+
+    YOU <-->|"conversation"| AGENT
+    AGENT <-->|"reads & writes"| CANVAS
+    AGENT <-->|"logs"| DECISIONS
+    AGENT <-->|"learns from"| CORRECTIONS
+    YOU -->|"resumes with<br/>/diamond-assess"| AGENT
+```
 
 ### Team
-- Canvas files committed to git = shared product documentation
-- Any team member's agent reads the same canvas state
-- Canvas updates are PR-reviewed like code changes
-- Different team members can work on different diamonds simultaneously
-- Use Agent Teams or worktrees for parallel delivery
+
+Canvas files are committed to git — they become shared product documentation. Any team member's agent reads the same state. Different members can work on different diamonds simultaneously.
+
+```mermaid
+graph TD
+    subgraph GIT ["Git Repository"]
+        CANVAS["📋 Canvas Files"]
+        DECISIONS["📝 Decision Log"]
+    end
+
+    subgraph MEMBER1 ["Team Member A"]
+        A_DEV["👤 Developer"]
+        A_AGENT["🤖 Agent"]
+        A_DEV <--> A_AGENT
+    end
+
+    subgraph MEMBER2 ["Team Member B"]
+        B_DEV["👤 Designer"]
+        B_AGENT["🤖 Agent"]
+        B_DEV <--> B_AGENT
+    end
+
+    subgraph MEMBER3 ["Team Member C"]
+        C_DEV["👤 PM"]
+        C_AGENT["🤖 Agent"]
+        C_DEV <--> C_AGENT
+    end
+
+    A_AGENT <-->|"L4 Delivery<br/>diamond"| GIT
+    B_AGENT <-->|"L3 Solution<br/>diamond"| GIT
+    C_AGENT <-->|"L2 Opportunity<br/>diamond"| GIT
+```
+
+Canvas updates are PR-reviewed like code changes. Everyone sees the same product state.
 
 ### Agent Orchestration
 
-When the OST has multiple solutions to explore in parallel:
+When the OST has multiple solutions to explore in parallel, Mycelium fans out worker agents — each in an isolated git worktree. The lead agent coordinates, compares results, and selects the winner.
 
-```
-Lead Agent (main session)
-  |-- Worker 1 (worktree: feature/ai-search)   -- explores Solution A
-  |-- Worker 2 (worktree: feature/filters)      -- explores Solution B
-  |-- Worker 3 (worktree: feature/feed-algo)    -- explores Solution C
-  |
-  Fan-in: Compare results, update ICE scores, select winner
+```mermaid
+graph TD
+    LEAD["🤖 Lead Agent<br/><i>main session</i>"]
+
+    LEAD -->|"fan-out"| W1["🤖 Worker 1<br/><i>worktree: feature/ai-search</i><br/>explores Solution A"]
+    LEAD -->|"fan-out"| W2["🤖 Worker 2<br/><i>worktree: feature/filters</i><br/>explores Solution B"]
+    LEAD -->|"fan-out"| W3["🤖 Worker 3<br/><i>worktree: feature/feed-algo</i><br/>explores Solution C"]
+
+    W1 -->|"results"| FANIN["📊 Fan-in<br/><i>compare ICE scores,<br/>select winner</i>"]
+    W2 -->|"results"| FANIN
+    W3 -->|"results"| FANIN
+
+    FANIN -->|"winner merged"| LEAD
+
+    style W1 fill:#e8f5e9
+    style W2 fill:#e8f5e9
+    style W3 fill:#e8f5e9
+    style FANIN fill:#fff3e0
 ```
 
-Workers get read-only canvas access and worktree isolation. Only the lead agent updates canvas and progresses diamonds.
+Workers get read-only canvas access and worktree isolation. Only the lead agent updates canvas and progresses diamonds. Use `/fan-out` to start parallel exploration.
 
 ## JiT Tooling (Language-Agnostic)
 
-Mycelium works with **any** tech stack, including polyglot/multi-language projects. When delivery begins:
+Mycelium works with any tech stack. When delivery begins, it auto-detects languages, frameworks, and existing tooling, then generates stack-appropriate validation. Universal principles (DRY, KISS, OWASP) apply to all stacks.
 
-1. Auto-detects languages, frameworks, project shape (single app, monorepo, multi-service), existing tooling
-2. Generates stack-appropriate validation commands, linting, testing
-3. Configures security scanning for detected stack(s)
-4. Agent asks user to confirm before proceeding
+## Theories & Frameworks Integrated
 
-Universal principles (DRY, KISS, testing pyramid, OWASP) apply to all stacks. Specific tooling (test runners, linters, formatters) is discovered per project.
-
-## Directory Structure
-
-```
-your-project/
-  CLAUDE.md                    # Root Mycelium agent instructions (v0.10.0)
-  .claude/
-    settings.json              # Shared hook config + permissions (committed)
-    engine/                    # Diamond rules, theory gates, confidence thresholds, Cynefin routing
-    canvas/                    # 24 YAML source-of-truth files
-    diamonds/                  # Active diamond state tracking
-    harness/                   # Guardrails, anti-patterns, biases, security, engineering principles
-    memory/                    # Corrections, patterns, product journal, delivery journal
-    domains/                   # Phase-specific agent behavior (discovery/delivery/quality)
-    skills/                    # 42 invocable skills
-    hooks/                     # 6-layer enforcement (gate, nudge, reflexion, stop-check, session-start, skill-gates)
-    orchestration/             # Solo/team modes, agent teams, fan-out, operations, escape hatch
-    jit-tooling/               # Language-agnostic delivery tooling + polyglot detection
-    evals/                     # 6 benchmark scenarios + results
-    optimization/              # Prompt A/B testing baselines + variants
-```
+| Theory | Author(s) | Applied To |
+|--------|-----------|------------|
+| Golden Circle | Sinek | Purpose, mission, values |
+| Jobs to be Done | Christensen, Ulwick | Functional/emotional/social needs |
+| Wardley Mapping | Wardley | Strategic landscape, evolution |
+| North Star Framework | Ellis | Key metric + input metrics |
+| Team Topologies | Skelton, Pais | Team structure, cognitive load |
+| Continuous Discovery / OST | Torres | Opportunity discovery, testing |
+| User Needs Mapping | Allen | Needs independent of solutions |
+| Cynefin Framework | Snowden | Domain classification |
+| GIST Planning / ICE | Gilad | Evidence-guided prioritization |
+| Inspired / Empowered | Cagan | Four risks, empowered teams |
+| Good Services | Downe | Service design quality |
+| Accelerate / DORA | Forsgren, Humble, Kim | Delivery performance |
+| OWASP / STRIDE | OWASP, Microsoft | Security throughout lifecycle |
+| Privacy by Design | Cavoukian | Privacy as default |
+| Loved | Lauchengco | Positioning, go-to-market |
+| BVSSH | Smart | Holistic outcome measurement |
+| Double Diamond | Design Council | Diverge/converge at every scale |
+| Behavioral Science | Shotton, Kahneman | Bias mitigation, ethical design |
+| Theory of Constraints | Goldratt | Bottleneck resolution |
+| The Fifth Discipline | Senge | Systems thinking archetypes |
+| Domain-Driven Design | Evans | Bounded contexts, context mapping |
+| Lean UX | Gothelf, Seiden | Hypothesis-driven design |
+| Toyota Kata | Rother | Coaching questions for scientific thinking |
+| ... and more | | See CLAUDE.md for complete list |
 
 ## Regulatory Awareness: EU AI Act
 
-**Mycelium itself is not regulated** by the EU AI Act (Regulation 2024/1689). It is configuration files, not an AI system under Article 3(1). It is protected as an open-source component under Article 25(4) and Recital 102.
+**Mycelium itself is not regulated** — it's configuration files, not an AI system. But products built with Mycelium may be. Mycelium includes a Regulatory Gate at L3 that prompts you to assess risk classification. See `.claude/harness/security-trust.md` for details.
 
-**However, products built WITH Mycelium may be regulated.** If you're building an AI-powered product that makes decisions about people, interacts with users, or operates in the EU market, you should assess your obligations:
-
-- **High-risk systems** (employment, credit scoring, healthcare, education, law enforcement) require conformity assessments, documentation, and human oversight
-- **User-facing AI** must disclose its AI nature (Article 50, effective August 2026)
-- **Generative AI** must mark synthetic content as AI-generated
-
-Mycelium includes a **Regulatory Gate** in its theory gates that prompts you to assess risk classification at the L3 Solution stage. See `.claude/harness/security-trust.md` for the full regulatory awareness guide.
-
-**Mycelium does not certify EU AI Act compliance. For compliance decisions, consult qualified EU AI law counsel.**
+**Mycelium does not certify compliance. For compliance decisions, consult qualified EU AI law counsel.**
 
 ## Acknowledgments
 
-Mycelium is substantially shaped by community feedback. See [CONTRIBUTORS.md](CONTRIBUTORS.md) for detailed credits.
-
-**v0.9.0 was shaped by:**
-- **Simon Rohrer** — named the core weakness (inferential vs computational enforcement), referenced [Böckeler's harness engineering article](https://martinfowler.com/articles/harness-engineering.html)
-- **Daniel Bentes** — provided the comparison with [BDSK (synaptiai/bdsk)](https://github.com/synaptiai/bdsk) that clarified upstream thinking vs downstream enforcement
+Mycelium is shaped by community feedback. See [CONTRIBUTORS.md](CONTRIBUTORS.md) for credits.
 
 ## Contributing
 
-Contributions are welcome. Mycelium is built on open product development theory -- if you see a gap in the frameworks, a missing bias, an incomplete guardrail, or a better way to harness agent behavior, please open an issue or PR.
-
-### Validating Changes
-
-Before submitting a PR, run the structural integrity validation:
+Contributions welcome. If you see a gap in the frameworks, a missing bias, or a better way to harness agent behavior, open an issue or PR.
 
 ```bash
-bash .claude/tests/validate-template.sh
+bash .claude/tests/validate-template.sh  # structural integrity check
 ```
-
-This checks that all cross-references, counts, versions, and file structures are consistent. It also runs in CI on every push and PR.
-
-### Areas for Contribution
-- New skills for frameworks not yet integrated
-- JiT tooling improvements for specific tech stacks
-- Eval scenarios that test agent harnessing quality
-- Hook enforcement patterns for new Claude Code events
-- Integration patterns with other AI coding tools
 
 ## License
 
@@ -434,4 +412,4 @@ MIT License. See [LICENSE](LICENSE).
 
 ---
 
-*Mycelium is not affiliated with any of the authors or publishers of the books and frameworks referenced. All theory citations are for educational purposes and to properly credit the intellectual foundations this system builds upon.*
+*Mycelium is not affiliated with any of the authors or publishers referenced. All citations are for educational purposes and to credit the intellectual foundations this system builds upon.*
