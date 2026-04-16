@@ -30,9 +30,33 @@ Mycelium isn't 44 skills dumped on you at once. It's three modes that show up at
 
 You're in control. The agent surfaces what matters, catches you when you drift, and confirms readiness when you're done. A small project sees fewer gates and lighter guidance. A complex product gets the full treatment. The process is proportionate to the stakes.
 
-## What It Catches
+## How Mycelium Got Smarter
 
-In its first dogfood session, Mycelium forced a strategic pivot before any code was written — the founder's original positioning was invalidated by evidence the framework required them to gather. Without it, that mistake would have shipped.
+Mycelium has been dogfooded on three small projects. Each one taught the framework something different — and most of what they taught is in the version you're looking at right now.
+
+### tic-tac-toe — *what we learned*
+[huggingface.co/spaces/haabe/tic-tac-toe](https://huggingface.co/spaces/haabe/tic-tac-toe). React + TypeScript + Node.js WebSocket on Hugging Face Spaces, 40 Vitest tests, WCAG 2.1 AA accessible. Zero human-written lines of code. The agent + early Mycelium carried it end-to-end. One durable engineering pattern came out (optimistic UI in client-server real-time apps) and now lives in that project's `corrections.md` so the agent won't ship the same desync bug twice.
+
+### macos-can-i-open — *what we improved*
+A native macOS app for bulk file type association management (Swift/SwiftUI, LaunchServices, AXUIElement). The session produced two reusable corrections worth keeping: SwiftUI Table cells lose `@EnvironmentObject` on scroll (use concrete values instead), and `AXIsProcessTrusted()` lies for ad-hoc signed apps (test with a real AX call instead). Both are now project-memory entries the agent will respect on the next macOS project.
+
+### macos-fileviewer — *what we stopped, and what that gave us*
+A planned macOS file viewer that **never wrote a line of code**. Killed in L0 Discovery after a mocked-persona exercise: 4 of 6 personas would not switch defaults, including the modal user. Mycelium correctly forced the stop — and the session produced a 12-finding dogfood report. Most of those findings are now shipped framework features:
+
+| What the kill found | What now exists in Mycelium |
+|---|---|
+| No discipline for mocked personas | `/mocked-persona-interview` skill |
+| No "I'm dogfooding the framework" project mode | `meta_dogfood` project type, `dogfood: true` canvas flag |
+| Two memory systems undocumented and overlapping | Memory boundary section in `CLAUDE.md` |
+| Reflexion hook fired on agent-internal failures | Hook scoped to project-relevant failures only |
+| No sanctioned exit from a stuck diamond | `/diamond-progress pivot/park/kill` subcommands |
+| Strategic loop checks easy to ignore | `/feedback-review` skill |
+| No quarterly framework self-assessment | `/framework-health` skill |
+| Canvas drifts toward confident-sounding speculation | `/canvas-health` lints provenance and staleness |
+| No mechanism for the framework to learn from its cycles | `cycle-history.yml` + adaptive thresholds + framework-reflexion |
+| No accumulator for dogfood findings | `.claude/evals/dogfood-reports/` directory |
+
+This is what *"Mycelium gets smarter with each project cycle"* actually looks like. Not a promise — receipts. The project that didn't ship contributed more to the framework than the two that did.
 
 ## How It Works
 
@@ -103,7 +127,7 @@ Every diamond transition must pass theory gates — evidence checks grounded in 
 
 | Gate | In Plain English | Suggested Skill |
 |------|-----------------|----------------|
-| Evidence | Do you have real data, not just assumptions? | `/user-interview`, `/assumption-test` |
+| Evidence | Do you have real data, not just assumptions? | `/user-interview`, `/assumption-test`, `/metrics-pull` |
 | Four Risks | Is it valuable, usable, buildable, and viable? | `/assumption-test` |
 | Jobs to be Done | Do you understand what users actually need — practically, emotionally, socially? | `/jtbd-map` |
 | Domain Fit | Is your approach appropriate for the type of problem? | `/cynefin-classify` |
@@ -136,7 +160,7 @@ All product knowledge lives in `.claude/canvas/*.yml` — structured YAML files 
 | `threat-model.yml` | STRIDE threat model | OWASP |
 | `dora-metrics.yml` | Delivery performance | Forsgren |
 | `go-to-market.yml` | Positioning, launch tiers | Lauchengco |
-| ... | 14 more canvas files | Various |
+| ... | 13 more canvas files | Various |
 
 Not all canvas files are needed for every project. `/interview` classifies your project and tells you which ones to focus on.
 
@@ -364,6 +388,8 @@ Workers get read-only canvas access and worktree isolation. Only the lead agent 
 ## JiT Tooling (Language-Agnostic)
 
 Mycelium works with any tech stack. When delivery begins, it auto-detects languages, frameworks, and existing tooling, then generates stack-appropriate validation. Universal principles (DRY, KISS, OWASP) apply to all stacks.
+
+The same pattern applies to **metric sources**. `/metrics-detect` scans for signals (git remote, SDK installs, env vars) and asks about channels the repo can't reveal (deployed URL, payment processor, app stores), then generates adapters for sources it hasn't seen before. `/metrics-pull` then turns "I checked the dashboard" into timestamped, sourced, diffable evidence for L0/L1/L2/L5 diamonds.
 
 ## Theories & Frameworks Integrated
 
