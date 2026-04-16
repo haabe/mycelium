@@ -17,13 +17,15 @@ framework:
     - .claude/hooks/
     - .claude/domains/
     - .claude/orchestration/
-    - .claude/jit-tooling/
     - .claude/schemas/
     - .claude/scripts/
     - .claude/optimization/
     - .claude/tests/
     - .claude/auto-dogfood/
     - .github/
+    # .claude/jit-tooling/ is MIXED (see metrics_adapters section below).
+    # upgrade.sh preserves active-metrics.yml and user-generated adapters
+    # while replacing the framework-shipped files.
   single_files:
     - .claude/settings.json
     - .claude/manifest.yml
@@ -60,3 +62,17 @@ evals:
   preserve:
     - .claude/evals/dogfood-reports/
     - .claude/evals/results/
+    - .claude/evals/metrics/          # v0.14: per-project metric snapshots
+
+# Metrics adapters (v0.14) — mixed.
+# Framework ships TEMPLATE.md, GENERATING.md, and github.md as the reference
+# adapter. All other adapters are generated per-project and must be preserved
+# across upgrades.
+metrics_adapters:
+  framework:
+    - .claude/jit-tooling/metrics-adapters/TEMPLATE.md
+    - .claude/jit-tooling/metrics-adapters/GENERATING.md
+    - .claude/jit-tooling/metrics-adapters/github.md
+  project_state:
+    - .claude/jit-tooling/active-metrics.yml
+    - .claude/jit-tooling/metrics-adapters/  # any non-framework adapter files

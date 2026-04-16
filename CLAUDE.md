@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.13.1 -- Audit fix: cycle-history data entry points, trio checks in skills, anti-pattern numbering, cross-reference schemas, perspective resolution gaps.*
+*Version 0.14.0 -- Metrics harvesting: JiT metric source detection mirroring the tech-stack detector. Unified `/metrics-pull` across configured sources (GitHub reference adapter shipped; others generated on demand via `metrics-adapters/GENERATING.md`). Closes the L0/L1/L2/L5 evidence loop — replaces manual "I checked the dashboard" reports with timestamped, sourced, diffable snapshots.*
 
 Mycelium is a harnessing system for AI-assisted product development. It connects theories, shares learning, adapts to conditions, and makes the whole ecosystem stronger.
 
@@ -153,7 +153,7 @@ See `.claude/orchestration/modes.md` for usage patterns and `.claude/orchestrati
 
 ## Skills
 
-All 42 skills are auto-discovered from `.claude/skills/*/SKILL.md`. Suggested skills are surfaced at diamond transitions by `/diamond-progress` and `/diamond-assess`, and contextually by hooks. Type `/` to see the current list.
+All 44 skills are auto-discovered from `.claude/skills/*/SKILL.md`. Suggested skills are surfaced at diamond transitions by `/diamond-progress` and `/diamond-assess`, and contextually by hooks. Type `/` to see the current list.
 
 ## Getting Started
 

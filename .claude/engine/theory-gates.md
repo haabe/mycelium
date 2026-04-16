@@ -68,7 +68,9 @@ For solo developers: apply perspectives sequentially as distinct evaluation pass
 
 **Evidence required**: Interview transcripts, analytics screenshots, research synthesis documents, test results.
 
-**Suggested skill**: `/user-interview` (for gathering evidence), `/assumption-test` (for validating evidence), `/canvas-health` (for verifying evidence quality and staleness in canvas files)
+**External metric snapshots count as `external_data`** (v0.14): snapshots produced by `/metrics-pull` (`.claude/evals/metrics/<source>/*.json`) satisfy the `external_data` source_class at L0/L1/L2/L5. They do NOT substitute for `external_human` conversations where the L2 source-ratio gate requires them, but they satisfy the Evidence gate's "behavioral data" criterion and freshen traction evidence at L0/L5. Adapter `provenance.snapshot` path must be included in the canvas evidence entry.
+
+**Suggested skill**: `/user-interview` (for gathering evidence), `/assumption-test` (for validating evidence), `/canvas-health` (for verifying evidence quality and staleness in canvas files), `/metrics-pull` (for L0/L1/L2/L5 external traction / product / market metrics)
 
 #### Source Ratio Sub-Check (v0.11.0)
 

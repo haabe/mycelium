@@ -44,7 +44,9 @@ Feedback loops are how Mycelium learns, corrects, and improves. They operate at 
 | Signal | Source | Action | Mechanism |
 |--------|--------|--------|-----------|
 | BVSSH dimension declining | /bvssh-check | Investigate root cause, adjust strategy | Monthly BVSSH review |
-| North Star metric flat | Product metrics | Re-evaluate opportunities, consider pivot | Monthly North Star review |
+| North Star metric flat | /metrics-pull snapshot trend | Re-evaluate opportunities, consider pivot | Weekly /metrics-pull + monthly North Star review |
+| External traction stalling (L0/L1/L2/L5) | /metrics-pull snapshot deltas (stars, views, conversion, review velocity) | Investigate: new channels, messaging, or reposition | Weekly /metrics-pull, compare against prior snapshot |
+| Unexplained referrer / market signal | /metrics-pull "unexplained signals" flag | Investigate source (HN, press, viral) before acting on it | Per /metrics-pull run |
 | DORA metrics degrading | /dora-check | Investigate delivery bottlenecks | Per-delivery-cycle DORA check |
 | Confidence stagnant | OST stagnation | Re-evaluate opportunity, consider regression | Diamond stale detection |
 | Competitive landscape shift | Market intelligence | Update Wardley map, reassess positioning | Monthly /wardley-map review |
@@ -54,9 +56,10 @@ Feedback loops are how Mycelium learns, corrects, and improves. They operate at 
 **Health signal**: If strategic corrections don't improve the trajectory after 2+ cycles, escalate to Loop 4 (the framework itself may need adjustment).
 
 **Cadence**:
-- Weekly: /diamond-assess + corrections review
+- Weekly: /diamond-assess + corrections review + /metrics-pull (L0/L1/L2/L5 diamonds)
 - Monthly: /bvssh-check + /wardley-map + stale diamond cleanup
 - Per-delivery: /dora-check + /retrospective
+- On launch: /metrics-pull 24-48h after launch to capture the bump, then weekly for the first month
 
 ### Loop 4: Transformative (Triple-Loop -- "Transform the System")
 **Speed**: Quarterly. Fires on evaluation cycles.

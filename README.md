@@ -20,7 +20,7 @@ Works for **software, online courses, AI tools, and services**. One command to s
 
 ## What It Feels Like
 
-Mycelium isn't 42 skills dumped on you at once. It's three modes that show up at the right time:
+Mycelium isn't 44 skills dumped on you at once. It's three modes that show up at the right time:
 
 | When | Experience | Example |
 |------|-----------|---------|
@@ -201,7 +201,7 @@ bash .claude/scripts/upgrade.sh v0.12.0  # specific version
 
 After upgrading, run `/diamond-assess` to see your work through the new version's lens.
 
-## Skills Reference (42 skills)
+## Skills Reference (44 skills)
 
 ### Onboarding & Assessment
 | Skill | When to Use |
@@ -249,6 +249,12 @@ After upgrading, run `/diamond-assess` to see your work through the new version'
 | `/definition-of-done` | Verify all DoD criteria |
 | `/dora-check` | Delivery performance metrics |
 | `/retrospective` | Post-delivery learning capture |
+
+### Evidence & Metrics
+| Skill | When to Use |
+|-------|------------|
+| `/metrics-detect` | Detect external metric sources (GitHub, analytics, payments, reviews) and configure adapters |
+| `/metrics-pull` | Pull snapshots from all configured sources, compute deltas, draft canvas evidence entries |
 
 ### Market & Organization
 | Skill | When to Use |

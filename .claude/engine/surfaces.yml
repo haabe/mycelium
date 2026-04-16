@@ -16,7 +16,7 @@ surfaces:
         note: "Changes here affect every agent session"
       - path: .claude/skills/*/SKILL.md
         type: skill-prompt
-        count: 41
+        count: 44
         impact: medium
         change_frequency: medium
         note: "Each skill defines a specific workflow"
@@ -26,6 +26,11 @@ surfaces:
         impact: medium
         change_frequency: low
         note: "Discovery, delivery, quality domain contexts"
+      - path: .claude/jit-tooling/metrics-adapters/*.md
+        type: adapter-instructions
+        impact: medium
+        change_frequency: medium
+        note: "v0.14: instructions-as-docs for metric source pulls. TEMPLATE/GENERATING/github shipped as framework; others generated per-project."
 
   configs:
     description: "Structured data that controls framework behavior"
@@ -50,6 +55,11 @@ surfaces:
         impact: high
         change_frequency: low
         note: "Diamond state machine rules"
+      - path: .claude/jit-tooling/active-metrics.yml
+        type: metric-sources
+        impact: medium
+        change_frequency: medium
+        note: "v0.14: per-project registry of active metric sources and pull targets. Project state — never replaced by upgrade."
 
   rules:
     description: "Constraints and guardrails that bound agent behavior"
@@ -103,6 +113,6 @@ surfaces:
         note: "Project state — populated by skills, never auto-replaced"
 
 summary:
-  total_surfaces: 10
+  total_surfaces: 12
   high_impact: 6
   note: "High-impact surfaces should be changed via /prompt-optimizer with eval benchmarks"

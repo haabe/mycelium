@@ -102,12 +102,52 @@ for file in CLAUDE.md README.md CONTRIBUTORS.md LICENSE requirements-ci.txt; do
 done
 
 # Framework directories (full replace)
-for dir in engine skills hooks domains orchestration jit-tooling schemas scripts optimization; do
+for dir in engine skills hooks domains orchestration schemas scripts optimization; do
     if [ -d "$TEMP_DIR/.claude/$dir" ]; then
         rm -rf ".claude/$dir"
         cp -R "$TEMP_DIR/.claude/$dir" ".claude/$dir"
     fi
 done
+
+# jit-tooling: framework files get replaced, but active-metrics.yml and any
+# non-shipped metrics-adapters/*.md are per-project state. Preserve them.
+if [ -d "$TEMP_DIR/.claude/jit-tooling" ]; then
+    # Save per-project files before wipe
+    PRESERVE_DIR=$(mktemp -d)
+    if [ -f ".claude/jit-tooling/active-metrics.yml" ]; then
+        cp ".claude/jit-tooling/active-metrics.yml" "$PRESERVE_DIR/active-metrics.yml"
+    fi
+    if [ -d ".claude/jit-tooling/metrics-adapters" ]; then
+        # Copy user-generated adapters (everything except shipped ones)
+        mkdir -p "$PRESERVE_DIR/metrics-adapters"
+        for f in .claude/jit-tooling/metrics-adapters/*.md; do
+            [ -e "$f" ] || continue
+            name=$(basename "$f")
+            case "$name" in
+                TEMPLATE.md|GENERATING.md|github.md) ;;  # shipped — skip
+                *) cp "$f" "$PRESERVE_DIR/metrics-adapters/$name" ;;
+            esac
+        done
+    fi
+
+    # Replace the framework directory
+    rm -rf .claude/jit-tooling
+    cp -R "$TEMP_DIR/.claude/jit-tooling" .claude/jit-tooling
+
+    # Restore preserved per-project files
+    if [ -f "$PRESERVE_DIR/active-metrics.yml" ]; then
+        cp "$PRESERVE_DIR/active-metrics.yml" .claude/jit-tooling/active-metrics.yml
+    fi
+    if [ -d "$PRESERVE_DIR/metrics-adapters" ]; then
+        mkdir -p .claude/jit-tooling/metrics-adapters
+        for f in "$PRESERVE_DIR/metrics-adapters"/*.md; do
+            [ -e "$f" ] || continue
+            cp "$f" ".claude/jit-tooling/metrics-adapters/$(basename "$f")"
+        done
+    fi
+
+    rm -rf "$PRESERVE_DIR"
+fi
 
 # .github and tests
 if [ -d "$TEMP_DIR/.github" ]; then

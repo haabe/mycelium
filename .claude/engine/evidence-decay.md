@@ -18,6 +18,7 @@ Different evidence types age at different rates:
 | Technical feasibility | 120 days | Tech landscape evolves, but not as fast as user needs |
 | Market positioning | 90 days | Market conditions shift with competitive moves |
 | DORA / delivery metrics | 30 days | Delivery health is a current snapshot, not historical |
+| External metric snapshots (`/metrics-pull`, v0.14) | 7 days warn, 30 days critical | Market signals (traffic, events, reviews, support) shift weekly — snapshots older than 30 days are not valid evidence for L0/L1/L2/L5 progression |
 | Regulatory assessment | 365 days | Regulation changes slowly (unless a new law passes) |
 
 These are defaults. Override per-project in `canvas/thresholds.yml` (when it exists, see adaptive-thresholds.md).

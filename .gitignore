@@ -17,6 +17,20 @@ Thumbs.db
 # JiT generated files (stack-specific, regenerated per project)
 .claude/jit-tooling/active-stack.yml
 
+# Metric source configuration (generated per project by /metrics-detect).
+# Targets aren't secrets but snapshots can reveal business state. Opt in to
+# committing (e.g., dogfood / open-source projects) by un-gitignoring these
+# explicitly in a downstream .gitignore override.
+.claude/jit-tooling/active-metrics.yml
+.claude/evals/metrics/
+
+# Generated adapters (per-project, produced by metrics-adapters/GENERATING.md).
+# Shipped adapters (github.md, TEMPLATE.md, GENERATING.md) remain tracked.
+.claude/jit-tooling/metrics-adapters/*
+!.claude/jit-tooling/metrics-adapters/github.md
+!.claude/jit-tooling/metrics-adapters/TEMPLATE.md
+!.claude/jit-tooling/metrics-adapters/GENERATING.md
+
 # Eval results (generated per run, not part of the boilerplate)
 .claude/evals/results/*.json
 

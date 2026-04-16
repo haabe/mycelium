@@ -424,3 +424,102 @@ delivery_types:
       - "safety exits exist"             # Users can leave without completing
       - "no re-traumatizing content"     # Content reviewed for harm potential
     note: "This type is additive -- a user_facing app that also handles sensitive contexts gets BOTH sets of requirements. Source: Hussain (Chayn), built on SAMHSA's 6 Principles (2014)."
+
+# ============================================================
+# Metric Sources (v0.14): which external metric sources feed
+# which canvas fields. Used by /metrics-pull to draft evidence
+# entries with the right target canvas file + evidence type.
+#
+# Sources are configured per-project in jit-tooling/active-metrics.yml.
+# This section maps source_class -> candidate canvas files. Adapters
+# refine the mapping in their "Canvas routing" section.
+#
+# Evidence types:
+#   market_signal   -- external traction/attention (views, referrers, stars)
+#   user_behavior   -- usage metrics (sessions, events, retention)
+#   revenue_signal  -- monetization (MRR, conversions, churn)
+#   support_signal  -- user-reported issues, tickets, sentiment
+#   review_signal   -- ratings, reviews, NPS
+# ============================================================
+
+metric_sources:
+
+  description: "Maps external metric source_classes to candidate canvas targets for evidence drafting."
+
+  by_source_class:
+
+    traffic:
+      # e.g., github, plausible, google_analytics, fathom, posthog (pageview side)
+      primary_canvas_targets:
+        - file: purpose.yml
+          evidence_type: market_signal
+          when: "general traction evidence for L0 Purpose"
+        - file: north-star.yml
+          evidence_type: market_signal
+          when: "north-star metric is traffic/engagement-based"
+        - file: go-to-market.yml
+          evidence_type: market_signal
+          when: "within 14 days of a launch or campaign (L5)"
+      secondary_canvas_targets:
+        - file: opportunities.yml
+          evidence_type: market_signal
+          when: "unexplained referrers or paths hint at new underserved needs (L2)"
+
+    events:
+      # e.g., stripe, segment, sentry
+      primary_canvas_targets:
+        - file: north-star.yml
+          evidence_type: revenue_signal
+          when: "north-star metric is revenue/conversion-based"
+        - file: dora-metrics.yml
+          evidence_type: user_behavior
+          when: "events indicate delivery/reliability signal (e.g., Sentry error rate)"
+        - file: go-to-market.yml
+          evidence_type: revenue_signal
+          when: "conversion, activation, or revenue events during launch windows"
+      secondary_canvas_targets:
+        - file: purpose.yml
+          evidence_type: market_signal
+          when: "customer-count milestones"
+
+    reviews:
+      # e.g., app_store_connect, play_console, trustpilot
+      primary_canvas_targets:
+        - file: go-to-market.yml
+          evidence_type: review_signal
+          when: "review velocity, rating trends during/after launches"
+        - file: opportunities.yml
+          evidence_type: review_signal
+          when: "recurring review themes suggest underserved needs"
+      secondary_canvas_targets:
+        - file: services.yml
+          evidence_type: review_signal
+          when: "reviews indicate service-quality issues (Downe)"
+        - file: trust-signals.yml
+          evidence_type: review_signal
+          when: "rating average is a trust input"
+
+    support:
+      # e.g., intercom, zendesk, linear, github_issues
+      primary_canvas_targets:
+        - file: opportunities.yml
+          evidence_type: support_signal
+          when: "support volume concentrated on specific themes signals unmet needs (L2)"
+        - file: services.yml
+          evidence_type: support_signal
+          when: "support load is a service-quality lagging indicator"
+      secondary_canvas_targets:
+        - file: jobs-to-be-done.yml
+          evidence_type: support_signal
+          when: "support requests reveal jobs the product isn't yet hired for"
+
+  routing_rules:
+    - "Adapters MAY override / narrow the mapping in their 'Canvas routing' section."
+    - "Evidence entries are always drafted, never auto-written. User confirms before append."
+    - "Every drafted entry MUST include provenance pointing back to the snapshot JSON."
+    - "If a source's data does not fit any canvas target, /metrics-pull reports it as 'no canvas routing' rather than inventing one."
+
+  staleness:
+    snapshot_warn_days: 7      # /canvas-health flags snapshots >7d old as warning
+    snapshot_critical_days: 30 # >30d old is critical for L0/L1/L2/L5
+    adapter_regenerate_days: 180  # adapter's last_known_working >180d triggers regeneration nudge
