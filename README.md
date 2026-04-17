@@ -106,7 +106,7 @@ graph LR
 |-------|----------|-------------|
 | L0: Purpose | "Why do we exist?" | Sinek, Christensen |
 | L1: Strategy | "Where do we play?" | Wardley, North Star, Skelton |
-| L2: Opportunity | "What problem to solve?" | Torres, Allen, Cynefin |
+| L2: Opportunity | "What problem to solve?" | Torres, Allen, Hoskins, Cynefin |
 | L3: Solution | "How to solve it?" | Gilad, Cagan, Downe |
 | L4: Delivery | "Build and ship" | Forsgren, OWASP Top 10:2025, SOLID |
 | L5: Market | "Reach users" | Lauchengco, Shotton |
@@ -116,6 +116,8 @@ graph LR
 **Diamonds** run at every scale — the same four phases: **Discover** (explore broadly) → **Define** (narrow focus) → **Develop** (generate solutions) → **Deliver** (build & validate). Each transition must pass theory gates.
 
 **The OST bridge**: At L2, discovery produces an Opportunity Solution Tree (Torres). Multiple opportunities are found, multiple solutions are generated for each. Solutions compete — the winner spawns an L3 Solution diamond. Losers are archived with evidence, not deleted.
+
+**Scenarios as connective tissue**: Scenarios (Hoskins) carry user context from L2 through L5. Born from interview stories at L2 (persona + means + motive + simulation), solutions are designed against them at L3, tested against them at L4, and validated in reality at L5. They're the thread that keeps every phase grounded in a real person's real situation.
 
 **The feedback loop**: After L5 Market, real-world signals feed back into new L2 Opportunity diamonds. Purpose → Strategy → Discovery → Solution → Delivery → Market → Discovery. The cycle never truly ends.
 
@@ -155,6 +157,7 @@ All product knowledge lives in `.claude/canvas/*.yml` — structured YAML files 
 | `jobs-to-be-done.yml` | User jobs (functional/emotional/social) | Christensen |
 | `landscape.yml` | Strategic landscape, competitors | Wardley |
 | `opportunities.yml` | Opportunity Solution Tree | Torres |
+| `scenarios.yml` | User scenarios (persona/means/motive/simulation) | Hoskins |
 | `gist.yml` | Goals, Ideas, Steps, Tasks | Gilad |
 | `services.yml` | 15 service quality principles | Downe |
 | `threat-model.yml` | STRIDE threat model | OWASP |
@@ -419,6 +422,7 @@ The same pattern applies to **metric sources**. `/metrics-detect` scans for sign
 | CALMS | Willis, Humble | DevOps culture assessment |
 | The Fifth Discipline | Senge | Systems thinking archetypes |
 | Domain-Driven Design | Evans | Bounded contexts, context mapping |
+| Scenarios | Hoskins | User scenarios as connective primitive (L2→L5) |
 | Lean UX | Gothelf, Seiden | Hypothesis-driven design |
 | Toyota Kata | Rother | Coaching questions for scientific thinking |
 | Hooked / Indistractable | Eyal | Ethical engagement design |

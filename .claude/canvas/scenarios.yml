@@ -1,0 +1,97 @@
+# Scenarios Canvas — Drew Hoskins
+# Source: "Attention to Users Is All You Need" (SAP talk, April 2026)
+# Populated through: /user-interview (born), /ost-builder (refined), /assumption-test (tested)
+#
+# Scenarios are the connective tissue between discovery and delivery.
+# They carry user context through L2→L3→L4→L5 so that every phase
+# stays grounded in a real person's real situation.
+#
+# A scenario is NOT a user story ("As a X, I want Y, so that Z").
+# It's a narrative: who is this person, how do they interact, why,
+# and what does the full experience look like?
+#
+# Drew Hoskins' four elements:
+#   Persona  — Who is this person? (role, context, constraints, goals)
+#   Means    — How do they interact with the product? (touchpoints, devices, workflow)
+#   Motive   — Why are they doing this? (JTBD link — functional, emotional, social)
+#   Simulation — The narrative tying it together (a specific, testable story)
+
+schema_version: 1
+
+scenarios: []
+# - id: scn-001
+#   name: ""                    # Short memorable name ("Sarah's Tuesday standup prep")
+#   status: draft|active|tested|validated|invalidated
+#
+#   # Hoskins' four elements
+#   persona:
+#     description: ""           # Who — rich enough to feel real, not a demographic checkbox
+#     segment_ref: ""           # Link to purpose.yml#who (primary/secondary)
+#     jtbd_ref: ""              # Link to jobs-to-be-done.yml#jobs[].id
+#   means:
+#     touchpoints: []           # How they interact (CLI, IDE, browser, mobile, etc.)
+#     workflow_context: ""      # What's happening around the product (meetings, deadlines, toolchain)
+#     constraints: []           # Time pressure, skill level, accessibility needs, device limitations
+#   motive:
+#     functional: ""            # What job are they trying to get done?
+#     emotional: ""             # How do they want to feel?
+#     social: ""                # How do they want to be perceived?
+#     trigger: ""               # What specific event kicks off this scenario?
+#   simulation:
+#     narrative: ""             # The full story — "Sarah opens her terminal at 8:45am..."
+#     success_state: ""         # What does "it worked" look like from the persona's perspective?
+#     failure_state: ""         # What does "it failed" look like? (equally important)
+#     duration: ""              # How long does this scenario take? (minutes, hours, days)
+#
+#   # Lifecycle tracking — where has this scenario been used?
+#   lifecycle:
+#     born_at: ""               # L2 phase where this was first captured
+#     born_from: ""             # Evidence source (interview ID, observation, etc.)
+#     designed_against: []      # L3 solution IDs that were designed with this scenario
+#       # - solution_ref: ""   # Link to opportunities.yml#solutions[].name
+#       #   fit: full|partial|none  # Does the solution address this scenario?
+#       #   gaps: ""            # What the solution doesn't cover
+#     tested_against: []        # L4 test results using this scenario
+#       # - test_type: ""      # acceptance|usability|integration|e2e
+#       #   date: ""
+#       #   result: pass|fail|partial
+#       #   notes: ""
+#     validated_in_market: null  # L5 — did this scenario play out in reality?
+#       # result: confirmed|partial|invalidated
+#       # evidence: ""
+#       # date: ""
+#
+#   # Provenance
+#   provenance:
+#     evidence_type: speculation|anecdotal|data-supported|test-validated|launch-validated
+#     evidence_sources: []
+#     captured_at: ""
+#     confidence: 0.0
+#
+#   # Cross-references
+#   trace:
+#     upstream:
+#       - target_id: ""        # e.g., "opportunities#opp-001" or "user-needs#need-003"
+#         edge: derived_from
+#     downstream:
+#       - target_id: ""        # e.g., "gist#idea-001" or "services#principle-3"
+#         edge: informs
+
+# User Knowledge Repository (Hoskins concept)
+# Maps to Mycelium's evidence system — these are the INPUT SOURCES that produce scenarios.
+# Not a separate system; a lens on what we already collect.
+knowledge_sources:
+  - type: interviews           # /user-interview, /mocked-persona-interview
+    canvas_ref: "opportunities.yml#provenance"
+  - type: dogfooding           # /eval-runner, dogfood reports
+    canvas_ref: "evals/dogfood-reports/"
+  - type: support              # Future: support tickets, bug reports
+    canvas_ref: null
+  - type: reviews              # Future: app store reviews, community feedback
+    canvas_ref: "purpose.yml#evidence"
+  - type: competitive_analysis # /wardley-map competitive landscape
+    canvas_ref: "landscape.yml"
+  - type: analytics            # /metrics-pull behavioral data
+    canvas_ref: "evals/metrics/"
+
+last_updated: null

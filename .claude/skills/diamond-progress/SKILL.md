@@ -78,6 +78,7 @@ Progress a diamond through phases with full theory gate validation. At delivery 
 
 9. **If progressing**:
    - Update diamond state in active.yml.
+   - **Render the updated journey map**: Follow `.claude/engine/wayfinding.md` to show the user where they've moved to. This makes the transition visible — the user sees their position shift on the map.
    - Log transition in decision-log.md. If threshold was adapted, include: "Threshold adapted from [base] to [effective] because project_type=[type]. Would increase with [action]."
    - Update product-journal.md.
    - Identify if child diamonds should be spawned.

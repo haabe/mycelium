@@ -66,6 +66,8 @@ Rules:
 - The tree is a living artifact -- updated with every research cycle.
 - Never brainstorm opportunities. Discover them.
 
+Discovery also produces **scenarios** (Hoskins) — narrative descriptions of how a specific person uses the product to solve their problem. Scenarios have four elements: Persona (who), Means (how they interact), Motive (why), Simulation (the full story). They emerge from interview stories and carry user context through L3→L4→L5. See `canvas/scenarios.yml`.
+
 ### 5. Jobs to Be Done (JTBD) Mapping
 
 Map all three dimensions for every job (Christensen):

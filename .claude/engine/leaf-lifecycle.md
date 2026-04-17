@@ -17,7 +17,8 @@ OST Leaf → Four Risks → ICE Score → Assumption Test → GIST Entry
 **Input**: Research evidence (interviews, behavioral data, analytics)
 **Gate**: Opportunity must cite ≥2 evidence sources (Torres CDH rule)
 **Output**: Solution leaf in `canvas/opportunities.yml` under its parent opportunity
-**Skill**: `/ost-builder`
+**Scenario link**: Each opportunity should have at least one scenario in `canvas/scenarios.yml` that illustrates the need. Scenarios are born from interview stories (`/user-interview`) — extract the persona, means, motive, and simulation from real user narratives. If no scenario exists for this opportunity, create one before generating solutions.
+**Skill**: `/ost-builder`, `/user-interview`
 
 The leaf is a hypothesis: "This solution might address this opportunity." It is NOT validated yet.
 
@@ -68,6 +69,7 @@ Test the assumption with the cheapest viable method:
 **Input**: ICE-scored leaf with assumption test results
 **Gate**: ICE ≥ configurable threshold (default: 100) AND riskiest assumption tested
 **Output**: Idea entry in `canvas/gist.yml` with `source_leaf_id` backreference
+**Scenario link**: The GIST idea must reference which scenarios it addresses. Update `canvas/scenarios.yml` — add the solution to `lifecycle.designed_against[]` for each relevant scenario. If the solution only partially fits a scenario, document the gaps. A solution that doesn't address any scenario is a solution without a user — challenge it.
 
 The leaf graduates from the OST (opportunity space) into GIST (solution space). The GIST idea inherits the leaf's ICE score and confidence level.
 
@@ -102,6 +104,7 @@ Cynefin routing applies here:
 **Input**: All artifacts from phases 1-7
 **Gate**: Corrections.md reviewed (G-P5). Definition of Done drafted. Acceptance criteria defined.
 **Output**: Delivery diamond spawned (L3 spawns L4). Preflight stamp in decision log.
+**Scenario link**: Acceptance criteria should be derived from scenario simulations. For each scenario in `canvas/scenarios.yml` linked to this solution, the success_state becomes an acceptance criterion and the failure_state becomes a negative test case.
 
 The preflight verifies:
 - Four Risks assessed ✓
@@ -111,6 +114,7 @@ The preflight verifies:
 - Service/bounded context designed ✓
 - Threat model complete (if applicable) ✓
 - Corrections reviewed ✓
+- Scenarios linked and acceptance criteria derived ✓
 
 **Skill**: `/preflight`, `/delivery-bootstrap`
 
@@ -129,11 +133,12 @@ This is the standard L4 diamond lifecycle — Discover, Define, Develop, Deliver
 **Input**: Shipped deliverable + launch plan
 **Gate**: Success criteria defined pre-launch. Telemetry in place.
 **Output**: Market feedback entry in `canvas/go-to-market.yml` with `source_leaf_id` backreference.
+**Scenario link**: Validate scenarios against reality. Update `canvas/scenarios.yml` — set `lifecycle.validated_in_market` for each scenario: did the persona's story actually play out? Confirmed scenarios strengthen confidence. Invalidated scenarios are the most valuable learning — they reveal where our model of the user was wrong.
 
 Post-launch:
-- **Metrics confirm value**: Update confidence on original OST leaf. Mark as `launch-validated`.
-- **Metrics contradict**: Spawn new L2 diamond with market evidence. The original leaf's provenance updates to reflect the contradiction.
-- **Mixed signals**: Run `/retrospective`, then decide: iterate (stay in L5) or regress (back to L3/L2).
+- **Metrics confirm value**: Update confidence on original OST leaf. Mark as `launch-validated`. Update linked scenarios to `status: validated`.
+- **Metrics contradict**: Spawn new L2 diamond with market evidence. Update linked scenarios to `status: invalidated` with evidence. The original leaf's provenance updates to reflect the contradiction.
+- **Mixed signals**: Run `/retrospective`, then decide: iterate (stay in L5) or regress (back to L3/L2). Update scenario status to reflect which parts confirmed and which didn't.
 
 **Skill**: `/launch-tier`, `/retrospective`
 

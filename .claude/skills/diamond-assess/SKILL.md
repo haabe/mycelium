@@ -99,7 +99,11 @@ Evaluate current diamond state and recommend next action.
 **ALWAYS output in plain language first, then technical details.**
 Use `.claude/engine/status-translations.md` for translations.
 
+**ALWAYS render the journey map first.** Follow `.claude/engine/wayfinding.md` to render the "You Are Here" map before any other output. This orients the user to where they are in the full L0→L5 progression before diving into gate details.
+
 ```
+[Journey map from wayfinding.md — rendered first]
+
 ## Where We Are
 
 Current focus: [plain-language description from status-translations.md]

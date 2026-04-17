@@ -12,6 +12,10 @@ Mycelium is shaped by the product development community. The following people co
 
 **Linda Maria Sneve** — Asked the question no one inside the project had considered: "How can I use Mycelium for non-software products — courses, ebooks, videos, AI tools?" This prompted the entire product_type dimension: 6 product types, 3 new delivery metrics canvases, conditional theory gates, product-type Definition of Done variants, non-software delivery guidance, and product-type-specific launch channels. Made Mycelium's largest structural expansion since v0.9.0.
 
+## v0.15.0 — Scenarios as First-Class Primitive
+
+**Drew Hoskins** — Staff PM at Temporal, author of *The Product-Minded Engineer*. Over two rounds of LinkedIn feedback (2026-04-14, 2026-04-17), Hoskins sharpened two key critiques: (1) L0-L2 scales make sense, but L3-L5 "starts to look like another way to think of the product lifecycle" — the upstream is differentiated, the downstream needs more. (2) Scenarios should be a first-class primitive, not an implicit byproduct of JTBD mapping. His SAP talk slides ("Attention to Users Is All You Need", April 2026) provided the specific structure: Persona + Means + Motive + Simulation. This directly led to `canvas/scenarios.yml` as a new canvas artifact, scenario wiring through the leaf lifecycle (phases 1, 5, 8, 10), and scenario extraction in `/user-interview`. Hoskins' "User Knowledge Repository" concept also validated Mycelium's canvas evidence system as architecturally aligned.
+
 ---
 
 ## How Mycelium Uses Feedback

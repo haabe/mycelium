@@ -73,6 +73,7 @@ project_types:
     recommended:
       - jobs-to-be-done.yml  # Deeper need understanding
       - user-needs.yml       # User needs beyond your own assumptions
+      - scenarios.yml        # User scenarios carrying context through L2→L5 (Hoskins)
     optional:
       - landscape.yml        # Not needed without competitors
       - team-shape.yml       # Solo, no team to shape
@@ -99,6 +100,7 @@ project_types:
       - user-needs.yml
       - threat-model.yml     # Products need security thinking
       - services.yml         # Products need service quality
+      - scenarios.yml        # User scenarios carrying context through L2→L5 (Hoskins)
     recommended:
       - privacy-assessment.yml
       - dora-metrics.yml
@@ -122,6 +124,7 @@ project_types:
       - gist.yml
       - jobs-to-be-done.yml
       - user-needs.yml
+      - scenarios.yml        # User scenarios carrying context through L2→L5 (Hoskins)
       - threat-model.yml
       - services.yml
       - team-shape.yml       # Team structure matters
@@ -148,6 +151,7 @@ project_types:
       - gist.yml
       - jobs-to-be-done.yml
       - user-needs.yml
+      - scenarios.yml        # User scenarios carrying context through L2→L5 (Hoskins)
       - threat-model.yml
       - services.yml
       - team-shape.yml
