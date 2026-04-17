@@ -130,6 +130,6 @@ When running `/fan-out` for a leaf bakeoff, specify `bakeoff: true` and the lead
 ## Theory Citations
 
 - Torres: Continuous Discovery Habits (parallel solution exploration)
-- Gilad: Evidence Guided (ICE-based comparison)
+- Ellis: ICE scoring. Gilad: Evidence-Guided (ICE-based comparison with Confidence Meter)
 - Cagan: Inspired (Four Risks as evaluation framework)
 - Ries: Lean Startup (cheapest viable test for assumptions)

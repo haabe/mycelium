@@ -92,7 +92,7 @@ Evaluate current diamond state and recommend next action.
     - Current: 44 skills, 32 guardrails, 4 mandatory reads, 5 hook layers, 12 gates
     - If thickness has increased since last assess, note it
     - This is observability, not a gate — purely informational
-    - *Source: Pachaar ("scaffolding should decrease as models improve")*
+    - *Source: Trivedy (Anatomy of an Agent Harness, LangChain blog — "scaffolding should decrease as models improve," but harnesses remain valuable as they engineer systems around model intelligence)*
 
 ## Output Format
 

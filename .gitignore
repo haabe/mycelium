@@ -44,4 +44,7 @@ Thumbs.db
 
 # Node modules (if any tooling is added later)
 node_modules/
+# Content drafts and assets (not part of the framework)
 linkedin-source.md
+linkedin-*.pdf
+.claude/drafts/

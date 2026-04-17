@@ -66,6 +66,20 @@ Review the relevant stage checklist before every research activity, decision poi
 | **Anchoring** | Copying a pattern from StackOverflow/AI without evaluating fit | Understand the code. Evaluate for this context. Test thoroughly. |
 | **Framing effect** | Task description frames the implementation approach | Read acceptance criteria. Consider alternative implementations. |
 
+## WYSIATI — What You See Is All There Is (Kahneman)
+
+The tendency to build a coherent story from limited evidence without noticing what's missing. WYSIATI is why the Evidence Gate exists — it forces you to ask "what evidence DON'T we have?" before concluding. Active at every stage, especially dangerous when confidence is high and evidence is thin.
+
+**Mitigation**: Before concluding, explicitly list what evidence you have NOT seen. Ask: "What would change my mind if I saw it?"
+
+## Noise — Unwanted Variability in Judgment (Kahneman, Sibony & Sunstein, 2021)
+
+Unlike bias (systematic error in one direction), **noise** is random scatter — different assessors (or different sessions) producing different judgments for the same evidence. ICE scoring, confidence calibration, and gate assessments are all susceptible.
+
+**Types**: Occasion noise (same person, different day = different score), level noise (consistently harsh/lenient across items), pattern noise (inconsistent weighting of factors).
+
+**Mitigation**: Use structured assessment criteria, score independently before discussion, conduct noise audits (score same evidence twice, compare divergence). If scores diverge by >1 point on any dimension, investigate before proceeding.
+
 ## The Agent's Own Biases
 
 **Critical section.** AI agents have systematic biases that differ from human biases but are equally dangerous.

@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.14.0 -- Metrics harvesting: JiT metric source detection mirroring the tech-stack detector. Unified `/metrics-pull` across configured sources (GitHub reference adapter shipped; others generated on demand via `metrics-adapters/GENERATING.md`). Closes the L0/L1/L2/L5 evidence loop — replaces manual "I checked the dashboard" reports with timestamped, sourced, diffable snapshots.*
+*Version 0.15.0 -- Theory accuracy audit: 7 misattributions fixed (ICE→Ellis, Pachaar→Trivedy, CALMS→Willis & Humble, Goodhart→Strathern, Allen scoring→Ulwick), OWASP Top 10:2025 (10 categories), OWASP Top 10 for LLM Applications v2025 (LLM01-10), DORA 5th metric (Reliability) + FDRT naming, Kim Three Ways + Five Ideals fully defined, engineering principles expanded (ETC, Orthogonality, Component Principles), cognitive biases expanded (WYSIATI, Noise), Gothelf 4-part hypothesis format, trauma-informed design rewritten (SAMHSA + Chayn). 30 files updated across skills, engine, harness, and domains.*
 
 Mycelium is a harnessing system for AI-assisted product development. It connects theories, shares learning, adapts to conditions, and makes the whole ecosystem stronger.
 

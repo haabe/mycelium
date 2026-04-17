@@ -28,7 +28,7 @@ safer:
   error_budget_status: null  # healthy|warning|depleted (from dora-metrics.yml SRE section)
 
 happier:
-  description: "Team wellbeing, customer satisfaction, societal impact"
+  description: "Customers, colleagues, citizens, and climate. Not 'more for less' at any human or climatic cost. Empowered teams, psychological safety, positive societal and planetary impact."
   metrics: []
   current_state: ""
   trend: ""

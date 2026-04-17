@@ -52,7 +52,11 @@ Use biases ETHICALLY to help users understand value:
 ## Canvas Output
 Update `canvas/go-to-market.yml` with tier classification and launch plan.
 
-## Ethical Engagement Design (Eyal -- Hook Model)
+## Ethical Engagement Design (Eyal -- Hook Model + Indistractable)
+
+Eyal's work spans two complementary books: **Hooked** (2014) provides the Hook Model for building habit-forming products; **Indistractable** (2019) provides the user-side framework for managing attention. The Manipulation Matrix below bridges both — ethical engagement design means building hooks that users would choose even with full information.
+
+The Hook Model is most relevant at L3 (Solution design) for engagement architecture, not just L5 (Market). Apply during solution design when the product requires recurring usage.
 
 For products that need user retention, design engagement ethically using the Hook Canvas:
 

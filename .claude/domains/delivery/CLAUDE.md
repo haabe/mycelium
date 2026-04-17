@@ -120,6 +120,36 @@ The AI agent IS your pair partner. Leverage this:
 
 *Source: Beck (XP Pair Programming, adapted for AI-assisted development)*
 
+## Kim's Three Ways (The DevOps Handbook)
+
+The three foundational principles of DevOps flow:
+
+- **First Way: Flow** — Optimize left-to-right system-level flow. Small batches, WIP limits, reduce handoffs, make work visible, eliminate waste. Never optimize a local stage at the expense of global throughput.
+- **Second Way: Feedback** — Amplify right-to-left feedback loops. Shorten loop times, create quality at source, stop the line on defects (Jidoka). The faster problems surface, the cheaper they are to fix.
+- **Third Way: Continual Learning and Experimentation** — Foster a culture of experimentation. Take calculated risks, learn from failure, practice and repetition. Allocate time for improvement of daily work. Blameless post-mortems, corrections.md, patterns.md — all Third Way practices.
+
+*Source: Kim, Humble, Debois, Willis (The DevOps Handbook)*
+
+### Kim's Five Ideals (The Unicorn Project, 2019)
+
+A concise health checklist integrating several Mycelium frameworks:
+
+1. **Locality and Simplicity** — Design for local changes without cross-team impact. Maps to: bounded contexts (Evans), stream-aligned teams (Skelton).
+2. **Focus, Flow, and Joy** — Small batches, fast feedback, meaningful work. Maps to: BVSSH Happier, First Way (Flow).
+3. **Improvement of Daily Work** — Paying down tech debt is a priority, not a luxury. Maps to: refactoring practice (Fowler/Beck), Third Way.
+4. **Psychological Safety** — Team members feel safe raising problems. Maps to: blameless post-mortems (SRE), BVSSH Happier, CALMS Culture.
+5. **Customer Focus** — Distinguish core from context. Maps to: JTBD (Christensen), Wardley evolution (genesis vs commodity).
+
+### Kim & Spear: Slowification, Simplification, Amplification (2023)
+
+Three mechanisms that evolve the Three Ways:
+
+- **Slowification** — Make it easier to solve problems by creating conditions to pause and think. Relevant to AI-assisted development: the system should make it easy to pause before the agent races ahead.
+- **Simplification** — Make problems easier by reducing complexity, partitioning systems, linearizing interactions. Maps to: KISS, bounded contexts, cognitive load management.
+- **Amplification** — Make problems obvious through signals, feedback, and transparency. Maps to: Second Way evolved, observability, DORA metrics.
+
+*Source: Kim & Spear (Wiring the Winning Organization, 2023)*
+
 ## Agile/DevOps Practices
 
 - **Trunk-based development**: Short-lived feature branches (< 1 day ideally). Merge to main frequently.
@@ -172,7 +202,7 @@ A feature/story is done when ALL of the following are true:
 - [ ] Deployed to staging and smoke tested
 - [ ] BVSSH check passed
 
-## CALMS Culture Assessment (Humble)
+## CALMS Culture Assessment (Willis & Humble)
 
 DORA measures delivery OUTCOMES. CALMS explains WHY those outcomes are what they are. Assess periodically alongside BVSSH:
 
@@ -184,18 +214,21 @@ DORA measures delivery OUTCOMES. CALMS explains WHY those outcomes are what they
 
 If DORA metrics are poor, check CALMS to find the cultural root cause. If DORA is good but CALMS is weak, the performance is fragile and won't survive team changes.
 
-*Source: Humble (CALMS DevOps Culture Framework)*
+*Source: Willis & Humble (CALMS) — John Willis coined "CAMS"; Jez Humble added the "L" for Lean.*
 
 ## DORA Metrics Tracking
 
 **Applies to: software. For other product types, use the appropriate metrics canvas: content-metrics.yml (content), ai-tool-metrics.yml (AI tools), service-metrics.yml (services). See theory-gates.md Gate 10 for the product-type routing table.**
 
-Track and optimize the four key metrics (Forsgren):
+Track and optimize the five key metrics (Forsgren):
 
 - **Deployment Frequency**: How often code reaches production. Target: on-demand (multiple times per day).
 - **Lead Time for Changes**: Time from commit to production. Target: less than one hour.
 - **Change Failure Rate**: Percentage of deployments causing failure. Target: 0-15%.
-- **Mean Time to Recovery**: Time to restore service after failure. Target: less than one hour.
+- **Failed Deployment Recovery Time** (formerly MTTR): Time to restore service after failure. Target: less than one hour.
+- **Reliability**: The ability of a system to perform its intended function without failure over time. Connected to SRE practices (SLIs/SLOs/error budgets). Added to DORA 2021.
+
+When DORA metrics are poor, the 24 capabilities from *Accelerate* (Forsgren, Humble, Kim) identify specific improvement levers — grouped into technical (trunk-based development, CI, test automation, loosely coupled architecture), process (small batches, work visibility, WIP limits), lean (lightweight change approval, monitoring, proactive notifications), and cultural (learning culture, transformational leadership, cross-functional collaboration) categories.
 
 ## Theory of Constraints: Fixing Bottlenecks (Goldratt)
 
@@ -211,7 +244,25 @@ When DORA/APEX metrics identify a bottleneck, apply Goldratt's Five Focusing Ste
 
 Use `canvas/value-stream.yml` to visualize the full flow and identify where the constraint lives.
 
-*Source: Goldratt (The Goal, Theory of Constraints)*
+*Source: Goldratt (The Goal, Theory of Constraints). Note: Step 5 includes the critical warning "do not allow inertia to cause a system's constraint" — don't keep optimizing a former bottleneck out of habit.*
+
+### Lean Waste Identification (Ohno — 7 Wastes / TIMWOOD)
+
+Before optimizing, identify which waste category the bottleneck falls into:
+
+| Waste | Product Development Form | Detection |
+|---|---|---|
+| **T**ransportation | Handoffs between people/teams | Count handoffs in the value stream |
+| **I**nventory | WIP, unshipped code, unmerged branches | Check WIP limits, branch age |
+| **M**otion | Context switching, tool switching | Track focus time vs fragmented time |
+| **W**aiting | Blocked tasks, review queues, approval delays | Measure wait-to-work ratio |
+| **O**verproduction | Features nobody asked for | Compare shipped features to validated needs (YAGNI) |
+| **O**verprocessing | Gold-plating, excessive ceremony, premature optimization | "Would removing this step reduce value?" |
+| **D**efects | Bugs, corrections, rework | Track defect escape rate |
+
+Also watch for: **Muri** (overburden → BVSSH Happier / sustainable pace) and **Mura** (unevenness → delivery cadence variation in DORA).
+
+*Source: Ohno (Toyota Production System). Mapped to product development via Poppendieck (Lean Software Development).*
 
 ## Observability
 
@@ -232,7 +283,15 @@ For products with reliability requirements:
 
 Error budgets are the social contract: reliability earns the right to ship features faster. Track in `canvas/dora-metrics.yml` under the `sre` section. This connects to BVSSH Safer dimension.
 
-*Source: Beyer, Jones, Petoff, Murphy (Site Reliability Engineering, Google)*
+### Toil (SRE)
+
+**Toil**: Work that is manual, repetitive, automatable, tactical, devoid of enduring value, and scales linearly with service growth. Cap toil at 50% of engineering time (SRE target).
+
+Toil is often THE constraint in Goldratt's Five Focusing Steps — identify it, exploit it (automate the most painful parts first), don't subordinate everything else to it.
+
+Common product development toil: manual deployments, repetitive review cycles, manual test runs, environment setup, dependency updates, manual data migrations, copy-paste configuration.
+
+*Source: Beyer, Jones, Petoff, Murphy (Site Reliability Engineering, Google). Workbook (2018) added toil budgets and measurement taxonomy.*
 
 ## Usability for User-Facing Work
 
@@ -257,7 +316,7 @@ When you detect this pattern: reduce PR size, add automated review gates, improv
 
 Track APEX metrics in `canvas/dora-metrics.yml` under the `apex` section.
 
-*Source: LinearB APEX Framework (AI Leverage, Predictability, Efficiency, Developer Experience)*
+*Source: LinearB APEX Framework (AI Leverage, Predictability, Flow Efficiency, Developer eXperience). Note: "Flow Efficiency" is the official pillar name — the "Flow" prefix emphasizes end-to-end flow from Lean/Goldratt, not just individual efficiency.*
 
 ## Component Architecture for UI Projects (Frost — Atomic Design)
 

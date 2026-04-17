@@ -104,7 +104,7 @@ All four risks must be assessed, and the assessment must demonstrate that **thre
 
 | Risk | Perspective | Pass Criteria | Fail Criteria |
 |------|------------|--------------|---------------|
-| **Value** | Product (PM) | Evidence that users want/need this (not just stakeholder opinion). Grounded in user research, JTBD, or opportunity scoring. | No user validation; only internal demand; assessed purely from technical feasibility |
+| **Value** (Cagan: "Desirability") | Product (PM) | Evidence that users want/need this (not just stakeholder opinion). Grounded in user research, JTBD, or opportunity scoring. | No user validation; only internal demand; assessed purely from technical feasibility |
 | **Usability** | Design (UX) | Users can figure out how to use it (tested, not assumed). Assessed through user flows, prototypes, or heuristic evaluation. | No usability testing; assumed "intuitive"; assessed only as "we'll make it simple" |
 | **Feasibility** | Engineering (Dev) | Engineering confirms buildable within constraints. Specific technical risks identified, dependencies mapped, spike results documented. | No technical assessment; unknown dependencies; hand-waved as "straightforward" |
 | **Business Viability** | Cross-cutting | Aligns with business model, legal, ethical constraints | Conflicts with business constraints; legal risk unassessed |
@@ -168,7 +168,7 @@ All four risks must be assessed, and the assessment must demonstrate that **thre
 
 ### 6. Security Gate
 
-**Source**: OWASP, STRIDE
+**Source**: OWASP Top 10:2025, STRIDE (Shostack)
 
 **Applies to**: Develop->Deliver and Deliver->Complete, L3-L5
 
@@ -180,7 +180,7 @@ All four risks must be assessed, and the assessment must demonstrate that **thre
 | Scale | Pass Criteria | Fail Criteria |
 |-------|--------------|---------------|
 | L3 | STRIDE threat model completed; security architecture reviewed | No threat analysis |
-| L4 | OWASP Top 10 addressed; input validation; auth/authz verified | Known vulnerability unaddressed |
+| L4 | OWASP Top 10:2025 addressed; input validation; auth/authz verified | Known vulnerability unaddressed |
 | L5 | Code-level security checks passing; no hardcoded secrets; dependencies scanned | Security scan findings ignored |
 
 **Evidence required**: STRIDE analysis, security review checklist, dependency scan results, SAST/DAST results.
@@ -217,7 +217,7 @@ All five dimensions must be assessed (even a one-sentence answer per dimension i
 | **Value** | Measurable user/business value delivered or validated | No measurable outcome; vanity metrics only |
 | **Sooner** | Lead time maintained or reduced; no unnecessary delays | Lead time increased; batch size too large |
 | **Safer** | Risk reduced; compliance maintained; no new vulnerabilities | New risks introduced without mitigation |
-| **Happier** | Team sustainability maintained; no burnout indicators | Unsustainable pace; team morale concerns |
+| **Happier** | Four stakeholders assessed — customers, colleagues, citizens, climate (Smart). Sustainable pace; no burnout; compute usage proportionate to value; no negative societal impact | Unsustainable pace; team morale concerns; wasteful compute (brute-force retries); negative community impact |
 
 **Evidence required**: Metrics dashboard, team health check, DORA metrics comparison.
 
@@ -267,7 +267,7 @@ Two quality layers for user-facing work:
 
 | Product Type | Metrics Canvas | Key Metrics |
 |-------------|---------------|-------------|
-| software | dora-metrics.yml | Deployment frequency, lead time, change failure rate, MTTR |
+| software | dora-metrics.yml | Deployment frequency, lead time, change failure rate, failed deployment recovery time (FDRT, formerly MTTR), reliability |
 | content_* | content-metrics.yml | Publication cadence, production lead time, revision rate, completion rate |
 | ai_tool | ai-tool-metrics.yml | Eval frequency, prompt version cadence, safety score, bias assessment |
 | service_offering | service-metrics.yml | Client throughput, delivery lead time, client satisfaction, repeatability |

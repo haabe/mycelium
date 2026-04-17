@@ -138,7 +138,7 @@ Before marking user-facing delivery complete, evaluate against Nielsen's 10 usab
 
 **G-L1: Every solution leaf must have Four Risks → ICE → assumption identification before entering L4** `REVIEW` `quality`
 The leaf lifecycle pipeline must be complete before spawning a delivery diamond. A leaf without risk assessment and scoring is an unvalidated guess entering production.
-*Source: Torres (CDH), Cagan (Four Risks), Gilad (ICE), Mycelium leaf lifecycle*
+*Source: Torres (CDH), Cagan (Four Risks), Ellis (ICE) / Gilad (Confidence Meter), Mycelium leaf lifecycle*
 
 **G-L2: Every GIST entry must trace back to a scored OST leaf** `REVIEW` `quality`
 GIST ideas don't appear from thin air. Every idea must have a `source_leaf_id` referencing an OST leaf that has passed ICE threshold. Ideas without provenance bypass the evidence pipeline.

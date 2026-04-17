@@ -108,7 +108,7 @@ graph LR
 | L1: Strategy | "Where do we play?" | Wardley, North Star, Skelton |
 | L2: Opportunity | "What problem to solve?" | Torres, Allen, Cynefin |
 | L3: Solution | "How to solve it?" | Gilad, Cagan, Downe |
-| L4: Delivery | "Build and ship" | Forsgren, OWASP, SOLID |
+| L4: Delivery | "Build and ship" | Forsgren, OWASP Top 10:2025, SOLID |
 | L5: Market | "Reach users" | Lauchengco, Shotton |
 
 **Not all scales are required.** A weekend project might skip L1 Strategy entirely. A small bet might start at L2 Opportunity and go straight to L4 Delivery. `/interview` classifies your project and tells you which scales matter — the system scales to your project, not the other way around.
@@ -403,21 +403,28 @@ The same pattern applies to **metric sources**. `/metrics-detect` scans for sign
 | Continuous Discovery / OST | Torres | Opportunity discovery, testing |
 | User Needs Mapping | Allen | Needs independent of solutions |
 | Cynefin Framework | Snowden | Domain classification |
-| GIST Planning / ICE | Gilad | Evidence-guided prioritization |
+| GIST Planning | Gilad | Evidence-guided prioritization |
+| ICE Scoring | Ellis | Impact/Confidence/Ease prioritization |
 | Inspired / Empowered | Cagan | Four risks, empowered teams |
 | Good Services | Downe | Service design quality |
-| Accelerate / DORA | Forsgren, Humble, Kim | Delivery performance |
-| OWASP / STRIDE | OWASP, Microsoft | Security throughout lifecycle |
+| Accelerate / DORA | Forsgren, Humble, Kim | Delivery performance (5 metrics incl. FDRT, Reliability) |
+| OWASP Top 10:2025 / STRIDE | OWASP, Shostack | Security throughout lifecycle |
 | Privacy by Design | Cavoukian | Privacy as default |
 | Loved | Lauchengco | Positioning, go-to-market |
 | BVSSH | Smart | Holistic outcome measurement |
-| Double Diamond | Design Council | Diverge/converge at every scale |
+| Double Diamond | Design Council (2004) | Diverge/converge at every scale |
 | Behavioral Science | Shotton, Kahneman | Bias mitigation, ethical design |
 | Theory of Constraints | Goldratt | Bottleneck resolution |
+| Three Ways / Five Ideals | Kim | DevOps flow, feedback, continual learning |
+| CALMS | Willis, Humble | DevOps culture assessment |
 | The Fifth Discipline | Senge | Systems thinking archetypes |
 | Domain-Driven Design | Evans | Bounded contexts, context mapping |
 | Lean UX | Gothelf, Seiden | Hypothesis-driven design |
 | Toyota Kata | Rother | Coaching questions for scientific thinking |
+| Hooked / Indistractable | Eyal | Ethical engagement design |
+| Clean Architecture / SOLID | Martin | Software design principles |
+| SRE | Beyer, Jones, Petoff, Murphy | Error budgets, toil, SLIs/SLOs |
+| TPS / Lean | Ohno, Toyoda | 7 Wastes, continuous improvement |
 | ... and more | | See CLAUDE.md for complete list |
 
 ## Regulatory Awareness: EU AI Act

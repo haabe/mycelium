@@ -4,7 +4,7 @@ Diamonds are the core workflow unit in Mycelium. Each diamond represents a cycle
 
 ## The Four Phases
 
-Every diamond passes through four phases, based on the **Double Diamond** model (Design Council, 2005):
+Every diamond passes through four phases, based on the **Double Diamond** model (Design Council, 2004). The Design Council evolved this into a broader "Framework for Innovation" (2019) adding Design Principles, Methods Bank, and Culture layers. For Complex-domain problems (Cynefin), consider the Design Council's Systemic Design Framework:
 
 ```
     DISCOVER          DEFINE           DEVELOP          DELIVER
@@ -28,7 +28,7 @@ Diamonds operate at different scales of abstraction:
 | **L0** | Purpose | Why we exist | Sinek (Golden Circle), JTBD (Christensen) | Months-years | "We help teams ship better products" |
 | **L1** | Strategy | Where to play | Wardley Mapping, North Star, Team Topologies (Skelton) | Weeks-months | "Focus on AI-assisted product development" |
 | **L2** | Opportunity | What to solve | Torres (CDH/OST), Allen (User Needs), Cynefin (Snowden) | Days-weeks | "Teams struggle with discovery-delivery handoff" |
-| **L3** | Solution | How to solve it | Gilad (GIST/ICE), Cagan (Inspired), Downe (Good Services) | Days-weeks | "An AI agent that enforces theory gates" |
+| **L3** | Solution | How to solve it | Gilad (GIST) / Ellis (ICE), Cagan (Inspired), Downe (Good Services) | Days-weeks | "An AI agent that enforces theory gates" |
 | **L4** | Delivery | Build and ship | Forsgren (DORA), OWASP, DRY/KISS/YAGNI/SOLID/SoC | Hours-days | "Implement bias-check skill with tests" |
 | **L5** | Market | Reach users | Lauchengco (Loved), Shotton (behavioral science) | Days-weeks | "Position and launch the product" |
 

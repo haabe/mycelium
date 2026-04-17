@@ -246,7 +246,7 @@ If any link in this chain is missing, `/canvas-health` should flag it as an orph
 
 - Torres: Continuous Discovery Habits (OST, assumption testing, trio perspectives)
 - Cagan: Inspired (Four Risks framework)
-- Gilad: Evidence Guided (ICE scoring, confidence meter)
+- Ellis: ICE scoring (Impact × Confidence × Ease). Gilad: Evidence-Guided (Confidence Meter — evidence-grading layer on Ellis's ICE)
 - Gothelf: Lean UX (hypothesis-driven solution framing)
 - Snowden: Cynefin (domain-appropriate methods at Phase 6)
 - Downe: Good Services (service design at Phase 6)

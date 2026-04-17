@@ -2,6 +2,16 @@
 
 Feedback loops are how Mycelium learns, corrects, and improves. They operate at four speeds, mapped to Argyris's learning levels and Meadows's leverage points.
 
+## Kim's Three Ways of DevOps (The DevOps Handbook, 2016; Wiring the Winning Organisation, 2023)
+
+The four loop speeds implement Kim's Three Ways:
+
+- **First Way — Flow** (left-to-right): Optimize the flow of work from development to operations to the customer. Small batches, WIP limits, reduce handoffs. Loops 1-2 support flow by catching errors early and keeping increments small.
+- **Second Way — Feedback** (right-to-left): Amplify feedback loops so problems are detected and corrected quickly. Market signals flow back into discovery, DORA metrics flow back into feasibility estimates. Loops 2-3 are the primary feedback amplifiers.
+- **Third Way — Continual Learning and Experimentation**: Create a culture of experimentation, learning from failure (blameless post-mortems), and practice (repetition). Loop 4 is where the system questions and transforms itself.
+
+*In "Wiring the Winning Organisation" (2023), Kim & Spear reframe the Three Ways as three mechanisms: **Slowification** (move problem-solving from execution to planning), **Simplification** (reduce complexity in processes), and **Amplification** (make problems visible fast). These are complementary lenses on the same principles.*
+
 ## The Four Loop Speeds
 
 ### Loop 1: Immediate (Single-Loop -- "Fix the Error")
@@ -102,7 +112,7 @@ DORA metrics from completed deliveries should feed back into feasibility risk as
 | Deploy frequency dropped after shipping solution X | Feasibility risk assessment for similar solutions | Increase default feasibility risk for solutions in the same domain/pattern |
 | Lead time increased for solution type Y | ICE ease scoring | Reduce ease scores for similar solution types |
 | Change failure rate high for pattern Z | Four Risks feasibility dimension | Flag pattern Z as high feasibility risk in future assessments |
-| MTTR acceptable for solution W | Feasibility risk positive signal | Note that this solution type is operationally manageable |
+| FDRT acceptable for solution W | Feasibility risk positive signal | Note that this solution type is operationally manageable |
 
 **Mechanism**: After each `/dora-check`, compare actual delivery metrics with the original ICE ease score and feasibility risk assessment. Log significant deviations (>2 points on ICE ease scale) in `corrections.md` as calibration data.
 
@@ -129,7 +139,7 @@ This is triggered by `/launch-tier` completion and `/retrospective` after market
 
 ## Goodhart's Law Protection
 
-**"When a measure becomes a target, it ceases to be a good measure."** (Goodhart)
+**"When a measure becomes a target, it ceases to be a good measure."** (Strathern's 1997 generalization, commonly attributed to Goodhart. Goodhart's 1975 original: "Any observed statistical regularity will tend to collapse once pressure is placed upon it for control purposes.")
 
 Every metric in Mycelium must have a **counter-metric** to prevent gaming:
 

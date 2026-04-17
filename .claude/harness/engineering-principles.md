@@ -4,6 +4,16 @@ Reference guide for all engineering decisions. Apply consistently, violate consc
 
 **Product type note** (v0.11.0): These principles are written with software examples but the underlying concepts apply to all product types. For non-software products, translate the principles: DRY = don't duplicate content across modules (courses), don't repeat the same service step (services). KISS = simplest curriculum that teaches the concept (courses), simplest prompt that gets the right output (AI tools). YAGNI = don't create content for topics students haven't asked about yet (courses), don't add service tiers nobody's requested (services). SoC = each lesson covers one concept (courses), each prompt handles one task (AI tools).
 
+## ETC — Easy to Change (The Unifying Principle)
+
+**Definition**: Good design is easier to change than bad design. A thing is well designed if it adapts to the people who use it. For code, that means it must adapt by changing.
+
+**Why it matters**: ETC is the meta-principle that subsumes DRY, KISS, YAGNI, SoC, and SOLID. When principles conflict (DRY vs readability, KISS vs extensibility), ETC is the tiebreaker: which choice makes the system easier to change?
+
+**How to apply**: Before choosing between competing principles, ask: "Which option leaves the system easier to change tomorrow?" This applies to code, documentation, canvas files, and team processes alike.
+
+*Source: Hunt & Thomas (The Pragmatic Programmer, 20th Anniversary Edition, 2019)*
+
 ## DRY - Don't Repeat Yourself
 
 **Definition**: Every piece of knowledge must have a single, unambiguous, authoritative representation within a system.
@@ -15,6 +25,12 @@ Reference guide for all engineering decisions. Apply consistently, violate consc
 - Use configuration over hardcoding repeated values.
 - Create shared types/interfaces for common data structures.
 - Reference single source of truth for business rules.
+- Documentation: don't restate code in comments or READMEs that duplicate inline docs.
+- Schemas: avoid duplicating definitions across files (canvas YAML, API specs).
+- Processes: eliminate duplicated build/deployment steps.
+- Knowledge: team knowledge siloed in one person's head is a DRY violation — the knowledge is duplicated nowhere accessible.
+
+Note: Hunt & Thomas explicitly state DRY applies to "every piece of knowledge" — not just code.
 
 **How to detect violations**:
 - Similar code blocks in multiple files.
@@ -84,12 +100,32 @@ Reference guide for all engineering decisions. Apply consistently, violate consc
 
 **Exceptions**: Performance-critical paths sometimes benefit from co-locating concerns. Document the trade-off.
 
+**Relationship to Orthogonality**: SoC is about organizing concerns; orthogonality is about measuring independence. A system can separate concerns but still have non-orthogonal components if they share hidden state.
+
+## Orthogonality
+
+**Definition**: Components should be independent — changes in one should not require changes in others.
+
+**Why it matters**: Non-orthogonal systems amplify the cost of change. One change ripples through unrelated components.
+
+**How to apply**:
+- Test: "If I change X, how many other things must change?" Fewer = more orthogonal.
+- Eliminate coupling between unrelated components.
+- Each component should have a single, well-defined purpose.
+
+**How to detect violations**:
+- Changing a UI label requires changing a database column.
+- Adding a feature to one module breaks tests in another.
+- Components share mutable state.
+
+*Source: Hunt & Thomas (The Pragmatic Programmer)*
+
 ## SOLID Principles
 
 ### S - Single Responsibility Principle (SRP)
-**Definition**: A class/module should have one, and only one, reason to change.
+**Definition**: A module should be responsible to one, and only one, actor. (Clean Architecture, 2017 revision — originally formulated as "one reason to change" (2003); the "actor" framing shifts from ambiguous reasons to concrete stakeholders who might request changes.)
 
-**How to apply**: If you can describe what a module does with "and" (it validates AND saves AND notifies), it has multiple responsibilities.
+**How to apply**: If you can describe what a module does with "and" (it validates AND saves AND notifies), it has multiple responsibilities. Ask: "Which actor would request this change?" If the answer is more than one actor, split.
 
 **Detection**: Class has multiple unrelated methods. Changes for different features touch the same file.
 
@@ -120,6 +156,24 @@ Reference guide for all engineering decisions. Apply consistently, violate consc
 **How to apply**: Depend on interfaces, not implementations. Inject dependencies rather than creating them.
 
 **Detection**: Direct instantiation of dependencies. Import of concrete implementations in high-level modules. Difficulty testing without real database/API.
+
+### Component Principles (Martin, Clean Architecture)
+
+Six principles governing how classes group into components — bridges SOLID (class-level) and architecture (system-level):
+
+**Cohesion (what goes together):**
+- **REP** (Reuse-Release Equivalence): The granule of reuse is the granule of release.
+- **CCP** (Common Closure): Classes that change together belong together. (Maps to bounded context cohesion in DDD.)
+- **CRP** (Common Reuse): Don't force users to depend on things they don't use. (Component-level ISP.)
+
+**Coupling (how components relate):**
+- **ADP** (Acyclic Dependencies): No cycles in the component dependency graph. (Validates context-map relationships in DDD.)
+- **SDP** (Stable Dependencies): Depend in the direction of stability.
+- **SAP** (Stable Abstractions): Stable components should be abstract; unstable components concrete.
+
+### Clean Architecture (Martin, 2017)
+
+The **Dependency Rule**: source code dependencies must point inward, toward higher-level policies. Concentric layers: Entities → Use Cases → Interface Adapters → Frameworks & Drivers. Business logic is independent of UI, database, and frameworks. Related: Cockburn's Hexagonal Architecture (Ports and Adapters), which Clean Architecture builds upon.
 
 ## LoD - Law of Demeter (Principle of Least Knowledge)
 
@@ -156,6 +210,8 @@ Reference guide for all engineering decisions. Apply consistently, violate consc
 
 **Exceptions**: Framework-required inheritance (e.g., React class components in legacy code). Language features that work well with inheritance (e.g., Rust traits, Go interface embedding).
 
+*Source: Gamma, Helm, Johnson, Vlissides (Design Patterns, 1994) — "Favor object composition over class inheritance."*
+
 ## Clean Code
 
 **Definition**: Code is clean when it is easy to understand and easy to change (Robert C. Martin).
@@ -178,6 +234,8 @@ Reference guide for all engineering decisions. Apply consistently, violate consc
 - Functions with boolean parameters (usually doing two things).
 - Try-catch blocks that catch and ignore.
 
+For a comprehensive catalog of code smells, see Fowler (*Refactoring*, 2nd ed., 2018): Long Method, Large Class, Feature Envy, Data Clumps, Primitive Obsession, Divergent Change, Shotgun Surgery, and ~18 more. Named smells give precise vocabulary for identifying improvement opportunities.
+
 **Exceptions**: Performance-critical code may sacrifice readability. Document the trade-off and keep a readable version available for understanding.
 
 ---
@@ -190,7 +248,7 @@ Extreme Programming's five values reinforce the principles above:
 - **Simplicity**: Do the simplest thing that works (= KISS). Build only what's needed now (= YAGNI).
 - **Feedback**: Tight feedback loops at every level. Tests, validation, reflexion, DORA metrics.
 - **Courage**: Refactor fearlessly when design is wrong. Regress diamonds when evidence says so. Delete code that's not earning its keep.
-- **Respect**: Sustainable pace. No chronic overtime. BVSSH "Happier" dimension.
+- **Respect**: Sustainable pace. No chronic overtime. BVSSH "Happier" dimension -- customers, colleagues, citizens, and climate. Not faster at any human or climatic cost.
 
 ### TDD: Test-First as Target Practice
 
@@ -200,4 +258,6 @@ Test-first (write the test, then the code) is the target practice. Test-alongsid
 
 After each delivery increment, look for: duplicated logic (DRY), unnecessary complexity (KISS), poor naming (Clean Code), tight coupling (LoD). Refactoring is engineering discipline, not optional polish.
 
-*Source: Beck (XP, TDD), Fowler (Refactoring)*
+For micro-refactorings smaller than Fowler-style refactoring, see Beck (*Tidy First?*, 2023): guard clauses, extract helper, normalize symmetries, and other "tidyings" — structural changes so small they can precede any behavioral change. The key question is *when* to tidy: before (if it makes the behavioral change easier), after (if you notice during review), later (if it's not blocking), or never (if it doesn't matter).
+
+*Source: Beck (XP, TDD, Tidy First?), Fowler (Refactoring)*

@@ -80,4 +80,4 @@ Framework health metrics are themselves subject to Goodhart's Law. Counter-metri
 - Meadows: Thinking in Systems (leverage points for system change)
 - Senge: The Fifth Discipline (the learning organization)
 - Forsgren: Accelerate (measuring and improving organizational capabilities)
-- Goodhart: When a measure becomes a target (counter-metrics)
+- Goodhart/Strathern: "When a measure becomes a target, it ceases to be a good measure" (Strathern's 1997 generalization of Goodhart's 1975 law; counter-metrics)

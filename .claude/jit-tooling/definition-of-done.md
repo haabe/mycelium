@@ -53,7 +53,7 @@ Every delivery increment must satisfy ALL applicable items before being consider
 - [ ] Breaking changes documented
 
 ## Delivery Health
-- [ ] DORA metrics not degraded (deployment frequency, lead time, failure rate, MTTR)
+- [ ] DORA metrics not degraded (deployment frequency, lead time, failure rate, FDRT, reliability)
 - [ ] Corrections.md updated if new patterns discovered
 - [ ] Delivery journal updated with outcome
 

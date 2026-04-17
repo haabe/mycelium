@@ -56,7 +56,7 @@ Continuously evaluate against Better Value Sooner Safer Happier (Smart):
 - **Value**: Is this delivering actual user/business value? Can we measure it?
 - **Sooner**: Is this reducing lead time? Are we removing delays and handoffs?
 - **Safer**: Is this making the system more resilient? Reducing risk? Improving compliance?
-- **Happier**: Are users happier? Is the team happier? Is this sustainable?
+- **Happier**: Four stakeholders (Smart): customers, colleagues, citizens, climate. Are users happier? Is the team happier? Is this sustainable? Is compute usage proportionate to value (not brute-force waste)? Positive societal impact?
 
 If any dimension is degrading, flag it immediately. Do not trade long-term BVSSH for short-term speed.
 
@@ -129,16 +129,39 @@ Use at L3->L4 transitions as a completeness review. If any layer has no evidence
 
 **Activates when**: Product handles health, finance, domestic violence, government services, mental health, or addiction recovery contexts. Detected via `sensitive_context` delivery type in canvas-guidance.yml.
 
-**5-Point Check**:
+**SAMHSA's 6 Principles of Trauma-Informed Care (2014)**:
+1. **Safety** — Physical and psychological safety in the experience
+2. **Trustworthiness & Transparency** — Operations and decisions are transparent; trust is built
+3. **Peer Support** — Mutual self-help; people with shared experiences support each other
+4. **Collaboration & Mutuality** — Power differences are leveled; shared decision-making
+5. **Empowerment, Voice & Choice** — User strengths are recognized; users have meaningful choices
+6. **Cultural, Historical & Gender Issues** — Responsive to cultural contexts; addresses historical trauma
 
-| # | Check | Pass Criteria |
-|---|-------|--------------|
-| 1 | Safety exits exist | User can leave any flow without penalty, data loss, or explanation required |
-| 2 | No re-traumatizing content | Language, imagery, and flows reviewed for potential harm; no forced retelling of traumatic events |
-| 3 | User agency preserved | User controls pace, disclosure level, and data sharing; no coercion by design |
-| 4 | Privacy beyond minimum | Data protection exceeds legal minimum; assume breach = physical danger for this population |
-| 5 | Hope-oriented framing | Content frames forward progress, not deficit; avoids labeling or pathologizing users |
+**Chayn's 8 Principles of Trauma-Informed Digital Design (Hera Hussain, 2023)**:
+1. Safety — Safe exits, no re-traumatizing content
+2. Agency — User controls their experience
+3. Equity — Accessible to all, including marginalized groups
+4. Privacy — Beyond minimum compliance
+5. Accountability — Transparent about data use and limitations
+6. Plurality — Multiple paths, no single "right way"
+7. Power Sharing — Users contribute to how the product evolves
+8. Hope — Framing oriented toward possibility, not despair
 
-If this check is active, it supplements (does not replace) the standard quality checks above. Trauma-informed design is not about making products "soft" -- it is about not causing harm to people who are already in a vulnerable state.
+**Combined Check** (maps both frameworks):
 
-*Source: Hussain (Chayn -- trauma-informed design whitepaper, 2023), built on SAMHSA's 6 Principles of Trauma-Informed Care (2014)*
+| # | Check | Source | Pass Criteria |
+|---|-------|--------|--------------|
+| 1 | Safety exits exist | SAMHSA 1, Chayn 1 | User can leave any flow without penalty, data loss, or explanation required |
+| 2 | No re-traumatizing content | Chayn 1 | Language, imagery, and flows reviewed for potential harm; no forced retelling of traumatic events |
+| 3 | Trustworthiness & transparency | SAMHSA 2, Chayn 5 | Clear about what data is collected, how it's used, and what the product's limitations are |
+| 4 | User agency preserved | SAMHSA 5, Chayn 2 | User controls pace, disclosure level, and data sharing; no coercion by design |
+| 5 | Privacy beyond minimum | Chayn 4 | Data protection exceeds legal minimum; assume breach = physical danger for this population |
+| 6 | Equity & cultural sensitivity | SAMHSA 6, Chayn 3 | Responsive to cultural, historical, and gender contexts; accessible to marginalized groups |
+| 7 | Multiple paths (plurality) | SAMHSA 4, Chayn 6-7 | No single "right way"; shared decision-making; users can contribute to how the product evolves |
+| 8 | Hope-oriented framing | Chayn 8 | Content frames forward progress, not deficit; avoids labeling or pathologizing users |
+
+SAMHSA Principle 3 (Peer Support) is primarily organizational — relevant for service design but less directly applicable to digital interfaces. Consider for service_offering product types.
+
+If this check is active, it supplements (does not replace) the standard quality checks above. Trauma-informed design is not about making products "soft" — it is about not causing harm to people who are already in a vulnerable state.
+
+*Source: Hera Hussain (Chayn — trauma-informed design whitepaper, 2023), built on SAMHSA (Substance Abuse and Mental Health Services Administration) 6 Principles of Trauma-Informed Care (2014)*

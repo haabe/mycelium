@@ -76,5 +76,5 @@ Flow: Opportunity (research) -> Solution hypothesis (Lean UX) -> Assumption test
 ## Theory Citations
 - Torres: Continuous Discovery Habits (OST methodology)
 - Christensen: Competing Against Luck (JTBD informing opportunities)
-- Gilad: Evidence Guided (ICE scoring for solutions)
+- Ellis: ICE scoring. Gilad: Evidence-Guided (Confidence Meter for solutions)
 - Gothelf: Lean UX (hypothesis-driven solution framing)
