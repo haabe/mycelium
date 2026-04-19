@@ -179,11 +179,11 @@ Mycelium gets smarter with each project cycle:
 
 ### Harnessing (What Prevents the Agent from Going Haywire)
 
-Three enforcement tiers, 30 constraints:
+Three enforcement tiers, 33 constraints, [phase-scoped](/.claude/harness/guardrails.md) to manage instruction budget:
 
 - **BLOCK** (2): Mechanically prevented. Secrets in code, stale corrections.
-- **REVIEW** (13): Gates delivery completion. Tests, accessibility, security, BVSSH, decision logging.
-- **NUDGE** (15): Surfaced by hooks, not blocking. Engineering principles, bias checks, devil's advocate.
+- **REVIEW** (15): Gates delivery completion. Tests, accessibility, security, BVSSH, decision logging, AI disclosure.
+- **NUDGE** (16): Surfaced by hooks, not blocking. Engineering principles, bias checks, devil's advocate, data minimization.
 
 Plus 5 hook layers that fire automatically — from secret detection before code edits (~30 tokens) to theory gate evaluation on demand. Total overhead: ~6,000 tokens/session.
 

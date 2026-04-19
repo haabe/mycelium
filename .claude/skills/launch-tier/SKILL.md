@@ -1,6 +1,7 @@
 ---
 name: launch-tier
 description: "Classify releases into launch tiers and plan go-to-market. Based on Lauchengco's Loved framework."
+instruction_budget: 58
 ---
 
 # Launch Tier Classification

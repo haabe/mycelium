@@ -1,6 +1,7 @@
 ---
 name: assumption-test
 description: "Design the smallest viable test to validate or invalidate a critical assumption. Based on Torres's assumption testing framework."
+instruction_budget: 24
 ---
 
 # Assumption Testing

@@ -1,6 +1,7 @@
 ---
 name: bvssh-check
 description: "Use to evaluate whether current work aligns with Better Value Sooner Safer Happier. Run at diamond completion and periodically."
+instruction_budget: 50
 ---
 
 # BVSSH Check Skill

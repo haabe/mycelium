@@ -1,6 +1,7 @@
 ---
 name: service-check
 description: "Use to evaluate a service or feature against Downe's 15 principles of good services."
+instruction_budget: 52
 ---
 
 # Service Check Skill

@@ -1,6 +1,7 @@
 ---
 name: cynefin-classify
 description: "Use when facing a new problem to classify its domain (Clear, Complicated, Complex, Chaotic, Disorder) and select appropriate methods."
+instruction_budget: 20
 ---
 
 # Cynefin Classify Skill

@@ -2,6 +2,21 @@
 
 Hard constraints that override confidence scores, user requests, and agent judgment. These are non-negotiable.
 
+## Phase-Scoped Loading (v0.15.1)
+
+Guardrails are split into scoped files to manage instruction budget (Horthy: models lose consistency past 150-200 instructions; Haagsman: 40-instruction budget per phase). **Load only what the current phase needs:**
+
+| Current phase | Load |
+|---|---|
+| Any task | `guardrails-core.md` (always) |
+| L0-L2 Discovery/Define | + `guardrails-discovery.md` |
+| L3-L4 Develop/Deliver | + `guardrails-delivery.md` |
+| L5 Market | + `guardrails-market.md` |
+
+This file (`guardrails.md`) is the **full reference** — read it when you need the complete list. For task execution, load the scoped files above instead.
+
+*Source: Horthy (instruction budget overflow, Coding Agents Conference 2026), Haagsman (40-instruction phase budget, haagsman.ai).*
+
 ## TL;DR
 
 **BLOCK** (mechanical): G-S1 (no plaintext secrets), G-P5 (read corrections.md before implementation).

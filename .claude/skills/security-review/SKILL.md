@@ -1,6 +1,7 @@
 ---
 name: security-review
 description: "OWASP secure design review for code and architecture. Checks input validation, authentication, authorization, data protection."
+instruction_budget: 42
 ---
 
 # Security Review

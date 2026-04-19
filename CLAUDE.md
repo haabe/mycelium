@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.15.0 -- Theory accuracy audit: 7 misattributions fixed (ICE→Ellis, Pachaar→Trivedy, CALMS→Willis & Humble, Goodhart→Strathern, Allen scoring→Ulwick), OWASP Top 10:2025 (10 categories), OWASP Top 10 for LLM Applications v2025 (LLM01-10), DORA 5th metric (Reliability) + FDRT naming, Kim Three Ways + Five Ideals fully defined, engineering principles expanded (ETC, Orthogonality, Component Principles), cognitive biases expanded (WYSIATI, Noise), Gothelf 4-part hypothesis format, trauma-informed design rewritten (SAMHSA + Chayn). 30 files updated across skills, engine, harness, and domains.*
+*Version 0.15.1 -- Instruction budget management: phase-scoped guardrails (core/discovery/delivery/market), instruction_budget frontmatter on all 44 skills, lazy-reference guardrail index. Interviewing: Brown's three mindsets (curiosity/skepticism/humility), stakeholder vs user distinction, internal_stakeholder source class, validated flag, constraints category, closing question. 7 external evidence articles logged. Sources: Horthy (instruction budget), Haagsman (40-instruction budget), Brown (stakeholder interviewing).*
 
 Mycelium is a harnessing system for AI-assisted product development. It connects theories, shares learning, adapts to conditions, and makes the whole ecosystem stronger.
 
@@ -24,7 +24,7 @@ Before ANY implementation task, load context in this order (task-specific first,
 1. Identify which diamond you are operating within (check `.claude/diamonds/active.yml`)
 2. Load the appropriate domain context (`.claude/domains/{discovery|delivery|quality}/CLAUDE.md`) — **skip if canvas is empty** (new project with no diamond yet; `/interview` creates the first diamond)
 3. Read `.claude/memory/corrections.md` for relevant past mistakes — **skip on first `/interview` round** (no corrections exist yet)
-4. Read `.claude/harness/guardrails.md` for hard constraints
+4. Load phase-scoped guardrails: always load `guardrails-core.md`; add `guardrails-discovery.md` (L0-L2), `guardrails-delivery.md` (L3-L4), or `guardrails-market.md` (L5) per current phase. See `.claude/harness/guardrails.md` for full reference.
 
 ## The Diamond Engine
 
