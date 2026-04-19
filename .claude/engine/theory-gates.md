@@ -76,7 +76,13 @@ For solo developers: apply perspectives sequentially as distinct evaluation pass
 
 Evidence sources in canvas provenance objects carry an optional `source_classes` field (see `_common.schema.json`). This sub-check prevents the Goodhart trap where confidence climbs on desk research alone while zero external human voices are heard.
 
-**Classification**: `external_human` (real user interview, stakeholder conversation, survey response, usability test), `external_data` (third-party analytics, behavioral data, market data), `internal_desk` (desk research, competitive analysis, brainstorming), `internal_simulated` (mocked persona interview, thought experiment). Unclassified sources default to `internal_desk`.
+**Classification**: `external_human` (real user interview, survey response, usability test), `external_data` (third-party analytics, behavioral data, market data), `internal_stakeholder` (founder/PM/team interview — beliefs about users, constraints, strategy; organizational mythology per Brown), `internal_desk` (desk research, competitive analysis, brainstorming), `internal_simulated` (mocked persona interview, thought experiment). Unclassified sources default to `internal_desk`.
+
+**Stakeholder belief handling** (v0.15.1): Evidence from `/interview` (onboarding) is classified as `internal_stakeholder`. This is distinct from `external_human` — stakeholder claims about users are organizational mythology until validated through direct user contact (Spool: secondhand research fails to produce the same benefits as firsthand observation). `internal_stakeholder` evidence:
+- Counts toward L0 Purpose confidence (stakeholders ARE the authority on purpose, constraints, and strategy)
+- Does NOT count toward L2 Opportunity `external_human` requirements (stakeholder beliefs about user needs must be validated)
+- Does NOT satisfy the Source Ratio sub-check's `external_human` criterion
+- Creates a `validated: false` flag that `/assumption-test` can resolve
 
 **Enforcement levels**:
 

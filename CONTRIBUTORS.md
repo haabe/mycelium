@@ -50,7 +50,7 @@ The 40+ frameworks Mycelium integrates are credited in the *Theories & Framework
 2. Shared document articulating the upstream-thinking / downstream-enforcement division of labor
 3. Compare notes on Böckeler's computational vs inferential distinction
 
-**Response**: [pending — check the issue thread]
+**Response**: No response as of 2026-04-17. Daniel's v0.4.0 commit (`a2f1592`, 2026-04-09) appears in the issue timeline but this is a false positive — the commit message references internal improvement proposal "#6" (validator dependency bundling), and GitHub auto-linked it to the GitHub issue #6. The 14 proposals are internal BDSK quality issues unrelated to the outreach.
 
 **How to handle a response**:
 - If synaptiai accepts (1): add a cross-reference in README.md under the "Related projects" section (create if needed) pointing at https://github.com/synaptiai/bdsk with a one-line summary of the complementarity

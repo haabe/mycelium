@@ -25,6 +25,36 @@ Follow the Continuous Discovery Habits approach to interviewing:
 - **Look for workarounds**: What people actually do reveals unmet needs better than what they say they want.
 - **Interview weekly**: Continuous discovery means continuous contact with users.
 
+### 2b. Interviewing Mindsets (Brown)
+
+Techniques matter, but so does the stance you hold while asking. Adopt three mindsets throughout any interview:
+
+- **Curiosity**: Ask from genuine interest, not obligation. Reframe checklist questions as exploration: "Walk me through the process of..." not "What are your pain points?" If a question isn't producing meaningful responses, change the question — don't push through it.
+- **Skepticism**: Already embedded in bias mitigation (§3 below). Challenge assumptions and organizational norms. Probe beneath surface responses: "Why does the organization refer to this group as 'power users'?"
+- **Humility**: Combine skepticism with confident ignorance. Use: "Can you say that again so I can make sure I get it right?" Don't assume immediate comprehension. Close with: "Is there anything we didn't discuss that matters?"
+
+**Master the pause**: After a response, wait 3-5 seconds before your next question. Silence signals you're thinking, not rushing — and often prompts the interviewee to elaborate with the real insight. Resist the urge to fill it.
+
+*Sources: Brown (The Delicate Art of Interviewing Stakeholders, EightShapes), Portigal (Interviewing Users), IxDF (probing techniques).*
+
+### 2c. Stakeholder vs User Interviews
+
+Not all interviews are the same. Recognize which type you're conducting:
+
+| | Stakeholder Interview | User Interview |
+|---|---|---|
+| **Who** | Founder, PM, team lead, sponsor | End user, customer |
+| **Goal** | Understand beliefs, constraints, organizational context | Understand behavior, needs, workarounds |
+| **Output** | Raw materials + working relationship | Evidence for OST/JTBD |
+| **Evidence class** | `internal_stakeholder` (beliefs until validated) | `external_human` (behavioral evidence) |
+| **Key risk** | Treating beliefs as facts | Social desirability bias |
+
+Stakeholder interviews have a **dual agenda**: gathering information AND building a working relationship (Hall: "Stakeholder conversations are the most important ones we have — we understand not just what we're designing, but how we'll need to design it"). User interviews are purely about learning.
+
+**Critical rule**: Stakeholder claims about users are **organizational mythology** (Brown) — what the organization believes about its users, which may differ from reality. Tag these with `source_class: internal_stakeholder` in canvas entries. They count toward L0 confidence but NOT toward L2 opportunity confidence without independent validation. Mark user-related claims with `validated: false` to create pressure for real user research via `/assumption-test`.
+
+*Sources: Brown (EightShapes), Hall (Just Enough Research), Torres (assumptions are "beliefs that may or may not be true").*
+
 ### 3. Bias Mitigation
 
 **Before every research activity**, review `cognitive-biases.md` for the current stage.

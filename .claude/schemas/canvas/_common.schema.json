@@ -38,10 +38,11 @@
       "enum": [
         "external_human",
         "external_data",
+        "internal_stakeholder",
         "internal_desk",
         "internal_simulated"
       ],
-      "description": "Classification of an evidence source's origin. external_human = real conversation with a real person (interview, usability test, survey response). external_data = third-party analytics, behavioral data, market data. internal_desk = desk research, competitive analysis, brainstorming. internal_simulated = mocked persona interview, thought experiment."
+      "description": "Classification of an evidence source's origin. external_human = real conversation with a real person (user interview, usability test, survey response). external_data = third-party analytics, behavioral data, market data. internal_stakeholder = founder/PM/team interview — beliefs about users, constraints, strategy; organizational mythology (Brown). Counts toward L0 confidence but does NOT satisfy L2 external_human requirements. internal_desk = desk research, competitive analysis, brainstorming. internal_simulated = mocked persona interview, thought experiment."
     },
     "provenance": {
       "type": "object",
@@ -70,6 +71,11 @@
         },
         "confidence": {
           "$ref": "#/$defs/confidence"
+        },
+        "validated": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether this evidence has been independently validated. Set to false for internal_stakeholder claims about users (organizational mythology). Resolved to true by /assumption-test when the claim is confirmed through external evidence. Unset defaults to true (most evidence is what it claims to be)."
         }
       },
       "required": ["evidence_type", "evidence_sources"],

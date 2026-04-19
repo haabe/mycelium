@@ -66,7 +66,7 @@ project_types:
   solo_hobby:
     description: "Personal project, learning exercise, or hobby. Single developer, no commercial intent."
     required:
-      - purpose.yml        # Always know WHY you're building
+      - purpose.yml        # Always know WHY you're building. Includes constraints section (technical/political/regulatory) from /interview Phase 5b (Brown).
       - north-star.yml     # Define what success looks like
       - opportunities.yml  # Map what to build (even for small projects)
       - gist.yml           # Plan your goals and ideas
@@ -92,7 +92,7 @@ project_types:
   solo_product:
     description: "Solo developer building a real product. May have users, may generate revenue."
     required:
-      - purpose.yml
+      - purpose.yml           # Includes constraints section (technical/political/regulatory) from /interview Phase 5b (Brown)
       - north-star.yml
       - opportunities.yml
       - gist.yml
