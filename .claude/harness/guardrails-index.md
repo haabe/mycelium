@@ -37,3 +37,4 @@ Compact reference for lazy loading. Load full rule from `guardrails.md` only whe
 | G-P4 | REVIEW | Any significant decision | Log in decision-log.md |
 | G-P5 | BLOCK | Starting any implementation task | Read corrections.md first |
 | G-P6 | NUDGE | Major transition (L2->L3, L3->L4) | Play devil's advocate first |
+| G-P7 | REVIEW | Completing any batch of changes | Close the loop: verify, log corrections, log patterns |

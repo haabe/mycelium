@@ -43,7 +43,7 @@ Each risk dimension must have:
 
 ICE is derived FROM the Four Risks, not scored independently:
 - **Impact** ← value + usability + viability risk assessments
-- **Confidence** ← evidence quality across all risk dimensions (Gilad's meter)
+- **Confidence** ← evidence quality across all risk dimensions (adapted from Gilad's Confidence Meter)
 - **Ease** ← feasibility risk assessment
 
 **Skill**: `/ice-score`

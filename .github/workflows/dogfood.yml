@@ -44,8 +44,12 @@ jobs:
       - name: Install dependencies
         run: pip install pyyaml
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
       - name: Install Claude Code
-        uses: anthropic/setup-claude-code@v1
+        run: npm install -g @anthropic-ai/claude-code
 
       - name: Run scenario
         env:
@@ -109,8 +113,12 @@ jobs:
       - name: Install dependencies
         run: pip install pyyaml
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
       - name: Install Claude Code
-        uses: anthropic/setup-claude-code@v1
+        run: npm install -g @anthropic-ai/claude-code
 
       - name: Run all scenarios
         env:

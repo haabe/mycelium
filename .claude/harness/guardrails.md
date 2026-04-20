@@ -20,7 +20,7 @@ This file (`guardrails.md`) is the **full reference** — read it when you need 
 ## TL;DR
 
 **BLOCK** (mechanical): G-S1 (no plaintext secrets), G-P5 (read corrections.md before implementation).
-**REVIEW** (gates progression): G-D1 (no skipping discovery for complex domains), G-S2 (threat model for user data/permissions), G-S3 (privacy assessment for data collection), G-S4 (input validation), G-S7 (AI disclosure), G-V1 (validation suite), G-V2 (Downe's 15), G-V7 (tests alongside code), G-V8 (a11y), G-V9 (error states), G-V10 (usability heuristics), G-L1 (leaf pipeline complete before L4), G-L2 (GIST traces to scored leaf), G-P1 (canvas updated at transitions), G-P4 (decision log).
+**REVIEW** (gates progression): G-D1 (no skipping discovery for complex domains), G-S2 (threat model for user data/permissions), G-S3 (privacy assessment for data collection), G-S4 (input validation), G-S7 (AI disclosure), G-V1 (validation suite), G-V2 (Downe's 15), G-V7 (tests alongside code), G-V8 (a11y), G-V9 (error states), G-V10 (usability heuristics), G-L1 (leaf pipeline complete before L4), G-L2 (GIST traces to scored leaf), G-P1 (canvas updated at transitions), G-P4 (decision log), G-P7 (close the loop: verify + corrections + patterns after every task batch).
 **NUDGE** (advised): G-L3 (segment check before archiving), everything else — evidence quality, bias checks, engineering principles, BVSSH.
 
 **Constraint types**: Each guardrail is tagged by what it protects — `safety`, `quality`, `scope`, `privacy`, `regulatory`, `ethical`. Inspired by AI Interaction Atlas's 37-constraint taxonomy.
@@ -185,3 +185,7 @@ Past mistakes are expensive lessons. Reading them costs seconds. Not reading the
 **G-P6: Always play devil's advocate before major transitions** `NUDGE` `quality`
 Before progressing a diamond to a new scale (L2->L3, L3->L4), systematically challenge the current assumptions. What if we're wrong? What evidence contradicts our position?
 *Source: Kahneman (Thinking Fast and Slow), Shotton (Choice Factory)*
+
+**G-P7: Close the loop after every task batch** `REVIEW` `quality`
+After completing any batch of changes, before reporting done: (1) verify cross-repo consistency if changes span repos, (2) log corrections for any mistakes made, (3) log patterns for anything reusable, (4) update corrections.md TL;DR if new entries added. If the user has to ask whether this happened, the guardrail already failed.
+*Source: Hoskins Ch4 (friction logging), Argyris (double-loop learning)*

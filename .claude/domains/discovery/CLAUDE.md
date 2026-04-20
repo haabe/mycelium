@@ -131,7 +131,7 @@ Classify the problem domain before choosing research methods (Snowden):
 - **Complicated**: Expert analysis needed. Multiple right answers exist.
 - **Complex**: Probe-sense-respond. Run experiments. Cannot predict outcomes.
 - **Chaotic**: Act-sense-respond. Stabilize first.
-- **Disorder**: Don't know which domain. Gather more information.
+- **Confused**: Don't know which domain. Gather more information.
 
 See `cynefin-routing.md` for detailed method mapping.
 

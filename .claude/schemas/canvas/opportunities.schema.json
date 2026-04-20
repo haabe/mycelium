@@ -30,7 +30,7 @@
           "frequency": {"type": "string", "enum": ["low", "medium", "high"]},
           "impact": {"type": "string", "enum": ["low", "medium", "high"]},
           "strategic_alignment": {"type": "string", "enum": ["low", "medium", "high"]},
-          "cynefin_domain": {"type": "string", "enum": ["clear", "complicated", "complex", "chaotic", "disorder"]},
+          "cynefin_domain": {"type": "string", "enum": ["clear", "complicated", "complex", "chaotic", "confused"]},
           "sub_opportunities": {"type": "array"},
           "solutions": {"type": "array"},
           "provenance": {

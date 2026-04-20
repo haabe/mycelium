@@ -58,7 +58,7 @@ assessment_history: []
 #   safer: "improving|stable|declining"
 #   happier: "improving|stable|declining"
 
-# CALMS Culture Assessment — Jez Humble
+# CALMS Culture Assessment — Willis & Humble (Willis coined CAMS, Humble added Lean)
 # DORA measures delivery OUTCOMES. CALMS explains WHY those outcomes are what they are.
 # Populated through: /bvssh-check skill (CALMS section)
 calms_assessment:

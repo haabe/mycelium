@@ -404,7 +404,7 @@ class Evaluator:
 
     def _check_cynefin_classified(self, _args: Any) -> bool:
         """Check that Cynefin classification appears with a specific domain."""
-        cynefin_domains = ["clear", "complicated", "complex", "chaotic", "disorder"]
+        cynefin_domains = ["clear", "complicated", "complex", "chaotic", "confused"]
         # Check decision log for domain + reasoning
         if self.decision_log.exists():
             content = self.decision_log.read_text().lower()

@@ -26,6 +26,16 @@ Before ANY implementation task, load context in this order (task-specific first,
 3. Read `.claude/memory/corrections.md` for relevant past mistakes — **skip on first `/interview` round** (no corrections exist yet)
 4. Load phase-scoped guardrails: always load `guardrails-core.md`; add `guardrails-discovery.md` (L0-L2), `guardrails-delivery.md` (L3-L4), or `guardrails-market.md` (L5) per current phase. See `.claude/harness/guardrails.md` for full reference.
 
+## Mandatory Post-Task Protocol (G-P7)
+
+After completing ANY batch of changes, before reporting done:
+1. **Verify**: If changes span repos, diff changed files for consistency. Check reference integrity (counts, cross-links, no orphans).
+2. **Corrections**: Did any mistakes happen during this task? Log to `corrections.md`, update TL;DR.
+3. **Patterns**: Did anything reusable emerge? Log to `patterns.md`.
+4. **Sync**: Ensure both repos match on all changed files.
+
+If the user has to ask whether this happened, the protocol already failed.
+
 ## The Diamond Engine
 
 ### Diamond Scales (L0-L5)
@@ -35,7 +45,7 @@ Before ANY implementation task, load context in this order (task-specific first,
 | L0: Purpose | Why we exist | Sinek (Golden Circle), JTBD (Christensen) | `canvas/purpose.yml`, `canvas/jobs-to-be-done.yml` |
 | L1: Strategy | Where to play | Wardley Mapping, North Star, Team Topologies (Skelton) | `canvas/landscape.yml`, `canvas/north-star.yml`, `canvas/team-shape.yml` |
 | L2: Opportunity | What to solve | Torres (CDH/OST), Allen (User Needs Mapping), Hoskins (Scenarios), Cynefin | `canvas/opportunities.yml`, `canvas/user-needs.yml`, `canvas/scenarios.yml` |
-| L3: Solution | How to solve it | Gilad (GIST/ICE), Cagan (Inspired), Downe (Good Services) | `canvas/gist.yml`, `canvas/services.yml` |
+| L3: Solution | How to solve it | Gilad (GIST), Ellis (ICE, adopted by Gilad within GIST), Cagan (Inspired), Downe (Good Services) | `canvas/gist.yml`, `canvas/services.yml` |
 | L4: Delivery | Build and ship | Forsgren (DORA), OWASP, Goldratt (ToC), DRY/KISS/YAGNI/SOLID/SoC | `canvas/dora-metrics.yml`, `canvas/threat-model.yml`, `canvas/value-stream.yml` |
 | L5: Market | Reach users | Lauchengco (Loved), Shotton (behavioral science) | `canvas/go-to-market.yml`, `canvas/trust-signals.yml` |
 

@@ -1,5 +1,11 @@
 # Confidence Thresholds
 # Per-scale confidence requirements for diamond progression
+#
+# Scale adaptation: Mycelium uses 0.0-1.0 (adapted from Gilad's Confidence Meter).
+# Gilad's original is 0-10 non-linear: 0.01=opinion, 1=anecdotal, 5=market data,
+# 8=A/B test, 10=launch data. The non-linear penalty (opinions worth ~0.01 in ICE
+# multiplication) is preserved through evidence-class weighting and source-class
+# requirements, not through the raw scale.
 
 scales:
   L0:

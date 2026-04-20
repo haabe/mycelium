@@ -107,7 +107,7 @@ graph LR
 | L0: Purpose | "Why do we exist?" | Sinek, Christensen |
 | L1: Strategy | "Where do we play?" | Wardley, North Star, Skelton |
 | L2: Opportunity | "What problem to solve?" | Torres, Allen, Hoskins, Cynefin |
-| L3: Solution | "How to solve it?" | Gilad, Cagan, Downe |
+| L3: Solution | "How to solve it?" | Gilad, Ellis (ICE), Cagan, Downe |
 | L4: Delivery | "Build and ship" | Forsgren, OWASP Top 10:2025, SOLID |
 | L5: Market | "Reach users" | Lauchengco, Shotton |
 
@@ -179,10 +179,10 @@ Mycelium gets smarter with each project cycle:
 
 ### Harnessing (What Prevents the Agent from Going Haywire)
 
-Three enforcement tiers, 33 constraints, [phase-scoped](/.claude/harness/guardrails.md) to manage instruction budget:
+Three enforcement tiers, 34 constraints, [phase-scoped](/.claude/harness/guardrails.md) to manage instruction budget:
 
 - **BLOCK** (2): Mechanically prevented. Secrets in code, stale corrections.
-- **REVIEW** (15): Gates delivery completion. Tests, accessibility, security, BVSSH, decision logging, AI disclosure.
+- **REVIEW** (16): Gates delivery completion. Tests, accessibility, security, BVSSH, decision logging, AI disclosure, close-the-loop.
 - **NUDGE** (16): Surfaced by hooks, not blocking. Engineering principles, bias checks, devil's advocate, data minimization.
 
 Plus 5 hook layers that fire automatically — from secret detection before code edits (~30 tokens) to theory gate evaluation on demand. Total overhead: ~6,000 tokens/session.
@@ -422,7 +422,7 @@ The same pattern applies to **metric sources**. `/metrics-detect` scans for sign
 | CALMS | Willis, Humble | DevOps culture assessment |
 | The Fifth Discipline | Senge | Systems thinking archetypes |
 | Domain-Driven Design | Evans | Bounded contexts, context mapping |
-| Scenarios | Hoskins | User scenarios as connective primitive (L2→L5) |
+| The Product-Minded Engineer | Hoskins | Scenarios as connective primitive (L2→L5), great reindexing (story→system view), scenario-driven discovery, streetlight effect, friction logging |
 | Lean UX | Gothelf, Seiden | Hypothesis-driven design |
 | Toyota Kata | Rother | Coaching questions for scientific thinking |
 | Hooked / Indistractable | Eyal | Ethical engagement design |

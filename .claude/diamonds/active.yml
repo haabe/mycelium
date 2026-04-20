@@ -16,7 +16,7 @@ active_diamonds: []
 # - parent_id: null for L0, parent diamond id otherwise
 # - confidence: 0.0-1.0
 # - evidence_type: speculation|anecdotal|data-supported|test-validated|launch-validated
-# - cynefin_domain: clear|complicated|complex|chaotic|disorder
+# - cynefin_domain: clear|complicated|complex|chaotic|confused
 # - canvas_refs: list of canvas files this diamond reads/writes
 # - created_at: ISO timestamp
 # - last_progressed: ISO timestamp

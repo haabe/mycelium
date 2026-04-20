@@ -12,6 +12,7 @@ Record of significant decisions made during product development. Decisions are i
 - **Theory**: Which framework/theory informed this decision (e.g., "Cynefin - Complex domain", "Cagan - Four Risks").
 - **Evidence**: What data or research supports this decision.
 - **Confidence**: [0.0-1.0] How confident are we, and what would change this.
+- **Scenario ref**: [optional — which scenario from scenarios.yml does this decision serve? Keeps architecture decisions connected to user context. Hoskins: "Draw a line between the problem and the why."]
 - **Reversibility**: [easily reversible | costly to reverse | irreversible]
 ```
 

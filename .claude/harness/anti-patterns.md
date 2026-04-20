@@ -186,35 +186,35 @@ Known failure modes organized by category. Check regularly, especially when thin
 
 These are systemic organizational traps from Senge's "The Fifth Discipline." They manifest at L1/L2 strategic scales and are harder to detect than tactical anti-patterns because they feel like rational responses in the moment.
 
-### 13. Fixes That Fail
+### 12. Fixes That Fail
 - **Description**: A fix addresses symptoms but creates unintended side effects that eventually make the original problem worse. The fix becomes the new problem.
 - **Detection rule**: The same problem recurs after being "fixed." Each fix is bigger than the last. Side effects appear in related systems.
 - **Examples**: Adding more process to fix quality issues (slows delivery, causes shortcuts). Using AI to speed up code generation without improving review capacity (creates bigger review backlog). Adding more meetings to fix communication problems (reduces time for actual work).
 - **What to do instead**: Map the full causal loop before fixing. Ask "What are the second-order effects of this fix?" Use `/devils-advocate` to challenge the proposed solution. Check if the "fix" appeared in a previous retrospective as a problem.
 - **Source**: Senge (The Fifth Discipline)
 
-### 14. Shifting the Burden
+### 13. Shifting the Burden
 - **Description**: A quick symptomatic fix undermines the motivation to develop a fundamental solution. Over time, the fundamental solution atrophies while dependence on the symptomatic fix grows.
 - **Examples**: Using AI to paper over broken processes instead of fixing the root cause. Relying on heroic individuals instead of building systemic capability. Using workarounds instead of fixing the platform.
 - **Detection rule**: The same workaround is applied repeatedly. The fundamental capability (testing, architecture, process) degrades over time. Team says "we'll fix it properly later" but never does.
 - **What to do instead**: Identify the fundamental solution and invest in it, even if slower. Time-box the symptomatic fix with an explicit payback plan (see escape-hatch.md). Track workaround frequency as a health signal.
 - **Source**: Senge (The Fifth Discipline)
 
-### 15. Limits to Growth
+### 14. Limits to Growth
 - **Description**: A reinforcing process of growth hits a balancing constraint that slows or reverses growth. The natural response (push harder on the growth engine) makes things worse because the constraint is the bottleneck, not the engine.
 - **Examples**: Shipping features faster but degrading quality until users churn. Scaling the team but not the architecture, creating coordination overhead. Growing the product surface area without growing support/docs/onboarding.
 - **Detection rule**: Growth metrics plateau or reverse despite increased effort. BVSSH dimensions diverge (Sooner improving while Better/Safer/Happier decline). DORA lead time increases as team size increases.
 - **What to do instead**: Identify the limiting factor (the constraint) and address it directly. Apply Theory of Constraints Five Focusing Steps (Goldratt). Don't push harder on the growth engine — relieve the constraint.
 - **Source**: Senge (The Fifth Discipline), connects to Goldratt (ToC)
 
-### 16. Eroding Goals
+### 15. Eroding Goals
 - **Description**: When a gap exists between the goal and reality, the team lowers the goal instead of improving performance. Standards gradually erode.
 - **Examples**: Relaxing test coverage requirements because "we're behind schedule." Accepting increasingly longer lead times as "normal." Reducing accessibility requirements for "just this release." Lowering DORA targets after missing them.
 - **Detection rule**: Goals/targets trend downward over successive reviews. Definition of Done items are waived "just this once" repeatedly. "Good enough" replaces "meets the standard."
 - **What to do instead**: Hold the standard. Flex scope (MoSCoW), not quality. If a standard can't be met, investigate why — the answer is usually a systemic constraint, not an unrealistic standard.
 - **Source**: Senge (The Fifth Discipline)
 
-### 17. Test-Last Development (Delivery)
+### 16. Test-Last Development (Delivery)
 - **Description**: Writing all code first, then adding tests as an afterthought -- or not at all. Both Mycelium pilot projects exhibited this pattern.
 - **Detection rule**: Test files created in a separate commit after source files. Or: source files exist with no corresponding test files at delivery completion.
 - **What to do instead**: Write tests first (TDD) or at minimum alongside implementation. The G-V7 guardrail requires tests to exist before delivery completion (REVIEW).
@@ -257,6 +257,14 @@ These are systemic organizational traps from Senge's "The Fifth Discipline." The
 - **Detection rule**: Decision log entry shows a perspective conflict resolved with fewer than 3 perspectives documented. Or gate check has a missing perspective without explicit "N/A: [reason]" justification.
 - **What to do instead**: Use the perspective resolution framework (`engine/perspective-resolution.md`). If a perspective is overridden, document why with evidence in the decision log and tag it as a risk to monitor.
 - **Source**: Torres (Product Trio), Cagan (Empowered), Mycelium perspective resolution framework
+
+## Measurement Anti-Patterns
+
+### 1. Streetlight Effect
+- **Description**: Optimizing what's measurable rather than what matters to users. Engineers (and agents) gravitate toward problems they can see — test pass rates, lint scores, latency p99 — without connecting them to user scenarios. The drunk man searches for his keys under the streetlight because "this is where the light is."
+- **Detection rule**: (1) Optimization proposed without naming which user scenario benefits. (2) System metric improving but no corresponding improvement in user outcome. (3) Agent proposes technical improvement without referencing a canvas scenario or opportunity.
+- **What to do instead**: Before any optimization, state the user scenario: "This improves [scenario X] because [user impact Y]." If you can't name the scenario, question whether it matters. Draw a line from the technical problem to the "why" — the user scenario that necessitates it.
+- **Source**: Hoskins (The Product-Minded Engineer, Ch9 — "Don't be the drunkard")
 
 ## Cognitive & Drift Anti-Patterns
 

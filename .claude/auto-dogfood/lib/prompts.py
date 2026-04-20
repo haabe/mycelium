@@ -1308,7 +1308,7 @@ Assess which domain the current work falls into:
 - **Complicated**: Cause-effect discoverable with expertise. Good practice. Sense-Analyze-Respond.
 - **Complex**: Cause-effect only clear in retrospect. Emergent practice. Probe-Sense-Respond.
 - **Chaotic**: No cause-effect relationship. Novel practice. Act-Sense-Respond.
-- **Disorder**: Don't know which domain. Decompose into sub-problems first.
+- **Confused**: Don't know which domain. Decompose into sub-problems first.
 
 For the current diamond, consider:
 - Is the problem well-understood or novel?
@@ -1356,7 +1356,7 @@ Rate each dimension Green / Amber / Red with evidence:
 4. **Safer**: Are security and compliance risks managed? Change failure rate acceptable?
 5. **Happier**: Is the team (or solo developer) sustainable? Burnout risk? Enjoyment?
 
-Also assess CALMS culture drivers (Humble):
+Also assess CALMS culture drivers (Willis & Humble):
 - Culture: Is there a learning culture?
 - Automation: Are repetitive tasks automated?
 - Lean: Are we minimizing waste?

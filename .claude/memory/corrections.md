@@ -1,5 +1,7 @@
 # Corrections Log
 
+*Mycelium's friction log (Hoskins, Ch4). A record of experience, not prescriptions. Read before every task — past mistakes are expensive lessons.*
+
 ## TL;DR
 
 _No corrections logged yet. This section will contain a compact summary of the most impactful corrections for quick pre-task scanning. Deep-read below only when working in a relevant scope._

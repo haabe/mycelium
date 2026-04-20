@@ -30,3 +30,7 @@ Past mistakes are expensive lessons. Reading them costs seconds. Not reading the
 
 **G-P3: Always cite which theory informed a decision** `NUDGE` `quality`
 Every significant decision in the decision log must reference the specific theory/framework that guided it.
+
+**G-P7: Close the loop after every task batch** `REVIEW` `quality`
+After completing any batch of changes, before reporting done: (1) verify cross-repo consistency if changes span repos, (2) log corrections for any mistakes made, (3) log patterns for anything reusable, (4) update corrections.md TL;DR if new entries added. If the user has to ask whether this happened, the guardrail already failed.
+*Source: Hoskins Ch4 (friction logging), Argyris (double-loop learning)*

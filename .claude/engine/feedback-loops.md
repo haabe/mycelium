@@ -147,7 +147,7 @@ Every metric in Mycelium must have a **counter-metric** to prevent gaming:
 |--------|--------------|---------------|
 | Deployment frequency | Deploy empty changes | Change failure rate + actual value delivered |
 | Lead time | Skip reviews/testing | Change failure rate + defect density |
-| Confidence score | Self-inflate without evidence | Evidence TYPE must match level (Gilad's meter) |
+| Confidence score | Self-inflate without evidence | Evidence TYPE must match level (adapted from Gilad's Confidence Meter) |
 | Test coverage | Write meaningless tests | Mutation testing score or defect leakage |
 | Diamond velocity | Rush through gates | Regression rate (how often do diamonds regress?) |
 | Correction count | Log trivial corrections | Correction IMPACT (did prevention rules prevent recurrence?) |

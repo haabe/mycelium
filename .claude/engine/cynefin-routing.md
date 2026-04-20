@@ -118,7 +118,7 @@ How to classify problems into Cynefin domains and choose appropriate methods (Sn
 - Retrospective skill after stabilization.
 - Move to Complex or Complicated once stabilized.
 
-### 5. Disorder
+### 5. Confused
 
 **Characteristics:**
 - Don't know which domain applies.
@@ -181,5 +181,5 @@ Is the problem well-understood with known best practices?
       YES -> Complex: Design safe-to-fail probes.
       NO  -> Is there immediate crisis?
         YES -> Chaotic: Act to stabilize, then reassess.
-        NO  -> Disorder: Decompose and reclassify parts.
+        NO  -> Confused: Decompose and reclassify parts.
 ```

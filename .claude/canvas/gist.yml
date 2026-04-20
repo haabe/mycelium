@@ -23,7 +23,7 @@ ideas: []
 #     confidence: 0
 #     ease: 0
 #     total: 0
-#   confidence_level: 0.1  # Gilad's meter: 0.1-0.9
+#   confidence_level: 0.1  # 0.1-0.9 (adapted from Gilad's Confidence Meter)
 #   evidence_log: []
 #     # - date: ""
 #     #   evidence_type: "anecdotal|market_data|user_evidence|experiment|launch_data"
