@@ -107,9 +107,11 @@ class ClaudeRunner:
 
         # Parse JSON output to extract text and token usage
         text_content = stdout
+        is_error = False
         try:
             parsed = json.loads(stdout)
             text_content = parsed.get("result", stdout)
+            is_error = parsed.get("is_error", False)
             usage = parsed.get("usage", {})
             tokens = usage.get("input_tokens", 0) + usage.get("output_tokens", 0)
             if role == "mycelium":
@@ -119,6 +121,10 @@ class ClaudeRunner:
         except (json.JSONDecodeError, TypeError, AttributeError):
             # Backward compat: treat stdout as plain text if not valid JSON
             text_content = stdout
+
+        if is_error:
+            # Surface the error clearly — don't silently continue with empty output
+            text_content = f"[CLAUDE_ERROR] {text_content}"
 
         return RunResult(
             stdout=text_content,

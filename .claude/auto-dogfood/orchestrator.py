@@ -202,12 +202,18 @@ class DogfoodSession:
         self._log(f"Workdir: {self.workdir}")
 
         early_exit = False
+        consecutive_errors = 0
         for step in self.scenario.journey:
             if self._budget_exceeded() or early_exit:
                 if early_exit:
                     self._log("All criteria met, stopping early.")
                 else:
                     self._log("Budget exceeded, stopping.")
+                break
+
+            if consecutive_errors >= 2:
+                self._log(f"Aborting: {consecutive_errors} consecutive Claude errors. "
+                          "Check ANTHROPIC_API_KEY and Claude Code installation.")
                 break
 
             self._log(f"Step: /{step.skill} (rounds={step.rounds})")
@@ -217,7 +223,11 @@ class DogfoodSession:
 
             for r in range(step.rounds):
                 self.round += 1
-                self._run_round(step.skill, planted_failure=planted)
+                had_error = self._run_round(step.skill, planted_failure=planted)
+                if had_error:
+                    consecutive_errors += 1
+                else:
+                    consecutive_errors = 0
 
             # Check if all criteria already pass — exit early to save tokens
             if self.round >= 2:  # Need at least 2 rounds for meaningful check
@@ -320,14 +330,15 @@ class DogfoodSession:
         self,
         skill: str,
         planted_failure=None,
-    ):
-        """Execute one orchestrator round.
+    ) -> bool:
+        """Execute one orchestrator round. Returns True if Claude returned an error.
 
         For interview skills: agent asks questions -> user sim responds -> agent synthesizes.
         For all other skills: single agent call with pre-loaded context (no reads needed).
         """
         max_turns = self.SKILL_MAX_TURNS.get(skill, 10)
         timeout = self.SKILL_TIMEOUTS.get(skill, 300)
+        had_error = False
 
         if skill in ("interview",) and not planted_failure:
             # Interview: agent asks, user responds, then synthesize
@@ -345,8 +356,11 @@ class DogfoodSession:
             self._log(f"  Mycelium agent: {len(mycelium_result.stdout)} chars, "
                        f"{mycelium_result.duration_seconds}s")
 
-            # User simulator responds to agent questions
-            if mycelium_result.stdout:
+            if mycelium_result.stdout.startswith("[CLAUDE_ERROR]"):
+                self._log(f"  ERROR: {mycelium_result.stdout}")
+                had_error = True
+            elif mycelium_result.stdout:
+                # User simulator responds to agent questions
                 user_prompt = build_user_prompt(
                     self.scenario, skill, mycelium_result.stdout,
                 )
@@ -392,6 +406,10 @@ class DogfoodSession:
             )
             self._log(f"  Mycelium agent: {len(result.stdout)} chars, "
                        f"{result.duration_seconds}s")
+
+            if result.stdout.startswith("[CLAUDE_ERROR]"):
+                self._log(f"  ERROR: {result.stdout}")
+                had_error = True
 
         # Observe workspace state after this round
         files_written = self._observe(skill)

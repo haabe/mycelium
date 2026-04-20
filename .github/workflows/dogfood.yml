@@ -51,6 +51,13 @@ jobs:
       - name: Install Claude Code
         run: npm install -g @anthropic-ai/claude-code
 
+      - name: Verify Claude Code
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          claude --version
+          claude -p "respond with exactly: HEALTHCHECK_OK" --output-format json --max-turns 1 2>&1 | head -1
+
       - name: Run scenario
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -119,6 +126,13 @@ jobs:
 
       - name: Install Claude Code
         run: npm install -g @anthropic-ai/claude-code
+
+      - name: Verify Claude Code
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          claude --version
+          claude -p "respond with exactly: HEALTHCHECK_OK" --output-format json --max-turns 1 2>&1 | head -1
 
       - name: Run all scenarios
         env:
