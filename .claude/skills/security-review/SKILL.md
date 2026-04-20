@@ -102,5 +102,8 @@ Language-agnostic security review based on OWASP Secure by Design.
 - [ ] **Overreliance**: Users informed of model limitations; confidence indicators provided
 - [ ] **Model Theft**: Model weights and fine-tuning data access-controlled
 
+## Decision Log (MANDATORY per G-P4)
+**APPEND** a `### Security Review` entry to `harness/decision-log.md` with: OWASP categories assessed, findings, risk ratings, remediation recommendations.
+
 ## Stack-Specific Tools
 Consult `.claude/jit-tooling/security-scanning.md` for tool selection per stack.

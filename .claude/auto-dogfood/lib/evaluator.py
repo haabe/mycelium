@@ -163,8 +163,13 @@ class Evaluator:
 
     def _check_decision_log_honest(self, args: Any) -> bool:
         if not self.decision_log.exists():
-            # After skills that should produce a decision log, absence is a failure
-            require_after = {"mocked-persona-interview", "diamond-progress"}
+            # After skills that assess/evaluate/progress, absence is a failure
+            require_after = {
+                "mocked-persona-interview", "diamond-progress", "diamond-assess",
+                "dora-check", "bvssh-check", "team-shape", "service-check",
+                "canvas-health", "bias-check", "privacy-check", "security-review",
+                "launch-tier", "wardley-map", "cynefin-classify", "retrospective",
+            }
             skill = args.get("skill", "") if isinstance(args, dict) else ""
             if skill in require_after:
                 return False

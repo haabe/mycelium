@@ -139,6 +139,9 @@ If no cycle record exists yet (leaf went directly to market without retrospectiv
 
 This closes the data loop: predicted ICE → actual delivery metrics → actual market outcomes → calibration for future scoring.
 
+## Decision Log (MANDATORY per G-P4)
+**APPEND** a `### Launch Tier Classification` entry to `harness/decision-log.md` with: tier assigned, positioning rationale, key risks, go-to-market approach.
+
 ## Theory Citations
 - Lauchengco: Loved (launch tier classification, positioning)
 - Shotton: Choice Factory (ethical behavioral science in positioning)

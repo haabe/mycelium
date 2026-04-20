@@ -72,6 +72,9 @@ This skill should be triggered:
 ## Canvas Output
 Record bias check in `canvas/opportunities.yml` under `bias_checks` section with date, biases mitigated, and research design adjustments made.
 
+## Decision Log (MANDATORY per G-P4)
+**APPEND** a `### Bias Check` entry to `harness/decision-log.md` with: activity assessed, active bias risks found, mitigations applied, agent self-check results.
+
 ## Theory Citations
 - Kahneman: Thinking, Fast and Slow (System 1/System 2)
 - Shotton: The Choice Factory (behavioral biases in decision-making)

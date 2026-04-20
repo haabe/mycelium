@@ -93,4 +93,7 @@ Agency without boundaries produces chaos; boundaries without agency produces bur
 
 *Source: Skelton (Infrastructure for Agency, 2025-2026)*
 
-Update canvas/team-shape.yml and canvas/bounded-contexts.yml with assessment results.
+## Output
+
+- Update `canvas/team-shape.yml` and `canvas/bounded-contexts.yml` with assessment results.
+- **APPEND** a `### Team Shape Assessment` entry to `harness/decision-log.md` with: team types identified, cognitive load findings, Conway alignment, recommendations. (MANDATORY per G-P4)

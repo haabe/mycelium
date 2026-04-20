@@ -110,6 +110,9 @@ Diamond: [ID if applicable]
 Overall: [summary and recommended actions]
 ```
 
+## Decision Log (MANDATORY per G-P4)
+**APPEND** a `### BVSSH Assessment` entry to `harness/decision-log.md` with: all 5 dimension ratings, CALMS ratings, key evidence, recommended actions.
+
 ## Theory Citations
 - Smart: Sooner Safer Happier (BVSSH framework)
 - Willis & Humble: CALMS (Willis coined CAMS at DevOpsDays 2010, Humble added Lean -- explains WHY DORA outcomes are what they are)

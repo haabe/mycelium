@@ -96,5 +96,8 @@ Score: [X/15 Pass, Y/15 Partial, Z/15 Fail]
 Priority fixes: [top 3 items to address]
 ```
 
+## Decision Log (MANDATORY per G-P4)
+**APPEND** a `### Service Check` entry to `harness/decision-log.md` with: principles assessed, scores, priority fixes, overall service quality rating.
+
 ## Theory Citations
 - Downe: Good Services (15 principles)

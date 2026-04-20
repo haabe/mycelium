@@ -12,6 +12,12 @@ If the product interacts directly with people, it must disclose AI nature. Requi
 Before delivering an AI-powered product, assess high-risk category under Annex III. Run `/regulatory-review`.
 *Source: EU AI Act (Regulation 2024/1689), Annex III*
 
+## Market-relevant honesty
+
+**G-M1: Never use promotional language in the decision log** `REVIEW` `quality`
+At L5 Market scale, the agent is primed toward optimistic/promotional framing by the go-to-market context. The decision log must remain an honest internal record. Forbidden phrases: "mostly positive", "minor concerns", "largely validated", "strong validation", "confirms product-market fit", "high confidence", "validates the concept", "clear demand." Use specific evidence and hedged language instead: "3 of 5 users mentioned X" not "strong validation from users."
+*Source: Kahneman (optimism bias), Shotton (social proof bias). Detected by dogfood scenario `content-solo-l5-market` 2026-04-20.*
+
 ## Market-relevant process
 
 **G-P2: Never ignore BVSSH dimensions** `NUDGE` `quality`

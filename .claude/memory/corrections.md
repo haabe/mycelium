@@ -4,7 +4,9 @@
 
 ## TL;DR
 
-_No corrections logged yet. This section will contain a compact summary of the most impactful corrections for quick pre-task scanning. Deep-read below only when working in a relevant scope._
+- **L5 sycophancy**: At market scale, agent uses promotional language in decision logs. Guardrail G-M1 added.
+- **Decision log skipped**: 27/44 skills had no decision log instruction. G-P4 strengthened, 10 skills patched, evaluator expanded.
+- **python vs python3**: macOS has `python3` not `python`. Use `python3` in all commands.
 
 ## Format
 
@@ -26,6 +28,24 @@ Each correction entry follows this structure:
 ## Generalizable Corrections
 
 _Corrections that apply broadly across projects and contexts._
+
+### 2026-04-20 - L5 market scale produces sycophantic decision log entries
+- **Scope**: quality
+- **Category**: bias
+- **Origin**: ai-generated
+- **Mistake**: At L5 Market scale, the agent wrote overly optimistic phrases ("mostly positive", "strong validation", "confirms product-market fit") in the decision log. The go-to-market context primes promotional framing that bleeds into internal records.
+- **Correction**: Decision log language must remain evidence-specific and hedged. "3 of 5 users mentioned X" not "strong validation from users."
+- **Prevention**: Added guardrail G-M1 to `guardrails-market.md`. The `decision_log_honest` evaluator criterion catches forbidden phrases. Agent should use specific counts and hedged language at all scales, but especially L5.
+- **Source**: Kahneman (optimism bias), Shotton (social proof bias). Detected by dogfood scenario `content-solo-l5-market`.
+
+### 2026-04-20 - 27 of 44 skills had no decision log instruction
+- **Scope**: process
+- **Category**: process
+- **Origin**: ai-generated
+- **Mistake**: Core guardrail G-P4 says "always log decisions" but 27 skills never mentioned the decision log. The agent sometimes skipped writing it, requiring evaluator retries (observed in 3 of 18 dogfood scenarios: `service-team-multiscale-l2-l4`, `saas-solo-l1-strategy`, `content-solo-l5-market`).
+- **Correction**: Strengthened G-P4 with explicit skill list. Added `## Decision Log (MANDATORY per G-P4)` section to 10 high-impact skills (`team-shape`, `wardley-map`, `cynefin-classify`, `launch-tier`, `service-check`, `bias-check`, `privacy-check`, `security-review`, `bvssh-check`). Expanded evaluator `require_after` set from 2 to 14 skills.
+- **Prevention**: When creating new skills, always include a decision log section. G-P4 now lists skills explicitly rather than relying on "significant decisions."
+- **Source**: Dogfood finding F2. Argyris (double-loop learning — the instruction was present but not specific enough to change behavior).
 
 
 

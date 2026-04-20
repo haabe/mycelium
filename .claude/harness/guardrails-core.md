@@ -22,7 +22,8 @@ Credentials, tokens, API keys, passwords must be encrypted at rest and in transi
 Every diamond transition must be reflected in the appropriate canvas files. The canvas is the single source of truth -- if it's not in the canvas, it didn't happen.
 
 **G-P4: Always log decisions in the decision log** `REVIEW` `quality`
-No significant decision (diamond transition, solution selection, architecture choice, scope change) happens without a logged entry in `.claude/harness/decision-log.md`.
+No significant decision (diamond transition, solution selection, architecture choice, scope change) happens without a logged entry in `.claude/harness/decision-log.md`. **Every skill that assesses, evaluates, checks, or progresses a diamond MUST append an entry before completing.** This includes but is not limited to: `/diamond-assess`, `/diamond-progress`, `/dora-check`, `/bvssh-check`, `/team-shape`, `/service-check`, `/canvas-health`, `/bias-check`, `/privacy-check`, `/security-review`, `/launch-tier`, `/wardley-map`, `/cynefin-classify`, `/retrospective`. If the skill produces a finding, the finding goes in the log.
+*Source: Dogfood finding F2 (2026-04-20): 3 of 18 scenarios needed retries because skills skipped the decision log on first pass.*
 
 **G-P5: Always read corrections.md before implementation tasks** `BLOCK` `quality`
 Past mistakes are expensive lessons. Reading them costs seconds. Not reading them costs hours.

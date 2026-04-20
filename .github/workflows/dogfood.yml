@@ -6,7 +6,7 @@ on:
   # schedule:
     # Weekly Monday 6am UTC — exploration battery
     # Disabled: requires API credits (Claude Max subscription doesn't include API).
-    # Run locally instead: python .claude/auto-dogfood/orchestrator.py run-all .claude/auto-dogfood/scenarios/ -v
+    # Run locally instead: python3 .claude/auto-dogfood/orchestrator.py run-all .claude/auto-dogfood/scenarios/ -v
     # - cron: '0 6 * * 1'
   workflow_dispatch:
     inputs:

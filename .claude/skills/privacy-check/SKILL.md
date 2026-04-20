@@ -81,6 +81,9 @@ Privacy by Design assessment.
 1. [risk and recommended action]
 ```
 
+## Decision Log (MANDATORY per G-P4)
+**APPEND** a `### Privacy Assessment` entry to `harness/decision-log.md` with: principles assessed, data flows identified, risks found, GDPR compliance status.
+
 ## Theory Citations
 - Cavoukian: Privacy by Design (7 principles)
 - GDPR: Data protection regulation
