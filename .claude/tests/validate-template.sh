@@ -218,7 +218,7 @@ check_skill_count_readme() {
 
     # Match: "## Skills Reference (35 skills)"
     local readme_count
-    readme_count=$(grep "Skills Reference" README.md | sed 's/.*(\([0-9]*\) skills).*/\1/' || echo "0")
+    readme_count=$(grep "^## Skills Reference" README.md | sed 's/.*(\([0-9]*\) skills).*/\1/' || echo "0")
 
     if [ -z "$readme_count" ] || [ "$readme_count" = "0" ]; then
         fail "Could not find skill count in README"
