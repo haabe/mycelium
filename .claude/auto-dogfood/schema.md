@@ -3,6 +3,28 @@
 Full-session dogfood scenarios extend the eval scenario format (`.claude/evals/schema.md`)
 with multi-turn orchestration, user persona simulation, and planted failure conditions.
 
+## Scenario Families
+
+Each scenario belongs to a family that defines what class of agent behavior it tests. Families make coverage gaps visible — if a family has zero scenarios, that's an untested failure mode.
+
+*Inspired by: greyhaven-ai/autocontext's 11 scenario families — a taxonomy of "what kinds of things can go wrong."*
+
+| Family | Tests | Mycelium Mechanism | Current Scenarios |
+|--------|-------|--------------------|-------------------|
+| `guardrail` | Does the agent stop when it should? | Anti-patterns, guardrails | sw-web-team-skip-discovery, ai-agent-solo-confidence-inflate, sw-solo-hollow-bvssh |
+| `gate` | Do theory gates fire correctly? | Theory gates, confidence | ai-tool-solo-theory-gates, sw-solo-evidence-decay, sw-solo-shallow-cynefin |
+| `lifecycle` | Does diamond progression work end-to-end? | Diamond phases, transitions | sw-api-solo-happy-path, sw-solo-lifecycle-cycle-recording, sw-solo-perspective-conflict |
+| `delivery` | Do completion gates validate properly? | DoD, BVSSH, DORA | sw-api-solo-deliver-complete, sw-lib-solo-coding-quality, sw-cli-solo-happy-full |
+| `product_type` | Do non-software product types work? | Canvas routing, product_type | content-solo-l5-market, ai-tool-solo-value-risk, service-team-multiscale-l2-l4, course-solo-value-risk |
+| `value_risk` | Does the agent detect value-risk failures? | Four risks, JTBD | sw-cli-solo-value-risk, ai-tool-solo-value-risk, course-solo-value-risk |
+| `strategy` | Do L0/L1 scales work? | Wardley, North Star, Team Topologies | saas-solo-l1-strategy |
+| `exploration` | Does OST/ICE pipeline work? | OST builder, ICE scoring | sw-tool-solo-ost-exploration |
+| `onboarding` | Can a new user get value in 10 minutes? | /interview, cold-start | *NONE — gap* |
+| `mid_project` | Does the agent handle contradictory evidence? | Canvas with pre-populated conflicts | *NONE — gap* |
+| `determinism` | Does the same scenario produce consistent results? | Repeated runs, flake rate | *NONE — gap* |
+
+Three families have zero scenarios — these are known coverage gaps (see LEARNING-STRATEGY.md §Known Issues).
+
 ## Scenario YAML Format
 
 ```yaml
@@ -10,6 +32,7 @@ name: "Human-readable scenario name"
 category: dogfood
 type: full-session
 difficulty: easy | medium | hard
+family: guardrail | gate | lifecycle | delivery | product_type | value_risk | strategy | exploration | onboarding | mid_project | determinism
 
 # Product definition — what the simulated user is building
 product:

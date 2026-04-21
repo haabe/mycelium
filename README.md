@@ -2,6 +2,28 @@
 
 **Build the right thing the right way.**
 
+## Contents
+
+- [Who It's For](#who-its-for)
+- [What It Feels Like](#what-it-feels-like)
+- [How Mycelium Got Smarter](#how-mycelium-got-smarter)
+- [How It Works](#how-it-works)
+  - [The Flow](#the-flow)
+  - [Theory Gates](#theory-gates)
+  - [The Canvas](#the-canvas)
+  - [Self-Learning](#self-learning)
+  - [Harnessing](#harnessing-what-prevents-the-agent-from-going-haywire)
+- [Quick Start](#quick-start)
+- [Upgrading](#upgrading)
+- [Skills Reference (44 skills)](#skills-reference-44-skills)
+- [Usage Modes](#usage-modes)
+- [JiT Tooling](#jit-tooling-language-agnostic)
+- [Theories & Frameworks Integrated](#theories--frameworks-integrated)
+- [Regulatory Awareness: EU AI Act](#regulatory-awareness-eu-ai-act)
+- [Contributing](#contributing)
+
+---
+
 AI agents are great at building. They're terrible at knowing *what* to build. They'll jump from an idea to code without discovery, skip security, ignore accessibility, and inflate their own confidence. Spec-driven tools help structure the coding — but they start at "what to build," never "should you build it?"
 
 Mycelium is the only AI harness that guides the full journey from *"should we build this?"* to *"did it work?"* — powered by 30+ established product frameworks, connected by theory gates so critical steps can't be skipped.
@@ -171,15 +193,17 @@ Not all canvas files are needed for every project. `/interview` classifies your 
 
 Mycelium gets smarter with each project cycle:
 
-- **Corrections** — learns from mistakes so they're not repeated
+- **Corrections** — learns from mistakes so they're not repeated. Corrections that recur 3+ times auto-escalate to guardrails.
 - **Patterns** — captures what worked for reuse
 - **Adaptive thresholds** — calibrates confidence scoring from historical data
 - **Reflexion loops** — implement, validate, self-critique, retry
 - **Evidence decay** — flags stale evidence so decisions stay current
+- **Canvas mutation log** — append-only audit trail of every canvas change, enabling checkpoint-based replay during diamond regression
+- **Memory consolidation** — periodic deduplication, contradiction detection, and staleness removal in corrections and patterns
 
 ### Harnessing (What Prevents the Agent from Going Haywire)
 
-Three enforcement tiers, 34 constraints, [phase-scoped](/.claude/harness/guardrails.md) to manage instruction budget:
+Three enforcement tiers, 35 constraints, [phase-scoped](/.claude/harness/guardrails.md) to manage instruction budget:
 
 - **BLOCK** (2): Mechanically prevented. Secrets in code, stale corrections.
 - **REVIEW** (16): Gates delivery completion. Tests, accessibility, security, BVSSH, decision logging, AI disclosure, close-the-loop.

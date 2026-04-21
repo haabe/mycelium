@@ -34,6 +34,7 @@ These fire when the same failure mode recurs:
 | **Late discard pattern** | >50% of discards happen at Phase 7+ (delivery or later) | Flag pipeline weakness: "Most discards happen late. Earlier gates (ICE threshold, assumption testing) may need tightening." |
 | **Confidence inflation** | Confidence scores consistently >0.2 higher than actual outcomes warrant | Flag calibration issue: "Confidence scores are systematically inflated. Review evidence standards." |
 | **Single-perspective dominance** | >70% of Four Risks assessments show one perspective providing all evidence | Flag trio imbalance: "Engineering perspective is dominating risk assessments. Product and design evidence is thin." |
+| **Correction recurrence** | Same correction logged 3+ times despite documented prevention | Auto-escalate: graduate the correction to a guardrail (draft G-XX entry in guardrails-core.md). The prevention strategy failed — the system needs a harder constraint, not another reminder. |
 
 ### Success Pattern Extraction
 
