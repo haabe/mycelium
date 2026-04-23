@@ -58,6 +58,10 @@ When multiple approaches solve the problem, choose the simplest one. Complexity 
 Business logic, data access, presentation, and infrastructure must be separated. Depend on abstractions, not concretions.
 *Source: SoC (Dijkstra), SOLID (Martin), Clean Architecture*
 
+**G-V6b: Document significant architectural tradeoffs** `NUDGE` `quality`
+If the solution involves framework selection, infrastructure choices, or integration patterns, document the rationale in `docs/adr/` using Nygard format (Context/Decision/Consequences). `/delivery-bootstrap` scaffolds the format.
+*Source: Nygard (Architecture Decision Records), theory-gates.md L3 Evidence Gate*
+
 **G-V7: Always validate alongside implementation** `REVIEW` `quality`
 Write tests first (TDD) or alongside code. Never defer validation to "later."
 *Source: Forsgren (Accelerate), TDD (Beck)*

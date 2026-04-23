@@ -156,6 +156,12 @@ Known failure modes organized by category. Check regularly, especially when thin
 - **What to do instead**: If evidence says the assumption is wrong, regress the diamond. Log the regression in decision-log.md. Document what was learned in product-journal.md. Regression is the system working correctly, not failure.
 - **Source**: Kahneman (sunk cost fallacy), Smart (BVSSH), Torres (evidence-guided)
 
+### 7b. Undocumented Architecture Decisions
+- **Description**: Significant architectural choices (framework selection, infrastructure, integration patterns) made without recorded rationale. Future developers reverse-engineer the "why" from code.
+- **Detection rule**: Multi-domain solution or high feasibility risk but `docs/adr/` is empty or missing. Code comments explain "we chose X over Y" but no formal decision record.
+- **What to do instead**: Run `/delivery-bootstrap` to scaffold `docs/adr/`. Document each significant decision in Nygard format (Context/Decision/Consequences) before or during implementation.
+- **Source**: Nygard (Architecture Decision Records)
+
 ## Market/GTM Anti-Patterns
 
 ### 8. Launch Without Positioning

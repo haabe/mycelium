@@ -59,7 +59,7 @@ For solo developers: apply perspectives sequentially as distinct evaluation pass
 | L0 | Market research, competitive analysis, stakeholder interviews documented | Assumptions stated without supporting data |
 | L1 | Strategic evidence from multiple sources; quantified opportunity size | Strategy based on opinion or single data point |
 | L2 | 5+ user interviews with triangulated findings; behavioral data | Fewer than 3 evidence sources; no triangulation |
-| L3 | Prototype tested with users; measurable feedback collected. Design hypotheses validated using Lean UX format (Gothelf). If multi-domain: bounded contexts identified (DDD/Evans). | Solution chosen without user validation |
+| L3 | Prototype tested with users; measurable feedback collected. Design hypotheses validated using Lean UX format (Gothelf). If multi-domain: bounded contexts identified (DDD/Evans). If significant architecture decisions: tradeoffs documented in ADRs (Nygard format: Context/Decision/Consequences). | Solution chosen without user validation; architecture choices made without documented rationale |
 | L4 | Acceptance criteria defined with measurable outcomes | Vague or missing acceptance criteria |
 | L5 (software) | Test cases written before or alongside implementation | No tests; untested code |
 | L5 (content) | Content reviewed against objectives; accessibility verified | Unreviewed content; missing captions/alt text |
@@ -474,7 +474,7 @@ Use this matrix to determine exactly which gates to evaluate for a given scale a
 **Trio guidance for L3**:
 - **Product**: Does the solution address the validated opportunity? Is there evidence users want this? (Strong)
 - **Design**: Is the solution usable? Has it been evaluated with prototypes or heuristic review? (Strong)
-- **Engineering**: Engineering spikes should happen DURING ideation, not after. If feasibility risk is medium or high, spike results must exist before ICE scoring. Feasibility informs solution design — it's not a post-hoc constraint. Add to `/ice-score`: feasibility assessment must include spike results if feasibility risk > medium.
+- **Engineering**: Engineering spikes should happen DURING ideation, not after. If feasibility risk is medium or high, spike results must exist before ICE scoring. Feasibility informs solution design — it's not a post-hoc constraint. Add to `/ice-score`: feasibility assessment must include spike results if feasibility risk > medium. Significant architecture choices (framework selection, infrastructure, integration patterns) should be documented as ADRs — `/delivery-bootstrap` scaffolds the format when needed.
 
 ### L4 Delivery
 

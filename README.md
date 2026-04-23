@@ -1,6 +1,6 @@
 # Mycelium
 
-**Build the right thing the right way.**
+**Your AI agent should think before it codes.**
 
 ## Contents
 
@@ -24,9 +24,9 @@
 
 ---
 
-AI agents are great at building. They're terrible at knowing *what* to build. They'll jump from an idea to code without discovery, skip security, ignore accessibility, and inflate their own confidence. Spec-driven tools help structure the coding — but they start at "what to build," never "should you build it?"
+AI agents are great at building. They're terrible at knowing *what* to build. They'll jump from an idea to a pull request without asking why, who for, or whether anyone needs it. Other tools help structure the coding — Mycelium makes the agent earn the right to start.
 
-Mycelium is the only AI harness that guides the full journey from *"should we build this?"* to *"did it work?"* — powered by 30+ established product frameworks, connected by theory gates so critical steps can't be skipped.
+Product discovery to market feedback, powered by 30+ established frameworks, connected by theory gates so critical steps can't be skipped. The agent doesn't progress until the evidence says it should.
 
 ```bash
 npx degit haabe/mycelium my-project && cd my-project
@@ -203,11 +203,11 @@ Mycelium gets smarter with each project cycle:
 
 ### Harnessing (What Prevents the Agent from Going Haywire)
 
-Three enforcement tiers, 35 constraints, [phase-scoped](/.claude/harness/guardrails.md) to manage instruction budget:
+Three enforcement tiers, 36 constraints, [phase-scoped](/.claude/harness/guardrails.md) to manage instruction budget:
 
 - **BLOCK** (2): Mechanically prevented. Secrets in code, stale corrections.
-- **REVIEW** (16): Gates delivery completion. Tests, accessibility, security, BVSSH, decision logging, AI disclosure, close-the-loop.
-- **NUDGE** (16): Surfaced by hooks, not blocking. Engineering principles, bias checks, devil's advocate, data minimization.
+- **REVIEW** (17): Gates delivery completion. Tests, accessibility, security, usability heuristics, BVSSH, decision logging, AI disclosure, close-the-loop.
+- **NUDGE** (17): Surfaced by hooks, not blocking. Engineering principles, architecture tradeoffs, bias checks, devil's advocate, data minimization.
 
 Plus 5 hook layers that fire automatically — from secret detection before code edits (~30 tokens) to theory gate evaluation on demand. Total overhead: ~6,000 tokens/session.
 
@@ -294,12 +294,12 @@ After upgrading, run `/diamond-assess` to see your work through the new version'
 ### Delivery
 | Skill | When to Use |
 |-------|------------|
-| `/delivery-bootstrap` | Auto-detect tech stack, set up tooling |
-| `/preflight` | Pre-code validation checklist |
-| `/reflexion` | Self-correcting implementation loop |
-| `/definition-of-done` | Verify all DoD criteria |
-| `/dora-check` | Delivery performance metrics |
-| `/retrospective` | Post-delivery learning capture |
+| `/delivery-bootstrap` | Auto-detect tech stack, generate validation tooling, scaffold ADRs if architecture decisions are needed |
+| `/preflight` | Pre-code checklist: canvas alignment, corrections review, scope confirmation |
+| `/reflexion` | Self-correcting loop: implement → validate → self-critique → retry (max 3 iterations) |
+| `/definition-of-done` | Executable checklist gates completion: tests, types, lint, secrets, BVSSH, accessibility, decision log |
+| `/dora-check` | DORA metrics: deployment frequency, lead time, change failure rate, FDRT, reliability |
+| `/retrospective` | Post-delivery: what worked, what didn't, pattern extraction, correction logging |
 
 ### Evidence & Metrics
 | Skill | When to Use |
@@ -453,6 +453,7 @@ The same pattern applies to **metric sources**. `/metrics-detect` scans for sign
 | Clean Architecture / SOLID | Martin | Software design principles |
 | SRE | Beyer, Jones, Petoff, Murphy | Error budgets, toil, SLIs/SLOs |
 | TPS / Lean | Ohno, Toyoda | 7 Wastes, continuous improvement |
+| Architecture Decision Records | Nygard | Lightweight architecture decision documentation |
 | ... and more | | See CLAUDE.md for complete list |
 
 ## Regulatory Awareness: EU AI Act
