@@ -24,9 +24,9 @@
 
 ---
 
-AI agents are great at building. They're terrible at knowing *what* to build. They'll jump from an idea to a pull request without asking why, who for, or whether anyone needs it. Other tools help structure the coding — Mycelium makes the agent earn the right to start.
+AI has made building cheap. It hasn't made *deciding* cheap. Agents will jump from an idea to a pull request without asking why, who for, or whether anyone needs it. Other tools accelerate delivery — Mycelium makes the agent earn the right to start.
 
-Product discovery to market feedback, powered by 30+ established frameworks, connected by theory gates so critical steps can't be skipped. The agent doesn't progress until the evidence says it should.
+Build to learn, then build to earn. Product discovery to market feedback, powered by 30+ established frameworks, connected by theory gates so critical steps can't be skipped. The agent doesn't progress until the evidence says it should.
 
 ```bash
 npx degit haabe/mycelium my-project && cd my-project
