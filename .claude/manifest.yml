@@ -37,8 +37,25 @@ harness_framework:
   - .claude/harness/cognitive-biases.md
   - .claude/harness/engineering-principles.md
   - .claude/harness/guardrails.md
+  - .claude/harness/guardrails-core.md
+  - .claude/harness/guardrails-delivery.md
+  - .claude/harness/guardrails-discovery.md
+  - .claude/harness/guardrails-index.md
+  - .claude/harness/guardrails-market.md
+  - .claude/harness/README.md
   - .claude/harness/security-trust.md
   - .claude/harness/theory-tensions.md
+
+# READMEs in preserved directories — framework documentation that lives
+# alongside project state. Always replaced during upgrade, even though the
+# parent directory is preserved.
+preserved_dir_readmes:
+  - .claude/canvas/README.md
+  - .claude/diamonds/README.md
+  - .claude/memory/README.md
+  - .claude/evals/README.md
+  - .claude/evals/dogfood-reports/README.md
+  - .claude/tests/README.md
 
 # Project state — NEVER overwrite if they exist.
 # These contain the user's work product.

@@ -14,10 +14,11 @@
 #   1. Checks for uncommitted changes (refuses if dirty)
 #   2. Pulls upstream to a temp directory
 #   3. Replaces framework files (engine, skills, hooks, etc.)
-#   4. Selectively replaces harness framework files (preserves decision-log.md)
-#   5. Adds new canvas templates (never overwrites existing)
-#   6. Runs validation
-#   7. Reports what changed
+#   4. Replaces ALL harness files except project state (decision-log.md)
+#   5. Syncs READMEs in preserved directories (canvas, diamonds, memory, evals, tests)
+#   6. Adds new canvas templates (never overwrites existing)
+#   7. Runs validation
+#   8. Reports what changed
 #
 # What it NEVER touches:
 #   - .claude/diamonds/active.yml (your diamond state)
@@ -102,7 +103,7 @@ for file in CLAUDE.md README.md CONTRIBUTORS.md LICENSE requirements-ci.txt; do
 done
 
 # Framework directories (full replace)
-for dir in engine skills hooks domains orchestration schemas scripts optimization; do
+for dir in engine skills hooks domains orchestration schemas scripts optimization tests auto-dogfood; do
     if [ -d "$TEMP_DIR/.claude/$dir" ]; then
         rm -rf ".claude/$dir"
         cp -R "$TEMP_DIR/.claude/$dir" ".claude/$dir"
@@ -177,14 +178,55 @@ info "Framework files replaced."
 
 info "Updating harness framework files..."
 
-for file in anti-patterns.md cognitive-biases.md engineering-principles.md \
-           guardrails.md security-trust.md theory-tensions.md; do
-    if [ -f "$TEMP_DIR/.claude/harness/$file" ]; then
-        cp "$TEMP_DIR/.claude/harness/$file" ".claude/harness/$file"
+# Sync ALL framework files in harness, preserving only project state.
+# Project state files that must never be overwritten:
+HARNESS_PROJECT_STATE="decision-log.md"
+
+for file in "$TEMP_DIR"/.claude/harness/*; do
+    [ -e "$file" ] || continue
+    basename=$(basename "$file")
+    # Skip project state files
+    skip=false
+    for preserve in $HARNESS_PROJECT_STATE; do
+        if [ "$basename" = "$preserve" ]; then
+            skip=true
+            break
+        fi
+    done
+    if [ "$skip" = false ]; then
+        cp "$file" ".claude/harness/$basename"
     fi
 done
 
 info "Harness files updated (decision-log.md preserved)."
+
+# ============================================================
+# Add new canvas templates (never overwrite existing)
+# ============================================================
+
+# ============================================================
+# Sync READMEs in preserved directories
+# ============================================================
+# Directories like canvas/, diamonds/, memory/, evals/, tests/
+# contain project state (never overwritten), but their READMEs
+# are framework documentation that should be kept current.
+
+info "Syncing READMEs in preserved directories..."
+
+READMES_SYNCED=0
+for dir in canvas diamonds memory evals evals/dogfood-reports tests; do
+    if [ -f "$TEMP_DIR/.claude/$dir/README.md" ]; then
+        mkdir -p ".claude/$dir"
+        cp "$TEMP_DIR/.claude/$dir/README.md" ".claude/$dir/README.md"
+        READMES_SYNCED=$((READMES_SYNCED + 1))
+    fi
+done
+
+if [ "$READMES_SYNCED" -gt 0 ]; then
+    info "$READMES_SYNCED README(s) synced in preserved directories."
+else
+    info "No READMEs to sync in preserved directories."
+fi
 
 # ============================================================
 # Add new canvas templates (never overwrite existing)

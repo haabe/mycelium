@@ -7,6 +7,7 @@
 - **L5 sycophancy**: At market scale, agent uses promotional language in decision logs. Guardrail G-M1 added.
 - **Decision log skipped**: 27/44 skills had no decision log instruction. G-P4 strengthened, 10 skills patched, evaluator expanded.
 - **python vs python3**: macOS has `python3` not `python`. Use `python3` in all commands.
+- **upgrade.sh must be glob-driven, not list-driven**: Hardcoded file lists drift when new files are added. Use globs with explicit preserve-lists.
 
 ## Format
 
@@ -48,6 +49,15 @@ _Corrections that apply broadly across projects and contexts._
 - **Source**: Dogfood finding F2. Argyris (double-loop learning — the instruction was present but not specific enough to change behavior).
 
 
+
+### 2026-04-28 - upgrade.sh harness sync was hardcoded, not manifest-driven
+- **Scope**: delivery
+- **Category**: engineering
+- **Origin**: ai-generated
+- **Mistake**: upgrade.sh hardcoded 6 harness filenames for sync. When new harness files were added (guardrails-core.md, guardrails-delivery.md, guardrails-discovery.md, guardrails-index.md, guardrails-market.md, README.md), they were never added to the hardcoded list or the manifest. The `tests/` and `auto-dogfood/` directories were also in the manifest but missing from the directory loop. Result: downstream projects silently drifted from upstream over upgrades.
+- **Correction**: (1) Replaced hardcoded harness list with glob + explicit preserve-list. (2) Added missing directories to framework replace loop. (3) Added README sync step for preserved directories. (4) Updated manifest.yml.
+- **Prevention**: When adding new framework files, verify upgrade.sh coverage. The harness glob pattern now handles new files automatically — no list to maintain. For new preserved-directory READMEs, add to manifest `preserved_dir_readmes`.
+- **Source**: DRY (hardcoded lists diverge from reality). Forsgren (change failure rate — silent drift is a deployment risk).
 
 ## Situational Corrections
 
