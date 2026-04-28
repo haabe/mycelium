@@ -39,6 +39,12 @@ Every leaf that reaches a terminal state (launched, archived, or killed) generat
     domain: ""   # What did we learn about this problem domain?
     framework: ""  # Did the Mycelium process help or hinder?
   
+  # Rework tracking (populated 14 days after completion via /retrospective rework-check)
+  rework:
+    post_delivery_corrections: 0    # corrections logged within 14 days of completion
+    post_delivery_regressions: 0    # regressions within 14 days of completion
+    days_to_first_regression: null  # null = no regression observed
+  
   # Discard-specific (if archived/killed)
   discard_reason: ""  # low-ice-score | failed-assumption | feasibility-block | etc.
   discard_phase: null  # Which lifecycle phase the leaf died at
@@ -51,6 +57,7 @@ Every leaf that reaches a terminal state (launched, archived, or killed) generat
 | Leaf archived | `/ice-score` discard, `/assumption-test` failure | Predicted ICE, discard reason, discard phase, learnings |
 | Leaf launched | L5 Deliver complete | Full predicted vs actual comparison |
 | Post-launch review | 30 days after launch | User metrics, actual outcome, calibration delta |
+| Rework follow-up | 14 days after completion | Post-delivery corrections, regressions, days to first regression |
 
 ## Post-Mortem Trigger
 
@@ -80,6 +87,14 @@ Track which risk dimension is most frequently the one that surprises:
 - If value risk is consistently wrong → user research methodology needs improvement
 - If feasibility risk is consistently wrong → engineering spikes need more depth
 - If usability risk is consistently wrong → prototype testing needs to be earlier/deeper
+
+### Rework Rate
+Track post-delivery corrections and regressions within 14 days of completion:
+- High rework rate with passing DoD → success criteria were too loose or didn't cover the right dimensions
+- High rework rate on AI-assisted code → cross-reference with APEX `ai_rework_rate` in `dora-metrics.yml`
+- Low rework rate → delivery quality is genuine, not just velocity theater
+
+*Source: Paddo (the denominator problem — velocity gains consumed by invisible rework).*
 
 ### Discard Timing
 Track at which lifecycle phase leaves are most often discarded:

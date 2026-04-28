@@ -7,7 +7,7 @@ The term "harness" comes from [Birgitta Böckeler's harness engineering concept]
 ## What's Here
 
 ### Guardrails (Phase-Scoped)
-- **[guardrails.md](guardrails.md)** — Full reference of all 36 guardrails across three enforcement tiers. Read this for the complete picture.
+- **[guardrails.md](guardrails.md)** — Full reference of all 37 guardrails across three enforcement tiers. Read this for the complete picture.
 - **[guardrails-core.md](guardrails-core.md)** — Always loaded. Secret detection (BLOCK), corrections preflight (BLOCK), canvas updates, decision logging.
 - **[guardrails-discovery.md](guardrails-discovery.md)** — Loaded during L0-L2. Evidence quality, no skipping discovery for complex domains, bias checks.
 - **[guardrails-delivery.md](guardrails-delivery.md)** — Loaded during L3-L4. Testing, security, accessibility, input validation, error states.
@@ -19,8 +19,8 @@ The term "harness" comes from [Birgitta Böckeler's harness engineering concept]
 | Tier | Count | Effect | Example |
 |------|-------|--------|---------|
 | **BLOCK** | 2 | Mechanically prevented by hooks | No plaintext secrets in code (G-S1) |
-| **REVIEW** | 17 | Gates diamond progression | Tests must exist before delivery complete (G-V7) |
-| **NUDGE** | 18 | Advised but not blocking | Evidence quality checks, BVSSH reminders, test ideas responsibly |
+| **REVIEW** | 18 | Gates diamond progression | Tests must exist before delivery complete (G-V7) |
+| **NUDGE** | 17 | Advised but not blocking | Evidence quality checks, BVSSH reminders, test ideas responsibly |
 
 ### Decision Quality
 - **[anti-patterns.md](anti-patterns.md)** — Known failure modes with detection rules. "Confidence theater," "discovery skip," "scope creep through accretion." If the agent catches itself in one, it stops and self-corrects.
