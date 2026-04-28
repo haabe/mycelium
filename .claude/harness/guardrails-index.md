@@ -38,3 +38,5 @@ Compact reference for lazy loading. Load full rule from `guardrails.md` only whe
 | G-P5 | BLOCK | Starting any implementation task | Read corrections.md first |
 | G-P6 | NUDGE | Major transition (L2->L3, L3->L4) | Play devil's advocate first |
 | G-P7 | REVIEW | Completing any batch of changes | Close the loop: verify, log corrections, log patterns |
+| G-M1 | REVIEW | Writing decision log at L5 | No promotional language in decision log |
+| G-M2 | NUDGE | Launching to users | Test ideas responsibly — select users first, not all |

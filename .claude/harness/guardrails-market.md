@@ -27,3 +27,7 @@ When evaluating market outcomes, check ALL five dimensions. Do not sacrifice Saf
 **G-P6: Always play devil's advocate before major transitions** `NUDGE` `quality`
 Before launch tier classification, systematically challenge positioning and readiness assumptions.
 *Source: Kahneman (Thinking Fast and Slow), Shotton (Choice Factory)*
+
+**G-M2: Test ideas responsibly — never experiment on all users** `NUDGE` `quality`
+Discovery tests (build to learn) must target select users who opt in. Do not expose the full user base to unvalidated changes. "Ready-fire-aim" — shipping experiments to all users hoping outcomes appear — erodes trust and reputation. Use `/launch-tier` to verify that launch scope matches evidence maturity.
+*Source: Cagan (SVPG, Build to Learn vs Build to Earn), Patton (build to learn vs build to earn)*

@@ -20,7 +20,7 @@ The term "harness" comes from [Birgitta Böckeler's harness engineering concept]
 |------|-------|--------|---------|
 | **BLOCK** | 2 | Mechanically prevented by hooks | No plaintext secrets in code (G-S1) |
 | **REVIEW** | 17 | Gates diamond progression | Tests must exist before delivery complete (G-V7) |
-| **NUDGE** | 17 | Advised but not blocking | Evidence quality checks, BVSSH reminders |
+| **NUDGE** | 18 | Advised but not blocking | Evidence quality checks, BVSSH reminders, test ideas responsibly |
 
 ### Decision Quality
 - **[anti-patterns.md](anti-patterns.md)** — Known failure modes with detection rules. "Confidence theater," "discovery skip," "scope creep through accretion." If the agent catches itself in one, it stops and self-corrects.

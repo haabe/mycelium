@@ -26,7 +26,7 @@
 
 AI has made building cheap. It hasn't made *deciding* cheap. Agents will jump from an idea to a pull request without asking why, who for, or whether anyone needs it. Other tools accelerate delivery — Mycelium makes the agent earn the right to start.
 
-Build to learn, then build to earn. Product discovery to market feedback, powered by 30+ established frameworks, connected by theory gates so critical steps can't be skipped. The agent doesn't progress until the evidence says it should.
+Build to learn, then build to earn (Patton). Product discovery to market feedback, powered by 30+ established frameworks, connected by theory gates so critical steps can't be skipped. The agent doesn't progress until the evidence says it should.
 
 ```bash
 npx degit haabe/mycelium my-project && cd my-project
@@ -137,6 +137,8 @@ graph LR
 
 **Diamonds** run at every scale — the same four phases: **Discover** (explore broadly) → **Define** (narrow focus) → **Develop** (generate solutions) → **Deliver** (build & validate). Each transition must pass theory gates.
 
+**This is a conceptual model, not a process.** Discovery and delivery are continuous, not sequential phases. You learn from delivery. You build during discovery. The scales give structure to thinking — they don't prescribe an order of operations. A weekend project skips most scales. A complex product runs diamonds concurrently at multiple scales.
+
 **The OST bridge**: At L2, discovery produces an Opportunity Solution Tree (Torres). Multiple opportunities are found, multiple solutions are generated for each. Solutions compete — the winner spawns an L3 Solution diamond. Losers are archived with evidence, not deleted.
 
 **Scenarios as connective tissue**: Scenarios (Hoskins) carry user context from L2 through L5. Born from interview stories at L2 (persona + means + motive + simulation), solutions are designed against them at L3, tested against them at L4, and validated in reality at L5. They're the thread that keeps every phase grounded in a real person's real situation.
@@ -170,7 +172,7 @@ If a gate fails, the agent tells you what's missing, cites the theory, suggests 
 
 ### The Canvas
 
-All product knowledge lives in `.claude/canvas/*.yml` — structured YAML files committed to git. They're your single source of truth and your product documentation:
+All product knowledge lives in `.claude/canvas/*.yml` — structured YAML files committed to git. In the product model, the prototype IS the spec (Cagan). In Mycelium, the canvas IS the spec — structured product knowledge that the agent builds from, not a document that sits in a drawer.
 
 | Canvas | What It Captures | Theory |
 |--------|-----------------|--------|
@@ -203,11 +205,11 @@ Mycelium gets smarter with each project cycle:
 
 ### Harnessing (What Prevents the Agent from Going Haywire)
 
-Three enforcement tiers, 36 constraints, [phase-scoped](/.claude/harness/guardrails.md) to manage instruction budget:
+Three enforcement tiers, 37 constraints, [phase-scoped](/.claude/harness/guardrails.md) to manage instruction budget:
 
 - **BLOCK** (2): Mechanically prevented. Secrets in code, stale corrections.
 - **REVIEW** (17): Gates delivery completion. Tests, accessibility, security, usability heuristics, BVSSH, decision logging, AI disclosure, close-the-loop.
-- **NUDGE** (17): Surfaced by hooks, not blocking. Engineering principles, architecture tradeoffs, bias checks, devil's advocate, data minimization.
+- **NUDGE** (18): Surfaced by hooks, not blocking. Engineering principles, architecture tradeoffs, bias checks, devil's advocate, data minimization, test ideas responsibly.
 
 Plus 5 hook layers that fire automatically — from secret detection before code edits (~30 tokens) to theory gate evaluation on demand. Total overhead: ~6,000 tokens/session.
 
@@ -432,6 +434,7 @@ The same pattern applies to **metric sources**. `/metrics-detect` scans for sign
 | Cynefin Framework | Snowden | Domain classification |
 | GIST Planning | Gilad | Evidence-guided prioritization |
 | ICE Scoring | Ellis | Impact/Confidence/Ease prioritization |
+| Build to Learn vs Build to Earn | Patton, Cagan | Discovery = build to learn, delivery = build to earn. Conceptual model, not a process. |
 | Inspired / Empowered | Cagan | Four risks, empowered teams |
 | Good Services | Downe | Service design quality |
 | Accelerate / DORA | Forsgren, Humble, Kim | Delivery performance (5 metrics incl. FDRT, Reliability) |
