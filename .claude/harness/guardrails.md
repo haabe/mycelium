@@ -20,7 +20,7 @@ This file (`guardrails.md`) is the **full reference** — read it when you need 
 ## TL;DR
 
 **BLOCK** (mechanical): G-S1 (no plaintext secrets), G-P5 (read corrections.md before implementation).
-**REVIEW** (gates progression): G-D1 (no skipping discovery for complex domains), G-S2 (threat model for user data/permissions), G-S3 (privacy assessment for data collection), G-S4 (input validation), G-S7 (AI disclosure), G-V1 (validation suite), G-V2 (Downe's 15), G-V7 (tests alongside code), G-V8 (a11y), G-V9 (error states), G-V10 (usability heuristics), G-L1 (leaf pipeline complete before L4), G-L2 (GIST traces to scored leaf), G-P1 (canvas updated at transitions), G-P4 (decision log), G-P7 (close the loop: verify + corrections + patterns after every task batch).
+**REVIEW** (gates progression): G-D1 (no skipping discovery for complex domains), G-S2 (threat model for user data/permissions), G-S3 (privacy assessment for data collection), G-S4 (input validation), G-S7 (AI disclosure), G-V1 (validation suite), G-V2 (Downe's 15), G-V7 (tests alongside code), G-V8 (a11y), G-V9 (error states), G-V10 (usability heuristics), G-V11 (declare success criteria before delivery), G-L1 (leaf pipeline complete before L4), G-L2 (GIST traces to scored leaf), G-P1 (canvas updated at transitions), G-P4 (decision log), G-P7 (close the loop: verify + corrections + patterns after every task batch).
 **NUDGE** (advised): G-L3 (segment check before archiving), G-M2 (test ideas responsibly), everything else — evidence quality, bias checks, engineering principles, BVSSH.
 
 **Constraint types**: Each guardrail is tagged by what it protects — `safety`, `quality`, `scope`, `privacy`, `regulatory`, `ethical`. Inspired by AI Interaction Atlas's 37-constraint taxonomy.
@@ -148,6 +148,10 @@ Every user flow must have designed error, empty, and loading states. Error messa
 **G-V10: Always check usability heuristics for user-facing interfaces** `REVIEW` `quality`
 Before marking user-facing delivery complete, evaluate against Nielsen's 10 usability heuristics. Interface-level quality (Nielsen) complements service-level quality (Downe G-V2). Run `/usability-check`.
 *Source: Nielsen (10 Usability Heuristics, 1994)*
+
+**G-V11: Always declare success criteria before delivery work** `REVIEW` `quality`
+Before starting delivery, declare 1-3 measurable success criteria and how each will be verified. Record in decision-log.md. Checked at DoD by `/diamond-progress`. Without upfront criteria, "done" becomes whatever was built — not what was needed.
+*Source: Cagan (outcome over output), Patton (build to learn vs build to earn), Paddo (the denominator problem — invisible rework from undefined success)*
 
 ## Leaf Lifecycle Guardrails
 

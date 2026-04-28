@@ -28,6 +28,7 @@ Compact reference for lazy loading. Load full rule from `guardrails.md` only whe
 | G-V8 | REVIEW | Building user-facing interfaces | Accessibility built in: semantic HTML, ARIA, keyboard, contrast |
 | G-V9 | REVIEW | Designing user flows | Error, empty, and loading states designed |
 | G-V10 | REVIEW | Completing user-facing interface | Nielsen's 10 heuristics checked |
+| G-V11 | REVIEW | Starting any delivery work | Declare 1-3 measurable success criteria first |
 | G-L1 | REVIEW | Moving leaf to L4 delivery | Four Risks + ICE + assumptions must be done |
 | G-L2 | REVIEW | Creating GIST entry | Must trace to scored OST leaf |
 | G-L3 | NUDGE | Archiving a solution | Check if it serves an unexamined segment |

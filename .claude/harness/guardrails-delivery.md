@@ -78,6 +78,10 @@ Every user flow must have designed error, empty, and loading states. Never show 
 Evaluate against Nielsen's 10 usability heuristics. Run `/usability-check`.
 *Source: Nielsen (10 Usability Heuristics, 1994)*
 
+**G-V11: Always declare success criteria before delivery work** `REVIEW` `quality`
+Before starting delivery, declare 1-3 measurable success criteria and how each will be verified. Record in decision-log.md. Checked at DoD by `/diamond-progress`. Without upfront criteria, "done" becomes whatever was built — not what was needed.
+*Source: Cagan (outcome over output), Patton (build to learn vs build to earn), Paddo (the denominator problem — invisible rework from undefined success)*
+
 ## Leaf Lifecycle
 
 **G-L1: Every solution leaf must have Four Risks -> ICE -> assumption identification before entering L4** `REVIEW` `quality`

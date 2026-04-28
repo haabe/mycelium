@@ -25,6 +25,10 @@ cycles: []
 #     ice_accuracy: 0
 #     effort_accuracy: ""
 #     risk_accuracy: ""
+#   rework:
+#     post_delivery_corrections: 0    # corrections logged within 14 days of completion
+#     post_delivery_regressions: 0    # regressions within 14 days of completion
+#     days_to_first_regression: null  # null = no regression observed
 #   learnings:
 #     process: ""
 #     domain: ""
