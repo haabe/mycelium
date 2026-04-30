@@ -208,8 +208,8 @@ Mycelium gets smarter with each project cycle:
 Three enforcement tiers, 37 constraints, [phase-scoped](/.claude/harness/guardrails.md) to manage instruction budget:
 
 - **BLOCK** (2): Mechanically prevented. Secrets in code, stale corrections.
-- **REVIEW** (17): Gates delivery completion. Tests, accessibility, security, usability heuristics, BVSSH, decision logging, AI disclosure, close-the-loop.
-- **NUDGE** (18): Surfaced by hooks, not blocking. Engineering principles, architecture tradeoffs, bias checks, devil's advocate, data minimization, test ideas responsibly.
+- **REVIEW** (18): Gates delivery completion. Tests, accessibility, security, usability heuristics, BVSSH, decision logging, AI disclosure, close-the-loop, success criteria.
+- **NUDGE** (17): Surfaced by hooks, not blocking. Engineering principles, architecture tradeoffs, bias checks, devil's advocate, data minimization, test ideas responsibly.
 
 Plus 5 hook layers that fire automatically — from secret detection before code edits (~30 tokens) to theory gate evaluation on demand. Total overhead: ~6,000 tokens/session.
 
@@ -452,6 +452,7 @@ The same pattern applies to **metric sources**. `/metrics-detect` scans for sign
 | The Product-Minded Engineer | Hoskins | Scenarios as connective primitive (L2→L5), great reindexing (story→system view), scenario-driven discovery, streetlight effect, friction logging |
 | Lean UX | Gothelf, Seiden | Hypothesis-driven design |
 | Toyota Kata | Rother | Coaching questions for scientific thinking |
+| Cognitive Forcing Functions | Buçinca, Malaya, Gajos | Human judges first, then AI presents — reduces automation bias at diamond transitions |
 | Hooked / Indistractable | Eyal | Ethical engagement design |
 | Clean Architecture / SOLID | Martin | Software design principles |
 | SRE | Beyer, Jones, Petoff, Murphy | Error budgets, toil, SLIs/SLOs |
