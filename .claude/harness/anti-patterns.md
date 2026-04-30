@@ -287,3 +287,15 @@ These patterns emerge from the human-AI collaboration dynamic itself. They are s
 - **Detection rule**: (1) Same files read in pre-task protocol with no changes between sessions. (2) User messages contain domain explanations that already exist (or should exist) in canvas files. (3) Agent asks questions whose answers are already in the canvas but not found because of poor indexing.
 - **What to do instead**: After any session where domain knowledge is explained verbally, capture it in the appropriate canvas file or corrections entry. Run `/canvas-health` to identify gaps between what the agent needs and what the canvas contains. Use auto-memory for agent-user patterns, project memory for domain knowledge.
 - **Source**: aiops3000 ("retrieval tax"), Karpathy (knowledge base maintenance), Raschka (stable prefix design)
+
+### 3. Eval Overfitting
+- **Description**: After an eval reveals a gap, the agent encodes the correct answer directly into documentation or data annotations rather than fixing the underlying data or model. The eval passes but the documentation becomes contaminated with defensive qualifiers that serve the test, not the reader.
+- **Detection rule**: (1) Documentation contains "NOT" qualifiers that reference specific test scenarios. (2) Data entries include negative framing ("this is NOT X") that answers an eval question rather than describing the entity. (3) Eval pass rate improves without corresponding data quality improvement.
+- **What to do instead**: When an eval reveals a gap, fix the source data. If the data was wrong, correct it. If the eval question was poorly framed, fix the eval. Never annotate documentation to pass a test — that's Goodhart's Law in action.
+- **Source**: Hoskins friction log (2026-04-25) — Drew caught the agent encoding "NOT the first commercial ICE" into data to pass an eval. Goodhart's Law (when the eval becomes the target, documentation ceases to be good documentation).
+
+### 4. Negative Documentation
+- **Description**: Defining things by what they are NOT rather than what they ARE. A defensive writing pattern where the agent anticipates objections and preemptively disclaims, resulting in documentation cluttered with negations that answer questions nobody asked.
+- **Detection rule**: (1) Multiple "NOT" or "does not" qualifiers in entity descriptions. (2) Documentation that reads like a FAQ response rather than a reference. (3) Drew's test: "Saying what things are *not*, answering questions that future people won't be asking."
+- **What to do instead**: State what something IS, with citations. Let the reader form their own questions. If a distinction is genuinely important (e.g., "compressed-charge cycle" vs "first commercial engine"), state the positive framing and let the data speak.
+- **Source**: Hoskins friction log (2026-04-25) — recurring pattern flagged by Drew. Related to Eval Overfitting but broader — occurs even without eval pressure.
