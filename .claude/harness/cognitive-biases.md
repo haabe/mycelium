@@ -66,6 +66,21 @@ Review the relevant stage checklist before every research activity, decision poi
 | **Anchoring** | Copying a pattern from StackOverflow/AI without evaluating fit | Understand the code. Evaluate for this context. Test thoroughly. |
 | **Framing effect** | Task description frames the implementation approach | Read acceptance criteria. Consider alternative implementations. |
 
+## Cognitive Forcing Functions (Buçinca, Malaya & Gajos, 2021)
+
+The most effective debiasing technique for human-AI collaboration. CFFs require the human to commit to a judgment *before* seeing the AI's recommendation. This activates System 2 analytical thinking and significantly reduces automation bias — more effectively than explanations, confidence scores, or uncertainty indicators.
+
+**How it works**: The human forms their own assessment first. Then the AI presents its analysis. Then both are compared. The temporal ordering is what matters — once a human sees the AI's output, their judgment is anchored to it.
+
+**Where Mycelium applies this**:
+- `/diamond-assess` Step 0: "Where do you think this diamond stands?" — before gate analysis
+- `/diamond-progress` Step 1b: "Do you think we're ready to move?" — before gate evaluation
+- `/preflight` Constraints: "How much time do you have?" — before the agent proposes scope
+
+**Why not everywhere?** CFFs add friction. Reserve them for high-stakes decisions (diamond transitions, delivery scoping) where the cost of automation bias is high. Don't apply them to routine operations.
+
+*Source: Buçinca, Z., Malaya, M. B., & Gajos, K. Z. (2021). "To Trust or to Think: Cognitive Forcing Functions Can Reduce Overreliance on AI in AI-assisted Decision-making." Proceedings of the ACM on Human-Computer Interaction, Vol 5, CSCW1. Harvard. arXiv:2102.09692. Validated by Hoskins transcript (2026-04-25): Drew's unprimed product instincts consistently outperformed the agent's analysis.*
+
 ## WYSIATI — What You See Is All There Is (Kahneman)
 
 The tendency to build a coherent story from limited evidence without noticing what's missing. WYSIATI is why the Evidence Gate exists — it forces you to ask "what evidence DON'T we have?" before concluding. Active at every stage, especially dangerous when confidence is high and evidence is thin.

@@ -15,7 +15,7 @@ Guardrails are split into scoped files to manage instruction budget (Horthy: mod
 
 This file (`guardrails.md`) is the **full reference** — read it when you need the complete list. For task execution, load the scoped files above instead.
 
-*Source: Horthy (instruction budget overflow, Coding Agents Conference 2026), Haagsman (40-instruction phase budget, haagsman.ai).*
+*Source: Horthy (instruction budget overflow, Coding Agents Conference 2026), Haagsman (40-instruction phase budget, haagsman.ai). Architecture validated by the "reasoning sandwich" pattern (Trivedy, LangChain harness engineering blog 2026): concentrate heavy context at planning and verification phases, reduce during implementation. Phase-scoped guardrails are Mycelium's implementation of this principle — full context at transitions (`/diamond-assess`, `/diamond-progress`), scoped context during execution.*
 
 ## TL;DR
 
