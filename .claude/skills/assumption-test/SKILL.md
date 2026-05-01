@@ -89,6 +89,23 @@ Organized by Gilad's AFTER model (Assessment → Fact-Finding → Tests → Expe
 
 *Source: Gilad (AFTER model, Evidence-Guided / Testing Product Ideas Handbook). 28 techniques across 5 stages, ordered by cost and confidence.*
 
+### Session-counter primitive (for shadow logs / longitudinal tests)
+
+Tests in the Fishfood / Dogfood / Longitudinal-study tiers often run as N-session shadow logs. The framework provides a generic counter via the SessionStart hook. To use it, drop a JSON file alongside your test doc at `.claude/evals/assumption-tests/{test-name}.count.json`:
+
+```json
+{
+  "test": "your-test-name",
+  "started": "YYYY-MM-DD",
+  "target": 10,
+  "sessions": 0,
+  "closed": false,
+  "doc": ".claude/evals/assumption-tests/{test-name}.md"
+}
+```
+
+The hook auto-discovers `*.count.json`, increments `sessions` per session start, and emits a SessionStart reminder when `sessions >= target` and `closed: false`. When the test concludes, set `"closed": true` to silence the reminder. Opt-in by file presence — zero cost for tests that don't need session counting.
+
 ## Step 4: Define Success Criteria
 
 Before running the test, write:

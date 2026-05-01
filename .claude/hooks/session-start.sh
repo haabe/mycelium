@@ -200,6 +200,45 @@ except: pass
 fi
 
 # ============================================================
+# CHECK 6: Open assumption-test session counters
+# ============================================================
+# Generic primitive for longitudinal/shadow-log assumption tests
+# (fishfood, dogfood, longitudinal study tiers in /assumption-test).
+# Auto-discovers any *.count.json under .claude/evals/assumption-tests/.
+# Schema: {test, started, target, sessions, closed, doc}.
+# Increments `sessions` per session start and emits a reminder when
+# `sessions >= target` and `closed` is false. Opt-in by file presence —
+# zero cost for products that don't run shadow-log tests.
+COUNTER_REMINDER=$(python3 -c "
+import json, glob, os, sys
+project_dir = sys.argv[1]
+pattern = os.path.join(project_dir, '.claude/evals/assumption-tests/*.count.json')
+msgs = []
+for f in glob.glob(pattern):
+    try:
+        with open(f) as fh:
+            data = json.load(fh)
+        if data.get('closed'):
+            continue
+        data['sessions'] = data.get('sessions', 0) + 1
+        with open(f, 'w') as fh:
+            json.dump(data, fh, indent=2)
+        n = data['sessions']
+        target = data.get('target', 10)
+        test = data.get('test', os.path.basename(f))
+        doc = data.get('doc', '')
+        if n >= target:
+            msgs.append(f\"Assumption-test '{test}' is on session {n}/{target} — time to review {doc} and write the result section.\")
+    except Exception:
+        pass
+print(' '.join(msgs))
+" "$PROJECT_DIR" 2>/dev/null || echo "")
+
+if [ -n "$COUNTER_REMINDER" ]; then
+  REMINDERS="${REMINDERS}${COUNTER_REMINDER} "
+fi
+
+# ============================================================
 # Build output
 # ============================================================
 if [ -n "$REMINDERS" ]; then
