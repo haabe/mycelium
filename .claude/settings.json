@@ -53,6 +53,12 @@
             "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/scope-gate.sh",
             "timeout": 5,
             "statusMessage": "Mycelium scope enforcement"
+          },
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/framework-guard.sh",
+            "timeout": 5,
+            "statusMessage": "Mycelium framework-guard (dogfood-mode only)"
           }
         ]
       }
