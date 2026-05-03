@@ -96,7 +96,12 @@ echo ""
 info "Replacing framework files..."
 
 # Top-level files
-for file in CLAUDE.md README.md CONTRIBUTORS.md LICENSE requirements-ci.txt; do
+# WARNING: this list must stay in sync with .claude/manifest.yml#framework.top_level
+# Correction 2026-04-28 fixed a similar drift in the harness/ directory by switching
+# to manifest-driven; the same fix should be applied here. Until then, every new
+# top_level addition (e.g., AGENTS.md added 2026-05-03) requires updating BOTH this
+# hardcoded list AND manifest.yml. A test in validate-template.sh should catch drift.
+for file in CLAUDE.md README.md AGENTS.md CONTRIBUTORS.md LICENSE requirements-ci.txt; do
     if [ -f "$TEMP_DIR/$file" ]; then
         cp "$TEMP_DIR/$file" "./$file"
     fi
