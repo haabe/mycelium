@@ -32,8 +32,31 @@ jobs:
       - name: Install CI dependencies
         run: pip install -r requirements-ci.txt
 
-      - name: Run structural integrity validation
+      - name: Run structural integrity validation (includes Check 17 — ruff/shellcheck/pytest)
         run: bash .claude/tests/validate-template.sh
 
       - name: Run canvas schema + trace validation
         run: python3 .claude/scripts/validate_canvas.py
+
+      - name: Run Python unit tests with coverage
+        run: |
+          pytest .claude/tests/python/ -v \
+            --cov=.claude/scripts \
+            --cov-report=term \
+            --cov-report=xml
+
+      - name: Run ruff (Python lint) standalone
+        run: |
+          ruff check .claude/scripts/_manifest_lib.py \
+                     .claude/scripts/framework_guard.py \
+                     .claude/scripts/parse_manifest.py \
+            --select=ALL \
+            --ignore=D,ANN,COM,T20,S603,S607,EM,TRY003,FBT,PTH,INP001
+
+      - name: Run shellcheck (Bash lint) standalone
+        run: |
+          shellcheck -S warning \
+            .claude/scripts/*.sh \
+            .claude/hooks/*.sh \
+            .claude/tests/*.sh || \
+          (echo "Shellcheck warnings exceed baseline. Pre-existing warnings in gate.sh + session-start.sh are tolerated; new warnings should be addressed." && exit 1)

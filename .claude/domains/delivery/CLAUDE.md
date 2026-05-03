@@ -15,6 +15,24 @@ Before starting delivery work:
 5. **Check Cynefin domain** -- is this a clear, complicated, or complex problem? Method depends on domain.
 6. **Review relevant patterns.md entries** -- reuse what has worked before.
 
+## Framework Self-Development Threshold (meta-dogfood)
+
+This rule applies when the project being worked on IS Mycelium itself (`product_type: meta_dogfood` or working in a project flagged as a dogfood instance via `.claude/state/upstream.json`):
+
+**Framework changes touching ≥3 files OR adding new infrastructure (hooks, skills, conventions, validators, scripts) MUST be classified as an L4 delivery diamond.** This means:
+1. Spawn an L4 diamond in `diamonds/active.yml` BEFORE editing
+2. Run `/preflight` to verify prerequisites
+3. Run `/definition-of-done` BEFORE committing any deliverable
+4. Run `/retrospective` AFTER merging to seed `cycle-history.yml`
+
+**Why this exists**: Surfaced 2026-05-03 (corrections.md "Framework-development work shipped without L4 delivery discipline"). Substantial framework code shipped in a single session without `/preflight`, `/diamond-progress`, or `/definition-of-done` because the agent treated framework-development as "ambient maintenance" exempt from delivery discipline. The framework's own DoD (lint, tests, engineering principles, code review) would have caught the resulting tech debt — the discipline existed, it just wasn't invoked.
+
+**Lighter changes are allowed without L4**: single-file edits, doc updates, comment cleanup, simple typo fixes. The threshold is about substantive infrastructure changes, not every keystroke.
+
+**The framework-guard hook** (`.claude/hooks/framework-guard.sh`, see `harness/security-trust.md`) provides the mechanical safety net: in dogfood-mode projects, edits to framework files via Edit/Write/MultiEdit OR Bash are intercepted and routed to upstream. This convention is the *behavioral* layer above the hook — even when the hook would allow (e.g., when changes flow through upstream correctly), the L4 discipline ensures the changes meet the framework's own quality bar before merging.
+
+*Source: corrections.md 2026-05-03 "DoD-skip meta-failure". Argyris (single-loop discipline failed; needed double-loop fix at the convention layer plus a third triple-loop fix in the harness layer — both shipped 2026-05-03).*
+
 ## Engineering Principles
 
 Apply consistently. See `engineering-principles.md` for full details.
