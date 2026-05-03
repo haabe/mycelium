@@ -95,23 +95,27 @@ echo ""
 
 info "Replacing framework files..."
 
-# Top-level files
-# WARNING: this list must stay in sync with .claude/manifest.yml#framework.top_level
-# Correction 2026-04-28 fixed a similar drift in the harness/ directory by switching
-# to manifest-driven; the same fix should be applied here. Until then, every new
-# top_level addition (e.g., AGENTS.md added 2026-05-03) requires updating BOTH this
-# hardcoded list AND manifest.yml. A test in validate-template.sh should catch drift.
-for file in CLAUDE.md README.md AGENTS.md CONTRIBUTORS.md LICENSE requirements-ci.txt; do
+# Top-level files (manifest-driven — single source of truth)
+# Reads .claude/manifest.yml#framework.top_level via parse_manifest.py.
+# Closes the recurring hardcoded-list drift pattern documented in
+# corrections.md 2026-04-28 (harness/) and 2026-05-03 (top_level/AGENTS.md).
+TOP_LEVEL=$(python3 .claude/scripts/parse_manifest.py top_level)
+for file in $TOP_LEVEL; do
     if [ -f "$TEMP_DIR/$file" ]; then
         cp "$TEMP_DIR/$file" "./$file"
     fi
 done
 
-# Framework directories (full replace)
-for dir in engine skills hooks domains orchestration schemas scripts optimization tests auto-dogfood; do
-    if [ -d "$TEMP_DIR/.claude/$dir" ]; then
-        rm -rf ".claude/$dir"
-        cp -R "$TEMP_DIR/.claude/$dir" ".claude/$dir"
+# Framework directories (manifest-driven, full replace)
+# Reads .claude/manifest.yml#framework.directories. Paths include trailing
+# slash and may live outside .claude/ (e.g., .github/), so iterate full paths.
+DIRECTORIES=$(python3 .claude/scripts/parse_manifest.py directories)
+for dir_path in $DIRECTORIES; do
+    # Strip trailing slash for consistent path handling
+    dir_path="${dir_path%/}"
+    if [ -d "$TEMP_DIR/$dir_path" ]; then
+        rm -rf "$dir_path"
+        cp -R "$TEMP_DIR/$dir_path" "$dir_path"
     fi
 done
 
@@ -155,25 +159,22 @@ if [ -d "$TEMP_DIR/.claude/jit-tooling" ]; then
     rm -rf "$PRESERVE_DIR"
 fi
 
-# .github and tests
-if [ -d "$TEMP_DIR/.github" ]; then
-    rm -rf .github
-    cp -R "$TEMP_DIR/.github" .github
-fi
-if [ -d "$TEMP_DIR/tests" ]; then
-    rm -rf tests
-    cp -R "$TEMP_DIR/tests" tests
-fi
+# Note: .github/ is now handled by the manifest-driven directories loop
+# above (it's listed in framework.directories). Same with .claude/tests/.
+# A root-level tests/ directory is NOT in the manifest — if it ever needs
+# to be synced, add it to manifest.directories rather than re-introducing
+# a hardcoded special case here.
 
-# settings.json (NOT settings.local.json)
-if [ -f "$TEMP_DIR/.claude/settings.json" ]; then
-    cp "$TEMP_DIR/.claude/settings.json" .claude/settings.json
-fi
-
-# manifest.yml
-if [ -f "$TEMP_DIR/.claude/manifest.yml" ]; then
-    cp "$TEMP_DIR/.claude/manifest.yml" .claude/manifest.yml
-fi
+# Single-file framework files (manifest-driven)
+# Reads .claude/manifest.yml#framework.single_files (settings.json, manifest.yml).
+# settings.local.json is project state (NOT in single_files) — never overwritten.
+SINGLE_FILES=$(python3 .claude/scripts/parse_manifest.py single_files)
+for file in $SINGLE_FILES; do
+    if [ -f "$TEMP_DIR/$file" ]; then
+        mkdir -p "$(dirname "$file")"
+        cp "$TEMP_DIR/$file" "$file"
+    fi
+done
 
 info "Framework files replaced."
 
@@ -183,27 +184,18 @@ info "Framework files replaced."
 
 info "Updating harness framework files..."
 
-# Sync ALL framework files in harness, preserving only project state.
-# Project state files that must never be overwritten:
-HARNESS_PROJECT_STATE="decision-log.md"
-
-for file in "$TEMP_DIR"/.claude/harness/*; do
-    [ -e "$file" ] || continue
-    basename=$(basename "$file")
-    # Skip project state files
-    skip=false
-    for preserve in $HARNESS_PROJECT_STATE; do
-        if [ "$basename" = "$preserve" ]; then
-            skip=true
-            break
-        fi
-    done
-    if [ "$skip" = false ]; then
-        cp "$file" ".claude/harness/$basename"
+# Manifest-driven: read the explicit harness_framework list. Anything NOT
+# on this list (e.g., decision-log.md, which is in project_state) is
+# preserved by omission — no separate skip logic needed.
+HARNESS_FILES=$(python3 .claude/scripts/parse_manifest.py harness_framework)
+for file in $HARNESS_FILES; do
+    if [ -f "$TEMP_DIR/$file" ]; then
+        mkdir -p "$(dirname "$file")"
+        cp "$TEMP_DIR/$file" "$file"
     fi
 done
 
-info "Harness files updated (decision-log.md preserved)."
+info "Harness files updated (decision-log.md preserved by manifest exclusion)."
 
 # ============================================================
 # Add new canvas templates (never overwrite existing)
@@ -218,11 +210,13 @@ info "Harness files updated (decision-log.md preserved)."
 
 info "Syncing READMEs in preserved directories..."
 
+# Manifest-driven: full README paths from preserved_dir_readmes.
 READMES_SYNCED=0
-for dir in canvas diamonds memory evals evals/dogfood-reports tests; do
-    if [ -f "$TEMP_DIR/.claude/$dir/README.md" ]; then
-        mkdir -p ".claude/$dir"
-        cp "$TEMP_DIR/.claude/$dir/README.md" ".claude/$dir/README.md"
+PRESERVED_READMES=$(python3 .claude/scripts/parse_manifest.py preserved_dir_readmes)
+for readme in $PRESERVED_READMES; do
+    if [ -f "$TEMP_DIR/$readme" ]; then
+        mkdir -p "$(dirname "$readme")"
+        cp "$TEMP_DIR/$readme" "$readme"
         READMES_SYNCED=$((READMES_SYNCED + 1))
     fi
 done
@@ -259,16 +253,21 @@ fi
 # Replace eval scenarios (preserve dogfood reports and results)
 # ============================================================
 
-if [ -d "$TEMP_DIR/.claude/evals/scenarios" ]; then
-    rm -rf .claude/evals/scenarios
-    cp -R "$TEMP_DIR/.claude/evals/scenarios" .claude/evals/scenarios
-    info "Eval scenarios updated."
-fi
+# Manifest-driven: evals_replace lists directories that get full replacement.
+EVALS_REPLACE=$(python3 .claude/scripts/parse_manifest.py evals_replace)
+for path in $EVALS_REPLACE; do
+    path="${path%/}"
+    if [ -d "$TEMP_DIR/$path" ]; then
+        rm -rf "$path"
+        cp -R "$TEMP_DIR/$path" "$path"
+        info "Eval scenarios updated: $path"
+    fi
+done
 
-# Update evals README if it exists upstream
-if [ -f "$TEMP_DIR/.claude/evals/dogfood-reports/README.md" ]; then
-    cp "$TEMP_DIR/.claude/evals/dogfood-reports/README.md" .claude/evals/dogfood-reports/README.md
-fi
+# Note: .claude/evals/dogfood-reports/README.md is now covered by the
+# preserved_dir_readmes manifest-driven loop above. The previous explicit
+# block was removed as redundant during the 2026-05-03 manifest-driven
+# refactor. Adding new preserved-dir READMEs is a manifest edit only.
 
 echo ""
 

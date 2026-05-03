@@ -559,6 +559,86 @@ check_untrusted_content_wrapping() {
     fi
 }
 
+check_upgrade_manifest_driven() {
+    section "Check 16: upgrade.sh is manifest-driven (no hardcoded list drift)"
+
+    # Guards against the recurring drift pattern documented in corrections.md:
+    #   2026-04-28: harness/ list hardcoded in upgrade.sh, drifted from manifest
+    #   2026-05-03: top_level list hardcoded in upgrade.sh, missed AGENTS.md
+    # Same root cause both times — fix-one-list-at-a-time without generalizing.
+    # The manifest-driven rewrite (upgrade.sh refactor 2026-05-03) closed this
+    # by reading framework lists from manifest.yml via parse_manifest.py.
+    # This check ensures the refactor stays intact: upgrade.sh must call
+    # parse_manifest.py for each canonical list AND must not contain
+    # hardcoded loops over the same patterns.
+
+    local upgrade=".claude/scripts/upgrade.sh"
+    if [ ! -f "$upgrade" ]; then
+        warn "upgrade.sh not found; skipping Check 16"
+        return
+    fi
+
+    # Required manifest keys that upgrade.sh must call parse_manifest.py for.
+    # Add a key here when manifest.yml grows a new framework list section.
+    local required_keys=(
+        "top_level"
+        "directories"
+        "single_files"
+        "harness_framework"
+        "preserved_dir_readmes"
+        "evals_replace"
+    )
+
+    local missing=()
+    for key in "${required_keys[@]}"; do
+        if ! grep -qE "parse_manifest\.py $key\b" "$upgrade" 2>/dev/null; then
+            missing+=("$key")
+        fi
+    done
+
+    if [ "${#missing[@]}" -eq "0" ]; then
+        pass "upgrade.sh calls parse_manifest.py for all ${#required_keys[@]} required lists"
+    else
+        fail "upgrade.sh missing parse_manifest.py call for: ${missing[*]}"
+        echo "    See .claude/memory/corrections.md 2026-05-03 'upgrade.sh top_level list missed AGENTS.md'"
+    fi
+
+    # Drift detector: count hardcoded framework directory literals in upgrade.sh.
+    # After the manifest-driven rewrite, these literals should be near-zero
+    # (only references in comments are acceptable). A spike indicates someone
+    # re-introduced a hardcoded loop.
+    local hardcoded_dir_count
+    hardcoded_dir_count=$( { grep -E '\.claude/(engine|skills|hooks|domains|orchestration|schemas|optimization|auto-dogfood)/?[ "$]' "$upgrade" 2>/dev/null \
+        | grep -vE '^\s*#' \
+        | grep -vE 'parse_manifest\.py' \
+        || true; } | wc -l | tr -d ' ')
+
+    if [ "$hardcoded_dir_count" -le "0" ]; then
+        pass "upgrade.sh contains no hardcoded framework-directory literals (drift-free)"
+    elif [ "$hardcoded_dir_count" -le "3" ]; then
+        warn "upgrade.sh contains $hardcoded_dir_count hardcoded framework-directory literal(s) — review for drift candidates"
+    else
+        fail "upgrade.sh contains $hardcoded_dir_count hardcoded framework-directory literals — refactor to manifest-driven"
+        echo "    Use: VAR=\$(python3 .claude/scripts/parse_manifest.py <key>); for x in \$VAR; do ...; done"
+    fi
+
+    # Drift detector for top-level files: same pattern.
+    local hardcoded_top_count
+    hardcoded_top_count=$( { grep -E '\b(CLAUDE\.md|README\.md|AGENTS\.md|CONTRIBUTORS\.md|LICENSE)\b' "$upgrade" 2>/dev/null \
+        | grep -vE '^\s*#' \
+        | grep -vE 'parse_manifest\.py' \
+        | grep -vE '\$TEMP_DIR' \
+        || true; } | wc -l | tr -d ' ')
+
+    if [ "$hardcoded_top_count" -le "0" ]; then
+        pass "upgrade.sh contains no hardcoded top-level filename literals"
+    elif [ "$hardcoded_top_count" -le "2" ]; then
+        warn "upgrade.sh contains $hardcoded_top_count hardcoded top-level filename literal(s) — review"
+    else
+        fail "upgrade.sh contains $hardcoded_top_count hardcoded top-level filename literals — refactor to manifest-driven"
+    fi
+}
+
 # ============================================================
 # RUN ALL CHECKS
 # ============================================================
@@ -581,6 +661,7 @@ check_gate_count
 check_theory_count
 check_agents_md
 check_untrusted_content_wrapping
+check_upgrade_manifest_driven
 
 # ============================================================
 # SUMMARY
