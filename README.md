@@ -48,7 +48,7 @@ Mycelium is for work where deciding *what to build* is the hard part. Some use c
 - **Pure execution acceleration in a known scope** — the build is decided; just ship it faster. Tools like [Addy Osmani's agent-skills](https://github.com/addyosmani/agent-skills) optimize this. They compose with Mycelium when discovery is missing, but if discovery is settled, use them directly.
 - **Projects where the ceremony feels heavier than the value it adds.** Mycelium scales gates to project size, but if your project genuinely lacks wrong-build risk, the discipline reads as bureaucracy. That's a fit signal — listen to it.
 
-**Today (v0.15.x), Mycelium also defers some adjacent segments**: established teams pre-maturity (the framework's L4-L5 work isn't seasoned for that scale yet), non-Claude-Code agents (partial via [AGENTS.md](AGENTS.md)), and time-constrained <8-hour sprints (sprint-mode in development per the 2026-04-30 process-cliff finding).
+**Today (v0.15.x), Mycelium also defers some adjacent segments**: established teams pre-maturity (the framework's L4-L5 work isn't seasoned for that scale yet) and non-Claude-Code agents (partial via [AGENTS.md](AGENTS.md)). Time-constrained projects ARE supported as of 2026-04-30: `/interview` Phase 0 picks **<8h inline discovery** (skip /interview entirely, weave 3 questions into the first task), **8-48h sprint mode** (Phases 1+2 only, ~15 minutes of questions, parallelized canvas writes), or **48h+ full interview**. The path is selected by your answer to "How much time do you have?"
 
 ## What It Feels Like
 
@@ -64,7 +64,7 @@ You're in control. The agent surfaces what matters, catches you when you drift, 
 
 ## How Mycelium Got Smarter
 
-Mycelium has been dogfooded on three small projects. Each one taught the framework something different — and most of what they taught is in the version you're looking at right now.
+Mycelium has been dogfooded on three small projects AND tested by one outside user under realistic time pressure. Each session taught the framework something different — and most of what they taught is in the version you're looking at right now.
 
 ### tic-tac-toe — *what we learned*
 [huggingface.co/spaces/haabe/tic-tac-toe](https://huggingface.co/spaces/haabe/tic-tac-toe). React + TypeScript + Node.js WebSocket on Hugging Face Spaces, 40 Vitest tests, WCAG 2.1 AA accessible. Zero human-written lines of code. The agent + early Mycelium carried it end-to-end. One durable engineering pattern came out (optimistic UI in client-server real-time apps) and now lives in that project's `corrections.md` so the agent won't ship the same desync bug twice.
@@ -88,7 +88,18 @@ A planned macOS file viewer that **never wrote a line of code**. Killed in L0 Di
 | No mechanism for the framework to learn from its cycles | `cycle-history.yml` + adaptive thresholds + framework-reflexion |
 | No accumulator for dogfood findings | `.claude/evals/dogfood-reports/` directory |
 
-This is what *"Mycelium gets smarter with each project cycle"* actually looks like. Not a promise — receipts. The project that didn't ship contributed more to the framework than the two that did.
+### drew-hoskins-takehome — *what a real outside user under pressure surfaced*
+Drew Hoskins (author *The Product-Minded Engineer*; Staff PM at Temporal) ran a take-home interview against an 8-hour clock, using Mycelium for the first time. The full session (82 prompts, 17 pages) became the most concrete outside-dogfood signal Mycelium has so far. Apr 30 commits [`41d957c`](https://github.com/haabe/mycelium/commit/41d957c) + [`52bb346`](https://github.com/haabe/mycelium/commit/52bb346) absorbed seven framework changes from that one session:
+
+| What the session surfaced | What now exists in Mycelium |
+|---|---|
+| /interview ceremony consumed the whole session before delivery began | `/interview` Phase 0 selects <8h inline / 8-48h sprint / 48h+ full path |
+| Mycelium structure abandoned for 75% of session after onboarding | Lightweight discovery-to-delivery continuation mode (partial fix; full lightweight-gates work still in progress) |
+| Agent over-scoped before learning user's time budget | Constraint-first preflight: ask time budget BEFORE proposing scope |
+| Documentation annotated to pass eval rather than fix the data | "Eval Overfitting" anti-pattern in `anti-patterns.md` |
+| Negative documentation pattern (defining things by what they are NOT) | "Negative Documentation" anti-pattern |
+
+This is what *"Mycelium gets smarter with each project cycle"* actually looks like. Not a promise — receipts. The project that didn't ship contributed more to the framework than the two that did, and one outside user's 8-hour session contributed seven changes that are visible in the version you're reading now.
 
 ## How It Works
 
