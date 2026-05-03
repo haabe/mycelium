@@ -30,3 +30,26 @@ Mycelium has two distinct memory systems. Don't confuse them:
 3. **Journals**: Product and delivery insights are captured continuously, prompted at phase transitions.
 
 Over time, corrections accumulate into a project-specific knowledge base that prevents recurring mistakes. When a correction appears 3+ times, `/feedback-review` suggests graduating it to a guardrail.
+
+## Optional Field: detection_origin
+
+Beyond the standard `Origin` field (whose output the failure was IN — `ai-generated` / `human-written` / `ai-assisted`), corrections may include an optional `Detection_origin` field naming WHO OR WHAT CAUGHT the failure:
+
+| detection_origin | Meaning |
+|---|---|
+| `user` | The human user noticed and surfaced it |
+| `agent_self` | The agent caught its own mistake mid-task |
+| `hook` | A PreToolUse / PostToolUse hook intercepted it |
+| `evaluator` | An eval scenario or gate evaluator detected it |
+| `eval_runner` | `/eval-runner` flagged regression vs baseline |
+| `external_review` | A code review, peer feedback, or user-of-the-product surfaced it |
+
+### Why this distinction matters
+
+`Origin` and `detection_origin` are independent. A 100% `ai-generated` Origin distribution might look like "AI is the only source of failures" — but if `detection_origin` is also 100% `user`, the real signal is "AI generates failures that the user catches." That's a harness-detection gap, NOT a code-quality problem. Adding more context to AI prompts wouldn't help; adding more harness checks would.
+
+Surfaced 2026-05-03 via /corrections-audit (Action 4 origin investigation): the 100% ai-generated Origin in mycelium-roadmap dogfood was an artifact of the solo+AI workflow (every commit Claude-co-authored, user catches everything). Without `detection_origin`, the audit's interpretation defaulted to "improve AI prompt context" — which would have been the wrong intervention.
+
+### Backward compatibility
+
+The field is OPTIONAL. Existing entries without it remain valid. `/corrections-audit` ignores the field when absent and computes the additional distribution when present. Add to new entries going forward; do not retroactively backfill.
