@@ -39,14 +39,22 @@ from pathlib import Path
 
 # Shared parser — see _manifest_lib.py
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _manifest_lib import parse_manifest  # noqa: E402
+from _manifest_lib import parse_manifest
+
+EXPECTED_ARGV_LEN = 2  # script_name + key
 
 
 def main():
-    if len(sys.argv) != 2:
+    if len(sys.argv) != EXPECTED_ARGV_LEN:
         print("Usage: parse_manifest.py <key>", file=sys.stderr)
-        print("Keys: top_level directories single_files harness_framework", file=sys.stderr)
-        print("      preserved_dir_readmes evals_replace metrics_adapters_framework", file=sys.stderr)
+        print(
+            "Keys: top_level directories single_files harness_framework",
+            file=sys.stderr,
+        )
+        print(
+            "      preserved_dir_readmes evals_replace metrics_adapters_framework",
+            file=sys.stderr,
+        )
         print("      project_state", file=sys.stderr)
         sys.exit(1)
 

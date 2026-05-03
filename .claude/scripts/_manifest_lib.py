@@ -30,7 +30,14 @@ SECTION_KEY_MAP = {
 EMPTY_FRAMEWORK = {key: [] for key in SECTION_KEY_MAP.values()}
 
 # Manifest YAML uses 2-space indentation for sub-sections (see manifest.yml).
+INDENT_TOP_LEVEL = 0
 INDENT_SUBSECTION = 2
+
+# List items begin with "- " (hyphen + single space).
+LIST_ITEM_PREFIX = "- "
+# Length of the list-item prefix — used to slice off the "- " before
+# extracting the value.
+LIST_ITEM_PREFIX_LEN = 2
 
 
 def parse_manifest(manifest_path):
@@ -62,7 +69,7 @@ def parse_manifest(manifest_path):
             indent = len(line) - len(stripped)
 
             # Top-level section header (column 0): "framework:"
-            if indent == 0 and stripped.endswith(":"):
+            if indent == INDENT_TOP_LEVEL and stripped.endswith(":"):
                 section = stripped[:-1]
                 subsection = None
                 continue
@@ -73,8 +80,9 @@ def parse_manifest(manifest_path):
                 continue
 
             # List item: "- value  # optional comment"
-            if stripped.startswith("- "):
-                value = stripped[2:].split("#")[0].strip().strip('"').strip("'")
+            if stripped.startswith(LIST_ITEM_PREFIX):
+                raw_value = stripped[LIST_ITEM_PREFIX_LEN:].split("#")[0].strip()
+                value = raw_value.strip('"').strip("'")
                 if not value:
                     continue
                 key = SECTION_KEY_MAP.get((section, subsection))

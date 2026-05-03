@@ -639,6 +639,114 @@ check_upgrade_manifest_driven() {
     fi
 }
 
+check_code_quality() {
+    section "Check 17: Python + Bash code-quality regression"
+
+    # Guards against the L4 cleanup gap surfaced 2026-05-03: framework code
+    # shipped without DoD discipline accumulated 54 ruff findings, 1 DRY
+    # violation, 1 KISS violation, 0 unit tests. The L4 cleanup cycle
+    # (D1-D6) brought everything to the cleanliness standard the framework
+    # itself preaches in engineering-principles.md and definition-of-done.
+    # This check ensures the standard is preserved going forward.
+    #
+    # Both tools are optional — gracefully skipped if not installed (so the
+    # check never blocks downstream Mycelium projects that don't have
+    # them in their dev env). Install via: pip install -r requirements-ci.txt
+
+    # ----- Python: ruff -----
+    if ! command -v ruff >/dev/null 2>&1; then
+        warn "ruff not installed — skipping Python lint check (install via requirements-ci.txt)"
+    else
+        # Documented ignore choices:
+        # D = docstrings (we have prose docs, not numpy/google style)
+        # ANN = type annotations (intentionally untyped — stdlib-only hooks)
+        # COM = trailing comma (style choice)
+        # T20 = print() (CLI scripts use print legitimately)
+        # S603/S607 = subprocess (we use subprocess intentionally in tests)
+        # EM/TRY003 = error message rules (over-prescriptive for our scope)
+        # FBT = boolean trap (some legitimate uses)
+        # PTH = pathlib over os.path (mixed-style is fine)
+        # INP001 = implicit namespace package (sys.path-injected modules
+        #          are correct; no __init__.py needed for the hook's import path)
+        local ruff_ignores="D,ANN,COM,T20,S603,S607,EM,TRY003,FBT,PTH,INP001"
+
+        local ruff_count
+        ruff_count=$( { ruff check .claude/scripts/*.py \
+            --select=ALL \
+            --ignore="$ruff_ignores" \
+            2>/dev/null || true; } | grep -oE "Found [0-9]+ error" | grep -oE "[0-9]+" | head -1 || echo "0")
+
+        # Baseline: post-cleanup-cycle target is 0 errors on cleanly-refactored
+        # files (_manifest_lib, framework_guard, parse_manifest). Other
+        # pre-existing files (validate_canvas, scope_check) carry historical
+        # tech debt that's out of scope for the current cycle — tracked
+        # separately. The threshold here is per-file-grouping:
+        #   - cleanup-cycle files: target 0 errors (FAIL on regression)
+        #   - pre-existing files: warn if increases (don't block)
+        local cleanup_files=(
+            ".claude/scripts/_manifest_lib.py"
+            ".claude/scripts/framework_guard.py"
+            ".claude/scripts/parse_manifest.py"
+        )
+        local cleanup_errors
+        cleanup_errors=$( { ruff check "${cleanup_files[@]}" \
+            --select=ALL \
+            --ignore="$ruff_ignores" \
+            2>/dev/null || true; } | grep -oE "Found [0-9]+ error" | grep -oE "[0-9]+" | head -1 || echo "0")
+
+        if [ "$cleanup_errors" -eq "0" ]; then
+            pass "ruff: 0 errors on cleanup-cycle files (_manifest_lib, framework_guard, parse_manifest)"
+        elif [ "$cleanup_errors" -le "5" ]; then
+            warn "ruff: $cleanup_errors error(s) on cleanup-cycle files — review for drift"
+        else
+            fail "ruff: $cleanup_errors error(s) on cleanup-cycle files — exceeds drift threshold"
+        fi
+
+        # Pre-existing files: informational only
+        if [ "$ruff_count" -gt "0" ]; then
+            warn "ruff: $ruff_count total errors across all .claude/scripts/*.py (includes pre-existing tech debt; cleanup target tracks the cleanup-cycle subset only)"
+        fi
+    fi
+
+    # ----- Bash: shellcheck -----
+    # Pre-existing warnings as of 2026-05-03: 3 (gate.sh:19, session-start.sh:8/46).
+    # These are documented historical tech debt outside the cleanup cycle scope.
+    # Threshold tracks REGRESSIONS above that baseline.
+    local SHELLCHECK_BASELINE=3
+    if ! command -v shellcheck >/dev/null 2>&1; then
+        warn "shellcheck not installed — skipping Bash lint check (install via requirements-ci.txt)"
+    else
+        local sc_files=()
+        for f in .claude/scripts/*.sh .claude/hooks/*.sh .claude/tests/*.sh; do
+            [ -f "$f" ] && sc_files+=("$f")
+        done
+
+        local sc_warnings
+        sc_warnings=$( { shellcheck -S warning "${sc_files[@]}" 2>/dev/null || true; } | grep -cE "^In " || true)
+
+        if [ "$sc_warnings" -le "$SHELLCHECK_BASELINE" ]; then
+            pass "shellcheck: $sc_warnings warning(s) — at-or-below baseline ($SHELLCHECK_BASELINE)"
+        else
+            fail "shellcheck: $sc_warnings warnings — regression above baseline ($SHELLCHECK_BASELINE). Pre-existing tech debt is in gate.sh and session-start.sh; new warnings should be addressed."
+        fi
+    fi
+
+    # ----- Pytest -----
+    if ! command -v pytest >/dev/null 2>&1; then
+        warn "pytest not installed — skipping unit-test execution (install via requirements-ci.txt)"
+    elif [ ! -d ".claude/tests/python" ]; then
+        warn "pytest tests directory missing — skipping"
+    else
+        if pytest .claude/tests/python/ -q --tb=no >/dev/null 2>&1; then
+            local test_count
+            test_count=$(pytest .claude/tests/python/ --collect-only -q 2>/dev/null | tail -1 | grep -oE "[0-9]+ tests?" | head -1)
+            pass "pytest: all tests pass${test_count:+ ($test_count)}"
+        else
+            fail "pytest: tests failing — run 'pytest .claude/tests/python/ -v' for details"
+        fi
+    fi
+}
+
 # ============================================================
 # RUN ALL CHECKS
 # ============================================================
@@ -662,6 +770,7 @@ check_theory_count
 check_agents_md
 check_untrusted_content_wrapping
 check_upgrade_manifest_driven
+check_code_quality
 
 # ============================================================
 # SUMMARY

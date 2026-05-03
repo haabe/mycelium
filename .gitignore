@@ -48,3 +48,10 @@ node_modules/
 linkedin-source.md
 linkedin-*.pdf
 .claude/drafts/
+
+# Python bytecode + pytest cache (generated when tests run)
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+htmlcov/

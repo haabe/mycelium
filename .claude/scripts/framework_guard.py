@@ -33,7 +33,7 @@ from pathlib import Path
 
 # Shared parser — see _manifest_lib.py
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _manifest_lib import parse_manifest  # noqa: E402
+from _manifest_lib import parse_manifest
 
 # ============================================================
 # Module-level constants (compiled once, reused per invocation)
@@ -63,14 +63,17 @@ _SEGMENT_SPLIT = re.compile(r"(?:&&|\|\||;|\|(?!\|))")
 # Write-operation patterns. Each tuple is (regex_for_op_prefix, human_name).
 # These are matched per-segment, then the framework path must follow.
 _WRITE_OP_PATTERNS = [
-    (re.compile(r"\b(cp|mv|install|ln)\s+"),                    "copy/move/install/link"),
-    (re.compile(r">{1,2}(?!&)\s*"),                             "redirect"),
-    (re.compile(r"\btee\s+(-a\s+)?"),                           "tee"),
-    (re.compile(r"\bsed\s+(?:-[^\s]*i[^\s]*|-i)\s+"),           "sed -i"),
-    (re.compile(r"\bopen\s*\(\s*['\"]([^'\"]+)['\"]\s*,\s*['\"][wa]"), "python file write"),
-    (re.compile(r"\brm\s+(-[a-z]+\s+)*"),                       "rm"),
-    (re.compile(r"\btouch\s+"),                                 "touch"),
-    (re.compile(r"\bchmod\s+(\S+\s+)+"),                        "chmod"),
+    (re.compile(r"\b(cp|mv|install|ln)\s+"), "copy/move/install/link"),
+    (re.compile(r">{1,2}(?!&)\s*"), "redirect"),
+    (re.compile(r"\btee\s+(-a\s+)?"), "tee"),
+    (re.compile(r"\bsed\s+(?:-[^\s]*i[^\s]*|-i)\s+"), "sed -i"),
+    (
+        re.compile(r"\bopen\s*\(\s*['\"]([^'\"]+)['\"]\s*,\s*['\"][wa]"),
+        "python file write",
+    ),
+    (re.compile(r"\brm\s+(-[a-z]+\s+)*"), "rm"),
+    (re.compile(r"\btouch\s+"), "touch"),
+    (re.compile(r"\bchmod\s+(\S+\s+)+"), "chmod"),
 ]
 
 # Path-boundary characters that may legitimately precede a framework path
@@ -144,9 +147,7 @@ def _is_command_allowlisted(cmd_norm):
     """
     if _ALLOWLIST_UPGRADE.match(cmd_norm):
         return True
-    if _ALLOWLIST_GIT.match(cmd_norm):
-        return True
-    return False
+    return bool(_ALLOWLIST_GIT.match(cmd_norm))
 
 
 def _path_appears_at_boundary(seg, fp):
@@ -334,8 +335,11 @@ def _load_input():
         return None
 
 
+EXPECTED_ARGV_LEN = 3  # script_name + state_file + project_dir
+
+
 def main():
-    if len(sys.argv) != 3:
+    if len(sys.argv) != EXPECTED_ARGV_LEN:
         sys.exit(0)  # misconfigured → fail open
 
     state_file = sys.argv[1]

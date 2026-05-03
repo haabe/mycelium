@@ -15,3 +15,11 @@
 PyYAML>=6.0
 jsonschema>=4.18.0
 referencing>=0.30.0
+
+# Code-quality + test deps (used by .claude/tests/validate-template.sh Check 17
+# and .claude/tests/python/ unit tests). Same rationale as PyYAML — CI-only,
+# never required at hook runtime.
+pytest>=7.0
+pytest-cov>=4.0
+ruff>=0.1.0
+shellcheck-py>=0.9.0
