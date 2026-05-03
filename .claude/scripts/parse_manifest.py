@@ -27,9 +27,12 @@ Why this exists: corrections.md 2026-04-28 (harness/ hardcoded drift) +
 recurring. Shifts upgrade.sh from hardcoded lists to manifest-driven —
 single source of truth, no drift possible.
 
-Parser is intentionally minimal (stdlib only, no PyYAML) and matches the
-specific structure of manifest.yml. If manifest grows new sub-structures,
-this scanner needs updating (and a corresponding test).
+Parser is shared with framework_guard.py via _manifest_lib.py (D2 of the
+2026-05-03 cleanup cycle — closes the duplicated-parse_manifest DRY
+violation logged at end-of-day audit). Parser is intentionally minimal
+(stdlib only, no PyYAML) and matches the specific structure of
+manifest.yml. If manifest grows new sub-structures, _manifest_lib needs
+updating (and a corresponding test).
 """
 import sys
 from pathlib import Path

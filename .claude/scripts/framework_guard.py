@@ -176,40 +176,10 @@ def is_framework_write_in_command(cmd, project_dir, framework):
     if re.match(rf"^\s*git\s+({'|'.join(git_safe_subcmds)})\b", cmd_norm):
         return False, None, None
 
-    # ALLOWLIST 3: pure read operations (no write semantics in the command)
-    # Note: this is per-segment in the fallback below; the simple-prefix match
-    # here only catches single-statement read commands.
-    read_only_prefixes = (
-        "cat",
-        "head",
-        "tail",
-        "less",
-        "more",
-        "grep",
-        "find",
-        "ls",
-        "wc",
-        "diff",
-        "stat",
-        "file",
-        "echo",  # echo without redirect is read-only
-        "printf",
-        "python3",  # arbitrary python — analyzed below for write redirects
-        "node",
-        "npm",
-        "npx",
-    )
-    # Only treat as read-only if there's no write-redirect anywhere in the command
-    has_write_redirect = bool(re.search(r"(?<![<>])>{1,2}(?!&)", cmd_norm))
-    has_pipe_to_writer = bool(re.search(r"\|\s*(tee|sponge|dd)\b", cmd_norm))
-    if (
-        not has_write_redirect
-        and not has_pipe_to_writer
-        and any(re.match(rf"^\s*{prefix}\b", cmd_norm) for prefix in read_only_prefixes)
-    ):
-        # Still need to scan for embedded write commands inside compound statements
-        # (handled by the per-segment scan below)
-        pass
+    # Read-only prefix detection lives in the per-segment scan below — a
+    # standalone allowlist here is unsafe (compound statements like
+    # `cat foo && echo bar > framework_path` have a read prefix but write
+    # downstream). The per-segment scan catches both correctly.
 
     # Build framework path patterns from manifest
     framework_paths = set()

@@ -35,7 +35,7 @@ cd "$REPO_ROOT"
 
 VERSION="${1:-main}"
 TEMP_DIR=$(mktemp -d)
-trap "rm -rf $TEMP_DIR" EXIT
+trap 'rm -rf "$TEMP_DIR"' EXIT
 
 # Colors (if terminal supports them)
 RED='\033[0;31m'
