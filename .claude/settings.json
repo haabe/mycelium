@@ -61,6 +61,17 @@
             "statusMessage": "Mycelium framework-guard (dogfood-mode only)"
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/framework-guard.sh",
+            "timeout": 5,
+            "statusMessage": "Mycelium framework-guard (Bash — dogfood-mode only)"
+          }
+        ]
       }
     ],
     "PostToolUse": [
