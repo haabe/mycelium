@@ -143,7 +143,15 @@ project_types:
     optional: []
 
   team_enterprise:
-    description: "Larger team or enterprise product. Regulatory requirements, compliance needs, multiple stakeholders."
+    # CURRENTLY LATENT (as of v0.15.x): The framework supports this tier
+    # structurally, but Mycelium's L4-L5 work is not yet seasoned for enterprise
+    # scale. purpose.yml#who.secondary names "established product teams" as a
+    # secondary segment that "needs Mycelium to mature before serving well."
+    # This tier exists so /interview can classify enterprise-shaped projects
+    # without breaking, but the framework does not yet claim enterprise readiness.
+    # Promote to first-class once cycle history accumulates evidence from the
+    # tier (target: ≥3 enterprise project_type cycles with retrospectives).
+    description: "Larger team or enterprise product. Regulatory requirements, compliance needs, multiple stakeholders. (Currently latent — see comment above; primary segment is solo_product / team_startup per purpose.yml.)"
     required:
       - purpose.yml
       - north-star.yml
@@ -527,3 +535,67 @@ metric_sources:
     snapshot_warn_days: 7      # /canvas-health flags snapshots >7d old as warning
     snapshot_critical_days: 30 # >30d old is critical for L0/L1/L2/L5
     adapter_regenerate_days: 180  # adapter's last_known_working >180d triggers regeneration nudge
+
+# ============================================================
+# Action flags in evidence entries
+# ============================================================
+# Canvas evidence entries often contain forward-looking observations
+# ("candidate refresh", "worth considering", "next step", "should examine").
+# These are signals, not commitments. A fresh agent (cross-session or
+# non-Claude-Code) cannot tell whether a flagged item is open for action,
+# on hold for evidence, or reserved for someone else.
+#
+# Convention: any forward-looking action statement in a canvas entry MUST
+# end with an explicit status marker. Three states:
+#
+#   — OPEN. Any agent may action; evidence is sufficient.
+#     Example: "Candidate positioning refresh — OPEN."
+#
+#   — ON HOLD (<reason>). Do NOT action; waiting for the named condition.
+#     Example: "Candidate positioning refresh — ON HOLD (pending Juniors.dev
+#     May 7 usage validation)."
+#
+#   — RESERVED (<who/when>). Do NOT action; assigned.
+#     Example: "Candidate positioning refresh — RESERVED for /diamond-progress
+#     at next L0 pivot review."
+#
+# Default for unmarked entries: pre-existing entries without explicit markers
+# are treated as ON HOLD by convention. An agent that wants to action an
+# unmarked flagged item must first either (a) get explicit user authorization,
+# or (b) add the appropriate marker after determining state from context.
+#
+# Detection: prose containing any of these triggers the marker requirement —
+#   candidate, worth considering, worth examining, should consider,
+#   should examine, next step, future, refresh, revisit, reconsider
+#
+# Why this convention exists:
+# Surfaced 2026-05-03 by blind-subagent assumption test on AGENTS.md design.
+# A non-Claude-Code subagent could not distinguish flagged-but-pending items
+# from open items and asked rather than guessing — exactly the failure mode
+# this convention prevents. Preserves cross-session collaboration etiquette
+# without a schema change. Compatible with existing entries — markers are
+# added going forward; unmarked legacy entries default to ON HOLD.
+
+action_flags:
+  markers:
+    - status: OPEN
+      meaning: "Any agent may action; evidence is sufficient."
+      requires_parenthetical: false
+    - status: ON HOLD
+      meaning: "Do not action; waiting for the named condition."
+      requires_parenthetical: true   # the reason
+    - status: RESERVED
+      meaning: "Do not action; assigned to a named session/person/trigger."
+      requires_parenthetical: true   # who/when
+  default_for_unmarked: ON HOLD
+  detection_keywords:
+    - candidate
+    - worth considering
+    - worth examining
+    - should consider
+    - should examine
+    - next step
+    - future
+    - refresh
+    - revisit
+    - reconsider

@@ -40,6 +40,16 @@ npx degit haabe/mycelium my-project && cd my-project
 
 Works for **software, online courses, AI tools, and services**. One command to start. The agent guides you from there.
 
+## Who It's Not For
+
+Mycelium is for work where deciding *what to build* is the hard part. Some use cases are better served elsewhere — saying so up front saves frustration:
+
+- **Triage-lane work** — stale-ticket sweepers, board monitors, fixed-template brief generators. The decision of *what* to do is already made; you need execution velocity, not discovery. Paddo's [boring agents](https://paddo.dev/blog/boring-agents-ship/) patterns fit these directly.
+- **Pure execution acceleration in a known scope** — the build is decided; just ship it faster. Tools like [Addy Osmani's agent-skills](https://github.com/addyosmani/agent-skills) optimize this. They compose with Mycelium when discovery is missing, but if discovery is settled, use them directly.
+- **Projects where the ceremony feels heavier than the value it adds.** Mycelium scales gates to project size, but if your project genuinely lacks wrong-build risk, the discipline reads as bureaucracy. That's a fit signal — listen to it.
+
+**Today (v0.15.x), Mycelium also defers some adjacent segments**: established teams pre-maturity (the framework's L4-L5 work isn't seasoned for that scale yet), non-Claude-Code agents (partial via [AGENTS.md](AGENTS.md)), and time-constrained <8-hour sprints (sprint-mode in development per the 2026-04-30 process-cliff finding).
+
 ## What It Feels Like
 
 Mycelium isn't 44 skills dumped on you at once. It's three modes that show up at the right time:

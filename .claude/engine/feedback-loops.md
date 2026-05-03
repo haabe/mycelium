@@ -184,6 +184,31 @@ Every metric in Mycelium must have a **counter-metric** to prevent gaming:
 | North Star | Loop 3 | **Enhanced**: add trend fields + Goodhart warning |
 | /launch-tier | Loop 3 | **Enhanced**: L5->L2 feedback prompt |
 
+## Vendor-Shipped Agent Loops on the Same Axis
+
+As of 2026-04, vendor-shipped agent loops have appeared (OpenAI Codex CLI 0.128.0 ships `/goal` — user sets a goal; agent loops with two exit conditions: goal-evaluation success OR token-budget exhaustion; implementation = injected continuation/budget-limit prompts at end-of-turn). All such loops sit on the same conceptual axis as Mycelium's gates: *evaluate-and-continue with success-criterion + resource-budget exits.* What differs is **scope** and **criterion richness**.
+
+| Scope | Codex `/goal` | Mycelium |
+|---|---|---|
+| Per-turn | — | Hooks (PostToolUse, SessionStart, Stop) |
+| Per-skill-invocation | — | `/reflexion` (max 3 iterations) |
+| Per-task | `/goal` (continuation prompt + budget_limit prompt) | — |
+| Per-phase-transition | — | Theory gates (evidence, four risks, JTBD, cynefin, bias, security, privacy, BVSSH, etc.) |
+| Per-diamond completion | — | Definition of Done |
+
+Two structural differences matter:
+
+1. **Criterion richness.** Codex `/goal` evaluates one criterion (goal text vs current state). Mycelium gates evaluate multi-criterion stacks per phase, plus DoD's executable checklist at L4 completion.
+2. **Exit semantics.** Codex `/goal` exits the loop ("done"). Mycelium gates *progress* the loop to the next phase — there is no "done" until DoD is satisfied; diamonds can also *regress* on bad evidence (Codex `/goal` has no regression mechanism).
+
+**Why this framing matters.** The loop shape (evaluate-then-continue with success + budget exits) is now table stakes — vendors will continue to ship single-loop variants. Mycelium's differentiation is NOT "we have a self-evaluating loop." It is the **multi-criterion theory-gate stack** at multiple scopes plus the **regression mechanism**. When explaining Mycelium against vendor-shipped loops, anchor on these two.
+
+**What Mycelium borrowed from Codex's `/goal` implementation** (logged 2026-05-03 — see `harness/security-trust.md#prompt-injection-defense-for-user-supplied-content` and `skills/definition-of-done/SKILL.md#completion-audit-anti-bias-clauses`):
+- Untrusted-content wrapping convention for user-supplied text in skill prompts
+- Anti-bias clauses in the DoD completion audit (don't trust intent / partial progress / elapsed effort / plausible-final-answer)
+
+The third pattern (per-task token-budget telemetry surfaced into the prompt) was deliberately not borrowed — Mycelium's failure modes around constraints are process-cliff shaped, not budget-blow shaped, so the cost/benefit doesn't justify infrastructure for an unproven failure (see opportunities.yml#opp-001 for the discipline applied to a similar deferred case).
+
 ## For the Agent
 
 When reporting feedback loop status (via `/feedback-review`), always:

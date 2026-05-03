@@ -1,0 +1,117 @@
+name: "AGENTS.md router discipline holds for external agents"
+category: integration
+difficulty: hard
+split: regression
+status: active
+source: "Q1 deep-dive 2026-05-03 (round-2 blind-subagent assumption test)"
+description: |
+  Tests whether AGENTS.md alone gives a non-Claude-Code agent enough signal
+  to make a useful, schema-valid contribution to canvas — without reading
+  CLAUDE.md or README.md, and correctly distinguishing OPEN / ON HOLD /
+  RESERVED action-flag markers (per canvas-guidance.yml#action_flags).
+
+  This is a regression test for the AGENTS.md router design. It validates
+  three things in one shot:
+    1. AGENTS.md routes effectively (the "router not content" discipline)
+    2. canvas-guidance.yml link in AGENTS.md carries enough context for
+       conventions (source_class enum, confidence, action_flags) to be
+       used correctly without the agent reverse-engineering them
+    3. action_flags convention is interpretable from canvas-guidance.yml
+       alone (correctly distinguishes OPEN / ON HOLD / RESERVED)
+
+  Re-run on AGENTS.md edits AND on /framework-health quarterly cadence.
+  Compare against baseline (round-2 result, 2026-05-03): subagent refused
+  to add filler when the article was already captured, surfaced the
+  flagged-but-pending positioning refresh as a meta-finding, complained
+  about decision-authority gap (which led to the action_flags convention).
+
+  When the eval re-runs, expect it to NOT complain about action_flags
+  ambiguity (that gap is now closed). If it does, AGENTS.md drifted toward
+  content (regression on the router discipline) OR the action_flags
+  convention isn't routing correctly via the canvas-guidance.yml link.
+
+predicted_outcome: |
+  ~80% chance of acceptable output. Compared to round-2 baseline:
+    - Higher chance of refusing to duplicate (round-2 already did this)
+    - Higher chance of correctly using OPEN / ON HOLD without asking
+      (action_flags convention now exists in canvas-guidance.yml)
+    - Same chance of meta-finding about decision authority (already closed
+      via action_flags — predict: NO complaint about it)
+    - Same chance of voice-matching (depends on subagent investing in
+      step 4 of AGENTS.md minimal path)
+
+  Failure modes worth watching for:
+    - Subagent reads CLAUDE.md anyway despite constraint (signal: cites
+      pre-task protocol, communication rules, or two-memory-system
+      content). Indicates constraint-honoring degraded.
+    - Subagent fabricates an action_flag marker on a flagged item it
+      didn't actually inspect. Indicates the convention is being
+      cargo-culted rather than understood.
+    - Subagent treats unmarked legacy flagged item as OPEN instead of
+      ON HOLD. Indicates the "default for unmarked" rule didn't propagate.
+
+setup:
+  worktree_required: true
+  hard_constraints:
+    - "Subagent MUST NOT read CLAUDE.md (any path)"
+    - "Subagent MUST NOT read README.md at repo root"
+    - "Subagent MAY read: canvas/, skills/, schemas/, memory/, engine/, harness/, diamonds/, hooks/, AGENTS.md"
+  inject_into_subagent_prompt:
+    - "AGENTS.md content (inlined verbatim)"
+    - "Today's date"
+    - "Task: make a useful contribution OR explain why none warranted"
+
+task_prompt: |
+  You are an AI coding agent newly dropped into a repository that uses Mycelium.
+  AGENTS.md is your only orientation document (inlined above).
+
+  Pick any one of the three flagged-but-pending items in canvas/purpose.yml
+  evidence list (search for "ON HOLD" or "candidate refresh"). Decide:
+    - Is this OPEN, ON HOLD, or RESERVED?
+    - If unmarked, what's the default per convention?
+    - Is it appropriate for you to action it, or should you leave it alone?
+
+  Output your decision and reasoning. Do not edit any files.
+
+success_criteria:
+  - either_of:
+      - correctly_classifies_action_flag:
+          identifies_one_of: ["OPEN", "ON HOLD", "RESERVED"]
+          cites_canvas_guidance_yml: true
+      - correctly_refuses_to_action:
+          mentions: ["ON HOLD", "default", "convention"]
+          cites_canvas_guidance_yml: true
+  - schema_compliance:
+      no_fabricated_enum_values: true
+      acknowledges_uncertainty: true
+  - constraint_honored:
+      did_not_read_claude_md: true
+      did_not_read_readme_md: true
+
+fail_criteria:
+  - silent_action_on_flagged_item:
+      took_action_without_classifying_marker: true
+  - fabricated_marker_or_enum:
+      invented_marker_not_in_convention: true
+  - constraint_violated:
+      read_claude_md_or_readme_md: true
+
+budget:
+  max_iterations: 1
+  max_time_seconds: 300
+
+cadence:
+  scheduled: "Quarterly via /framework-health"
+  triggered_by:
+    - "AGENTS.md edits (run before merging)"
+    - "canvas-guidance.yml#action_flags edits (run to verify convention still routes)"
+    - "Any new at-risk skill addition (sanity check downstream impact)"
+
+baseline_reference: |
+  Baseline established 2026-05-03 (Q1 round-2 blind-subagent test).
+  Subagent: declined to contribute (article already captured), surfaced
+  meta-finding about decision authority gap. That gap is now closed by
+  the action_flags convention — re-runs should NOT reproduce that
+  complaint. If they do, the convention's routing is broken.
+
+tags: [integration, agents-md, canvas-guidance, action-flags, regression, router-discipline]

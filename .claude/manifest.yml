@@ -8,6 +8,7 @@ framework:
   top_level:
     - CLAUDE.md
     - README.md
+    - AGENTS.md
     - CONTRIBUTORS.md
     - LICENSE
     - requirements-ci.txt

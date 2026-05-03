@@ -430,6 +430,135 @@ check_theory_count() {
     fi
 }
 
+check_agents_md() {
+    section "Check 14: AGENTS.md router discipline"
+
+    if [ ! -f AGENTS.md ]; then
+        fail "AGENTS.md not found at repo root"
+        return
+    fi
+    pass "AGENTS.md exists at repo root"
+
+    # Required sections (router structure)
+    if grep -q "^## What's available" AGENTS.md; then
+        pass "AGENTS.md contains 'What's available' surface table"
+    else
+        fail "AGENTS.md missing required '## What's available' section"
+    fi
+
+    if grep -q "^## Minimal path" AGENTS.md; then
+        pass "AGENTS.md contains 'Minimal path' section"
+    else
+        fail "AGENTS.md missing required '## Minimal path' section"
+    fi
+
+    # Router-not-content discipline: AGENTS.md must NOT contain rule statements.
+    # The boundary: rules ("MUST", "always do X", "never do Y") belong in
+    # CLAUDE.md / harness/ / engine/, not AGENTS.md. AGENTS.md only routes.
+    # Allow these strings inside code/markdown table cells (they may appear in
+    # quoted file paths or capability descriptions); only flag them as bare
+    # imperatives at the start of a line.
+    local rule_lines
+    rule_lines=$( { grep -E '^[^|`]*\b(MUST|must always|never)\b' AGENTS.md 2>/dev/null || true; } | wc -l | tr -d ' ')
+    if [ "$rule_lines" -eq "0" ]; then
+        pass "AGENTS.md contains no bare rule statements (router discipline held)"
+    else
+        warn "AGENTS.md contains $rule_lines line(s) with rule keywords — verify router-not-content"
+    fi
+
+    # Length discipline: keep AGENTS.md compact (router only). Soft cap 80.
+    local line_count
+    line_count=$(wc -l < AGENTS.md | tr -d ' ')
+    if [ "$line_count" -le 80 ]; then
+        pass "AGENTS.md within length cap ($line_count / 80 lines)"
+    else
+        warn "AGENTS.md exceeds 80-line soft cap ($line_count lines) — likely accumulating content"
+    fi
+}
+
+check_untrusted_content_wrapping() {
+    section "Check 15: Untrusted-content wrapping in skills handling user input"
+
+    # Two-part detector for the prompt-injection-defense convention
+    # (.claude/harness/security-trust.md#prompt-injection-defense-for-user-supplied-content).
+    #
+    # Part A: curated list of skills KNOWN to receive user-supplied content
+    #         and feed it into model context. Each MUST acknowledge the
+    #         wrapping convention. Tier: NUDGE-WARN (rollout in progress).
+    # Part B: heuristic detector for NEW skills outside the curated list that
+    #         show strong user-content-handling signals — prompts a review-
+    #         and-add-to-list decision rather than an automatic warning.
+    #
+    # Why curated, not pure heuristic: keyword-heuristic detection produced 21
+    # false positives in the original audit (workflow skills that mention
+    # "interview" or "purpose.yml" without actually interpolating user content
+    # into model prompts). Curated list is honest about what's actually at risk.
+
+    # Part A: curated at-risk skills (per audit 2026-05-03, Q3 deep dive)
+    local at_risk_skills=(
+        "interview"
+        "user-interview"
+        "mocked-persona-interview"
+        "handoff"
+        "log-evidence"
+        "ost-builder"
+        "user-needs-map"
+        "jtbd-map"
+        "threat-model"
+        "security-review"
+        "assumption-test"
+    )
+
+    local wrapping_pattern='untrusted_user_content|untrusted-content|prompt-injection-defense|security-trust\.md#prompt-injection'
+    local missing=()
+
+    for skill in "${at_risk_skills[@]}"; do
+        local f=".claude/skills/${skill}/SKILL.md"
+        if [ ! -f "$f" ]; then
+            warn "Curated at-risk skill missing: $skill"
+            continue
+        fi
+        if ! grep -qE "$wrapping_pattern" "$f" 2>/dev/null; then
+            missing+=("$skill")
+        fi
+    done
+
+    if [ "${#missing[@]}" -eq "0" ]; then
+        pass "All ${#at_risk_skills[@]} curated at-risk skills acknowledge the wrapping convention"
+    else
+        warn "${#missing[@]} of ${#at_risk_skills[@]} at-risk skills lack wrapping acknowledgment:"
+        for skill in "${missing[@]}"; do
+            echo "    - $skill"
+        done
+        echo "    See .claude/harness/security-trust.md#prompt-injection-defense-for-user-supplied-content"
+    fi
+
+    # Part B: secondary heuristic — new skills outside the curated list that
+    # show strong user-content-handling signals (interactive collection patterns)
+    local strong_signal='ask the user|ask user.{0,5}:|conduct.{0,15}interview|record.{0,10}answer|raw.{0,10}transcript|user[- ]supplied|user[- ]provided'
+    local at_risk_lookup=" ${at_risk_skills[*]} "
+
+    local candidates=()
+    while IFS= read -r f; do
+        local skill
+        skill=$(basename "$(dirname "$f")")
+        # Skip skills already on the curated list
+        if [[ "$at_risk_lookup" == *" $skill "* ]]; then
+            continue
+        fi
+        if grep -qiE "$strong_signal" "$f" 2>/dev/null; then
+            candidates+=("$skill")
+        fi
+    done < <(find .claude/skills -name "SKILL.md" -type f 2>/dev/null)
+
+    if [ "${#candidates[@]}" -gt "0" ]; then
+        warn "${#candidates[@]} new skill(s) show strong user-content-handling signal — review and add to curated list if at-risk:"
+        for skill in "${candidates[@]}"; do
+            echo "    - $skill"
+        done
+    fi
+}
+
 # ============================================================
 # RUN ALL CHECKS
 # ============================================================
@@ -450,6 +579,8 @@ check_version_consistency
 check_antipattern_count
 check_gate_count
 check_theory_count
+check_agents_md
+check_untrusted_content_wrapping
 
 # ============================================================
 # SUMMARY
