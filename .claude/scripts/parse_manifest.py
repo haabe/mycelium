@@ -37,65 +37,9 @@ updating (and a corresponding test).
 import sys
 from pathlib import Path
 
-
-def parse_manifest(manifest_path):
-    framework = {
-        "top_level": [],
-        "directories": [],
-        "single_files": [],
-        "harness_framework": [],
-        "preserved_dir_readmes": [],
-        "evals_replace": [],
-        "metrics_adapters_framework": [],
-        "project_state": [],
-    }
-
-    if not manifest_path.exists():
-        return framework
-
-    section = None
-    subsection = None
-    with open(manifest_path) as f:
-        for raw_line in f:
-            line = raw_line.rstrip("\n")
-            stripped = line.lstrip()
-            if not stripped or stripped.startswith("#"):
-                continue
-
-            indent = len(line) - len(stripped)
-
-            # Top-level section: e.g., "framework:" at column 0
-            if indent == 0 and stripped.endswith(":"):
-                section = stripped[:-1]
-                subsection = None
-                continue
-
-            # Sub-section: e.g., "  top_level:" at column 2
-            if indent == 2 and stripped.endswith(":"):
-                subsection = stripped[:-1]
-                continue
-
-            # List item
-            if stripped.startswith("- "):
-                value = stripped[2:].split("#")[0].strip().strip('"').strip("'")
-                if not value:
-                    continue
-
-                if section == "framework":
-                    if subsection in ("top_level", "directories", "single_files"):
-                        framework[subsection].append(value)
-                elif section == "harness_framework":
-                    framework["harness_framework"].append(value)
-                elif section == "preserved_dir_readmes":
-                    framework["preserved_dir_readmes"].append(value)
-                elif section == "evals" and subsection == "replace":
-                    framework["evals_replace"].append(value)
-                elif section == "metrics_adapters" and subsection == "framework":
-                    framework["metrics_adapters_framework"].append(value)
-                elif section == "project_state":
-                    framework["project_state"].append(value)
-
-    return framework
+# Shared parser — see _manifest_lib.py
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _manifest_lib import parse_manifest  # noqa: E402
 
 
 def main():
