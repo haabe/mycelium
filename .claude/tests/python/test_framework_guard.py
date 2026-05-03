@@ -326,6 +326,23 @@ class TestInternalHelpers:
         assert guard._is_command_allowlisted("git rm --cached file.txt")
         assert guard._is_command_allowlisted("git mv old.txt new.txt")
 
+    def test_is_command_allowlisted_git_with_global_opts(self, scripts_path):
+        """git -C /path / git --no-pager / git -c key=val should match too."""
+        guard = _import_guard(scripts_path)
+        assert guard._is_command_allowlisted("git -C /tmp/repo rm --cached foo")
+        assert guard._is_command_allowlisted("git -c user.name=foo commit -m x")
+        assert guard._is_command_allowlisted("git --no-pager log")
+        assert guard._is_command_allowlisted("git --git-dir=/tmp/x.git status")
+
+    def test_is_segment_allowlisted_per_segment(self, scripts_path):
+        """Per-segment allowlist: compound commands check each segment separately."""
+        guard = _import_guard(scripts_path)
+        # The whole command starts with `cd` (not allowlisted), but the second
+        # segment is `git rm` (allowlisted) — _is_segment_allowlisted returns
+        # True for the git segment when called per-segment by the scanner.
+        assert guard._is_segment_allowlisted("git rm --cached .claude/skills/foo")
+        assert not guard._is_segment_allowlisted("cd /tmp/somewhere")
+
     def test_is_command_not_allowlisted_random(self, scripts_path):
         guard = _import_guard(scripts_path)
         assert not guard._is_command_allowlisted("rm -rf /")
@@ -341,6 +358,41 @@ class TestInternalHelpers:
             project_dir, framework,
         )
         assert matched
+
+    def test_compound_with_allowlisted_git_segment_passes(self, project_dir, manifest_path, scripts_path):
+        """REGRESSION: `cd /path && git rm framework_file` was previously denied
+        because the whole-command allowlist didn't match (started with `cd`).
+        The per-segment allowlist fix makes the git rm segment recognized as
+        safe even in compound commands. Closes follow-up #2 from the L4
+        cleanup cycle (cycle-001).
+        """
+        guard = _import_guard(scripts_path)
+        framework = guard.parse_manifest(manifest_path)
+        matched, _, _ = guard.is_framework_write_in_command(
+            "cd /tmp/somewhere && git rm --cached .claude/skills/foo/SKILL.md",
+            project_dir, framework,
+        )
+        assert not matched, "git rm in compound command should be allowlisted per-segment"
+
+    def test_compound_with_allowlisted_upgrade_segment_passes(self, project_dir, manifest_path, scripts_path):
+        """Compound that includes `bash .claude/scripts/upgrade.sh` should pass."""
+        guard = _import_guard(scripts_path)
+        framework = guard.parse_manifest(manifest_path)
+        matched, _, _ = guard.is_framework_write_in_command(
+            "cd /tmp && bash .claude/scripts/upgrade.sh && echo done",
+            project_dir, framework,
+        )
+        assert not matched
+
+    def test_compound_unsafe_segment_still_caught(self, project_dir, manifest_path, scripts_path):
+        """Per-segment allowlist must NOT mask a real unsafe write in another segment."""
+        guard = _import_guard(scripts_path)
+        framework = guard.parse_manifest(manifest_path)
+        matched, _, _ = guard.is_framework_write_in_command(
+            "git status && echo bar > .claude/manifest.yml",
+            project_dir, framework,
+        )
+        assert matched, "Unsafe write segment must still be caught even when sibling segments are safe"
 
     def test_load_state_returns_none_for_missing(self, project_dir, scripts_path):
         guard = _import_guard(scripts_path)

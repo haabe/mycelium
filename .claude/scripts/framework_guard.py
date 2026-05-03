@@ -53,8 +53,24 @@ _GIT_SAFE_SUBCMDS = (
     "rm", "mv",
 )
 
+# Subset of git "global options" (https://git-scm.com/docs/git#_options) that
+# may appear BEFORE the subcommand (e.g., `git -C /path/to/repo rm file`).
+# We strip these to find the actual subcommand for allowlist matching.
+_GIT_GLOBAL_OPTS_REGEX = re.compile(
+    r"^\s*git\s+"
+    r"(?:(?:-C|-c)\s+\S+\s+|"
+    r"--git-dir=\S+\s+|"
+    r"--work-tree=\S+\s+|"
+    r"--no-pager\s+|"
+    r"-P\s+)*"
+)
+
 # Allowlist patterns — compiled once at module load.
 _ALLOWLIST_UPGRADE = re.compile(r"^\s*bash\s+(?:[./\w-]*\.claude/scripts/)?upgrade\.sh")
+# Match `git <subcmd>` OR `git <global-opts> <subcmd>`. The optional
+# global-opts segment (handled by _GIT_GLOBAL_OPTS_REGEX, which we
+# substitute away first) lets us recognize `git -C /path rm foo` as
+# a git rm command.
 _ALLOWLIST_GIT = re.compile(rf"^\s*git\s+({'|'.join(_GIT_SAFE_SUBCMDS)})\b")
 
 # Compound-command separator: && / || / ; / | (single pipe, not ||).
@@ -138,16 +154,31 @@ def _extract_framework_paths(framework):
     return paths
 
 
-def _is_command_allowlisted(cmd_norm):
-    """Return True for commands that are inherently safe — no scan needed.
+def _is_segment_allowlisted(seg):
+    """Return True for shell segments that are inherently safe.
 
-    Allowlist:
+    Allowlist (per-segment, so compound commands like
+    `cd /path && git rm framework_file` correctly allow the git rm segment):
       1. `bash .claude/scripts/upgrade.sh` — the legitimate framework-update mechanism.
-      2. `git <safe-subcommand>` — git state operations (see _GIT_SAFE_SUBCMDS).
+      2. `git [global-opts] <safe-subcommand>` — git state operations
+         (see _GIT_SAFE_SUBCMDS). Strips global options like -C, -c,
+         --git-dir before matching the subcommand.
     """
-    if _ALLOWLIST_UPGRADE.match(cmd_norm):
+    seg_stripped = seg.lstrip()
+    if _ALLOWLIST_UPGRADE.match(seg_stripped):
         return True
-    return bool(_ALLOWLIST_GIT.match(cmd_norm))
+    # Strip any git global options to expose the subcommand
+    normalized = _GIT_GLOBAL_OPTS_REGEX.sub("git ", seg_stripped, count=1)
+    return bool(_ALLOWLIST_GIT.match(normalized))
+
+
+def _is_command_allowlisted(cmd_norm):
+    """Backwards-compatible whole-command allowlist (delegates to per-segment).
+
+    Kept for callers that pass the whole command. Internal callers should
+    prefer _is_segment_allowlisted, which is per-segment-aware.
+    """
+    return _is_segment_allowlisted(cmd_norm)
 
 
 def _path_appears_at_boundary(seg, fp):
@@ -227,15 +258,17 @@ def is_framework_write_in_command(cmd, project_dir, framework):  # noqa: ARG001
     """
     cmd_norm = cmd.strip()
 
-    if _is_command_allowlisted(cmd_norm):
-        return False, None, None
-
     framework_paths = _extract_framework_paths(framework)
     segments = _SEGMENT_SPLIT.split(cmd_norm)
 
     for segment in segments:
         seg = segment.strip()
         if not seg:
+            continue
+        # Per-segment allowlist: a single segment that is a git op or
+        # the upgrade.sh invocation is safe regardless of what other
+        # segments in the compound command look like.
+        if _is_segment_allowlisted(seg):
             continue
         matched, fp, op = _scan_segment_for_write(seg, framework_paths)
         if matched:
