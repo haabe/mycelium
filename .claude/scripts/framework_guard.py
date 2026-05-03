@@ -47,6 +47,10 @@ _GIT_SAFE_SUBCMDS = (
     "status", "diff", "log", "show", "add", "commit", "push", "pull",
     "fetch", "branch", "checkout", "restore", "stash", "reset", "rev-parse",
     "remote", "config", "tag", "merge", "rebase", "blame", "shortlog",
+    # git rm/mv are git-state (index/tree) operations, not agent-driven
+    # framework editing. Surfaced 2026-05-03 D4 follow-up: `git rm --cached`
+    # was incorrectly flagged because of the bare `rm` in the command.
+    "rm", "mv",
 )
 
 # Allowlist patterns — compiled once at module load.

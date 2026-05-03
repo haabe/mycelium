@@ -323,6 +323,8 @@ class TestInternalHelpers:
         assert guard._is_command_allowlisted("git status")
         assert guard._is_command_allowlisted("git checkout main")
         assert guard._is_command_allowlisted("git push origin main")
+        assert guard._is_command_allowlisted("git rm --cached file.txt")
+        assert guard._is_command_allowlisted("git mv old.txt new.txt")
 
     def test_is_command_not_allowlisted_random(self, scripts_path):
         guard = _import_guard(scripts_path)
