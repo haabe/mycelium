@@ -599,3 +599,35 @@ action_flags:
     - refresh
     - revisit
     - reconsider
+
+  # Transition rules — what happens when an ON HOLD or RESERVED condition is met.
+  # Surfaced 2026-05-03 by /framework-health step 2b re-run of the AGENTS.md
+  # router-discipline scenario: the convention defined markers but didn't define
+  # how items LEAVE the held state. Boundary case: when (e.g.) Juniors.dev May 7
+  # validation arrives, who removes the ON HOLD, what does it transition to,
+  # and how is the transition audited?
+  transitions:
+    on_hold_condition_met:
+      who_may_remove: "Any agent that can verify the named condition has been met. The verification must be evidenced (canvas evidence entry, decision-log line, or commit reference) — do not remove based on inference."
+      transitions_to: "OPEN by default. EXCEPTION: if the original ON HOLD reason names a successor (e.g., 'ON HOLD pending X — then run /retrospective'), transition to RESERVED for that successor instead."
+      audit_trail: |
+        Required:
+        1. Append a transition note to the entry's marker, preserving the original
+           reason: "ON HOLD (pending X) → OPEN 2026-MM-DD (X confirmed via evidence Y)".
+        2. Decision-log entry per G-P4 naming the entry, the verifying evidence,
+           and the new state.
+        3. If transitioning to RESERVED, name the successor explicitly.
+    reserved_assignment_complete:
+      who_may_remove: "The agent or person named as the assignee, OR any agent after the assignee has logged completion in decision-log.md."
+      transitions_to: "OPEN if the underlying observation/decision is open to further action; otherwise leave as completed history (no state change — the action it was reserved for is done, the entry becomes a permanent observation)."
+      audit_trail: "Same as on_hold_condition_met. Decision-log entry naming completion is required."
+    timeout_handling:
+      description: "ON HOLD entries with calendar conditions (e.g., 'pending May 7 evidence') that pass their named date without resolution should be flagged, not silently expired."
+      when_date_passes: "Surface as a stale flagged item via /canvas-health (existing staleness machinery applies). Do NOT auto-transition to OPEN — the absence of the awaited evidence is itself a finding worth surfacing to the user."
+      escalation: "After 30 days past a named date with no resolution, suggest re-evaluating whether the condition is still relevant or whether the underlying assumption has changed."
+
+  # Concurrency note: transitions are intentionally idempotent. If two agents
+  # observe the same condition met simultaneously and both attempt to transition
+  # OPEN, the result converges (final state: OPEN, transition note appended
+  # twice but preserved). Last-writer-wins on the marker; both audit-trail
+  # entries survive. This trades a small amount of duplication for safety.
