@@ -1,7 +1,7 @@
 ---
 name: canvas-update
 description: "Update canvas sections with new evidence. Ensures canvas stays current as the single source of truth."
-instruction_budget: 8
+instruction_budget: 12
 ---
 
 # Canvas Update
