@@ -31,6 +31,11 @@ framework:
   single_files:
     - .claude/settings.json
     - .claude/manifest.yml
+  # Canonical location of the framework version string. upgrade.sh reads
+  # via parse_manifest.py to avoid a hardcoded literal that would drift if
+  # the version source ever moves. Single-element list (parser is list-shaped).
+  version_source:
+    - CLAUDE.md
 
 # Harness files — framework templates that coexist with project data.
 # Replace framework files, preserve project data files.

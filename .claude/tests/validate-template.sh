@@ -494,7 +494,10 @@ check_untrusted_content_wrapping() {
     # "interview" or "purpose.yml" without actually interpolating user content
     # into model prompts). Curated list is honest about what's actually at risk.
 
-    # Part A: curated at-risk skills (per audit 2026-05-03, Q3 deep dive)
+    # Part A: curated at-risk skills (per audit 2026-05-03, Q3 deep dive;
+    # extended 2026-05-04 with the three skills the heuristic surfaced after
+    # /xai-check shipped — they all persist user-supplied content into canvas
+    # / state files which feed future agent context).
     local at_risk_skills=(
         "interview"
         "user-interview"
@@ -507,6 +510,9 @@ check_untrusted_content_wrapping() {
         "threat-model"
         "security-review"
         "assumption-test"
+        "canvas-update"
+        "metrics-pull"
+        "metrics-detect"
     )
 
     local wrapping_pattern='untrusted_user_content|untrusted-content|prompt-injection-defense|security-trust\.md#prompt-injection'

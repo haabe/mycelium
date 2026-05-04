@@ -63,6 +63,7 @@ def main():
         "top_level",
         "directories",
         "single_files",
+        "version_source",
         "harness_framework",
         "preserved_dir_readmes",
         "evals_replace",

@@ -39,6 +39,7 @@ instruction_budget: 12
 | Archived/discarded solutions | archived-solutions.yml | v0.12.0 |
 | Leaf lifecycle calibration | cycle-history.yml | v0.12.0 |
 | Adaptive thresholds | thresholds.yml | v0.12.0 |
+| User scenarios (Hoskins) | scenarios.yml | Hoskins |
 
 ## Workflow
 1. Identify which canvas file(s) need updating

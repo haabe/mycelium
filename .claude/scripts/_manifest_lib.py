@@ -20,6 +20,7 @@ SECTION_KEY_MAP = {
     ("framework", "top_level"): "top_level",
     ("framework", "directories"): "directories",
     ("framework", "single_files"): "single_files",
+    ("framework", "version_source"): "version_source",
     ("harness_framework", None): "harness_framework",
     ("preserved_dir_readmes", None): "preserved_dir_readmes",
     ("evals", "replace"): "evals_replace",

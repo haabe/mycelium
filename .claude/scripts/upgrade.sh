@@ -69,8 +69,16 @@ if ! git diff-index --quiet HEAD -- 2>/dev/null; then
     exit 1
 fi
 
-# Record current version
-CURRENT_VERSION=$(grep "Version [0-9]" CLAUDE.md 2>/dev/null | head -1 | sed 's/.*Version //' | sed 's/ .*//' || echo "unknown")
+# Record current version. Source file resolved via parse_manifest.py to avoid
+# a hardcoded literal that would drift if version_source ever moves
+# (corrections.md 2026-04-28 + 2026-05-03 + 2026-05-04 — recurring "validator/
+# script passes on incomplete checks" pattern, graduated as G-V12).
+VERSION_SOURCE=$(python3 .claude/scripts/parse_manifest.py version_source)
+if [ -z "$VERSION_SOURCE" ]; then
+    error "manifest.yml missing framework.version_source — cannot determine current version"
+    exit 1
+fi
+CURRENT_VERSION=$(grep "Version [0-9]" "$VERSION_SOURCE" 2>/dev/null | head -1 | sed 's/.*Version //' | sed 's/ .*//' || echo "unknown")
 info "Current version: $CURRENT_VERSION"
 info "Upgrading to: $VERSION"
 echo ""
@@ -85,7 +93,7 @@ if ! npx degit "haabe/mycelium#$VERSION" "$TEMP_DIR" --force 2>/dev/null; then
     exit 1
 fi
 
-NEW_VERSION=$(grep "Version [0-9]" "$TEMP_DIR/CLAUDE.md" 2>/dev/null | head -1 | sed 's/.*Version //' | sed 's/ .*//' || echo "unknown")
+NEW_VERSION=$(grep "Version [0-9]" "$TEMP_DIR/$VERSION_SOURCE" 2>/dev/null | head -1 | sed 's/.*Version //' | sed 's/ .*//' || echo "unknown")
 info "Upstream version: $NEW_VERSION"
 echo ""
 
