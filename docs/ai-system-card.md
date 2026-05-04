@@ -14,7 +14,7 @@ This is not a marketing document, a technical whitepaper, or a compliance certif
 - **Version:** 0.15.1 (canonical source: `CLAUDE.md` first-line frontmatter; auto-tracked by `parse_manifest.py version_source`)
 - **Last updated:** 2026-05-04
 - **Maintained by:** Håvard Bartnes (haabe). Issues + correspondence: [github.com/haabe/mycelium/issues](https://github.com/haabe/mycelium/issues)
-- **AI Act risk tier:** **limited** (provisional). Mycelium itself is not in EU AI Act Annex III high-risk categories. AI outputs reach end users (developers) in user-affecting ways via the runtime, so Article 50 transparency obligations apply. **`/regulatory-review` has not run on Mycelium-as-product** — this tier is provisional pending that review.
+- **AI Act risk tier:** **Limited** (canonical, assessed 2026-05-04 by `/regulatory-review` — see `canvas/threat-model.yml :: regulatory_classification` for the full assessment). Mycelium is not in any EU AI Act Annex III high-risk category. AI outputs reach end users (developers) in user-affecting ways via the runtime, so Article 50 transparency obligations apply and are satisfied by this card + README + CLAUDE.md framing + runtime-level disclosure.
 
 ## 2. Intended use
 
@@ -101,7 +101,7 @@ The runtime model is therefore **the actual decision-maker**; Mycelium is the ha
 
 - **Open questions.** Whether the discovery-first / theory-grounded approach scales beyond solo and small-team contexts (Juniors.dev pilot is the test); whether the framework's verbosity becomes friction at scale; whether agent runtimes other than Claude Code give comparable behavior (agent-agnostic aspiration; not yet tested).
 - **Recommended next audit.** This card is re-reviewed annually or after any material change to the framework's recommendation logic (new mandatory protocol, major skill set change, runtime portability work).
-- **Last full audit:** 2026-05-04 via `/xai-check` against `svc-mycelium`. Result: 13 of 15 items used (within `limited` tier cap), tier provisional pending `/regulatory-review`.
+- **Last full audit:** 2026-05-04 via `/xai-check` against `svc-mycelium` + `/regulatory-review` (canonical tier confirmed). Result: 13 of 15 items used (within `limited` tier cap); 8 of 10 Stage 2 cells pass after remediation; Stage 4 system card pass; Stage 5 recourse pass; Stage 3 fidelity partial (eval data collection ongoing).
 
 ## 10. Contact and feedback
 

@@ -103,11 +103,19 @@ echo ""
 
 info "Replacing framework files..."
 
+# Read manifest from the UPSTREAM (temp dir) copy, not the local one.
+# The local manifest is about to be replaced, but its contents drove every
+# preceding upgrade — meaning new manifest entries (new top_level files, new
+# directories) wouldn't take effect until a 2nd upgrade run if we read locally.
+# corrections.md 2026-05-04 "manifest-driven script reads stale local manifest"
+# (4th instance of the recurring stale-read pattern). Closed structurally by
+# parse_manifest.py's --manifest= override.
+UPSTREAM_MANIFEST="$TEMP_DIR/.claude/manifest.yml"
+
 # Top-level files (manifest-driven — single source of truth)
-# Reads .claude/manifest.yml#framework.top_level via parse_manifest.py.
 # Closes the recurring hardcoded-list drift pattern documented in
 # corrections.md 2026-04-28 (harness/) and 2026-05-03 (top_level/AGENTS.md).
-TOP_LEVEL=$(python3 .claude/scripts/parse_manifest.py top_level)
+TOP_LEVEL=$(python3 .claude/scripts/parse_manifest.py top_level "--manifest=$UPSTREAM_MANIFEST")
 for file in $TOP_LEVEL; do
     if [ -f "$TEMP_DIR/$file" ]; then
         cp "$TEMP_DIR/$file" "./$file"
@@ -115,9 +123,9 @@ for file in $TOP_LEVEL; do
 done
 
 # Framework directories (manifest-driven, full replace)
-# Reads .claude/manifest.yml#framework.directories. Paths include trailing
-# slash and may live outside .claude/ (e.g., .github/), so iterate full paths.
-DIRECTORIES=$(python3 .claude/scripts/parse_manifest.py directories)
+# Paths include trailing slash and may live outside .claude/ (e.g., .github/,
+# docs/), so iterate full paths.
+DIRECTORIES=$(python3 .claude/scripts/parse_manifest.py directories "--manifest=$UPSTREAM_MANIFEST")
 for dir_path in $DIRECTORIES; do
     # Strip trailing slash for consistent path handling
     dir_path="${dir_path%/}"
@@ -176,7 +184,7 @@ fi
 # Single-file framework files (manifest-driven)
 # Reads .claude/manifest.yml#framework.single_files (settings.json, manifest.yml).
 # settings.local.json is project state (NOT in single_files) — never overwritten.
-SINGLE_FILES=$(python3 .claude/scripts/parse_manifest.py single_files)
+SINGLE_FILES=$(python3 .claude/scripts/parse_manifest.py single_files "--manifest=$UPSTREAM_MANIFEST")
 for file in $SINGLE_FILES; do
     if [ -f "$TEMP_DIR/$file" ]; then
         mkdir -p "$(dirname "$file")"
@@ -195,7 +203,7 @@ info "Updating harness framework files..."
 # Manifest-driven: read the explicit harness_framework list. Anything NOT
 # on this list (e.g., decision-log.md, which is in project_state) is
 # preserved by omission — no separate skip logic needed.
-HARNESS_FILES=$(python3 .claude/scripts/parse_manifest.py harness_framework)
+HARNESS_FILES=$(python3 .claude/scripts/parse_manifest.py harness_framework "--manifest=$UPSTREAM_MANIFEST")
 for file in $HARNESS_FILES; do
     if [ -f "$TEMP_DIR/$file" ]; then
         mkdir -p "$(dirname "$file")"
@@ -220,7 +228,7 @@ info "Syncing READMEs in preserved directories..."
 
 # Manifest-driven: full README paths from preserved_dir_readmes.
 READMES_SYNCED=0
-PRESERVED_READMES=$(python3 .claude/scripts/parse_manifest.py preserved_dir_readmes)
+PRESERVED_READMES=$(python3 .claude/scripts/parse_manifest.py preserved_dir_readmes "--manifest=$UPSTREAM_MANIFEST")
 for readme in $PRESERVED_READMES; do
     if [ -f "$TEMP_DIR/$readme" ]; then
         mkdir -p "$(dirname "$readme")"
@@ -262,7 +270,7 @@ fi
 # ============================================================
 
 # Manifest-driven: evals_replace lists directories that get full replacement.
-EVALS_REPLACE=$(python3 .claude/scripts/parse_manifest.py evals_replace)
+EVALS_REPLACE=$(python3 .claude/scripts/parse_manifest.py evals_replace "--manifest=$UPSTREAM_MANIFEST")
 for path in $EVALS_REPLACE; do
     path="${path%/}"
     if [ -d "$TEMP_DIR/$path" ]; then

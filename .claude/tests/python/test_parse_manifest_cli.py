@@ -83,3 +83,54 @@ def test_main_project_state_resolves(scripts_path, capsys, monkeypatch):
     out = capsys.readouterr().out.strip()
     # project_state contains paths like .claude/memory/, .claude/state/
     assert ".claude/memory/" in out or ".claude/state/" in out
+
+
+def test_manifest_override_reads_from_specified_path(
+    scripts_path, tmp_path, capsys, monkeypatch,
+):
+    """--manifest=<path> reads from the override, not from the script-local manifest.
+
+    Closes the recurring "manifest-driven script reads stale local manifest"
+    pattern (corrections.md 2026-05-04, 4th instance). This test is the G-V12
+    coverage proof: construct a fixture manifest with a known directory entry
+    that the script-local manifest does NOT have, point --manifest= at the
+    fixture, assert the fixture's entry surfaces in stdout.
+    """
+    # Build a fixture manifest with a directory entry the local manifest doesn't have.
+    fixture_manifest = tmp_path / "fixture-manifest.yml"
+    fixture_manifest.write_text(
+        "framework:\n"
+        "  top_level: []\n"
+        "  directories:\n"
+        "    - .claude/totally-fake-fixture-only-dir/\n"
+        "  single_files: []\n",
+    )
+    monkeypatch.setattr(sys, "argv", [
+        "parse_manifest.py",
+        "directories",
+        f"--manifest={fixture_manifest}",
+    ])
+    pm = _import_main(scripts_path)
+    pm.main()
+    out = capsys.readouterr().out.strip()
+    # The fixture's entry must surface, and only the fixture's entry.
+    assert ".claude/totally-fake-fixture-only-dir/" in out
+    # The local manifest's entries must NOT appear (otherwise we read both).
+    assert ".claude/skills/" not in out
+
+
+def test_unknown_extra_arg_rejected(scripts_path, monkeypatch):
+    """Known-bad: 3rd arg that isn't --manifest=<path> → exit 1.
+
+    Preserves the test_cli_too_many_args_exits_1 contract while admitting the
+    legitimate --manifest= override.
+    """
+    monkeypatch.setattr(sys, "argv", [
+        "parse_manifest.py",
+        "directories",
+        "this-is-not-a-flag",
+    ])
+    pm = _import_main(scripts_path)
+    with pytest.raises(SystemExit) as ei:
+        pm.main()
+    assert ei.value.code == 1
