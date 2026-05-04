@@ -62,25 +62,40 @@ Eval coverage: `evals/assumption-tests/2026-05-04-xai-inline-attribution.md`.
 
 ## Schema impact
 
-Asymmetric — only some target canvases have schemas today. Phase 2 must address each path explicitly:
+Asymmetric — only some target canvases have schemas today. Phase 2 status:
 
-- `services.yml` — **no schema exists.** Phase 2.1 must build `services.schema.json` *before* `/xai-check` writes the `xai` block, otherwise the new fields land structurally ungated. (Building the schema is the right move — relying on the absence of schema enforcement extends an existing inconsistency rather than fixing it.)
+- `services.yml` — **schema shipped 2026-05-04** at `.claude/schemas/canvas/services.schema.json` with optional `xai` block per service, all sub-fields validated by enum (tier, verdict). Phase 2.1 ✓.
 - `threat-model.yml` — schema exists. Phase 2.3 must update it to accept the `explanation_attacks` category, or `/threat-model` writes will get rejected post-extension.
 - `go-to-market.yml` — schema exists. Phase 2 launch-tier extension must update it for per-channel `ai_disclosure`.
 
-## Phase 2 prerequisites (don't ship paper rules)
+## Phase 2 prerequisites (status)
 
-Each Phase 2 item depends on a non-XAI prerequisite. Listed here so they don't get dropped at planning-to-build time:
+- **Phase 2.0 (audit prerequisites) — DONE 2026-05-04:**
+  - ✓ `validate_canvas.py` ID-uniqueness check (graduated 3-instance "validator passes on incomplete checks" pattern; G-V12 coverage proof shipped)
+  - ✓ `guardrails-delivery.md` G-V12 (every validator/enforcer ships with a coverage proof)
+  - ✓ `CLAUDE.md` Mandatory Pre-Ship Protocol G-P-pre (graduated user feedback on missing pre-ship gap analysis)
+  - ✓ `manifest.yml` `.claude/templates/` entry
 
-- **Phase 2.1 (`/xai-check`)** requires `services.schema.json` to exist. See "Schema impact" above. The XAI plan's claim of "schema updates ship with /xai-check" is honest only if Phase 2.1 builds the `services.yml` schema, not just adds fields to a non-existent one.
+- **Phase 2.1 (`/xai-check`) — DONE 2026-05-04:**
+  - ✓ `services.schema.json` (permissive, with xai block) + 6 schema tests
+  - ✓ `theory-gates.md` Gate 13 (Explainability — operational gate composing with G-S7/S8)
+  - ✓ `templates/ai-system-card.md` (Mitchell et al. 2019 format)
+  - ✓ `skills/xai-check/SKILL.md` (5-stage tier-scaled)
+  - ✓ 6 eval scenarios (xai-tier-classification, xai-fidelity-detects-unfaithful, xai-recourse-detected, xai-cap-enforced, xai-matrix-detects-missing-recourse-surface, xai-system-card-detects-missing-sections)
 
-- **Phase 2.2 (AI-aware Definition of Done)** requires an XAI gate in `engine/theory-gates.md` that consults `ai_components.detected` and routes to `/xai-check`. Without that gate, AI-aware DoD is a paper rule — `/definition-of-done` is gate-driven, and gates are the enforcement surface. The conditional-overlay list in `jit-tooling/detector.md` is documentation, not enforcement.
+- **Phase 2.2 (AI-aware Definition of Done) — pending:**
+  - `/definition-of-done` consults Gate 13 verdicts when `ai_components.detected: true`
+  - `/preflight` Constraints adds AI confirmation
+  - `/diamond-progress`, `/diamond-assess` integration
+  - `domains/delivery/CLAUDE.md` and `domains/quality/CLAUDE.md` XAI sections
+  - `status-translations.md` Gate 13 entry
 
-- **Phase 2.3 (`/threat-model` XAI extension)** requires the `threat-model.schema.json` update noted under "Schema impact" — same shape as 2.1 but applied to an existing schema rather than a new one.
-
-- **Phase 2.4 (AI System Card template)** requires a manifest entry for `.claude/templates/`. The directory does not exist today; without manifest coverage, future templates won't sync downstream on `upgrade.sh`. Add to `manifest.yml :: directories` (replace wholesale) when 2.4 lands.
-
-- **Validator capability gap (cross-cutting):** `validate_canvas.py` currently does not enforce ID uniqueness within a single canvas file (caught when adding `comp-009` to `landscape.yml` 2026-05-04 — an earlier accidental `comp-007` collision passed validation). This is independent of XAI but should be closed before Phase 2.1, because adding fielded structure (xai blocks per service) increases the surface where ID collisions matter. See corrections.md.
+- **Phase 2.3 (`/threat-model` XAI extension) — pending:**
+  - `threat-model.schema.json` adds `explanation_attacks` category
+  - `/threat-model` skill writes the new category when AI present
+  - `/security-review` integrates explanation-attack threats
+  - `go-to-market.schema.json` adds per-channel `ai_disclosure`
+  - `/launch-tier` extension
 
 ## References
 

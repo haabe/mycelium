@@ -351,6 +351,35 @@ This gate checks whether the product being built falls under AI regulation. Myce
 
 ---
 
+### 13. Explainability (XAI) Gate
+
+**Source**: Doshi-Velez & Kim (2017) "Towards a Rigorous Science of Interpretable ML"; Liao, Gruen, Miller (2020) "Questioning the AI"; Mitchell et al. (2019) "Model Cards"; Lanham et al. (2023) chain-of-thought faithfulness; Selbst & Barocas (2018) recourse-as-substance; EU AI Act Art. 13 + 50; NIST AI Risk Management Framework.
+
+**Applies to**: Develop->Deliver and Deliver->Complete, L3-L5, **only when `active-stack.yml :: ai_components.detected` is true**.
+
+This gate is **operational** — it asks "have you actually run `/xai-check`?" and consumed its findings. It composes with the upstream **intent guardrails** G-S7 (always disclose AI nature) and G-S8 (always assess EU AI Act risk classification), and with **Gate 12 Regulatory** (which establishes the AI Act tier classification). XAI Gate consumes that classification rather than re-deriving it; the canonical tier source is `/regulatory-review`'s output landed in `privacy-assessment.yml`.
+
+| Scale | Pass Criteria | Fail Criteria |
+|-------|--------------|---------------|
+| L3 | If AI components present and reach user-affecting decisions: `/xai-check` Stage 1 (tier classification) has been run; `services.yml :: <service>.xai.tier` populated and consistent with `/regulatory-review` output | AI components present and user-affecting but no XAI tier classification recorded |
+| L4 | All XAI stages applicable to the tier have been run; per-stakeholder explanation surfaces (Stage 2 matrix), recourse path (Stage 5), and system card (Stage 4) at least drafted; fidelity audit (Stage 3) sample collected when LLM rationales surfaced | Limited+ tier product entering delivery with empty `services.yml :: xai` block; LLM-generated rationales surfaced to users without a fidelity audit |
+| L5 | At launch: AI System Card published; recourse path tested end-to-end; disclosure copy reviewed against AI Act Art. 50; all `services.yml :: xai.*.verdict` are `pass` or have remediation plans | Launching with open `fail` verdicts on disclosure or recourse; no published system card for High-risk |
+
+**What this gate does NOT require**: Application-grounded user testing of explanations. `/xai-check` produces `validated_functionally` and `needs_user_testing` lists; user-grounded validation is recommended but not blocking at this gate. The honest tagging is what passes the gate, not the proof of user comprehension.
+
+**Tier scaling** (item caps): minimal ≤5, limited ≤15, high ≤25. The gate's strictness scales with the AI Act risk tier — minimal-risk AI features don't carry the full ceremony.
+
+**Evidence required**: `services.yml :: <service>.xai.last_assessed_at` recent (within evidence-decay threshold); per-stage verdicts populated; fidelity sample under `.claude/evals/xai-fidelity/<service>/YYYY-MM-DD.json` if applicable.
+
+**Suggested skill**: `/xai-check` (consults `active-stack.yml :: ai_components`, reads tier from `privacy-assessment.yml` if `/regulatory-review` ran first, writes `services.yml :: <service>.xai.*`).
+
+**Cross-references**:
+- Detector emits the trigger: `.claude/jit-tooling/detector.md` Step 1c
+- Canvas routing: `.claude/engine/xai-canvas-threading.md`
+- Phase 2.3 will add `threat-model.yml :: explanation_attacks` category — until then, explanation-layer threats are noted but not enumerated structurally.
+
+---
+
 ## Transition Matrix
 
 Summary of which gates apply to which transitions:
