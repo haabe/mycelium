@@ -645,6 +645,92 @@ check_upgrade_manifest_driven() {
     fi
 }
 
+check_version_bump_discipline() {
+    section "Check 26: Material framework changes require a version bump"
+
+    # 5th instance of "documented rule diverges from enforcement" cluster
+    # (corrections.md 2026-05-04). Cross-project signal: another dogfood
+    # project's agent saw "0.15.1 → 0.15.1, 42 files refreshed" — the upgrade
+    # signal was wasted because version stayed pinned across substantive
+    # framework changes. This check enforces semver discipline at the harness
+    # layer rather than relying on convention.
+    #
+    # Definition of "material framework change": any modification to skills,
+    # engine docs, harness files, hooks, scripts, jit-tooling docs, top-level
+    # CLAUDE.md/AGENTS.md, or docs/ since the last commit that changed the
+    # Version line in CLAUDE.md.
+    #
+    # Coverage proof: at the moment of writing (2026-05-04), this check
+    # immediately FAILS on the upstream working tree because the session
+    # shipped G-V12, /xai-check, ai-system-card, warnings ingestor, etc.
+    # without bumping past 0.15.1. Bumping to 0.16.0 in the same commit makes
+    # it pass — that round-trip is the proof that the check catches the
+    # known-bad case.
+
+    if ! command -v git >/dev/null 2>&1 || ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+        info "git not available — skipping version-bump discipline check"
+        return
+    fi
+
+    local curr_version
+    curr_version=$(grep -m1 "^\*Version " CLAUDE.md 2>/dev/null | sed 's/.*Version //' | sed 's/[ —].*//')
+    if [ -z "$curr_version" ]; then
+        warn "Could not read current Version line from CLAUDE.md"
+        return
+    fi
+
+    # Find the last commit that changed the Version line (-G regex match).
+    local last_version_commit
+    last_version_commit=$(git log -1 --pretty=format:%H -G "^\*Version " -- CLAUDE.md 2>/dev/null)
+    if [ -z "$last_version_commit" ]; then
+        info "No prior version-bumping commit found — skipping (initial commit?)"
+        return
+    fi
+
+    local head_commit
+    head_commit=$(git rev-parse HEAD 2>/dev/null)
+    if [ "$last_version_commit" = "$head_commit" ]; then
+        pass "Version-bump check: HEAD commit changed the Version line ($curr_version)"
+        return
+    fi
+
+    # Material framework paths — match changes since the last version bump.
+    local material_count
+    material_count=$( {
+        git diff --name-only "$last_version_commit"..HEAD -- \
+            ".claude/skills" \
+            ".claude/engine" \
+            ".claude/harness" \
+            ".claude/hooks" \
+            ".claude/scripts" \
+            ".claude/jit-tooling" \
+            ".claude/templates" \
+            "CLAUDE.md" \
+            "AGENTS.md" \
+            "README.md" \
+            "docs" 2>/dev/null
+        # Also include uncommitted changes — important for in-flight work.
+        git diff --name-only HEAD -- \
+            ".claude/skills" \
+            ".claude/engine" \
+            ".claude/harness" \
+            ".claude/hooks" \
+            ".claude/scripts" \
+            ".claude/jit-tooling" \
+            ".claude/templates" \
+            "CLAUDE.md" \
+            "AGENTS.md" \
+            "README.md" \
+            "docs" 2>/dev/null
+    } | sort -u | wc -l | tr -d ' ')
+
+    if [ "$material_count" -gt 0 ]; then
+        fail "Version-bump discipline: $material_count material framework file(s) changed since the last version bump (currently $curr_version). Bump CLAUDE.md Version line per .claude/engine/version-discipline.md (semver: new skill/feature → minor; backwards-incompatible → major; doc-only → patch)."
+    else
+        pass "Version-bump check: no material changes since last bump (version $curr_version)"
+    fi
+}
+
 check_code_quality() {
     section "Check 17: Python + Bash code-quality regression"
 
@@ -776,6 +862,7 @@ check_theory_count
 check_agents_md
 check_untrusted_content_wrapping
 check_upgrade_manifest_driven
+check_version_bump_discipline
 check_code_quality
 
 # ============================================================
