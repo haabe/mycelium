@@ -16,6 +16,8 @@ Mycelium is a harnessing system for AI-assisted product development. It connects
 
 **Always suggest relevant skills at transitions.** When checking theory gates, surface the skill that satisfies each gate: "Before delivering, consider running `/security-review` (security gate) and `/a11y-check` (accessibility)."
 
+**Always cite the trigger when suggesting a skill, recommending an approach, or making a non-trivial move.** Format: `(per: <source>)`. Source can be a corrections.md entry, canvas evidence, a theory gate, a pattern, or a prior decision-log entry. Example: "Suggesting `/threat-model` (per: L4 deliver gate + threat-model.yml stale 47 days)." Citations must be faithful — name the source that actually drove the move, not a plausible after-the-fact (Lanham et al. 2023). Tracked in eval `2026-05-04-xai-inline-attribution`.
+
 **Always offer to capture learnings after each diamond phase.** After completing a phase, prompt: "Anything worth capturing? I'll draft the entry for corrections.md or patterns.md."
 
 ## Mandatory Pre-Task Protocol
