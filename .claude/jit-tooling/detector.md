@@ -43,6 +43,41 @@ If non-software indicators are found:
 
 If BOTH software and non-software indicators are found (e.g., an AI tool with a web frontend), detect as a **hybrid**: set `product_type: ai_tool` (or whichever non-software type) but also detect the software stack for the code components. Both sets of quality frameworks apply.
 
+### Step 1c: AI Component Detection (v0.16)
+
+AI-component presence is **orthogonal to product_type**: a `software` product can contain AI (LLM-backed feature), an `ai_tool` product is itself AI. Both raise XAI obligations downstream (`/xai-check`, AI-aware Definition of Done, threat-model extensions). Detect imports across all language manifests; categorize, don't just yes/no.
+
+| Category | What it implies | Signals (selected packages — match by name, version-agnostic) |
+|---|---|---|
+| `llm_api_client` | Generative/conversational AI; triggers AI Act Art. 50 disclosure when user-facing | JS/TS: `@anthropic-ai/sdk`, `openai`, `@google/generative-ai`, `cohere-ai`, `@mistralai/mistralai`, `groq-sdk`, `replicate`, `together-ai`, `@ai-sdk/*`, `ai` (Vercel), `@aws-sdk/client-bedrock-runtime`, `@azure/openai`. Python: `anthropic`, `openai`, `google-generativeai`, `cohere`, `mistralai`, `groq`, `replicate`, `together`, `litellm`, `boto3` (when bedrock client used). Go: `sashabaranov/go-openai`, `anthropics/anthropic-sdk-go`. Java/Kotlin: `theokanning.openai-gpt3-java`. Ruby: `ruby-openai`, `anthropic`. C#: `OpenAI`, `Anthropic.SDK`. |
+| `agent_framework` | Multi-step reasoning; explanation-fidelity risk amplified (Lanham 2023) | Python: `langchain`, `langchain-*`, `llama-index`, `instructor`, `dspy`, `guidance`, `autogen`, `crewai`. JS/TS: `langchain`, `@langchain/*`, `llamaindex`, `mastra`, `agentkit`. C#: `Microsoft.SemanticKernel`. Java/Kotlin: `dev.langchain4j:*`. |
+| `classical_ml` | Automated decisions; AI Act Art. 22 / GDPR right-to-explanation if user-affecting | Python: `scikit-learn` / `sklearn`, `xgboost`, `lightgbm`, `catboost`, `tensorflow`, `torch`, `pytorch`, `keras`, `jax`, `pyspark.ml`. R: `caret`, `mlr3`. JVM: `weka`, `smile`, `tribuo`. |
+| `embedding_retrieval` | Information retrieval; lower XAI tier unless retrieved info gates a user-affecting decision | Python: `sentence-transformers`, `chromadb`, `weaviate-client`, `pinecone-client`, `qdrant-client`, `pymilvus`, `faiss-cpu`, `faiss-gpu`. JS/TS: `@pinecone-database/pinecone`, `weaviate-ts-client`, `@qdrant/js-client`, `chromadb`. |
+| `nlp_traditional` | Lower XAI tier; mostly text processing, not user-facing decisions | Python: `spacy`, `nltk`, `gensim`, `transformers` (when used for embeddings/classification only — overlaps `agent_framework` if used for generation). |
+| `prompt_assets` | Prompt templates / agent configs present; signals AI is in the build, not just the deps | Filesystem: `prompts/`, `.prompts/`, `*.prompt`, `agents.yml`, `agent.yml`, `.cursor/rules/`. |
+| `mcp_servers` | Model Context Protocol servers — agent extension surface | `mcp-*` packages, `@modelcontextprotocol/*` deps, `mcpServers` block in claude config. |
+
+**Detection method:** parse each detected language's manifest dependencies (Step 1) and match package names against the lists above. Filesystem signals (last two rows) are matched by glob/path scan. Match is name-only — version-agnostic, so the detector keeps working as packages bump majors.
+
+**Honesty rule (don't overclaim).** Imports tell us AI components exist; they do **not** tell us whether AI outputs reach end users in a user-affecting way. That is the classifying question for `/xai-check`. The detector emits a hint, not a verdict.
+
+**Output additions to `active-stack.yml`:**
+
+```yaml
+ai_components:
+  detected: true                    # false if no signals match
+  categories:
+    - type: llm_api_client
+      packages: ["@anthropic-ai/sdk", "openai"]
+    - type: agent_framework
+      packages: ["langchain"]
+  user_facing_decisions: unknown    # unknown | yes | no — confirm with user during Step 6
+  xai_tier_hint: limited            # minimal | limited | high — provisional, /xai-check classifies definitively
+  detected_via: ["package.json", "requirements.txt", "prompts/"]
+```
+
+If `detected: false`, the block can be omitted entirely. Downstream skills (`/xai-check`, AI-aware DoD, threat-model XAI extension) treat absence as "no AI"; presence triggers their AI overlays. The `user_facing_decisions` field stays `unknown` until the user answers Step 6's confirmation prompt — never inferred silently.
+
 ### Step 2: Identify Project Shape
 
 | Signal | Classification |
@@ -128,6 +163,12 @@ These apply conditionally based on product_type:
 - WCAG 2.1 AA accessibility (software UI); content accessibility for courses/publications/media
 - DORA metrics specifically (software only; other product types use their own metrics canvas)
 - Testing pyramid (software, ai_tool code components)
+
+These apply conditionally based on `ai_components.detected` (Step 1c):
+- `/xai-check` (XAI gate for AI-containing products — disclosure, decision-explanation, recourse, fidelity, system card, tier-scaled)
+- AI-aware Definition of Done items (disclosure copy reviewed, fidelity sample audited, recourse path tested, system card published)
+- Threat-model XAI extension (misleading-explanation manipulation, prompt-injection causing false rationales, explanation side-channel leakage)
+- See `.claude/engine/xai-canvas-threading.md` for which existing canvas files thread XAI signals.
 
 ## What Varies (Stack-Specific)
 
