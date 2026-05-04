@@ -689,43 +689,49 @@ check_version_bump_discipline() {
 
     local head_commit
     head_commit=$(git rev-parse HEAD 2>/dev/null)
-    if [ "$last_version_commit" = "$head_commit" ]; then
-        pass "Version-bump check: HEAD commit changed the Version line ($curr_version)"
-        return
+
+    # Material paths watched (kept as a single list for both committed and
+    # uncommitted diffs).
+    local material_paths=(
+        ".claude/skills"
+        ".claude/engine"
+        ".claude/harness"
+        ".claude/hooks"
+        ".claude/scripts"
+        ".claude/jit-tooling"
+        ".claude/templates"
+        ".claude/tests"
+        "CLAUDE.md"
+        "AGENTS.md"
+        "README.md"
+        "docs"
+    )
+
+    # Count committed material changes since the last version-line edit.
+    local committed_count=0
+    if [ "$last_version_commit" != "$head_commit" ]; then
+        committed_count=$(git diff --name-only "$last_version_commit"..HEAD -- "${material_paths[@]}" 2>/dev/null | wc -l | tr -d ' ')
     fi
 
-    # Material framework paths — match changes since the last version bump.
-    local material_count
-    material_count=$( {
-        git diff --name-only "$last_version_commit"..HEAD -- \
-            ".claude/skills" \
-            ".claude/engine" \
-            ".claude/harness" \
-            ".claude/hooks" \
-            ".claude/scripts" \
-            ".claude/jit-tooling" \
-            ".claude/templates" \
-            "CLAUDE.md" \
-            "AGENTS.md" \
-            "README.md" \
-            "docs" 2>/dev/null
-        # Also include uncommitted changes — important for in-flight work.
-        git diff --name-only HEAD -- \
-            ".claude/skills" \
-            ".claude/engine" \
-            ".claude/harness" \
-            ".claude/hooks" \
-            ".claude/scripts" \
-            ".claude/jit-tooling" \
-            ".claude/templates" \
-            "CLAUDE.md" \
-            "AGENTS.md" \
-            "README.md" \
-            "docs" 2>/dev/null
-    } | sort -u | wc -l | tr -d ' ')
+    # Count uncommitted material changes in the working tree (post-bump edits).
+    local uncommitted_count
+    uncommitted_count=$(git diff --name-only HEAD -- "${material_paths[@]}" 2>/dev/null | wc -l | tr -d ' ')
 
-    if [ "$material_count" -gt 0 ]; then
-        fail "Version-bump discipline: $material_count material framework file(s) changed since the last version bump (currently $curr_version). Bump CLAUDE.md Version line per .claude/engine/version-discipline.md (semver: new skill/feature → minor; backwards-incompatible → major; doc-only → patch)."
+    if [ "$committed_count" -gt 0 ]; then
+        # FAIL: committed material changes without a version bump. Hard stop —
+        # the canonical error this check exists to catch.
+        fail "Version-bump discipline: $committed_count material framework file(s) committed since the last version bump (currently $curr_version). Bump CLAUDE.md Version line per .claude/engine/version-discipline.md (semver: new skill/feature → minor; backwards-incompatible → major; doc-only → patch)."
+    elif [ "$uncommitted_count" -gt 0 ] && [ "$last_version_commit" = "$head_commit" ]; then
+        # WARN: HEAD bumped the version, but new material edits are pending.
+        # Either fold into HEAD (commit --amend before push) or expect to
+        # bump again at the next commit. Catches the post-bump-mid-session edit case.
+        warn "Version-bump check: HEAD bumped to $curr_version, but $uncommitted_count uncommitted material file(s) waiting. Fold into HEAD (amend before push) or bump again at the next commit."
+    elif [ "$uncommitted_count" -gt 0 ]; then
+        # FAIL: uncommitted material changes AND HEAD didn't bump — the next
+        # commit must either bump or be a non-material edit.
+        fail "Version-bump discipline: $uncommitted_count material framework file(s) uncommitted with no version bump in HEAD (currently $curr_version). Bump CLAUDE.md before committing, per .claude/engine/version-discipline.md."
+    elif [ "$last_version_commit" = "$head_commit" ]; then
+        pass "Version-bump check: HEAD commit changed the Version line ($curr_version), no pending material changes"
     else
         pass "Version-bump check: no material changes since last bump (version $curr_version)"
     fi

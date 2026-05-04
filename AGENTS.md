@@ -12,7 +12,8 @@ This repository uses Mycelium, a theory-guided harness for AI-assisted product d
 
 | Surface | What it is | Where |
 |---|---|---|
-| Skills | 44 invocable workflows (interview, ost-builder, security-review, etc.) | `.claude/skills/*/SKILL.md` |
+| Skills | 45 invocable workflows (interview, ost-builder, security-review, xai-check, etc.) | `.claude/skills/*/SKILL.md` |
+| Upgrade | Update Mycelium framework files in this project | `bash .claude/scripts/upgrade.sh` (see also `docs/ai-system-card.md` for what's running and `engine/version-discipline.md` for what version bumps mean) |
 | Canvas | Source-of-truth product knowledge (YAML) | `.claude/canvas/*.yml` |
 | Diamonds | Active work state (which scale/phase the project is in) | `.claude/diamonds/active.yml` |
 | Memory | Accumulated corrections + patterns | `.claude/memory/` |
@@ -28,6 +29,12 @@ This repository uses Mycelium, a theory-guided harness for AI-assisted product d
 4. Before adding evidence, read 2-3 recent entries in the same canvas section to match voice (concrete + sourced + hedged, not interpretive)
 5. Before actioning a flagged item in canvas (anything with "candidate / worth considering / next step / refresh"), check its status marker (OPEN / ON HOLD / RESERVED). Unmarked = ON HOLD by convention. See `.claude/engine/canvas-guidance.yml#action_flags`.
 6. Make changes; record evidence with provenance in canvas; log decisions
+
+## Upgrading Mycelium
+
+When asked to "update Mycelium" or "pull the latest version": run `bash .claude/scripts/upgrade.sh`. The script pulls from `haabe/mycelium` upstream via `npx degit`, requires a clean git tree (`git stash -u && bash .claude/scripts/upgrade.sh && git stash pop` if you have WIP), and reports what changed.
+
+The framework version is in `CLAUDE.md` first-line frontmatter. **A version bump that looks like a no-op (e.g., 0.15.1 → 0.15.1) means the upstream main branch drifted without a release tag** — either the maintainer hadn't bumped (which is now caught by `validate-template.sh` Check 26) or the upgrade ran from a tagged release. Read the Version line summary to see what changed; if the line itself didn't change but file count is high, that's a discipline gap and worth a corrections.md entry on the user's project side.
 
 ## Conventions for contributors
 
