@@ -139,10 +139,10 @@ Canvas files should include `_meta` blocks for versioning and staleness detectio
 The reflexion hook (PostToolUseFailure) is scoped to **project-relevant failures only** -- do not log entries to project memory for agent self-inflicted tool errors or environment issues outside the project directory.
 
 ### Key Artifacts
-- **Corrections** (`.claude/memory/corrections.md`): Accumulated learning from mistakes. **Read before every task.**
+- **Corrections** (`.claude/memory/corrections.md`): Accumulated learning from mistakes. **Read before every task.** *Recourse SLA*: one-off corrections inform the next session's pre-task protocol (same-day effect on agent behavior); recurring entries (≥3 instances of the same root cause) graduate to mechanism on the next L4 cleanup cycle. Public-graduation cases visible in upstream commit history. No formal SLA on GitHub-issue response — solo-maintainer project (acknowledged in `docs/ai-system-card.md` §6).
 - **Patterns** (`.claude/memory/patterns.md`): Successful patterns to reuse.
 - **Warnings Log** (`.claude/memory/warnings-log.md`): CI signal capture (validator/upgrade WARN+FAIL lines), auto-updated by `.claude/scripts/ingest_warnings.py`. Best-practice fixes per class live in `.claude/engine/warning-handbook.md`. Consumed by `/corrections-audit` for cross-source pattern detection.
-- **Decision Log** (`.claude/harness/decision-log.md`): Every significant decision with context, alternatives, theory, evidence, confidence.
+- **Decision Log** (`.claude/harness/decision-log.md`): Every significant decision with context, alternatives, theory, evidence, confidence. **Required structured field**: `why_not_alternatives` — for each alternative considered, a one-line rejection rationale. Contrastive ("why X rather than Y") explanations land harder than purely positive ones (Liao et al. 2020); freeform "alternatives considered" without per-alternative rejection rationale fails the contrastive surface check in `/xai-check` Stage 2.
 - **Feedback Loops** (`.claude/engine/feedback-loops.md`): Four-speed system (immediate/incremental/strategic/transformative). Run `/feedback-review` to check health.
 - **Reflexion Loop**: Implement -> validate -> self-critique -> retry (max 3). See `.claude/skills/reflexion/SKILL.md`.
 - **Eval Benchmarks** (`.claude/evals/`): Periodic self-assessment against scenarios.

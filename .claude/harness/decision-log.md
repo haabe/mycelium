@@ -8,7 +8,9 @@ Record of significant decisions made during product development. Decisions are i
 ### [DATE] - [SHORT TITLE]
 - **Diamond**: [ID, scale, phase]
 - **Decision**: What was decided.
-- **Alternatives considered**: What other options were evaluated and why they were rejected.
+- **Why_not_alternatives** (structured, per-alternative): list every option considered and a one-line rejection rationale per option. Contrastive explanations ("why X rather than Y") land harder than purely positive ones (Liao et al. 2020); this field must be populated for any decision with ≥1 real alternative. Format:
+    - `Option A: <one-line rejection rationale>`
+    - `Option B: <one-line rejection rationale>`
 - **Theory**: Which framework/theory informed this decision (e.g., "Cynefin - Complex domain", "Cagan - Four Risks").
 - **Evidence**: What data or research supports this decision.
 - **Confidence**: [0.0-1.0] How confident are we, and what would change this.

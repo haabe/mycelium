@@ -275,6 +275,11 @@ bash .claude/scripts/upgrade.sh v0.12.0  # specific version
 
 After upgrading, run `/diamond-assess` to see your work through the new version's lens.
 
+## Public-facing docs
+
+- **`docs/ai-system-card.md`** — Mycelium's own AI System Card (Mitchell et al. 2019 format, adapted for the agent-runtime-target case). Read before relying on Mycelium for substantive product decisions.
+- **`docs/context-surface.md`** — single-page map of what data the agent reads when making recommendations under Mycelium. Useful for understanding where to look when an agent move surprises you.
+
 ## Skills Reference (45 skills)
 
 ### Onboarding & Assessment

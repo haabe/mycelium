@@ -25,6 +25,7 @@ framework:
     - .claude/auto-dogfood/
     - .claude/templates/
     - .github/
+    - docs/  # framework public-facing artifacts (ai-system-card.md, context-surface.md)
     # .claude/jit-tooling/ is MIXED (see metrics_adapters section below).
     # upgrade.sh preserves active-metrics.yml and user-generated adapters
     # while replacing the framework-shipped files.
