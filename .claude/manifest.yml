@@ -66,6 +66,8 @@ preserved_dir_readmes:
 
 # Project state — NEVER overwrite if they exist.
 # These contain the user's work product.
+# Note: .claude/memory/ is a directory; warnings-log.md (auto-updated by
+# ingest_warnings.py) lives there alongside corrections.md and patterns.md.
 project_state:
   - .claude/harness/decision-log.md
   - .claude/diamonds/active.yml

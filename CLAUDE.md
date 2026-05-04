@@ -141,6 +141,7 @@ The reflexion hook (PostToolUseFailure) is scoped to **project-relevant failures
 ### Key Artifacts
 - **Corrections** (`.claude/memory/corrections.md`): Accumulated learning from mistakes. **Read before every task.**
 - **Patterns** (`.claude/memory/patterns.md`): Successful patterns to reuse.
+- **Warnings Log** (`.claude/memory/warnings-log.md`): CI signal capture (validator/upgrade WARN+FAIL lines), auto-updated by `.claude/scripts/ingest_warnings.py`. Best-practice fixes per class live in `.claude/engine/warning-handbook.md`. Consumed by `/corrections-audit` for cross-source pattern detection.
 - **Decision Log** (`.claude/harness/decision-log.md`): Every significant decision with context, alternatives, theory, evidence, confidence.
 - **Feedback Loops** (`.claude/engine/feedback-loops.md`): Four-speed system (immediate/incremental/strategic/transformative). Run `/feedback-review` to check health.
 - **Reflexion Loop**: Implement -> validate -> self-critique -> retry (max 3). See `.claude/skills/reflexion/SKILL.md`.

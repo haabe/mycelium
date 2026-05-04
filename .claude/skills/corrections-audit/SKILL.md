@@ -17,8 +17,9 @@ Analyze corrections.md for trends, recurring patterns, and actionable insights.
 
 ## Workflow
 
-1. **Load corrections**: Read `.claude/memory/corrections.md`
-   - If empty or no corrections logged: report "No corrections to audit" and stop
+1. **Load corrections AND warnings**: Read `.claude/memory/corrections.md` AND `.claude/memory/warnings-log.md` (the latter is auto-updated by `.claude/scripts/ingest_warnings.py` from CI signals — see `.claude/engine/warning-handbook.md`).
+   - If both empty: report "No corrections or warnings to audit" and stop
+   - Treat both as inputs to the same pattern analysis. Corrections capture agent-introduced failures; warnings capture framework-state debt. Same recurring-pattern shape, different origins.
 
 2. **Categorize by frequency**:
    - Group corrections by `Category` (bias, security, engineering, process, communication)
@@ -50,10 +51,12 @@ Analyze corrections.md for trends, recurring patterns, and actionable insights.
    - Anti-pattern: stopping at "human error" or "agent didn't follow instructions" — ask why the system allowed it
    *Source: Toyoda/Ohno (5 Whys), adapted for agentic workflows.*
 
-6. **Identify graduation candidates**:
+6. **Identify graduation candidates** (across both corrections AND warnings):
    - Correction logged 3+ times with same root cause -> propose new guardrail (draft G-XX entry)
+   - Warning class with `Count: 3+` and `Status: open` in warnings-log.md -> graduation candidate. Consult `warning-handbook.md` for the canonical fix; if the canonical fix is "manifest-driven" or similar structural pattern that's already shipped, the recurrence indicates a regression, not a new pattern.
    - Correction reveals a failure mode not in anti-patterns.md -> propose new anti-pattern entry
    - Correction reveals a successful mitigation -> propose new pattern in patterns.md
+   - **Cross-cluster patterns**: when corrections + warnings together reveal the same shape (e.g., "documented rule diverges from enforcement" — fired both via validator gaps in warnings-log AND via agent-behavior corrections), graduate to a meta-pattern in patterns.md and consider whether one upstream mechanism could close both surfaces.
 
 7. **Consolidate memory files** (automated hygiene):
    - **Deduplication**: Identify corrections that describe the same root cause in different words. Merge into a single entry, preserving all dates and evidence.
