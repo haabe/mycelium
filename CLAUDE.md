@@ -28,6 +28,24 @@ Before ANY implementation task, load context in this order (task-specific first,
 3. Read `.claude/memory/corrections.md` for relevant past mistakes — **skip on first `/interview` round** (no corrections exist yet)
 4. Load phase-scoped guardrails: always load `guardrails-core.md`; add `guardrails-discovery.md` (L0-L2), `guardrails-delivery.md` (L3-L4), or `guardrails-market.md` (L5) per current phase. See `.claude/harness/guardrails.md` for full reference.
 
+## Mandatory Pre-Ship Protocol (G-P-pre)
+
+Before committing any **substantive** work — defined as ≥1 framework file modified, OR a new skill/convention introduced, OR a multi-commit batch — perform an explicit pre-ship analysis and surface findings *visibly* in the response. Not an afterthought. Not "I checked everything." A bulleted section with real findings.
+
+The minimum check set:
+1. **Dead-end references**: Does every artifact reference something that exists or is tagged as future work? Forward-grep what you wrote against the codebase.
+2. **Misalignments**: Are there two places that should agree but don't? Existing skills overlapping with new ones, intent guardrails vs operational gates, schemas vs the data they validate.
+3. **Blocked gates**: Any gates that can't pass because of missing prerequisites? Phase-N depends on Phase-M being shipped first.
+4. **Functional gaps**: Does the work handle the edge cases — absence signals, defaults, idempotency, multi-entity loops?
+5. **Integration debt**: What existing skills/docs need updating to know about the new work? Tag what defers.
+6. **Schema/validation impact**: Will writes pass existing validators? Are new validators paired with G-V12 coverage proofs?
+7. **Manifest impact**: Are new directories/files in `manifest.yml` so `upgrade.sh` syncs them?
+8. **Test coverage**: Per G-V12, every check that flags a problem ships with a test demonstrating it does.
+
+The findings drive what ships now vs defers. Real findings change the plan. Theatre findings are worse than no analysis.
+
+*Source: Graduated 2026-05-04 from corrections.md "Pre-ship gap/misalignment/dead-end analysis skipped despite repeated user instruction" (recurring; user-detected, daily-nag class). The Post-Task Protocol below covers post-ship verification; this protocol covers pre-ship analysis. Together they bracket the work.*
+
 ## Mandatory Post-Task Protocol (G-P7)
 
 After completing ANY batch of changes, before reporting done:

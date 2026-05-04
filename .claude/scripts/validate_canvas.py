@@ -145,6 +145,9 @@ def collect_trace_graph():
         canvas_id = canvas_path.stem
         all_ids.add(canvas_id)
 
+        # Per-file ID list (allows duplicate detection — set would silently dedupe).
+        file_ids = []
+
         # Walk recursively looking for trace blocks
         def walk(node, path_prefix):
             if isinstance(node, dict):
@@ -153,6 +156,7 @@ def collect_trace_graph():
                 if node_id and isinstance(node_id, str):
                     qualified = f"{canvas_path.stem}#{node_id}"
                     all_ids.add(qualified)
+                    file_ids.append(node_id)
 
                 # Check for a trace block
                 trace_block = node.get("trace")
@@ -173,6 +177,18 @@ def collect_trace_graph():
                     walk(item, f"{path_prefix}[{i}]")
 
         walk(data, canvas_path.stem)
+
+        # Per-file ID uniqueness check (corrections.md 2026-05-04 — closes the
+        # "validator passes on incomplete checks" pattern; G-V12 coverage proof).
+        seen = {}
+        for nid in file_ids:
+            seen[nid] = seen.get(nid, 0) + 1
+        duplicates = sorted(nid for nid, count in seen.items() if count > 1)
+        for dup in duplicates:
+            errors.append(
+                f"{canvas_path.name} :: duplicate id '{dup}' "
+                f"(appears {seen[dup]}x within file — ids must be unique per canvas)"
+            )
 
     return graph, all_ids, errors
 

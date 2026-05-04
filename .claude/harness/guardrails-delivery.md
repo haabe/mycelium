@@ -82,6 +82,10 @@ Evaluate against Nielsen's 10 usability heuristics. Run `/usability-check`.
 Before starting delivery, declare 1-3 measurable success criteria and how each will be verified. Record in decision-log.md. Checked at DoD by `/diamond-progress`. Without upfront criteria, "done" becomes whatever was built — not what was needed.
 *Source: Cagan (outcome over output), Patton (build to learn vs build to earn), Paddo (the denominator problem — invisible rework from undefined success)*
 
+**G-V12: Every validator, enforcer, or check ships with a coverage proof** `REVIEW` `quality`
+Any new or extended mechanism that nominally checks/enforces a rule (validator scripts, schema rules, hook conditions, skill stages that flag issues) must ship with a test that constructs a known-bad input and asserts the mechanism rejects it. "The validator passed" only proves it ran — not that it caught. No mechanism merges without a coverage proof per rule it claims to enforce.
+*Source: Graduated 2026-05-04 from corrections.md "validator passes on incomplete checks" recurring pattern (3 instances: upgrade.sh hardcoded list drift 2026-04-28 + 2026-05-03; validate_canvas.py ID-uniqueness gap 2026-05-04). Lopopolo reframe — fix at the harness layer, not behavior. Cross-references G-P7 (verification protocol) for completion-side discipline.*
+
 ## Leaf Lifecycle
 
 **G-L1: Every solution leaf must have Four Risks -> ICE -> assumption identification before entering L4** `REVIEW` `quality`
