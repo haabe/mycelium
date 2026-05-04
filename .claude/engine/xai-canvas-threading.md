@@ -54,6 +54,19 @@ Eval coverage: `evals/assumption-tests/2026-05-04-xai-inline-attribution.md`.
 
 - **Per-output fidelity samples**: stored under `evals/xai-fidelity/<service>/YYYY-MM-DD.json`, mirroring the metrics-pull pattern. Each sample is the input + output + agent's stated rationale + blind-reviewer prediction + verdict. Aggregate stats land in `services.yml :: xai.fidelity`.
 
+## Special case: `agent_runtime_target` products (added 2026-05-04)
+
+When the detector emits `agent_runtime_target` (Mycelium itself, agent-engineered products, harness frameworks operated by Claude Code / Codex / Cursor / etc.), the XAI surface is unusual: the AI is the runtime that consumes the project, not a dependency the project embeds. The framework's logic shapes how the runtime behaves.
+
+For products in this category, the threading still applies but with these substitutions:
+
+- **System card** describes the framework's *recommendation logic and known limitations*, not the underlying LLM (whose system card is the runtime vendor's responsibility — Anthropic for Claude Code, etc.). Mycelium's own system card would describe what the framework guides the agent to do, not what Claude does.
+- **Recourse path** for users contesting framework recommendations is the existing `corrections.md` mechanism — file an entry, /corrections-audit picks up patterns, recurring entries graduate to mechanism. This satisfies Selbst & Barocas substance check.
+- **Fidelity audit** maps to the inline-attribution rule (CLAUDE.md Communication Rule, eval `2026-05-04-xai-inline-attribution`) — does the agent's stated rationale faithfully reflect the framework state that drove it? Same Lanham faithfulness check, applied to framework-shaped products.
+- **Disclosure** is partly the runtime's responsibility (Claude Code discloses it's AI) and partly the framework's docs (the README/CLAUDE.md should mention the framework guides AI behavior).
+
+`/xai-check` works for `agent_runtime_target` products without modification — Stages 1-5 all map. The user_facing_decisions confirmation can default to yes for this category (the runtime IS the user surface).
+
 ## Out of scope for canvas threading
 
 - **Per-decision provenance for the user's product** (i.e., logs of every AI decision made by the user's product, in production). That's product runtime data, not Mycelium state. Mycelium recommends product teams keep such logs but does not store them.
