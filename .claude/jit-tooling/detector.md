@@ -146,6 +146,7 @@ After detection, present findings and ask user to confirm/adjust:
 - "I detected [language] [shape] project with [tooling]. Is this correct?"
 - "I'll use [test command] for testing. Should I adjust?"
 - "No security scanning detected. Should I set up [recommended tool]?"
+- If `ai_components.detected` (Step 1c): "I detected [llm_api_client / agent_framework / classical_ml / ...] AI components. Does the AI's output reach end users in a way that affects them — deny, recommend, rank, generate content shown to them, or otherwise drive their experience?" Set `ai_components.user_facing_decisions` to `yes` / `no` / `partially` based on the answer. The XAI tier (`/xai-check` Stage 1) depends on this; never infer it silently.
 
 ## What Stays Universal (All Product Types)
 

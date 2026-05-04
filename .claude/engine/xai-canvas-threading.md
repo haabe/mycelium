@@ -62,7 +62,25 @@ Eval coverage: `evals/assumption-tests/2026-05-04-xai-inline-attribution.md`.
 
 ## Schema impact
 
-`services.yml` schema gains an optional `xai` block per service. `threat-model.yml` schema gains an optional `explanation_attacks` category. Neither is required when `ai_components.detected: false`. Schema updates ship with `/xai-check` (Phase 2.1), not with this threading note.
+Asymmetric — only some target canvases have schemas today. Phase 2 must address each path explicitly:
+
+- `services.yml` — **no schema exists.** Phase 2.1 must build `services.schema.json` *before* `/xai-check` writes the `xai` block, otherwise the new fields land structurally ungated. (Building the schema is the right move — relying on the absence of schema enforcement extends an existing inconsistency rather than fixing it.)
+- `threat-model.yml` — schema exists. Phase 2.3 must update it to accept the `explanation_attacks` category, or `/threat-model` writes will get rejected post-extension.
+- `go-to-market.yml` — schema exists. Phase 2 launch-tier extension must update it for per-channel `ai_disclosure`.
+
+## Phase 2 prerequisites (don't ship paper rules)
+
+Each Phase 2 item depends on a non-XAI prerequisite. Listed here so they don't get dropped at planning-to-build time:
+
+- **Phase 2.1 (`/xai-check`)** requires `services.schema.json` to exist. See "Schema impact" above. The XAI plan's claim of "schema updates ship with /xai-check" is honest only if Phase 2.1 builds the `services.yml` schema, not just adds fields to a non-existent one.
+
+- **Phase 2.2 (AI-aware Definition of Done)** requires an XAI gate in `engine/theory-gates.md` that consults `ai_components.detected` and routes to `/xai-check`. Without that gate, AI-aware DoD is a paper rule — `/definition-of-done` is gate-driven, and gates are the enforcement surface. The conditional-overlay list in `jit-tooling/detector.md` is documentation, not enforcement.
+
+- **Phase 2.3 (`/threat-model` XAI extension)** requires the `threat-model.schema.json` update noted under "Schema impact" — same shape as 2.1 but applied to an existing schema rather than a new one.
+
+- **Phase 2.4 (AI System Card template)** requires a manifest entry for `.claude/templates/`. The directory does not exist today; without manifest coverage, future templates won't sync downstream on `upgrade.sh`. Add to `manifest.yml :: directories` (replace wholesale) when 2.4 lands.
+
+- **Validator capability gap (cross-cutting):** `validate_canvas.py` currently does not enforce ID uniqueness within a single canvas file (caught when adding `comp-009` to `landscape.yml` 2026-05-04 — an earlier accidental `comp-007` collision passed validation). This is independent of XAI but should be closed before Phase 2.1, because adding fielded structure (xai blocks per service) increases the surface where ID collisions matter. See corrections.md.
 
 ## References
 
