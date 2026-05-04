@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.15.1 -- Instruction budget management: phase-scoped guardrails (core/discovery/delivery/market), instruction_budget frontmatter on all 44 skills, lazy-reference guardrail index. Interviewing: Brown's three mindsets (curiosity/skepticism/humility), stakeholder vs user distinction, internal_stakeholder source class, validated flag, constraints category, closing question. 7 external evidence articles logged. Sources: Horthy (instruction budget), Haagsman (40-instruction budget), Brown (stakeholder interviewing).*
+*Version 0.15.1 -- Instruction budget management: phase-scoped guardrails (core/discovery/delivery/market), instruction_budget frontmatter on all 45 skills, lazy-reference guardrail index. Interviewing: Brown's three mindsets (curiosity/skepticism/humility), stakeholder vs user distinction, internal_stakeholder source class, validated flag, constraints category, closing question. 7 external evidence articles logged. Sources: Horthy (instruction budget), Haagsman (40-instruction budget), Brown (stakeholder interviewing).*
 
 Mycelium is a harnessing system for AI-assisted product development. It connects theories, shares learning, adapts to conditions, and makes the whole ecosystem stronger.
 
@@ -183,7 +183,7 @@ See `.claude/orchestration/modes.md` for usage patterns and `.claude/orchestrati
 
 ## Skills
 
-All 44 skills are auto-discovered from `.claude/skills/*/SKILL.md`. Suggested skills are surfaced at diamond transitions by `/diamond-progress` and `/diamond-assess`, and contextually by hooks. Type `/` to see the current list.
+All 45 skills are auto-discovered from `.claude/skills/*/SKILL.md`. Suggested skills are surfaced at diamond transitions by `/diamond-progress` and `/diamond-assess`, and contextually by hooks. Type `/` to see the current list.
 
 ## Getting Started
 
