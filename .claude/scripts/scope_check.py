@@ -57,17 +57,22 @@ def emit_deny(reason: str):
     sys.exit(0)
 
 
-def main():
-    if len(sys.argv) < 3:
+REQUIRED_ARG_COUNT = 3  # script name + state_file + project_dir
+
+
+def main():  # noqa: C901, PLR0912 — hook entry point with linear fail-closed branching
+    if len(sys.argv) < REQUIRED_ARG_COUNT:
         emit_deny(
             "Mycelium scope-gate: scope_check.py invoked without required arguments. "
-            "This is a bug in the hook wrapper."
+            "This is a bug in the hook wrapper.",
         )
 
     state_file = sys.argv[1]
     project_dir = sys.argv[2]
 
-    # Parse state file — fail closed on corruption
+    # Parse state file — fail closed on corruption.
+    # Broad except is intentional: hook is in the critical path; any unexpected
+    # filesystem/decoding error must produce a clear deny rather than crash.
     try:
         with open(state_file) as f:
             state = json.load(f)
@@ -77,18 +82,18 @@ def main():
     except json.JSONDecodeError as exc:
         emit_deny(
             f"Mycelium scope-gate: active-execution.json is corrupt: {exc}. "
-            "Delete the file or run /diamond-progress to recreate it."
+            "Delete the file or run /diamond-progress to recreate it.",
         )
-    except Exception as exc:
+    except OSError as exc:
         emit_deny(
             f"Mycelium scope-gate: unexpected error reading state: {exc}. "
-            "Delete .claude/state/active-execution.json to disable scope enforcement."
+            "Delete .claude/state/active-execution.json to disable scope enforcement.",
         )
 
     if not isinstance(state, dict):
         emit_deny(
-            "Mycelium scope-gate: active-execution.json has wrong shape (expected object). "
-            "Run /diamond-progress to recreate."
+            "Mycelium scope-gate: active-execution.json has wrong shape "
+            "(expected object). Run /diamond-progress to recreate.",
         )
 
     # Parse stdin for tool_input.file_path
@@ -98,7 +103,9 @@ def main():
         # Can't read hook input → allow (shouldn't happen in practice)
         emit_allow()
 
-    tool_input = hook_input.get("tool_input", {}) if isinstance(hook_input, dict) else {}
+    tool_input = (
+        hook_input.get("tool_input", {}) if isinstance(hook_input, dict) else {}
+    )
     file_path = tool_input.get("file_path", "") if isinstance(tool_input, dict) else ""
 
     if not file_path:
@@ -112,13 +119,17 @@ def main():
     # Always allow .claude/** edits (framework self-modification, canvas updates,
     # state file writes by other hooks). Scope enforcement is for SOURCE CODE
     # in L4 delivery, not for framework internals.
-    if rel_path.startswith(".claude/") or file_path.startswith(f"{project_dir}/.claude/"):
+    if rel_path.startswith(".claude/") or file_path.startswith(
+        f"{project_dir}/.claude/",
+    ):
         emit_allow()
 
     # Extract scope lists — support both top-level and spec-nested
     spec = state.get("spec", {}) if isinstance(state.get("spec"), dict) else {}
     in_scope = spec.get("in_scope_paths") or state.get("in_scope_paths") or []
-    out_of_scope = spec.get("out_of_scope_paths") or state.get("out_of_scope_paths") or []
+    out_of_scope = (
+        spec.get("out_of_scope_paths") or state.get("out_of_scope_paths") or []
+    )
 
     if not isinstance(in_scope, list):
         in_scope = []
@@ -131,9 +142,10 @@ def main():
     for pattern in out_of_scope:
         if fnmatch.fnmatch(rel_path, pattern) or fnmatch.fnmatch(file_path, pattern):
             emit_deny(
-                f"GUARDRAIL SCOPE VIOLATION: File path '{rel_path}' matches out_of_scope_paths "
-                f"in active execution plan for diamond {diamond_id} (pattern: {pattern}). "
-                f"Review .claude/state/active-execution.json or run /diamond-progress to update scope."
+                f"GUARDRAIL SCOPE VIOLATION: File path '{rel_path}' matches "
+                f"out_of_scope_paths in active execution plan for diamond "
+                f"{diamond_id} (pattern: {pattern}). Review "
+                ".claude/state/active-execution.json or run /diamond-progress.",
             )
 
     # If in_scope is empty, no scope declared → allow
@@ -147,9 +159,9 @@ def main():
 
     # Did not match any in_scope pattern → deny
     emit_deny(
-        f"GUARDRAIL SCOPE VIOLATION: File path '{rel_path}' is not in in_scope_paths "
-        f"for active execution plan (diamond {diamond_id}). "
-        f"Review .claude/state/active-execution.json or run /diamond-progress to update scope."
+        f"GUARDRAIL SCOPE VIOLATION: File path '{rel_path}' is not in "
+        f"in_scope_paths for active execution plan (diamond {diamond_id}). "
+        "Review .claude/state/active-execution.json or run /diamond-progress.",
     )
 
 

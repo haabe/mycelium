@@ -48,7 +48,6 @@ except ImportError:
     sys.exit(2)
 
 try:
-    import jsonschema
     from jsonschema import Draft202012Validator
     from referencing import Registry, Resource
     from referencing.jsonschema import DRAFT202012
@@ -83,9 +82,12 @@ def build_registry():
     common = load_schema(COMMON_SCHEMA)
     common_resource = Resource.from_contents(common, default_specification=DRAFT202012)
     # Register under both the $id and a relative URL so schemas can $ref it
-    registry = Registry().with_resource(uri=common.get("$id", "_common.schema.json"), resource=common_resource)
-    registry = registry.with_resource(uri="_common.schema.json", resource=common_resource)
-    return registry
+    common_id = common.get("$id", "_common.schema.json")
+    return (
+        Registry()
+        .with_resource(uri=common_id, resource=common_resource)
+        .with_resource(uri="_common.schema.json", resource=common_resource)
+    )
 
 
 def validate_canvas_against_schema(canvas_path: Path, registry: Registry):
@@ -101,7 +103,7 @@ def validate_canvas_against_schema(canvas_path: Path, registry: Registry):
 
     try:
         canvas_data = load_yaml(canvas_path)
-    except Exception as exc:
+    except (yaml.YAMLError, OSError) as exc:
         return [f"YAML parse error in {canvas_path.name}: {exc}"]
 
     if canvas_data is None:
@@ -110,7 +112,7 @@ def validate_canvas_against_schema(canvas_path: Path, registry: Registry):
 
     try:
         schema = load_schema(schema_path)
-    except Exception as exc:
+    except (json.JSONDecodeError, OSError) as exc:
         return [f"Schema parse error in {schema_path.name}: {exc}"]
 
     validator = Draft202012Validator(schema, registry=registry)
@@ -122,10 +124,45 @@ def validate_canvas_against_schema(canvas_path: Path, registry: Registry):
     return errors
 
 
-def collect_trace_graph():
+def _walk_canvas(node, path_prefix, ctx):  # noqa: C901
+    """Recursive descent over a canvas tree; collects ids, trace edges, file_ids.
+
+    `ctx` is a dict with keys: stem, graph, all_ids, file_ids. Bundling state
+    avoids loop-variable closure issues (B023) and keeps the signature clean.
+    Complexity is intrinsic — node shapes are dict/list and trace blocks have
+    upstream/target_id structure that has to be unpacked.
     """
-    Walk all canvas files, extract trace.upstream / trace.downstream entries,
-    build a graph of (source_id -> target_ids). Returns (graph, all_ids, errors).
+    if isinstance(node, dict):
+        node_id = node.get("id")
+        if node_id and isinstance(node_id, str):
+            ctx["all_ids"].add(f"{ctx['stem']}#{node_id}")
+            ctx["file_ids"].append(node_id)
+
+        trace_block = node.get("trace")
+        if isinstance(trace_block, dict):
+            upstream = trace_block.get("upstream") or []
+            if isinstance(upstream, list):
+                for edge in upstream:
+                    if isinstance(edge, dict) and "target_id" in edge:
+                        target = edge["target_id"]
+                        source = node.get("id") or path_prefix
+                        ctx["graph"][source].add(target)
+
+        for k, v in node.items():
+            if k != "trace":
+                child_prefix = f"{path_prefix}.{k}" if path_prefix else k
+                _walk_canvas(v, child_prefix, ctx)
+    elif isinstance(node, list):
+        for i, item in enumerate(node):
+            _walk_canvas(item, f"{path_prefix}[{i}]", ctx)
+
+
+def collect_trace_graph():
+    """Walk all canvas files; build trace graph + per-file id sets.
+
+    Returns (graph, all_ids, errors). Errors include per-file ID uniqueness
+    violations (corrections.md 2026-05-04 — G-V12 coverage proof in
+    test_validate_canvas.py).
     """
     graph = defaultdict(set)
     all_ids = set()
@@ -137,88 +174,66 @@ def collect_trace_graph():
     for canvas_path in sorted(CANVAS_DIR.glob("*.yml")):
         try:
             data = load_yaml(canvas_path)
-        except Exception:
+        except (yaml.YAMLError, OSError) as exc:
+            # Best-effort: schema validator already reports bad YAML separately.
+            print(
+                f"  warn: skipping {canvas_path.name} during trace walk: {exc}",
+                file=sys.stderr,
+            )
             continue
         if data is None or not isinstance(data, dict):
             continue
 
-        canvas_id = canvas_path.stem
-        all_ids.add(canvas_id)
+        stem = canvas_path.stem
+        all_ids.add(stem)
 
-        # Per-file ID list (allows duplicate detection — set would silently dedupe).
-        file_ids = []
+        # Per-file ID list — set would silently dedupe and miss collisions.
+        file_ids: list[str] = []
+        ctx = {"stem": stem, "graph": graph, "all_ids": all_ids, "file_ids": file_ids}
+        _walk_canvas(data, stem, ctx)
 
-        # Walk recursively looking for trace blocks
-        def walk(node, path_prefix):
-            if isinstance(node, dict):
-                # Check for an id field that we can register
-                node_id = node.get("id")
-                if node_id and isinstance(node_id, str):
-                    qualified = f"{canvas_path.stem}#{node_id}"
-                    all_ids.add(qualified)
-                    file_ids.append(node_id)
-
-                # Check for a trace block
-                trace_block = node.get("trace")
-                if isinstance(trace_block, dict):
-                    upstream = trace_block.get("upstream") or []
-                    if isinstance(upstream, list):
-                        for edge in upstream:
-                            if isinstance(edge, dict) and "target_id" in edge:
-                                target = edge["target_id"]
-                                source = node.get("id") or path_prefix
-                                graph[source].add(target)
-
-                for k, v in node.items():
-                    if k != "trace":
-                        walk(v, f"{path_prefix}.{k}" if path_prefix else k)
-            elif isinstance(node, list):
-                for i, item in enumerate(node):
-                    walk(item, f"{path_prefix}[{i}]")
-
-        walk(data, canvas_path.stem)
-
-        # Per-file ID uniqueness check (corrections.md 2026-05-04 — closes the
-        # "validator passes on incomplete checks" pattern; G-V12 coverage proof).
-        seen = {}
+        # Per-file ID uniqueness check.
+        seen: dict[str, int] = {}
         for nid in file_ids:
             seen[nid] = seen.get(nid, 0) + 1
         duplicates = sorted(nid for nid, count in seen.items() if count > 1)
-        for dup in duplicates:
-            errors.append(
-                f"{canvas_path.name} :: duplicate id '{dup}' "
-                f"(appears {seen[dup]}x within file — ids must be unique per canvas)"
-            )
+        errors.extend(
+            f"{canvas_path.name} :: duplicate id '{dup}' "
+            f"(appears {seen[dup]}x within file — ids must be unique per canvas)"
+            for dup in duplicates
+        )
 
     return graph, all_ids, errors
 
 
 def resolve_trace_references(graph, all_ids):
-    """
-    Verify every target_id in the graph resolves to a known id.
+    """Verify every target_id in the graph resolves to a known id.
+
+    Target taxonomy (recognized prefixes for cross-canvas references):
+        canvas_basename                          e.g. "opportunities"
+        canvas_basename#entry_id                 e.g. "opportunities#opp-001"
+        {decision-log,external,memory}#anything  external — assume valid
+
     Returns list of error strings.
     """
+    external_namespaces = {"decision-log", "external", "memory"}
     errors = []
     for source, targets in graph.items():
         for target in targets:
-            # Targets can be:
-            # - canvas_basename (e.g. "opportunities")
-            # - canvas_basename#entry_id (e.g. "opportunities#opp-001")
-            # - external (e.g. "decision-log#2026-04-09-pivot")
-            # We can only validate the first two types here.
             if "#" in target:
                 base, _ = target.split("#", 1)
-                if base in {"decision-log", "external", "memory"}:
-                    continue  # External reference — assume valid
+                if base in external_namespaces:
+                    continue
                 if target not in all_ids:
                     errors.append(
-                        f"Trace edge from '{source}' references '{target}' which does not resolve to any known canvas entry"
+                        f"Trace edge from '{source}' references '{target}' "
+                        f"— does not resolve to any known canvas entry",
                     )
-            else:
-                if target not in all_ids and target not in {"decision-log", "external", "memory"}:
-                    errors.append(
-                        f"Trace edge from '{source}' references '{target}' which does not resolve to any canvas file"
-                    )
+            elif target not in all_ids and target not in external_namespaces:
+                errors.append(
+                    f"Trace edge from '{source}' references '{target}' "
+                    f"— does not resolve to any canvas file",
+                )
     return errors
 
 
@@ -229,7 +244,7 @@ def detect_cycles(graph):
     """
     in_degree = defaultdict(int)
     nodes = set(graph.keys())
-    for source, targets in graph.items():
+    for targets in graph.values():
         for target in targets:
             in_degree[target] += 1
             nodes.add(target)
@@ -248,7 +263,8 @@ def detect_cycles(graph):
     if visited < len(nodes):
         # Find which nodes are in the cycle
         in_cycle = [n for n in nodes if in_degree[n] > 0]
-        return [f"Trace graph contains cycle(s) involving: {', '.join(sorted(in_cycle)[:10])}"]
+        cycle_sample = ", ".join(sorted(in_cycle)[:10])
+        return [f"Trace graph contains cycle(s) involving: {cycle_sample}"]
     return []
 
 
@@ -285,7 +301,10 @@ def main():
 
     schemas_present = len(list(SCHEMA_DIR.glob("*.schema.json"))) - 1  # exclude _common
     canvases_present = len(list(CANVAS_DIR.glob("*.yml")))
-    print(f"Canvas validation: PASS ({canvases_present} canvas files, {schemas_present} schemas, {len(all_ids)} traceable IDs)")
+    print(
+        f"Canvas validation: PASS ({canvases_present} canvas files, "
+        f"{schemas_present} schemas, {len(all_ids)} traceable IDs)",
+    )
     sys.exit(0)
 
 
