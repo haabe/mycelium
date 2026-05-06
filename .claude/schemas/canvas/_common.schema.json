@@ -66,6 +66,10 @@
           },
           "description": "Parallel array to evidence_sources classifying each source's origin. Optional — unclassified sources default to internal_desk for ratio calculations. Added in v0.11.0 to address the internal/external evidence ratio Goodhart trap."
         },
+        "source_class": {
+          "$ref": "#/$defs/source_class",
+          "description": "Single source class applying to all evidence_sources. Convenience form when every source is the same class (the common case). The framework convention uses the singular form at the top level of evidence entries; allowing it here matches that convention. If both source_class and source_classes are present, source_classes (per-source) takes precedence."
+        },
         "captured_at": {
           "$ref": "#/$defs/iso_timestamp"
         },
@@ -76,6 +80,10 @@
           "type": "boolean",
           "default": true,
           "description": "Whether this evidence has been independently validated. Set to false for internal_stakeholder claims about users (organizational mythology). Resolved to true by /assumption-test when the claim is confirmed through external evidence. Unset defaults to true (most evidence is what it claims to be)."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Free-text annotation about how the evidence was gathered, caveats, or context that doesn't fit other fields. Optional. Kept short — provenance is reference metadata, not narrative."
         }
       },
       "required": ["evidence_type", "evidence_sources"],

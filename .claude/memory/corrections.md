@@ -12,6 +12,7 @@
 - **Process cliff after onboarding**: After /interview, entire Mycelium process was abandoned — no diamonds, no canvas updates, no theory gates for 75% of the session. Discovery-to-delivery transition needs a lightweight mode.
 - **Over-scope before constraints**: Agent proposed 20-hour plan before learning user had 8 hours. Ask time/resource constraints before proposing scope.
 - **Eval overfitting**: Agent encoded test answers into data documentation to pass evals. New anti-pattern documented.
+- **provenance singular/plural mismatch**: `_common.schema.json` accepted only `source_classes` (plural array) inside provenance, but framework convention uses singular `source_class` everywhere else. Writers (especially `/interview`) reached for the singular form and got rejected. Schema now accepts both + `notes`.
 
 ## Format
 
@@ -89,6 +90,15 @@ _Corrections that apply broadly across projects and contexts._
 - **Correction**: Ask time/resource constraints before proposing scope. When the user says "let's build X," the first response should include "What's your time budget?" — not a 20-hour plan.
 - **Prevention**: Add constraint discovery to the top of any delivery planning: time budget, resource constraints, demo vs. production, audience. This maps to the new G-V11 success criteria requirement — criteria include what's achievable within the constraint.
 - **Source**: Hoskins transcript (2026-04-25). Goldratt (Theory of Constraints — identify the constraint before optimizing). Patton (build to learn — scope to the learning, not the vision).
+
+### 2026-05-06 - provenance schema rejected the framework's own canonical evidence vocabulary
+- **Scope**: quality
+- **Category**: engineering
+- **Origin**: ai-generated
+- **Mistake**: During pre-run dogfooding for the 2026-05-07 Juniors.dev presentation, `/interview` populated `jobs-to-be-done.yml` and `opportunities.yml`. Validation failed three times with `Additional properties are not allowed ('source_class' was unexpected)` and `('notes' was unexpected)` inside `provenance` blocks. Root cause: the framework convention uses singular `source_class` at the top level of every evidence entry across `purpose.yml`, `landscape.yml`, `metrics-pull` snapshots, and 5+ skills — the agent generalized that convention into provenance blocks. But the provenance sub-schema (`_common.schema.json#/$defs/provenance`) accepted only `source_classes` (plural array) and had `additionalProperties: false`. Same concept, two field names depending on schema depth — a structural footgun. The agent also reached for `notes` as a natural free-text field; schema rejected it without offering a sanctioned alternative.
+- **Correction**: Schema now accepts singular `source_class` (single enum value, applying to all `evidence_sources`) AND `notes` (optional free-text string) inside provenance, alongside the existing plural `source_classes`. Strict mode preserved for everything else — typos still caught. If both `source_class` and `source_classes` are present, `source_classes` (per-source) takes precedence.
+- **Prevention**: When `additionalProperties: false` is used, audit whether the rejected fields are typos or natural-feeling fields the rest of the framework conventions point toward. If the latter, accept them rather than fight the convention. Sister pattern to "documented rule diverges from enforcement" (5th-instance graduation Check 26, 2026-05-04) — same shape: schema layer disagrees with the convention the rest of the framework teaches.
+- **Source**: Self-detected during dogfood pre-run for Juniors.dev presentation. Theory: DRY (one canonical name per concept across schema depths), POLA (Principle of Least Astonishment — Saltzer & Schroeder; what the rest of the framework teaches should also work in narrower scopes).
 
 ### 2026-04-30 - Eval overfitting in documentation
 - **Scope**: quality
