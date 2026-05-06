@@ -99,7 +99,18 @@ Drew Hoskins (author *The Product-Minded Engineer*; Staff PM at Temporal) ran a 
 | Documentation annotated to pass eval rather than fix the data | "Eval Overfitting" anti-pattern in `anti-patterns.md` |
 | Negative documentation pattern (defining things by what they are NOT) | "Negative Documentation" anti-pattern |
 
-This is what *"Mycelium gets smarter with each project cycle"* actually looks like. Not a promise — receipts. The project that didn't ship contributed more to the framework than the two that did, and one outside user's 8-hour session contributed seven changes that are visible in the version you're reading now.
+### framework-self-correction (May 1 → May 4) — *what the framework caught itself doing*
+A four-day cycle where Mycelium's own harness flagged recurring patterns in its own work and graduated them into mechanism. No outside user, no new project — the inputs were the framework's own corrections log, validator output, and one user remark on May 4 ("the self-learning mechanisms should automatically log both errors and warnings"). Commits [`91186b8`](https://github.com/haabe/mycelium/commit/91186b8), [`200b4d6`](https://github.com/haabe/mycelium/commit/200b4d6), [`c25aaff`](https://github.com/haabe/mycelium/commit/c25aaff), [`d6c4e9d`](https://github.com/haabe/mycelium/commit/d6c4e9d):
+
+| What the framework caught | What now exists in Mycelium |
+|---|---|
+| Validators shipping without tests proving they catch what they claim to catch | Guardrail **G-V12**: every check ships with a coverage-proof test on a known-bad case |
+| Pre-ship gap/misalignment/dead-end analysis silently skipped despite repeated user instruction | Guardrail **G-P-pre**: Mandatory Pre-Ship Protocol — visible bulleted gap analysis on substantive work, not "I checked everything" |
+| AI-component products had no explainability surface or recourse path | `/xai-check` skill + theory Gate 13 + `ai-system-card.md` template (EU AI Act Art. 13/50 alignment) |
+| Documented version-bump rule kept diverging from what actually shipped (5th instance of "documented rule diverges from enforcement") | **Check 26**: validator detects material framework changes since the last version bump and FAILs the harness |
+| CI warnings (validator + upgrade output) had no path back into the learning loop | `ingest_warnings.py` + `warning-handbook.md` + `warnings-log.md` — same machinery as `corrections.md`, now feeding `/corrections-audit` |
+
+This is what *"Mycelium gets smarter with each project cycle"* actually looks like. Not a promise — receipts. The project that didn't ship contributed more to the framework than the two that did. One outside user's 8-hour session contributed seven changes. And four days later the framework graduated five more patterns from its own friction log without needing a new project to do it.
 
 ## How It Works
 
