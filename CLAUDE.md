@@ -1,6 +1,8 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.16.2 -- Patch on 0.16.1: provenance schema accepts singular `source_class` (single enum) and `notes` (free-text) alongside the existing plural `source_classes`. Reason: rest of framework convention uses singular `source_class` at top level of evidence entries (5+ skills teach it that way); writers — especially `/interview` — generalized that pattern into provenance blocks where `additionalProperties: false` rejected them. Same shape as Check 26's "documented rule diverges from enforcement" cluster, this time at the schema layer instead of the validator layer. Detected during Juniors.dev presentation pre-run dogfood (2026-05-06). Strict mode preserved for all other unknown fields (typos still caught). Tested both ways: previously-rejected real-world shape now PASSes, typo `soruce_class` still rejected.
+*Version 0.16.3 -- Patch on 0.16.2: CLAUDE.md "Canvas writes — Read before Write" paragraph added under "The Canvas (Source of Truth)." Canvas files ship pre-populated as templates (every `.claude/canvas/*.yml` exists on a fresh project), so Claude Code's `Write` tool always trips its read-before-write check; `cat` via Bash does not satisfy it. Detected during Juniors.dev pre-run dogfood (2026-05-06) — `/interview` failed reliably on fresh projects. Affects every canvas-writing skill (/interview, /canvas-update, /log-evidence, /jtbd-map, /wardley-map, /ost-builder, /gist-plan, /dora-check, every metric-pull evidence write). Documentation-only fix; if it recurs, graduate to a PreToolUse hook on `.claude/canvas/*.yml`.
+
+0.16.2 (folded) -- Provenance schema accepts singular `source_class` (single enum) and `notes` (free-text) alongside plural `source_classes`. Strict mode preserved (typos still caught). Same shape as Check 26's "documented rule diverges from enforcement" cluster, at schema layer.
 
 0.16.1 (folded) -- Check 26 refined to WARN on uncommitted post-bump material edits; .claude/tests/ added to watched material paths; AGENTS.md surfaces upgrade.sh + version-bump caveat.
 
@@ -120,6 +122,8 @@ All product knowledge lives in `.claude/canvas/*.yml`. These files are:
 **Never make a significant decision without first checking and updating the relevant canvas file.**
 
 Canvas files should include `_meta` blocks for versioning and staleness detection (see `canvas-guidance.yml`). Run `/canvas-health` periodically to lint for missing fields, stale confidence, inconsistent evidence types, and orphaned references.
+
+**Canvas writes — Read before Write.** Every canvas file ships pre-populated as a template (header comments + placeholder fields), so on a fresh project every `.claude/canvas/*.yml` already exists. Claude Code's `Write` tool requires a prior `Read` (the same tool, same session) on existing files; `cat` via Bash does NOT satisfy this check. When a skill populates a canvas file, the agent must use the **Read tool** on the canvas file *before* Write. Use `Edit` for partial updates (also requires prior Read). This applies to `/interview`, `/canvas-update`, `/log-evidence`, `/jtbd-map`, `/wardley-map`, `/ost-builder`, `/gist-plan`, `/dora-check`, every metric-pull evidence write, and any other skill that touches `.claude/canvas/*.yml`. Detected during Juniors.dev pre-run dogfood (2026-05-06).
 
 ## Harnessing System
 

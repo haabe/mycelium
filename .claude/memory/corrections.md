@@ -13,6 +13,7 @@
 - **Over-scope before constraints**: Agent proposed 20-hour plan before learning user had 8 hours. Ask time/resource constraints before proposing scope.
 - **Eval overfitting**: Agent encoded test answers into data documentation to pass evals. New anti-pattern documented.
 - **provenance singular/plural mismatch**: `_common.schema.json` accepted only `source_classes` (plural array) inside provenance, but framework convention uses singular `source_class` everywhere else. Writers (especially `/interview`) reached for the singular form and got rejected. Schema now accepts both + `notes`.
+- **Canvas Write trips Claude Code's read-before-write check**: Canvas files ship pre-populated as templates, so they exist on every fresh project. `Write` tool requires prior `Read` (same tool); `cat` via Bash doesn't count. Every canvas-writing skill (/interview, /canvas-update, /log-evidence, etc.) hit this. Documented in CLAUDE.md "Canvas writes — Read before Write."
 
 ## Format
 
@@ -90,6 +91,15 @@ _Corrections that apply broadly across projects and contexts._
 - **Correction**: Ask time/resource constraints before proposing scope. When the user says "let's build X," the first response should include "What's your time budget?" — not a 20-hour plan.
 - **Prevention**: Add constraint discovery to the top of any delivery planning: time budget, resource constraints, demo vs. production, audience. This maps to the new G-V11 success criteria requirement — criteria include what's achievable within the constraint.
 - **Source**: Hoskins transcript (2026-04-25). Goldratt (Theory of Constraints — identify the constraint before optimizing). Patton (build to learn — scope to the learning, not the vision).
+
+### 2026-05-06 - Canvas Write fails on fresh projects — read-before-write tool quirk
+- **Scope**: orchestration
+- **Category**: process
+- **Origin**: ai-generated
+- **Mistake**: During Juniors.dev presentation pre-run, a fresh `npx degit haabe/mycelium test-demo1` followed by `/interview` failed at the canvas-write step with "Error writing file" on `purpose.yml` and `jobs-to-be-done.yml`. Reproduced reliably on a second fresh project. Root cause: canvas files ship pre-populated as templates (header comments + placeholder fields), so every `.claude/canvas/*.yml` already exists on a fresh project. Claude Code's `Write` tool requires a prior `Read` (same tool, same session) on existing files; `cat` via Bash does NOT satisfy the check. The agent had `cat`-ed the file during interview synthesis but never invoked the Read tool, so Write was rejected. No skill in the framework instructed the agent to use Read before Write on canvas files — a structural assumption baked into Mycelium's tooling that wasn't surfaced.
+- **Correction**: Added a "Canvas writes — Read before Write" paragraph to `CLAUDE.md` under "The Canvas (Source of Truth)." Spells out the tool-quirk explicitly, names the affected skills (every canvas-writing skill), and tells the agent to use the Read tool before Write. Edit also requires prior Read but is the right tool for partial updates.
+- **Prevention**: Future skills that populate canvas files inherit this guidance from CLAUDE.md without per-skill duplication. If this recurs as a per-skill failure (≥3 instances), graduate to a PreToolUse hook on `.claude/canvas/*.yml` that injects "use Read tool first" into the deny reason — converts the quirk into a self-explaining harness rule.
+- **Source**: Detected during 2026-05-07 Juniors.dev presentation pre-run dogfood. Theory: Lopopolo ("every interaction is a failure of the harness to provide enough context") — the agent's behavior was correct given the context it had; the harness was missing the tool-quirk context. Brooks (No Silver Bullet — accidental complexity from tool quirks should be absorbed by the harness, not pushed to the user).
 
 ### 2026-05-06 - provenance schema rejected the framework's own canonical evidence vocabulary
 - **Scope**: quality
