@@ -23,6 +23,15 @@ After `/interview` creates the first diamond, users need a mental model of the f
 
 ## How to Render
 
+**STRICT — reproduce the template literally.** Render the template below verbatim; substitute only the dynamic values (symbol per scale, phase markers, confidence text, next-action text). Do not redesign the layout. Do not add box-drawing characters or vertical connectors. Do not change the title text. Do not omit scales. Do not paraphrase the scale descriptions.
+
+Common deviations seen in the wild — all wrong:
+- ❌ Title `You Are Here — Wayfinding Map` → use `YOUR JOURNEY` (caps, no subtitle).
+- ❌ Symbol `●` → use `◆` (active), `✦` (completed), `○` (not started), `–` (skipped).
+- ❌ Vertical tree with `┐ │ ┘` connectors → use one line per scale, horizontal phase progression with `→`.
+- ❌ Inline confidence on the active line (e.g., `← YOU ARE HERE (Discover, confidence 0.3)`) → confidence belongs in the footer, after the closing horizontal rule.
+- ❌ Skipping the plain-language description line under each scale → always include it.
+
 Read `diamonds/active.yml` and render the map. Rules:
 
 ### Scale indicators

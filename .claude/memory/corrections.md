@@ -14,6 +14,7 @@
 - **Eval overfitting**: Agent encoded test answers into data documentation to pass evals. New anti-pattern documented.
 - **provenance singular/plural mismatch**: `_common.schema.json` accepted only `source_classes` (plural array) inside provenance, but framework convention uses singular `source_class` everywhere else. Writers (especially `/interview`) reached for the singular form and got rejected. Schema now accepts both + `notes`.
 - **Canvas Write trips Claude Code's read-before-write check**: Canvas files ship pre-populated as templates, so they exist on every fresh project. `Write` tool requires prior `Read` (same tool); `cat` via Bash doesn't count. Every canvas-writing skill (/interview, /canvas-update, /log-evidence, etc.) hit this. Documented in CLAUDE.md "Canvas writes — Read before Write."
+- **Wayfinding map improvised against spec**: Agent rendered `You Are Here — Wayfinding Map` with vertical box-drawing characters instead of `YOUR JOURNEY` template with horizontal phase progression. Doc was descriptive, not prescriptive. Tightened wayfinding.md with explicit "STRICT — reproduce the template literally" + a list of common deviations.
 
 ## Format
 
@@ -91,6 +92,15 @@ _Corrections that apply broadly across projects and contexts._
 - **Correction**: Ask time/resource constraints before proposing scope. When the user says "let's build X," the first response should include "What's your time budget?" — not a 20-hour plan.
 - **Prevention**: Add constraint discovery to the top of any delivery planning: time budget, resource constraints, demo vs. production, audience. This maps to the new G-V11 success criteria requirement — criteria include what's achievable within the constraint.
 - **Source**: Hoskins transcript (2026-04-25). Goldratt (Theory of Constraints — identify the constraint before optimizing). Patton (build to learn — scope to the learning, not the vision).
+
+### 2026-05-06 - Wayfinding map: agent improvised layout against template
+- **Scope**: discovery
+- **Category**: communication
+- **Origin**: ai-generated
+- **Mistake**: After `/interview` populated the canvas, the agent rendered the post-interview wayfinding map as a vertical tree (`L0 Purpose ●──┐ │ L1 Strategy ○─┤ │ ...`) with title `You Are Here — Wayfinding Map`, `●` symbol, no phase progression, and inline confidence on the active line (`← YOU ARE HERE (Discover, confidence 0.3, anecdotal)`). The wayfinding.md spec called for a different layout: title `YOUR JOURNEY`, horizontal phase progression (`Discover ✓ → Define → Develop → Deliver`), `◆` for active, plain-language description per scale, footer with confidence + next-action. Root cause: wayfinding.md described the rendering rules and showed a template, but didn't forbid alternative layouts. The agent had latitude to "interpret" and used it.
+- **Correction**: Tightened `engine/wayfinding.md` with a "STRICT — reproduce the template literally" header at the top of "How to Render," plus a list of common improvisations to forbid (vertical box-drawing, `●` instead of `◆`, inline confidence, missing descriptions, alternate titles). Same template, but no room to redesign.
+- **Prevention**: When a doc is descriptive but the agent has visual latitude, expect it to improvise. For rendering specs, lead with "reproduce verbatim, do not redesign" and enumerate common deviations. If this recurs (≥3 instances of layout-improvisation across other rendering docs), graduate to a meta-pattern: "rendering specs must be prescriptive, not descriptive."
+- **Source**: Detected during 2026-05-07 Juniors.dev presentation pre-run dogfood. Theory: NNGroup (You-Are-Here pattern depends on consistency for orientation; improvised layouts defeat the purpose). Lopopolo (the harness must remove latitude where consistency matters).
 
 ### 2026-05-06 - Canvas Write fails on fresh projects — read-before-write tool quirk
 - **Scope**: orchestration
