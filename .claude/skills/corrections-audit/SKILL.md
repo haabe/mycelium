@@ -66,6 +66,15 @@ Analyze corrections.md for trends, recurring patterns, and actionable insights.
    - **Surface mis-counted clusters**: a recurring failure mode silently accumulating without a cluster entry IS the harness-context-debt the cluster log was created to scope. If you find correction patterns that should have been counted but weren't, propose backfill entries.
    - **Recursive check**: a cluster's graduation criterion not being honored is itself an instance of the documented-rule-diverges-from-enforcement cluster. If you detect this, log it as a new instance of that cluster (with appropriate eyebrow-raising in the report).
 
+6c. **Scan `docs/receipts/cases/` frontmatter for graduation signals** (added 2026-05-08 with the docs restructure):
+   For each case file in `docs/receipts/cases/*.md`:
+   - **Parse YAML frontmatter** (`id`, `date`, `contributor`, `mechanism_or_status`, `commits`, `subclass`).
+   - **Cross-reference with `cluster-instances.md`**: if the case's `subclass` field names a known cluster, ensure the cluster's instance count includes this case. If the case is the first instance of a recurring shape that has no cluster entry, propose a new cluster.
+   - **Detect mechanism-or-status patterns**: if multiple cases share a `mechanism_or_status: in-progress` and the underlying friction recurs, that is a graduation-readiness signal — the partial fix has not converged. If multiple cases share `mechanism_or_status: one-off`, check whether they actually share a root-cause shape that warrants graduation to a cluster.
+   - **Report contributor distribution**: which contributors produce the most receipts? Solo internal-dogfood receipts are valid but the framework's claim of community-shaped feedback weakens if external_human contributor cases are sparse. Flag if external receipts < internal receipts × 0.2 across the last 90 days.
+   - **Identify candidate-graduation cases**: a `mechanism_or_status: spec` that has been at spec ≥30 days without a promotion-bar update is a stalled-spec signal worth surfacing.
+   *The frontmatter exists specifically so this audit step can detect graduations from cases without parsing prose. See `docs/contributing/style.md#receipts-case-file-frontmatter`.*
+
 7. **Consolidate memory files** (automated hygiene):
    - **Deduplication**: Identify corrections that describe the same root cause in different words. Merge into a single entry, preserving all dates and evidence.
    - **Contradiction detection**: Flag corrections that contradict each other (e.g., "always use X" vs "never use X"). Present conflicts to the user for resolution.

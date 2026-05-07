@@ -91,6 +91,28 @@ Read `.claude/memory/cluster-instances.md`. For each cluster:
 
 This step closes the recursion the cluster log was created to address: graduation criteria become mechanically auditable rather than promises stored in commit messages.
 
+### 4c. Receipts Highlights Rotation Cadence (added 2026-05-08)
+
+The README's "How Mycelium got smarter" section shows 5 case headers; the full list lives in `docs/receipts/cases/`. Stale README highlights are a Goodhart signal: if the receipts surface freezes, the framework's "we get smarter with each cycle" claim degrades to "we got smarter once".
+
+For each case currently on the README:
+- **Check git-log staleness**: when did the case header last change? If >90 days, flag as a rotation candidate.
+- **Check for newer cases**: are there cases under `docs/receipts/cases/` newer than the rotation candidate that better demonstrate the framework's recent behavior?
+- **Recommend rotation**: surface specific rotate-out / rotate-in pairs in the dashboard. Rotation is a maintainer decision, not automatic — but the flag forces the decision rather than letting it drift.
+- **Highlight gap signal**: if no case has been added to `docs/receipts/cases/` in >60 days, flag as a possible-low-friction signal — either the framework genuinely caused no recent friction (rare), or the dogfood loop has weakened (usually).
+
+Per `docs/contributing/style.md#highlights-rotation`. Cases stay in `docs/receipts/cases/` even when rotated off README; only the README mention rotates.
+
+### 4d. Docs Health Cross-Surface (added 2026-05-08)
+
+Run a lightweight version of `/canvas-health` step 9b on `docs/`:
+- Stub freshness (any forthcoming-doc `Last updated` >60 days)
+- Length budget compliance (hard caps)
+- Marketing-voice scan
+- Information-scent scan on links
+
+Surface in the dashboard. Full details delegate to `/canvas-health`.
+
 ### 5. Generate Dashboard
 
 ## Output

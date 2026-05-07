@@ -94,6 +94,20 @@ Audit the canvas knowledge base for quality, consistency, and completeness. The 
    - Flag canvas files where >50% of content matches the template defaults from canvas-guidance.yml
    - Flag files with placeholder text ("TBD", "TODO", "fill in later", "placeholder")
 
+9b. **Check `docs/` health** (added 2026-05-08 with the docs restructure):
+   - **Audience markers**: every public doc under `docs/` (excluding `docs/receipts/cases/` which carry frontmatter) must have **Audience**, **Time to read**, and **Last updated** lines in the first 5 lines. Flag missing markers.
+   - **Stub freshness**: docs containing `is forthcoming` are Phase 2 stubs. Flag any stub with `Last updated` older than 60 days — Phase 2 may have stalled.
+   - **Length budget compliance**: per `docs/README.md` and `docs/contributing/style.md`:
+     - README ≤ 250 lines (hard cap; soft cap 200)
+     - `docs/<page>.md` ≤ 400 lines (hard cap; soft cap 250)
+     - `docs/receipts/cases/<case>.md` ≤ 250 lines (hard cap; soft cap 150)
+     - Flag any file over hard cap (FAIL); warn over soft cap (NUDGE).
+   - **Last updated freshness**: any `docs/` file with `Last updated` older than 180 days gets flagged for refresh.
+   - **Information scent on links**: scan for "click here", "see [filename](path)" patterns — these violate the scent rule. Flag for review.
+   - **Marketing-voice scan**: scan for "powerful", "comprehensive", "robust", "seamless", "best-in-class". Flag occurrences for voice review per `docs/contributing/style.md`.
+   - **Receipts case frontmatter**: every file under `docs/receipts/cases/` must have YAML frontmatter with the required fields (id, date, contributor, contributor_link, project, mechanism_or_status, commits, subclass). Flag missing fields.
+   - **Highlights rotation cadence**: if README's "How Mycelium got smarter" section has not changed in >90 days (check git log for last commit touching that section), flag as a rotation candidate per `docs/contributing/style.md#highlights-rotation`. The flag is informational; rotation is a `/framework-health` decision, not an automatic move.
+
 10. **Log findings to decision-log.md** (MANDATORY):
    - APPEND a `### Canvas Health Report` entry to `harness/decision-log.md`
    - Include: overall status (HEALTHY/WARNINGS/CRITICAL), stale evidence found, refresh recommendations

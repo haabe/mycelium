@@ -1,5 +1,7 @@
 # Decision Log
 
+**Audience**: internal — published as audit trail, not as public reading.
+
 Record of significant decisions made during product development. Decisions are immutable once logged -- if a decision is reversed, log a new entry that references the original.
 
 ## Format

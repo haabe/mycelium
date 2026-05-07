@@ -1,5 +1,7 @@
 # Cluster Instances
 
+**Audience**: internal — published as audit trail, not as public reading.
+
 Tracks instances of recurring correction patterns ("clusters") and their graduation status. Without this file, "the cluster has graduated 5 times" has no auditable backing — and the framework's own stated graduation criteria (e.g., Check 26's "graduate at instance 6") become unenforceable promises rather than mechanical triggers.
 
 ## How clusters work
