@@ -15,6 +15,7 @@
 - **provenance singular/plural mismatch**: `_common.schema.json` accepted only `source_classes` (plural array) inside provenance, but framework convention uses singular `source_class` everywhere else. Writers (especially `/interview`) reached for the singular form and got rejected. Schema now accepts both + `notes`.
 - **Canvas Write trips Claude Code's read-before-write check**: Canvas files ship pre-populated as templates, so they exist on every fresh project. `Write` tool requires prior `Read` (same tool); `cat` via Bash doesn't count. Every canvas-writing skill (/interview, /canvas-update, /log-evidence, etc.) hit this. Documented in CLAUDE.md "Canvas writes — Read before Write."
 - **Wayfinding map improvised against spec**: Agent rendered `You Are Here — Wayfinding Map` with vertical box-drawing characters instead of `YOUR JOURNEY` template with horizontal phase progression. Doc was descriptive, not prescriptive. Tightened wayfinding.md with explicit "STRICT — reproduce the template literally" + a list of common deviations.
+- **`/diamond-progress` re-invocation interpreted as approval**: when a previous `/diamond-progress` left the diamond in pending-approval state, typing `/diamond-progress` again was silently treated as "yes, advance" rather than as a fresh evaluation request. Implicit behavior nowhere in SKILL.md. Surfaced during Juniors.dev pre-run dogfood (2026-05-06).
 
 ## Format
 
@@ -92,6 +93,15 @@ _Corrections that apply broadly across projects and contexts._
 - **Correction**: Ask time/resource constraints before proposing scope. When the user says "let's build X," the first response should include "What's your time budget?" — not a 20-hour plan.
 - **Prevention**: Add constraint discovery to the top of any delivery planning: time budget, resource constraints, demo vs. production, audience. This maps to the new G-V11 success criteria requirement — criteria include what's achievable within the constraint.
 - **Source**: Hoskins transcript (2026-04-25). Goldratt (Theory of Constraints — identify the constraint before optimizing). Patton (build to learn — scope to the learning, not the vision).
+
+### 2026-05-06 - `/diamond-progress` silently interprets re-invocation as approval
+- **Scope**: orchestration
+- **Category**: communication
+- **Origin**: ai-generated
+- **Mistake**: During Juniors.dev pre-run dogfood, the user ran `/diamond-progress` to evaluate L0 Discover→Define. Gates passed-with-caveats; the agent paused and asked for explicit human approval before mutating state ("Pending your explicit approval: progress L0 Purpose from Discover → Define?"). The user re-invoked `/diamond-progress` rather than typing "yes." The agent interpreted the re-invocation as approval and advanced the diamond, rendering `"Reading your re-invocation as approval — executing the progression now."` on screen. The user expected a fresh gate evaluation. The behavior is reasonable as a UX shortcut but is documented nowhere in `skills/diamond-progress/SKILL.md` — neither in the workflow steps, the human-approval section, nor a "shortcuts and conventions" subsection. Implicit harness behavior is a footgun: in this case it cost the user one round of confused re-running before the next `/diamond-progress` invocation finally produced the Define→Develop refusal moment.
+- **Correction**: At minimum, document the convention in `skills/diamond-progress/SKILL.md` step 4 (human approval): "If the user re-invokes `/diamond-progress` while a previous invocation is awaiting approval, that re-invocation is treated as approval. To force a fresh evaluation instead, the user should type `evaluate again` or modify state and then re-invoke." Better: add a line to the agent's pending-approval prompt that names the convention explicitly ("Reply 'yes' to advance, 'no' to stay, or re-invoke `/diamond-progress` to approve. Type 'evaluate again' to re-run gates."). The mechanism is fine; surfacing it removes the footgun.
+- **Prevention**: Audit other skills with deferred-action patterns for similar implicit conventions. `/diamond-progress pivot|park|kill` subcommands and `/preflight` are the most likely candidates. If a second instance of "implicit interaction convention" surfaces, graduate to a meta-rule: skills with multi-turn workflows must document interaction conventions in the prompt that asks for them, not in the skill text.
+- **Source**: Detected during 2026-05-07 Juniors.dev presentation pre-run. Theory: Norman (Design of Everyday Things — affordances must be visible, not implicit). Lopopolo (every interaction is a failure of the harness to provide enough context).
 
 ### 2026-05-06 - Wayfinding map: agent improvised layout against template
 - **Scope**: discovery
