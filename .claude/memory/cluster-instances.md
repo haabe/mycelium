@@ -35,11 +35,11 @@ A rule the framework teaches diverges from how the framework enforces it. Subcla
 
 **Mechanism graduation bar:** ≥3 detection rules from the spec validated against the cluster's instance corpus with <5% false-positive rate. See `engine/consistency-check-spec.md#promotion-bar`.
 
-**Total instances:** 8 (as of 2026-05-08)
+**Total instances:** 9 (as of 2026-05-08)
 
 **First instance:** pre-2026-04-28 (referenced in the Check 26 graduation commit `d6c4e9d`)
 
-**Most recent:** 2026-05-07 (JTBD schema lacks per-dimension backing)
+**Most recent:** 2026-05-08 (validator-template.sh checks coupled to old README structure)
 
 **Instance log:**
 
@@ -50,6 +50,7 @@ A rule the framework teaches diverges from how the framework enforces it. Subcla
 | 6 | 2026-05-06 | Singular `source_class` canonical at top-level, rejected inside provenance | schema-vs-discipline | Schema fix accepting both forms (commit `75a27cc`, version 0.16.2) |
 | 7 | 2026-05-06 | Wayfinding doc was descriptive, not prescriptive; agent improvised template | doc-vs-rendering | Doc tightened with STRICT marker + forbidden deviations (commit `4259121`, version 0.16.4) |
 | 8 | 2026-05-07 | JTBD schema can't natively express Christensen tripartite (per-dimension backing) | schema-vs-discipline | Schema fix + spec graduation (this commit, version 0.17.0) |
+| 9 | 2026-05-08 | `validate-template.sh` checks 2/3/4/6/12/13 coupled to old README structure that the docs split replaced; failed mid-Phase-1 ship | validator-vs-doc | Fixed inline during Phase 1 ship (commit `114d841`, version 0.18.0): Checks 2/3/4 deprecated (Check 5 covers via canvas-update SKILL.md); Check 6 reads `docs/skills/README.md` with stub-aware skip; Check 12 reads `engine/theory-gates.md` (canonical gate source); Check 13 reads `docs/theories.md` with stub-aware skip |
 
 **Spec-graduation rationale (2026-05-08):** Cluster reached the Check 26 stated graduation criterion ("graduate at instance 6") several days before today's audit; instances 6 and 7 were fixed individually without being counted. Today's instance 8 forced an honest recount and a decision: graduate fully now (full mechanism) vs spec-only (framework-discipline-driven choice). Chose spec because the cluster's instances are heterogeneous and a single detection rule covering all subclasses is research-shaped; spec articulates what consistency-checking means + sets a mechanical promotion bar without shipping a half-baked check. See `engine/consistency-check-spec.md` for full rationale.
 
