@@ -17,9 +17,9 @@ Analyze corrections.md for trends, recurring patterns, and actionable insights.
 
 ## Workflow
 
-1. **Load corrections AND warnings**: Read `.claude/memory/corrections.md` AND `.claude/memory/warnings-log.md` (the latter is auto-updated by `.claude/scripts/ingest_warnings.py` from CI signals — see `.claude/engine/warning-handbook.md`).
-   - If both empty: report "No corrections or warnings to audit" and stop
-   - Treat both as inputs to the same pattern analysis. Corrections capture agent-introduced failures; warnings capture framework-state debt. Same recurring-pattern shape, different origins.
+1. **Load corrections AND warnings AND clusters**: Read `.claude/memory/corrections.md`, `.claude/memory/warnings-log.md`, AND `.claude/memory/cluster-instances.md` (the cluster log graduated 2026-05-08 — canonical record of recurring-pattern instances and their graduation status; without it, "the cluster has graduated N times" has no auditable backing).
+   - If corrections + warnings both empty AND no clusters logged: report "No corrections, warnings, or clusters to audit" and stop
+   - Treat all three as inputs to the same pattern analysis. Corrections capture agent-introduced failures; warnings capture framework-state debt; cluster-instances capture cross-cluster pattern accumulation with explicit graduation criteria. Same recurring-pattern shape, different vantage points.
 
 2. **Categorize by frequency**:
    - Group corrections by `Category` (bias, security, engineering, process, communication)
@@ -51,12 +51,20 @@ Analyze corrections.md for trends, recurring patterns, and actionable insights.
    - Anti-pattern: stopping at "human error" or "agent didn't follow instructions" — ask why the system allowed it
    *Source: Toyoda/Ohno (5 Whys), adapted for agentic workflows.*
 
-6. **Identify graduation candidates** (across both corrections AND warnings):
-   - Correction logged 3+ times with same root cause -> propose new guardrail (draft G-XX entry)
+6. **Identify graduation candidates** (across corrections, warnings, AND cluster-instances):
+   - Correction logged 3+ times with same root cause -> propose new guardrail (draft G-XX entry) AND ensure a cluster-instances.md entry exists for the pattern
    - Warning class with `Count: 3+` and `Status: open` in warnings-log.md -> graduation candidate. Consult `warning-handbook.md` for the canonical fix; if the canonical fix is "manifest-driven" or similar structural pattern that's already shipped, the recurrence indicates a regression, not a new pattern.
    - Correction reveals a failure mode not in anti-patterns.md -> propose new anti-pattern entry
    - Correction reveals a successful mitigation -> propose new pattern in patterns.md
    - **Cross-cluster patterns**: when corrections + warnings together reveal the same shape (e.g., "documented rule diverges from enforcement" — fired both via validator gaps in warnings-log AND via agent-behavior corrections), graduate to a meta-pattern in patterns.md and consider whether one upstream mechanism could close both surfaces.
+
+6b. **Cluster-instance audit** (graduated 2026-05-08):
+   For each entry in `cluster-instances.md`:
+   - **Update instance count**: if any correction logged since the last audit fits an existing cluster's shape, increment that cluster's instance count and add a row to its instance log. If the shape is new and recurs (≥2 candidates), propose a new cluster section.
+   - **Check graduation criterion**: each cluster has a stated graduation criterion (e.g., "≥3 instances, ≥3 detection rules validated, <5% FP"). If a cluster has crossed its criterion without being graduated, flag it as a graduation-readiness signal.
+   - **Cross-reference spec docs**: if a cluster has a `spec` graduation status (e.g., "documented-rule-diverges-from-enforcement" → `engine/consistency-check-spec.md`), check whether new instances introduce subclass shapes the spec hasn't yet considered. New subclasses extend the spec; recurring known subclasses just increment the count.
+   - **Surface mis-counted clusters**: a recurring failure mode silently accumulating without a cluster entry IS the harness-context-debt the cluster log was created to scope. If you find correction patterns that should have been counted but weren't, propose backfill entries.
+   - **Recursive check**: a cluster's graduation criterion not being honored is itself an instance of the documented-rule-diverges-from-enforcement cluster. If you detect this, log it as a new instance of that cluster (with appropriate eyebrow-raising in the report).
 
 7. **Consolidate memory files** (automated hygiene):
    - **Deduplication**: Identify corrections that describe the same root cause in different words. Merge into a single entry, preserving all dates and evidence.
@@ -100,8 +108,14 @@ Period: [earliest date] to [latest date]
 ### Recurring Patterns
 - [Pattern description]: [N] occurrences -> [recommendation]
 
+### Cluster Status (from cluster-instances.md)
+| Cluster | Instances | Status | Graduation criterion | Notes |
+|---|---|---|---|---|
+| documented-rule-diverges-from-enforcement | 8 | spec | ≥3 detection rules validated, <5% FP | Spec at engine/consistency-check-spec.md (graduated 2026-05-08) |
+
 ### Graduation Candidates
 1. [Correction pattern] -> Proposed guardrail: G-XX "[text]" `[TIER]` `[type]`
+2. [Cluster X reaching its graduation criterion] -> Proposed promotion from <current_status> to <next_status>: <action>
 
 ### Failed Preventions
 - [Correction] was logged again despite prevention "[strategy]" -> [escalation]

@@ -81,6 +81,16 @@ For each dimension, verify the counter-metric is not degrading:
 - Earlier discards BUT false positive rate rising? Flag.
 - Better calibration BUT decision speed dropping? Flag.
 
+### 4b. Cluster Graduation-Readiness (added 2026-05-08)
+
+Read `.claude/memory/cluster-instances.md`. For each cluster:
+- **Compare instance count to graduation criterion.** If a cluster has reached or exceeded its stated criterion without being graduated to the corresponding mechanism (e.g., 6+ instances with spec-only status when promotion bar requires implemented detection rules), surface as a graduation-readiness flag.
+- **For `spec`-status clusters with linked spec docs** (e.g., `engine/consistency-check-spec.md`): check whether the spec's promotion-bar conditions have been met. Concretely: count detection rules drafted vs. required, FP-rate measurements available vs. needed.
+- **Recursive check**: if a cluster's stated graduation criterion has been met for >30 days without graduation action, that's itself an instance of the documented-rule-diverges-from-enforcement cluster — log it.
+- **Output**: include cluster status in the dashboard under a new "Cluster Graduation Status" section.
+
+This step closes the recursion the cluster log was created to address: graduation criteria become mechanically auditable rather than promises stored in commit messages.
+
 ### 5. Generate Dashboard
 
 ## Output
