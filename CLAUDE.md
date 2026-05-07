@@ -1,6 +1,8 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.16.4 -- Patch on 0.16.3: `engine/wayfinding.md` tightened with "STRICT — reproduce the template literally" header at the top of "How to Render" + an explicit list of common improvisations to forbid (vertical box-drawing, `●` instead of `◆`, inline confidence, missing descriptions, alternate titles). Reason: the doc was descriptive, not prescriptive; agent rendered the post-interview map as a vertical tree against `YOUR JOURNEY` horizontal-progression spec. Detected during Juniors.dev pre-run dogfood (2026-05-06). Same shape as 0.16.2 (schema vs framework convention) and 0.16.3 (canvas-write tool quirk) — three doc-layer footguns surfaced by one fresh-project pre-run.
+*Version 0.16.5 -- Patch on 0.16.4: `/diamond-progress` SKILL.md step 4 (human approval) now includes an explicit prompt-template that names the re-invocation-as-approval shortcut. Previously the convention was implicit; user re-invoking `/diamond-progress` while a previous run was awaiting approval would silently advance the diamond rather than re-run gates fresh, with no documentation in the skill. Detected 2026-05-06 Juniors.dev pre-run dogfood (corrections.md). The fix surfaces the shortcut in the prompt: "Reply yes to advance, no to stay. Re-invoking /diamond-progress is also treated as approval (shortcut). Type evaluate again to re-run gates from scratch." Footgun → visible affordance (Norman).
+
+0.16.4 (folded) -- engine/wayfinding.md tightened with "STRICT — reproduce the template literally" + explicit list of common improvisations to forbid. Reason: doc was descriptive, not prescriptive; agent improvised vertical-tree layout against horizontal-progression spec.
 
 0.16.3 (folded) -- CLAUDE.md "Canvas writes — Read before Write" paragraph: canvas files ship pre-populated as templates, so Claude Code's `Write` tool always requires a prior `Read` on a fresh project; `cat` via Bash doesn't count.
 

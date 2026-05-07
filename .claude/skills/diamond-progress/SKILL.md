@@ -78,6 +78,9 @@ Progress a diamond through phases with full theory gate validation. At delivery 
 4. **Check human approval requirement**:
    - Per confidence-thresholds.yml, is human approval required/recommended/optional?
    - If required: present assessment and wait for approval.
+   - **When asking for approval, include the interaction convention explicitly in the prompt** — do not leave it implicit. Use this template (or paraphrase faithfully):
+     > "Reply **yes** to advance, **no** to stay. Re-invoking `/diamond-progress` is also treated as approval (shortcut). Type **evaluate again** to re-run gates from scratch."
+   - This makes the implicit-shortcut convention visible. If the user re-invokes `/diamond-progress` while a previous invocation is awaiting approval, that re-invocation IS treated as approval — but only because the convention has been surfaced in the prompt above. Without the prompt-line, the behavior is a footgun (corrections.md 2026-05-06 — `/diamond-progress` re-invocation interpreted as approval).
 
 5. **Run bias check**: Execute bias-check for the current stage.
 
