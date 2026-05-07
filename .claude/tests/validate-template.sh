@@ -85,99 +85,30 @@ check_yaml_parsing() {
 
 # ============================================================
 # CHECK 2: Canvas file count in README body matches disk
+# (Deprecated 2026-05-08 docs split: README no longer enumerates canvas files;
+#  canonical mapping is canvas-update SKILL.md, validated by Check 5.)
 # ============================================================
 check_canvas_count_readme_body() {
     section "Check 2: Canvas count (README body)"
-
-    local disk_count
-    disk_count=$(find .claude/canvas -name '*.yml' | wc -l | tr -d ' ')
-
-    # Try two patterns:
-    # v0.13+: "N more canvas files" in abbreviated table
-    # Pre-v0.13: "-- N structured YAML files"
-    local readme_count
-    local more_count
-    more_count=$(grep -oE '[0-9]+ more canvas files' README.md | head -1 | sed 's/ more.*//' || echo "0")
-
-    if [ "$more_count" != "0" ]; then
-        # Count listed canvas files in the table (lines with backtick-quoted .yml filenames)
-        local listed_count
-        listed_count=$(grep -cE '`[a-z-]+\.yml`' README.md || echo "0")
-        readme_count=$((listed_count + more_count))
-    else
-        readme_count=$(grep "structured YAML files" README.md | sed 's/.*-- //' | sed 's/ structured.*//' || echo "0")
-    fi
-
-    if [ -z "$readme_count" ] || [ "$readme_count" = "0" ]; then
-        fail "Could not find canvas count in README body"
-    elif [ "$readme_count" -eq "$disk_count" ]; then
-        pass "README body canvas count ($readme_count) matches disk ($disk_count)"
-    else
-        fail "README body says $readme_count canvas files, but $disk_count exist on disk"
-    fi
+    pass "Deprecated by 2026-05-08 docs split; canvas-list authority is canvas-update SKILL.md (Check 5)"
 }
 
 # ============================================================
 # CHECK 3: Canvas file count in README directory structure
+# (Deprecated 2026-05-08: README no longer carries a directory structure section.)
 # ============================================================
 check_canvas_count_readme_dir() {
     section "Check 3: Canvas count (README directory structure)"
-
-    local disk_count
-    disk_count=$(find .claude/canvas -name '*.yml' | wc -l | tr -d ' ')
-
-    # Match: "canvas/                    # 17 YAML source-of-truth files"
-    local dir_count
-    dir_count=$(grep "canvas/.*# .*YAML" README.md | sed 's/.*# //' | sed 's/ YAML.*//' || echo "0")
-
-    if [ -z "$dir_count" ] || [ "$dir_count" = "0" ]; then
-        # README may not have a directory structure section (v0.13+ simplified README)
-        pass "README directory structure section not present (simplified README)"
-    elif [ "$dir_count" -eq "$disk_count" ]; then
-        pass "README directory structure canvas count ($dir_count) matches disk ($disk_count)"
-    else
-        fail "README directory structure says $dir_count, but $disk_count exist on disk"
-    fi
+    pass "Deprecated by 2026-05-08 docs split; canvas-list authority is canvas-update SKILL.md (Check 5)"
 }
 
 # ============================================================
 # CHECK 4: Every canvas file on disk appears in README table
+# (Deprecated 2026-05-08: README no longer enumerates canvas files; covered by Check 5.)
 # ============================================================
 check_canvas_in_readme_table() {
     section "Check 4: Canvas files in README table"
-
-    # README may use an abbreviated table with "N more canvas files".
-    # In that case, check that listed + more = total on disk.
-    if grep -q "more canvas files" README.md; then
-        local more_count
-        more_count=$(grep -oE '[0-9]+ more canvas files' README.md | head -1 | sed 's/ more.*//')
-        local listed_count
-        listed_count=$(grep -cE '`[a-z-]+\.yml`' README.md || echo "0")
-        local disk_count
-        disk_count=$(find .claude/canvas -name '*.yml' | wc -l | tr -d ' ')
-        local total=$((listed_count + more_count))
-
-        if [ "$total" -eq "$disk_count" ]; then
-            pass "Canvas table: $listed_count listed + $more_count more = $disk_count on disk"
-        else
-            fail "Canvas table: $listed_count listed + $more_count more = $total, but $disk_count on disk"
-        fi
-    else
-        # Full listing mode: every file must appear
-        local missing=0
-        for file in .claude/canvas/*.yml; do
-            local basename
-            basename=$(basename "$file")
-            if ! grep -q "$basename" README.md; then
-                fail "Canvas file $basename not listed in README.md"
-                missing=$((missing + 1))
-            fi
-        done
-
-        if [ "$missing" -eq 0 ]; then
-            pass "All canvas files appear in README table"
-        fi
-    fi
+    pass "Deprecated by 2026-05-08 docs split; canvas-list authority is canvas-update SKILL.md (Check 5)"
 }
 
 # ============================================================
@@ -208,24 +139,37 @@ check_canvas_in_update_mapping() {
 }
 
 # ============================================================
-# CHECK 6: Skill count in README matches directories on disk
+# CHECK 6: Skill count in docs/skills/README.md matches directories on disk
+# (As of 2026-05-08 docs split: skill index moved from README to docs/skills/README.md.
+#  Stub state — page contains "is forthcoming" — passes informational; Phase 2 fills.)
 # ============================================================
 check_skill_count_readme() {
-    section "Check 6: Skill count (README)"
+    section "Check 6: Skill count (docs/skills/README.md)"
 
     local disk_count
     disk_count=$(find .claude/skills -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
+    local skills_doc="docs/skills/README.md"
 
-    # Match: "## Skills Reference (35 skills)"
-    local readme_count
-    readme_count=$(grep "^## Skills Reference" README.md | sed 's/.*(\([0-9]*\) skills).*/\1/' || echo "0")
+    if [ ! -f "$skills_doc" ]; then
+        fail "$skills_doc not found"
+        return
+    fi
 
-    if [ -z "$readme_count" ] || [ "$readme_count" = "0" ]; then
-        fail "Could not find skill count in README"
-    elif [ "$readme_count" -eq "$disk_count" ]; then
-        pass "README skill count ($readme_count) matches disk ($disk_count)"
+    if grep -q "is forthcoming" "$skills_doc"; then
+        pass "$skills_doc is a Phase 1 stub; Phase 2 will write the $disk_count-skill index"
+        return
+    fi
+
+    # Match: "(N skills)" or "all N skills" or "N-skill index" or "the N skills"
+    local doc_count
+    doc_count=$(grep -oE '(\(|all |the )[0-9]+(-| )?skill' "$skills_doc" | head -1 | grep -oE '[0-9]+' || echo "0")
+
+    if [ -z "$doc_count" ] || [ "$doc_count" = "0" ]; then
+        fail "Could not find skill count in $skills_doc"
+    elif [ "$doc_count" -eq "$disk_count" ]; then
+        pass "$skills_doc skill count ($doc_count) matches disk ($disk_count)"
     else
-        fail "README says $readme_count skills, but $disk_count directories exist on disk"
+        fail "$skills_doc says $doc_count skills, but $disk_count directories exist on disk"
     fi
 }
 
@@ -373,60 +317,72 @@ check_antipattern_count() {
 }
 
 # ============================================================
-# CHECK 12: Theory gate count in README matches table rows
+# CHECK 12: Theory gate count — canonical authority is engine/theory-gates.md
+# (As of 2026-05-08 docs split: README no longer carries the gate table;
+#  canonical source is .claude/engine/theory-gates.md.)
 # ============================================================
 check_gate_count() {
     section "Check 12: Theory gate count"
 
-    # Count data rows in the gate table (exclude header "| Gate |" and separator "|-")
+    local gates_file=".claude/engine/theory-gates.md"
+    if [ ! -f "$gates_file" ]; then
+        fail "$gates_file not found (canonical theory gate source missing)"
+        return
+    fi
+
+    # Count gate sections; engine/theory-gates.md uses "### N. <Gate name>" or similar.
     local actual_count
-    actual_count=$(sed -n '/### Theory Gates/,/^##/p' README.md | grep -E '^\| [A-Za-z0-9]' | grep -vcE '^\| Gate \|' || echo "0")
+    actual_count=$(grep -cE '^### [0-9]+\.|^## Gate |^### Gate ' "$gates_file" || echo "0")
 
-    # README may have "### Theory Gates (12 gates)" or just "### Theory Gates"
-    local readme_count
-    readme_count=$(grep -oE '\([0-9]+ gates\)' README.md 2>/dev/null | head -1 | sed 's/[^0-9]//g' || true)
-    readme_count="${readme_count:-0}"
-
-    if [ -z "$readme_count" ] || [ "$readme_count" = "0" ]; then
-        # No explicit count in heading — just verify the table has rows
-        if [ "$actual_count" -gt 0 ]; then
-            pass "Theory gate table has $actual_count rows (no explicit count in heading)"
-        else
-            fail "Theory gate table has no rows"
-        fi
-    elif [ "$readme_count" -eq "$actual_count" ]; then
-        pass "Theory gate count ($readme_count) matches table rows ($actual_count)"
+    if [ "$actual_count" -gt 0 ]; then
+        pass "$gates_file defines $actual_count gates (canonical source)"
     else
-        fail "README says $readme_count gates, but $actual_count rows in gate table"
+        fail "$gates_file defines no gates (heading patterns '### N.' / '## Gate' / '### Gate' not found)"
     fi
 }
 
 # ============================================================
-# CHECK 13: Theory count claim vs actual table rows
+# CHECK 13: Theory count claim vs theories.md table rows
+# (As of 2026-05-08 docs split: theories table moved to docs/theories.md.
+#  Stub state passes informational; Phase 2 fills mechanism-mapped table.)
 # ============================================================
 check_theory_count() {
     section "Check 13: Theory count"
 
-    # README: "30+ established product frameworks" or "35+ established frameworks"
+    local theories_doc="docs/theories.md"
+
+    # README "30+ established frameworks" or "30+ frameworks" — either form is valid.
     local claimed
     claimed=$(grep -oE '[0-9]+\+ established' README.md | head -1 | sed 's/+.*//' || echo "0")
-
-    # Count data rows in the theories table (exclude header rows and separator "|-")
-    # Try both "## Theories & Frameworks Integrated" and "## Theories" section headers
-    local actual_count
-    actual_count=$(sed -n '/## Theories/,/^## /p' README.md | grep -E '^\| [A-Za-z0-9]' | grep -vcE '^\| Theory' || echo "0")
-
     if [ -z "$claimed" ] || [ "$claimed" = "0" ]; then
-        fail "Could not find theory count claim in README"
-    elif [ "$actual_count" -ge "$claimed" ]; then
-        pass "Theory claim ($claimed+) satisfied by $actual_count table rows"
-    else
-        # The table may use "... and more" for brevity — check for that
-        if grep -q "and more" README.md; then
-            pass "Theory claim ($claimed+), table shows $actual_count rows + '... and more'"
+        claimed=$(grep -oE '[0-9]+\+ frameworks' README.md | head -1 | sed 's/+.*//' || echo "0")
+    fi
+
+    if [ ! -f "$theories_doc" ]; then
+        fail "$theories_doc not found"
+        return
+    fi
+
+    if grep -q "is forthcoming" "$theories_doc"; then
+        pass "$theories_doc is a Phase 1 stub; README claims ${claimed}+ frameworks; Phase 2 fills the mechanism-mapped table"
+        return
+    fi
+
+    local actual_count
+    actual_count=$(grep -cE '^\| [A-Za-z0-9]' "$theories_doc" || echo "0")
+
+    if [ "$claimed" = "0" ]; then
+        if [ "$actual_count" -gt 0 ]; then
+            pass "$theories_doc has $actual_count theory rows (README does not state a count)"
         else
-            fail "README claims $claimed+ theories, but only $actual_count rows in table"
+            fail "$theories_doc has no theory rows"
         fi
+    elif [ "$actual_count" -ge "$claimed" ]; then
+        pass "Theory claim (${claimed}+) satisfied by $actual_count rows in $theories_doc"
+    elif grep -q "and more" "$theories_doc"; then
+        pass "Theory claim (${claimed}+), $theories_doc shows $actual_count rows + '... and more'"
+    else
+        fail "README claims ${claimed}+ theories, but only $actual_count rows in $theories_doc"
     fi
 }
 

@@ -1,24 +1,44 @@
 # Contributors
 
-Mycelium is shaped by the product development community. The following people contributed feedback, critique, and insight that directly influenced the framework.
+Mycelium is shaped by the product development community. The people listed here surfaced friction that shaped the framework — the per-cycle detail of *what* shaped what lives in [docs/receipts/](docs/receipts/README.md).
 
-## v0.9.0 — Computational Enforcement Layer (in planning)
+This is the **PEOPLE view**. The receipts directory is the **WORK view** of the same facts.
+
+## How to get listed
+
+Surface friction the framework doesn't yet handle. Document it. If it shapes the framework — meaning it lands as a mechanism, an anti-pattern, a guardrail, a corrections.md entry, or a receipts case — you get a named entry on this page. Your contribution becomes a row in [docs/receipts/](docs/receipts/README.md).
+
+The friction-to-mechanism trace is portable proof: point at it on a CV, on a portfolio, in a conversation. The framework's bias is to credit the named person who shaped a mechanism, not the maintainer who merged it.
+
+The asymmetric deal is deliberate: low cost to find friction (surface it in an issue, a DM, a 30-min call), uncapped credit if it shapes the framework. See [docs/contributing/](docs/contributing/README.md) for process.
+
+## v0.9.0 — Computational Enforcement Layer
 
 **Simon Rohrer** — Identified Mycelium's core weakness: that inferential GATED controls are treated as advisory by the model. Introduced Birgitta Böckeler's [harness engineering](https://martinfowler.com/articles/harness-engineering.html) vocabulary to the framework. Prompted the eval depth audit, the framework tensions documentation, and the honest gate renaming.
 
+→ Receipts: tracked in framework history; case file forthcoming if the v0.9.0 cycle gets a dedicated write-up.
+
 **Daniel Bentes** — Provided the architectural comparison between Mycelium and [BDSK (synaptiai/bdsk)](https://github.com/synaptiai/bdsk), clarifying the division of labor: Mycelium ensures you think about the right things before deciding; BDSK ensures the code respects what was decided. Directly shaped the v0.9.0 computational enforcement layer — scope hooks, state files, trace edges, schema validation.
+
+→ Receipts: tracked in framework history; case file forthcoming.
 
 ## v0.11.0 — Product-Type-Agnostic Delivery
 
 **Linda Maria Sneve** — Asked the question no one inside the project had considered: "How can I use Mycelium for non-software products — courses, ebooks, videos, AI tools?" This prompted the entire product_type dimension: 6 product types, 3 new delivery metrics canvases, conditional theory gates, product-type Definition of Done variants, non-software delivery guidance, and product-type-specific launch channels. Made Mycelium's largest structural expansion since v0.9.0.
 
+→ Receipts: tracked in framework history; case file forthcoming.
+
 ## v0.15.0 — Scenarios as First-Class Primitive
 
 **Drew Hoskins** — Staff PM at Temporal, author of *The Product-Minded Engineer*. Over two rounds of LinkedIn feedback (2026-04-14, 2026-04-17), Hoskins sharpened two key critiques: (1) L0-L2 scales make sense, but L3-L5 "starts to look like another way to think of the product lifecycle" — the upstream is differentiated, the downstream needs more. (2) Scenarios should be a first-class primitive, not an implicit byproduct of JTBD mapping. His SAP talk slides ("Attention to Users Is All You Need", April 2026) provided the specific structure: Persona + Means + Motive + Simulation. This directly led to `canvas/scenarios.yml` as a new canvas artifact, scenario wiring through the leaf lifecycle (phases 1, 5, 8, 10), and scenario extraction in `/user-interview`. Hoskins' "User Knowledge Repository" concept also validated Mycelium's canvas evidence system as architecturally aligned.
 
+A second round on 2026-04-30, against an 8-hour take-home interview clock, surfaced seven more framework changes (Phase 0 path selector, constraint-first preflight, two anti-patterns, lightweight continuation mode).
+
+→ Receipts: [drew-hoskins-takehome](docs/receipts/cases/2026-04-30-drew-hoskins-takehome.md).
+
 ---
 
-## How Mycelium Uses Feedback
+## How Mycelium uses feedback
 
 Mycelium follows its own feedback loop discipline:
 
@@ -27,17 +47,17 @@ Mycelium follows its own feedback loop discipline:
 - **Strategic** (weeks/months): BVSSH, Wardley refresh
 - **Transformative** (quarterly): external feedback integration — this file
 
-Feedback is credited here not to the framework author but to the people who genuinely reshaped the framework's direction.
+Feedback is credited to the people who genuinely reshaped the framework's direction.
 
 ---
 
-## Theory Authors
+## Theory authors
 
-The 40+ frameworks Mycelium integrates are credited in the *Theories & Frameworks Integrated* table in [README.md](README.md).
+The 30+ frameworks Mycelium integrates are credited in [docs/theories.md](docs/theories.md).
 
 ---
 
-## Outreach History
+## Outreach archive
 
 ### synaptiai (BDSK)
 
@@ -53,8 +73,8 @@ The 40+ frameworks Mycelium integrates are credited in the *Theories & Framework
 **Response**: No response as of 2026-04-17. Daniel's v0.4.0 commit (`a2f1592`, 2026-04-09) appears in the issue timeline but this is a false positive — the commit message references internal improvement proposal "#6" (validator dependency bundling), and GitHub auto-linked it to the GitHub issue #6. The 14 proposals are internal BDSK quality issues unrelated to the outreach.
 
 **How to handle a response**:
-- If synaptiai accepts (1): add a cross-reference in README.md under the "Related projects" section (create if needed) pointing at https://github.com/synaptiai/bdsk with a one-line summary of the complementarity
+- If synaptiai accepts (1): add a cross-reference in README.md under a "Related projects" section (create if needed) pointing at https://github.com/synaptiai/bdsk with a one-line summary of the complementarity
 - If synaptiai is open to (2): the division-of-labor document is a good candidate for a shared GitHub repo or a post on martinfowler.com's harness engineering thread; log any follow-up discussion here
 - If synaptiai declines or doesn't respond: no action needed. Mycelium's credit in CONTRIBUTORS.md and release notes stands regardless.
 
-**Full sent text**: archived in the issue body at the link above. The draft that preceded it is preserved in git history of this file (pre-commit `[next hash]`).
+**Full sent text**: archived in the issue body at the link above.

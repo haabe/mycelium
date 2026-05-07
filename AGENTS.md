@@ -1,34 +1,75 @@
 # Agents
 
-This repository uses Mycelium, a theory-guided harness for AI-assisted product development. See README.md for what it is and why.
+This repository uses Mycelium, a theory-guided harness for AI-assisted product development. See [README.md](README.md) for what it is and why.
 
 ## If you are operating in this repo
 
-**Claude Code agents:** your operating manual is CLAUDE.md. Read it first.
+**Claude Code agents:** your operating manual is [CLAUDE.md](CLAUDE.md). Read it first. Mycelium's full enforcement layer (hooks, gates, reflexion loops, framework-guard, secret detection) is Claude-Code-specific today.
 
-**Other agents (Codex, Cursor, Aider, Copilot, etc.):** Mycelium's active enforcement (hooks, gates, reflexion loops) is Claude-Code-specific today. You can still read and contribute to the canvas — see "Minimal path" below.
+**Other agents (Codex, Cursor, Aider, Copilot, etc.):** active enforcement is not yet portable. You can still read and contribute to the canvas — see "Minimal path" below. The portable surface is **canvas reading + writing + decision logging**; Claude-Code-specific is **everything that fires automatically** (PreToolUse hooks, PostToolUseFailure reflexion, secret-detection, framework-guard).
+
+Agent-class consumers are tracked as a distinct persona in `.claude/canvas/jobs-to-be-done.yml#non_consumption.segments[1]`. If you're integrating Mycelium into another agent harness, open an issue — interest validates the L5 work.
 
 ## What's available
 
-| Surface | What it is | Where |
-|---|---|---|
-| Skills | 45 invocable workflows (interview, ost-builder, security-review, xai-check, etc.) | `.claude/skills/*/SKILL.md` |
-| Upgrade | Update Mycelium framework files in this project | `bash .claude/scripts/upgrade.sh` (see also `docs/ai-system-card.md` for what's running and `engine/version-discipline.md` for what version bumps mean) |
-| Canvas | Source-of-truth product knowledge (YAML) | `.claude/canvas/*.yml` |
-| Diamonds | Active work state (which scale/phase the project is in) | `.claude/diamonds/active.yml` |
-| Memory | Accumulated corrections + patterns | `.claude/memory/` |
-| Hooks | Event-triggered behavior (Claude Code only) | `.claude/hooks/` |
-| Schemas | Validation contracts for canvas YAML | `.claude/schemas/canvas/*.schema.json` |
-| Conventions | Canvas guidance: source_class enum, confidence scoring, evidence types, action_flags | `.claude/engine/canvas-guidance.yml` |
+| Surface | What it is | Where | Claude-Code-specific? |
+|---|---|---|---|
+| Skills | 45 invocable workflows (interview, ost-builder, security-review, xai-check, etc.) | `.claude/skills/*/SKILL.md` | Auto-discovery is, prose is portable |
+| Upgrade | Update Mycelium framework files in this project | `bash .claude/scripts/upgrade.sh` (see [docs/ai-system-card.md](docs/ai-system-card.md), [.claude/engine/version-discipline.md](.claude/engine/version-discipline.md)) | No — pure shell |
+| Canvas | Source-of-truth product knowledge (YAML) | `.claude/canvas/*.yml` | No — pure data |
+| Diamonds | Active work state | `.claude/diamonds/active.yml` | No — pure data |
+| Memory | Accumulated corrections + patterns | `.claude/memory/` | No — pure data |
+| Hooks | Event-triggered behavior | `.claude/hooks/` | **Yes** |
+| Schemas | Validation contracts for canvas YAML | `.claude/schemas/canvas/*.schema.json` | No — pure JSON Schema |
+| Conventions | Canvas guidance (source_class, confidence, evidence types, action_flags) | `.claude/engine/canvas-guidance.yml` | No |
+| Receipts | Per-cycle case files of how Mycelium got smarter | [docs/receipts/](docs/receipts/README.md) | No — read-only doc |
+| Style guide | Voice + scent rules for any doc edit | [docs/contributing/style.md](docs/contributing/style.md) | No |
 
 ## Minimal path (any agent)
 
-1. Read `.claude/diamonds/active.yml` to know where the project is
-2. Read the relevant `.claude/canvas/*.yml` files to know what's already established
+For agents without Mycelium's hook layer, the operating loop is:
+
+1. Read `.claude/diamonds/active.yml` to know which scale + phase the project is in
+2. Read the relevant `.claude/canvas/*.yml` files to see what evidence has already been gathered
 3. Read `.claude/memory/corrections.md` to avoid past mistakes
 4. Before adding evidence, read 2-3 recent entries in the same canvas section to match voice (concrete + sourced + hedged, not interpretive)
 5. Before actioning a flagged item in canvas (anything with "candidate / worth considering / next step / refresh"), check its status marker (OPEN / ON HOLD / RESERVED). Unmarked = ON HOLD by convention. See `.claude/engine/canvas-guidance.yml#action_flags`.
-6. Make changes; record evidence with provenance in canvas; log decisions
+6. Make changes; record evidence with provenance; log decisions to `.claude/harness/decision-log.md`
+
+### Concrete operating model per agent class
+
+**Codex / Cursor / Aider / Copilot:**
+
+- Treat the canvas as the spec. Before generating code, read the canvas section that defines what's being built (typically `gist.yml`, `services.yml`, `bounded-contexts.yml`).
+- Treat `corrections.md` as a known-bad-patterns list. Avoid the shapes documented there.
+- Mycelium's gates won't fire automatically; the user must run `/diamond-progress` (or its equivalent prompt) manually to check transition readiness.
+- Decision-log entries are still valuable — they create the audit trail Phase 3 of the docs restructure will surface.
+
+**Multi-agent orchestrators:**
+
+- Treat the canvas as shared memory. Workers read; lead writes. The same discipline as `/fan-out` enforces in Claude Code.
+- See [docs/usage-modes.md](docs/usage-modes.md) for the fan-out / fan-in pattern.
+
+## Examples (minimal path in action)
+
+**Adding evidence after an external interview** (any agent):
+
+```yaml
+# In the relevant canvas file (e.g., opportunities.yml#opp-007.evidence)
+- date: "2026-05-08"
+  type: external_human
+  source_class: external_human
+  source: "https://linkedin.com/in/...  message thread"
+  captured_at: "2026-05-08T14:30:00Z"
+  confidence: 0.6
+  notes: "Verbatim quote: ..."
+```
+
+Before writing: skim 2-3 nearby evidence entries to match voice. After writing: validate with `python3 .claude/scripts/validate_canvas.py`.
+
+**Logging a decision** (any agent):
+
+Append to `.claude/harness/decision-log.md` with the structured fields documented at the top of that file (decision, context, alternatives + per-alternative `why_not`, theory, evidence, confidence). The contrastive `why_not_alternatives` field is required (Liao et al. 2020 — contrastive explanations land harder than purely positive ones).
 
 ## Upgrading Mycelium
 
@@ -38,11 +79,8 @@ The framework version is in `CLAUDE.md` first-line frontmatter. **A version bump
 
 ## Conventions for contributors
 
-- Canvas changes: include provenance (url/source, captured_at, confidence). For schema details, see `.claude/schemas/canvas/`. For enum values, evidence types, confidence calibration, and action_flags, see `.claude/engine/canvas-guidance.yml`.
-- Decisions: log to `.claude/harness/decision-log.md`
-- Commits: conventional-commits style; reference scale (L0-L5) when relevant
-- Tests: `bash .claude/tests/validate-template.sh` and `python3 .claude/scripts/validate_canvas.py`
-
-## Note for non-Claude agents
-
-Mycelium's full value (gate enforcement, reflexion, hook-driven discoverability) requires Claude Code today. We treat agent-class consumers as a distinct persona (`go-to-market.yml#buyer_personas` schema comment). If you're integrating Mycelium into another agent harness, open an issue — interest validates the L5 work.
+- **Canvas changes**: include provenance (url/source, captured_at, confidence). Schema: `.claude/schemas/canvas/`. Enums + evidence types + action_flags: `.claude/engine/canvas-guidance.yml`.
+- **Decisions**: log to `.claude/harness/decision-log.md` (structured fields, contrastive `why_not_alternatives`).
+- **Commits**: conventional-commits style; reference scale (L0–L5) when relevant.
+- **Tests**: `bash .claude/tests/validate-template.sh` and `python3 .claude/scripts/validate_canvas.py`.
+- **Docs voice**: [docs/contributing/style.md](docs/contributing/style.md) is authoritative for any edit under `docs/` or to README/AGENTS/CONTRIBUTORS.
