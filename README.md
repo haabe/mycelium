@@ -114,25 +114,13 @@ Inside Claude Code:
 
 Skills are namespaced (`/mycelium:<name>`) per Anthropic's plugin convention. Use `/myc<Tab>` to expand the prefix, or invoke in prose ("run mycelium start", "have mycelium assess current state") — Claude Code routes either form.
 
-### Legacy install (pre-v0.20.0, still supported during transition)
+### Legacy install (deprecated as of v0.20.x)
 
-**New project**:
+The `npx degit haabe/mycelium` install path is **no longer supported** for new installs. As of v0.20.x, framework reference content (skills, hooks, engine, schemas, scripts) lives in the plugin cache, not in the user's project. A fresh `npx degit` would land an empty `.claude/` with no skills to invoke and no hooks to fire.
 
-```bash
-npx degit haabe/mycelium my-project
-cd my-project
-```
+Existing legacy installs continue to work locally. To migrate to plugin form, see the next subsection. To recover from a broken legacy refresh, see [docs/migration.md#recovering-from-a-broken-legacy-refresh](docs/migration.md#recovering-from-a-broken-legacy-refresh).
 
-Then start Claude Code and run `/interview`.
-
-**Existing project** (legacy):
-
-```bash
-npx degit haabe/mycelium/CLAUDE.md ./CLAUDE.md
-npx degit haabe/mycelium/.claude ./.claude
-```
-
-Note: this overwrites your existing CLAUDE.md if you have one. Plugin install above avoids this. Then start Claude Code and run `/interview`.
+The legacy path is scheduled for full removal in v0.21.0 (target: 2026-06-09 or earlier).
 
 ### Migrating from legacy to plugin form
 

@@ -1,6 +1,16 @@
 # Mycelium File Manifest
+#
+# Canonical location: plugins/mycelium/manifest.yml
+# Legacy copy at .claude/manifest.yml is retained as a transition artifact
+# for legacy upgrade.sh users mid-migration; deprecated as of v0.20.15
+# (2026-05-09), scheduled for removal in v0.21.0 or 2026-06-09 (whichever
+# comes first). The two copies MUST byte-match — Validator Check 28 enforces.
+# Edit the canonical copy; sync to the legacy copy until the legacy copy is
+# removed.
+#
 # Classifies every file as framework (safe to replace) or project state (never overwrite).
-# Used by .claude/scripts/upgrade.sh to perform safe upgrades.
+# Used by upgrade.sh to perform safe upgrades and by --migrate-to-plugin to
+# determine the deletion list.
 
 # Framework files — always replaced during upgrade.
 # These contain Mycelium instructions, not project data.

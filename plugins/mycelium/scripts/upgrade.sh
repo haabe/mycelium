@@ -93,6 +93,28 @@ if ! npx degit "haabe/mycelium#$VERSION" "$TEMP_DIR" --force 2>/dev/null; then
     exit 1
 fi
 
+# Stale-upstream detection: as of v0.20.x, upstream main no longer ships a
+# legacy .claude/skills/ tree (canonical Mycelium is plugin form). If we
+# pulled an upstream tree with no framework reference content, the legacy
+# refresh path can't proceed — the user needs to migrate to plugin form.
+if [ ! -d "$TEMP_DIR/.claude/skills" ] && [ ! -d "$TEMP_DIR/.claude/engine" ]; then
+    error "Upstream Mycelium ($VERSION) no longer ships framework files in .claude/."
+    error "The legacy npx-degit install path is deprecated as of v0.20.x;"
+    error "the canonical Mycelium ships as a Claude Code plugin."
+    echo ""
+    info "To migrate this project to plugin form, run:"
+    echo "  bash .claude/scripts/upgrade.sh --migrate-to-plugin"
+    echo ""
+    info "Or install the plugin (inside Claude Code):"
+    echo "  /plugin marketplace add haabe/mycelium"
+    echo "  /plugin install mycelium@haabe-mycelium"
+    echo "  /mycelium:migrate-from-legacy"
+    echo ""
+    info "Full guide: docs/migration.md (in upstream repo) or"
+    info "https://github.com/haabe/mycelium/blob/main/docs/migration.md"
+    exit 1
+fi
+
 NEW_VERSION=$(grep "Version [0-9]" "$TEMP_DIR/$VERSION_SOURCE" 2>/dev/null | head -1 | sed 's/.*Version //' | sed 's/ .*//' || echo "unknown")
 info "Upstream version: $NEW_VERSION"
 echo ""

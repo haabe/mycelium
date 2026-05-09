@@ -884,6 +884,38 @@ check_skills_tree_parity() {
 info() { echo "  INFO: $1"; }
 
 # ============================================================
+# CHECK 28: Manifest dual-source byte-match (transition artifact)
+# ============================================================
+# .claude/manifest.yml is deprecated as of v0.20.15 in favour of
+# plugins/mycelium/manifest.yml (canonical). While both files exist,
+# they MUST byte-match — drift between them would cause subtle bugs
+# in --migrate-to-plugin (which reads via parse_manifest.py from
+# plugin-local) vs legacy upgrade.sh (which reads from .claude/).
+# Removed when .claude/manifest.yml is deleted in v0.21.0 / 2026-06-09.
+check_manifest_byte_match() {
+    section "Check 28: Manifest dual-source byte-match (transition artifact)"
+
+    local legacy="./.claude/manifest.yml"
+    local canonical="./plugins/mycelium/manifest.yml"
+
+    if [ ! -f "$canonical" ]; then
+        fail "Canonical manifest missing: $canonical"
+        return
+    fi
+
+    if [ ! -f "$legacy" ]; then
+        info "Legacy manifest absent — Check 28 N/A (transition complete; remove this check)"
+        return
+    fi
+
+    if cmp -s "$legacy" "$canonical"; then
+        pass "Manifest dual-source byte-matches (legacy + canonical agree)"
+    else
+        fail "Manifest dual-source DRIFT: $legacy != $canonical. Sync the legacy copy from canonical, or run: cp $canonical $legacy"
+    fi
+}
+
+# ============================================================
 # RUN ALL CHECKS
 # ============================================================
 
@@ -909,6 +941,7 @@ check_upgrade_manifest_driven
 check_version_bump_discipline
 check_code_quality
 check_skills_tree_parity
+check_manifest_byte_match
 
 # ============================================================
 # SUMMARY

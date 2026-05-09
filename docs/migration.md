@@ -128,6 +128,56 @@ This restores the legacy framework files. If you also installed the plugin, it d
 
 If the issue is more subtle — say `/mycelium:diamond-assess` reads your canvas but reports an unexpected state — that's almost certainly a project-state read issue, not a migration issue. Check `.claude/canvas/*.yml` and `.claude/diamonds/active.yml` are intact (they should be, by construction), then file a GitHub issue.
 
+## Recovering from a broken legacy refresh
+
+As of v0.20.x, upstream's `.claude/` no longer ships framework reference content (skills, hooks, engine, schemas live in the plugin cache only). If you tried to run `bash .claude/scripts/upgrade.sh` and hit one of these failures, you've found the deprecated-legacy edge:
+
+### Failure: "Failed to pull upstream. Check version/tag exists"
+
+Your local `upgrade.sh` predates v0.20.10 (it doesn't recognize the `--migrate-to-plugin` flag, OR the flag misparses as a version). Two fixes, in order:
+
+1. Run **without arguments** first to refresh `upgrade.sh` from upstream main:
+   ```bash
+   bash .claude/scripts/upgrade.sh
+   ```
+2. Then re-invoke with the flag:
+   ```bash
+   bash .claude/scripts/upgrade.sh --migrate-to-plugin
+   ```
+
+If the no-args refresh fails too, see the next failure.
+
+### Failure: "Upstream Mycelium no longer ships framework files in .claude/"
+
+This is the v0.20.10+ stale-upstream detector firing — upstream main has moved past legacy form. Your project's `.claude/` framework tree is the most recent legacy snapshot you have locally; refresh from upstream is no longer possible. The script's recommendation is correct: migrate to plugin form.
+
+```bash
+bash .claude/scripts/upgrade.sh --migrate-to-plugin
+```
+
+This deletes your local legacy framework tree and preserves project state. Then install the plugin in Claude Code:
+
+```
+/plugin marketplace add haabe/mycelium
+/plugin install mycelium@haabe-mycelium
+```
+
+### Failure: "no such file or directory" on bash .claude/scripts/upgrade.sh
+
+You don't have a local `upgrade.sh` at all — your install predates the script (very old) or you cloned a v0.20.x+ tree where upstream no longer ships it. Use the agent-driven path (Path A above) instead:
+
+```
+/plugin marketplace add haabe/mycelium
+/plugin install mycelium@haabe-mycelium
+/mycelium:migrate-from-legacy
+```
+
+The skill detects the install state and walks the migration explicitly. It works without `upgrade.sh` being present locally.
+
+### Failure: framework files missing after a successful refresh
+
+Your refresh ran, but `.claude/skills/`, `.claude/engine/`, etc. are empty or absent. You're now on plugin-form-shape but without the plugin installed. Install the plugin (commands above) and verify with `/mycelium:diamond-assess`. If your canvas reads correctly, the migration is complete; commit the empty-tree state.
+
 ## Why we kept legacy supported during transition
 
 Three reasons. First, abrupt removal would strand existing users mid-project. Second, plugin form depends on Claude Code's plugin runtime — agents that don't speak the plugin spec (Codex, Cursor, Aider, Copilot) still get framework value via `AGENTS.md` orientation, but the legacy npx-degit path remains useful as a portable installation channel for projects that don't want to depend on the plugin runtime. Third, dogfooding: the maintainer's own Mycelium repo runs both forms in parallel during the transition window, so smoke-testing happens on the same surface real users see.
