@@ -41,11 +41,36 @@ Attack your own position:
 9. If we had to start over, would we make the same choice?
 10. Who disagrees with us and what's their strongest argument?
 
+## Technique 4: Attribution-vs-Consistency Check
+Per anti-pattern *Consistency-as-Evidence* (#7) — graduated 2026-05-09 from a recurring failure where causal chains were built from observational consistency rather than verified attribution.
+
+For each piece of evidence supporting the current claim, label it:
+- **Cleanly-attributed**: the cause was demonstrably driving the effect (the action was Mycelium-specific, the variable was isolated, the alternative explanations were ruled out).
+- **Consistency-only**: the data is *compatible with* the hypothesis but doesn't *isolate* the cause (the user reported X in a context where Y was also true; the trend matches the prediction but matches three other predictions equally well).
+- **Unrelated**: the evidence is a different question entirely; don't include it in the chain.
+
+If ≥1 link in a chain is consistency-only, mark the chain provisional and explicitly identify the missing attribution evidence. If N=1, do not publish a structural conclusion (e.g., "this generalizes to all users") until N≥2 with attribution. Apply this check to your own analysis pre-publish, not after the user catches it.
+
+## Technique 5: Ambient triggering on assertion-shaped patterns
+Per the bias cluster (corrections.md TL;DR — L5 sycophancy, eval overfitting, sharper-framing anchoring; common root: "agent prefers what feels right over what evidence supports"):
+
+Beyond formal diamond-transition use, run a fast self-check whenever you write text containing structural-claim shapes:
+- "X causes Y"
+- "this means Z"
+- "the framework needs..." / "the user needs..."
+- "the right answer is..."
+- "this generalizes to..." / "this applies broadly..."
+
+For each, ask: *what specific evidence supports this claim, and does any of it merely support it by consistency rather than attribution?* (Technique 4). If you can't name cleanly-attributed evidence for the claim, downgrade it: from assertion to hypothesis, from "X causes Y" to "X is consistent with Y; attribution evidence pending."
+
+This converts the framework's own anti-bias discipline into a per-publish self-check, not just a per-decision ceremony. Graduated 2026-05-09 from corrections.md TL;DR open candidate.
+
 ## When to Use
 - Before every diamond scale transition (L2->L3, L3->L4)
 - Before architecture decisions
 - Before committing to a specific solution
 - When the team feels "certain" (certainty is a bias signal)
+- **Ambient (per Technique 5)**: any time the agent writes text with assertion-shaped structural claims. This is a quick self-check, not the full ceremony.
 
 ## Output
 Log the challenge results in .claude/harness/decision-log.md alongside the decision.

@@ -39,6 +39,9 @@ Below: active patterns (multiple cases, may graduate), graduated mechanisms (cas
 | `/mycelium:migrate-from-legacy` + `--migrate-to-plugin` flag | [plugin-form-dogfood](cases/2026-05-09-plugin-form-dogfood.md) | Shipped (v0.20.10) |
 | Validator Check 27 (skills-tree parity) + manifest-file watching | [plugin-form-dogfood](cases/2026-05-09-plugin-form-dogfood.md) | Shipped (v0.20.9 / v0.20.11) |
 | Hard-gate ordering pattern (detection-then-route) in skill SKILL.md | [plugin-form-dogfood](cases/2026-05-09-plugin-form-dogfood.md) | Shipped (v0.20.11) |
+| Anti-pattern #7 *Consistency-as-Evidence* + `/devils-advocate` Technique 4 + G-P-pre item 9 | [consistency-as-evidence-graduation](cases/2026-05-09-consistency-as-evidence-graduation.md) | Shipped (v0.21.0) |
+| Anti-pattern #8 *Stale State Read* + `/corrections-audit` Step 6e + Validator Check 29 | [stale-state-read-graduation](cases/2026-05-09-stale-state-read-graduation.md) | Shipped (v0.21.0) |
+| `/devils-advocate` Technique 5 (ambient assertion-shape triggering) + `/corrections-audit` Step 6d | [bias-cluster-graduation](cases/2026-05-09-bias-cluster-graduation.md) | Shipped (v0.21.0) |
 
 ### Active clusters (spec, not yet mechanism)
 

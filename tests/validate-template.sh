@@ -884,6 +884,56 @@ check_skills_tree_parity() {
 info() { echo "  INFO: $1"; }
 
 # ============================================================
+# CHECK 29: Stale-state-read pattern scan (anti-pattern #8)
+# ============================================================
+# Per harness/anti-patterns.md #8 "Stale State Read" (graduated 2026-05-09).
+# Scans plugin scripts that read state files (manifest.yml, settings.json,
+# canvas YAML) for the failure mode: hardcoded local-path default without an
+# explicit-source argv override. The worked example is parse_manifest.py's
+# `--manifest=<path>` parameter — every state-reading script should follow
+# the same shape so upgrade/sync flows can pass the upstream/temp-dir copy.
+#
+# This check is informational at WARN level until the pattern is fully
+# enforceable. It surfaces candidate scripts; manual review confirms whether
+# the script actually needs the override (some scripts read state that's
+# never replaced mid-run, e.g., truly-static config).
+check_stale_state_read_pattern() {
+    section "Check 29: Stale-state-read pattern scan (anti-pattern #8)"
+
+    local scripts_dir="plugins/mycelium/scripts"
+    if [ ! -d "$scripts_dir" ]; then
+        info "Plugin scripts dir absent — Check 29 N/A"
+        return
+    fi
+
+    # Heuristic: find Python scripts that resolve a state file via
+    # `Path(__file__)...` AND lack an explicit-source override mechanism.
+    # Override mechanisms recognized: argparse / sys.argv / --manifest /
+    # --source / --config (CLI-arg pattern), OR os.environ / os.getenv
+    # (env-var pattern, e.g. CLAUDE_PROJECT_DIR / CLAUDE_PLUGIN_ROOT).
+    # Both pattern + missing-override flag the script; either alone is fine.
+    local candidates=()
+    while IFS= read -r f; do
+        if grep -qE "Path\(__file__\)" "$f" 2>/dev/null && \
+           grep -qE "(manifest|settings|state|canvas).*\.ya?ml|\.json" "$f" 2>/dev/null && \
+           ! grep -qE "argparse|sys\.argv|--manifest|--source|--config|os\.environ|os\.getenv" "$f" 2>/dev/null; then
+            candidates+=("$f")
+        fi
+    done < <(find "$scripts_dir" -name "*.py" -type f 2>/dev/null)
+
+    if [ "${#candidates[@]}" -eq 0 ]; then
+        pass "No stale-state-read pattern candidates detected in $scripts_dir"
+    else
+        warn "${#candidates[@]} script(s) match the stale-state-read heuristic (review manually):"
+        for f in "${candidates[@]}"; do
+            echo "    - $f"
+        done
+        echo "    Per anti-pattern #8: state-reading scripts should accept --source=<path>"
+        echo "    or equivalent. Worked example: parse_manifest.py --manifest=<path>."
+    fi
+}
+
+# ============================================================
 # CHECK 28: Manifest dual-source byte-match (transition artifact)
 # ============================================================
 # .claude/manifest.yml is deprecated as of v0.20.15 in favour of
@@ -942,6 +992,7 @@ check_version_bump_discipline
 check_code_quality
 check_skills_tree_parity
 check_manifest_byte_match
+check_stale_state_read_pattern
 
 # ============================================================
 # SUMMARY

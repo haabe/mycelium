@@ -14,6 +14,14 @@
 | `/mycelium:migrate-from-legacy` + `--migrate-to-plugin` flag | [plugin-form-dogfood](cases/2026-05-09-plugin-form-dogfood.md) |
 | Validator Check 27 (skills-tree parity) + manifest-file watching in Check 26 | [plugin-form-dogfood](cases/2026-05-09-plugin-form-dogfood.md) |
 | Hard-gate ordering pattern in skill SKILL.md (detection-then-route) | [plugin-form-dogfood](cases/2026-05-09-plugin-form-dogfood.md) |
+| Anti-pattern #7 *Consistency-as-Evidence* | [consistency-as-evidence-graduation](cases/2026-05-09-consistency-as-evidence-graduation.md) |
+| Anti-pattern #8 *Stale State Read* | [stale-state-read-graduation](cases/2026-05-09-stale-state-read-graduation.md) |
+| `/devils-advocate` Technique 4 (attribution-vs-consistency) | [bias-cluster-graduation](cases/2026-05-09-bias-cluster-graduation.md) + [consistency-as-evidence-graduation](cases/2026-05-09-consistency-as-evidence-graduation.md) |
+| `/devils-advocate` Technique 5 (ambient assertion-shape triggering) | [bias-cluster-graduation](cases/2026-05-09-bias-cluster-graduation.md) |
+| `/corrections-audit` Step 6d (consistency-as-evidence detection) | [consistency-as-evidence-graduation](cases/2026-05-09-consistency-as-evidence-graduation.md) |
+| `/corrections-audit` Step 6e (stale-state-read detection) | [stale-state-read-graduation](cases/2026-05-09-stale-state-read-graduation.md) |
+| Validator Check 29 (stale-state-read pattern scan) | [stale-state-read-graduation](cases/2026-05-09-stale-state-read-graduation.md) |
+| `CLAUDE.md` G-P-pre item 9 (attribution check on causal claims) | [consistency-as-evidence-graduation](cases/2026-05-09-consistency-as-evidence-graduation.md) |
 | `/mocked-persona-interview` | [macos-fileviewer](cases/2026-04-macos-fileviewer.md) |
 | `/feedback-review` | [macos-fileviewer](cases/2026-04-macos-fileviewer.md) |
 | `/framework-health` | [macos-fileviewer](cases/2026-04-macos-fileviewer.md) |
