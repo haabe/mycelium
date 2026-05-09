@@ -148,6 +148,8 @@ The skill walks through detection, plugin verification, the explicit "what will 
 
 Or run the script directly: `bash .claude/scripts/upgrade.sh --migrate-to-plugin`. Use `--check-migration` to see which form your project is on without making changes. Full guide: [docs/migration.md](docs/migration.md).
 
+> **Heads-up if your install is older than v0.20.10**: the `--migrate-to-plugin` flag was added in v0.20.10. If your local `.claude/scripts/upgrade.sh` predates it, the script will treat the flag as a version arg and fail with "Failed to pull upstream. Check version/tag exists: --migrate-to-plugin". Fix: run `bash .claude/scripts/upgrade.sh` (no args) once first to refresh your `upgrade.sh` from upstream main, then re-invoke with the flag. Surfaced during the maintainer's own self-migration on 2026-05-09.
+
 ### Resuming work
 
 Plugin form: `/mycelium:diamond-assess`. Legacy: `/diamond-assess`. The agent reads your canvas state and tells you where you are and what to do next.
