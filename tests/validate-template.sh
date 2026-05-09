@@ -893,6 +893,50 @@ info() { echo "  INFO: $1"; }
 # invariant that plugin.json#version === leading "Version X.Y.Z" in
 # CLAUDE.md. Without it, ship a CLAUDE.md bump and forget plugin.json,
 # users running /plugin list see a stale version.
+# ============================================================
+# CHECK 31: Canvas-writing skills carry Read-before-Write preflight (anti-pattern #7 instance #5)
+# ============================================================
+# Per CLAUDE.md "Canvas writes — Read before Write (HARD RULE)" and
+# corrections.md 2026-05-09 (anti-pattern #7 instance #5). Every SKILL.md
+# that mentions Update/Write/Append against .claude/canvas/*.yml must
+# carry a Preflight block telling the agent to use the Read tool on
+# the target file BEFORE Write. Without this, agents conflate `head`
+# via Bash with the `Read` tool and waste ~14k tokens on a Write-fail
+# → Read → re-Write loop.
+#
+# The marker is "## Preflight: Read target canvas file" — a uniform
+# heading inserted into every canvas-writing skill 2026-05-09.
+check_canvas_write_preflight() {
+    section "Check 31: Canvas-write Preflight presence (anti-pattern #7 instance #5)"
+
+    local skills_dir="$SKILLS_DIR"
+    if [ ! -d "$skills_dir" ]; then
+        info "Skills dir absent — Check 31 N/A"
+        return
+    fi
+
+    local marker="## Preflight: Read target canvas file"
+    local missing_count=0
+    local missing_list=""
+    local checked=0
+
+    # Find SKILL.md files that mention canvas writes (Update/Write/Append .claude/canvas/*.yml)
+    while IFS= read -r skill; do
+        checked=$((checked + 1))
+        if ! grep -q "$marker" "$skill"; then
+            missing_count=$((missing_count + 1))
+            missing_list="${missing_list}"$'\n'"  - ${skill#"$skills_dir"/}"
+        fi
+    done < <(grep -lE "(Update|Write|Append).*canvas/[a-z-]+\.yml" "$skills_dir"/*/SKILL.md 2>/dev/null)
+
+    if [ "$missing_count" -eq 0 ]; then
+        pass "All $checked canvas-writing skills carry the Read-before-Write Preflight block"
+    else
+        printf "  WARN: %d canvas-writing skill(s) missing Preflight block:%s\n" "$missing_count" "$missing_list"
+        WARN=$((WARN + 1))
+    fi
+}
+
 check_plugin_json_version_sync() {
     section "Check 30: plugin.json#version tracks CLAUDE.md Version line"
 
@@ -1035,6 +1079,7 @@ check_skills_tree_parity
 check_manifest_byte_match
 check_stale_state_read_pattern
 check_plugin_json_version_sync
+check_canvas_write_preflight
 
 # ============================================================
 # SUMMARY

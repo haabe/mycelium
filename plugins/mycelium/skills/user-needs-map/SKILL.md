@@ -8,6 +8,14 @@ instruction_budget: 35
 
 Map what users need independently of any particular solution. Discover needs through research, not assumption. Source: Rich Allen (User Needs Mapping), connected to Wardley Mapping and Team Topologies.
 
+## Preflight: Read target canvas file(s) before any Write/Edit
+
+**Hard rule.** Before issuing `Write` or `Edit` against any `.claude/canvas/*.yml`, use the **Read tool** on that file in this session. Claude Code's Read-before-Write check requires the `Read` tool specifically — `cat`/`head`/`grep` via Bash do NOT satisfy it. Reaching for `Write` first produces a tool error and forces a remedial Read, which costs ~14k tokens of pure ceremony at typical canvas sizes (anti-pattern #7 instance #5, 2026-05-09).
+
+If this skill writes to multiple canvas files, Read each one first. If unsure whether a write is needed, Read first anyway — Read is cheap, the recovery loop is not.
+
+See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
+
 ## When to Use
 - During L2 Opportunity discovery
 - When building initial understanding of user landscape

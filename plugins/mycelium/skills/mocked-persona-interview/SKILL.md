@@ -14,6 +14,14 @@ A disciplined alternative to real user interviews when:
 
 **This skill is NOT a substitute for `/mycelium:user-interview` when real users are available.** Mocked personas are simulation. They catch some mistakes, miss others, and — without discipline — become a confirmation-bias machine. This skill's job is to enforce the discipline.
 
+## Preflight: Read target canvas file(s) before any Write/Edit
+
+**Hard rule.** Before issuing `Write` or `Edit` against any `.claude/canvas/*.yml`, use the **Read tool** on that file in this session. Claude Code's Read-before-Write check requires the `Read` tool specifically — `cat`/`head`/`grep` via Bash do NOT satisfy it. Reaching for `Write` first produces a tool error and forces a remedial Read, which costs ~14k tokens of pure ceremony at typical canvas sizes (anti-pattern #7 instance #5, 2026-05-09).
+
+If this skill writes to multiple canvas files, Read each one first. If unsure whether a write is needed, Read first anyway — Read is cheap, the recovery loop is not.
+
+See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
+
 ## Why This Skill Exists
 
 From the macos-fileviewer dogfood session (2026-04-09, finding G2):

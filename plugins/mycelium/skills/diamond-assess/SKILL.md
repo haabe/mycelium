@@ -39,7 +39,8 @@ Evaluate current diamond state and recommend next action.
      - **Delivery Metrics Gate**: routes to product-type-appropriate metrics canvas
      - **Service Quality Gate**: Downe applies to consumption experience for all product types; Nielsen only for digital interfaces
    - Evaluate each applicable gate: Pass / Fail / Insufficient Evidence / N/A (if gate doesn't apply to this product_type)
-   - Document what is missing for failed gates
+   - **Read-before-claim (HARD RULE; anti-pattern #7 instance #4, 2026-05-09):** Before claiming a required-evidence bucket is *missing* or *partial* (e.g., "Wardley Map | Missing", "user_research_synthesis | Insufficient"), the agent MUST use the **Read tool** on the canvas file that bucket maps to (e.g., `landscape.yml`, `user-needs.yml`, `opportunities.yml`, `gist.yml`). Spawn-note text, theory-gates.md references, and prior conversation context do NOT count as evidence of the bucket's actual state — only reading the file does. Treating consistency between spawn-note phrasing and an absence-claim as causal evidence is anti-pattern #7 (Consistency-as-Evidence). The graduation case for instance #4 was the agent recommending "build the Wardley map now" when the map was substantially complete — the agent had not opened landscape.yml.
+   - Document what is missing for failed gates, naming the specific canvas file read and the specific field that is empty/incomplete (not the inference that it should be empty).
 
 4. **Check confidence threshold**:
    - Reference ${CLAUDE_PLUGIN_ROOT}/engine/confidence-thresholds.yml for the current scale
