@@ -1,4 +1,5 @@
 ---
+name: setup
 description: First-run setup for the Mycelium plugin. Creates project-state directories (.claude/canvas, .claude/diamonds, .claude/memory, .claude/harness) and minimal starter files in the user's project. Idempotent — re-running on an initialized project is a no-op. Run this once after installing the Mycelium plugin and before invoking other skills.
 ---
 

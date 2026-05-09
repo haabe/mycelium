@@ -1,4 +1,5 @@
 ---
+name: start
 description: One command from "plugin installed" to "running brief on your idea." Combines /mycelium:setup (project-state initialization) and /mycelium:interview (10-minute discovery brief) into a single flow. Run this immediately after installing the Mycelium plugin — it's the recommended entry point for first-time users.
 ---
 

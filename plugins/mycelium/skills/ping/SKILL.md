@@ -1,4 +1,5 @@
 ---
+name: ping
 description: Smoke-test skill that confirms the Mycelium plugin loaded correctly. Returns a deterministic marker string for plugin-shape validation. Not for end-user invocation in normal use.
 ---
 

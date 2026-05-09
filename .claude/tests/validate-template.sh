@@ -15,6 +15,24 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$REPO_ROOT"
 
+# --- Skills tree detection (plugin form vs legacy) ---
+# As of v0.20.x, skills live at plugins/mycelium/skills/ (plugin canonical).
+# Legacy .claude/skills/ is preserved during transition until the canonical
+# 0.20.0 bump on merge to main. Validator targets the canonical tree first;
+# if both exist it also runs a parity check (see Check 27).
+PLUGIN_SKILLS="plugins/mycelium/skills"
+LEGACY_SKILLS=".claude/skills"
+if [ -d "$PLUGIN_SKILLS" ]; then
+    SKILLS_DIR="$PLUGIN_SKILLS"
+    SKILLS_FORM="plugin"
+elif [ -d "$LEGACY_SKILLS" ]; then
+    SKILLS_DIR="$LEGACY_SKILLS"
+    SKILLS_FORM="legacy"
+else
+    echo "FATAL: no skills directory found (looked in $PLUGIN_SKILLS and $LEGACY_SKILLS)" >&2
+    exit 2
+fi
+
 # --- Counters and helpers ---
 
 PASS=0
@@ -117,7 +135,7 @@ check_canvas_in_readme_table() {
 check_canvas_in_update_mapping() {
     section "Check 5: Canvas files in canvas-update SKILL.md mapping"
 
-    local mapping_file=".claude/skills/canvas-update/SKILL.md"
+    local mapping_file="$SKILLS_DIR/canvas-update/SKILL.md"
     if [ ! -f "$mapping_file" ]; then
         fail "canvas-update SKILL.md not found"
         return
@@ -147,7 +165,7 @@ check_skill_count_readme() {
     section "Check 6: Skill count (docs/skills/README.md)"
 
     local disk_count
-    disk_count=$(find .claude/skills -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
+    disk_count=$(find "$SKILLS_DIR" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
     local skills_doc="docs/skills/README.md"
 
     if [ ! -f "$skills_doc" ]; then
@@ -180,7 +198,7 @@ check_skill_count_claude() {
     section "Check 7: Skill count (CLAUDE.md)"
 
     local disk_count
-    disk_count=$(find .claude/skills -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
+    disk_count=$(find "$SKILLS_DIR" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
 
     # Match: "All 38 skills are auto-discovered" (v0.11.0+) or "All 38 skills:" (pre-v0.11.0)
     local claude_count
@@ -202,7 +220,7 @@ check_skill_frontmatter() {
     section "Check 8: Skill SKILL.md frontmatter"
 
     local issues=0
-    for dir in .claude/skills/*/; do
+    for dir in "$SKILLS_DIR"/*/; do
         local skill_name
         skill_name=$(basename "$dir")
         local skill_file="$dir/SKILL.md"
@@ -236,19 +254,19 @@ check_skills_in_claude_md() {
     section "Check 9: Skills discoverable from CLAUDE.md"
 
     # v0.11.0+: skills are auto-discovered from SKILL.md frontmatter.
-    # CLAUDE.md declares this with "auto-discovered" and points to .claude/skills/.
-    # Check that the auto-discovery declaration exists OR that all skills are individually listed.
+    # CLAUDE.md declares this with "auto-discovered". Path reference accepts
+    # either legacy (.claude/skills/) or plugin (plugins/mycelium/skills/) form
+    # during the v0.20.x transition.
     if grep -q "auto-discovered" CLAUDE.md; then
-        # Verify CLAUDE.md points to the skills directory
-        if grep -q ".claude/skills/" CLAUDE.md; then
-            pass "CLAUDE.md declares skills as auto-discovered from .claude/skills/"
+        if grep -qE "\.claude/skills/|plugins/mycelium/skills/" CLAUDE.md; then
+            pass "CLAUDE.md declares skills as auto-discovered (form: $SKILLS_FORM)"
         else
-            fail "CLAUDE.md says auto-discovered but doesn't reference .claude/skills/ path"
+            fail "CLAUDE.md says auto-discovered but doesn't reference a skills directory path"
         fi
     else
         # Fallback: check individual skill references (pre-v0.11.0 behavior)
         local missing=0
-        for dir in .claude/skills/*/; do
+        for dir in "$SKILLS_DIR"/*/; do
             local skill_name
             skill_name=$(basename "$dir")
             if ! grep -q "/$skill_name" CLAUDE.md; then
@@ -475,7 +493,7 @@ check_untrusted_content_wrapping() {
     local missing=()
 
     for skill in "${at_risk_skills[@]}"; do
-        local f=".claude/skills/${skill}/SKILL.md"
+        local f="$SKILLS_DIR/${skill}/SKILL.md"
         if [ ! -f "$f" ]; then
             warn "Curated at-risk skill missing: $skill"
             continue
@@ -511,7 +529,7 @@ check_untrusted_content_wrapping() {
         if grep -qiE "$strong_signal" "$f" 2>/dev/null; then
             candidates+=("$skill")
         fi
-    done < <(find .claude/skills -name "SKILL.md" -type f 2>/dev/null)
+    done < <(find "$SKILLS_DIR" -name "SKILL.md" -type f 2>/dev/null)
 
     if [ "${#candidates[@]}" -gt "0" ]; then
         warn "${#candidates[@]} new skill(s) show strong user-content-handling signal — review and add to curated list if at-risk:"
@@ -657,6 +675,15 @@ check_version_bump_discipline() {
         ".claude/jit-tooling"
         ".claude/templates"
         ".claude/tests"
+        "plugins/mycelium/skills"
+        "plugins/mycelium/engine"
+        "plugins/mycelium/harness"
+        "plugins/mycelium/hooks"
+        "plugins/mycelium/scripts"
+        "plugins/mycelium/jit-tooling"
+        "plugins/mycelium/schemas"
+        "plugins/mycelium/domains"
+        "plugins/mycelium/orchestration"
         "CLAUDE.md"
         "AGENTS.md"
         "README.md"
@@ -802,6 +829,50 @@ check_code_quality() {
 }
 
 # ============================================================
+# CHECK 27: Skills-tree parity (plugin vs legacy during transition)
+# ============================================================
+check_skills_tree_parity() {
+    section "Check 27: Skills-tree parity (plugin vs legacy)"
+
+    if [ ! -d "$PLUGIN_SKILLS" ] || [ ! -d "$LEGACY_SKILLS" ]; then
+        info "Only one skills tree present (form: $SKILLS_FORM) — parity check N/A"
+        return
+    fi
+
+    local plugin_count legacy_count
+    plugin_count=$(find "$PLUGIN_SKILLS" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
+    legacy_count=$(find "$LEGACY_SKILLS" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
+
+    if [ "$plugin_count" != "$legacy_count" ]; then
+        warn "Skill count diverges: plugin=$plugin_count, legacy=$legacy_count (legacy may be drifting; clean up at canonical 0.20.0 bump)"
+    else
+        pass "Skill count matches across trees ($plugin_count each)"
+    fi
+
+    # Set diff: which skill names differ
+    local plugin_names legacy_names
+    plugin_names=$(find "$PLUGIN_SKILLS" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | sort)
+    legacy_names=$(find "$LEGACY_SKILLS" -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | sort)
+
+    local plugin_only legacy_only
+    plugin_only=$(comm -23 <(echo "$plugin_names") <(echo "$legacy_names"))
+    legacy_only=$(comm -13 <(echo "$plugin_names") <(echo "$legacy_names"))
+
+    if [ -n "$plugin_only" ]; then
+        warn "Skills only in plugin tree (not mirrored to legacy): $(echo "$plugin_only" | tr '\n' ' ')"
+    fi
+    if [ -n "$legacy_only" ]; then
+        warn "Skills only in legacy tree (not mirrored to plugin): $(echo "$legacy_only" | tr '\n' ' ')"
+    fi
+    if [ -z "$plugin_only" ] && [ -z "$legacy_only" ]; then
+        pass "Skill name set matches across trees"
+    fi
+}
+
+# Helper: info-level (not pass/fail/warn) — for diagnostic context.
+info() { echo "  INFO: $1"; }
+
+# ============================================================
 # RUN ALL CHECKS
 # ============================================================
 
@@ -826,6 +897,7 @@ check_untrusted_content_wrapping
 check_upgrade_manifest_driven
 check_version_bump_discipline
 check_code_quality
+check_skills_tree_parity
 
 # ============================================================
 # SUMMARY
