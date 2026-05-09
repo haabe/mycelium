@@ -36,6 +36,12 @@ A second round on 2026-04-30, against an 8-hour take-home interview clock, surfa
 
 → Receipts: [drew-hoskins-takehome](docs/receipts/cases/2026-04-30-drew-hoskins-takehome.md).
 
+## v0.20.0 — Plugin-Form Install Model
+
+**Daniel Bentes** (second-cycle credit; see v0.9.0 above for first-cycle credit) — On 2026-05-08, on first install of Mycelium against a real project, Daniel surfaced the install-model architectural debt: the framework's top-level files (CLAUDE.md, README, CONTRIBUTORS, LICENSE) describe Mycelium-the-framework as if Mycelium IS the project, contaminating user project root and (worse) overwriting user files in brownfield installs. His finding directly drove the v0.20.0 architectural pivot: Mycelium repackaged as a Claude Code plugin (per Anthropic plugin spec), with all framework files living in plugin cache and the user's project root staying user-owned. Skill names became namespaced (`/mycelium:<name>`); a `/mycelium:setup` skill creates project-state directories on first run; AGENTS.md became the canonical cross-agent instructions surface. Same architectural-reviewer rigor that shaped v0.9.0's computational enforcement layer.
+
+→ Receipts: [bentes-install-model](docs/receipts/cases/2026-05-08-bentes-install-model.md).
+
 ---
 
 ## How Mycelium uses feedback

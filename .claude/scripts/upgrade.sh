@@ -33,7 +33,23 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$REPO_ROOT"
 
-VERSION="${1:-main}"
+# Parse args. Supports:
+#   bash .claude/scripts/upgrade.sh                         # legacy refresh
+#   bash .claude/scripts/upgrade.sh v0.21.0                 # legacy refresh to tag
+#   bash .claude/scripts/upgrade.sh --migrate-to-plugin     # legacy → plugin migration
+#   bash .claude/scripts/upgrade.sh --check-migration       # diagnostic only
+MIGRATE_MODE=false
+CHECK_ONLY=false
+VERSION="main"
+for arg in "$@"; do
+    case "$arg" in
+        --migrate-to-plugin) MIGRATE_MODE=true ;;
+        --check-migration)   CHECK_ONLY=true ;;
+        --*) echo "Unknown flag: $arg" >&2; exit 2 ;;
+        *) VERSION="$arg" ;;
+    esac
+done
+
 TEMP_DIR=$(mktemp -d)
 trap 'rm -rf "$TEMP_DIR"' EXIT
 
@@ -48,7 +64,210 @@ warn()  { echo -e "${YELLOW}[WARN]${NC} $1"; }
 error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
 # ============================================================
-# Pre-flight checks
+# Detect install form (legacy vs migrated-to-plugin)
+# ============================================================
+# Legacy form: framework reference content lives in .claude/skills/, .claude/engine/, etc.
+# Plugin form: only project state in .claude/ (canvas/, diamonds/, memory/, evals/,
+#              harness/decision-log+warnings, jit-tooling/active-metrics.yml). The
+#              framework lives in ~/.claude/plugins/cache/...
+detect_form() {
+    if [ -d ".claude/skills" ] || [ -d ".claude/engine" ]; then
+        FORM="legacy"
+    elif [ -d ".claude/canvas" ] || [ -d ".claude/diamonds" ]; then
+        FORM="plugin"
+    else
+        FORM="unknown"
+    fi
+}
+detect_form
+
+# ============================================================
+# --check-migration: diagnostic only (read-only)
+# ============================================================
+if [ "$CHECK_ONLY" = "true" ]; then
+    echo "Mycelium install-form check"
+    echo "==========================="
+    echo ""
+    info "Detected form: $FORM"
+    echo ""
+    case "$FORM" in
+        legacy)
+            info "Framework files present in .claude/ (skills/, engine/, etc.)"
+            info "This project is on the legacy install path."
+            info "To migrate: install the plugin, then run:"
+            echo "  bash .claude/scripts/upgrade.sh --migrate-to-plugin"
+            ;;
+        plugin)
+            info "Only project state in .claude/. Framework reference comes from plugin cache."
+            info "This project is on the plugin install path."
+            info "To upgrade Mycelium: /plugin update mycelium@haabe-mycelium (inside Claude Code)"
+            ;;
+        unknown)
+            warn "Could not detect install form — neither framework files nor project state found in .claude/."
+            warn "Run /mycelium:setup (plugin) or 'npx degit haabe/mycelium .' (legacy) to bootstrap."
+            ;;
+    esac
+    exit 0
+fi
+
+# ============================================================
+# Plugin form: upgrade.sh is not the right surface
+# ============================================================
+if [ "$FORM" = "plugin" ] && [ "$MIGRATE_MODE" = "false" ]; then
+    cat <<EOF
+Mycelium Upgrade
+================
+
+This project is on plugin form (no legacy framework files in .claude/).
+Plugin upgrades happen through Claude Code, not this script:
+
+  /plugin update mycelium@haabe-mycelium
+
+Or for a fresh fetch:
+
+  /plugin marketplace update haabe/mycelium
+  /plugin install mycelium@haabe-mycelium
+
+To verify install-form: bash .claude/scripts/upgrade.sh --check-migration
+
+If you intended to install Mycelium fresh in legacy form (npx-degit),
+remove the plugin first or use a clean directory.
+
+EOF
+    exit 0
+fi
+
+# ============================================================
+# --migrate-to-plugin: delete legacy framework files in .claude/,
+# preserve project state. Idempotent on already-migrated projects.
+# ============================================================
+if [ "$MIGRATE_MODE" = "true" ]; then
+    echo "Mycelium Migration: legacy → plugin"
+    echo "===================================="
+    echo ""
+
+    if [ "$FORM" = "plugin" ]; then
+        info "No legacy framework files found in .claude/ — already migrated."
+        info "If the plugin is not installed yet, run inside Claude Code:"
+        echo "    /plugin marketplace add haabe/mycelium"
+        echo "    /plugin install mycelium@haabe-mycelium"
+        exit 0
+    fi
+
+    if [ "$FORM" = "unknown" ]; then
+        error "Could not detect install form. Aborting migration to be safe."
+        error "Inspect .claude/ manually before re-running."
+        exit 1
+    fi
+
+    if ! git rev-parse --is-inside-work-tree &>/dev/null; then
+        error "Not a git repository. Initialize git first so the migration is reversible:"
+        echo "  git init && git add -A && git commit -m 'Pre-migration snapshot'"
+        exit 1
+    fi
+    if ! git diff-index --quiet HEAD -- 2>/dev/null; then
+        error "Uncommitted changes detected. Commit or stash first so the migration is reversible:"
+        echo "  git add -A && git commit -m 'Pre-migration snapshot'"
+        exit 1
+    fi
+
+    info "This will DELETE legacy framework files from .claude/ in your project:"
+    echo ""
+    echo "  WILL DELETE (framework reference, now in plugin cache):"
+    echo "    .claude/skills/, .claude/engine/, .claude/hooks/,"
+    echo "    .claude/scripts/, .claude/schemas/, .claude/domains/,"
+    echo "    .claude/orchestration/, .claude/templates/, .claude/tests/"
+    echo "    .claude/agents/ (if present)"
+    echo "    .claude/jit-tooling/* (except active-metrics.yml)"
+    echo "    .claude/harness/* (except decision-log.md, warnings-log.md)"
+    echo ""
+    echo "  WILL PRESERVE (project state):"
+    echo "    .claude/canvas/, .claude/diamonds/, .claude/memory/,"
+    echo "    .claude/evals/, .claude/state/,"
+    echo "    .claude/harness/decision-log.md, .claude/harness/warnings-log.md,"
+    echo "    .claude/jit-tooling/active-metrics.yml,"
+    echo "    .claude/settings.local.json (if present)"
+    echo ""
+    echo "  Project root files (CLAUDE.md, README.md, AGENTS.md, etc.) are NOT touched."
+    echo ""
+    echo "  Reversible via git: this commit is reversible by 'git reset --hard HEAD' before"
+    echo "  the migration commit lands."
+    echo ""
+
+    if [ -t 0 ]; then
+        read -r -p "Continue? [y/N] " confirm
+        if [ "$confirm" != "y" ] && [ "$confirm" != "Y" ]; then
+            info "Aborted. No changes made."
+            exit 0
+        fi
+    else
+        warn "Non-interactive shell — proceeding without prompt. Set MYCELIUM_MIGRATE_AUTO=cancel to abort here in CI."
+        if [ "${MYCELIUM_MIGRATE_AUTO:-}" = "cancel" ]; then
+            info "Aborted by MYCELIUM_MIGRATE_AUTO=cancel."
+            exit 0
+        fi
+    fi
+
+    # Driven by manifest.yml so the deletion list cannot drift from the
+    # upgrade refresh list (Check 16 enforces this).
+    fw_dirs=$(python3 .claude/scripts/parse_manifest.py directories)
+    harness_fw=$(python3 .claude/scripts/parse_manifest.py harness_framework)
+
+    info "Deleting legacy framework directories (manifest-driven)..."
+    for d in $fw_dirs; do
+        # Keep only directories under .claude/ (skip docs/, .github/ which are
+        # project root / repo metadata, not Mycelium framework reference content).
+        case "$d" in
+            .claude/*) [ -d "$d" ] && rm -rf "$d" && info "  removed $d" ;;
+        esac
+    done
+
+    info "Removing harness framework files (preserving project state)..."
+    for f in $harness_fw; do
+        [ -f "$f" ] && rm -f "$f"
+    done
+    # Clean up empty harness/ subdirs (READMEs etc.) but never the dir itself
+    # if decision-log.md or warnings-log.md remain.
+    if [ -d .claude/harness ]; then
+        find .claude/harness -mindepth 1 -maxdepth 1 -type d -empty -delete 2>/dev/null || true
+    fi
+
+    if [ -d ".claude/jit-tooling" ]; then
+        info "Pruning .claude/jit-tooling/ (preserving active-metrics.yml)..."
+        find .claude/jit-tooling -mindepth 1 -maxdepth 1 \
+            ! -name 'active-metrics.yml' ! -name '.gitkeep' -exec rm -rf {} +
+    fi
+
+    # Settings.json: warn if hooks block points at the deleted hooks tree.
+    if [ -f .claude/settings.json ] && grep -q '"hooks"' .claude/settings.json 2>/dev/null; then
+        warn ".claude/settings.json contains a 'hooks' block — likely points at"
+        warn "the deleted hooks tree. Plugin form provides hooks via the plugin"
+        warn "manifest; remove the legacy hooks block manually or hooks may fail"
+        warn "silently. Edit .claude/settings.json yourself before next session."
+    fi
+
+    echo ""
+    info "Migration complete."
+    echo ""
+    info "Project state preserved:"
+    echo "    .claude/canvas/, .claude/diamonds/, .claude/memory/,"
+    echo "    .claude/evals/, .claude/harness/{decision-log,warnings-log}.md,"
+    echo "    .claude/jit-tooling/active-metrics.yml"
+    echo ""
+    info "Next steps (inside Claude Code):"
+    echo "  1. Verify the plugin is installed:  /plugin list"
+    echo "     If not: /plugin marketplace add haabe/mycelium"
+    echo "             /plugin install mycelium@haabe-mycelium"
+    echo "  2. Verify project state reads:      /mycelium:diamond-assess"
+    echo "  3. Commit the migration:            git add -A && git commit -m 'chore: migrate from legacy to plugin form'"
+    echo ""
+    info "If anything looks off: 'git reset --hard HEAD' before committing returns to pre-migration state."
+    exit 0
+fi
+
+# ============================================================
+# Legacy refresh (npx-degit upgrade): existing flow, unchanged
+# below. Falls through here only when FORM=legacy and MIGRATE_MODE=false.
 # ============================================================
 
 echo "Mycelium Upgrade"
@@ -329,4 +548,22 @@ echo "Next steps:"
 echo "  1. Review changes: git diff"
 echo "  2. Commit: git add -A && git commit -m 'Upgrade Mycelium to v$NEW_VERSION'"
 echo "  3. Run /diamond-assess to verify diamond compatibility"
+echo ""
+echo "------------------------------------------------------------"
+echo "Heads-up: Mycelium 0.20.x ships as a Claude Code plugin."
+echo "Legacy npx-degit install is supported during transition,"
+echo "but plugin form is the recommended path:"
+echo ""
+echo "  /plugin marketplace add haabe/mycelium"
+echo "  /plugin install mycelium@haabe-mycelium"
+echo ""
+echo "To migrate this project from legacy to plugin form:"
+echo "  bash .claude/scripts/upgrade.sh --migrate-to-plugin"
+echo ""
+echo "Project state (canvas/, diamonds/, memory/, decision-log.md,"
+echo "evals/, active-metrics.yml) survives migration untouched."
+echo "Skill invocations gain the 'mycelium:' namespace prefix"
+echo "(e.g. /interview becomes /mycelium:interview); tab-completion"
+echo "and natural-language invocation soften the typing tax."
+echo "------------------------------------------------------------"
 echo ""

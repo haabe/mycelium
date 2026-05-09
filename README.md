@@ -5,6 +5,21 @@
 AI has made building cheap. It hasn't made *deciding* cheap. Agents will jump from an idea to a pull request without asking why, who for, or whether anyone needs it. Other tools accelerate delivery — Mycelium makes the agent earn the right to start.
 
 ```bash
+# Recommended (post-v0.20.0): install as a Claude Code plugin
+/plugin marketplace add haabe/mycelium
+/plugin install mycelium@haabe-mycelium
+/mycelium:start       # one command: setup + 10-minute discovery
+```
+
+Plugin install is brownfield-safe: no project-root files are modified. Skills are namespaced as `/mycelium:<name>`. See [docs/get-started.md](docs/get-started.md) for details.
+
+**On the namespace prefix.** Anthropic's plugin convention requires `/<plugin>:<skill>`, so every Mycelium skill is `/mycelium:foo`. Two ergonomics that take the typing tax down:
+
+- **Tab completion** — type `/myc<Tab>` in Claude Code and it expands to `/mycelium:`. Then a few letters of the skill name + `<Tab>` finishes it. `/mycelium:diamond-assess` is six keystrokes.
+- **Natural-language invocation** — you can also just say "run mycelium setup" or "have mycelium assess where we are." Claude Code routes to the right skill. The `/...` form is faster once you know the name; prose is fine when you don't.
+
+Legacy install (pre-v0.20.0, still supported during transition):
+```bash
 npx degit haabe/mycelium my-project && cd my-project
 # Start Claude Code, then:
 /interview
@@ -85,9 +100,23 @@ If delivery reveals a bad assumption, the diamond **regresses** back with new ev
 
 ## Quick start
 
-### New project
+### Recommended: plugin install (any project, brownfield-safe)
 
-Click **"Use this template"** on GitHub, or:
+Inside Claude Code:
+
+```
+/plugin marketplace add haabe/mycelium
+/plugin install mycelium@haabe-mycelium
+/mycelium:start
+```
+
+`/mycelium:start` is the recommended first-run command — it composes `/mycelium:setup` (project-state directories under `.claude/`) and `/mycelium:interview` (10-minute discovery on your idea) into one invocation, with a short welcome to bridge the install→value gap. Both sub-skills remain invocable directly if you prefer piecewise. None of the steps touch your project root files (CLAUDE.md, README, LICENSE). Idempotent — re-running on an initialized project routes to `/mycelium:diamond-assess` instead.
+
+Skills are namespaced (`/mycelium:<name>`) per Anthropic's plugin convention. Use `/myc<Tab>` to expand the prefix, or invoke in prose ("run mycelium start", "have mycelium assess current state") — Claude Code routes either form.
+
+### Legacy install (pre-v0.20.0, still supported during transition)
+
+**New project**:
 
 ```bash
 npx degit haabe/mycelium my-project
@@ -96,27 +125,44 @@ cd my-project
 
 Then start Claude Code and run `/interview`.
 
-### Existing project
+**Existing project** (legacy):
 
 ```bash
 npx degit haabe/mycelium/CLAUDE.md ./CLAUDE.md
 npx degit haabe/mycelium/.claude ./.claude
 ```
 
-Then start Claude Code and run `/interview`.
+Note: this overwrites your existing CLAUDE.md if you have one. Plugin install above avoids this. Then start Claude Code and run `/interview`.
+
+### Migrating from legacy to plugin form
+
+If you already installed Mycelium via `npx degit` and want to switch to plugin form, your project state (canvas, diamonds, memory, decision log) is preserved. The agent-driven path:
+
+```
+/plugin marketplace add haabe/mycelium
+/plugin install mycelium@haabe-mycelium
+/mycelium:migrate-from-legacy
+```
+
+The skill walks through detection, plugin verification, the explicit "what will and will not change" preview, the migration script, and verification. Migration is reversible via git (`git reset --hard HEAD` before committing).
+
+Or run the script directly: `bash .claude/scripts/upgrade.sh --migrate-to-plugin`. Use `--check-migration` to see which form your project is on without making changes. Full guide: [docs/migration.md](docs/migration.md).
 
 ### Resuming work
 
-```
-/diamond-assess
-```
-
-The agent reads your canvas state and tells you where you are and what to do next.
+Plugin form: `/mycelium:diamond-assess`. Legacy: `/diamond-assess`. The agent reads your canvas state and tells you where you are and what to do next.
 
 ## Upgrading
 
 Mycelium is not a software library — it's instructions that reshape agent behavior. Upgrading replaces framework files while preserving your project state.
 
+**Plugin form** (recommended, post-v0.20.0):
+```
+/plugin update mycelium@haabe-mycelium
+```
+Plugin auto-update is on by default for the official-style marketplace; manual update via `/plugin marketplace update haabe-mycelium` followed by `/reload-plugins`.
+
+**Legacy form**:
 ```bash
 bash .claude/scripts/upgrade.sh          # latest
 bash .claude/scripts/upgrade.sh v0.12.0  # specific version

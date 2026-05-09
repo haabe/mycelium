@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mycelium.dev/schemas/canvas/jobs-to-be-done.schema.json",
+  "title": "Jobs to be Done Canvas",
+  "description": "Christensen JTBD — functional, emotional, social dimensions. Each job requires provenance because all three dimensions need interview backing.",
+  "type": "object",
+  "$defs": {
+    "dimension_status": {
+      "type": "object",
+      "description": "Per-dimension validation status for one Christensen dimension (functional/emotional/social).",
+      "properties": {
+        "status": {
+          "type": "string",
+          "description": "Short status phrase, e.g. 'partial — observed-reaction backed' / 'inferred — desk-derived' / 'hypothesis — founder-articulated' / 'validated — interview-extracted'."
+        },
+        "backing": {
+          "type": "string",
+          "description": "Evidence supporting this dimension specifically. Free text; cite sources when concrete."
+        },
+        "gap": {
+          "type": "string",
+          "description": "What's missing or speculative for this dimension. Names the load-bearing validation event that would close the gap."
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "properties": {
+    "schema_version": {
+      "$ref": "_common.schema.json#/$defs/schema_version"
+    },
+    "jobs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "situation": {"type": "string"},
+          "motivation": {"type": "string"},
+          "expected_outcome": {"type": "string"},
+          "functional": {"type": "string"},
+          "emotional": {"type": "string"},
+          "social": {"type": "string"},
+          "validation_status_per_dimension": {
+            "type": "object",
+            "description": "Per-dimension backing audit per Christensen tripartite (functional/emotional/social each need backing). Optional but encouraged when provenance.confidence is heterogeneous across dimensions. Closes a known schema-discipline divergence (cluster instance 8, see engine/consistency-check-spec.md). Aggregate provenance.confidence remains the single number used by gates and threshold calculations; this block is for legibility, not gate computation.",
+            "properties": {
+              "functional": {"$ref": "#/$defs/dimension_status"},
+              "emotional": {"$ref": "#/$defs/dimension_status"},
+              "social": {"$ref": "#/$defs/dimension_status"}
+            },
+            "additionalProperties": false
+          },
+          "provenance": {
+            "$ref": "_common.schema.json#/$defs/provenance"
+          },
+          "trace": {
+            "$ref": "_common.schema.json#/$defs/trace"
+          }
+        },
+        "required": ["provenance"],
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

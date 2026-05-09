@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-hooks.json",
+  "description": "Mycelium 5-layer enforcement architecture wired to Claude Code plugin events. Hook scripts read project state from $CLAUDE_PROJECT_DIR/.claude/ (canvas, memory, decision-log) which the user's project owns; the scripts themselves live in ${CLAUDE_PLUGIN_ROOT}/hooks/ via plugin install.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/gate.sh",
+            "timeout": 5,
+            "statusMessage": "Mycelium preflight gate + secret scan"
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/scope-gate.sh",
+            "timeout": 5,
+            "statusMessage": "Mycelium scope enforcement"
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/framework-guard.sh",
+            "timeout": 5,
+            "statusMessage": "Mycelium framework-guard (dogfood-mode only)"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/framework-guard.sh",
+            "timeout": 5,
+            "statusMessage": "Mycelium framework-guard (Bash — dogfood-mode only)"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/post-write-nudge.sh",
+            "timeout": 3,
+            "statusMessage": "Mycelium post-write check"
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/change-log.sh",
+            "timeout": 3,
+            "statusMessage": "Mycelium change log"
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/diamond-state-audit.sh",
+            "timeout": 3,
+            "statusMessage": "Mycelium diamond state audit"
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/reflexion-gate.sh",
+            "timeout": 10,
+            "statusMessage": "Reflexion: checking failure relevance..."
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/stop-check.sh",
+            "timeout": 5,
+            "statusMessage": "Mycelium guardrail + feedback loop check"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/session-start.sh",
+            "timeout": 5,
+            "statusMessage": "Mycelium feedback loop check"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/preflight.sh",
+            "timeout": 5,
+            "statusMessage": "Mycelium preflight stamp"
+          }
+        ]
+      }
+    ]
+  }
+}

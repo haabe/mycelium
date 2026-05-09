@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mycelium.dev/schemas/canvas/human-tasks.schema.json",
+  "title": "Human Tasks Canvas",
+  "description": "Tracks offline human tasks (interviews, observations, outreach). Created by /handoff, consumed by /log-evidence and session-start.sh. Bridges agent-executable and human-executable work.",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "$ref": "_common.schema.json#/$defs/schema_version"
+    },
+    "pending_tasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "type": {
+            "type": "string",
+            "enum": ["interview", "observation", "survey", "usability_test", "stakeholder_meeting", "experiential_research"]
+          },
+          "objective": {"type": "string"},
+          "target_persona": {"type": "string"},
+          "key_questions": {
+            "type": "array",
+            "items": {"type": "string"}
+          },
+          "success_criteria": {"type": "string"},
+          "created_at": {
+            "$ref": "_common.schema.json#/$defs/iso_timestamp"
+          },
+          "diamond_ref": {"type": "string"},
+          "canvas_refs": {
+            "type": "array",
+            "items": {"type": "string"}
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "in_progress", "completed", "cancelled"]
+          },
+          "priority": {
+            "type": "string",
+            "enum": ["high", "medium", "low"]
+          },
+          "capture_template": {"type": "string"}
+        },
+        "required": ["id", "type", "objective", "status"],
+        "additionalProperties": true
+      }
+    },
+    "completed_tasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "completed_at": {
+            "$ref": "_common.schema.json#/$defs/iso_timestamp"
+          },
+          "evidence_logged_to": {
+            "type": "array",
+            "items": {"type": "string"}
+          },
+          "key_findings": {"type": "string"},
+          "source_class": {
+            "$ref": "_common.schema.json#/$defs/source_class"
+          }
+        },
+        "required": ["id", "completed_at", "source_class"],
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

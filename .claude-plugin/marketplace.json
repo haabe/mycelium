@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-marketplace.json",
+  "name": "haabe-mycelium",
+  "description": "Mycelium framework — theory-grounded product-thinking discipline for AI agents. Single-plugin marketplace.",
+  "owner": {
+    "name": "Håvard Bartnes"
+  },
+  "plugins": [
+    {
+      "name": "mycelium",
+      "source": "./plugins/mycelium",
+      "description": "45 skills, 12 theory gates, six diamond scales (Purpose to Market). Evidence-gated discovery-to-delivery harness. Brownfield-safe: install adds skills, agents, hooks; never modifies project root files.",
+      "category": "development",
+      "tags": [
+        "product-discovery",
+        "harness-engineering",
+        "discipline",
+        "evidence-based"
+      ]
+    }
+  ]
+}
