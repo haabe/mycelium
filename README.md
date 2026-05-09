@@ -134,6 +134,20 @@ npx degit haabe/mycelium/.claude ./.claude
 
 Note: this overwrites your existing CLAUDE.md if you have one. Plugin install above avoids this. Then start Claude Code and run `/interview`.
 
+### Migrating from legacy to plugin form
+
+If you already installed Mycelium via `npx degit` and want to switch to plugin form, your project state (canvas, diamonds, memory, decision log) is preserved. The agent-driven path:
+
+```
+/plugin marketplace add haabe/mycelium
+/plugin install mycelium@haabe-mycelium
+/mycelium:migrate-from-legacy
+```
+
+The skill walks through detection, plugin verification, the explicit "what will and will not change" preview, the migration script, and verification. Migration is reversible via git (`git reset --hard HEAD` before committing).
+
+Or run the script directly: `bash .claude/scripts/upgrade.sh --migrate-to-plugin`. Use `--check-migration` to see which form your project is on without making changes. Full guide: [docs/migration.md](docs/migration.md).
+
 ### Resuming work
 
 Plugin form: `/mycelium:diamond-assess`. Legacy: `/diamond-assess`. The agent reads your canvas state and tells you where you are and what to do next.
