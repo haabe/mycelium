@@ -69,7 +69,7 @@ Automated evals test known failure modes. Manual dogfood sessions catch **unknow
 
 **Pick a product shape that's different from the last session.** If macos-fileviewer was a native app, try a CLI tool next. Then a web service. Then a data pipeline. Rotation surfaces different framework gaps.
 
-**Use the template at `.claude/evals/dogfood-reports/README.md`** for report structure. The goal is not to ship the product — the goal is to surface framework gaps and document them.
+**See `${CLAUDE_PLUGIN_ROOT}/engine/dogfood-mode.md`** for the report-structure template, anonymization rules, and when-to-run guidance. The goal is not to ship the product — the goal is to surface framework gaps and document them.
 
 ### Dogfood Session Budget
 

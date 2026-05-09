@@ -282,7 +282,7 @@ Load canvas guidance from `${CLAUDE_PLUGIN_ROOT}/engine/canvas-guidance.yml` for
 If the user says it's primarily about learning Mycelium:
 - Set `dogfood: true` in `.claude/diamonds/active.yml` (in addition to `project_type`)
 - Explain what this enables: mocked personas via `/mycelium:mocked-persona-interview`, honest stop conditions, dogfood reports as the real deliverable
-- Reference `.claude/evals/dogfood-reports/README.md` for the pattern
+- Reference `${CLAUDE_PLUGIN_ROOT}/engine/dogfood-mode.md` for the pattern (when/how to run, report structure, anonymization rules). Reports themselves go to `.claude/evals/dogfood-reports/` in the user's project.
 - Note that theory gates will accept "documented Mycelium learning" as evidence in place of user research
 
 See `${CLAUDE_PLUGIN_ROOT}/engine/canvas-guidance.yml#dogfood_modifier` for the full effect list.

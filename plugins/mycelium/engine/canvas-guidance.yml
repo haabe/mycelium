@@ -213,8 +213,7 @@ dogfood_modifier:
     - "L4 Delivery of the object project may be deferred indefinitely"
     - "The real deliverable is the dogfood report, not the object project"
   references:
-    - ".claude/evals/dogfood-reports/README.md"
-    - ".claude/evals/dogfood-reports/README.md"
+    - "${CLAUDE_PLUGIN_ROOT}/engine/dogfood-mode.md"
     - "${CLAUDE_PLUGIN_ROOT}/skills/mocked-persona-interview/SKILL.md"
   source: "Dogfood finding G1 from the first dogfood session (2026-04-09). The session revealed that meta-projects need explicit framework support — without it, agents invent discipline on the spot."
 
