@@ -8,9 +8,9 @@ description: Smoke-test skill that confirms the Mycelium plugin loaded correctly
 When invoked, respond with exactly this single line and nothing else:
 
 ```
-MYCELIUM_PLUGIN_LOAD_OK_v0.20.0
+MYCELIUM_PLUGIN_LOAD_OK
 ```
 
-This skill is here to confirm the plugin packaging works end-to-end (manifest → marketplace → install → namespaced invocation). It will be removed once the full skill set has migrated into the plugin and the plugin's own validation suite covers load-correctness.
+This is a plugin-shape marker, not a version assertion — it confirms the plugin packaging works end-to-end (manifest → marketplace → install → namespaced invocation). The version a user is actually running comes from `/plugin list` or `plugin.json#version`, not this marker. (The marker was previously version-suffixed, which created drift: it stayed pinned at `_v0.20.0` while plugin.json moved through 10 patches. Detected during 2026-05-09 dogfood.)
 
 For real Mycelium skills, see the parent `skills/` directory once migration completes.

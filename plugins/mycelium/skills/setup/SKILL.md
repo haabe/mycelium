@@ -40,6 +40,8 @@ Create these directories in the user's project (using Bash `mkdir -p`):
 
 These directories hold project-specific state that the user's project owns and commits to git. Framework reference content (skills, hooks, theory gates) lives in the plugin cache and is not duplicated here.
 
+A `.claude/state/` directory may also be present — that one is created and owned by Claude Code itself for runtime state (audit logs, etc.), not by Mycelium. Mycelium does not write to it; if you see it, it's expected.
+
 **Important — empty dirs and git**: directories that don't get a starter file in Step 3 (`canvas/`, `evals/`, `jit-tooling/`) are empty after Step 2 and would not survive a git commit. Drop a `.gitkeep` stub in each so they remain in the user's repo:
 
 ```bash
@@ -99,10 +101,13 @@ Empty until the first decision is logged.
 ```
 
 ### `.claude/harness/warnings-log.md`
+
+**IMPORTANT — write the file content literally; do NOT expand `$CLAUDE_PLUGIN_ROOT`.** When the Write tool processes the content below, it must preserve `$CLAUDE_PLUGIN_ROOT` as a literal string (so any user reading the file later sees the variable name, not the maintainer's absolute path). Detected during 2026-05-09 plugin-form dogfood: a previous agent expanded the variable while writing, baking the maintainer's absolute path into every user's `warnings-log.md`. Use prose in the file body to make path expansion semantically wrong (the file is documentation, not a runnable command).
+
 ```markdown
 # Warnings log
 
-Auto-populated by ${CLAUDE_PLUGIN_ROOT}/scripts/ingest_warnings.py from CI signals
+Auto-populated by the plugin's `ingest_warnings.py` script from CI signals
 (validator/upgrade WARN+FAIL lines). Consumed by
 /mycelium:corrections-audit for cross-source pattern detection.
 

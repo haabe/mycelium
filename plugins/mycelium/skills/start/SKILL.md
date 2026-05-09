@@ -23,17 +23,19 @@ Output a short welcome before doing anything. Do NOT skip this — the install-t
 >
 > Let's begin."
 
-## Step 2: Run setup
+## Step 2: Detect existing state — HARD GATE
 
-Detect whether setup has already run:
+**This must be the very first action after the welcome. Do NOT run any other Bash commands, Edit/Write operations, or "let me prepare the directories" reasoning before this gate fires.**
+
+Run exactly this check, and only this check:
 
 ```bash
 test -f "$CLAUDE_PROJECT_DIR/.claude/diamonds/active.yml"
 ```
 
-- If file EXISTS: the project already has Mycelium state. Skip to Step 4 (route to `/mycelium:diamond-assess` instead of running interview, because the user is returning to existing project work, not starting a new idea).
+- **If exit code 0** (file EXISTS): the project already has Mycelium state. Skip directly to Step 4 routing output. **Do NOT run setup. Do NOT run mkdir. Do NOT touch `.gitkeep` stubs.** Setup-style operations on an already-initialized project waste tokens and trigger Read-before-Write tool errors when the agent then tries to write to existing files. Detected during 2026-05-09 plugin-form dogfood — the agent ran `mkdir -p .claude/...` before honoring this gate, then hit a Write error on `active.yml` and only then realized the project was initialized. The fix is structural: the gate is the first action.
 
-- If file does NOT exist: invoke the setup workflow inline. Follow the instructions in `${CLAUDE_PLUGIN_ROOT}/skills/setup/SKILL.md` exactly — same Step 1 detection (which will fall through), Step 2 directory creation with `.gitkeep` stubs, Step 3 starter file writes, Step 4 AGENTS.md prompt (default-yes in non-interactive contexts), Step 5 confirmation message. Do not duplicate the setup logic here; reference it.
+- **If exit code 1** (file does NOT exist): invoke the setup workflow inline. Follow the instructions in `${CLAUDE_PLUGIN_ROOT}/skills/setup/SKILL.md` exactly — same Step 1 detection (which will fall through), Step 2 directory creation with `.gitkeep` stubs, Step 3 starter file writes, Step 4 AGENTS.md prompt (default-yes in non-interactive contexts), Step 5 confirmation message. Do not duplicate the setup logic here; reference it.
 
 After setup completes, do NOT print setup's "Next:" line — this skill is the next step. Print:
 
