@@ -4,17 +4,23 @@ on:
   push:
     branches: [main]
     paths:
+      - 'plugins/mycelium/**'
+      - '.claude-plugin/**'
       - '.claude/**'
+      - 'tests/**'
+      - 'docs/**'
       - '*.md'
-      - '.claude/tests/**'
       - 'requirements-ci.txt'
       - '.github/workflows/validate.yml'
   pull_request:
     branches: [main]
     paths:
+      - 'plugins/mycelium/**'
+      - '.claude-plugin/**'
       - '.claude/**'
+      - 'tests/**'
+      - 'docs/**'
       - '*.md'
-      - '.claude/tests/**'
       - 'requirements-ci.txt'
       - '.github/workflows/validate.yml'
 
@@ -33,23 +39,31 @@ jobs:
         run: pip install -r requirements-ci.txt
 
       - name: Run structural integrity validation (includes Check 17 — ruff/shellcheck/pytest with baseline-aware logic)
-        run: bash .claude/tests/validate-template.sh
+        run: bash tests/validate-template.sh
 
       - name: Run canvas schema + trace validation
-        run: python3 .claude/scripts/validate_canvas.py
+        run: python3 plugins/mycelium/scripts/validate_canvas.py
 
       - name: Run Python unit tests with coverage (verbose output for CI logs)
         run: |
-          pytest .claude/tests/python/ -v \
-            --cov=.claude/scripts \
+          pytest tests/python/ -v \
+            --cov=plugins/mycelium/scripts \
             --cov-report=term \
             --cov-report=xml
 
-      # Note: standalone ruff and shellcheck checks were removed 2026-05-03.
-      # validate-template.sh Check 17 already runs both with the correct
-      # baseline-aware thresholds (e.g., shellcheck pre-existing warnings in
-      # gate.sh + session-start.sh are tolerated; only regression above
-      # baseline FAILs). Running them standalone here duplicated the logic
-      # AND used the wrong threshold (shellcheck exits non-zero on ANY
-      # warning, which doesn't match the baseline rule). Single source of
-      # truth = Check 17 in validate-template.sh.
+      # Note: standalone ruff and shellcheck checks are not run here — Check 17
+      # in validate-template.sh runs both with the correct baseline-aware
+      # thresholds (pre-existing warnings tolerated; regression above baseline
+      # fails). Single source of truth.
+      #
+      # Path layout (post-2026-05-09 legacy cleanup):
+      #   tests/validate-template.sh          — validator (was .claude/tests/)
+      #   tests/python/                       — Python unit tests
+      #   plugins/mycelium/scripts/           — framework scripts (validate_canvas.py,
+      #                                         parse_manifest.py, ingest_warnings.py,
+      #                                         framework_guard.py, scope_check.py,
+      #                                         _manifest_lib.py, upgrade.sh)
+      #   .claude/                            — project state only (canvas, diamonds,
+      #                                         memory, evals, harness/decision-log.md,
+      #                                         jit-tooling/active-metrics.yml,
+      #                                         manifest.yml, settings.json)
