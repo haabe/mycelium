@@ -884,6 +884,47 @@ check_skills_tree_parity() {
 info() { echo "  INFO: $1"; }
 
 # ============================================================
+# CHECK 30: plugin.json version tracks CLAUDE.md leading version line
+# ============================================================
+# Coupled-field sync enforcement (added 2026-05-09 after 0.21.0 shipped
+# without bumping plugin.json — same drift class as 0.20.x dogfood B2,
+# but at MINOR-bump rather than PATCH-bump scale). Check 26 watches
+# plugin.json as a material path; this check enforces the field-level
+# invariant that plugin.json#version === leading "Version X.Y.Z" in
+# CLAUDE.md. Without it, ship a CLAUDE.md bump and forget plugin.json,
+# users running /plugin list see a stale version.
+check_plugin_json_version_sync() {
+    section "Check 30: plugin.json#version tracks CLAUDE.md Version line"
+
+    local claude_md="CLAUDE.md"
+    local plugin_json="plugins/mycelium/.claude-plugin/plugin.json"
+
+    if [ ! -f "$claude_md" ] || [ ! -f "$plugin_json" ]; then
+        info "Either CLAUDE.md or plugin.json absent — Check 30 N/A"
+        return
+    fi
+
+    local claude_version plugin_version
+    claude_version=$(grep -m1 "^\*Version " "$claude_md" 2>/dev/null | sed -E 's/^\*Version ([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
+    plugin_version=$(grep -m1 '"version":' "$plugin_json" 2>/dev/null | sed 's/.*"version":[ ]*"//' | sed 's/".*//')
+
+    if [ -z "$claude_version" ]; then
+        fail "Could not read Version line from CLAUDE.md"
+        return
+    fi
+    if [ -z "$plugin_version" ]; then
+        fail "Could not read version field from $plugin_json"
+        return
+    fi
+
+    if [ "$claude_version" = "$plugin_version" ]; then
+        pass "plugin.json#version matches CLAUDE.md ($claude_version)"
+    else
+        fail "Version drift: CLAUDE.md=$claude_version, plugin.json=$plugin_version. Sync plugin.json to match."
+    fi
+}
+
+# ============================================================
 # CHECK 29: Stale-state-read pattern scan (anti-pattern #8)
 # ============================================================
 # Per harness/anti-patterns.md #8 "Stale State Read" (graduated 2026-05-09).
@@ -993,6 +1034,7 @@ check_code_quality
 check_skills_tree_parity
 check_manifest_byte_match
 check_stale_state_read_pattern
+check_plugin_json_version_sync
 
 # ============================================================
 # SUMMARY
