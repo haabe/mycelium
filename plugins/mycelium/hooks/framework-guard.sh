@@ -36,28 +36,40 @@ set -euo pipefail
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
 STATE_FILE="$PROJECT_DIR/.claude/state/upstream.json"
-HELPER="$PROJECT_DIR/.claude/scripts/framework_guard.py"
 
 # Fast path: no state file → not a dogfood instance → allow everything
 [ ! -f "$STATE_FILE" ] && exit 0
+
+# Helper resolution — prefer plugin path (post-0.20.x), fall back to legacy.
+# F6 fix (2026-05-09 team-topologies dogfood): plugin migration removed the
+# legacy helper from git but the hook still hardcoded the legacy path,
+# producing a hard deadlock for anyone pulling main without a local copy.
+HELPER=""
+if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/framework_guard.py" ]; then
+  HELPER="${CLAUDE_PLUGIN_ROOT}/scripts/framework_guard.py"
+elif [ -f "$PROJECT_DIR/.claude/scripts/framework_guard.py" ]; then
+  HELPER="$PROJECT_DIR/.claude/scripts/framework_guard.py"
+fi
 
 # Read input JSON from stdin
 INPUT=$(cat)
 
 # Delegate to Python stdlib helper
-if [ -f "$HELPER" ]; then
+if [ -n "$HELPER" ]; then
   printf '%s' "$INPUT" | python3 "$HELPER" "$STATE_FILE" "$PROJECT_DIR"
   exit $?
 fi
 
-# Helper missing → fail-closed with a clear restore instruction
+# Helper missing in BOTH plugin and legacy paths → fail-closed.
+# Updated bypass instruction names both paths so the user can diagnose.
 python3 -c "
-import json
+import json, os
+plugin_root = os.environ.get('CLAUDE_PLUGIN_ROOT', '<CLAUDE_PLUGIN_ROOT not set>')
 print(json.dumps({
     'hookSpecificOutput': {
         'hookEventName': 'PreToolUse',
         'permissionDecision': 'deny',
-        'permissionDecisionReason': 'Mycelium framework-guard: .claude/scripts/framework_guard.py is missing. Restore from upstream OR delete .claude/state/upstream.json to disable framework-edit enforcement.'
+        'permissionDecisionReason': f'Mycelium framework-guard: framework_guard.py not found at {plugin_root}/scripts/framework_guard.py NOR at .claude/scripts/framework_guard.py. Reinstall the plugin (/plugin update mycelium) OR delete .claude/state/upstream.json to disable framework-edit enforcement.'
     }
 }))
 "

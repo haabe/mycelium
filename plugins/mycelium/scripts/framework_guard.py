@@ -348,6 +348,42 @@ def _handle_bash(tool_input, project_dir, framework, upstream_repo):
         _deny_bash_write(fp, op, upstream_repo)
 
 
+def _handle_mcp_filesystem_path(tool_input, project_dir, framework, upstream_repo):
+    """MCP filesystem write/edit on a single `path` field.
+
+    Added 2026-05-09 (team-topologies dogfood F6 follow-up): the
+    Edit/Write/MultiEdit guard was bypassable via mcp__filesystem__write_file
+    and mcp__filesystem__edit_file because the matcher only covered the
+    Anthropic-built tools. This handler closes the gap for the filesystem MCP.
+    Other MCP servers with write capability (mcp__github__create_or_update_file,
+    mcp__filesystem__create_directory) remain uncovered — extend handlers and
+    the hooks.json matcher together when they become a real bypass risk.
+    """
+    file_path = tool_input.get("path", "")
+    if not file_path:
+        return  # no path → fail open
+    matched, rule = is_framework(file_path, project_dir, framework)
+    if matched:
+        rel_path = os.path.relpath(os.path.abspath(file_path), project_dir)
+        _deny_file_edit(rel_path, rule, upstream_repo)
+
+
+def _handle_mcp_filesystem_move(tool_input, project_dir, framework, upstream_repo):
+    """MCP filesystem move with `source` + `destination`.
+
+    Move into framework path = framework write; move out of framework path =
+    framework deletion. Both classify as framework-modifying.
+    """
+    for field in ("source", "destination"):
+        path = tool_input.get(field, "")
+        if not path:
+            continue
+        matched, rule = is_framework(path, project_dir, framework)
+        if matched:
+            rel_path = os.path.relpath(os.path.abspath(path), project_dir)
+            _deny_file_edit(rel_path, rule, upstream_repo)
+
+
 def _load_state(state_file):
     """Read the upstream-config state file. Returns dict or None on error/disabled."""
     try:
@@ -394,10 +430,13 @@ def main():
     framework = parse_manifest(manifest_path)
 
     handlers = {
-        "Write":     _handle_file_edit,
-        "Edit":      _handle_file_edit,
-        "MultiEdit": _handle_file_edit,
-        "Bash":      _handle_bash,
+        "Write":                          _handle_file_edit,
+        "Edit":                           _handle_file_edit,
+        "MultiEdit":                      _handle_file_edit,
+        "Bash":                           _handle_bash,
+        "mcp__filesystem__write_file":    _handle_mcp_filesystem_path,
+        "mcp__filesystem__edit_file":     _handle_mcp_filesystem_path,
+        "mcp__filesystem__move_file":     _handle_mcp_filesystem_move,
     }
     handler = handlers.get(tool_name)
     if handler is not None:

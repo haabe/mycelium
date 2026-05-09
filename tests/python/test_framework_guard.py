@@ -12,9 +12,20 @@ def _import_guard(scripts_path):
 
 
 def _run_guard(scripts_path, state_file, project_dir, tool_name, payload):
-    """Invoke framework_guard.py as the hook would. Returns (allow|deny, message)."""
+    """Invoke framework_guard.py as the hook would. Returns (allow|deny, message).
+
+    `payload` shape varies by tool:
+      - Bash: command string
+      - Edit/Write/MultiEdit: file path → wrapped as {file_path: ...}
+      - mcp__filesystem__write_file/edit_file: file path → wrapped as {path: ...}
+      - mcp__filesystem__move_file: dict {source, destination}
+    """
     if tool_name == "Bash":
         tool_input = {"command": payload}
+    elif tool_name in ("mcp__filesystem__write_file", "mcp__filesystem__edit_file"):
+        tool_input = {"path": payload}
+    elif tool_name == "mcp__filesystem__move_file":
+        tool_input = payload  # caller passes {source, destination}
     else:
         tool_input = {"file_path": payload}
     input_json = json.dumps({"tool_name": tool_name, "tool_input": tool_input})
@@ -271,10 +282,89 @@ class TestMainDispatch:
         assert verdict == "allow"
 
     def test_unknown_tool_silently_passes(self, project_dir, manifest_path, upstream_state, scripts_path):
-        """Tools other than Edit/Write/MultiEdit/Bash are not classified."""
+        """Tools other than Edit/Write/MultiEdit/Bash/mcp__filesystem__* are not classified."""
         verdict, _ = _run_guard(
             scripts_path, upstream_state, project_dir,
             "Read", str(project_dir / "AGENTS.md"),
+        )
+        assert verdict == "allow"
+
+    # ============================================================
+    # MCP filesystem coverage (added 2026-05-09 — F6 follow-up).
+    # Closes the bypass surfaced during the team-topologies dogfood
+    # where mcp__filesystem__move_file cleanly evaded the guard
+    # because matchers only listed Anthropic-built tools.
+    # ============================================================
+
+    def test_mcp_filesystem_write_to_framework_denies(self, project_dir, manifest_path, upstream_state, scripts_path):
+        verdict, msg = _run_guard(
+            scripts_path, upstream_state, project_dir,
+            "mcp__filesystem__write_file",
+            str(project_dir / ".claude" / "skills" / "foo" / "SKILL.md"),
+        )
+        assert verdict == "deny"
+        assert "framework.directories" in msg
+
+    def test_mcp_filesystem_write_to_project_state_allows(self, project_dir, manifest_path, upstream_state, scripts_path):
+        verdict, _ = _run_guard(
+            scripts_path, upstream_state, project_dir,
+            "mcp__filesystem__write_file",
+            str(project_dir / ".claude" / "canvas" / "purpose.yml"),
+        )
+        assert verdict == "allow"
+
+    def test_mcp_filesystem_edit_to_framework_denies(self, project_dir, manifest_path, upstream_state, scripts_path):
+        verdict, msg = _run_guard(
+            scripts_path, upstream_state, project_dir,
+            "mcp__filesystem__edit_file",
+            str(project_dir / "AGENTS.md"),
+        )
+        assert verdict == "deny"
+        assert "framework.top_level" in msg
+
+    def test_mcp_filesystem_move_into_framework_denies(self, project_dir, manifest_path, upstream_state, scripts_path):
+        """Move INTO framework path = framework write."""
+        verdict, msg = _run_guard(
+            scripts_path, upstream_state, project_dir,
+            "mcp__filesystem__move_file",
+            {
+                "source": str(project_dir / ".claude" / "canvas" / "purpose.yml"),
+                "destination": str(project_dir / "AGENTS.md"),
+            },
+        )
+        assert verdict == "deny"
+        # destination is framework — should match top_level
+        assert "AGENTS.md" in msg or "framework.top_level" in msg
+
+    def test_mcp_filesystem_move_out_of_framework_denies(self, project_dir, manifest_path, upstream_state, scripts_path):
+        """Move OUT of framework path = framework deletion (also forbidden)."""
+        verdict, msg = _run_guard(
+            scripts_path, upstream_state, project_dir,
+            "mcp__filesystem__move_file",
+            {
+                "source": str(project_dir / "AGENTS.md"),
+                "destination": str(project_dir / ".claude" / "canvas" / "stolen.md"),
+            },
+        )
+        assert verdict == "deny"
+        assert "AGENTS.md" in msg or "framework.top_level" in msg
+
+    def test_mcp_filesystem_move_within_project_state_allows(self, project_dir, manifest_path, upstream_state, scripts_path):
+        verdict, _ = _run_guard(
+            scripts_path, upstream_state, project_dir,
+            "mcp__filesystem__move_file",
+            {
+                "source": str(project_dir / ".claude" / "canvas" / "a.yml"),
+                "destination": str(project_dir / ".claude" / "canvas" / "b.yml"),
+            },
+        )
+        assert verdict == "allow"
+
+    def test_mcp_filesystem_write_no_path_fails_open(self, project_dir, manifest_path, upstream_state, scripts_path):
+        """Empty path → fail open (consistent with Edit handler behavior)."""
+        verdict, _ = _run_guard(
+            scripts_path, upstream_state, project_dir,
+            "mcp__filesystem__write_file", "",
         )
         assert verdict == "allow"
 

@@ -71,6 +71,25 @@ The Phase 1 of the docs restructure (this version) shipped the docs/ structure w
 
 The docs restructure dogfooded its own framework: spec the metadocumentation, then fill the docs. If the metadocumentation does not survive the fill, the metadocumentation was wrong; that is also a learning.
 
+## What Mycelium does not yet do (single-team scope cut)
+
+The framework's data model and orchestration model both assume **one author / one team / one diamond-flow at a time**. This is a deliberate scope cut, not an oversight, and it is worth naming because Team Topologies vocabulary (stream-aligned, platform, X-as-a-Service) is present in the framework as *described content* — there is a `/mycelium:team-shape` skill, the L1 strategy table cites Skelton, and `canvas/team-shape.yml` exists — without being present as an *operational discriminator* on artifacts. Nothing else in the system reads what `team-shape.yml` produces.
+
+A 2026-05-09 multi-agent dogfood ran the framework against itself with parallel subagents simulating stream-aligned and platform team members on a shared canvas (full report: `.claude/evals/dogfood-reports/2026-05-09-team-topologies-simulation.md`). Two-agent independent corroboration surfaced four absences:
+
+- **No `owned_by_team` field anywhere in canvas.** Searched all schemas — opportunities, leaves, decisions, human-tasks, metric sources, all carry no team discriminator. Single-team assumption is baked across the canvas.
+- **No stream→platform request-routing primitive.** `human-tasks.yml` is the only inbox-shaped artifact, but its type enum is locked to user-research verbs (interview, observation, survey). There is no `platform_request` / `adapter_request` type, and misuse-fitting it would corrupt the artifact's discipline.
+- **No interface-contract / "what the platform exposes" doc.** `metrics-adapters/TEMPLATE.md` is a build-it-yourself template, not a "what platform commits to ship" surface. Stream teams have no way to distinguish "ask the platform" from "build it yourself" — the framework's default answer is always the latter.
+- **Silent semantic overwrite on multi-author canvas writes** survives git merge because provenance fields are single-valued (no per-entry author/date/type discriminator). Two parallel team members both adjusting the same opportunity's confidence would last-writer-win without any signal.
+
+There is also a real architectural tension to name: Mycelium's JiT philosophy ("detect-and-generate over pre-shipped catalogs") collapses, in a multi-team world, into "every stream builds its own adapter," which negates a platform team's value proposition. The two principles need reconciliation if multi-team operation becomes load-bearing.
+
+**Why none of this is fixed yet.** N=1 simulation is not adoption evidence. The framework's promotion bar (see `engine/consistency-check-spec.md`) wants instances of lived friction, not constructed ones. Subagent simulation surfaces mechanism issues honestly and fabricates social ones; the social findings (cognitive load felt-sense, handoff awkwardness, Conway pressure) — the things Team Topologies actually cares about — would require real two-team adoption to test. The right move is to wait for real adopters and promote primitives based on lived friction, not to ship speculative multi-team scaffolding the framework cannot yet justify.
+
+**Trigger for revisiting.** A real adopter brings an actual two-team setup (stream + platform, or two streams sharing canvas), runs Mycelium for 2-3 weeks, and reports back. If the same four absences surface as lived friction, that is mechanism-promotion evidence. Until then, the scope cut stands.
+
+If you are evaluating Mycelium for multi-team use today, the honest answer is: not yet. Solo founder + agent dyad, or a single team that treats canvas as shared documentation with all members editing serially, is the supported shape.
+
 ## What this implies for the reader
 
 If you find yourself disagreeing with the load-bearing claims above — that the agent should earn the right to start; that gates should fire upstream; that theory citations should be faithful; that dogfood is required — the rest of the framework will read as ceremony, because it follows from these claims.

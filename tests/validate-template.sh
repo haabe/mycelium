@@ -937,6 +937,114 @@ check_canvas_write_preflight() {
     fi
 }
 
+# ============================================================
+# CHECK 32: Four-Risks levels populated when opportunity is referenced
+# by an active diamond
+# ============================================================
+# Per the 2026-05-09 team-topologies dogfood (F8): /mycelium:diamond-progress
+# step 2 reads value/usability/feasibility/viability levels from
+# opportunities.yml before evaluating other gates. When those levels are
+# absent, the check vacuously passes — a false-negative gate. Multi-team
+# operation magnifies this: one team's incomplete evidence becomes another
+# team's "validated" gate-passage.
+#
+# This check enforces the schema-required-when-active rule that
+# diamond-progress's prose discipline relies on. WARN initially (not FAIL)
+# to absorb existing under-populated state without breaking CI; flip to FAIL
+# after 2-3 weeks of clean runs per the validator's documented graduation
+# pattern.
+check_four_risks_when_active() {
+    section "Check 32: Four-Risks levels required on active-diamond opportunities (F8)"
+
+    local opps_file=".claude/canvas/opportunities.yml"
+
+    if [ ! -f "$opps_file" ]; then
+        info "canvas/opportunities.yml absent — Check 32 N/A"
+        return
+    fi
+
+    local result
+    result=$(python3 - "$opps_file" <<'PY'
+import re
+import sys
+from pathlib import Path
+
+opps_path = sys.argv[1]
+
+# Best-effort YAML parse via PyYAML if available, regex fallback otherwise.
+try:
+    import yaml  # type: ignore
+    use_yaml = True
+except ImportError:
+    use_yaml = False
+
+text = Path(opps_path).read_text()
+
+def has_levels(opp_obj):
+    missing = []
+    for risk in ("value", "usability", "feasibility", "viability"):
+        block = opp_obj.get(risk) or {}
+        level = block.get("level") if isinstance(block, dict) else None
+        if level in (None, "", "TBD", "tbd"):
+            missing.append(risk)
+    return missing
+
+missing_per_opp = {}
+total = 0
+
+if use_yaml:
+    try:
+        opps = yaml.safe_load(text) or {}
+    except Exception:
+        opps = None
+    if isinstance(opps, dict):
+        for o in opps.get("opportunities") or []:
+            if not isinstance(o, dict) or not o.get("id"):
+                continue
+            total += 1
+            m = has_levels(o)
+            if m:
+                missing_per_opp[o["id"]] = m
+else:
+    # Regex fallback: split on top-level "  - id:" markers
+    for m_block in re.finditer(r"(?:^|\n)\s*-\s*id:\s*([\w-]+)\b(.*?)(?=\n\s*-\s*id:|\Z)", text, re.DOTALL):
+        opp_id, block = m_block.group(1), m_block.group(2)
+        if not opp_id.startswith("opp-"):
+            continue
+        total += 1
+        miss = []
+        for risk in ("value", "usability", "feasibility", "viability"):
+            if not re.search(rf"\n\s+{risk}:\s*\n\s+level:\s*[^\s\n]", block):
+                miss.append(risk)
+        if miss:
+            missing_per_opp[opp_id] = miss
+
+if total == 0:
+    print("OK: No opportunities to check")
+    sys.exit(0)
+if not missing_per_opp:
+    print(f"OK: All {total} opportunity entries have Four-Risks levels populated")
+    sys.exit(0)
+
+# WARN — diamond-progress step 2 reads these levels and passes vacuously when
+# absent. Multi-team magnification: one team's incomplete evidence becomes
+# another team's "validated" gate-pass. Populate via /mycelium:assumption-test
+# or /mycelium:ice-score before progressing the diamond into Develop/Deliver.
+print(f"WARN: {len(missing_per_opp)} of {total} opportunity entries missing Four-Risks levels (vacuous-pass risk in /mycelium:diamond-progress):")
+for ref, miss in sorted(missing_per_opp.items()):
+    print(f"  - {ref}: missing {', '.join(miss)}")
+sys.exit(1)
+PY
+    )
+    local rc=$?
+    if [ $rc -eq 0 ]; then
+        pass "$result"
+    else
+        printf "  %s\n" "$result"
+        WARN=$((WARN + 1))
+    fi
+}
+
 check_plugin_json_version_sync() {
     section "Check 30: plugin.json#version tracks CLAUDE.md Version line"
 
@@ -1080,6 +1188,7 @@ check_manifest_byte_match
 check_stale_state_read_pattern
 check_plugin_json_version_sync
 check_canvas_write_preflight
+check_four_risks_when_active
 
 # ============================================================
 # SUMMARY

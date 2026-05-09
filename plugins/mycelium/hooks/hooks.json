@@ -36,6 +36,17 @@
             "statusMessage": "Mycelium framework-guard (Bash — dogfood-mode only)"
           }
         ]
+      },
+      {
+        "matcher": "mcp__filesystem__(write_file|edit_file|move_file)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/framework-guard.sh",
+            "timeout": 5,
+            "statusMessage": "Mycelium framework-guard (MCP filesystem — dogfood-mode only)"
+          }
+        ]
       }
     ],
     "PostToolUse": [
