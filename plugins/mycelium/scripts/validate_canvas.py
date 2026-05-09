@@ -36,6 +36,7 @@ Exit codes:
 """
 
 import json
+import os
 import sys
 from collections import defaultdict, deque
 from pathlib import Path
@@ -56,9 +57,42 @@ except ImportError:
     sys.exit(2)
 
 
-REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-CANVAS_DIR = REPO_ROOT / ".claude" / "canvas"
-SCHEMA_DIR = REPO_ROOT / ".claude" / "schemas" / "canvas"
+# Path resolution — supports plugin form AND legacy form.
+#
+# Plugin form (post-v0.20.0): script is at $CLAUDE_PLUGIN_ROOT/scripts/X.py.
+#   - Schema lives at $CLAUDE_PLUGIN_ROOT/schemas/canvas/.
+#   - Canvas is project state at $CLAUDE_PROJECT_DIR/.claude/canvas/.
+#
+# Legacy form (pre-v0.20.0): script is at <repo>/.claude/scripts/X.py.
+#   - Schema and canvas both under <repo>/.claude/.
+#
+# Env vars take precedence; fall back to relative-to-script auto-detect.
+
+def _resolve_paths():
+    """Return (CANVAS_DIR, SCHEMA_DIR) honoring env vars + auto-detect."""
+    here = Path(__file__).resolve()
+    plugin_root_candidate = here.parent.parent  # plugins/mycelium/
+    legacy_repo_candidate = here.parent.parent.parent  # repo root in legacy
+
+    plugin_root = os.environ.get("CLAUDE_PLUGIN_ROOT")
+    if plugin_root:
+        schema_dir = Path(plugin_root) / "schemas" / "canvas"
+    elif (plugin_root_candidate / "schemas" / "canvas").exists():
+        schema_dir = plugin_root_candidate / "schemas" / "canvas"
+    else:
+        schema_dir = legacy_repo_candidate / ".claude" / "schemas" / "canvas"
+
+    project_dir = os.environ.get("CLAUDE_PROJECT_DIR")
+    if project_dir:
+        canvas_dir = Path(project_dir) / ".claude" / "canvas"
+    else:
+        cwd_canvas = Path.cwd() / ".claude" / "canvas"
+        canvas_dir = cwd_canvas if cwd_canvas.exists() else legacy_repo_candidate / ".claude" / "canvas"
+
+    return canvas_dir, schema_dir
+
+
+CANVAS_DIR, SCHEMA_DIR = _resolve_paths()
 COMMON_SCHEMA = SCHEMA_DIR / "_common.schema.json"
 
 

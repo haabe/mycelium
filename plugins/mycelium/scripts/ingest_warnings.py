@@ -23,14 +23,41 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-WARNINGS_LOG = REPO_ROOT / ".claude" / "memory" / "warnings-log.md"
-HANDBOOK = REPO_ROOT / ".claude" / "engine" / "warning-handbook.md"
+# Path resolution — supports plugin form AND legacy form.
+# Plugin form: $CLAUDE_PROJECT_DIR/.claude/memory/warnings-log.md (project state) +
+#              $CLAUDE_PLUGIN_ROOT/engine/warning-handbook.md (plugin reference).
+# Legacy form: <repo>/.claude/{memory,engine}/...
+
+def _resolve_paths():
+    here = Path(__file__).resolve()
+    plugin_root_candidate = here.parent.parent
+    legacy_repo_candidate = here.parent.parent.parent
+
+    plugin_root = os.environ.get("CLAUDE_PLUGIN_ROOT")
+    if plugin_root:
+        handbook = Path(plugin_root) / "engine" / "warning-handbook.md"
+    elif (plugin_root_candidate / "engine" / "warning-handbook.md").exists():
+        handbook = plugin_root_candidate / "engine" / "warning-handbook.md"
+    else:
+        handbook = legacy_repo_candidate / ".claude" / "engine" / "warning-handbook.md"
+
+    project_dir = os.environ.get("CLAUDE_PROJECT_DIR")
+    if project_dir:
+        warnings_log = Path(project_dir) / ".claude" / "memory" / "warnings-log.md"
+    else:
+        cwd_log = Path.cwd() / ".claude" / "memory" / "warnings-log.md"
+        warnings_log = cwd_log if (Path.cwd() / ".claude" / "memory").exists() else legacy_repo_candidate / ".claude" / "memory" / "warnings-log.md"
+
+    return warnings_log, handbook
+
+
+WARNINGS_LOG, HANDBOOK = _resolve_paths()
 
 # Known warning-class signatures. Each tuple is (class_name, signature_regex).
 # Order matters: first match wins. Add new classes to warning-handbook.md
