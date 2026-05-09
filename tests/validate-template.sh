@@ -443,13 +443,19 @@ check_agents_md() {
         warn "AGENTS.md contains $rule_lines line(s) with rule keywords — verify router-not-content"
     fi
 
-    # Length discipline: keep AGENTS.md compact (router only). Soft cap 80.
+    # Length discipline: keep AGENTS.md compact (router, not full guide).
+    # Soft cap was 80 pre-plugin-form (2026-05-08); raised to 120 on
+    # 2026-05-09 to accommodate plugin-form cross-agent operating models
+    # (Codex/Cursor/Aider/Copilot per-class guidance, examples, tab-
+    # completion + natural-language invocation notes). If AGENTS.md
+    # accumulates further past 120, that's a real "split into sub-docs"
+    # signal — file separate references and link from AGENTS.md.
     local line_count
     line_count=$(wc -l < AGENTS.md | tr -d ' ')
-    if [ "$line_count" -le 80 ]; then
-        pass "AGENTS.md within length cap ($line_count / 80 lines)"
+    if [ "$line_count" -le 120 ]; then
+        pass "AGENTS.md within length cap ($line_count / 120 lines)"
     else
-        warn "AGENTS.md exceeds 80-line soft cap ($line_count lines) — likely accumulating content"
+        warn "AGENTS.md exceeds 120-line soft cap ($line_count lines) — likely accumulating content; consider splitting into sub-docs"
     fi
 }
 
@@ -474,7 +480,11 @@ check_untrusted_content_wrapping() {
     # Part A: curated at-risk skills (per audit 2026-05-03, Q3 deep dive;
     # extended 2026-05-04 with the three skills the heuristic surfaced after
     # /xai-check shipped — they all persist user-supplied content into canvas
-    # / state files which feed future agent context).
+    # / state files which feed future agent context; extended 2026-05-09 with
+    # setup + migrate-from-legacy after the plugin-form pivot — they handle
+    # AGENTS.md template content + interactive migration confirmations
+    # respectively, both lower-risk than the canvas-write skills but worth
+    # acknowledging the wrapping convention).
     local at_risk_skills=(
         "interview"
         "user-interview"
@@ -490,6 +500,8 @@ check_untrusted_content_wrapping() {
         "canvas-update"
         "metrics-pull"
         "metrics-detect"
+        "setup"
+        "migrate-from-legacy"
     )
 
     local wrapping_pattern='untrusted_user_content|untrusted-content|prompt-injection-defense|security-trust\.md#prompt-injection'

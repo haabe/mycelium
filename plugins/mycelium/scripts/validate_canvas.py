@@ -87,7 +87,8 @@ def _resolve_paths():
         canvas_dir = Path(project_dir) / ".claude" / "canvas"
     else:
         cwd_canvas = Path.cwd() / ".claude" / "canvas"
-        canvas_dir = cwd_canvas if cwd_canvas.exists() else legacy_repo_candidate / ".claude" / "canvas"
+        legacy_canvas = legacy_repo_candidate / ".claude" / "canvas"
+        canvas_dir = cwd_canvas if cwd_canvas.exists() else legacy_canvas
 
     return canvas_dir, schema_dir
 

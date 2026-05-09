@@ -52,7 +52,11 @@ def _resolve_paths():
         warnings_log = Path(project_dir) / ".claude" / "memory" / "warnings-log.md"
     else:
         cwd_log = Path.cwd() / ".claude" / "memory" / "warnings-log.md"
-        warnings_log = cwd_log if (Path.cwd() / ".claude" / "memory").exists() else legacy_repo_candidate / ".claude" / "memory" / "warnings-log.md"
+        legacy_log = legacy_repo_candidate / ".claude" / "memory" / "warnings-log.md"
+        if (Path.cwd() / ".claude" / "memory").exists():
+            warnings_log = cwd_log
+        else:
+            warnings_log = legacy_log
 
     return warnings_log, handbook
 
