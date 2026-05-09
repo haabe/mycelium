@@ -58,7 +58,7 @@ For each dimension, compute the metric and compare against trend (if prior asses
 Re-run any eval scenario tagged `regression` AND `router-discipline` from `.claude/evals/scenarios/integration/`. These are deferred design-time decisions that need periodic re-verification (the AGENTS.md router design is the canonical case — see `agents-md-router-discipline.yml`).
 
 For each scenario:
-- Run via `/eval-runner` against the scenario file
+- Run via `/mycelium:eval-runner` against the scenario file
 - Compare result against the scenario's `baseline_reference` field
 - Report:
   - **Same outcome** → design holding; no action
@@ -105,13 +105,13 @@ Per `docs/contributing/style.md#highlights-rotation`. Cases stay in `docs/receip
 
 ### 4d. Docs Health Cross-Surface (added 2026-05-08)
 
-Run a lightweight version of `/canvas-health` step 9b on `docs/`:
+Run a lightweight version of `/mycelium:canvas-health` step 9b on `docs/`:
 - Stub freshness (any forthcoming-doc `Last updated` >60 days)
 - Length budget compliance (hard caps)
 - Marketing-voice scan
 - Information-scent scan on links
 
-Surface in the dashboard. Full details delegate to `/canvas-health`.
+Surface in the dashboard. Full details delegate to `/mycelium:canvas-health`.
 
 ### 5. Generate Dashboard
 

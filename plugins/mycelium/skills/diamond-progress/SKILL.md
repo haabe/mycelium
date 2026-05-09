@@ -51,7 +51,7 @@ Progress a diamond through phases with full theory gate validation. At delivery 
    4. **Apply the resolution methods in order of preference**:
       - Constraint-based: Can all three perspectives be satisfied within acceptable thresholds?
       - Phased: Can we deliver in stages? (Phase 1 = MVP addressing highest risk, Phase 2 = polish)
-      - Evidence-based: Can we test the disputed dimension? (Run `/assumption-test` on the riskiest assumption)
+      - Evidence-based: Can we test the disputed dimension? (Run `/mycelium:assumption-test` on the riskiest assumption)
       - Scope reduction: Can we remove features until all perspectives align?
    5. **Log the resolution** in decision-log.md with: the conflict type, each perspective's position, the resolution method chosen, and why.
    6. **Block progression**: Report "Progression blocked: perspective conflict ([type]). Recommended resolution: [method]."
@@ -79,8 +79,8 @@ Progress a diamond through phases with full theory gate validation. At delivery 
    - Per confidence-thresholds.yml, is human approval required/recommended/optional?
    - If required: present assessment and wait for approval.
    - **When asking for approval, include the interaction convention explicitly in the prompt** — do not leave it implicit. Use this template (or paraphrase faithfully):
-     > "Reply **yes** to advance, **no** to stay. Re-invoking `/diamond-progress` is also treated as approval (shortcut). Type **evaluate again** to re-run gates from scratch."
-   - This makes the implicit-shortcut convention visible. If the user re-invokes `/diamond-progress` while a previous invocation is awaiting approval, that re-invocation IS treated as approval — but only because the convention has been surfaced in the prompt above. Without the prompt-line, the behavior is a footgun (corrections.md 2026-05-06 — `/diamond-progress` re-invocation interpreted as approval).
+     > "Reply **yes** to advance, **no** to stay. Re-invoking `/mycelium:diamond-progress` is also treated as approval (shortcut). Type **evaluate again** to re-run gates from scratch."
+   - This makes the implicit-shortcut convention visible. If the user re-invokes `/mycelium:diamond-progress` while a previous invocation is awaiting approval, that re-invocation IS treated as approval — but only because the convention has been surfaced in the prompt above. Without the prompt-line, the behavior is a footgun (corrections.md 2026-05-06 — `/mycelium:diamond-progress` re-invocation interpreted as approval).
 
 5. **Run bias check**: Execute bias-check for the current stage.
 
@@ -102,7 +102,7 @@ Progress a diamond through phases with full theory gate validation. At delivery 
 
 9. **If progressing**:
    - Update diamond state in active.yml.
-   - **Render the updated journey map**: Follow `.claude/engine/wayfinding.md` to show the user where they've moved to. This makes the transition visible — the user sees their position shift on the map.
+   - **Render the updated journey map**: Follow `${CLAUDE_PLUGIN_ROOT}/engine/wayfinding.md` to show the user where they've moved to. This makes the transition visible — the user sees their position shift on the map.
    - Log transition in decision-log.md. If threshold was adapted, include: "Threshold adapted from [base] to [effective] because project_type=[type]. Would increase with [action]."
    - Update product-journal.md.
    - Identify if child diamonds should be spawned.
@@ -112,7 +112,7 @@ Progress a diamond through phases with full theory gate validation. At delivery 
     - Report in plain language: "Can't mark this done yet because [reason]."
     - List each failed item with its suggested skill
     - Do not progress. Stay in current phase.
-    - At **L0 / L1 / L2 / L5** diamonds, if the Evidence gate is "Insufficient Evidence" and `.claude/jit-tooling/active-metrics.yml` is configured, suggest `/metrics-pull` as one route to strengthen external signal. If `active-metrics.yml` is missing, suggest `/metrics-detect` first. (v0.14: `external_data` from snapshots satisfies the Evidence gate's behavioral-data criterion but does NOT replace `external_human` requirements at L2 Develop->Deliver.)
+    - At **L0 / L1 / L2 / L5** diamonds, if the Evidence gate is "Insufficient Evidence" and `.claude/jit-tooling/active-metrics.yml` is configured, suggest `/mycelium:metrics-pull` as one route to strengthen external signal. If `active-metrics.yml` is missing, suggest `/mycelium:metrics-detect` first. (v0.14: `external_data` from snapshots satisfies the Evidence gate's behavioral-data criterion but does NOT replace `external_human` requirements at L2 Develop->Deliver.)
 
 11. **Always communicate in plain language**:
     - Use status-translations.md for all state descriptions
@@ -134,7 +134,7 @@ Check `product_type` from `diamonds/active.yml` to determine which auto-checks a
 **Testing (G-V7 REVIEW)**:
 - Check: Do test files exist? (glob for *.test.*, *.spec.*, Tests/*, __tests__/*)
 - If no tests AND project has source files: **GATE FAILED**
-- Message: "No tests found. Tests must exist before marking delivery complete. Run /reflexion to add tests."
+- Message: "No tests found. Tests must exist before marking delivery complete. Run /mycelium:reflexion to add tests."
 - If tests exist: run them and verify they pass
 
 **Type Safety (REVIEW for typed languages)**:
@@ -170,25 +170,25 @@ Check `product_type` from `diamonds/active.yml` to determine which auto-checks a
 
 **For user_facing work (G-V2, G-V8, G-V9 REVIEW)**:
 - Check: Has services.yml been assessed? (count of "not-assessed" < 15)
-- If all 15 are "not-assessed": **GATE FAILED** -- "Run /service-check before completing."
+- If all 15 are "not-assessed": **GATE FAILED** -- "Run /mycelium:service-check before completing."
 - Check: Has accessibility been considered? (any evidence of a11y work)
-- If no evidence: **GATE FAILED** -- "Run /a11y-check for user-facing work."
-- Check: Has usability been evaluated? (Nielsen's 10 heuristics via /usability-check)
-- If no evidence: **GATE FAILED** -- "Run /usability-check for user-facing interfaces." (G-V10)
+- If no evidence: **GATE FAILED** -- "Run /mycelium:a11y-check for user-facing work."
+- Check: Has usability been evaluated? (Nielsen's 10 heuristics via /mycelium:usability-check)
+- If no evidence: **GATE FAILED** -- "Run /mycelium:usability-check for user-facing interfaces." (G-V10)
 
 **For api_service or permission_requiring work (G-S2 REVIEW)**:
 - Check: Does threat-model.yml have components listed?
-- If empty: **GATE FAILED** -- "Run /threat-model for work that handles data or requires permissions."
+- If empty: **GATE FAILED** -- "Run /mycelium:threat-model for work that handles data or requires permissions."
 
 **For data-handling work (G-S3 REVIEW)**:
 - Check: Does privacy-assessment.yml have principles assessed?
-- If all "not-assessed" and product handles user data: **GATE FAILED** -- "Run /privacy-check."
+- If all "not-assessed" and product handles user data: **GATE FAILED** -- "Run /mycelium:privacy-check."
 
 ### Always Required (REVIEW)
 
 **Success criteria declared (G-V11 REVIEW)**:
-- Check: Does decision-log.md have success criteria recorded for this delivery (from `/preflight`)?
-- If no success criteria found: **GATE FAILED** -- "No success criteria declared. Run `/preflight` and declare what will be true after delivery and how to verify it."
+- Check: Does decision-log.md have success criteria recorded for this delivery (from `/mycelium:preflight`)?
+- If no success criteria found: **GATE FAILED** -- "No success criteria declared. Run `/mycelium:preflight` and declare what will be true after delivery and how to verify it."
 - If criteria exist: verify each criterion is satisfied. Report pass/fail per criterion.
 - This catches the denominator problem: without declared criteria, "done" = "whatever we built."
 
@@ -244,17 +244,17 @@ Check `product_type` from `diamonds/active.yml` to determine which auto-checks a
 
 **Retrospective (PROMPTED)**:
 - "What went well? What didn't? What to change next time?"
-- Suggest /retrospective for deeper review
+- Suggest /mycelium:retrospective for deeper review
 
 ---
 
 ## Non-Progression Paths: Pivot, Park, Kill
 
-Not every diamond makes forward progress. Sometimes the right move is to reframe, pause, or abandon. `/diamond-progress` handles these paths too, via subcommands:
+Not every diamond makes forward progress. Sometimes the right move is to reframe, pause, or abandon. `/mycelium:diamond-progress` handles these paths too, via subcommands:
 
-- `/diamond-progress pivot` — reframe the diamond's scope, audience, or JTBD with new evidence
-- `/diamond-progress park` — mark the diamond as inactive-pending-conditions
-- `/diamond-progress kill` — abandon with a documented reason
+- `/mycelium:diamond-progress pivot` — reframe the diamond's scope, audience, or JTBD with new evidence
+- `/mycelium:diamond-progress park` — mark the diamond as inactive-pending-conditions
+- `/mycelium:diamond-progress kill` — abandon with a documented reason
 
 All three are **sanctioned exits** from a stuck diamond. They are not failure modes — they are the system working correctly when evidence tells you the current direction is wrong.
 
@@ -295,7 +295,7 @@ Use when the diamond cannot progress right now but may be revisitable later. Exa
    - State → `parked`
    - Add `parked_reason`, `parked_at`, `resume_conditions` fields
 4. Parked diamonds remain in active.yml but do not count against WIP limits
-5. `/feedback-review` and `/diamond-assess` surface parked diamonds with their resume conditions at session start
+5. `/mycelium:feedback-review` and `/mycelium:diamond-assess` surface parked diamonds with their resume conditions at session start
 
 ### Kill (abandon with documented reason)
 
@@ -352,7 +352,7 @@ Draft entries for the user. Present for confirmation before saving. This capture
 
 ## Counter-Argument Check (Bias Mitigation)
 
-Before progressing the diamond OR signing off on a phase transition, draft a one-line counter-argument: *"What's the strongest case AGAINST this transition — what gate is borderline, what evidence is weakest, what regression risk is being underweighted?"* If you can't articulate one, run `/devils-advocate` before proceeding.
+Before progressing the diamond OR signing off on a phase transition, draft a one-line counter-argument: *"What's the strongest case AGAINST this transition — what gate is borderline, what evidence is weakest, what regression risk is being underweighted?"* If you can't articulate one, run `/mycelium:devils-advocate` before proceeding.
 
 This addresses the bias cluster documented in corrections.md (L5 sycophancy 2026-04-20, eval overfitting 2026-04-30, sharper-framing-isn't-righter 2026-05-03). Common shape: agent prefers what feels right over what evidence supports under competing pressure (be helpful vs. be honest, advance vs. regress). Phase-transition reviews are the canonical context — the agent is incentivized to move forward and may underweight the case for staying or regressing.
 

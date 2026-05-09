@@ -12,7 +12,7 @@ Analyze corrections.md for trends, recurring patterns, and actionable insights.
 
 - Loop 2 (Incremental) cadence: after every 3+ corrections are logged
 - When the same correction category appears 3+ times
-- During `/diamond-assess` if corrections gate has findings
+- During `/mycelium:diamond-assess` if corrections gate has findings
 - Before starting a new diamond at the same scale as a previously corrected one
 
 ## Workflow

@@ -69,7 +69,7 @@ The most important Cynefin warning: when a system in Clear becomes **complacent*
 
 **Detection signs**: Over-reliance on best practices without questioning them. No feedback loops. "We don't need to monitor that." Dismissing edge cases as irrelevant.
 
-**Mycelium connection**: Theory gates and `/feedback-review` prevent complacent drift by requiring evidence refresh and active sensing at every transition.
+**Mycelium connection**: Theory gates and `/mycelium:feedback-review` prevent complacent drift by requiring evidence refresh and active sensing at every transition.
 
 *Source: Snowden (Cynefin evolution, cynefin.io, 2022+)*
 

@@ -54,15 +54,15 @@ Evaluate current diamond state and recommend next action.
    - At L3->L4 transitions: also run the **Design Completeness Check** (quality/CLAUDE.md) to verify all layers of the product design stack have evidence. Source: Mill, building on Garrett.
 
 6. **Check canvas health**:
-   - Run the `/canvas-health` checks inline: missing required files, stale confidence, inconsistent evidence types
+   - Run the `/mycelium:canvas-health` checks inline: missing required files, stale confidence, inconsistent evidence types
    - Report any critical or warning-level findings
    - This catches silent canvas degradation before it affects progression decisions
 
 6b. **Check metric snapshot freshness** (v0.14; L0/L1/L2/L5 only):
    - If the current diamond scale is L0, L1, L2, or L5 AND `.claude/jit-tooling/active-metrics.yml` exists:
      - For each `status: active` source, find the newest file in `.claude/evals/metrics/<source>/`.
-     - If the newest snapshot is >7 days old (or missing entirely), flag as a warning and recommend `/metrics-pull`.
-     - If `active-metrics.yml` is missing, recommend `/metrics-detect` (softer — info-level, not a gate).
+     - If the newest snapshot is >7 days old (or missing entirely), flag as a warning and recommend `/mycelium:metrics-pull`.
+     - If `active-metrics.yml` is missing, recommend `/mycelium:metrics-detect` (softer — info-level, not a gate).
    - Rationale: evidence loops for Purpose/Strategy/Opportunity/Market depend on external signal freshness. A stale snapshot silently anchors confidence.
    - Do NOT block progression on stale snapshots — this is a NUDGE, not a gate.
 
@@ -72,7 +72,7 @@ Evaluate current diamond state and recommend next action.
 7b. **Check trio perspective coverage** (Torres Product Trio):
    - For the current diamond phase, verify all three perspectives (product/design/engineering) have been applied.
    - Reference `engine/theory-gates.md` §Trio Perspective Requirement for the per-scale coverage matrix.
-   - Flag any missing perspectives as a gap: "Design perspective not yet applied at L[X]. Consider running `/usability-check` or `/service-check`."
+   - Flag any missing perspectives as a gap: "Design perspective not yet applied at L[X]. Consider running `/mycelium:usability-check` or `/mycelium:service-check`."
    - If perspectives are in conflict, recommend `engine/perspective-resolution.md`.
 
 8. **Coaching check** (Rother's Coaching Kata):
@@ -112,9 +112,9 @@ Evaluate current diamond state and recommend next action.
 ## Output Format
 
 **ALWAYS output in plain language first, then technical details.**
-Use `.claude/engine/status-translations.md` for translations.
+Use `${CLAUDE_PLUGIN_ROOT}/engine/status-translations.md` for translations.
 
-**ALWAYS render the journey map first.** Follow `.claude/engine/wayfinding.md` to render the "You Are Here" map before any other output. This orients the user to where they are in the full L0→L5 progression before diving into gate details.
+**ALWAYS render the journey map first.** Follow `${CLAUDE_PLUGIN_ROOT}/engine/wayfinding.md` to render the "You Are Here" map before any other output. This orients the user to where they are in the full L0→L5 progression before diving into gate details.
 
 ```
 [Journey map from wayfinding.md — rendered first]
@@ -135,8 +135,8 @@ Current focus: [plain-language description from status-translations.md]
 
 | Gate | Status | Suggested Skill |
 |------|--------|----------------|
-| Evidence | Pass/Fail | /user-interview or /assumption-test |
-| Four Risks | Pass/Fail | /assumption-test |
+| Evidence | Pass/Fail | /mycelium:user-interview or /mycelium:assumption-test |
+| Four Risks | Pass/Fail | /mycelium:assumption-test |
 | ... | ... | ... |
 
 ## What I'd Challenge (Devil's Advocate)

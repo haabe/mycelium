@@ -12,7 +12,7 @@ This skill is the L0/L1/L2/L5 evidence-gathering loop. Replaces manual "I checke
 
 ## When to Use
 
-- Before `/diamond-assess` at L0/L1/L2/L5, if the newest snapshot is >7 days old.
+- Before `/mycelium:diamond-assess` at L0/L1/L2/L5, if the newest snapshot is >7 days old.
 - After any public activity (launch, post, conference mention) — typically 24-48h later to capture the bump.
 - Weekly baseline, regardless of activity.
 - Ad hoc when the user wants a fresh read.
@@ -21,8 +21,8 @@ This skill is the L0/L1/L2/L5 evidence-gathering loop. Replaces manual "I checke
 
 If `.claude/jit-tooling/active-metrics.yml` does NOT exist:
 
-1. Tell the user: "No metric sources are configured. Running `/metrics-detect` first."
-2. Invoke `/metrics-detect` (or follow `.claude/jit-tooling/metrics-detector.md`).
+1. Tell the user: "No metric sources are configured. Running `/mycelium:metrics-detect` first."
+2. Invoke `/mycelium:metrics-detect` (or follow `${CLAUDE_PLUGIN_ROOT}/jit-tooling/metrics-detector.md`).
 3. After detection completes, return to this skill.
 
 ## Workflow
@@ -137,7 +137,7 @@ External metric data (referrer names, top paths, review text, support tickets) f
 
 ### Step 9: Update active-metrics.yml
 
-For each source that pulled successfully, update `last_pulled_at` to the current timestamp. This is the only mutation `/metrics-pull` makes to `active-metrics.yml`.
+For each source that pulled successfully, update `last_pulled_at` to the current timestamp. This is the only mutation `/mycelium:metrics-pull` makes to `active-metrics.yml`.
 
 ## Parallel dispatch
 

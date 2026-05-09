@@ -54,7 +54,7 @@ ICE = Impact x Confidence x Ease. Rank solution leaves by ICE score.
 
 ### Step 4: Identify riskiest assumptions
 
-For the top-ranked solutions, extract the **highest-risk assumptions** from the Four Risks assessment — these are what `/assumption-test` should target first. Prioritize assumptions where importance is high but evidence is low.
+For the top-ranked solutions, extract the **highest-risk assumptions** from the Four Risks assessment — these are what `/mycelium:assumption-test` should target first. Prioritize assumptions where importance is high but evidence is low.
 
 ### Step 5: Bias check
 

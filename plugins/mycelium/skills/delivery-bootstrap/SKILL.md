@@ -11,7 +11,7 @@ Just-in-Time tech stack detection and setup.
 ## Workflow
 
 1. **Check product_type** from `diamonds/active.yml`:
-   - If `product_type` is set (from `/interview`), use it to determine the delivery profile.
+   - If `product_type` is set (from `/mycelium:interview`), use it to determine the delivery profile.
    - If not set, scan for indicators per `detector.md` Step 1b:
      - Curriculum/lesson plans, LMS config -> `content_course`
      - Manuscript/chapters, editorial calendar -> `content_publication`
@@ -113,8 +113,8 @@ Just-in-Time tech stack detection and setup.
 - If tooling is broken, flag it rather than silently working around it.
 
 ## Canvas Output
-Create/update `.claude/jit-tooling/active-stack.yml` with detected stack configuration.
-See `.claude/jit-tooling/active-stack.example.yml` for the expected format.
+Create/update `${CLAUDE_PLUGIN_ROOT}/jit-tooling/active-stack.yml` with detected stack configuration.
+See `${CLAUDE_PLUGIN_ROOT}/jit-tooling/active-stack.example.yml` for the expected format.
 
 ## Theory Citations
 - Forsgren: Accelerate (tooling and automation)

@@ -67,7 +67,7 @@ This skill should be triggered:
 - Before any research activity (interviews, surveys, data analysis)
 - Before significant decisions at any diamond scale
 - **At L5 market transitions**: Before launch tier classification and go-to-market planning, check for optimism bias (overweighting positive signals), confirmation bias (seeking validation of "ready to ship"), and anchoring (fixating on initial positioning)
-- When `/diamond-progress` or `/diamond-assess` detects bias-related gate failures
+- When `/mycelium:diamond-progress` or `/mycelium:diamond-assess` detects bias-related gate failures
 
 ## Canvas Output
 Record bias check in `canvas/opportunities.yml` under `bias_checks` section with date, biases mitigated, and research design adjustments made.

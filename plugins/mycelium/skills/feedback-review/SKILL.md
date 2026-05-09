@@ -13,7 +13,7 @@ Single-place health check across all Mycelium feedback loops. Run periodically o
 - When metrics aren't moving despite active work
 - When the team feels busy but unproductive
 - After a failed launch or unexpected regression
-- When `/diamond-assess` shows stale diamonds
+- When `/mycelium:diamond-assess` shows stale diamonds
 
 ## Workflow
 
@@ -43,7 +43,7 @@ Read canvas trend data and check cadence:
 - Has the escape hatch been used? How often? (Frequent = process too heavy for context)
 
 ### 5. Regression Warning Check
-From `.claude/engine/feedback-loops.md`, check active triggers:
+From `${CLAUDE_PLUGIN_ROOT}/engine/feedback-loops.md`, check active triggers:
 - DORA declined 2+ times? -> Warn about L4/L3 regression
 - Confidence stagnant 3+ steps? -> Warn about opportunity reframing
 - Same correction 3+ times? -> Suggest guardrail graduation
@@ -55,7 +55,7 @@ For each active metric, verify its counter-metric:
 - Confidence score up BUT evidence type hasn't changed? -> Inflation
 - Test coverage up BUT defect leakage unchanged? -> Meaningless tests
 - Diamond velocity up BUT regression rate also up? -> Rushing through gates
-- Evidence source count up BUT external evidence ratio declining? -> Internal echo chamber risk. Suggest `/handoff` to plan external conversations.
+- Evidence source count up BUT external evidence ratio declining? -> Internal echo chamber risk. Suggest `/mycelium:handoff` to plan external conversations.
 
 ## Output Format
 

@@ -86,20 +86,20 @@ Update `canvas/go-to-market.yml` engagement_design section with Hook Canvas resu
 
 ## Pre-Launch Bias Check
 
-Before classifying a launch tier, run `/bias-check` for L5-specific biases:
+Before classifying a launch tier, run `/mycelium:bias-check` for L5-specific biases:
 - **Optimism bias**: Are we overweighting positive signals and ignoring negative ones?
 - **Confirmation bias**: Are we seeking validation that "it's ready to ship" rather than honestly assessing market readiness?
 - **Anchoring**: Are we fixated on the initial positioning without considering what evidence now suggests?
 - **Sunk cost fallacy**: Are we launching because we've invested too much to stop, not because the market signals are positive?
 
-If `/bias-check` reveals significant biases, address them before finalizing the launch tier.
+If `/mycelium:bias-check` reveals significant biases, address them before finalizing the launch tier.
 
 ## After Launch: The L5 -> L2 Feedback Loop
 
 **This is critical.** After launch, market feedback must flow back into discovery:
 
 1. **Capture market signals** (within 2-4 weeks post-launch).
-   Check the product-type-appropriate metrics canvas via `/dora-check`:
+   Check the product-type-appropriate metrics canvas via `/mycelium:dora-check`:
 
    **Software**: feature usage, retention, conversion, support tickets, NPS/CSAT
    **Content**: refund rate, completion rate, drop-off points, return rate, reviews, NPS
@@ -128,10 +128,10 @@ This closes the full Mycelium loop: Purpose -> Strategy -> Discovery -> Solution
 
 After launch feedback is captured (L5 → L2 loop), update the cycle record in `canvas/cycle-history.yml`:
 
-1. Find the cycle record for this leaf (created by `/retrospective` at delivery completion)
+1. Find the cycle record for this leaf (created by `/mycelium:retrospective` at delivery completion)
 2. Add **actual** market outcomes: user metrics, adoption data, NPS/CSAT, revenue impact
-   - **Source this data from `/metrics-pull`** where possible (v0.14): 24-48h after launch to capture the bump, then weekly for the first month. Snapshots live at `.claude/evals/metrics/<source>/*.json`. This replaces manual "I checked the dashboard" reports with timestamped evidence.
-   - If `active-metrics.yml` has no configured source for the relevant channel, run `/metrics-detect` first.
+   - **Source this data from `/mycelium:metrics-pull`** where possible (v0.14): 24-48h after launch to capture the bump, then weekly for the first month. Snapshots live at `.claude/evals/metrics/<source>/*.json`. This replaces manual "I checked the dashboard" reports with timestamped evidence.
+   - If `active-metrics.yml` has no configured source for the relevant channel, run `/mycelium:metrics-detect` first.
 3. Update the calibration section: compare predicted value/usability risk against actual market reception
 4. If market signals contradict the original L2 opportunity assumptions, note this as calibration data
 
@@ -150,6 +150,6 @@ This closes the data loop: predicted ICE → actual delivery metrics → actual 
 
 ## Counter-Argument Check (Bias Mitigation)
 
-Before finalizing the launch tier classification AND before drafting any positioning copy, draft a one-line counter-argument: *"What's the strongest case that this is a smaller tier than I'm claiming? That this positioning is overstating impact? That market readiness is weaker than the evidence suggests?"* If you can't articulate one, run `/devils-advocate` before proceeding.
+Before finalizing the launch tier classification AND before drafting any positioning copy, draft a one-line counter-argument: *"What's the strongest case that this is a smaller tier than I'm claiming? That this positioning is overstating impact? That market readiness is weaker than the evidence suggests?"* If you can't articulate one, run `/mycelium:devils-advocate` before proceeding.
 
 This addresses the bias cluster documented in corrections.md (L5 sycophancy 2026-04-20 — promotional language in decision logs at L5 — explicitly named this skill's domain; eval overfitting 2026-04-30; sharper-framing-isn't-righter 2026-05-03). L5 work is the highest-risk context for bias because the framing pressure is explicit ("we're going to market"). G-M1 catches the WORST language, but bias appears in subtler tier-classification and positioning choices that G-M1 doesn't see. The counter-argument is the upstream check.

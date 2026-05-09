@@ -63,13 +63,13 @@ These clauses address two documented Mycelium failures: **Eval Overfitting** (20
 - [ ] Color contrast meets WCAG 2.1 AA (4.5:1 normal, 3:1 large)
 - [ ] Screen reader announces content correctly
 - [ ] Focus management correct for dynamic content
-- [ ] Usability heuristics evaluated (Nielsen's 10 via /usability-check)
+- [ ] Usability heuristics evaluated (Nielsen's 10 via /mycelium:usability-check)
 
 ### Documentation
 - [ ] API documentation updated (if API changed)
 - [ ] Inline documentation for complex logic
 - [ ] README updated if setup/usage changed
-- [ ] Architecture Decision Records filled in (if `docs/adr/` was scaffolded by `/delivery-bootstrap`)
+- [ ] Architecture Decision Records filled in (if `docs/adr/` was scaffolded by `/mycelium:delivery-bootstrap`)
 
 ### Observability
 - [ ] Structured logging for key operations

@@ -70,7 +70,7 @@ The validate step in the reflexion loop should use the appropriate verification 
 - LLM-as-judge, peer review, heuristic evaluation
 - Used when rules-based and computational verification are insufficient
 - Results require confidence scoring — never treat as definitive
-- Examples: `/devils-advocate`, `/usability-check`, auto-dogfood evaluation, design review
+- Examples: `/mycelium:devils-advocate`, `/mycelium:usability-check`, auto-dogfood evaluation, design review
 - The auto-dogfood system is an inferential verification loop
 
 **Order**: Always attempt rules-based → computational → inferential. Only escalate to the next mode when the previous mode cannot verify the property in question.

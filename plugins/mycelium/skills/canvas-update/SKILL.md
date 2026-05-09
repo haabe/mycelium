@@ -50,7 +50,7 @@ instruction_budget: 12
 
 ## Counter-Argument Check (Bias Mitigation)
 
-Before applying the canvas update, draft a one-line counter-argument: *"What's the strongest case AGAINST this update — what evidence or perspective would invalidate it?"* If you can't articulate one, run `/devils-advocate` before proceeding.
+Before applying the canvas update, draft a one-line counter-argument: *"What's the strongest case AGAINST this update — what evidence or perspective would invalidate it?"* If you can't articulate one, run `/mycelium:devils-advocate` before proceeding.
 
 This addresses the bias cluster documented in corrections.md (L5 sycophancy 2026-04-20, eval overfitting 2026-04-30, sharper-framing-isn't-righter 2026-05-03). Common shape: agent prefers what feels right over what evidence supports under competing pressure (be helpful vs. be honest, sharpen framing vs. preserve evidence base). The counter-argument step forces the missing perspective explicit, so the bias surfaces before it lands in canvas.
 

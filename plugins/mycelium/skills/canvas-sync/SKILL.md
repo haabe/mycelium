@@ -18,7 +18,7 @@ instruction_budget: 8
 ```
 git pull origin main
 ```
-Then run `/diamond-assess` to see what changed.
+Then run `/mycelium:diamond-assess` to see what changed.
 
 ### Commit Changes
 ```

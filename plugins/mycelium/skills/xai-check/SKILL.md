@@ -16,13 +16,13 @@ This skill is **functionally-grounded** in Doshi-Velez & Kim's (2017) sense: it 
 - L4 Develop→Deliver — required when AI components reach user-affecting decisions (deny, recommend, rank, generate user-shown content)
 - L5 Develop→Deliver — required for any user-facing AI feature at launch
 - After any change to AI components, prompts, or surfaces that affect user-facing decisions
-- When Gate 13 is checked during `/diamond-progress`
+- When Gate 13 is checked during `/mycelium:diamond-progress`
 
 ## Precondition: AI components detected
 
-Read `.claude/jit-tooling/active-stack.yml` (Step 1c output of `delivery-bootstrap` per `.claude/jit-tooling/detector.md`).
+Read `${CLAUDE_PLUGIN_ROOT}/jit-tooling/active-stack.yml` (Step 1c output of `delivery-bootstrap` per `${CLAUDE_PLUGIN_ROOT}/jit-tooling/detector.md`).
 
-- If `ai_components.detected` is missing or `false`: report **"No AI components detected — XAI Gate N/A. Run `/delivery-bootstrap` if you believe AI is present but undetected."** Stop.
+- If `ai_components.detected` is missing or `false`: report **"No AI components detected — XAI Gate N/A. Run `/mycelium:delivery-bootstrap` if you believe AI is present but undetected."** Stop.
 - If `ai_components.detected: true` but `user_facing_decisions: unknown` (Step 6 confirmation never answered): prompt the user explicitly: *"This product has AI components, but it's not on record whether their outputs reach end users in a user-affecting way. Does the AI's output deny / recommend / rank / generate content shown to users, or otherwise drive their experience?"* Do not proceed silently — XAI tier depends on this answer. If the user defers, default to `tier: limited` and note **"tier defaulted to limited pending user_facing_decisions confirmation"** in the output.
 
 ## Workflow (5 stages)
@@ -31,12 +31,12 @@ For each service in `services.yml` (loop — multiple services produce per-servi
 
 ### Stage 1 — Risk tier classification
 
-**Source canonical tier from `/regulatory-review` output if available.** Read `canvas/privacy-assessment.yml` for prior AI Act risk classification. If `/regulatory-review` has run, use its tier; this skill does not re-classify regulatory tiers as that would risk producing divergent classifications across two skills.
+**Source canonical tier from `/mycelium:regulatory-review` output if available.** Read `canvas/privacy-assessment.yml` for prior AI Act risk classification. If `/mycelium:regulatory-review` has run, use its tier; this skill does not re-classify regulatory tiers as that would risk producing divergent classifications across two skills.
 
-If `/regulatory-review` has not run:
-1. Recommend running it: *"`/regulatory-review` is the canonical AI Act tier classifier. Without it, this skill produces a provisional tier only — which is fine for early development but should not be the final source for L4/L5 transitions."*
+If `/mycelium:regulatory-review` has not run:
+1. Recommend running it: *"`/mycelium:regulatory-review` is the canonical AI Act tier classifier. Without it, this skill produces a provisional tier only — which is fine for early development but should not be the final source for L4/L5 transitions."*
 2. Apply provisional logic: AI Act Annex III categories → `high`; user-affecting AI without Annex III → `limited`; non-user-affecting AI → `minimal`.
-3. Record `xai.tier` with a `provisional: true` note until `/regulatory-review` confirms.
+3. Record `xai.tier` with a `provisional: true` note until `/mycelium:regulatory-review` confirms.
 
 If tier classification yields `prohibited`: **stop immediately.** Escalate. Do not run subsequent stages — the product cannot ship under EU AI Act Article 5.
 
@@ -159,7 +159,7 @@ After writing canvas, present a remediation list ranked by stakeholder impact:
 XAI check — <service name> — tier: limited
 
 Findings:
-  ✓ Stage 1 (tier classification) — pass (provisional, /regulatory-review not run)
+  ✓ Stage 1 (tier classification) — pass (provisional, /mycelium:regulatory-review not run)
   △ Stage 2 (matrix) — 2 cells fail: end_user.how_to_be_that, end_user.why_not
   △ Stage 3 (fidelity) — partial (0.65 — 5 of 10 sampled rationales did not predict the output)
   ✗ Stage 4 (system card) — fail (4 of 8 required sections missing)
@@ -174,14 +174,14 @@ Remediation (ranked):
 Validated functionally: stages 1, 4, 5 (static review).
 Needs user testing: stages 2 (answerable-when-needed in real flows), 3 (population-level fidelity).
 
-Run /regulatory-review to confirm the tier is canonical, then re-run /xai-check after remediation.
+Run /mycelium:regulatory-review to confirm the tier is canonical, then re-run /mycelium:xai-check after remediation.
 ```
 
 ## Composition with other gates / skills
 
-- **Upstream:** `/regulatory-review` is canonical for tier classification; this skill consumes its output. G-S7 (disclose AI) and G-S8 (assess AI Act) are intent guardrails that this skill operationalizes.
-- **Sibling:** `/security-review` covers OWASP. Phase 2.3 will add explanation-attack threats to `threat-model.yml` — until then, explanation-layer threats are flagged in this skill's output but not enumerated structurally.
-- **Downstream:** `/definition-of-done` (AI-aware DoD, Phase 2.2) consumes Gate 13 verdicts.
+- **Upstream:** `/mycelium:regulatory-review` is canonical for tier classification; this skill consumes its output. G-S7 (disclose AI) and G-S8 (assess AI Act) are intent guardrails that this skill operationalizes.
+- **Sibling:** `/mycelium:security-review` covers OWASP. Phase 2.3 will add explanation-attack threats to `threat-model.yml` — until then, explanation-layer threats are flagged in this skill's output but not enumerated structurally.
+- **Downstream:** `/mycelium:definition-of-done` (AI-aware DoD, Phase 2.2) consumes Gate 13 verdicts.
 
 ## What this skill does NOT do
 

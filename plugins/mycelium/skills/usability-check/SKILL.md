@@ -1,6 +1,6 @@
 ---
 name: usability-check
-description: "Evaluate user-facing interfaces against Nielsen's 10 Usability Heuristics. Complements /service-check (Downe = service-level quality, Nielsen = interface-level quality)."
+description: "Evaluate user-facing interfaces against Nielsen's 10 Usability Heuristics. Complements /mycelium:service-check (Downe = service-level quality, Nielsen = interface-level quality)."
 instruction_budget: 45
 ---
 

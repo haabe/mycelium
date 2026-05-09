@@ -27,7 +27,7 @@ For each solution:
 ### 3. Fan-In (Collect Results)
 - Collect all worker results
 - Update ICE scores in canvas
-- Run `/bias-check` on combined findings
+- Run `/mycelium:bias-check` on combined findings
 - Select winner(s) based on evidence
 - Log decision in decision-log.md
 
@@ -38,7 +38,7 @@ When comparing competing OST leaves for the same opportunity:
 - Lead agent applies **winner selection rules**: clear winner (>20% ICE delta), close race (tiebreaker), segment split (both advance), both fail (archive and re-evaluate)
 - Losers are archived to `canvas/archived-solutions.yml` with full evidence snapshot
 
-See `.claude/orchestration/leaf-bakeoff.md` for the complete bakeoff protocol.
+See `${CLAUDE_PLUGIN_ROOT}/orchestration/leaf-bakeoff.md` for the complete bakeoff protocol.
 
 ## Rules
 - Workers NEVER write to canvas (lead agent does)
@@ -47,4 +47,4 @@ See `.claude/orchestration/leaf-bakeoff.md` for the complete bakeoff protocol.
 - Minimum 2 workers for meaningful comparison
 - Maximum 3 leaves per bakeoff (respects L3 WIP ceiling)
 
-See `.claude/orchestration/agent-teams.md` for full orchestration patterns.
+See `${CLAUDE_PLUGIN_ROOT}/orchestration/agent-teams.md` for full orchestration patterns.

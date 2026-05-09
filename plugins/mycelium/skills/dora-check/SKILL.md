@@ -120,7 +120,7 @@ Assess the four APEX pillars to detect AI-era delivery problems:
 
 ### Value Stream Diagnosis (if bottleneck detected)
 If DORA shows a bottleneck, map the value stream to identify WHERE in the flow the constraint lives:
-- Run `/canvas-update` to update `canvas/value-stream.yml` with current stage timings
+- Run `/mycelium:canvas-update` to update `canvas/value-stream.yml` with current stage timings
 - Apply Theory of Constraints Five Focusing Steps (Goldratt): Identify -> Exploit -> Subordinate -> Elevate -> Repeat
 - Look for wait times >> process times (a sign of queuing, not capacity, problems)
 - Look for high handoff counts (each handoff adds delay and information loss)

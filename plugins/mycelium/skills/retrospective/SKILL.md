@@ -33,7 +33,7 @@ Find the leaf_id and opportunity_id for the delivered solution (from `canvas/opp
     effort_estimate: "X days/weeks"              # Original estimate
   actual:
     effort: "X days/weeks"                       # How long it actually took
-    dora:                                        # From /dora-check or known metrics
+    dora:                                        # From /mycelium:dora-check or known metrics
       deploy_frequency: "..."
       lead_time: "..."
       change_failure_rate: "..."
@@ -45,7 +45,7 @@ Find the leaf_id and opportunity_id for the delivered solution (from `canvas/opp
   learnings: "Key learning from this cycle"
 ```
 
-Update `calibration_summary.total_cycles` count. If total_cycles reaches a multiple of 5, prompt: "5 cycles since last review. Run `/framework-health` to check calibration?"
+Update `calibration_summary.total_cycles` count. If total_cycles reaches a multiple of 5, prompt: "5 cycles since last review. Run `/mycelium:framework-health` to check calibration?"
 
 #### Step 5b. Log cycle calibration summary in decision-log.md
 
@@ -93,7 +93,7 @@ If this retrospective is for a cycle completed more than 14 days ago, check:
 
 Update the cycle record in `canvas/cycle-history.yml` with the rework fields. This is the denominator — the hidden cost of delivery that velocity metrics miss.
 
-If this retrospective is for a just-completed cycle, prompt: "Set a reminder to check rework in 14 days. Run `/retrospective rework-check [cycle-id]` after that."
+If this retrospective is for a just-completed cycle, prompt: "Set a reminder to check rework in 14 days. Run `/mycelium:retrospective rework-check [cycle-id]` after that."
 
 *Source: Paddo (the denominator problem — 43% of AI-assisted code requires post-delivery debugging). Forsgren (change failure rate as a trailing indicator).*
 
@@ -189,7 +189,7 @@ After delivery retrospective, always ask:
 
 ## Counter-Argument Check (Bias Mitigation)
 
-Before finalizing the retrospective, draft a one-line counter-argument for each major claim: *"What's the strongest case that this 'went well' was actually luck? That this 'went wrong' was actually unavoidable? That this 'pattern' is actually noise?"* If you can't articulate counter-cases, run `/devils-advocate` before locking in the corrections/patterns.
+Before finalizing the retrospective, draft a one-line counter-argument for each major claim: *"What's the strongest case that this 'went well' was actually luck? That this 'went wrong' was actually unavoidable? That this 'pattern' is actually noise?"* If you can't articulate counter-cases, run `/mycelium:devils-advocate` before locking in the corrections/patterns.
 
 This addresses the bias cluster documented in corrections.md (L5 sycophancy 2026-04-20, eval overfitting 2026-04-30, sharper-framing-isn't-righter 2026-05-03). Retrospectives are particularly bias-prone — narrative coherence is rewarded, the agent is incentivized to find tidy patterns, and post-hoc rationalization is the natural mode. Counter-arguments break that gravity.
 

@@ -10,7 +10,7 @@ Audit the canvas knowledge base for quality, consistency, and completeness. The 
 
 ## When to Use
 
-- Before any diamond phase transition (called automatically by `/diamond-assess`)
+- Before any diamond phase transition (called automatically by `/mycelium:diamond-assess`)
 - After a period of inactivity (>7 days since last canvas update)
 - When agent output quality seems to degrade
 - After onboarding a new team member (ensures canvas is self-explanatory)
@@ -20,7 +20,7 @@ Audit the canvas knowledge base for quality, consistency, and completeness. The 
 
 1. **Load project configuration**:
    - Read `diamonds/active.yml` for `product_type` and `project_type`
-   - Read `.claude/engine/canvas-guidance.yml` for required/recommended/optional files per project type
+   - Read `${CLAUDE_PLUGIN_ROOT}/engine/canvas-guidance.yml` for required/recommended/optional files per project type
 
 2. **Check file presence**:
    - For each **required** canvas file: does it exist? Is it non-empty (>50 bytes)?
@@ -61,16 +61,16 @@ Audit the canvas knowledge base for quality, consistency, and completeness. The 
      - Technical feasibility: 120 days
      - DORA/delivery metrics: 30 days
    - Flag evidence past threshold as warning; past 3x threshold as critical
-   - Suggest refresh actions: "Evidence in [file] is [N] days old. Run `/user-interview` or `/log-evidence` to refresh."
+   - Suggest refresh actions: "Evidence in [file] is [N] days old. Run `/mycelium:user-interview` or `/mycelium:log-evidence` to refresh."
    - Note: corrections and patterns do NOT decay — process learnings are timeless
 
 7b. **Check metric snapshot freshness** (v0.14):
    - If `.claude/jit-tooling/active-metrics.yml` exists, for each `status: active` source:
      - Find the newest snapshot in `.claude/evals/metrics/<source>/`.
-     - If >7 days old: warning ("[source] snapshot is [N] days old — run `/metrics-pull` to refresh").
+     - If >7 days old: warning ("[source] snapshot is [N] days old — run `/mycelium:metrics-pull` to refresh").
      - If >30 days old: critical (evidence this stale is worse than no metric reference — anchors old state).
-     - If missing entirely: info-level ("No snapshots yet for [source]. Run `/metrics-pull`.").
-   - Also check per-adapter freshness: for each adapter file in `.claude/jit-tooling/metrics-adapters/`, if `last_known_working` is >180 days old, flag as warning suggesting regeneration via `metrics-adapters/GENERATING.md`.
+     - If missing entirely: info-level ("No snapshots yet for [source]. Run `/mycelium:metrics-pull`.").
+   - Also check per-adapter freshness: for each adapter file in `${CLAUDE_PLUGIN_ROOT}/jit-tooling/metrics-adapters/`, if `last_known_working` is >180 days old, flag as warning suggesting regeneration via `metrics-adapters/GENERATING.md`.
    - Source: v0.14 metrics harvesting. Metric evidence has a faster staleness curve than interview evidence because the underlying data changes continuously.
 
 8. **Check cross-reference integrity** (leaf lifecycle):
@@ -106,14 +106,14 @@ Audit the canvas knowledge base for quality, consistency, and completeness. The 
    - **Information scent on links**: scan for "click here", "see [filename](path)" patterns — these violate the scent rule. Flag for review.
    - **Marketing-voice scan**: scan for "powerful", "comprehensive", "robust", "seamless", "best-in-class". Flag occurrences for voice review per `docs/contributing/style.md`.
    - **Receipts case frontmatter**: every file under `docs/receipts/cases/` must have YAML frontmatter with the required fields (id, date, contributor, contributor_link, project, mechanism_or_status, commits, subclass). Flag missing fields.
-   - **Highlights rotation cadence**: if README's "How Mycelium got smarter" section has not changed in >90 days (check git log for last commit touching that section), flag as a rotation candidate per `docs/contributing/style.md#highlights-rotation`. The flag is informational; rotation is a `/framework-health` decision, not an automatic move.
+   - **Highlights rotation cadence**: if README's "How Mycelium got smarter" section has not changed in >90 days (check git log for last commit touching that section), flag as a rotation candidate per `docs/contributing/style.md#highlights-rotation`. The flag is informational; rotation is a `/mycelium:framework-health` decision, not an automatic move.
 
 10. **Log findings to decision-log.md** (MANDATORY):
    - APPEND a `### Canvas Health Report` entry to `harness/decision-log.md`
    - Include: overall status (HEALTHY/WARNINGS/CRITICAL), stale evidence found, refresh recommendations
    - Use these words explicitly when applicable: "stale", "evidence", "refresh", "interview", "validate"
    - Example: "Evidence in opportunities.yml is stale (183 days old, threshold 90). Refresh needed: run fresh interviews to validate opportunity assumptions."
-   - This log entry is essential for auditability and for downstream skills (e.g., `/diamond-progress`) to detect health issues
+   - This log entry is essential for auditability and for downstream skills (e.g., `/mycelium:diamond-progress`) to detect health issues
 
 11. **Generate health report**:
    - Summarize findings by severity: critical (required file missing), warning (stale, inconsistent), info (recommended file missing, meta block absent)
@@ -144,9 +144,9 @@ Files checked: N canvas files, M diamonds files
 | Market (L5) | N | M | ... |
 
 Recommended actions:
-  - /canvas-update [file] -- [reason]
-  - /interview -- [if evidence gaps found]
-  - /log-evidence -- [if confidence unsupported]
+  - /mycelium:canvas-update [file] -- [reason]
+  - /mycelium:interview -- [if evidence gaps found]
+  - /mycelium:log-evidence -- [if confidence unsupported]
 ```
 
 ## Theory Citations

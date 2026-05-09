@@ -50,6 +50,6 @@ Update canvas/landscape.yml with components, evolution stages, movements, and ga
 **APPEND** a `### Wardley Map Assessment` entry to `harness/decision-log.md` with: components mapped, evolution stages, strategic gameplay identified, recommendations.
 
 ## Connection to Other Frameworks
-- Evolution stage maps to Cynefin domain (use `/cynefin-classify`)
-- User needs at top map to OST outcomes (use `/ost-builder`)
-- Strategic gameplay informs GIST goals (use `/gist-plan`)
+- Evolution stage maps to Cynefin domain (use `/mycelium:cynefin-classify`)
+- User needs at top map to OST outcomes (use `/mycelium:ost-builder`)
+- Strategic gameplay informs GIST goals (use `/mycelium:gist-plan`)

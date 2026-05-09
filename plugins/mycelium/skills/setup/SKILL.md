@@ -101,7 +101,7 @@ Empty until the first decision is logged.
 ```markdown
 # Warnings log
 
-Auto-populated by .claude/scripts/ingest_warnings.py from CI signals
+Auto-populated by ${CLAUDE_PLUGIN_ROOT}/scripts/ingest_warnings.py from CI signals
 (validator/upgrade WARN+FAIL lines). Consumed by
 /mycelium:corrections-audit for cross-source pattern detection.
 
