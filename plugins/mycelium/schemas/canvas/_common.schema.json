@@ -1,0 +1,145 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mycelium.dev/schemas/canvas/_common.schema.json",
+  "title": "Mycelium Canvas Common Definitions",
+  "description": "Shared $defs for canvas YAML schemas. Provenance, trace edges, confidence enums, ISO timestamps.",
+  "$defs": {
+    "evidence_type": {
+      "type": "string",
+      "enum": [
+        "speculation",
+        "anecdotal",
+        "data-supported",
+        "test-validated",
+        "launch-validated"
+      ],
+      "description": "Gilad's evidence ladder. Match the level of evidence to the claim — never overclaim."
+    },
+    "confidence": {
+      "oneOf": [
+        {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0
+        },
+        {
+          "$ref": "#/$defs/evidence_type"
+        }
+      ],
+      "description": "Either a float 0.0-1.0 (Gilad confidence meter) or one of the evidence_type enum values."
+    },
+    "iso_timestamp": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}([Tt][0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?(Z|[+-][0-9]{2}:[0-9]{2})?)?$",
+      "description": "ISO 8601 date or datetime"
+    },
+    "source_class": {
+      "type": "string",
+      "enum": [
+        "external_human",
+        "external_data",
+        "internal_stakeholder",
+        "internal_desk",
+        "internal_simulated"
+      ],
+      "description": "Classification of an evidence source's origin. external_human = real conversation with a real person (user interview, usability test, survey response). external_data = third-party analytics, behavioral data, market data. internal_stakeholder = founder/PM/team interview — beliefs about users, constraints, strategy; organizational mythology (Brown). Counts toward L0 confidence but does NOT satisfy L2 external_human requirements. internal_desk = desk research, competitive analysis, brainstorming. internal_simulated = mocked persona interview, thought experiment."
+    },
+    "provenance": {
+      "type": "object",
+      "description": "Per-entry provenance for high-stakes canvas claims. Documents the evidence behind each claim so canvas-as-source-of-truth doesn't drift toward confident speculation.",
+      "properties": {
+        "evidence_type": {
+          "$ref": "#/$defs/evidence_type"
+        },
+        "evidence_sources": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Identifiers for the evidence: interview IDs, research brief refs, external URLs, behavioral data sources, etc.",
+          "minItems": 0
+        },
+        "source_classes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/source_class"
+          },
+          "description": "Parallel array to evidence_sources classifying each source's origin. Optional — unclassified sources default to internal_desk for ratio calculations. Added in v0.11.0 to address the internal/external evidence ratio Goodhart trap."
+        },
+        "source_class": {
+          "$ref": "#/$defs/source_class",
+          "description": "Single source class applying to all evidence_sources. Convenience form when every source is the same class (the common case). The framework convention uses the singular form at the top level of evidence entries; allowing it here matches that convention. If both source_class and source_classes are present, source_classes (per-source) takes precedence."
+        },
+        "captured_at": {
+          "$ref": "#/$defs/iso_timestamp"
+        },
+        "confidence": {
+          "$ref": "#/$defs/confidence"
+        },
+        "validated": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether this evidence has been independently validated. Set to false for internal_stakeholder claims about users (organizational mythology). Resolved to true by /assumption-test when the claim is confirmed through external evidence. Unset defaults to true (most evidence is what it claims to be)."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Free-text annotation about how the evidence was gathered, caveats, or context that doesn't fit other fields. Optional. Kept short — provenance is reference metadata, not narrative."
+        }
+      },
+      "required": ["evidence_type", "evidence_sources"],
+      "additionalProperties": false
+    },
+    "trace_edge": {
+      "type": "object",
+      "description": "A directed edge in the canvas trace graph. Mirrors BDSK's 10 canonical edge types.",
+      "properties": {
+        "target_id": {
+          "type": "string",
+          "description": "Identifier of the linked artifact (canvas section, decision log entry, eval scenario, etc.)"
+        },
+        "edge": {
+          "type": "string",
+          "enum": [
+            "depends_on",
+            "derived_from",
+            "constrains",
+            "implements",
+            "proves",
+            "evaluates",
+            "produced_by",
+            "supersedes",
+            "escalates_to",
+            "waives"
+          ],
+          "description": "Canonical edge type. Borrowed from BDSK's trace.upstream model (Daniel Bentes feedback)."
+        }
+      },
+      "required": ["target_id", "edge"],
+      "additionalProperties": false
+    },
+    "trace": {
+      "type": "object",
+      "description": "Bidirectional trace links for an artifact. Optional for most canvas entries; required for high-stakes entries.",
+      "properties": {
+        "upstream": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/trace_edge"
+          }
+        },
+        "downstream": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/trace_edge"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "schema_version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Canvas schema version. Increment on breaking changes (additive changes do not require a bump)."
+    }
+  }
+}

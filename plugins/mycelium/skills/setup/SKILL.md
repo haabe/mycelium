@@ -24,22 +24,34 @@ If the file does NOT exist, continue to Step 2.
 
 ## Step 2: Create project-state directory structure
 
+Resolve the project root: use `$CLAUDE_PROJECT_DIR` if set, else fall back to `pwd`. (Claude Code sets it automatically; non-Claude-Code agents may not.)
+
 Create these directories in the user's project (using Bash `mkdir -p`):
 
 ```
-$CLAUDE_PROJECT_DIR/.claude/canvas/
-$CLAUDE_PROJECT_DIR/.claude/diamonds/
-$CLAUDE_PROJECT_DIR/.claude/memory/
-$CLAUDE_PROJECT_DIR/.claude/harness/
-$CLAUDE_PROJECT_DIR/.claude/evals/
-$CLAUDE_PROJECT_DIR/.claude/jit-tooling/
+<project_root>/.claude/canvas/
+<project_root>/.claude/diamonds/
+<project_root>/.claude/memory/
+<project_root>/.claude/harness/
+<project_root>/.claude/evals/
+<project_root>/.claude/jit-tooling/
 ```
 
 These directories hold project-specific state that the user's project owns and commits to git. Framework reference content (skills, hooks, theory gates) lives in the plugin cache and is not duplicated here.
 
+**Important — empty dirs and git**: directories that don't get a starter file in Step 3 (`canvas/`, `evals/`, `jit-tooling/`) are empty after Step 2 and would not survive a git commit. Drop a `.gitkeep` stub in each so they remain in the user's repo:
+
+```bash
+touch <project_root>/.claude/canvas/.gitkeep
+touch <project_root>/.claude/evals/.gitkeep
+touch <project_root>/.claude/jit-tooling/.gitkeep
+```
+
 ## Step 3: Write minimal starter files
 
-Use the Write tool (one Read+Write per file; do not concatenate via heredoc). Each file gets a small starter content, NOT a full canvas template — the canvas-population skills (`/mycelium:interview`, `/mycelium:canvas-update`, etc.) populate them when the user runs them.
+Use the Write tool to create each file. Each file gets a small starter content, NOT a full canvas template — the canvas-population skills (`/mycelium:interview`, `/mycelium:canvas-update`, etc.) populate them when the user runs them.
+
+**Note**: these files don't yet exist, so the Read-before-Write convention does NOT apply (it applies only to existing files). Use Write directly.
 
 ### `.claude/diamonds/active.yml`
 ```yaml
@@ -100,8 +112,10 @@ Empty until the ingestor runs.
 
 Ask the user: "Should I create an AGENTS.md at your project root? This is the cross-agent-portable instructions file (read by Codex, Cursor, Aider, Copilot, and Claude Code as fallback). It will reference Mycelium plugin discipline. If you already have an AGENTS.md, I'll append a Mycelium reference section instead of overwriting."
 
+**Auto-mode default**: if running non-interactively (no terminal user to prompt), default to creating AGENTS.md when absent and skipping when present. Never overwrite an existing AGENTS.md without explicit consent.
+
 If yes:
-- Check if `$CLAUDE_PROJECT_DIR/AGENTS.md` exists.
+- Check if `<project_root>/AGENTS.md` exists.
 - If absent: write a minimal AGENTS.md template (see template content below).
 - If present: prompt before appending. Show the user what would be appended. Append only on explicit yes.
 
@@ -147,17 +161,17 @@ Run `/mycelium:diamond-assess` for current state.
 
 ## Step 5: Confirmation message
 
-After all writes succeed, print:
+After all writes succeed, build the confirmation by checking what was actually created. Use `test -f <project_root>/AGENTS.md` to determine whether the AGENTS.md line should appear.
 
 > "Mycelium project state initialized.
 >
 > Created:
-> - `.claude/canvas/` (canvas files will be populated by `/mycelium:interview` or `/mycelium:canvas-update`)
+> - `.claude/canvas/` + `.gitkeep` (canvas files will be populated by `/mycelium:interview` or `/mycelium:canvas-update`)
 > - `.claude/diamonds/active.yml` (empty)
 > - `.claude/memory/corrections.md`, `patterns.md` (empty)
 > - `.claude/harness/decision-log.md`, `warnings-log.md` (empty)
-> - `.claude/evals/`, `.claude/jit-tooling/` (empty)
-> - `AGENTS.md` at project root (if you said yes)
+> - `.claude/evals/.gitkeep`, `.claude/jit-tooling/.gitkeep` (empty dirs preserved for git)
+> - `AGENTS.md` at project root  ← include this line ONLY if AGENTS.md was actually written this session
 >
 > Next: run `/mycelium:interview` to start a 10-minute discovery session and populate the canvas. Or `/mycelium:diamond-assess` if you want to add Mycelium to a project that's already partway through discovery."
 
@@ -176,7 +190,7 @@ After all writes succeed, print:
 
 ## Source
 
-Receipts case (forthcoming): `docs/receipts/cases/2026-05-08-bentes-install-model.md`. Daniel Bentes (BDSK author, Produktleder.no) surfaced the install-model architectural debt 2026-05-08; this setup skill is part of the plugin-form fix.
+Receipts case: [docs/receipts/cases/2026-05-08-bentes-install-model.md](../../../../docs/receipts/cases/2026-05-08-bentes-install-model.md). Daniel Bentes (BDSK author, Produktleder.no) surfaced the install-model architectural debt 2026-05-08; this setup skill is part of the plugin-form fix.
 
 ## Handling User-Supplied Content
 

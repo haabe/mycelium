@@ -1,0 +1,318 @@
+# Confidence Thresholds
+# Per-scale confidence requirements for diamond progression
+#
+# Scale adaptation: Mycelium uses 0.0-1.0 (adapted from Gilad's Confidence Meter).
+# Gilad's original is 0-10 non-linear: 0.01=opinion, 1=anecdotal, 5=market data,
+# 8=A/B test, 10=launch data. The non-linear penalty (opinions worth ~0.01 in ICE
+# multiplication) is preserved through evidence-class weighting and source-class
+# requirements, not through the raw scale.
+
+scales:
+  L0:
+    name: Purpose
+    confidence_threshold: 0.9
+    required_evidence:
+      - market_research
+      - competitive_analysis
+      - stakeholder_alignment
+      - vision_document
+    required_theory_gates:
+      - evidence
+      - cynefin
+      - bias
+      - bvssh
+      - corrections
+    human_approval:
+      discover_to_define: required
+      define_to_develop: required
+      develop_to_deliver: required
+      deliver_to_complete: required
+    notes: "Purpose-level decisions are foundational. Highest bar for evidence and approval. Gates must match theory-gates.md L0 matrix."
+
+  L1:
+    name: Strategy
+    confidence_threshold: 0.85
+    required_evidence:
+      - user_research_synthesis
+      - opportunity_sizing
+      - strategic_alignment_check
+      - wardley_map
+    required_theory_gates:
+      - evidence
+      - four_risks
+      - jtbd
+      - cynefin
+      - bias
+      - bvssh
+      - corrections
+    human_approval:
+      discover_to_define: required
+      define_to_develop: required
+      develop_to_deliver: required
+      deliver_to_complete: recommended
+    notes: "Strategic bets require strong evidence and multi-dimensional risk assessment."
+
+  L2:
+    name: Opportunity
+    confidence_threshold: 0.8
+    required_evidence:
+      - interview_data_min_5
+      - triangulated_findings
+      - jtbd_map
+      - opportunity_tree_node
+    required_theory_gates:
+      - evidence
+      - four_risks
+      - jtbd
+      - cynefin
+      - bias
+      - privacy
+      - bvssh
+      - service_quality
+      - corrections
+    human_approval:
+      discover_to_define: required
+      define_to_develop: recommended
+      develop_to_deliver: recommended
+      deliver_to_complete: optional
+    notes: "Opportunity validation requires rich qualitative evidence. Gates must match theory-gates.md L2 matrix."
+
+  L3:
+    name: Solution
+    confidence_threshold: 0.75
+    required_evidence:
+      - prototype_feedback
+      - usability_test_results
+      - technical_feasibility_spike
+      - security_threat_model
+    required_theory_gates:
+      - evidence
+      - four_risks
+      - jtbd
+      - cynefin
+      - bias
+      - security
+      - privacy
+      - bvssh
+      - service_quality
+      - delivery_metrics
+      - corrections
+      - regulatory
+    human_approval:
+      discover_to_define: recommended
+      define_to_develop: recommended
+      develop_to_deliver: optional
+      deliver_to_complete: optional
+    notes: "Solutions must be validated against all four Cagan risks. L3 is the only scale requiring all 12 gates."
+
+  L4:
+    name: Feature
+    confidence_threshold: 0.7
+    required_evidence:
+      software:
+        - acceptance_criteria
+        - test_cases
+        - security_review
+        - accessibility_check
+      content:
+        - acceptance_criteria
+        - quality_review          # SME or self-review checklist
+        - accessibility_check     # captions, alt text, readable typography
+      ai_tool:
+        - acceptance_criteria
+        - eval_results            # prompt/model evaluation against test cases
+        - safety_review           # red-team + bias assessment
+        - regulatory_classification  # EU AI Act risk level
+      service_offering:
+        - acceptance_criteria
+        - service_blueprint_review
+        - client_onboarding_test
+    required_theory_gates:
+      - evidence
+      - four_risks
+      - cynefin
+      - bias
+      - security              # conditioned on product_type in theory-gates.md
+      - privacy
+      - bvssh
+      - service_quality
+      - delivery_metrics      # was: dora. Routed to product-type-appropriate metrics.
+      - corrections
+      - regulatory
+    human_approval:
+      discover_to_define: optional
+      define_to_develop: optional
+      develop_to_deliver: optional
+      deliver_to_complete: optional
+    notes: "Features should flow quickly. Approval needed mainly for novel or risky items. Required evidence varies by product_type. All gates except JTBD apply at L4."
+
+  L5:
+    name: Task
+    confidence_threshold: 0.6
+    required_evidence:
+      software:
+        - test_results
+        - lint_clean
+        - security_scan_clean
+      content:
+        - content_reviewed        # factual accuracy, style consistency
+        - accessibility_verified  # captions/alt text present
+      ai_tool:
+        - eval_passing            # automated or manual eval results
+        - safety_check_clean      # no harmful outputs in test cases
+      service_offering:
+        - delivery_step_documented
+    required_theory_gates:
+      - evidence
+      - cynefin
+      - bias
+      - security              # conditioned on product_type in theory-gates.md
+      - bvssh
+      - delivery_metrics      # was: dora. Routed to product-type-appropriate metrics.
+      - corrections
+      - regulatory
+    human_approval:
+      discover_to_define: not_required
+      define_to_develop: not_required
+      develop_to_deliver: not_required
+      deliver_to_complete: not_required
+    notes: "Tasks are atomic. Agent can progress autonomously with passing gates. Required evidence varies by product_type."
+
+# Confidence scoring rules
+scoring:
+  evidence_weight: 0.4
+  theory_gate_weight: 0.3
+  validation_weight: 0.2
+  peer_review_weight: 0.1
+
+  # How evidence types contribute to confidence
+  evidence_values:
+    direct_user_research: 0.3
+    behavioral_data: 0.25
+    quantitative_analysis: 0.2
+    expert_assessment: 0.15
+    stakeholder_input: 0.1
+    assumption: 0.0
+
+  # Minimum evidence sources per scale
+  min_sources:
+    L0: 5
+    L1: 4
+    L2: 3
+    L3: 2
+    L4: 2
+    L5: 1
+
+# ============================================================
+# Confidence Explanation Templates (for human-readable reporting)
+# When reporting confidence, ALWAYS use these templates.
+# ============================================================
+confidence_explanations:
+  0.1:
+    label: "Speculation"
+    template: "Just an idea -- no evidence yet. Based on intuition or a single anecdote."
+    what_increases_it: "Any structured research: interviews, data analysis, competitive review."
+    # v0.11.1: Edge case guidance (dogfood report M2)
+    edge_cases:
+      - "Founder describing their own problem = speculation (not anecdotal). The founder IS the assumption — they cannot validate themselves."
+      - "Mocked persona interviews = always speculation, regardless of how many personas."
+      - "Single informal conversation with a friend = speculation (not anecdotal). One non-structured data point lacks triangulation."
+  0.3:
+    label: "Anecdotal"
+    template: "Some signals support this, but not validated. Based on a few data points or informal feedback."
+    what_increases_it: "Structured interviews (3+), quantitative data, or formal competitive analysis."
+    edge_cases:
+      - "2+ structured interviews with distinct non-founder users = anecdotal."
+      - "Competitive analysis alone (no user voice) = anecdotal only if triangulated with at least one other source type."
+      - "Demo reactions from friendly contacts = anecdotal at best (bias risk: friendly audience). Note the bias in provenance."
+  0.5:
+    label: "Data-supported"
+    template: "Data supports this direction. Multiple evidence sources agree, though not yet tested directly."
+    what_increases_it: "Direct testing: prototype tests, A/B experiments, concierge validation."
+  0.7:
+    label: "Test-validated"
+    template: "Tested and confirmed. User tests, experiments, or prototypes show positive results."
+    what_increases_it: "Scale testing: broader user base, production metrics, sustained usage patterns."
+  0.9:
+    label: "Launch-validated"
+    template: "Proven in production. Real users, real metrics, sustained over time."
+    what_increases_it: "This is the highest practical level. Maintain through continuous measurement."
+
+# ============================================================
+# Project Type Adaptations (v0.11.0)
+# ============================================================
+# Adaptations lower the THRESHOLD (how much evidence you need)
+# but NEVER lower the EVIDENCE QUALITY requirements (source diversity, external ratio).
+# Every adaptation MUST be logged in decision-log.md with specific rationale.
+#
+# Usage: effective_threshold = base_threshold * threshold_multiplier
+#        If dogfood: effective_threshold *= dogfood_modifier.additional_threshold_multiplier
+#        effective_min_sources = ceil(base_min_sources * min_sources_multiplier)
+
+project_type_adaptations:
+  solo_hobby:
+    threshold_multiplier: 0.7    # e.g., L0: 0.9 * 0.7 = 0.63
+    min_sources_multiplier: 0.5  # e.g., L0: ceil(5 * 0.5) = 3
+    human_approval_override:
+      discover_to_define: optional
+      define_to_develop: optional
+      develop_to_deliver: optional
+      deliver_to_complete: optional
+    external_evidence_min: NO_REDUCTION
+    notes: "Solo hobby lowers the bar for evidence quantity but not quality. External evidence requirements are maintained."
+
+  solo_product:
+    threshold_multiplier: 0.85   # e.g., L0: 0.9 * 0.85 = 0.765
+    min_sources_multiplier: 0.75 # e.g., L0: ceil(5 * 0.75) = 4
+    human_approval_override:
+      discover_to_define: recommended
+      define_to_develop: recommended
+      develop_to_deliver: optional
+      deliver_to_complete: optional
+    external_evidence_min: NO_REDUCTION
+    notes: "Solo products need real evidence but the bar is slightly lower than team projects."
+
+  team_startup:
+    threshold_multiplier: 1.0
+    min_sources_multiplier: 1.0
+    human_approval_override: null  # use defaults from scales section
+    external_evidence_min: NO_REDUCTION
+    notes: "Team startups use default thresholds. Teams have the capacity for full evidence gathering."
+
+  team_enterprise:
+    threshold_multiplier: 1.0
+    min_sources_multiplier: 1.0
+    human_approval_override: null
+    external_evidence_min: NO_REDUCTION
+    notes: "Enterprise uses default or stricter thresholds. Regulatory requirements may add further gates."
+
+  dogfood_modifier:
+    additional_threshold_multiplier: 0.8  # stacks multiplicatively with project_type
+    # e.g., solo_product (0.85) + dogfood (0.8) = 0.68 effective multiplier
+    # e.g., solo_hobby (0.7) + dogfood (0.8) = 0.56 effective multiplier
+    external_evidence_min: NO_REDUCTION  # even dogfood projects track evidence honestly
+    notes: "Dogfood projects further reduce thresholds because iteration cycles are faster and blast radius is lower. The real deliverable is Mycelium learnings, not the object product."
+    # v0.11.1: Confidence transferability warning (dogfood report T3)
+    # With solo_product × dogfood, L0 threshold drops from 0.9 to 0.612 — a 32% reduction.
+    # Confidence levels achieved in dogfood mode are NOT transferable to production decisions.
+    # If a dogfood project transitions to a real product, re-evaluate all diamond confidence
+    # levels against production thresholds (remove dogfood modifier) before making ship decisions.
+    transferability_warning: "Confidence levels achieved in dogfood mode reflect reduced thresholds. If this project transitions from dogfood to production, all diamond confidence levels must be re-evaluated against production thresholds (without the dogfood modifier). A diamond that passes at 0.612 in dogfood mode would need 0.9 in production."
+
+# Anti-gaming rule: external_evidence_min: NO_REDUCTION means that the
+# external evidence ratio gate (theory-gates.md Evidence Gate) is never
+# lowered by project_type adaptations. You can lower HOW MUCH evidence
+# you need, but not WHERE it comes from.
+#
+# What the Evidence Gate actually enforces (theory-gates.md):
+# - At L0/L2 Develop->Deliver: REVIEW if zero external_human sources (blocks progression)
+# - At L0-L2 Define->Develop: NUDGE if zero external_human sources (warns only)
+# - Dogfood projects: mocked personas (internal_simulated) supplement but don't replace
+#   external_human -- still need at least one real conversation for REVIEW gates.
+#
+# The min_sources_multiplier reduces HOW MANY total sources you need,
+# but every adaptation MUST still satisfy the Evidence Gate source ratio check.
+# Coverage rule: required_evidence items define WHAT must be covered,
+# min_sources defines HOW MANY distinct sources. A single source can cover
+# multiple required_evidence items (e.g., one interview covers market_research
+# + stakeholder_alignment), but each required_evidence item must be addressed.

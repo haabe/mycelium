@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mycelium.dev/schemas/canvas/threat-model.schema.json",
+  "title": "STRIDE Threat Model Canvas",
+  "description": "OWASP STRIDE threat modeling. Each threat requires provenance to distinguish hypothetical threats from observed ones.",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "$ref": "_common.schema.json#/$defs/schema_version"
+    },
+    "threats": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "category": {
+            "type": "string",
+            "enum": ["spoofing", "tampering", "repudiation", "info_disclosure", "denial_of_service", "elevation_of_privilege"]
+          },
+          "description": {"type": "string"},
+          "severity": {"type": "string", "enum": ["low", "medium", "high", "critical"]},
+          "provenance": {
+            "$ref": "_common.schema.json#/$defs/provenance"
+          },
+          "trace": {
+            "$ref": "_common.schema.json#/$defs/trace"
+          }
+        },
+        "required": ["description", "provenance"],
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

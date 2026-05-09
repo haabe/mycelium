@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mycelium.dev/schemas/canvas/service-metrics.schema.json",
+  "title": "Service Delivery Metrics Canvas",
+  "description": "Delivery metrics for service offerings (consulting, coaching, agency, freelance). Measures client throughput, satisfaction, and delivery repeatability.",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "$ref": "_common.schema.json#/$defs/schema_version"
+    },
+    "client_throughput": {
+      "type": "object",
+      "properties": {
+        "current": {"type": ["string", "null"]},
+        "target": {"type": ["string", "null"]},
+        "classification": {
+          "type": ["string", "null"],
+          "enum": ["consistent", "improving", "declining", null]
+        }
+      },
+      "additionalProperties": true
+    },
+    "delivery_lead_time": {
+      "type": "object",
+      "properties": {
+        "current": {"type": ["string", "null"]},
+        "target": {"type": ["string", "null"]},
+        "bottleneck": {"type": ["string", "null"]}
+      },
+      "additionalProperties": true
+    },
+    "client_satisfaction": {
+      "type": "object",
+      "properties": {
+        "nps": {"type": ["number", "null"]},
+        "csat": {"type": ["number", "null"]},
+        "retention_rate": {"type": ["number", "null"]},
+        "referral_rate": {"type": ["number", "null"]}
+      },
+      "additionalProperties": true
+    },
+    "repeatability": {
+      "type": "object",
+      "properties": {
+        "documented": {"type": "boolean"},
+        "templated": {"type": "boolean"},
+        "onboarding_tested": {"type": "boolean"},
+        "score": {"type": ["number", "null"]}
+      },
+      "additionalProperties": true
+    },
+    "time_to_first_value": {
+      "type": "object",
+      "properties": {
+        "current": {"type": ["string", "null"]},
+        "target": {"type": ["string", "null"]},
+        "bottleneck": {"type": ["string", "null"]}
+      },
+      "additionalProperties": true
+    },
+    "acquisition": {
+      "type": "object",
+      "properties": {
+        "conversion_rate": {"type": ["number", "null"]},
+        "cost_per_acquisition": {"type": ["number", "null"]},
+        "proposal_win_rate": {"type": ["number", "null"]}
+      },
+      "additionalProperties": true
+    },
+    "revenue": {
+      "type": "object",
+      "properties": {
+        "refund_rate": {"type": ["number", "null"]},
+        "customer_lifetime_value": {"type": ["number", "null"]},
+        "churn_rate": {"type": ["number", "null"]},
+        "net_revenue_retention": {"type": ["number", "null"]}
+      },
+      "additionalProperties": true
+    },
+    "quality_review": {
+      "type": "object",
+      "properties": {
+        "service_blueprint_reviewed": {"type": "boolean"},
+        "pricing_validated": {"type": "boolean"},
+        "delivery_workflow_tested": {"type": "boolean"}
+      },
+      "additionalProperties": true
+    },
+    "last_measured": {
+      "oneOf": [
+        {"$ref": "_common.schema.json#/$defs/iso_timestamp"},
+        {"type": "null"}
+      ]
+    }
+  },
+  "additionalProperties": true
+}
