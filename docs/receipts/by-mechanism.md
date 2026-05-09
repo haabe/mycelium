@@ -2,10 +2,14 @@
 
 **Audience**: practitioners curious about which case produced which framework mechanism.
 **Time to read**: 2 min.
-**Last updated**: 2026-05-08.
+**Last updated**: 2026-05-09.
 
 | Mechanism | Origin case |
 |---|---|
+| Plugin-form install model + single-plugin marketplace | [bentes-install-model](cases/2026-05-08-bentes-install-model.md) |
+| `/mycelium:setup` skill (idempotent first-run project init) | [bentes-install-model](cases/2026-05-08-bentes-install-model.md) |
+| Skill namespacing convention (`/mycelium:<name>`) | [bentes-install-model](cases/2026-05-08-bentes-install-model.md) |
+| AGENTS.md as canonical cross-agent instructions surface | [bentes-install-model](cases/2026-05-08-bentes-install-model.md) |
 | `/mocked-persona-interview` | [macos-fileviewer](cases/2026-04-macos-fileviewer.md) |
 | `/feedback-review` | [macos-fileviewer](cases/2026-04-macos-fileviewer.md) |
 | `/framework-health` | [macos-fileviewer](cases/2026-04-macos-fileviewer.md) |
