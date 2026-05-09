@@ -28,7 +28,7 @@ People "hire" products to get jobs done. Map ALL three dimensions. Source: Chris
 6. Look for non-consumption: people who have the job but use NO solution
 
 ## Output
-Update canvas/jobs-to-be-done.yml with discovered jobs, hiring/firing criteria, and underserved outcomes.
+Update .claude/canvas/jobs-to-be-done.yml with discovered jobs, hiring/firing criteria, and underserved outcomes.
 
 ## Handling User-Supplied Content
 

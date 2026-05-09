@@ -12,19 +12,19 @@ Run after every completed delivery diamond or significant milestone. Source: For
 
 Run these steps IN ORDER. Do not skip any step. **Step 1 (cycle recording) MUST be completed FIRST — before any reflective analysis.**
 
-### Step 1. Record Cycle in `canvas/cycle-history.yml` AND Decision Log (MANDATORY — DO THIS FIRST)
+### Step 1. Record Cycle in `.claude/canvas/cycle-history.yml` AND Decision Log (MANDATORY — DO THIS FIRST)
 
 **This step is critical.** Without it, the learning metabolism has no data. You MUST do BOTH parts (5a and 5b).
 
-#### Step 5a. Write cycle record to `canvas/cycle-history.yml`
+#### Step 5a. Write cycle record to `.claude/canvas/cycle-history.yml`
 
-Find the leaf_id and opportunity_id for the delivered solution (from `canvas/opportunities.yml` or `canvas/gist.yml`). Then write a cycle record:
+Find the leaf_id and opportunity_id for the delivered solution (from `.claude/canvas/opportunities.yml` or `.claude/canvas/gist.yml`). Then write a cycle record:
 
 ```yaml
 - cycle_id: cycle-NNN
   leaf_id: "opp-XXX-sol-X"         # From opportunities.yml
   opportunity_id: "opp-XXX"         # Parent opportunity
-  diamond_id: "d-XXX"               # From diamonds/active.yml
+  diamond_id: "d-XXX"               # From .claude/diamonds/active.yml
   completed_at: "YYYY-MM-DDTHH:MM:SSZ"
   outcome: shipped | partial | failed | discarded
   predicted:
@@ -47,7 +47,7 @@ Find the leaf_id and opportunity_id for the delivered solution (from `canvas/opp
 
 Update `calibration_summary.total_cycles` count. If total_cycles reaches a multiple of 5, prompt: "5 cycles since last review. Run `/mycelium:framework-health` to check calibration?"
 
-#### Step 5b. Log cycle calibration summary in decision-log.md
+#### Step 5b. Log cycle calibration summary in .claude/harness/decision-log.md
 
 Write a decision log entry titled "Cycle calibration record" that includes ALL of the following (use these exact words):
 
@@ -91,7 +91,7 @@ If this retrospective is for a cycle completed more than 14 days ago, check:
 - How many regressions occurred? → `rework.post_delivery_regressions`
 - Days to first regression? → `rework.days_to_first_regression`
 
-Update the cycle record in `canvas/cycle-history.yml` with the rework fields. This is the denominator — the hidden cost of delivery that velocity metrics miss.
+Update the cycle record in `.claude/canvas/cycle-history.yml` with the rework fields. This is the denominator — the hidden cost of delivery that velocity metrics miss.
 
 If this retrospective is for a just-completed cycle, prompt: "Set a reminder to check rework in 14 days. Run `/mycelium:retrospective rework-check [cycle-id]` after that."
 
@@ -183,9 +183,9 @@ After delivery retrospective, always ask:
 1. Update `.claude/memory/corrections.md` with new corrections
 2. Update `.claude/memory/patterns.md` with new patterns
 3. Update `.claude/memory/delivery-journal.md` with retrospective entry
-4. Update canvas/bvssh-health.yml if dimensions changed
-5. Log in decision-log.md
-6. Record cycle in `canvas/cycle-history.yml` (see Cycle History Recording above)
+4. Update .claude/canvas/bvssh-health.yml if dimensions changed
+5. Log in .claude/harness/decision-log.md
+6. Record cycle in `.claude/canvas/cycle-history.yml` (see Cycle History Recording above)
 
 ## Counter-Argument Check (Bias Mitigation)
 

@@ -83,7 +83,7 @@ When synthesizing across personas:
 - **If the stop condition triggered, flag the exercise as FAILED** in the output, not "mostly positive with some concerns"
 - **Never average out the rejections** — a single hard rejection from the modal user outweighs 5 enthusiastic yeses from niche personas
 - **Do not paper over the failure to be helpful to the user** — the user invoked this skill because they want honest epistemic discipline, not cheerleading
-- **Map each rejection to a JTBD job ID** (v0.11.1) — cross-reference `canvas/jobs-to-be-done.yml`. For each persona that rejected, identify which specific job(s) are at risk. This prevents implicit connections between "persona rejects" and "which job fails." If a rejection can't be mapped to an existing job, that's a signal the JTBD canvas is incomplete.
+- **Map each rejection to a JTBD job ID** (v0.11.1) — cross-reference `.claude/canvas/jobs-to-be-done.yml`. For each persona that rejected, identify which specific job(s) are at risk. This prevents implicit connections between "persona rejects" and "which job fails." If a rejection can't be mapped to an existing job, that's a signal the JTBD canvas is incomplete.
 
 ### 6. Document the exercise in the decision log
 

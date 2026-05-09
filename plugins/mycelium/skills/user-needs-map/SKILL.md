@@ -65,11 +65,11 @@ User needs sit at the TOP of the Wardley Map (most visible to users). Each need 
 User needs can inform team boundaries: each stream-aligned team should own a coherent cluster of user needs, not a technical component. If team boundaries don't align with need clusters, Conway's Law will create fragmented user experiences.
 
 ## Canvas Output
-**Always update** `canvas/user-needs.yml` with discovered needs, scores, and states.
+**Always update** `.claude/canvas/user-needs.yml` with discovered needs, scores, and states.
 Also update:
-- `canvas/opportunities.yml` with opportunity areas derived from underserved needs
-- `canvas/landscape.yml` if needs mapping reveals new value chain components
-- `canvas/team-shape.yml` if need clusters suggest different team boundaries
+- `.claude/canvas/opportunities.yml` with opportunity areas derived from underserved needs
+- `.claude/canvas/landscape.yml` if needs mapping reveals new value chain components
+- `.claude/canvas/team-shape.yml` if need clusters suggest different team boundaries
 
 ## Bias Warning
 Before mapping needs, run `/mycelium:bias-check`. Key biases:

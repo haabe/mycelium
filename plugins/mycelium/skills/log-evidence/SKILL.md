@@ -10,7 +10,7 @@ The re-entry point after offline human work. Takes raw conversation notes, obser
 
 ## When to Use
 
-- After completing a human task from `canvas/human-tasks.yml`
+- After completing a human task from `.claude/canvas/human-tasks.yml`
 - When the user returns from an offline conversation and has findings to record
 - When SessionStart reminds about pending human tasks and the user has completed them
 - When the user pastes conversation notes or interview summaries
@@ -18,7 +18,7 @@ The re-entry point after offline human work. Takes raw conversation notes, obser
 ## Workflow
 
 1. **Check pending tasks**:
-   - Read `canvas/human-tasks.yml` for `pending_tasks`
+   - Read `.claude/canvas/human-tasks.yml` for `pending_tasks`
    - List them: "You have [N] pending human task(s): [objective summaries]"
    - Ask: "Which task did you complete? Or paste your notes and I'll match them."
 
@@ -54,7 +54,7 @@ The re-entry point after offline human work. Takes raw conversation notes, obser
    - Update `confidence` score with explicit reasoning
    - Update `captured_at` timestamp
 
-5. **Update `canvas/human-tasks.yml`**:
+5. **Update `.claude/canvas/human-tasks.yml`**:
    - Move task from `pending_tasks` to `completed_tasks`
    - Record: `completed_at`, `evidence_logged_to`, `key_findings`, `source_class: external_human`
 
@@ -86,8 +86,8 @@ If the user reports a task couldn't be completed (contact unavailable, timing di
 ## Canvas Output
 
 - Updates: relevant canvas file provenance (evidence_sources, source_classes, evidence_type, confidence)
-- Updates: `canvas/human-tasks.yml` (moves task to completed)
-- May update: `canvas/opportunities.yml`, `canvas/user-needs.yml`, `canvas/jobs-to-be-done.yml` depending on findings
+- Updates: `.claude/canvas/human-tasks.yml` (moves task to completed)
+- May update: `.claude/canvas/opportunities.yml`, `.claude/canvas/user-needs.yml`, `.claude/canvas/jobs-to-be-done.yml` depending on findings
 
 ## Theory Citations
 

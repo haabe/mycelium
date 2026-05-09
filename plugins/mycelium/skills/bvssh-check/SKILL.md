@@ -111,7 +111,7 @@ Overall: [summary and recommended actions]
 ```
 
 ## Decision Log (MANDATORY per G-P4)
-**APPEND** a `### BVSSH Assessment` entry to `harness/decision-log.md` with: all 5 dimension ratings, CALMS ratings, key evidence, recommended actions.
+**APPEND** a `### BVSSH Assessment` entry to `.claude/harness/decision-log.md` with: all 5 dimension ratings, CALMS ratings, key evidence, recommended actions.
 
 ## Theory Citations
 - Smart: Sooner Safer Happier (BVSSH framework)

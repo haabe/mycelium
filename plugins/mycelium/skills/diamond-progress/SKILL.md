@@ -26,7 +26,7 @@ Progress a diamond through phases with full theory gate validation. At delivery 
 
    *Source: Buçinca, Malaya & Gajos (Cognitive Forcing Functions, Harvard CHI/CSCW 2021). Applied after Hoskins transcript analysis — Drew's product judgment consistently outperformed the agent's gate-based assessment.*
 
-2. **Run all required theory gates** (per theory-gates.md transition matrix):
+2. **Run all required theory gates** (per ${CLAUDE_PLUGIN_ROOT}/engine/theory-gates.md transition matrix):
    - For each gate:
      a. State the gate name and source theory.
      b. **Surface the suggested skill**: "Run `/skill-name` to satisfy this gate."
@@ -35,14 +35,14 @@ Progress a diamond through phases with full theory gate validation. At delivery 
      e. If Fail: document what is missing, recommend the skill to run, and do NOT proceed.
 
    **CRITICAL — Perspective conflict check (do this BEFORE evaluating any other gate)**:
-   Before checking any gate status, read `canvas/opportunities.yml` and inspect the Four Risks risk LEVELS for the active solution. Do NOT rely on `theory_gates_status.four_risks` in active.yml — that only records whether risks are documented, not whether they conflict. You must read the actual `value.level`, `usability.level`, `feasibility.level`, `viability.level` values.
+   Before checking any gate status, read `.claude/canvas/opportunities.yml` and inspect the Four Risks risk LEVELS for the active solution. Do NOT rely on `theory_gates_status.four_risks` in active.yml — that only records whether risks are documented, not whether they conflict. You must read the actual `value.level`, `usability.level`, `feasibility.level`, `viability.level` values.
 
    If TWO OR MORE risk dimensions are rated HIGH, or if perspectives directly contradict each other (e.g., value says "build it" but usability/feasibility say "don't"), this is a **perspective conflict** — not a simple gate failure. STOP evaluating other gates and jump to step 2b immediately. This takes priority over all other gate checks.
 
 2b. **Resolve perspective conflict** (if detected in step 2):
    Do NOT continue to steps 3-6. A perspective conflict must be resolved before any other gate evaluation matters. Follow this procedure:
 
-   1. **Name the conflict explicitly** in the decision log: "Perspective conflict: [type]" — use the vocabulary from `engine/perspective-resolution.md` (value-vs-feasibility, usability-vs-feasibility, value-vs-viability, usability-vs-viability, three-way).
+   1. **Name the conflict explicitly** in the decision log: "Perspective conflict: [type]" — use the vocabulary from `${CLAUDE_PLUGIN_ROOT}/engine/perspective-resolution.md` (value-vs-feasibility, usability-vs-feasibility, value-vs-viability, usability-vs-viability, three-way).
    2. **Classify the conflict type** per the resolution framework.
    3. **State each perspective's position**:
       - Product perspective: what does the value evidence say?
@@ -53,11 +53,11 @@ Progress a diamond through phases with full theory gate validation. At delivery 
       - Phased: Can we deliver in stages? (Phase 1 = MVP addressing highest risk, Phase 2 = polish)
       - Evidence-based: Can we test the disputed dimension? (Run `/mycelium:assumption-test` on the riskiest assumption)
       - Scope reduction: Can we remove features until all perspectives align?
-   5. **Log the resolution** in decision-log.md with: the conflict type, each perspective's position, the resolution method chosen, and why.
+   5. **Log the resolution** in .claude/harness/decision-log.md with: the conflict type, each perspective's position, the resolution method chosen, and why.
    6. **Block progression**: Report "Progression blocked: perspective conflict ([type]). Recommended resolution: [method]."
    7. Do NOT proceed to step 3 or beyond. The conflict must be resolved first.
 
-   The perspective resolution framework (`engine/perspective-resolution.md`) is the authoritative reference. The anti-pattern to avoid is Perspective Suppression — resolving a conflict by ignoring one perspective.
+   The perspective resolution framework (`${CLAUDE_PLUGIN_ROOT}/engine/perspective-resolution.md`) is the authoritative reference. The anti-pattern to avoid is Perspective Suppression — resolving a conflict by ignoring one perspective.
 
 2c. **Build-to-learn awareness NUDGE** (Define → Develop transitions only):
    At the point of entering Develop, surface this prompt to the human:
@@ -66,9 +66,9 @@ Progress a diamond through phases with full theory gate validation. At delivery 
    *Source: Cagan (SVPG), Patton (build to learn vs build to earn). Added as NUDGE per risk analysis — conceptual awareness, not process gate.*
 
 3. **Calculate confidence**:
-   - Apply scoring rules from confidence-thresholds.yml.
-   - Look up `project_type` and `dogfood` from `diamonds/active.yml`.
-   - Apply `project_type_adaptations` from confidence-thresholds.yml:
+   - Apply scoring rules from `${CLAUDE_PLUGIN_ROOT}/engine/confidence-thresholds.yml`.
+   - Look up `project_type` and `dogfood` from `.claude/diamonds/active.yml`.
+   - Apply `project_type_adaptations` from ${CLAUDE_PLUGIN_ROOT}/engine/confidence-thresholds.yml:
      - `effective_threshold = base_threshold * threshold_multiplier`
      - If `dogfood: true`: `effective_threshold *= dogfood_modifier.additional_threshold_multiplier`
      - `effective_min_sources = ceil(base_min_sources * min_sources_multiplier)`
@@ -76,7 +76,7 @@ Progress a diamond through phases with full theory gate validation. At delivery 
    - Report both: "Confidence: 0.55. Effective threshold: 0.57 (base 0.85, adapted for solo_product). Needs: one more evidence source to cross."
 
 4. **Check human approval requirement**:
-   - Per confidence-thresholds.yml, is human approval required/recommended/optional?
+   - Per ${CLAUDE_PLUGIN_ROOT}/engine/confidence-thresholds.yml, is human approval required/recommended/optional?
    - If required: present assessment and wait for approval.
    - **When asking for approval, include the interaction convention explicitly in the prompt** — do not leave it implicit. Use this template (or paraphrase faithfully):
      > "Reply **yes** to advance, **no** to stay. Re-invoking `/mycelium:diamond-progress` is also treated as approval (shortcut). Type **evaluate again** to re-run gates from scratch."
@@ -90,7 +90,7 @@ Progress a diamond through phases with full theory gate validation. At delivery 
    - For each gate evaluated in step 2, verify all three perspectives (product/design/engineering) are documented.
    - Each perspective must have evidence or an explicit "N/A: [reason]" justification.
    - Missing perspectives without justification = **GATE FAILED** (Perspective Skip anti-pattern).
-   - See `engine/theory-gates.md` §Trio Perspective Requirement for per-scale guidance.
+   - See `${CLAUDE_PLUGIN_ROOT}/engine/theory-gates.md` §Trio Perspective Requirement for per-scale guidance.
    - Note: Perspective CONFLICTS (2+ HIGH risk dimensions) are caught in step 2b, not here. This step checks for missing perspectives, not conflicting ones.
 
 7. **If transition is Deliver -> Complete: RUN EXECUTABLE DoD CHECKLIST** (see below)
@@ -101,10 +101,10 @@ Progress a diamond through phases with full theory gate validation. At delivery 
    - Confidence below threshold = **NEEDS EVIDENCE** (list what would help)
 
 9. **If progressing**:
-   - Update diamond state in active.yml.
+   - Update diamond state in `.claude/diamonds/active.yml`.
    - **Render the updated journey map**: Follow `${CLAUDE_PLUGIN_ROOT}/engine/wayfinding.md` to show the user where they've moved to. This makes the transition visible — the user sees their position shift on the map.
-   - Log transition in decision-log.md. If threshold was adapted, include: "Threshold adapted from [base] to [effective] because project_type=[type]. Would increase with [action]."
-   - Update product-journal.md.
+   - Log transition in `.claude/harness/decision-log.md`. If threshold was adapted, include: "Threshold adapted from [base] to [effective] because project_type=[type]. Would increase with [action]."
+   - Update `.claude/memory/product-journal.md`.
    - Identify if child diamonds should be spawned.
    - **Capture learnings** (see Learning Capture section below)
 
@@ -112,10 +112,10 @@ Progress a diamond through phases with full theory gate validation. At delivery 
     - Report in plain language: "Can't mark this done yet because [reason]."
     - List each failed item with its suggested skill
     - Do not progress. Stay in current phase.
-    - At **L0 / L1 / L2 / L5** diamonds, if the Evidence gate is "Insufficient Evidence" and `.claude/jit-tooling/active-metrics.yml` is configured, suggest `/mycelium:metrics-pull` as one route to strengthen external signal. If `active-metrics.yml` is missing, suggest `/mycelium:metrics-detect` first. (v0.14: `external_data` from snapshots satisfies the Evidence gate's behavioral-data criterion but does NOT replace `external_human` requirements at L2 Develop->Deliver.)
+    - At **L0 / L1 / L2 / L5** diamonds, if the Evidence gate is "Insufficient Evidence" and `.claude/jit-tooling/active-metrics.yml` is configured, suggest `/mycelium:metrics-pull` as one route to strengthen external signal. If `.claude/jit-tooling/active-metrics.yml` is missing, suggest `/mycelium:metrics-detect` first. (v0.14: `external_data` from snapshots satisfies the Evidence gate's behavioral-data criterion but does NOT replace `external_human` requirements at L2 Develop->Deliver.)
 
 11. **Always communicate in plain language**:
-    - Use status-translations.md for all state descriptions
+    - Use ${CLAUDE_PLUGIN_ROOT}/engine/status-translations.md for all state descriptions
     - Include contextual confidence explanation
     - Suggest specific skills for any gaps
 
@@ -127,7 +127,7 @@ When transitioning from Deliver to Complete, run this checklist. Items marked `R
 
 ### Auto-Checked (Machine Verifiable)
 
-Check `product_type` from `diamonds/active.yml` to determine which auto-checks apply.
+Check `product_type` from `.claude/diamonds/active.yml` to determine which auto-checks apply.
 
 **For software and ai_tool (code components):**
 
@@ -166,7 +166,7 @@ Check `product_type` from `diamonds/active.yml` to determine which auto-checks a
 - Check: Scan all project files for secret patterns (same as gate.sh)
 - If secrets found: **GATE FAILED**
 
-### Delivery-Type Dependent (from canvas-guidance.yml)
+### Delivery-Type Dependent (from ${CLAUDE_PLUGIN_ROOT}/engine/canvas-guidance.yml)
 
 **For user_facing work (G-V2, G-V8, G-V9 REVIEW)**:
 - Check: Has services.yml been assessed? (count of "not-assessed" < 15)
@@ -187,13 +187,13 @@ Check `product_type` from `diamonds/active.yml` to determine which auto-checks a
 ### Always Required (REVIEW)
 
 **Success criteria declared (G-V11 REVIEW)**:
-- Check: Does decision-log.md have success criteria recorded for this delivery (from `/mycelium:preflight`)?
+- Check: Does .claude/harness/decision-log.md have success criteria recorded for this delivery (from `/mycelium:preflight`)?
 - If no success criteria found: **GATE FAILED** -- "No success criteria declared. Run `/mycelium:preflight` and declare what will be true after delivery and how to verify it."
 - If criteria exist: verify each criterion is satisfied. Report pass/fail per criterion.
 - This catches the denominator problem: without declared criteria, "done" = "whatever we built."
 
 **Decision log (G-P4)**:
-- Check: Does decision-log.md have an entry for this delivery?
+- Check: Does .claude/harness/decision-log.md have an entry for this delivery?
 - If no entry since diamond was created: **GATE FAILED** -- "Log the delivery decision."
 
 **BVSSH Quick-Check (Smart -- Fix 6)**:
@@ -267,13 +267,13 @@ Use when evidence invalidates the current framing but the underlying need is sti
 **Workflow**:
 1. State the invalidating evidence (what did we learn that broke the old framing?)
 2. Propose the new framing (scope change, audience change, JTBD refinement)
-3. Log decision in decision-log.md with:
+3. Log decision in .claude/harness/decision-log.md with:
    - Original framing
    - Invalidating evidence
    - New framing
    - Theory: which framework informed the pivot (Torres "evidence-guided", Cagan "value risk", etc.)
    - Confidence delta (the pivot should REDUCE confidence initially — you have less evidence for the new framing)
-4. Update `diamonds/active.yml`:
+4. Update `.claude/diamonds/active.yml`:
    - Phase often regresses (e.g., Define → Discover) to gather evidence on the new framing
    - Confidence resets to match the new framing's evidence level
    - Add `pivot_history` entry listing old and new framings
@@ -286,15 +286,15 @@ Use when the diamond cannot progress right now but may be revisitable later. Exa
 
 **Workflow**:
 1. State the blocking condition(s) — what would un-park this?
-2. Log decision in decision-log.md with:
+2. Log decision in .claude/harness/decision-log.md with:
    - Reason for parking
    - Conditions for resuming
    - Expected timeline (best guess)
    - Theory: Goldratt ToC (constraint waiting on resolution) or Torres (evidence insufficient, acceptable to pause)
-3. Update `diamonds/active.yml`:
+3. Update `.claude/diamonds/active.yml`:
    - State → `parked`
    - Add `parked_reason`, `parked_at`, `resume_conditions` fields
-4. Parked diamonds remain in active.yml but do not count against WIP limits
+4. Parked diamonds remain in `.claude/diamonds/active.yml` but do not count against WIP limits
 5. `/mycelium:feedback-review` and `/mycelium:diamond-assess` surface parked diamonds with their resume conditions at session start
 
 ### Kill (abandon with documented reason)
@@ -304,20 +304,20 @@ Use when the diamond cannot be rescued via pivot or park. Example: the opportuni
 **Workflow**:
 1. State the reason for killing — what evidence makes this diamond dead?
 2. Confirm with user (kill is destructive) — present the reason, ask for explicit confirmation
-3. Log decision in decision-log.md with:
+3. Log decision in .claude/harness/decision-log.md with:
    - Final state of the diamond
    - Reason for kill
    - Alternatives considered (why not pivot, why not park?)
    - Theory: Kahneman (sunk cost fallacy — kill is correct when evidence says continuing is worse than stopping)
    - What we learned (the learning is the deliverable for a killed diamond)
-4. Update `diamonds/active.yml`:
+4. Update `.claude/diamonds/active.yml`:
    - Move to `killed_diamonds` section (NOT deleted — canvas data is preserved)
    - Add `killed_at`, `killed_reason`, `learnings` fields
 5. Do NOT delete canvas artifacts associated with the killed diamond — they are learning for future work
-6. Capture the learning in `memory/patterns.md` and `memory/corrections.md` as appropriate
-7. **Record cycle in `canvas/cycle-history.yml`**: Killed diamonds are terminal states. Record predicted ICE/effort, actual outcome as "killed", reason, and phase at kill. This feeds adaptive thresholds and pattern detection.
+6. Capture the learning in `.claude/memory/patterns.md` and `.claude/memory/corrections.md` as appropriate
+7. **Record cycle in `.claude/canvas/cycle-history.yml`**: Killed diamonds are terminal states. Record predicted ICE/effort, actual outcome as "killed", reason, and phase at kill. This feeds adaptive thresholds and pattern detection.
 
-### Dogfood Mode Modifier (from canvas-guidance.yml)
+### Dogfood Mode Modifier (from ${CLAUDE_PLUGIN_ROOT}/engine/canvas-guidance.yml)
 
 When the project has `dogfood: true` set, stop conditions become Mycelium learnings rather than project deaths. In dogfood mode, a killed diamond generates a dogfood report entry in `.claude/evals/dogfood-reports/` instead of only being logged as a project kill. The framework gap caught is the real deliverable.
 

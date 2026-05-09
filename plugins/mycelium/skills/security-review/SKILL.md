@@ -103,7 +103,7 @@ Language-agnostic security review based on OWASP Secure by Design.
 - [ ] **Model Theft**: Model weights and fine-tuning data access-controlled
 
 ## Decision Log (MANDATORY per G-P4)
-**APPEND** a `### Security Review` entry to `harness/decision-log.md` with: OWASP categories assessed, findings, risk ratings, remediation recommendations.
+**APPEND** a `### Security Review` entry to `.claude/harness/decision-log.md` with: OWASP categories assessed, findings, risk ratings, remediation recommendations.
 
 ## Stack-Specific Tools
 Consult `${CLAUDE_PLUGIN_ROOT}/jit-tooling/security-scanning.md` for tool selection per stack.

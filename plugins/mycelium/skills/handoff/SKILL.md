@@ -19,7 +19,7 @@ Generate structured materials for tasks the human does offline. Bridges the gap 
 ## Workflow
 
 1. **Identify the evidence gap**:
-   - Read active diamond state from `diamonds/active.yml`
+   - Read active diamond state from `.claude/diamonds/active.yml`
    - Check canvas provenance for `source_classes` distribution
    - Identify which canvas sections lack `external_human` or `external_data` evidence
    - State the gap plainly: "We have [N] evidence sources but none from real conversations."
@@ -97,7 +97,7 @@ Generate structured materials for tasks the human does offline. Bridges the gap 
    ---
    ```
 
-5. **Write to `canvas/human-tasks.yml`**:
+5. **Write to `.claude/canvas/human-tasks.yml`**:
    - Add a `pending_tasks` entry with all fields populated
    - Set `status: pending`
    - Link to the relevant canvas section via `canvas_refs`
@@ -110,7 +110,7 @@ Generate structured materials for tasks the human does offline. Bridges the gap 
 
 ## Canvas Output
 
-- Writes to: `canvas/human-tasks.yml` (pending_tasks section)
+- Writes to: `.claude/canvas/human-tasks.yml` (pending_tasks section)
 - References: whatever canvas section has the evidence gap
 
 ## Theory Citations

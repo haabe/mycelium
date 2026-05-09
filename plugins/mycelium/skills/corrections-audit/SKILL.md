@@ -37,7 +37,7 @@ Analyze corrections.md for trends, recurring patterns, and actionable insights.
    - If human-written corrections dominate (>60%): flag for process/training improvement
    - If ai-assisted is high: check if the AI contribution or the human contribution caused the issue
 
-4b. **Cross-check with detection_origin** (when field is present — see memory/README.md):
+4b. **Cross-check with detection_origin** (when field is present — see .claude/memory/README.md):
    - Count corrections by `Detection_origin` if present (user / agent_self / hook / evaluator / eval_runner / external_review)
    - **Critical disambiguation**: if Origin is heavily ai-generated AND detection_origin is heavily `user`, the apparent AI-quality signal is actually a HARNESS-DETECTION GAP. The AI is generating failures and the user is the only entity catching them. The right intervention is more harness checks (hooks, evaluators), NOT more AI context.
    - If detection_origin is dominantly `user` (>70%): flag for harness-detection gap. Suggest where new hooks or evaluators could catch the failure modes earlier.
@@ -53,8 +53,8 @@ Analyze corrections.md for trends, recurring patterns, and actionable insights.
 
 6. **Identify graduation candidates** (across corrections, warnings, AND cluster-instances):
    - Correction logged 3+ times with same root cause -> propose new guardrail (draft G-XX entry) AND ensure a cluster-instances.md entry exists for the pattern
-   - Warning class with `Count: 3+` and `Status: open` in warnings-log.md -> graduation candidate. Consult `warning-handbook.md` for the canonical fix; if the canonical fix is "manifest-driven" or similar structural pattern that's already shipped, the recurrence indicates a regression, not a new pattern.
-   - Correction reveals a failure mode not in anti-patterns.md -> propose new anti-pattern entry
+   - Warning class with `Count: 3+` and `Status: open` in .claude/harness/warnings-log.md -> graduation candidate. Consult `${CLAUDE_PLUGIN_ROOT}/engine/warning-handbook.md` for the canonical fix; if the canonical fix is "manifest-driven" or similar structural pattern that's already shipped, the recurrence indicates a regression, not a new pattern.
+   - Correction reveals a failure mode not in ${CLAUDE_PLUGIN_ROOT}/harness/anti-patterns.md -> propose new anti-pattern entry
    - Correction reveals a successful mitigation -> propose new pattern in patterns.md
    - **Cross-cluster patterns**: when corrections + warnings together reveal the same shape (e.g., "documented rule diverges from enforcement" — fired both via validator gaps in warnings-log AND via agent-behavior corrections), graduate to a meta-pattern in patterns.md and consider whether one upstream mechanism could close both surfaces.
 
@@ -62,7 +62,7 @@ Analyze corrections.md for trends, recurring patterns, and actionable insights.
    For each entry in `cluster-instances.md`:
    - **Update instance count**: if any correction logged since the last audit fits an existing cluster's shape, increment that cluster's instance count and add a row to its instance log. If the shape is new and recurs (≥2 candidates), propose a new cluster section.
    - **Check graduation criterion**: each cluster has a stated graduation criterion (e.g., "≥3 instances, ≥3 detection rules validated, <5% FP"). If a cluster has crossed its criterion without being graduated, flag it as a graduation-readiness signal.
-   - **Cross-reference spec docs**: if a cluster has a `spec` graduation status (e.g., "documented-rule-diverges-from-enforcement" → `engine/consistency-check-spec.md`), check whether new instances introduce subclass shapes the spec hasn't yet considered. New subclasses extend the spec; recurring known subclasses just increment the count.
+   - **Cross-reference spec docs**: if a cluster has a `spec` graduation status (e.g., "documented-rule-diverges-from-enforcement" → `${CLAUDE_PLUGIN_ROOT}/engine/consistency-check-spec.md`), check whether new instances introduce subclass shapes the spec hasn't yet considered. New subclasses extend the spec; recurring known subclasses just increment the count.
    - **Surface mis-counted clusters**: a recurring failure mode silently accumulating without a cluster entry IS the harness-context-debt the cluster log was created to scope. If you find correction patterns that should have been counted but weren't, propose backfill entries.
    - **Recursive check**: a cluster's graduation criterion not being honored is itself an instance of the documented-rule-diverges-from-enforcement cluster. If you detect this, log it as a new instance of that cluster (with appropriate eyebrow-raising in the report).
 
@@ -78,9 +78,9 @@ Analyze corrections.md for trends, recurring patterns, and actionable insights.
 7. **Consolidate memory files** (automated hygiene):
    - **Deduplication**: Identify corrections that describe the same root cause in different words. Merge into a single entry, preserving all dates and evidence.
    - **Contradiction detection**: Flag corrections that contradict each other (e.g., "always use X" vs "never use X"). Present conflicts to the user for resolution.
-   - **Staleness removal**: Corrections older than 6 months whose prevention has been verified effective (no recurrence) can be archived to `memory/corrections-archive.md`.
+   - **Staleness removal**: Corrections older than 6 months whose prevention has been verified effective (no recurrence) can be archived to `.claude/memory/corrections-archive.md`.
    - **Size cap**: If corrections.md exceeds 50 entries, consolidate the oldest resolved entries into a summary paragraph in the archive.
-   - Apply the same consolidation to `memory/patterns.md`.
+   - Apply the same consolidation to `.claude/memory/patterns.md`.
    *Inspired by: greyhaven-ai/autocontext curator agent — periodic dedup, cap, and contradiction removal.*
 
 8. **Update TL;DR section**:
@@ -120,7 +120,7 @@ Period: [earliest date] to [latest date]
 ### Cluster Status (from cluster-instances.md)
 | Cluster | Instances | Status | Graduation criterion | Notes |
 |---|---|---|---|---|
-| documented-rule-diverges-from-enforcement | 8 | spec | ≥3 detection rules validated, <5% FP | Spec at engine/consistency-check-spec.md (graduated 2026-05-08) |
+| documented-rule-diverges-from-enforcement | 8 | spec | ≥3 detection rules validated, <5% FP | Spec at ${CLAUDE_PLUGIN_ROOT}/engine/consistency-check-spec.md (graduated 2026-05-08) |
 
 ### Graduation Candidates
 1. [Correction pattern] -> Proposed guardrail: G-XX "[text]" `[TIER]` `[type]`

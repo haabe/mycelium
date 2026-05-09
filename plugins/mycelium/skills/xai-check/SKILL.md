@@ -31,7 +31,7 @@ For each service in `services.yml` (loop — multiple services produce per-servi
 
 ### Stage 1 — Risk tier classification
 
-**Source canonical tier from `/mycelium:regulatory-review` output if available.** Read `canvas/privacy-assessment.yml` for prior AI Act risk classification. If `/mycelium:regulatory-review` has run, use its tier; this skill does not re-classify regulatory tiers as that would risk producing divergent classifications across two skills.
+**Source canonical tier from `/mycelium:regulatory-review` output if available.** Read `.claude/canvas/privacy-assessment.yml` for prior AI Act risk classification. If `/mycelium:regulatory-review` has run, use its tier; this skill does not re-classify regulatory tiers as that would risk producing divergent classifications across two skills.
 
 If `/mycelium:regulatory-review` has not run:
 1. Recommend running it: *"`/mycelium:regulatory-review` is the canonical AI Act tier classifier. Without it, this skill produces a provisional tier only — which is fine for early development but should not be the final source for L4/L5 transitions."*

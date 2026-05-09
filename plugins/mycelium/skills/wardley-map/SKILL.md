@@ -44,10 +44,10 @@ Strategic options based on the map:
 - Tower and moat: Invest in defensibility
 
 ## Output
-Update canvas/landscape.yml with components, evolution stages, movements, and gameplay options.
+Update .claude/canvas/landscape.yml with components, evolution stages, movements, and gameplay options.
 
 ## Decision Log (MANDATORY per G-P4)
-**APPEND** a `### Wardley Map Assessment` entry to `harness/decision-log.md` with: components mapped, evolution stages, strategic gameplay identified, recommendations.
+**APPEND** a `### Wardley Map Assessment` entry to `.claude/harness/decision-log.md` with: components mapped, evolution stages, strategic gameplay identified, recommendations.
 
 ## Connection to Other Frameworks
 - Evolution stage maps to Cynefin domain (use `/mycelium:cynefin-classify`)

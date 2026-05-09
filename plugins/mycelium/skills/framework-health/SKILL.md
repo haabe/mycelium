@@ -19,7 +19,7 @@ Mycelium evaluates its own process. This is triple-loop learning — the framewo
 
 ### 1. Load Cycle Data
 
-Read `canvas/cycle-history.yml`. If fewer than 5 cycles recorded, report:
+Read `.claude/canvas/cycle-history.yml`. If fewer than 5 cycles recorded, report:
 "Insufficient cycle data for framework health assessment. [N] cycles recorded; minimum 5 needed. Continue recording outcomes."
 
 ### 2. Measure Five Dimensions
@@ -69,10 +69,10 @@ If a scenario fails its `success_criteria` for the first time, log to correction
 
 ### 3. Run Threshold Calibration
 
-If cycle count ≥ minimum_n for any threshold in `canvas/thresholds.yml`:
-- Apply calibration rules from `engine/adaptive-thresholds.md`
+If cycle count ≥ minimum_n for any threshold in `.claude/canvas/thresholds.yml`:
+- Apply calibration rules from `${CLAUDE_PLUGIN_ROOT}/engine/adaptive-thresholds.md`
 - Update calibrated values
-- Log changes in decision-log.md
+- Log changes in .claude/harness/decision-log.md
 
 ### 4. Check Goodhart Counter-Metrics
 
@@ -85,7 +85,7 @@ For each dimension, verify the counter-metric is not degrading:
 
 Read `.claude/memory/cluster-instances.md`. For each cluster:
 - **Compare instance count to graduation criterion.** If a cluster has reached or exceeded its stated criterion without being graduated to the corresponding mechanism (e.g., 6+ instances with spec-only status when promotion bar requires implemented detection rules), surface as a graduation-readiness flag.
-- **For `spec`-status clusters with linked spec docs** (e.g., `engine/consistency-check-spec.md`): check whether the spec's promotion-bar conditions have been met. Concretely: count detection rules drafted vs. required, FP-rate measurements available vs. needed.
+- **For `spec`-status clusters with linked spec docs** (e.g., `${CLAUDE_PLUGIN_ROOT}/engine/consistency-check-spec.md`): check whether the spec's promotion-bar conditions have been met. Concretely: count detection rules drafted vs. required, FP-rate measurements available vs. needed.
 - **Recursive check**: if a cluster's stated graduation criterion has been met for >30 days without graduation action, that's itself an instance of the documented-rule-diverges-from-enforcement cluster — log it.
 - **Output**: include cluster status in the dashboard under a new "Cluster Graduation Status" section.
 
@@ -144,7 +144,7 @@ Period: [date range]
 
 ### Pattern Signals Active
 
-[List any active pattern detector signals from engine/pattern-detector.md]
+[List any active pattern detector signals from ${CLAUDE_PLUGIN_ROOT}/engine/pattern-detector.md]
 
 ### Recommendations
 
@@ -155,7 +155,7 @@ Period: [date range]
 
 - Never modify thresholds without sufficient data (respect minimum_n)
 - Always check counter-metrics before celebrating improvement
-- Log all threshold changes in decision-log.md
+- Log all threshold changes in .claude/harness/decision-log.md
 - If all dimensions are healthy, say so and suggest next review date
 
 ## Theory Citations

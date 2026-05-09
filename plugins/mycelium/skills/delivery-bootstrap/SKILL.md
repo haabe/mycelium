@@ -10,9 +10,9 @@ Just-in-Time tech stack detection and setup.
 
 ## Workflow
 
-1. **Check product_type** from `diamonds/active.yml`:
+1. **Check product_type** from `.claude/diamonds/active.yml`:
    - If `product_type` is set (from `/mycelium:interview`), use it to determine the delivery profile.
-   - If not set, scan for indicators per `detector.md` Step 1b:
+   - If not set, scan for indicators per `${CLAUDE_PLUGIN_ROOT}/jit-tooling/detector.md` Step 1b:
      - Curriculum/lesson plans, LMS config -> `content_course`
      - Manuscript/chapters, editorial calendar -> `content_publication`
      - Video scripts, subtitle files, podcast RSS -> `content_media`

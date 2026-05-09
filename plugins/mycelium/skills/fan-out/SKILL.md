@@ -14,7 +14,7 @@ instruction_budget: 22
 ## Workflow
 
 ### 1. Prepare (Lead Agent)
-- Read canvas/opportunities.yml
+- Read .claude/canvas/opportunities.yml
 - Identify solutions needing parallel work
 - For each: identify riskiest assumption and design test
 
@@ -29,14 +29,14 @@ For each solution:
 - Update ICE scores in canvas
 - Run `/mycelium:bias-check` on combined findings
 - Select winner(s) based on evidence
-- Log decision in decision-log.md
+- Log decision in .claude/harness/decision-log.md
 
 ### Leaf Bakeoff Mode
 
 When comparing competing OST leaves for the same opportunity:
 - Each worker returns a structured **scorecard** (Four Risks + ICE + assumption test result + segment fit)
 - Lead agent applies **winner selection rules**: clear winner (>20% ICE delta), close race (tiebreaker), segment split (both advance), both fail (archive and re-evaluate)
-- Losers are archived to `canvas/archived-solutions.yml` with full evidence snapshot
+- Losers are archived to `.claude/canvas/archived-solutions.yml` with full evidence snapshot
 
 See `${CLAUDE_PLUGIN_ROOT}/orchestration/leaf-bakeoff.md` for the complete bakeoff protocol.
 

@@ -18,7 +18,7 @@ Progressive onboarding through structured discovery conversation.
 
 ### Phase 0: Canvas state detection (ALWAYS FIRST)
 
-Read `canvas/purpose.yml` and `canvas/diamonds/active.yml` at session start. Determine state:
+Read `.claude/canvas/purpose.yml` and `.claude/diamonds/active.yml` at session start. Determine state:
 
 - **Canvas empty** (template-only fields, no diamonds in `active_diamonds`): proceed to **Universal Brief Flow** below.
 - **Canvas populated** (purpose statement set OR diamonds present): proceed to **Continuing-Project Routing** below.
@@ -64,12 +64,12 @@ Output the brief markdown to the chat. This is the visible payoff and it MUST ap
 
 Read+Edit in parallel where possible (one tool batch for Reads, one for Edits) to minimize TUI noise:
 
-- `canvas/purpose.yml`: purpose statement from Q1, JTBD functional from Q1+Q2, workarounds from Q2. Tag all entries `source_class: internal_stakeholder, validated: false`.
-- `canvas/diamonds/active.yml`: L0 Purpose diamond, phase Discover, `confidence: 0.15` (hardcoded floor for brief-only state — see DEFERRED note at end of file), evidence_type: internal_stakeholder, theory_gates_status all pending, note: `created_via: brief`.
+- `.claude/canvas/purpose.yml`: purpose statement from Q1, JTBD functional from Q1+Q2, workarounds from Q2. Tag all entries `source_class: internal_stakeholder, validated: false`.
+- `.claude/diamonds/active.yml`: L0 Purpose diamond, phase Discover, `confidence: 0.15` (hardcoded floor for brief-only state — see DEFERRED note at end of file), evidence_type: internal_stakeholder, theory_gates_status all pending, note: `created_via: brief`.
 
 Do NOT write `opportunities.yml`, `north-star.yml`, `landscape.yml`, or any other canvas file from the brief alone — those are populated when the user picks a depth option.
 
-After writes, output one line: `Saved your brief to canvas (purpose.yml + diamonds/active.yml).`
+After writes, output one line: `Saved your brief to canvas (purpose.yml + .claude/diamonds/active.yml).`
 
 #### Step 3 — Render the depth menu (informed by brief content)
 
@@ -259,7 +259,7 @@ Ask: "Let me understand the project scope to tailor the framework:"
   - Service offering (consulting, coaching, agency)
   - Other (describe)
 
-Store as `product_type` on the L0 diamond entry in `diamonds/active.yml` (per-diamond field, not root-level). Child diamonds inherit product_type from their parent unless overridden. Load delivery profile from `canvas-guidance.yml#product_types`.
+Store as `product_type` on the L0 diamond entry in `.claude/diamonds/active.yml` (per-diamond field, not root-level). Child diamonds inherit product_type from their parent unless overridden. Load delivery profile from `${CLAUDE_PLUGIN_ROOT}/engine/canvas-guidance.yml#product_types`.
 
 **Project scope**:
 - Is this a solo or team project?
@@ -280,7 +280,7 @@ Load canvas guidance from `${CLAUDE_PLUGIN_ROOT}/engine/canvas-guidance.yml` for
 > "Is this primarily a real product that you intend to ship, or are you using this project mostly as a vehicle to test and learn Mycelium itself?"
 
 If the user says it's primarily about learning Mycelium:
-- Set `dogfood: true` in `diamonds/active.yml` (in addition to `project_type`)
+- Set `dogfood: true` in `.claude/diamonds/active.yml` (in addition to `project_type`)
 - Explain what this enables: mocked personas via `/mycelium:mocked-persona-interview`, honest stop conditions, dogfood reports as the real deliverable
 - Reference `.claude/evals/dogfood-reports/README.md` for the pattern
 - Note that theory gates will accept "documented Mycelium learning" as evidence in place of user research
@@ -293,11 +293,11 @@ Report to user: "Based on this being a [type] project [+ dogfood modifier if app
 - **Optional**: [list] -- "You can skip these for this project type."
 - **If dogfood**: "Mocked personas are acceptable via `/mycelium:mocked-persona-interview`. The real deliverable is a dogfood report at session end."
 
-Store classification in `diamonds/active.yml` as `project_type`. If dogfood, also store `dogfood: true`.
+Store classification in `.claude/diamonds/active.yml` as `project_type`. If dogfood, also store `dogfood: true`.
 
 ### Threshold Implications (v0.11.0)
 
-After classifying project_type (and dogfood status), inform the user of threshold adaptations from `confidence-thresholds.yml#project_type_adaptations`:
+After classifying project_type (and dogfood status), inform the user of threshold adaptations from `${CLAUDE_PLUGIN_ROOT}/engine/confidence-thresholds.yml#project_type_adaptations`:
 
 "Based on your project type, confidence thresholds are adapted:
 - L0 Purpose: [base] -> [effective] (base [base] x [project_type multiplier] [x dogfood multiplier if applicable])
@@ -308,10 +308,10 @@ After classifying project_type (and dogfood status), inform the user of threshol
 - Note: evidence quality and external evidence requirements are NOT reduced -- you still need at least one real human conversation before shipping purpose or opportunity diamonds."
 
 **Canvas setup**: Based on the product_type, create the appropriate delivery metrics canvas:
-- software -> `canvas/dora-metrics.yml` (already exists as template)
-- content_course/content_publication/content_media -> `canvas/content-metrics.yml`
-- ai_tool -> `canvas/ai-tool-metrics.yml`
-- service_offering -> `canvas/service-metrics.yml`
+- software -> `.claude/canvas/dora-metrics.yml` (already exists as template)
+- content_course/content_publication/content_media -> `.claude/canvas/content-metrics.yml`
+- ai_tool -> `.claude/canvas/ai-tool-metrics.yml`
+- service_offering -> `.claude/canvas/service-metrics.yml`
 
 Tell the user: "I've set up [canvas name] for tracking your delivery metrics. When you reach L4, run `/mycelium:dora-check` to assess delivery health."
 
@@ -323,7 +323,7 @@ Follow `${CLAUDE_PLUGIN_ROOT}/jit-tooling/metrics-detector.md`:
 3. Confirm each candidate source. For novel sources with no adapter, follow `metrics-adapters/GENERATING.md`.
 4. Write `.claude/jit-tooling/active-metrics.yml`.
 
-Tell the user: "I've configured N metric source(s) in `active-metrics.yml`. Run `/mycelium:metrics-pull` whenever you want a fresh snapshot — I'll also remind you before `/mycelium:diamond-assess` at L0/L1/L2/L5 if the latest is >7 days old."
+Tell the user: "I've configured N metric source(s) in `.claude/jit-tooling/active-metrics.yml`. Run `/mycelium:metrics-pull` whenever you want a fresh snapshot — I'll also remind you before `/mycelium:diamond-assess` at L0/L1/L2/L5 if the latest is >7 days old."
 
 If the user prefers to defer this: skip, note in the interview summary, and suggest `/mycelium:metrics-detect` later.
 
@@ -343,7 +343,7 @@ Write a decision-log entry for the interview itself. The interview shapes all do
 
 ### Theory Gates Initialization (v0.11.1)
 
-When creating the L0 diamond in `active.yml`, initialize `theory_gates_status` with ALL applicable gates for the diamond's scale. Use the Quick Reference table in `theory-gates.md#quick-reference-gates-per-scale-for-theory_gates_status-initialization`:
+When creating the L0 diamond in `active.yml`, initialize `theory_gates_status` with ALL applicable gates for the diamond's scale. Use the Quick Reference table in `${CLAUDE_PLUGIN_ROOT}/engine/theory-gates.md#quick-reference-gates-per-scale-for-theory_gates_status-initialization`:
 
 | Scale | Gates to Initialize |
 |-------|-------------------|

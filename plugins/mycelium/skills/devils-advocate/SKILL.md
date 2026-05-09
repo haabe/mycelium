@@ -48,4 +48,4 @@ Attack your own position:
 - When the team feels "certain" (certainty is a bias signal)
 
 ## Output
-Log the challenge results in decision-log.md alongside the decision.
+Log the challenge results in .claude/harness/decision-log.md alongside the decision.

@@ -173,7 +173,7 @@ The output has two parts: a short welcome (closes the install→setup void for u
 > - `.claude/canvas/` + `.gitkeep` (canvas files will be populated by `/mycelium:interview` or `/mycelium:canvas-update`)
 > - `.claude/diamonds/active.yml` (empty)
 > - `.claude/memory/corrections.md`, `patterns.md` (empty)
-> - `.claude/harness/decision-log.md`, `warnings-log.md` (empty)
+> - `.claude/harness/decision-log.md`, `.claude/harness/warnings-log.md` (empty)
 > - `.claude/evals/.gitkeep`, `.claude/jit-tooling/.gitkeep` (empty dirs preserved for git)
 > - `AGENTS.md` at project root  ← include this line ONLY if AGENTS.md was actually written this session
 >

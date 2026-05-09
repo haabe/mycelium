@@ -28,7 +28,7 @@ If time budget < 8 hours, scope aggressively — one vertical slice, no polish. 
 - [ ] patterns.md reviewed for applicable patterns
 - [ ] Current diamond phase is Develop or Deliver
 - [ ] Acceptance criteria are clear and measurable
-- [ ] Scenarios linked: `canvas/scenarios.yml` has scenarios for this solution, and acceptance criteria trace back to scenario success/failure states (Hoskins)
+- [ ] Scenarios linked: `.claude/canvas/scenarios.yml` has scenarios for this solution, and acceptance criteria trace back to scenario success/failure states (Hoskins)
 
 ### Scope
 - [ ] Scope fits within the time budget declared above
@@ -80,7 +80,7 @@ If time budget < 8 hours, scope aggressively — one vertical slice, no polish. 
 ### Success Criteria (G-V11)
 - [ ] Declare what will be true after this delivery increment (1-3 measurable statements)
 - [ ] Declare how each criterion will be verified (test, manual check, metric)
-- [ ] Record criteria in decision-log.md alongside the delivery decision
+- [ ] Record criteria in .claude/harness/decision-log.md alongside the delivery decision
 
 Example:
 ```

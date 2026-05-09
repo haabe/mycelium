@@ -74,7 +74,7 @@ The most important Cynefin warning: when a system in Clear becomes **complacent*
 *Source: Snowden (Cynefin evolution, cynefin.io, 2022+)*
 
 ## Decision Log (MANDATORY per G-P4)
-**APPEND** a `### Cynefin Classification` entry to `harness/decision-log.md` with: domain classified, key indicators, method routed to, confidence in classification.
+**APPEND** a `### Cynefin Classification` entry to `.claude/harness/decision-log.md` with: domain classified, key indicators, method routed to, confidence in classification.
 
 ## Theory Citations
 - Snowden: Cynefin framework (including Liminal zones and Confused/Aporetic domain renaming)

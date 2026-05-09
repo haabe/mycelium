@@ -33,8 +33,8 @@ Evaluate current diamond state and recommend next action.
    - Blockers or risks
 
 3. **Check theory gates for next transition**:
-   - Reference theory-gates.md for the current transition
-   - Check `product_type` from `diamonds/active.yml` -- gates conditioned on product_type include:
+   - Reference ${CLAUDE_PLUGIN_ROOT}/engine/theory-gates.md for the current transition
+   - Check `product_type` from `.claude/diamonds/active.yml` -- gates conditioned on product_type include:
      - **Security Gate**: full OWASP for software/ai_tool; platform-only for content; infra-only for service
      - **Delivery Metrics Gate**: routes to product-type-appropriate metrics canvas
      - **Service Quality Gate**: Downe applies to consumption experience for all product types; Nielsen only for digital interfaces
@@ -42,13 +42,13 @@ Evaluate current diamond state and recommend next action.
    - Document what is missing for failed gates
 
 4. **Check confidence threshold**:
-   - Reference confidence-thresholds.yml for the current scale
-   - Apply `project_type_adaptations` to compute effective threshold (see confidence-thresholds.yml)
+   - Reference ${CLAUDE_PLUGIN_ROOT}/engine/confidence-thresholds.yml for the current scale
+   - Apply `project_type_adaptations` to compute effective threshold (see ${CLAUDE_PLUGIN_ROOT}/engine/confidence-thresholds.yml)
    - Compare current confidence to the **effective** threshold
    - Identify what would increase confidence
 
 5. **Check for anti-patterns**:
-   - Reference anti-patterns.md
+   - Reference ${CLAUDE_PLUGIN_ROOT}/harness/anti-patterns.md
    - Flag any detected failure modes
    - For L1/L2 diamonds: also check for **system archetypes** (Senge) — Fixes That Fail, Shifting the Burden, Limits to Growth, Eroding Goals
    - At L3->L4 transitions: also run the **Design Completeness Check** (quality/CLAUDE.md) to verify all layers of the product design stack have evidence. Source: Mill, building on Garrett.
@@ -62,7 +62,7 @@ Evaluate current diamond state and recommend next action.
    - If the current diamond scale is L0, L1, L2, or L5 AND `.claude/jit-tooling/active-metrics.yml` exists:
      - For each `status: active` source, find the newest file in `.claude/evals/metrics/<source>/`.
      - If the newest snapshot is >7 days old (or missing entirely), flag as a warning and recommend `/mycelium:metrics-pull`.
-     - If `active-metrics.yml` is missing, recommend `/mycelium:metrics-detect` (softer — info-level, not a gate).
+     - If `.claude/jit-tooling/active-metrics.yml` is missing, recommend `/mycelium:metrics-detect` (softer — info-level, not a gate).
    - Rationale: evidence loops for Purpose/Strategy/Opportunity/Market depend on external signal freshness. A stale snapshot silently anchors confidence.
    - Do NOT block progression on stale snapshots — this is a NUDGE, not a gate.
 
@@ -71,9 +71,9 @@ Evaluate current diamond state and recommend next action.
 
 7b. **Check trio perspective coverage** (Torres Product Trio):
    - For the current diamond phase, verify all three perspectives (product/design/engineering) have been applied.
-   - Reference `engine/theory-gates.md` §Trio Perspective Requirement for the per-scale coverage matrix.
+   - Reference `${CLAUDE_PLUGIN_ROOT}/engine/theory-gates.md` §Trio Perspective Requirement for the per-scale coverage matrix.
    - Flag any missing perspectives as a gap: "Design perspective not yet applied at L[X]. Consider running `/mycelium:usability-check` or `/mycelium:service-check`."
-   - If perspectives are in conflict, recommend `engine/perspective-resolution.md`.
+   - If perspectives are in conflict, recommend `${CLAUDE_PLUGIN_ROOT}/engine/perspective-resolution.md`.
 
 8. **Coaching check** (Rother's Coaching Kata):
    Surface these five questions in the output to prompt the human's thinking:
@@ -85,8 +85,8 @@ Evaluate current diamond state and recommend next action.
    The coach (human) should answer these, not the agent. The agent surfaces them.
    *Source: Rother (Toyota Kata) — the 5 questions install scientific thinking as a daily habit.*
 
-9. **Log assessment in decision-log.md** (MANDATORY):
-   - APPEND a `### Diamond Assessment` entry to `harness/decision-log.md`
+9. **Log assessment in .claude/harness/decision-log.md** (MANDATORY):
+   - APPEND a `### Diamond Assessment` entry to `.claude/harness/decision-log.md`
    - Include: diamond ID and scale, gates passed/failed, current confidence with rationale, evidence gaps
    - This log entry is essential for auditability — every assessment should be documented
 
@@ -117,11 +117,11 @@ Use `${CLAUDE_PLUGIN_ROOT}/engine/status-translations.md` for translations.
 **ALWAYS render the journey map first.** Follow `${CLAUDE_PLUGIN_ROOT}/engine/wayfinding.md` to render the "You Are Here" map before any other output. This orients the user to where they are in the full L0→L5 progression before diving into gate details.
 
 ```
-[Journey map from wayfinding.md — rendered first]
+[Journey map from ${CLAUDE_PLUGIN_ROOT}/engine/wayfinding.md — rendered first]
 
 ## Where We Are
 
-Current focus: [plain-language description from status-translations.md]
+Current focus: [plain-language description from ${CLAUDE_PLUGIN_ROOT}/engine/status-translations.md]
   [1-2 sentences of context]
   Confidence: [plain word] ([number], [Gilad level]) -- [why this level, what would increase it]
 

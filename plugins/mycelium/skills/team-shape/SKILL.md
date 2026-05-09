@@ -66,7 +66,7 @@ When a team's cognitive load exceeds capacity, use fracture planes to identify t
 
 ### 5. Bounded Context Alignment (DDD)
 If the product has multiple domains or services:
-- Are bounded contexts identified? (Check canvas/bounded-contexts.yml)
+- Are bounded contexts identified? (Check .claude/canvas/bounded-contexts.yml)
 - Does each stream-aligned team own a coherent bounded context?
 - If a context is split across teams: handoff friction. Fix team boundaries.
 - If a team owns unrelated contexts: cognitive overload. Split the team or contexts.
@@ -95,5 +95,5 @@ Agency without boundaries produces chaos; boundaries without agency produces bur
 
 ## Output
 
-- Update `canvas/team-shape.yml` and `canvas/bounded-contexts.yml` with assessment results.
-- **APPEND** a `### Team Shape Assessment` entry to `harness/decision-log.md` with: team types identified, cognitive load findings, Conway alignment, recommendations. (MANDATORY per G-P4)
+- Update `.claude/canvas/team-shape.yml` and `.claude/canvas/bounded-contexts.yml` with assessment results.
+- **APPEND** a `### Team Shape Assessment` entry to `.claude/harness/decision-log.md` with: team types identified, cognitive load findings, Conway alignment, recommendations. (MANDATORY per G-P4)

@@ -6,7 +6,7 @@ instruction_budget: 126
 
 # Delivery Metrics Check
 
-Assess delivery health using product-type-appropriate metrics. Check `product_type` from `diamonds/active.yml` to determine which assessment to run.
+Assess delivery health using product-type-appropriate metrics. Check `product_type` from `.claude/diamonds/active.yml` to determine which assessment to run.
 
 **Product type routing** (v0.11.0):
 - **software**: Full DORA + APEX assessment (Parts 1-3 below)
@@ -120,7 +120,7 @@ Assess the four APEX pillars to detect AI-era delivery problems:
 
 ### Value Stream Diagnosis (if bottleneck detected)
 If DORA shows a bottleneck, map the value stream to identify WHERE in the flow the constraint lives:
-- Run `/mycelium:canvas-update` to update `canvas/value-stream.yml` with current stage timings
+- Run `/mycelium:canvas-update` to update `.claude/canvas/value-stream.yml` with current stage timings
 - Apply Theory of Constraints Five Focusing Steps (Goldratt): Identify -> Exploit -> Subordinate -> Elevate -> Repeat
 - Look for wait times >> process times (a sign of queuing, not capacity, problems)
 - Look for high handoff counts (each handoff adds delay and information loss)
@@ -134,7 +134,7 @@ If DORA shows a bottleneck, map the value stream to identify WHERE in the flow t
 
 ## Part 3: SRE Metrics (Error Budgets)
 
-If SLIs/SLOs defined in `canvas/dora-metrics.yml` sre section:
+If SLIs/SLOs defined in `.claude/canvas/dora-metrics.yml` sre section:
 - Review each service's SLI values against SLO targets
 - Calculate error budget remaining: (SLO - actual) / (1 - SLO) * 100%
 - **Healthy** (>50%): Ship features. Budget available.
@@ -146,14 +146,14 @@ Error budgets are the social contract: reliability earns the right to ship faste
 If NOT defined: "Consider defining SLIs/SLOs to balance velocity with reliability."
 
 ## Decision Log (MANDATORY)
-**Always APPEND** a `### DORA Assessment` or `### Delivery Metrics Assessment` entry to `harness/decision-log.md` with:
+**Always APPEND** a `### DORA Assessment` or `### Delivery Metrics Assessment` entry to `.claude/harness/decision-log.md` with:
 - Each metric assessed, current baseline, target, and classification level
 - The identified bottleneck and recommended improvements
 - Any shifting bottleneck signals (AI-era: coding faster but review slower)
 This ensures the delivery metrics gate has auditable evidence.
 
 ## Canvas Output
-**Always update** `canvas/dora-metrics.yml` with:
+**Always update** `.claude/canvas/dora-metrics.yml` with:
 - DORA metrics, classifications, and capability scores
 - APEX section: ai_leverage, predictability, efficiency, developer_experience
 - SRE section: SLI/SLO status, error budget remaining
@@ -163,7 +163,7 @@ This ensures the delivery metrics gate has auditable evidence.
 
 ## Part 4: Content Delivery Assessment (v0.11.0)
 
-For content_course, content_publication, content_media products. Read `canvas/content-metrics.yml`.
+For content_course, content_publication, content_media products. Read `.claude/canvas/content-metrics.yml`.
 
 ### Producer-Side (how well we make it)
 
@@ -201,13 +201,13 @@ For content_course, content_publication, content_media products. Read `canvas/co
 - Refund rate > 10% = product-market fit problem, not just delivery quality.
 
 ### Canvas Output
-Update `canvas/content-metrics.yml` with current measurements and `last_measured` timestamp.
+Update `.claude/canvas/content-metrics.yml` with current measurements and `last_measured` timestamp.
 
 ---
 
 ## Part 5: AI Tool Assessment (v0.11.0)
 
-For ai_tool products. Read `canvas/ai-tool-metrics.yml`.
+For ai_tool products. Read `.claude/canvas/ai-tool-metrics.yml`.
 
 ### Producer-Side (quality & safety)
 
@@ -239,13 +239,13 @@ For ai_tool products. Read `canvas/ai-tool-metrics.yml`.
 - Same benchmarks as content: refund rate target < 5%
 
 ### Canvas Output
-Update `canvas/ai-tool-metrics.yml` with current measurements and `last_measured` timestamp.
+Update `.claude/canvas/ai-tool-metrics.yml` with current measurements and `last_measured` timestamp.
 
 ---
 
 ## Part 6: Service Delivery Assessment (v0.11.0)
 
-For service_offering products. Read `canvas/service-metrics.yml`.
+For service_offering products. Read `.claude/canvas/service-metrics.yml`.
 
 ### Producer-Side (delivery capacity & quality)
 
@@ -269,7 +269,7 @@ For service_offering products. Read `canvas/service-metrics.yml`.
 **Revenue Health**: Refund/dispute rate, CLV, churn (retainers), NRR?
 
 ### Canvas Output
-Update `canvas/service-metrics.yml` with current measurements and `last_measured` timestamp.
+Update `.claude/canvas/service-metrics.yml` with current measurements and `last_measured` timestamp.
 
 ---
 

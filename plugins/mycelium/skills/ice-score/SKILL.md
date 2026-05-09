@@ -14,7 +14,7 @@ ICE scoring is applied to **OST solution leaves**. Each leaf must have a Four Ri
 
 ### Step 1: Verify Four Risks exist
 
-For each solution leaf in `canvas/opportunities.yml`, check that `four_risks` has been assessed:
+For each solution leaf in `.claude/canvas/opportunities.yml`, check that `four_risks` has been assessed:
 - **Value** (product lens): Do users want/need this?
 - **Usability** (design lens): Can users figure it out?
 - **Feasibility** (engineering lens): Can we build it within constraints?
@@ -76,8 +76,8 @@ Are high-scoring items benefiting from availability bias, IKEA effect, or anchor
 - Review for bias after scoring, before acting.
 
 ## Canvas Output
-Update `canvas/opportunities.yml` — write `four_risks` and `ice_score` per solution leaf.
-Update `canvas/gist.yml` with idea ICE scores and confidence levels.
+Update `.claude/canvas/opportunities.yml` — write `four_risks` and `ice_score` per solution leaf.
+Update `.claude/canvas/gist.yml` with idea ICE scores and confidence levels.
 
 ## Theory Citations
 - Ellis: ICE scoring (Impact × Confidence × Ease — Sean Ellis invented the ICE framework as part of growth methodology)

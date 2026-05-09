@@ -15,7 +15,7 @@ Self-correcting implementation loop from the n-trax pattern.
 **Step 1: Implement**
 - Create the deliverable according to the specification/acceptance criteria.
   - Software: write code. Content: write/produce content. AI tool: write prompts/configs. Service: document workflow.
-- Follow engineering-principles.md (principles apply to all product types).
+- Follow ${CLAUDE_PLUGIN_ROOT}/harness/engineering-principles.md (principles apply to all product types).
 - Apply patterns from patterns.md.
 - Check corrections.md for relevant past mistakes.
 
@@ -58,7 +58,7 @@ The validate step in the reflexion loop should use the appropriate verification 
 - Linters, formatters, schema validators, type checkers
 - Pass/fail is unambiguous — no judgment needed
 - Always run first — fastest and cheapest
-- Examples: `eslint`, `mypy`, `yamllint`, YAML schema validation against canvas-guidance.yml
+- Examples: `eslint`, `mypy`, `yamllint`, YAML schema validation against ${CLAUDE_PLUGIN_ROOT}/engine/canvas-guidance.yml
 
 ### Computational (deterministic)
 - Test runners, build systems, security scanners

@@ -39,7 +39,7 @@ Read canvas trend data and check cadence:
 ### 4. Check Loop 4 (Transformative) Health
 - When was the last eval benchmark run?
 - Are eval pass rates improving, stable, or declining?
-- Are any skills consistently underutilized? (Check decision-log.md for skill invocation patterns)
+- Are any skills consistently underutilized? (Check .claude/harness/decision-log.md for skill invocation patterns)
 - Has the escape hatch been used? How often? (Frequent = process too heavy for context)
 
 ### 5. Regression Warning Check
@@ -86,7 +86,7 @@ For each active metric, verify its counter-metric:
 - Escape hatch uses: [N] in last quarter
 
 ### Regression Warnings
-- [Any active triggers from feedback-loops.md]
+- [Any active triggers from ${CLAUDE_PLUGIN_ROOT}/engine/feedback-loops.md]
 
 ### Goodhart's Law Check
 - [Any metric/counter-metric divergences]
@@ -98,8 +98,8 @@ For each active metric, verify its counter-metric:
 ```
 
 ## Canvas Output
-Update `canvas/bvssh-health.yml` trend fields if BVSSH was assessed.
-Update `canvas/dora-metrics.yml` trend fields if DORA was assessed.
+Update `.claude/canvas/bvssh-health.yml` trend fields if BVSSH was assessed.
+Update `.claude/canvas/dora-metrics.yml` trend fields if DORA was assessed.
 Log review in `.claude/memory/product-journal.md`.
 
 ## Theory Citations

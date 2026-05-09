@@ -50,7 +50,7 @@ After the brief is rendered and the user picks a depth-menu option, the start sk
 
 If Step 2 detected existing canvas state (the user has Mycelium installed already on this project), do NOT run setup or interview. Instead, print:
 
-> "This project already has Mycelium state from [date of last write to diamonds/active.yml]. Last diamond touched: [scale, phase, confidence, name]. Three options:
+> "This project already has Mycelium state from [date of last write to .claude/diamonds/active.yml]. Last diamond touched: [scale, phase, confidence, name]. Three options:
 >   1. Run `/mycelium:diamond-assess` to see current state and what to work on next.
 >   2. Run `/mycelium:interview` to add a new idea as a sibling diamond on this product.
 >   3. Stop and look around. Canvas files are in `.claude/canvas/`."

@@ -39,7 +39,7 @@ STRIDE threat modeling for secure design.
 
    **For AI-powered systems**: Extend STRIDE with AI-specific threat dimensions:
    - **Autonomy risk**: Can the AI take actions beyond its intended scope?
-   - **Oversight gap**: Is human-in-the-loop oversight meaningful? (Test Authority/Time/Understanding per Bannerman's triad -- see security-trust.md)
+   - **Oversight gap**: Is human-in-the-loop oversight meaningful? (Test Authority/Time/Understanding per Bannerman's triad -- see ${CLAUDE_PLUGIN_ROOT}/harness/security-trust.md)
    - **Feedback poisoning**: Can adversarial inputs degrade the system over time?
    - **Opacity risk**: Can decisions be explained to affected parties?
 

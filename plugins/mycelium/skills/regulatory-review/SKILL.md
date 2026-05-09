@@ -45,9 +45,9 @@ Assess whether the product falls under AI regulation and identify compliance req
    - **service_offering**: Check if AI assists in service delivery decisions. If yes, explainability required.
 
 5. **Document findings**:
-   - Update `canvas/threat-model.yml` with regulatory classification
-   - Update `canvas/privacy-assessment.yml` if data processing is involved
-   - Log classification decision in `decision-log.md`
+   - Update `.claude/canvas/threat-model.yml` with regulatory classification
+   - Update `.claude/canvas/privacy-assessment.yml` if data processing is involved
+   - Log classification decision in `.claude/harness/decision-log.md`
 
 6. **Determine compliance path**:
    - Minimal risk: No action required beyond documentation

@@ -56,7 +56,7 @@ Benchmark the agent's performance against defined scenarios. Adapted from n-trax
 4. For saturated evals, suggest: retire or increase difficulty
 5. For broken evals, suggest: fix criteria or retire
 6. Present recommendations — do NOT auto-retire
-7. On user confirmation: set `status: retired` in scenario YAML, update pass-history.json, log in decision-log.md
+7. On user confirmation: set `status: retired` in scenario YAML, update pass-history.json, log in .claude/harness/decision-log.md
 
 ### `mine`
 Analyze audit logs to propose new eval scenarios from observed failure patterns.

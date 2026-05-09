@@ -14,13 +14,13 @@ Replace opinion-based roadmaps with evidence-guided planning. Source: Gilad (Evi
 - Derive from North Star input metrics or OKRs
 - Format: "Improve [metric] from [current] to [target] by [date]"
 - Maximum 3 goals per quarter
-- Update canvas/gist.yml goals section
+- Update .claude/canvas/gist.yml goals section
 
 ### 2. Generate Ideas (Ongoing)
 - Ideas are hypothetical ways to achieve goals
 - Most ideas fail (>80%) -- this is expected and planned for
 - Generate many, hold loosely
-- Store in canvas/gist.yml idea bank with ICE scores
+- Store in .claude/canvas/gist.yml idea bank with ICE scores
 - Never commit to an idea until evidence supports it
 
 ### 3. Score with ICE + Confidence Meter

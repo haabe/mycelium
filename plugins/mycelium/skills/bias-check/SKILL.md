@@ -12,14 +12,14 @@ Pre-research and pre-decision bias review.
 
 1. **Identify context**: What stage (L0-L5)? What activity (research, decision, evaluation)?
 
-2. **Load stage-specific checklist** from cognitive-biases.md for the current scale.
+2. **Load stage-specific checklist** from ${CLAUDE_PLUGIN_ROOT}/harness/cognitive-biases.md for the current scale.
 
 3. **For each bias on the checklist**:
    - Is this bias likely active in the current situation? (Yes/No/Maybe)
    - If Yes/Maybe: What specific mitigation will be applied?
    - Document the assessment.
 
-4. **Check agent's own biases** (from cognitive-biases.md agent section):
+4. **Check agent's own biases** (from ${CLAUDE_PLUGIN_ROOT}/harness/cognitive-biases.md agent section):
    - Sycophancy: Am I agreeing with the user when evidence says otherwise?
    - Recency: Am I overweighting recent context over earlier evidence?
    - Pattern matching: Am I assuming this is like something I've seen before without checking?
@@ -70,10 +70,10 @@ This skill should be triggered:
 - When `/mycelium:diamond-progress` or `/mycelium:diamond-assess` detects bias-related gate failures
 
 ## Canvas Output
-Record bias check in `canvas/opportunities.yml` under `bias_checks` section with date, biases mitigated, and research design adjustments made.
+Record bias check in `.claude/canvas/opportunities.yml` under `bias_checks` section with date, biases mitigated, and research design adjustments made.
 
 ## Decision Log (MANDATORY per G-P4)
-**APPEND** a `### Bias Check` entry to `harness/decision-log.md` with: activity assessed, active bias risks found, mitigations applied, agent self-check results.
+**APPEND** a `### Bias Check` entry to `.claude/harness/decision-log.md` with: activity assessed, active bias risks found, mitigations applied, agent self-check results.
 
 ## Theory Citations
 - Kahneman: Thinking, Fast and Slow (System 1/System 2)

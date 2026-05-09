@@ -64,7 +64,7 @@ Interviews are where scenarios are born. After each interview, look for narrativ
 3. **Motive**: Why they're doing this — captured in JTBD dimensions (functional, emotional, social)
 4. **Simulation**: The story itself — the "last time you tried to..." narrative IS the simulation
 
-Draft a scenario entry for `canvas/scenarios.yml` from any interview story that is rich enough. Not every interview produces a scenario — only extract when all four elements are present. A partial story is an opportunity, not a scenario.
+Draft a scenario entry for `.claude/canvas/scenarios.yml` from any interview story that is rich enough. Not every interview produces a scenario — only extract when all four elements are present. A partial story is an opportunity, not a scenario.
 
 *Source: Hoskins, "Attention to Users Is All You Need" (SAP talk, April 2026) — "Scenarios are the fundamental primitive of product thinking."*
 
@@ -77,11 +77,11 @@ This is where the most surprising insights surface. The interviewee has been pri
 *Source: Brown (EightShapes), NNGroup, IxDF.*
 
 ## Output
-- Update canvas/opportunities.yml with new evidence
-- Update canvas/user-needs.yml
-- Update canvas/jobs-to-be-done.yml
-- Update canvas/scenarios.yml with extracted scenarios (if four elements present)
-- Add snapshot to product-journal.md
+- Update .claude/canvas/opportunities.yml with new evidence
+- Update .claude/canvas/user-needs.yml
+- Update .claude/canvas/jobs-to-be-done.yml
+- Update .claude/canvas/scenarios.yml with extracted scenarios (if four elements present)
+- Add snapshot to `.claude/memory/product-journal.md`
 
 ## Handling User-Supplied Content
 

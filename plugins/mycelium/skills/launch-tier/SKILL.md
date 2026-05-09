@@ -51,7 +51,7 @@ Use biases ETHICALLY to help users understand value:
 - **Never**: Confirmshaming, hidden costs, forced continuity, misdirection
 
 ## Canvas Output
-Update `canvas/go-to-market.yml` with tier classification and launch plan.
+Update `.claude/canvas/go-to-market.yml` with tier classification and launch plan.
 
 ## Ethical Engagement Design (Eyal -- Hook Model + Indistractable)
 
@@ -80,7 +80,7 @@ Before implementing engagement design, answer honestly:
 
 Only **Facilitator** products should be built without reservation. Entertainers need honest self-assessment. Peddlers and Dealers trigger anti-pattern #10 (Dark Pattern Marketing).
 
-Update `canvas/go-to-market.yml` engagement_design section with Hook Canvas results.
+Update `.claude/canvas/go-to-market.yml` engagement_design section with Hook Canvas results.
 
 *Source: Eyal (Hooked), with ethical framework from the Manipulation Matrix*
 
@@ -107,7 +107,7 @@ If `/mycelium:bias-check` reveals significant biases, address them before finali
    **Service**: client satisfaction (NPS/CSAT), referral rate, retention, delivery lead time feedback
 
 2. **Validate scenarios against reality** (Hoskins):
-   - For each scenario in `canvas/scenarios.yml` linked to this launch: did the persona's story play out?
+   - For each scenario in `.claude/canvas/scenarios.yml` linked to this launch: did the persona's story play out?
    - Update `lifecycle.validated_in_market`: confirmed, partial, or invalidated
    - Invalidated scenarios are the most valuable learning — they reveal where the user model was wrong
 
@@ -115,7 +115,7 @@ If `/mycelium:bias-check` reveals significant biases, address them before finali
    - Do the signals confirm the L2 opportunity we solved for?
    - Are there NEW needs we didn't anticipate?
    - Did users "hire" the product for a different job than expected? (JTBD)
-   - Do real user stories suggest NEW scenarios not in `canvas/scenarios.yml`?
+   - Do real user stories suggest NEW scenarios not in `.claude/canvas/scenarios.yml`?
 
 4. **Feed back into discovery**:
    - If signals confirm: update confidence scores, mark scenarios as `validated`, celebrate validated learning
@@ -126,12 +126,12 @@ This closes the full Mycelium loop: Purpose -> Strategy -> Discovery -> Solution
 
 ## Cycle History Recording
 
-After launch feedback is captured (L5 → L2 loop), update the cycle record in `canvas/cycle-history.yml`:
+After launch feedback is captured (L5 → L2 loop), update the cycle record in `.claude/canvas/cycle-history.yml`:
 
 1. Find the cycle record for this leaf (created by `/mycelium:retrospective` at delivery completion)
 2. Add **actual** market outcomes: user metrics, adoption data, NPS/CSAT, revenue impact
    - **Source this data from `/mycelium:metrics-pull`** where possible (v0.14): 24-48h after launch to capture the bump, then weekly for the first month. Snapshots live at `.claude/evals/metrics/<source>/*.json`. This replaces manual "I checked the dashboard" reports with timestamped evidence.
-   - If `active-metrics.yml` has no configured source for the relevant channel, run `/mycelium:metrics-detect` first.
+   - If `.claude/jit-tooling/active-metrics.yml` has no configured source for the relevant channel, run `/mycelium:metrics-detect` first.
 3. Update the calibration section: compare predicted value/usability risk against actual market reception
 4. If market signals contradict the original L2 opportunity assumptions, note this as calibration data
 
@@ -140,7 +140,7 @@ If no cycle record exists yet (leaf went directly to market without retrospectiv
 This closes the data loop: predicted ICE → actual delivery metrics → actual market outcomes → calibration for future scoring.
 
 ## Decision Log (MANDATORY per G-P4)
-**APPEND** a `### Launch Tier Classification` entry to `harness/decision-log.md` with: tier assigned, positioning rationale, key risks, go-to-market approach.
+**APPEND** a `### Launch Tier Classification` entry to `.claude/harness/decision-log.md` with: tier assigned, positioning rationale, key risks, go-to-market approach.
 
 ## Theory Citations
 - Lauchengco: Loved (launch tier classification, positioning)

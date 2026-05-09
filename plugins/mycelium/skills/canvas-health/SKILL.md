@@ -19,7 +19,7 @@ Audit the canvas knowledge base for quality, consistency, and completeness. The 
 ## Workflow
 
 1. **Load project configuration**:
-   - Read `diamonds/active.yml` for `product_type` and `project_type`
+   - Read `.claude/diamonds/active.yml` for `product_type` and `project_type`
    - Read `${CLAUDE_PLUGIN_ROOT}/engine/canvas-guidance.yml` for required/recommended/optional files per project type
 
 2. **Check file presence**:
@@ -38,7 +38,7 @@ Audit the canvas knowledge base for quality, consistency, and completeness. The 
    - Flag confidence > 0.5 with `evidence_type: speculation` or `evidence_type: assumption`
    - Flag confidence > 0.7 with fewer than 2 evidence sources
    - Flag confidence values that haven't changed across git history (anchored confidence anti-pattern)
-   - Cross-check against `diamonds/active.yml` confidence
+   - Cross-check against `.claude/diamonds/active.yml` confidence
 
 5. **Check evidence type consistency**:
    - Every canvas file with `evidence_type:` should have it set to one of: `interview`, `survey`, `analytics`, `experiment`, `speculation`, `assumption`, `mocked_persona`
@@ -54,7 +54,7 @@ Audit the canvas knowledge base for quality, consistency, and completeness. The 
 
 7. **Check evidence freshness** (evidence decay):
    - Scan all `provenance` blocks across canvas files for `validated_at` or `captured_at` timestamps
-   - Compare against staleness thresholds from `engine/evidence-decay.md`:
+   - Compare against staleness thresholds from `${CLAUDE_PLUGIN_ROOT}/engine/evidence-decay.md`:
      - User needs/interviews: 90 days
      - Competitive intelligence: 90 days
      - Strategic assumptions: 180 days
@@ -81,17 +81,17 @@ Audit the canvas knowledge base for quality, consistency, and completeness. The 
    - Flag broken references as warnings ("Zombie Solution" anti-pattern)
 
 8b. **Check scenario health** (Hoskins):
-   - If `canvas/scenarios.yml` exists:
+   - If `.claude/canvas/scenarios.yml` exists:
      - Every scenario must have all four Hoskins elements populated (persona, means, motive, simulation) — flag incomplete scenarios
      - Every scenario must have `lifecycle.born_at` set — flag if missing (orphan scenario with no origin)
      - Every scenario with `confidence > 0.5` must have evidence sources — flag unsupported confidence
      - Every scenario referenced in `lifecycle.designed_against[]` → verify the solution exists in `opportunities.yml` or `gist.yml`
      - Every scenario referenced in `lifecycle.tested_against[]` → verify test date is not in the future
      - Flag scenarios with `status: draft` older than 30 days (stale draft — either promote or discard)
-   - If `canvas/scenarios.yml` does NOT exist but project_type requires it (per canvas-guidance.yml): flag as warning
+   - If `.claude/canvas/scenarios.yml` does NOT exist but project_type requires it (per ${CLAUDE_PLUGIN_ROOT}/engine/canvas-guidance.yml): flag as warning
 
 9. **Check for boilerplate content**:
-   - Flag canvas files where >50% of content matches the template defaults from canvas-guidance.yml
+   - Flag canvas files where >50% of content matches the template defaults from ${CLAUDE_PLUGIN_ROOT}/engine/canvas-guidance.yml
    - Flag files with placeholder text ("TBD", "TODO", "fill in later", "placeholder")
 
 9b. **Check `docs/` health** (added 2026-05-08 with the docs restructure):
@@ -108,8 +108,8 @@ Audit the canvas knowledge base for quality, consistency, and completeness. The 
    - **Receipts case frontmatter**: every file under `docs/receipts/cases/` must have YAML frontmatter with the required fields (id, date, contributor, contributor_link, project, mechanism_or_status, commits, subclass). Flag missing fields.
    - **Highlights rotation cadence**: if README's "How Mycelium got smarter" section has not changed in >90 days (check git log for last commit touching that section), flag as a rotation candidate per `docs/contributing/style.md#highlights-rotation`. The flag is informational; rotation is a `/mycelium:framework-health` decision, not an automatic move.
 
-10. **Log findings to decision-log.md** (MANDATORY):
-   - APPEND a `### Canvas Health Report` entry to `harness/decision-log.md`
+10. **Log findings to .claude/harness/decision-log.md** (MANDATORY):
+   - APPEND a `### Canvas Health Report` entry to `.claude/harness/decision-log.md`
    - Include: overall status (HEALTHY/WARNINGS/CRITICAL), stale evidence found, refresh recommendations
    - Use these words explicitly when applicable: "stale", "evidence", "refresh", "interview", "validate"
    - Example: "Evidence in opportunities.yml is stale (183 days old, threshold 90). Refresh needed: run fresh interviews to validate opportunity assumptions."

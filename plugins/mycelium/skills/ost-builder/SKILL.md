@@ -23,10 +23,10 @@ Build and maintain Opportunity Solution Trees from research evidence.
 
 4. **Structure hierarchically**: Group related opportunities. Identify parent-child relationships.
    - Before structuring, ensure each opportunity has been examined from **all three trio perspectives** (product, design, engineering). Product lens sees user value; design lens sees experience gaps; engineering lens sees technical constraints or enablers.
-   - Classify each opportunity's **Cynefin domain** (clear/complicated/complex). Complex-domain opportunities must produce probes (experiments), not fully-designed solutions. See `engine/cynefin-routing.md`.
+   - Classify each opportunity's **Cynefin domain** (clear/complicated/complex). Complex-domain opportunities must produce probes (experiments), not fully-designed solutions. See `${CLAUDE_PLUGIN_ROOT}/engine/cynefin-routing.md`.
 
 5. **For each leaf opportunity**, check scenario coverage:
-   - Does `canvas/scenarios.yml` have at least one scenario illustrating this opportunity?
+   - Does `.claude/canvas/scenarios.yml` have at least one scenario illustrating this opportunity?
    - If not: extract one from the research evidence. Use Hoskins' four elements: Persona (who), Means (how they interact), Motive (why — link to JTBD), Simulation (the full narrative).
    - Scenarios should emerge from interview stories, not be invented. If no interview data exists for this opportunity, flag it as an evidence gap.
 
@@ -42,7 +42,7 @@ Build and maintain Opportunity Solution Trees from research evidence.
    - **Feasibility** (engineering lens): Can we build it within constraints?
    - **Viability** (cross-cutting): Does it align with business/legal/ethical?
    Each risk must have its own evidence — a combined statement fails.
-   Write `four_risks` per solution in `canvas/opportunities.yml`.
+   Write `four_risks` per solution in `.claude/canvas/opportunities.yml`.
 
 8. **For each solution**, identify riskiest assumptions from the Four Risks:
    - Which risk dimension has the least evidence?
@@ -68,12 +68,12 @@ Build and maintain Opportunity Solution Trees from research evidence.
 
 ## Canvas Output
 
-**Always update `canvas/opportunities.yml`** with the OST contents after building or updating. This is the single source of truth for the opportunity space.
+**Always update `.claude/canvas/opportunities.yml`** with the OST contents after building or updating. This is the single source of truth for the opportunity space.
 
 Also update:
-- `canvas/scenarios.yml` if scenarios were created or refined (step 5)
-- `canvas/user-needs.yml` if new needs were identified
-- `canvas/jobs-to-be-done.yml` if JTBD dimensions surfaced during mapping
+- `.claude/canvas/scenarios.yml` if scenarios were created or refined (step 5)
+- `.claude/canvas/user-needs.yml` if new needs were identified
+- `.claude/canvas/jobs-to-be-done.yml` if JTBD dimensions surfaced during mapping
 
 ## Lean UX Connection
 
