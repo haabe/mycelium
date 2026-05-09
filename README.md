@@ -8,11 +8,15 @@ AI has made building cheap. It hasn't made *deciding* cheap. Agents will jump fr
 # Recommended (post-v0.20.0): install as a Claude Code plugin
 /plugin marketplace add haabe/mycelium
 /plugin install mycelium@haabe-mycelium
-/mycelium:setup       # creates project-state directories
-/mycelium:interview   # 10-minute discovery on your idea
+/mycelium:start       # one command: setup + 10-minute discovery
 ```
 
 Plugin install is brownfield-safe: no project-root files are modified. Skills are namespaced as `/mycelium:<name>`. See [docs/get-started.md](docs/get-started.md) for details.
+
+**On the namespace prefix.** Anthropic's plugin convention requires `/<plugin>:<skill>`, so every Mycelium skill is `/mycelium:foo`. Two ergonomics that take the typing tax down:
+
+- **Tab completion** — type `/myc<Tab>` in Claude Code and it expands to `/mycelium:`. Then a few letters of the skill name + `<Tab>` finishes it. `/mycelium:diamond-assess` is six keystrokes.
+- **Natural-language invocation** — you can also just say "run mycelium setup" or "have mycelium assess where we are." Claude Code routes to the right skill. The `/...` form is faster once you know the name; prose is fine when you don't.
 
 Legacy install (pre-v0.20.0, still supported during transition):
 ```bash
@@ -103,11 +107,12 @@ Inside Claude Code:
 ```
 /plugin marketplace add haabe/mycelium
 /plugin install mycelium@haabe-mycelium
-/mycelium:setup
-/mycelium:interview
+/mycelium:start
 ```
 
-`/mycelium:setup` creates project-state directories (`.claude/canvas/`, `.claude/diamonds/`, `.claude/memory/`, etc.) without touching your project root files (CLAUDE.md, README, LICENSE). Idempotent — re-running is a no-op. Skills are namespaced (`/mycelium:<name>`) per Anthropic's plugin convention.
+`/mycelium:start` is the recommended first-run command — it composes `/mycelium:setup` (project-state directories under `.claude/`) and `/mycelium:interview` (10-minute discovery on your idea) into one invocation, with a short welcome to bridge the install→value gap. Both sub-skills remain invocable directly if you prefer piecewise. None of the steps touch your project root files (CLAUDE.md, README, LICENSE). Idempotent — re-running on an initialized project routes to `/mycelium:diamond-assess` instead.
+
+Skills are namespaced (`/mycelium:<name>`) per Anthropic's plugin convention. Use `/myc<Tab>` to expand the prefix, or invoke in prose ("run mycelium start", "have mycelium assess current state") — Claude Code routes either form.
 
 ### Legacy install (pre-v0.20.0, still supported during transition)
 

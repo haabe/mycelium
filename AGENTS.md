@@ -9,7 +9,11 @@ This repository uses Mycelium, a theory-guided harness for AI-assisted product d
 /plugin marketplace add haabe/mycelium
 /plugin install mycelium@haabe-mycelium
 ```
-After install, run `/mycelium:setup` to create project-state directories. Skills are namespaced as `/mycelium:<name>` (e.g., `/mycelium:interview`, `/mycelium:diamond-assess`). Hooks (PreToolUse / PostToolUse / Stop / SessionStart / PostToolUseFailure) auto-fire. Plugin lives in `~/.claude/plugins/cache/...` — your project root stays user-owned.
+After install, run `/mycelium:start` (the recommended first-run command — composes setup + 10-minute discovery interview into one invocation). Skills are namespaced as `/mycelium:<name>` (e.g., `/mycelium:interview`, `/mycelium:diamond-assess`). Hooks (PreToolUse / PostToolUse / Stop / SessionStart / PostToolUseFailure) auto-fire. Plugin lives in `~/.claude/plugins/cache/...` — your project root stays user-owned.
+
+**Invoking namespaced skills.** Anthropic's plugin convention requires `/<plugin>:<skill>`. Two ergonomics make the prefix tax cheap:
+- **Tab completion** in Claude Code: `/myc<Tab>` expands to `/mycelium:`, then a few letters + `<Tab>` finishes the skill name.
+- **Natural-language invocation**: prose like "run mycelium start" or "have mycelium assess where we are" routes to the right skill. Use whichever form is faster for you.
 
 **Claude Code agents (legacy `npx degit` install — pre-v0.20.0):** your operating manual is [CLAUDE.md](CLAUDE.md). Read it first. Skills invoke as `/<name>` without namespace. Mycelium's full enforcement layer (hooks, gates, reflexion loops, framework-guard, secret detection) is Claude-Code-specific. Both install paths supported during transition; plugin form is the recommended path.
 

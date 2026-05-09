@@ -163,7 +163,11 @@ Run `/mycelium:diamond-assess` for current state.
 
 After all writes succeed, build the confirmation by checking what was actually created. Use `test -f <project_root>/AGENTS.md` to determine whether the AGENTS.md line should appear.
 
+The output has two parts: a short welcome (closes the install→setup void for users who invoked `/mycelium:setup` directly rather than `/mycelium:start`), then the created-files list, then the next-move prompt.
+
 > "Mycelium project state initialized.
+>
+> Mycelium is a discovery-and-discipline harness for AI agents — 30+ product-thinking frameworks (JTBD, OST, Wardley, Cagan four risks, Cynefin, BVSSH...) connected by evidence gates, so critical steps cannot be skipped. Your project root files (CLAUDE.md, README.md, LICENSE, etc.) are not touched; framework reference lives in plugin cache, only `.claude/` was created in your project.
 >
 > Created:
 > - `.claude/canvas/` + `.gitkeep` (canvas files will be populated by `/mycelium:interview` or `/mycelium:canvas-update`)
@@ -173,7 +177,7 @@ After all writes succeed, build the confirmation by checking what was actually c
 > - `.claude/evals/.gitkeep`, `.claude/jit-tooling/.gitkeep` (empty dirs preserved for git)
 > - `AGENTS.md` at project root  ← include this line ONLY if AGENTS.md was actually written this session
 >
-> Next: run `/mycelium:interview` to start a 10-minute discovery session and populate the canvas. Or `/mycelium:diamond-assess` if you want to add Mycelium to a project that's already partway through discovery."
+> Next: run `/mycelium:interview` to start a 10-minute discovery session — 4 questions about your idea, then a one-page brief covering who it's for, the biggest assumption, the biggest risk, and your next concrete move. Or `/mycelium:diamond-assess` if you want to add Mycelium to a project that's already partway through discovery."
 
 ## What this skill does NOT do
 
