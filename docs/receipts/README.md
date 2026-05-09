@@ -2,7 +2,7 @@
 
 **Audience**: evaluators, contributors, practitioners curious about what "Mycelium gets smarter with each project cycle" actually means in artifacts.
 **Time to read**: 5 min.
-**Last updated**: 2026-05-08.
+**Last updated**: 2026-05-09.
 
 This directory is the WORK view of how the framework has evolved: per project, per cycle, per friction-to-mechanism trace. The PEOPLE view (per contributor) lives in [CONTRIBUTORS.md](../../CONTRIBUTORS.md). Same facts, two indexes — frontmatter cross-links them.
 
@@ -34,6 +34,11 @@ Below: active patterns (multiple cases, may graduate), graduated mechanisms (cas
 | `/xai-check` skill + theory Gate 13 + AI System Card | [framework-self-correction](cases/2026-05-01-framework-self-correction.md) | Shipped (v0.16.0) |
 | Check 26 (version-bump enforcement) | [framework-self-correction](cases/2026-05-01-framework-self-correction.md) | Shipped (v0.16.0/0.16.1) |
 | `ingest_warnings.py` + `warning-handbook.md` + `warnings-log.md` | [framework-self-correction](cases/2026-05-01-framework-self-correction.md) | Shipped (v0.16.0) |
+| Plugin-form install (marketplace + plugin manifest) | [bentes-install-model](cases/2026-05-08-bentes-install-model.md) | Shipped (v0.20.x canonical 2026-05-09) |
+| `/mycelium:start` welcome + universal-flow brief | [plugin-form-dogfood](cases/2026-05-09-plugin-form-dogfood.md) | Shipped (v0.20.6) |
+| `/mycelium:migrate-from-legacy` + `--migrate-to-plugin` flag | [plugin-form-dogfood](cases/2026-05-09-plugin-form-dogfood.md) | Shipped (v0.20.10) |
+| Validator Check 27 (skills-tree parity) + manifest-file watching | [plugin-form-dogfood](cases/2026-05-09-plugin-form-dogfood.md) | Shipped (v0.20.9 / v0.20.11) |
+| Hard-gate ordering pattern (detection-then-route) in skill SKILL.md | [plugin-form-dogfood](cases/2026-05-09-plugin-form-dogfood.md) | Shipped (v0.20.11) |
 
 ### Active clusters (spec, not yet mechanism)
 

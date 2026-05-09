@@ -10,6 +10,10 @@
 | `/mycelium:setup` skill (idempotent first-run project init) | [bentes-install-model](cases/2026-05-08-bentes-install-model.md) |
 | Skill namespacing convention (`/mycelium:<name>`) | [bentes-install-model](cases/2026-05-08-bentes-install-model.md) |
 | AGENTS.md as canonical cross-agent instructions surface | [bentes-install-model](cases/2026-05-08-bentes-install-model.md) |
+| `/mycelium:start` welcome + universal-flow brief (closes install→value void) | [plugin-form-dogfood](cases/2026-05-09-plugin-form-dogfood.md) |
+| `/mycelium:migrate-from-legacy` + `--migrate-to-plugin` flag | [plugin-form-dogfood](cases/2026-05-09-plugin-form-dogfood.md) |
+| Validator Check 27 (skills-tree parity) + manifest-file watching in Check 26 | [plugin-form-dogfood](cases/2026-05-09-plugin-form-dogfood.md) |
+| Hard-gate ordering pattern in skill SKILL.md (detection-then-route) | [plugin-form-dogfood](cases/2026-05-09-plugin-form-dogfood.md) |
 | `/mocked-persona-interview` | [macos-fileviewer](cases/2026-04-macos-fileviewer.md) |
 | `/feedback-review` | [macos-fileviewer](cases/2026-04-macos-fileviewer.md) |
 | `/framework-health` | [macos-fileviewer](cases/2026-04-macos-fileviewer.md) |
