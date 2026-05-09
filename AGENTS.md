@@ -4,24 +4,33 @@ This repository uses Mycelium, a theory-guided harness for AI-assisted product d
 
 ## If you are operating in this repo
 
-**Claude Code agents:** your operating manual is [CLAUDE.md](CLAUDE.md). Read it first. Mycelium's full enforcement layer (hooks, gates, reflexion loops, framework-guard, secret detection) is Claude-Code-specific today.
+**Claude Code agents (plugin install — recommended as of v0.20.0):**
+```
+/plugin marketplace add haabe/mycelium
+/plugin install mycelium@haabe-mycelium
+```
+After install, run `/mycelium:setup` to create project-state directories. Skills are namespaced as `/mycelium:<name>` (e.g., `/mycelium:interview`, `/mycelium:diamond-assess`). Hooks (PreToolUse / PostToolUse / Stop / SessionStart / PostToolUseFailure) auto-fire. Plugin lives in `~/.claude/plugins/cache/...` — your project root stays user-owned.
 
-**Other agents (Codex, Cursor, Aider, Copilot, etc.):** active enforcement is not yet portable. You can still read and contribute to the canvas — see "Minimal path" below. The portable surface is **canvas reading + writing + decision logging**; Claude-Code-specific is **everything that fires automatically** (PreToolUse hooks, PostToolUseFailure reflexion, secret-detection, framework-guard).
+**Claude Code agents (legacy `npx degit` install — pre-v0.20.0):** your operating manual is [CLAUDE.md](CLAUDE.md). Read it first. Skills invoke as `/<name>` without namespace. Mycelium's full enforcement layer (hooks, gates, reflexion loops, framework-guard, secret detection) is Claude-Code-specific. Both install paths supported during transition; plugin form is the recommended path.
+
+**Other agents (Codex, Cursor, Aider, Copilot, etc.):** active enforcement is not yet portable. You can still read and contribute to the canvas — see "Minimal path" below. The portable surface is **canvas reading + writing + decision logging**; Claude-Code-specific is **everything that fires automatically** (PreToolUse hooks, PostToolUseFailure reflexion, secret-detection, framework-guard). For non-Claude-Code agents, the canonical instructions surface is THIS file (AGENTS.md) — Codex / Cursor / Aider / Copilot read it natively. Claude Code falls back to AGENTS.md when no CLAUDE.md exists. The framework canonical content lives at `plugins/mycelium/` in the upstream haabe/mycelium repo (skill SKILL.md files are pure markdown — readable by any agent).
 
 Agent-class consumers are tracked as a distinct persona in `.claude/canvas/jobs-to-be-done.yml#non_consumption.segments[1]`. If you're integrating Mycelium into another agent harness, open an issue — interest validates the L5 work.
 
 ## What's available
 
+Two install forms during v0.20.x transition: **plugin form** (recommended, post-v0.20.0) ships under `plugins/mycelium/` in upstream and installs to `~/.claude/plugins/cache/...`; **legacy** ships at `.claude/` directly via `npx degit`. Both are supported until plugin form is canonical.
+
 | Surface | What it is | Where | Claude-Code-specific? |
 |---|---|---|---|
-| Skills | 45 invocable workflows (interview, ost-builder, security-review, xai-check, etc.) | `.claude/skills/*/SKILL.md` | Auto-discovery is, prose is portable |
-| Upgrade | Update Mycelium framework files in this project | `bash .claude/scripts/upgrade.sh` (see [docs/ai-system-card.md](docs/ai-system-card.md), [.claude/engine/version-discipline.md](.claude/engine/version-discipline.md)) | No — pure shell |
-| Canvas | Source-of-truth product knowledge (YAML) | `.claude/canvas/*.yml` | No — pure data |
-| Diamonds | Active work state | `.claude/diamonds/active.yml` | No — pure data |
-| Memory | Accumulated corrections + patterns | `.claude/memory/` | No — pure data |
-| Hooks | Event-triggered behavior | `.claude/hooks/` | **Yes** |
-| Schemas | Validation contracts for canvas YAML | `.claude/schemas/canvas/*.schema.json` | No — pure JSON Schema |
-| Conventions | Canvas guidance (source_class, confidence, evidence types, action_flags) | `.claude/engine/canvas-guidance.yml` | No |
+| Skills | 45 invocable workflows (interview, ost-builder, security-review, xai-check, etc.). Plugin form: namespaced as `/mycelium:<name>`. Legacy: `/<name>`. | Plugin: `plugins/mycelium/skills/*/SKILL.md`. Legacy: `.claude/skills/*/SKILL.md` | Auto-discovery is, prose is portable |
+| Upgrade | Update Mycelium framework files in this project | Plugin: `/plugin update mycelium@haabe-mycelium`. Legacy: `bash .claude/scripts/upgrade.sh` (see [docs/ai-system-card.md](docs/ai-system-card.md), [.claude/engine/version-discipline.md](.claude/engine/version-discipline.md)) | No — pure shell or plugin command |
+| Canvas | Source-of-truth product knowledge (YAML) — project state, lives in user project | `.claude/canvas/*.yml` (user's project, both install forms) | No — pure data |
+| Diamonds | Active work state — project state, lives in user project | `.claude/diamonds/active.yml` (user's project, both install forms) | No — pure data |
+| Memory | Accumulated corrections + patterns — project state, lives in user project | `.claude/memory/` (user's project, both install forms) | No — pure data |
+| Hooks | Event-triggered behavior | Plugin: `plugins/mycelium/hooks/` with `hooks.json`. Legacy: `.claude/hooks/` with `.claude/settings.json` | **Yes** |
+| Schemas | Validation contracts for canvas YAML | `.claude/schemas/canvas/*.schema.json` (legacy); migrating to plugin in subsequent commits | No — pure JSON Schema |
+| Conventions | Canvas guidance (source_class, confidence, evidence types, action_flags) | `.claude/engine/canvas-guidance.yml` (legacy); migrating to plugin | No |
 | Receipts | Per-cycle case files of how Mycelium got smarter | [docs/receipts/](docs/receipts/README.md) | No — read-only doc |
 | Style guide | Voice + scent rules for any doc edit | [docs/contributing/style.md](docs/contributing/style.md) | No |
 
