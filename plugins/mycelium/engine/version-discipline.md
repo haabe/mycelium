@@ -39,6 +39,15 @@ If a single PR spans both kinds, bump on the framework-side change and let the p
 
 The line in `CLAUDE.md` (single source of truth, per `manifest.yml :: framework.version_source`) carries a one-paragraph summary of the headline changes. Keep it tight — one or two sentences per major thread, with theory citations where applicable. Downstream agents read this line on every upgrade; it's the canonical "what changed" surface.
 
+**Attribution label (added 2026-05-10):** every Version line should include the dominant attribution label naming what *triggered* the graduation. Four classes per `${CLAUDE_PLUGIN_ROOT}/engine/feedback-loops.md` Work-Mode Mix:
+
+- `lived-friction-triggered` — a specific Mycelium failure surfaced; the graduation directly fixes it.
+- `research-while-here` (or `research-while-waiting`) — gap analysis or research surfaced candidates while related work was in flight; the work is real but the trigger is opportunity, not failure.
+- `maintenance-housekeeping` — version drift fixes, citation backfills, doc restructures, mechanical sweeps.
+- `scheduled-discipline` — recurring audit graduating accumulated candidates.
+
+Most graduations are mixed; pick the label that explains ≥60% of the work. The label appears in the Version line text near the PATCH/MINOR/MAJOR justification. This makes the audit trail show *why* graduations happened, not just *what* they shipped — a defense against the graduation-velocity failure mode (anti-pattern #7 at the meta layer: one genuine lived-friction trigger extending into a session-long graduation streak via consistency rather than each graduation having its own attribution). Surfaced 2026-05-10 in-session during a 4-bump research-while-waiting day.
+
 ## How the discipline is enforced
 
 - **Pre-ship layer** (G-P-pre): the visible pre-ship analysis must include "version impact" as part of the schema/manifest checks. If the change is material, the analysis says so and proposes a tier.

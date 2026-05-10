@@ -209,6 +209,28 @@ Two structural differences matter:
 
 The third pattern (per-task token-budget telemetry surfaced into the prompt) was deliberately not borrowed — Mycelium's failure modes around constraints are process-cliff shaped, not budget-blow shaped, so the cost/benefit doesn't justify infrastructure for an unproven failure (see opportunities.yml#opp-001 for the discipline applied to a similar deferred case).
 
+## Work-Mode Mix (named 2026-05-10)
+
+Mycelium recognizes that not all framework-improvement work fits into delivery / discovery / strategy / market modes. A fifth shape exists, made legible 2026-05-10:
+
+- **Lived-friction-triggered**: a specific Mycelium failure surfaced and the work directly fixes it. Highest-confidence trigger class. Example: v0.23.3 bare-path sweep (the `/mycelium:metrics-pull` failure surfaced 30 sites of bare-path drift; the fix is structurally bounded by the trigger).
+- **Research-while-waiting** (sometimes "research-while-here"): external feedback loops are blocked but internal-mechanism work is fruitful. Gap analysis, citation backfills, doc restructures, anti-pattern enrichments. The work is real; the trigger is opportunity, not failure. Example: v0.23.2 (CBI cognitive-bias citations), v0.23.4 (lawsofsoftwareengineering 7 citations), v0.23.5 (context-rot doc + citation backfills).
+- **Maintenance-housekeeping**: version drift fixes, mechanical sweeps, hygiene. Example: v0.21.1 (plugin.json drift + Check 30).
+- **Scheduled-discipline**: recurring audit (e.g., quarterly `/mycelium:framework-health`) graduating accumulated candidates.
+
+Different rules apply per mode:
+
+| Mode | When fine | When risky |
+|---|---|---|
+| Lived-friction-triggered | Always — the trigger justifies the work | If the fix scope creeps past what the trigger actually surfaced |
+| Research-while-waiting | When it produces real research artifacts that survive attribution discipline | When session-velocity (multiple bumps in one session) extends one genuine trigger into a graduation streak via consistency rather than per-graduation attribution — meta-instance of anti-pattern #7 |
+| Maintenance-housekeeping | Always — small, mechanical | When a "small fix" is actually a behavior change in disguise |
+| Scheduled-discipline | At the scheduled cadence | When ad-hoc invocations replace the schedule's discipline |
+
+Each version-line summary in CLAUDE.md should include the dominant attribution label (most graduations are mixed; pick the one that explains ≥60% of the work). `/mycelium:corrections-audit` can flag streaks of one type or unusual mode-shifts. `/mycelium:framework-health` can quarterly-review whether the mode mix has been healthy: too much lived-friction-triggered without any research-while-waiting suggests reactive-only operation; too much research-while-waiting without any lived-friction-triggered suggests the framework isn't being exercised against real workloads.
+
+The category itself is honest naming of what was happening 2026-05-08 → 2026-05-10 anyway: 9 mechanism graduations in 9 days, mostly during a 6-8 week external-feedback-wait window. Naming the mode lets the framework defend it as legitimate AND surface its specific failure modes (graduation-velocity, attribution drift) cleanly. Source: 2026-05-10 in-conversation surfacing during Drew/Simon outreach session; corrections.md entry of same date for the meta-instance.
+
 ## For the Agent
 
 When reporting feedback loop status (via `/feedback-review`), always:

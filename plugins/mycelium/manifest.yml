@@ -53,6 +53,7 @@ framework:
 harness_framework:
   - .claude/harness/anti-patterns.md
   - .claude/harness/cognitive-biases.md
+  - .claude/harness/context-management.md
   - .claude/harness/engineering-principles.md
   - .claude/harness/guardrails.md
   - .claude/harness/guardrails-core.md

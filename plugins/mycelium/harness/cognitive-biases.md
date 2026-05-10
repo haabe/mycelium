@@ -105,8 +105,9 @@ Unlike bias (systematic error in one direction), **noise** is random scatter —
 - **Mitigation**: Always evaluate evidence independently. If evidence contradicts user expectations, present it clearly with supporting data.
 
 ### Recency Bias in Context
-- **Description**: Overweighting information that appears later in the conversation or context window.
-- **Mitigation**: When synthesizing, explicitly review earlier context. Reference all evidence, not just recent additions.
+- **Description**: Overweighting information that appears later in the conversation or context window. Symptomatic surface of the **lost-in-the-middle** effect: LLMs attend best to the start and end of context; information placed in the middle is recalled with >30% lower accuracy on long contexts.
+- **Mitigation**: When synthesizing, explicitly review earlier context. Reference all evidence, not just recent additions. For the structural anti-pattern this can cause (re-reading the same files across sessions instead of externalizing knowledge), see `${CLAUDE_PLUGIN_ROOT}/harness/anti-patterns.md` *Knowledge Reconstruction Tax*. For the framework's coherent context-rot defense layer, see `${CLAUDE_PLUGIN_ROOT}/harness/context-management.md`.
+- **Source**: Liu et al. 2023, "Lost in the Middle: How Language Models Use Long Contexts" (arXiv:2307.03172) — peer-reviewed source for the U-curve attention bias. Chroma "Context Rot" study (research.trychroma.com/context-rot, 2025) shows Claude is especially sensitive to irrelevant surrounding context relative to other models — making this mitigation Claude-particularly-load-bearing.
 
 ### Verbosity Bias
 - **Description**: Generating more detail than warranted, which can create false confidence through volume.
