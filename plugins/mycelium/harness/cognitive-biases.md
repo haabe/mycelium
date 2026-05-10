@@ -35,6 +35,7 @@ Review the relevant stage checklist before every research activity, decision poi
 | **Availability heuristic** | Vivid or emotional stories dominate over common patterns | Count frequency across all interviews. Look for quiet patterns. |
 | **Peak-end rule** | Remembering the most intense and most recent interview moments | Take structured notes. Review all notes equally in synthesis. |
 | **Framing effect** | How questions are phrased shapes the answers received | Review question guide for leading language before each session. |
+| **Curse of knowledge** | Founder/expert assumes interviewees share their domain framing and vocabulary | Use plain language. Ask "what would you call this?" Mirror interviewee vocabulary instead of jargon. *Source: Camerer, Loewenstein & Weber (1989).* |
 
 ### L3 - Solution Stage
 

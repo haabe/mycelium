@@ -66,7 +66,7 @@ For the top-ranked solutions, extract the **highest-risk assumptions** from the 
 
 ### Step 5: Bias check
 
-Are high-scoring items benefiting from availability bias, IKEA effect, or anchoring? Review for bias after scoring, before acting.
+Are high-scoring items benefiting from availability bias, IKEA effect, anchoring, or **hyperbolic discounting** (overweighting near-term Impact at the expense of longer-horizon outcomes)? Review for bias after scoring, before acting. *Source for hyperbolic discounting: Laibson, "Golden Eggs and Hyperbolic Discounting" (1997) — when the Impact dimension is rewarded for "what we can ship this sprint," delayed-payoff opportunities get systematically under-scored.*
 
 ### Output
 

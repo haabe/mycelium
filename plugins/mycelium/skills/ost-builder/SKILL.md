@@ -73,6 +73,7 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
 - Every opportunity must link to at least 2 research data points.
 - Solutions come after opportunities are understood, not before.
 - The OST is a living document. Update weekly with new research.
+- **Avoid the decoy effect**: do not generate weak solution variants whose only purpose is to make a preferred option look better in comparison. Each solution must stand on its own user-need rationale. If a solution exists only as a foil for another, drop it. *Source: Huber, Payne & Puto, "Adding Asymmetrically Dominated Alternatives" (1982) — adding a clearly inferior option shifts preference toward the dominating option without changing the underlying value.*
 
 ## Canvas Output
 

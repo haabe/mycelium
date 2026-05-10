@@ -201,4 +201,10 @@ Before finalizing the retrospective, draft a one-line counter-argument for each 
 
 This addresses the bias cluster documented in corrections.md (L5 sycophancy 2026-04-20, eval overfitting 2026-04-30, sharper-framing-isn't-righter 2026-05-03). Retrospectives are particularly bias-prone — narrative coherence is rewarded, the agent is incentivized to find tidy patterns, and post-hoc rationalization is the natural mode. Counter-arguments break that gravity.
 
+### Hindsight Bias Check
+
+Retrospectives are the natural home of *hindsight bias* — the "I knew it all along" effect that rewrites uncertainty as foreknowledge. For every claim of the form "we should have seen X coming," ask: *would I have predicted X with the evidence available BEFORE the outcome?* If the honest answer is "no, that evidence only became diagnostic in retrospect," log it as a learning about evidence interpretation, not as a missed signal. This protects future retrospectives from manufacturing false should-have-knowns that distort confidence calibration.
+
+*Source: Fischhoff, "Hindsight ≠ Foresight: The Effect of Outcome Knowledge on Judgment Under Uncertainty" (1975).*
+
 Especially important when proposing graduation candidates (recurring corrections → guardrails) — make sure the recurrence is real, not 3 instances of pattern-matching by the agent itself.
