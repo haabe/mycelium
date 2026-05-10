@@ -66,3 +66,8 @@ Warnings ingestor + corrections-audit cross-source pattern detection. ...*
 ```
 
 Each summary should answer: "If a downstream project's agent reads only this line on upgrade, will it know what changed?" If no, expand the line until yes.
+
+## Theory grounding
+
+- **Hyrum's Law** ("with a sufficient number of users of an API, it does not matter what you promise in the contract: all observable behaviors of your system will be depended on by somebody"). Every Mycelium ship is a behavior contract whether stated or not — the version-bump discipline is what gives downstream agents a fighting chance to detect when an observable behavior they depend on has shifted. The plugin install path (`/plugin update mycelium@haabe-mycelium`) makes this acute: every clone of the plugin tree by an existing user is a point at which an unstated dependency could break silently. The Version line is the user-facing contract surface; this discipline is what keeps that surface honest. Source: Wright et al., *Software Engineering at Google* (2020), ch. 22 — also at hyrumslaw.com.
+- **Leaky Abstractions** (Spolsky 2002 — "all non-trivial abstractions, to some degree, are leaky"). The plugin-form architecture abstracts install location behind `${CLAUDE_PLUGIN_ROOT}` and project-state location behind `.claude/` — but those abstractions leak whenever a bare path is left in framework content (`metrics-adapters/<source>.md` resolves wrong because the abstraction wasn't honored at every reference site). v0.20.7 swept the first level; v0.23.3 swept the second when `/mycelium:metrics-pull` failed in real invocation. Each leak is a version-bump-worthy material change because downstream agents inherit the leak. Source: Joel Spolsky, "The Law of Leaky Abstractions" (2002).

@@ -245,3 +245,7 @@ If no package manifest is found (new/empty project):
 2. Ask preferred language/framework
 3. Recommend appropriate tooling
 4. Generate initial project structure if requested
+
+## Theory grounding
+
+- **Tesler's Law of Conservation of Complexity** ("every application has an inherent amount of complexity that cannot be removed or hidden — it can only be moved"). Mycelium's JiT philosophy ("detect-and-generate over pre-shipped catalogs") is Tesler's Law applied: a pre-shipped catalog of every language × every test runner × every CI provider would shift the complexity onto framework maintenance (Cartesian-product growth, stale entries, "my stack isn't in your catalog" friction). Detect-then-generate moves the same complexity to the agent at the moment of need, where it has the project's actual context to resolve correctly. Same total complexity; different bearer. Source: Larry Tesler (1980s, attributed via Saffer, *Designing for Interaction*).

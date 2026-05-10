@@ -65,6 +65,17 @@ For each, ask: *what specific evidence supports this claim, and does any of it m
 
 This converts the framework's own anti-bias discipline into a per-publish self-check, not just a per-decision ceremony. Graduated 2026-05-09 from corrections.md TL;DR open candidate.
 
+## Technique 6: Cunningham's Law check (publish-rough-then-iterate)
+
+"The best way to get the right answer on the internet is not to ask a question; it's to post the wrong answer." — Ward Cunningham (community attribution).
+
+When deciding whether to publish a draft (a memo, a finding, a position), the bias is to wait for certainty. Cunningham's Law inverts this: a *specific wrong* answer attracts correction faster than a *vague right* one. Concretely:
+
+- A vague position ("we should think about X") gets nodded at and forgotten.
+- A specific position ("X is Y because Z") gets contradicted, sharpened, or confirmed — all of which produce information the vague position can't.
+
+Apply this when the alternative to publishing is "wait until I'm sure." If the cost of being wrong publicly is bounded (corrections.md exists, version-discipline catches drift, retrospectives review), the publish-rough-then-iterate path produces faster learning than the wait-for-certainty path. The dogfood-first discipline + receipts case structure are Mycelium's institutionalized form of this. Don't apply where the cost of being wrong is unbounded (security claims, legal positions, irreversible commitments).
+
 ## When to Use
 - Before every diamond scale transition (L2->L3, L3->L4)
 - Before architecture decisions

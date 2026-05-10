@@ -260,9 +260,17 @@ When DORA/APEX metrics identify a bottleneck, apply Goldratt's Five Focusing Ste
 
 **Key insight for AI-assisted delivery**: When AI accelerates coding (APEX), the bottleneck typically shifts to review/testing/deployment. Don't add more AI coding — fix the review pipeline.
 
-Use `canvas/value-stream.yml` to visualize the full flow and identify where the constraint lives.
+Use `.claude/canvas/value-stream.yml` to visualize the full flow and identify where the constraint lives.
 
 *Source: Goldratt (The Goal, Theory of Constraints). Note: Step 5 includes the critical warning "do not allow inertia to cause a system's constraint" — don't keep optimizing a former bottleneck out of habit.*
+
+### Brooks's Law (counter-intuition for AI-assisted delivery)
+
+"Adding manpower to a late software project makes it later" — Fred Brooks, *The Mythical Man-Month* (1975). Reasoning: new contributors require ramp-up time from existing contributors (negative throughput), and communication overhead scales as N(N-1)/2.
+
+The AI-assisted variant: adding *another AI agent* to a struggling delivery typically does not reduce time-to-ship — it adds context-window pressure, coordination overhead, and the same handoff-tax humans pay. The Theory-of-Constraints fix (find the bottleneck, fix that) almost always beats the Brooks's-Law antipattern fix (throw more agents at it).
+
+When the impulse arises to spawn a second agent on a stuck task, first ask: *what is the actual constraint, and would a second agent address it?* If the constraint is review depth, an extra coding agent makes it worse. If the constraint is parallel exploration of independent options, `/mycelium:fan-out` is the right tool — but parallel exploration is a different shape than "more agents on the same problem."
 
 ### Lean Waste Identification (Ohno — 7 Wastes / TIMWOOD)
 
