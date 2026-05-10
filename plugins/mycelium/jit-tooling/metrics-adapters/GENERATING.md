@@ -1,12 +1,12 @@
 # Generating a New Metrics Adapter
 
-Mycelium does NOT pre-ship a catalog of adapters. The detector identifies which metric sources apply to the user's project, and the agent generates an adapter the first time a novel source is encountered. This is the same philosophy as `jit-tooling/detector.md` — Mycelium does not ship test runners; it detects which one the user has and configures it. Metrics work the same way.
+Mycelium does NOT pre-ship a catalog of adapters. The detector identifies which metric sources apply to the user's project, and the agent generates an adapter the first time a novel source is encountered. This is the same philosophy as `${CLAUDE_PLUGIN_ROOT}/jit-tooling/detector.md` — Mycelium does not ship test runners; it detects which one the user has and configures it. Metrics work the same way.
 
-**Your goal as the generating agent:** produce a new `metrics-adapters/<source>.md` that a future agent (possibly a different session, possibly you after compaction) can follow to pull data from the source without any handover from the user.
+**Your goal as the generating agent:** produce a new `${CLAUDE_PLUGIN_ROOT}/jit-tooling/metrics-adapters/<source>.md` that a future agent (possibly a different session, possibly you after compaction) can follow to pull data from the source without any handover from the user.
 
 ## When to generate
 
-- `/metrics-detect` identifies a source (e.g., Plausible env var, Stripe SDK) that has no adapter file in `metrics-adapters/`.
+- `/metrics-detect` identifies a source (e.g., Plausible env var, Stripe SDK) that has no adapter file in `${CLAUDE_PLUGIN_ROOT}/jit-tooling/metrics-adapters/`.
 - The user adds a source to `active-metrics.yml` manually and asks to run `/metrics-pull`, and the adapter is missing.
 - An existing adapter's `last_known_working` is more than 180 days old AND a run fails — regenerate rather than patch.
 
@@ -14,8 +14,8 @@ Mycelium does NOT pre-ship a catalog of adapters. The detector identifies which 
 
 Before writing the adapter, collect:
 
-1. **The template**: `metrics-adapters/TEMPLATE.md` — the required shape.
-2. **The reference adapter**: `metrics-adapters/github.md` — a fully-worked traffic-class example.
+1. **The template**: `${CLAUDE_PLUGIN_ROOT}/jit-tooling/metrics-adapters/TEMPLATE.md` — the required shape.
+2. **The reference adapter**: `${CLAUDE_PLUGIN_ROOT}/jit-tooling/metrics-adapters/github.md` — a fully-worked traffic-class example.
 3. **Vendor documentation**: use `mcp__context7` for library/API docs, `WebFetch` for vendor API reference pages.
 4. **The user's confirmation** on credential approach — ask what auth they have set up. Do NOT assume.
 
@@ -60,7 +60,7 @@ If you catch yourself inventing a mapping, stop and omit instead.
 
 ### Step 4 — Write the adapter
 
-Copy `TEMPLATE.md` to `metrics-adapters/<source>.md`. Fill in every section. Use `github.md` as the shape reference — length and detail should be similar. Don't skip "Failure modes" or "Freshness" — those are where future-you will thank present-you.
+Copy `${CLAUDE_PLUGIN_ROOT}/jit-tooling/metrics-adapters/TEMPLATE.md` to `${CLAUDE_PLUGIN_ROOT}/jit-tooling/metrics-adapters/<source>.md`. Fill in every section. Use `github.md` as the shape reference — length and detail should be similar. Don't skip "Failure modes" or "Freshness" — those are where future-you will thank present-you.
 
 ### Step 5 — Validate before presenting
 
@@ -76,14 +76,14 @@ Before saving, verify:
 
 Show the drafted adapter to the user. Ask:
 
-1. "I drafted an adapter for `<source>` based on [docs/CLI/env-var you found]. Should I save it as `metrics-adapters/<source>.md`?"
+1. "I drafted an adapter for `<source>` based on [docs/CLI/env-var you found]. Should I save it as `${CLAUDE_PLUGIN_ROOT}/jit-tooling/metrics-adapters/<source>.md`?"
 2. "Credentials needed: `<credential_requirement>`. Do you have that set up, or do I need to guide you through it?"
 
 Wait for confirmation before writing and before adding the source to `active-metrics.yml`.
 
 ### Step 7 — Save and register
 
-Write the adapter to `metrics-adapters/<source>.md`. Add or update the entry in `active-metrics.yml`:
+Write the adapter to `${CLAUDE_PLUGIN_ROOT}/jit-tooling/metrics-adapters/<source>.md`. Add or update the entry in `.claude/jit-tooling/active-metrics.yml`:
 
 ```yaml
 sources:

@@ -72,10 +72,10 @@ No conflicts because different diamonds touch different canvas sections.
 
 ### Onboarding New Team Members
 1. New member reads CLAUDE.md (system overview)
-2. Reads canvas/purpose.yml (why we exist)
-3. Reads canvas/north-star.yml (what success looks like)
-4. Reads canvas/opportunities.yml (what we've discovered)
-5. Reads harness/decision-log.md (why decisions were made)
+2. Reads .claude/canvas/purpose.yml (why we exist)
+3. Reads .claude/canvas/north-star.yml (what success looks like)
+4. Reads .claude/canvas/opportunities.yml (what we've discovered)
+5. Reads .claude/harness/decision-log.md (why decisions were made)
 6. Runs `/diamond-assess` (where are we now, what needs attention)
 
 The onboarding IS reading the canvas. No separate onboarding docs needed.

@@ -2,7 +2,7 @@
 
 Mycelium detects which external metric sources apply to this product and configures them, the same way `detector.md` detects the tech stack. The goal: replace manual "I checked GitHub" / "I looked at Stripe" reports with timestamped, sourced, diffable snapshots at L0 (purpose), L1 (strategy), L2 (opportunity), and L5 (market).
 
-This file is the detection logic. The unified pull entrypoint is `/metrics-pull`. Per-source logic lives in `metrics-adapters/<source>.md` (and is generated on demand — see `metrics-adapters/GENERATING.md`).
+This file is the detection logic. The unified pull entrypoint is `/metrics-pull`. Per-source logic lives in `${CLAUDE_PLUGIN_ROOT}/jit-tooling/metrics-adapters/<source>.md` (and is generated on demand — see `${CLAUDE_PLUGIN_ROOT}/jit-tooling/metrics-adapters/GENERATING.md`).
 
 ## When This Runs
 
@@ -54,10 +54,10 @@ Accept: yes / no / later. Sources marked "later" are saved as `status: deferred`
 
 ### Step 3: Ensure Adapters Exist
 
-For each confirmed source, check `metrics-adapters/<source>.md`:
+For each confirmed source, check `${CLAUDE_PLUGIN_ROOT}/jit-tooling/metrics-adapters/<source>.md`:
 
 - **Exists**: good. Note the `last_known_working` date; flag if >180 days.
-- **Missing**: invoke the adapter-generation workflow in `metrics-adapters/GENERATING.md`. The agent generates the adapter using the template + GitHub reference + vendor docs (via `mcp__context7` / `WebFetch`), then presents it for user confirmation before saving.
+- **Missing**: invoke the adapter-generation workflow in `${CLAUDE_PLUGIN_ROOT}/jit-tooling/metrics-adapters/GENERATING.md`. The agent generates the adapter using the template + GitHub reference + vendor docs (via `mcp__context7` / `WebFetch`), then presents it for user confirmation before saving.
 
 Mycelium ships only `github.md` as the reference adapter. All other adapters are generated on demand during this step.
 
@@ -118,16 +118,16 @@ Adapters declare one of four classes; downstream delta/report logic keys off the
 ## What Mycelium Ships vs Generates
 
 **Ships** (committed to the framework, safe to replace on upgrade):
-- `metrics-detector.md` (this file)
-- `metrics-adapters/TEMPLATE.md`
-- `metrics-adapters/GENERATING.md`
-- `metrics-adapters/github.md` (reference adapter)
-- `.claude/skills/metrics-pull/SKILL.md`
-- `.claude/skills/metrics-detect/SKILL.md`
+- `${CLAUDE_PLUGIN_ROOT}/jit-tooling/metrics-detector.md` (this file)
+- `${CLAUDE_PLUGIN_ROOT}/jit-tooling/metrics-adapters/TEMPLATE.md`
+- `${CLAUDE_PLUGIN_ROOT}/jit-tooling/metrics-adapters/GENERATING.md`
+- `${CLAUDE_PLUGIN_ROOT}/jit-tooling/metrics-adapters/github.md` (reference adapter)
+- `${CLAUDE_PLUGIN_ROOT}/skills/metrics-pull/SKILL.md`
+- `${CLAUDE_PLUGIN_ROOT}/skills/metrics-detect/SKILL.md`
 
 **Generates per-project** (gitignored by default — user opts in to committing):
-- `active-metrics.yml`
-- Any other `metrics-adapters/<source>.md` produced by `GENERATING.md`
+- `.claude/jit-tooling/active-metrics.yml`
+- Any other `${CLAUDE_PLUGIN_ROOT}/jit-tooling/metrics-adapters/<source>.md` produced by `GENERATING.md` (NOTE: generated adapters MAY also be saved into a project-local override location if the user chooses; the default is plugin-resident)
 - Snapshots in `.claude/evals/metrics/<source>/YYYY-MM-DD.json`
 
 ## Freshness / Staleness Rules

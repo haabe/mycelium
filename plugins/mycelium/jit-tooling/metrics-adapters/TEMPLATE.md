@@ -2,12 +2,12 @@
 
 An adapter teaches the agent how to pull, normalize, and interpret data from one external metrics source. Adapters are **instructions, not code** — consistent with how the rest of Mycelium works. The agent reads the adapter and executes the steps.
 
-Copy this file to `metrics-adapters/<source>.md` and fill in every section. Delete this preamble and the "EDIT ME" hints when you're done.
+Copy this file to `${CLAUDE_PLUGIN_ROOT}/jit-tooling/metrics-adapters/<source>.md` and fill in every section. Delete this preamble and the "EDIT ME" hints when you're done.
 
 ## Identity
 
 - **source**: `<short identifier, lowercase, snake_case>` (e.g., `github`, `plausible`, `app_store_connect`)
-- **source_class**: `traffic | events | reviews | support` — pick ONE. See `metrics-detector.md :: Source classes` if unsure.
+- **source_class**: `traffic | events | reviews | support` — pick ONE. See `${CLAUDE_PLUGIN_ROOT}/jit-tooling/metrics-detector.md :: Source classes` if unsure.
 - **credential_requirement**: what the user must have set up (env var, CLI auth, API key path). Mycelium does NOT store secrets.
 - **last_known_working**: `YYYY-MM-DD` — date this adapter was last verified against the live API.
 - **adapter_version**: `1` — increment when the adapter changes its output shape or pull logic.

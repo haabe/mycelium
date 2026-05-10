@@ -15,8 +15,8 @@ No new canvas file. XAI signals thread through existing files where they semanti
 | XAI property | Lives in |
 |---|---|
 | Inline reasoning attribution | CLAUDE.md Communication Rule (`(per: <source>)`) |
-| Per-decision rationale, alternatives, confidence | `harness/decision-log.md` |
-| Calibration of past confidence vs reality | `canvas/cycle-history.yml`, `canvas/thresholds.yml` |
+| Per-decision rationale, alternatives, confidence | `.claude/harness/decision-log.md` |
+| Calibration of past confidence vs reality | `.claude/canvas/cycle-history.yml`, `.claude/canvas/thresholds.yml` |
 | Mistake learning | `memory/corrections.md` |
 | Successful patterns | `memory/patterns.md` |
 
@@ -28,7 +28,7 @@ Eval coverage: `evals/assumption-tests/2026-05-04-xai-inline-attribution.md`.
 
 | XAI property | Canvas file | Field / location |
 |---|---|---|
-| AI components present and what kind | `jit-tooling/active-stack.yml` | `ai_components` block (Step 1c output of detector) |
+| AI components present and what kind | `.claude/jit-tooling/active-stack.yml` | `ai_components` block (Step 1c output of detector) |
 | Risk-tier classification | `services.yml` | per-service `xai.tier: minimal\|limited\|high` |
 | Per-stakeholder explanation surfaces (Liao question matrix) | `services.yml` | per-service `xai.surfaces:` keyed by stakeholder |
 | Recourse path | `services.yml` | per-service `xai.recourse:` (path, SLA, logging) |
@@ -100,8 +100,8 @@ Asymmetric — only some target canvases have schemas today. Phase 2 status:
   - `/definition-of-done` consults Gate 13 verdicts when `ai_components.detected: true`
   - `/preflight` Constraints adds AI confirmation
   - `/diamond-progress`, `/diamond-assess` integration
-  - `domains/delivery/CLAUDE.md` and `domains/quality/CLAUDE.md` XAI sections
-  - `status-translations.md` Gate 13 entry
+  - `${CLAUDE_PLUGIN_ROOT}/domains/delivery/CLAUDE.md` and `${CLAUDE_PLUGIN_ROOT}/domains/quality/CLAUDE.md` XAI sections
+  - `${CLAUDE_PLUGIN_ROOT}/engine/status-translations.md` Gate 13 entry
 
 - **Phase 2.3 (`/threat-model` XAI extension) — pending:**
   - `threat-model.schema.json` adds `explanation_attacks` category

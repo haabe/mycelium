@@ -203,7 +203,7 @@ Two structural differences matter:
 
 **Why this framing matters.** The loop shape (evaluate-then-continue with success + budget exits) is now table stakes — vendors will continue to ship single-loop variants. Mycelium's differentiation is NOT "we have a self-evaluating loop." It is the **multi-criterion theory-gate stack** at multiple scopes plus the **regression mechanism**. When explaining Mycelium against vendor-shipped loops, anchor on these two.
 
-**What Mycelium borrowed from Codex's `/goal` implementation** (logged 2026-05-03 — see `harness/security-trust.md#prompt-injection-defense-for-user-supplied-content` and `skills/definition-of-done/SKILL.md#completion-audit-anti-bias-clauses`):
+**What Mycelium borrowed from Codex's `/goal` implementation** (logged 2026-05-03 — see `${CLAUDE_PLUGIN_ROOT}/harness/security-trust.md#prompt-injection-defense-for-user-supplied-content` and `${CLAUDE_PLUGIN_ROOT}/skills/definition-of-done/SKILL.md#completion-audit-anti-bias-clauses`):
 - Untrusted-content wrapping convention for user-supplied text in skill prompts
 - Anti-bias clauses in the DoD completion audit (don't trust intent / partial progress / elapsed effort / plausible-final-answer)
 

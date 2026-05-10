@@ -8,7 +8,7 @@ When starting a new session on an existing Mycelium project:
 
 **Note**: The SessionStart hook (`session-start.sh`) automatically checks for overdue strategic feedback loops (BVSSH, DORA) and reminds you at the start of every session.
 
-1. Run `/diamond-assess` -- see current state in plain language (includes the "You Are Here" journey map from `engine/wayfinding.md`)
+1. Run `/diamond-assess` -- see current state in plain language (includes the "You Are Here" journey map from `${CLAUDE_PLUGIN_ROOT}/engine/wayfinding.md`)
 2. Read the output: the journey map shows where you are in L0→L5, then which diamonds are active, what phase each is in, what's recommended
 3. If multiple diamonds are active, prioritize:
    - **Blocked diamonds first** (unblock before starting new work)

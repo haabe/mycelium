@@ -29,7 +29,7 @@ If `.claude/jit-tooling/active-metrics.yml` does NOT exist:
 
 ### Step 1: Load configuration
 
-Read `.claude/jit-tooling/active-metrics.yml`. Filter to sources with `status: active`. For each, verify the adapter file exists at `metrics-adapters/<source>.md`. If missing, follow `metrics-adapters/GENERATING.md` to generate it.
+Read `.claude/jit-tooling/active-metrics.yml`. Filter to sources with `status: active`. For each, verify the adapter file exists at `${CLAUDE_PLUGIN_ROOT}/jit-tooling/metrics-adapters/<source>.md`. If missing, follow `${CLAUDE_PLUGIN_ROOT}/jit-tooling/metrics-adapters/GENERATING.md` to generate it.
 
 If `confirmed_by_user: false`, ask the user to confirm the source list before proceeding.
 

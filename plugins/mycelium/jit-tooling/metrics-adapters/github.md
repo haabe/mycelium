@@ -46,7 +46,7 @@ Notes:
 
 ## Normalize
 
-Emit a snapshot matching the shared schema (`metrics-adapters/TEMPLATE.md`):
+Emit a snapshot matching the shared schema (`${CLAUDE_PLUGIN_ROOT}/jit-tooling/metrics-adapters/TEMPLATE.md`):
 
 ```yaml
 source: "github"

@@ -328,7 +328,7 @@ Tell the user: "I've set up [canvas name] for tracking your delivery metrics. Wh
 Follow `${CLAUDE_PLUGIN_ROOT}/jit-tooling/metrics-detector.md`:
 1. Scan for signals (git remote, SDK installs, env vars).
 2. Ask the user about things the repo can't reveal: deployed product URL, payment processor, app stores, support channels.
-3. Confirm each candidate source. For novel sources with no adapter, follow `metrics-adapters/GENERATING.md`.
+3. Confirm each candidate source. For novel sources with no adapter, follow `${CLAUDE_PLUGIN_ROOT}/jit-tooling/metrics-adapters/GENERATING.md`.
 4. Write `.claude/jit-tooling/active-metrics.yml`.
 
 Tell the user: "I've configured N metric source(s) in `.claude/jit-tooling/active-metrics.yml`. Run `/mycelium:metrics-pull` whenever you want a fresh snapshot — I'll also remind you before `/mycelium:diamond-assess` at L0/L1/L2/L5 if the latest is >7 days old."

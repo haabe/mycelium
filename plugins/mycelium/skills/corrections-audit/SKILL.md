@@ -80,13 +80,13 @@ Analyze corrections.md for trends, recurring patterns, and actionable insights.
    - Mistake involves a generalization (claim of structural significance, "this means", "this generalizes to")
    - At least one piece of supporting evidence in the entry's mistake or correction sections is consistency-only (the data is compatible with the hypothesis but the cause was not isolated)
    - User intervention caught the failure post-publication, not the agent pre-publication
-   If 3+ instances within a rolling 90-day window: surface as graduation-confirmed (the anti-pattern *Consistency-as-Evidence* in `harness/anti-patterns.md` #7). If the pattern recurs after graduation, that's a signal the prevention layer needs strengthening (e.g., harden Technique 4 in `/devils-advocate` from skill-time check to ambient hook).
+   If 3+ instances within a rolling 90-day window: surface as graduation-confirmed (the anti-pattern *Consistency-as-Evidence* in `${CLAUDE_PLUGIN_ROOT}/harness/anti-patterns.md` #7). If the pattern recurs after graduation, that's a signal the prevention layer needs strengthening (e.g., harden Technique 4 in `/devils-advocate` from skill-time check to ambient hook).
 
 6e. **Stale-state-read pattern detection** (added 2026-05-09 with the anti-pattern graduation):
    Scan `corrections.md` for the *Stale State Read* signature:
    - Mistake involves a script, validator, or check producing nominally-correct output against an outdated reference
    - Root cause: read default was hardcoded local path without explicit-source override, OR a sync flow read pre-replacement state
-   - Same epistemic shape as anti-pattern #8 in `harness/anti-patterns.md`
+   - Same epistemic shape as anti-pattern #8 in `${CLAUDE_PLUGIN_ROOT}/harness/anti-patterns.md`
    Track instance count. The 5th instance graduates the prevention layer beyond the existing `parse_manifest.py --manifest=<path>` worked example: scan the codebase via `validate-template.sh` Check 29 for state-reading scripts that lack explicit-source parameters. Until then, the anti-pattern entry is the primary defense.
 
 7. **Consolidate memory files** (automated hygiene):

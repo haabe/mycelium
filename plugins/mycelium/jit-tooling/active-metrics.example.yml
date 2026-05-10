@@ -22,7 +22,7 @@ sources:
     last_pulled_at: null
     # known_referrers: [...]   # optional override of defaults in github.md
 
-  # Generated on demand via metrics-adapters/GENERATING.md
+  # Generated on demand via ${CLAUDE_PLUGIN_ROOT}/jit-tooling/metrics-adapters/GENERATING.md
   plausible:
     status: "active"
     target: "example.com"      # your Plausible site

@@ -249,7 +249,7 @@ These are systemic organizational traps from Senge's "The Fifth Discipline." The
 ### 2. Perspective Skip
 - **Description**: A theory gate was passed without all three trio perspectives (product/design/engineering) documented. One or more perspectives were silently omitted.
 - **Detection rule**: Gate check log has fewer than 3 perspective entries. Or a perspective is missing without an explicit "N/A: [reason]" justification.
-- **What to do instead**: Every gate check must state all three perspectives. Omission requires explicit justification. See `engine/perspective-resolution.md`.
+- **What to do instead**: Every gate check must state all three perspectives. Omission requires explicit justification. See `${CLAUDE_PLUGIN_ROOT}/engine/perspective-resolution.md`.
 - **Source**: Torres (Product Trio), Cagan (Empowered)
 
 ### 3. Zombie Solution
@@ -261,19 +261,19 @@ These are systemic organizational traps from Senge's "The Fifth Discipline." The
 ### 4. Implicit Handoff
 - **Description**: Transition between leaf lifecycle phases without an explicit artifact and gate check. The leaf "jumped" from OST to delivery without the intermediate steps.
 - **Detection rule**: GIST idea has no `source_leaf_id`. Service entry has no `gist_id`. Threat model has no `solution_id`. Any missing link in the cross-reference chain.
-- **What to do instead**: Every lifecycle phase transition produces an artifact and checks a gate. See `engine/leaf-lifecycle.md` for the complete chain.
+- **What to do instead**: Every lifecycle phase transition produces an artifact and checks a gate. See `${CLAUDE_PLUGIN_ROOT}/engine/leaf-lifecycle.md` for the complete chain.
 - **Source**: Mycelium leaf lifecycle
 
 ### 5. Score-Only Discard
 - **Description**: A leaf was discarded solely based on its ICE score without checking if a different user segment would benefit from it.
 - **Detection rule**: `canvas/archived-solutions.yml` entry has `segments_checked` with only one segment, and `reason` is `low-ice-score`.
-- **What to do instead**: Before discarding for low ICE, evaluate whether the solution serves a different segment where it might score higher. See `engine/leaf-lifecycle.md` Discard Decision Rules.
+- **What to do instead**: Before discarding for low ICE, evaluate whether the solution serves a different segment where it might score higher. See `${CLAUDE_PLUGIN_ROOT}/engine/leaf-lifecycle.md` Discard Decision Rules.
 - **Source**: Torres (CDH — solutions serve different user needs), Mycelium leaf lifecycle
 
 ### 6. Perspective Suppression
 - **Description**: Resolving a trio conflict by ignoring a perspective entirely rather than using the perspective resolution framework. Common forms: "Engineering will figure it out" (suppresses feasibility), "Users will learn" (suppresses usability), "We'll find the users later" (suppresses value), "Legal won't notice" (suppresses viability).
 - **Detection rule**: Decision log entry shows a perspective conflict resolved with fewer than 3 perspectives documented. Or gate check has a missing perspective without explicit "N/A: [reason]" justification.
-- **What to do instead**: Use the perspective resolution framework (`engine/perspective-resolution.md`). If a perspective is overridden, document why with evidence in the decision log and tag it as a risk to monitor.
+- **What to do instead**: Use the perspective resolution framework (`${CLAUDE_PLUGIN_ROOT}/engine/perspective-resolution.md`). If a perspective is overridden, document why with evidence in the decision log and tag it as a risk to monitor.
 - **Source**: Torres (Product Trio), Cagan (Empowered), Mycelium perspective resolution framework
 
 ## Measurement Anti-Patterns

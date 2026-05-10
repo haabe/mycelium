@@ -207,21 +207,21 @@ Every leaf that reaches a terminal state (shipped, discarded, or market-rejected
 ### Why This Matters
 
 Without cycle records, the following systems have no data:
-- **Adaptive thresholds** (`engine/adaptive-thresholds.md`) — cannot calibrate ICE threshold
-- **Pattern detector** (`engine/pattern-detector.md`) — cannot identify correlations
-- **Framework reflexion** (`engine/framework-reflexion.md`) — cannot measure cycle velocity or confidence calibration
-- **Evidence decay** (`engine/evidence-decay.md`) — cannot calibrate staleness thresholds
+- **Adaptive thresholds** (`${CLAUDE_PLUGIN_ROOT}/engine/adaptive-thresholds.md`) — cannot calibrate ICE threshold
+- **Pattern detector** (`${CLAUDE_PLUGIN_ROOT}/engine/pattern-detector.md`) — cannot identify correlations
+- **Framework reflexion** (`${CLAUDE_PLUGIN_ROOT}/engine/framework-reflexion.md`) — cannot measure cycle velocity or confidence calibration
+- **Evidence decay** (`${CLAUDE_PLUGIN_ROOT}/engine/evidence-decay.md`) — cannot calibrate staleness thresholds
 
 ---
 
 ## WIP and Flow
 
-Leaf WIP follows diamond WIP limits from `diamond-rules.md`:
+Leaf WIP follows diamond WIP limits from `${CLAUDE_PLUGIN_ROOT}/engine/diamond-rules.md`:
 - L3 working WIP: 2 solutions (compare at most 2 concurrently)
 - L3 hard ceiling: 5 solutions
 - When 2 leaves are in active evaluation, others queue
 
-For parallel leaf evaluation (bakeoff), see `orchestration/leaf-bakeoff.md`.
+For parallel leaf evaluation (bakeoff), see `${CLAUDE_PLUGIN_ROOT}/orchestration/leaf-bakeoff.md`.
 
 ---
 
