@@ -21,7 +21,7 @@ This file (`docs/README.md`) is the metadocumentation: it sets the rules every o
 - `changelog.md` — version history extracted from `CLAUDE.md`
 - `ai-system-card.md` — Mycelium's own AI System Card (Mitchell et al. 2019 format)
 - `context-surface.md` — what data the agent reads under Mycelium
-- `skills/` — index of all 45 skills
+- `skills/` — index of all 49 skills
 - `receipts/` — case files of how Mycelium got smarter (per project, per cycle)
 - `contributing/` — how to contribute to the framework
 

@@ -47,7 +47,7 @@ Time-constrained projects ARE supported as of 2026-04-30: `/interview` Phase 0 p
 
 ## What it feels like
 
-Not 45 skills dumped on you at once. Three modes that show up at the right time:
+Not 49 skills dumped on you at once. Three modes that show up at the right time:
 
 | When | Experience | Example |
 |------|-----------|---------|
@@ -166,7 +166,7 @@ After upgrading, run `/diamond-assess` to see your work through the new version'
 |---|---|
 | Try it on a new project | Quick start above |
 | Understand why opinionated | [docs/philosophy.md](docs/philosophy.md) |
-| Look up a specific skill | [docs/skills/](docs/skills/README.md) (45 skills) |
+| Look up a specific skill | [docs/skills/](docs/skills/README.md) (49 skills) |
 | Check the theory grounding | [docs/theories.md](docs/theories.md) (30+ frameworks) |
 | Evaluate it for your team | [docs/evaluate.md](docs/evaluate.md) |
 | Read the FAQ | [docs/faq.md](docs/faq.md) |

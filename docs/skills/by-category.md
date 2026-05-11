@@ -4,7 +4,7 @@
 **Time to read**: 3 min.
 **Last updated**: 2026-05-08.
 
-Alternate index to the phase-first [skills/README.md](README.md). Same 45 skills, different ordering.
+Alternate index to the phase-first [skills/README.md](README.md). Same 49 skills, different ordering.
 
 ## Research & discovery
 
@@ -93,5 +93,5 @@ Mycelium itself. Use when dogfooding the framework or as part of `/framework-hea
 
 ## See also
 
-- [README.md](README.md) — phase-first index of the same 45 skills
+- [README.md](README.md) — phase-first index of the same 49 skills
 - [glossary.md](../glossary.md) — vocabulary

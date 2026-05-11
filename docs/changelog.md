@@ -2,9 +2,24 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-05-10.
+**Last updated**: 2026-05-11.
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
+
+## v0.23.7 — Count-drift correction across surface docs
+
+**2026-05-11. Attribution: maintenance-housekeeping.** Count-drift correction surfaced by a peer-agent fact-check during outreach drafting (the agent claimed "the public README confirms 32 anti-patterns" — no such number exists anywhere in the framework; grep-verification caught the fabrication; sister anti-pattern #7 instance #9 to yesterday's BDSK case).
+
+Drift swept across all surface docs:
+- **Skill count 45 → 49** (README.md ×2, docs/README.md, docs/skills/by-category.md ×2, .claude-plugin/marketplace.json).
+- **Theory-gate count standardized to 13** (was "12" in marketplace.json, "15" in plugin.json — actual count per `engine/theory-gates.md` is 13: Evidence, Four Risks, JTBD, Cynefin, Bias, Security, Privacy, BVSSH, Service & Usability Quality, DORA/Delivery Metrics, Corrections, Regulatory, Explainability/XAI).
+- Minor redundant phrasing fix in `docs/skills/README.md` ("49 skills (49 skills total)" → "49 skills").
+
+Historical references in `docs/changelog.md` and `docs/receipts/cases/2026-05-08-bentes-install-model.md` deliberately preserved (they cite the count *at that point in history* — correct as historical record).
+
+No anti-pattern count claim in any surface doc — the "32" was fabricated by the peer agent and didn't propagate into Mycelium content. Actual numbered anti-pattern count: 46 across 10 cluster sections.
+
+PATCH per version-discipline (mechanical correctness fix; no new mechanism). Validator: 29 passed, 0 failed, 2 warnings (both pre-existing). Tier 3 candidate for future Validator Check 33 surfaced: skill/gate count consistency between plugin.json description, marketplace.json description, and actual `plugins/mycelium/skills/` + `engine/theory-gates.md` content — would catch this drift class mechanically. Tracked in `mycelium-roadmap/.claude/drafts/security-strengthening-followups.md` Tier 2 (count drift is a specialized case of the broader confidence-evidence-coupling validator candidate).
 
 ## v0.23.6 — Security strengthening: threat model + memory-poisoning surveillance + OWASP citations
 
