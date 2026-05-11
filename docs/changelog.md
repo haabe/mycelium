@@ -6,6 +6,26 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.23.8 — C1: read-log + verify_citations attack anti-pattern #7 Level 3
+
+**2026-05-11. Attribution: lived-friction-triggered.** Triggered by Supra Insider ep 110 surfacing Apurva Garware describing the exact failure shape ("agent silently used scripts instead of skills + fabricated explanation when probed"); cross-mapped to same-day cluster activity (three fresh framing-shape instances) + deep-dive analysis decomposing the failure into four levels (skipped read / skipped steps / fabricated inputs / fabricated outputs). C1 is the bounded-cost preventive attack on Level 3 (fabricated underlying inputs in citations).
+
+**Two new artifacts:**
+
+1. **`plugins/mycelium/hooks/read-log.sh`** — PostToolUse hook on `Read` tool. Mirrors `change-log.sh` pattern. Appends one JSONL line per Read tool use to `.claude/state/read-log.jsonl` with schema `{ts, tool, file_path, session_id, diamond_id?}`. Fail-open (logging failure never blocks reads). Sister to `change-log.sh` — together they answer "what did the agent claim to read, read, and write during session X?"
+
+2. **`plugins/mycelium/scripts/verify_citations.py`** — standalone Python stdlib script. Extracts `(per: <source>)` citations from agent text, classifies file-shaped vs concept-shaped via path heuristic (slash or known extension), cross-references file-shaped citations against read-log via suffix matching. Reports verified / unverified / unverifiable counts. Explicitly frames "unverified ≠ fabricated" with 4 legitimate-reason scenarios enumerated.
+
+**Test coverage (G-V12):** 14 unit tests in `tests/python/test_verify_citations.py`. All pass. File-shape heuristic, citation extraction with dedup, suffix matching (positive + no-false-positive on `scape.yml` vs `landscape.yml`), all-verified, unverified-caught (load-bearing), concept-routing, session-id filter, missing-read-log fail-open, malformed-JSONL fail-open, end-to-end anti-pattern-7 scenario, human-format, main CLI.
+
+**Sister observability shipped same version**: `plugins/mycelium/engine/consistency-check-spec.md` gains a "Preemptive convention registry" subsection naming the skill-folder-layout convention (one SKILL.md per dir, no helper scripts) as held-by-discipline-not-mechanism. First violation triggers graduation to validator check. Audit confirmed clean across all 49 skill dirs.
+
+**What C1 does NOT catch**: Level-2 framing-shape instances (mechanism-vs-value language, leading-question violations, transactional-vs-relational framing). These don't reference files, so the script is structurally blind. Three such instances surfaced same day; C1 is necessary but not sufficient. **C2 (skill-execution fingerprints) and C3 (external witness)** logged as Tier 2 candidates in `mycelium-roadmap/.claude/drafts/security-strengthening-followups.md` with concrete graduation triggers.
+
+**Manual invocation only for initial ship.** Automatic Stop-hook integration deferred per Mycelium's observability-before-enforcement discipline.
+
+MINOR per version-discipline (additive observability infrastructure; new PostToolUse matcher on Read; no breaking changes; no behavior change beyond logging + on-demand verification).
+
 ## v0.23.7 — Count-drift correction across surface docs
 
 **2026-05-11. Attribution: maintenance-housekeeping.** Count-drift correction surfaced by a peer-agent fact-check during outreach drafting (the agent claimed "the public README confirms 32 anti-patterns" — no such number exists anywhere in the framework; grep-verification caught the fabrication; sister anti-pattern #7 instance #9 to yesterday's BDSK case).

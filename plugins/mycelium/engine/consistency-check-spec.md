@@ -126,11 +126,25 @@ Promotion requires an explicit decision-log entry stating the rules implemented,
 - **Does not require all five candidate rules.** Three is sufficient if they cover the cluster well; rules can be added post-promotion.
 - **Does not auto-update.** Updates to this spec require explicit revision; that's the point — the framework's discipline about its own consistency-checking should be deliberate.
 
+## Preemptive convention registry
+
+Conventions that **currently hold by discipline alone** — not enforced by any mechanism. Named here so they have a discoverable identity before the first violation. Each entry sets the graduation trigger: the moment the convention diverges, it becomes a cluster instance and ships a check.
+
+The registry's purpose is to close the silent-erosion path: an unnamed convention that holds is indistinguishable from no convention at all; when it eventually breaks, the failure looks like a new pattern rather than a known one. Naming it makes the eventual failure detectable as a recurrence, not a novelty.
+
+| Convention | Currently true because | Graduation trigger | Candidate detection |
+|---|---|---|---|
+| **Skill-folder layout: one `SKILL.md` per directory, no helper scripts** | All 49 plugin-form skill dirs contain only `SKILL.md`; scripts live in sibling `plugins/mycelium/scripts/`. Audit confirmed clean 2026-05-11 (Supra Insider ep 110 Apurva-anecdote dogfood). | First skill dir gains a non-`SKILL.md` file. Either: skill legitimately ships assets (then frontmatter must declare them) OR convention violated (then ship the check). | Lint in `validate-template.sh`: `find plugins/mycelium/skills -type f ! -name SKILL.md ! -name README.md` → if non-empty, every result must appear in its parent skill's frontmatter under a declared `assets:` list. |
+
+Add a row when: (a) a convention is named in conversation or in a memory entry but lacks a mechanism, (b) the convention is currently holding without violation, (c) the cost of writing the check is higher than the cost of the current violation rate (zero).
+
+**Promotion path for a preemptive-registry entry**: when the graduation trigger fires, the entry moves into the main Cluster catalog above (becomes instance N) and a detection rule is added to the candidate list. The check ships per the Promotion bar.
+
 ## Audit and maintenance
 
-- **`/corrections-audit`** reads this file (post-promotion to spec-graduated, 2026-05-08). When the audit detects a candidate cluster instance, it cross-references this spec's catalog and reports whether the instance is novel or a recurrence.
-- **`/framework-health`** checks the promotion bar quarterly. When ≥3 candidate rules have been drafted, framework-health surfaces graduation as a candidate next-step.
-- **Direct edits to this file** require a corrections.md entry and a decision-log entry — the spec is a load-bearing artifact, not a scratchpad.
+- **`/corrections-audit`** reads this file (post-promotion to spec-graduated, 2026-05-08). When the audit detects a candidate cluster instance, it cross-references this spec's catalog AND the preemptive convention registry; an instance matching a registered convention promotes that registry row rather than creating a novel cluster entry.
+- **`/framework-health`** checks the promotion bar quarterly. When ≥3 candidate rules have been drafted, framework-health surfaces graduation as a candidate next-step. Also: surfaces any preemptive-registry conventions whose graduation triggers have fired since last audit.
+- **Direct edits to this file** require a corrections.md entry and a decision-log entry — the spec is a load-bearing artifact, not a scratchpad. Preemptive-registry rows are an exception: adding a row that names a currently-true convention is single-line bookkeeping and does not require corrections.md.
 
 ## Theory grounding
 

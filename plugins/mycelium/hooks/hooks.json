@@ -72,6 +72,17 @@
             "statusMessage": "Mycelium diamond state audit"
           }
         ]
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/read-log.sh",
+            "timeout": 3,
+            "statusMessage": "Mycelium read log"
+          }
+        ]
       }
     ],
     "PostToolUseFailure": [
