@@ -41,6 +41,47 @@ Both layers are valid. Mycelium specializes upstream. The L1 strategic_frame art
 
 The cost of in-loop: friction. Every gate is a place the agent can stall. The cost of post-run: wasted work. Both are real; the framework picks the upstream side because the wasted-work cost compounds and the friction cost stays constant.
 
+## Why a fractal double-loop (not a flat iteration cycle)
+
+DevOps and similar frameworks run a single-loop: Plan → Develop → Test → Release → Operate → Monitor → Plan. Same loop, executed faster each cycle. Mycelium runs a **fractal double-loop**: three iteration levels operating simultaneously, where each cycle's outcomes rewrite the rules the next cycle runs under.
+
+The three levels:
+
+- **Leaf loop** — every OST solution leaf iterates assumption → test → outcome until it advances, regresses, or discards.
+- **Diamond loop** — every L0–L5 diamond iterates Discover → Define → Develop → Deliver, with explicit regression-on-invalidated-assumption pushing back to earlier phases.
+- **Framework loop** — completed and discarded cycles feed cycle-history, which feeds pattern emergence, which feeds cluster graduation, which rewrites guardrails, anti-patterns, and adaptive thresholds. The framework you run the next cycle in is not the framework you ran the previous cycle in.
+
+```mermaid
+graph LR
+    subgraph FW["Framework Loop — rewrites the rules"]
+        direction TB
+        CH["Cycle history"] -->|"feeds"| PE["Pattern emergence"]
+        PE -->|"feeds"| AT["Adaptive thresholds"]
+        AT -->|"triggers at ≥3 instances"| CG["Cluster graduation"]
+        CG -.->|"rewrites guardrails, anti-patterns, gates"| DI
+
+        subgraph DI["Diamond Loop — every L0–L5 cycle"]
+            DSC["Discover"] --> DEF["Define"] --> DEV["Develop"] --> DEL["Deliver"]
+            DEL -.->|"regress on invalidated assumption"| DSC
+
+            subgraph LF["Leaf Loop — every OST leaf"]
+                AS["Assumption"] --> TS["Test"] --> OU["Outcome"]
+                OU -.->|"discard, refine, or spawn delivery"| AS
+            end
+
+            LF -->|"completed/discarded leaves feed cycle-history"| DI
+        end
+
+        DI -->|"each cycle's outcomes feed framework loop"| CH
+    end
+```
+
+This is what Argyris named double-loop learning, made operational. The framework's mechanisms for cluster graduation (`memory/cluster-instances.md`), pattern emergence (`engine/pattern-detector.md`), and adaptive thresholds (`engine/adaptive-thresholds.md`) are wired together so each cycle's evidence updates the framework's own rules. DevOps has the iteration; Mycelium has the iteration *plus* the rule-rewrite.
+
+The cost: thicker harness, more state to track. The payoff: a framework that gets sharper from its own use, where today's instance of a recurring failure becomes tomorrow's mechanical guardrail. Anti-pattern #7 (Consistency-as-Evidence) was graduated this way after the cluster crossed its instance threshold; the `agent-as-instrument-on-shadow-logs` cluster opened 2026-05-12 is the next candidate.
+
+The fractal claim is also operational, not decorative: the three loops are not identical-and-nested but self-similar-and-different. Leaves have a pipeline-with-back-edges shape; diamonds have a four-phase shape with regression; the framework loop has a pattern-emergence-and-graduation shape. Same iteration logic, different phase structures — what fractal means in the strict mathematical sense.
+
 ## Why dogfood is required (not optional)
 
 The framework is dogfooded on the framework. The friction the founder hits while building Mycelium becomes corrections that shape Mycelium. The `meta_dogfood` project type formalizes this — when a project's purpose is "improve the framework", canvas writes target the framework's own discovery scales.
