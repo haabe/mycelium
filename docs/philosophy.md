@@ -81,6 +81,8 @@ The cost: thicker harness, more state to track. The payoff: a framework that get
 
 The fractal claim is also operational, not decorative: the three loops are not identical-and-nested but self-similar-and-different. Leaves have a pipeline-with-back-edges shape; diamonds have a four-phase shape with regression; the framework loop has a pattern-emergence-and-graduation shape. Same iteration logic, different phase structures — what fractal means in the strict mathematical sense.
 
+Wardley names this from the practitioner side: the skill of asking questions is distinct from the skill of answering them, and the leverage is in protecting **time-to-question (ttQ)** from being crowded out by time-to-answer (ttA) ([Rewilding Software Engineering, ch. 3](https://www.swardleymaps.com/posts/2025-02-06-rewilding-software-engineering)). Mycelium's three loops are the structural answer to where ttQ gets protected and where ttA gets accelerated: leaves protect ttQ within a solution space, diamonds protect it across solution spaces, the framework loop protects it across cycles by rewriting which questions count as interesting.
+
 ## Why dogfood is required (not optional)
 
 The framework is dogfooded on the framework. The friction the founder hits while building Mycelium becomes corrections that shape Mycelium. The `meta_dogfood` project type formalizes this — when a project's purpose is "improve the framework", canvas writes target the framework's own discovery scales.
