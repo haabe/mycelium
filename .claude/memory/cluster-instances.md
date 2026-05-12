@@ -54,6 +54,33 @@ A rule the framework teaches diverges from how the framework enforces it. Subcla
 
 **Spec-graduation rationale (2026-05-08):** Cluster reached the Check 26 stated graduation criterion ("graduate at instance 6") several days before today's audit; instances 6 and 7 were fixed individually without being counted. Today's instance 8 forced an honest recount and a decision: graduate fully now (full mechanism) vs spec-only (framework-discipline-driven choice). Chose spec because the cluster's instances are heterogeneous and a single detection rule covering all subclasses is research-shaped; spec articulates what consistency-checking means + sets a mechanical promotion bar without shipping a half-baked check. See `engine/consistency-check-spec.md` for full rationale.
 
+### agent-as-instrument-on-shadow-logs
+
+A test/check requires the agent to self-record behavioral data (per-session rows, citation counts, faithfulness audits) without a mechanical capture mechanism, and the recording is unreliable. Anti-pattern #7 Level 1 (skipped step) applied to test instruments specifically. Subclasses: shadow-log table (per-session rows empty), counter-misclassification (non-shadow-log file swept into session-counter nagging).
+
+**Graduation status:** `pending` (at first graduation candidate threshold: 2 instances; one more recurrence triggers graduation)
+
+**Graduation criterion (if pending):** ≥3 instances OR ≥1 instance where the missing data led to a wrong framework decision (e.g., a rule kept that should have been killed, or vice versa). When met, graduate to mechanism: a recording hook companion to v0.23.8's C1 (`read-log.sh` + `verify_citations.py`) — same capture-then-audit shape, different captured behavior. C1 is the worked example for what the relay-check / shadow-log-record hook should look like.
+
+**Total instances:** 2 (as of 2026-05-12)
+
+**First instance:** 2026-05-02 (`relay-norms` shadow log opened)
+
+**Most recent:** 2026-05-12 (closure session that surfaced the cluster)
+
+**Instance log:**
+
+| # | Date | Title | Subclass | Outcome |
+|---|---|---|---|---|
+| 1 | 2026-05-02 → 2026-05-12 | `relay-norms` assumption-test ran 15/10 sessions with empty per-session log table; agent didn't fill in rows | shadow-log-table | Closed INCONCLUSIVE 2026-05-12. Norm 1 (SessionStart relay) flagged for harness graduation; Norms 2-3 kept in CLAUDE.md as low-trust. |
+| 2 | 2026-05-04 → 2026-05-12 | `xai-inline-attribution` assumption-test ran 11/10 sessions with only session 1 recorded (partial); sessions 2-11 absent | shadow-log-table | Closed INSTRUMENT-FAILED 2026-05-12. Rule remains in CLAUDE.md; v0.23.8's C1 (`verify_citations.py`) supersedes the shadow-log instrument. Juniors.dev named as next evaluation surface. |
+
+**Near-miss (not counted; different root cause):**
+
+`xai-check-evals` (2026-05-04 → 2026-05-12) — static coverage-fixture set incorrectly counter-nagged at sessions=10. NOT the same shape as instances 1-2 (the agent didn't fail to record; the counter mechanism failed to discriminate non-shadow-log files). Logged separately as harness-followup candidate: counter-mechanism should require `kind: shadow_log` field before nagging.
+
+**Theory grounding for this cluster:** Lopopolo ("every interaction with the agent is a failure of the harness to provide enough context") — the shadow-log pattern asks the agent to be the harness for itself. The relay-norms doc explicitly named this risk in its own Codification-venue section 2026-05-02 ("if a norm has a clean mechanical trigger, prefer harness encoding — it survives agent-norm drift"); the cluster's two instances are evidence that the warning was correct. Bridge to anti-pattern #7: skipping the recording step is Level 1 (skipped step) of the consistency-as-evidence anti-pattern's failure-level decomposition (v0.23.8 deep dive).
+
 ## Format for new clusters
 
 ```markdown
