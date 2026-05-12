@@ -58,7 +58,7 @@ graph LR
         CH["Cycle history"] -->|"feeds"| PE["Pattern emergence"]
         PE -->|"feeds"| AT["Adaptive thresholds"]
         AT -->|"triggers at ≥3 instances"| CG["Cluster graduation"]
-        CG -.->|"rewrites guardrails, anti-patterns, gates"| DI
+        CG -.->|"rewrites guardrails, anti-patterns, gates"| DSC
 
         subgraph DI["Diamond Loop — every L0–L5 cycle"]
             DSC["Discover"] --> DEF["Define"] --> DEV["Develop"] --> DEL["Deliver"]
@@ -66,13 +66,12 @@ graph LR
 
             subgraph LF["Leaf Loop — every OST leaf"]
                 AS["Assumption"] --> TS["Test"] --> OU["Outcome"]
-                OU -.->|"discard, refine, or spawn delivery"| AS
+                OU -.->|"discard or refine"| AS
             end
-
-            LF -->|"completed/discarded leaves feed cycle-history"| DI
         end
 
-        DI -->|"each cycle's outcomes feed framework loop"| CH
+        DEL -->|"cycle outcome feeds framework"| CH
+        OU -->|"leaf outcome feeds framework"| CH
     end
 ```
 
