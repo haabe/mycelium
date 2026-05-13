@@ -6,6 +6,12 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.23.15 — Check 34: CLAUDE.md ≤ 1 version entry (mechanism graduation)
+
+**2026-05-14. Attribution: lived-friction-triggered.** Graduates the discipline failure surfaced at v0.23.14 (deferred-entries-not-migrated, recurred ×5 in one session) from vigilance to mechanism. New validator check counts `^\*Version [0-9]` lines in CLAUDE.md; fails if more than 1. Latest entry stays; prior entries migrate to this file.
+
+Pairs with Check 30 (plugin.json#version tracks CLAUDE.md) as the doc-discipline-fast-failure family. This commit dogfoods the new check by migrating v0.23.14 out (swap, not append). PATCH — observability-and-mechanism-strengthening; no behavior change for downstream users (`tests/` doesn't ship via the plugin).
+
 ## v0.23.14 — Doc-only: regenericize architecture narrative + migrate deferred entries
 
 **2026-05-14. Attribution: lived-friction-triggered.** Two coalesced fixes flowing from the same discipline: keep deferred versions and private-architecture details out of CLAUDE.md.

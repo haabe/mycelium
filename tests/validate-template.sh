@@ -1057,6 +1057,42 @@ PY
     fi
 }
 
+# Check 34: CLAUDE.md must contain at most one version entry.
+#
+# Convention: CLAUDE.md frontmatter carries only the *current* release's
+# changelog entry; full history lives in docs/changelog.md. When a new
+# version is bumped, the prior entry is migrated to docs/changelog.md
+# rather than accumulating in CLAUDE.md.
+#
+# Detection: count lines matching `^\*Version [0-9]` (the leading-italic-
+# asterisk + literal "Version" + version number that opens each entry).
+# More than 1 means a prior entry wasn't migrated.
+#
+# Graduated 2026-05-14 after 5 consecutive in-session violations (v0.23.10
+# → v0.23.14, each new prose entry prepended without migrating the prior).
+# The agent forgot once at v0.23.10 then carried the wrong pattern forward
+# four more times by reading the just-written file as canonical example.
+# Anti-pattern #7 at the meta layer (consistency-as-evidence: validation
+# passing on commit N treated as evidence commit N-1 was correct).
+# Mechanism beats vigilance for cross-session pattern adherence.
+check_claudemd_single_version_entry() {
+    section "Check 34: CLAUDE.md contains at most one version entry (deferred-entries migrated to changelog)"
+
+    if [ ! -f CLAUDE.md ]; then
+        info "CLAUDE.md absent — Check 34 N/A"
+        return
+    fi
+
+    local count
+    count=$(grep -cE '^\*Version [0-9]' CLAUDE.md 2>/dev/null || echo 0)
+
+    if [ "$count" -le 1 ]; then
+        pass "Check 34: $count version entry in CLAUDE.md (≤1, discipline holding)"
+    else
+        fail "Check 34: $count version entries in CLAUDE.md (should be ≤1). Migrate older entries to docs/changelog.md per the established convention. The latest entry stays; prior entries move."
+    fi
+}
+
 check_four_risks_when_active() {
     section "Check 32: Four-Risks levels required on active-diamond opportunities (F8)"
 
@@ -1292,6 +1328,7 @@ check_plugin_json_version_sync
 check_canvas_write_preflight
 check_four_risks_when_active
 check_plugin_identifier_leak
+check_claudemd_single_version_entry
 
 # ============================================================
 # SUMMARY
