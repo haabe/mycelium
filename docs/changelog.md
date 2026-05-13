@@ -2,9 +2,70 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-05-11.
+**Last updated**: 2026-05-14.
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
+
+## v0.23.14 — Doc-only: regenericize architecture narrative + migrate deferred entries
+
+**2026-05-14. Attribution: lived-friction-triggered.** Two coalesced fixes flowing from the same discipline: keep deferred versions and private-architecture details out of CLAUDE.md.
+
+1. **Forward-only regenericization** of changelog entries that named a private companion repo by path while describing v0.23.13's registry-move fix. Generalizes v0.23.13's lesson one step further: commit messages and changelog text are public-disclosure surfaces even when discussing the architecture that *supports* privacy discipline.
+2. **Migrated v0.23.9 through v0.23.13** entries out of CLAUDE.md per the established convention (CLAUDE.md keeps only the current release). Five consecutive bumps this session each violated that discipline; the failure replicated forward without being noticed. Recurring-pattern graduation candidate.
+
+Git history retains original phrasing in `c539f29` and earlier; working-tree view is now generic. PATCH per version-discipline.
+
+## v0.23.13 — Frida-leak fix + Check 33 architecture correction
+
+**2026-05-14. Attribution: lived-friction-triggered.** Regenericized the last Check-33 leak in `plugins/mycelium/harness/anti-patterns.md` (the date-tagged source citation that named a private-channel observer). Also collapsed an adjacent friction-log attribution to its theoretical-lens framing for consistency. Architecture correction for Check 33 / attribution-registry placement: initial 0.23.12 ship put the registry in this public repo, which was self-defeating (registry contains the very names whose private attribution it tracks). Moved out. Check 33 now resolves the registry via `$MYCELIUM_ATTRIBUTION_REGISTRY` env var; fail-open if unset.
+
+Acknowledged residual: prior public-repo references to the same individual remain in commit history and existing changelog entries. Scrubbing fully would require git history rewrite — higher cost than the marginal incremental exposure. Forward leaks into the plugin tree are now mechanism-prevented; historical references are accepted residual.
+
+PATCH.
+
+## v0.23.12 — Check 33: plugin tree must not contain unconsented personal identifiers
+
+**2026-05-14. Attribution: lived-friction-triggered.** Trigger: in-session user-asked whether a repo-root canvas file could leak into downstream user projects. The literal answer was no (plugin scope is `./plugins/mycelium/`), but the deeper question (whether names embedded in plugin-shipped files leak) surfaced 5 unconsented references in `plugins/mycelium/harness/anti-patterns.md` and `plugins/mycelium/harness/theory-tensions.md`.
+
+**Mechanism shipped:** new validator Check 33 reads an attribution registry (kept outside the public repo) listing each known individual's consent state (`public_ok` | `generic_only` | `unknown`). The check scans `plugins/mycelium/**` for `generic_only` and `unknown` names via word-boundary regex across `.md`, `.yml`, `.yaml`, `.json`, `.py`, `.sh`. Adding a name without a consent value fails registry parsing (forces deliberate consent decisions). WARN-only initially per observability-before-enforcement discipline.
+
+**Deeper lesson:** lived-friction attribution can leak through the graduation chain even when the source is generic-framed at point of capture. Capture-time discipline is necessary but not sufficient — every step from corrections → anti-patterns → engine docs that cites trigger sources is itself an attribution surface. GDPR data-minimization applied to internal framework documentation, not just user data.
+
+Borderline-MINOR (new gate) but PATCH defensible because it lands WARN-only and strengthens existing G-V12 + version-discipline.md anti-leak intent rather than introducing new theory.
+
+## v0.23.11 — Ruff cleanup pass on verify_citations.py
+
+**2026-05-14. Attribution: lived-friction-triggered.** Check 17's 20-error WARN was sitting as de-facto indefinite tech debt with no entry in any `warnings-log.md` and no trigger condition — quiet violation of `feedback_no_tech_debt_deferral.md` ("never indefinite"). Ran validator's own ruff invocation: 4 auto-fixed via `--fix`, 17 manually fixed in `verify_citations.py` (SIM103 ×2, PLW2901, S110+BLE001 narrowed, RET504, PERF401, 9× E501 via implicit string concatenation, EXE001 chmod +x). All 14 unit tests still pass; behavior unchanged. Check 17 returns to 0 errors.
+
+PATCH per version-discipline.md line 11 (explicit "ruff cleanup" listed as PATCH-class).
+
+## v0.23.10 — Migration-skill truth-up + retroactive bump
+
+**2026-05-14. Attribution: lived-friction-triggered.** Two changes coalesced because the second surfaced the first.
+
+1. **`plugins/mycelium/skills/migrate-from-legacy/SKILL.md` Step 7 corrected.** Triggered by per-turn `No such file or directory` hook errors from a stale `"hooks"` block in `.claude/settings.local.json`. SKILL.md previously claimed the legacy migration script warned on both `settings.json` and `settings.local.json`; reality is `settings.json` only. SKILL now owns the dual-file grep itself. Considered-and-reverted: a 130-line `--migrate-to-plugin` flag handler in the plugin's `upgrade.sh` — reverted after archaeology showed the plugin copy is by-design never invoked for migration (legacy users run their local `.claude/scripts/upgrade.sh`).
+2. **Retroactive bump for `2f0b003`.** The SIGPIPE fix to Check 10 landed without a version bump; validation appeared to pass because the SIGPIPE bug itself was aborting the script at Check 10 with exit 2 before Check 26 (version-bump-discipline) ran. Fixing the SIGPIPE structurally unmasked the check that would have caught its own missing bump — observer effect.
+
+Lesson candidate for `version-discipline.md`: test-suite fixes that change which downstream checks run are structural changes to the validator's observable behavior, not cosmetic. Worth a sentence next time that doc is edited.
+
+PATCH.
+
+## v0.23.9 — First-run friction batch (9 patches)
+
+**2026-05-13. Attribution: lived-friction-triggered.** Behavior-validated cautious-learner first-run observation surfaced 7 framework opportunities (opp-001 through opp-007); 5 mechanism patches shipped across hooks, skills, and README.
+
+**Specific changes:**
+1. `plugins/mycelium/hooks/stop-check.sh` — no longer emits per-turn "Session ended" line when counts are zero (opp-003 closed).
+2. `plugins/mycelium/hooks/preflight.sh` + `session-start.sh` — count-display lines disambiguate three states (memory not initialized / empty / N corrections) (opp-001 partial).
+3. `plugins/mycelium/skills/setup/SKILL.md` — AGENTS.md prompt rewritten with say-yes-vs-skip framing before the question (opp-002a partial).
+4. `README.md` — time-budget routing description aligned with current Universal Brief Flow (opp-002b partial).
+5. `plugins/mycelium/skills/interview/SKILL.md` — confidence-0.15 rationale rewritten from "hardcoded floor" framing to canvas-density formula breakdown; DEFERRED block restructured to partial-graduation checkbox status (opp-004 partial).
+6. `interview/SKILL.md` brief flow — adds post-write line surfacing auto-tagged `source_class` choice + revise-path; names all five source classes (opp-005 partial).
+7. `interview/SKILL.md` + `start/SKILL.md` — NARRATION DISCIPLINE block forbidding phase-number narration to users with ✗/✓ examples (opp-006 partial).
+8. `interview/SKILL.md` friction-log prompt — three explicit destinations and consent gates (opp-007 closed).
+9. `tests/validate-template.sh` Check 32 wrapper bug fixed (set +e / set -e around rc capture so WARN is actually WARN).
+
+PATCH per version-discipline: all changes are bug fixes, clarification copy, or framing precedent-setting; no new skills, no new gates, no backwards-incompatible behavior.
 
 ## v0.23.8 — C1: read-log + verify_citations attack anti-pattern #7 Level 3
 
@@ -20,7 +81,7 @@ The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that
 
 **Sister observability shipped same version**: `plugins/mycelium/engine/consistency-check-spec.md` gains a "Preemptive convention registry" subsection naming the skill-folder-layout convention (one SKILL.md per dir, no helper scripts) as held-by-discipline-not-mechanism. First violation triggers graduation to validator check. Audit confirmed clean across all 49 skill dirs.
 
-**What C1 does NOT catch**: Level-2 framing-shape instances (mechanism-vs-value language, leading-question violations, transactional-vs-relational framing). These don't reference files, so the script is structurally blind. Three such instances surfaced same day; C1 is necessary but not sufficient. **C2 (skill-execution fingerprints) and C3 (external witness)** logged as Tier 2 candidates in `mycelium-roadmap/.claude/drafts/security-strengthening-followups.md` with concrete graduation triggers.
+**What C1 does NOT catch**: Level-2 framing-shape instances (mechanism-vs-value language, leading-question violations, transactional-vs-relational framing). These don't reference files, so the script is structurally blind. Three such instances surfaced same day; C1 is necessary but not sufficient. **C2 (skill-execution fingerprints) and C3 (external witness)** logged as Tier 2 candidates in private follow-up drafts with concrete graduation triggers.
 
 **Manual invocation only for initial ship.** Automatic Stop-hook integration deferred per Mycelium's observability-before-enforcement discipline.
 
