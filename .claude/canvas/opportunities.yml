@@ -176,8 +176,9 @@ opportunities:
     description: |
       First-run user reported that the line
       `Stop says: Session ended. 0 corrections, 0 decisions logged.`
-      appeared between every interview question turn. She read it as
-      an error message; in practice the interview continued normally.
+      appeared between every interview question turn. The user read
+      it as an error message; in practice the interview continued
+      normally.
       Pattern: hook output that is operationally useful (recording
       session-end state) is rendered into the same channel as the
       agent's user-facing content, with no signal that it is mechanical
@@ -330,11 +331,11 @@ opportunities:
       `_common.schema.json:41-82` documents all five source classes
       with descriptions.
 
-      But the moment of the write is invisible to the user. She wasn't
-      told the framework was making a classification choice, what the
-      choice was, or that the choice can be revised. The discipline
-      lives in docs; the practice lives in skill internals; the user
-      sees neither.
+      But the moment of the write is invisible to the user. They were
+      not told the framework was making a classification choice, what
+      the choice was, or that the choice can be revised. The
+      discipline lives in docs; the practice lives in skill internals;
+      the user sees neither.
 
       Pattern likely systemic: every canvas-writing skill (interview,
       jtbd-map, ost-builder, log-evidence, user-needs-map, gist-plan,
@@ -352,6 +353,22 @@ opportunities:
            source_class" path so a user who realizes they had real
            interview data behind a brief answer can re-tag without
            hand-editing YAML.
+
+      **Status 2026-05-13 — SHIPPED (partial, precedent set)**:
+      candidate fix #1 applied to `/interview` brief flow — third
+      post-write line surfaces "Tagged your brief as source_class:
+      internal_stakeholder (your own description, not independent user
+      evidence yet) + validated: false. If you have real interview
+      data..., run /mycelium:assumption-test or /mycelium:log-evidence
+      to attach it — the source class then shifts and confidence
+      rises. The five source classes are: external_human,
+      external_data, internal_stakeholder, internal_desk,
+      internal_simulated (see schema for full definitions)."
+      Precedent set; remaining canvas-writing skills (jtbd-map,
+      ost-builder, log-evidence, user-needs-map, gist-plan, dora-check,
+      metrics-pull, wardley-map, canvas-update) still need the same
+      surface-the-choice line on their writes. Candidate #2 (README)
+      and #3 (/canvas-update revise-source_class path) remain open.
     type: functional
     frequency: high       # Every canvas write hits this
     impact: medium        # Silent default that affects downstream confidence math is a real epistemic cost when wrong
@@ -412,6 +429,24 @@ opportunities:
         3. Onboarding docs: if certain internal terms (Lx, diamonds,
            canvas) are unavoidable in user-facing material, surface a
            plain-language glossary once, not implicitly.
+
+      **Status 2026-05-13 — SHIPPED (partial, precedent set)**:
+      candidate fix #1 + #2 applied:
+        - `/interview` SKILL.md gained a NARRATION DISCIPLINE block
+          above Phase 1 explicitly forbidding phase-number narration
+          to users, with concrete ✗/✓ examples (including the exact
+          Phase 6 leak that prompted this entry).
+        - `/start` SKILL.md:48 leak fixed — "interview's Phase 0
+          canvas-state detection" → "/interview's canvas-state
+          detection" + reference to the narration discipline.
+      Precedent set; remaining work — skill-file audit for any other
+      cross-skill phase-index references (candidate #2 full sweep),
+      plain-language glossary in onboarding for unavoidable framework
+      vocabulary (candidate #3). ChatGPT 2026-05-13 review enumerated
+      six framework-internal terms beyond Phase N (diamond scales,
+      leaf lifecycle, adaptive thresholds, framework reflexion,
+      evidence decay, perspective resolution) — those need the
+      glossary treatment when candidate #3 ships.
     type: functional
     frequency: high       # Phase / Lx vocabulary surfaces across many skill outputs
     impact: medium        # First-impression cost; reinforces the "cult-framework" risk independently observed
@@ -472,6 +507,15 @@ opportunities:
         3. Long-term: the "receipts case" concept could surface in
            README so the vocabulary is anchored before a skill uses
            it.
+
+      **Status 2026-05-13 — SHIPPED**: candidate fix #1 applied to
+      `interview/SKILL.md:123` friction-log prompt. Rewritten to name
+      three concrete destinations with explicit consent gates: (a)
+      default stays in conversation, (b) opt-in file write to
+      `.claude/evals/dogfood-reports/YYYY-MM-DD-friction.md`, (c)
+      opt-in public receipts case with explicit pre-publish ask. No
+      more opaque-pipeline shape. opp-007 closed. Candidates #2
+      (broader audit) and #3 (README anchor) remain open.
     type: functional
     frequency: medium     # Friction-log specific instance; pattern more frequent across skills
     impact: low           # Cosmetic + first-trust; user worked around easily

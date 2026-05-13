@@ -77,12 +77,13 @@ Read+Edit in parallel where possible (one tool batch for Reads, one for Edits) t
 
 Do NOT write `opportunities.yml`, `north-star.yml`, `landscape.yml`, or any other canvas file from the brief alone — those are populated when the user picks a depth option.
 
-After writes, output two lines:
+After writes, output three lines:
 
 1. `Saved your brief to canvas (purpose.yml + .claude/diamonds/active.yml).`
 2. `L0 confidence set to 0.15 — this reflects what a 4-question brief can establish (purpose 0.05 + JTBD functional 0.05 + workarounds 0.025). Confidence increases as more canvas dimensions get evidence; see the formula at the end of this skill for the full ladder.`
+3. `Tagged your brief as source_class: internal_stakeholder (your own description, not independent user evidence yet) + validated: false. If you have real interview data, user research, or behavioral evidence behind these answers, run /mycelium:assumption-test or /mycelium:log-evidence to attach it — the source class then shifts and confidence rises. The five source classes are: external_human, external_data, internal_stakeholder, internal_desk, internal_simulated (see schema for full definitions).`
 
-The second line is opp-004 candidate fix #3: surface caveat at point of display so users querying "why 0.15?" get the formula, not a "we know it's wrong" answer.
+Lines 2 + 3 together are opp-004 candidate #3 and opp-005 candidate #1: surface the framework's classification choices at point of display so users have visibility into how their input is being weighted, not just buried-in-docs discipline.
 
 #### Step 3 — Render the depth menu (informed by brief content)
 
@@ -120,7 +121,7 @@ If 3+ contextual triggers fire, surface the strongest 2 and add a one-liner: "Ot
 - **Go deeper into discovery** → Proceed to **Go Deeper Sub-Routing** below.
 - **Contextual option** → Invoke the named skill.
 - **Stop for now** → "Your brief is saved. Run `/mycelium:diamond-assess` whenever you want to come back. Bye."
-- **Friction log** → "What felt off? Where did the framework get in your way? Your answer goes to a receipts case under your name. See CONTRIBUTORS.md for how that works."
+- **Friction log** → "What felt off? Where did the framework get in your way? By default this stays in our conversation — say so if you want me to write it to a file (e.g. `.claude/evals/dogfood-reports/YYYY-MM-DD-friction.md`) so it survives the session. If you'd like the friction to become a public receipts-case under your name (CV-citable contribution to Mycelium, see CONTRIBUTORS.md for how that works), I'll ask before publishing anything outside this repo."
 - **Other** → Surface a brief skill index ("Here's what Mycelium can do — pick one or describe what you want") then route based on response.
 
 ### Go Deeper Sub-Routing
@@ -168,6 +169,20 @@ Options:
 - **Joining the team / new to this project** → Invoke `/mycelium:diamond-assess` with onboarding framing (canvas as orientation doc).
 
 **Edge case**: if last brief-write was within 24h on this canvas with the same Q1 idea name (the user is iterating on their own brief), offer: "Update the brief with new answers, or start fresh?"
+
+### NARRATION DISCIPLINE — required for all phases below
+
+Phase numbers (Phase 1 / Phase 2 / Phase 5b / Phase 6 / etc.) are internal section structure for skill authors. **Do NOT narrate phase numbers to the user.** Reference the *outcome* the phase produces, not the index. Per opp-006 (internal-vocabulary leak).
+
+Examples of correct narration:
+- ✗ "The interview skill would normally populate these from Phase 6 questions."
+- ✓ "These get populated by the project-classification questions in the full interview flow."
+- ✗ "We'll go through Phase 5b constraints now."
+- ✓ "Now the questions about constraints — what can't change, who has to approve what, what rules apply."
+- ✗ "Phase 0 detected an existing canvas."
+- ✓ "Detected an existing canvas — here's where you left off."
+
+Same discipline applies when one skill references another: name the outcome ("the project-type question in /interview"), not the phase index ("interview's Phase 6"). Internal vocabulary stays internal.
 
 ### Phase 1: Purpose & Vision
 1. Ask: "What problem does this product/organization solve? Who suffers without it?"

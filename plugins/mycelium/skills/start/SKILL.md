@@ -45,7 +45,7 @@ After setup completes, do NOT print setup's "Next:" line — this skill is the n
 
 Invoke the interview workflow inline. Follow the instructions in `${CLAUDE_PLUGIN_ROOT}/skills/interview/SKILL.md` from Phase 0 onward.
 
-Because setup just ran, the canvas is empty — interview's Phase 0 canvas-state detection will route to the Universal Brief Flow (the 4-question brief shape, not the legacy time-budget-routed ceremony). Render the brief, write canvas state, render the depth menu.
+Because setup just ran, the canvas is empty — /interview's canvas-state detection will route to the Universal Brief Flow (the 4-question brief shape, not the legacy time-budget-routed ceremony). Render the brief, write canvas state, render the depth menu. Per opp-006 narration discipline in interview/SKILL.md, do not narrate phase numbers to the user — reference the outcome (e.g., "the brief", "the project-type question") instead of the phase index.
 
 After the brief is rendered and the user picks a depth-menu option, the start skill is done. Hand off to whatever the user chose (`/mycelium:assumption-test` for "Test the biggest assumption", continued discovery for "Go deeper", graceful exit for "Stop for now", etc.).
 
