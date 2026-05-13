@@ -38,6 +38,15 @@ jobs:
       - name: Install CI dependencies
         run: pip install -r requirements-ci.txt
 
+      # Check 33 (plugin tree must not contain unconsented personal identifiers)
+      # fails open here by design — MYCELIUM_ATTRIBUTION_REGISTRY is intentionally
+      # unset in CI. The registry lives in a private companion repo to avoid
+      # publishing the very names whose private-channel attribution it tracks;
+      # CI on this public repo has no credentials to fetch it. The check's real
+      # enforcement point is the maintainer's pre-push validation; CI fail-open
+      # is the accepted residual. If a backstop becomes necessary (e.g., a real
+      # incident where a leak slipped past pre-push), revisit by piping a
+      # names-only subset via a GitHub Actions secret.
       - name: Run structural integrity validation (includes Check 17 — ruff/shellcheck/pytest with baseline-aware logic)
         run: bash tests/validate-template.sh
 
