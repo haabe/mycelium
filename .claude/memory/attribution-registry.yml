@@ -5,14 +5,43 @@
 # so the registry itself is never distributed to downstream users.
 #
 # consent values:
-#   public_ok      — explicit consent to appear by name in plugin-distributed content
-#   generic_only   — identity allowed in repo-root logs (changelog, corrections)
-#                    but MUST be generic-framed inside plugins/mycelium/**
-#   unknown        — consent state unverified; treated as generic_only pending
-#                    clarification
+#   public_ok      — citing this person by name is consistent with the
+#                    original publication context. Covers two sub-cases:
+#                      (a) Public figures cited as theory/framework
+#                          originators in their published work (Torres,
+#                          Christensen, Cagan, etc.). Standard academic
+#                          citation norm. These typically do NOT need a
+#                          registry entry — last-name-only citations of
+#                          published work are covered by citation norms.
+#                      (b) Individuals who gave feedback in public or
+#                          effectively-public channels (open Slack threads,
+#                          LinkedIn, conference talks, blog posts).
+#                          Quotable without permission per the Norwegian
+#                          standard that treats large "closed" groups as
+#                          public-equivalent. These DO get registry entries
+#                          for first-name disambiguation.
+#   generic_only   — gave feedback in a private channel (email, DM, 1:1
+#                    observation, genuinely-private group). Identity
+#                    allowed in repo-root logs (changelog, corrections) but
+#                    MUST be generic-framed inside plugins/mycelium/**.
+#                    Receipts-attribution needs separate explicit sign-off.
+#   unknown        — consent state unverified; treated as generic_only
+#                    pending clarification.
 #
-# Adding a name without a consent value fails registry parsing → check fails.
-# This forces deliberate consent decisions at the point of adding a name.
+# Why first-name entries matter even for public_ok individuals:
+# "Drew", "Simon", "Frida" are common first names. Multiple people share
+# them. The registry records WHICH "Simon" is referenced in which file so
+# the team can disambiguate later. This is repo-internal — none of this
+# information leaks to plugin users.
+#
+# Out of scope for this registry:
+#   - Theory originators cited last-name-only in plugin docs (Pearl,
+#     Kahneman, Saltzer & Schroeder, Brooks, etc.) — covered by standard
+#     citation norms. No entry needed unless a first-name reference appears.
+#
+# Adding a name without a consent value fails registry parsing → check
+# fails. This forces deliberate consent decisions at the point of adding
+# a name.
 #
 # Check 33 is WARN-only initially (observability before enforcement per
 # framework discipline). Graduates to FAIL once existing pre-disclosure
@@ -32,19 +61,23 @@ people:
 
   - name: "Drew"
     consent: public_ok
-    note: "Explicit consent for public attribution."
+    note: |
+      Explicit consent for public attribution given prior to inclusion.
+      Registered here for first-name disambiguation — "Drew" is common.
 
   - name: "Simon"
-    consent: unknown
+    consent: public_ok
     note: |
-      Consent state unverified. Treat as generic_only pending clarification.
-      Pre-existing references in two places:
-        - plugins/mycelium/engine/feedback-loops.md (first-name only;
-          "Drew/Simon outreach session")
-        - plugins/mycelium/harness/theory-tensions.md (FULL NAME: "Simon
-          Rohrer", attributing LinkedIn feedback that motivated the file).
-      The full-name reference is the higher-doxing-risk surface — LinkedIn
-      attribution is plausibly public context, but consent for republication
-      in framework files is a separate question from "they posted publicly."
-      First-name-only references are lower risk but still attribution
-      surfaces; the framework's discipline applies independent of doxing risk.
+      Simon Rohrer. The "Simon Rohrer (LinkedIn feedback, v0.8.x)"
+      attribution in plugins/mycelium/harness/theory-tensions.md cites
+      public LinkedIn commentary; quotable without permission per
+      standard public-statement norms. The "Drew/Simon outreach session"
+      reference in plugins/mycelium/engine/feedback-loops.md cites a
+      public-or-effectively-public Slack thread, also quotable per the
+      Norwegian standard that treats large "closed" groups as
+      public-equivalent (Supreme Court precedent on large Facebook
+      groups; same logic applies to open or member-of-many Slack
+      workspaces).
+      Registered here (rather than omitted as "obviously public") for
+      first-name disambiguation — "Simon" is common; the registry
+      records WHICH Simon is meant in which file.
