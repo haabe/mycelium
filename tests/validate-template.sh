@@ -290,8 +290,11 @@ check_version_consistency() {
     section "Check 10: Version consistency"
 
     # CLAUDE.md: "*Version 0.7.0 --"
+    # -m1 + ^\*Version anchor stops grep after the canonical first match and
+    # avoids SIGPIPE on closed-pipe under set -o pipefail (CI is Linux-strict;
+    # macOS is more lenient). Mirrors Check 26's grep shape.
     local claude_version
-    claude_version=$(grep "Version [0-9]" CLAUDE.md | head -1 | sed 's/.*Version //' | sed 's/ .*//')
+    claude_version=$(grep -m1 "^\*Version [0-9]" CLAUDE.md | sed 's/^\*Version //' | sed 's/ .*//')
 
     # README.md: "*v0.7.0*" (optional — simplified README may omit version)
     local readme_version
