@@ -956,6 +956,95 @@ check_canvas_write_preflight() {
 # to absorb existing under-populated state without breaking CI; flip to FAIL
 # after 2-3 weeks of clean runs per the validator's documented graduation
 # pattern.
+# Check 33: Plugin tree must not contain unconsented personal identifiers.
+#
+# Personal first names in plugins/mycelium/** ship to every downstream user
+# via the plugin marketplace. Consent state for each named individual lives
+# in .claude/memory/attribution-registry.yml (outside the plugin tree, never
+# distributed). Names with consent=generic_only or consent=unknown must not
+# appear in plugin-distributed content.
+#
+# Fails-open if the registry is absent (no enforcement until opted in).
+# WARN-only initially per the framework's observability-before-enforcement
+# discipline; graduates to FAIL once existing pre-disclosure leaks are
+# addressed.
+#
+# Surfaced 2026-05-14 in-session: a generic-framed first-run observer
+# nonetheless drifted into plugins/mycelium/harness/anti-patterns.md via the
+# graduation chain (corrections.md entry referenced by name when the anti-
+# pattern entry was graduated). The lived-friction attribution mechanism
+# itself was the leak vector — generic capture at point-of-friction does not
+# guarantee generic carry-through when downstream framework files cite their
+# trigger sources.
+check_plugin_identifier_leak() {
+    section "Check 33: Plugin tree contains no unconsented personal identifiers"
+
+    local registry=".claude/memory/attribution-registry.yml"
+    if [ ! -f "$registry" ]; then
+        info "Attribution registry absent — Check 33 N/A (create $registry to enable)"
+        return
+    fi
+
+    local flagged
+    set +e
+    flagged=$(python3 - "$registry" <<'PY' 2>/dev/null
+import sys
+import yaml
+try:
+    with open(sys.argv[1]) as f:
+        data = yaml.safe_load(f) or {}
+    names = [
+        p["name"] for p in data.get("people", [])
+        if p.get("consent") in ("generic_only", "unknown")
+    ]
+    print("\n".join(names))
+except Exception as e:
+    sys.stderr.write(f"registry parse error: {e}\n")
+    sys.exit(1)
+PY
+)
+    local rc=$?
+    set -e
+
+    if [ "$rc" -ne 0 ]; then
+        fail "Check 33: attribution-registry.yml parse error — fix syntax or remove file to disable check"
+        return
+    fi
+
+    if [ -z "$flagged" ]; then
+        pass "Check 33: no flagged identifiers in registry (all entries are consent=public_ok)"
+        return
+    fi
+
+    local total_hits=0
+    local hit_detail=""
+    while IFS= read -r name; do
+        [ -z "$name" ] && continue
+        local matches
+        matches=$(grep -rEn "\b${name}\b" plugins/mycelium/ \
+            --include="*.md" --include="*.yml" --include="*.yaml" \
+            --include="*.json" --include="*.py" --include="*.sh" \
+            2>/dev/null || true)
+        if [ -n "$matches" ]; then
+            local n
+            n=$(echo "$matches" | wc -l | tr -d ' ')
+            total_hits=$((total_hits + n))
+            hit_detail+=$'\n'"  '${name}' (${n} leak[s]):"
+            while IFS= read -r m; do
+                hit_detail+=$'\n'"    ${m}"
+            done <<< "$matches"
+        fi
+    done <<< "$flagged"
+
+    if [ "$total_hits" -eq 0 ]; then
+        pass "Check 33: 0 leaks in plugins/mycelium/ (all flagged names absent from plugin tree)"
+    else
+        warn "Check 33: ${total_hits} leak(s) — flagged identifiers in plugin-distributed content${hit_detail}"
+        echo "    Action: regenericize occurrences OR escalate consent in ${registry}."
+        echo "    (Check is WARN-only initially; graduates to FAIL once cleared.)"
+    fi
+}
+
 check_four_risks_when_active() {
     section "Check 32: Four-Risks levels required on active-diamond opportunities (F8)"
 
@@ -1190,6 +1279,7 @@ check_stale_state_read_pattern
 check_plugin_json_version_sync
 check_canvas_write_preflight
 check_four_risks_when_active
+check_plugin_identifier_leak
 
 # ============================================================
 # SUMMARY
