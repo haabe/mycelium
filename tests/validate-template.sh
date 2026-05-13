@@ -960,11 +960,23 @@ check_canvas_write_preflight() {
 #
 # Personal first names in plugins/mycelium/** ship to every downstream user
 # via the plugin marketplace. Consent state for each named individual lives
-# in .claude/memory/attribution-registry.yml (outside the plugin tree, never
-# distributed). Names with consent=generic_only or consent=unknown must not
-# appear in plugin-distributed content.
+# in a registry kept OUTSIDE this public repo — storing it in the public
+# repo would be self-defeating (the registry contains the very names whose
+# private-channel attribution it tracks).
 #
-# Fails-open if the registry is absent (no enforcement until opted in).
+# Registry path: $MYCELIUM_ATTRIBUTION_REGISTRY env var. Fails-open if
+# unset or pointing at a missing file. Expected unset on:
+#   - fresh maintainer clones (point at your roadmap/private repo)
+#   - CI runners that don't check out private companion repos
+#   - downstream user environments (Check 33 is maintainer-side only;
+#     tests/ doesn't ship via the plugin, only plugins/mycelium/ does)
+#
+# Canonical location for haabe's setup is the private companion repo at
+# haabe/mycelium-roadmap (e.g.,
+# ../mycelium-roadmap/.claude/memory/attribution-registry.yml) — but no
+# repo name is hardcoded here so the same check works for forks or
+# alternate layouts.
+#
 # WARN-only initially per the framework's observability-before-enforcement
 # discipline; graduates to FAIL once existing pre-disclosure leaks are
 # addressed.
@@ -979,9 +991,9 @@ check_canvas_write_preflight() {
 check_plugin_identifier_leak() {
     section "Check 33: Plugin tree contains no unconsented personal identifiers"
 
-    local registry=".claude/memory/attribution-registry.yml"
-    if [ ! -f "$registry" ]; then
-        info "Attribution registry absent — Check 33 N/A (create $registry to enable)"
+    local registry="${MYCELIUM_ATTRIBUTION_REGISTRY:-}"
+    if [ -z "$registry" ] || [ ! -f "$registry" ]; then
+        info "Attribution registry absent — Check 33 N/A (set MYCELIUM_ATTRIBUTION_REGISTRY to a registry file outside this repo to enable)"
         return
     fi
 
