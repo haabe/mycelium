@@ -49,7 +49,6 @@ import re
 import sys
 from pathlib import Path
 
-
 # Citation pattern: `(per: <source>)` where <source> can span multiple words
 # but ends before the closing paren. Captured non-greedy.
 CITATION_RE = re.compile(r"\(per:\s+([^)]+?)\)", re.IGNORECASE)
@@ -77,9 +76,7 @@ def looks_like_file_path(source: str) -> bool:
     s_for_shape = s.split("#", 1)[0]
     if "/" in s_for_shape:
         return True
-    if FILE_EXT_RE.search(s_for_shape):
-        return True
-    return False
+    return bool(FILE_EXT_RE.search(s_for_shape))
 
 
 def extract_citations(text: str):
@@ -103,9 +100,9 @@ def load_read_log(read_log_path: Path, session_id_filter: str | None = None):
     if not read_log_path.exists():
         return entries
     try:
-        with open(read_log_path, "r") as f:
-            for line in f:
-                line = line.strip()
+        with open(read_log_path) as f:
+            for raw_line in f:
+                line = raw_line.strip()
                 if not line:
                     continue
                 try:
@@ -115,25 +112,23 @@ def load_read_log(read_log_path: Path, session_id_filter: str | None = None):
                 if session_id_filter and entry.get("session_id") != session_id_filter:
                     continue
                 entries.append(entry)
-    except Exception:
-        pass  # fail-open: an unreadable log produces an empty result
+    except OSError:
+        # fail-open: an unreadable log produces an empty result
+        return entries
     return entries
 
 
 def normalize_path(p: str) -> str:
     """Normalize for matching: absolute -> basename + relative tail.
 
-    Citations typically use repo-relative paths (`landscape.yml`, `.claude/canvas/X.yml`)
-    while Read tool logs absolute paths (`/Users/.../landscape.yml`). Match by
-    the trailing path component(s) — anchor matching to suffix match so that
-    `landscape.yml` matches `/Users/.../canvas/landscape.yml`.
+    Citations typically use repo-relative paths (e.g. `landscape.yml`,
+    `.claude/canvas/X.yml`) while Read tool logs absolute paths (e.g.
+    `/Users/.../landscape.yml`). Match by the trailing path component(s) —
+    anchor matching to suffix match so that `landscape.yml` matches
+    `/Users/.../canvas/landscape.yml`.
     """
-    # Strip any anchor / fragment from citation
-    p = p.split("#", 1)[0].strip()
-    # Strip leading ./ if present
-    if p.startswith("./"):
-        p = p[2:]
-    return p
+    # Strip any anchor / fragment from citation, then leading ./ if present
+    return p.split("#", 1)[0].strip().removeprefix("./")
 
 
 def cited_path_matches_read(citation: str, read_path: str) -> bool:
@@ -158,9 +153,7 @@ def cited_path_matches_read(citation: str, read_path: str) -> bool:
         return True
     # Also match if read_path ends with cite_norm and cite_norm starts with .
     # (handles .claude/... style citations against absolute paths)
-    if cite_norm.startswith(".") and read_path.endswith(cite_norm):
-        return True
-    return False
+    return cite_norm.startswith(".") and read_path.endswith(cite_norm)
 
 
 def verify(text: str, read_entries: list) -> dict:
@@ -171,7 +164,8 @@ def verify(text: str, read_entries: list) -> dict:
       - file_shaped_citations
       - concept_shaped_citations
       - verified (file-shaped citations with matching reads)
-      - unverified (file-shaped citations without matching reads — anti-pattern #7 candidates)
+      - unverified (file-shaped citations without matching reads —
+        anti-pattern #7 candidates)
       - unverifiable (concept-shaped citations — out of scope by design)
     """
     citations = list(extract_citations(text))
@@ -204,34 +198,52 @@ def verify(text: str, read_entries: list) -> dict:
 
 def format_human(report: dict) -> str:
     """Human-readable report."""
-    lines = []
-    lines.append(f"Citation verification: {report['total_citations']} citation(s) found")
-    lines.append(f"  File-shaped: {report['file_shaped']} ({len(report['verified'])} verified, {len(report['unverified'])} unverified)")
-    lines.append(f"  Concept-shaped (out of scope): {report['concept_shaped']}")
-    lines.append(f"  Reads in session log: {report['reads_in_session']}")
+    verified_n = len(report["verified"])
+    unverified_n = len(report["unverified"])
+    lines = [
+        f"Citation verification: {report['total_citations']} citation(s) found",
+        f"  File-shaped: {report['file_shaped']} "
+        f"({verified_n} verified, {unverified_n} unverified)",
+        f"  Concept-shaped (out of scope): {report['concept_shaped']}",
+        f"  Reads in session log: {report['reads_in_session']}",
+    ]
     if report["unverified"]:
         lines.append("")
         lines.append("Unverified file-citations (anti-pattern #7 Level 3 candidates):")
-        for u in report["unverified"]:
-            lines.append(f"  - (per: {u})")
+        lines.extend(f"  - (per: {u})" for u in report["unverified"])
         lines.append("")
         lines.append("Note: unverified ≠ fabricated. Possible legitimate reasons:")
-        lines.append("  - File was read before the read-log hook was installed (pre-v0.23.8 session)")
+        lines.append(
+            "  - File was read before the read-log hook was installed "
+            "(pre-v0.23.8 session)"
+        )
         lines.append("  - File content was provided via system reminder, not Read tool")
-        lines.append("  - Reference is to a concept that happens to share the file name")
-        lines.append("  - Read happened in a different session and is being recalled from memory")
+        lines.append(
+            "  - Reference is to a concept that happens to share the file name"
+        )
+        lines.append(
+            "  - Read happened in a different session and is being recalled "
+            "from memory"
+        )
         lines.append("Treat as a signal worth investigating, not a verdict.")
     return "\n".join(lines)
 
 
 def main():
     p = argparse.ArgumentParser(
-        description="Cross-reference agent (per: <source>) citations against read-log evidence."
+        description=(
+            "Cross-reference agent (per: <source>) citations against "
+            "read-log evidence."
+        )
     )
     p.add_argument(
         "--read-log",
         default=None,
-        help="Path to read-log.jsonl. Defaults to $CLAUDE_PROJECT_DIR/.claude/state/read-log.jsonl (or ./.claude/state/read-log.jsonl).",
+        help=(
+            "Path to read-log.jsonl. Defaults to "
+            "$CLAUDE_PROJECT_DIR/.claude/state/read-log.jsonl "
+            "(or ./.claude/state/read-log.jsonl)."
+        ),
     )
     p.add_argument(
         "--session-id",
@@ -259,7 +271,7 @@ def main():
 
     # Read input
     if args.input:
-        with open(args.input, "r") as f:
+        with open(args.input) as f:
             text = f.read()
     else:
         text = sys.stdin.read()
