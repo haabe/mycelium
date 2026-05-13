@@ -129,15 +129,28 @@ Then invoke `/mycelium:diamond-assess` to read the canvas and diamonds — this 
 
 If any project-state check fails, that's a bug in the migration script — surface it loudly to the user and recommend `git reset --hard HEAD` to revert.
 
-## Step 7: Settings.json hooks block (manual cleanup)
+## Step 7: Settings hooks block (manual cleanup)
 
-The migration script warns if `.claude/settings.json` contains a `"hooks"` block — that block likely points at the deleted `.claude/hooks/` tree. In plugin form, hooks are wired via `${CLAUDE_PLUGIN_ROOT}/hooks/hooks.json` automatically; the settings-level hooks block is dead weight at best, double-firing or broken at worst.
+The legacy migration script (`.claude/scripts/upgrade.sh --migrate-to-plugin`) warns if `.claude/settings.json` contains a `"hooks"` block. **That check only covers `settings.json`, not `settings.local.json`** — which is actually the more common location for hook registrations in real-world installs (the local-overrides convention). So this skill takes ownership of checking both files.
 
-Tell the user:
+Run the dual-grep check:
 
-> "Final manual step: open `.claude/settings.json` and remove the `\"hooks\"` block (if present). Plugin form provides hooks automatically. Also worth removing: any `\"customCommands\"` block referencing the legacy `/foo` skill names — they're now `/mycelium:foo`."
+```bash
+cd "$CLAUDE_PROJECT_DIR"
+for sf in .claude/settings.json .claude/settings.local.json; do
+    if [ -f "$sf" ] && grep -Eq '^\s*"hooks"\s*:' "$sf"; then
+        echo "WARN: legacy hooks block found in $sf"
+    fi
+done
+```
 
-This step is manual because settings.json may contain user-customized content alongside the legacy hooks block, and I shouldn't auto-edit it.
+For each file the grep flags, tell the user — with the specific file path — to open it and remove the top-level `"hooks": { ... }` block. In plugin form, hooks are wired via `${CLAUDE_PLUGIN_ROOT}/hooks/hooks.json` automatically; any settings-level hooks block now points at the just-deleted `.claude/hooks/` tree.
+
+**Symptom if skipped:** every turn emits non-blocking errors like `bash: .../.claude/hooks/gate.sh: No such file or directory` (PreToolUse, PostToolUse, Stop). The tool calls still succeed because the errors are non-blocking, but the noise is real and points back to this step.
+
+Also surface (independent of the grep): if either settings file contains a `"customCommands"` block referencing legacy `/foo` skill names, those need updating to `/mycelium:foo`.
+
+This step is manual-edit (the SKILL flags but doesn't auto-rewrite) because settings files contain user-customized content alongside the legacy hooks block, and the SKILL shouldn't risk clobbering user-owned config.
 
 ## Step 8: Final commit
 
@@ -163,7 +176,7 @@ This skill is safe to re-invoke. Step 1's detection routes already-migrated proj
 ## What this skill does NOT do
 
 - Does NOT install the plugin for the user (Anthropic plugin install is a Claude Code surface, not callable from a skill).
-- Does NOT modify `.claude/settings.json` (manual step in Step 7 — settings may contain user-owned content).
+- Does NOT modify `.claude/settings.json` or `.claude/settings.local.json` (manual step in Step 7 — settings files may contain user-owned content).
 - Does NOT touch project root files (CLAUDE.md, README.md, etc.).
 - Does NOT migrate non-Mycelium content under `.claude/` — if the user has put their own files there, they survive.
 - Does NOT roll back automatically on failure — the user can `git reset --hard HEAD`.
