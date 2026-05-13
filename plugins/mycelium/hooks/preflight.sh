@@ -33,5 +33,14 @@ cat > "$STAMP_FILE" << EOF
 }
 EOF
 
-echo "Mycelium preflight complete. $CORRECTIONS_COUNT corrections in memory."
+# Disambiguate "memory not yet initialized" from "memory has zero entries"
+# from "memory has N entries" — bare "0 corrections" reads as a possible
+# counting failure to first-run users (per opp-001).
+if [ ! -f "$CORRECTIONS_FILE" ]; then
+  echo "Mycelium preflight complete. Memory not yet initialized — run /mycelium:setup if this is a fresh install."
+elif [ "$CORRECTIONS_COUNT" -eq 0 ]; then
+  echo "Mycelium preflight complete. Memory is empty (no corrections logged yet)."
+else
+  echo "Mycelium preflight complete. $CORRECTIONS_COUNT corrections in memory."
+fi
 exit 0

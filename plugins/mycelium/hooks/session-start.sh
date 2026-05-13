@@ -315,10 +315,17 @@ if [ -n "$REMINDERS" ]; then
 import json, sys
 reminders = sys.argv[1]
 corrections = sys.argv[2]
+# Disambiguate '0' (genuinely empty memory) from a counting failure
+# (per opp-001) — phrase empty state as state, not failure.
+corrections_phrase = (
+    'no corrections logged yet'
+    if corrections in ('0', '0.', '')
+    else f'{corrections} corrections logged'
+)
 output = {
     'hookSpecificOutput': {
         'hookEventName': 'SessionStart',
-        'additionalContext': f'MYCELIUM FEEDBACK LOOPS: {reminders}Corrections in memory: {corrections}.'
+        'additionalContext': f'MYCELIUM FEEDBACK LOOPS: {reminders}Memory state: {corrections_phrase}.'
     }
 }
 print(json.dumps(output))

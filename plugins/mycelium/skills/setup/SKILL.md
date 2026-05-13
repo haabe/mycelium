@@ -116,7 +116,17 @@ Empty until the ingestor runs.
 
 ## Step 4: Optionally write AGENTS.md at project root
 
-Ask the user: "Should I create an AGENTS.md at your project root? This is the cross-agent-portable instructions file (read by Codex, Cursor, Aider, Copilot, and Claude Code as fallback). It will reference Mycelium plugin discipline. If you already have an AGENTS.md, I'll append a Mycelium reference section instead of overwriting."
+Ask the user — and give them the basis to decide, not just the menu (per opp-002 decision-without-context pattern). The prompt MUST cover what AGENTS.md is, when it earns its keep, and when it's safe to skip:
+
+> "Should I create an AGENTS.md at your project root?
+>
+> AGENTS.md is the cross-agent-portable instructions file (read by Codex, Cursor, Aider, Copilot, and Claude Code as fallback). It will reference Mycelium plugin discipline.
+>
+> - **Say yes** if you use (or might use) other agents on this project — AGENTS.md lets them read the same Mycelium discipline.
+> - **Say no / skip** if you use Claude Code only. Mycelium runs via the plugin hooks regardless; AGENTS.md adds nothing in a Claude-only flow and just leaves an extra file at your project root.
+> - **If you already have an AGENTS.md**, I'll append a Mycelium reference section instead of overwriting — I won't touch the rest of your file.
+>
+> Default if you're not sure: skip. You can run `/mycelium:setup` again later to add it once you know you need it."
 
 **Auto-mode default**: if running non-interactively (no terminal user to prompt), default to creating AGENTS.md when absent and skipping when present. Never overwrite an existing AGENTS.md without explicit consent.
 

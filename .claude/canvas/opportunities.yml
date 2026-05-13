@@ -21,7 +21,472 @@ desired_outcome:
 # Opportunities: Customer needs/pain points discovered through research
 # Structure is a tree: opportunities can have sub-opportunities
 # REQUIRED for each entry: name, provenance
-opportunities: []
+opportunities:
+  # First-run friction cluster surfaced 2026-05-13 from a private first-run
+  # observation (N=1 cautious-learner, behavior_validated per friction
+  # item). Each entry below carries the user's specific instance + a
+  # framework-recurrence audit showing where the same pattern appears
+  # elsewhere in the codebase. Evidence is generically framed per
+  # source's disclosure-and-ack on 2026-05-13; identity withheld
+  # pending separate sign-off for receipts attribution.
+
+  - id: opp-001
+    name: "Status-count hooks display '0 X' as ambiguous between success and failure"
+    description: |
+      A first-run user ran `/reload-plugins` and saw the platform report
+      "0 skills"; the user could not tell whether install had succeeded
+      with legitimately-zero-skills or failed to count. Probed `/myc`
+      autocomplete to confirm install. Outcome was correct, but the
+      bridge-of-doubt cost real time and confidence.
+
+      The `/reload-plugins` output itself is Claude Code (out of scope
+      for this entry), but the same "0 X" ambiguity pattern recurs in
+      Mycelium-owned status hooks:
+        - `plugins/mycelium/hooks/preflight.sh:36` — "Mycelium preflight
+          complete. $CORRECTIONS_COUNT corrections in memory." When
+          $CORRECTIONS_COUNT=0 (true on every fresh install), the line
+          reads as much like a counter-failure as a healthy zero.
+        - `plugins/mycelium/hooks/stop-check.sh` — "Session ended.
+          0 corrections, 0 decisions logged." between every interview
+          turn (also feeds opp-003).
+        - `plugins/mycelium/hooks/session-start.sh:325` — similar count
+          line.
+
+      Pattern: count-display lines do not distinguish "genuinely zero
+      (healthy)" from "could not count (failure)". A user who has not
+      yet built mental model of what these counts mean cannot read the
+      output as feedback.
+
+      Candidate fixes (not ranked):
+        1. Show "0/N corrections (no activity recorded yet)" instead of
+           bare "0 corrections" on fresh install.
+        2. Suppress count line entirely when count=0 and the
+           memory file existed pre-hook (genuinely empty), keep when
+           count=0 but file is missing (genuine failure).
+        3. Replace numeric lines with status-shape language ("memory:
+           empty (fresh install)" vs "memory: 12 corrections logged").
+
+      **Status 2026-05-13 — SHIPPED (partial)**: candidate fixes #1+#3
+      applied to `preflight.sh` (three-state messaging: not initialized
+      vs empty vs N corrections) and `session-start.sh` (empty-state
+      phrased as "no corrections logged yet"). `stop-check.sh` covered
+      under opp-003. Pattern still open for any future hook that emits
+      bare "0 X" counts; treat opp-001 as the precedent.
+    type: functional
+    frequency: high       # Every fresh install hits this; every hook firing thereafter shows the count
+    impact: low           # Cosmetic + onboarding-trust, not blocking
+    strategic_alignment: medium  # Onboarding-trust gate is L1-thesis-relevant
+    cynefin_domain: clear  # Display logic, deterministic, single-file fixes
+    sub_opportunities: []
+    solutions: []
+    provenance:
+      evidence_type: anecdotal  # N=1 behavior_validated for /reload-plugins instance; recurrence pattern desk-confirmed via grep across hook files
+      evidence_sources:
+        - "private first-run observation 2026-05-10 (generic, source disclosure ack'd 2026-05-13)"
+        - "plugins/mycelium/hooks/preflight.sh"
+        - "plugins/mycelium/hooks/stop-check.sh"
+        - "plugins/mycelium/hooks/session-start.sh"
+      captured_at: "2026-05-13"
+      confidence: 0.4  # Single user instance + clear pattern match in three hook files; would advance with second user observation or one shipped fix observed-in-the-wild
+
+  - id: opp-002
+    name: "/interview skill: decisions asked too early, doc/skill consistency drift"
+    description: |
+      Two related frictions in `/mycelium:interview` and its companions
+      that both stem from the same shape: skills ask the user for input
+      or signal expectations without giving the user enough context to
+      evaluate the choice. Bundled because a single skill-prompt audit
+      would fix both.
+
+      Instance A (decision-without-context): During `/mycelium:start`,
+      the agent asked the first-run user whether to create AGENTS.md
+      for cross-agent portability (Codex/Cursor/Aider/Copilot/Claude
+      Code fallback). The user uses only Claude Code and accepted
+      from "laziness" because they lacked basis to evaluate the
+      implication. Decision was asked before user has framing to
+      understand what AGENTS.md does, when it matters, or what cost
+      defaulting-yes carries.
+
+      Recurrence: the agent narrating diamond inspection asked "Want
+      to fill those [project_type, product_type] in now, or leave them
+      for `/mycelium:diamond-assess`?" — same shape, different field.
+      Pattern likely repeats across skills that offer post-action
+      decision branches. Cannot be exhaustively listed via grep; needs
+      audit of every "Want to / Do you want / Should I" prompt across
+      `plugins/mycelium/skills/`.
+
+      Instance B (doc/skill consistency drift): User expected a
+      time-budget question based on prior README reading; the question
+      did not appear. `plugins/mycelium/skills/interview/SKILL.md:34`
+      confirms the time-budget routing was intentionally REPLACED by
+      the Universal Brief Flow ("Both were predict-the-future questions
+      asked before any value was delivered"). However:
+        - `plugins/mycelium/skills/preflight/SKILL.md:22-34` STILL uses
+          "time budget" framing as an active part of the skill.
+        - README references to time-budget flow (not audited here) may
+          still exist and were the user's source for the expectation.
+
+      The /interview change shipped without sweeping cross-skill /
+      README references, leaving users with stale mental models that
+      cost real cycles searching for the missing prompt.
+
+      Candidate fixes:
+        1. For Instance A: every "Want to / Do you want" prompt in
+           skills gets a one-line framing of why the choice matters
+           BEFORE the question, not after.
+        2. For Instance B: README + cross-skill audit for residual
+           time-budget references; either restore consistent
+           terminology in /preflight or update /preflight to align
+           with /interview's no-future-prediction stance.
+        3. Long-term: when a skill significantly changes its prompt
+           surface, a doc-sweep step in the release process catches
+           cross-skill / README drift.
+
+      **Status 2026-05-13 — SHIPPED (partial)**:
+        - Instance A (decision-context): AGENTS.md prompt in
+          `setup/SKILL.md:119` rewritten to give say-yes-vs-skip framing
+          ("say yes if you use other agents; skip if Claude Code only").
+          Sets the precedent. Pattern audit of remaining
+          "Want to / Do you want" prompts across skills still pending.
+        - Instance B (doc drift): `README.md:46` updated — old
+          time-budget routing description replaced with Universal Brief
+          Flow description. `/preflight` time-budget usage left
+          unchanged (it's legitimate at delivery-scoping stage,
+          different from /interview's removed brief-stage routing).
+        - Remaining: full skill-prompt audit (Instance A pattern),
+          release-process doc-sweep step (#3).
+    type: functional
+    frequency: high       # /interview is the primary entry point; every first-run hits it
+    impact: medium        # Real time cost + correctness-of-mental-model risk
+    strategic_alignment: high  # First-run skill design is L1-thesis-load-bearing
+    cynefin_domain: complicated  # Known shapes, known countermeasures, requires audit + sweep
+    sub_opportunities: []
+    solutions: []
+    provenance:
+      evidence_type: anecdotal  # N=1 behavior_validated for both instances; recurrence pattern partially desk-confirmed
+      evidence_sources:
+        - "private first-run observation 2026-05-10 (generic, source disclosure ack'd 2026-05-13)"
+        - "plugins/mycelium/skills/interview/SKILL.md:34 (time-budget removal)"
+        - "plugins/mycelium/skills/preflight/SKILL.md:22-34 (residual time-budget framing)"
+      captured_at: "2026-05-13"
+      confidence: 0.4  # Two instances from one user + desk-confirmed cross-skill inconsistency; recurrence of decision-without-context shape needs broader skill-prompt audit before advancing
+
+  - id: opp-003
+    name: "Stop-hook output leaks into user-facing channel as visual noise"
+    description: |
+      First-run user reported that the line
+      `Stop says: Session ended. 0 corrections, 0 decisions logged.`
+      appeared between every interview question turn. She read it as
+      an error message; in practice the interview continued normally.
+      Pattern: hook output that is operationally useful (recording
+      session-end state) is rendered into the same channel as the
+      agent's user-facing content, with no signal that it is mechanical
+      output rather than conversational content.
+
+      Source confirmed: `plugins/mycelium/hooks/stop-check.sh` is the
+      single emitter; runs on every Stop event. The N=0 case (no
+      corrections / no decisions during a brief flow) is the most
+      common case during first-run, so the line appears at maximum
+      frequency precisely when the user has the weakest model of what
+      it means.
+
+      Related but distinct shape: `session-start.sh:325` produces a
+      similar reminders/corrections summary at session boundary; less
+      noisy because it appears once per session, but the same
+      output-channel-conflation pattern applies.
+
+      Candidate fixes:
+        1. Suppress when both counts are 0 AND session was brief-shaped
+           (no agent-side activity to log) — silence is correct output
+           for "nothing happened to log".
+        2. Move hook output to a dedicated channel (system message,
+           stderr-equivalent, ANSI-dim) so users can distinguish hook
+           feedback from agent content.
+        3. Rephrase from "Session ended. 0 corrections, 0 decisions
+           logged." (reads as terminal report) to absence-shape
+           ("memory unchanged this turn") that doesn't suggest a
+           session-state event.
+
+      **Status 2026-05-13 — SHIPPED**: candidate fix #1 + #3 applied to
+      `stop-check.sh`. Hook now emits nothing when WARNINGS is empty
+      AND both counts are zero (silence is correct output for
+      no-activity). When counts > 0 without warnings, rephrased
+      "Session ended." → "Session:" so the line reads as turn-summary
+      not session-terminal. opp-003 closed.
+    type: functional
+    frequency: high       # Fires per Stop event; high frequency during /interview
+    impact: medium        # Reads as error to first-time users; visual noise to repeat users
+    strategic_alignment: medium  # Hook-output discipline is part of the perceived-cognitive-load surface
+    cynefin_domain: clear  # Single file, mechanical fix
+    sub_opportunities: []
+    solutions: []
+    provenance:
+      evidence_type: anecdotal
+      evidence_sources:
+        - "private first-run observation 2026-05-10 (generic, source disclosure ack'd 2026-05-13)"
+        - "plugins/mycelium/hooks/stop-check.sh"
+        - "plugins/mycelium/hooks/session-start.sh:325"
+      captured_at: "2026-05-13"
+      confidence: 0.45  # Single user + single-file source confirmed via grep; high-frequency surface
+
+  - id: opp-004
+    name: "Gate-self-aware-but-unfixed: hardcoded calibration with DEFERRED notes"
+    description: |
+      First-run user noticed the L0 diamond showed `confidence: 0.15`
+      after they had provided answers backed by real underlying
+      research data. The user queried the agent; the agent correctly
+      identified it as a hardcoded floor for brief-only state and
+      named it as "a known calibration issue."
+
+      Source confirmed:
+        - `plugins/mycelium/skills/interview/SKILL.md:76` writes
+          `confidence: 0.15` with inline comment
+          "hardcoded floor for brief-only state — see DEFERRED note at
+          end of file".
+        - `plugins/mycelium/skills/interview/SKILL.md:418` contains the
+          full DEFERRED block:
+          `## DEFERRED: confidence-math should be canvas-density-emergent`
+          — the skill self-flags that the calibration is wrong but
+          ships with the wrong calibration deliberately.
+
+      Meta-pattern: the framework documents known calibration issues
+      via DEFERRED notes and ships anyway. From the user side, this
+      means the framework actively presents wrong-but-known values
+      while having the receipts to know they're wrong. The agent's
+      offer to bump 0.15 → 0.25 in this user's case is an in-session
+      patch that the framework should not require to apply.
+
+      This is a different category from genuine speculation or
+      genuine uncertainty — it's a deliberate ship-with-known-wrong
+      pattern. Worth a broader skill audit to find every DEFERRED note
+      that affects user-visible values (confidence scores, gate
+      thresholds, evidence-decay constants).
+
+      Candidate fixes:
+        1. Inventory every DEFERRED note in `plugins/mycelium/skills/`
+           that affects user-visible values; classify by "shipping cost
+           low" (fix in patch release) vs "shipping cost high" (needs
+           design work).
+        2. For the specific 0.15 floor: ship the canvas-density-
+           emergent confidence calculation, OR if that is out of scope,
+           change the brief-only flow so the user is not shown a
+           confidence value that the framework knows is wrong.
+        3. Standardize: when a DEFERRED issue affects user-visible
+           output, surface a one-line caveat at the point of display
+           ("this value is a known-rough floor; see /faq").
+
+      **Status 2026-05-13 — SHIPPED (partial graduation)**:
+        - 0.15 inline rationale fixed in `interview/SKILL.md:76` from
+          "hardcoded floor" to "canvas-density-derived" with formula
+          breakdown (purpose 0.05 + JTBD functional 0.05 + workarounds
+          0.025 ≈ 0.125 → 0.15). The value was already formula-correct;
+          only the framing was misleading.
+        - User-facing post-write line added: "L0 confidence set to
+          0.15 — this reflects what a 4-question brief can establish..."
+          surfaces the formula at point of display (candidate fix #3).
+        - DEFERRED block restructured into "Confidence-math: canvas-
+          density-emergent (partial)" with checkbox status: brief-only
+          ✓ shipped; depth-menu writes ☐, classic Phase 1-6 paths ☐,
+          /diamond-assess computation ☐.
+        - Trigger from DEFERRED block ("first time a user reports
+          unexpected L0 confidence delta") confirmed fired by the
+          first-run observation 2026-05-10; documented in DEFERRED
+          block.
+        - Remaining: full DEFERRED audit across skills (candidate #1);
+          depth-menu + classic-path + diamond-assess work (candidate #2
+          deeper scope). Bundle into next confidence-related cleanup
+          cycle per the trigger rules.
+    type: functional
+    frequency: medium     # Hits every brief-only L0 entry; lower than per-turn but still per-first-run
+    impact: medium        # Trust impact when user notices the discrepancy; bigger downstream cost if they don't notice and trust the floor
+    strategic_alignment: high  # Honest-receipts discipline is core L1 framing
+    cynefin_domain: complicated  # Known issue with named design tension; needs design choice
+    sub_opportunities: []
+    solutions: []
+    provenance:
+      evidence_type: anecdotal
+      evidence_sources:
+        - "private first-run observation 2026-05-10 (generic, source disclosure ack'd 2026-05-13)"
+        - "plugins/mycelium/skills/interview/SKILL.md:76 (hardcoded 0.15 floor)"
+        - "plugins/mycelium/skills/interview/SKILL.md:418 (DEFERRED note — full text)"
+      captured_at: "2026-05-13"
+      confidence: 0.4  # Single user + source-confirmed; broader DEFERRED audit not yet done
+
+  - id: opp-005
+    name: "Canvas-writing skills auto-tag source_class silently without user surface"
+    description: |
+      First-run user noticed that canvas entries had been tagged
+      `source_class: internal_stakeholder, validated: false` without
+      being asked. The user did not know other classes existed; was
+      not consulted on the choice.
+
+      Source confirmed: `plugins/mycelium/skills/interview/SKILL.md:75`
+      instructs the skill to "Tag all entries `source_class:
+      internal_stakeholder, validated: false`" — the discipline is
+      load-bearing (per `plugins/mycelium/domains/discovery/CLAUDE.md`,
+      stakeholder claims about users count toward L0 confidence but
+      NOT L2 without independent validation; the `validated: false`
+      tag creates pressure for `/assumption-test`). The schema in
+      `_common.schema.json:41-82` documents all five source classes
+      with descriptions.
+
+      But the moment of the write is invisible to the user. She wasn't
+      told the framework was making a classification choice, what the
+      choice was, or that the choice can be revised. The discipline
+      lives in docs; the practice lives in skill internals; the user
+      sees neither.
+
+      Pattern likely systemic: every canvas-writing skill (interview,
+      jtbd-map, ost-builder, log-evidence, user-needs-map, gist-plan,
+      dora-check, metrics-pull, wardley-map, canvas-update) has to
+      make source_class choices. If they all auto-tag silently, the
+      same friction recurs across the whole flow.
+
+      Candidate fixes:
+        1. Skills that auto-tag a default source_class surface the
+           choice when first written — one-line "tagged
+           internal_stakeholder per [reason]; correct?".
+        2. README-side: explain the five source classes in onboarding,
+           not buried in domain docs.
+        3. /faq or /canvas-update gains an explicit "revise
+           source_class" path so a user who realizes they had real
+           interview data behind a brief answer can re-tag without
+           hand-editing YAML.
+    type: functional
+    frequency: high       # Every canvas write hits this
+    impact: medium        # Silent default that affects downstream confidence math is a real epistemic cost when wrong
+    strategic_alignment: high  # Source_class discipline is L0-L2 confidence-math foundation
+    cynefin_domain: complicated  # Discipline is documented; surface design is the gap
+    sub_opportunities: []
+    solutions: []
+    provenance:
+      evidence_type: anecdotal
+      evidence_sources:
+        - "private first-run observation 2026-05-10 (generic, source disclosure ack'd 2026-05-13)"
+        - "plugins/mycelium/skills/interview/SKILL.md:75 (auto-tag instruction)"
+        - "plugins/mycelium/domains/discovery/CLAUDE.md:49-54 (load-bearing discipline)"
+        - "plugins/mycelium/schemas/canvas/_common.schema.json:41-82 (full taxonomy)"
+      captured_at: "2026-05-13"
+      confidence: 0.45  # Single user + clearly systemic pattern (10+ canvas-writing skills affected by the same default-tag mechanic)
+
+  - id: opp-006
+    name: "Internal-vocabulary leak in user-facing prompts (Phase N, Lx, diamond scales)"
+    description: |
+      During diamond inspection, the agent flagged empty
+      `project_type` / `product_type` fields with the phrase
+      "The interview skill would normally populate these from Phase 6
+      questions." The first-run user did not know what Phase 6 was,
+      whether it was something coming later, or something they had
+      missed by running `/mycelium:start` instead of
+      `/mycelium:interview` directly. Phase-numbering is internal
+      skill structure; surfaced to the user without anchor.
+
+      Source confirmed: `plugins/mycelium/skills/interview/SKILL.md`
+      uses Phase 0 / Phase 1 / Phase 2 / Phase 3 / Phase 4 / Phase 5
+      / Phase 5b / Phase 5c extensively as internal section structure.
+      `plugins/mycelium/skills/start/SKILL.md:48` references "interview's
+      Phase 0 canvas-state detection" — i.e., skill chains reference
+      each other's internal phase numbering. When agents narrate
+      "Phase 6" or "Phase 0" to users, internal vocabulary leaks.
+
+      Related: an independent external LLM review of the public repo
+      surface on 2026-05-13 enumerated specific framework-internal
+      terms ("diamond scales", "leaf lifecycle", "adaptive thresholds",
+      "framework reflexion", "evidence decay", "perspective
+      resolution") as readable but un-anchored for users without
+      prior framework exposure. The Phase-N instance is one example
+      of a broader pattern: Mycelium has internal taxonomy that is
+      useful for skill authors but unaccountable in user-facing
+      prompts.
+
+      Candidate fixes:
+        1. Skill-author guideline: phase-numbers and internal
+           taxonomy are for SKILL.md structure only; agent narration
+           to users uses outcome-shape language ("the part where the
+           framework asks about your project type") not structural
+           ("Phase 6 questions").
+        2. Audit skill files for cross-skill phase references; if
+           skill A needs to refer to skill B's structure, name the
+           outcome not the index ("the project-type question in
+           /interview" not "interview's Phase 6").
+        3. Onboarding docs: if certain internal terms (Lx, diamonds,
+           canvas) are unavoidable in user-facing material, surface a
+           plain-language glossary once, not implicitly.
+    type: functional
+    frequency: high       # Phase / Lx vocabulary surfaces across many skill outputs
+    impact: medium        # First-impression cost; reinforces the "cult-framework" risk independently observed
+    strategic_alignment: high  # The vocabulary-leak pattern is what makes Mycelium feel like methodology-for-methodology; central to L1 activation-cost framing
+    cynefin_domain: complicated  # Style/voice discipline + selective rewrite
+    sub_opportunities: []
+    solutions: []
+    provenance:
+      evidence_type: anecdotal  # N=1 behavior_validated for the "Phase 6" instance + independent LLM-positioning-mirror observation of the broader pattern
+      evidence_sources:
+        - "private first-run observation 2026-05-10 (generic, source disclosure ack'd 2026-05-13)"
+        - "plugins/mycelium/skills/interview/SKILL.md (Phase 0 through 5c internal structure)"
+        - "plugins/mycelium/skills/start/SKILL.md:48 (cross-skill phase reference leak)"
+        - "ChatGPT review of public repo surface 2026-05-13 (independent enumeration of self-referential vocabulary — llm_positioning_mirror, not external_human)"
+      captured_at: "2026-05-13"
+      confidence: 0.5  # Two independent evidence types converging on the same pattern (behavior + careful-reader proxy); higher than single-source instance
+
+  - id: opp-007
+    name: "Opaque destination prompts read as background pipeline"
+    description: |
+      First-run user reached the friction-log capture step and saw
+      the prompt "Your answer goes to a receipts case under your name.
+      See CONTRIBUTORS.md for how that works." The user read this as
+      an opaque pipeline — could not tell whether their input would
+      be written to a file, sent somewhere, or aggregated. Asked the
+      agent directly what would happen; agent clarified it stays in
+      conversation unless the user asks for a file. The user then
+      asked for the file write explicitly.
+
+      Source confirmed: `plugins/mycelium/skills/interview/SKILL.md:118`
+      contains the literal phrase:
+        `"What felt off? Where did the framework get in your way?
+         Your answer goes to a receipts case under your name. See
+         CONTRIBUTORS.md for how that works."`
+
+      "Goes to a receipts case" implies a destination + transformation
+      ("case" suggests a structured artifact, "goes to" suggests
+      automation), and "See CONTRIBUTORS.md" defers explanation to a
+      different file. At the moment of the prompt, the user has no
+      operational answer to "what happens with my input."
+
+      Pattern shape: prompts that reference internal artifacts
+      (receipts cases, decision log, canvas, memory) by name without
+      specifying the destination at the moment of the prompt. Other
+      skills likely have similar phrasings ("logged to decision log",
+      "captured in canvas") that suffer the same opacity for new
+      users.
+
+      Candidate fixes:
+        1. Rewrite the friction-log prompt to be operationally
+           explicit at the moment of the question: "If you want, I'll
+           write your answer to [.claude/evals/dogfood-reports/...]
+           so it's preserved across sessions. Just text in chat is
+           also fine." User-controlled destination, named at the
+           point of decision.
+        2. Audit other prompts that reference internal artifacts;
+           same surgery applies where opacity exists.
+        3. Long-term: the "receipts case" concept could surface in
+           README so the vocabulary is anchored before a skill uses
+           it.
+    type: functional
+    frequency: medium     # Friction-log specific instance; pattern more frequent across skills
+    impact: low           # Cosmetic + first-trust; user worked around easily
+    strategic_alignment: medium  # Prompt-clarity discipline is part of the broader "feel-lightweight" surface
+    cynefin_domain: clear  # Prompt-copy edits; deterministic
+    sub_opportunities: []
+    solutions: []
+    provenance:
+      evidence_type: anecdotal
+      evidence_sources:
+        - "private first-run observation 2026-05-10 (generic, source disclosure ack'd 2026-05-13)"
+        - "plugins/mycelium/skills/interview/SKILL.md:118 (literal source of the prompt)"
+      captured_at: "2026-05-13"
+      confidence: 0.4  # Single user + source-confirmed; pattern likely broader but not exhaustively audited
+
 # - id: opp-001
 #   name: ""
 #   description: ""

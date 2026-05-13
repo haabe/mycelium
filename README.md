@@ -43,7 +43,7 @@ Mycelium is for work where deciding *what to build* is the hard part. Some use c
 - **Pure execution acceleration in a known scope** — the build is decided; just ship it faster. Tools like [Addy Osmani's agent-skills](https://github.com/addyosmani/agent-skills) optimize this. They compose with Mycelium when discovery is missing, but if discovery is settled, use them directly.
 - **Projects where the ceremony feels heavier than the value it adds.** Mycelium scales gates to project size, but if your project genuinely lacks wrong-build risk, the discipline reads as bureaucracy. That's a fit signal — listen to it.
 
-Time-constrained projects ARE supported as of 2026-04-30: `/interview` Phase 0 picks **<8h inline discovery**, **8-48h sprint mode**, or **48h+ full interview**. The path is selected by your answer to "How much time do you have?"
+Time-constrained projects ARE supported: `/interview` opens with a universal 4-question brief (problem, users, risk, smallest next move) — no predict-the-future time-budget question up front. After the brief, you choose how deep to go via a menu (test biggest assumption, go deeper, regulatory review, stop here, friction log). Depth and time-cost are chosen with data, not before any value has been delivered.
 
 ## What it feels like
 

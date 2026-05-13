@@ -176,8 +176,12 @@ output = {
 }
 print(json.dumps(output))
 " "$WARNINGS" "$CORRECTIONS_COUNT" "$DECISIONS_COUNT"
-else
-  echo "{\"systemMessage\": \"Session ended. ${CORRECTIONS_COUNT} corrections, ${DECISIONS_COUNT} decisions logged.\"}"
+elif [ "$CORRECTIONS_COUNT" -gt 0 ] || [ "$DECISIONS_COUNT" -gt 0 ]; then
+  # Surface counts only when something was actually logged this session.
+  # Silence is the correct output when nothing happened — emitting
+  # "Session ended. 0 corrections, 0 decisions logged." on every turn
+  # reads as visual noise / error to first-run users (per opp-003).
+  echo "{\"systemMessage\": \"Session: ${CORRECTIONS_COUNT} corrections, ${DECISIONS_COUNT} decisions logged.\"}"
 fi
 
 exit 0
