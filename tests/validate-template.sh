@@ -963,15 +963,18 @@ check_four_risks_when_active() {
         return
     fi
 
-    local result
+    # set -euo pipefail at top of file would abort the script when the
+    # python3 invocation exits 1 to signal a WARN (which the wrapper logic
+    # below is intended to convert to WARN, not FAIL). Temporarily disable
+    # errexit around the rc capture so the wrapper actually runs.
+    local result rc
+    set +e
     result=$(python3 - "$opps_file" <<'PY'
 import re
 import sys
 from pathlib import Path
 
 opps_path = sys.argv[1]
-
-# Best-effort YAML parse via PyYAML if available, regex fallback otherwise.
 try:
     import yaml  # type: ignore
     use_yaml = True
@@ -1006,7 +1009,6 @@ if use_yaml:
             if m:
                 missing_per_opp[o["id"]] = m
 else:
-    # Regex fallback: split on top-level "  - id:" markers
     for m_block in re.finditer(r"(?:^|\n)\s*-\s*id:\s*([\w-]+)\b(.*?)(?=\n\s*-\s*id:|\Z)", text, re.DOTALL):
         opp_id, block = m_block.group(1), m_block.group(2)
         if not opp_id.startswith("opp-"):
@@ -1020,28 +1022,24 @@ else:
             missing_per_opp[opp_id] = miss
 
 if total == 0:
-    print("OK: No opportunities to check")
+    print("No opportunities to check")
     sys.exit(0)
 if not missing_per_opp:
-    print(f"OK: All {total} opportunity entries have Four-Risks levels populated")
+    print(f"All {total} opportunity entries have Four-Risks levels populated")
     sys.exit(0)
 
-# WARN — diamond-progress step 2 reads these levels and passes vacuously when
-# absent. Multi-team magnification: one team's incomplete evidence becomes
-# another team's "validated" gate-pass. Populate via /mycelium:assumption-test
-# or /mycelium:ice-score before progressing the diamond into Develop/Deliver.
-print(f"WARN: {len(missing_per_opp)} of {total} opportunity entries missing Four-Risks levels (vacuous-pass risk in /mycelium:diamond-progress):")
+print(f"{len(missing_per_opp)} of {total} opportunity entries missing Four-Risks levels (vacuous-pass risk in /mycelium:diamond-progress):")
 for ref, miss in sorted(missing_per_opp.items()):
     print(f"  - {ref}: missing {', '.join(miss)}")
 sys.exit(1)
 PY
     )
-    local rc=$?
+    rc=$?
+    set -e
     if [ $rc -eq 0 ]; then
         pass "$result"
     else
-        printf "  %s\n" "$result"
-        WARN=$((WARN + 1))
+        warn "$result"
     fi
 }
 
