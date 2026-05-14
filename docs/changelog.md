@@ -6,6 +6,28 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.23.18 — Read-before-Write: limit:1 discipline for Edit (~10–50k tokens/session saved)
+
+**2026-05-14. Attribution: lived-friction-triggered.** The v0.23.x Preflight discipline correctly solved the surface-confusion failure (Bash `head` ≠ Read tool, anti-pattern #7 instance #5, 2026-05-09) but introduced a second-order cost: the agent over-applied "Read before Write" as "full Read before every Edit." With canvas files at 800+ lines (~20k tokens each), per-Edit full-Reads were dominating session token cost — meaningful on Pro-tier sessions where the 5h window already strains under Mycelium's load.
+
+**Mechanism**: Claude Code's read-state tracking is per file, not per byte. `Read(limit:1)` registers the file at ~50 tokens and unblocks subsequent `Edit` calls anywhere in it. Verified experimentally 2026-05-14 (Read line 1 of a 5-line file, then Edited line 3 successfully).
+
+**Rule sharpening**:
+- **`Edit`** (exact-string replacement): `Read(limit:1)` satisfies the check. Use for partial updates against large canvas files.
+- **`Write`** (full replacement): full Read still required. Write obliterates the file; you should see what you're about to replace. The shortcut is *not* appropriate here — safety motivation preserved.
+
+**Shipped to**:
+- `CLAUDE.md` — canonical rule under "Canvas writes — Read before Write (HARD RULE)"
+- All 22 canvas-writing SKILL.md Preflight blocks (byte-identical replacement via script — no per-skill drift risk)
+
+**Estimated savings**: 10–50k tokens per session, ongoing, every Mycelium user. Compounds across the install base.
+
+**Check 31 unchanged**: validator still matches on the `## Preflight: Read target canvas file` heading. The rule body sharpened underneath; structural enforcement layer keeps passing.
+
+**Third entry in the 2026-05-14 framework-health cycle**: pairs with v0.23.16 (framework-on-framework exemption) and v0.23.17 (Hashimoto + Torres external-validation citations).
+
+PATCH — rule clarification + cost optimization; same discipline, documented cheap path.
+
 ## v0.23.17 — Citations: Hashimoto (harness engineering), Torres (AI-generated OSTs)
 
 **2026-05-14. Attribution: external-validation-triggered.** Two convergent external signals dated 2026-05-13:
