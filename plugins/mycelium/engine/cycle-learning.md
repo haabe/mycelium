@@ -113,6 +113,8 @@ When Mycelium is the product (this repo dogfoods itself), framework improvements
 - Graduation criterion in `cluster-instances.md` — the "actual vs expected" trigger
 - Commit history of `plugins/mycelium/engine/validator.sh` and `harness/anti-patterns.md` — the mechanism ledger
 
+**Canonical source for this discipline**: Mitchell Hashimoto (HashiCorp co-founder, blog post early Feb 2026): *"Anytime you find an agent makes a mistake, you take the time to engineer a solution such that the agent never makes that mistake again."* The corrections.md → cluster → mechanism loop is Mycelium's direct implementation. The term "harness engineering" — given formal definition by Ryan Lopopolo (OpenAI, 2026-02-11) and crystallized as the fourth paradigm of AI engineering across the industry by mid-2026 — names the broader discipline Mycelium has been building toward since v0.1.
+
 **Detection** (used by `/mycelium:framework-health` Step 1): the project root contains `plugins/mycelium/plugin.json` AND `CLAUDE.md` begins with `# Mycelium:`. When both hold, the skill routes to the corrections-graduation summary instead of returning early on N=0 cycles.
 
 **Reconsider this exemption if**: Mycelium gains a second product surface (e.g., a hosted service) whose delivery does fit the OST→ICE→launch shape. At that point, the framework-meta work could move to a parallel `framework-cycle-history.yml`. Until then, the existing corrections graduation is the ledger.

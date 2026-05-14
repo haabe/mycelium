@@ -91,7 +91,7 @@ When generating solution ideas for leaf opportunities, frame each as a Lean UX h
 Flow: Opportunity (research) -> Solution hypothesis (Lean UX) -> Assumption test (smallest viable test).
 
 ## Theory Citations
-- Torres: Continuous Discovery Habits (OST methodology)
+- Torres: Continuous Discovery Habits (OST methodology). Update 2026-05-13 ("Behind the Scenes: Building AI-Generated Opportunity Solution Trees", producttalk.org): Torres now ships AI-generated OSTs via Vistaly, generated *from* customer interview transcripts (3 minimum, scaling to 16+). This reinforces this skill's "never from brainstorming" rule — the canonical OST voice independently converged on evidence-only generation. Her service also exposes a structural lesson Mycelium has not yet implemented: when updating an OST from new evidence, emit a change set (add/delete/reframe/merge/split) alongside the new tree so users can accept/modify/reject each move. Today `/mycelium:ost-builder` and `/mycelium:canvas-update` silently rewrite `opportunities.yml`. Tracked as an L3 gap; see backlog rather than this skill's scope.
 - Christensen: Competing Against Luck (JTBD informing opportunities)
 - Ellis: ICE scoring. Gilad: Evidence-Guided (Confidence Meter for solutions)
 - Gothelf: Lean UX (hypothesis-driven solution framing)

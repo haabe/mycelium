@@ -6,6 +6,24 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.23.17 — Citations: Hashimoto (harness engineering), Torres (AI-generated OSTs)
+
+**2026-05-14. Attribution: external-validation-triggered.** Two convergent external signals dated 2026-05-13:
+
+1. **Teresa Torres** ("Behind the Scenes: Building AI-Generated Opportunity Solution Trees", producttalk.org): the canonical OST source now ships AI-generated OSTs via Vistaly, generated *from* customer interview transcripts (3 → 16+). Reinforces `/mycelium:ost-builder`'s "never from brainstorming" rule with canonical-source convergence. Torres's service also surfaces a structural gap Mycelium has not yet implemented: when updating an OST from new evidence, emit a change set (add/delete/reframe/merge/split) alongside the new tree so users can accept/modify/reject each move. Logged as L3 backlog; out of scope for this PATCH.
+
+2. **"Harness engineering" as the fourth paradigm of AI engineering** (TechTimes 2026-05-13, citing Mitchell Hashimoto's Feb 2026 blog post and Ryan Lopopolo's 2026-02-11 OpenAI definition). Hashimoto's principle — *"anytime you find an agent makes a mistake, engineer a solution such that the agent never makes that mistake again"* — names the discipline Mycelium's `corrections.md → cluster → mechanism` graduation loop implements directly. Stanford/Tsinghua research cited in the same piece reports 6x performance gaps from harness design alone with the model held constant.
+
+Two citation edits to shipped framework files:
+- `engine/cycle-learning.md` — Hashimoto + Lopopolo citation under the framework-on-framework exemption section (paired with the v0.23.16 mechanism).
+- `skills/ost-builder/SKILL.md` — Torres-Vistaly citation under Theory Citations; OST-update-with-change-set gap flagged as L3 backlog.
+
+Canvas evidence entries (landscape.yml component for "harness engineering"; purpose.yml evidence sources) land in the roadmap-repo canvas, not here — per the framework-on-framework exemption shipped at v0.23.16.
+
+README / positioning rewrite ("Mycelium is a **theory-grounded** harness for product development") deferred to a deliberate L5 marketing diamond.
+
+PATCH — citation additions to shipped docs; no schema change, no new validator check, no behavior change for downstream users.
+
 ## v0.23.16 — Framework-on-framework exemption for `/framework-health`
 
 **2026-05-14. Attribution: lived-friction-triggered.** `/mycelium:framework-health` was returning early on N=0 cycles when run against this repo, because Mycelium dogfoods itself and framework improvements don't fit the OST→ICE→launch cycle schema. The actual learning signal lives in `corrections.md` graduation (21 corrections → mechanisms; Checks 30–34 are recent examples) and `cluster-instances.md`, not in `cycle-history.yml`.
