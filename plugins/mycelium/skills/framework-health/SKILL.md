@@ -19,7 +19,14 @@ Mycelium evaluates its own process. This is triple-loop learning — the framewo
 
 ### 1. Load Cycle Data
 
-Read `.claude/canvas/cycle-history.yml`. If fewer than 5 cycles recorded, report:
+Read `.claude/canvas/cycle-history.yml`.
+
+**Framework-self-host detection** (per `engine/cycle-learning.md#framework-on-framework-exemption`): if the project root contains `plugins/mycelium/plugin.json` AND `CLAUDE.md` begins with `# Mycelium:`, this is the framework dogfooding itself. Skip the cycle-count gate and route to a corrections-graduation summary:
+- Count entries in `.claude/memory/corrections.md` (total, and ×graduated-to-mechanism in the last 90 days).
+- Read `.claude/memory/cluster-instances.md` and list clusters at-or-above their graduation criterion that are not yet graduated (this is the framework analogue of "actual outcome vs predicted ICE").
+- Skip cycle-derived dimensions (velocity, discard rate, confidence calibration, regression rate) — they do not apply. Still run Steps 2b, 4b, 4c, 4d.
+
+Otherwise (product project, not framework-self-host): if fewer than 5 cycles recorded, report:
 "Insufficient cycle data for framework health assessment. [N] cycles recorded; minimum 5 needed. Continue recording outcomes."
 
 ### 2. Measure Five Dimensions

@@ -102,6 +102,21 @@ Track at which lifecycle phase leaves are most often discarded:
 - Late discards (Phase 7-9) are expensive — earlier gates should catch these
 - If most discards happen at the same phase, that gate may be too lenient or the previous gate too easy
 
+## Framework-on-Framework Exemption
+
+When Mycelium is the product (this repo dogfoods itself), framework improvements ship as commits and graduate through `.claude/memory/corrections.md` → mechanism (validator check, guardrail, skill update). They do **not** populate `cycle-history.yml`.
+
+**Why**: The cycle schema (`feasibility_risk`, `dora_metrics`, `user_metrics`, ICE prediction) does not map cleanly to "added a validator check" or "graduated a recurring correction to a mechanism." Forcing framework work through the cycle ledger would produce mostly-null rows and mix product-cycle signal with framework-meta signal in `calibration_summary`, degrading both.
+
+**Where framework calibration lives instead**:
+- `corrections.md` — recurrence count is the prediction-error signal
+- Graduation criterion in `cluster-instances.md` — the "actual vs expected" trigger
+- Commit history of `plugins/mycelium/engine/validator.sh` and `harness/anti-patterns.md` — the mechanism ledger
+
+**Detection** (used by `/mycelium:framework-health` Step 1): the project root contains `plugins/mycelium/plugin.json` AND `CLAUDE.md` begins with `# Mycelium:`. When both hold, the skill routes to the corrections-graduation summary instead of returning early on N=0 cycles.
+
+**Reconsider this exemption if**: Mycelium gains a second product surface (e.g., a hosted service) whose delivery does fit the OST→ICE→launch shape. At that point, the framework-meta work could move to a parallel `framework-cycle-history.yml`. Until then, the existing corrections graduation is the ledger.
+
 ## Connecting to Existing Systems
 
 | System | Connection |

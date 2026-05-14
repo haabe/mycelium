@@ -6,6 +6,16 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.23.16 — Framework-on-framework exemption for `/framework-health`
+
+**2026-05-14. Attribution: lived-friction-triggered.** `/mycelium:framework-health` was returning early on N=0 cycles when run against this repo, because Mycelium dogfoods itself and framework improvements don't fit the OST→ICE→launch cycle schema. The actual learning signal lives in `corrections.md` graduation (21 corrections → mechanisms; Checks 30–34 are recent examples) and `cluster-instances.md`, not in `cycle-history.yml`.
+
+Step 1 of the skill now detects the framework-self-host case (`plugins/mycelium/.claude-plugin/plugin.json` present AND `CLAUDE.md` starts with `# Mycelium:`) and routes to a corrections-graduation summary, skipping cycle-derived dimensions while still running the non-cycle-gated steps (2b router-discipline re-run, 4b cluster graduation, 4c receipts rotation, 4d docs health).
+
+Exemption documented in `engine/cycle-learning.md#framework-on-framework-exemption` with the reconsider trigger: if Mycelium gains a second product surface (e.g., a hosted service) whose delivery fits the cycle shape, the framework-meta work moves to a parallel `framework-cycle-history.yml`. Until then, corrections graduation is the ledger.
+
+PATCH — skill routing + doc clarification; no schema change to `cycle-history.yml`, no new validator check, no behavior change for non-self-host downstream users.
+
 ## v0.23.15 — Check 34: CLAUDE.md ≤ 1 version entry (mechanism graduation)
 
 **2026-05-14. Attribution: lived-friction-triggered.** Graduates the discipline failure surfaced at v0.23.14 (deferred-entries-not-migrated, recurred ×5 in one session) from vigilance to mechanism. New validator check counts `^\*Version [0-9]` lines in CLAUDE.md; fails if more than 1. Latest entry stays; prior entries migrate to this file.
