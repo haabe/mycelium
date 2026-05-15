@@ -117,6 +117,8 @@ Use `${CLAUDE_PLUGIN_ROOT}/engine/status-translations.md` for translations.
 
 **ALWAYS render the journey map first.** Follow `${CLAUDE_PLUGIN_ROOT}/engine/wayfinding.md` to render the "You Are Here" map before any other output. This orients the user to where they are in the full L0→L5 progression before diving into gate details.
 
+**Phase-index narration discipline** (per ht-012 cohort-log f9, shipped v0.23.21): when surfacing routing decisions or flagging empty canvas fields, **do NOT narrate internal phase numbers ("Phase 6 questions", "Phase 4 Landscape") to the user**. Reference the outcome instead: "the project-type question", "the landscape mapping step". L0–L5 diamond scales are framework-external vocabulary and ARE narratable (they appear in user-facing docs); Phase-N indices are internal skill structure and are NOT.
+
 ```
 [Journey map from ${CLAUDE_PLUGIN_ROOT}/engine/wayfinding.md — rendered first]
 

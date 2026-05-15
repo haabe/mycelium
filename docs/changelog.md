@@ -6,6 +6,38 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.23.21 — ht-012 cohort-log driven: Q1 constraint visibility, time-budget expectation, phase-index narration discipline; opp-010 logged; named-attribution leak regenericized
+
+**2026-05-15. Attribution: cohort-log-triggered (ht-012).** Mechanism audit against the first cautious-learner cohort log (ht-012 partial_findings 2026-05-10/12, private roadmap repo) surfaced 7 partial-shipped frictions and 1 unmapped one. Three closed this PATCH, one promoted to opp-010.
+
+**Privacy correction layered into this PATCH**: initial draft of this version named the cohort participant explicitly across 5 working-tree files (CLAUDE.md version line, this changelog entry, two SKILL.md discipline-note attributions, opp-010 description) plus 2 already-pushed entries (opp-009 evidence in commit 43989ae). Recurrence of the v0.23.13 named-attribution-leak class. User caught pre-push; regenericized in this same PATCH. Generic-only attribution discipline holds in the public framework repo per the cohort-attribution-boundary rule; named attribution stays in the private roadmap repo where disclosure-ack covers generic-framed friction flow only. Correction logged separately in framework `corrections.md`.
+
+**Closed by this version**:
+
+- **f4** (Q1 single-sentence constraint mis-read as rhetorical politeness; user wrote 2–3 sentences before discovering the limit was hard). Fix: format spec now appears as a bolded mechanical prefix (`**(one sentence, hard limit)**`) before the question text, not as a prose prefix (`"In one sentence, X?"`) that can be parsed as politeness register. Discipline rule added to `/interview` SKILL.md: format specs must be bolded/parenthesized, not prose.
+
+- **f5** (user expected a time-budget question per stale README mental model; spent time re-reading skills/README to confirm she hadn't misunderstood). Fix: `/interview` Universal Brief Flow intro line now explicitly states no time-budget question at brief stage — "depth and time-cost are chosen after the brief, when you have data to choose." Aligns user expectation with current Universal Brief Flow behavior; resolves the cross-skill consistency drift between `/interview` (no time-budget) and `/mycelium:preflight` (time-budget IS asked, but for L4 delivery scoping, not L0 brief).
+
+- **f9** (internal "Phase 6" vocabulary leaked into user-facing prompts during diamond inspection). Fix: narration-discipline rule added to both `/interview` SKILL.md and `/mycelium:diamond-assess` SKILL.md — Phase-N indices are internal skill structure and MUST NOT be narrated to users; L0–L5 diamond scales are framework-external vocabulary and ARE narratable.
+
+**Promoted to opportunity (not shipped this PATCH)**:
+
+- **f2** (per-file permission prompts during `/mycelium:start` with no upfront preview list; verbatim user quote in the source language preserved in private roadmap canvas — not surfaced here). Logged as **opp-010** with `evidence_type: data-supported` (schema enum; underlying class is behavior-validated per the cohort-log) and `confidence: 0.55`. **First framework-repo opportunity with real-user-research provenance** — opp-001 through opp-007 are anecdotal/N=1 partial-graduations; opp-008/009 are framework-on-framework conversational discovery (anecdotal). opp-010 is real cohort-log evidence and satisfies Torres CDH "from research, not brainstorming" rule cleanly.
+
+  Implementation deferred pending wider cohort triangulation. Suggested shape (in opp-010 notes): add a Step 0 to `/mycelium:start` that enumerates the files/directories `setup` will create and presents them as a flat list with a single "Proceed?" prompt before per-file Claude Code permission prompts arrive. Doesn't bypass Claude Code's per-action model, but aligns user expectation with system behavior — addresses the worst part of the friction (uncertainty about scope mid-install).
+
+**ht-012 cohort-log audit scoreboard after this PATCH**:
+
+| Status | Count | Friction points |
+|---|---|---|
+| Closed | 5 | f4, f5, f6 (prior), f9, f10 (prior) |
+| Partial | 4 | f1, f3, f7, f8 |
+| Open as opp (deferred) | 1 | f2 → opp-010 |
+
+5/10 frictions now fully closed. The framework cycle 0.23.16–0.23.21 has moved the cohort-log signal from 2/10 closed → 5/10 closed in two days, with the remaining four flagged for triangulation when wider cohort logs land.
+
+**What did NOT change**: no schema change, no validator change, no new skill, no hook change. Three SKILL.md prompt-copy edits + one new opp entry. PATCH per version-discipline.
+
 ## v0.23.20 — Canvas-validation pre-push integration (capability, not auto-install)
 
 **2026-05-15. Attribution: lived-friction-triggered.** Two CI failures on 2026-05-15 (commits 43989ae, 483dd86) — schema violations in `opp-009.trace.upstream` that the local template validator didn't catch because canvas-schema validation is a separate tool (`validate_canvas.py`) that wasn't run before push. Recurrence of "I ran one of two validators" pattern.

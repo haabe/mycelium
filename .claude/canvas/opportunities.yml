@@ -661,7 +661,7 @@ opportunities:
         - **Multi-modal coherence** (product with visual + voice + API
           surfaces, e.g., smart home): zero — each modality evaluated
           in isolation, no consistency check across them.
-        - **DevEx of Mycelium-itself**: self-blind. Frida ht-012
+        - **DevEx of Mycelium-itself**: self-blind. ht-012 cohort-log
           friction log contains DevEx evidence (permission prompts,
           vocabulary opacity, time-budget consistency drift) but no
           skill catches that class systematically. Recursion-flavored
@@ -702,7 +702,7 @@ opportunities:
         - "plugins/mycelium/skills/service-check/SKILL.md (Downe 15, service-level)"
         - "plugins/mycelium/engine/canvas-guidance.yml (delivery_types: user_facing, api_service, cli_tool taxonomy)"
         - "plugins/mycelium/domains/delivery/CLAUDE.md (product type awareness section)"
-        - ".claude/canvas/human-tasks.yml#ht-012 (Frida ht-012 partial_findings — DevEx friction class evidence)"
+        - ".claude/canvas/human-tasks.yml#ht-012 (ht-012 cohort partial_findings — DevEx friction class evidence)"
       captured_at: "2026-05-15"
       confidence: 0.35  # Real coverage map, conversationally surfaced; needs a real user with a non-web modality (voice/CLI/wearable) hitting a gap before promotion to data-supported. Promotion candidate: when Juniors.dev cohort or another user works on a non-web product and identifies a missing evaluation skill.
     notes: |
@@ -803,6 +803,88 @@ opportunities:
       upstream:
         - target_id: "opportunities#opp-008"
           edge: "derived_from"  # Sibling-class peer: opp-009 was surfaced from the same founder conversation 2026-05-15 that yielded opp-008; both are framework-design-tension opportunities awaiting a real-diamond instance to promote from anecdotal to data-supported. Schema's trace_edge enum lacks a "sibling/co-discovered" value (closest are derived_from / depends_on / constrains); derived_from is the most accurate because opp-009 inherits its discovery context from the same conversational thread.
+
+  - id: opp-010
+    name: "Per-file permission prompts during /mycelium:start with no upfront preview list"
+    description: |
+      ht-012 cohort-log f2 (unmapped during initial cohort-log triage
+      2026-05-13; surfaced as standalone opp in 2026-05-15 cohort-log
+      mechanism audit).
+
+      First-run cohort participant observed that `/mycelium:start`
+      triggered per-file permission prompts during setup with no
+      batch-approve option and no list shown upfront. Generic
+      paraphrase of the source-language verbatim (the verbatim text
+      itself stays in the private roadmap canvas per attribution
+      boundary): the user said an upfront list with a single
+      approve-all option would have been their preference.
+
+      Two layers to the friction:
+
+      (1) **Claude Code-side**: the permission prompt model is per-action
+          and the agent doesn't ship batch-approve. This is out of scope
+          for Mycelium directly but could be tracked as an upstream
+          feature request (similar shape to issue #59060 on
+          read-state visibility).
+
+      (2) **Mycelium-side, in scope**: `/mycelium:start` knows what files
+          it will create (`.claude/canvas/*.yml`, `.claude/diamonds/`,
+          `.claude/memory/`, `.claude/harness/`) before it does any
+          writes. It could ship a preview list at the start of the
+          skill — "I'm about to create the following files / directories
+          in your project: [list]. Proceed?" — letting the user
+          mentally batch-approve before the per-file prompts arrive.
+          This doesn't bypass Claude Code's permission model, but it
+          aligns user expectation with system behavior.
+
+      The Mycelium-side fix is the higher-leverage move. Even if Claude
+      Code never ships batch-approve, surfacing the list upfront removes
+      the worst part of the friction (uncertainty about what was about
+      to happen, prompt fatigue without knowing how many prompts
+      remained).
+    type: functional
+    frequency: high  # Every fresh install hits this. /mycelium:start is the entry-point skill.
+    impact: medium  # Doesn't block install; costs trust and patience on first run. Cautious-learner segment is the worst-hit cohort.
+    strategic_alignment: high  # First-run UX is load-bearing for adoption. ht-012 was the first cautious-learner cohort log with behavior-validated install — the friction here is direct evidence.
+    cynefin_domain: clear  # Solvable via a deterministic preview-list output before any file writes. No experimentation needed.
+    sub_opportunities: []
+    solutions: []
+    provenance:
+      evidence_type: data-supported  # Gilad-ladder schema enum. Underlying class is "behavior_validated" (framework-internal vocabulary — N=1 cautious-learner cohort log with per-session attribution intact + verbatim source-language text preserved in private roadmap canvas, not surfaced here); schema lacks "behavior_validated" enum value. Vocabulary inconsistency between canvas schema (Gilad-ladder) and decision-log/corrections.md (behavior_validated/consistency_only) noted as a separate framework-design issue worth surfacing.
+      evidence_sources:
+        - ".claude/canvas/human-tasks.yml#ht-012.partial_findings.friction_points.f2 (2026-05-13)"
+        - "ht-012 cohort-log 2026-05-10/12 (verbatim source-language text preserved in private roadmap canvas per attribution boundary; English paraphrase: upfront list + single approve-all would have been the cohort participant's preference)"
+        - "plugins/mycelium/skills/start/SKILL.md (current implementation — no preview-list step)"
+      captured_at: "2026-05-15"
+      confidence: 0.55  # Single-cohort-log behavior-validated + clear mechanism + Mycelium-side scope. Promotes to test-validated when wider cohort logs show same friction (likely).
+    notes: |
+      Suggested implementation shape (held as design hint, not committed):
+
+      1. Add a Step 0 to `/mycelium:start` before `/setup` runs: enumerate
+         the files/directories `setup` will create (already known from
+         `manifest.yml` + skill state) and present them as a flat list
+         with a single "Proceed?" prompt at the top.
+
+      2. Output format example:
+         > "I'm about to create 25 canvas files, 5 directories, and 2
+         > harness files in `.claude/`. You'll see Claude Code prompt
+         > you for each one individually — that's a Claude Code
+         > limitation we can't bypass. Want to see the full list before
+         > we start?"
+         > [renders list on confirmation, then begins writes]
+
+      3. This is a `/mycelium:start` SKILL.md edit, not a hook change.
+         No new validator needed.
+
+      Promotion trigger: ht-014 or ht-015 cohort participants hitting
+      the same friction. If both do, ship as v0.23.22 or similar. If
+      only the ht-012 cohort-log shows it, still worth shipping — the
+      signal is strong enough; the fix is small.
+
+      Also worth surfacing upstream to Claude Code as a feature
+      request: batch-approve / preview-and-confirm mode for skills
+      that create many files. Track alongside issue #59060 in the
+      upstream_claude_code_issues auto-memory.
 
 # - id: opp-001
 #   name: ""

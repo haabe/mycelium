@@ -53,12 +53,16 @@ Goal: the user walks away in ~10 minutes with a one-page brief on their idea tha
 
 **State the deal in one line, then ask the four questions** (one at a time, follow the energy):
 
-> "I'll ask 4 short questions about your idea, then give you a one-page brief. ~10 minutes. Nothing leaves your machine."
+> "I'll ask 4 short questions about your idea, then give you a one-page brief. ~10 minutes. Nothing leaves your machine. I won't ask how much time you have for the whole project right now — depth and time-cost are chosen after the brief, when you have data to choose."
 
-1. "In one sentence, what are you trying to build, and for whom?"
+1. **(one sentence, hard limit)** "What are you trying to build, and for whom?"
 2. "Tell me about the last time someone in that group hit the problem you're trying to solve. What did they actually do?" (Torres past-behavior — not "would they want X")
 3. "If you had to bet on one thing being wrong about this idea, what would it be?"
 4. "What's the smallest move you could make this week to find out?"
+
+**Format constraint discipline** (per ht-012 cohort-log f4, shipped v0.23.21): the format spec (e.g., "one sentence") MUST appear before the question text and as a bolded mechanical constraint, not as a prose prefix that can be read as a rhetorical politeness. The "In one sentence, X?" framing was misread as "succinctly, X?" — the user answered in 2-3 sentences before discovering the constraint was hard. Render format specs as parenthetical or bolded prefixes; do not rely on prose to carry the constraint.
+
+**Phase-index narration discipline** (per ht-012 cohort-log f9, shipped v0.23.21): the Phase 1–6 structure below is internal skill organization. **Do NOT narrate phase numbers ("Phase 4 Landscape", "Phase 6 product-type") to the user.** When routing or referencing a later step in user-facing output, use the outcome label ("we'll explore the landscape next", "the project-type question comes later"). Same discipline applies in `/mycelium:diamond-assess` and any skill that surfaces routing decisions.
 
 **After Q4, in this exact order**:
 
