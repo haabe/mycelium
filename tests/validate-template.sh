@@ -993,6 +993,30 @@ check_plugin_identifier_leak() {
 
     local registry="${MYCELIUM_ATTRIBUTION_REGISTRY:-}"
     if [ -z "$registry" ] || [ ! -f "$registry" ]; then
+        # Fail-open behavior diverges by context (graduated v0.23.22 after
+        # named-attribution-leak recurrence #3, 2026-05-15):
+        #   - CI runs: INFO (CI runners legitimately can't reach the private
+        #     companion repo where the registry lives; check is maintainer-side).
+        #   - Local maintainer dev IN THE FRAMEWORK REPO: WARN (registry should
+        #     be configured; missing-registry is the leak vector).
+        #   - Downstream user / non-self-host project: INFO (check is maintainer-
+        #     side, not user-side; downstream users don't have a cohort registry
+        #     concern).
+        if [ -n "${CI:-}${GITHUB_ACTIONS:-}" ]; then
+            info "Attribution registry absent — Check 33 N/A in CI (registry lives in private companion repo, not available to CI runners)"
+            return
+        fi
+        # Framework-self-host detection (same convention used by
+        # engine/cycle-learning.md framework-on-framework exemption):
+        # plugin manifest + CLAUDE.md beginning with "# Mycelium:".
+        if [ -f "plugins/mycelium/.claude-plugin/plugin.json" ] && \
+           head -1 CLAUDE.md 2>/dev/null | grep -q "^# Mycelium:"; then
+            warn "Check 33: attribution registry absent in framework-self-host context — leak detection NOT running"
+            echo "    Set MYCELIUM_ATTRIBUTION_REGISTRY to your private registry path before editing the public framework tree." >&2
+            echo "    Canonical location: ../mycelium-roadmap/.claude/memory/attribution-registry.yml (or your fork's equivalent)." >&2
+            echo "    Without the registry, named-attribution leaks into plugins/mycelium/ will not be caught locally — see corrections.md 2026-05-15 for the recurrence-#3 incident." >&2
+            return
+        fi
         info "Attribution registry absent — Check 33 N/A (set MYCELIUM_ATTRIBUTION_REGISTRY to a registry file outside this repo to enable)"
         return
     fi

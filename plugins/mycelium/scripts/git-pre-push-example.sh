@@ -48,4 +48,27 @@ if ! python3 "$VALIDATOR" >&2; then
     exit 1
 fi
 
+# Layer 2 (graduated v0.23.22 after named-attribution-leak recurrence #3):
+# If this repo carries the framework's template validator (tests/validate-
+# template.sh), run it too. This surfaces Check 33 (named-attribution leak
+# scan) and the other structural-integrity checks at push-time. Downstream
+# user projects do not ship tests/ — they'll skip this branch gracefully.
+TEMPLATE_VALIDATOR=""
+if [ -f "tests/validate-template.sh" ]; then
+    TEMPLATE_VALIDATOR="tests/validate-template.sh"
+elif [ -f ".claude/tests/validate-template.sh" ]; then
+    TEMPLATE_VALIDATOR=".claude/tests/validate-template.sh"
+fi
+
+if [ -n "$TEMPLATE_VALIDATOR" ]; then
+    echo "[mycelium pre-push] Validating template integrity via $TEMPLATE_VALIDATOR ..." >&2
+    if ! bash "$TEMPLATE_VALIDATOR" >&2; then
+        echo "" >&2
+        echo "[mycelium pre-push] Template validation FAILED — push blocked." >&2
+        echo "  • Fix the errors above and re-push." >&2
+        echo "  • Emergency bypass: git push --no-verify (and document it)." >&2
+        exit 1
+    fi
+fi
+
 exit 0

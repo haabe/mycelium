@@ -6,6 +6,43 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.23.22 — Layer 1 + Layer 2: Check 33 context-aware fail-loud + pre-push hook runs both validators
+
+**2026-05-15. Attribution: lived-friction-triggered.** Three documented graduations had not prevented recurrence of the named-attribution-leak class (v0.23.13 initial → v0.23.14 commit-message-as-public-surface → v0.23.21 working-tree-leak, all logged in `.claude/memory/corrections.md`). The auto-memory rule was a cognitive gate; cognitive gates degrade across long sessions. This PATCH replaces cognitive gates with mechanical ones at two layers.
+
+**Layer 1 — Check 33 context-aware fail-loud**:
+
+The validator's named-attribution-registry check (`tests/validate-template.sh` Check 33) previously fail-opened uniformly when `$MYCELIUM_ATTRIBUTION_REGISTRY` was absent. The fail-open was intentional for CI (CI runners legitimately can't reach the private companion repo where the registry lives) but undifferentiated from local-dev — which is exactly where edits happen and where the registry SHOULD be configured.
+
+New behavior:
+- `$CI` or `$GITHUB_ACTIONS` set → INFO (unchanged; CI fail-open preserved).
+- Framework-self-host detected (`plugins/mycelium/.claude-plugin/plugin.json` exists AND `CLAUDE.md` starts with `# Mycelium:`) AND registry absent → **WARN with explicit setup guidance** (was INFO). Surfaces the missing-registry state at the moment of every local validator run.
+- Downstream user / non-self-host project → INFO (check is maintainer-side; downstream users don't have a cohort registry concern).
+
+Framework-self-host detection uses the same convention as the v0.23.16 framework-on-framework exemption — no new mechanism, just reusing the established marker.
+
+**Layer 2 — pre-push hook runs both validators**:
+
+The pre-push hook script (`plugins/mycelium/scripts/git-pre-push-example.sh`, shipped v0.23.20) previously ran only `validate_canvas.py`. v0.23.21's leak passed the canvas validator (schema was clean) and would have reached `origin/main` if the founder hadn't caught it manually in commit-message review.
+
+New behavior:
+- Hook still runs `validate_canvas.py` first (existing canvas-schema check).
+- If `tests/validate-template.sh` exists in the repo (or `.claude/tests/validate-template.sh` for legacy), the hook now runs it too. This surfaces Check 33 (named-attribution scan) and the other 33 structural-integrity checks at push-time as a backstop.
+- Downstream user projects don't ship `tests/` — they skip this branch gracefully (the hook detects absence and exits 0 from that branch).
+
+Both repos (`mycelium`, `mycelium-roadmap`) have their local `.git/hooks/pre-push` updated to the new version. Per-clone state, not in git, dogfooding only.
+
+**What this PATCH does NOT do**:
+- Does NOT clean up the 3 pre-existing leaks already on `origin` from older versions (v0.23.13 title, v0.23.10 entry, v0.18.x entry naming a cohort participant). Separate regenericize PATCH candidate.
+- Does NOT graduate Check 33 leak detection from WARN to FAIL when registry IS present and leaks are found. Depends on the pre-existing-leak cleanup landing first.
+- Does NOT add a PostToolUse hook for edit-time interception (Layer 3 from the 2026-05-15 deep-dive). Held until Layer 1 + Layer 2 prove insufficient against future recurrence.
+
+**Theory connection**:
+
+This is the Hashimoto principle applied recursively. Each prior graduation (registry move, CI fail-open documentation, auto-memory rule) was a partial mechanism. The auto-memory rule failed because cognitive gates degrade. Layer 1 + Layer 2 are mechanical gates that fire on every validator run and every push, not on agent vigilance. Per the framework's own discipline (graduated v0.23.16): the corrections-to-mechanism pipeline only counts when the mechanism is *engineered*, not memorized.
+
+PATCH per version-discipline: validator behavior change + hook script extension; no schema change, no skill change, no behavior change for downstream users beyond the (correctly-shaped) push-time backstop.
+
 ## v0.23.21 — ht-012 cohort-log driven: Q1 constraint visibility, time-budget expectation, phase-index narration discipline; opp-010 logged; named-attribution leak regenericized
 
 **2026-05-15. Attribution: cohort-log-triggered (ht-012).** Mechanism audit against the first cautious-learner cohort log (ht-012 partial_findings 2026-05-10/12, private roadmap repo) surfaced 7 partial-shipped frictions and 1 unmapped one. Three closed this PATCH, one promoted to opp-010.
