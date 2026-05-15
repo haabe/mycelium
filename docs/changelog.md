@@ -6,6 +6,33 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.23.20 — Canvas-validation pre-push integration (capability, not auto-install)
+
+**2026-05-15. Attribution: lived-friction-triggered.** Two CI failures on 2026-05-15 (commits 43989ae, 483dd86) — schema violations in `opp-009.trace.upstream` that the local template validator didn't catch because canvas-schema validation is a separate tool (`validate_canvas.py`) that wasn't run before push. Recurrence of "I ran one of two validators" pattern.
+
+**What changed**:
+- New reference script: `plugins/mycelium/scripts/git-pre-push-example.sh`. Resolves `validate_canvas.py` via `$CLAUDE_PLUGIN_ROOT` (with legacy fallbacks), checks `.claude/canvas/` exists, runs the validator, blocks the push with a clear error and bypass hint if it fails. Self-skips gracefully when validator or canvas dir is absent.
+- Docs section in `docs/contributing/README.md`: how to wire `validate_canvas.py` into existing hook tooling (husky/lefthook/pre-commit/plain bash/GitHub Actions), plus opt-in install command for the reference hook.
+
+**What did NOT change**:
+- No plugin installer modification. Mycelium does **not** install hooks for plugin users — `.git/hooks/` is per-clone state, and most projects have or will have their own hook pipeline. The shipped pattern is *library, not framework*: provide the capability, let users integrate it.
+- No PostToolUse hook (Option B from v0.23.19 deferred candidate). Pre-push catches the same class one loop later at lower implementation cost; PostToolUse remains future work if pre-push proves insufficient.
+- No schema change, no skill change, no validator change.
+
+**Sequencing notes**:
+
+Three discussion rounds collapsed to this smaller correct shape after user pushback ("Won't the users set up their own pre-commit scripts for their project?"). The earlier proposals (Option A doc-only / Option B PostToolUse / pre-push hook auto-install) all overstepped Mycelium's seam: the framework provides discipline scaffolding, not hook-pipeline management for user repos. Original framing was scope-creep; current framing is the right boundary.
+
+**Dogfooding**:
+
+Local pre-push hook installed in `/Users/bartnes/Repos/mycelium/.git/hooks/pre-push` and `/Users/bartnes/Repos/mycelium-roadmap/.git/hooks/pre-push` as part of shipping this version. Per-clone state, not in git. Catches my own failures going forward; would have caught both 2026-05-15 CI failures locally.
+
+**Watched for**:
+- Recurrence of "ran one validator, missed the other" pattern on canvas edits. Pre-push hook makes the second validator non-skippable for the cohort that installs it.
+- False-positive rate. If `validate_canvas.py` becomes too slow as canvas grows, pre-push pain compounds. Currently ~1s on 25-file canvas; acceptable. Calibration trigger: >5s.
+
+PATCH per version-discipline: new reference artifact + docs section; no schema change, no skill change, no behavior change for downstream users beyond capability discoverability.
+
 ## v0.23.19 — Canvas-write Preflight: ID-scan discipline (graduated from comp-010 collision)
 
 **2026-05-15. Attribution: lived-friction-triggered.** On 2026-05-14, the agent (this assistant) added `comp-010 "Harness engineering"` to `mycelium-roadmap/.claude/canvas/landscape.yml` without scanning the existing ID space. `comp-010` was already taken (Anthropic Outcomes, added 2026-05-07). Duplicate persisted ~24 hours in the working tree and on GitHub, caught only when adding a subsequent component (`comp-013 Semantic Anchors`) forced an ID-space scan.

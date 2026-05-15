@@ -72,6 +72,25 @@ python3 .claude/scripts/validate_canvas.py  # canvas YAML schema validation
 
 Both must pass before a PR is merge-ready.
 
+### Wiring canvas validation into your own pre-push pipeline
+
+`validate_canvas.py` is invocable as a CLI. Wire it into whatever hook tooling you already use — husky, lefthook, the Python `pre-commit` framework, plain bash, GitHub Actions — by calling:
+
+```bash
+python3 "$CLAUDE_PLUGIN_ROOT/scripts/validate_canvas.py"
+```
+
+It exits non-zero on schema violation or duplicate-ID detection. The validator auto-detects your `.claude/canvas/` directory; no arguments needed.
+
+A reference git pre-push hook script ships at `$CLAUDE_PLUGIN_ROOT/scripts/git-pre-push-example.sh` for projects that don't already have hook tooling. **Mycelium does not install it for you** — `.git/hooks/` is per-clone state outside the plugin's official surface, and most projects will want their canvas validation called from their existing hook pipeline alongside other checks. To opt in manually:
+
+```bash
+cp "$CLAUDE_PLUGIN_ROOT/scripts/git-pre-push-example.sh" .git/hooks/pre-push
+chmod +x .git/hooks/pre-push
+```
+
+Emergency bypass: `git push --no-verify`. Document any use — the hook exists because shipping a duplicate-ID or schema-violation to `origin/main` blocks downstream consumers and leaves the broken commit publicly visible until a follow-up fix lands.
+
 ## Where to start
 
 Three concrete entry points:
