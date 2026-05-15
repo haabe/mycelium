@@ -6,6 +6,31 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.23.19 — Canvas-write Preflight: ID-scan discipline (graduated from comp-010 collision)
+
+**2026-05-15. Attribution: lived-friction-triggered.** On 2026-05-14, the agent (this assistant) added `comp-010 "Harness engineering"` to `mycelium-roadmap/.claude/canvas/landscape.yml` without scanning the existing ID space. `comp-010` was already taken (Anthropic Outcomes, added 2026-05-07). Duplicate persisted ~24 hours in the working tree and on GitHub, caught only when adding a subsequent component (`comp-013 Semantic Anchors`) forced an ID-space scan.
+
+**Detection mechanism already existed**: `validate_canvas.py` lines 230-239 do per-file ID uniqueness with explicit list-not-set discipline (corrections.md 2026-05-04). The check would have fired. It didn't, because the validator only ran in the framework repo's CI — not against the roadmap repo where the canvas data lives.
+
+**Gap was enforcement timing, not detection.** Three graduation candidates identified:
+- (A) Doc-only — extend the Preflight rule to require ID-scan before adding ID-bearing entries. Cheapest. Ships with the framework.
+- (B) PostToolUse hook — extend `post-write-nudge.sh` to run `validate_canvas.py` against `.claude/canvas/` on canvas Edits. Mechanically enforced. Adds runtime cost.
+- (C) Both A and B (belt-and-suspenders).
+
+**v0.23.19 ships A.** B deferred to v0.23.20 candidate pending validator-runtime calibration as canvas grows. Sequencing them avoids bundling unrelated risk surfaces.
+
+**Rule addition** to the Preflight (canonical block in CLAUDE.md + 22 canvas-writing SKILL.md files, byte-identical via script):
+
+> **ID-bearing entries — scan the ID space before assigning.** When adding a new component, opportunity, solution, or any other ID-bearing entry to a canvas file, run `grep "^  - id: <prefix>-" .claude/canvas/<file>.yml | sort -u` first and pick the next free integer.
+
+**Classification**: kin to anti-pattern #8 (Stale State Read) — agent reads enough of the file to satisfy the Edit check but not enough to see existing ID assignments. The v0.23.18 `limit:1` discipline made it easier (fewer tokens) to do the Edit check at minimum cost — and easier to miss the broader context needed for ID allocation. Sharpening pays for the cheap shortcut.
+
+**Worked example** logged in roadmap-repo `.claude/memory/corrections.md` (2026-05-15 entry, commit 2cdfb42). Recurrence count: 1; structural failure shape ≥4 (anti-pattern #8 family).
+
+**Check 31 unchanged**: matches on the `## Preflight: Read target canvas file` heading; rule body sharpened underneath. No validator change.
+
+PATCH — doc-only sharpening of an existing discipline; no schema change, no behavior change for downstream users beyond the new convention prose.
+
 ## v0.23.18 — Read-before-Write: limit:1 discipline for Edit (~10–50k tokens/session saved)
 
 **2026-05-14. Attribution: lived-friction-triggered.** The v0.23.x Preflight discipline correctly solved the surface-confusion failure (Bash `head` ≠ Read tool, anti-pattern #7 instance #5, 2026-05-09) but introduced a second-order cost: the agent over-applied "Read before Write" as "full Read before every Edit." With canvas files at 800+ lines (~20k tokens each), per-Edit full-Reads were dominating session token cost — meaningful on Pro-tier sessions where the 5h window already strains under Mycelium's load.
