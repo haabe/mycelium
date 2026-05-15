@@ -23,7 +23,7 @@ Three times in five weeks, the agent constructed a structural conclusion (a plan
 |---|---|---|
 | 2026-04-30 | Hoskins takehome session | Agent built 20h delivery plan from partial discovery without checking the 8h budget. Discovery completion was *consistent with* "ready to plan delivery" but didn't *evidence* it. |
 | 2026-05-03 | Q4 baseline framing audit | Agent anchored on `landscape.yml#gameplay`'s "users burned by building the wrong thing" framing and proposed sharpening README to match. Internal-doc consistency was treated as evidence the framing was correct, without testing against the full evidence base (Juniors.dev cohort, Cutler 2026-05-03 identity-trap). Sharpening would have shrunk the segment. |
-| 2026-05-09 | Verbosity-adaptation memo | Agent built "verbose discipline → session-token burn → Pro-tier rate-limit → adoption ceiling" chain anchored on Hoskins (Mycelium-attributable) and extended to Frida (consistency-only — her rate-limit reports may not be Mycelium-driven). Treated cohort-level consistency as evidence for a structural exclusion claim. |
+| 2026-05-09 | Verbosity-adaptation memo | Agent built "verbose discipline → session-token burn → Pro-tier rate-limit → adoption ceiling" chain anchored on Hoskins (Mycelium-attributable) and extended to a cohort participant (consistency-only — their rate-limit reports may not be Mycelium-driven). Treated cohort-level consistency as evidence for a structural exclusion claim. |
 
 ## Why three instances forced graduation
 

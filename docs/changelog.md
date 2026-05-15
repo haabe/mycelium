@@ -6,6 +6,60 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.23.23 — Check 33 scope expansion + WARN→FAIL graduation + pre-disclosure cleanup (mechanism complete)
+
+**2026-05-15. Attribution: lived-friction-triggered.** Three-part graduation closing the named-attribution mechanism stack:
+
+**Part 1 — Check 33 scope expansion**:
+
+Prior scope was `plugins/mycelium/` only, justified as "plugin-marketplace-distribution boundary." But `docs/`, `CLAUDE.md`, `README.md`, `.claude/memory/` are all publicly visible on GitHub even though they don't ship via the plugin — and the v0.23.21 leak hit exactly those paths. Public-visibility scope is the correct boundary, not plugin-distribution scope. New scan paths:
+
+- `plugins/mycelium/` (kept)
+- `CLAUDE.md`, `README.md`, `AGENTS.md`, `CONTRIBUTORS.md` (top-level docs)
+- `docs/` (recursive)
+- `.claude/memory/{corrections,patterns,cluster-instances}.md` (project memory)
+- `.claude/canvas/` (canvas state — gitignored in this repo per framework-on-framework exemption, but covered for forks that don't gitignore it)
+- `.claude/harness/`, `.claude/engine/` (legacy paths for non-plugin installs)
+- `tests/` (catches leaks in test fixtures and validator scripts themselves)
+
+**Part 2 — WARN→FAIL graduation**:
+
+When the registry IS present and Check 33 finds leaks, the check now exits 1 instead of warning. Graduation criterion ("pre-disclosure leaks addressed") satisfied by Part 3.
+
+Layer 1 from v0.23.22 preserved: missing-registry behavior is still INFO in CI, WARN-loud in framework-self-host local context.
+
+**Part 3 — Pre-disclosure cleanup**:
+
+15 leaks regenericized across 4 files:
+- `docs/changelog.md` — 3 spots (v0.23.13 title, v0.23.10 entry text, v0.18.x entry text). Title now reads "Cohort-attribution leak fix" instead of the prior cohort-participant-named version. Historical-accuracy preservation: git history retains the original text; only the working-tree state is regenericized.
+- `docs/receipts/cases/2026-05-09-consistency-as-evidence-graduation.md` — 1 spot (verbosity-adaptation memo example regenericized).
+- `.claude/memory/patterns.md` — 1 spot (named cohort-participant "fork" attribution → generic "audience-attendee fork from a cohort participant" phrasing).
+- `.claude/memory/corrections.md` — 6 spots across multiple entries (the 2026-05-14 Check 33 introduction entry, the 2026-05-14 limit:1 cost-framing entry, the 2026-05-14 recurrence-flag entry, and today's 2026-05-15 recurrence-#3 entry).
+
+**Registry update** (in private roadmap repo):
+
+Two cohort participants (ht-014, ht-015) added to the attribution registry as `consent: generic_only`. The prior registry only flagged the ht-012 participant; the two newly-active cohort members were not yet tracked, so Check 33 wouldn't have caught their names had they leaked. Now tracked.
+
+**Validator state after this PATCH**:
+
+```
+Check 33: 0 leaks in public-visibility scope (all flagged names absent from publicly-visible paths)
+```
+
+Mechanism complete: registry-driven detection + expanded scope + fail-on-leak + cleaned baseline.
+
+**Sequential 4-version arc**:
+
+The named-attribution-leak class has driven four PATCH cycles in two days, each closing a gap exposed by the previous:
+- **v0.23.20** — pre-push hook for canvas validation (shipped the hook infrastructure)
+- **v0.23.21** — cohort-log-driven friction fixes + in-band leak regenericize after founder pre-push catch
+- **v0.23.22** — Layer 1 (Check 33 local fail-loud) + Layer 2 (pre-push runs both validators) — mechanical gates replacing cognitive ones
+- **v0.23.23** — scope expansion + WARN→FAIL + cleanup — mechanism completion
+
+Each version satisfies the Hashimoto principle: detect a discipline gap → engineer a mechanism that catches it → verify the mechanism by walking through the next failure attempt. The recurrence count for this class started at 3; one more recurrence (a fourth instance) would now be caught at edit-time by the expanded Check 33 running through the pre-push hook before reaching `origin/main`.
+
+PATCH per version-discipline: validator behavior change + content regenericize; no schema change, no skill change, no behavior change for downstream users.
+
 ## v0.23.22 — Layer 1 + Layer 2: Check 33 context-aware fail-loud + pre-push hook runs both validators
 
 **2026-05-15. Attribution: lived-friction-triggered.** Three documented graduations had not prevented recurrence of the named-attribution-leak class (v0.23.13 initial → v0.23.14 commit-message-as-public-surface → v0.23.21 working-tree-leak, all logged in `.claude/memory/corrections.md`). The auto-memory rule was a cognitive gate; cognitive gates degrade across long sessions. This PATCH replaces cognitive gates with mechanical ones at two layers.
@@ -192,7 +246,7 @@ Pairs with Check 30 (plugin.json#version tracks CLAUDE.md) as the doc-discipline
 
 Git history retains original phrasing in `c539f29` and earlier; working-tree view is now generic. PATCH per version-discipline.
 
-## v0.23.13 — Frida-leak fix + Check 33 architecture correction
+## v0.23.13 — Cohort-attribution leak fix + Check 33 architecture correction
 
 **2026-05-14. Attribution: lived-friction-triggered.** Regenericized the last Check-33 leak in `plugins/mycelium/harness/anti-patterns.md` (the date-tagged source citation that named a private-channel observer). Also collapsed an adjacent friction-log attribution to its theoretical-lens framing for consistency. Architecture correction for Check 33 / attribution-registry placement: initial 0.23.12 ship put the registry in this public repo, which was self-defeating (registry contains the very names whose private attribution it tracks). Moved out. Check 33 now resolves the registry via `$MYCELIUM_ATTRIBUTION_REGISTRY` env var; fail-open if unset.
 
@@ -325,7 +379,7 @@ PATCH per version-discipline (additive doc + new hook check + citation backfills
 
 ## v0.21.0 — Three anti-pattern graduations
 
-**2026-05-09.** **(#7) Consistency-as-Evidence:** constructing causal chains where ≥1 link rests on observational consistency rather than verified attribution. Three documented instances (2026-04-30 Hoskins over-scoping, 2026-05-03 sharper-framing anchoring, 2026-05-09 Frida verbosity-attribution gap). Distinct from confirmation bias (attention-direction failure) — this is attribution failure (misclassifying evidence in hand). Source: Pearl causal inference. **(#8) Stale State Read:** scripts/validators reading state files the same operation is about to replace, producing nominally-correct output against the wrong reference. Four documented instances. Worked example: `parse_manifest.py --manifest=<path>`. **Bias cluster → ambient `/devils-advocate`:** "agent prefers what feels right over what evidence supports" graduated as Techniques 4 (attribution-vs-consistency labeling) and 5 (ambient triggering on assertion-shaped patterns) — converts anti-bias discipline from per-decision ceremony to per-publish self-check. Plus integration: `/corrections-audit` Steps 6d/6e, validator Check 29, CLAUDE.md G-P-pre item 9. MINOR per version-discipline.
+**2026-05-09.** **(#7) Consistency-as-Evidence:** constructing causal chains where ≥1 link rests on observational consistency rather than verified attribution. Three documented instances (2026-04-30 Hoskins over-scoping, 2026-05-03 sharper-framing anchoring, 2026-05-09 cohort-log verbosity-attribution gap). Distinct from confirmation bias (attention-direction failure) — this is attribution failure (misclassifying evidence in hand). Source: Pearl causal inference. **(#8) Stale State Read:** scripts/validators reading state files the same operation is about to replace, producing nominally-correct output against the wrong reference. Four documented instances. Worked example: `parse_manifest.py --manifest=<path>`. **Bias cluster → ambient `/devils-advocate`:** "agent prefers what feels right over what evidence supports" graduated as Techniques 4 (attribution-vs-consistency labeling) and 5 (ambient triggering on assertion-shaped patterns) — converts anti-bias discipline from per-decision ceremony to per-publish self-check. Plus integration: `/corrections-audit` Steps 6d/6e, validator Check 29, CLAUDE.md G-P-pre item 9. MINOR per version-discipline.
 
 ## v0.20.15 — Legacy install path deprecated + manifest single-source
 
@@ -397,7 +451,7 @@ PATCH per version-discipline (additive doc + new hook check + citation backfills
 
 ## v0.18.1 — Phase 2 content backfill
 
-**2026-05-06.** 9 forthcoming-stub docs filled (glossary, faq, evaluate, theories, philosophy, usage-modes, jit-tooling, regulatory, changelog, contributing/README) + skills/{README,by-category}.md filled with 45-skill phase-and-category-ordered indexes. evaluate.md is the load-bearing landing for Drew Hoskins's post (~2026-05-25). usage-modes.md ships canvas-sync conflict-resolution rules answering Alex's Q from the 2026-05-07 Juniors.dev presentation. theories.md mechanism-maps every Tier 1 + Tier 2 theory to the Mycelium artifact that implements it. philosophy.md frames opinionated discipline / theory-grounded / in-loop preventive / dogfood-required / build-to-learn-vs-earn / structure-before-content as load-bearing claims. faq.md answers six Juniors.dev questions concretely. PATCH per version-discipline. Validator authority migration from Phase 1 still load-bearing — Checks 6 + 13 now actively validate populated docs/skills/ and docs/theories.md.
+**2026-05-06.** 9 forthcoming-stub docs filled (glossary, faq, evaluate, theories, philosophy, usage-modes, jit-tooling, regulatory, changelog, contributing/README) + skills/{README,by-category}.md filled with 45-skill phase-and-category-ordered indexes. evaluate.md is the load-bearing landing for Drew Hoskins's post (~2026-05-25). usage-modes.md ships canvas-sync conflict-resolution rules answering a cohort participant's Q from the 2026-05-07 Juniors.dev presentation. theories.md mechanism-maps every Tier 1 + Tier 2 theory to the Mycelium artifact that implements it. philosophy.md frames opinionated discipline / theory-grounded / in-loop preventive / dogfood-required / build-to-learn-vs-earn / structure-before-content as load-bearing claims. faq.md answers six Juniors.dev questions concretely. PATCH per version-discipline. Validator authority migration from Phase 1 still load-bearing — Checks 6 + 13 now actively validate populated docs/skills/ and docs/theories.md.
 
 ## v0.18.0 — README + docs/ restructure (Phase 1 of 3)
 

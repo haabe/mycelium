@@ -1052,15 +1052,49 @@ PY
         return
     fi
 
+    # Scope expanded v0.23.23 after named-attribution-leak recurrence-#3
+    # (corrections.md 2026-05-15): the prior scope was `plugins/mycelium/`
+    # only, justified as "plugin tree is what ships via marketplace." But
+    # docs/, CLAUDE.md, README.md, .claude/memory/ are all publicly visible
+    # on GitHub even though they don't ship via the plugin — and the v0.23.21
+    # leak hit exactly those paths. Public-visibility scope is the right
+    # boundary, not plugin-distribution scope.
+    #
+    # Excludes: .git/, node_modules/, .gitignored paths. Doesn't try to
+    # exclude per-file gitignore status (too expensive for a pre-push gate);
+    # uses path-based exclusion only.
+    local scan_paths=(
+        "plugins/mycelium/"
+        "CLAUDE.md"
+        "README.md"
+        "AGENTS.md"
+        "CONTRIBUTORS.md"
+        "docs/"
+        ".claude/memory/corrections.md"
+        ".claude/memory/patterns.md"
+        ".claude/memory/cluster-instances.md"
+        ".claude/canvas/"
+        ".claude/harness/"
+        ".claude/engine/"
+        "tests/"
+    )
+
     local total_hits=0
     local hit_detail=""
     while IFS= read -r name; do
         [ -z "$name" ] && continue
-        local matches
-        matches=$(grep -rEn "\b${name}\b" plugins/mycelium/ \
-            --include="*.md" --include="*.yml" --include="*.yaml" \
-            --include="*.json" --include="*.py" --include="*.sh" \
-            2>/dev/null || true)
+        local matches=""
+        for path in "${scan_paths[@]}"; do
+            [ ! -e "$path" ] && continue
+            local found
+            found=$(grep -rEn "\b${name}\b" "$path" \
+                --include="*.md" --include="*.yml" --include="*.yaml" \
+                --include="*.json" --include="*.py" --include="*.sh" \
+                2>/dev/null || true)
+            if [ -n "$found" ]; then
+                matches="${matches}${matches:+$'\n'}${found}"
+            fi
+        done
         if [ -n "$matches" ]; then
             local n
             n=$(echo "$matches" | wc -l | tr -d ' ')
@@ -1073,11 +1107,13 @@ PY
     done <<< "$flagged"
 
     if [ "$total_hits" -eq 0 ]; then
-        pass "Check 33: 0 leaks in plugins/mycelium/ (all flagged names absent from plugin tree)"
+        pass "Check 33: 0 leaks in public-visibility scope (all flagged names absent from publicly-visible paths)"
     else
-        warn "Check 33: ${total_hits} leak(s) — flagged identifiers in plugin-distributed content${hit_detail}"
+        # FAIL behavior graduated v0.23.23 from prior WARN-only state.
+        # Pre-disclosure leaks are now cleaned up; subsequent leaks should
+        # block the validator run rather than slip through as warnings.
+        fail "Check 33: ${total_hits} leak(s) — flagged identifiers in publicly-visible content${hit_detail}"
         echo "    Action: regenericize occurrences OR escalate consent in ${registry}."
-        echo "    (Check is WARN-only initially; graduates to FAIL once cleared.)"
     fi
 }
 
