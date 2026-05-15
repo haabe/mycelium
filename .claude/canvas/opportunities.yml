@@ -801,8 +801,8 @@ opportunities:
       subset.
     trace:
       upstream:
-        - target_id: "opp-008"
-          relationship: "sibling — both are framework-design-tension opportunities surfaced via founder conversation 2026-05-15; both await a real-diamond instance to promote from anecdotal to data-supported"
+        - target_id: "opportunities#opp-008"
+          edge: "derived_from"  # Sibling-class peer: opp-009 was surfaced from the same founder conversation 2026-05-15 that yielded opp-008; both are framework-design-tension opportunities awaiting a real-diamond instance to promote from anecdotal to data-supported. Schema's trace_edge enum lacks a "sibling/co-discovered" value (closest are derived_from / depends_on / constrains); derived_from is the most accurate because opp-009 inherits its discovery context from the same conversational thread.
 
 # - id: opp-001
 #   name: ""
