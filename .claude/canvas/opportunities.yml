@@ -777,6 +777,24 @@ opportunities:
           gaming + AR/VR + accessibility)
         - Olfactory / gustatory / scent: extreme niche, skip
 
+      **Cross-cutting modifiers** (axes that intersect all modalities,
+      not modalities themselves — surfaced 2026-05-15 second pass):
+        - **Form factor as modality-modifier**: same modality (visual
+          GUI) but very different ergonomics across phone / tablet /
+          laptop / ultrawide / foldable / e-ink. Responsive design
+          covers some; reading-on-e-ink is its own discipline; foldable
+          transitions are still emerging. Not a separate modality but
+          a real evaluation axis that intersects all visual modalities.
+        - **Time-as-modality / sync vs async**: chatbot in real-time
+          vs email-replying assistant vs daily-digest agent vs
+          scheduled-routine agent are all "agent-as-interface" but
+          have different turn-cadence expectations and intervention
+          affordances. Worth flagging because Mycelium's own product
+          class spans this axis: Claude Code = real-time, Anthropic
+          Routines = scheduled, Anthropic Outcomes = post-run grading.
+          Same agent shape, different time signatures, different UX
+          requirements.
+
       The expanded list is meant to be exhaustive-enough to make the
       scope-boundary statement honest, not to be a roadmap. Ship A
       as the boundary documentation; B addresses the highest-pain
