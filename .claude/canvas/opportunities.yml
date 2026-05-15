@@ -531,6 +531,261 @@ opportunities:
       captured_at: "2026-05-13"
       confidence: 0.4  # Single user + source-confirmed; pattern likely broader but not exhaustively audited
 
+  - id: opp-008
+    name: "Cross-cutting sub-OSTs surfaced during delivery exploration aren't portable across parent solutions"
+    description: |
+      When delivery exploration of a top-level solution surfaces a
+      sub-OST (e.g., solution A "logged-in portal" needs to choose
+      between auth-X, auth-Y, auth-Z), the discovery work — four-risks,
+      ICE, assumption tests, spike results — is locked to solution A.
+      If a competing parent solution B later needs the same cross-cutting
+      concern (auth), the framework provides no mechanism to surface
+      "the work done on auth-X is reusable here." B's discovery has to
+      rediscover independently, or the agent/user has to manually
+      remember and re-cite.
+
+      Current schema is tree-shaped:
+      - `opportunities.schema.json` allows `sub_opportunities` (nested
+        same-shape) and `solutions` (flat array per opportunity).
+        Sub-opportunities is unused in practice.
+      - Solutions are owned by a single parent opportunity. No
+        many-to-one or many-to-many.
+      - L4 sub-diamonds exist (`diamond-rules.md`) but they're delivery
+        sub-diamonds, not OST sub-trees that can be shared.
+      - Bounded contexts (`canvas/bounded-contexts.yml`, Phase 6 of
+        leaf-lifecycle) are closest to a shared-concern primitive but
+        currently tied to specific solutions, not first-class reusable
+        components.
+      - Trace edges (`_common.schema.json#/$defs/trace`) and
+        `validate_canvas.py` cycle detection already provide the
+        infrastructure for DAG-style cross-references. Just not used
+        at the OST level.
+
+      Real-world cases where this hurts: authentication, payments,
+      observability, i18n, accessibility, error handling. These are
+      quintessentially cross-cutting — they emerge during exploration
+      of nearly any feature solution, and the right choice in one
+      context is usually the right choice in another.
+
+      Torres's own CDH doesn't fully solve this either; she nests
+      within a single tree. The 2026-05-13 Torres-Vistaly piece
+      (`producttalk.org/behind-the-scenes-ai-osts/`) is suggestive of
+      the right shape: her service emits explicit *merge* operations
+      when updating an OST, alongside add/delete/reframe/split. Merge
+      is structurally exactly the cross-applicability move ("A's auth
+      sub-OST is equivalent to B's auth sub-OST — record the shared
+      discovery without committing to a permanent DAG"). The tree
+      stays tree-shaped at any given moment; merge is how
+      cross-applicability is captured.
+
+      This opportunity converges with the deferred OST-update-with-
+      change-set gap also surfaced by the Torres signal yesterday
+      (`skills/ost-builder/SKILL.md` Theory Citations note, v0.23.17).
+      They are the same design need approached from two directions:
+      one says "we need to update an OST and surface the diff"; the
+      other says "we need to share discoveries across parent solutions."
+      Both want change sets with merge as a primitive.
+    type: functional
+    frequency: high  # Cross-cutting concerns are pervasive — surface in nearly any non-trivial solution exploration
+    impact: medium  # Workaround exists (rediscover or manually trace); cost is wasted exploration cycles and lost evidence reuse
+    strategic_alignment: high  # Directly affects framework's claim to handle OST work end-to-end; failure to model this leaks discipline at the delivery boundary
+    cynefin_domain: complicated  # Solvable via established schema design (DAG, references, bounded contexts) but requires deliberate work — not a fresh complex domain
+    sub_opportunities: []
+    solutions: []
+    provenance:
+      evidence_type: anecdotal  # Conversational surface (founder 2026-05-15) + framework convergence with Torres 2026-05-13 signal; no behavior-validated instance yet
+      evidence_sources:
+        - "founder conversation 2026-05-15 ('the OST in Mycelium generates branches of new OSTs/foliages — auth X/Y/Z might fit either solution A or B')"
+        - "Torres 2026-05-13: https://www.producttalk.org/behind-the-scenes-ai-osts/ (change-set semantics including merge as cross-applicability primitive)"
+        - "plugins/mycelium/engine/leaf-lifecycle.md (Phase 6 bounded-contexts — current closest primitive)"
+        - "plugins/mycelium/engine/diamond-rules.md (L4 sub-diamond rule — delivery-side spawning, not OST-side sharing)"
+        - "plugins/mycelium/schemas/canvas/opportunities.schema.json (tree-shaped solutions[] array per opportunity)"
+        - "plugins/mycelium/skills/ost-builder/SKILL.md Theory Citations (2026-05-13 Torres OST-update gap note, v0.23.17)"
+      captured_at: "2026-05-15"
+      confidence: 0.35  # Real design tension named by founder + Torres convergence; no behavior-validated user instance, no prototype, no scoping spike. Promotion path: when a real diamond surfaces auth/payments/observability as a sub-OST and the rediscovery cost becomes visible.
+    notes: |
+      **Out of scope for v0.23.x.** This is framework L2 work — needs
+      its own diamond, not a patch. Three implementation paths
+      enumerated in 2026-05-15 conversation:
+        (A) Convention-only: use existing `trace.upstream` to manually
+            reference shared sub-opportunities. Zero schema change;
+            relies on discipline. Cheapest entry point.
+        (B) Promote bounded-contexts to first-class reusable solution
+            components (DDD-aligned). Schema change, validator update,
+            retroactive migration.
+        (C) New `solution_components.yml` canvas for cross-cutting
+            sub-units. Each has own four-risks, ICE, assumption-tests.
+            Largest scope; cleanest semantics.
+        (D) Implement merge-as-primitive (Torres-shape): when
+            delivery-exploration sub-solutions converge across parents,
+            emit a merge change set rather than committing to a
+            permanent DAG. Lazy DAG-isation; closest to OST-update gap.
+
+      ICE scoring + assumption test deferred to diamond start. Will
+      converge with `skills/ost-builder/SKILL.md` deferred-update gap
+      (v0.23.17 Theory Citations note) — they should be one design
+      diamond, not two.
+
+  - id: opp-009
+    name: "Delivery-pipeline quality skills cluster on web/GUI; other interface modalities under-covered"
+    description: |
+      Mycelium's `delivery_types` taxonomy is modality-aware
+      (`user_facing`, `api_service`, `cli_tool` are distinct entries with
+      tailored detection patterns) but the actual evaluation skills
+      cluster heavily around web/GUI:
+        - `usability-check` (Nielsen 10) — web/GUI-first
+        - `a11y-check` (WCAG 2.1 AA) — web/mobile-first
+        - `service-check` (Downe 15) — service-level, mostly govtech/web
+
+      Coverage matrix as of 2026-05-15:
+        - **Visual GUI** (web/mobile): strong (Nielsen + WCAG + Downe).
+        - **API / DevEx**: partial — security-strong via threat-model /
+          security-review / privacy-check, but no API design quality
+          skill (no REST conventions, error-message review, versioning,
+          SDK ergonomics, documentation review). The framework's own
+          DevEx would fail this missing review.
+        - **CLI / TUI**: weak — `cli_tool` delivery type detects CLI
+          and flags input validation only. No skill for CLI ergonomics
+          (help output, flag naming, color-blind-safe terminal output,
+          exit codes, piping/composition, TUI patterns).
+        - **Conversational / chat UI**: weak — `xai-check` covers
+          explainability, `ai_safety` covers harm, but nothing on
+          turn-taking, error recovery, persona consistency, message
+          scannability, retry-affordance. Notable since Mycelium itself
+          operates IN a chat UI (Claude Code).
+        - **Voice / audible**: very weak — `content_media` covers audio
+          production quality (caption/transcript discipline) but no
+          conversational voice UX (Alexa/Siri shape), audio earcons,
+          spatial audio, voice-only navigation.
+        - **Tactile / haptic**: zero.
+        - **Multi-modal coherence** (product with visual + voice + API
+          surfaces, e.g., smart home): zero — each modality evaluated
+          in isolation, no consistency check across them.
+        - **DevEx of Mycelium-itself**: self-blind. Frida ht-012
+          friction log contains DevEx evidence (permission prompts,
+          vocabulary opacity, time-budget consistency drift) but no
+          skill catches that class systematically. Recursion-flavored
+          — framework's discipline doesn't apply to framework's own
+          interface to users.
+
+      Additional surfaces surfaced 2026-05-15 (see notes block for the
+      expanded matrix): notification surfaces (push/in-app/email/SMS),
+      wearable / glance-able (smartwatch / fitness band tiny screens),
+      AR/VR / spatial / 3D, TV / 10-foot UI, embedded / IoT physical
+      devices (LEDs, segment displays, single-button), voice-only IVR,
+      sign-language overlays, refreshable braille / assistive tactile,
+      eye / gaze input, BCI (frontier), agent-as-interface (an AI
+      agent IS the user's surface — Mycelium is structurally in this
+      class but has no skill for evaluating agent-as-product),
+      documentation / error-message text as interface, structured-form
+      input (govtech / healthcare), webhook / event-driven async
+      interfaces (B2B), embed / widget surfaces (sitting inside
+      another product's frame), bot-in-platform (Slack/Discord/Teams),
+      print (PDFs, physical mail, receipts).
+
+      Strong coverage = current user base (mostly web app builders).
+      Self-consistent, not a flaw — but a scope statement that
+      Mycelium currently doesn't make explicit.
+    type: functional
+    frequency: medium  # Becomes high when Mycelium reaches users outside the web/GUI baseline; today it's a latent gap
+    impact: medium  # Workaround: bring-your-own evaluation criteria. Cost is missed friction surfaces and the framework underclaiming its own coverage boundary.
+    strategic_alignment: high  # Tied to L1 positioning — Mycelium claims to be a theory-grounded harness for "product development", not specifically web-product development. Coverage gap weakens the general-purpose claim.
+    cynefin_domain: complicated  # Per-modality evaluation criteria are well-established in their respective communities (clig.dev for CLI, NN/g voice UX for voice, etc.); the work is integration, not invention
+    sub_opportunities: []
+    solutions: []
+    provenance:
+      evidence_type: anecdotal  # Conversational surface (founder 2026-05-15) + desk-mapped against current SKILL.md inventory and canvas-guidance.yml taxonomy; no behavior-validated user instance of the gap
+      evidence_sources:
+        - "founder conversation 2026-05-15 ('how well does Mycelium optimize for user interfaces in the delivery pipeline?')"
+        - "plugins/mycelium/skills/usability-check/SKILL.md (Nielsen 10, web-first)"
+        - "plugins/mycelium/skills/a11y-check/SKILL.md (WCAG 2.1 AA, web/mobile)"
+        - "plugins/mycelium/skills/service-check/SKILL.md (Downe 15, service-level)"
+        - "plugins/mycelium/engine/canvas-guidance.yml (delivery_types: user_facing, api_service, cli_tool taxonomy)"
+        - "plugins/mycelium/domains/delivery/CLAUDE.md (product type awareness section)"
+        - ".claude/canvas/human-tasks.yml#ht-012 (Frida ht-012 partial_findings — DevEx friction class evidence)"
+      captured_at: "2026-05-15"
+      confidence: 0.35  # Real coverage map, conversationally surfaced; needs a real user with a non-web modality (voice/CLI/wearable) hitting a gap before promotion to data-supported. Promotion candidate: when Juniors.dev cohort or another user works on a non-web product and identifies a missing evaluation skill.
+    notes: |
+      **Out of scope for v0.23.x.** This is framework L2 work — needs
+      its own diamond. Three implementation paths enumerated in
+      2026-05-15 conversation:
+        (A) Document the scope boundary (lowest cost): add a "modality
+            coverage matrix" to canvas-guidance.yml or
+            docs/architecture.md. Honest, no scope creep.
+        (B) Adopt-existing-frameworks for high-impact gaps: ship
+            `devex-check` (Stripe-style API consistency +
+            error-message + onboarding patterns), `cli-check`
+            (clig.dev / Heroku CLI style), `chat-check` (turn-taking,
+            persona consistency). 3 new skills, each maps to a real
+            industry framework. ~1 design-diamond each. Prioritize by
+            real-user need (Juniors.dev cohort = DevEx + chat UX,
+            given how they encounter Mycelium).
+        (C) Defer voice/haptic/multi-modal: niche enough today that
+            thin coverage is worse than acknowledged absence.
+
+      Founder direction 2026-05-15: ship A immediately (cheap
+      honesty), B as deferred work prioritized by real-user need, C —
+      hold.
+
+      **Expanded modality matrix** (additional surfaces surfaced
+      2026-05-15 after initial coverage map):
+        - Notification surfaces (push, in-app, email, SMS) — modal
+          that interrupts other contexts; transactional-email design
+          is its own discipline
+        - Wearable / glance-able (smartwatch, fitness band) —
+          sub-modal of visual but with tight constraints (tiny
+          screen, glance-only attention budget)
+        - AR / VR / spatial / 3D (immersive, gesture, mixed reality)
+        - TV / 10-foot UI (limited input, distance reading,
+          remote-control navigation)
+        - Embedded / IoT physical device UX (LEDs, segment displays,
+          single-button affordances, no screen)
+        - Automotive (CarPlay/Android Auto, in-vehicle infotainment —
+          glanceable, hands-mostly-occupied)
+        - Game UI (HUD, controller-driven, performance-critical)
+        - Voice-only IVR / phone tree (call-center UX)
+        - Sign-language overlay / interpreter (live or recorded
+          accessibility-modal)
+        - Refreshable braille / assistive tactile (real, used,
+          under-served by mainstream UX)
+        - Eye / gaze input (accessibility + spatial computing
+          intersection)
+        - BCI / brain-computer interface (frontier — Neuralink etc.;
+          not worth modeling today, watch)
+        - **Agent-as-interface** (the AI agent IS the user's surface;
+          this is the class Mycelium itself inhabits as an
+          interpretive layer over Claude Code; no skill for evaluating
+          agent-as-product even though that's the framework's own
+          shape — recursion-blind)
+        - Documentation / error-message text as interface (the words
+          ARE the UI for many products; closest skill is the
+          forthcoming devex-check)
+        - Structured-form input (govtech/healthcare paper-equivalent
+          forms — Downe service-check touches this but doesn't fully
+          cover form-design ergonomics)
+        - Webhook / event-driven async interfaces (B2B; API design
+          skill would cover most of this)
+        - Embed / widget surfaces (sitting inside another product's
+          frame, e.g., a calendar widget on a third-party page —
+          constraint set is distinct)
+        - Bot-in-platform (Slack/Discord/Teams bot UIs — also
+          embedded; turn-taking + invocation discoverability are
+          central)
+        - Print (generated PDFs, physical mail, receipts, tickets —
+          one-shot, no follow-up affordance)
+        - Spatial audio / 3D positional sound (not just stereo voice;
+          gaming + AR/VR + accessibility)
+        - Olfactory / gustatory / scent: extreme niche, skip
+
+      The expanded list is meant to be exhaustive-enough to make the
+      scope-boundary statement honest, not to be a roadmap. Ship A
+      as the boundary documentation; B addresses the highest-pain
+      subset.
+    trace:
+      upstream:
+        - target_id: "opp-008"
+          relationship: "sibling — both are framework-design-tension opportunities surfaced via founder conversation 2026-05-15; both await a real-diamond instance to promote from anecdotal to data-supported"
+
 # - id: opp-001
 #   name: ""
 #   description: ""
