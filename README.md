@@ -45,6 +45,8 @@ Mycelium is for work where deciding *what to build* is the hard part. Some use c
 
 Time-constrained projects ARE supported: `/interview` opens with a universal 4-question brief (problem, users, risk, smallest next move) — no predict-the-future time-budget question up front. After the brief, you choose how deep to go via a menu (test biggest assumption, go deeper, regulatory review, stop here, friction log). Depth and time-cost are chosen with data, not before any value has been delivered.
 
+**Self-hosted setups**: Mycelium runs on [opencode](https://github.com/anomalyco/opencode) with local models (Ollama, LM Studio) for users who want to escape Claude Code's pricing model. The substrate ports verbatim; three runtime safety mechanisms degrade to model-following-instructions rather than structural enforcement. Honest support matrix and setup steps: [docs/integrations/opencode.md](docs/integrations/opencode.md).
+
 ## What it feels like
 
 Not 49 skills dumped on you at once. Three modes that show up at the right time:
@@ -61,7 +63,7 @@ A small project sees fewer gates and lighter guidance. A complex product gets th
 
 Mycelium has been dogfooded on three small projects AND tested by one outside user under realistic time pressure. Each session taught the framework something different — and most of what they taught is in the version you're looking at right now.
 
-- **[tic-tac-toe](docs/receipts/cases/2026-04-tic-tac-toe.md)** — what Mycelium learned. One durable engineering pattern (optimistic UI desync) now in project-local memory.
+- **[consistency-as-evidence-graduation](docs/receipts/cases/2026-05-09-consistency-as-evidence-graduation.md)** — what Mycelium learned to distrust about itself. A pattern recurring across 5 instances graduated to anti-pattern #7 with an ambient self-check — the framework's own verification discipline now flags when its agent argues from internal coherence rather than external evidence.
 - **[macos-can-i-open](docs/receipts/cases/2026-04-macos-can-i-open.md)** — what Mycelium improved. Two reusable Swift / AX corrections from observed agent failure.
 - **[macos-fileviewer](docs/receipts/cases/2026-04-macos-fileviewer.md)** — what Mycelium stopped, and what that gave it. The project that didn't ship contributed more than the two that did: 10 framework features came out of a kill.
 - **[drew-hoskins-takehome](docs/receipts/cases/2026-04-30-drew-hoskins-takehome.md)** — what a real outside user under pressure surfaced. 82 prompts, 8 hours, 7 framework changes.

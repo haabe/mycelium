@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.23.25 -- **Attribution label: lived-friction-triggered**. Phase 0 substrate-neutralization audit receipt (37 substrate files swept, 13 load-bearing Claude-Code-specific references located, 11/13 already labelled as such in AGENTS.md, three rewrites queued at ~4.5h total effort) plus a corrections.md entry capturing the second same-session Check-26 trip from misclassifying receipts under `docs/receipts/cases/` as outside the "material framework file" scope. New rule: receipts ARE material; bump pre-emptively when adding any file outside obvious exclusions. PATCH per version-discipline: audit receipt + corrections entry + this version line; no schema, skill, or behaviour change.*
+*Version 0.23.26 -- **Attribution label: external-validation-triggered**. User-facing honest-status doc on Mycelium-with-opencode added at `docs/integrations/opencode.md` (support matrix, setup steps, model-size guidance, three known runtime gaps with their upstream issue links). README "How Mycelium got smarter" rotation: tic-tac-toe (oldest) rotates off, 2026-05-09 consistency-as-evidence-graduation rotates on (better demonstrates current discipline). README adds a pointer to the opencode integration doc from the "Who it's for" section to surface the self-hosted option for users escaping Claude Code's pricing model. PATCH per version-discipline: new doc + README rotation + pointer; no schema, skill, or behaviour change.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

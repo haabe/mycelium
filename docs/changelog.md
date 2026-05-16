@@ -6,6 +6,16 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.23.26 — opencode integration doc + README rotation (self-hosted positioning)
+
+**2026-05-16. Attribution: external-validation-triggered.** Documentation-only release surfacing Mycelium-on-opencode as an honest user option.
+
+**`docs/integrations/opencode.md`** — first user-facing doc on running Mycelium with opencode + local Ollama. Frames the option for users feeling pressure from Claude Code's pricing model (a visible 2026 trend toward self-hosted AI development workflow). Honest about what works (substrate, skills, validators, MCP, instructions via AGENTS.md/CLAUDE.md fallback) and what doesn't (Read-before-Edit not runtime-enforced, `tool.execute.after` success-only, `tui.prompt.append` silent in headless). Includes setup steps for opencode + `opencode-agent-skills` plugin + Ollama, plus a model-size guidance table (4B–8B not recommended, 14B–32B sweet spot for self-hosted, 70B+ matches Claude-on-Claude-Code discipline level). Links to the three upstream issues filed today (anomalyco/opencode #27899, #27900, #27901).
+
+**README rotation**: tic-tac-toe (oldest, narrowest case study from 2026-04) rotates off "How Mycelium got smarter" highlights; `2026-05-09-consistency-as-evidence-graduation` rotates on (5-instance pattern graduated to anti-pattern #7 with ambient self-check — better demonstrates current verification discipline). README "Who it's for" section gains a pointer to the new opencode doc for users wanting self-hosted setups.
+
+PATCH per version-discipline: new doc + README updates only; no schema, skill, or behaviour change.
+
 ## v0.23.25 — Phase 0 substrate audit receipt + Check-26 scope correction
 
 **2026-05-16. Attribution: lived-friction-triggered.** Documentation-only release closing the opencode-port arc's same-day work.
