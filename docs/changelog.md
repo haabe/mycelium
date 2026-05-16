@@ -2,9 +2,36 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-05-14.
+**Last updated**: 2026-05-16.
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
+
+## v0.23.24 — opencode port feasibility arc; two delivery patterns graduated; first real decision-log entries
+
+**2026-05-16. Attribution: external-validation-triggered.** Documentation-only release capturing a two-step verification of a potential Mycelium → opencode port.
+
+**Phase 0 — desk + static + binary inspection** estimated a ~1–3 day adapter and flagged three runtime unknowns: whether `tui.prompt.append` mutates the outbound prompt, whether `tool.execute.after` carries a failure signal, whether Read-before-Edit is runtime-enforced.
+
+**Phase 1 — headless runtime test** against opencode 1.15.1 with local Ollama (llama3.1:8b 32k-ctx) overturned all three:
+
+- `tui.prompt.append` is silent in `opencode run` (TUI-scoped only; no documented headless equivalent).
+- `tool.execute.after` is success-only — a failed `read` of a nonexistent file fires `before` but never `after`. Errors reach the message stream, not the hook stream.
+- Read-before-Edit is **prompt-level only** — the precondition string is in the LLM-facing tool description, not the runtime code path. A clean edit succeeded on a fresh session with no prior read. The Phase 0 binary-inspection conclusion that the precondition was "mechanically enforced" was wrong.
+
+Adapter cost estimate inverts to ~1–2 weeks; PR deferred indefinitely. Substrate-neutralization discipline (canvas + memory + harness + validators as harness-neutral source-of-truth) kept regardless — free option value either way.
+
+**Two delivery patterns graduated** to `patterns.md`:
+
+1. **Don't infer runtime enforcement from schema/description strings.** Binary strings prove what the agent is told, not what the runtime enforces. To reach enforcement evidence: construct the condition the schema warns against, run it against the runtime, observe.
+2. **Symmetric API names don't imply symmetric semantics.** `before`/`after` pairs promise temporal ordering, not population symmetry. Any reflexion/cleanup logic depending on "for every X.before I get X.after" must be runtime-verified.
+
+Both are structural twins of anti-pattern #7 (consistency-as-evidence) applied to the framework's own analysis of host runtimes.
+
+**Decision-log gains its first two entries**: "Adopt two-lane harness path (Claude Code + opencode)" at confidence 0.55, immediately superseded by "Re-scope opencode adapter post-Phase-1" at confidence 0.32 — both 2026-05-16, second references the first per the decision-log's immutability convention.
+
+**Two receipts** under `docs/receipts/cases/`: `2026-05-16-opencode-port-feasibility.md` (Phase 0) and `2026-05-16-opencode-phase1-runtime.md` (Phase 1, includes the meta-correction that the Phase 0 binary-inspection conclusion was wrong).
+
+PATCH per version-discipline: documentation + decision-log + memory additions only; no schema change, no skill change, no behavior change for downstream users.
 
 ## v0.23.23 — Check 33 scope expansion + WARN→FAIL graduation + pre-disclosure cleanup (mechanism complete)
 
