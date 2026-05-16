@@ -41,6 +41,15 @@ Each correction entry follows this structure:
 
 _Corrections that apply broadly across projects and contexts._
 
+### 2026-05-16 - Check 26 scope misread: receipts under docs/receipts/cases/ ARE material
+- **Scope**: process
+- **Category**: version-discipline
+- **Origin**: agent-self (twice in one session, surfaced by pre-push hook)
+- **Mistake**: Twice on 2026-05-16, I committed framework-tree files without bumping the version, assuming Check 26 (material framework changes require a version bump) would not count those files. First trip: `.claude/harness/decision-log.md` + `.claude/memory/patterns.md` (commit `2ab089e`, fixed in `4e796e0` with PATCH bump to 0.23.24). Second trip: `docs/receipts/cases/2026-05-16-phase0-substrate-audit.md` (commit `23a648d`, required PATCH bump to 0.23.25). Both pushes were blocked by the pre-push hook running Check 26 — the validator was correct; my mental model of "material" was wrong.
+- **Correction**: Bump the version pre-emptively when adding ANY file outside obvious exclusions (build artefacts, gitignored paths, `plugins/mycelium/` is the per-harness adapter and has its own discipline). Receipts under `docs/receipts/cases/` ARE counted as material. The validator is the authority on what counts as material, not my expectation of what *should* count.
+- **Prevention**: When in doubt about whether a commit needs a version bump, the cheapest discipline is to bump pre-emptively. A wasted bump is a no-op; a missing bump is a push rejection plus an amend-style follow-up commit. The cost asymmetry favours bumping. Alternative (more rigorous): read `tests/validate-template.sh` Check 26 source to understand the exact file-exclusion logic before relying on memory of what counts. Did not do this either time; should have on the second.
+- **Source**: Same-session double-trip 2026-05-16, pre-push hook output. Reflexion-loop triggered both times via `PostToolUseFailure` on the failed `git push`. The recurrence in a single session is the signal that the agent's mental model was structurally wrong, not just one-off forgetfulness — exactly the kind of pattern that warrants corrections.md graduation rather than a private note.
+
 ### 2026-05-14 - Generic-framed lived-friction sources can re-identify through the graduation chain
 - **Scope**: quality
 - **Category**: privacy

@@ -6,6 +6,22 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.23.25 — Phase 0 substrate audit receipt + Check-26 scope correction
+
+**2026-05-16. Attribution: lived-friction-triggered.** Documentation-only release closing the opencode-port arc's same-day work.
+
+**Phase 0 substrate-neutralization audit** (`docs/receipts/cases/2026-05-16-phase0-substrate-audit.md`): read-only Explore-subagent sweep of 37 substrate files (CLAUDE.md, `.claude/memory/`, `.claude/harness/`, `.claude/engine/`, `docs/`, AGENTS.md, README.md). Four coupling categories surveyed:
+- Cat A (tool-surface references): 13 load-bearing findings, concentrated in CLAUDE.md + corrections.md. Read-before-Write rule is the single highest-coupling item.
+- Cat B (Claude Code primitive names): hook events, slash-command namespace, auto-memory path. 11 of 13 already labelled "Claude-Code-specific" in AGENTS.md.
+- Cat C (paths): `.claude/` referenced 203 times. Treated as location convention, not semantics.
+- Cat D (vocabulary/framing): AGENTS.md already documents "framework vs plugin" distinction sharply.
+
+Headline finding: substrate-neutralization claim is verifiable; coupling is visible and documented, not hidden. Three rewrites queued at ~4.5 hours total effort, deferred until either opencode adapter becomes demand-pulled or a quiet maintainer block opens post-Juniors.dev cohort signal.
+
+**Check-26 scope correction** (`.claude/memory/corrections.md`): second same-session trip on the same root cause — `docs/receipts/cases/*.md` files ARE counted as material framework changes by Check 26, contrary to my prior mental model. New rule: bump version pre-emptively when adding any file outside obvious exclusion zones, rather than guessing at what Check 26 treats as material.
+
+PATCH per version-discipline: audit receipt + corrections entry only; no schema, skill, or behaviour change.
+
 ## v0.23.24 — opencode port feasibility arc; two delivery patterns graduated; first real decision-log entries
 
 **2026-05-16. Attribution: external-validation-triggered.** Documentation-only release capturing a two-step verification of a potential Mycelium → opencode port.
