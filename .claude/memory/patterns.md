@@ -43,6 +43,35 @@ Each hedge is the LLM's own signal that it's reaching. Treat as **zero evidence*
 
 _Patterns for implementation, testing, deployment, and monitoring._
 
+### Don't infer runtime enforcement from schema/description strings
+
+Binary inspection of an installed tool can find strings like *"This tool will error if you attempt an edit without reading the file"* or *"You must X before Y."* That evidence proves only **what the agent is told**, not **what the runtime enforces**. The two layers diverge routinely: tool authors often put preconditions in the LLM-facing schema text as a behavioural nudge while leaving the executable code path permissive. A model that ignores the instruction will succeed; a guard that depends on the precondition being enforced will silently no-op.
+
+**Detection rule**: any claim of the form "the runtime enforces X" backed only by strings in a binary, schema, or docs is **prompt-level evidence**, not enforcement evidence. To reach enforcement evidence you must:
+1. Construct the exact condition the schema warns against.
+2. Run it against the real runtime.
+3. Observe whether the runtime refuses, errors, or proceeds.
+
+If the runtime proceeds, the precondition is **agent-discipline, not framework-discipline** — and a less-disciplined agent (smaller model, different harness, or the same model on a long-context distraction) will violate it without consequence. Frameworks that depend on the precondition for safety properties must ship their own guard rather than relying on the host runtime.
+
+**Counter-pattern**: a single round of "the binary says X, therefore the runtime enforces X" is the structural twin of the consistency-as-evidence anti-pattern (#7). The binary string is *compatible with* runtime enforcement, but also compatible with prompt-level-only enforcement. Distinguishing the two requires a runtime test, not more reading.
+
+*Source: opencode adapter Phase 1 runtime test 2026-05-16 (`docs/receipts/cases/2026-05-16-opencode-phase1-runtime.md`). The Phase 0 desk + binary inspection concluded "Read-before-Edit is enforced — the binary contains the precondition string." Phase 1 runtime test: clean edit succeeded on a fresh session with no prior read. The precondition string was in the LLM-facing tool description, not the code path. Confidence in the entire adapter feasibility estimate dropped 0.55 → 0.32 on that single correction, plus two adjacent ones. The pattern is the same shape as Wardley/Vistaly fabrication verification (2026-05-15/16) — different surface, same epistemic class.*
+
+### Symmetric API names don't imply symmetric semantics
+
+When an event surface ships paired names like `before` / `after`, `on_start` / `on_end`, `pre_*` / `post_*`, the names suggest the two hooks fire on the same population of events with mirror-image timing. Treating that as a contract is a guess, not a fact. Hook taxonomies routinely diverge on populations:
+
+- `tool.execute.before` fires for **all** tool calls; `tool.execute.after` fires only for **successful** ones.
+- `session.start` may fire once per connection; `session.end` may not fire at all on abnormal disconnect.
+- `request.received` may include preflight CORS; `request.completed` may not.
+
+The naming convention promises **temporal ordering** (after fires later than before, when both fire), not **population symmetry** (after fires for the same calls before fired for). Any reflexion / retry / cleanup logic that depends on "for every X.before I get X.after" must be **verified at runtime**, not inferred from the name pair.
+
+**Detection rule**: in any plugin/hook adapter design, list which event pairs the design relies on for population symmetry. For each pair, run an explicit test for the failure / abnormal-termination case to verify the second event fires. If it doesn't, design a sidecar mechanism: tag events with callIDs at `.before`, reconcile orphans against the message/result stream, treat absence-of-`.after` as the failure signal.
+
+*Source: opencode Phase 1 runtime test 2026-05-16. Mycelium's reflexion port from Claude Code's `PostToolUseFailure` to opencode's `tool.execute.after` was designed on the assumption that the latter fires for failures. Headless test with a forced read failure: `tool.execute.before` fired, `tool.execute.after` never did. The naming convention strongly suggests otherwise; the runtime is authoritative. Same class as the prior pattern — both are "verify at the layer you're depending on, not the layer that describes it."*
+
 
 ## Orchestration Patterns
 
