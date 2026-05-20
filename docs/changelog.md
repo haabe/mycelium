@@ -6,6 +6,18 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.23.29 — Diamond assessment 2026-05-20 logged (audit-trail)
+
+**2026-05-20. Attribution: dogfood-audit-trail.** `/mycelium:diamond-assess` invoked following yesterday's Edith-Mari user-test signal. Assessment logged to `.claude/harness/decision-log.md` with the full cognitive-forcing → read-before-claim → why-not-alternatives → anti-pattern-scan → reversibility structure.
+
+**L0 Purpose**: confidence 0.61 → 0.63. Half-weight increment absorbing Edith-Mari's behavior-validation signal. L0 stays in Develop — Develop→Deliver needs density beyond a single half-weight signal.
+
+**L1 Strategy**: held at 0.24. The 2026-05-12 devils-advocate rule ("no further L1 increments from positioning-only signals until ≥1 behavior-validation lands") was framed for arms-length validation. Edith-Mari is relationship-class, not arms-length — counts as half-weight behavior-validation but does not satisfy the L1 movement prerequisite. Arms-length cohort signal (ht-014/ht-015) remains the gate.
+
+**Canvas-health items addressed in the same cycle**: `active.yml` refreshed (8-day staleness closed); `purpose.yml _meta.last_validated` refreshed (9-day staleness closed); landscape.yml staleness flagged but left for next pass (content is current; timestamp-only drift).
+
+PATCH per version-discipline: decision-log entry + version line + changelog; no schema, skill, or behaviour change. Two consecutive PATCHes (0.23.28 + 0.23.29) on the same day reflect substantive cycle work (receipt + assessment) — version-discipline is designed to support this cadence at the bottom of the semver tree.
+
 ## v0.23.28 — First non-developer user signal (Edith-Mari Pedersen Bartnes book project)
 
 **2026-05-20. Attribution: user-detected.** First non-developer user to test Mycelium end-to-end. Edith-Mari Pedersen Bartnes ran `/mycelium:start` on her book project (content_publication product-type) on 2026-05-20, reaching the assumption-test stage in ~10–15 minutes.
