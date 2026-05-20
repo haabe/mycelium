@@ -29,6 +29,10 @@ npx degit haabe/mycelium my-project && cd my-project
 
 Build to learn, then build to earn (Patton). 30+ established frameworks, connected by theory gates so critical steps cannot be skipped. The agent does not progress until the evidence says it should. Discovery to market feedback at six scales (Purpose → Strategy → Opportunity → Solution → Delivery → Market), the same four-phase diamond at every scale. Configuration files plus orchestrated prompts — not a software library.
 
+## Where it sits in the field
+
+The vocabulary settled in spring 2026. Martin Fowler / Thoughtworks ([Birgitta Böckeler, 2026-04-02](https://martinfowler.com/articles/harness-engineering.html)) and Ning et al. ([arxiv 2605.18747, 2026-05-18](https://arxiv.org/abs/2605.18747)) both name **harness engineering** as an emerging practice: feedforward guides + feedback sensors, computational and inferential, regulating an agent toward a desired state. Mycelium is one worked example of this taxonomy, on a markdown + canvas-YAML + validator substrate — the family of mechanisms is consensus-forming; the substrate choice and the specific gating discipline are Mycelium's own design.
+
 ## Who it's for
 
 **Builders** — solo developers or small teams using AI agents to build products. If you can't afford to burn runway on the wrong thing, Mycelium helps you find the right thing before you build it.

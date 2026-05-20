@@ -6,6 +6,20 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.23.27 — README adds "Where it sits in the field" — harness engineering vocabulary anchors
+
+**2026-05-20. Attribution: external-validation-triggered.** Documentation-only release surfacing the recently-named "harness engineering" practice on the README.
+
+Two canonical anchors emerged in spring 2026:
+- **2026-04-02**: Birgitta Böckeler / Martin Fowler / Thoughtworks article "Harness engineering for coding agent users" — practitioner thought-leadership canonical anchor on martinfowler.com
+- **2026-05-18**: Ning et al. arxiv 2605.18747 "Code as Agent Harness" — 42-author academic survey
+
+Both name "harness engineering" with explicit feedforward / feedback / computational / inferential taxonomy. Mycelium implements a worked example of this taxonomy on a markdown + canvas-YAML + validator substrate. README adds a 3-sentence "Where it sits in the field" section between "What it is in 5 lines" and "Who it's for" — date-anchored citation, no claim of endorsement, explicit acknowledgement that the family of mechanisms is consensus-forming while Mycelium's substrate and specific gating discipline remain its own design.
+
+The positioning claim is time-bound. Re-check schedule lives in the roadmap repo at `.claude/memory/positioning-claim-recheck-harness-engineering.md` with hard checks at 2026-08-19 (3-month) and 2026-11-19 (6-month), plus soft triggers for new arxiv papers, Thoughtworks Technology Radar listings, Doppler-team follow-ups, and industry tools branding "self-improving" features. The discipline this monitors is anti-pattern #7 (Consistency-as-Evidence) applied to positioning claims that age — preventing the founder-keeps-citing-a-stale-claim failure mode.
+
+PATCH per version-discipline: README addition only; no schema, skill, or behaviour change.
+
 ## v0.23.26 — opencode integration doc + README rotation (self-hosted positioning)
 
 **2026-05-16. Attribution: external-validation-triggered.** Documentation-only release surfacing Mycelium-on-opencode as an honest user option.
