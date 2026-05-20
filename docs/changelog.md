@@ -6,6 +6,26 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.23.28 — First non-developer user signal (Edith-Mari Pedersen Bartnes book project)
+
+**2026-05-20. Attribution: user-detected.** First non-developer user to test Mycelium end-to-end. Edith-Mari Pedersen Bartnes ran `/mycelium:start` on her book project (content_publication product-type) on 2026-05-20, reaching the assumption-test stage in ~10–15 minutes.
+
+**Strongest positive emotional signal to date.** Brief synthesis produced a near-tears recognition moment ("captured and presented well, even though it was her own words"). Assumption test left her feeling that the framework and agent "really saw her" and what she was trying to achieve with her book. Validates the brief-synthesis-as-identity-mirror hypothesis at the affective layer for non-developer users on non-software product types.
+
+**Five friction items surfaced**, one graduating to corrections.md:
+
+1. Repo bootstrap confusion (creating initial files/folders before `/mycelium:start` could run) — pre-Mycelium friction; non-dev users hit it first.
+2. Claude Code save/update file prompts confused her — host-runtime UX, not a Mycelium issue per se but invisible to Mycelium's UX considerations until now.
+3. Long save-structure output confused her about what was important — signal-vs-noise issue for non-tech-savvy readers.
+4. Chat scroll auto-bounce — when she scrolled up to answer an earlier question, the window scrolled back down. Host-runtime UX issue. She self-solved by asking the agent to repeat the question.
+5. **"You are here" wayfinding gap at the assumption-test → deep-dive-interview transition.** Graduated to corrections.md — orientation mechanism previously covered initial flow only; recurs at phase transitions. Correction extends the surface to fire at every transition with explicit non-developer-user rationale.
+
+A calming moment also worth noting: she became visibly less nervous once she realised she was talking to an AI rather than a human. The same warmth in the brief that produced the recognition moment had been producing social-presence pressure before the AI-ness clicked. One property, two effects — worth holding both in mind for future flow design.
+
+**Attribution**: Edith-Mari gave explicit consent for public attribution on 2026-05-20. Attribution-registry (in the private roadmap repo) updated: consent: public_ok. Full receipt at `docs/receipts/cases/2026-05-20-edith-mari-book-project.md`; CONTRIBUTORS.md adds v0.23.28 cycle credit.
+
+PATCH per version-discipline: new receipt + corrections entry + CONTRIBUTORS entry + version line + this changelog entry; no schema, skill, or behaviour change.
+
 ## v0.23.27 — README adds "Where it sits in the field" — harness engineering vocabulary anchors
 
 **2026-05-20. Attribution: external-validation-triggered.** Documentation-only release surfacing the recently-named "harness engineering" practice on the README.

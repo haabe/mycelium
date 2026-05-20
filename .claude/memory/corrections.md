@@ -41,6 +41,15 @@ Each correction entry follows this structure:
 
 _Corrections that apply broadly across projects and contexts._
 
+### 2026-05-20 - "You are here" wayfinding fires only at initial entry, not at phase transitions
+- **Scope**: quality
+- **Category**: ux
+- **Origin**: user-detected (first non-developer user, Edith-Mari Pedersen Bartnes, book project test 2026-05-20)
+- **Mistake**: The wayfinding-orientation mechanism added at an earlier framework stage covered initial flow orientation, but did not fire at later phase transitions. After completing the assumption test, the user was bewildered when the deep-dive interview was mentioned — she remembered being asked about it early in the flow, but no surface showed remaining steps or "you-are-here" status after the assumption test. Recurrence of the same orientation-loss shape we'd previously addressed; new stage where the prior solution didn't reach.
+- **Correction**: Extend the "You are here" surface to fire at every phase transition, not just initial entry. After completing any user-facing milestone (brief, assumption-test, etc.), the agent should surface a brief "you are here, next is X, you can also Y" indicator before opening the next phase.
+- **Prevention**: When adding any user-facing flow mechanism, ask: "does this need to fire at every transition, or just initial entry?" Default to every-transition unless the cost of repetition outweighs the orientation value. For non-developer users especially, orientation value is much higher than developers because they don't carry mental models of agent flows by default. The prior assumption that initial orientation was sufficient assumed a developer-style user who tracks flow state implicitly.
+- **Source**: Edith-Mari Pedersen Bartnes book-project test 2026-05-20 (`docs/receipts/cases/2026-05-20-edith-mari-book-project.md`). First non-developer user; first concrete instance of the wayfinding gap at a non-initial transition. Theory: Hoskins (scenario-driven design) — when you don't know what scenario the user is in, default to surfacing the map. Cluster candidate: this is the second observed instance of orientation-loss after a partial earlier fix; if a third surfaces, graduate to a named cluster in cluster-instances.md.
+
 ### 2026-05-16 - Check 26 scope misread: receipts under docs/receipts/cases/ ARE material
 - **Scope**: process
 - **Category**: version-discipline

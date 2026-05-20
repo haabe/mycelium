@@ -44,6 +44,16 @@ A second round on 2026-04-30, against an 8-hour take-home interview clock, surfa
 
 ---
 
+## v0.23.28 — First non-developer user signal (book project)
+
+**Edith-Mari Pedersen Bartnes** — On 2026-05-20, Edith-Mari became the first non-developer user to test Mycelium end-to-end. She ran `/mycelium:start` on her book project (content_publication product-type) and reached the assumption-test stage in ~10–15 minutes. The brief Mycelium produced from her input nearly brought her to tears — "captured and presented well, even though it was her own words." The assumption test left her feeling that the framework "really saw" her and what she was trying to achieve with her book. Five friction items surfaced in the same session; one ("You are here" wayfinding gap at the assumption-test → deep-dive-interview transition) graduated into a corrections.md entry extending the orientation mechanism to fire at every phase transition.
+
+This is the first concrete validation that Mycelium's brief-synthesis-as-identity-mirror and assumption-test mechanisms work at the affective layer for non-developer users on non-software product types. Sample size 1; specific relationship (founder's wife); real signal but not statistical.
+
+→ Receipts: [edith-mari-book-project](docs/receipts/cases/2026-05-20-edith-mari-book-project.md).
+
+---
+
 ## How Mycelium uses feedback
 
 Mycelium follows its own feedback loop discipline:
