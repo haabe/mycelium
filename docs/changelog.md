@@ -6,6 +6,23 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.23.30 — First BVSSH baseline assessment (audit-trail)
+
+**2026-05-20. Attribution: dogfood-audit-trail.** `/mycelium:bvssh-check` invoked addressing the SessionStart-hook flag "BVSSH health has never been assessed." First baseline.
+
+Result: **8 of 10 cells green, 2 amber.** Both ambers reflect the same underlying fact: validation-class outcomes (Hoskins, Bentes, Edith-Mari, Lars, plus DORA/Fowler/arxiv vocabulary anchors) are accumulating fast, while the North Star metric "products successfully shipped using Mycelium" remains at 0. Cohort signal (ht-014/15 testing started this week) is the next plausible mover.
+
+CALMS culture all-green except Measurement-outcome (infrastructure healthy — DORA/APEX + daily GitHub pulls + Goodhart counter-metrics — but the thing being measured hasn't moved). The discipline of marking Measurement amber on outcome rather than green on infrastructure is itself the BVSSH check working: don't substitute measurement maturity for outcome movement.
+
+Recommended actions:
+- Don't manufacture green on Value. The amber is honest.
+- Solo SPOF risk on the founder documented in ai-system-card §6 but unaddressed long-term. Not today; tracked.
+- Quarterly cadence for next BVSSH assessment.
+
+Full assessment in `.claude/harness/decision-log.md`. Reversibility: assessment-class entries are immutable by decision-log convention; next assessment supersedes via reference.
+
+PATCH per version-discipline: decision-log entry + version line + changelog; no schema, skill, or behaviour change.
+
 ## v0.23.29 — Diamond assessment 2026-05-20 logged (audit-trail)
 
 **2026-05-20. Attribution: dogfood-audit-trail.** `/mycelium:diamond-assess` invoked following yesterday's Edith-Mari user-test signal. Assessment logged to `.claude/harness/decision-log.md` with the full cognitive-forcing → read-before-claim → why-not-alternatives → anti-pattern-scan → reversibility structure.

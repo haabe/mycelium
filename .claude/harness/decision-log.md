@@ -22,6 +22,32 @@ Record of significant decisions made during product development. Decisions are i
 
 ## Decisions
 
+### BVSSH Assessment 2026-05-20 — 8 of 10 green, 2 amber (Value + Measurement-outcome)
+- **Trigger**: `/mycelium:bvssh-check` invoked 2026-05-20, addressing SessionStart-hook flag "BVSSH health has never been assessed." First baseline assessment.
+- **Scope**: framework-on-framework dogfood. L0 Purpose (Develop, 0.63) + L1 Strategy (Discover, 0.24).
+- **Ratings**:
+    - Better: 🟢 (31 validators passing, 24 corrections graduating debt to mechanism, three external_human positive validations this cycle)
+    - Value: 🟡 (validation-class outcomes accumulating fast — Hoskins, Bentes, Edith-Mari, Lars, plus DORA/Fowler/arxiv vocabulary anchors; North Star "products successfully shipped using Mycelium" at 0)
+    - Sooner: 🟢 (within-session lead time for some graduations, three focused PATCH releases today, WIP=2 honored)
+    - Safer: 🟢 with caveat (Check 33 attribution-registry caught a real leak today and prevented publication; solo SPOF risk on founder documented in ai-system-card §6 but unaddressed)
+    - Happier: 🟢 (sustainable pace + pre-surgery announcement, Edith-Mari emotional recognition, MIT-licensed open framework, discovery-before-delivery prevents waste)
+- **CALMS**:
+    - Culture: 🟢 (blameless post-mortems = corrections.md; today's leak slip went straight to "mechanism worked, fix, move on")
+    - Automation: 🟢 (full pre-push validator stack; today's attribution-leak catch is the working proof)
+    - Lean: 🟢 (small PATCH batches, WIP=2, discovery-first applied to the framework itself)
+    - Measurement: 🟢 on infrastructure, 🟡 on outcome (DORA/APEX + daily GitHub pulls + Goodhart counter-metrics; North Star value at 0 — measurement works, the thing being measured hasn't moved)
+    - Sharing: 🟢 (public receipts, per-cycle CONTRIBUTORS credit, attribution-registry shares-while-protecting)
+- **Why_not_alternatives**:
+    - `Mark Value as green (validation evidence is strong)`: rejected — validation-class outcomes ≠ adoption-class outcomes. North Star metric is "products shipped using Mycelium." Value = 0. Marking green would be the Goodhart trap (vanity-metric validation substituting for outcome metric).
+    - `Mark Safer as amber due to solo SPOF`: considered. Decided green-with-caveat instead because (a) the SPOF is documented honestly, (b) day-to-day operational safety is genuinely healthy (validator stack working in earnest), (c) marking SPOF amber overweights a long-term risk against current operational state. The caveat surfaces the risk without distorting the day-to-day read.
+    - `Skip CALMS, do BVSSH only`: rejected — the SessionStart-hook flag specifically referenced BVSSH which per the skill includes CALMS. CALMS is the "why" layer explaining DORA-style metrics; useful to baseline.
+    - `Defer until post-surgery`: rejected — the SessionStart flag had been outstanding indefinitely; a 30-min baseline now is cheap and gives a comparison point for the next assessment.
+- **Theory**: Smart (BVSSH); Willis & Humble (CALMS); Forsgren (Accelerate — metrics alignment).
+- **Evidence sources** (read-before-claim discipline; canvas files actually opened): `purpose.yml` (39 evidence entries through 2026-05-20), `active.yml` (today's L0 increment), `landscape.yml` (Torres/DORA/arxiv/Fowler entries), `corrections.md` (24 entries), `cluster-instances.md`, `attribution-registry.yml` (which caught today's leak), validator output (31 passed, 0 failed, 2 warnings — same warnings as recent runs).
+- **Confidence**: 0.7. Would rise to 0.85 with: (a) a second BVSSH assessment 3 months out showing the Value-amber resolved (cohort-class adoption signal moving North Star above 0), AND (b) explicit SPOF-mitigation plan documented even if not yet executed. Would fall toward 0.5 if: a subsequent assessment showed self-evaluation bias (e.g., everything else getting greener while Value stayed flat — suggesting measurement-of-everything-but-the-thing-that-matters drift).
+- **Scenario ref**: L0 purpose evidence loop + L1 behavior-validation gate + North Star metric definition.
+- **Reversibility**: assessment-class entries are immutable by decision-log convention; next assessment supersedes via reference, doesn't replace.
+
 ### Diamond Assessment 2026-05-20 — L0 +0.02, L1 held
 - **Diamonds assessed**: L0 Purpose (Develop, 0.61) and L1 Strategy (Discover, 0.24), both active per `mycelium-roadmap/.claude/diamonds/active.yml`
 - **Trigger**: `/mycelium:diamond-assess` invoked 2026-05-20 following Edith-Mari Pedersen Bartnes user-test signal (first non-developer end-to-end user; content_publication product-type; brief-synthesis affective recognition moment; "really seen" assumption-test feedback; one corrections.md graduation = "You are here" wayfinding extension at phase transitions, shipped v0.23.28)
