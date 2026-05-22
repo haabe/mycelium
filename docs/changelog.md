@@ -6,6 +6,54 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.23.33 — "Comprehension Debt" concept surveyed (Shopify/BVP, audit-trail)
+
+**2026-05-22. Attribution: dogfood-audit-trail.** Surveyed Bessemer Venture Partners "Inside Shopify's AI-First Engineering Playbook" (Atlas editorial series). Article surfaces a Shopify-internal concept worth borrowing into Mycelium's vocabulary: **Comprehension Debt** — engineers must understand systems "2-3 layers below" their working layer; *learning cannot be abdicated to AI, only toil*. The distinction *abdicate toil ≠ abdicate learning* is sharper than anything currently in Mycelium's corrections.md, anti-patterns catalog, or status-translations vocabulary. It's the operational mechanism behind Cagan's "amplify thinking, don't abdicate it" and Mycelium's own "agent earns the right to write code" framing.
+
+Concept attributed to Farhan Thawar (VP-Eng Shopify) in a Bessemer interview. Same Bessemer piece is also the source for the fourth independent "harness" vocabulary voice this month (Thawar: "If you don't figure out how to harness the agents in 2026, you'll be behind"), and the Lütke/Evans Goodhart-contradiction repeat pattern ("shipped more code in three weeks than the decade before" — identical speech-act to the Evans claim Evans himself critiqued two days earlier).
+
+**Parked, not implemented.** Same parking pattern as v0.23.31 (ODI) and v0.23.32 (Friedman). Five alternatives considered and rejected: graduate to anti-patterns (wrong shelf — Comprehension Debt is a positive discipline, not a failure pattern); graduate to corrections.md (not yet observed as a Mycelium-internal failure mode); extend status-translations to surface toil/learning question (premature surface change); adopt as theory citation in CLAUDE.md L0-L1 roster (single editorial, no research base behind it); do nothing (rejected — future-self should know it was considered).
+
+**Re-entry trigger**: a real Mycelium user articulating "I let the agent do the work but didn't understand it" as a felt problem in a correction or session log. At that point the demand-pull justifies graduation; until then, framework adds no surface area.
+
+**Cross-references** (same survey produced multi-canvas effects in the roadmap repo):
+- `mycelium-roadmap/.claude/canvas/purpose.yml` — new market_signal entry 2026-05-22 capturing the Thawar/Lütke quotes, harness-vocabulary fourth voice, and Lütke/Evans Goodhart-repeat pattern.
+- `mycelium-roadmap/.claude/canvas/landscape.yml` — comp-025 ("100x org school") extended with Shopify custom-built operationalization vs Evans genesis-stage rhetoric divergence; confidence bumped 0.55 → 0.62 on now-multi-actor evidence.
+
+Decision-log entry `2026-05-22 - "Comprehension Debt" concept surveyed and parked` records the contrastive `why_not_alternatives` and confidence calibration.
+
+## v0.23.32 — Vitaly Friedman AI UX patterns surveyed (external corroboration, audit-trail)
+
+**2026-05-22. Attribution: dogfood-audit-trail.** Surveyed Vitaly Friedman's Maven course "Design Patterns For AI Products In 2026" (June 2026 cohort, $995). External-corroboration class — no new theory adopted, three existing Mycelium disciplines gain independent UX-authority citation:
+
+1. **"Avoid confidence scores (false precision)"** — corroborates `status-translations.md`'s discipline of translating internal confidence floats (0.7) into plain-language presentation ("Moderate — based on 2 user interviews"). Friedman frames this as a UX trust pattern; Mycelium derived it from Liao/Doshi-Velez/Lanham XAI literature. Independent paths to the same rule.
+2. **Consensus Meter pattern** — surfacing agreement/disagreement across parallel AI outputs corroborates the value of an explicit dissent UI in `/fan-out` fan-in. Currently Mycelium produces narrative comparison; a consensus/dissent primitive is future UX work, not new mechanism.
+3. **Capability Awareness pattern** — users not knowing what the framework can/can't do. `/interview` and `/setup` surface this implicitly via skill discovery + theory citation. Friedman makes the gap explicit; worth noting in `/usability-check` as a Mycelium-internal-UX consideration.
+
+**Rejected**: course-specific UX patterns (Quiet vs Visible AI, daemons, style lenses, precision/temperature knobs, prompt strength indicator, task builder) — these are end-user-product affordances, not methodology primitives. Adding them to a process framework would be a category error. The Trust-Value-Effort triangle was also rejected as a parallel-heuristic to BVSSH — BVSSH already covers the strategic layer; T-V-E is too thin to graduate into the L0–L5 theory roster.
+
+Course not purchased. Public material (Maven course page, free preview lesson "Designing For Trust and Confidence In AI Products", PUSH UX 2025 talk archive) was sufficient for the corroboration determination. The auth-walled Google Doc referenced by the user was visible only as title — body content not extracted.
+
+**Re-entry trigger**: if a Mycelium user designing an end-user AI product asks for UX-layer guidance, point them at Friedman's free preview lesson rather than building UX patterns into Mycelium itself.
+
+Decision-log entry `2026-05-22 - Vitaly Friedman ... surveyed` records the contrastive `why_not_alternatives` (buy-course, graduate-patterns, adopt-T-V-E, re-debate-Quiet-vs-Visible, do-nothing).
+
+## v0.23.31 — ODI surveyed and parked (audit-trail)
+
+**2026-05-22. Attribution: dogfood-audit-trail.** Deep-dive survey of Ulwick's Outcome-Driven Innovation (ODI) against Mycelium's existing L0–L2 theory roster (Christensen JTBD, Allen User Needs Mapping, Torres CDH/OST, Ellis/Gilad ICE).
+
+**Three gaps surfaced**: (1) no quantitative opportunity scoring at the *need* layer — `/ice-score` scores solutions, nothing scores needs against Importance/Satisfaction; (2) no Desired Outcome Statement (DOS) format discipline on need writing — Allen and Christensen both permit free-form, both can drift solution-coupled; (3) no Universal Job Map (Ulwick's 8-step decomposition) in `/jtbd-map`, which often surfaces under-served Prepare/Monitor/Modify steps that incumbents miss.
+
+**Three integration candidates drafted, none shipped**: DOS-format extension to `/user-needs-map`; new `opportunity-score` skill applying `Importance + max(Importance−Satisfaction, 0)` at the need layer; optional 8-step job map step in `/jtbd-map`.
+
+**Parked, not implemented.** User instruction was "log, don't act." YAGNI / demand-pulled discipline applied to the framework's own elaboration — no primitives ship until a real user pulls them. Christensen JTBD retained at L0 (functional/emotional/social lens is structurally better for B2C and identity-laden products than ODI's functional-only bias). Full ODI surveys (n=60–180) rejected as disproportionate for current solo/dogfood user shape; the right cadence here is still Torres continuous discovery, not Ulwick survey methodology.
+
+**Re-entry triggers** (recorded so future-self knows when to un-park):
+- Real user reports need-layer prioritization friction that `/ice-score` doesn't solve, OR
+- A Mycelium-using product graduates to Tier-3+ launch with a stable, segmentable user base — at which point Cynefin shifts Complex → Complicated and ODI's analyze-mode strengths become applicable.
+
+Decision-log entry `2026-05-22 - ODI primitives surveyed, integration parked` records the contrastive `why_not_alternatives` (full adoption, replace-Christensen, add-to-landscape, do-nothing, implement-now) and confidence calibration. Search decision-log for "ODI" before re-surveying.
+
 ## v0.23.30 — First BVSSH baseline assessment (audit-trail)
 
 **2026-05-20. Attribution: dogfood-audit-trail.** `/mycelium:bvssh-check` invoked addressing the SessionStart-hook flag "BVSSH health has never been assessed." First baseline.
