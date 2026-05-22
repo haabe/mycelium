@@ -6,6 +6,12 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.23.34 — Plumbing-only: plugin.json sync trap resolved (audit-trail)
+
+**2026-05-22. Attribution: dogfood-audit-trail.** No theory, skill, or schema change. Validator Check 30 caught plugin.json version drift after the 0.23.31/0.23.32/0.23.33 patch sequence today missed syncing plugin.json alongside CLAUDE.md. Initial fix-up commit then chained Check 26 (plugin.json is a material framework file; changing it without a version bump is itself a discipline violation). Resolution: bump CLAUDE.md + plugin.json + changelog in a single coordinated commit at 0.23.34.
+
+**Worth flagging for corrections.md graduation review** (3rd-4th observed instance of this sync-lag class): the validator mechanism is working (Check 30 catches the drift) but the agent-workflow has not yet internalized that `plugin.json` sync belongs in the SAME commit as the `CLAUDE.md` Version-line bump, not as a fix-up. Until the workflow internalizes this, multi-bump sessions will keep tripping the catch-22 between Check 30 (sync required) and Check 26 (changing material files requires version bump).
+
 ## v0.23.33 — "Comprehension Debt" concept surveyed (Shopify/BVP, audit-trail)
 
 **2026-05-22. Attribution: dogfood-audit-trail.** Surveyed Bessemer Venture Partners "Inside Shopify's AI-First Engineering Playbook" (Atlas editorial series). Article surfaces a Shopify-internal concept worth borrowing into Mycelium's vocabulary: **Comprehension Debt** — engineers must understand systems "2-3 layers below" their working layer; *learning cannot be abdicated to AI, only toil*. The distinction *abdicate toil ≠ abdicate learning* is sharper than anything currently in Mycelium's corrections.md, anti-patterns catalog, or status-translations vocabulary. It's the operational mechanism behind Cagan's "amplify thinking, don't abdicate it" and Mycelium's own "agent earns the right to write code" framing.
