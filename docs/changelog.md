@@ -6,6 +6,16 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.23.38 — Manifest sync after Check 28 catch (v0.23.37 follow-up)
+
+**2026-05-22. Attribution: maintenance-housekeeping.** v0.23.37 commit was caught by Check 28 (manifest dual-source byte-match) — the two manifests had different rationale comments in their `auto-dogfood` removal block. Resolved by syncing `.claude/manifest.yml` from canonical `plugins/mycelium/manifest.yml` per the validator's remediation hint.
+
+**Pattern recognized**: same shape as the v0.23.34 sync-trap that originated the atomic-commit rule (v0.23.35). The previous trap was plugin.json vs CLAUDE.md (caught by Check 30 + Check 26 chain). This trap is `.claude/manifest.yml` vs `plugins/mycelium/manifest.yml` (caught by Check 28). Both are "I edited two files with different content where the discipline says they must match."
+
+**Lesson for the rule**: when editing both `.claude/manifest.yml` and `plugins/mycelium/manifest.yml`, ALWAYS sync the legacy copy from the canonical AFTER editing the canonical, never compose two independent edits. The legacy copy is a transition artifact pending v0.21.0 / 2026-06-09 removal.
+
+**Worth flagging for corrections.md graduation review** (sister to the v0.23.35 plugin.json sync-lag): "manifest dual-source MUST sync byte-identically" — already enforced by Check 28; the agent-workflow needs to internalize the file-pair coupling.
+
 ## v0.23.37 — Auto-dogfood architectural decision: roadmap-private
 
 **2026-05-22. Attribution: maintenance-housekeeping.** Framework cleanup closing dead-end references to `.claude/auto-dogfood/` (deleted in legacy cleanup commit `a5cabd3`, ~April 2026) and re-routing the reinstatement target.
