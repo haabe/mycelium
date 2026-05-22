@@ -52,7 +52,23 @@ Most graduations are mixed; pick the label that explains ≥60% of the work. The
 
 - **Pre-ship layer** (G-P-pre): the visible pre-ship analysis must include "version impact" as part of the schema/manifest checks. If the change is material, the analysis says so and proposes a tier.
 - **CI layer** (Check 26 in `validate-template.sh`): comparing material file changes since the last version-line edit. FAILs if material changes exist and version is unchanged.
+- **CI layer** (Check 30 in `validate-template.sh`): `plugin.json#version` must track `CLAUDE.md` Version line. FAILs on drift.
 - **Convention layer** (this doc): explains the contract and gives examples. Read alongside `CLAUDE.md :: Mandatory Pre-Ship Protocol`.
+
+## Coordinated commit — files that must move together
+
+Every Version-line bump in CLAUDE.md is an atomic operation across THREE files (FOUR for decision-log-bearing patches). Stage all of them in the SAME commit, never as fix-ups:
+
+1. `CLAUDE.md` — Version line edit (canonical version source)
+2. `plugins/mycelium/.claude-plugin/plugin.json` — `version` field synced to match (Check 30 enforces)
+3. `docs/changelog.md` — new version section with rationale
+4. `.claude/harness/decision-log.md` — decision entry (for patches that record a decision; most do)
+
+Rationale: a fix-up commit that touches `plugin.json` alone triggers Check 26 (plugin.json is a material framework file → changing it requires a version bump → infinite regress). The only escape is to bundle all version-bump files atomically.
+
+Failure mode this prevents (graduated 2026-05-22 at v0.23.35 after three misses in one session): agent bumps CLAUDE.md but forgets `plugin.json`. Push fails Check 30. Fix-up commit syncs `plugin.json` but triggers Check 26 because changing it without a version bump violates discipline. Resolution requires a plumbing-only bump that resyncs all files. Three rapid PATCH-class bumps on 2026-05-22 (0.23.31/32/33) all tripped this; v0.23.34 was the plumbing-only resolution and v0.23.35 is this graduation.
+
+See `.claude/memory/corrections.md :: 2026-05-22 - plugin.json sync must ride with CLAUDE.md Version-line bumps` for the full incident log.
 
 ## Why this exists (5th-instance graduation)
 

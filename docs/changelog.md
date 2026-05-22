@@ -6,6 +6,23 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.23.35 — Workflow graduation: atomic-commit rule for version bumps
+
+**2026-05-22. Attribution: lived-friction-triggered.** Three observed misses earlier today (0.23.31 / 0.23.32 / 0.23.33 all failed to sync `plugins/mycelium/.claude-plugin/plugin.json` alongside the CLAUDE.md Version line) plus one plumbing resolution (0.23.34) graduate the pattern to a documented workflow rule.
+
+**New rule** in `plugins/mycelium/engine/version-discipline.md :: Coordinated commit — files that must move together`: every Version-line bump is an ATOMIC operation across these files, in the same commit, never as fix-ups:
+
+1. `CLAUDE.md` (Version line — canonical source)
+2. `plugins/mycelium/.claude-plugin/plugin.json` (`version` field — Check 30 enforces)
+3. `docs/changelog.md` (new version section)
+4. `.claude/harness/decision-log.md` (for decision-bearing patches; most are)
+
+**Why the workflow gap was structural**, not just memory failure: a fix-up commit that touches `plugin.json` alone triggers Check 26 (plugin.json is material → changing it requires its own version bump → infinite regress). Only escape: bundle all version-bump files atomically. The validators (Check 30 + Check 26) were already in place and catching the drift at push-time; the agent-workflow side of the loop was open.
+
+**Full incident log** in `.claude/memory/corrections.md` (TL;DR + full entry dated 2026-05-22). Placed there so future agents reading corrections.md at task-start internalize the rule BEFORE composing the first version-bump commit of any session.
+
+**Theory citation**: Hashimoto — engineer out recurrence. Gilad — evidence-guided graduation (three validator catches in one session without an agent-side rule = the gap is real). Same shape as the 5th-instance "documented rule diverges from enforcement" graduation that created `version-discipline.md` itself.
+
 ## v0.23.34 — Plumbing-only: plugin.json sync trap resolved (audit-trail)
 
 **2026-05-22. Attribution: dogfood-audit-trail.** No theory, skill, or schema change. Validator Check 30 caught plugin.json version drift after the 0.23.31/0.23.32/0.23.33 patch sequence today missed syncing plugin.json alongside CLAUDE.md. Initial fix-up commit then chained Check 26 (plugin.json is a material framework file; changing it without a version bump is itself a discipline violation). Resolution: bump CLAUDE.md + plugin.json + changelog in a single coordinated commit at 0.23.34.
