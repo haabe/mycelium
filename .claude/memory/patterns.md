@@ -92,3 +92,26 @@ What this prevents on the OTHER end: children spawned too early (parent confiden
 
 *Source: Mycelium dogfooded its own L1 spawn 2026-05-07 — L0 confidence sat at 0.61 vs effective threshold 0.612 (functionally at-threshold, not far above) WHILE strategic events (Hoskins post window, Juniors.dev presentation just delivered, audience-attendee fork from a cohort participant, four-track convergence) made L1 framing necessary. Spawning at exactly that intersection produced an L1 diamond with low initial confidence (0.20) but coherent strategic input, avoiding the process cliff that would have come from doing receipts-architecture L2/L3 work without an L1 frame. CLAUDE.md "Diamond Engine" — parents continue while children execute. Counter-pattern: waiting for parent → Complete delayed L1 past strategic-event windows.*
 
+
+## Verification Patterns
+
+### Isolated capability test before instruction iteration
+
+**Pattern**: When an agent isn't producing artifact X during a test, verify in isolation that the agent CAN produce X before iterating on instruction wording.
+
+**Mechanism**: Construct a minimal `claude -p` invocation that asks the agent to produce X directly, in a manually-mimicked workdir matching the test environment's structure. If the agent succeeds, capability is proven — the issue is somewhere between the test driver and the agent (prompt-template content, missing context, conflicting instructions, scenario configuration). If it fails, capability is the gap — instruction wording / SKILL.md / framework state is the right place to iterate.
+
+**What this prevents**: iterating on the wrong surface. Today's example (2026-05-22→23): three framework SKILL.md patches (v0.23.39/40/41) tried to make the agent write a decision-log entry during `/interview`. None worked. A 30-second isolated test (`claude -p "Write to .claude/harness/decision-log.md..."`) succeeded immediately. That single test would have ended the SKILL.md iteration arc 6 hours earlier and pointed to the actual gap: the orchestrator's hardcoded prompt template.
+
+**When to apply**:
+- ANY time an instruction-following failure looks systematic across multiple runs (>2/3 fail rate with the same failure mode).
+- BEFORE the second framework patch in a "fix the test" loop. If iteration #1 didn't move the verdict, do the isolated capability test before iteration #2.
+- When the failure mode is "agent didn't do X" (vs "agent did X wrong" — the latter usually IS an instruction-wording issue).
+
+**Diagnostic shape**: isolated test → result interpretation:
+- Agent succeeds in isolation → instruction-following IS possible; trace upstream from "where does the agent get its instructions for this test?" through the test driver / scenario config / prompt template / framework loading until you find the layer that's missing the directive.
+- Agent fails in isolation → capability gap; investigate at the framework / model / tool-availability level. Instruction wording is downstream of capability and won't fix it.
+
+**Sister mechanism**: `mycelium-roadmap/.claude/auto-dogfood/scripts/check_skill_prompt_drift.py` mechanically surfaces drift between framework SKILL.md write-paths and orchestrator task templates — closes the specific failure mode of "framework edits don't reach the test" for the orchestrator class. The pattern above is the general discipline; the script is one mechanism that implements it for one cross-surface invariant.
+
+*Source: 2026-05-22→23 auto-dogfood Phase 5 cycle. After three framework SKILL.md iterations failed to move the test verdict, an isolated direct-claude-p test took 30 seconds to prove capability and point at the real root cause (orchestrator's hardcoded prompt). Logged 2026-05-23. Theory: Gilad (evidence-guided — three failed iterations IS evidence the wrong layer was being edited); Hashimoto (engineer out recurrence — make the diagnostic shape a reflex, not a thing-to-remember).*
