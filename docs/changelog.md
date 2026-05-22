@@ -6,6 +6,22 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.23.42 — Framework-health + corrections-audit cycle (scheduled-discipline)
+
+**2026-05-23. Attribution: scheduled-discipline.** `/mycelium:framework-health` + `/mycelium:corrections-audit` cycle. Four mechanical actions landed atomically.
+
+**1. `engine/consistency-check-spec.md`** — added 10th cluster instance + Rule 6 candidate. Today's deep dive surfaced a new subclass of `documented-rule-diverges-from-enforcement`: `test-driver-vs-source-of-truth`. Auto-dogfood orchestrator's hardcoded `_<skill>_task()` prompts bypass framework SKILL.md — three v0.23.39/40/41 SKILL.md edits had zero auto-dogfood effect. The roadmap repo's `check_skill_prompt_drift.py` (~200 LOC) already implements the candidate detection rule for this subclass — counts toward the spec's ≥3-validated-rules promotion bar.
+
+**2. `.claude/memory/corrections.md`** — Detection_origin field backfilled across all 25 corrections in the 90-day window per audit Step 4b discipline. Distribution: evaluator 9, agent_self 7, external_review 4, user 3, hook 1, eval_runner 1. Confirms harness coverage is healthy (most catches are mechanical, not user-dependent) — not a user-detection-gap situation despite 88% ai-generated Origin rate.
+
+**3. `.claude/memory/cluster-instances.md`** — `documented-rule-diverges-from-enforcement` cluster instance count 9 → 10 with full instance-log entry for today's auto-dogfood finding.
+
+**4. README.md "How Mycelium got smarter" highlights rotated** — added 2026-05-20 Edith-Mari book-project case (first non-developer user signal). Replaced 2026-04 macos-can-i-open. The framework-health 4c check flagged 4 newer receipts cases not yet on README; Edith-Mari was the highest narrative significance (first non-developer user pressure-test, drove the wayfinding-at-phase-transitions correction).
+
+**Additionally (no commit changes)**: re-ran `agents-md-router-discipline.yml` (Step 2b deferred design-verification scenario). PASSED against the 2026-05-03 baseline. Subagent classified ON HOLD correctly, cited `canvas-guidance.yml#action_flags`, DID NOT complain about decision authority gap (closed by the action_flags convention shipped between baseline and re-run). Design improved, not just model. One new finding surfaced: timeout_handling case where named-date passed without evidence-resolution warrants a `/canvas-health` route. Worth a follow-up but not blocking.
+
+**Atomic-commit rule** (per v0.23.35) applied: CLAUDE.md + plugin.json + changelog + engine/consistency-check-spec.md + memory/cluster-instances.md + memory/corrections.md + README.md in one commit. No schema, skill, or behaviour change.
+
 ## v0.23.41 — `/interview` decision-log salience fix (v0.23.40 follow-up)
 
 **2026-05-23. Attribution: lived-friction-triggered.** Continuation of v0.23.40. Diagnostic --keep-workdir run revealed the agent IS reading the v0.23.40 SKILL.md (confirmed via the roadmap orchestrator's new --plugin-dir flag bypassing user-level plugin cache) but still NOT writing the decision-log entry. Selective instruction-following.

@@ -24,7 +24,7 @@ A **consistency check** verifies that one of the following pairs agree:
 
 A consistency violation is detected when the pair disagree AND the disagreement is unintentional (legitimate divergences are documented; see "Escape valves" below).
 
-## Cluster catalog (8 known instances)
+## Cluster catalog (10 known instances)
 
 Sourced from `memory/cluster-instances.md#documented-rule-diverges-from-enforcement`. Subclasses help the detection-rule design — different shapes need different rules.
 
@@ -35,6 +35,8 @@ Sourced from `memory/cluster-instances.md#documented-rule-diverges-from-enforcem
 | 6 | schema-vs-discipline (vocabulary) | "doc teaches singular `source_class`; schema only accepts plural `source_classes`" | Term-coverage check across discipline-doc and schema |
 | 7 | doc-vs-rendering | "doc shows template; renderer produces different output" | STRICT-marker presence on rendering-spec docs |
 | 8 | schema-vs-discipline (missing field) | "doc teaches per-dimension backing; schema has only aggregate" | Discipline-vocabulary inventory matched to schema field inventory |
+| 9 | validator-vs-doc (mid-ship) | `validate-template.sh` Checks 2/3/4/6/12/13 coupled to README structure that the docs split replaced; failed mid-Phase-1 ship 2026-05-08 | Continuous coupling-graph check between validator scripts and the doc surfaces they consume |
+| 10 | test-driver-vs-source-of-truth | 2026-05-23: auto-dogfood orchestrator's hardcoded `_<skill>_task()` prompts bypass framework SKILL.md; three framework SKILL.md edits (v0.23.39/40/41) had zero auto-dogfood effect | Drift-check between framework SKILL.md write-paths and roadmap orchestrator task templates (Rule 6 below). Implementation already exists at `mycelium-roadmap/.claude/auto-dogfood/scripts/check_skill_prompt_drift.py` |
 
 Pattern observations:
 - Instances 1-5 fixed mechanism-side (validator changes, doc-following hook).
@@ -43,7 +45,7 @@ Pattern observations:
 
 ## Detection-rule candidates
 
-Five concrete candidates. The promotion bar requires ≥3 to be validated against the cluster's instance corpus with <5% false-positive rate.
+Six concrete candidates. The promotion bar requires ≥3 to be validated against the cluster's instance corpus with <5% false-positive rate. Rule 6 added 2026-05-23 alongside instance 10 (test-driver-vs-source-of-truth subclass); an implementation of Rule 6 already exists in the roadmap repo as `check_skill_prompt_drift.py`.
 
 ### Rule 1: Term-coverage check
 
@@ -86,6 +88,18 @@ For each documented hook behavior (in CLAUDE.md, `harness/guardrails-*.md`, or s
 **Catches:** future hook-vs-rule instances (no historical instance documented yet, but the cluster shape is real per pattern observations).
 **Misses:** non-hook instances.
 **False-positive risk:** medium — hooks often have escape paths the doc doesn't fully describe.
+
+### Rule 6: Test-driver vs source-of-truth drift (added 2026-05-23)
+
+For each test driver that has hardcoded expectations about framework artifacts (the auto-dogfood orchestrator's `_<skill>_task()` prompt templates being the canonical case), compare the test driver's expectations against the corresponding framework SKILL.md's documented write-paths / behavior. Warn when the framework documents a write-path the test driver doesn't enforce, or vice versa.
+
+**Catches:** instance 10 (auto-dogfood orchestrator's `_interview_task()` bypassing `/interview` SKILL.md). Same shape applies to any future test driver / fixture / scenario that's decoupled from its canonical source.
+**Misses:** divergences in non-write-path behavior (e.g., conditional logic, dynamic content rendering). The current implementation is heuristic on write-paths only.
+**False-positive risk:** medium-to-high — the heuristic over-collects when SKILL.md mentions paths in meta-references or conditional contexts (see `mycelium-roadmap/.claude/auto-dogfood/scripts/README.md` for the known caveat list).
+
+**Implementation status:** EXISTS at `mycelium-roadmap/.claude/auto-dogfood/scripts/check_skill_prompt_drift.py` (~200 LOC, pure stdlib). Roadmap-private because the auto-dogfood orchestrator is roadmap-private per the 2026-05-22 architectural decision. Counts toward the promotion-bar's "validated against the cluster's instance corpus" requirement for instance 10 (the specific instance this rule catches). FP rate measurement against the broader instance corpus pending.
+
+**Maintenance burden:** low. Heuristic regex + write-context window; no external dependencies.
 
 ## Coverage proof requirements (G-V12)
 
