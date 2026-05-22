@@ -6,6 +6,24 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.23.41 — `/interview` decision-log salience fix (v0.23.40 follow-up)
+
+**2026-05-23. Attribution: lived-friction-triggered.** Continuation of v0.23.40. Diagnostic --keep-workdir run revealed the agent IS reading the v0.23.40 SKILL.md (confirmed via the roadmap orchestrator's new --plugin-dir flag bypassing user-level plugin cache) but still NOT writing the decision-log entry. Selective instruction-following.
+
+**Two contributing causes diagnosed**:
+1. Decision-log bullet was LAST in the Step 2 list and verbose (5+ sub-bullets), giving it low salience vs the short canvas-write bullets.
+2. "After the Interview" section had a competing decision-log instruction; agent may have been deferring to that (which often isn't reached within the journey budget).
+
+**Fix**:
+- (a) Hoist decision-log write to FIRST position in Step 2 list. Label "(1 of 4)" — mechanical visibility of the complete required set.
+- (b) Numbers in all four bullets: "(1 of 4)" through "(4 of 4)". Decision-log + purpose.yml + jobs-to-be-done.yml + active.yml.
+- (c) Update Step 2 framing from "side-effect canvas writes" to "Hard requirement: all FOUR files below must be written before Step 3."
+- (d) Update "After the Interview" section's Decision Log Entry to explicitly say "EXTEND Step 2's minimal entry, do NOT write a duplicate."
+
+**Combined v0.23.39/40/41 effect on cold-start brief**: the four-file artifact set (purpose, JTBD, diamond, decision-log) is now structurally enforced at Step 2 with mechanical numbering. Verification re-run pending in roadmap auto-dogfood.
+
+**Atomic-commit rule** (per v0.23.35) applied.
+
 ## v0.23.40 — `/interview` decision-log gap fix (v0.23.39 follow-up)
 
 **2026-05-22. Attribution: lived-friction-triggered.** Continuation of v0.23.39. The post-v0.23.39 verification re-run surfaced a second gap: `decision_log_entries: None` after the brief — brief flow's Step 2 wrote three canvas files (purpose.yml, jobs-to-be-done.yml, active.yml) but did not write a decision-log entry.
