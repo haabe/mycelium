@@ -6,6 +6,27 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.23.36 — agentskills.io spec compliance: instruction_budget migration
+
+**2026-05-22. Attribution: maintenance-housekeeping.** YAML-only frontmatter migration across 45 SKILL.md files (4 skills never had the field). `instruction_budget` moved from top-level frontmatter to `metadata.instruction_budget` per the agentskills.io spec's "custom fields belong under `metadata:` namespace" rule.
+
+**Background**: comp-028 audit in roadmap landscape.yml (2026-05-22) verified Mycelium against the agentskills.io spec. Two of three fields (`name`, `description`) were on-spec. The third (`instruction_budget`) was at top-level frontmatter, which the spec disallows — custom fields belong under the `metadata` namespace. This migration closes the tech-debt finding.
+
+**Scope of change**:
+- 45 SKILL.md files: `instruction_budget: N` → `metadata:\n  instruction_budget: "N"` (string-quoted under metadata namespace).
+- 1 prose doc (`plugins/mycelium/harness/context-management.md`) updated to reference the new location.
+- Zero code references existed. Grep across `*.py`, `*.sh`, `*.md`, `*.json` found only the prose doc above and the SKILL.md files themselves. No validators currently enforce the field; no runtime routes off it.
+
+**Verification**:
+- Python YAML-validation pass: all 49 SKILL.md files parse cleanly post-migration. 45 have `metadata.instruction_budget`; 4 have no budget (unchanged).
+- No top-level `instruction_budget` remains in any SKILL.md.
+
+**Atomic-commit rule applied per v0.23.35**: CLAUDE.md + plugin.json + changelog + 45 SKILL.md + context-management.md in a single commit. Decision-log entry skipped because this is mechanical migration with no decision-class content (no contrastive alternatives to record; the choice was: align to the spec we already cite).
+
+**Cross-reference**: parallel landing of Anthropic + OpenAI harness article primary-source verification recorded in `mycelium-roadmap/.claude/canvas/purpose.yml` — extends the 2026-05-22 entry's `verification_update_2026_05_22` block with verbatim quotes from "Effective harnesses for long-running agents", "Harness design for long-running application development", "Harness engineering: leveraging Codex in an agent-first world", and "Building an AI-Native Engineering Team." Closes the source-verification flag from this morning's deep-dive entry.
+
+**Re-entry trigger**: if a Check 35-class validator is later added to enforce "no custom top-level frontmatter fields outside the agentskills.io spec set", this migration's completeness is the precondition.
+
 ## v0.23.35 — Workflow graduation: atomic-commit rule for version bumps
 
 **2026-05-22. Attribution: lived-friction-triggered.** Three observed misses earlier today (0.23.31 / 0.23.32 / 0.23.33 all failed to sync `plugins/mycelium/.claude-plugin/plugin.json` alongside the CLAUDE.md Version line) plus one plumbing resolution (0.23.34) graduate the pattern to a documented workflow rule.

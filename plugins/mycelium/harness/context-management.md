@@ -29,7 +29,7 @@ Six distinct mechanisms bundled under one term — varying empirical support:
 | Rot mechanism | Mycelium-side defense | Where it lives |
 |---|---|---|
 | (a) Lost-in-the-middle | Mandatory Pre-Task Protocol explicit "early and late context" ordering; Recency Bias in Context entry naming the failure mode | `CLAUDE.md`, `harness/cognitive-biases.md` |
-| (b) Attention dilution | Phase-scoped guardrail loading (40-instruction budget per phase, Haagsman/Horthy citations); JiT detection (load only what's needed); `instruction_budget` field on every SKILL.md | `harness/guardrails.md`, `jit-tooling/detector.md`, all SKILL.md frontmatter |
+| (b) Attention dilution | Phase-scoped guardrail loading (40-instruction budget per phase, Haagsman/Horthy citations); JiT detection (load only what's needed); `metadata.instruction_budget` field on every SKILL.md (under `metadata:` per agentskills.io spec; was top-level before 2026-05-22 migration in v0.23.36) | `harness/guardrails.md`, `jit-tooling/detector.md`, all SKILL.md frontmatter |
 | (c) Instruction drift | Two-memory system (project memory externalized to `corrections.md`/`patterns.md`, not held in conversation); Read-before-Write hard rule (don't trust conversation memory of earlier reads); decision-log as out-of-context persistence | `CLAUDE.md` two-memory section, anti-pattern #7 |
 | (d) Needle-in-haystack | Canvas as Single Source of Truth (replaces wiki/conversation history); `/canvas-health` lints for staleness; `/devils-advocate` Technique 4 attribution check forces explicit evidence sourcing | `CLAUDE.md` Canvas section, `/canvas-health`, `/devils-advocate` |
 | (e) Compaction quality loss | Decision-log + corrections.md + patterns.md + receipts cases survive compaction by design; `metrics-adapters/GENERATING.md` explicitly designed for "future agent after compaction" | All memory + receipts artifacts |
@@ -79,7 +79,7 @@ Each version-line summary should include the dominant attribution label (most gr
 
 1. **Prompt-cache strategy.** No guidance on cache invalidation tied to corrections.md/canvas changes, or the bloat-incentive that caches create. Wait for evidence Mycelium hits cache-bloat issues; the framework doesn't currently use prompt caching itself.
 2. **Conversation-length detection.** No mechanism to detect "this conversation is getting context-heavy, time to compact or reset." The Knowledge Reconstruction Tax anti-pattern names the failure shape; detection would need session-token-count instrumentation that Claude Code doesn't currently expose to plugin code.
-3. **Instruction-budget calculation rules.** Skills carry `instruction_budget: N` (range 6-205) but no doc explains how the budget is computed or how multi-skill sequences should be budgeted. Worked examples + composition rules are missing.
+3. **Instruction-budget calculation rules.** Skills carry `metadata.instruction_budget: "N"` (range 6-205, string-quoted under metadata namespace per agentskills.io spec; migrated from top-level in v0.23.36, 2026-05-22) but no doc explains how the budget is computed or how multi-skill sequences should be budgeted. Worked examples + composition rules are missing.
 4. **Coherent-haystack risk.** Chroma's counterintuitive "coherent haystacks perform worse than shuffled" finding applies to richly-coherent canvas blocks (e.g., `landscape.yml#strategic_frame` with multiple metadata sub-blocks). No current Mycelium mechanism flags this risk.
 
 ## Theory citations
