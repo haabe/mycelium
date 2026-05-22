@@ -94,6 +94,16 @@ Read+Edit in parallel where possible (one tool batch for Reads, one for Edits) t
 - `.claude/canvas/purpose.yml`: purpose statement from Q1, JTBD functional from Q1+Q2, workarounds from Q2. Tag all entries `source_class: internal_stakeholder, validated: false`.
 - `.claude/canvas/jobs-to-be-done.yml`: stub JTBD entry from Q1+Q2 with `functional` dimension populated and `emotional`/`social`/`hiring`/`firing`/`opportunity_score` fields present as placeholders for downstream `/mycelium:jtbd-map` enrichment. Even a one-line stub (e.g., `hiring: "TBD via /mycelium:jtbd-map"`) is enough — the file existing with the JTBD structural shape is what lets the auto-dogfood evaluator's `jtbd_mapped` check pass AND lets `/mycelium:jtbd-map` build incrementally rather than from a blank file. Tag `source_class: internal_stakeholder, validated: false`. Added 2026-05-22 (v0.23.39) per Phase 3c onboarding-cold-start finding — the brief flow's "10-min first value" promise was leaving the JTBD canvas file un-created, which broke downstream skills + auto-dogfood verification.
 - `.claude/diamonds/active.yml`: L0 Purpose diamond, **`scale: L0`, `phase: discover`** (lowercase per active.yml schema convention), `confidence: 0.15` (canvas-density-derived: purpose 0.05 + JTBD functional 0.05 + workarounds 0.025 ≈ 0.125 → 0.15; see formula table at end of file), evidence_type: internal_stakeholder, theory_gates_status all pending, note: `created_via: brief`.
+- `.claude/harness/decision-log.md`: append a minimal entry naming the brief's substance, NOT deferred to the "After the Interview" section below. Format:
+  ```
+  ### YYYY-MM-DD - Interview brief: <Q1 idea name>
+  - **Decision**: Conducted 4-question brief on <Q1 idea name>. Purpose, JTBD-functional, and biggest risk captured. Tagged as internal_stakeholder evidence pending external validation.
+  - **Theory**: Sinek (purpose), Christensen (JTBD-functional from Q1+Q2), Torres (riskiest assumption from Q3), Cagan (four-risks classification on Q3).
+  - **Evidence**: User-supplied Q1-Q4 answers (paraphrase Q1+Q3 in 1-2 sentences each).
+  - **Confidence**: 0.15 (canvas-density-emergent — see formula).
+  - **Why_not_alternatives**: N/A (first interview).
+  ```
+  Added 2026-05-22 (v0.23.40) per Phase 3c finding: the brief flow's "After the Interview" section's decision-log entry was reachable only if the user picked specific depth options; if the user stopped after the brief (or the agent didn't traverse to that section), no decision-log entry was written. The interview IS the most foundational decision in the project lifecycle — it should write its own log entry at the point of writing the canvas, not in a downstream section that may not be reached. The deeper "After the Interview" entry below can extend / replace this minimal one when reached.
 
 Do NOT write `opportunities.yml`, `north-star.yml`, `landscape.yml`, or any other canvas file from the brief alone — those are populated when the user picks a depth option.
 

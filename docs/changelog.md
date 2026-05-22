@@ -6,6 +6,20 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.23.40 — `/interview` decision-log gap fix (v0.23.39 follow-up)
+
+**2026-05-22. Attribution: lived-friction-triggered.** Continuation of v0.23.39. The post-v0.23.39 verification re-run surfaced a second gap: `decision_log_entries: None` after the brief — brief flow's Step 2 wrote three canvas files (purpose.yml, jobs-to-be-done.yml, active.yml) but did not write a decision-log entry.
+
+**Root cause**: the existing decision-log instruction lived in the "After the Interview: What Happens Next" section of the SKILL.md, reachable only when the user takes specific depth-menu paths after the brief. Users who stop after the brief (or whose journey is short — e.g., automated dogfood tests with `rounds: 3`) get no decision-log entry.
+
+**Why this is a real issue**: the interview IS the most foundational decision in the project lifecycle. It should write its own log entry at the point of writing the canvas, not in a downstream section that may not be reached. Failing the auto-dogfood `decision_log_contains` check is just the visible symptom; the deeper consequence is that brief-only-onboarded users have NO decision audit trail at all.
+
+**Fix**: Step 2 of brief flow now appends a minimal decision-log entry alongside the canvas writes. Format includes Decision, Theory, Evidence, Confidence, Why_not_alternatives (N/A for first interview). The "After the Interview" section's deeper entry can extend/replace the minimal one when the user reaches it via depth menu.
+
+**Combined v0.23.39 + v0.23.40 effect**: the cold-start brief flow now structurally produces ALL four artifacts (purpose, JTBD, diamond, decision-log) needed for downstream skills + auto-dogfood verification, regardless of whether the user takes a depth-menu path after the brief.
+
+**Atomic-commit rule** (per v0.23.35) applied.
+
 ## v0.23.39 — `/interview` cold-start gap fix (Phase 3c finding)
 
 **2026-05-22. Attribution: lived-friction-triggered.** Auto-dogfood Phase 3c (roadmap-private, see roadmap repo) surfaced a real framework gap: the `onboarding-solo-cold-start.yml` scenario (non-developer persona, empty canvas) failed 3/6 criteria at 50% score. The brief flow ("10-min first value" path) was not creating `jobs-to-be-done.yml` AND was creating the L0 diamond with phase variants that broke downstream evaluator checks.
