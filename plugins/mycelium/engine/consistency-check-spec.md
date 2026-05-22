@@ -24,7 +24,7 @@ A **consistency check** verifies that one of the following pairs agree:
 
 A consistency violation is detected when the pair disagree AND the disagreement is unintentional (legitimate divergences are documented; see "Escape valves" below).
 
-## Cluster catalog (10 known instances)
+## Cluster catalog (11 known instances)
 
 Sourced from `memory/cluster-instances.md#documented-rule-diverges-from-enforcement`. Subclasses help the detection-rule design — different shapes need different rules.
 
@@ -37,6 +37,7 @@ Sourced from `memory/cluster-instances.md#documented-rule-diverges-from-enforcem
 | 8 | schema-vs-discipline (missing field) | "doc teaches per-dimension backing; schema has only aggregate" | Discipline-vocabulary inventory matched to schema field inventory |
 | 9 | validator-vs-doc (mid-ship) | `validate-template.sh` Checks 2/3/4/6/12/13 coupled to README structure that the docs split replaced; failed mid-Phase-1 ship 2026-05-08 | Continuous coupling-graph check between validator scripts and the doc surfaces they consume |
 | 10 | test-driver-vs-source-of-truth | 2026-05-23: auto-dogfood orchestrator's hardcoded `_<skill>_task()` prompts bypass framework SKILL.md; three framework SKILL.md edits (v0.23.39/40/41) had zero auto-dogfood effect | Drift-check between framework SKILL.md write-paths and roadmap orchestrator task templates (Rule 6 below). Implementation already exists at `mycelium-roadmap/.claude/auto-dogfood/scripts/check_skill_prompt_drift.py` |
+| 11 | validator-vs-doc | 2026-05-23: `canvas-guidance.yml#action_flags.transitions.timeout_handling` (2026-05-03) said "Surface as a stale flagged item via /canvas-health" but `canvas-health` SKILL.md had no scanner for ON HOLD calendar timeouts; gap surfaced by the `agents-md-router-discipline` regression scenario re-run 2026-05-23. Fixed same-session by adding Step 9c to `canvas-health/SKILL.md` (v0.23.43). | Hook-claim cross-reference (Rule 5) generalized to "every doc that names a downstream surface ("/skill does X") must trace to that surface's actual implementation" |
 
 Pattern observations:
 - Instances 1-5 fixed mechanism-side (validator changes, doc-following hook).

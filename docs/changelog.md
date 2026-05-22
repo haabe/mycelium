@@ -6,6 +6,29 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.23.43 — `/canvas-health` action-flag timeout check (v0.23.42 follow-up)
+
+**2026-05-23. Attribution: lived-friction-triggered.** Closes the v0.23.42 meta-finding from the router-discipline scenario re-run.
+
+**Background**: the v0.23.42 router-discipline subagent re-run surfaced this: `canvas-guidance.yml#action_flags.transitions.timeout_handling` (added 2026-05-03) states "Surface as a stale flagged item via /canvas-health (existing staleness machinery applies)." But `/canvas-health` SKILL.md had NO scanner for ON HOLD markers with calendar dates. The convention pointed at a downstream skill that didn't implement what was claimed.
+
+**Same shape as v0.23.42's instance 10** (auto-dogfood orchestrator bypassing SKILL.md). Two `documented-rule-diverges-from-enforcement` instances surfaced in the same session, in different sub-systems. Recorded as instance 11 of the cluster; cluster catalog + instance log updated.
+
+**Fix**: Step 9c added to `plugins/mycelium/skills/canvas-health/SKILL.md`. The new step:
+- Scans canvas YAML files for ON HOLD markers with parenthetical calendar dates (`YYYY-MM-DD`, "Month DD", etc.).
+- Parses each date and compares to today.
+- Future dates: no flag (correctly waiting).
+- Past dates <30 days: warning, suggest checking whether awaited evidence has arrived.
+- Past dates ≥30 days: escalation, suggest re-evaluating whether the condition is still relevant.
+- Does NOT auto-transition any marker. Maintainer decides.
+- Explicitly acknowledges the check is incomplete without evidence inspection.
+
+**Concrete instances this would now surface in the roadmap repo's purpose.yml** (if `/canvas-health` were run there): two items reference "Juniors.dev May 7 validation" (Cutler entry + three-voices-convergence entry). Both are at +16 days past (warning, not escalation). Items remain correctly ON HOLD because the awaited usage-validation hasn't arrived; the 16-day past-date is consistent.
+
+**Recursive note worth flagging**: this is the second instance of `documented-rule-diverges-from-enforcement` graduated to mechanism in the SAME SESSION. The cluster's substrate has more surface area than the spec's 5-rule taxonomy currently catches. A Rule 7 candidate ("convention promise → downstream-skill implementation cross-reference") may be warranted if a 12th instance surfaces.
+
+**Atomic-commit rule** (per v0.23.35) applied: CLAUDE.md + plugin.json + changelog + canvas-health/SKILL.md + consistency-check-spec.md + cluster-instances.md in one commit. SKILL.md doc-only addition; no schema/behaviour change.
+
 ## v0.23.42 — Framework-health + corrections-audit cycle (scheduled-discipline)
 
 **2026-05-23. Attribution: scheduled-discipline.** `/mycelium:framework-health` + `/mycelium:corrections-audit` cycle. Four mechanical actions landed atomically.
