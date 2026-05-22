@@ -32,7 +32,12 @@ framework:
     - .claude/scripts/
     - .claude/optimization/
     - .claude/tests/
-    - .claude/auto-dogfood/
+    # .claude/auto-dogfood/ REMOVED 2026-05-22 (v0.23.37): auto-dogfood
+    # was deleted in legacy cleanup (commit a5cabd3) and reinstated as
+    # ROADMAP-PRIVATE tooling at mycelium-roadmap/.claude/auto-dogfood/
+    # per founder direction — not framework-shared infrastructure at this
+    # stage. Re-add this entry if/when a second operator demand triggers
+    # promotion to framework code (see roadmap REBUILD-PLAN.md §1).
     - .claude/templates/
     - .github/
     - docs/  # framework public-facing artifacts (ai-system-card.md, context-surface.md)

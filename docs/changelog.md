@@ -6,6 +6,26 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.23.37 — Auto-dogfood architectural decision: roadmap-private
+
+**2026-05-22. Attribution: maintenance-housekeeping.** Framework cleanup closing dead-end references to `.claude/auto-dogfood/` (deleted in legacy cleanup commit `a5cabd3`, ~April 2026) and re-routing the reinstatement target.
+
+**Original deletion-commit assumption** (incorrect): if auto-dogfood is reinstated, it ships in plugin form (`plugins/mycelium/auto-dogfood/`) as framework-shared infrastructure.
+
+**Updated decision 2026-05-22**: auto-dogfood reinstates as **roadmap-private tooling** at `mycelium-roadmap/.claude/auto-dogfood/`, NOT framework code. Founder direction: at this stage no other Mycelium operator plausibly runs full-session auto-dogfood; the 19-scenario battery + orchestrator + persona-simulator are founder-internal validation tooling. Maintaining the orchestrator with public-API surface burden is over-engineering for a single-operator use case.
+
+**Framework cleanup landed**:
+- `plugins/mycelium/manifest.yml` — removed `.claude/auto-dogfood/` entry; replaced with rationale comment.
+- `.claude/manifest.yml` — same.
+- `plugins/mycelium/engine/dogfood-mode.md` — reference text now points at roadmap-repo location with full context.
+- `.claude/evals/dogfood-reports/README.md` — same.
+
+**Full rebuild plan** (~580 lines, 10 sections): `mycelium-roadmap/.claude/auto-dogfood/REBUILD-PLAN.md`. Includes industry-state synthesis (Anthropic + OpenAI + LangChain harness literature), current Mycelium audit (14 change-vectors since deletion), 5-phase rollout, institutional knowledge preservation (deleted `LEARNING-STRATEGY.md` verbatim), and all 5 open questions answered.
+
+**Promotion trigger** (re-evaluate if/when this changes): a second Mycelium operator wanting their own auto-dogfood promotes the orchestrator (not the scenarios) back to framework via `plugins/mycelium/auto-dogfood/`. Default assumption: doesn't happen in the next 6 months.
+
+**Atomic-commit rule** (per v0.23.35): CLAUDE.md + plugin.json + changelog + 2 manifests + 2 doc references in one commit. No skill behaviour change, no schema change, no new skill, no theory change.
+
 ## v0.23.36 — agentskills.io spec compliance: instruction_budget migration
 
 **2026-05-22. Attribution: maintenance-housekeeping.** YAML-only frontmatter migration across 45 SKILL.md files (4 skills never had the field). `instruction_budget` moved from top-level frontmatter to `metadata.instruction_budget` per the agentskills.io spec's "custom fields belong under `metadata:` namespace" rule.

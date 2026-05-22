@@ -45,7 +45,7 @@ Dogfood reports are committed to git and may be public. **Always anonymize befor
 
 ## Automated Dogfood
 
-For automated agent-to-agent dogfood testing, see `.claude/auto-dogfood/`. The orchestrator runs full-session scenarios with planted failure conditions and evaluates the framework's safety properties programmatically. Manual dogfood sessions (documented here) remain valuable for discovering gaps that automated sessions miss.
+For automated agent-to-agent dogfood testing, see the **roadmap-repo** at `mycelium-roadmap/.claude/auto-dogfood/REBUILD-PLAN.md`. The auto-dogfood orchestrator was deleted in framework legacy cleanup (commit a5cabd3, ~2026-04) and is being reinstated as roadmap-private tooling per founder direction 2026-05-22 — not framework-shared infrastructure at this stage. Manual dogfood sessions (documented here) remain valuable for discovering gaps that automated sessions miss.
 
 ## Reports
 

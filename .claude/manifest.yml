@@ -32,7 +32,9 @@ framework:
     - .claude/scripts/
     - .claude/optimization/
     - .claude/tests/
-    - .claude/auto-dogfood/
+    # .claude/auto-dogfood/ REMOVED 2026-05-22 (v0.23.37): see
+    # plugins/mycelium/manifest.yml for full rationale. Roadmap-private
+    # at mycelium-roadmap/.claude/auto-dogfood/REBUILD-PLAN.md.
     - .claude/templates/
     - .github/
     - docs/  # framework public-facing artifacts (ai-system-card.md, context-surface.md)
