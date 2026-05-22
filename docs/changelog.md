@@ -6,6 +6,22 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.23.39 — `/interview` cold-start gap fix (Phase 3c finding)
+
+**2026-05-22. Attribution: lived-friction-triggered.** Auto-dogfood Phase 3c (roadmap-private, see roadmap repo) surfaced a real framework gap: the `onboarding-solo-cold-start.yml` scenario (non-developer persona, empty canvas) failed 3/6 criteria at 50% score. The brief flow ("10-min first value" path) was not creating `jobs-to-be-done.yml` AND was creating the L0 diamond with phase variants that broke downstream evaluator checks.
+
+**Fix in Step 2 of the brief flow** (`/mycelium:interview` SKILL.md):
+1. Now also writes a stub `.claude/canvas/jobs-to-be-done.yml` with full JTBD structural shape (functional populated from Q1+Q2; emotional, social, hiring, firing, opportunity_score as placeholders for `/mycelium:jtbd-map` enrichment).
+2. Explicitly specifies `scale: L0, phase: discover` (lowercase per active.yml schema convention) when creating the L0 Purpose diamond.
+
+**Why this matters**: the brief flow's "10-min first value" promise was structurally incomplete — downstream skills that consume `jobs-to-be-done.yml` couldn't find the file; the auto-dogfood evaluator's `jtbd_mapped` and `diamond_created` checks correctly flagged this. Validates Known Issue #7 from the original April 2026 LEARNING-STRATEGY.md ("No onboarding scenario") — the gap was real, the scenario surfaced it, the fix closes it.
+
+**Particularly relevant for**: the Edith-Mari first-non-developer-user signal logged 2026-05-20. The cold-start path for non-developer users is the path Mycelium has been positioning around; demonstrably had measurable gaps before this fix.
+
+**Atomic-commit rule** (per v0.23.35) applied: CLAUDE.md + plugin.json + changelog + interview SKILL.md in one commit. No schema change, no new skill, no theory change.
+
+**Verification**: re-run of `onboarding-solo-cold-start.yml` post-fix in roadmap repo's auto-dogfood (see roadmap commit for results).
+
 ## v0.23.38 — Manifest sync after Check 28 catch (v0.23.37 follow-up)
 
 **2026-05-22. Attribution: maintenance-housekeeping.** v0.23.37 commit was caught by Check 28 (manifest dual-source byte-match) — the two manifests had different rationale comments in their `auto-dogfood` removal block. Resolved by syncing `.claude/manifest.yml` from canonical `plugins/mycelium/manifest.yml` per the validator's remediation hint.
