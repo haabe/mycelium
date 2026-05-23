@@ -1,0 +1,7 @@
+# Test fixture registry: contains a generic_only person whose name will be
+# leaked in the fixture's CLAUDE.md. Check 33 must flag the leak.
+people:
+  - name: FixtureTestPersonA
+    consent: generic_only
+  - name: FixtureTestPersonB
+    consent: public_ok

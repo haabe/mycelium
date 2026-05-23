@@ -1,0 +1,6 @@
+# Test fixture: manifest byte-match scenario (passing).
+# Both copies are byte-identical.
+version: 1.0.0
+files:
+  - path: foo.md
+  - path: bar.md

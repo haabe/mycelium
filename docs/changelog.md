@@ -2,9 +2,64 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-05-16.
+**Last updated**: 2026-05-23.
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
+
+## v0.24.0 — `Gated by:` convention + bash check fixture-test infrastructure + AP#7 sub-class extension
+
+**2026-05-23. Attribution: lived-friction-triggered + self-audit-driven.** Saturday session that started as a `/bvssh-check` on l0-purpose and surfaced two structural discipline gaps the framework was carrying. Three feature surfaces shipped in a single coherent unit.
+
+### (1) `Gated by:` Communication Rule
+
+Added to CLAUDE.md Communication Rules: every deferral, threshold, or date-based recommendation must explicitly name its unblock event. Format: `Gated by: [event] — [interventional|observational]`, or canvas `ON HOLD (pending X)`, or natural prose ("Wait for X before Y", "deferred pending X"). All three forms are equivalent; the convention closes the implicit-causal-link surface that the existing prose convention was already partly covering, without retroactively breaking well-formed existing instances.
+
+**Trigger**: a BVSSH-on-l0-purpose recommendation that said "Defer to ≥2026-05-31" for three items that were actually evidence-gated, not capacity-gated. User-detected. The deferral date was *consistent with* the likely unblock window (post-surgery synthesis) without being the *cause* of unblock. Pre-Ship #9 (graduated 2026-05-04) ran and didn't catch — the check pattern-matches on explicit X→Y→Z chains, not on implicit causal links between dates and unblock events.
+
+**Same-turn recurrence**: agent committed the same failure mode in its own scope-pushback paragraph within minutes of shipping the convention. Confirmed the convention must apply to ALL deferral statements including pushback, not just user-facing recommendations.
+
+**Graduation philosophy** (load-bearing, established 2026-05-09, reaffirmed today): AP#7-class failures are almost impossible to eliminate — humans don't write or tell absolutely everything (Grice maxim of quantity; Sperber & Wilson relevance theory). Mechanism class for this cluster is "make the interpolation visible," not "stop interpolating." Output conventions are the right shape; pre-publish checks of subtle inference are not.
+
+**Companion artifact**: `plugins/mycelium/scripts/check_gated_by.py` shipped as un-wired DRAFT stub with full design notes. Graduation criterion to wire into validation: 2nd post-convention hard-violation instance. Avoids gold-plating (mechanism without evidence) per the cluster's own discipline.
+
+### (2) `tests/bash/` fixture-test convention + 8 worked examples
+
+The framework's G-V12 promotion bar ("every check that flags a problem ships with a test demonstrating it does") had been honored for Python scripts (135 pytest tests, 100% script coverage) but missed for Bash checks in `tests/validate-template.sh` (7 graduated-since-G-V12 checks shipped without fixture tests; coverage proof was implicit from "the check fired in the historical instance that triggered graduation" — consistency-only evidence, exactly the AP#7 sub-class e shape applied to test design).
+
+**Cluster surfaced 2026-05-23**: `bash-check-without-fixture-test`, 7 instances (Checks 26, 28, 29, 31, 32, 33, 34), graduated `pattern` same day. The framework discipline diverged from how Bash check graduations actually happened.
+
+**Convention shipped**:
+- **Sourcing guard** in `tests/validate-template.sh` so check_* functions can be invoked individually
+- `tests/bash/_assert.sh` — shared assert/run helpers
+- `tests/bash/run.sh` — discovery + execution runner over `test_*.sh`
+- `tests/bash/README.md` — convention doc
+- `tests/bash/fixtures/check_<N>/<scenario>/` — fixture project trees per check
+- Wired into Check 17 alongside pytest; framework validation now reports "bash check tests: all pass (N test file(s))"
+
+**Phase 1 complete in same session**: all 7 post-G-V12 Bash checks now have fixture tests. Originally estimated 4.5-6.5h; actual time ~1.5h thanks to convention reuse (each subsequent fixture took 15-25 min once the pattern was established). Check 26 (version-bump discipline) was hardest — runtime git-repo construction in tempdir, worked first try. Check 33 (named-attribution leak) required env-var-pointed fixture registry, also worked first try.
+
+**Phases 2-5 remaining** (~12-17h): retroactive coverage of 22 pre-G-V12 Bash checks (Checks 1-25 excluding 17, 26, 27). Lower priority — these pre-date G-V12 and have implicit production stress-test history. Deferred to next post-surgery work window.
+
+### (3) Anti-pattern #7 sub-class catalog + cluster ports
+
+`harness/anti-patterns.md` entry #7 (*Consistency-as-Evidence*) extended with the full sub-class catalog (a-g, NEW: g = implicit-causal-link with temporal-binarization variant) and the graduation philosophy paragraph that was previously buried in roadmap-private corrections.
+
+`cluster-instances.md` (framework, public) ported from roadmap-private:
+- `consistency-as-evidence` cluster (8+ instances, sub-class summary table, graduation philosophy)
+- `subagent-simulation-misses-lived-friction` cluster (2 instances)
+
+Plus `documented-rule-diverges-from-enforcement` extended to 13 instances with two new sub-shape candidates:
+- **hook-vs-canvas-distribution** (instance 12): session-start hook claimed BVSSH never assessed; scans framework-local canvas only, blind to roadmap-side state where 5 prior assessments exist.
+- **canvas-state-vs-reality-drift** (instance 13): ht task `status` field showed stale `pending` while external-channel activity had moved testers to receive-mode 9 days earlier. No back-flow mechanism from external channels to canvas.
+
+### Side findings
+
+- **Test-fixture authoring lesson** (logged inline in the Check 29 fixture): test fixtures cannot describe the failure mode in prose if the check uses keyword grep — the prose can satisfy the negated pattern and produce a false-clean fixture. One-off fixture-design quirk, not corrections.md-worthy.
+- **Named-attribution leak caught at the mechanism layer**: a cluster-instances.md row included two generic_only names; Check 33 caught pre-push, fixed in-session. Mechanism worked at the layer the agent rule should have. Auto-memory `agent_frida_slip_pattern.md` updated 5x→6x with broadened name-set.
+
+### Bump rationale
+
+MINOR per `engine/version-discipline.md`: three new feature surfaces (testing convention + Communication Rule + script stub), backward-compatible (existing prose gate-naming forms accepted by the new convention; pre-existing checks still callable directly or via sourcing). Not PATCH because of the new feature surfaces; not MAJOR because nothing breaks.
 
 ## v0.23.43 — `/canvas-health` action-flag timeout check (v0.23.42 follow-up)
 

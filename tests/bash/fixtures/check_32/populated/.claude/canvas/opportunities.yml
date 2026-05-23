@@ -1,0 +1,17 @@
+# Test fixture for Check 32: opportunities with all Four-Risks levels populated.
+# Check 32 must pass.
+opportunities:
+  - id: opp-001
+    title: "Test opp with all four risks levels"
+    value:
+      level: medium
+      description: "value risk assessed"
+    usability:
+      level: low
+      description: "usability risk assessed"
+    feasibility:
+      level: high
+      description: "feasibility risk assessed"
+    viability:
+      level: medium
+      description: "viability risk assessed"

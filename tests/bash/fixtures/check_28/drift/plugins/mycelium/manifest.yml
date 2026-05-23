@@ -1,0 +1,7 @@
+# Test fixture: manifest byte-match scenario (drift).
+# Canonical copy has entries the legacy lacks.
+version: 1.0.0
+files:
+  - path: foo.md
+  - path: bar.md
+  - path: baz.md

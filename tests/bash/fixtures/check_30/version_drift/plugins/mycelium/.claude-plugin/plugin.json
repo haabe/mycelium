@@ -1,0 +1,5 @@
+{
+  "name": "mycelium-test-fixture",
+  "version": "0.0.0",
+  "description": "Test fixture for Check 30 version-drift scenario. NOT a real plugin."
+}

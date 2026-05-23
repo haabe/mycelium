@@ -1,0 +1,15 @@
+# Test fixture for Check 32: opportunities lacking Four-Risks levels.
+# Check 32 must surface these as WARN (vacuous-pass risk).
+opportunities:
+  - id: opp-001
+    title: "Test opp without risks levels"
+    value:
+      description: "describes value but lacks level field"
+    usability:
+      description: "describes usability but lacks level"
+    feasibility:
+      description: "describes feasibility but lacks level"
+    viability:
+      description: "describes viability but lacks level"
+  - id: opp-002
+    title: "Second test opp also missing levels"

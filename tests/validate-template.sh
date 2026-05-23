@@ -840,6 +840,23 @@ check_code_quality() {
             fail "pytest: tests failing — run 'pytest tests/python/ -v' for details"
         fi
     fi
+
+    # ----- Bash check tests (tests/bash) — G-V12 coverage proofs -----
+    # Convention established 2026-05-23 with Check 30 as worked example.
+    # Future Bash checks should ship with fixture tests per tests/bash/README.md.
+    if [ ! -d "tests/bash" ]; then
+        warn "tests/bash directory missing — skipping Bash check tests"
+    elif [ ! -f "tests/bash/run.sh" ]; then
+        warn "tests/bash/run.sh missing — skipping Bash check tests"
+    else
+        if bash tests/bash/run.sh >/dev/null 2>&1; then
+            local bash_test_count
+            bash_test_count=$(find tests/bash -maxdepth 1 -name "test_*.sh" -type f 2>/dev/null | wc -l | tr -d ' ')
+            pass "bash check tests: all pass (${bash_test_count} test file(s))"
+        else
+            fail "bash check tests: failures — run 'bash tests/bash/run.sh' for details"
+        fi
+    fi
 }
 
 # ============================================================
@@ -1359,6 +1376,19 @@ check_manifest_byte_match() {
 # ============================================================
 # RUN ALL CHECKS
 # ============================================================
+#
+# Sourcing guard: this block runs only when the script is invoked directly,
+# not when sourced. Sourcing the script defines all the helpers + check_*
+# functions for use in tests/bash/test_check_<N>.sh. Per G-V12, every
+# Bash check should have a fixture test asserting it flags its target
+# failure mode; tests source this script, cd to a fixture project, and
+# invoke the relevant check function in isolation.
+#
+# See `tests/bash/README.md` for the testing convention.
+
+if [ "${BASH_SOURCE[0]:-$0}" != "${0}" ]; then
+    return 0 2>/dev/null || true
+fi
 
 echo "Mycelium Template Structural Integrity Validation"
 echo "================================================="
