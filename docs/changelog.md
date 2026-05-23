@@ -6,6 +6,24 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.24.1 — chmod fix for v0.24.0's `check_gated_by.py` (self-audit-driven)
+
+**2026-05-23. Attribution: self-audit-driven.** Post-ship cleanup of v0.24.0.
+
+`check_gated_by.py` shipped in v0.24.0 with a shebang (`#!/usr/bin/env python3`) but without executable mode. Ruff EXE001 fires on this combination ("Shebang is present but file is not executable"). The validator surfaced the regression as one of three WARNs.
+
+**Self-audit failure that delayed the catch**: when user asked "what are the 3 warnings?" agent reported "all three pre-existing tech debt" by reading the validator's wrapper text in Check 17's output ("includes pre-existing tech debt; cleanup target tracks the cleanup-cycle subset only") rather than running `ruff` to inspect the actual finding. Drill-down on follow-up question "what of these 3 warnings are worth working through?" revealed the EXE001 was on `check_gated_by.py` — shipped in the same v0.24.0 commit ~1 hour earlier. The "pre-existing" claim was false; the regression was self-introduced.
+
+**Same shape as anti-pattern #7 sub-class (e)** subagent-output-verification (cluster instance #9, 2026-05-11) — trust-without-verification applied to validator wrapper text instead of subagent claims. Sub-class needs re-definition to cover "any tool output containing a wrapper claim the agent didn't independently verify." Logged to corrections.md + cluster-instances.md.
+
+**Fix**: `chmod +x plugins/mycelium/scripts/check_gated_by.py`. Ruff now clean.
+
+**Backlog items surfaced in same triage** (NOT acted on):
+- **Check 16 hardcoded literal in `upgrade.sh:100`**: intentional migration-detection guard; Check 16 lacks an allowlist marker convention for intentional literals. Backlog: design allowlist or comment-marker convention.
+- **Check 32: 10/10 framework opportunities lack Four-Risks levels**: real opportunities, predate F8 graduation (2026-05-09). Requires per-opp Torres four-risks assessment (90-150 min + user judgment). NOT placeholder-populated — would defeat Check 32's vacuous-pass detection (exactly the failure it exists to catch).
+
+**Bump rationale**: PATCH per `engine/version-discipline.md` — file-mode bug fix on a script in `plugins/mycelium/scripts/` (material path per Check 26). No content changes, no new features. v0.24.0 entry migrated to docs/changelog.md per Check 34.
+
 ## v0.24.0 — `Gated by:` convention + bash check fixture-test infrastructure + AP#7 sub-class extension
 
 **2026-05-23. Attribution: lived-friction-triggered + self-audit-driven.** Saturday session that started as a `/bvssh-check` on l0-purpose and surfaced two structural discipline gaps the framework was carrying. Three feature surfaces shipped in a single coherent unit.
