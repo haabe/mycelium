@@ -6,6 +6,49 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.25.0 — `Verify-before-propagate:` Communication Rule (AP#7 sub-class b + e mechanism layer)
+
+**2026-05-23. Attribution: corrections-audit-driven.** /mycelium:corrections-audit run at session end across 30 framework + 30 roadmap corrections (60 cross-repo) surfaced the load-bearing finding: 87% ai-generated, ≥10 of those user-detected post-publication — confirming harness-detection-gap as the dominant pattern. Today's session alone added 4+ AP#7 instances (sub-classes c, e×3, g + temporal-binarization variant) ALL caught by user or hook, NOT by agent pre-publication.
+
+Two AP#7 sub-classes had **unshipped graduation candidates**:
+- **(b) conversational** — flagged 2026-05-09; still unshipped 2 weeks later
+- **(e) subagent-output-verification** — graduated to anti-pattern only; surface limited to subagent claims; today's EXE001 instance hit it on validator wrapper text (a NEW surface)
+
+This release is the next mechanism layer for both. Same shape as `Gated by:` convention shipped earlier today: output-convention with grep-detectable post-publish check, aligned with AP#7 graduation philosophy ("make interpolation visible, don't try to eliminate it" — Grice/Sperber-Wilson).
+
+### `Verify-before-propagate:` Communication Rule
+
+Added to CLAUDE.md Communication Rules. Every claim propagation from an external source (subagent, validator wrapper text, tool result paraphrase, dialog assertion, ranked-list summary) must include one of:
+- `Verified: ran [tool]` — agent actually ran the underlying tool
+- `Cited: [source]` — agent traced the claim to its source
+- `Per [speaker/tool]:` — agent attributes the claim without claiming verification (signals reported-not-confirmed)
+- `Unverified` — agent explicitly acknowledges propagating without verification (surfaces the trust-gap)
+
+Without any of these forms, the inferential link from "claim someone made" to "I will act on this" is invisible. Convention is grep-detectable.
+
+**Trigger instances that drove the ship**:
+- 2026-05-23 EXE001 instance: agent reported "all 3 warnings pre-existing tech debt" by reading validator's wrapper text without running ruff. Drill-down revealed the EXE001 was on `check_gated_by.py` shipped same commit ~1 hour earlier.
+- 2026-05-11 subagent-output-verification instance (cluster instance #9): agent accepted subagent's claim about Mycelium files without grep-verifying.
+- 2026-05-09 conversational instance (cluster instance #7): agent confirmed founder's "two installs" claim without challenging evidence source; a named user's direct message contradicted both readings.
+
+Same instance shape, different surfaces. Convention covers all three.
+
+### Anti-patterns.md #7 sub-class (e) broadened
+
+`subagent-output-verification` → `trust-without-verification`. Covers ANY tool/wrapper/dialog claim the agent didn't independently verify, not just subagent claims. Sub-class definition + remedy text updated to reflect the new surface.
+
+### Cluster-instances.md instance count
+
+`consistency-as-evidence` bumped 8+ → 12+ to reflect today's four new instances (sub-classes c, e×3, g + temporal-binarization variant). Sub-class distribution narrative updated to note the verify-before-propagate convention ships as next mechanism layer.
+
+### Bump rationale
+
+MINOR per `engine/version-discipline.md`: new Communication Rule surface, backward-compatible (existing prose without verify-form continues to work; convention applies prospectively + retroactively-greppable for future enforcement). No new files, no schema changes; doc + harness extension. Mechanism-graduation script for `Verify-before-propagate:` enforcement deferred (parallel to `check_gated_by.py` stub status — graduation criterion: 2nd post-convention hard-violation instance).
+
+### Devil's advocate
+
+The graduation philosophy explicitly states AP#7 is "almost impossible to fully avoid." This convention may shift the failure surface elsewhere rather than reduce total rate. Counter-test: observe AP#7 instance count over the next ~10 sessions; if rate drops, convention is load-bearing; if rate stays the same, the philosophy is right and additional mechanism layers will be asymptotic. The next 10 sessions ARE the validation. Shipping the convention without conviction-of-effectiveness is the right call per the philosophy — making the interpolation visible doesn't require certainty that it will eliminate the interpolation.
+
 ## v0.24.1 — chmod fix for v0.24.0's `check_gated_by.py` (self-audit-driven)
 
 **2026-05-23. Attribution: self-audit-driven.** Post-ship cleanup of v0.24.0.
