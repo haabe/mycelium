@@ -192,21 +192,27 @@ def _walk_canvas(node, path_prefix, ctx):  # noqa: C901
             _walk_canvas(item, f"{path_prefix}[{i}]", ctx)
 
 
-def collect_trace_graph():
+def collect_trace_graph(canvas_dir: Path = None):
     """Walk all canvas files; build trace graph + per-file id sets.
 
     Returns (graph, all_ids, errors). Errors include per-file ID uniqueness
     violations (corrections.md 2026-05-04 — G-V12 coverage proof in
     test_validate_canvas.py).
+
+    Accepts optional canvas_dir (defaults to module-level CANVAS_DIR for
+    backward compat with existing pytest fixtures).
     """
+    if canvas_dir is None:
+        canvas_dir = CANVAS_DIR
+
     graph = defaultdict(set)
     all_ids = set()
     errors = []
 
-    if not CANVAS_DIR.exists():
+    if not canvas_dir.exists():
         return graph, all_ids, errors
 
-    for canvas_path in sorted(CANVAS_DIR.glob("*.yml")):
+    for canvas_path in sorted(canvas_dir.glob("*.yml")):
         try:
             data = load_yaml(canvas_path)
         except (yaml.YAMLError, OSError) as exc:
@@ -303,11 +309,50 @@ def detect_cycles(graph):
     return []
 
 
+def validate_all_yaml_parses(canvas_dir: Path) -> list[str]:
+    """Fail-loud YAML parse check on every canvas file.
+
+    Returns list of error strings. Empty if all files parse cleanly.
+
+    Closes cluster instance 14 of documented-rule-diverges-from-enforcement
+    (validator silently skipped YAML parse failures): files without schemas
+    previously passed silently at schema layer (line 135-137 returns []
+    when no schema), and the trace walk warned-then-continued. Combined
+    effect: broken YAML on a schemaless file ("Canvas validation: PASS").
+    Witnessed 2026-05-23 on roadmap north-star.yml. This check runs first
+    in main() and surfaces ALL parse errors before any other validation.
+    """
+    errors = []
+    for canvas_path in sorted(canvas_dir.glob("*.yml")):
+        try:
+            with open(canvas_path) as f:
+                yaml.safe_load(f)
+        except yaml.YAMLError as exc:
+            # Strip trailing newlines from yaml error messages for cleaner output
+            errors.append(f"YAML parse error in {canvas_path.name}: {str(exc).strip()}")
+        except OSError as exc:
+            errors.append(f"Cannot read {canvas_path.name}: {exc}")
+    return errors
+
+
 def main():
+    # CLI: optional positional argv overrides canvas directory.
+    # Previously the script defaulted to cwd + ignored positional argv —
+    # confusing when invoked with a directory path that got silently dropped
+    # (witnessed 2026-05-23: session-long "PASS" reports were against
+    # framework canvas while user thought they were against roadmap canvas).
+    canvas_dir = CANVAS_DIR
+    if len(sys.argv) > 1:
+        candidate = Path(sys.argv[1]).resolve()
+        if not candidate.exists():
+            print(f"Canvas directory not found: {candidate}", file=sys.stderr)
+            sys.exit(2)
+        canvas_dir = candidate
+
     all_errors = []
 
-    if not CANVAS_DIR.exists():
-        print("Canvas directory not found:", CANVAS_DIR)
+    if not canvas_dir.exists():
+        print("Canvas directory not found:", canvas_dir)
         sys.exit(0)
 
     if not SCHEMA_DIR.exists():
@@ -315,15 +360,20 @@ def main():
         print("(no schemas to validate against — silently passing)")
         sys.exit(0)
 
+    # Fail-loud YAML parse check (instance 14 fix, 2026-05-23). Must run
+    # before schema validation + trace walk so YAML errors surface even on
+    # schemaless files.
+    all_errors.extend(validate_all_yaml_parses(canvas_dir))
+
     registry = build_registry()
 
     # Validate each canvas against its schema
-    for canvas_path in sorted(CANVAS_DIR.glob("*.yml")):
+    for canvas_path in sorted(canvas_dir.glob("*.yml")):
         errors = validate_canvas_against_schema(canvas_path, registry)
         all_errors.extend(errors)
 
     # Trace edge resolution + cycle detection
-    graph, all_ids, collect_errors = collect_trace_graph()
+    graph, all_ids, collect_errors = collect_trace_graph(canvas_dir)
     all_errors.extend(collect_errors)
     all_errors.extend(resolve_trace_references(graph, all_ids))
     all_errors.extend(detect_cycles(graph))
@@ -335,7 +385,7 @@ def main():
         sys.exit(1)
 
     schemas_present = len(list(SCHEMA_DIR.glob("*.schema.json"))) - 1  # exclude _common
-    canvases_present = len(list(CANVAS_DIR.glob("*.yml")))
+    canvases_present = len(list(canvas_dir.glob("*.yml")))
     print(
         f"Canvas validation: PASS ({canvases_present} canvas files, "
         f"{schemas_present} schemas, {len(all_ids)} traceable IDs)",

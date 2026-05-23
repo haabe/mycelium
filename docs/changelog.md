@@ -6,6 +6,54 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.25.1 — validate_canvas.py fail-loud refactor (cluster instance 14 graduation)
+
+**2026-05-23. Attribution: lived-friction-triggered + self-audit-driven.** Closes cluster instance 14 of `documented-rule-diverges-from-enforcement` (new sub-shape: `validator-tolerance-vs-parser-strictness`).
+
+### Trigger
+
+Post-/canvas-health investigation surfaced two real silent-skip surfaces in `validate_canvas.py`:
+
+- **Schema-layer silent pass**: `validate_canvas_against_schema` returns `[]` (no errors) when no schema exists for a canvas file (line 135-137). So YAML parse errors on schemaless files like `north-star.yml`, `bvssh-health.yml`, `gist.yml` (12 of 25 canvas files lack schemas) never surface as FAIL.
+- **Trace-walk silent skip**: `collect_trace_graph` warns to stderr then continues on YAML parse failure (line 212-218). Warning is the only signal; doesn't affect exit code.
+
+**Combined effect**: a canvas file with broken YAML + no schema produces "Canvas validation: PASS" with a stderr warning. The warning is the only signal.
+
+**Witnessed same session**: north-star.yml shipped broken at commit `f06634d` (today's /metrics-pull #35 commit — metric_trend entry was inserted into goodhart_check's scope, breaking YAML at line 153). Undetected until validate_canvas.py refactor investigation. Fixed at roadmap commit `32e8acc`.
+
+**Bonus finding (separate concern)**: validate_canvas.py silently defaulted to cwd's `.claude/canvas` when positional argv was ignored. Session-long "Canvas validation: PASS" reports were running against FRAMEWORK canvas while user intent was ROADMAP canvas. This is what masked the roadmap-side YAML break entirely.
+
+### Shipped
+
+1. **`validate_all_yaml_parses()` function in `validate_canvas.py`** — runs first in main(); unconditionally parses every `.yml` in canvas_dir; collects parse errors before schema validation + trace walk. Surfaces all parse errors regardless of schema presence.
+
+2. **Positional argv handling**: `python3 validate_canvas.py [canvas_dir]` now works. argv overrides cwd default. CLAUDE_PROJECT_DIR env var still respected.
+
+3. **G-V12 fixture test** at `tests/bash/test_validate_canvas_fail_loud.sh`:
+   - `broken_yaml` fixture (invalid `**Update` at column 3 — same shape as the landscape.yml comp-027 + north-star.yml issues)
+   - `clean` fixture (parseable)
+   - 6 assertions (file named, validation failed, exit 1 on broken; PASS reported, no error flag, exit 0 on clean)
+   - First-try pass
+
+4. **`collect_trace_graph(canvas_dir=None)`** signature — accepts canvas_dir argument with module-level CANVAS_DIR as backward-compatible default for existing pytest fixtures.
+
+5. **Pre-flight inventory pass** against both repo canvas dirs confirmed 0 pre-existing breaks (50 files scanned: 25 framework + 25 roadmap). Refactor ships clean — no CI breakage from previously-hidden issues.
+
+### Cluster instance 14 graduation
+
+Same-session graduation from candidate → mechanism:
+- Discovered: post-/canvas-health investigation 2026-05-23 late
+- Inventoried: 50 files scanned, 0 pre-existing breaks
+- Refactored: ~50 min single session
+- Tested: G-V12 fixture covered
+- Shipped: this release
+
+The cluster's `documented-rule-diverges-from-enforcement` instance count is now 14. Spec at `engine/consistency-check-spec.md` should consider whether this sub-shape (`validator-tolerance-vs-parser-strictness`) warrants a sibling detection rule in the canonical 6-rule catalog; deferred to next consistency-check-spec.md update.
+
+### Bump rationale
+
+PATCH per `engine/version-discipline.md` — bug fix on validator behavior (documented intent: fail loud on YAML errors; actual behavior pre-refactor: silent pass on schemaless files). Backward-compatible: positional argv is additive; CLAUDE_PROJECT_DIR + cwd defaulting unchanged. No new feature surfaces. v0.25.0 entry migrated to docs/changelog.md per Check 34.
+
 ## v0.25.0 — `Verify-before-propagate:` Communication Rule (AP#7 sub-class b + e mechanism layer)
 
 **2026-05-23. Attribution: corrections-audit-driven.** /mycelium:corrections-audit run at session end across 30 framework + 30 roadmap corrections (60 cross-repo) surfaced the load-bearing finding: 87% ai-generated, ≥10 of those user-detected post-publication — confirming harness-detection-gap as the dominant pattern. Today's session alone added 4+ AP#7 instances (sub-classes c, e×3, g + temporal-binarization variant) ALL caught by user or hook, NOT by agent pre-publication.

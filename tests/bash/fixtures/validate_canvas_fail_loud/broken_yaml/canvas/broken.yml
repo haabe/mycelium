@@ -1,0 +1,12 @@
+# Test fixture: YAML break reproduces the silent-skip scenario fixed 2026-05-23.
+# The `**Update` markdown emphasis at column 7 triggers YAML alias-syntax parsing
+# (same shape as the landscape.yml comp-027 + north-star.yml issues that revealed
+# the silent-skip cluster instance).
+content:
+  status: testing
+  notes: |
+    Normal text fine.
+
+  **Update**: this line at column 3 breaks YAML — `**` triggers alias-syntax parsing.
+
+  - **License**: MIT.

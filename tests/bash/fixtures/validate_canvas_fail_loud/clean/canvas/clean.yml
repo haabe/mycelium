@@ -1,0 +1,4 @@
+# Test fixture: clean YAML that parses without error.
+content:
+  status: testing
+  notes: "Single-line note, no markdown emphasis at indent-relevant positions."
