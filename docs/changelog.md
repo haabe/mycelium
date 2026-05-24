@@ -6,7 +6,40 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
-## v0.26.2 — Bash-test CI diagnostic surface (silent-skip → fail-loud)
+## v0.26.3 — Bash-test CI diagnostic surface (silent-skip → fail-loud, take 2) + ruff cleanup
+
+**2026-05-24. Attribution: silent-skip-fail-loud + ruff-cleanup.**
+
+### (1) Bash-test CI diagnostic surface — corrected take
+
+Same shape as v0.25.1 validate_canvas fail-loud refactor, applied to Check 17's bash-test sub-check.
+
+**The gap**: Check 17 was suppressing `tests/bash/run.sh` output with `>/dev/null 2>&1` and only reporting `FAIL: bash check tests: failures — run 'bash tests/bash/run.sh' for details`. Useless in CI where there's no shell to "run the command in." Surfaced 2026-05-24 when v0.26.1 bash sweep passed locally (macOS+BSD) but failed CI (Linux+GNU).
+
+**v0.26.2 broken attempt** (not a real release; never re-pushed clean): used bare variable assignment `bash_test_output=$(bash tests/bash/run.sh 2>&1)` to capture output. `set -e` at top of validate-template.sh aborts on non-zero command-substitution exit in plain assignment, so the diagnostic block never ran — CI failed identically to v0.26.1.
+
+**v0.26.3 corrected fix**: use `if VAR=$(cmd); then ... else ... fi` shape — same pattern the pytest sub-check already uses correctly under `set -e`. Diagnostic block now reachable on failure; filtered to RUN:/✗/✓/===/Npassed lines; capped at 60 lines to prevent log flooding.
+
+Closes a documented-rule-diverges-from-enforcement instance candidate (validator-says-FAIL-but-cannot-show-why) — parallel to v0.25.1's validator-tolerance-vs-parser-strictness instance 14 graduation.
+
+### (2) Ruff strict-mode cleanup
+
+Two pre-existing ruff strict-mode errors in `validate_canvas.py` introduced by today's earlier refactors (v0.25.1 fail-loud + v0.25.2 collect_trace_graph signature change):
+
+- **RUF013** PEP 484 implicit Optional on `def collect_trace_graph(canvas_dir: Path = None)` → `canvas_dir: Path | None = None`.
+- **PERF203** try-in-loop in `validate_all_yaml_parses()` → `# noqa: PERF203` on the except line with rationale comment. **Per-file isolation IS the required design** (each canvas file needs independent error handling so one parse failure doesn't crash the loop AND the error must be attributed to the specific file). Moving the try/except outside the loop would lose both properties. Performance overhead acceptable at ~25-file canvas scale.
+
+Ruff strict mode now clean (was 2 → 0).
+
+### Self-noted: v0.26.2 instance of validator-says-FAIL-but-cannot-show-why
+
+The original v0.26.2 attempt was itself an instance of the very pattern it tried to fix — the diagnostic block didn't run because `set -e` aborted before it. Caught by reading the actual CI log (HEAD's Post Run actions/checkout shows the script exited immediately after "PASS: pytest" with no further validator output). Same dynamic the silent-skip pattern this fix targets: error condition detected but diagnostic information swallowed by environment behavior.
+
+### Bump rationale
+
+PATCH per `engine/version-discipline.md` — bug fix on validator behavior + tech-debt cleanup; closes diagnostic gap; no new feature surfaces. Backward-compatible. v0.26.1 entry migrated to docs/changelog.md per Check 34. v0.26.2 not preserved as standalone changelog entry — broken-attempt, never functional.
+
+## v0.26.1 — Bash-check fixture-test sweep complete (Phase 2-5; cluster fully graduated)
 
 **2026-05-24. Attribution: silent-skip-fail-loud.** Same shape as v0.25.1 validate_canvas fail-loud refactor, applied to Check 17's bash-test sub-check.
 

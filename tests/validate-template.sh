@@ -866,15 +866,19 @@ check_code_quality() {
     elif [ ! -f "tests/bash/run.sh" ]; then
         warn "tests/bash/run.sh missing — skipping Bash check tests"
     else
+        # NOTE: must use `if VAR=$(cmd); then` shape, not bare assignment
+        # capture, because `set -e` (top of file) aborts on a non-zero
+        # command-substitution exit in a plain assignment. The if-guard
+        # form lets the else branch run for diagnosis. Same pattern the
+        # pytest block above uses correctly; my first v0.26.2 attempt
+        # used bare assignment and the diagnostic code never executed.
         local bash_test_output
-        bash_test_output=$(bash tests/bash/run.sh 2>&1)
-        local bash_test_rc=$?
-        if [ "$bash_test_rc" -eq 0 ]; then
+        if bash_test_output=$(bash tests/bash/run.sh 2>&1); then
             local bash_test_count
             bash_test_count=$(find tests/bash -maxdepth 1 -name "test_*.sh" -type f 2>/dev/null | wc -l | tr -d ' ')
             pass "bash check tests: all pass (${bash_test_count} test file(s))"
         else
-            fail "bash check tests: failures (rc=$bash_test_rc)"
+            fail "bash check tests: failures (see diagnostic below)"
             # Print the failing assertions + per-file summary lines for diagnosis.
             echo "$bash_test_output" | grep -E "^.{0,8}(RUN: |✗|✓|=== |[0-9]+ passed)" | head -60 | sed 's/^/    /'
         fi

@@ -192,7 +192,7 @@ def _walk_canvas(node, path_prefix, ctx):  # noqa: C901
             _walk_canvas(item, f"{path_prefix}[{i}]", ctx)
 
 
-def collect_trace_graph(canvas_dir: Path = None):
+def collect_trace_graph(canvas_dir: Path | None = None):
     """Walk all canvas files; build trace graph + per-file id sets.
 
     Returns (graph, all_ids, errors). Errors include per-file ID uniqueness
@@ -322,12 +322,17 @@ def validate_all_yaml_parses(canvas_dir: Path) -> list[str]:
     Witnessed 2026-05-23 on roadmap north-star.yml. This check runs first
     in main() and surfaces ALL parse errors before any other validation.
     """
+    # Per-file isolation is required, not optional. Each canvas file needs
+    # INDEPENDENT error handling so one parse failure doesn't crash the loop
+    # AND the error must be attributed to the specific file. Moving the
+    # try/except outside the loop would lose both properties. Performance
+    # overhead is acceptable for the ~25-file canvas-dir scale.
     errors = []
     for canvas_path in sorted(canvas_dir.glob("*.yml")):
         try:
             with open(canvas_path) as f:
                 yaml.safe_load(f)
-        except yaml.YAMLError as exc:
+        except yaml.YAMLError as exc:  # noqa: PERF203
             # Strip trailing newlines from yaml error messages for cleaner output
             errors.append(f"YAML parse error in {canvas_path.name}: {str(exc).strip()}")
         except OSError as exc:
