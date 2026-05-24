@@ -853,17 +853,30 @@ check_code_quality() {
     # ----- Bash check tests (tests/bash) — G-V12 coverage proofs -----
     # Convention established 2026-05-23 with Check 30 as worked example.
     # Future Bash checks should ship with fixture tests per tests/bash/README.md.
+    #
+    # On failure: capture run.sh output and print failing assertions inline.
+    # Previously suppressed output silently, making CI failures impossible to
+    # diagnose without local replication (silent-skip pattern, parallel to
+    # validate_canvas.py fail-loud refactor shipped v0.25.1). Surfaced
+    # 2026-05-24 when bash tests passed locally on macOS+BSD but failed on
+    # CI's Linux+GNU runner — silent stdout/stderr swallowing forced
+    # diagnostic-by-environment-replication rather than read-the-log.
     if [ ! -d "tests/bash" ]; then
         warn "tests/bash directory missing — skipping Bash check tests"
     elif [ ! -f "tests/bash/run.sh" ]; then
         warn "tests/bash/run.sh missing — skipping Bash check tests"
     else
-        if bash tests/bash/run.sh >/dev/null 2>&1; then
+        local bash_test_output
+        bash_test_output=$(bash tests/bash/run.sh 2>&1)
+        local bash_test_rc=$?
+        if [ "$bash_test_rc" -eq 0 ]; then
             local bash_test_count
             bash_test_count=$(find tests/bash -maxdepth 1 -name "test_*.sh" -type f 2>/dev/null | wc -l | tr -d ' ')
             pass "bash check tests: all pass (${bash_test_count} test file(s))"
         else
-            fail "bash check tests: failures — run 'bash tests/bash/run.sh' for details"
+            fail "bash check tests: failures (rc=$bash_test_rc)"
+            # Print the failing assertions + per-file summary lines for diagnosis.
+            echo "$bash_test_output" | grep -E "^.{0,8}(RUN: |✗|✓|=== |[0-9]+ passed)" | head -60 | sed 's/^/    /'
         fi
     fi
 }

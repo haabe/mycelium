@@ -6,6 +6,47 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.26.2 — Bash-test CI diagnostic surface (silent-skip → fail-loud)
+
+**2026-05-24. Attribution: silent-skip-fail-loud.** Same shape as v0.25.1 validate_canvas fail-loud refactor, applied to Check 17's bash-test sub-check.
+
+### The diagnostic gap
+
+Check 17's bash-test sub-check was suppressing `tests/bash/run.sh` output with `>/dev/null 2>&1` and only reporting:
+> FAIL: bash check tests: failures — run 'bash tests/bash/run.sh' for details
+
+That's useless in CI — there's no shell to "run the command in." Diagnosis required either SSH-into-CI or commit-and-watch-and-iterate.
+
+**Surfaced 2026-05-24** when v0.26.1 bash sweep passed locally (macOS+BSD) but failed CI (Linux+GNU). Local-vs-CI environment divergence is exactly when the diagnostic output matters most.
+
+### Fix
+
+Capture `run.sh` output to a variable; print failing assertions inline on failure. Single check-block edit; backward-compatible.
+
+```bash
+local bash_test_output
+bash_test_output=$(bash tests/bash/run.sh 2>&1)
+local bash_test_rc=$?
+if [ "$bash_test_rc" -eq 0 ]; then
+    pass "bash check tests: all pass (${bash_test_count} test file(s))"
+else
+    fail "bash check tests: failures (rc=$bash_test_rc)"
+    echo "$bash_test_output" | grep -E "^.{0,8}(RUN: |✗|✓|=== |[0-9]+ passed)" | head -60 | sed 's/^/    /'
+fi
+```
+
+### Same shape, different surface
+
+v0.25.1: validate_canvas.py silently passed YAML errors on schemaless files. Fixed by adding fail-loud YAML-parse check upfront.
+
+v0.26.2 (this): validate-template.sh silently suppressed bash-test output on failure. Fixed by capturing + printing on failure.
+
+Both are instances of the **silent-skip-on-failure** pattern in validators — error condition is detected but the diagnostic information is swallowed. Both close a documented-rule-diverges-from-enforcement instance candidate (validator-says-FAIL-but-cannot-show-why).
+
+### Bump rationale
+
+PATCH per `engine/version-discipline.md` — bug fix on validator behavior; closes diagnostic gap; no new feature surfaces. Backward-compatible. v0.26.1 entry migrated to docs/changelog.md per Check 34.
+
 ## v0.26.1 — Bash-check fixture-test sweep complete (Phase 2-5; cluster fully graduated)
 
 **2026-05-24. Attribution: backlog-discharge-driven (Phase 2-5 sweep).** User flagged that at today's velocity, the bash-check-without-fixture-test backlog was doable today. Sweep executed in ~2h actual (vs original 12-17h estimate; vs morning-revised 3-5h estimate after convention-reuse compression). Cluster now fully graduated — every Check in `tests/validate-template.sh` has G-V12 fixture-test backing.
