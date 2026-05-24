@@ -6,6 +6,30 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.25.2 — README zone-shaping clarification + Verify-before-propagate X-URL extension
+
+**2026-05-24. Attribution: scoping-carry-forward-driven.** Two small clarifications shipped together.
+
+### (1) README "What it feels like" — zone-shaping mechanisms made explicit
+
+Carry-forward from 2026-05-23 Hashimoto-zone scoping decision (roadmap decision-log). That decision declined to add explicit "zone" classification to Mycelium's gate model on the grounds that **project_type adaptations + phase-scoped guardrails + the explicit out-of-scope statement in README** together ALREADY ARE the zone-shaping mechanism Mycelium offers. Adding an explicit "zone" concept would have been over-engineering plus a gameable surface.
+
+The decision flagged a documentation gap: readers couldn't see the existing mechanism as zone-shaping without explicit framing. This release closes that gap with one sentence in README "What it feels like" naming all three:
+
+> Gate intensity adapts via three mechanisms already in the framework: **project type** (`solo_hobby` thresholds lighter than `team_enterprise`), **phase** (Discover-phase gates lighter than Deliver-phase), and the explicit out-of-scope bounds in "Who it's not for" above. Regen-cheap exploratory scaffolding usually belongs in the out-of-scope set, not under a lighter Mycelium gate path — sibling tools fit those use cases directly.
+
+### (2) Verify-before-propagate convention extended for X/Twitter URLs
+
+Empirical finding from 2026-05-24's four scoping/positioning verifications: WebFetch returns HTTP 402 on x.com and most Nitter mirrors (xcancel.com 503, nitter.privacydev.net refused, nitter.net empty under WebFetch). **Playwright with full-browser rendering succeeds where lighter fetchers don't** — extracts `.tweet-content` text + reply chains via JS evaluation.
+
+Convention extension: for X URLs specifically, attempt playwright → nitter.net before defaulting to `Per user:` summary. Sequence: `mcp__playwright__browser_navigate` → `mcp__playwright__browser_evaluate` to pull tweet content. If Nitter returns empty (some mirrors degrade), accept `Per user:` or ask for paste.
+
+Also documented (Cited: roadmap decision-log 2026-05-24 benchmark): agent-browser CLI was installed and tested as a lighter alternative; while it works for renderable pages with semantic markup (agent-browser.dev = 5KB compact snapshot), it returns empty body on Nitter pages. Not a drop-in replacement for the X-verification surface. Keep playwright as primary; agent-browser available for general-web verification when needed.
+
+### Bump rationale
+
+PATCH per `engine/version-discipline.md` — doc clarifications + convention surface extension. No new behavior or schema changes. Backward-compatible. v0.25.1 entry migrated to docs/changelog.md per Check 34.
+
 ## v0.25.1 — validate_canvas.py fail-loud refactor (cluster instance 14 graduation)
 
 **2026-05-23. Attribution: lived-friction-triggered + self-audit-driven.** Closes cluster instance 14 of `documented-rule-diverges-from-enforcement` (new sub-shape: `validator-tolerance-vs-parser-strictness`).

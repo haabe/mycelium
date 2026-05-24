@@ -63,6 +63,8 @@ Not 49 skills dumped on you at once. Three modes that show up at the right time:
 
 A small project sees fewer gates and lighter guidance. A complex product gets the full treatment.
 
+Gate intensity adapts via three mechanisms already in the framework: **project type** (`solo_hobby` thresholds lighter than `team_enterprise`), **phase** (Discover-phase gates lighter than Deliver-phase), and the explicit out-of-scope bounds in "Who it's not for" above. Regen-cheap exploratory scaffolding usually belongs in the out-of-scope set, not under a lighter Mycelium gate path — sibling tools fit those use cases directly.
+
 ## How Mycelium got smarter
 
 Mycelium has been dogfooded on three small projects AND tested by one outside user under realistic time pressure. Each session taught the framework something different — and most of what they taught is in the version you're looking at right now.
