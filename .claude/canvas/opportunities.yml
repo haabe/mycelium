@@ -77,6 +77,18 @@ opportunities:
     impact: low           # Cosmetic + onboarding-trust, not blocking
     strategic_alignment: medium  # Onboarding-trust gate is L1-thesis-relevant
     cynefin_domain: clear  # Display logic, deterministic, single-file fixes
+    value:
+      level: low
+      description: "Real user-detected friction; clear value in distinguishing zero-vs-failure cases on first install. Partially shipped 2026-05-13."
+    usability:
+      level: low
+      description: "Fix is display-side only; users do not have to learn anything new."
+    feasibility:
+      level: low
+      description: "Display logic, deterministic, single-file fixes per cynefin clear classification."
+    viability:
+      level: low
+      description: "No ongoing cost; one-time fix per hook."
     sub_opportunities: []
     solutions: []
     provenance:
@@ -160,6 +172,18 @@ opportunities:
     impact: medium        # Real time cost + correctness-of-mental-model risk
     strategic_alignment: high  # First-run skill design is L1-thesis-load-bearing
     cynefin_domain: complicated  # Known shapes, known countermeasures, requires audit + sweep
+    value:
+      level: medium
+      description: "Bentes-flagged install-context-without-context friction; load-bearing for early adoption but not blocking."
+    usability:
+      level: low
+      description: "Better-context prompts make the interview easier to evaluate, not harder."
+    feasibility:
+      level: medium
+      description: "Skill-prompt audit + restructure across multiple skills; mechanical but bounded multi-file work."
+    viability:
+      level: low
+      description: "One-time audit; no ongoing maintenance burden."
     sub_opportunities: []
     solutions: []
     provenance:
@@ -219,6 +243,18 @@ opportunities:
     impact: medium        # Reads as error to first-time users; visual noise to repeat users
     strategic_alignment: medium  # Hook-output discipline is part of the perceived-cognitive-load surface
     cynefin_domain: clear  # Single file, mechanical fix
+    value:
+      level: low
+      description: "User-detected cosmetic noise; trust-relevant but not blocking."
+    usability:
+      level: low
+      description: "Silencing noise = lower cognitive load; no UI learning required."
+    feasibility:
+      level: low
+      description: "Hook output suppression; one-file fix."
+    viability:
+      level: low
+      description: "No ongoing cost."
     sub_opportunities: []
     solutions: []
     provenance:
@@ -302,6 +338,19 @@ opportunities:
     impact: medium        # Trust impact when user notices the discrepancy; bigger downstream cost if they don't notice and trust the floor
     strategic_alignment: high  # Honest-receipts discipline is core L1 framing
     cynefin_domain: complicated  # Known issue with named design tension; needs design choice
+    value:
+      level: medium
+      description: |
+        Meta-trust concern: confidence floor visible to user but unexplained; the user noticed and queried it. Calibration matters but is meta-meta and few users see it.
+    usability:
+      level: medium
+      description: "Even with a fix, calibration logic is opaque to non-fluent users; needs careful surfacing."
+    feasibility:
+      level: medium
+      description: "Adaptive-thresholds mechanism exists (engine/adaptive-thresholds.md) but is immature; requires evidence accumulation."
+    viability:
+      level: medium
+      description: "Calibration data needs accumulating over many cycles; takes time before mechanism is load-bearing."
     sub_opportunities: []
     solutions: []
     provenance:
@@ -374,6 +423,18 @@ opportunities:
     impact: medium        # Silent default that affects downstream confidence math is a real epistemic cost when wrong
     strategic_alignment: high  # Source_class discipline is L0-L2 confidence-math foundation
     cynefin_domain: complicated  # Discipline is documented; surface design is the gap
+    value:
+      level: medium
+      description: "User-detected consent/transparency concern; affects evidence-typing honesty."
+    usability:
+      level: medium
+      description: "Adding a confirmation step IS friction; tradeoff between transparency and flow. Implementation form determines actual usability cost."
+    feasibility:
+      level: low
+      description: "Surface the tag option; explicit confirmation step; skill-prompt edit."
+    viability:
+      level: low
+      description: "No ongoing cost."
     sub_opportunities: []
     solutions: []
     provenance:
@@ -452,6 +513,21 @@ opportunities:
     impact: medium        # First-impression cost; reinforces the "cult-framework" risk independently observed
     strategic_alignment: high  # The vocabulary-leak pattern is what makes Mycelium feel like methodology-for-methodology; central to L1 activation-cost framing
     cynefin_domain: complicated  # Style/voice discipline + selective rewrite
+    value:
+      level: medium
+      description: |
+        User-detected (Edith-Mari Phase-6 confusion); do-not-narrate-phase-numbers rule already partly graduated in interview SKILL.md per opp-006 narration discipline note.
+    usability:
+      level: high
+      description: |
+        CRITICAL TENSION: founder reports first-person friction with wayfinding-loss risk - "the feeling of not knowing the scope and the current way forward is something I feel when working the roadmap at times." A naive fix that hides internal vocabulary entirely could make users feel MORE lost. The fix must translate vocabulary while PRESERVING the structural map (you are here wayfinding). Wrong implementation breaks something more important than it fixes.
+    feasibility:
+      level: medium
+      description: |
+        Multi-skill audit + selective rewrite. Substantial - has to translate without losing structural surface; not just a find-and-replace audit. Must coordinate with existing wayfinding work.
+    viability:
+      level: low
+      description: "One-time audit + ongoing discipline (rule already exists in interview SKILL.md as precedent)."
     sub_opportunities: []
     solutions: []
     provenance:
@@ -521,6 +597,18 @@ opportunities:
     impact: low           # Cosmetic + first-trust; user worked around easily
     strategic_alignment: medium  # Prompt-clarity discipline is part of the broader "feel-lightweight" surface
     cynefin_domain: clear  # Prompt-copy edits; deterministic
+    value:
+      level: medium
+      description: "User-detected transparency concern; first-run friction."
+    usability:
+      level: low
+      description: "Clearer prompts reduce friction; no new learning required."
+    feasibility:
+      level: low
+      description: "Prompt rewrites; deterministic."
+    viability:
+      level: low
+      description: "No ongoing cost."
     sub_opportunities: []
     solutions: []
     provenance:
@@ -590,6 +678,20 @@ opportunities:
     impact: medium  # Workaround exists (rediscover or manually trace); cost is wasted exploration cycles and lost evidence reuse
     strategic_alignment: high  # Directly affects framework's claim to handle OST work end-to-end; failure to model this leaks discipline at the delivery boundary
     cynefin_domain: complicated  # Solvable via established schema design (DAG, references, bounded contexts) but requires deliberate work — not a fresh complex domain
+    value:
+      level: high
+      description: |
+        Structural framework limitation; affects L3-L4 work scaling. As long as GIT is the shared knowledge layer (user-named design constraint 2026-05-24), the framework needs a mechanism to delegate sub-OST foliage across multiple users and multiple agents - without it, parallel discovery on cross-cutting concerns (auth, observability, deployment shape) is locked per parent solution. Compounds as the framework scales beyond solo use.
+    usability:
+      level: medium
+      description: "Solution will require user understanding of new sub-OST abstraction model + delegation semantics; learning curve for adopters."
+    feasibility:
+      level: high
+      description: |
+        Substantial: schema + workflow + skill changes. Must work with git-shared-knowledge model (canvas + decision-log in git). Must support multi-user + multi-agent delegation semantics. Not a single-skill fix - touches OST representation, leaf lifecycle, evidence portability, and cross-solution reference integrity.
+    viability:
+      level: medium
+      description: "Ongoing maintenance of new abstraction layer + delegation semantics; framework discipline must absorb it without bloating instruction budget."
     sub_opportunities: []
     solutions: []
     provenance:
@@ -691,6 +793,19 @@ opportunities:
     impact: medium  # Workaround: bring-your-own evaluation criteria. Cost is missed friction surfaces and the framework underclaiming its own coverage boundary.
     strategic_alignment: high  # Tied to L1 positioning — Mycelium claims to be a theory-grounded harness for "product development", not specifically web-product development. Coverage gap weakens the general-purpose claim.
     cynefin_domain: complicated  # Per-modality evaluation criteria are well-established in their respective communities (clig.dev for CLI, NN/g voice UX for voice, etc.); the work is integration, not invention
+    value:
+      level: medium
+      description: |
+        Real gap but bites only on non-web/GUI products. No current Mycelium user is on non-web; the gap is theoretical until cohort or external user surfaces with CLI/voice/API product.
+    usability:
+      level: medium
+      description: "New skills for CLI/voice/API would need user familiarity with the per-modality evaluation criteria."
+    feasibility:
+      level: high
+      description: "Substantial: per-modality quality skills (clig.dev for CLI, NN/g voice UX for voice, etc.) require integration work; not invention but multi-skill scope."
+    viability:
+      level: medium
+      description: "Ongoing skill maintenance per modality; instruction-budget pressure as skill count grows."
     sub_opportunities: []
     solutions: []
     provenance:
@@ -847,6 +962,18 @@ opportunities:
     impact: medium  # Doesn't block install; costs trust and patience on first run. Cautious-learner segment is the worst-hit cohort.
     strategic_alignment: high  # First-run UX is load-bearing for adoption. ht-012 was the first cautious-learner cohort log with behavior-validated install — the friction here is direct evidence.
     cynefin_domain: clear  # Solvable via a deterministic preview-list output before any file writes. No experimentation needed.
+    value:
+      level: medium
+      description: "ht-012 cohort-log f2 friction; first-run experience matters for adoption."
+    usability:
+      level: low
+      description: "Fix is one-shot preview list; simpler not more complex than current state."
+    feasibility:
+      level: low
+      description: "start-skill modification; deterministic."
+    viability:
+      level: low
+      description: "No ongoing cost."
     sub_opportunities: []
     solutions: []
     provenance:
