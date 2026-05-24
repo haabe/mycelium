@@ -6,6 +6,32 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.26.7 — Empty fixture dir sweep (test_check_27 + defensive)
+
+**2026-05-24. Attribution: empty-fixture-dir-sweep.**
+
+v0.26.6's dropped-filter raw-output diagnostic finally showed the actual failure:
+
+```
+✗ test_passes_match: passes when skill set matches (needle 'PASS' not found)
+✗ test_flags_divergence: warns on divergence (needle 'WARN' not found)
+✗ test_flags_divergence: names the plugin-only skill (needle 'skill_b' not found)
+```
+
+test_check_27 (skills-tree parity) fixture directories were entirely empty (`tests/bash/fixtures/check_27/match/.claude/skills/skill_a/`, etc.) — git doesn't track empty dirs, so on CI checkout the entire check_27 fixture tree was missing.
+
+Same root cause as v0.26.4 (`.gitkeep` discipline) but different fixtures. **Defensive sweep**: `find tests/bash/fixtures/ -type d -empty -exec touch {}/.gitkeep \;` — added 17 `.gitkeep` files across check_6/7/8/9/27 fixtures.
+
+test_check_27 now passes on CI. check_6/7/8/9 also get latent-safety even though they happened to pass CI in v0.26.6 (likely via permissive `find` behavior on missing paths + assertion-shape coincidence — investigating further would be diagnostic-yak-shaving; defensive coverage is the right move).
+
+### Pattern note for future fixture authoring
+
+Empty directory tracking is **the** persistent git footgun. Any fixture representing "directory exists but is empty" or "subdirectories exist with no files of their own" needs `.gitkeep`. Recommended pre-commit hook candidate: `find tests/bash/fixtures/ -type d -empty -not -path '*/.git/*'` — flag empty fixture dirs as a discipline check. Not shipping that today; carry-forward for next validator-hardening window.
+
+### Bump rationale
+
+PATCH per `engine/version-discipline.md` — test-fixture sweep; backward-compatible. v0.26.6 entry migrated to docs/changelog.md per Check 34.
+
 ## v0.26.6 — Locale-UTF8 grep blindness in diagnostic filter (6th silent-skip variant)
 
 **2026-05-24. Attribution: locale-utf8-grep-blind.**
