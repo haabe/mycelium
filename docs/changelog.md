@@ -6,6 +6,33 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.26.6 — Locale-UTF8 grep blindness in diagnostic filter (6th silent-skip variant)
+
+**2026-05-24. Attribution: locale-utf8-grep-blind.**
+
+v0.26.5 fixed SIGPIPE but CI diagnostic STILL showed only RUN: + === lines — no ✓ / ✗ / "N passed" summary lines. **Linux CI's default `LANG=C` makes GNU grep byte-blind to multi-byte UTF-8 sequences**, so the filter regex `^.{0,8}(RUN: |✗|✓|=== |[0-9]+ passed)` silently dropped all assertion lines containing ✓ or ✗ characters.
+
+The filter was hiding the very signal it was designed to surface. macOS BSD grep handles UTF-8 by default; Linux GNU grep does not without explicit locale setup. Local testing never showed the bug.
+
+**Fix**: drop the filter entirely; print raw bash test output (capped at 200 lines). More verbose, but actually surfaces what failed.
+
+**Silent-skip cluster instance count now at 6 in 24 hours** — every fix uncovered the next layer:
+
+| # | Variant | Surfaced via | Fix |
+|---|---|---|---|
+| 1 | validate_canvas.py silent-pass on schemaless YAML | post-/canvas-health investigation | v0.25.1 |
+| 2 | validate-template.sh silent-suppression of bash output | CI red after bash sweep | v0.26.3 |
+| 3 | git silent-omission of empty fixture dirs | v0.26.3 diagnostic visible | v0.26.4 |
+| 4 | bare `VAR=$(cmd)` under `set -e` silently aborting | first v0.26.2 attempt failed CI same way | v0.26.3 if-then-else |
+| 5 | diagnostic-print pipeline's own SIGPIPE | v0.26.4 fix triggered abort | v0.26.5 \|\| true |
+| 6 | **THIS**: GNU grep byte-blind to UTF-8 under LANG=C | v0.26.5 diagnostic still missing ✓/✗ lines | drop filter |
+
+Pattern shape: **every diagnostic surface is itself a potential silent-skip surface** at the next layer. Defensive design discipline: diagnostic-only code paths should be maximally robust to environment quirks (locale, signals, exit codes, missing tools). Use raw output + cap; avoid clever filters that depend on environment behavior.
+
+### Bump rationale
+
+PATCH per `engine/version-discipline.md` — validator diagnostic-display fix; backward-compatible. v0.26.5 entry migrated to docs/changelog.md per Check 34.
+
 ## v0.26.5 — Diagnostic-pipeline SIGPIPE (4th silent-skip variant in 24h)
 
 **2026-05-24. Attribution: diagnostic-pipeline-sigpipe.**
