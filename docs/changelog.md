@@ -6,6 +6,34 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.26.4 — Empty fixture directories not git-tracked (CI-only failure)
+
+**2026-05-24. Attribution: git-doesnt-track-empty-dirs.**
+
+The v0.26.3 fix made the bash-test diagnostic visible in CI. First visible diagnostic surfaced the actual cross-environment failure:
+
+```
+✗ test_flags_missing: flags missing file (needle 'FAIL' not found)
+✗ test_check_14_flags_missing_file: flags absent file (needle 'FAIL: AGENTS.md not found' not found)
+```
+
+**Root cause**: `tests/bash/fixtures/check_12/missing/` and `tests/bash/fixtures/check_14/missing_file/` are intentionally-empty fixture directories representing the "file absent" scenarios for those checks. **Git does not track empty directories** — they existed locally on macOS but did not appear on CI checkout. Test scripts use `cd $FIXTURES_DIR/$1` under `set +e`, so cd into non-existent dir silently succeeded (well, didn't abort), and `check_X` ran against whatever CWD happened to be at the time. Different output than fixtures intended → assertions failed only on CI.
+
+**Fix**: add `.gitkeep` files to both directories.
+
+**Diagnostic-loop value**: this is exactly what the v0.26.3 fail-loud surface was designed to surface. Without it, the cycle would have been: push → CI fails opaquely → guess → push → CI fails opaquely → repeat. With it: push → CI fails with specific test names + needles → root-cause-clear → ship fix.
+
+**Worth noting structurally**: this is the **third** silent-skip-class fix in 24 hours:
+- v0.25.1: validate_canvas.py silent-pass on YAML errors for schemaless files
+- v0.26.3: validate-template.sh silent-suppression of bash-test output on failure
+- v0.26.4: git silent-omission of empty directories (no fix to git; mitigation via `.gitkeep` discipline)
+
+Same cluster shape: `documented-rule-diverges-from-enforcement` sub-shape **silent-skip-on-failure** at successive layers (canvas-validator → validator-output-suppression → version-control-state-management).
+
+### Bump rationale
+
+PATCH per `engine/version-discipline.md` — test-fixture infrastructure fix; closes CI-environment compatibility gap. Backward-compatible. v0.26.3 entry migrated to docs/changelog.md per Check 34.
+
 ## v0.26.3 — Bash-test CI diagnostic surface (silent-skip → fail-loud, take 2) + ruff cleanup
 
 **2026-05-24. Attribution: silent-skip-fail-loud + ruff-cleanup.**
