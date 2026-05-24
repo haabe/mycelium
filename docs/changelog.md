@@ -6,6 +6,47 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.26.1 — Bash-check fixture-test sweep complete (Phase 2-5; cluster fully graduated)
+
+**2026-05-24. Attribution: backlog-discharge-driven (Phase 2-5 sweep).** User flagged that at today's velocity, the bash-check-without-fixture-test backlog was doable today. Sweep executed in ~2h actual (vs original 12-17h estimate; vs morning-revised 3-5h estimate after convention-reuse compression). Cluster now fully graduated — every Check in `tests/validate-template.sh` has G-V12 fixture-test backing.
+
+### Coverage shipped this sweep
+
+14 new fixture test files (bash tests 9 → 23):
+
+| Check | Behavior tested | Fixtures |
+|---|---|---|
+| 1 | YAML parsing across `.claude/canvas/*.yml` | broken_yaml, clean |
+| 2 + 3 + 4 (shared) | Deprecation-pass behaviour after 2026-05-08 docs split | (no fixtures; degenerate-pass) |
+| 5 | Every canvas file in canvas-update SKILL.md mapping | missing_canvas_in_mapping, all_present, missing_mapping_file |
+| 6 | Skill count in `docs/skills/README.md` vs disk | match, mismatch, stub |
+| 7 | Skill count in CLAUDE.md vs disk | match, mismatch |
+| 8 | Skill SKILL.md frontmatter (name + description) | valid, missing_name, missing_skill_md |
+| 9 | Skills auto-discoverable from CLAUDE.md | auto_discovered, missing_path |
+| 10 | Version consistency CLAUDE.md vs README.md | match, mismatch, no_readme_version |
+| 11 | Anti-pattern count CLAUDE.md/README vs disk | match, mismatch, no_readme_count |
+| 12 | theory-gates.md defines gates | valid, empty, missing |
+| 13 | Theory count vs README "NN+ frameworks" claim | stub, missing_doc |
+| 14 | AGENTS.md router discipline | missing_file, missing_sections, valid |
+| 15 | Untrusted-content wrapping convention (curated list + heuristic) | compliant, missing_wrapping, heuristic_candidate |
+| 27 | Skills-tree parity (plugin vs legacy) | match, diverge |
+
+### Infrastructure improvement
+
+`tests/bash/_assert.sh`: `grep -qF -- "$needle"` end-of-options sentinel. Without it, needles starting with `-` (like `- interview` for list-item assertions) triggered grep usage errors. Surfaced during Check 15 test draft; fixed once for all future tests.
+
+### Convention reuse validated
+
+Phase 1 (8 tests, 1.5h actual vs 4.5-6.5h estimate) demonstrated ~4× compression via convention reuse. Phase 2-5 (15 tests, 2h actual vs 3-5h estimate) extended the pattern with cross-reference SKILLS_DIR-override sub-pattern (Checks 5-13 share canvas/skills shape; Check 27 extends to plugin/legacy parallel). Per-check time averaged ~10 min after the shared-pattern batch took hold.
+
+### Cluster fully graduated
+
+`documented-rule-diverges-from-enforcement`-adjacent cluster `bash-check-without-fixture-test` is now at full coverage: every Bash Check has fixture test demonstrating it flags its target failure mode. Cluster instance log can record `graduation_status: complete`.
+
+### Bump rationale
+
+PATCH per `engine/version-discipline.md` — retroactive fixture coverage + test-infrastructure micro-fix; closes documented gap; no new feature surfaces. Backward-compatible. v0.26.0 entry migrated to docs/changelog.md per Check 34.
+
 ## v0.26.0 — Backlog-discharge bundle: Check 16 allowlist + BVSSH env-var override + Reliability SLOs
 
 **2026-05-24. Attribution: backlog-discharge-driven.** Three shortest-backlog items closed in one bundle, per user instruction.

@@ -1,0 +1,5 @@
+# Test fixture: YAML break for Check 1 (parse-all-canvas-yml).
+content:
+  status: testing
+
+  **Update**: this column-3 markdown emphasis breaks YAML — `**` triggers alias-syntax parsing.

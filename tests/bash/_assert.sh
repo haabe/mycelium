@@ -25,7 +25,7 @@ assert_contains() {
     local haystack="$1"
     local needle="$2"
     local msg="${3:-contains}"
-    if echo "$haystack" | grep -qF "$needle"; then
+    if echo "$haystack" | grep -qF -- "$needle"; then
         _ASSERT_PASSED=$((_ASSERT_PASSED + 1))
         echo "    ✓ ${_ASSERT_CURRENT}: $msg"
     else
@@ -38,7 +38,7 @@ assert_not_contains() {
     local haystack="$1"
     local needle="$2"
     local msg="${3:-does not contain}"
-    if echo "$haystack" | grep -qF "$needle"; then
+    if echo "$haystack" | grep -qF -- "$needle"; then
         _ASSERT_FAILED=$((_ASSERT_FAILED + 1))
         echo "    ✗ ${_ASSERT_CURRENT}: $msg (needle '$needle' WAS found)" >&2
     else

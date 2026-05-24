@@ -1,0 +1,4 @@
+# Test fixture: clean YAML for Check 1.
+content:
+  status: testing
+  notes: "Single-line note; no alias-trigger characters at column-3."
