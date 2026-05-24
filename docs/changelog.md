@@ -6,6 +6,36 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.26.5 — Diagnostic-pipeline SIGPIPE (4th silent-skip variant in 24h)
+
+**2026-05-24. Attribution: diagnostic-pipeline-sigpipe.**
+
+The v0.26.3 diagnostic surface was working but its print pipeline `... | head -60 | sed 's/^/    /'` triggered SIGPIPE on CI when output exceeded 60 lines. `pipefail` + `set -e` at top of validate-template.sh aborted the validator MID-DIAGNOSTIC, hiding the actual test results AND aborting subsequent checks. **The diagnostic-fix needed its own diagnostic-fix** — same shape as the meta-pattern this whole sequence targets.
+
+Bash tests in fact ALL PASS on CI (verified by counting "X passed, 0 failed" lines in the truncated diagnostic output). The false-FAIL was the validator's diagnostic-print pipeline catching its own SIGPIPE.
+
+**Fix**: `{ ...pipeline... } || true` so the expected SIGPIPE from `head -60` early-close doesn't propagate through pipefail.
+
+### Silent-skip variants tally for 2026-05-24
+
+This is the 5th silent-skip-class fix in 24 hours, all sub-shapes of `documented-rule-diverges-from-enforcement`:
+
+| # | Variant | Fix |
+|---|---|---|
+| 1 | validate_canvas.py silent-pass on schemaless YAML errors | v0.25.1 fail-loud refactor |
+| 2 | validate-template.sh silent-suppression of bash-test output | v0.26.3 capture + diagnostic-print |
+| 3 | git silent-omission of empty fixture dirs | v0.26.4 `.gitkeep` discipline |
+| 4 | v0.26.2 bare `VAR=$(cmd)` under `set -e` silently aborting diagnostic block | v0.26.3 if-then-else shape |
+| 5 | **THIS** — diagnostic-print pipeline's own SIGPIPE silently aborting validator | `\|\| true` to tolerate expected SIGPIPE |
+
+Each was uncovered by the previous fix's diagnostic. The diagnostic-loop value of each fix compounded the next-layer signal — what would have been a multi-day opaque-CI cycle was compressed to ~1.5 hours via successive fail-loud surfaces.
+
+**Meta-pattern observation**: building diagnostic surfaces is structurally adversarial to `set -e` + `pipefail` discipline. Each new diagnostic-capture pattern introduces opportunities for the diagnostic itself to abort the script. Defensive `|| true` on diagnostic-only pipelines (where the print is best-effort, not load-bearing) is the discipline.
+
+### Bump rationale
+
+PATCH per `engine/version-discipline.md` — validator-internal robustness fix; backward-compatible. v0.26.4 entry migrated to docs/changelog.md per Check 34.
+
 ## v0.26.4 — Empty fixture directories not git-tracked (CI-only failure)
 
 **2026-05-24. Attribution: git-doesnt-track-empty-dirs.**

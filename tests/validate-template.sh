@@ -880,7 +880,13 @@ check_code_quality() {
         else
             fail "bash check tests: failures (see diagnostic below)"
             # Print the failing assertions + per-file summary lines for diagnosis.
-            echo "$bash_test_output" | grep -E "^.{0,8}(RUN: |✗|✓|=== |[0-9]+ passed)" | head -60 | sed 's/^/    /'
+            # `|| true` tolerates expected SIGPIPE: head -60 closes the pipe
+            # early when output exceeds 60 lines, grep upstream then exits 141
+            # (SIGPIPE), set -o pipefail + set -e at top would abort the
+            # validator mid-diagnostic without this. Surfaced 2026-05-24 on CI
+            # Linux where the diagnostic itself triggered the abort that this
+            # very diagnostic was designed to surface. Second-order silent-skip.
+            { echo "$bash_test_output" | grep -E "^.{0,8}(RUN: |✗|✓|=== |[0-9]+ passed)" | head -60 | sed 's/^/    /'; } || true
         fi
     fi
 }
