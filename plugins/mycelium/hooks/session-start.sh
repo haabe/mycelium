@@ -10,7 +10,15 @@ NOW=$(date +%s)
 # ============================================================
 # CHECK 1: BVSSH health check cadence (monthly)
 # ============================================================
-if [ -f "$PROJECT_DIR/.claude/canvas/bvssh-health.yml" ]; then
+# Path resolution: MYCELIUM_BVSSH_CANVAS env var override takes precedence,
+# else default to PROJECT_DIR-local canvas. Override added 2026-05-24 to close
+# instance 12 of `documented-rule-diverges-from-enforcement` cluster — the hook
+# previously scanned framework-local canvas only and reported "BVSSH never
+# assessed" for framework-self-host context where the assessment canvas lives
+# in a sibling roadmap repo. Same convention as MYCELIUM_ATTRIBUTION_REGISTRY
+# (Check 33 in validate-template.sh).
+BVSSH_CANVAS="${MYCELIUM_BVSSH_CANVAS:-$PROJECT_DIR/.claude/canvas/bvssh-health.yml}"
+if [ -f "$BVSSH_CANVAS" ]; then
   LAST_BVSSH=$(python3 -c "
 import yaml, sys
 try:
@@ -19,7 +27,7 @@ try:
   last = data.get('last_assessed')
   print(last if last else 'never')
 except: print('never')
-" "$PROJECT_DIR/.claude/canvas/bvssh-health.yml" 2>/dev/null || echo "never")
+" "$BVSSH_CANVAS" 2>/dev/null || echo "never")
 
   if [ "$LAST_BVSSH" = "never" ] || [ "$LAST_BVSSH" = "null" ] || [ "$LAST_BVSSH" = "None" ]; then
     REMINDERS="${REMINDERS}BVSSH health has never been assessed. Consider running /bvssh-check. "

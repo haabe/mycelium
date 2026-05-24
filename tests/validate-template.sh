@@ -605,10 +605,18 @@ check_upgrade_manifest_driven() {
     # After the manifest-driven rewrite, these literals should be near-zero
     # (only references in comments are acceptable). A spike indicates someone
     # re-introduced a hardcoded loop.
+    #
+    # Allowlist convention (2026-05-24): intentional literals (e.g., the legacy-
+    # tree detection guard at upgrade.sh line ~100, which checks for upstream
+    # framework files that no longer ship — a structural-by-design check, not
+    # drift) may carry an end-of-line marker `# check-16-allowlist: <reason>`
+    # to exempt them. Reason MUST be present; bare marker without rationale
+    # does not exempt.
     local hardcoded_dir_count
     hardcoded_dir_count=$( { grep -E '\.claude/(engine|skills|hooks|domains|orchestration|schemas|optimization|auto-dogfood)/?[ "$]' "$upgrade" 2>/dev/null \
         | grep -vE '^\s*#' \
         | grep -vE 'parse_manifest\.py' \
+        | grep -vE '# check-16-allowlist:\s*\S' \
         || true; } | wc -l | tr -d ' ')
 
     if [ "$hardcoded_dir_count" -le "0" ]; then
@@ -620,12 +628,13 @@ check_upgrade_manifest_driven() {
         echo "    Use: VAR=\$(python3 plugins/mycelium/scripts/parse_manifest.py <key>); for x in \$VAR; do ...; done"
     fi
 
-    # Drift detector for top-level files: same pattern.
+    # Drift detector for top-level files: same pattern + allowlist marker.
     local hardcoded_top_count
     hardcoded_top_count=$( { grep -E '\b(CLAUDE\.md|README\.md|AGENTS\.md|CONTRIBUTORS\.md|LICENSE)\b' "$upgrade" 2>/dev/null \
         | grep -vE '^\s*#' \
         | grep -vE 'parse_manifest\.py' \
         | grep -vE '\$TEMP_DIR' \
+        | grep -vE '# check-16-allowlist:\s*\S' \
         || true; } | wc -l | tr -d ' ')
 
     if [ "$hardcoded_top_count" -le "0" ]; then

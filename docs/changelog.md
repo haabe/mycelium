@@ -6,6 +6,46 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.26.0 — Backlog-discharge bundle: Check 16 allowlist + BVSSH env-var override + Reliability SLOs
+
+**2026-05-24. Attribution: backlog-discharge-driven.** Three shortest-backlog items closed in one bundle, per user instruction.
+
+### (1) Check 16 allowlist convention
+
+`Check 16: upgrade.sh is manifest-driven (no hardcoded list drift)` previously WARNed on `upgrade.sh:100` — a legacy-tree detection guard that's structural-by-design (it checks for upstream framework files that no longer ship as part of the plugin migration flow), not drift. The WARN has been a persistent low-priority finding since v0.20.x.
+
+**Convention shipped**: end-of-line marker `# check-16-allowlist: <reason>` exempts intentional hardcoded literals. Validator's grep chain in Check 16 now respects the marker; reason MUST be present (regex `# check-16-allowlist:\s*\S` requires non-whitespace after the colon). Bare marker without rationale does not exempt.
+
+**Applied**: upgrade.sh line 100 carries marker with reason "intentional legacy-tree detection guard for migration path." Check 16 now reports clean — "no hardcoded framework-directory literals (drift-free)."
+
+### (2) BVSSH session-start hook env-var override
+
+`MYCELIUM_BVSSH_CANVAS` env var added to `plugins/mycelium/hooks/session-start.sh`. Default behavior unchanged (scans `$PROJECT_DIR/.claude/canvas/bvssh-health.yml`); override path takes precedence when set.
+
+**Closes instance 12** of `documented-rule-diverges-from-enforcement` cluster — the hook was reporting "BVSSH health has never been assessed" in framework-self-host context because the assessment canvas lives in the roadmap repo (sibling-path), not in the framework's own `.claude/canvas/`. Same convention pattern as `MYCELIUM_ATTRIBUTION_REGISTRY` (Check 33 in validate-template.sh).
+
+**Verified**: with env var pointed at roadmap canvas, BVSSH-never-assessed reminder GONE (hook sees the roadmap's 6 assessments, latest 2026-05-23 within 30-day cadence → no reminder fires).
+
+### (3) Reliability SLI/SLO definitions (roadmap dora-metrics.yml)
+
+Three explicit SLIs/SLOs defined in `dora-metrics.yml#reliability.slis_slos`:
+
+| SLI | SLO | Current | Classification |
+|---|---|---|---|
+| rel-001: validate-template.sh exit-0 rate on main | ≥99% over rolling 30d | 100% | elite |
+| rel-002: pytest pass rate on main | ≥99% over rolling 30d | 100% | elite |
+| rel-003: upgrade.sh successful-sync rate (legacy install path) | ≥95% over rolling 30d | unmeasured | unmeasured |
+
+**Closes Improvement #1 from 2026-05-04 /dora-check** ("Reliability is the only DORA metric not at Elite, and only because SLIs/SLOs aren't defined. Not a real reliability problem; a measurement gap.").
+
+DORA `overall_classification` updated: 4 metrics fully Elite + Reliability at 2-of-3 Elite SLOs (1 unmeasured). Honest framing: Reliability is no longer "unassessed measurement gap" — it has defined SLOs, 2 measured at threshold, 1 awaiting infrastructure.
+
+rel-003 deferred: requires upgrade.sh to write a timestamped sync-log. Lower SLO threshold (95% vs 99%) reflects legacy-install-path role — code path serves downgrade-from-plugin or fresh-degit users, not the canonical plugin-form workflow. Plugin form is canonical post-v0.20.x; legacy path usage decreasing per landscape evolution.
+
+### Bump rationale
+
+MINOR per `engine/version-discipline.md` — new allowlist convention surface (Check 16) + new hook env-var override convention (BVSSH). Backward-compatible: markers + env vars are additive; existing prose/state continues to work; existing checks unchanged on files without markers. No schema changes. v0.25.2 entry migrated to docs/changelog.md per Check 34.
+
 ## v0.25.2 — README zone-shaping clarification + Verify-before-propagate X-URL extension
 
 **2026-05-24. Attribution: scoping-carry-forward-driven.** Two small clarifications shipped together.

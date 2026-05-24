@@ -97,7 +97,7 @@ fi
 # legacy .claude/skills/ tree (canonical Mycelium is plugin form). If we
 # pulled an upstream tree with no framework reference content, the legacy
 # refresh path can't proceed — the user needs to migrate to plugin form.
-if [ ! -d "$TEMP_DIR/.claude/skills" ] && [ ! -d "$TEMP_DIR/.claude/engine" ]; then
+if [ ! -d "$TEMP_DIR/.claude/skills" ] && [ ! -d "$TEMP_DIR/.claude/engine" ]; then  # check-16-allowlist: intentional legacy-tree detection guard for migration path
     error "Upstream Mycelium ($VERSION) no longer ships framework files in .claude/."
     error "The legacy npx-degit install path is deprecated as of v0.20.x;"
     error "the canonical Mycelium ships as a Claude Code plugin."
