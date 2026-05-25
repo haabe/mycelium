@@ -77,6 +77,27 @@ The naming convention promises **temporal ordering** (after fires later than bef
 
 _Patterns for diamond management, theory gate navigation, and workflow coordination._
 
+### Memory-application discipline gap — having an auto-memory loaded ≠ applying it at the inference moment
+
+When the agent has a relevant auto-memory or prior-conversation context loaded in the session, **having it loaded is not the same as applying it at the right moment.** The agent must explicitly check whether relevant context applies BEFORE making an inference, not just at the load moment.
+
+**Why it matters**: an auto-memory captures a discipline that was costly to learn. If the agent loads it but doesn't reach for it when it would change the inference, the memory is decorative — it documents what the agent "knows" without changing what the agent does. The cost was paid; the benefit doesn't materialize.
+
+**Detection rule**: when an inference is being made from an artifact (a title, a name, a brief tool output, a wrapper-text summary, a self-described category), check: is there an auto-memory or prior-conversation context that would change this inference? If yes, surface the check explicitly. If you can't be bothered to check, your inference is at AP#7 sub-(e) trust-without-verification risk.
+
+**Worked failures (2026-05-26 session)**:
+
+1. **Auto-dogfood dir not grepped before sketching architecture**: agent designed a parallel `mycelium-roadmap/.claude/auto-dogfood/playground-runs/` architecture proposal without first running `ls .claude/auto-dogfood/`. Existing mature 50k-LOC orchestrator + 23 scenarios + active 19/19 PASS baseline already lived there. Founder pushback: "Did you look inside .claude/auto-dogfood for what already exists?" Acknowledged as AP#7 sub-(e); architecture proposal was 95% reinvention.
+
+2. **Cohort-member role-title treated as expertise-class evidence without applying loaded juniors-context discipline**: agent had a juniors-context auto-memory loaded (rule: "role titles in junior-cohort contexts signal grow-into-this, not 10+y expertise; treat as junior unless evidence says otherwise"). When a cohort tester was described with a senior-shaped role title (CTO-class), agent inferred "if a senior-title-holder is hitting the vocabulary wall, the issue is structural regardless of theory-fluency" — without applying the juniors-context discipline that was already in memory. Founder pushback recalled the discipline; recalibrated read placed the tester in the junior-class evidence column (where the existing N=1 cohort-junior signal already sat), removing the spurious "theory-fluency" inference. Acknowledged as AP#7 sub-(e); inference rebuilt with corrected framing.
+
+**Counter-discipline**: before any inference that depends on interpretation of a brief artifact (title, summary, wrapper-text, name, self-described category), the agent runs a one-line self-check: "What auto-memory or prior context would change this inference if applied?" If the check surfaces anything relevant, apply it explicitly with a `Per auto-memory [name]:` citation form (parallel to the Verify-before-propagate convention). If nothing, proceed with explicit `No relevant memory found` note.
+
+**Graduation status**: 2 instances same day, same root cause (loaded-but-not-applied), different surfaces (directory existence vs. interpretive context). Pattern is well-defined; counter-discipline is mechanizable as a self-check. Candidate for framework-level Communication Rule in CLAUDE.md ("Before any inference that depends on interpretation of a brief artifact, run a one-line check for relevant auto-memory or prior context.") — decision deferred to post-recovery.
+
+*Source: 2026-05-26 in-session founder pushbacks on two distinct AP#7-shape instances. Both involved agent failing to apply available context at the inference moment despite the context being technically loaded. Cousins: anti-pattern #7 sub-(e) trust-without-verification (this is the cousin "trust-without-checking-loaded-context" sub-shape).*
+
+
 ### Framework hosts primitives, roadmap composes them — the universal-product-model test as the gate
 
 When designing a new mechanism (skill, hook, scheduled task, validator check), the architectural placement question is:
