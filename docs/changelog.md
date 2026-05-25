@@ -6,6 +6,38 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.29.0 — Metrics-pull anomaly → devils-advocate auto-chain
+
+**2026-05-25. Attribution: metrics-pull-anomaly-devils-advocate-chain.**
+
+First compound-dogfood mechanism shipping framework-side after an architectural sharpening session: **framework hosts primitives, roadmap composes them into operations**; framework-side mechanisms must pass the **universal-product-model test** (does this serve any adopter regardless of what product they're building?).
+
+Of six compound-exercise candidates surfaced in the session, only #4 passes the test:
+- ✅ **#4 anomaly → devils-advocate** — framework-side (universal evidence-discipline value)
+- ❌ #2 compound retrospective — roadmap-side (composes framework skills on Mycelium-team cadence)
+- ❌ #3 scrape watch — roadmap-side (targets `haabe/mycelium` specifically)
+- ❌ #5 cohort-of-one friction walk — roadmap-side (Mycelium-team measurement)
+- ❌ #6 trio-coverage on commits — roadmap-side (generalized trio-coverage already lives as a theory gate; my version was framework-team-specific)
+
+**Shipped**: new **Step 10** in `/mycelium:metrics-pull` SKILL.md. When the combined report flags an anomaly with an *inferred explanation* (prose like "Plausible drivers (Unverified):", "Possible cause:", "Likely driver:"), the skill automatically follows `/mycelium:devils-advocate` Technique 4 (Attribution-vs-Consistency Check) against each inference **before presenting the report to the user**.
+
+For each inferred explanation, Step 10 produces:
+- A one-sentence restate of the inference
+- Per-evidence labels: `cleanly-attributed | consistency-only | unrelated`
+- An `evidence_status` field: `verified | consistency_only | unverified`
+- Generated contrarian reads (≥1 alternative explanation fitting the same data)
+- A recommendation: accept-as-verified | downgrade-to-Unverified | escalate | discard
+
+If any inference is `consistency_only` AND the user is about to append a candidate evidence entry (Step 8) referencing it, Step 10 prompts explicitly: "Append as Unverified in canvas, OR investigate further, OR drop?" No silent canvas-write of consistency-only inferences framed as established cause.
+
+**Skip cleanly** if the report flagged no anomalies, or if all anomalies are raw observations without inferred explanation (Technique 4 challenges *explanations*, not *observations* — honest "X happened, no idea why" is fine).
+
+**Auto-tracks**: if `.claude/memory/cluster-instances.md` has a `consistency-as-evidence` cluster section (graduated 2026-05-09), Step 10 appends one entry per downgrade to the cluster's instance log. Automates the AP#7 sub-(g) accounting that today's session had to do manually for the Google-ratio inference and 5-24 unique-cloner spike.
+
+**Universal-product-model fit**: the AP#7 sub-(g) risk (anchoring on a single inference without contrarian examination) applies to any Mycelium adopter writing evidence to canvas from metric data — whether the product is SaaS, course, AI tool, or service. Not Mycelium-team-specific. No dogfood-mode toggle needed.
+
+**MINOR per version-discipline**: new feature surface on existing skill (Step 10 added); backward-compatible (additive; existing Steps 1-9 unchanged).
+
 ## v0.28.0 — Skill framework-dependency frontmatter
 
 **2026-05-25. Attribution: skill-framework-dependency-frontmatter.**
