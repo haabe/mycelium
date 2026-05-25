@@ -2,6 +2,9 @@
 .DS_Store
 Thumbs.db
 
+# MCP tool caches (per-session scratch dirs from MCP servers like playwright)
+.playwright-mcp/
+
 # Editor files
 *.swp
 *.swo
