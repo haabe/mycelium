@@ -77,6 +77,37 @@ The naming convention promises **temporal ordering** (after fires later than bef
 
 _Patterns for diamond management, theory gate navigation, and workflow coordination._
 
+### Framework hosts primitives, roadmap composes them — the universal-product-model test as the gate
+
+When designing a new mechanism (skill, hook, scheduled task, validator check), the architectural placement question is:
+
+> **Does this mechanism serve any Mycelium adopter's product-delivery workflow, regardless of what product they're building, without requiring a "dogfood-mode" toggle?**
+
+If **yes** → framework-side. Ship in `plugins/mycelium/` and it travels to every adopter via `/plugin install`. This is the **universal-product-model test**.
+
+If **no** (only useful for the Mycelium team operating on Mycelium-the-product, OR only useful in specific dogfood contexts) → **roadmap-side** (or the adopter's analogous ops dir). Live in `mycelium-roadmap/.claude/auto-dogfood/` or equivalent. Compose framework skills via `claude -p` non-bare from a wrapper script; schedule via launchd/cron/Actions.
+
+**Why this matters**: the framework distribution is inherited by every adopter at install time. Mycelium-team operational concerns embedded in the framework (scheduled scrape-watches targeting `haabe/mycelium`, retrospective skills tuned to OUR commit cadence, trio-coverage hooks specifically auditing OUR framework MINOR bumps) become invisible context-mismatches for downstream users — kin to the same epistemic risk we shipped `framework_dependency` frontmatter (v0.28.0) to address in the opposite direction. The architectural separation also protects the open-source-learning-project trajectory: embedded scheduled-headless-cron infrastructure pushes the framework toward a service-shape that the trajectory commitment explicitly rejects.
+
+**Concrete test results from the design session 2026-05-25** (six compound-dogfood candidates surfaced from "how do we improve auto-dogfooding"):
+
+| Compound | Test result | Placement |
+|---|---|---|
+| #4 anomaly → devils-advocate auto-chain | ✅ Passes — AP#7 sub-(g) risk applies to any adopter writing canvas evidence from metrics, regardless of product type | Framework-side (shipped v0.29.0 as `/metrics-pull` Step 10) |
+| #2 compound retrospective | ❌ Fails — composes framework skills on Mycelium-team cadence against Mycelium-team commit history | Roadmap-side |
+| #3 scrape watch | ❌ Fails — target (`haabe/mycelium`) is Mycelium-team-specific | Roadmap-side |
+| #5 cohort-of-one friction walk | ❌ Fails — Mycelium-team measurement | Roadmap-side |
+| #6 trio-coverage on commits | ❌ Fails — auditing framework-modification commits is team-specific; generalized trio-coverage already exists as a theory gate at diamond transitions | Roadmap-side |
+
+**Hooks DO live inside the framework** (PostToolUse, SessionStart, etc.) and are absolutely automation — so "automation lives inside" is partially true. The distinction is: framework-internal automation is **event-driven on user action and universally relevant**; roadmap-side automation is **scheduled, autonomous, and Mycelium-team-specific**.
+
+**Anti-pattern**: shipping mechanisms behind a `dogfood_mode: true` toggle is a smell. If a toggle is needed to justify framework-side residence, the mechanism's universal value couldn't be justified — which means it belongs roadmap-side, no toggle.
+
+**Generalizable for any adopter**: this isn't a Mycelium-team-only architectural rule. Every adopter has (or should have) an ops/roadmap analogue — a place where their own dogfood loops and scheduled compositions live, separate from the framework primitives. The framework/roadmap split is itself a Mycelium architectural pattern.
+
+*Source: Architectural sharpening session 2026-05-25 in conversation context, prompted by founder's "I am scared of introducing autodogfooding into Mycelium. I think it should live outside." Initial proposal had 4 of 6 compounds framework-side; user pushback sharpened the test; final classification put only 1 framework-side. v0.29.0 shipped the lone framework-side compound (`/metrics-pull` Step 10 anomaly chain) as the worked example. Cousins: anti-pattern #7 sub-class (e) trust-without-verification (architectural-trust shape) + `framework_dependency` frontmatter v0.28.0 (the inverse epistemic boundary — skills protected from running outside framework context; framework protected from carrying team-specific automation inside).*
+
+
 ### Spawn child diamonds at strategic-events density, not parent confidence completion
 
 When a parent diamond's confidence reaches its **effective threshold** (after `project_type` and `dogfood` adaptations) AND multiple strategic events arrive that require child-scale framing, spawn the child immediately rather than waiting for parent → Complete. Don't conflate "L0 at threshold" with "L0 done"; they're different conditions, and the child diamond exists precisely to handle work the parent's scale can't hold.
