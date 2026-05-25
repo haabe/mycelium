@@ -2,9 +2,57 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-05-23.
+**Last updated**: 2026-05-25.
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
+
+## v0.28.0 — Skill framework-dependency frontmatter
+
+**2026-05-25. Attribution: skill-framework-dependency-frontmatter.**
+
+Triggered by investigating an unexplained Google referrer signal in `/metrics-pull` #36/#37 (13:1 visits/unique persisted 2 consecutive days). Hunt surfaced **`majiayu000/claude-skill-registry`** (336 stars, MIT, actively maintained): a Chinese-language Claude Code skills aggregator that has scraped all 49 Mycelium skills as separate registry entries with names like `setup-haabe-mycelium`, `interview-haabe-mycelium`, `four-risks-haabe-mycelium`, indexed across three Google-visible surfaces (GitHub repo + `skills-registry-web.vercel.app` + `majiayu000.github.io/claude-skill-registry/`).
+
+**The registry behaves responsibly**: source_url, repo, and author preserved verbatim; original SKILL.md content + frontmatter intact; license conservatively classified as `NOASSERTION / distribution: restricted` because the crawler missed the LICENSE file at repo root (Mycelium's MIT license lives in `plugins/mycelium/`). The conservative classification actively discourages downstream redistribution.
+
+**The remaining risk**: a user finding e.g. `four-risks-haabe-mycelium` via Google and running it standalone gets a skill that assumes canvas + gates + harness it cannot find. Most skills will partial-fail gracefully but the misfire will read as "Mycelium is broken" to someone who never installed the framework.
+
+**Shipped**: two fields under `metadata:` in every SKILL.md:
+
+```yaml
+metadata:
+  framework_dependency: "mycelium"
+  framework_dependency_note: "This skill is designed to run within the Mycelium framework (https://github.com/haabe/mycelium). Standalone use will skip the canvas state, theory gates, and harness behavior the skill assumes. Install: /plugin install mycelium@haabe/mycelium."
+```
+
+**Properties**:
+- Invisible to in-framework users (Claude Code does not render `metadata:` as user-facing text).
+- Machine-readable for any scraper/registry consumer.
+- Propagates wherever the frontmatter goes (the registry preserves frontmatter; see `audit_category_quality.py --include-frontmatter`).
+- Spec-compliant per agentskills.io (custom fields under `metadata:` are spec-allowed; same pattern as the v0.23.36 `instruction_budget` migration).
+
+**Mechanical sweep**: 49 files modified in one pass, no body content changed. 45 skills had a pre-existing `metadata:` block (fields appended); 4 skills had no `metadata:` block (fresh one added). All 49 frontmatters re-parse via PyYAML post-edit.
+
+**MINOR per version-discipline**: new feature surface on skill metadata (framework-dependency declaration); backward-compatible.
+
+## v0.27.0 — Check 35: empty-fixture-dir prospective guard
+
+**2026-05-24. Attribution: empty-fixture-dir-check.**
+
+Today's silent-skip cascade twice (v0.26.4 + v0.26.7) hit the same root: empty fixture directories vanish from git, surface as fixture-not-found failures on CI. The `.gitkeep` sweeps closed both incidents reactively. **v0.27.0 closes the failure mode prospectively.**
+
+**New Check 35** in `tests/validate-template.sh`:
+
+```
+tests/bash/fixtures/ — no empty directories
+```
+
+Every fixture directory must contain a real fixture file OR an explicit `.gitkeep`. Empty dirs FAIL the validator (loud) instead of silently shipping to CI (mysterious fixture-not-found).
+
+**G-V12 coverage**: `tests/bash/test_check_35.sh` with three cases (flags empty dir, passes when `.gitkeep` present, N/A when fixtures dir absent). Empty-dir failure-case fixture is materialized at test time via `mkdir` (committing the empty state IS the bug under test).
+
+**Bash test count**: 23 → 24 files.
+
+**MINOR per version-discipline**: new validator check + new feature surface; backward-compatible (additive — pre-existing fixture dirs already have content or `.gitkeep` from the v0.26.7 sweep).
 
 ## v0.26.7 — Empty fixture dir sweep (test_check_27 + defensive)
 

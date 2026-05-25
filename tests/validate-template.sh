@@ -1405,6 +1405,41 @@ check_manifest_byte_match() {
 }
 
 # ============================================================
+# CHECK 35: tests/bash/fixtures — no empty directories
+# ============================================================
+# Empty fixture directories cause silent test-skip failures in CI: git does
+# not track empty dirs, so a locally-passing test setup ships as a CI failure
+# ("fixture not found"). Recurred twice in 24h on 2026-05-24 (v0.26.4
+# check_12/check_14 empty dirs; v0.26.7 check_27 empty dir + 17 .gitkeep
+# defensive sweep). This check makes the failure mode loud at validation
+# time instead of at CI time. Every fixture dir must either contain a real
+# fixture file OR a .gitkeep placeholder.
+check_no_empty_fixture_dirs() {
+    section "Check 35: tests/bash/fixtures — no empty directories"
+
+    local fixtures_dir="tests/bash/fixtures"
+    if [ ! -d "$fixtures_dir" ]; then
+        info "tests/bash/fixtures absent — Check 35 N/A"
+        return
+    fi
+
+    local empty_dirs
+    empty_dirs=$(find "$fixtures_dir" -type d -empty 2>/dev/null | sort)
+
+    if [ -z "$empty_dirs" ]; then
+        pass "Check 35: 0 empty directories under $fixtures_dir"
+    else
+        local n
+        n=$(echo "$empty_dirs" | wc -l | tr -d ' ')
+        fail "Check 35: ${n} empty directory(ies) under $fixtures_dir (git will silently omit these; CI will fail with fixture-not-found):"
+        while IFS= read -r d; do
+            echo "    - $d"
+        done <<< "$empty_dirs"
+        echo "    Fix: populate with a fixture file, OR add '.gitkeep' if the empty state IS the fixture (e.g., 'directory missing' negative test)."
+    fi
+}
+
+# ============================================================
 # RUN ALL CHECKS
 # ============================================================
 #
@@ -1450,6 +1485,7 @@ check_canvas_write_preflight
 check_four_risks_when_active
 check_plugin_identifier_leak
 check_claudemd_single_version_entry
+check_no_empty_fixture_dirs
 
 # ============================================================
 # SUMMARY
