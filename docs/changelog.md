@@ -2,9 +2,39 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-05-25.
+**Last updated**: 2026-05-26.
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
+
+## v0.30.0 — Cursor 1.7+ and Codex CLI hook adapters
+
+**2026-05-26. Attribution: cursor-codex-hook-adapters.**
+
+Two new runtime adapters land alongside Claude Code (primary) and opencode (extended, deferred): **Cursor 1.7+** and **OpenAI Codex CLI**. Both upstream hook systems are near-supersets of Claude Code's, so Mycelium's twelve hook scripts run unmodified on both runtimes.
+
+**Cursor 1.7+**
+- Exports `CLAUDE_PROJECT_DIR` as an env alias — explicit upstream signal that Claude Code scripts should run unmodified.
+- Ships native `postToolUseFailure` (the very event opencode lacks). Full reflexion-gate coverage.
+- Event names are camelCase (`preToolUse` vs Claude's `PreToolUse`); stdin field names (`tool_name`, `tool_input`, `file_path`, `cwd`, `command`) are identical to Claude Code.
+- `UserPromptSubmit` ≡ Cursor's `beforeSubmitPrompt`.
+- Adapter: `plugins/mycelium/hooks/hooks.cursor.json` with `failClosed: true` on safety-critical hooks.
+
+**OpenAI Codex CLI**
+- Deliberately clones Claude Code's PascalCase event vocabulary — `PreToolUse`, `PostToolUse`, `SessionStart`, `UserPromptSubmit`, `Stop`, `PreCompact`, etc.
+- Stdin field names align byte-for-byte with Claude Code.
+- One gap: no native `PostToolUseFailure`. Failures still surface in `PostToolUse` with the error captured in `tool_response`.
+- Adapter: `plugins/mycelium/hooks/hooks.codex.json` plus `codex-postfailure-shim.sh` — a 25-line stdin filter that inspects `tool_response` for `success: false / error / exit_code != 0 / is_error` and delegates to `reflexion-gate.sh` only on failure. Mechanically equivalent to a native failure event for Mycelium's purposes.
+- Codex does not auto-export `CLAUDE_PROJECT_DIR`; shell-level export required (documented in integration page).
+
+**Docs**: `docs/integrations/cursor.md` and `docs/integrations/codex.md` mirror the opencode.md structure with honest gap labeling.
+
+**Honesty caveat**: claim that adapters work end-to-end is **consistency-only** — verified against upstream hook docs as of 2026-05-26 but no live runtime test executed yet. Integration pages invite PR-based receipts per anti-pattern #7 discipline.
+
+**Calibration**: opencode adapter remains deferred behind 3 upstream issues (#27899/#27900/#27901). Cursor and Codex have those primitives natively, so both ports are trivial — ~1 session each, scripts reused verbatim.
+
+**MINOR per version-discipline**: new feature surface (two new hook configs + shim + two integration docs); backward-compatible (additive; no existing hook config touched; Claude Code remains primary runtime).
+
+---
 
 ## v0.29.0 — Metrics-pull anomaly → devils-advocate auto-chain
 

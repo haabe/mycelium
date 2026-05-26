@@ -1,0 +1,119 @@
+{
+  "_description": "Mycelium hooks for OpenAI Codex CLI. Event names match Claude Code (PascalCase) — Codex deliberately cloned that vocabulary. Stdin field names (tool_name, tool_input, cwd, tool_response) align with Claude Code's. Scripts in this directory are reused verbatim; Codex does not export CLAUDE_PROJECT_DIR, so set it once in your shell or wrap invocations. Codex has no native PostToolUseFailure — reflexion-gate is invoked via PostToolUse and short-circuits when tool_response shows no error (see codex-postfailure-shim.sh). Symlink or copy this file to <repo>/.codex/hooks.json (or ~/.codex/hooks.json for user-level).",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit|edit|write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/gate.sh",
+            "timeout": 5,
+            "statusMessage": "Mycelium preflight gate + secret scan"
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/scope-gate.sh",
+            "timeout": 5,
+            "statusMessage": "Mycelium scope enforcement"
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/framework-guard.sh",
+            "timeout": 5,
+            "statusMessage": "Mycelium framework-guard (dogfood-mode only)"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash|shell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/framework-guard.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit|edit|write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/post-write-nudge.sh",
+            "timeout": 3
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/change-log.sh",
+            "timeout": 3
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/diamond-state-audit.sh",
+            "timeout": 3
+          }
+        ]
+      },
+      {
+        "matcher": "Read|read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/read-log.sh",
+            "timeout": 3
+          }
+        ]
+      },
+      {
+        "matcher": "Bash|shell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/codex-postfailure-shim.sh",
+            "timeout": 10,
+            "statusMessage": "Reflexion: checking failure relevance (Codex shim)"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/stop-check.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/session-start.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/preflight.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

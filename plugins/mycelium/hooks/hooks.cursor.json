@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "_description": "Mycelium hooks for Cursor 1.7+. Translation of hooks.json (Claude Code) to Cursor's camelCase event names. Scripts in this directory are reused verbatim — Cursor exports CLAUDE_PROJECT_DIR as an env alias and the stdin JSON field names (tool_name, tool_input, file_path, command, cwd) match Claude Code's. Native postToolUseFailure means full reflexion-gate coverage. Symlink or copy this file to <project>/.cursor/hooks.json (or ~/.cursor/hooks.json for user-level).",
+  "hooks": {
+    "preToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit|edit|write",
+        "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/gate.sh",
+        "type": "command",
+        "timeout": 5,
+        "failClosed": true
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit|edit|write",
+        "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/scope-gate.sh",
+        "type": "command",
+        "timeout": 5
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit|edit|write|Bash|shell|mcp__filesystem__(write_file|edit_file|move_file)",
+        "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/framework-guard.sh",
+        "type": "command",
+        "timeout": 5
+      }
+    ],
+    "postToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit|edit|write",
+        "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/post-write-nudge.sh",
+        "type": "command",
+        "timeout": 3
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit|edit|write",
+        "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/change-log.sh",
+        "type": "command",
+        "timeout": 3
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit|edit|write",
+        "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/diamond-state-audit.sh",
+        "type": "command",
+        "timeout": 3
+      },
+      {
+        "matcher": "Read|read",
+        "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/read-log.sh",
+        "type": "command",
+        "timeout": 3
+      }
+    ],
+    "postToolUseFailure": [
+      {
+        "matcher": "Bash|shell",
+        "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/reflexion-gate.sh",
+        "type": "command",
+        "timeout": 10
+      }
+    ],
+    "stop": [
+      {
+        "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/stop-check.sh",
+        "type": "command",
+        "timeout": 5
+      }
+    ],
+    "sessionStart": [
+      {
+        "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/session-start.sh",
+        "type": "command",
+        "timeout": 5
+      }
+    ],
+    "beforeSubmitPrompt": [
+      {
+        "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/preflight.sh",
+        "type": "command",
+        "timeout": 5
+      }
+    ]
+  }
+}
