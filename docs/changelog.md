@@ -6,6 +6,29 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.31.1 — Post-build silence nudge
+
+**2026-05-26. Attribution: post-build-silence-nudge.**
+
+Surgical PATCH addressing one carry-forward from cohort-tester-2's friction log (mycelium-roadmap decision-log 2026-05-26): after a build/POC produces working code, the framework "just stopped and didn't prompt for more info or advise me what to do next."
+
+**Closes** the post-build silence seam with a single addition to `/mycelium:diamond-progress` SKILL.md: an explicit next-steps offer-menu at any Develop→Deliver transition (or any moment a build produces working code):
+
+1. `/mycelium:security-review`
+2. `/mycelium:threat-model`
+3. `/mycelium:definition-of-done`
+4. `/mycelium:reflexion`
+5. Refine the spec
+6. Ship as-is (explicit decision, record reason)
+
+Cites the risk shapes that fired during bootstrap per CLAUDE.md attribution rule. Never auto-invokes; offer-menu only, consistent with v0.31.0's "framework offers menu, never pushes tools" principle.
+
+**Deferred** (other tester-2 carry-forwards): framework-wide output density ("brain fried from gigantic walls of text") and L0-L2 discoverability hardening (skill-name vocabulary, re-entry naming). Both require design, not single-edit pattern extension. Deferred to post-surgery synthesis pass per `health-surgery-window` auto-memory.
+
+**PATCH per version-discipline**: additive extension to one existing skill, no new files, no new feature surface, backward-compatible.
+
+---
+
 ## v0.31.0 — JIT tooling: 4-layer adoption composition
 
 **2026-05-26. Attribution: jit-tooling-4-layer-composition.**

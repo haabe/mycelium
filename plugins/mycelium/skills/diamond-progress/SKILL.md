@@ -359,6 +359,24 @@ After EVERY successful transition (not just Deliver->Complete):
 
 Draft entries for the user. Present for confirmation before saving. This captures learning at the moment of discovery, not retrospectively.
 
+## Post-Build Next-Steps Nudge (Develop → Deliver, and after any build/POC produces working code)
+
+After any transition that produces working code (Develop→Deliver, or the moment the agent finishes a build/POC inside Develop), emit an explicit next-steps nudge. Closes the **post-build silence** friction surfaced by cohort-tester-2 (mycelium-roadmap decision-log 2026-05-26): framework completed POC and "just stopped and didn't prompt for more info or advise me what to do next."
+
+Format:
+
+> Build complete. What's next?
+> 1. `/mycelium:security-review` — OWASP-shaped review of the code just produced (recommended if any risk shape fired during `/mycelium:delivery-bootstrap`)
+> 2. `/mycelium:threat-model` — STRIDE pass if the spec involves auth, data handling, file upload, or external boundaries
+> 3. `/mycelium:definition-of-done` — checklist before declaring shippable
+> 4. `/mycelium:reflexion` — if anything in the build felt unstable, run the self-critique loop
+> 5. Refine the spec — was the original ask correct, or did the build reveal a gap?
+> 6. Ship as-is — explicit decision to deploy without further review (record reason)
+>
+> If unclear, my recommendation is: {pick based on risk shapes fired earlier, default `/mycelium:security-review`}.
+
+Cite the risk shapes that fired during bootstrap (per CLAUDE.md attribution rule). Never auto-invoke; offer-menu only.
+
 ---
 
 ## Theory Citations
