@@ -6,6 +6,50 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.31.0 — JIT tooling: 4-layer adoption composition
+
+**2026-05-26. Attribution: jit-tooling-4-layer-composition.**
+
+### Motivation
+
+Three test cycles spawning junior-developer subagents on different stacks (Python Flask auth, Node Express notes, Go stdlib upload, Python Flask gallery, Node Express admin) revealed that Mycelium's JIT-tooling subsystem was effectively silent at project bootstrap: it documented *what tools exist per stack* in `security-scanning.md` but never surfaced that menu to the user. Result: of 8 deliberately-planted bugs in the baseline Python test, 1 was caught by tools that happened to be already installed.
+
+### The principle (founder)
+
+Framework **offers menu, never pushes tools**. The framework does not know the user's language, purpose, dev-loop preferences, machine constraints, or pre-existing toolchain opinions. Auto-install / default-ruleset / starter-pack approaches are ruled out as over-reach. See auto-memory `feedback-jit-nudge-not-push` (2026-05-26).
+
+### The composition (deep study)
+
+A deep comparison of 10 adoption approaches against industry evidence and Mycelium's constraints found this four-layer composition uniquely fits the principle while patching each single-approach failure mode:
+
+1. **OFFER-MENU at bootstrap, smallest-friction first** — `delivery-bootstrap` SKILL.md Step 3a presents the stack-matched menu (secrets → lint → SAST → dep audit → container scan) and asks once, per tool. Declines logged for later re-surfacing.
+2. **RISK-TRIGGERED re-offer** — Step 3b scans code for risk shapes (AUTH, AI, PII, public-endpoint, file-upload) and re-surfaces the relevant subset with the risk as citation. Patterns include trust-bearing headers (`x-user-id`, `x-role`), upload signals (`multipart`, `FormFile`, `ServeFile`), PII fields, AI-component imports. Strongest single-evidence lever: contextual nudges at decision moments produce ~8× higher detection (Less is More, arxiv 2202.04586; *consistency_only*).
+3. **NUDGE-AT-FAILURE** — `security-review`, `reflexion` SKILL.md now append "this class of bug is what `{tool}` catches automatically — want help wiring it up now?" when a finding surfaces that a standard tool would have caught. Converts demonstrated-value moments into low-friction install consent.
+4. **PR-TIME gap flag** — `definition-of-done` SKILL.md Security checklist surfaces "closing this diamond without SAST coverage; gap is on the record" as visible (non-blocking) finding.
+
+### SAST coverage honesty (cycle-3 finding)
+
+Layer 2 explicitly labels SAST blind spots inline: identity-trust design, authorization-presence checks, MIME confusion, business-logic flaws, and ownership checks are design-level concerns invisible to pattern-matching SAST. Cycle 3 confirmed the value: a Node admin dashboard with self-promote-to-admin (any user can `POST /me/update-role {role:"admin"}`) passed every SAST tool clean (eslint-security 0, npm audit 0, gitleaks 0). Without the disclosure, a junior sees 3× green and merges. With the disclosure, the bootstrap output says explicitly "SAST will return clean here — `/mycelium:security-review` is the gate for this class."
+
+### Files
+
+- `plugins/mycelium/skills/delivery-bootstrap/SKILL.md` — Steps 3a/3b + Step 6 "Recommended Next Skills" output
+- `plugins/mycelium/skills/security-review/SKILL.md` — NUDGE-AT-FAILURE section
+- `plugins/mycelium/skills/reflexion/SKILL.md` — NUDGE-AT-FAILURE rule
+- `plugins/mycelium/skills/definition-of-done/SKILL.md` — PR-TIME gap flag
+- `plugins/mycelium/jit-tooling/adoption-strategy.md` — NEW; documents the composition, why-not-alternatives, SAST coverage table
+
+### Honesty caveats
+
+- 5 test runs across 4 stacks = *consistency_only*. Strong signal across heterogeneous PoCs, not a controlled study.
+- The 8× detection finding is from a single experimental study (small N, lab conditions).
+- Tool-catch rate is a noisy metric across stacks because worker subagent discipline varied substantially (Go worker wrote defensive code unprompted; Python workers shipped `debug=True` twice). Framework changes don't normalize worker quality — only review can.
+- The composition was not validated in production with real users; the design is theory-backed but the adoption-rate claim is *unverified*.
+
+**MINOR per version-discipline**: new feature surface on existing skills + 1 new framework-doc file; backward-compatible (additive; existing bootstrap steps unchanged; user owns all install consent).
+
+---
+
 ## v0.30.0 — Cursor 1.7+ and Codex CLI hook adapters
 
 **2026-05-26. Attribution: cursor-codex-hook-adapters.**

@@ -46,6 +46,22 @@ Just-in-Time tech stack detection and setup.
    - Run lint command
    - Note any failures or warnings
 
+3a. **Offer the feedback-loop tooling menu** (OFFER-MENU layer):
+   - For the detected stack, present the best-practice menu from `${CLAUDE_PLUGIN_ROOT}/jit-tooling/security-scanning.md` (SAST, dep audit, secrets, test runner, linter), **ordered smallest-friction first** (typically: secrets scan → linter → SAST → dep audit → container scan).
+   - Frame as: *"Best practice is to have tools help you shorten the feedback loop. For your detected stack ({lang}), the menu is: {list}. Want help finding and configuring any of these?"*
+   - **Never auto-install. Never pick rulesets on the user's behalf.** Adoption is per-tool, per-consent. The user owns the choice. See `feedback-jit-nudge-not-push` (founder principle, 2026-05-26).
+   - If user declines or defers, record the offer in `active-stack.yml` under `tooling_offers_declined` with timestamp — later shape-triggers (Step 3b) can re-surface the relevant subset.
+
+3b. **Risk-shape re-offer** (RISK-TRIGGERED layer):
+   - Scan code for risk-shape patterns. If any fires AND the corresponding tool was declined in 3a, re-offer the relevant subset with the risk as citation. Patterns:
+     - **AUTH shape**: `/login`, `/auth`, `/register`, `password`, `session`, `token`, `jwt`, `oauth`, `x-user-id` and similar trust-bearing headers → re-offer SAST + suggest `/mycelium:threat-model` and `/mycelium:security-review`. **SAST blind spot**: identity-trust design (e.g., `x-user-id` header trusted as auth) is NOT catchable by SAST tools — they don't model intent. Route to `/mycelium:security-review` regardless of whether SAST consent was given.
+     - **AI shape**: imports from `ai_components` categories per detector.md Step 1c → suggest `/mycelium:xai-check`
+     - **PII / data shape**: `email`, `ssn`, `phone`, `address`, `payment`, `card`, schema fields matching PII patterns → suggest `/mycelium:privacy-check` + secrets scanner
+     - **Public endpoint shape**: routes without auth middleware → suggest SAST + DAST. **SAST blind spot**: "no authorization check" is design-level; SAST can flag suspicious patterns but cannot confirm absence-of-intent. Route to `/mycelium:security-review`.
+     - **File-upload shape**: `upload`, `multipart`, `FormFile`, `ServeFile`, `ServeContent`, `Content-Disposition`, file-system write from request → re-offer SAST + suggest `/mycelium:threat-model` with explicit MIME-allowlist + filename-sanitization + size-cap + overwrite-policy review. **SAST partial coverage**: gosec/semgrep catch path-traversal (`filepath.Join` without `Base`), but cannot catch design flaws (MIME confusion via stored files, public-list disclosure, missing auth).
+   - Cite the trigger explicitly per CLAUDE.md attribution rule: `(per: AUTH shape detected at app.py:42 → SAST recommended)`.
+   - The 4-layer composition (OFFER-MENU + RISK-TRIGGERED + NUDGE-AT-FAILURE + PR-TIME) is derived from a deep-study comparison of 10 adoption approaches (2026-05-26). Strongest single-finding: contextual nudges at decision moments produce ~8× higher detection vs no-nudge baseline (Less is More, arxiv 2202.04586; *consistency_only* — single experimental study). Other layers live in `/mycelium:security-review`, `/mycelium:threat-model`, `/mycelium:reflexion` (NUDGE-AT-FAILURE) and `/mycelium:definition-of-done` (PR-TIME).
+
 4. **Document existing patterns**:
    - Code organization (monorepo, src layout, etc.)
    - Naming conventions
@@ -108,6 +124,14 @@ Just-in-Time tech stack detection and setup.
    - Scaffolded: yes/no
    - Location: docs/adr/
    - Pending decisions: [list if any identified during bootstrap]
+
+   ## Risk Shapes Detected
+   - [list of risk shapes fired in Step 3b, with citations]
+
+   ## Recommended Next Skills
+   - [if AUTH / public-endpoint / file-upload / PII shape fired] → run `/mycelium:security-review` before merging (per: SAST blind spot — identity/authorization/business-logic flaws aren't tool-catchable)
+   - [if AI shape fired] → run `/mycelium:xai-check`
+   - [if PII shape fired] → run `/mycelium:privacy-check`
    ```
 
 ## Rules

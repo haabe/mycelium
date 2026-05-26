@@ -59,6 +59,7 @@ These clauses address two documented Mycelium failures: **Eval Overfitting** (20
 - [ ] Authentication/authorization verified
 - [ ] Dependency scan clean (no high/critical vulnerabilities)
 - [ ] OWASP Top 10:2025 addressed for this feature
+- [ ] **JIT-tooling gap flag** (PR-TIME layer): if no SAST equivalent ran in the validation suite, surface as a visible (non-blocking) finding — *"Closing this diamond without SAST coverage. Best-practice menu was offered at bootstrap; gap is on the record."* Don't block; do make the absence visible. Per the 4-layer JIT composition (delivery-bootstrap 3a/3b + reflexion/security-review NUDGE-AT-FAILURE + this PR-TIME layer; deep-study 2026-05-26).
 
 ### Accessibility
 - [ ] Semantic HTML used correctly
