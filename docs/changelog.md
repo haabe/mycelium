@@ -6,6 +6,65 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.31.2 — BLUF + Footnote output convention
+
+**2026-05-26. Attribution: bluf-footnote-output-convention.**
+
+Second carry-forward from cohort-tester-2's friction log (mycelium-roadmap decision-log 2026-05-26) closed. The tester reported being "brain fried from gigantic walls of text" — framework-wide, not skill-specific.
+
+### Diagnosis (deep cross-angle research)
+
+Not a verbosity problem. A **layering** problem. Discipline-visibility metadata (citations, attribution labels, why-not-alternatives, anti-pattern references, recommended next skills, bias warnings) is currently emitted at the same fidelity, visual hierarchy, and emission as the actionable claim. Cognitive load theory predicts the result: working memory holds ~4 chunks (Cowan 2001); current emissions front-load 20+ simultaneously, displacing the cognitive budget from the actual decision.
+
+### Solution: G-C1 — BLUF + Footnote convention
+
+New `NUDGE`-level guardrail in `plugins/mycelium/harness/guardrails-core.md` plus corresponding clause in `CLAUDE.md` Communication Rules. Every emission with discipline-visibility metadata layers in three blocks:
+
+1. **BLUF** (1-2 lines, plain register): actionable claim — verdict, recommendation, finding. No inline citations, no attribution labels, no theory name-drops. Reader who stops here has the answer.
+2. **Rationale** (scannable middle): why the claim holds. No attribution metadata inline.
+3. **Discipline notes** (under `---` rule): citations, `verified | consistency_only | unverified` labels, why-not-alternatives, recommended next skills, anti-pattern cross-references. Load-bearing — NOT removed — but lives below the fold where readers who don't need it can skip without scanning cost.
+
+For checklist skills: lead with verdict + top-3 findings; full per-category checklist under the rule. For decisions: why-not-alternatives collapses to one summary line in the body, expanded in the trailing block.
+
+Convention is a nudge, not a limit. 3-line and 50-line emissions both satisfy it as long as layering holds. Audience-tier sensitivity encouraged (junior/designer/non-native English → plainer register; theory-fluent → denser trailing block acceptable).
+
+### Research basis
+
+- Sweller (cognitive load theory): intrinsic / extraneous / germane load split
+- Cowan 2001 (working memory ≈4 chunks, decay ~20s)
+- Nielsen NN/g (F-pattern scanning, first 11 words weighted)
+- Minto Pyramid Principle (top-down communication)
+- BLUF (military/business communication tradition)
+- W3C COGA + WCAG 3.0 cognitive accessibility working draft (summary-before-detail, chunked presentation, plain language)
+
+### Honest caveats
+
+- Chain "wall-of-text → comprehension failure → cohort attrition" is *consistency_only* at N=1 (cohort-tester-2). Convention is research-informed, not research-validated for the Claude Code / Cursor / Codex surface specifically.
+- "Caveats-after-conclusion increases trust" is *consistency_only* across technical-writing literature; no controlled Mycelium-surface study found.
+- Convention is inferentially enforced (Böckeler) — a future validator could grep for `---` + `Discipline notes:` presence but layering *quality* is judgment-bound. Structural enforcement deferred.
+- Does not reduce total token count meaningfully. Restructures, not strips. API-cost concerns require a separate lever.
+- Does not address SKILL.md internal density (agent-facing, consumed by model, not human).
+- Heterogeneous-audience tier discrimination is encouraged in prose but not auto-detected from canvas (structural item, deferred).
+
+A `/mycelium:prompt-optimizer` A/B against the convention is the right next step to close the consistency-only gap.
+
+### Why-not-alternatives
+
+- "Shorter everything" — strips theory-discipline; founder veto
+- Strict word/line limits — violates nudge-not-push; legitimate `/security-review` against 50KLOC can't fit in 200 words
+- `<details>`/`<summary>` collapsible UI — terminal/markdown surface, unreliable rendering across clients
+- Lite/full/ultra modes (Caveman pattern) — adds config dimension user has to remember
+- Separate `/summarize` post-skill — doubles emissions; fix at emission-time
+- Auto-tier from canvas — structural, not prose-convention scope
+
+### Deferred
+
+L0-L2 discoverability hardening (third tester-2 carry-forward — skill-name vocabulary, re-entry naming, per-skill output budgets) remains deferred to post-surgery synthesis per `health-surgery-window` auto-memory.
+
+**PATCH per version-discipline**: prose convention only, two files touched (`CLAUDE.md`, `guardrails-core.md`), no new files, additive, backward-compatible.
+
+---
+
 ## v0.31.1 — Post-build silence nudge
 
 **2026-05-26. Attribution: post-build-silence-nudge.**

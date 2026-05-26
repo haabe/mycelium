@@ -35,3 +35,20 @@ Every significant decision in the decision log must reference the specific theor
 **G-P7: Close the loop after every task batch** `REVIEW` `quality`
 After completing any batch of changes, before reporting done: (1) verify cross-repo consistency if changes span repos, (2) log corrections for any mistakes made, (3) log patterns for anything reusable, (4) update corrections.md TL;DR if new entries added. If the user has to ask whether this happened, the guardrail already failed.
 *Source: Hoskins Ch4 (friction logging), Argyris (double-loop learning)*
+
+## Communication (universal)
+
+**G-C1: Layer output — BLUF first, rationale next, discipline notes last** `NUDGE` `quality`
+Every emission with discipline-visibility metadata (citations, attribution labels, why-not-alternatives, recommended next skills, bias warnings, anti-pattern references) should layer in three blocks:
+
+1. **BLUF** (Bottom Line Up Front, 1-2 lines, plain register): the actionable claim — verdict, recommendation, finding, or next step. No inline citations. No attribution labels. No theory name-drops. A reader who stops here has the answer.
+2. **Rationale** (scannable middle block): why the claim holds. Short sentences. No attribution metadata inline. Theory references stay in the trailing block.
+3. **Discipline notes** (under a `---` rule, prefixed `Discipline notes:` or equivalent): citations, `verified | consistency_only | unverified` labels, why-not-alternatives, recommended next skills, anti-pattern cross-references, bias-cluster references, source attributions. Load-bearing — do NOT remove — but lives below the fold where readers who don't need it can skip without scanning cost.
+
+For checklist skills (`/security-review`, `/a11y-check`, `/definition-of-done`): lead with overall verdict + top-3 findings; full per-category checklist goes under the rule.
+
+For decisions/recommendations: why-not-alternatives collapses to one summary line in the body ("considered N alternatives — see notes below"), expanded in the trailing block.
+
+Convention is a nudge, not a limit: a 3-line emission and a 50-line emission both satisfy it as long as the layering holds. Audience-tier sensitivity encouraged — junior / designer / non-native English reader → plainer register; theory-fluent reader → denser trailing block acceptable.
+
+*Source: Sweller (cognitive load theory) + Cowan 2001 (working memory ≈4 chunks) + Nielsen NN/g (F-pattern scanning) + Minto Pyramid Principle + BLUF (military/business comms) + W3C COGA + WCAG 3.0 cognitive accessibility working draft. Graduated 2026-05-26 from cohort-tester-2 friction log ("brain fried from gigantic walls of text"). The chain "wall-of-text → comprehension failure → cohort attrition" is `consistency_only` at N=1 — convention is research-informed, not research-validated for this surface; a `/mycelium:prompt-optimizer` A/B is the right next step.*
