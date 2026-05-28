@@ -6,6 +6,21 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.31.4 — Contributor credit + receipts (Frida, Alex)
+
+**2026-05-28. Attribution: contributor-credit-receipts. Class: maintenance-housekeeping.**
+
+Doc-only credit backfill following `/framework-health`. Two cohort contributors who had shaped the framework were not yet credited by name — both consented on 2026-05-26. This release names them and writes the receipts.
+
+- **CONTRIBUTORS.md**: Frida (`v0.23.9 — First-run friction batch`: the hook-output-leak bug, brief revision_note/confidence_note preservation, README time-budget fix, L0 confidence-formula display, vocabulary leak; plus the cohort-tester-1 "terminology is written for people who already know the frameworks" finding) and Alex (`v0.31.x`: post-build silence, walls-of-text, vocabulary, buggy POC).
+- **Receipts cases**: `2026-05-10-frida-first-run`, `2026-05-26-alex-cohort-first-run`, `2026-05-28-canvas-drift-reconciliation` (self-correction → v0.31.3 detection layer).
+- **Attribution carve-out**: Frida's project is named only by the approved generic descriptor ("a public-sector mobile app for next-of-kin in home care; GDPR, healthcare, AI-naive end users"), never directly. Name-leak scan clean.
+- Also: `cluster-instances.md` reconciled (instance 15 canvas-drift graduated via v0.31.3; framework-vs-roadmap log-divergence noted); router-discipline eval re-run recorded (PASS, improved vs baseline).
+
+The credit was prompted by the maintainer catching that Alex had been credited but Frida hadn't — the same multi-home-fact drift this session was about, surfacing one more time in the credit ledger.
+
+**PATCH**: doc-only (CONTRIBUTORS + docs/receipts), no behavioral change.
+
 ## v0.31.3 — Human-task reconciliation (canvas-drift detection)
 
 **2026-05-28. Attribution: human-task-reconciliation. Class: lived-friction-triggered.**
