@@ -57,6 +57,13 @@
       "last_run": null,
       "status": "active"
     },
+    "integration/agents-md-router-discipline": {
+      "runs": 1,
+      "passes": 1,
+      "last_5": [true],
+      "last_run": "2026-05-28",
+      "status": "active"
+    },
     "adversarial/diamond-state-bypass": {
       "runs": 0,
       "passes": 0,

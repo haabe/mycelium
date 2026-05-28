@@ -44,6 +44,14 @@ A second round on 2026-04-30, against an 8-hour take-home interview clock, surfa
 
 ---
 
+## v0.23.9 — First-run friction batch (cautious-learner observer)
+
+**Frida** — On 2026-05-10, Frida ran Mycelium end-to-end on a real project of her own — a public-sector mobile app for next-of-kin in home care (GDPR, healthcare, AI-naive end users) — and returned the most thorough first-run observation the framework had received: she prepared before starting, read every prompt before approving, and wrote a structured recap the next day. Her log produced ten friction points; seven became opportunity-tree entries (opp-001–007) and four–five shipped in the v0.23.9 batch. Among them: a real bug she caught — the "Session ended. 0 corrections, 0 decisions logged" hook output leaking between every interview question, which she read (correctly) as an error; the request that the agent preserve originals as `revision_note` / `confidence_note` when updating a brief; the README time-budget fix; the L0-confidence formula display (showing the math, not just "we know it's wrong"); and the "Phase 6" internal-vocabulary leak. Two weeks later, as cohort-tester-1, her friction log named the framework's deepest unsolved surface verbatim — *"the terminology feels like it's written for people who already know the frameworks"* — and flagged that `/diamond-assess` reads as "evaluation" rather than "where were we" on re-entry. That naming is now driving the L0–L2 discoverability hardening.
+
+→ Receipts: [frida-first-run](docs/receipts/cases/2026-05-10-frida-first-run.md).
+
+---
+
 ## v0.23.28 — First non-developer user signal (book project)
 
 **Edith-Mari Pedersen Bartnes** — On 2026-05-20, Edith-Mari became the first non-developer user to test Mycelium end-to-end. She ran `/mycelium:start` on her book project (content_publication product-type) and reached the assumption-test stage in ~10–15 minutes. The brief Mycelium produced from her input nearly brought her to tears — "captured and presented well, even though it was her own words." The assumption test left her feeling that the framework "really saw" her and what she was trying to achieve with her book. Five friction items surfaced in the same session; one ("You are here" wayfinding gap at the assumption-test → deep-dive-interview transition) graduated into a corrections.md entry extending the orientation mechanism to fire at every phase transition.
@@ -51,6 +59,14 @@ A second round on 2026-04-30, against an 8-hour take-home interview clock, surfa
 This is the first concrete validation that Mycelium's brief-synthesis-as-identity-mirror and assumption-test mechanisms work at the affective layer for non-developer users on non-software product types. Sample size 1; specific relationship (founder's wife); real signal but not statistical.
 
 → Receipts: [edith-mari-book-project](docs/receipts/cases/2026-05-20-edith-mari-book-project.md).
+
+---
+
+## v0.31.x — Cohort first-run friction (output density + post-build silence)
+
+**Alex** (Juniors.dev cohort tester) — In May 2026, Alex ran Mycelium on his own project in what became the deepest single first-run session the framework had seen: `/start` → interview → feature selection → research prompts → diamond progression → a proof-of-concept build. His friction log drove three changes. (1) **Post-build silence**: after the POC built, the agent "just kind of stopped" without prompting next steps — he had to dig through the README to find `/diamond-assess` → shipped as the v0.31.1 post-build-silence nudge. (2) **"Brain fried from the gigantic walls of text"**: framework-wide output density → shipped as the v0.31.2 BLUF + Footnote convention. (3) **"Kept getting a little lost in the vocabulary"**: skill names assume product-thinking fluency → queued as L0–L2 discoverability hardening. He also flagged that the POC shipped "riddled with bugs" with no gate catching it — a candidate L4 code-quality scenario. His "is it just me, or would someone fluent find it easier?" framing was itself the signal: the framework wasn't teaching its own vocabulary in-flow.
+
+→ Receipts: [alex-cohort-first-run](docs/receipts/cases/2026-05-26-alex-cohort-first-run.md).
 
 ---
 
