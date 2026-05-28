@@ -93,6 +93,16 @@ Audit the canvas knowledge base for quality, consistency, and completeness. The 
      - Flag scenarios with `status: draft` older than 30 days (stale draft — either promote or discard)
    - If `.claude/canvas/scenarios.yml` does NOT exist but project_type requires it (per ${CLAUDE_PLUGIN_ROOT}/engine/canvas-guidance.yml): flag as warning
 
+8c. **Human-task reconciliation** (added v0.31.3, closes the evidence/status/consent decoupling drift — corrections.md 2026-05-28):
+
+The failure this catches: a fact about a human-task lives in 2+ places (the task `status`, the evidence file it produced, the contributor's consent registry) and only the salient one gets updated, so the canvas silently drifts from reality. Three sub-checks over `.claude/canvas/human-tasks.yml#pending_tasks`:
+
+   - **(a) Status-vs-activity staleness**: for each task whose `status` is non-terminal (NOT `completed`/`abandoned`/`stalled`), compute the latest activity date across `updated_at`, `touch_log[].date`, and `partial_findings[].date`. If the latest is >21 days ago (or no activity date at all), flag: "ht-XXX untouched [N]d while still `[status]` — decide: mark `stalled`, mark `abandoned`, or nudge the contact. Abandonment is a non-event; nothing else will surface this." (The session-start hook flags this at 14d for awareness; canvas-health is the deeper 21d decision prompt.)
+   - **(b) Evidence-exists-but-task-open**: for each non-terminal task, check whether it has already produced evidence — i.e. it has a populated `partial_findings` block, OR its `canvas_refs` resolve to real evidence entries in purpose.yml/user-needs.yml dated at/after the task's activity. If evidence exists but the task is still open, flag: "ht-XXX has captured evidence (partial_findings / linked purpose.yml entry) but status is `[status]` — close it (`completed`) or record why it stays open. Logging evidence and closing the source task are separate steps; this catches the gap." Recommend `/mycelium:log-evidence` should be closing the task going forward.
+   - **(c) Consent-registry sync** (best-effort; cross-source): if an attribution registry is available (`$MYCELIUM_ATTRIBUTION_REGISTRY` or a private companion repo's `.claude/memory/attribution-registry.yml`), compare each contributor's `consent` value there against any consent state recorded in the agent's auto-memory (`~/.claude/projects/<id>/memory/`). Flag mismatches: "Consent for [name] is `[X]` in the registry but `[Y]` in auto-memory — the registry is canonical (Check 33 reads it); sync them." If neither source is accessible in the current context, skip this sub-check and note it was skipped. Do NOT print the literal value of any `generic_only`/project-name carve-out term into the report.
+
+   Output all three as warnings (not critical) — they are drift, not breakage. Each names the specific ht-ID and the specific action.
+
 9. **Check for boilerplate content**:
    - Flag canvas files where >50% of content matches the template defaults from ${CLAUDE_PLUGIN_ROOT}/engine/canvas-guidance.yml
    - Flag files with placeholder text ("TBD", "TODO", "fill in later", "placeholder")

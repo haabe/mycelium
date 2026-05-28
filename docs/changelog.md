@@ -6,6 +6,23 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.31.3 — Human-task reconciliation (canvas-drift detection)
+
+**2026-05-28. Attribution: human-task-reconciliation. Class: lived-friction-triggered.**
+
+A reconciliation gap surfaced this session: a fact about a human-task lives in 2+ places — the task `status`, the evidence file it produced, and the contributor's consent registry — and only the salient one gets updated, so the canvas silently drifts from reality. Concretely: tasks left `in_progress` after their evidence was already logged; cohort consent recorded in auto-memory but never propagated to the canonical `attribution-registry.yml`; cold outreach left open because abandonment is a non-event with no trigger. User-caught: "why weren't these updated when the agent got the data?"
+
+### Fixes (detection layer)
+
+1. **Session-start hook `CHECK 5`** now counts OPEN human-tasks by status — excludes terminal `completed`/`abandoned`/`stalled` instead of counting raw `len(pending_tasks)` — and flags items with no activity (across `updated_at` / `touch_log[].date` / `partial_findings[].date`) in 14+ days. The old count surfaced noise: in the dogfood repo it reported "16 pending" when only 4 were genuinely open. Now: "4 OPEN (12 closed/parked), all STALE."
+2. **`/canvas-health` sub-check 8c** (human-task reconciliation): (a) status-vs-activity staleness at 21 days; (b) evidence-exists-but-task-still-open (task has `partial_findings` or resolved `canvas_refs` evidence but a non-terminal status); (c) consent-registry-vs-auto-memory mismatch (best-effort, registry is canonical). Each flag names the specific ht-ID and the action.
+
+### Deferred (honest)
+
+The `/log-evidence` close-the-loop — auto-closing the source task and syncing the registry at evidence-write time, the third prevention item in the corrections entry — is NOT in this release. This ships *detection*, not *auto-close*. Tracked in `corrections.md` 2026-05-28.
+
+**PATCH**: two framework files (hook + canvas-health SKILL), no new files, additive + bug-fix.
+
 ## v0.31.2 — BLUF + Footnote output convention
 
 **2026-05-26. Attribution: bluf-footnote-output-convention.**

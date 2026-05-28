@@ -368,6 +368,16 @@ _Corrections that apply broadly across projects and contexts._
 - **Prevention**: New anti-pattern "Eval Overfitting" added to anti-patterns.md. Detection rule: documentation contains "NOT" qualifiers that reference specific test scenarios or eval questions. Also: new anti-pattern "Negative Documentation" — defining things by what they are not.
 - **Source**: Hoskins friction log (2026-04-25). Goodhart's Law (when a measure becomes a target, it ceases to be a good measure — when eval results become the target, documentation ceases to be good documentation).
 
+### 2026-05-28 - Human-task tracking decouples status, evidence-capture, and consent-registry (canvas drift)
+- **Scope**: orchestration
+- **Category**: process
+- **Origin**: ai-assisted
+- **Detection_origin**: user-detected (dogfood)
+- **Mistake**: A fact about a human-task lives in 2+ "homes" — the task `status` in human-tasks.yml, the evidence file it produces (purpose.yml / `partial_findings`), and the contributor's consent in attribution-registry.yml — and only the home salient to the current task gets updated. The others drift: tasks stay `in_progress` after their evidence is already logged; consent reaches auto-memory but not the canonical registry; cold tasks stay open because abandonment is a non-event with no trigger. The session-start hook counted raw `len(pending_tasks)` regardless of status, surfacing noise (reported 16 "pending" when only 4 were open).
+- **Correction**: Reconcile the homes. v0.31.3 ships the detection layer — hook `CHECK 5` counts OPEN tasks by status + flags 14d staleness; `/canvas-health` sub-check `8c` reconciles status-vs-activity, evidence-exists-but-open, and consent-vs-registry. The generating-side fix (`/log-evidence` auto-closes the source task + syncs the registry at evidence-write) is deferred to a focused bump.
+- **Prevention**: General rule for multi-home facts — the write that produces the fact should update all its homes in one action, OR a reconciliation lint must catch the divergence. Detection landed v0.31.3; close-the-loop deferred. Roadmap dogfood instance: `mycelium-roadmap/.claude/memory/corrections.md` 2026-05-28 (with the paired AP#7-on-own-tooling entry).
+- **Source**: Lopopolo (when a correction recurs, fix the harness one layer up); Gilad (canvas must reflect reality, not last-remembered state). User-detected during dogfood backlog triage: "why weren't these updated when the agent got the data?"
+
 ## Situational Corrections
 
 _Corrections specific to a particular project, team, or context._

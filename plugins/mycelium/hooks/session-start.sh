@@ -189,17 +189,44 @@ fi
 if [ -f "$PROJECT_DIR/.claude/canvas/human-tasks.yml" ]; then
   HUMAN_TASKS=$(python3 -c "
 import yaml, sys
+from datetime import date, datetime
 try:
   with open(sys.argv[1]) as f:
     data = yaml.safe_load(f) or {}
   pending = data.get('pending_tasks', [])
-  if pending:
-    objectives = [t.get('objective', 'unnamed task') for t in pending]
-    summaries = '; '.join(objectives[:3])
-    if len(objectives) > 3:
-      summaries += '... and {} more'.format(len(objectives) - 3)
-    print('You have {} pending human task(s). If you completed any offline conversations, run /log-evidence. Pending: {}'.format(len(pending), summaries))
-except: pass
+  # Count by status, not raw list length: completed/abandoned/stalled are terminal
+  # and must not inflate the 'open work' signal (corrections.md 2026-05-28 canvas-drift).
+  TERMINAL = {'completed', 'abandoned', 'stalled'}
+  open_tasks = [t for t in pending if t.get('status') not in TERMINAL]
+  if open_tasks:
+    today = date.today()
+    def latest_touch(t):
+      ds = []
+      for k in ('updated_at', 'created_at', 'commitment_received_at'):
+        v = t.get(k)
+        if isinstance(v, str): ds.append(v[:10])
+      for lk in ('touch_log', 'partial_findings'):
+        for e in (t.get(lk) or []):
+          d = e.get('date') if isinstance(e, dict) else None
+          if isinstance(d, str): ds.append(d[:10])
+      parsed = []
+      for d in ds:
+        try: parsed.append(datetime.strptime(d, '%Y-%m-%d').date())
+        except Exception: pass
+      return max(parsed) if parsed else None
+    def label(t):
+      obj = (t.get('objective', 'unnamed task') or 'unnamed task')[:70]
+      st = t.get('status', 'no-status')
+      lt = latest_touch(t)
+      if lt is not None and (today - lt).days >= 14:
+        return '{} (STALE {}d, {})'.format(obj, (today - lt).days, st)
+      return '{} ({})'.format(obj, st)
+    summaries = '; '.join(label(t) for t in open_tasks[:3])
+    if len(open_tasks) > 3:
+      summaries += '... and {} more'.format(len(open_tasks) - 3)
+    n_terminal = len(pending) - len(open_tasks)
+    print('You have {} OPEN human task(s) ({} closed/parked, not counted). If you completed offline work, run /log-evidence (which should also close the source task). STALE items have had no activity in 14+ days — decide stalled/abandoned/nudge. Open: {}'.format(len(open_tasks), n_terminal, summaries))
+except Exception: pass
 " "$PROJECT_DIR/.claude/canvas/human-tasks.yml" 2>/dev/null || echo "")
 
   if [ -n "$HUMAN_TASKS" ]; then
