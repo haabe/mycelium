@@ -6,6 +6,18 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.31.5 — Loop-extremity sharpening for AP-MS-1 (Streetlight)
+
+**2026-05-29. Attribution: loop-extremity-streetlight. Class: external-signal-triggered + user-gate-override.**
+
+Hashimoto's "agent psychosis" thread (an optimization loop drove a renderer's frame time 88ms→2ms and allocations ~150K→500 while the property the metric proxied stayed suspect) prompted the question: does Mycelium need a metric-gaming-via-optimization-loop detector? The scoping decision was **no new anti-pattern** — Goodhart is already named in AP-CD-3 (Eval Overfitting), the measurable-vs-matters surface in AP-MS-1 (Streetlight), and with N=0 internal instances a new entry would be a HiPPO-Driven / Consistency-as-Evidence move on a single external anecdote. The maintainer then overrode the evidence-gate ("do as recommended") to ship the one genuine sliver now.
+
+- **AP-MS-1 detection rule (4) — loop-extremity signature**: an autonomous minimize/maximize loop drives a proxy metric out-of-distribution with no out-of-band check on the proxied property; the proxy↔target relationship breaks under optimization pressure (Goodhart / Campbell's Law). The extremity is itself the tell.
+- **AP-MS-1 remediation**: when a loop produces an extreme/surprising metric win, verify the proxied property out-of-band — re-derive the target, don't trust the number. Where the framework runs metric-targeted loops, prefer the `/eval-runner run-split optimization|holdout` train/test split as the structural Goodhart guard.
+- **Naming**: "agent psychosis" kept as a see-also umbrella only; Mycelium prefers the sharper, citable Goodhart/Streetlight framing.
+
+**PATCH**: single NUDGE-tier detection-rule addition to one harness file (`anti-patterns.md`); no BLOCK/REVIEW gate added. Scoping rationale + the gate-override are both in `harness/decision-log.md` 2026-05-29.
+
 ## v0.31.4 — Contributor credit + receipts (Frida, Alex)
 
 **2026-05-28. Attribution: contributor-credit-receipts. Class: maintenance-housekeeping.**
