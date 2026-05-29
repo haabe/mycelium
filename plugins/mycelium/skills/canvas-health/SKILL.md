@@ -103,6 +103,15 @@ The failure this catches: a fact about a human-task lives in 2+ places (the task
 
    Output all three as warnings (not critical) — they are drift, not breakage. Each names the specific ht-ID and the specific action.
 
+8d. **Learning-target coupling on feedback tasks** (added v0.31.6, closes the "we asked for feedback but didn't ask what we needed to learn" gap — see `engine/canvas-guidance.yml#learning_target_coupling`):
+
+The failure this catches: the canvas carries open learning needs (ON HOLD / RE-GATED action flags, in-progress human-tasks naming a MISSING SIGNAL, low-confidence entries with an un-validated assumption), AND a feedback-gathering task is open, but the task's questions target none of those gaps — so the feedback returns whatever the respondent volunteers rather than the answers the canvas is waiting on. Feedback capacity is scarce and non-repeating; an un-targeted session spends it without retiring any gap.
+
+   - First, build the open-gap set: scan all canvas `.yml` files for (i) `ON HOLD` / `RE-GATED` markers, (ii) `human-tasks.yml` tasks with `status: in_progress` whose `success_criteria` name a MISSING SIGNAL or un-met track, (iii) entries with `confidence < 0.5` carrying a named un-validated assumption. If the open-gap set is empty, skip this check (nothing to couple to).
+   - Then, for each feedback-gathering task that is open (`human-tasks.yml` tasks with a `key_questions` block, status non-terminal): check whether any question carries a `[target → <file>#<anchor>]` tag (the coupling tag) OR plainly references one of the open gaps by name. If NONE do, flag (NUDGE): "ht-XXX gathers feedback but none of its key_questions target an open canvas gap ([list 2-3 open gaps]). Seed ≥1 learning-target question per `learning_target_coupling`, or record why this is pure discovery."
+   - Also flag any `[target → ref]` tag whose `<file>#<anchor>` does not resolve to a real canvas entry (broken coupling — the gap it claimed to feed was renamed or closed): "ht-XXX question tags [ref] but that entry no longer exists — re-point or drop the tag."
+   - NUDGE-tier, not a gate. Zero-target feedback sessions are legitimate (pure discovery); the check makes the omission a visible choice rather than an oversight. Each flag names the specific ht-ID and the specific open gaps it could target.
+
 9. **Check for boilerplate content**:
    - Flag canvas files where >50% of content matches the template defaults from ${CLAUDE_PLUGIN_ROOT}/engine/canvas-guidance.yml
    - Flag files with placeholder text ("TBD", "TODO", "fill in later", "placeholder")

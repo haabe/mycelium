@@ -630,3 +630,57 @@ action_flags:
   # OPEN, the result converges (final state: OPEN, transition note appended
   # twice but preserved). Last-writer-wins on the marker; both audit-trail
   # entries survive. This trades a small amount of duplication for safety.
+
+# Learning-target coupling — close the gap between "we have open questions on the
+# canvas" and "we remembered to ask them when feedback was on offer."
+# Graduated 2026-05-29 from a lived instance: cohort first-runs produced rich
+# friction logs, but the canvas carried open positioning/hypothesis gaps
+# (purpose.yml ON HOLD + RE-GATED entries, an in-progress human-task) that the
+# feedback never targeted — so we learned what we happened to observe, not what
+# we needed to learn. The fix is to derive feedback questions FROM the open gaps,
+# rather than hoping post-hoc observation covers them.
+#
+# An "open learning need" is any canvas entry that is explicitly waiting on
+# evidence to move:
+#   - action_flags markers: ON HOLD (pending X), RESERVED, or RE-GATED entries
+#   - purpose.yml / opportunities.yml entries with confidence < threshold and an
+#     un-validated assumption named in the entry
+#   - human-tasks.yml tasks with status in_progress whose success_criteria name
+#     a MISSING SIGNAL track
+#   - assumptions with validated: false carrying confidence > 0.5 (stakeholder
+#     belief not yet externally checked)
+learning_target_coupling:
+  principle: |
+    When a feedback-gathering activity is being designed (an interview, an
+    assumption test, a cohort task, a survey), seed AT LEAST ONE question per
+    relevant open learning need — so the feedback returns answers the canvas is
+    actually waiting on, not only whatever the respondent volunteers.
+    Feedback capacity is scarce and non-repeating; an un-targeted session spends
+    it without retiring any open gap.
+  question_tag:
+    format: "[target → <canvas-file>#<entry-or-anchor>]"
+    purpose: |
+      Each seeded question carries an inline tag naming the canvas gap it feeds.
+      Makes the coupling grep-detectable (canvas-health can verify a feedback
+      task references ≥1 open gap) and lets /log-evidence route the answer back
+      to the exact entry that was waiting (close-the-loop).
+    examples:
+      - "[positioning resonance → purpose.yml#L797-cutler] When you'd describe this to a peer, what words do you use?"
+      - "[L4 code-quality gap → purpose.yml#L828-1] After your build shipped, did anything break that a review gate should have caught?"
+      - "[theory-fluency hypothesis → purpose.yml#anti_states] Did the vocabulary feel like scaffolding or like a wall?"
+  applies_to_skills:
+    - /mycelium:user-interview
+    - /mycelium:assumption-test
+    - /mycelium:mocked-persona-interview
+    # human-task feedback design (human-tasks.yml#key_questions) follows the same rule
+  not_a_gate: |
+    NUDGE-tier. A feedback session that targets zero open gaps is allowed (some
+    sessions are pure discovery) — but canvas-health surfaces it so the omission
+    is a choice, not an oversight. The convention asks you to seed the question,
+    not to guarantee an answer.
+  close_the_loop: |
+    /mycelium:log-evidence reads the [target → ref] tag on an answered question
+    and routes the captured evidence to that canvas entry, then prompts whether
+    the open gap can now transition (ON HOLD → OPEN, RE-GATED → met, confidence
+    bump). Logging the evidence and retiring the gap remain separate steps; the
+    tag makes the second step visible.

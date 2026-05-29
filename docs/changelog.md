@@ -2,9 +2,24 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-05-26.
+**Last updated**: 2026-05-29.
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
+
+## v0.31.6 — Learning-target coupling (feedback targets open canvas gaps)
+
+**2026-05-29. Attribution: learning-target-coupling. Class: lived-instance-triggered + maintainer-directed.**
+
+Closes the "we asked for feedback but didn't ask what we needed to learn" gap. Lived instance: cohort first-runs produced rich friction logs while the canvas carried open positioning/hypothesis gaps (purpose.yml ON HOLD + RE-GATED entries, an in-progress human-task naming MISSING SIGNALs) that the feedback never targeted — so the system learned what it happened to observe, not what it needed to learn. The fix derives feedback questions FROM the open gaps.
+
+- **`learning_target_coupling` convention** (`engine/canvas-guidance.yml`): when designing any feedback activity, seed ≥1 question per relevant open learning need (ON HOLD / RE-GATED action flags, in-progress human-tasks naming a MISSING SIGNAL, low-confidence entries with an un-validated assumption). Feedback capacity is scarce and non-repeating; an un-targeted session spends it without retiring any gap.
+- **`[target → <file>#<anchor>]` question tag**: each seeded question carries an inline tag naming the gap it feeds — grep-detectable, and lets `/log-evidence` route the answer back to the exact waiting entry.
+- **Skill steps**: `/user-interview` Pre-Interview gains a seed-from-gaps step; `/assumption-test` Step 1 gains a couple-to-gaps step; `/log-evidence` Step 4 gains a close-the-loop note (route tagged answers, prompt the gap transition, treat a missing answer as itself a finding).
+- **canvas-health NUDGE check (8d)**: flags open feedback tasks whose `key_questions` target zero open gaps, and flags `[target → ref]` tags that no longer resolve.
+
+**PATCH**: prose-only across one engine file + four skill files; single NUDGE-tier check; no BLOCK/REVIEW gate; no mechanical validator change for the coupling convention itself (matches the v0.31.3 human-task-reconciliation precedent — agent-run prose check, no G-V12 test obligation). A mechanical `validate_canvas.py` Check is flagged as a future graduation candidate. Rationale in `harness/decision-log.md` 2026-05-29.
+
+**Bundled fix — human-tasks status enum**: `schemas/canvas/human-tasks.schema.json` `status` enum widened to include `stalled` and `abandoned`. The canvas-health human-task-reconciliation check (8a, v0.31.3) canonically treats `completed`/`stalled`/`abandoned` as the terminal-status vocabulary, but the schema enum was never updated to match — a documented-rule-diverges-from-enforcement instance that surfaced as 6 validator FAILs when real tasks adopted the convention's vocabulary. The schema is the thing that was wrong; aligning enforcement with the documented convention is the root-cause fix.
 
 ## v0.31.5 — Loop-extremity sharpening for AP-MS-1 (Streetlight)
 

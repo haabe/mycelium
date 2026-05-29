@@ -63,6 +63,7 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
 
 4. **Update canvas provenance**:
    - Identify the relevant canvas file and section (from the task's `canvas_refs`)
+   - **Close the learning-target loop** (per `engine/canvas-guidance.yml#learning_target_coupling`): if any answered question carried a `[target → <file>#<anchor>]` tag, route the captured evidence to that exact entry, then prompt whether the open gap can now move — ON HOLD → OPEN, RE-GATED → met, or a confidence bump. Logging the evidence and retiring the gap are separate steps; the tag makes the second one explicit. If the awaited answer did NOT arrive, say so — the absence is itself a finding (the gap stays open with a note).
    - If the canvas entry has NO provenance object yet (early project), create one:
      ```yaml
      provenance:
