@@ -21,10 +21,22 @@ _stamp_uid=$(id -u 2>/dev/null || echo 0)
 _stamp_phash=$(printf '%s' "$PROJECT_DIR" | { md5 2>/dev/null || md5sum 2>/dev/null; } | tr -cd '0-9a-f' | cut -c1-12)
 STAMP_FILE="${TMPDIR:-/tmp}/mycelium-preflight-stamp-${_stamp_uid}-${_stamp_phash:-0}"
 
-# Parse tool input from stdin
+# Parse tool input from stdin. Single python spawn (not two) emits tool_name
+# and file_path NUL-separated — this hook is on the Write/Edit hot path, so we
+# avoid paying a second interpreter startup per edit. NUL separation keeps it
+# correct even if a path contained a newline. On parse failure both vars stay
+# empty (same fallback as before).
 INPUT=$(cat)
-TOOL_NAME=$(echo "$INPUT" | python3 -c 'import sys,json;print(json.load(sys.stdin).get("tool_name",""))' 2>/dev/null || echo "")
-FILE_PATH=$(echo "$INPUT" | python3 -c 'import sys,json;d=json.load(sys.stdin);ti=d.get("tool_input",{});print(ti.get("file_path",ti.get("file","")))' 2>/dev/null || echo "")
+TOOL_NAME=""
+FILE_PATH=""
+{ IFS= read -r -d '' TOOL_NAME; IFS= read -r -d '' FILE_PATH; } < <(
+  printf '%s' "$INPUT" | python3 -c '
+import sys, json
+d = json.load(sys.stdin)
+ti = d.get("tool_input", {})
+sys.stdout.write(d.get("tool_name", "") + "\0" + ti.get("file_path", ti.get("file", "")) + "\0")
+' 2>/dev/null
+) || true
 
 # Normalize path: ensure leading / so patterns match consistently
 # Claude Code may pass relative paths (e.g., "src/foo.js") or absolute paths.

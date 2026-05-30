@@ -6,6 +6,21 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.31.12 — Audit Medium group: hot-path spawn consolidation + CI pip cache
+
+**2026-05-30. Attribution: audit-medium-group. Class: maintainer-directed (code audit).**
+
+Third and final severity-grouped batch from the repo deep-dive audit. Bounded Medium fixes; the larger items were deferred rather than rushed.
+
+- **M1 — double interpreter spawn on the edit hot path**: `gate.sh` parsed `tool_name` and `file_path` in two separate `python3` invocations. It now extracts both in a single NUL-separated spawn, dropping one interpreter startup per gated Write/Edit. Secret-detection and path-gating behavior is unchanged (verified across non-source, benign-source, and planted-secret inputs: exit 0 / exit 0 / deny).
+- **M2 — uncached CI pip installs**: the `setup-python` step gained `cache: 'pip'` keyed on `requirements-ci.txt`, so dependency installs reuse the wheel cache across runs.
+
+**Deferred (logged in `decision-log.md`)**: manifest / skill-count / version auto-generation. These are attractive but large and carry real miswiring risk; each deserves its own design pass rather than a drive-by in an audit batch.
+
+**Left as-is by design (not bugs)**: Check 33's CI fail-open (documented private-registry rationale — the enforcement point is maintainer pre-push) and Check 17 as the single source of truth for ruff/shellcheck/pytest.
+
+**PATCH**: hot-path + CI perf; no behavioral-contract, canvas, or schema change.
+
 ## v0.31.11 — Audit High group: stamp hardening, scope globbing, G-V12 meta-check
 
 **2026-05-30. Attribution: audit-high-group. Class: maintainer-directed (code audit).**

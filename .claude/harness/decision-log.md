@@ -22,6 +22,21 @@ Record of significant decisions made during product development. Decisions are i
 
 ## Decisions
 
+### 2026-05-30 — Audit Medium group: hot-path spawn consolidation + CI pip cache (v0.31.12)
+- **Diamond**: framework-on-framework dogfood; `hooks/gate.sh`, `.github/workflows/validate.yml`. No active product diamond touched.
+- **Trigger**: Third and final severity-grouped batch from the deep-dive audit; maintainer directed per-group commit-after-verify. This is the Medium group.
+- **Decision (BLUF)**: Ship two bounded fixes, defer the rest. (M1) `gate.sh` parses `tool_name` + `file_path` in one NUL-separated `python3` spawn instead of two — one fewer interpreter startup per gated edit on the Write/Edit hot path; gating behavior unchanged. (M2) CI `setup-python` gains `cache: 'pip'` keyed on `requirements-ci.txt`. DEFER manifest/skill-count/version auto-generation to its own design. Leave Check 33 CI fail-open and Check 17 single-source-of-truth as by-design. PATCH (v0.31.12).
+- **Why_not_alternatives** (structured):
+    - `M1: keep two python spawns, they're cheap`: each spawn is an interpreter cold-start on a hook that fires on every Write/Edit; halving it is free and the NUL-separated parse stays correct even if a path contained a newline. Rejected the no-op.
+    - `M1: parse JSON in pure bash to drop python entirely`: bash JSON parsing is fragile against the untrusted tool_input payload (embedded quotes/newlines); the existing python stdlib parse is the safe surface. Rejected — consolidated rather than rewrote.
+    - `M2: pin a manual cache action with a hand-built key`: `actions/setup-python`'s built-in `cache: 'pip'` already keys on the requirements file and is less to maintain. Rejected the manual cache.
+    - `Medium: also auto-generate the manifest / skill-count / version`: attractive (kills three hand-maintenance surfaces) but large and genuinely miswiring-prone — a wrong manifest silently changes what `upgrade.sh` syncs. Deferred to a dedicated design pass rather than rushed into an audit batch. This is a scope-discipline call, not a capacity call.
+    - `Medium: "fix" Check 33 CI fail-open and Check 17 narrowness`: both are documented deliberate designs (Check 33's registry is private so CI has no credentials — enforcement is maintainer pre-push; Check 17 is the single source of truth for ruff/shellcheck/pytest). Treating a by-design choice as a bug would have added churn. Left as-is.
+- **Theory**: hot-path micro-optimization (process-spawn cost on a per-edit hook); CI cache reuse; YAGNI / scope-discipline on the deferred generators (don't build the large risky thing as a drive-by).
+- **Evidence**: M1 verified across three inputs — non-source path (exit 0), benign source path (exit 0), planted secret in source (deny JSON) — behavior identical to the two-spawn version (Verified: ran gate.sh with crafted stdin). M2 is a workflow-only YAML change (Verified: Read the diff). Validator 35/35, bash suite green, pytest green (Verified: ran all three below).
+- **Confidence**: 0.9 — M1/M2 are small and verified; the higher-value deferrals are explicitly logged, not dropped.
+- **Reversibility**: easily reversible (git).
+
 ### 2026-05-30 — Audit High group: stamp hardening, scope globbing, G-V12 meta-check (v0.31.11)
 - **Diamond**: framework-on-framework dogfood; `hooks/gate.sh`, `hooks/preflight.sh`, `scripts/scope_check.py`, `tests/validate-template.sh` (new Check 37), `tests/bash/test_check_{16,17,37}.sh` + fixtures, `tests/python/test_scope_check.py`. No active product diamond touched.
 - **Trigger**: Second of three severity-grouped batches from the deep-dive audit; maintainer directed per-group commit-after-verify. This is the High group.
