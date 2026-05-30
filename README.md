@@ -67,12 +67,12 @@ Gate intensity adapts via three mechanisms already in the framework: **project t
 
 ## How Mycelium got smarter
 
-Mycelium has been dogfooded on three small projects AND tested by one outside user under realistic time pressure. Each session taught the framework something different — and most of what they taught is in the version you're looking at right now.
+Mycelium has been dogfooded on three small projects AND tested by outside users under realistic time pressure. Each session taught the framework something different — and most of what they taught is in the version you're looking at right now.
 
 - **[consistency-as-evidence-graduation](docs/receipts/cases/2026-05-09-consistency-as-evidence-graduation.md)** — what Mycelium learned to distrust about itself. A pattern recurring across 5 instances graduated to anti-pattern #7 with an ambient self-check — the framework's own verification discipline now flags when its agent argues from internal coherence rather than external evidence.
 - **[edith-mari-book-project](docs/receipts/cases/2026-05-20-edith-mari-book-project.md)** — what Mycelium reached beyond developers. First non-developer user (writer with a cookbook project) hit the brief-synthesis flow at the affective layer; surfaced the wayfinding-at-phase-transitions correction. The framework's plain-language discipline was load-bearing.
 - **[macos-fileviewer](docs/receipts/cases/2026-04-macos-fileviewer.md)** — what Mycelium stopped, and what that gave it. The project that didn't ship contributed more than the two that did: 10 framework features came out of a kill.
-- **[drew-hoskins-takehome](docs/receipts/cases/2026-04-30-drew-hoskins-takehome.md)** — what a real outside user under pressure surfaced. 82 prompts, 8 hours, 7 framework changes.
+- **[alex-cohort-first-run](docs/receipts/cases/2026-05-26-alex-cohort-first-run.md)** — what the deepest single session cost the reader. An outside user's first run surfaced output-density and post-build-silence gaps that drove the v0.31.x batch.
 - **[framework-self-correction](docs/receipts/cases/2026-05-01-framework-self-correction.md)** — what the framework caught itself doing. A 4-day cycle that graduated 5 patterns from the framework's own friction log without a new project.
 
 The framework you're looking at now is partly built from things it stopped itself.

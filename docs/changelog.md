@@ -6,6 +6,18 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.36.2 — framework-health follow-through
+
+**2026-05-30. Attribution: framework-health-followthrough. Class: maintainer-requested.**
+
+Acts on the three recommendations from the `/framework-health` run that followed v0.36.1.
+
+- **Cluster mechanism-graduation gate-defer.** The `documented-rule-diverges-from-enforcement` cluster is at 15 instances but its *mechanism* promotion bar (≥3 spec Rules validated at <5% FP) is not met. Rather than silently leave it "pending" or fake the validation, the deferral is now an explicit named gate logged in `.claude/memory/cluster-instances.md`: `Gated by: ≥3 of the 6 spec Rules implemented in this repo AND run against the 15-instance corpus with measured FP <5% — interventional`. Faking the FP number would itself be an AP#7 consistency-only instance.
+- **README receipts rotation.** `alex-cohort-first-run` (2026-05-26) rotates onto the "How Mycelium got smarter" list; `drew-hoskins-takehome` (2026-04-30, oldest outside-user case) rotates off but stays in `docs/receipts/cases/`. The intro's "tested by one outside user" is now stale (Drew, Alex, plus the non-developer book project) and reads "outside users".
+- **Gate-rendering fix + class-level convention.** The two Von-Restorff flags from step 4e — `regulatory-review` and `diamond-assess` — now instruct the agent to render the gate **Fail** case distinctly (a leading `BLOCKED:`/`Blocking:` line or bold `**FAIL**`) so a failing gate pops instead of blending into `Pass`. The convention is codified class-level in `harness/design-principles.md` (Von Restorff bullet) so it governs all gate-bearing output templates, not just these two.
+
+Deferred (honestly): the broader checklist-skill sweep (e.g. `service-check`) is G-C1 "lead with verdict" territory, not blocker-pop, and is not rewritten here; the mechanical 4e check stays unbuilt (first flag — two-strike rule before promotion to a `tests/bash` check).
+
 ## v0.36.1 — UX-axioms bridge: self-audit remediation
 
 **2026-05-30. Attribution: ux-axioms-bridge-remediation. Class: maintainer-requested self-audit.**

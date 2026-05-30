@@ -145,6 +145,8 @@ Current focus: [plain-language description from ${CLAUDE_PLUGIN_ROOT}/engine/sta
 | Four Risks | Pass/Fail | /mycelium:assumption-test |
 | ... | ... | ... |
 
+Render any **Fail** row so it pops (e.g. `**FAIL**` or a leading `Blocking:` line under the table) rather than letting it sit indistinguishable from `Pass` — the failing gate is the one the reader must not scroll past. Von Restorff; per `harness/design-principles.md`.
+
 ## What I'd Challenge (Devil's Advocate)
 - [Key assumption to question]
 - [Evidence gap to flag]
