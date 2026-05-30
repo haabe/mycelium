@@ -6,6 +6,17 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.36.3 — ruff cleanup (zero-behavior lint fix)
+
+**2026-05-30. Attribution: ruff-cleanup. Class: maintainer-requested code-quality.**
+
+Clears the 8 ruff findings the v0.36.2 pre-push surfaced as a WARN (Check 17). No behavior change — verified by the unchanged 161-test pytest run, `sync_derived.py --check` (no drift), and `check_doc_references.py` (links resolve).
+
+- `check_doc_references.py`: collapse a multi-branch tail into a direct `return` (SIM103); drop two extraneous parens (UP034); mark executable (EXE001).
+- `sync_derived.py`: extract `_compute_drift` helper to bring `sync` under the cyclomatic-complexity ceiling (C901 12→ok); wrap two over-long `argparse` help lines (E501); mark executable (EXE001).
+
+Patch (lint only, no schema or skill change). The version bump exists solely to satisfy Check 26 — `plugins/mycelium/scripts` is a material path, so committing the cleanup without a bump would FAIL the next run.
+
 ## v0.36.2 — framework-health follow-through
 
 **2026-05-30. Attribution: framework-health-followthrough. Class: maintainer-requested.**

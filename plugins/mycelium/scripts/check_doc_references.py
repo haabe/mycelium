@@ -96,18 +96,16 @@ def is_skippable(target: str) -> bool:
     # A real file/dir link in this repo always has a slash or a dot-extension.
     # A bare word like "path" (from a `see [filename](path)` style example) is
     # a placeholder, not a navigable target.
-    if "/" not in target and "." not in target:
-        return True
-    return False
+    return "/" not in target and "." not in target
 
 
 def candidate_paths(src_file: Path, target: str, root: Path):
     """Yield candidate filesystem paths a link target could resolve to."""
     cands = []
     # 1. Relative to the linking file's own directory.
-    cands.append((src_file.parent / target))
+    cands.append(src_file.parent / target)
     # 2. Repo-root-relative (some docs link from root regardless of location).
-    cands.append((root / target))
+    cands.append(root / target)
     # 3. Dual-tree mapping: .claude/X (runtime path) -> plugins/mycelium/X
     #    (canonical source). Apply to both the raw target and the dir-relative
     #    resolution, since either tree may legitimately hold it.

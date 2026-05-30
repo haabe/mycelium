@@ -498,6 +498,19 @@ Record of significant decisions made during product development. Decisions are i
 - **Scenario ref**: L1 landscape comp-005 (Claude Code as primary harness) and comp-017 (agent-CLI category, of which opencode is a member). The decision graduates Mycelium's relationship to its harness from "Claude Code plugin" to "harness-portable framework with Claude Code as first runtime."
 - **Reversibility**: easily reversible — if opencode adapter PR reveals friction we didn't see (e.g., `tui.prompt.append` is observe-only), we can pause adapter work and remain Claude-Code-only without rework. Substrate stays neutral either way.
 
+### 2026-05-30 - Clear ruff WARN backlog (v0.36.3)
+- **Diamond**: framework-meta (code-quality maintenance; `plugins/mycelium/scripts`)
+- **Decision**: Fix all 8 ruff findings the v0.36.2 pre-push reported under Check 17's informational WARN. `check_doc_references.py`: SIM103 (direct-return the boolean), UP034 ×2 (drop extraneous parens), EXE001 (chmod +x). `sync_derived.py`: C901 (extract `_compute_drift` so `sync` drops below the complexity ceiling), E501 ×2 (wrap `argparse` help lines), EXE001 (chmod +x). PATCH bump 0.36.2→0.36.3.
+- **Trigger**: maintainer directed "fix the ruff errors" after the v0.36.2 push, where the WARN was surfaced as pre-existing tech debt.
+- **Zero-behavior claim — how verified**: 161-test pytest unchanged; `sync_derived.py --check` reports no drift (the extraction preserves output exactly); `check_doc_references.py` still resolves all links. The refactor is structural, not semantic.
+- **Why the version bump**: a lint-only fix wouldn't normally warrant a bump, but `plugins/mycelium/scripts` is a Check-26 material path — committing the cleanup against the already-pushed v0.36.2 HEAD would make `committed_count>0` with no version-line change and FAIL the next validation run. The bump is the mechanical cost of touching a material path, recorded honestly as such (not dressed up as a feature).
+- **Why_not_alternatives**:
+    - `Suppress the codes via per-file noqa / extend the Check-17 ignore list`: hides debt instead of clearing it; the WARN exists precisely to keep the count visible and trending to zero. Widening ignores is the consistency-as-evidence move (make the signal quiet rather than make the code clean).
+    - `Commit the lint fix without a version bump`: would FAIL Check 26 on the next run (material path changed, no version line edit) — not viable.
+    - `Fold into the v0.36.2 commit via --amend`: v0.36.2 is already pushed to origin/main; amending would require a force-push to a published main, which the safety protocol forbids absent explicit instruction.
+    - `Leave C901 as-is and only raise the complexity ceiling`: raising the ceiling to pass is the ratchet-the-wrong-way move; the honest fix is to lower complexity, which the `_compute_drift` extraction does without changing behavior.
+- **Reversibility**: trivially reversible — `git revert`; no schema, skill, or data change.
+
 ### 2026-05-29 - Ship learning-target coupling (v0.31.6)
 - **Diamond**: framework-meta (cross-cutting feedback discipline; touches L2 discovery skills + canvas-health)
 - **Decision**: Add a canonical `learning_target_coupling` convention so feedback-gathering activities derive ≥1 question per open canvas learning need, tag each with `[target → <file>#<anchor>]`, route answers back via `/log-evidence`, and surface un-targeted feedback tasks via a canvas-health NUDGE check (8d). Prose-only; PATCH bump 0.31.5→0.31.6.

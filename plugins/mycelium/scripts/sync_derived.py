@@ -80,10 +80,10 @@ def canonical_skill_count(root: Path) -> int:
     return n
 
 
-def sync(root: Path, check_only: bool) -> int:
-    version = canonical_version(root)
-    skill_count = canonical_skill_count(root)
-
+def _compute_drift(
+    root: Path, version: str, skill_count: int,
+) -> tuple[dict[str, str], list[str]]:
+    """Fold both derive passes into (staged_text_by_rel, human-readable drift list)."""
     staged: dict[str, str] = {}  # rel_path → latest in-memory text (folds both passes)
     drifted: list[str] = []
 
@@ -105,6 +105,14 @@ def sync(root: Path, check_only: bool) -> int:
         if new != old:
             drifted.append(f"{rel}: skill count → {skill_count}")
             staged[rel] = new
+
+    return staged, drifted
+
+
+def sync(root: Path, check_only: bool) -> int:
+    version = canonical_version(root)
+    skill_count = canonical_skill_count(root)
+    staged, drifted = _compute_drift(root, version, skill_count)
 
     if check_only:
         if drifted:
@@ -129,8 +137,14 @@ def sync(root: Path, check_only: bool) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--check", action="store_true", help="report drift, write nothing, exit 1 on drift")
-    ap.add_argument("--root", default=str(REPO_ROOT), help="repo root (default: inferred from script location)")
+    ap.add_argument(
+        "--check", action="store_true",
+        help="report drift, write nothing, exit 1 on drift",
+    )
+    ap.add_argument(
+        "--root", default=str(REPO_ROOT),
+        help="repo root (default: inferred from script location)",
+    )
     args = ap.parse_args(argv)
     return sync(Path(args.root), args.check)
 
