@@ -20,10 +20,20 @@ set -euo pipefail
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
 STATE_FILE="$PROJECT_DIR/.claude/state/active-execution.json"
-HELPER="$PROJECT_DIR/.claude/scripts/scope_check.py"
 
 # Fast path: no state file → no active execution → allow everything
 [ ! -f "$STATE_FILE" ] && exit 0
+
+# Helper resolution — prefer plugin path (post-0.20.x), fall back to legacy.
+# Mirrors framework-guard.sh: plugin installs removed the legacy helper from git,
+# so the hardcoded legacy path fell through to the fail-closed deny below for
+# anyone running as a plugin — a hard deadlock during active execution.
+HELPER=""
+if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/scope_check.py" ]; then
+  HELPER="${CLAUDE_PLUGIN_ROOT}/scripts/scope_check.py"
+elif [ -f "$PROJECT_DIR/.claude/scripts/scope_check.py" ]; then
+  HELPER="$PROJECT_DIR/.claude/scripts/scope_check.py"
+fi
 
 # Read input JSON from stdin
 INPUT=$(cat)
@@ -35,14 +45,15 @@ if [ -f "$HELPER" ]; then
   exit $?
 fi
 
-# If helper script is missing, fail-closed with a clear error
+# Helper missing in BOTH plugin and legacy paths → fail-closed.
 python3 -c "
-import json
+import json, os
+plugin_root = os.environ.get('CLAUDE_PLUGIN_ROOT', '<CLAUDE_PLUGIN_ROOT not set>')
 print(json.dumps({
     'hookSpecificOutput': {
         'hookEventName': 'PreToolUse',
         'permissionDecision': 'deny',
-        'permissionDecisionReason': 'Mycelium scope-gate: .claude/scripts/scope_check.py is missing. Restore the file or delete .claude/state/active-execution.json to disable scope enforcement.'
+        'permissionDecisionReason': f'Mycelium scope-gate: scope_check.py not found at {plugin_root}/scripts/scope_check.py NOR at .claude/scripts/scope_check.py. Reinstall the plugin (/plugin update mycelium) OR delete .claude/state/active-execution.json to disable scope enforcement.'
     }
 }))
 "

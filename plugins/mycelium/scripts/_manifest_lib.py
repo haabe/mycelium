@@ -60,6 +60,7 @@ def parse_manifest(manifest_path):
 
     section = None
     subsection = None
+    list_items_seen = 0
     with open(manifest_path) as f:
         for raw_line in f:
             line = raw_line.rstrip("\n")
@@ -82,6 +83,7 @@ def parse_manifest(manifest_path):
 
             # List item: "- value  # optional comment"
             if stripped.startswith(LIST_ITEM_PREFIX):
+                list_items_seen += 1
                 raw_value = stripped[LIST_ITEM_PREFIX_LEN:].split("#")[0].strip()
                 value = raw_value.strip('"').strip("'")
                 if not value:
@@ -89,5 +91,19 @@ def parse_manifest(manifest_path):
                 key = SECTION_KEY_MAP.get((section, subsection))
                 if key is not None:
                     framework[key].append(value)
+
+    # Structural-drift guard: a manifest with list items that bucketed into
+    # nothing means our indentation/section assumptions no longer match the
+    # file (e.g. someone reindented manifest.yml to 4 spaces). Silently
+    # returning empty lists would make framework_guard.py fail OPEN — every
+    # protected path would become writable. Fail LOUD instead so CI/the hook
+    # surfaces the drift rather than silently dropping protection.
+    if list_items_seen > 0 and not any(framework.values()):
+        raise ValueError(
+            f"manifest parse yielded zero framework entries from "
+            f"{list_items_seen} list item(s) in {manifest_path}: "
+            "indentation or section structure has drifted from "
+            "SECTION_KEY_MAP / INDENT_SUBSECTION assumptions."
+        )
 
     return framework

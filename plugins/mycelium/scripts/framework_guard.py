@@ -427,7 +427,27 @@ def main():
     tool_input = input_data.get("tool_input", {})
 
     manifest_path = Path(project_dir) / ".claude" / "manifest.yml"
-    framework = parse_manifest(manifest_path)
+    try:
+        framework = parse_manifest(manifest_path)
+    except ValueError as exc:
+        # Structural drift in manifest.yml (see _manifest_lib.parse_manifest).
+        # parse yielded zero protected paths from a non-empty manifest, which
+        # would make every framework file writable. Fail CLOSED (deny) rather
+        # than fail open — the operator must fix the manifest or disable the
+        # guard explicitly.
+        print(json.dumps({
+            "hookSpecificOutput": {
+                "hookEventName": "PreToolUse",
+                "permissionDecision": "deny",
+                "permissionDecisionReason": (
+                    f"Mycelium framework-guard: {exc} "
+                    "Fix manifest.yml indentation/structure, or delete "
+                    ".claude/state/upstream.json to disable framework-edit "
+                    "enforcement."
+                ),
+            }
+        }))
+        sys.exit(0)
 
     handlers = {
         "Write":                          _handle_file_edit,

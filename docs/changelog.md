@@ -6,6 +6,19 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.31.10 — Hook dual-path hardening (Critical audit group)
+
+**2026-05-30. Attribution: hook-dual-path-hardening. Class: maintainer-directed (code audit).**
+
+First of three severity-grouped fix batches from the repo deep-dive audit. Closes three Critical findings, all rooted in the plugin migration having emptied the legacy `.claude/` tree while two hooks still hardcoded legacy paths.
+
+- **C1 — `gate.sh` preflight no-op (plugin installs)**: the preflight renewal branch ran `bash "$PROJECT_DIR/.claude/hooks/preflight.sh" 2>/dev/null`. Plugin installs have no `.claude/hooks/`, so the missing file was swallowed by `2>/dev/null` and preflight silently never ran. Now resolves `${CLAUDE_PLUGIN_ROOT}/hooks/preflight.sh` first, legacy second — mirroring `framework-guard.sh`.
+- **C2 — `scope-gate.sh` fail-closed deadlock (plugin installs)**: helper was hardcoded to `.claude/scripts/scope_check.py`; on plugin installs it fell through to the fail-closed deny, blocking all tool use during active execution. Now resolves `${CLAUDE_PLUGIN_ROOT}/scripts/scope_check.py` first, legacy second; the fail-closed message names both paths.
+- **C3 — `_manifest_lib.parse_manifest` silent fail-open**: a `manifest.yml` reindented away from 2-space structure parsed to all-empty buckets, which made `framework_guard.py` treat **zero** paths as protected (every framework file writable). The parser now raises `ValueError` when a non-empty manifest buckets into nothing; `framework_guard.py` catches it and emits a **deny** (fail closed). Comment-only / genuinely-empty manifests still fail open as before.
+- **Tests**: `test_manifest_lib.py` gains `test_indentation_drift_raises` + `test_comment_only_manifest_does_not_raise` (15 pass).
+
+**PATCH**: robustness/security bug fixes to hooks + one script; no behavioral-contract change, no canvas/schema change, no new gate. Validator 34/34.
+
 ## v0.31.9 — CLAUDE.md dispatcher refactor (ceiling 248 → 200)
 
 **2026-05-30. Attribution: claudemd-dispatcher-refactor. Class: maintainer-directed.**

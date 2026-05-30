@@ -101,10 +101,22 @@ else
 fi
 
 if [ "$NEEDS_RENEWAL" -eq 1 ]; then
-  bash "$PROJECT_DIR/.claude/hooks/preflight.sh" 2>/dev/null || {
-    echo '{"message": "Mycelium preflight required. Read corrections.md and run validation before code changes."}' >&2
-    exit 2
-  }
+  # Preflight resolution — prefer plugin path (post-0.20.x), fall back to legacy.
+  # Mirrors framework-guard.sh: plugin installs have no .claude/hooks/ tree, so
+  # the hardcoded legacy path silently no-op'd (2>/dev/null swallowed the missing
+  # file) and preflight never ran for plugin users.
+  PREFLIGHT=""
+  if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/hooks/preflight.sh" ]; then
+    PREFLIGHT="${CLAUDE_PLUGIN_ROOT}/hooks/preflight.sh"
+  elif [ -f "$PROJECT_DIR/.claude/hooks/preflight.sh" ]; then
+    PREFLIGHT="$PROJECT_DIR/.claude/hooks/preflight.sh"
+  fi
+  if [ -n "$PREFLIGHT" ]; then
+    bash "$PREFLIGHT" 2>/dev/null || {
+      echo '{"message": "Mycelium preflight required. Read corrections.md and run validation before code changes."}' >&2
+      exit 2
+    }
+  fi
 fi
 
 # ============================================================

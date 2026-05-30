@@ -138,3 +138,31 @@ mystery_section:
     framework = lib.parse_manifest(path)
     assert framework["top_level"] == ["CLAUDE.md"]
     # mystery_section doesn't go anywhere — silently ignored, no error
+
+
+def test_indentation_drift_raises(project_dir, scripts_path):
+    """C3 regression: a non-empty manifest whose list items bucket into nothing
+    (e.g. reindented to 4 spaces) must raise, not silently fail open."""
+    import pytest  # noqa: PLC0415
+
+    lib = _import_lib(scripts_path)
+    manifest = """\
+framework:
+    top_level:
+      - CLAUDE.md
+"""
+    path = project_dir / ".claude" / "manifest.yml"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(manifest)
+    with pytest.raises(ValueError):
+        lib.parse_manifest(path)
+
+
+def test_comment_only_manifest_does_not_raise(project_dir, scripts_path):
+    """No list items at all → no drift signal → empty buckets, no error."""
+    lib = _import_lib(scripts_path)
+    path = project_dir / ".claude" / "manifest.yml"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("# just a comment\nframework:\n")
+    framework = lib.parse_manifest(path)
+    assert not any(framework.values())

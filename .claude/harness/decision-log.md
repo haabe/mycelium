@@ -22,6 +22,21 @@ Record of significant decisions made during product development. Decisions are i
 
 ## Decisions
 
+### 2026-05-30 — Hook dual-path hardening: Critical audit group (v0.31.10)
+- **Diamond**: framework-on-framework dogfood; `hooks/gate.sh`, `hooks/scope-gate.sh`, `scripts/_manifest_lib.py`, `scripts/framework_guard.py`, `tests/python/test_manifest_lib.py`. No active product diamond touched.
+- **Trigger**: Repo deep-dive audit (4 parallel agents) surfaced 3 Critical findings; maintainer directed "Fix them all, but do them in groups by severity. Then commit once each group is completed and the fix verified." This is the Critical group.
+- **Decision (BLUF)**: Fix all three. (C1) `gate.sh` preflight and (C2) `scope-gate.sh` helper now resolve `${CLAUDE_PLUGIN_ROOT}` first, legacy `.claude/` second — the dual-path pattern already proven in `framework-guard.sh` (F6 fix). (C3) `_manifest_lib.parse_manifest` raises `ValueError` on structural drift (non-empty manifest → zero buckets); `framework_guard.py` catches it and emits a **deny** so the guard fails CLOSED. PATCH (v0.31.10).
+- **Root cause (shared)**: the plugin migration emptied the legacy `.claude/hooks` and `.claude/scripts` trees, but these two hooks still hardcoded legacy paths. C1 manifested as a SILENT no-op (preflight never ran — `2>/dev/null` hid the missing file); C2 as a fail-closed DEADLOCK (every tool denied during active execution); C3 was independent — a silent fail-OPEN in the manifest parser that would unprotect every framework path on indentation drift.
+- **Why_not_alternatives** (structured):
+    - `Leave C1/C2 legacy-only (status quo)`: leaves plugin installs — the recommended install path — with preflight disabled and scope-gate deadlocked. Rejected; this is the live failure mode.
+    - `Make C3 fail OPEN louder (warn + empty buckets)`: a noisy warning still leaves the guard unprotected for that invocation. Rejected — for a security guard, drift must fail closed, not warn-and-allow.
+    - `Make C3 raise but let it crash framework_guard.py (exit 1)`: PreToolUse exit 1 is non-blocking, so the crash would still fail OPEN. Rejected — caught the ValueError and converted to a deny JSON (exit 0) so it actually blocks.
+    - `Bundle all three severity groups into one commit`: maintainer explicitly asked for per-group commits with verification between. Kept Critical as its own v0.31.10.
+- **Theory**: fail-closed-for-security-guards; dual-path resolution (plugin-first, legacy-fallback) as the migration-era invariant; G-V12 (every drift guard ships with a regression test).
+- **Evidence**: real `.claude/manifest.yml` parses to 51 entries post-fix; 4-space-drift fixture raises; missing-file still returns empty (Verified: ran python3 repro). `test_manifest_lib.py` 15/15 (Verified: ran pytest). Both hooks `bash -n` clean (Verified). Legacy `.claude/hooks/preflight.sh` + `.claude/scripts/scope_check.py` confirmed ABSENT, plugin copies present (Verified: ran ls) — confirms C1/C2 were live failures, not hypothetical. Validator 34/34 (Verified).
+- **Confidence**: 0.9 — mechanical, mirrors an already-shipped pattern (framework-guard F6), fully reproduced. Residual: C3's fail-closed path is exercised only by the new fixture, never yet by a real reindented manifest.
+- **Reversibility**: easily reversible (git).
+
 ### 2026-05-30 — CLAUDE.md dispatcher refactor: execute the relocation, ratchet ceiling 248 → 200 (v0.31.9)
 - **Diamond**: framework-on-framework dogfood; `CLAUDE.md` + `harness/` + `tests/validate-template.sh`. No active product diamond touched.
 - **Trigger**: Maintainer asked whether the optimization the Check 36 ratchet was built to drive had actually been done (it had not — v0.31.8 added only the guard). Then directed: commit the staged guard, run `/optimize-claudemd`, and — explicitly — do not scope the work around their reduced post-surgery capacity ("You're the one doing the job").
