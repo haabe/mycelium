@@ -55,6 +55,35 @@ Mycelium's guardrails are built on **Theory Y**: they exist to *elevate a capabl
 
 Extrinsic reward crowds out intrinsic motivation — the **overjustification effect**. Never gamify the framework's own discipline loop (points, badges, streaks, XP, leaderboards). It substitutes a token for the craft and collapses the moment the token stops mattering. Full detection rule and the boundary with legitimate *end-user* reward design: `${CLAUDE_PLUGIN_ROOT}/harness/anti-patterns.md` → "Gamified Discipline (Overjustification)".
 
+## The chat is a UI — perception & cognitive-load axioms (Mycelium's own interface)
+
+The motivation layer above governs *whether* the human stays willing. This layer governs *whether the output lands* once they are. An agentic chat has no visual canvas to lay out — the interface **is** the text stream — so the classic UX axioms (Hick, Miller, Zeigarnik…) apply to *how the agent emits*, not to pixels. Most of the Communication Rules in `CLAUDE.md` are already applied UX axioms; naming them makes the discipline auditable and surfaces the ones we under-exploit.
+
+**Already embodied** (axiom → the rule that already does it):
+
+| UX axiom | Where Mycelium already applies it |
+|---|---|
+| Curse of Knowledge | "plain language first, technical second" + `${CLAUDE_PLUGIN_ROOT}/engine/status-translations.md` |
+| Serial-Position (primacy/recency) | BLUF-first / discipline-notes-last layering (`G-C1`) |
+| The Labor Illusion | `Verified:` / `Cited:` / `Per` attribution — showing the work builds trust |
+| Tesler's Law (irreducible complexity) | complexity absorbed into gates, not dumped on the user |
+| Miller's Law (chunking) | context discipline; chunked output over walls of text |
+| Peak-End Rule | the Post-Task protocol *is* the "end" the interaction is remembered by |
+| Goal-Gradient | diamond phase progress / `/diamond-progress` |
+
+**Under-exploited — treat these as active nudges when shaping a reply:**
+
+- **Hick's Law** — every option you list multiplies decision time. When you offer choices, **recommend one and keep the set small** (≤3 plus the recommendation). A wall of equally-weighted options is a hidden tax on the human.
+- **Doherty Threshold (acknowledgment latency)** — in a chat, "responsiveness" is *narration*, not milliseconds. Before a long tool batch, **say what you're about to do in one line** so the user is never staring at silence wondering if you stalled. This is the perceptual grounding for the "state what you're about to do" rule.
+- **Zeigarnik Effect** — open loops nag until closed. A **visible task list** turns the user's "did it forget?" anxiety into a tracked, closable loop. Use it for any multi-step arc.
+- **Von Restorff (isolation)** — the distinctive item is the one remembered. A **blocker or gate must visually *pop*** (`ON HOLD (pending X)`, `Gated by:`), never blend into prose — otherwise the one line meant to stop the user scrolls past unseen.
+- **Service Recovery Paradox** — a mistake handled *visibly and well* builds **more** trust than no mistake. The `corrections.md` culture is this axiom institutionalized; the chat-facing version is: when you catch your own error, **surface the catch and the fix** rather than quietly patching it. (Pairs with the Labor Illusion.)
+- **Anchoring** — the first number you emit anchors the human's judgment hard. This is *why* estimation honesty matters: a padded-then-beaten estimate is not generous, it is a corrupted anchor. State the estimate you would defend, or say you do not know.
+
+**Persuasion axioms are dual-use.** Anchoring, Scarcity, Social Proof, Loss Aversion, Decoy, Framing — the axioms that *clarify* for a user can also *manipulate* one. Inside the framework's own interface they are bound by the same ethics line as Shotton at L5: use them to help the human decide well, never to steer them toward what the framework "wants." See `${CLAUDE_PLUGIN_ROOT}/harness/anti-patterns.md` → "Dark Pattern Marketing" (#10) — it governs the agent's own output, not just the delivered product.
+
+The interaction/visual layer of these axioms (Fitts, Gestalt grouping, typography) is *delivery-context* UX, not chat UX — Mycelium nudges the complementary `haabe/ux-axioms-mcp` server for that at UI-delivery transitions rather than absorbing 44 axioms it would have to keep in sync. See `${CLAUDE_PLUGIN_ROOT}/skills/usability-check/SKILL.md`.
+
 ---
 
-*Sources: Deci & Ryan (Self-Determination Theory, 1985; 2000); Pink (*Drive*, 2009); Herzberg (*The Motivation to Work*, 1959; "One More Time: How Do You Motivate Employees?", HBR 1968); Pierce, Kostova & Dirks (psychological ownership, 2001); Bandura (collective efficacy, *Self-Efficacy*, 1997); McGregor (*The Human Side of Enterprise*, 1960); Burns (*Leadership*, 1978) & Bass (transformational leadership, 1985); Lepper, Greene & Nisbett (overjustification, 1973); Deci, Koestner & Ryan (extrinsic-reward meta-analysis, 1999).*
+*Sources: Deci & Ryan (Self-Determination Theory, 1985; 2000); Pink (*Drive*, 2009); Herzberg (*The Motivation to Work*, 1959; "One More Time: How Do You Motivate Employees?", HBR 1968); Pierce, Kostova & Dirks (psychological ownership, 2001); Bandura (collective efficacy, *Self-Efficacy*, 1997); McGregor (*The Human Side of Enterprise*, 1960); Burns (*Leadership*, 1978) & Bass (transformational leadership, 1985); Lepper, Greene & Nisbett (overjustification, 1973); Deci, Koestner & Ryan (extrinsic-reward meta-analysis, 1999). UX axioms (chat-as-UI layer): Hick (1952), Miller (1956), Zeigarnik (1927), von Restorff (1933), Doherty & Thadani (1982), Kahneman & Tversky (anchoring, 1974), Norman (peak-end/service recovery) — full registry: `haabe/ux-axioms-mcp`.*

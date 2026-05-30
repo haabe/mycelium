@@ -199,7 +199,7 @@ Known failure modes organized by category. Check regularly, especially when thin
 
 ### 10. Dark Pattern Marketing
 - **Description**: Using behavioral science to manipulate users rather than help them make good decisions.
-- **Detection rule**: Design patterns that exploit cognitive biases against user interest (confirmshaming, hidden costs, forced continuity, misdirection). `/service-check` Principle 12 ("Encourages right behaviors") catches this during service quality review.
+- **Detection rule**: Design patterns that exploit cognitive biases against user interest (confirmshaming, hidden costs, forced continuity, misdirection). `/service-check` Principle 12 ("Encourages right behaviors") catches this during service quality review. **Turned inward**: the persuasion axioms in `haabe/ux-axioms-mcp` (anchoring, scarcity, social proof, loss aversion, decoy, framing) are dual-use — deploying them in the *agent's own output* to steer the user toward what the framework wants, rather than to help them decide, is this same anti-pattern aimed at the framework's user (see `${CLAUDE_PLUGIN_ROOT}/harness/design-principles.md` → persuasion axioms).
 - **What to do instead**: Use behavioral insights to HELP users (social proof for good choices, framing that clarifies value, anchoring that contextualizes pricing fairly).
 - **Source**: Shotton (ethical application of behavioral science)
 

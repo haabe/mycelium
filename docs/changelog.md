@@ -6,6 +6,18 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.36.0 — UX-axioms bridge: the chat is a UI
+
+**2026-05-30. Attribution: ux-axioms-bridge. Class: maintainer-directed (UX-axiom registry assessed for the framework, then the chat-interface lens added on user request).**
+
+v0.35.0 gave the framework a *motivation* layer (whether the human stays willing). This adds the *perception* layer (whether the output lands once they are). An agentic chat has no pixels to design — the interface **is** the text stream — so the classic UX axioms apply to *how the agent emits*.
+
+- **`harness/design-principles.md` gains a "chat is a UI" section.** Names which UX axioms the Communication Rules already embody (Curse-of-Knowledge → plain-language-first; Serial-Position → BLUF/discipline-notes layering; Labor-Illusion → `Verified:`/`Cited:` attribution; Tesler → complexity-in-gates; Peak-End → Post-Task protocol; Goal-Gradient → diamond progress) — making the discipline auditable — and flags the **under-exploited** ones as active nudges: **Hick's Law** (recommend one, keep option-sets ≤3), **Doherty Threshold** (acknowledgment-latency: narrate before long tool batches), **Zeigarnik** (visible task lists close open loops), **Von Restorff** (blockers must visually pop), **Service Recovery Paradox** (surface your own caught error, don't quietly patch), **Anchoring** (the first number anchors — the perceptual grounding for estimation honesty).
+- **`usability-check` nudges the complementary `haabe/ux-axioms-mcp` server** at UI-delivery transitions. Nielsen's heuristics cover interface *principles*; the ~44-axiom MCP covers the quantitative interaction/visual layer Nielsen doesn't (Fitts/Hick math, Gestalt grouping, typography). **Nudge, not push** — offer it, let the user wire it up; no axioms copied into the canvas (it's a maintained external source that would drift). Dedupe note: where Nielsen and an axiom overlap, cite once.
+- **Persuasion axioms tied to anti-pattern #10 (Dark Pattern Marketing), turned inward.** Anchoring/scarcity/social-proof/loss-aversion/decoy/framing are dual-use; deploying them in the *agent's own output* to steer the user toward what the framework wants is the dark-pattern anti-pattern aimed at the framework's user, not just the delivered product.
+
+**MINOR**: agent-facing capability; extends existing files (no new file, no schema change). What was *declined* and why (absorbing the 44 axioms; adding a UX gate; new Communication Rules in CLAUDE.md): `harness/decision-log.md` 2026-05-30.
+
 ## v0.35.0 — Motivation layer: how the framework treats its human
 
 **2026-05-30. Attribution: motivation-layer. Class: maintainer-directed (a cluster of motivation/psychology theories proposed for the framework).**
