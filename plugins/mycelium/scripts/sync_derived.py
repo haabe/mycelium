@@ -59,6 +59,9 @@ SKILL_COUNT_FILES = [
     PLUGIN,
     ".claude-plugin/marketplace.json",
     CARD,
+    # SKILL.md files whose lone "<N> skills" token is the total count. Without
+    # this sweep they restale (finding C, 2026-05-30: this file drifted to 44).
+    "plugins/mycelium/skills/diamond-assess/SKILL.md",
 ]
 
 

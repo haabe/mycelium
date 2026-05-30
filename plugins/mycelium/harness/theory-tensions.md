@@ -1,6 +1,6 @@
 # Theory Tensions
 
-Mycelium integrates 40+ frameworks. Some of them disagree. This file names the known tensions and provides navigation guidance for choosing between competing approaches.
+Mycelium integrates 30+ frameworks. Some of them disagree. This file names the known tensions and provides navigation guidance for choosing between competing approaches.
 
 **Why this file exists**: Simon Rohrer's LinkedIn feedback (v0.8.x) called out that "there's a lot in there that doesn't necessarily align 100%." Until v0.9.0, Mycelium hid these tensions and trusted the agent to reconcile them silently. That's the inferential-enforcement trap. This file makes the tensions explicit so the agent can name the choice and log the rationale in `decision-log.md`.
 

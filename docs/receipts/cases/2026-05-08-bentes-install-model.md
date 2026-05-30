@@ -64,7 +64,7 @@ The fix took ~3 hours of architectural analysis and ~3 hours of plugin scaffoldi
 
 ## Cross-references
 
-- Contributor: [Daniel Bentes](../../CONTRIBUTORS.md#v090--computational-enforcement-layer) (BDSK author, Produktleder.no Slack peer-practitioner, longstanding architectural reviewer)
+- Contributor: [Daniel Bentes](../../../CONTRIBUTORS.md#v090--computational-enforcement-layer) (BDSK author, Produktleder.no Slack peer-practitioner, longstanding architectural reviewer)
 - Related framework: [synaptiai/bdsk](https://github.com/synaptiai/bdsk) — Behavior-Driven Specification Kit; Daniel's architectural review of Mycelium runs in parallel
 - Related marketplace: [synaptiai/synapti-marketplace](https://github.com/synaptiai/synapti-marketplace) — inspired the plugin-form decision; future Mycelium listing under consideration
 - Plugin spec: [Anthropic Claude Code plugins reference](https://code.claude.com/docs/en/plugins-reference)

@@ -49,7 +49,7 @@ surfaces:
         type: gate-definition
         impact: high
         change_frequency: low
-        note: "12 theory gates that control phase transitions"
+        note: "13 theory gates that control phase transitions (the 13th, Explainability, is conditional — AI products only)"
       - path: .claude/engine/diamond-rules.md
         type: lifecycle
         impact: high

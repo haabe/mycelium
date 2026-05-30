@@ -80,7 +80,7 @@ Returns `additionalContext` so the agent knows about overdue strategic feedback 
 
 ### Layer 6: Skill-Level Gates (not hooks)
 **Triggers**: When `/diamond-progress` is explicitly invoked
-**Does**: Full theory gate evaluation across all 11 gates (Evidence, Four Risks, JTBD, Cynefin, Bias, Security, Privacy, BVSSH, Service Quality, DORA, Corrections). Requires judgment, context, and multiple canvas file reads.
+**Does**: Full theory gate evaluation across all 13 gates (Evidence, Four Risks, JTBD, Cynefin, Bias, Security, Privacy, BVSSH, Service Quality, Delivery Metrics, Corrections, Regulatory, Explainability). Requires judgment, context, and multiple canvas file reads.
 
 ## Hook Types (by cost)
 

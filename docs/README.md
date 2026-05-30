@@ -10,6 +10,7 @@ This file (`docs/README.md`) is the metadocumentation: it sets the rules every o
 
 ## Contents
 
+- `get-started.md` — install (plugin or legacy) + first-run for a new or existing project
 - `philosophy.md` — why opinionated discipline, why theory-grounded, why in-loop preventive
 - `glossary.md` — Mycelium-specific vocabulary (diamond, scale, canvas, gate, ...)
 - `faq.md` — frequently asked questions, including the six that surfaced at the 2026-05-07 Juniors.dev presentation

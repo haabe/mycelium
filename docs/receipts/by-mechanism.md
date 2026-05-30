@@ -2,10 +2,11 @@
 
 **Audience**: practitioners curious about which case produced which framework mechanism.
 **Time to read**: 2 min.
-**Last updated**: 2026-05-09.
+**Last updated**: 2026-05-30.
 
 | Mechanism | Origin case |
 |---|---|
+| Canvas-vs-reality drift detection (human-task reconciliation in `/canvas-health` + hooks) | [canvas-drift-reconciliation](cases/2026-05-28-canvas-drift-reconciliation.md) |
 | Plugin-form install model + single-plugin marketplace | [bentes-install-model](cases/2026-05-08-bentes-install-model.md) |
 | `/mycelium:setup` skill (idempotent first-run project init) | [bentes-install-model](cases/2026-05-08-bentes-install-model.md) |
 | Skill namespacing convention (`/mycelium:<name>`) | [bentes-install-model](cases/2026-05-08-bentes-install-model.md) |

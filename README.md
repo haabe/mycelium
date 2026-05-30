@@ -11,7 +11,7 @@ AI has made building cheap. It hasn't made *deciding* cheap. Agents will jump fr
 /mycelium:start       # one command: setup + 10-minute discovery
 ```
 
-Plugin install is brownfield-safe: no project-root files are modified. Skills are namespaced as `/mycelium:<name>`. See [docs/get-started.md](docs/get-started.md) for details.
+Plugin install is brownfield-safe: no project-root files are modified. Skills are namespaced as `/mycelium:<name>`. See [how to install and run your first round](docs/get-started.md) for details.
 
 **On the namespace prefix.** Anthropic's plugin convention requires `/<plugin>:<skill>`, so every Mycelium skill is `/mycelium:foo`. Two ergonomics that take the typing tax down:
 

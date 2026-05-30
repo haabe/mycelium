@@ -15,9 +15,15 @@ def _mini_repo(root, version="1.2.3", n_skills=3, plugin_version="1.2.3", token_
     (root / ".claude-plugin").mkdir(parents=True)
     (root / "docs/skills").mkdir(parents=True)
     for i in range(n_skills):
-        d = root / f"plugins/mycelium/skills/skill{i}"
+        # First real skill dir is diamond-assess — it carries a "<N> skills"
+        # harness-thickness token that the syncer now sweeps (finding C guard).
+        name = "diamond-assess" if i == 0 else f"skill{i}"
+        d = root / f"plugins/mycelium/skills/{name}"
         d.mkdir(parents=True)
-        (d / "SKILL.md").write_text("---\nname: x\n---\n")
+        body = "---\nname: x\n---\n"
+        if i == 0:
+            body += f"\n- Current: {token_count} skills, 12 gates\n"
+        (d / "SKILL.md").write_text(body)
 
     (root / "CLAUDE.md").write_text(
         f"# Title\n\n*Version {version} -- prose that must survive.*\n\nAll {token_count} skills are discovered.\n"
@@ -78,6 +84,7 @@ def test_sync_fixes_version_and_skill_count(scripts_path, tmp_path):
     assert "5 skills" in (root / "README.md").read_text()
     assert "5 skills" in (root / ".claude-plugin/marketplace.json").read_text()
     assert "5 skills" in (root / "docs/skills/README.md").read_text()
+    assert "5 skills" in (root / "plugins/mycelium/skills/diamond-assess/SKILL.md").read_text()
     # the published AI System Card gets BOTH the version and the skill count
     card = (root / "docs/ai-system-card.md").read_text()
     assert "**Version:** 2.0.0" in card

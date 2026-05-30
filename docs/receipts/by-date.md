@@ -2,10 +2,11 @@
 
 **Audience**: anyone scanning the chronology of Mycelium's evolution.
 **Time to read**: 1 min.
-**Last updated**: 2026-05-09.
+**Last updated**: 2026-05-30.
 
 | Date | Case | Contributor |
 |---|---|---|
+| 2026-05-28 | [canvas-drift-reconciliation](cases/2026-05-28-canvas-drift-reconciliation.md) | internal-dogfood |
 | 2026-05-09 | [consistency-as-evidence-graduation](cases/2026-05-09-consistency-as-evidence-graduation.md) | internal-dogfood |
 | 2026-05-09 | [stale-state-read-graduation](cases/2026-05-09-stale-state-read-graduation.md) | internal-dogfood |
 | 2026-05-09 | [bias-cluster-graduation](cases/2026-05-09-bias-cluster-graduation.md) | internal-dogfood |

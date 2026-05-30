@@ -91,7 +91,7 @@ Output the brief markdown to the chat. This is the visible payoff and it MUST ap
 
 #### Step 2 — Side-effect canvas + decision-log writes (after brief is rendered)
 
-**Hard requirement**: all FOUR files below must be written before Step 3. This is not optional or "best-effort" — downstream skills (`/mycelium:diamond-assess`, `/mycelium:jtbd-map`, `/mycelium:opportunity`) AND the auto-dogfood verification all assume the brief flow produces this complete artifact set. The brief flow's "10-min first value" promise IS this four-file write.
+**Hard requirement**: all FOUR files below must be written before Step 3. This is not optional or "best-effort" — downstream skills (`/mycelium:diamond-assess`, `/mycelium:jtbd-map`, `/mycelium:ost-builder`) AND the auto-dogfood verification all assume the brief flow produces this complete artifact set. The brief flow's "10-min first value" promise IS this four-file write.
 
 Read+Edit in parallel where possible (one tool batch for Reads, one for Edits) to minimize TUI noise. Order does not matter, but ALL FOUR must land:
 

@@ -9,7 +9,7 @@ The engine is the brain of Mycelium. It defines how diamonds work, what gates mu
 - **[leaf-lifecycle.md](leaf-lifecycle.md)** — The 10-phase pipeline every solution leaf follows, from creation through delivery to market feedback. Includes discard criteria.
 
 ### Decision Gates
-- **[theory-gates.md](theory-gates.md)** — The 12 gates that must pass before a diamond transitions: Evidence, Four Risks, JTBD, Cynefin, Bias, Security, Privacy, BVSSH, Service Quality, Delivery Metrics, Corrections, Regulatory. Each gate has pass/fail criteria and a suggested skill.
+- **[theory-gates.md](theory-gates.md)** — The 13 gates that must pass before a diamond transitions: Evidence, Four Risks, JTBD, Cynefin, Bias, Security, Privacy, BVSSH, Service Quality, Delivery Metrics, Corrections, Regulatory, Explainability (the 13th is conditional — L3–L5, AI products only). Each gate has pass/fail criteria and a suggested skill.
 - **[confidence-thresholds.yml](confidence-thresholds.yml)** — How much evidence is enough? Thresholds per scale, adapted by project type and dogfood mode.
 - **[adaptive-thresholds.md](adaptive-thresholds.md)** — Thresholds that improve from historical data. ICE advance threshold, confidence calibration, evidence staleness — all adjust as cycle history accumulates.
 

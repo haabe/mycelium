@@ -30,8 +30,6 @@ framework:
     - .claude/orchestration/
     - .claude/schemas/
     - .claude/scripts/
-    - .claude/optimization/
-    - .claude/tests/
     # .claude/auto-dogfood/ REMOVED 2026-05-22 (v0.23.37): auto-dogfood
     # was deleted in legacy cleanup (commit a5cabd3) and reinstated as
     # ROADMAP-PRIVATE tooling at mycelium-roadmap/.claude/auto-dogfood/
@@ -81,7 +79,6 @@ preserved_dir_readmes:
   - .claude/memory/README.md
   - .claude/evals/README.md
   - .claude/evals/dogfood-reports/README.md
-  - .claude/tests/README.md
 
 # Project state — NEVER overwrite if they exist.
 # These contain the user's work product.

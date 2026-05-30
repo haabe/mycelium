@@ -55,6 +55,9 @@ jobs:
       - name: Run canvas schema + trace validation
         run: python3 plugins/mycelium/scripts/validate_canvas.py
 
+      - name: Run dead-reference doc check (markdown links resolve in either tree)
+        run: python3 plugins/mycelium/scripts/check_doc_references.py --root .
+
       - name: Run Python unit tests with coverage (verbose output for CI logs)
         run: |
           pytest tests/python/ -v \

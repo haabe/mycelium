@@ -6,6 +6,19 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.34.0 — Reference-integrity: dead-link CI validator + cross-doc drift swept
+
+**2026-05-30. Attribution: reference-integrity. Class: maintainer-directed (gap-closure follow-on to the 2026-05-30 reference-graph recon).**
+
+A reference-graph recon over the whole tree surfaced three classes of gap: dead `manifest.yml` entries, the absence of the dead-reference validator deferred since v0.32.0 (and named as deferred at the bottom of v0.33.0), and cross-document factual drift. All three closed in one bundle.
+
+- **Dead manifest entries removed + orphan receipt linked.** `framework.directories` listed `.claude/optimization/` and `.claude/tests/`, and `preserved_dir_readmes` listed `.claude/tests/README.md` — none of which have a source in either tree, so `upgrade.sh` silently no-ops on them. Removed. The `2026-05-28-canvas-drift-reconciliation` receipt was unlinked from every receipt index; wired into by-date/by-contributor/by-mechanism/README. New `tests/python/test_manifest_coverage.py` fails if any shipped manifest entry loses its source going forward.
+- **The deferred dead-reference validator now exists.** `plugins/mycelium/scripts/check_doc_references.py` follows every markdown link in the doc + plugin tree and fails CI on any that resolve nowhere. It applies the real path model: file-relative links, the `.claude/`↔`plugins/mycelium/` dual-tree mapping, and *runtime-equivalent* resolution (a plugin-tree doc's relative link is correct for its installed `.claude/<sub>/` location, resolved lexically via `normpath` because the repo-root `.claude/` tree is partial). It dropped the recon's 377 raw hits — ~95% false positives from a naive single-tree resolver — to 3 genuine broken links, all fixed. Wired as a dedicated CI step + `test_check_doc_references.py` (8 tests incl. a standing "real tree stays clean" guard).
+- **Cross-doc drift swept.** `theory-tensions.md` said "40+ frameworks" (canonical is 30+); `diamond-assess/SKILL.md` reported "44 skills" (49); `interview/SKILL.md` named a downstream `/mycelium:opportunity` skill that does not exist (→ `/mycelium:ost-builder`). The skills-count restale is root-caused: `sync_derived.py` now also sweeps `diamond-assess/SKILL.md`'s harness-thickness token.
+- **Gate count reconciled (12 vs 13).** The tree was split: `plugin.json` + `marketplace.json` + `theory-gates.md` said 13, while CLAUDE.md's transition roster, `engine/README.md`, `surfaces.yml`, `diamond-assess`, and `hooks/README.md` (the last reading "11 gates", naming DORA, omitting Regulatory) said 12. Maintainer ruling: **13** is the canonical headline — 12 baseline gates plus a conditional 13th, Explainability/XAI (`theory-gates.md` gate 13: L3–L5, AI products only). Headline/total surfaces aligned to 13 with the conditional noted; per-scale *baseline* applicability counts ("L3 requires all 12 gates", "L4 = 11") left intact, since XAI is conditional rather than a fixed every-transition gate.
+
+**MINOR**: new CI validator + new manifest-coverage guard + generator-coverage extension. No agent-behavior, canvas, or schema change. Closes the orphan/dead-reference item deferred at v0.32.0 and again at v0.33.0. Rationale in `decision-log.md` 2026-05-30.
+
 ## v0.33.0 — AI System Card integrity: missing template + token drift closed
 
 **2026-05-30. Attribution: card-integrity. Class: maintainer-directed (audit follow-on — surfaced while reviewing whether the system card should be live or a template).**

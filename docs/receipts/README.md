@@ -14,6 +14,7 @@ Below: active patterns (multiple cases, may graduate), graduated mechanisms (cas
 
 | Mechanism | Origin case | Status |
 |---|---|---|
+| Canvas-vs-reality drift detection (human-task reconciliation) | [canvas-drift-reconciliation](cases/2026-05-28-canvas-drift-reconciliation.md) | Shipped (v0.31.3) |
 | `/mocked-persona-interview` skill | [macos-fileviewer kill](cases/2026-04-macos-fileviewer.md) | Shipped |
 | `meta_dogfood` project type + `dogfood: true` flag | [macos-fileviewer kill](cases/2026-04-macos-fileviewer.md) | Shipped |
 | Memory boundary (project memory vs auto-memory) | [macos-fileviewer kill](cases/2026-04-macos-fileviewer.md) | Documented in CLAUDE.md |
