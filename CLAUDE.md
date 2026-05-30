@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.34.1 -- **Attribution label: gate-count-guard**. Closes the structural hole behind v0.34.0's hand-washed gate count: Check 12 over-counted (its grep swept up `## Gate Structure`/`## Gate Definitions`, reporting 15 — the phantom that leaked into plugin.json and seeded a 12/13/15 split persisting since v0.23.7), and nothing tied the count to the headline surfaces. Rewrote Check 12 to count numbered gate *definitions* only (true 13) and to **fail** when plugin.json, marketplace.json, or the CLAUDE.md transition roster disagree — the gate-count analogue of Check 6/7 for skills. Conditional XAI nuance (13 total / 12 baseline) encoded in-check so per-scale tables aren't read as drift. +2 fixtures (`aligned` proving section-headings are ignored, `mismatch` proving surface-drift fails). **PATCH** (validator hardening; no agent-behavior, schema, or capability change). Rationale in `harness/decision-log.md` 2026-05-30. **Prior**: reference-integrity (v0.34.0), card-integrity (v0.33.0).*
+*Version 0.35.0 -- **Attribution label: motivation-layer**. Adds the framework's missing human-motivation layer: a new `harness/design-principles.md` grounding the existing nudge-don't-push instincts in Self-Determination Theory (autonomy/competence/relatedness), with Pink (A/M/P), Herzberg (hygiene vs motivator), psychological ownership, collective efficacy, and Theory Y as supporting lenses; a new anti-pattern **Gamified Discipline (Overjustification)** + guardrail **G-P8** forbidding extrinsic gamification of the framework's own discipline (the overjustification effect — distinct from legitimate end-user Hook-Model reward); theory-tensions **Tension 7** (discipline-as-control/Theory X vs discipline-as-scaffolding/Theory Y) wired into `/framework-health`'s gate-effectiveness audit; and an explicit **dual-process foundation** (Kahneman System 1/2; Haidt elephant-rider) consolidating the scattered System-1 references in `cognitive-biases.md` and sharpening the XAI gate against rider-confabulation. **MINOR** (new harness file, anti-pattern, guardrail, tension — agent-facing capability; no schema change). Rationale in `harness/decision-log.md` 2026-05-30. **Prior**: gate-count-guard (v0.34.1), reference-integrity (v0.34.0).*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 
@@ -142,7 +142,7 @@ Validator Check 31 enforces Preflight-block presence; the rule stays in sync via
 - **Anti-Patterns** (`.claude/harness/anti-patterns.md`): Known failure modes with detection rules. Stop and self-correct if you catch yourself in one.
 - **Cognitive Biases** (`.claude/harness/cognitive-biases.md`): Per-stage bias checklist.
 - **Security & Trust** (`.claude/harness/security-trust.md`): Per-stage security requirements.
-- **Engineering Principles** (`.claude/harness/engineering-principles.md`): DRY, KISS, YAGNI, SoC, SOLID, LoD.
+- **Engineering Principles** (`.claude/harness/engineering-principles.md`): DRY, KISS, YAGNI, SoC, SOLID, LoD. Human-facing complement: **Design Principles** (`.claude/harness/design-principles.md`) — how the framework treats its user (SDT autonomy/competence/relatedness; Theory Y; never gamify discipline).
 
 ## Self-Learning System
 

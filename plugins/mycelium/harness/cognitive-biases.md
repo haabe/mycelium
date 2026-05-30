@@ -67,6 +67,23 @@ Review the relevant stage checklist before every research activity, decision poi
 | **Anchoring** | Copying a pattern from StackOverflow/AI without evaluating fit | Understand the code. Evaluate for this context. Test thoroughly. |
 | **Framing effect** | Task description frames the implementation approach | Read acceptance criteria. Consider alternative implementations. |
 
+## Foundation: Dual-Process Cognition (Kahneman; Haidt)
+
+The whole of this file rests on one model, worth naming explicitly because so much below is an instance of it.
+
+**Kahneman (System 1 / System 2)**: cognition runs on two systems. **System 1** is fast, automatic, associative, effortless — it completes patterns. **System 2** is slow, deliberate, effortful — it checks, verifies, and reasons. System 1 produces most judgments; System 2 endorses or overrides them, but is lazy and often rubber-stamps System 1's offer.
+
+**Why this is foundational for an agent**: a language model is structurally a System-1 engine — fast, fluent, next-token pattern completion with no built-in deliberation step. Left alone it will produce a confident, coherent answer to almost anything. **Mycelium's gates, evidence requirements, and reflexion loops are a System-2 harness bolted over a System-1 generator** — they force the slow check the substrate does not do on its own. This is *why* the framework works at all, and why "I'm confident enough" is never sufficient to pass a gate: confidence is a System-1 signal.
+
+Seen through this lens, the rest of the file lines up:
+- **Cognitive Forcing Functions** (below) are the sharpest System-2 *activation* technique — they make the human deliberate before anchoring on the agent's System-1 output.
+- **WYSIATI** and **Noise** are characteristic System-1 *failure modes* (coherent story from thin evidence; scatter the deliberate system would catch).
+- Anti-patterns **Sycophancy (#6)**, **Consistency-as-Evidence (#7)**, and **Stale State Read (#8)** are all explicitly sourced to "System 1 pattern completion / autopilot" — they are what an un-checked System 1 does. **Pattern Matching Overconfidence** (above) is the same in the agent's own register.
+
+**Haidt (the elephant and the rider)**: the complementary model. The **elephant** (intuition, System 1) moves; the **rider** (reasoning, System 2) mostly *rationalizes* where the elephant already went, producing a post-hoc story that feels like the cause but isn't. The load-bearing warning for an agent: **a fluent explanation of a decision can be the rider confabulating, not the reason the decision was actually made.** This sharpens the Explainability (XAI) gate — see `${CLAUDE_PLUGIN_ROOT}/engine/theory-gates.md`: an explanation must be *verified against the evidence*, not accepted because it reads coherently. Narration is not reasoning.
+
+*Source: Kahneman (*Thinking, Fast and Slow*, 2011); Haidt (*The Happiness Hypothesis*, 2006; *The Righteous Mind*, 2012 — elephant-and-rider). Operationalized below via Buçinca et al. (2021).*
+
 ## Cognitive Forcing Functions (Buçinca, Malaya & Gajos, 2021)
 
 The most effective debiasing technique for human-AI collaboration. CFFs require the human to commit to a judgment *before* seeing the AI's recommendation. This activates System 2 analytical thinking and significantly reduces automation bias — more effectively than explanations, confidence scores, or uncertainty indicators.

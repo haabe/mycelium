@@ -155,6 +155,30 @@ Mycelium integrates 30+ frameworks. Some of them disagree. This file names the k
 
 ---
 
+## Tension 7: Discipline-as-Control (Theory X) vs Discipline-as-Scaffolding (Theory Y)
+
+**Frameworks**: McGregor (Theory X — people must be directed and controlled) vs McGregor (Theory Y — people seek responsibility and self-direction)
+
+**Nature**: Inconsistency (the same guardrail can embody either assumption; only one fits a given user/context)
+
+**The disagreement**: This is a tension *within the framework's own design*, not a product-decision tension. Every BLOCK / REVIEW / NUDGE guardrail rests on an implicit assumption about the human on the other side. Mycelium's declared stance is **Theory Y** — guardrails exist to elevate a capable professional's work (see `${CLAUDE_PLUGIN_ROOT}/harness/design-principles.md`). But a dense, blocking gate set *can read as* Theory-X distrust regardless of intent, and a specific guardrail can genuinely drift into coercion. When designing or applying a guardrail, name which assumption it encodes.
+
+**Context criteria for choosing**:
+
+| Signal | Guardrail is scaffolding (Theory Y) | Guardrail is coercion (Theory X) |
+|---|---|---|
+| **What it produces** | A sounder decision the user owns | Compliance for its own sake |
+| **The why** | Surfaced — user learns the reason | Hidden — "because the gate says so" |
+| **Escape** | Escape hatch available for cause, documented | No bypass; the rule is absolute regardless of context |
+| **Effect on competence** | User leaves more capable | User leaves more dependent |
+| **Framing** | "This evidence makes the call sound" | "Keep the streak / don't break the rule" |
+
+When a guardrail lands in the right-hand column, it is the failure mode to fix — relax it toward scaffolding, surface its why, or confirm an escape exists. Right-hand-column framing that adds *rewards* for compliance is a distinct trap: see anti-pattern "Gamified Discipline (Overjustification)" and `G-P8`.
+
+**Decision log prompt**: *"Kept G-P5 (read corrections.md) as BLOCK rather than NUDGE — it's Theory-Y scaffolding (it makes the user's next decision better by surfacing past lessons), not Theory-X control, because the cost is seconds and the why is explicit. A blanket BLOCK with no escape and no surfaced reason would have been Theory X; this isn't."*
+
+---
+
 ## Adding New Tensions
 
 When you encounter a new tension between frameworks Mycelium integrates, add it here using this template:

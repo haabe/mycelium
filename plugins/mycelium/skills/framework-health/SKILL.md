@@ -58,6 +58,7 @@ For each dimension, compute the metric and compare against trend (if prior asses
 - For each theory gate, count: times checked, times passed, times failed
 - Compute hit rate: failures / total checks
 - Flag rubber stamps (0% failure rate) and hard blocks (>80% failure rate)
+- **Theory X/Y audit** (per `${CLAUDE_PLUGIN_ROOT}/harness/theory-tensions.md` Tension 7): for any hard-block gate, check it is *scaffolding* (surfaces its why, an escape hatch exists, leaves the user more capable), not *coercion* (compliance for its own sake, no surfaced reason, no escape). A high-block gate that fails this audit is a Theory-X drift to remediate, not just a strict gate.
 
 **Regression Rate**:
 - Count diamonds that regressed at least once / total diamonds

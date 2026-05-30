@@ -2,6 +2,8 @@
 
 Reference guide for all engineering decisions. Apply consistently, violate consciously.
 
+**Scope note**: this file governs how the agent writes *code*. For how the framework should treat the *human* using it — autonomy, competence, relatedness, and the motivation traps to avoid — see the complementary `${CLAUDE_PLUGIN_ROOT}/harness/design-principles.md`.
+
 **Product type note** (v0.11.0): These principles are written with software examples but the underlying concepts apply to all product types. For non-software products, translate the principles: DRY = don't duplicate content across modules (courses), don't repeat the same service step (services). KISS = simplest curriculum that teaches the concept (courses), simplest prompt that gets the right output (AI tools). YAGNI = don't create content for topics students haven't asked about yet (courses), don't add service tiers nobody's requested (services). SoC = each lesson covers one concept (courses), each prompt handles one task (AI tools).
 
 ## ETC — Easy to Change (The Unifying Principle)

@@ -6,6 +6,19 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.35.0 — Motivation layer: how the framework treats its human
+
+**2026-05-30. Attribution: motivation-layer. Class: maintainer-directed (a cluster of motivation/psychology theories proposed for the framework).**
+
+Mycelium had deep machinery for the *agent's* cognition and the *user's product decisions*, but almost nothing explicit about the framework's **motivational and relational stance toward the person using it**. This adds that layer — and, critically, draws the line that keeps it from being anthropomorphic theatre: motivation theories describe a *human*, so they shape the framework's UX, not the (stateless) agent's "drives".
+
+- **New `harness/design-principles.md`** — the human-facing complement to `engineering-principles.md`. Grounds the existing "nudge, don't push" instincts in **Self-Determination Theory** (autonomy = menu-not-mandate; competence = make the user more capable and show the why; relatedness = canvas as shared, owned artifact). Supporting lenses: **Pink** (Autonomy/Mastery/Purpose, the communicable surface), **Herzberg** (hygiene-vs-motivator — a false-positive validator is a hygiene *defect*), **psychological ownership** + **collective efficacy** (why canvas-as-code is a relational choice), and **McGregor Theory Y** / transformational-not-transactional stance.
+- **New anti-pattern "Gamified Discipline (Overjustification)"** + guardrail **G-P8** — never bolt extrinsic rewards (points/badges/streaks/XP/leaderboards) onto the framework's own discipline. The overjustification effect: extrinsic tokens crowd out the intrinsic motivation of building good products. Boundary drawn explicitly: extrinsic/variable reward is legitimate for **end-user** habit design (the Hook Model in `/launch-tier`, L5), corrosive for the maintainer's own discipline loop.
+- **Theory-tensions Tension 7** — discipline-as-control (Theory X) vs discipline-as-scaffolding (Theory Y), wired into `/framework-health`'s gate-effectiveness step as a self-audit (a hard-block gate with no surfaced why and no escape is a Theory-X drift, not just a strict gate).
+- **Dual-process foundation named** in `cognitive-biases.md` — Kahneman System 1/2 and Haidt's elephant-and-rider were already load-bearing (Cognitive Forcing Functions, WYSIATI, anti-patterns #6/#7/#8 all cite System-1) but never consolidated. Now explicit: the agent is a System-1 generator, the gates are a System-2 harness. Haidt sharpens the XAI gate — a fluent explanation can be the rider confabulating, so explanations must be verified against evidence, not accepted for coherence.
+
+**MINOR**: new harness file + anti-pattern + guardrail + tension = agent-facing capability. No schema change. What was *declined* and why (transformational-transactional and collective-efficacy as standalone additions; the eight theories as new gates): `harness/decision-log.md` 2026-05-30.
+
 ## v0.34.1 — Gate-count guard: Check 12 now derives-and-compares
 
 **2026-05-30. Attribution: gate-count-guard. Class: maintainer-directed (root-cause follow-on to v0.34.0's hand-washed gate count).**

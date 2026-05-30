@@ -59,6 +59,7 @@ harness_framework:
   - .claude/harness/cognitive-biases.md
   - .claude/harness/communication-rules.md
   - .claude/harness/context-management.md
+  - .claude/harness/design-principles.md
   - .claude/harness/engineering-principles.md
   - .claude/harness/guardrails.md
   - .claude/harness/guardrails-core.md
