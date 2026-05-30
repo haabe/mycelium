@@ -57,6 +57,7 @@ framework:
 # Replace framework files, preserve project data files.
 harness_framework:
   - .claude/harness/anti-patterns.md
+  - .claude/harness/behavioral-contract.md
   - .claude/harness/cognitive-biases.md
   - .claude/harness/context-management.md
   - .claude/harness/engineering-principles.md

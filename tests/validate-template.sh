@@ -1440,6 +1440,50 @@ check_no_empty_fixture_dirs() {
 }
 
 # ============================================================
+# CHECK 36: CLAUDE.md line-count ceiling (dispatcher-size ratchet)
+# ============================================================
+# CLAUDE.md is always loaded into the agent's context, so its size is a
+# standing cost on every session. The /optimize-claudemd target is ~150 lines:
+# CLAUDE.md should be a DISPATCHER (rule + grep vocabulary + pointer), with
+# rationale / research citations / incident history relocated to sub-files.
+#
+# This check enforces a RATCHET, not a hard 150:
+#   - FAIL if line count exceeds CLAUDEMD_MAX_LINES (the ceiling). The ceiling
+#     starts at the current size so existing debt does not block commits, but
+#     the file cannot GROW past it. The rule: the ceiling only ever ratchets
+#     DOWN (lower it as the dispatcher refactor lands); never raise it to pass.
+#   - WARN if line count is within the ceiling but over CLAUDEMD_TARGET_LINES
+#     (the ~150 goal) — a visible, non-blocking reminder to keep trimming.
+#   - PASS at or under the target.
+#
+# Both bounds are env-overridable so the G-V12 fixture test can exercise all
+# three tiers with tiny fixtures (see tests/bash/test_check_36.sh).
+#
+# Graduated 2026-05-30 (v0.31.8) — maintainer-directed, after CLAUDE.md drifted
+# to 248 lines (~100 over target) with no mechanical guard against regrowth.
+check_claudemd_size_ceiling() {
+    section "Check 36: CLAUDE.md line-count ceiling (dispatcher-size ratchet)"
+
+    if [ ! -f CLAUDE.md ]; then
+        info "CLAUDE.md absent — Check 36 N/A"
+        return
+    fi
+
+    local ceiling target lines
+    ceiling="${CLAUDEMD_MAX_LINES:-248}"
+    target="${CLAUDEMD_TARGET_LINES:-150}"
+    lines=$(wc -l < CLAUDE.md | tr -d ' ')
+
+    if [ "$lines" -gt "$ceiling" ]; then
+        fail "Check 36: CLAUDE.md is ${lines} lines, over the ${ceiling}-line ceiling. CLAUDE.md is a dispatcher — relocate rationale/research/history to a sub-file and leave a pointer (run /optimize-claudemd). The ceiling ratchets DOWN only; never raise it to pass."
+    elif [ "$lines" -gt "$target" ]; then
+        warn "Check 36: CLAUDE.md is ${lines} lines — within the ${ceiling}-line ceiling but over the ${target}-line target. Trend toward ${target} via the dispatcher pattern, and lower the ceiling as you do."
+    else
+        pass "Check 36: CLAUDE.md is ${lines} lines (≤ ${target}-line target)."
+    fi
+}
+
+# ============================================================
 # RUN ALL CHECKS
 # ============================================================
 #
@@ -1486,6 +1530,7 @@ check_four_risks_when_active
 check_plugin_identifier_leak
 check_claudemd_single_version_entry
 check_no_empty_fixture_dirs
+check_claudemd_size_ceiling
 
 # ============================================================
 # SUMMARY

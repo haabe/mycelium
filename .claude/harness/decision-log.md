@@ -22,6 +22,38 @@ Record of significant decisions made during product development. Decisions are i
 
 ## Decisions
 
+### 2026-05-30 — CLAUDE.md size ratchet: mechanical regrowth guard (v0.31.8)
+- **Diamond**: framework-on-framework dogfood; `tests/validate-template.sh` CI gate. No active product diamond touched.
+- **Trigger**: Maintainer asked for a rule + a pre-commit test to stop CLAUDE.md growing past the ~150-line `/optimize-claudemd` target after it drifted to 248. The file is always context-loaded, so size is a recurring cost, and there was no mechanical guard against regrowth.
+- **Decision (BLUF)**: Add **Check 36** to `validate-template.sh` (the repo's CI gate; there is no separate git pre-commit hook) as a **ratchet**: FAIL above an env-overridable ceiling (default 248 = current), WARN above the 150 target, PASS under. Ceiling ratchets down only. Ship with a 3-tier G-V12 fixture test. PATCH (v0.31.8).
+- **Why_not_alternatives** (structured):
+    - `Hard FAIL above 150 now`: would break every commit immediately (file is at 248) and force the big relocation refactor before any other work could land. Rejected — blocks on pre-existing debt rather than on regression.
+    - `WARN-only (no FAIL tier)`: advisory yellow that everyone learns to ignore; does not actually prevent regrowth. Rejected — the explicit ask was to *prevent* growth.
+    - `Hardcoded ceiling (no env override)`: the G-V12 test would need a real >248-line fixture committed just to exercise FAIL. Rejected for env-overridable bounds so the test runs on 2–5 line fixtures.
+    - `A real git pre-commit hook (.pre-commit-config.yaml / .githooks)`: this repo enforces via CI `validate-template.sh`, not local hooks; adding a hook framework is a separate, environment-specific concern. Noted as an optional follow-up, not done here.
+    - `Document the rule as prose in CLAUDE.md`: self-defeating — would grow the file the check guards. Rejected; the rule self-documents in the Check comment + changelog/decision-log.
+    - `Bundle into v0.31.7`: distinct concern (CI tooling vs AI-PRD content) and a material change requiring its own version per Check 26. Kept as separate v0.31.8.
+- **Theory**: ratchet / baseline-aware enforcement (same philosophy as Check 17 ruff/shellcheck "pre-existing tolerated, regression fails"); Sweller CLT / always-loaded-context cost as the motivation for the 150 target; YAGNI (no git-hook framework until needed).
+- **Evidence**: `wc -l CLAUDE.md` = 248; `/optimize-claudemd` command documents the ~150 target and the dispatcher pattern (Verified: Read of `~/.claude/commands/optimize-claudemd.md`). Check 36 + test_check_36.sh both pass (3 tiers green).
+- **Confidence**: 0.8 — the mechanism is simple, tested, and self-contained; main residual is that a persistent WARN in CI could be normalized and ignored until the relocation refactor lands.
+- **Reversibility**: easily reversible (remove the check function + registration + test; no other code depends on it).
+- **Follow-up (tracked, not done)**: the dispatcher relocation refactor that brings CLAUDE.md toward 150 — relocate Communication-Rules rationale, Self-Learning artifact descriptions, and the Canvas Edit-vs-Write detail (already duplicated in `gist-plan/SKILL.md`) into sub-files with pointers, updating inbound references (incl. `harness/behavioral-contract.md` rows A1–A5) in lockstep. Lower the Check 36 ceiling as each tranche lands.
+
+### 2026-05-30 — AI behavioral contract: ship both product + agent surfaces (v0.31.7)
+- **Diamond**: framework-on-framework dogfood; `ai-tool-metrics.yml` + `/definition-of-done` (product) and `harness/` self-governance (agent). No active product diamond touched.
+- **Trigger**: Maintainer asked whether Adaline's "AI PRD missing sections" had anything for Mycelium, then (second turn) whether it applied to *how Mycelium works*, then directed "do as recommended for both." Coverage analysis: of the article's 6 sections, layered metrics (3) was already covered by `ai-tool-metrics.yml`; failure-modes-from-real-outputs (4), enhanced DoD (5), and behavioral constraints (6) were thin. The same framing recurses onto the agent's own scattered must/must-never rules.
+- **Decision (BLUF)**: Ship two coordinated additions. **Product**: `behavioral_constraints` + `failure_modes` (with `outputs_reviewed` provenance + binary `acceptance_criterion`) in `ai-tool-metrics.yml`, schema-backed, plus an `ai_tool`-gated `/definition-of-done` section. **Agent**: a pointer-only `harness/behavioral-contract.md` index. PATCH.
+- **Why_not_alternatives** (structured):
+    - `Dedicated /ai-contract skill instead of canvas blocks`: heavier; the canvas already holds the model/product layers, so blocks + a DoD gate reuse existing machinery — a new skill would be a parallel surface that drifts from the canvas. Rejected as YAGNI.
+    - `Put the DoD criteria in the product-agnostic checklist`: would bleed AI-specific gates onto software/content/service products. Rejected — the section is explicitly `product_type: ai_tool`-gated to preserve the agnostic core (per the named tradeoff).
+    - `Restate the agent rules in one new rulebook (copy bodies)`: creates a second source of truth that drifts from CLAUDE.md / guardrails / anti-patterns — the exact failure the canonical-block discipline prevents. Rejected for a pointer-only index where the source always wins.
+    - `Convert NUDGE self-governance rows to REVIEW now / add a contract-adherence metric`: tempting (the article argues binary forces clarity) but that is a real-friction change on N=0 measured violations — a HiPPO move on a single external artifact. Rejected; named in the index as a separate, evidence-gated future decision.
+    - `MINOR not PATCH`: no new BLOCK/REVIEW gate, no new mechanical validator Check, fully additive — matches the v0.31.5/v0.31.6 patch precedent. Rejected MINOR.
+- **Theory**: Adaline AI-PRD-as-behavioral-contract (2026); YAGNI (no premature skill); anti-pattern #4 HiPPO-Driven and #7 Consistency-as-Evidence (gate the NUDGE→REVIEW move on real evidence, not one artifact); canonical-block / Grice-quantity drift-avoidance (pointer-only index).
+- **Evidence**: Read-verified coverage of `ai-tool-metrics.yml`, `definition-of-done`, `eval-runner`, `gist-plan`; grep-verified guardrail tiers + anti-pattern anchors. Source itself is a vendor (evals tooling) WebFetch paraphrase — `consistency_only`/`Unverified` against the raw page; the framing is research-plausible, not validated for this surface.
+- **Confidence**: 0.6 — the product blocks are cleanly motivated and schema-validated; the agent index is a documentation consolidation with low downside. Would rise with a lived `ai_tool` delivery exercising the new DoD section, or a measured self-governance violation justifying the NUDGE→REVIEW conversion.
+- **Reversibility**: easily reversible (additive; no consumer depends on the new fields yet).
+
 ### 2026-05-29 — Scoping: production-observability-as-compiler-input → NOT YET (option c)
 - **Diamond**: framework-on-framework dogfood; feedback-loops.md Loop 3 + metrics-adapter governance. No active product diamond touched.
 - **Trigger**: Zigler×Yen (Honeycomb) Dev Interrupted 2026-05-26 — "production signals must become compiler inputs for autonomous agents"; observability reframed insurance→profit-center; MCP tools democratizing telemetry across orgs. Distinct axis from MAQ #5 (Cherny 2026-05-21, per-skill observability *inside* the harness): Yen's frame is *upstream* — production-side telemetry feeding the in-loop discipline. Question: add a production-signal-as-compiler-input pattern (a), scope out on the in-loop-vs-runtime-substrate layer distinction (b), or not-yet (c)?

@@ -2,9 +2,44 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-05-29.
+**Last updated**: 2026-05-30.
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
+
+## v0.31.8 — CLAUDE.md size ratchet (Check 36)
+
+**2026-05-30. Attribution: claudemd-size-ratchet. Class: maintainer-directed.**
+
+CLAUDE.md is loaded into context every session, so its size is a standing per-session cost. The `/optimize-claudemd` target is ~150 lines (a dispatcher that points to sub-files); the file had drifted to 248 (~100 over) with no mechanical guard against further regrowth. This adds the guard.
+
+- **Check 36** (`tests/validate-template.sh`): a line-count **ratchet**, not a hard 150.
+  - **FAIL** above `CLAUDEMD_MAX_LINES` (ceiling, default **248** = current size). Existing debt does not block commits, but the file cannot grow past the ceiling.
+  - **WARN** above `CLAUDEMD_TARGET_LINES` (default **150**, the optimize target) — a visible, non-blocking reminder. CLAUDE.md WARNs at 248 today.
+  - **PASS** at or under the target.
+- **The rule**: the ceiling ratchets **DOWN only**. As the dispatcher refactor relocates rationale/research/history into sub-files, lower the ceiling to lock in the gain; never raise it to make a commit pass.
+- **G-V12 proof**: `tests/bash/test_check_36.sh` exercises all three tiers (FAIL/WARN/PASS) on tiny fixtures via the env-overridable bounds.
+- **No CLAUDE.md prose added**: the rule self-documents in the Check comment + this entry, so the guard itself does not grow the file it guards.
+
+The relocation refactor that would actually bring CLAUDE.md toward 150 (and let the ceiling ratchet down) is tracked separately — see `harness/decision-log.md` 2026-05-30.
+
+**PATCH**: one new CI Check + its G-V12 test; no BLOCK gate, no canvas/schema change.
+
+## v0.31.7 — AI behavioral contract (product + agent)
+
+**2026-05-30. Attribution: ai-behavioral-contract. Class: external-artifact-triggered + maintainer-directed.**
+
+Reviewing Adaline's "AI PRD missing sections" surfaced that Mycelium already covered the layered-metrics section (model-quality vs product) via `ai-tool-metrics.yml`, but was thin on three: evidence-derived failure modes, an AI-aware Definition of Done, and behavioral (must-never) constraints. The same "feature as behavioral contract" framing applies to Mycelium's *own* agent governance, where the must / must-never rules were scattered. This ships both.
+
+**Product surface (`ai_tool` only):**
+- **`canvas/ai-tool-metrics.yml` — `behavioral_constraints`**: hyperspecific must-never rules (`id`, `rule`, `scope`, `verification`, `last_verified`), each binary-checkable.
+- **`canvas/ai-tool-metrics.yml` — `failure_modes`**: an `outputs_reviewed` provenance field (target ≥20) forcing derivation from *real* outputs rather than imagination (criteria drift), with a BINARY `acceptance_criterion` per mode that names who holds final judgment.
+- **Schema**: both blocks defined in `schemas/canvas/ai-tool-metrics.schema.json`. Canvas validation passes (additive; top-level already `additionalProperties: true`).
+- **`/definition-of-done`**: a new section gated explicitly on `product_type: ai_tool` — eval passes at the *declared* (product-decision) threshold, PM sign-off on a representative output batch, every behavioral constraint verified non-violated, failure modes derived from real outputs. Explicitly does NOT bleed into the product-agnostic checklist.
+
+**Agent surface:**
+- **`harness/behavioral-contract.md`** (new): a pointer-only consolidated must / must-never index for the agent itself, linking to the canonical sources in `CLAUDE.md`, the guardrail tiers, and `anti-patterns.md`. It copies no rule bodies — the cited source always wins — so it cannot drift. Registered in both manifests (Check 28 byte-match), surfaced in `harness/README.md` and the `CLAUDE.md` Harnessing System section. Names the known NUDGE-heavy self-governance gap as an explicit, separately-gated future decision rather than silently closing it.
+
+**PATCH**: additive canvas blocks + schema, one `ai_tool`-gated DoD section, one new pointer-only harness file + reference plumbing; no new BLOCK/REVIEW gate, no new mechanical validator Check (the DoD section is an agent-run prose check, matching the v0.31.6 prose-only precedent — no G-V12 test obligation). Rationale in `harness/decision-log.md` 2026-05-30.
 
 ## v0.31.6 — Learning-target coupling (feedback targets open canvas gaps)
 
