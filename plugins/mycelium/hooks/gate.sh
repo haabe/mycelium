@@ -11,8 +11,15 @@
 # 3. Secret detection in content being written (G-S1 ENFORCED)
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-.}"
-STAMP_FILE="/tmp/mycelium-preflight-stamp"
 CORRECTIONS_FILE="$PROJECT_DIR/.claude/memory/corrections.md"
+
+# Stamp path: per-user + per-project under $TMPDIR. The old shared
+# /tmp/mycelium-preflight-stamp was world-predictable — any local user could
+# pre-create or symlink it (clobber / privacy) and two projects/users on one
+# box collided on a single stamp. preflight.sh derives this identically.
+_stamp_uid=$(id -u 2>/dev/null || echo 0)
+_stamp_phash=$(printf '%s' "$PROJECT_DIR" | { md5 2>/dev/null || md5sum 2>/dev/null; } | tr -cd '0-9a-f' | cut -c1-12)
+STAMP_FILE="${TMPDIR:-/tmp}/mycelium-preflight-stamp-${_stamp_uid}-${_stamp_phash:-0}"
 
 # Parse tool input from stdin
 INPUT=$(cat)

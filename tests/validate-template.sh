@@ -1490,6 +1490,59 @@ check_claudemd_size_ceiling() {
 }
 
 # ============================================================
+# CHECK 37: G-V12 meta-check — every CI check ships a fixture test
+# ============================================================
+# G-V12 ("every check that flags a problem ships with a test demonstrating it
+# does") was enforced only by convention + the Pre-Ship checklist. It drifted:
+# the 2026-05-30 deep-dive audit found Check 16 and Check 17 had no
+# tests/bash/test_check_<N>.sh. This meta-check makes the gap mechanical —
+# it cross-references every `section "Check N:` declaration against the
+# tests/bash/ fixture files and FAILs on any uncovered check. Self-applying:
+# Check 37 itself ships tests/bash/test_check_37.sh.
+#
+# Combined/deprecated test files (e.g. test_check_2_3_4_deprecated.sh) count as
+# coverage for every number in their filename. The EXEMPT list is for checks
+# that are structurally un-fixturable; keep it empty unless truly necessary and
+# document the reason inline — an exemption is a coverage hole by another name.
+check_gv12_test_coverage() {
+    section "Check 37: G-V12 — every CI check ships a fixture test"
+
+    local checks_file="tests/validate-template.sh"
+    local tests_dir="tests/bash"
+    if [ ! -f "$checks_file" ] || [ ! -d "$tests_dir" ]; then
+        info "Check 37: validator or tests/bash missing in cwd — N/A"
+        return
+    fi
+
+    local required covered
+    required=$(grep -oE 'section "Check [0-9]+' "$checks_file" | grep -oE '[0-9]+' | sort -un)
+    covered=$(for f in "$tests_dir"/test_check_*.sh; do
+        [ -f "$f" ] || continue
+        basename "$f" | grep -oE '[0-9]+'
+    done | sort -un)
+
+    # Space-separated list of check numbers exempt from the fixture-test rule.
+    # Currently empty by design.
+    local exempt=""
+
+    local missing=() n
+    for n in $required; do
+        case " $exempt " in *" $n "*) continue ;; esac
+        if ! echo "$covered" | grep -qx "$n"; then
+            missing+=("$n")
+        fi
+    done
+
+    local total
+    total=$(echo "$required" | wc -w | tr -d ' ')
+    if [ "${#missing[@]}" -eq 0 ]; then
+        pass "Check 37: all ${total} declared checks have a tests/bash fixture test (G-V12 holds)"
+    else
+        fail "Check 37: checks missing a tests/bash/test_check_<N>.sh: ${missing[*]}. Add the fixture test per tests/bash/README.md (G-V12)."
+    fi
+}
+
+# ============================================================
 # RUN ALL CHECKS
 # ============================================================
 #
@@ -1537,6 +1590,7 @@ check_plugin_identifier_leak
 check_claudemd_single_version_entry
 check_no_empty_fixture_dirs
 check_claudemd_size_ceiling
+check_gv12_test_coverage
 
 # ============================================================
 # SUMMARY

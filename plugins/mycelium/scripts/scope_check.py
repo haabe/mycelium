@@ -34,9 +34,51 @@ Decision logic:
 - If state file is malformed → deny (fail-closed)
 """
 
-import fnmatch
+import functools
 import json
+import re
 import sys
+
+
+@functools.lru_cache(maxsize=256)
+def _compile_glob(pattern: str) -> "re.Pattern[str]":
+    """Compile a path glob to a regex with path-segment semantics.
+
+    Unlike fnmatch (where ``*`` matches ``/`` too — letting ``src/xyz/*`` leak
+    into ``src/xyz/legacy/...``), here:
+      - ``*``   matches within a single path segment (no ``/``)
+      - ``?``   matches a single non-``/`` char
+      - ``**``  matches across segments (any depth)
+      - ``**/`` matches zero-or-more leading segments, so ``**/foo`` hits both
+                top-level ``foo`` and nested ``a/b/foo``
+    """
+    out = []
+    i = 0
+    n = len(pattern)
+    while i < n:
+        c = pattern[i]
+        if c == "*":
+            if pattern[i + 1 : i + 2] == "*":
+                if pattern[i + 2 : i + 3] == "/":
+                    out.append("(?:.*/)?")  # **/  → zero-or-more dirs
+                    i += 3
+                else:
+                    out.append(".*")  # **   → any depth
+                    i += 2
+            else:
+                out.append("[^/]*")  # *    → single segment
+                i += 1
+        elif c == "?":
+            out.append("[^/]")
+            i += 1
+        else:
+            out.append(re.escape(c))
+            i += 1
+    return re.compile("^" + "".join(out) + "$")
+
+
+def _glob_match(path: str, pattern: str) -> bool:
+    return bool(_compile_glob(pattern).match(path))
 
 
 def emit_allow():
@@ -140,7 +182,7 @@ def main():  # noqa: C901, PLR0912 — hook entry point with linear fail-closed 
 
     # out_of_scope takes precedence
     for pattern in out_of_scope:
-        if fnmatch.fnmatch(rel_path, pattern) or fnmatch.fnmatch(file_path, pattern):
+        if _glob_match(rel_path, pattern) or _glob_match(file_path, pattern):
             emit_deny(
                 f"GUARDRAIL SCOPE VIOLATION: File path '{rel_path}' matches "
                 f"out_of_scope_paths in active execution plan for diamond "
@@ -154,7 +196,7 @@ def main():  # noqa: C901, PLR0912 — hook entry point with linear fail-closed 
 
     # Check in_scope match
     for pattern in in_scope:
-        if fnmatch.fnmatch(rel_path, pattern) or fnmatch.fnmatch(file_path, pattern):
+        if _glob_match(rel_path, pattern) or _glob_match(file_path, pattern):
             emit_allow()
 
     # Did not match any in_scope pattern → deny

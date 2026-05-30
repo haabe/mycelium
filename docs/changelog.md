@@ -6,6 +6,18 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.31.11 — Audit High group: stamp hardening, scope globbing, G-V12 meta-check
+
+**2026-05-30. Attribution: audit-high-group. Class: maintainer-directed (code audit).**
+
+Second severity-grouped batch from the repo deep-dive audit. Three High findings.
+
+- **H1 — predictable preflight stamp path**: `gate.sh` and `preflight.sh` shared a world-readable, world-predictable `/tmp/mycelium-preflight-stamp`. Any local user could pre-create or symlink it (clobber / info leak), and two projects or users on one host collided on a single stamp. Both scripts now derive an identical per-user + per-project path — `${TMPDIR:-/tmp}/mycelium-preflight-stamp-<uid>-<project-hash>` — and `preflight.sh` writes it `umask 077` (0600) after an `rm -f`.
+- **H2 — scope glob over-matching**: `scope_check.py` used `fnmatch`, where `*` matches `/`. An in_scope pattern like `src/feat/*` silently widened to `src/feat/legacy/secret.py`, defeating the point of scope enforcement. Replaced with a path-segment-aware glob compiler: `*` matches within a segment, `?` a single non-`/` char, `**` spans depth, and `**/` matches zero-or-more leading segments. Existing `**`-based scope plans are unaffected.
+- **H3 — G-V12 coverage was convention-only**: the audit found Check 16 and Check 17 shipped with no `tests/bash/test_check_<N>.sh`. New **Check 37** cross-references every `section "Check N:` declaration against the fixture-test files and FAILs on any gap (self-applying — ships `test_check_37.sh`). Backfilled `test_check_16.sh` (+ compliant / missing-key / hardcoded-drift fixtures) and `test_check_17.sh` (asserts the never-block-on-missing-tools invariant). Validator now 35 checks, all green.
+
+**PATCH**: new CI check + tests, robustness/security fixes; no behavioral-contract change, no canvas/schema change. New-CI-check-as-PATCH follows the Check 36 (v0.31.8) precedent.
+
 ## v0.31.10 — Hook dual-path hardening (Critical audit group)
 
 **2026-05-30. Attribution: hook-dual-path-hardening. Class: maintainer-directed (code audit).**

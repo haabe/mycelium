@@ -214,3 +214,41 @@ def test_spec_nested_in_scope_works(scripts_path, tmp_path, monkeypatch, capsys)
     )
     assert code == 0
     assert payload is None  # in_scope match → allow
+
+
+def test_single_star_does_not_leak_into_subdir(scripts_path, tmp_path, monkeypatch, capsys):
+    """H2 regression: a single-star in_scope pattern must NOT match across '/'.
+
+    With the old fnmatch behavior, 'src/feat/*' matched 'src/feat/legacy/old.py'
+    (because fnmatch '*' eats '/'), silently widening scope. Segment-aware
+    globbing denies it.
+    """
+    state_file = tmp_path / "active-execution.json"
+    state_file.write_text(json.dumps({
+        "diamond_id": "L4-feat",
+        "in_scope_paths": ["src/feat/*"],
+    }))
+    code, payload = _run_main(
+        scripts_path, monkeypatch, capsys,
+        state_file=state_file, project_dir=tmp_path,
+        hook_input={"tool_input": {"file_path": "src/feat/legacy/old.py"}},
+    )
+    assert code == 0
+    assert payload is not None
+    assert payload["hookSpecificOutput"]["permissionDecision"] == "deny"
+
+
+def test_double_star_matches_any_depth(scripts_path, tmp_path, monkeypatch, capsys):
+    """'**' still matches across segments so existing scope plans keep working."""
+    state_file = tmp_path / "active-execution.json"
+    state_file.write_text(json.dumps({
+        "diamond_id": "L4-feat",
+        "in_scope_paths": ["src/feat/**"],
+    }))
+    code, payload = _run_main(
+        scripts_path, monkeypatch, capsys,
+        state_file=state_file, project_dir=tmp_path,
+        hook_input={"tool_input": {"file_path": "src/feat/deeply/nested/api.py"}},
+    )
+    assert code == 0
+    assert payload is None  # deep match → allow

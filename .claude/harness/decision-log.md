@@ -22,6 +22,22 @@ Record of significant decisions made during product development. Decisions are i
 
 ## Decisions
 
+### 2026-05-30 — Audit High group: stamp hardening, scope globbing, G-V12 meta-check (v0.31.11)
+- **Diamond**: framework-on-framework dogfood; `hooks/gate.sh`, `hooks/preflight.sh`, `scripts/scope_check.py`, `tests/validate-template.sh` (new Check 37), `tests/bash/test_check_{16,17,37}.sh` + fixtures, `tests/python/test_scope_check.py`. No active product diamond touched.
+- **Trigger**: Second of three severity-grouped batches from the deep-dive audit; maintainer directed per-group commit-after-verify. This is the High group.
+- **Decision (BLUF)**: Fix all three. (H1) move the preflight stamp from world-predictable `/tmp/mycelium-preflight-stamp` to a per-user + per-project path under `$TMPDIR`, written `umask 077`. (H2) replace `fnmatch` in `scope_check.py` with a segment-aware glob compiler (`*` ≠ `/`, `**` spans depth). (H3) add Check 37 enforcing G-V12 mechanically + backfill the missing `test_check_16/17` and add self-applying `test_check_37`. PATCH (v0.31.11).
+- **Why_not_alternatives** (structured):
+    - `H1: keep shared /tmp path, just add umask`: umask fixes perms but not the cross-user/cross-project collision or the symlink-precreation surface. Rejected — namespacing per uid+project-hash is what actually isolates.
+    - `H1: hash with sha256 / external tool`: md5 via `md5`/`md5sum` is already a script dependency and the hash is for namespacing, not security. Rejected as needless.
+    - `H2: keep fnmatch, document the footgun`: leaves a silent scope-escape live. Rejected — the whole point of scope-gate is containment.
+    - `H2: depend on PurePath.full_match (3.13+) or a glob lib`: not stdlib-portable across the Python versions downstream projects run. Rejected — wrote a ~20-line stdlib regex compiler instead.
+    - `H3: write a brittle fixture test of check_17 by shelling to real tools`: check_17 is the meta-runner (ruff/shellcheck/pytest/bash-runner) and testing it in repo-root risks re-invoking the bash runner (recursion). Instead the test runs `check_code_quality` inside an isolated clean fixture and asserts the load-bearing invariant — *never FAIL on a clean project regardless of which tools are installed* — which avoids recursion (no `tests/bash/run.sh` in the fixture) and is env-independent.
+    - `H3: exempt 16/17 from G-V12 via an allowlist`: an exemption is a coverage hole by another name; the audit flagged both as real gaps. Rejected — wrote real fixture tests; left the EXEMPT list empty by design.
+- **Theory**: least-privilege / predictable-tmp hardening (CWE-377 temp-file); path-containment for scope guards; G-V12 (every check ships a failure-demonstrating test) made mechanical rather than convention-only; new-CI-check-as-PATCH precedent (Check 36, v0.31.8).
+- **Evidence**: stamp round-trip writes 0600 at the namespaced path, both scripts derive the same path (Verified: ran preflight + recomputed path + stat). Glob table: `src/feat/*` denies `src/feat/legacy/x` while `src/feat/**` allows it; `**/foo` matches `foo` and `a/b/foo` (Verified: ran matcher). `test_scope_check.py` 14/14, `test_manifest_lib.py` 15/15 (Verified: pytest). Check 37 PASS over 29 declared checks; bash suite 28 files pass; validator 35/35, 0 fail (Verified: ran both). Check 37 gap-fixture correctly FAILs naming the uncovered check (Verified: test_check_37).
+- **Confidence**: 0.88 — mechanical, reproduced, env-independent. Residual: H2's matcher is a hand-rolled translator; the test covers the common `*`/`**`/`**/` cases but not exotic patterns (character classes, escapes) which scope plans don't use today.
+- **Reversibility**: easily reversible (git).
+
 ### 2026-05-30 — Hook dual-path hardening: Critical audit group (v0.31.10)
 - **Diamond**: framework-on-framework dogfood; `hooks/gate.sh`, `hooks/scope-gate.sh`, `scripts/_manifest_lib.py`, `scripts/framework_guard.py`, `tests/python/test_manifest_lib.py`. No active product diamond touched.
 - **Trigger**: Repo deep-dive audit (4 parallel agents) surfaced 3 Critical findings; maintainer directed "Fix them all, but do them in groups by severity. Then commit once each group is completed and the fix verified." This is the Critical group.
