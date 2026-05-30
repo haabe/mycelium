@@ -72,6 +72,16 @@ The naming convention promises **temporal ordering** (after fires later than bef
 
 *Source: opencode Phase 1 runtime test 2026-05-16. Mycelium's reflexion port from Claude Code's `PostToolUseFailure` to opencode's `tool.execute.after` was designed on the assumption that the latter fires for failures. Headless test with a forced read failure: `tool.execute.before` fired, `tool.execute.after` never did. The naming convention strongly suggests otherwise; the runtime is authoritative. Same class as the prior pattern — both are "verify at the layer you're depending on, not the layer that describes it."*
 
+### PreToolUse hooks fail OPEN — a raised exception or non-zero exit does NOT block
+
+A Claude Code `PreToolUse` hook that hits an unhandled exception, or exits non-zero *without* emitting a decision payload, **fails open**: the tool call proceeds. The only way to *block* (fail closed) is to emit `{"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny", ...}}` on stdout and `exit 0`. So a guard that does `raise ValueError(...)` / `sys.exit(1)` on its own internal failure is silently permissive at exactly the moment its invariant broke — the worst time to wave the edit through.
+
+**Detection rule**: for every guard hook, ask "what happens when the guard *itself* errors?" Trace the error path, not just the happy path. If the error path is a bare exception or `exit 1`, the guard fails open. A guard whose *purpose* is containment (scope-gate, manifest-integrity, secret-detection) must catch its own internal errors and convert them to a `deny` decision + `exit 0`, so a broken guard denies rather than admits.
+
+**Counter-pattern**: testing only that the guard blocks the *bad input* it was written to catch, while never testing what it does when its *own* parsing/lookup fails. The fail-open path is invisible until the parser drifts — and then the guard is wide open precisely when structure has changed underneath it.
+
+*Source: v0.31.10 Critical audit group (`framework_guard.py`). `_manifest_lib.parse_manifest` was hardened to raise `ValueError` on structural drift (non-empty manifest → zero parsed buckets). The first cut let that exception propagate — which in a PreToolUse hook means exit non-zero, which means the edit proceeds: a manifest-integrity guard that fails open exactly when the manifest structure drifted. Fixed by catching the `ValueError` and emitting a `deny` JSON + `exit 0`. Same epistemic class as the two patterns above — verify the behavior at the layer you depend on (the runtime's block semantics), not the layer that describes it (the function "raises an error, so surely it's blocked").*
+
 
 ## Orchestration Patterns
 

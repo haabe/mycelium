@@ -8,6 +8,7 @@
 - **Decision log skipped**: 27/44 skills had no decision log instruction. G-P4 strengthened, 10 skills patched, evaluator expanded.
 - **python vs python3**: macOS has `python3` not `python`. Use `python3` in all commands.
 - **upgrade.sh must be glob-driven, not list-driven**: Hardcoded file lists drift when new files are added. Use globs with explicit preserve-lists.
+- **Migration fixes are class fixes — sweep siblings**: A path-resolution/dual-path fix proven in one hook (`framework-guard.sh` F6) was never applied to `gate.sh`/`scope-gate.sh`, which kept hardcoded legacy paths and silently no-op'd for plugin installs (v0.31.10 C1/C2). Grep every sibling for the pre-migration path before closing the work.
 - **Interview ceremony too long for sprints**: /interview consumed an entire session before any delivery work started. Need sprint-mode detection and minimum-viable interview path.
 - **Process cliff after onboarding**: After /interview, entire Mycelium process was abandoned — no diamonds, no canvas updates, no theory gates for 75% of the session. Discovery-to-delivery transition needs a lightweight mode.
 - **Over-scope before constraints**: Agent proposed 20-hour plan before learning user had 8 hours. Ask time/resource constraints before proposing scope.
@@ -42,6 +43,15 @@ Each correction entry follows this structure:
 ## Generalizable Corrections
 
 _Corrections that apply broadly across projects and contexts._
+
+### 2026-05-30 - Path-resolution migration fix proven once but never swept to sibling hooks (class left half-fixed)
+- **Scope**: orchestration, framework-on-framework (plugin migration)
+- **Category**: process (fix-the-instance-not-the-class)
+- **Origin**: ai-generated, surfaced by maintainer-directed deep-dive audit
+- **Mistake**: The plugin migration moved hooks/scripts under `${CLAUDE_PLUGIN_ROOT}` with a `.claude/` legacy fallback. The dual-path resolution (`${CLAUDE_PLUGIN_ROOT}/...` first, `.claude/...` second) was correctly written and proven in `framework-guard.sh` (the F6 fix). But two sibling hooks — `gate.sh`'s preflight invocation (C1) and `scope-gate.sh`'s helper invocation (C2) — kept hardcoded legacy `.claude/` paths. For plugin installs (no `.claude/` hook tree), those paths silently no-op'd: `gate.sh` never ran preflight, `scope-gate.sh` couldn't find its helper. The class was *known* — this very corrections file, entry 2026-05-09 line 307, had already recommended "ship the framework_guard helpers as part of the plugin tree so `${CLAUDE_PLUGIN_ROOT}/...` is canonical." The canonical fix was anticipated a year-quarter earlier and applied to one hook; the siblings were never swept.
+- **Correction**: v0.31.10 Critical audit group applied the same plugin-first/legacy-second resolution to `gate.sh` and `scope-gate.sh`. Verified the legacy paths were genuinely absent for plugin installs (confirms C1/C2 were live failures, not hypothetical).
+- **Prevention**: When a path-resolution / migration fix lands in one hook or script, **grep every sibling in the same directory for the same hardcoded pre-migration path before closing the work** (`grep -rn '\.claude/hooks/\|\.claude/scripts/' plugins/mycelium/hooks/`). A migration fix is a *class* fix; shipping it for the one file that visibly broke leaves the silent siblings live until an audit finds them. The Pre-Ship "dead-end references" check (G-P-pre #1) is the natural home — forward-grep what the migration changed against every caller, not just the one that failed.
+- **Source**: 2026-05-30 deep-dive audit. Theory: fix-the-class-not-the-instance; Lopopolo (silent absence is a harness-context failure — a no-op'd hook gives no signal). Kin to the glob-driven-not-list-driven correction (TL;DR line 10): both are "a hardcoded path/list drifts silently when the structure around it moves."
 
 ### 2026-05-23 - Subagent-output-verification applied to validator output (AP#7 sub-class e, new surface)
 - **Scope**: discovery, agent self-application during post-ship validation triage
