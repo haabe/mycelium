@@ -24,6 +24,56 @@
       },
       "additionalProperties": true
     },
+    "behavioral_constraints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "rule": {"type": "string"},
+          "scope": {"type": ["string", "null"]},
+          "verification": {"type": ["string", "null"]},
+          "last_verified": {
+            "oneOf": [
+              {"$ref": "_common.schema.json#/$defs/iso_timestamp"},
+              {"type": "null"}
+            ]
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "failure_modes": {
+      "type": "object",
+      "properties": {
+        "outputs_reviewed": {"type": ["integer", "null"]},
+        "review_source": {"type": ["string", "null"]},
+        "last_reviewed": {
+          "oneOf": [
+            {"$ref": "_common.schema.json#/$defs/iso_timestamp"},
+            {"type": "null"}
+          ]
+        },
+        "modes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {"type": "string"},
+              "description": {"type": "string"},
+              "frequency": {"type": ["string", "number", "null"]},
+              "severity": {
+                "type": ["string", "null"],
+                "enum": ["low", "medium", "high", null]
+              },
+              "acceptance_criterion": {"type": ["string", "null"]}
+            },
+            "additionalProperties": true
+          }
+        }
+      },
+      "additionalProperties": true
+    },
     "model_metrics": {
       "type": "object",
       "properties": {

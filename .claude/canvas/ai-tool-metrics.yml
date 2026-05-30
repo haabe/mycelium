@@ -17,6 +17,42 @@ prompt_quality:
   last_evaluated: null
 
 # ============================================================
+# Behavioral Constraints (must-never rules)
+# ============================================================
+# What the system must NEVER do, independent of what a user asks for. This is
+# the "behavioral contract" section of an AI PRD: hyperspecific prohibitions,
+# not vague guidance. "Must not cite a source absent from retrieved context"
+# beats "be accurate". Each constraint is binary-checkable and is verified at
+# Definition of Done (see /mycelium:definition-of-done — ai_tool section).
+behavioral_constraints: []
+  # - id: bc-1
+  #   rule: "Must not cite a source absent from the retrieved context."
+  #   scope: all_outputs          # all_outputs | tool_calls | <named surface>
+  #   verification: null          # how non-violation is checked (eval probe / manual review / guardrail)
+  #   last_verified: null
+
+# ============================================================
+# Failure Modes (evidence-derived, from real outputs)
+# ============================================================
+# DERIVE these from reviewing real prototype outputs, NOT from imagination —
+# people articulate requirements far better from seeing outputs than from
+# abstract thinking (criteria drift). Review the outputs BEFORE writing
+# acceptance criteria. Each mode carries a BINARY pass/fail acceptance_criterion
+# so "accurate enough" never stays a subjective Likert judgment, and names who
+# holds final judgment. severity is by failure COST, not occurrence rate (a rare
+# fabricated citation can outweigh a common formatting slip).
+failure_modes:
+  outputs_reviewed: null         # N real outputs inspected to derive this list (target >= 20)
+  review_source: null            # where they came from (prototype / staging / A-B / dogfood)
+  last_reviewed: null
+  modes: []
+    # - id: fm-1
+    #   description: "Summary invents action items the meeting never produced."
+    #   frequency: null           # observed rate across reviewed outputs
+    #   severity: null            # low | medium | high — by failure COST
+    #   acceptance_criterion: null  # BINARY + owner: ">= 95% of summaries contain zero fabricated action items; PM holds final judgment"
+
+# ============================================================
 # Model Metrics (if fine-tuned or custom model)
 # ============================================================
 model_metrics:

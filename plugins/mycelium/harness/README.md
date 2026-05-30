@@ -23,6 +23,7 @@ The term "harness" comes from [Birgitta Böckeler's harness engineering concept]
 | **NUDGE** | 17 | Advised but not blocking | Evidence quality checks, BVSSH reminders, test ideas responsibly |
 
 ### Decision Quality
+- **[behavioral-contract.md](behavioral-contract.md)** — The consolidated must / must-never index for the agent itself. Points to the canonical sources (it copies nothing) so the agent's own behavioral contract is grep-able in one place — the same behavioral-contract framing Mycelium applies to `ai_tool` *products* via `/definition-of-done`.
 - **[anti-patterns.md](anti-patterns.md)** — Known failure modes with detection rules. "Confidence theater," "discovery skip," "scope creep through accretion." If the agent catches itself in one, it stops and self-corrects.
 - **[cognitive-biases.md](cognitive-biases.md)** — Per-stage bias checklist. Confirmation bias in research, sunk cost in delivery, optimism in market planning. Paired with the `/bias-check` skill.
 - **[theory-tensions.md](theory-tensions.md)** — What happens when theories contradict each other? Wardley says "evolve" but YAGNI says "don't build it yet." This file maps known tensions and resolution strategies.
