@@ -1461,6 +1461,12 @@ check_no_empty_fixture_dirs() {
 #
 # Graduated 2026-05-30 (v0.31.8) — maintainer-directed, after CLAUDE.md drifted
 # to 248 lines (~100 over target) with no mechanical guard against regrowth.
+# Ratcheted DOWN to 200 on 2026-05-30 (v0.31.9) after the dispatcher relocation
+# (Communication-Rules rationale → harness/communication-rules.md; Diamond/
+# Self-Learning/Canvas-history detail → pointers). ~200 is the behavioral floor:
+# the remaining lines are always-on rules + the L0–L5 scales table, which must
+# stay resident and cannot move to a load-on-demand sub-file. The 150 target is
+# retained as the aspirational marker (WARN band), not a reachable floor here.
 check_claudemd_size_ceiling() {
     section "Check 36: CLAUDE.md line-count ceiling (dispatcher-size ratchet)"
 
@@ -1470,7 +1476,7 @@ check_claudemd_size_ceiling() {
     fi
 
     local ceiling target lines
-    ceiling="${CLAUDEMD_MAX_LINES:-248}"
+    ceiling="${CLAUDEMD_MAX_LINES:-200}"
     target="${CLAUDEMD_TARGET_LINES:-150}"
     lines=$(wc -l < CLAUDE.md | tr -d ' ')
 

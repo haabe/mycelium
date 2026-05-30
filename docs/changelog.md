@@ -6,6 +6,19 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.31.9 — CLAUDE.md dispatcher refactor (ceiling 248 → 200)
+
+**2026-05-30. Attribution: claudemd-dispatcher-refactor. Class: maintainer-directed.**
+
+Executes the relocation Check 36 (v0.31.8) was built to drive. CLAUDE.md goes 248 → **200 lines**; the Check 36 ceiling ratchets **DOWN** to 200.
+
+- **Communication Rules**: each rule keeps its active lead sentence + acceptable-form bullets inline; the rationale, graduation history, research basis, and X/Twitter extraction sequence move to a new **`harness/communication-rules.md`** (canonical detail — the active rules in `CLAUDE.md` win). Registered in both manifests (Check 28 byte-match), surfaced in `harness/README.md`.
+- **Diamond Engine / Self-Learning / Canvas history**: reference detail compressed to pointers at the existing `engine/*` sub-files (`diamond-rules.md`, `leaf-lifecycle.md`, `cycle-learning.md`, etc.). The L0–L5 scales table is kept inline as core wayfinding vocabulary.
+- **Preserved**: all 8 always/never active rules, gate-name vocabulary, and every `behavioral-contract.md` § anchor (Communication Rules, The Canvas, Pre-Task/Pre-Ship/Post-Task, Theory Gates) — so that index does not break.
+- **Honest floor**: ~200, not 150. The remainder is always-on rules + the scales table, which must stay resident and cannot move to a load-on-demand sub-file. The 150 target is retained as the aspirational WARN-band marker, not a reachable floor for this file.
+
+**PATCH**: relocation + pointer compression; no new gate, no behavioral change, no canvas/schema change. Validator 34/34, Check 36 G-V12 test 6/6.
+
 ## v0.31.8 — CLAUDE.md size ratchet (Check 36)
 
 **2026-05-30. Attribution: claudemd-size-ratchet. Class: maintainer-directed.**

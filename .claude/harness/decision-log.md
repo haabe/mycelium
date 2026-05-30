@@ -22,6 +22,22 @@ Record of significant decisions made during product development. Decisions are i
 
 ## Decisions
 
+### 2026-05-30 — CLAUDE.md dispatcher refactor: execute the relocation, ratchet ceiling 248 → 200 (v0.31.9)
+- **Diamond**: framework-on-framework dogfood; `CLAUDE.md` + `harness/` + `tests/validate-template.sh`. No active product diamond touched.
+- **Trigger**: Maintainer asked whether the optimization the Check 36 ratchet was built to drive had actually been done (it had not — v0.31.8 added only the guard). Then directed: commit the staged guard, run `/optimize-claudemd`, and — explicitly — do not scope the work around their reduced post-surgery capacity ("You're the one doing the job").
+- **Decision (BLUF)**: Execute the relocation. Move Communication-Rules rationale/history/research/X-Twitter-ops into a new canonical `harness/communication-rules.md`; compress Diamond-Engine, Self-Learning, Canvas-history reference detail to pointers at existing `engine/*` sub-files; keep every active rule + the L0–L5 scales table inline. CLAUDE.md 248 → **200**; Check 36 ceiling ratchets DOWN to 200. PATCH (v0.31.9).
+- **Why_not_alternatives** (structured):
+    - `Push to the literal ~150 target`: would require demoting always-on rules (Communication-Rules forms, Pre-Ship 9-item set, Two-Memory routing, scales table) to load-on-demand sub-files — but the `/optimize-claudemd` skill itself says behavioral directives stay resident because they must be active every session. Rejected — 150 is unreachable here without breaking that rule; ~200 is the honest behavioral floor.
+    - `Compress the L0–L5 scales table to a dense list`: saves ~2–3 lines at the cost of the dispatcher's core scannable wayfinding map. Rejected — low yield, real legibility loss.
+    - `Inline-delete the Communication-Rules rationale (no sub-file)`: violates the skill's "move first, then compress" rule and loses graduation provenance. Rejected — created the canonical sub-file instead.
+    - `One sub-file per heavy section (also a canvas-write-discipline.md, a diamond-detail.md)`: the Diamond/Self-Learning reference already lives in `engine/*` sub-files, so pointing at them satisfies "move first" with zero new files + zero new manifest entries. Only Communication-Rules lacked a home. Rejected the extra files as needless surface (YAGNI).
+    - `Bundle into v0.31.8`: the guard and the refactor it drives are distinct concerns and distinct material changes (Check 26). Kept as separate v0.31.9.
+- **Theory**: dispatcher pattern (root = what-exists-and-where, not a manual); Sweller CLT / always-loaded-context cost; "move first, then compress" (no content deleted that does not exist elsewhere); ratchet-down discipline (Check 36).
+- **Evidence**: `wc -l CLAUDE.md` 248 → 200 (Verified: ran wc). All 7 `behavioral-contract.md` § anchors still resolve (Verified: ran grep). 8 always/never rules retained (Verified: ran grep -c). communication-rules.md created + registered in both manifests; validator 34/34, Check 36 test 6/6 (Verified: ran both).
+- **Confidence**: 0.85 — mechanical, fully reference-checked, reversible. Residual: the WARN at 200 (>150) persists, by design, since 150 is not the floor for this file.
+- **Reversibility**: easily reversible (git; the moved content is intact in the sub-file).
+- **Closes**: the v0.31.8 "Follow-up (tracked, not done)" relocation item below — with the scope corrected (the Edit-vs-Write detail was *not* duplicated in `gist-plan/SKILL.md`; it stayed inline as an active rule, and the rationale that moved went to `communication-rules.md`, not a canvas-write file).
+
 ### 2026-05-30 — CLAUDE.md size ratchet: mechanical regrowth guard (v0.31.8)
 - **Diamond**: framework-on-framework dogfood; `tests/validate-template.sh` CI gate. No active product diamond touched.
 - **Trigger**: Maintainer asked for a rule + a pre-commit test to stop CLAUDE.md growing past the ~150-line `/optimize-claudemd` target after it drifted to 248. The file is always context-loaded, so size is a recurring cost, and there was no mechanical guard against regrowth.
