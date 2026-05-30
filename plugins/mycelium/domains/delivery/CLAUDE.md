@@ -143,7 +143,7 @@ The AI agent IS your pair partner. Leverage this:
 The three foundational principles of DevOps flow:
 
 - **First Way: Flow** — Optimize left-to-right system-level flow. Small batches, WIP limits, reduce handoffs, make work visible, eliminate waste. Never optimize a local stage at the expense of global throughput.
-- **Second Way: Feedback** — Amplify right-to-left feedback loops. Shorten loop times, create quality at source, stop the line on defects (Jidoka). The faster problems surface, the cheaper they are to fix.
+- **Second Way: Feedback** — Amplify right-to-left feedback loops. Shorten loop times, create quality at source, stop the line on defects (Jidoka). The faster problems surface, the cheaper they are to fix. **Within an L4 delivery diamond, validation is continuous, not a terminal Deliver-phase gate**: run tests/types/lint/evals on every change *alongside* generation, so a wrong assumption surfaces in seconds, not at the end. (This is the fine-grained concurrency the diamond's phase-gating does not preclude — gates govern *diamond transitions*, not the moment-to-moment build loop inside Deliver.)
 - **Third Way: Continual Learning and Experimentation** — Foster a culture of experimentation. Take calculated risks, learn from failure, practice and repetition. Allocate time for improvement of daily work. Blameless post-mortems, corrections.md, patterns.md — all Third Way practices.
 
 *Source: Kim, Humble, Debois, Willis (The DevOps Handbook)*

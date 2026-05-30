@@ -39,7 +39,8 @@ Scope note: this is the *agent self-governance* contract. The *product* behavior
 | N6 | Never parrot the user's self-praise or grade their choices (Sycophancy) | `anti-patterns.md` § Confidence #6 |
 | N7 | Never declare done on intent/effort/memory rather than verified evidence | `skills/definition-of-done/SKILL.md` § Completion Audit |
 | N8 | Never skip the reflexion loop on a tool failure (Reflexion Bypass) | `anti-patterns.md` § Delivery #6 |
-| N9 | Never take a destructive/hard-to-reverse/shared-state action without confirmation unless pre-authorized | Operating harness (system prompt) — no repo anchor; reversibility is recorded per-decision in `harness/decision-log.md` (Reversibility field) |
+| N9 | Never take a destructive/hard-to-reverse/shared-state action without confirmation unless pre-authorized; under uncertainty, round up to the more-governed tier | `harness/delegation-authority.md` (authority map; consequence rule); reversibility also recorded per-decision in `harness/decision-log.md` (Reversibility field) |
+| N10 | Never decide a no-standing item (which bet to make; accept a security/privacy/regulatory/ethics tradeoff; edit the authority map) on the agent's own authority | `harness/delegation-authority.md` § no-standing list |
 
 ## Enforcement tiers
 

@@ -290,6 +290,8 @@ Two quality layers for user-facing work:
 
 **Suggested skill**: `/dora-check` (auto-routes to product-type-appropriate assessment)
 
+**Note — deploy authority is not a gate.** This gate measures delivery *health* (cadence, quality), not the per-deploy *decision* of whether the agent may ship to real users on its own. That decision is governed by consequence (effective-reversibility × aggregate-blast-radius), not by a phase transition — a production deploy is high-consequence whether or not it coincides with a Deliver→Complete gate. The authority rule and the **risk-envelope** mechanism (human sets thresholds once; agent acts within them) live in `${CLAUDE_PLUGIN_ROOT}/harness/delegation-authority.md`. Do not add a "deploy gate" here; the consequence rule already covers it.
+
 ### 11. Corrections Gate
 
 **Source**: Mycelium (internal learning loop)

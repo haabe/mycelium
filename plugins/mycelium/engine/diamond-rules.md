@@ -191,6 +191,8 @@ Each diamond transition involves both agent and human actions. The agent execute
 
 **Key principle**: The human actions column defines what the framework EXPECTS from the human at each point. If the human is not performing these actions, the Cognitive Offloading Loop anti-pattern may be emerging.
 
+**What is delegable at Develop → Deliver** (the **Delegate**/**Review** seam above): not "hand off everything." Implementation decisions are delegated to the agent *up to the consequence line* — reversible, contained work is the agent's; the deploy decision, destructive/shared-state ops, and any no-standing tradeoff stay the human's. The authority map and the consequence rule (effective-reversibility × aggregate-blast-radius) live in `${CLAUDE_PLUGIN_ROOT}/harness/delegation-authority.md`. A human who delegates *past* that line is in the Cognitive Offloading Loop; an agent that acts *past* it violates behavioral-contract N9/N10.
+
 *Source: AI Interaction Atlas (23 human actions), adapted for Mycelium's diamond model*
 
 ## Relationship to Other Methodologies

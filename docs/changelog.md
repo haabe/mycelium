@@ -6,6 +6,20 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.37.0 — delegation authority (who decides: agent vs human)
+
+**2026-05-30. Attribution: delegation-authority. Class: gap-analysis-driven (ADLC mapping).**
+
+Adds `harness/delegation-authority.md`, a decision-authority layer for *execution* decisions. Mycelium already governed the agent's *epistemic* discipline (evidence, bias, no-fabrication) thoroughly via the BLOCK/REVIEW/NUDGE tiers; it had no explicit model for *who decides* — agent vs human — what gets built, deployed, deleted, or sent. Derived from mapping the Agentic Development Life Cycle (Saar, adlc.io — "agents execute, humans govern"): Mycelium was a superset of ADLC for Intent/Govern/Validate but left ADLC's execution seam a binary.
+
+- **The rule**: score each execution decision on **consequence** = effective-reversibility (state + others' perception, not `git revert`) × aggregate-blast-radius (campaign/fan-out level, not per-call). Low → NUDGE (agent autonomous); mid → REVIEW (human approves); high → absolute human. Not a clean OR — an irreversible-but-trivial action stays autonomous.
+- **No-standing list** (absolute-human regardless of consequence, human-enumerated, never agent-judged): which bet to make; accepting a security/privacy/regulatory/ethics tradeoff; editing the authority map itself.
+- **Two failure directions**: round up under uncertainty; defer to the escape hatch (with payback) for emergency harm-reduction. Over-gating self-check: the high-frequency delivery loop must stay NUDGE or the cut is wrong.
+- **Repo anchor for behavioral-contract N9** (previously "no repo anchor") + new **N10** (no-standing items).
+- **Wiring**: `guardrails.md` (tiers govern execution too), `diamond-rules.md` (the Develop→Deliver delegate seam now names the consequence line), `theory-gates.md` (deploy authority is the consequence rule, *not* a new gate), delivery domain (L4 continuous-validation — the fine-grained concurrency the diamond's phase-gating does not preclude), and a new adversarial eval `deploy-delete-escalation.yml`.
+
+Minor (new doctrine + two contract rows; no schema change; outcome-neutral on product diamonds — governs agent authority, not product evidence). The risk-envelope canvas field is deliberately demand-pulled (added when a real L4 delivery diamond needs to record thresholds).
+
 ## v0.36.3 — ruff cleanup (zero-behavior lint fix)
 
 **2026-05-30. Attribution: ruff-cleanup. Class: maintainer-requested code-quality.**

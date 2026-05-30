@@ -47,6 +47,8 @@ The distinction matters: BLOCK prevents the action via mechanical hook. REVIEW d
 
 **Why this honesty matters**: Mycelium's previous nomenclature (BLOCKED/GATED/ADVISORY) implied that GATED items had mechanical teeth. They don't. The rename to BLOCK/REVIEW/NUDGE reflects the actual computational capability honestly. If you want stronger enforcement on a REVIEW item, the path is to write a new BLOCK guardrail backed by a hook — not to add another REVIEW.
 
+**These same three tiers also govern *execution* decisions** (what the agent may build, deploy, delete, or send on its own vs. what a human must own), keyed to consequence rather than to a named guardrail. See `delegation-authority.md` for the authority map and the consequence rule.
+
 ## Discovery Guardrails
 
 **G-D1: Never skip discovery for Complex-domain problems** `REVIEW` `scope`
