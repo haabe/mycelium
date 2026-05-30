@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.36.0 -- **Attribution label: ux-axioms-bridge**. Extends `harness/design-principles.md` with a **chat-is-a-UI** layer: the perception/cognitive-load axioms that govern the framework's own text-stream interface (Curse-of-Knowledge, Serial-Position, Labor-Illusion, Peak-End already embodied in the Communication Rules; Hick, Doherty acknowledgment-latency, Zeigarnik visible-task-lists, Von-Restorff distinctive-blockers, Service-Recovery-Paradox, Anchoring named as under-exploited nudges). Nudges the complementary `haabe/ux-axioms-mcp` server (~44 interaction/visual/typography/Gestalt axioms) at UI-delivery transitions via `usability-check` — **nudge-not-push**, no axioms copied in. Ties the registry's dual-use **persuasion axioms** to anti-pattern **#10 Dark Pattern Marketing**, turned inward onto the agent's own output. **MINOR** (agent-facing capability; extends existing files, no new file, no schema change). Rationale in `harness/decision-log.md` 2026-05-30. **Prior**: motivation-layer (v0.35.0), gate-count-guard (v0.34.1).*
+*Version 0.36.1 -- **Attribution label: ux-axioms-bridge-remediation**. Self-audit remediation of v0.36.0: (1) wires `harness/design-principles.md` into the **Mandatory Pre-Task load** (step 4) so the chat-as-UI nudges are genuinely loaded, not merely documented (closes a documented-≠-enforced gap); (2) attributes the `haabe/ux-axioms-mcp` tool list to its README (`Per its README`) rather than asserting an unverified install path; (3) adds `/framework-health` **step 4e** — a *buildable* chat-UX self-audit that scans static skill `## Output` templates for Hick's-Law (recommendation-less option-lists) and Von-Restorff (non-distinct blockers) violations (the live-output version is unenforceable — no corpus). Two corrections logged (skipped-visible-Pre-Ship; asserted-external-tool-from-README). **PATCH** (remediation + one small audit step; no schema change). Rationale in `harness/decision-log.md` 2026-05-30. **Prior**: ux-axioms-bridge (v0.36.0), motivation-layer (v0.35.0).*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 
@@ -49,7 +49,7 @@ Before ANY implementation task, load context in this order (task-specific first,
 1. Identify which diamond you are operating within (check `.claude/diamonds/active.yml`)
 2. Load the appropriate domain context (`.claude/domains/{discovery|delivery|quality}/CLAUDE.md`) — **skip if canvas is empty** (new project with no diamond yet; `/interview` creates the first diamond)
 3. Read `.claude/memory/corrections.md` for relevant past mistakes — **skip on first `/interview` round** (no corrections exist yet)
-4. Load phase-scoped guardrails: always load `guardrails-core.md`; add `guardrails-discovery.md` (L0-L2), `guardrails-delivery.md` (L3-L4), or `guardrails-market.md` (L5) per current phase. See `.claude/harness/guardrails.md` for full reference.
+4. Load phase-scoped guardrails: always load `guardrails-core.md` and `harness/design-principles.md` (human-UX + chat-as-UI nudges that shape every reply); add `guardrails-discovery.md` (L0-L2), `guardrails-delivery.md` (L3-L4), or `guardrails-market.md` (L5) per current phase. See `.claude/harness/guardrails.md` for full reference.
 
 ## Mandatory Pre-Ship Protocol (G-P-pre)
 

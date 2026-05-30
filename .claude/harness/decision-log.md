@@ -22,7 +22,21 @@ Record of significant decisions made during product development. Decisions are i
 
 ## Decisions
 
-### 2026-05-30 — UX-axioms bridge: treat the agent chat as a UI; nudge the external axiom MCP rather than absorb it (v0.36.0)
+### 2026-05-30 — UX-axioms bridge self-audit remediation: make the nudges loadable, attribute the external tool, build the auditable self-check (v0.36.1)
+- **Diamond**: framework-on-framework dogfood; CLAUDE.md Pre-Task step 4 (load design-principles.md), `skills/usability-check/SKILL.md` (attribute MCP tools), `skills/framework-health/SKILL.md` (new step 4e), two `corrections.md` entries. No new file, no schema change. No active product diamond touched.
+- **Decision**: A maintainer-requested self-audit of v0.36.0 found (1) "active nudges" was an overclaim — design-principles.md was not in any mandatory load; (2) the `haabe/ux-axioms-mcp` tool list was asserted from its README without verifying the install path; (3) the offered "/framework-health flags over-long option-sets in chat" feature was unbuildable as described (no stored corpus of live agent output). Remediated all three: wired design-principles.md into Pre-Task step 4; softened the MCP claim to `Per its README`; built the auditable variant (step 4e scans static skill `## Output` templates, not live chat).
+- **Why_not_alternatives**:
+    - `Soften "active nudges" → "available nudges" (the originally-offered fix)`: rejected once remediation 2 was chosen — wiring the file into the load makes "active" *true*, so softening would have made the language *less* accurate. Fixed the enforcement, not the wording.
+    - `Add design-principles.md as a new mandatory Pre-Task step (own numbered line)`: rejected — CLAUDE.md is at the 200-line Check 36 ceiling; extended step 4's existing line instead (line-neutral).
+    - `Mandatory-load design-principles.md on every turn, not just Pre-Task`: not mechanically possible (only Pre-Task has a load hook); step-4 load covers implementation work, where output-shaping matters most. Honest scope, not full "every reply."
+    - `Build step 4e as a mechanical tests/bash check now`: rejected — a CI check needs a G-V12 fixture (Check 37) and a flat option-list may be deliberate; a prose audit step (matching 4b–4d) with a two-strike graduation path to a mechanical check is the proportionate build.
+    - `Drop the MCP recommendation entirely until verified`: rejected — the README is real evidence the tool exists; attribution (`Per its README`) is the calibrated move, not removal.
+    - `Log corrections only, ship no fix`: rejected — the user said "do all three"; the overclaim was live in shipped files.
+- **Theory**: anti-pattern #1 (Confidence Theater — "all green" as done-ness theatre), #7 (Consistency-as-Evidence — README-as-installability); Goodhart (a passing validator is a precondition, not the G-P-pre analysis); Hick & von Restorff (the axioms the step-4e audit enforces).
+- **Evidence**: verified design-principles.md absent from CLAUDE.md:48-52 mandatory load (Read); Bash classifier unavailable when MCP install-path re-verification was attempted → attribution is the only honest option.
+- **Confidence**: 0.8 — high on the remediations (each closes a verified gap); step 4e's real-world yield is unmeasured until first run. Would rise after one `/framework-health` run reports template flags.
+- **Reversibility**: easily reversible (additive prose + one CLAUDE.md line extension).
+
 - **Diamond**: framework-on-framework dogfood; extends `harness/design-principles.md` (new "chat is a UI" section), `skills/usability-check/SKILL.md` (MCP nudge), `harness/anti-patterns.md` #10 (persuasion axioms turned inward). No new file, no manifest change, no schema change. No active product diamond touched.
 - **Decision**: Assessed the `haabe/ux-axioms-mcp` registry (~44 interaction/visual/cognitive-load/typography/Gestalt axioms) against Mycelium's existing UX surface (service via Downe, interface heuristics via Nielsen, accessibility via WCAG, ethics via Shotton). Two gaps found and addressed differently: (1) the framework's **own** user-facing UX — the agent chat — was implicitly applying ~7 axioms via the Communication Rules but never named them, so named them and surfaced 6 under-exploited ones as nudges; (2) the **delivery-context** interaction/visual layer is real and net-new, but owned by the external MCP, so nudged it at UI-delivery transitions rather than copying axioms into the canvas.
 - **Why_not_alternatives**:

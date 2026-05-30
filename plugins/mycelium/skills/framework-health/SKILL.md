@@ -124,6 +124,15 @@ Run a lightweight version of `/mycelium:canvas-health` step 9b on `docs/`:
 
 Surface in the dashboard. Full details delegate to `/mycelium:canvas-health`.
 
+### 4e. Chat-UX Axiom Audit of Skill Output Templates (added 2026-05-30)
+
+The chat-UX nudges in `${CLAUDE_PLUGIN_ROOT}/harness/design-principles.md` ("the chat is a UI") shape *live* output, which has no stored corpus to audit retroactively. What *is* auditable is the static surface that pre-shapes live output: the `## Output`/`## Output Format` blocks in `${CLAUDE_PLUGIN_ROOT}/skills/*/SKILL.md`. Scan each for two axiom violations:
+
+- **Hick's Law** — an output template that instructs the agent to present a *list of options/recommendations* with no "recommend one" / "priority" / "top-N" cue. A template that emits N equally-weighted choices manufactures decision-tax on every invocation. Flag templates with option-lists lacking a recommendation cue.
+- **Von Restorff (isolation)** — an output template that renders a blocker, gate, error, or STOP condition as undifferentiated prose rather than a visually distinct marker (`ON HOLD`, `Gated by:`, a leading verdict line). Flag blocker-bearing templates whose blocker does not visually pop.
+
+This is the **buildable** form of the self-audit; the live-output version is unenforceable (no corpus). Surface counts + offending skills in the dashboard. Do not auto-edit skills — flag for maintainer review (a template's flat option-list may be deliberate). Graduation path: if the same skill is flagged across two assessments, promote to a mechanical `tests/bash` check (then it inherits G-V12 / Check 37).
+
 ### 5. Generate Dashboard
 
 ## Output

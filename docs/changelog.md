@@ -6,6 +6,20 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.36.1 — UX-axioms bridge: self-audit remediation
+
+**2026-05-30. Attribution: ux-axioms-bridge-remediation. Class: maintainer-requested self-audit.**
+
+A self-audit of v0.36.0 (requested right after it shipped) found two real misses and one design gap. This patch fixes all three.
+
+- **Wired `design-principles.md` into the Mandatory Pre-Task load** (CLAUDE.md step 4). v0.36.0 called the chat-UX nudges "active," but the file was only an on-demand pointer — not in any mandatory load. That is the documented-≠-enforced cluster the framework tracks. Now it loads alongside `guardrails-core.md`, so the nudges are genuinely in context when shaping replies.
+- **Attributed the `haabe/ux-axioms-mcp` tool list to its README.** v0.36.0 recommended the server's tools as fact having verified only the repo's README, not the install/run path. Softened to `Per its README` + "confirm the current install/run path before recommending a setup command" — per CLAUDE.md's verification-surface rule.
+- **Added `/framework-health` step 4e — a buildable chat-UX self-audit.** The "flag over-long option-sets in live chat" idea is unenforceable (no stored corpus of agent output). The buildable form scans the *static* `## Output` templates in `skills/*/SKILL.md` for Hick's-Law (option-lists with no recommendation cue) and Von-Restorff (blockers rendered as flat prose) violations. Flags for maintainer review; graduates to a mechanical `tests/bash` check if a skill is flagged twice.
+
+Two corrections logged: skipped-visible-Pre-Ship (validator-green treated as the G-P-pre gate) and asserted-external-tool-from-README.
+
+**PATCH**: remediation of v0.36.0 plus one small audit step; no schema change. Rationale: `harness/decision-log.md` 2026-05-30.
+
 ## v0.36.0 — UX-axioms bridge: the chat is a UI
 
 **2026-05-30. Attribution: ux-axioms-bridge. Class: maintainer-directed (UX-axiom registry assessed for the framework, then the chat-interface lens added on user request).**
