@@ -6,6 +6,22 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.33.0 — AI System Card integrity: missing template + token drift closed
+
+**2026-05-30. Attribution: card-integrity. Class: maintainer-directed (audit follow-on — surfaced while reviewing whether the system card should be live or a template).**
+
+Two latent gaps in the AI System Card, both closed at the source and guarded going forward.
+
+- **The template that `/xai-check` Stage 4 reads never existed.** Stage 4 says "Reference the template's `Required` markings," and the card footer, `engine/xai-canvas-threading.md`, and `manifest.yml`'s `.claude/templates/` entry all pointed at `.claude/templates/ai-system-card.md` — a file no one had created. The skill audited against a missing reference. Now shipped: `plugins/mycelium/templates/ai-system-card.md` (canonical) → installed to `.claude/templates/`. All 10 Mitchell-et-al. (2019) sections, each marked **Required** / **Recommended** so Stage 4 has markings to read, with `agent_runtime_target` extension notes.
+- **Mycelium's own card had gone stale.** `docs/ai-system-card.md` still claimed `Version 0.15.1`, `45+ skills`, `.claude/skills/` paths, and `parse_manifest.py` while the framework shipped 0.32.0 / 49 / plugin-form. For a *published disclosure artifact* (the named Article 50 transparency surface) a wrong version is a live honesty problem, not just untidy. Mechanical tokens refreshed; the substantive audit content stays dated to the last `/xai-check` (2026-05-04) with an explicit "this was a token refresh, not a re-audit" note.
+
+**Why these recurred — and the going-forward fix.** The card carries two cadences that were being treated as one: *mechanical* tokens (version, skill count) that must always be current, and *substantive* content (eval results, tier, last audit) that changes only at audit events. Nothing synced the mechanical tokens, and nothing verified the template existed.
+
+- **`scripts/sync_derived.py` now also sweeps the card.** Its `**Version:**` and `N skills` tokens join the existing version/skill-count targets; `--check` (CI/pre-push) catches drift. Same single-source-of-truth discipline already used for plugin.json. Substantive prose stays hand-written.
+- **`tests/python/test_ai_system_card.py` (new)** fails if the template disappears, loses a Required section marking, or if the card drops a Required section — the guard the dead reference lacked. 5 tests.
+
+**MINOR**: new template artifact + generator coverage + a CI guard. No agent-behavior, canvas, or schema change. The broader *orphan/dead-reference validator* (a path referenced in framework files must resolve) remains the deferred v0.32.0 item — this incident is its first concrete catch case, logged in `decision-log.md`.
+
 ## v0.32.0 — Derived-value sync generator (closes 2 of 3 deferred generators)
 
 **2026-05-30. Attribution: deferred-generators. Class: maintainer-directed (follow-through on the v0.31.12 audit deferrals).**

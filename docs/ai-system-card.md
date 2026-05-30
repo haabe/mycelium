@@ -11,8 +11,8 @@ This is not a marketing document, a technical whitepaper, or a compliance certif
 ## 1. Identity
 
 - **System name:** Mycelium — Theory-Guided Agentic Product Development Framework
-- **Version:** 0.15.1 (canonical source: `CLAUDE.md` first-line frontmatter; auto-tracked by `parse_manifest.py version_source`)
-- **Last updated:** 2026-05-04
+- **Version:** 0.33.0 (canonical source: the `*Version X.Y.Z` line in `CLAUDE.md`; mechanical tokens here — version, skill count — are kept in sync by `scripts/sync_derived.py`, not hand-edited)
+- **Last updated:** 2026-05-30 (mechanical-token refresh; last *full* audit 2026-05-04 — see §9)
 - **Maintained by:** Håvard Bartnes (haabe). Issues + correspondence: [github.com/haabe/mycelium/issues](https://github.com/haabe/mycelium/issues)
 - **AI Act risk tier:** **Limited** (canonical, assessed 2026-05-04 by `/regulatory-review` — see `canvas/threat-model.yml :: regulatory_classification` for the full assessment). Mycelium is not in any EU AI Act Annex III high-risk category. AI outputs reach end users (developers) in user-affecting ways via the runtime, so Article 50 transparency obligations apply and are satisfied by this card + README + CLAUDE.md framing + runtime-level disclosure.
 
@@ -33,7 +33,7 @@ This is the agent-runtime-target case: **Mycelium does not embed an AI model.** 
 
 What Mycelium contributes on top of the runtime:
 - **Instructions:** `CLAUDE.md` is read first on every task. Defines mandatory protocols (Pre-Task, Pre-Ship, Post-Task) and Communication Rules (plain-language-first, inline attribution, learning-capture prompts).
-- **Skills:** 45+ markdown SKILL.md files at `.claude/skills/` define structured procedures the agent invokes by name (`/interview`, `/diamond-progress`, `/xai-check`, etc.).
+- **Skills:** 49 skills — markdown SKILL.md files in `plugins/mycelium/skills/` (installed to `.claude/skills/`) — define structured procedures the agent invokes by name (`/interview`, `/diamond-progress`, `/xai-check`, etc.).
 - **Theory-gated state:** `.claude/canvas/*.yml` files persist evidence-supported product state; gates in `.claude/engine/theory-gates.md` block phase transitions without sufficient evidence.
 - **Corrections / patterns / warnings memory:** `.claude/memory/` accumulates failures (`corrections.md`), successes (`patterns.md`), and CI signals (`warnings-log.md`). Read before every task.
 - **Hooks:** runtime-level enforcement (`.claude/hooks/`): `framework-guard.sh` blocks framework edits to dogfood instances, `scope-gate.sh` enforces L4 scope discipline.
@@ -101,7 +101,7 @@ The runtime model is therefore **the actual decision-maker**; Mycelium is the ha
 
 - **Open questions.** Whether the discovery-first / theory-grounded approach scales beyond solo and small-team contexts (Juniors.dev pilot is the test); whether the framework's verbosity becomes friction at scale; whether agent runtimes other than Claude Code give comparable behavior (agent-agnostic aspiration; not yet tested).
 - **Recommended next audit.** This card is re-reviewed annually or after any material change to the framework's recommendation logic (new mandatory protocol, major skill set change, runtime portability work).
-- **Last full audit:** 2026-05-04 via `/xai-check` against `svc-mycelium` + `/regulatory-review` (canonical tier confirmed). Result: 13 of 15 items used (within `limited` tier cap); 8 of 10 Stage 2 cells pass after remediation; Stage 4 system card pass; Stage 5 recourse pass; Stage 3 fidelity partial (eval data collection ongoing).
+- **Last full audit:** 2026-05-04 via `/xai-check` against `svc-mycelium` + `/regulatory-review` (canonical tier confirmed). Result: 13 of 15 items used (within `limited` tier cap); 8 of 10 Stage 2 cells pass after remediation; Stage 4 system card pass; Stage 5 recourse pass; Stage 3 fidelity partial (eval data collection ongoing). The 2026-05-30 update refreshed mechanically-derived tokens only (version, skill count, paths) — it was **not** a re-audit; the substantive findings above still date to 2026-05-04 and a fresh `/xai-check` is the next-audit trigger.
 
 ## 10. Contact and feedback
 
@@ -111,4 +111,4 @@ The runtime model is therefore **the actual decision-maker**; Mycelium is the ha
 
 ---
 
-*Adapted from `.claude/templates/ai-system-card.md` (Mitchell et al. 2019 + agent_runtime_target extensions per `engine/xai-canvas-threading.md`). Maintained at `docs/ai-system-card.md` upstream; ships with the framework so any project that runs `/upgrade.sh` gets the latest version. The user's own products that contain AI should publish their own system cards, drawing from the template — Mycelium's card describes Mycelium's recommendation logic, not the products built using it.*
+*Adapted from the scaffold at `plugins/mycelium/templates/ai-system-card.md` (installed to `.claude/templates/ai-system-card.md`; Mitchell et al. 2019 + agent_runtime_target extensions per `engine/xai-canvas-threading.md`). Maintained at `docs/ai-system-card.md` upstream; ships with the framework so any project that runs `/upgrade.sh` gets the latest version. The user's own products that contain AI should publish their own system cards, drawing from the template — Mycelium's card describes Mycelium's recommendation logic, not the products built using it.*

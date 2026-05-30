@@ -6,10 +6,14 @@ into several files (where they drift and get caught late by Validator Checks
 6/7/10/30):
 
   - version:     canonical = the ``*Version X.Y.Z`` line in CLAUDE.md.
-                 target     = plugins/mycelium/.claude-plugin/plugin.json#version
+                 targets    = plugin.json#version and the ``**Version:**`` token
+                              in docs/ai-system-card.md (the published AI System
+                              Card is a disclosure artifact — a stale version on
+                              it is a live honesty problem, not just untidy).
   - skill_count: canonical = number of plugins/mycelium/skills/*/SKILL.md files.
                  targets    = every "<N> skills" token in CLAUDE.md, README.md,
-                              docs/skills/README.md, plugin.json, marketplace.json
+                              docs/skills/README.md, plugin.json, marketplace.json,
+                              docs/ai-system-card.md
 
 The CLAUDE.md *Version prose line and plugin descriptions stay hand-written;
 this only rewrites the derived *tokens* inside them, never surrounding prose.
@@ -32,17 +36,29 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
+PLUGIN = "plugins/mycelium/.claude-plugin/plugin.json"
+CARD = "docs/ai-system-card.md"
+
 VERSION_RE = re.compile(r"^\*Version (\d+\.\d+\.\d+)", re.MULTILINE)
 PLUGIN_VERSION_RE = re.compile(r'("version":\s*")\d+\.\d+\.\d+(")')
+CARD_VERSION_RE = re.compile(r"(\*\*Version:\*\* )\d+\.\d+\.\d+")
 SKILLS_TOKEN_RE = re.compile(r"\b\d+ skills\b")
+
+# (rel_path, version pattern, replacement template) — each pattern only matches
+# its own file's version form, so applying all of them to a file is safe.
+VERSION_TARGETS = [
+    (PLUGIN, PLUGIN_VERSION_RE, r"\g<1>{v}\g<2>"),
+    (CARD, CARD_VERSION_RE, r"\g<1>{v}"),
+]
 
 # Files whose "<N> skills" tokens all refer to the total skill count.
 SKILL_COUNT_FILES = [
     "CLAUDE.md",
     "README.md",
     "docs/skills/README.md",
-    "plugins/mycelium/.claude-plugin/plugin.json",
+    PLUGIN,
     ".claude-plugin/marketplace.json",
+    CARD,
 ]
 
 
@@ -61,34 +77,31 @@ def canonical_skill_count(root: Path) -> int:
     return n
 
 
-def _apply(root: Path, rel: str, pattern: re.Pattern, replacement: str) -> tuple[bool, str]:
-    """Return (changed, new_text) for one file. Does not write."""
-    path = root / rel
-    old = path.read_text(encoding="utf-8")
-    new = pattern.sub(replacement, old)
-    return (new != old, new)
-
-
 def sync(root: Path, check_only: bool) -> int:
     version = canonical_version(root)
     skill_count = canonical_skill_count(root)
 
-    edits: list[tuple[str, str]] = []  # (rel_path, new_text)
+    staged: dict[str, str] = {}  # rel_path → latest in-memory text (folds both passes)
     drifted: list[str] = []
 
-    # version → plugin.json
-    plugin_rel = "plugins/mycelium/.claude-plugin/plugin.json"
-    changed, new = _apply(root, plugin_rel, PLUGIN_VERSION_RE, rf"\g<1>{version}\g<2>")
-    if changed:
-        drifted.append(f"{plugin_rel}: version → {version}")
-        edits.append((plugin_rel, new))
+    def current(rel: str) -> str:
+        return staged.get(rel, (root / rel).read_text(encoding="utf-8"))
+
+    # version → each target's own version token
+    for rel, pattern, repl in VERSION_TARGETS:
+        old = current(rel)
+        new = pattern.sub(repl.format(v=version), old)
+        if new != old:
+            drifted.append(f"{rel}: version → {version}")
+            staged[rel] = new
 
     # skill_count → every "<N> skills" token
     for rel in SKILL_COUNT_FILES:
-        changed, new = _apply(root, rel, SKILLS_TOKEN_RE, f"{skill_count} skills")
-        if changed:
+        old = current(rel)
+        new = SKILLS_TOKEN_RE.sub(f"{skill_count} skills", old)
+        if new != old:
             drifted.append(f"{rel}: skill count → {skill_count}")
-            edits.append((rel, new))
+            staged[rel] = new
 
     if check_only:
         if drifted:
@@ -103,16 +116,7 @@ def sync(root: Path, check_only: bool) -> int:
         print(f"OK: version={version}, skills={skill_count} — nothing to sync.")
         return 0
 
-    # plugin.json may appear twice (version + skill count); merge by re-deriving.
-    # Re-run sub on the latest content per file to fold both edits.
-    merged: dict[str, str] = {}
-    for rel, _ in edits:
-        path = root / rel
-        text = path.read_text(encoding="utf-8")
-        text = PLUGIN_VERSION_RE.sub(rf"\g<1>{version}\g<2>", text)
-        text = SKILLS_TOKEN_RE.sub(f"{skill_count} skills", text)
-        merged[rel] = text
-    for rel, text in merged.items():
+    for rel, text in staged.items():
         (root / rel).write_text(text, encoding="utf-8")
     print(f"Synced (version={version}, skills={skill_count}):")
     for d in drifted:

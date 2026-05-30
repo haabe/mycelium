@@ -8,7 +8,8 @@ def _import(scripts_path):
     return sync_derived
 
 
-def _mini_repo(root, version="1.2.3", n_skills=3, plugin_version="1.2.3", token_count=3):
+def _mini_repo(root, version="1.2.3", n_skills=3, plugin_version="1.2.3", token_count=3,
+               card_version=None):
     """Build a minimal repo tree the syncer understands."""
     (root / "plugins/mycelium/.claude-plugin").mkdir(parents=True)
     (root / ".claude-plugin").mkdir(parents=True)
@@ -25,6 +26,10 @@ def _mini_repo(root, version="1.2.3", n_skills=3, plugin_version="1.2.3", token_
         f"Not {token_count} skills dumped on you.\n\n| look up | ({token_count} skills) |\n"
     )
     (root / "docs/skills/README.md").write_text(f"This index lists all {token_count} skills.\n")
+    (root / "docs/ai-system-card.md").write_text(
+        f"# AI System Card\n\n- **Version:** {card_version or plugin_version}\n\n"
+        f"- **Skills:** {token_count} skills define the procedures.\n"
+    )
     (root / "plugins/mycelium/.claude-plugin/plugin.json").write_text(
         f'{{\n  "version": "{plugin_version}",\n  "description": "{token_count} skills, 13 gates."\n}}\n'
     )
@@ -52,6 +57,14 @@ def test_check_detects_skill_count_drift(scripts_path, tmp_path):
     assert mod.sync(root, check_only=True) == 1
 
 
+def test_check_detects_card_version_drift(scripts_path, tmp_path):
+    mod = _import(scripts_path)
+    # CLAUDE.md and plugin.json agree; only the system card's version is stale.
+    root = _mini_repo(tmp_path, version="2.0.0", plugin_version="2.0.0",
+                      card_version="1.0.0", n_skills=3, token_count=3)
+    assert mod.sync(root, check_only=True) == 1
+
+
 def test_sync_fixes_version_and_skill_count(scripts_path, tmp_path):
     mod = _import(scripts_path)
     root = _mini_repo(tmp_path, version="2.0.0", plugin_version="1.0.0", n_skills=5, token_count=3)
@@ -65,6 +78,10 @@ def test_sync_fixes_version_and_skill_count(scripts_path, tmp_path):
     assert "5 skills" in (root / "README.md").read_text()
     assert "5 skills" in (root / ".claude-plugin/marketplace.json").read_text()
     assert "5 skills" in (root / "docs/skills/README.md").read_text()
+    # the published AI System Card gets BOTH the version and the skill count
+    card = (root / "docs/ai-system-card.md").read_text()
+    assert "**Version:** 2.0.0" in card
+    assert "5 skills" in card
     # prose around the version token survived untouched
     assert "prose that must survive" in (root / "CLAUDE.md").read_text()
     # re-check is now clean
