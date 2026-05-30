@@ -6,6 +6,19 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.32.0 — Derived-value sync generator (closes 2 of 3 deferred generators)
+
+**2026-05-30. Attribution: deferred-generators. Class: maintainer-directed (follow-through on the v0.31.12 audit deferrals).**
+
+The v0.31.12 audit batch deferred three generators — manifest, skill-count, version — as "needing their own design." On closer look, two of the three are mechanically derivable and now ship; the third turned out to be the wrong tool for the job.
+
+- **`scripts/sync_derived.py` (new)**: rewrites derived tokens from a single source of truth. Version comes from CLAUDE.md's `*Version` line → written into `plugin.json`. Skill count comes from `plugins/mycelium/skills/*/SKILL.md` → written into every `"N skills"` token across CLAUDE.md, README.md, docs/skills/README.md, plugin.json, and marketplace.json. Default mode writes; `--check` reports drift and exits non-zero without writing (CI / pre-push). Hand-written prose (the CLAUDE.md version paragraph, the plugin descriptions) is preserved — only the derived tokens move. 7 unit tests (`tests/python/test_sync_derived.py`). The tool was dogfooded to perform its own 0.31.12 → 0.32.0 plugin.json bump.
+- **Manifest auto-generation: intentionally not built.** `manifest.yml` classifies every path as framework / project_state / mixed — a *semantic* judgement that drives what `upgrade.sh` replaces vs preserves. That can't be derived from a directory walk; a generator would silently mis-classify and corrupt upgrades. The correct complement is an *orphan-coverage validator* (assert every tree file is covered by some manifest rule), not a generator. Logged in `decision-log.md` as the one remaining deferral.
+
+**Why no new CI check**: `--check` overlaps the existing Checks 6/7 (skill count) and 10/30 (version), which already fail the build on drift. Adding a redundant check would also incur a G-V12 fixture-test obligation (Check 37) for zero new coverage. The generator's value is the *write* path, run by the maintainer before a release.
+
+**MINOR**: new maintainer tooling (closest precedent: landing the warnings ingestor). No agent-behavior, canvas, or schema change.
+
 ## v0.31.12 — Audit Medium group: hot-path spawn consolidation + CI pip cache
 
 **2026-05-30. Attribution: audit-medium-group. Class: maintainer-directed (code audit).**
