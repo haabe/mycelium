@@ -18,6 +18,7 @@ Compact reference for lazy loading. Load full rule from `guardrails.md` only whe
 | G-D4 | NUDGE | Validating opportunities in OST | 2+ evidence sources per opportunity |
 | G-D5 | NUDGE | Before conducting any research | Run bias checklist first |
 | G-D6 | NUDGE | Mapping user needs | Include emotional + social, not just functional |
+| G-D7 | NUDGE | User surfaces an idea mid-build | Route to OST now; state where/disposition/scale; challenges resolve visibly |
 | G-V1 | REVIEW | Marking any delivery complete | Run validation suite for product type |
 | G-V2 | REVIEW | Shipping user-facing work | Check Downe's 15 service principles |
 | G-V3 | NUDGE | Creating new code/content | Check for existing implementations first (DRY) |

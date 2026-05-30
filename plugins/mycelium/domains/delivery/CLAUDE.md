@@ -80,10 +80,11 @@ Target distribution:
 
 Why test-first matters MORE with AI agents: AI generates code with unknown quality patterns. The test suite is the safety net that catches what review might miss. In the AI era, less testing = more risk.
 
-1. Write a failing test that describes the desired behavior.
-2. Write the minimum code to make it pass.
-3. Refactor while keeping tests green.
-4. Repeat.
+1. Write a test that describes the desired behavior.
+2. Run it and confirm it fails for the right reason (the behavior is missing, not a typo or import error). A test that passes before the code exists, or fails for an unrelated reason, proves nothing.
+3. Write the minimum code to make it pass.
+4. Refactor while keeping tests green.
+5. Repeat.
 
 *Source: Beck (TDD, XP)*
 

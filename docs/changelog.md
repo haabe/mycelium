@@ -6,6 +6,18 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.38.0 — mid-build idea intake (OST-routing ritual)
+
+**2026-05-30. Attribution: mid-build-idea-intake. Class: minor (new guardrail + behavioral coupling).**
+
+Build-now batch from a decision-log audit — three items that were genuinely open, cheap, and clearly-correct:
+
+- **OST-routing ritual (G-D7)**: when an idea surfaces mid-build, route it into the existing OST in the same turn — a new `opportunities.yml` entry (`scale`+`parent`), a `gist.yml` leaf, or `archived-solutions.yml` with a reason — and state **where** it landed, **its disposition** (build-now / scoped-child / archived-with-reason), and **its scale** vs. the active diamond. Challenges resolve to a named disposition; the drift nudge fires proactively on idea-accumulation, not reactively on pushback. No new store — a parking-lot/backlog was examined and rejected on anti-backlog grounds. New guardrail in `harness/guardrails-discovery.md` (+ `guardrails.md`, `guardrails-index.md`) and a concrete subsection in `domains/discovery/CLAUDE.md`. Graduated from cohort signals 3/4/5/6.
+- **/log-evidence close-the-loop**: `skills/log-evidence/SKILL.md` step 5 now couples the evidence-write to the source-task close (default / partial-with-narration / registry-sync branches) — the *prevention* side of the drift that `/canvas-health` `8c(b)/(c)` only detects.
+- **TDD confirm-fail step**: `domains/delivery/CLAUDE.md` TDD loop gains "run it and confirm it fails for the right reason" before writing code — a test that passes before the code exists proves nothing.
+
+Outcome-neutral on product confidence; efficacy of G-D7 is N=1 (one cohort tester) and untested until a live build-phase run.
+
 ## v0.37.1 — delegation-authority pre-push remediation
 
 **2026-05-30. Attribution: delegation-authority-prepush. Class: patch (sync + line-budget).**

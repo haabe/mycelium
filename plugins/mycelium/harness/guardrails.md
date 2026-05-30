@@ -75,6 +75,10 @@ Review `.claude/harness/cognitive-biases.md` before designing interviews, survey
 User needs have three dimensions: functional (what they need to do), emotional (how they need to feel), and social (how it affects their relationships/status). Mapping only functional needs misses the actual hiring criteria.
 *Source: Christensen (Jobs to be Done)*
 
+**G-D7: Always route an in-flight idea into the OST and state where it landed, its disposition, and its scale** `NUDGE` `scope`
+When the user surfaces a feature or idea mid-build, route it into the existing OST *in the same turn* — a new `canvas/opportunities.yml` entry (with `scale`+`parent`), a `canvas/gist.yml` solution leaf, or `canvas/archived-solutions.yml` (archive-with-reason) — never absorb it into chat to be "added later" (lost next session) or accumulate it in an un-routed list (the backlog anti-pattern). After routing, state visibly: **where** it landed (file + id), **its disposition** (build-now / scoped-child-opportunity / archived-with-reason), and **its scale** vs. the active diamond (read off `scale`+`parent`). A *challenge* to a proposed idea still resolves to one of those dispositions — never leave the outcome invisible. Fire proactively on idea-accumulation, not reactively after pushback. Full ritual: `domains/discovery/CLAUDE.md` "In-flight idea intake (mid-build)".
+*Source: Torres (CDH/OST), leaf-lifecycle Discard/Archive Protocol; graduated from Alex cohort signals 3/4/5/6*
+
 ## Security & Trust Guardrails
 
 **G-S1: Never store, log, or transmit user secrets in plaintext** `BLOCK` `safety`

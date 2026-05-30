@@ -28,6 +28,10 @@ Review `.claude/harness/cognitive-biases.md` before designing interviews, survey
 User needs have three dimensions: functional, emotional, social. Mapping only functional needs misses the actual hiring criteria.
 *Source: Christensen (Jobs to be Done)*
 
+**G-D7: Always route an in-flight idea into the OST and state where it landed, its disposition, and its scale** `NUDGE` `scope`
+When the user surfaces a feature or idea mid-build, route it into the existing OST *in the same turn* — a new entry in `canvas/opportunities.yml` (with `scale`+`parent` set), a GIST solution leaf in `canvas/gist.yml`, or an archive-with-reason in `canvas/archived-solutions.yml`. Do not absorb it into chat to be "added later": an idea that lives only in the conversation is lost on the next session (the user's own "lost in the noise" fear), and a growing un-routed list is the backlog anti-pattern — accumulation decoupled from the active loop. After routing, state three things visibly: **where** it landed (file + id), **its disposition** (build-now / scoped-child-opportunity / archived-with-reason), and **its scale** relative to the active diamond (is this part of the current diamond, or its own thing further down the L0–L2 axis — read straight off the `scale`+`parent` fields). When you *challenge* a proposed idea, the challenge still resolves to one of those dispositions — never leave the outcome invisible. Fire this proactively on idea accumulation, not reactively after the user pushes back.
+*Source: Torres (CDH/OST), leaf-lifecycle Discard/Archive Protocol; graduated from Alex cohort signals 3/4/5/6 (`docs/receipts/cases/2026-05-30-alex-cohort-sessions-2-3.md`)*
+
 ## Strategic (discovery-adjacent)
 
 **G-P2: Never ignore BVSSH dimensions** `NUDGE` `quality`

@@ -98,6 +98,16 @@ Rules:
 
 Discovery also produces **scenarios** (Hoskins) — narrative descriptions of how a specific person uses the product to solve their problem. Scenarios have four elements: Persona (who), Means (how they interact), Motive (why), Simulation (the full story). They emerge from interview stories and carry user context through L3→L4→L5. See `canvas/scenarios.yml`.
 
+#### In-flight idea intake (mid-build)
+
+Ideas do not only arrive during a dedicated discovery phase — mid-build, the user will rattle off features ("preferred stores, barcode scanner, substitutions…"). The OST is their home; there is no separate backlog or "exploration log" (a parking lot would reintroduce the backlog anti-pattern the framework exists to avoid). Route each idea the moment it lands (per `G-D7`):
+
+- **Where**: a new `canvas/opportunities.yml` entry (set `scale` + `parent` to place it on the L0–L2 axis), a GIST solution leaf in `canvas/gist.yml`, or `canvas/archived-solutions.yml` with a reason.
+- **Disposition** (say it out loud): *build-now* (belongs in the active diamond), *scoped-child-opportunity* (its own thing, deferred via `scale`+`parent` — not an unbounded list), or *archived-with-reason* (per the leaf-lifecycle Discard/Archive Protocol).
+- **Scale**: name whether it sits inside the current diamond or below it. The `scale`+`parent` fields already encode the L0-vs-L2 line the user finds blurry mid-build — read it back to them.
+
+When you **challenge** a proposed idea, the challenge resolves to one of those same dispositions and you state which — never leave the user guessing whether their suggestion was added, deferred, or dropped. Pruning happens via archive-with-reason, not silent deletion.
+
 ### 5. Jobs to Be Done (JTBD) Mapping
 
 Map all three dimensions for every job (Christensen):

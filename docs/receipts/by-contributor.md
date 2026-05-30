@@ -10,6 +10,7 @@ This page is the receipts-side cross-link to the canonical [CONTRIBUTORS.md](../
 |---|---|
 | [Daniel Bentes](../../CONTRIBUTORS.md#v090--computational-enforcement-layer) | [bentes-install-model](cases/2026-05-08-bentes-install-model.md) |
 | [Drew Hoskins](../../CONTRIBUTORS.md#v0150--scenarios-as-first-class-primitive) | [drew-hoskins-takehome](cases/2026-04-30-drew-hoskins-takehome.md) |
+| [Alex](../../CONTRIBUTORS.md#v031x--cohort-first-run-friction-output-density--post-build-silence) | [alex-cohort-first-run](cases/2026-05-26-alex-cohort-first-run.md), [alex-cohort-sessions-2-3](cases/2026-05-30-alex-cohort-sessions-2-3.md) |
 | internal-dogfood | [canvas-drift-reconciliation](cases/2026-05-28-canvas-drift-reconciliation.md), [consistency-as-evidence-graduation](cases/2026-05-09-consistency-as-evidence-graduation.md), [stale-state-read-graduation](cases/2026-05-09-stale-state-read-graduation.md), [bias-cluster-graduation](cases/2026-05-09-bias-cluster-graduation.md), [plugin-form-dogfood](cases/2026-05-09-plugin-form-dogfood.md), [framework-self-correction](cases/2026-05-01-framework-self-correction.md), [macos-fileviewer](cases/2026-04-macos-fileviewer.md), [macos-can-i-open](cases/2026-04-macos-can-i-open.md), [tic-tac-toe](cases/2026-04-tic-tac-toe.md) |
 
 ## How to get listed
