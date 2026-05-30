@@ -6,6 +6,15 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.37.1 — delegation-authority pre-push remediation
+
+**2026-05-30. Attribution: delegation-authority-prepush. Class: patch (sync + line-budget).**
+
+Clears the two pre-push FAILs the v0.37.0 commit surfaced, with zero behavior change to the doctrine:
+
+- **Manifest dual-source sync**: legacy `.claude/manifest.yml` now byte-matches the canonical `plugins/mycelium/manifest.yml` (the `delegation-authority.md` entry was only added to the canonical copy).
+- **CLAUDE.md line ceiling (Check 36)**: the v0.37.0 Harnessing-System bullet tipped CLAUDE.md to 201 > 200; merged the Anti-Patterns + Cognitive Biases bullets into one line to recover it.
+
 ## v0.37.0 — delegation authority (who decides: agent vs human)
 
 **2026-05-30. Attribution: delegation-authority. Class: gap-analysis-driven (ADLC mapping).**
