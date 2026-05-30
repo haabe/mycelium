@@ -6,6 +6,19 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.34.1 — Gate-count guard: Check 12 now derives-and-compares
+
+**2026-05-30. Attribution: gate-count-guard. Class: maintainer-directed (root-cause follow-on to v0.34.0's hand-washed gate count).**
+
+v0.34.0 reconciled the gate count by hand for the fourth time. This closes the structural reason the hand-washes kept landing on different numbers.
+
+- **Check 12 was over-counting.** Its grep `^### [0-9]+\.|^## Gate ` swept up two section headings — `## Gate Structure` and `## Gate Definitions` — reporting **15** for a file that defines **13** gates. That phantom 15 had leaked verbatim into `plugin.json` (per the v0.23.7 commit message, which "standardized to 13, was 12 in marketplace.json, 15 in plugin.json"), seeding a 12/13/15 split that survived from 2026-05-11 to v0.34.0.
+- **Nothing tied the count to the headline surfaces.** Skills can't drift like this because Check 6/7 derive the count from disk and *compare it to the surfaces*; the gate count had no equivalent, so every reconciliation re-counted against a miscounting validator by hand.
+
+**The fix:** Check 12 now counts numbered gate *definitions* only (`^### [0-9]+\. ` → true 13) and **fails** when `plugin.json`, `marketplace.json`, or the CLAUDE.md transition-roster name-list disagree. The conditional Explainability/XAI gate (13 total vs 12 baseline) is documented in-check so per-scale baseline tables ("L3 = all 12 gates") are not read as drift. Two new fixtures: `aligned` (proves the section headings are ignored and surfaces are compared), `mismatch` (proves a disagreeing surface fails).
+
+**PATCH**: validator hardening only. No agent-behavior, schema, or capability change.
+
 ## v0.34.0 — Reference-integrity: dead-link CI validator + cross-doc drift swept
 
 **2026-05-30. Attribution: reference-integrity. Class: maintainer-directed (gap-closure follow-on to the 2026-05-30 reference-graph recon).**

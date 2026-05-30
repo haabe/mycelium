@@ -33,9 +33,24 @@ test_flags_missing() {
     assert_contains "$output" "FAIL" "flags missing file"
     assert_contains "$output" "not found" "names the gap"
 }
+# Regression: the count must ignore "## Gate Structure"/"## Gate Definitions"
+# section headings (the historical source of the phantom 15) and agree with the
+# headline surfaces (plugin.json, marketplace.json, CLAUDE.md roster).
+test_aligned_surfaces_pass() {
+    local output; output=$(capture "aligned")
+    assert_contains "$output" "PASS" "passes when surfaces agree"
+    assert_contains "$output" "3 gates" "counts definitions only, not section headings"
+}
+test_flags_surface_mismatch() {
+    local output; output=$(capture "mismatch")
+    assert_contains "$output" "FAIL" "flags a surface that disagrees with the canonical count"
+    assert_contains "$output" "states 5 gates but" "names the drifting surface and number"
+}
 
 echo "=== test_check_12: Check 12 (theory gate count) ==="
 run_test test_passes_with_gates
 run_test test_flags_empty
 run_test test_flags_missing
+run_test test_aligned_surfaces_pass
+run_test test_flags_surface_mismatch
 report

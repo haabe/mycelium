@@ -354,14 +354,58 @@ check_gate_count() {
         return
     fi
 
-    # Count gate sections; engine/theory-gates.md uses "### N. <Gate name>" or similar.
-    local actual_count
-    actual_count=$(grep -cE '^### [0-9]+\.|^## Gate |^### Gate ' "$gates_file" || echo "0")
+    # Canonical count = numbered gate *definitions* only ("### N. <name>").
+    # Deliberately NOT matching "## Gate Structure" / "## Gate Definitions" section
+    # headings — that loose alternation historically inflated the count to 15,
+    # which leaked verbatim into plugin.json and seeded a 12/13/15 split that
+    # persisted from v0.23.7 to v0.34.0 (root-cause: decision-log 2026-05-31).
+    local canonical
+    canonical=$(grep -cE '^### [0-9]+\. ' "$gates_file" || true)
 
-    if [ "$actual_count" -gt 0 ]; then
-        pass "$gates_file defines $actual_count gates (canonical source)"
-    else
-        fail "$gates_file defines no gates (heading patterns '### N.' / '## Gate' / '### Gate' not found)"
+    if [ "$canonical" -eq 0 ]; then
+        fail "$gates_file defines no gates (no '### N. <name>' heading found)"
+        return
+    fi
+
+    # Derive-and-compare: every headline surface stating a TOTAL gate count must
+    # equal the canonical definition count. This is the gate-count analogue of
+    # Check 6/7 for skills; its absence is exactly why hand-washes kept landing on
+    # different numbers. The Nth gate (Explainability/XAI) is conditional (L3-L5,
+    # AI products only) but still counts toward the documented total, so the
+    # CLAUDE.md transition-roster MENU lists all of them. Per-scale BASELINE
+    # tables ("L3 = all 12 gates") legitimately exclude the conditional gate and
+    # are NOT checked here — they are a different semantic.
+    local mismatch=0
+
+    # JSON marketing surfaces carry a "<N> theory gates" / "<N> gates" token.
+    local surface stated
+    for surface in \
+        "plugins/mycelium/.claude-plugin/plugin.json" \
+        ".claude-plugin/marketplace.json"; do
+        [ -f "$surface" ] || continue
+        stated=$(grep -oE '[0-9]+ (theory )?gates' "$surface" | head -1 | grep -oE '^[0-9]+' || true)
+        [ -z "$stated" ] && continue
+        if [ "$stated" -ne "$canonical" ]; then
+            fail "$surface states $stated gates but $gates_file defines $canonical"
+            mismatch=1
+        fi
+    done
+
+    # CLAUDE.md states the roster as a NAMED LIST, not a count: compare its length.
+    if [ -f "CLAUDE.md" ]; then
+        local roster_line roster_count
+        roster_line=$(grep -E 'must pass applicable gates from:' CLAUDE.md | head -1 || true)
+        if [ -n "$roster_line" ]; then
+            roster_count=$(echo "$roster_line" | sed -E 's/.*from: //; s/\..*//' | tr ',' '\n' | grep -cE '[A-Za-z]' || true)
+            if [ "$roster_count" -ne "$canonical" ]; then
+                fail "CLAUDE.md gate roster lists $roster_count names but $gates_file defines $canonical"
+                mismatch=1
+            fi
+        fi
+    fi
+
+    if [ "$mismatch" -eq 0 ]; then
+        pass "$gates_file defines $canonical gates; all headline surfaces agree"
     fi
 }
 
