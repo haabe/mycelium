@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.38.0 -- **Attribution label: mid-build-idea-intake**. Build-now batch from the decision-log audit: (1) new guardrail **G-D7** + a discovery-domain "In-flight idea intake (mid-build)" ritual — route ideas into the existing OST in-turn, state where/disposition/scale, resolve challenges visibly, fire proactively (cohort signals 3/4/5/6; no new store); (2) `/log-evidence` step 5 couples evidence-write to source-task close + registry sync (prevention side of canvas-health 8c); (3) TDD now has a run-and-confirm-it-fails step. **MINOR** (new guardrail + behavioral coupling; outcome-neutral on product confidence). Rationale in `harness/decision-log.md` 2026-05-30. **Prior**: delegation-authority-prepush (v0.37.1); delegation-authority (v0.37.0).*
+*Version 0.38.1 -- **Attribution label: guardrail-count-sync**. Doc-only remediation: synced the stale guardrail count (37→38) in `harness/README.md` and the `diamond-assess` harness-thickness counter to match the G-D7 addition shipped in v0.38.0. **PATCH** (count sync only; no behavior change). **Prior**: mid-build-idea-intake (v0.38.0); delegation-authority-prepush (v0.37.1); delegation-authority (v0.37.0).*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

@@ -6,6 +6,12 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.38.1 — guardrail-count sync (doc-only)
+
+**2026-05-31. Attribution: guardrail-count-sync. Class: patch (count sync only).**
+
+Synced the stale guardrail count from 37 to 38 in `harness/README.md` and the `diamond-assess` harness-thickness counter, matching the G-D7 guardrail added in v0.38.0. No behavior change.
+
 ## v0.38.0 — mid-build idea intake (OST-routing ritual)
 
 **2026-05-30. Attribution: mid-build-idea-intake. Class: minor (new guardrail + behavioral coupling).**
