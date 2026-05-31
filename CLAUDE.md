@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.38.1 -- **Attribution label: guardrail-count-sync**. Doc-only remediation: synced the stale guardrail count (37→38) in `harness/README.md` and the `diamond-assess` harness-thickness counter to match the G-D7 addition shipped in v0.38.0. **PATCH** (count sync only; no behavior change). **Prior**: mid-build-idea-intake (v0.38.0); delegation-authority-prepush (v0.37.1); delegation-authority (v0.37.0).*
+*Version 0.38.2 -- **Attribution label: framework-health-remediation**. Doc-only remediation of two `/framework-health` findings: (F1) `AGENTS.md` canvas-guidance references converted to dual-path (plugin + legacy) form; (F3) `cluster-instances.md` marks the conversational and implicit-causal-link sub-classes of anti-pattern #7 GRADUATED, each citing the communication-rule convention that closed it. **PATCH** (doc/memory correctness; no behavior change). **Prior**: guardrail-count-sync (v0.38.1); mid-build-idea-intake (v0.38.0); delegation-authority-prepush (v0.37.1).*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

@@ -34,7 +34,7 @@ Two install forms during v0.20.x transition: **plugin form** (recommended, post-
 | Memory | Accumulated corrections + patterns — project state, lives in user project | `.claude/memory/` (user's project, both install forms) | No — pure data |
 | Hooks | Event-triggered behavior | Plugin: `plugins/mycelium/hooks/` with `hooks.json`. Legacy: `.claude/hooks/` with `.claude/settings.json` | **Yes** |
 | Schemas | Validation contracts for canvas YAML | `.claude/schemas/canvas/*.schema.json` (legacy); migrating to plugin in subsequent commits | No — pure JSON Schema |
-| Conventions | Canvas guidance (source_class, confidence, evidence types, action_flags) | `.claude/engine/canvas-guidance.yml` (legacy); migrating to plugin | No |
+| Conventions | Canvas guidance (source_class, confidence, evidence types, action_flags) | Plugin: `plugins/mycelium/engine/canvas-guidance.yml`. Legacy: `.claude/engine/canvas-guidance.yml` | No |
 | Receipts | Per-cycle case files of how Mycelium got smarter | [docs/receipts/](docs/receipts/README.md) | No — read-only doc |
 | Style guide | Voice + scent rules for any doc edit | [docs/contributing/style.md](docs/contributing/style.md) | No |
 
@@ -46,7 +46,7 @@ For agents without Mycelium's hook layer, the operating loop is:
 2. Read the relevant `.claude/canvas/*.yml` files to see what evidence has already been gathered
 3. Read `.claude/memory/corrections.md` to avoid past mistakes
 4. Before adding evidence, read 2-3 recent entries in the same canvas section to match voice (concrete + sourced + hedged, not interpretive)
-5. Before actioning a flagged item in canvas (anything with "candidate / worth considering / next step / refresh"), check its status marker (OPEN / ON HOLD / RESERVED). Unmarked = ON HOLD by convention. See `.claude/engine/canvas-guidance.yml#action_flags`.
+5. Before actioning a flagged item in canvas (anything with "candidate / worth considering / next step / refresh"), check its status marker (OPEN / ON HOLD / RESERVED). Unmarked = ON HOLD by convention. See `plugins/mycelium/engine/canvas-guidance.yml#action_flags` (plugin form) or `.claude/engine/canvas-guidance.yml#action_flags` (legacy install).
 6. Make changes; record evidence with provenance; log decisions to `.claude/harness/decision-log.md`
 
 ### Concrete operating model per agent class
@@ -92,7 +92,7 @@ The framework version is in `CLAUDE.md` first-line frontmatter. **A version bump
 
 ## Conventions for contributors
 
-- **Canvas changes**: include provenance (url/source, captured_at, confidence). Schema: `.claude/schemas/canvas/`. Enums + evidence types + action_flags: `.claude/engine/canvas-guidance.yml`.
+- **Canvas changes**: include provenance (url/source, captured_at, confidence). Schema: `.claude/schemas/canvas/`. Enums + evidence types + action_flags: `plugins/mycelium/engine/canvas-guidance.yml` (plugin form) or `.claude/engine/canvas-guidance.yml` (legacy install).
 - **Decisions**: log to `.claude/harness/decision-log.md` (structured fields, contrastive `why_not_alternatives`).
 - **Commits**: conventional-commits style; reference scale (L0–L5) when relevant.
 - **Tests**: `bash .claude/tests/validate-template.sh` and `python3 .claude/scripts/validate_canvas.py`.

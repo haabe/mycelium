@@ -6,6 +6,17 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.38.2 — framework-health remediation (doc-only)
+
+**2026-05-31. Attribution: framework-health-remediation. Class: patch (doc/memory correctness).**
+
+Closed two findings surfaced by a `/framework-health` run:
+
+- **F1 — `AGENTS.md` dual-path references**: three canvas-guidance pointers that named only the legacy `.claude/engine/...` path now give both the plugin form (`plugins/mycelium/engine/...`) and the legacy form, so plugin-form installs resolve them.
+- **F3 — anti-pattern #7 sub-graduations**: `cluster-instances.md` marks the conversational and implicit-causal-link (sub-class g) sub-classes of Consistency-as-Evidence as GRADUATED, each citing the communication-rule convention that closed it ("name the verification surface" and "name the gate before a deferral", respectively). Both NUDGE-tier.
+
+No behavior change.
+
 ## v0.38.1 — guardrail-count sync (doc-only)
 
 **2026-05-31. Attribution: guardrail-count-sync. Class: patch (count sync only).**
