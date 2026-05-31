@@ -7,7 +7,7 @@ The term "harness" comes from [Birgitta Böckeler's harness engineering concept]
 ## What's Here
 
 ### Guardrails (Phase-Scoped)
-- **[guardrails.md](guardrails.md)** — Full reference of all 37 guardrails across three enforcement tiers. Read this for the complete picture.
+- **[guardrails.md](guardrails.md)** — Full reference of all 38 guardrails across three enforcement tiers. Read this for the complete picture.
 - **[guardrails-core.md](guardrails-core.md)** — Always loaded. Secret detection (BLOCK), corrections preflight (BLOCK), canvas updates, decision logging.
 - **[guardrails-discovery.md](guardrails-discovery.md)** — Loaded during L0-L2. Evidence quality, no skipping discovery for complex domains, bias checks.
 - **[guardrails-delivery.md](guardrails-delivery.md)** — Loaded during L3-L4. Testing, security, accessibility, input validation, error states.
