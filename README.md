@@ -173,6 +173,7 @@ After upgrading, run `/diamond-assess` to see your work through the new version'
 | If you want to... | Go to |
 |---|---|
 | Try it on a new project | Quick start above |
+| Build the mental model (how to think in it) | [docs/mental-model.md](docs/mental-model.md) |
 | Understand why opinionated | [docs/philosophy.md](docs/philosophy.md) |
 | Look up a specific skill | [docs/skills/](docs/skills/README.md) (49 skills) |
 | Check the theory grounding | [docs/theories.md](docs/theories.md) (30+ frameworks) |

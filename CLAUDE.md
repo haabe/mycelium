@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.38.2 -- **Attribution label: framework-health-remediation**. Doc-only remediation of two `/framework-health` findings: (F1) `AGENTS.md` canvas-guidance references converted to dual-path (plugin + legacy) form; (F3) `cluster-instances.md` marks the conversational and implicit-causal-link sub-classes of anti-pattern #7 GRADUATED, each citing the communication-rule convention that closed it. **PATCH** (doc/memory correctness; no behavior change). **Prior**: guardrail-count-sync (v0.38.1); mid-build-idea-intake (v0.38.0); delegation-authority-prepush (v0.37.1).*
+*Version 0.38.3 -- **Attribution label: mental-model-docs-page**. New human-centric teaching page `docs/mental-model.md` ("How to think in Mycelium") that builds the scales/diamonds/gates mental model through one worked example (the macOS-fileviewer kill), per Breunig's "what humans need from docs." Linked from README, get-started, philosophy, and docs/README. Decision-log records both the scope-out (the human-docs layer mostly already existed) and the build-to-learn proposal that closed the residual register gap. **PATCH** (new docs page + cross-links; no behavior change). **Prior**: framework-health-remediation (v0.38.2); guardrail-count-sync (v0.38.1); mid-build-idea-intake (v0.38.0).*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

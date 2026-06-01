@@ -2,7 +2,7 @@
 
 **Audience**: contributors, evaluators, and operators who want depth past the README. Public.
 **Time to read**: 5 min for this index; pages link to longer reads.
-**Last updated**: 2026-05-08
+**Last updated**: 2026-06-01
 
 This directory is the **spoke** to the README's **hub**. The README is the landing page (≤200 lines, scannable in 30s). Everything that doesn't fit in 30s lives here.
 
@@ -11,6 +11,7 @@ This file (`docs/README.md`) is the metadocumentation: it sets the rules every o
 ## Contents
 
 - `get-started.md` — install (plugin or legacy) + first-run for a new or existing project
+- `mental-model.md` — how to think in Mycelium: scales, diamonds, gates, taught through one worked example
 - `philosophy.md` — why opinionated discipline, why theory-grounded, why in-loop preventive
 - `glossary.md` — Mycelium-specific vocabulary (diamond, scale, canvas, gate, ...)
 - `faq.md` — frequently asked questions, including the six that surfaced at the 2026-05-07 Juniors.dev presentation

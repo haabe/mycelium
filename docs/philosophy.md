@@ -142,6 +142,7 @@ The two readings are not symmetric. The framework does not try to convert the fi
 
 ## See also
 
+- [How to think in Mycelium](mental-model.md) — the mental model in one worked example (this page is the *why*; that one is the *how*)
 - [theories.md](theories.md) — the 30+ frameworks Mycelium integrates
 - [evaluate.md](evaluate.md) — anti-promotional evaluation surface
 - [docs/contributing/style.md](contributing/style.md) — voice rules that follow from this philosophy

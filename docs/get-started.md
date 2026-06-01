@@ -55,6 +55,7 @@ Skills are namespaced as `/mycelium:<name>` per Anthropic's plugin convention.
 
 ## Where to go next
 
+- [How to think in Mycelium — the mental model in one worked example](mental-model.md)
 - [How to apply Mycelium — solo, team, or agent orchestration](usage-modes.md)
 - [Evaluate Mycelium for your team in ~1 hour](evaluate.md)
 - [Frequently asked questions](faq.md)

@@ -2,9 +2,18 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-05-30.
+**Last updated**: 2026-06-01.
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
+
+## v0.38.3 — human mental-model docs page (doc-only)
+
+**2026-06-01. Attribution: mental-model-docs-page. Class: patch (new docs page + cross-links; no behavior change).**
+
+Added [`docs/mental-model.md`](mental-model.md) — "How to think in Mycelium" — a human-centric teaching page that builds the scales/diamonds/gates mental model through one worked example (the macOS file-viewer project that was killed in Discovery before a line of code), rather than as a reference list. Grounded in Drew Breunig's "What Do Humans Need From Docs?" (2026-05-31): human docs should build mental models and teach the art of the possible, not optimize for completeness.
+
+- **Why it earned a page**: a scoping pass concluded the human-docs *layer* mostly already existed (`philosophy.md` carries the why; the README carries the 30s pitch; `docs/README.md` enforces Breunig's principles). The residual was a **register gap** — no doc in the teaching register for a cold newcomer mid-disorientation. The decision-log records both the scope-out and the build-to-learn proposal (with a kill-criterion: put the page before the next cohort tester's first run and measure whether lost-in-vocabulary disorientation drops).
+- **Cross-links**: linked from `README.md` (Going deeper), `docs/get-started.md`, `docs/philosophy.md` (the why ↔ the how), and `docs/README.md` Contents. Holds no canonical facts — links out to skills index, glossary, theories, and the file-viewer receipt.
 
 ## v0.38.2 — framework-health remediation (doc-only)
 
