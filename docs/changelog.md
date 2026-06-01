@@ -6,6 +6,16 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.38.4 — architecture-discovery-narrowed receipts case (doc-only)
+
+**2026-06-01. Attribution: architecture-discovery-narrowed-receipt. Class: patch (one new receipts case; no behavior change).**
+
+Added [`docs/receipts/cases/2026-06-01-architecture-discovery-narrowed.md`](receipts/cases/2026-06-01-architecture-discovery-narrowed.md) — a self-dogfood case. An external practitioner asked whether the framework's evidence-gate could be extended from product to *technical* discovery (architecture, API contracts, data models). Instead of building for the adjacency, the hypothesized gap was captured as a failing-first scenario and dogfooded via a Claude Code subagent against a clean workdir.
+
+- **Disk-verified result**: 5/7 success criteria pass; 2/7 partial. The existing gates (Evidence + Bias + Anti-Pattern #7 + Cagan feasibility) already do the blocking work the original framing assumed was missing. What is missing is narrower — vocabulary ("technical discovery" appears 0× in the decision-log output), routing (recommended `/mycelium:user-interview` for an unread-API gap, where the right surface is read-docs / pull-payload), and a surface state-drift between `active.yml` gate-status and the decision-log (new instance of `documented-rule-diverges-from-enforcement`).
+- **What this changed**: the candidate solution shape in the private OST collapses from "dedicated technical-discovery scale/diamond" to "vocabulary + routing nudge on existing gates." Nothing shipped to skills/hooks. A leaf still requires the documented external-second-ask graduation criterion the opp records.
+- **Discipline note**: generic framing — practitioner identity, employer, and named clients stay in the private roadmap per the Lars Jenssen attribution pattern. The receipt is about *what we did with the signal*, not who sent it.
+
 ## v0.38.3 — human mental-model docs page (doc-only)
 
 **2026-06-01. Attribution: mental-model-docs-page. Class: patch (new docs page + cross-links; no behavior change).**
