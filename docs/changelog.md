@@ -6,6 +6,24 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.39.1 — README newcomer-surface language revision (doc-only)
+
+**2026-06-02. Attribution: readme-language-revision-2026-06-02. Class: patch (README copy; no skill/gate/hook change).**
+
+Two changes to the README newcomer surface, against N=2 peer-practitioner friction:
+
+- Drew Hoskins (2026-05-11): "pretty jargon-y" + value-not-landing before mechanism vocabulary takes over.
+- Bård Øien (2026-06-02): "litt akademisk språk, vanskelig å umiddelbart skjønne hvorfor mycelium var produktet jeg trengte."
+
+Shipped:
+
+- **Replaced "What it is in 5 lines"** (theory gates, six scales, four-phase diamond, "configuration files plus orchestrated prompts") with **"Your first ten minutes"** — a no-vocabulary scene: four questions, written brief, agent points at the riskiest assumption, lets you decline depth, stops you where you'd want to be stopped.
+- **Demoted "Where it sits in the field"** (Fowler/arxiv harness-engineering positioning) from paragraph 3 down to after "How it works". Peer positioning still findable; newcomers no longer hit it before any value lands.
+
+Mechanism vocabulary (scales, diamonds, gates, canvas) now first appears in "How it works", introduced after the reader has a reason to learn it.
+
+**Scope held narrow on purpose.** The in-product vocabulary surface (skill descriptions, gate-fail copy, `/interview` flow) was not touched. `opportunities.yml#opp-005` (vocabulary-comprehension) deliberately leaves that solution space open pending wider-N evidence on whether the in-product vocabulary IS the product (learning the lingo = learning the discipline). External comms = pre-discipline → translation cost only → copy edit safe. In-product = post-discipline → Torres-open until evidence resolves.
+
 ## v0.39.0 — framework-health follow-up: Check 38 + Check 39 + per-rule promotion
 
 **2026-06-02. Attribution: framework-health-followup-2026-06-02. Class: minor (two new validator gates + one new mandatory protocol + one new convention with structural impact).**
