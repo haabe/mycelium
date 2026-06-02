@@ -25,13 +25,11 @@ npx degit haabe/mycelium my-project && cd my-project
 /interview
 ```
 
-## What it is in 5 lines
+## Your first ten minutes
 
-Build to learn, then build to earn (Patton). 30+ established frameworks, connected by theory gates so critical steps cannot be skipped. The agent does not progress until the evidence says it should. Discovery to market feedback at six scales (Purpose → Strategy → Opportunity → Solution → Delivery → Market), the same four-phase diamond at every scale. Configuration files plus orchestrated prompts — not a software library.
+You have an idea. You run `/mycelium:start`. The agent doesn't open an editor — it asks you four questions: what's the problem, who has it, what's the biggest risk, what's the smallest next move. Ten minutes in, you have a written brief and the agent points to the riskiest thing you assumed and asks if you want to test it before building anything.
 
-## Where it sits in the field
-
-The vocabulary settled in spring 2026. Martin Fowler / Thoughtworks ([Birgitta Böckeler, 2026-04-02](https://martinfowler.com/articles/harness-engineering.html)) and Ning et al. ([arxiv 2605.18747, 2026-05-18](https://arxiv.org/abs/2605.18747)) both name **harness engineering** as an emerging practice: feedforward guides + feedback sensors, computational and inferential, regulating an agent toward a desired state. Mycelium is one worked example of this taxonomy, on a markdown + canvas-YAML + validator substrate — the family of mechanisms is consensus-forming; the substrate choice and the specific gating discipline are Mycelium's own design.
+You can say no — a weekend hack gets lighter prompts than a team product, and you can decline depth at any step. What the agent won't do is silently skip past missing evidence and call the work done. That's the whole pitch: it stops where you'd want to be stopped.
 
 ## Who it's for
 
@@ -105,6 +103,10 @@ All product knowledge lives in `.claude/canvas/*.yml` — structured YAML commit
 If delivery reveals a bad assumption, the diamond **regresses** back with new evidence. This is the system working correctly, not failing.
 
 → Depth: [docs/usage-modes.md](docs/usage-modes.md), [docs/skills/](docs/skills/README.md), [docs/theories.md](docs/theories.md), [docs/philosophy.md](docs/philosophy.md).
+
+## Where it sits in the field
+
+The vocabulary settled in spring 2026. Martin Fowler / Thoughtworks ([Birgitta Böckeler, 2026-04-02](https://martinfowler.com/articles/harness-engineering.html)) and Ning et al. ([arxiv 2605.18747, 2026-05-18](https://arxiv.org/abs/2605.18747)) both name **harness engineering** as an emerging practice: feedforward guides + feedback sensors, computational and inferential, regulating an agent toward a desired state. Mycelium is one worked example of this taxonomy, on a markdown + canvas-YAML + validator substrate — the family of mechanisms is consensus-forming; the substrate choice and the specific gating discipline are Mycelium's own design.
 
 ## Quick start
 
