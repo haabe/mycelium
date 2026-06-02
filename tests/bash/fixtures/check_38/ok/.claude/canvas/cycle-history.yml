@@ -1,0 +1,22 @@
+schema_version: 1
+cycles:
+  - cycle_id: cycle-001
+    leaf_id: opp-001-sol-a
+    opportunity_id: opp-001
+    cycle_class: product-leaf
+    predicted:
+      ice_score: {i: 8, c: 6, e: 7, total: 336}
+      feasibility_risk: medium
+      estimated_effort: "2 sprints"
+    actual:
+      outcome: success
+  - cycle_id: cycle-002
+    leaf_id: meta-validator-check-shipped
+    opportunity_id: meta-dogfood
+    cycle_class: meta-dogfood
+    predicted:
+      ice_score: {i: 0, c: 0, e: 0, total: 0}
+      feasibility_risk: low
+      estimated_effort: "1 session"
+    actual:
+      outcome: success

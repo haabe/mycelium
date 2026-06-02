@@ -24,7 +24,7 @@ A **consistency check** verifies that one of the following pairs agree:
 
 A consistency violation is detected when the pair disagree AND the disagreement is unintentional (legitimate divergences are documented; see "Escape valves" below).
 
-## Cluster catalog (11 known instances)
+## Cluster catalog (13 known instances)
 
 Sourced from `memory/cluster-instances.md#documented-rule-diverges-from-enforcement`. Subclasses help the detection-rule design — different shapes need different rules.
 
@@ -73,14 +73,16 @@ For each `harness/*.md` or `engine/*.md` that contains "validates", "checks", "e
 **Misses:** instances 6, 7, 8.
 **False-positive risk:** high — natural-language claim extraction is fuzzy.
 
-### Rule 4: STRICT-marker presence on rendering specs
+### Rule 4: STRICT-marker presence on rendering specs — PROMOTED (Check 39, 2026-06-02)
 
 Any `engine/*.md` containing "Template" + "Render" sections must contain either a "STRICT — reproduce literally" marker OR a documented "this template is illustrative" disclaimer. Default-strict prevents improvisation.
 
 **Catches:** instance 7 (wayfinding before 0.16.4 fix).
 **Misses:** instances 5, 6, 8.
-**False-positive risk:** low — narrow scope.
+**False-positive risk:** low — narrow scope. Measured FP rate on the upstream engine/ corpus 2026-06-02: 0/20 docs (2 in scope, both compliant).
 **Maintenance burden:** low.
+
+**Promotion provenance:** /mycelium:framework-health on the dogfood repo 2026-06-02 surfaced the cluster's 25-day spec-status duration. Analysis determined the original "≥3 rules" criterion was not met and was not nearly-met (only Rule 6 has an implementation; Rule 6's FP measurement is pending). Rather than downgrade the criterion OR ship the broader mechanism unprepared, Rule 4 was promoted independently because it is (a) narrow, (b) mechanizable today, (c) directly addresses one known historical instance, (d) prevents the same shape in any new rendering-spec doc. The broader cluster remains at `spec` status; this is **per-rule promotion**, not cluster graduation. See Promotion bar §"Per-rule promotion" below.
 
 ### Rule 5: Hook-claim cross-reference
 
@@ -126,14 +128,40 @@ Annotations are intentional friction: writers must explicitly mark divergences a
 
 ## Promotion bar (spec → mechanism)
 
+### Per-rule promotion (added 2026-06-02)
+
+A single detection rule may graduate independently of the rest of the cluster when **all four** of the following hold for that rule:
+
+1. **Implementation exists** as a concrete check (in `tests/validate-template.sh`, `.claude/scripts/`, or `plugins/mycelium/scripts/`).
+2. **<5% false-positive rate** measured on the upstream corpus (engine/, skills/, harness/ as relevant to the rule's scope).
+3. **Covers ≥1 known historical instance** from the cluster catalog.
+4. **Hook integration** in place (pre-commit, CI, or session hook).
+
+Per-rule promotion ships as a single Check (e.g., Check 39 for Rule 4) and a decision-log entry stating the rule, the FP rate measured, and the integration point. The cluster's overall status remains `spec` until the cluster-level bar (below) is met. This path exists because the cluster is heterogeneous — forcing all rules to ship together would gate easy mechanizable subclasses on hard research-shaped ones.
+
+### Cluster-level promotion
+
 The cluster graduates from `spec` to `guardrail` (REVIEW tier) when **all four** conditions are met:
 
-1. **≥3 detection rules** from the candidate list above are implemented as concrete checks (in `.claude/scripts/` or `.claude/tests/`).
+1. **≥3 detection rules** from the candidate list above are implemented (per-rule promotion counts toward this).
 2. **<5% false-positive rate** for each implemented rule, measured on the false-positive corpus.
 3. **100% true-positive rate** across the cluster's known-instance fixtures (every historical instance is detected by at least one rule).
 4. **Hook integration:** the checks are wired into either pre-commit (`validate-template.sh`), `/corrections-audit`, or a new dedicated hook. Detection without integration doesn't count.
 
-Promotion requires an explicit decision-log entry stating the rules implemented, the FP rate measured, and the integration point chosen. The mechanism then ships with a Check number (e.g., Check 27) and a CLAUDE.md version bump (MINOR per version-discipline.md).
+Cluster-level promotion requires an explicit decision-log entry stating the rules implemented, the FP rate measured per rule, and the aggregate TP coverage across the historical instances.
+
+### Current promotion state (as of 2026-06-02)
+
+| Rule | Status | Implementation | FP rate | Hook integration |
+|---|---|---|---|---|
+| Rule 1 (Term-coverage) | spec | none | — | — |
+| Rule 2 (Schema-discipline map) | spec | none | — | — |
+| Rule 3 (Validator-claim cross-ref) | spec | none | — | — |
+| Rule 4 (STRICT-marker presence) | **mechanism** | Check 39 in `tests/validate-template.sh` | 0/20 on upstream engine/ | run-all in `validate-template.sh` (pre-commit + CI) |
+| Rule 5 (Hook-claim cross-ref) | spec | none | — | — |
+| Rule 6 (Test-driver drift) | **near-ready** | `mycelium-roadmap/.claude/auto-dogfood/scripts/check_skill_prompt_drift.py` (248 LOC) | unmeasured (gated on FP corpus build) | not integrated |
+
+Cluster bar at 1/3 implemented rules. Rule 6 promotion blocked on FP measurement, not implementation.
 
 ## What this spec does NOT do
 

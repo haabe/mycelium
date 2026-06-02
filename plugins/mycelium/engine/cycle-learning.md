@@ -15,10 +15,11 @@ Every leaf that reaches a terminal state (launched, archived, or killed) generat
   started_at: "2026-04-12T10:00:00Z"
   completed_at: "2026-04-20T15:00:00Z"
   terminal_state: launched | archived | killed
-  
+  cycle_class: product-leaf | meta-dogfood | observation  # REQUIRED — see Cycle Class below
+
   # Predicted vs actual — the calibration data
   predicted:
-    ice_score: {i: 8, c: 6, e: 7, total: 336}
+    ice_score: {i: 8, c: 6, e: 7, total: 336}  # REQUIRED non-zero when cycle_class=product-leaf
     feasibility_risk: medium
     estimated_effort: "2 sprints"
   actual:
@@ -49,6 +50,20 @@ Every leaf that reaches a terminal state (launched, archived, or killed) generat
   discard_reason: ""  # low-ice-score | failed-assumption | feasibility-block | etc.
   discard_phase: null  # Which lifecycle phase the leaf died at
 ```
+
+## Cycle Class
+
+Every cycle record carries a `cycle_class` field. The class determines which calibration dimensions apply:
+
+| Class | Definition | ICE required? | Calibration dimensions that apply |
+|---|---|---|---|
+| `product-leaf` | OST solution leaf shipped or discarded — the canonical cycle shape | **yes**, non-zero `predicted.ice_score` | ICE accuracy, effort accuracy, risk accuracy, rework rate, discard timing |
+| `meta-dogfood` | Framework-self-development (validator check shipped, anti-pattern graduated, harness layer added) — no impact/confidence/ease tradeoff was scored | no — `ice_score: {i:0, c:0, e:0, total:0}` permitted with `notes:` line stating why | Effort accuracy only |
+| `observation` | First-week observation, cohort log capture, evidence harvesting — no design decision was made | no | None (record for audit trail only; excluded from calibration_summary aggregates) |
+
+**Rule**: A `product-leaf` cycle with `predicted.ice_score.total == 0` is a validator failure (Check 38). Either the cycle is mis-classed, or the ICE step was skipped at opp-selection — see `skills/ice-score/SKILL.md` for the gate.
+
+**Why this matters**: without `cycle_class`, framework-meta cycles (no ICE possible) and product-leaf cycles (ICE required) end up in the same bucket. `calibration_summary` then says "0/N cycles carry ICE" forever — a permanently dark dimension. Classing makes the dark dimension narrow correctly: "0/0 product-leaf cycles" is honest and actionable; "0/N total cycles" is theater.
 
 ## When to Record
 

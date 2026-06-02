@@ -126,6 +126,8 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
    - Confidence below threshold = **NEEDS EVIDENCE** (list what would help)
 
 9. **If progressing**:
+   - **At Define→Develop with a product-leaf solution chosen**: open a cycle record in `.claude/canvas/cycle-history.yml` with `cycle_class: product-leaf` and **copy the solution's `ice_score` from `opportunities.yml` into `predicted.ice_score`**. If the solution has no ICE score, STOP — return "Cannot open product-leaf cycle without ICE. Run `/mycelium:ice-score` on the chosen solution first." This is the gate that prevents permanent dark cells in calibration. See `${CLAUDE_PLUGIN_ROOT}/engine/cycle-learning.md#cycle-class`.
+   - **Framework-self-development or observation transitions** (no OST solution leaf chosen — e.g., L2 strategy adjustment, cohort-log capture, validator-check ship): open the cycle record with `cycle_class: meta-dogfood` or `cycle_class: observation` as appropriate. `ice_score` may be zero with a `notes:` line stating why. These cycles are excluded from ICE-calibration aggregates by design.
    - Update diamond state in `.claude/diamonds/active.yml`.
    - **Render the updated journey map**: Follow `${CLAUDE_PLUGIN_ROOT}/engine/wayfinding.md` to show the user where they've moved to. This makes the transition visible — the user sees their position shift on the map.
    - Log transition in `.claude/harness/decision-log.md`. If threshold was adapted, include: "Threshold adapted from [base] to [effective] because project_type=[type]. Would increase with [action]."

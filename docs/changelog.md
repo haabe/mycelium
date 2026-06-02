@@ -2,9 +2,20 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-06-01.
+**Last updated**: 2026-06-02.
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
+
+## v0.39.0 — framework-health follow-up: Check 38 + Check 39 + per-rule promotion
+
+**2026-06-02. Attribution: framework-health-followup-2026-06-02. Class: minor (two new validator gates + one new mandatory protocol + one new convention with structural impact).**
+
+`/mycelium:framework-health` on the dogfood repo surfaced two structural gaps; both addressed in this ship.
+
+- **Check 38 — cycle_class discipline**. Cycles in `cycle-history.yml` had no class field to distinguish OST-leaf delivery (ICE required for calibration) from framework-self-development / cohort observation (no ICE possible). Result: the confidence-calibration dimension was permanently dark because the "0/N cycles carry ICE" metric conflated cycles that *should* have ICE with cycles that *can't*. Shipped: new `cycle_class: product-leaf | meta-dogfood | observation` REQUIRED field in `engine/cycle-learning.md`, copy-ICE-from-opp gate at `/mycelium:diamond-progress` step 9 (Define→Develop with a chosen solution leaf), hard gate at `/mycelium:retrospective` step 1 (with backfill escape via `reconstructed_post_hoc: true`), and "no leaf advances to selected without ICE" rule in `/mycelium:ice-score`. Validator `check_cycle_class_ice_required` walks `cycle-history.yml`, FAILs on product-leaf with zero ICE, WARNs on unclassed legacy entries.
+- **Check 39 — Rule 4 promoted**. `documented-rule-diverges-from-enforcement` cluster sat at 13 instances / 25-day spec status. Analysis: the promotion criterion (≥3 implemented rules + <5% FP + 100% TP + integration) was never met and was not nearly met (only Rule 6 has implementation, FP measurement pending). Rather than downgrade the bar OR ship the broader mechanism unprepared, **added a per-rule promotion path** to `engine/consistency-check-spec.md`: individual rules graduate independently when narrow + mechanizable + ≥1 historical instance covered + hook-integrated. **Rule 4 (STRICT-marker presence on rendering specs) graduated** to Check 39 — FP rate 0/20 on upstream `engine/`, covers historical instance 7 (wayfinding pre-0.16.4). Cluster overall stays at `spec` status (1/3 rules implemented).
+- **Receipts rotation**. The README highlights section rotates `2026-05-01-framework-self-correction` → `2026-05-09-plugin-form-dogfood`. The "subagent-simulation ≠ lived friction" graduation is structurally stronger — it's load-bearing on the framework's current audit discipline (cited in `/mycelium:framework-health` Step 2b and Step 4b). Rotated-out case stays in `docs/receipts/cases/` per the highlights-rotation rule.
+- **G-V12 coverage**. Both new checks ship fixture tests: `test_check_38.sh` (10 assertions, 4 fixtures: violation, ok, unclassed, meta_only) and `test_check_39.sh` (9 assertions, 4 fixtures: compliant_strict, compliant_illustrative, violation, out_of_scope). Check 37 confirms full coverage at 31 declared checks.
 
 ## v0.38.4 — architecture-discovery-narrowed receipts case (doc-only)
 

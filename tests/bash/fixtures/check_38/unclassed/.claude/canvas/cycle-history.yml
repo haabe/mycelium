@@ -1,0 +1,11 @@
+schema_version: 1
+cycles:
+  - cycle_id: cycle-001
+    leaf_id: opp-001-sol-a
+    opportunity_id: opp-001
+    predicted:
+      ice_score: {i: 0, c: 0, e: 0, total: 0}
+      feasibility_risk: medium
+      estimated_effort: "2 sprints"
+    actual:
+      outcome: success

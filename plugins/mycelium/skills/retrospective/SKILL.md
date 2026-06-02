@@ -52,8 +52,9 @@ Find the leaf_id and opportunity_id for the delivered solution (from `.claude/ca
   diamond_id: "d-XXX"               # From .claude/diamonds/active.yml
   completed_at: "YYYY-MM-DDTHH:MM:SSZ"
   outcome: shipped | partial | failed | discarded
+  cycle_class: product-leaf | meta-dogfood | observation  # REQUIRED — see engine/cycle-learning.md#cycle-class
   predicted:
-    ice_score: {i: X, c: X, e: X, total: XXX}  # ICE at time of scoring
+    ice_score: {i: X, c: X, e: X, total: XXX}  # REQUIRED non-zero when cycle_class=product-leaf; permitted zero for meta-dogfood/observation (state why in notes)
     feasibility_risk: low | medium | high        # From four_risks
     effort_estimate: "X days/weeks"              # Original estimate
   actual:
@@ -71,6 +72,8 @@ Find the leaf_id and opportunity_id for the delivered solution (from `.claude/ca
 ```
 
 Update `calibration_summary.total_cycles` count. If total_cycles reaches a multiple of 5, prompt: "5 cycles since last review. Run `/mycelium:framework-health` to check calibration?"
+
+**Hard gate on `cycle_class: product-leaf`**: if the cycle being closed shipped an OST solution leaf, `predicted.ice_score.total` must be non-zero. If it is zero, do NOT write the record yet — stop and ask: "This cycle shipped a product leaf but has no recorded ICE prediction. Was `/mycelium:ice-score` run before the cycle opened? If yes, copy the score from `opportunities.yml`. If no, this is a Check 38 violation — class the cycle as `meta-dogfood` if no design tradeoff was actually scored, or backfill the ICE score with an honest reconstruction noted as `reconstructed_post_hoc: true`." Reconstructed scores are excluded from calibration aggregates but preserved for the audit trail.
 
 #### Step 5b. Log cycle calibration summary in .claude/harness/decision-log.md
 

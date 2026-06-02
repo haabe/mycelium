@@ -73,7 +73,7 @@ Mycelium has been dogfooded on three small projects AND tested by outside users 
 - **[edith-mari-book-project](docs/receipts/cases/2026-05-20-edith-mari-book-project.md)** — what Mycelium reached beyond developers. First non-developer user (writer with a cookbook project) hit the brief-synthesis flow at the affective layer; surfaced the wayfinding-at-phase-transitions correction. The framework's plain-language discipline was load-bearing.
 - **[macos-fileviewer](docs/receipts/cases/2026-04-macos-fileviewer.md)** — what Mycelium stopped, and what that gave it. The project that didn't ship contributed more than the two that did: 10 framework features came out of a kill.
 - **[alex-cohort-first-run](docs/receipts/cases/2026-05-26-alex-cohort-first-run.md)** — what the deepest single session cost the reader. An outside user's first run surfaced output-density and post-build-silence gaps that drove the v0.31.x batch.
-- **[framework-self-correction](docs/receipts/cases/2026-05-01-framework-self-correction.md)** — what the framework caught itself doing. A 4-day cycle that graduated 5 patterns from the framework's own friction log without a new project.
+- **[plugin-form-dogfood](docs/receipts/cases/2026-05-09-plugin-form-dogfood.md)** — what Mycelium caught running on itself. The founder's first plugin-form session surfaced 5 bugs that four prior subagent simulations had missed; the graduation lesson — subagent-simulation ≠ lived friction — now anchors the framework's pre-ship audit discipline.
 
 The framework you're looking at now is partly built from things it stopped itself.
 

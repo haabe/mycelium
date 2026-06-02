@@ -1586,6 +1586,161 @@ check_gv12_test_coverage() {
     fi
 }
 
+# ------------------------------------------------------------
+# Check 38: cycle_class discipline — product-leaf cycles must carry non-zero ICE.
+#
+# Closes the dark-cell leak surfaced by /mycelium:framework-health on the
+# roadmap dogfood repo 2026-06-02: all 6 cycles in cycle-history.yml carried
+# ice_score: {i:0, c:0, e:0} with a prose comment ("not formally scored —
+# emerged mid-session" / "narrative-prediction work" / etc.), making the
+# confidence-calibration dimension permanently unmeasurable.
+#
+# The fix surfaces two intents in the schema: meta-dogfood and observation
+# cycles legitimately have no ICE (no tradeoff was scored); product-leaf
+# cycles must — they shipped an OST solution leaf, and ICE is the
+# pre-shipment prediction whose calibration is the whole point.
+#
+# Detection: walk cycle-history.yml, find entries with cycle_class: product-leaf
+# and predicted.ice_score.total == 0. Either the cycle is mis-classed
+# (should be meta-dogfood/observation) or /mycelium:ice-score was skipped
+# at opp-selection — see skills/ice-score/SKILL.md gate.
+check_cycle_class_ice_required() {
+    section "Check 38: product-leaf cycles must carry non-zero ICE"
+
+    local cycle_file=".claude/canvas/cycle-history.yml"
+    if [ ! -f "$cycle_file" ]; then
+        info "Check 38: $cycle_file absent — N/A"
+        return
+    fi
+
+    if ! command -v python3 >/dev/null 2>&1; then
+        warn "Check 38: python3 unavailable; skipping cycle_class audit"
+        return
+    fi
+
+    local result
+    result=$(python3 - "$cycle_file" <<'PY'
+import sys
+try:
+    import yaml
+except ImportError:
+    print("SKIP: PyYAML unavailable")
+    sys.exit(0)
+
+with open(sys.argv[1]) as f:
+    try:
+        doc = yaml.safe_load(f) or {}
+    except yaml.YAMLError as e:
+        print(f"PARSE_ERROR: {e}")
+        sys.exit(0)
+
+cycles = doc.get("cycles") or []
+violations = []
+unclassed = []
+for c in cycles:
+    if not isinstance(c, dict):
+        continue
+    cid = c.get("cycle_id", "<no-id>")
+    klass = c.get("cycle_class")
+    if klass is None:
+        unclassed.append(cid)
+        continue
+    if klass != "product-leaf":
+        continue
+    ice = (c.get("predicted") or {}).get("ice_score") or {}
+    total = ice.get("total", 0) or 0
+    try:
+        total_i = int(total)
+    except (TypeError, ValueError):
+        total_i = 0
+    if total_i == 0:
+        violations.append(cid)
+
+if violations:
+    print(f"FAIL: {','.join(violations)}")
+elif unclassed:
+    print(f"WARN: {','.join(unclassed)}")
+else:
+    print("OK")
+PY
+)
+
+    case "$result" in
+        OK)
+            pass "Check 38: all product-leaf cycles carry non-zero ICE"
+            ;;
+        SKIP:*)
+            warn "Check 38: ${result#SKIP: }"
+            ;;
+        PARSE_ERROR:*)
+            warn "Check 38: ${result#PARSE_ERROR: }"
+            ;;
+        WARN:*)
+            warn "Check 38: cycles missing cycle_class (treat as legacy; add classification): ${result#WARN: }. See engine/cycle-learning.md#cycle-class."
+            ;;
+        FAIL:*)
+            fail "Check 38: product-leaf cycles with zero ICE: ${result#FAIL: }. Either re-class as meta-dogfood/observation (no tradeoff was scored) OR backfill ICE via /mycelium:ice-score with reconstructed_post_hoc: true. See engine/cycle-learning.md#cycle-class."
+            ;;
+        *)
+            warn "Check 38: unexpected result: $result"
+            ;;
+    esac
+}
+
+# ------------------------------------------------------------
+# Check 39: rendering-spec docs carry STRICT or illustrative marker.
+#
+# Promotes Rule 4 of engine/consistency-check-spec.md from spec to mechanism.
+# Closes the doc-vs-rendering subclass of the
+# documented-rule-diverges-from-enforcement cluster. Historical instance:
+# wayfinding.md pre-0.16.4 (instance 7 in the cluster log) — the doc showed
+# a template, the agent improvised on rendering, the fix tightened the doc
+# with a STRICT marker. Without a check, the next rendering-spec doc that
+# ships can drop the marker silently and the same failure surface returns.
+#
+# In-scope detection: engine docs that contain BOTH "Template" AND
+# "Render"/"render" anywhere in the body. Either a STRICT-marker line
+# ("STRICT — reproduce…") OR an explicit "illustrative" disclaimer
+# satisfies the check. Out-of-scope docs (general engine docs that
+# happen to mention either word) are not flagged.
+#
+# Promotion provenance: framework-health 2026-06-02 (roadmap dogfood).
+# Single-rule, single-subclass graduation; the broader cluster remains
+# at spec status per consistency-check-spec.md Promotion bar.
+check_rendering_spec_strict_marker() {
+    section "Check 39: rendering-spec docs carry STRICT or illustrative marker (Rule 4)"
+
+    local engine_dir="plugins/mycelium/engine"
+    if [ ! -d "$engine_dir" ]; then
+        engine_dir=".claude/engine"
+    fi
+    if [ ! -d "$engine_dir" ]; then
+        info "Check 39: engine dir absent — N/A"
+        return
+    fi
+
+    local violations=() doc in_scope_count=0
+    while IFS= read -r doc; do
+        if grep -q "Template" "$doc" 2>/dev/null && grep -qE "(Render|render)" "$doc" 2>/dev/null; then
+            in_scope_count=$((in_scope_count + 1))
+            if ! grep -qE "STRICT|illustrative" "$doc" 2>/dev/null; then
+                violations+=("$doc")
+            fi
+        fi
+    done < <(find "$engine_dir" -maxdepth 2 -name "*.md" -type f 2>/dev/null)
+
+    if [ "$in_scope_count" -eq 0 ]; then
+        info "Check 39: no rendering-spec docs in scope — N/A"
+        return
+    fi
+
+    if [ "${#violations[@]}" -eq 0 ]; then
+        pass "Check 39: all ${in_scope_count} rendering-spec doc(s) carry STRICT or illustrative marker (Rule 4 of consistency-check-spec.md)"
+    else
+        fail "Check 39: rendering-spec docs missing STRICT/illustrative marker: ${violations[*]}. Add 'STRICT — reproduce literally' OR a documented 'illustrative' disclaimer per engine/consistency-check-spec.md Rule 4."
+    fi
+}
+
 # ============================================================
 # RUN ALL CHECKS
 # ============================================================
@@ -1634,6 +1789,8 @@ check_plugin_identifier_leak
 check_claudemd_single_version_entry
 check_no_empty_fixture_dirs
 check_claudemd_size_ceiling
+check_cycle_class_ice_required
+check_rendering_spec_strict_marker
 check_gv12_test_coverage
 
 # ============================================================

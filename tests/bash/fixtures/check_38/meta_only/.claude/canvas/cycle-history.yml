@@ -1,0 +1,22 @@
+schema_version: 1
+cycles:
+  - cycle_id: cycle-001
+    leaf_id: meta-cleanup-2026-05-03
+    opportunity_id: meta-dogfood
+    cycle_class: meta-dogfood
+    predicted:
+      ice_score: {i: 0, c: 0, e: 0, total: 0}
+      feasibility_risk: low
+      estimated_effort: "3 hours"
+    actual:
+      outcome: success
+  - cycle_id: cycle-002
+    leaf_id: ht-014-first-week-observation
+    opportunity_id: l0-purpose
+    cycle_class: observation
+    predicted:
+      ice_score: {i: 0, c: 0, e: 0, total: 0}
+      feasibility_risk: medium
+      estimated_effort: "Alex-paced"
+    actual:
+      outcome: success

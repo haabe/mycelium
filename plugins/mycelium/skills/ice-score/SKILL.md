@@ -99,6 +99,7 @@ Are high-scoring items benefiting from availability bias, IKEA effect, anchoring
 - Confidence of 7+ requires test-validated evidence, not analogy or assumption.
 - If all items score similarly, the risk assessments need more depth.
 - Review for bias after scoring, before acting.
+- **No OST leaf advances to selected without an ICE score.** A solution leaf may be sketched without ICE while still a candidate. The moment it is picked up for delivery (cycle opens, diamond progresses Define→Develop with this leaf as the chosen solution), `ice_score` on the solution entry in `opportunities.yml` must be non-zero. This is what makes the calibration dimension measurable later — a cycle that ships without a prior ICE prediction is a permanent dark cell in `cycle-history.yml`. See `engine/cycle-learning.md#cycle-class` for how this propagates into `cycle-history.yml.predicted.ice_score`.
 
 ## Canvas Output
 Update `.claude/canvas/opportunities.yml` — write `four_risks` and `ice_score` per solution leaf.
