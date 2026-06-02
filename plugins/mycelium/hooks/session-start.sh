@@ -343,6 +343,77 @@ if [ -n "$POISON_WARNING" ]; then
 fi
 
 # ============================================================
+# CHECK 8: Cross-repo activity surfacing (anti-pattern #8 cross-repo arm)
+# ============================================================
+# Anti-pattern #8 (Stale State Read) was graduated for the same-repo case —
+# agent re-checks stored memory/canvas without verifying current disk state.
+# The cross-repo manifestation: agent reads canvas state in repo A while
+# reality moved in repo B. Both repos cross-reference each other, but the
+# harness has no built-in awareness of activity in the sibling repo.
+#
+# Worked example (2026-06-02): roadmap dogfood session touched
+# opportunities.yml#opp-005 to log a new evidence source. Earlier same day,
+# upstream had shipped a README rewrite (commit a1cef04) that explicitly
+# named opp-005 in its message and acted on the marketing-surface arm of
+# the same friction. The dogfood session had no signal of the upstream
+# commit and the canvas update missed the partial-action that already
+# shipped. Sibling instance of AP#7 #13 (conversational-reasoning over
+# canvas state, logged in roadmap memory same day).
+#
+# Mechanism: MYCELIUM_CROSS_REPO_WATCH env var holds a colon-separated
+# list of sibling repo paths. For each, scan last 24h of commit messages
+# for canvas-ID patterns (opp-XXX, sol-XXX, comp-XXX, ht-XXX, etc).
+# Surface matches as observability nudge. Fail-open, NUDGE tier.
+if [ -n "$MYCELIUM_CROSS_REPO_WATCH" ]; then
+  CROSS_REPO_WARNING=$(python3 -c "
+import os, re, subprocess, sys
+paths = [p for p in os.environ.get('MYCELIUM_CROSS_REPO_WATCH', '').split(':') if p]
+id_re = re.compile(r'\b(?:opp|sol|comp|ht|cyc|sce)-[A-Za-z0-9_-]+\b')
+# Use ASCII Record Separator (\x1e) to delimit commits — survives any content in
+# subject/body. Format: %h\\t%s\\n%B; commits separated by \x1e.
+DELIM = '\x1e'
+hits = []
+for p in paths:
+    if not os.path.isdir(os.path.join(p, '.git')):
+        continue
+    try:
+        out = subprocess.check_output(
+            ['git', '-C', p, 'log', '--since=24 hours ago',
+             f'--format={DELIM}%h%x09%s%n%B'],
+            stderr=subprocess.DEVNULL,
+            timeout=3,
+        ).decode('utf-8', errors='replace')
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired, FileNotFoundError):
+        continue
+    repo_label = os.path.basename(os.path.normpath(p)) or p
+    for commit in out.split(DELIM):
+        commit = commit.strip()
+        if not commit:
+            continue
+        # First line is '<sha>\t<subject>'; rest is body.
+        first_nl = commit.find('\n')
+        head = commit if first_nl == -1 else commit[:first_nl]
+        ids = id_re.findall(commit)
+        if ids:
+            unique_ids = sorted(set(ids))
+            hits.append(f'{repo_label}: {head.strip()} [canvas IDs: {\", \".join(unique_ids)}]')
+if hits:
+    print(
+        'CROSS-REPO ACTIVITY (last 24h): sibling repo(s) committed against '
+        'canvas IDs that may live in this repo. Verify cross-repo state before '
+        'treating this repo\\'s canvas as authoritative on touched IDs. '
+        'Per anti-pattern #8 (Stale State Read) cross-repo arm. '
+        + '; '.join(hits[:5])
+        + ('; +more' if len(hits) > 5 else '')
+    )
+" 2>/dev/null || echo "")
+
+  if [ -n "$CROSS_REPO_WARNING" ]; then
+    REMINDERS="${REMINDERS}${CROSS_REPO_WARNING} "
+  fi
+fi
+
+# ============================================================
 # Build output
 # ============================================================
 if [ -n "$REMINDERS" ]; then

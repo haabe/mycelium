@@ -6,6 +6,23 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.39.3 — SessionStart CHECK 8: cross-repo activity surfacing (AP#8 cross-repo arm)
+
+**2026-06-02. Attribution: cross-repo-stale-state-arm-2026-06-02. Class: patch (single observability check, no behavior gate, opt-in via env var).**
+
+Anti-pattern #8 (Stale State Read) was graduated for the same-repo case. The cross-repo manifestation surfaced today as a sibling instance of AP#7 #13: roadmap dogfood session touched `opportunities.yml#opp-005` to log a Bård evidence source while unaware that upstream had shipped commit `a1cef04` earlier same day, a README rewrite that explicitly named opp-005 and acted on the marketing-surface arm of the same friction. Both repos cross-reference each other, but the harness had no built-in awareness of activity in the sibling repo. User correction surfaced the gap.
+
+**Mechanism shipped**: SessionStart hook CHECK 8. If `MYCELIUM_CROSS_REPO_WATCH` env var is set (colon-separated list of sibling repo paths, PATH-style), the hook scans each repo's last 24h of commit messages for canvas-ID patterns (`opp-XXX`, `sol-XXX`, `comp-XXX`, `ht-XXX`, `cyc-XXX`, `sce-XXX`). Matches are surfaced in the SessionStart additionalContext block alongside other observability nudges. Fail-open, NUDGE tier, opt-in.
+
+**Configuration** (dogfood project example, set in user-level `~/.claude/settings.json` env block):
+```
+"MYCELIUM_CROSS_REPO_WATCH": "/Users/bartnes/Repos/mycelium"
+```
+
+**Deliberately deferred — PreToolUse cross-repo canvas check**: a complementary mechanism that would scan upstream for canvas-ID hits on every canvas Edit/Write was considered for this version. Not shipped — it overlaps in shape with the Read-before-Recommend graduation candidate logged in roadmap memory same day (AP#7 #13 side learning, v0.39.2 changelog). Folding the cross-repo arm into that pending graduation at the next `/corrections-audit` avoids maintaining two separate codepaths for sibling instances of the same root pattern (System-1 pattern completion skipping verification). The SessionStart observability nudge ships now because it's loose-fit, doesn't conflict with the pending graduation, and addresses the immediate cross-repo blindspot.
+
+**Theory**: Kahneman System 1 / System 2 (the agent's substrate is System 1; gates are bolted-on System 2; verification is the System-2 act AP#8 specifically targets). Argyris (double-loop — fix the rule, not just the instance; same-day sibling instances point at a structural fix, not two ad-hoc corrections). Lopopolo ("every interaction is a failure of the harness to provide enough context" — un-surfaced cross-repo state is exactly accumulated harness-context-debt).
+
 ## v0.39.2 — Rule 6 FP measurement; new escape valve; promotion-bar shape mismatch surfaced
 
 **2026-06-02. Attribution: rule-6-fp-measurement-2026-06-02. Class: patch (doc-only spec edit; no skill/gate/hook change).**
