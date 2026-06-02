@@ -6,6 +6,21 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.39.2 — Rule 6 FP measurement; new escape valve; promotion-bar shape mismatch surfaced
+
+**2026-06-02. Attribution: rule-6-fp-measurement-2026-06-02. Class: patch (doc-only spec edit; no skill/gate/hook change).**
+
+`/mycelium:framework-health` (second run same day) executed its own recommendation #2 — unblock Rule 6 (Test-driver drift) of the `documented-rule-diverges-from-enforcement` cluster. The work produced two findings, both shipped here:
+
+- **New escape valve added** to [`engine/consistency-check-spec.md`](../plugins/mycelium/engine/consistency-check-spec.md#escape-valves) — "framework-wide procedural writes": writes to `harness/decision-log.md` (G-P4 rule) and `diamonds/active.yml` (theory-gates rule) are mandated framework-wide, not skill-specific. SKILL.mds correctly don't repeat them, so the divergence between SKILL.md and a test driver on these specific paths is not drift. Applies to Rule 6 specifically; documented mid-FP-measurement.
+- **Promotion-bar shape mismatch surfaced.** After applying the new escape valve, the roadmap-side Rule 6 implementation still flags 21/28 task fns (75%, far above the 5% cluster bar). Inspection: residual flags are dominantly conditional/scenario-dependent writes by Phase-5 Option-C hybrid design (prompts.py intentionally simpler than full skill behavior). Rule 6 is a **maintainer-review-surfacer** (flag-and-decide), not a **validator** (flag-and-fix). The cluster's `<5% FP rate` criterion fits validator-shaped rules and is the wrong gate for Rule 6.
+
+Status table updated: Rule 6 from "near-ready (FP-pending)" to "promotion-bar-shape-mismatch." Cluster bar stays at **1/3** implemented rules. Two unblocking paths recorded — Path A (revise Rule 6's promotion bar to a per-flag-decision-log shape) or Path B (graduate Rule 3 or Rule 5 first — more validator-shaped, less reshaping needed). Neither in scope this session.
+
+Full measurement run + analysis: `mycelium-roadmap/.claude/auto-dogfood/rule-6-fp-measurement-2026-06-02.md` (roadmap-private; orchestrator is roadmap-private per 2026-05-22 architectural decision).
+
+**Side learning (same session):** AP#7 instance #13 (conversational-reasoning over canvas state) logged in roadmap memory. The agent recommended on the language thread from N=2 fresh evidence (Drew + Bård) without reading the canvas's existing N=5 friction surface (Frida ht-012, cohort testers, Frida presentation Q&A). User correction surfaced the gap. Sub-graduation candidate sharpened: Read-before-Recommend when topic has any extant `opportunities.yml` entry — the conversational analogue of Read-before-Write (Check 31). Recorded in roadmap `memory/cluster-instances.md` (instance #13, conversational + canvas-evidence-read-skip sub-class) and `memory/corrections.md`. Not graduated to mechanism this session; structural-enforcement candidate for next /corrections-audit.
+
 ## v0.39.1 — README newcomer-surface language revision (doc-only)
 
 **2026-06-02. Attribution: readme-language-revision-2026-06-02. Class: patch (README copy; no skill/gate/hook change).**

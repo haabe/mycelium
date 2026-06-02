@@ -123,6 +123,7 @@ Not all documented-rule-divergences-from-enforcement are bugs. The mechanism mus
 | Emerging-research areas | Discipline genuinely too fast-moving to schematize yet | Doc carries `_research_emerging: true` annotation |
 | Language-specific schema constraints | E.g., JSON Schema can't express some discipline shapes natively | Schema carries `_constraint_inherited: <language>` annotation |
 | Workaround-pending-graduation | Known divergence, scheduled for fix | Doc references `cluster-instances.md` and the cluster's graduation status is `pending` |
+| Framework-wide procedural writes (added 2026-06-02) | Writes mandated by framework-wide rules, not skill-specific decisions: `harness/decision-log.md` (G-P4 — every decision-bearing skill logs to it) and `diamonds/active.yml` (theory-gates / diamond-progress — every gate-bearing skill updates it). Repeating these in every SKILL.md would be noise. | The flagged write path is one of `harness/decision-log.md`, `diamonds/active.yml`. The orchestrator (or other downstream test driver) writes it; SKILL.md doesn't repeat it because the rule lives at framework scope. Applies to Rule 6 (test-driver drift) specifically; documented mid-Rule-6-FP-measurement 2026-06-02 (see `.claude/auto-dogfood/rule-6-fp-measurement-2026-06-02.md` in dogfood repo). |
 
 Annotations are intentional friction: writers must explicitly mark divergences as legitimate. The mechanism's default is "flag every divergence."
 
@@ -159,9 +160,9 @@ Cluster-level promotion requires an explicit decision-log entry stating the rule
 | Rule 3 (Validator-claim cross-ref) | spec | none | — | — |
 | Rule 4 (STRICT-marker presence) | **mechanism** | Check 39 in `tests/validate-template.sh` | 0/20 on upstream engine/ | run-all in `validate-template.sh` (pre-commit + CI) |
 | Rule 5 (Hook-claim cross-ref) | spec | none | — | — |
-| Rule 6 (Test-driver drift) | **near-ready** | `mycelium-roadmap/.claude/auto-dogfood/scripts/check_skill_prompt_drift.py` (248 LOC) | unmeasured (gated on FP corpus build) | not integrated |
+| Rule 6 (Test-driver drift) | **promotion-bar-shape-mismatch** | `mycelium-roadmap/.claude/auto-dogfood/scripts/check_skill_prompt_drift.py` (260 LOC, framework-wide-procedural-writes escape valve honored 2026-06-02) | measured 2026-06-02: 21/28 task fns flagged after escape valve (75% raw); residual flags are dominantly conditional/scenario-dependent writes (test-scaffold simplification) by Phase-5 Option-C design — not drift | not integrated |
 
-Cluster bar at 1/3 implemented rules. Rule 6 promotion blocked on FP measurement, not implementation.
+Cluster bar at 1/3 implemented rules. **Rule 6 promotion blocked on shape mismatch, not implementation.** FP measurement 2026-06-02 (see `mycelium-roadmap/.claude/auto-dogfood/rule-6-fp-measurement-2026-06-02.md`) surfaced that the cluster's `<5% FP rate` criterion was specified for validator-shaped rules (flag-and-fix). Rule 6 is a maintainer-review-surfacer (flag-and-decide) — its success criterion is "every flag has a maintainer decision logged" not "≤5% of corpus flagged." Two unblocking paths: (A) revise Rule 6's promotion bar to per-flag-decision-log shape; (B) graduate Rule 3 or Rule 5 first (more validator-shaped). Either advances cluster bar to 2/3; neither in scope for the session that surfaced this finding.
 
 ## What this spec does NOT do
 
