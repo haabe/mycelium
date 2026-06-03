@@ -4,6 +4,22 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-03.
 
+## v0.39.6 — sol-007a: technical-discovery vocabulary + routing branch in /mycelium:diamond-progress
+
+**2026-06-03. Attribution: sol-007a-technical-discovery-vocab-2026-06-03. Class: patch (vocabulary + routing branch in an existing skill).**
+
+Closes opp-007 (Valiantsina Hryn Mind-the-Product comment 2026-06-01 + roadmap brownfield-iteration eval 2026-06-03 sw-tech-discovery dogfood). The dogfood pass-shape characterization (sw-tech-discovery-architecture-guess, scored 6/7 = 86% with `decision_log_contains` as the sole failure across multiple runs) established that the framework's existing gates (Evidence, Bias, AP#7 Consistency-as-Evidence, Cagan feasibility) correctly BLOCK progression when an external API contract is unread and a data model is unvalidated. The gap was purely vocabulary + routing: the verdict didn't NAME the dimension as technical-discovery and recommended `/mycelium:user-interview` where `/mycelium:assumption-test` (read-docs / pull-payload) was the correct surface.
+
+**Mechanism shipped (this version):** `/mycelium:diamond-progress` step 10 extended with a shape-detection branch. When the Evidence/Bias/Feasibility gates are blocking AND canvas state shows any of {unverified `constraints.*` entry naming an external API/contract/schema/data model, develop_intent referencing a specific external API version without an evidence source, recent code change touching an external client/SDK while the contract is unread}, the verdict line names "technical discovery" explicitly and recommends `/mycelium:assumption-test` against the unread contract with "read the current docs, pull a real payload, validate the assumption against observed data" framing.
+
+**No new gate, no new scale, no new diamond, no new skill.** The structural gating already worked. This version is purely the labeling + routing layer that the dogfood characterized as missing.
+
+**Verification protocol:** re-run `auto-dogfood/scenarios/_failing_first/sw-tech-discovery-architecture-guess.yml` after upgrade. Expected shift: `decision_log_contains: ["technical discovery", "API contract", "feasibility"]` should now PASS (synonym-tolerant matcher requires ≥2 of 3 substring hits; this branch reliably emits "technical discovery" + "feasibility" in the verdict line). Score: 7/7 = 100%. Verdict (with the failing-first inversion shipped in v0.39.4 companion roadmap commit): `gap-closed-or-tautology` with `passed_flag=False` (the gap-proving criteria now pass; if 2 sessions in a row produce the same shape, graduate the scenario out of `_failing_first/` per its README).
+
+**Theory:** Christensen / Cagan (the technical dimension of feasibility risk needs to be named to be acted on); Torres (evidence-gated decisions need evidence-appropriate verification surfaces — interviewing a user is not the right surface for an unread API contract); Hoskins/Jobs-of-the-product (the dogfood characterization was the receipts signal; this version is the through-line answer — characterization → mechanism → ship).
+
+## v0.39.5 — Validator-hygiene follow-up to v0.39.4 (no behavior change)
+
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
 ## v0.39.5 — Validator-hygiene follow-up to v0.39.4 (no behavior change)

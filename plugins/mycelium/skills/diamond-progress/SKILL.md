@@ -141,6 +141,15 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
     - Do not progress. Stay in current phase.
     - At **L0 / L1 / L2 / L5** diamonds, if the Evidence gate is "Insufficient Evidence" and `.claude/jit-tooling/active-metrics.yml` is configured, suggest `/mycelium:metrics-pull` as one route to strengthen external signal. If `.claude/jit-tooling/active-metrics.yml` is missing, suggest `/mycelium:metrics-detect` first. (v0.14: `external_data` from snapshots satisfies the Evidence gate's behavioral-data criterion but does NOT replace `external_human` requirements at L2 Develop->Deliver.)
 
+    **Technical-discovery shape detection (sol-007a, v0.39.6)**: when Evidence/Bias/Feasibility gates are blocking AND the agent observes any of the following technical-shape signals in canvas state, **name the dimension explicitly as "technical discovery" in the verdict and recommend `/mycelium:assumption-test` with read-docs / pull-real-payload framing — NOT `/mycelium:user-interview`** (interviewing a domain user does not validate an unread API contract):
+    - Any `constraints.*` entry with `validated: false` that names an external API, contract, schema, data model, or third-party integration
+    - Develop_intent or develop_summary referencing a specific external API/service version without an evidence source
+    - Recent code change touching an external client/SDK while the contract is unread (look for client/SDK imports in src/ adjacent to the active diamond's scope)
+
+    Verdict-line template when triggered: *"Blocked — **technical discovery** incomplete. The [API contract / data model / architecture decision] for [name] is unverified. **Feasibility** evidence missing: [the specific assumption flagged]. Recommended next: `/mycelium:assumption-test` against the unread contract — read the current docs, pull a real payload, validate the assumption against observed data before building the dependent component."*
+
+    Why this routing-branch (rationale captured 2026-06-03 — roadmap brownfield-iteration eval, sw-tech-discovery dogfood pass 6/7 with `decision_log_contains` failing): the framework's existing gates correctly BLOCK the bad-progression behavior (5+ of 7 measurable dimensions pass on the failing-first dogfood) — the structural gating is healthy. The gap was purely vocabulary + routing: the verdict didn't NAME the dimension as technical-discovery and recommended `/user-interview` where `read-docs / pull-payload` was the correct surface. Sol-007a closes both gaps without adding a new gate, scale, or skill. See opp-007 in mycelium-roadmap canvas.
+
 11. **Always communicate in plain language**:
     - Use ${CLAUDE_PLUGIN_ROOT}/engine/status-translations.md for all state descriptions
     - Include contextual confidence explanation
