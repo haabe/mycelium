@@ -6,6 +6,16 @@
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
 
+## v0.39.5 — Validator-hygiene follow-up to v0.39.4 (no behavior change)
+
+**2026-06-03. Attribution: v0.39.4-validator-followup-2026-06-03. Class: patch (validator hygiene).**
+
+The v0.39.4 commit shipped the Pre-Task Protocol trigger extension but two `tests/validate-template.sh` checks failed at push: (a) Check 30 — plugin.json still on 0.39.3 (version-drift); (b) Check 36 — CLAUDE.md at 201 lines vs the 200-line dispatcher ceiling, because the trigger-extension rationale block landed inline rather than in changelog.
+
+**Fix shipped:** plugin.json bumped to 0.39.5; rationale-pointer removed from CLAUDE.md (the canonical home for that detail is the changelog entry below). No behavior change vs v0.39.4. The v0.39.4 Pre-Task Protocol trigger extension stands.
+
+**Why a new version rather than amending v0.39.4:** Git Safety Protocol "always create NEW commits rather than amending unless explicitly requested" per roadmap CLAUDE.md. Founder chose the strict-no-amend path (vs "Authorize amend" option) when surfaced. History now shows v0.39.4 (incomplete) → v0.39.5 (validator-clean release).
+
 ## v0.39.4 — Pre-Task Protocol trigger widened to non-trivial product questions (canvas-first-on-product-questions)
 
 **2026-06-03. Attribution: canvas-first-on-product-questions-2026-06-03. Class: patch (trigger-language widening, no new gate / skill / file).**
