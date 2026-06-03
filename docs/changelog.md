@@ -2,9 +2,35 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-06-02.
+**Last updated**: 2026-06-03.
 
 The live version is in [CLAUDE.md](../CLAUDE.md) first-line frontmatter — that is canonical. This page is the human-readable summary log.
+
+## v0.39.4 — Pre-Task Protocol trigger widened to non-trivial product questions (canvas-first-on-product-questions)
+
+**2026-06-03. Attribution: canvas-first-on-product-questions-2026-06-03. Class: patch (trigger-language widening, no new gate / skill / file).**
+
+Roadmap brownfield-iteration eval (`.claude/evals/results/brownfield-iteration-2026-06-03/`) ran 10 dogfood runs across two fixtures, two models, and four priming layers to characterize a headline finding from Daniel Bentes' 2026-06-02 friction signal. Original hypothesis (brownfield triggers more gates) disconfirmed. Sharper finding emerged: filled canvas + naive product prompt + headless mode = framework bypassed entirely. Sonnet jumps to "Option A vs B" implementation; opus does the same but pauses before implementing. Both miss the active diamond's open gates, the `develop_intent`'s flagged assumptions, and corrections warning against the move.
+
+**Eight specific findings:**
+1. Original hypothesis (brownfield gates > greenfield gates) disconfirmed on direction.
+2. Activation threshold is a single framework noun in the prompt — adding "diamond" to a naive prompt engages the full Define-gate evaluation.
+3. Mode matters more than model: opus interactive engages without any prompt vocabulary; opus headless bypasses without priming.
+4. Sonnet headless reads CLAUDE.md but does not internalize it as binding discipline (Eval A: priming sentence in CLAUDE.md → still bypassed; same priming as user-prompt prefix → engaged at $0.10).
+5. Opus headless DOES load CLAUDE.md as discipline (Evals D + E, two fixtures, both produced discipline-notes footers citing the priming sentence).
+6. Cost inversion: framework-engaged paths $0.10–$0.27; bypassed paths $0.22–$0.41. Sonnet bypass is 4× the cheapest engaged path.
+7. The fix splits by model. Opus: CLAUDE.md sentence. Sonnet: prompt-layer injection at the entry point.
+8. Auto-dogfood default `ClaudeRunner` falls through to sonnet; past sonnet-headless findings may be subject to the discipline-internalization gap, less so to a literal canvas-skip gap because the orchestrator already embeds canvas content into the prompt.
+
+**Mechanism shipped (this version):** Pre-Task Protocol trigger language widened from "implementation task" to "implementation task OR non-trivial product question on a project with non-null `.claude/diamonds/active.yml`." Examples added to the trigger ("what should we do next?", "add X feature", "how should we approach Y?") so naive product questions match without requiring framework vocabulary. Rationale block appended below the protocol list, citing the eval.
+
+**Companion change (roadmap-local, same date, commit 44c869a):** `.claude/auto-dogfood/lib/prompts.py:build_mycelium_prompt` prepended with a `CANVAS-FIRST DISCIPLINE` preamble that frames the embedded CURRENT STATE blocks as binding discipline rather than background reference. Targets the sonnet headless discipline-internalization gap that the CLAUDE.md edit alone does not close. Also: auto-dogfood orchestrator solidification A+B+C (suppress early-exit for `expected_to_fail` scenarios, invert PASS/FAIL semantics so low score = `gap-proven`, add `_requires_step` criterion annotation), validated against `sw-tech-discovery-architecture-guess.yml` re-run — 6/7 pass, `decision_log_contains` fails cleanly = opp-007 vocabulary gap replicates independent of orchestrator behavior.
+
+**Deliberately NOT shipped this version:**
+- A PreToolUse hook that blocks direct implementation answers when active_diamond has open gates — would re-create Daniel Bentes' "for mange gates" friction for interactive users where the routing already works. Per roadmap decision-log 2026-06-03 PM (strategic narrowing): sol-007e mechanism scope = headless contexts only, NOT interactive.
+- Re-tests of past auto-dogfood findings against the new preamble — queued for next dogfood pass; the canvas-skip bias on prior findings is bounded by the orchestrator's existing canvas-embedding.
+
+**Theory:** Kahneman System 1/System 2 (sonnet headless treats CLAUDE.md as reference docs / System 1 fast-read; the prompt-prefix lands as System-2 immediate instruction — the prompt-layer fix targets the layer where sonnet treats input as binding). Argyris double-loop (the trigger that drove the protocol was wrong; widening it is the rule-level fix, not the instance-level fix). Hoskins/Jobs-of-the-product (Daniel's friction was the receipts signal; this version is the through-line answer — eval → mechanism → ship).
 
 ## v0.39.3 — SessionStart CHECK 8: cross-repo activity surfacing (AP#8 cross-repo arm)
 
