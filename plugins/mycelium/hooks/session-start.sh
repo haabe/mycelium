@@ -300,10 +300,46 @@ memory_files = [
 # Imperatives that commonly start malicious instruction bullets.
 # Conservative list — designed for low FP at the cost of missed catches.
 imperative_re = re.compile(
-    r'^\s*[-*]\s+(?:Run|Execute|Delete|Remove|Send|Email|Curl|Wget|Push|Force|'
+    r'^(\s*)[-*]\s+(?:Run|Execute|Delete|Remove|Send|Email|Curl|Wget|Push|Force|'
     r'Disable|Bypass|Skip|Ignore|Override|Fetch|Download|Install|Eval|Exec)\s+',
-    re.IGNORECASE | re.MULTILINE,
+    re.IGNORECASE,
 )
+# Headers under which nested bullets document discarded options, not
+# instructions. decision-log entries use this convention heavily; without
+# the exclusion every session lights up with false positives.
+rejected_header_re = re.compile(
+    r'^\s*[-*]\s+\*?\*?(?:why_not_alternatives|rejected alternatives|'
+    r'considered alternatives|alternatives considered)\b',
+    re.IGNORECASE,
+)
+top_bullet_re = re.compile(r'^\s*[-*]\s+')
+heading_re = re.compile(r'^#{1,6}\s')
+
+def count_imperative_bullets(content):
+    n = 0
+    in_rejected = False
+    rejected_indent = -1
+    for line in content.splitlines():
+        if heading_re.match(line):
+            in_rejected = False
+            continue
+        m = top_bullet_re.match(line)
+        if m:
+            indent = len(line) - len(line.lstrip())
+            if in_rejected and indent <= rejected_indent:
+                # Left the rejected-alternatives subtree.
+                in_rejected = False
+            if rejected_header_re.match(line):
+                in_rejected = True
+                rejected_indent = indent
+                continue
+            if in_rejected and indent > rejected_indent:
+                # Nested bullet under a rejected-alternatives header — skip.
+                continue
+            if imperative_re.match(line):
+                n += 1
+    return n
+
 suspicious = []
 for rel in memory_files:
     path = os.path.join(project_dir, rel)
@@ -322,11 +358,9 @@ for rel in memory_files:
             content = f.read()
     except (OSError, UnicodeDecodeError):
         continue
-    # Skip files that already wrap user-supplied content in untrusted tags.
-    # Find imperative bullets that are NOT inside such a wrapper.
-    matches = imperative_re.findall(content)
-    if matches:
-        suspicious.append((rel, len(matches)))
+    n = count_imperative_bullets(content)
+    if n:
+        suspicious.append((rel, n))
 if suspicious:
     parts = [f'{rel} ({n} imperative-bullet pattern(s))' for rel, n in suspicious]
     print(
