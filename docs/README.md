@@ -2,11 +2,19 @@
 
 **Audience**: contributors, evaluators, and operators who want depth past the README. Public.
 **Time to read**: 5 min for this index; pages link to longer reads.
-**Last updated**: 2026-06-01
+**Last updated**: 2026-06-04
 
 This directory is the **spoke** to the README's **hub**. The README is the landing page (≤200 lines, scannable in 30s). Everything that doesn't fit in 30s lives here.
 
 This file (`docs/README.md`) is the metadocumentation: it sets the rules every other doc in this tree must respect. Read it before adding or rewriting a page.
+
+## Where to start
+
+Three common entry paths, each anchored on a specific user task. Pick the one that matches what you arrived here to do.
+
+- **Install and try it on a real project.** [Step-by-step first-run walkthrough](get-started.md), or [install variants and migration paths](install-paths.md) if you're already running an older form.
+- **Understand how it thinks before adopting it.** [Mental model: scales, diamonds, gates, taught through one worked example](mental-model.md), then [why opinionated discipline, theory-grounded, in-loop preventive](philosophy.md).
+- **Evaluate fit for your team or your project.** [Evaluate Mycelium for your team in ~1 hour, anti-promotional](evaluate.md), with the [30+ theory frameworks Mycelium integrates](theories.md) and the [case files of how Mycelium got smarter](receipts/) for evidence.
 
 ## Contents
 
