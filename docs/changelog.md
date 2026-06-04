@@ -4,6 +4,22 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-04.
 
+## v0.39.8 — docs/README.md persona-index ("Where to start")
+
+**2026-06-04. Attribution: docs-readme-persona-index-2026-06-04. Class: patch (docs only).**
+
+Companion to v0.39.7's README restructure. The main README stays single-funnel (one hero, no top-of-page routing fork per the Core Model decision in v0.39.7). The routing fork lands instead at `docs/README.md`, where multiple deep paths have room without duplication pressure.
+
+**Shipped:** a "Where to start" H2 added to `docs/README.md` above the Contents list, with three task-anchored entry paths:
+
+- **Install and try it on a real project** → `get-started.md` + `install-paths.md`
+- **Understand how it thinks before adopting it** → `mental-model.md` + `philosophy.md`
+- **Evaluate fit for your team or your project** → `evaluate.md` + `theories.md` + `receipts/`
+
+Link-text follows the Pirolli/Card information-scent rule already documented in `docs/README.md` ("Link text should answer 'what will I see if I follow this?'").
+
+**Files touched:** `docs/README.md` (persona-index added, `Last updated` bumped), `CLAUDE.md` (version), `plugins/mycelium/.claude-plugin/plugin.json` (version), `docs/changelog.md` (this entry).
+
 ## v0.39.7 — readme-restructure: Core Model + voice discipline pass
 
 **2026-06-04. Attribution: readme-restructure-articulation-driven-2026-06-04. Class: patch (docs only).**
