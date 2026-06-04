@@ -2,7 +2,30 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-06-03.
+**Last updated**: 2026-06-04.
+
+## v0.39.7 — readme-restructure: Core Model + voice discipline pass
+
+**2026-06-04. Attribution: readme-restructure-articulation-driven-2026-06-04. Class: patch (docs only).**
+
+Driving findings: a non-founder purpose-articulation test (6 returns) plus a brownfield-iteration eval surfaced structural symptoms in the README that bullet-patches couldn't fix: density at the top-of-page decision moment (12 H2 + multiple Diátaxis quadrants), missing docs-handoff signal above the fold, and absence of the load-bearing "two-products / factory" external framing.
+
+**Restructure shipped:**
+
+- Hero rewritten with two-products / factory framing in the lead paragraph and canonical purpose statement merged in; docs-handoff callout placed immediately after the install block.
+- Sections reorganized to the target IA: hero → What it does → What it feels like → Who it's for → Who it's not for → How it works → Where it sits in the field → How Mycelium got smarter → Resuming work → Going deeper → Acknowledgments → License.
+- "What it feels like" converted from a three-mode table to story-shaped prose triggering curiosity / safety / clarity beats; mode names land in the close as a refrain.
+- "Who it's not for" adds the centralized-CRUD architectural-scope bullet (one project, one shared repo, one builder or small team using standard git; concurrent multi-role org workflows named as out-of-scope with the specific concurrency-debt items called out).
+- "Who it's for" embeds an "if you already do this on your own" counter so the discipline-already-internalized reader self-screens.
+- Receipts case-link titles humanized (slug-style → "When consistency stopped counting as evidence", "Edith-Mari's book project", "The macOS fileviewer that didn't ship", "Alex's first run", "Mycelium running on itself").
+- Quick start + Upgrading H2s collapsed into a short "Resuming work" beat plus a new consolidated page at `docs/install-paths.md` covering plugin install, legacy install, migration, upgrading, and self-hosted runtimes.
+- Acknowledgments line tightened to lived-collaborative register; Acknowledgments and License retained as separate H2s per Core Model task-mapping (credibility + community + license-evaluator paths each load-bearing).
+- Voice-discipline pass per project-local `/voice-revise-framework-doc`: em-dashes removed across the README (C-001), AI-tells absent, factory-framing and craft-register dry-wit established as the section-spanning voice.
+- Section count: 16 H2 → 11 H2. Diátaxis quadrants in the README narrowed from 4–5 to 2 (positioning + first-install entry).
+
+No skill behavior changes. No new gates. No new canvas keys. Plugin runtime unchanged.
+
+**Files touched:** `README.md` (restructure), `docs/install-paths.md` (new), `CLAUDE.md` (version), `plugins/mycelium/.claude-plugin/plugin.json` (version), `docs/changelog.md` (this entry).
 
 ## v0.39.6 — sol-007a: technical-discovery vocabulary + routing branch in /mycelium:diamond-progress
 
