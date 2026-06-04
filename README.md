@@ -2,88 +2,62 @@
 
 **Your AI agent should think before it codes.**
 
-AI has made building cheap. It hasn't made *deciding* cheap. Agents will jump from an idea to a pull request without asking why, who for, or whether anyone needs it. Other tools accelerate delivery — Mycelium makes the agent earn the right to start.
+AI has made building cheap. It hasn't made *deciding* cheap. Agents will jump from an idea to a pull request without asking why, who for, or whether anyone needs it.
+
+The gap shows up the same way across every AI-native team. You're shipping two products at once: the one customers see, and the internal factory that decides how the first gets made. Most teams build that factory by accident, in chat logs and prompts no one reviews. Mycelium is that factory, made with a strong purpose: build the right thing the right way. Other tools accelerate delivery; Mycelium makes the agent earn the right to start. Built using itself, and released as open source.
 
 ```bash
-# Recommended (post-v0.20.0): install as a Claude Code plugin
+# Recommended: install as a Claude Code plugin
 /plugin marketplace add haabe/mycelium
 /plugin install mycelium@haabe-mycelium
 /mycelium:start       # one command: setup + 10-minute discovery
 ```
 
-Plugin install is brownfield-safe: no project-root files are modified. Skills are namespaced as `/mycelium:<name>`. See [how to install and run your first round](docs/get-started.md) for details.
+Plugin install is brownfield-safe; no project-root files are modified. Skills are namespaced `/mycelium:<name>`, and `/myc<Tab>` expands the prefix. Legacy install + migration: [`docs/install-paths.md`](docs/install-paths.md).
 
-**On the namespace prefix.** Anthropic's plugin convention requires `/<plugin>:<skill>`, so every Mycelium skill is `/mycelium:foo`. Two ergonomics that take the typing tax down:
+This README orients you and gets you installed. Full docs live at [`docs/`](docs/README.md): mental model, how-to guides, theory grounding, receipts.
 
-- **Tab completion** — type `/myc<Tab>` in Claude Code and it expands to `/mycelium:`. Then a few letters of the skill name + `<Tab>` finishes it. `/mycelium:diamond-assess` is six keystrokes.
-- **Natural-language invocation** — you can also just say "run mycelium setup" or "have mycelium assess where we are." Claude Code routes to the right skill. The `/...` form is faster once you know the name; prose is fine when you don't.
+## What it does
 
-Legacy install (pre-v0.20.0, still supported during transition):
-```bash
-npx degit haabe/mycelium my-project && cd my-project
-# Start Claude Code, then:
-/interview
-```
+You have an idea. You run `/mycelium:start`. The agent doesn't open an editor, it asks you four questions: what's the problem, who has it, what's the biggest risk, what's the smallest next move. Ten minutes in, you have a written brief and the agent points to the riskiest thing you assumed and asks if you want to test it before building anything.
 
-## Your first ten minutes
-
-You have an idea. You run `/mycelium:start`. The agent doesn't open an editor — it asks you four questions: what's the problem, who has it, what's the biggest risk, what's the smallest next move. Ten minutes in, you have a written brief and the agent points to the riskiest thing you assumed and asks if you want to test it before building anything.
-
-You can say no — a weekend hack gets lighter prompts than a team product, and you can decline depth at any step. What the agent won't do is silently skip past missing evidence and call the work done. That's the whole pitch: it stops where you'd want to be stopped.
-
-## Who it's for
-
-**Builders** — solo developers or small teams using AI agents to build products. If you can't afford to burn runway on the wrong thing, Mycelium helps you find the right thing before you build it.
-
-Works for **software, online courses, AI tools, and services**. One command to start. The agent guides you from there.
-
-## Who it's not for
-
-Mycelium is for work where deciding *what to build* is the hard part. Some use cases are better served elsewhere — saying so up front saves frustration:
-
-- **Triage-lane work** — stale-ticket sweepers, board monitors, fixed-template brief generators. The decision of *what* to do is already made; you need execution velocity, not discovery. Paddo's [boring agents](https://paddo.dev/blog/boring-agents-ship/) patterns fit these directly.
-- **Pure execution acceleration in a known scope** — the build is decided; just ship it faster. Tools like [Addy Osmani's agent-skills](https://github.com/addyosmani/agent-skills) optimize this. They compose with Mycelium when discovery is missing, but if discovery is settled, use them directly.
-- **Projects where the ceremony feels heavier than the value it adds.** Mycelium scales gates to project size, but if your project genuinely lacks wrong-build risk, the discipline reads as bureaucracy. That's a fit signal — listen to it.
-
-Time-constrained projects ARE supported: `/interview` opens with a universal 4-question brief (problem, users, risk, smallest next move) — no predict-the-future time-budget question up front. After the brief, you choose how deep to go via a menu (test biggest assumption, go deeper, regulatory review, stop here, friction log). Depth and time-cost are chosen with data, not before any value has been delivered.
-
-**Self-hosted setups**: Mycelium runs on [opencode](https://github.com/anomalyco/opencode) with local models (Ollama, LM Studio) for users who want to escape Claude Code's pricing model. The substrate ports verbatim; three runtime safety mechanisms degrade to model-following-instructions rather than structural enforcement. Honest support matrix and setup steps: [docs/integrations/opencode.md](docs/integrations/opencode.md).
+You can say no. A weekend hack gets lighter prompts than a team product, and you can decline depth at any step. What the agent won't do is silently skip past missing evidence and call the work done. It stops where you'd want to be stopped.
 
 ## What it feels like
 
-Not 49 skills dumped on you at once. Three modes that show up at the right time:
+Not a pile of skills dumped on you at once. Three modes that show up at the right time.
 
-| When | Experience | Example |
-|------|-----------|---------|
-| **During a phase** | Mentor | "Have you considered who your real user is? Here's what the research says about purpose statements." |
-| **At boundaries** | Guardrail | "You're about to skip the bias check. The evidence gate requires this before progressing." |
-| **At transitions** | Checklist | "Before moving forward: evidence ✓, bias check ✗, corrections ✓" |
+You sit down with an idea. As you work through what it actually is, the agent surfaces what you didn't think to ask: "Have you considered who your real user is? Here's what the research says about purpose statements." You weren't going to get there on your own; now you are.
 
-A small project sees fewer gates and lighter guidance. A complex product gets the full treatment.
+Later, tired enough that the bias check feels optional, the agent stops you: "You're about to skip the bias check. The evidence gate requires this before progressing." It catches the moment you'd most like to slip past.
 
-Gate intensity adapts via three mechanisms already in the framework: **project type** (`solo_hobby` thresholds lighter than `team_enterprise`), **phase** (Discover-phase gates lighter than Deliver-phase), and the explicit out-of-scope bounds in "Who it's not for" above. Regen-cheap exploratory scaffolding usually belongs in the out-of-scope set, not under a lighter Mycelium gate path — sibling tools fit those use cases directly.
+When the phase closes, you get the picture back: "evidence ✓, bias check ✗, corrections ✓." What's done, what's still owed.
 
-## How Mycelium got smarter
+Same agent, three voices. Mentor in the work. Guardrail at the edge. Checklist at the close. A weekend hack sees fewer of these moments; a team product sees them all. The intensity scales with what's at stake, not with how many skills are loaded.
 
-Mycelium has been dogfooded on three small projects AND tested by outside users under realistic time pressure. Each session taught the framework something different — and most of what they taught is in the version you're looking at right now.
+## Who it's for
 
-- **[consistency-as-evidence-graduation](docs/receipts/cases/2026-05-09-consistency-as-evidence-graduation.md)** — what Mycelium learned to distrust about itself. A pattern recurring across 5 instances graduated to anti-pattern #7 with an ambient self-check — the framework's own verification discipline now flags when its agent argues from internal coherence rather than external evidence.
-- **[edith-mari-book-project](docs/receipts/cases/2026-05-20-edith-mari-book-project.md)** — what Mycelium reached beyond developers. First non-developer user (writer with a cookbook project) hit the brief-synthesis flow at the affective layer; surfaced the wayfinding-at-phase-transitions correction. The framework's plain-language discipline was load-bearing.
-- **[macos-fileviewer](docs/receipts/cases/2026-04-macos-fileviewer.md)** — what Mycelium stopped, and what that gave it. The project that didn't ship contributed more than the two that did: 10 framework features came out of a kill.
-- **[alex-cohort-first-run](docs/receipts/cases/2026-05-26-alex-cohort-first-run.md)** — what the deepest single session cost the reader. An outside user's first run surfaced output-density and post-build-silence gaps that drove the v0.31.x batch.
-- **[plugin-form-dogfood](docs/receipts/cases/2026-05-09-plugin-form-dogfood.md)** — what Mycelium caught running on itself. The founder's first plugin-form session surfaced 5 bugs that four prior subagent simulations had missed; the graduation lesson — subagent-simulation ≠ lived friction — now anchors the framework's pre-ship audit discipline.
+**Builders.** Solo developers and small teams using AI agents to build products. If you can't afford to burn runway on the wrong thing, Mycelium helps you find the right thing before you build it.
 
-The framework you're looking at now is partly built from things it stopped itself.
+Works for software, online courses, AI tools, and services. One command to start. The agent guides you from there.
 
-→ Full tables, per-mechanism index, per-contributor index: [docs/receipts/](docs/receipts/README.md).
-→ The people who shaped these: [CONTRIBUTORS.md](CONTRIBUTORS.md).
+If you already do all of this on your own (discovery before delivery, evidence before commitment, your agent not skipping the boring parts under pressure), you don't need Mycelium. If you mean to but the agent does skip them, that's the gap Mycelium fills.
+
+## Who it's not for
+
+Mycelium is for work where deciding what to build is the hard part. Some use cases are better served elsewhere; saying so up front saves frustration.
+
+- **Triage-lane work.** Stale-ticket sweepers, board monitors, fixed-template brief generators. The decision of *what* to do is already made; you need execution velocity, not discovery. Paddo's [boring agents](https://paddo.dev/blog/boring-agents-ship/) patterns fit these directly.
+- **Pure execution acceleration in a known scope.** The build is decided; just ship it faster. Tools like [Addy Osmani's agent-skills](https://github.com/addyosmani/agent-skills) optimize this. They compose with Mycelium when discovery is missing, but if discovery is settled, use them directly.
+- **Centralized cross-role org workflows.** Mycelium is built for one project, one shared repo, one builder or small team using standard git. PMs, CTOs, developers, and CEOs live-editing the same canvas concurrently is a different architecture: merge semantics on YAML, identity attribution per edit, locks on gate evaluations mid-progress. Not yet built. If you need that shape, Mycelium isn't it.
+- **Projects where the ceremony feels heavier than the value it adds.** Mycelium scales gates to project size, but if your project genuinely lacks wrong-build risk, the discipline reads as bureaucracy. That's a fit signal; listen to it.
 
 ## How it works
 
-Two building blocks: **Scales** answer *"What am I deciding?"* (from Purpose down to Delivery and Market). **Diamonds** answer *"How do I decide?"* (the same Discover → Define → Develop → Deliver cycle at every scale).
+Two building blocks. **Scales** answer *"What am I deciding?"* The levels run from Purpose down to Delivery and Market. **Diamonds** answer *"How do I decide?"* The same Discover → Define → Develop → Deliver cycle runs at every scale.
 
 ```mermaid
-graph LR
+graph TD
     L0["🎯 L0: Purpose"]
     L1["🗺️ L1: Strategy"]
     L2["🔍 L2: Opportunity"]
@@ -94,101 +68,61 @@ graph LR
     L5 -.->|"market feedback"| L2
 ```
 
-Not all scales are required. A weekend project might skip L1 entirely. `/interview` classifies your project and tells you which scales matter — the system scales to your project, not the other way around.
+Not all scales are required. A weekend project might skip L1 entirely. `/mycelium:start` classifies your project and tells you which scales matter; the system scales to your project, not the other way around.
 
-Every diamond transition must pass theory gates — evidence checks grounded in specific frameworks. Not "I'm confident enough", but "here's the evidence". If a gate fails, the agent tells you what's missing, cites the theory, suggests the skill to run, and does not proceed.
+Every diamond transition must pass theory gates: evidence checks grounded in specific frameworks. Not "I'm confident enough", but "here's the evidence". If a gate fails, the agent tells you what's missing, cites the theory, suggests the skill to run, and does not proceed.
 
-All product knowledge lives in `.claude/canvas/*.yml` — structured YAML committed to git. The canvas IS the spec (the prototype-IS-the-spec discipline from Cagan applied to product knowledge, not just code).
+All product knowledge lives in `.claude/canvas/*.yml`: structured YAML, committed to git. The canvas IS the spec: the prototype-IS-the-spec discipline from Cagan, applied to product knowledge instead of code.
 
-If delivery reveals a bad assumption, the diamond **regresses** back with new evidence. This is the system working correctly, not failing.
+If delivery reveals a bad assumption, the diamond **regresses** back with new evidence. That's the system working correctly, not failing.
 
 → Depth: [docs/usage-modes.md](docs/usage-modes.md), [docs/skills/](docs/skills/README.md), [docs/theories.md](docs/theories.md), [docs/philosophy.md](docs/philosophy.md).
 
 ## Where it sits in the field
 
-The vocabulary settled in spring 2026. Martin Fowler / Thoughtworks ([Birgitta Böckeler, 2026-04-02](https://martinfowler.com/articles/harness-engineering.html)) and Ning et al. ([arxiv 2605.18747, 2026-05-18](https://arxiv.org/abs/2605.18747)) both name **harness engineering** as an emerging practice: feedforward guides + feedback sensors, computational and inferential, regulating an agent toward a desired state. Mycelium is one worked example of this taxonomy, on a markdown + canvas-YAML + validator substrate — the family of mechanisms is consensus-forming; the substrate choice and the specific gating discipline are Mycelium's own design.
+The vocabulary settled in spring 2026. Martin Fowler / Thoughtworks ([Birgitta Böckeler, 2026-04-02](https://martinfowler.com/articles/harness-engineering.html)) and Ning et al. ([arxiv 2605.18747, 2026-05-18](https://arxiv.org/abs/2605.18747)) both name **harness engineering** as an emerging practice: feedforward guides plus feedback sensors, computational and inferential, regulating an agent toward a desired state.
 
-## Quick start
+Mycelium is one worked example of this taxonomy, on a markdown + canvas-YAML + validator substrate. The family of mechanisms is consensus-forming; the substrate choice and the specific gating discipline are Mycelium's own design.
 
-### Recommended: plugin install (any project, brownfield-safe)
+## How Mycelium got smarter
 
-Inside Claude Code:
+Mycelium has been dogfooded on three small projects and tested by outside users under realistic time pressure. Each session taught the framework something different. Most of what they taught is in the version you're looking at right now.
 
-```
-/plugin marketplace add haabe/mycelium
-/plugin install mycelium@haabe-mycelium
-/mycelium:start
-```
+- **[When consistency stopped counting as evidence](docs/receipts/cases/2026-05-09-consistency-as-evidence-graduation.md):** what Mycelium learned to distrust about itself. A pattern recurring across 5 instances graduated to anti-pattern #7 with an ambient self-check. The framework's own verification discipline now flags when its agent argues from internal coherence rather than external evidence.
+- **[Edith-Mari's book project](docs/receipts/cases/2026-05-20-edith-mari-book-project.md):** what Mycelium reached beyond developers. First non-developer user (a writer with a cookbook project) hit the brief-synthesis flow at the affective layer and surfaced the wayfinding-at-phase-transitions correction. The framework's plain-language discipline was load-bearing.
+- **[The macOS fileviewer that didn't ship](docs/receipts/cases/2026-04-macos-fileviewer.md):** what Mycelium stopped, and what that gave it. The project that didn't ship contributed more than the two that did: 10 framework features came out of a kill.
+- **[Alex's first run](docs/receipts/cases/2026-05-26-alex-cohort-first-run.md):** what the deepest single session cost the reader. An outside user's first run surfaced output-density and post-build-silence gaps that drove the v0.31.x batch.
+- **[Mycelium running on itself](docs/receipts/cases/2026-05-09-plugin-form-dogfood.md):** what the framework caught about its own ship. The founder's first plugin-form session surfaced 5 bugs that four prior subagent simulations had missed. The graduation lesson (subagent-simulation ≠ lived friction) now anchors the framework's pre-ship audit discipline.
 
-`/mycelium:start` is the recommended first-run command — it composes `/mycelium:setup` (project-state directories under `.claude/`) and `/mycelium:interview` (10-minute discovery on your idea) into one invocation, with a short welcome to bridge the install→value gap. Both sub-skills remain invocable directly if you prefer piecewise. None of the steps touch your project root files (CLAUDE.md, README, LICENSE). Idempotent — re-running on an initialized project routes to `/mycelium:diamond-assess` instead.
+The framework you're looking at now is partly built from things it stopped itself.
 
-Skills are namespaced (`/mycelium:<name>`) per Anthropic's plugin convention. Use `/myc<Tab>` to expand the prefix, or invoke in prose ("run mycelium start", "have mycelium assess current state") — Claude Code routes either form.
+→ Full tables, per-mechanism index, per-contributor index: [docs/receipts/](docs/receipts/README.md).
+→ The people who shaped these: [CONTRIBUTORS.md](CONTRIBUTORS.md).
 
-### Legacy install (deprecated as of v0.20.x)
+## Resuming work
 
-The `npx degit haabe/mycelium` install path is **no longer supported** for new installs. As of v0.20.x, framework reference content (skills, hooks, engine, schemas, scripts) lives in the plugin cache, not in the user's project. A fresh `npx degit` would land an empty `.claude/` with no skills to invoke and no hooks to fire.
-
-Existing legacy installs continue to work locally. To migrate to plugin form, see the next subsection. To recover from a broken legacy refresh, see [docs/migration.md#recovering-from-a-broken-legacy-refresh](docs/migration.md#recovering-from-a-broken-legacy-refresh).
-
-The legacy path is scheduled for full removal in v0.21.0 (target: 2026-06-09 or earlier).
-
-### Migrating from legacy to plugin form
-
-If you already installed Mycelium via `npx degit` and want to switch to plugin form, your project state (canvas, diamonds, memory, decision log) is preserved. The agent-driven path:
-
-```
-/plugin marketplace add haabe/mycelium
-/plugin install mycelium@haabe-mycelium
-/mycelium:migrate-from-legacy
-```
-
-The skill walks through detection, plugin verification, the explicit "what will and will not change" preview, the migration script, and verification. Migration is reversible via git (`git reset --hard HEAD` before committing).
-
-Or run the script directly: `bash .claude/scripts/upgrade.sh --migrate-to-plugin`. Use `--check-migration` to see which form your project is on without making changes. Full guide: [docs/migration.md](docs/migration.md).
-
-> **Heads-up if your install is older than v0.20.10**: the `--migrate-to-plugin` flag was added in v0.20.10. If your local `.claude/scripts/upgrade.sh` predates it, the script will treat the flag as a version arg and fail with "Failed to pull upstream. Check version/tag exists: --migrate-to-plugin". Fix: run `bash .claude/scripts/upgrade.sh` (no args) once first to refresh your `upgrade.sh` from upstream main, then re-invoke with the flag. Surfaced during the maintainer's own self-migration on 2026-05-09.
-
-### Resuming work
-
-Plugin form: `/mycelium:diamond-assess`. Legacy: `/diamond-assess`. The agent reads your canvas state and tells you where you are and what to do next.
-
-## Upgrading
-
-Mycelium is not a software library — it's instructions that reshape agent behavior. Upgrading replaces framework files while preserving your project state.
-
-**Plugin form** (recommended, post-v0.20.0):
-```
-/plugin update mycelium@haabe-mycelium
-```
-Plugin auto-update is on by default for the official-style marketplace; manual update via `/plugin marketplace update haabe-mycelium` followed by `/reload-plugins`.
-
-**Legacy form**:
-```bash
-bash .claude/scripts/upgrade.sh          # latest
-bash .claude/scripts/upgrade.sh v0.12.0  # specific version
-```
-
-After upgrading, run `/diamond-assess` to see your work through the new version's lens.
+Returning to a project? Run `/mycelium:diamond-assess`. The agent reads your canvas state and tells you where you are and what to do next. Legacy installs run `/diamond-assess`. Install variants, upgrading, and migration paths: [`docs/install-paths.md`](docs/install-paths.md).
 
 ## Going deeper
 
 | If you want to... | Go to |
 |---|---|
-| Try it on a new project | Quick start above |
 | Build the mental model (how to think in it) | [docs/mental-model.md](docs/mental-model.md) |
-| Understand why opinionated | [docs/philosophy.md](docs/philosophy.md) |
-| Look up a specific skill | [docs/skills/](docs/skills/README.md) (49 skills) |
-| Check the theory grounding | [docs/theories.md](docs/theories.md) (30+ frameworks) |
+| Understand why Mycelium is opinionated | [docs/philosophy.md](docs/philosophy.md) |
 | Evaluate it for your team | [docs/evaluate.md](docs/evaluate.md) |
+| Look up a specific skill | [docs/skills/](docs/skills/README.md) |
+| Check the theory grounding | [docs/theories.md](docs/theories.md) (30+ frameworks) |
+| Read the full receipts index | [docs/receipts/](docs/receipts/README.md) |
+| Install variants, migration, upgrading | [docs/install-paths.md](docs/install-paths.md) |
 | Read the FAQ | [docs/faq.md](docs/faq.md) |
 | Vocabulary check | [docs/glossary.md](docs/glossary.md) |
 | See version history | [docs/changelog.md](docs/changelog.md) |
-| Contribute / get listed | [CONTRIBUTORS.md](CONTRIBUTORS.md) + [docs/contributing/](docs/contributing/README.md) |
+| Contribute or get listed | [CONTRIBUTORS.md](CONTRIBUTORS.md) + [docs/contributing/](docs/contributing/README.md) |
 | Check regulatory exposure | [docs/regulatory.md](docs/regulatory.md) + [docs/ai-system-card.md](docs/ai-system-card.md) |
 
 ## Acknowledgments
 
-Mycelium is shaped by community feedback. See [CONTRIBUTORS.md](CONTRIBUTORS.md) for credits. Theory authors are credited in [docs/theories.md](docs/theories.md).
+Mycelium is shaped by the people who used it and helped sharpen it. Credits: [CONTRIBUTORS.md](CONTRIBUTORS.md). Theory authors are credited in [docs/theories.md](docs/theories.md).
 
 ## License
 
