@@ -15,6 +15,10 @@ Progress a diamond through phases with full theory gate validation. At delivery 
 
 **Hard rule.** Before issuing `Write` or `Edit` against any `.claude/canvas/*.yml`, use the **Read tool** on that file in this session. Claude Code's Read-before-Write check requires the `Read` tool specifically — `cat`/`head`/`grep` via Bash do NOT satisfy it.
 
+## Preflight: Read-before-Recommend (gate-narration discipline)
+
+**Hard rule** (per CLAUDE.md Communication Rules, anti-pattern #7 graduation v0.39.16). Every gate-status narration, blocker statement, hold claim, theory-gate verdict, or transition-blocked finding this skill emits MUST cite the canvas file + field path of the source evidence. Adjacent-surface inference (different opportunity, different ht, different topic) MUST be tagged as inference, not asserted as gate state. Companion to the Read-before-Write rule above: that one protects what gets WRITTEN to canvas; this one protects what gets CLAIMED about canvas state in the skill's narration.
+
 **Edit vs Write — different cost profiles** (verified 2026-05-14):
 - **`Edit`** (exact-string replacement): `Read` with `limit: 1` satisfies the check at ~50 tokens. State-tracking is per-file, not per-byte — subsequent `Edit` calls work anywhere in the file. Use this for partial updates against large canvas files (e.g., `purpose.yml` at 800+ lines).
 - **`Write`** (full replacement): do a **full Read** first. Write obliterates the file; you should see what you're about to replace. The `limit:1` shortcut is *not* appropriate here.

@@ -4,6 +4,38 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-05.
 
+## v0.39.16 — Read-before-Recommend Stage 1: conversational + gate-narration sub-shapes graduate (anti-pattern #7)
+
+**2026-06-05. Attribution: read-before-recommend-graduation-stage-1-2026-06-05. Class: patch (Communication Rule + skill preambles + validator check + canvas-health 9b additions; no engine/hook behavior change).**
+
+**The graduation this lands.** Anti-pattern #7 (*Consistency-as-Evidence*) saw 5 same-day instances on 2026-06-02 (`cluster-instances.md` #13-#17) across 5 sub-shapes (same-repo canvas-state skip, cross-repo state skip, consent-state-change skip, cross-file completeness skip, **gate-status-narration confabulation**). Instance #17 was recursive — the agent confabulated an "L0 unclear" blocker from comms-friction evidence inside `/mycelium:diamond-assess`, the very skill whose output named the unified Read-before-Recommend mechanism as the queued graduation candidate. The mechanism was queued for "next session" 24 days ago; today's `/mycelium:framework-health` dashboard named it as the highest-leverage graduation candidate (cluster met-but-ungraduated >30d for the conversational sub-class). This commit ships Stage 1.
+
+**Shipped:**
+
+- **New Communication Rule in `CLAUDE.md`**: *"Always read canvas state before recommending or narrating gate-status on a topic with a known canvas entry."* When the agent emits a recommendation, gate-narration, blocker statement, or hold-status claim about a topic with an extant canvas entry (`opportunities.yml`, `purpose.yml`, `services.yml`, etc.), READ the relevant canvas file + field path FIRST and cite the source inline (e.g., `per purpose.yml#why`, `per opportunities.yml#opp-005#status`). Adjacent-surface inference MUST be tagged as inference, not asserted as gate state. Discipline analog of Read-before-Write (Check 31) applied to gate-narration / conversational recommendations.
+
+- **New `## Preflight: Read-before-Recommend` block** added to the two surface skills founder named explicitly (corrections.md L52): `diamond-assess` and `diamond-progress`. The `diamond-assess` block specifically references its own recursive failure (instance #17 fired inside the very skill diagnosing the cluster).
+
+- **New Check 41** in `tests/validate-template.sh` + fixture test (`tests/bash/test_check_41.sh` + `fixtures/check_41/{with_preamble,missing_preamble}/`). Parallels Check 31 (Read-before-Write on canvas-writing skills) for the gate-narration surface. Scope is deliberately narrow this graduation: hardcoded surface list `[diamond-assess, diamond-progress]`. Adding more skills to the surface is a Stage 2+ decision.
+
+- **`/canvas-health` 9b additions** (per `/mycelium:framework-health` 2026-06-05 dashboard findings #4 and #5):
+  - **Changelog exemption from page-length cap**: `docs/changelog.md` (and any file self-declaring as append-only log surface in its first 5 lines) is exempt from the `docs/<page>.md ≤ 400 lines` rule. The full version history is the artifact's purpose; pages-as-shape is a category error for log files.
+  - **Stable-cohort signal**: when ≥3 docs share the same `Last updated` date AND that date is within 30 days of the 180d freshness threshold, surface as a *cohort-validation event overdue* (INFO-tier, not FAIL/WARN). Pattern signals "one batch validated, no individual re-touches" — remediation should be a single batch re-validation, not N separate touch-passes.
+
+**Sub-shapes deferred to next graduation cycle:**
+
+- (2) cross-repo state checks — needs SessionStart-hook deepening or a cross-repo grep PreToolUse
+- (3) consent-state-change reconciliation — needs attribution-registry diff observability
+- (4) cross-file completeness verification — needs an Edit/Write post-tool hook that triggers grep-completeness on identity-merge patterns
+
+These three each need a different surface than skill preambles — they're harness-level, not skill-level — and are scoped-but-not-shipped this graduation. Queued in the cluster.
+
+**Deferred from `/mycelium:framework-health` dashboard:**
+- **Recommendation #2 (eval-runner against `agents-md-router-discipline.yml`)**: separate dispatch, not bundled here.
+- **Recommendation #3 (6 Chat-UX axiom flags)**: this assessment is #1 of the 4e graduation path; same-skill re-flag at assessment #2 graduates to mechanical check. Defer the fixes accordingly so the graduation triggers correctly rather than firing now and resetting the assessment count.
+
+**Files touched:** `CLAUDE.md` (Communication Rule + version), `plugins/mycelium/.claude-plugin/plugin.json` (version), `plugins/mycelium/skills/diamond-assess/SKILL.md`, `plugins/mycelium/skills/diamond-progress/SKILL.md`, `plugins/mycelium/skills/canvas-health/SKILL.md` (two 9b sub-rules), `tests/validate-template.sh` (Check 41 + runner), `tests/bash/test_check_41.sh` (new), `tests/bash/fixtures/check_41/{with_preamble,missing_preamble}/plugins/mycelium/skills/diamond-assess/SKILL.md` (new fixtures), `docs/changelog.md` (this entry).
+
 ## v0.39.15 — System-card substantive refresh + canvas-health 8d coupling-tag pattern sharpened
 
 **2026-06-05. Attribution: system-card-substantive-refresh-plus-coupling-sharpening-2026-06-05. Class: patch (docs + skill text; no engine/hook behavior change).**

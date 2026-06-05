@@ -1742,6 +1742,55 @@ check_rendering_spec_strict_marker() {
 }
 
 # ============================================================
+# CHECK 41: Read-before-Recommend preamble on gate-narrating skills
+# ============================================================
+#
+# Anti-pattern #7 conversational/gate-narration sub-shape graduation
+# (v0.39.16). The Communication Rule lives in CLAUDE.md; this check
+# enforces that the two gate-narrating skills founder named in
+# corrections.md L52 (2026-06-02 cluster-instances.md instance #17)
+# carry the canonical Preflight block, parallel to Check 31's
+# Read-before-Write enforcement on canvas-writing skills.
+#
+# Scope is deliberately narrow this graduation: diamond-assess and
+# diamond-progress only. Sub-shapes deferred to next graduation
+# (cross-repo state, consent-state, cross-file completeness) need
+# different surfaces — hooks or registry diffs, not skill preambles.
+check_read_before_recommend_preamble() {
+    section "Check 41: Read-before-Recommend preamble on gate-narrating skills (anti-pattern #7 graduation v0.39.16)"
+
+    local skills_dir="$SKILLS_DIR"
+    if [ ! -d "$skills_dir" ]; then
+        info "Skills dir absent — Check 41 N/A"
+        return
+    fi
+
+    local marker="## Preflight: Read-before-Recommend"
+    local surface_skills=("diamond-assess" "diamond-progress")
+    local missing_count=0
+    local missing_list=""
+    local checked=0
+
+    for skill in "${surface_skills[@]}"; do
+        local skill_path="$skills_dir/$skill/SKILL.md"
+        if [ ! -f "$skill_path" ]; then
+            continue
+        fi
+        checked=$((checked + 1))
+        if ! grep -q "$marker" "$skill_path"; then
+            missing_count=$((missing_count + 1))
+            missing_list="${missing_list}"$'\n'"  - $skill/SKILL.md"
+        fi
+    done
+
+    if [ "$missing_count" -eq 0 ]; then
+        pass "Check 41: all $checked gate-narrating skills carry the Read-before-Recommend Preflight block"
+    else
+        fail "Check 41: $missing_count gate-narrating skill(s) missing Read-before-Recommend Preflight block:${missing_list}. Add the '$marker' section per anti-pattern #7 v0.39.16 graduation."
+    fi
+}
+
+# ============================================================
 # CHECK 40: sync_derived.py --check — mechanically-derived tokens in sync
 # ============================================================
 #
@@ -1833,6 +1882,7 @@ check_claudemd_size_ceiling
 check_cycle_class_ice_required
 check_rendering_spec_strict_marker
 check_sync_derived_drift
+check_read_before_recommend_preamble
 check_gv12_test_coverage
 
 # ============================================================
