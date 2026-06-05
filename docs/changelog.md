@@ -4,6 +4,35 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-05.
 
+## v0.39.18 — Read-before-Recommend Stage 2a (sub-shape 6 write-narration-verification) + Chat-UX axiom proof-of-pattern
+
+**2026-06-05. Attribution: read-before-recommend-stage-2a-plus-chat-ux-proof-of-pattern-2026-06-05. Class: patch (skill preambles + validator check + Output-template proof-of-pattern; no engine/hook behavior change).**
+
+**The graduation this lands.** v0.39.16 Stage 1 shipped Read-before-Recommend for the conversational + gate-narration sub-shapes (instances #13 + #17). Within hours of that ship, **instance #18 fired in `/mycelium:dora-check`**: the agent narrated *"✅ Updated `_meta.last_validated` on both canvas files"* in the user-facing summary as if the update were complete — but only the freshness stamp was changed, not the value fields the skill MANDATORY specified (deployment_frequency / change_failure_rate / time_to_restore / APEX / measurement_history). Operator surfaced via Torres-shape question *"Did you run the dora check?"* — non-leading, behavior-anchored — which let the agent self-discover the gap rather than ratifying it after a direct accusation.
+
+This is a NEW sub-shape (sub-shape 6, *write-narration-verification*) symmetric to Check 31's Read-before-Write: that one protects WHAT gets written; this one protects what gets CLAIMED about what was written.
+
+**Shipped:**
+
+- **New `## Postflight: Verify-After-Write` block** in `dora-check` and `xai-check` (the two skills with multi-field canvas update MANDATORIES that produced or could produce the same failure shape). The block tells the agent: before claiming "✅ updated canvas" in user-facing output, Read the just-written file and verify the targeted value fields hold the new values — not just metadata fields like `_meta.last_validated`.
+- **New Validator Check 42** in `tests/validate-template.sh` enforces preamble presence on the surface skills. Parallels Check 31 (Read-before-Write Preflight on canvas-writing skills) and Check 41 (Read-before-Recommend Preflight on gate-narrating skills). Three checks now enforce the read/write/verify discipline at the three corresponding skill surfaces.
+- **Fixture test** at `tests/bash/test_check_42.sh` + `fixtures/check_42/{with_preamble,missing_preamble}/` per G-V12.
+
+**Chat-UX axiom proof-of-pattern fixes** (per `/mycelium:framework-health` 2026-06-05 dashboard finding #3 — operator override of the 4e same-skill-re-flag-at-assessment-2 graduation deferral):
+
+- **canvas-update** (Hick's Law fix): `## Which Canvas File for Which Information` now leads with a one-paragraph **routing rule** that names the discipline (recommend ONE primary destination, at-most-one secondary cross-reference, do not present a flat list for the user to pick from). The table that follows is the canonical map; the rule positions it as authoritative-choice rather than menu.
+- **canvas-health** (Von Restorff fix): `## Output Format` now leads with a visually-isolated `> **Status: [HEALTHY | WARNINGS | CRITICAL]**` blockquote-style verdict line + one-line summary, BEFORE the "Files checked: N..." prose. The status pops at first read instead of being buried two lines in.
+
+**Stage 2b backlog (NOT shipped this graduation):**
+
+- Postflight preambles on threat-model, regulatory-review, service-check, canvas-update (which has Preflight; would gain Postflight as symmetric half)
+- AP#7 Stage 2 sub-shapes (2) cross-repo state, (3) consent-state-change, (4) cross-file completeness — each needs harness-level surfaces (PreToolUse hooks, registry diffs), not skill preambles
+- Chat-UX axiom fixes for remaining 4 flagged skills (ost-builder, ice-score, bvssh-check, dora-check) — deferred to next session
+
+**Cluster status updated:** roadmap and framework `cluster-instances.md` both updated. Total instances 17 → 18 in roadmap; framework summary mirrors via the cross-repo count. Stage 1 graduation marked shipped; Stage 2 backlog enumerated.
+
+**Files touched:** `CLAUDE.md` (version + new Version-line entry), `plugins/mycelium/.claude-plugin/plugin.json` (version), `docs/changelog.md` (this entry), `docs/ai-system-card.md` (sync_derived token refresh), `plugins/mycelium/skills/dora-check/SKILL.md`, `plugins/mycelium/skills/xai-check/SKILL.md`, `plugins/mycelium/skills/canvas-health/SKILL.md`, `plugins/mycelium/skills/canvas-update/SKILL.md`, `tests/validate-template.sh` (+ runner list), `tests/bash/test_check_42.sh` (new), `tests/bash/fixtures/check_42/{with_preamble,missing_preamble}/plugins/mycelium/skills/dora-check/SKILL.md` (new fixtures), `.claude/memory/cluster-instances.md` (instance #18 entry + Stage 1 graduation markers).
+
 ## v0.39.17 — AGENTS.md Minimal Path Step 5: plugin-cache path added
 
 **2026-06-05. Attribution: agents-md-plugin-cache-path-fix-2026-06-05. Class: patch (docs only).**

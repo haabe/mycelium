@@ -1742,6 +1742,53 @@ check_rendering_spec_strict_marker() {
 }
 
 # ============================================================
+# CHECK 42: Postflight Verify-After-Write preamble on multi-field-canvas-writing skills
+# ============================================================
+#
+# Anti-pattern #7 Stage 2a sub-shape (6) graduation (v0.39.18).
+# Symmetric to Check 41 (Read-before-Recommend Preflight) and Check 31
+# (Read-before-Write Preflight). Three checks now enforce the
+# read/write/verify discipline on the corresponding skill surfaces.
+#
+# Scope narrow this graduation: 2 surface skills (dora-check, xai-check —
+# the two with multi-field canvas MANDATORIES that produced AP#7 instance
+# #18 worked failure). Stage 2b candidates: threat-model, regulatory-review,
+# service-check, canvas-update.
+check_postflight_verify_after_write_preamble() {
+    section "Check 42: Postflight Verify-After-Write preamble on multi-field-canvas-writing skills (anti-pattern #7 Stage 2a graduation v0.39.18)"
+
+    local skills_dir="$SKILLS_DIR"
+    if [ ! -d "$skills_dir" ]; then
+        info "Skills dir absent — Check 42 N/A"
+        return
+    fi
+
+    local marker="## Postflight: Verify-After-Write"
+    local surface_skills=("dora-check" "xai-check")
+    local missing_count=0
+    local missing_list=""
+    local checked=0
+
+    for skill in "${surface_skills[@]}"; do
+        local skill_path="$skills_dir/$skill/SKILL.md"
+        if [ ! -f "$skill_path" ]; then
+            continue
+        fi
+        checked=$((checked + 1))
+        if ! grep -q "$marker" "$skill_path"; then
+            missing_count=$((missing_count + 1))
+            missing_list="${missing_list}"$'\n'"  - $skill/SKILL.md"
+        fi
+    done
+
+    if [ "$missing_count" -eq 0 ]; then
+        pass "Check 42: all $checked multi-field-canvas-writing skills carry the Postflight Verify-After-Write block"
+    else
+        fail "Check 42: $missing_count multi-field-canvas-writing skill(s) missing Postflight Verify-After-Write block:${missing_list}. Add the '$marker' section per anti-pattern #7 Stage 2a v0.39.18 graduation."
+    fi
+}
+
+# ============================================================
 # CHECK 41: Read-before-Recommend preamble on gate-narrating skills
 # ============================================================
 #
@@ -1883,6 +1930,7 @@ check_cycle_class_ice_required
 check_rendering_spec_strict_marker
 check_sync_derived_drift
 check_read_before_recommend_preamble
+check_postflight_verify_after_write_preamble
 check_gv12_test_coverage
 
 # ============================================================

@@ -38,6 +38,8 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
 
 ## Which Canvas File for Which Information
 
+> **Routing rule (Hick's Law, added v0.39.18)**: when the new information could plausibly fit multiple canvas files, recommend ONE primary destination based on the information's PRIMARY type (the "why" of the data), with at-most-one secondary cross-reference. Do not present a flat list of candidate files for the user to choose from; that manufactures decision-tax. The table below maps each information type to its canonical canvas file — pick the row whose information type best describes what's being added, not the row whose source-theory the agent finds most interesting.
+
 | Information Type | Canvas File | Source |
 |-----------------|-------------|--------|
 | Purpose, mission, why | purpose.yml | Sinek |

@@ -114,6 +114,10 @@ Assess the four APEX pillars to detect AI-era delivery problems:
 - Burnout signals: unsustainable pace? Context-switching? Alert fatigue?
 - Maps to BVSSH "Happier" dimension
 
+## Postflight: Verify-After-Write (write-narration-verification discipline)
+
+**Hard rule** (per CLAUDE.md Communication Rules, anti-pattern #7 Stage 2 graduation — v0.39.18). Before the user-facing summary claims "✅ updated `dora-metrics.yml`" / "✅ refreshed APEX" / similar, verify the write actually changed the value fields named in `## Canvas Output` below — not just `_meta.last_validated`. Use the **Read tool** on `dora-metrics.yml` after the edits to confirm `deployment_frequency.current`, `change_failure_rate.current`, `time_to_restore.current`, `apex.*`, `measurement_history`, etc. hold the new measurements. If only `_meta` changed and value fields stayed stale, the narration is a state-claim on a state the skill did not achieve (AP#7 instance #18 was the worked failure, 2026-06-05 — operator surfaced it with the Torres-shape question *"Did you run the dora check?"*). Symmetric to the Preflight above: Preflight protects what gets WRITTEN; Postflight protects what gets CLAIMED about what was written. Validator Check 42 enforces preamble presence.
+
 ## Output
 
 ```

@@ -109,6 +109,10 @@ End-to-end test:
 
 This is the Selbst & Barocas (2018) substance check. Without recourse, the rest of XAI is theatre. Verdict: `pass` (all five sub-checks pass), `partial` (path exists but missing SLA or logging), `fail` (no path or path loops).
 
+## Postflight: Verify-After-Write (write-narration-verification discipline)
+
+**Hard rule** (per CLAUDE.md Communication Rules, anti-pattern #7 Stage 2 graduation — v0.39.18). Before the user-facing summary claims "✅ updated `services.yml :: xai.*`" / "✅ refreshed Stage 3 fidelity" / similar, verify the write actually changed the targeted fields below — not just `_meta.last_validated`. Use the **Read tool** on `services.yml` after the edits to confirm `xai.tier` / `xai.surfaces.*` / `xai.recourse.*` / `xai.fidelity.*` / `xai.system_card.*` / `xai.remediation_history` hold the new values. If only `_meta` or `last_assessed_at` changed and value fields stayed stale, the narration is a state-claim on a state the skill did not achieve (parallel to AP#7 instance #18 worked failure, 2026-06-05). Validator Check 42 enforces preamble presence.
+
 ## Output
 
 Write to `services.yml` per service:

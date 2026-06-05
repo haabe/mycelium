@@ -167,7 +167,8 @@ Concretely:
 ```
 ## Canvas Health Report
 
-Overall: [HEALTHY | WARNINGS | CRITICAL]
+> **Status: [HEALTHY | WARNINGS | CRITICAL]** — [one-line verdict, e.g., "0 critical, 3 warnings, 1 info — system-card content stale vs services.yml; chat-UX axiom flags first-fire"]
+
 Files checked: N canvas files, M diamonds files
 
 ### Critical Issues
