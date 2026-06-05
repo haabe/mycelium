@@ -4,7 +4,7 @@
 
 AI has made building cheap. It hasn't made *deciding* cheap. Agents will jump from an idea to a pull request without asking why, who for, or whether anyone needs it.
 
-The gap shows up the same way across every AI-native team. You're shipping two products at once: the one customers see, and the internal factory that decides how the first gets made. Most teams build that factory by accident, in chat logs and prompts no one reviews. Mycelium is that factory, made with a strong purpose: build the right thing the right way. Other tools accelerate delivery; Mycelium makes the agent earn the right to start. Built using itself, and released as open source.
+The gap shows up the same way across every AI-native team. You're shipping two products at once: the one customers see, and the internal factory that decides how the first gets made. Most teams build that factory by accident, in chat logs and prompts no one reviews. Mycelium is that factory, built on purpose: build the right thing the right way. Other tools accelerate delivery; Mycelium makes the agent earn the right to start. Built using itself, and released as open source.
 
 ```bash
 # Recommended: install as a Claude Code plugin
@@ -19,7 +19,7 @@ This README orients you and gets you installed. Full docs live at [`docs/`](docs
 
 ## What it does
 
-You have an idea. You run `/mycelium:start`. The agent doesn't open an editor, it asks you four questions: what's the problem, who has it, what's the biggest risk, what's the smallest next move. Ten minutes in, you have a written brief and the agent points to the riskiest thing you assumed and asks if you want to test it before building anything.
+You have an idea. You run `/mycelium:start`. The agent doesn't open an editor; it asks four questions. What's the problem, who has it, what's the riskiest thing you're assuming, and what's the smallest move that would test it. Ten minutes in, you have a written brief and the agent points to the riskiest thing you assumed and asks if you want to test it before building anything.
 
 You can say no. A weekend hack gets lighter prompts than a team product, and you can decline depth at any step. What the agent won't do is silently skip past missing evidence and call the work done. It stops where you'd want to be stopped.
 
@@ -33,7 +33,7 @@ Later, tired enough that the bias check feels optional, the agent stops you: "Yo
 
 When the phase closes, you get the picture back: "evidence ✓, bias check ✗, corrections ✓." What's done, what's still owed.
 
-Same agent, three voices. Mentor in the work. Guardrail at the edge. Checklist at the close. A weekend hack sees fewer of these moments; a team product sees them all. The intensity scales with what's at stake, not with how many skills are loaded.
+Same agent, three voices. Mentor while you're in it. Guardrail at the edge, checklist at the close. A weekend hack sees fewer of these moments; a team product sees them all. The intensity scales with what's at stake, not with how many skills are loaded.
 
 ## Who it's for
 
@@ -70,7 +70,7 @@ graph TD
 
 Not all scales are required. A weekend project might skip L1 entirely. `/mycelium:start` classifies your project and tells you which scales matter; the system scales to your project, not the other way around.
 
-Every diamond transition must pass theory gates: evidence checks grounded in specific frameworks. Not "I'm confident enough", but "here's the evidence". If a gate fails, the agent tells you what's missing, cites the theory, suggests the skill to run, and does not proceed.
+Every diamond transition must pass theory gates: evidence checks grounded in specific frameworks. Not "I'm confident enough", but "here's the evidence". If a gate fails, the agent names what's missing, cites the theory, and points to the skill that would close it. It does not proceed.
 
 All product knowledge lives in `.claude/canvas/*.yml`: structured YAML, committed to git. The canvas IS the spec: the prototype-IS-the-spec discipline from Cagan, applied to product knowledge instead of code.
 

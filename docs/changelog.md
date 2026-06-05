@@ -4,6 +4,21 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-05.
 
+## v0.39.11 — README voice pass: AI-aesthetic-coded prose sweep
+
+**2026-06-05. Attribution: readme-ai-aesthetic-prose-sweep-2026-06-05. Class: patch (docs only).**
+
+**The friction this catches:** craft readers flagging README copy as having "AI-ness" that distracts before substance lands (cohort-tester friction, logged on the roadmap as an anti-state candidate). The mechanical layer was already clean — zero em-dashes, zero banned AI-tell words — but four passages carried evenly-smoothed parallel structures that read machine-generated. Layer 4 of the `voice-revise-framework-doc` discipline targets exactly this: balanced triples and quads, smoothed parallels, even cadence.
+
+**Shipped:** four edits to `README.md`.
+
+- Line 7: dropped the filler "made with a strong purpose"; the colon-clause already carries the meaning. *"Mycelium is that factory, built on purpose: build the right thing the right way."*
+- Line 22: the four matched WH-clauses (`what's the problem, who has it, what's the biggest risk, what's the smallest next move`) read drill-like. Broken with a sentence-break and asymmetric phrasing on the last two: *"What's the problem, who has it, what's the riskiest thing you're assuming, and what's the smallest move that would test it."*
+- Line 36: the three matched fragments (`Mentor in the work. Guardrail at the edge. Checklist at the close.`) had identical `[noun] [preposition] [the noun]` shape. Collapsed to compress-and-erupt: *"Mentor while you're in it. Guardrail at the edge, checklist at the close."* The third merges into the second as a fragment-stinger.
+- Line 73: the four-verb smooth chain (`tells you what's missing, cites the theory, suggests the skill to run, and does not proceed`) buried the refusal in the rhythm. Split three-plus-stinger: *"the agent names what's missing, cites the theory, and points to the skill that would close it. It does not proceed."*
+
+**Files touched:** `README.md`, `CLAUDE.md` (version), `plugins/mycelium/.claude-plugin/plugin.json` (version), `docs/changelog.md` (this entry).
+
 ## v0.39.10 — `/mycelium:log-evidence` catches untracked-channel drift; `/canvas-health` 8c(d) is the safety net
 
 **2026-06-05. Attribution: log-evidence-untracked-channel-backfill-2026-06-05. Class: patch (skill behavior refinement).**
