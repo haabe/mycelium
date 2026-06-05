@@ -4,6 +4,24 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-05.
 
+## v0.39.12 — `docs/get-started.md` voice pass: C-001 em-dash hygiene
+
+**2026-06-05. Attribution: get-started-c001-hygiene-2026-06-05. Class: patch (docs only).**
+
+**Companion to v0.39.11.** A docs/ survey after the README sweep found that `philosophy.md`, `mental-model.md`, `faq.md`, and `evaluate.md` already read in voice; receipt cases carry their authors' voices intentionally; reference material is stable. The one file that warranted a pass was `get-started.md` — the README's onboarding entry point — which still carried five rhetorical em-dashes and one bureaucratic phrasing.
+
+**Shipped:** six edits to `docs/get-started.md`.
+
+- L8: rhetorical em-dash split to sentence-break. *"Installation does not modify any project-root files. It adds namespaced..."*
+- L12 and L31: section-header parentheticals comma-separated instead of em-dash. *"## Install (plugin form, recommended)"* / *"## Install (legacy npx, portable)"*
+- L58 and L59: link-title em-dashes to colons (consistent with title:subtitle shape). *"How to think in Mycelium: the mental model..."* / *"How to apply Mycelium: solo, team, or agent orchestration"*
+- L35: *"remains available for projects that prefer not to depend"* tightened to *"is still there for projects that would rather not depend"*
+- L5: "Last updated" stamped to 2026-06-05
+
+Layer 4 cadence/structure work was minimal — the file is procedural install register and was already structurally direct (bullet lists, antithetical Adds/Does-not-touch pair, code blocks). The pass was almost entirely C-001 hygiene.
+
+**Files touched:** `docs/get-started.md`, `CLAUDE.md` (version), `plugins/mycelium/.claude-plugin/plugin.json` (version), `docs/changelog.md` (this entry).
+
 ## v0.39.11 — README voice pass: AI-aesthetic-coded prose sweep
 
 **2026-06-05. Attribution: readme-ai-aesthetic-prose-sweep-2026-06-05. Class: patch (docs only).**
