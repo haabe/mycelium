@@ -4,6 +4,23 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-05.
 
+## v0.39.14 — Check 40 + canvas-health 9b sub-check close the system-card staleness gap
+
+**2026-06-05. Attribution: check-40-sync-derived-pre-push-gate-2026-06-05. Class: patch (CI gate + canvas-health sub-check; no engine/hook/skill behavior change).**
+
+**The failure this catches.** `docs/ai-system-card.md` §1 Version sat at `0.38.0` across six framework bumps (v0.38.1 → v0.39.13) without `scripts/sync_derived.py` being run. The script existed, had a `--check` dry-run mode, knew what to do — it just wasn't wired to any gate. Caught when the operator asked *"why is the system card stale"* during a `/mycelium:xai-check` Stage 4 re-audit. The system card is the published transparency artifact; a stale version on it is a live honesty problem, not just untidy (per sync_derived.py's own header comment).
+
+**Shipped:**
+
+- **Check 40** in `tests/validate-template.sh` wraps `python3 plugins/mycelium/scripts/sync_derived.py --check` as a pre-push gate. Any drift in mechanically-derived tokens (version + skill-count tokens across CLAUDE.md, README.md, docs/skills/README.md, plugin.json, marketplace.json, docs/ai-system-card.md, diamond-assess/SKILL.md) blocks push. Remediation: `python3 plugins/mycelium/scripts/sync_derived.py` (no `--check`) refreshes the tokens.
+- **Fixture test** at `tests/bash/test_check_40.sh` + `tests/bash/fixtures/check_40/{drift,synced}/` per G-V12 (Check 37). Stub-based fixtures decouple the wrapper test from the full CLAUDE.md + 49 SKILL.md environment the real script reads.
+- **canvas-health 9b sub-check** for system-card content freshness vs `services.yml :: xai.*`. NUDGE-tier on mismatches in §9 audit date, §5/§9 eval status references, and §1 AI Act tier text. Closes the substantive-content gap that Check 40 doesn't cover (sync_derived only handles mechanical tokens; audit dates and eval narrative are hand-edited).
+- **sync_derived ran**: `docs/ai-system-card.md` §1 Version refreshed `0.38.0` → `0.39.14` (24 patches of drift cleared).
+
+**What's still hand-edit-required (deferred):** §5/§9 fidelity eval status (still says "1/10 sessions" — closed 5/12 at 11), §9 last full audit date (still 5/4; actual fourth audit was 6/5), §1 "Last updated" stamp. These will surface as NUDGE flags on the next `/canvas-health` run thanks to the new 9b sub-check, and can either be hand-fixed then OR `sync_derived.py` can be extended to cover them if there's appetite for that scope. Today's commit ships the gates; content remediation is the next L4 cleanup item.
+
+**Files touched:** `tests/validate-template.sh` (+ runner list), `tests/bash/test_check_40.sh` (new), `tests/bash/fixtures/check_40/{drift,synced}/plugins/mycelium/scripts/sync_derived.py` (new stubs), `plugins/mycelium/skills/canvas-health/SKILL.md`, `docs/ai-system-card.md` (sync_derived token refresh, no hand-edit), `CLAUDE.md` (version), `plugins/mycelium/.claude-plugin/plugin.json` (version), `docs/changelog.md` (this entry).
+
 ## v0.39.13 — `docs/changelog.md` regenericize two leaked names (consent fix)
 
 **2026-06-05. Attribution: changelog-regenericize-leaked-names-2026-06-05. Class: patch (docs only).**

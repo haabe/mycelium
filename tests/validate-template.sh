@@ -1742,6 +1742,47 @@ check_rendering_spec_strict_marker() {
 }
 
 # ============================================================
+# CHECK 40: sync_derived.py --check — mechanically-derived tokens in sync
+# ============================================================
+#
+# Wraps `plugins/mycelium/scripts/sync_derived.py --check` as a pre-push gate.
+# The script already exists and is idempotent; it just wasn't being called
+# anywhere automatically, so version + skill-count tokens in docs/ai-system-card.md
+# (and four other files) routinely drifted across framework releases.
+#
+# Worked failure (2026-06-05): docs/ai-system-card.md §1 Version sat at 0.38.0
+# across six framework bumps (v0.38.1 → v0.39.13) without anyone running
+# sync_derived.py. Caught by the operator asking "why is the system card
+# stale" during a /mycelium:xai-check Stage 4 re-audit. The system card is
+# the published transparency artifact; a stale version on it is a live
+# honesty problem, not just untidy (per sync_derived.py's own header comment).
+#
+# This check gates that drift pre-push. Remediation when it fails:
+# `python3 plugins/mycelium/scripts/sync_derived.py` (no --check) refreshes
+# the tokens. Substantive content (audit date, eval status, last-updated
+# stamp) is not in sync_derived's scope — that's covered by canvas-health
+# 9b sub-check for system-card content freshness.
+check_sync_derived_drift() {
+    section "Check 40: docs/ai-system-card.md + cross-file mechanical tokens in sync (sync_derived.py --check)"
+
+    local sync_script="plugins/mycelium/scripts/sync_derived.py"
+    if [ ! -f "$sync_script" ]; then
+        info "Check 40: $sync_script absent — N/A"
+        return
+    fi
+
+    local output rc
+    output=$(python3 "$sync_script" --check 2>&1)
+    rc=$?
+
+    if [ "$rc" -eq 0 ]; then
+        pass "Check 40: mechanical tokens in sync — $(echo "$output" | head -1)"
+    else
+        fail "Check 40: sync_derived --check reports drift. Remediation: \`python3 $sync_script\` (no --check) refreshes tokens. $output"
+    fi
+}
+
+# ============================================================
 # RUN ALL CHECKS
 # ============================================================
 #
@@ -1791,6 +1832,7 @@ check_no_empty_fixture_dirs
 check_claudemd_size_ceiling
 check_cycle_class_ice_required
 check_rendering_spec_strict_marker
+check_sync_derived_drift
 check_gv12_test_coverage
 
 # ============================================================
