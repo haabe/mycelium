@@ -1,5 +1,9 @@
 # Install variants, migration, and upgrading
 
+**Audience**: operators choosing an install path, migrating between forms, or upgrading an existing project.
+**Time to read**: 10 min.
+**Last updated**: 2026-06-05.
+
 Mycelium runs as a Claude Code plugin (post-v0.20.0) and as a legacy npx-degit install (pre-v0.20.0, deprecated). This page covers all install paths, the migration between them, upgrading, and self-hosted runtimes.
 
 ## Recommended: plugin install (any project, brownfield-safe)

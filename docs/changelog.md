@@ -4,6 +4,28 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-05.
 
+## v0.39.15 — System-card substantive refresh + canvas-health 8d coupling-tag pattern sharpened
+
+**2026-06-05. Attribution: system-card-substantive-refresh-plus-coupling-sharpening-2026-06-05. Class: patch (docs + skill text; no engine/hook behavior change).**
+
+**The chain that landed this.** v0.39.14 shipped the `/canvas-health` 9b sub-check that compares `docs/ai-system-card.md` content against `services.yml :: svc-mycelium.xai.*`. Same-day `/canvas-health` run fired the check for the first time and flagged the three field families v0.39.14 had explicitly deferred (§1 Last-updated stamp, §4/§5/§9 eval-status references, §9 last-full-audit date). This commit clears the flagged content.
+
+**Substantive content refresh of `docs/ai-system-card.md`:**
+
+- §1 *Last updated*: `2026-05-30 (mechanical-token refresh)` → `2026-06-05 (substantive refresh after fourth full audit)`.
+- §4 *Evaluation methodology*: rewrote the `xai-inline-attribution (1/10 sessions)` line to record the **2026-05-12 INSTRUMENT FAILED** eval closure at session 11 (agent self-report didn't reliably log; rule preserved per Lanham et al. faithfulness frame) and the **C1 mechanical-capture replacement** in v0.23.8 (`hooks/read-log.sh` PostToolUse on Read + `scripts/verify_citations.py` cross-references file-shaped citations against the captured log; 376 reads captured in the roadmap dogfood since 5/12; formal faithfulness audit deferred to Juniors.dev cohort sessions). Also softened the cycle-history line (was anchored on a single 5/4 cycle that's long superseded).
+- §5 *Explainability + Fidelity caveat*: reframed around C1. The per-decision rationale claim now cites the mechanical instrument; the fidelity caveat distinguishes the retired self-report instrument from the active C1 instrument.
+- §6 *Service-level commitment*: dropped the dangling "this audit, 2026-05-04" parenthetical that no longer corresponded to a recent timestamp.
+- §9 *Last full audit*: moved from `2026-05-04` to `2026-06-05` with the fourth-audit narrative — tier holds Limited, Stage 2 unchanged, Stage 3 reframed around C1, Stage 4 + 5 pass. Documented the two meta-findings that drove v0.39.14's structural fixes (canvas-health spot-check missed the eval-substrate change; the card itself drifted six framework patches behind on its version token until the operator surfaced it mid-audit).
+
+**Audience markers added to two `docs/` files** flagged by `/canvas-health` 9b: `docs/context-surface.md` and `docs/install-paths.md` now carry the **Audience / Time to read / Last updated** three-line block in the first 5 lines, matching `docs/contributing/style.md`.
+
+**`/canvas-health` 8d skill text sharpened.** The 8d rule (added v0.31.6) described coupling tags as `[target → <file>#<anchor>]` literally, but the convention as actually validated in use (ht-002, 2026-05-29) is the more informative `[<gap-handle> → <ref>]` form — e.g., `[L0 adoption / cautious-learner → purpose.yml L797 + ht-002 track(c)]`. The skill text now names both forms explicitly (both match the same `\[[^\]]+→[^\]]+\]` regex shape) and notes the descriptive form is the recommended one. Added a scope-narrow clause stating 8d applies only to feedback-EXTRACTION tasks (interview / deep-session / observation), not warm-referral asks, broadcast recruits, or close-the-loop receipts — closes a false-positive class surfaced by today's `/canvas-health` run on the roadmap (audit incorrectly flagged ht-002 as missing tags because it grepped the literal "target" string; ht-002 actually has 4 tags using the descriptive form).
+
+**Cross-repo consent activation (worth flagging).** As a side effect of adding a previously-unregistered name to the private roadmap's `attribution-registry.yml` (as `generic_only`), Check 33 (consent-leak scan) immediately surfaced three pre-existing public-surface references to that name in shipped upstream docs (one receipts case, one changelog entry). Both were regenericized as part of this commit. This is exactly how the registry-driven consent system is designed to work: adding a name *activates* the protection across all files, surfacing latent leaks. The implication is that any future registry addition should expect a similar one-pass cleanup; routing it through pre-push validation is what makes the surfacing reliable.
+
+**Files touched:** `docs/ai-system-card.md`, `docs/context-surface.md`, `docs/install-paths.md`, `docs/receipts/cases/2026-06-01-architecture-discovery-narrowed.md` (regenericize 2 references), `docs/changelog.md` (regenericize 1 reference + this entry), `plugins/mycelium/skills/canvas-health/SKILL.md`, `CLAUDE.md` (version), `plugins/mycelium/.claude-plugin/plugin.json` (version).
+
 ## v0.39.14 — Check 40 + canvas-health 9b sub-check close the system-card staleness gap
 
 **2026-06-05. Attribution: check-40-sync-derived-pre-push-gate-2026-06-05. Class: patch (CI gate + canvas-health sub-check; no engine/hook/skill behavior change).**
@@ -254,7 +276,7 @@ Added [`docs/receipts/cases/2026-06-01-architecture-discovery-narrowed.md`](rece
 
 - **Disk-verified result**: 5/7 success criteria pass; 2/7 partial. The existing gates (Evidence + Bias + Anti-Pattern #7 + Cagan feasibility) already do the blocking work the original framing assumed was missing. What is missing is narrower — vocabulary ("technical discovery" appears 0× in the decision-log output), routing (recommended `/mycelium:user-interview` for an unread-API gap, where the right surface is read-docs / pull-payload), and a surface state-drift between `active.yml` gate-status and the decision-log (new instance of `documented-rule-diverges-from-enforcement`).
 - **What this changed**: the candidate solution shape in the private OST collapses from "dedicated technical-discovery scale/diamond" to "vocabulary + routing nudge on existing gates." Nothing shipped to skills/hooks. A leaf still requires the documented external-second-ask graduation criterion the opp records.
-- **Discipline note**: generic framing — practitioner identity, employer, and named clients stay in the private roadmap per the Lars Jenssen attribution pattern. The receipt is about *what we did with the signal*, not who sent it.
+- **Discipline note**: generic framing — practitioner identity, employer, and named clients stay in the private roadmap per the framework's attribution discipline. The receipt is about *what we did with the signal*, not who sent it.
 
 ## v0.38.3 — human mental-model docs page (doc-only)
 

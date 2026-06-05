@@ -19,7 +19,7 @@ subclass: self-dogfood
 
 An external practitioner — a backend engineer working on .NET / ML production systems — commented on a public post from the founder. The comment validated the existing thesis ("forcing agents to do discovery before building is the right problem to solve") and asked a real question: could Mycelium's evidence-gate be extended from *product* discovery to *technical* discovery — architecture, API contracts, data models — where the practitioner had observed agents "confidently guessing and getting it wrong"?
 
-Identity, employer, and named clients live in the private roadmap canvas. Per the framework's attribution discipline (Lars Jenssen pattern), nothing in this case names the practitioner, their company, or any client; the receipt is about what we *did* with the signal, not who sent it.
+Identity, employer, and named clients live in the private roadmap canvas. Per the framework's attribution discipline, nothing in this case names the practitioner, their company, or any client; the receipt is about what we *did* with the signal, not who sent it.
 
 N=1, soft trial intent only ("next time we do product work"). A positioning + demand signal — not behavior validation.
 
@@ -77,4 +77,4 @@ Attribution honesty: every causal claim above ("the gap is narrower than feared"
 
 ## Attribution note
 
-External practitioner: identity, employer, and named clients live in the private roadmap (`opp-007` and the 2026-06-01 decision-log entry). Per the Lars Jenssen pattern, public framework surfaces stay generic until explicit consent. This receipts case is the generic surface. Nothing here identifies the inbound contact.
+External practitioner: identity, employer, and named clients live in the private roadmap (`opp-007` and the 2026-06-01 decision-log entry). Per the framework's attribution discipline, public framework surfaces stay generic until explicit consent. This receipts case is the generic surface. Nothing here identifies the inbound contact.
