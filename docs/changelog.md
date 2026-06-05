@@ -2,7 +2,21 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-06-04.
+**Last updated**: 2026-06-05.
+
+## v0.39.10 — `/mycelium:log-evidence` catches untracked-channel drift; `/canvas-health` 8c(d) is the safety net
+
+**2026-06-05. Attribution: log-evidence-untracked-channel-backfill-2026-06-05. Class: patch (skill behavior refinement).**
+
+**The drift this catches:** outreach that produces evidence with no source-task at all — the symmetric inverse of `/canvas-health 8c(b)` (which catches task-with-no-evidence). An ad-hoc DM goes out unregistered, a reply lands, evidence gets logged free-form against a canvas section, and the channel is now invisible to status checks, learning-target coupling, and the attribution registry until the contributor surfaces in a later session.
+
+**Dogfood trigger:** roadmap `ht-022` Dean Peters channel (2026-06-05). Founder-initiated DM to Dean Peters (deanpeters/Product-Manager-Skills maintainer, 3,848★ comparator). Reply landed positive ("engineering POV vs PM POV" peer-comparator framing). The drift was visible only because `/mycelium:log-evidence` happened to run on the reply — had the founder just edited `purpose.yml` directly, the channel would have stayed unaddressable until the next contributor-name surfaced through a different path. No matching `ht` existed; the skill happy-pathed past the gap to free-form capture in v0.39.9.
+
+**Shipped:**
+- `plugins/mycelium/skills/log-evidence/SKILL.md` step 1: new explicit no-matching-task branch. When user notes describe an exchange with a contributor not covered by any `pending_tasks`, the skill stops, surfaces the gap, and offers two paths — (a) **backfill** an `ht-XXX` inline with a `backfill_note` field (good for ad-hoc one-shot exchanges); (b) **register-then-log** via `/mycelium:handoff` (good for first touch in a channel with plausible follow-ups). Free-form capture with no `ht` reference is no longer the happy path. The rationale spelled out in the skill: this step is the only forcing-function for the "evidence with no task" class, because the symmetric `8c(b)` health check has no task to flag against.
+- `plugins/mycelium/skills/canvas-health/SKILL.md` step 8c: new sub-check `(d)` "Untracked-channel evidence" — scans 30-day window for `external_human` entries naming a contributor via `provenance.relationship` or `provenance.evidence_sources[]`. If no `human-tasks.yml` entry covers that contributor (across `target_persona`, `touch_log`, or `backfill_note`), NUDGE-tier flag with a backfill recommendation. Skips registry-private (`generic_only`) names. Acts as the periodic safety net for the in-skill check.
+
+**Files touched:** `plugins/mycelium/skills/log-evidence/SKILL.md`, `plugins/mycelium/skills/canvas-health/SKILL.md`, `CLAUDE.md` (version), `plugins/mycelium/.claude-plugin/plugin.json` (version), `docs/changelog.md` (this entry).
 
 ## v0.39.9 — SessionStart memory-poisoning detector: exclude `why_not_alternatives` subtrees
 

@@ -42,10 +42,15 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
 
 ## Workflow
 
-1. **Check pending tasks**:
+1. **Check pending tasks — and handle the no-matching-task case explicitly**:
    - Read `.claude/canvas/human-tasks.yml` for `pending_tasks`
    - List them: "You have [N] pending human task(s): [objective summaries]"
    - Ask: "Which task did you complete? Or paste your notes and I'll match them."
+   - **No-matching-task branch (added v0.39.10, symmetric to `8c(b)`).** If the user's notes describe an exchange with a named contributor and NONE of the pending tasks plausibly matches (no `target_persona` overlap, no `touch_log` entry for that channel), stop and surface the gap before writing evidence:
+     > "I can't find a human-task that covers this exchange. Outreach that produces evidence without a registered task is the symmetric drift of `8c(b)` — it makes the channel invisible to status checks, learning-target coupling, and the attribution registry. Two paths: (a) **backfill** an `ht-XXX` now with a `backfill_note` explaining the channel wasn't pre-registered (good when the outreach was ad-hoc and short — a DM reply, a one-shot reaction); (b) **register-then-log** via `/mycelium:handoff` (good when this is the first touch in a channel that will plausibly have follow-ups). Which fits?"
+     - If (a): create the ht with `created_at: today`, `status: pending` (or `completed` if this single exchange closes it), a `backfill_note` field stating "Created retroactively — original [send/inbound] not pre-registered via /mycelium:handoff", and a `touch_log` entry for the exchange. Then proceed to step 2 with the new ht-ID in hand.
+     - If (b): pause this skill, invoke `/mycelium:handoff` to register the channel properly, then resume here with the new ht-ID.
+     - Do NOT happy-path past the gap by free-form-capturing the evidence with no `ht` reference. The next `/canvas-health` `8c(b)` pass will not catch this class because there is no task to flag against; the only forcing-function for "evidence with no task" is *this* step.
 
 2. **Guided evidence capture** (if user doesn't have a filled template):
    - Who did you talk to? (role and context, not name -- privacy)
