@@ -4,6 +4,16 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-05.
 
+## v0.39.13 — `docs/changelog.md` regenericize two leaked names (consent fix)
+
+**2026-06-05. Attribution: changelog-regenericize-leaked-names-2026-06-05. Class: patch (docs only).**
+
+Two pre-existing leaked names in `docs/changelog.md` replaced with generic framing per `attribution-registry.yml` consent state (both `generic_only`). v0.39.10 dogfood-trigger paragraph: PM-skills comparator maintainer (~3,800★) substantive framing preserved, name removed. v0.36.x peer-practitioner feedback list: Norwegian quote preserved, name replaced with "a peer practitioner".
+
+Surfaced by Check 33 (plugin tree contains no unconsented personal identifiers) on the first push after both entries had landed. The check exists exactly to catch this; it worked as designed.
+
+**Files touched:** `docs/changelog.md`, `CLAUDE.md` (version), `plugins/mycelium/.claude-plugin/plugin.json` (version), `docs/changelog.md` (this entry).
+
 ## v0.39.12 — `docs/get-started.md` voice pass: C-001 em-dash hygiene
 
 **2026-06-05. Attribution: get-started-c001-hygiene-2026-06-05. Class: patch (docs only).**
@@ -43,7 +53,7 @@ Layer 4 cadence/structure work was minimal — the file is procedural install re
 
 **The drift this catches:** outreach that produces evidence with no source-task at all — the symmetric inverse of `/canvas-health 8c(b)` (which catches task-with-no-evidence). An ad-hoc DM goes out unregistered, a reply lands, evidence gets logged free-form against a canvas section, and the channel is now invisible to status checks, learning-target coupling, and the attribution registry until the contributor surfaces in a later session.
 
-**Dogfood trigger:** roadmap `ht-022` Dean Peters channel (2026-06-05). Founder-initiated DM to Dean Peters (deanpeters/Product-Manager-Skills maintainer, 3,848★ comparator). Reply landed positive ("engineering POV vs PM POV" peer-comparator framing). The drift was visible only because `/mycelium:log-evidence` happened to run on the reply — had the founder just edited `purpose.yml` directly, the channel would have stayed unaddressable until the next contributor-name surfaced through a different path. No matching `ht` existed; the skill happy-pathed past the gap to free-form capture in v0.39.9.
+**Dogfood trigger:** roadmap `ht-022` channel (2026-06-05). Founder-initiated DM to a peer-practitioner maintainer of a comparator PM-skills repo (~3,800★). Reply landed positive ("engineering POV vs PM POV" peer-comparator framing). The drift was visible only because `/mycelium:log-evidence` happened to run on the reply — had the founder just edited `purpose.yml` directly, the channel would have stayed unaddressable until the next contributor-name surfaced through a different path. No matching `ht` existed; the skill happy-pathed past the gap to free-form capture in v0.39.9.
 
 **Shipped:**
 - `plugins/mycelium/skills/log-evidence/SKILL.md` step 1: new explicit no-matching-task branch. When user notes describe an exchange with a contributor not covered by any `pending_tasks`, the skill stops, surfaces the gap, and offers two paths — (a) **backfill** an `ht-XXX` inline with a `backfill_note` field (good for ad-hoc one-shot exchanges); (b) **register-then-log** via `/mycelium:handoff` (good for first touch in a channel with plausible follow-ups). Free-form capture with no `ht` reference is no longer the happy path. The rationale spelled out in the skill: this step is the only forcing-function for the "evidence with no task" class, because the symmetric `8c(b)` health check has no task to flag against.
@@ -197,7 +207,7 @@ Full measurement run + analysis: `mycelium-roadmap/.claude/auto-dogfood/rule-6-f
 Two changes to the README newcomer surface, against N=2 peer-practitioner friction:
 
 - Drew Hoskins (2026-05-11): "pretty jargon-y" + value-not-landing before mechanism vocabulary takes over.
-- Bård Øien (2026-06-02): "litt akademisk språk, vanskelig å umiddelbart skjønne hvorfor mycelium var produktet jeg trengte."
+- A peer practitioner (2026-06-02): "litt akademisk språk, vanskelig å umiddelbart skjønne hvorfor mycelium var produktet jeg trengte."
 
 Shipped:
 
