@@ -4,6 +4,22 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-05.
 
+## v0.39.17 — AGENTS.md Minimal Path Step 5: plugin-cache path added
+
+**2026-06-05. Attribution: agents-md-plugin-cache-path-fix-2026-06-05. Class: patch (docs only).**
+
+**The drift this catches.** AGENTS.md Minimal Path Step 5 told agents to look up the `action_flags` convention at either `plugins/mycelium/engine/canvas-guidance.yml` (in-repo plugin) or `.claude/engine/canvas-guidance.yml` (legacy). Neither path resolves in a post-plugin-migration project, where the engine ships inside the user's plugin cache (`~/.claude/plugins/cache/haabe-mycelium/mycelium/<version>/engine/`). The 2026-06-05 `/mycelium:eval-runner` re-run of `agents-md-router-discipline.yml` surfaced this as a NUDGE — the blind subagent found the convention anyway by discovery in the plugin cache, then flagged the AGENTS.md pointers as not-actually-pointing.
+
+**Shipped.** Step 5 now lists all three install forms explicitly, with the fallback search order:
+
+> in-repo plugin (`plugins/mycelium/engine/canvas-guidance.yml`) → legacy (`.claude/engine/canvas-guidance.yml`) → plugin cache (`~/.claude/plugins/cache/haabe-mycelium/mycelium/<version>/engine/canvas-guidance.yml`)
+
+`/plugin list` shows the installed plugin version when the cache path is needed. Three install forms during the v0.20.x → plugin transition is intentional; the docs need to reflect that the cache form is now the most common runtime location.
+
+**Why not collapse to one path.** Each install form is valid for a different audience: in-repo plugin for framework contributors, legacy for pre-v0.20.0 projects in transition, plugin cache for post-migration users. Removing any path would leave one of those audiences without a working pointer. The fix is to list all three with explicit search order, not to pick one.
+
+**Files touched:** `AGENTS.md` (single-line Step 5 update), `CLAUDE.md` (version), `plugins/mycelium/.claude-plugin/plugin.json` (version), `docs/changelog.md` (this entry).
+
 ## v0.39.16 — Read-before-Recommend Stage 1: conversational + gate-narration sub-shapes graduate (anti-pattern #7)
 
 **2026-06-05. Attribution: read-before-recommend-graduation-stage-1-2026-06-05. Class: patch (Communication Rule + skill preambles + validator check + canvas-health 9b additions; no engine/hook behavior change).**

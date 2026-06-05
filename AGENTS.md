@@ -46,7 +46,7 @@ For agents without Mycelium's hook layer, the operating loop is:
 2. Read the relevant `.claude/canvas/*.yml` files to see what evidence has already been gathered
 3. Read `.claude/memory/corrections.md` to avoid past mistakes
 4. Before adding evidence, read 2-3 recent entries in the same canvas section to match voice (concrete + sourced + hedged, not interpretive)
-5. Before actioning a flagged item in canvas (anything with "candidate / worth considering / next step / refresh"), check its status marker (OPEN / ON HOLD / RESERVED). Unmarked = ON HOLD by convention. See `plugins/mycelium/engine/canvas-guidance.yml#action_flags` (plugin form) or `.claude/engine/canvas-guidance.yml#action_flags` (legacy install).
+5. Before actioning a flagged item in canvas (anything with "candidate / worth considering / next step / refresh"), check its status marker (OPEN / ON HOLD / RESERVED). Unmarked = ON HOLD by convention. See `canvas-guidance.yml#action_flags` — three install forms carry it: **plugin** at `~/.claude/plugins/cache/haabe-mycelium/mycelium/<version>/engine/canvas-guidance.yml` (where `<version>` matches the installed plugin; `/plugin list` shows it); **in-repo plugin** at `plugins/mycelium/engine/canvas-guidance.yml`; **legacy** at `.claude/engine/canvas-guidance.yml`. The fallback search order if you're unsure which install form is in use: in-repo plugin → legacy → plugin cache.
 6. Make changes; record evidence with provenance; log decisions to `.claude/harness/decision-log.md`
 
 ### Concrete operating model per agent class
