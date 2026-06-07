@@ -1879,6 +1879,101 @@ check_sync_derived_drift() {
 }
 
 # ============================================================
+# CHECK 43: Identifier-exposure declaration on render-fleet skills
+# ============================================================
+#
+# Render-fleet specialists (skill name ends in `-render`) and the
+# dispatcher (skill name == `render`) emit canvas/state into human-
+# audience artifacts. The consent-state-change-skip cluster (anti-
+# pattern #7 sub-shape, instance #15, 2026-06-02) demonstrated that
+# unchecked identifier rendering becomes a privacy incident. Per
+# `engine/render-conventions.md#hard-rule-consent--privacy-gate`,
+# every render skill MUST declare `identifier_exposure: YES|NONE|MIXED`
+# in frontmatter AND carry a `## Identifier exposure` body section.
+#
+# This check enforces frontmatter presence + value validity. Body-
+# section consistency is prose discipline reviewed at promotion.
+check_render_identifier_exposure_declaration() {
+    section "Check 43: Identifier-exposure declaration on render-fleet skills (engine/render-conventions.md HARD RULE)"
+
+    local skills_dir="$SKILLS_DIR"
+    if [ ! -d "$skills_dir" ]; then
+        info "Skills dir absent — Check 43 N/A"
+        return
+    fi
+
+    local missing_frontmatter_count=0
+    local missing_frontmatter_list=""
+    local missing_body_count=0
+    local missing_body_list=""
+    local invalid_value_count=0
+    local invalid_value_list=""
+    local checked=0
+
+    # Detection: name pattern `*-render` OR exactly `render`.
+    # Walk every subdirectory in the skills tree.
+    for skill_dir in "$skills_dir"/*/; do
+        local skill_name
+        skill_name="$(basename "$skill_dir")"
+        case "$skill_name" in
+            *-render|render)
+                ;;
+            *)
+                continue
+                ;;
+        esac
+
+        local skill_path="$skill_dir/SKILL.md"
+        if [ ! -f "$skill_path" ]; then
+            continue
+        fi
+        checked=$((checked + 1))
+
+        # Frontmatter check: look for `identifier_exposure: "YES"|"NONE"|"MIXED"`
+        # in the metadata block. Tolerate quoted or unquoted values.
+        local value
+        value="$(grep -E "^[[:space:]]*identifier_exposure:[[:space:]]*\"?(YES|NONE|MIXED)\"?[[:space:]]*$" "$skill_path" | head -1 || true)"
+
+        if [ -z "$value" ]; then
+            # Either missing entirely, or invalid value.
+            if grep -qE "^[[:space:]]*identifier_exposure:" "$skill_path"; then
+                invalid_value_count=$((invalid_value_count + 1))
+                invalid_value_list="${invalid_value_list}"$'\n'"  - $skill_name/SKILL.md"
+            else
+                missing_frontmatter_count=$((missing_frontmatter_count + 1))
+                missing_frontmatter_list="${missing_frontmatter_list}"$'\n'"  - $skill_name/SKILL.md"
+            fi
+        fi
+
+        # Body section check: `## Identifier exposure`
+        if ! grep -qE "^## Identifier exposure" "$skill_path"; then
+            missing_body_count=$((missing_body_count + 1))
+            missing_body_list="${missing_body_list}"$'\n'"  - $skill_name/SKILL.md"
+        fi
+    done
+
+    local total_failures=$((missing_frontmatter_count + missing_body_count + invalid_value_count))
+
+    if [ "$total_failures" -eq 0 ]; then
+        pass "Check 43: all $checked render-fleet skill(s) carry identifier_exposure frontmatter + ## Identifier exposure body section"
+        return
+    fi
+
+    local msg="Check 43: render-fleet identifier-exposure declaration failures:"
+    if [ "$missing_frontmatter_count" -gt 0 ]; then
+        msg="${msg}"$'\n'"  ${missing_frontmatter_count} skill(s) missing 'identifier_exposure:' frontmatter:${missing_frontmatter_list}"
+    fi
+    if [ "$invalid_value_count" -gt 0 ]; then
+        msg="${msg}"$'\n'"  ${invalid_value_count} skill(s) with invalid identifier_exposure value (must be YES, NONE, or MIXED):${invalid_value_list}"
+    fi
+    if [ "$missing_body_count" -gt 0 ]; then
+        msg="${msg}"$'\n'"  ${missing_body_count} skill(s) missing '## Identifier exposure' body section:${missing_body_list}"
+    fi
+    msg="${msg}"$'\n'"  See engine/render-conventions.md HARD RULE: Consent + privacy gate."
+    fail "$msg"
+}
+
+# ============================================================
 # RUN ALL CHECKS
 # ============================================================
 #
@@ -1931,6 +2026,7 @@ check_rendering_spec_strict_marker
 check_sync_derived_drift
 check_read_before_recommend_preamble
 check_postflight_verify_after_write_preamble
+check_render_identifier_exposure_declaration
 check_gv12_test_coverage
 
 # ============================================================

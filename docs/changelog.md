@@ -4,6 +4,31 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-07.
 
+## v0.40.0 — Render fleet foundation (engine/render-conventions.md + /mycelium:diamond-render + Check 43)
+
+**2026-06-07. Attribution: render-fleet-foundation-v0400-2026-06-07. Class: minor (feature addition; new skill + new engine doc + new validator check).**
+
+**Background.** The canvas/state render fleet ships as a four-skill family: per-canvas specialists (`/mycelium:diamond-render`, `/mycelium:ost-render`, `/mycelium:cycle-render`) plus a dispatcher (`/mycelium:render`). All four were drafted dogfood-local in the roadmap repo through Phase 1–4 sessions surfacing 13 architectural findings (F1–F13) before any upstream promotion. v0.40.0 lands the foundation: the engine convention doc that all specialists read, the first specialist (the lowest-risk one — NONE identifier exposure), and the mechanical validator check that enforces consent + privacy declaration on every render skill.
+
+**Shipped:**
+
+- **New engine doc** `${CLAUDE_PLUGIN_ROOT}/engine/render-conventions.md`. Canonical conventions read by every render skill. Encodes: HARD RULE consent + privacy gate (registry path resolution via `$MYCELIUM_ATTRIBUTION_REGISTRY` env var preferred; real schema `people:`+`name:`+`consent: public_ok|generic_only|unknown`; anon-label numbering shared across renders; audience tier → consent tier mapping; carve-out note footnote pointer); supported formats catalog (mermaid, ascii, markdown-table, markdown-list, json) with audience × format decision matrix; format-support negotiation (fail loud, never silent downgrade); Mermaid frontmatter syntax (deprecating `%%{init: ...}%%`); WCAG AA theme convention with per-diagram-type theme-variable mapping; canvas-state timestamp resolution + staleness-check distinction (canvas-stale vs pending-retrospective); canonical disclaimer template.
+
+- **New specialist** `${CLAUDE_PLUGIN_ROOT}/skills/diamond-render/`. Read-only emit of `.claude/diamonds/active.yml` as Mermaid stateDiagram-v2 / ascii / json. Declared `identifier_exposure: NONE` (active.yml is phase-state shape with no contributor names). Six-argument surface (`--format`, `--scale`, `--theme`, `--show-gates`, `--show-confidence`, `--show-history`, `--as-of`). Includes multi-diamond rendering with parent→child spawn arrows, staleness check, four-Counter-Argument verification (current-phase truth, fractal-of-diamonds awareness, state ID consistency, classDef-current presence). Recommends not auto-invokes from `/mycelium:diamond-assess` (Q1 architecture decision: dispatcher and parent skills recommend, never silently sub-invoke).
+
+- **New Validator Check 43** in `tests/validate-template.sh`. Detects render-fleet skills by name pattern (`*-render` or exact `render`) and enforces frontmatter `identifier_exposure: YES|NONE|MIXED` + `## Identifier exposure` body section. Three failure modes named explicitly: missing frontmatter, invalid value, missing body section. Promotion rationale documented per `engine/consistency-check-spec.md` (narrow + mechanizable + ≥1 historical instance covered + hook-integrated). Per G-V12, ships with 5 fixtures + `tests/bash/test_check_43.sh` (11 assertions across 5 test functions).
+
+**The F1–F13 dogfood discovery arc** (full detail in the receipts case): four sessions of dogfood-local iteration on the render-fleet skills against this project's actual canvas state surfaced 13 architectural findings before upstream promotion. F1–F4 (diamond-render spec drift vs canvas), F5–F7 (registry path + schema + carve-out semantics), F8–F10 (self-reference handling, verbose-mode bounding, staleness vs pending-retrospective), F11–F13 (Mermaid syntactic validity / WCAG accessibility / four-attempt-arc on mindmap theming).
+
+**Foundation for**:
+- v0.40.1: `/mycelium:ost-render` (YES identifier exposure; consent gate active)
+- v0.40.2: `/mycelium:cycle-render` (YES identifier exposure; gantt + pie + json)
+- v0.40.3: `/mycelium:render` dispatcher (MIXED; recommends not auto-invokes; cross-cutting `--view traceability` deferred to research-first methodology per Phase 4a–4d)
+
+**Receipts case** `docs/receipts/cases/2026-06-07-render-fleet-foundation.md` documents the architecture decision arc + the F1–F13 friction trail as a worked example of dogfood-discipline-protecting-upstream.
+
+**Prior**: framework-health-temporal-independence-receipts-case-2026-06-07 (v0.39.23).
+
 ## v0.39.23 — Receipts case for the v0.39.22 temporal-independence catch
 
 **2026-06-07. Attribution: framework-health-temporal-independence-receipts-case-2026-06-07. Class: patch (single docs/ file added; no skill, hook, engine, or schema behavior change).**

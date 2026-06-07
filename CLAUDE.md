@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.39.23 -- **Attribution label: framework-health-temporal-independence-receipts-case-2026-06-07**. New receipts case `docs/receipts/cases/2026-06-07-framework-health-temporal-independence.md` documents the v0.39.22 catch (the audit that named the rule-gap was the audit it was running). Same-session ship: the case file is added but README "How Mycelium got smarter" rotation deferred per the morning `/mycelium:framework-health` 4c finding of zero rotation pressure. Voice discipline applied: C-001 em-dash body-sweep (zero outside the faithful blockquote of the shipped rule), banned-AI-tell sweep clean, parataxis cadence. **PATCH** (single docs/ file added; no skill, hook, engine, or schema behavior change). **Prior**: framework-health-temporal-independence-2026-06-07 (v0.39.22).*
+*Version 0.40.0 -- **Attribution label: render-fleet-foundation-v0400-2026-06-07**. First specialist of the canvas/state render fleet ships upstream: `/mycelium:diamond-render` (read-only emit of `diamonds/active.yml` as Mermaid stateDiagram-v2 / ascii / json). New engine doc `engine/render-conventions.md` codifies the shared conventions (HARD RULE consent + privacy gate via `$MYCELIUM_ATTRIBUTION_REGISTRY`; supported formats + audience matrix; WCAG AA theme convention; Mermaid frontmatter syntax; staleness check; canonical disclaimer). New Validator Check 43 mechanically enforces `identifier_exposure: YES|NONE|MIXED` frontmatter + `## Identifier exposure` body section on every render-fleet skill (name pattern `*-render` or exact `render`). Ships with 5 fixtures + 11 test assertions covering missing-frontmatter, invalid-value, missing-body, valid-YES, valid-NONE paths. Foundation for v0.40.1 (`/mycelium:ost-render`), v0.40.2 (`/mycelium:cycle-render`), v0.40.3 (`/mycelium:render` dispatcher). Dogfood-discovered findings F1–F13 logged in the receipts case. **MINOR** (feature addition; new skill + new engine doc + new validator check). **Prior**: framework-health-temporal-independence-receipts-case-2026-06-07 (v0.39.23).*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 
@@ -193,7 +193,7 @@ See `.claude/orchestration/modes.md` for usage patterns and `.claude/orchestrati
 
 ## Skills
 
-All 50 skills are auto-discovered from SKILL.md frontmatter — in plugin form (`plugins/mycelium/skills/*/SKILL.md`, recommended) or legacy form (`.claude/skills/*/SKILL.md`, supported during transition). Suggested skills are surfaced at diamond transitions by `/diamond-progress` and `/diamond-assess`, and contextually by hooks. Type `/` to see the current list.
+All 51 skills are auto-discovered from SKILL.md frontmatter — in plugin form (`plugins/mycelium/skills/*/SKILL.md`, recommended) or legacy form (`.claude/skills/*/SKILL.md`, supported during transition). Suggested skills are surfaced at diamond transitions by `/diamond-progress` and `/diamond-assess`, and contextually by hooks. Type `/` to see the current list.
 
 ## Getting Started
 
