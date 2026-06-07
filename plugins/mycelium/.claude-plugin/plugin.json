@@ -1,8 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "mycelium",
-  "version": "0.40.0",
-  "description": "Theory-grounded product-thinking discipline for AI agents. 51 skills, 13 theory gates, six diamond scales (Purpose to Market). Discovery to delivery with evidence gates that block on insufficient evidence.",
+  "version": "0.40.1",
+  "description": "Theory-grounded product-thinking discipline for AI agents. 52 skills, 13 theory gates, six diamond scales (Purpose to Market). Discovery to delivery with evidence gates that block on insufficient evidence.",
   "author": {
     "name": "Håvard Bartnes",
     "url": "https://github.com/haabe"

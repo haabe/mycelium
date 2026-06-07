@@ -9,7 +9,7 @@
     {
       "name": "mycelium",
       "source": "./plugins/mycelium",
-      "description": "51 skills, 13 theory gates, six diamond scales (Purpose to Market). Evidence-gated discovery-to-delivery harness. Brownfield-safe: install adds skills, agents, hooks; never modifies project root files.",
+      "description": "52 skills, 13 theory gates, six diamond scales (Purpose to Market). Evidence-gated discovery-to-delivery harness. Brownfield-safe: install adds skills, agents, hooks; never modifies project root files.",
       "category": "development",
       "tags": [
         "product-discovery",

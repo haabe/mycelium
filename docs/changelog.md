@@ -4,6 +4,32 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-07.
 
+## v0.40.1 — Render fleet: /mycelium:ost-render (YES exposure, consent gate active)
+
+**2026-06-08. Attribution: render-fleet-ost-render-v0401-2026-06-08. Class: patch (specialist sibling completing the v0.40.0-announced render fleet foundation; no engine doc or validator behavior change).**
+
+**Background.** v0.40.0 shipped the render fleet foundation: engine convention doc, the first specialist (`/mycelium:diamond-render` with NONE identifier exposure), and Validator Check 43. v0.40.1 adds the second specialist — the first one with active consent-gate machinery.
+
+**Shipped:**
+
+- **New specialist** `${CLAUDE_PLUGIN_ROOT}/skills/ost-render/`. Read-only emit of `.claude/canvas/opportunities.yml` as Mermaid mindmap / ascii / markdown-list / json. Declared `identifier_exposure: YES`; consults the attribution registry per `engine/render-conventions.md#hard-rule-consent--privacy-gate`. Eight-argument surface (`--format`, `--shape`, `--theme`, `--root-outcome`, `--include-status`, `--show-ice`, `--show-confidence`, `--no-identifiers`).
+
+- **Real-schema registry semantics** baked in (F6 corrections from dogfood): the registry uses `people:` + `name:` + `consent: public_ok|generic_only|unknown` (not the speculation-stage `entries:`+`identifier:`+`granted|pending|declined`). Path resolution prefers `$MYCELIUM_ATTRIBUTION_REGISTRY` env var; falls back to `.claude/memory/attribution-registry.yml`. Absence is fail-open with a header warning.
+
+- **Consent-gate behavior** per the engine doc: `public_ok` renders literal; `generic_only` redacts to anon-label (`cohort-tester-N` / `peer-practitioner-N` / `participant-N` per identifier class); `unknown` treated as `generic_only`; not-in-registry fails loud unless `--no-identifiers=true`. Anon-label numbering consistent across the render (same registry entry → same N).
+
+- **Carve-out footnote pointers** (F7): when a literal name has a non-empty registry `note:`, the render appends `see registry note for <name>` to the audit-footnote block. Canonical case: Frida's name is `public_ok` BUT her project name has a hard carve-out — the render emits the name literally and points the operator at the note before external publication.
+
+- **Mermaid mindmap with verified WCAG palette** (F12 + F13): default uses Material Design saturated colors paired with appropriate text contrast per fill (`cScale1: '#42A5F5'` + `cScaleLabel1: '#FFFFFF'` etc.). The `cScale1`–`cScale7` family is undocumented but source-verified at `packages/mermaid/src/diagrams/mindmap/styles.ts`. Off-by-one warning baked in: `cScale0`/`cScaleLabel0` are wasted (section indexing starts at `cScale1`). Frontmatter syntax per Mermaid v10.5.0+ supported form; `%%{init: ...}%%` directive deprecated.
+
+- **`--shape flowchart-td` opt-in** for renderers that don't honor mindmap palette overrides; preserves tree structure as a directed-graph rendering.
+
+**Validator state**: Check 43 newly passes on 2 render-fleet skills (was 1 in v0.40.0). All other checks unchanged.
+
+**Foundation for**: v0.40.2 (`/mycelium:cycle-render` — YES exposure, gantt + pie + json), v0.40.3 (`/mycelium:render` dispatcher — MIXED, recommends-not-invokes, cross-cutting `--view traceability` deferred to research-first methodology per Phase 4a–4d).
+
+**Prior**: render-fleet-foundation-v0400-2026-06-07 (v0.40.0).
+
 ## v0.40.0 — Render fleet foundation (engine/render-conventions.md + /mycelium:diamond-render + Check 43)
 
 **2026-06-07. Attribution: render-fleet-foundation-v0400-2026-06-07. Class: minor (feature addition; new skill + new engine doc + new validator check).**
