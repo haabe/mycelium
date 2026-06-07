@@ -4,6 +4,24 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-07.
 
+## v0.39.20 — Faros counter-metric (first-pass-success) + receipts rotation + new case
+
+**2026-06-07. Attribution: faros-counter-receipts-rotation-2026-06-07. Class: patch (skill MANDATORY extension + docs receipts case + README rotation; no engine/hook behavior change).**
+
+**Background.** Same-day follow-on to v0.39.19 executing the `/mycelium:framework-health` 5-recommendation list from the same session. Three of the five ship as framework code; two are scheduling (canary watch after 2 more sessions; Stage 2b queued for the next cycle).
+
+**Shipped:**
+
+- **New receipts case** `docs/receipts/cases/2026-06-07-faros-whiplash-integration.md`. Captures the integration of Faros AI's *Acceleration Whiplash* + *Harness Engineering* and Datadog's *State of AI Engineering* into Mycelium's own self-assessment. Documents the assessment-as-amendment shape, the Level A vs Level B distinction (Mycelium-the-framework vs AI products built with Mycelium), the first dogfood scaffold-cost number (~449K eligible tokens; project canvas dominates 2.9× over framework files), and the symmetric premise-check honesty pattern surfaced when the amendment prompt mischaracterized the prior pass's provenance state. ~6 min read.
+- **README "How Mycelium got smarter" rotation**: `2026-04-macos-fileviewer` → `2026-06-07-faros-whiplash-integration`. Rotation decision per `/mycelium:framework-health` Step 4c — oldest highlight (~38d) rotated to the most-recent material case. The macOS case stays in `docs/receipts/cases/`; only the README mention rotated.
+- **Extended `/mycelium:dora-check` Part 2b** with `apex.first_pass_success_rate` (the Goodhart counter for `ai_rework_rate` + `hook_detection_rate` shipped v0.39.19). Computed from `.claude/evals/pass-history.json`: sum `passes` ÷ sum `runs` across `status: active` evals; trailing-5 pass rate as sharper recent signal. **Honest data-gap reporting**: when total runs is 0, the field reports `value: null, method: "N/A — 0 runs across N active evals"` rather than defaulting to a fake number. The honest gap is the staged-measurement-plan move (read existing raw data first, even when data shows the gap).
+
+**Discipline source**: per the same-session scaffold-mistaken-for-instrumentation correction (roadmap `corrections.md` 2026-06-07), every new metric field ships with its counter at the same maturity. The three APEX numerics from v0.39.19 created the obligation; this PATCH closes it within hours rather than letting the counter-debt accumulate.
+
+**Deferred to v0.40.x** (per the framework-health dashboard): the Level B Runtime-LLM Harness Gate itself; the SessionStart cache-prefix audit; the AI-product loop-budget + cache-strategy declaration requirements; the AP#7 Stage 2b queue (sub-shapes 2/3/4 — cross-repo, consent-state, cross-file-completeness). Sequenced behind the 2026-06-05 rework canary stabilizing in the now-numeric APEX read.
+
+**Prior**: faros-whiplash-plus-datadog-soae-integration-2026-06-07 (v0.39.19).
+
 ## v0.39.19 — Faros Whiplash + Datadog State-of-AI-Engineering integration: B14 scaffold-cost-check + B2 dora-check compute + B13 runtime_llm flag
 
 **2026-06-07. Attribution: faros-whiplash-plus-datadog-soae-integration-2026-06-07. Class: patch (new skill + canvas-guidance dimension extension + dora-check MANDATORY extension; no engine/hook behavior change).**

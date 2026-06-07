@@ -138,7 +138,15 @@ For each field below, **compute the number first** from the raw artifact, **then
 
 **Goodhart pair** (already named in `dora-metrics.yml#goodhart_check`): `ai_rework_rate` MUST be paired with `ai_acceptance_rate`. Rework-rate rising while acceptance-rate ALSO rising = healthy (validators catching real issues, user still accepting agent direction). Rework-rate rising while acceptance-rate falling = unhealthy (agent output quality dropping). Never report one without the other.
 
-**Cadence**: compute on every `/mycelium:dora-check` run; do not narrate "refreshed APEX" unless these three numeric fields actually moved (Postflight discipline below).
+**`apex.first_pass_success_rate`** (v0.39.20, the Goodhart counter for `ai_rework_rate` + `hook_detection_rate`) — proportion of eval scenarios that pass on first attempt across the active corpus.
+- Raw artifact: `.claude/evals/pass-history.json`. Each eval entry carries `{runs, passes, last_5, last_run, status}`.
+- Computation: sum `passes` ÷ sum `runs` across all evals where `status: active`. If `last_5` is populated, also report the trailing-5 pass rate as a sharper recent signal.
+- Output: `{ value: <pct>, denom: <runs>, numerator: <passes>, trailing_5_pct: <pct or null>, active_evals: <count>, method: "sum-passes/sum-runs over status:active evals from pass-history.json", notes: "<honest framing>" }`.
+- **Honest framing on the data-gap**: if total runs is 0 (eval-runner not invoked recently), report `value: null, method: "N/A — 0 runs across N active evals; counter exists, underlying data does not until eval-runner is in regular use", note: "this honest read is itself the staged-measurement-plan move [S2] — read existing raw data first even when data shows the gap"`. Do NOT default to a fake number.
+- **Goodhart pair anchor**: this field is the explicit counter for `ai_rework_rate` and `hook_detection_rate`. Rework falling AND first-pass-success rising = healthy. Rework falling AND first-pass-success ALSO falling = unhealthy (you've optimized rework by NOT shipping, or by gaming the rework pattern). Never read rework alone.
+- **Discipline source**: per the scaffold-mistaken-for-instrumentation correction (roadmap `corrections.md` 2026-06-07): every new metric field ships with its counter at the same maturity. This field exists because the three preceding APEX numerics shipped in v0.39.19; the counter ships in v0.39.20 in the same Part 2b block to honor that discipline.
+
+**Cadence**: compute on every `/mycelium:dora-check` run; do not narrate "refreshed APEX" unless these four numeric fields actually moved (Postflight discipline below).
 
 **Sources**:
 - [S1] Faros AI, *Ten takeaways from the AI Engineering Report 2026: The Acceleration Whiplash*, 2026-04-12. https://www.faros.ai/blog/ai-acceleration-whiplash-takeaways
