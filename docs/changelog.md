@@ -4,6 +4,34 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-07.
 
+## v0.40.3 — Render fleet completed: /mycelium:render dispatcher (MIXED exposure, recommends-not-invokes)
+
+**2026-06-08. Attribution: render-fleet-dispatcher-v0403-2026-06-08. Class: patch (specialist sibling completing the v0.40.0-announced render fleet foundation).**
+
+**Background.** v0.40.0 shipped the foundation (engine doc + diamond-render + Check 43). v0.40.1 added ost-render (YES, consent gate active). v0.40.2 added cycle-render (YES, gantt + pie). v0.40.3 completes the announced fleet with the central dispatcher.
+
+**Shipped:**
+
+- **New dispatcher** `${CLAUDE_PLUGIN_ROOT}/skills/render/`. Routes intent to specialists or lists what's renderable. Four-argument surface (`--list`, `--view`, `--format`, `--theme`).
+
+- **Recommend-not-auto-invoke**: when a user asks for a single-canvas render via the dispatcher (e.g., "show me the OST"), the dispatcher emits a recommendation pointing at the right specialist; it does NOT silently sub-invoke. Rule 4 makes this load-bearing: user retains one-hop control + audit trail + agency to override. This is the architecture Q1 decision baked into the dispatcher's reason to exist.
+
+- **MIXED identifier exposure with per-canvas table**: dispatcher's identifier surface depends on which cross-cutting view is invoked. MIXED is the only honest declaration — YES would force registry consultation on diamond-only views (unnecessary cost); NONE would silently leak identifiers on traceability views (incident). Per-canvas table names which canvases activate which exposure under which views.
+
+- **Cross-cutting views ALL deferred** per the research-first methodology (`traceability`, `confidence-trajectory`, `cluster-graduation-flow`, `canvas-dependency-graph`). Rule 5 makes the deferral explicit: NEVER emit a "best guess" cross-cutting view. The trap is "ship a looks-reasonable-to-me view"; the dispatcher's job is to gate against it. Counter-Argument item 3 is the verifier. Each deferred view names a promotion trigger.
+
+- **`--list` discovery mode** prints the dispatch table + deferred cross-cutting views. Each entry names: skill or view, what it renders, supported formats, beta risk, current status (shipped / deferred-with-trigger).
+
+- **Format + theme inheritance**: when routing, the dispatcher passes `--format <inherited>` and `--theme <inherited>` to the recommended specialist so the user's invocation matches dispatcher intent. Default `--theme base` (verified WCAG palette per the engine doc); `--theme dark` opt-in (WCAG-by-construction).
+
+**Validator state**: Check 43 newly passes on 4 render-fleet skills — the complete announced fleet (diamond-render + ost-render + cycle-render + render dispatcher). All other checks unchanged.
+
+**Future deferred work**:
+- Cross-cutting view shipment requires research-first methodology (architecture draft §10.2) — survey best practices for traceability/lifecycle viz, sketch 3–4 candidate views against actual canvas data, founder visual eval ≥4.0/5 across 7 criteria, only then implement.
+- Additional per-canvas specialists (`/mycelium:landscape-render` for `wardley-beta`, `/mycelium:bvssh-render` for `radar`, `/mycelium:dora-render` for `xychart-beta`, `/mycelium:scenarios-render` for `journey`) deferred per their respective promotion triggers (cohort tester asks; external receipts case needs).
+
+**Prior**: render-fleet-cycle-render-v0402-2026-06-08 (v0.40.2).
+
 ## v0.40.2 — Render fleet: /mycelium:cycle-render (YES exposure, gantt + pie + json)
 
 **2026-06-08. Attribution: render-fleet-cycle-render-v0402-2026-06-08. Class: patch (specialist sibling completing the v0.40.0-announced render fleet foundation).**

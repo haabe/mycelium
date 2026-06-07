@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.40.2 -- **Attribution label: render-fleet-cycle-render-v0402-2026-06-08**. Third specialist of the render fleet ships upstream: `/mycelium:cycle-render` (read-only emit of `cycle-history.yml` as Mermaid gantt + outcome distribution pie, plus ascii and json formats). Declared `identifier_exposure: YES`; consults the attribution registry per `engine/render-conventions.md`. F10 staleness-vs-pending-retrospective distinction baked in (canvas-stale uses `⚠ STALE`; decision-log activity without a recorded cycle uses `ℹ Pending retrospective`). Honest small-N display (`Note: N=<total>` when total <5); class-distribution disclosure (`7 meta-dogfood + 1 observation + 0 product-leaf` honest dark data). Status-color semantics warning surfaces the `:crit-reads-as-failure` UX issue. Six-argument surface (`--format`, `--view`, `--theme`, `--since`, `--cycle-class`, `--no-identifiers`). Check 43 newly passes on 3 render-fleet skills. **PATCH** (specialist sibling completing the v0.40.0-announced render fleet foundation). **Prior**: render-fleet-ost-render-v0401-2026-06-08 (v0.40.1).*
+*Version 0.40.3 -- **Attribution label: render-fleet-dispatcher-v0403-2026-06-08**. Completes the v0.40.0-announced render fleet foundation: `/mycelium:render` dispatcher ships upstream. Routes intent to specialists (`/mycelium:diamond-render`, `/mycelium:ost-render`, `/mycelium:cycle-render`) — recommends, does NOT auto-invoke (architecture Q1 decision; user retains one-hop control). `--list` discovery mode prints dispatch table + deferred cross-cutting views. Declared `identifier_exposure: MIXED` with per-canvas table (the only honest declaration: YES would force registry consultation on diamond-only views; NONE would silently leak identifiers on traceability views). Cross-cutting views (traceability, confidence-trajectory, cluster-graduation-flow, canvas-dependency-graph) ALL deferred to research-first methodology + manual visual eval per architecture draft §10.2 — Rule 5 explicitly forbids "best guess" emissions. Check 43 newly passes on 4 render-fleet skills. **PATCH** (specialist sibling completing the announced foundation). **Prior**: render-fleet-cycle-render-v0402-2026-06-08 (v0.40.2).*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 
@@ -193,7 +193,7 @@ See `.claude/orchestration/modes.md` for usage patterns and `.claude/orchestrati
 
 ## Skills
 
-All 53 skills are auto-discovered from SKILL.md frontmatter — in plugin form (`plugins/mycelium/skills/*/SKILL.md`, recommended) or legacy form (`.claude/skills/*/SKILL.md`, supported during transition). Suggested skills are surfaced at diamond transitions by `/diamond-progress` and `/diamond-assess`, and contextually by hooks. Type `/` to see the current list.
+All 54 skills are auto-discovered from SKILL.md frontmatter — in plugin form (`plugins/mycelium/skills/*/SKILL.md`, recommended) or legacy form (`.claude/skills/*/SKILL.md`, supported during transition). Suggested skills are surfaced at diamond transitions by `/diamond-progress` and `/diamond-assess`, and contextually by hooks. Type `/` to see the current list.
 
 ## Getting Started
 
