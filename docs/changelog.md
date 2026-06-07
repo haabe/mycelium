@@ -4,6 +4,26 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-07.
 
+## v0.39.21 — Voice-revise pass on the faros-whiplash-integration receipts case
+
+**2026-06-07. Attribution: faros-whiplash-receipts-voice-revise-2026-06-07. Class: patch (single docs/ file revised; no skill, hook, or engine behavior change).**
+
+**Background.** `docs/receipts/cases/2026-06-07-faros-whiplash-integration.md` shipped in v0.39.20 voice-matched against `2026-06-01-architecture-discovery-narrowed.md` at draft time rather than via the project-local `/voice-revise-framework-doc` skill. The framework-health dashboard explicitly named the voice-revise pass as the marginal follow-up. This patch executes that pass.
+
+**Applied:**
+
+- **C-001 em-dash sweep**: 15 em-dashes in body prose → 0. Replacements landed as period, colon, comma, semicolon, or sentence break depending on what the cadence needed.
+- **C-092 voice-essence pass**: bookend close added returning to the title's *"the report you cite is the one that fact-checks you"* frame. New closing paragraph carries a dry-wit ambush in C-007-safe form (the wit lives in sentence structure, not in a punchline-bolted-on or self-deprecation).
+- **C-096 output-side anti-calque check**: opener cadence broken from one long compound sentence to four short beats (*"Strong DORA foundations did not protect mature teams. Rework climbed. Churn climbed. PRs merged with no review climbed."*), establishing the parataxis-with-stinger rhythm the README's body paragraphs anchor.
+- **Banned AI-tell sweep**: `leverage` (line 22 in shipped version) → "single highest-value improvement"; `encompass` (line 50) → "cover canvas and memory".
+- **Three-noun balanced rhythm** at the opener-paragraph broken with parataxis ("rising rework, churn, and merged-without-review code" → three short sentences naming each climb separately).
+
+**What did not change**: substance. Every claim, source tag, number, file path, and framing in the prior case stays. The case still documents the assessment-as-amendment shape, the Level A versus Level B distinction, the first dogfood scaffold-cost baseline, and the premise-check honesty pattern.
+
+**Discipline source**: the project-local skill `~/Repos/mycelium-roadmap/.claude/skills/voice-revise-framework-doc/SKILL.md` loaded the personal-os voice discipline, fired the C-093 receipt gate (sample read: README §"What it feels like"; quoted line plus three observed moves printed before drafting), and ran the output-side passes per `harness/voice-gate.md`.
+
+**Prior**: faros-counter-receipts-rotation-2026-06-07 (v0.39.20).
+
 ## v0.39.20 — Faros counter-metric (first-pass-success) + receipts rotation + new case
 
 **2026-06-07. Attribution: faros-counter-receipts-rotation-2026-06-07. Class: patch (skill MANDATORY extension + docs receipts case + README rotation; no engine/hook behavior change).**
