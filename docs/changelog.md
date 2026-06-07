@@ -4,6 +4,22 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-07.
 
+## v0.39.23 — Receipts case for the v0.39.22 temporal-independence catch
+
+**2026-06-07. Attribution: framework-health-temporal-independence-receipts-case-2026-06-07. Class: patch (single docs/ file added; no skill, hook, engine, or schema behavior change).**
+
+**Background.** The v0.39.22 ship caught a rule-gap inside `/mycelium:framework-health` Step 4e during the same PM session that ran the skill. The catch was non-trivial: a same-day re-run with no intervening skill edit would have mechanically graduated the morning run's six-skill 4e baseline (canvas-update, ost-builder, ice-score, canvas-health, bvssh-check, dora-check) into `tests/bash` Check 37 enforcement. The skill's dashboard narration surfaced the gap before the graduation fired. The framework-finds-rule-gap-in-itself shape is worth its own case.
+
+**Shipped:**
+
+- **New receipts case** `docs/receipts/cases/2026-06-07-framework-health-temporal-independence.md`. Documents the trigger (same-day PM re-run), the recursion (skill found rule-gap in itself), the cheap paths considered and rejected (silent special-case, documentation-only graduation), the discipline path taken (amend Step 4e rule text with sibling clarification of 4b/4d), and the version-bump-discipline second-order catch (Check 30 surfaced missing `plugin.json` bump; `sync_derived` token-replacer rewrote a literal "6 skills" to "50 skills" in the version line, fixed in the v0.39.22 follow-up commit `d24e9bf`). ~4 min read.
+
+**Voice discipline applied** via the project-local `/voice-revise-framework-doc` skill heuristics (loaded from `personal-os/harness/voice-gate.md` + `context/voice-essence.md` semantics): C-001 em-dash sweep yields zero em-dashes in body prose (the only em-dashes in the file are inside the faithful blockquote of the shipped rule, preserved verbatim); banned AI-tell sweep clean (no `leverage`, `encompass`, `robust`, `delve`); parataxis cadence used at the trigger and lesson-recap sections; bookend close returns to the title's recursion frame.
+
+**No README rotation.** The morning `/mycelium:framework-health` Step 4c finding was "zero rotation pressure" (all five highlighted cases are within 30 days; no rotate-out justified yet). The new case lives in `docs/receipts/cases/` whether or not it surfaces on the README; the rotation decision is the next maintainer move, not this commit's.
+
+**Prior**: framework-health-temporal-independence-2026-06-07 (v0.39.22).
+
 ## v0.39.22 — Framework-health temporal-independence rule (Step 4e/4b/4d)
 
 **2026-06-07. Attribution: framework-health-temporal-independence-2026-06-07. Class: patch (one skill doc tightened; no engine, hook, or schema behavior change).**
