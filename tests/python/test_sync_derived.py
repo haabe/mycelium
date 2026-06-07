@@ -32,6 +32,7 @@ def _mini_repo(root, version="1.2.3", n_skills=3, plugin_version="1.2.3", token_
         f"Not {token_count} skills dumped on you.\n\n| look up | ({token_count} skills) |\n"
     )
     (root / "docs/skills/README.md").write_text(f"This index lists all {token_count} skills.\n")
+    (root / "docs/skills/by-category.md").write_text(f"Same {token_count} skills, different ordering.\n")
     (root / "docs/ai-system-card.md").write_text(
         f"# AI System Card\n\n- **Version:** {card_version or plugin_version}\n\n"
         f"- **Skills:** {token_count} skills define the procedures.\n"
@@ -84,6 +85,7 @@ def test_sync_fixes_version_and_skill_count(scripts_path, tmp_path):
     assert "5 skills" in (root / "README.md").read_text()
     assert "5 skills" in (root / ".claude-plugin/marketplace.json").read_text()
     assert "5 skills" in (root / "docs/skills/README.md").read_text()
+    assert "5 skills" in (root / "docs/skills/by-category.md").read_text()
     assert "5 skills" in (root / "plugins/mycelium/skills/diamond-assess/SKILL.md").read_text()
     # the published AI System Card gets BOTH the version and the skill count
     card = (root / "docs/ai-system-card.md").read_text()

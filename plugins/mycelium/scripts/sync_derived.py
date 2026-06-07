@@ -56,6 +56,7 @@ SKILL_COUNT_FILES = [
     "CLAUDE.md",
     "README.md",
     "docs/skills/README.md",
+    "docs/skills/by-category.md",  # added v0.40.4 — by-category had hardcoded "49 skills" that drifted to "54 skills" reality
     PLUGIN,
     ".claude-plugin/marketplace.json",
     CARD,

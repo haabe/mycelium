@@ -2,7 +2,27 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-06-07.
+**Last updated**: 2026-06-08.
+
+## v0.40.4 — docs/skills indexes catch up + render-fleet receipts case voice-revise
+
+**2026-06-08. Attribution: docs-skills-indexes-catchup-and-render-fleet-receipts-voice-revise-2026-06-08. Class: patch (three docs/* files revised; one script extended; no skill / hook / engine / schema behavior change).**
+
+**Background.** Roadmap-side check 2026-06-08 surfaced that `docs/skills/README.md` and `docs/skills/by-category.md` had "Last updated: 2026-05-08" and were missing the four render-fleet skills shipped earlier today (`/diamond-render` v0.40.0, `/ost-render` v0.40.1, `/cycle-render` v0.40.2, `/render` v0.40.3). Sharper finding: the two indexes claimed different skill counts (README said 54, by-category said 49), even though they were originally generated the same day. Root cause: `sync_derived.py` templated only `README.md`'s "<N> skills" token; `by-category.md`'s "49 skills" was hardcoded prose and never auto-updated. Drift was structural, not a one-time miss.
+
+Separately, the v0.40.0 receipts case `docs/receipts/cases/2026-06-07-render-fleet-foundation.md` shipped without running the `/voice-revise-framework-doc` project-local skill (the same skill that ran on the faros-whiplash case at v0.39.21). Bundling the voice-pass with the index catch-up avoids a voice-only orphan patch.
+
+**Shipped:**
+
+- **`docs/skills/README.md`**: new "Render & output (v0.40.0+)" section under "Canvas & orchestration". Lists `/diamond-render`, `/ost-render`, `/cycle-render`, `/render` with one-line use-cases and a pointer to the shared `engine/render-conventions.md` (consent + privacy HARD RULE, supported formats, WCAG AA theme convention, frontmatter Mermaid syntax, Validator Check 43 enforcement). "Last updated" bumped 2026-05-08 → 2026-06-08.
+- **`docs/skills/by-category.md`**: new "Render & output" section. New "Setup & lifecycle" section catching up the five skills that were missing from by-category before today (`/setup`, `/start`, `/migrate-from-legacy`, `/ping`, `/scaffold-cost-check` — the latter landed under "Framework self-improvement"). Hardcoded "49 skills" prose updated to "54 skills" in two places (header + see-also). "Last updated" bumped.
+- **`plugins/mycelium/scripts/sync_derived.py`**: `SKILL_COUNT_FILES` extended to include `docs/skills/by-category.md` so the hardcoded-count drift cannot recur. Going forward, `by-category.md`'s "<N> skills" token auto-syncs alongside README's via the same mechanism.
+- **`tests/validate-template.sh` Check 6b**: new `check_skill_count_by_category` validator. Same eval shape as Check 6 (`docs/skills/README.md`) because by-category is the alternate index — same scope, same drift risk class. Founder catch 2026-06-08 ("the readme and by-category should have the same eval as the other pages mentioning skills and so on"): the sync script is the belt; this check is the suspenders. Expected check count moves 41 → 42.
+- **`docs/receipts/cases/2026-06-07-render-fleet-foundation.md`**: voice-revised per project-local `/voice-revise-framework-doc` skill discipline. Applied: C-001 em-dash body sweep (~17 → 1, the remaining one is canonical version-range `v0.40.1–v0.40.3`), opener lift via concrete-number triple ("Thirteen architectural findings, four dogfood sessions, one upstream surface kept clean"), bookend close with verbatim callback of opener triple, parataxis-with-stinger at four compression moments (Trigger close, F10 fix, F12 mindmap rendering, F13 simpler-approach), one Pratchett-mode ambush at F13 conclusion ("The expert mode is unfortunately the failure mode" — C-007-safe), banned AI-tells grep clean, banned paragraph-opener grep clean, AI-aesthetic-coded prose check (triple-noun balanced rhythms broken with asymmetric quantifier-state shape; no markers like `moreover` / `ultimately` / `essentially`; cadence varied). **What did not change**: every number, named thing, source citation, F-number explanation, version label, and lesson stays. The pass is voice-only.
+
+**Discipline source**: roadmap-side voice-revise pending draft `mycelium-roadmap/.claude/drafts/render-fleet-receipts-voice-revise-pending.md` (committed 2026-06-08 to roadmap repo, held for batched ship per founder direction). The drift findings on `docs/skills/*` triggered the batched release: docs-quality catchup + voice-revise + sync_derived extension as one coherent patch rather than three orphan ships.
+
+**Prior**: render-fleet-dispatcher-v0403-2026-06-08 (v0.40.3).
 
 ## v0.40.3 — Render fleet completed: /mycelium:render dispatcher (MIXED exposure, recommends-not-invokes)
 

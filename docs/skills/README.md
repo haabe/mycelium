@@ -2,7 +2,7 @@
 
 **Audience**: practitioners looking up a skill, evaluators surveying capability surface.
 **Time to read**: 5 min for the table; depth lives in each `SKILL.md`.
-**Last updated**: 2026-05-08.
+**Last updated**: 2026-06-08.
 
 This index lists all 54 skills. Each skill's full behaviour lives in its `SKILL.md` — `plugins/mycelium/skills/<name>/SKILL.md` in plugin form (recommended), or `.claude/skills/<name>/SKILL.md` in legacy form (supported during transition). Loaded JIT by Claude Code. This page is an orientation map by phase; [by-category.md](by-category.md) is the alternate index by category of work.
 
@@ -85,6 +85,17 @@ This index lists all 54 skills. Each skill's full behaviour lives in its `SKILL.
 | `/canvas-health` | Lint canvas for staleness, missing fields, orphaned references | — |
 | `/canvas-sync` | Synchronize canvas across team via git (cross-session sync helper) | — |
 | `/fan-out` | Parallel agent orchestration with worktree isolation | — |
+
+## Render & output (v0.40.0+)
+
+Read-only visualization of canvas + state surfaces. All four skills share `engine/render-conventions.md` (consent + privacy HARD RULE, supported formats, WCAG AA theme convention, frontmatter Mermaid syntax). Validator Check 43 enforces `identifier_exposure: YES|NONE|MIXED` declaration on every render-fleet skill.
+
+| Skill | When to use | Gates it satisfies |
+|---|---|---|
+| `/diamond-render` | Emit `diamonds/active.yml` as Mermaid stateDiagram-v2 / ascii / json (current phase, gates, confidence). Recommend at end of `/diamond-assess`. | — |
+| `/ost-render` | Emit `opportunities.yml` as Mermaid mindmap / ascii / markdown-list / json. Consent-gate via attribution registry. | — |
+| `/cycle-render` | Emit `cycle-history.yml` as Mermaid gantt + pie / ascii / json. Honest small-N + class-distribution disclosure. | — |
+| `/render` | Dispatcher: routes intent to a specialist (recommends, never auto-invokes); lists what's renderable. Cross-cutting `--view traceability` research-gated to Phase 4a–4d. | — |
 
 ## Self-improvement (framework-level)
 

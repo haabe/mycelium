@@ -195,6 +195,43 @@ check_skill_count_readme() {
 }
 
 # ============================================================
+# CHECK 6b: Skill count in docs/skills/by-category.md matches directories on disk
+# (Added v0.40.4: by-category.md drifted to "49 skills" while README templated "54".
+#  Same eval as Check 6 because by-category is the alternate index — same scope, same drift risk.
+#  sync_derived.py's SKILL_COUNT_FILES now templates this page, so going forward both pages
+#  are kept in sync mechanically; this check is the validator-side belt to that script's suspenders.)
+# ============================================================
+check_skill_count_by_category() {
+    section "Check 6b: Skill count (docs/skills/by-category.md)"
+
+    local disk_count
+    disk_count=$(find "$SKILLS_DIR" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
+    local skills_doc="docs/skills/by-category.md"
+
+    if [ ! -f "$skills_doc" ]; then
+        fail "$skills_doc not found"
+        return
+    fi
+
+    if grep -q "is forthcoming" "$skills_doc"; then
+        pass "$skills_doc is a Phase 1 stub; Phase 2 will write the $disk_count-skill index"
+        return
+    fi
+
+    # Match: "(N skills)" or "all N skills" or "N-skill index" or "the N skills" or "Same N skills" or "of the same N skills"
+    local doc_count
+    doc_count=$(grep -oE '(\(|all |the |Same |of the same )[0-9]+(-| )?skill' "$skills_doc" | head -1 | grep -oE '[0-9]+' || echo "0")
+
+    if [ -z "$doc_count" ] || [ "$doc_count" = "0" ]; then
+        fail "Could not find skill count in $skills_doc"
+    elif [ "$doc_count" -eq "$disk_count" ]; then
+        pass "$skills_doc skill count ($doc_count) matches disk ($disk_count)"
+    else
+        fail "$skills_doc says $doc_count skills, but $disk_count directories exist on disk"
+    fi
+}
+
+# ============================================================
 # CHECK 7: Skill count in CLAUDE.md matches directories on disk
 # ============================================================
 check_skill_count_claude() {
@@ -1999,6 +2036,7 @@ check_canvas_count_readme_dir
 check_canvas_in_readme_table
 check_canvas_in_update_mapping
 check_skill_count_readme
+check_skill_count_by_category
 check_skill_count_claude
 check_skill_frontmatter
 check_skills_in_claude_md

@@ -2,9 +2,9 @@
 
 **Audience**: practitioners scanning skills by type of work.
 **Time to read**: 3 min.
-**Last updated**: 2026-05-08.
+**Last updated**: 2026-06-08.
 
-Alternate index to the phase-first [skills/README.md](README.md). Same 49 skills, different ordering.
+Alternate index to the phase-first [skills/README.md](README.md). Same 54 skills, different ordering.
 
 ## Research & discovery
 
@@ -73,6 +73,24 @@ Multi-agent + canvas-coordination patterns. Use when work fans out.
 - `/canvas-health` — lint canvas
 - `/canvas-sync` — cross-session canvas sync helper
 
+## Render & output
+
+Read-only visualization of canvas + state surfaces. All four skills share `engine/render-conventions.md` (consent + privacy HARD RULE, WCAG AA theme, frontmatter Mermaid syntax). Use when sharing state with operators or external readers.
+
+- `/diamond-render` — emit `diamonds/active.yml` as stateDiagram-v2 / ascii / json
+- `/ost-render` — emit `opportunities.yml` as Mermaid mindmap / ascii / markdown-list / json
+- `/cycle-render` — emit `cycle-history.yml` as gantt + pie / ascii / json
+- `/render` — dispatcher: routes intent to a specialist (recommends, never auto-invokes)
+
+## Setup & lifecycle
+
+Project bootstrap, plugin install hygiene, install-form transitions. Run at onboarding or when changing install form.
+
+- `/start` — one command from plugin-installed to running brief on your idea (combines `/setup` + `/interview`)
+- `/setup` — first-run project-state initialization (`.claude/canvas`, `.claude/diamonds`, `.claude/memory`, `.claude/harness`)
+- `/migrate-from-legacy` — migrate from legacy (`npx degit`) install to plugin install
+- `/ping` — smoke-test that the Mycelium plugin loaded correctly
+
 ## Market & organization
 
 Reaching users, team shape. Use at L5 / L1.
@@ -89,9 +107,10 @@ Mycelium itself. Use when dogfooding the framework or as part of `/framework-hea
 - `/corrections-audit` — trend analysis on corrections
 - `/prompt-optimizer` — A/B test instruction changes
 - `/framework-health` — quarterly self-assessment
+- `/scaffold-cost-check` — measure Mycelium's own scaffold token cost (CLAUDE.md + engine + harness + canvas + memory)
 - `/interview` — onboarding flow (lives here because it is the entry point to the rest)
 
 ## See also
 
-- [README.md](README.md) — phase-first index of the same 49 skills
+- [README.md](README.md) — phase-first index of the same 54 skills
 - [glossary.md](../glossary.md) — vocabulary
