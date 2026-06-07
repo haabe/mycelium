@@ -114,6 +114,37 @@ Assess the four APEX pillars to detect AI-era delivery problems:
 - Burnout signals: unsustainable pace? Context-switching? Alert fatigue?
 - Maps to BVSSH "Happier" dimension
 
+## Part 2b: Compute APEX from raw artifacts (v0.39.19, MANDATORY for software / ai_tool)
+
+**Why this is mandatory** ([S1] Faros *Acceleration Whiplash* 2026, [S2] Faros *Harness Engineering* 2026, [S5] Datadog *State of AI Engineering* 2026): the APEX section was prone to being filled with narrative `notes:` and `status:` colors while the underlying numbers stayed unmeasured — scaffold-without-instrumentation (corrections.md 2026-06-07 in the roadmap repo). The fix is to compute the load-bearing APEX fields from raw artifacts the project already produces, rather than treating the canvas surface as the measurement.
+
+For each field below, **compute the number first** from the raw artifact, **then** write `value:` to canvas; preserve the prior narrative as `notes:` (do not destroy it).
+
+**`apex.ai_rework_rate`** — fix-forward commits as a % of total commits in window.
+- Raw artifact: `git log --since="<window>" --pretty='%H %s'` on the repo's primary branches.
+- Computation: a commit counts as "fix-forward" if its subject matches the project's fix-pattern (default: `^(fix|amend|patch|hotfix|chore: re-validate|chore: fix)` or modifies files touched by the immediately prior commit on the same path within N hours). Document the chosen pattern + window in `apex.ai_rework_rate.method`.
+- Output: `{ value: <pct>, window: "<24h|7d|30d>", method: "<pattern>", notes: "<prior narrative>" }`.
+- Trend: maintain a small numeric series in `measurement_history` alongside the existing `change_failure_rate` strings.
+- Honest framing: when the project is 100% AI (solo + agent), `ai_rework_rate` ≈ project rework_rate; name this in `notes:`.
+
+**`apex.ai_acceptance_rate`** — proportion of agent-proposed actions the user accepts without redirection.
+- Raw artifact (proxy, honest about being a proxy): count of `corrections.md` entries with `detection_origin: user` in the same window ÷ count of total agent actions narrated in the session log if available; otherwise narrative estimate carried forward with `method: "narrative; instrumentation pending"`.
+- Output: `{ value: <pct>, method: "<exact|proxy|narrative>", notes: "<prior narrative>" }`.
+
+**`apex.hook_detection_rate`** — proportion of corrections that were caught by a hook or validator vs by the user.
+- Raw artifact: `corrections.md` entries' `detection_origin:` field (`user` / `hook` / `evaluator` / `agent`). Count by category in window.
+- Output: `{ value: <pct>, denom: <total>, user: <n>, hook: <n>, evaluator: <n>, agent: <n>, window: "<7d|30d>", notes: "load-bearing — if hook+evaluator ≈ 0%, the harness-detection-gap signal applies (corrections.md 2026-06-02 audit)" }`.
+- This field is the [S1] + [S5] canary: a harness with rising rework and ~0% hook-detection is the failure mode both reports diagnose.
+
+**Goodhart pair** (already named in `dora-metrics.yml#goodhart_check`): `ai_rework_rate` MUST be paired with `ai_acceptance_rate`. Rework-rate rising while acceptance-rate ALSO rising = healthy (validators catching real issues, user still accepting agent direction). Rework-rate rising while acceptance-rate falling = unhealthy (agent output quality dropping). Never report one without the other.
+
+**Cadence**: compute on every `/mycelium:dora-check` run; do not narrate "refreshed APEX" unless these three numeric fields actually moved (Postflight discipline below).
+
+**Sources**:
+- [S1] Faros AI, *Ten takeaways from the AI Engineering Report 2026: The Acceleration Whiplash*, 2026-04-12. https://www.faros.ai/blog/ai-acceleration-whiplash-takeaways
+- [S2] Faros AI, *Harness engineering: What makes AI coding agents work in 2026*, 2026-05-22. https://www.faros.ai/blog/harness-engineering
+- [S5] Datadog, *State of AI Engineering* (production LLM telemetry, 1,000+ customers), 2026. https://www.datadoghq.com/state-of-ai-engineering/
+
 ## Postflight: Verify-After-Write (write-narration-verification discipline)
 
 **Hard rule** (per CLAUDE.md Communication Rules, anti-pattern #7 Stage 2 graduation — v0.39.18). Before the user-facing summary claims "✅ updated `dora-metrics.yml`" / "✅ refreshed APEX" / similar, verify the write actually changed the value fields named in `## Canvas Output` below — not just `_meta.last_validated`. Use the **Read tool** on `dora-metrics.yml` after the edits to confirm `deployment_frequency.current`, `change_failure_rate.current`, `time_to_restore.current`, `apex.*`, `measurement_history`, etc. hold the new measurements. If only `_meta` changed and value fields stayed stale, the narration is a state-claim on a state the skill did not achieve (AP#7 instance #18 was the worked failure, 2026-06-05 — operator surfaced it with the Torres-shape question *"Did you run the dora check?"*). Symmetric to the Preflight above: Preflight protects what gets WRITTEN; Postflight protects what gets CLAIMED about what was written. Validator Check 42 enforces preamble presence.

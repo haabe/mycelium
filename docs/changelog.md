@@ -2,7 +2,26 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-06-05.
+**Last updated**: 2026-06-07.
+
+## v0.39.19 — Faros Whiplash + Datadog State-of-AI-Engineering integration: B14 scaffold-cost-check + B2 dora-check compute + B13 runtime_llm flag
+
+**2026-06-07. Attribution: faros-whiplash-plus-datadog-soae-integration-2026-06-07. Class: patch (new skill + canvas-guidance dimension extension + dora-check MANDATORY extension; no engine/hook behavior change).**
+
+**Background.** Roadmap-repo session (2026-06-07) ran the Faros AI "Acceleration Whiplash" 2026 report and "Harness Engineering" framework through Mycelium's own 5-layer scoring + finding map, with a same-session amendment adding [S5] Datadog *State of AI Engineering* (2026) and a Level-B distinction (AI products built with Mycelium vs Mycelium itself). Founder selected Option 5 of the combined decision point: ship B14 + B2 + B13 in a single upstream session, defer B12 (Level B Runtime-LLM Harness Gate) until Level A telemetry is stable. Full assessment + decision-log + provenance in roadmap repo `.claude/drafts/faros-whiplash-assessment-2026-06-07.md` and `.claude/harness/decision-log.md`.
+
+**Shipped:**
+
+- **New skill `/mycelium:scaffold-cost-check`** (B14). One-shot or periodic audit of Mycelium's own scaffold token cost — CLAUDE.md + engine + harness + AGENTS.md + canvas + memory. Sums bytes, divides by 4 (±15% heuristic), renders a structured table with comparison-against-prior-claim. Print-only by default; `--write` opt-in persists to `dora-metrics.yml#apex.scaffold_token_estimate`. Pairs first-pass-success as Goodhart counter-metric. Source: [S5] Datadog (~69% input tokens are system prompts across production agents).
+- **Extended `/mycelium:dora-check` MANDATORY** with **Part 2b: Compute APEX from raw artifacts** (B2). Three load-bearing APEX fields (`ai_rework_rate`, `ai_acceptance_rate`, `hook_detection_rate`) now MUST be computed from raw artifacts (git log, corrections.md `detection_origin` tags) rather than filled with narrative. Goodhart pair preserved (rework ↔ acceptance). The `hook_detection_rate` field promotes the corrections.md 2026-06-02 "0% caught by hook/evaluator" finding from prose to tracked metric. Sources: [S1] Faros Whiplash, [S2] Faros Harness Engineering, [S5] Datadog.
+- **Extended `engine/canvas-guidance.yml` with Dimension 2b: `runtime_llm`** (B13). New orthogonal axis (not a new `product_type` enum value) capturing whether a product itself makes runtime LLM API calls. Defaults conservative (`false`). Decoupled from `product_type` because runtime-LLM concerns cross product types (a `content_publication` with an LLM-backed reader-Q&A is `runtime_llm: true`). Downstream effect (planned v0.40.x): conditional Runtime-LLM Harness Gate at L3 Delivery, modeled on the existing Regulatory Gate template. Source: [S5] Datadog (multi-model runtime fleets are the norm).
+- **Extended `/mycelium:interview` Phase 6** to ask the runtime-LLM question right after product_type. Stores `runtime_llm: true|false` on the L0 diamond entry alongside `product_type`. Includes a clarifier prompt ("would a user, when they use this product, ever trigger a paid call to an LLM API?") for the ambiguous case.
+
+**Out of scope (deferred to next minor):** B12 Runtime-LLM Harness Gate, B15 SessionStart cache-prefix audit, B16/B17 loop-budget + cache-strategy AI-product declarations. Sequenced behind Level A telemetry stabilizing (rule-we-don't-follow-ourselves discipline).
+
+**Provenance honesty.** Five sources used ([S1] Faros Whiplash, [S2] Faros Harness Engineering, [S3] Anthropic Harness Design, [S4] DORA 2025, [S5] Datadog State of AI Engineering); inline source tags on every claim in the skills shipped. [S1] and [S5] reach the observability-essential conclusion from independent data (build-time vs runtime), strengthening the gate. [S1] explicitly disputes [S4]'s "strong foundations protect you" claim — informative dispute, recorded honestly.
+
+**Prior**: read-before-recommend-stage-2a-plus-chat-ux-proof-of-pattern-2026-06-05 (v0.39.18).
 
 ## v0.39.18 — Read-before-Recommend Stage 2a (sub-shape 6 write-narration-verification) + Chat-UX axiom proof-of-pattern
 

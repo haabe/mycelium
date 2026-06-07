@@ -325,6 +325,15 @@ Ask: "Let me understand the project scope to tailor the framework:"
 
 Store as `product_type` on the L0 diamond entry in `.claude/diamonds/active.yml` (per-diamond field, not root-level). Child diamonds inherit product_type from their parent unless overridden. Load delivery profile from `${CLAUDE_PLUGIN_ROOT}/engine/canvas-guidance.yml#product_types`.
 
+**Runtime-LLM flag** (v0.39.19 -- ask second, orthogonal to product_type):
+- "Does this product itself make production LLM API calls at runtime, or does it only use AI in the build process?"
+  - **Runtime LLM calls** (chatbot, RAG app, agent product, an LLM-backed feature in any other product): set `runtime_llm: true`
+  - **Build-time AI only** (prompt library, eval harness, dev-time agent; or no AI at all): set `runtime_llm: false`
+
+Store as `runtime_llm` on the L0 diamond entry in `.claude/diamonds/active.yml`. The flag is orthogonal to `product_type` — a `content_publication` with an LLM-backed reader-Q&A is `product_type: content_publication, runtime_llm: true`. See `${CLAUDE_PLUGIN_ROOT}/engine/canvas-guidance.yml#runtime_llm` for the full rationale + downstream gate implications (Runtime-LLM Harness Gate planned for L3 Delivery in v0.40.x). Source: [S5] Datadog, *State of AI Engineering* (2026).
+
+If unclear, ask: "Would a user, when they use this product, ever trigger a paid call to an LLM API? If yes — `runtime_llm: true`." Default to `false` if no clear answer; the flag is honest-default-conservative.
+
 **Project scope**:
 - Is this a solo or team project?
 - Is this a hobby/learning project, a real product, or enterprise?

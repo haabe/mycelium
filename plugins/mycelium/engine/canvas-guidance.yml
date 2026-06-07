@@ -330,6 +330,61 @@ product_type_capabilities:
     key_touchpoints: [client-intake, service-delivery, satisfaction-survey, follow-up]
 
 # ============================================================
+# Dimension 2b: Runtime-LLM flag (v0.39.19)
+# Orthogonal to product_type. Set during /interview Phase 6.
+# Stored as `runtime_llm: true|false` on the L0 diamond entry.
+#
+# Source: [S5] Datadog, "State of AI Engineering" (2026) —
+# https://www.datadoghq.com/state-of-ai-engineering/. Runtime LLM
+# fleets are now the norm; products that themselves make production
+# LLM calls have a distinct observability + cost + rate-limit
+# surface that build-time-only AI tools do not.
+#
+# The distinction the flag captures:
+#   - product_type: ai_tool can mean EITHER
+#     (a) a tool that uses AI in its BUILD process (prompt library,
+#         eval harness, dev-time agent) — runtime_llm: false
+#     (b) a tool that itself makes RUNTIME LLM calls users pay for
+#         and depend on (chatbot, RAG app, agent product) —
+#         runtime_llm: true
+#   - product_type: software / service_offering / content_* can
+#     ALSO carry runtime_llm: true if they ship an LLM-backed
+#     feature (e.g. software product with a chat assistant).
+#
+# Why this is orthogonal, not a new product_type value: a
+# content_publication might ship an LLM-backed reader-Q&A; a
+# service_offering might ship an LLM-backed client portal. The
+# runtime-LLM concern crosses product_type; modeling it as an
+# orthogonal axis matches the existing project_type / product_type
+# / delivery_type decomposition.
+#
+# Downstream effect: when runtime_llm: true, L3 Delivery gains a
+# conditional Runtime-LLM Harness Gate (planned next minor,
+# modeled on the existing Regulatory Gate template). The gate
+# requires the product to declare its own:
+#   - agent-output + runtime observability (cost/token per
+#     request, latency, error rate, model-fallback rate, sampled
+#     production eval)
+#   - loop/token budgets + backoff + backpressure (capacity/
+#     rate-limit is the dominant runtime failure mode per [S5])
+#   - prompt-caching strategy (only ~28% of cache-capable calls
+#     hit cache in production per [S5])
+#   - model-fleet governance (which models, fallback chain, cost-
+#     optimization rules)
+# ============================================================
+
+runtime_llm:
+  description: "Does this product itself make production LLM API calls at runtime, or use AI only in its build process?"
+  values:
+    true: "Product makes runtime LLM calls users depend on (chatbot, RAG app, agent product, LLM-backed feature in a non-AI product)"
+    false: "Product uses AI in build/dev only, or not at all (prompt library, eval harness, dev-time agent, non-AI product)"
+  default: false
+  detection: "Source code imports anthropic/openai/google-genai/etc. SDK at runtime path; environment variables for LLM API keys; product surface includes an interactive AI feature"
+  gate_implication: "L3 Delivery: Runtime-LLM Harness Gate fires when true (planned v0.40.x). When false, no additional gates fire from this flag."
+  set_in: /mycelium:interview Phase 6
+  stored_at: ".claude/diamonds/active.yml#<diamond>.runtime_llm"
+
+# ============================================================
 # How Product Type and Delivery Type Interact (v0.11.0)
 # ============================================================
 # Product type and delivery type are COMPLEMENTARY, not competing:
