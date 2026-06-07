@@ -133,6 +133,8 @@ The chat-UX nudges in `${CLAUDE_PLUGIN_ROOT}/harness/design-principles.md` ("the
 
 This is the **buildable** form of the self-audit; the live-output version is unenforceable (no corpus). Surface counts + offending skills in the dashboard. Do not auto-edit skills — flag for maintainer review (a template's flat option-list may be deliberate). Graduation path: if the same skill is flagged across two assessments, promote to a mechanical `tests/bash` check (then it inherits G-V12 / Check 37).
 
+**Temporal independence required.** "Flagged across two assessments" means two assessments separated by independent observation windows — a quarterly run, a cycle-count-trigger run, or an explicit re-audit after deliberate skill-template edits. Same-day re-runs with no intervening skill edit are mechanically the same flag, not two observations; record the prior run's flag-set as the baseline and check the next independent run against it. Without this rule, any agent running `/mycelium:framework-health` twice in a row would graduate the entire flagged set on the second run. The rule applies symmetrically to 4b (cluster graduation-readiness) and 4d (docs health) — re-flagging in the same session does not count as independent confirmation.
+
 ### 5. Generate Dashboard
 
 ## Output

@@ -4,6 +4,22 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-07.
 
+## v0.39.22 — Framework-health temporal-independence rule (Step 4e/4b/4d)
+
+**2026-06-07. Attribution: framework-health-temporal-independence-2026-06-07. Class: patch (one skill doc tightened; no engine, hook, or schema behavior change).**
+
+**Background.** A same-day re-run of `/mycelium:framework-health` (second pass of 2026-06-07) was about to mechanically graduate the morning run's 4e baseline — six skills flagged for Hick's Law or Von Restorff violations (canvas-update, ost-builder, ice-score, canvas-health, bvssh-check, dora-check) — on the second pass, because Step 4e's existing graduation rule reads "if the same skill is flagged across two assessments, promote to a mechanical `tests/bash` check." Two same-day runs with no intervening skill edit are mechanically the same flag, not two observations. The PM run's narration caught the gap before it fired.
+
+**Shipped:**
+
+- **Step 4e clarification** (`skills/framework-health/SKILL.md`): added an explicit "Temporal independence required" paragraph after the existing graduation-path sentence. Two assessments must be separated by independent observation windows — a quarterly run, a cycle-count-trigger run, or a deliberate re-audit after skill-template edits. The rule applies symmetrically to **4b** (cluster graduation-readiness) and **4d** (docs health) so re-flagging in the same session does not count as independent confirmation in any of the three steps.
+
+**What this prevents.** Any agent running `/mycelium:framework-health` twice in a row without this rule would auto-graduate the entire flagged set on the second pass. The "two assessments" wording was written with quarterly cadence in mind; the on-demand re-run case was never explicit. This patch closes it.
+
+**Discipline source**: caught during a `/mycelium:framework-health` PM re-run on the same day the morning run had already executed its 5 recommendations (mycelium-roadmap commit `19976a0`). The PM run surfaced the rule gap in its own narration of why 4e should NOT graduate today.
+
+**Prior**: faros-whiplash-receipts-voice-revise-2026-06-07 (v0.39.21).
+
 ## v0.39.21 — Voice-revise pass on the faros-whiplash-integration receipts case
 
 **2026-06-07. Attribution: faros-whiplash-receipts-voice-revise-2026-06-07. Class: patch (single docs/ file revised; no skill, hook, or engine behavior change).**
