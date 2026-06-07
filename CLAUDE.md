@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.40.1 -- **Attribution label: render-fleet-ost-render-v0401-2026-06-08**. Second specialist of the render fleet ships upstream: `/mycelium:ost-render` (read-only emit of `opportunities.yml` as Mermaid mindmap / ascii / markdown-list / json). First specialist with active consent gate: declared `identifier_exposure: YES`; consults `$MYCELIUM_ATTRIBUTION_REGISTRY` (env var preferred) or `.claude/memory/attribution-registry.yml` (fallback). Real-schema registry semantics per F6 corrections: `consent: public_ok` → render literal; `generic_only` → redact to anon-label; `unknown` → treat as generic_only; not-in-registry → fail loud. F7 carve-out footnote pointers on entries with non-empty `note:`. Mermaid mindmap default uses verified Material Design palette + paired text contrast per F13 source-verified `cScale1`–`cScale7` + `cScaleLabel1`–`cScaleLabel7` mapping; `--shape flowchart-td` opt-in for renderers that don't honor mindmap palette. Check 43 newly passes on 2 render-fleet skills. **PATCH** (specialist sibling completing the v0.40.0-announced render fleet foundation; no engine doc / validator behavior change). **Prior**: render-fleet-foundation-v0400-2026-06-07 (v0.40.0).*
+*Version 0.40.2 -- **Attribution label: render-fleet-cycle-render-v0402-2026-06-08**. Third specialist of the render fleet ships upstream: `/mycelium:cycle-render` (read-only emit of `cycle-history.yml` as Mermaid gantt + outcome distribution pie, plus ascii and json formats). Declared `identifier_exposure: YES`; consults the attribution registry per `engine/render-conventions.md`. F10 staleness-vs-pending-retrospective distinction baked in (canvas-stale uses `⚠ STALE`; decision-log activity without a recorded cycle uses `ℹ Pending retrospective`). Honest small-N display (`Note: N=<total>` when total <5); class-distribution disclosure (`7 meta-dogfood + 1 observation + 0 product-leaf` honest dark data). Status-color semantics warning surfaces the `:crit-reads-as-failure` UX issue. Six-argument surface (`--format`, `--view`, `--theme`, `--since`, `--cycle-class`, `--no-identifiers`). Check 43 newly passes on 3 render-fleet skills. **PATCH** (specialist sibling completing the v0.40.0-announced render fleet foundation). **Prior**: render-fleet-ost-render-v0401-2026-06-08 (v0.40.1).*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 
@@ -193,7 +193,7 @@ See `.claude/orchestration/modes.md` for usage patterns and `.claude/orchestrati
 
 ## Skills
 
-All 52 skills are auto-discovered from SKILL.md frontmatter — in plugin form (`plugins/mycelium/skills/*/SKILL.md`, recommended) or legacy form (`.claude/skills/*/SKILL.md`, supported during transition). Suggested skills are surfaced at diamond transitions by `/diamond-progress` and `/diamond-assess`, and contextually by hooks. Type `/` to see the current list.
+All 53 skills are auto-discovered from SKILL.md frontmatter — in plugin form (`plugins/mycelium/skills/*/SKILL.md`, recommended) or legacy form (`.claude/skills/*/SKILL.md`, supported during transition). Suggested skills are surfaced at diamond transitions by `/diamond-progress` and `/diamond-assess`, and contextually by hooks. Type `/` to see the current list.
 
 ## Getting Started
 

@@ -4,6 +4,30 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-07.
 
+## v0.40.2 — Render fleet: /mycelium:cycle-render (YES exposure, gantt + pie + json)
+
+**2026-06-08. Attribution: render-fleet-cycle-render-v0402-2026-06-08. Class: patch (specialist sibling completing the v0.40.0-announced render fleet foundation).**
+
+**Background.** v0.40.0 shipped the foundation (engine doc + diamond-render NONE + Check 43). v0.40.1 added ost-render (YES, consent gate active). v0.40.2 adds the third specialist — gantt + outcome-distribution pie for the cycle-history canvas.
+
+**Shipped:**
+
+- **New specialist** `${CLAUDE_PLUGIN_ROOT}/skills/cycle-render/`. Read-only emit of `.claude/canvas/cycle-history.yml` as Mermaid gantt + pie (or ascii / json). Declared `identifier_exposure: YES`; consults the attribution registry. Six-argument surface (`--format`, `--view`, `--theme`, `--since`, `--cycle-class`, `--no-identifiers`).
+
+- **F10 staleness vs pending-retrospective distinction** baked in: when decision-log activity is newer than the most-recent cycle's `completed_at` BUT no cycle entry has been recorded for it, the render uses informational `ℹ Pending retrospective: decision-log activity since <file>'s most recent <entry-type> ... Running /mycelium:retrospective will fold it in. Render reflects closed-and-recorded; in-flight session work is intentionally absent.` Canvas-stale (actual data drift) still uses the `⚠ STALE` shape.
+
+- **Honest small-N display**: gantt header notes `Note: N=<total>; distribution shape may not be load-bearing at this sample size` when total <5. Class-distribution disclosure (`7 meta-dogfood + 1 observation + 0 product-leaf`) surfaces honest dark data on `product-leaf: 0` as the canonical case for early-stage dogfood projects rather than hiding it.
+
+- **Status-color semantics warning**: Mermaid gantt `:crit` defaults to red, which reads as "failure" to viewers unfamiliar with the syntax. Cycle outcomes use a different ontology (success/partial/failure based on `actual.outcome`). The `:crit` color is currently reused for `actual.outcome: failure` AND `terminal_state: killed`; a `--status-mapping <strict|loose>` future arg could disambiguate (open implementation question).
+
+- **WCAG AA gantt + pie themes** with explicit task-status colors (a5d6a7 / 90caf9 / ef9a9a pastels) paired with dark text (#1a1a1a) for ≥8:1 contrast across all states. `--theme dark` opt-in.
+
+**Validator state**: Check 43 newly passes on 3 render-fleet skills (was 2 in v0.40.1). All other checks unchanged.
+
+**Foundation for**: v0.40.3 (`/mycelium:render` dispatcher — MIXED identifier exposure; recommends-not-invokes; cross-cutting `--view traceability` deferred to research-first methodology per Phase 4a–4d).
+
+**Prior**: render-fleet-ost-render-v0401-2026-06-08 (v0.40.1).
+
 ## v0.40.1 — Render fleet: /mycelium:ost-render (YES exposure, consent gate active)
 
 **2026-06-08. Attribution: render-fleet-ost-render-v0401-2026-06-08. Class: patch (specialist sibling completing the v0.40.0-announced render fleet foundation; no engine doc or validator behavior change).**
