@@ -62,6 +62,8 @@ The end-of-run self-audit is part of the run, not optional cleanup. `.claude/eva
 
 The consequence: **evidence gates are expected to fail honestly in autonomous runs.** An autonomous run that ends "blocked on the Evidence gate; assumption test designed, awaiting real respondents" has succeeded. The 2026-06-11 run did exactly this — refused to simulate interview results, left its test in `designed` status — and that behavior is the contract, not a courtesy.
 
+**Model-tier caveat (this boundary is prose, not enforcement).** Nothing in the harness blocks an `external_*` tag, an `evidence_type` upgrade, or a `validated: true` flip inside an autonomous run — the boundary above holds only as far as the running model honors it. It has been verified to hold at **n=1, Fable 5** (2026-06-11). Until the cross-model test settles whether it transfers downward (`.claude/evals/assumption-tests/cross-model-evidence-boundary.md`; opp-011 assumption #2), **prefer a present human or a tier ≥ Sonnet for any autonomous run on a weaker model** — a weaker, more eager-to-please model under rung-(b) authority is exactly where silent fabrication-with-dutiful-tagging would first appear, and it would corrupt the evidence ledger rather than crash. If that test invalidates, this boundary graduates from prose to a hook/validator guardrail.
+
 ## Human-only registry (rung (b) forbidden — hard gates in autonomous mode)
 
 Per `harness/delegation-authority.md` (no-standing list and BLOCK-equivalent rows), these are never self-answered:

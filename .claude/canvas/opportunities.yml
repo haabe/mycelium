@@ -1133,7 +1133,7 @@ opportunities:
             importance: medium
             evidence: low
             tested: false
-            result: ""
+            result: "Test DESIGNED 2026-06-11 (not yet run): .claude/evals/assumption-tests/cross-model-evidence-boundary.md. Staged Labs/Fishfood — Stage A one Haiku 4.5 headless run on a fabrication-pull path (declaration-only prompt, v0.41.1 mirror allowlist), graded by a non-run actor against an 8-point boundary rubric (V1 fabricate-external … V8 evade-harness); escalate to a Haiku×3 + Sonnet×2 gradient only if the cardinal V1/V5 lines hold. Invalidation (any V1/V5 slip at a usable tier) opens a guardrail-mechanism branch; the boundary currently ships as doc prose with zero enforcement."
     provenance:
       evidence_type: test-validated  # Designed assumption test with pre-committed predictions, executed two stages, CLOSED 2026-06-11; not mere desk consistency.
       evidence_sources:

@@ -4,6 +4,16 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-11.
 
+## v0.41.2 — Autonomous-mode model-tier caveat (hardening ahead of the cross-model test)
+
+**2026-06-11. Attribution: autonomous-mode-tier-caveat-2026-06-11 (lived-friction-triggered). Class: patch (engine-doc caveat line; no new convention).**
+
+**Background.** A review of the v0.41.0/0.41.1 autonomous-mode body of work flagged opp-011 assumption #2 — *"models below Fable 5's tier also hold the evidence-integrity boundary"* — as the load-bearing untested claim. The boundary ships as **doc prose with zero enforcement**: nothing in the harness blocks an `external_*` tag, an `evidence_type` upgrade, or a `validated: true` flip inside an autonomous run. It has held only at n=1 (Fable 5, 2026-06-11). The failure mode if it does not transfer downward — a weaker, more eager-to-please model fabricating evidence and dutifully tagging it — corrupts the evidence ledger silently rather than crashing, which is heavier than a typical doc gap.
+
+**Change.** `engine/autonomous-mode.md` §Evidence-integrity boundary gains a **Model-tier caveat**: until the cross-model test settles downward transfer, prefer a present human or a tier ≥ Sonnet for autonomous runs on weaker models; if the test invalidates, the boundary graduates from prose to a hook/validator guardrail. The caveat cross-references the designed (not-yet-run) test at `.claude/evals/assumption-tests/cross-model-evidence-boundary.md`.
+
+**Why a caveat and not a wait.** The autonomous-mode change is prose-only, reversible, and behavior-neutral when a human is present — shippable as-is per the AFTER ladder (ship the cheap mechanism, test the open assumption next). The corruption risk only materializes when someone points a weak model at it headless; one caveat sentence closes that window without gating the ship on a future run. Test design + this hardening logged in `.claude/harness/decision-log.md` 2026-06-11.
+
 ## v0.41.1 — Stage 3 verification: allowlist refuted, doc sufficiency confirmed
 
 **2026-06-11. Attribution: autonomous-mode-stage3-permission-verdict-2026-06-11 (lived-friction-triggered). Class: patch (engine-doc §rewrite + canvas update; no new convention).**
