@@ -4,6 +4,12 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-11.
 
+## v0.41.3 — Lint: wrap E501 in sync_derived.py (housekeeping)
+
+**2026-06-11. Attribution: ruff-e501-sync-derived-2026-06-11 (housekeeping). Class: patch (comment-only; no behavior change).**
+
+The v0.41.2 pre-push run surfaced a standing WARN — one ruff E501 (a 126-char inline comment in `scripts/sync_derived.py`, the last non-zero finding across `plugins/mycelium/scripts/*.py`). Fixed in-session rather than carried to a cleanup cycle: the comment moved to its own line and shortened under the 88-char limit, meaning unchanged. Ruff is now clean across all scripts under the check's `--select=ALL` ruleset. No version-surface or behavior change beyond the bump itself.
+
 ## v0.41.2 — Autonomous-mode model-tier caveat (hardening ahead of the cross-model test)
 
 **2026-06-11. Attribution: autonomous-mode-tier-caveat-2026-06-11 (lived-friction-triggered). Class: patch (engine-doc caveat line; no new convention).**
