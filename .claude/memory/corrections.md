@@ -412,3 +412,10 @@ _Corrections that apply broadly across projects and contexts._
 
 _Corrections specific to a particular project, team, or context._
 
+
+### 2026-06-11 - Version-line bump replaced only the paragraph's leading fragment
+- **Mistake**: Bumping CLAUDE.md v0.41.0 → v0.41.1, the Edit's old_string covered only the opening fragment ("*Version 0.41.0 -- **Attribution label: ...** (label).") of the version paragraph. The new v0.41.1 text landed, but the ENTIRE remainder of the old v0.41.0 paragraph stayed embedded after it — a malformed double-paragraph version line.
+- **Detected**: self-caught immediately after the Edit (before commit), by noticing the new_string ended with a Prior pointer while the old paragraph's body and its own Prior pointer still followed.
+- **Correction**: second Edit removed the dangling tail; version line verified single-paragraph via sed before commit.
+- **Prevention rule**: the CLAUDE.md Version line is ONE italic paragraph replaced WHOLE on every bump. old_string must span from `*Version X.Y.Z --` through the closing `.*` of the same paragraph. After any version-line edit, read the first 5 lines back and confirm exactly one `*Version ... *` paragraph before staging.
+- **Root cause kin**: anti-pattern #8 (Stale State Read) shape — edited against a remembered fragment of the line rather than its full current extent.
