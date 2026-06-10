@@ -2,7 +2,24 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-06-08.
+**Last updated**: 2026-06-11.
+
+## v0.41.0 — Autonomous mode: engine doc + per-skill hard-gate markers
+
+**2026-06-11. Attribution: autonomous-mode-fable5-dogfood-graduation-2026-06-11 (lived-friction-triggered). Class: minor (new convention with structural impact — a documented run mode; no hook, schema, or validator change).**
+
+**Background.** The 2026-06-11 Fable 5 dogfood evaluation (two-stage assumption test against the founder's Q3 bet "I cannot make Fable 5 complete a full test run on Mycelium because of the way Mycelium is designed") found that Mycelium had no documented autonomous-mode concept. Stage 1 desk audit of all 54 skills: exactly 5 blocking interaction points carried documented non-interactive fallbacks; hard gates with no fallback included `diamond-assess` cognitive forcing, `diamond-progress`'s approval convention, and — the irony finding — `mocked-persona-interview`'s own human-gated pre-commits. `engine/dogfood-mode.md` reframes stop conditions only; it never authorizes substituting human input. Stage 2's headless run completed the full minimal path (zero human-input requests, no process cliff, evidence boundary held unprompted) ONLY because its run prompt pre-authorized a one-paragraph improvisation rule. Unpredicted third actor: the run's sole true hard gate was the harness ( `.claude/` writes auto-denied as "sensitive file" in headless mode), not Mycelium. This release graduates the proven rule set from run-prompt improvisation to framework mechanism.
+
+**Shipped:**
+
+- **New engine doc `plugins/mycelium/engine/autonomous-mode.md`**: declaration (explicit run-prompt consent + `autonomous: true` root flag in `active.yml`; detection alone never activates the mode; a present human always outranks the flag); the three-rung substitution ladder (documented per-skill default → persona self-answer tagged `source_class: internal_simulated` / `evidence_type: speculation` → honest HARD GATE log-and-continue) with a default-substitutable rule and a pre-commit ordering rule (commitments ledgered BEFORE dependent content); mandatory substitution ledger at `.claude/evals/autonomous-run-log.md` (fixed path; format proven by the Stage 2 run) with end-of-run self-audit; evidence-integrity boundary (fabricating `external_human`/`external_data` evidence never permitted — an autonomous run blocked on the Evidence gate has *succeeded*); human-only registry keyed to `delegation-authority.md`'s no-standing list and `confidence-thresholds.yml#human_approval: required`; harness-permission story (operator settings allowlist for the `.claude/` state tree — explicitly labeled UNVERIFIED, gated by the first run under the doc — plus a mandatory step-0 write probe and the documented `mycelium-state/` mirror fallback with re-integration procedure); per-skill behavior table from the desk audit (31 of 54 skills have zero blocking points).
+- **`skills/diamond-assess/SKILL.md`**: autonomous-mode markers on cognitive forcing (rung (b) — persona judgment recorded BEFORE reading state; the ordering, not the human authorship, is load-bearing) and the coaching check.
+- **`skills/diamond-progress/SKILL.md`**: cognitive forcing → rung (b); approval semantics — `human_approval: required` transitions are autonomous HARD GATES, `recommended/optional` advance only when no gate-satisfying evidence is `internal_simulated`; the re-invocation-as-approval shortcut is explicitly revoked for autonomous runs (an agent must never count as its own approval); kill confirmation marked **human-only, hard gate in autonomous mode** (park/pivot stay autonomously available).
+- **`skills/mocked-persona-interview/SKILL.md`**: spectrum and stop-condition pre-commits self-authorable at rung (b) PROVIDED both hit the decision log and ledger before any profile generation — closes the audit's irony finding without weakening commitment-before-data.
+- **`engine/dogfood-mode.md`**: new "Dogfood mode vs autonomous mode" section — dogfood reframes what failure means, autonomous reframes who answers; orthogonal and composable. **`engine/README.md`**: new "Run Modes" index section.
+- **Canvas + evidence home**: `opp-011` in `.claude/canvas/opportunities.yml` (test-validated, confidence 0.7, solution entry with two open assumptions — settings-allowlist override first among them); receipts case `docs/receipts/cases/2026-06-11-fable5-autonomous-run.md`; decision-log entry 2026-06-11 with per-alternative rejections (extend-dogfood-mode, hook-detection activation, 54-skill marker sweep, do-nothing).
+
+**Prior**: docs-skills-indexes-catchup-and-render-fleet-receipts-voice-revise-2026-06-08 (v0.40.4).
 
 ## v0.40.4 — docs/skills indexes catch up + render-fleet receipts case voice-revise
 

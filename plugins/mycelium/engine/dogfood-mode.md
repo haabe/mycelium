@@ -44,6 +44,10 @@ Dogfood reports are committed to git and may be public. **Always anonymize befor
 - Remove or genericize any outreach targets, contact names, LinkedIn handles, or DM content
 - If in doubt, ask: "Could someone identify the operator from this sentence?" If yes, rewrite it.
 
+## Dogfood mode vs autonomous mode
+
+Dogfood mode reframes **stop conditions** (a killed diamond becomes a Mycelium learning). It does **not** authorize substituting human input at blocking interaction points — that authority lives exclusively in `autonomous-mode.md` (declaration, substitution ladder, mandatory ledger, evidence-integrity boundary). The two are orthogonal and compose: a fully automated dogfood run declares both `dogfood: true` and autonomous mode. A dogfood session with a human at the keyboard needs nothing from autonomous mode. (Per opp-011: the 2026-06-11 Fable 5 evaluation found runs improvising substitution rules because this distinction was undocumented.)
+
 ## Automated dogfood
 
 For automated agent-to-agent dogfood testing, see the **roadmap-repo** at `mycelium-roadmap/.claude/auto-dogfood/REBUILD-PLAN.md`. The auto-dogfood orchestrator was deleted in framework legacy cleanup (commit a5cabd3, ~2026-04) and is being reinstated as roadmap-private tooling per founder direction 2026-05-22 — not as framework-shared infrastructure at this stage. The orchestrator runs full-session scenarios with planted failure conditions and evaluates the framework's safety properties programmatically. Manual dogfood sessions (documented per this pattern) remain valuable for discovering gaps that automated sessions miss.

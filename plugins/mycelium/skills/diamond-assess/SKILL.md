@@ -31,6 +31,8 @@ Evaluate current diamond state and recommend next action.
 
    *Source: Buçinca, Malaya & Gajos (Cognitive Forcing Functions, Harvard CHI/CSCW 2021) — forcing initial human judgment before AI output significantly reduces automation bias and over-reliance on incorrect AI recommendations.*
 
+   **Autonomous mode** (per `${CLAUDE_PLUGIN_ROOT}/engine/autonomous-mode.md`): in a declared autonomous run, substitute at rung (b) — record the declared persona's unprimed judgment BEFORE reading any canvas or gate state (the ordering is the load-bearing part, not the human authorship), tag it `source_class: internal_simulated`, and ledger the substitution. The post-assessment comparison still runs: persona judgment vs gate verdict.
+
 1. **Identify the diamond**: Which diamond (ID, scale, phase) is being assessed?
 
 2. **Gather current state**:
@@ -92,6 +94,8 @@ Evaluate current diamond state and recommend next action.
    5. When can we **check what we learned** from that step? (Commit to a review point)
    The coach (human) should answer these, not the agent. The agent surfaces them.
    *Source: Rother (Toyota Kata) — the 5 questions install scientific thinking as a daily habit.*
+
+   **Autonomous mode** (per `${CLAUDE_PLUGIN_ROOT}/engine/autonomous-mode.md`): rung (b) — the declared persona answers all five, the answers are ledgered and tagged `internal_simulated`, and question 5's review point is a committed date the next human session can check.
 
 9. **Log assessment in .claude/harness/decision-log.md** (MANDATORY):
    - APPEND a `### Diamond Assessment` entry to `.claude/harness/decision-log.md`

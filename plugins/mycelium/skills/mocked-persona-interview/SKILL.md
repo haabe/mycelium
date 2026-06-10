@@ -137,9 +137,13 @@ If the gate fails, do not proceed. Say: "You have access to real users. Mocked p
 
 Ask the user to agree on the 6 persona archetypes. Write them to the decision log before generating any profiles.
 
+**Autonomous mode** (per `${CLAUDE_PLUGIN_ROOT}/engine/autonomous-mode.md`): rung (b) with the pre-commit ordering rule — the agent may self-author the 6 archetypes, but MUST write them to the decision log and the run ledger BEFORE generating any profile. Human authorship is substitutable; commitment-before-data is not. The 2026-06-11 desk audit flagged the irony that the framework's own substitution mechanism was human-gated; this marker closes it without weakening the discipline.
+
 ### Step 3: Pre-commit the stop condition
 
 Ask the user: "What would make us say this exercise FAILED? Write the condition before we start, so we hold ourselves to it."
+
+**Autonomous mode**: same rule — self-author the stop condition, write it to the decision log and ledger before any interviews. The Rule-5 prohibition on softening triggered stop conditions applies with extra force in autonomous runs: no human is present to catch the softening, so the pre-committed wording is the only defense.
 
 Examples to offer:
 - "If N of 6 hard-reject, fail"

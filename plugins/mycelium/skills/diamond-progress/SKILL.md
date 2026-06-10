@@ -55,6 +55,8 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
 
    *Source: Buçinca, Malaya & Gajos (Cognitive Forcing Functions, Harvard CHI/CSCW 2021). Applied after Hoskins transcript analysis — Drew's product judgment consistently outperformed the agent's gate-based assessment.*
 
+   **Autonomous mode** (per `${CLAUDE_PLUGIN_ROOT}/engine/autonomous-mode.md`): rung (b) — record the declared persona's gut call BEFORE running gates, tag `internal_simulated`, ledger it. The compare-after step still runs.
+
 2. **Run all required theory gates** (per ${CLAUDE_PLUGIN_ROOT}/engine/theory-gates.md transition matrix):
    - For each gate:
      a. State the gate name and source theory.
@@ -110,6 +112,7 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
    - **When asking for approval, include the interaction convention explicitly in the prompt** — do not leave it implicit. Use this template (or paraphrase faithfully):
      > "Reply **yes** to advance, **no** to stay. Re-invoking `/mycelium:diamond-progress` is also treated as approval (shortcut). Type **evaluate again** to re-run gates from scratch."
    - This makes the implicit-shortcut convention visible. If the user re-invokes `/mycelium:diamond-progress` while a previous invocation is awaiting approval, that re-invocation IS treated as approval — but only because the convention has been surfaced in the prompt above. Without the prompt-line, the behavior is a footgun (corrections.md 2026-05-06 — `/mycelium:diamond-progress` re-invocation interpreted as approval).
+   - **Autonomous mode** (per `${CLAUDE_PLUGIN_ROOT}/engine/autonomous-mode.md`): where `human_approval` is **required**, this is a HARD GATE — rung (c): do not advance, ledger the block, surface it for the next human session. Where it is **recommended/optional**, autonomous advance is permitted ONLY if every gate passes on evidence that does not depend on `internal_simulated` entries; ledger + decision-log entry mandatory. The re-invocation-as-approval shortcut does NOT apply in autonomous runs — an agent re-invoking the skill must never count as its own approval.
 
 5. **Run bias check**: Execute bias-check for the current stage.
 
@@ -340,6 +343,8 @@ Use when the diamond cannot progress right now but may be revisitable later. Exa
 ### Kill (abandon with documented reason)
 
 Use when the diamond cannot be rescued via pivot or park. Example: the opportunity turned out to be imaginary (no real users, no demand), or the solution space has been exhausted, or the project direction has fundamentally changed.
+
+**Human-only, hard gate in autonomous mode** (per `${CLAUDE_PLUGIN_ROOT}/engine/autonomous-mode.md` human-only registry): an autonomous run never confirms a kill on the human's behalf — rung (c): ledger the kill recommendation with its evidence and leave the diamond in place. Park and pivot remain autonomously available (reversible; ledger + decision-log required).
 
 **Workflow**:
 1. State the reason for killing — what evidence makes this diamond dead?

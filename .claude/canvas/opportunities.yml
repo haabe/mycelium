@@ -1013,6 +1013,137 @@ opportunities:
       that create many files. Track alongside issue #59060 in the
       upstream_claude_code_issues auto-memory.
 
+  - id: opp-011
+    name: "No documented autonomous-mode concept — headless runs must improvise at every blocking interaction point"
+    description: |
+      Fable 5 dogfood evaluation 2026-06-11 (two-stage assumption test;
+      receipts case docs/receipts/cases/2026-06-11-fable5-autonomous-run.md).
+
+      Stage 1 desk audit of all 54 skills: only 5 blocking interaction
+      points carry documented non-interactive fallbacks (setup AGENTS.md
+      auto-mode, interview runtime_llm default, xai-check tier default,
+      metrics-pull auto-routing, log-evidence gap branch). Hard gates
+      with no fallback sit on the minimal run path: diamond-assess
+      cognitive forcing ("Wait for the human's response"),
+      diamond-progress approval convention, and — the irony finding —
+      mocked-persona-interview's own spectrum/stop-condition pre-commits
+      (the framework's substitution mechanism was itself human-gated).
+      engine/dogfood-mode.md reframes stop conditions only; it never
+      authorizes substituting human input. Mycelium had no documented
+      autonomous-mode concept at all.
+
+      Stage 2 headless run (Fable 5, claude -p) completed the full
+      minimal path (start → brief → assumption-test → diamond-assess,
+      zero human-input requests, no process cliff) ONLY because the run
+      prompt pre-authorized an improvisation rule: documented default →
+      persona self-answer tagged internal_simulated → honest HARD GATE
+      log-and-continue. The model held the evidence boundary unprompted
+      (refused to fabricate external_human evidence; failed its own
+      Evidence gate honestly). Substitution ledger matched Stage 1
+      predictions point for point.
+
+      Unpredicted third actor: the run's only true hard gate was the
+      HARNESS, not Mycelium — every write under the sandbox project's
+      .claude/ was auto-denied as "sensitive file" in headless mode
+      (Bash, Write, cp, filesystem-MCP) and $CLAUDE_PROJECT_DIR
+      expansion was rejected; the run mirrored state to mycelium-state/
+      as mitigation. Any autonomous-mode design must include a
+      harness-permission story, not just skill-text fallbacks.
+
+      Without a documented mode, every autonomous run either improvises
+      (undocumented behavior = audit noise, and each run prompt must
+      re-invent the discipline) or stalls. The agent-driven-run segment
+      is named in the roadmap purpose canvas (autonomous software
+      thesis), so the gap sits on a strategic path, not an edge case.
+    type: functional
+    frequency: low  # Today: dogfood/eval runs only. Rises if/when agent-driven Mycelium consumption becomes a real segment (named in roadmap purpose.yml).
+    impact: high  # Without it, autonomous runs are unauditable improvisation or dead stalls; with it, the evidence ledger stays trustworthy with no human present.
+    strategic_alignment: high  # Direct prerequisite for automated dogfood (dogfood-mode.md "Automated dogfood" section) and the autonomous-software segment thesis.
+    cynefin_domain: complicated  # The 2026-06-11 test decomposed the problem fully; design is analyzable from the run evidence, no further probing needed.
+    value:
+      level: low
+      description: "Test-validated: the Stage 2 run only completed because the run prompt carried exactly this rule; demand is demonstrated, not assumed."
+    usability:
+      level: medium
+      description: "Risk that operators mistake autonomous mode for a license to simulate evidence; mitigated by the evidence-integrity boundary being the doc's hard rule and rung (c) being framed as correct output."
+    feasibility:
+      level: low
+      description: "Engine doc + three SKILL.md markers; no hook, schema, or validator change. The harness-permission allowlist is the one untested element (assumption logged on the solution)."
+    viability:
+      level: low
+      description: "No ongoing cost; ledger lives in .claude/evals/* (non-material), so runs create no version-bump pressure."
+    sub_opportunities: []
+    solutions:
+      - name: "engine/autonomous-mode.md + per-skill hard-gate markers (shipped v0.41.0)"
+        description: |
+          Codify what the test's improvisation rule had to improvise:
+          (1) declaration — explicit run-prompt consent + autonomous:true
+          root flag in active.yml; non-interactive detection alone never
+          activates the mode, a present human always outranks the flag;
+          (2) substitution ladder — documented per-skill default →
+          persona self-answer tagged internal_simulated → honest HARD
+          GATE log-and-continue, with a pre-commit ordering rule and a
+          default-substitutable rule; (3) mandatory substitution ledger
+          at .claude/evals/autonomous-run-log.md (the pattern the Stage 2
+          run proved) with end-of-run self-audit; (4) evidence-integrity
+          boundary — self-answering interaction prompts permitted,
+          fabricating external evidence never; evidence gates expected to
+          fail honestly; (5) human-only registry keyed to
+          delegation-authority's no-standing list and
+          confidence-thresholds' human_approval matrix; (6)
+          harness-permission story — settings allowlist (unverified,
+          gated by first run under the doc) + mandatory write probe +
+          documented mycelium-state/ mirror fallback with re-integration.
+          Inline markers added to diamond-assess (cognitive forcing,
+          coaching check), diamond-progress (cognitive forcing, approval
+          semantics, kill = human-only), mocked-persona-interview
+          (pre-commits self-authorable under the ordering rule).
+        four_risks:
+          value:
+            assessment: "The Stage 2 run is a working demonstration that this exact rule set is what an autonomous run needs; the doc graduates it rather than inventing it."
+            evidence: "Substitution ledger matched the Stage 1 predicted-stall list point for point; A1 validated conditional on the rule existing."
+            risk_level: low
+          usability:
+            assessment: "Operators and agents must not read 'autonomous' as 'simulate anything'; the boundary section and human-only registry carry that load."
+            evidence: "Stage 2 model held the boundary unprompted (n=1, Fable 5); weaker models untested."
+            risk_level: medium
+          feasibility:
+            assessment: "Doc + three skill edits, shipped. Open element: whether a settings allowlist overrides the headless sensitive-file denial."
+            evidence: "Stage 2 run artifact demonstrates the denial; allowlist untested (assumption below)."
+            risk_level: low
+          viability:
+            assessment: "Aligns with delegation-authority (consent precedes autonomy) and JIT nudge-not-push; no new ceremony for interactive users."
+            evidence: "Human-only registry maps 1:1 onto existing no-standing/BLOCK rows; zero behavior change when a human is present."
+            risk_level: low
+        ice_score:
+          impact: 7  # Unblocks automated dogfood + scheduled runs; converts improvisation noise into auditable mechanism.
+          confidence: 7  # Test-validated end-to-end on the minimal path, n=1 model/path; approval-gate and metrics-skill behavior untested at runtime.
+          ease: 8  # One engine doc + three skill markers + cross-refs; no hooks/schemas/validators.
+          total: 392
+          rationale: "Impact and ease informed by the run evidence (the rule was one paragraph; the gap blocked everything); confidence capped by n=1 and the unverified allowlist."
+        assumptions:
+          - statement: "A permissions.allow entry in the project's settings.json unblocks .claude/ writes under headless sensitive-file denial"
+            risk_dimension: feasibility
+            importance: high
+            evidence: low
+            tested: false
+            result: ""
+          - statement: "Models below Fable 5's instruction-following tier also hold the evidence-integrity boundary when the ladder authorizes rung (b)"
+            risk_dimension: viability
+            importance: medium
+            evidence: low
+            tested: false
+            result: ""
+    provenance:
+      evidence_type: test-validated  # Designed assumption test with pre-committed predictions, executed two stages, CLOSED 2026-06-11; not mere desk consistency.
+      evidence_sources:
+        - "docs/receipts/cases/2026-06-11-fable5-autonomous-run.md (in-repo evidence home for this opp)"
+        - "external: mycelium-fable5-testrun/.claude/evals/assumption-tests/fable5-autonomous-run.md (test design + Stage 1 desk audit + Stage 2 verdicts; A1 validated conditional, A2 runtime-confirmed invalidated, A3 validated)"
+        - "external: mycelium-fable5-stage2/mycelium-state/evals/autonomous-run-log.md (Stage 2 substitution ledger + self-audit — the pattern this opp's solution codifies)"
+        - "plugins/mycelium/engine/dogfood-mode.md (pre-fix state: stop-condition reframe only, no substitution authority)"
+      captured_at: "2026-06-11"
+      confidence: 0.7  # Test-validated on the minimal path with clean attribution (A3); capped by n=1 run, single persona/path, and the untested harness allowlist. Rises when the first autonomous run under the shipped doc verifies the permission story.
+
 # - id: opp-001
 #   name: ""
 #   description: ""
@@ -1088,4 +1219,4 @@ bias_checks: []
 #   biases_mitigated: []
 #   research_design_adjustments: []
 
-last_updated: null
+last_updated: "2026-06-11"
