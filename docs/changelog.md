@@ -4,6 +4,26 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-11.
 
+## v0.41.1 — Stage 3 verification: allowlist refuted, doc sufficiency confirmed
+
+**2026-06-11. Attribution: autonomous-mode-stage3-permission-verdict-2026-06-11 (lived-friction-triggered). Class: patch (engine-doc §rewrite + canvas update; no new convention).**
+
+**Background.** v0.41.0 shipped with exactly one Unverified claim, gated on the first autonomous run under the doc: does a settings allowlist override the headless sensitive-file denial on `.claude/` writes? The Stage 3 run settled it the same day — launched headless against the 0.41.0 plugin (installed from the local repo via the directory-source marketplace), with the doc's exact allowlist in the sandbox's `settings.json` and the substitution rules deliberately ABSENT from the run prompt (declaration-only), so the run isolated both open questions at once.
+
+**Findings (interventional):**
+
+- **Allowlist REFUTED**: `Write(.claude/evals/**)` was explicitly allow-listed and the write was still denied — *"Claude requested permissions to edit … which is a sensitive file."* Replicated with an isolated single-purpose probe before propagating (the run's claim was not taken on its own authority). Sensitive-file protection outranks allow rules in headless mode.
+- **Fallback gap**: the documented `mycelium-state/` mirror was itself unreachable — headless default-denies anything without a rule, and the mirror paths had none. A fallback that needs an ungrantable permission is no fallback.
+- **Doc sufficiency CONFIRMED**: with zero rules in the prompt, the run applied the correct rungs everywhere, honored the pre-commit ordering on its Step 5 prediction, tagged all persona content `internal_simulated`, refused to fabricate interview results (test left `designed`), failed its Evidence gate honestly, touched no human-only gate, and delivered the mandated self-audit — inline, since nothing was writable. The engine doc did the job Stage 2's improvisation paragraph did.
+
+**Shipped:**
+
+- **`engine/autonomous-mode.md` §Harness-permission story rewritten**: item 1 now records the verified NO (denial message quoted); mirror paths must be pre-authorized (`Write/Edit(mycelium-state/**)`, `Write(AGENTS.md)`, `Bash(mkdir)`); NEW final fallback codified — in-conversation proposal delivery with inline ledger + handover list, demonstrated by the Stage 3 run completing its full scope with zero persistable paths. Upstream feature-request candidate noted (headless override for operator-declared state paths).
+- **`opportunities.yml` opp-011**: assumption #1 → tested: true, REFUTED; confidence 0.7 → 0.75 (the pre-committed riser — "first run under the shipped doc verifies the permission story" — fired). Assumption #2 (weaker-model boundary-holding) stays open.
+- Decision-log entry 2026-06-11 (Stage 3) with method note on why the result is clean.
+
+**Prior**: autonomous-mode-fable5-dogfood-graduation-2026-06-11 (v0.41.0).
+
 ## v0.41.0 — Autonomous mode: engine doc + per-skill hard-gate markers
 
 **2026-06-11. Attribution: autonomous-mode-fable5-dogfood-graduation-2026-06-11 (lived-friction-triggered). Class: minor (new convention with structural impact — a documented run mode; no hook, schema, or validator change).**

@@ -1125,9 +1125,9 @@ opportunities:
           - statement: "A permissions.allow entry in the project's settings.json unblocks .claude/ writes under headless sensitive-file denial"
             risk_dimension: feasibility
             importance: high
-            evidence: low
-            tested: false
-            result: ""
+            evidence: high
+            tested: true
+            result: "REFUTED 2026-06-11 (Stage 3 verification run + direct probe, interventional): Write(.claude/evals/**) allow rule present, write still denied 'sensitive file'. Sensitive-file protection outranks allow rules headless. Doc updated v0.41.1: mirror paths must be pre-authorized instead; in-conversation proposal delivery codified as final fallback (demonstrated same run). Companion positive finding: the same run, with NO substitution rules in its prompt, followed the engine doc's ladder/ledger/boundary correctly — doc sufficiency runtime-confirmed."
           - statement: "Models below Fable 5's instruction-following tier also hold the evidence-integrity boundary when the ladder authorizes rung (b)"
             risk_dimension: viability
             importance: medium
@@ -1142,7 +1142,7 @@ opportunities:
         - "external: mycelium-fable5-stage2/mycelium-state/evals/autonomous-run-log.md (Stage 2 substitution ledger + self-audit — the pattern this opp's solution codifies)"
         - "plugins/mycelium/engine/dogfood-mode.md (pre-fix state: stop-condition reframe only, no substitution authority)"
       captured_at: "2026-06-11"
-      confidence: 0.7  # Test-validated on the minimal path with clean attribution (A3); capped by n=1 run, single persona/path, and the untested harness allowlist. Rises when the first autonomous run under the shipped doc verifies the permission story.
+      confidence: 0.75  # Raised 0.7 → 0.75 on 2026-06-11 when the pre-committed riser fired: the Stage 3 run under the shipped doc verified the permission story (allowlist REFUTED — doc corrected v0.41.1) AND confirmed doc sufficiency (correct rung discipline with zero substitution rules in the prompt). Remaining caps: n=2 runs, one model (Fable 5), one path; diamond-progress approval gates and metrics skills untested at runtime; weaker-model boundary-holding untested (open assumption #2).
 
 # - id: opp-001
 #   name: ""
