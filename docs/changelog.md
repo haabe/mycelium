@@ -4,6 +4,20 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-11.
 
+## v0.41.4 — CLAUDE.md dispatcher slim: 200 → 167 lines (Check 36 ratchet)
+
+**2026-06-11. Attribution: claudemd-dispatcher-slim-2026-06-11 (housekeeping). Class: patch (doc-size; no convention or behavior change).**
+
+Check 36 has standing-warned that CLAUDE.md (200 lines) is over its 150-line target. This is a ratchet step toward it: 200 → 167 by applying the dispatcher pattern to **duplicated detail only** — collapse the verbose block in CLAUDE.md to a directive + inline cue + pointer wherever the full detail already lives canonically elsewhere:
+
+- **Communication Rules** — the acceptable-form bullet lists for "name the verification surface" and "name the gate" collapse to inline forms + a pointer; full forms + graduation history already live in `harness/communication-rules.md` (named canonical).
+- **BLUF layering** — collapses to directive + pointer; the full three-block spec is `G-C1` in `guardrails-core.md`.
+- **Post-Task protocol** — four steps collapse to one line + pointer; full definition is `G-P7` in `guardrails-core.md`.
+- **Pre-Task protocol** — load-order steps collapse to one line, content preserved.
+- **Canvas Read-before-Write** — Edit/Write cost profiles + ID-scan collapse to one paragraph; the HARD RULE and every operative cue stay.
+
+**What was deliberately left.** The Pre-Ship 9-check list and the harness / key-artifact pointer indexes are intact — collapsing an active working checklist to prose trades the agent's scannable list for a line metric (Goodhart). The file is still over 150; closing that gap needs a judgment call (e.g. relocating the L0–L5 scales table to `engine/diamond-rules.md`), surfaced for the maintainer rather than forced. Validation green; every active rule and pointer preserved.
+
 ## v0.41.3 — Lint: wrap E501 in sync_derived.py (housekeeping)
 
 **2026-06-11. Attribution: ruff-e501-sync-derived-2026-06-11 (housekeeping). Class: patch (comment-only; no behavior change).**

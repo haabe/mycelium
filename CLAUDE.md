@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.41.3 -- **Attribution label: ruff-e501-sync-derived-2026-06-11** (housekeeping). Lint fix: wrapped a 126-char E501 inline comment in `scripts/sync_derived.py` (the last non-zero ruff finding across `plugins/mycelium/scripts/*.py`) onto its own line — surfaced as a pre-push WARN, fixed in-session per the no-tech-debt-deferral rule rather than carried. Comment-only; no behavior change. **PATCH** (housekeeping; no convention or behavior change). **Prior** (v0.41.2): **autonomous-mode-tier-caveat-2026-06-11** (lived-friction-triggered).*
+*Version 0.41.4 -- **Attribution label: claudemd-dispatcher-slim-2026-06-11** (housekeeping). CLAUDE.md 200 → 167 lines (Check 36 ratchet step) by collapsing duplicated detail to directive + pointer: the Communication-Rules acceptable-form bullet lists (full forms live canonically in `harness/communication-rules.md`), the BLUF block (canonical `G-C1` in `guardrails-core.md`), the Post-Task steps (canonical `G-P7`), the Pre-Task load-order, and the canvas Edit/Write/ID-scan detail. Every active rule + pointer preserved; only duplicated prose removed. Pre-Ship 9-check list and the harness/artifact pointer indexes left intact (collapsing an active checklist to prose would be Goodhart, not a dispatcher move). Still over the 150 target — the remaining gap needs a judgment call (relocate the L0-L5 scales table, etc.), surfaced not forced. **PATCH** (doc-size housekeeping; no convention or behavior change). **Prior** (v0.41.3): **ruff-e501-sync-derived-2026-06-11** (housekeeping).*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 
@@ -20,36 +20,17 @@ Mycelium is a harnessing system for AI-assisted product development. It connects
 
 **Always offer to capture learnings after each diamond phase.** Prompt: "Anything worth capturing? I'll draft the entry for corrections.md or patterns.md."
 
-**Always name the verification surface when propagating a claim you did not directly observe** (subagent output, validator wrapper text, dialog assertion, tool-result paraphrase). Acceptable forms — one satisfies the convention:
-- `Verified: ran [tool/grep/Read]` — ran the underlying tool whose output is being propagated
-- `Cited: [source path:line OR direct quote]` — traced the claim to its source
-- `Per [speaker/tool/wrapper]: [claim]` — attributed, not confirmed; signals reported-not-verified
-- `Unverified` — acknowledges the trust-gap rather than hiding it
+**Always name the verification surface when propagating a claim you did not directly observe** (subagent output, validator wrapper text, tool-result paraphrase). One form satisfies it: `Verified: ran [tool]`, `Cited: [path:line]`, `Per [speaker/tool]: [claim]` (reported, not confirmed), or `Unverified`. Definitions: `communication-rules.md`.
 
-**Always name the gate before stating a deferral, threshold, or date-based recommendation** — including pushback statements declining proposed work, which are themselves deferrals. Acceptable forms — one satisfies the convention:
-- `Gated by: [event that would unblock] — [interventional|observational]` (preferred for new output)
-- `ON HOLD (pending [X])` — canonical canvas action-flag form per `engine/canvas-guidance.yml#action_flags`
-- Natural-prose: "Wait for X before Y," "deferred pending X," "until X lands," "X remains the gate" — when the gate event is explicitly named
-
-If the gate is evidence-arrival, the date is a forecast not a commitment; say so. Without one, the causal link is invisible — the implicit-causal-link sub-class of **anti-pattern #7** *Consistency-as-Evidence*.
+**Always name the gate before stating a deferral, threshold, or date-based recommendation** — including pushback that declines proposed work (itself a deferral). One form satisfies it: `Gated by: [unblocking event] — [interventional|observational]`, the canvas `ON HOLD (pending X)` flag (`engine/canvas-guidance.yml#action_flags`), or natural-prose naming the gate event ("until X lands"). If the gate is evidence-arrival, the date is a forecast not a commitment — say so. Without a named gate the causal link is invisible — the implicit-causal-link sub-class of **anti-pattern #7** *Consistency-as-Evidence*. Forms + graduation: `communication-rules.md`.
 
 **Always read canvas state before recommending or narrating gate-status on a topic with a known canvas entry** (added v0.39.16, anti-pattern #7 graduation). When emitting a recommendation, gate-narration, blocker, or hold-status claim on a topic with an extant entry in `opportunities.yml`/`purpose.yml`/`services.yml`/other canvas state, READ the canvas file + field path FIRST and cite inline (e.g., `per purpose.yml#why`). Adjacent-surface inference MUST be tagged as inference, not asserted as gate state. Discipline analog of Read-before-Write (Check 31) applied to gate-narration; Check 41 enforces preamble presence on `/mycelium:diamond-assess` + `/mycelium:diamond-progress`. Sub-shapes covered + deferred + graduation history: `.claude/harness/communication-rules.md`.
 
-**Always layer output: BLUF first, rationale next, discipline notes last.** Per `G-C1` in `guardrails-core.md`. Every emission carrying discipline-visibility metadata (citations, attribution labels, why-not-alternatives, next skills, bias/anti-pattern references) splits into three blocks:
-
-1. **BLUF** (1-2 lines, plain register): the actionable claim. No inline citations or labels. A reader who stops here has the answer.
-2. **Rationale**: why the claim holds. No attribution metadata inline.
-3. **Discipline notes** (under a `---` rule, prefixed `Discipline notes:`): citations, attribution labels, why-not-alternatives, next skills, anti-pattern cross-references. Load-bearing — do NOT remove — but below the fold.
-
-For checklist skills: lead with verdict + top-3 findings; full checklist under the rule. Convention is a nudge, not a limit.
+**Always layer output: BLUF first, rationale next, discipline notes last** (per `G-C1` in `guardrails-core.md` — full spec there). Three blocks: **BLUF** (1-2 lines, plain, actionable — a reader who stops here has the answer), **Rationale**, then **Discipline notes** under a `---` rule (citations, attribution labels, why-not-alternatives, next skills, bias/anti-pattern refs — load-bearing, below the fold). Checklist skills: lead with verdict + top-3, full checklist under the rule. A nudge, not a limit.
 
 ## Mandatory Pre-Task Protocol
 
-Before ANY implementation task **OR non-trivial product question on a project with non-null `.claude/diamonds/active.yml`** (e.g., "what should we do next?", "add X feature", "how should we approach Y?"), load context in this order (task-specific first, background last — models attend best to early and late context):
-1. Identify which diamond you are operating within (check `.claude/diamonds/active.yml`)
-2. Load the appropriate domain context (`.claude/domains/{discovery|delivery|quality}/CLAUDE.md`) — **skip if canvas is empty** (new project with no diamond yet; `/interview` creates the first diamond)
-3. Read `.claude/memory/corrections.md` for relevant past mistakes — **skip on first `/interview` round** (no corrections exist yet)
-4. Load phase-scoped guardrails: always load `guardrails-core.md` and `harness/design-principles.md` (human-UX + chat-as-UI nudges that shape every reply); add `guardrails-discovery.md` (L0-L2), `guardrails-delivery.md` (L3-L4), or `guardrails-market.md` (L5) per current phase. See `.claude/harness/guardrails.md` for full reference.
+Before ANY implementation task **OR non-trivial product question on a project with non-null `.claude/diamonds/active.yml`** (e.g., "what should we do next?", "add X feature", "how should we approach Y?"), load context in this order (task-specific first, background last — models attend best to early and late context): (1) identify which diamond you're in (`.claude/diamonds/active.yml`); (2) load domain context (`.claude/domains/{discovery|delivery|quality}/CLAUDE.md`) — **skip if canvas is empty**; (3) read `.claude/memory/corrections.md` for relevant past mistakes — **skip on first `/interview` round**; (4) load phase-scoped guardrails — always `guardrails-core.md` + `harness/design-principles.md`, plus `guardrails-discovery.md` (L0-L2), `guardrails-delivery.md` (L3-L4), or `guardrails-market.md` (L5) per phase (`.claude/harness/guardrails.md` for full reference).
 
 ## Mandatory Pre-Ship Protocol (G-P-pre)
 
@@ -72,13 +53,7 @@ The findings drive what ships now vs defers. Real findings change the plan. Thea
 
 ## Mandatory Post-Task Protocol (G-P7)
 
-After completing ANY batch of changes, before reporting done:
-1. **Verify**: If changes span repos, diff changed files for consistency. Check reference integrity (counts, cross-links, no orphans).
-2. **Corrections**: Did any mistakes happen during this task? Log to `corrections.md`, update TL;DR.
-3. **Patterns**: Did anything reusable emerge? Log to `patterns.md`.
-4. **Sync**: Ensure both repos match on all changed files.
-
-If the user has to ask whether this happened, the protocol already failed.
+After completing ANY batch of changes, before reporting done: (1) **Verify** — diff changed files for consistency + reference integrity (counts, cross-links, no orphans), across repos if changes span them; (2) **Corrections** — log any mistakes to `corrections.md` + update TL;DR; (3) **Patterns** — log anything reusable to `patterns.md`; (4) **Sync** — ensure both repos match. Full definition: `G-P7` in `guardrails-core.md`. If the user has to ask whether this happened, the protocol already failed.
 
 ## The Diamond Engine
 
@@ -125,15 +100,7 @@ All product knowledge lives in `.claude/canvas/*.yml`. These files are:
 
 Canvas files should include `_meta` blocks for versioning and staleness detection (see `canvas-guidance.yml`). Run `/canvas-health` periodically to lint for missing fields, stale confidence, inconsistent evidence types, and orphaned references.
 
-**Canvas writes — Read before Write (HARD RULE).** Every canvas file ships pre-populated as a template, so on a fresh project every `.claude/canvas/*.yml` already exists. Claude Code's `Write`/`Edit` tools require a prior **`Read` tool** invocation (same tool, same session) on existing files. **`cat` / `head` / `grep` via Bash do NOT satisfy this check** — different tool surfaces.
-
-**Edit vs Write — different cost profiles** (verified 2026-05-14):
-- **`Edit`**: `Read` with `limit: 1` satisfies the check at ~50 tokens. State-tracking is per-file, not per-byte — subsequent `Edit` calls work anywhere in the file. Use this for partial updates against large canvas files (e.g., `purpose.yml` at 800+ lines).
-- **`Write`**: do a **full Read** first. Write obliterates the file; you should see what you're about to replace. The `limit:1` shortcut is *not* appropriate here.
-
-**ID-bearing entries — scan the ID space before assigning** (added 2026-05-15): When adding a new component, opportunity, solution, or any other ID-bearing entry to a canvas file, run `grep "^  - id: <prefix>-" .claude/canvas/<file>.yml | sort -u` first and pick the next free integer. `validate_canvas.py` lines 230-239 catch duplicate IDs on CI, but a duplicate can persist for days in the working tree if CI doesn't run between edit and discovery. Kin to anti-pattern #8 (Stale State Read): reading enough of the file to satisfy the Edit check but not enough to see existing ID assignments.
-
-Validator Check 31 enforces Preflight-block presence; the rule stays in sync via the canonical block. Graduation history (Preflight blocks, `limit:1` cost discipline, ID-scan — v0.23.x) is in `docs/changelog.md` and roadmap `corrections.md` 2026-05-15.
+**Canvas writes — Read before Write (HARD RULE).** Canvas files ship pre-populated, so every `.claude/canvas/*.yml` exists on a fresh project. `Write`/`Edit` require a prior **`Read` tool** call (same session); **`cat`/`head`/`grep` via Bash do NOT satisfy it** (different tool surfaces). **`Edit`**: `Read limit:1` suffices (~50 tokens; state is per-file — reuse across edits; use for large files like `purpose.yml`). **`Write`**: full Read first (it obliterates the file). **ID-bearing entries**: run `grep "^  - id: <prefix>-" .claude/canvas/<file>.yml | sort -u` before assigning and pick the next free integer (`validate_canvas.py` catches dupes on CI but a working-tree dupe can persist for days; kin to anti-pattern #8 Stale State Read). Validator Check 31 enforces the Preflight block; cost-discipline + ID-scan graduation history in `docs/changelog.md`.
 
 ## Harnessing System
 
