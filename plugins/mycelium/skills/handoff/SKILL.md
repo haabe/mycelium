@@ -56,13 +56,14 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
    - `usability_test` -- test a prototype or concept with a real user
    - `stakeholder_meeting` -- align with a decision-maker or domain expert
    - `experiential_research` -- try a competitor product yourself with structured observation
+   - `outreach` -- outbound contact or a post on a channel (DM, article, community post); often paired with pre-committed observation thresholds for the response/funnel signal
 
 3. **Generate Task Brief**:
 
    ```
    ## Task Brief: [Objective in one sentence]
 
-   **Type**: [interview/observation/survey/usability_test/stakeholder_meeting/experiential_research]
+   **Type**: [interview/observation/survey/usability_test/stakeholder_meeting/experiential_research/outreach]
    **Diamond**: [diamond ID and name]
    **Evidence gap**: [which canvas section needs external evidence]
    **Priority**: [high/medium/low]

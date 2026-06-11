@@ -16,7 +16,7 @@
           "id": {"type": "string"},
           "type": {
             "type": "string",
-            "enum": ["interview", "observation", "survey", "usability_test", "stakeholder_meeting", "experiential_research"]
+            "enum": ["interview", "observation", "survey", "usability_test", "stakeholder_meeting", "experiential_research", "outreach"]
           },
           "objective": {"type": "string"},
           "target_persona": {"type": "string"},

@@ -4,6 +4,18 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-11.
 
+## v0.41.5 — Add `outreach` to the human-tasks type enum
+
+**2026-06-11. Attribution: human-tasks-outreach-type-2026-06-11 (lived-friction-triggered). Class: patch (schema enum addition + skill sync; additive, backward-compatible).**
+
+**Friction.** The `human-tasks.schema.json` task-type enum (`interview, observation, survey, usability_test, stakeholder_meeting, experiential_research`) had no value for outbound contact or channel posts — yet both `/handoff` and `/log-evidence` already named "outreach" in their descriptions. Outbound tasks were being shoehorned into ill-fitting types with `# semantic intent:` comments (dogfood evidence: roadmap `ht-009` → `usability_test`, `ht-026` Discord post → `observation`). N=2 canvas instances + N=2 skill-description promises = a missing enum value, not an edge case.
+
+**Change.**
+- `schemas/canvas/human-tasks.schema.json`: enum gains `outreach`.
+- `skills/handoff/SKILL.md`: type list + brief template gain `outreach` (outbound contact or post — DM, article, community post; often paired with pre-committed observation thresholds for the response/funnel signal), closing the schema-vs-skill misalignment.
+
+Additive and backward-compatible — existing entries stay valid; `additionalProperties: true` already admits outreach-specific fields (watch_points, pre_committed_thresholds). No skill switches on the enum values, so no missing branch. Roadmap `ht-026` can now retype from the `observation` shoehorn to `outreach`.
+
 ## v0.41.4 — CLAUDE.md dispatcher slim: 200 → 167 lines (Check 36 ratchet)
 
 **2026-06-11. Attribution: claudemd-dispatcher-slim-2026-06-11 (housekeeping). Class: patch (doc-size; no convention or behavior change).**
