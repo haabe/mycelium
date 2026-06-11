@@ -38,6 +38,16 @@ gh api repos/$TARGET/traffic/popular/referrers
 gh api repos/$TARGET/traffic/popular/paths
 ```
 
+**Star landing DATES (optional, for star attribution).** The five calls above give star *counts* but never *when* a star landed, so a count delta can only ever be `consistency_only` on cause. To capture per-date landings — which lets a pull check whether new stars fell inside a known event window (a post/launch date) — pull `starred_at` timestamps:
+
+```
+gh api repos/$TARGET/stargazers --paginate -H "Accept: application/vnd.github.star+json" --jq '.[].starred_at'
+```
+
+- **Privacy (HARD RULE): bucket to dates, never persist usernames.** The `star+json` payload includes `user.login` — do NOT write it to the snapshot. Reduce the stream to per-date counts before emitting (`.[].starred_at` already drops the login above). Stargazer identity is third-party PII; committed snapshots stay identity-free per privacy-by-design. Username lookups are an ad-hoc live operation only, never committed.
+- **Cost guard.** Stargazers paginate oldest-first; reaching recent stars on a large repo costs `ceil(stars/100)` calls. Pull this only when `primary_counts.stars <= 1000`; above that, skip it and note `stargazer_dates: skipped (cost guard, stars > 1000)` in the snapshot.
+- Emit only the dates inside the snapshot window (`window_days`); older landings are not attribution-relevant and stay uncounted.
+
 Notes:
 - Traffic endpoints return the last 14 days only.
 - Data updates hourly.
@@ -76,6 +86,11 @@ referrers:
 top_paths:
   - { path: "<path>", count: <int>, unique: <int> }
 
+stargazer_dates:                  # OPTIONAL (added plugin v0.41.6); omit if not pulled or cost-guarded
+  in_window:                      # date-only; usernames NEVER persisted (privacy-by-design)
+    "YYYY-MM-DD": <int>           # count of stars that landed that day, within window_days
+  window_total: <int>            # stars landed inside the window
+
 custom_signals:
   clone_to_star_ratio: <float>    # clones.total / max(primary_counts.stars, 1)
   view_to_clone_ratio: <float>    # views.total / max(clones.total, 1)
@@ -102,6 +117,7 @@ When computing deltas against the prior snapshot:
 - **primary_counts**: current minus prior, plus days-since-prior.
 - **traffic.views / traffic.clones**: highlight the newest day not present in the prior snapshot. Window-to-window totals are approximate because the 14-day window overlaps.
 - **referrers / top_paths**: report new entries, dropped entries, and rank shifts ≥3 positions.
+- **stargazer_dates** (if captured): report the date(s) new stars landed on since the prior snapshot, and flag any landing inside an active event window (a post/launch/outreach date from a human-task or canvas event). A star whose date aligns with a known event is stronger than a bare count delta — but date-alignment alone stays `consistency_only` (a date is not a source; concurrent referrers remain equally plausible). The signal it DOES settle cleanly: whether N new stars fell in-window at all, which a count delta across overlapping pulls cannot.
 
 ## Canvas routing
 

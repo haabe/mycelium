@@ -4,6 +4,20 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-11.
 
+## v0.41.6 — GitHub adapter: optional date-only stargazer capture
+
+**2026-06-11. Attribution: github-adapter-stargazer-dates-2026-06-11 (lived-friction-triggered). Class: patch (reference-adapter capability + privacy rule; additive, backward-compatible).**
+
+**Friction.** Every `/metrics-pull` star increment is marked `consistency_only` on cause because the adapter captures only `stargazers_count` — *how many*, never *when*. So a count delta across overlapping 14-day windows can't even confirm whether a new star fell inside a known event window. Surfaced live by the ht-026 Discord-funnel question (was the +1 star tied to the 2026-06-10 post?) — unanswerable from the count alone.
+
+**Change.** `jit-tooling/metrics-adapters/github.md` gains an OPTIONAL `starred_at` pull (`/stargazers` with the `star+json` media type), normalized to `stargazer_dates.in_window` — a `{ "YYYY-MM-DD": count }` map of star landings inside the window. A new delta rule flags landings that fall in an active event window.
+
+- **Privacy HARD RULE**: bucket to dates, **never persist usernames**. The payload carries `user.login`; it is dropped before emit. Stargazer identity is third-party PII and stays out of committed snapshots — identity lookups are ad-hoc live only.
+- **Cost guard**: stargazers paginate oldest-first, so reaching recent stars costs `ceil(stars/100)` calls; pull only when `stars ≤ 1000`, else skip with a note.
+- **Honest about what it settles**: date-alignment confirms *whether N stars fell in-window* (which the count delta cannot), but stays `consistency_only` on *cause* — a date is not a source; concurrent referrers remain equally plausible.
+
+Additive and backward-compatible — old snapshots simply lack the field; the delta rule no-ops when it's absent. No schema-validation or skill change (the metrics-pull skill consumes adapter sections generically).
+
 ## v0.41.5 — Add `outreach` to the human-tasks type enum
 
 **2026-06-11. Attribution: human-tasks-outreach-type-2026-06-11 (lived-friction-triggered). Class: patch (schema enum addition + skill sync; additive, backward-compatible).**
