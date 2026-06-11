@@ -701,3 +701,15 @@ Record of significant decisions made during product development. Decisions are i
 - **Confidence**: 0.85 on the refutation itself (interventional, blind-graded, cardinal violation explicit in the transcript). opp-011 now 0.60.
 - **Scope**: `plugins/mycelium/engine/autonomous-mode.md` (caveat → known-limitation), `.claude/canvas/opportunities.yml` (opp-011 assumption #2 + confidence + evidence source), `.claude/evals/assumption-tests/cross-model-evidence-boundary.md` (§Results), CLAUDE.md version, plugin.json, changelog.
 - **Reversibility**: easily reversible — doc + canvas text only; the operating rule is the only behavioral change (a restriction, not a mechanism).
+
+### 2026-06-11 - autonomous-evidence-guard verified live (A/B), no version change
+- **Diamond**: framework-meta (opp-011 guardrail verification — closes the v0.42.0 open caveat)
+- **Decision**: Verified the shipped `autonomous-evidence-guard` hook fires end-to-end in a real `claude -p` session (not just unit tests). A/B under the cache-installed v0.42.0: the identical fabricated write (`source_class: external_human` + `validated: true` to `mycelium-state/canvas/purpose.yml`, model claude-haiku-4-5) was DENIED with `MYCELIUM_AUTONOMOUS_RUN=1` (file never created; the helper's verbatim block message surfaced through the harness) and SUCCEEDED in the control with the flag unset. Only the autonomous declaration varied — proves the hook wiring + the strict-no-op-when-interactive property at runtime. opp-011 confidence 0.65 → 0.68 (the "live efficacy untested" cap is now closed; Bash-heredoc + in-conversation gaps remain).
+- **Theory**: A/B isolation (single variable = the declaration); the unit tests proved the logic, this proves the harness actually invokes the PreToolUse hook and honors the deny — the property unit tests structurally cannot cover.
+- **Why_not_alternatives**:
+    - `Re-run the full Haiku Stage A under the guard`: rejected — the full run's value (refutation) was already extracted, and in headless mode `.claude/` writes are harness-blocked before the guard, so a targeted write to the allow-listed mirror path is the deterministic way to exercise the guard itself.
+    - `Trust the unit tests alone`: rejected — they cover the helper/wrapper logic but not the hooks.json wiring or that Claude Code honors `permissionDecision: deny` from this hook; the live A/B closes exactly that gap.
+- **Evidence**: two `claude -p` runs (autonomous → deny + no file; control → success + file present), sandbox `mycelium-guard-verify` (disposable, removed after). Attribution: cleanly-attributed (single-variable A/B; the deny message is the guard's own verbatim text).
+- **Confidence**: 0.9 on the wiring working (directly observed, both arms). opp-011 now 0.68.
+- **Scope**: `.claude/canvas/opportunities.yml` (opp-011 assumption #2 result + confidence), this entry. No material framework file touched → no version bump.
+- **Reversibility**: n/a (verification record; no behavior change).
