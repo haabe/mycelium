@@ -4,6 +4,12 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-11.
 
+## v0.42.3 — System card: disclose autonomous mode + the evidence guard (/xai-check)
+
+**2026-06-11. Attribution: system-card-autonomous-disclosure-2026-06-11 (lived-friction-triggered). Class: patch (system-card doc refresh; no behaviour change).**
+
+`/xai-check` fifth audit against `svc-mycelium`. The system card had drifted six patches behind — it disclosed nothing about the autonomous operational mode (shipped v0.41.0) or the `autonomous-evidence-guard` (v0.42.0), a Stage-4 disclosure gap on a substantive new capability with a transparency angle (an AI that can run with no human in the loop). `docs/ai-system-card.md` now discloses it across §2 (two operational modes; autonomous is declaration-only, a present human always outranks the flag), §3 (guard in the hook list; runtime is decision-maker except under a declared autonomous run), §4 (autonomous evidence-integrity is model-dependent — enforced for the cardinal write-path, prose-only otherwise, does NOT transfer below Fable 5 per opp-011 Stage A; operating rule + residual gaps stated honestly), and §5 (autonomous operation disclosed + gated with a mandatory substitution ledger). Other XAI stages (tier limited, fidelity C1, recourse) carried forward unchanged from the 2026-06-05 audit. `svc-mycelium.xai` remediation_history updated in the roadmap dogfood.
+
 ## v0.42.2 — hooks/README catch-up: document the full PreToolUse hook chain
 
 **2026-06-11. Attribution: hooks-readme-guard-catchup-2026-06-11 (lived-friction-triggered). Class: patch (hook doc; no behaviour change).**

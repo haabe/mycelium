@@ -11,8 +11,8 @@ This is not a marketing document, a technical whitepaper, or a compliance certif
 ## 1. Identity
 
 - **System name:** Mycelium — Theory-Guided Agentic Product Development Framework
-- **Version:** 0.42.2 (canonical source: the `*Version X.Y.Z` line in `CLAUDE.md`; mechanical tokens here — version, skill count — are kept in sync by `scripts/sync_derived.py`, not hand-edited)
-- **Last updated:** 2026-06-05 (substantive refresh after fourth full audit; see §9)
+- **Version:** 0.42.3 (canonical source: the `*Version X.Y.Z` line in `CLAUDE.md`; mechanical tokens here — version, skill count — are kept in sync by `scripts/sync_derived.py`, not hand-edited)
+- **Last updated:** 2026-06-11 (fifth audit — `/xai-check` refresh disclosing the autonomous operational mode + the `autonomous-evidence-guard`; see §9 / `services.yml :: svc-mycelium.xai.remediation_history`)
 - **Maintained by:** Håvard Bartnes (haabe). Issues + correspondence: [github.com/haabe/mycelium/issues](https://github.com/haabe/mycelium/issues)
 - **AI Act risk tier:** **Limited** (canonical, assessed 2026-05-04 by `/regulatory-review` — see `canvas/threat-model.yml :: regulatory_classification` for the full assessment). Mycelium is not in any EU AI Act Annex III high-risk category. AI outputs reach end users (developers) in user-affecting ways via the runtime, so Article 50 transparency obligations apply and are satisfied by this card + README + CLAUDE.md framing + runtime-level disclosure.
 
@@ -20,7 +20,7 @@ This is not a marketing document, a technical whitepaper, or a compliance certif
 
 - **Primary use:** Guide solo developers and small teams through the full product-development lifecycle (purpose → strategy → opportunity → solution → delivery → market) with theory citations, evidence gates, and a self-learning correction trail. Operated by an AI agent runtime; Mycelium provides the framing the agent applies.
 - **Intended users:** Developers comfortable working with an AI agent (Claude Code, Codex, Cursor, etc.) who want a discovery-first, theory-grounded process with explicit evidence gates. **Risk-aware builders** — those burned by building the wrong thing OR cautious enough to want to avoid it (see `canvas/landscape.yml` strategic positioning).
-- **Intended context:** Used during active product development sessions. The framework reads `CLAUDE.md` + skills + canvas state on every task; recommendations land mid-session rather than as a one-shot setup.
+- **Intended context:** Used during active product development sessions. The framework reads `CLAUDE.md` + skills + canvas state on every task; recommendations land mid-session rather than as a one-shot setup. **Two operational modes:** *interactive* (a human is present and decides — the default) and *autonomous* (a declared, headless / agent-to-agent run where the agent answers framework prompts itself under a documented substitution discipline; see `engine/autonomous-mode.md`). Autonomous mode is opt-in **by explicit declaration only** — non-interactive detection alone never activates it, and a present human always outranks the flag.
 - **Out-of-scope use:**
   - Not a legal or compliance certification tool. `/regulatory-review`, `/privacy-check`, `/threat-model` raise awareness — they don't replace qualified counsel.
   - Not a substitute for actual user research. The framework can structure interviews and audit evidence, but the evidence has to come from real users.
@@ -36,9 +36,9 @@ What Mycelium contributes on top of the runtime:
 - **Skills:** 54 skills — markdown SKILL.md files in `plugins/mycelium/skills/` (installed to `.claude/skills/`) — define structured procedures the agent invokes by name (`/interview`, `/diamond-progress`, `/xai-check`, etc.).
 - **Theory-gated state:** `.claude/canvas/*.yml` files persist evidence-supported product state; gates in `.claude/engine/theory-gates.md` block phase transitions without sufficient evidence.
 - **Corrections / patterns / warnings memory:** `.claude/memory/` accumulates failures (`corrections.md`), successes (`patterns.md`), and CI signals (`warnings-log.md`). Read before every task.
-- **Hooks:** runtime-level enforcement (`.claude/hooks/`): `framework-guard.sh` blocks framework edits to dogfood instances, `scope-gate.sh` enforces L4 scope discipline.
+- **Hooks:** runtime-level enforcement (`.claude/hooks/`): `framework-guard.sh` blocks framework edits to dogfood instances, `scope-gate.sh` enforces L4 scope discipline, and `autonomous-evidence-guard.sh` (v0.42.0) blocks fabricated/elevated evidence writes (`source_class: external_*`, `validated: true`, `evidence_type` above `speculation`) into the canvas **during a declared autonomous run** — a strict no-op when a human is present.
 
-The runtime model is therefore **the actual decision-maker**; Mycelium is the harness that constrains and informs its decisions.
+The runtime model is therefore **the actual decision-maker** — except in a declared autonomous run, where a documented substitution discipline (`engine/autonomous-mode.md`) plus the autonomous-evidence-guard govern what the agent may decide and persist without a human in the loop.
 
 ## 4. Performance and limitations
 
@@ -56,6 +56,7 @@ The runtime model is therefore **the actual decision-maker**; Mycelium is the ha
 - **Opinionated.** Mycelium bakes in specific framework choices (Torres/CDH, Cagan/Inspired, Hoskins/Scenarios, Skelton/Team Topologies, Cynefin, GIST). Teams that prefer different frameworks will need to override — not all overrides are graceful.
 - **Solo / small-team optimized.** The orchestration patterns target single-agent + single-developer dynamics. Multi-developer, multi-agent coordination is documented in `orchestration/` but less battle-tested.
 - **Vendor-runtime dependent.** AI quality is upstream of Mycelium. If Claude (or whichever runtime) produces a confidently-wrong output, the framework's gates catch *some* but not all of those failures. corrections.md exists precisely because gates miss things.
+- **Autonomous-mode evidence integrity is model-dependent.** Run headless/autonomously, the agent substitutes for the absent human. The evidence-integrity boundary (no fabricated external evidence) is *enforced as mechanism* by `autonomous-evidence-guard` for the cardinal canvas write-path, but is otherwise prose-only and **does not transfer below Fable 5** — a Haiku 4.5 run (opp-011 Stage A, 2026-06-11) fabricated `external_human` interview results and did not recognize it had. **Operating rule: do not run autonomous mode on a sub-Fable-5 model without a present human.** Residual unenforced gaps: Bash-heredoc writes, in-conversation prose fabrication, non-canonical paths (covered by the model-tier restriction, not the guard).
 
 ### Known foreseeable misuse
 
@@ -72,7 +73,7 @@ The runtime model is therefore **the actual decision-maker**; Mycelium is the ha
 
 ## 5. Explainability
 
-- **Disclosure surface.** This system card + the README's product positioning + CLAUDE.md's frontmatter version line. Users running Claude Code with Mycelium installed know they're operating an AI runtime that's been instructed by Mycelium; the runtime itself discloses AI nature (Anthropic's own disclosure).
+- **Disclosure surface.** This system card + the README's product positioning + CLAUDE.md's frontmatter version line. Users running Claude Code with Mycelium installed know they're operating an AI runtime that's been instructed by Mycelium; the runtime itself discloses AI nature (Anthropic's own disclosure). **Autonomous operation is disclosed and gated:** Mycelium can run with no human in the loop, but only under an explicit operator declaration (`engine/autonomous-mode.md`); such runs keep a mandatory substitution ledger and are subject to the evidence-integrity guard, so a human reviewing the output can see exactly which entries a machine produced and confirm no fabricated external evidence was persisted.
 - **Per-decision rationale.** The framework's Communication Rule (CLAUDE.md, added 2026-05-04) requires the agent to cite the trigger of any non-trivial move with `(per: <source>)`. Sources include corrections.md entries, canvas evidence, theory gates, patterns, decision-log entries. Faithfulness is verified mechanically by the C1 instrument (`hooks/read-log.sh` + `scripts/verify_citations.py`, v0.23.8) which captures every Read tool-call and cross-references file-shaped citations against the captured log. Sample-against-population audits are the next step (see §4 evaluation methodology).
 - **Confidence signaling.** Every confidence claim must include level + evidence type + WHY appropriate + what would increase it (CLAUDE.md Communication Rules). This is calibrated, not vibes-based.
 - **Fidelity caveat.** When the agent emits rationales, they are the agent's articulation of what drove its move — not a guaranteed audit of the underlying model's computation (Lanham et al. 2023). The original self-report eval treated theatre as a kill criterion; it was retired 2026-05-12 because the instrument (agent self-recording) failed, not because the rule did. The current instrument (C1 mechanical capture) audits file-shaped citations against actual read events; theatre would surface as citations to files never read.
