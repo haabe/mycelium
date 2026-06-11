@@ -23,6 +23,12 @@
             "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/framework-guard.sh",
             "timeout": 5,
             "statusMessage": "Mycelium framework-guard (dogfood-mode only)"
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/autonomous-evidence-guard.sh",
+            "timeout": 5,
+            "statusMessage": "Mycelium autonomous-evidence-guard (autonomous-mode only)"
           }
         ]
       },
@@ -45,6 +51,12 @@
             "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/framework-guard.sh",
             "timeout": 5,
             "statusMessage": "Mycelium framework-guard (MCP filesystem — dogfood-mode only)"
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/autonomous-evidence-guard.sh",
+            "timeout": 5,
+            "statusMessage": "Mycelium autonomous-evidence-guard (MCP filesystem — autonomous-mode only)"
           }
         ]
       }

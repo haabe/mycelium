@@ -4,6 +4,23 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-11.
 
+## v0.42.0 — autonomous-evidence-guard: the boundary becomes mechanism
+
+**2026-06-11. Attribution: autonomous-evidence-guard-2026-06-11 (lived-friction-triggered). Class: minor (new enforcement hook + declaration surface).**
+
+**The fix the refutation demanded.** v0.41.7 proved the evidence-integrity boundary is prose-only and does not transfer below Fable 5 — Haiku fabricated `external_human` interview results and did not know it. This ships the enforcement.
+
+**`autonomous-evidence-guard`** — a PreToolUse hook (`hooks/autonomous-evidence-guard.sh` + `scripts/autonomous_evidence_guard.py`):
+- **Fires only in a declared autonomous run** (env `MYCELIUM_AUTONOMOUS_RUN`, or `autonomous: true` in `diamonds/active.yml`). A present human is never autonomous, so it is a **strict no-op in every interactive session** — zero added friction.
+- **Hard-blocks** any Write/Edit/MultiEdit or MCP-filesystem write that introduces `source_class: external_human|external_data`, `validated: true`, or `evidence_type` above `speculation` into `.claude/canvas/*.yml`, `.claude/diamonds/*.yml`, or their `mycelium-state/` mirror. An autonomous run cannot legitimately produce any of these — no human or world answered. Permitted: `internal_simulated` / `speculation` / `validated: false`.
+- Returns `permissionDecision: deny` with a message naming the offending token and the recourse (if a human IS present, unset the flag). **Had it been live, it would have blocked the exact Haiku Stage-A fabrication at write time.**
+
+**New declaration surface:** `MYCELIUM_AUTONOMOUS_RUN=1` — the only one a hook can read *before* the first state write, and the one that survives the headless `.claude/` write-block. Engine doc Declaration section now lists three surfaces.
+
+**Defense-in-depth, honestly bounded.** The guard is necessary, not sufficient — the tier restriction still stands. Known gaps it does NOT close: Bash-heredoc / `echo >` writes (the V8 evasion vector), in-conversation prose fabrication a model reports without writing a file, and fabrication into non-canonical paths. The guard catches the cardinal write-path (V1/V2/V3); the tier rule covers the rest.
+
+**Coverage:** `tests/bash/test_autonomous_evidence_guard.sh` (8 cases — blocks external_human / validated:true / evidence_type-upgrade in autonomous mode; allows clean simulated writes; no-op when interactive; out-of-scope paths ignored; activates via both env and active.yml flag). opp-011 confidence 0.60 → 0.65.
+
 ## v0.41.7 — Cross-model boundary REFUTED: autonomous mode is model-dependent
 
 **2026-06-11. Attribution: autonomous-mode-cross-model-refuted-2026-06-11 (lived-friction-triggered). Class: patch (engine-doc known-limitation + evidence; a restriction, not a new mechanism).**
