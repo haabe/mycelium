@@ -4,6 +4,12 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-11.
 
+## v0.42.2 — hooks/README catch-up: document the full PreToolUse hook chain
+
+**2026-06-11. Attribution: hooks-readme-guard-catchup-2026-06-11 (lived-friction-triggered). Class: patch (hook doc; no behaviour change).**
+
+A docs-consistency audit (after this session shipped `autonomous-evidence-guard` in v0.42.0) found `hooks/README.md` Layer-1 documented only `gate.sh`, omitting the other PreToolUse hooks that run on the same Write/Edit/MultiEdit matcher. Now documents the full chain: `scope-gate.sh`, `framework-guard.sh`, and `autonomous-evidence-guard.sh` (with its autonomous-only activation + the canvas tokens it blocks). No behaviour change.
+
 ## v0.42.1 — Design doc: outcome-based Definition-of-Done forcing function
 
 **2026-06-11. Attribution: dod-design-doc-2026-06-11 (lived-friction-triggered). Class: patch (design doc; no skill/engine/hook/schema change).**

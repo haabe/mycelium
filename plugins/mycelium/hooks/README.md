@@ -33,6 +33,11 @@ Total hook overhead: ~6,000 tokens/session (negligible vs typical 50K-200K sessi
 **Excludes**: `.claude/` directory edits (always allowed)
 **Only gates**: `src/`, `scripts/`, `tests/`, `lib/`, `app/`, `pages/`, `components/`, `server/`, `api/`
 
+**Sibling PreToolUse hooks (same Write/Edit/MultiEdit matcher, run alongside `gate.sh`):**
+- **`scope-gate.sh`** — scope enforcement (keeps edits within the declared work scope).
+- **`framework-guard.sh`** — blocks edits to FRAMEWORK-classified files in *dogfood instances* of an upstream Mycelium repo (active only when `.claude/state/upstream.json` exists). Also wired on `Bash` and MCP-filesystem matchers.
+- **`autonomous-evidence-guard.sh`** (v0.42.0) — evidence-integrity enforcement. **Only fires in a DECLARED autonomous run** (env `MYCELIUM_AUTONOMOUS_RUN`, or `autonomous: true` in `diamonds/active.yml`); a strict no-op in every interactive session. Hard-blocks (`permissionDecision: deny`) any write that introduces `source_class: external_human|external_data`, `validated: true`, or `evidence_type` above `speculation` into `.claude/canvas/*.yml`, `.claude/diamonds/*.yml`, or their `mycelium-state/` mirror — the fabrication a sub-Fable-5 model committed in the opp-011 Stage A run (2026-06-11). Also wired on the MCP-filesystem write/edit matcher. See `engine/autonomous-mode.md`.
+
 ### Layer 2: PostToolUse -> Write/Edit/MultiEdit (`post-write-nudge.sh`)
 **Triggers**: After any successful code edit
 **Type**: `command` (3s timeout)
