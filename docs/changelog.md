@@ -4,6 +4,12 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-11.
 
+## v0.42.4 — System card §9 audit-date fix (caught by /canvas-health 9b)
+
+**2026-06-11. Attribution: system-card-s9-audit-date-2026-06-11 (lived-friction-triggered). Class: patch (system-card §9 date; no behaviour change).**
+
+`/canvas-health` 9b sub-check (system-card content vs `services.yml :: xai.*`) caught that v0.42.3 updated §1 "Last updated" to 2026-06-11 but left §9 "Last full audit" at 2026-06-05 (the fourth audit) — a card-vs-canvas audit-date mismatch. §9 now reflects the fifth audit (autonomous-mode disclosure) with the fourth demoted to "Prior full audit." One skill (`/canvas-health`) catching another's (`/xai-check`) incomplete write is the sub-shape-6 write-narration-verification discipline working across skills.
+
 ## v0.42.3 — System card: disclose autonomous mode + the evidence guard (/xai-check)
 
 **2026-06-11. Attribution: system-card-autonomous-disclosure-2026-06-11 (lived-friction-triggered). Class: patch (system-card doc refresh; no behaviour change).**
