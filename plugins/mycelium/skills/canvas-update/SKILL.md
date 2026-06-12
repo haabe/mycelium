@@ -75,6 +75,10 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
 4. Check cross-file consistency
 5. Log in .claude/harness/decision-log.md
 
+## Output to the user
+
+**Lead with the recommendation** (Hick's Law, per `harness/design-principles.md`; graduated from two consecutive `/framework-health` 4e flags, 2026-06-05 + 2026-06-12): when more than one canvas file could host the update (the mapping table above offers options), don't present the alternatives as an open menu — name the one file you recommend and why, with alternatives one line each below. Same rule for follow-up actions: one recommended next step, not an unweighted list.
+
 ## Counter-Argument Check (Bias Mitigation)
 
 Before applying the canvas update, draft a one-line counter-argument: *"What's the strongest case AGAINST this update — what evidence or perspective would invalidate it?"* If you can't articulate one, run `/mycelium:devils-advocate` before proceeding.

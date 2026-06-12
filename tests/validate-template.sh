@@ -2119,6 +2119,65 @@ print('\n'.join(sorted(set(re.findall(r'/hooks/([A-Za-z0-9._-]+\.sh)', t)))))
 }
 
 # ============================================================
+# CHECK 45: Chat-UX axiom markers on graduated output templates
+# ============================================================
+#
+# Graduation of the /framework-health 4e chat-UX audit per its stated path:
+# "if the same skill is flagged across two assessments, promote to a
+# mechanical tests/bash check." Trigger fired 2026-06-12 (assessments
+# 2026-06-05 + 2026-06-12, temporally independent, templates unedited
+# between): Hick's-Law set re-flagged 3/3, Von Restorff set 2/3
+# (canvas-health self-resolved via its verdict line).
+#
+# Enforcement is marker-presence (same pattern as Checks 41/42): each
+# graduated skill's SKILL.md must carry the axiom lead-in its template
+# fix introduced. New skills are NOT in scope — 4e keeps auditing the
+# full surface heuristically; a skill joins this list only by the
+# two-assessment graduation path.
+check_chat_ux_axiom_markers() {
+    section "Check 45: chat-UX axiom markers on graduated output templates (4e graduation 2026-06-12)"
+
+    local skills_dir="$SKILLS_DIR"
+    if [ ! -d "$skills_dir" ]; then
+        info "Skills dir absent — Check 45 N/A"
+        return
+    fi
+
+    # skill:marker pairs. Hick set leads with a recommendation; Von Restorff
+    # set leads with a verdict.
+    local pairs=(
+        "canvas-update:Lead with the recommendation"
+        "ost-builder:Lead with the recommendation"
+        "ice-score:Lead with the recommendation"
+        "bvssh-check:Lead with the verdict"
+        "dora-check:Lead with the verdict"
+    )
+    local missing_count=0
+    local missing_list=""
+    local checked=0
+
+    for pair in "${pairs[@]}"; do
+        local skill="${pair%%:*}"
+        local marker="${pair#*:}"
+        local skill_path="$skills_dir/$skill/SKILL.md"
+        if [ ! -f "$skill_path" ]; then
+            continue
+        fi
+        checked=$((checked + 1))
+        if ! grep -q "$marker" "$skill_path"; then
+            missing_count=$((missing_count + 1))
+            missing_list="${missing_list}"$'\n'"  - $skill/SKILL.md (expected: \"$marker\")"
+        fi
+    done
+
+    if [ "$missing_count" -eq 0 ]; then
+        pass "Check 45: all $checked graduated skill(s) carry their chat-UX axiom marker (Hick recommend-lead / Von Restorff verdict-lead)"
+    else
+        fail "Check 45: $missing_count graduated skill(s) missing chat-UX axiom marker:${missing_list}. Per harness/design-principles.md + the 4e graduation path (framework-health 2026-06-05 + 2026-06-12)."
+    fi
+}
+
+# ============================================================
 # RUN ALL CHECKS
 # ============================================================
 #
@@ -2174,6 +2233,7 @@ check_read_before_recommend_preamble
 check_postflight_verify_after_write_preamble
 check_render_identifier_exposure_declaration
 check_hooks_registration_parity
+check_chat_ux_axiom_markers
 check_gv12_test_coverage
 
 # ============================================================

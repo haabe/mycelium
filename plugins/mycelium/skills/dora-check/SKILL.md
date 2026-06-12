@@ -159,8 +159,12 @@ For each field below, **compute the number first** from the raw artifact, **then
 
 ## Output
 
+**Lead with the verdict; isolate the bottleneck** (Von Restorff, per `harness/design-principles.md` — the constraining metric is the one finding the reader must not scroll past; graduated from two consecutive `/framework-health` 4e flags, 2026-06-05 + 2026-06-12):
+
 ```
 ## DORA + APEX Assessment
+
+> **Verdict: [HEALTHY | BOTTLENECK: <metric> — <one line on where the constraint lives and the first focusing step>]**
 
 ### DORA Metrics
 | Metric | Current | Level | Target | Gap |

@@ -88,8 +88,13 @@ Assess the five cultural dimensions that explain WHY DORA outcomes are what they
 
 ## Output
 
+**Lead with the verdict; make Red pop** (Von Restorff, per `harness/design-principles.md` — a declining dimension buried in a uniform table is the one thing the reader must not scroll past; graduated from two consecutive `/framework-health` 4e flags, 2026-06-05 + 2026-06-12):
+
 ```
 ## BVSSH Assessment
+
+> **Verdict: [HEALTHY | N dimension(s) RED/declining — [name them]]** — [one line on the single most important move]
+
 Date: [date]
 Diamond: [ID if applicable]
 
@@ -112,6 +117,8 @@ Diamond: [ID if applicable]
 
 Overall: [summary and recommended actions]
 ```
+
+Any **Red** cell (either table) gets a bolded `**Red**` + a one-line `Blocking:`-style callout under its table — never left as an undifferentiated table value.
 
 ## Decision Log (MANDATORY per G-P4)
 **APPEND** a `### BVSSH Assessment` entry to `.claude/harness/decision-log.md` with: all 5 dimension ratings, CALMS ratings, key evidence, recommended actions.

@@ -87,11 +87,17 @@ Are high-scoring items benefiting from availability bias, IKEA effect, anchoring
 
 ### Output
 
+**Lead with the recommendation** (Hick's Law, per `harness/design-principles.md` — a flat N-row ranking manufactures decision-tax; graduated from two consecutive `/framework-health` 4e flags, 2026-06-05 + 2026-06-12):
+
 ```
+**Recommended: [top solution] (ICE [score])** — [one line: why it leads + the single riskiest assumption to test first]
+
 | Solution | Value | Usability | Feasibility | Viability | I | C | E | ICE | Riskiest Assumption |
 |----------|-------|-----------|-------------|-----------|---|---|---|-----|---------------------|
 | ...      | risk  | risk      | risk        | risk      | X | X | X | XXX | [what to test]      |
 ```
+
+If the top two scores are within noise of each other (see Noise Check below), say so instead of manufacturing a false leader — "too close to call on current evidence; [X] would separate them" is a legitimate recommendation.
 
 ## Rules
 - Every ICE score must trace back to a Four Risks assessment — no scoring without risk evaluation first.

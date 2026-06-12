@@ -4,6 +4,18 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-12.
 
+## v0.45.2 — Chat-UX 4e graduation: five templates fixed + Check 45
+
+**2026-06-12. Attribution: chat-ux-4e-graduation-2026-06-12 (lived-friction-triggered). Class: patch (skill output templates + new marker check).**
+
+The `/framework-health` 4e chat-UX audit's graduation trigger fired: the same skills flagged across two temporally-independent assessments (2026-06-05 + 2026-06-12, templates unedited between). Per 4e's stated path, the flagged set promotes to mechanism:
+
+- **Hick's Law fixes** (option-list without a recommend-one cue): `/ice-score` output now leads with `**Recommended: [top solution]**` (with an honest too-close-to-call branch tied to the Noise Check); `/ost-builder` closes with the evidence-strongest next opportunity above the tree; `/canvas-update` recommends one host file + one next step instead of open menus.
+- **Von Restorff fixes** (blocker as undifferentiated prose): `/bvssh-check` + `/dora-check` outputs lead with a `> **Verdict:**` line; Red cells / the constraining metric get isolated callouts. (`/canvas-health` had self-resolved via its v0.39.16 verdict line — re-flag cleared, not in the graduated set.)
+- **Check 45** enforces the axiom markers on the graduated five (marker-presence, same pattern as Checks 41/42). New skills stay under 4e's heuristic audit; the only way onto Check 45's list is the two-assessment graduation path. G-V12: `tests/bash/test_check_45.sh` (6 assertions, 2 fixtures).
+
+Also this assessment: cycle-history `outcome_distribution` drift fixed (AP#7 instance #24, third of the aggregate family, pre-Check-42-expansion append — see roadmap cluster log); `agents-md-router-discipline` eval re-run after two deferred assessments — **PASS, design holding** (correct OPEN/ON HOLD classification, unmarked-default applied, no decision-authority complaint = the round-2 baseline gap stays closed; routing note: convention reached via corrections.md TL;DR rather than the designed canvas-guidance.yml hop — redundancy worked, result logged roadmap-side).
+
 ## v0.45.1 — Prevention layer: promise registry + framework-health gap-diff audit
 
 **2026-06-12. Attribution: gap-prevention-registry-2026-06-12 (lived-friction-triggered). Class: patch (spec section + skill step; no enforcement change).**

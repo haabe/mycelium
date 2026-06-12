@@ -92,6 +92,10 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
 - The OST is a living document. Update weekly with new research.
 - **Avoid the decoy effect**: do not generate weak solution variants whose only purpose is to make a preferred option look better in comparison. Each solution must stand on its own user-need rationale. If a solution exists only as a foil for another, drop it. *Source: Huber, Payne & Puto, "Adding Asymmetrically Dominated Alternatives" (1982) — adding a clearly inferior option shifts preference toward the dominating option without changing the underlying value.*
 
+## Output to the user
+
+**Lead with the recommendation** (Hick's Law, per `harness/design-principles.md`; graduated from two consecutive `/framework-health` 4e flags, 2026-06-05 + 2026-06-12): after building or updating the tree, do NOT end on a flat dump of branches. Close with one line naming the opportunity (or leaf) the evidence most supports working next, and why — e.g., "Strongest next: opp-XXX — [N] external sources vs [M] elsewhere; its top leaf is testable this week via `/mycelium:assumption-test`." The full tree stays in the output; the recommendation sits above it.
+
 ## Canvas Output
 
 **Always update `.claude/canvas/opportunities.yml`** with the OST contents after building or updating. This is the single source of truth for the opportunity space.
