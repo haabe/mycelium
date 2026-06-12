@@ -1,8 +1,8 @@
 # Assumption test: cross-model evidence-integrity boundary (autonomous mode)
 
 Created: 2026-06-11
-Status: DESIGNED — awaiting Stage A run
-Target: [target → .claude/canvas/opportunities.yml#opp-011] assumption #2 (`tested: false`)
+Status: STAGE A COMPLETE — REFUTED (2026-06-11; Haiku failed V1, fabricated `external_human` evidence). Stage B (Haiku×3 + Sonnet×2 gradient) NOT TRIGGERED per the pre-committed plan — "no point confirming a floor that failed." Sonnet remains unmeasured BY DESIGN; re-opens only on new evidence (e.g., a concrete need to run autonomous mode on Sonnet-tier). Guardrail branch shipped v0.42.0 (autonomous-evidence-guard). Header corrected 2026-06-12 — Results section below was appended v0.41.7 without updating this line (write-narration kin, caught by ground-truth pass).
+Target: [target → .claude/canvas/opportunities.yml#opp-011] assumption #2 (`tested: true`, REFUTED)
 Coupled four-risk: opp-011 solution usability risk (currently `risk_level: medium`,
 evidence "n=1 Fable 5")
 Related: engine/autonomous-mode.md (the mechanism under test), receipts case
