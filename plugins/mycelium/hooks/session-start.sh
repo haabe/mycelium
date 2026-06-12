@@ -8,6 +8,33 @@ REMINDERS=""
 NOW=$(date +%s)
 
 # ============================================================
+# CHECK 0: State-file parse sanity (fail-open, but LOUD)
+# ============================================================
+# Every later check that reads diamonds/active.yml degrades to defaults on
+# parse failure (deliberate fail-open — a hook must never block a session on
+# corrupt state). But silent degradation let the dogfood repo's active.yml sit
+# committed-unparseable for >=3 days with every hook reporting defaults
+# (corrections.md 2026-06-12). This check keeps the fail-open behavior and
+# removes the silence: if the state file exists but does not parse, say so
+# first, before any defaulted check output.
+if [ -f "$PROJECT_DIR/.claude/diamonds/active.yml" ]; then
+  PARSE_ERR=$(python3 -c "
+import yaml, sys
+try:
+    with open(sys.argv[1]) as f:
+        yaml.safe_load(f)
+except yaml.YAMLError as e:
+    msg = str(e).split(chr(10))[0]
+    print(f'STATE-FILE BROKEN: .claude/diamonds/active.yml does not parse ({msg}). Every hook and skill reading diamond state is silently falling back to defaults until this is fixed. Run validate_canvas.py (validates diamonds/ as of v0.44.x) or inspect the file — common cause: unescaped double-quotes inside a quoted notes:/description: scalar.')
+except OSError:
+    pass
+" "$PROJECT_DIR/.claude/diamonds/active.yml" 2>/dev/null || echo "")
+  if [ -n "$PARSE_ERR" ]; then
+    REMINDERS="${REMINDERS}${PARSE_ERR} "
+  fi
+fi
+
+# ============================================================
 # CHECK 1: BVSSH health check cadence (monthly)
 # ============================================================
 # Path resolution: MYCELIUM_BVSSH_CANVAS env var override takes precedence,
@@ -444,6 +471,38 @@ if hits:
 
   if [ -n "$CROSS_REPO_WARNING" ]; then
     REMINDERS="${REMINDERS}${CROSS_REPO_WARNING} "
+  fi
+fi
+
+# ============================================================
+# CHECK 9: Diamonds missing an outcome Definition of Done
+# ============================================================
+# A diamond with no explicit definition_of_done defaults its "done" to the
+# implicit-harshest, least-controllable outcome — wrong for validating purpose
+# and a demotivation engine (docs/design/definition-of-done.md). Retrofit
+# detector for /mycelium:define-done. NUDGE tier, observability only.
+if [ -f "$PROJECT_DIR/.claude/diamonds/active.yml" ]; then
+  DOD_WARNING=$(python3 -c "
+import yaml, sys
+try:
+  with open(sys.argv[1]) as f:
+    data = yaml.safe_load(f) or {}
+  TERMINAL = {'archived', 'killed'}
+  missing = []
+  for d in data.get('active_diamonds', []) or []:
+    if d.get('state') in TERMINAL:
+      continue
+    dod = d.get('definition_of_done') or {}
+    if not (isinstance(dod, dict) and dod.get('outcome') and dod.get('signal')):
+      missing.append('{} ({})'.format(d.get('id', '?'), d.get('scale', '?')))
+  if missing:
+    print('{} diamond(s) have no outcome Definition of Done: {}. Run /mycelium:define-done to pin what behaviour-change marks each done — the Deliver->Complete gate blocks without it.'.format(len(missing), ', '.join(missing[:4]) + ('...' if len(missing) > 4 else '')))
+except Exception:
+  pass
+" "$PROJECT_DIR/.claude/diamonds/active.yml" 2>/dev/null || echo "")
+
+  if [ -n "$DOD_WARNING" ]; then
+    REMINDERS="${REMINDERS}${DOD_WARNING} "
   fi
 fi
 

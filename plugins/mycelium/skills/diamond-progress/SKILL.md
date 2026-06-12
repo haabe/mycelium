@@ -139,7 +139,7 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
    - **Render the updated journey map**: Follow `${CLAUDE_PLUGIN_ROOT}/engine/wayfinding.md` to show the user where they've moved to. This makes the transition visible — the user sees their position shift on the map.
    - Log transition in `.claude/harness/decision-log.md`. If threshold was adapted, include: "Threshold adapted from [base] to [effective] because project_type=[type]. Would increase with [action]."
    - Update `.claude/memory/product-journal.md`.
-   - Identify if child diamonds should be spawned.
+   - Identify if child diamonds should be spawned. **For each child diamond spawned, run `/mycelium:define-done` before it goes live** — pin its outcome `definition_of_done` and set `rolls_up_to` naming which parent outcome it serves (contribution-not-summation). A child born without a done-bar inherits the implicit-harshest-bar problem.
    - **Capture learnings** (see Learning Capture section below)
 
 10. **If blocked or needs evidence**:
@@ -228,6 +228,13 @@ Check `product_type` from `.claude/diamonds/active.yml` to determine which auto-
 - If all "not-assessed" and product handles user data: **GATE FAILED** -- "Run /mycelium:privacy-check."
 
 ### Always Required (REVIEW)
+
+**Outcome Definition of Done met (REVIEW)**:
+- Read `.claude/diamonds/active.yml` for this diamond's `definition_of_done` (the outcome bar, distinct from the quality checklist below — set at birth via `/mycelium:define-done`).
+- If the field is **absent**: **GATE FAILED** — "This diamond has no outcome Definition of Done. Run `/mycelium:define-done` to pin what behaviour-change marks it done before completing." (Do not silent-fill — the question is what produces a real bar.)
+- If present: the gate passes only when **either** the `signal` is met with evidence (cite the canvas/decision-log source), **OR** the `kill_criterion` (state+date) has fired with evidence — done-by-invalidation, which must route through `/mycelium:diamond-progress kill` + `dogfood-mode`, not be declared here. If neither holds: **GATE FAILED** — report which (signal unmet / kill-date not reached) and stay in Deliver.
+- **Child diamonds**: also verify the outcome `rolls_up_to` the parent — the parent outcome moved or the parent assumption validated. A child that shipped but did not move the parent is not done (contribution-not-summation).
+- This is the diamond-level outcome gate; the items below are per-feature quality. Both must pass.
 
 **Success criteria declared (G-V11 REVIEW)**:
 - Check: Does .claude/harness/decision-log.md have success criteria recorded for this delivery (from `/mycelium:preflight`)?

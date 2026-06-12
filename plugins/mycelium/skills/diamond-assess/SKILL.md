@@ -41,6 +41,11 @@ Evaluate current diamond state and recommend next action.
    - Confidence score with breakdown
    - Blockers or risks
 
+2b. **Surface parked diamonds with resume conditions**:
+   - Read `.claude/diamonds/active.yml` for diamonds with `state: parked` (or a `parked_diamonds` section).
+   - For each, evaluate `resume_conditions` against current canvas/world state. If the awaited condition now holds, surface it as resumable: "Parked: [id] (parked [date], condition: '[condition]'). That looks satisfied — resume?" If not yet met, list it with its condition in one line. If a parked diamond has NO `resume_conditions`, flag it (unreachable except by memory — add conditions or decide park → kill).
+   - Implements the surface promised in `/mycelium:diamond-progress` § Park; found unimplemented by the 2026-06-12 gap analysis (no skill read `resume_conditions`).
+
 3. **Check theory gates for next transition**:
    - Reference ${CLAUDE_PLUGIN_ROOT}/engine/theory-gates.md for the current transition
    - Check `product_type` from `.claude/diamonds/active.yml` -- gates conditioned on product_type include:
@@ -85,6 +90,11 @@ Evaluate current diamond state and recommend next action.
    - Flag any missing perspectives as a gap: "Design perspective not yet applied at L[X]. Consider running `/mycelium:usability-check` or `/mycelium:service-check`."
    - If perspectives are in conflict, recommend `${CLAUDE_PLUGIN_ROOT}/engine/perspective-resolution.md`.
 
+7c. **Check outcome Definition-of-Done presence** (retrofit detector for `/mycelium:define-done`):
+   - Read `.claude/diamonds/active.yml` for this diamond's `definition_of_done` (non-empty `outcome` + `signal`).
+   - If **absent**: surface it before the coaching check — "This diamond has no explicit outcome Definition of Done, so 'done' is defaulting to the implicit-harshest bar. Run `/mycelium:define-done` to pin it (problem → signal → kill-criterion)." This is the validated retrofit path — the *question* is what produced a real bar ("fits, not ships") when L0 was retrofitted; a back-filled field is not. Cite `per diamonds/active.yml` (field absent).
+   - If present, carry its `signal` into the coaching check below as the concrete "what does done look like" answer rather than re-eliciting it.
+
 8. **Coaching check** (Rother's Coaching Kata):
    Surface these five questions in the output to prompt the human's thinking:
    1. What is the **target condition** for this diamond? (What does "done" look like?)
@@ -116,7 +126,7 @@ Evaluate current diamond state and recommend next action.
 
 12. **Report harness thickness** (informational):
     - Count: total skills, active guardrails, mandatory reads, hooks, theory gates
-    - Current: 54 skills, 38 guardrails, 4 mandatory reads, 5 hook layers, 13 gates
+    - Current: 55 skills, 38 guardrails, 4 mandatory reads, 5 hook layers, 13 gates
     - If thickness has increased since last assess, note it
     - This is observability, not a gate — purely informational
     - *Source: Trivedy (Anatomy of an Agent Harness, LangChain blog — "scaffolding should decrease as models improve," but harnesses remain valuable as they engineer systems around model intelligence)*

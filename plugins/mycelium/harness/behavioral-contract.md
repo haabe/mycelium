@@ -26,6 +26,8 @@ Scope note: this is the *agent self-governance* contract. The *product* behavior
 | A8 | Run the Post-Task verify/corrections/patterns/sync protocol before reporting done | `CLAUDE.md` § Mandatory Post-Task Protocol (G-P7) |
 | A9 | `Read` (the tool) a canvas file before `Write`/`Edit`; scan the ID space before assigning an ID | `CLAUDE.md` § The Canvas — Read before Write |
 | A10 | Pass applicable theory gates with demonstrated evidence — never "confident enough" | `engine/theory-gates.md`; `CLAUDE.md` § Theory Gates |
+| A11 | Read canvas state (file + field path, cited inline) before recommending or narrating gate-status on a topic with a known canvas entry; tag adjacent-surface inference as inference | `CLAUDE.md` § Communication Rules; Check 41 |
+| A12 | Verify value fields actually changed (re-read) before narrating "updated/wrote/refreshed [canvas]" — a freshness stamp is not an update | `CLAUDE.md` § Communication Rules; Check 42 |
 
 ## Must never
 

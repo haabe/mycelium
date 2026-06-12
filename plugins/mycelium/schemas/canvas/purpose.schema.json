@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mycelium.dev/schemas/canvas/purpose.schema.json",
+  "title": "Purpose Canvas",
+  "description": "L0 Purpose — Sinek Golden Circle (why/how/what) + JTBD anchoring. The framework's entry-point canvas, written first by /interview. Permissive by design: only type-pins the established top-level keys; a fresh brief writes a minimal subset. Added 2026-06-12 (gap analysis: the L0 entry point had no schema).",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "$ref": "_common.schema.json#/$defs/schema_version"
+    },
+    "why": {
+      "type": "string",
+      "description": "Purpose statement — why this exists (Sinek)."
+    },
+    "how": {
+      "type": "array"
+    },
+    "what": {
+      "type": "array"
+    },
+    "who": {
+      "type": "object",
+      "description": "Who it's for — JTBD-shaped user/cohort description."
+    },
+    "experience": {
+      "type": "object"
+    },
+    "experience_vision": {
+      "type": "object"
+    },
+    "workarounds": {
+      "type": ["array", "object"]
+    },
+    "constraints": {
+      "type": ["array", "object"],
+      "description": "Brown constraint surfacing (interview Phase 5b)."
+    },
+    "technical_capabilities_required": {
+      "type": "array"
+    },
+    "technical_constraints": {
+      "type": "object"
+    },
+    "ethical_boundaries": {
+      "type": "array"
+    },
+    "trajectory": {
+      "type": "object"
+    },
+    "definition_of_done": {
+      "type": "object",
+      "description": "L0 outcome bar (worked instance lives here in dogfood; canonical per-diamond field is diamonds/active.yml — see schemas/diamonds/active.schema.json)."
+    },
+    "evidence": {
+      "type": "object"
+    },
+    "anti_states": {
+      "type": ["array", "object"]
+    },
+    "architecture_invariants": {
+      "type": "array"
+    },
+    "_meta": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": true
+}

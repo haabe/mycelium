@@ -1,0 +1,9 @@
+active_diamonds:
+  - id: l0-test
+    scale: L0
+    phase: deliver
+    confidence: 0.6
+    definition_of_done:
+      outcome: "users keep choosing it"
+      signal: "second session within a week"
+      kind: lagging

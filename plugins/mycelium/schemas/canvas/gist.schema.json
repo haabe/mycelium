@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mycelium.dev/schemas/canvas/gist.schema.json",
+  "title": "GIST Canvas",
+  "description": "L3 GIST planning (Gilad): goals, ideas, steps, tasks. Permissive: type-pins the four GIST collections; idea-level fields (ice_score, source_leaf_id) stay open for /canvas-health cross-reference checks rather than schema enforcement. Added 2026-06-12 (gap analysis).",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "$ref": "_common.schema.json#/$defs/schema_version"
+    },
+    "goals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "provenance": {
+            "$ref": "_common.schema.json#/$defs/provenance"
+          },
+          "trace": {
+            "$ref": "_common.schema.json#/$defs/trace"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "ideas": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "source_leaf_id": {
+            "type": "string",
+            "description": "OST leaf this idea derives from — cross-checked by /canvas-health step 8."
+          },
+          "provenance": {
+            "$ref": "_common.schema.json#/$defs/provenance"
+          },
+          "trace": {
+            "$ref": "_common.schema.json#/$defs/trace"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "steps": {
+      "type": "array"
+    },
+    "current_tasks": {
+      "type": "array"
+    },
+    "last_updated": {
+      "oneOf": [
+        {
+          "$ref": "_common.schema.json#/$defs/iso_timestamp"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "_meta": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": true
+}

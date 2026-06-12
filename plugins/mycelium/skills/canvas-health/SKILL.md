@@ -115,6 +115,15 @@ The failure this catches: the canvas carries open learning needs (ON HOLD / RE-G
    - **Scope-narrow** (added 2026-06-05): 8d applies to feedback-EXTRACTION tasks (interview, deep-session, observation). It does NOT apply to: warm-referral asks (the question is a relationship move, not feedback-extraction), single-question broadcast recruits (the questions are the post text, not extraction prompts), or close-the-loop receipt asks where the "question" is acknowledgment, not learning. The check should skip these task shapes when their `objective:` field clearly signals non-extraction intent; if in doubt, flag with the carve-out language ("ht-XXX appears to be a [shape] task rather than feedback-extraction — apply 8d only if extraction was the intent").
    - NUDGE-tier, not a gate. Zero-target feedback sessions are legitimate (pure discovery); the check makes the omission a visible choice rather than an oversight. Each flag names the specific ht-ID and the specific open gaps it could target.
 
+8e. **Diamond Definition-of-Done presence** (added with `/mycelium:define-done` — retrofit detector):
+
+The failure this catches: a diamond reaches Deliver (or sits in any phase) with no explicit outcome bar, so "done" defaults implicitly to the harshest, least-controllable outcome — wrong for validating purpose and a demotivation engine (see `docs/design/definition-of-done.md`).
+
+   - Read `.claude/diamonds/active.yml`. For each diamond in `active_diamonds` whose state is not terminal (NOT `archived`/`killed`), check for a `definition_of_done` block with non-empty `outcome` and `signal`.
+   - If missing or stub-empty: flag (NUDGE) — "Diamond [id] ([scale], [phase]) has no outcome Definition of Done. Run `/mycelium:define-done` to pin what behaviour-change marks it done. The Deliver→Complete gate will block without it." Do NOT auto-fill — the question is what produces a real bar, not the field.
+   - For child diamonds (non-null `parent`) that DO have a DoD: flag if `rolls_up_to` is absent — "Diamond [id] is a child but its DoD names no parent outcome it rolls up to (contribution-not-summation)."
+   - NUDGE-tier; names the specific diamond id and the specific action.
+
 9. **Check for boilerplate content**:
    - Flag canvas files where >50% of content matches the template defaults from ${CLAUDE_PLUGIN_ROOT}/engine/canvas-guidance.yml
    - Flag files with placeholder text ("TBD", "TODO", "fill in later", "placeholder")
@@ -200,3 +209,7 @@ Recommended actions:
 - Raschka: "Context quality = model quality" -- canvas quality determines agent output quality
 - Gilad: Confidence must be evidence-backed (confidence consistency checks)
 - Torres: Evidence triangulation (evidence type consistency)
+
+## Postflight: Verify-After-Write (claim matches state)
+
+**Hard rule** (per CLAUDE.md Communication Rules, anti-pattern #7 *write-narration-verification* — mechanism Check 42, graduated v0.39.18; enforced surface expanded to this skill v0.44.0). This skill mandates multi-field canvas updates. Before narrating "updated / wrote / refreshed [canvas]" in any user-facing summary, RE-READ the value fields this skill's MANDATORY says to update and confirm they actually changed — not just `_meta.last_validated` or a freshness stamp. Each field you claim to have updated must reflect its new value. The symmetric half of the Read-before-Write Preflight: that one protects what gets read before a write; this one protects that the write matches the claim. Worked failures: 2026-06-05 #18 (`/dora-check` narrated "updated" with value fields unchanged) + #19 (`/retrospective` left a cycle-history aggregate un-propagated).

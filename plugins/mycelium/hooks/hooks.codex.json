@@ -22,6 +22,12 @@
             "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/framework-guard.sh",
             "timeout": 5,
             "statusMessage": "Mycelium framework-guard (dogfood-mode only)"
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/autonomous-evidence-guard.sh",
+            "timeout": 5,
+            "statusMessage": "Mycelium autonomous-evidence-guard (autonomous-mode only)"
           }
         ]
       },

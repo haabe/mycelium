@@ -21,6 +21,12 @@
         "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/framework-guard.sh",
         "type": "command",
         "timeout": 5
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit|edit|write|mcp__filesystem__(write_file|edit_file|move_file)",
+        "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/autonomous-evidence-guard.sh",
+        "type": "command",
+        "timeout": 5
       }
     ],
     "postToolUse": [

@@ -419,3 +419,13 @@ _Corrections specific to a particular project, team, or context._
 - **Correction**: second Edit removed the dangling tail; version line verified single-paragraph via sed before commit.
 - **Prevention rule**: the CLAUDE.md Version line is ONE italic paragraph replaced WHOLE on every bump. old_string must span from `*Version X.Y.Z --` through the closing `.*` of the same paragraph. After any version-line edit, read the first 5 lines back and confirm exactly one `*Version ... *` paragraph before staging.
 - **Root cause kin**: anti-pattern #8 (Stale State Read) shape — edited against a remembered fragment of the line rather than its full current extent.
+
+### 2026-06-12 - New schemas validated against one corpus; pre-push hook caught null-intolerance on the other
+- **Scope**: quality
+- **Category**: engineering
+
+**Mistake**: The v0.45.0 schemas (north-star, diamonds/active) typed `last_updated` as iso_timestamp string-only. They were verified against the ROADMAP corpus (populated values) but never against THIS repo's own self-hosted canvas, where template placeholders hold `last_updated: null`. The pre-push hook blocked the push with 2 errors. Inconsistently self-applied: gist.schema.json written the same hour already carried the `oneOf [timestamp, null]` tolerance for exactly this reason.
+
+**Correction**: null tolerance added to both schemas; validator re-run against BOTH corpora (upstream self-host + roadmap dogfood) before re-push. The push-block is the system working (jidoka) — caught pre-publish.
+
+**Prevention rule**: any new/changed canvas or diamonds schema must be validated against BOTH corpora before ship: `python3 plugins/mycelium/scripts/validate_canvas.py .claude/canvas` (self-host, template-shaped nulls) AND the dogfood repo's canvas (populated shapes). One-corpus validation of a two-corpus reality is the schema-side variant of the Postel's-Law note in consistency-check-spec.md — pre-check whether a rejected value is a typo or a natural framework state.

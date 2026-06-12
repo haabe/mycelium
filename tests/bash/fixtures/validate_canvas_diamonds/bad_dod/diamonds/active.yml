@@ -1,0 +1,7 @@
+active_diamonds:
+  - id: l0-test
+    scale: L9
+    phase: deliver
+    confidence: 1.5
+    definition_of_done:
+      outcome: "users keep choosing it"

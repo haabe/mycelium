@@ -2,9 +2,9 @@
 
 **Audience**: practitioners looking up a skill, evaluators surveying capability surface.
 **Time to read**: 5 min for the table; depth lives in each `SKILL.md`.
-**Last updated**: 2026-06-08.
+**Last updated**: 2026-06-12.
 
-This index lists all 54 skills. Each skill's full behaviour lives in its `SKILL.md` — `plugins/mycelium/skills/<name>/SKILL.md` in plugin form (recommended), or `.claude/skills/<name>/SKILL.md` in legacy form (supported during transition). Loaded JIT by Claude Code. This page is an orientation map by phase; [by-category.md](by-category.md) is the alternate index by category of work.
+This index lists all 55 skills. Each skill's full behaviour lives in its `SKILL.md` — `plugins/mycelium/skills/<name>/SKILL.md` in plugin form (recommended), or `.claude/skills/<name>/SKILL.md` in legacy form (supported during transition). Loaded JIT by Claude Code. This page is an orientation map by phase; [by-category.md](by-category.md) is the alternate index by category of work.
 
 ## Onboarding & navigation
 
@@ -13,6 +13,7 @@ This index lists all 54 skills. Each skill's full behaviour lives in its `SKILL.
 | `/interview` | New project: purpose, vision, North Star, project classification | Evidence (L0) |
 | `/diamond-assess` | Resume a session: where am I and what next | — |
 | `/diamond-progress` | Move a diamond forward through gate checks | All applicable to the transition |
+| `/define-done` | Pin a diamond's outcome Definition of Done (behaviour-change, not a build-list) at birth or retrofit | Outcomes (DoD) |
 
 ## Discovery (L0–L2)
 
@@ -97,6 +98,15 @@ Read-only visualization of canvas + state surfaces. All four skills share `engin
 | `/cycle-render` | Emit `cycle-history.yml` as Mermaid gantt + pie / ascii / json. Honest small-N + class-distribution disclosure. | — |
 | `/render` | Dispatcher: routes intent to a specialist (recommends, never auto-invokes); lists what's renderable. Cross-cutting `--view traceability` research-gated to Phase 4a–4d. | — |
 
+## Setup & lifecycle
+
+| Skill | When to use | Gates it satisfies |
+|---|---|---|
+| `/start` | First command after installing the plugin: composes `/setup` + `/interview` into one flow — the recommended entry point | — |
+| `/setup` | Initialize project-state directories + starter files only (idempotent); use standalone when you want state without the interview | — |
+| `/migrate-from-legacy` | Move a legacy (npx-degit) install to plugin form; idempotent, verifies project state survived | — |
+| `/ping` | Smoke-test that the plugin loaded correctly (deterministic marker); not for normal end-user use | — |
+
 ## Self-improvement (framework-level)
 
 | Skill | When to use | Gates it satisfies |
@@ -106,6 +116,7 @@ Read-only visualization of canvas + state surfaces. All four skills share `engin
 | `/corrections-audit` | Analyze correction trends, surface recurring patterns, flag graduation candidates | — |
 | `/prompt-optimizer` | A/B test instruction changes against eval benchmarks | — |
 | `/framework-health` | Quarterly self-assessment: cycle velocity, discard trends, calibration, regression rate | — |
+| `/scaffold-cost-check` | Measure Mycelium's own scaffold token cost (CLAUDE.md + engine + harness + canvas + memory); pair with `/framework-health` for trend | — |
 
 ## How to use this index
 

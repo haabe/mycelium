@@ -1,0 +1,209 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mycelium.dev/schemas/diamonds/active.schema.json",
+  "title": "Diamond State (active.yml)",
+  "description": "The framework's most-read state file: active/parked/archived/killed diamonds per engine/diamond-rules.md § Diamond State Tracking. Permissive by design (additionalProperties: true) — projects extend freely; the schema pins the load-bearing core: ids, scale/phase enums, confidence range, and the definition_of_done shape (v0.43.0). Added 2026-06-12 after the dogfood repo's active.yml sat committed-unparseable for ≥3 days with zero detection (corrections.md 2026-06-12).",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "$ref": "_common.schema.json#/$defs/schema_version"
+    },
+    "project_type": {
+      "type": "string"
+    },
+    "product_type": {
+      "type": "string",
+      "enum": [
+        "software",
+        "content_course",
+        "content_publication",
+        "content_media",
+        "ai_tool",
+        "service_offering"
+      ]
+    },
+    "dogfood": {
+      "type": "boolean"
+    },
+    "autonomous": {
+      "type": "boolean",
+      "description": "Declared autonomous run (engine/autonomous-mode.md). One of the three declaration surfaces the autonomous-evidence-guard reads."
+    },
+    "last_updated": {
+      "oneOf": [
+        {
+          "$ref": "_common.schema.json#/$defs/iso_timestamp"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "active_diamonds": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/diamond"
+      }
+    },
+    "parked_diamonds": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/diamond"
+      }
+    },
+    "archived_diamonds": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/diamond"
+      }
+    },
+    "killed_diamonds": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/diamond"
+      }
+    }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "diamond": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "scale": {
+          "type": "string",
+          "enum": ["L0", "L1", "L2", "L3", "L4", "L5"]
+        },
+        "phase": {
+          "type": "string",
+          "enum": ["discover", "define", "develop", "deliver", "complete"]
+        },
+        "state": {
+          "type": "string",
+          "enum": ["active", "blocked", "parked", "archived", "killed"]
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0
+        },
+        "parent": {
+          "type": ["string", "null"]
+        },
+        "parent_id": {
+          "type": ["string", "null"]
+        },
+        "children": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "product_type": {
+          "type": "string"
+        },
+        "evidence_type": {
+          "type": "string"
+        },
+        "created": {
+          "$ref": "_common.schema.json#/$defs/iso_timestamp"
+        },
+        "created_at": {
+          "$ref": "_common.schema.json#/$defs/iso_timestamp"
+        },
+        "last_updated": {
+          "$ref": "_common.schema.json#/$defs/iso_timestamp"
+        },
+        "last_progressed": {
+          "$ref": "_common.schema.json#/$defs/iso_timestamp"
+        },
+        "theory_gates_status": {
+          "type": "object"
+        },
+        "theory_gates": {
+          "type": "object"
+        },
+        "definition_of_done": {
+          "$ref": "#/$defs/definition_of_done"
+        },
+        "parked_reason": {
+          "type": "string"
+        },
+        "parked_at": {
+          "$ref": "_common.schema.json#/$defs/iso_timestamp"
+        },
+        "resume_conditions": {
+          "type": ["array", "string"],
+          "items": {
+            "type": "string"
+          }
+        },
+        "killed_at": {
+          "$ref": "_common.schema.json#/$defs/iso_timestamp"
+        },
+        "killed_reason": {
+          "type": "string"
+        },
+        "learnings": {
+          "type": ["array", "string"]
+        },
+        "pivot_history": {
+          "type": "array"
+        },
+        "notes": {
+          "type": "string"
+        }
+      },
+      "required": ["id", "scale", "phase"],
+      "additionalProperties": true
+    },
+    "definition_of_done": {
+      "type": "object",
+      "description": "Outcome-based done-criterion pinned at diamond birth (v0.43.0, /define-done). outcome + signal required; the rest optional per skills/define-done/SKILL.md.",
+      "properties": {
+        "outcome": {
+          "type": "string",
+          "description": "What changes, for WHOM — a behaviour, not a feature. Problem-first."
+        },
+        "signal": {
+          "type": "string",
+          "description": "The ONE observable thing you'd see them DO (OMTM)."
+        },
+        "kind": {
+          "type": "string",
+          "enum": ["leading", "lagging", "mixed"]
+        },
+        "threshold": {
+          "type": ["string", "number"]
+        },
+        "rolls_up_to": {
+          "type": "string",
+          "description": "Parent diamond id + which parent outcome this serves (contribution-not-summation). Child diamonds only."
+        },
+        "kill_criterion": {
+          "type": "object",
+          "properties": {
+            "state": {
+              "type": "string"
+            },
+            "date": {
+              "$ref": "_common.schema.json#/$defs/iso_timestamp"
+            },
+            "premortem": {
+              "type": "string"
+            }
+          },
+          "required": ["state", "date"],
+          "additionalProperties": true
+        },
+        "provenance": {
+          "type": "object"
+        }
+      },
+      "required": ["outcome", "signal"],
+      "additionalProperties": true
+    }
+  }
+}

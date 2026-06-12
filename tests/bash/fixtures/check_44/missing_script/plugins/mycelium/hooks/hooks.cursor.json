@@ -1,0 +1,4 @@
+{"hooks": {"preToolUse": [
+  {"command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/gate.sh"},
+  {"command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/autonomous-evidence-guard.sh"}],
+"postToolUseFailure": [{"command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/reflexion-gate.sh"}]}}

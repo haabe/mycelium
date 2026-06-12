@@ -2,7 +2,73 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-06-11.
+**Last updated**: 2026-06-12.
+
+## v0.45.0 — Gap-analysis mechanisms: Rule 5 → Check 44, diamonds validation + schemas, parked-resume surfacing, state-parse sentinel
+
+**2026-06-12. Attribution: gap-analysis-mechanisms-2026-06-12 (lived-friction-triggered; decision-log "Five-dimension deep-dive gap analysis" + "Per-rule promotion: Rule 5"). Class: minor (new check + new schemas + validator coverage + skill steps + hook check).**
+
+The mechanism batch from the 2026-06-12 five-dimension gap analysis (priorities 4–6 + the safe slice of 8):
+
+- **Check 44 — hooks registration parity** (consistency-check-spec **Rule 5 per-rule promotion**, narrowed core): every script a `hooks*.json` registers must exist; every hook on the Claude Code reference surface must be registered on Codex + Cursor unless in the documented-divergence allowlist (codex shim pair). FP 0 on the post-fix corpus; TP proven on the v0.42.0–v0.44.0 historical state (fixture `check_44/codex_drift`). Cluster bar 1/3 → **2/3** implemented rules. G-V12: `test_check_44.sh` (8 assertions).
+- **Diamonds state validation** — `validate_canvas.py` now parse-checks `.claude/diamonds/*.yml` fail-loud and validates `active.yml` against the new `schemas/diamonds/active.schema.json` (scale/phase enums, confidence 0–1, the v0.43.0 `definition_of_done` shape with required outcome+signal). Live coverage proof: the dogfood repo's active.yml sat **committed-unparseable for ≥3 days** (unescaped interior quotes in a `notes:` scalar) with zero detection — found and fixed during this session (roadmap corrections.md 2026-06-12). G-V12: `test_validate_canvas_diamonds.sh` (9 assertions; the broken fixture reproduces the exact defect).
+- **Tier-1 canvas schemas** — `purpose.yml` (the L0 entry point had no schema), `north-star.yml`, `gist.yml`; all permissive (`additionalProperties: true`), type-pinning established keys. `validate_canvas.py` now **WARNs on schema-less canvas files** instead of silently passing (tolerance stays, silence goes) — 11 named on the dogfood corpus.
+- **Parked-diamond resume surfacing** — `/diamond-assess` (2b) + `/feedback-review` (2b) now actually read `state: parked` + `resume_conditions` and surface resumable/waiting/condition-less parked work. Implements the surface `/diamond-progress` § Park had promised; the gap analysis found **no skill read `resume_conditions`** (promised-but-unimplemented, catalogued for the consistency cluster).
+- **SessionStart CHECK 0 — state-parse sentinel**: if `diamonds/active.yml` exists but does not parse, the hook says so loudly FIRST, instead of every check silently degrading to defaults. Fail-open preserved; silence removed. Verified against the historical broken file.
+
+Deferred with a named gate (decision-log follow-up): full SessionStart single-pass consolidation + `set -euo pipefail` sweep — **Gated by: a hook-harness test suite existing first** (converting fail-open hooks under `set -e` without one risks turning corrupt state into blocked sessions) — interventional.
+
+## v0.44.2 — Doc backfill: communication-rules canonical detail, skills index 55/55, three missing operator pages
+
+**2026-06-12. Attribution: gap-analysis-doc-backfill-2026-06-12 (lived-friction-triggered). Class: patch (docs only; no behaviour change).**
+
+- **communication-rules.md** now carries canonical-detail sections for all 9 CLAUDE.md Communication Rules (was 5/9): added suggest-skills-at-transitions, offer-learning-capture, Read-before-Recommend (v0.39.16 graduation history incl. instances #13/#17), Verify-After-Write (v0.39.18/v0.44.0 history incl. #18/#19). **behavioral-contract.md** gains rows A11 (Read-before-Recommend) + A12 (Verify-After-Write).
+- **docs/skills/README.md** indexes 55/55 (was 50 while claiming "all 55"): added `/start` (the recommended entry point was absent from its own index), `/setup`, `/migrate-from-legacy`, `/ping` (new Setup & lifecycle section) + `/scaffold-cost-check` (Self-improvement).
+- **Three new operator pages**: `docs/autonomous-mode.md` (the capability had zero user-facing docs), `docs/environment.md` (all `MYCELIUM_*` vars in one table — previously scattered across 6 files), `docs/uninstall.md` (uninstall/downgrade/rollback; the plugin-state separation made explicit). docs/README.md index updated (+ stale "49 skills" → 55).
+
+## v0.44.1 — Hooks parity: autonomous-evidence-guard registered on Codex + Cursor surfaces
+
+**2026-06-12. Attribution: hooks-parity-evidence-guard-2026-06-12 (lived-friction-triggered). Class: patch (registration config; closes an enforcement hole).**
+
+The 2026-06-12 gap analysis found `autonomous-evidence-guard.sh` (v0.42.0) registered in `hooks.json` only — `hooks.codex.json` and `hooks.cursor.json` never gained it, leaving Codex/Cursor surfaces with **zero autonomous evidence-integrity enforcement** for the exact fabrication class the guard blocks (worse there: alternate runtimes are likelier to run sub-Fable-5 tiers, the population the guard exists for). Both JSONs now register the guard on their Write/Edit matchers (+ MCP-filesystem on Cursor, mirroring hooks.json). The scripts are surface-portable by design ("reused verbatim", aligned stdin fields). hooks/README.md notes the three-surface registration. Mechanized one version later as Check 44 (v0.45.0) so this divergence class can't silently recur — catalogued as consistency-cluster instance 12.
+
+## v0.44.0 — Verify-After-Write: expand Check 42's surface to where instance #19 fired
+
+**2026-06-12. Attribution: write-narration-surface-expansion-2026-06-12 (lived-friction-triggered). Class: minor (enforcement-surface expansion + new Communication Rule + doc-gap close).**
+
+The `## Postflight: Verify-After-Write` mechanism (AP#7 sub-shape *write-narration-verification* — agent narrates "updated canvas" when only a freshness stamp changed, not the value fields) graduated v0.39.18 as **Check 42**, but scoped narrow to `dora-check` + `xai-check`. AP#7 instance **#19** (2026-06-05) then fired in `/retrospective` — a multi-field-canvas-writing skill the v0.39.18 surface did not cover. This expands coverage to the full mechanically-identified population and closes two loose ends the narrow ship left.
+
+- **Check 42 surface expanded** — enforced `surface_skills` now covers every skill carrying a MANDATORY multi-field canvas write: adds `retrospective` (the #19 instance), `canvas-health`, `cynefin-classify`, `launch-tier`, `wardley-map`, `team-shape`. All six now carry the `## Postflight: Verify-After-Write` block; Check 42 passes green. The original-author Stage 2b candidates (threat-model, regulatory-review, service-check, canvas-update) remain out of scope — they do not currently carry a MANDATORY multi-field canvas write.
+- **CLAUDE.md Communication Rule added** — "Always verify after write before narrating a canvas update" now sits alongside Read-before-Recommend, making the rule visible in the always-loaded contract rather than only in the validator + skill preambles.
+- **Doc gap closed** — `harness/anti-patterns.md` listed AP#7 sub-classes (a)–(g) but omitted write-narration-verification despite Check 42 enforcing it since v0.39.18. Added as sub-class **(h)**, marked shipped (not pending). A documented-rule-diverges-from-enforcement instance in the framework's own anti-pattern catalog.
+
+No new skill, no new check number — this hardens an existing mechanism to the population its own stated scope ("multi-field-canvas-writing skills") always implied.
+
+## v0.43.1 — Render-fleet static validator: the contrast/state-id blind-spot becomes mechanism
+
+**2026-06-12. Attribution: render-static-validator-2026-06-12 (lived-friction-triggered). Class: patch (additive opt-in tooling + G-V12 test).**
+
+The render fleet shipped (v0.40.0–0.40.3) with a known agent-blind-spot: the agent emits Mermaid syntax but cannot visually evaluate the rendered diagram, so contrast (F13/WCAG) and state-id consistency (F11) were caught only by Counter-Argument discipline + operator eyeballing — `render-conventions.md` named `mmdc --validate` as the "deferred mechanical answer." Two of those checks are pure static analysis needing no rendering surface, and this ships them.
+
+- **`scripts/validate_mermaid.py`** (pure stdlib, ~190 LOC): (1) **WCAG AA contrast** — computes the WCAG 2.1 contrast ratio of every `themeVariables` foreground/background pair (`cScaleN`↔`cScaleLabelN`, `gitN`↔`gitBranchLabelN`, `*Color`↔`*TextColor`) and fails any pair below 4.5:1; (2) **state-id consistency** — in a stateDiagram with explicit `state "…" as <ID>` declarations, every transition endpoint and `class` target must reference a declared ID or `[*]`. Optional `--cli` shells out to `mmdc` for a full parse cross-check (fail-open when the binary is absent — the static checks stand alone).
+- **`render-conventions.md`** updated: the "Limit: agent cannot visually validate" + state-id sections now point at the script and scope honestly what stays operator-side — **visual layout / communicative quality** still needs a human eye; contrast and state-id no longer do.
+- **Coverage (G-V12):** `tests/bash/test_validate_mermaid.sh` — 4 cases: catches a sub-AA contrast pair, catches an undeclared state-id, and passes both the actual documented render-conventions palette (zero false positives) and a clean declared diagram.
+
+Honestly bounded: this closes F11 + F13 (the mechanizable half). The visual-judgement half (does the diagram communicate) remains operator-side by design.
+
+## v0.43.0 — Outcome-based Definition of Done: the bar becomes mechanism
+
+**2026-06-12. Attribution: define-done-outcome-bar-2026-06-12 (lived-friction-triggered). Class: minor (new skill + diamond field + retrofit/gate wiring).**
+
+Builds the v0.42.1 design (`docs/design/definition-of-done.md`) into mechanism. The L0 Purpose diamond reached Deliver with its success bar still implicit; the founder pinned it ("fits, not ships") only reactively during `/diamond-assess`. Without an explicit bar, a diamond's "done" defaults to the harshest, least-controllable outcome — wrong for validating purpose and a demotivation engine. This pins an explicit, **outcome-based** Definition of Done (a behaviour-change that creates value — Seiden/Cagan/Amplitude — not a feature shipped) per diamond.
+
+- **New skill `/mycelium:define-done`** (`skills/define-done/SKILL.md`) — a problem-first Socratic sequence: *outcome (for WHOM) → the ONE observable signal → optional threshold → pre-mortem-derived state+date kill-criterion*. Each step carries a good/bad contrast and rejects build-lists at step 1. Distinct from `/mycelium:definition-of-done` (the per-feature agile quality checklist); this sets the **diamond-level outcome bar**. Prompt wording is provisional → validate via `/mycelium:prompt-optimizer`.
+- **New diamond field `definition_of_done`** (`engine/diamond-rules.md` state block) — `outcome` + `signal` required; `kind` (leading-low / lagging-high by scale), `threshold` (optional — numbers not mandatory), `rolls_up_to` (children; contribution-not-summation), `kill_criterion {state, date, premortem}`, `provenance`.
+- **Birth wiring** — `/mycelium:interview` writes a DoD stub onto the L0 diamond (a field, not a fifth file — four-file brief contract unchanged) and surfaces it in the brief; `/mycelium:diamond-progress` runs `/define-done` on each child-diamond spawn with `rolls_up_to`.
+- **Retrofit detectors (detect-and-prompt, never silent-fill)** — `/mycelium:canvas-health` (8e) flags non-terminal diamonds missing a DoD + children missing `rolls_up_to`; `/mycelium:diamond-assess` (7c) surfaces it before the coaching check; SessionStart hook CHECK 9 nudges. The *question* is what produces a real bar (retrofitting L0 proved this), not a back-filled field.
+- **Gate wiring** — `/mycelium:diamond-progress` Deliver→Complete adds an **Outcome Definition of Done (REVIEW)** item: passes only when the `signal` is met with evidence **OR** the `kill_criterion` (state+date) fired with evidence (done-by-invalidation routed through `dogfood-mode` + `diamond-progress kill`), and for children that the outcome rolled up to the parent.
+
+Skill count 54 → 55 (plugin.json, CLAUDE.md, diamond-assess harness-thickness line, docs/skills/{README,by-category}, ai-system-card). The 2026-06-11 autonomous-mode desk audit's "54 skills" references are left as the dated historical fact they are — `/define-done` was not in that audit. Deferred per the design's phased plan: L0/L1 backfill (roadmap dogfood) + `/prompt-optimizer` A/B on the question wording.
 
 ## v0.42.4 — System card §9 audit-date fix (caught by /canvas-health 9b)
 

@@ -116,12 +116,17 @@ def build_registry():
 
     common = load_schema(COMMON_SCHEMA)
     common_resource = Resource.from_contents(common, default_specification=DRAFT202012)
-    # Register under both the $id and a relative URL so schemas can $ref it
+    # Register under the $id, a relative URL, AND the diamonds-relative URI:
+    # schemas/diamonds/*.schema.json carry $id .../schemas/diamonds/<name>, so
+    # their relative "_common.schema.json" refs resolve against that base
+    # (RFC 3986) — without the third registration those refs are Unresolvable.
     common_id = common.get("$id", "_common.schema.json")
+    diamonds_relative = common_id.replace("/canvas/", "/diamonds/")
     return (
         Registry()
         .with_resource(uri=common_id, resource=common_resource)
         .with_resource(uri="_common.schema.json", resource=common_resource)
+        .with_resource(uri=diamonds_relative, resource=common_resource)
     )
 
 
@@ -340,6 +345,67 @@ def validate_all_yaml_parses(canvas_dir: Path) -> list[str]:
     return errors
 
 
+def validate_diamonds(canvas_dir: Path, registry: Registry) -> list[str]:
+    """Fail-loud parse + schema check for the diamonds state directory.
+
+    Coverage gap closed 2026-06-12: the dogfood repo's diamonds/active.yml sat
+    committed-unparseable for >=3 days (unescaped interior double-quotes in a
+    notes: scalar) with zero detection — diamonds/ was outside this script's
+    canvas glob, active.yml had no schema, and every hook reading it degrades
+    to defaults on parse failure (roadmap corrections.md 2026-06-12). This
+    function gives the framework's most-read state file the same fail-loud
+    parse guarantee as canvas files, plus schema validation for active.yml
+    (schemas/diamonds/active.schema.json — pins scale/phase enums, confidence
+    range, and the v0.43.0 definition_of_done shape).
+    """
+    diamonds_dir = canvas_dir.parent / "diamonds"
+    if not diamonds_dir.is_dir():
+        return []
+
+    errors = []
+    for path in sorted(diamonds_dir.glob("*.yml")):
+        try:
+            with open(path) as f:
+                data = yaml.safe_load(f)
+        except yaml.YAMLError as exc:
+            msg = str(exc).strip()
+            errors.append(f"YAML parse error in diamonds/{path.name}: {msg}")
+            continue
+        except OSError as exc:
+            errors.append(f"Cannot read diamonds/{path.name}: {exc}")
+            continue
+
+        schema_path = SCHEMA_DIR.parent / "diamonds" / f"{path.stem}.schema.json"
+        if data is None or not schema_path.exists():
+            continue
+        try:
+            schema = load_schema(schema_path)
+        except (json.JSONDecodeError, OSError) as exc:
+            errors.append(f"Schema parse error in diamonds/{schema_path.name}: {exc}")
+            continue
+        validator = Draft202012Validator(schema, registry=registry)
+        for error in sorted(validator.iter_errors(data), key=lambda e: e.path):
+            epath = ".".join(str(p) for p in error.absolute_path) or "(root)"
+            errors.append(f"diamonds/{path.name} :: {epath} :: {error.message}")
+    return errors
+
+
+def schemaless_canvas_warnings(canvas_dir: Path) -> list[str]:
+    """Name every canvas file that has no schema — visibility, not failure.
+
+    Previously schema-less files passed silently (early-development
+    tolerance), which read as 'validated' when nothing was checked beyond
+    YAML parse. The tolerance stays (warnings don't fail the run); the
+    silence goes (gap analysis 2026-06-12, finding: 'unvalidated canvas
+    files silently pass').
+    """
+    return [
+        f"{canvas_path.name}: no schema — parse-checked only"
+        for canvas_path in sorted(canvas_dir.glob("*.yml"))
+        if not (SCHEMA_DIR / f"{canvas_path.stem}.schema.json").exists()
+    ]
+
+
 def main():
     # CLI: optional positional argv overrides canvas directory.
     # Previously the script defaulted to cwd + ignored positional argv —
@@ -377,6 +443,9 @@ def main():
         errors = validate_canvas_against_schema(canvas_path, registry)
         all_errors.extend(errors)
 
+    # Diamonds state dir: fail-loud parse + active.yml schema (2026-06-12)
+    all_errors.extend(validate_diamonds(canvas_dir, registry))
+
     # Trace edge resolution + cycle detection
     graph, all_ids, collect_errors = collect_trace_graph(canvas_dir)
     all_errors.extend(collect_errors)
@@ -389,11 +458,17 @@ def main():
             print(f"  - {err}")
         sys.exit(1)
 
+    # Schema-less files: warn (visible), never fail (early-development tolerance)
+    warnings = schemaless_canvas_warnings(canvas_dir)
+    for w in warnings:
+        print(f"  WARN (no schema): {w}")
+
     schemas_present = len(list(SCHEMA_DIR.glob("*.schema.json"))) - 1  # exclude _common
     canvases_present = len(list(canvas_dir.glob("*.yml")))
     print(
         f"Canvas validation: PASS ({canvases_present} canvas files, "
-        f"{schemas_present} schemas, {len(all_ids)} traceable IDs)",
+        f"{schemas_present} schemas, {len(warnings)} schema-less, "
+        f"{len(all_ids)} traceable IDs)",
     )
     sys.exit(0)
 

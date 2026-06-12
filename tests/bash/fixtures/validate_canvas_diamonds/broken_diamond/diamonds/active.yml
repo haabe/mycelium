@@ -1,0 +1,5 @@
+active_diamonds:
+  - id: l0-test
+    scale: L0
+    phase: deliver
+    notes: "an unescaped "interior quote" breaks the scalar"

@@ -78,3 +78,7 @@ Update .claude/canvas/landscape.yml with components, evolution stages, movements
 - Evolution stage maps to Cynefin domain (use `/mycelium:cynefin-classify`)
 - User needs at top map to OST outcomes (use `/mycelium:ost-builder`)
 - Strategic gameplay informs GIST goals (use `/mycelium:gist-plan`)
+
+## Postflight: Verify-After-Write (claim matches state)
+
+**Hard rule** (per CLAUDE.md Communication Rules, anti-pattern #7 *write-narration-verification* — mechanism Check 42, graduated v0.39.18; enforced surface expanded to this skill v0.44.0). This skill mandates multi-field canvas updates. Before narrating "updated / wrote / refreshed [canvas]" in any user-facing summary, RE-READ the value fields this skill's MANDATORY says to update and confirm they actually changed — not just `_meta.last_validated` or a freshness stamp. Each field you claim to have updated must reflect its new value. The symmetric half of the Read-before-Write Preflight: that one protects what gets read before a write; this one protects that the write matches the claim. Worked failures: 2026-06-05 #18 (`/dora-check` narrated "updated" with value fields unchanged) + #19 (`/retrospective` left a cycle-history aggregate un-propagated).

@@ -4,7 +4,7 @@
 **Time to read**: 3 min.
 **Last updated**: 2026-06-08.
 
-Alternate index to the phase-first [skills/README.md](README.md). Same 54 skills, different ordering.
+Alternate index to the phase-first [skills/README.md](README.md). Same 55 skills, different ordering.
 
 ## Research & discovery
 
@@ -29,6 +29,7 @@ Turn research into decisions. Use when discovery has produced enough signal to c
 - `/assumption-test` — smallest viable test (Torres + Gilad AFTER)
 - `/diamond-progress` — move a diamond through gate checks
 - `/diamond-assess` — current state + recommended next action
+- `/define-done` — pin a diamond's outcome Definition of Done (Seiden/Cagan/Adzic)
 
 ## Build & delivery
 
@@ -112,5 +113,5 @@ Mycelium itself. Use when dogfooding the framework or as part of `/framework-hea
 
 ## See also
 
-- [README.md](README.md) — phase-first index of the same 54 skills
+- [README.md](README.md) — phase-first index of the same 55 skills
 - [glossary.md](../glossary.md) — vocabulary

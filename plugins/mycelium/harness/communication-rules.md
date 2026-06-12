@@ -17,6 +17,18 @@ Use `engine/status-translations.md` to translate diamond states.
 - When reporting confidence, always include: the level, the evidence type, WHY it's
   appropriate, and what would increase it.
 
+## Suggest relevant skills at transitions
+
+Surface the skill that satisfies each gate at the moment the transition makes it
+relevant: "Before delivering, consider `/security-review` (security gate) and
+`/a11y-check` (accessibility)." The gate→skill mapping lives in
+`engine/theory-gates.md` (each gate names its suggested skill); `/diamond-progress`
+step 2b and `/diamond-assess` step 10 are the primary surfaces. Never auto-invoke —
+offer-menu only (per the post-build next-steps nudge convention in
+`/diamond-progress`). No mechanical enforcement: this rule is NUDGE-shaped by design
+(a missed suggestion costs an opportunity, not integrity), so it has no Check; the
+adherence signal is `/framework-health`'s gate-effectiveness measure.
+
 ## Cite the trigger `(per: <source>)`
 
 Source can be a corrections.md entry, canvas evidence, a theory gate, a pattern, or a
@@ -24,6 +36,19 @@ prior decision-log entry. Example: "Suggesting `/threat-model` (per: L4 deliver 
 threat-model.yml stale 47 days)." Citations must be faithful — name the source that
 actually drove the move, not a plausible after-the-fact (Lanham et al. 2023). Tracked
 in eval `2026-05-04-xai-inline-attribution`.
+
+## Offer to capture learnings after each diamond phase
+
+Prompt: "Anything worth capturing? I'll draft the entry for corrections.md or
+patterns.md." Fires after EVERY phase transition (not only Deliver→Complete) — the
+operational sequence lives in `/diamond-progress` § Learning Capture: (1) corrections,
+(2) patterns, (3) delivery journal (delivery phases), (4) product journal (discovery
+phases). Draft for the user; confirm before saving — capture at the moment of
+discovery, not retrospectively. Routing rule (CLAUDE.md § Two Memory Systems):
+project-team learnings → project memory; agent-user learnings → auto-memory. No
+mechanical enforcement: the downstream artifacts are audited instead (`/corrections-audit`
+frequency analysis; Post-Task protocol G-P7 step 2 makes the failure visible when the
+user has to ask).
 
 ## Name the verification surface
 
@@ -88,6 +113,48 @@ close the agent-output surface that lacked any gate-naming convention, NOT to re
 existing well-formed canvas-state or natural-prose gate naming. Candidate Check N+1
 mechanism flagged in corrections.md; graduation criterion is a 2nd hard-violation
 instance post-convention.
+
+## Read canvas state before recommending or narrating gate-status
+
+Graduated v0.39.16 (anti-pattern #7 Stage 1 — conversational + gate-narration
+sub-shapes). When emitting a recommendation, gate-narration, blocker, or hold-status
+claim on a topic with an extant entry in `opportunities.yml`/`purpose.yml`/
+`services.yml`/other canvas state, READ the canvas file + field path FIRST and cite
+inline (e.g., `per purpose.yml#why`, `per opportunities.yml#opp-005#status`).
+Adjacent-surface inference (different opportunity, different ht, different topic) MUST
+be tagged as inference, not asserted as gate state.
+
+The discipline analog of Read-before-Write (Check 31) applied to gate-narration.
+**Check 41** enforces the `## Preflight: Read-before-Recommend` preamble on
+`/diamond-assess` + `/diamond-progress`. Graduation provenance: instance #13
+(2026-06-02, language-thread recommendation from N=2 conversation evidence without
+reading the canvas's N=5 evidence base) and instance #17 (same day, `/diamond-assess`
+confabulated an "L0 unclear" blocker from adjacent-surface comms evidence while the
+canvas held a clear, documented purpose — the assessment that named this mechanism was
+itself running the failure it diagnosed). Stage 2 sub-shapes (cross-repo, consent-state,
+cross-file-completeness) carry partial observability mechanisms (SessionStart CHECK 8,
+canvas-health 8c(c)); enforcement-tier remains deferred pending graduation triggers —
+see `memory/cluster-instances.md#consistency-as-evidence` (roadmap repo).
+
+## Verify after write before narrating a canvas update
+
+Anti-pattern #7 sub-class (h) *write-narration-verification* — mechanism graduated
+v0.39.18; CLAUDE.md rule surfaced + enforcement expanded v0.44.0. Before claiming
+"updated / wrote / refreshed [canvas]" in any user-facing summary, RE-READ the fields
+the running skill's MANDATORY says to update and confirm the **value fields actually
+changed** — not just `_meta.last_validated` or a freshness stamp. A multi-field update
+claim requires each named field to reflect its new value.
+
+The symmetric half of Read-before-Write: Check 31 protects what gets read before a
+write; this protects that the write matches the claim. **Check 42** enforces the
+`## Postflight: Verify-After-Write` preamble on every skill carrying a MANDATORY
+multi-field canvas write (8 skills as of v0.44.0: dora-check, xai-check, retrospective,
+canvas-health, cynefin-classify, launch-tier, wardley-map, team-shape). Graduation
+provenance: two same-day instances 2026-06-05 — #18 (`/dora-check` narrated "updated"
+with value fields unchanged; surfaced by a Torres-shape operator question) and #19
+(`/retrospective` left `cycle-history.yml` aggregates un-propagated; caught by a
+`/framework-health` re-run, the audit-cadence positive signal). #19 fired in a skill
+the v0.39.18 surface did not cover — the trigger for the v0.44.0 expansion.
 
 ## Layer output: BLUF → rationale → discipline notes
 

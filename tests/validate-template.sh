@@ -1787,12 +1787,17 @@ check_rendering_spec_strict_marker() {
 # (Read-before-Write Preflight). Three checks now enforce the
 # read/write/verify discipline on the corresponding skill surfaces.
 #
-# Scope narrow this graduation: 2 surface skills (dora-check, xai-check —
-# the two with multi-field canvas MANDATORIES that produced AP#7 instance
-# #18 worked failure). Stage 2b candidates: threat-model, regulatory-review,
-# service-check, canvas-update.
+# v0.39.18 shipped narrow (2 skills: dora-check, xai-check — dora-check
+# produced AP#7 instance #18). v0.44.0 EXPANDS the enforced surface to the
+# full mechanically-identified population: every skill whose SKILL.md carries
+# a MANDATORY multi-field canvas write (grep `MANDATORY` ∧ a `…canvas/*.yml`
+# write directive). The trigger was AP#7 instance #19 (2026-06-05) firing in
+# /retrospective — a multi-field-canvas-writing skill the v0.39.18 surface did
+# NOT cover. The original-author Stage 2b candidates (threat-model,
+# regulatory-review, service-check, canvas-update) remain open: they do not
+# currently carry a MANDATORY multi-field canvas write and are not yet in scope.
 check_postflight_verify_after_write_preamble() {
-    section "Check 42: Postflight Verify-After-Write preamble on multi-field-canvas-writing skills (anti-pattern #7 Stage 2a graduation v0.39.18)"
+    section "Check 42: Postflight Verify-After-Write preamble on multi-field-canvas-writing skills (anti-pattern #7 Stage 2a v0.39.18; surface expanded v0.44.0)"
 
     local skills_dir="$SKILLS_DIR"
     if [ ! -d "$skills_dir" ]; then
@@ -1801,7 +1806,10 @@ check_postflight_verify_after_write_preamble() {
     fi
 
     local marker="## Postflight: Verify-After-Write"
-    local surface_skills=("dora-check" "xai-check")
+    # v0.39.18: dora-check, xai-check. v0.44.0 +retrospective (#19) + the rest of
+    # the MANDATORY multi-field-canvas-write population (cynefin-classify,
+    # canvas-health, launch-tier, wardley-map, team-shape).
+    local surface_skills=("dora-check" "xai-check" "retrospective" "canvas-health" "cynefin-classify" "launch-tier" "wardley-map" "team-shape")
     local missing_count=0
     local missing_list=""
     local checked=0
@@ -2011,6 +2019,106 @@ check_render_identifier_exposure_declaration() {
 }
 
 # ============================================================
+# CHECK 44: Hooks registration — script existence + cross-surface parity
+# ============================================================
+#
+# Per-rule promotion of consistency-check-spec.md Rule 5 (hook-claim
+# cross-reference), narrowed to its mechanizable core: (a) every hook
+# script a hooks*.json registers must exist on disk; (b) every
+# enforcement hook registered in hooks.json (Claude Code, the reference
+# surface) must also be registered in hooks.codex.json and
+# hooks.cursor.json, unless the divergence is in the documented
+# allowlist below.
+#
+# Historical instance covered: 2026-06-12 gap analysis found
+# autonomous-evidence-guard.sh registered in hooks.json (v0.42.0) but
+# absent from BOTH alternate-surface JSONs — Codex/Cursor users had
+# zero autonomous evidence-integrity enforcement for the exact
+# fabrication class the guard exists to block (decision-log
+# 2026-06-12). This check makes that divergence class mechanical.
+#
+# Documented divergence allowlist (runtime differences, not drift):
+#   - reflexion-gate.sh missing from codex: Codex has no native
+#     PostToolUseFailure; codex-postfailure-shim.sh wraps it (see
+#     hooks.codex.json _description).
+#   - codex-postfailure-shim.sh present only on codex: it IS the
+#     divergence mechanism.
+check_hooks_registration_parity() {
+    section "Check 44: hooks registration — script existence + cross-surface parity (Rule 5 per-rule promotion)"
+
+    local hooks_dir="plugins/mycelium/hooks"
+    if [ ! -d "$hooks_dir" ]; then
+        info "Hooks dir absent — Check 44 N/A"
+        return
+    fi
+
+    local violations
+    violations=$(python3 - "$hooks_dir" <<'PYEOF'
+import json, re, sys
+from pathlib import Path
+
+hooks_dir = Path(sys.argv[1])
+SURFACES = ["hooks.json", "hooks.codex.json", "hooks.cursor.json"]
+# Divergences that are documented runtime differences, not drift.
+ALLOW_MISSING = {
+    "hooks.codex.json": {"reflexion-gate.sh"},   # no native PostToolUseFailure; shim wraps it
+    "hooks.cursor.json": set(),
+}
+ALLOW_EXTRA = {
+    "hooks.codex.json": {"codex-postfailure-shim.sh"},  # the divergence mechanism itself
+    "hooks.cursor.json": set(),
+}
+script_re = re.compile(r"/hooks/([A-Za-z0-9._-]+\.sh)")
+
+def registered(path: Path) -> set[str]:
+    try:
+        text = path.read_text()
+        json.loads(text)  # must be valid JSON
+    except (OSError, json.JSONDecodeError) as exc:
+        print(f"{path.name}: unreadable or invalid JSON ({exc})")
+        return set()
+    return set(script_re.findall(text))
+
+sets = {}
+for name in SURFACES:
+    p = hooks_dir / name
+    if not p.exists():
+        print(f"{name}: file missing from {hooks_dir}")
+        continue
+    scripts = registered(p)
+    sets[name] = scripts
+    for s in sorted(scripts):
+        if not (hooks_dir / s).exists():
+            print(f"{name} registers {s} but {hooks_dir}/{s} does not exist")
+
+baseline = sets.get("hooks.json")
+if baseline:
+    for alt in ("hooks.codex.json", "hooks.cursor.json"):
+        if alt not in sets:
+            continue
+        missing = baseline - sets[alt] - ALLOW_MISSING[alt]
+        extra = sets[alt] - baseline - ALLOW_EXTRA[alt]
+        for s in sorted(missing):
+            print(f"{alt} missing {s} (registered in hooks.json; not in divergence allowlist)")
+        for s in sorted(extra):
+            print(f"{alt} registers {s} not in hooks.json (undocumented extra)")
+PYEOF
+)
+
+    if [ -z "$violations" ]; then
+        local n
+        n=$(grep -c "" <<<"$(python3 -c "
+import re, pathlib
+t = pathlib.Path('$hooks_dir/hooks.json').read_text()
+print('\n'.join(sorted(set(re.findall(r'/hooks/([A-Za-z0-9._-]+\.sh)', t)))))
+")")
+        pass "Check 44: all 3 hooks JSONs valid; every registered script exists; cross-surface parity holds ($n hooks on the reference surface)"
+    else
+        fail "Check 44: hooks registration violations:"$'\n'"$(echo "$violations" | sed 's/^/  - /')"$'\n'"  Fix the registration or add a documented divergence to the Check 44 allowlist (with the runtime reason)."
+    fi
+}
+
+# ============================================================
 # RUN ALL CHECKS
 # ============================================================
 #
@@ -2065,6 +2173,7 @@ check_sync_derived_drift
 check_read_before_recommend_preamble
 check_postflight_verify_after_write_preamble
 check_render_identifier_exposure_declaration
+check_hooks_registration_parity
 check_gv12_test_coverage
 
 # ============================================================

@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mycelium.dev/schemas/canvas/north-star.schema.json",
+  "title": "North Star Canvas",
+  "description": "L1 North Star metric + input metrics + Goodhart guard. Permissive: type-pins established top-level keys. Added 2026-06-12 (gap analysis). Witnessed failure this schema's parse-layer would have caught: roadmap north-star.yml broken YAML 2026-05-23 (cluster instance 14).",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "$ref": "_common.schema.json#/$defs/schema_version"
+    },
+    "metric": {
+      "type": "object",
+      "description": "The North Star metric itself: name, definition, current value."
+    },
+    "input_metrics": {
+      "type": "array",
+      "description": "Leading input metrics that drive the North Star."
+    },
+    "trust_dimension": {
+      "type": "object"
+    },
+    "guardrails": {
+      "type": "array",
+      "description": "Counter-metrics guarding against optimizing the North Star at the expense of health."
+    },
+    "metric_trend": {
+      "type": "array"
+    },
+    "goodhart_check": {
+      "type": "object",
+      "description": "Explicit Goodhart's-Law audit block: how this metric could be gamed and what watches for it."
+    },
+    "last_updated": {
+      "oneOf": [
+        {
+          "$ref": "_common.schema.json#/$defs/iso_timestamp"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "_meta": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": true
+}

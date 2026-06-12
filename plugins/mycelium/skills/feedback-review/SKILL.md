@@ -53,6 +53,14 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
 - Is the delivery journal being updated? (Empty = no incremental learning)
 - Are retrospectives happening after delivery increments?
 
+### 2b. Parked-Diamond Resume Check
+Read `.claude/diamonds/active.yml` for diamonds with `state: parked` (or a `parked_diamonds` section). For each, evaluate its `resume_conditions` against current canvas/world state:
+- **Condition met** (the awaited event happened — dependency shipped, evidence arrived, date passed): surface as resumable — "Parked: [id] ([parked_at], condition: '[resume_conditions]'). That condition now holds — ready to resume? Run `/mycelium:diamond-progress` to re-activate."
+- **Condition not yet met**: list with its condition (one line) so parked work stays visible, not forgotten.
+- **No `resume_conditions` recorded**: flag it — a parked diamond without resume conditions is unreachable by anything but memory; prompt the user to add them or decide park → kill.
+
+This implements the surface promised in `/mycelium:diamond-progress` § Park ("feedback-review and diamond-assess surface parked diamonds with their resume conditions") — a promise that stood unimplemented until the 2026-06-12 gap analysis found no skill read `resume_conditions`. Abandonment is a non-event; nothing else surfaces this.
+
 ### 3. Check Loop 3 (Strategic) Health
 Read canvas trend data and check cadence:
 - **BVSSH**: Last assessed when? Any dimension declining? (Check `bvssh-health.yml` trend fields)

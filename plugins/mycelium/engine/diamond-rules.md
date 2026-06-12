@@ -144,6 +144,7 @@ created: [timestamp]
 last_updated: [timestamp]
 evidence: [list of evidence references]
 blockers: [list of current blockers]
+definition_of_done: [outcome-based done-criterion, set at birth — see below]
 theory_gates:
   discover_to_define: [pass | fail | pending]
   define_to_develop: [pass | fail | pending]
@@ -152,6 +153,23 @@ theory_gates:
 ```
 
 Update state on every significant action. State is the source of truth for what the agent should do next.
+
+### Definition of Done (outcome bar, per diamond)
+
+Every diamond carries an explicit, **outcome-based** `definition_of_done`, pinned at birth — *a change in human behaviour that creates value* (Seiden), not "the feature shipped." Without it the bar defaults implicitly to the harshest, least-controllable outcome, which is both wrong for validating purpose and a demotivation engine. Set it with `/mycelium:define-done` (problem-first Socratic sequence); retrofit when missing. Distinct from the per-feature agile quality checklist run by `/mycelium:definition-of-done` at Deliver→Complete.
+
+```yaml
+definition_of_done:
+  outcome:   "<what changes, for WHOM — a behaviour, not a feature>"   # required; problem-first
+  signal:    "<the ONE observable thing you'd see them DO>"            # required; OMTM
+  kind:      leading | lagging                                        # defaulted by scale (lead-low / lag-high)
+  threshold: "<a target IF one genuinely fits>"                       # OPTIONAL — numbers not mandatory
+  rolls_up_to: "<parent diamond id + parent outcome>"                 # child diamonds; contribution-not-summation
+  kill_criterion: { state: "...", date: "YYYY-MM-DD", premortem: "..." }   # state+date, pre-committed via pre-mortem
+  provenance: { source_class, validated, captured_at }
+```
+
+The **Deliver→Complete** gate passes only when the diamond's DoD `signal` is met **OR** its `kill_criterion` (state+date) fired with evidence (done-by-invalidation, routed through `dogfood-mode` + decision-log). A child is done only when its outcome **rolls up** to move the parent — contribution, not summation. Full design + evidence grades: `docs/design/definition-of-done.md`; per-scale defaults + the question sequence: `${CLAUDE_PLUGIN_ROOT}/skills/define-done/SKILL.md`.
 
 ## Diamond Lifecycle Management
 

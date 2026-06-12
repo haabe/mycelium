@@ -2,7 +2,7 @@
 
 **Audience**: contributors, evaluators, and operators who want depth past the README. Public.
 **Time to read**: 5 min for this index; pages link to longer reads.
-**Last updated**: 2026-06-04
+**Last updated**: 2026-06-12
 
 This directory is the **spoke** to the README's **hub**. The README is the landing page (≤200 lines, scannable in 30s). Everything that doesn't fit in 30s lives here.
 
@@ -26,12 +26,15 @@ Three common entry paths, each anchored on a specific user task. Pick the one th
 - `evaluate.md` — how to evaluate Mycelium for your team in ~1h, anti-promotional
 - `theories.md` — the 30+ frameworks Mycelium integrates, mechanism-mapped
 - `usage-modes.md` — solo, team, agent orchestration, JIT tooling
+- `autonomous-mode.md` — declared headless / agent-to-agent runs: declaration, evidence guard, model-tier restriction
+- `environment.md` — every `MYCELIUM_*` environment variable in one place (all opt-in)
+- `uninstall.md` — uninstall, downgrade, rollback; what stays (your `.claude/` state) and what goes
 - `jit-tooling.md` — language-agnostic and product-type-agnostic detection
 - `regulatory.md` — EU AI Act mapping (pointer to `ai-system-card.md`)
 - `changelog.md` — version history extracted from `CLAUDE.md`
 - `ai-system-card.md` — Mycelium's own AI System Card (Mitchell et al. 2019 format)
 - `context-surface.md` — what data the agent reads under Mycelium
-- `skills/` — index of all 49 skills
+- `skills/` — index of all 55 skills
 - `receipts/` — case files of how Mycelium got smarter (per project, per cycle)
 - `contributing/` — how to contribute to the framework
 

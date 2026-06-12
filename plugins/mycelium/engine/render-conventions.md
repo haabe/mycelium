@@ -184,9 +184,9 @@ git0: '#FDD835'     ; gitBranchLabel0: '#000000' # root yellow + black
 
 All combinations exceed 4.5:1 AA contrast; most exceed 7:1 AAA.
 
-### Limit: agent cannot visually validate
+### Limit: agent cannot visually validate (partially mechanized)
 
-The agent emits Mermaid syntax but cannot visually evaluate the rendered diagram. Per architecture §10.2.3, manual visual evaluation by the operator is load-bearing for every render-fleet ship until mechanical contrast-ratio audit + `mmdc --validate` integration lands. Specialists name "render output should be visually inspected before external publication" in their canonical disclaimer.
+The agent emits Mermaid syntax but cannot visually evaluate the rendered diagram. The two deterministic checks the agent cannot do by eye are now mechanized — **`scripts/validate_mermaid.py`** statically audits (1) WCAG AA contrast of every `themeVariables` foreground/background pair (closes the F13 contrast blind-spot — contrast ratio is pure math, no rendering surface needed) and (2) state-id consistency (closes F11). Pipe the emitted block to it: `printf '%s' "$DIAGRAM" | python3 ${CLAUDE_PLUGIN_ROOT}/scripts/validate_mermaid.py -` (add `--cli` to also shell out to `mmdc` for a full parse when the binary is present — fail-open when absent). What remains genuinely operator-side is **visual layout / communicative quality** (does the diagram read well, is the information ordering right) — that judgement still needs a human eye, so specialists keep "render output should be visually inspected before external publication" in their canonical disclaimer. Coverage proof: `tests/bash/test_validate_mermaid.sh`.
 
 ## Mermaid label-escape rules
 
@@ -199,7 +199,7 @@ The agent emits Mermaid syntax but cannot visually evaluate the rendered diagram
 
 For diagrams with explicit state-ID declarations (`state ... as <ID>`), every `<src> --> <dst>` arrow and every `class <X> <name>` line MUST reference a defined state ID OR a Mermaid built-in (`[*]`). Mismatch produces a parse error at render time and is unverifiable from the syntax alone.
 
-Specialists include this check in their Counter-Argument block. Render-time syntactic validation (`mmdc --validate`) is the deferred mechanical answer.
+Specialists include this check in their Counter-Argument block. Render-time syntactic validation is now mechanized — `scripts/validate_mermaid.py` enforces this state-id rule (plus WCAG contrast) statically with no external dependency; `--cli` adds an `mmdc` full-parse cross-check when available. Run it on the emitted diagram before external publication.
 
 ## Schema versioning + graceful degradation
 

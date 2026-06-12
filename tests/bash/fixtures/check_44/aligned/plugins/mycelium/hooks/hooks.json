@@ -1,0 +1,5 @@
+{"hooks": {"PreToolUse": [{"matcher": "Write", "hooks": [
+  {"type": "command", "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/gate.sh"},
+  {"type": "command", "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/autonomous-evidence-guard.sh"}]}],
+"PostToolUseFailure": [{"matcher": "Bash", "hooks": [
+  {"type": "command", "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/reflexion-gate.sh"}]}]}}
