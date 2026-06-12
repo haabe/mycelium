@@ -135,6 +135,17 @@ This is the **buildable** form of the self-audit; the live-output version is une
 
 **Temporal independence required.** "Flagged across two assessments" means two assessments separated by independent observation windows — a quarterly run, a cycle-count-trigger run, or an explicit re-audit after deliberate skill-template edits. Same-day re-runs with no intervening skill edit are mechanically the same flag, not two observations; record the prior run's flag-set as the baseline and check the next independent run against it. Without this rule, any agent running `/mycelium:framework-health` twice in a row would graduate the entire flagged set on the second run. The rule applies symmetrically to 4b (cluster graduation-readiness) and 4d (docs health) — re-flagging in the same session does not count as independent confirmation.
 
+### 4f. Gap-Analysis Diff Audit (added 2026-06-12)
+
+The 2026-06-12 five-dimension gap analysis (code/hooks, doc-vs-mechanism consistency, flows/lifecycle, documentation, packaging/CI/schemas — decision-log "Five-dimension deep-dive gap analysis") is a repeatable audit shape. Its expensive failure mode was NOT finding gaps — it was stale premises: 4 of 6 backlog-derived items were already shipped or already graduated, found only by ground-truthing against the current tree.
+
+On each quarterly run:
+- **Diff, don't rediscover.** Locate the previous gap-analysis decision-log entry and its priority list. For each prior finding: re-verify its CURRENT state against the tree (shipped / still-open / changed shape) BEFORE any new fan-out. A finding carried forward without re-verification is a stale-state read (anti-pattern #8) on the audit's own output.
+- **Promise-registry sweep**: read `${CLAUDE_PLUGIN_ROOT}/engine/consistency-check-spec.md` § Promise registry. For each open row, check whether the implementing artifact has landed (close the row, citing the version) or the trigger has fired (escalate to the cluster catalog). New "skill X will do Y" claims found in docs without an implementing artifact or `Gated by:` marker become new rows.
+- **Schema-coverage trend**: run `validate_canvas.py` and record the schema-less WARN count in the dashboard. The count should be monotonically non-increasing; an increase means a new canvas file was taught without a schema or waiver (preemptive-registry trigger fired — see spec).
+- **New fan-out only for new surface**: dimensions whose prior findings all re-verify unchanged get a light pass; spend the deep fan-out where the tree actually changed since the last run.
+- Temporal-independence rule from 4e applies: a same-session re-run is not a second observation.
+
 ### 5. Generate Dashboard
 
 ## Output

@@ -4,6 +4,16 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-12.
 
+## v0.45.1 — Prevention layer: promise registry + framework-health gap-diff audit
+
+**2026-06-12. Attribution: gap-prevention-registry-2026-06-12 (lived-friction-triggered). Class: patch (spec section + skill step; no enforcement change).**
+
+Converts the gap analysis's prevention conclusions into mechanism rather than advice:
+
+- **Promise registry** (`engine/consistency-check-spec.md`, new section) — capability claims framework prose makes that nothing implements. Seeded with the analysis's four instances: P1 parked-resume (CLOSED v0.45.0), P2 WIP-limit enforcement, P3 ice-score DORA calibration, P4 canvas-sync conflict tooling (OPEN — each with an implement-path AND an honest re-word-path; a promise can close by the doc stopping to promise). OPEN across 3 consecutive `/framework-health` runs escalates to the cluster catalog.
+- **Two preemptive-registry rows** — capability promises ship with their mechanism or a `Gated by:` marker (going-forward convention); new canvas files ship with a schema or waiver (trigger: the schema-less WARN count increases between framework-health runs).
+- **`/framework-health` step 4f — Gap-Analysis Diff Audit**: on each quarterly run, re-verify the previous gap analysis's findings against the current tree BEFORE any new fan-out (this week's biggest waste was 4/6 stale backlog premises), sweep the promise registry, record the schema-coverage trend, and spend deep fan-out only where the tree changed. Temporal-independence rule from 4e applies.
+
 ## v0.45.0 — Gap-analysis mechanisms: Rule 5 → Check 44, diamonds validation + schemas, parked-resume surfacing, state-parse sentinel
 
 **2026-06-12. Attribution: gap-analysis-mechanisms-2026-06-12 (lived-friction-triggered; decision-log "Five-dimension deep-dive gap analysis" + "Per-rule promotion: Rule 5"). Class: minor (new check + new schemas + validator coverage + skill steps + hook check).**
