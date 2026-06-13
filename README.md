@@ -17,6 +17,12 @@ Plugin install is brownfield-safe; no project-root files are modified. Skills ar
 
 This README orients you and gets you installed. Full docs live at [`docs/`](docs/README.md): mental model, how-to guides, theory grounding, receipts.
 
+## Why this exists
+
+Skipping discovery is an old habit. You've watched a stakeholder pick a framework because they sat in a workshop with its authors, not because a user asked for it. You've heard "my gut beats the data." You've heard "no point in discovery, users never know what they want anyway." Deciding what is worth building was always the hard part, and there was always a reason to skip it.
+
+The agent just made skipping it free. It runs from idea to pull request without asking why, who for, or whether anyone needs it, faster than any of them ever could. Mycelium answers the old excuses the same way every time: with evidence instead of a shrug.
+
 ## What it does
 
 You have an idea. You run `/mycelium:start`. The agent doesn't open an editor; it asks four questions. What's the problem, who has it, what's the riskiest thing you're assuming, and what's the smallest move that would test it. Ten minutes in, you have a written brief and the agent points to the riskiest thing you assumed and asks if you want to test it before building anything.
@@ -25,15 +31,15 @@ You can say no. A weekend hack gets lighter prompts than a team product, and you
 
 ## What it feels like
 
-Not a pile of skills dumped on you at once. Three modes that show up at the right time.
+Three moments you'll recognize.
 
-You sit down with an idea. As you work through what it actually is, the agent surfaces what you didn't think to ask: "Have you considered who your real user is? Here's what the research says about purpose statements." You weren't going to get there on your own; now you are.
+**The weekend build.** Saturday, an idea, an agent ready to type. The usual ending: a working thing by Sunday that you're not sure anyone needs, yourself included. With Mycelium the first ten minutes go to the questions you'd skip on your own: who it's for, the riskiest thing you're assuming, the smallest way to check. You still ship this weekend. You just ship the version worth shipping.
 
-Later, tired enough that the bias check feels optional, the agent stops you: "You're about to skip the bias check. The evidence gate requires this before progressing." It catches the moment you'd most like to slip past.
+**The decision that went stale.** Your team agreed on a feature three weeks ago; the agent's been building it ever since. Nobody's re-checked the assumption underneath it. At the close, Mycelium won't sign the work off on "we already decided." It asks what evidence says the assumption still holds, and the stale one surfaces now instead of at launch.
 
-When the phase closes, you get the picture back: "evidence ✓, bias check ✗, corrections ✓." What's done, what's still owed.
+**The tired Friday.** It's late, you're done, and the careful step feels optional. The agent stops you: "you're about to skip the check that catches the thing you'd regret." It catches you exactly when you'd most like to slip past. Then it hands you the honest picture at the close: what's done, what's still owed.
 
-Same agent, three voices. Mentor while you're in it. Guardrail at the edge, checklist at the close. A weekend hack sees fewer of these moments; a team product sees them all. The intensity scales with what's at stake, not with how many skills are loaded.
+A weekend hack meets fewer of these moments; a team product meets them all. The intensity scales with what's at stake, not with how much you have to learn.
 
 ## Who it's for
 

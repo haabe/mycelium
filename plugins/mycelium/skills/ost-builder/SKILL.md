@@ -52,8 +52,8 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
 
 5. **For each leaf opportunity**, check scenario coverage:
    - Does `.claude/canvas/scenarios.yml` have at least one scenario illustrating this opportunity?
-   - If not: extract one from the research evidence. Use Hoskins' four elements: Persona (who), Means (how they interact), Motive (why — link to JTBD), Simulation (the full narrative).
-   - Scenarios should emerge from interview stories, not be invented. If no interview data exists for this opportunity, flag it as an evidence gap.
+   - If not: extract one from the research evidence. Use Hoskins' four elements: Persona (who), Means (how they interact), Motive (why — link to JTBD), Simulation (the full narrative + a falsifiable `success_criteria`: an observable signal with a threshold, not just a felt outcome).
+   - Scenarios should emerge from interview stories, not be invented. If no interview data exists for this opportunity, flag it as an evidence gap and leave the scenario `status: draft` (`source_class: internal_simulated` is envision-only — it cannot drive a leaf's design or confidence until a real source grounds it). See `/user-interview` for the full two-discipline rule.
 
 6. **For each leaf opportunity**, generate solution ideas:
    - Multiple solutions per opportunity.

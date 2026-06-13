@@ -91,6 +91,8 @@ Audit the canvas knowledge base for quality, consistency, and completeness. The 
      - Every scenario referenced in `lifecycle.designed_against[]` → verify the solution exists in `opportunities.yml` or `gist.yml`
      - Every scenario referenced in `lifecycle.tested_against[]` → verify test date is not in the future
      - Flag scenarios with `status: draft` older than 30 days (stale draft — either promote or discard)
+     - **Falsifiable-success check:** every scenario with `status` other than `draft` must have `simulation.success_criteria` with at least one entry carrying `observable` + `threshold` — flag a non-draft scenario whose success is only the qualitative `simulation.success_state` (an un-falsifiable scenario is a user story, not a Hoskins scenario; it cannot be run against the eval-runner)
+     - **Grounding check:** a scenario listed in any `lifecycle.designed_against[]`, OR carrying `confidence > 0.3`, must have `provenance.source_class` of `external_human` or `external_data` — flag any `internal_simulated` / `evidence_type: speculation` scenario that is driving design or confidence (envision-only scenarios stay `status: draft` until a real source grounds them; a fabricated scenario feels like research because it is a story)
    - If `.claude/canvas/scenarios.yml` does NOT exist but project_type requires it (per ${CLAUDE_PLUGIN_ROOT}/engine/canvas-guidance.yml): flag as warning
 
 8c. **Human-task reconciliation** (added v0.31.3, closes the evidence/status/consent decoupling drift — corrections.md 2026-05-28):

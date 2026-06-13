@@ -94,6 +94,11 @@ Draft a scenario entry for `.claude/canvas/scenarios.yml` from any interview sto
 
 *Source: Hoskins, "Attention to Users Is All You Need" (SAP talk, April 2026) — "Scenarios are the fundamental primitive of product thinking."*
 
+**Two disciplines on every extracted scenario.** A scenario is an *advanced user story* — what separates it from "As a [role] I want [X]" is that it is **runnable** and **grounded**. Hold both:
+
+1. **Falsifiable success, not just a felt one.** Keep the qualitative `simulation.success_state` ("what 'it worked' feels like to the persona") — it carries the empathy. But also capture `simulation.success_criteria`: at least one *observable* signal with a *measure* and a *threshold* (e.g. "user starts a second session within 7 days"). This is what makes a scenario a runnable test rather than a longer user story, and it is the assertion `/eval-runner` checks. A scenario with no `success_criteria` stays `status: draft`. *(Goodhart guard: the criterion becomes a target the moment you name it — keep the qualitative `success_state` beside it so the number never crowds out the felt outcome.)*
+2. **Grounded, not invented.** Tag `provenance.source_class`. A scenario drawn from a real interview is `external_human` — that is the whole point of extracting it *here*. A scenario authored without a real source (desk-written, or via `/mocked-persona-interview`) is `internal_simulated` / `evidence_type: speculation` and is **envision-only**: it may provoke questions, but it may NOT appear in `lifecycle.designed_against[]` as validated, may NOT drive a confidence delta, and may NOT clear a gate. It stays `status: draft` until at least one `external_human` / `external_data` source grounds it. A scenario is the most seductive artifact to fabricate — it *feels* like research because it is a story — so it carries the same evidence bar as the rest of the canvas.
+
 ### Closing
 
 Always end with: **"Is there anything else you'd like to share that I didn't ask about?"**

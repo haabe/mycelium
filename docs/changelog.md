@@ -2,7 +2,20 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-06-12.
+**Last updated**: 2026-06-13.
+
+## v0.46.0 — Scenario primitive becomes a falsifiable, grounded user story + README scenario rewrite
+
+**2026-06-13. Attribution: scenario-primitive-falsifiable-grounded-2026-06-13 (lived-friction-triggered: peer-practitioner feedback). Class: minor (new scenario schema capability + canvas-health enforcement + README human-surface rewrite).**
+
+A scenario is an *advanced user story* — what separates it from "As a [role] I want [X]" is that it is **runnable** and **grounded**. Two upgrades to the Hoskins scenario primitive (persona + means + motive + simulation) make that real, both triggered by peer-practitioner feedback that surfaced two principles: draw the direct lessons rather than naming the concepts, and treat the scenario as the fundamental primitive of product thinking (Hoskins, *Attention to Users Is All You Need*):
+
+- **Falsifiable success.** `simulation.success_criteria` (at least one `observable` + `measure` + `threshold`) sits alongside the qualitative `simulation.success_state`. The criterion is the assertion `/eval-runner` checks — it is what makes a scenario a runnable test rather than a longer user story. A scenario with no `success_criteria` stays `status: draft`. Goodhart guard: the criterion is a named target the moment it is written, so the qualitative `success_state` stays beside it.
+- **Grounding rule.** `provenance.source_class` is now load-bearing. A scenario authored without a real source (`internal_simulated` / `evidence_type: speculation`) is **envision-only**: it may provoke questions but may NOT appear in `lifecycle.designed_against[]` as validated, drive a confidence delta, or clear a gate, until at least one `external_human` / `external_data` source grounds it. A scenario is the most seductive artifact to fabricate — it feels like research because it is a story — so it carries the same evidence bar as the rest of the canvas.
+
+Authored at the birth site (`/user-interview` "Scenario Extraction"), propagated to `/ost-builder`, and **enforced** by two new `/canvas-health` Check 8b lints: a falsifiable-success check (non-draft scenarios need `success_criteria`) and a grounding check (a scenario driving design or `confidence > 0.3` needs an external `source_class`).
+
+Also this release: the README **"What it feels like"** section was re-skeletoned from framework modes (mentor/guardrail/checklist) to three user-situation scenarios (the weekend build, the decision that went stale, the tired Friday) per the user-situation-over-framework-modes critique (describe user problems, not framework modes), and de-jargoned per the academic-language friction surfaced by peer practitioners (no diamond/L0/gate vocabulary in the section). A new **"Why this exists"** section frames the problem in the builder's own words (discovery-skipping predates AI; the agent just automates the old habit at machine speed). Both README changes voice-revised via `/voice-revise-framework-doc` (register-one, slop-check clean, em-dashes removed).
 
 ## v0.45.2 — Chat-UX 4e graduation: five templates fixed + Check 45
 
