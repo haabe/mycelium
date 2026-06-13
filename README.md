@@ -60,7 +60,7 @@ Mycelium is for work where deciding what to build is the hard part. Some use cas
 
 ## How it works
 
-Two building blocks. **Scales** answer *"What am I deciding?"* The levels run from Purpose down to Delivery and Market. **Diamonds** answer *"How do I decide?"* The same Discover → Define → Develop → Deliver cycle runs at every scale.
+Two pieces. **Scales** are what you're deciding, from Purpose at the top down to Delivery and Market. **Diamonds** are how you decide: the same Discover, Define, Develop, Deliver loop, run at whatever scale you're working on.
 
 ```mermaid
 graph TD
@@ -74,27 +74,23 @@ graph TD
     L5 -.->|"market feedback"| L2
 ```
 
-Not all scales are required. A weekend project might skip L1 entirely. `/mycelium:start` classifies your project and tells you which scales matter; the system scales to your project, not the other way around.
+You don't run all of them. A weekend project might skip strategy entirely. `/mycelium:start` reads your project and tells you which scales matter; it sizes itself to the work, not the other way around.
 
-Every diamond transition must pass theory gates: evidence checks grounded in specific frameworks. Not "I'm confident enough", but "here's the evidence". If a gate fails, the agent names what's missing, cites the theory, and points to the skill that would close it. It does not proceed.
+Each step has to clear an evidence check before it continues. Not "I'm confident enough," but "here's what backs it." If a step can't clear, the agent tells you what's missing and which command closes the gap, then stops there.
 
-All product knowledge lives in `.claude/canvas/*.yml`: structured YAML, committed to git. The canvas IS the spec: the prototype-IS-the-spec discipline from Cagan, applied to product knowledge instead of code.
-
-If delivery reveals a bad assumption, the diamond **regresses** back with new evidence. That's the system working correctly, not failing.
+Your product decisions live as plain YAML in your repo, versioned in git. That's the spec. If the build turns up a bad assumption, the work moves back a step with what you learned, which is the system working, not failing.
 
 → Depth: [docs/usage-modes.md](docs/usage-modes.md), [docs/skills/](docs/skills/README.md), [docs/theories.md](docs/theories.md), [docs/philosophy.md](docs/philosophy.md).
 
 ## Where it sits in the field
 
-The vocabulary settled in spring 2026. Martin Fowler / Thoughtworks ([Birgitta Böckeler, 2026-04-02](https://martinfowler.com/articles/harness-engineering.html)) and Ning et al. ([arxiv 2605.18747, 2026-05-18](https://arxiv.org/abs/2605.18747)) both name **harness engineering** as an emerging practice: feedforward guides plus feedback sensors, computational and inferential, regulating an agent toward a desired state.
-
-Mycelium is one worked example of this taxonomy, on a markdown + canvas-YAML + validator substrate. The family of mechanisms is consensus-forming; the substrate choice and the specific gating discipline are Mycelium's own design.
+Mycelium is one worked example of a pattern the field is converging on: guardrails going in, checks coming back, keeping an agent honest. Others have started naming it too ([Thoughtworks](https://martinfowler.com/articles/harness-engineering.html), [recent research](https://arxiv.org/abs/2605.18747)). Mycelium is one take on it, built on plain files in git.
 
 ## How Mycelium got smarter
 
 Mycelium has been dogfooded on three small projects and tested by outside users under realistic time pressure. Each session taught the framework something different. Most of what they taught is in the version you're looking at right now.
 
-- **[When consistency stopped counting as evidence](docs/receipts/cases/2026-05-09-consistency-as-evidence-graduation.md):** what Mycelium learned to distrust about itself. A pattern recurring across 5 instances graduated to anti-pattern #7 with an ambient self-check. The framework's own verification discipline now flags when its agent argues from internal coherence rather than external evidence.
+- **[When consistency stopped counting as evidence](docs/receipts/cases/2026-05-09-consistency-as-evidence-graduation.md):** what Mycelium learned to distrust about itself. A pattern recurring across 5 instances became a standing self-check the framework runs on itself. The framework's own verification discipline now flags when its agent argues from internal coherence rather than external evidence.
 - **[Edith-Mari's book project](docs/receipts/cases/2026-05-20-edith-mari-book-project.md):** what Mycelium reached beyond developers. First non-developer user (a writer with a cookbook project) hit the brief-synthesis flow at the affective layer and surfaced the wayfinding-at-phase-transitions correction. The framework's plain-language discipline was load-bearing.
 - **[When the report you cite fact-checks you](docs/receipts/cases/2026-06-07-faros-whiplash-integration.md):** what Mycelium learned about its own observability layer. Faros's *Acceleration Whiplash* and Datadog's *State of AI Engineering* arrived as external prompts; the framework's L5 score landed at 3/5 — strong scaffolding, weak instrumentation. Three changes shipped in one cycle, including the discipline that a schema field becomes a target the moment it's named.
 - **[Alex's first run](docs/receipts/cases/2026-05-26-alex-cohort-first-run.md):** what the deepest single session cost the reader. An outside user's first run surfaced output-density and post-build-silence gaps that drove the v0.31.x batch.

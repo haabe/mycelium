@@ -4,6 +4,18 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-13.
 
+## v0.46.1 — README jargon reduction (round two)
+
+**2026-06-13. Attribution: readme-jargon-reduction-2026-06-13 (lived-friction-triggered: peer-practitioner academic-language friction). Class: patch (human-surface doc; no schema or skill-behavior change).**
+
+The v0.46.0 README pass de-jargoned only "What it feels like." This finishes the job on the sections where the academic-language friction actually lives:
+
+- **"How it works"** — dropped *theory gates*, *diamond transition*, the *prototype-IS-the-spec / Cagan* citation, *regresses*, and the bare *L1/L2* numbers in prose. The behaviour is now described plainly ("each step has to clear an evidence check before it continues"; "the work moves back a step with what you learned").
+- **"Where it sits in the field"** — dropped the *harness engineering / feedforward-feedback sensors / computational-and-inferential / taxonomy / substrate* lecture. Kept the two credibility links (Thoughtworks + the paper) in one plain sentence.
+- One receipts phrase de-jargoned ("graduated to anti-pattern #7 with an ambient self-check" → "became a standing self-check the framework runs on itself").
+
+**Deliberately kept:** the core model names — **Scales**, **Diamonds**, and the L0–L5 graph. Whether the *in-product* vocabulary itself should change is the open `opportunities.yml#opp-005` question (is the vocabulary the product?), which is evidence-gated and not a README copy-edit call. This pass cuts the peripheral and academic jargon (the marketing-surface arm); the core-vocabulary question waits for user evidence.
+
 ## v0.46.0 — Scenario primitive becomes a falsifiable, grounded user story + README scenario rewrite
 
 **2026-06-13. Attribution: scenario-primitive-falsifiable-grounded-2026-06-13 (lived-friction-triggered: peer-practitioner feedback). Class: minor (new scenario schema capability + canvas-health enforcement + README human-surface rewrite).**
