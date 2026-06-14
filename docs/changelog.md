@@ -2,7 +2,17 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-06-14.
+**Last updated**: 2026-06-15.
+
+## v0.48.1 — /dora-check first_pass_success_rate reads the live battery instrument (+ dead-runner & gap-prover guards)
+
+**2026-06-15. Attribution: dora-firstpass-live-instrument-2026-06-15 (lived-friction-triggered). Class: patch (skill-doc/behaviour change).**
+
+Dogfood `/dora-check` surfaced that `apex.first_pass_success_rate` was wired to `.claude/evals/pass-history.json` — a derived counter that sits at `runs: 0` whenever the standard scenario corpus is dormant, so the metric was perpetually null while the *real* battery output (valid scored aggregates) sat unread in ephemeral `/tmp`. Fix: the field now reads scored battery result/aggregate JSONs under `.claude/evals/results/` as the **primary live source**, with `pass-history.json` demoted to a fallback for the standard corpus. Two guards are now MANDATORY, both encoded from lived incidents:
+- **Validity guard** — skip any scenario-result with `invalid: true` or `token_usage.total == 0` (the dead-runner artifact that produced the phantom INVALID 0/7 / 38% "baseline" on 2026-06-12). A zero-token result means the CLI never ran; counting it fabricates the metric.
+- **Expected-to-fail guard** — gap-prover scenarios (`expected_to_fail: true`) are excluded from the denominator so a designed failure can't drag the rate to a fake 0%.
+
+Run date is now reported with the number (a stale battery is a stale number). Null is reserved for the genuine no-valid-data case.
 
 ## v0.48.0 — Framework-health instrumentation (cycle-record gate/regression fields + preflight re-forecast)
 
