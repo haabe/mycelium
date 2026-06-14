@@ -2,7 +2,7 @@
 
 **Audience**: practitioner peers (PMs, senior engineers, designers, researchers) who want to know which frameworks Mycelium uses and how each one is wired in.
 **Time to read**: 15 min for full read; 2 min if you only want the table.
-**Last updated**: 2026-05-08.
+**Last updated**: 2026-06-14.
 
 The differentiator vs other framework lists: every theory is **mechanism-mapped** — the column "Implemented as" answers "which Mycelium artifact actually applies this?" Citations without mechanism-mapping are theatre.
 
@@ -73,6 +73,7 @@ Each one shapes a specific surface; removable in isolation, but the surface goes
 These show up as citations and inform the framework's ethics or peripheral mechanisms; they do not shape primary structure. Listed as `... and more` below — the table format is reserved for tier 1 + tier 2 (the load-bearing surface).
 
 - **Behavioral Science** (Shotton, Kahneman) — bias mitigation in `/bias-check`, ethical design constraints
+- **Amabile** (creativity research) — *Brilliant but Cruel* (1983) grounds the Negativity-as-Competence bias item in `/bias-check` (harsh critique reads as competence, so adversarial-review findings get weighed on cited evidence, not severity); componential theory backs the separable-process bet named in [philosophy.md](philosophy.md)
 - **CALMS** (Willis, Humble) — DevOps culture vocabulary in retrospectives
 - **Hooked / Indistractable** (Eyal) — ethical engagement design (anti-dark-pattern check)
 - **Clean Architecture / SOLID** (Martin) — engineering-principles.md NUDGE tier

@@ -138,6 +138,11 @@ Unlike bias (systematic error in one direction), **noise** is random scatter —
 - **Description**: Treating named frameworks, authors, or methodologies as inherently correct rather than as useful models.
 - **Mitigation**: Theories are lenses, not laws. Apply critically. Note when a framework may not fit the situation.
 
+### Negativity-as-Competence Bias (Brilliant-but-Cruel)
+- **Description**: Critical, harsh, or skeptical output is perceived as more intelligent and competent than supportive output — *independent of accuracy*. When the agent weighs a critical finding (from `/devils-advocate`, an adversarial verifier, scrutinize-style review, or `/code-review`) against a confirming one, it tends to treat the critic as inherently more credible. The harness amplifies this **structurally**: the adversarial-review stack is built to surface criticism, so criticism is over-represented and reads as rigor.
+- **Mitigation**: Weight an adversarial finding on the **evidence it cites**, not on the severity or confidence of the critique. A devils-advocate finding with no evidence is a hypothesis, not a verdict — ask it the same question the Evidence Gate asks of any claim ("what backs it?"). Apply the Consistency-as-Evidence check (anti-pattern #7) **symmetrically**: a harsh critique built only on internal coherence is consistency-only too. Severity is not substantiation.
+- **Source**: Amabile, T. M. (1983). "Brilliant but Cruel: Perceptions of Negative Evaluators." *Journal of Experimental Social Psychology*, 19(2), 146–156. Negative evaluators were rated more intelligent, competent, and expert (but less likable) than positive ones, independent of accuracy.
+
 ### Completionism Bias
 - **Description**: Feeling compelled to fill every section, answer every question, and produce comprehensive output even when evidence is thin.
 - **Mitigation**: It is better to say "insufficient evidence" than to speculate. Leave sections empty when appropriate.

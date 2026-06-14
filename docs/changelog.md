@@ -4,6 +4,18 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-14.
 
+## v0.46.3 — Amabile creativity/bias grounding (new bias item + theory citations)
+
+**2026-06-14. Attribution: amabile-creativity-bias-grounding-2026-06-14 (lived-friction-triggered: dogfood deep-dive in mycelium-roadmap cross-referencing Teresa Amabile's creativity / inner-work-life research against the framework). Class: patch (one harness-guidance item + two human-doc citations; no schema or skill-behavior change).**
+
+A deep-dive on Amabile's research surfaced one finding that cuts *against* a Mycelium mechanism and two that ground existing claims. All seven Amabile citations were verified before landing (the docs are public).
+
+- **New bias item — Negativity-as-Competence (Brilliant-but-Cruel).** Added to `harness/cognitive-biases.md` under "The Agent's Own Biases". Amabile (1983) found harsh evaluators are perceived as more competent than supportive ones, independent of accuracy. The adversarial-review stack (`/devils-advocate`, scrutinize-style review, `/code-review`, adversarial verifiers) *structurally* over-represents criticism, so the agent tends to over-trust the critic. The mitigation is a weighting rule: judge an adversarial finding on the evidence it cites, not on severity; apply the Consistency-as-Evidence check (anti-pattern #7) symmetrically to harsh critiques.
+- **theories.md Tier 3.** Amabile added to the background/citation tier, mechanism-mapped per the file's own rule: *Brilliant but Cruel* → the new bias item; componential theory → the philosophy backbone. Not promoted to Tier 1/2 — it implements no gate, and claiming the progress-principle/morale mappings as shipped mechanisms would be the theatre the file warns against.
+- **philosophy.md "Why opinionated discipline".** One sentence naming the empirical bet under "harness, not model": that *how* a decision gets made is a separable, improvable component of the outcome (Amabile's componential theory). A sentence, not a section — the doc disclaims academic showmanship.
+
+**Process note:** the two human-audience docs went through the voice gate (receipt + output-side pass); `cognitive-biases.md` is agent-audience and took a plain edit. The tier-3 `—` is the list's existing separator and "harness" is the domain noun, so both slop-check hits were judged false-positives, not recompose triggers. **Deliberately not done:** the progress-principle "momentum/morale" value-line and the brilliant-but-cruel marketing differentiator stay out of the README — the first needs cohort morale evidence, the second needs the weighting item to prove out first.
+
 ## v0.46.2 — README first-interaction rework (hero de-jargon + usefulness-first order)
 
 **2026-06-14. Attribution: readme-hero-positioning-2026-06-14 (lived-friction-triggered: peer-practitioner academic-language friction, plus desk-research adoption findings dogfooded in mycelium-roadmap). Class: patch (human-surface doc; no schema or skill-behavior change).**
