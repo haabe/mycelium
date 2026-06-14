@@ -116,7 +116,7 @@ DORA metrics from completed deliveries should feed back into feasibility risk as
 
 **Mechanism**: After each `/dora-check`, compare actual delivery metrics with the original ICE ease score and feasibility risk assessment. Log significant deviations (>2 points on ICE ease scale) in `corrections.md` as calibration data.
 
-**Skill integration**: `/dora-check` should surface this comparison. `/ice-score` should check for relevant DORA calibration data in corrections.md before scoring ease.
+**Skill integration**: `/dora-check` surfaces this comparison. The reverse direction is *aspirational* — `/ice-score` does not yet read DORA calibration data before scoring ease. `Gated by:` an ice-score step that greps corrections.md for "DORA calibration:" entries matching the solution shape — not yet built. Until then this loop runs manually: a human carries the calibration signal from `/dora-check` output into the next `/ice-score`.
 
 ## The L5 -> L2 Feedback Loop
 

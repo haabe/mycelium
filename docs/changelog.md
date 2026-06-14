@@ -4,6 +4,17 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-14.
 
+## v0.47.0 — Framework-health remediation (new anti-pattern #9 + promise-registry closes)
+
+**2026-06-15. Attribution: framework-health-remediation-2026-06-15 (lived-friction-triggered: a `/framework-health` run on mycelium-roadmap surfaced two actionable items). Class: minor (new anti-pattern entry; doc re-words; no schema or skill-behavior change).**
+
+A `/framework-health` run flagged the densest cluster ever logged in the dogfood repo and three promise-registry rows two runs from auto-escalation. Two remediations:
+
+- **New anti-pattern #9 — Fail-Open on Absent Input** (`harness/anti-patterns.md`, Confidence cluster, sibling to #7 Consistency-as-Evidence and #8 Stale State Read). A component treats absence/corruption of an upstream output as a benign default, and downstream layers then score, summarize, or act on the phantom as if it were a real measurement (a zero-token run scored, untouched fixture state graded, an `except→default→2>/dev/null` chain laundering a missing file into a plausible value). Cross-cutting principle: **scores require existence proofs**. Prose-graduated at 6 instances in 5 days (the workflow-#96 phantom-baseline chain accounts for four). The cross-cutting *mechanism* (an evaluator-rule requiring a work-evidence field on every verdict, or a `/framework-health` check flagging fail-open read chains) is **deliberately held** until the next instance lands in a NEW surface — the cluster's pre-registered graduation trigger. Prose-naming is well past the ≥3 bar; the mechanism waits on the gate rather than jumping it.
+- **Promise-registry P2/P3/P4 closed by honest re-word.** Three prose claims that implied enforcement Mycelium doesn't have are now advisory/manual with explicit `Gated by:` markers naming the not-yet-built mechanism: WIP "hard ceiling" (`engine/diamond-rules.md` — advisory, no spawn-time block), the DORA→Feasibility reverse loop (`engine/feedback-loops.md` — `/ice-score` doesn't read calibration data; manual carry-over), and canvas-sync "the person with more evidence wins" (`skills/canvas-sync/SKILL.md` — a manual heuristic, no evidence-weighing tooling). This closes them honestly (a promise can close by the doc ceasing to promise) and stops their 3rd-open-run escalation to the documented-rule-diverges cluster.
+
+**Process note:** `harness/*` and `engine/*` are agent-audience (plain edits, no voice gate). Surfaced and sequenced per the agent-led-structural-recommendation discipline — the two bounded/urgent items shipped here; the two instrumentation/process recommendations (cycle-history gate+regression fields; an effort-reforecast checkpoint) are held for an explicit design decision rather than imposed.
+
 ## v0.46.3 — Amabile creativity/bias grounding (new bias item + theory citations)
 
 **2026-06-14. Attribution: amabile-creativity-bias-grounding-2026-06-14 (lived-friction-triggered: dogfood deep-dive in mycelium-roadmap cross-referencing Teresa Amabile's creativity / inner-work-life research against the framework). Class: patch (one harness-guidance item + two human-doc citations; no schema or skill-behavior change).**
