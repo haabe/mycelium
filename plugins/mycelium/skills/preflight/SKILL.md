@@ -24,7 +24,9 @@ Before scoping any delivery work, establish constraints. Do not propose a plan b
 
 If time budget < 8 hours, scope aggressively — one vertical slice, no polish. If the initial plan exceeds the time budget, cut scope before presenting it to the user.
 
-*Source: Hoskins transcript (2026-04-25) — agent proposed 20-hour plan before learning user had 8 hours. Goldratt (Theory of Constraints — identify the constraint before optimizing). Corrections.md: "Over-scope before constraints."*
+**Re-forecast trigger (audit-triggered / emergent work).** Work that opens as "just address the recommendations", "quick fix", or any audit/assessment follow-up still gets a constraint pass — set an explicit estimate even when no one asked for one. Then, mid-session, **re-forecast when the work crosses ~2× the estimate or when no estimate was ever set**: stop, state actual-so-far vs estimate, and re-scope or re-confirm the budget before continuing. The failure this catches: emergent cycles that bypass preflight and balloon silently (dogfood `cycle-history.yml` — a "~2h" audit cycle ran ~9h; a "session-scope" one ran ~14h). The re-forecast becomes the `calibration.effort_accuracy` data point at `/retrospective`.
+
+*Source: Hoskins transcript (2026-04-25) — agent proposed 20-hour plan before learning user had 8 hours. Goldratt (Theory of Constraints — identify the constraint before optimizing). Corrections.md: "Over-scope before constraints." Re-forecast trigger from the 2026-06-15 `/framework-health` effort-calibration finding (audit-triggered cycles balloon past estimate).*
 
 ### Context
 - [ ] corrections.md reviewed for relevant past mistakes

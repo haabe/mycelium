@@ -4,6 +4,17 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-14.
 
+## v0.48.0 — Framework-health instrumentation (cycle-record gate/regression fields + preflight re-forecast)
+
+**2026-06-15. Attribution: framework-health-instrumentation-2026-06-15 (lived-friction-triggered: same `/framework-health` run as v0.47.0; closes the two instrumentation gaps rather than the two graduation gaps). Class: minor (schema extension + skill-behavior change in /retrospective and /preflight).**
+
+The health run found two of its five dimensions blind in `cycle-history` and one recurring calibration miss. Both now instrumented:
+
+- **Gate-effectiveness + regression-rate fields.** Cycle records gain `gates_fired` (each theory gate that fired this cycle + `result: pass|fail` + what a failed gate caught) and an in-cycle `regressions` block (`in_cycle_count` / `from_phase` / `to_phase` / `trigger` — phase step-backs *during* the cycle, distinct from the existing post-delivery `rework.*`). Schema in `engine/cycle-learning.md`; `/retrospective` populates them from the gate-review and regression-count analysis it already runs. **Absence is recorded explicitly** (empty/zero forms, not omitted) — a missing field would be a fail-open (AP#9), so "no gate fired" is written, not left blank.
+- **Preflight re-forecast trigger.** `/preflight` § Constraints now requires an explicit estimate even for audit-triggered / "just address the recommendations" work, and a mid-session re-forecast when actual crosses ~2× the estimate or none was set. Targets the balloon pattern the health run measured (a "~2h" audit cycle ran ~9h; a "session-scope" one ran ~14h). The re-forecast feeds `calibration.effort_accuracy` at retrospective.
+
+Existing cycle records are not back-filled — gate/regression history can't be reconstructed without fabricating it (the honest move is going-forward capture). **No change to gate logic or scoring**; this adds capture fields and one preflight prompt.
+
 ## v0.47.0 — Framework-health remediation (new anti-pattern #9 + promise-registry closes)
 
 **2026-06-15. Attribution: framework-health-remediation-2026-06-15 (lived-friction-triggered: a `/framework-health` run on mycelium-roadmap surfaced two actionable items). Class: minor (new anti-pattern entry; doc re-words; no schema or skill-behavior change).**

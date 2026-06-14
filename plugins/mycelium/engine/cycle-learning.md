@@ -33,7 +33,22 @@ Every leaf that reaches a terminal state (launched, archived, or killed) generat
     ice_accuracy: -2  # Predicted ICE total vs outcome-adjusted score
     effort_accuracy: "+50%"  # Actual vs estimated effort
     risk_accuracy: "feasibility underestimated"  # Which risk dimension was most wrong?
-  
+
+  # Gate effectiveness — which theory gates fired this cycle and whether they caught a real problem.
+  # Closes the /framework-health "Gate effectiveness" dimension (was unInstrumented in cycle records).
+  gates_fired:
+    - gate: "Evidence (L0→L1)"   # gate name / id
+      result: pass               # pass | fail  (fail = gate blocked progression, i.e. caught a gap)
+      caught: ""                 # what the gate surfaced when it failed; "" when it passed clean
+  # In-cycle regression — the diamond moved back a phase DURING this cycle (assumption invalidated mid-flight).
+  # Distinct from rework.post_delivery_regressions below (those are post-launch defects within 14 days).
+  # Closes the /framework-health "Regression rate" dimension.
+  regressions:
+    in_cycle_count: 0            # times the diamond regressed to an earlier phase during this cycle
+    from_phase: null             # deepest phase regressed FROM (e.g., Deliver)
+    to_phase: null               # phase regressed TO (e.g., Define)
+    trigger: ""                  # what invalidated the assumption / forced the step back
+
   # What was learned
   learnings:
     process: ""  # What would we do differently next time?
