@@ -4,7 +4,7 @@
 
 AI has made building cheap. It hasn't made *deciding* cheap. Agents will jump from an idea to a pull request without asking why, who for, or whether anyone needs it.
 
-The gap shows up the same way across every AI-native team. You're shipping two products at once: the one customers see, and the internal factory that decides how the first gets made. Most teams build that factory by accident, in chat logs and prompts no one reviews. Mycelium is that factory, built on purpose: build the right thing the right way. Other tools accelerate delivery; Mycelium makes the agent earn the right to start. Built using itself, and released as open source.
+The gap shows up the same way across every AI-native team. The agent is fast, confident, and glad to build something nobody asked for. What it skips is the deciding: why, who for, whether anyone needs it. Mycelium puts that part back. It doesn't replace your judgment; it gives the agent enough feedback that the judgment that ships is still yours. Other tools accelerate delivery; Mycelium makes the agent earn the right to start. Built using itself, and released as open source.
 
 ```bash
 # Recommended: install as a Claude Code plugin
@@ -16,12 +16,6 @@ The gap shows up the same way across every AI-native team. You're shipping two p
 Plugin install is brownfield-safe; no project-root files are modified. Skills are namespaced `/mycelium:<name>`, and `/myc<Tab>` expands the prefix. Legacy install + migration: [`docs/install-paths.md`](docs/install-paths.md).
 
 This README orients you and gets you installed. Full docs live at [`docs/`](docs/README.md): mental model, how-to guides, theory grounding, receipts.
-
-## Why this exists
-
-Skipping discovery is an old habit. You've watched a stakeholder pick a framework because they sat in a workshop with its authors, not because a user asked for it. You've heard "my gut beats the data." You've heard "no point in discovery, users never know what they want anyway." Deciding what is worth building was always the hard part, and there was always a reason to skip it.
-
-The agent just made skipping it free. It runs from idea to pull request without asking why, who for, or whether anyone needs it, faster than any of them ever could. Mycelium answers the old excuses the same way every time: with evidence instead of a shrug.
 
 ## What it does
 
@@ -40,6 +34,12 @@ Three moments you'll recognize.
 **The tired Friday.** It's late, you're done, and the careful step feels optional. The agent stops you: "you're about to skip the check that catches the thing you'd regret." It catches you exactly when you'd most like to slip past. Then it hands you the honest picture at the close: what's done, what's still owed.
 
 A weekend hack meets fewer of these moments; a team product meets them all. The intensity scales with what's at stake, not with how much you have to learn.
+
+## Why this exists
+
+Skipping discovery is an old habit. You've watched a stakeholder pick a framework because they sat in a workshop with its authors, not because a user asked for it. You've heard "my gut beats the data." You've heard "no point in discovery, users never know what they want anyway." Deciding what is worth building was always the hard part, and there was always a reason to skip it.
+
+The agent just made skipping it free. It runs from idea to pull request without asking why, who for, or whether anyone needs it, faster than any of them ever could. Mycelium answers the old excuses the same way every time: with evidence instead of a shrug.
 
 ## Who it's for
 

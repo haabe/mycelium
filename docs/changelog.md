@@ -2,7 +2,19 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-06-13.
+**Last updated**: 2026-06-14.
+
+## v0.46.2 — README first-interaction rework (hero de-jargon + usefulness-first order)
+
+**2026-06-14. Attribution: readme-hero-positioning-2026-06-14 (lived-friction-triggered: peer-practitioner academic-language friction, plus desk-research adoption findings dogfooded in mycelium-roadmap). Class: patch (human-surface doc; no schema or skill-behavior change).**
+
+v0.46.1 de-jargoned the body sections. This reworks the part a first-time visitor (a "window-shopper") hits first:
+
+- **Hero, second paragraph** — dropped the "two products / internal factory" abstraction (the named concept a reader outside the tech-product-marketing intersection bounces on) for the direct lesson: the agent is fast, confident, and glad to build something nobody asked for; what it skips is the deciding.
+- **Judgment-trustworthy reframe** — added one line so the positioning is "it doesn't replace your judgment; it gives the agent enough feedback that the judgment that ships is still yours" (grounded in Kahneman & Klein: intuition is reliable in a high-validity, fast-feedback environment, not a thing to override).
+- **Order** — moved "What it does" and "What it feels like" ahead of "Why this exists", so felt usefulness precedes the manifesto (Hardgrave 2003: methodology adoption runs on usefulness + fit, not belief or mandate; Rogers: complexity reduces adoption, trialability raises it).
+
+**Deliberately kept:** the core model names (Scales, Diamonds, L0–L5) and the "earn the right to start" line (it disciplines the agent, not the user). **Status:** these are positioning hypotheses from desk research, not validated; the discriminating instrument is observed usage (roadmap `ht-028`, the Bård huddle).
 
 ## v0.46.1 — README jargon reduction (round two)
 
