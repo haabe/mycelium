@@ -4,6 +4,17 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-15.
 
+## v0.49.1 — opencode onboarding fix: provision-skills.sh self-locates from a git clone
+
+**2026-06-15. Attribution: opencode-clone-onboarding-fix-2026-06-15 (lived-friction). Class: patch.**
+
+Dry-run prep for the cohort handoff caught a real onboarding bug in the v0.49.0 scaffold: `provision-skills.sh` resolved the plugin root as `${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/…}` — but a pure-opencode user who *git-cloned* the repo (the documented opencode path) has no Claude Code plugin cache and no `CLAUDE_PLUGIN_ROOT` set, so they'd hit "cannot find Mycelium plugin."
+
+- **Fix**: the script now resolves the plugin root in priority order — explicit `CLAUDE_PLUGIN_ROOT` → **script-relative (`$SCRIPT_DIR/../..`, i.e. self-locating from the clone)** → cache fallback. Verified by running it with `CLAUDE_PLUGIN_ROOT` unset from a clone: self-resolves and vendors all 55 skills + refs with resolvable paths.
+- **Doc**: `docs/integrations/opencode.md` manual setup now runs `bash plugins/mycelium/integrations/opencode/provision-skills.sh .` directly from the clone (self-locating, no env var), and adds **Apple-Silicon model-size guidance** — unified memory is the binding constraint: 16 GB → `qwen2.5-coder:14b`, 32 GB+ → `qwen2.5-coder:32b`, with a note to prefer reliable tool-callers (opencode drives edits via structured tool calls).
+
+Doc + script fix; no skill/hook/engine behaviour changed for Claude Code users.
+
 ## v0.49.0 — opencode as a provisionable agent target: starter scaffold + /mycelium:setup wiring
 
 **2026-06-15. Attribution: opencode-starter-scaffold-2026-06-15 (dogfood-triggered). Class: minor.**

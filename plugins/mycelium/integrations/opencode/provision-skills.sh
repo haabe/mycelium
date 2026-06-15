@@ -29,14 +29,27 @@
 
 set -euo pipefail
 
-PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}"
+# Resolve the plugin root in priority order so this works whether invoked by
+# /mycelium:setup (CLAUDE_PLUGIN_ROOT set) OR run by hand from a git clone
+# (CLAUDE_PLUGIN_ROOT unset — the common opencode case). The script lives at
+# <plugin_root>/integrations/opencode/provision-skills.sh, so its own location
+# resolves the plugin root for a clone without the user setting anything.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -d "${CLAUDE_PLUGIN_ROOT}/skills" ]; then
+  PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT}"                       # Claude Code / explicit
+elif [ -d "$SCRIPT_DIR/../../skills" ]; then
+  PLUGIN_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"            # running from a git clone
+else
+  PLUGIN_ROOT="$HOME/.claude/plugins/cache/mycelium-plugin/mycelium"  # cache fallback
+fi
 PROJECT_ROOT="${1:-$PWD}"
 DEST="$PROJECT_ROOT/.claude"
 VENDOR="$DEST/mycelium"
 
 if [ ! -d "$PLUGIN_ROOT/skills" ]; then
-  echo "ERROR: cannot find Mycelium plugin at '$PLUGIN_ROOT' (no skills/ dir)." >&2
-  echo "       Set CLAUDE_PLUGIN_ROOT to the plugin path and re-run." >&2
+  echo "ERROR: cannot find the Mycelium plugin (no skills/ dir at '$PLUGIN_ROOT')." >&2
+  echo "       Run this script from inside a Mycelium checkout, or set" >&2
+  echo "       CLAUDE_PLUGIN_ROOT to the plugins/mycelium path and re-run." >&2
   exit 1
 fi
 

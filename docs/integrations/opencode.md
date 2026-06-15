@@ -45,12 +45,15 @@ git clone https://github.com/haabe/mycelium
 cd mycelium
 # Substrate is ready: CLAUDE.md, AGENTS.md, .claude/, plugins/mycelium/, tests/
 
-# 3. Configure opencode (.opencode/opencode.json or ~/.config/opencode/opencode.json).
-# opencode 1.17.7 discovers skills in .claude/skills/ natively — no extra plugin needed.
-# (On older builds you needed the opencode-agent-skills plugin; on 1.17.7 it's redundant.)
-# NOTE: run `bash <plugin>/integrations/opencode/provision-skills.sh .` to vendor the
-# skills + rewrite their ${CLAUDE_PLUGIN_ROOT} refs (/mycelium:setup does this for you).
-# The config schema is strict — no comment keys.
+# 3. Provision the skills into your project. Run the script FROM the clone — it
+# self-locates (no CLAUDE_PLUGIN_ROOT needed) and vendors the skills + rewrites their
+# ${CLAUDE_PLUGIN_ROOT} refs to project-relative paths. (/mycelium:setup does this for
+# you on Claude Code; for a pure-opencode clone, run it directly.) Re-run after upgrades.
+bash plugins/mycelium/integrations/opencode/provision-skills.sh .   # '.' = your project root
+
+# 4. Configure opencode (.opencode/opencode.json or ~/.config/opencode/opencode.json).
+# opencode 1.17.7 discovers .claude/skills/ natively — no opencode-agent-skills plugin needed.
+# Schema is strict — no comment keys. Set the model to one your hardware can run (see below).
 {
   "$schema": "https://opencode.ai/config.json",
   "provider": {
@@ -65,10 +68,11 @@ cd mycelium
   }
 }
 
-# 4. Pull a capable model (32B+ recommended for reliable instruction-following)
-ollama pull qwen2.5-coder:32b
+# 5. Pull a model your hardware can run (see "Model size matters" — on Apple Silicon
+# the binding constraint is unified memory: 16GB → 14B, 32GB+ → 32B).
+ollama pull qwen2.5-coder:32b      # or qwen2.5-coder:14b on a 16GB machine
 
-# 5. Run
+# 6. Run
 opencode
 ```
 
@@ -81,6 +85,15 @@ This is the load-bearing decision. Mycelium-on-opencode trades structural enforc
 | 4B – 8B local | Substrate loads. Model will often ignore the Read-before-Edit hint, skip the Pre-Task Protocol, and forget to log corrections. Verified 2026-05-16: llama3.1:8b edited a versioned file with no prior read, no warning. **Not recommended** for serious project work. Fine for trying the framework's mechanics. |
 | 14B – 32B local | The instruction-following sweet spot for self-hosted. Qwen 2.5 Coder 32B, DeepSeek Coder V2, Llama 3.3 70B-quantized class. Most Mycelium discipline holds; expect occasional skips that the validators + corrections-loop catch. **Recommended** for self-hosted dogfood. |
 | 70B+ local or hosted-API class | Discipline holds at the same level as Claude on Claude Code. Tradeoff is inference latency vs structural enforcement; choose based on your hardware budget. |
+
+**On Apple Silicon, model size is bounded by unified memory** (the GPU shares RAM):
+
+| Mac | Realistic local model (Q4_K_M) | Notes |
+|---|---|---|
+| **16 GB** (M1 / M1 Pro base, 13"/14" 2021) | `qwen2.5-coder:14b` (~9 GB) | The realistic ceiling — leaves headroom for the OS + editor. Better tool-calling + instruction-following than 7-8B, but still **below** the 32B sweet spot: expect some skill-driving friction. Drop to `qwen2.5-coder:7b` (~4.7 GB) only if 14B is too tight. |
+| **32 GB+** (M1 Pro/Max higher config) | `qwen2.5-coder:32b` (~20 GB) | The recommended sweet spot — fits with room to spare. |
+
+Use a model with solid **tool-calling** (Qwen 2.5 Coder is reliable here) — opencode drives edits/reads through structured tool calls, and weak tool-callers stall or malform them.
 | Claude / GPT-4 via API | Use [Claude Code](https://claude.com/claude-code) instead — you get the structural enforcement Mycelium was designed against. opencode-as-frontend with an API model in the back works, but it's the worst-of-both: API cost without runtime enforcement. |
 
 ## Known runtime gaps and current workarounds
