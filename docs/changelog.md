@@ -4,6 +4,29 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-15.
 
+## v0.49.0 — opencode as a provisionable agent target: starter scaffold + /mycelium:setup wiring
+
+**2026-06-15. Attribution: opencode-starter-scaffold-2026-06-15 (dogfood-triggered). Class: minor.**
+
+A cross-repo opencode discovery arc re-verified the runtime gaps against the opencode `dev` branch and produced a runnable starter. opencode moves from "documented integration" to "provisionable target".
+
+**New: bundled starter scaffold** — `plugins/mycelium/integrations/opencode/` (the opencode analogue of `hooks.codex.json` / `hooks.cursor.json`):
+- `opencode.json` — starter config (local-model provider example, `AGENTS.md` instructions, skill permission).
+- `plugin/mycelium.ts` — enforcement-plugin **skeleton** covering the two clean hooks: preflight context injection (`chat.message`, fires headless too) and read-before-edit guard (`tool.execute.before` throw).
+- `command/mycelium/interview.md` — example user-typed entry command.
+- `README.md` — what's covered vs TODO, and the source-verified-not-runtime-verified status.
+
+**New: `/mycelium:setup` Step 5** optionally provisions the scaffold into the user's project. **Guarded and opt-in**: it fires only when opencode is detected (`opencode.json`/`.opencode/` in project, `~/.config/opencode`, or `opencode` on `PATH`) or the user asks; it skips silently on Claude-Code-only installs and never overwrites existing files.
+
+**Doc: `docs/integrations/opencode.md` gap re-assessment (3 hard gaps → 1)**:
+- **#27899 (headless context injection) — effectively closed** via the stable `chat.message` hook (mutating `output.parts` reaches the model headless). Supersedes the May `tui.prompt.append`-is-silent finding.
+- **#27901 (read-before-edit) — plugin-solvable** (track read-history, `throw` from `tool.execute.before`). Core still doesn't enforce it.
+- **#27900 (reflexion / tool-failure event) — the one genuine hard gap.** On failure no plugin hook fires; needs an upstream `tool.execute.error` event (PR draft exists).
+
+Deferral-trigger status (decision-log 2026-05-16): gap-trigger **partially met** (2 of 3 paths now structural); demand-trigger (a real user adopting opencode) **not yet met**. The tryable path (scaffold + setup provisioning + doc) is the low-regret ship-now move; committing the adapter to maintained framework core (CI coupling) stays paced behind real adoption.
+
+**Runtime-verified on opencode 1.17.7** (2026-06-15): the scaffold was tested end-to-end on a real opencode + Ollama box. The test caught and fixed **3 ship-blocking defects** the source-reading missed: (1) `//` "comment" keys in `opencode.json` are rejected by opencode's strict schema (config wouldn't load); (2) a custom `@ai-sdk/openai-compatible` provider needs an explicit `models` map; (3) the `chat.message` preflight part shape crashed every run with a `SchemaError` — it must carry `id` + `sessionID` + `messageID`. Post-fix: plugin loads, `chat.message` injection works headless, the read-before-edit guard fired live against `llama3.1:8b`, clean `opencode run` (EXIT 0). #27899 (headless injection) and #27901 (read-before-edit) are now runtime-confirmed on 1.17.7, not just dev-source. Still a starter: gate/scope/secret-scan, post-write nudges, and Stop-relocation are TODO; small models (≈8B) can be distracted by the preflight prose. **Known limitation (runtime-verified 2026-06-15):** opencode 1.17.7 discovers skills natively (the `opencode-agent-skills` plugin is no longer needed), but 36 of 55 skills reference `${CLAUDE_PLUGIN_ROOT}/engine/…` + `/harness/…` files that opencode does not resolve (the variable is never set; no substitution) — so reference-heavy skills would load but misfire on their deeper steps. **Fixed**: `provision-skills.sh` (invoked by `/mycelium:setup` Step 5) vendors the skills + their `engine/`/`harness/`/`jit-tooling/`/`domains/` reference files into the project's `.claude/` and rewrites `${CLAUDE_PLUGIN_ROOT}/…` to project-relative paths opencode resolves. The rewrite is verified to produce resolvable paths; full skill *execution* on a local model isn't yet model-verified end-to-end. The vendored copies are a snapshot — re-run setup after a framework upgrade to refresh. (The env-var alternative — set `CLAUDE_PLUGIN_ROOT` in opencode config — was tested and ruled out: opencode does no skill-content interpolation, so resolution would depend on model-luck.) No existing skill/hook/engine behaviour changed for Claude Code users.
+
 ## v0.48.2 — /dora-check first_pass: search both battery dirs + locate-before-deny
 
 **2026-06-15. Attribution: dora-firstpass-battery-locations-2026-06-15 (lived-friction-triggered). Class: patch.**

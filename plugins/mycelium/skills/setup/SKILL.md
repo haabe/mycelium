@@ -1,6 +1,6 @@
 ---
 name: setup
-description: First-run setup for the Mycelium plugin. Creates project-state directories (.claude/canvas, .claude/diamonds, .claude/memory, .claude/harness) and minimal starter files in the user's project. Idempotent — re-running on an initialized project is a no-op. Run this once after installing the Mycelium plugin and before invoking other skills.
+description: First-run setup for the Mycelium plugin. Creates project-state directories (.claude/canvas, .claude/diamonds, .claude/memory, .claude/harness) and minimal starter files in the user's project. Optionally provisions opencode runtime support (a starter scaffold) when opencode is detected or requested. Idempotent — re-running on an initialized project is a no-op. Run this once after installing the Mycelium plugin and before invoking other skills.
 metadata:
   framework_dependency: "mycelium"
   framework_dependency_note: "This skill is designed to run within the Mycelium framework (https://github.com/haabe/mycelium). Standalone use will skip the canvas state, theory gates, and harness behavior the skill assumes. Install: /plugin install mycelium@haabe/mycelium."
@@ -178,7 +178,84 @@ This project also uses the [Mycelium plugin](https://github.com/haabe/mycelium).
 Run `/mycelium:diamond-assess` for current state.
 ```
 
-## Step 5: Confirmation message
+## Step 5: Optionally provision opencode runtime support
+
+This step is **opt-in and guarded**. The overwhelming majority of installs run on
+Claude Code and must NOT get opencode files dropped into their project. Only offer
+this when there's a signal that opencode is in play, or when the user explicitly
+asks ("set up opencode support").
+
+### 5a: Detect (best-effort) whether opencode is relevant
+
+Check for any of these signals (best-effort — none is authoritative):
+
+```bash
+test -f "$project_root/opencode.json" || test -d "$project_root/.opencode"   # project already uses opencode
+test -d "$HOME/.config/opencode"                                             # user has opencode configured
+command -v opencode >/dev/null 2>&1                                          # opencode on PATH
+```
+
+- If **no signal** AND the user did not explicitly ask for opencode: **skip this
+  step silently** (do not mention it — keep the Claude-Code path clean).
+- If **a signal is present** OR the user asked: continue to 5b.
+
+### 5b: Offer, with the basis to decide (per opp-002 decision-without-context)
+
+> "I noticed opencode may be your runtime (or you asked for it). Want me to drop in
+> a Mycelium-on-opencode starter scaffold?
+>
+> What it provisions (copied from the plugin, never overwriting your `.opencode/` files):
+> - `opencode.json` — a starter config (local-model provider example; edit `model` for your setup)
+> - `.opencode/plugin/mycelium.ts` — enforcement plugin with the two clean hooks: preflight context injection + read-before-edit guard
+> - `.opencode/command/mycelium/interview.md` — an example `/mycelium:interview` entry command
+> - **the skills** — vendored into `.claude/skills/` + their reference files into `.claude/mycelium/`, with `${CLAUDE_PLUGIN_ROOT}` paths rewritten so opencode can resolve them (opencode does no variable substitution, so this rewrite is required for the 36 reference-heavy skills to work)
+>
+> Honest caveats:
+> - **The vendored skills/reference files are a SNAPSHOT** — they go stale when the framework updates. Re-run `/mycelium:setup` after a framework upgrade to refresh. (This vendors framework reference into your repo — opencode-only; the trade for opencode's lack of a plugin-cache it can read.)
+> - The enforcement plugin is a **starter skeleton** (runtime-verified on opencode 1.17.7 for the two clean hooks; gate/scope/secret-scan + Stop-relocation are TODO).
+> - **One known gap**: reflexion-on-tool-failure has no clean path until opencode ships `tool.execute.error` (issue #27900). Everything else works.
+> - Skills are discovered natively by opencode 1.17.7 — no `opencode-agent-skills` plugin needed.
+> - Full details, model-size guidance, and the gap table: `docs/integrations/opencode.md`.
+>
+> Say no/skip if you're on Claude Code — this adds nothing there."
+
+**Auto-mode default** (no interactive user): default to **skip** unless an opencode
+signal is present, in which case provision the scaffold and print the caveats. Never
+overwrite an existing `opencode.json` or `.opencode/` file without explicit consent.
+
+### 5c: Provision (on yes)
+
+Copy from the plugin's bundled scaffold, idempotently, never clobbering user files:
+
+```bash
+SRC="${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/integrations/opencode"
+mkdir -p "$project_root/.opencode/plugin" "$project_root/.opencode/command/mycelium"
+
+# opencode.json — only if absent; if present, show the user the starter and let them merge.
+test -f "$project_root/opencode.json" || cp "$SRC/opencode.json" "$project_root/opencode.json"
+
+# plugin + command — copy with -n (no-clobber)
+cp -n "$SRC/plugin/mycelium.ts" "$project_root/.opencode/plugin/mycelium.ts"
+cp -n "$SRC/command/mycelium/interview.md" "$project_root/.opencode/command/mycelium/interview.md"
+
+# Skill provisioning (the load-bearing part): vendor the skills + their referenced
+# engine/harness/jit-tooling/domains files into .claude/ and rewrite ${CLAUDE_PLUGIN_ROOT}
+# paths to project-relative ones. opencode does NO ${...} interpolation of skill content,
+# so without this the 36 reference-heavy skills load but misfire. Idempotent + re-runnable.
+bash "$SRC/provision-skills.sh" "$project_root"
+```
+
+If `opencode.json` already exists, do NOT overwrite — print the starter's contents
+and tell the user which keys to merge (`provider`, `instructions`, `permission.skill`).
+
+After provisioning, remind the user: (1) skills are discovered natively by opencode
+1.17.7 — no `opencode-agent-skills` plugin needed; (2) the vendored copies are a
+SNAPSHOT — **re-run `/mycelium:setup` after any framework upgrade to refresh them**;
+(3) read `docs/integrations/opencode.md`; (4) the enforcement plugin is a starter
+skeleton (two clean hooks; gate/scope/secret-scan + Stop-relocation are TODO) and
+reflexion (#27900) needs the upstream opencode fix.
+
+## Step 6: Confirmation message
 
 After all writes succeed, build the confirmation by checking what was actually created. Use `test -f <project_root>/AGENTS.md` to determine whether the AGENTS.md line should appear.
 
@@ -195,6 +272,7 @@ The output has two parts: a short welcome (closes the install→setup void for u
 > - `.claude/harness/decision-log.md`, `.claude/harness/warnings-log.md` (empty)
 > - `.claude/evals/.gitkeep`, `.claude/jit-tooling/.gitkeep` (empty dirs preserved for git)
 > - `AGENTS.md` at project root  ← include this line ONLY if AGENTS.md was actually written this session
+> - `opencode.json` + `.opencode/` starter scaffold  ← include this line ONLY if the opencode scaffold was provisioned this session (Step 5); add: "see docs/integrations/opencode.md to finish + verify"
 >
 > Next: run `/mycelium:interview` to start a 10-minute discovery session — 4 questions about your idea, then a one-page brief covering who it's for, the biggest assumption, the biggest risk, and your next concrete move. Or `/mycelium:diamond-assess` if you want to add Mycelium to a project that's already partway through discovery."
 
