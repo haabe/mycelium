@@ -4,6 +4,18 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-15.
 
+## v0.49.2 — don't ship unverified code: runtime existence-proof before a "works" claim (G-V13)
+
+**2026-06-15. Attribution: runtime-verification-before-ship-2026-06-15 (lived-friction). Class: patch.**
+
+This session shipped an opencode scaffold authored from dev-branch *source analysis*, tagged "source-verified" — and it would have shipped broken: a runtime test (prompted by the user, not forced by any gate) found 3 ship-blocking bugs. "source-verified" is a weasel tag: it pattern-matches to "verified" but carries no runtime proof. Nothing in the framework forced "if a runnable artifact claims it works, actually run it." Fixed by sharpening three existing mechanisms (not a new subsystem):
+
+- **`G-V13` (guardrails-delivery)** — a change that adds/modifies a runnable artifact (script/plugin/hook/config/command) AND claims it works/ships isn't done until it's been executed in a representative environment (`Ran: <cmd> → <result>`), or the claim is explicitly downgraded to "source-verified, untested." Scoped to fire only when the change *claims* it works (not every config tweak); NUDGE-weight. Sibling of G-V12 ("validator passed only proves it ran" → "source-verified only proves you read it").
+- **Verification-surface rule (`communication-rules.md` + CLAUDE.md)** — gains a runnable-artifact tier: a works/ships claim needs `Ran:`; `source-verified` is an explicit non-runtime tag that cannot satisfy it.
+- **Anti-pattern #7 sub-class (i) source-analysis-narrated-as-runtime-verification** — added to the registry.
+
+Generalizes the existing existence-proof rule (`fail-open-scoring-of-absent-work`: scores require existence proofs) from measurements to runnable artifacts. No new validator Check — detection-mechanization deferred (no clean signal for "did you run it"); prose-discipline + Pre-Ship nudge, per prose-first-mechanize-later. No existing skill/hook/engine behaviour changed for Claude Code users.
+
 ## v0.49.1 — opencode onboarding fix: provision-skills.sh self-locates from a git clone
 
 **2026-06-15. Attribution: opencode-clone-onboarding-fix-2026-06-15 (lived-friction). Class: patch.**

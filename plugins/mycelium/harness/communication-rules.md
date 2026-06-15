@@ -74,6 +74,18 @@ don't try to eliminate it. Convention is grep-detectable post-publish; a propaga
 without any verification form fails the check. Candidate Check N+2 mechanism flagged in
 corrections.md.
 
+**For runnable artifacts specifically (scripts, plugins, hooks, config, commands)**: a
+claim that the artifact *works / runs / is verified / ships* requires `Ran: <cmd> →
+<result>` — a RUNTIME existence-proof that it was actually executed in a representative
+environment. Source / spec / dev-branch analysis is `Source-verified (NOT run)` and
+CANNOT satisfy a works/ships claim — "source-verified" is a non-runtime tag, not a
+verification synonym (it proves the artifact *should* work, not that it *does*). This is
+sub-class **(i) source-analysis-narrated-as-runtime-verification** of anti-pattern #7
+(graduated 2026-06-15: the opencode scaffold tagged "source-verified" carried 3
+ship-blocking bugs caught only by a user-prompted runtime test — the safety came from a
+prompt, not a gate). Enforced Pre-Ship by **G-V13** (guardrails-delivery); generalizes
+the existence-proof rule from measurements to runnable artifacts.
+
 **For X / Twitter URLs specifically**: attempt playwright + nitter.net extraction before
 defaulting to `Per user:` summary. The WebFetch surface fails on X (HTTP 402 paywall)
 and on most Nitter mirrors; playwright with full-browser rendering succeeds where lighter
