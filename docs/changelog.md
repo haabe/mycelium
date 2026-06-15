@@ -4,6 +4,14 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-15.
 
+## v0.48.2 — /dora-check first_pass: search both battery dirs + locate-before-deny
+
+**2026-06-15. Attribution: dora-firstpass-battery-locations-2026-06-15 (lived-friction-triggered). Class: patch.**
+
+Immediate dogfood follow-up to v0.48.1. Two corrections from a real incident:
+- v0.48.1 named only `.claude/evals/results/` as the battery source, but the auto-dogfood full-session battery writes to `.claude/auto-dogfood/results/`. first_pass_success_rate now searches **both** locations (most-recent across both), plus any project-configured battery dir.
+- Added a **locate-before-deny** rule: before reporting `null` or "no battery exists", search both dirs in the current tree AND `git log --all --name-only`. The trigger was an agent asserting "the battery harness doesn't exist in either repo" off an incomplete search (it was in `.claude/auto-dogfood/` the whole time) and building a cascade of wrong artifacts on that false premise. A negative grep in one location is not absence.
+
 ## v0.48.1 — /dora-check first_pass_success_rate reads the live battery instrument (+ dead-runner & gap-prover guards)
 
 **2026-06-15. Attribution: dora-firstpass-live-instrument-2026-06-15 (lived-friction-triggered). Class: patch (skill-doc/behaviour change).**
