@@ -2,7 +2,7 @@
 
 **Audience**: practitioners + evaluators wondering why the framework imposes structure rather than leaving choice to the user.
 **Time to read**: 7 min.
-**Last updated**: 2026-05-08.
+**Last updated**: 2026-06-14.
 
 The agent operating manual is [CLAUDE.md](../CLAUDE.md). This page is the human-facing rationale. They should agree, but they speak to different readers.
 
@@ -19,6 +19,8 @@ This is the load-bearing claim. Everything else follows from it.
 Discipline that the user can opt out of at any moment is not discipline; it is a suggestion. The agent's default behavior under context pressure is to skip — and the agent has more context pressure than a human.
 
 So Mycelium picks specific gates, specific evidence shapes, specific theories, and enforces them. The opinionation is not arbitrary: every gate has a theory citation, every guardrail has a corrections.md entry that produced it, every cluster has a graduation criterion. The opinionation is auditable.
+
+Underneath this sits a bet: that how a decision gets made is its own improvable part of the outcome, not just the skill of whoever makes it. That is what Amabile's componential theory of creativity names, and it is why a harness around the agent can change what ships, not only how fast.
 
 The cost of opinionation: when your work does not match the framework's shape, the framework feels heavy. The fix for that is not "make the framework lighter for everyone"; it is "be honest about who the framework is and is not for". See [evaluate.md](evaluate.md) and the README's Who-it's-not-for section.
 

@@ -2,7 +2,59 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-06-14.
+**Last updated**: 2026-06-15.
+
+## v0.48.2 — /dora-check first_pass: search both battery dirs + locate-before-deny
+
+**2026-06-15. Attribution: dora-firstpass-battery-locations-2026-06-15 (lived-friction-triggered). Class: patch.**
+
+Immediate dogfood follow-up to v0.48.1. Two corrections from a real incident:
+- v0.48.1 named only `.claude/evals/results/` as the battery source, but the auto-dogfood full-session battery writes to `.claude/auto-dogfood/results/`. first_pass_success_rate now searches **both** locations (most-recent across both), plus any project-configured battery dir.
+- Added a **locate-before-deny** rule: before reporting `null` or "no battery exists", search both dirs in the current tree AND `git log --all --name-only`. The trigger was an agent asserting "the battery harness doesn't exist in either repo" off an incomplete search (it was in `.claude/auto-dogfood/` the whole time) and building a cascade of wrong artifacts on that false premise. A negative grep in one location is not absence.
+
+## v0.48.1 — /dora-check first_pass_success_rate reads the live battery instrument (+ dead-runner & gap-prover guards)
+
+**2026-06-15. Attribution: dora-firstpass-live-instrument-2026-06-15 (lived-friction-triggered). Class: patch (skill-doc/behaviour change).**
+
+Dogfood `/dora-check` surfaced that `apex.first_pass_success_rate` was wired to `.claude/evals/pass-history.json` — a derived counter that sits at `runs: 0` whenever the standard scenario corpus is dormant, so the metric was perpetually null while the *real* battery output (valid scored aggregates) sat unread in ephemeral `/tmp`. Fix: the field now reads scored battery result/aggregate JSONs under `.claude/evals/results/` as the **primary live source**, with `pass-history.json` demoted to a fallback for the standard corpus. Two guards are now MANDATORY, both encoded from lived incidents:
+- **Validity guard** — skip any scenario-result with `invalid: true` or `token_usage.total == 0` (the dead-runner artifact that produced the phantom INVALID 0/7 / 38% "baseline" on 2026-06-12). A zero-token result means the CLI never ran; counting it fabricates the metric.
+- **Expected-to-fail guard** — gap-prover scenarios (`expected_to_fail: true`) are excluded from the denominator so a designed failure can't drag the rate to a fake 0%.
+
+Run date is now reported with the number (a stale battery is a stale number). Null is reserved for the genuine no-valid-data case.
+
+## v0.48.0 — Framework-health instrumentation (cycle-record gate/regression fields + preflight re-forecast)
+
+**2026-06-15. Attribution: framework-health-instrumentation-2026-06-15 (lived-friction-triggered: same `/framework-health` run as v0.47.0; closes the two instrumentation gaps rather than the two graduation gaps). Class: minor (schema extension + skill-behavior change in /retrospective and /preflight).**
+
+The health run found two of its five dimensions blind in `cycle-history` and one recurring calibration miss. Both now instrumented:
+
+- **Gate-effectiveness + regression-rate fields.** Cycle records gain `gates_fired` (each theory gate that fired this cycle + `result: pass|fail` + what a failed gate caught) and an in-cycle `regressions` block (`in_cycle_count` / `from_phase` / `to_phase` / `trigger` — phase step-backs *during* the cycle, distinct from the existing post-delivery `rework.*`). Schema in `engine/cycle-learning.md`; `/retrospective` populates them from the gate-review and regression-count analysis it already runs. **Absence is recorded explicitly** (empty/zero forms, not omitted) — a missing field would be a fail-open (AP#9), so "no gate fired" is written, not left blank.
+- **Preflight re-forecast trigger.** `/preflight` § Constraints now requires an explicit estimate even for audit-triggered / "just address the recommendations" work, and a mid-session re-forecast when actual crosses ~2× the estimate or none was set. Targets the balloon pattern the health run measured (a "~2h" audit cycle ran ~9h; a "session-scope" one ran ~14h). The re-forecast feeds `calibration.effort_accuracy` at retrospective.
+
+Existing cycle records are not back-filled — gate/regression history can't be reconstructed without fabricating it (the honest move is going-forward capture). **No change to gate logic or scoring**; this adds capture fields and one preflight prompt.
+
+## v0.47.0 — Framework-health remediation (new anti-pattern #9 + promise-registry closes)
+
+**2026-06-15. Attribution: framework-health-remediation-2026-06-15 (lived-friction-triggered: a `/framework-health` run on mycelium-roadmap surfaced two actionable items). Class: minor (new anti-pattern entry; doc re-words; no schema or skill-behavior change).**
+
+A `/framework-health` run flagged the densest cluster ever logged in the dogfood repo and three promise-registry rows two runs from auto-escalation. Two remediations:
+
+- **New anti-pattern #9 — Fail-Open on Absent Input** (`harness/anti-patterns.md`, Confidence cluster, sibling to #7 Consistency-as-Evidence and #8 Stale State Read). A component treats absence/corruption of an upstream output as a benign default, and downstream layers then score, summarize, or act on the phantom as if it were a real measurement (a zero-token run scored, untouched fixture state graded, an `except→default→2>/dev/null` chain laundering a missing file into a plausible value). Cross-cutting principle: **scores require existence proofs**. Prose-graduated at 6 instances in 5 days (the workflow-#96 phantom-baseline chain accounts for four). The cross-cutting *mechanism* (an evaluator-rule requiring a work-evidence field on every verdict, or a `/framework-health` check flagging fail-open read chains) is **deliberately held** until the next instance lands in a NEW surface — the cluster's pre-registered graduation trigger. Prose-naming is well past the ≥3 bar; the mechanism waits on the gate rather than jumping it.
+- **Promise-registry P2/P3/P4 closed by honest re-word.** Three prose claims that implied enforcement Mycelium doesn't have are now advisory/manual with explicit `Gated by:` markers naming the not-yet-built mechanism: WIP "hard ceiling" (`engine/diamond-rules.md` — advisory, no spawn-time block), the DORA→Feasibility reverse loop (`engine/feedback-loops.md` — `/ice-score` doesn't read calibration data; manual carry-over), and canvas-sync "the person with more evidence wins" (`skills/canvas-sync/SKILL.md` — a manual heuristic, no evidence-weighing tooling). This closes them honestly (a promise can close by the doc ceasing to promise) and stops their 3rd-open-run escalation to the documented-rule-diverges cluster.
+
+**Process note:** `harness/*` and `engine/*` are agent-audience (plain edits, no voice gate). Surfaced and sequenced per the agent-led-structural-recommendation discipline — the two bounded/urgent items shipped here; the two instrumentation/process recommendations (cycle-history gate+regression fields; an effort-reforecast checkpoint) are held for an explicit design decision rather than imposed.
+
+## v0.46.3 — Amabile creativity/bias grounding (new bias item + theory citations)
+
+**2026-06-14. Attribution: amabile-creativity-bias-grounding-2026-06-14 (lived-friction-triggered: dogfood deep-dive in mycelium-roadmap cross-referencing Teresa Amabile's creativity / inner-work-life research against the framework). Class: patch (one harness-guidance item + two human-doc citations; no schema or skill-behavior change).**
+
+A deep-dive on Amabile's research surfaced one finding that cuts *against* a Mycelium mechanism and two that ground existing claims. All seven Amabile citations were verified before landing (the docs are public).
+
+- **New bias item — Negativity-as-Competence (Brilliant-but-Cruel).** Added to `harness/cognitive-biases.md` under "The Agent's Own Biases". Amabile (1983) found harsh evaluators are perceived as more competent than supportive ones, independent of accuracy. The adversarial-review stack (`/devils-advocate`, scrutinize-style review, `/code-review`, adversarial verifiers) *structurally* over-represents criticism, so the agent tends to over-trust the critic. The mitigation is a weighting rule: judge an adversarial finding on the evidence it cites, not on severity; apply the Consistency-as-Evidence check (anti-pattern #7) symmetrically to harsh critiques.
+- **theories.md Tier 3.** Amabile added to the background/citation tier, mechanism-mapped per the file's own rule: *Brilliant but Cruel* → the new bias item; componential theory → the philosophy backbone. Not promoted to Tier 1/2 — it implements no gate, and claiming the progress-principle/morale mappings as shipped mechanisms would be the theatre the file warns against.
+- **philosophy.md "Why opinionated discipline".** One sentence naming the empirical bet under "harness, not model": that *how* a decision gets made is a separable, improvable component of the outcome (Amabile's componential theory). A sentence, not a section — the doc disclaims academic showmanship.
+
+**Process note:** the two human-audience docs went through the voice gate (receipt + output-side pass); `cognitive-biases.md` is agent-audience and took a plain edit. The tier-3 `—` is the list's existing separator and "harness" is the domain noun, so both slop-check hits were judged false-positives, not recompose triggers. **Deliberately not done:** the progress-principle "momentum/morale" value-line and the brilliant-but-cruel marketing differentiator stay out of the README — the first needs cohort morale evidence, the second needs the weighting item to prove out first.
 
 ## v0.46.2 — README first-interaction rework (hero de-jargon + usefulness-first order)
 

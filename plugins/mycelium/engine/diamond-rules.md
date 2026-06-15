@@ -54,7 +54,9 @@ Diamonds spawn child diamonds when complexity or scope requires it:
 
 Two limits apply: a hard ceiling per scale and a working WIP limit per scale.
 
-**Hard ceiling per scale** (architectural maximum — cannot exceed):
+**Hard ceiling per scale** (architectural maximum — advisory, not gate-enforced):
+
+> **Enforcement is advisory.** `/diamond-progress` surfaces these ceilings but does not currently block an over-ceiling spawn. `Gated by:` a spawn-time count-and-block gate in `/diamond-progress` (count active diamonds per scale vs ceiling, block + suggest park candidates) — not yet built. Until then the ceiling is a convention the agent and team hold, not a hard stop.
 
 | Scale | Max active | Rationale |
 |---|---|---|

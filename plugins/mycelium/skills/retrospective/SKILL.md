@@ -68,8 +68,17 @@ Find the leaf_id and opportunity_id for the delivered solution (from `.claude/ca
     ice_accuracy: "predicted XXX vs actual [outcome description]"
     effort_accuracy: "predicted X days vs actual X days (delta: +/-X)"
     risk_accuracy: "feasibility was [predicted] — actual was [description]"
+  gates_fired:                                   # which theory gates fired; result pass|fail (fail = caught a real gap)
+    - {gate: "<gate name>", result: pass, caught: ""}
+  regressions:                                   # in-cycle phase regressions (NOT post-delivery rework)
+    in_cycle_count: 0
+    from_phase: null
+    to_phase: null
+    trigger: ""
   learnings: "Key learning from this cycle"
 ```
+
+**Populate `gates_fired` and `regressions` from the analysis you already do below** (Step "Where did the theory gates catch a real problem?" → `gates_fired`; "How many regressions occurred?" → split: mid-cycle phase regressions go to `regressions.in_cycle_count`/`from_phase`/`to_phase`/`trigger`, post-launch defects stay in `rework.post_delivery_regressions`). If no gate fired and no regression occurred, write the empty/zero forms explicitly — absence recorded is a measurement; a missing field is not (anti-pattern #9, Fail-Open on Absent Input).
 
 Update `calibration_summary.total_cycles` count. If total_cycles reaches a multiple of 5, prompt: "5 cycles since last review. Run `/mycelium:framework-health` to check calibration?"
 
