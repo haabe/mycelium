@@ -1,6 +1,6 @@
 # Harness — Guardrails, Constraints, and Decision Quality
 
-The harness is what keeps the agent honest. While the [engine](../engine/) defines the workflow and the [canvas](../canvas/) holds the state, the harness enforces constraints that prevent shortcuts, catch bias, and maintain quality.
+The harness is what keeps the agent honest. While the [engine](../engine/) defines the workflow and the canvas holds the state (`.claude/canvas/` in the user's project), the harness enforces constraints that prevent shortcuts, catch bias, and maintain quality.
 
 The term "harness" comes from [Birgitta Böckeler's harness engineering concept](https://martinfowler.com/articles/harness-engineering.html): scaffolding that constrains an AI agent's behavior through a mix of computational enforcement (hooks, scripts) and inferential guidance (instructions, checklists).
 
@@ -34,7 +34,7 @@ The term "harness" comes from [Birgitta Böckeler's harness engineering concept]
 - **[security-trust.md](security-trust.md)** — Per-stage security requirements. OWASP at L4, trust signals at L5, threat modeling for anything handling user data.
 
 ### Decision History
-- **[decision-log.md](decision-log.md)** — Every significant decision with context, alternatives considered, theory justification, evidence, and confidence level. The audit trail for "why did we do it this way?"
+- **`decision-log.md`** (`.claude/harness/decision-log.md` in the user's project) — Every significant decision with context, alternatives considered, theory justification, evidence, and confidence level. The audit trail for "why did we do it this way?"
 
 ## How It Fits Together
 

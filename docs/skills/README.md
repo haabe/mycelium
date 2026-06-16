@@ -122,7 +122,7 @@ Read-only visualization of canvas + state surfaces. All four skills share `engin
 
 If you are mid-diamond and want a skill: look at the phase section that matches your scale. If you are auditing: look at audit & governance. If you are doing framework-level work: look at self-improvement.
 
-Skills are auto-discovered from `.claude/skills/*/SKILL.md` frontmatter — Claude Code reads them at session start. Adding a skill is creating a new directory + SKILL.md; this index then needs updating per the [version-discipline](../../.claude/engine/version-discipline.md) rule on material framework changes.
+Skills are auto-discovered from `.claude/skills/*/SKILL.md` frontmatter — Claude Code reads them at session start. Adding a skill is creating a new directory + SKILL.md; this index then needs updating per the [version-discipline](../../plugins/mycelium/engine/version-discipline.md) rule on material framework changes.
 
 ## See also
 

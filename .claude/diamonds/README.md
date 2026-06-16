@@ -30,4 +30,4 @@ Diamond state is managed through the `/diamond-progress` skill, not by direct ed
 
 Direct edits to `active.yml` are tracked by the `diamond-state-audit.sh` hook for observability.
 
-See [`../engine/diamond-rules.md`](../engine/diamond-rules.md) for the complete lifecycle rules.
+See [`plugins/mycelium/engine/diamond-rules.md`](../../plugins/mycelium/engine/diamond-rules.md) for the complete lifecycle rules.

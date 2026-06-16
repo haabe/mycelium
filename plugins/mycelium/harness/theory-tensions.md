@@ -205,4 +205,4 @@ The goal is not to "resolve" the tension — most cannot be resolved in the abst
 - Springer: *Reconciling Requirements* taxonomy (interference / inconsistency / conflict)
 - PMI: *Reconciling Differences* (agile vs traditional PM)
 - SEBoK: Decision Management — context-driven trade studies over decision trees
-- All framework citations are in [README.md](../../README.md) Theories table
+- All framework citations are in [docs/theories.md](../../../docs/theories.md) (30+ frameworks)

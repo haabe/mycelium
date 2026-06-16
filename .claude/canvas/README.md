@@ -81,7 +81,7 @@ Run `/canvas-health` to check for missing fields, stale confidence, or inconsist
 
 ## Schema and Validation
 
-Canvas file schemas are defined in [`../schemas/canvas/`](../schemas/canvas/). The validation script at [`../scripts/validate_canvas.py`](../scripts/validate_canvas.py) checks structural integrity. CI runs this automatically.
+Canvas file schemas are defined in [`plugins/mycelium/schemas/canvas/`](../../plugins/mycelium/schemas/canvas/). The validation script at [`plugins/mycelium/scripts/validate_canvas.py`](../../plugins/mycelium/scripts/validate_canvas.py) checks structural integrity. CI runs this automatically.
 
 Each canvas file includes a `_meta` block for versioning and staleness detection:
 

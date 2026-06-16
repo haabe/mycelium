@@ -22,9 +22,9 @@ This page operationalizes the rules in [docs/README.md](../README.md) (the metad
 
 Every link must signal what's behind it.
 
-- ❌ "click [here](evaluate.md)"
-- ❌ "see [evaluate.md](evaluate.md)"
-- ✅ "[Evaluate Mycelium for your team in 1 hour](evaluate.md)"
+- ❌ "click [here](../evaluate.md)"
+- ❌ "see [evaluate.md](../evaluate.md)"
+- ✅ "[Evaluate Mycelium for your team in 1 hour](../evaluate.md)"
 
 Audit by reading link text alone, top to bottom, with the rest of the prose hidden. If the page still answers "what will I see?", scent is good.
 

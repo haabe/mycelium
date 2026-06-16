@@ -40,4 +40,4 @@ AI models lose consistency when given too many instructions simultaneously. Rese
 
 Domains implement this by scoping instructions to the current phase. The agent loads `quality/CLAUDE.md` always, plus whichever domain matches the active diamond's scale.
 
-See the [CLAUDE.md](../../CLAUDE.md) "Mandatory Pre-Task Protocol" section for the loading sequence.
+See the [CLAUDE.md](../../../CLAUDE.md) "Mandatory Pre-Task Protocol" section for the loading sequence.

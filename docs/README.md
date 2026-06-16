@@ -70,9 +70,9 @@ Internal docs (`.claude/memory/cluster-instances.md`, `.claude/harness/decision-
 
 Every link must signal what's behind it. Audit each link before merging:
 
-- **Bad**: "click [here](docs/evaluate.md)"
-- **Bad**: "see [docs/evaluate.md](docs/evaluate.md)" (filename leaks structure, not content)
-- **Good**: "[Evaluate Mycelium for your team in 1 hour](docs/evaluate.md)"
+- **Bad**: "click [here](evaluate.md)"
+- **Bad**: "see [evaluate.md](evaluate.md)" (filename leaks structure, not content)
+- **Good**: "[Evaluate Mycelium for your team in 1 hour](evaluate.md)"
 
 Link text should answer "what will I see if I follow this?" — readers scan link text without reading surrounding prose.
 

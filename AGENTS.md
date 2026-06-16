@@ -28,7 +28,7 @@ Two install forms during v0.20.x transition: **plugin form** (recommended, post-
 | Surface | What it is | Where | Claude-Code-specific? |
 |---|---|---|---|
 | Skills | 45 invocable workflows (interview, ost-builder, security-review, xai-check, etc.). Plugin form: namespaced as `/mycelium:<name>`. Legacy: `/<name>`. | Plugin: `plugins/mycelium/skills/*/SKILL.md`. Legacy: `.claude/skills/*/SKILL.md` | Auto-discovery is, prose is portable |
-| Upgrade | Update Mycelium framework files in this project | Plugin: `/plugin update mycelium@haabe-mycelium`. Legacy: `bash .claude/scripts/upgrade.sh` (see [docs/ai-system-card.md](docs/ai-system-card.md), [.claude/engine/version-discipline.md](.claude/engine/version-discipline.md)) | No — pure shell or plugin command |
+| Upgrade | Update Mycelium framework files in this project | Plugin: `/plugin update mycelium@haabe-mycelium`. Legacy: `bash .claude/scripts/upgrade.sh` (see [docs/ai-system-card.md](docs/ai-system-card.md), [version-discipline.md](plugins/mycelium/engine/version-discipline.md)) | No — pure shell or plugin command |
 | Canvas | Source-of-truth product knowledge (YAML) — project state, lives in user project | `.claude/canvas/*.yml` (user's project, both install forms) | No — pure data |
 | Diamonds | Active work state — project state, lives in user project | `.claude/diamonds/active.yml` (user's project, both install forms) | No — pure data |
 | Memory | Accumulated corrections + patterns — project state, lives in user project | `.claude/memory/` (user's project, both install forms) | No — pure data |

@@ -190,4 +190,4 @@ The transition window closes at the canonical 0.20.0 bump on merge to main. Afte
 - [`docs/receipts/cases/2026-05-08-bentes-install-model.md`](receipts/cases/2026-05-08-bentes-install-model.md) — the architectural finding that drove the plugin pivot
 - [`AGENTS.md`](../AGENTS.md) — cross-agent install guidance
 - [`/mycelium:migrate-from-legacy`](../plugins/mycelium/skills/migrate-from-legacy/SKILL.md) — the agent-driven migration skill
-- [`.claude/scripts/upgrade.sh`](../.claude/scripts/upgrade.sh) — the shell script with `--migrate-to-plugin` and `--check-migration` flags
+- [`plugins/mycelium/scripts/upgrade.sh`](../plugins/mycelium/scripts/upgrade.sh) — the shell script with `--migrate-to-plugin` and `--check-migration` flags

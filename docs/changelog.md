@@ -2,7 +2,21 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-06-15.
+**Last updated**: 2026-06-16.
+
+## v0.49.5 — docs dead-link sweep
+
+**2026-06-16. Attribution: docs-dead-link-sweep-2026-06-16 (reader-reported). Class: patch.**
+
+A reader reported `docs/theories.md` pointing at a `theory-gates.md` that doesn't exist (the file lives at `plugins/mycelium/engine/theory-gates.md`). A repo-wide markdown link audit found **46 raw dead-link hits**; every real one is fixed.
+
+Fixes, by class:
+- **Wrong relative depth**: `docs/README.md` + `docs/contributing/style.md` (the `evaluate.md` link-scent examples resolved to `docs/docs/...` / `docs/contributing/...`); `plugins/mycelium/domains/README.md` → root `CLAUDE.md` (was 2 up, is 3); `plugins/mycelium/hooks/README.md` → root `CONTRIBUTORS.md`; `plugins/mycelium/harness/theory-tensions.md` pointed at a non-existent `README.md` "Theories table" — repointed to `docs/theories.md` (the actual 30+-framework citation home).
+- **Stale legacy `.claude/...` paths → plugin canonical**: `AGENTS.md` + `docs/skills/README.md` now point version-discipline at `plugins/mycelium/engine/version-discipline.md`; `docs/migration.md` points the upgrade script at `plugins/mycelium/scripts/upgrade.sh`.
+- **Runtime-artifact refs de-linked**: `plugins/mycelium/engine/README.md` + `harness/README.md` referred to `canvas/` and `decision-log.md`, which exist only in a user's project (`.claude/...`), not in the plugin tree — converted to plain references with the user-project path noted.
+- **Dogfood-instance docs (project-owned, not shipped)**: rewrote `.claude/README.md`, which still called itself "the Mycelium Framework Root" after the plugin migration — it now describes the dogfood instance and points framework concepts to `plugins/mycelium/`. Same repoint in `.claude/{evals,diamonds,canvas}/README.md`.
+
+One link is intentionally left dead: `plugins/mycelium/skills/canvas-health/SKILL.md` quotes `see [filename](path)` as an example of the link-scent anti-pattern it tells authors to avoid — it is illustrative text, not a navigation link.
 
 ## v0.49.4 — opencode e2e friction fixes: preflight opt-out, serve-process num_ctx, warning whitelist
 

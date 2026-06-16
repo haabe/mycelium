@@ -20,7 +20,7 @@ Evals test whether Mycelium itself works correctly. They're integration tests fo
 - **[results/](results/)** — Raw output from eval runs
 
 ### Metrics
-- **[metrics/](metrics/)** — Normalized metric snapshots from `/metrics-pull` (GitHub traffic, etc.), organized by source and date
+- **`metrics/`** — Normalized metric snapshots from `/mycelium:metrics-pull` (GitHub traffic, etc.), organized by source and date. Created on demand when a pull runs; not present until then.
 
 ### Dogfood Reports
 - **[dogfood-reports/](dogfood-reports/)** — Findings from using Mycelium on itself. Framework gaps discovered through real usage.
@@ -32,4 +32,4 @@ Evals test whether Mycelium itself works correctly. They're integration tests fo
 
 Use `/eval-runner` to execute scenarios against the current framework state. Results are compared to `pass-history.json` to detect regressions.
 
-The [auto-dogfood](../auto-dogfood/) system can run evals automatically and generate reports.
+An auto-dogfood battery can run these evals automatically and generate reports; that runner lives in the dogfood/roadmap companion repo (`.claude/auto-dogfood/`), not in the framework tree.

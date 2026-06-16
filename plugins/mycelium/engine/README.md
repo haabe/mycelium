@@ -50,4 +50,4 @@ User starts work
   → Cycle learning calibrates future thresholds
 ```
 
-The engine never acts alone — it works with the [harness](../harness/) (constraints), [canvas](../canvas/) (state), and [skills](../skills/) (operations).
+The engine never acts alone — it works with the [harness](../harness/) (constraints), the canvas (state — `.claude/canvas/` in the user's project), and [skills](../skills/) (operations).
