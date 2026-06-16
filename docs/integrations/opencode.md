@@ -73,10 +73,15 @@ bash plugins/mycelium/integrations/opencode/provision-skills.sh .   # '.' = your
 ollama pull llama3.1:8b
 # Verify it before relying on it (FAIL = unusable in opencode):
 #   python3 plugins/mycelium/integrations/opencode/check-tool-calling.py llama3.1:8b
-# And avoid Ollama's 4K context default (overflows agentic prompts -> tool-calls fail):
+# And avoid Ollama's 4K context default (overflows agentic prompts -> tool-calls fail).
+# IMPORTANT: this must be set on the SERVE PROCESS, not just your shell — a GUI/brew
+# launchd `ollama serve` won't inherit a shell export. Stop that server and run:
+#   env OLLAMA_CONTEXT_LENGTH=32768 ollama serve   (verify: ps shows llama-server -c 32768)
 export OLLAMA_CONTEXT_LENGTH=32768
 
 # 6. Run
+# (Optional) on a weak local model (≈8B), disable the preflight injection if it derails
+# tool-calling — see "Choosing a model": export MYCELIUM_PREFLIGHT=off
 opencode
 ```
 
@@ -93,7 +98,9 @@ The load-bearing decision is **NOT model size** — it's whether the model emits
 
 **Check any model before trusting it:** `python3 plugins/mycelium/integrations/opencode/check-tool-calling.py <model>` → PASS = usable, FAIL = it leaks tool calls as text.
 
-**Then fix context (the silent killer): `export OLLAMA_CONTEXT_LENGTH=32768`** (or a Modelfile `PARAMETER num_ctx 32768`). Ollama defaults to **4K** even when the model supports more; Mycelium's system + skill + tool-schema prompts overflow that, and tool-calling fails on overflow. Necessary even with a working-template model.
+**Then fix context (the silent killer): `export OLLAMA_CONTEXT_LENGTH=32768`** (or a Modelfile `PARAMETER num_ctx 32768`). Ollama defaults to **4K** even when the model supports more; a Mycelium skill like `interview` is ~10k tokens, so its prompts overflow 4K and tool-calling fails. Necessary even with a working-template model. **Critical: set it on the SERVE PROCESS, not just your shell** — a GUI/brew/launchd `ollama serve` won't inherit a shell export (verified 2026-06-16, the #1 setup gotcha). Stop that server and run `env OLLAMA_CONTEXT_LENGTH=32768 ollama serve`; confirm with `ps … | grep llama-server` showing `-c 32768` (not `-c 4096`).
+
+**On a weak local model (≈8B), the preflight injection can distract it** into summarising the reminder instead of calling tools (e2e 2026-06-16: an 8B followed the skill 3/3 with preflight off vs 1/3 on — not fatal, but real). Disable it with **`export MYCELIUM_PREFLIGHT=off`** (the plugin reads this and skips the injection); the read-before-edit guard is independent and still fires. Capable models can leave it on.
 
 **Only then does size/quality matter** — and only *among models that tool-call at all.* Bigger = better instruction-following + fewer skipped gates, but a working-template 8B beats a broken-template 32B (which scores zero). On Apple Silicon the ceiling is unified memory (16 GB ≈ an 8–14B Q4 model with headroom; 32 GB+ ≈ up to ~32B) — pick the **largest model that (a) passes the tool-calling check and (b) fits**.
 

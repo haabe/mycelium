@@ -44,6 +44,10 @@ export const Mycelium: Plugin = async ({ directory }) => {
   return {
     // ---- Preflight context injection (every user message, TUI + headless) ----
     "chat.message": async (input, output) => {
+      // Opt-out: weak local models (≈8B) can be distracted by the preflight prose
+      // into summarising it instead of calling tools (e2e 2026-06-16: 8B followed
+      // 3/3 with preflight off vs 1/3 on). Set MYCELIUM_PREFLIGHT=off to disable.
+      if (process.env.MYCELIUM_PREFLIGHT === "off") return
       // Mirror of Mycelium's preflight stamp: a lightweight reminder that the
       // discipline harness is active and where project state lives.
       // Runtime-verified on opencode 1.17.7: a pushed text part MUST carry

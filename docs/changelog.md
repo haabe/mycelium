@@ -4,6 +4,18 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-15.
 
+## v0.49.4 — opencode e2e friction fixes: preflight opt-out, serve-process num_ctx, warning whitelist
+
+**2026-06-16. Attribution: opencode-e2e-friction-fixes-2026-06-16 (lived-friction). Class: patch.**
+
+The end-to-end test on opencode 1.17.7 + llama3.1:8b + num_ctx=32768 **passed** — a Mycelium-gated workflow runs (skill invoked + followed), the vendored `.claude/mycelium/…` reference paths resolve and are read live (the open positive, closed), and the read-before-edit guard fires and blocks (clean A/B). The 8B model's one ceiling — it narrates canvas writes but doesn't reliably call the write tools — is model capability, not the harness. The run surfaced three friction fixes, all shipped here:
+
+- **`MYCELIUM_PREFLIGHT=off` opt-out** (`plugin/mycelium.ts`): the `chat.message` preflight injection can distract weak local models (≈8B) into summarising it instead of calling tools (8B followed the skill 3/3 with it off vs 1/3 on). The plugin now skips the injection when `MYCELIUM_PREFLIGHT=off`. Verified: ON injects one part, OFF injects zero. The read-before-edit guard is independent and unaffected.
+- **`num_ctx` must be on the serve process** (docs + README): `OLLAMA_CONTEXT_LENGTH=32768` set in your shell does NOT reach a GUI/brew/launchd `ollama serve` — it must own the env (`env OLLAMA_CONTEXT_LENGTH=32768 ollama serve`). This was the #1 setup gotcha; Ollama's 4K default overflows the ~10k-token `interview` skill and silently breaks tool-calling.
+- **`provision-skills.sh` warning whitelist**: the residual-`${CLAUDE_PLUGIN_ROOT}` warning now flags only path-shaped refs (`${CLAUDE_PLUGIN_ROOT}/…`), not bare prose mentions of the variable name — no more false positives (verified: clean run, 0 residuals).
+
+Doc + scaffold + a small plugin opt-out. No change to Claude Code behaviour.
+
 ## v0.49.3 — opencode model guidance: tool-calling template, not size (retracts the qwen2.5-coder rec)
 
 **2026-06-16. Attribution: opencode-model-toolcalling-guidance-2026-06-16 (deep-dive). Class: patch.**

@@ -34,11 +34,15 @@ surface.
   before relying on a model. Full table + fixes (Dolphin 3 / Qwen3-Coder tool-fix
   template / `hhao/qwen2.5-coder-tools`): `docs/integrations/opencode.md`.
 - **Context (the silent killer)**: Ollama defaults to 4K (`num_ctx`), which overflows
-  Mycelium's system+skill+tool-schema prompts and breaks tool-calling. Set
-  `OLLAMA_CONTEXT_LENGTH=32768` (or a Modelfile `PARAMETER num_ctx 32768`).
-- **Small-model caveat**: the preflight injection can distract weak models into
-  summarising the reminder instead of calling tools. If your model derails, trim/drop the
-  preflight text in `plugin/mycelium.ts` — the read-before-edit guard is independent of it.
+  Mycelium's prompts (the `interview` skill alone is ~10k tokens) and breaks tool-calling.
+  Set `OLLAMA_CONTEXT_LENGTH=32768`. **It must be on the SERVE PROCESS, not your shell** —
+  a GUI/brew/launchd `ollama serve` won't inherit a shell export (the #1 setup gotcha,
+  verified 2026-06-16). Stop that server and run `env OLLAMA_CONTEXT_LENGTH=32768 ollama serve`
+  (verify: `ps … | grep llama-server` shows `-c 32768`). Or bake it into a Modelfile.
+- **Small-model caveat**: the preflight injection can distract weak models (≈8B) into
+  summarising the reminder instead of calling tools (e2e 2026-06-16: 8B followed 3/3 with
+  it off vs 1/3 on). Disable with **`export MYCELIUM_PREFLIGHT=off`** — the plugin reads
+  this and skips the injection; the read-before-edit guard is independent and still fires.
 
 ## What's here
 

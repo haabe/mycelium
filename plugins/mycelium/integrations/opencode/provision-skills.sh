@@ -89,13 +89,17 @@ rewrite() {
 rewrite "$DEST/skills"
 rewrite "$VENDOR"
 
-# 4. Report.
+# 4. Report. Only flag PATH-shaped residuals (a `/` after the var) — those are genuine
+#    unrewritten references. Bare prose mentions of the variable name (e.g. setup/SKILL.md's
+#    "do NOT expand $CLAUDE_PLUGIN_ROOT", or version-discipline.md's leaky-abstraction
+#    discussion) are intentional and must NOT trip the warning (don't cry wolf).
+RESIDUAL_RE='\$\{?CLAUDE_PLUGIN_ROOT\}?/'
 SKILL_N=$(find "$DEST/skills" -name 'SKILL.md' | wc -l | tr -d ' ')
-RESIDUAL=$(grep -rl 'CLAUDE_PLUGIN_ROOT' "$DEST/skills" "$VENDOR" 2>/dev/null | wc -l | tr -d ' ')
+RESIDUAL=$(grep -rlE "$RESIDUAL_RE" "$DEST/skills" "$VENDOR" 2>/dev/null | wc -l | tr -d ' ')
 echo "  vendored: $SKILL_N skills + engine/harness/jit-tooling/domains → .claude/mycelium/"
 echo "  rewrote \${CLAUDE_PLUGIN_ROOT} → .claude/mycelium (and /skills/ → .claude/skills/)"
 if [ "$RESIDUAL" != "0" ]; then
-  echo "  WARNING: $RESIDUAL file(s) still contain a literal CLAUDE_PLUGIN_ROOT — inspect:" >&2
-  grep -rl 'CLAUDE_PLUGIN_ROOT' "$DEST/skills" "$VENDOR" 2>/dev/null | sed 's/^/    /' >&2
+  echo "  WARNING: $RESIDUAL file(s) still contain an unrewritten \${CLAUDE_PLUGIN_ROOT}/… path — inspect:" >&2
+  grep -rlE "$RESIDUAL_RE" "$DEST/skills" "$VENDOR" 2>/dev/null | sed 's/^/    /' >&2
 fi
 echo "Done. Re-run after a framework upgrade to refresh the vendored snapshot."
