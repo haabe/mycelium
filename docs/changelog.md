@@ -4,6 +4,18 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-15.
 
+## v0.49.3 — opencode model guidance: tool-calling template, not size (retracts the qwen2.5-coder rec)
+
+**2026-06-16. Attribution: opencode-model-toolcalling-guidance-2026-06-16 (deep-dive). Class: patch.**
+
+Deep-dive after the 14b value-test (prompted by the founder lead "ollama supports Claude routing"). Runtime isolation (direct Ollama API, `/v1` + native — existence-proof) found the opencode local-model failure is **not** hardware size, **not** the provider path, **not** the API surface — it's a **model-specific Ollama tool-call template gap**:
+
+- **`llama3.1:8b` emits structured `tool_calls` at 8B**, on both `/v1` and native. **Stock `qwen2.5-coder` (`:14b` and `:32b`) does not** — it emits the call as text content (known qwen-coder-family template bug); `qwen3:32b` reported the same (opencode#1034). So a working-template 8B beats a broken-template 32B (which scores zero).
+- **Retracts** the earlier "qwen2.5-coder 14b/32b is the self-hosted sweet spot" guidance — that pointed at the one broken family. Tool-template support, not size, is the gate.
+- **Ecosystem context**: opencode (like Roo Code) is native-tool-call-only — no client-side text/XML fallback (unlike Cline). So the fix must be at the model/template/`num_ctx` layer. Ollama's 4K `num_ctx` default also silently breaks tool-calling on agentic prompts → set `OLLAMA_CONTEXT_LENGTH=32768`.
+
+Changes: `docs/integrations/opencode.md` model section reframed tool-calling-first (+ `num_ctx`, + a History note retracting the old claim); scaffold `opencode.json` default model → `llama3.1:8b`; new `check-tool-calling.py` diagnostic (run it to verify a model emits structured calls before relying on it — verified PASS on llama3.1:8b, FAIL on qwen2.5-coder:14b); README model+context notes. Doc + scaffold only.
+
 ## v0.49.2 — don't ship unverified code: runtime existence-proof before a "works" claim (G-V13)
 
 **2026-06-15. Attribution: runtime-verification-before-ship-2026-06-15 (lived-friction). Class: patch.**

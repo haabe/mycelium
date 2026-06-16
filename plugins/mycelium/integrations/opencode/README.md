@@ -27,11 +27,18 @@ surface.
 - A custom `@ai-sdk/openai-compatible` provider needs an explicit `provider.<name>.models`
   map; a bare provider block fails with `ProviderModelNotFoundError`. Edit `model` + the
   `models` entry for your local model.
-- **Small-model caveat**: the preflight injection can distract weak models (≈8B) into
-  summarising the reminder instead of calling tools, and some thinking-models stall
-  headless. If your local model derails, trim/drop the preflight text — the guard is
-  independent of it. 32B+ / capable open-weight is the sweet spot (see the model-size
-  table in `docs/integrations/opencode.md`).
+- **Model choice is gated by tool-calling, NOT size** (runtime-verified 2026-06-16):
+  opencode needs structured `tool_calls`; a model whose Ollama template emits them as
+  text silently does nothing. `llama3.1:8b` PASSES (at 8B); stock `qwen2.5-coder`
+  (`:14b`/`:32b`) FAILS, any size. Run `python3 check-tool-calling.py <model>` to verify
+  before relying on a model. Full table + fixes (Dolphin 3 / Qwen3-Coder tool-fix
+  template / `hhao/qwen2.5-coder-tools`): `docs/integrations/opencode.md`.
+- **Context (the silent killer)**: Ollama defaults to 4K (`num_ctx`), which overflows
+  Mycelium's system+skill+tool-schema prompts and breaks tool-calling. Set
+  `OLLAMA_CONTEXT_LENGTH=32768` (or a Modelfile `PARAMETER num_ctx 32768`).
+- **Small-model caveat**: the preflight injection can distract weak models into
+  summarising the reminder instead of calling tools. If your model derails, trim/drop the
+  preflight text in `plugin/mycelium.ts` — the read-before-edit guard is independent of it.
 
 ## What's here
 
@@ -40,6 +47,7 @@ surface.
 | `opencode.json` | Minimal opencode config: local-model provider (Ollama example), `AGENTS.md` as instructions, skill permission. Edit the `model` / provider to your setup. |
 | `plugin/mycelium.ts` | Enforcement plugin **skeleton**. Covers the two clean hooks: preflight context injection (`chat.message`, fires headless too — #27899) and read-before-edit guard (`tool.execute.before` throw — #27901). Gate/scope/secret-scan and post-write nudge are TODO. |
 | `command/mycelium/interview.md` | Example user-typed entry command (`/mycelium:interview`). Copy this shape for other typed entry points. |
+| `check-tool-calling.py` | Diagnostic: asks a model to call a tool and reports whether Ollama returns structured `tool_calls` (PASS = usable in opencode) or leaks it as text (FAIL). Run `python3 check-tool-calling.py <model>` before relying on any local model — the #1 cause of "nothing happens" on opencode. |
 | `provision-skills.sh` | Vendors the Mycelium skills + their `engine/`/`harness/`/`jit-tooling/`/`domains/` reference files into the project's `.claude/`, and rewrites `${CLAUDE_PLUGIN_ROOT}/…` references to project-relative paths. opencode does NO `${...}` interpolation of skill content and never sets that variable, so without this the 36 reference-heavy skills load but misfire. Idempotent + re-runnable (the vendored copies are a snapshot — re-run after a framework upgrade). `/mycelium:setup` invokes it; or run `bash provision-skills.sh <project-root>` by hand. Self-locates the plugin root from its own path when run from a clone (no `CLAUDE_PLUGIN_ROOT` needed). |
 
 opencode 1.17.7 discovers skills natively from `.claude/skills/` — the

@@ -1,12 +1,12 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "model": "ollama/qwen2.5-coder:32b",
+  "model": "ollama/llama3.1:8b",
   "provider": {
     "ollama": {
       "npm": "@ai-sdk/openai-compatible",
       "options": { "baseURL": "http://localhost:11434/v1" },
       "models": {
-        "qwen2.5-coder:32b": { "name": "Qwen2.5 Coder 32B (Ollama)", "tool_call": true }
+        "llama3.1:8b": { "name": "Llama 3.1 8B (Ollama)", "tool_call": true }
       }
     }
   },

@@ -68,33 +68,38 @@ bash plugins/mycelium/integrations/opencode/provision-skills.sh .   # '.' = your
   }
 }
 
-# 5. Pull a model your hardware can run (see "Model size matters" — on Apple Silicon
-# the binding constraint is unified memory: 16GB → 14B, 32GB+ → 32B).
-ollama pull qwen2.5-coder:32b      # or qwen2.5-coder:14b on a 16GB machine
+# 5. Pull a model that emits STRUCTURED tool calls (see "Choosing a model" — this,
+# not size, is the gate). llama3.1:8b is verified-working; stock qwen2.5-coder is NOT.
+ollama pull llama3.1:8b
+# Verify it before relying on it (FAIL = unusable in opencode):
+#   python3 plugins/mycelium/integrations/opencode/check-tool-calling.py llama3.1:8b
+# And avoid Ollama's 4K context default (overflows agentic prompts -> tool-calls fail):
+export OLLAMA_CONTEXT_LENGTH=32768
 
 # 6. Run
 opencode
 ```
 
-## Model size matters
+## Choosing a model — tool-calling first, then context, then size
 
-This is the load-bearing decision. Mycelium-on-opencode trades structural enforcement for model discipline; that trade only works if the model is disciplined enough.
+The load-bearing decision is **NOT model size** — it's whether the model emits **structured `tool_calls`** through Ollama. opencode (like Roo Code) is native-tool-call-only: it has no client-side text/XML fallback (unlike Cline). A model that emits the tool-call JSON as plain text — which many do, because their Ollama Modelfile `TEMPLATE` doesn't parse it — silently does nothing in opencode: it "knows" to call the tool, but the call never executes. **Runtime-verified 2026-06-16** (direct Ollama API, both `/v1` and native):
 
-| Model size | Mycelium-on-opencode experience |
-|---|---|
-| 4B – 8B local | Substrate loads. Model will often ignore the Read-before-Edit hint, skip the Pre-Task Protocol, and forget to log corrections. Verified 2026-05-16: llama3.1:8b edited a versioned file with no prior read, no warning. **Not recommended** for serious project work. Fine for trying the framework's mechanics. |
-| 14B – 32B local | The instruction-following sweet spot for self-hosted. Qwen 2.5 Coder 32B, DeepSeek Coder V2, Llama 3.3 70B-quantized class. Most Mycelium discipline holds; expect occasional skips that the validators + corrections-loop catch. **Recommended** for self-hosted dogfood. |
-| 70B+ local or hosted-API class | Discipline holds at the same level as Claude on Claude Code. Tradeoff is inference latency vs structural enforcement; choose based on your hardware budget. |
-
-**On Apple Silicon, model size is bounded by unified memory** (the GPU shares RAM):
-
-| Mac | Realistic local model (Q4_K_M) | Notes |
+| Model | Structured tool_calls on Ollama? | Note |
 |---|---|---|
-| **16 GB** (M1 / M1 Pro base, 13"/14" 2021) | `qwen2.5-coder:14b` (~9 GB) | The realistic ceiling — leaves headroom for the OS + editor. Better tool-calling + instruction-following than 7-8B, but still **below** the 32B sweet spot: expect some skill-driving friction. Drop to `qwen2.5-coder:7b` (~4.7 GB) only if 14B is too tight. |
-| **32 GB+** (M1 Pro/Max higher config) | `qwen2.5-coder:32b` (~20 GB) | The recommended sweet spot — fits with room to spare. |
+| **`llama3.1:8b`** | ✅ **PASS** (verified) | Clean structured calls on `/v1` *and* native — **at 8B**. Size is not the gate. |
+| stock `qwen2.5-coder` (`:14b`, `:32b`) | ❌ **FAIL** | Emits the call as text content; Ollama template gap (known qwen-coder-family bug). Unusable in opencode as-is, any size. |
+| `qwen3` (e.g. `:32b`) | ❌ FAIL (reported, [opencode#1034](https://github.com/anomalyco/opencode/issues/1034)) | Generates tool JSON, never executes — same failure at 32B. |
+| Dolphin 3 · Qwen3-Coder (unsloth tool-calling-fix template) · `hhao/qwen2.5-coder-tools` · DeepSeek-Coder | ↗ community-reported good | Tool-fixed templates exist; **verify before relying** (next row). |
 
-Use a model with solid **tool-calling** (Qwen 2.5 Coder is reliable here) — opencode drives edits/reads through structured tool calls, and weak tool-callers stall or malform them.
+**Check any model before trusting it:** `python3 plugins/mycelium/integrations/opencode/check-tool-calling.py <model>` → PASS = usable, FAIL = it leaks tool calls as text.
+
+**Then fix context (the silent killer): `export OLLAMA_CONTEXT_LENGTH=32768`** (or a Modelfile `PARAMETER num_ctx 32768`). Ollama defaults to **4K** even when the model supports more; Mycelium's system + skill + tool-schema prompts overflow that, and tool-calling fails on overflow. Necessary even with a working-template model.
+
+**Only then does size/quality matter** — and only *among models that tool-call at all.* Bigger = better instruction-following + fewer skipped gates, but a working-template 8B beats a broken-template 32B (which scores zero). On Apple Silicon the ceiling is unified memory (16 GB ≈ an 8–14B Q4 model with headroom; 32 GB+ ≈ up to ~32B) — pick the **largest model that (a) passes the tool-calling check and (b) fits**.
+
 | Claude / GPT-4 via API | Use [Claude Code](https://claude.com/claude-code) instead — you get the structural enforcement Mycelium was designed against. opencode-as-frontend with an API model in the back works, but it's the worst-of-both: API cost without runtime enforcement. |
+
+> **History:** an earlier version of this page recommended `qwen2.5-coder:14b/32b` as the "self-hosted sweet spot." That was wrong — runtime testing (2026-06-16) found the qwen-coder family doesn't emit structured tool calls on Ollama at any size, while `llama3.1:8b` does. Tool-template support, not size, is the gate.
 
 ## Known runtime gaps and current workarounds
 
