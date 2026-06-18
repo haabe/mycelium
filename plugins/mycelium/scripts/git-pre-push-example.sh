@@ -112,6 +112,10 @@ if [ -d "tests/python" ] && [ -n "$SCRIPTS_DIR" ]; then
         echo "[mycelium pre-push] Dead-reference doc check FAILED — push blocked (bypass: --no-verify)." >&2
         exit 1
     fi
+    if ! python3 "$SCRIPTS_DIR/check_theory_fidelity.py" --root . >&2; then
+        echo "[mycelium pre-push] Theory-fidelity structural check FAILED — push blocked (bypass: --no-verify)." >&2
+        exit 1
+    fi
     rm -f coverage.json
 fi
 

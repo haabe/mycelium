@@ -149,6 +149,14 @@ On each quarterly run:
 - **New fan-out only for new surface**: dimensions whose prior findings all re-verify unchanged get a light pass; spend the deep fan-out where the tree actually changed since the last run.
 - Temporal-independence rule from 4e applies: a same-session re-run is not a second observation.
 
+### 4g. Theory-Fidelity Cadence Trigger (added 2026-06-18)
+
+`/theory-fidelity` is the *semantic* audit (is each theory faithfully operationalized vs distorted/over-claimed?) — it needs source-grounding and an LLM, so it runs on cadence, not every push. The `check_theory_fidelity.py` CI guard covers only the *structural* subset (references resolve, gates grounded, no name-only theory). This step is the trigger for the semantic half.
+
+- **Recommend `/theory-fidelity` when the theory surface moved OR quarterly.** Check whether `docs/theories.md`, `engine/theory-gates.md`, or any skill's `Source:`/`## Theory Citations` line changed since the last `/theory-fidelity` decision-log entry (git-log the paths against that date). If yes, or if >90 days since the last run, surface in the dashboard: "Theory surface changed since last fidelity audit — run `/theory-fidelity`."
+- **Confirm the structural guard is green**: run `check_theory_fidelity.py` inline and report. A guard failure is a structural-drift finding (phantom skill/gate ref, name-only theory) for the dashboard; it does NOT substitute for the semantic audit.
+- Temporal-independence (4e) applies.
+
 ### 5. Generate Dashboard
 
 ## Output

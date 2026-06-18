@@ -61,6 +61,9 @@ jobs:
       - name: Run legacy-path doc check (no stale .claude/{engine,orchestration,schemas}/ refs)
         run: python3 plugins/mycelium/scripts/check_legacy_paths.py --root .
 
+      - name: Run theory-fidelity structural guard (theories.md mechanism refs resolve; gates grounded; no name-only theory)
+        run: python3 plugins/mycelium/scripts/check_theory_fidelity.py --root .
+
       - name: Run Python unit tests with coverage (verbose output for CI logs)
         run: |
           pytest tests/python/ -v \

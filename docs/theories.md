@@ -59,7 +59,7 @@ Each one shapes a specific surface; removable in isolation, but the surface goes
 | Loved | Lauchengco | `canvas/go-to-market.yml`, `/launch-tier` (L5) |
 | BVSSH | Smart | `canvas/bvssh-health.yml`, `/bvssh-check` (gate 8 Outcomes) |
 | Build to Learn vs Build to Earn | Patton, Cagan | Discovery diamonds = build-to-learn; delivery diamonds = build-to-earn. Rationale in `philosophy.md`; enforced via G-M2 + define-done/DoD guardrails |
-| Cognitive Forcing Functions | Buçinca, Malaya, Gajos | Diamond transition gates: human articulates evidence before agent shows verdict |
+| Cognitive Forcing Functions | Buçinca, Malaya, Gajos | `/diamond-assess` step 0 + `/diamond-progress` — human articulates unprimed judgment before the agent shows gate verdicts |
 | Theory of Constraints | Goldratt | `value-stream.yml`, bottleneck identification at L4 |
 | Three Ways / Five Ideals | Kim | Three Ways map the four feedback-loop speeds (`engine/feedback-loops.md`); Five Ideals = L4 prose checklist in `domains/delivery/CLAUDE.md` (principle-text, not a gate) |
 | The Fifth Discipline | Senge | System archetypes (Fixes That Fail / Shifting the Burden / Limits to Growth / Eroding Goals) in `harness/anti-patterns.md` (#12–15), checked at L1/L2 in `/diamond-assess` step 5; `cluster-instances.md` is the recurrence-to-structure ledger |

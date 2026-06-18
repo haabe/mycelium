@@ -4,6 +4,29 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-18.
 
+## v0.49.19 — anti-drift guard for theory fidelity
+
+**2026-06-18. Attribution: theory-fidelity-anti-drift-guard-2026-06-18. Class: patch.**
+
+Secures the v0.49.17/18 theory work from re-occurring drift — the framework's own single-loop → double-loop move (Argyris). The `/theory-fidelity` skill is single-loop ("run it and it finds drift"); this adds the double-loop gate that catches the *mechanizable* subset before it ships, in three layers.
+
+**Layer 1 — `check_theory_fidelity.py` (CI guard).** Wired into `validate.yml` and the pre-push delivery gate. Enforces the **structural** invariants of `docs/theories.md`:
+- every Tier-1/2 `/skill` reference resolves to a skill dir (A),
+- every `gate N` reference resolves to a gate in `theory-gates.md` (B),
+- every `engine|harness|orchestration/X.md` reference resolves (C),
+- every gate in `theory-gates.md` carries a `**Source**:` theory line (D),
+- no name-only theory sits in a load-bearing tier — each Tier-1/2 entry names at least one concrete mechanism (E; the doc's own "citations without mechanism-mapping are theatre" rule, mechanized).
+
+96.9% test coverage; clears the per-file floor. It caught one real under-specification on first run (the Cognitive Forcing Functions row named no artifact — now cites `/diamond-assess` step 0 + `/diamond-progress`).
+
+**Layer 2 — `/framework-health` step 4g (cadence trigger).** Recommends running the *semantic* `/theory-fidelity` audit when the theory surface (`theories.md`, `theory-gates.md`, or any skill `Source:` line) changed since the last run, or quarterly — and runs the structural guard inline.
+
+**Layer 3 — promise-registry convention.** A newly-cited theory with no `theories.md` mapping becomes a tracked Promise-registry row (`consistency-check-spec.md`), surfaced by `/framework-health` 4f/4g.
+
+Honest boundary, stated in the guard's own docstring: it catches **structural** drift (phantom references, name-only theories, ungrounded gates). It does **not** catch semantic distortion (a reference that resolves but misrepresents the theory — e.g. "Torres selects via ICE"), citation truth (Lopopolo vs Shinn), or numberless prose gate claims. Those are irreducibly the LLM `/theory-fidelity` skill + source-grounding. The guard shrinks the attack surface; it does not replace the audit.
+
+New script + test + CI/pre-push wiring + 2 doc edits. **PATCH**.
+
 ## v0.49.18 — new skill: /theory-fidelity
 
 **2026-06-18. Attribution: theory-fidelity-skill-2026-06-18. Class: patch.**
