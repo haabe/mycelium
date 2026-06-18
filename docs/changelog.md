@@ -4,6 +4,21 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-18.
 
+## v0.49.13 — framework-health calibration is cycle-class-aware
+
+**2026-06-18. Attribution: framework-health-calibration-class-aware-2026-06-18. Class: patch.**
+
+`/mycelium:framework-health`'s confidence-calibration dimension computed over *all* cycles — but `engine/cycle-learning.md#cycle-class` and `cycle-history.yml#calibration_summary` already exclude `meta-dogfood` (framework-self-development) and `observation` (strategic reflection) from ICE-calibration. The skill was out of sync with the model, so a dogfood repo whose cycles are all meta-dogfood read as a calibration *gap* rather than the honest *empty-by-design* state.
+
+Fix:
+- Calibration now scopes to **`product-leaf` cycles only**. With 0 product-leaf cycles it reports status **`empty-by-design`** ("N meta-dogfood + M observation, 0 product-leaf") — no flag, no synthesized factor, no "route product work through OST" nudge unless real product work is queued.
+- The compute/flag path for product-leaf cycles is unchanged — **real product projects calibrate exactly as before** once they ship a leaf, and early-stage projects (no leaf yet) get an honest "empty (early)" instead of a false miscalibration flag.
+- **Masking guard** (so the change can't hide a real signal for non-dogfood users): a project doing *actual* delivery work (active L3/L4 diamonds, shipped features) yet showing 0 product-leaf cycles is a **`cycle_class` mis-assignment to investigate**, not an empty-by-design pass.
+
+Also repairs a malformed v0.49.12 CLAUDE.md version line (the v0.49.11→12 bump matched only the line prefix, leaving v0.49.11's descriptive tail dangling; Check 34 counts entries-per-line so it passed). Surfaced by reading the line during the v0.49.13 bump.
+
+Skill + docs. **PATCH**.
+
 ## v0.49.12 — per-file coverage gate: every shipped script must be tested
 
 **2026-06-18. Attribution: per-file-coverage-gate-2026-06-18. Class: patch.**

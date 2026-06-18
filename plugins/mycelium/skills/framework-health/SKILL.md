@@ -48,11 +48,14 @@ For each dimension, compute the metric and compare against trend (if prior asses
 - If >50% of discards at Phase 7+: flag "late discard pattern"
 
 **Confidence Calibration**:
-- For all cycles with predicted confidence and actual outcome:
+- **Cycle-class scope (per `engine/cycle-learning.md#cycle-class`)**: ONLY `product-leaf` cycles feed calibration. `meta-dogfood` (framework-self-development) and `observation` (strategic-process reflection) cycles carry no ICE *by design* — they are EXCLUDED, not missing. This matches `cycle-history.yml#calibration_summary`, which already excludes them from aggregates; the dimension was previously computed over all cycles, which is the bug this fixes.
+- For `product-leaf` cycles with predicted confidence/ICE and actual outcome:
   - Compute: actual success rate per confidence band (0.3-0.5, 0.5-0.7, 0.7-0.9)
   - Compare with expected rate (confidence 0.7 should succeed ~70%)
   - Report calibration factor: actual/expected
-- If calibration factor < 0.8 or > 1.2: flag miscalibration
+  - If calibration factor < 0.8 or > 1.2: flag miscalibration
+- **If 0 product-leaf cycles**: report calibration as **"honestly empty — N meta-dogfood + M observation cycles, 0 product-leaf"**, status `empty-by-design`. Do NOT flag it as warning/critical and do NOT synthesize a factor from non-product cycles. For a project early in delivery (no leaf shipped yet) this is the correct early state; for a framework-self-host / dogfood project it is the steady state (its work is meta-dogfood, not product delivery).
+  - **Masking guard (protects real product projects):** if the project is *actually doing product/delivery work* (active L3/L4 product diamonds, shipped features) yet shows 0 product-leaf cycles, that is a **cycle_class mis-assignment to investigate** — NOT an empty-by-design pass. Surface it: "0 product-leaf cycles despite active delivery — check cycle_class on recent entries." Only treat empty as by-design when the absence of product-leaf cycles is itself honest (discovery-phase or framework-self-development).
 
 **Gate Effectiveness**:
 - For each theory gate, count: times checked, times passed, times failed
@@ -163,7 +166,7 @@ Period: [date range]
 |-----------|---------|-------|--------|----------------|
 | Cycle velocity | [X days avg] | [improving/stable/degrading] | [healthy/warning/critical] | Outcome quality: [OK/degrading] |
 | Discard rate | [avg phase X] | [earlier/stable/later] | [healthy/warning/critical] | False positive rate: [OK/rising] |
-| Confidence calibration | [factor X.XX] | [improving/stable/diverging] | [healthy/warning/critical] | Decision speed: [OK/slowing] |
+| Confidence calibration | [factor X.XX, or "empty (0 product-leaf)"] | [improving/stable/diverging/—] | [healthy/warning/critical/empty-by-design] | Decision speed: [OK/slowing] |
 | Gate effectiveness | [see detail] | — | [healthy/warning/critical] | Flow speed: [OK/slowing] |
 | Regression rate | [X%] | [decreasing/stable/increasing] | [healthy/warning/critical] | Innovation rate: [OK/declining] |
 
