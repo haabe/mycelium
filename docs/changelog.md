@@ -4,6 +4,16 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-18.
 
+## v0.49.9 — receipts: legacy-path-rot guard
+
+**2026-06-18. Attribution: legacy-path-rot-receipts-case-2026-06-18 (`/framework-health` Step 4c). Class: patch.**
+
+Adds the receipts case for the v0.49.6–v0.49.8 arc: `docs/receipts/cases/2026-06-18-legacy-path-rot-guard.md`. The dogfood house-cleaning found stale `.claude/{engine,orchestration,schemas}/` references that the v0.49.5 link-only sweep couldn't catch (they live in code-spans and prose, not markdown links); the fix shipped across three patches plus a new `check_legacy_paths.py` CI guard. The case's load-bearing lesson: **a passing check is a scoped claim, not a global one** — two checks with disjoint scopes can both go green while rot sits in the gap. Surfaced as a `/framework-health` 4c rotate-in candidate.
+
+Known follow-up flagged in the case: the receipts indexes (`by-date.md`, `by-mechanism.md`) have lagged since 2026-05-30 and miss several recent cases — a 4c maintenance item, not this commit's scope.
+
+Docs (receipts). **PATCH**.
+
 ## v0.49.8 — framework-guard sync message: harness-neutral
 
 **2026-06-18. Attribution: framework-guard-sync-message-harness-neutral-2026-06-18. Class: patch.**
