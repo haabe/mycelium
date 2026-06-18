@@ -4,6 +4,22 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-18.
 
+## v0.49.8 — framework-guard sync message: harness-neutral
+
+**2026-06-18. Attribution: framework-guard-sync-message-harness-neutral-2026-06-18. Class: patch.**
+
+Closes the item v0.49.7 flagged for a maintainer call. The dogfood guard (`framework_guard.py`) blocks direct framework edits in a project that syncs from upstream, and both deny messages told the user to "edit upstream, commit + push, then run `.claude/scripts/upgrade.sh` here." That's wrong for any non-legacy form — and in a plugin-form dogfood project (like the roadmap) that path doesn't even exist.
+
+There is **no universal upgrade command** — it's install-form-specific:
+- **Claude Code, plugin form**: `/plugin update mycelium@haabe-mycelium`
+- **Claude Code, legacy npx-degit** (deprecated): `bash .claude/scripts/upgrade.sh`
+- **opencode**: re-run `/mycelium:setup` (`provision-skills.sh` re-vendors the snapshot) — neither `/plugin update` nor `upgrade.sh` applies
+- **Codex / Cursor / Aider**: re-pull / re-vendor the source; they read the markdown substrate directly
+
+Both deny messages now give form-aware guidance and point to `docs/install-paths.md` rather than naming one mechanism. The guard still allowlists `bash .claude/scripts/upgrade.sh` (a true, harmless legacy permission — a plugin-form sync isn't a bash write the guard intercepts); its allowlist docstring reworded "the legitimate framework-update mechanism" → "the legacy framework-update mechanism (allowlisted)".
+
+Verified: `py_compile` (catches malformed f-strings), `validate-template.sh` PASS, both doc guards pass. Scripts. **PATCH**.
+
 ## v0.49.7 — legacy-path sweep: runtime strings + a plugin-form bug
 
 **2026-06-18. Attribution: legacy-path-rot-runtime-strings-2026-06-18 (follow-up). Class: patch.**

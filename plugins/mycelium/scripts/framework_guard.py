@@ -159,7 +159,7 @@ def _is_segment_allowlisted(seg):
 
     Allowlist (per-segment, so compound commands like
     `cd /path && git rm framework_file` correctly allow the git rm segment):
-      1. `bash .claude/scripts/upgrade.sh` — the legitimate framework-update mechanism.
+      1. `bash .claude/scripts/upgrade.sh` — the legacy framework-update mechanism (allowlisted).
       2. `git [global-opts] <safe-subcommand>` — git state operations
          (see _GIT_SAFE_SUBCMDS). Strips global options like -C, -c,
          --git-dir before matching the subcommand.
@@ -301,7 +301,10 @@ def _deny_file_edit(rel_path, rule, upstream_repo):
         f"({rule}) per .claude/manifest.yml. This project is in dogfood "
         f"mode (.claude/state/upstream.json points to '{upstream_repo}'). "
         f"Framework changes must flow upstream first: edit in '{upstream_repo}', "
-        f"commit + push, then run .claude/scripts/upgrade.sh here. "
+        f"commit + push, then sync the framework into this project per your "
+        f"install form (Claude plugin: /plugin update; legacy: "
+        f".claude/scripts/upgrade.sh; opencode/vendored: re-run /mycelium:setup; "
+        f"see docs/install-paths.md). "
         f"\n\nRecurring failure logged in corrections.md 2026-05-03 "
         f"'Framework changes made directly in roadmap'. To bypass this gate "
         f"in an emergency, set 'active': false in .claude/state/upstream.json. "
@@ -316,8 +319,10 @@ def _deny_bash_write(fp, op, upstream_repo):
         f"({op}), which is classified as FRAMEWORK per .claude/manifest.yml. "
         f"This project is in dogfood mode (.claude/state/upstream.json points "
         f"to '{upstream_repo}'). Framework changes must flow upstream first: "
-        f"edit in '{upstream_repo}', commit + push, then run "
-        f".claude/scripts/upgrade.sh here.\n\n"
+        f"edit in '{upstream_repo}', commit + push, then sync the framework "
+        f"into this project per your install form (Claude plugin: /plugin update; "
+        f"legacy: .claude/scripts/upgrade.sh; opencode/vendored: re-run "
+        f"/mycelium:setup; see docs/install-paths.md).\n\n"
         f"Closes the Bash coverage gap acknowledged when the file-edit guard "
         f"shipped (corrections.md 2026-05-03). Legitimate sync IS allowed: "
         f"`bash .claude/scripts/upgrade.sh` is allowlisted; git operations "
