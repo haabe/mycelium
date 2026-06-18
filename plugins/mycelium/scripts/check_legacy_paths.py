@@ -62,6 +62,9 @@ ALLOWLIST_FILES = {
     "docs/install-paths.md",                                 # documents both install forms
     "docs/changelog.md",                                     # frozen historical record
     "plugins/mycelium/skills/migrate-from-legacy/SKILL.md",  # names legacy dirs to delete
+    # Receipts cases that document the migration/rot itself quote the moved
+    # paths as their subject, not as live pointers. Allowlist per-case.
+    "docs/receipts/cases/2026-06-18-legacy-path-rot-guard.md",
 }
 
 
@@ -83,6 +86,12 @@ def scan(root: Path):
             continue
         files_scanned += 1
         for i, line in enumerate(f.read_text(encoding="utf-8", errors="replace").splitlines(), 1):
+            # The CLAUDE.md `*Version ...` line is an embedded changelog record
+            # (same rationale as allowlisting changelog.md): it legitimately
+            # quotes moved paths when narrating a fix. Skip it — the routing
+            # pointers elsewhere in CLAUDE.md are still scanned.
+            if src_rel == "CLAUDE.md" and line.lstrip().startswith("*Version"):
+                continue
             if LEGACY_RE.search(line):
                 hits.append((src_rel, i, line.strip()[:120]))
     return {"files_scanned": files_scanned, "hits": hits}

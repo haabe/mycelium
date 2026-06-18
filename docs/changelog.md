@@ -4,6 +4,20 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-18.
 
+## v0.49.10 — check_legacy_paths: don't flag docs that quote the paths
+
+**2026-06-18. Attribution: check-legacy-paths-doc-quote-false-positive-2026-06-18. Class: patch.**
+
+The `check_legacy_paths.py` guard (shipped v0.49.6) had a false-positive class: documentation that **quotes** a moved path to *describe* it — rather than routing a reader to it — got flagged as rot. Two commits went red on CI as a result: v0.49.7 (the CLAUDE.md `*Version` line quoted `$PROJECT_DIR/.claude/schemas/` while narrating the post-write-nudge fix) and v0.49.9 (the receipts case quotes `.claude/engine/...` as its subject). Both passed local `validate-template.sh` because the guard runs only in `validate.yml`, not in the local validator or the pre-push hook.
+
+Fix:
+- The guard now **skips the CLAUDE.md `*Version` line** — it's an embedded changelog record (same rationale as the already-allowlisted `changelog.md`); the routing pointers elsewhere in CLAUDE.md are still scanned.
+- **Allowlists** `docs/receipts/cases/2026-06-18-legacy-path-rot-guard.md` — a case whose subject *is* the rot. The guard's own failure message already prescribes this path for intentional documentation.
+
+Process note (carried to the dogfood corrections): CI gates that live in `validate.yml` but not in `validate-template.sh` — `check_legacy_paths.py` and `check_doc_references.py` — must be run locally before pushing framework changes. The pre-push hook runs `validate-template.sh` only.
+
+Scripts. **PATCH**.
+
 ## v0.49.9 — receipts: legacy-path-rot guard
 
 **2026-06-18. Attribution: legacy-path-rot-receipts-case-2026-06-18 (`/framework-health` Step 4c). Class: patch.**
