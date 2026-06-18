@@ -4,7 +4,7 @@
 **Time to read**: 5 min for the table; depth lives in each `SKILL.md`.
 **Last updated**: 2026-06-12.
 
-This index lists all 55 skills. Each skill's full behaviour lives in its `SKILL.md` — `plugins/mycelium/skills/<name>/SKILL.md` in plugin form (recommended), or `.claude/skills/<name>/SKILL.md` in legacy form (supported during transition). Loaded JIT by Claude Code. This page is an orientation map by phase; [by-category.md](by-category.md) is the alternate index by category of work.
+This index lists all 56 skills. Each skill's full behaviour lives in its `SKILL.md` — `plugins/mycelium/skills/<name>/SKILL.md` in plugin form (recommended), or `.claude/skills/<name>/SKILL.md` in legacy form (supported during transition). Loaded JIT by Claude Code. This page is an orientation map by phase; [by-category.md](by-category.md) is the alternate index by category of work.
 
 ## Onboarding & navigation
 
@@ -116,6 +116,7 @@ Read-only visualization of canvas + state surfaces. All four skills share `engin
 | `/corrections-audit` | Analyze correction trends, surface recurring patterns, flag graduation candidates | — |
 | `/prompt-optimizer` | A/B test instruction changes against eval benchmarks | — |
 | `/framework-health` | Quarterly self-assessment: cycle velocity, discard trends, calibration, regression rate | — |
+| `/theory-fidelity` | Audit whether the theories the project claims are faithfully operationalized (source-grounds load-bearing ones); pair with `/framework-health` quarterly | — |
 | `/scaffold-cost-check` | Measure Mycelium's own scaffold token cost (CLAUDE.md + engine + harness + canvas + memory); pair with `/framework-health` for trend | — |
 
 ## How to use this index

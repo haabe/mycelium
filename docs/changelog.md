@@ -4,6 +4,23 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-18.
 
+## v0.49.18 — new skill: /theory-fidelity
+
+**2026-06-18. Attribution: theory-fidelity-skill-2026-06-18. Class: patch.**
+
+Graduates the v0.49.17 audit into a reusable instrument — the "be able to evaluate the framework against the theories it represents" capability. Before this, no check evaluated theory→mechanism *fidelity* (process health, evals, and DORA all measure something else).
+
+**`/theory-fidelity`** audits whether each theory a project claims is faithfully operationalized, on three axes:
+- **Representation** — Mechanized / Prose-only / Absent.
+- **Fidelity** — Faithful / Justified-Adaptation (deliberate divergence *with* documented rationale) / Partial / Distorted / Over-claim / Name-only.
+- **Evidence-basis** — source-grounded vs model-knowledge (provisional).
+
+It source-grounds the load-bearing theories (cite the author's canonical work) and tags the rest provisional, and it bakes in two hard-won guards: the **anti-pattern-#7 recursion guard** (grading a mechanism against your own recollection of a theory is consistency-as-evidence — source-ground instead) and the **Lopopolo attribution-fix rule** (when a wrong citation is found, ground-truth every occurrence before fixing — a blind sweep once would have corrupted ~16 valid citations of the same author for an unrelated concept). Pairs with `/framework-health` on the quarterly cadence — `/framework-health` is the process half, `/theory-fidelity` is the theory half.
+
+Generalizes beyond Mycelium: on any project that maintains a theory/methodology doc it audits that doc; with no such doc it reports the absence. Skill count 55 → 56 (`sync_derived` propagates the token across CLAUDE.md / README / skill indexes / plugin manifests).
+
+New skill. **PATCH**.
+
 ## v0.49.17 — theory-fidelity audit: doc corrections + DORA fix
 
 **2026-06-18. Attribution: theory-fidelity-doc-corrections-2026-06-18. Class: patch.**

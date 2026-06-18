@@ -4,7 +4,7 @@
 **Time to read**: 3 min.
 **Last updated**: 2026-06-08.
 
-Alternate index to the phase-first [skills/README.md](README.md). Same 55 skills, different ordering.
+Alternate index to the phase-first [skills/README.md](README.md). Same 56 skills, different ordering.
 
 ## Research & discovery
 
@@ -108,10 +108,11 @@ Mycelium itself. Use when dogfooding the framework or as part of `/framework-hea
 - `/corrections-audit` — trend analysis on corrections
 - `/prompt-optimizer` — A/B test instruction changes
 - `/framework-health` — quarterly self-assessment
+- `/theory-fidelity` — audit whether claimed theories are faithfully operationalized (source-grounds the load-bearing ones)
 - `/scaffold-cost-check` — measure Mycelium's own scaffold token cost (CLAUDE.md + engine + harness + canvas + memory)
 - `/interview` — onboarding flow (lives here because it is the entry point to the rest)
 
 ## See also
 
-- [README.md](README.md) — phase-first index of the same 55 skills
+- [README.md](README.md) — phase-first index of the same 56 skills
 - [glossary.md](../glossary.md) — vocabulary
