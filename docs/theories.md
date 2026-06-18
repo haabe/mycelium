@@ -2,7 +2,7 @@
 
 **Audience**: practitioner peers (PMs, senior engineers, designers, researchers) who want to know which frameworks Mycelium uses and how each one is wired in.
 **Time to read**: 15 min for full read; 2 min if you only want the table.
-**Last updated**: 2026-06-14.
+**Last updated**: 2026-06-18.
 
 The differentiator vs other framework lists: every theory is **mechanism-mapped** — the column "Implemented as" answers "which Mycelium artifact actually applies this?" Citations without mechanism-mapping are theatre.
 
@@ -12,7 +12,7 @@ These shape Mycelium's structure. Removing one collapses a load-bearing wall.
 
 ### Sinek — Golden Circle (Why / How / What)
 
-The L0 Purpose canvas (`canvas/purpose.yml`) follows the Why → How → What ordering Sinek argues for. The agent refuses to spawn an L1 Strategy diamond before L0 has at least the `why` field populated with evidence. Implemented as: `canvas/purpose.yml`, `/interview` first phase, gate 1 (Evidence) at L0→L1.
+The L0 Purpose canvas (`canvas/purpose.yml`) follows the Why → How → What ordering Sinek argues for, and `/interview` elicits purpose first. Honest scope: the L0→L1 transition is governed by the generic **Evidence gate**, not a `why`-specific population-and-evidence check, and the schema treats `why` as optional — so "start with Why" is modeled in canvas structure and interview ordering, not hard-gated. Implemented as: `canvas/purpose.yml`, `/interview` first phase, gate 1 (Evidence) at L0→L1.
 
 ### Christensen — Jobs to be Done
 
@@ -20,15 +20,15 @@ JTBD with the Christensen tripartite (functional, emotional, social). Each canva
 
 ### Torres — Continuous Discovery / Opportunity Solution Tree
 
-The OST is the bridge from L2 Opportunity to L3 Solution: opportunities are decomposed into solutions, solutions compete on ICE, the winner spawns L3. Loser leaves are archived with evidence. Torres's interviewing structure also informs `/user-interview`. Implemented as: `canvas/opportunities.yml`, `/ost-builder`, `/user-interview`, leaf-lifecycle.md.
+The OST is the bridge from L2 Opportunity to L3 Solution: opportunities are decomposed into solutions, solutions are compared via **assumption tests** (Torres's method — she explicitly cautions *against* scoring frameworks like ICE for solution selection), the winner spawns L3, loser leaves are archived with evidence. ICE [Ellis] is a secondary prioritization aid derived from the Four Risks, not the Torres selection mechanism. Torres's interviewing structure also informs `/user-interview`. Implemented as: `canvas/opportunities.yml`, `/ost-builder`, `/user-interview`, leaf-lifecycle.md.
 
 ### Cagan — Inspired / Empowered (four risks)
 
-Value, Usability, Feasibility, Viability. Every leaf must show evidence on each before advancing out of L3. Cagan's "prototype IS the spec" discipline is also the load-bearing claim behind Mycelium's "canvas IS the spec". Implemented as: gate 2 (Four Risks), `/assumption-test`, leaf-lifecycle.md phase 2.
+Value, Usability, Feasibility, Viability. Every leaf must show evidence on each before advancing out of L3. Mycelium's "canvas IS the spec" is an *analogical extension* of Cagan's "prototype IS the spec" (his claim is about high-fidelity discovery prototypes, not a YAML canvas — plausible, but Mycelium's framing, not a verbatim Cagan mechanism). Implemented as: gate 2 (Four Risks), `/assumption-test`, leaf-lifecycle.md phase 2.
 
 ### Wardley — Mapping
 
-Strategic landscape with evolution stages (Genesis → Custom → Product → Commodity). Mycelium's L1 strategic_frame articulates "where Mycelium plays" using Wardley's vocabulary. Implemented as: `canvas/landscape.yml`, `/wardley-map`, gate at L1→L2.
+Strategic landscape with evolution stages (Genesis → Custom → Product → Commodity). Mycelium's L1 strategic_frame articulates "where Mycelium plays" using Wardley's vocabulary. Implemented as: `canvas/landscape.yml`, `/wardley-map`, and a **NUDGE at Develop→Deliver + a suggested L1 Engineering-trio skill** (there is no hard Wardley gate at L1→L2 — the skill and canvas carry the discipline).
 
 ### Cynefin (Snowden) — Domain classification
 
@@ -36,11 +36,11 @@ Clear / Complicated / Complex / Chaotic / Confused. Determines which methods app
 
 ### Forsgren / Humble / Kim — DORA
 
-Five delivery metrics (deployment frequency, lead time, change failure rate, FDRT, reliability). L4 only. Adapted for non-software product types (content, AI tool, service) into APEX-shaped variants. Implemented as: `canvas/dora-metrics.yml`, `/dora-check`, gate 10 (Delivery Health) at L4→complete.
+Four core delivery metrics (deployment frequency, lead time, change failure rate, FDRT — formerly MTTR). **Reliability** is a *2021* operational-performance dimension (dora.dev classifies it as operational, not software-delivery), assessed via SRE/SLOs in `/dora-check` Part 3 — not a fifth delivery metric. (The 2024 report's additional delivery metric was *deployment rework rate*, which Mycelium does not separately track.) L4 only. Adapted for non-software product types (content, AI tool, service) into APEX-shaped variants — **rationale**: DORA's deployment-centric metrics don't map onto content/AI/service delivery, so product-type-appropriate cadence/quality/recovery proxies stand in. Implemented as: `canvas/dora-metrics.yml` (the 4 core), `/dora-check`, gate 10 (Delivery Health) at L4→complete.
 
 ### Hoskins — Scenarios as connective tissue
 
-Persona + Means + Motive + Simulation. Born at L2 from interview stories, designed against at L3, tested at L4, validated at L5. Hoskins's "User Knowledge Repository" concept validated Mycelium's canvas approach as architecturally aligned. Implemented as: `canvas/scenarios.yml`, scenario extraction in `/user-interview`, scenario wiring through leaf-lifecycle phases 1, 5, 8, 10.
+Persona + Means + Motive + Simulation. Born at L2 from interview stories, designed against at L3, tested at L4, validated at L5. Primary source: Hoskins, *The Product-Minded Engineer* (O'Reilly, 2025) — the scenario as the core primitive of product thinking. (An earlier in-repo citation to a SAP talk "Attention to Users Is All You Need" and a "User Knowledge Repository" concept is **unverified** pending a primary-source link.) Implemented as: `canvas/scenarios.yml`, scenario extraction in `/user-interview`, scenario wiring through leaf-lifecycle phases 1, 5, 8, 10.
 
 ## Tier 2 — Integrated theories
 
@@ -52,17 +52,18 @@ Each one shapes a specific surface; removable in isolation, but the surface goes
 | GIST Planning | Gilad | `canvas/gist.yml`, `/gist-plan` (L3 prioritization) |
 | ICE Scoring | Ellis (adopted by Gilad) | `/ice-score` (evidence-backed confidence; calibration via `cycle-history.yml`) |
 | North Star Framework | Ellis | `canvas/north-star.yml` (key metric + input metrics) |
-| Team Topologies | Skelton, Pais | `canvas/team-shape.yml`, `/team-shape` (cognitive load, interaction modes) |
+| Team Topologies | Skelton, Pais | `/team-shape` skill (cognitive load, interaction modes) — **advisory-only until multi-team adoption**: `canvas/team-shape.yml` has no schema and nothing else in the system consumes it yet (see philosophy.md "What Mycelium does not yet do") |
 | Good Services | Downe | `canvas/services.yml`, `/service-check` (15 service principles) |
 | OWASP Top 10:2025 / STRIDE | OWASP, Shostack | `canvas/threat-model.yml`, `/threat-model`, `/security-review` (gate 6) |
 | Privacy by Design | Cavoukian | `canvas/privacy-assessment.yml`, `/privacy-check` (gate 7) |
 | Loved | Lauchengco | `canvas/go-to-market.yml`, `/launch-tier` (L5) |
 | BVSSH | Smart | `canvas/bvssh-health.yml`, `/bvssh-check` (gate 8 Outcomes) |
-| Build to Learn vs Build to Earn | Patton, Cagan | Discovery diamonds = build-to-learn; delivery diamonds = build-to-earn (load-bearing distinction in CLAUDE.md) |
+| Build to Learn vs Build to Earn | Patton, Cagan | Discovery diamonds = build-to-learn; delivery diamonds = build-to-earn. Rationale in `philosophy.md`; enforced via G-M2 + define-done/DoD guardrails |
 | Cognitive Forcing Functions | Buçinca, Malaya, Gajos | Diamond transition gates: human articulates evidence before agent shows verdict |
 | Theory of Constraints | Goldratt | `value-stream.yml`, bottleneck identification at L4 |
-| Three Ways / Five Ideals | Kim | DevOps flow / feedback / continual learning shaping L4 practices |
-| The Fifth Discipline | Senge | `cluster-instances.md` is the recurring-pattern ledger; cluster log is the structural-issue surface |
+| Three Ways / Five Ideals | Kim | Three Ways map the four feedback-loop speeds (`engine/feedback-loops.md`); Five Ideals = L4 prose checklist in `domains/delivery/CLAUDE.md` (principle-text, not a gate) |
+| The Fifth Discipline | Senge | System archetypes (Fixes That Fail / Shifting the Burden / Limits to Growth / Eroding Goals) in `harness/anti-patterns.md` (#12–15), checked at L1/L2 in `/diamond-assess` step 5; `cluster-instances.md` is the recurrence-to-structure ledger |
+| Double-loop learning | Argyris | The named ground for the fractal double-loop architecture (philosophy.md) and the corrections→cluster→mechanism graduation cycle; sourced in guardrail G-P7 (`guardrails-core.md`) |
 | Domain-Driven Design | Evans | `canvas/bounded-contexts.yml` (L3→L4 boundary) |
 | Lean UX | Gothelf, Seiden | Hypothesis-driven design feeds `/assumption-test` |
 | Toyota Kata | Rother | Coaching-question shape in `/diamond-assess` |
@@ -79,7 +80,6 @@ These show up as citations and inform the framework's ethics or peripheral mecha
 - **Clean Architecture / SOLID** (Martin) — engineering-principles.md NUDGE tier
 - **SRE** (Beyer, Jones, Petoff, Murphy) — error budgets, toil, SLIs/SLOs vocabulary
 - **TPS / Lean** (Ohno, Toyoda) — 7 Wastes inform value-stream.yml
-- **Argyris** — double-loop learning informs the corrections-graduates-to-mechanism cycle
 - **Norman** (visible affordances) — UX surface for footgun-to-affordance graduations (e.g., wayfinding strict marker, diamond-progress prompt template)
 - **Liao et al. (2020)** — contrastive explanations land harder than purely positive ones; informs `decision-log.md` `why_not_alternatives` field
 - **Lanham et al. (2023)** — citations must be faithful, not after-the-fact rationalization; informs the `(per: <source>)` discipline
@@ -87,7 +87,7 @@ These show up as citations and inform the framework's ethics or peripheral mecha
 - **Doshi-Velez & Kim (2017)** — explainability tier classification informs `/xai-check`
 - **Selbst & Barocas** — disparate impact / fairness considerations in `/regulatory-review`
 - **Bansal et al.** — human-AI complementarity informs cognitive forcing applications
-- **Lopopolo (Reflexion)** — self-correcting loop reference for `/reflexion`
+- **Reflexion (Shinn et al., 2023)** — self-correcting loop reference for `/reflexion` (the framework's `reflexion/SKILL.md` already cites Shinn; Ryan Lopopolo is separately and correctly cited elsewhere for the *harness-context reframe*, not for Reflexion)
 - **EU AI Act Art. 13 / 50** — transparency + disclosure requirements; tested by `/regulatory-review` and `/xai-check`
 - **Halland CORE** — Central content / Outward paths / Related links / Entry points; informs the docs structure
 

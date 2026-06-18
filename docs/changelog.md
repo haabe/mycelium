@@ -4,6 +4,26 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-18.
 
+## v0.49.17 — theory-fidelity audit: doc corrections + DORA fix
+
+**2026-06-18. Attribution: theory-fidelity-doc-corrections-2026-06-18. Class: patch.**
+
+A theory-fidelity audit (does each theory Mycelium claims get faithfully operationalized, or name-dropped / distorted / over-claimed?) — Tier-1 load-bearing theories source-grounded against canonical works, Tier 2/3 graded from model-knowledge with provisional tags. Finding: the *engine* is mostly faithful; the least-faithful artifact was **`docs/theories.md` itself**, against its own stated standard ("citations without mechanism-mapping are theatre").
+
+Corrections shipped:
+
+- **Torres / OST** — `theories.md` no longer says "solutions compete on ICE." Torres explicitly cautions against scoring frameworks like ICE for solution selection; the method is assumption testing, ICE is Ellis's (a secondary aid derived from Four Risks). The engine was already faithful; the doc mis-credited the mechanism.
+- **DORA** — "reliability" was wrongly described as the "fifth metric added in the 2024 report." It is a **2021 operational-performance dimension** (dora.dev classifies it as operational, not software-delivery); the 2024 delivery addition was *deployment rework rate*. Re-classified as an operational adjunct (assessed via SRE) across `theories.md`, `/dora-check`, and gate 10. The `dora-metrics.yml` schema correctly holds the four core delivery metrics; no schema change.
+- **Wardley** — "gate at L1→L2" corrected to a NUDGE at Develop→Deliver + a suggested L1 trio skill (no such gate exists).
+- **Sinek** — "refuses to spawn L1 before `why` is populated with evidence" softened to match reality (generic Evidence gate; `why` is schema-optional).
+- **Senge** — row now cites the system archetypes (anti-patterns #12–15, checked at L1/L2 in `/diamond-assess`), the textbook-faithful mechanism it previously omitted.
+- **Argyris** — promoted Tier-3 → Tier-2: it is the named ground for the fractal double-loop and is sourced in guardrail G-P7, i.e. load-bearing, not citation-only.
+- **Three Ways, Patton/Cagan, Cagan "canvas IS spec", Team Topologies** — pointer/over-claim corrections (Team Topologies marked advisory-only until multi-team adoption, matching philosophy.md).
+- **Hoskins** — citation re-anchored to *The Product-Minded Engineer* (O'Reilly, 2025); the SAP-talk title and "User Knowledge Repository" tagged unverified.
+- **Reflexion attribution** — fixed Lopopolo → **Shinn et al. (2023)** in `theories.md` and `glossary.md` only. Note: this was **not** a repo-wide sweep — Ryan Lopopolo is correctly cited in ~16 other places for the *harness-context reframe* ("every interaction is a failure of the harness to provide enough context"); a blind sweep (which the audit's own Tier-3 pass recommended from model-knowledge) would have corrupted them. Ground-truthing caught the audit's own error — an AP#7 instance in the self-audit, exactly the recursion the method's premortem flagged.
+
+Docs + one skill (`/dora-check`) + one gate (theory-gates §10). **PATCH**.
+
 ## v0.49.16 — README receipts highlights rotation
 
 **2026-06-18. Attribution: readme-receipts-rotation-2026-06-18. Class: patch.**

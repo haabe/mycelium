@@ -273,7 +273,7 @@ Two quality layers for user-facing work:
 
 | Product Type | Metrics Canvas | Key Metrics |
 |-------------|---------------|-------------|
-| software | dora-metrics.yml | Deployment frequency, lead time, change failure rate, failed deployment recovery time (FDRT, formerly MTTR), reliability |
+| software | dora-metrics.yml | Deployment frequency, lead time, change failure rate, failed deployment recovery time (FDRT, formerly MTTR). Reliability is assessed as an operational adjunct (2021 dimension) via SRE, not as a core delivery metric |
 | content_* | content-metrics.yml | Publication cadence, production lead time, revision rate, completion rate |
 | ai_tool | ai-tool-metrics.yml | Eval frequency, prompt version cadence, safety score, bias assessment |
 | service_offering | service-metrics.yml | Client throughput, delivery lead time, client satisfaction, repeatability |

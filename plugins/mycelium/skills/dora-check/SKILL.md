@@ -43,13 +43,13 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
 
 ## Software Products
 
-Assess delivery health using Forsgren's five DORA metrics AND LinearB's APEX AI-era metrics.
+Assess delivery health using the four core DORA delivery metrics (Forsgren) plus reliability as an operational adjunct, AND LinearB's APEX AI-era metrics.
 
 ## Part 1: DORA Metrics (Forsgren)
 
 Gather current metrics from CI/CD, deployment logs, incident records.
 
-*Note: DORA expanded from 4 to 5 metrics. "MTTR" was renamed to "Failed Deployment Recovery Time" (FDRT) for precision — the original name was ambiguous with other mean-time-to-X metrics. "Reliability" was added as the 5th metric in the 2024 State of DevOps report.*
+*Note: DORA's core set is **four delivery metrics** (below). "MTTR" was renamed to "Failed Deployment Recovery Time" (FDRT) for precision — the original was ambiguous with other mean-time-to-X metrics. **Reliability** is an **operational-performance** dimension DORA added in **2021** — dora.dev classifies it as operational, not software-delivery — so it is assessed here as an adjunct via SLOs/SLIs (Part 3 SRE), not as a fifth delivery metric. (The 2024 State of DevOps report's additional delivery metric was **deployment rework rate**, which this skill does not separately track.)*
 
 **Deployment Frequency**: How often does code reach production?
 - Elite: On-demand (multiple deploys/day)
@@ -77,13 +77,13 @@ Gather current metrics from CI/CD, deployment logs, incident records.
 
 *Formerly "Mean Time to Recovery (MTTR)." Renamed for precision — FDRT measures recovery from failed deployments specifically, not all incidents.*
 
-**Reliability**: Does the software meet or exceed its reliability targets?
+**Reliability** *(operational adjunct, not a core delivery metric)*: Does the software meet or exceed its reliability targets?
 - Elite: Meets or exceeds targets
 - High: Slightly below targets
 - Medium: Moderately below targets
 - Low: Significantly below targets
 
-*Added in DORA 2024. Measures operational reliability via SLOs/SLIs. Connects to SRE metrics in Part 3.*
+*Added by DORA in 2021 as an operational-performance dimension (dora.dev classifies it as operational, not software-delivery). Measured via SLOs/SLIs; assessed in this skill as an adjunct that connects to the SRE metrics in Part 3 — it does not populate the four-metric `dora-metrics.yml` delivery core.*
 
 ## Part 2: APEX Metrics (LinearB)
 

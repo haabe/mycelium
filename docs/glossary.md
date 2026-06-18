@@ -56,7 +56,7 @@ Two-to-four sentences per entry. No theory teaching here — entries link out to
 
 **Process cliff** — The point in a session where Mycelium's structure starts feeling heavier than the value it adds. The Hoskins take-home surfaced this at the 75% mark. Lightweight discovery-to-delivery continuation mode is the ongoing fix.
 
-**Reflexion** — A self-correcting loop: implement → validate → self-critique → retry (max 3 iterations). Lopopolo / academic origin. Implemented as `/reflexion` and as a PostToolUseFailure hook.
+**Reflexion** — A self-correcting loop: implement → validate → self-critique → retry (max 3 iterations). Reflexion pattern: Shinn et al. (2023). Implemented as `/reflexion` and as a PostToolUseFailure hook.
 
 **Scale** — One of L0 Purpose / L1 Strategy / L2 Opportunity / L3 Solution / L4 Delivery / L5 Market. Scales answer "what am I deciding?". Not all scales are required for every project.
 
