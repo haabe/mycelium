@@ -3,7 +3,7 @@
 
 Reads validate-template.sh / upgrade.sh stdout (from stdin or a file via -f),
 extracts WARN/FAIL lines, classifies them against known signatures from
-.claude/engine/warning-handbook.md, and updates .claude/memory/warnings-log.md
+the plugin's engine/warning-handbook.md, and updates .claude/memory/warnings-log.md
 with per-class records (first_seen, last_seen, count, sample, status).
 
 This is the substrate for the existing self-learning machinery (corrections.md
@@ -192,9 +192,9 @@ def render(merged: dict[str, dict]) -> str:
         "# Warnings Log",
         "",
         "*CI signal capture for the self-learning loop. Auto-updated by "
-        "`.claude/scripts/ingest_warnings.py`. Each class lists when it was "
-        "first/last seen and how often. Best-practice fixes live in "
-        "`.claude/engine/warning-handbook.md`.*",
+        "`ingest_warnings.py` in the Mycelium plugin. Each class lists when it was "
+        "first/last seen and how often. Best-practice fixes live in the plugin's "
+        "`engine/warning-handbook.md`.*",
         "",
         "## TL;DR",
         "",

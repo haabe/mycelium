@@ -306,7 +306,7 @@ def _deny_file_edit(rel_path, rule, upstream_repo):
         f"'Framework changes made directly in roadmap'. To bypass this gate "
         f"in an emergency, set 'active': false in .claude/state/upstream.json. "
         f"Use the bypass sparingly — every bypass should be paired with an "
-        f"escape-hatch entry per .claude/orchestration/escape-hatch.md."
+        f"escape-hatch entry per the plugin's orchestration/escape-hatch.md."
     )
 
 
@@ -324,7 +324,7 @@ def _deny_bash_write(fp, op, upstream_repo):
         f"(checkout/restore/stash/reset) are allowlisted.\n\n"
         f"To bypass for an emergency: set 'active': false in "
         f".claude/state/upstream.json. Use sparingly — every bypass should be "
-        f"paired with an escape-hatch entry per .claude/orchestration/"
+        f"paired with an escape-hatch entry per the plugin's orchestration/"
         f"escape-hatch.md."
     )
 

@@ -103,7 +103,7 @@ if [ -n "$NUDGE" ]; then
   case "$FILE_PATH" in
     *".claude/canvas/"*.yml)
       BASENAME=$(basename "$FILE_PATH" .yml)
-      SCHEMA_FILE="$PROJECT_DIR/.claude/schemas/canvas/${BASENAME}.schema.json"
+      SCHEMA_FILE="${CLAUDE_PLUGIN_ROOT:-$PROJECT_DIR/.claude}/schemas/canvas/${BASENAME}.schema.json"
       if [ -f "$SCHEMA_FILE" ]; then
         NUDGE="${NUDGE} Schema exists at schemas/canvas/${BASENAME}.schema.json — validate with validate_canvas.py."
       fi

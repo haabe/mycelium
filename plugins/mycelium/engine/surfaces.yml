@@ -35,22 +35,22 @@ surfaces:
   configs:
     description: "Structured data that controls framework behavior"
     items:
-      - path: .claude/engine/canvas-guidance.yml
+      - path: plugins/mycelium/engine/canvas-guidance.yml
         type: schema
         impact: high
         change_frequency: low
         note: "Defines project types, product types, canvas requirements"
-      - path: .claude/engine/confidence-thresholds.yml
+      - path: plugins/mycelium/engine/confidence-thresholds.yml
         type: threshold
         impact: high
         change_frequency: low
         note: "Controls when diamonds can progress"
-      - path: .claude/engine/theory-gates.md
+      - path: plugins/mycelium/engine/theory-gates.md
         type: gate-definition
         impact: high
         change_frequency: low
         note: "13 theory gates that control phase transitions (the 13th, Explainability, is conditional — AI products only)"
-      - path: .claude/engine/diamond-rules.md
+      - path: plugins/mycelium/engine/diamond-rules.md
         type: lifecycle
         impact: high
         change_frequency: low

@@ -19,7 +19,8 @@ Mycelium canvas schema validator.
 ╚════════════════════════════════════════════════════════════════════╝
 
 Validates each .claude/canvas/*.yml file against its corresponding schema in
-.claude/schemas/canvas/<basename>.schema.json. Schemas not present are silently
+$CLAUDE_PLUGIN_ROOT/schemas/canvas/<basename>.schema.json (plugin form; falls back
+to .claude/schemas/canvas/ in legacy form). Schemas not present are silently
 skipped (canvas can have weaker schemas in early development; tighten over time).
 
 Resolves trace.upstream / trace.downstream target_id references across all

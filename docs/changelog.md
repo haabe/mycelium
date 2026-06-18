@@ -4,6 +4,21 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-18.
 
+## v0.49.7 — legacy-path sweep: runtime strings + a plugin-form bug
+
+**2026-06-18. Attribution: legacy-path-rot-runtime-strings-2026-06-18 (follow-up). Class: patch.**
+
+Follow-up to v0.49.6, refining the boundary it drew. v0.49.6 swept docs and left "scripts / manifest.yml / surfaces.yml" as intentional runtime/dual-tree references. On closer reading, some of that was genuinely stale, **runtime-surfaced** content — worse than a stale doc, because it misleads at runtime:
+
+- **Agent-facing hook/guard messages**: `scripts/framework_guard.py` (escape-hatch pointer) and `hooks/stop-check.sh` (canvas-guidance pointer) named `.claude/{orchestration,engine}/` paths that don't exist in plugin form. Reworded to reference "the plugin's …".
+- **Generated + documented content**: `scripts/ingest_warnings.py` docstring + the header it writes into every `warnings-log.md`; `scripts/validate_canvas.py` docstring (its resolution logic was already dual-tree-aware — only the docstring lagged).
+- **Descriptive registry**: `engine/surfaces.yml` `path:` fields are descriptive metadata (only `engine/README.md` references the file; no runtime code resolves them), so `.claude/engine/` there was simply inaccurate. Repointed to `plugins/mycelium/engine/`.
+- **Real bug**: `hooks/post-write-nudge.sh` checked `$PROJECT_DIR/.claude/schemas/canvas/<name>.schema.json` before adding a "validate against schema" nudge. In plugin form schemas live in the plugin cache, so the check was always false and plugin users silently never got the enhanced nudge. Now resolves `${CLAUDE_PLUGIN_ROOT:-$PROJECT_DIR/.claude}/schemas/canvas/`.
+
+Left untouched, flagged for a deliberate maintainer call (semantic, not mechanical path rot): the dogfood-sync workflow guidance in `framework_guard.py` (`run .claude/scripts/upgrade.sh`) is coupled to the guard's allowlist logic and the plugin-form sync model (`upgrade.sh` vs `/plugin update`); `manifest.yml` (the migration deletion-list) and `provision-skills.sh` (vendors framework skills *into* `.claude/skills/` for opencode) legitimately reference the runtime tree.
+
+Validated: `validate-template.sh` PASS (incl. shellcheck / ruff / pytest), both doc guards pass, `stop-check.sh` embedded-Python executes. Scripts/hooks/config. **PATCH**.
+
 ## v0.49.6 — legacy-path rot sweep (code-span class)
 
 **2026-06-18. Attribution: legacy-path-rot-sweep-2026-06-18 (dogfood-surfaced). Class: patch.**

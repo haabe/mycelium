@@ -171,7 +171,7 @@ warnings = sys.argv[1]
 corrections = sys.argv[2]
 decisions = sys.argv[3]
 output = {
-    'additionalContext': f'MYCELIUM GUARDRAIL WARNINGS: {warnings}Before completing, address these warnings or document why they are not applicable for this project type (check .claude/engine/canvas-guidance.yml).',
+    'additionalContext': f'MYCELIUM GUARDRAIL WARNINGS: {warnings}Before completing, address these warnings or document why they are not applicable for this project type (check engine/canvas-guidance.yml in the plugin).',
     'systemMessage': f'Session: {corrections} corrections, {decisions} decisions logged.'
 }
 print(json.dumps(output))
