@@ -194,7 +194,7 @@ A diamond is stale when:
 4. **Kill**: Remove from active.yml. Log reason in decision-log.md. Canvas data stays with "killed" note.
 5. **Never delete canvas artifacts** -- they're learning, even from killed work
 
-See `.claude/orchestration/operations.md` for full maintenance schedules.
+See `../orchestration/operations.md` for full maintenance schedules.
 
 ## Human Actions at Phase Transitions
 

@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.49.5 -- **Attribution label: docs-dead-link-sweep-2026-06-16** (a reader reported `docs/theories.md` pointing at a non-existent `theory-gates.md`; a repo-wide markdown link audit found 46 raw hits and fixed every real one). Fixes: wrong relative-depth links (`docs/README.md` + `docs/contributing/style.md` evaluate.md examples; `domains/README.md`→root CLAUDE.md; `hooks/README.md`→root CONTRIBUTORS.md; `harness/theory-tensions.md`→`docs/theories.md`); stale legacy `.claude/...` paths repointed to plugin canonical (`AGENTS.md` + `docs/skills/README.md`→`plugins/mycelium/engine/version-discipline.md`; `docs/migration.md`→`plugins/mycelium/scripts/upgrade.sh`); runtime-artifact refs de-linked where no repo target exists (`engine/README.md` + `harness/README.md` canvas/decision-log). Dogfood-instance docs (project-owned, not shipped): rewrote `.claude/README.md` — it still called itself "the Mycelium Framework Root" post-plugin-migration; now describes the dogfood instance and points framework concepts to `plugins/mycelium/`; same repoint in `.claude/{evals,diamonds,canvas}/README.md`. One link intentionally left: `canvas-health/SKILL.md` quotes `see [filename](path)` as a scent anti-pattern. Docs only. **PATCH**. **Priors**: v0.49.4 **opencode-e2e-friction-fixes-2026-06-16**, v0.49.3 **opencode-model-toolcalling-guidance** (see `docs/changelog.md`).*
+*Version 0.49.6 -- **Attribution label: legacy-path-rot-sweep-2026-06-18** (dogfood-surfaced: a roadmap house-cleaning found the same post-migration legacy-path rot here that v0.49.5's link-only sweep structurally could not catch — it lives in **code-spans and prose**, not markdown links). Fixes: repointed stale `.claude/{engine,orchestration,schemas}/` references — in doc prose to `plugins/mycelium/...` (CLAUDE.md, `docs/{glossary,theories,ai-system-card,usage-modes,regulatory,README,skills/README}.md`), and to relative paths in plugin-internal docs (`engine/{theory-gates,diamond-rules,framework-reflexion,warning-handbook,xai-canvas-threading,version-discipline}.md`, `jit-tooling/detector.md`, `orchestration/agent-teams.md`, `hooks/README.md`). New `plugins/mycelium/scripts/check_legacy_paths.py` guards the code-span class the markdown-link checker (`check_doc_references.py`) excludes by design; wired into `validate.yml`. Scope is the three dirs with no plugin-form runtime path (`engine|orchestration|schemas`); `skills`/`harness` excluded (legitimate runtime refs). Intentional refs left untouched: `AGENTS.md`/`migration.md`/`install-paths.md` dual-form docs, `migrate-from-legacy` SKILL, and scripts/`manifest.yml`/`surfaces.yml` runtime + dual-tree maps. Docs + CI tooling. **PATCH**. **Priors**: v0.49.5 **docs-dead-link-sweep-2026-06-16**, v0.49.4 **opencode-e2e-friction-fixes-2026-06-16** (see `docs/changelog.md`).*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 
@@ -12,7 +12,7 @@ Mycelium is a harnessing system for AI-assisted product development. It connects
 
 *Rationale, graduation history, research basis, and the X/Twitter extraction sequence for every rule below live in `.claude/harness/communication-rules.md` — that file is canonical detail; the active rules here win.*
 
-**Always communicate in plain language first, technical details second.** Use `.claude/engine/status-translations.md` to translate diamond states. When reporting confidence, always include: the level, the evidence type, WHY it's appropriate, and what would increase it. (Say "Confidence: Moderate -- based on 2 user interviews" not "Confidence: 0.5".)
+**Always communicate in plain language first, technical details second.** Use `plugins/mycelium/engine/status-translations.md` to translate diamond states. When reporting confidence, always include: the level, the evidence type, WHY it's appropriate, and what would increase it. (Say "Confidence: Moderate -- based on 2 user interviews" not "Confidence: 0.5".)
 
 **Always suggest relevant skills at transitions.** Surface the skill that satisfies each gate: "Before delivering, consider `/security-review` (security gate) and `/a11y-check` (accessibility)."
 
@@ -74,19 +74,19 @@ L0-L3 are product-agnostic. L4-L5 adapt to `product_type` (software, content_cou
 
 ### Diamond Phases
 
-Four phases per diamond, gated by theory checks: **Discover** (diverge — explore, gather evidence), **Define** (converge — synthesize, frame the problem), **Develop** (diverge — ideate, prototype), **Deliver** (converge — validate, build, ship, measure). Diamonds spawn children (L0→L1→L2→L3→L4, L5→L2 on market feedback); a bad assumption found in delivery **regresses** the diamond back with new evidence — the system working correctly. Full transition rules, WIP limits, lifecycle: `.claude/engine/diamond-rules.md`.
+Four phases per diamond, gated by theory checks: **Discover** (diverge — explore, gather evidence), **Define** (converge — synthesize, frame the problem), **Develop** (diverge — ideate, prototype), **Deliver** (converge — validate, build, ship, measure). Diamonds spawn children (L0→L1→L2→L3→L4, L5→L2 on market feedback); a bad assumption found in delivery **regresses** the diamond back with new evidence — the system working correctly. Full transition rules, WIP limits, lifecycle: `plugins/mycelium/engine/diamond-rules.md`.
 
 ### OST Leaf Lifecycle
 
-Every solution leaf runs a 10-phase pipeline, each phase with input artifacts, gates, outputs, and discard criteria: **OST Leaf → Four Risks → ICE Score → Assumption Test → GIST Entry → Bounded Context → Threat Model → Preflight → Delivery Diamond → Launch + Feedback**. Definitions and discard rules: `.claude/engine/leaf-lifecycle.md`; archived leaves → `canvas/archived-solutions.yml`.
+Every solution leaf runs a 10-phase pipeline, each phase with input artifacts, gates, outputs, and discard criteria: **OST Leaf → Four Risks → ICE Score → Assumption Test → GIST Entry → Bounded Context → Threat Model → Preflight → Delivery Diamond → Launch + Feedback**. Definitions and discard rules: `plugins/mycelium/engine/leaf-lifecycle.md`; archived leaves → `canvas/archived-solutions.yml`.
 
 ### Perspective Resolution & Leaf Bakeoff
 
-Conflicting product/design/engineering perspectives → structured resolution in `.claude/engine/perspective-resolution.md`. Multiple leaves competing for one opportunity → structured A/B comparison in `.claude/orchestration/leaf-bakeoff.md`.
+Conflicting product/design/engineering perspectives → structured resolution in `plugins/mycelium/engine/perspective-resolution.md`. Multiple leaves competing for one opportunity → structured A/B comparison in `plugins/mycelium/orchestration/leaf-bakeoff.md`.
 
 ## Theory Gates (Decision Checkpoints)
 
-Every diamond transition must pass applicable gates from: Evidence, Four Risks, JTBD, Cynefin, Bias, Security, Privacy, BVSSH, Service Quality, Delivery Metrics, Corrections, Regulatory, Explainability. See `.claude/engine/theory-gates.md` for complete definitions, pass/fail criteria, and suggested skills.
+Every diamond transition must pass applicable gates from: Evidence, Four Risks, JTBD, Cynefin, Bias, Security, Privacy, BVSSH, Service Quality, Delivery Metrics, Corrections, Regulatory, Explainability. See `plugins/mycelium/engine/theory-gates.md` for complete definitions, pass/fail criteria, and suggested skills.
 
 **You cannot progress a diamond by saying "I'm confident enough." You must demonstrate evidence that satisfies each gate.**
 
@@ -129,13 +129,13 @@ The reflexion hook (PostToolUseFailure) is scoped to **project-relevant failures
 ### Key Artifacts
 - **Corrections** (`.claude/memory/corrections.md`): learning from mistakes. **Read before every task.** *Recourse SLA*: one-offs inform next session; ≥3 same-root-cause instances graduate to mechanism on the next L4 cleanup cycle.
 - **Patterns** (`.claude/memory/patterns.md`): successful patterns to reuse.
-- **Warnings Log** (`.claude/memory/warnings-log.md`): CI WARN+FAIL capture, auto-updated; per-class fixes in `.claude/engine/warning-handbook.md`; consumed by `/corrections-audit`.
+- **Warnings Log** (`.claude/memory/warnings-log.md`): CI WARN+FAIL capture, auto-updated; per-class fixes in `plugins/mycelium/engine/warning-handbook.md`; consumed by `/corrections-audit`.
 - **Decision Log** (`.claude/harness/decision-log.md`): every significant decision. **Required** `why_not_alternatives` field — per-alternative rejection rationale; contrastive explanations land harder (Liao et al. 2020) and feed `/xai-check` Stage 2.
-- **Feedback Loops** (`.claude/engine/feedback-loops.md`, `/feedback-review`), **Reflexion Loop** (`.claude/skills/reflexion/SKILL.md`, max-3 retry), **Eval Benchmarks** (`.claude/evals/`), **Cycle History** (`.claude/canvas/cycle-history.yml` → `engine/cycle-learning.md`), **Adaptive Thresholds** (`.claude/canvas/thresholds.yml` → `engine/adaptive-thresholds.md`).
+- **Feedback Loops** (`plugins/mycelium/engine/feedback-loops.md`, `/feedback-review`), **Reflexion Loop** (`plugins/mycelium/skills/reflexion/SKILL.md`, max-3 retry), **Eval Benchmarks** (`.claude/evals/`), **Cycle History** (`.claude/canvas/cycle-history.yml` → `engine/cycle-learning.md`), **Adaptive Thresholds** (`.claude/canvas/thresholds.yml` → `engine/adaptive-thresholds.md`).
 
 ### Learning Metabolism (Self-Improving System)
 
-Five mechanisms make Mycelium smarter over time (details + cadence in each sub-file): **Cycle Learning** (`.claude/engine/cycle-learning.md` — predicted vs actual ICE), **Pattern Emergence** (`.claude/engine/pattern-detector.md` — into `/retrospective`, `/diamond-assess`), **Adaptive Thresholds** (`.claude/engine/adaptive-thresholds.md` — defaults until N=10), **Framework Reflexion** (`.claude/engine/framework-reflexion.md`, `/framework-health`), **Evidence Decay** (`.claude/engine/evidence-decay.md` — `/canvas-health` flags stale evidence).
+Five mechanisms make Mycelium smarter over time (details + cadence in each sub-file): **Cycle Learning** (`plugins/mycelium/engine/cycle-learning.md` — predicted vs actual ICE), **Pattern Emergence** (`plugins/mycelium/engine/pattern-detector.md` — into `/retrospective`, `/diamond-assess`), **Adaptive Thresholds** (`plugins/mycelium/engine/adaptive-thresholds.md` — defaults until N=10), **Framework Reflexion** (`plugins/mycelium/engine/framework-reflexion.md`, `/framework-health`), **Evidence Decay** (`plugins/mycelium/engine/evidence-decay.md` — `/canvas-health` flags stale evidence).
 
 ## Domain Contexts
 
@@ -153,12 +153,12 @@ Mycelium is **language-agnostic** and **product-type-agnostic**. When a delivery
 
 Solo developers use canvas as shared memory with the agent. Teams commit canvas to git as shared product documentation. For parallel exploration, use `/fan-out` with worktree-isolated worker agents.
 
-See `.claude/orchestration/modes.md` for usage patterns and `.claude/orchestration/agent-teams.md` for parallel orchestration.
+See `plugins/mycelium/orchestration/modes.md` for usage patterns and `plugins/mycelium/orchestration/agent-teams.md` for parallel orchestration.
 
 ## Operations & Maintenance
 
-- **Day-to-day**: `.claude/orchestration/operations.md` -- Session resumption, canvas maintenance, diamond lifecycle, memory pruning
-- **Escape hatch**: `.claude/orchestration/escape-hatch.md` -- Legitimate process bypass for emergencies. Must be documented and paid back.
+- **Day-to-day**: `plugins/mycelium/orchestration/operations.md` -- Session resumption, canvas maintenance, diamond lifecycle, memory pruning
+- **Escape hatch**: `plugins/mycelium/orchestration/escape-hatch.md` -- Legitimate process bypass for emergencies. Must be documented and paid back.
 
 ## Skills
 

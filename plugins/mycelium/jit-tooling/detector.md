@@ -175,7 +175,7 @@ These apply conditionally based on `ai_components.detected` (Step 1c):
 - `/xai-check` (XAI gate for AI-containing products — disclosure, decision-explanation, recourse, fidelity, system card, tier-scaled)
 - AI-aware Definition of Done items (disclosure copy reviewed, fidelity sample audited, recourse path tested, system card published)
 - Threat-model XAI extension (misleading-explanation manipulation, prompt-injection causing false rationales, explanation side-channel leakage)
-- See `.claude/engine/xai-canvas-threading.md` for which existing canvas files thread XAI signals.
+- See `../engine/xai-canvas-threading.md` for which existing canvas files thread XAI signals.
 
 ## What Varies (Stack-Specific)
 

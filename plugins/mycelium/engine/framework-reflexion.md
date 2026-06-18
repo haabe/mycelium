@@ -43,7 +43,7 @@ Five health dimensions that tell you whether the framework is getting better at 
 
 ## `/framework-health` Skill
 
-See `.claude/skills/framework-health/SKILL.md` for the skill definition that generates the dashboard.
+See `../skills/framework-health/SKILL.md` for the skill definition that generates the dashboard.
 
 ## Cadence
 

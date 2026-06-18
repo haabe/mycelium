@@ -42,7 +42,7 @@ When checking gates during `/diamond-progress`, for each applicable gate:
 2. State the **design perspective** assessment (or N/A with reason)
 3. State the **engineering perspective** assessment (or N/A with reason)
 
-For solo developers: apply perspectives sequentially as distinct evaluation passes, not collapsed into one. See `.claude/engine/perspective-resolution.md` for when perspectives conflict.
+For solo developers: apply perspectives sequentially as distinct evaluation passes, not collapsed into one. See `perspective-resolution.md` for when perspectives conflict.
 
 ---
 
@@ -377,7 +377,7 @@ This gate is **operational** — it asks "have you actually run `/xai-check`?" a
 
 **Cross-references**:
 - Detector emits the trigger: `.claude/jit-tooling/detector.md` Step 1c
-- Canvas routing: `.claude/engine/xai-canvas-threading.md`
+- Canvas routing: `xai-canvas-threading.md`
 - Phase 2.3 will add `threat-model.yml :: explanation_attacks` category — until then, explanation-layer threats are noted but not enumerated structurally.
 
 ---

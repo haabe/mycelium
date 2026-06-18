@@ -95,4 +95,4 @@ These show up as citations and inform the framework's ethics or peripheral mecha
 
 - [philosophy.md](philosophy.md) — the why-opinionated rationale that picks these specific theories
 - [glossary.md](glossary.md) — short definitions for theory vocabulary
-- `.claude/engine/theory-gates.md` — canonical theory gate definitions per scale
+- `plugins/mycelium/engine/theory-gates.md` — canonical theory gate definitions per scale

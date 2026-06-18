@@ -50,7 +50,7 @@ When CI emits a line the ingestor classifies as `unclassified`, that is the sign
 
 **Signature**: `Canvas file \S+ not in canvas-update mapping`
 **Detection**: `validate-template.sh` Check 5
-**Best practice**: Add a one-line entry to `.claude/skills/canvas-update/SKILL.md`'s mapping table. Format: `| <description> | <filename>.yml | <theory source> |`. Without the mapping, the agent doesn't know which canvas file holds which kind of state, so updates to that canvas may be skipped or misrouted.
+**Best practice**: Add a one-line entry to `../skills/canvas-update/SKILL.md`'s mapping table. Format: `| <description> | <filename>.yml | <theory source> |`. Without the mapping, the agent doesn't know which canvas file holds which kind of state, so updates to that canvas may be skipped or misrouted.
 **Graduation**: low priority — fires only when a new canvas type ships without the mapping update. Consider folding into the canvas-template addition workflow if it recurs.
 
 ### ruff-total-above-baseline

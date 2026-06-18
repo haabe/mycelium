@@ -111,7 +111,7 @@ graph TD
 
 Workers get read-only canvas access and worktree isolation. Only the lead agent updates canvas and progresses diamonds. Use `/fan-out` to start parallel exploration.
 
-The bakeoff protocol structures the comparison: see `.claude/orchestration/leaf-bakeoff.md`.
+The bakeoff protocol structures the comparison: see `plugins/mycelium/orchestration/leaf-bakeoff.md`.
 
 ## JIT tooling mode (any of the above)
 
@@ -135,4 +135,4 @@ See [jit-tooling.md](jit-tooling.md) for depth.
 - [README](../README.md#how-it-works) — diamond model overview
 - [jit-tooling.md](jit-tooling.md) — detection and adapter generation
 - [skills/README.md](skills/README.md) — full skill index
-- `.claude/orchestration/modes.md` — full operations reference
+- `plugins/mycelium/orchestration/modes.md` — full operations reference

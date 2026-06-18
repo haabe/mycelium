@@ -85,7 +85,7 @@ The doc tree assumes four layers of attention:
 | 30s | landing | README headline + 5-line pitch + nav cards |
 | 5 min | overview | README full read OR one of `evaluate.md` / `philosophy.md` |
 | 30 min | considered | `theories.md`, `usage-modes.md`, `receipts/`, deep skill reads |
-| deep | operating | `CLAUDE.md`, `.claude/engine/`, `.claude/harness/` |
+| deep | operating | `CLAUDE.md`, `plugins/mycelium/engine/`, `.claude/harness/` |
 
 Don't write a 30-min page when a 5-min page is the right surface. Don't bury 30s scent under 5-min text.
 

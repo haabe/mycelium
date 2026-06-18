@@ -81,7 +81,7 @@ Returns warnings via `additionalContext` (does not block). This is the "hybrid" 
 - If DORA metrics are overdue (>30 days since last measurement) -> Reminder to run `/dora-check`
 - Reports corrections count for awareness
 
-Returns `additionalContext` so the agent knows about overdue strategic feedback loops from the start of the session. Part of the four-speed feedback loop system (see `.claude/engine/feedback-loops.md`).
+Returns `additionalContext` so the agent knows about overdue strategic feedback loops from the start of the session. Part of the four-speed feedback loop system (see `../engine/feedback-loops.md`).
 
 ### Layer 6: Skill-Level Gates (not hooks)
 **Triggers**: When `/diamond-progress` is explicitly invoked

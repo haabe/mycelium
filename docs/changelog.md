@@ -2,7 +2,23 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-06-16.
+**Last updated**: 2026-06-18.
+
+## v0.49.6 — legacy-path rot sweep (code-span class)
+
+**2026-06-18. Attribution: legacy-path-rot-sweep-2026-06-18 (dogfood-surfaced). Class: patch.**
+
+A house-cleaning of the dogfood roadmap surfaced that the same post-migration legacy-path rot existed here, in a form v0.49.5's sweep **structurally could not catch**: that sweep follows markdown links (`[text](target)`) only — by design, since bare-token scanning produced 95% false positives. This rot lives in **code-spans and prose** (`` `.claude/engine/X` ``), which the link checker never inspects. A scoped scan found stale `.claude/{engine,orchestration,schemas}/` references that should point at `plugins/mycelium/...` (the dirs moved at the legacy→plugin migration; in plugin form they live in the plugin cache, never in the user's `.claude/`).
+
+Fixes, by class:
+- **Doc prose → `plugins/mycelium/...`**: `CLAUDE.md` (status-translations, diamond-rules, leaf-lifecycle, perspective-resolution, theory-gates, warning-handbook, feedback-loops, reflexion SKILL, cycle-learning, pattern-detector, adaptive-thresholds, framework-reflexion, evidence-decay, orchestration modes/operations/escape-hatch/agent-teams); `docs/glossary.md`, `docs/theories.md`, `docs/ai-system-card.md`, `docs/usage-modes.md`, `docs/regulatory.md`, `docs/README.md`, `docs/skills/README.md`.
+- **Plugin-internal docs → relative paths** (these ship in the plugin cache, where the `plugins/mycelium/` prefix doesn't exist): `engine/{theory-gates,diamond-rules,framework-reflexion,warning-handbook,xai-canvas-threading,version-discipline}.md`, `jit-tooling/detector.md`, `orchestration/agent-teams.md`, `hooks/README.md`.
+
+New guard: **`plugins/mycelium/scripts/check_legacy_paths.py`** — a static check for the code-span class the markdown-link checker excludes. Scoped to the three dirs with no plugin-form runtime path (`engine|orchestration|schemas`); `skills`/`harness` are deliberately excluded because they have legitimate runtime references (skills discovered from `.claude/skills/` after opencode vendoring; `.claude/harness/` holds user project state). Wired into `validate.yml` as a sibling step to `check_doc_references.py`.
+
+Intentional references left untouched (and allowlisted in the new check): `AGENTS.md` / `docs/migration.md` / `docs/install-paths.md` dual-form transition docs; `migrate-from-legacy/SKILL.md` (names legacy dirs to delete); and scripts / `manifest.yml` / `surfaces.yml`, which legitimately operate on or map the runtime `.claude/` tree. A few hook/guard user-facing message strings still name legacy paths (`framework_guard.py`, `stop-check.sh`); those are a separate script-internal class deferred to avoid touching load-bearing runtime logic in a docs patch.
+
+Docs + CI tooling. **PATCH**.
 
 ## v0.49.5 — docs dead-link sweep
 

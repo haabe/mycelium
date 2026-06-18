@@ -15,8 +15,8 @@ The semver-tier choice is judgment, not arithmetic. When in doubt, **bump conser
 ## What counts as "material framework change"
 
 Check 26 watches these paths:
-- `.claude/skills/` — any SKILL.md or skill directory addition/modification
-- `.claude/engine/` — engine docs (theory-gates, canvas-guidance, leaf-lifecycle, etc.)
+- `plugins/mycelium/skills/` — any SKILL.md or skill directory addition/modification
+- `plugins/mycelium/engine/` — engine docs (theory-gates, canvas-guidance, leaf-lifecycle, etc.)
 - `.claude/harness/` — guardrails, anti-patterns, cognitive-biases, security-trust, etc.
 - `.claude/hooks/` — runtime enforcement scripts
 - `.claude/scripts/` — Python/Bash scripts (parse_manifest, validate_canvas, framework_guard, ingest_warnings, etc.)

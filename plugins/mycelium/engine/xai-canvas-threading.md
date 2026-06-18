@@ -77,7 +77,7 @@ For products in this category, the threading still applies but with these substi
 
 Asymmetric — only some target canvases have schemas today. Phase 2 status:
 
-- `services.yml` — **schema shipped 2026-05-04** at `.claude/schemas/canvas/services.schema.json` with optional `xai` block per service, all sub-fields validated by enum (tier, verdict). Phase 2.1 ✓.
+- `services.yml` — **schema shipped 2026-05-04** at `../schemas/canvas/services.schema.json` with optional `xai` block per service, all sub-fields validated by enum (tier, verdict). Phase 2.1 ✓.
 - `threat-model.yml` — schema exists. Phase 2.3 must update it to accept the `explanation_attacks` category, or `/threat-model` writes will get rejected post-extension.
 - `go-to-market.yml` — schema exists. Phase 2 launch-tier extension must update it for per-channel `ai_disclosure`.
 

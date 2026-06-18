@@ -22,13 +22,13 @@ Two-to-four sentences per entry. No theory teaching here — entries link out to
 
 **Counter-argument check** — A bias-mitigation step the agent runs before strong claims. Forces it to articulate the strongest case against its own current position. Implemented in `/devils-advocate`.
 
-**Diamond** — A four-phase Discover → Define → Develop → Deliver cycle. Every scale (L0–L5) runs the same diamond. Transitions between phases must pass theory gates. Defined in `.claude/engine/diamond-rules.md`.
+**Diamond** — A four-phase Discover → Define → Develop → Deliver cycle. Every scale (L0–L5) runs the same diamond. Transitions between phases must pass theory gates. Defined in `plugins/mycelium/engine/diamond-rules.md`.
 
 **Dogfood** — Using a tool on its own development. Mycelium's framework is dogfooded on Mycelium itself — the friction the founder hits while building Mycelium becomes corrections that shape Mycelium. The `meta_dogfood` project type formalizes this. See [philosophy.md](philosophy.md) for why it's required.
 
-**Escape hatch** — A sanctioned bypass for emergencies. Documented in `.claude/orchestration/escape-hatch.md`. The bypass must be paired with a debt entry — every escape hatch use gets paid back.
+**Escape hatch** — A sanctioned bypass for emergencies. Documented in `plugins/mycelium/orchestration/escape-hatch.md`. The bypass must be paired with a debt entry — every escape hatch use gets paid back.
 
-**Gate / theory gate** — An evidence check that must pass before a diamond transitions phase. Each gate is grounded in a specific framework (Evidence, Four Risks, JTBD, Cynefin, Bias, Security, Privacy, Outcomes/BVSSH, Service Quality, Delivery Health, Learning, Regulatory, Explainability). Defined in `.claude/engine/theory-gates.md`.
+**Gate / theory gate** — An evidence check that must pass before a diamond transitions phase. Each gate is grounded in a specific framework (Evidence, Four Risks, JTBD, Cynefin, Bias, Security, Privacy, Outcomes/BVSSH, Service Quality, Delivery Health, Learning, Regulatory, Explainability). Defined in `plugins/mycelium/engine/theory-gates.md`.
 
 **GIST** — Goals, Ideas, Steps, Tasks (Gilad). The prioritization model used at L3 Solution scale. Steps are the testable unit; tasks are the executable unit. See [theories.md#gist](theories.md).
 
@@ -42,9 +42,9 @@ Two-to-four sentences per entry. No theory teaching here — entries link out to
 
 **JIT tooling** — Just-in-time tooling. Mycelium does not pre-ship a per-language or per-product-type catalog of validation; it detects what's there and generates adapters. See [jit-tooling.md](jit-tooling.md).
 
-**Leaf (OST leaf)** — A single solution node in the Opportunity Solution Tree. Every leaf moves through a 10-phase lifecycle (creation → four risks → ICE → assumption test → GIST → bounded context → threat model → preflight → delivery diamond → launch + feedback). See `.claude/engine/leaf-lifecycle.md`.
+**Leaf (OST leaf)** — A single solution node in the Opportunity Solution Tree. Every leaf moves through a 10-phase lifecycle (creation → four risks → ICE → assumption test → GIST → bounded context → threat model → preflight → delivery diamond → launch + feedback). See `plugins/mycelium/engine/leaf-lifecycle.md`.
 
-**Leaf bakeoff** — A protocol for parallel A/B testing of competing leaves. When multiple leaves compete for the same opportunity, the bakeoff structure compares them. See `.claude/orchestration/leaf-bakeoff.md`.
+**Leaf bakeoff** — A protocol for parallel A/B testing of competing leaves. When multiple leaves compete for the same opportunity, the bakeoff structure compares them. See `plugins/mycelium/orchestration/leaf-bakeoff.md`.
 
 **Opportunity Solution Tree (OST)** — Torres's discovery framework. Multiple opportunities are found, multiple solutions are generated for each, solutions compete, the winner spawns an L3 Solution diamond. Loser leaves are archived with evidence, not deleted. See [theories.md#ost](theories.md).
 

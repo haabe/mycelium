@@ -128,4 +128,4 @@ Skills are auto-discovered from `.claude/skills/*/SKILL.md` frontmatter — Clau
 
 - [by-category.md](by-category.md) — alternate index ordered by type of work
 - [glossary.md](../glossary.md) — vocabulary used in skill descriptions
-- `.claude/engine/theory-gates.md` — canonical gate definitions
+- `plugins/mycelium/engine/theory-gates.md` — canonical gate definitions
