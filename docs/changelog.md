@@ -4,6 +4,20 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-18.
 
+## v0.49.12 — per-file coverage gate: every shipped script must be tested
+
+**2026-06-18. Attribution: per-file-coverage-gate-2026-06-18. Class: patch.**
+
+The proper graduation of v0.49.11. `--cov-fail-under` gates the *total* average — a single new 0% script barely moves a 90% total, so it slips through (exactly how `check_legacy_paths.py` shipped at 0% in v0.49.6). This adds a **per-file** gate.
+
+`plugins/mycelium/scripts/check_coverage_floor.py` reads `coverage.json` and asserts every `.py` under `scripts/` + `integrations/` is exercised at ≥70%. A new untested script is either **absent** from the report (never imported) or at **0%** — both fail loudly, naming the file. It's the script-level analog of **G-V12 / Check 37**, which mandates a fixture test for every validator *check*; this mandates a test for every shipped *script*. Closes the scope hole that let a standalone script ship testless.
+
+Wired into `validate.yml` after the pytest step (now also emits `--cov-report=json`). The gate ships with its own 9-case test, and was verified to catch a planted untested script (exit 1, names it). 279 python tests pass; all 15 shipped scripts ≥70%.
+
+Note: like `check_legacy_paths.py`, this gate runs in `validate.yml`, not `validate-template.sh` — so it's part of the "run the full CI gate set locally before pushing" discipline (v0.49.10). Wiring it into the pre-push hook is a candidate follow-up.
+
+Tests + CI. **PATCH**.
+
 ## v0.49.11 — Python test coverage 62% → 90% + a coverage gate
 
 **2026-06-18. Attribution: python-test-coverage-62-to-90-2026-06-18. Class: patch.**
