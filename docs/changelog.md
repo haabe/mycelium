@@ -4,6 +4,18 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-18.
 
+## v0.49.16 — README receipts highlights rotation
+
+**2026-06-18. Attribution: readme-receipts-rotation-2026-06-18. Class: patch.**
+
+Closes the last open `/framework-health` recommendation (4c, highlights rotation).
+
+The README "How Mycelium got smarter" section shows five case headers; the full set lives in `docs/receipts/cases/`. The `/framework-health` 4c check flagged the highlights as stale — the newest on the README was 2026-06-07 (faros) while a newer case (2026-06-18-legacy-path-rot-guard) had already shipped. Per `docs/contributing/style.md#highlights-rotation`, the surfaced set rotates so the "we get smarter with each cycle" claim doesn't freeze into "we got smarter once".
+
+Rotated **off** the README: `2026-05-09-plugin-form-dogfood` (subagent-simulation ≠ lived friction). It stays in `docs/receipts/cases/` — only the README mention rotates. Rotated **on**: `2026-06-18-legacy-path-rot-guard` (a dead-link sweep passed green while the same rot sat in code-spans and prose). The two are thematic twins — both "a check passed but missed real rot" — so the swap freshens the date without narrowing the set's range.
+
+Docs only. **PATCH**.
+
 ## v0.49.15 — scope-expansion guardrail (G-P9) + receipts index backfill
 
 **2026-06-18. Attribution: scope-expansion-guardrail-receipts-backfill-2026-06-18. Class: patch.**
