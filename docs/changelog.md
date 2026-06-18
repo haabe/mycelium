@@ -4,6 +4,18 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-18.
 
+## v0.49.15 — scope-expansion guardrail (G-P9) + receipts index backfill
+
+**2026-06-18. Attribution: scope-expansion-guardrail-receipts-backfill-2026-06-18. Class: patch.**
+
+Closes the last two `/framework-health` recommendations.
+
+**G-P9 (scope-expansion checkpoint)** added to `guardrails-core.md` Process section, NUDGE: when a task scoped as one bounded ask (an audit, a cleanup, a single fix) starts spawning additional ships via implicit "well, then we should also..." reasoning, pause and re-surface the expanding scope to the user before continuing. It's a checkpoint, not a prohibition — scope can grow, but the user re-authorizes the new shape rather than discovering it after N commits. This is the dogfood's most consistent calibration miss (scope-expansion-blind, N=4: cycle-006/008/009/012). Honest note: the session that named it was itself instance #4 — a "clean up everything dead" sweep became a 7-patch arc. Pairs with G-P7 (loop-closure) at task-batch boundaries.
+
+**Receipts indexes backfilled**: `by-date.md` and `by-mechanism.md` had lagged since 2026-05-30 (flagged by `/framework-health` 4c), missing six cases — 2026-06-01 (architecture-discovery-narrowed), three on 2026-06-07 (render-fleet-foundation, framework-health-temporal-independence, faros-whiplash-integration), 2026-06-11 (fable5-autonomous-run), 2026-06-18 (legacy-path-rot-guard). Both indexes are now current.
+
+Guardrail + docs. **PATCH**.
+
 ## v0.49.14 — pre-push delivery gate: the discipline finally self-applies
 
 **2026-06-18. Attribution: pre-push-delivery-gate-2026-06-18. Class: patch.**

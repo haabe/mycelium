@@ -2,10 +2,16 @@
 
 **Audience**: anyone scanning the chronology of Mycelium's evolution.
 **Time to read**: 1 min.
-**Last updated**: 2026-05-30.
+**Last updated**: 2026-06-18.
 
 | Date | Case | Contributor |
 |---|---|---|
+| 2026-06-18 | [legacy-path-rot-guard](cases/2026-06-18-legacy-path-rot-guard.md) | internal-dogfood |
+| 2026-06-11 | [fable5-autonomous-run](cases/2026-06-11-fable5-autonomous-run.md) | internal-dogfood |
+| 2026-06-07 | [render-fleet-foundation](cases/2026-06-07-render-fleet-foundation.md) | internal-dogfood |
+| 2026-06-07 | [framework-health-temporal-independence](cases/2026-06-07-framework-health-temporal-independence.md) | internal-dogfood |
+| 2026-06-07 | [faros-whiplash-integration](cases/2026-06-07-faros-whiplash-integration.md) | internal-dogfood |
+| 2026-06-01 | [architecture-discovery-narrowed](cases/2026-06-01-architecture-discovery-narrowed.md) | internal-dogfood |
 | 2026-05-29 → 2026-05-30 | [alex-cohort-sessions-2-3](cases/2026-05-30-alex-cohort-sessions-2-3.md) | [Alex](../../CONTRIBUTORS.md#v031x--cohort-first-run-friction-output-density--post-build-silence) |
 | 2026-05-28 | [canvas-drift-reconciliation](cases/2026-05-28-canvas-drift-reconciliation.md) | internal-dogfood |
 | 2026-05-26 | [alex-cohort-first-run](cases/2026-05-26-alex-cohort-first-run.md) | [Alex](../../CONTRIBUTORS.md#v031x--cohort-first-run-friction-output-density--post-build-silence) |

@@ -40,6 +40,10 @@ After completing any batch of changes, before reporting done: (1) verify cross-r
 Do not add extrinsic rewards (points, badges, streaks, XP, leaderboards, completion dopamine) to gates, skills, canvas updates, or protocol adherence. Extrinsic tokens crowd out the intrinsic motivation of building good products — the overjustification effect — and collapse the moment the token stops mattering. Motivate adherence by removing friction (Herzberg hygiene) and surfacing mastery, not by bolting on tokens. Extrinsic/variable reward is a legitimate lever for *end-user* product design (Hook Model, `/launch-tier`), never for the maintainer's own discipline loop.
 *Source: Deci & Ryan (Self-Determination Theory), Lepper/Greene/Nisbett (overjustification, 1973). Detection rule: `${CLAUDE_PLUGIN_ROOT}/harness/anti-patterns.md` "Gamified Discipline". Design rationale: `${CLAUDE_PLUGIN_ROOT}/harness/design-principles.md`.*
 
+**G-P9: Re-surface scope when a bounded task starts spawning ships** `NUDGE` `quality`
+When a task scoped as a single bounded ask (an audit, a cleanup, one fix) starts generating additional ships — "well, then we should also build/fix/refactor X" — pause and surface the expanding scope to the user before continuing, rather than chaining ship after ship inside one turn. It is a checkpoint, not a prohibition: scope CAN grow, but the user re-authorizes the new shape rather than discovering it after N commits. Observed N=4 in the dogfood (cycle-history cycle-006/008/009/012) — an initial finding repeatedly morphed into a multi-phase ship via implicit "and also" chaining, with the human only able to course-correct after the fact.
+*Source: dogfood cycle-history scope-expansion-blind pattern (N=4, the framework's most consistent calibration miss). Detection: self-check at task-batch boundaries; pairs with G-P7 (loop-closure).*
+
 ## Communication (universal)
 
 **G-C1: Layer output — BLUF first, rationale next, discipline notes last** `NUDGE` `quality`

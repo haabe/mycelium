@@ -2,10 +2,14 @@
 
 **Audience**: practitioners curious about which case produced which framework mechanism.
 **Time to read**: 2 min.
-**Last updated**: 2026-05-30.
+**Last updated**: 2026-06-18.
 
 | Mechanism | Origin case |
 |---|---|
+| Pre-push delivery gate (Layer 3) + `check_coverage_floor.py` + `check_legacy_paths.py` (test-on-add / rot guards) | [legacy-path-rot-guard](cases/2026-06-18-legacy-path-rot-guard.md) |
+| `engine/autonomous-mode.md` (autonomous-mode declaration + substitution ladder) | [fable5-autonomous-run](cases/2026-06-11-fable5-autonomous-run.md) |
+| Render fleet: `/mycelium:{diamond,ost,cycle}-render` + `/mycelium:render` dispatcher + Check 43 | [render-fleet-foundation](cases/2026-06-07-render-fleet-foundation.md) |
+| `/mycelium:framework-health` temporal-independence rule (4e/4b/4d) | [framework-health-temporal-independence](cases/2026-06-07-framework-health-temporal-independence.md) |
 | Canvas-vs-reality drift detection (human-task reconciliation in `/canvas-health` + hooks) | [canvas-drift-reconciliation](cases/2026-05-28-canvas-drift-reconciliation.md) |
 | Plugin-form install model + single-plugin marketplace | [bentes-install-model](cases/2026-05-08-bentes-install-model.md) |
 | `/mycelium:setup` skill (idempotent first-run project init) | [bentes-install-model](cases/2026-05-08-bentes-install-model.md) |
