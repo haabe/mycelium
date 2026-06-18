@@ -71,4 +71,48 @@ if [ -n "$TEMPLATE_VALIDATOR" ]; then
     fi
 fi
 
+# Layer 3 (added v0.49.14 after the delivery-discipline-never-fired reckoning,
+# 2026-06-18): run the CI-equivalent delivery-quality gate LOCALLY at push-time.
+# This is the first mechanism that makes Mycelium's own test/clean-code discipline
+# fire automatically on framework-dev — previously it lived only in validate.yml
+# (CI), so untested scripts (check_legacy_paths shipped at 0%) and CI-only-red
+# commits (v0.49.7/9) sailed past every local check. Hard-blocks. Framework repo
+# only (tests/python present); downstream user projects skip this branch.
+SCRIPTS_DIR=""
+if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -d "$CLAUDE_PLUGIN_ROOT/scripts" ]; then
+    SCRIPTS_DIR="$CLAUDE_PLUGIN_ROOT/scripts"
+elif [ -d "plugins/mycelium/scripts" ]; then
+    SCRIPTS_DIR="plugins/mycelium/scripts"
+fi
+
+if [ -d "tests/python" ] && [ -n "$SCRIPTS_DIR" ]; then
+    echo "[mycelium pre-push] Delivery-quality gate: tests + total-coverage floor ..." >&2
+    if ! python3 -m pytest tests/python/ \
+            --cov=plugins/mycelium/scripts --cov=plugins/mycelium/integrations \
+            --cov-report=json --cov-fail-under=85 -q >&2; then
+        echo "" >&2
+        echo "[mycelium pre-push] Tests / total-coverage gate FAILED — push blocked." >&2
+        echo "  • Emergency bypass: git push --no-verify (and document it)." >&2
+        exit 1
+    fi
+    echo "[mycelium pre-push] Delivery-quality gate: per-file coverage floor (every shipped script must be tested) ..." >&2
+    if ! python3 "$SCRIPTS_DIR/check_coverage_floor.py" --root . --floor 70 >&2; then
+        echo "" >&2
+        echo "[mycelium pre-push] Per-file coverage floor FAILED — a shipped script lacks a test. Push blocked." >&2
+        echo "  • Add tests/python/test_<name>.py exercising the flagged script(s)." >&2
+        echo "  • Emergency bypass: git push --no-verify (and document it)." >&2
+        exit 1
+    fi
+    echo "[mycelium pre-push] Delivery-quality gate: legacy-path + dead-reference doc guards ..." >&2
+    if ! python3 "$SCRIPTS_DIR/check_legacy_paths.py" --root . >&2; then
+        echo "[mycelium pre-push] Legacy-path check FAILED — push blocked (bypass: --no-verify)." >&2
+        exit 1
+    fi
+    if ! python3 "$SCRIPTS_DIR/check_doc_references.py" --root . >&2; then
+        echo "[mycelium pre-push] Dead-reference doc check FAILED — push blocked (bypass: --no-verify)." >&2
+        exit 1
+    fi
+    rm -f coverage.json
+fi
+
 exit 0

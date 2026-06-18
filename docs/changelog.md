@@ -4,6 +4,23 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-18.
 
+## v0.49.14 — pre-push delivery gate: the discipline finally self-applies
+
+**2026-06-18. Attribution: pre-push-delivery-gate-2026-06-18. Class: patch.**
+
+The whole truth, stated plainly: Mycelium's **delivery-quality discipline — test-on-add, coverage, clean-code — had never fired automatically on its own development.** Not this session; never. `/definition-of-done` (which carries the tests/types/lint gate) only executes at a product-leaf diamond's Deliver→Complete, and there have been **0 product-leaf cycles** (11/11 are meta-dogfood/observation) — so that gate has *literally never run* on framework code. The test/coverage/legacy/dead-reference checks lived only in `validate.yml` (CI), invisible to the local loop, which is how `check_legacy_paths.py` shipped at 0% (v0.49.6) and two commits went CI-red unnoticed (v0.49.7/9). The operator was always the delivery gate the framework claims to be.
+
+Fix: **`git-pre-push-example.sh` gains a Layer 3 delivery-quality gate** that runs the CI-equivalent set **locally, at push-time, hard-blocking**:
+- `pytest tests/python/` + `--cov-fail-under=85`
+- `check_coverage_floor.py` (per-file ≥70% — **a shipped script with no test cannot be pushed**)
+- `check_legacy_paths.py` + `check_doc_references.py`
+
+Framework-repo only (gated on `tests/python` present); downstream user projects skip the branch gracefully. Bypass stays `git push --no-verify` (document any use). The framework repo's own `.git/hooks/pre-push` was updated to match, so this version's push is gated by the new hook itself — the first time the discipline self-applies.
+
+This closes the "local validation ≠ CI gates" gap (v0.49.10) at its root: the CI set now runs before every push, so neither agent-forgetfulness nor CI-invisibility can let untested or rot-bearing code through. It is the mechanism behind the operator's correction that the harness — not the human — must be the delivery gate.
+
+Scripts (hook). **PATCH**.
+
 ## v0.49.13 — framework-health calibration is cycle-class-aware
 
 **2026-06-18. Attribution: framework-health-calibration-class-aware-2026-06-18. Class: patch.**
