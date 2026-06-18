@@ -4,6 +4,23 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-18.
 
+## v0.49.11 — Python test coverage 62% → 90% + a coverage gate
+
+**2026-06-18. Attribution: python-test-coverage-62-to-90-2026-06-18. Class: patch.**
+
+A dogfood audit of the framework's Python test coverage found a 62% line total that was **reported but not gated** — so it could (and did) erode silently. The gaps, now closed:
+
+- **Four scripts at 0%** → tested: `check_legacy_paths` (0→91%), `validate_mermaid` (0→87%), `autonomous_evidence_guard` (0→93%), `check_gated_by` (0→83%). `check-tool-calling.py` (opencode integration) was also at 0% *and outside the coverage scope*; now 86% and in scope.
+- **Load-bearing validators under-covered** → deepened: `validate_canvas` 58→91% (the trace-resolution, DAG cycle-detection, and CLI/error paths), `framework_guard` 64→99% (the deny-message builders + bash-deny path — which is why the v0.49.8/10 message fixes had shipped with no test catching them).
+- **Hooks were untested** → new bash smoke-tests for `post-write-nudge` and `stop-check`. These lock the runtime fixes behaviorally: post-write-nudge's schema nudge now provably fires in plugin form (the v0.49.7 bug), and stop-check's warning message provably uses the v0.49.10 plugin-form phrasing, not a dead `.claude/` path.
+- **Regression locks**: the `check_legacy_paths` tests assert it does NOT flag the CLAUDE.md `*Version` line or the receipts case (the v0.49.7/9 false positives) but DOES flag a real stale pointer.
+
+CI now **gates** coverage: `--cov-fail-under=85` and `plugins/mycelium/integrations` added to `--cov` scope. Total `scripts/` coverage 62% → **90%**; 161 → 270 python tests, all green; `validate-template.sh` runs the two new hook tests via Check 17.
+
+Note (carried to the dogfood): the deeper cause of the gap is that the framework's own test-on-add delivery discipline (G-V12 / Check 37) is scoped to *validator checks* (`tests/bash`), not standalone Python scripts — which is how `check_legacy_paths.py` shipped testless. A per-script "new/changed script needs a test" gate is the proper graduation; the `--cov-fail-under` floor is the interim backstop.
+
+Tests + CI. **PATCH**.
+
 ## v0.49.10 — check_legacy_paths: don't flag docs that quote the paths
 
 **2026-06-18. Attribution: check-legacy-paths-doc-quote-false-positive-2026-06-18. Class: patch.**

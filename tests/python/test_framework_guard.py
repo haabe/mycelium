@@ -1,4 +1,5 @@
 """Unit tests for framework_guard.py — both file-path and Bash command paths."""
+import io
 import json
 import subprocess
 import sys
@@ -547,3 +548,346 @@ class TestDenyHelpers:
         assert "redirect" in msg
         assert "/path/upstream" in msg
         assert "Bash coverage gap" in msg  # cross-references the original gap
+
+
+def _deny_message(guard, builder, *args):
+    """Call a deny-builder, swallow its SystemExit, return the reason string.
+
+    The deny() builders print the hook JSON to stdout and sys.exit(0). We
+    redirect stdout to capture the JSON, then pull out the reason text.
+    """
+    buf = io.StringIO()
+    real = sys.stdout
+    sys.stdout = buf
+    try:
+        builder(*args)
+    except SystemExit:
+        pass
+    finally:
+        sys.stdout = real
+    out = json.loads(buf.getvalue())
+    return out["hookSpecificOutput"]["permissionDecisionReason"]
+
+
+class TestDenyMessageContent:
+    """Lock the v0.49.8/v0.49.10 install-form-aware deny-message fixes.
+
+    These messages were edited with zero coverage; regressions shipped
+    silently. The asserts below pin the install-form sync guidance and the
+    plugin-relative escape-hatch path so a future edit that drops or reverts
+    them fails CI.
+    """
+
+    def test_file_edit_message_install_form_guidance(self, scripts_path):
+        guard = _import_guard(scripts_path)
+        msg = _deny_message(
+            guard, guard._deny_file_edit,
+            "AGENTS.md", "framework.top_level: AGENTS.md", "/up/stream",
+        )
+        # Install-form-aware sync guidance (v0.49.8/10)
+        assert "Claude plugin: /plugin update" in msg
+        assert "/mycelium:setup" in msg
+        assert "see docs/install-paths.md" in msg
+        # Escape-hatch must be the plugin-relative path, NOT a bare .claude/
+        assert "the plugin's orchestration/escape-hatch.md" in msg
+        assert ".claude/orchestration/escape-hatch.md" not in msg
+
+    def test_bash_write_message_install_form_guidance(self, scripts_path):
+        guard = _import_guard(scripts_path)
+        msg = _deny_message(
+            guard, guard._deny_bash_write,
+            ".claude/manifest.yml", "redirect", "/up/stream",
+        )
+        assert "Claude plugin: /plugin update" in msg
+        assert "/mycelium:setup" in msg
+        assert "see docs/install-paths.md" in msg
+        assert "the plugin's orchestration/escape-hatch.md" in msg
+        assert ".claude/orchestration/escape-hatch.md" not in msg
+        # Allowlist hints stay in the bash message
+        assert "bash .claude/scripts/upgrade.sh" in msg
+        assert "checkout/restore/stash/reset" in msg
+
+
+class TestHandlersInProcess:
+    """Exercise the per-tool handler functions directly (in-process so the
+    deny-builders, classification branches, and fail-open paths get coverage).
+    """
+
+    def test_handle_file_edit_denies_framework(self, project_dir, manifest_path, scripts_path):
+        guard = _import_guard(scripts_path)
+        framework = guard.parse_manifest(manifest_path)
+        msg = _deny_message(
+            guard, guard._handle_file_edit,
+            {"file_path": str(project_dir / "AGENTS.md")},
+            str(project_dir), framework, "/up",
+        )
+        assert "framework.top_level" in msg
+        assert "AGENTS.md" in msg
+
+    def test_handle_file_edit_allows_project_state(self, project_dir, manifest_path, scripts_path):
+        guard = _import_guard(scripts_path)
+        framework = guard.parse_manifest(manifest_path)
+        # Project-state path → handler returns without calling deny() (no exit)
+        guard._handle_file_edit(
+            {"file_path": str(project_dir / ".claude" / "canvas" / "purpose.yml")},
+            str(project_dir), framework, "/up",
+        )  # no SystemExit raised
+
+    def test_handle_file_edit_empty_path_fails_open(self, project_dir, manifest_path, scripts_path):
+        guard = _import_guard(scripts_path)
+        framework = guard.parse_manifest(manifest_path)
+        guard._handle_file_edit({}, str(project_dir), framework, "/up")  # no exit
+
+    def test_handle_bash_denies_framework_write(self, project_dir, manifest_path, scripts_path):
+        guard = _import_guard(scripts_path)
+        framework = guard.parse_manifest(manifest_path)
+        msg = _deny_message(
+            guard, guard._handle_bash,
+            {"command": "echo x > .claude/manifest.yml"},
+            str(project_dir), framework, "/up",
+        )
+        assert ".claude/manifest.yml" in msg
+        assert "redirect" in msg
+
+    def test_handle_bash_allows_read(self, project_dir, manifest_path, scripts_path):
+        guard = _import_guard(scripts_path)
+        framework = guard.parse_manifest(manifest_path)
+        guard._handle_bash(
+            {"command": "cat .claude/manifest.yml"},
+            str(project_dir), framework, "/up",
+        )  # no exit
+
+    def test_handle_bash_empty_command_fails_open(self, project_dir, manifest_path, scripts_path):
+        guard = _import_guard(scripts_path)
+        framework = guard.parse_manifest(manifest_path)
+        guard._handle_bash({}, str(project_dir), framework, "/up")  # no exit
+
+    def test_handle_mcp_path_denies_framework(self, project_dir, manifest_path, scripts_path):
+        guard = _import_guard(scripts_path)
+        framework = guard.parse_manifest(manifest_path)
+        msg = _deny_message(
+            guard, guard._handle_mcp_filesystem_path,
+            {"path": str(project_dir / "AGENTS.md")},
+            str(project_dir), framework, "/up",
+        )
+        assert "framework.top_level" in msg
+
+    def test_handle_mcp_path_empty_fails_open(self, project_dir, manifest_path, scripts_path):
+        guard = _import_guard(scripts_path)
+        framework = guard.parse_manifest(manifest_path)
+        guard._handle_mcp_filesystem_path({}, str(project_dir), framework, "/up")  # no exit
+
+    def test_handle_mcp_path_allows_project_state(self, project_dir, manifest_path, scripts_path):
+        guard = _import_guard(scripts_path)
+        framework = guard.parse_manifest(manifest_path)
+        guard._handle_mcp_filesystem_path(
+            {"path": str(project_dir / ".claude" / "canvas" / "x.yml")},
+            str(project_dir), framework, "/up",
+        )  # no exit
+
+    def test_handle_mcp_move_denies_framework_destination(self, project_dir, manifest_path, scripts_path):
+        guard = _import_guard(scripts_path)
+        framework = guard.parse_manifest(manifest_path)
+        msg = _deny_message(
+            guard, guard._handle_mcp_filesystem_move,
+            {
+                "source": str(project_dir / ".claude" / "canvas" / "a.yml"),
+                "destination": str(project_dir / "AGENTS.md"),
+            },
+            str(project_dir), framework, "/up",
+        )
+        assert "framework.top_level" in msg
+
+    def test_handle_mcp_move_allows_project_state(self, project_dir, manifest_path, scripts_path):
+        guard = _import_guard(scripts_path)
+        framework = guard.parse_manifest(manifest_path)
+        guard._handle_mcp_filesystem_move(
+            {
+                "source": str(project_dir / ".claude" / "canvas" / "a.yml"),
+                "destination": str(project_dir / ".claude" / "canvas" / "b.yml"),
+            },
+            str(project_dir), framework, "/up",
+        )  # no exit
+
+    def test_handle_mcp_move_empty_fields_skipped(self, project_dir, manifest_path, scripts_path):
+        guard = _import_guard(scripts_path)
+        framework = guard.parse_manifest(manifest_path)
+        guard._handle_mcp_filesystem_move({}, str(project_dir), framework, "/up")  # no exit
+
+
+class TestScanEdgeCases:
+    def test_redirect_strict_quote_pattern(self, project_dir, manifest_path, scripts_path):
+        """Covers the special-case redirect branch matching `> 'fp'` directly."""
+        guard = _import_guard(scripts_path)
+        framework = guard.parse_manifest(manifest_path)
+        matched, fp, op = guard.is_framework_write_in_command(
+            "cat <<'EOF' > '.claude/manifest.yml'\ndata\nEOF",
+            project_dir, framework,
+        )
+        assert matched
+        assert op == "redirect"
+
+    def test_empty_segment_skipped(self, project_dir, manifest_path, scripts_path):
+        """Compound command with empty segments (e.g. trailing `;`) is handled."""
+        guard = _import_guard(scripts_path)
+        framework = guard.parse_manifest(manifest_path)
+        matched, _, _ = guard.is_framework_write_in_command(
+            "; ; echo x > .claude/manifest.yml ;", project_dir, framework,
+        )
+        assert matched
+
+    def test_load_input_parse_error_returns_none(self, scripts_path, monkeypatch):
+        guard = _import_guard(scripts_path)
+        monkeypatch.setattr(sys, "stdin", io.StringIO("not json{{{"))
+        assert guard._load_input() is None
+
+    def test_load_input_valid_returns_dict(self, scripts_path, monkeypatch):
+        guard = _import_guard(scripts_path)
+        monkeypatch.setattr(sys, "stdin", io.StringIO(json.dumps({"a": 1})))
+        assert guard._load_input() == {"a": 1}
+
+
+def _run_main(guard, monkeypatch, capsys, state_file, project_dir, payload):
+    """Drive main() in-process: stub argv + stdin, run, return (exited_code, stdout)."""
+    monkeypatch.setattr(
+        sys, "argv",
+        ["framework_guard.py", str(state_file), str(project_dir)],
+    )
+    monkeypatch.setattr(sys, "stdin", io.StringIO(json.dumps(payload)))
+    code = None
+    try:
+        guard.main()
+    except SystemExit as e:
+        code = e.code
+    out = capsys.readouterr().out
+    return code, out
+
+
+class TestMainInProcess:
+    """Drive main() in-process so its body (argv parsing, state load, dispatch,
+    manifest-drift fail-closed) gets coverage — the subprocess tests don't."""
+
+    def test_main_denies_framework_edit(self, project_dir, manifest_path, upstream_state, scripts_path, monkeypatch, capsys):
+        guard = _import_guard(scripts_path)
+        code, out = _run_main(
+            guard, monkeypatch, capsys, upstream_state, project_dir,
+            {"tool_name": "Edit", "tool_input": {"file_path": str(project_dir / "AGENTS.md")}},
+        )
+        assert code == 0
+        assert "framework.top_level" in out
+
+    def test_main_allows_project_state(self, project_dir, manifest_path, upstream_state, scripts_path, monkeypatch, capsys):
+        guard = _import_guard(scripts_path)
+        code, out = _run_main(
+            guard, monkeypatch, capsys, upstream_state, project_dir,
+            {"tool_name": "Edit", "tool_input": {"file_path": str(project_dir / ".claude" / "canvas" / "purpose.yml")}},
+        )
+        assert code == 0
+        assert out == ""
+
+    def test_main_bash_dispatch_denies(self, project_dir, manifest_path, upstream_state, scripts_path, monkeypatch, capsys):
+        guard = _import_guard(scripts_path)
+        code, out = _run_main(
+            guard, monkeypatch, capsys, upstream_state, project_dir,
+            {"tool_name": "Bash", "tool_input": {"command": "rm .claude/manifest.yml"}},
+        )
+        assert code == 0
+        assert "Mycelium framework-guard" in out
+
+    def test_main_unknown_tool_passes(self, project_dir, manifest_path, upstream_state, scripts_path, monkeypatch, capsys):
+        guard = _import_guard(scripts_path)
+        code, out = _run_main(
+            guard, monkeypatch, capsys, upstream_state, project_dir,
+            {"tool_name": "Read", "tool_input": {"file_path": str(project_dir / "AGENTS.md")}},
+        )
+        assert code == 0
+        assert out == ""
+
+    def test_main_wrong_argv_len_fails_open(self, scripts_path, monkeypatch, capsys):
+        guard = _import_guard(scripts_path)
+        monkeypatch.setattr(sys, "argv", ["framework_guard.py"])  # missing args
+        code = None
+        try:
+            guard.main()
+        except SystemExit as e:
+            code = e.code
+        assert code == 0
+        assert capsys.readouterr().out == ""
+
+    def test_main_inactive_state_fails_open(self, project_dir, manifest_path, scripts_path, monkeypatch, capsys):
+        guard = _import_guard(scripts_path)
+        state_file = project_dir / ".claude" / "state" / "inactive.json"
+        state_file.write_text(json.dumps({"upstream_repo": "/x", "active": False}))
+        code, out = _run_main(
+            guard, monkeypatch, capsys, state_file, project_dir,
+            {"tool_name": "Edit", "tool_input": {"file_path": str(project_dir / "AGENTS.md")}},
+        )
+        assert code == 0
+        assert out == ""
+
+    def test_main_bad_input_fails_open(self, project_dir, manifest_path, upstream_state, scripts_path, monkeypatch, capsys):
+        guard = _import_guard(scripts_path)
+        monkeypatch.setattr(
+            sys, "argv",
+            ["framework_guard.py", str(upstream_state), str(project_dir)],
+        )
+        monkeypatch.setattr(sys, "stdin", io.StringIO("not-json{{{"))
+        code = None
+        try:
+            guard.main()
+        except SystemExit as e:
+            code = e.code
+        assert code == 0
+        assert capsys.readouterr().out == ""
+
+    def test_main_uses_default_upstream_repo_when_missing(self, project_dir, manifest_path, scripts_path, monkeypatch, capsys):
+        """State active but no upstream_repo key → default phrase used in message."""
+        guard = _import_guard(scripts_path)
+        state_file = project_dir / ".claude" / "state" / "noupstream.json"
+        state_file.write_text(json.dumps({"active": True}))
+        code, out = _run_main(
+            guard, monkeypatch, capsys, state_file, project_dir,
+            {"tool_name": "Edit", "tool_input": {"file_path": str(project_dir / "AGENTS.md")}},
+        )
+        assert code == 0
+        assert "the upstream framework repo" in out
+
+    def test_module_entrypoint_runs_main(self, scripts_path, monkeypatch, capsys):
+        """Executing the module as __main__ invokes main() (covers the guard).
+
+        Stub argv to the misconfigured shape so main() fails open (exit 0)
+        without needing real state/stdin.
+        """
+        import runpy  # noqa: PLC0415
+        monkeypatch.setattr(sys, "argv", ["framework_guard.py"])  # wrong argc → fail open
+        try:
+            runpy.run_path(
+                str(scripts_path / "framework_guard.py"),
+                run_name="__main__",
+            )
+        except SystemExit as e:
+            assert e.code == 0
+        assert capsys.readouterr().out == ""
+
+    def test_main_manifest_drift_fails_closed(self, project_dir, scripts_path, monkeypatch, capsys):
+        """Non-empty manifest that parses to zero protected paths → deny (fail closed)."""
+        guard = _import_guard(scripts_path)
+        # Reindented manifest: list items are seen but bucket into nothing
+        # (drifted indentation), tripping parse_manifest's structural guard.
+        manifest = project_dir / ".claude" / "manifest.yml"
+        manifest.write_text(
+            "framework:\n"
+            "    top_level:\n"
+            "        - AGENTS.md\n"
+            "        - CLAUDE.md\n"
+        )
+        state_file = project_dir / ".claude" / "state" / "upstream.json"
+        state_file.write_text(json.dumps({"upstream_repo": "/x", "active": True}))
+        code, out = _run_main(
+            guard, monkeypatch, capsys, state_file, project_dir,
+            {"tool_name": "Edit", "tool_input": {"file_path": str(project_dir / "AGENTS.md")}},
+        )
+        assert code == 0
+        # Fail-closed deny message routes operator to fix manifest
+        assert "Fix manifest.yml" in out
+        assert "permissionDecision" in out

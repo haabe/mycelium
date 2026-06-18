@@ -65,8 +65,10 @@ jobs:
         run: |
           pytest tests/python/ -v \
             --cov=plugins/mycelium/scripts \
+            --cov=plugins/mycelium/integrations \
             --cov-report=term \
-            --cov-report=xml
+            --cov-report=xml \
+            --cov-fail-under=85
 
       # Note: standalone ruff and shellcheck checks are not run here — Check 17
       # in validate-template.sh runs both with the correct baseline-aware
