@@ -757,3 +757,10 @@ Record of significant decisions made during product development. Decisions are i
 - **Why:** the repo had 0 tags / 0 releases despite 0.49.x of history; the active version was only discoverable by opening `plugin.json` or the changelog. An empty Releases section on an actively-developed repo undersells maintenance (reach-without-conversion). The release is the human-browsable mirror of `plugin.json#version`, not a replacement for it.
 - **Scope:** convention-tier, NOT CI-enforced — cutting a release touches no tracked file, so Check 26 cannot see it. Tag must equal `plugin.json` version (third leg of the Check-30 sync). Never tag a red commit.
 - **Surfaced:** dogfood discussion of the GitHub About/sidebar (mycelium-roadmap session 2026-06-19). Authored upstream per the dogfood boundary. **PATCH** (doc-only).
+
+### Cowork preflight robustness — 2026-06-19 (v0.49.21)
+- **Trigger:** first-hand Claude Cowork dogfood run (founder). Friction report flagged the preflight hook emitting "Memory not yet initialized" on every turn of an already-set-up project (F1).
+- **Root cause (read from source, not guessed):** `${CLAUDE_PROJECT_DIR:-.}` — Cowork doesn't set the env var, so the `.` fallback resolved the wrong dir. NOT hardcoded; a per-surface env-provisioning gap (issue #57538 question #1).
+- **Fix:** walk up from `$PWD` for `.claude/` when the env var is unset; trust it verbatim when set (CLI unchanged). Testing against the REAL Cowork project then exposed a second latent bug — `grep -c || echo 0` double-printing `0\n0` on a zero-entry corrections.md — fixed in the same patch.
+- **Honesty boundary (G-V13):** verified 5 resolution cases incl. the real Cowork project's filesystem state; did NOT claim 'Cowork fixed' because in-runtime hook-CWD provisioning is unverified from the CLI. Release framed as hardening + pending Cowork re-test.
+- **Meta:** corrects an earlier same-session misread (treated `.claude/state/` absence as 'hooks don't fire' — state/ is runtime-owned; AP#7 verify-mechanical-condition). **PATCH**, lived-friction-triggered.

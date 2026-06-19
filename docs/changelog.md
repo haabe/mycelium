@@ -4,6 +4,17 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-19.
 
+## v0.49.21 — preflight robustness (Cowork dogfood fixes)
+
+**2026-06-19. Attribution: cowork-preflight-robustness-2026-06-19. Class: patch.**
+
+Two `hooks/preflight.sh` bugs surfaced by a first-hand Claude Cowork dogfood run, fixed together.
+
+- **F1 — false "Memory not yet initialized".** The hook resolved the project via `${CLAUDE_PROJECT_DIR:-.}`. Cowork does not set `CLAUDE_PROJECT_DIR`, so the bare `.` fallback checked the wrong directory and an already-initialized project was told to re-run setup every turn. Now: env var trusted verbatim when set (CLI unchanged); when unset, walk up from `$PWD` to find `.claude/`.
+- **Count double-print.** `grep -c '^### ' … || echo 0` produced `0\n0` on a zero-entry corrections.md (grep prints "0" and exits 1, so `|| echo 0` appended a second "0"), causing an "integer expected" error. Now `|| true` + integer-normalize. Latent everywhere; F1's fix exposed it by making the hook reach the counter on a fresh-but-initialized project.
+
+Verified across 5 resolution cases (env set / unset / subdir walk-up / fresh / the real Cowork project). In-runtime Cowork confirmation pending re-test: the fix addresses the identified root cause and is correct for the Cowork project's filesystem state, but whether Cowork invokes the hook with a project-rooted CWD is unverified from the CLI. No behavioral change to the CLI path.
+
 ## v0.49.20 — GitHub-release backlog convention
 
 **2026-06-19. Attribution: release-backlog-convention-2026-06-19. Class: patch.**

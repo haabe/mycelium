@@ -3,7 +3,22 @@
 # Creates a stamp file that the gate.sh checks before allowing code edits.
 # This ensures corrections.md has been read and basic system health verified.
 
-PROJECT_DIR="${CLAUDE_PROJECT_DIR:-.}"
+# Resolve the project dir. Prefer $CLAUDE_PROJECT_DIR (the Claude Code CLI sets
+# it), but fall back to walking up from $PWD to find a .claude/ dir when it is
+# unset. Some runtimes (e.g. Claude Cowork) do not provision CLAUDE_PROJECT_DIR,
+# which made the bare ".-fallback resolve against the wrong directory and report
+# "Memory not yet initialized" on every turn of an already-initialized project
+# (Cowork dogfood F1, 2026-06-19). When the env var IS set we trust it verbatim,
+# so CLI behaviour is unchanged.
+PROJECT_DIR="${CLAUDE_PROJECT_DIR:-}"
+if [ -z "$PROJECT_DIR" ]; then
+  _d="$PWD"
+  while [ -n "$_d" ] && [ "$_d" != "/" ]; do
+    if [ -d "$_d/.claude" ]; then PROJECT_DIR="$_d"; break; fi
+    _d="$(dirname "$_d")"
+  done
+  PROJECT_DIR="${PROJECT_DIR:-.}"
+fi
 CORRECTIONS_FILE="$PROJECT_DIR/.claude/memory/corrections.md"
 
 # Stamp path: per-user + per-project under $TMPDIR — must match gate.sh exactly.
@@ -25,7 +40,12 @@ fi
 # Count corrections
 CORRECTIONS_COUNT=0
 if [ -f "$CORRECTIONS_FILE" ]; then
-  CORRECTIONS_COUNT=$(grep -c '^### ' "$CORRECTIONS_FILE" 2>/dev/null || echo 0)
+  # grep -c prints "0" AND exits 1 on no matches, so `|| echo 0` would append a
+  # second "0" → "0\n0" → "integer expected" in the -eq test below. Use `|| true`
+  # (grep already prints the count) and normalize to a bare integer.
+  CORRECTIONS_COUNT=$(grep -c '^### ' "$CORRECTIONS_FILE" 2>/dev/null || true)
+  CORRECTIONS_COUNT=${CORRECTIONS_COUNT//[^0-9]/}
+  CORRECTIONS_COUNT=${CORRECTIONS_COUNT:-0}
 fi
 
 # Write stamp (0600 — only the owner can read/clobber it)
