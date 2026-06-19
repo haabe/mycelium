@@ -764,3 +764,8 @@ Record of significant decisions made during product development. Decisions are i
 - **Fix:** walk up from `$PWD` for `.claude/` when the env var is unset; trust it verbatim when set (CLI unchanged). Testing against the REAL Cowork project then exposed a second latent bug — `grep -c || echo 0` double-printing `0\n0` on a zero-entry corrections.md — fixed in the same patch.
 - **Honesty boundary (G-V13):** verified 5 resolution cases incl. the real Cowork project's filesystem state; did NOT claim 'Cowork fixed' because in-runtime hook-CWD provisioning is unverified from the CLI. Release framed as hardening + pending Cowork re-test.
 - **Meta:** corrects an earlier same-session misread (treated `.claude/state/` absence as 'hooks don't fire' — state/ is runtime-owned; AP#7 verify-mechanical-condition). **PATCH**, lived-friction-triggered.
+
+### Cowork-runtime-gap receipts case — 2026-06-19 (v0.49.22)
+- **Decision:** land the cross-runtime dogfood as a receipts case (`docs/receipts/cases/2026-06-19-cowork-runtime-gap.md`) + index row.
+- **Why a bump:** receipts cases live under `docs/` → material per Check 26 → doc-only PATCH bump (the discipline's prescribed path). Rides the release-backlog convention (v0.49.20).
+- **Content:** skills port to Cowork with fidelity; hook enforcement doesn't (local-sandbox no-project-root-signal). Honest negative result + v0.49.21 partial fix + AP#7 self-correction beat (state/ misread, already documented in the May plugin-form case B5).

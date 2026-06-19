@@ -4,6 +4,12 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-19.
 
+## v0.49.22 — cowork-runtime-gap receipts case
+
+**2026-06-19. Attribution: cowork-dogfood-receipts-2026-06-19. Class: patch (doc-only).**
+
+Adds the `cowork-runtime-gap` receipts case and its index row. A first-hand cross-runtime dogfood: Mycelium's skills run in Claude Cowork with full fidelity (start/diamond-assess/assumption-test all compose and apply their theory), but the always-on hook layer cannot — Cowork's local agent-mode sandbox runs hooks with `CLAUDE_PROJECT_DIR` empty, `pwd` at `/sessions/<name>`, and the project bind-mounted at `/mnt/` with no signal to find it (F1 preflight false-negative + F3 Write-block, one root cause). The case documents the v0.49.21 partial fix and the honest verdict that the residual is a Cowork-platform gap, not Mycelium-fixable. No runtime or behavioral change.
+
 ## v0.49.21 — preflight robustness (Cowork dogfood fixes)
 
 **2026-06-19. Attribution: cowork-preflight-robustness-2026-06-19. Class: patch.**
