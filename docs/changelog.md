@@ -2,7 +2,19 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-06-18.
+**Last updated**: 2026-06-19.
+
+## v0.49.20 — GitHub-release backlog convention
+
+**2026-06-19. Attribution: release-backlog-convention-2026-06-19. Class: patch.**
+
+Adds a release-cutting checklist to `engine/version-discipline.md` so every version bump also cuts a GitHub Release — accumulating a gap-free, browsable backlog of versions that mirrors `plugin.json#version` for anyone who lands on the repo without opening source.
+
+- The release notes ARE the changelog section for that version (single source, not hand-rewritten); the attribution label and tier ride along automatically.
+- Tag = `plugin.json` version, exactly — the third leg alongside Check 30's `plugin.json` ↔ `CLAUDE.md` sync. Never tag a pre-CI commit; a release advertises a state.
+- Convention-tier, not CI-enforced: cutting a release touches no tracked file, so Check 26 cannot see it. Enforced by habit + the doc.
+
+Doc-only; no runtime or behavioral change.
 
 ## v0.49.19 — anti-drift guard for theory fidelity
 

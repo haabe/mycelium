@@ -751,3 +751,9 @@ Record of significant decisions made during product development. Decisions are i
 - **Confidence**: 0.9 on the wiring working (directly observed, both arms). opp-011 now 0.68.
 - **Scope**: `.claude/canvas/opportunities.yml` (opp-011 assumption #2 result + confidence), this entry. No material framework file touched → no version bump.
 - **Reversibility**: n/a (verification record; no behavior change).
+
+### Release-backlog convention — 2026-06-19 (v0.49.20)
+- **Decision:** every version bump now also cuts a GitHub Release (annotated tag + `gh release` with notes pulled verbatim from the `docs/changelog.md` section). Added as a FIFTH coordinated step in `engine/version-discipline.md`.
+- **Why:** the repo had 0 tags / 0 releases despite 0.49.x of history; the active version was only discoverable by opening `plugin.json` or the changelog. An empty Releases section on an actively-developed repo undersells maintenance (reach-without-conversion). The release is the human-browsable mirror of `plugin.json#version`, not a replacement for it.
+- **Scope:** convention-tier, NOT CI-enforced — cutting a release touches no tracked file, so Check 26 cannot see it. Tag must equal `plugin.json` version (third leg of the Check-30 sync). Never tag a red commit.
+- **Surfaced:** dogfood discussion of the GitHub About/sidebar (mycelium-roadmap session 2026-06-19). Authored upstream per the dogfood boundary. **PATCH** (doc-only).

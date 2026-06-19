@@ -70,6 +70,32 @@ Failure mode this prevents (graduated 2026-05-22 at v0.23.35 after three misses 
 
 See `.claude/memory/corrections.md :: 2026-05-22 - plugin.json sync must ride with CLAUDE.md Version-line bumps` for the full incident log.
 
+## Cutting the GitHub release (the version backlog)
+
+The coordinated commit lands the version *in the tree*. A GitHub Release puts it on a browsable, dated **backlog** — the human-facing mirror of `plugin.json#version`, so a visitor sees where the framework is without opening source. `plugin.json` stays the source of truth; the release is the shop window. Cut one for **every** bump so the backlog stays gap-free.
+
+This is the FIFTH step, run AFTER the coordinated commit is on `main` and CI is green — never tag a red commit:
+
+1. **Tag the bump commit** (annotated, on the commit that synced `plugin.json`):
+   ```bash
+   git tag -a v<X.Y.Z> -m "v<X.Y.Z>"
+   git push origin v<X.Y.Z>
+   ```
+2. **Cut the release from the changelog section** — single source, do not rewrite notes by hand:
+   ```bash
+   gh release create v<X.Y.Z> \
+     --title "v<X.Y.Z> — <changelog headline>" \
+     --notes "$(awk -v v="## v<X.Y.Z> " 'index($0,v)==1{f=1} f&&/^## v/&&index($0,v)!=1{exit} f' docs/changelog.md)"
+   ```
+   The notes ARE the `docs/changelog.md` block for this version — the attribution label and tier ride along automatically.
+3. **Verify**: `gh release view v<X.Y.Z>` — confirm tag, title, and notes resolved.
+
+Notes:
+- **Tag = `plugin.json` version, exactly.** Check 30 keeps `plugin.json` ↔ `CLAUDE.md` synced; the tag is the third leg. A tag that disagrees with `plugin.json` is the same drift class.
+- **Never tag a pre-CI commit.** A release advertises a state; advertise only green ones.
+- **Gap-free is the point.** A skipped bump leaves a hole that reads as a lost version. If a bump shipped without a release, backfill the tag against its commit later.
+- This rides the existing version-bump trigger — no new gate. It is convention, enforced by habit + this doc, not CI (cutting a release touches no tracked file, so Check 26 cannot see it).
+
 ## Why this exists (5th-instance graduation)
 
 Sister convention to G-V12 (validator coverage proofs) — both close subclasses of the same recurring "documented rule diverges from enforcement" pattern. Five instances logged before this bump landed (corrections.md 2026-04-20 / 2026-04-28 / 2026-05-03 / 2026-05-04 ×2). Pre-committed graduation trigger fired at instance #5 (this); structural enforcement layer is now CI-tier rather than convention-tier.
