@@ -4,7 +4,7 @@
 **Time to read**: 5 min for the table; depth lives in each `SKILL.md`.
 **Last updated**: 2026-06-12.
 
-This index lists all 56 skills. Each skill's full behaviour lives in its `SKILL.md` — `plugins/mycelium/skills/<name>/SKILL.md` in plugin form (recommended), or `.claude/skills/<name>/SKILL.md` in legacy form (supported during transition). Loaded JIT by Claude Code. This page is an orientation map by phase; [by-category.md](by-category.md) is the alternate index by category of work.
+This index lists all 57 skills. Each skill's full behaviour lives in its `SKILL.md` — `plugins/mycelium/skills/<name>/SKILL.md` in plugin form (recommended), or `.claude/skills/<name>/SKILL.md` in legacy form (supported during transition). Loaded JIT by Claude Code. This page is an orientation map by phase; [by-category.md](by-category.md) is the alternate index by category of work.
 
 ## Onboarding & navigation
 
@@ -89,7 +89,7 @@ This index lists all 56 skills. Each skill's full behaviour lives in its `SKILL.
 
 ## Render & output (v0.40.0+)
 
-Read-only visualization of canvas + state surfaces. All four skills share `engine/render-conventions.md` (consent + privacy HARD RULE, supported formats, WCAG AA theme convention, frontmatter Mermaid syntax). Validator Check 43 enforces `identifier_exposure: YES|NONE|MIXED` declaration on every render-fleet skill.
+Read-only rendering of canvas + state surfaces. All five skills share `engine/render-conventions.md` (consent + privacy HARD RULE, supported formats, WCAG AA theme convention, frontmatter Mermaid syntax) and Validator Check 43's `identifier_exposure: YES|NONE|MIXED` declaration. The first three plus the dispatcher are the canvas-visualization fleet; `/receipt-render` shares the conventions but is a standalone shareable-artifact generator, not a `/render` target.
 
 | Skill | When to use | Gates it satisfies |
 |---|---|---|
@@ -97,6 +97,7 @@ Read-only visualization of canvas + state surfaces. All four skills share `engin
 | `/ost-render` | Emit `opportunities.yml` as Mermaid mindmap / ascii / markdown-list / json. Consent-gate via attribution registry. | — |
 | `/cycle-render` | Emit `cycle-history.yml` as Mermaid gantt + pie / ascii / json. Honest small-N + class-distribution disclosure. | — |
 | `/render` | Dispatcher: routes intent to a specialist (recommends, never auto-invokes); lists what's renderable. Cross-cutting `--view traceability` research-gated to Phase 4a–4d. | — |
+| `/receipt-render` | Turn a completed diamond into a shareable, factual one-page work receipt (problem framed, assumptions tested, killed vs kept) with a volitional, no-telemetry onward-handoff data flow. Standalone; not a `/render` target. | — |
 
 ## Setup & lifecycle
 

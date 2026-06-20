@@ -4,7 +4,7 @@
 **Time to read**: 3 min.
 **Last updated**: 2026-06-08.
 
-Alternate index to the phase-first [skills/README.md](README.md). Same 56 skills, different ordering.
+Alternate index to the phase-first [skills/README.md](README.md). Same 57 skills, different ordering.
 
 ## Research & discovery
 
@@ -76,12 +76,13 @@ Multi-agent + canvas-coordination patterns. Use when work fans out.
 
 ## Render & output
 
-Read-only visualization of canvas + state surfaces. All four skills share `engine/render-conventions.md` (consent + privacy HARD RULE, WCAG AA theme, frontmatter Mermaid syntax). Use when sharing state with operators or external readers.
+Read-only rendering of canvas + state surfaces. All five skills share `engine/render-conventions.md` (consent + privacy HARD RULE, WCAG AA theme, frontmatter Mermaid syntax). Use when sharing state with operators or external readers.
 
 - `/diamond-render` — emit `diamonds/active.yml` as stateDiagram-v2 / ascii / json
 - `/ost-render` — emit `opportunities.yml` as Mermaid mindmap / ascii / markdown-list / json
 - `/cycle-render` — emit `cycle-history.yml` as gantt + pie / ascii / json
 - `/render` — dispatcher: routes intent to a specialist (recommends, never auto-invokes)
+- `/receipt-render` — turn a completed diamond into a shareable, factual one-page work receipt with a volitional onward-handoff data flow (standalone; not a `/render` target)
 
 ## Setup & lifecycle
 
@@ -114,5 +115,5 @@ Mycelium itself. Use when dogfooding the framework or as part of `/framework-hea
 
 ## See also
 
-- [README.md](README.md) — phase-first index of the same 56 skills
+- [README.md](README.md) — phase-first index of the same 57 skills
 - [glossary.md](../glossary.md) — vocabulary

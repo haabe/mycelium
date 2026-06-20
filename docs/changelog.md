@@ -2,7 +2,19 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-06-19.
+**Last updated**: 2026-06-20.
+
+## v0.50.0 — receipt-render (L1 onward-handoff instrument)
+
+**2026-06-20. Attribution: receipt-render-l1-instrument-2026-06-20. Class: minor (new skill).**
+
+Adds `/mycelium:receipt-render` (skill #57) and a `docs/receipts/handoff.md` landing page.
+
+**The problem it instruments.** A "where-to-play" (L1) bet is validated when a non-cohort pragmatist independently adopts and either passes the tool onward or names a concrete strategic use. But that signal bundles the *outcome* (they adopt) with its *detection* (the maintainer finds out), and detection doesn't happen on its own — silent adopters are invisible, so a silent success reads as a failure. An assumption test confirmed the design is feasible within the no-telemetry privacy stance, and confirmed against GitHub's own docs that passive traffic data (domain-granular, top-10, 14-day) cannot register a single handoff. So detection has to come from a volitional surface.
+
+**What ships.** `receipt-render` turns a completed diamond into a shareable, factual one-page receipt — problem as framed, assumptions tested, what was killed vs kept. It is read-only and fully local; nothing is transmitted. Its footer carries two volitional, no-telemetry data flows via pre-filled GitHub Discussion deep-links a human reviews and submits: an adopter "Show and tell" share-back, and (via `handoff.md`) a colleague "Handoffs" self-ID. Hard content rule: report what the *user* did; no tool-narrated wins, no invented benefit-metrics (a fabricated "N hours saved" both leads the verdict and would contaminate `/framework-health` evidence).
+
+It follows the render-fleet conventions and the consent gate (audience fixed `external`, stricter than the fleet default, because it is a hand-it-over artifact; Check 43 applies via the `-render` name), but it is a standalone artifact generator, not a `/render` dispatcher target. Ships dormant — opt-in, does nothing until invoked.
 
 ## v0.49.22 — cowork-runtime-gap receipts case
 

@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.49.22 -- **Attribution label: cowork-dogfood-receipts-2026-06-19** (lived-friction-triggered, doc-only). Adds the `cowork-runtime-gap` receipts case + receipts-index row: a cross-runtime dogfood where Mycelium's skills port to Claude Cowork with fidelity but the ambient hook layer can't (Cowork's local sandbox runs hooks with no project-root signal — F1/F3, one root cause). Documents the v0.49.21 partial fix + the honest platform-gap boundary. No runtime/behavioral change. **PATCH**. **Priors**: v0.49.21 **cowork-preflight-robustness-2026-06-19**, v0.49.20 **release-backlog-convention-2026-06-19** (see `docs/changelog.md`).*
+*Version 0.50.0 -- **Attribution label: receipt-render-l1-instrument-2026-06-20** (lived-friction-triggered). Adds `/mycelium:receipt-render`: a read-only skill that turns a completed diamond into a shareable, factual one-page work receipt (problem framed, assumptions tested, what was killed vs kept) with an origin line + a volitional, no-telemetry onward-handoff data flow (pre-filled GitHub Discussion deep-links; first-crossing detection is a human posting of their own accord, not referrer stats, which a single handoff can't reach). Instruments the spontaneous-onward-handoff adoption signal an L1 "where-to-play" Definition of Done prizes. Follows render-fleet conventions + the consent gate (Check 43), but is a standalone artifact generator, not a `/render` dispatcher target. Ships dormant (opt-in). Also adds the `docs/receipts/handoff.md` landing page. **MINOR**. **Priors**: v0.49.22 **cowork-dogfood-receipts-2026-06-19**, v0.49.21 **cowork-preflight-robustness-2026-06-19** (see `docs/changelog.md`).*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 
@@ -162,7 +162,7 @@ See `plugins/mycelium/orchestration/modes.md` for usage patterns and `plugins/my
 
 ## Skills
 
-All 56 skills are auto-discovered from SKILL.md frontmatter — in plugin form (`plugins/mycelium/skills/*/SKILL.md`, recommended) or legacy form (`.claude/skills/*/SKILL.md`, supported during transition). Suggested skills are surfaced at diamond transitions by `/diamond-progress` and `/diamond-assess`, and contextually by hooks. Type `/` to see the current list.
+All 57 skills are auto-discovered from SKILL.md frontmatter — in plugin form (`plugins/mycelium/skills/*/SKILL.md`, recommended) or legacy form (`.claude/skills/*/SKILL.md`, supported during transition). Suggested skills are surfaced at diamond transitions by `/diamond-progress` and `/diamond-assess`, and contextually by hooks. Type `/` to see the current list.
 
 ## Getting Started
 
