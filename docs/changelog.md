@@ -4,6 +4,14 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-20.
 
+## v0.50.1 — receipt-render killed-source fix (dogfood)
+
+**2026-06-20. Attribution: receipt-render-killed-source-fix-2026-06-20. Class: patch (dogfood fix).**
+
+The v0.50.0 dogfood — generating a receipt for the roadmap's L0 diamond minutes after release — caught that `receipt-render`'s "What got killed" section read only `archived-solutions.yml`. That file is schema-only/empty in the roadmap; its actual discards live in `cycle-history.yml`. So the receipt rendered an empty kill section while real work-avoided existed, gutting the receipt's most load-bearing, honesty-carrying part.
+
+Fix: the killed section now reads BOTH kill registries — `archived-solutions.yml` entries AND `cycle-history.yml` entries with a discard/kill outcome (`terminal_state: killed|archived`, `outcome: discarded`, or a non-empty `discard_reason`/`discard_phase`). Instructions-only change to one skill; no behavioural change elsewhere.
+
 ## v0.50.0 — receipt-render (L1 onward-handoff instrument)
 
 **2026-06-20. Attribution: receipt-render-l1-instrument-2026-06-20. Class: minor (new skill).**

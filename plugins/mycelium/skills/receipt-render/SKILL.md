@@ -102,7 +102,7 @@ Resolve `--diamond`; apply the single-completed-diamond default; fail loud if ze
 ### Step 2: Gather the four factual sections (read-only)
 - **Problem (as framed):** from the diamond `definition_of_done` (`outcome`/`signal`) and `name`. State the problem the work addressed, in the user's own framing.
 - **Assumptions tested:** from `theory_gates_status`, the decision-log entries for this diamond, and any `four_risks` snapshots in `archived-solutions.yml`. List what was checked, not what was concluded about quality.
-- **Killed (and why):** from `archived-solutions.yml` entries tied to this diamond — name what was discarded and the recorded `reason`. This is the load-bearing honesty of the receipt (work avoided is the point).
+- **Killed (and why):** read BOTH kill registries — `archived-solutions.yml` entries tied to this diamond (the canonical leaf registry; recorded `reason`) AND `cycle-history.yml` entries with a discard/kill outcome (`terminal_state: killed|archived`, or `outcome: discarded`, or a non-empty `discard_reason`/`discard_phase`). Projects record kills in either place, and a receipt that reads only `archived-solutions.yml` under-reports the work avoided when discards live in `cycle-history.yml` (dogfood finding 2026-06-20, v0.50.0 → v0.50.1). This section is the load-bearing honesty of the receipt — work NOT built is the point — so missing a kill is the costliest omission.
 - **Kept / shipped:** surviving `opportunities.yml` solutions + launched entries in `cycle-history.yml`.
 
 ### Step 3: Consent check
