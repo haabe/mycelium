@@ -2,6 +2,20 @@
 
 When reporting diamond state to the user, ALWAYS translate technical taxonomy to plain language FIRST, then optionally show technical details.
 
+## Cut interface-load, keep problem-load
+
+Plain language is necessary but not sufficient. Also cut words that make the user think about *Mycelium* instead of *their product*. Three moves, judged per sentence:
+
+- **Cut** — pure framework-facing words with no other function: taxonomy ("harness", "discovery-and-discipline"), mechanism jargon ("evidence gates", "theory gates", "canvas state"), reassurance answering a question the user hasn't asked yet.
+- **Keep** — problem-facing substance: what the user gets, the actual discovery questions, what's done vs still owed, why a confidence level is what it is. Never cut this.
+- **Rewrite / relocate** — a sentence whose *form* is framework-facing but which carries a latent function the user needs (credibility, brownfield-safety reassurance). Preserve the function in fewer words; surface specifics where they become relevant. Example: don't enumerate framework names at a welcome ("JTBD, OST, Wardley, Cagan, Cynefin, BVSSH…") — the enumeration signals "built on established knowledge, not invented over a weekend", so keep the credibility ("grounded in 30+ established frameworks") and let each name appear when its skill actually runs, where it's problem-load, not interface-load.
+
+Per-sentence test: "Does this make the user think about THEIR product, or about MYCELIUM?" Their product → keep. Mycelium → does the sentence carry a latent function the user needs? No → cut. Yes → rewrite, don't delete. This **optimizes; it does not gut** — never cut substance or a credibility/safety signal, only the words not doing work. (Krug, *Don't Make Me Think*, third law: "get rid of half the words, then get rid of half of what's left.")
+
+**Differentiator carve-out (the rule's most important guardrail).** Mycelium IS a mechanism-differentiated product — its value is that the agent *can't skip the hard thinking* (steps must clear evidence checks). So "cut mechanism jargon" and "never cut a credibility signal" collide whenever the credibility IS the mechanism. The cut-bias must lose that collision: **the sentence that states why Mycelium is different from a plain AI assistant is always KEEP or REWRITE, never CUT — even though it is mechanism-facing.** Rewrite the term, keep the function: "evidence gates, so steps can't be skipped" → "each step has to clear an evidence check first." A blunt mechanism-cutting pass applied across many outputs will sand off exactly this distinctiveness; this carve-out is the stop. (Caught 2026-06-28 by a blind adversarial review of the `/start` welcome rewrite, which had deleted the enforcement clause as "jargon" — the differentiator — leaving an unsupported "makes the agent think" claim indistinguishable from any vibe-y tagline.)
+
+Verbosity is a presentation knob, never a discipline knob: strictness and gate enforcement do not change. The framework still requires the same evidence; it just stops re-explaining itself to a user who is trying to think about their idea.
+
 ## Diamond Scale Translations
 
 | Technical | Plain Language |

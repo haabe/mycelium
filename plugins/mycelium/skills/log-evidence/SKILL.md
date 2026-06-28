@@ -117,6 +117,8 @@ If the user reports a task couldn't be completed (contact unavailable, timing di
    - If enough evidence: "Evidence looks solid for `/mycelium:diamond-progress` to attempt the next transition."
    - If contradictions found: "Before progressing, resolve the contradiction. Run `/mycelium:devils-advocate` or revisit the canvas."
 
+All user-facing summaries above follow the interface-load/problem-load discipline in `${CLAUDE_PLUGIN_ROOT}/engine/status-translations.md`: lead with what was learned and what it changes; cut framework-facing narration.
+
 ## Canvas Output
 
 - Updates: relevant canvas file provenance (evidence_sources, source_classes, evidence_type, confidence)

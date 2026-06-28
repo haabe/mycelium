@@ -88,3 +88,5 @@ Apply this when the alternative to publishing is "wait until I'm sure." If the c
 
 ## Output
 Log the challenge results in .claude/harness/decision-log.md alongside the decision.
+
+When presenting challenges to the user, apply the interface-load/problem-load discipline in `${CLAUDE_PLUGIN_ROOT}/engine/status-translations.md`: lead with the substantive challenge and what it puts at risk; cut framework-facing narration (technique numbers, ceremony names).

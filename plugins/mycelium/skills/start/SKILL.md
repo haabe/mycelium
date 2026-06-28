@@ -16,13 +16,11 @@ Output a short welcome before doing anything. Do NOT skip this — the install-t
 
 > "Welcome to Mycelium.
 >
-> Mycelium is a discovery-and-discipline harness for AI agents — it forces the agent to think before it codes. 30+ product-thinking frameworks (JTBD, OST, Wardley, Cagan four risks, Cynefin, BVSSH...) connected by evidence gates, so critical steps cannot be skipped.
+> Mycelium makes the agent think before it builds — it can't skip the hard questions; each step has to clear an evidence check first. Grounded in 30+ established product-thinking frameworks; you'll meet the relevant ones as they come up.
 >
-> What I'm about to do, in two steps:
->   1. Set up project-state directories in your `.claude/` (canvas, diamonds, memory). ~10 seconds.
->   2. Run a 10-minute discovery brief: 4 questions about your idea, then a one-page brief covering who it's for, the biggest assumption, the biggest risk, and your next concrete move.
->
-> Your project root files (CLAUDE.md, README.md, LICENSE, etc.) are NOT touched — Mycelium ships as a Claude Code plugin and lives in plugin cache. Only your `.claude/` directory is created.
+> Two quick steps:
+>   1. Set up Mycelium's files in `.claude/` — about 10 seconds. Your existing files (CLAUDE.md, README, etc.) aren't touched; only a new `.claude/` directory is added.
+>   2. A 10-minute discovery brief: 4 questions about your idea, then a one-page brief covering who it's for, the biggest assumption, the biggest risk, and your next concrete move.
 >
 > Let's begin."
 

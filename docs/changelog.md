@@ -4,6 +4,24 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-20.
 
+## v0.51.0 — interface-load vs problem-load output discipline
+
+**2026-06-28. Attribution: output-discipline-interface-load-2026-06-28. Class: minor (new convention with framework-wide output impact).**
+
+Mycelium ships `/usability-check` (Nielsen) and `/a11y-check` for the products users build, but never applied "Don't Make Me Think" to its own surface. The friction is documented: "verbose/strict" (Bentes), a new user bouncing off "OST" at the welcome (Bård), walls of text. A prior pass (2026-05-09) tried an *adaptive* verbosity knob gated on cohort data that never arrived; it never shipped. This is the unconditional move instead.
+
+Adds a **"Cut interface-load, keep problem-load"** section to `engine/status-translations.md` — already the technical→human-readable doc loaded by `diamond-assess` and `diamond-progress`. Coverage is made framework-wide by **broadening the always-on communication rule in `CLAUDE.md`** from "translate diamond states" to "all user-facing output", plus explicit references from `log-evidence` and `devils-advocate` — the #2 and #4 highest-traffic prose surfaces by usage proxy, neither of which loaded the doc before. So the discipline reaches the agent's *emergent* prose across surfaces, not just fixed strings. The discipline is a three-move per-sentence test, grounded in Krug's third law:
+
+- **Cut** framework-facing words with no other function (taxonomy, mechanism jargon like "evidence gates").
+- **Keep** problem-facing substance (what the user gets, the discovery questions, what's owed) — never cut this.
+- **Rewrite/relocate** sentences whose form is framework-facing but which carry a latent function the user needs (credibility, brownfield-safety) — preserve the function in fewer words, surface specifics where they become relevant (e.g. framework names appear when their skill runs, not enumerated at hello).
+
+Rewrites the `/mycelium:start` welcome as the worked example: drops the framework-acronym wall (`JTBD, OST, Wardley, Cagan, Cynefin, BVSSH…`) and the plugin-cache mechanism explanation; keeps the credibility signal ("grounded in 30+ established product-thinking frameworks"), the brief's contents, and the brownfield-safety reassurance.
+
+Includes a **differentiator carve-out**: because Mycelium is a mechanism-differentiated product (its value is that the agent *can't skip the hard thinking*), the sentence stating why it differs from a plain AI assistant is always KEEP/REWRITE, never CUT — even though it is mechanism-facing. Added after a blind adversarial review caught the first welcome rewrite deleting the enforcement clause ("steps can't be skipped") as jargon, which is the differentiator, not jargon. The welcome now keeps it in plain language ("each step has to clear an evidence check first").
+
+This **optimizes** user-facing output; it does not gut it. Verbosity is a presentation knob — strictness and gate enforcement are unchanged. The framework still requires the same evidence; it just stops re-explaining itself to a user trying to think about their idea.
+
 ## v0.50.1 — receipt-render killed-source fix (dogfood)
 
 **2026-06-20. Attribution: receipt-render-killed-source-fix-2026-06-20. Class: patch (dogfood fix).**
