@@ -1,6 +1,6 @@
 ---
 name: wardley-map
-description: "Create or update a Wardley Map of the value chain. Maps user needs, components, evolution stages, and strategic gameplay."
+description: "Create or update a Wardley Map of how any domain delivers value. Maps the needs it serves, the capabilities involved, how each is evolving (genesis to commodity), and strategic plays. Applies to any domain, not only software."
 metadata:
   instruction_budget: "10"
   framework_dependency: "mycelium"

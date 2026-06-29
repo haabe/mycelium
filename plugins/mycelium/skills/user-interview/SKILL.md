@@ -1,6 +1,6 @@
 ---
 name: user-interview
-description: "Guide for conducting Torres-style story-based user interviews with bias mitigation and JTBD lens."
+description: "Guide for conducting Torres-style story-based interviews with the people whose experience you're researching, with bias mitigation and a JTBD lens."
 metadata:
   instruction_budget: "39"
   framework_dependency: "mycelium"

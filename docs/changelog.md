@@ -4,6 +4,26 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-20.
 
+## v0.52.0 — non-software-object routing fix
+
+**2026-06-29. Attribution: non-software-routing-fix-2026-06-29. Class: minor (routing-affecting skill-description changes + new always-on convention).**
+
+Dogfood finding: a Mycelium run on a **non-software** object (a career-discovery project) drifted hard — the agent kept light canvas bookkeeping but produced the valued deliverables (devil's advocate, interview guides, a landscape map) as **freeform `outputs/*.md` that reinvented skills that already exist**, instead of routing to them. Root cause: skill descriptions and the agent's routing priors are software-product-shaped, and no rule forbade parallel freeform reinvention. (The crux from 2026-06-25 — "object = software is incidental" — holds at the *config* layer, but routing/descriptions were still software-shaped.)
+
+Two-part fix:
+
+**(A) Object-agnostic skill descriptions.** Four descriptions assumed a software/product object at the routing surface and so failed to fire on a non-software discovery object. Rewritten to name the *activity*, not the object (the `handoff`/`log-evidence` template):
+- `wardley-map` — "value chain… components" → "how any domain delivers value… capabilities… applies to any domain, not only software."
+- `user-needs-map` — "user needs" → "the needs of the people you're building or exploring for."
+- `jtbd-map` — "user Jobs to be Done" → "the Jobs to be Done that people are trying to get done… applies to any object, not only software."
+- `user-interview` — "user interviews" → "interviews with the people whose experience you're researching."
+
+**(B) New always-on Communication Rule** in `CLAUDE.md`: route through skills; the canvas + decision-log are the source of truth and human docs are *derived* from them, not invented in parallel; do not write a freeform document that reinvents a skill's output. Includes an **escape valve** — if no skill covers the task or no emitter produces the needed artifact, grounded freeform is allowed and the gap is flagged upstream (the prohibition is on *reinventing*, not on producing un-emittable artifacts).
+
+Blind-tested before commit: routing 4/4 on a non-software object; an adversary pass on the rule caught and fixed an over-absolute framing and the missing escape valve before it shipped.
+
+Deferred follow-ons (gated, not authored): a non-product object-type + software-fallback fix; a canvas→discovery-deliverable emitter; a skill-duplication drift-detector.
+
 ## v0.51.0 — interface-load vs problem-load output discipline
 
 **2026-06-28. Attribution: output-discipline-interface-load-2026-06-28. Class: minor (new convention with framework-wide output impact).**

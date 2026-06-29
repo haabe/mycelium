@@ -1,6 +1,6 @@
 ---
 name: user-needs-map
-description: "Map user needs independently of solutions using Allen's User Needs Mapping methodology. Identifies underserved needs that feed into the Opportunity Solution Tree."
+description: "Map the needs of the people you're building or exploring for, independently of solutions, using Allen's User Needs Mapping methodology. Identifies underserved needs that feed into the Opportunity Solution Tree."
 metadata:
   instruction_budget: "35"
   framework_dependency: "mycelium"
