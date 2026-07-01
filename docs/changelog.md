@@ -4,6 +4,24 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-20.
 
+## v0.53.0 — outcome→discovery loop (Move 1)
+
+**2026-07-01. Attribution: outcome-discovery-loop-move1-2026-07-01. Class: minor (new mechanism across 5 files + schema).**
+
+Wires the back half of the product loop (opt-in + prompted): delivered outcomes flowing back into discovery (Kim's Second Way). The loop needs a DoD `measure` and a human `/metrics-pull` run; it is automated only where a metric adapter exists, and `session-start` surfaces opted-out or overdue shipped diamonds so the gap is never silent. Surfaced when Mik Kersten publicly suggested it and an audit found `engine/feedback-loops.md` over-claimed "market signals flow back into discovery" while the mechanism was manual/partial. The direction is convergent-validated across the canon Mycelium already integrates — BVSSH (outcome-over-output), Team Topologies (value streams), Kersten's Flow / Output-to-Outcome, DORA — not a single suggestion.
+
+**Move 1 — research-grounded, 5 pieces, each reusing an existing idiom:**
+
+1. **`define-done`** gains an optional `measure` block: `source` (metric adapter key OR first-class `manual` for interview/observation outcomes), `field`, `target`, `check_after` (per-DoD lag matched to `kind` — not a global window), `guardrail` (Goodhart counter-metric), `last_checked`.
+2. **`diamond-progress`** stamps `completed_at` at Deliver→Complete — the ship timestamp that times the check (none existed before).
+3. **`metrics-pull`** Step 8b checks each shipped diamond's DoD target-vs-actual and drafts opportunity-routed evidence (met → confidence-up; missed → reopen-discovery). Manual outcomes are prompted, not faked.
+4. **`session-start`** CHECK 10 nudges when a shipped diamond's outcome-check is overdue (default lag; per-DoD tuning via `check_after`).
+5. **`feedback-loops.md`** rewritten honest: a real closed loop for outcomes with an automated source; prompted-not-automated for manual/interview outcomes.
+
+Schema documents `measure` + `completed_at` (additive; `additionalProperties` already accepted them). Research applied: outcomes-are-lagging, per-DoD lag windows, Goodhart guardrails/counter-metrics, vanity-vs-actionable, link-the-outcome-to-the-opportunity.
+
+**Honest bound:** tightening the loop is necessary but not sufficient — a tighter loop cycles signals faster but cannot manufacture outcomes without real users experiencing the shipped thing. It does not displace the get-real-users work. Moves 2–3 (richer post-ship verification; automatic re-discovery routing) remain gated.
+
 ## v0.52.0 — non-software-object routing fix
 
 **2026-06-29. Attribution: non-software-routing-fix-2026-06-29. Class: minor (routing-affecting skill-description changes + new always-on convention).**

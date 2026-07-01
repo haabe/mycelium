@@ -119,6 +119,10 @@
         "last_progressed": {
           "$ref": "_common.schema.json#/$defs/iso_timestamp"
         },
+        "completed_at": {
+          "$ref": "_common.schema.json#/$defs/iso_timestamp",
+          "description": "True ship timestamp, stamped at Deliver->Complete (v0.53.0). Times the outcome->discovery loop (/metrics-pull Step 8b + session-start CHECK 10)."
+        },
         "theory_gates_status": {
           "type": "object"
         },
@@ -177,6 +181,19 @@
         },
         "threshold": {
           "type": ["string", "number"]
+        },
+        "measure": {
+          "type": "object",
+          "description": "Optional (v0.53.0). Makes `signal` checkable post-ship to close the outcome->discovery loop (/metrics-pull Step 8b). source: 'manual' is first-class. See skills/define-done/SKILL.md.",
+          "properties": {
+            "source": { "type": "string", "description": "Metric adapter key (github, plausible, ...) OR 'manual'." },
+            "field": { "type": "string", "description": "Snapshot field path for automated sources; omit for source: manual." },
+            "target": { "type": ["string", "number"] },
+            "check_after": { "type": "string", "description": "When to check — lag matched to `kind`. Per-DoD, not a global window." },
+            "guardrail": { "type": "string", "description": "Counter-metric that must not worsen while `signal` improves (Goodhart guard)." },
+            "last_checked": { "type": ["string", "null"], "description": "Stamped by /metrics-pull; null = never checked." }
+          },
+          "additionalProperties": true
         },
         "rolls_up_to": {
           "type": "string",

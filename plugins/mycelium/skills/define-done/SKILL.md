@@ -69,6 +69,13 @@ definition_of_done:
   signal:    "<the ONE observable thing you'd see them DO>"            # required; OMTM
   kind:      leading | lagging                                        # defaulted by scale above
   threshold: "<a target IF one genuinely fits>"                       # OPTIONAL (numbers not mandatory)
+  measure:                                                            # OPTIONAL — makes `signal` checkable post-ship; closes the outcome→discovery loop (/metrics-pull reads this)
+    source:      "<metric adapter key (github, plausible, …) OR 'manual' for interview/observation outcomes>"
+    field:       "<snapshot field path for automated sources; omit for source: manual>"
+    target:      "<value or direction that means the outcome landed — reuse `threshold` if already set>"
+    check_after: "<lag before checking, as Nd or Nw after ship (e.g. 14d, 8w) — matched to `kind`. Per-DoD; consumed by /metrics-pull's lag gate + the overdue nudge. Default 14d if unset>"
+    guardrail:   "<counter-metric that must NOT worsen while `signal` improves — Goodhart guard (advisory: downgrades a 'met' to 'met-with-regression')>"
+    last_checked: null                                                # stamped by /metrics-pull when the outcome-check runs
   rolls_up_to: "<parent diamond id + which parent outcome this serves>"  # child diamonds only
   kill_criterion:
     state: "<concrete benchmark that means this goal is WRONG>"
@@ -78,6 +85,15 @@ definition_of_done:
 ```
 
 `outcome` and `signal` are required; everything else is optional or scale-defaulted. At L0/L1 birth from the brief, a one-line `outcome` + `signal` stub is enough — depth comes from re-running this skill.
+
+### `measure` — closing the outcome→discovery loop (optional)
+
+Setting a DoD target and never checking whether it landed leaves the back half of the loop open (Kim's Second Way: outcomes must flow back). The optional `measure` block makes `signal` checkable after ship, so `/metrics-pull` can compare target-vs-actual and route the result back to discovery (met → confidence up / scale; missed → reopen the opportunity). Design notes, all evidence-grounded:
+
+- **`source: manual` is first-class, not a fallback.** Many real outcomes — especially early, and any that depend on real users experiencing the thing — are interview/observation-based, not dashboard numbers. `measure` must NOT push you to pick the number you can automate over the outcome you care about (the metric-availability trap). Manual outcomes get *prompted*, not faked.
+- **`check_after` is per-DoD, never a global window.** Outcome lag varies by what you measure (engagement lands in days; retention in weeks or months). Match it to `kind` — leading measures check sooner, lagging later — long enough to capture real signal, short enough to still act on it. Written as `Nd`/`Nw`; `/metrics-pull` skips the check (no false "missed") and the nudge stays quiet until it elapses.
+- **`guardrail` is the Goodhart guard (advisory, with teeth).** When `signal` becomes a target it degrades; pair it with a counter-metric that must not worsen. It doesn't block, but `/metrics-pull` downgrades a "met" to "met-with-regression" when the guardrail worsened as the signal improved. Five metrics are harder to game than one.
+- Omit `measure` entirely for a directional outcome with no meaningful check — that stays valid.
 
 ## Failure-mode guards (baked in)
 

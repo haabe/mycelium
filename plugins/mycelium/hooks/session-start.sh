@@ -507,6 +507,66 @@ except Exception:
 fi
 
 # ============================================================
+# CHECK 10: Shipped diamonds with an overdue outcome-check (added v0.53.0)
+# ============================================================
+# Move-1 outcome loop: a completed diamond whose DoD carries a `measure` but
+# whose outcome was never checked leaves the outcome->discovery loop open.
+# Nudge only after a default lag (outcomes are lagging — don't nag immediately;
+# per-DoD tuning lives in measure.check_after, guidance-level). NUDGE tier.
+if [ -f "$PROJECT_DIR/.claude/diamonds/active.yml" ]; then
+  OUTCOME_WARNING=$(python3 -c "
+import yaml, sys, re
+from datetime import datetime
+def lag_days(ca):
+    if not ca: return 14
+    m = re.search(r'(\d+)\s*([dw]?)', str(ca))
+    if not m: return 14
+    n = int(m.group(1)); return n*7 if m.group(2)=='w' else n
+try:
+  with open(sys.argv[1]) as f:
+    data = yaml.safe_load(f) or {}
+  overdue, no_measure, no_ts = [], [], []
+  for d in data.get('active_diamonds', []) or []:
+    if d.get('phase') != 'complete':
+      continue
+    dod = d.get('definition_of_done') or {}
+    if not isinstance(dod, dict) or not dod.get('signal'):
+      continue
+    did = d.get('id','?')
+    measure = dod.get('measure')
+    if not isinstance(measure, dict):
+      no_measure.append(did); continue
+    if measure.get('last_checked'):
+      continue
+    comp = d.get('completed_at')
+    if not comp:
+      no_ts.append(did); continue
+    try:
+      cd = datetime.fromisoformat(str(comp).replace('Z','+00:00'))
+      age = (datetime.now(cd.tzinfo) - cd).days
+    except Exception:
+      continue
+    if age >= lag_days(measure.get('check_after')):
+      overdue.append('{} ({}d)'.format(did, age))
+  msgs = []
+  if overdue:
+    msgs.append('{} shipped diamond(s) due an outcome-check: {}. Run /mycelium:metrics-pull to check target-vs-actual and close the loop back to discovery.'.format(len(overdue), ', '.join(overdue[:4]) + ('...' if len(overdue)>4 else '')))
+  if no_measure:
+    msgs.append('{} shipped diamond(s) have a signal but no measure ({}) — outside outcome-verification; add one via /mycelium:define-done to include them.'.format(len(no_measure), ', '.join(no_measure[:4]) + ('...' if len(no_measure)>4 else '')))
+  if no_ts:
+    msgs.append('{} shipped diamond(s) have a measure but no completed_at ({}) — cannot schedule the outcome-check.'.format(len(no_ts), ', '.join(no_ts[:4]) + ('...' if len(no_ts)>4 else '')))
+  if msgs:
+    print(' '.join(msgs))
+except Exception:
+  pass
+" "$PROJECT_DIR/.claude/diamonds/active.yml" 2>/dev/null || echo "")
+
+  if [ -n "$OUTCOME_WARNING" ]; then
+    REMINDERS="${REMINDERS}${OUTCOME_WARNING} "
+  fi
+fi
+
+# ============================================================
 # Build output
 # ============================================================
 if [ -n "$REMINDERS" ]; then
