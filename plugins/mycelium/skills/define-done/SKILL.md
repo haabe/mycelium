@@ -57,6 +57,25 @@ Default `kind` by altitude: lower/activity scales take **leading** measures (pre
 | L4 Delivery | shipped **AND** has the intended impact | leading |
 | L5 Market | **adoption / business outcome** at scale | lagging |
 
+## Build-mode gate — refuse build-to-earn during build-to-learn
+
+The per-scale table isn't only a `kind` default — it encodes the **build mode** (Patton/Cagan). This skill enforces it at diamond birth (agent-adjudicated), with a `/canvas-health` lint backstop that fires unconditionally (step 8c there). This is the mechanism behind philosophy.md's *"the framework refuses to let the agent build-to-earn during a build-to-learn phase — that refusal is the gate."*
+
+- **Build-to-LEARN** (a diamond whose terminal purpose is to *learn* — scales L0 Purpose → L3 Solution): its DoD `outcome` must be a **learning / validation** result ("the bet is validated", "the need is confirmed worth solving", "the solution actually solves it for users").
+- **Build-to-EARN** (terminal purpose is to *ship value* — L4 Delivery, L5 Market): its DoD `outcome` is a **shipped-value / adoption** result ("shipped **AND** the intended impact landed").
+
+**The discriminator is NOT the word "ship" — it is what the done-bar IS.** Discovery legitimately *ships to learn*: a fake-door test, wizard-of-oz, a disposable prototype shipped to a few opted-in users. Those are build-to-LEARN — the ship is the *method*, the *learning it yields* is the done-bar ("40% of the 5 opted-in users returned = demand validated"). Do NOT reject those.
+
+**The gate — reject a build-to-LEARN diamond's DoD only when it is genuinely earn-shaped**, i.e. either:
+- the **ship itself is the done-bar** (no learning behind it — "the flow is deployed" as the terminal criterion), OR
+- **scope is all-users / permanent / production-hardened** rather than select opt-in (reuse G-M2's opted-in-vs-all-users line).
+
+Then say: *"That's build-to-earn on a build-to-learn diamond — you haven't earned delivery yet (Patton/Cagan). What will this ship let you LEARN? Make the learning the done-bar, keep the ship disposable / opt-in. Production rollout is the L4 outcome, earned after discovery validates."* This is **distinct from the step-1 build-list rejection**: step 1 catches *"the flow ships"* as a non-outcome; this catches a well-formed but **premature earn-bar**. Conversely, a build-to-EARN (L4) diamond whose `outcome` is pure learning with **no value/impact** → prompt to reframe to earn ("shipped **AND** moved [signal]").
+
+**Boundary note (mode is per-phase; the DoD bar is per-diamond).** The DoD keys to the diamond's *terminal purpose* (its scale), but build mode shifts *across a diamond's phases*: even an L4 Delivery diamond has an early Discover/Develop phase (a spike, "how should we build this?") that is build-to-learn — don't force its early spike into an earn-bar. And a build-to-EARN L4 child under a build-to-LEARN parent ships (earn) yet rolls up to the parent's *learning* (`rolls_up_to`). philosophy.md frames the line by **phase** (Discover/Develop divergent = learn; Define/Deliver convergent = earn); this skill keys the *DoD outcome* to the diamond's terminal **altitude** — the same distinction, applied to the artifact each governs.
+
+**Scenarios** — *happy:* L4 "shipped X and retention rose" ✓; L1 "the where-to-play bet is validated" ✓; L2 "fake-door: 40% of opted-in users clicked through = demand validated" ✓ (ships, but to learn). *sad (redirect):* L2 "ship the onboarding flow" (ship = the bar, no learning) → reframe to the need it must confirm first. *bad (blocked):* L0/L1 "deploy production auth to all users" → earn-during-learn, the "earn the right to start" gate firing.
+
 **Ladder rule (contribution-not-summation):** a child diamond is done only when its outcome **rolls up** to move the parent outcome / validate the parent assumption — not just because the child shipped. A child that doesn't roll up is discarded, not summed. Set `rolls_up_to` on every child.
 
 ## Write the field

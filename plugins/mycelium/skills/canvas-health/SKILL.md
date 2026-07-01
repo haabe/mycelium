@@ -95,6 +95,11 @@ Audit the canvas knowledge base for quality, consistency, and completeness. The 
      - **Grounding check:** a scenario listed in any `lifecycle.designed_against[]`, OR carrying `confidence > 0.3`, must have `provenance.source_class` of `external_human` or `external_data` — flag any `internal_simulated` / `evidence_type: speculation` scenario that is driving design or confidence (envision-only scenarios stay `status: draft` until a real source grounds them; a fabricated scenario feels like research because it is a story)
    - If `.claude/canvas/scenarios.yml` does NOT exist but project_type requires it (per ${CLAUDE_PLUGIN_ROOT}/engine/canvas-guidance.yml): flag as warning
 
+8c. **Check build-mode** (Patton/Cagan — the `/define-done` build-mode gate's unconditional backstop):
+   - For each diamond in `active.yml` at scale **L0–L3** (build-to-learn), lint its `definition_of_done.outcome` against an earn-verb lexicon (`deploy`, `ship`, `releas`, `production`, `go live`, `roll out`, `launch`, `all users`).
+   - On a match → **WARN** (do not auto-fail — this is a keyword tripwire, not the semantic adjudication): *"Possible build-to-earn goal on a build-to-learn (L0–L3) diamond. Confirm this is a ship-to-LEARN outcome (disposable / opt-in, the learning is the done-bar) and not a premature earn-bar. If it's an earn-bar, re-run `/define-done` — production rollout is the L4 outcome."*
+   - This converts the birth-only, agent-adjudicated gate into a check that fires regardless of whether the run engaged the gate prose. It routes the semantic call back to a human/agent; it never adjudicates "earn-shaped" itself (that stays with `/define-done`).
+
 8c. **Human-task reconciliation** (added v0.31.3, closes the evidence/status/consent decoupling drift — corrections.md 2026-05-28):
 
 The failure this catches: a fact about a human-task lives in 2+ places (the task `status`, the evidence file it produced, the contributor's consent registry) and only the salient one gets updated, so the canvas silently drifts from reality. Three sub-checks over `.claude/canvas/human-tasks.yml#pending_tasks`:

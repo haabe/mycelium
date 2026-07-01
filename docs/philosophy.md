@@ -103,7 +103,7 @@ Patton/Cagan distinction. Discovery work is built to learn — the artifact may 
 
 This is the conceptual ground for the diamond's divergent / convergent phases: Discover and Develop are divergent, build-to-learn; Define and Deliver are convergent, build-to-earn-ish. Mixing them collapses both — you get fragile prototypes the team commits to, or hardened-too-early infrastructure that pivots badly.
 
-The framework refuses to let the agent build-to-earn during a build-to-learn phase. That refusal is the gate.
+The framework refuses to let the agent build-to-earn during a build-to-learn phase. That refusal is the gate — enforced by the `/define-done` **build-mode gate** (v0.55.0): a build-to-learn diamond (L0–L3) may not carry an earn-shaped DoD `outcome` (ship/deploy/production); shipping is the L4 outcome, earned only after discovery validates.
 
 ## Why structure before content
 

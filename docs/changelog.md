@@ -4,6 +4,18 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-20.
 
+## v0.55.0 — build-mode gate (B1: earn the right to start)
+
+**2026-07-01. Attribution: build-mode-gate-2026-07-01. Class: minor (new gate on the live define-done path).**
+
+Theory-fidelity B1 — the flagship real-mechanism build. Makes Patton/Cagan's build-to-learn-vs-build-to-earn distinction — Mycelium's "earn the right to start" thesis — REAL. The audit's worst over-claim: `theories.md` said it was "enforced via G-M2 + define-done", but G-M2 is an off-target NUDGE (experiment audience-scope), `/define-done` had ZERO build-mode awareness, and `philosophy.md`'s "that refusal is the gate" pointed at no gate. Pure prose behind the framework's most load-bearing claim.
+
+- **The gate (`/define-done`):** a build-to-LEARN diamond (L0–L3, terminal purpose = learn) may not set an earn-shaped DoD `outcome`. Earn-shaped = **the ship itself is the done-bar, OR scope is all-users / permanent / production** — NOT merely mentioning "ship". Discovery legitimately *ships to learn* (fake-door, wizard-of-oz, opt-in disposable prototype); those pass because the *learning* is the done-bar. Reject → reframe to the learning; production rollout is the L4 outcome, earned after discovery validates.
+- **The backstop (`/canvas-health` step 8c):** an unconditional earn-verb lint on every L0–L3 diamond's `definition_of_done.outcome` → WARN + route the semantic call back. Converts a birth-only, agent-adjudicated gate into a tripwire that fires regardless of whether the run engaged the gate prose. It flags, never adjudicates.
+- **Boundary reconciled:** philosophy.md frames the learn/earn line by *phase* (Discover/Develop = learn; Define/Deliver = earn); the DoD keys to the diamond's terminal *altitude* (scale). Same distinction, different artifact — and mode still shifts across a diamond's phases (an L4's early spike is build-to-learn; don't force it to an earn-bar).
+
+Scenario-designed (happy: L4 "shipped + impact" / L2 "fake-door validated demand"; sad: L2 "ship the flow" with no learning → redirect; bad: L0/L1 "deploy to all users" → BLOCK). Blind-tested before commit — the adversary caught the bare verb-list false-positiving on ship-to-learn, the missing machine backstop, the phase/scale contradiction with philosophy.md, and the over-stated "enforced" label; all four fixed. Honest label: agent-adjudicated at birth + unconditional lint backstop (a semantic call rightly stays agent-adjudicated; the lint makes it unskippable).
+
 ## v0.54.0 — Torres selection authority (B4: assumption-test, not ICE)
 
 **2026-07-01. Attribution: torres-selection-authority-2026-07-01. Class: minor (OST→GIST gate behaviour change).**
