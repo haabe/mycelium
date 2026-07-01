@@ -4,6 +4,18 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-20.
 
+## v0.55.3 — scenarios schema (B6/B7) + program close
+
+**2026-07-01. Attribution: scenarios-schema-2026-07-01. Class: minor (new schema).**
+
+Theory-fidelity B6/B7 — closes the schema-cluster item and the remediation program. Of the audit's schema-less canvases, only `scenarios.yml` has real instances (6); the rest are unpopulated templates (value-stream / dora-metrics / bounded-contexts / bvssh-health / privacy-assessment — value-stream's own `_meta` even states "unpopulated template by design"), and `north-star` already had a permissive schema (audit imprecision).
+
+- **Built `scenarios.schema.json`** — permissive: pins the load-bearing core (id, status enum, provenance shape), leaves the Hoskins element blocks flexible so `/canvas-health` step 8b drives the semantic 3-element (Motivation/Persona/Simulation) check. Validates the 6 live scenarios and legacy 4-block (persona/means/motive/simulation) instances, while 8b flags the distortion for correction. Verified against the roadmap's real data (6/6 pass).
+- **JiT-deferred the dormant templates** rather than build 5 speculative schemas — they are already surfaced (not silent) by `validate_canvas`'s schemaless-warning, and building schemas for zero-instance templates is the speculative over-building the audit itself warns against (team-shape precedent; B4 zero-instance lesson). Schema-when-populated.
+- Fixed the roadmap `scenarios.yml` header straggler (the old 4-element "Means/Motive" model + fabricated SAP-talk citation → corrected 3-element model + O'Reilly book).
+
+**Program close.** The theory-fidelity remediation (prompted by the v0.53.0 feedback-loops over-claim) is complete: Track 1 corrections (v0.53.1), B4 Torres selection authority (v0.54.0), B1 build-mode gate (v0.55.0), B5 Sinek why-first (v0.55.1), B2 Cynefin correction (v0.55.2), B6/B7 scenarios schema + JiT-defer (v0.55.3). B3 (ICE Check 38) needed no build — the audit's "doesn't exist" was a false-negative. Every real-mechanism build was scenario-designed and blind-tested before commit.
+
 ## v0.55.2 — Cynefin rigor correction (B2) + Check 38 false-negative (B3)
 
 **2026-07-01. Attribution: cynefin-rigor-correction-2026-07-01. Class: patch (over-claim correction + narrow Gate-4 firming).**

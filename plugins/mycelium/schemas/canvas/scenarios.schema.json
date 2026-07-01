@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mycelium.dev/schemas/canvas/scenarios.schema.json",
+  "title": "Scenarios Canvas (Hoskins)",
+  "description": "L2-born Hoskins scenarios that carry user context L2->L5. Hoskins's model has THREE elements — Motivation, Persona, Simulation (corrected 2026-07-01; an earlier in-repo model added a fabricated 4th 'Means' — 'means' folds into the simulation). Permissive by design (additionalProperties: true): pins the load-bearing core (id, status enum, provenance shape) and leaves the element blocks flexible so /user-interview writes them and /canvas-health step 8b does the semantic 3-element completeness check (schema validates shape; canvas-health drives the corrected-model semantics). Legacy instances may still carry a 4-block persona/means/motive/simulation structure; the permissive schema validates both while 8b flags the distortion. Added v0.55.3 (theory-fidelity B7): the canvas had real instances but no schema.",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "$ref": "_common.schema.json#/$defs/schema_version"
+    },
+    "_meta": {
+      "type": "object"
+    },
+    "scenarios": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Stable scenario id, e.g. scn-001."
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["draft", "active", "tested", "validated", "invalidated"]
+          },
+          "persona": {
+            "type": "object",
+            "description": "Hoskins element: who the person is (role, context, constraints, goals)."
+          },
+          "motivation": {
+            "type": "object",
+            "description": "Hoskins element: what the person is trying to accomplish and why (JTBD link). Corrected model; legacy files may carry 'motive' instead."
+          },
+          "simulation": {
+            "type": "object",
+            "description": "Hoskins element: the narrative tying it together (a specific, testable story). 'How they interact' (legacy 'means') lives inside the simulation."
+          },
+          "motive": {
+            "type": "object",
+            "description": "Legacy field (pre-2026-07-01 4-block model) — superseded by 'motivation'. Kept in the schema so historical instances validate; new scenarios should use 'motivation'."
+          },
+          "means": {
+            "type": "object",
+            "description": "Legacy field (pre-2026-07-01 4-block model) — 'Means' is NOT a Hoskins element; fold this into the simulation. Kept so historical instances validate."
+          },
+          "lifecycle": {
+            "type": "object"
+          },
+          "provenance": {
+            "type": "object"
+          },
+          "trace": {
+            "type": "object"
+          }
+        },
+        "required": ["id"],
+        "additionalProperties": true
+      }
+    },
+    "knowledge_sources": {
+      "type": "array"
+    },
+    "last_updated": {
+      "type": ["string", "null"]
+    }
+  },
+  "additionalProperties": true
+}
