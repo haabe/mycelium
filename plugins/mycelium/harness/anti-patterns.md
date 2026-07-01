@@ -283,10 +283,10 @@ These are systemic organizational traps from Senge's "The Fifth Discipline." The
 - **Source**: Mycelium leaf lifecycle
 
 ### 5. Score-Only Discard
-- **Description**: A leaf was discarded solely based on its ICE score without checking if a different user segment would benefit from it.
-- **Detection rule**: `canvas/archived-solutions.yml` entry has `segments_checked` with only one segment, and `reason` is `low-ice-score`.
-- **What to do instead**: Before discarding for low ICE, evaluate whether the solution serves a different segment where it might score higher. See `${CLAUDE_PLUGIN_ROOT}/engine/leaf-lifecycle.md` Discard Decision Rules.
-- **Source**: Torres (CDH — solutions serve different user needs), Mycelium leaf lifecycle
+- **Description**: A leaf discarded (or graduated) on its ICE score rather than an assumption-test verdict. As of v0.54.0 the mechanism itself prevents this — OST→GIST selection is the riskiest-assumption test verdict (leaf-lifecycle Phase 5); ICE never discards or gates selection, only sequences validated leaves. This anti-pattern now guards against **re-introducing** an ICE threshold, and against the analogous move of archiving on an invalidated assumption without a segment check.
+- **Detection rule**: any `canvas/archived-solutions.yml` entry with `reason: low-ice-score` (should no longer be produced post-v0.54.0); or an archived-on-invalidated-assumption entry with `segments_checked` naming only one segment.
+- **What to do instead**: Discard only on an invalidated assumption test; before archiving, evaluate whether the assumption holds for a different segment (Torres — solutions serve different user needs). See `${CLAUDE_PLUGIN_ROOT}/engine/leaf-lifecycle.md`.
+- **Source**: Torres (CDH — assumption tests, not scoring, for solution selection; solutions serve different user needs), Mycelium leaf lifecycle
 
 ### 6. Perspective Suppression
 - **Description**: Resolving a trio conflict by ignoring a perspective entirely rather than using the perspective resolution framework. Common forms: "Engineering will figure it out" (suppresses feasibility), "Users will learn" (suppresses usability), "We'll find the users later" (suppresses value), "Legal won't notice" (suppresses viability).

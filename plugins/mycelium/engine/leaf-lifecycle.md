@@ -66,15 +66,15 @@ Test the assumption with the cheapest viable method:
 
 ### Phase 5: GIST Entry (L3 Define)
 
-**Input**: ICE-scored leaf with assumption test results
-**Gate**: ICE ≥ configurable threshold (default: 100) AND riskiest assumption tested
+**Input**: leaf with a recorded assumption-test verdict on its #1 riskiest assumption (from Phase 4); ICE score present for sequencing + calibration
+**Gate**: **the riskiest assumption has a recorded test verdict of `validated`** — this is Torres's selection mechanism (solutions are compared via assumption tests, not scoring). ICE is **advisory only** here: it sequences which *validated* leaves to pursue first and feeds calibration (`cycle-history.yml`); it is **NOT a pass/kill threshold**. *(Corrected 2026-07-01: Phase 5 previously required `ICE ≥ 100`, a scoring-for-selection gate Torres explicitly cautions against.)*
 **Output**: Idea entry in `canvas/gist.yml` with `source_leaf_id` backreference
 **Scenario link**: The GIST idea must reference which scenarios it addresses. Update `canvas/scenarios.yml` — add the solution to `lifecycle.designed_against[]` for each relevant scenario. If the solution only partially fits a scenario, document the gaps. A solution that doesn't address any scenario is a solution without a user — challenge it.
 
 The leaf graduates from the OST (opportunity space) into GIST (solution space). The GIST idea inherits the leaf's ICE score and confidence level.
 
-**Discard criteria**: ICE < threshold → archive with reason `low-ice-score`.
-**Segment check**: Before discarding, verify the leaf doesn't serve a different user segment where it might score higher. If it does, re-score for that segment.
+**Discard criteria**: a leaf is archived only when its riskiest assumption is **invalidated** by a test (Phase 4), never by ICE alone. A validated leaf with a low ICE is **deprioritized** (sequenced later / scoped smaller), not archived.
+**Segment check**: Before archiving on an invalidated assumption, verify the assumption doesn't hold for a different user segment — if it might, re-test for that segment rather than discard.
 
 **Skill**: `/gist-plan`
 
@@ -159,7 +159,7 @@ When a leaf is killed at any phase, it is archived — never deleted.
   opportunity_id: opp-001
   archived_at: "2026-04-12T10:00:00Z"
   archived_at_phase: 5  # Which lifecycle phase
-  reason: low-ice-score | failed-assumption | feasibility-block | viability-block | superseded | market-rejection
+  reason: failed-assumption | feasibility-block | viability-block | superseded | market-rejection  # (low-ice-score removed v0.54.0 — ICE no longer discards a leaf)
   ice_score_at_archive: {i: 3, c: 4, e: 2, total: 24}
   four_risks_snapshot:
     value: {level: medium, summary: "..."}
@@ -175,14 +175,15 @@ When a leaf is killed at any phase, it is archived — never deleted.
 
 | Phase | Discard Trigger | Required Before Discard |
 |-------|----------------|------------------------|
-| 3 (ICE) | ICE < threshold (default 100) | Check other segments. Log in decision-log.md. |
-| 4 (Assumption) | Riskiest assumption fails | Verify no pivot path. Log evidence. |
+| 4 (Assumption) | Riskiest assumption **invalidated** by test | Verify no pivot path; check whether the assumption holds for a different segment. Log evidence. |
 | 6 (Bounded Context) | Feasibility spike fails | Document what was learned. Feed back to L2. |
 | 7 (Threat Model) | Unacceptable security/privacy risk | Document the risk. Consider if scope reduction resolves it. |
 | 9 (Delivery) | Implementation reveals bad assumption | Regress to appropriate phase with evidence. |
 | 10 (Launch) | Market rejects | Spawn new L2 diamond with rejection evidence. |
 
-**Anti-pattern: Score-Only Discard** — Never discard a leaf on ICE score alone without checking if a different user segment would benefit. A solution that scores poorly for power users might score well for new users.
+**ICE never discards a leaf** (removed v0.54.0). Three assumption-verdict outcomes at the OST→GIST boundary: `validated` → graduates (a low-ICE validated leaf is *deprioritized* — sequenced later / scoped smaller — not archived); `invalidated` → discarded at Phase 4; **`partial`/ambiguous → graduates neither** — re-test with a sharper method or scope the assumption down. When several validated leaves compete for the same opportunity, pick the front-runner via a comparison (`orchestration/leaf-bakeoff.md`), not by ICE alone.
+
+**Anti-pattern: Score-Only Discard** — Never discard (or graduate) a leaf on ICE (or any score) alone. Selection is by assumption-test verdict (Torres). A solution that scores poorly for power users might validate for new users — check segments before archiving on an invalidated assumption.
 
 ---
 

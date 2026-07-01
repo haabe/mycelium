@@ -31,7 +31,7 @@ Compact reference for lazy loading. Load full rule from `guardrails.md` only whe
 | G-V10 | REVIEW | Completing user-facing interface | Nielsen's 10 heuristics checked |
 | G-V11 | REVIEW | Starting any delivery work | Declare 1-3 measurable success criteria first |
 | G-L1 | REVIEW | Moving leaf to L4 delivery | Four Risks + ICE + assumptions must be done |
-| G-L2 | REVIEW | Creating GIST entry | Must trace to scored OST leaf |
+| G-L2 | REVIEW | Creating GIST entry | Must trace to a validated-assumption OST leaf |
 | G-L3 | NUDGE | Archiving a solution | Check if it serves an unexamined segment |
 | G-P1 | REVIEW | Any diamond phase transition | Update canvas files |
 | G-P2 | NUDGE | Evaluating progress | Check all 5 BVSSH dimensions |

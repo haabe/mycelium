@@ -166,7 +166,7 @@ The leaf lifecycle pipeline must be complete before spawning a delivery diamond.
 *Source: Torres (CDH), Cagan (Four Risks), Ellis (ICE) / Gilad (Confidence Meter), Mycelium leaf lifecycle*
 
 **G-L2: Every GIST entry must trace back to a scored OST leaf** `REVIEW` `quality`
-GIST ideas don't appear from thin air. Every idea must have a `source_leaf_id` referencing an OST leaf that has passed ICE threshold. Ideas without provenance bypass the evidence pipeline.
+GIST ideas don't appear from thin air. Every idea must have a `source_leaf_id` referencing an OST leaf whose #1 riskiest assumption has a recorded test verdict of `validated` (Torres's selection mechanism — assumption tests, not ICE scoring). Ideas without a tested-assumption provenance bypass the evidence pipeline. *(Corrected 2026-07-01, v0.54.0: was "passed ICE threshold" — a scoring-for-selection gate Torres cautions against.)*
 *Source: Gilad (Evidence Guided), Torres (CDH), Mycelium leaf lifecycle*
 
 **G-L3: Before archiving a solution, check if it serves an unexamined segment** `NUDGE` `quality`

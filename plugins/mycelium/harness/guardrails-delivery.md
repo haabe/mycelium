@@ -97,7 +97,7 @@ The leaf lifecycle pipeline must be complete before spawning a delivery diamond.
 *Source: Torres (CDH), Cagan (Four Risks), Ellis (ICE) / Gilad (Confidence Meter)*
 
 **G-L2: Every GIST entry must trace back to a scored OST leaf** `REVIEW` `quality`
-Every idea must have a `source_leaf_id` referencing an OST leaf that has passed ICE threshold.
+Every idea must have a `source_leaf_id` referencing an OST leaf whose riskiest assumption has a recorded `validated` test verdict (Torres selection, not ICE scoring; corrected 2026-07-01, v0.54.0).
 *Source: Gilad (Evidence Guided), Torres (CDH)*
 
 **G-L3: Before archiving a solution, check if it serves an unexamined segment** `NUDGE` `quality`

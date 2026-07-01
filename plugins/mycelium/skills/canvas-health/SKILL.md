@@ -77,7 +77,7 @@ Audit the canvas knowledge base for quality, consistency, and completeness. The 
    - Source: v0.14 metrics harvesting. Metric evidence has a faster staleness curve than interview evidence because the underlying data changes continuously.
 
 8. **Check cross-reference integrity** (leaf lifecycle):
-   - Every GIST idea with `source_leaf_id` → verify that leaf exists in `opportunities.yml` (and not in `archived-solutions.yml` without the GIST being shelved)
+   - Every GIST idea with `source_leaf_id` → verify (a) the leaf exists in `opportunities.yml` and is not in `archived-solutions.yml` without the GIST being shelved, AND (b) the leaf's #1 riskiest assumption carries a recorded test **verdict of `validated`** (v0.54.0 — Torres selection: a GIST idea may only trace to a leaf that PASSED its assumption test, not one that merely exists or scored high on ICE). Flag a GIST idea whose source leaf has an untested / `partial` / `invalidated` riskiest assumption as a broken graduation (G-L2 REVIEW blocks it).
    - Every service entry with `gist_id` → verify that GIST idea exists
    - Every threat model entry with `solution_id` → verify that solution exists
    - Every go-to-market `feedback_loop` entry with `source_leaf_id` → verify leaf exists
@@ -85,7 +85,7 @@ Audit the canvas knowledge base for quality, consistency, and completeness. The 
 
 8b. **Check scenario health** (Hoskins):
    - If `.claude/canvas/scenarios.yml` exists:
-     - Every scenario must have all four Hoskins elements populated (persona, means, motive, simulation) — flag incomplete scenarios
+     - Every scenario must have all three Hoskins elements populated (motivation, persona, simulation) — flag incomplete scenarios (corrected 2026-07-01: the model has THREE elements; the prior "persona/means/motive/simulation" was a distortion — "Means" is not a Hoskins element)
      - Every scenario must have `lifecycle.born_at` set — flag if missing (orphan scenario with no origin)
      - Every scenario with `confidence > 0.5` must have evidence sources — flag unsupported confidence
      - Every scenario referenced in `lifecycle.designed_against[]` → verify the solution exists in `opportunities.yml` or `gist.yml`

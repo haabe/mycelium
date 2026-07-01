@@ -4,6 +4,19 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-20.
 
+## v0.54.0 — Torres selection authority (B4: assumption-test, not ICE)
+
+**2026-07-01. Attribution: torres-selection-authority-2026-07-01. Class: minor (OST→GIST gate behaviour change).**
+
+Theory-fidelity B4 — the first real-mechanism build of the remediation program. Makes Torres's solution-selection mechanism REAL (per the founder's steer: not softened, not a nudge). The audit found `leaf-lifecycle.md` Phase 5 required `ICE ≥ 100` to graduate a solution leaf OST→GIST — a scoring-for-selection gate Torres *explicitly cautions against* — and Phase 3 auto-killed leaves on `ICE < threshold`, while the file's own anti-pattern #5 said "never discard on ICE alone." Self-contradictory theatre.
+
+- **Gate (Phase 5):** the #1 riskiest assumption must have a recorded test **verdict of `validated`**. ICE is advisory only — sequences validated leaves + feeds calibration; it never gates or kills.
+- **Discard:** only on an **`invalidated`** assumption (Phase 4). A validated low-ICE leaf is *deprioritized*, not archived. A **`partial`** verdict graduates neither — re-test with a sharper method or scope the assumption down.
+- **Teeth:** `/canvas-health` step 8 upgraded from "source leaf exists" to "source leaf's riskiest assumption == `validated`", enforced by the **G-L2 REVIEW** gate (blocks progression) — the framework's semantic-enforcement surface. A CI validator was deliberately NOT built: the OST→GIST leaf mechanism has **zero live instances** in the dogfood (all opportunities are `solutions: []`), so hard CI enforcement would be speculative — JiT-gated on real leaves appearing.
+- **Also fixed:** removed the contradictory Phase-3 ICE discard row + `low-ice-score` reason; corrected the G-L2 headers ("scored" → "validated-assumption"); and a straggler from Track 1 — canvas-health still enforced the fabricated 4-element Hoskins model, now the real three.
+
+Scenario-designed (happy: validated→graduate; sad: validated+low-ICE→deprioritize; bad: high-ICE+untested→BLOCK; partial→re-test). Blind-tested before commit — the adversary caught that the first pass left Phase 3's ICE kill-gate intact, had no verdict check (a nudge), and missed the `partial` path; all fixed.
+
 ## v0.53.1 — theory-fidelity corrections (Track 1)
 
 **2026-07-01. Attribution: theory-fidelity-corrections-2026-07-01. Class: patch (fidelity corrections; no new mechanism).**

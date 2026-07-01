@@ -20,7 +20,7 @@ JTBD with the Christensen tripartite (functional, emotional, social). Each canva
 
 ### Torres — Continuous Discovery / Opportunity Solution Tree
 
-The OST is the bridge from L2 Opportunity to L3 Solution: opportunities are decomposed into solutions, solutions are compared via **assumption tests** (Torres's method — she explicitly cautions *against* scoring frameworks like ICE for solution selection), the winner spawns L3, loser leaves are archived with evidence. ICE [Ellis] is a secondary prioritization aid derived from the Four Risks, not the Torres selection mechanism. Torres's interviewing structure also informs `/user-interview`. Implemented as: `canvas/opportunities.yml`, `/ost-builder`, `/user-interview`, leaf-lifecycle.md.
+The OST is the bridge from L2 Opportunity to L3 Solution: opportunities are decomposed into solutions, solutions are compared via **assumption tests** (Torres's method — she explicitly cautions *against* scoring frameworks like ICE for solution selection), the winner spawns L3, loser leaves are archived with evidence. ICE [Ellis] is a secondary prioritization aid derived from the Four Risks, not the Torres selection mechanism. **(As of v0.54.0 the mechanism matches this claim: the OST→GIST gate — `leaf-lifecycle.md` Phase 5 — is the riskiest-assumption test verdict; the prior `ICE ≥ 100` selection threshold was removed. ICE still feeds calibration + sequencing.)** Torres's interviewing structure also informs `/user-interview`. Implemented as: `canvas/opportunities.yml`, `/ost-builder`, `/user-interview`, leaf-lifecycle.md.
 
 ### Cagan — Inspired / Empowered (four risks)
 
