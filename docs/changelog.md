@@ -4,6 +4,16 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-20.
 
+## v0.55.2 — Cynefin rigor correction (B2) + Check 38 false-negative (B3)
+
+**2026-07-01. Attribution: cynefin-rigor-correction-2026-07-01. Class: patch (over-claim correction + narrow Gate-4 firming).**
+
+Theory-fidelity B2 + a B3 finding. Two dormant-path items resolved.
+
+**B2 — Cynefin.** The audit's "cynefin_domain written but never read" was overstated: Gate 4 already consumes it (requires classification; fails Complex-treated-as-Clear; fails planning-in-complex). The genuine over-claim was theories.md's "complex domains get more diamond DEPTH, clear domains SKIP scales" — Mycelium does not flex diamond *count* by domain, and skipping evidence gates on a mis-classified "Clear" would be dangerous. Corrected to the real mechanism (method-appropriateness via Gate 4 + design routing via leaf-lifecycle Phase 6), and firmed Gate 4: a **Complex** classification now requires probe-sense-respond experiment / assumption-test evidence before Define→Develop (not classification alone); Clear/Complicated does not reduce rigor below the scale baseline. Rigor scales by the *experiment requirement*, not by scale count.
+
+**B3 — Check 38 was a FALSE-NEGATIVE in the audit.** The audit reported "ICE Check 38 doesn't exist." It does: `check_cycle_class_ice_required` in `tests/validate-template.sh` (product-leaf cycles must carry non-zero predicted ICE), 10/10 tests in `tests/bash/test_check_38.sh`, four fixtures, wired into the CI run-all. The audit grepped only `consistency-check-spec.md` and `validate_canvas.py` (0 hits each) and missed `validate-template.sh`. No build needed; `cycle-learning.md`'s citation was already true. Logged as a lesson: the audit's grep scope must include the bash CI gate, not only the Python validator + the check-cluster spec.
+
 ## v0.55.1 — Sinek why-first in the brief flow (B5)
 
 **2026-07-01. Attribution: sinek-why-first-2026-07-01. Class: patch (elicitation fidelity fix on the live interview flow).**

@@ -149,9 +149,9 @@ All four risks must be assessed, and the assessment must demonstrate that **thre
 |--------------|---------------|
 | Problem classified into a Cynefin domain | No classification attempted |
 | Method chosen matches the domain (see cynefin-routing.md) | Complex problem treated as Clear (best practice applied to emergent situation) |
-| If Complex, experiments designed with clear learning goals | Attempting to plan/predict outcomes in complex domain |
+| If Complex, **probe-sense-respond experiment / assumption-test evidence is present** (not classification alone) | Complex problem advancing on classification alone, OR attempting to plan/predict outcomes in a complex domain |
 
-**Evidence required**: Cynefin classification document with rationale, method selection justification.
+**Evidence required**: a populated `cynefin_domain` classification with rationale + method-selection justification. **For a Complex classification, experiment / assumption-test evidence is required before Define→Develop** — this is how Cynefin scales rigor (more depth for complexity via the experiment requirement), NOT by adding or skipping diamond scales. A Clear/Complicated classification does **not** reduce rigor below the scale baseline (skipping evidence gates on a mis-classified "Clear" is the failure mode this guards against).
 
 **Suggested skill**: `/cynefin-classify`
 

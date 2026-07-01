@@ -32,7 +32,7 @@ Strategic landscape with evolution stages (Genesis → Custom → Product → Co
 
 ### Cynefin (Snowden) — Domain classification
 
-Clear / Complicated / Complex / Chaotic / Confused. Determines which methods apply (best-practice vs good-practice vs probe-sense-respond). Mycelium uses Cynefin to scale the discovery rigor: complex domains get more diamond depth, clear domains skip scales. Implemented as: `/cynefin-classify`, gate 4 (Domain Fit) at L2 transitions.
+Clear / Complicated / Complex / Chaotic / Confused. Determines which methods apply (best-practice vs good-practice vs probe-sense-respond). Cynefin drives **method-appropriateness**, not diamond count: **Gate 4 (Domain Fit)** requires a populated classification, fails a Complex problem treated as Clear or any attempt to plan/predict outcomes in a complex domain, and requires probe-sense-respond **experiment / assumption-test evidence** for a Complex classification before Define→Develop (a Complex problem may not pass on classification alone). Design routing follows at `leaf-lifecycle.md` Phase 6 (Clear/Complicated → standard patterns; Complex → experiment, not full solution; Chaotic → stabilize first). (Corrected v0.55.2: previously claimed "complex domains get more diamond depth, clear domains skip scales" — Mycelium does NOT add or skip diamond scales by domain, and skipping evidence gates on a "Clear" classification would be dangerous under mis-classification; rigor scales by *method + the Complex experiment requirement*, not by scale count.) Implemented as: `/cynefin-classify`, gate 4 (Domain Fit) at Define→Develop, routing at `leaf-lifecycle.md` Phase 6.
 
 ### Forsgren / Humble / Kim — DORA
 
