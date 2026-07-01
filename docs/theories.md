@@ -40,7 +40,7 @@ Four core delivery metrics (deployment frequency, lead time, change failure rate
 
 ### Hoskins — Scenarios as connective tissue
 
-Persona + Means + Motive + Simulation. Born at L2 from interview stories, designed against at L3, tested at L4, validated at L5. Primary source: Hoskins, *The Product-Minded Engineer* (O'Reilly, 2025) — the scenario as the core primitive of product thinking. (An earlier in-repo citation to a SAP talk "Attention to Users Is All You Need" and a "User Knowledge Repository" concept is **unverified** pending a primary-source link.) Implemented as: `canvas/scenarios.yml`, scenario extraction in `/user-interview`, scenario wiring through leaf-lifecycle phases 1, 5, 8, 10.
+**Motivation + Persona + Simulation** (Hoskins's three elements). Born at L2 from interview stories, designed against at L3, tested at L4, validated at L5. Primary source: Hoskins, *The Product-Minded Engineer* (O'Reilly), ch. 1 — the scenario as the core primitive of product thinking. (**Corrected 2026-07-01:** an earlier in-repo model claimed FOUR elements — Persona/Means/Motive/Simulation — but **"Means" is not a Hoskins element** (a distortion); and the cited "SAP talk 'Attention to Users Is All You Need'" was **fabricated**. Both removed; "how they interact with tools" lives inside the Simulation.) Implemented as: `canvas/scenarios.yml`, scenario extraction in `/user-interview`, scenario wiring through leaf-lifecycle phases 1, 5, 8, 10.
 
 ## Tier 2 — Integrated theories
 
@@ -75,21 +75,22 @@ These show up as citations and inform the framework's ethics or peripheral mecha
 
 - **Behavioral Science** (Shotton, Kahneman) — bias mitigation in `/bias-check`, ethical design constraints
 - **Amabile** (creativity research) — *Brilliant but Cruel* (1983) grounds the Negativity-as-Competence bias item in `/bias-check` (harsh critique reads as competence, so adversarial-review findings get weighed on cited evidence, not severity); componential theory backs the separable-process bet named in [philosophy.md](philosophy.md)
-- **CALMS** (Willis, Humble) — DevOps culture vocabulary in retrospectives
+- **CALMS** (Willis, Humble) — DevOps culture vocabulary in `/bvssh-check` + `domains/delivery/CLAUDE.md` (corrected 2026-07-01: previously said "retrospectives", where it does not appear)
 - **Hooked / Indistractable** (Eyal) — ethical engagement design (anti-dark-pattern check)
 - **Clean Architecture / SOLID** (Martin) — engineering-principles.md NUDGE tier
 - **SRE** (Beyer, Jones, Petoff, Murphy) — error budgets, toil, SLIs/SLOs vocabulary
-- **TPS / Lean** (Ohno, Toyoda) — 7 Wastes inform value-stream.yml
-- **Norman** (visible affordances) — UX surface for footgun-to-affordance graduations (e.g., wayfinding strict marker, diamond-progress prompt template)
+- **TPS / Lean** (Ohno, Toyoda) — 7 Wastes (TIMWOOD) checklist in `domains/delivery/CLAUDE.md` + `/retrospective` (corrected 2026-07-01: previously said `value-stream.yml`, which carries Goldratt's Theory of Constraints)
+- **Norman** (visible affordances) — UX surface for footgun-to-affordance graduations (`diamond-progress` prompt template; corrected 2026-07-01: the "wayfinding strict marker" example carried no Norman attribution in-repo and was removed)
 - **Liao et al. (2020)** — contrastive explanations land harder than purely positive ones; informs `decision-log.md` `why_not_alternatives` field
 - **Lanham et al. (2023)** — citations must be faithful, not after-the-fact rationalization; informs the `(per: <source>)` discipline
 - **Mitchell et al. (2019)** — Model Cards format adapted to AI System Card (`docs/ai-system-card.md`)
 - **Doshi-Velez & Kim (2017)** — explainability tier classification informs `/xai-check`
-- **Selbst & Barocas** — disparate impact / fairness considerations in `/regulatory-review`
-- **Bansal et al.** — human-AI complementarity informs cognitive forcing applications
+- **Selbst & Barocas (2018)** — recourse-as-substance (an explanation must enable the user to *act*) in `/xai-check` Stage 5 (corrected 2026-07-01: previously cited as "disparate impact / fairness in /regulatory-review", conflating the 2016 "Big Data's Disparate Impact" paper with the 2018 recourse paper the mechanism actually implements — the engine cite at `theory-gates.md` was already correct)
+- **Bansal et al.** — human-AI complementarity informs adaptive-vs-always-on explanation in `/xai-check` Stage 2 (corrected 2026-07-01: previously credited to cognitive forcing, which is Buçinca/Malaya/Gajos)
 - **Reflexion (Shinn et al., 2023)** — self-correcting loop reference for `/reflexion` (the framework's `reflexion/SKILL.md` already cites Shinn; Ryan Lopopolo is separately and correctly cited elsewhere for the *harness-context reframe*, not for Reflexion)
 - **EU AI Act Art. 13 / 50** — transparency + disclosure requirements; tested by `/regulatory-review` and `/xai-check`
-- **Halland CORE** — Central content / Outward paths / Related links / Entry points; informs the docs structure
+
+*(Removed 2026-07-01: "Halland CORE — informs the docs structure" — a decorative citation appearing nowhere but its own line; nothing in `docs/` operationalized it. If CORE is wanted as a real docs-structure convention, that is a separate build, not a citation.)*
 
 ## See also
 

@@ -83,16 +83,15 @@ Create immediately after each interview:
 
 ### Scenario Extraction (Hoskins)
 
-Interviews are where scenarios are born. After each interview, look for narratives that contain Hoskins' four elements:
+Interviews are where scenarios are born. After each interview, look for narratives that contain Hoskins' three elements:
 
-1. **Persona**: The interviewee's role, context, constraints, goals — captured naturally in the conversation
-2. **Means**: How they interact with existing tools/processes — captured in "walk me through" questions
-3. **Motive**: Why they're doing this — captured in JTBD dimensions (functional, emotional, social)
-4. **Simulation**: The story itself — the "last time you tried to..." narrative IS the simulation
+1. **Motivation**: What the person is trying to accomplish and why — captured in JTBD dimensions (functional, emotional, social)
+2. **Persona**: The interviewee's role, context, constraints, goals — captured naturally in the conversation
+3. **Simulation**: The story itself — the "last time you tried to..." narrative IS the simulation (how they interacted with existing tools lives *inside* the simulation, not as a separate element)
 
-Draft a scenario entry for `.claude/canvas/scenarios.yml` from any interview story that is rich enough. Not every interview produces a scenario — only extract when all four elements are present. A partial story is an opportunity, not a scenario.
+Draft a scenario entry for `.claude/canvas/scenarios.yml` from any interview story that is rich enough. Not every interview produces a scenario — only extract when all three elements are present. A partial story is an opportunity, not a scenario.
 
-*Source: Hoskins, "Attention to Users Is All You Need" (SAP talk, April 2026) — "Scenarios are the fundamental primitive of product thinking."*
+*Source: Hoskins, The Product-Minded Engineer (O'Reilly), ch. 1 — "if there is a core primitive of product thinking, it's the scenario." A scenario = a Motivation, a Persona, a Simulation. (An earlier in-repo model listed four elements including a "Means" — "Means" is NOT a Hoskins element and was a distortion; corrected 2026-07-01. The prior "Attention Is All You Need" SAP-talk citation was fabricated and is removed.)*
 
 **Two disciplines on every extracted scenario.** A scenario is an *advanced user story* — what separates it from "As a [role] I want [X]" is that it is **runnable** and **grounded**. Hold both:
 

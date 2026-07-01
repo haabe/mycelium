@@ -92,18 +92,18 @@ Language-agnostic security review based on OWASP Secure by Design.
 
 ## OWASP Top 10 for LLM Applications (2025)
 
-*Apply for `ai_tool` product types. Source: owasp.org/www-project-top-10-for-large-language-model-applications*
+*Apply for `ai_tool` product types. Source: OWASP Top 10 for LLM Applications v2025.1 (genai.owasp.org). Aligned with `/mycelium:threat-model`'s LLM list.*
 
-- [ ] **Prompt Injection**: User input cannot override system instructions (direct or indirect)
-- [ ] **Data Poisoning**: Training/fine-tuning data sources validated and auditable
-- [ ] **Insecure Output Handling**: LLM output sanitized before use in downstream systems (SQL, shell, HTML)
-- [ ] **Model Denial of Service**: Rate limiting and resource caps on inference requests
-- [ ] **Supply Chain**: Model provenance verified; third-party models/plugins audited
-- [ ] **Sensitive Information Disclosure**: PII/secrets not leaked in model responses; training data scrubbed
-- [ ] **Insecure Plugin/Tool Design**: Tool permissions follow least privilege; tool outputs validated
-- [ ] **Excessive Agency**: Model actions bounded; human-in-the-loop for destructive operations
-- [ ] **Overreliance**: Users informed of model limitations; confidence indicators provided
-- [ ] **Model Theft**: Model weights and fine-tuning data access-controlled
+- [ ] **LLM01 Prompt Injection**: User input (direct or indirect) cannot override system instructions
+- [ ] **LLM02 Sensitive Information Disclosure**: PII/secrets/system-prompts not leaked in responses; training data scrubbed
+- [ ] **LLM03 Supply Chain**: Model/plugin provenance verified; third-party components audited
+- [ ] **LLM04 Data and Model Poisoning**: Training/fine-tuning data sources validated and auditable
+- [ ] **LLM05 Improper Output Handling**: LLM output sanitized before downstream use (SQL, shell, HTML)
+- [ ] **LLM06 Excessive Agency**: Model actions bounded; least-privilege tools; human-in-the-loop for destructive ops
+- [ ] **LLM07 System Prompt Leakage**: System instructions not extractable via adversarial prompts; no secrets in the system prompt
+- [ ] **LLM08 Vector and Embedding Weaknesses**: RAG pipelines guarded against poisoned embeddings / retrieval manipulation
+- [ ] **LLM09 Misinformation**: Hallucination controls in high-stakes contexts; users informed of limitations
+- [ ] **LLM10 Unbounded Consumption**: Rate limits + resource caps against denial-of-wallet / resource exhaustion
 
 ## Decision Log (MANDATORY per G-P4)
 **APPEND** a `### Security Review` entry to `.claude/harness/decision-log.md` with: OWASP categories assessed, findings, risk ratings, remediation recommendations.

@@ -4,6 +4,19 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-20.
 
+## v0.53.1 — theory-fidelity corrections (Track 1)
+
+**2026-07-01. Attribution: theory-fidelity-corrections-2026-07-01. Class: patch (fidelity corrections; no new mechanism).**
+
+A full `/theory-fidelity` audit of all ~45 claimed theories (docs/theories.md Tier 1/2/3) — prompted by the v0.53.0 finding that `feedback-loops.md` over-claimed a wired loop — found the feedback-loops case was **not** the only gap. Track 1 ships the factual corrections (the real-mechanism builds follow as separate gated releases). These are corrections to truth, not softening:
+
+- **Hoskins — Scenarios (DISTORTED → corrected).** The skill + doc claimed *four* elements including "Means"; Hoskins's canonical model has **three** (Motivation / Persona / Simulation). "Means" was invented and mis-attributed. The cited "SAP talk 'Attention to Users Is All You Need'" was fabricated (a riff on the transformer paper). Restored the real *The Product-Minded Engineer* (O'Reilly) citation. (`/user-interview`, `docs/theories.md`.)
+- **OWASP LLM Top 10 (STALE → 2025).** `/security-review` listed the 2023 taxonomy under a "2025" header while `/threat-model` carried the correct v2025.1 list — two skills in one gate disagreeing. Swapped `/security-review` to the real LLM01–10 (2025), including System Prompt Leakage, Vector/Embedding Weaknesses, Misinformation, Unbounded Consumption.
+- **Tier-3 attribution drift (corrected).** CALMS (→ `/bvssh-check` + delivery, not retrospectives); TPS 7-Wastes (→ delivery/`/retrospective`, not `value-stream.yml`); Bansal (→ `/xai-check` adaptive-explanation, not cognitive-forcing); Selbst & Barocas (→ recourse-as-substance in `/xai-check`, not "disparate impact in `/regulatory-review`" — which conflated two papers); Norman (dropped an unattributed example). Engine-level cites were already correct; the drift lived only in the human-facing doc.
+- **Halland CORE — removed.** A decorative citation-only entry appearing nowhere but its own line. (CORE as a real docs-structure convention would be a separate build, not a citation.)
+
+The audit's headline: the *engines and gates* are largely faithful; the gaps clustered in the human-facing `theories.md` — the exact doc that markets "citations without mechanism-mapping are theatre."
+
 ## v0.53.0 — outcome→discovery loop (Move 1)
 
 **2026-07-01. Attribution: outcome-discovery-loop-move1-2026-07-01. Class: minor (new mechanism across 5 files + schema).**
