@@ -58,12 +58,14 @@ Goal: the user walks away in ~10 minutes with a one-page brief on their idea tha
 
 > "I'll ask 4 short questions about your idea, then give you a one-page brief. ~10 minutes. Nothing leaves your machine. I won't ask how much time you have for the whole project right now — depth and time-cost are chosen after the brief, when you have data to choose."
 
-1. **(one sentence, hard limit)** "What are you trying to build, and for whom?"
+1. **(one sentence, hard limit)** "What are you trying to change, and for whom?"
 2. "Tell me about the last time someone in that group hit the problem you're trying to solve. What did they actually do?" (Torres past-behavior — not "would they want X")
 3. "If you had to bet on one thing being wrong about this idea, what would it be?"
 4. "What's the smallest move you could make this week to find out?"
 
 **Format constraint discipline** (per ht-012 cohort-log f4, shipped v0.23.21): the format spec (e.g., "one sentence") MUST appear before the question text and as a bolded mechanical constraint, not as a prose prefix that can be read as a rhetorical politeness. The "In one sentence, X?" framing was misread as "succinctly, X?" — the user answered in 2-3 sentences before discovering the constraint was hard. Render format specs as parenthetical or bolded prefixes; do not rely on prose to carry the constraint.
+
+**Why-first discipline** (Sinek inside-out, v0.55.1 — makes the theory real). Q1 leads with the **change** the product makes — Sinek's Why, *the difference you want true in the world* — then *for whom*. Two clauses, one sentence, open stem. This is deliberate: the Golden Circle communicates inside-out (Why → How → What), so purpose must be *elicited*, not back-labeled from a build-list. **Keep the stem open** — a solution-first / curiosity-first user who answers with what they're building ("I'm building X") is fine; do NOT block or force a problem-frame they may not have. Then, with **ONE light follow-up**, do two things: **(a) reach the belief** — *"what becomes true for them if it works?"* (the change-in-the-world — Sinek's actual Why — NOT merely the problem/job, which is Torres/Christensen territory); **(b) capture the build** if not yet given — *"and what are you building to do that?"* (the brief needs the idea name). Sinek is **not hard-gated** (purpose stays optional in the schema by design), so a user who still can't name the change proceeds, flagged for the deeper Phase-1 purpose questions. Populate `purpose.yml` (Step 2) from the **change/why answer** — what becomes true in the world — NOT the build and NOT a bare problem statement; that is what makes the decision-log's "Theory: Sinek (purpose)" true rather than back-labeling a Torres job as a Sinek belief.
 
 **Phase-index narration discipline** (per ht-012 cohort-log f9, shipped v0.23.21): the Phase 1–6 structure below is internal skill organization. **Do NOT narrate phase numbers ("Phase 4 Landscape", "Phase 6 product-type") to the user.** When routing or referencing a later step in user-facing output, use the outcome label ("we'll explore the landscape next", "the project-type question comes later"). Same discipline applies in `/mycelium:diamond-assess` and any skill that surfaces routing decisions.
 
@@ -77,7 +79,7 @@ Output the brief markdown to the chat. This is the visible payoff and it MUST ap
 # Brief: <one-line idea name>
 
 ## Who it's for
-<one paragraph synthesizing Q1+Q2 in JTBD shape: who they are, what job they're trying to get done, what they do today>
+<one paragraph synthesizing Q1+Q2: lead with the CHANGE / why (what becomes true in the world if it works — Sinek's purpose), then who they are, the job they're getting done, what they do today>
 
 ## Biggest assumption
 <one paragraph from Q3, ending with: "This is risky because…">
@@ -106,7 +108,7 @@ Read+Edit in parallel where possible (one tool batch for Reads, one for Edits) t
   ```
   Added 2026-05-22 (v0.23.40), hoisted to first-in-list 2026-05-23 (v0.23.41) per Phase 5 finding that the decision-log write was being skipped when buried mid-list — the agent followed canvas-write bullets but treated this one as optional.
 
-- **(2 of 4) `.claude/canvas/purpose.yml`**: purpose statement from Q1, JTBD functional from Q1+Q2, workarounds from Q2. Tag all entries `source_class: internal_stakeholder, validated: false`.
+- **(2 of 4) `.claude/canvas/purpose.yml`**: purpose statement from **Q1's change/why answer** (what becomes true in the world — Sinek's Why — NOT the build, NOT a bare problem/job), JTBD functional from Q1+Q2, workarounds from Q2. Tag all entries `source_class: internal_stakeholder, validated: false`.
 - **(3 of 4) `.claude/canvas/jobs-to-be-done.yml`**: stub JTBD entry from Q1+Q2 with `functional` dimension populated and `emotional`/`social`/`hiring`/`firing`/`opportunity_score` fields present as placeholders for downstream `/mycelium:jtbd-map` enrichment. Even a one-line stub (e.g., `hiring: "TBD via /mycelium:jtbd-map"`) is enough — the file existing with the JTBD structural shape is what lets the auto-dogfood evaluator's `jtbd_mapped` check pass AND lets `/mycelium:jtbd-map` build incrementally rather than from a blank file. Tag `source_class: internal_stakeholder, validated: false`. Added 2026-05-22 (v0.23.39) per Phase 3c onboarding-cold-start finding.
 
 - **(4 of 4) `.claude/diamonds/active.yml`**: L0 Purpose diamond, **`scale: L0`, `phase: discover`** (lowercase per active.yml schema convention), `confidence: 0.15` (canvas-density-derived: purpose 0.05 + JTBD functional 0.05 + workarounds 0.025 ≈ 0.125 → 0.15; see formula table at end of file), evidence_type: internal_stakeholder, theory_gates_status all pending, note: `created_via: brief`. Also write a **`definition_of_done` stub** on this diamond (it is a field, not a fifth file — the four-file contract is unchanged): `outcome` = the behaviour-change the purpose implies for the Q1+Q2 user (problem-first, not a build-list), `signal` = the one observable thing from Q4's "what you'll learn / when you'd know," `kind: lagging` (L0 default — "people keep choosing it / fits, not ships"), `provenance: {source_class: internal_stakeholder, validated: false}`. A one-line `outcome` + `signal` stub is enough at birth; it gets sharpened by `/mycelium:define-done`. Per `${CLAUDE_PLUGIN_ROOT}/skills/define-done/SKILL.md`.

@@ -4,6 +4,18 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-06-20.
 
+## v0.55.1 — Sinek why-first in the brief flow (B5)
+
+**2026-07-01. Attribution: sinek-why-first-2026-07-01. Class: patch (elicitation fidelity fix on the live interview flow).**
+
+Theory-fidelity B5 — the last live-path build. Makes Sinek "start with Why" real in the primary `/interview` brief flow. The audit found Q1 asked "what are you trying to build, and for whom?" (build-first) then the decision-log tagged it "Theory: Sinek (purpose)" — back-labeling the What as the Why, the exact inside-out inversion Sinek warns against.
+
+- **Q1 now:** "What are you trying to change, and for whom?" — the *change in the world* is Sinek's Why. Two clauses, one sentence, open stem.
+- **Follow-up (one, light):** reaches the belief — "what becomes true for them if it works?" — and captures the build for the brief — "what are you building to do that?". `purpose.yml` is populated from the change/why answer, not the build.
+- Sinek stays **not hard-gated** (a communication principle is faithfully represented as elicitation order, not a gate — the honest scope the theory doc already states).
+
+Blind-tested before commit — the adversary caught that a first reframe ("what problem are you solving") was back-labeling ONE LAYER DOWN (that's Torres/Christensen's *job*, not Sinek's *belief*), was triple-barreled under a one-sentence hard limit, and presupposed a problem-frame that solution/curiosity-first builders lack. All three fixed: the shipped stem asks for the change (Sinek), stays open (solution-first passes without a forced problem-frame), and the belief-elevation lives in the follow-up.
+
 ## v0.55.0 — build-mode gate (B1: earn the right to start)
 
 **2026-07-01. Attribution: build-mode-gate-2026-07-01. Class: minor (new gate on the live define-done path).**
