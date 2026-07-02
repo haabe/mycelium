@@ -11,6 +11,12 @@
         "failClosed": true
       },
       {
+        "matcher": "Write|write",
+        "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/discovery-gate.sh",
+        "type": "command",
+        "timeout": 5
+      },
+      {
         "matcher": "Write|Edit|MultiEdit|edit|write",
         "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/scope-gate.sh",
         "type": "command",

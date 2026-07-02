@@ -13,6 +13,12 @@
           },
           {
             "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/discovery-gate.sh",
+            "timeout": 5,
+            "statusMessage": "Mycelium discovery gate (new source files in discovery-untouched projects)"
+          },
+          {
+            "type": "command",
             "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/scope-gate.sh",
             "timeout": 5,
             "statusMessage": "Mycelium scope enforcement"

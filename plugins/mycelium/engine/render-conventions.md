@@ -34,7 +34,7 @@ people:
 | `generic_only` | Redact to anon-label. Identity allowed in roadmap-private artifacts; MUST be generic-framed in upstream-public artifacts. |
 | `unknown` | Treat as `generic_only` per registry README (consent unverified ⇒ conservative). |
 
-Identifier not in registry → fail loud. The only override is `--no-identifiers=true` which forces ALL names to redact regardless of consent state.
+Identifier not in registry → fail loud: **the whole render is blocked and NO artifact is emitted** — not a partial render with the offending entry omitted or redacted (an unresolved consent state makes the exposure declaration impossible to give honestly). Naming the offending source in the owner-facing explanation is fine; the artifact is what must not exist. The only override is `--no-identifiers=true` which forces ALL names to redact regardless of consent state. (Whole-render semantics clarified v0.56.0 after a dogfood run read this as per-entry.)
 
 ### Anon-label convention
 

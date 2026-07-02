@@ -119,7 +119,11 @@ Empty until the ingestor runs.
 
 ## Step 4: Optionally write AGENTS.md at project root
 
-Ask the user — and give them the basis to decide, not just the menu (per opp-002 decision-without-context pattern). The prompt MUST cover what AGENTS.md is, when it earns its keep, and when it's safe to skip:
+**Detect BEFORE asking (v0.56.0).** First check whether `<project_root>/AGENTS.md` exists and already mentions Mycelium (`grep -qi mycelium AGENTS.md`). If it does, SKIP this step silently — there is nothing to decide; note "AGENTS.md already covers Mycelium" in the Step 5 confirmation instead. The 2026-07-02 roadmap dogfood run showed the old order (ask first, inspect after) burning a full user exchange only to discover the file already had a more thorough Mycelium section than the append template.
+
+**When /start invoked this setup**: this step is DEFERRED until after the interview brief (see start/SKILL.md Step 2) — do not ask it here.
+
+Otherwise, ask the user — and give them the basis to decide, not just the menu (per opp-002 decision-without-context pattern). The prompt MUST cover what AGENTS.md is, when it earns its keep, and when it's safe to skip:
 
 > "Should I create an AGENTS.md at your project root?
 >

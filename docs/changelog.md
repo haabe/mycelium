@@ -2,7 +2,28 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-06-20.
+**Last updated**: 2026-07-02.
+
+## v0.56.0 — discovery gate + /start opening-rounds fix + ost-render fail-loud semantics
+
+**2026-07-02. Attribution: discovery-gate-2026-07-02. Class: minor (new enforcement hook) + two patches.**
+
+All three changes come from the roadmap auto-dogfood battery's first **utterance-mode** runs (2026-07-02) — scenarios that send the raw user message verbatim instead of a task paraphrase, exercising routing and the real skill surfaces for the first time.
+
+**Discovery gate (`hooks/discovery-gate.sh`) — the teeth for the deliver-framed routing gap.** The battery mechanically reproduced the founder-observed failure (2026-06-08/09): a confident "build me a REST API" *first message* on an empty workspace led the agent to scaffold source files to the turn cap, twice — router-discipline prose alone did not hold. The new PreToolUse hook blocks scaffolding **new** source files when discovery has never been engaged (no diamond entry in `active.yml` AND no populated `canvas/purpose.yml`), and its block message routes to `/mycelium:start`.
+
+Scope is deliberately narrow — the friction-wall risk (cohort "verbose/strict" feedback) is real:
+
+- **Write tool only.** Edit/MultiEdit are never gated; brownfield work on existing code is untouched.
+- **New files only.** A Write to an existing path is brownfield full-replace — allowed.
+- **Source/infra shapes only** (extension list + basename list for `Dockerfile*`/`docker-compose*`/`package.json`-class files). Markdown, generic YAML, and everything under `.claude/` never gate.
+- **One conversation per project.** The escape hatch — `.claude/state/discovery-skip-ack`, written after the *user* explicitly declines discovery (date + their words, on the record) — silences the gate permanently. The block message instructs the agent NOT to write the ack on its own judgment.
+
+Wired on all three runtime surfaces (`hooks.json`, `hooks.codex.json`, `hooks.cursor.json` — per the v0.44.1 all-surfaces lesson). Scenario-per-guardpost test suite: `tests/bash/test_discovery_gate.sh` (13 asserts: cold-project block, diamond-present allow, populated-purpose allow, ack allow, Edit never gated, existing-file allow, non-source allow, no-`.claude`-at-all still blocks). The roadmap's `routing-deliver-framed-opening` scenario is the live acceptance test.
+
+**/start AGENTS.md deferral (patch).** Dogfood showed a first-time user's opening two exchanges going to AGENTS.md file administration before interview Question 1. In the `/start` composition, setup's Step 4 (AGENTS.md prompt) now defers to after the brief; and setup detects an existing Mycelium section BEFORE asking (the old order asked first, inspected after — burning an exchange to discover there was nothing to decide). Standalone `/mycelium:setup` keeps its step order.
+
+**ost-render fail-loud semantics (patch).** "Identifier absent from registry → fail loud" was ambiguous between per-entry and whole-render; a dogfood run rendered *around* the unregistered source. Clarified in `skills/ost-render/SKILL.md` + `engine/render-conventions.md`: the WHOLE render is blocked, no artifact is emitted (an unresolved consent state makes the exposure declaration impossible to give honestly). Naming the offending source in owner-facing prose is fine — the artifact is what must not exist.
 
 ## v0.55.3 — scenarios schema (B6/B7) + program close
 

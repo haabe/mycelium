@@ -63,7 +63,7 @@ Per `engine/render-conventions.md#consent-value-semantics`:
 
 **Already-anon canvas label → preserve**: `evidence_sources: ["cohort-tester-3 session 2 transcript"]`, canvas already anon-labeled → renders as `cohort-tester-3 session 2 transcript` (preserve canvas-side anonymization; do not look up).
 
-**Identifier absent from registry → fail loud**: `evidence_sources: ["Random Name DM 2026-06-05"]`, no entry → emit fail-loud with three fix options (add to registry, re-run with `--no-identifiers`, edit canvas).
+**Identifier absent from registry → fail loud**: `evidence_sources: ["Random Name DM 2026-06-05"]`, no entry → **the WHOLE render is blocked — emit NO artifact** (not a partial mindmap with the offending entry redacted or omitted), and give the fail-loud message with three fix options (add to registry, re-run with `--no-identifiers`, edit canvas). Clarified v0.56.0 after a dogfood run read this line as per-entry and rendered around the unregistered source: an unresolved consent state means the render's exposure declaration cannot be made honestly, so nothing ships until the user resolves it. Naming the offending source in the owner-facing explanation is fine (project-private context); the artifact is what must not exist.
 
 ### Fixture pointer
 
