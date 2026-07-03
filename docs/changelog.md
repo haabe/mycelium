@@ -2,7 +2,15 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-07-02.
+**Last updated**: 2026-07-03.
+
+## v0.56.1 — /canvas-health evidence_type rubric aligned to the shipped schema
+
+**2026-07-03. Attribution: canvas-health-enum-2026-07-03. Class: patch (doc fix).**
+
+Roadmap dogfood finding (2026-07-03 /canvas-health run): the skill's step-5 evidence_type "valid set" (`interview`/`survey`/`analytics`/`experiment`/`speculation`/`assumption`/`mocked_persona`) had drifted from the shipped schema enum (`schemas/canvas/_common.schema.json#$defs/evidence_type`: `speculation`/`anecdotal`/`data-supported`/`test-validated`/`launch-validated`, Gilad's ladder) — the audit rubric mislabeled ~120 legitimate canvas fields as unknown in a single run. Documented-rule-diverges-from-enforcement class.
+
+Step 5 now cites the schema enum directly, carves out `_meta` structural markers (`schema`/`assessment`/`not-yet-populated` describe the file, not an evidence claim — flag them only outside `_meta`), and rewords the mocked-persona honesty check in ladder terms (simulated evidence sits at `speculation` no matter how vivid it reads) since `evidence_type: interview` no longer exists to key on.
 
 ## v0.56.0 — discovery gate + /start opening-rounds fix + ost-render fail-loud semantics
 
