@@ -2,7 +2,19 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-07-03.
+**Last updated**: 2026-07-04.
+
+## v0.56.2 — install-command drift fixed + Show-HN doc pass + Check 46 graduation
+
+**2026-07-04. Attribution: install-command-drift-2026-07-04. Class: patch (doc fixes + a dev-time CI check).**
+
+Show HN readiness review (2026-07-04). Three parts:
+
+**1. Install-command drift (the trigger).** 53 skill `SKILL.md` files carried the wrong plugin-install command in their `framework_dependency_note` frontmatter — the slash marketplace ref `mycelium@haabe/mycelium`. The marketplace is named `haabe-mycelium` (dash) in `.claude-plugin/marketplace.json`, so the slash form points at a marketplace that does not exist and fails if a reader copy-pastes it. The user-facing docs (README, `docs/get-started.md`, `docs/install-paths.md`) were already correct; the drift hid in per-skill frontmatter, which a reader browsing the repo source would hit. All 53 corrected to the dash form. The `github.com/haabe/mycelium` URL (slash, correct) on the same line was left untouched.
+
+**2. Blind cold-install readiness test → further Show-HN fixes.** A subagent with no context, told only "install this following the docs," surfaced four more first-timer blockers, all fixed: (a) the README + get-started install blocks were fenced as `bash` even though the commands are Claude Code slash commands — pasting into a terminal fails; relabeled to plain fences with an "inside Claude Code" lead-in (mirroring `install-paths.md`). (b) No prerequisite was stated anywhere; added a one-line Claude-Code-signed-in prerequisite to README + get-started. (c) `get-started.md` advertised `npx degit` legacy install as a live "portable" option while `install-paths.md` declared it unsupported (lands an empty `.claude/`) — reconciled get-started to the authoritative statement. (d) `docs/README.md` said "55 skills" against the actual 57 (manifests, CLAUDE.md, disk) — corrected.
+
+**3. Check 46 (the graduation).** This drift class ("documented rule diverges from enforcement" / doc-drift) is a repeat, so it graduates to CI teeth rather than a one-off fix. New `validate-template.sh` Check 46 asserts every `plugin install mycelium@<ref>` across docs + skill frontmatter uses the marketplace `name` from `.claude-plugin/marketplace.json` (historical changelog and test fixtures exempt). It fails on the exact bad case (the slash ref) and passes on the corrected tree. Fixture test `tests/bash/test_check_46.sh`.
 
 ## v0.56.1 — /canvas-health evidence_type rubric aligned to the shipped schema
 

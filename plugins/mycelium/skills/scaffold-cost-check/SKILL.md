@@ -4,7 +4,7 @@ description: "Measure Mycelium's own scaffold token cost (CLAUDE.md + engine + h
 metadata:
   instruction_budget: "42"
   framework_dependency: "mycelium"
-  framework_dependency_note: "This skill is designed to run within the Mycelium framework (https://github.com/haabe/mycelium). Standalone use will skip the canvas state, theory gates, and harness behavior the skill assumes. Install: /plugin install mycelium@haabe/mycelium."
+  framework_dependency_note: "This skill is designed to run within the Mycelium framework (https://github.com/haabe/mycelium). Standalone use will skip the canvas state, theory gates, and harness behavior the skill assumes. Install: /plugin install mycelium@haabe-mycelium."
 ---
 
 # Scaffold Cost Check

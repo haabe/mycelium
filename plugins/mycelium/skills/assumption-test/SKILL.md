@@ -4,7 +4,7 @@ description: "Design the smallest viable test to validate or invalidate a critic
 metadata:
   instruction_budget: "38"
   framework_dependency: "mycelium"
-  framework_dependency_note: "This skill is designed to run within the Mycelium framework (https://github.com/haabe/mycelium). Standalone use will skip the canvas state, theory gates, and harness behavior the skill assumes. Install: /plugin install mycelium@haabe/mycelium."
+  framework_dependency_note: "This skill is designed to run within the Mycelium framework (https://github.com/haabe/mycelium). Standalone use will skip the canvas state, theory gates, and harness behavior the skill assumes. Install: /plugin install mycelium@haabe-mycelium."
 ---
 
 # Assumption Testing
