@@ -2178,6 +2178,56 @@ check_chat_ux_axiom_markers() {
 }
 
 # ============================================================
+# CHECK 46: install-command marketplace ref is canonical
+# ============================================================
+# Graduation of the recurring "documented rule diverges from enforcement" /
+# doc-drift class (2026-07-04 Show-HN readiness review). 53 skill SKILL.md
+# frontmatter notes shipped the slash marketplace ref (mycelium@haabe/mycelium)
+# while the marketplace is named haabe-mycelium (dash) in
+# .claude-plugin/marketplace.json — the slash form resolves to a nonexistent
+# marketplace and fails on paste, and it hid in per-skill frontmatter while the
+# user-facing install docs were correct. This check asserts every
+# `plugin install mycelium@<ref>` (across *.md + *.json) uses the marketplace
+# `name` from the manifest. Historical docs/changelog.md and test fixtures are
+# exempt (they legitimately quote non-canonical refs while describing the bug).
+check_install_command_canonical() {
+    section "Check 46: install-command marketplace ref is canonical"
+
+    local mkt_file=".claude-plugin/marketplace.json"
+    if [ ! -f "$mkt_file" ]; then
+        info "Check 46: $mkt_file absent — N/A"
+        return
+    fi
+
+    local mkt
+    mkt=$(grep -m1 '"name"' "$mkt_file" | sed 's/.*"name"[[:space:]]*:[[:space:]]*"//' | sed 's/".*//')
+    if [ -z "$mkt" ]; then
+        warn "Check 46: could not read marketplace name from $mkt_file"
+        return
+    fi
+
+    local offenders
+    # Ref char class excludes '.' and '/' deliberately: a marketplace name is
+    # [A-Za-z0-9_-], so stopping at '.' lets the correct ref be recognised even
+    # when a sentence-ending period follows it in frontmatter, and stopping at
+    # '/' truncates the bad slash ref (haabe/mycelium -> "haabe") so it still
+    # fails the canonical-name match.
+    offenders=$(grep -rEn "plugin install mycelium@[A-Za-z0-9_-]+" . \
+        --include='*.md' --include='*.json' \
+        --exclude-dir=tests --exclude-dir=.git 2>/dev/null \
+        | grep -v "changelog.md:" \
+        | grep -vE "plugin install mycelium@${mkt}([^A-Za-z0-9_-]|$)" || true)
+
+    if [ -z "$offenders" ]; then
+        pass "Check 46: all 'plugin install mycelium@' refs use marketplace name '$mkt'"
+    else
+        local n
+        n=$(printf '%s\n' "$offenders" | grep -c .)
+        fail "Check 46: $n install-command ref(s) do not use marketplace name '$mkt' from $mkt_file (canonical: mycelium@$mkt). First: $(printf '%s\n' "$offenders" | head -1)"
+    fi
+}
+
+# ============================================================
 # RUN ALL CHECKS
 # ============================================================
 #
@@ -2220,6 +2270,7 @@ check_skills_tree_parity
 check_manifest_byte_match
 check_stale_state_read_pattern
 check_plugin_json_version_sync
+check_install_command_canonical
 check_canvas_write_preflight
 check_four_risks_when_active
 check_plugin_identifier_leak

@@ -4,7 +4,7 @@ description: "Map the Jobs to be Done (functional, emotional, and social) that p
 metadata:
   instruction_budget: "6"
   framework_dependency: "mycelium"
-  framework_dependency_note: "This skill is designed to run within the Mycelium framework (https://github.com/haabe/mycelium). Standalone use will skip the canvas state, theory gates, and harness behavior the skill assumes. Install: /plugin install mycelium@haabe/mycelium."
+  framework_dependency_note: "This skill is designed to run within the Mycelium framework (https://github.com/haabe/mycelium). Standalone use will skip the canvas state, theory gates, and harness behavior the skill assumes. Install: /plugin install mycelium@haabe-mycelium."
 ---
 
 # Jobs to be Done Mapping

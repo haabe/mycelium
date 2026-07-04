@@ -6,8 +6,9 @@ AI has made building cheap. It hasn't made *deciding* cheap. Agents will jump fr
 
 The gap shows up the same way across every AI-native team. The agent is fast, confident, and glad to build something nobody asked for. What it skips is the deciding: why, who for, whether anyone needs it. Mycelium puts that part back. It doesn't replace your judgment; it gives the agent enough feedback that the judgment that ships is still yours. Other tools accelerate delivery; Mycelium makes the agent earn the right to start. Built using itself, and released as open source.
 
-```bash
-# Recommended: install as a Claude Code plugin
+**Prerequisite:** Claude Code, signed in — or another supported agent (see [install paths](docs/install-paths.md)). Then, inside Claude Code:
+
+```
 /plugin marketplace add haabe/mycelium
 /plugin install mycelium@haabe-mycelium
 /mycelium:start       # one command: setup + 10-minute discovery

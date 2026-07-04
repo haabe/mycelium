@@ -4,7 +4,7 @@ description: "Lint canvas files for staleness, missing fields, inconsistent evid
 metadata:
   instruction_budget: "87"
   framework_dependency: "mycelium"
-  framework_dependency_note: "This skill is designed to run within the Mycelium framework (https://github.com/haabe/mycelium). Standalone use will skip the canvas state, theory gates, and harness behavior the skill assumes. Install: /plugin install mycelium@haabe/mycelium."
+  framework_dependency_note: "This skill is designed to run within the Mycelium framework (https://github.com/haabe/mycelium). Standalone use will skip the canvas state, theory gates, and harness behavior the skill assumes. Install: /plugin install mycelium@haabe-mycelium."
 ---
 
 # Canvas Health Check

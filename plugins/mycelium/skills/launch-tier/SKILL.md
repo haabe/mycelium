@@ -4,7 +4,7 @@ description: "Classify releases into launch tiers and plan go-to-market. Based o
 metadata:
   instruction_budget: "62"
   framework_dependency: "mycelium"
-  framework_dependency_note: "This skill is designed to run within the Mycelium framework (https://github.com/haabe/mycelium). Standalone use will skip the canvas state, theory gates, and harness behavior the skill assumes. Install: /plugin install mycelium@haabe/mycelium."
+  framework_dependency_note: "This skill is designed to run within the Mycelium framework (https://github.com/haabe/mycelium). Standalone use will skip the canvas state, theory gates, and harness behavior the skill assumes. Install: /plugin install mycelium@haabe-mycelium."
 ---
 
 # Launch Tier Classification

@@ -4,7 +4,7 @@ description: "Audit whether the theories/methodologies a project claims to imple
 metadata:
   instruction_budget: "55"
   framework_dependency: "mycelium"
-  framework_dependency_note: "Designed to run within Mycelium (https://github.com/haabe/mycelium), where docs/theories.md provides the claimed-theory inventory. On a non-Mycelium project it audits whatever theory/methodology doc the project maintains; with no such doc it reports the absence. Install: /plugin install mycelium@haabe/mycelium."
+  framework_dependency_note: "Designed to run within Mycelium (https://github.com/haabe/mycelium), where docs/theories.md provides the claimed-theory inventory. On a non-Mycelium project it audits whatever theory/methodology doc the project maintains; with no such doc it reports the absence. Install: /plugin install mycelium@haabe-mycelium."
 ---
 
 # Theory Fidelity Audit
