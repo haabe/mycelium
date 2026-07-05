@@ -1,0 +1,44 @@
+name: Auto-tag release
+
+# Closes the recurring release-process gap: a version bump lands on main but the
+# git tag gets forgotten (v0.56.0/.1 and v0.56.2 were both dropped and tagged by
+# hand after the fact). The tag step is the one that keeps falling off because it
+# happens AFTER the server-side squash-merge, where no local hook runs. This Action
+# runs on that merge and creates the tag if it's missing — so it can't be dropped.
+
+on:
+  push:
+    branches: [main]
+    # plugin.json#version is rewritten by sync_derived.py on every release bump,
+    # so a change here is a reliable "a version landed on main" signal.
+    paths:
+      - 'plugins/mycelium/.claude-plugin/plugin.json'
+
+permissions:
+  contents: write   # required to push the tag via the default GITHUB_TOKEN
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # need the full tag list for the "already exists" check
+
+      - name: Tag the release if the version is not yet tagged
+        run: |
+          set -euo pipefail
+          VERSION="$(python3 -c "import json,sys; print(json.load(open('plugins/mycelium/.claude-plugin/plugin.json'))['version'])")"
+          TAG="v${VERSION}"
+          if [ -z "${VERSION}" ]; then
+            echo "::error::Could not read version from plugin.json"; exit 1
+          fi
+          if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
+            echo "Tag ${TAG} already exists — nothing to do."
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "${TAG}" -m "${TAG} (auto-tagged on merge to main)"
+          git push origin "${TAG}"
+          echo "Created and pushed ${TAG}"
