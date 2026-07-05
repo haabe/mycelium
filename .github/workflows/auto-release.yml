@@ -1,0 +1,60 @@
+name: Auto-release on merge to main
+
+# Closes the recurring release-process gap: a version bump lands on main but the
+# GitHub Release is never created (tags v0.56.0..v0.56.3 existed while the /releases
+# page still showed v0.55.3 as latest). A *tag* is not a *Release* — the /releases
+# page and "Latest" badge track Release objects. This Action creates the Release
+# (which also creates the tag) on the merge that bumps the version, so neither the
+# tag nor the Release can be dropped. Supersedes the earlier tag-only auto-tag.yml.
+
+on:
+  push:
+    branches: [main]
+    # plugin.json#version is rewritten by sync_derived.py on every release bump,
+    # so a change here is a reliable "a version landed on main" signal.
+    paths:
+      - 'plugins/mycelium/.claude-plugin/plugin.json'
+
+permissions:
+  contents: write   # required to create the tag + Release via the default token
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history so gh release create can tag the merge commit
+
+      - name: Create the GitHub Release if this version has none
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          VERSION="$(python3 -c "import json; print(json.load(open('plugins/mycelium/.claude-plugin/plugin.json'))['version'])")"
+          TAG="v${VERSION}"
+          if [ -z "${VERSION}" ]; then echo "::error::Could not read version from plugin.json"; exit 1; fi
+          if gh release view "${TAG}" >/dev/null 2>&1; then
+            echo "Release ${TAG} already exists — nothing to do."
+            exit 0
+          fi
+          # Pull the title + body from this version's changelog section (## vX.Y.Z ... next ## v).
+          # Falls back to a bare title/body if the section is absent, so the step never fails on notes.
+          python3 - "${VERSION}" <<'PY'
+          import sys, re
+          ver = "v" + sys.argv[1]
+          lines = open('docs/changelog.md').read().split('\n')
+          heads = [(i, l) for i, l in enumerate(lines) if re.match(r'^## v\d', l)]
+          title, body = ver, "Release " + ver + " (see docs/changelog.md)."
+          for idx, (i, l) in enumerate(heads):
+              m = re.match(r'^## (v\d+\.\d+\.\d+)', l)
+              if m and m.group(1) == ver:
+                  title = l[3:].strip()
+                  end = heads[idx + 1][0] if idx + 1 < len(heads) else len(lines)
+                  body = '\n'.join(lines[i + 1:end]).strip() or body
+                  break
+          open('rel_title.txt', 'w').write(title)
+          open('rel_notes.md', 'w').write(body)
+          PY
+          gh release create "${TAG}" --title "$(cat rel_title.txt)" --notes-file rel_notes.md --latest
+          echo "Created Release ${TAG} (tag created if it was missing)"
