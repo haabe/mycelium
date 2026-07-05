@@ -229,7 +229,7 @@ try:
     today = date.today()
     def latest_touch(t):
       ds = []
-      for k in ('updated_at', 'created_at', 'commitment_received_at'):
+      for k in ('updated_at', 'reopened_at', 'created_at', 'commitment_received_at'):
         v = t.get(k)
         if isinstance(v, str): ds.append(v[:10])
       for lk in ('touch_log', 'partial_findings'):

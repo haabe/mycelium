@@ -2,7 +2,19 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-07-04.
+**Last updated**: 2026-07-05.
+
+## v0.56.3 — canvas-health counts `reopened_at` as task activity
+
+**2026-07-05. Attribution: canvas-health-reopened-at-2026-07-05. Class: patch (staleness false-positive fix).**
+
+Dogfood fix from the roadmap repo. The `/canvas-health` **8c-a** status-vs-activity staleness check, and the **session-start** staleness hook, both computed a human-task's latest-activity date from `updated_at` / `touch_log[].date` / `partial_findings[].date` — but omitted `reopened_at`. The task-reopen convention writes `reopened_at`, so a task deliberately reopened *today* still read as untouched since its original dates. Surfaced when `ht-003` (reopened same-day) mechanically read as 70 days stale during a health pass.
+
+Both readers now include `reopened_at` in the activity-date set:
+- `skills/canvas-health/SKILL.md` §8c-a — added `reopened_at` to the date list, with the rationale inline.
+- `hooks/session-start.sh` `latest_touch()` — added `reopened_at` to the scalar-date keys.
+
+A documented-rule-diverges-from-enforcement instance: the reopen convention wrote a field the staleness readers never consumed. No canvas migration needed; correctly-reopened tasks simply stop mis-flagging.
 
 ## v0.56.2 — install-command drift fixed + Show-HN doc pass + Check 46 graduation
 
