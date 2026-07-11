@@ -4,7 +4,7 @@
 **Time to read**: 3 min.
 **Last updated**: 2026-06-08.
 
-Alternate index to the phase-first [skills/README.md](README.md). Same 57 skills, different ordering.
+Alternate index to the phase-first [skills/README.md](README.md). Same 58 skills, different ordering.
 
 ## Research & discovery
 
@@ -53,6 +53,7 @@ Quality, security, privacy, accessibility, regulatory, explainability. Use as ga
 - `/threat-model` — STRIDE
 - `/privacy-check` — Privacy by Design (Cavoukian)
 - `/security-review` — OWASP Top 10:2025
+- `/harms-check` — dark/deceptive patterns + foreseeable misuse (safety-by-design; NUDGE)
 - `/usability-check` — Nielsen's 10 heuristics
 - `/a11y-check` — WCAG 2.1 AA
 - `/regulatory-review` — EU AI Act
@@ -115,5 +116,5 @@ Mycelium itself. Use when dogfooding the framework or as part of `/framework-hea
 
 ## See also
 
-- [README.md](README.md) — phase-first index of the same 57 skills
+- [README.md](README.md) — phase-first index of the same 58 skills
 - [glossary.md](../glossary.md) — vocabulary

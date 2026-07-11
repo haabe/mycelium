@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.56.3 -- **Attribution label: canvas-health-reopened-at-2026-07-05** (roadmap dogfood — task-staleness false-positive fix). **`reopened_at` now counts as task activity**: the `/canvas-health` 8c-a status-vs-activity staleness check AND the session-start staleness hook computed a task's latest-activity date from `updated_at`/`touch_log`/`partial_findings` but omitted `reopened_at` — so a task deliberately reopened today mis-flagged as stale. Surfaced in the roadmap repo when ht-003 (reopened same-day) read as 70 days stale. Both the skill check (SKILL.md 8c-a) and the hook (`session-start.sh` `latest_touch`) now include `reopened_at`. A documented-rule-diverges-from-enforcement instance where the reopen convention wrote a field the staleness readers never consumed. **Priors**: v0.56.2 **install-command-drift-2026-07-04** (slash marketplace ref fixed across 53 skill frontmatter notes + Check 46 graduation), v0.56.1 **canvas-health-enum-2026-07-03** (/canvas-health rubric aligned to schema), v0.56.0 **discovery-gate-2026-07-02** (auto-dogfood utterance-mode findings) (see `docs/changelog.md`).*
+*Version 0.57.0 -- **Attribution label: harms-check-gate-2026-07-11** (roadmap dogfood — safety-by-design values-gate authored upstream). **New skill `/harms-check`**: a JiT, NUDGE-tier design-time gate that surfaces harm the security/privacy/compliance gates structurally miss — dark/deceptive patterns (Brignull; FTC / EU Digital Fairness Act / GDPR-consent) and foreseeable misuse — assuming the product works as designed. It is the design-time front-end of the BVSSH **Happier** dimension (a manipulative design is Happier-negative by definition), fires only on user-facing / persuasion-retention / vulnerable-user product shapes, and educates the unwitting builder without policing the deliberate one. Decided as VALUES-CORE (part of "building the right thing", which lives within BVSSH) rather than demand-gated — roadmap opp-016. **Priors**: v0.56.3 **canvas-health-reopened-at-2026-07-05** (`reopened_at` counts as task activity), v0.56.2 **install-command-drift-2026-07-04** (slash marketplace ref fixed across 53 skill notes + Check 46), v0.56.1 **canvas-health-enum-2026-07-03** (/canvas-health rubric aligned to schema) (see `docs/changelog.md`).*
 
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
@@ -165,7 +165,7 @@ See `plugins/mycelium/orchestration/modes.md` for usage patterns and `plugins/my
 
 ## Skills
 
-All 57 skills are auto-discovered from SKILL.md frontmatter — in plugin form (`plugins/mycelium/skills/*/SKILL.md`, recommended) or legacy form (`.claude/skills/*/SKILL.md`, supported during transition). Suggested skills are surfaced at diamond transitions by `/diamond-progress` and `/diamond-assess`, and contextually by hooks. Type `/` to see the current list.
+All 58 skills are auto-discovered from SKILL.md frontmatter — in plugin form (`plugins/mycelium/skills/*/SKILL.md`, recommended) or legacy form (`.claude/skills/*/SKILL.md`, supported during transition). Suggested skills are surfaced at diamond transitions by `/diamond-progress` and `/diamond-assess`, and contextually by hooks. Type `/` to see the current list.
 
 ## Getting Started
 

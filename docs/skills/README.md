@@ -4,7 +4,7 @@
 **Time to read**: 5 min for the table; depth lives in each `SKILL.md`.
 **Last updated**: 2026-06-12.
 
-This index lists all 57 skills. Each skill's full behaviour lives in its `SKILL.md` — `plugins/mycelium/skills/<name>/SKILL.md` in plugin form (recommended), or `.claude/skills/<name>/SKILL.md` in legacy form (supported during transition). Loaded JIT by Claude Code. This page is an orientation map by phase; [by-category.md](by-category.md) is the alternate index by category of work.
+This index lists all 58 skills. Each skill's full behaviour lives in its `SKILL.md` — `plugins/mycelium/skills/<name>/SKILL.md` in plugin form (recommended), or `.claude/skills/<name>/SKILL.md` in legacy form (supported during transition). Loaded JIT by Claude Code. This page is an orientation map by phase; [by-category.md](by-category.md) is the alternate index by category of work.
 
 ## Onboarding & navigation
 
@@ -59,6 +59,7 @@ This index lists all 57 skills. Each skill's full behaviour lives in its `SKILL.
 | `/threat-model` | STRIDE threat modeling | Security |
 | `/privacy-check` | Privacy by Design / GDPR (Cavoukian) | Privacy |
 | `/security-review` | OWASP Top 10:2025 secure-design review | Security |
+| `/harms-check` | Design-level harm to users: dark/deceptive patterns + foreseeable misuse (safety-by-design; NUDGE) | Harms (BVSSH Happier) |
 | `/usability-check` | Nielsen's 10 usability heuristics | Service Quality |
 | `/a11y-check` | Accessibility audit (WCAG 2.1 AA) | Service Quality |
 | `/regulatory-review` | EU AI Act risk classification (Annex III, Art 13/50) | Regulatory |

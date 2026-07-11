@@ -11,7 +11,7 @@ This is not a marketing document, a technical whitepaper, or a compliance certif
 ## 1. Identity
 
 - **System name:** Mycelium — Theory-Guided Agentic Product Development Framework
-- **Version:** 0.56.3 (canonical source: the `*Version X.Y.Z` line in `CLAUDE.md`; mechanical tokens here — version, skill count — are kept in sync by `scripts/sync_derived.py`, not hand-edited)
+- **Version:** 0.57.0 (canonical source: the `*Version X.Y.Z` line in `CLAUDE.md`; mechanical tokens here — version, skill count — are kept in sync by `scripts/sync_derived.py`, not hand-edited)
 - **Last updated:** 2026-06-11 (fifth audit — `/xai-check` refresh disclosing the autonomous operational mode + the `autonomous-evidence-guard`; see §9 / `services.yml :: svc-mycelium.xai.remediation_history`)
 - **Maintained by:** Håvard Bartnes (haabe). Issues + correspondence: [github.com/haabe/mycelium/issues](https://github.com/haabe/mycelium/issues)
 - **AI Act risk tier:** **Limited** (canonical, assessed 2026-05-04 by `/regulatory-review` — see `canvas/threat-model.yml :: regulatory_classification` for the full assessment). Mycelium is not in any EU AI Act Annex III high-risk category. AI outputs reach end users (developers) in user-affecting ways via the runtime, so Article 50 transparency obligations apply and are satisfied by this card + README + CLAUDE.md framing + runtime-level disclosure.
@@ -33,7 +33,7 @@ This is the agent-runtime-target case: **Mycelium does not embed an AI model.** 
 
 What Mycelium contributes on top of the runtime:
 - **Instructions:** `CLAUDE.md` is read first on every task. Defines mandatory protocols (Pre-Task, Pre-Ship, Post-Task) and Communication Rules (plain-language-first, inline attribution, learning-capture prompts).
-- **Skills:** 57 skills — markdown SKILL.md files in `plugins/mycelium/skills/` (installed to `.claude/skills/`) — define structured procedures the agent invokes by name (`/interview`, `/diamond-progress`, `/xai-check`, etc.).
+- **Skills:** 58 skills — markdown SKILL.md files in `plugins/mycelium/skills/` (installed to `.claude/skills/`) — define structured procedures the agent invokes by name (`/interview`, `/diamond-progress`, `/xai-check`, etc.).
 - **Theory-gated state:** `.claude/canvas/*.yml` files persist evidence-supported product state; gates in `plugins/mycelium/engine/theory-gates.md` block phase transitions without sufficient evidence.
 - **Corrections / patterns / warnings memory:** `.claude/memory/` accumulates failures (`corrections.md`), successes (`patterns.md`), and CI signals (`warnings-log.md`). Read before every task.
 - **Hooks:** runtime-level enforcement (`.claude/hooks/`): `framework-guard.sh` blocks framework edits to dogfood instances, `scope-gate.sh` enforces L4 scope discipline, and `autonomous-evidence-guard.sh` (v0.42.0) blocks fabricated/elevated evidence writes (`source_class: external_*`, `validated: true`, `evidence_type` above `speculation`) into the canvas **during a declared autonomous run** — a strict no-op when a human is present.

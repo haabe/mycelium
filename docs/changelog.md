@@ -2,7 +2,22 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-07-05.
+**Last updated**: 2026-07-11.
+
+## v0.57.0 — `/harms-check` gate (dark patterns + foreseeable misuse; safety-by-design)
+
+**2026-07-11. Attribution: harms-check-gate-2026-07-11. Class: minor (new skill).**
+
+New skill `/harms-check` — the safety-by-design lens the existing gates structurally miss. `/threat-model` (STRIDE) asks how an attacker breaks the system; `/privacy-check` asks about personal data; neither asks the design-time question: *assuming the product works exactly as designed, who could it harm — including vulnerable users and non-users — and how could a legitimate feature be misused?* The most Mycelium-native instance is **dark / deceptive patterns** (Brignull; regulated by the FTC / EU Digital Fairness Act / GDPR-consent): a design that harms the user while working as intended.
+
+It is the **design-time front-end of BVSSH "Happier"** — a manipulative design is Happier-negative by definition, so this catches at design time what `/bvssh-check` would only measure post-hoc.
+
+Deliberately scoped:
+- **JiT, conditional** — fires only on user-facing / persuasion-retention-cancellation-consent-pricing / vulnerable-user product shapes; skips internal tooling, libraries, build scripts. NUDGE tier, never a hard block (gate-fatigue history: Bentes "for mange gates").
+- **Not a trust-&-safety apparatus** — online-content harms (CSAM, disinformation, hate) are out of scope and belong to specialised tooling.
+- **Honest limit** — educates the unwitting builder; cannot stop the deliberate one.
+
+Provenance: decided as **values-core** rather than demand-gated (roadmap `opp-016`) — "building the right thing" lives within BVSSH, so the values already carry the blocker; this makes it explicit and executable. Surfaced from a deep dive on the safety-by-design canon (WEF "Building safer systems", eSafety Safety by Design, Microsoft Harms Modeling, doteveryone Consequence Scanning) prompted by the roadmap dogfood.
 
 ## v0.56.3 — canvas-health counts `reopened_at` as task activity
 
