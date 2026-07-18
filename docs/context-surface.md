@@ -81,7 +81,7 @@ Every significant decision: context, alternatives, theory, evidence, confidence.
 
 ## Skills the agent can invoke
 
-45+ skills auto-discovered from `.claude/skills/*/SKILL.md`. The agent reads the skill's SKILL.md when it invokes the skill — not all 45 at once. Type `/` to see the current list, or read `surfaces.yml` for the index.
+58 skills auto-discovered from `.claude/skills/*/SKILL.md`. The agent reads the skill's SKILL.md when it invokes the skill — not all 58 at once. Type `/` to see the current list, or read `surfaces.yml` for the index.
 
 ## Hooks that constrain the agent
 

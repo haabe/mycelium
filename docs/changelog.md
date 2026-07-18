@@ -2,7 +2,19 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-07-11.
+**Last updated**: 2026-07-18.
+
+## v0.57.1 — documentation drift sweep (stale skill counts + dead version token)
+
+**2026-07-18. Attribution: docs-drift-skillcount-2026-07-18. Class: patch (doc fixes).**
+
+Dogfood doc pass from the roadmap repo. Two drift classes corrected across the docs tree:
+
+**1. Stale skill counts.** Several docs asserted an out-of-date skill total (the framework now ships **58**): `context-surface.md` ("45+ … not all 45 at once"), the Codex and Cursor integration tables ("49 skills"), and the opencode integration doc ("55 skills"). All corrected to 58. The opencode engine/harness-reference measurement ("36 of 55 skills reference `${CLAUDE_PLUGIN_ROOT}/engine…`", runtime-verified 2026-06-15) was re-measured and refreshed to **33 of 58, runtime-verified 2026-07-18** rather than left as a stale-denominator hybrid.
+
+**2. Dead version token.** `ai-system-card.md` §4 claimed `/framework-health` was "not yet executed for v0.15.x" — stale on both counts (the version is 0.57.x, and framework-health has run repeatedly, last 2026-07-05). Rewritten to name the quarterly self-assessment dimensions and its last-run date.
+
+Historical version tokens (deprecations, "shipped in vX", dated receipts) were checked and correctly left untouched; no dead paths or phantom skill names surfaced. Triggered when the founder spotted the `v0.15.x` token during a docs read; a subagent then swept the rest of the tree for the same drift classes.
 
 ## v0.57.0 — `/harms-check` gate (dark patterns + foreseeable misuse; safety-by-design)
 

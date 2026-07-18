@@ -11,7 +11,7 @@ This is not a marketing document, a technical whitepaper, or a compliance certif
 ## 1. Identity
 
 - **System name:** Mycelium — Theory-Guided Agentic Product Development Framework
-- **Version:** 0.57.0 (canonical source: the `*Version X.Y.Z` line in `CLAUDE.md`; mechanical tokens here — version, skill count — are kept in sync by `scripts/sync_derived.py`, not hand-edited)
+- **Version:** 0.57.1 (canonical source: the `*Version X.Y.Z` line in `CLAUDE.md`; mechanical tokens here — version, skill count — are kept in sync by `scripts/sync_derived.py`, not hand-edited)
 - **Last updated:** 2026-06-11 (fifth audit — `/xai-check` refresh disclosing the autonomous operational mode + the `autonomous-evidence-guard`; see §9 / `services.yml :: svc-mycelium.xai.remediation_history`)
 - **Maintained by:** Håvard Bartnes (haabe). Issues + correspondence: [github.com/haabe/mycelium/issues](https://github.com/haabe/mycelium/issues)
 - **AI Act risk tier:** **Limited** (canonical, assessed 2026-05-04 by `/regulatory-review` — see `canvas/threat-model.yml :: regulatory_classification` for the full assessment). Mycelium is not in any EU AI Act Annex III high-risk category. AI outputs reach end users (developers) in user-affecting ways via the runtime, so Article 50 transparency obligations apply and are satisfied by this card + README + CLAUDE.md framing + runtime-level disclosure.
@@ -68,7 +68,7 @@ The runtime model is therefore **the actual decision-maker** — except in a dec
 
 - **Self-eval.** `.claude/evals/assumption-tests/` and `.claude/evals/scenarios/` track behavioral hypotheses with pre-committed pass/iterate/kill criteria. The original `2026-05-04-xai-inline-attribution` eval closed 2026-05-12 at session 11 with verdict **INSTRUMENT FAILED**: agent self-report didn't reliably log per-session data (sister failure to relay-norms). The rule itself (the `(per: <source>)` inline-attribution requirement) was preserved — absence of evidence is not evidence of failure, and the citations that did appear were load-bearing rather than theatre (Lanham et al. 2023 faithfulness frame). The measurement instrument was replaced by C1 (v0.23.8): `hooks/read-log.sh` (PostToolUse on Read) captures every read mechanically, and `scripts/verify_citations.py` cross-references file-shaped citations in agent output against the captured log. At time of writing, the C1 read-log carries 376 entries since 2026-05-12 in the roadmap dogfood project; no formal faithfulness audit has been run against captured data yet — that requires a text sample with citations and is the next audit step (Juniors.dev cohort sessions are the natural source per the original eval's bias-guard).
 - **Cycle history.** `.claude/canvas/cycle-history.yml` captures completed leaf lifecycles for calibration. Active maintenance: cycles close routinely; framework-health quarterly audit is the canonical synthesis surface.
-- **Framework reflexion.** `/framework-health` runs quarterly self-assessment; not yet executed for v0.15.x.
+- **Framework reflexion.** `/framework-health` runs quarterly self-assessment of process effectiveness (cycle velocity, discard trends, confidence calibration, gate effectiveness); last executed 2026-07-05 in the roadmap dogfood project.
 - **External evaluation.** Convergent validity comes from external practitioner feedback (canvas evidence trails). Application-grounded user testing is pending — Juniors.dev pilot is the natural next test.
 
 ## 5. Explainability

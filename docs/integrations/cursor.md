@@ -17,7 +17,7 @@ The only translation needed is event-name casing (Claude Code `PreToolUse` → C
 |---|---|---|
 | Canvas YAML, memory, decision-log, corrections, patterns | ✅ Fully portable | Pure files. |
 | `CLAUDE.md` / `AGENTS.md` instructions | ✅ Read | Cursor reads `.cursorrules` and `AGENTS.md`; Mycelium ships both. |
-| Skills (49 skills, frontmatter-driven discovery) | ✅ Native | Cursor honors skill discovery from `.claude/skills/` when configured. |
+| Skills (58 skills, frontmatter-driven discovery) | ✅ Native | Cursor honors skill discovery from `.claude/skills/` when configured. |
 | Validators (`validate_canvas.py`, `validate-template.sh`) | ✅ Run unchanged | Harness-agnostic. |
 | MCP server integrations | ✅ Native | Both speak MCP. |
 | Pre-task gate (Read-before-Edit, preflight, scope, framework-guard) | ✅ Hook-enforced | `preToolUse` ≡ Claude `PreToolUse`. |
