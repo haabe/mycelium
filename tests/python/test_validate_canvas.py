@@ -677,10 +677,9 @@ def test_collect_trace_graph_handles_multiple_distinct_duplicates(tmp_path, scri
 # EVERYWHERE, including undeclared entry-level occurrences — 2026-07-19)
 # ---------------------------------------------------------------------------
 
-def test_enum_consistency_flags_source_class_in_canvas_evidence_type(tmp_path, scripts_path, monkeypatch):
-    """A bare entry-level evidence_type holding a source_class value (outside any
-    provenance block) is caught — the canvas-surface sibling of the diamond gap
-    that per-schema $refs miss (additionalProperties waves the undeclared key past)."""
+def test_enum_consistency_flags_source_class_value_in_evidence_type(tmp_path, scripts_path, monkeypatch):
+    """A source_class value in a canvas entry's evidence_type field is a swap → flagged.
+    (evidence_type is polymorphic, but source_class values are never valid there.)"""
     validator = _import_validator(scripts_path)
     _point_at_real_schemas(validator, monkeypatch)
     canvas_dir = tmp_path / ".claude" / "canvas"
@@ -689,13 +688,12 @@ def test_enum_consistency_flags_source_class_in_canvas_evidence_type(tmp_path, s
         "components:\n  - id: src-research-005\n    name: x\n    evidence_type: internal_stakeholder\n"
     )
     errors = validator.enum_consistency_errors(canvas_dir)
-    # 'internal_stakeholder' is not in the evidence_type enum, so it appears only
-    # as the offending value + in the disjoint-set hint (safe to match on).
     assert any("internal_stakeholder" in e and "source_class" in e for e in errors), errors
 
 
-def test_enum_consistency_flags_bad_diamond_evidence_type(tmp_path, scripts_path, monkeypatch):
-    """A nonsense evidence_type on a diamond record is caught by the walk too."""
+def test_enum_consistency_flags_source_class_swap_in_diamond(tmp_path, scripts_path, monkeypatch):
+    """A source_class value (external_human) in a diamond's evidence_type field → flagged
+    (the i-productified / roadmap dogfood bug)."""
     validator = _import_validator(scripts_path)
     _point_at_real_schemas(validator, monkeypatch)
     canvas_dir = tmp_path / ".claude" / "canvas"
@@ -703,10 +701,45 @@ def test_enum_consistency_flags_bad_diamond_evidence_type(tmp_path, scripts_path
     diamonds_dir = tmp_path / ".claude" / "diamonds"
     diamonds_dir.mkdir(parents=True)
     (diamonds_dir / "active.yml").write_text(
-        "active_diamonds:\n  - id: l0\n    scale: L0\n    phase: deliver\n    evidence_type: not-a-rung\n"
+        "active_diamonds:\n  - id: l0\n    scale: L0\n    phase: deliver\n    evidence_type: external_human\n"
     )
     errors = validator.enum_consistency_errors(canvas_dir)
-    assert any("not-a-rung" in e for e in errors), errors
+    assert any("external_human" in e and "source_class" in e for e in errors), errors
+
+
+def test_enum_consistency_flags_reverse_swap(tmp_path, scripts_path, monkeypatch):
+    """A Gilad evidence_type value sitting in a source_class field → flagged."""
+    validator = _import_validator(scripts_path)
+    _point_at_real_schemas(validator, monkeypatch)
+    canvas_dir = tmp_path / ".claude" / "canvas"
+    canvas_dir.mkdir(parents=True)
+    (canvas_dir / "landscape.yml").write_text(
+        "components:\n  - id: c1\n    name: x\n    provenance:\n      source_class: data-supported\n"
+    )
+    errors = validator.enum_consistency_errors(canvas_dir)
+    assert any("data-supported" in e and "evidence_type" in e for e in errors), errors
+
+
+def test_enum_consistency_ignores_polymorphic_evidence_type(tmp_path, scripts_path, monkeypatch):
+    """Regression guard for the v0.57.4 over-fire: legitimate polymorphic evidence_type
+    values (gathering-method in _meta, signal-type, intentional extensions) must NOT be
+    flagged. Only source_class-value swaps are errors."""
+    validator = _import_validator(scripts_path)
+    _point_at_real_schemas(validator, monkeypatch)
+    canvas_dir = tmp_path / ".claude" / "canvas"
+    canvas_dir.mkdir(parents=True)
+    (canvas_dir / "landscape.yml").write_text(
+        "_meta:\n"
+        "  evidence_type: interview\n"          # gathering-method vocabulary (canvas-guidance.yml)
+        "components:\n"
+        "  - id: c1\n"
+        "    name: x\n"
+        "    evidence_type: market_signal\n"     # signal-type vocabulary
+        "  - id: c2\n"
+        "    name: y\n"
+        "    evidence_type: llm_positioning_mirror\n"  # intentional extension
+    )
+    assert validator.enum_consistency_errors(canvas_dir) == []
 
 
 def test_enum_consistency_passes_valid_values(tmp_path, scripts_path, monkeypatch):

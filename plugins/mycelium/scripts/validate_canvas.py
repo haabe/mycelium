@@ -392,19 +392,23 @@ def validate_diamonds(canvas_dir: Path, registry: Registry) -> list[str]:
 
 
 def enum_consistency_errors(canvas_dir: Path) -> list[str]:
-    """evidence_type / source_class values must be in their enum EVERYWHERE.
+    """The evidence_type <-> source_class SWAP detector (disjoint-set check).
 
-    The per-schema $ref only covers *declared* properties — provenance blocks
-    (canvas) and the diamond record (evidence_type $ref added v0.57.3). Undeclared
-    entry-level occurrences — a bare `evidence_type:` on a canvas entry outside a
-    provenance block — slip past `additionalProperties`. This walk closes that
-    surface across canvas + diamonds, present and future files, and flags the
-    disjoint-set error class (a source_class value in an evidence_type field, and
-    vice versa) with a targeted hint.
+    evidence_type is POLYMORPHIC by design (canvas-guidance.yml): the Gilad
+    ladder in diamonds + confidence-provenance, gathering-method (interview|
+    survey|analytics|...) in `_meta` blocks, signal-type (market_signal|...) in
+    market provenance, plus intentional extensions (llm_positioning_mirror,
+    dogfood_result, stated-intent). So it is NOT enum-locked globally — doing so
+    was the v0.57.4 over-fire (false positives on legitimate polymorphic values
+    in real dogfood canvases). What IS always an error is the SWAP: the
+    source_class value set is disjoint from every legitimate evidence_type
+    vocabulary, so a source_class value in an evidence_type field (or a Gilad
+    evidence_type value in a source_class field) is a category error regardless
+    of context. Diamonds additionally carry the strict Gilad enum via schema
+    $ref (v0.57.3, active.schema.json).
 
-    Surfaced 2026-07-19: a source_class value (`internal_stakeholder`) in a
-    diamond's `evidence_type` survived ~3 weeks of PASSes; the sibling canvas
-    surface had the same latent gap. Enums are read from _common (single source).
+    Surfaced 2026-07-19 (i-productified + roadmap dogfood). Enums read from
+    _common (single source).
     """
     if not COMMON_SCHEMA.exists():
         return []
@@ -422,18 +426,17 @@ def enum_consistency_errors(canvas_dir: Path) -> list[str]:
     def walk(node, where, rel):
         if isinstance(node, dict):
             for k, v in node.items():
-                if k == "evidence_type" and isinstance(v, str) and v not in ev_enum:
-                    hint = (" — that is a source_class value; did you mean source_class?"
-                            if v in sc_enum else "")
+                if k == "evidence_type" and isinstance(v, str) and v in sc_enum:
                     errors.append(
-                        f"{rel} :: {where}.evidence_type :: '{v}' is not in the "
-                        f"evidence_type enum {sorted(ev_enum)}{hint}")
-                elif k == "source_class" and isinstance(v, str) and v not in sc_enum:
-                    hint = (" — that is an evidence_type value; did you mean evidence_type?"
-                            if v in ev_enum else "")
+                        f"{rel} :: {where}.evidence_type :: '{v}' is a source_class "
+                        f"value in an evidence_type field — did you mean source_class? "
+                        f"(evidence_type is polymorphic, but source_class values are "
+                        f"never valid there)")
+                elif k == "source_class" and isinstance(v, str) and v in ev_enum:
                     errors.append(
-                        f"{rel} :: {where}.source_class :: '{v}' is not in the "
-                        f"source_class enum {sorted(sc_enum)}{hint}")
+                        f"{rel} :: {where}.source_class :: '{v}' is a Gilad "
+                        f"evidence_type value in a source_class field — did you mean "
+                        f"evidence_type?")
                 walk(v, f"{where}.{k}" if where else k, rel)
         elif isinstance(node, list):
             for i, item in enumerate(node):

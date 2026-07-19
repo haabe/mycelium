@@ -4,6 +4,18 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-07-19.
 
+## v0.57.5 — evidence_type is polymorphic; walk narrowed to a swap detector (corrects v0.57.4)
+
+**2026-07-19. Attribution: evidence-type-swap-detector-2026-07-19. Class: patch (validator correctness — corrects v0.57.4 over-fire).**
+
+v0.57.4's enum-consistency walk asserted that `evidence_type` must be a Gilad-ladder value **everywhere** it appears. That contradicts the field's **documented polymorphism** (`canvas-guidance.yml`): `evidence_type` carries the Gilad ladder in diamonds + confidence-provenance, a gathering-method vocabulary (`interview | survey | analytics | speculation | assumption`) in `_meta` blocks, a signal-type vocabulary (`market_signal | revenue_signal | user_behavior | review_signal`) in market provenance, plus intentional extensions (`llm_positioning_mirror`, `dogfood_result`, `stated-intent`). Run against a real dogfood canvas, v0.57.4 flagged **21 legitimate values** as violations alongside the 2 genuine bugs.
+
+Fix: the walk is now a **disjoint-set swap detector**. The `source_class` value set {external_human, external_data, internal_stakeholder, internal_desk, internal_simulated} is disjoint from every legitimate `evidence_type` vocabulary, so the always-true error is the *swap* — a source_class value in an `evidence_type` field, or a Gilad `evidence_type` value in a `source_class` field. That catches the real error class (the i-productified + roadmap diamond bug, `evidence_type: external_human`) with **zero false positives** on the polymorphic vocabularies. Diamonds keep the strict Gilad `$ref` from v0.57.3 (that context genuinely is Gilad-only).
+
+Tests: added a polymorphic-values-not-flagged regression guard (`_meta` gathering-method, signal-type, and an extension all pass) plus a reverse-swap test; the nonsense-value test was removed (a nonsense non-source_class value in a polymorphic field isn't knowable as wrong globally — on a diamond the schema `$ref` still catches it). Framework, roadmap, and i-productified canvases all PASS.
+
+Process lesson: v0.57.4 was validated against the framework's own (clean, Gilad-only) canvas, where the false-positive surface was invisible. A global canvas check must be dogfooded against a real, richer project canvas before shipping.
+
 ## v0.57.4 — evidence_type/source_class enum enforced on canvas entries too (completes v0.57.3)
 
 **2026-07-19. Attribution: evidence-type-enum-canvas-surface-2026-07-19. Class: patch (validator correctness).**
