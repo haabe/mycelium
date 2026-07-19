@@ -2,7 +2,7 @@
 
 **Audience**: developers who want Mycelium's product-thinking discipline without committing to Claude Code as the runtime — typically because of pricing, vendor lock-in, or a preference for self-hosted local models.
 **Time to read**: 6 min.
-**Last updated**: 2026-06-15.
+**Last updated**: 2026-07-19 (upstream status refresh — see "Known runtime gaps").
 **Status**: Mycelium works on opencode as a substrate-portable framework. Of the three runtime safety mechanisms that Mycelium relies on in Claude Code, **one genuine hard gap remains** (reflexion / tool-failure events, #27900); the other two now have clean structural paths — headless context injection is effectively addressed upstream (#27899), and read-before-edit is solvable by a thin plugin guard (#27901). Honest details below. (Gap re-assessment 2026-06-15: the headless-injection (#27899) and read-before-edit (#27901) paths are **runtime-verified on opencode 1.17.7** — the starter scaffold loads and both hooks fire live; reflexion (#27900) remains the gap. Behaviour on other opencode versions may differ; re-verify against your build.)
 
 ## Why this might fit
@@ -124,14 +124,14 @@ The load-bearing decision is **NOT model size** — it's whether the model emits
 
 **Workaround today**: Reflexion still works at the *model* level — the model sees the error in its message stream and can self-correct in the same turn. The automatic retry-with-explicit-self-critique pattern doesn't fire.
 
-**Upstream**: [opencode #27900](https://github.com/anomalyco/opencode/issues/27900) requests a `tool.execute.error` event. This is the single gap whose clean fix must come from upstream; a PR draft exists. Landing it retires the need for any opencode-specific shim here.
+**Upstream**: [opencode #27900](https://github.com/anomalyco/opencode/issues/27900) requests a `tool.execute.error` event — still OPEN and the single gap whose clean fix must come from upstream. A draft PR that implemented it ([#32542](https://github.com/anomalyco/opencode/pull/32542)) was **auto-closed unmerged on 2026-07-16 by opencode's "Automated PR Cleanup"** (>1 month old + <2 positive reactions — a housekeeping close, not a review rejection); it is reopenable by commenting. Landing a fix retires the need for any opencode-specific shim here.
 
 ### Pre-task context injection — effectively addressed upstream
 **Status (revised 2026-06-15)**: The May finding that `tui.prompt.append` is silent in `opencode run` is superseded. Source analysis of the `dev` branch shows the stable `chat.message` hook fires in headless `opencode run`, and mutating `output.parts` reaches the model (path: `cli/cmd/run.ts` → `session.prompt` → `createUserMessage`). `experimental.chat.system.transform` covers system-prompt injection. So Mycelium's Pre-Task Protocol (`G-P-pre`) has a structural injection path in both TUI and headless modes.
 
 **Caveat**: this is source analysis, not an end-to-end runtime test — verify against your opencode build.
 
-**Upstream**: [opencode #27899](https://github.com/anomalyco/opencode/issues/27899) — effectively closed by the `chat.message` path.
+**Upstream**: [opencode #27899](https://github.com/anomalyco/opencode/issues/27899) — effectively closed by the `chat.message` path. The GitHub issue itself was also auto-closed `NOT_PLANNED` on 2026-07-19 by the 60-day stale bot (no maintainer response to the offer to draft a PR); this is consistent, since the capability is already covered structurally via `chat.message`.
 
 ## Roadmap
 

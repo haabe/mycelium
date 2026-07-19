@@ -2,7 +2,19 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-07-18.
+**Last updated**: 2026-07-19.
+
+## v0.57.2 — opencode upstream: procedural closure of #27899 + PR #32542
+
+**2026-07-19. Attribution: opencode-upstream-closure-2026-07-19. Class: patch (upstream-tracking + doc fix).**
+
+Status check on the opencode adapter's upstream dependencies. Both filed contributions were closed by housekeeping bots, not on merit:
+
+- **Issue #27899** (headless prompt-mutation hook) — auto-closed `NOT_PLANNED` by the 60-day stale bot (no maintainer response to the offer to draft a PR / steer the design). Harmless: the capability is already covered structurally via the `chat.message` path, so the doc's "effectively addressed upstream" stance is unchanged.
+- **PR #32542** (implements `tool.execute.error`, the fix for the #27900 reflexion gap) — closed **unmerged** by "Automated PR Cleanup" (>1 month old + <2 positive reactions), i.e. a housekeeping close, not a review rejection. Reopenable by commenting.
+- **Issues #27900** (tool-failure event — the one genuine hard gap) and **#27901** (read-before-edit) remain **OPEN**.
+
+No adapter-posture or gate change. The only stale doc claim — "a PR draft exists" for #27900 — is fixed in `docs/integrations/opencode.md` (both the #27900 and #27899 upstream notes updated; Last-updated bumped). Decision (per `.claude/harness/decision-log.md`): do not chase a reopen now — the reflexion gap has a model-level workaround and nothing is blocked; if #27900 later blocks work, comment to reopen #32542 or re-file fresh.
 
 ## v0.57.1 — documentation drift sweep (stale skill counts + dead version token)
 
