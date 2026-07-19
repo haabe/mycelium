@@ -105,7 +105,7 @@
           "type": "string"
         },
         "evidence_type": {
-          "type": "string"
+          "$ref": "_common.schema.json#/$defs/evidence_type"
         },
         "created": {
           "$ref": "_common.schema.json#/$defs/iso_timestamp"

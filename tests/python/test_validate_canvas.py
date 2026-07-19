@@ -225,6 +225,52 @@ def test_validate_diamonds_schema_violation_reported(tmp_path, scripts_path, mon
     assert any("active.yml" in e for e in errors), f"Expected schema error, got {errors}"
 
 
+def test_validate_diamonds_source_class_in_evidence_type_reported(tmp_path, scripts_path, monkeypatch):
+    """A diamond record carrying a source_class value in evidence_type is rejected.
+
+    Regression guard for the 2026-07-19 gap: the diamond schema typed
+    evidence_type as {"type": "string"} instead of $ref-ing the enum, so
+    'internal_stakeholder' (a source_class value, disjoint from the evidence_type
+    enum) survived ~3 weeks of PASSes. Caught only by a human canvas-health grep.
+    """
+    validator = _import_validator(scripts_path)
+    _point_at_real_schemas(validator, monkeypatch)
+    canvas_dir = tmp_path / ".claude" / "canvas"
+    canvas_dir.mkdir(parents=True)
+    diamonds_dir = tmp_path / ".claude" / "diamonds"
+    diamonds_dir.mkdir(parents=True)
+    (diamonds_dir / "active.yml").write_text(
+        "active_diamonds:\n"
+        "  - id: l0-purpose\n"
+        "    scale: L0\n"
+        "    phase: deliver\n"
+        "    evidence_type: internal_stakeholder\n"
+    )
+    errors = validator.validate_diamonds(canvas_dir, validator.build_registry())
+    assert any("evidence_type" in e or "internal_stakeholder" in e for e in errors), (
+        f"Expected an evidence_type enum error, got {errors}"
+    )
+
+
+def test_validate_diamonds_valid_evidence_type_passes(tmp_path, scripts_path, monkeypatch):
+    """A valid evidence_type enum value on a diamond passes (no regression)."""
+    validator = _import_validator(scripts_path)
+    _point_at_real_schemas(validator, monkeypatch)
+    canvas_dir = tmp_path / ".claude" / "canvas"
+    canvas_dir.mkdir(parents=True)
+    diamonds_dir = tmp_path / ".claude" / "diamonds"
+    diamonds_dir.mkdir(parents=True)
+    (diamonds_dir / "active.yml").write_text(
+        "active_diamonds:\n"
+        "  - id: l0-purpose\n"
+        "    scale: L0\n"
+        "    phase: deliver\n"
+        "    evidence_type: data-supported\n"
+    )
+    errors = validator.validate_diamonds(canvas_dir, validator.build_registry())
+    assert errors == [], f"Valid evidence_type should pass: {errors}"
+
+
 def test_validate_diamonds_valid_passes(tmp_path, scripts_path, monkeypatch):
     """A diamonds file with no matching schema parses and is skipped cleanly."""
     validator = _import_validator(scripts_path)

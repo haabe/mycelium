@@ -4,6 +4,18 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-07-19.
 
+## v0.57.3 — diamond evidence_type enum now enforced (validator gap fix)
+
+**2026-07-19. Attribution: diamond-evidence-type-enum-2026-07-19. Class: patch (validator correctness).**
+
+Dogfood-surfaced validator gap. The diamond-record `evidence_type` field in `schemas/diamonds/active.schema.json` was typed `{"type": "string"}` rather than `$ref`-ing `_common.schema.json#/$defs/evidence_type`. Consequence: a **source_class** value (`internal_stakeholder`) written into an **evidence_type** field — two adjacent fields with disjoint value sets — passed `validate_canvas.py` cleanly for ~3 weeks in a downstream project, caught only by a human-invoked `/canvas-health` grep. A wrong rung on the evidence ladder reads as a valid claim, which is load-bearing for confidence discipline and every gate that reads it.
+
+Fix: `evidence_type` now `$ref`s the enum — the same enforcement canvas provenance blocks already carry. Added two regression tests in `tests/python/test_validate_canvas.py` (`test_validate_diamonds_source_class_in_evidence_type_reported` + `test_validate_diamonds_valid_evidence_type_passes`).
+
+Scope check: a cross-schema scan confirmed this was the **only** named `evidence_type` / `source_class` property typed bare-string framework-wide (human-tasks `source_class` already `$ref`s correctly). Classified as a sibling sub-shape of *documented-rule-diverges-from-enforcement* — enforced on the canvas-provenance surface, omitted on the diamonds schema when it was retrofitted 2026-06-12 — not the classic "never-enforced" shape of instance #11.
+
+Known follow-ups (not in this patch): (1) confirm whether a bare top-level `evidence_type` on a *canvas* entry outside a provenance block is similarly unenforced; (2) consider a `/canvas-health` sub-check for the inverse-of-detected case (gate criteria met but `theory_gates_status` still `pending`).
+
 ## v0.57.2 — opencode upstream: procedural closure of #27899 + PR #32542
 
 **2026-07-19. Attribution: opencode-upstream-closure-2026-07-19. Class: patch (upstream-tracking + doc fix).**
