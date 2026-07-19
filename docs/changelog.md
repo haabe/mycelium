@@ -4,6 +4,18 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-07-19.
 
+## v0.57.4 — evidence_type/source_class enum enforced on canvas entries too (completes v0.57.3)
+
+**2026-07-19. Attribution: evidence-type-enum-canvas-surface-2026-07-19. Class: patch (validator correctness).**
+
+Follow-up to v0.57.3, closing the sibling surface. v0.57.3 enforced the `evidence_type` enum on the *diamond record* via a schema `$ref`. Dogfood reproduction then confirmed the same defect was latent on *canvas entries*: a bare entry-level `evidence_type:` (or `source_class:`) outside a provenance block is an **undeclared** property — no canvas schema declares those fields (they enforce them only inside provenance blocks) — so `additionalProperties` waves it past. A `source_class` value in a canvas entry's `evidence_type` field would validate clean.
+
+Fix: `validate_canvas.py` now runs an **enum-consistency walk** over every canvas + diamond node and checks each `evidence_type`/`source_class` value against its enum (read from `_common`, single source), everywhere the field appears — declared or not, present or future files. The disjoint-set case gets a targeted hint (*"'internal_stakeholder' is not in the evidence_type enum — that is a source_class value; did you mean source_class?"*). +3 regression tests in `tests/python/test_validate_canvas.py`.
+
+Chosen over adding a per-schema `$ref` to all 16 canvas schemas: none declare `evidence_type`/`source_class` today, the per-schema route wouldn't cover future files, and a single walk is the DRY enforcement point for a cross-cutting error class. The v0.57.3 diamond `$ref` stays as declarative defense-in-depth.
+
+Remaining follow-up (unchanged): a `/canvas-health` sub-check for the inverse-of-detected case (gate criteria met but `theory_gates_status` still `pending`).
+
 ## v0.57.3 — diamond evidence_type enum now enforced (validator gap fix)
 
 **2026-07-19. Attribution: diamond-evidence-type-enum-2026-07-19. Class: patch (validator correctness).**

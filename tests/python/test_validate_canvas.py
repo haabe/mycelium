@@ -670,3 +670,52 @@ def test_collect_trace_graph_handles_multiple_distinct_duplicates(tmp_path, scri
     assert len(duplicate_errors) == 2
     assert any("'opp-aaa'" in e for e in duplicate_errors)
     assert any("'opp-bbb'" in e for e in duplicate_errors)
+
+
+# ---------------------------------------------------------------------------
+# enum_consistency_errors (evidence_type / source_class values in their enum
+# EVERYWHERE, including undeclared entry-level occurrences — 2026-07-19)
+# ---------------------------------------------------------------------------
+
+def test_enum_consistency_flags_source_class_in_canvas_evidence_type(tmp_path, scripts_path, monkeypatch):
+    """A bare entry-level evidence_type holding a source_class value (outside any
+    provenance block) is caught — the canvas-surface sibling of the diamond gap
+    that per-schema $refs miss (additionalProperties waves the undeclared key past)."""
+    validator = _import_validator(scripts_path)
+    _point_at_real_schemas(validator, monkeypatch)
+    canvas_dir = tmp_path / ".claude" / "canvas"
+    canvas_dir.mkdir(parents=True)
+    (canvas_dir / "landscape.yml").write_text(
+        "components:\n  - id: src-research-005\n    name: x\n    evidence_type: internal_stakeholder\n"
+    )
+    errors = validator.enum_consistency_errors(canvas_dir)
+    # 'internal_stakeholder' is not in the evidence_type enum, so it appears only
+    # as the offending value + in the disjoint-set hint (safe to match on).
+    assert any("internal_stakeholder" in e and "source_class" in e for e in errors), errors
+
+
+def test_enum_consistency_flags_bad_diamond_evidence_type(tmp_path, scripts_path, monkeypatch):
+    """A nonsense evidence_type on a diamond record is caught by the walk too."""
+    validator = _import_validator(scripts_path)
+    _point_at_real_schemas(validator, monkeypatch)
+    canvas_dir = tmp_path / ".claude" / "canvas"
+    canvas_dir.mkdir(parents=True)
+    diamonds_dir = tmp_path / ".claude" / "diamonds"
+    diamonds_dir.mkdir(parents=True)
+    (diamonds_dir / "active.yml").write_text(
+        "active_diamonds:\n  - id: l0\n    scale: L0\n    phase: deliver\n    evidence_type: not-a-rung\n"
+    )
+    errors = validator.enum_consistency_errors(canvas_dir)
+    assert any("not-a-rung" in e for e in errors), errors
+
+
+def test_enum_consistency_passes_valid_values(tmp_path, scripts_path, monkeypatch):
+    """Valid evidence_type + source_class values produce no errors (no false positive)."""
+    validator = _import_validator(scripts_path)
+    _point_at_real_schemas(validator, monkeypatch)
+    canvas_dir = tmp_path / ".claude" / "canvas"
+    canvas_dir.mkdir(parents=True)
+    (canvas_dir / "opportunities.yml").write_text(
+        "opportunities:\n  - id: opp-1\n    evidence_type: data-supported\n    source_class: external_human\n"
+    )
+    assert validator.enum_consistency_errors(canvas_dir) == []

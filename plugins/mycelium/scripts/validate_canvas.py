@@ -391,6 +391,67 @@ def validate_diamonds(canvas_dir: Path, registry: Registry) -> list[str]:
     return errors
 
 
+def enum_consistency_errors(canvas_dir: Path) -> list[str]:
+    """evidence_type / source_class values must be in their enum EVERYWHERE.
+
+    The per-schema $ref only covers *declared* properties — provenance blocks
+    (canvas) and the diamond record (evidence_type $ref added v0.57.3). Undeclared
+    entry-level occurrences — a bare `evidence_type:` on a canvas entry outside a
+    provenance block — slip past `additionalProperties`. This walk closes that
+    surface across canvas + diamonds, present and future files, and flags the
+    disjoint-set error class (a source_class value in an evidence_type field, and
+    vice versa) with a targeted hint.
+
+    Surfaced 2026-07-19: a source_class value (`internal_stakeholder`) in a
+    diamond's `evidence_type` survived ~3 weeks of PASSes; the sibling canvas
+    surface had the same latent gap. Enums are read from _common (single source).
+    """
+    if not COMMON_SCHEMA.exists():
+        return []
+    common = load_schema(COMMON_SCHEMA)
+    ev_enum = set(common["$defs"]["evidence_type"]["enum"])
+    sc_enum = set(common["$defs"]["source_class"]["enum"])
+
+    files = sorted(canvas_dir.glob("*.yml"))
+    diamonds_dir = canvas_dir.parent / "diamonds"
+    if diamonds_dir.is_dir():
+        files += sorted(diamonds_dir.glob("*.yml"))
+
+    errors: list[str] = []
+
+    def walk(node, where, rel):
+        if isinstance(node, dict):
+            for k, v in node.items():
+                if k == "evidence_type" and isinstance(v, str) and v not in ev_enum:
+                    hint = (" — that is a source_class value; did you mean source_class?"
+                            if v in sc_enum else "")
+                    errors.append(
+                        f"{rel} :: {where}.evidence_type :: '{v}' is not in the "
+                        f"evidence_type enum {sorted(ev_enum)}{hint}")
+                elif k == "source_class" and isinstance(v, str) and v not in sc_enum:
+                    hint = (" — that is an evidence_type value; did you mean evidence_type?"
+                            if v in ev_enum else "")
+                    errors.append(
+                        f"{rel} :: {where}.source_class :: '{v}' is not in the "
+                        f"source_class enum {sorted(sc_enum)}{hint}")
+                walk(v, f"{where}.{k}" if where else k, rel)
+        elif isinstance(node, list):
+            for i, item in enumerate(node):
+                walk(item, f"{where}[{i}]", rel)
+
+    for path in files:
+        try:
+            data = load_yaml(path)
+        except Exception:
+            # YAML parse errors are reported by validate_all_yaml_parses /
+            # validate_diamonds; don't double-report here.
+            continue
+        rel = path.name if path.parent.name == "canvas" else f"diamonds/{path.name}"
+        walk(data, "", rel)
+
+    return errors
+
+
 def schemaless_canvas_warnings(canvas_dir: Path) -> list[str]:
     """Name every canvas file that has no schema — visibility, not failure.
 
@@ -446,6 +507,11 @@ def main():
 
     # Diamonds state dir: fail-loud parse + active.yml schema (2026-06-12)
     all_errors.extend(validate_diamonds(canvas_dir, registry))
+
+    # Enum-consistency walk (2026-07-19): evidence_type/source_class values must
+    # be in their enum EVERYWHERE they appear, including undeclared entry-level
+    # occurrences that additionalProperties waves past per-schema $refs.
+    all_errors.extend(enum_consistency_errors(canvas_dir))
 
     # Trace edge resolution + cycle detection
     graph, all_ids, collect_errors = collect_trace_graph(canvas_dir)
