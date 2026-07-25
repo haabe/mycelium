@@ -569,11 +569,25 @@ fi
 # ============================================================
 # Build output
 # ============================================================
-if [ -n "$REMINDERS" ]; then
-  python3 -c "
+# ALWAYS inject the agent operating contract (the always-on rules) so it binds
+# even in plugin form, where no operating-manual CLAUDE.md is templated into the
+# project (the plugin-form replacement for the removed legacy templating path;
+# see engine/agent-operating-contract.md + CI Check 47). Feedback-loop reminders
+# are appended when present. Resolve the packaged contract file: plugin form via
+# CLAUDE_PLUGIN_ROOT, else legacy .claude/, else in-repo relative to this hook.
+CONTRACT_FILE=""
+for candidate in \
+  "${CLAUDE_PLUGIN_ROOT:-}/engine/agent-operating-contract.md" \
+  "$PROJECT_DIR/.claude/engine/agent-operating-contract.md" \
+  "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)/engine/agent-operating-contract.md"; do
+  if [ -n "$candidate" ] && [ -f "$candidate" ]; then CONTRACT_FILE="$candidate"; break; fi
+done
+
+python3 -c "
 import json, sys
-reminders = sys.argv[1]
-corrections = sys.argv[2]
+contract_file = sys.argv[1]
+reminders = sys.argv[2]
+corrections = sys.argv[3]
 # Disambiguate '0' (genuinely empty memory) from a counting failure
 # (per opp-001) — phrase empty state as state, not failure.
 corrections_phrase = (
@@ -581,14 +595,24 @@ corrections_phrase = (
     if corrections in ('0', '0.', '')
     else f'{corrections} corrections logged'
 )
-output = {
-    'hookSpecificOutput': {
-        'hookEventName': 'SessionStart',
-        'additionalContext': f'MYCELIUM FEEDBACK LOOPS: {reminders}Memory state: {corrections_phrase}.'
+parts = []
+if contract_file:
+    try:
+        with open(contract_file) as f:
+            parts.append(f.read().strip())
+    except OSError:
+        pass
+if reminders:
+    parts.append(f'MYCELIUM FEEDBACK LOOPS: {reminders}Memory state: {corrections_phrase}.')
+context = '\n\n'.join(p for p in parts if p)
+if context:
+    output = {
+        'hookSpecificOutput': {
+            'hookEventName': 'SessionStart',
+            'additionalContext': context,
+        }
     }
-}
-print(json.dumps(output))
-" "$REMINDERS" "$CORRECTIONS_COUNT"
-fi
+    print(json.dumps(output))
+" "$CONTRACT_FILE" "$REMINDERS" "$CORRECTIONS_COUNT"
 
 exit 0
