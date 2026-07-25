@@ -49,9 +49,23 @@ import re
 import sys
 from pathlib import Path
 
-# Citation pattern: `(per: <source>)` where <source> can span multiple words
-# but ends before the closing paren. Captured non-greedy.
-CITATION_RE = re.compile(r"\(per:\s+([^)]+?)\)", re.IGNORECASE)
+# Citation pattern: `(per: <source>)` OR `(per <source>)` — the colon is
+# OPTIONAL, and that is the whole point of this line.
+#
+# THE BUG THIS FIXES (found in dogfood 2026-07-25, shipped v0.23.8, live ~2.5
+# months): the pattern required the colon. Measured across 19 captured agent
+# sessions, the colon form occurs ZERO times — every real citation the agent
+# emits is `(per C-025 skill-invocation)`, `(per Step 7)`, `(per #12 precedent)`.
+# So this checker matched 0% of live citations for its entire life while
+# reporting "no problems found" on every run. A guard that cannot match its
+# target is not a weak guard, it is an absent one wearing a green badge:
+# anti-pattern #9 (fail-open on absent input), and the same class as the
+# legacy-path-rot receipt where a green audit was read as a clean bill of health.
+#
+# The colon stays OPTIONAL rather than being switched to no-colon, because the
+# documented convention in the operating contract writes `(per: <source>)` and
+# some prose does follow it. Both forms are real; both must match.
+CITATION_RE = re.compile(r"\(per:?\s+([^)]+?)\)", re.IGNORECASE)
 
 # File-shape heuristic: contains a slash, OR contains a dot followed by a
 # known extension. Rejects pure-concept citations like "L2 Discover gate".
@@ -59,6 +73,23 @@ FILE_EXT_RE = re.compile(
     r"\.(md|yml|yaml|json|py|sh|toml|jsonl|txt|csv|html|js|ts|tsx|jsx|css|sql)\b",
     re.IGNORECASE,
 )
+
+# Path detection runs PER WHITESPACE-DELIMITED TOKEN, not across the whole
+# citation string. Scanning the whole string is what produced the false
+# positives: prose containing a hyphenated compound with a slash
+# (`doc-reference/legacy-path`) or a ratio (`Checks 26/30`) is not a file
+# reference, but any whole-string slash test says it is.
+#
+# A token is path-shaped when it carries a file extension, or when it has BOTH
+# a slash and a dot (a path whose extension is not in our list). Deliberately
+# conservative: a directory citation with no extension (`.claude/canvas/`)
+# falls through to concept-shaped and is reported UNVERIFIABLE rather than
+# UNVERIFIED. That is the safe direction — under-claiming costs a missed check,
+# over-claiming trains the reader to ignore the output.
+def _token_looks_like_path(token: str) -> bool:
+    if FILE_EXT_RE.search(token):
+        return True
+    return "/" in token and "." in token
 
 
 def looks_like_file_path(source: str) -> bool:
@@ -74,9 +105,17 @@ def looks_like_file_path(source: str) -> bool:
     s = source.strip()
     # Strip trailing `#anchor` for shape detection (keep for matching)
     s_for_shape = s.split("#", 1)[0]
-    if "/" in s_for_shape:
-        return True
-    return bool(FILE_EXT_RE.search(s_for_shape))
+
+    # A bare slash is NOT enough. Measured 2026-07-25 over 19 captured sessions:
+    # every "unverified file citation" the checker reported was prose that merely
+    # contained a slash — e.g. "the run-gates-before-push discipline — Checks
+    # 26/30 plus the doc-reference/legacy-path checks". 3 of 3 were false
+    # positives. Reporting prose as an unverified FILE citation trains the reader
+    # to ignore the output, which costs more than the check earns.
+    #
+    # A path-shaped token is a slash with no surrounding whitespace, i.e. the
+    # slash joins two path segments rather than separating words or numbers.
+    return any(_token_looks_like_path(tok) for tok in s_for_shape.split())
 
 
 def extract_citations(text: str):

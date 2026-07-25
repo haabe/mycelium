@@ -4,6 +4,20 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-07-25.
 
+## v0.60.1 — verify_citations matched 0% of real citations for 2.5 months
+
+**2026-07-25. Attribution: verify-citations-matcher-2026-07-25. Class: patch (guard correctness).**
+
+**The bug.** `CITATION_RE` required a colon: `\(per:\s+...\)`. Measured across 19 captured agent sessions on 2026-07-25, **the colon form occurs zero times** — every real citation the agent emits is `(per C-025 skill-invocation)`, `(per Step 7)`, `(per #12 precedent)`. So the checker shipped in v0.23.8 matched **0% of live citations for its entire life**, reporting "no problems found" on every run.
+
+A guard that cannot match its target is not a weak guard; it is an absent one wearing a green badge. Anti-pattern #9 (fail-open on absent input), same class as the legacy-path-rot receipt where a green audit was read as a clean bill of health. The colon is now **optional** rather than removed — the documented convention writes `(per: X)` and some prose follows it, so both forms are real and both must match.
+
+**Second defect, found by the same audit: prose reported as unverified file paths.** `looks_like_file_path()` returned true for any string containing a slash, scanning the whole citation. Every "unverified" verdict in the 19-session corpus was this false positive — e.g. *"the run-gates-before-push discipline — Checks 26/30 plus the doc-reference/legacy-path checks"*. Detection now runs **per whitespace-delimited token** and requires a file extension, or both a slash and a dot. Deliberately conservative: an extensionless directory citation falls through to concept-shaped and is reported UNVERIFIABLE rather than UNVERIFIED, because under-claiming costs a missed check while over-claiming trains the reader to ignore the output.
+
+**Measured effect on the real corpus** (`citation-audit.py`, 16 sessions): unverified **3 → 0**, all three being the prose false positive; 27 citations now correctly classified concept-shaped. The honest reading is that the agent cites *concepts*, not file paths — so a file-grounding checker has little surface to work on. That is a finding about the citation convention, not a bug.
+
+**Tests:** 6 regression assertions in `tests/python/test_verify_citations.py` covering both forms, the prose/ratio false positives, and a genuine path embedded in a longer citation.
+
 ## v0.60.0 — the opencode consumer path actually works now
 
 **2026-07-25. Attribution: opencode-consumer-path-2026-07-25. Class: minor (fail-closed guards + a shipped-broken script fixed + setup path corrected).**

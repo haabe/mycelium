@@ -212,3 +212,62 @@ def test_main_stdin_json_output(vc, read_log, monkeypatch, capsys):
     assert data["total_citations"] == 2
     assert "landscape.yml" in data["verified"]
     assert "missing.yml" in data["unverified"]
+
+
+# ---------------------------------------------------------------------------
+# Regression: the matcher required a colon and matched 0% of live citations.
+#
+# Shipped v0.23.8, live ~2.5 months. Measured across 19 captured agent sessions
+# 2026-07-25: the `(per: X)` colon form occurs ZERO times; every real citation
+# is `(per X)`. So the checker reported "no problems found" on every run while
+# matching nothing — anti-pattern #9, a guard that cannot match its target.
+# ---------------------------------------------------------------------------
+
+
+def test_no_colon_form_is_matched(scripts_path):
+    """The form that actually occurs in agent output."""
+    mod = _import(scripts_path)
+    cits = list(mod.extract_citations("Suggesting /threat-model (per C-025 skill-invocation)"))
+    assert len(cits) == 1
+    assert cits[0]["source"] == "C-025 skill-invocation"
+
+
+def test_colon_form_still_matched(scripts_path):
+    """The documented convention must keep working — the colon is optional, not removed."""
+    mod = _import(scripts_path)
+    cits = list(mod.extract_citations("(per: .claude/canvas/purpose.yml)"))
+    assert len(cits) == 1
+    assert cits[0]["file_shaped"] is True
+
+
+def test_no_colon_file_path_is_file_shaped(scripts_path):
+    mod = _import(scripts_path)
+    cits = list(mod.extract_citations("(per docs/theories.md)"))
+    assert cits[0]["file_shaped"] is True
+
+
+# ---------------------------------------------------------------------------
+# Regression: prose containing a slash was reported as an unverified FILE path.
+# All 3 "unverified" verdicts in the 19-session corpus were this false positive.
+# ---------------------------------------------------------------------------
+
+
+def test_prose_with_slashes_is_not_file_shaped(scripts_path):
+    """Hyphenated compounds and ratios are not paths."""
+    mod = _import(scripts_path)
+    text = "(per the run-gates discipline — Checks 26/30 plus the doc-reference/legacy-path checks)"
+    cits = list(mod.extract_citations(text))
+    assert cits[0]["file_shaped"] is False, "prose with a slash must not read as a file path"
+
+
+def test_ratio_prose_is_not_file_shaped(scripts_path):
+    mod = _import(scripts_path)
+    cits = list(mod.extract_citations("(per the whole session, reach/agreement is not a run)"))
+    assert cits[0]["file_shaped"] is False
+
+
+def test_real_paths_still_detected_among_words(scripts_path):
+    """A genuine path inside a longer citation is still found."""
+    mod = _import(scripts_path)
+    cits = list(mod.extract_citations("(per the gate in plugins/mycelium/engine/theory-gates.md)"))
+    assert cits[0]["file_shaped"] is True
