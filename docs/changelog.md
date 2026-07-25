@@ -4,6 +4,18 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-07-25.
 
+## v0.59.1 — Check 48: a release that corrects an earlier release owes a corrections entry
+
+**2026-07-25. Attribution: self-correcting-release-capture-2026-07-25. Class: patch (repo-only validator check, WARN tier).**
+
+**Scope note, deliberate:** this is a **repo-only** check in `tests/validate-template.sh`, NOT a shipped consumer script. The principle ("when you fix your own recent fix, capture the learning") is general; the *detector* assumes a versioned-release workflow with a dated changelog, which most consumers — who build products, not framework releases — do not have. Shipping a consumer-facing check that can never fire is how promise-registry rows accumulate.
+
+**Why.** v0.57.3 → v0.57.4 → v0.57.5 shipped a fix, an over-reach, and a retraction; v0.57.5's own heading reads *"corrects v0.57.4"*. Once a changelog says a release corrects an earlier one, there is no judgement call left to skip — which is what makes this mechanizable rather than another prose rule.
+
+**Narrow on purpose.** `completes` is NOT a trigger (follow-through is not a mistake); only `corrects`/`reverts`/`supersedes` with a version reference count. WARN tier per the start-at-WARN convention; promote to FAIL after a clean full-history inventory.
+
+**The finding it surfaced, and the nuance worth keeping.** The v0.57.4 lesson was never *lost* — it was written into the v0.57.5 changelog the same day. It was missing from `.claude/memory/corrections.md`, which is what `/corrections-audit`, the cluster catalogue, and count-keyed graduation triggers actually read. A lesson recorded only in release notes is invisible to every graduation mechanism the framework runs. Backfilled in this release. Sibling of v0.59.0's BVSSH orphan — same shape, different artifact: **right content, wrong surface**.
+
 ## v0.59.0 — /bvssh-check now writes the canvas it is measured by
 
 **2026-07-25. Attribution: bvssh-assessment-reconcile-2026-07-25. Class: minor (new mandatory skill step + new guard + hook reminder).**

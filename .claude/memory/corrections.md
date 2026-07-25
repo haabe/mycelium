@@ -429,3 +429,18 @@ _Corrections specific to a particular project, team, or context._
 **Correction**: null tolerance added to both schemas; validator re-run against BOTH corpora (upstream self-host + roadmap dogfood) before re-push. The push-block is the system working (jidoka) — caught pre-publish.
 
 **Prevention rule**: any new/changed canvas or diamonds schema must be validated against BOTH corpora before ship: `python3 plugins/mycelium/scripts/validate_canvas.py .claude/canvas` (self-host, template-shaped nulls) AND the dogfood repo's canvas (populated shapes). One-corpus validation of a two-corpus reality is the schema-side variant of the Postel's-Law note in consistency-check-spec.md — pre-check whether a rejected value is a typo or a natural framework state.
+
+### 2026-07-19 - Global canvas check validated only against the framework's own canvas; 21 false positives on a real one (v0.57.4 → v0.57.5)
+- **Scope**: delivery / validator design
+- **Category**: validated-against-the-wrong-corpus
+- **Origin**: dogfood reproduction (backfilled 2026-07-25 by Check 48, which flagged this release as self-correcting with no corrections entry)
+
+**Mistake**: v0.57.4 shipped an enum-consistency walk asserting `evidence_type` must be a Gilad-ladder value **everywhere** it appears. That contradicts the field's documented polymorphism (`canvas-guidance.yml`): `evidence_type` carries the Gilad ladder in diamonds and confidence-provenance, a gathering-method vocabulary in `_meta`, a signal-type vocabulary in market provenance, plus intentional extensions. Run against a real dogfood canvas it flagged **21 legitimate values** as violations alongside the 2 genuine bugs. v0.57.5 narrowed it to a disjoint-set swap detector.
+
+**Why it shipped**: v0.57.4 was validated against the framework's own canvas, which is clean and Gilad-only — the false-positive surface was structurally invisible there. Same shape as the v0.58.0 gap (validated in the one repo where a delivery defect cannot appear) and the legacy-path-rot receipt (a green audit read as a clean bill of health).
+
+**Prevention rule**: a check that walks a *whole canvas* must be dogfooded against a real, richer project canvas before shipping — the framework's own canvas is a best case, not a test case. Generalized: when a check's false-positive surface depends on data variety, validate it against the most varied corpus available, not the most convenient one.
+
+**Backfill note (this is the part worth keeping)**: the process lesson above was NOT lost — it was written into `docs/changelog.md` v0.57.5 the same day. It was missing from *here*. That distinction matters: the changelog is release communication, while `corrections.md` is what `/corrections-audit`, the cluster catalogue, and count-keyed graduation triggers actually read. A lesson recorded only in the changelog is invisible to every graduation mechanism the framework runs — so the cluster counts under-report, and patterns that should graduate silently cannot. Check 48 (added v0.59.1, WARN tier) now flags a release that corrects an earlier release with no corrections entry within 14 days.
+
+**Generalization**: sibling of the v0.59.0 BVSSH orphan — *written in the surface that reads well, not the surface that gets read*. Two instances now, different artifacts (assessment → decision-log-not-canvas; release lesson → changelog-not-corrections). Candidate cluster: **right-content-wrong-surface**. Worth watching for a third before proposing a mechanism beyond the two point-checks already shipped.
