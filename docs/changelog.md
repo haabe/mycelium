@@ -4,6 +4,20 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-07-25.
 
+## v0.59.0 — /bvssh-check now writes the canvas it is measured by
+
+**2026-07-25. Attribution: bvssh-assessment-reconcile-2026-07-25. Class: minor (new mandatory skill step + new guard + hook reminder).**
+
+**The defect.** `/bvssh-check` MANDATED a decision-log append and never mentioned `.claude/canvas/bvssh-health.yml` at all — while `hooks/session-start.sh` computes the "BVSSH is N days overdue" reminder by reading `bvssh-health.yml#last_assessed`. The skill wrote to A; the detector read B; nothing connected them. Every consumer running `/bvssh-check` therefore got a permanently stale `last_assessed`, an overdue nag that fires forever (including immediately after a completed assessment), and an `assessment_history` that never accumulated the trend it exists to hold.
+
+Found in dogfood 2026-07-25 with **three** historical orphans across two repos — 2026-05-20 (framework), 2026-06-20 and 2026-07-11 (dogfood). The 06-20 orphan was noticed at the time and "fixed" by writing a prose rule into a canvas notes field; the 07-11 orphan is that prose rule failing, because the skill never had the step. This ships the step, not more prose.
+
+**Changes.**
+- `skills/bvssh-check/SKILL.md` — new **Canvas (MANDATORY — do this FIRST)** section: append to `assessment_history`, update both `last_assessed` fields, update changed CALMS `status`/`evidence`, refresh `_meta`, refresh the stale-prone top-of-file snapshot blocks, then verify-after-write. The decision-log section now requires a dated heading (`### BVSSH Assessment — YYYY-MM-DD`) so orphans are mechanically detectable.
+- `scripts/check_bvssh_reconcile.py` — new guard. Every dated BVSSH heading in the decision log must have a matching `assessment_history` entry. Honours `MYCELIUM_BVSSH_CANVAS`. Absent-input discipline runs both ways (anti-pattern #9): a project that never ran `/bvssh-check` is NOT flagged, and canvas-without-log is INFO rather than failure since the canvas is the source of truth.
+- `hooks/session-start.sh` — when orphans exist, says so, and warns that the overdue count above it is unreliable until they are reconciled. Distinguishing "never assessed" from "assessed but not landed" is the difference between a useful reminder and a misleading one.
+- `tests/python/test_check_bvssh_reconcile.py` — 10 coverage tests (G-V12), fixtured on all three real orphans plus the absent-input and env-override paths.
+
 ## v0.58.1 — consumer-perspective delivery test + the missing architecture doc
 
 **2026-07-25. Attribution: consumer-dogfood-test-and-architecture-doc-2026-07-25. Class: patch (test + docs; no runtime change).**

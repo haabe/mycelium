@@ -120,8 +120,38 @@ Overall: [summary and recommended actions]
 
 Any **Red** cell (either table) gets a bolded `**Red**` + a one-line `Blocking:`-style callout under its table — never left as an undifferentiated table value.
 
+## Canvas (MANDATORY — the source of truth, do this FIRST)
+
+`.claude/canvas/bvssh-health.yml` is the canonical record. The decision log is provenance; the canvas is what the framework READS. Write the canvas before the decision log — if only one of the two lands, it must be this one.
+
+**APPEND** to `assessment_history`:
+
+```yaml
+  - date: "YYYY-MM-DDT00:00:00Z"
+    better: "improving|stable|declining"
+    value: "improving|stable|declining"
+    sooner: "improving|stable|declining"
+    safer: "improving|stable|declining"
+    happier: "improving|stable|declining"
+    notes: |
+      Trigger for this assessment; per-dimension evidence; CALMS line;
+      Overall verdict + recommended actions.
+```
+
+**UPDATE** in the same pass:
+1. `last_assessed` (top-level) **and** `calms_assessment.last_assessed` — both, to today. `hooks/session-start.sh` reads the top-level one to compute the "BVSSH overdue" reminder; leaving it stale makes the hook nag overdue forever, immediately after a completed assessment.
+2. `calms_assessment.<dimension>.status` + `evidence` for any CALMS dimension whose rating changed. State the downgrade/upgrade reason and, for a downgrade, the recovery bar.
+3. `_meta.last_validated` + a one-line `_meta.notes` addition naming what changed.
+4. The per-dimension snapshot blocks at the top of the file (`better:`, `value:`, … `current_state` / `trend` / `metrics`) when they no longer match the assessment you just wrote. These are a snapshot of the newest assessment, not history — stale blocks here are the file's most common rot.
+
+**THEN VERIFY** (per the operating contract's verify-after-write rule): re-read the fields you just wrote and confirm the *value fields* changed, not only the timestamps. Do not report the assessment complete until `last_assessed` reads today's date in the file itself.
+
+**Why this section exists (added v0.59.0):** it was missing. The skill mandated the decision-log append and never mentioned the canvas, while `session-start.sh` computed overdue-ness from the canvas — so assessments landed in provenance and never in the file the framework reads. Three orphaned assessments across two repos before the cause was found (2026-05-20 framework; 2026-06-20 + 2026-07-11 dogfood). A prose rule written into a canvas notes field failed to prevent the recurrence, because the skill never had the step. `scripts/check_bvssh_reconcile.py` is the mechanical backstop.
+
 ## Decision Log (MANDATORY per G-P4)
-**APPEND** a `### BVSSH Assessment` entry to `.claude/harness/decision-log.md` with: all 5 dimension ratings, CALMS ratings, key evidence, recommended actions.
+**APPEND** a `### BVSSH Assessment — <YYYY-MM-DD>` entry to `.claude/harness/decision-log.md` with: all 5 dimension ratings, CALMS ratings, key evidence, recommended actions.
+
+Keep the date in the heading — `check_bvssh_reconcile.py` matches heading dates against `assessment_history` dates to detect orphans.
 
 ## Theory Citations
 - Smart: Sooner Safer Happier (BVSSH framework)
