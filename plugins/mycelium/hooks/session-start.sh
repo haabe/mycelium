@@ -71,6 +71,35 @@ except: print(999)
       REMINDERS="${REMINDERS}BVSSH health check is ${BVSSH_AGE} days overdue (monthly cadence). Run /bvssh-check. "
     fi
   fi
+
+  # Orphan check (v0.59.0): an assessment can be written to the decision log and
+  # never reconciled into this canvas — in which case last_assessed stays stale
+  # and the overdue reminder above is WRONG (it nags for an assessment that was
+  # actually performed). Distinguishing "never assessed" from "assessed but not
+  # landed" is the difference between useful and misleading. Observed 3x across
+  # two repos before /bvssh-check was given a mandatory canvas step.
+  # Resolve the helper via CLAUDE_PLUGIN_ROOT (plugin form) with a legacy
+  # .claude/ fallback — the same convention as framework-guard.sh / scope-gate.sh.
+  RECONCILE=""
+  if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check_bvssh_reconcile.py" ]; then
+    RECONCILE="${CLAUDE_PLUGIN_ROOT}/scripts/check_bvssh_reconcile.py"
+  elif [ -f "$PROJECT_DIR/.claude/scripts/check_bvssh_reconcile.py" ]; then
+    RECONCILE="$PROJECT_DIR/.claude/scripts/check_bvssh_reconcile.py"
+  fi
+  if [ -n "$RECONCILE" ]; then
+    ORPHANS=$(python3 "$RECONCILE" --project-dir "$PROJECT_DIR" --json 2>/dev/null \
+      | python3 -c "
+import json, sys
+try:
+  d = json.load(sys.stdin)
+except Exception:
+  sys.exit(0)
+print(','.join(d.get('orphaned_in_log_only') or []))
+" 2>/dev/null || echo "")
+    if [ -n "$ORPHANS" ]; then
+      REMINDERS="${REMINDERS}BVSSH assessment(s) ${ORPHANS} are in the decision log but NOT in bvssh-health.yml — the overdue count above is unreliable until they are reconciled into assessment_history. "
+    fi
+  fi
 fi
 
 # ============================================================
