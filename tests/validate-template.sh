@@ -2273,6 +2273,99 @@ check_operating_contract_wiring() {
 }
 
 # ============================================================
+# Check 48: a release that CORRECTS an earlier release owes a corrections entry
+# ============================================================
+#
+# Scope: THIS REPO ONLY, deliberately. The general principle ("when you fix
+# your own recent fix, capture the learning") applies to everyone, but the
+# detector assumes a versioned-release workflow with a dated changelog —
+# which most Mycelium consumers, who build products rather than framework
+# releases, do not have. Shipping a consumer-facing check that can never fire
+# is how promise-registry rows accumulate. So this lives in the repo-only
+# validator, not in plugins/mycelium/scripts/.
+#
+# Why it exists: v0.57.3 -> v0.57.4 -> v0.57.5 shipped a fix, an over-reach,
+# and a retraction (v0.57.5's own heading reads "corrects v0.57.4"). The git
+# history proved a mistake had been made and diagnosed — and no corrections.md
+# entry was written in either repo. There is no judgement call left to skip
+# once a changelog says a release corrects an earlier one, which is exactly
+# what makes it mechanizable rather than another prose rule (the sibling
+# lesson from v0.59.0's BVSSH orphan: prose in a notes field did not hold).
+#
+# Tier: WARN, per the framework's start-at-WARN convention for new checks
+# (see scripts/check_gated_by.py header). Promote to FAIL once the backlog it
+# surfaces is cleared and a full-history inventory is clean.
+#
+# Deliberately NARROW: "completes" is NOT a trigger. Completing earlier work
+# is follow-through, not a mistake. Only corrects/reverts/supersedes count.
+check_self_correcting_release_capture() {
+    section "Check 48: releases that correct an earlier release carry a corrections entry (WARN tier)"
+
+    local changelog="docs/changelog.md"
+    local corrections=".claude/memory/corrections.md"
+    local window_days=14
+
+    if [ ! -f "$changelog" ]; then
+        pass "Check 48: no $changelog — nothing to check"
+        return
+    fi
+    if [ ! -f "$corrections" ]; then
+        warn "Check 48: $changelog exists but $corrections does not — self-correcting releases cannot be captured anywhere."
+        return
+    fi
+
+    local result
+    result=$(python3 - "$changelog" "$corrections" "$window_days" <<'PY'
+import re, sys
+from datetime import date, timedelta
+
+changelog, corrections, window = sys.argv[1], sys.argv[2], int(sys.argv[3])
+text = open(changelog, encoding="utf-8", errors="replace").read()
+
+# "corrects v0.57.4" / "reverts v0.1.2" / "supersedes v2.0.0".
+# "completes" is intentionally excluded: follow-through is not a mistake.
+TRIGGER = re.compile(r"\b(corrects|reverts|supersedes)\s+v\d+\.\d+\.\d+", re.I)
+DATE = re.compile(r"\*\*(\d{4}-\d{2}-\d{2})\.")
+
+# Section = a `## vX.Y.Z` heading plus everything up to the next one.
+sections = re.split(r"(?m)^(?=## v\d+\.\d+\.\d+)", text)
+
+entry_dates = set()
+for m in re.finditer(r"(?m)^#{2,4}\s*(\d{4}-\d{2}-\d{2})", open(corrections, encoding="utf-8", errors="replace").read()):
+    try:
+        entry_dates.add(date.fromisoformat(m.group(1)))
+    except ValueError:
+        pass
+
+uncaptured = []
+for sec in sections:
+    head = sec.split("\n", 1)[0]
+    vm = re.match(r"## (v\d+\.\d+\.\d+)", head)
+    if not vm or not TRIGGER.search(sec):
+        continue
+    dm = DATE.search(sec)
+    if not dm:
+        continue  # undated section: cannot evaluate a window, skip rather than guess
+    try:
+        rel = date.fromisoformat(dm.group(1))
+    except ValueError:
+        continue
+    if not any(abs((d - rel).days) <= window for d in entry_dates):
+        uncaptured.append(f"{vm.group(1)} ({rel.isoformat()})")
+
+print("|".join(uncaptured))
+PY
+) || result=""
+
+    if [ -z "$result" ]; then
+        pass "Check 48: every self-correcting release has a corrections entry within ${window_days} days"
+        return
+    fi
+
+    warn "Check 48: release(s) correcting an earlier release with no corrections.md entry within ${window_days} days: ${result//|/, }. The changelog already states a mistake was diagnosed; capture the learning in $corrections."
+}
+
+# ============================================================
 # RUN ALL CHECKS
 # ============================================================
 #
@@ -2317,6 +2410,7 @@ check_stale_state_read_pattern
 check_plugin_json_version_sync
 check_install_command_canonical
 check_operating_contract_wiring
+check_self_correcting_release_capture
 check_canvas_write_preflight
 check_four_risks_when_active
 check_plugin_identifier_leak
