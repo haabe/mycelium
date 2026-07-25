@@ -4,6 +4,16 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-07-25.
 
+## v0.58.1 — consumer-perspective delivery test + the missing architecture doc
+
+**2026-07-25. Attribution: consumer-dogfood-test-and-architecture-doc-2026-07-25. Class: patch (test + docs; no runtime change).**
+
+Hardens v0.58.0 and closes a documentation gap surfaced in the same dogfood session.
+
+**Meta-fix — dogfood from the consumer's seat.** v0.58.0's gap stayed invisible for ~2.5 months because validation ran in the framework repo — the one place a delivery/packaging gap cannot appear. `tests/bash/test_session_start_contract_delivery.sh` now runs the real `session-start.sh` against a downstream-consumer-shaped project (`${CLAUDE_PLUGIN_ROOT}` set, no `CLAUDE.md`, empty `.claude/`) and asserts the operating contract is actually injected. Check 47 guards the wiring statically; this proves the end-to-end runtime path — the test that would have caught the original gap. Discovered + run by `tests/bash/run.sh` (Check 17), so it executes in CI and at push-time.
+
+**Architecture doc.** `docs/architecture.md` is the previously-missing single map of how Mycelium is built and connected: engine / harness / hooks / skills / canvas and how they relate (Böckeler's computational + inferential halves), the Scales×Diamonds runtime model, the **context surface** (what is always-on via the SessionStart-injected operating contract vs what loads JiT), and the packaging → release → install flow. Consolidates what previously lived scattered across `CLAUDE.md`, the engine/harness READMEs, `context-surface.md`, `README.md`, and `install-paths.md`; linked from `docs/README.md`.
+
 ## v0.58.0 — plugin form now injects the always-on operating contract (fixes an unintended migration gap)
 
 **2026-07-25. Attribution: plugin-form-operating-contract-injection-2026-07-25. Class: minor (new always-on delivery mechanism; behavior change for plugin-form consumers).**
