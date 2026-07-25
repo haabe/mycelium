@@ -4,7 +4,7 @@
 #
 # WHY: opencode discovers skills natively (reads .claude/skills/) but does NO
 # ${...} interpolation of skill content, and its read tool treats a literal
-# ${CLAUDE_PLUGIN_ROOT}/... path as project-relative → fails. 36 of 55 skills
+# ${CLAUDE_PLUGIN_ROOT}/... path as project-relative → fails. 38 of 58 skills
 # reference ${CLAUDE_PLUGIN_ROOT}/engine/… + /harness/… in load-bearing steps.
 # (Verified against opencode 1.17.7, 2026-06-15: setting the env var does NOT fix
 # this — resolution would depend on the model cat-ing via a shell, i.e. model-luck.)
@@ -53,6 +53,61 @@ if [ ! -d "$PLUGIN_ROOT/skills" ]; then
   exit 1
 fi
 
+# ---------------------------------------------------------------------------
+# GUARD 1 (fail-closed): the project root must be a git root.
+#
+# WHY THIS IS FAIL-CLOSED AND NOT A WARNING. opencode resolves its "project
+# directory" by walking UP from the working directory until it finds a marker.
+# From a directory with no .git, it escapes upward and adopts an ancestor repo
+# as the project — so canvas writes, vendored skills, and CLAUDE.md edits land
+# in the WRONG repository. A user with a dotfiles repo in $HOME (common) who
+# does `mkdir ~/myidea && cd ~/myidea && opencode` gets writes into ~/. That is
+# data loss, not friction, so this refuses rather than warns.
+#
+# `git init` is the fix and it is cheap, so the failure mode of this guard
+# (someone has to type one command) is far cheaper than the failure it prevents.
+# Recorded as opp-009 in the dogfood project; the anchor fix previously existed
+# only in a dogfood-local runner and never shipped to consumers.
+#
+# ESCAPE HATCH: MYCELIUM_ALLOW_NONGIT_ROOT=1 for the deliberate case (a project
+# tracked by another VCS, or a sandbox the user genuinely wants). It is opt-in
+# and named, so bypassing is a decision rather than an accident.
+# ---------------------------------------------------------------------------
+if [ ! -d "$PROJECT_ROOT/.git" ] && [ "${MYCELIUM_ALLOW_NONGIT_ROOT:-0}" != "1" ]; then
+  echo "ERROR: '$PROJECT_ROOT' is not a git root (no .git directory)." >&2
+  echo "" >&2
+  echo "  opencode finds its project directory by walking UP from the working" >&2
+  echo "  directory. Without a marker here, it adopts an ancestor repository" >&2
+  echo "  instead, and Mycelium's writes land in the wrong repo." >&2
+  echo "" >&2
+  echo "  Fix (one command):   git init" >&2
+  echo "" >&2
+  echo "  Deliberate exception: MYCELIUM_ALLOW_NONGIT_ROOT=1 $0 $PROJECT_ROOT" >&2
+  exit 1
+fi
+
+# ---------------------------------------------------------------------------
+# GUARD 2 (fail-closed): refuse to vendor into the Mycelium checkout itself.
+#
+# The documented manual setup path said `git clone … && cd mycelium` and then
+# `provision-skills.sh .` with the comment "'.' = your project root" — but after
+# the cd, '.' IS the clone. Following the docs literally vendored Mycelium into
+# Mycelium: 58 skills copied over themselves and their ${CLAUDE_PLUGIN_ROOT}
+# references rewritten in place, corrupting the checkout. The doc is fixed, and
+# this catches anyone following an older copy of it.
+# ---------------------------------------------------------------------------
+if [ "$(cd "$PROJECT_ROOT" && pwd -P)" = "$(cd "$PLUGIN_ROOT/../.." && pwd -P 2>/dev/null || echo /nonexistent)" ] \
+   || [ -f "$PROJECT_ROOT/plugins/mycelium/manifest.yml" ]; then
+  echo "ERROR: '$PROJECT_ROOT' looks like the Mycelium checkout itself, not your project." >&2
+  echo "" >&2
+  echo "  Provisioning here would vendor Mycelium into Mycelium and rewrite the" >&2
+  echo "  checkout's own skill references in place." >&2
+  echo "" >&2
+  echo "  Pass YOUR project root explicitly:" >&2
+  echo "    bash $0 /path/to/your-project" >&2
+  exit 1
+fi
+
 echo "Mycelium → opencode provisioning"
 echo "  plugin:  $PLUGIN_ROOT"
 echo "  project: $PROJECT_ROOT"
@@ -95,7 +150,15 @@ rewrite "$VENDOR"
 #    discussion) are intentional and must NOT trip the warning (don't cry wolf).
 RESIDUAL_RE='\$\{?CLAUDE_PLUGIN_ROOT\}?/'
 SKILL_N=$(find "$DEST/skills" -name 'SKILL.md' | wc -l | tr -d ' ')
-RESIDUAL=$(grep -rlE "$RESIDUAL_RE" "$DEST/skills" "$VENDOR" 2>/dev/null | wc -l | tr -d ' ')
+# NOTE the `|| true`. grep exits 1 when it finds NOTHING, which here is the
+# SUCCESS case (every reference rewritten). Under `set -euo pipefail` that exit
+# propagated through the pipeline into the assignment and killed the script — so
+# a perfectly clean provisioning run aborted at exit 1 with no message, while a
+# run that left residuals behind completed and printed "Done." The success path
+# was the failure path, and /mycelium:setup Step 5 invokes this, so setup
+# reported failure on a flawless run. Shipped broken; found 2026-07-25 by the
+# first test that ever ran this script against a clean project root.
+RESIDUAL=$( { grep -rlE "$RESIDUAL_RE" "$DEST/skills" "$VENDOR" 2>/dev/null || true; } | wc -l | tr -d ' ')
 echo "  vendored: $SKILL_N skills + engine/harness/jit-tooling/domains → .claude/mycelium/"
 echo "  rewrote \${CLAUDE_PLUGIN_ROOT} → .claude/mycelium (and /skills/ → .claude/skills/)"
 if [ "$RESIDUAL" != "0" ]; then

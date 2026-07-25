@@ -9,7 +9,7 @@
 
 The AI coding scene in mid-2026 has visible tension around pricing: subscription tiers shifting, per-token costs accumulating, and a steady drift toward self-hosted setups (laptop, VPS, dedicated inference box). [opencode](https://github.com/anomalyco/opencode) is the most-cited Claude Code alternative — provider-agnostic, TUI-first, runs against Anthropic, OpenAI, Google, or local providers via Ollama or LM Studio.
 
-If you're already moving toward self-hosted AI development workflow, Mycelium can come along — but with one real caveat about skills (below). The file substrate — canvas YAML, memory, decision-log, and the Python/Bash validators — is harness-neutral and runs verbatim. The skills are discovered natively (opencode 1.17.7 reads `.claude/skills/` directly — no extra plugin needed), **but 33 of the 58 skills reference `${CLAUDE_PLUGIN_ROOT}/engine/…` and `/harness/…` files that opencode does not resolve** (it never sets that variable). Runtime-verified 2026-07-18: those references are dead on opencode unless the referenced files are vendored into the project and the paths rewritten. **`/mycelium:setup` now automates this** (`provision-skills.sh`): it copies the skills + their `engine/`/`harness/`/`jit-tooling/`/`domains/` reference files into your project's `.claude/` and rewrites `${CLAUDE_PLUGIN_ROOT}/…` to project-relative paths opencode resolves. The rewrite is verified to produce resolvable paths; full skill *execution* on a local model isn't yet end-to-end-verified (the available local models were too weak to drive it). The vendored copies are a snapshot — re-run setup after a framework upgrade to refresh. The runtime-discipline mechanisms (described below) are Claude-Code-specific in their *enforcement*; on opencode they degrade to **prompt-level guidance to the model** unless a plugin re-supplies the enforcement. As of mid-2026 two of the three previously-hard gaps have structural paths (one closed upstream, one plugin-solvable), leaving reflexion-on-tool-failure as the one mechanism with no clean path today. Capable models (including open-weight Mistral-class) will follow the prose guidance; small 4B/8B models may not.
+If you're already moving toward self-hosted AI development workflow, Mycelium can come along — but with one real caveat about skills (below). The file substrate — canvas YAML, memory, decision-log, and the Python/Bash validators — is harness-neutral and runs verbatim. The skills are discovered natively (opencode 1.17.7 reads `.claude/skills/` directly — no extra plugin needed), **but 38 of the 58 skills reference `${CLAUDE_PLUGIN_ROOT}/engine/…` and `/harness/…` files that opencode does not resolve** (it never sets that variable). Runtime-verified 2026-07-18: those references are dead on opencode unless the referenced files are vendored into the project and the paths rewritten. **`/mycelium:setup` now automates this** (`provision-skills.sh`): it copies the skills + their `engine/`/`harness/`/`jit-tooling/`/`domains/` reference files into your project's `.claude/` and rewrites `${CLAUDE_PLUGIN_ROOT}/…` to project-relative paths opencode resolves. The rewrite is verified to produce resolvable paths; full skill *execution* on a local model isn't yet end-to-end-verified (the available local models were too weak to drive it). The vendored copies are a snapshot — re-run setup after a framework upgrade to refresh. The runtime-discipline mechanisms (described below) are Claude-Code-specific in their *enforcement*; on opencode they degrade to **prompt-level guidance to the model** unless a plugin re-supplies the enforcement. As of mid-2026 two of the three previously-hard gaps have structural paths (one closed upstream, one plugin-solvable), leaving reflexion-on-tool-failure as the one mechanism with no clean path today. Capable models (including open-weight Mistral-class) will follow the prose guidance; small 4B/8B models may not.
 
 This page tells you what works, what doesn't, how to set it up, and which model sizes are worth your time.
 
@@ -37,47 +37,57 @@ This page tells you what works, what doesn't, how to set it up, and which model 
 Assumes you have [Bun](https://bun.sh), [Ollama](https://ollama.com) (or another provider), and a local clone of Mycelium.
 
 ```bash
+# 0. Make your project a git root FIRST. This is not optional.
+# opencode finds its "project directory" by walking UP from the working directory.
+# Without a marker here it adopts an ANCESTOR repo as the project, and Mycelium's
+# writes land in the wrong repository (a dotfiles repo in $HOME is the common trap).
+# provision-skills.sh now refuses to run without this.
+mkdir -p ~/my-project && cd ~/my-project && git init
+
 # 1. Install opencode
 npm install -g opencode-ai          # or curl -fsSL https://opencode.ai/install | bash
 
-# 2. Install Mycelium in your project
-git clone https://github.com/haabe/mycelium
-cd mycelium
-# Substrate is ready: CLAUDE.md, AGENTS.md, .claude/, plugins/mycelium/, tests/
+# 2. Get Mycelium. Clone it SOMEWHERE ELSE — it is the source, not your project.
+git clone https://github.com/haabe/mycelium ~/src/mycelium
 
-# 3. Provision the skills into your project. Run the script FROM the clone — it
-# self-locates (no CLAUDE_PLUGIN_ROOT needed) and vendors the skills + rewrites their
-# ${CLAUDE_PLUGIN_ROOT} refs to project-relative paths. (/mycelium:setup does this for
-# you on Claude Code; for a pure-opencode clone, run it directly.) Re-run after upgrades.
-bash plugins/mycelium/integrations/opencode/provision-skills.sh .   # '.' = your project root
+# 3. Provision the skills INTO YOUR PROJECT. Note the argument: it is your project
+# root, NOT the clone. The script self-locates (no CLAUDE_PLUGIN_ROOT needed) and
+# vendors the skills + their engine/harness references, rewriting ${CLAUDE_PLUGIN_ROOT}
+# to project-relative paths. Re-run after upgrades. It refuses to vendor into the
+# Mycelium checkout itself.
+bash ~/src/mycelium/plugins/mycelium/integrations/opencode/provision-skills.sh ~/my-project
 
-# 4. Configure opencode (.opencode/opencode.json or ~/.config/opencode/opencode.json).
-# opencode 1.17.7 discovers .claude/skills/ natively — no opencode-agent-skills plugin needed.
-# Schema is strict — no comment keys. Set the model to one your hardware can run (see below).
-{
-  "$schema": "https://opencode.ai/config.json",
-  "provider": {
-    "ollama": {
-      "npm": "@ai-sdk/openai-compatible",
-      "name": "Ollama (local)",
-      "options": { "baseURL": "http://localhost:11434/v1" },
-      "models": {
-        "qwen2.5-coder:32b": { "name": "Qwen 2.5 Coder 32B", "tools": true }
-      }
-    }
-  }
-}
+# 4. Install the opencode enforcement plugin + commands. WITHOUT THIS you get the
+# skills but NONE of the runtime enforcement (see "What you lose" below).
+mkdir -p ~/my-project/.opencode/plugin ~/my-project/.opencode/command
+cp -R ~/src/mycelium/plugins/mycelium/integrations/opencode/plugin/. ~/my-project/.opencode/plugin/
+cp -R ~/src/mycelium/plugins/mycelium/integrations/opencode/command/. ~/my-project/.opencode/command/
 
-# 5. Pull a model that emits STRUCTURED tool calls (see "Choosing a model" — this,
-# not size, is the gate). llama3.1:8b is verified-working; stock qwen2.5-coder is NOT.
-ollama pull llama3.1:8b
-# Verify it before relying on it (FAIL = unusable in opencode):
-#   python3 plugins/mycelium/integrations/opencode/check-tool-calling.py llama3.1:8b
+# 5. Configure opencode. Start from the shipped config rather than retyping it:
+cp ~/src/mycelium/plugins/mycelium/integrations/opencode/opencode.json ~/my-project/.opencode/opencode.json
+# Then set "model" to one your hardware can run (see "Choosing a model" below).
+# NOTE the per-model key is "tool_call": true (not "tools") — the schema is strict.
+
+# 6. Create AGENTS.md, or opencode's `instructions` load silently finds nothing.
+# The shipped opencode.json declares "instructions": ["AGENTS.md"]. On Claude Code,
+# /mycelium:setup writes this file; on a pure-opencode install nothing does, so the
+# always-on operating contract has no delivery vehicle unless you create one:
+cp ~/src/mycelium/plugins/mycelium/engine/agent-operating-contract.md ~/my-project/AGENTS.md
+
+# 7. Pull a model that emits STRUCTURED tool calls (see "Choosing a model" — this,
+# not size, is the gate). Verified-working: llama3.1:8b, mistral-nemo, mistral.
+# Stock qwen2.5-coder is NOT.
+ollama pull mistral-nemo
+# Verify any model before relying on it (FAIL = unusable in opencode):
+#   python3 ~/src/mycelium/plugins/mycelium/integrations/opencode/check-tool-calling.py mistral-nemo
 # And avoid Ollama's 4K context default (overflows agentic prompts -> tool-calls fail).
 # IMPORTANT: this must be set on the SERVE PROCESS, not just your shell — a GUI/brew
-# launchd `ollama serve` won't inherit a shell export. Stop that server and run:
-#   env OLLAMA_CONTEXT_LENGTH=32768 ollama serve   (verify: ps shows llama-server -c 32768)
-export OLLAMA_CONTEXT_LENGTH=32768
+# launchd `ollama serve` won't inherit a shell export. THE macOS Ollama.app SERVER IS
+# THE COMMON CASE AND IT RUNS AT 4096 WITH NO WARNING (verified 2026-07-25). Quit it,
+# then run:
+#   env OLLAMA_CONTEXT_LENGTH=32768 ollama serve
+# Verify mechanically — do not trust the env var alone:
+#   ps aux | grep llama-server   # must show -c 32768, not -c 4096
 
 # 6. Run
 # (Optional) on a weak local model (≈8B), disable the preflight injection if it derails
@@ -92,9 +102,13 @@ The load-bearing decision is **NOT model size** — it's whether the model emits
 | Model | Structured tool_calls on Ollama? | Note |
 |---|---|---|
 | **`llama3.1:8b`** | ✅ **PASS** (verified) | Clean structured calls on `/v1` *and* native — **at 8B**. Size is not the gate. |
+| **`mistral-nemo`** (12B) | ✅ **PASS** (verified 2026-07-25) | Structured calls at `-c 32768`, control-gated against `llama3.1:8b`. 7.1 GB, ~6 min pull. |
+| **`mistral`** (7B) | ✅ **PASS** (verified 2026-07-25) | Second Mistral-family data point. 4.4 GB, ~3.5 min pull. |
 | stock `qwen2.5-coder` (`:14b`, `:32b`) | ❌ **FAIL** | Emits the call as text content; Ollama template gap (known qwen-coder-family bug). Unusable in opencode as-is, any size. |
 | `qwen3` (e.g. `:32b`) | ❌ FAIL (reported, [opencode#1034](https://github.com/anomalyco/opencode/issues/1034)) | Generates tool JSON, never executes — same failure at 32B. |
 | Dolphin 3 · Qwen3-Coder (unsloth tool-calling-fix template) · `hhao/qwen2.5-coder-tools` · DeepSeek-Coder | ↗ community-reported good | Tool-fixed templates exist; **verify before relying** (next row). |
+
+**What a PASS does and does not license (added 2026-07-25).** It establishes that the model's Ollama template emits structured `tool_calls` at all. It does NOT establish that the model can drive Mycelium's skills end-to-end — the checker's prompt is a few dozen tokens, while a single skill like `interview` is ~10k. Note the corollary: this check passes even at the 4K default, so a PASS is not evidence your context is configured correctly. Those are separate failures and only the second one is silent.
 
 **Check any model before trusting it:** `python3 plugins/mycelium/integrations/opencode/check-tool-calling.py <model>` → PASS = usable, FAIL = it leaks tool calls as text.
 
@@ -144,7 +158,7 @@ Mycelium's opencode adapter was **deferred** 2026-05-16 (decision-log) behind tw
 
 ## Honest summary
 
-- Mycelium-the-substrate works on opencode today. The file substrate (canvas, memory, decision-log, validators, harness docs) ports verbatim; skills are discovered natively but 36 of 55 reference `${CLAUDE_PLUGIN_ROOT}` paths opencode can't resolve, so `/mycelium:setup` vendors them + rewrites the paths (re-run after a framework upgrade to refresh).
+- Mycelium-the-substrate works on opencode today. The file substrate (canvas, memory, decision-log, validators, harness docs) ports verbatim; skills are discovered natively but 38 of 58 reference `${CLAUDE_PLUGIN_ROOT}` paths opencode can't resolve, so `/mycelium:setup` vendors them + rewrites the paths (re-run after a framework upgrade to refresh).
 - Of the three runtime-enforcement mechanisms, two now have structural paths (context injection works via `chat.message`; read-before-edit via a plugin guard) and one (reflexion on tool failure, #27900) needs an upstream fix. With a capable 32B+ model — including open-weight Mistral-class — the residual gap is small. With a 4B/8B local model the read-before-edit plugin guard is worth having.
 - If you'd self-host AI development workflow anyway — laptop, VPS, dedicated inference box — Mycelium fits the stack without forcing a Claude Code subscription.
 - If you're choosing between Claude Code and self-hosting purely for Mycelium, Claude Code remains the better runtime today. The gap will close as upstream issues land or the adapter ships.
