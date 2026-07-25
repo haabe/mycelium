@@ -4,6 +4,16 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-07-25.
 
+## v0.60.3 — the story invitation asks for either shape, not just the failures
+
+**2026-07-25. Attribution: invite-both-story-shapes-2026-07-25. Class: patch (README + receipts copy).**
+
+v0.60.2 asked readers to report what BROKE. That under-asks. **What makes a story valuable is that someone RAN it** — whether they liked it is nearly worthless on its own (applause is not validation; the 0/19 broadcast ledger produced plenty of enthusiasm and zero conversions). But asking only for failures filters out half the runs: someone whose run went fine reads "tell me what broke", concludes they have nothing to report, and the fact that they ran it at all is lost.
+
+The MiniLisp case is the proof that these are not opposites — a finished interpreter *and* the most useful friction report in the record, from the same person in the same thread.
+
+Both invitations now open to either shape while still signalling that friction is rarer and especially wanted. The wording deliberately does not solicit praise: it asks what happened, not whether it was good.
+
 ## v0.60.2 — the MiniLisp receipt: someone else's run, finally shown
 
 **2026-07-25. Attribution: minilisp-showcase-2026-07-25. Class: patch (docs/receipts only; no runtime change).**

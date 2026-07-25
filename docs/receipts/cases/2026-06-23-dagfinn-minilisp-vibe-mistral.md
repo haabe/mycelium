@@ -55,4 +55,4 @@ I also asked, and he agreed, before naming him here.
 
 ---
 
-**Have you run Mycelium on something?** I would genuinely like to know — especially if it broke, or if you stopped. Open an issue, start a [discussion](https://github.com/haabe/mycelium/discussions), or just tell me. The friction reports have been worth more than the compliments.
+**Have you run Mycelium on something?** I would genuinely like to know, whether it worked or whether it fell over. This case is both at once: a finished interpreter and the friction report that came with it. Open an issue, start a [discussion](https://github.com/haabe/mycelium/discussions), or just tell me.
