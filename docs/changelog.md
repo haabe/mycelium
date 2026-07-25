@@ -4,6 +4,20 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-07-25.
 
+## v0.60.2 — the MiniLisp receipt: someone else's run, finally shown
+
+**2026-07-25. Attribution: minilisp-showcase-2026-07-25. Class: patch (docs/receipts only; no runtime change).**
+
+Adds `docs/receipts/cases/2026-06-23-dagfinn-minilisp-vibe-mistral.md` and rotates it onto the README highlights.
+
+**Why it matters more than a docs commit.** Dagfinn Dybvig — a cold contact, AI team lead at a university library, mathematician — took a Lisp interpreter end to end on **Vibe CLI + Mistral, no Claude anywhere in the loop**, published [the repo](https://github.com/dagfinndybvig/minilisp) with the Mycelium development files included, and credited the framework unprompted. He granted permission to be named on 2026-06-24 (registry: `public_ok`); it had gone unused for a month. Asking someone for a showcase and then not using it is its own kind of debt.
+
+**The finding the case carries.** The context-budget friction has **two distinct faces**, previously treated as one: (1) window size, and (2) rate-limit × number-of-file-operations — on a strictly rate-limited university HPC the binding constraint was *"too many files to read and update"*, which a bigger window does nothing for. JiT skill-loading addresses the first only. Found by someone running under real institutional constraints, not reproducible on a large-window Claude session.
+
+**Honest boundary kept in the case text:** MiniLisp is an educational project, not his own real work. It proves the discipline is *usable*, not *adopted*, and the case says so.
+
+**README rotation** (closes the framework-health 4c flag — newest case had been 2026-06-19, 36 days): rotated out `2026-05-09-consistency-as-evidence-graduation` (the oldest highlight; the case file stays in `docs/receipts/cases/`), rotated in MiniLisp. Added a closing invitation asking readers who have run Mycelium to report what broke — every case in that section began as someone reporting friction the founder could not find on his own machine.
+
 ## v0.60.1 — verify_citations matched 0% of real citations for 2.5 months
 
 **2026-07-25. Attribution: verify-citations-matcher-2026-07-25. Class: patch (guard correctness).**

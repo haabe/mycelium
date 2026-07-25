@@ -91,13 +91,15 @@ Mycelium is one worked example of a pattern the field is converging on: guardrai
 
 Mycelium has been dogfooded on three small projects and tested by outside users under realistic time pressure. Each session taught the framework something different. Most of what they taught is in the version you're looking at right now.
 
-- **[When consistency stopped counting as evidence](docs/receipts/cases/2026-05-09-consistency-as-evidence-graduation.md):** what Mycelium learned to distrust about itself. A pattern recurring across 5 instances became a standing self-check the framework runs on itself. The framework's own verification discipline now flags when its agent argues from internal coherence rather than external evidence.
+- **[Someone I had never met ran the whole thing on Mistral](docs/receipts/cases/2026-06-23-dagfinn-minilisp-vibe-mistral.md):** what Mycelium learned about working away from Claude. A cold contact took a Lisp interpreter end to end on Vibe + Mistral, published [the repo](https://github.com/dagfinndybvig/minilisp), and reported the friction that mattered: the context budget is two problems, not one, and a bigger window fixes only the first.
 - **[Edith-Mari's book project](docs/receipts/cases/2026-05-20-edith-mari-book-project.md):** what Mycelium reached beyond developers. First non-developer user (a writer with a cookbook project) hit the brief-synthesis flow at the affective layer and surfaced the wayfinding-at-phase-transitions correction. The framework's plain-language discipline was load-bearing.
 - **[When the report you cite fact-checks you](docs/receipts/cases/2026-06-07-faros-whiplash-integration.md):** what Mycelium learned about its own observability layer. Faros's *Acceleration Whiplash* and Datadog's *State of AI Engineering* arrived as external prompts; the framework's L5 score landed at 3/5 — strong scaffolding, weak instrumentation. Three changes shipped in one cycle, including the discipline that a schema field becomes a target the moment it's named.
 - **[Alex's first run](docs/receipts/cases/2026-05-26-alex-cohort-first-run.md):** what the deepest single session cost the reader. An outside user's first run surfaced output-density and post-build-silence gaps that drove the v0.31.x batch.
 - **[When the checker passed and the paths were still dead](docs/receipts/cases/2026-06-18-legacy-path-rot-guard.md):** what Mycelium learned about the limits of its own checks. A dead-link sweep went green; two days later a house-cleaning found migration debt sitting in code-spans and prose, where a link checker scoped to links by design was never going to look. The green audit had been read as a clean bill of health, and a second guard now covers the class the first one couldn't see.
 
 The framework you're looking at now is partly built from things it stopped itself.
+
+**Run it on something?** I would like to hear about it, and I would rather hear the parts that went badly. Where it broke, where it got in the way, where you stopped. Every case above started as someone telling me something I could not have found on my own machine. Open an issue or start a [discussion](https://github.com/haabe/mycelium/discussions).
 
 → Full tables, per-mechanism index, per-contributor index: [docs/receipts/](docs/receipts/README.md).
 → The people who shaped these: [CONTRIBUTORS.md](CONTRIBUTORS.md).
