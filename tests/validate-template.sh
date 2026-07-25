@@ -2228,6 +2228,51 @@ check_install_command_canonical() {
 }
 
 # ============================================================
+# CHECK 47: plugin-form operating contract is wired
+# ============================================================
+# Dogfood-driven (2026-07-25). The v0.20.0 plugin migration left the operating
+# manual (Communication Rules + Mandatory Protocols) at repo-root CLAUDE.md,
+# OUTSIDE plugins/mycelium/ — so it was never packaged, and the legacy degit
+# templating that delivered it to each project was removed in 0.20.14 with
+# nothing to replace it. Plugin-form consumers ran without the always-on rules
+# for ~2.5 months; the framework repo never noticed because its own sessions
+# load root CLAUDE.md natively. v0.58.0 fix: rules extracted to a single
+# canonical engine/agent-operating-contract.md, injected by session-start.sh,
+# referenced (not restated) by CLAUDE.md. This check keeps that wiring intact.
+check_operating_contract_wiring() {
+    section "Check 47: plugin-form operating contract is wired (present + injected + referenced + plugin-path-clean)"
+
+    local contract="plugins/mycelium/engine/agent-operating-contract.md"
+    local hook="plugins/mycelium/hooks/session-start.sh"
+    local claudemd="CLAUDE.md"
+
+    if [ ! -f "$contract" ]; then
+        fail "Check 47: operating contract missing at $contract — plugin-form sessions get no always-on rules (regression of the v0.20.0 migration gap)."
+        return
+    fi
+    if [ ! -f "$hook" ] || ! grep -q "agent-operating-contract" "$hook"; then
+        fail "Check 47: SessionStart hook ($hook) does not inject agent-operating-contract — the contract is packaged but never reaches a session."
+        return
+    fi
+    if [ ! -f "$claudemd" ] || ! grep -q "agent-operating-contract" "$claudemd"; then
+        fail "Check 47: $claudemd does not reference agent-operating-contract — the extract-and-reference wiring is broken (rules may have drifted back inline)."
+        return
+    fi
+    # Framework references in the contract MUST resolve via \${CLAUDE_PLUGIN_ROOT}
+    # (or a logical name), never a legacy .claude/ framework path. Project-state
+    # paths (.claude/canvas, .claude/memory, .claude/diamonds, decision-log) are
+    # legitimately project-local and exempt.
+    local legacy
+    legacy=$(grep -nE '\.claude/(engine|harness/guardrails|harness/communication|harness/design|domains|skills|orchestration|jit-tooling)' "$contract" || true)
+    if [ -n "$legacy" ]; then
+        fail "Check 47: operating contract references legacy .claude/ FRAMEWORK paths (must resolve via \${CLAUDE_PLUGIN_ROOT} in plugin form). First: $(printf '%s\n' "$legacy" | head -1)"
+        return
+    fi
+
+    pass "Check 47: operating contract present, injected by SessionStart, referenced by CLAUDE.md, and free of legacy framework paths"
+}
+
+# ============================================================
 # RUN ALL CHECKS
 # ============================================================
 #
@@ -2271,6 +2316,7 @@ check_manifest_byte_match
 check_stale_state_read_pattern
 check_plugin_json_version_sync
 check_install_command_canonical
+check_operating_contract_wiring
 check_canvas_write_preflight
 check_four_risks_when_active
 check_plugin_identifier_leak

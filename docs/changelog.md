@@ -2,7 +2,19 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-07-19.
+**Last updated**: 2026-07-25.
+
+## v0.58.0 — plugin form now injects the always-on operating contract (fixes an unintended migration gap)
+
+**2026-07-25. Attribution: plugin-form-operating-contract-injection-2026-07-25. Class: minor (new always-on delivery mechanism; behavior change for plugin-form consumers).**
+
+**The gap.** Traced from a dogfood session: in plugin form, the framework's always-on operating rules did not reach a consuming session. The operating-manual `CLAUDE.md` (Communication Rules + Mandatory Pre-Task / Pre-Ship / Post-Task Protocols) lives at repo root, **outside** `plugins/mycelium/`, so it was never packaged into the plugin. In legacy `degit` installs it was templated into each project's `.claude/CLAUDE.md`; the v0.20.0 migration kept the harness's **computational** half (hooks fire on any model) but dropped this always-on **inferential** half, and the 0.20.14 "legacy `.claude/` cleanup" removed the templating with nothing to replace it. `plugin.json` has no `instructions` field and the SessionStart/preflight hooks emitted only status stamps, so no rule text reached plugin-form sessions. The framework repo never noticed for ~2.5 months because sessions working *in* the repo load the root `CLAUDE.md` as their own project `CLAUDE.md` — **the bug is invisible from the author's seat**; only consuming projects (external users + the dogfood repo) hit it.
+
+**The fix.** The always-on rules are extracted to a single canonical, packaged file — `plugins/mycelium/engine/agent-operating-contract.md` — using plugin-form `${CLAUDE_PLUGIN_ROOT}` path conventions (which also fixes the Pre-Task Protocol's dead `.claude/domains/...` reference). `hooks/session-start.sh` now injects it into every session's `additionalContext` **unconditionally** (feedback-loop reminders appended when present), resolving the file via `CLAUDE_PLUGIN_ROOT` → legacy `.claude/` → in-repo fallback. Root `CLAUDE.md` **references** the contract instead of restating it (single source of truth; the active rules in the contract win). Heavy reference (diamond scales, theory-gate catalogue, learning-metabolism) stays JiT — only the turn-1-and-turn-30 behavioral contract is always-on, keeping the injected surface lean.
+
+**Guard + test.** CI **Check 47** (`validate-template.sh`) enforces the wiring: contract file present in the plugin engine dir, injected by the SessionStart hook, referenced by root `CLAUDE.md`, and free of legacy `.claude/` framework paths. Paired G-V12 bash test fixtures (`tests/bash/fixtures/check_47/`) demonstrate the pass and each fail mode.
+
+**Process lesson (the meta-finding).** Dogfood must run from a **consumer** repo, not the framework repo — the framework repo is the one place this class of packaging/delivery bug cannot appear. The legacy `CLAUDE.md`'s double duty (framework-authoring manual **and** templated-into-consumers file) is exactly what let one role silently lapse while the other kept it looking handled.
 
 ## v0.57.5 — evidence_type is polymorphic; walk narrowed to a swap detector (corrects v0.57.4)
 
