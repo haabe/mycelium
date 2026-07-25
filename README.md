@@ -99,7 +99,7 @@ Mycelium has been dogfooded on three small projects and tested by outside users 
 
 The framework you're looking at now is partly built from things it stopped itself.
 
-**Run it on something?** I would like to hear about it, and I would rather hear the parts that went badly. Where it broke, where it got in the way, where you stopped. Every case above started as someone telling me something I could not have found on my own machine. Open an issue or start a [discussion](https://github.com/haabe/mycelium/discussions).
+**Run it on something?** I would like to hear about it either way. The thing you got built, or the point where it got in the way and you stopped. Both are useful and the second kind is rarer, so if you have one of those I am especially interested. Every case above started as someone telling me something I could not have found on my own machine. Open an issue or start a [discussion](https://github.com/haabe/mycelium/discussions).
 
 → Full tables, per-mechanism index, per-contributor index: [docs/receipts/](docs/receipts/README.md).
 → The people who shaped these: [CONTRIBUTORS.md](CONTRIBUTORS.md).
