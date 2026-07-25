@@ -4,6 +4,28 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-07-25.
 
+## v0.60.0 — the opencode consumer path actually works now
+
+**2026-07-25. Attribution: opencode-consumer-path-2026-07-25. Class: minor (fail-closed guards + a shipped-broken script fixed + setup path corrected).**
+
+**The headline bug: the success path was the failure path.** `provision-skills.sh` computed its residual-reference count as `RESIDUAL=$(grep ... | wc -l | tr -d ' ')` under `set -euo pipefail`. `grep` exits 1 when it finds nothing — and finding nothing is the SUCCESS case here, meaning every `${CLAUDE_PLUGIN_ROOT}` reference was rewritten. `pipefail` propagated that into the assignment and `set -e` killed the script. **A perfect provisioning run aborted at exit 1 with no message; a run that left residuals behind completed and printed "Done."** `/mycelium:setup` Step 5 invokes this script, so setup reported failure on a flawless install. It shipped this way and stayed invisible because nothing had ever run the script against a clean project root.
+
+**Fail-closed guards (the opp-009 data-loss footgun, previously unshipped).** opencode resolves its project directory by walking UP from the working directory; from a directory with no marker it adopts an ancestor repo, so canvas writes, vendored skills, and `CLAUDE.md` edits land in the wrong repository. A user with a dotfiles repo in `$HOME` doing `mkdir ~/myidea && cd ~/myidea && opencode` was exposed. The anchor fix existed only in a dogfood-local runner and never reached consumers.
+- **Guard 1:** refuse a non-git project root. Escape hatch `MYCELIUM_ALLOW_NONGIT_ROOT=1`, named so bypassing is a decision rather than an accident.
+- **Guard 2:** refuse to vendor into the Mycelium checkout itself — the documented path said `git clone … && cd mycelium` then `provision-skills.sh .`, and after the `cd`, `.` IS the clone.
+
+**Setup path corrected end-to-end.** `git init` as an explicit step 0; clone to a separate location; the provisioning argument fixed; the previously-missing `.opencode/plugin/` + `command/` install steps added (without them you got skills and NONE of the runtime enforcement); an `AGENTS.md` creation step (the shipped `opencode.json` declares `"instructions": ["AGENTS.md"]` and nothing on a pure-opencode install created it, so the always-on operating contract had no delivery vehicle); and `"tool_call"` vs `"tools"` reconciled against the shipped config.
+
+**Model evidence, measured not asserted.** The docs twice claimed "including open-weight Mistral-class" with no Mistral in the verified table. Now runtime-verified 2026-07-25, control-gated against `llama3.1:8b` at a confirmed `-c 32768`: **`mistral-nemo` PASS** (7.1 GB, ~6 min pull) and **`mistral` 7B PASS** (4.4 GB, ~3.5 min). Added with a scope note: a PASS establishes the template emits structured `tool_calls`, NOT that the model can drive Mycelium's skills end-to-end — and the check passes even at 4K, so it is not evidence your context is configured right.
+
+**The macOS Ollama.app trap, documented.** The app-managed server carries no `OLLAMA_CONTEXT_LENGTH` and runs `llama-server` at `-c 4096` with no signal to the user. The docs now say to quit it, restart with `env OLLAMA_CONTEXT_LENGTH=32768 ollama serve`, and **verify mechanically via `ps`** rather than trusting the env var.
+
+**Number drift.** Skill counts were stated as 36-of-55 and 33-of-58 across three files; counted actual is **38 of 58**. Changelog history left untouched — rewriting a record would falsify it.
+
+**Tests.** `tests/bash/test_provision_skills_guards.sh`, 14 assertions: both guards, the escape hatch, the positive path, and a regression asserting a clean run exits 0 and reaches "Done."
+
+**Explicitly NOT in this release:** `hooks.opencode.json` and first-class hook parity. Only 2 of 9 hooks fire under opencode and Check 44's parity gate structurally excludes it. That work stays gated on opp-014's adoption trigger, which is unmet.
+
 ## v0.59.1 — Check 48: a release that corrects an earlier release owes a corrections entry
 
 **2026-07-25. Attribution: self-correcting-release-capture-2026-07-25. Class: patch (repo-only validator check, WARN tier).**
