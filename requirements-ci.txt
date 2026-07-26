@@ -37,7 +37,15 @@ pytest-cov>=4.0
 # verifies the installed ruff matches this pin, so a divergence fails loudly
 # instead of producing two different meanings of "clean".
 #
-# Deferred follow-up, named rather than vague: upgrade to ruff 0.16.x and triage
-# its 59 additional findings as its own change.
-ruff==0.15.12
+# UPGRADED 2026-07-26 (the named follow-up, completed): 0.15.12 -> 0.16.0.
+# Its 59 additional findings were triaged three ways rather than blanket-ignored:
+#   - CPY001 (43) per-file copyright headers -> ignored in ruff.toml as a policy
+#     choice (MIT with one LICENSE file; duplicated headers are noise here).
+#   - ISC004  (9) unparenthesized implicit concat inside a collection -> FIXED,
+#     not ignored. The rule catches a real footgun (a missing comma silently
+#     concatenates two list items); 6 of the 9 were introduced by the previous
+#     day's refactor. Parenthesized so the intent is explicit.
+#   - PLR0917 (7) too-many-positional-args, all pytest fixture signatures ->
+#     scoped to tests/, the same place its sibling PLR0913 already lives.
+ruff==0.16.0
 shellcheck-py>=0.9.0

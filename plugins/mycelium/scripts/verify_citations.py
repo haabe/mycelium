@@ -241,8 +241,8 @@ def format_human(report: dict) -> str:
     unverified_n = len(report["unverified"])
     lines = [
         f"Citation verification: {report['total_citations']} citation(s) found",
-        f"  File-shaped: {report['file_shaped']} "
-        f"({verified_n} verified, {unverified_n} unverified)",
+        (f"  File-shaped: {report['file_shaped']} "
+        f"({verified_n} verified, {unverified_n} unverified)"),
         f"  Concept-shaped (out of scope): {report['concept_shaped']}",
         f"  Reads in session log: {report['reads_in_session']}",
     ]

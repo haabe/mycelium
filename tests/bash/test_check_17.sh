@@ -20,10 +20,23 @@ source "$REPO_ROOT/tests/validate-template.sh"
 set -uo pipefail
 
 capture() {
-    cd "$FIXTURES_DIR/$1"
+    # Copy the fixture to scratch and drop the LIVE ruff.toml + requirements-ci.txt
+    # in, rather than committing snapshots of them.
+    #
+    # A committed config copy DRIFTS BY CONSTRUCTION, and this one did — on the very
+    # next policy edit. The fixture briefly carried its own ruff.toml (added when
+    # Check 17 started requiring a declared policy); moving the pin to ruff 0.16.0
+    # introduced CPY001, the snapshot lacked the new ignore, and Check 17 failed
+    # INSIDE its own coverage proof. Same enumerate-vs-derive defect this release is
+    # about, in the test harness. Deriving the config at run time makes the drift
+    # structurally impossible instead of something to remember.
+    local tmp; tmp=$(mktemp -d)
+    cp -R "$FIXTURES_DIR/$1/." "$tmp/"
+    [ -f "$REPO_ROOT/ruff.toml" ] && cp "$REPO_ROOT/ruff.toml" "$tmp/ruff.toml"
+    [ -f "$REPO_ROOT/requirements-ci.txt" ] && cp "$REPO_ROOT/requirements-ci.txt" "$tmp/requirements-ci.txt"
     local out
-    out=$(check_code_quality 2>&1)
-    cd "$REPO_ROOT"
+    out=$(cd "$tmp" && check_code_quality 2>&1)
+    rm -rf "$tmp"
     echo "$out"
 }
 

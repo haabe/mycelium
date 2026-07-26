@@ -190,17 +190,17 @@ def render(merged: dict[str, dict]) -> str:
     lines = [
         "# Warnings Log",
         "",
-        "*CI signal capture for the self-learning loop. Auto-updated by "
+        ("*CI signal capture for the self-learning loop. Auto-updated by "
         "`ingest_warnings.py` in the Mycelium plugin. Each class lists when it was "
         "first/last seen and how often. Best-practice fixes live in the plugin's "
-        "`engine/warning-handbook.md`.*",
+        "`engine/warning-handbook.md`.*"),
         "",
         "## TL;DR",
         "",
-        f"*Auto-rendered. {len(merged)} known warning class(es) tracked. "
+        (f"*Auto-rendered. {len(merged)} known warning class(es) tracked. "
         "When a class's count rises across runs without a status change, that's a "
         "graduation signal — extend the harness one layer up rather than fixing "
-        "the symptom (Lopopolo reframe).*",
+        "the symptom (Lopopolo reframe).*"),
         "",
     ]
     # Sort: open / FAIL first (highest priority), then by count desc
