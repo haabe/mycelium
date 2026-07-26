@@ -163,6 +163,39 @@ fi
 # ============================================================
 # Build output
 # ============================================================
+# CHECK 8: Unreconciled reflexions — the learning loop's denominator
+# ============================================================
+# corrections.md was the numerator with nothing to divide by: an ignored
+# reflexion looked exactly like one that never fired. reflexion-gate.sh now
+# records each firing, and a reflexion is answered by a DECISION — either a
+# corrections entry or an explicit dismissal with a reason. Silence is not a
+# decision.
+#
+# Reports, never blocks. Learning debt should accumulate visibly (and resurface
+# at SessionStart) rather than gate a session end.
+RECONCILE="${CLAUDE_PLUGIN_ROOT}/scripts/reconcile_reflexions.py"
+if [ -f "$RECONCILE" ]; then
+  OUTSTANDING=$(python3 "$RECONCILE" --project-dir "$PROJECT_DIR" --json 2>/dev/null \
+    | python3 -c "import json,sys;print(json.load(sys.stdin).get('outstanding',0))" 2>/dev/null || echo 0)
+  if [ "${OUTSTANDING:-0}" -gt 0 ]; then
+    WARNINGS="${WARNINGS}${OUTSTANDING} reflexion(s) fired this session and produced no recorded decision. Each needs a corrections.md entry OR 'reconcile_reflexions.py --dismiss \"why this was not a learning\"'. Run the script to see which commands. | "
+  fi
+fi
+
+# ============================================================
+# CHECK 9: the class no hook can see — asked in prose, deliberately
+# ============================================================
+# CHECK 8 only sees failures that FIRED the reflexion hook. The costlier class
+# leaves no failure at all: a command that printed a confident wrong answer, or
+# a fix applied inline while building and explained only in a code comment. Two
+# of the three unlogged learnings that motivated this check were of that shape.
+# No mechanical signal for it was found, so this asks — and is labelled a
+# stopgap rather than dressed up as a mechanism.
+if [ "$CORRECTIONS_COUNT" -gt 0 ] || [ -n "$WARNINGS" ]; then
+  WARNINGS="${WARNINGS}Before ending: did you fix anything in-flight without recording it — a wrong answer you quietly re-ran, or a bug you fixed and explained only in a code comment? A code comment is read by whoever opens that file; corrections.md is read at every session start. | "
+fi
+
+# ============================================================
 if [ -n "$WARNINGS" ]; then
   python3 -c "
 import json, sys

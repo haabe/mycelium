@@ -4,6 +4,44 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-07-26.
 
+## v0.64.0 — the learning loop had a numerator and no denominator
+
+`reflexion-gate.sh` fired after every project-relevant command failure and asked the right five
+questions. Then it left **no trace**. `stop-check.sh` counted corrections. So nothing could ever
+ask the obvious thing: *how many reflexions fired, and how many produced a learning?* An ignored
+reflexion looked exactly like one that never happened, and "64 corrections" said nothing about how
+many prompts were dropped on the way there.
+
+Found by auditing a session in which three in-flight fixes went unrecorded — and the audit happened
+only because a human asked. That is the same shape as every other failure in this family: a
+measurement that lands only when someone remembers to go looking.
+
+**What changed.** Every firing is recorded to `.claude/state/reflexion-log.jsonl`.
+`reconcile_reflexions.py` reports **fired − decided**, where a decision is one of exactly two
+things: a `corrections.md` entry, or an explicit dismissal carrying a reason. Most command failures
+genuinely are not learnings — the dismissal path exists for them. The point is that deciding so
+should leave a record rather than evaporate. A dismissal without a real reason is refused.
+
+Outstanding debt appears at **Stop** and again at **SessionStart**, so it accumulates visibly across
+sessions rather than dying with the one that created it — the same shape as the stale-human-task and
+overdue-loop reminders. It reports and never gates: learning debt should be visible, not blocking.
+
+**Two honest limits, written into the code rather than discovered later.** It is a *floor, not a
+ledger* — corrections are credited by count, not attributed to specific reflexions, so a session
+adding corrections for unrelated reasons will over-credit. That leniency is deliberate; a nagging
+counter gets switched off, and a guard that cries wolf is worth less than none. And the **blind
+spot is half the problem**: this only sees failures that fire the hook, while two of the three
+unlogged fixes that motivated it produced no failure at all — a pipeline that printed `exit: 0`
+while swallowing the real status, and a guard that exited 0 after measuring nothing. A hook keyed to
+command failure is structurally blind to a wrong answer delivered confidently. No mechanical signal
+for that class was found, so `stop-check` asks for it in prose and the code says plainly that the
+prose is a stopgap.
+
+**Caught by its own tests, applying the rule graduated the same day** (every guard ships with a
+bites-test *and* a clean-run test): the first implementation recomputed the corrections baseline as
+"now" on every run, so no correction ever credited and the counter could only rise — a number that
+would have been ignored within a week.
+
 ## v0.63.0 — the wiring contract: the L3 half, and it works in your project too
 
 v0.62.0 closed the question "does production code run when the test runs?". This closes the one
