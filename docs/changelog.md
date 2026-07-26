@@ -4,6 +4,22 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-07-26.
 
+## v0.61.1 — the ruff upgrade, and a config snapshot that drifted immediately
+
+**2026-07-26. Attribution: ruff-0-16-upgrade-2026-07-26. Class: patch (lint policy + test harness).**
+
+Completes the follow-up v0.61.0 named rather than left vague. Pin moved **0.15.12 → 0.16.0**; its 59 additional findings were triaged three ways, because "new rules fired, ignore them all" would have made the upgrade pointless:
+
+| Rule | n | Decision |
+|---|---|---|
+| `CPY001` per-file copyright notice | 43 | **Ignored** — policy choice. MIT project, one LICENSE at the root; 43 duplicated headers are noise here. Not a claim the rule is wrong for repos that want it. |
+| `ISC004` unparenthesized implicit concat *in a collection* | 9 | **Fixed.** The rule catches a genuine footgun — a missing comma silently concatenates two list items instead of erroring. **6 of the 9 were introduced by v0.61.0's own refactor.** Parenthesized so intent is explicit. |
+| `PLR0917` too many positional args | 7 | **Scoped to `tests/`** — all are pytest functions with 6 fixtures. Positional-only sibling of `PLR0913`, which already lives in the same per-file-ignore for the same reason. |
+
+**And the Check 17 fixture's `ruff.toml` drifted on the very next policy edit.** v0.61.0 gave the fixture its own committed copy of the config so it would represent a properly-configured project. Moving the pin introduced `CPY001`, the snapshot lacked the new ignore, and **Check 17 failed inside its own coverage proof.** A committed config copy drifts by construction — the same enumerate-vs-derive defect this release is about, now in the test harness. The snapshot is deleted; `capture()` copies the **live** `ruff.toml` and `requirements-ci.txt` at run time, so drift is structurally impossible rather than something to remember.
+
+That is the third place in two releases where the fix for "the spec lives where nothing reads it" re-created the problem one layer out: a bash string → an unbounded dependency spec → a committed fixture snapshot. Worth naming as a pattern rather than three coincidences.
+
 ## v0.61.0 — three mechanisms shipped green with no caller; the wiring guard that finds the next one
 
 **2026-07-26. Attribution: wiring-guard-2026-07-26. Class: minor (new CI gate + new schema + four behaviour fixes).**

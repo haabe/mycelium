@@ -98,8 +98,8 @@ def _check_skill_refs(tier12: str, root: Path):
     """A: every `/skill-name` named in a load-bearing tier has a SKILL.md."""
     return [
         ("A:skill-ref",
-         f"theories.md references `/{name}` — no "
-         f"plugins/mycelium/skills/{name}/SKILL.md")
+         (f"theories.md references `/{name}` — no "
+         f"plugins/mycelium/skills/{name}/SKILL.md"))
         for name in sorted(set(SKILL_RE.findall(tier12)))
         if not (root / SKILLS_DIR / name / "SKILL.md").is_file()
     ]
@@ -109,8 +109,8 @@ def _check_gate_refs(tier12: str, valid_gate_nums: set):
     """B: every `gate N` reference resolves to a real gate section."""
     return [
         ("B:gate-ref",
-         f"theories.md references `gate {num}` — no `### {num}.` in "
-         f"theory-gates.md")
+         (f"theories.md references `gate {num}` — no `### {num}.` in "
+         f"theory-gates.md"))
         for num in sorted(set(GATE_RE.findall(tier12)), key=int)
         if num not in valid_gate_nums
     ]
@@ -120,8 +120,8 @@ def _check_doc_paths(tier12: str, root: Path):
     """C: every engine/harness/orchestration doc path resolves."""
     return [
         ("C:doc-path",
-         f"theories.md references `{sub}/{fname}` — no "
-         f"plugins/mycelium/{sub}/{fname}")
+         (f"theories.md references `{sub}/{fname}` — no "
+         f"plugins/mycelium/{sub}/{fname}"))
         for sub, fname in sorted(set(ENGINE_PATH_RE.findall(tier12)))
         if not (root / "plugins/mycelium" / sub / fname).is_file()
     ]
@@ -131,8 +131,8 @@ def _check_gate_sources(gate_sources: dict):
     """D: every gate carries a named theory Source."""
     return [
         ("D:gate-source",
-         f"theory-gates.md gate {num} has no `**Source**:` line — gate "
-         f"shipped without a named theory")
+         (f"theory-gates.md gate {num} has no `**Source**:` line — gate "
+         f"shipped without a named theory"))
         for num in sorted(gate_sources, key=int)
         if not gate_sources[num]
     ]
@@ -161,8 +161,8 @@ def _check_name_only(tier1: str, tier2: str):
             title = part.splitlines()[0].strip()
             errors.append((
                 "E:name-only",
-                f"Tier-1 theory '{title}' has no resolvable mechanism token "
-                f"(skill/gate/engine-path) — name-only in a load-bearing tier",
+                (f"Tier-1 theory '{title}' has no resolvable mechanism token "
+                f"(skill/gate/engine-path) — name-only in a load-bearing tier"),
             ))
     for line in tier2.splitlines():                      # Tier 2: table rows
         s = line.strip()
@@ -174,8 +174,8 @@ def _check_name_only(tier1: str, tier2: str):
         if not _has_mechanism(line):
             errors.append((
                 "E:name-only",
-                f"Tier-2 theory '{cells[0]}' has no resolvable mechanism token "
-                f"— name-only in a load-bearing tier",
+                (f"Tier-2 theory '{cells[0]}' has no resolvable mechanism token "
+                f"— name-only in a load-bearing tier"),
             ))
     return errors
 

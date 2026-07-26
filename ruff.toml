@@ -68,6 +68,12 @@ ignore = [
     "PTH",      # os.path over pathlib — mixed by history; not worth a churn pass.
     "INP001",   # implicit namespace package — scripts/ is intentionally not a package
                 # (hooks import by path; adding __init__.py would break resolution).
+
+    # --- Added when the pin moved to ruff 0.16.0 (see requirements-ci.txt) ---
+    "CPY001",   # per-file copyright notice. This is an MIT project with a single
+                # LICENSE file at the root; 43 duplicated headers would be noise
+                # and are not this project's convention. Ignored as a POLICY
+                # choice, not because the rule is wrong for repos that want it.
 ]
 
 [lint.per-file-ignores]
@@ -81,6 +87,9 @@ ignore = [
     "SLF001",   # tests legitimately reach into private members to pin behaviour.
     "PLR2004",  # expected values ARE magic numbers; naming each one hides the assertion.
     "PLR0913",  # pytest fixtures arrive as parameters; arity is the framework's call.
+    "PLR0917",  # same cause, positional-only sibling of PLR0913 (new in ruff 0.16.0):
+                # pytest injects fixtures positionally, so a 6-fixture test trips it.
+                # Scoped to tests for exactly the reason PLR0913 already is.
     "PLC0415",  # deliberate in-function imports: the `_import(scripts_path)` helper
                 # loads a guard by path after sys.path manipulation.
     "ARG001",   # unused pytest fixture args (e.g. capsys requested for its side effect).
