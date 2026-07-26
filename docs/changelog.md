@@ -4,6 +4,75 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-07-26.
 
+## v0.63.0 — the wiring contract: the L3 half, and it works in your project too
+
+v0.62.0 closed the question "does production code run when the test runs?". This closes the one
+before it: **when something is built here, what does it have to be connected to before it counts
+as done?**
+
+`check_wiring.py` has always enforced Mycelium's *own* wiring rules, hard-coded because Mycelium's
+structure is known. A project built WITH Mycelium has different joins — a component imported by a
+parent, a route registered, a migration listed — and the framework cannot ship a catalogue of them.
+A sibling project solved this by hand-listing 4 component and 9 plugin integration points; that
+list is stale the moment someone adds the tenth, and hand-enumerated scope is the origin of this
+entire failure family.
+
+So `/mycelium:wiring-contract` **derives** rules from what the repo already does, and each carries
+the evidence that produced it:
+
+```yaml
+- id: wc-002
+  pattern: "scripts/*.py"
+  obliges: [{referenced_by: ["**/*"]}]
+  detected_from: "18 of 20 files already satisfy this"
+  confidence: 0.90
+```
+
+A rule without observed support is a preference, not a contract. Rules are regenerated, never
+hand-edited — if adding a file means remembering to add a contract line, the contract has the
+disease it treats. Two obligation types exist and that is deliberate: nine specific obligations rot,
+two general ones that always run do not.
+
+**New guardrails.** **G-V13** (L3, `REVIEW`) — a solution design is not complete until its
+integration points are declared; Cockburn's walking skeleton, with the wiring contract as the
+artefact that satisfies it. **G-V14** (L4, `BLOCK`) — the fitness functions run in the per-change
+verification command, not only in CI, because agents respond to automated signals far more reliably
+than to documentation: a failing command gets fixed, a guardrail paragraph may not be read.
+
+**Grounded externally, not in local intuition.** Across **304,362 verified AI-authored commits in
+6,275 repositories**, "unused variables or parameters" is the **second most frequent issue class**
+and "undefined variable or reference" — writer and reader disagreeing — is the **most common
+runtime bug category**; **>15% of commits from every assistant** introduce a detectable problem. The
+mechanism is structural rather than careless: limited context makes a model unable to tell whether
+what it generated is used anywhere else. And it accumulates — AI-authored code survives **longer**
+than human-written code (53.9% vs 69.3% line death rate), so an orphan is *less* likely to be
+cleaned up than a human's. Sediment, not churn.
+
+**Two bugs found by pointing the new guard at this repo, both self-defeating:**
+
+- `fnmatch` has no `**`. The default glob `**/*` compiled to a pattern requiring a slash, so a
+  caller sitting at the **repo root** matched nothing and was read as no caller at all.
+- **The contract satisfied itself.** It contains the very patterns it governs (`scripts/*.py`), and
+  the glob-invocation index counted that as a call site — so every governed file looked wired and
+  the guard passed a repo whose orphan it was pointed directly at. A declaration that something
+  should be called is not something calling it.
+
+**And it caught a real gap in its older sibling.** `check_wiring.py`'s Rule A knew how to spot an
+executable being run (`python3 x.py`, `./x.sh`, `"$S/x.py"`) but not a Python **import** — so every
+shared library module in the tree was invisible to it, and the new `_text_lib.py` was reported as
+having no caller while two guards imported it. Rule A now recognises imports as call sites.
+
+**BVSSH.** `/mycelium:bvssh-check` gains a `wiring_integrity` block under CALMS Automation, so the
+rating cites a measurement rather than an impression. Its load-bearing field is `ungoverned_files` —
+a `0/0/0` beside 400 files matching no rule reports the health of a subset while implying the whole.
+Mapping stated honestly: this bears hardest on **Value** (delivered-and-inert being
+indistinguishable from delivered-and-connected makes value claims *unfalsifiable*), **Safer** (an
+unwired safety mechanism gives *negative* safety), and **Better**; it does **not** obviously help
+**Sooner**, where the counter-argument is avoided rework rather than speed.
+
+**Mutation testing** is recorded on G-V12c as the stated upgrade path, with an adoption *trigger*
+rather than a date.
+
 ## v0.62.0 — the third question: does production code run when the test runs?
 
 `check_wiring.py` asks whether a shipped mechanism has a caller. `check_negative_control.py`

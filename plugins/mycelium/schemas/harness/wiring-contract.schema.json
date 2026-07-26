@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/haabe/mycelium/schemas/harness/wiring-contract.schema.json",
+  "title": "Wiring contract",
+  "description": "A project's own integration conventions, DERIVED from its majority behaviour and regenerated rather than hand-edited. Enforced by check_wiring_contract.py; drafted by /mycelium:wiring-contract. Guards the built-but-not-wired class: a mechanism that ships and is never called passes tests, coverage, lint and review, because each of those verifies a thing against itself while wiring is a property of a pair.",
+  "type": "object",
+  "required": ["contracts"],
+  "additionalProperties": false,
+  "properties": {
+    "contracts": {
+      "type": "array",
+      "description": "Rules. An EMPTY array is valid and meaningful: it records that no majority convention was detected, which is a finding rather than a pass.",
+      "items": {
+        "type": "object",
+        "required": ["id", "pattern", "obliges", "detected_from", "confidence"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^wc-[0-9]{3}$",
+            "description": "Stable identifier, wc-NNN."
+          },
+          "pattern": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Glob, relative to repo root, selecting the files this rule governs."
+          },
+          "obliges": {
+            "type": "array",
+            "minItems": 1,
+            "description": "What a governed file must satisfy. Exactly two obligation types exist by design — nine specific obligations rot, two general ones that always run do not.",
+            "items": {
+              "type": "object",
+              "minProperties": 1,
+              "maxProperties": 1,
+              "additionalProperties": false,
+              "properties": {
+                "referenced_by": {
+                  "type": "array",
+                  "items": {"type": "string"},
+                  "description": "At least one file matching one of these globs must reference this file from NON-COMMENT code — by import, invocation, path, or a glob that matches it. Prose naming a file is not a call site."
+                },
+                "sibling_reference": {
+                  "type": "string",
+                  "description": "A file with this name in the SAME directory must reference it (barrel export, __init__.py, registry)."
+                }
+              }
+            }
+          },
+          "detected_from": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The evidence that produced this rule, e.g. '18 of 20 files already satisfy this'. REQUIRED: a rule asserted without observed support is a preference, not a contract, and the next reader cannot tell the difference without this line."
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Fraction of the governed group already satisfying the obligation when detected."
+          },
+          "exemptions": {
+            "type": "array",
+            "description": "Files this rule does not apply to. Each needs a REASON about the file's purpose — 'it is hard to check' is not one, since that is the false green being caught.",
+            "items": {
+              "type": "object",
+              "required": ["path", "reason"],
+              "additionalProperties": false,
+              "properties": {
+                "path": {"type": "string"},
+                "reason": {"type": "string", "minLength": 8}
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

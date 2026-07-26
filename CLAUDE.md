@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.62.0 -- **Attribution label: test-authenticity-2026-07-26**. Adds `check_test_authenticity.py`, the third question in the series: `check_wiring` asks whether a mechanism has a caller, `check_negative_control` asks whether a guard can fail, and this asks whether **production code runs when the test runs**. A test that imports nothing, asserts a tautology, or mocks away the thing it names is green, covered, and worthless — coverage records which lines executed, never whether the following assertion could have failed. Scope is derived from test-naming conventions across Python, Bash and JS/TS; unsupported languages are reported UNCHECKED rather than silently passed. Prompted by a sibling project's corrections entry — "visualization rendered blank canvas: unit tests mock the data sources" — the same shape as this repo's citation checker matching 0% of real citations for ~2.5 months. **Priors**: v0.61.1 **ruff-0-16-upgrade-2026-07-26** (see `docs/changelog.md`).*
+*Version 0.63.0 -- **Attribution label: wiring-contract-2026-07-26**. Adds the L3 half of the built-but-not-wired defence. `check_wiring.py` enforces Mycelium's OWN hard-coded wiring rules; `check_wiring_contract.py` + `/mycelium:wiring-contract` derive a rule set from **any** project's majority convention and hold it there, so a product built WITH Mycelium gets the guarantee too. Rules carry their evidence (`18 of 20 files already satisfy this`) and are regenerated, never hand-edited — a hand-kept list is stale the moment someone adds the next file, which is the origin of this whole failure family. **G-V13** (walking skeleton at L3: a design is not complete until its joins are declared) and **G-V14** (fitness functions in the per-change verification command, not only CI). Grounded in external evidence rather than local intuition: across 304,362 AI-authored commits in 6,275 repos, unused variables/parameters are the **second most frequent** issue class and undefined-reference the most common runtime bug, while AI code survives **longer** than human code (53.9% vs 69.3% death rate) so orphans accumulate rather than wash out. Also fixes Rule A, which could not see a Python `import` and so reported every shared library module as having no caller. **Priors**: v0.62.0 **test-authenticity-2026-07-26** (see `docs/changelog.md`).*
 
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
@@ -122,7 +122,7 @@ See `plugins/mycelium/orchestration/modes.md` for usage patterns and `plugins/my
 
 ## Skills
 
-All 58 skills are auto-discovered from SKILL.md frontmatter — in plugin form (`plugins/mycelium/skills/*/SKILL.md`, recommended) or legacy form (`.claude/skills/*/SKILL.md`, supported during transition). Suggested skills are surfaced at diamond transitions by `/diamond-progress` and `/diamond-assess`, and contextually by hooks. Type `/` to see the current list.
+All 59 skills are auto-discovered from SKILL.md frontmatter — in plugin form (`plugins/mycelium/skills/*/SKILL.md`, recommended) or legacy form (`.claude/skills/*/SKILL.md`, supported during transition). Suggested skills are surfaced at diamond transitions by `/diamond-progress` and `/diamond-assess`, and contextually by hooks. Type `/` to see the current list.
 
 ## Getting Started
 
