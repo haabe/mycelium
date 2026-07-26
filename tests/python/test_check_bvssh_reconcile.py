@@ -20,7 +20,7 @@ import sys
 
 def _import(scripts_path):
     sys.path.insert(0, str(scripts_path))
-    import check_bvssh_reconcile  # noqa: PLC0415
+    import check_bvssh_reconcile
 
     return check_bvssh_reconcile
 

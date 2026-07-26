@@ -14,16 +14,31 @@ The semver-tier choice is judgment, not arithmetic. When in doubt, **bump conser
 
 ## What counts as "material framework change"
 
-Check 26 watches these paths:
+Check 26 watches these paths — this list mirrors `material_paths` in
+`tests/validate-template.sh` verbatim; **keep the two in sync**:
 - `plugins/mycelium/skills/` — any SKILL.md or skill directory addition/modification
 - `plugins/mycelium/engine/` — engine docs (theory-gates, canvas-guidance, leaf-lifecycle, etc.)
-- `.claude/harness/` — guardrails, anti-patterns, cognitive-biases, security-trust, etc.
-- `.claude/hooks/` — runtime enforcement scripts
-- `.claude/scripts/` — Python/Bash scripts (parse_manifest, validate_canvas, framework_guard, ingest_warnings, etc.)
-- `.claude/jit-tooling/` — detector specs, metrics adapters, definition-of-done.md, etc.
-- `.claude/templates/` — public-facing artifact templates
+- `plugins/mycelium/harness/` — guardrails, anti-patterns, cognitive-biases, security-trust, etc.
+- `plugins/mycelium/hooks/` — runtime enforcement scripts
+- `plugins/mycelium/scripts/` — Python/Bash scripts (parse_manifest, validate_canvas, framework_guard, ingest_warnings, etc.)
+- `plugins/mycelium/jit-tooling/` — detector specs, metrics adapters, definition-of-done.md, etc.
+- `plugins/mycelium/schemas/` — canvas + diamond JSON Schemas
+- `plugins/mycelium/domains/` — discovery / delivery / quality domain contexts
+- `plugins/mycelium/orchestration/` — operations + mode docs
+- `plugins/mycelium/.claude-plugin/plugin.json`, `plugins/mycelium/.claude-plugin/marketplace.json`, `.claude-plugin/marketplace.json` — packaging manifests
+- `tests/` — the validator and its coverage proofs
 - `CLAUDE.md`, `AGENTS.md`, `README.md` — top-level framework docs
 - `docs/` — public-facing artifacts (ai-system-card.md, context-surface.md)
+
+> Corrected 2026-07-26. This list had gone stale in both directions: it still named
+> the pre-migration `.claude/{harness,hooks,scripts,jit-tooling,templates}/` paths
+> (which Check 26 has not watched since the 2026-05-09 migration), and it omitted
+> five paths the check *does* watch (`schemas/`, `domains/`, `orchestration/`, the
+> packaging manifests, and `tests/`). `templates/` is not watched at all. A
+> documented-scope list that diverges from the enforced one is the
+> documented-rule-diverges-from-enforcement cluster, and it misleads in the
+> dangerous direction — a contributor reading it would think a `schemas/` edit
+> needs no version bump.
 
 Explicitly NOT material (so they don't force a bump):
 - `.claude/canvas/*.yml` — project state, not framework

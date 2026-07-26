@@ -27,7 +27,7 @@ Hard rule. Before issuing `Write` or `Edit` against any `.claude/canvas/*.yml`, 
    - `CLAUDE.md` (project-local; the dispatcher)
    - `${CLAUDE_PLUGIN_ROOT}/engine/` (all `.md` and `.yml`)
    - `${CLAUDE_PLUGIN_ROOT}/harness/` (all `.md`)
-   - `${CLAUDE_PLUGIN_ROOT}/AGENTS.md` if present
+   - `AGENTS.md` (project-local, if present — the router for non-Claude-Code runtimes; **not** a plugin file. It lives at a repo root and is never packaged, so resolving it through the plugin cache always missed and the row silently vanished from the table via the "if present" clause. Report `0 / absent` explicitly when the project has none, rather than omitting the row — an omitted row reads as "not part of the surface" instead of "not there")
    - `.claude/canvas/` (project state — not framework, but it ALSO joins the load surface; report separately)
    - `.claude/memory/` (corrections.md, patterns.md, MEMORY.md)
 2. **Sum bytes** per surface via `wc -c`.

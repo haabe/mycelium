@@ -23,26 +23,54 @@ or hhao/qwen2.5-coder-tools). Also bump context: Ollama defaults to 4K (num_ctx)
 which overflows on agentic prompts — set OLLAMA_CONTEXT_LENGTH=32768 (or a Modelfile
 PARAMETER num_ctx) so tool-calling survives Mycelium's larger system/tool prompts.
 """
-import json, os, sys, urllib.request
+import json
+import os
+import sys
+import urllib.request
 
 MODEL = sys.argv[1] if len(sys.argv) > 1 else "llama3.1:8b"
 HOST = os.environ.get("OLLAMA_HOST", "http://localhost:11434").rstrip("/")
 TOOLS = [{"type": "function", "function": {
-    "name": "read_file", "description": "Read a file and return its contents",
-    "parameters": {"type": "object", "properties": {"path": {"type": "string"}}, "required": ["path"]}}}]
-MSG = [{"role": "user", "content": "Read the file sample.txt and tell me its first line. Use the read_file tool."}]
+    "name": "read_file",
+    "description": "Read a file and return its contents",
+    "parameters": {
+        "type": "object",
+        "properties": {"path": {"type": "string"}},
+        "required": ["path"],
+    },
+}}]
+MSG = [{
+    "role": "user",
+    "content": (
+        "Read the file sample.txt and tell me its first line. "
+        "Use the read_file tool."
+    ),
+}]
+
 
 def post(url, payload):
-    req = urllib.request.Request(url, data=json.dumps(payload).encode(), headers={"Content-Type": "application/json"})
-    with urllib.request.urlopen(req, timeout=300) as r:
+    req = urllib.request.Request(  # noqa: S310 — scheme is fixed by OLLAMA_HOST's
+        url,                       # http://localhost default; operator-supplied env,
+        data=json.dumps(payload).encode(),   # not untrusted input.
+        headers={"Content-Type": "application/json"},
+    )
+    with urllib.request.urlopen(req, timeout=300) as r:  # noqa: S310 — same call site
         return json.load(r)
 
 def main():
     print(f"Model: {MODEL}   Host: {HOST}")
     try:
-        r = post(f"{HOST}/api/chat", {"model": MODEL, "messages": MSG, "tools": TOOLS, "stream": False})
-    except Exception as e:
-        print(f"ERROR contacting Ollama: {e}"); return 2
+        r = post(
+            f"{HOST}/api/chat",
+            {"model": MODEL, "messages": MSG, "tools": TOOLS, "stream": False},
+        )
+    except (urllib.error.URLError, OSError, ValueError) as e:
+        # Narrowed from a blind `except Exception` (BLE001): the reachable
+        # failures are transport (URLError/OSError) and a non-JSON body
+        # (ValueError). A probe that swallows every exception cannot
+        # distinguish "Ollama is down" from "this script is broken".
+        print(f"ERROR contacting Ollama: {e}")
+        return 2
     m = r.get("message", {})
     tc = m.get("tool_calls")
     if tc:

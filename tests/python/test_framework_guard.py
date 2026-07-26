@@ -8,7 +8,7 @@ import sys
 def _import_guard(scripts_path):
     """Import framework_guard via sys.path (not packaged)."""
     sys.path.insert(0, str(scripts_path))
-    import framework_guard  # noqa: PLC0415
+    import framework_guard
     return framework_guard
 
 
@@ -858,7 +858,7 @@ class TestMainInProcess:
         Stub argv to the misconfigured shape so main() fails open (exit 0)
         without needing real state/stdin.
         """
-        import runpy  # noqa: PLC0415
+        import runpy
         monkeypatch.setattr(sys, "argv", ["framework_guard.py"])  # wrong argc → fail open
         try:
             runpy.run_path(

@@ -53,7 +53,7 @@ try:
     data = yaml.safe_load(f) or {}
   last = data.get('last_assessed')
   print(last if last else 'never')
-except: print('never')
+except Exception: print('never')
 " "$BVSSH_CANVAS" 2>/dev/null || echo "never")
 
   if [ "$LAST_BVSSH" = "never" ] || [ "$LAST_BVSSH" = "null" ] || [ "$LAST_BVSSH" = "None" ]; then
@@ -65,7 +65,7 @@ import sys
 try:
   d = datetime.fromisoformat(sys.argv[1].replace('Z','+00:00'))
   print((datetime.now(d.tzinfo) - d).days)
-except: print(999)
+except Exception: print(999)
 " "$LAST_BVSSH" 2>/dev/null || echo "999")
     if [ "$BVSSH_AGE" -gt 30 ]; then
       REMINDERS="${REMINDERS}BVSSH health check is ${BVSSH_AGE} days overdue (monthly cadence). Run /bvssh-check. "
@@ -113,19 +113,31 @@ METRICS_LABEL="Delivery metrics"
 # Determine which metrics canvas to check based on product_type.
 # product_type is per-diamond (v0.11.0). Use the first active diamond's type,
 # falling back to root-level product_type (legacy), then to 'software'.
+#
+# FIXED 2026-07-26 — this routing had NEVER worked. The extractor used
+# `sys.exit(0)` for the early return inside a `try` guarded by a BARE `except:`.
+# sys.exit raises SystemExit, which a bare except catches, so the fallback
+# `print` ran too and the captured value was TWO lines ("ai_tool\nsoftware").
+# That matched no specific case arm below and fell through to the DORA default,
+# so every content_*/ai_tool/service_offering project silently got DORA-labelled
+# reminders read from dora-metrics.yml instead of its own metrics canvas — while
+# the three non-software canvases (which do declare last_measured, and whose
+# /dora-check blocks do write it) were never read at all. The same copy-pasted
+# extractor was broken identically in stop-check.sh. No loop + break, no
+# SystemExit to swallow; every bare except in this file is now `except Exception`
+# so the class cannot recur. Coverage: tests/bash/test_session_start_metrics_reminder.sh.
 PRODUCT_TYPE=$(python3 -c "
 import yaml, sys
 try:
   with open(sys.argv[1]) as f:
     data = yaml.safe_load(f) or {}
-  diamonds = data.get('active_diamonds', [])
-  for d in diamonds:
-    pt = d.get('product_type')
-    if pt:
-      print(pt)
-      sys.exit(0)
-  print(data.get('product_type', 'software') or 'software')
-except: print('software')
+  pt = None
+  for d in (data.get('active_diamonds') or []):
+    if d.get('product_type'):
+      pt = d['product_type']
+      break
+  print(pt or data.get('product_type') or 'software')
+except Exception: print('software')
 " "$PROJECT_DIR/.claude/diamonds/active.yml" 2>/dev/null || echo "software")
 
 case "$PRODUCT_TYPE" in
@@ -155,7 +167,7 @@ try:
     data = yaml.safe_load(f) or {}
   last = data.get('last_measured')
   print(last if last else 'never')
-except: print('never')
+except Exception: print('never')
 " "$METRICS_CANVAS" 2>/dev/null || echo "never")
 
   if [ "$LAST_MEASURED" != "never" ] && [ "$LAST_MEASURED" != "null" ] && [ "$LAST_MEASURED" != "None" ]; then
@@ -165,11 +177,19 @@ import sys
 try:
   d = datetime.fromisoformat(sys.argv[1].replace('Z','+00:00'))
   print((datetime.now(d.tzinfo) - d).days)
-except: print(999)
+except Exception: print(999)
 " "$LAST_MEASURED" 2>/dev/null || echo "999")
     if [ "$METRICS_AGE" -gt 30 ]; then
       REMINDERS="${REMINDERS}${METRICS_LABEL} are ${METRICS_AGE} days old. Review delivery health. "
     fi
+  else
+    # Absence signal. The canvas exists but carries no usable last_measured, so
+    # staleness is unknowable — say so rather than staying silent. Silence here
+    # was indistinguishable from "measured yesterday": /dora-check's software
+    # Canvas Output never named the field (fixed same release), so the default
+    # product type could never produce the reminder and nothing reported that.
+    # CHECK 1 (BVSSH) has always had this never-assessed branch; CHECK 2 did not.
+    REMINDERS="${REMINDERS}${METRICS_LABEL} have never been measured (no last_measured in $(basename "$METRICS_CANVAS")). Consider running /mycelium:dora-check. "
   fi
 fi
 
@@ -226,7 +246,7 @@ for f in glob.glob(os.path.join(canvas_dir, '*.yml')):
             data = yaml.safe_load(fh)
             if data:
                 scan(data)
-    except:
+    except Exception:
         pass
 
 if total > 3 and external == 0:

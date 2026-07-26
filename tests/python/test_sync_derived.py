@@ -4,7 +4,7 @@ import sys
 
 def _import(scripts_path):
     sys.path.insert(0, str(scripts_path))
-    import sync_derived  # noqa: PLC0415
+    import sync_derived
     return sync_derived
 
 

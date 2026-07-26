@@ -1,6 +1,6 @@
 # Warning Handbook
 
-Best-practice fix per CI warning class. Consumed by `.claude/scripts/ingest_warnings.py` (which logs occurrences to `.claude/memory/warnings-log.md`) and surfaced by `/corrections-audit` when a class crosses the recurring-≥3 graduation threshold.
+Best-practice fix per CI warning class. Consumed by `${CLAUDE_PLUGIN_ROOT}/scripts/ingest_warnings.py` (which logs occurrences to `.claude/memory/warnings-log.md`) and surfaced by `/corrections-audit` when a class crosses the recurring-≥3 graduation threshold.
 
 This file is **the system's documented memory of how to fix each warning class.** The ingestor classifies CI output against the signatures listed here; the agent (or user) consults this handbook when a fresh warning lands, rather than re-deriving the fix each time. New warning classes get added as `KNOWN_SIGNATURES` in `ingest_warnings.py` and as a section here in the same change.
 
@@ -20,7 +20,7 @@ When CI emits a line the ingestor classifies as `unclassified`, that is the sign
 
 **Signature**: `upgrade.sh contains \d+ hardcoded top-level filename literal`
 **Detection**: `validate-template.sh` Check 16 — drift detector for upgrade.sh
-**Best practice**: Refactor to read via `parse_manifest.py`. Add a manifest field (e.g., `framework.version_source`) and consume it: `VAR=$(python3 .claude/scripts/parse_manifest.py <key>); use "$VAR"`. Pattern set 2026-05-04 with `version_source` field. The drift detector tiers: 0 = pass, 1-2 = WARN, 3+ = FAIL — so a single load-bearing literal is *tolerated* if it can't be manifest-driven, but the goal is 0.
+**Best practice**: Refactor to read via `parse_manifest.py`. Add a manifest field (e.g., `framework.version_source`) and consume it: `VAR=$(python3 ${CLAUDE_PLUGIN_ROOT}/scripts/parse_manifest.py <key>); use "$VAR"`. Pattern set 2026-05-04 with `version_source` field. The drift detector tiers: 0 = pass, 1-2 = WARN, 3+ = FAIL — so a single load-bearing literal is *tolerated* if it can't be manifest-driven, but the goal is 0.
 **Graduation**: Already graduated to G-V12 + manifest-driven pattern. Recurrence after this point indicates a regression — investigate the script edit that re-introduced the literal.
 
 ### hardcoded-directory-literal

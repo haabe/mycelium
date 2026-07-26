@@ -12,7 +12,7 @@ import sys
 
 def _import(scripts_path):
     sys.path.insert(0, str(scripts_path))
-    import validate_mermaid  # noqa: PLC0415
+    import validate_mermaid
 
     return validate_mermaid
 

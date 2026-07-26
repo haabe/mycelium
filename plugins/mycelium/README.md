@@ -56,7 +56,7 @@ Should return `MYCELIUM_PLUGIN_LOAD_OK_v0.20.0`.
 | `skills/` | `canvas/*.yml` |
 | `agents/` | `diamonds/active.yml` |
 | `hooks/hooks.json` | `memory/corrections.md`, `memory/patterns.md` |
-| `harness/` (mostly) | `harness/decision-log.md`, `harness/warnings-log.md` |
+| `harness/` (mostly) | `harness/decision-log.md`, `memory/warnings-log.md` |
 | `engine/` | `evals/` |
 | `schemas/` | `jit-tooling/active-metrics.yml` |
 | `scripts/` (validators) | |

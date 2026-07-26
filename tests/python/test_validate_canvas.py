@@ -11,7 +11,7 @@ from pathlib import Path
 
 def _import_validator(scripts_path):
     sys.path.insert(0, str(scripts_path))
-    import validate_canvas  # noqa: PLC0415
+    import validate_canvas
     return validate_canvas
 
 

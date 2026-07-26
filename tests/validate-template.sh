@@ -842,54 +842,73 @@ check_code_quality() {
     if ! command -v ruff >/dev/null 2>&1; then
         warn "ruff not installed — skipping Python lint check (install via requirements-ci.txt)"
     else
-        # Documented ignore choices:
-        # D = docstrings (we have prose docs, not numpy/google style)
-        # ANN = type annotations (intentionally untyped — stdlib-only hooks)
-        # COM = trailing comma (style choice)
-        # T20 = print() (CLI scripts use print legitimately)
-        # S603/S607 = subprocess (we use subprocess intentionally in tests)
-        # EM/TRY003 = error message rules (over-prescriptive for our scope)
-        # FBT = boolean trap (some legitimate uses)
-        # PTH = pathlib over os.path (mixed-style is fine)
-        # INP001 = implicit namespace package (sys.path-injected modules
-        #          are correct; no __init__.py needed for the hook's import path)
-        local ruff_ignores="D,ANN,COM,T20,S603,S607,EM,TRY003,FBT,PTH,INP001"
-
-        local ruff_count
-        ruff_count=$( { ruff check plugins/mycelium/scripts/*.py \
-            --select=ALL \
-            --ignore="$ruff_ignores" \
-            2>/dev/null || true; } | grep -oE "Found [0-9]+ error" | grep -oE "[0-9]+" | head -1 || echo "0")
-
-        # Baseline: post-cleanup-cycle target is 0 errors on cleanly-refactored
-        # files (_manifest_lib, framework_guard, parse_manifest). Other
-        # pre-existing files (validate_canvas, scope_check) carry historical
-        # tech debt that's out of scope for the current cycle — tracked
-        # separately. The threshold here is per-file-grouping:
-        #   - cleanup-cycle files: target 0 errors (FAIL on regression)
-        #   - pre-existing files: warn if increases (don't block)
-        local cleanup_files=(
-            "plugins/mycelium/scripts/_manifest_lib.py"
-            "plugins/mycelium/scripts/framework_guard.py"
-            "plugins/mycelium/scripts/parse_manifest.py"
-        )
-        local cleanup_errors
-        cleanup_errors=$( { ruff check "${cleanup_files[@]}" \
-            --select=ALL \
-            --ignore="$ruff_ignores" \
-            2>/dev/null || true; } | grep -oE "Found [0-9]+ error" | grep -oE "[0-9]+" | head -1 || echo "0")
-
-        if [ "$cleanup_errors" -eq "0" ]; then
-            pass "ruff: 0 errors on cleanup-cycle files (_manifest_lib, framework_guard, parse_manifest)"
-        elif [ "$cleanup_errors" -le "5" ]; then
-            warn "ruff: $cleanup_errors error(s) on cleanup-cycle files — review for drift"
-        else
-            fail "ruff: $cleanup_errors error(s) on cleanup-cycle files — exceeds drift threshold"
+        # POLICY LIVES IN ruff.toml — NOT HERE (v0.61.0).
+        #
+        # This block used to carry its own `--select=ALL --ignore=<11 rules>`
+        # string. Nothing else on disk read it, so `ruff check` in an editor used
+        # ruff's DEFAULT selection and said "All checks passed" while CI reported
+        # 35 errors against a selection that existed only in this file. Same
+        # defect class as the wiring bugs of this release: a specification kept
+        # where nothing reads it. Now `ruff check` is invoked with NO flags, so it
+        # resolves ruff.toml exactly as a contributor's editor and pre-commit do,
+        # and the three cannot disagree.
+        #
+        # Gate is 0, repo-wide, and FAILS. The previous shape — FAIL on a
+        # hand-listed 3-file "cleanup-cycle" subset, WARN on everything else —
+        # was the enumerate-the-scope anti-pattern: nothing ever added a new file
+        # to that list, so every script written after it was ungated (this
+        # release's own check_wiring.py included). A repo at 0 needs no list.
+        # Check 17's standing invariant is that it never BLOCKS a downstream
+        # project for a missing file — so the policy requirement is scoped to the
+        # framework repo (identified by plugins/mycelium/). A consumer project is
+        # not obliged to adopt Mycelium's lint policy, and failing them for it
+        # would be the framework imposing house style on someone else's repo.
+        # VERSION-MATCH GUARD (added after PR #17 CI). `select = ["ALL"]` makes the
+        # ruff VERSION part of the policy: a newer ruff enables rules that did not
+        # exist when the tree was cleaned, so an unpinned spec means local and CI
+        # disagree about what "clean" is. That is precisely what happened —
+        # local 0.15.12 said 0 errors, CI resolved `ruff>=0.1.0` to 0.16.0 and said
+        # 59. Compare the installed version against the pin and fail LOUDLY on
+        # divergence, rather than letting two environments hold two policies.
+        # Framework repo only, per Check 17's never-block-a-consumer invariant.
+        if [ -d "plugins/mycelium" ] && [ -f "requirements-ci.txt" ]; then
+            local ruff_pin ruff_have
+            # `|| true` is LOAD-BEARING on both lines. The script runs under
+            # `set -euo pipefail`, and a no-match grep exits 1 — so without it the
+            # substitution aborts check_code_quality mid-check precisely when the
+            # spec is UNPINNED, which is the condition this guard exists to detect.
+            # The guard would have failed open on its own subject: it reported
+            # nothing rather than "not pinned", the same fail-open shape as the six
+            # findings this release fixes. Caught by the negative-control probe
+            # before merge, not by reading the code.
+            ruff_pin=$(grep -oE '^ruff==[0-9][0-9.]*' requirements-ci.txt | head -1 | cut -d= -f3 || true)
+            ruff_have=$(ruff --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || true)
+            if [ -z "$ruff_pin" ]; then
+                fail "ruff is not pinned in requirements-ci.txt. ruff.toml selects ALL, so the version IS the policy — an unbounded spec lets CI and local disagree about what 'clean' means (PR #17: 0 vs 59 errors)."
+            elif [ -n "$ruff_have" ] && [ "$ruff_pin" != "$ruff_have" ]; then
+                fail "ruff version divergence: installed $ruff_have, pinned $ruff_pin. With select=ALL these are DIFFERENT policies. Install the pin (pip install -r requirements-ci.txt), or bump the pin deliberately and triage the newly-firing rules."
+            else
+                pass "ruff version matches the pin ($ruff_pin) — one policy, not two"
+            fi
         fi
 
-        # Pre-existing files: informational only
-        if [ "$ruff_count" -gt "0" ]; then
-            warn "ruff: $ruff_count total errors across all plugins/mycelium/scripts/*.py (includes pre-existing tech debt; cleanup target tracks the cleanup-cycle subset only)"
+        if [ ! -f "ruff.toml" ]; then
+            if [ -d "plugins/mycelium" ]; then
+                fail "ruff.toml missing in the framework repo — the lint policy must be declared on disk, not inside this script"
+            else
+                info "ruff: no ruff.toml in this project — lint policy is the project's own call (skipped)"
+            fi
+        else
+            local ruff_out ruff_count
+            ruff_out=$( { ruff check . 2>/dev/null || true; } )
+            ruff_count=$(printf '%s' "$ruff_out" | grep -oE "Found [0-9]+ error" | grep -oE "[0-9]+" | head -1 || echo "0")
+            ruff_count=${ruff_count:-0}
+
+            if [ "$ruff_count" -eq "0" ]; then
+                pass "ruff: 0 errors repo-wide under the declared policy (ruff.toml)"
+            else
+                fail "ruff: $ruff_count error(s) under ruff.toml. Fix them, or change the policy in ruff.toml with a stated reason — do not re-introduce a tolerated-debt baseline."
+            fi
         fi
     fi
 

@@ -140,8 +140,10 @@ Just-in-Time tech stack detection and setup.
 - If tooling is broken, flag it rather than silently working around it.
 
 ## Canvas Output
-Create/update `${CLAUDE_PLUGIN_ROOT}/jit-tooling/active-stack.yml` with detected stack configuration.
+Create/update `.claude/jit-tooling/active-stack.yml` with detected stack configuration — **project state, in the consumer's `.claude/`**, never the shared plugin cache (which is read-only in practice and wiped on `/plugin update`).
 See `${CLAUDE_PLUGIN_ROOT}/jit-tooling/active-stack.example.yml` for the expected format.
+
+This file is the trigger for the whole XAI/AI-Act gate family: `ai_components.detected` gates Theory Gate 13 and `/mycelium:xai-check`, plus the AI arms of `/mycelium:threat-model`, `/mycelium:launch-tier`, `/mycelium:regulatory-review`, and `/mycelium:definition-of-done`. If it is not written here, every one of those silently reports N/A.
 
 ## Theory Citations
 - Forsgren: Accelerate (tooling and automation)

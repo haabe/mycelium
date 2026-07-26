@@ -84,4 +84,4 @@ This template adapts Mitchell et al. (2019) *Model Cards for Model Reporting* to
 
 ---
 
-*Template source: `plugins/mycelium/templates/ai-system-card.md` (installed to `.claude/templates/ai-system-card.md`). Mitchell et al. (2019) format + `agent_runtime_target` extensions per `engine/xai-canvas-threading.md`. Mycelium's own filled instance lives at `docs/ai-system-card.md` and is the reference example.*
+*Template source: `plugins/mycelium/templates/ai-system-card.md` (read from `${CLAUDE_PLUGIN_ROOT}/templates/ai-system-card.md` in plugin form). Mitchell et al. (2019) format + `agent_runtime_target` extensions per `engine/xai-canvas-threading.md`. Mycelium's own filled instance lives at `docs/ai-system-card.md` and is the reference example.*

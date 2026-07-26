@@ -56,7 +56,7 @@ Analyze corrections.md for trends, recurring patterns, and actionable insights.
 
 6. **Identify graduation candidates** (across corrections, warnings, AND cluster-instances):
    - Correction logged 3+ times with same root cause -> propose new guardrail (draft G-XX entry) AND ensure a cluster-instances.md entry exists for the pattern
-   - Warning class with `Count: 3+` and `Status: open` in .claude/harness/warnings-log.md -> graduation candidate. Consult `${CLAUDE_PLUGIN_ROOT}/engine/warning-handbook.md` for the canonical fix; if the canonical fix is "manifest-driven" or similar structural pattern that's already shipped, the recurrence indicates a regression, not a new pattern.
+   - Warning class with `Count: 3+` and `Status: open` in `.claude/memory/warnings-log.md` -> graduation candidate. Consult `${CLAUDE_PLUGIN_ROOT}/engine/warning-handbook.md` for the canonical fix; if the canonical fix is "manifest-driven" or similar structural pattern that's already shipped, the recurrence indicates a regression, not a new pattern.
    - Correction reveals a failure mode not in ${CLAUDE_PLUGIN_ROOT}/harness/anti-patterns.md -> propose new anti-pattern entry
    - Correction reveals a successful mitigation -> propose new pattern in patterns.md
    - **Cross-cluster patterns**: when corrections + warnings together reveal the same shape (e.g., "documented rule diverges from enforcement" — fired both via validator gaps in warnings-log AND via agent-behavior corrections), graduate to a meta-pattern in patterns.md and consider whether one upstream mechanism could close both surfaces.

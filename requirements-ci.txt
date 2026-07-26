@@ -21,5 +21,23 @@ referencing>=0.30.0
 # never required at hook runtime.
 pytest>=7.0
 pytest-cov>=4.0
-ruff>=0.1.0
+# PINNED, and the pin is LOAD-BEARING (2026-07-26).
+#
+# ruff.toml uses `select = ["ALL"]`, which means the RUFF VERSION IS PART OF THE
+# LINT POLICY: a newer ruff adds rules, `ALL` silently expands, and the
+# FAIL-at-zero gate breaks on a dependency bump nobody made deliberately.
+# That is exactly what happened on PR #17 — local ruff 0.15.12 reported 0 errors
+# while CI resolved `ruff>=0.1.0` to 0.16.0 and reported 59, failing Check 17 and
+# (via the fixture) test_check_17. The unbounded spec turned a declared policy
+# into a moving target — the same enumerate-vs-derive defect this release is
+# about, one level out in the dependency graph.
+#
+# Bumping this pin is a DELIBERATE REVIEW TASK: expect newly-added rules to fire,
+# read them, then either fix or add a reasoned ignore to ruff.toml. Check 17
+# verifies the installed ruff matches this pin, so a divergence fails loudly
+# instead of producing two different meanings of "clean".
+#
+# Deferred follow-up, named rather than vague: upgrade to ruff 0.16.x and triage
+# its 59 additional findings as its own change.
+ruff==0.15.12
 shellcheck-py>=0.9.0

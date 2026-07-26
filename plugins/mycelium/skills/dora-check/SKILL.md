@@ -233,6 +233,7 @@ This ensures the delivery metrics gate has auditable evidence.
 - APEX section: ai_leverage, predictability, efficiency, developer_experience
 - SRE section: SLI/SLO status, error budget remaining
 - Measurement history for trend tracking
+- **Top-level `last_measured: YYYY-MM-DD`** — required. `hooks/session-start.sh` (Check 2) reads this exact top-level key to compute the metrics-staleness reminder, and `software` is its default product type, so this canvas is the one it reads for most projects. The three non-software blocks below (Parts 4-6) always named it; the software block did not, so the default path was the one that lost the field — the reminder could not fire for the most common consumer. Absent field = silent, not "never measured".
 
 ---
 

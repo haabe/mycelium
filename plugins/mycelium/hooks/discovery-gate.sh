@@ -51,8 +51,19 @@ case "$FILE_PATH" in
 esac
 
 # Never gate framework/project state or documentation.
+#
+# The .claude/ test is deliberately PROJECT-RELATIVE. Matching `*/.claude/*`
+# against the absolute path exempted any project that merely lives underneath a
+# `.claude` ancestor directory — e.g. a workspace at ~/.claude/jobs/<id>/work —
+# so every source write in such a tree escaped the gate. Found 2026-07-26 by
+# tripping it with a probe workspace under ~/.claude/; unlikely for real user
+# projects, but the exemption was wider than its intent by construction.
+REL_PATH="${FILE_PATH#"$PROJECT_DIR"/}"
+case "$REL_PATH" in
+  .claude/*|*/.claude/*) exit 0;;
+esac
 case "$FILE_PATH" in
-  *"/.claude/"*|*.md|*.txt) exit 0;;
+  *.md|*.txt) exit 0;;
 esac
 
 # Only new files — an existing target means brownfield work in flight.

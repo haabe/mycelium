@@ -180,11 +180,8 @@ def main(argv=None):
     p.add_argument("--json", action="store_true", help="Emit JSON.")
     args = p.parse_args(argv)
 
-    if args.root:
-        root = Path(args.root).resolve()
-    else:
-        # scripts live at <root>/plugins/mycelium/scripts/
-        root = Path(__file__).resolve().parents[3]
+    # scripts live at <root>/plugins/mycelium/scripts/
+    root = Path(args.root).resolve() if args.root else Path(__file__).resolve().parents[3]
 
     if not root.exists():
         print(f"error: root does not exist: {root}", file=sys.stderr)

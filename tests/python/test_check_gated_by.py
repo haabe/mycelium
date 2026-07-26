@@ -11,7 +11,7 @@ import sys
 
 def _import(scripts_path):
     sys.path.insert(0, str(scripts_path))
-    import check_gated_by  # noqa: PLC0415
+    import check_gated_by
 
     return check_gated_by
 

@@ -90,12 +90,100 @@ def _gate_numbers_and_sources(gates_text):
     return out
 
 
+# Minimum cells in a Tier-2 table row (theory | mechanism | note).
+TIER2_MIN_CELLS = 3
+
+
+def _check_skill_refs(tier12: str, root: Path):
+    """A: every `/skill-name` named in a load-bearing tier has a SKILL.md."""
+    return [
+        ("A:skill-ref",
+         f"theories.md references `/{name}` — no "
+         f"plugins/mycelium/skills/{name}/SKILL.md")
+        for name in sorted(set(SKILL_RE.findall(tier12)))
+        if not (root / SKILLS_DIR / name / "SKILL.md").is_file()
+    ]
+
+
+def _check_gate_refs(tier12: str, valid_gate_nums: set):
+    """B: every `gate N` reference resolves to a real gate section."""
+    return [
+        ("B:gate-ref",
+         f"theories.md references `gate {num}` — no `### {num}.` in "
+         f"theory-gates.md")
+        for num in sorted(set(GATE_RE.findall(tier12)), key=int)
+        if num not in valid_gate_nums
+    ]
+
+
+def _check_doc_paths(tier12: str, root: Path):
+    """C: every engine/harness/orchestration doc path resolves."""
+    return [
+        ("C:doc-path",
+         f"theories.md references `{sub}/{fname}` — no "
+         f"plugins/mycelium/{sub}/{fname}")
+        for sub, fname in sorted(set(ENGINE_PATH_RE.findall(tier12)))
+        if not (root / "plugins/mycelium" / sub / fname).is_file()
+    ]
+
+
+def _check_gate_sources(gate_sources: dict):
+    """D: every gate carries a named theory Source."""
+    return [
+        ("D:gate-source",
+         f"theory-gates.md gate {num} has no `**Source**:` line — gate "
+         f"shipped without a named theory")
+        for num in sorted(gate_sources, key=int)
+        if not gate_sources[num]
+    ]
+
+
+def _has_mechanism(chunk: str) -> bool:
+    """True when a theory unit names at least one resolvable mechanism token."""
+    return bool(
+        SKILL_RE.search(chunk)
+        or GATE_RE.search(chunk)
+        or ENGINE_PATH_RE.search(chunk)
+        or FILENAME_RE.search(chunk)
+        or GUARDRAIL_RE.search(chunk),
+    )
+
+
+def _check_name_only(tier1: str, tier2: str):
+    """E: no name-only theory in the load-bearing tiers.
+
+    A theory that names no mechanism is a citation, not an implementation — the
+    exact over-claim this guard exists to prevent.
+    """
+    errors = []
+    for part in re.split(r"\n### ", tier1)[1:]:          # Tier 1: ### sections
+        if not _has_mechanism(part):
+            title = part.splitlines()[0].strip()
+            errors.append((
+                "E:name-only",
+                f"Tier-1 theory '{title}' has no resolvable mechanism token "
+                f"(skill/gate/engine-path) — name-only in a load-bearing tier",
+            ))
+    for line in tier2.splitlines():                      # Tier 2: table rows
+        s = line.strip()
+        if not s.startswith("|") or s.startswith(("|---", "| Theory")):
+            continue
+        cells = [c.strip() for c in s.strip("|").split("|")]
+        if len(cells) < TIER2_MIN_CELLS or not cells[0]:
+            continue
+        if not _has_mechanism(line):
+            errors.append((
+                "E:name-only",
+                f"Tier-2 theory '{cells[0]}' has no resolvable mechanism token "
+                f"— name-only in a load-bearing tier",
+            ))
+    return errors
+
+
 def scan(root: Path):
-    errors = []  # (check, detail)
-    theories_path = root / THEORIES_MD
-    gates_path = root / GATES_MD
-    theories = theories_path.read_text(encoding="utf-8")
-    gates = gates_path.read_text(encoding="utf-8")
+    """Run checks A-E over the load-bearing theory tiers."""
+    theories = (root / THEORIES_MD).read_text(encoding="utf-8")
+    gates = (root / GATES_MD).read_text(encoding="utf-8")
 
     # Load-bearing tiers only: Tier 3 is citation-only by design (exempt).
     tier1 = _section(theories, "## Tier 1", "## Tier 2", "## Tier 3", "## See also")
@@ -103,59 +191,22 @@ def scan(root: Path):
     tier12 = tier1 + "\n" + tier2
 
     gate_sources = _gate_numbers_and_sources(gates)
-    valid_gate_nums = set(gate_sources)
 
-    # A. skill references resolve
-    for name in sorted(set(SKILL_RE.findall(tier12))):
-        if not (root / SKILLS_DIR / name / "SKILL.md").is_file():
-            errors.append(("A:skill-ref", f"theories.md references `/{name}` — no plugins/mycelium/skills/{name}/SKILL.md"))
-
-    # B. gate-number references resolve
-    for num in sorted(set(GATE_RE.findall(tier12)), key=int):
-        if num not in valid_gate_nums:
-            errors.append(("B:gate-ref", f"theories.md references `gate {num}` — no `### {num}.` in theory-gates.md"))
-
-    # C. engine/harness/orchestration doc paths resolve
-    for sub, fname in sorted(set(ENGINE_PATH_RE.findall(tier12))):
-        if not (root / "plugins/mycelium" / sub / fname).is_file():
-            errors.append(("C:doc-path", f"theories.md references `{sub}/{fname}` — no plugins/mycelium/{sub}/{fname}"))
-
-    # D. every gate carries a named theory Source
-    for num in sorted(gate_sources, key=int):
-        if not gate_sources[num]:
-            errors.append(("D:gate-source", f"theory-gates.md gate {num} has no `**Source**:` line — gate shipped without a named theory"))
-
-    # E. no name-only theory in the load-bearing tiers (≥1 resolvable mechanism token per unit)
-    def has_mechanism(chunk):
-        return bool(
-            SKILL_RE.search(chunk)
-            or GATE_RE.search(chunk)
-            or ENGINE_PATH_RE.search(chunk)
-            or FILENAME_RE.search(chunk)
-            or GUARDRAIL_RE.search(chunk)
-        )
-
-    # Tier 1: ### sections
-    for part in re.split(r"\n### ", tier1)[1:]:
-        title = part.splitlines()[0].strip()
-        if not has_mechanism(part):
-            errors.append(("E:name-only", f"Tier-1 theory '{title}' has no resolvable mechanism token (skill/gate/engine-path) — name-only in a load-bearing tier"))
-    # Tier 2: table rows (skip header + separator)
-    for line in tier2.splitlines():
-        s = line.strip()
-        if not s.startswith("|") or s.startswith("|---") or s.startswith("| Theory"):
-            continue
-        cells = [c.strip() for c in s.strip("|").split("|")]
-        if len(cells) < 3 or not cells[0]:
-            continue
-        if not has_mechanism(line):
-            errors.append(("E:name-only", f"Tier-2 theory '{cells[0]}' has no resolvable mechanism token — name-only in a load-bearing tier"))
-
+    errors = (
+        _check_skill_refs(tier12, root)
+        + _check_gate_refs(tier12, set(gate_sources))
+        + _check_doc_paths(tier12, root)
+        + _check_gate_sources(gate_sources)
+        + _check_name_only(tier1, tier2)
+    )
     return {"errors": errors, "gates_checked": len(gate_sources)}
 
 
 def main(argv=None):
-    p = argparse.ArgumentParser(description="Guard the theory→mechanism mapping in docs/theories.md against structural drift.")
+    p = argparse.ArgumentParser(
+        description="Guard the theory→mechanism mapping in docs/theories.md "
+                    "against structural drift.",
+    )
     p.add_argument("--root", default=None, help="Repo root (default: auto-detect).")
     p.add_argument("--json", action="store_true", help="Emit JSON.")
     args = p.parse_args(argv)
@@ -172,7 +223,8 @@ def main(argv=None):
     if args.json:
         print(json.dumps(report, indent=2))
     else:
-        print(f"Theory fidelity (structural): checked {report['gates_checked']} gates + theories.md Tier 1/2 references.")
+        print(f"Theory fidelity (structural): checked {report['gates_checked']} "
+              f"gates + theories.md Tier 1/2 references.")
         if report["errors"]:
             print(f"\nSTRUCTURAL DRIFT ({len(report['errors'])}):")
             for check, detail in report["errors"]:

@@ -20,7 +20,7 @@ import pytest
 
 def _import(scripts_path):
     sys.path.insert(0, str(scripts_path))
-    import verify_citations  # noqa: PLC0415
+    import verify_citations
     return verify_citations
 
 
@@ -41,8 +41,7 @@ def read_log(tmp_path):
         {"ts": "2026-05-11T19:03:00Z", "tool": "Read", "file_path": "/other/session/file.md", "session_id": "s2"},
     ]
     with open(log, "w") as f:
-        for e in entries:
-            f.write(json.dumps(e) + "\n")
+        f.writelines(json.dumps(e) + "\n" for e in entries)
     return log
 
 
@@ -148,7 +147,7 @@ def test_malformed_jsonl_fail_open(vc, tmp_path):
     log = tmp_path / "read-log.jsonl"
     with open(log, "w") as f:
         f.write('{"ts": "2026-05-11T19:00:00Z", "tool": "Read", "file_path": "/a.md", "session_id": "s1"}\n')
-        f.write('not-json-at-all\n')
+        f.write("not-json-at-all\n")
         f.write('{"ts": "2026-05-11T19:01:00Z", "tool": "Read", "file_path": "/b.md", "session_id": "s1"}\n')
     entries = vc.load_read_log(log)
     assert len(entries) == 2  # malformed line skipped

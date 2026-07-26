@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.60.3 -- **Attribution label: invite-both-story-shapes-2026-07-25** (README + receipts copy). v0.60.2 asked readers to report what BROKE, which under-asks: the datum is that someone RAN it, not whether they liked it, and a failures-only invitation filters out half the runs (a clean run reads 'tell me what broke' and concludes it has nothing to report). MiniLisp proves the two are not opposites: a finished interpreter AND the record's most useful friction report, same person, same thread. Both invitations now open to either shape while still marking friction as rarer and especially wanted; the wording deliberately asks what happened rather than whether it was good, so it does not solicit applause. **Priors**: v0.60.2 **minilisp-showcase-2026-07-25** (see `docs/changelog.md`).*
+*Version 0.61.0 -- **Attribution label: wiring-guard-2026-07-26** (silently-inert-mechanism sweep). A coverage proof asserts a mechanism BEHAVES when called; nothing asserted it IS called. Three shipped green with no caller at all: `ingest_warnings.py` (documented "auto-updated from CI signals", published as Shipped v0.16.0, invoked by nothing), `validate_mermaid.py` (87% covered, no render skill piped to it), and — from the reader side — `/xai-check` resolving a path nothing ever wrote, so Theory Gate 13 could never fire (~2.5mo, dated to the same 2026-05-09 bulk path rewrite as the v0.58.0 gap). New `check_wiring.py` (CI-gated, 3 rules: no orphan scripts, plugin-root refs resolve, one canonical path per state file) is the general mechanism the 2026-07-25 BVSSH assessment said was missing when it predicted "a second silently-inert check would still be found by hand". Also: product-type routing in two hooks had NEVER worked (`sys.exit` inside a bare `except:` swallowed SystemExit, yielding a two-line value that matched no case arm), dora-metrics gains the schema it never had, and `check_legacy_paths` widens to the four dirs whose holes were hiding live rot. **Priors**: v0.60.3 **invite-both-story-shapes-2026-07-25** (see `docs/changelog.md`).*
 
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
@@ -101,9 +101,9 @@ Five mechanisms make Mycelium smarter over time (details + cadence in each sub-f
 
 Load the appropriate context based on current diamond phase:
 
-- **Discovery**: `.claude/domains/discovery/CLAUDE.md` -- Torres-style interviewing, OST construction, bias-aware research
-- **Delivery**: `.claude/domains/delivery/CLAUDE.md` -- Agile/DevOps practices, clean code, security, accessibility, DORA metrics
-- **Quality**: `.claude/domains/quality/CLAUDE.md` -- Always-active overlay: validation, accessibility, security, service principles
+- **Discovery**: `${CLAUDE_PLUGIN_ROOT}/domains/discovery/CLAUDE.md` -- Torres-style interviewing, OST construction, bias-aware research
+- **Delivery**: `${CLAUDE_PLUGIN_ROOT}/domains/delivery/CLAUDE.md` -- Agile/DevOps practices, clean code, security, accessibility, DORA metrics
+- **Quality**: `${CLAUDE_PLUGIN_ROOT}/domains/quality/CLAUDE.md` -- Always-active overlay: validation, accessibility, security, service principles
 
 ## JiT Tooling
 

@@ -14,7 +14,7 @@ import sys
 
 def _import(scripts_path):
     sys.path.insert(0, str(scripts_path))
-    import check_theory_fidelity  # noqa: PLC0415
+    import check_theory_fidelity
 
     return check_theory_fidelity
 

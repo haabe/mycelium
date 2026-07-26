@@ -186,6 +186,20 @@ When `--scale all` or `--scale active` with multiple diamonds, stack diamond blo
 }
 ```
 
+### Step 4b: Validate the emitted Mermaid (MANDATORY for `mermaid` format)
+
+Pipe the block you just emitted through the static validator before showing it:
+
+```bash
+printf '%s' "$DIAGRAM" | python3 ${CLAUDE_PLUGIN_ROOT}/scripts/validate_mermaid.py -
+```
+
+It checks the two things you cannot check by eye: **state-id consistency** (F11 — every transition endpoint and `class` target references a declared ID, a mismatch being a render-time parse error invisible in the raw syntax) and **WCAG AA contrast** (F13 — every `themeVariables` foreground/background pair ≥ 4.5:1, which is pure math). Add `--cli` to also shell out to `mmdc` for a full parse when the binary is present (fail-open when absent).
+
+Exit 1 means at least one FAIL: **fix the diagram and re-validate before emitting.** Do not show the user a diagram that failed this check.
+
+What remains genuinely operator-side is visual layout and communicative quality — that still needs a human eye, which is why the Step 5 disclaimer stays. This step covers only what is mechanically decidable. (Wired 2026-07-26: the validator shipped with a coverage proof but no render skill invoked it, so both blind-spots it "closed" were still open in practice.)
+
 ### Step 5: Append disclaimers
 
 Per `engine/render-conventions.md`:

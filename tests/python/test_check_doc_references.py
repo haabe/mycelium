@@ -11,7 +11,7 @@ import sys
 
 def _import(scripts_path):
     sys.path.insert(0, str(scripts_path))
-    import check_doc_references  # noqa: PLC0415
+    import check_doc_references
 
     return check_doc_references
 

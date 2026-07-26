@@ -54,8 +54,8 @@ Run before tagging each minor release (v0.x.0). The manual dogfood session is th
 
 | # | Step | Required? |
 |---|---|---|
-| 1 | `bash .claude/tests/validate-template.sh` passes 13/13 | YES |
-| 2 | `python3 .claude/scripts/validate_canvas.py` passes (CI-only, requires `pip install -r requirements-ci.txt`) | YES |
+| 1 | `bash tests/validate-template.sh` passes (all numbered checks) | YES |
+| 2 | `python3 plugins/mycelium/scripts/validate_canvas.py` passes (CI-only, requires `pip install -r requirements-ci.txt`) | YES |
 | 3 | `/eval-runner run-all` passes all scenarios (scenarios/discovery, delivery, integration, adversarial) | YES |
 | 4 | Version bumped consistently in CLAUDE.md and README.md | YES |
 | 5 | `/feedback-review` health check — no regressions across Loop 1-4 | YES |

@@ -17,7 +17,7 @@ import pytest
 
 def _import(scripts_path):
     sys.path.insert(0, str(scripts_path))
-    import scope_check  # noqa: PLC0415
+    import scope_check
     return scope_check
 
 

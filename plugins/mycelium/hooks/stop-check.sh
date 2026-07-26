@@ -92,7 +92,7 @@ try:
     d = datetime.fromisoformat(str(last).replace('Z','+00:00'))
     days = (datetime.now(timezone.utc) - d).days
     print('overdue' if days > 30 else 'ok')
-except: print('unknown')
+except Exception: print('unknown')
 " "$CANVAS_DIR/bvssh-health.yml" 2>/dev/null || echo "unknown")
 
   if [ "$BVSSH_OVERDUE" = "overdue" ] || [ "$BVSSH_OVERDUE" = "never" ]; then
@@ -107,14 +107,13 @@ import yaml, sys
 try:
   with open(sys.argv[1]) as f:
     data = yaml.safe_load(f) or {}
-  diamonds = data.get('active_diamonds', [])
-  for d in diamonds:
-    pt = d.get('product_type')
-    if pt:
-      print(pt)
-      sys.exit(0)
-  print(data.get('product_type', 'software') or 'software')
-except: print('software')
+  pt = None
+  for d in (data.get('active_diamonds') or []):
+    if d.get('product_type'):
+      pt = d['product_type']
+      break
+  print(pt or data.get('product_type') or 'software')
+except Exception: print('software')
 " "$PROJECT_DIR/.claude/diamonds/active.yml" 2>/dev/null || echo "software")
 
 case "$PRODUCT_TYPE_STOP" in
@@ -138,7 +137,7 @@ try:
     d = datetime.fromisoformat(str(last).replace('Z','+00:00'))
     days = (datetime.now(timezone.utc) - d).days
     print('overdue' if days > 30 else 'ok')
-except: print('unknown')
+except Exception: print('unknown')
 " "$METRICS_CANVAS_STOP" 2>/dev/null || echo "unknown")
 
   if [ "$METRICS_OVERDUE" = "overdue" ]; then

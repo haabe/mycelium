@@ -35,7 +35,7 @@ The framework's bias is removal over addition; new mechanisms must show their fr
 For fixes, mechanical improvements, and new artifacts that fit the existing surface. Good PRs:
 
 - Target a single concern (one corrections.md entry, one validator check, one stub fill)
-- Pass `bash .claude/tests/validate-template.sh` and `python3 .claude/scripts/validate_canvas.py` locally
+- Pass `bash tests/validate-template.sh` and `python3 plugins/mycelium/scripts/validate_canvas.py` locally
 - Update CLAUDE.md version line if the change is "material" per `engine/version-discipline.md`
 - Include a corrections.md entry if the PR was triggered by an agent mistake (see `.claude/memory/corrections.md` for shape)
 - Match voice per [style.md](style.md)
@@ -66,8 +66,8 @@ The case file is the receipt the receipt argument rests on. Frontmatter cross-li
 ## Validation hooks
 
 ```bash
-bash .claude/tests/validate-template.sh   # structural integrity (24 checks)
-python3 .claude/scripts/validate_canvas.py  # canvas YAML schema validation
+bash tests/validate-template.sh   # structural integrity (all numbered checks)
+python3 plugins/mycelium/scripts/validate_canvas.py  # canvas YAML schema validation
 ```
 
 Both must pass before a PR is merge-ready.
