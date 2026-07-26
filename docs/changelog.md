@@ -4,6 +4,52 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-07-26.
 
+## v0.62.0 — the third question: does production code run when the test runs?
+
+`check_wiring.py` asks whether a shipped mechanism has a caller. `check_negative_control.py`
+asks whether a guard is able to fail. Neither asks what sits between them: **when the test
+executes, does any production code execute with it?**
+
+A test can import nothing, assert `True`, or patch away the very module it names, and still
+be green, covered, and counted in the totals. Coverage cannot see this — it records which
+lines ran, never whether the assertion that followed could have failed. Every instance is on
+this project's record: `verify_citations.py` shipped 14 green tests while its matcher matched
+0% of real citations for ~2.5 months; `hooks_no_errors` returned True on an empty state
+directory, passing hardest exactly when the hook layer was dead. The prompt to build it came
+from a sibling project's corrections log describing the same shape in another stack —
+*"visualization rendered blank canvas — no automated test caught the missing wiring because
+unit tests mock the data sources."*
+
+**What it checks**, scope derived from test-naming conventions (Python, Bash, JS/TS), never
+from a maintained list:
+- **no-production-reach** — the test references nothing this repo ships, from non-comment
+  code, by any mechanism: import, `importlib` dynamic load, `subprocess`, sourced shell
+  script, or a read of a shipped document.
+- **fully-mocked** — every production module the test touches is patched, so only mocks run.
+- **tautology** — language-scoped: `assert True`, `assertEqual(n, n)`, `expect(x).toBe(x)`,
+  `[ 1 = 1 ]`.
+- **placeholder** — a `# Simulate`/`# Stub` marker, reported only when the file also reaches
+  no production code. Alone it usually narrates *fixture* construction inside a real test.
+
+**Unsupported languages are reported UNCHECKED with a count, never silently skipped**, and a
+repo with no test files exits 1 rather than reporting a clean pass — a gate that quietly
+narrows its own scope reports health it never measured.
+
+**Four false-positive classes were found by running it against this repo and fixed before
+shipping**, each a lesson about deriving scope on the wrong axis: production was first
+defined by directory (which classified `tests/validate-template.sh`, the validator the whole
+bash suite exercises, as a non-production test — 44 false positives), then by leading
+underscore (which misfiled the shipped `_manifest_lib.py`), then by file extension (which
+excluded the `.md` artefacts that are half of what this framework ships). A path-hostile
+lookbehind rejected `source "$ROOT/tests/validate-template.sh"`, the commonest shell
+reference of all. And the tautology patterns, applied without language typing, flagged this
+gate's own fixture string `[ 1 = 1 ]` inside a `.py` file — a detector firing on its own test
+data is telling you the rule is untyped, not that the data is wrong. **A gate that cries wolf
+gets switched off, and is then worth less than no gate.**
+
+Wired into CI beside the other two guards; 16 tests, including negative controls that build a
+fake test and require a finding.
+
 ## v0.61.1 — the ruff upgrade, and a config snapshot that drifted immediately
 
 **2026-07-26. Attribution: ruff-0-16-upgrade-2026-07-26. Class: patch (lint policy + test harness).**
