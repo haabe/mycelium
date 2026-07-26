@@ -1,0 +1,100 @@
+# Ruff configuration — the single source of truth for this repo's lint policy.
+#
+# WHY THIS FILE EXISTS (added v0.61.0)
+# -----------------------------------
+# Before this, the policy lived ONLY as a bash string inside
+# tests/validate-template.sh (Check 17):
+#
+#     --select=ALL --ignore="D,ANN,COM,T20,S603,S607,EM,TRY003,FBT,PTH,INP001"
+#
+# Nothing else read it. A contributor running `ruff check` got ruff's DEFAULT
+# selection, saw "All checks passed!", and pushed — while CI reported 35 errors
+# against a selection that existed nowhere on disk. Editors, pre-commit hooks,
+# and CI all disagreed about what "clean" meant, and only one of them was right.
+#
+# That is the same defect class as the wiring bugs this release fixes: a
+# specification kept somewhere nothing reads. Declaring it here means `ruff check`
+# in an editor, in a pre-commit hook, and in CI now agree by construction.
+#
+# Check 17 reads its selection from this file rather than restating it, so the
+# two cannot drift.
+
+# 100, chosen deliberately rather than inherited.
+#
+# The old effective limit was 88 — ruff's DEFAULT, which leaked in because the
+# validator never set one. Nobody picked it. Measured against the actual code the
+# violating lines ran 89..164 with a MEDIAN of 98, i.e. house style is ~100 and 88
+# was mismatched to it. 100 is declared here so the limit reflects the style, and
+# the genuine tail (the 14 lines over 100, up to 164) was WRAPPED rather than
+# accommodated — the point is a limit that is both chosen and met, not a limit set
+# above the worst line.
+line-length = 100
+target-version = "py311"
+
+# Directories that are not ours to police.
+extend-exclude = [
+    ".ruff_cache",
+    ".pytest_cache",
+    "__pycache__",
+    ".playwright-mcp",
+    # Test FIXTURES are data that happens to end in .py — deliberately broken or
+    # inert copies used to prove a check fires. Linting them is a category error
+    # (e.g. EXE001 wants a shebang'd fixture to be executable, which would make
+    # it a runnable script instead of a fixture).
+    "tests/bash/fixtures",
+]
+
+[lint]
+# Maximalist by intent: enable everything, then subtract with a stated reason.
+# The alternative (enable a hand-picked subset) is the enumerate-the-scope
+# anti-pattern — a new rule class never gets added to a hand list, so new
+# defect classes silently fall outside the gate.
+select = ["ALL"]
+
+ignore = [
+    # --- Documentation / typing style: deliberate project choices ---
+    "D",      # pydocstyle — docstring FORM is not policed; this repo's convention
+              # is long explanatory docstrings that state WHY, which D fights.
+    "ANN",    # type annotations not required in stdlib-only guard scripts.
+    "COM",    # trailing-comma formatting — no formatter is enforced, so this is noise.
+
+    # --- Rules that fight what these scripts ARE ---
+    "T20",      # print() IS the output contract: every guard reports findings on stdout.
+    "S603",     # subprocess without shell=True is the SAFE form; the rule flags all use.
+    "S607",     # partial executable path — `git`/`ruff` from PATH is intended.
+    "EM",       # exception message in a variable; adds ceremony without safety here.
+    "TRY003",   # long messages outside exception class — guard errors must be readable.
+    "FBT",      # boolean positional args — CLI flags legitimately map to booleans.
+    "PTH",      # os.path over pathlib — mixed by history; not worth a churn pass.
+    "INP001",   # implicit namespace package — scripts/ is intentionally not a package
+                # (hooks import by path; adding __init__.py would break resolution).
+]
+
+[lint.per-file-ignores]
+# Tests get a REAL policy, just a different one — not an exemption. A test file's
+# job is to assert against literals and to poke at internals, and rules written
+# for production code punish exactly that. Every entry below is a property of
+# test code, not a concession:
+"tests/**" = [
+    "S101",     # `assert` is the entire point of a test.
+    "E501",     # fixture strings and explanatory comments run long by design.
+    "SLF001",   # tests legitimately reach into private members to pin behaviour.
+    "PLR2004",  # expected values ARE magic numbers; naming each one hides the assertion.
+    "PLR0913",  # pytest fixtures arrive as parameters; arity is the framework's call.
+    "PLC0415",  # deliberate in-function imports: the `_import(scripts_path)` helper
+                # loads a guard by path after sys.path manipulation.
+    "ARG001",   # unused pytest fixture args (e.g. capsys requested for its side effect).
+    "ARG002",
+    "ARG005",
+    "PT017",    # asserting on a caught exception inside `except` is fine in these tests.
+    "PT018",    # composite asserts read better than split ones for path/line pairs.
+    "RUF059",   # unused unpacked variable in destructuring assertions.
+    "SIM105",   # contextlib.suppress over try/except/pass — clarity preferred here.
+    "F401",     # a module imported purely to prove it imports.
+    "S108",     # hardcoded /tmp paths are the SUBJECT of path-handling assertions,
+                # not real filesystem writes (test_framework_guard pins how the
+                # guard classifies an absolute path outside the project).
+    "PT011",    # broad pytest.raises — some guards raise plain ValueError by design.
+    "ERA001",   # "commented-out code" false-positives on Mermaid/YAML fixture text.
+    "PERF401",  # loop-to-comprehension rewrites hurt readability in table-driven tests.
+]

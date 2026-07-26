@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mycelium.dev/schemas/canvas/dora-metrics.schema.json",
+  "title": "DORA + APEX Delivery Metrics Canvas",
+  "description": "Delivery metrics for software products (Forsgren DORA + LinearB APEX + SRE error budgets). Written by /mycelium:dora-check. This canvas is the DEFAULT metrics surface: hooks/session-start.sh Check 2 routes every `software` product_type here, so it is the one read for most consumers. Deliberately permissive on the metric blocks (additionalProperties: true) and strict on `last_measured` only — the field the staleness reminder depends on.",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "$ref": "_common.schema.json#/$defs/schema_version"
+    },
+    "last_measured": {
+      "type": ["string", "null"],
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}",
+      "description": "Date of the most recent measurement, ISO-8601 (YYYY-MM-DD), or null for never measured. The KEY IS REQUIRED; its value may be null. Read verbatim as a top-level key by hooks/session-start.sh Check 2 to compute the metrics-staleness reminder; nothing else supplies it. This schema exists because its absence was undetectable: dora-metrics.yml was the only metrics canvas without a schema (the other three declared the field), and /dora-check's software Canvas Output block never named it, so the reminder for the default product type could not fire and no gate reported the gap. Both halves fixed in the same release. Required-but-nullable is the deliberate calibration: an emitter that omits the key entirely FAILS (the original defect), while an honestly-unmeasured project can still say so — null is the truthful value for a canvas with an empty measurement_history, and the hook now reports it out loud instead of staying silent. Do not fabricate a date to satisfy the schema."
+    },
+    "deployment_frequency": {"type": ["object", "null"], "additionalProperties": true},
+    "lead_time_for_changes": {"type": ["object", "null"], "additionalProperties": true},
+    "change_failure_rate": {"type": ["object", "null"], "additionalProperties": true},
+    "time_to_restore": {"type": ["object", "null"], "additionalProperties": true},
+    "reliability": {"type": ["object", "null"], "additionalProperties": true},
+    "overall_classification": {"type": ["string", "object", "null"]},
+    "capabilities": {"type": ["object", "array", "null"]},
+    "measurement_history": {"type": ["array", "object", "null"]},
+    "goodhart_check": {"type": ["object", "string", "null"]},
+    "apex": {
+      "type": ["object", "null"],
+      "description": "LinearB APEX: ai_leverage, predictability, efficiency, developer_experience. Also holds apex.scaffold_token_estimate when /mycelium:scaffold-cost-check is run with --write.",
+      "additionalProperties": true
+    },
+    "sre": {
+      "type": ["object", "string", "null"],
+      "description": "SLI/SLO status and error budget. May be the string marker `n/a-until-production` for pre-production products — an explicit not-applicable rather than a null that reads as a skipped measurement."
+    },
+    "_meta": {"type": ["object", "null"], "additionalProperties": true}
+  },
+  "required": ["last_measured"],
+  "additionalProperties": true
+}

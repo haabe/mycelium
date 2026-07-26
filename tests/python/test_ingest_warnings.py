@@ -11,7 +11,7 @@ import textwrap
 
 def _import(scripts_path):
     sys.path.insert(0, str(scripts_path))
-    import ingest_warnings  # noqa: PLC0415
+    import ingest_warnings
     return ingest_warnings
 
 

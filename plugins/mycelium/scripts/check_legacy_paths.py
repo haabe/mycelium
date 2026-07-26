@@ -15,9 +15,17 @@ across docs/ + CLAUDE.md + engine/orchestration doc files, weeks after a link-on
 sweep (v0.49.5) had passed clean.
 
 Scope — deliberately narrow to keep false positives ~zero:
-  - PATTERN: `.claude/(engine|orchestration|schemas)/` only. These three dirs
-    have NO legitimate user-runtime path in plugin form — they are always either
-    repo source (`plugins/mycelium/...`) or plugin cache (`${CLAUDE_PLUGIN_ROOT}/...`).
+  - PATTERN: `.claude/(engine|orchestration|schemas|templates|scripts|domains|tests)/`.
+    These dirs have NO legitimate user-runtime path in plugin form — they are
+    always either repo source (`plugins/mycelium/...`) or plugin cache
+    (`${CLAUDE_PLUGIN_ROOT}/...`).
+    WIDENED 2026-07-26 (+templates, scripts, domains, tests): the original three
+    left holes exactly where live rot was sitting. `/xai-check` told the agent to
+    read `.claude/templates/ai-system-card.md` (packaged at
+    `${CLAUDE_PLUGIN_ROOT}/templates/`), and `.claude/domains/` is the dead
+    Pre-Task path the v0.58.0 plugin-form finding had already flagged — both
+    invisible to a guard built for this exact class. A guard with holes where the
+    bugs are reads green and is worse than none.
   - EXCLUDED from the pattern: `.claude/skills/` and `.claude/harness/`. Those DO
     have legitimate runtime references — skills are discovered from `.claude/skills/`
     after opencode vendoring; `.claude/harness/` holds user project state
@@ -52,7 +60,9 @@ SCAN_GLOBS = [
 ]
 
 # The moved reference dirs with no legitimate plugin-form runtime path.
-LEGACY_RE = re.compile(r"\.claude/(engine|orchestration|schemas)/")
+LEGACY_RE = re.compile(
+    r"\.claude/(engine|orchestration|schemas|templates|scripts|domains|tests)/"
+)
 
 # Files that intentionally document the legacy install form (deprecated, removed
 # at the version named in each project's deprecation notice). Relative to root.
@@ -86,11 +96,15 @@ def scan(root: Path):
             continue
         files_scanned += 1
         for i, line in enumerate(f.read_text(encoding="utf-8", errors="replace").splitlines(), 1):
-            # The CLAUDE.md `*Version ...` line is an embedded changelog record
-            # (same rationale as allowlisting changelog.md): it legitimately
-            # quotes moved paths when narrating a fix. Skip it — the routing
-            # pointers elsewhere in CLAUDE.md are still scanned.
-            if src_rel == "CLAUDE.md" and line.lstrip().startswith("*Version"):
+            # An embedded `*Version ...` changelog line is a frozen historical
+            # record (same rationale as allowlisting changelog.md): it
+            # legitimately quotes moved paths when narrating a past fix. Skip it
+            # — the routing pointers elsewhere in the same file are still
+            # scanned. Generalised from a CLAUDE.md-only skip 2026-07-26, when
+            # widening the dir list surfaced the identical construct in
+            # engine/version-discipline.md; the rule was always about the line
+            # shape, not about one file.
+            if line.lstrip().startswith("*Version"):
                 continue
             if LEGACY_RE.search(line):
                 hits.append((src_rel, i, line.strip()[:120]))
@@ -98,16 +112,15 @@ def scan(root: Path):
 
 
 def main(argv=None):
-    p = argparse.ArgumentParser(description="Guard against stale .claude/{engine,orchestration,schemas}/ doc references.")
+    p = argparse.ArgumentParser(
+        description="Guard against stale framework-dir references in .claude/ docs.",
+    )
     p.add_argument("--root", default=None, help="Repo root (default: auto-detect).")
     p.add_argument("--json", action="store_true", help="Emit JSON.")
     args = p.parse_args(argv)
 
-    if args.root:
-        root = Path(args.root).resolve()
-    else:
-        # scripts live at <root>/plugins/mycelium/scripts/
-        root = Path(__file__).resolve().parents[3]
+    # scripts live at <root>/plugins/mycelium/scripts/
+    root = Path(args.root).resolve() if args.root else Path(__file__).resolve().parents[3]
 
     if not root.exists():
         print(f"error: root does not exist: {root}", file=sys.stderr)
@@ -119,7 +132,8 @@ def main(argv=None):
         print(json.dumps(report, indent=2))
     else:
         print(f"Legacy paths: scanned {report['files_scanned']} doc file(s) "
-              f"for stale .claude/{{engine,orchestration,schemas}}/ references.")
+              f"for stale .claude/{{engine,orchestration,schemas,templates,"
+              f"scripts,domains,tests}}/ references.")
         if report["hits"]:
             print(f"\nSTALE references ({len(report['hits'])}) — these dirs moved to "
                   f"plugins/mycelium/ (repo) / ${{CLAUDE_PLUGIN_ROOT}}/ (installed):")

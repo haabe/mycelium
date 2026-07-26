@@ -15,7 +15,7 @@ import pytest
 
 def _import_main(scripts_path):
     sys.path.insert(0, str(scripts_path))
-    import parse_manifest  # noqa: PLC0415
+    import parse_manifest
     return parse_manifest
 
 

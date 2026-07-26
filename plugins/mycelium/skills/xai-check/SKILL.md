@@ -23,7 +23,7 @@ This skill is **functionally-grounded** in Doshi-Velez & Kim's (2017) sense: it 
 
 ## Precondition: AI components detected
 
-Read `${CLAUDE_PLUGIN_ROOT}/jit-tooling/active-stack.yml` (Step 1c output of `delivery-bootstrap` per `${CLAUDE_PLUGIN_ROOT}/jit-tooling/detector.md`).
+Read `.claude/jit-tooling/active-stack.yml` (Step 1c output of `delivery-bootstrap` per `${CLAUDE_PLUGIN_ROOT}/jit-tooling/detector.md`). It is **project state** — it lives in the consumer's `.claude/`, not in the shared plugin cache.
 
 - If `ai_components.detected` is missing or `false`: report **"No AI components detected — XAI Gate N/A. Run `/mycelium:delivery-bootstrap` if you believe AI is present but undetected."** Stop.
 - If `ai_components.detected: true` but `user_facing_decisions: unknown` (Step 6 confirmation never answered): prompt the user explicitly: *"This product has AI components, but it's not on record whether their outputs reach end users in a user-affecting way. Does the AI's output deny / recommend / rank / generate content shown to users, or otherwise drive their experience?"* Do not proceed silently — XAI tier depends on this answer. If the user defers, default to `tier: limited` and note **"tier defaulted to limited pending user_facing_decisions confirmation"** in the output.
@@ -83,7 +83,7 @@ If the product does not surface LLM-generated rationales to users, set `xai.fide
 
 ### Stage 4 — System card check
 
-Reference `.claude/templates/ai-system-card.md` (Mitchell et al. 2019 format). Required sections (per the template's `Required` markings):
+Reference `${CLAUDE_PLUGIN_ROOT}/templates/ai-system-card.md` (Mitchell et al. 2019 format). Required sections (per the template's `Required` markings):
 
 1. Identity (system name, version, last-updated, maintainer, AI Act tier)
 2. Intended use (primary use, intended users, intended context, out-of-scope)

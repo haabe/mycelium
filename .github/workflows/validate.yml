@@ -50,7 +50,35 @@ jobs:
       # incident where a leak slipped past pre-push), revisit by piping a
       # names-only subset via a GitHub Actions secret.
       - name: Run structural integrity validation (includes Check 17 — ruff/shellcheck/pytest with baseline-aware logic)
-        run: bash tests/validate-template.sh
+        # Output is teed so the warning-ingestion step below can classify it.
+        # pipefail is required: without it the step would report tee's exit code
+        # and a validator failure would pass silently.
+        run: |
+          set -o pipefail
+          bash tests/validate-template.sh 2>&1 | tee validator-output.txt
+
+      - name: Ingest CI warnings into the learning loop (classify against warning-handbook)
+        # Closes the loop this script was shipped for in v0.16.0 and never wired
+        # into: it was documented as "auto-updated from CI signals" while being
+        # invoked by nothing for ~2.5 months. Dry-run because a CI runner's
+        # filesystem is ephemeral — accumulation into .claude/memory/warnings-log.md
+        # happens on the maintainer's local/pre-push run, where the file persists.
+        # What CI adds is the live wire: every run exercises the classifier against
+        # real validator output, so a matcher that stops matching (the v0.60.1
+        # verify_citations failure mode) surfaces here instead of reading green.
+        # Non-blocking on findings, blocking on a crash — an ingestor that cannot
+        # run is a broken wire, which is the whole point of this step.
+        run: python3 plugins/mycelium/scripts/ingest_warnings.py --dry-run -f validator-output.txt
+
+      - name: Run wiring guard (no orphan scripts; plugin-root refs resolve; one path per state file; automation claims kept)
+        run: python3 plugins/mycelium/scripts/check_wiring.py --root .
+
+      - name: Run negative-control guard (every guard's test proves the guard BITES)
+        # Check 37 asks "does every check have a test?" — never whether that test
+        # would FAIL if the check broke. verify_citations.py shipped 14 green tests
+        # while matching 0% of real citations for ~2.5 months. This gates the
+        # difference between "we tested the sad path" and "we only tested green".
+        run: python3 plugins/mycelium/scripts/check_negative_control.py --root .
 
       - name: Run canvas schema + trace validation
         run: python3 plugins/mycelium/scripts/validate_canvas.py

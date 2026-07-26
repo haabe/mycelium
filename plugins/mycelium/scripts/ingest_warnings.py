@@ -26,7 +26,7 @@ import argparse
 import os
 import re
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 # Path resolution — supports plugin form AND legacy form.
@@ -53,10 +53,9 @@ def _resolve_paths():
     else:
         cwd_log = Path.cwd() / ".claude" / "memory" / "warnings-log.md"
         legacy_log = legacy_repo_candidate / ".claude" / "memory" / "warnings-log.md"
-        if (Path.cwd() / ".claude" / "memory").exists():
-            warnings_log = cwd_log
-        else:
-            warnings_log = legacy_log
+        warnings_log = (
+            cwd_log if (Path.cwd() / ".claude" / "memory").exists() else legacy_log
+        )
 
     return warnings_log, handbook
 
@@ -260,7 +259,7 @@ def main():
 
     current = aggregate(records)
     existing = parse_existing_log(args.log_path)
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    today = datetime.now(UTC).strftime("%Y-%m-%d")
     merged = merge(existing, current, today)
     rendered = render(merged)
 

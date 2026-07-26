@@ -338,7 +338,7 @@ def validate_all_yaml_parses(canvas_dir: Path) -> list[str]:
         try:
             with open(canvas_path) as f:
                 yaml.safe_load(f)
-        except yaml.YAMLError as exc:  # noqa: PERF203
+        except yaml.YAMLError as exc:
             # Strip trailing newlines from yaml error messages for cleaner output
             errors.append(f"YAML parse error in {canvas_path.name}: {str(exc).strip()}")
         except OSError as exc:
@@ -391,7 +391,16 @@ def validate_diamonds(canvas_dir: Path, registry: Registry) -> list[str]:
     return errors
 
 
-def enum_consistency_errors(canvas_dir: Path) -> list[str]:
+def enum_consistency_errors(canvas_dir: Path) -> list[str]:  # noqa: C901
+    # C901 (12 > 10) accepted, not deferred. This is ONE concern — the
+    # evidence_type/source_class swap detector — whose branch count comes from
+    # the polymorphic-field walk it must perform, not from doing several things.
+    # It is also the most delicately-scoped function in the file: v0.57.4 shipped
+    # it over-reaching (21 false positives on a real canvas) and v0.57.5 narrowed
+    # it to a disjoint-set check. Splitting it for a complexity metric would risk
+    # re-opening that correction chain for no behavioural gain. Revisit only if a
+    # genuine second concern is added, which is the point at which the split is
+    # real rather than cosmetic.
     """The evidence_type <-> source_class SWAP detector (disjoint-set check).
 
     evidence_type is POLYMORPHIC by design (canvas-guidance.yml): the Gilad
@@ -445,9 +454,11 @@ def enum_consistency_errors(canvas_dir: Path) -> list[str]:
     for path in files:
         try:
             data = load_yaml(path)
-        except Exception:
-            # YAML parse errors are reported by validate_all_yaml_parses /
-            # validate_diamonds; don't double-report here.
+        except (yaml.YAMLError, OSError):
+            # Narrowed from `except Exception` (BLE001/S112). YAML parse errors
+            # are reported by validate_all_yaml_parses / validate_diamonds;
+            # don't double-report here. Naming the two reachable classes means a
+            # genuine bug in this walk surfaces instead of being swallowed.
             continue
         rel = path.name if path.parent.name == "canvas" else f"diamonds/{path.name}"
         walk(data, "", rel)

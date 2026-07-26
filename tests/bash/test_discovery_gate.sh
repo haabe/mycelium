@@ -111,6 +111,28 @@ test_missing_active_yml_still_blocks() {
     rm -rf "$tmp"
 }
 
+test_project_under_a_dot_claude_ancestor_still_blocks() {
+    # REGRESSION (2026-07-26): the project-state exemption matched `*/.claude/*`
+    # against the ABSOLUTE path, so any project living beneath a `.claude`
+    # ancestor — e.g. a workspace at ~/.claude/jobs/<id>/work — had every source
+    # write silently exempted. Found by tripping it with a probe workspace under
+    # ~/.claude/. The test is the exemption's two directions in one place: the
+    # gate must still bite on source, and must still exempt real project state,
+    # when the project path itself contains `.claude`.
+    local base; base=$(mktemp -d)
+    local p="$base/.claude/jobs/probe/work"
+    mkdir -p "$p/.claude/diamonds" "$p/.claude/canvas"
+    : > "$p/.claude/diamonds/active.yml"
+    : > "$p/.claude/canvas/purpose.yml"
+
+    local code
+    code=$(run_gate "$p" "$(write_json "$p/src/app.py")")
+    assert_eq "$code" "2" "source file in a project under a .claude ancestor -> blocked"
+    code=$(run_gate "$p" "$(write_json "$p/.claude/state/x.json")")
+    assert_eq "$code" "0" "project state under the same tree -> still exempt"
+    rm -rf "$base"
+}
+
 run_test test_bad_path_blocks_new_source_on_cold_project
 run_test test_happy_path_diamond_present_allows
 run_test test_populated_purpose_allows
@@ -119,5 +141,6 @@ run_test test_edit_tool_never_blocked
 run_test test_existing_file_write_allowed
 run_test test_non_source_files_allowed
 run_test test_missing_active_yml_still_blocks
+run_test test_project_under_a_dot_claude_ancestor_still_blocks
 
 report

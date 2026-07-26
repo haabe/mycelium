@@ -50,7 +50,7 @@ Eval coverage: `evals/assumption-tests/2026-05-04-xai-inline-attribution.md`.
 
 ## What lives outside canvas
 
-- **AI System Card** for the product itself: published as `docs/ai-system-card.md` (or product-team equivalent), template at `.claude/templates/ai-system-card.md` (Phase 2.4). Mitchell et al. (2019) format. Referenced from `services.yml :: xai.system_card.path`. Not a canvas file because it's a public-facing artifact, not internal product state.
+- **AI System Card** for the product itself: published as `docs/ai-system-card.md` (or product-team equivalent), template at `${CLAUDE_PLUGIN_ROOT}/templates/ai-system-card.md` (Phase 2.4). Mitchell et al. (2019) format. Referenced from `services.yml :: xai.system_card.path`. Not a canvas file because it's a public-facing artifact, not internal product state.
 
 - **Per-output fidelity samples**: stored under `evals/xai-fidelity/<service>/YYYY-MM-DD.json`, mirroring the metrics-pull pattern. Each sample is the input + output + agent's stated rationale + blind-reviewer prediction + verdict. Aggregate stats land in `services.yml :: xai.fidelity`.
 
@@ -87,7 +87,7 @@ Asymmetric — only some target canvases have schemas today. Phase 2 status:
   - ✓ `validate_canvas.py` ID-uniqueness check (graduated 3-instance "validator passes on incomplete checks" pattern; G-V12 coverage proof shipped)
   - ✓ `guardrails-delivery.md` G-V12 (every validator/enforcer ships with a coverage proof)
   - ✓ `CLAUDE.md` Mandatory Pre-Ship Protocol G-P-pre (graduated user feedback on missing pre-ship gap analysis)
-  - ✓ `manifest.yml` `.claude/templates/` entry
+  - ✓ `manifest.yml` `templates/` entry
 
 - **Phase 2.1 (`/xai-check`) — DONE 2026-05-04:**
   - ✓ `services.schema.json` (permissive, with xai block) + 6 schema tests

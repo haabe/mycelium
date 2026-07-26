@@ -376,7 +376,7 @@ This gate is **operational** — it asks "have you actually run `/xai-check`?" a
 **Suggested skill**: `/xai-check` (consults `active-stack.yml :: ai_components`, reads tier from `privacy-assessment.yml` if `/regulatory-review` ran first, writes `services.yml :: <service>.xai.*`).
 
 **Cross-references**:
-- Detector emits the trigger: `.claude/jit-tooling/detector.md` Step 1c
+- Detector emits the trigger: `${CLAUDE_PLUGIN_ROOT}/jit-tooling/detector.md` Step 1c, writing `.claude/jit-tooling/active-stack.yml` (project state)
 - Canvas routing: `xai-canvas-threading.md`
 - Phase 2.3 will add `threat-model.yml :: explanation_attacks` category — until then, explanation-layer threats are noted but not enumerated structurally.
 

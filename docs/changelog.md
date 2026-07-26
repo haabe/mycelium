@@ -2,7 +2,69 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-07-25.
+**Last updated**: 2026-07-26.
+
+## v0.61.0 — three mechanisms shipped green with no caller; the wiring guard that finds the next one
+
+**2026-07-26. Attribution: wiring-guard-2026-07-26. Class: minor (new CI gate + new schema + four behaviour fixes).**
+
+A G-V12 coverage proof asserts a mechanism **behaves when called**. Nothing asserted it **is called**, or that its output is **read by whatever claims to read it**. The 2026-07-25 BVSSH assessment named this hole and predicted "a second silently-inert check would still be found by hand." It was — twice, the next day, plus four more defects. This release fixes them and ships the general mechanism.
+
+**The new gate — `scripts/check_wiring.py`** (CI step, coverage proof `tests/python/test_check_wiring.py`, 20 cases). Three rules:
+
+- **A. No orphan scripts.** Every shipped script has a real caller in CI, a hook, a skill, the validator, or another script — or an allowlist entry *stating why it has none*. A **commented-out** or merely-mentioning line does not count. "It has a unit test" is explicitly not a reason: that is the false-green being caught.
+- **B. Plugin-root refs resolve.** Every `${CLAUDE_PLUGIN_ROOT}/<path>` resolves inside the packaged tree. Repo-root files are not packaged; per-project state does not belong in a shared cache that `/plugin update` wipes.
+- **C. One canonical path per state file.** A registry pins each project-state file's location and every reference must agree. Writer and reader disagreeing is invisible from either end alone.
+
+**What it caught (all pre-existing, all now fixed):**
+
+| Defect | Consequence | Age |
+|---|---|---|
+| `/xai-check` + `delivery-bootstrap` read/wrote `active-stack.yml` via the plugin cache; the spec and both `.gitignore`s said `.claude/jit-tooling/` | The file had **never existed anywhere**, so `ai_components.detected` was never true → **Theory Gate 13 could never fire**, nor the AI arms of `/threat-model`, `/launch-tier`, `/regulatory-review`, `/definition-of-done`. Mycelium's own AI-Act gate was inert. | 2026-05-09 → now (~2.5mo) |
+| `ingest_warnings.py` invoked by nothing | The CI-warning learning loop had **never run once**; neither `warnings-log.md` path existed in either repo, so `/corrections-audit`'s `Count: 3+` graduation trigger had no data. Published in the receipts index as "Shipped (v0.16.0)". | v0.16.0 → now |
+| `warnings-log.md` split three ways (`harness/` vs `memory/`) | Even had it run, the graduation rule read a path the writer never wrote. Canonicalised to `.claude/memory/warnings-log.md` (where the writer resolves it, beside `corrections.md`). | — |
+| `validate_mermaid.py` invoked by no render skill | Both blind-spots it "closed" (F11 state-ids, F13 WCAG contrast) were still open in practice. Now a mandatory step in `diamond-render`, `ost-render`, `cycle-render`. | v0.50.x → now |
+| `scaffold-cost-check` read `AGENTS.md` through the plugin cache | Row silently vanished via its own "if present" clause. Now project-local, and reports `absent` explicitly. | — |
+
+**Product-type routing in two hooks had never worked** (found while writing the CHECK 2 wiring test). `session-start.sh` and `stop-check.sh` shared a copy-pasted extractor using `sys.exit(0)` for an early return inside a `try` guarded by a **bare `except:`** — which catches `SystemExit`, so the fallback `print` ran too and the captured value was two lines (`"ai_tool\nsoftware"`). That matched no `case` arm and fell through to the DORA default. Every `content_*` / `ai_tool` / `service_offering` project silently got DORA-labelled reminders read from the wrong canvas, while the three non-software canvases — the ones that *do* declare `last_measured` and whose `/dora-check` blocks *do* write it — were never read. Fixed with loop+break (no `SystemExit` to swallow); every bare `except:` in both files narrowed to `except Exception:` so the class cannot recur.
+
+**`dora-metrics.yml` gains the schema it never had.** It was the only metrics canvas without one — which is why nobody noticed that `/dora-check`'s **software** Canvas Output block never named `last_measured` while all three non-software blocks did. The default product type was the one that lost the field. The key is now **required but nullable**: an emitter that omits it fails, while an honestly-unmeasured project can still say `null` — do not fabricate a date to satisfy a schema. CHECK 2 also gained the never-measured branch it lacked (CHECK 1 always had one), so absence now speaks instead of reading identically to "measured yesterday".
+
+**`check_legacy_paths.py` widened** to `+templates, scripts, domains, tests`. The original three dirs left holes exactly where live rot sat: the dead `.claude/templates/` pointer above, and `.claude/domains/` — the dead Pre-Task path the v0.58.0 finding had already flagged and which was still in root `CLAUDE.md`. 18 stale pointers repointed, including contributor and ops runbooks handing out commands that could not run. `version-discipline.md`'s Check 26 material-paths list was stale in both directions (named five pre-migration paths, omitted five watched ones) and now mirrors the code. A guard with holes where the bugs are reads green and is worse than none.
+
+**One robustness nit:** `discovery-gate.sh` tested `*/.claude/*` against the **absolute** path, so any project living beneath a `.claude` ancestor had every source write exempted. Now project-relative, with both directions covered by test.
+
+**Framing.** The honest read: of these, only the XAI gate and the DORA nudge could plausibly have been hit by an outside evaluator, and neither is a first-run blocker — the shelf-risk story remains v0.58.0's missing operating contract, which is fixed and now verified from a real consumer seat. What this release adds is not reassurance but a mechanism: the next disconnected wire fails CI instead of waiting to be found by hand.
+
+### Post-CI amendment: the lint policy was still a moving target
+
+PR #17's first CI run **failed**, and the cause is worth stating plainly because it is this release's own theme turned back on itself.
+
+`ruff.toml` fixed the "policy lives where nothing reads it" problem — then re-created it one level out. `select = ["ALL"]` makes the **ruff version part of the policy**, and `requirements-ci.txt` said `ruff>=0.1.0`. Local resolved 0.15.12 and reported **0 errors**; the runner resolved 0.16.0 and reported **59**. Two CI failures, one cause: Check 17 itself, plus `test_check_17`'s clean-project fixture tripping its own never-block invariant. A declared policy with an unbounded toolchain spec is still a moving target.
+
+Fixed by pinning `ruff==0.15.12`, with the pin marked load-bearing and a **version-match guard** in Check 17 so a divergence fails loudly instead of producing two meanings of "clean". Upgrading to 0.16.x and triaging its 59 additional findings is recorded as a named follow-up, not a vague later.
+
+**And the guard's first cut failed open on its own subject.** It read the pin with an unguarded `grep` under `set -euo pipefail`; a no-match `grep` exits 1, so on an *unpinned* spec the substitution aborted the check mid-run and the guard emitted nothing — no finding, no error. Exactly the shape of the six findings above, in code written an hour after `check_negative_control.py` shipped. Caught by running a three-case probe (pin matches / diverges / absent) rather than by reading it: the first two cases passed and looked convincing; the third produced empty output. That probe is now two permanent tests, one of which asserts the check *continues past* the finding — proving it did not die mid-check.
+
+Third fail-open-on-absent-input in one release (DORA's silent `last_measured` branch, the bare `except:` swallowing `SystemExit`, and this). Same trigger every time: the absent case was never exercised, only the populated one.
+
+### Second half: the lint policy, and the layer G-V12 was missing
+
+Both of these turned out to be **the same defect as the bugs above** — a measurement whose scope is hand-enumerated, so new things fall outside it. The repo already had the right pattern twice (Check 37 derives its required set by grepping `section "Check N"`; `check_coverage_floor.py` gates each file rather than the average, "so a new untested script can't hide under the average"). These two places were still enumerating.
+
+**Lint policy: declared, met, and gated at zero.** There was no ruff config anywhere. The policy lived only as a `--select=ALL --ignore=<11 rules>` string inside `validate-template.sh`, so `ruff check` in an editor used ruff's *defaults* and said "All checks passed" while CI reported 35 errors against a selection that existed nowhere on disk. Three tools, three different meanings of "clean", one of them right.
+- `ruff.toml` now declares it, with a stated reason per ignored rule. Check 17 invokes `ruff check` with **no flags** so it resolves the same file an editor and a pre-commit hook would — they cannot drift.
+- `line-length` is **100, chosen rather than inherited**: 88 was ruff's default, and measured against the real code the violating lines ran 89..164 with a *median of 98*. The genuine tail — the 14 lines over 100 — was wrapped rather than accommodated. A limit set above the worst line is not a limit.
+- **Zero, repo-wide, FAIL not WARN.** The old gate failed on a hand-listed 3-file "cleanup-cycle" subset and merely warned on everything else; nothing ever added a new file to that list, so every script written after it was ungated — including this release's own `check_wiring.py`. A repo at 0 needs no list. `enum_consistency_errors` carries the one `noqa`, with the argument stated inline (it is one concern, and it is the function v0.57.4/v0.57.5 corrected twice for over-reach — splitting it for a metric would risk re-opening that chain).
+- Scoped so a **consumer** project is never failed for lacking Mycelium's policy, preserving Check 17's never-block invariant. Both directions tested.
+
+**`check_negative_control.py` — the question Check 37 never asks.** Check 37 asks *does every check have a test?* It never asks *would that test fail if the check broke?* `verify_citations.py` shipped 14 green tests while matching 0% of real citations for 2.5 months. So: every guard's test corpus must contain a **failure-direction assertion**. Scope is derived, not listed — a hook with no `exit 2` and no deny decision is a recorder or a nudge and has nothing to reject, so adding a blocking construct immediately creates the obligation with no list to remember. One exemption remains (the documented DRAFT stub), argued rather than listed.
+
+Three of this guard's own false positives were found by running it against the real corpus instead of trusting it — hyphen/underscore test names, hooks whose sad path lives in a helper's test, and PreToolUse hooks that deny in the stdout payload while exiting 0. Each is now a pinned test case. That is the `validated-against-the-wrong-corpus` lesson from corrections.md 2026-07-19 applied to a new check on the day it was written.
+
+**Rule D found a published over-claim.** `docs/ai-system-card.md` stated faithfulness "is verified mechanically by … `scripts/verify_citations.py`" — while that script's own header says *"Designed for manual invocation initially. Automatic Stop-hook integration is deferred."* Only the capture half (`read-log.sh`) runs unattended. The card now distinguishes the two halves explicitly. The audit half stays manual **by design**, and is allowlisted with that reason so it remains a stated decision rather than an accident.
+
+**G-V12b** makes the whole thing a standing requirement: a mechanism documented as automatic owes a caller, a wiring test, and a negative control — all three mechanically gated, and "it has a unit file" explicitly rejected as an allowlist reason, since that is the false green being caught.
 
 ## v0.60.3 — the story invitation asks for either shape, not just the failures
 

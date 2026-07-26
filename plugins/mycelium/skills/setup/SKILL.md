@@ -103,7 +103,7 @@ rationale, contrastive XAI).
 Empty until the first decision is logged.
 ```
 
-### `.claude/harness/warnings-log.md`
+### `.claude/memory/warnings-log.md`
 
 **IMPORTANT — write the file content literally; do NOT expand `$CLAUDE_PLUGIN_ROOT`.** When the Write tool processes the content below, it must preserve `$CLAUDE_PLUGIN_ROOT` as a literal string (so any user reading the file later sees the variable name, not the maintainer's absolute path). Detected during 2026-05-09 plugin-form dogfood: a previous agent expanded the variable while writing, baking the maintainer's absolute path into every user's `warnings-log.md`. Use prose in the file body to make path expansion semantically wrong (the file is documentation, not a runnable command).
 
@@ -273,7 +273,7 @@ The output has two parts: a short welcome (closes the install→setup void for u
 > - `.claude/canvas/` + `.gitkeep` (canvas files will be populated by `/mycelium:interview` or `/mycelium:canvas-update`)
 > - `.claude/diamonds/active.yml` (empty)
 > - `.claude/memory/corrections.md`, `patterns.md` (empty)
-> - `.claude/harness/decision-log.md`, `.claude/harness/warnings-log.md` (empty)
+> - `.claude/harness/decision-log.md`, `.claude/memory/warnings-log.md` (empty)
 > - `.claude/evals/.gitkeep`, `.claude/jit-tooling/.gitkeep` (empty dirs preserved for git)
 > - `AGENTS.md` at project root  ← include this line ONLY if AGENTS.md was actually written this session
 > - `opencode.json` + `.opencode/` starter scaffold  ← include this line ONLY if the opencode scaffold was provisioned this session (Step 5); add: "see docs/integrations/opencode.md to finish + verify"

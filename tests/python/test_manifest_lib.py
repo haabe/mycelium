@@ -6,7 +6,7 @@ from pathlib import Path
 def _import_lib(scripts_path):
     """Import _manifest_lib via sys.path (not packaged)."""
     sys.path.insert(0, str(scripts_path))
-    import _manifest_lib  # noqa: PLC0415
+    import _manifest_lib
     return _manifest_lib
 
 
@@ -143,7 +143,7 @@ mystery_section:
 def test_indentation_drift_raises(project_dir, scripts_path):
     """C3 regression: a non-empty manifest whose list items bucket into nothing
     (e.g. reindented to 4 spaces) must raise, not silently fail open."""
-    import pytest  # noqa: PLC0415
+    import pytest
 
     lib = _import_lib(scripts_path)
     manifest = """\

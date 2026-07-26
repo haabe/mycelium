@@ -15,7 +15,7 @@ import sys
 
 def _import(scripts_path):
     sys.path.insert(0, str(scripts_path))
-    import autonomous_evidence_guard  # noqa: PLC0415
+    import autonomous_evidence_guard
 
     return autonomous_evidence_guard
 

@@ -10,7 +10,7 @@ from pathlib import Path
 
 def _import_validator(scripts_path):
     sys.path.insert(0, str(scripts_path))
-    import validate_canvas  # noqa: PLC0415
+    import validate_canvas
     return validate_canvas
 
 
@@ -79,7 +79,7 @@ def test_invalid_xai_tier_is_rejected(tmp_path, scripts_path, monkeypatch):
               tier: "extreme"
     """)
     errors = _setup_canvas(tmp_path, scripts_path, monkeypatch, yaml_content)
-    assert any("'extreme'" in e and "enum" in e.lower() or "'extreme' is not one of" in e for e in errors), (
+    assert any(("'extreme'" in e and "enum" in e.lower()) or "'extreme' is not one of" in e for e in errors), (
         f"Schema should reject xai.tier='extreme'. errors={errors}"
     )
 

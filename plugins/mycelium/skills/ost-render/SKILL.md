@@ -206,6 +206,20 @@ Desired outcome
 }
 ```
 
+### Step 4b: Validate the emitted Mermaid (MANDATORY for `mermaid` format)
+
+Pipe the block you just emitted through the static validator before showing it:
+
+```bash
+printf '%s' "$DIAGRAM" | python3 ${CLAUDE_PLUGIN_ROOT}/scripts/validate_mermaid.py -
+```
+
+It checks the two things you cannot check by eye: **state-id consistency** (F11) and **WCAG AA contrast** of every `themeVariables` foreground/background pair (F13, ≥ 4.5:1 — pure math, no rendering surface needed). Add `--cli` to also shell out to `mmdc` for a full parse when the binary is present (fail-open when absent).
+
+Exit 1 means at least one FAIL: **fix the diagram and re-validate before emitting.** Do not show the user a diagram that failed this check.
+
+Visual layout and communicative quality remain operator-side — hence the Step 5 disclaimer. This step covers only what is mechanically decidable. (Wired 2026-07-26: the validator shipped with a coverage proof but no render skill invoked it.)
+
 ### Step 5: Append disclaimers
 
 Per `engine/render-conventions.md`:

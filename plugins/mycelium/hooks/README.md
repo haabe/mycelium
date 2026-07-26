@@ -135,7 +135,7 @@ v0.9.0 added three new hooks and one new wrapper script, all focused on closing 
 **Tier**: BLOCK (when an active L4 execution exists)
 **Fail policy**: **Fail-closed** (deny on state corruption, exit 2 on script failure)
 
-When `.claude/state/active-execution.json` exists and declares `in_scope_paths`, this hook blocks edits to files outside the declared scope. Mirrors BDSK's `check-scope.sh` pattern. Delegates to `.claude/scripts/scope_check.py` (Python stdlib only — no PyYAML).
+When `.claude/state/active-execution.json` exists and declares `in_scope_paths`, this hook blocks edits to files outside the declared scope. Mirrors BDSK's `check-scope.sh` pattern. Delegates to `${CLAUDE_PLUGIN_ROOT}/scripts/scope_check.py` (Python stdlib only — no PyYAML).
 
 When no `active-execution.json` exists, the hook is a no-op (allows all edits). This is the common case before L4 delivery work begins.
 

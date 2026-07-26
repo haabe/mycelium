@@ -68,7 +68,7 @@ Maintain `engine/schema-discipline-map.yml` listing each discipline-vocabulary i
 
 ### Rule 3: Validator-claim cross-reference
 
-For each `harness/*.md` or `engine/*.md` that contains "validates", "checks", "enforces" (or similar), extract the claim and verify a corresponding line exists in `.claude/scripts/` or `.claude/tests/`.
+For each `harness/*.md` or `engine/*.md` that contains "validates", "checks", "enforces" (or similar), extract the claim and verify a corresponding line exists in `${CLAUDE_PLUGIN_ROOT}/scripts/` or `tests/`.
 
 **Catches:** instance 5 (version-bump claim was in doc, validator didn't enforce).
 **Misses:** instances 6, 7, 8.
@@ -87,7 +87,7 @@ Any `engine/*.md` containing "Template" + "Render" sections must contain either 
 
 ### Rule 5: Hook-claim cross-reference
 
-For each documented hook behavior (in CLAUDE.md, `harness/guardrails-*.md`, or skill PreToolUse claims), verify the corresponding hook file in `.claude/hooks/` or `.claude/scripts/` actually implements the behavior. Use grep + AST inspection if needed.
+For each documented hook behavior (in CLAUDE.md, `harness/guardrails-*.md`, or skill PreToolUse claims), verify the corresponding hook file in `${CLAUDE_PLUGIN_ROOT}/hooks/` or `${CLAUDE_PLUGIN_ROOT}/scripts/` actually implements the behavior. Use grep + AST inspection if needed.
 
 **Catches:** future hook-vs-rule instances (no historical instance documented yet, but the cluster shape is real per pattern observations).
 **Misses:** non-hook instances.
@@ -134,7 +134,7 @@ Annotations are intentional friction: writers must explicitly mark divergences a
 
 A single detection rule may graduate independently of the rest of the cluster when **all four** of the following hold for that rule:
 
-1. **Implementation exists** as a concrete check (in `tests/validate-template.sh`, `.claude/scripts/`, or `plugins/mycelium/scripts/`).
+1. **Implementation exists** as a concrete check (in `tests/validate-template.sh` or `plugins/mycelium/scripts/`).
 2. **<5% false-positive rate** measured on the upstream corpus (engine/, skills/, harness/ as relevant to the rule's scope).
 3. **Covers ≥1 known historical instance** from the cluster catalog.
 4. **Hook integration** in place (pre-commit, CI, or session hook).

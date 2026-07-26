@@ -13,7 +13,7 @@ This document answers a question the audit (`/xai-check` on `svc-mycelium`, 2026
 When the agent starts any non-trivial task, it loads context in this order (per `CLAUDE.md :: Mandatory Pre-Task Protocol`):
 
 1. **`.claude/diamonds/active.yml`** — which diamond is active. Determines scale (L0/L1/L2/L3/L4/L5) and phase (Discover/Define/Develop/Deliver).
-2. **`.claude/domains/{discovery|delivery|quality}/CLAUDE.md`** — the appropriate domain context for the active scale.
+2. **`${CLAUDE_PLUGIN_ROOT}/domains/{discovery|delivery|quality}/CLAUDE.md`** — the appropriate domain context for the active scale.
 3. **`.claude/memory/corrections.md`** — past mistakes. Read in full. Recurring patterns inform present behavior.
 4. **`.claude/harness/guardrails-core.md`** — always loaded — plus phase-scoped: `guardrails-discovery.md` (L0-L2), `guardrails-delivery.md` (L3-L4), `guardrails-market.md` (L5).
 

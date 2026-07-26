@@ -159,7 +159,8 @@ def _is_segment_allowlisted(seg):
 
     Allowlist (per-segment, so compound commands like
     `cd /path && git rm framework_file` correctly allow the git rm segment):
-      1. `bash .claude/scripts/upgrade.sh` — the legacy framework-update mechanism (allowlisted).
+      1. `bash .claude/scripts/upgrade.sh` — the legacy framework-update
+         mechanism (allowlisted).
       2. `git [global-opts] <safe-subcommand>` — git state operations
          (see _GIT_SAFE_SUBCMDS). Strips global options like -C, -c,
          --git-dir before matching the subcommand.
