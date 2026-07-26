@@ -665,3 +665,18 @@ if context:
 " "$CONTRACT_FILE" "$REMINDERS" "$CORRECTIONS_COUNT"
 
 exit 0
+
+# ============================================================
+# Carried-over reflexion debt
+# ============================================================
+# Outstanding reflexions survive the session that created them. Surfacing them
+# here is what makes the debt accumulate visibly instead of evaporating at Stop
+# — the same shape as the stale-human-task and overdue-loop reminders.
+RECONCILE="${CLAUDE_PLUGIN_ROOT}/scripts/reconcile_reflexions.py"
+if [ -f "$RECONCILE" ]; then
+  RX=$(python3 "$RECONCILE" --project-dir "$PROJECT_DIR" --json 2>/dev/null \
+    | python3 -c "import json,sys;print(json.load(sys.stdin).get('outstanding',0))" 2>/dev/null || echo 0)
+  if [ "${RX:-0}" -gt 0 ]; then
+    printf '\nUNRECONCILED REFLEXIONS: %s command failure(s) prompted a reflexion in an earlier session and produced no recorded decision. Run reconcile_reflexions.py to see which, then either log a correction or dismiss with a reason.\n' "$RX"
+  fi
+fi

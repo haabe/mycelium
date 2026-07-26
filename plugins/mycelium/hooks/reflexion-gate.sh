@@ -73,6 +73,37 @@ if [ "$SHOULD_REFLEX" -eq 0 ]; then
   exit 0
 fi
 
+# ============================================================
+# RECORD THAT THIS FIRED — the missing half of the learning loop
+# ============================================================
+# Until 2026-07-26 this hook emitted a prompt and left NO trace. So nothing could
+# ever ask the obvious question: how many reflexions fired, and how many produced
+# a learning? corrections.md counts entries; there was no denominator, and an
+# ignored reflexion was indistinguishable from one that never happened.
+#
+# Found by auditing a session in which three in-flight fixes went unrecorded. One
+# of them DID fire this hook, was triaged as "environment, not a learning", and
+# left nothing behind — a judgement call that is legitimate, but should leave a
+# recorded decision rather than silence.
+#
+# One line per firing. reconcile_reflexions.py computes fired − reconciled.
+STATE_DIR="$PROJECT_DIR/.claude/state"
+mkdir -p "$STATE_DIR" 2>/dev/null
+python3 -c "
+import json, sys, os, time
+rec = {
+    'ts': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
+    'tool': 'Bash',
+    'command_head': sys.argv[2][:160],
+}
+path = os.path.join(sys.argv[1], 'reflexion-log.jsonl')
+try:
+    with open(path, 'a', encoding='utf-8') as fh:
+        fh.write(json.dumps(rec) + '\n')
+except OSError:
+    pass
+" "$STATE_DIR" "$COMMAND" 2>/dev/null || true
+
 # Emit the reflexion prompt as a command hook output
 # This mirrors the inline prompt that was previously in settings.json
 python3 -c "
