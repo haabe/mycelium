@@ -84,6 +84,30 @@ Assess the five cultural dimensions that explain WHY DORA outcomes are what they
 - [ ] **Sharing**: Is knowledge shared across teams? Cross-functional collaboration? Or siloed expertise?
 - Evidence: [cite specific observations or team feedback]
 
+**Automation — cite a measurement, not an impression.** The four fitness functions emit machine-readable counts, so the Automation rating can rest on evidence rather than narrative:
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_wiring.py" --root .
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_wiring_contract.py" --root .
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_negative_control.py" --root .
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_test_authenticity.py" --root .
+```
+
+Record under `calms_assessment.automation`:
+
+```yaml
+wiring_integrity:
+  unwired_mechanisms: 0       # check_wiring / check_wiring_contract
+  guards_that_cannot_fail: 0  # check_negative_control
+  inauthentic_tests: 0        # check_test_authenticity
+  ungoverned_files: 12        # files matching NO contract rule
+  measured_at: "YYYY-MM-DD"
+```
+
+`ungoverned_files` is the load-bearing field and the one most likely to be dropped: it counts what **no rule covers**. A `0/0/0` beside 400 ungoverned files reports the health of a subset while implying the whole — which is the same false green the other three exist to catch, one level up.
+
+**Why this belongs in BVSSH at all.** Smart's framework separates **output** from **outcome**, and built-but-not-wired is the purest case of output *without* outcome: a mechanism that ships, passes review, raises coverage, appears in the changelog, and does nothing. It bears hardest on three dimensions — **Value** (if delivered-and-inert cannot be distinguished from delivered-and-connected, value claims are not merely hard to measure but *unfalsifiable*), **Safer** (an unwired safety mechanism gives *negative* safety: false assurance displaces the attention that absence would attract), and **Better** (a defect no quality gate catches). It does **not** obviously help **Sooner** — these checks add first-pass friction, and the counter-argument is about avoided rework, not speed. Say that plainly rather than claiming all five.
+
 **Interpreting CALMS with DORA**: DORA tells you WHAT your delivery performance is. CALMS explains WHY. If DORA metrics are poor, CALMS identifies the cultural root cause. If DORA is good but CALMS is weak, the performance is fragile.
 
 ## Output

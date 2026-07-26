@@ -210,8 +210,16 @@ def _is_invocation(line: str, name: str) -> bool:
     failed until this function existed.
     """
     esc = re.escape(name)
+    stem = re.escape(Path(name).stem)
     return bool(
-        re.search(r"(?:python3?|bash|sh)\b[^\n]*" + esc, line)   # python3 …/x.py
+        # A LIBRARY MODULE IS REACHED BY IMPORT, not by subprocess. Rule A knew
+        # only how to spot an executable being run, so `_text_lib.py` — imported
+        # by two guards on the line above — was reported as having no caller at
+        # all. Every shared module in the tree was invisible to this rule for the
+        # same reason. `import x` and `from . import x` are call sites.
+        re.search(r"^\s*(?:from\s+[.\w]*\s+)?import\s+[^\n]*\b" + stem + r"\b", line)
+        or re.search(r"^\s*from\s+[.\w]*\b" + stem + r"\b\s+import\b", line)
+        or re.search(r"(?:python3?|bash|sh)\b[^\n]*" + esc, line)   # python3 …/x.py
         or re.search(r"(?:^|[\s\"'(=])\./[^\s\"']*" + esc, line)  # ./x.sh
         or re.search(r"\$\{?\w+\}?/[^\s\"']*" + esc, line)        # "$S/x.py"
         # A shell assignment of the script's path is programmatic use: Check 40

@@ -1,0 +1,34 @@
+# DRAFT wiring contract — derived from this repo's own conventions.
+# Review every rule before committing: a detected majority is evidence
+# of a convention, not proof that the convention is correct.
+# Regenerate rather than hand-edit when the structure changes.
+contracts:
+- id: wc-001
+  pattern: plugins/mycelium/hooks/*.sh
+  obliges:
+  - referenced_by:
+    - '**/*'
+  detected_from: 14 of 14 files already satisfy this
+  confidence: 1.0
+- id: wc-005
+  pattern: plugins/mycelium/scripts/*.py
+  obliges:
+  - referenced_by:
+    - '**/*'
+  detected_from: 21 of 21 files already satisfy this
+  confidence: 1.0
+- id: wc-008
+  pattern: tests/bash/*.sh
+  obliges:
+  - referenced_by:
+    - '**/*'
+  detected_from: 50 of 50 files already satisfy this
+  confidence: 1.0
+- id: wc-009
+  pattern: tests/python/*.py
+  obliges:
+  - referenced_by:
+    - '**/*'
+  detected_from: 25 of 25 files already satisfy this
+  confidence: 1.0
+

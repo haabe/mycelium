@@ -89,6 +89,13 @@ jobs:
         # whether the assertion after them meant anything.
         run: python3 plugins/mycelium/scripts/check_test_authenticity.py --root .
 
+      - name: Run wiring-contract guard (project's own integration conventions hold)
+        # check_wiring.py enforces Mycelium's OWN hard-coded wiring rules. This
+        # enforces the contract DERIVED from a repo's majority convention, so it
+        # works in a consumer project whose joins the framework cannot know.
+        # Ungoverned files are reported, never silently excluded.
+        run: python3 plugins/mycelium/scripts/check_wiring_contract.py --root .
+
       - name: Run canvas schema + trace validation
         run: python3 plugins/mycelium/scripts/validate_canvas.py
 
