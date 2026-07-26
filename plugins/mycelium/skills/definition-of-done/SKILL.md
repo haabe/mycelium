@@ -109,6 +109,41 @@ These clauses address two documented Mycelium failures: **Eval Overfitting** (20
 - [ ] **`failure_modes` derived from real outputs, with binary acceptance.** `ai-tool-metrics.yml#failure_modes.outputs_reviewed` is set (target >= 20 real outputs reviewed) and every mode carries a BINARY `acceptance_criterion` naming who holds final judgment. Imagined failure modes do not count.
 - [ ] **AI transparency disclosure** present if the feature is user-facing (`regulatory.transparency_disclosure`, EU AI Act Art. 50) — cross-check via `/mycelium:regulatory-review`.
 
+## Mechanised proxy check — run these before ticking anything
+
+The anti-bias clause above says *"a test that passes but doesn't exercise the new
+code is not coverage."* That sentence has been in this skill as prose, and prose
+does not fail a build. Three shipped guards now decide it mechanically. Run them
+from the project root and paste the output as the evidence for the "tests" and
+"mechanisms wired" items — an unrun guard is the same false green it was written
+to catch.
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_wiring.py" --root .
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_negative_control.py" --root .
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_test_authenticity.py" --root .
+```
+
+Each answers a different question, and passing one says nothing about the others:
+
+| Guard | Question | The failure it catches |
+|---|---|---|
+| `check_wiring` | Does anything CALL this mechanism? | Shipped, documented "auto-updated", invoked by nothing |
+| `check_negative_control` | Could this guard FAIL? | A check that is green because it can only be green |
+| `check_test_authenticity` | Does production code RUN when the test runs? | A test that imports nothing, asserts a tautology, or mocks away the thing it names |
+
+**Non-zero exit is a NOT-DONE, not a warning.** Each prints the specific file and
+line; fix the finding or state the exemption with a reason. "It is hard to check"
+is not a reason.
+
+**Why this belongs at the moment of claiming done rather than in CI alone.** The
+failure class is "built, not wired": an artefact whose tests pass, whose coverage
+rises, and which nothing calls. Every local signal an agent uses to decide it is
+finished — tests green, file written, coverage up — is blind to wiring, because
+wiring is a property of a PAIR and every default tool verifies a thing against
+itself. So the completion signal fires before the work is connected. These guards
+move that discovery from "months later, if ever" to "before the box gets ticked".
+
 ## Outcome
 - **DONE**: All required items checked. Proceed.
 - **NOT DONE**: List failing items. Address before marking complete.

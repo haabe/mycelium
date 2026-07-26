@@ -80,6 +80,15 @@ jobs:
         # difference between "we tested the sad path" and "we only tested green".
         run: python3 plugins/mycelium/scripts/check_negative_control.py --root .
 
+      - name: Run test-authenticity guard (every test reaches real production code)
+        # The third question in the series. check_wiring asks "does this mechanism
+        # have a caller?"; check_negative_control asks "can this guard fail?";
+        # this asks "when the test runs, does production code run?" A test can
+        # import nothing, assert a tautology, or mock away the thing it names and
+        # still be green AND covered — coverage measures which lines ran, never
+        # whether the assertion after them meant anything.
+        run: python3 plugins/mycelium/scripts/check_test_authenticity.py --root .
+
       - name: Run canvas schema + trace validation
         run: python3 plugins/mycelium/scripts/validate_canvas.py
 
