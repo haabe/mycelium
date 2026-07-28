@@ -616,6 +616,48 @@ except Exception:
 fi
 
 # ============================================================
+# CHECK 11: Existing code, no discovery state (brownfield entry)
+# ============================================================
+# Why SessionStart and not a PreToolUse gate: discovery-gate.sh fires on Write
+# only and exempts Edit/MultiEdit by design. On a project that already has code,
+# most work is EDIT-shaped — bug fixes, tweaks, behaviour changes — so a
+# tool-gated check covers the minority of brownfield work and misses the rest.
+# Measured, not assumed: two auto-dogfood runs 2026-07-28. A file-creating
+# request on a TS extension gated cleanly (PreToolUse blocking:1, agent stopped);
+# an edit-shaped request on a Python library sailed straight through
+# (blocking:0, no PreToolUse at all) and the agent shipped a code change with no
+# canvas and no discovery. SessionStart is tool-agnostic, so it catches both.
+#
+# Deliberately a NUDGE, not a block. Blocking a maintainer from editing their own
+# working project would be the "enforcement as acquisition" mistake — hard gates
+# are for people who already opted in. This fires once per session and says what
+# is available.
+#
+# Fail-open and cheap: bounded find, no full tree walk, silent if uncertain.
+if [ -z "$(find "$PROJECT_DIR/.claude/canvas" -name 'purpose.yml' -size +200c 2>/dev/null)" ] \
+   && [ ! -s "$PROJECT_DIR/.claude/diamonds/active.yml" ]; then
+  # Source-shaped files, excluding the framework's own tree and common vendor dirs.
+  SRC_COUNT=$(find "$PROJECT_DIR" \
+      \( -path "$PROJECT_DIR/.git" -o -path "$PROJECT_DIR/.claude" \
+         -o -path "$PROJECT_DIR/plugins" -o -name node_modules -o -name vendor \
+         -o -name .venv -o -name dist -o -name build \) -prune -o \
+      -type f \( -name '*.py' -o -name '*.ts' -o -name '*.tsx' -o -name '*.js' \
+         -o -name '*.jsx' -o -name '*.go' -o -name '*.rs' -o -name '*.rb' \
+         -o -name '*.java' -o -name '*.kt' -o -name '*.swift' -o -name '*.cs' \
+         -o -name '*.php' -o -name '*.vue' \) -print 2>/dev/null \
+    | head -30 | wc -l | tr -d ' ')
+  # 12+ source files means a real project, not a stray script or a fresh scaffold.
+  if [ "${SRC_COUNT:-0}" -ge 12 ]; then
+    REMINDERS="${REMINDERS}
+BROWNFIELD ENTRY: this project has source code (${SRC_COUNT}+ files) and no discovery state — no populated purpose.yml, no diamond. The user did not start here; the code came first.
+
+Do NOT silently proceed into the work, and do NOT open /mycelium:start as if this were a blank page — it asks a maintainer of a shipping product to articulate purpose from scratch. Offer /mycelium:adopt: it reads the repo, drafts what the code CAN establish (delivery and solution shape), and names what it cannot (purpose, strategy, real user evidence). That second list is the point, and it is a discovery backlog rather than an empty canvas.
+
+Say it once, in one line, then do what the user asks. This is a nudge, not a gate — they may well just want the change made."
+  fi
+fi
+
+# ============================================================
 # Build output
 # ============================================================
 # ALWAYS inject the agent operating contract (the always-on rules) so it binds

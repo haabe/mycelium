@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "_description": "Mycelium hooks for Cursor 1.7+. Translation of hooks.json (Claude Code) to Cursor's camelCase event names. Scripts in this directory are reused verbatim — Cursor exports CLAUDE_PROJECT_DIR as an env alias and the stdin JSON field names (tool_name, tool_input, file_path, command, cwd) match Claude Code's. Native postToolUseFailure means full reflexion-gate coverage. Symlink or copy this file to <project>/.cursor/hooks.json (or ~/.cursor/hooks.json for user-level).",
+  "_description": "Mycelium hooks for Cursor 1.7+. Translation of hooks.json (Claude Code) to Cursor's camelCase event names. Scripts in this directory are reused verbatim \u2014 Cursor exports CLAUDE_PROJECT_DIR as an env alias and the stdin JSON field names (tool_name, tool_input, file_path, command, cwd) match Claude Code's. Native postToolUseFailure means full reflexion-gate coverage. Symlink or copy this file to <project>/.cursor/hooks.json (or ~/.cursor/hooks.json for user-level).",
   "hooks": {
     "preToolUse": [
       {
@@ -13,6 +13,12 @@
       {
         "matcher": "Write|write",
         "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/discovery-gate.sh",
+        "type": "command",
+        "timeout": 5
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit|edit|write",
+        "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/brownfield-gate.sh",
         "type": "command",
         "timeout": 5
       },

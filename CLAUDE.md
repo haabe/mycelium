@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.64.0 -- **Attribution label: reflexion-ledger-2026-07-26**. Closes the learning loop's missing half. `reflexion-gate.sh` prompted after every project-relevant command failure and left **no trace**, while `stop-check.sh` counted corrections — a numerator with no denominator, so an ignored reflexion was indistinguishable from one that never fired. Each firing is now recorded, and `reconcile_reflexions.py` reports **fired minus decided**, where a decision is either a corrections entry or an explicit dismissal *with a reason*. Silence is not a decision. Outstanding debt surfaces at Stop and again at SessionStart, so it accumulates visibly instead of evaporating. Found by auditing a session in which three in-flight fixes went unrecorded — an audit that happened only because a human asked, which is the same failure shape as the rest of this family. **Stated blind spot**: this sees only failures that FIRE the hook; two of those three produced no failure at all (a pipeline printing `exit: 0` while swallowing the real status, a guard exiting 0 after measuring nothing), so `stop-check` asks for that class in prose and the code records that the prose is a stopgap, not a mechanism. **Priors**: v0.63.0 **wiring-contract-2026-07-26** (see `docs/changelog.md`).*
+*Version 0.65.0 -- **Attribution label: brownfield-adopt-2026-07-28**. The code came first for most projects, and the framework had no way in. `discovery-gate.sh` fires on Write only and exempts Edit by design, so on an existing codebase — where most work is editing — enforcement had almost no surface: measured across two auto-dogfood runs, a file-creating request gated cleanly while an edit-shaped one shipped a code change with no canvas and no discovery. Adds `brownfield-gate.sh` (PreToolUse on Write AND Edit, fired once per project — a SessionStart prose nudge was tried first, was delivered, and was measurably ignored), SessionStart CHECK 11 as the good-path prompt, and `/mycelium:adopt`, which reads an existing repo and drafts what code CAN establish while naming what it cannot. The output is the discovery backlog, never a filled canvas — extraction is strong at delivery and solution, silent at purpose and strategy, and handing someone a full-looking canvas would fill in exactly the layers that never needed discovery.*
 
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
@@ -122,7 +122,7 @@ See `plugins/mycelium/orchestration/modes.md` for usage patterns and `plugins/my
 
 ## Skills
 
-All 59 skills are auto-discovered from SKILL.md frontmatter — in plugin form (`plugins/mycelium/skills/*/SKILL.md`, recommended) or legacy form (`.claude/skills/*/SKILL.md`, supported during transition). Suggested skills are surfaced at diamond transitions by `/diamond-progress` and `/diamond-assess`, and contextually by hooks. Type `/` to see the current list.
+All 60 skills are auto-discovered from SKILL.md frontmatter — in plugin form (`plugins/mycelium/skills/*/SKILL.md`, recommended) or legacy form (`.claude/skills/*/SKILL.md`, supported during transition). Suggested skills are surfaced at diamond transitions by `/diamond-progress` and `/diamond-assess`, and contextually by hooks. Type `/` to see the current list.
 
 ## Getting Started
 

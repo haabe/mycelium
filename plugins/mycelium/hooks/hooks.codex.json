@@ -1,5 +1,5 @@
 {
-  "_description": "Mycelium hooks for OpenAI Codex CLI. Event names match Claude Code (PascalCase) — Codex deliberately cloned that vocabulary. Stdin field names (tool_name, tool_input, cwd, tool_response) align with Claude Code's. Scripts in this directory are reused verbatim; Codex does not export CLAUDE_PROJECT_DIR, so set it once in your shell or wrap invocations. Codex has no native PostToolUseFailure — reflexion-gate is invoked via PostToolUse and short-circuits when tool_response shows no error (see codex-postfailure-shim.sh). Symlink or copy this file to <repo>/.codex/hooks.json (or ~/.codex/hooks.json for user-level).",
+  "_description": "Mycelium hooks for OpenAI Codex CLI. Event names match Claude Code (PascalCase) \u2014 Codex deliberately cloned that vocabulary. Stdin field names (tool_name, tool_input, cwd, tool_response) align with Claude Code's. Scripts in this directory are reused verbatim; Codex does not export CLAUDE_PROJECT_DIR, so set it once in your shell or wrap invocations. Codex has no native PostToolUseFailure \u2014 reflexion-gate is invoked via PostToolUse and short-circuits when tool_response shows no error (see codex-postfailure-shim.sh). Symlink or copy this file to <repo>/.codex/hooks.json (or ~/.codex/hooks.json for user-level).",
   "hooks": {
     "PreToolUse": [
       {
@@ -16,6 +16,12 @@
             "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/discovery-gate.sh",
             "timeout": 5,
             "statusMessage": "Mycelium discovery gate (new source files in discovery-untouched projects)"
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/brownfield-gate.sh",
+            "timeout": 5,
+            "statusMessage": "Mycelium brownfield gate (one-shot: existing code, no discovery state)"
           },
           {
             "type": "command",

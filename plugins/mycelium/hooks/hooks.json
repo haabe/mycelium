@@ -20,6 +20,12 @@
           },
           {
             "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/brownfield-gate.sh",
+            "timeout": 5,
+            "statusMessage": "Mycelium brownfield gate (one-shot: existing code, no discovery state)"
+          },
+          {
+            "type": "command",
             "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/scope-gate.sh",
             "timeout": 5,
             "statusMessage": "Mycelium scope enforcement"
@@ -45,7 +51,7 @@
             "type": "command",
             "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/framework-guard.sh",
             "timeout": 5,
-            "statusMessage": "Mycelium framework-guard (Bash — dogfood-mode only)"
+            "statusMessage": "Mycelium framework-guard (Bash \u2014 dogfood-mode only)"
           }
         ]
       },
@@ -56,13 +62,13 @@
             "type": "command",
             "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/framework-guard.sh",
             "timeout": 5,
-            "statusMessage": "Mycelium framework-guard (MCP filesystem — dogfood-mode only)"
+            "statusMessage": "Mycelium framework-guard (MCP filesystem \u2014 dogfood-mode only)"
           },
           {
             "type": "command",
             "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/autonomous-evidence-guard.sh",
             "timeout": 5,
-            "statusMessage": "Mycelium autonomous-evidence-guard (MCP filesystem — autonomous-mode only)"
+            "statusMessage": "Mycelium autonomous-evidence-guard (MCP filesystem \u2014 autonomous-mode only)"
           }
         ]
       }

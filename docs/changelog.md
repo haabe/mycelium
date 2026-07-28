@@ -4,6 +4,63 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-07-26.
 
+## v0.65.0 — the code came first, and there was no way in
+
+`discovery-gate.sh` fires on Write and exempts Edit/MultiEdit by design. On a
+project that already has code — where most work is editing — that left almost no
+enforcement surface. Measured rather than assumed, two auto-dogfood runs on real
+pinned repos: a file-creating request on a TypeScript extension gated cleanly
+(PreToolUse blocking:1, agent stopped, nothing shipped); an edit-shaped request
+on a Python library sailed straight through (blocking:0, no PreToolUse at all)
+and the agent shipped a code change with no canvas and no discovery. The gate
+covered the minority of brownfield work.
+
+And when it *did* gate, the only paths offered were the ~10-minute greenfield
+brief or skip-discovery — asking a maintainer of a five-year-old shipping
+product to articulate purpose from scratch, or to opt out.
+
+**`brownfield-gate.sh` — a PreToolUse gate on Write AND Edit/MultiEdit, fired
+once per project, ever.** This is the mechanism that does the work, and it
+exists because the prose version measurably did not.
+
+The first attempt was a SessionStart nudge alone. It was delivered — 723 bytes,
+8.2% of injected context — and the agent ignored it, shipping the change anyway
+with a byte-identical score to the run before it. That is this project's own
+thesis landing on its own fix: prose gates get read as recommendations, and a
+hook is what makes a gate real. The nudge stays as the good-path prompt; the
+gate is the backstop.
+
+One-shot by design. Blocking a maintainer from editing their own working project
+would be enforcement used for acquisition — the fastest way to get the plugin
+uninstalled. So it interrupts on the first Write/Edit, asks one question, and
+never fires again whichever way the user answers. Escape hatch
+`.claude/state/brownfield-ack` records the USER's decision, not the agent's, and
+an existing `discovery-skip-ack` satisfies it too.
+
+**SessionStart CHECK 11.** Detects source-bearing project + no discovery state
+and points at `/mycelium:adopt`. SessionStart rather than a PreToolUse gate
+because it is tool-agnostic, so it catches the edit-shaped work the Write gate
+misses. A NUDGE, not a block: hard gates are for people who already opted in,
+and blocking a maintainer from editing their own working project would be
+enforcement used for acquisition.
+
+**`/mycelium:adopt`.** Two phases in one session. Phase 1 reads the repo and
+populates what code can establish. Phase 2 patches the holes with the user using
+the same discovery discipline a greenfield project gets — the canvas simply is
+not empty when it starts. It deliberately does not stop between the phases and
+hand over a list; ending at a fork is the failure it exists to remove.
+
+Extraction is asymmetric and the skill says so: delivery and solution extract
+strongly, opportunity only by inference (real demand signal lives in the issue
+tracker, which a clone does not contain), strategy and purpose usually empty.
+Phase 1 therefore fills the layers that never needed discovery — which is why it
+cannot be the whole thing. Hard guardrail: artifact-derived material is never
+`external_human`, and does not satisfy the evidence gates. Exit condition is the
+same as greenfield's.
+
+Also surfaces drift — a stated purpose the product has outgrown — as the
+opening question rather than a correction.
+
 ## v0.64.0 — the learning loop had a numerator and no denominator
 
 `reflexion-gate.sh` fired after every project-relevant command failure and asked the right five
