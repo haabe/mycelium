@@ -4,7 +4,11 @@
 
 AI has made building cheap. It hasn't made *deciding* cheap. Agents will jump from an idea to a pull request without asking why, who for, or whether anyone needs it.
 
-The gap shows up the same way across every AI-native team. The agent is fast, confident, and glad to build something nobody asked for. What it skips is the deciding: why, who for, whether anyone needs it. Mycelium puts that part back. It doesn't replace your judgment; it gives the agent enough feedback that the judgment that ships is still yours. Other tools accelerate delivery; Mycelium makes the agent earn the right to start. Built using itself, and released as open source.
+The gap shows up the same way across every AI-native team: the agent is fast, confident, and glad to build something nobody asked for. Mycelium puts the deciding back. It doesn't replace your judgment — it gives the agent enough feedback that the judgment that ships is still yours.
+
+**Other tools accelerate delivery. Mycelium makes the agent earn the right to start.**
+
+Built using itself, and released as open source.
 
 **Prerequisite:** Claude Code, signed in — or another supported agent (see [install paths](docs/install-paths.md)). Then, inside Claude Code:
 

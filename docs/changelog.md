@@ -4,6 +4,41 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-07-30.
 
+## v0.66.2 — the register applied to this repo's own docs
+
+First real use of the thing v0.66.0 added, on the repo that ships it.
+
+Classifying upstream markdown by audience produced the useful half immediately: **149
+`agent_contract` files to leave alone**, 63 reference, one template, and exactly **one
+`human_instructional` file** — `docs/get-started.md`, the onboarding path for a framework
+whose adoption is the open problem. That is where the instructional-design rules apply at
+full strength rather than by transfer, and the file had never been written against them.
+
+**Its completion test failed.** A reader ran three install commands and had no way to
+confirm any of them worked before committing to a ten-minute discovery round — while
+`/mycelium:ping` exists for precisely that purpose and went unmentioned in the getting-started
+doc. Now Step 2, with the expected `MYCELIUM_PLUGIN_LOAD_OK` marker and what to do when it
+does not appear.
+
+Also applied: the sequence is signposted (signalling is the cheapest evidence-backed win
+available), and the legacy-tree and `npx degit` material moved out of the install thread
+into a clearly-marked asides section. That material is correct and still present — it is
+simply off-thread for someone getting started, and off-thread material measurably reduces
+comprehension of what surrounds it rather than occupying neutral space.
+
+**The file got longer.** That is the correct outcome and worth stating, because the
+instinct it contradicts is strong: the instructional class optimises for task completion,
+not brevity. Cutting words out of an onboarding doc that already failed its completion test
+would have made it worse.
+
+`README.md` classified `human_reference` despite being the landing page, which is the
+mixed-case the register handles — persuasive checks apply *additionally*. Applying them found
+the opening stated the same problem triplet twice in consecutive paragraphs and buried its
+strongest line ("Mycelium makes the agent earn the right to start") mid-paragraph among three
+other moves. Deduplicated, and the line is now the peak it was already doing the work of.
+The falsifier requirement was already satisfied by the existing `## Who it's not for`
+section — checked before assuming a gap.
+
 ## v0.66.1 — the two the review called nits
 
 Closes the last two defects from the v0.66.0 adversarial review, both marked nit and both
