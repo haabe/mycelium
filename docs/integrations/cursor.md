@@ -7,7 +7,7 @@
 
 ## Why this fits cleanly
 
-Cursor 1.7 (released 2025-Q4) added a hook system that closely mirrors Claude Code's, including the native `postToolUseFailure` event that opencode still lacks. Cursor explicitly exports `CLAUDE_PROJECT_DIR` as an environment alias to signal that Claude Code hook scripts are intended to run unmodified. Mycelium's twelve hook scripts use that env var plus stdin JSON fields (`tool_name`, `tool_input`, `file_path`, `cwd`, `command`) that match Cursor's payload field names byte-for-byte (verified against [cursor.com/docs/agent/hooks](https://cursor.com/docs/agent/hooks) 2026-05-26).
+Cursor 1.7 (released 2025-Q4) added a hook system that closely mirrors Claude Code's, including the native `postToolUseFailure` event that opencode still lacks. Cursor explicitly exports `CLAUDE_PROJECT_DIR` as an environment alias to signal that Claude Code hook scripts are intended to run unmodified. Mycelium's 14 hook scripts use that env var plus stdin JSON fields (`tool_name`, `tool_input`, `file_path`, `cwd`, `command`) that match Cursor's payload field names byte-for-byte (verified against [cursor.com/docs/agent/hooks](https://cursor.com/docs/agent/hooks) 2026-05-26).
 
 The only translation needed is event-name casing (Claude Code `PreToolUse` → Cursor `preToolUse`) and Claude Code's `UserPromptSubmit` → Cursor's `beforeSubmitPrompt`. Ship as a parallel `hooks.cursor.json`; the scripts themselves are reused verbatim.
 
@@ -17,12 +17,13 @@ The only translation needed is event-name casing (Claude Code `PreToolUse` → C
 |---|---|---|
 | Canvas YAML, memory, decision-log, corrections, patterns | ✅ Fully portable | Pure files. |
 | `CLAUDE.md` / `AGENTS.md` instructions | ✅ Read | Cursor reads `.cursorrules` and `AGENTS.md`; Mycelium ships both. |
-| Skills (58 skills, frontmatter-driven discovery) | ✅ Native | Cursor honors skill discovery from `.claude/skills/` when configured. |
+| Skills (60 skills, frontmatter-driven discovery) | ✅ Native | Cursor honors skill discovery from `.claude/skills/` when configured. |
 | Validators (`validate_canvas.py`, `validate-template.sh`) | ✅ Run unchanged | Harness-agnostic. |
 | MCP server integrations | ✅ Native | Both speak MCP. |
 | Pre-task gate (Read-before-Edit, preflight, scope, framework-guard) | ✅ Hook-enforced | `preToolUse` ≡ Claude `PreToolUse`. |
 | Post-write nudge / change-log / diamond-audit | ✅ Hook-enforced | `postToolUse` ≡ Claude `PostToolUse`. |
 | Reflexion loop (auto-retry on tool failure) | ✅ Hook-enforced | `postToolUseFailure` fires natively. |
+| Autonomous-run evidence guard | ✅ Hook-enforced | `autonomous-evidence-guard.sh`, registered on this surface since v0.44.1. |
 | Pre-task context injection (G-P-pre) | ✅ Hook-enforced | `beforeSubmitPrompt` ≡ Claude `UserPromptSubmit`. |
 | Session-start preflight | ✅ Hook-enforced | `sessionStart` ≡ Claude `SessionStart`. |
 | Stop check (Mycelium guardrails + feedback loops) | ✅ Hook-enforced | `stop` ≡ Claude `Stop`. |

@@ -2,10 +2,18 @@
 
 **Audience**: practitioners curious about which case produced which framework mechanism.
 **Time to read**: 2 min.
-**Last updated**: 2026-06-18.
+**Last updated**: 2026-07-30.
+
+
+This index lists **mechanism-origin cases only** — cases that produced a named framework mechanism. Evidence-only cases (first-run observations, feasibility research, audits that queued rather than shipped) are deliberately absent; [by-date.md](by-date.md) is the complete index of all 26 cases. Verified 2026-07-30: of 13 cases previously absent, 5 had shipped a mechanism and were missing — those are now listed; the other 8 are evidence-only and stay out.
 
 | Mechanism | Origin case |
 |---|---|
+| `/mycelium:scaffold-cost-check` + APEX-extended `/dora-check` (3 mandatory AI fields) + Check 43 | [faros-whiplash-integration](cases/2026-06-07-faros-whiplash-integration.md) |
+| Guardrail **G-D7** (OST-routing ritual, `harness/guardrails-discovery.md`, NUDGE tier) | [alex-cohort-sessions-2-3](cases/2026-05-30-alex-cohort-sessions-2-3.md) |
+| Post-build-silence nudge + BLUF/Footnote output convention (`G-C1`) | [alex-cohort-first-run](cases/2026-05-26-alex-cohort-first-run.md) |
+| Hook-leak fix (`0 corrections`/`0 skills` now distinguish not-initialized from empty) + AGENTS.md say-yes-or-skip framing | [frida-first-run](cases/2026-05-10-frida-first-run.md) |
+| Cowork runtime-gap partial fix (v0.49.21) + platform gap escalated upstream | [cowork-runtime-gap](cases/2026-06-19-cowork-runtime-gap.md) |
 | Pre-push delivery gate (Layer 3) + `check_coverage_floor.py` + `check_legacy_paths.py` (test-on-add / rot guards) | [legacy-path-rot-guard](cases/2026-06-18-legacy-path-rot-guard.md) |
 | `engine/autonomous-mode.md` (autonomous-mode declaration + substitution ladder) | [fable5-autonomous-run](cases/2026-06-11-fable5-autonomous-run.md) |
 | Render fleet: `/mycelium:{diamond,ost,cycle}-render` + `/mycelium:render` dispatcher + Check 43 | [render-fleet-foundation](cases/2026-06-07-render-fleet-foundation.md) |

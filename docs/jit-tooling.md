@@ -33,7 +33,7 @@ Generates:
 - Bootstrapped ADR scaffolding if architecture decisions are needed
 - Pre-commit and definition-of-done checklist scoped to the stack
 
-See `.claude/jit-tooling/detector.md` for detection rules.
+See `../plugins/mycelium/jit-tooling/detector.md` for detection rules.
 
 ## `/metrics-detect`
 
@@ -70,6 +70,6 @@ JIT detection externalizes the stack-specific knowledge to the moment of need. T
 
 ## See also
 
-- `.claude/jit-tooling/detector.md` — full detection rules
+- `../plugins/mycelium/jit-tooling/detector.md` — full detection rules
 - [usage-modes.md](usage-modes.md) — JIT tooling integrates into all modes
 - [skills/README.md](skills/README.md) — `/delivery-bootstrap`, `/metrics-detect`, `/metrics-pull`

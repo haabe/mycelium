@@ -15,7 +15,7 @@ When the agent starts any non-trivial task, it loads context in this order (per 
 1. **`.claude/diamonds/active.yml`** — which diamond is active. Determines scale (L0/L1/L2/L3/L4/L5) and phase (Discover/Define/Develop/Deliver).
 2. **`${CLAUDE_PLUGIN_ROOT}/domains/{discovery|delivery|quality}/CLAUDE.md`** — the appropriate domain context for the active scale.
 3. **`.claude/memory/corrections.md`** — past mistakes. Read in full. Recurring patterns inform present behavior.
-4. **`.claude/harness/guardrails-core.md`** — always loaded — plus phase-scoped: `guardrails-discovery.md` (L0-L2), `guardrails-delivery.md` (L3-L4), `guardrails-market.md` (L5).
+4. **`../plugins/mycelium/harness/guardrails-core.md`** — always loaded — plus phase-scoped: `guardrails-discovery.md` (L0-L2), `guardrails-delivery.md` (L3-L4), `guardrails-market.md` (L5).
 
 After loading: the agent reads any task-specific files the user references, then invokes the relevant skill (which may itself read further canvas state).
 
@@ -81,7 +81,7 @@ Every significant decision: context, alternatives, theory, evidence, confidence.
 
 ## Skills the agent can invoke
 
-58 skills auto-discovered from `.claude/skills/*/SKILL.md`. The agent reads the skill's SKILL.md when it invokes the skill — not all 58 at once. Type `/` to see the current list, or read `surfaces.yml` for the index.
+60 skills auto-discovered from `.claude/skills/*/SKILL.md`. The agent reads the skill's SKILL.md when it invokes the skill — not all 58 at once. Type `/` to see the current list, or read `surfaces.yml` for the index.
 
 ## Hooks that constrain the agent
 

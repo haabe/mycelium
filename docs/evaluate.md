@@ -10,7 +10,7 @@ This page is anti-promotional by design. The cost of a bad fit is high (a quarte
 
 Mycelium imposes structure before the agent is allowed to start coding. That structure is theory-grounded discipline — 30+ frameworks, theory gates that block progression on insufficient evidence, a canvas of YAML files that tracks every assumption. The structure costs you something:
 
-- **Upfront opinionation tax.** `/interview` is 15–60 minutes (depending on Phase 0 path) before the first useful output. Sprint mode and inline mode reduce but do not eliminate this.
+- **Upfront opinionation tax.** `/interview` runs a universal brief before the first useful output. Depth and time-cost are chosen *after* the brief, once you have the data to choose — but the brief itself is still time spent before you see value.
 - **Vocabulary cost.** Diamond, scale, leaf, gate, OST, JTBD — a learning curve before fluency. The [glossary](glossary.md) compresses it; the curve is real.
 - **Conformance cost.** The framework is opinionated about format (canvas YAML schema, decision-log structure, correction shape). If your team has its own discovery vocabulary, there is friction at the seams.
 
@@ -43,7 +43,7 @@ Look for: are the corrections concrete (named commits, named bugs, named people)
 
 ### 2. Run a small `/interview` (15 min)
 
-Clone Mycelium into a throwaway directory. Pick a real project you've been chewing on (a side project, a decision you're about to make at work, a thing you almost started). Run `/interview` Phase 0 → sprint mode (the 15-min path). Watch what the agent does.
+Install the plugin (`/plugin marketplace add haabe/mycelium`, then `/plugin install mycelium@haabe-mycelium`) — it touches no project-root files, so a real repo is safe. Pick a real project you've been chewing on (a side project, a decision you're about to make at work, a thing you almost started). Run `/interview` and let the brief run. Watch what the agent does.
 
 Look for: does the agent ask questions that surface things you had not considered? Or does it feel like form-filling? The first is the framework working. The second is the framework over-fitting.
 
@@ -85,6 +85,6 @@ Concrete signals:
 
 ## Next step
 
-If after the 1h evaluation you want to try it on a real project: see [README Quick start](../README.md#quick-start). Set the project up, run `/interview` with sprint or full mode, and commit to one full diamond cycle (1–2 weeks). Most of the value is in the first complete cycle; abandoning halfway through is a worse signal than abandoning at the start.
+If after the 1h evaluation you want to try it on a real project: see [README Quick start](../README.md#quick-start). Set the project up, run `/interview`, and commit to one full diamond cycle (1–2 weeks). Most of the value is in the first complete cycle; abandoning halfway through is a worse signal than abandoning at the start.
 
 If after the evaluation you want to push back: open an issue on the Mycelium repo. Pushback that lands a friction surfaces a corrections.md entry; you get named credit per [CONTRIBUTORS.md "How to get listed"](../CONTRIBUTORS.md#how-to-get-listed).

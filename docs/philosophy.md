@@ -109,7 +109,7 @@ The framework refuses to let the agent build-to-earn during a build-to-learn pha
 
 ## Why structure before content
 
-The Phase 1 of the docs restructure (this version) shipped the docs/ structure with stub pages. Phase 2 fills the content. The order is deliberate — in Mycelium's own discipline:
+The docs restructure is complete: the `docs/` structure shipped in Phase 1 and Phase 2 filled the content. No stub pages remain. The order is deliberate — in Mycelium's own discipline:
 
 - **L1 → L2 → L3 → L4**: spec before mechanism, structure before content
 - **Mocked persona before real interviews**: speculation tagged before evidence weighted

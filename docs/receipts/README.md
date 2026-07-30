@@ -2,7 +2,7 @@
 
 **Audience**: evaluators, contributors, practitioners curious about what "Mycelium gets smarter with each project cycle" actually means in artifacts.
 **Time to read**: 5 min.
-**Last updated**: 2026-05-09.
+**Last updated**: 2026-07-30.
 
 This directory is the WORK view of how the framework has evolved: per project, per cycle, per friction-to-mechanism trace. The PEOPLE view (per contributor) lives in [CONTRIBUTORS.md](../../CONTRIBUTORS.md). Same facts, two indexes — frontmatter cross-links them.
 

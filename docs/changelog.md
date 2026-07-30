@@ -4,6 +4,63 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-07-30.
 
+## v0.66.4 — accuracy sweep, fixing the finders before the findings
+
+An adversarial documentation pass returned 25 defects. Two of them were root causes worth
+more than every edit they would otherwise generate, so those went first.
+
+**`check_legacy_paths.py` was blind to two of the trees it exists to guard.** Its pattern
+covered `engine|orchestration|schemas|templates|scripts|domains|tests` and omitted
+`jit-tooling` and `harness` — both moved to `plugins/mycelium/` in the same migration. The
+rot guard built for exactly this failure class could not see it. Extending it immediately
+surfaced a subtlety worth recording: `harness/` and `jit-tooling/` are **split trees**.
+Framework docs moved, but `decision-log.md`, `wiring-contract.yml`, `active-stack.yml` and
+`active-metrics.yml` are project state and correctly live in `.claude/`. A directory-wide
+pattern flags those legitimate references, so the guard matches framework **filenames**
+instead. Found by running it, not by reasoning about it.
+
+The extended guard then found 12 stale paths on its own — including **11 in `CLAUDE.md`**
+and 2 inside `plugins/mycelium/harness/` itself.
+
+**`sync_derived.py` covered 8 files while hardcoded skill counts sat in 5 more.** Its own
+comment already recorded that the list had restaled once and the fix was "one more file."
+Extended to cover them; it auto-corrected five stale `58`s to 60. `architecture.md` needed
+its phrasing changed rather than the regex broadened — "58 SKILL.md workflows" does not
+match the canonical `N skills` token, and growing the pattern per phrasing variant is how
+that mechanism rots again. Extending the list also exposed a real robustness bug: the loop
+assumed every target exists and crashed on a checkout without them, which is exactly what a
+consuming project is. Missing targets are now skipped.
+
+**Content defects, all verified against the repo before fixing:**
+
+- `evaluate.md` gave three steps a reader cannot follow — "Phase 0 → sprint mode", "sprint
+  or full mode", "clone into a throwaway directory". Time-budget routing was replaced by
+  canvas-state detection (`interview/SKILL.md`), and cloning has not been the install path
+  since v0.20.0.
+- `migration.md` said `npx degit haabe/mycelium` "still works" and called it a usable
+  portable channel. It lands an empty `.claude/` with no skills and no hooks. The same
+  contradiction was found and fixed in `get-started.md` earlier and never traced here.
+- `glossary.md` described DORA as **five** delivery metrics including reliability;
+  `theories.md` says four, with reliability a 2021 *operational* dimension.
+- `codex.md` / `cursor.md` claimed **twelve** hook scripts; 14 are registered on all three
+  surfaces. Both also omitted `autonomous-evidence-guard` from their capability tables
+  despite it being registered since v0.44.1.
+- `opencode.md` contradicted itself: 38 of 58, 38 of 60, and 33 of 60 in one file. Measured:
+  **33 of 60**.
+- `design/definition-of-done.md` read "**Status:** design (not built)" months after
+  `/define-done` shipped — while three agent-facing files cite it as the canonical design.
+- Three pages still carried a legacy-removal deadline of v0.21.0, which shipped 2026-05-09;
+  removal never happened and the tree is unmaintained rather than gone.
+
+**Receipts indexes reconciled against the 26 case files they index.** All three were
+incomplete: `by-date` listed 19, `by-contributor` 4 contributors, `by-mechanism` 13.
+Regenerating from case frontmatter surfaced why they drifted — the `contributor` field has
+no canonical form, and the founder's own cases carry **seven** different spellings, so a
+naive rebuild produced seven rows for one person. Normalised for the index, detail kept in
+the frontmatter. `by-mechanism` gained the 5 cases that genuinely shipped a mechanism plus a
+scope note; the other 8 absences are evidence-only cases and are deliberate, which the file
+now says rather than leaving them looking like drift.
+
 ## v0.66.3 — a fabricated citation we had already caught, still live in five places
 
 The blind test for v0.66.0 was meant to answer whether the audience register changes an

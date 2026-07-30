@@ -15,7 +15,15 @@ across docs/ + CLAUDE.md + engine/orchestration doc files, weeks after a link-on
 sweep (v0.49.5) had passed clean.
 
 Scope — deliberately narrow to keep false positives ~zero:
-  - PATTERN: `.claude/(engine|orchestration|schemas|templates|scripts|domains|tests)/`.
+  - PATTERN: `.claude/(engine|orchestration|schemas|templates|scripts|domains|tests)/`
+    plus the specific framework FILENAMES under `.claude/harness/` and `.claude/jit-tooling/`.
+    Those two are split trees — framework docs moved to plugins/mycelium/, but decision-log.md,
+    wiring-contract.yml, active-stack.yml and active-metrics.yml are project state and belong
+    in .claude/. Matching the bare directory flags legitimate project-state references, which
+    is why this is filename-scoped (found by running it, 2026-07-30).
+    (`jit-tooling` and `harness` added 2026-07-30: both are framework trees that moved
+    to plugins/mycelium/ in the same migration, and both were missing from this pattern,
+    so the guard built for exactly this rot class was blind to them for ~3 months.)
     These dirs have NO legitimate user-runtime path in plugin form — they are
     always either repo source (`plugins/mycelium/...`) or plugin cache
     (`${CLAUDE_PLUGIN_ROOT}/...`).
@@ -62,6 +70,17 @@ SCAN_GLOBS = [
 # The moved reference dirs with no legitimate plugin-form runtime path.
 LEGACY_RE = re.compile(
     r"\.claude/(engine|orchestration|schemas|templates|scripts|domains|tests)/"
+    # harness/ and jit-tooling/ are SPLIT trees: framework files moved to
+    # plugins/mycelium/, but decision-log.md, wiring-contract.yml, active-stack.yml
+    # and active-metrics.yml are project state and correctly live in .claude/.
+    # So match the framework FILENAMES, never the bare directory.
+    r"|\.claude/harness/(anti-patterns|behavioral-contract|cognitive-biases"
+    r"|communication-rules|context-management|delegation-authority|design-principles"
+    r"|engineering-principles|guardrails|guardrails-core|guardrails-delivery"
+    r"|guardrails-discovery|guardrails-index|guardrails-market|security-trust"
+    r"|theory-tensions)\.md"
+    r"|\.claude/jit-tooling/(adoption-strategy|cicd-patterns|definition-of-done"
+    r"|detector|metrics-detector|security-scanning|testing-strategy)\.md"
 )
 
 # Files that intentionally document the legacy install form (deprecated, removed

@@ -105,7 +105,7 @@ When evidence invalidates a higher-level assumption, regress:
 6. Log the regression decision in `.claude/harness/decision-log.md`
 7. Never treat regression as failure -- it is the system working correctly
 
-**Anti-pattern: Regression Avoidance** -- Refusing to regress because of sunk cost. If evidence says the assumption is wrong, the evidence wins. See `.claude/harness/anti-patterns.md`.
+**Anti-pattern: Regression Avoidance** -- Refusing to regress because of sunk cost. If evidence says the assumption is wrong, the evidence wins. See `../harness/anti-patterns.md`.
 
 ## Smooth Flow
 
