@@ -74,6 +74,8 @@ If you remember one rule for *how much* framework to use:
 
 > The rougher the idea, the more scales earn their cost. The clearer the idea, the fewer you need.
 
+(Same heuristic, applied to the do-I-need-this question, in the [FAQ](faq.md#does-mycelium-help-when-i-already-know-exactly-what-to-build-or-only-when-im-exploring).)
+
 If you already know who it is for, what "done" means, and that the problem is real, the discovery scales (Purpose, Strategy, Opportunity) have little to add — you are past the part Mycelium is built for, and lighter execution tools fit better ([who it is not for](../README.md#who-its-not-for)). If your idea is a rough hunch, those scales are exactly where the wrong-build risk hides, and the gates earn their keep.
 
 The framework recommends a depth from how you answer `/interview`; you can always override it. It scales to your project, not the other way around.

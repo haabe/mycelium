@@ -4,6 +4,33 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-07-30.
 
+## v0.66.5 — the last index, and a bucket that did not exist
+
+`docs/receipts/README.md` was the one index whose sections are editorial rather than
+derivable — Graduated mechanisms, Active clusters, One-off learnings. It covered 12 of 26
+cases.
+
+Eight of the missing cases had shipped a mechanism, and their descriptions were **lifted
+from `by-mechanism.md`** rather than written fresh, so the two indexes now agree by
+construction instead of by discipline.
+
+The remaining six fit none of the three buckets, and forcing them would have been the real
+error. They produced a documented null, an overturned prior claim, or a narrowed hypothesis
+— `opencode-phase1-runtime` overturned earlier claims through runtime verification;
+`architecture-discovery-narrowed` states plainly that **nothing shipped**;
+`dagfinn-minilisp-vibe-mistral` is the first arms-length full run with no Claude in the loop.
+Those are results. A receipts index that only records wins is a marketing page, so they get a
+fourth section that says what they produced instead.
+
+Two rows read "Shipped" for the `/interview` Phase 0 time-budget selector and the
+constraint-first preflight. Both were removed — canvas-state detection replaced them, because
+the time-budget question asked the user to predict the future before any value was delivered.
+An unqualified "Shipped" reads as current, so both rows now carry the removal.
+
+All four receipts indexes are complete at 26/26. Also closed: the same do-I-need-this
+heuristic stated in `mental-model.md` and `faq.md` with no cross-link either way — now linked
+both directions, against the real heading anchor rather than the one that seemed obvious.
+
 ## v0.66.4 — accuracy sweep, fixing the finders before the findings
 
 An adversarial documentation pass returned 25 defects. Two of them were root causes worth

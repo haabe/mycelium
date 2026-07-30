@@ -28,6 +28,9 @@ The framework's value concentrates upstream. If your problem statement is settle
 
 If your idea is rough — you're not sure who it's for, or whether it's a real problem, or what "done" looks like — Mycelium's discovery scales (L0–L2) earn their cost. The clearer the idea, the less you need; the rougher the idea, the more you do.
 
+
+The same heuristic stated as a rule of thumb: [the rougher the idea, the more scales earn their cost](mental-model.md).
+
 ### Will this work with OpenAI Codex / Cursor / Aider / Copilot?
 
 Partially. Mycelium's full enforcement layer (hooks, gates, reflexion loops, framework-guard, secret detection) is Claude-Code-specific today. The portable surface is canvas reading + writing + decision logging — non-Claude-Code agents can read `.claude/canvas/*.yml` and `.claude/memory/corrections.md` to operate on the same evidence base, but gates do not fire automatically.

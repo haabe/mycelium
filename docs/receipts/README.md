@@ -14,6 +14,14 @@ Below: active patterns (multiple cases, may graduate), graduated mechanisms (cas
 
 | Mechanism | Origin case | Status |
 |---|---|---|
+| Hook-leak fix (`0 corrections`/`0 skills` now distinguish not-initialized from empty) + AGENTS.md say-yes-or-skip framing | [frida-first-run](cases/2026-05-10-frida-first-run.md) | Shipped (v0.23.9) |
+| Post-build-silence nudge + BLUF/Footnote output convention (`G-C1`) | [alex-cohort-first-run](cases/2026-05-26-alex-cohort-first-run.md) | Shipped (v0.31.0) |
+| Guardrail **G-D7** (OST-routing ritual, `harness/guardrails-discovery.md`, NUDGE tier) | [alex-cohort-sessions-2-3](cases/2026-05-30-alex-cohort-sessions-2-3.md) | partially-shipped — signals 3/4/5/6 shipped as the OST-routi |
+| `/mycelium:scaffold-cost-check` + APEX-extended `/dora-check` (3 mandatory AI fields) + Check 43 | [faros-whiplash-integration](cases/2026-06-07-faros-whiplash-integration.md) | Shipped (v0.39.19) |
+| `/mycelium:framework-health` temporal-independence rule (4e/4b/4d) | [framework-health-temporal-independence](cases/2026-06-07-framework-health-temporal-independence.md) | Shipped (v0.39.22) |
+| Render fleet: `/mycelium:{diamond,ost,cycle}-render` + `/mycelium:render` dispatcher + Check 43 | [render-fleet-foundation](cases/2026-06-07-render-fleet-foundation.md) | Shipped (v0.40.0) |
+| `engine/autonomous-mode.md` (autonomous-mode declaration + substitution ladder) | [fable5-autonomous-run](cases/2026-06-11-fable5-autonomous-run.md) | Shipped (v0.41.0) |
+| Pre-push delivery gate (Layer 3) + `check_coverage_floor.py` + `check_legacy_paths.py` (test-on-add / rot guards) | [legacy-path-rot-guard](cases/2026-06-18-legacy-path-rot-guard.md) | Shipped (v0.49.6–v0.49.8) |
 | Preflight project-dir robustness + count-bug fix (Cowork cross-runtime dogfood) | [cowork-runtime-gap](cases/2026-06-19-cowork-runtime-gap.md) | Shipped (v0.49.21); Cowork F1/F3 platform-gap documented |
 | Canvas-vs-reality drift detection (human-task reconciliation) | [canvas-drift-reconciliation](cases/2026-05-28-canvas-drift-reconciliation.md) | Shipped (v0.31.3) |
 | `/mocked-persona-interview` skill | [macos-fileviewer kill](cases/2026-04-macos-fileviewer.md) | Shipped |
@@ -26,9 +34,9 @@ Below: active patterns (multiple cases, may graduate), graduated mechanisms (cas
 | `/canvas-health` provenance + staleness lints | [macos-fileviewer kill](cases/2026-04-macos-fileviewer.md) | Shipped |
 | `cycle-history.yml` + adaptive thresholds + framework-reflexion | [macos-fileviewer kill](cases/2026-04-macos-fileviewer.md) | Shipped |
 | `.claude/evals/dogfood-reports/` directory | [macos-fileviewer kill](cases/2026-04-macos-fileviewer.md) | Shipped |
-| `/interview` Phase 0 path selector (<8h / 8-48h / 48h+) | [hoskins-takehome](cases/2026-04-30-drew-hoskins-takehome.md) | Shipped |
+| `/interview` Phase 0 path selector (<8h / 8-48h / 48h+) | [hoskins-takehome](cases/2026-04-30-drew-hoskins-takehome.md) | Shipped, **since removed** — replaced by canvas-state detection; the time-budget question asked the user to predict the future before any value was delivered |
 | Lightweight discovery-to-delivery continuation mode | [hoskins-takehome](cases/2026-04-30-drew-hoskins-takehome.md) | Partial |
-| Constraint-first preflight (ask time budget before scope) | [hoskins-takehome](cases/2026-04-30-drew-hoskins-takehome.md) | Shipped |
+| Constraint-first preflight (ask time budget before scope) | [hoskins-takehome](cases/2026-04-30-drew-hoskins-takehome.md) | Shipped, **since superseded** — same removal as the Phase 0 selector above |
 | "Eval Overfitting" anti-pattern | [hoskins-takehome](cases/2026-04-30-drew-hoskins-takehome.md) | Shipped |
 | "Negative Documentation" anti-pattern | [hoskins-takehome](cases/2026-04-30-drew-hoskins-takehome.md) | Shipped |
 | Guardrail **G-V12** (every check ships coverage-proof test) | [framework-self-correction](cases/2026-05-01-framework-self-correction.md) | Shipped (v0.16.0) |
@@ -60,6 +68,20 @@ Canonical cluster log: [`.claude/memory/cluster-instances.md`](../../.claude/mem
 | Optimistic UI desync in client-server real-time apps | [tic-tac-toe](cases/2026-04-tic-tac-toe.md) | Project-local `corrections.md` |
 | `@EnvironmentObject` lost on SwiftUI Table cell scroll | [macos-can-i-open](cases/2026-04-macos-can-i-open.md) | Project-local `corrections.md` |
 | `AXIsProcessTrusted()` lies for ad-hoc-signed apps | [macos-can-i-open](cases/2026-04-macos-can-i-open.md) | Project-local `corrections.md` |
+
+
+### Evidence & investigation (no mechanism shipped)
+
+Cases that produced evidence, overturned a prior claim, or closed an investigation without shipping a framework change. They belong in the receipts because a documented null or a narrowed hypothesis is a result; they are not mechanisms and are not project-local learnings.
+
+| Case | What it produced |
+|---|---|
+| [opencode-phase1-runtime](cases/2026-05-16-opencode-phase1-runtime.md) | runtime-verification-overturned-prior-claims |
+| [opencode-port-feasibility](cases/2026-05-16-opencode-port-feasibility.md) | research-with-hands-on-verification |
+| [phase0-substrate-audit](cases/2026-05-16-phase0-substrate-audit.md) | audit-with-queued-rewrites |
+| [edith-mari-book-project](cases/2026-05-20-edith-mari-book-project.md) | brief-synthesis-as-identity-mirror-validated |
+| [architecture-discovery-narrowed](cases/2026-06-01-architecture-discovery-narrowed.md) | investigated — hypothesized gap captured as a failing-first scenario, then dogfooded; the gap is narrower than its first framing. A light-touch soluti |
+| [dagfinn-minilisp-vibe-mistral](cases/2026-06-23-dagfinn-minilisp-vibe-mistral.md) | first-arms-length-full-run / no-Claude-in-the-loop / context-budget friction documented |
 
 ## Other indexes
 
