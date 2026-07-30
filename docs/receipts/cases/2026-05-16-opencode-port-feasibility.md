@@ -1,7 +1,8 @@
 ---
 id: 2026-05-16-opencode-port-feasibility
 date: 2026-05-16
-contributor: Håvard Bartnes (founder)
+contributor: Håvard Bartnes
+contributor_note: founder
 contributor_link: CONTRIBUTORS.md
 project: mycelium
 mechanism_or_status: research-with-hands-on-verification

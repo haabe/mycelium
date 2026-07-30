@@ -1,7 +1,8 @@
 ---
 id: 2026-05-09-bias-cluster-graduation
 date: 2026-05-09
-contributor: Håvard Bartnes (founder dogfood)
+contributor: Håvard Bartnes
+contributor_note: founder dogfood
 contributor_link: CONTRIBUTORS.md
 project: mycelium-self-discipline
 mechanism_or_status: graduated

@@ -1,7 +1,8 @@
 ---
 id: 2026-06-19-cowork-runtime-gap
 date: 2026-06-19
-contributor: Håvard Bartnes (founder self-dogfood)
+contributor: Håvard Bartnes
+contributor_note: founder self-dogfood
 contributor_link: CONTRIBUTORS.md
 project: Mycelium-test / Mycelium-test2 (Claude Cowork)
 mechanism_or_status: partial-fix-shipped (v0.49.21) + platform-gap-documented

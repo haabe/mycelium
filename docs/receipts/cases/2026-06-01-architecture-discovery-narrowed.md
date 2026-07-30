@@ -1,7 +1,8 @@
 ---
 id: 2026-06-01-architecture-discovery-narrowed
 date: 2026-06-01
-contributor: Håvard Bartnes (founder self-dogfood)
+contributor: Håvard Bartnes
+contributor_note: founder self-dogfood
 contributor_link: CONTRIBUTORS.md
 project: mycelium-roadmap (private — generic-framed receipt; raw artifacts and the practitioner identity stay private until consent)
 mechanism_or_status: investigated — hypothesized gap captured as a failing-first scenario, then dogfooded; the gap is narrower than its first framing. A light-touch solution candidate is sketched in the private OST. NOTHING shipped to the framework. A leaf still requires a second independent external ask.

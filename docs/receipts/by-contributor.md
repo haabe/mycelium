@@ -6,7 +6,7 @@
 
 This page is the receipts-side cross-link to the canonical [CONTRIBUTORS.md](../../CONTRIBUTORS.md). Names + project credit live there; per-case detail lives here.
 
-Generated from the `contributor` field in each case's frontmatter. Note that field has no canonical form — the founder's own cases carry seven different spellings, each adding session context — so entries are normalised to the person here while the frontmatter keeps its detail.
+Generated from the canonical `contributor` field in each case's frontmatter; session context lives in `contributor_note`. Check 49 enforces the canonical form, so this table can be regenerated rather than hand-maintained.
 
 | Contributor | Cases |
 |---|---|

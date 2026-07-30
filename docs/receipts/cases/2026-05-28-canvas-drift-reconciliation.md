@@ -1,7 +1,8 @@
 ---
 id: 2026-05-28-canvas-drift-reconciliation
 date: 2026-05-28
-contributor: Mycelium (dogfood self-correction)
+contributor: internal-dogfood
+contributor_note: dogfood self-correction
 contributor_link: CONTRIBUTORS.md#how-mycelium-uses-feedback
 project: canvas-drift-reconciliation
 mechanism_or_status: shipped-v0.31.3-detection-layer

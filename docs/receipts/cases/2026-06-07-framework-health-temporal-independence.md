@@ -1,7 +1,8 @@
 ---
 id: 2026-06-07-framework-health-temporal-independence
 date: 2026-06-07
-contributor: Håvard Bartnes (founder, dogfood-session catch)
+contributor: Håvard Bartnes
+contributor_note: founder, dogfood-session catch
 contributor_link: CONTRIBUTORS.md
 project: mycelium-roadmap (private; the dogfood project. The skill that found the gap is the skill the gap was in)
 mechanism_or_status: shipped. v0.39.22 tightens `skills/framework-health/SKILL.md` Step 4e with an explicit temporal-independence rule applying symmetrically to 4b and 4d. One commit, four files, validator green at HEAD.

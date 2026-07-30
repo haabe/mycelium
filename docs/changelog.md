@@ -4,6 +4,41 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-07-30.
 
+## v0.67.0 — a canonical contributor field, and a guard so it stays that way
+
+The `contributor` field in `docs/receipts/cases/` had no canonical form and nothing
+validated it. Across 26 cases it had drifted into **15 distinct spellings for 8 people** —
+the founder alone appearing seven ways: `(founder)`, `(founder dogfood)`, `(founder
+self-dogfood)`, `(founder, dogfood-session catch)`, and on.
+
+Every one of those parentheticals carried real session context, which is what made this
+awkward rather than obvious: the values were **informative and ungroupable at the same
+time**. `by-contributor.md` silently under-listed contributors for two months because
+grouping on a free-text field cannot group, and Frida, Edith-Mari and Dagfinn were absent
+from a page that called itself the receipts-side cross-link to CONTRIBUTORS.md.
+
+Split into two fields: `contributor` is the canonical join key, `contributor_note` keeps the
+context. No information was deleted — 15 notes preserved.
+
+**Check 49 enforces it**, with its G-V12 fixture test. The fixture set matters as much as the
+check: `parenthetical` and `missing_field` prove it flags the failure, and `canonical` proves
+a case that keeps its context in a note **passes** — without that third fixture the check
+would train people to delete information to satisfy it.
+
+`by-contributor.md` is now generated from the canonical field rather than normalised in
+flight, so it can be regenerated instead of hand-maintained.
+
+Minor rather than patch: a newly-enforced field convention is a schema change for anyone
+maintaining receipts cases.
+
+**Still open, deliberately.** The audience register's central claim — that agent-facing prose
+reaches runtimes where hooks never fire — remains untested for the case it was written for.
+The 2026-07-30 blind test that validated it ran as a Claude Code subagent, and it is
+undetermined whether it found the rule by following links or by hook injection. Registered as
+`ht-053` in the dogfood repo with a frozen prediction, explicitly marked as not closable by
+another agent run: the failure mode under test is the *absence* of hook enforcement, and any
+Claude Code agent has hooks available and cannot produce the negative case.
+
 ## v0.66.6 — scan for the class, not the reported instance
 
 With all 25 reported defects fixed, a mechanical re-scan for each defect *class* found two

@@ -1,7 +1,8 @@
 ---
 id: 2026-05-09-plugin-form-dogfood
 date: 2026-05-09
-contributor: Håvard Bartnes (founder self-dogfood)
+contributor: Håvard Bartnes
+contributor_note: founder self-dogfood
 contributor_link: CONTRIBUTORS.md
 project: mycelium-plugin-test
 mechanism_or_status: bugs-closed-in-session
