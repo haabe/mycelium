@@ -21,7 +21,7 @@ Each opportunity in the OST must have evidence from at least 2 sources. Frequenc
 *Source: Torres (CDH), Gilad (Evidence Guided)*
 
 **G-D5: Always run bias checklist before conducting research** `NUDGE` `quality`
-Review `.claude/harness/cognitive-biases.md` before designing interviews, surveys, or experiments.
+Review `cognitive-biases.md` before designing interviews, surveys, or experiments.
 *Source: Shotton (Choice Factory), Kahneman (Thinking Fast and Slow)*
 
 **G-D6: Always map emotional and social dimensions, not just functional** `NUDGE` `quality`

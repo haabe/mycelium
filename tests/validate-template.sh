@@ -2385,6 +2385,58 @@ PY
 }
 
 # ============================================================
+# Check 49: receipts case frontmatter carries a canonical contributor
+# ============================================================
+#
+# Scope: THIS REPO ONLY, same reasoning as Check 48. `docs/receipts/cases/` is
+# Mycelium's own evidence base; consumers build products and have no receipts
+# tree, so a shipped check could never fire for them.
+#
+# Why it exists: the `contributor` field had no canonical form and nothing
+# validated it. Across 26 cases it drifted into 15 distinct spellings for 8
+# people — the founder alone appeared 7 ways ("Håvard Bartnes (founder)",
+# "(founder dogfood)", "(founder self-dogfood)", "(founder, dogfood-session
+# catch)", ...). Every parenthetical carried real session context, so the
+# values were informative and unusable at the same time: by-contributor.md
+# silently under-listed contributors for two months because grouping on a
+# free-text field cannot group. Normalised 2026-07-30 into `contributor` (the
+# canonical join key to CONTRIBUTORS.md) plus optional `contributor_note` (the
+# context). This check keeps it that way — a one-time cleanup with no guard is
+# how SKILL_COUNT_FILES restaled twice.
+check_receipt_contributor_canonical() {
+    section "Check 49: receipts case frontmatter carries a canonical contributor"
+
+    local cases_dir="docs/receipts/cases"
+    if [ ! -d "$cases_dir" ]; then
+        info "Check 49: no $cases_dir — N/A"
+        return
+    fi
+
+    local offenders=() f val
+    for f in "$cases_dir"/*.md; do
+        [ -f "$f" ] || continue
+        val=$(grep -m1 '^contributor:' "$f" | sed 's/^contributor:[[:space:]]*//; s/[[:space:]]*$//')
+        if [ -z "$val" ]; then
+            offenders+=("$(basename "$f"): missing contributor field")
+        elif printf '%s' "$val" | grep -q '('; then
+            offenders+=("$(basename "$f"): '$val' — move the parenthetical to contributor_note")
+        fi
+    done
+
+    if [ "${#offenders[@]}" -eq 0 ]; then
+        local n
+        n=$(ls -1 "$cases_dir"/*.md 2>/dev/null | wc -l | tr -d ' ')
+        pass "Check 49: all ${n} receipts cases carry a canonical contributor"
+    else
+        local o
+        for o in "${offenders[@]}"; do
+            echo "      $o"
+        done
+        fail "Check 49: ${#offenders[@]} case(s) with a non-canonical contributor — grouping on a free-text field cannot group"
+    fi
+}
+
+# ============================================================
 # RUN ALL CHECKS
 # ============================================================
 #
@@ -2442,9 +2494,12 @@ check_sync_derived_drift
 check_read_before_recommend_preamble
 check_postflight_verify_after_write_preamble
 check_render_identifier_exposure_declaration
+
+
 check_hooks_registration_parity
 check_chat_ux_axiom_markers
 check_gv12_test_coverage
+check_receipt_contributor_canonical
 
 # ============================================================
 # SUMMARY

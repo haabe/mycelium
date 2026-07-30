@@ -2,6 +2,7 @@
 
 **Audience**: contributors and integrators who need the whole picture in one place.
 **Time to read**: 10 min.
+**Last updated**: 2026-07-30.
 
 Until now the architecture lived in five places (`CLAUDE.md`, the engine/harness READMEs, `context-surface.md`, `README.md`, `install-paths.md`). This file is the single map; each section points at the canonical detail rather than restating it.
 
@@ -27,9 +28,9 @@ A **harness**, in Birgitta Böckeler's sense (`plugins/mycelium/harness/README.m
              └───────────────────────────────────────┘   └─────────────────────────┘
                                    │ invoked as /mycelium:<name>
                                    ▼
-                        ┌──────── skills (operations) ────────┐
-                        │ 58 SKILL.md workflows, auto-loaded  │
-                        └──────────────────────────────────────┘
+                        ┌──────── skills (operations) ─────────┐
+                        │ 60 skills, auto-loaded from SKILL.md │
+                        └─────────────────────────────────────┘
 ```
 
 | Layer | Role | Lives in | Böckeler half |
@@ -37,7 +38,7 @@ A **harness**, in Birgitta Böckeler's sense (`plugins/mycelium/harness/README.m
 | **Engine** | Decision logic: diamonds, scales, theory gates, confidence, routing | `plugins/mycelium/engine/` | — |
 | **Harness** | 38 guardrails in three tiers (BLOCK / REVIEW / NUDGE) that keep the agent honest | `plugins/mycelium/harness/` | both |
 | **Hooks** | Event-fired scripts; computational enforcement of BLOCK-tier guardrails + feedback loops | `plugins/mycelium/hooks/` (`hooks.json`) | computational |
-| **Skills** | 58 invocable operations (`/mycelium:<name>`), auto-discovered from SKILL.md frontmatter | `plugins/mycelium/skills/` | inferential |
+| **Skills** | 60 skills, invocable as `/mycelium:<name>`, auto-discovered from SKILL.md frontmatter | `plugins/mycelium/skills/` | inferential |
 | **Canvas** | Source-of-truth product **state** (YAML), committed to git | the user's `.claude/canvas/` | — |
 | **Domains** | Per-phase context overlays (discovery / delivery / quality) | `plugins/mycelium/domains/*/CLAUDE.md` | inferential |
 | **Schemas** | Validation contracts for canvas YAML | `plugins/mycelium/schemas/` | computational |
@@ -69,7 +70,7 @@ The design intent: the always-on surface stays **lean** (the turn-1-and-turn-30 
 
 ## Packaging, authoring, release, install
 
-- **Form**: a Claude Code **plugin** (canonical since v0.20.0). Framework reference content lives in the plugin cache, addressed via `${CLAUDE_PLUGIN_ROOT}`; the user's `.claude/` holds **only project state**. Legacy `npx degit` is deprecated (removal planned v0.21.0). Detail: `docs/install-paths.md`.
+- **Form**: a Claude Code **plugin** (canonical since v0.20.0). Framework reference content lives in the plugin cache, addressed via `${CLAUDE_PLUGIN_ROOT}`; the user's `.claude/` holds **only project state**. Legacy `npx degit` is non-functional — it lands an empty `.claude/`. Removal was planned for v0.21.0 and did not happen; the tree is unmaintained. See [install paths](install-paths.md). Detail: `docs/install-paths.md`.
 - **Descriptors**: `.claude-plugin/marketplace.json` (marketplace `haabe-mycelium`) → `plugins/mycelium/.claude-plugin/plugin.json` (the plugin manifest, carries `version`). `plugins/mycelium/manifest.yml` classifies every file `framework` (safe to replace) vs `project_state` (never overwrite).
 - **Version discipline** (`plugins/mycelium/engine/version-discipline.md`): the `CLAUDE.md` Version line is the single source of truth; a bump is an atomic commit of `CLAUDE.md` + `plugin.json` + `docs/changelog.md` (+ derived docs via `sync_derived.py`). CI Checks 26/30/40 enforce it.
 - **Release**: merge to `main` → CI (`validate.yml`) green → `auto-release.yml` reads the changelog section and creates the tag + GitHub Release.

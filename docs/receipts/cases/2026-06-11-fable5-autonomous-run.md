@@ -1,7 +1,8 @@
 ---
 id: 2026-06-11-fable5-autonomous-run
 date: 2026-06-11
-contributor: Håvard Bartnes (founder, Q3 bet-on-being-wrong test)
+contributor: Håvard Bartnes
+contributor_note: founder, Q3 bet-on-being-wrong test
 contributor_link: CONTRIBUTORS.md
 project: mycelium-fable5-testrun + mycelium-fable5-stage2 (sandbox; dogfood evaluation of Fable 5 against Mycelium v0.40.4)
 mechanism_or_status: shipped. v0.41.0 adds engine/autonomous-mode.md (declaration, substitution ladder, mandatory ledger, evidence-integrity boundary, human-only registry, harness-permission story) plus inline hard-gate markers in diamond-assess, diamond-progress, and mocked-persona-interview. Canvas opp-011 carries the evidence.

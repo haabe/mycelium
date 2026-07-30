@@ -15,7 +15,7 @@ Mycelium 0.20.0 repackaged the framework as a Claude Code plugin per Anthropic's
 
 Plugin form solves both: framework reference content lives in plugin cache (`~/.claude/plugins/cache/...`), the user's `.claude/` holds only project state, and upgrades happen via `/plugin update` — Claude Code's atomic plugin replacement, not a script-driven refresh.
 
-The legacy install path is supported during the v0.20.x transition. Plugin form is recommended for all new installs and the migration path below for existing installs.
+The legacy install path was supported during the v0.20.x transition. It is now unmaintained and `npx degit` does not produce a working install. Plugin form is recommended for all new installs and the migration path below for existing installs.
 
 ## What does and doesn't change
 
@@ -178,11 +178,13 @@ The skill detects the install state and walks the migration explicitly. It works
 
 Your refresh ran, but `.claude/skills/`, `.claude/engine/`, etc. are empty or absent. You're now on plugin-form-shape but without the plugin installed. Install the plugin (commands above) and verify with `/mycelium:diamond-assess`. If your canvas reads correctly, the migration is complete; commit the empty-tree state.
 
-## Why we kept legacy supported during transition
+## Why legacy stayed supported during the transition
 
-Three reasons. First, abrupt removal would strand existing users mid-project. Second, plugin form depends on Claude Code's plugin runtime — agents that don't speak the plugin spec (Codex, Cursor, Aider, Copilot) still get framework value via `AGENTS.md` orientation, but the legacy npx-degit path remains useful as a portable installation channel for projects that don't want to depend on the plugin runtime. Third, dogfooding: the maintainer's own Mycelium repo runs both forms in parallel during the transition window, so smoke-testing happens on the same surface real users see.
+Three reasons. First, abrupt removal would strand existing users mid-project. Second, plugin form depends on Claude Code's plugin runtime — agents that don't speak the plugin spec (Codex, Cursor, Aider, Copilot) still get framework value via `AGENTS.md` orientation, and during the transition the npx-degit path was expected to remain a portable installation channel. **That expectation did not hold** — see the correction below. Third, dogfooding: the maintainer's own Mycelium repo runs both forms in parallel during the transition window, so smoke-testing happens on the same surface real users see.
 
-The transition window closes at the canonical 0.20.0 bump on merge to main. After that, `npx degit haabe/mycelium` still works, but the legacy `.claude/` framework tree gets removed from upstream — fresh installs default to plugin form, and migration becomes mandatory for existing installs.
+The transition window closed at the canonical 0.20.0 bump. Fresh installs default to plugin form and migration is mandatory for existing installs.
+
+> **Correction, 2026-07-30.** This section previously said `npx degit haabe/mycelium` "still works" and described it as a usable portable channel. **It does not work.** On the current layout it lands an empty `.claude/` with no skills to invoke and no hooks to fire — see [install paths](install-paths.md) and [get started](get-started.md). The same contradiction was found and fixed in `get-started.md` earlier (changelog v0.20.x) and never traced here, so this page kept recommending a dead channel. Agents that don't speak the plugin spec get framework value through [`AGENTS.md`](../AGENTS.md) orientation instead.
 
 ## Related
 

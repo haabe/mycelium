@@ -7,7 +7,7 @@
 
 ## Why this fits cleanly
 
-Codex CLI's hook system uses Claude Code's exact event vocabulary — `SessionStart`, `PreToolUse`, `PostToolUse`, `UserPromptSubmit`, `Stop`, `PreCompact`, `PostCompact`, `SubagentStart`, `SubagentStop`, plus `PermissionRequest`. The stdin payload field names (`tool_name`, `tool_input`, `cwd`, `tool_response`, `hook_event_name`) match Claude Code's byte-for-byte (verified against [developers.openai.com/codex/hooks](https://developers.openai.com/codex/hooks) 2026-05-26). Mycelium's twelve hook scripts run unmodified.
+Codex CLI's hook system uses Claude Code's exact event vocabulary — `SessionStart`, `PreToolUse`, `PostToolUse`, `UserPromptSubmit`, `Stop`, `PreCompact`, `PostCompact`, `SubagentStart`, `SubagentStop`, plus `PermissionRequest`. The stdin payload field names (`tool_name`, `tool_input`, `cwd`, `tool_response`, `hook_event_name`) match Claude Code's byte-for-byte (verified against [developers.openai.com/codex/hooks](https://developers.openai.com/codex/hooks) 2026-05-26). Mycelium's 14 hook scripts run unmodified.
 
 The one surface difference: Codex has no native `PostToolUseFailure`. Failures still surface in `PostToolUse` with the error captured in `tool_response`. A small shim script (`codex-postfailure-shim.sh`) inspects `tool_response` and delegates to `reflexion-gate.sh` only on failure.
 
@@ -17,12 +17,13 @@ The one surface difference: Codex has no native `PostToolUseFailure`. Failures s
 |---|---|---|
 | Canvas YAML, memory, decision-log, corrections, patterns | ✅ Fully portable | Pure files. |
 | `AGENTS.md` instructions | ✅ Read natively | Codex's primary; Mycelium ships it. |
-| Skills (58 skills, frontmatter-driven discovery) | ⚠️ Depends on Codex skill discovery | Codex has plugin manifests (`.codex-plugin/plugin.json`); skill-discovery glue may be needed for full parity. Substrate loads either way. |
+| Skills (60 skills, frontmatter-driven discovery) | ⚠️ Depends on Codex skill discovery | Codex has plugin manifests (`.codex-plugin/plugin.json`); skill-discovery glue may be needed for full parity. Substrate loads either way. |
 | Validators (`validate_canvas.py`, `validate-template.sh`) | ✅ Run unchanged | Harness-agnostic. |
 | MCP server integrations | ✅ Native | Both speak MCP. |
 | Pre-task gate (Read-before-Edit, preflight, scope, framework-guard) | ✅ Hook-enforced | `PreToolUse` identical event + payload. |
 | Post-write nudge / change-log / diamond-audit | ✅ Hook-enforced | `PostToolUse` identical. |
 | Reflexion loop (auto-retry on tool failure) | ✅ Hook-enforced via shim | `codex-postfailure-shim.sh` filters `PostToolUse` for error in `tool_response`. |
+| Autonomous-run evidence guard | ✅ Hook-enforced | `autonomous-evidence-guard.sh`, registered on this surface since v0.44.1. |
 | Pre-task context injection (G-P-pre) | ✅ Hook-enforced | `UserPromptSubmit` identical. |
 | Session-start preflight | ✅ Hook-enforced | `SessionStart` identical. |
 | Stop check (Mycelium guardrails + feedback loops) | ✅ Hook-enforced | `Stop` identical. |
@@ -84,7 +85,7 @@ No mapping needed — Codex uses PascalCase event names identical to Claude Code
 ## Honest gaps
 
 - **No native `PostToolUseFailure`** — covered by the shim above. If/when Codex adds the event, drop the shim and point the hook at `reflexion-gate.sh` directly.
-- **Skill discovery** — Codex's plugin manifest format (`.codex-plugin/plugin.json`) differs from Claude Code's; the 58 skills load as files but `/skill-name` invocation parity may require a Codex-side skill loader. Mycelium's slash commands work; full parity needs verification.
+- **Skill discovery** — Codex's plugin manifest format (`.codex-plugin/plugin.json`) differs from Claude Code's; the 60 skills load as files but `/skill-name` invocation parity may require a Codex-side skill loader. Mycelium's slash commands work; full parity needs verification.
 - **`CLAUDE_PROJECT_DIR` not auto-exported** — set it in your shell. (Cursor exports this alias automatically; Codex doesn't.)
 
 Verified primitives match against [Codex hooks docs](https://developers.openai.com/codex/hooks) 2026-05-26. End-to-end Mycelium-on-Codex run not yet executed — adopt and report friction back via PR on `docs/receipts/cases/`.

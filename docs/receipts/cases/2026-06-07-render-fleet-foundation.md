@@ -1,7 +1,8 @@
 ---
 id: 2026-06-07-render-fleet-foundation
 date: 2026-06-07
-contributor: Håvard Bartnes (founder, dogfood-session catch)
+contributor: Håvard Bartnes
+contributor_note: founder, dogfood-session catch
 contributor_link: CONTRIBUTORS.md
 project: mycelium-roadmap (private; the dogfood project where four sessions of render-fleet iteration surfaced thirteen findings before upstream promotion)
 mechanism_or_status: shipped. v0.40.0 lands the engine convention doc, the first specialist (`/mycelium:diamond-render`), and Validator Check 43 mechanically enforcing identifier-exposure declaration on the render-fleet skill class. Three more specialists follow in v0.40.1–v0.40.3 patches as they stabilize.

@@ -1,6 +1,6 @@
 # Design: outcome-based Definition of Done as a forcing function
 
-**Status:** design (not built). **Date:** 2026-06-11. **Origin:** roadmap dogfood —
+**Status:** SHIPPED — `/mycelium:define-done` implements this design (v0.42.1+). This page is retained as the canonical statement of the design and the evidence grades, which three agent-facing files still cite; it is not a forward-looking plan. (Corrected 2026-07-30: it read "design (not built)" for months after shipping.). **Last updated**: 2026-07-30. **Origin:** roadmap dogfood —
 the L0 "Mycelium Purpose" diamond reached Deliver with its success bar still
 implicit; the founder pinned it ("fits, not ships") only reactively during
 `/diamond-assess`, and named the gap: *a Definition of Done should be forced

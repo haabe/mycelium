@@ -28,6 +28,9 @@ The framework's value concentrates upstream. If your problem statement is settle
 
 If your idea is rough — you're not sure who it's for, or whether it's a real problem, or what "done" looks like — Mycelium's discovery scales (L0–L2) earn their cost. The clearer the idea, the less you need; the rougher the idea, the more you do.
 
+
+The same heuristic stated as a rule of thumb: [the rougher the idea, the more scales earn their cost](mental-model.md).
+
 ### Will this work with OpenAI Codex / Cursor / Aider / Copilot?
 
 Partially. Mycelium's full enforcement layer (hooks, gates, reflexion loops, framework-guard, secret detection) is Claude-Code-specific today. The portable surface is canvas reading + writing + decision logging — non-Claude-Code agents can read `.claude/canvas/*.yml` and `.claude/memory/corrections.md` to operate on the same evidence base, but gates do not fire automatically.
@@ -70,6 +73,8 @@ Mycelium does not certify compliance. For compliance decisions, consult qualifie
 
 ### How does Mycelium decide what's a "small project" vs a "complex product"?
 
-`/interview` Phase 0 asks: "How much time do you have?" Under 8h selects inline discovery (skip /interview entirely, weave 3 questions into the first task). 8–48h selects sprint mode. 48h+ selects the full interview. After Phase 0, project complexity is inferred from canvas density and the number of L2 opportunities — more opportunities + more scenarios = more diamond depth.
+`/interview` routes on **canvas state**, not on a time budget. An empty canvas gets the universal brief; a populated one resumes via `/diamond-assess`. Depth and time-cost are chosen *after* the brief, when you have the data to choose. Project complexity is then inferred from canvas density and the number of L2 opportunities — more opportunities and more scenarios mean more diamond depth.
+
+(Corrected 2026-07-30: this answer described a Phase 0 time-budget selector — under 8h, 8–48h, 48h+ — that was removed. It asked the reader to predict the future before any value had been delivered, which is why it went.)
 
 You can override at any time. The framework recommends; it does not force.

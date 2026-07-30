@@ -1,7 +1,8 @@
 ---
 id: 2026-06-18-legacy-path-rot-guard
 date: 2026-06-18
-contributor: Håvard Bartnes (founder, dogfood-session sweep)
+contributor: Håvard Bartnes
+contributor_note: founder, dogfood-session sweep
 contributor_link: CONTRIBUTORS.md
 project: mycelium-roadmap (private; the dogfood project) → upstream framework
 mechanism_or_status: shipped. v0.49.6–v0.49.8 repoint stale `.claude/{engine,orchestration,schemas}/` references across docs, plugin-internal docs, and runtime strings; a new `plugins/mycelium/scripts/check_legacy_paths.py` guards the code-span class and is wired into `validate.yml`.

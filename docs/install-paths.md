@@ -28,7 +28,7 @@ The `npx degit haabe/mycelium` install path is **no longer supported** for new i
 
 Existing legacy installs continue to work locally. To migrate to plugin form, see the migration section below. To recover from a broken legacy refresh, see [migration.md#recovering-from-a-broken-legacy-refresh](migration.md#recovering-from-a-broken-legacy-refresh).
 
-The legacy path is scheduled for full removal in v0.21.0 (target: 2026-06-09 or earlier).
+Legacy removal was scheduled for v0.21.0 (target 2026-06-09). **That did not happen** — v0.21.0 shipped 2026-05-09 and `.claude/manifest.yml` and `upgrade.sh` are both still present as of 0.66.x. The legacy tree is unmaintained rather than removed; treat plugin form as the only supported install and `npx degit` as non-functional.
 
 ## Migrating from legacy to plugin form
 

@@ -64,6 +64,16 @@ SKILL_COUNT_FILES = [
     # SKILL.md files whose lone "<N> skills" token is the total count. Without
     # this sweep they restale (finding C, 2026-05-30: this file drifted to 44).
     "plugins/mycelium/skills/diamond-assess/SKILL.md",
+    # added v0.66.4: these carried hardcoded counts that no sweep covered and had
+    # drifted to 58 while disk was 60. Same failure the v0.40.4 comment above
+    # describes — the fix each time was one more file, so this list is the
+    # mechanism and anything holding a skill total belongs in it.
+    "docs/context-surface.md",
+    "docs/architecture.md",
+    "docs/integrations/opencode.md",
+    "docs/integrations/codex.md",
+    "docs/integrations/cursor.md",
+    "docs/README.md",
 ]
 
 
@@ -102,6 +112,13 @@ def _compute_drift(
 
     # skill_count → every "<N> skills" token
     for rel in SKILL_COUNT_FILES:
+        # Skip files this repo/checkout does not have. A consuming project runs
+        # this script against its own tree and will not carry Mycelium's own docs
+        # (docs/integrations/*, docs/architecture.md, ...), so a missing entry is
+        # normal rather than an error. Added 2026-07-30 when extending the list
+        # surfaced the crash — the loop had assumed every target exists.
+        if rel not in staged and not (root / rel).exists():
+            continue
         old = current(rel)
         new = SKILLS_TOKEN_RE.sub(f"{skill_count} skills", old)
         if new != old:

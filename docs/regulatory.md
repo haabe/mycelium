@@ -59,6 +59,6 @@ Mycelium itself was xai-checked in v0.16.0. Its system card is at [docs/ai-syste
 
 - [docs/ai-system-card.md](ai-system-card.md) — Mycelium's own system card (Mitchell et al. 2019 format)
 - [docs/context-surface.md](context-surface.md) — what data the agent reads under Mycelium
-- `.claude/harness/security-trust.md` — security and trust per stage
+- `../plugins/mycelium/harness/security-trust.md` — security and trust per stage
 - `plugins/mycelium/skills/regulatory-review/SKILL.md` — full regulatory review skill
 - `plugins/mycelium/skills/xai-check/SKILL.md` — explainability audit

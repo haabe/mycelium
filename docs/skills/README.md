@@ -64,6 +64,7 @@ This index lists all 60 skills. Each skill's full behaviour lives in its `SKILL.
 | `/a11y-check` | Accessibility audit (WCAG 2.1 AA) | Service Quality |
 | `/regulatory-review` | EU AI Act risk classification (Annex III, Art 13/50) | Regulatory |
 | `/xai-check` | Explainability audit for AI-containing products (5-stage tier-scaled) | Explainability |
+| `/wiring-contract` | Check that declared mechanisms are actually reached — producers have consumers, and readers resolve the paths writers write | — |
 
 ## Evidence & metrics
 
@@ -107,6 +108,7 @@ Read-only rendering of canvas + state surfaces. All five skills share `engine/re
 | `/start` | First command after installing the plugin: composes `/setup` + `/interview` into one flow — the recommended entry point | — |
 | `/setup` | Initialize project-state directories + starter files only (idempotent); use standalone when you want state without the interview | — |
 | `/migrate-from-legacy` | Move a legacy (npx-degit) install to plugin form; idempotent, verifies project state survived | — |
+| `/adopt` | Two-phase on-ramp for an existing codebase: populates what the code can establish, then patches the holes it cannot with the same discipline as greenfield | — |
 | `/ping` | Smoke-test that the plugin loaded correctly (deterministic marker); not for normal end-user use | — |
 
 ## Self-improvement (framework-level)

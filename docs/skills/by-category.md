@@ -58,6 +58,7 @@ Quality, security, privacy, accessibility, regulatory, explainability. Use as ga
 - `/a11y-check` — WCAG 2.1 AA
 - `/regulatory-review` — EU AI Act
 - `/xai-check` — explainability audit (5-stage)
+- `/wiring-contract` — verify declared mechanisms are reached: producers have consumers, readers resolve written paths
 
 ## Evidence & metrics
 
@@ -92,6 +93,7 @@ Project bootstrap, plugin install hygiene, install-form transitions. Run at onbo
 - `/start` — one command from plugin-installed to running brief on your idea (combines `/setup` + `/interview`)
 - `/setup` — first-run project-state initialization (`.claude/canvas`, `.claude/diamonds`, `.claude/memory`, `.claude/harness`)
 - `/migrate-from-legacy` — migrate from legacy (`npx degit`) install to plugin install
+- `/adopt` — on-ramp an existing codebase: extract what the code establishes, then patch what it cannot
 - `/ping` — smoke-test that the Mycelium plugin loaded correctly
 
 ## Market & organization

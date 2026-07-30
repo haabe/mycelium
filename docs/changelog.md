@@ -2,7 +2,297 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-07-26.
+**Last updated**: 2026-07-30.
+
+## v0.67.0 — a canonical contributor field, and a guard so it stays that way
+
+The `contributor` field in `docs/receipts/cases/` had no canonical form and nothing
+validated it. Across 26 cases it had drifted into **15 distinct spellings for 8 people** —
+the founder alone appearing seven ways: `(founder)`, `(founder dogfood)`, `(founder
+self-dogfood)`, `(founder, dogfood-session catch)`, and on.
+
+Every one of those parentheticals carried real session context, which is what made this
+awkward rather than obvious: the values were **informative and ungroupable at the same
+time**. `by-contributor.md` silently under-listed contributors for two months because
+grouping on a free-text field cannot group, and Frida, Edith-Mari and Dagfinn were absent
+from a page that called itself the receipts-side cross-link to CONTRIBUTORS.md.
+
+Split into two fields: `contributor` is the canonical join key, `contributor_note` keeps the
+context. No information was deleted — 15 notes preserved.
+
+**Check 49 enforces it**, with its G-V12 fixture test. The fixture set matters as much as the
+check: `parenthetical` and `missing_field` prove it flags the failure, and `canonical` proves
+a case that keeps its context in a note **passes** — without that third fixture the check
+would train people to delete information to satisfy it.
+
+`by-contributor.md` is now generated from the canonical field rather than normalised in
+flight, so it can be regenerated instead of hand-maintained.
+
+Minor rather than patch: a newly-enforced field convention is a schema change for anyone
+maintaining receipts cases.
+
+**Still open, deliberately.** The audience register's central claim — that agent-facing prose
+reaches runtimes where hooks never fire — remains untested for the case it was written for.
+The 2026-07-30 blind test that validated it ran as a Claude Code subagent, and it is
+undetermined whether it found the rule by following links or by hook injection. Registered as
+`ht-053` in the dogfood repo with a frozen prediction, explicitly marked as not closable by
+another agent run: the failure mode under test is the *absence* of hook enforcement, and any
+Claude Code agent has hooks available and cannot produce the negative case.
+
+## v0.66.6 — scan for the class, not the reported instance
+
+With all 25 reported defects fixed, a mechanical re-scan for each defect *class* found two
+more that no report had named.
+
+`docs/faq.md` still answered "how does Mycelium decide how deep to go?" by describing the
+Phase 0 time-budget selector — under 8h, 8–48h, 48h+ — as live behaviour. That mechanism was
+removed and replaced by canvas-state detection. Three other pages had already been corrected
+for the same removal; this one was missed because it was never on anyone's list.
+
+`docs/README.md` carried "index of all 58 skills". The token matches the sync sweep's regex
+perfectly; the file simply was not in `SKILL_COUNT_FILES`. Added, and it corrected itself on
+the next run.
+
+The method is the point. Fixing a list of reported instances leaves the class open, and the
+scan that closes it is one command. Both of these survived a 25-item adversarial sweep and a
+subsequent fix pass.
+
+## v0.66.5 — the last index, and a bucket that did not exist
+
+`docs/receipts/README.md` was the one index whose sections are editorial rather than
+derivable — Graduated mechanisms, Active clusters, One-off learnings. It covered 12 of 26
+cases.
+
+Eight of the missing cases had shipped a mechanism, and their descriptions were **lifted
+from `by-mechanism.md`** rather than written fresh, so the two indexes now agree by
+construction instead of by discipline.
+
+The remaining six fit none of the three buckets, and forcing them would have been the real
+error. They produced a documented null, an overturned prior claim, or a narrowed hypothesis
+— `opencode-phase1-runtime` overturned earlier claims through runtime verification;
+`architecture-discovery-narrowed` states plainly that **nothing shipped**;
+`dagfinn-minilisp-vibe-mistral` is the first arms-length full run with no Claude in the loop.
+Those are results. A receipts index that only records wins is a marketing page, so they get a
+fourth section that says what they produced instead.
+
+Two rows read "Shipped" for the `/interview` Phase 0 time-budget selector and the
+constraint-first preflight. Both were removed — canvas-state detection replaced them, because
+the time-budget question asked the user to predict the future before any value was delivered.
+An unqualified "Shipped" reads as current, so both rows now carry the removal.
+
+All four receipts indexes are complete at 26/26. Also closed: the same do-I-need-this
+heuristic stated in `mental-model.md` and `faq.md` with no cross-link either way — now linked
+both directions, against the real heading anchor rather than the one that seemed obvious.
+
+## v0.66.4 — accuracy sweep, fixing the finders before the findings
+
+An adversarial documentation pass returned 25 defects. Two of them were root causes worth
+more than every edit they would otherwise generate, so those went first.
+
+**`check_legacy_paths.py` was blind to two of the trees it exists to guard.** Its pattern
+covered `engine|orchestration|schemas|templates|scripts|domains|tests` and omitted
+`jit-tooling` and `harness` — both moved to `plugins/mycelium/` in the same migration. The
+rot guard built for exactly this failure class could not see it. Extending it immediately
+surfaced a subtlety worth recording: `harness/` and `jit-tooling/` are **split trees**.
+Framework docs moved, but `decision-log.md`, `wiring-contract.yml`, `active-stack.yml` and
+`active-metrics.yml` are project state and correctly live in `.claude/`. A directory-wide
+pattern flags those legitimate references, so the guard matches framework **filenames**
+instead. Found by running it, not by reasoning about it.
+
+The extended guard then found 12 stale paths on its own — including **11 in `CLAUDE.md`**
+and 2 inside `plugins/mycelium/harness/` itself.
+
+**`sync_derived.py` covered 8 files while hardcoded skill counts sat in 5 more.** Its own
+comment already recorded that the list had restaled once and the fix was "one more file."
+Extended to cover them; it auto-corrected five stale `58`s to 60. `architecture.md` needed
+its phrasing changed rather than the regex broadened — "58 SKILL.md workflows" does not
+match the canonical `N skills` token, and growing the pattern per phrasing variant is how
+that mechanism rots again. Extending the list also exposed a real robustness bug: the loop
+assumed every target exists and crashed on a checkout without them, which is exactly what a
+consuming project is. Missing targets are now skipped.
+
+**Content defects, all verified against the repo before fixing:**
+
+- `evaluate.md` gave three steps a reader cannot follow — "Phase 0 → sprint mode", "sprint
+  or full mode", "clone into a throwaway directory". Time-budget routing was replaced by
+  canvas-state detection (`interview/SKILL.md`), and cloning has not been the install path
+  since v0.20.0.
+- `migration.md` said `npx degit haabe/mycelium` "still works" and called it a usable
+  portable channel. It lands an empty `.claude/` with no skills and no hooks. The same
+  contradiction was found and fixed in `get-started.md` earlier and never traced here.
+- `glossary.md` described DORA as **five** delivery metrics including reliability;
+  `theories.md` says four, with reliability a 2021 *operational* dimension.
+- `codex.md` / `cursor.md` claimed **twelve** hook scripts; 14 are registered on all three
+  surfaces. Both also omitted `autonomous-evidence-guard` from their capability tables
+  despite it being registered since v0.44.1.
+- `opencode.md` contradicted itself: 38 of 58, 38 of 60, and 33 of 60 in one file. Measured:
+  **33 of 60**.
+- `design/definition-of-done.md` read "**Status:** design (not built)" months after
+  `/define-done` shipped — while three agent-facing files cite it as the canonical design.
+- Three pages still carried a legacy-removal deadline of v0.21.0, which shipped 2026-05-09;
+  removal never happened and the tree is unmaintained rather than gone.
+
+**Receipts indexes reconciled against the 26 case files they index.** All three were
+incomplete: `by-date` listed 19, `by-contributor` 4 contributors, `by-mechanism` 13.
+Regenerating from case frontmatter surfaced why they drifted — the `contributor` field has
+no canonical form, and the founder's own cases carry **seven** different spellings, so a
+naive rebuild produced seven rows for one person. Normalised for the index, detail kept in
+the frontmatter. `by-mechanism` gained the 5 cases that genuinely shipped a mechanism plus a
+scope note; the other 8 absences are evidence-only cases and are deliberate, which the file
+now says rather than leaving them looking like drift.
+
+## v0.66.3 — a fabricated citation we had already caught, still live in five places
+
+The blind test for v0.66.0 was meant to answer whether the audience register changes an
+agent's behaviour when the tempting path violates it. It answered that — the agent refused
+to trim the framework tree, named all four enforcement layers, checked and closed the
+size-ceiling escape hatch, and declined to hit its own target rather than compress unique
+prose. Then it surfaced something the test was not looking for and that matters more.
+
+**`docs/theories.md` recorded on 2026-07-01 that a Hoskins "SAP talk" titled *Attention to
+Users Is All You Need* does not exist, and that "Means" is not a Hoskins element.** Both
+fabrications, both identified, both corrected — in that one file. Four weeks later the
+invented citation was still asserted in five others:
+
+- `CONTRIBUTORS.md` — with an invented title *and date*, attributed to a real named person
+- `docs/philosophy.md` — **inside the section arguing that naming your theories is what makes
+  Mycelium's interpretation auditable.** That paragraph is now its own counter-example and is
+  left visible as one
+- `docs/glossary.md` — the distorted four-element structure
+- `plugins/mycelium/skills/ost-builder/SKILL.md` — an `agent_contract` file, so any agent
+  running that skill would propagate the invention
+- a historical changelog entry, now flagged inline rather than rewritten, because a changelog
+  records what shipped
+
+The propagation failure is the finding, not the original error. A correction that lands in
+one file and is never traced to the others leaves the false claim doing its work everywhere
+else, and the one place it survived longest was the page claiming citation discipline.
+Note for the register: **correcting a false citation in an `agent_contract` file is not
+trimming**, and the never-trim rule does not shield it.
+
+Separately, from the same sweep: `docs/skills/README.md` and `docs/skills/by-category.md`
+both claimed "all 60 skills" while listing 58. `sync_derived.py` rewrites the number and
+nobody added the rows, so `/adopt` and `/wiring-contract` were missing from both indexes
+while the count read green — a counter-syncs-content-doesn't instance, in the mechanism
+built to stop exactly that.
+
+## v0.66.2 — the register applied to this repo's own docs
+
+First real use of the thing v0.66.0 added, on the repo that ships it.
+
+Classifying upstream markdown by audience produced the useful half immediately: **149
+`agent_contract` files to leave alone**, 63 reference, one template, and exactly **one
+`human_instructional` file** — `docs/get-started.md`, the onboarding path for a framework
+whose adoption is the open problem. That is where the instructional-design rules apply at
+full strength rather than by transfer, and the file had never been written against them.
+
+**Its completion test failed.** A reader ran three install commands and had no way to
+confirm any of them worked before committing to a ten-minute discovery round — while
+`/mycelium:ping` exists for precisely that purpose and went unmentioned in the getting-started
+doc. Now Step 2, with the expected `MYCELIUM_PLUGIN_LOAD_OK` marker and what to do when it
+does not appear.
+
+Also applied: the sequence is signposted (signalling is the cheapest evidence-backed win
+available), and the legacy-tree and `npx degit` material moved out of the install thread
+into a clearly-marked asides section. That material is correct and still present — it is
+simply off-thread for someone getting started, and off-thread material measurably reduces
+comprehension of what surrounds it rather than occupying neutral space.
+
+**The file got longer.** That is the correct outcome and worth stating, because the
+instinct it contradicts is strong: the instructional class optimises for task completion,
+not brevity. Cutting words out of an onboarding doc that already failed its completion test
+would have made it worse.
+
+`README.md` classified `human_reference` despite being the landing page, which is the
+mixed-case the register handles — persuasive checks apply *additionally*. Applying them found
+the opening stated the same problem triplet twice in consecutive paragraphs and buried its
+strongest line ("Mycelium makes the agent earn the right to start") mid-paragraph among three
+other moves. Deduplicated, and the line is now the peak it was already doing the work of.
+The falsifier requirement was already satisfied by the existing `## Who it's not for`
+section — checked before assuming a gap.
+
+## v0.66.1 — the two the review called nits
+
+Closes the last two defects from the v0.66.0 adversarial review, both marked nit and both
+real.
+
+**Templates are two things in one file and are classified twice.** The apparent paradox was
+`templates/ai-system-card.md` being `agent_contract` ("never trim") while its rendered
+output `docs/ai-system-card.md` is `human_reference` ("plain language, short sentences") —
+same prose, opposite rules. It was never the same prose. Scaffolding is `agent_contract`
+and is never trimmed: placeholders, guidance comments, and above all any token a downstream
+check matches on. That last part has a named consumer — the template says "keep the section
+headings stable, the audit matches on them," and `/xai-check` Stage 4 reads its
+`**Required**` markings to decide a pass, so tidying the headings silently breaks an audit.
+The prose a template emits verbatim takes its *destination's* class instead. Collapsing a
+template into one class either freezes its output quality forever or breaks the checks that
+read it.
+
+**Structured data files have no prose class, but their strings still count.** JSON, YAML and
+TOML have no narrative to structure, so no narrative rule applies. Two things do: the
+never-trim rule covers comments, keys and structure in machine-read config inside an agent
+tree, because deleting a key that looks redundant is the same failure as trimming prose;
+and any string value meant for human display — `description`, `tagline`, `summary`, `title`
+— is persuasive copy and takes the register check. `.claude-plugin/marketplace.json`
+carries the marketplace-facing product description, which is the same class of copy as a
+GitHub About field and was previously governed by nothing. The falsifier requirement does
+not attach to a one-liner that makes no argument.
+
+Both rules are in `detector.md` Step 1d (Steps 0a and 0c) with treatment in
+`engine/audience-register.md`, and both have Definition of Done checkboxes. Re-test 18/18
+including the two new handling paths; gates green.
+
+## v0.66.0 — craft is not universally good, and for agent files it inverts
+
+`product_type` already routed metrics files, Definition of Done variants and
+validation. Nothing routed on **who reads a given file**. So a `content_course`
+product got the same treatment for its agent config, its README, its course
+modules and its landing copy — four artifacts that want opposite things.
+
+The sharp part is not that craft is unnecessary for agent-facing files. It is
+that five common craft moves are actively **harmful** there. Omission leaves a
+branch unspecified and the model resolves it by guessing. A withheld reveal is an
+unspecified behaviour. Metaphor leaves the referent ambiguous. "Felt before
+understood" has nothing to act on. And trimming for concision removes prose that
+is the only carrier of a rule in runtimes where hooks never fire — the same
+conclusion the model-variance rule already reached from the compression direction,
+now stated once in both directions.
+
+Adds `engine/audience-register.md`: four classes (`agent_contract`,
+`human_reference`, `human_instructional`, `human_persuasive`), the inversion table,
+and a safe default — anything unclassifiable is treated as reference, because
+reference treatment adds no narrative machinery and removes nothing an agent needs.
+Classification is by **path**, never by tone; a conversationally-written `SKILL.md`
+is still an agent contract. Referenced from the operating contract as rule 1b, so
+it reaches every runtime as prose rather than depending on a hook.
+
+Detector Step 1d emits `artifact_audiences` into `.claude/jit-tooling/active-stack.yml`
+— the same path the detector already writes, which is the mismatch that silenced
+`ai_components.detected` for ~2.5 months and is what `check_wiring.py` exists to catch.
+
+Definition of Done gets teeth in two places. Content products
+(`content_course`, `content_publication`, `content_media`) must **name an efficacy
+criterion and wire it** to a `content-metrics.yml` field, and run a completion test.
+The content variant previously had fifteen criteria and every one was hygiene —
+reviewed, accurate, attributed, consistent, captioned, Bloom-aligned. Nothing asked
+whether the content produced the change it exists to produce, so a course could pass
+all fifteen and be inert. Bloom alignment verifies an objective is *stated* at a
+level, not that a learner reaches it, and for a course the receiver changing is the
+product promise rather than a quality attribute. The measurement was already sitting
+in `content-metrics.yml`, unrequired by any gate: built-not-wired, applied to content.
+
+Persuasive artifacts must match **register to the reader's awareness stage** and
+**state their falsifier**. Both are properties of the text, which is the point — a
+claim can be factually correct, well-attributed and accessible and still be aimed at
+someone who has not yet agreed they have the problem, and that is checkable where
+audience psychology is not. The falsifier requirement is the structural line between
+evidence-based persuasion and manipulation: narrowing a reader's field of view works
+just as well inside a flood of true facts as in their absence, so citation volume is
+not a defence.
+
+Not included, and deliberately: no voice mechanism. Voice is personal and stays
+downstream in the consumer's own tooling. The framework ships classification and
+gates, not a house style.
 
 ## v0.65.0 — the code came first, and there was no way in
 
@@ -1087,7 +1377,7 @@ The v0.46.0 README pass de-jargoned only "What it feels like." This finishes the
 
 **2026-06-13. Attribution: scenario-primitive-falsifiable-grounded-2026-06-13 (lived-friction-triggered: peer-practitioner feedback). Class: minor (new scenario schema capability + canvas-health enforcement + README human-surface rewrite).**
 
-A scenario is an *advanced user story* — what separates it from "As a [role] I want [X]" is that it is **runnable** and **grounded**. Two upgrades to the Hoskins scenario primitive (persona + means + motive + simulation) make that real, both triggered by peer-practitioner feedback that surfaced two principles: draw the direct lessons rather than naming the concepts, and treat the scenario as the fundamental primitive of product thinking (Hoskins, *Attention to Users Is All You Need*):
+A scenario is an *advanced user story* — what separates it from "As a [role] I want [X]" is that it is **runnable** and **grounded**. Two upgrades to the Hoskins scenario primitive (persona + means + motive + simulation) make that real, both triggered by peer-practitioner feedback that surfaced two principles: draw the direct lessons rather than naming the concepts, and treat the scenario as the fundamental primitive of product thinking (Hoskins — **note added 2026-07-30: the source cited here, *Attention to Users Is All You Need*, is fabricated and does not exist; the real source is *The Product-Minded Engineer* ch. 1, and the four-element list including "means" is a distortion. This entry is left otherwise intact because a changelog records what shipped, but the citation was never valid and is flagged so it is not propagated**):
 
 - **Falsifiable success.** `simulation.success_criteria` (at least one `observable` + `measure` + `threshold`) sits alongside the qualitative `simulation.success_state`. The criterion is the assertion `/eval-runner` checks — it is what makes a scenario a runnable test rather than a longer user story. A scenario with no `success_criteria` stays `status: draft`. Goodhart guard: the criterion is a named target the moment it is written, so the qualitative `success_state` stays beside it.
 - **Grounding rule.** `provenance.source_class` is now load-bearing. A scenario authored without a real source (`internal_simulated` / `evidence_type: speculation`) is **envision-only**: it may provoke questions but may NOT appear in `lifecycle.designed_against[]` as validated, drive a confidence delta, or clear a gate, until at least one `external_human` / `external_data` source grounds it. A scenario is the most seductive artifact to fabricate — it feels like research because it is a story — so it carries the same evidence bar as the rest of the canvas.

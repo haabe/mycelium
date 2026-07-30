@@ -1,7 +1,8 @@
 ---
 id: 2026-06-07-faros-whiplash-integration
 date: 2026-06-07
-contributor: Håvard Bartnes (founder self-dogfood + external report integration)
+contributor: Håvard Bartnes
+contributor_note: founder self-dogfood + external report integration
 contributor_link: CONTRIBUTORS.md
 project: mycelium-roadmap (private; generic-framed receipt. Raw assessment artifacts live in the private dogfood draft)
 mechanism_or_status: shipped. Three framework changes landed in one cycle (v0.39.19) plus a discipline note for the symmetric premise-check honesty pattern. The counter-metric for the new APEX fields ships with them, per the self-applied scaffold-without-instrumentation rule.

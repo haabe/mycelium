@@ -8,7 +8,7 @@ Two-to-four sentences per entry. No theory teaching here — entries link out to
 
 ## Mycelium concepts
 
-**Anti-pattern** — A known failure mode the framework has seen and documents in `.claude/harness/anti-patterns.md`. Detection rules let the agent flag the shape early. See `.claude/harness/anti-patterns.md` for the catalog.
+**Anti-pattern** — A known failure mode the framework has seen and documents in `../plugins/mycelium/harness/anti-patterns.md`. Detection rules let the agent flag the shape early. See `../plugins/mycelium/harness/anti-patterns.md` for the catalog.
 
 **Build to learn vs build to earn** — Patton/Cagan distinction. Discovery work is built to learn (the artifact may be discarded once the learning lands); delivery work is built to earn (it has to ship and run). Mycelium gates which mode applies before the agent commits scope. See [theories.md#build-to-learn-vs-earn](theories.md).
 
@@ -32,7 +32,7 @@ Two-to-four sentences per entry. No theory teaching here — entries link out to
 
 **GIST** — Goals, Ideas, Steps, Tasks (Gilad). The prioritization model used at L3 Solution scale. Steps are the testable unit; tasks are the executable unit. See [theories.md#gist](theories.md).
 
-**Guardrail** — A constraint enforced at one of three tiers: BLOCK (mechanically prevented), REVIEW (gates progression at a checkpoint), or NUDGE (surfaced but not blocking). Defined in `.claude/harness/guardrails.md`. Three-tier vocabulary follows Birgitta Böckeler's [harness engineering](https://martinfowler.com/articles/harness-engineering.html).
+**Guardrail** — A constraint enforced at one of three tiers: BLOCK (mechanically prevented), REVIEW (gates progression at a checkpoint), or NUDGE (surfaced but not blocking). Defined in `../plugins/mycelium/harness/guardrails.md`. Three-tier vocabulary follows Birgitta Böckeler's [harness engineering](https://martinfowler.com/articles/harness-engineering.html).
 
 **Harness** — The set of mechanisms that constrain agent behavior: hooks, guardrails, gates, validators, pre/post-task protocols. The harness is what makes the framework's claims load-bearing rather than aspirational.
 
@@ -60,7 +60,7 @@ Two-to-four sentences per entry. No theory teaching here — entries link out to
 
 **Scale** — One of L0 Purpose / L1 Strategy / L2 Opportunity / L3 Solution / L4 Delivery / L5 Market. Scales answer "what am I deciding?". Not all scales are required for every project.
 
-**Scenario** — A user-context primitive (Persona + Means + Motive + Simulation, Hoskins). Born at L2, designed against at L3, tested at L4, validated at L5. Lives in `canvas/scenarios.yml`. See [theories.md#scenarios](theories.md).
+**Scenario** — A user-context primitive (Motivation + Persona + Simulation, Hoskins, *The Product-Minded Engineer* ch. 1). Born at L2, designed against at L3, tested at L4, validated at L5. Lives in `canvas/scenarios.yml`. See [theories.md#scenarios](theories.md).
 
 ## Theory framework names
 
@@ -72,7 +72,7 @@ Two-to-four sentences per entry. No theory teaching here — entries link out to
 
 **Cynefin** — Snowden's domain classification (Clear, Complicated, Complex, Chaotic, Confused). Determines which methods apply. See [theories.md#cynefin](theories.md).
 
-**DORA** — Forsgren/Humble/Kim. Five delivery metrics (deployment frequency, lead time, change failure rate, FDRT, reliability). L4 only. See [theories.md#dora](theories.md).
+**DORA** — Forsgren/Humble/Kim. Four core delivery metrics (deployment frequency, lead time, change failure rate, FDRT — formerly MTTR). **Reliability** is a 2021 *operational-performance* dimension, not a fifth delivery metric. L4 only. See [theories.md#dora](theories.md).
 
 **JTBD** — Jobs to be Done (Christensen, Ulwick). Functional, emotional, social dimensions. L0/L2. See [theories.md#jtbd](theories.md).
 
