@@ -4,6 +4,41 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-07-30.
 
+## v0.66.3 — a fabricated citation we had already caught, still live in five places
+
+The blind test for v0.66.0 was meant to answer whether the audience register changes an
+agent's behaviour when the tempting path violates it. It answered that — the agent refused
+to trim the framework tree, named all four enforcement layers, checked and closed the
+size-ceiling escape hatch, and declined to hit its own target rather than compress unique
+prose. Then it surfaced something the test was not looking for and that matters more.
+
+**`docs/theories.md` recorded on 2026-07-01 that a Hoskins "SAP talk" titled *Attention to
+Users Is All You Need* does not exist, and that "Means" is not a Hoskins element.** Both
+fabrications, both identified, both corrected — in that one file. Four weeks later the
+invented citation was still asserted in five others:
+
+- `CONTRIBUTORS.md` — with an invented title *and date*, attributed to a real named person
+- `docs/philosophy.md` — **inside the section arguing that naming your theories is what makes
+  Mycelium's interpretation auditable.** That paragraph is now its own counter-example and is
+  left visible as one
+- `docs/glossary.md` — the distorted four-element structure
+- `plugins/mycelium/skills/ost-builder/SKILL.md` — an `agent_contract` file, so any agent
+  running that skill would propagate the invention
+- a historical changelog entry, now flagged inline rather than rewritten, because a changelog
+  records what shipped
+
+The propagation failure is the finding, not the original error. A correction that lands in
+one file and is never traced to the others leaves the false claim doing its work everywhere
+else, and the one place it survived longest was the page claiming citation discipline.
+Note for the register: **correcting a false citation in an `agent_contract` file is not
+trimming**, and the never-trim rule does not shield it.
+
+Separately, from the same sweep: `docs/skills/README.md` and `docs/skills/by-category.md`
+both claimed "all 60 skills" while listing 58. `sync_derived.py` rewrites the number and
+nobody added the rows, so `/adopt` and `/wiring-contract` were missing from both indexes
+while the count read green — a counter-syncs-content-doesn't instance, in the mechanism
+built to stop exactly that.
+
 ## v0.66.2 — the register applied to this repo's own docs
 
 First real use of the thing v0.66.0 added, on the repo that ships it.
@@ -1205,7 +1240,7 @@ The v0.46.0 README pass de-jargoned only "What it feels like." This finishes the
 
 **2026-06-13. Attribution: scenario-primitive-falsifiable-grounded-2026-06-13 (lived-friction-triggered: peer-practitioner feedback). Class: minor (new scenario schema capability + canvas-health enforcement + README human-surface rewrite).**
 
-A scenario is an *advanced user story* — what separates it from "As a [role] I want [X]" is that it is **runnable** and **grounded**. Two upgrades to the Hoskins scenario primitive (persona + means + motive + simulation) make that real, both triggered by peer-practitioner feedback that surfaced two principles: draw the direct lessons rather than naming the concepts, and treat the scenario as the fundamental primitive of product thinking (Hoskins, *Attention to Users Is All You Need*):
+A scenario is an *advanced user story* — what separates it from "As a [role] I want [X]" is that it is **runnable** and **grounded**. Two upgrades to the Hoskins scenario primitive (persona + means + motive + simulation) make that real, both triggered by peer-practitioner feedback that surfaced two principles: draw the direct lessons rather than naming the concepts, and treat the scenario as the fundamental primitive of product thinking (Hoskins — **note added 2026-07-30: the source cited here, *Attention to Users Is All You Need*, is fabricated and does not exist; the real source is *The Product-Minded Engineer* ch. 1, and the four-element list including "means" is a distortion. This entry is left otherwise intact because a changelog records what shipped, but the citation was never valid and is flagged so it is not propagated**):
 
 - **Falsifiable success.** `simulation.success_criteria` (at least one `observable` + `measure` + `threshold`) sits alongside the qualitative `simulation.success_state`. The criterion is the assertion `/eval-runner` checks — it is what makes a scenario a runnable test rather than a longer user story. A scenario with no `success_criteria` stays `status: draft`. Goodhart guard: the criterion is a named target the moment it is written, so the qualitative `success_state` stays beside it.
 - **Grounding rule.** `provenance.source_class` is now load-bearing. A scenario authored without a real source (`internal_simulated` / `evidence_type: speculation`) is **envision-only**: it may provoke questions but may NOT appear in `lifecycle.designed_against[]` as validated, drive a confidence delta, or clear a gate, until at least one `external_human` / `external_data` source grounds it. A scenario is the most seductive artifact to fabricate — it feels like research because it is a story — so it carries the same evidence bar as the rest of the canvas.

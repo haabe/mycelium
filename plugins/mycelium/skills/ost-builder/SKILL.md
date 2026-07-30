@@ -116,7 +116,7 @@ Flow: Opportunity (research) -> Solution hypothesis (Lean UX) -> Assumption test
 - Christensen: Competing Against Luck (JTBD informing opportunities)
 - Ellis: ICE scoring. Gilad: Evidence-Guided (Confidence Meter for solutions)
 - Gothelf: Lean UX (hypothesis-driven solution framing)
-- Hoskins: Scenarios as connective primitive (persona + means + motive + simulation). Source: "Attention to Users Is All You Need" (SAP talk, April 2026)
+- Hoskins: Scenarios as connective primitive (motivation + persona + simulation). Source: *The Product-Minded Engineer* (O'Reilly), ch. 1. (Corrected 2026-07-30: an earlier version of this line cited a "SAP talk, April 2026" that **does not exist** and listed a "means" element Hoskins never proposed. Both were recorded as fabricated in `docs/theories.md` on 2026-07-01; the correction never reached this file, so an agent reading this skill would have propagated an invented citation for four weeks.)
 
 ## Handling User-Supplied Content
 

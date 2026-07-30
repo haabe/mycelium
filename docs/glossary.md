@@ -60,7 +60,7 @@ Two-to-four sentences per entry. No theory teaching here — entries link out to
 
 **Scale** — One of L0 Purpose / L1 Strategy / L2 Opportunity / L3 Solution / L4 Delivery / L5 Market. Scales answer "what am I deciding?". Not all scales are required for every project.
 
-**Scenario** — A user-context primitive (Persona + Means + Motive + Simulation, Hoskins). Born at L2, designed against at L3, tested at L4, validated at L5. Lives in `canvas/scenarios.yml`. See [theories.md#scenarios](theories.md).
+**Scenario** — A user-context primitive (Motivation + Persona + Simulation, Hoskins, *The Product-Minded Engineer* ch. 1). Born at L2, designed against at L3, tested at L4, validated at L5. Lives in `canvas/scenarios.yml`. See [theories.md#scenarios](theories.md).
 
 ## Theory framework names
 

@@ -29,7 +29,9 @@ The cost of opinionation: when your work does not match the framework's shape, t
 Every gate, every canvas, every skill cites the theory it is grounded in. This is not academic showmanship. It is two things:
 
 1. **Drift detection.** When the framework moves, the citation makes the drift visible. If a gate stops checking what its theory says it should check, that is the documented-rule-diverges-from-enforcement cluster shape (8 instances in the cluster log as of 2026-05-08), and the framework has machinery to catch and graduate it.
-2. **Outside critique.** A practitioner who knows the theory can audit Mycelium's interpretation of it. Drew Hoskins did this with scenarios — his SAP talk slides showed Persona + Means + Motive + Simulation; Mycelium had been doing scenarios implicitly. Hoskins's critique landed because the theory was named.
+2. **Outside critique.** A practitioner who knows the theory can audit Mycelium's interpretation of it. Drew Hoskins did this with scenarios: Mycelium had been doing scenarios implicitly, and his critique — that they should be a first-class primitive rather than a byproduct of JTBD mapping — landed because the theory was named.
+
+   This paragraph is also the section's own counter-example, and it is left visible on purpose. It previously cited a Hoskins "SAP talk" that **does not exist**, listing a four-element structure with an element he never proposed. `docs/theories.md` recorded both as fabricated on 2026-07-01; the correction reached that file and no other, so the invented citation survived here — inside the passage arguing that naming your sources is what makes them auditable — for four more weeks, until an adversarial sweep found it on 2026-07-30. Naming a theory is what *enables* the audit. It is not the audit.
 
 The framework cites Lanham et al. (2023) on faithful citations: the cite must be the *actual* reason for the move, not a plausible after-the-fact rationalization. The `(per: <source>)` discipline at every recommendation site is the operating form.
 
