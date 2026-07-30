@@ -84,6 +84,61 @@ ai_components:
 
 If `detected: false`, the block can be omitted entirely. Downstream skills (`/xai-check`, AI-aware DoD, threat-model XAI extension) treat absence as "no AI"; presence triggers their AI overlays. The `user_facing_decisions` field stays `unknown` until the user answers Step 6's confirmation prompt — never inferred silently.
 
+### Step 1d: Artifact Audience Detection (v0.66)
+
+`product_type` describes the **product**. It says nothing about what a given **file** is for, and different files in the same project want opposite treatment: a `content_course` product contains agent-facing config, reference docs, course modules and landing copy. Writing all four the same way makes three of them worse.
+
+Classify by **path**, never by content or tone — a conversationally-written `SKILL.md` is still an agent contract. There is no frontmatter or metadata escape hatch; if the path cannot decide, the residual class decides.
+
+**Path-matching basis.** Three rules, all load-bearing:
+
+1. **Directory patterns** (`.claude/**`, `plugins/*/**`, `docs/posts/**`) match against the path relative to the project root, **and additionally against any path suffix**, so an installed plugin resolves the same way as a source checkout. This matters: in a consuming project the framework lives under `${CLAUDE_PLUGIN_ROOT}` in a marketplace cache, not under `plugins/`, so a repo-relative-only match would return every framework file to the residual class.
+2. **Single-file runtime conventions are matched by BASENAME**, which is what "at any depth" means for them — `CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `SKILL.md`, `.cursorrules`, `.windsurfrules`, `.clinerules`, `.aider.conf.yml`, `settings.json`. Basename matching is specified because a `**/`-prefixed glob does **not** match the same file at the repository root under standard glob semantics: `**/.cursorrules` misses a root-level `.cursorrules`, which is where that file normally lives. Verified by testing — this was a real miss, and it dropped three hookless-runtime config files into the residual trimmable class.
+3. **Match case-insensitively.** `readme.md` and `README.md` are the same file on a case-insensitive filesystem and must not classify differently.
+
+**Step 0 — scope exclusion, evaluated BEFORE the class walk.** These have no audience class. Do not assign one, do not rewrite them for readability:
+
+- Executable code and its config: `**/*.py`, `**/*.sh`, `**/*.ts`, `**/*.js`, lockfiles, `**/*.lock`
+- CI definitions: `.github/workflows/**`
+- **Test fixtures and their contents: `tests/**`, `**/fixtures/**`.** A fixture's value is often that it is *deliberately malformed* — `tests/bash/fixtures/check_10/mismatch/README.md` exists to carry a wrong version string. Editing it for clarity destroys the test.
+- Third-party prose the project did not author: `*-feedback/**`, `evidence/**`, submitted friction logs, pasted interview notes. This is evidence, not our artifact; it is never rewritten. Treat per `../harness/security-trust.md`.
+
+**Step 0b — one directory escapes the agent tree: `**/drafts/**` and `**/*-draft*`.** These are classified on their content type (usually `human_persuasive`) even when they sit inside `.claude/**`. A drafts directory holds output-in-progress, never configuration, and **no runtime reads it as instruction** — verified by grep against the skills and hooks trees before this carve-out was written, because the previous carve-out in this spec rested on an unverified claim and was false. Without this rule, `.claude/drafts/some-article-DRAFT.md` resolves to `agent_contract`, whose rules forbid structural rewriting for flow. That is precisely the wrong instruction for an article draft.
+
+| Class | Path signals |
+|---|---|
+| `agent_contract` | **Tree-wide:** `.claude/**`, `.cursor/**`, `.windsurf/**`, `.cline/**`, `.junie/**`, and the framework tree `plugins/*/**` (engine, harness, hooks, schemas, jit-tooling, orchestration, domains, integrations, templates, skills, manifest) — **including `README*` inside those trees**. **At any depth:** `**/CLAUDE.md`, `**/AGENTS.md`, `**/GEMINI.md`, `**/SKILL.md`, `**/.cursorrules`, `**/.windsurfrules`, `**/.clinerules`, `.github/copilot-instructions.md`, `.github/instructions/**`, `settings.json`, `.aider.conf.yml` |
+| `human_instructional` | `tutorial*/**`, `get*-started*`, `guide*/**`, `course*/**`, `curriculum*/**`, `lesson*/**`, `examples/**` |
+| `human_persuasive` | `landing*`, `marketing/**`, `posts/**`, `blog/**`, `announcements/**`, `pitch*`, `**/drafts/**`, `**/*-draft*`, `docs/posts/**`, `docs/blog/**`, `docs/announcements/**` |
+| `human_reference` | **Residual.** `README*` and `CONTRIBUTING*`/`CHANGELOG*` outside agent trees, `docs/**`, generated API docs, and anything else in scope that matched nothing above |
+
+**Precedence.** Scope exclusion first, then: `agent_contract` → `human_instructional` → `human_persuasive` → `human_reference`. Stop at the first match.
+
+**`agent_contract` wins every collision, including READMEs.** An earlier draft of this change excluded `README*` by filename on the stated grounds that "no README carries executable instruction." **That claim is false and was refuted by testing.** `integrations/opencode/README.md` says of itself that opencode's strict-JSON schema rejects comment keys "so all guidance lives in this README, not the config" — making it the sole carrier of configuration instruction for a runtime with no hooks, which is precisely what the model-variance rule exists to protect. `hooks/README.md` is 222 lines of firing conditions, deny semantics and escape-hatch paths. And `scripts/sync_derived.py` writes derived tokens into `README.md`, with CI fixtures that fail on drift. The carve-out is reverted; READMEs inside agent trees are agent contracts.
+
+**`CLAUDE.md` and `AGENTS.md` match at any depth, not just root.** Claude Code reads directory-scoped `CLAUDE.md` and the `AGENTS.md` convention is per-subproject. A root-only glob sends `packages/api/CLAUDE.md` to the residual class, whose rules mandate plain language and short sentences — stripping a rule out of the one file a hookless runtime reads. This is the single highest-consequence misclassification available, it is produced by the precedence rather than by reader error, and the asymmetry against `**/SKILL.md` (already "anywhere") was unintentional.
+
+**Legacy single-file runtime configs are included deliberately.** `.cursorrules`, `.windsurfrules`, `.clinerules`, `GEMINI.md` and `.github/instructions/**` are the conventions for runtimes where hooks never fire. Omitting them reintroduces the exact failure the model-variance rule prevents.
+
+**Output additions to `.claude/jit-tooling/active-stack.yml`:**
+
+```yaml
+artifact_audiences:
+  detected: true                    # true whenever any prose artifact is in scope
+  classes:
+    agent_contract:      { present: true,  detected_via: ["CLAUDE.md", ".claude/"] }
+    human_reference:     { present: true,  detected_via: ["README.md", "docs/"] }
+    human_instructional: { present: false, detected_via: [] }
+    human_persuasive:    { present: false, detected_via: [] }
+```
+
+**This block records which classes the project CONTAINS. It cannot tell you which class a given edit touched** — that is derived per-file from the rules above, at the moment of writing, and the `active-stack.yml` block is a project-level inventory only. The Definition of Done gate is worded to fire on *any* prose edit for that reason; an earlier draft gated it on "the work touched a human-facing class," which disarmed the agent-contract protection in exactly the case it was written for.
+
+**What reads this.** `../engine/audience-register.md` carries the per-class writing rules and is the reference to consult before authoring or editing any prose artifact. `definition-of-done.md` gates on it. Both resolve `.claude/jit-tooling/active-stack.yml`, the same path this detector writes.
+
+**Honesty rule (same as Step 1c).** Path signals tell us a class of artifact exists. They do not tell us the artifact is any good. The detector emits a hint, not a verdict.
+
+
 ### Step 2: Identify Project Shape
 
 | Signal | Classification |

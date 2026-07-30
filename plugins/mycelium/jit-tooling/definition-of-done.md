@@ -34,6 +34,19 @@ Every delivery increment must satisfy ALL applicable items before being consider
 - [ ] Error messages don't leak internal details
 - [ ] If user data involved: threat model updated, privacy check done
 
+## Authored Artifacts (fires on ANY prose edit, any product type — v0.66)
+
+**Trigger: the work created or edited any prose artifact.** Not "touched a human-facing class." A draft of this section gated on the latter, which disarmed the agent-contract protection below in precisely the case it exists for — work that edits only `CLAUDE.md` and `SKILL.md` files would never have armed the section whose first checkbox protects them. Out-of-scope files (code, CI, test fixtures, third-party evidence) do not arm it; see `detector.md` Step 1d Step 0.
+
+Classification rules and per-class treatment: `../engine/audience-register.md`. Note that `artifact_audiences` in `active-stack.yml` is a project-level inventory and cannot tell you which class a specific edit touched — derive that per-file from Step 1d.
+
+- [ ] Audience class of each edited file identified by **path**, not by tone
+- [ ] **`agent_contract` files were not trimmed, tightened, or given narrative structure.** Compression removes rules that hookless runtimes depend on. Includes READMEs inside agent trees, and `CLAUDE.md`/`AGENTS.md` at any depth — not just root
+- [ ] If a size ceiling forced a reduction (Check 36, style budgets): the rule was **split out and linked**, not compressed — and a one-line statement of the obligation was left at the original site, so a runtime that does not follow links still learns the rule exists
+- [ ] `human_reference` files carry no narrative machinery. Long is not a defect here unless the length is duplication or self-superseded content
+- [ ] **`human_persuasive`: register matched to the reader's awareness stage.** Checkable from the text — a mechanism claim aimed at someone who has not agreed they have the problem is the default failure
+- [ ] **`human_persuasive`: falsifier stated, where a falsifiable claim exists.** Exempt for announcements and headlines that make no argument. Citation volume is not a substitute — narrowing a reader's view works as well inside a flood of true facts as without one
+
 ## Accessibility (user-facing work)
 - [ ] WCAG 2.1 AA requirements met
 - [ ] Semantic HTML / appropriate ARIA
@@ -77,6 +90,10 @@ Replace Code Quality and Testing with:
 - [ ] Sources attributed where applicable
 - [ ] Consistent formatting, style, and terminology throughout
 - [ ] Learning objectives met (courses: aligned to Bloom's taxonomy level)
+- [ ] **Efficacy criterion named and wired (v0.66)** — state what change in the receiver this content exists to produce, and which `content-metrics.yml` field will show whether it happened (`engagement.completion_rate`, drop-off point, `time_to_first_value`). Bloom alignment states the target; this states how you will know it landed.
+- [ ] **Completion test run** — someone who did not write it finished the task using only this content, or the gap is named
+
+**Why these two are not more hygiene.** Every other item above verifies the artifact is *well-formed* — reviewed, accurate, attributed, consistent, accessible. A course can satisfy all of them and be inert, because nothing asks whether it does its job. For a course or a publication, the receiver changing is not a quality attribute, it is the product promise. This is the built-not-wired failure class applied to content: the measurement already exists in `content-metrics.yml` and was simply never required by the gate. Naming an efficacy criterion you cannot yet measure is acceptable and honest; leaving the field null with no criterion named is the thing this item blocks.
 
 Replace Accessibility with:
 - [ ] Captions/subtitles for video content

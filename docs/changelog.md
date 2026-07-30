@@ -2,7 +2,59 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-07-26.
+**Last updated**: 2026-07-30.
+
+## v0.66.0 — craft is not universally good, and for agent files it inverts
+
+`product_type` already routed metrics files, Definition of Done variants and
+validation. Nothing routed on **who reads a given file**. So a `content_course`
+product got the same treatment for its agent config, its README, its course
+modules and its landing copy — four artifacts that want opposite things.
+
+The sharp part is not that craft is unnecessary for agent-facing files. It is
+that five common craft moves are actively **harmful** there. Omission leaves a
+branch unspecified and the model resolves it by guessing. A withheld reveal is an
+unspecified behaviour. Metaphor leaves the referent ambiguous. "Felt before
+understood" has nothing to act on. And trimming for concision removes prose that
+is the only carrier of a rule in runtimes where hooks never fire — the same
+conclusion the model-variance rule already reached from the compression direction,
+now stated once in both directions.
+
+Adds `engine/audience-register.md`: four classes (`agent_contract`,
+`human_reference`, `human_instructional`, `human_persuasive`), the inversion table,
+and a safe default — anything unclassifiable is treated as reference, because
+reference treatment adds no narrative machinery and removes nothing an agent needs.
+Classification is by **path**, never by tone; a conversationally-written `SKILL.md`
+is still an agent contract. Referenced from the operating contract as rule 1b, so
+it reaches every runtime as prose rather than depending on a hook.
+
+Detector Step 1d emits `artifact_audiences` into `.claude/jit-tooling/active-stack.yml`
+— the same path the detector already writes, which is the mismatch that silenced
+`ai_components.detected` for ~2.5 months and is what `check_wiring.py` exists to catch.
+
+Definition of Done gets teeth in two places. Content products
+(`content_course`, `content_publication`, `content_media`) must **name an efficacy
+criterion and wire it** to a `content-metrics.yml` field, and run a completion test.
+The content variant previously had fifteen criteria and every one was hygiene —
+reviewed, accurate, attributed, consistent, captioned, Bloom-aligned. Nothing asked
+whether the content produced the change it exists to produce, so a course could pass
+all fifteen and be inert. Bloom alignment verifies an objective is *stated* at a
+level, not that a learner reaches it, and for a course the receiver changing is the
+product promise rather than a quality attribute. The measurement was already sitting
+in `content-metrics.yml`, unrequired by any gate: built-not-wired, applied to content.
+
+Persuasive artifacts must match **register to the reader's awareness stage** and
+**state their falsifier**. Both are properties of the text, which is the point — a
+claim can be factually correct, well-attributed and accessible and still be aimed at
+someone who has not yet agreed they have the problem, and that is checkable where
+audience psychology is not. The falsifier requirement is the structural line between
+evidence-based persuasion and manipulation: narrowing a reader's field of view works
+just as well inside a flood of true facts as in their absence, so citation volume is
+not a defence.
+
+Not included, and deliberately: no voice mechanism. Voice is personal and stays
+downstream in the consumer's own tooling. The framework ships classification and
+gates, not a house style.
 
 ## v0.65.0 — the code came first, and there was no way in
 
