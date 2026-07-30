@@ -73,6 +73,7 @@ SKILL_COUNT_FILES = [
     "docs/integrations/opencode.md",
     "docs/integrations/codex.md",
     "docs/integrations/cursor.md",
+    "docs/README.md",
 ]
 
 

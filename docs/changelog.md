@@ -4,6 +4,24 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-07-30.
 
+## v0.66.6 — scan for the class, not the reported instance
+
+With all 25 reported defects fixed, a mechanical re-scan for each defect *class* found two
+more that no report had named.
+
+`docs/faq.md` still answered "how does Mycelium decide how deep to go?" by describing the
+Phase 0 time-budget selector — under 8h, 8–48h, 48h+ — as live behaviour. That mechanism was
+removed and replaced by canvas-state detection. Three other pages had already been corrected
+for the same removal; this one was missed because it was never on anyone's list.
+
+`docs/README.md` carried "index of all 58 skills". The token matches the sync sweep's regex
+perfectly; the file simply was not in `SKILL_COUNT_FILES`. Added, and it corrected itself on
+the next run.
+
+The method is the point. Fixing a list of reported instances leaves the class open, and the
+scan that closes it is one command. Both of these survived a 25-item adversarial sweep and a
+subsequent fix pass.
+
 ## v0.66.5 — the last index, and a bucket that did not exist
 
 `docs/receipts/README.md` was the one index whose sections are editorial rather than
