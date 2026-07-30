@@ -103,6 +103,18 @@ Classify by **path**, never by content or tone — a conversationally-written `S
 - **Test fixtures and their contents: `tests/**`, `**/fixtures/**`.** A fixture's value is often that it is *deliberately malformed* — `tests/bash/fixtures/check_10/mismatch/README.md` exists to carry a wrong version string. Editing it for clarity destroys the test.
 - Third-party prose the project did not author: `*-feedback/**`, `evidence/**`, submitted friction logs, pasted interview notes. This is evidence, not our artifact; it is never rewritten. Treat per `../harness/security-trust.md`.
 
+**Step 0a — templates are classified TWICE, because they are two things in one file.** A template under `**/templates/**` interleaves scaffolding with prose that ships verbatim to a destination, and those halves take opposite treatment:
+
+- **Scaffolding is `agent_contract`** and is never trimmed: `{{PLACEHOLDER}}` tokens, `<!-- guidance -->` comments, how-to-use instructions, and **any token a downstream check matches on.** Concrete instance: `templates/ai-system-card.md` says "Keep the section headings stable — the audit matches on them," and `/xai-check` Stage 4 reads its `**Required**` / `**Recommended**` markings to decide a pass. Tidying those headings silently breaks an audit — this is the only-carrier failure with a named consumer.
+- **Prose the template emits verbatim takes its DESTINATION's class.** For `templates/ai-system-card.md` the destination is a consumer's `docs/ai-system-card.md`, so that prose is `human_reference` and is written accordingly.
+
+This dissolves the apparent paradox of "same prose, opposite rules." It was never the same prose — it is agent scaffolding and human output interleaved, and each half follows its own class. Without this rule a template is either frozen (so its output can never improve) or trimmable (so it breaks the checks that read it).
+
+**Step 0c — structured data files have no prose class.** `**/*.json`, `**/*.yaml`, `**/*.yml`, `**/*.toml`. There is no narrative to structure, so no narrative rule applies and the class walk is not run for prose treatment. Two things still do apply:
+
+1. If the file is machine-read configuration inside an agent tree (`settings.json`, `manifest.yml`, `hooks.codex.json`), the never-trim rule covers its comments, keys and structure. Removing a key or a comment because it looks redundant is the same failure as trimming prose.
+2. **Any string value intended for human display is persuasive copy and takes the register check** — `description`, `tagline`, `summary`, `title`. `.claude-plugin/marketplace.json` carries the marketplace-facing product description, which is the same class of copy as a GitHub About field and is covered by the mechanism-versus-value discipline. The falsifier requirement does not attach: a one-line description makes no falsifiable argument.
+
 **Step 0b — one directory escapes the agent tree: `**/drafts/**` and `**/*-draft*`.** These are classified on their content type (usually `human_persuasive`) even when they sit inside `.claude/**`. A drafts directory holds output-in-progress, never configuration, and **no runtime reads it as instruction** — verified by grep against the skills and hooks trees before this carve-out was written, because the previous carve-out in this spec rested on an unverified claim and was false. Without this rule, `.claude/drafts/some-article-DRAFT.md` resolves to `agent_contract`, whose rules forbid structural rewriting for flow. That is precisely the wrong instruction for an article draft.
 
 | Class | Path signals |

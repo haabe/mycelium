@@ -185,6 +185,32 @@ match. `agent_contract` wins every collision it is in, including READMEs.
   announcement is `human_persuasive`. Path decides; if the path cannot decide, the residual
   class decides — not a reading of the prose.
 
+### Templates: two classes inside one file
+
+A template is scaffolding *and* prose-in-waiting, so it is classified twice (Step 0a):
+
+- **Scaffolding never gets trimmed** — placeholders, guidance comments, how-to-use blocks,
+  and above all **any token a downstream check matches on.** `templates/ai-system-card.md`
+  states that its section headings must stay stable because an audit matches on them, and
+  `/xai-check` Stage 4 reads its Required/Recommended markings to decide a pass. Tidying
+  those breaks a real consumer, silently.
+- **Prose the template emits verbatim is written for its destination's class**, not for the
+  template's own. The AI-system-card template emits into a consumer's
+  `docs/ai-system-card.md`, so that prose is `human_reference`.
+
+The point of splitting it: treating the whole file as `agent_contract` freezes the output
+quality forever, and treating it as `human_reference` breaks the checks. Neither single
+class is right, because it is not a single kind of file.
+
+### Structured data: no prose class, but the strings still count
+
+JSON, YAML and TOML have no narrative to structure, so no narrative rule applies. Two
+things do (Step 0c): the never-trim rule covers comments, keys and structure in
+machine-read config inside an agent tree; and **any string value meant for human display —
+`description`, `tagline`, `summary`, `title` — is persuasive copy** and takes the register
+check. A plugin marketplace description is the same class of copy as a GitHub About field.
+The falsifier requirement does not attach to a one-liner that makes no argument.
+
 ## Theory grounding
 
 Schwartz (awareness stages, market sophistication); Mayer (coherence, signalling,

@@ -4,6 +4,37 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-07-30.
 
+## v0.66.1 — the two the review called nits
+
+Closes the last two defects from the v0.66.0 adversarial review, both marked nit and both
+real.
+
+**Templates are two things in one file and are classified twice.** The apparent paradox was
+`templates/ai-system-card.md` being `agent_contract` ("never trim") while its rendered
+output `docs/ai-system-card.md` is `human_reference` ("plain language, short sentences") —
+same prose, opposite rules. It was never the same prose. Scaffolding is `agent_contract`
+and is never trimmed: placeholders, guidance comments, and above all any token a downstream
+check matches on. That last part has a named consumer — the template says "keep the section
+headings stable, the audit matches on them," and `/xai-check` Stage 4 reads its
+`**Required**` markings to decide a pass, so tidying the headings silently breaks an audit.
+The prose a template emits verbatim takes its *destination's* class instead. Collapsing a
+template into one class either freezes its output quality forever or breaks the checks that
+read it.
+
+**Structured data files have no prose class, but their strings still count.** JSON, YAML and
+TOML have no narrative to structure, so no narrative rule applies. Two things do: the
+never-trim rule covers comments, keys and structure in machine-read config inside an agent
+tree, because deleting a key that looks redundant is the same failure as trimming prose;
+and any string value meant for human display — `description`, `tagline`, `summary`, `title`
+— is persuasive copy and takes the register check. `.claude-plugin/marketplace.json`
+carries the marketplace-facing product description, which is the same class of copy as a
+GitHub About field and was previously governed by nothing. The falsifier requirement does
+not attach to a one-liner that makes no argument.
+
+Both rules are in `detector.md` Step 1d (Steps 0a and 0c) with treatment in
+`engine/audience-register.md`, and both have Definition of Done checkboxes. Re-test 18/18
+including the two new handling paths; gates green.
+
 ## v0.66.0 — craft is not universally good, and for agent files it inverts
 
 `product_type` already routed metrics files, Definition of Done variants and
