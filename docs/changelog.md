@@ -4,6 +4,47 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-07-30.
 
+## v0.68.0 — the task tracker could not tell who was waiting
+
+`touch_log` recorded exchanges on a human-task's channel. It was never in the schema —
+it survived on `additionalProperties: true` — so nothing could safely read it, and the
+two things that did read it took only the dates.
+
+That made an inbound and an outbound indistinguishable. Worse than indistinguishable:
+because any entry counts as activity, **a contact's reply refreshed the staleness clock**.
+A task where someone had written to you and you had not answered scored as *healthier*
+than one where you had sent something and heard nothing back. Those are opposite states.
+
+Found by dogfood on 2026-08-01. Three tasks had an inbound as their last contact, aged
+4 to 7 days, entirely invisible behind a green staleness check. One was from a
+practitioner who had read the harness thesis and replied that it was already his working
+flow — the most engaged inbound on the board, silently unanswered for a week.
+
+**What shipped:**
+
+- `touch_log` is now defined in `human-tasks.schema.json`, with `direction` taking
+  `outbound`, `inbound`, `bidirectional`, or `internal`.
+- `session-start` emits a REPLY OWED line when the newest *contact* on an open task is
+  inbound and ≥3 days old. An explicit `reply_owed:` field forces it regardless of dates.
+- canvas-health gains sub-check **8c(e)**, the audit-side equivalent, plus a migration
+  nudge for logs that predate the field.
+- `tests/bash/test_session_start_reply_owed.sh` — nine guardposts covering happy, sad,
+  bad and edge paths.
+
+**Two deliberate design choices.** `direction` is **optional**: pre-0.68.0 logs have to
+keep validating on upgrade, so entries without it are unevaluable rather than invalid.
+And `internal` exists as a distinct value because a metric reading or status note logged
+on top of an inbound would otherwise become the "last touch" and hide the owed reply —
+the same masking bug one level down. Internal entries are skipped when locating the last
+contact.
+
+The enum was widened twice during authoring, both times because real data disagreed with
+the design: the first pass assumed two values and found six in one repo, including
+`bidirectional` for exchanges captured as a single entry. Twenty-eight distinct free-text
+variants were normalised as part of the change.
+
+Minor rather than patch: a new schema field and a new emitted reminder.
+
 ## v0.67.0 — a canonical contributor field, and a guard so it stays that way
 
 The `contributor` field in `docs/receipts/cases/` had no canonical form and nothing

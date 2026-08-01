@@ -41,7 +41,26 @@
             "type": "string",
             "enum": ["high", "medium", "low"]
           },
-          "capture_template": {"type": "string"}
+          "capture_template": {"type": "string"},
+          "touch_log": {
+            "type": "array",
+            "description": "Chronological log of exchanges on this task's channel. Formalised in v0.68.0: it existed as an undocumented convention surviving only on additionalProperties, so nothing could safely read it. `direction` is what makes a task's state legible - without it an inbound and an outbound are indistinguishable, and a task where the CONTACT is waiting on YOU looks identical to one where you are waiting on them.",
+            "items": {
+              "type": "object",
+              "required": ["date"],
+              "properties": {
+                "date": {"type": "string", "description": "ISO date (YYYY-MM-DD) of the exchange."},
+                "direction": {
+                  "type": "string",
+                  "enum": ["outbound", "inbound", "bidirectional", "internal"],
+                  "description": "Who moved. `outbound` = you contacted them. `inbound` = they contacted you. `bidirectional` = a two-way exchange captured as one entry (no reply is owed - it completed). `internal` = an observation or note with NO contact (a metric reading, a status note); these are skipped entirely when locating the last contact, so an internal note logged on top of an inbound does not conceal the owed reply. Keep the value bare - annotations belong in `purpose`, since a qualified value like 'outbound (founder-sent)' defeats the machine read this field exists for. NOT required: pre-v0.68.0 logs have none and must keep validating on upgrade; entries without it are unevaluable rather than invalid."
+                },
+                "channel": {"type": "string", "description": "Where the exchange happened."},
+                "purpose": {"type": "string", "description": "What was sent, received, or observed."}
+              },
+              "additionalProperties": true
+            }
+          }
         },
         "required": ["id", "type", "objective", "status"],
         "additionalProperties": true
