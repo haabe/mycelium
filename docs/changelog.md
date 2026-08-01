@@ -4,6 +4,43 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-07-30.
 
+## v0.69.0 - the contract had ten rules for talking and none for listening
+
+Every rule in `engine/agent-operating-contract.md` governed what the agent **says**.
+Plain language first. Cite the trigger. Name the verification surface. Read canvas state
+before narrating it. Layer output BLUF-first.
+
+Nothing governed what it does when what it **received** was unclear.
+
+So an agent that misread an instruction had no rule to fail against, and no sanctioned
+*form* in which to raise the doubt. The available moves were guess silently, or stop and
+interrogate. Both are bad, and the first is what always happened.
+
+**Four instances in a single session, 2026-08-01:**
+
+- The operator wrote "check out 036". The agent had mislabelled that task id earlier in
+  the same session, resolved the referent against its own error, and ran a full
+  investigation down the wrong path until the operator asked what it was writing about.
+- Logging a commenter, the agent wrote a block headed "stated so it is not quietly filled
+  in", recording that her role was unknown and material, then inferred it from her word
+  choice in the very next sentence, while the operator could see the answer on screen.
+- "do that", after two distinct pieces of work had been offered.
+- "Commit, push, merge", with two repositories dirty and one under discussion.
+
+**Rule 11** adds the third option: name the ambiguity and state the reading you will act
+on, in the same breath. *Reading this as X; say otherwise and I will switch.* Accepting
+costs nothing, correcting costs one word, and the rule adds a clause rather than a turn.
+
+The triggers are narrow on purpose - readings that lead to *materially different work*,
+or a material fact the person in the conversation holds. An unbounded ask-when-unclear
+rule either never fires, because an agent mid-task always feels confident enough, or
+fires constantly and trains the user to skim past exactly the sentences that matter.
+
+**No teeth, and none claimed.** No hook can detect that a human was unclear. This holds
+only while the prose reaches the agent, which makes it the `agent_contract` class
+`engine/audience-register.md` was written to protect: apparently redundant, load-bearing,
+and split rather than trimmed if a ceiling ever bites.
+
 ## v0.68.0 — the task tracker could not tell who was waiting
 
 `touch_log` recorded exchanges on a human-task's channel. It was never in the schema —
