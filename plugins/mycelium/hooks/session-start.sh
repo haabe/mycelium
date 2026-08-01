@@ -297,6 +297,40 @@ try:
       if lt is not None and (today - lt).days >= 14:
         return '{} (STALE {}d, {})'.format(obj, (today - lt).days, st)
       return '{} ({})'.format(obj, st)
+    # REPLY-OWED DETECTION (v0.68.0). 8c(a) and the STALE label above read touch_log
+    # DATES but never DIRECTION, so a task where the contact answered and you did not
+    # looks identical to one where you are waiting on them — in fact it looks HEALTHIER,
+    # because their reply refreshes the activity clock. Dogfood 2026-08-01: three
+    # unanswered inbounds (4-7d) sat invisible behind a green staleness check.
+    # `internal` entries are skipped when locating the last contact, so a metric note
+    # logged on top of an inbound cannot conceal the owed reply.
+    CONTACT_DIRS = ('outbound', 'inbound', 'bidirectional')
+    def last_contact(t):
+      best = None
+      for e in (t.get('touch_log') or []):
+        if not isinstance(e, dict): continue
+        d = e.get('direction')
+        if d not in CONTACT_DIRS: continue
+        ds = e.get('date')
+        if not isinstance(ds, str): continue
+        try: dt = datetime.strptime(ds[:10], '%Y-%m-%d').date()
+        except Exception: continue
+        if best is None or dt > best[0]: best = (dt, d)
+      return best
+    owed = []
+    for t in open_tasks:
+      tid = t.get('id', '?')
+      if t.get('reply_owed'):
+        owed.append((tid, None)); continue
+      lc = last_contact(t)
+      if lc and lc[1] == 'inbound':
+        age = (today - lc[0]).days
+        if age >= 3: owed.append((tid, age))
+    if owed:
+      parts = ['{}{}'.format(i, ' ({}d)'.format(a) if a is not None else '') for i, a in owed[:5]]
+      more = '' if len(owed) <= 5 else ' +{} more'.format(len(owed) - 5)
+      print('REPLY OWED on {} task(s): {}{}. The last CONTACT on these was inbound — they wrote, you have not answered. This is invisible to the staleness check, which counts their reply as activity.'.format(len(owed), ', '.join(parts), more))
+
     summaries = '; '.join(label(t) for t in open_tasks[:3])
     if len(open_tasks) > 3:
       summaries += '... and {} more'.format(len(open_tasks) - 3)
