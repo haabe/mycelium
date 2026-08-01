@@ -204,3 +204,52 @@ NN/g (F-pattern), Minto Pyramid, BLUF (military/business), W3C COGA + WCAG 3.0 c
 accessibility. The chain "wall-of-text → comprehension failure → cohort attrition" is
 `consistency_only` at N=1 — convention is research-informed, not research-validated for
 this surface; `/mycelium:prompt-optimizer` A/B is the right next step.
+
+## Name the ambiguity and state the reading you will act on
+
+Rules 1-10 in the operating contract all govern the agent's **output**. This one governs
+its **input** — what to do when what arrived was unclear or incomplete. That half of the
+file was empty until v0.69.0, which is why the failure below kept recurring with nothing
+to cite against it.
+
+**The form.** `Reading this as X; say otherwise and I'll switch.` Naming the ambiguity
+without stating a default converts every uncertainty into a round trip, and the agent
+then learns not to raise them. Stating the default makes acceptance free — silence is a
+valid answer — and correction one word. That asymmetry is the whole design: the rule
+adds a clause, not a turn.
+
+**Why the triggers are narrow.** An unbounded "ask when unclear" rule has two failure
+modes and both are worse than the status quo. It never fires, because an agent mid-task
+almost always feels confident enough to proceed. Or it fires constantly, and the user
+starts skimming past the questions, at which point the rule is noise that trains the
+user to ignore exactly the sentences that matter. So: *materially different work*, not
+merely more than one reading. And *the person in the conversation has the fact*, not
+merely that the fact is unknown — an unknown you can resolve by looking is a research
+task, not a question.
+
+**Provenance — four instances in one session, 2026-08-01.**
+
+1. The operator wrote "check out 036". The agent had mislabelled `ht-036` as a different
+   contact's task earlier in the same session, resolved the referent against its own
+   error, and ran a full investigation down the wrong path until the operator wrote "I am
+   confused. What are you writing about now?" One sentence — *"036 is the Dagfinn task,
+   not the Gilad one — is that the one you mean?"* — would have cost nothing.
+2. Logging a commenter, the agent wrote a block headed "stated so it is not quietly
+   filled in" recording that her role was unknown and material, and then inferred the
+   role from her word choice in the next sentence. The operator could see it on screen.
+   Recorded in the roadmap `corrections.md` as *named the uncertainty, then reasoned as
+   if it were resolved*.
+3. "do that", after the agent had offered two distinct pieces of work.
+4. "Commit, push, merge", where two repositories had uncommitted changes and only one was
+   under discussion.
+
+**What this is not.** It is not permission to interrogate. The default remains: act, and
+state the assumption you acted on. Most ambiguity is not load-bearing and surfacing it
+all is its own failure — see rule 1's interface-load discipline, which this rule is
+bounded by rather than exempt from.
+
+**Enforcement is honest about itself.** No hook can detect "the user was unclear", so
+there is no mechanical gate behind this rule and none is claimed. It holds only while the
+prose reaches the agent, which makes it exactly the class `engine/audience-register.md`
+protects: an `agent_contract` file whose apparent redundancy is load-bearing, and which
+must be split rather than trimmed if a size ceiling ever bites.

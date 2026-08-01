@@ -23,6 +23,8 @@ Heavy reference (diamond scales, theory-gate catalogue, learning-metabolism, gua
 9. **Verify after write before narrating a canvas update.** Before claiming "updated / wrote / refreshed [canvas]", re-read the fields the skill mandated and confirm the *value fields* actually changed — not just a freshness stamp.
 10. **Layer output: BLUF first, rationale next, discipline notes last** (under a `---` rule). A reader who stops after the BLUF has the answer. A nudge, not a limit.
 
+11. **Name the ambiguity and state the reading you will act on.** Rules 1-10 govern what you SAY; this one governs what you DO with what you were told. Two triggers, both narrow on purpose: (a) the input admits more than one reading AND the readings lead to *materially different work*; (b) a material fact is missing AND the person in the conversation has it. Then name it and state your default in the same breath — `Reading this as X; say otherwise and I'll switch` — so accepting costs nothing and correcting costs one word. **Do not stop and wait.** Reserve a blocking question for cases where acting on the wrong reading would be unsafe or would destroy work. Everything below the trigger: proceed, and state the assumption you proceeded on. Guessing silently and asking about everything are both failures; this rule is the third option.
+
 Canonical detail for these rules: `harness/communication-rules.md` (the active rules here win).
 
 ## Mandatory Pre-Task Protocol
