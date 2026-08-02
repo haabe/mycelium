@@ -49,6 +49,17 @@ try:
 except ImportError:  # pragma: no cover - flat import from tests / direct run
     import _text_lib
 
+# These scripts are run three ways: as `python3 .../scripts/x.py` from any cwd,
+# imported as a package, and loaded by file path from tests. Only the first puts
+# this directory on sys.path, so put it there explicitly before the sibling
+# import — the alternative is a module that works until the way it is loaded
+# changes, which is how this landed as a test-collection error the first time.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+try:
+    from . import _scan_lib
+except ImportError:  # invoked as a script, or loaded by file path
+    import _scan_lib
+
 try:
     import yaml
 except ImportError:  # pragma: no cover
@@ -59,6 +70,7 @@ CONTRACT_REL = ".claude/harness/wiring-contract.yml"
 SKIP_DIRS = {
     ".git", "node_modules", "__pycache__", ".venv", "venv", "dist", "build",
     ".pytest_cache", ".mypy_cache", ".ruff_cache", ".next", "vendor", "results",
+    ".fixtures",  # exact-match missed the dotted form; see _scan_lib for the general fix
     # Fixture trees are deliberately synthetic mini-repos built to make a guard
     # fire. Governing them proposes rules about scaffolding and buries the real
     # findings; the detector offered five such rules on its first run here.
@@ -105,10 +117,13 @@ class Violation:
 
 def _iter_files(root: Path) -> list[Path]:
     out = []
+    ignored = _scan_lib.ignored_paths(root)
     for f in root.rglob("*"):
         if not f.is_file():
             continue
         if any(p in SKIP_DIRS for p in f.parts):
+            continue
+        if _scan_lib.is_ignored(f, ignored):
             continue
         out.append(f)
     return sorted(out)
