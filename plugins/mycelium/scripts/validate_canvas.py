@@ -546,6 +546,21 @@ def main():
 
     schemas_present = len(list(SCHEMA_DIR.glob("*.schema.json"))) - 1  # exclude _common
     canvases_present = len(list(canvas_dir.glob("*.yml")))
+    if not canvases_present:
+        # Refuse the bare pass (v0.75.0). This is the most-read green line in the
+        # framework, and against an empty directory it printed
+        # a PASS line naming zero canvas files, then exited 0.
+        # A reader takes that as "the canvas is correct"; it meant
+        # "there was no canvas". The digital-gardener friction log named this
+        # exact false-assurance effect on 2026-08-02 before anyone checked what
+        # the empty case actually printed.
+        print(
+            f"NOT A PASS: 0 canvas files found in {canvas_dir}. Nothing was "
+            "validated. Either the path is wrong, or this project has no canvas "
+            "yet — both are answers, and neither is PASS.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
     print(
         f"Canvas validation: PASS ({canvases_present} canvas files, "
         f"{schemas_present} schemas, {len(warnings)} schema-less, "
