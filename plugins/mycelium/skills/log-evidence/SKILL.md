@@ -96,7 +96,7 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
 
 If the user reports a task couldn't be completed (contact unavailable, timing didn't work, etc.):
 1. Ask: "Should we cancel this task or reschedule it?"
-2. If cancel: move to `completed_tasks` with `source_class: cancelled` and a note explaining why
+2. If cancel: move to `completed_tasks` with `closure_reason: <why>` and a note. **Do NOT write `source_class: cancelled`** — corrected 2026-08-03. `source_class` classifies where EVIDENCE came from, and its shipped enum is `external_human` / `external_data` / `internal_stakeholder` / `internal_desk` / `internal_simulated`. A cancelled task produced no evidence, so it has no source class, and `cancelled` is a task outcome wearing an evidence field's name. This instruction told authors to write a value the framework's own schema rejects — found by a dogfood canvas-health on 9 tasks. Leave `source_class` absent; `closure_reason` carries the meaning.
 3. If reschedule: update the task's `objective` or `target_persona` if needed, keep in `pending_tasks`
 4. Either way: "The evidence gap still exists. Consider `/mycelium:handoff` to plan an alternative approach."
 

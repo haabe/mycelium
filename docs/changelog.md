@@ -4,6 +4,26 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-02.
 
+## v0.76.1 - a skill instructed a value its own schema rejects
+
+`/log-evidence`'s task-cancellation branch said to move a cancelled task to
+`completed_tasks` with `source_class: cancelled`.
+
+`source_class` classifies where **evidence** came from. Its shipped enum in
+`_common.schema.json` is `external_human` / `external_data` /
+`internal_stakeholder` / `internal_desk` / `internal_simulated`. A cancelled task
+produced no evidence, so it has no source class — `cancelled` is a task *outcome*
+wearing an evidence field's name.
+
+Found by a dogfood canvas-health on 9 tasks, **every one of which already carried
+a `closure_reason` saying the same thing correctly.** So the field was both a
+category error and redundant.
+
+Corrected in the skill; the 9 instances migrated by deletion. This is a
+documented-rule-diverges-from-enforcement instance in its purest form: the drift
+was not between a rule and a mechanism, but between two artifacts shipped in the
+same release.
+
 ## v0.76.0 - the corrected model was documented five times and migrated zero
 
 Hoskins has **three** scenario elements: Motivation, Persona, Simulation. An
