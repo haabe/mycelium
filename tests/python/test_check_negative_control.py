@@ -189,7 +189,10 @@ def test_zero_guards_is_not_a_pass(scripts_path, tmp_path, capsys):
     Stating the zero was never enough. The verdict line has to refuse.
     """
     mod = _import(scripts_path)
-    (tmp_path / ".claude").mkdir(parents=True, exist_ok=True)
+    # The precondition must be MET and the population empty. A tree with no
+    # plugins/mycelium/ at all is the DIFFERENT state (N/A) — see the test below.
+    (tmp_path / "plugins" / "mycelium" / "hooks").mkdir(parents=True)
+    (tmp_path / "plugins" / "mycelium" / "scripts").mkdir(parents=True)
     rc = mod.main(["--root", str(tmp_path)])
     out = capsys.readouterr().out
     assert "0 guard(s) checked" in out, "the count must still be reported"
@@ -220,4 +223,32 @@ def test_pass_line_states_its_denominator_and_its_exclusion(scripts_path, capsys
     assert "outside this count" in out
     assert "Every guard asserts its own failure direction." not in out, (
         "the unqualified universal must not come back"
+    )
+
+
+def test_absent_precondition_is_not_applicable_not_a_refusal(scripts_path, tmp_path, capsys):
+    """A repo this check cannot apply to gets N/A, not NOT A PASS.
+
+    THE REGRESSION THIS CLOSES (shipped v0.74.0, caught 2026-08-02 the same day).
+    Refusing on an empty population was right; refusing on an ABSENT PRECONDITION
+    was not, and the two were collapsed. A plugin CONSUMER repo has no
+    `plugins/mycelium/` tree at all, so every user running `/bvssh-check` got
+    NOT A PASS on something they could do nothing about.
+
+    That is worse than the false green it replaced, in a specific way: a red a
+    user cannot act on teaches them to stop reading the check — which is the
+    same failure this guard family exists to prevent, arriving from the other
+    side. Exit 0 is correct here, and the message has to say WHY nothing was
+    checked so it is never mistaken for a pass over real input.
+    """
+    mod = _import(scripts_path)
+    (tmp_path / ".claude").mkdir(parents=True, exist_ok=True)
+    rc = mod.main(["--root", str(tmp_path)])
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "N/A" in out
+    assert "consumer" in out, "the message must say which repo kind it is for"
+    assert "NOT A PASS" not in out
+    assert "Every guard asserts" not in out, (
+        "N/A must not be dressed up as a clean pass either"
     )

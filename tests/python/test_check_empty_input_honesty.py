@@ -163,3 +163,35 @@ def test_the_real_tree_passes_its_own_rule(scripts_path, capsys):
     assert rc == 0, out
     assert "refuse to report success over an empty population" in out
     assert "not reduced input" in out, "the pass must state its own scope limit"
+
+
+def test_absent_precondition_is_not_applicable_not_a_refusal(scripts_path, tmp_path, capsys):
+    """A consumer repo ships no checks of its own, so there is nothing to guard."""
+    mod = _import(scripts_path)
+    (tmp_path / ".claude").mkdir(parents=True)
+    rc = mod.main(["--root", str(tmp_path)])
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "N/A" in out
+    assert "consumer" in out
+    assert "NOT A PASS" not in out
+
+
+def test_fixture_meets_preconditions_so_checks_are_not_skipped(
+    scripts_path, tmp_path
+):
+    """THE SUBTLE ONE, and the reason the empty fixture is not merely empty.
+
+    The guard runs each shipped check against a throwaway tree. Once N/A exists,
+    a bare empty directory makes every check answer "N/A" — so the guard would
+    verify NOTHING and report a pass, becoming the exact thing it was built to
+    catch. Its fixture therefore CREATES the plugin tree: precondition met,
+    population empty. This asserts that a check needing that tree is actually
+    exercised rather than skipped into silence.
+    """
+    mod = _import(scripts_path)
+    _fake_check(tmp_path, "check_vacuous.py", VACUOUS_SUCCESS)
+    report = mod.scan(tmp_path)
+    assert "check_vacuous.py" in [f["script"] for f in report["findings"]], (
+        "a vacuous check must still be caught after the N/A change"
+    )

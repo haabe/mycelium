@@ -108,6 +108,12 @@ def scan(root: Path) -> dict:
     with tempfile.TemporaryDirectory(prefix="mycelium-empty-") as tmp:
         empty = Path(tmp)
         (empty / ".claude" / "canvas").mkdir(parents=True)
+        # The fixture must MEET each check's precondition while leaving its
+        # population empty — otherwise every check answers "N/A" here and the
+        # guard verifies nothing while reporting a pass. Precondition-absent and
+        # population-empty are different states and this is where they diverge.
+        (empty / SCRIPTS_REL).mkdir(parents=True)
+        (empty / "plugins" / "mycelium" / "hooks").mkdir(parents=True)
         subprocess.run(["git", "init", "-q"], cwd=empty, check=False,
                        capture_output=True)
 
@@ -183,6 +189,13 @@ def main(argv=None) -> int:
     if not root.exists():
         print(f"error: root does not exist: {root}", file=sys.stderr)
         return 2
+
+    if not (root / SCRIPTS_REL).is_dir():
+        print(f"Empty-input honesty: N/A — no {SCRIPTS_REL}/ under {root}. This "
+              "guard runs the FRAMEWORK repo's shipped checks; a plugin consumer "
+              "ships none of its own. Nothing was checked, and nothing was "
+              "supposed to be.")
+        return 0
 
     report = scan(root)
     if args.json:

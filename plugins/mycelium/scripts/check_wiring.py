@@ -437,6 +437,16 @@ def scan(root: Path):
     return {"findings": findings, "examined": examined}
 
 
+#: A check that CANNOT apply to a repo is a different state from one that
+#: applies and found nothing, and v0.74.0/v0.75.0 collapsed the two. Running
+#: these in a plugin CONSUMER repo — which has no `plugins/mycelium/` tree at
+#: all — produced NOT A PASS on something the user can do nothing about. False
+#: alarms are how a check gets ignored, which is the same failure this guard
+#: family exists to prevent, arriving from the other side.
+#:
+#:   precondition ABSENT  -> N/A, exit 0, say which repo kind it is for
+#:   precondition PRESENT, population empty -> refuse, exit 1
+
 def main(argv=None):
     p = argparse.ArgumentParser(
         description="Guard against mechanisms that exist but are never reached."
@@ -453,6 +463,14 @@ def main(argv=None):
     if not root.exists():
         print(f"error: root does not exist: {root}", file=sys.stderr)
         return 2
+
+    if not (root / PLUGIN_REL).is_dir():
+        # N/A, not a failure. See the note above main().
+        print(f"Wiring: N/A — no {PLUGIN_REL}/ tree under {root}. This check "
+              "guards the FRAMEWORK repo's packaged plugin; a plugin consumer "
+              "has nothing for it to reach. Nothing was checked, and nothing "
+              "was supposed to be.")
+        return 0
 
     report = scan(root)
     findings = report["findings"]
