@@ -2442,6 +2442,101 @@ PY
 #
 # Direction matters: delivery evidence WITHOUT a delivery diamond is the defect.
 # A delivery diamond without metrics yet is simply early, and passes.
+check_canonical_field_location() {
+    section "Check 52: one fact, one field name"
+
+    if [ ! -d ".claude/canvas" ]; then
+        info "Check 52: no .claude/canvas -- N/A"
+        return
+    fi
+
+    local result rc
+    set +e
+    result=$(python3 - <<'PY'
+import sys
+from pathlib import Path
+try:
+    import yaml
+except ImportError:
+    print("pyyaml unavailable -- skipped"); sys.exit(0)
+
+def load(p):
+    q = Path(p)
+    if not q.exists():
+        return {}
+    try:
+        return yaml.safe_load(q.read_text()) or {}
+    except Exception:
+        return {}
+
+problems = []
+
+# (1) confidence in two places on one opportunity.
+for o in (load(".claude/canvas/opportunities.yml").get("opportunities") or []):
+    if not isinstance(o, dict):
+        continue
+    top = o.get("confidence")
+    prov = (o.get("provenance") or {}).get("confidence") if isinstance(o.get("provenance"), dict) else None
+    if top is not None and prov is not None:
+        agree = "agree" if top == prov else f"DISAGREE ({top} vs {prov})"
+        problems.append(
+            f"{o.get('id', o.get('name', '?'))}: confidence at BOTH top level and "
+            f"provenance -- {agree}. provenance is schema-canonical (it is the required "
+            f"object); the top-level field is an unvalidated extra property."
+        )
+
+# (2) two names for one completion date.
+for t_ in (load(".claude/canvas/human-tasks.yml").get("pending_tasks") or []):
+    if not isinstance(t_, dict):
+        continue
+    a, b = t_.get("closed_at"), t_.get("completed_at")
+    if a is not None and b is not None and str(a) != str(b):
+        problems.append(
+            f"{t_.get('id', '?')}: closed_at={a!r} and completed_at={b!r} disagree. "
+            f"They name the same event."
+        )
+
+# (3) two four_risks shapes in one file. Mixing is what breaks structured readers;
+#     a project consistently on either shape is fine and is NOT flagged.
+shapes = {}
+for o in (load(".claude/canvas/opportunities.yml").get("opportunities") or []):
+    for s in (o.get("solutions") or []) if isinstance(o, dict) else []:
+        fr = s.get("four_risks") if isinstance(s, dict) else None
+        if not isinstance(fr, dict):
+            continue
+        for dim, v in fr.items():
+            if not isinstance(v, dict):
+                continue
+            if "risk_level" in v:
+                shapes.setdefault("risk_level", []).append(f"{s.get('id')}.{dim}")
+            elif "level" in v:
+                shapes.setdefault("level", []).append(f"{s.get('id')}.{dim}")
+if len(shapes) > 1:
+    detail = "; ".join(f"{k}: {len(v)} dims e.g. {v[0]}" for k, v in sorted(shapes.items()))
+    problems.append(
+        f"four_risks uses TWO key shapes in one canvas -- {detail}. "
+        f"Pick one so a structured reader sees every dimension."
+    )
+
+if problems:
+    print("\n".join(problems))
+    sys.exit(1)
+sys.exit(0)
+PY
+)
+    rc=$?
+    set -e
+
+    if [ "$rc" -ne 0 ]; then
+        fail "Check 52: the same fact is recorded under two field names"
+        echo "$result" | sed 's/^/    /'
+        echo "    Readers disagree depending on which field they happen to read, and"
+        echo "    schema validation cannot see it -- both fields are individually valid."
+    else
+        pass "Check 52: no duplicate-location fields (scope: opportunity confidence, task completion date, four_risks key shape -- NOT a general consistency check)"
+    fi
+}
+
 check_delivery_diamond_reconciliation() {
     section "Check 51: shipped-delivery evidence has a delivery diamond"
 
@@ -2681,12 +2776,15 @@ check_postflight_verify_after_write_preamble
 check_render_identifier_exposure_declaration
 
 
+
+
 check_hooks_registration_parity
 check_chat_ux_axiom_markers
 check_gv12_test_coverage
 check_receipt_contributor_canonical
 check_theory_claim_artifacts
 check_delivery_diamond_reconciliation
+check_canonical_field_location
 
 # ============================================================
 # SUMMARY

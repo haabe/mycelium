@@ -1,0 +1,8 @@
+schema_version: 1
+pending_tasks:
+  - id: ht-001
+    type: outreach
+    objective: o
+    status: completed
+    closed_at: "2026-06-01"
+    completed_at: "2026-07-30"

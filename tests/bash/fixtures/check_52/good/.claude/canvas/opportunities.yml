@@ -1,0 +1,13 @@
+schema_version: 1
+opportunities:
+  - id: opp-001
+    name: "clean"
+    provenance:
+      evidence_type: anecdotal
+      evidence_sources: ["x"]
+      confidence: 0.3
+    solutions:
+      - id: sol-001a
+        four_risks:
+          value: {risk_level: low, assessment: "a"}
+          usability: {risk_level: low, assessment: "b"}

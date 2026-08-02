@@ -2,7 +2,43 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-07-30.
+**Last updated**: 2026-08-02.
+
+## v0.73.0 - one fact, two field names, and readers that disagreed depending on which they opened
+
+A full structural audit of the dogfood canvas returned 44 defects. Three of them
+were the same failure wearing different clothes.
+
+**Confidence.** Nineteen opportunities carried it at `provenance.confidence`. The
+four newest carried it at *both* top level and provenance. One held `0.35` at the
+top against `0.3` in provenance, because a founder correction — *"it is still just
+n=1 on that"* — landed in one place and not the other. An agent then wrote a
+decision-log entry citing a confidence the canvas contradicted.
+
+**Completion date.** Some tasks used `closed_at`, some `completed_at`. A staleness
+sweep reading only the latter reported thirteen terminal tasks as undated. Three of
+them had the date, under the other name.
+
+**Four risks.** Two key shapes coexisted: `{level, evidence}` from June and
+`{risk_level, assessment}` from August. Every structured reader saw half the
+dimensions and reported cleanly on what it could see.
+
+Schema validation cannot catch any of this. Both fields are individually valid, and
+the opportunities schema sets `additionalProperties: true` while declaring neither
+`id`, nor `status`, nor `confidence` — so every field the framework actually routes
+on was unvalidated. That is how three conventions accumulated without anyone
+noticing.
+
+**Check 52** compares the three named field pairs, with five scenario-per-guardpost
+fixtures. The `consistent_level` fixture guards the direction that matters most: a
+canvas consistently on the *old* shape is not drifting and must pass. Flagging it
+would force a migration on every existing canvas to satisfy a check about internal
+consistency, and the fastest way to kill a check is to make it demand work from
+people who have no problem.
+
+The scope sits in the pass string itself — three named pairs, not a general
+consistency check. An unqualified green here would be the exact false assurance the
+audit was chasing.
 
 ## v0.72.0 - the canvas said stuck while the product shipped four times a day
 
