@@ -13,9 +13,21 @@ All configurable thresholds live in `canvas/thresholds.yml`. Each threshold has:
 
 ## Thresholds
 
-### ICE Advance Threshold
+### ICE Sequencing Reference
 
-**What it controls**: The minimum ICE score for a leaf to advance from Phase 3 (ICE Scoring) to Phase 5 (GIST Entry). Below this, the leaf is archived.
+> **This is NOT an advancement gate.** Corrected v0.71.0. Until 2026-07-01 this section
+> described a `minimum ICE to advance, below this the leaf is archived` threshold. That
+> gate was **removed** in v0.54.0 because it is scoring-for-selection, which Torres
+> cautions against — `leaf-lifecycle.md` Phase 5 states the actual gate: **the riskiest
+> assumption has a recorded test verdict of `validated`**, and a leaf is archived only
+> when that assumption is **invalidated**, never by ICE. A validated leaf with a low ICE
+> is **deprioritized, not archived**. The correction reached `theories.md` and
+> `leaf-lifecycle.md` and did not reach this file for four weeks, during which an agent
+> reading here would have archived leaves on a score.
+
+**What it controls**: sequencing among leaves that have ALREADY passed Phase 5, plus
+calibration input to `cycle-history.yml`. It decides what to do first, never whether to
+do it at all.
 
 | Parameter | Value |
 |-----------|-------|
@@ -25,6 +37,8 @@ All configurable thresholds live in `canvas/thresholds.yml`. Each threshold has:
 | Adjustment bounds | 50-300 (never below 50, never above 300) |
 
 **Example**: After 15 cycles, data shows leaves with ICE ≥ 120 succeeded 70% of the time, while leaves with ICE 80-119 succeeded only 30%. Threshold adjusts to 120.
+
+**Reminder**: this reference orders *validated* leaves. A leaf below it is sequenced later, never discarded — discarding on score is the removed behaviour.
 
 ### Confidence Calibration
 
