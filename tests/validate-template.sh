@@ -2442,6 +2442,83 @@ PY
 #
 # Direction matters: delivery evidence WITHOUT a delivery diamond is the defect.
 # A delivery diamond without metrics yet is simply early, and passes.
+check_scenario_legacy_model() {
+    section "Check 53: scenarios migrated off the pre-2026-07-01 4-block model"
+
+    if [ ! -f ".claude/canvas/scenarios.yml" ]; then
+        info "Check 53: no .claude/canvas/scenarios.yml -- N/A"
+        return
+    fi
+
+    local result rc
+    set +e
+    result=$(python3 - <<'PY'
+import sys
+from pathlib import Path
+try:
+    import yaml
+except ImportError:
+    print("pyyaml unavailable -- skipped"); sys.exit(0)
+
+try:
+    doc = yaml.safe_load(Path(".claude/canvas/scenarios.yml").read_text()) or {}
+except Exception as e:
+    print(f"scenarios.yml did not parse: {e}"); sys.exit(1)
+
+problems = []
+checked = 0
+for s in (doc.get("scenarios") or []):
+    if not isinstance(s, dict):
+        continue
+    checked += 1
+    sid = s.get("id", "<no id>")
+    status = str(s.get("status", "")).lower()
+    if status == "archived":
+        continue                      # history may keep the old shape
+    if "motive" in s and "motivation" not in s:
+        problems.append(
+            f"{sid}: carries `motive` and no `motivation`. Rename it — "
+            f"`motivation` is the Hoskins element; `motive` is the superseded name."
+        )
+    if "means" in s:
+        problems.append(
+            f"{sid}: carries `means`. \"Means\" is NOT a Hoskins element — the model "
+            f"has THREE (Motivation, Persona, Simulation). How the persona meets "
+            f"existing tools lives INSIDE the simulation; fold it to "
+            f"`simulation.context` and delete the block."
+        )
+
+if not checked:
+    # N/A, not a refusal. This differs deliberately from the empty-input rule the
+    # fitness functions follow: there, an empty population means the check could
+    # not SEE the thing it guards. Here it means the project has not written any
+    # scenarios yet, which is a legitimate early state and the shipped template's
+    # normal condition. Migration pressure applies to scenarios that exist.
+    print("NA:scenarios.yml holds no scenarios yet")
+    sys.exit(0)
+if problems:
+    print("\n".join(problems))
+    sys.exit(1)
+print(f"OK:{checked}")
+sys.exit(0)
+PY
+)
+    rc=$?
+    set -e
+
+    if [ "$rc" -ne 0 ]; then
+        fail "Check 53: scenarios still on the superseded 4-block model"
+        echo "$result" | sed 's/^/    /'
+        echo "    The schema TOLERATES these fields so historical files keep validating."
+        echo "    Tolerance is not permission: without this check a corrected model can sit"
+        echo "    unmigrated indefinitely, which is exactly what happened for a month."
+    elif [ "${result#NA:}" != "$result" ]; then
+        info "Check 53: ${result#NA:} -- N/A (nothing to migrate; not a pass over a population)"
+    else
+        pass "Check 53: all ${result#OK:} non-archived scenario(s) use Motivation/Persona/Simulation (archived ones may keep the legacy shape)"
+    fi
+}
+
 check_canonical_field_location() {
     section "Check 52: one fact, one field name"
 
@@ -2778,6 +2855,8 @@ check_render_identifier_exposure_declaration
 
 
 
+
+
 check_hooks_registration_parity
 check_chat_ux_axiom_markers
 check_gv12_test_coverage
@@ -2785,6 +2864,7 @@ check_receipt_contributor_canonical
 check_theory_claim_artifacts
 check_delivery_diamond_reconciliation
 check_canonical_field_location
+check_scenario_legacy_model
 
 # ============================================================
 # SUMMARY
