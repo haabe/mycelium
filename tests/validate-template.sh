@@ -2422,6 +2422,97 @@ PY
 # same audit found adaptive-thresholds.md documenting a gate removed a month
 # earlier, and a fabricated Hoskins element surviving in leaf-lifecycle.md, and
 # neither is reachable by name-matching.
+# Check 51: shipped-delivery evidence must have a delivery diamond
+# ---------------------------------------------------------------------------
+# WHY THIS EXISTS (dogfood 2026-08-02). The dogfood repo's dora-metrics.yml was
+# fully populated and classified ELITE -- ~4 deploys/day, lead time in minutes,
+# 0% strict change-failure rate -- with 11 launched cycles and 71 plugin
+# releases. Its active.yml held two diamonds: L0 and L1. No L2, no L3, no L4.
+#
+# So the canvas said the project was stuck in discovery while the product
+# shipped continuously at the top DORA band. "Stuck since May" was true of the
+# canvas and false of the work, and it went unnoticed for months because nothing
+# compared the two records.
+#
+# GENERALISES BEYOND DOGFOOD, which is the reason this is a check and not a note:
+# every brownfield adoption produces this shape. /mycelium:adopt exists for "the
+# code came first" -- a repo with years of delivery history, tests and CI gets a
+# fresh canvas that can only speak about L0/L1. Without this check, the framework
+# tells a shipping team it has not started.
+#
+# Direction matters: delivery evidence WITHOUT a delivery diamond is the defect.
+# A delivery diamond without metrics yet is simply early, and passes.
+check_delivery_diamond_reconciliation() {
+    section "Check 51: shipped-delivery evidence has a delivery diamond"
+
+    if [ ! -f ".claude/diamonds/active.yml" ]; then
+        info "Check 51: no .claude/diamonds/active.yml -- N/A"
+        return
+    fi
+
+    local result rc
+    set +e
+    result=$(python3 - <<'PY'
+import sys
+from pathlib import Path
+try:
+    import yaml
+except ImportError:
+    print("pyyaml unavailable -- skipped"); sys.exit(0)
+
+def load(p):
+    q = Path(p)
+    if not q.exists():
+        return {}
+    try:
+        return yaml.safe_load(q.read_text()) or {}
+    except Exception:
+        return {}
+
+diamonds = load(".claude/diamonds/active.yml").get("active_diamonds") or []
+delivery_scales = {"L4", "L5"}
+have = [d.get("id") for d in diamonds
+        if isinstance(d, dict) and str(d.get("scale", "")).upper() in delivery_scales]
+
+evidence = []
+dora = load(".claude/canvas/dora-metrics.yml")
+cls = dora.get("overall_classification")
+if cls not in (None, "", "TBD", "n/a"):
+    evidence.append(f"dora-metrics.yml overall_classification={cls!r}")
+
+cycles = load(".claude/canvas/cycle-history.yml").get("cycles") or []
+launched = [c for c in cycles if isinstance(c, dict) and c.get("terminal_state") == "launched"]
+shipped = [c for c in cycles if isinstance(c, dict) and c.get("artifacts_shipped")]
+if launched:
+    evidence.append(f"cycle-history.yml has {len(launched)} launched cycle(s)")
+if shipped:
+    evidence.append(f"cycle-history.yml has {len(shipped)} cycle(s) with artifacts_shipped")
+
+if not evidence:
+    print("no shipped-delivery evidence recorded -- nothing to reconcile")
+    sys.exit(0)
+if have:
+    print(f"delivery evidence reconciled against diamond(s): {', '.join(have)}")
+    sys.exit(0)
+
+print("Delivery evidence exists but NO diamond is at L4/L5:")
+for e in evidence:
+    print(f"  - {e}")
+print("The canvas is reporting a discovery-stage project while the product ships.")
+print("Spawn a delivery diamond (retrofit is fine -- mark it) or explain the absence.")
+sys.exit(1)
+PY
+)
+    rc=$?
+    set -e
+
+    if [ $rc -eq 0 ]; then
+        pass "Check 51: $result"
+    else
+        fail "Check 51: $result"
+    fi
+}
+
 check_theory_claim_artifacts() {
     section "Check 50: theories.md claims name artifacts that exist"
 
@@ -2595,6 +2686,7 @@ check_chat_ux_axiom_markers
 check_gv12_test_coverage
 check_receipt_contributor_canonical
 check_theory_claim_artifacts
+check_delivery_diamond_reconciliation
 
 # ============================================================
 # SUMMARY

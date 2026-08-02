@@ -1,0 +1,10 @@
+active_diamonds:
+  - id: l0-purpose
+    scale: L0
+    phase: discover
+  - id: l1-strategy
+    scale: L1
+    phase: discover
+  - id: l4-delivery
+    scale: L4
+    phase: deliver

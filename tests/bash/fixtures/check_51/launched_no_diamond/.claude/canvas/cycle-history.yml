@@ -1,0 +1,4 @@
+cycles:
+  - cycle_id: 1
+    terminal_state: launched
+    artifacts_shipped: ["v1.0.0"]
