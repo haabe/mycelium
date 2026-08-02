@@ -174,3 +174,50 @@ def test_real_repo_passes_its_own_rule(scripts_path):
     root = scripts_path.parents[2]
     findings = mod.scan(root)["findings"]
     assert findings == [], f"guards tested only passing: {findings}"
+
+
+def test_zero_guards_is_not_a_pass(scripts_path, tmp_path, capsys):
+    """0 guards checked must NOT report that every guard is sound.
+
+    THE DEFECT (dogfood 2026-08-02, found while assessing the CALMS Automation
+    bar this line is an instance of). The check printed "0 guard(s) checked" and
+    then, on the next line, "Every guard asserts its own failure direction." Both
+    true. The second is vacuously true over an empty set, and a reader takes it
+    as coverage — which is precisely the `verify_citations` failure that put
+    Automation at amber: a check that executes, matches nothing, and reads green.
+
+    Stating the zero was never enough. The verdict line has to refuse.
+    """
+    mod = _import(scripts_path)
+    (tmp_path / ".claude").mkdir(parents=True, exist_ok=True)
+    rc = mod.main(["--root", str(tmp_path)])
+    out = capsys.readouterr().out
+    assert "0 guard(s) checked" in out, "the count must still be reported"
+    assert "NOT A PASS" in out
+    assert "nothing was verified" in out
+    assert "Every guard asserts" not in out, "the universal must not survive"
+    assert rc == 1
+
+
+def test_pass_line_states_its_denominator_and_its_exclusion(scripts_path, capsys):
+    """A real pass names how many it checked AND what it left out.
+
+    Run against the SHIPPED TREE rather than a fixture, because the thing under
+    test is the shape of a genuine pass and the shipped tree is the only place a
+    genuine one occurs — the fixtures here all build guards that are meant to be
+    caught.
+
+    The exclusion clause is the load-bearing half. Guards not derived as blocking
+    sit outside the count, and a pass that does not say so invites the reader to
+    take it as covering every guard in the tree.
+    """
+    mod = _import(scripts_path)
+    root = scripts_path.parents[2]
+    rc = mod.main(["--root", str(root)])
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "checked guard(s)" in out
+    assert "outside this count" in out
+    assert "Every guard asserts its own failure direction." not in out, (
+        "the unqualified universal must not come back"
+    )

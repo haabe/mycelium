@@ -4,6 +4,49 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-02.
 
+## v0.74.0 - a green verdict over an empty population is not a pass
+
+Asked whether to build `sol-023b` — *"every passing check names what it did NOT
+verify"* — the answer turned out to be **do it, and not that.**
+
+A scope clause is prose, and this repo has four recorded instances of prose not
+binding. The two fitness functions that already handle empty input correctly do
+not disclaim. They **refuse**.
+
+Measured on a genuinely empty repo:
+
+| Check | Before |
+|---|---|
+| `check_wiring` | `No wiring breaks.` — **no counts at all** |
+| `check_negative_control` | `0 guard(s) checked` … `Every guard asserts its own failure direction.` |
+| `check_wiring_contract` | *"silence here is the absence this guard is for"* — already correct |
+| `check_test_authenticity` | *"rather than accepting a quiet zero"* — already correct |
+
+`check_wiring` was the worse of the two. With no denominator, a run over an empty
+tree was indistinguishable from a run over 437 references — the exact shape
+`verify_citations` shipped with for three months while matching 0% of live input,
+and the reason CALMS Automation sits at amber.
+
+`check_negative_control` stated its zero and then asserted a universal that is
+vacuously true across it. **Stating the zero was never enough.** The verdict line
+has to refuse.
+
+**Now:** `check_wiring` reports a per-rule denominator (25 scripts / 243
+plugin-root refs / 143 state-path refs / 26 automation claims, upstream), exits 1
+when all four are zero, and **names any individual rule that matched nothing** —
+the between-case is the common state, and an unqualified "no breaks" there is the
+quiet half-truth this change is about. `check_negative_control` refuses on zero,
+and its pass states both its denominator and its exclusion.
+
+**One existing test had to be rewritten rather than adapted, and it is the best
+evidence the change was needed.** `test_clean_tree_exits_zero` built a "clean
+tree" containing a single markdown file — every rule matched an empty population —
+and asserted that this exits 0. The test was locking in the behaviour being
+removed. Its fixture now contains a script *with a caller*, so rule A judges a
+real population and finds it clean, which is what "no breaks" is supposed to mean.
+
+Seven new fixtures.
+
 ## v0.73.1 - the guard was written for exactly this tree and could not see it
 
 Both `check_wiring_contract.py` and `check_test_authenticity.py` carried
