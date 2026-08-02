@@ -4,6 +4,51 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-07-30.
 
+## v0.72.0 - the canvas said stuck while the product shipped four times a day
+
+The dogfood repo's `dora-metrics.yml` was fully populated and classified **elite** —
+roughly four deploys a day, lead time in minutes, 0% strict change-failure rate, 5-10
+minute restore — alongside 11 launched cycles and 71 plugin releases.
+
+Its `active.yml` held two diamonds. L0 and L1. No L2, no L3, no L4.
+
+So the canvas reported a project **stuck in discovery** while the product shipped
+continuously at the top DORA band, and nothing compared the two records. The founder read
+the canvas as the state of his product for months. "Stuck since May" was true of the
+canvas and false of the work.
+
+### Why this is not a dogfood curiosity
+
+**Every brownfield adoption produces this shape.** It is what `/mycelium:adopt` exists
+for — "the code came first." A repo with years of delivery history, tests and CI gets a
+fresh canvas that can only speak about L0/L1. Without a reconciliation, the framework
+tells a shipping team it has not started, which is both wrong and the fastest possible
+way to lose them.
+
+### Check 51
+
+Reconciles shipped-delivery evidence against delivery diamonds. Evidence is
+`dora-metrics.yml#overall_classification` being set, or `cycle-history.yml` carrying
+launched cycles or shipped artifacts. If any exists and no diamond sits at L4/L5, it
+fails and names what it found.
+
+**Direction is deliberate and fixture-guarded.** Delivery evidence *without* a delivery
+diamond is the defect. A delivery diamond *without* metrics yet is simply early and
+passes — failing that would punish spawning the diamond first, which is the exact
+behaviour the check wants to encourage.
+
+### How it surfaced
+
+While answering whether the L0-L1 confidence bar was too high to ever clear. **It was
+not.** The 0.9 base is modified by `project_type_adaptations`; the effective solo/dogfood
+bar is 0.50-0.63, and the dogfood L0 cleared at exactly 0.63. The one thing no multiplier
+ever reduces is `external_evidence_min: NO_REDUCTION` — which is correct, since
+discounting it would let a project self-certify demand.
+
+And the scales were never sequential. The spawn rules say **"parent diamond remains
+active while children execute"** and only L3→L4 mentions a confidence threshold at all.
+L1 sitting at 0.26 had never blocked anything above it. The tree was simply never grown.
+
 ## v0.71.0 - the theory audit, and the file nobody checked
 
 `docs/theories.md` is where this framework states what it claims to implement. Every
