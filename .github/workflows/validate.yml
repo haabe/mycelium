@@ -99,6 +99,9 @@ jobs:
       - name: Run canvas schema + trace validation
         run: python3 plugins/mycelium/scripts/validate_canvas.py
 
+      - name: No shipped check reports success over empty input
+        run: python3 plugins/mycelium/scripts/check_empty_input_honesty.py --root .
+
       - name: Run dead-reference doc check (markdown links resolve in either tree)
         run: python3 plugins/mycelium/scripts/check_doc_references.py --root .
 

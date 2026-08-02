@@ -72,6 +72,11 @@ def test_receipts_case_file_is_allowlisted(scripts_path, tmp_path):
         tmp_path / "docs/receipts/cases/2026-06-18-legacy-path-rot-guard.md",
         "the rot quoted `.claude/engine/x.md` as its subject",
     )
+    # A clean, SCANNED, non-allowlisted file so the run has a real denominator.
+    # Added v0.75.0: without it every file in this fixture is excluded, the scan
+    # examines nothing, and the exit-0 assertion was testing the vacuous pass
+    # that v0.75.0 removes rather than the exclusion this test is about.
+    _write(tmp_path / "docs/clean.md", "nothing legacy here")
     report = mod.scan(tmp_path)
     assert report["hits"] == []
     assert mod.main(["--root", str(tmp_path)]) == 0
@@ -82,6 +87,11 @@ def test_generic_allowlisted_files_are_skipped(scripts_path, tmp_path):
     mod = _import(scripts_path)
     _write(tmp_path / "AGENTS.md", "legacy form put it at .claude/orchestration/x.md")
     _write(tmp_path / "docs/changelog.md", "fixed .claude/orchestration/x.md pointer")
+    # A clean, SCANNED, non-allowlisted file so the run has a real denominator.
+    # Added v0.75.0: without it every file in this fixture is excluded, the scan
+    # examines nothing, and the exit-0 assertion was testing the vacuous pass
+    # that v0.75.0 removes rather than the exclusion this test is about.
+    _write(tmp_path / "docs/clean.md", "nothing legacy here")
     report = mod.scan(tmp_path)
     assert report["hits"] == []
     assert mod.main(["--root", str(tmp_path)]) == 0
@@ -116,6 +126,11 @@ def test_non_scanned_location_not_flagged(scripts_path, tmp_path):
     """A file outside SCAN_GLOBS (.claude/memory/) is not scanned even with a hit."""
     mod = _import(scripts_path)
     _write(tmp_path / ".claude/memory/x.md", "see .claude/engine/y.md")
+    # A clean, SCANNED, non-allowlisted file so the run has a real denominator.
+    # Added v0.75.0: without it every file in this fixture is excluded, the scan
+    # examines nothing, and the exit-0 assertion was testing the vacuous pass
+    # that v0.75.0 removes rather than the exclusion this test is about.
+    _write(tmp_path / "docs/clean.md", "nothing legacy here")
     report = mod.scan(tmp_path)
     assert report["hits"] == []
     assert mod.main(["--root", str(tmp_path)]) == 0

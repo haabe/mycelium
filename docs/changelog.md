@@ -4,6 +4,50 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-02.
 
+## v0.75.0 - a check over the checks, and it found the most-read green line in the framework
+
+v0.74.0 fixed four fitness functions by hand, and CALMS Automation was
+deliberately **held** at amber. Fixing four does not stop the fifth, and the bar
+asks for a *mechanism*: "verifies a shipped check matches live input, not merely
+that it executes."
+
+`check_empty_input_honesty.py` is that mechanism. It **runs** every shipped check
+against a genuinely empty repository and reads the exit code.
+
+**Not a source grep.** A comment, a docstring, or an unreachable branch would
+satisfy one. The fixture `test_a_docstring_does_not_satisfy_the_guard` is a file
+containing the refusal string, a docstring promising the refusal, and a `print`
+of it — which then exits 0. Behaviour cannot be faked by prose about behaviour.
+
+**Building it found three more checks passing over nothing:**
+
+- `check_doc_references` — `No dead references.` over zero links
+- `check_legacy_paths` — `No stale legacy-path references.` over zero files
+- `validate_canvas` — a **PASS line naming zero canvas files**, exit 0
+
+The last is the single most-read green line in this framework, and the exact
+false-assurance effect the digital-gardener friction log named on 2026-08-02,
+before anyone checked what the empty case actually printed. All three now refuse
+with a denominator.
+
+**Two exemptions, re-verified rather than trusted.** `check_bvssh_reconcile`
+legitimately passes on zero — it detects *orphaned* assessments, so zero
+assessments means zero orphans, and flagging it would fail every project that has
+simply never run `/bvssh-check`. `check_gated_by` is a self-declared stub, and its
+exemption is invalidated the moment the file stops saying so.
+
+**One exemption is a finding, not an exclusion.** `verify_citations` — the script
+whose three-month blindness set this bar — is advisory. Its `main()` returns
+`None`, it can never exit non-zero, and it therefore sits structurally outside the
+guard built to serve the bar it created. The bar cannot fully close for advisory
+reporters, and forcing an exit contract on one would be theatre.
+
+Scope is in the pass line: this catches **empty** input, not **reduced** input. A
+check matching 3 of 300 live cases still exits 0 here.
+
+Wired into CI in the same commit, because an unwired wiring guard would have been
+the complete irony.
+
 ## v0.74.0 - a green verdict over an empty population is not a pass
 
 Asked whether to build `sol-023b` — *"every passing check names what it did NOT

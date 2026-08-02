@@ -200,8 +200,16 @@ def main(argv=None):
             print(f"\nDEAD references ({len(report['dead'])}):")
             for src, target in report["dead"]:
                 print(f"  {src}\n      -> {target}")
+        elif not report["links_checked"]:
+            # Refuse the bare pass: zero links checked means nothing was
+            # verified, and "No dead references." reads as coverage.
+            print("NOT A PASS: 0 markdown link(s) were checked, so nothing was "
+                  "verified. Either --root points somewhere with no docs, or the "
+                  "link pattern has stopped matching this repo's markdown.")
+            return 1
         else:
-            print("No dead references.")
+            print(f"No dead references across {report['links_checked']} "
+                  "checked link(s).")
 
     return 1 if report["dead"] else 0
 

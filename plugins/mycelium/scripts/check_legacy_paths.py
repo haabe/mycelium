@@ -161,8 +161,14 @@ def main(argv=None):
             print("\nFix: repoint to plugins/mycelium/<dir>/ (docs) or a relative path "
                   "(plugin-internal files). If the reference intentionally documents the "
                   "legacy form, add the file to ALLOWLIST_FILES.")
+        elif not report["files_scanned"]:
+            print("NOT A PASS: 0 doc file(s) were scanned, so nothing was "
+                  "verified. Either --root points somewhere with no docs, or the "
+                  "file pattern has stopped matching this repo's layout.")
+            return 1
         else:
-            print("No stale legacy-path references.")
+            print(f"No stale legacy-path references across "
+                  f"{report['files_scanned']} scanned file(s).")
 
     return 1 if report["hits"] else 0
 
