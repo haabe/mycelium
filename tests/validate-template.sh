@@ -2403,6 +2403,100 @@ PY
 # canonical join key to CONTRIBUTORS.md) plus optional `contributor_note` (the
 # context). This check keeps it that way — a one-time cleanup with no guard is
 # how SKILL_COUNT_FILES restaled twice.
+# Check 50: theories.md claims must name artifacts that actually exist
+# ---------------------------------------------------------------------------
+# WHY THIS EXISTS (2026-08-02 theory-fidelity audit). theories.md is the file
+# that says what the framework claims to implement, and every claim ends in an
+# "Implemented as:" line naming gates, skills and files. NOTHING verified those
+# names. The audit found gate 10 cited as "Delivery Health" — a section heading
+# in jit-tooling/definition-of-done.md, not a gate; the gate is "DORA / Delivery
+# Metrics". It also found a Wardley "NUDGE at Develop->Deliver" that exists
+# nowhere in the tree.
+#
+# A theory claim naming an artifact that does not exist is worse than no claim:
+# it reads as evidence the theory was operationalised, and docs/theories.md is
+# the file a skeptical reader opens first.
+#
+# SCOPE, stated so the check is not mistaken for more than it is: this verifies
+# that named artifacts EXIST. It cannot verify they behave as described — the
+# same audit found adaptive-thresholds.md documenting a gate removed a month
+# earlier, and a fabricated Hoskins element surviving in leaf-lifecycle.md, and
+# neither is reachable by name-matching.
+check_theory_claim_artifacts() {
+    section "Check 50: theories.md claims name artifacts that exist"
+
+    local theories="docs/theories.md"
+    local gates="plugins/mycelium/engine/theory-gates.md"
+
+    if [ ! -f "$theories" ]; then
+        info "Check 50: $theories absent — N/A"
+        return
+    fi
+
+    local result rc
+    set +e
+    result=$(python3 - "$theories" "$gates" <<'PY'
+import re, sys
+from pathlib import Path
+
+theories = Path(sys.argv[1]).read_text()
+gates_path = Path(sys.argv[2])
+gates_text = gates_path.read_text() if gates_path.exists() else ""
+
+problems = []
+
+# 1. every "gate N (Name)" must match a "### N. <Name> Gate" heading
+gate_headings = {}
+for m in re.finditer(r"^### (\d+)\.\s+(.+?)\s*$", gates_text, re.M):
+    gate_headings[m.group(1)] = m.group(2).strip()
+
+# Correction notes QUOTE the old wrong citation, so blank quoted spans first:
+# documenting a fix must not permanently re-trip the check that prompted it.
+scan = re.sub(r'"[^"]*"', lambda q: " " * len(q.group(0)), theories)
+for m in re.finditer(r"gate (\d+) \(([^)]+)\)", scan, re.I):
+    num, claimed = m.group(1), m.group(2).strip()
+    actual = gate_headings.get(num)
+    if actual is None:
+        problems.append(f"theories.md cites gate {num} ({claimed}) — no '### {num}.' heading in theory-gates.md")
+        continue
+    # claimed name must appear in the real heading (case/punctuation tolerant)
+    norm = lambda s: re.sub(r"[^a-z0-9]+", "", s.lower())
+    if norm(claimed) not in norm(actual) and norm(actual.replace(" Gate", "")) not in norm(claimed):
+        problems.append(f"theories.md calls gate {num} '{claimed}'; theory-gates.md calls it '{actual}'")
+
+# 2. every backticked path in an "Implemented as:" line must exist
+for line in theories.splitlines():
+    if "Implemented as:" not in line:
+        continue
+    tail = line.split("Implemented as:", 1)[1]
+    for ref in re.findall(r"`([^`]+)`", tail):
+        ref = ref.strip()
+        if ref.startswith("/"):          # skill invocation, not a path
+            continue
+        if "/" not in ref and not ref.endswith((".md", ".yml")):
+            continue
+        cands = [Path(ref), Path("plugins/mycelium")/ref, Path("plugins/mycelium/engine")/ref,
+                 Path(".claude")/ref, Path("docs")/ref]
+        if not any(c.exists() for c in cands):
+            problems.append(f"theories.md 'Implemented as:' names `{ref}` — not found")
+
+if problems:
+    print("\n".join(problems))
+    sys.exit(1)
+print(f"{len(gate_headings)} gates cross-checked; all Implemented-as paths resolve")
+PY
+)
+    rc=$?
+    set -e
+
+    if [ $rc -eq 0 ]; then
+        pass "Check 50: $result"
+    else
+        fail "Check 50: theory claims name artifacts that do not exist:
+$result"
+    fi
+}
+
 check_receipt_contributor_canonical() {
     section "Check 49: receipts case frontmatter carries a canonical contributor"
 
@@ -2500,6 +2594,7 @@ check_hooks_registration_parity
 check_chat_ux_axiom_markers
 check_gv12_test_coverage
 check_receipt_contributor_canonical
+check_theory_claim_artifacts
 
 # ============================================================
 # SUMMARY

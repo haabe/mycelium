@@ -17,7 +17,7 @@ OST Leaf → Four Risks → ICE Score → Assumption Test → GIST Entry
 **Input**: Research evidence (interviews, behavioral data, analytics)
 **Gate**: Opportunity must cite ≥2 evidence sources (Torres CDH rule)
 **Output**: Solution leaf in `canvas/opportunities.yml` under its parent opportunity
-**Scenario link**: Each opportunity should have at least one scenario in `canvas/scenarios.yml` that illustrates the need. Scenarios are born from interview stories (`/user-interview`) — extract the persona, means, motive, and simulation from real user narratives. If no scenario exists for this opportunity, create one before generating solutions.
+**Scenario link**: Each opportunity should have at least one scenario in `canvas/scenarios.yml` that illustrates the need. Scenarios are born from interview stories (`/user-interview`) — extract the **Motivation, Persona and Simulation** from real user narratives — Hoskins's THREE elements. (Corrected v0.71.0: this line read "persona, means, motive, and simulation". **"Means" is not a Hoskins element** — it was recorded as a distortion in `docs/theories.md` on 2026-07-01 and removed from five other files in v0.66.3, and survived here. How the persona interacts with tools lives INSIDE the Simulation.). If no scenario exists for this opportunity, create one before generating solutions.
 **Skill**: `/ost-builder`, `/user-interview`
 
 The leaf is a hypothesis: "This solution might address this opportunity." It is NOT validated yet.

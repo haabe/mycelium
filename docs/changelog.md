@@ -4,6 +4,61 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-07-30.
 
+## v0.71.0 - the theory audit, and the file nobody checked
+
+`docs/theories.md` is where this framework states what it claims to implement. Every
+claim ends in an "Implemented as:" line naming gates, skills and files. **Nothing
+verified those names.**
+
+A full audit of all eight theories, prompted by a user who said he didn't trust the
+answer he'd just been given, found this:
+
+### Naming defects (3)
+
+- **gate 10 cited as "Delivery Health"** — that is a section heading in
+  `jit-tooling/definition-of-done.md`, not a gate. The gate is *DORA / Delivery Metrics*,
+  and it applies at Deliver→Complete across L3-L5, not "L4 only" as claimed.
+- **gate 4 cited as "Domain Fit"** — it is the *Cynefin Gate*. The manual audit missed
+  this one; the new check found it on its first run.
+- **a Wardley "NUDGE at Develop→Deliver"** that exists nowhere in the plugin tree. The
+  claim is now withdrawn rather than implemented, because nothing establishes that a
+  Wardley check belongs at that transition.
+
+### Content defects (2), which matter more
+
+`engine/adaptive-thresholds.md` still documented the **ICE advance threshold removed in
+v0.54.0** — including *"below this, the leaf is archived."* That is scoring-for-selection,
+which Torres cautions against, and which `leaf-lifecycle.md` Phase 5 explicitly forbids:
+the gate is a **validated assumption-test verdict**, ICE is advisory only, and a leaf is
+archived only when its riskiest assumption is *invalidated*. The 2026-07-01 correction
+reached `theories.md` and `leaf-lifecycle.md` and never reached this file. An agent
+reading it would have archived leaves on a score.
+
+And the **fabricated Hoskins "Means" element** — recorded as a distortion on 2026-07-01,
+cleaned from five files in v0.66.3 — survived in `leaf-lifecycle.md:20`. A sixth
+location, four weeks after the correction.
+
+### What shipped
+
+**Check 50** cross-references every `gate N (Name)` citation in `theories.md` against the
+`### N.` headings in `theory-gates.md`, and resolves every path named in an
+"Implemented as:" line. Five fixtures, including one guarding the direction that bit
+during authoring: **a correction note quotes the old wrong citation**, and the first
+version of the check flagged the quotation — which would have made recording a correction
+the thing that breaks the build.
+
+**Scope is stated inside the check**: it verifies artifacts *exist*, not that they behave
+as described. Both content defects above needed a human reading prose. Name-matching
+would never have reached either.
+
+### Five of eight audited clean
+
+Sinek, Christensen, Cynefin, DORA and the Torres mechanism are implemented as documented.
+`/interview` Q1 elicits the change rather than back-labelling from a build-list, and
+explains why. Gate 4 requires probe-sense-respond experiment evidence for a Complex
+classification. `dora-metrics.yml` carries exactly the four core metrics with Reliability
+correctly separated as operational. Those were checked, not assumed.
+
 ## v0.70.0 - the framework was thin at the exact moment evidence destroys something
 
 Both changes graduated from a dogfood project's friction log. That project ran an
