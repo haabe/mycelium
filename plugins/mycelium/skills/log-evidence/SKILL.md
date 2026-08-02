@@ -100,13 +100,21 @@ If the user reports a task couldn't be completed (contact unavailable, timing di
 3. If reschedule: update the task's `objective` or `target_persona` if needed, keep in `pending_tasks`
 4. Either way: "The evidence gap still exists. Consider `/mycelium:handoff` to plan an alternative approach."
 
-6. **Check for contradictions**:
-   - Compare findings against existing canvas data
-   - If findings contradict assumptions: flag clearly
-     - "This contradicts [canvas section / assumption]. The user said [X] but we assumed [Y]."
-     - Suggest: "Consider running `/mycelium:devils-advocate` to stress-test this assumption, or update the canvas with `/mycelium:canvas-update`."
-   - If findings support assumptions: note the confirmation
-     - "This supports [canvas section]. Confidence for [item] can increase."
+6. **Check for contradictions — and separate QUALIFIES from FALSIFIES**:
+   - Compare findings against existing canvas data.
+   - If findings support assumptions: note the confirmation — "This supports [canvas section]. Confidence for [item] can increase."
+   - If findings merely QUALIFY an assumption (narrow its scope, add a condition): flag clearly — "This qualifies [assumption]: it holds for [X] but not [Y]" — update the assumption's wording, and continue.
+   - **If findings FALSIFY an assumption — it fails against its own pre-committed criteria — flagging is not enough. Falsification invalidates UPWARD.** This skill otherwise only ever writes *downward* into provenance, which is why a killed premise can leave the framing that rests on it untouched while every write reports success. Three things are REQUIRED before this run may be reported as complete:
+
+     **(a) Upward propagation pass.** Walk the fields that DEPEND on the falsified assumption and reconcile each one: `purpose.yml#why`, `who.*`, `findings[]`, the opportunity that motivated the test, and any scenario asserting the dead framing as current belief. A `why` field still asserting what the same file now records as falsified is the characteristic failure. List each field you changed and each you deliberately left, with the reason.
+
+     **(b) A `.claude/harness/decision-log.md` entry.** Falsification is a decision, and it is usually the largest one a project makes. Record what was falsified, the evidence that did it, the confidence move, whether any human-task closed early, and — per the log's own required field — `why_not_alternatives`, including the alternatives most tempting here: re-scoping the assumption after seeing the data to a boundary the data does not support, and discounting unwelcome answers as bias. If you would not reject those in writing, you have not rejected them.
+
+     **(c) Confidence re-derivation, not adjustment.** Re-derive from what the canvas now supports rather than nudging the old number, and check that any confidence *rationale prose* (`confidence_effect`, or equivalent narrative) is updated too — the number can be consistent everywhere while the sentence beside it contradicts it.
+
+     Then suggest `/mycelium:devils-advocate` on the falsification itself. That is the right NEXT step and is not a substitute for (a)-(c). It is worth running: a falsification is where a tally gets counted at the strength of its strongest answer and where a reconciliation gets constructed to make two statements agree (anti-pattern #7).
+
+   - **Do not report a falsifying run as successful on the strength of the provenance writes alone.** Every write can succeed while the three things above are undone. That is the shape this branch exists to prevent (roadmap dogfood 2026-08-02: `/log-evidence` invoked four times across two days, provenance correct every time, run reported success every time, and the project's largest decision went unrecorded until the user asked).
 
 7. **Recalculate confidence**:
    - Show before/after: "Diamond confidence: 0.45 -> 0.52 (added 1 external_human source)"
@@ -124,6 +132,9 @@ All user-facing summaries above follow the interface-load/problem-load disciplin
 - Updates: relevant canvas file provenance (evidence_sources, source_classes, evidence_type, confidence)
 - Updates: `.claude/canvas/human-tasks.yml` (moves task to completed)
 - May update: `.claude/canvas/opportunities.yml`, `.claude/canvas/user-needs.yml`, `.claude/canvas/jobs-to-be-done.yml` depending on findings
+- **Updates: `.claude/harness/decision-log.md`** whenever this run kills an assumption, moves a confidence value, or closes a human-task before its pre-committed horizon. Any one of those is decision-log-worthy on its own. This skill was the only one of 36 that never named the decision log, which is why falsifications ingested through it left no trace there.
+
+**Schema PASS is not consistency.** `scripts/validate_canvas.py` returning `PASS (N canvas files, M schemas)` means the YAML matches its schemas. It cannot detect a `why` field asserting what the same file records as falsified, and it must never stand in for the post-task consistency judgement. After a falsifying run, re-read the framing fields you changed and confirm they say what you think they say.
 
 ## Theory Citations
 

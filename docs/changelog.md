@@ -4,6 +4,61 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-07-30.
 
+## v0.70.0 - the framework was thin at the exact moment evidence destroys something
+
+Both changes graduated from a dogfood project's friction log. That project ran an
+assumption test against pre-committed criteria, and the evidence falsified its founding
+premise — which is the *intended* outcome of assumption testing, not an edge case.
+
+### `/log-evidence` had no falsification path
+
+It was invoked four times across two days. Every run wrote provenance correctly into
+four canvas files. Every run reported success. And when the premise died, three things
+were left undone:
+
+- `purpose.yml`'s `why`, `who.*` and `findings[]` still asserted the falsified framing as
+  current belief
+- `harness/decision-log.md` had no entry at all — for an assumption kill, a 0.30 → 0.10
+  confidence move, and a human-task closed 19 days before its horizon
+- the confidence *narrative* said 0.25 while the diamond said 0.10
+
+The skill was the only one of 36 that never referenced the decision log. Its step 6 did
+catch contradictions, but terminated at *flag and suggest*. **Flagging is not propagating.**
+
+The structural point: **falsification invalidates upward**, and this skill only ever wrote
+*downward* into provenance. So a killed premise could leave every field that rests on it
+untouched while each write reported success.
+
+Step 6 now separates QUALIFIES from FALSIFIES. A falsifying run requires an upward
+propagation pass over the dependent framing fields, a decision-log entry carrying
+`why_not_alternatives` (naming the two most tempting escapes — re-scoping the assumption
+after seeing the data, and discounting unwelcome answers as bias), and confidence
+**re-derivation** rather than adjustment. `/devils-advocate` is the right next step and
+is explicitly not a substitute for recording what happened.
+
+Also: `canvas-health`'s confidence cross-check now covers rationale **prose**, not only
+`confidence:` fields — the drift here was in narrative that nothing reads, and *prose that
+encodes state is state*. And `validate_canvas.py` returning PASS is named for what it
+means: the YAML matches its schemas. It cannot detect a `why` field asserting what the
+same file records as falsified, and it must not stand in for the consistency judgement.
+
+### Pseudonymous identifiers reaching the user as bare tokens
+
+Same friction log. An action list was written as "Reply to R11", "stagger R8, R4, R18".
+The user's verdict: *"'R11' means nothing to me. It is gibberish."* Two of four items
+could not be acted on.
+
+A privacy convention that keeps real names out of git is a **storage** rule. Applied to
+conversation it invents a private language and then issues instructions in it — and the
+identifiers read as authoritative precisely because they are everywhere in the canvas, so
+the output looks precise while being unactionable.
+
+Rule 1 now covers project-data identifiers, not only framework vocabulary: a canvas-
+generated pseudonym may appear in user-facing output only with its descriptor attached at
+first use. The descriptor is usually more useful than the real name, because the
+descriptor is the evidence. And if you cannot produce one, that is the signal you do not
+know who you are referring to either.
+
 ## v0.69.0 - the contract had ten rules for talking and none for listening
 
 Every rule in `engine/agent-operating-contract.md` governed what the agent **says**.

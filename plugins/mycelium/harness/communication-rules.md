@@ -17,6 +17,27 @@ Use `engine/status-translations.md` to translate diamond states.
 - When reporting confidence, always include: the level, the evidence type, WHY it's
   appropriate, and what would increase it.
 
+**This covers project-data identifiers, not only framework vocabulary.** A pseudonymous
+or internal identifier the canvas generated — `R11`, `respondent-4`, `account-7` — may
+appear in user-facing output only with its descriptor attached at first use in that turn:
+`R11 (Gardenize + album + marker sticks, control gone by July)`. Never as a bare token in
+an instruction the user is expected to act on.
+
+Privacy conventions that keep real names out of git are **storage** rules. Applying one as
+a *conversation* rule invents a private language and then issues instructions in it. The
+identifiers also read as authoritative precisely because they appear throughout the canvas,
+so the output looks precise while being unactionable — worse than obvious jargon, which at
+least signals that a translation is needed.
+
+The descriptor is usually **more** useful than the real name would have been, because the
+descriptor is the evidence: "the one whose marker sticks got stolen by magpies" identifies
+the person and carries why they matter. And if you cannot produce a descriptor, that is the
+signal you do not actually know who you are referring to either.
+
+*Graduated 2026-08-02 from a project friction log. The user's response to a four-item action
+list written in bare IDs: "'R11' means nothing to me. It is gibberish." Two of the four items
+could not be acted on at all. Same graduation path as the wall-of-text rule below.*
+
 ## Suggest relevant skills at transitions
 
 Surface the skill that satisfies each gate at the moment the transition makes it
