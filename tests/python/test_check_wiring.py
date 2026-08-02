@@ -46,7 +46,7 @@ def test_rule_a_script_with_no_caller_is_flagged(scripts_path, tmp_path):
     """A shipped script nothing invokes is one finding; exit 1."""
     mod = _import(scripts_path)
     _write(_plugin(tmp_path) / "scripts/lonely.py", "print('hi')\n")
-    findings = mod.check_orphan_scripts(tmp_path)
+    findings, _ = mod.check_orphan_scripts(tmp_path)
     assert len(findings) == 1
     assert findings[0]["rule"] == "A"
     assert "lonely.py" in findings[0]["target"]
@@ -61,7 +61,7 @@ def test_rule_a_commented_out_caller_does_not_count(scripts_path, tmp_path):
         tmp_path / ".github/workflows/validate.yml",
         "jobs:\n  # runs lonely.py eventually\n  #   run: python3 lonely.py\n",
     )
-    findings = mod.check_orphan_scripts(tmp_path)
+    findings, _ = mod.check_orphan_scripts(tmp_path)
     assert len(findings) == 1, "a commented-out invocation must not satisfy the check"
 
 
@@ -73,7 +73,7 @@ def test_rule_a_real_ci_caller_satisfies(scripts_path, tmp_path):
         tmp_path / ".github/workflows/validate.yml",
         "jobs:\n  steps:\n    - run: python3 plugins/mycelium/scripts/wired.py --root .\n",
     )
-    assert mod.check_orphan_scripts(tmp_path) == []
+    assert mod.check_orphan_scripts(tmp_path)[0] == []
 
 
 def test_rule_a_skill_caller_satisfies(scripts_path, tmp_path):
@@ -84,7 +84,7 @@ def test_rule_a_skill_caller_satisfies(scripts_path, tmp_path):
         _plugin(tmp_path) / "skills/diamond-render/SKILL.md",
         "pipe it: python3 ${CLAUDE_PLUGIN_ROOT}/scripts/validate_mermaid.py -\n",
     )
-    assert mod.check_orphan_scripts(tmp_path) == []
+    assert mod.check_orphan_scripts(tmp_path)[0] == []
 
 
 def test_rule_a_allowlisted_script_is_exempt(scripts_path, tmp_path):
@@ -92,14 +92,14 @@ def test_rule_a_allowlisted_script_is_exempt(scripts_path, tmp_path):
     mod = _import(scripts_path)
     name = next(iter(mod.ORPHAN_ALLOWLIST))
     _write(_plugin(tmp_path) / f"scripts/{name}", "# parked\n")
-    assert mod.check_orphan_scripts(tmp_path) == []
+    assert mod.check_orphan_scripts(tmp_path)[0] == []
 
 
 def test_rule_a_no_scripts_dir_is_quiet(scripts_path, tmp_path):
     """A tree with no scripts/ dir yields nothing rather than raising."""
     mod = _import(scripts_path)
     _write(_plugin(tmp_path) / "engine/x.md", "hi\n")
-    assert mod.check_orphan_scripts(tmp_path) == []
+    assert mod.check_orphan_scripts(tmp_path)[0] == []
 
 
 # ---------------------------------------------------------------------------
@@ -113,7 +113,7 @@ def test_rule_b_unresolvable_plugin_root_ref_is_flagged(scripts_path, tmp_path):
         _plugin(tmp_path) / "skills/xai-check/SKILL.md",
         "Read `${CLAUDE_PLUGIN_ROOT}/jit-tooling/active-stack.yml` first.\n",
     )
-    findings = mod.check_plugin_root_refs(tmp_path)
+    findings, _ = mod.check_plugin_root_refs(tmp_path)
     assert len(findings) == 1
     assert findings[0]["rule"] == "B"
     assert "active-stack.yml" in findings[0]["detail"]
@@ -127,7 +127,7 @@ def test_rule_b_repo_root_file_through_plugin_cache_is_flagged(scripts_path, tmp
         _plugin(tmp_path) / "skills/scaffold-cost-check/SKILL.md",
         "- `${CLAUDE_PLUGIN_ROOT}/AGENTS.md` if present\n",
     )
-    findings = mod.check_plugin_root_refs(tmp_path)
+    findings, _ = mod.check_plugin_root_refs(tmp_path)
     assert len(findings) == 1, "...but resolving it through the plugin cache still fails"
 
 
@@ -139,7 +139,7 @@ def test_rule_b_resolvable_ref_is_quiet(scripts_path, tmp_path):
         _plugin(tmp_path) / "skills/s/SKILL.md",
         "See `${CLAUDE_PLUGIN_ROOT}/engine/theory-gates.md`.\n",
     )
-    assert mod.check_plugin_root_refs(tmp_path) == []
+    assert mod.check_plugin_root_refs(tmp_path)[0] == []
 
 
 def test_rule_b_brace_alternation_expands(scripts_path, tmp_path):
@@ -150,7 +150,7 @@ def test_rule_b_brace_alternation_expands(scripts_path, tmp_path):
         _plugin(tmp_path) / "engine/contract.md",
         "load `${CLAUDE_PLUGIN_ROOT}/domains/{discovery|delivery}/CLAUDE.md`\n",
     )
-    findings = mod.check_plugin_root_refs(tmp_path)
+    findings, _ = mod.check_plugin_root_refs(tmp_path)
     assert len(findings) == 1, "the missing delivery/ branch must be caught"
     assert "delivery" in findings[0]["detail"]
 
@@ -162,7 +162,7 @@ def test_rule_b_globs_and_placeholders_are_skipped(scripts_path, tmp_path):
         _plugin(tmp_path) / "engine/x.md",
         "`${CLAUDE_PLUGIN_ROOT}/skills/*/SKILL.md` and `${CLAUDE_PLUGIN_ROOT}/s/<name>.md`\n",
     )
-    assert mod.check_plugin_root_refs(tmp_path) == []
+    assert mod.check_plugin_root_refs(tmp_path)[0] == []
 
 
 # ---------------------------------------------------------------------------
@@ -176,7 +176,7 @@ def test_rule_c_split_state_path_is_flagged(scripts_path, tmp_path):
         _plugin(tmp_path) / "skills/corrections-audit/SKILL.md",
         "read `.claude/harness/warnings-log.md` for open classes\n",
     )
-    findings = mod.check_state_path_agreement(tmp_path)
+    findings, _ = mod.check_state_path_agreement(tmp_path)
     assert len(findings) == 1
     assert findings[0]["rule"] == "C"
     assert ".claude/memory/warnings-log.md" in findings[0]["detail"]
@@ -189,7 +189,7 @@ def test_rule_c_canonical_path_is_quiet(scripts_path, tmp_path):
         _plugin(tmp_path) / "skills/corrections-audit/SKILL.md",
         "read `.claude/memory/warnings-log.md` for open classes\n",
     )
-    assert mod.check_state_path_agreement(tmp_path) == []
+    assert mod.check_state_path_agreement(tmp_path)[0] == []
 
 
 def test_rule_c_allowlisted_migration_doc_is_exempt(scripts_path, tmp_path):
@@ -199,14 +199,14 @@ def test_rule_c_allowlisted_migration_doc_is_exempt(scripts_path, tmp_path):
         _plugin(tmp_path) / "skills/migrate-from-legacy/SKILL.md",
         "preserve `.claude/harness/warnings-log.md` before pruning\n",
     )
-    assert mod.check_state_path_agreement(tmp_path) == []
+    assert mod.check_state_path_agreement(tmp_path)[0] == []
 
 
 def test_rule_c_unregistered_file_is_ignored(scripts_path, tmp_path):
     """Only registered state files are policed — no blanket path opinions."""
     mod = _import(scripts_path)
     _write(_plugin(tmp_path) / "engine/x.md", "see `.claude/whatever/random.md`\n")
-    assert mod.check_state_path_agreement(tmp_path) == []
+    assert mod.check_state_path_agreement(tmp_path)[0] == []
 
 
 # ---------------------------------------------------------------------------
@@ -214,11 +214,72 @@ def test_rule_c_unregistered_file_is_ignored(scripts_path, tmp_path):
 # ---------------------------------------------------------------------------
 
 def test_clean_tree_exits_zero(scripts_path, tmp_path):
-    """A tree with no breaks exits 0."""
+    """A tree with real, correctly-wired content exits 0.
+
+    REWRITTEN v0.74.0, AND THE OLD VERSION IS THE POINT. Its "clean tree" was a
+    single markdown file saying "nothing to see" — every rule matched an EMPTY
+    population, and the test asserted that this exits 0. It was locking in the
+    behaviour v0.74.0 removes: a green verdict over nothing checked. The fixture
+    now contains a script WITH a caller, so rule A judges a real population and
+    finds it clean, which is what "no breaks" is supposed to mean.
+    """
+    mod = _import(scripts_path)
+    plugin = _plugin(tmp_path)
+    _write(plugin / "scripts/wired.py", "print('x')\n")
+    _write(plugin / "hooks/session-start.sh",
+           'python3 "${CLAUDE_PLUGIN_ROOT}/scripts/wired.py"\n')
+    report = mod.scan(tmp_path)
+    assert report["findings"] == []
+    assert report["examined"]["A"] == 1, "rule A must have judged a real script"
+    assert mod.main(["--root", str(tmp_path)]) == 0
+
+
+def test_empty_population_is_not_a_pass(scripts_path, tmp_path, capsys):
+    """Every rule matching nothing must NOT report a pass.
+
+    The defect this closes (dogfood 2026-08-02): `check_wiring` printed "No
+    wiring breaks." with no counts at all, so a run over an empty tree was
+    indistinguishable from a run over four hundred references. That is the shape
+    `verify_citations` shipped with for three months while matching 0% of live
+    input, and the reason CALMS Automation sits at amber.
+    """
     mod = _import(scripts_path)
     _write(_plugin(tmp_path) / "engine/x.md", "nothing to see\n")
-    assert mod.scan(tmp_path)["findings"] == []
+    assert mod.scan(tmp_path)["findings"] == []       # still no BREAKS...
+    assert mod.main(["--root", str(tmp_path)]) == 1   # ...but not a pass
+    out = capsys.readouterr().out
+    assert "NOT A PASS" in out
+    assert "0/0/0/0" in out
+
+
+def test_pass_line_states_the_denominator(scripts_path, tmp_path, capsys):
+    """A pass must say how much it checked, or it cannot be falsified."""
+    mod = _import(scripts_path)
+    plugin = _plugin(tmp_path)
+    _write(plugin / "scripts/wired.py", "print('x')\n")
+    _write(plugin / "hooks/session-start.sh",
+           'python3 "${CLAUDE_PLUGIN_ROOT}/scripts/wired.py"\n')
     assert mod.main(["--root", str(tmp_path)]) == 0
+    out = capsys.readouterr().out
+    assert "checked reference(s)" in out
+    assert "1 shipped script(s)" in out
+
+
+def test_partial_zero_rules_are_named_in_the_pass(scripts_path, tmp_path, capsys):
+    """A rule that matched nothing is named, so the pass is not read as covering it.
+
+    The between-case matters more than either extreme: some rules finding a real
+    population and others finding none is the COMMON state, and an unqualified
+    "no breaks" there is the quiet half-truth this whole change is about.
+    """
+    mod = _import(scripts_path)
+    plugin = _plugin(tmp_path)
+    _write(plugin / "scripts/wired.py", "print('x')\n")
+    _write(plugin / "hooks/session-start.sh",
+           'python3 "${CLAUDE_PLUGIN_ROOT}/scripts/wired.py"\n')
+    assert mod.main(["--root", str(tmp_path)]) == 0
+    out = capsys.readouterr().out
+    assert "says nothing about them" in out, "zero-population rules must be named"
 
 
 def test_json_output_is_parseable(scripts_path, tmp_path, capsys):
@@ -265,7 +326,7 @@ def test_rule_d_claim_about_uncalled_script_is_flagged(scripts_path, tmp_path):
         _plugin(tmp_path) / "engine/warning-handbook.md",
         "warnings-log.md is auto-updated by `ingest_warnings.py` from CI signals.\n",
     )
-    findings = mod.check_automation_claims(tmp_path)
+    findings, _ = mod.check_automation_claims(tmp_path)
     assert len(findings) == 1
     assert findings[0]["rule"] == "D"
     assert "ingest_warnings.py" in findings[0]["detail"]
@@ -279,7 +340,7 @@ def test_rule_d_shipped_vx_claim_is_flagged(scripts_path, tmp_path):
         tmp_path / "docs/receipts/README.md",
         "| `ingest_warnings.py` + handbook | case | Shipped (v0.16.0) |\n",
     )
-    findings = mod.check_automation_claims(tmp_path)
+    findings, _ = mod.check_automation_claims(tmp_path)
     assert len(findings) == 1, "a receipts-index 'Shipped' claim is still a claim"
 
 
@@ -295,7 +356,7 @@ def test_rule_d_claim_about_wired_script_is_quiet(scripts_path, tmp_path):
         tmp_path / ".github/workflows/validate.yml",
         "    - run: python3 plugins/mycelium/scripts/ingest_warnings.py --dry-run\n",
     )
-    assert mod.check_automation_claims(tmp_path) == []
+    assert mod.check_automation_claims(tmp_path)[0] == []
 
 
 def test_rule_d_changelog_narration_is_allowlisted(scripts_path, tmp_path):
@@ -306,7 +367,7 @@ def test_rule_d_changelog_narration_is_allowlisted(scripts_path, tmp_path):
         tmp_path / "docs/changelog.md",
         "v0.16.0 — `ingest_warnings.py` auto-updated the warnings log.\n",
     )
-    assert mod.check_automation_claims(tmp_path) == []
+    assert mod.check_automation_claims(tmp_path)[0] == []
 
 
 def test_rule_d_unrelated_script_name_is_ignored(scripts_path, tmp_path):
@@ -317,4 +378,4 @@ def test_rule_d_unrelated_script_name_is_ignored(scripts_path, tmp_path):
         _plugin(tmp_path) / "engine/x.md",
         "our data is auto-updated by `someone_elses_tool.py` nightly.\n",
     )
-    assert mod.check_automation_claims(tmp_path) == []
+    assert mod.check_automation_claims(tmp_path)[0] == []

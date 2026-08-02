@@ -257,13 +257,15 @@ def check_orphan_scripts(root: Path):
     plugin = root / PLUGIN_REL
     scripts_dir = plugin / "scripts"
     if not scripts_dir.is_dir():
-        return []
+        return [], 0
 
     corpus = _caller_corpus(root)
     findings = []
+    examined = 0
     for script in sorted(scripts_dir.iterdir()):
         if not script.is_file() or script.suffix not in {".py", ".sh"}:
             continue
+        examined += 1
         name = script.name
         own = f"scripts/{name}"
         if any(not src.endswith(own) and _is_invocation(line, name)
@@ -281,16 +283,17 @@ def check_orphan_scripts(root: Path):
                 "A unit test is not a caller."
             ),
         })
-    return findings
+    return findings, examined
 
 
 def check_plugin_root_refs(root: Path):
     """Rule B: every ${CLAUDE_PLUGIN_ROOT}/<path> resolves in the packaged tree."""
     plugin = root / PLUGIN_REL
     if not plugin.is_dir():
-        return []
+        return [], 0
 
     findings = []
+    examined = 0
     for f in _shipped_files(plugin, root):
         rel = str(f.relative_to(root))
         for i, line in enumerate(f.read_text(errors="replace").splitlines(), 1):
@@ -298,6 +301,7 @@ def check_plugin_root_refs(root: Path):
                 tok = raw.rstrip(".,;:)`'\"")
                 if "*" in tok or "<" in tok:
                     continue
+                examined += 1
                 findings.extend(
                     {
                         "rule": "B",
@@ -312,16 +316,17 @@ def check_plugin_root_refs(root: Path):
                     for c in _expand_braces(tok)
                     if not (plugin / c).exists()
                 )
-    return findings
+    return findings, examined
 
 
 def check_state_path_agreement(root: Path):
     """Rule C: every reference to a registered state file uses its canonical path."""
     plugin = root / PLUGIN_REL
     if not plugin.is_dir():
-        return []
+        return [], 0
 
     findings = []
+    examined = 0
     # Match any .claude/<dir>/<basename> occurrence of a registered file.
     patterns = {
         base: re.compile(r"\.claude/[A-Za-z0-9_.-]+/" + re.escape(base))
@@ -334,6 +339,7 @@ def check_state_path_agreement(root: Path):
         for i, line in enumerate(f.read_text(errors="replace").splitlines(), 1):
             for base, pat in patterns.items():
                 canonical = CANONICAL_STATE_PATHS[base]
+                examined += len(pat.findall(line))
                 findings.extend(
                     {
                         "rule": "C",
@@ -348,7 +354,7 @@ def check_state_path_agreement(root: Path):
                     for hit in pat.findall(line)
                     if hit != canonical
                 )
-    return findings
+    return findings, examined
 
 
 def check_automation_claims(root: Path):
@@ -362,7 +368,7 @@ def check_automation_claims(root: Path):
     plugin = root / PLUGIN_REL
     scripts_dir = plugin / "scripts"
     if not scripts_dir.is_dir():
-        return []
+        return [], 0
 
     shipped_scripts = {p.name for p in scripts_dir.iterdir() if p.suffix == ".py"}
     corpus = _caller_corpus(root)
@@ -376,6 +382,7 @@ def check_automation_claims(root: Path):
     doc_globs = ["plugins/mycelium/**/*.md", "docs/**/*.md", "README.md"]
     seen = set()
     findings = []
+    examined = 0
     for g in doc_globs:
         for f in root.glob(g):
             if not f.is_file() or f in seen:
@@ -387,6 +394,7 @@ def check_automation_claims(root: Path):
             for i, line in enumerate(f.read_text(errors="replace").splitlines(), 1):
                 if not CLAIM_RE.search(line):
                     continue
+                examined += 1
                 findings.extend(
                     {
                         "rule": "D",
@@ -402,16 +410,31 @@ def check_automation_claims(root: Path):
                     for tok in dict.fromkeys(SCRIPT_TOKEN_RE.findall(line))
                     if tok in shipped_scripts and tok not in called
                 )
-    return findings
+    return findings, examined
 
 
 def scan(root: Path):
+    """Return findings AND the size of the population each rule judged.
+
+    The denominators are not decoration. Before v0.74.0 this printed "No wiring
+    breaks." with no counts at all, so a run over an empty tree was
+    indistinguishable from a run over four hundred files — the check could match
+    nothing for months and read green the whole time, which is the exact failure
+    `verify_citations` shipped with for three months and the reason CALMS
+    Automation sits at amber.
+    """
     findings = []
-    findings += check_orphan_scripts(root)
-    findings += check_plugin_root_refs(root)
-    findings += check_state_path_agreement(root)
-    findings += check_automation_claims(root)
-    return {"findings": findings}
+    examined = {}
+    for rule, fn in (
+        ("A", check_orphan_scripts),
+        ("B", check_plugin_root_refs),
+        ("C", check_state_path_agreement),
+        ("D", check_automation_claims),
+    ):
+        got, n = fn(root)
+        findings += got
+        examined[rule] = n
+    return {"findings": findings, "examined": examined}
 
 
 def main(argv=None):
@@ -437,16 +460,31 @@ def main(argv=None):
     if args.json:
         print(json.dumps(report, indent=2))
     else:
-        print("Wiring: checked orphan scripts (A), ${CLAUDE_PLUGIN_ROOT} refs (B), "
-              "state-path agreement (C), automation claims (D).")
+        ex = report["examined"]
+        print(f"Wiring: {ex['A']} shipped script(s) (A), {ex['B']} "
+              "${CLAUDE_PLUGIN_ROOT} ref(s) (B), "
+              f"{ex['C']} state-path ref(s) (C), {ex['D']} automation claim(s) (D).")
         if findings:
             print(f"\nWIRING BREAKS ({len(findings)}):")
             for f in findings:
                 print(f"  [rule {f['rule']}] {f['target']}\n      {f['detail']}")
             print("\nA mechanism nothing reaches is absent, not weak — "
                   "and it reads green.")
+        elif not any(ex.values()):
+            # Refuse the bare pass. Every rule matched an empty population, so
+            # "no wiring breaks" is true and carries no information — and a
+            # reader takes an unqualified green as coverage.
+            print("NOT A PASS: every rule matched an empty population "
+                  "(0/0/0/0). Nothing was verified. Either --root points "
+                  "somewhere without a packaged plugin tree, or the patterns "
+                  "have stopped matching this repo's layout.")
+            return 1
         else:
-            print("No wiring breaks.")
+            zeros = [r for r, n in ex.items() if n == 0]
+            scope = (f" Rule(s) {'/'.join(zeros)} matched nothing, so this pass "
+                     "says nothing about them.") if zeros else ""
+            print(f"No wiring breaks across {sum(ex.values())} checked "
+                  f"reference(s).{scope}")
 
     return 1 if findings else 0
 

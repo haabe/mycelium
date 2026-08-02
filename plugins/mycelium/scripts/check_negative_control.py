@@ -219,8 +219,19 @@ def main(argv=None):
                 print(f"  {f['guard']}\n      {f['detail']}")
             print("\nA test that cannot fail certifies nothing, and green is read "
                   "as evidence.")
+        elif not report["guards_checked"]:
+            # Refuse the universal over an empty set. "Every guard asserts its
+            # own failure direction" is vacuously true across zero guards, and a
+            # reader takes it as coverage. Found 2026-08-02 while assessing the
+            # CALMS Automation bar this line is an instance of.
+            print("NOT A PASS: 0 guards were checked, so nothing was verified. "
+                  "Either this project ships no blocking guards yet, or the "
+                  "derivation has stopped recognising the ones it has.")
+            return 1
         else:
-            print("Every guard asserts its own failure direction.")
+            print(f"Every one of the {report['guards_checked']} checked guard(s) "
+                  "asserts its own failure direction. Guards not derived as "
+                  "blocking are outside this count.")
 
     return 1 if findings else 0
 
