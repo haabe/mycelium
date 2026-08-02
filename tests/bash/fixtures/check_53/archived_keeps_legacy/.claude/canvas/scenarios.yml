@@ -1,0 +1,8 @@
+schema_version: 1
+scenarios:
+  - id: scn-000
+    status: archived
+    motive: {functional: "old model"}
+    means: {touchpoints: ["old tool"]}
+    persona: {description: "someone"}
+    simulation: {narrative: "history"}

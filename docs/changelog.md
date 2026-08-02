@@ -4,6 +4,41 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-02.
 
+## v0.76.0 - the corrected model was documented five times and migrated zero
+
+Hoskins has **three** scenario elements: Motivation, Persona, Simulation. An
+in-repo four-block model with a "Means" was identified as a fabrication on
+2026-07-01, cleaned from five files in v0.66.3, and a sixth instance surfaced in
+`leaf-lifecycle.md` in v0.71.0.
+
+A hand-run canvas-health on 2026-08-03 found **all seven scenarios in the dogfood
+repo still carrying `means` + `motive`, and none carrying `motivation`** — a full
+month after the correction.
+
+**Correcting the first diagnosis.** That report said the schema still blessed the
+fields. **It does not.** `scenarios.schema.json` marks both as legacy, and its own
+description reads *"'Means' is NOT a Hoskins element; fold this into the
+simulation."* Keeping them declared is a deliberate allowance so historical files
+keep validating, and that is correct.
+
+The actual gap was that **tolerance had no expiry**. Nothing told a project it was
+still on the old shape, so five corrected documents sat beside unmigrated data
+indefinitely.
+
+**Check 53** fails a non-archived scenario that carries `motive` without
+`motivation`, or that carries `means` at all — `means` has no successor field, it
+folds into `simulation.context`. Archived scenarios are exempt: rewriting history
+to satisfy a lint is worse than the lint.
+
+**One fixture changed during authoring, and the reason is kept in the test.** It
+first asserted that zero scenarios *fails*, importing the empty-input rule the
+fitness functions follow — and Check 53 then failed the framework repo's own CI,
+because its `scenarios.yml` ships as an empty template. **The rules are not the
+same.** An empty population in a fitness function means the check could not *see*
+what it guards. An empty `scenarios.yml` means the project has written none yet,
+which is a legitimate early state. Migration pressure applies to scenarios that
+exist.
+
 ## v0.75.1 - a false green traded for a false red, caught the same day
 
 v0.74.0 and v0.75.0 made checks **refuse** rather than report success over an

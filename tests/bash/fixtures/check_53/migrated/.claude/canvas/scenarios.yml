@@ -1,0 +1,9 @@
+schema_version: 1
+scenarios:
+  - id: scn-001
+    status: active
+    motivation: {functional: "ship without rework"}
+    persona: {description: "solo builder"}
+    simulation:
+      narrative: "their bill jumps"
+      context: {touchpoints: ["agentic CLI"]}
