@@ -42,6 +42,7 @@ Audit the canvas knowledge base for quality, consistency, and completeness. The 
    - Flag confidence > 0.7 with fewer than 2 evidence sources
    - Flag confidence values that haven't changed across git history (anchored confidence anti-pattern)
    - Cross-check against `.claude/diamonds/active.yml` confidence
+   - **Cross-check the confidence RATIONALE prose too, not only the `confidence:` field.** Projects record *why* a value moved in narrative fields (`confidence_effect`, `confidence_effect_v2`, or any prose block that names a number). Nothing reads those, so a canvas can be numerically consistent everywhere while the sentence explaining the number contradicts it. Flag when a rationale block names a confidence value that no longer matches `.claude/diamonds/active.yml`. **Prose that encodes state is state, and it is otherwise unvalidated.** (Roadmap dogfood 2026-08-02: the field said 0.10, the narrative beside it still said 0.25, and the numeric check passed.)
 
 5. **Check evidence type consistency**:
    - Every canvas file with `evidence_type:` should have it set to one of the shipped schema enum values (`schemas/canvas/_common.schema.json#$defs/evidence_type` — Gilad's evidence ladder): `speculation`, `anecdotal`, `data-supported`, `test-validated`, `launch-validated`
