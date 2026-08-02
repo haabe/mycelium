@@ -1,0 +1,9 @@
+schema_version: 1
+opportunities:
+  - id: opp-001
+    name: "drifted"
+    confidence: 0.35
+    provenance:
+      evidence_type: anecdotal
+      evidence_sources: ["x"]
+      confidence: 0.3

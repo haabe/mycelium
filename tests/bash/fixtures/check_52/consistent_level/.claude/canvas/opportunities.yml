@@ -1,0 +1,12 @@
+schema_version: 1
+opportunities:
+  - id: opp-001
+    name: "consistently on the old shape"
+    provenance: {evidence_type: anecdotal, evidence_sources: ["x"]}
+    solutions:
+      - id: sol-001a
+        four_risks:
+          value: {level: low, evidence: "old"}
+      - id: sol-001b
+        four_risks:
+          usability: {level: high, evidence: "old"}

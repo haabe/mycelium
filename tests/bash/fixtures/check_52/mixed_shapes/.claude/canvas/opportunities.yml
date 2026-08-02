@@ -1,0 +1,12 @@
+schema_version: 1
+opportunities:
+  - id: opp-001
+    name: "two generations"
+    provenance: {evidence_type: anecdotal, evidence_sources: ["x"]}
+    solutions:
+      - id: sol-001a
+        four_risks:
+          value: {risk_level: low, assessment: "new shape"}
+      - id: sol-001b
+        four_risks:
+          value: {level: low, evidence: "old shape"}
