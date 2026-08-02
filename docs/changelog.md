@@ -4,6 +4,48 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-02.
 
+## v0.73.1 - the guard was written for exactly this tree and could not see it
+
+Both `check_wiring_contract.py` and `check_test_authenticity.py` carried
+`"fixtures"` in `SKIP_DIRS`, with a comment saying exactly why fixture trees must
+not be governed — they are synthetic mini-repos built to make a guard fire, so
+governing them "proposes rules about scaffolding and buries the real findings".
+
+The dogfood repo's directory is `.fixtures`. With a leading dot. The membership
+test is exact.
+
+Measured rather than supposed:
+
+- `check_wiring_contract --detect` returned **96 contract rules, of which three
+  were ours**. The other 93 governed two vendored third-party repositories, every
+  one at `confidence: 1.0`. Committing that draft would have created a contract
+  that passes forever while describing somebody else's code.
+- `check_test_authenticity` **failed with three findings**, all of them tests
+  inside that vendored code. Failing loudly on code outside your remit erodes
+  trust as surely as passing blindly does.
+
+**A name list was not the fix.** Adding `.fixtures` closes today and leaves
+`_fixtures`, `third_party`, `.cache`, and whatever the next project calls it. The
+general question is "is this file part of this project?", and the repository
+already answers it.
+
+`_scan_lib.py` shells to `git ls-files --others --ignored --exclude-standard
+--directory`. Three details carry the correctness:
+
+- **Ignored AND untracked.** A force-added file matching an ignore rule is still
+  yours, and stays in scope.
+- **Containment, not membership.** `--directory` collapses a wholly-ignored tree
+  to a single entry, so every file beneath it must be tested by ancestry. That is
+  the case that produced the 93.
+- **Fails open.** No git, no repo, or a failed call returns an empty set and
+  everything is scanned. This filter removes noise; a project without git should
+  still get its checks run rather than silently get none. `.fixtures` went into
+  `SKIP_DIRS` anyway as belt-and-braces for those checkouts.
+
+Seven scenario-per-guardpost fixtures. Found while executing a BVSSH #12
+recommendation to generate the dogfood repo's own wiring contract — which turned
+out not to be the one-command fix it was billed as.
+
 ## v0.73.0 - one fact, two field names, and readers that disagreed depending on which they opened
 
 A full structural audit of the dogfood canvas returned 44 defects. Three of them

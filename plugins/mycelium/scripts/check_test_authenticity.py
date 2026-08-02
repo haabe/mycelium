@@ -43,6 +43,17 @@ import re
 import sys
 from pathlib import Path
 
+# These scripts are run three ways: as `python3 .../scripts/x.py` from any cwd,
+# imported as a package, and loaded by file path from tests. Only the first puts
+# this directory on sys.path, so put it there explicitly before the sibling
+# import — the alternative is a module that works until the way it is loaded
+# changes, which is how this landed as a test-collection error the first time.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+try:
+    from . import _scan_lib
+except ImportError:  # invoked as a script, or loaded by file path
+    import _scan_lib
+
 # ---------------------------------------------------------------- scope
 
 # A file is a test because of its NAME, never merely because of its directory.
@@ -59,7 +70,7 @@ TEST_PATTERNS = (
 
 SKIP_DIRS = {
     ".git", "node_modules", "__pycache__", ".venv", "venv", "dist", "build",
-    ".pytest_cache", ".mypy_cache", ".ruff_cache", "fixtures", "results",
+    ".pytest_cache", ".mypy_cache", ".ruff_cache", "fixtures", ".fixtures", "results",
 }
 
 # Files that are test-shaped but are not tests. Each needs a reason that is about
@@ -140,11 +151,14 @@ class Finding:
 
 def _iter_test_files(root: Path) -> list[Path]:
     seen: set[Path] = set()
+    ignored = _scan_lib.ignored_paths(root)
     for pattern in TEST_PATTERNS:
         for f in root.glob(pattern):
             if not f.is_file():
                 continue
             if any(part in SKIP_DIRS for part in f.parts):
+                continue
+            if _scan_lib.is_ignored(f, ignored):
                 continue
             if f.name in EXEMPT:
                 continue
