@@ -4,6 +4,37 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-02.
 
+## v0.75.1 - a false green traded for a false red, caught the same day
+
+v0.74.0 and v0.75.0 made checks **refuse** rather than report success over an
+empty population. That was right. It also collapsed two states that are not the
+same thing:
+
+- **applies here, and found nothing** — refuse
+- **does not apply here at all** — not a failure
+
+`check_wiring`, `check_negative_control` and `check_empty_input_honesty` all guard
+the *framework* repo's packaged plugin tree. A plugin **consumer** repo has no
+`plugins/mycelium/` at all — so every user running `/bvssh-check` outside the
+framework repo got NOT A PASS on three checks they could do nothing about.
+
+**That is worse than the false green it replaced**, in a specific way: a red
+nobody can act on teaches them to stop reading the check. Which is the same
+failure this guard family exists to prevent, arriving from the other side.
+
+Third state added. Precondition absent → `N/A`, exit 0, naming which repo kind the
+check is for. Precondition present with an empty population → still refuses.
+
+**One consequence is subtle enough to name.** `check_empty_input_honesty` runs the
+shipped checks against a throwaway tree. Once N/A exists, a *bare* empty directory
+makes every one of them answer N/A — so the guard would verify nothing and report
+a pass, becoming the exact thing it was built to catch. Its fixture now creates the
+plugin tree, so preconditions are met and populations are empty, and a test asserts
+a vacuous check is still caught after the change.
+
+Six new fixtures pin both sides of the line. Two existing tests had their fixtures
+corrected to state which of the two states they meant.
+
 ## v0.75.0 - a check over the checks, and it found the most-read green line in the framework
 
 v0.74.0 fixed four fitness functions by hand, and CALMS Automation was

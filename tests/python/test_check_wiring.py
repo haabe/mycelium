@@ -379,3 +379,36 @@ def test_rule_d_unrelated_script_name_is_ignored(scripts_path, tmp_path):
         "our data is auto-updated by `someone_elses_tool.py` nightly.\n",
     )
     assert mod.check_automation_claims(tmp_path)[0] == []
+
+
+def test_absent_precondition_is_not_applicable_not_a_refusal(scripts_path, tmp_path, capsys):
+    """A plugin CONSUMER repo gets N/A, not NOT A PASS.
+
+    THE REGRESSION THIS CLOSES (shipped v0.74.0, caught the same day). Refusing
+    on an empty population was right; refusing on an ABSENT PRECONDITION was not.
+    A consumer repo has no `plugins/mycelium/` tree, so every `/bvssh-check` run
+    outside the framework repo reported NOT A PASS on something the user could
+    do nothing about — and a red nobody can act on teaches them to stop reading.
+    """
+    mod = _import(scripts_path)
+    (tmp_path / ".claude" / "canvas").mkdir(parents=True)
+    rc = mod.main(["--root", str(tmp_path)])
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "N/A" in out
+    assert "consumer" in out
+    assert "NOT A PASS" not in out
+    assert "No wiring breaks" not in out, "N/A is not a pass either"
+
+
+def test_present_precondition_with_empty_population_still_refuses(
+    scripts_path, tmp_path, capsys
+):
+    """The other side of the same line: the tree EXISTS and matched nothing."""
+    mod = _import(scripts_path)
+    _plugin(tmp_path).mkdir(parents=True, exist_ok=True)
+    rc = mod.main(["--root", str(tmp_path)])
+    out = capsys.readouterr().out
+    assert rc == 1
+    assert "NOT A PASS" in out
+    assert "0/0/0/0" in out
