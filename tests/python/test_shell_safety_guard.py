@@ -190,3 +190,42 @@ def test_main_fails_open_on_garbage(scripts_path, monkeypatch, capsys):
     monkeypatch.setattr(sys, "stdin", io.StringIO("{not json"))
     assert mod.main() == 0
     assert capsys.readouterr().out == ""
+
+
+# ------------------------------------------------- shell portability (v0.81.1)
+# The remedy this guard recommends was bash-only, and this project's shell is
+# zsh — where `${PIPESTATUS[0]}` expands to the empty string. So the advice
+# shipped for the trap that produced a wrong answer to the operator silently did
+# not work in the environment it was written for. Two bugs, one root cause:
+# assuming bash. Caught by the author's own command printing `EXIT=` while
+# testing something unrelated.
+
+
+def test_zsh_pipestatus_suppresses_the_warning(scripts_path):
+    """THE WORSE OF THE TWO. The suppression regex was case-sensitive, so
+    someone who had ALREADY applied the correct zsh remedy was still warned —
+    a false positive aimed squarely at the people doing it right."""
+    mod = _import(scripts_path)
+    assert mod.findings("foo | head; echo ${pipestatus[1]}") == []
+
+
+def test_bash_pipestatus_still_suppresses(scripts_path):
+    mod = _import(scripts_path)
+    assert mod.findings("foo | head; echo ${PIPESTATUS[0]}") == []
+
+
+def test_the_warning_names_both_shells_and_the_index_difference(scripts_path):
+    """zsh's array is lowercase AND 1-indexed, so `${pipestatus[0]}` is also
+    empty. Naming the variable without the index would trade one silent
+    failure for another."""
+    mod = _import(scripts_path)
+    msg = mod.findings("foo | head; echo $?")[0]
+    assert "${PIPESTATUS[0]}" in msg
+    assert "${pipestatus[1]}" in msg
+    assert "1-INDEXED" in msg
+
+
+def test_a_bare_status_check_after_a_pipe_still_warns(scripts_path):
+    """The fix must not silence the actual trap."""
+    mod = _import(scripts_path)
+    assert len(mod.findings("which opencode | head -1; echo $?")) == 1
