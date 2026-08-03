@@ -2720,7 +2720,9 @@ PY
     rc=$?
     set -e
 
-    if [ $rc -eq 0 ]; then
+    if [ "$rc" -eq 3 ]; then
+        info "Check 51: ${result#SKIP:} -- SKIPPED, not passed"
+    elif [ $rc -eq 0 ]; then
         pass "Check 51: $result"
     else
         fail "Check 51: $result"

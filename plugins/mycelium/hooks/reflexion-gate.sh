@@ -40,6 +40,29 @@ except Exception:
     print('')
 " 2>/dev/null || echo "")
 
+# The payload has carried the outcome all along; this gate never read it.
+# codex-postfailure-shim.sh reads tool_response.exit_code / .is_error from the
+# same envelope. Without them every firing looked identical in the log, so no
+# one could tell a real failure from a grep that matched nothing.
+EXIT_CODE=$(printf '%s' "$INPUT" | python3 -c "
+import json, sys
+try:
+    r = json.load(sys.stdin).get('tool_response') or {}
+    print(r.get('exit_code') if isinstance(r, dict) and r.get('exit_code') is not None else '')
+except Exception:
+    print('')
+" 2>/dev/null || echo "")
+
+STDERR_HEAD=$(printf '%s' "$INPUT" | python3 -c "
+import json, sys
+try:
+    r = json.load(sys.stdin).get('tool_response') or {}
+    s = (r.get('stderr') or '') if isinstance(r, dict) else ''
+    print(' '.join(s.split())[:200])
+except Exception:
+    print('')
+" 2>/dev/null || echo "")
+
 # Decision logic:
 # 1. If cwd is INSIDE the project directory → project-relevant → emit prompt
 # 2. If cwd is OUTSIDE the project directory → skip (not our concern)
@@ -68,6 +91,44 @@ case "$COMMAND" in
     ;;
 esac
 
+# ============================================================
+# DOCUMENTED NON-FAILURES (added 2026-08-03)
+# ============================================================
+# THE DEFECT: this gate fired on any non-zero exit, and several standard tools
+# use non-zero to report a RESULT rather than an error. Their own man pages say
+# so, so this is a category error rather than a judgement call:
+#
+#   grep(1)  "Exit status is 0 if any line is selected, 1 if no lines were
+#            selected, and 2 if an error occurred."
+#   diff(1)  0 = same, 1 = differences found, 2 = trouble.
+#   test(1)  1 = the expression is false.
+#
+# MEASURED COST, dogfood 2026-08-03: 39 firings had accumulated, 23 of them in a
+# single session, and the five most recent were all `grep`/`sed` reads. The
+# counter reported "30 outstanding learnings" that were overwhelmingly greps
+# finding nothing. It printed that at session start and was ignored — the correct
+# response to a counter made of noise, and also how a guard dies.
+#
+# Suppressed firings are still LOGGED, with the reason. Dropping them silently
+# would make this classifier unauditable, which is the failure one level up.
+NON_EVENT=""
+FIRST_WORD=$(printf '%s' "$COMMAND" | sed 's/^[[:space:]]*//' | cut -d' ' -f1 | xargs basename 2>/dev/null || echo "")
+if [ "$EXIT_CODE" = "1" ]; then
+  case "$FIRST_WORD" in
+    grep|egrep|fgrep|rg|ugrep|zgrep)
+      NON_EVENT="grep-family exit 1 = no match, not an error (grep(1))" ;;
+    diff|colordiff)
+      NON_EVENT="diff exit 1 = differences found, not an error (diff(1))" ;;
+    test|[)
+      NON_EVENT="test exit 1 = expression false, not an error (test(1))" ;;
+    git)
+      case "$COMMAND" in
+        *"git diff"*|*"git grep"*)
+          NON_EVENT="git diff/grep exit 1 = differences/no-match, not an error" ;;
+      esac ;;
+  esac
+fi
+
 if [ "$SHOULD_REFLEX" -eq 0 ]; then
   # Skip silently — the failure is not project-relevant
   exit 0
@@ -95,14 +156,26 @@ rec = {
     'ts': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
     'tool': 'Bash',
     'command_head': sys.argv[2][:160],
+    'exit_code': sys.argv[3] or None,
+    'stderr_head': sys.argv[4] or None,
 }
+# A suppressed row stays in the log WITH its reason. Silent dropping would make
+# the classifier unauditable — and an unauditable filter on a learning loop is
+# the same defect the loop exists to catch.
+if sys.argv[5]:
+    rec['suppressed'] = sys.argv[5]
 path = os.path.join(sys.argv[1], 'reflexion-log.jsonl')
 try:
     with open(path, 'a', encoding='utf-8') as fh:
         fh.write(json.dumps(rec) + '\n')
 except OSError:
     pass
-" "$STATE_DIR" "$COMMAND" 2>/dev/null || true
+" "$STATE_DIR" "$COMMAND" "$EXIT_CODE" "$STDERR_HEAD" "$NON_EVENT" 2>/dev/null || true
+
+# A documented non-failure is recorded and then dropped: no prompt, no learning debt.
+if [ -n "$NON_EVENT" ]; then
+  exit 0
+fi
 
 # Emit the reflexion prompt as a command hook output
 # This mirrors the inline prompt that was previously in settings.json

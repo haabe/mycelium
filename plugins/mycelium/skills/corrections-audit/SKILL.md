@@ -11,6 +11,30 @@ metadata:
 
 Analyze corrections.md for trends, recurring patterns, and actionable insights.
 
+
+## Attribution: run the script, do not count by hand
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_correction_attribution.py" --root .
+```
+
+**Added 2026-08-03.** This audit's headline number — *who caught the mistake* —
+was computed by hand and had been produced exactly twice, six weeks apart, each
+time because a human remembered to look. It is the only number that answers the
+question the correction loop exists to answer: **more harness, or more context.**
+
+The script reports the escape rate **and its denominator, every time**. At the
+time of writing 14 of 72 entries carry a catcher, so the rate covers 19% of the
+corpus — quoting it without that is a claim about the whole wearing borrowed
+clothes, which is the failure this repo spent 2026-08-02/03 removing from its own
+checks. If it prints `NO RATE AVAILABLE`, that is not 0%: it means nothing in the
+corpus says who caught anything.
+
+**To make the number better, add one phrase per new entry** — `caught by user`,
+`caught by hook`, `caught by review`, `self-caught`. The parser reads the prose
+forms already present rather than requiring a new field, so nothing existing
+needs rewriting.
+
 ## When to Use
 
 - Loop 2 (Incremental) cadence: after every 3+ corrections are logged

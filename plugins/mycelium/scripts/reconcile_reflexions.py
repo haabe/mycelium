@@ -125,12 +125,23 @@ def status(project_dir: Path) -> dict:
         baseline = corrections_now
     corrections_since = max(0, corrections_now - int(baseline))
 
+    # SUPPRESSED ROWS ARE NOT LEARNING DEBT (added 2026-08-03). reflexion-gate
+    # now classifies documented non-failures — grep exit 1 = no match, diff exit
+    # 1 = differences found, test exit 1 = false — and records them WITH the
+    # reason instead of dropping them. They are kept in the log so the classifier
+    # stays auditable, and excluded here so the outstanding count means something.
+    # Before this, 39 firings included 23 from one session that were largely
+    # greps finding nothing, and the resulting "30 outstanding" was ignored —
+    # correctly, and that is how a guard dies.
+    suppressed_records = [r for r in fired_records if r.get("suppressed")]
+    fired_records = [r for r in fired_records if not r.get("suppressed")]
     fired = len(fired_records)
     credited = ledger["credited"] + corrections_since + len(dismissals)
     outstanding = max(0, fired - credited)
 
     return {
         "fired": fired,
+        "suppressed_non_events": len(suppressed_records),
         "corrections_since_baseline": corrections_since,
         "dismissed": len(dismissals),
         "outstanding": outstanding,
@@ -216,13 +227,25 @@ def main() -> int:
         print(json.dumps(st, indent=2))
         return 0
 
+    supp = st.get("suppressed_non_events", 0)
     if st["fired"] == 0:
-        print("Reflexion ledger: no reflexions recorded yet.")
+        # State the suppressed count even here. "No reflexions recorded" over a
+        # log full of suppressed rows would be a green over a population the
+        # reader cannot see.
+        if supp:
+            print(f"Reflexion ledger: no reflexions to reconcile "
+                  f"({supp} documented non-failure(s) recorded and excluded).")
+        else:
+            print("Reflexion ledger: no reflexions recorded yet.")
         return 0
 
     print(f"Reflexion ledger: {st['fired']} fired, "
           f"{st['corrections_since_baseline']} correction(s) added, "
           f"{st['dismissed']} dismissed -> {st['outstanding']} OUTSTANDING")
+    if supp:
+        print(f"  ({supp} further firing(s) were documented non-failures — grep "
+              f"no-match, diff differences, test false — recorded with a reason "
+              f"and excluded from learning debt.)")
     if st["outstanding"]:
         print("\n  These failures prompted a reflexion and produced no recorded decision:")
         for cmd in st["recent"]:
