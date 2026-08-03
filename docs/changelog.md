@@ -4,6 +4,48 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-02.
 
+## v0.77.0 - the releases built to eliminate green-over-nothing shipped green-over-nothing
+
+A max-effort code review of v0.70.0-v0.76.1 returned 15 confirmed findings.
+
+**The systemic one.** Every refuse-on-empty branch added in v0.74.0/v0.75.0 was
+written inside the `else` of `if args.json:` — so the machine-readable surface,
+the one a CI wrapper actually consumes, still exited 0 over an empty population.
+Five scripts, **including `check_empty_input_honesty` itself**, which could not
+catch it because it invokes children with `--root .` only. The verdict is now
+computed once, before the output branch, and both renderers report it.
+
+**The same guard had a second hole.** `_accepts_root` grepped the source for the
+string, so a script whose docstring merely *mentioned* `--root` was run with a
+flag it rejects, exited 2 from argparse, and was counted as an honest refusal — a
+check that always reports green, certified compliant. Aiming is now decided by
+reading what argparse said; a rejected command line is recorded as UNKNOWN.
+
+**Three more false-green paths:**
+
+- A missing PyYAML exited 0, which is the PASS path in the bash tails, so Checks
+  51/52/53 printed green on machines that never opened a YAML file. Now exit 3,
+  rendered as SKIPPED.
+- Checks 51/52 swallowed YAML parse errors and returned `{}`, making a corrupt
+  canvas — the state most likely to hold the drift they hunt — indistinguishable
+  from an empty one.
+- Check 50 blanked quoted spans with one global pass, which is delimiter pairing
+  rather than correction-note detection: a single inch mark inverts which half of
+  the file is scanned. It also reported the *other* file's heading count as its
+  denominator.
+
+**Two denominator/state corrections.** Check 53 counted archived scenarios in a
+denominator labelled "non-archived". `validate_canvas` had inverted its own
+distinction — present-but-empty exited 1 while **absent** exited 0 — and the empty
+case blocked every push from a freshly `/mycelium:setup` project through the
+shipped pre-push hook, which gates only on the directory existing. Both are N/A.
+
+**And the v0.73.1 ignore filter covered one of two tree walks.**
+`_production_modules` still harvested names from vendored trees, *suppressing*
+real findings rather than raising false ones.
+
+15 regressions added across four files.
+
 ## v0.76.1 - a skill instructed a value its own schema rejects
 
 `/log-evidence`'s task-cancellation branch said to move a cancelled task to

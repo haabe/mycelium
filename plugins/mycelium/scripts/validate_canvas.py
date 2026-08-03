@@ -498,8 +498,22 @@ def main():
 
     all_errors = []
 
+    # N/A vs REFUSAL vs PASS — three states, and v0.75.0 collapsed two of them
+    # (code review 2026-08-03). It made a present-but-empty canvas exit 1 while
+    # leaving an ABSENT canvas exiting 0, which is backwards: absent is the
+    # strictly less-informed case. And the empty case broke consumers, because
+    # /mycelium:setup creates `.claude/canvas/` containing only `.gitkeep`, while
+    # the shipped git-pre-push-example.sh gates on the DIRECTORY existing — so
+    # every push from a freshly set-up project was blocked until the user
+    # hand-wrote a YAML file or discovered --no-verify.
+    #
+    # Both are now N/A: a project that has not written its canvas yet is in a
+    # legitimate early state, not a defect. This is the same distinction Check 53
+    # was corrected to make the same week — migration and validation pressure
+    # apply to canvases that EXIST. N/A is not a pass, and the message says so.
     if not canvas_dir.exists():
-        print("Canvas directory not found:", canvas_dir)
+        print(f"Canvas validation: N/A — no canvas directory at {canvas_dir}. "
+              "Nothing was validated, and nothing was supposed to be.")
         sys.exit(0)
 
     if not SCHEMA_DIR.exists():
@@ -547,20 +561,11 @@ def main():
     schemas_present = len(list(SCHEMA_DIR.glob("*.schema.json"))) - 1  # exclude _common
     canvases_present = len(list(canvas_dir.glob("*.yml")))
     if not canvases_present:
-        # Refuse the bare pass (v0.75.0). This is the most-read green line in the
-        # framework, and against an empty directory it printed
-        # a PASS line naming zero canvas files, then exited 0.
-        # A reader takes that as "the canvas is correct"; it meant
-        # "there was no canvas". The digital-gardener friction log named this
-        # exact false-assurance effect on 2026-08-02 before anyone checked what
-        # the empty case actually printed.
-        print(
-            f"NOT A PASS: 0 canvas files found in {canvas_dir}. Nothing was "
-            "validated. Either the path is wrong, or this project has no canvas "
-            "yet — both are answers, and neither is PASS.",
-            file=sys.stderr,
-        )
-        sys.exit(1)
+        print(f"Canvas validation: N/A — {canvas_dir} holds no .yml files yet "
+              "(a fresh /mycelium:setup leaves it empty). Nothing was validated. "
+              "This is NOT a pass over a populated canvas.")
+        sys.exit(0)
+
     print(
         f"Canvas validation: PASS ({canvases_present} canvas files, "
         f"{schemas_present} schemas, {len(warnings)} schema-less, "

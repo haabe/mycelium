@@ -2458,7 +2458,11 @@ from pathlib import Path
 try:
     import yaml
 except ImportError:
-    print("pyyaml unavailable -- skipped"); sys.exit(0)
+    # EXIT 3, NOT 0 (code review 2026-08-03). 0 is the PASS path in every bash
+    # tail below, so a machine without PyYAML printed green for checks that never
+    # opened a YAML file — including Check 53, whose entire reason for existing is
+    # that unmigrated data sat green for a month.
+    print("SKIP:pyyaml unavailable"); sys.exit(3)
 
 try:
     doc = yaml.safe_load(Path(".claude/canvas/scenarios.yml").read_text()) or {}
@@ -2470,11 +2474,17 @@ checked = 0
 for s in (doc.get("scenarios") or []):
     if not isinstance(s, dict):
         continue
-    checked += 1
     sid = s.get("id", "<no id>")
     status = str(s.get("status", "")).lower()
     if status == "archived":
         continue                      # history may keep the old shape
+    # Counted AFTER the archived skip (code review 2026-08-03). Incrementing
+    # first meant a project that archived all its scenarios got
+    # "all 7 non-archived scenario(s) use Motivation/Persona/Simulation" while
+    # zero were examined, and the N/A branch never fired because the counter
+    # was non-zero. A pass over an empty live population, in the check written
+    # because unmigrated data sat green.
+    checked += 1
     if "motive" in s and "motivation" not in s:
         problems.append(
             f"{sid}: carries `motive` and no `motivation`. Rename it — "
@@ -2506,7 +2516,9 @@ PY
     rc=$?
     set -e
 
-    if [ "$rc" -ne 0 ]; then
+    if [ "$rc" -eq 3 ]; then
+        info "Check 53: ${result#SKIP:} -- SKIPPED, not passed"
+    elif [ "$rc" -ne 0 ]; then
         fail "Check 53: scenarios still on the superseded 4-block model"
         echo "$result" | sed 's/^/    /'
         echo "    The schema TOLERATES these fields so historical files keep validating."
@@ -2535,7 +2547,14 @@ from pathlib import Path
 try:
     import yaml
 except ImportError:
-    print("pyyaml unavailable -- skipped"); sys.exit(0)
+    # EXIT 3, NOT 0 (code review 2026-08-03). 0 is the PASS path in every bash
+    # tail below, so a machine without PyYAML printed green for checks that never
+    # opened a YAML file — including Check 53, whose entire reason for existing is
+    # that unmigrated data sat green for a month.
+    print("SKIP:pyyaml unavailable"); sys.exit(3)
+
+PARSE_ERRORS = []
+
 
 def load(p):
     q = Path(p)
@@ -2543,7 +2562,12 @@ def load(p):
         return {}
     try:
         return yaml.safe_load(q.read_text()) or {}
-    except Exception:
+    except Exception as e:
+        # NOT `return {}` (code review 2026-08-03). Swallowing the error made an
+        # unparseable canvas indistinguishable from an empty one, so a corrupt
+        # file — the state MOST likely to hold the drift these checks hunt —
+        # produced an unqualified PASS.
+        PARSE_ERRORS.append(f"{p}: {e}")
         return {}
 
 problems = []
@@ -2595,8 +2619,12 @@ if len(shapes) > 1:
         f"Pick one so a structured reader sees every dimension."
     )
 
+if PARSE_ERRORS:
+    print("UNPARSEABLE (nothing was compared in these files):")
+    print("\n".join("  " + e for e in PARSE_ERRORS))
 if problems:
     print("\n".join(problems))
+if PARSE_ERRORS or problems:
     sys.exit(1)
 sys.exit(0)
 PY
@@ -2604,7 +2632,9 @@ PY
     rc=$?
     set -e
 
-    if [ "$rc" -ne 0 ]; then
+    if [ "$rc" -eq 3 ]; then
+        info "Check 52: ${result#SKIP:} -- SKIPPED, not passed"
+    elif [ "$rc" -ne 0 ]; then
         fail "Check 52: the same fact is recorded under two field names"
         echo "$result" | sed 's/^/    /'
         echo "    Readers disagree depending on which field they happen to read, and"
@@ -2630,7 +2660,14 @@ from pathlib import Path
 try:
     import yaml
 except ImportError:
-    print("pyyaml unavailable -- skipped"); sys.exit(0)
+    # EXIT 3, NOT 0 (code review 2026-08-03). 0 is the PASS path in every bash
+    # tail below, so a machine without PyYAML printed green for checks that never
+    # opened a YAML file — including Check 53, whose entire reason for existing is
+    # that unmigrated data sat green for a month.
+    print("SKIP:pyyaml unavailable"); sys.exit(3)
+
+PARSE_ERRORS = []
+
 
 def load(p):
     q = Path(p)
@@ -2638,7 +2675,12 @@ def load(p):
         return {}
     try:
         return yaml.safe_load(q.read_text()) or {}
-    except Exception:
+    except Exception as e:
+        # NOT `return {}` (code review 2026-08-03). Swallowing the error made an
+        # unparseable canvas indistinguishable from an empty one, so a corrupt
+        # file — the state MOST likely to hold the drift these checks hunt —
+        # produced an unqualified PASS.
+        PARSE_ERRORS.append(f"{p}: {e}")
         return {}
 
 diamonds = load(".claude/diamonds/active.yml").get("active_diamonds") or []
@@ -2715,8 +2757,25 @@ for m in re.finditer(r"^### (\d+)\.\s+(.+?)\s*$", gates_text, re.M):
 
 # Correction notes QUOTE the old wrong citation, so blank quoted spans first:
 # documenting a fix must not permanently re-trip the check that prompted it.
-scan = re.sub(r'"[^"]*"', lambda q: " " * len(q.group(0)), theories)
+# PER-LINE, AND ONLY ON LINES THAT LOOK LIKE CORRECTION NOTES (review 2026-08-03).
+# This blanked every `"..."` span across the WHOLE file in one pass, which is
+# delimiter pairing, not correction-note detection: a single unpaired quote — an
+# inch mark, a stray quote in a code sample, a smart-quote mismatch — inverts
+# which half of the file is scanned, hiding every live citation between it and
+# the next quote while EXPOSING the historical one. theories.md already holds 29
+# quoted spans. The check would then print "N gates cross-checked" while the
+# miscited gate right below the inch mark was never examined — shipping exactly
+# the gate-10 defect it was written to catch.
+CORRECTION_HINT = re.compile(r"correct|superseded|withdrawn|formerly|was cited|no longer", re.I)
+scan_lines = []
+for line in theories.splitlines():
+    if line.count('"') % 2 == 0 and CORRECTION_HINT.search(line):
+        line = re.sub(r'"[^"]*"', lambda q: " " * len(q.group(0)), line)
+    scan_lines.append(line)
+scan = "\n".join(scan_lines)
+citations_checked = 0
 for m in re.finditer(r"gate (\d+) \(([^)]+)\)", scan, re.I):
+    citations_checked += 1
     num, claimed = m.group(1), m.group(2).strip()
     actual = gate_headings.get(num)
     if actual is None:
@@ -2728,6 +2787,7 @@ for m in re.finditer(r"gate (\d+) \(([^)]+)\)", scan, re.I):
         problems.append(f"theories.md calls gate {num} '{claimed}'; theory-gates.md calls it '{actual}'")
 
 # 2. every backticked path in an "Implemented as:" line must exist
+paths_checked = 0
 for line in theories.splitlines():
     if "Implemented as:" not in line:
         continue
@@ -2738,6 +2798,7 @@ for line in theories.splitlines():
             continue
         if "/" not in ref and not ref.endswith((".md", ".yml")):
             continue
+        paths_checked += 1
         cands = [Path(ref), Path("plugins/mycelium")/ref, Path("plugins/mycelium/engine")/ref,
                  Path(".claude")/ref, Path("docs")/ref]
         if not any(c.exists() for c in cands):
@@ -2746,17 +2807,29 @@ for line in theories.splitlines():
 if problems:
     print("\n".join(problems))
     sys.exit(1)
-print(f"{len(gate_headings)} gates cross-checked; all Implemented-as paths resolve")
+# DENOMINATOR IS WHAT THIS CHECK VERIFIED (review 2026-08-03). It used to report
+# len(gate_headings) — a count of headings in the OTHER file — so a citation regex
+# that stopped matching printed a large, reassuring green over zero comparisons.
+# That is the verify_citations shape, in the check written to catch it.
+if not citations_checked and not paths_checked:
+    print("NA:theories.md yielded 0 gate citations and 0 Implemented-as paths")
+    sys.exit(0)
+print(f"OK:{citations_checked} gate citation(s) and {paths_checked} "
+      f"Implemented-as path(s) verified against {len(gate_headings)} gate heading(s)")
 PY
 )
     rc=$?
     set -e
 
-    if [ $rc -eq 0 ]; then
-        pass "Check 50: $result"
-    else
+    if [ "$rc" -eq 3 ]; then
+        info "Check 50: ${result#SKIP:} -- SKIPPED, not passed"
+    elif [ "$rc" -ne 0 ]; then
         fail "Check 50: theory claims name artifacts that do not exist:
 $result"
+    elif [ "${result#NA:}" != "$result" ]; then
+        info "Check 50: ${result#NA:} -- N/A (nothing to cross-check)"
+    else
+        pass "Check 50: ${result#OK:}"
     fi
 }
 

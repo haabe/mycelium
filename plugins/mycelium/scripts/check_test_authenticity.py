@@ -256,6 +256,15 @@ def _production_modules(root: Path) -> set[str]:
     always loses.
     """
     names: set[str] = set()
+    # SAME IGNORE FILTER AS THE TEST WALK (code review 2026-08-03). v0.73.1 wired
+    # `_scan_lib` into `_iter_test_files` and missed this, the module's SECOND
+    # tree walk — so names harvested from git-ignored vendored trees still counted
+    # as "production reach". Reproduced with a control: a test whose only
+    # reference is a string matching a file inside an ignored tree is NOT flagged,
+    # and IS flagged once that tree is removed. In the dogfood consumer, which
+    # vendors two third-party repos, every common stem (`runner`, `config`,
+    # `index`) is harvested from somebody else's code and silences real findings.
+    ignored = _scan_lib.ignored_paths(root)
     # Documents are shipped artefacts, not just code. Mycelium delivers 58 skills
     # as SKILL.md, its contract as engine/*.md, and its schemas as JSON — a test
     # asserting on that content exercises the product as surely as one importing
@@ -264,6 +273,8 @@ def _production_modules(root: Path) -> set[str]:
     for suffix in ("*.py", "*.sh", "*.md", "*.yml", "*.yaml", "*.json"):
         for f in root.glob(f"**/{suffix}"):
             if any(p in SKIP_DIRS for p in f.parts):
+                continue
+            if _scan_lib.is_ignored(f, ignored):
                 continue
             if _is_test_infrastructure(f):
                 continue

@@ -147,30 +147,37 @@ def main(argv=None):
 
     report = scan(root)
 
+    # Verdict decided BEFORE the output branch (code review 2026-08-03): the
+    # refuse-on-empty branch lived inside the `else` of `if args.json:`, so the
+    # machine-readable path still exited 0 over an empty population.
+    rc = 1 if (report["hits"] or not report["files_scanned"]) else 0
+
     if args.json:
-        print(json.dumps(report, indent=2))
+        print(json.dumps({**report, "verdict": "fail" if rc else "pass"}, indent=2))
+        return rc
+    print(f"Legacy paths: scanned {report['files_scanned']} doc file(s) "
+          f"for stale .claude/{{engine,orchestration,schemas,templates,"
+          f"scripts,domains,tests}}/ references.")
+    if report["hits"]:
+        print(f"\nSTALE references ({len(report['hits'])}) — these dirs moved to "
+              f"plugins/mycelium/ (repo) / ${{CLAUDE_PLUGIN_ROOT}}/ (installed):")
+        for src, lineno, line in report["hits"]:
+            print(f"  {src}:{lineno}\n      {line}")
+        print("\nFix: repoint to plugins/mycelium/<dir>/ (docs) or a relative path "
+              "(plugin-internal files). If the reference intentionally documents the "
+              "legacy form, add the file to ALLOWLIST_FILES.")
+    elif not report["files_scanned"]:
+        print("NOT A PASS: 0 doc file(s) were scanned, so nothing was "
+              "verified. Either --root points somewhere with no docs, or the "
+              "file pattern has stopped matching this repo's layout.")
+        return 1
     else:
-        print(f"Legacy paths: scanned {report['files_scanned']} doc file(s) "
-              f"for stale .claude/{{engine,orchestration,schemas,templates,"
-              f"scripts,domains,tests}}/ references.")
-        if report["hits"]:
-            print(f"\nSTALE references ({len(report['hits'])}) — these dirs moved to "
-                  f"plugins/mycelium/ (repo) / ${{CLAUDE_PLUGIN_ROOT}}/ (installed):")
-            for src, lineno, line in report["hits"]:
-                print(f"  {src}:{lineno}\n      {line}")
-            print("\nFix: repoint to plugins/mycelium/<dir>/ (docs) or a relative path "
-                  "(plugin-internal files). If the reference intentionally documents the "
-                  "legacy form, add the file to ALLOWLIST_FILES.")
-        elif not report["files_scanned"]:
-            print("NOT A PASS: 0 doc file(s) were scanned, so nothing was "
-                  "verified. Either --root points somewhere with no docs, or the "
-                  "file pattern has stopped matching this repo's layout.")
-            return 1
-        else:
-            print(f"No stale legacy-path references across "
-                  f"{report['files_scanned']} scanned file(s).")
+        print(f"No stale legacy-path references across "
+              f"{report['files_scanned']} scanned file(s).")
 
     return 1 if report["hits"] else 0
+
+    return rc
 
 
 if __name__ == "__main__":

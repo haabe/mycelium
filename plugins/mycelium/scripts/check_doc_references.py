@@ -189,29 +189,36 @@ def main(argv=None):
 
     report = scan(root)
 
+    # Verdict decided BEFORE the output branch (code review 2026-08-03): the
+    # refuse-on-empty branch lived inside the `else` of `if args.json:`, so the
+    # machine-readable path still exited 0 over an empty population.
+    rc = 1 if (report["dead"] or not report["links_checked"]) else 0
+
     if args.json:
-        print(json.dumps(report, indent=2))
+        print(json.dumps({**report, "verdict": "fail" if rc else "pass"}, indent=2))
+        return rc
+    print(
+        f"Doc references: scanned {report['files_scanned']} file(s), "
+        f"checked {report['links_checked']} markdown link(s)."
+    )
+    if report["dead"]:
+        print(f"\nDEAD references ({len(report['dead'])}):")
+        for src, target in report["dead"]:
+            print(f"  {src}\n      -> {target}")
+    elif not report["links_checked"]:
+        # Refuse the bare pass: zero links checked means nothing was
+        # verified, and "No dead references." reads as coverage.
+        print("NOT A PASS: 0 markdown link(s) were checked, so nothing was "
+              "verified. Either --root points somewhere with no docs, or the "
+              "link pattern has stopped matching this repo's markdown.")
+        return 1
     else:
-        print(
-            f"Doc references: scanned {report['files_scanned']} file(s), "
-            f"checked {report['links_checked']} markdown link(s)."
-        )
-        if report["dead"]:
-            print(f"\nDEAD references ({len(report['dead'])}):")
-            for src, target in report["dead"]:
-                print(f"  {src}\n      -> {target}")
-        elif not report["links_checked"]:
-            # Refuse the bare pass: zero links checked means nothing was
-            # verified, and "No dead references." reads as coverage.
-            print("NOT A PASS: 0 markdown link(s) were checked, so nothing was "
-                  "verified. Either --root points somewhere with no docs, or the "
-                  "link pattern has stopped matching this repo's markdown.")
-            return 1
-        else:
-            print(f"No dead references across {report['links_checked']} "
-                  "checked link(s).")
+        print(f"No dead references across {report['links_checked']} "
+              "checked link(s).")
 
     return 1 if report["dead"] else 0
+
+    return rc
 
 
 if __name__ == "__main__":

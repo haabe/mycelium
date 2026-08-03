@@ -151,7 +151,7 @@ def test_a_stale_stub_exemption_is_flagged(scripts_path, tmp_path):
     _fake_check(tmp_path, "check_gated_by.py", VACUOUS_SUCCESS)   # no stub marker
     findings = mod.scan(tmp_path)["findings"]
     assert len(findings) == 1
-    assert "no longer says" in findings[0]["detail"]
+    assert "no longer carries the marker" in findings[0]["detail"]
 
 
 def test_the_real_tree_passes_its_own_rule(scripts_path, capsys):
@@ -195,3 +195,25 @@ def test_fixture_meets_preconditions_so_checks_are_not_skipped(
     assert "check_vacuous.py" in [f["script"] for f in report["findings"]], (
         "a vacuous check must still be caught after the N/A change"
     )
+
+
+def test_a_stale_three_state_exemption_is_flagged(scripts_path, tmp_path):
+    """validate_canvas is exempt because it is three-state, not because of its name.
+
+    Added 2026-08-03. It exits 0 on an empty canvas — legitimately, as N/A — and
+    this guard reads only exit codes, so it cannot see the distinction. Encoding
+    N/A as a distinct exit code was rejected: the shipped pre-push hook treats any
+    non-zero as failure and would re-block every push from a fresh
+    /mycelium:setup project, the exact consumer breakage being fixed.
+
+    The exemption therefore rests on the file still SAYING it is three-state. If
+    someone removes that N/A branch and makes it claim a pass over nothing, the
+    exemption must die with it — an exemption that outlives its justification is a
+    hole exactly where nobody is looking.
+    """
+    mod = _import(scripts_path)
+    _fake_check(tmp_path, "validate_canvas.py", VACUOUS_SUCCESS)   # no N/A marker
+    findings = mod.scan(tmp_path)["findings"]
+    assert len(findings) == 1
+    assert findings[0]["script"] == "validate_canvas.py"
+    assert "no longer carries the marker" in findings[0]["detail"]

@@ -224,33 +224,40 @@ def main(argv=None):
     report = scan(root)
     findings = report["findings"]
 
+    # Verdict decided BEFORE the output branch (code review 2026-08-03): the
+    # refuse-on-empty branch lived inside the `else` of `if args.json:`, so the
+    # machine-readable path still exited 0 over an empty population.
+    rc = 1 if (report["findings"] or not report["guards_checked"]) else 0
+
     if args.json:
-        print(json.dumps(report, indent=2))
+        print(json.dumps({**report, "verdict": "fail" if rc else "pass"}, indent=2))
+        return rc
+    print(f"Negative control: {report['guards_checked']} guard(s) checked for a "
+          f"failure-direction assertion (advisory/non-blocking hooks derived, "
+          f"not listed; {len(EXEMPT)} stub exempt).")
+    if findings:
+        print(f"\nGUARDS TESTED ONLY PASSING ({len(findings)}):")
+        for f in findings:
+            print(f"  {f['guard']}\n      {f['detail']}")
+        print("\nA test that cannot fail certifies nothing, and green is read "
+              "as evidence.")
+    elif not report["guards_checked"]:
+        # Refuse the universal over an empty set. "Every guard asserts its
+        # own failure direction" is vacuously true across zero guards, and a
+        # reader takes it as coverage. Found 2026-08-02 while assessing the
+        # CALMS Automation bar this line is an instance of.
+        print("NOT A PASS: 0 guards were checked, so nothing was verified. "
+              "Either this project ships no blocking guards yet, or the "
+              "derivation has stopped recognising the ones it has.")
+        return 1
     else:
-        print(f"Negative control: {report['guards_checked']} guard(s) checked for a "
-              f"failure-direction assertion (advisory/non-blocking hooks derived, "
-              f"not listed; {len(EXEMPT)} stub exempt).")
-        if findings:
-            print(f"\nGUARDS TESTED ONLY PASSING ({len(findings)}):")
-            for f in findings:
-                print(f"  {f['guard']}\n      {f['detail']}")
-            print("\nA test that cannot fail certifies nothing, and green is read "
-                  "as evidence.")
-        elif not report["guards_checked"]:
-            # Refuse the universal over an empty set. "Every guard asserts its
-            # own failure direction" is vacuously true across zero guards, and a
-            # reader takes it as coverage. Found 2026-08-02 while assessing the
-            # CALMS Automation bar this line is an instance of.
-            print("NOT A PASS: 0 guards were checked, so nothing was verified. "
-                  "Either this project ships no blocking guards yet, or the "
-                  "derivation has stopped recognising the ones it has.")
-            return 1
-        else:
-            print(f"Every one of the {report['guards_checked']} checked guard(s) "
-                  "asserts its own failure direction. Guards not derived as "
-                  "blocking are outside this count.")
+        print(f"Every one of the {report['guards_checked']} checked guard(s) "
+              "asserts its own failure direction. Guards not derived as "
+              "blocking are outside this count.")
 
     return 1 if findings else 0
+
+    return rc
 
 
 if __name__ == "__main__":
