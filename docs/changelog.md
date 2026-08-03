@@ -4,6 +4,41 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-03.
 
+## v0.80.1 - the honest-denominator script had a dishonest denominator
+
+`check_correction_attribution.py` shipped in v0.78.0 for one reason: to report
+the correction-loop escape rate **with its denominator**, so a rate could never
+be quoted over a population nobody measured.
+
+Its own denominator was wrong.
+
+`corrections.md` carries **two** entry shapes, and the parser matched one:
+
+| Shape | Example | Matched? |
+|---|---|---|
+| heading | `## 2026-05-03 - thing that happened` | yes |
+| bullet | `- **Thing that happened (2026-05-03, some-class)**: ...` | **no** |
+
+The bullet form is what recent entries actually use. Found the first time the
+script ran against a freshly-appended log: **five entries added that morning,
+every one carrying an explicit "Caught by ..." phrase, were invisible to it**,
+and it printed `measured over 14 of 74 entries` while the corpus held 97.
+
+Both shapes are matched now, in a single interleaved scan so a heading body
+cannot swallow the bullets that follow it, and a dateless bullet
+(`- **Prevention**: ...`) is not mistaken for a new entry.
+
+**Real corpus, before and after:**
+
+| | before | after |
+|---|---|---|
+| entries seen | 74 | **97** |
+| attributed | 14 | **25** |
+| coverage | 19% | **26%** |
+| escape rate | 57% | **60%** |
+
+Three fixtures added, verified by reverting the parser and watching them fail.
+
 ## v0.80.0 - two guardrails that named a level and enforced nothing
 
 `G-D2` and `G-D4` require evidence **breadth**. Both carry a declared `NUDGE`

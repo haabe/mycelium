@@ -42,8 +42,28 @@ from pathlib import Path
 
 CORRECTIONS_REL = ".claude/memory/corrections.md"
 
-#: An entry starts at a dated `### YYYY-MM-DD` heading.
-ENTRY_RE = re.compile(r"^#{2,3}\s+(\d{4}-\d{2}-\d{2})\b(.*)$", re.MULTILINE)
+#: corrections.md uses TWO entry formats, and reading only one is how this
+#: script's own denominator went wrong (dogfood 2026-08-03, first run against a
+#: freshly-appended log):
+#:
+#:   heading style  `## 2026-05-03 — thing that happened`
+#:   bullet style   `- **Thing that happened (2026-05-03, some-class)**: ...`
+#:
+#: The bullet form is what recent entries actually use — 26 of them at the time
+#: this was found, against 75 headings — and the parser matched only headings.
+#: It then printed "measured over 14 of 74 entries" while the corpus was ~101,
+#: which is a wrong denominator inside the script written to print honest
+#: denominators. Five entries appended that morning, every one carrying an
+#: explicit "Caught by ..." phrase, were invisible to it.
+#:
+#: Both patterns are matched now. A body runs to whichever entry starts next,
+#: regardless of which form that one takes, so mixed files interleave correctly.
+ENTRY_RE = re.compile(
+    r"^#{2,3}\s+(\d{4}-\d{2}-\d{2})\b(.*)$"                 # heading style
+    r"|"
+    r"^- \*\*.*?\((\d{4}-\d{2}-\d{2})[,)].*$",              # bullet style
+    re.MULTILINE,
+)
 
 #: The catcher vocabulary, in priority order. First match on an entry wins, so
 #: the more specific patterns come first. Derived from the phrasings already in
@@ -69,7 +89,10 @@ def _entries(text: str) -> list[tuple[str, str]]:
     out = []
     for i, m in enumerate(marks):
         end = marks[i + 1].start() if i + 1 < len(marks) else len(text)
-        out.append((m.group(1), text[m.start():end]))
+        # group(1) is the heading date, group(3) the bullet date; exactly one
+        # of the two alternatives matched.
+        date = m.group(1) or m.group(3)
+        out.append((date, text[m.start():end]))
     return out
 
 
