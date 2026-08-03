@@ -26,6 +26,7 @@ The three defects covered here are the ones a unit test can hold:
    from git-ignored vendored trees still counted as production reach — silencing
    real findings rather than raising false ones.
 """
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -81,12 +82,19 @@ def test_json_and_plain_agree_over_an_empty_population(script, scripts_path, tmp
     )
 
 
-def _run_validate(scripts_path, arg=None, cwd=None):
+def _run_validate(scripts_path, arg=None, cwd=None, env_extra=None):
     cmd = [sys.executable, str(scripts_path / "validate_canvas.py")]
     if arg:
         cmd.append(str(arg))
+    # Scrub the resolution env vars rather than inheriting them: a developer with
+    # CLAUDE_PROJECT_DIR exported would otherwise silently redirect these tests at
+    # their own repo, which is the finding-14 failure mode with a different cause.
+    env = {k: v for k, v in os.environ.items()
+           if k not in ("CLAUDE_PROJECT_DIR", "CLAUDE_PLUGIN_ROOT")}
+    env.update(env_extra or {})
     # check=False: a non-zero exit is part of what these tests assert.
-    return subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, check=False)
+    return subprocess.run(cmd, cwd=cwd, capture_output=True, text=True,
+                          check=False, env=env)
 
 
 def test_fresh_setup_canvas_is_not_a_failure(scripts_path, tmp_path):
@@ -110,12 +118,32 @@ def test_absent_canvas_is_na_not_a_silent_success(scripts_path, tmp_path):
     """Absent used to exit 0 with 'Canvas directory not found' while empty exited 1.
 
     Absent is the STRICTLY LESS INFORMED case; it cannot be the more forgiving one.
+
+    FINDING 14, 2026-08-03 — THIS TEST ASSERTED AGAINST A PATH THAT NEVER EXISTED.
+    It ran with `cwd=tmp_path` and no `CLAUDE_PROJECT_DIR`, so `_resolve_paths()`
+    skipped the cwd branch (because `tmp_path/.claude/canvas` does not exist) and
+    fell back to `<repo>/plugins/.claude/canvas` — a path in the real checkout.
+    The fixture's `mkdir` was decorative: deleting it changed nothing, and the
+    assertions passed for a directory the test never created.
+
+    The fix is to PIN the resolution and then prove which directory was judged.
+    `CLAUDE_PROJECT_DIR` makes the target unambiguous, and asserting the message
+    names that exact path is what stops the test drifting back onto a repo path
+    if resolution changes again — a test that does not check WHICH population it
+    examined is the same defect as a check that reports a denominator it did not
+    measure.
     """
-    (tmp_path / ".claude").mkdir(parents=True)
-    r = _run_validate(scripts_path, cwd=tmp_path)
-    assert r.returncode == 0
+    target = tmp_path / ".claude" / "canvas"
+    assert not target.exists(), "the point of this test is that it is ABSENT"
+    r = _run_validate(scripts_path, cwd=tmp_path,
+                      env_extra={"CLAUDE_PROJECT_DIR": str(tmp_path)})
+    assert r.returncode == 0, r.stdout + r.stderr
     assert "N/A" in r.stdout
     assert "nothing was supposed to be" in r.stdout
+    assert str(target) in r.stdout, (
+        "the message must name the canvas directory it actually judged; without "
+        "this the test passes against <repo>/plugins/.claude/canvas"
+    )
 
 
 def test_populated_canvas_still_reports_its_denominator(scripts_path):
@@ -155,3 +183,68 @@ def test_ignored_tree_names_do_not_count_as_production_reach(scripts_path, tmp_p
         "and the real finding must therefore surface"
     )
     assert r.returncode == 1
+
+
+# ---------------------------------------------------------------- findings 11 + 12
+# validate_canvas had two ways to exit 0 having validated nothing. Both were
+# reachable over a REAL canvas, and .github/workflows/validate.yml runs the
+# script bare, so both went green in CI.
+#
+# Scenario-per-guardpost for the empty/absent family:
+#   happy — populated canvas + schemas        -> PASS with a denominator
+#   sad   — canvas dir holds only non-.yml    -> FAIL (the glob stopped matching)
+#   bad   — schema dir missing, canvas full   -> FAIL (stale CLAUDE_PLUGIN_ROOT)
+#   edge  — fresh setup, .gitkeep only        -> N/A, exit 0 (must stay pushable)
+#   edge  — absent canvas dir                 -> N/A, exit 0
+#   edge  — dotfiles only                     -> N/A, not mistaken for content
+
+
+def test_canvas_that_stopped_matching_the_glob_fails(scripts_path, tmp_path):
+    """FINDING 12. The N/A for an empty canvas also covered a BROKEN one.
+
+    Rename `purpose.yml` to `.yaml`, or move the canvas one level down, and
+    `*.yml` matches nothing. The job printed `N/A` and exited 0 — CI green over a
+    canvas nobody validated. Empty-by-birth and empty-by-breakage are opposite
+    states and cannot share an exit code.
+    """
+    canvas = tmp_path / ".claude" / "canvas"
+    canvas.mkdir(parents=True)
+    (canvas / "purpose.yaml").write_text("why: renamed away from the glob\n")
+    r = _run_validate(scripts_path, canvas)
+    assert r.returncode == 1, r.stdout + r.stderr
+    assert "none match *.yml" in r.stdout
+    assert "purpose.yaml" in r.stdout, "the failure must name what it found instead"
+
+
+def test_missing_schema_dir_over_a_populated_canvas_fails(scripts_path, tmp_path):
+    """FINDING 11. `(no schemas to validate against — silently passing)`, exit 0.
+
+    Reachable with a FULL canvas whenever CLAUDE_PLUGIN_ROOT points at a stale
+    plugin-cache path. It also made check_empty_input_honesty's exemption for
+    this script false — the exemption asserted "there is no state where it
+    verifies nothing AND claims a pass", and this was that state.
+    """
+    canvas = tmp_path / ".claude" / "canvas"
+    canvas.mkdir(parents=True)
+    (canvas / "purpose.yml").write_text("why: real content\n")
+    r = _run_validate(scripts_path, canvas,
+                      env_extra={"CLAUDE_PLUGIN_ROOT": str(tmp_path / "stale-cache")})
+    assert r.returncode == 1, r.stdout + r.stderr
+    out = r.stdout + r.stderr
+    assert "Refusing to report a pass" in out
+    assert "CLAUDE_PLUGIN_ROOT" in out, "name the likely cause, not just the symptom"
+
+
+def test_dotfiles_alone_are_still_a_fresh_setup(scripts_path, tmp_path):
+    """EDGE. `.gitkeep` is the setup marker; dotfiles are not authored content.
+
+    Counting them as 'files but no .yml' would fail exactly the fresh-project
+    push that the N/A state exists to keep working.
+    """
+    canvas = tmp_path / ".claude" / "canvas"
+    canvas.mkdir(parents=True)
+    (canvas / ".gitkeep").touch()
+    (canvas / ".DS_Store").write_bytes(b"\x00")
+    r = _run_validate(scripts_path, canvas)
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert "N/A" in r.stdout

@@ -4,6 +4,97 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-03.
 
+## v0.79.0 - the fixes had the same defect as the things they fixed
+
+A max-effort review of the v0.77.0/v0.78.0 batch returned **15 confirmed
+defects, every one reproduced by execution**. They are defects in *fixes* — in
+the releases written to eliminate green-over-nothing.
+
+### Check 50 decided suppression by sniffing prose
+
+Correction notes quote the old wrong citation, so quoted spans were blanked
+before scanning. Whether to blank was decided by a six-word vocabulary list.
+
+**Too wide.** `correct` fires on "correctly" and "incorrect", and `theories.md`
+paragraphs are ONE LINE EACH — line 15 is 1368 characters. Measured on the live
+file: **9 lines blanked, 8 of them triggered by ordinary prose**, wiping 19
+quoted spans no correction note was near. A live miscitation inside any of them
+is invisible.
+
+**Too narrow.** A note reading `(Fixed v0.80.0: this read "gate 10 (Delivery
+Health)")` matches nothing, so the historical citation IS scanned, the check
+fails, and CI goes red because the author wrote "Fixed" instead of "Corrected".
+A guard whose pass depends on synonym choice is not a guard.
+
+No linter sniffs prose to decide whether to suppress itself. They take an
+explicit, machine-readable marker naming the scope — `# noqa: E501`,
+`// eslint-disable-next-line`, `# type: ignore[code]`. Check 50 now uses
+`<!-- validator:historical-citation -->` (an HTML comment, so it renders
+invisibly) and the vocabulary heuristic is **deleted**. A pragma line with
+unpaired quotes is reported as itself rather than silently not blanking.
+
+### Check 51 declared PARSE_ERRORS and never read it
+
+Check 52's otherwise identical heredoc carries the `if PARSE_ERRORS: sys.exit(1)`
+block. Check 51's did not, so all four `load()` calls returned `{}` on a YAML
+error and the check printed `nothing to reconcile`, exit 0. Reproduced with two
+unparseable canvas files. **An unparseable canvas is the state most likely to
+hold the drift this check hunts, and it was the one state guaranteed to pass.**
+
+### Check 50's N/A guard used `and`
+
+`if not citations_checked and not paths_checked` refused only when BOTH
+populations were empty. A citation-regex change dropping citations to 0 still
+printed a confident green off the back of 9 verified paths — one half of the
+check verifying nothing while the other half carried the report. Refusal is
+per-population now, and the message names which one was empty.
+
+### validate_canvas had two ways to exit 0 having validated nothing
+
+Both reachable over a real canvas, and `.github/workflows/validate.yml` runs the
+script bare.
+
+| State | Was | Now |
+|---|---|---|
+| Schema dir missing, canvas POPULATED | `(no schemas to validate against — silently passing)`, exit 0 | exit 1, names `CLAUDE_PLUGIN_ROOT` as the likely cause |
+| Canvas dir holds files, none `*.yml` | `N/A`, exit 0 | exit 1, names what it found instead |
+| Canvas dir empty / `.gitkeep` only | `N/A`, exit 0 | unchanged — exit 0 |
+
+The first is reachable in normal use whenever `CLAUDE_PLUGIN_ROOT` points at a
+stale plugin-cache path. It also made `check_empty_input_honesty`'s exemption for
+this script **false** — the exemption asserted "there is no state where it
+verifies nothing AND claims a pass", and this was that state. **Fixed by fixing
+the script, not by rewording the reason**, and the guard now re-verifies both
+markers against the file.
+
+Empty-by-birth and empty-by-breakage are opposite states that shared an exit
+code. The fresh-`/mycelium:setup` case still exits 0 — the shipped pre-push hook
+gates on the directory existing, and any non-zero re-blocks every first push,
+the consumer breakage v0.75.1 was fixing. Dotfiles do not count as authored
+content.
+
+### Two tests could not fail on the bug they were written for
+
+Both proven by reverting the fix and watching the test stay green — not by
+inspection.
+
+- `test_absent_canvas_is_na_not_a_silent_success` ran with `cwd=tmp_path` and no
+  `CLAUDE_PROJECT_DIR`, so `_resolve_paths()` fell back to
+  `<repo>/plugins/.claude/canvas` — a path in the real checkout that never
+  existed. The fixture's `mkdir` was decorative. It now pins the resolution and
+  asserts the message names the directory it actually judged.
+- `test_main_schema_dir_missing_exits_zero` asserted the silent pass above. It
+  asserted the defect, so it is now
+  `test_main_schema_dir_missing_over_populated_canvas_exits_one`.
+
+### Regressions added
+
+New fixtures under `tests/bash/fixtures/check_50/` (`prose_hint_word`,
+`pragma_any_wording`, `pragma_unpaired_quote`, `no_citations`) and
+`check_51/unparseable`, plus three `validate_canvas` states in
+`tests/python/test_review_fixes_2026_08_03.py`. Each was verified to FAIL against
+the pre-fix code.
+
 ## v0.78.0 - who caught it, computed instead of recalled
 
 **The number the correction loop exists to produce was the least automated thing

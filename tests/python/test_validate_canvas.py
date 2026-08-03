@@ -439,8 +439,24 @@ def test_main_canvas_dir_missing_exits_zero(tmp_path, scripts_path, monkeypatch)
     assert exc.value.code == 0
 
 
-def test_main_schema_dir_missing_exits_zero(tmp_path, scripts_path, monkeypatch):
-    """SCHEMA_DIR doesn't exist → exit 0 (no schemas to validate against)."""
+def test_main_schema_dir_missing_over_populated_canvas_exits_one(
+    tmp_path, scripts_path, monkeypatch, capsys
+):
+    """SCHEMA_DIR missing while the canvas HAS files → exit 1, not a silent pass.
+
+    THIS TEST ASSERTED exit 0 UNTIL 2026-08-03, and that is finding 11. The
+    script printed "(no schemas to validate against — silently passing)" and
+    exited 0 over a populated canvas — reachable in normal use whenever
+    CLAUDE_PLUGIN_ROOT points at a stale plugin-cache path. It also made
+    check_empty_input_honesty's exemption for this script false: the exemption
+    asserted "there is no state where it verifies nothing AND claims a pass",
+    and this was exactly that state, sitting in the file the whole time.
+
+    A missing schema directory over real canvas files is a broken installation,
+    not an early project — the fresh-setup and absent-canvas cases return N/A
+    before this point, so reaching here means there was something to validate
+    and nothing to validate it with.
+    """
     validator = _import_validator(scripts_path)
     canvas_dir = tmp_path / ".claude" / "canvas"
     canvas_dir.mkdir(parents=True)
@@ -450,7 +466,9 @@ def test_main_schema_dir_missing_exits_zero(tmp_path, scripts_path, monkeypatch)
 
     with __import__("pytest").raises(SystemExit) as exc:
         validator.main()
-    assert exc.value.code == 0
+    assert exc.value.code == 1
+    out = capsys.readouterr()
+    assert "Refusing to report a pass" in (out.out + out.err)
 
 
 def test_main_argv_override_nonexistent_exits_two(tmp_path, scripts_path, monkeypatch):
