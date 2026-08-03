@@ -187,3 +187,66 @@ def test_phrasings_already_in_the_corpus_are_recognised(scripts_path, phrase, ex
     """
     mod = _import(scripts_path)
     assert mod.classify(f"Some text. {phrase}. More text.") == expected
+
+
+# ------------------------------------------------- both entry formats (v0.80.1)
+# corrections.md uses TWO shapes and this script read one of them, so its own
+# denominator was wrong. Found the first time it ran against a freshly-appended
+# log: five new entries, every one carrying an explicit "Caught by ..." phrase,
+# were invisible, and the tool printed "measured over 14 of 74" while the corpus
+# held ~101. A wrong denominator inside the script written to print honest
+# denominators.
+
+
+def _bullet_corpus(root, lines):
+    d = root / ".claude" / "memory"
+    d.mkdir(parents=True, exist_ok=True)
+    (d / "corrections.md").write_text("# Corrections Log\n\n" + "\n\n".join(lines) + "\n")
+    return root
+
+
+def test_bullet_style_entries_are_counted(scripts_path, tmp_path):
+    """`- **Title (YYYY-MM-DD, class)**: ...` is what recent entries actually use."""
+    mod = _import(scripts_path)
+    root = _bullet_corpus(tmp_path, [
+        "- **Something went wrong (2026-08-03, some-class)**: prose. Caught by founder.",
+        "- **Another thing (2026-08-02, other-class)**: prose. Caught by hook.",
+    ])
+    result = mod.scan(root)
+    assert result["entries"] == 2, result
+    assert result["attributed"] == 2, result
+
+
+def test_heading_and_bullet_entries_interleave(scripts_path, tmp_path):
+    """A body must run to whichever entry starts next, whichever form it takes.
+    If the two formats did not share one scan, a heading body would swallow every
+    bullet after it and their catchers would be credited to the wrong entry."""
+    mod = _import(scripts_path)
+    d = tmp_path / ".claude" / "memory"
+    d.mkdir(parents=True)
+    (d / "corrections.md").write_text(
+        "# Corrections Log\n\n"
+        "### 2026-05-01 - heading entry\n\nprose. Caught by the user.\n\n"
+        "- **Bullet entry (2026-05-02, cls)**: prose. Caught by the hook.\n\n"
+        "### 2026-05-03 - another heading\n\nprose with no catcher at all.\n\n"
+        "- **Last bullet (2026-05-04, cls)**: prose. Self-caught by the agent.\n"
+    )
+    result = mod.scan(tmp_path)
+    assert result["entries"] == 4, result
+    assert result["attributed"] == 3, result
+    assert result["by_catcher"]["user"] == 1
+    assert result["by_catcher"]["hook_or_check"] == 1
+    assert result["by_catcher"]["agent_self"] == 1
+
+
+def test_bullet_without_a_date_is_not_an_entry(scripts_path, tmp_path):
+    """EDGE. Ordinary bulleted prose inside an entry body must not split it —
+    the file is full of `- **Prevention**:` style lines."""
+    mod = _import(scripts_path)
+    root = _bullet_corpus(tmp_path, [
+        "- **Real entry (2026-08-03, cls)**: prose. Caught by founder.",
+        "- **Prevention**: do the thing. Not an entry, no date.",
+        "- some plain bullet",
+    ])
+    result = mod.scan(root)
+    assert result["entries"] == 1, result
