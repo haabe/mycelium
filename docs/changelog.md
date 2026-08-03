@@ -4,6 +4,62 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-03.
 
+## v0.81.0 - two mechanisms for a failure class that had three notes and kept happening
+
+In one session the agent hit documented shell and verification traps **eight
+times**. Three of them already had their own memory files in the dogfood project,
+written after earlier incidents. One produced a **wrong answer to the operator**:
+
+```
+which opencode | head -1; echo $?     # reports head's status, not which's
+```
+
+...so a tool was reported as not installed when the binary was merely absent from
+PATH. Per the Lopopolo reframe this project runs on — *every interaction is a
+failure of the harness to provide enough context; fix one layer up* — a
+correction that recurs against an existing note needs a mechanism. A note is read
+at session start and decays; a hook fires on the command.
+
+### `hooks/shell-safety-guard.sh` (PreToolUse on Bash)
+
+| Trap | Contract it cites |
+|---|---|
+| `$?` after a pipeline | POSIX: `$?` is the exit status of the pipeline's **last** command. Remedy `${PIPESTATUS[0]}` — and the warning suppresses itself when that is already present |
+| Backticks | ShellCheck **SC2006**; and backticks inside a double-quoted string are command substitution, so a markdown code span in a commit message gets executed |
+| `grep` gating `&&` | grep(1): "exit status is 0 if any line is selected, **1 if no lines were selected**" — and zero matches is often the desired answer |
+
+**It warns, it never denies.** Every pattern has legitimate uses, and a guard that
+blocks real work gets disabled, which is how a guard dies. Registered on all three
+hook surfaces (`hooks.json`, `hooks.codex.json`, `hooks.cursor.json`). Fails open
+on unparseable input — a guard that breaks the Bash tool is worse than the traps
+it catches.
+
+**Stated limit:** cwd persistence across Bash calls is the fourth trap in this
+family and bit twice the same session. It is invisible to a PreToolUse hook,
+which sees one command and cannot know what the next call assumes. That needs
+cross-invocation state and is not pretended at.
+
+### `scripts/safe_replace.py`
+
+This project's scripted-edit rule was *"assert the replacement landed"*. Following
+it produced a **worse** failure than ignoring it: a script patching two files with
+a shared anchor wrote the first, raised on the second, and left the tree
+half-edited — the two "mirror" files were not verbatim copies.
+
+The bug is **ordering**. `write; assert` turns a bad assertion into a partial
+edit, which is strictly worse than no assertion, because the tree is now in a
+state nobody described. `validate-all; then write` cannot do that.
+
+It reports **every** failing anchor at once rather than the first, since fail-fast
+just makes the caller rediscover one anchor per run. Expected occurrence `count`
+is a precondition instead of an afterthought remembered wrongly — that mistake
+happened three times in the same session (`== 3` when it was 2, twice; `== 4` when
+it was 3).
+
+`agent-operating-contract.md` mandates it for any scripted edit touching more than
+one file or anchor, so the contract that is injected every session is what makes
+it reachable. It made its own wiring edits.
+
 ## v0.80.1 - the honest-denominator script had a dishonest denominator
 
 `check_correction_attribution.py` shipped in v0.78.0 for one reason: to report

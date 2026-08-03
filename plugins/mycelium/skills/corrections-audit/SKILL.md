@@ -15,7 +15,7 @@ Analyze corrections.md for trends, recurring patterns, and actionable insights.
 ## Attribution: run the script, do not count by hand
 
 ```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_correction_attribution.py" --root .
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_correction_attribution.py" --root . --snapshot
 ```
 
 **Added 2026-08-03.** This audit's headline number — *who caught the mistake* —
@@ -30,7 +30,11 @@ clothes, which is the failure this repo spent 2026-08-02/03 removing from its ow
 checks. If it prints `NO RATE AVAILABLE`, that is not 0%: it means nothing in the
 corpus says who caught anything.
 
-**To make the number better, add one phrase per new entry** — `caught by user`,
+`--snapshot` appends the reading to `.claude/evals/metrics/corrections/<date>.json`, the same layout the other metric adapters use. **The level is not the signal.** Trend `caught_by_hook_or_check` rising in absolute terms; the ratio can also be improved by logging fewer user-caught mistakes, which is why this script never gates on it.
+
+**Attribution is a HARD RULE at write time**, not a suggestion — see `engine/agent-operating-contract.md`. It was advisory until 2026-08-03 and 72 of 100 entries carry no catcher as a result. Do not backfill those in bulk: who caught a mistake six weeks ago is not recoverable by inference, and a guessed catcher corrupts the only number this loop produces.
+
+**For entries written before the rule, add one phrase per new entry** — `caught by user`,
 `caught by hook`, `caught by review`, `self-caught`. The parser reads the prose
 forms already present rather than requiring a new field, so nothing existing
 needs rewriting.

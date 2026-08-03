@@ -67,6 +67,13 @@ from pathlib import Path
 # Each allowlist entry needs a REASON. "It has a unit test" is not a reason —
 # that is precisely the false-green this check exists to catch.
 ORPHAN_ALLOWLIST = {
+    "safe_replace.py":
+        "manual-invocation instrument for agent-authored scripted edits, the "
+        "same class as verify_citations.py below. No skill or CI job calls it "
+        "because its consumer is the agent mid-task, not a scheduled step. It "
+        "is NOT unreachable: agent-operating-contract.md mandates it for any "
+        "scripted edit touching more than one file or anchor, and that contract "
+        "is injected every session.",
     "_manifest_lib.py":
         "library imported by parse_manifest.py; not independently invoked",
     "check_gated_by.py":

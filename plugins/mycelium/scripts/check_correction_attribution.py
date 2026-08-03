@@ -38,6 +38,7 @@ import argparse
 import json
 import re
 import sys
+from datetime import UTC, datetime
 from pathlib import Path
 
 CORRECTIONS_REL = ".claude/memory/corrections.md"
@@ -136,16 +137,86 @@ def scan(root: Path) -> dict:
     }
 
 
+#: Snapshot layout matches the existing metrics convention
+#: (.claude/evals/metrics/<source>/<YYYY-MM-DD>.json) rather than inventing one,
+#: so the corrections series is readable by whatever already reads the others.
+SNAPSHOT_REL = ".claude/evals/metrics/corrections"
+ADAPTER_VERSION = 1
+
+
+def write_snapshot(root: Path, st: dict, snapshot_dir: Path | None = None) -> Path | None:
+    """Append today's reading to the metrics series. Returns the path, or None.
+
+    WHY A SERIES (dogfood 2026-08-03). The escape rate existed only as prose in
+    hand-written TL;DR paragraphs — three readings across two months, each
+    recomputed by someone who remembered to look, and the top-of-file count was
+    stale by 46 entries when this was added. A rate whose trend cannot be
+    computed answers the wrong question: the useful signal is not the level but
+    whether the harness is catching more over time.
+
+    REFUSES TO WRITE A RATE IT DOES NOT HAVE. When no entry carries a catcher
+    there is no rate, and storing a null in a series is how a gap becomes a
+    number later. Nothing is written in that case.
+
+    Same-day re-runs OVERWRITE: a snapshot is a state-of-day reading, not an
+    event log, so a second run on the same date corrects the first rather than
+    double-counting it.
+    """
+    if not st.get("applicable") or not st.get("attributed"):
+        return None
+    target = snapshot_dir or (root / SNAPSHOT_REL)
+    target.mkdir(parents=True, exist_ok=True)
+    now = datetime.now(UTC)
+    path = target / f"{now:%Y-%m-%d}.json"
+    path.write_text(json.dumps({
+        "pulled_at": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "source": "corrections",
+        "source_class": "process-quality",
+        "target": str(root / CORRECTIONS_REL),
+        "adapter_version": ADAPTER_VERSION,
+        "fetch_status": "complete",
+        "primary_counts": {
+            "entries": st["entries"],
+            "attributed": st["attributed"],
+            "unattributed": st["unattributed"],
+            **{f"caught_by_{k}": v for k, v in sorted(st["by_catcher"].items())},
+        },
+        "escape_rate": st["escape_rate"],
+        "coverage": st["coverage"],
+        "note": (
+            "Escape rate = share of ATTRIBUTED corrections not caught by a hook, "
+            "check, or the agent itself. Read it with `coverage`: a rate over a "
+            "quarter of the corpus is indicative, not measured. The signal worth "
+            "trending is caught_by_hook_or_check rising in absolute terms, not "
+            "the ratio falling, which under-logging would also achieve."
+        ),
+    }, indent=2) + "\n")
+    return path
+
+
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(
         description="Escape rate of the correction loop: who caught each mistake."
     )
     p.add_argument("--root", default=".", help="Project root (default: cwd).")
     p.add_argument("--json", action="store_true", help="Emit JSON.")
+    p.add_argument("--snapshot", nargs="?", const="", metavar="DIR",
+                   help="Append this reading to the metrics series "
+                        f"(default: {SNAPSHOT_REL}/<date>.json).")
     args = p.parse_args(argv)
 
-    st = scan(Path(args.root).resolve())
+    root = Path(args.root).resolve()
+    st = scan(root)
+    # BEFORE the output branch, deliberately: v0.77.0 found five scripts
+    # whose behaviour differed between --json and plain because the work
+    # lived inside one arm of the branch.
+    snapshot_path = None
+    if args.snapshot is not None:
+        snapshot_path = write_snapshot(
+            root, st, Path(args.snapshot) if args.snapshot else None)
     if args.json:
+        if snapshot_path:
+            st = {**st, "snapshot": str(snapshot_path)}
         print(json.dumps(st, indent=2))
         return 0
 
