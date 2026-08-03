@@ -3,7 +3,7 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Write|Edit|MultiEdit|edit|write",
+        "matcher": "Write|Edit|MultiEdit|edit|write|apply_patch",
         "hooks": [
           {
             "type": "command",
@@ -40,6 +40,10 @@
             "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/autonomous-evidence-guard.sh",
             "timeout": 5,
             "statusMessage": "Mycelium autonomous-evidence-guard (autonomous-mode only)"
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/absence-claim-guard.sh"
           }
         ]
       },
@@ -65,7 +69,7 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "Write|Edit|MultiEdit|edit|write",
+        "matcher": "Write|Edit|MultiEdit|edit|write|apply_patch",
         "hooks": [
           {
             "type": "command",
