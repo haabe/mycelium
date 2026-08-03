@@ -20,8 +20,13 @@ WHAT IT CHECKS, each anchored to a documented contract rather than a preference:
 
   1. `$?` after a pipeline. POSIX and bash define `$?` as the exit status of the
      LAST command in a pipeline, so `cmd | head; echo $?` reports head. The
-     documented remedy is `${PIPESTATUS[0]}` (bash) — suppressed when that is
-     already present, since then the author knows.
+     documented remedy is `${PIPESTATUS[0]}` in bash and `${pipestatus[1]}` in
+     zsh (lowercase, 1-indexed) — suppressed when either is present, since
+     then the author knows. Naming only the bash form was the shipped bug:
+     this project's shell is zsh, where `${PIPESTATUS[0]}` expands to the
+     empty string, so the advice silently did not work in the environment it
+     was written for. Advice that fails quietly is worse than none, because
+     it reads as handled.
      ShellCheck SC2181 covers the adjacent "check exit code directly" case.
 
   2. Backticks. ShellCheck SC2006: "Use $(...) notation instead of legacy
@@ -56,7 +61,10 @@ import sys
 _BACKTICK = re.compile(r"`")
 _PIPE = re.compile(r"(?<!\|)\|(?!\|)")          # a real pipe, not ||
 _DOLLAR_STATUS = re.compile(r"\$\?")
-_PIPESTATUS = re.compile(r"PIPESTATUS")
+#: Case-INSENSITIVE: bash spells it PIPESTATUS, zsh spells it pipestatus.
+#: A case-sensitive test warned people who had already applied the remedy,
+#: in the shell this project actually runs.
+_PIPESTATUS = re.compile(r"pipestatus", re.IGNORECASE)
 _GREP_AND = re.compile(r"\b(grep|pgrep|rg)\b[^\n;]*?&&")
 
 
@@ -74,7 +82,9 @@ def findings(command: str) -> list[str]:
                 "`$?` appears after a pipeline. POSIX defines it as the exit "
                 "status of the LAST command in the pipeline, so it reports the "
                 "tail (often `head`/`tail`/`grep`), not the command you care "
-                "about. Use `${PIPESTATUS[0]}`, or drop the pipe."
+                "about. In bash use `${PIPESTATUS[0]}`; in ZSH that array is "
+                "`$pipestatus` and it is 1-INDEXED, so the same slot is "
+                "`${pipestatus[1]}`. Or drop the pipe."
             )
 
     # 2. Backticks.

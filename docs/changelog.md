@@ -4,6 +4,34 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-03.
 
+## v0.81.1 - the guard's own advice did not work in the shell it shipped for
+
+`shell-safety-guard` (v0.81.0) warns when `$?` follows a pipeline and recommends
+`${PIPESTATUS[0]}`. That is bash. **This project's shell is zsh**, where the
+array is lowercase and 1-indexed:
+
+```
+bash-style ${PIPESTATUS[0]} -> ''      # empty in zsh
+zsh-style  ${pipestatus[1]} -> '0'
+```
+
+So the remedy for the trap that produced a wrong answer to the operator silently
+did nothing in the environment it was written for.
+
+**The suppression bug was worse than the message bug.** `_PIPESTATUS` matched
+case-sensitively, so a command already using the correct zsh form still got
+warned — a false positive aimed precisely at the people who had done the right
+thing. That is how a guard gets muted, and the guard's own docstring says so.
+
+Both forms are named now, with the 1-indexing called out explicitly (naming the
+variable without the index would trade one silent failure for another), and the
+suppression is case-insensitive.
+
+Caught by the author's own command printing `EXIT=` — empty — while testing
+something unrelated. Advice that fails quietly is worse than no advice, because
+it reads as handled: the same shape as every green-over-nothing defect
+v0.77.0-v0.80.1 removed, in a guard four hours old.
+
 ## v0.81.0 - two mechanisms for a failure class that had three notes and kept happening
 
 In one session the agent hit documented shell and verification traps **eight
