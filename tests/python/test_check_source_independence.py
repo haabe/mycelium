@@ -390,3 +390,20 @@ def test_pointer_is_a_valid_schema_value(scripts_path):
     schema = json.loads(
         (scripts_path.parent / "schemas" / "canvas" / "_common.schema.json").read_text())
     assert "pointer" in schema["$defs"]["source_class"]["enum"]
+
+
+def test_finding_names_the_method_not_the_first_pointer(scripts_path, tmp_path):
+    """A real finding named the wrong culprit. With classes
+    ['pointer', 'internal_desk', 'pointer'] the message read "3 sources, all
+    `pointer`" — but pointers are excluded, and the single METHOD was
+    internal_desk. A true finding that misnames its cause gets dismissed as a
+    tool bug, which is worse than not reporting it."""
+    root = _canvas(tmp_path, body=_opp(
+        ["a canvas ref", "some desk research", "another canvas ref"],
+        ["pointer", "internal_desk", "pointer"],
+    ))
+    r = _run(scripts_path, root)
+    assert r.returncode == 1, r.stdout
+    assert "all `internal_desk`" in r.stdout
+    assert "all `pointer`" not in r.stdout
+    assert "2 pointer(s) set aside from 3 total" in r.stdout
