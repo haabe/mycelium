@@ -260,3 +260,136 @@ def test_main_fails_open_on_garbage(scripts_path, monkeypatch, capsys):
     monkeypatch.setattr(sys, "stdin", io.StringIO("{not json"))
     assert mod.main() == 0
     assert capsys.readouterr().out == ""
+
+
+# ------------------------------------------------- shell writes (the reach gap)
+# The tool half watches Write/Edit/MultiEdit. Every correction appended during
+# the session that produced this guard went in as `cat >> ... <<'EOF'`, which no
+# write matcher sees — so the guard was blind to the way its own author writes.
+# v0.84.0 closes that. These are the shapes that actually occurred.
+
+
+def _bash(command):
+    return json.dumps({"tool_name": "Bash", "tool_input": {"command": command}})
+
+
+def _bash_warn(scripts_path, command):
+    r = _run(scripts_path, _bash(command))
+    assert r.returncode == 0, r.stderr
+    if not r.stdout.strip():
+        return ""
+    return json.loads(r.stdout)["hookSpecificOutput"]["additionalContext"]
+
+
+# ---------------------------------------------------------------- sad
+
+
+def test_the_heredoc_append_that_the_guard_used_to_miss(scripts_path):
+    """Verbatim shape of every corrections.md append in the originating session."""
+    out = _bash_warn(scripts_path, "cat >> .claude/memory/corrections.md <<'EOF'\n"
+                                   "No entry covers vocabulary.\nEOF")
+    assert "ABSENCE-CLAIM WARNING" in out
+    assert "No entry covers vocabulary." in out
+
+
+def test_a_one_liner_echo_does_not_suppress_itself_with_its_own_target(scripts_path):
+    """The scope suppressor counts a named file as showing your work, and the
+    redirect target IS a named file — so without stripping it first, this
+    command cites its own destination as evidence and goes quiet."""
+    assert "ABSENCE-CLAIM WARNING" in _bash_warn(
+        scripts_path, 'echo "No entry covers vocabulary." >> .claude/memory/corrections.md')
+
+
+@pytest.mark.parametrize("command", [
+    'printf "%s" "nothing in the framework tracks it." | tee -a .claude/canvas/opportunities.yml',
+    "cat > /Users/x/p/.claude/canvas/user-needs.yml <<'EOF'\nNo source exists.\nEOF",
+    "sed -i '' 's/x/No entry covers it./' .claude/harness/decision-log.md",
+])
+def test_each_shell_write_form_is_watched(scripts_path, command):
+    assert "ABSENCE-CLAIM WARNING" in _bash_warn(scripts_path, command)
+
+
+# ---------------------------------------------------------------- happy
+
+
+@pytest.mark.parametrize("command", [
+    'grep -n "No entry covers" .claude/memory/corrections.md',          # a READ
+    "cat >> README.md <<'EOF'\nNo entry covers vocabulary.\nEOF",        # unwatched target
+    "cat >> .claude/memory/corrections.md <<'EOF'\nBentes drove it.\nEOF",   # no claim
+    ("cat >> .claude/memory/corrections.md <<'EOF'\n"
+     "No entry covers it - grep over *.yml found none.\nEOF"),          # cited
+    'git commit -m "No entry covers vocabulary."',                       # not a file write
+])
+def test_shell_commands_that_must_stay_silent(scripts_path, command):
+    """Reads, unwatched destinations and commit messages are not evidence writes.
+    The commit-message case matters most: this project writes long prose commit
+    messages, and warning on them would make the guard noise within a day."""
+    assert _bash_warn(scripts_path, command) == ""
+
+
+# ---------------------------------------------------------------- bad
+
+
+@pytest.mark.parametrize("payload", [
+    json.dumps({"tool_name": "Bash", "tool_input": {}}),
+    json.dumps({"tool_name": "Bash", "tool_input": {"command": "   "}}),
+    json.dumps({"tool_name": "Bash", "tool_input": {"command": 7}}),
+])
+def test_malformed_bash_payloads_stay_silent(scripts_path, payload):
+    r = _run(scripts_path, payload)
+    assert r.returncode == 0, r.stderr
+    assert r.stdout.strip() == ""
+
+
+# ---------------------------------------------------------------- in-process
+
+
+def test_shell_findings_strips_every_target_before_scanning(scripts_path):
+    mod = _import(scripts_path)
+    assert mod.shell_findings("echo hi > /tmp/x") == []
+    assert len(mod.shell_findings(
+        'echo "No entry covers it." >> .claude/memory/corrections.md')) == 1
+
+
+def test_cursor_and_codex_shell_tool_names_reach_the_same_path(scripts_path):
+    """Cursor calls its shell tool `Shell`, not `Bash`. Reading only `Bash`
+    would register the hook on Cursor and have it no-op there — the same class
+    of dead registration v0.83.0 fixed in the manifests."""
+    import io
+    mod = _import(scripts_path)
+    for name in ("Bash", "Shell", "shell"):
+        monkey = io.StringIO(json.dumps({
+            "tool_name": name,
+            "tool_input": {"command": 'echo "No entry covers it." '
+                                      '>> .claude/memory/corrections.md'}}))
+        old, sys.stdin = sys.stdin, monkey
+        try:
+            assert mod.main() == 0
+        finally:
+            sys.stdin = old
+
+
+@pytest.mark.parametrize("claim", [
+    "No check caught any of them.",
+    "No entry covered it.",
+    "No mechanism existed for that.",
+    "nothing caught the drift.",
+])
+def test_past_tense_absence_is_caught(scripts_path, claim):
+    """REGRESSION. The verb list shipped with `catches` and not `caught`, so
+    "No check caught any of them" — a sentence from the very corrections entry
+    that motivated this guard — matched nothing. All 56 fixtures passed, because
+    every one of them was written in present tense. Found by running the hook
+    end-to-end on a real sentence instead of a synthetic one."""
+    assert "ABSENCE-CLAIM WARNING" in _warn(scripts_path, claim)
+
+
+@pytest.mark.parametrize("ledger", [
+    "No confidence gate moved.",
+    "no skill or framework change applied.",
+    "NO evidence entry drafted, NO confidence movement, task status unchanged.",
+])
+def test_past_tense_ledger_prose_still_stays_silent(scripts_path, ledger):
+    """The past-tense fix must not swallow the calibration. `moved`, `applied`
+    and `drafted` are session-ledger verbs, deliberately absent from the list."""
+    assert _warn(scripts_path, ledger) == ""

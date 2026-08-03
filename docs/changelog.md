@@ -4,6 +4,50 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-04.
 
+## v0.84.0 - the guard could not see how its own author writes
+
+v0.83.0's commit message said `absence-claim-guard` "fires at the write." It did
+not. It watched `Write|Edit|MultiEdit`, and every correction appended during the
+session that produced it went in as:
+
+```
+cat >> .claude/memory/corrections.md <<'EOF'
+```
+
+No PreToolUse write matcher sees a heredoc. The guard would have caught the two
+canvas errors that motivated it — those were `Edit` calls — and would have missed
+every entry written *about* them.
+
+A guard blind to the way its author writes is the documented-not-operational
+failure this project audits others for, so the reach is closed rather than
+recorded as a limitation. It now also watches shell writes into evidence
+surfaces — `>` / `>>`, `tee`, `sed -i` — registered on the `Bash` matcher in
+`hooks.json` and `hooks.codex.json` and on `Shell` in `hooks.cursor.json`.
+
+**The redirect target is stripped before scanning.** The scope suppressor counts
+a named file as showing your work, and the destination *is* a named file, so
+without stripping it first `echo "No entry covers x." >> corrections.md` cites
+its own target as evidence and goes quiet.
+
+**What stays silent, as fixtures**: reads, writes to unwatched destinations, and
+`git commit -m` prose. The commit-message case matters most — this project
+writes long prose commit messages, and warning on them would turn the guard into
+noise within a day. `cp`/`mv` are deliberately unwatched: they move bytes that
+exist elsewhere, so the command carries no prose to scan.
+
+**A second hole, found only because the shell half was tested end-to-end on a
+real sentence.** The verb list shipped with `catches` and not `caught`, so
+
+> No check caught any of them.
+
+— a sentence from the very corrections entry that motivated the guard — matched
+nothing. All 56 fixtures passed, because every one of them happened to be
+written in present tense. Past-tense forms added; the ledger verbs (`moved`,
+`applied`, `drafted`) are still deliberately excluded, and that exclusion is now
+its own regression test. Corpus rate 0.175% → 0.190%.
+
+63 tests on the script now, 601 in the suite.
+
 ## v0.83.0 - a note that never fired becomes a hook that does
 
 Five findings in one dogfood session took the same shape: **a narrow read

@@ -58,6 +58,21 @@ import sys
 #: on those would train the reader to ignore this.
 _WATCHED_PATH = re.compile(r"/\.claude/(canvas|memory|harness|evals|diamonds)/")
 
+#: The same surfaces as they appear inside a shell command, where the path is
+#: usually relative (`.claude/memory/corrections.md`) rather than absolute.
+_SURFACE = (r"(?P<path>[\w./~$-]*\.claude/"
+            r"(?:canvas|memory|harness|evals|diamonds)/[\w./-]+)")
+
+#: Shell constructs that put text into one of those files. Separate patterns
+#: rather than one alternation, because a named group cannot repeat in a single
+#: expression. `cp`/`mv` are deliberately absent: they move bytes that exist
+#: elsewhere, so the command carries no prose to scan.
+_SHELL_WRITE = [
+    re.compile(r">>?\s*['\"]?" + _SURFACE),                       # cat >> f, echo > f
+    re.compile(r"\btee\b\s+(?:-a\s+)?['\"]?" + _SURFACE),         # | tee -a f
+    re.compile(r"\bsed\b[^|;]*?-i[^|;]*?['\"]?" + _SURFACE),      # sed -i ... f
+]
+
 #: Assertive universal negatives about a COLLECTION. Each noun/verb list is kept
 #: tight on purpose: "no product training" and "nothing ships wrong" are ordinary
 #: prose from this project's own canvas and must not fire, so the nouns are
@@ -80,9 +95,18 @@ _ABSENCE = [
                r"instances|record|records)\s+"
                r"(?:covers?|exists?|checks?|tracks?|measures?|reaches?|names?|"
                r"mentions?|addresses|catches|gates?|enforces?|writes?|reads?|"
+               # PAST TENSE, and its absence was a live hole. "No check caught
+               # any of them" — a sentence from the corrections entry that
+               # motivated this guard — matched nothing, because the list had
+               # `catches` and not `caught`. Found by running the hook
+               # end-to-end on a real sentence instead of a synthetic one; the
+               # 56 fixture tests all used present tense and all passed.
+               r"covered|existed|checked|tracked|measured|reached|named|"
+               r"mentioned|caught|gated|enforced|"
                r"in\b|anywhere\b|across\b)", re.IGNORECASE),
     re.compile(r"\bnothing\s+(?:in\b|that\b|here\b|checks\b|covers\b|reads\b|"
-               r"gates\b|enforces\b|measures\b|tracks\b|catches\b|surfaces\b)",
+               r"gates\b|enforces\b|measures\b|tracks\b|catches\b|surfaces\b|"
+               r"caught\b|covered\b|tracked\b|measured\b|enforced\b)",
                re.IGNORECASE),
     re.compile(r"\b(?:has|have|had|was|were|is|are)\s+never\s+"
                r"(?:been\s+)?(?:reached|routed|ran|run|fired|logged|captured|"
@@ -182,24 +206,66 @@ def _payload_text(tool_name: str, tool_input: dict) -> str:
     return v if isinstance(v, str) else ""
 
 
+def shell_findings(command: str) -> list[str]:
+    """Absence claims inside a shell command that writes to an evidence surface.
+
+    WHY THIS HALF EXISTS (added v0.84.0, one release after the tool half). The
+    first version watched Write/Edit/MultiEdit only, and its own commit message
+    said it "fires at the write". It did not. Every correction appended during
+    the session that produced it went in as `cat >> .claude/memory/corrections.md
+    <<'EOF'`, and no PreToolUse write matcher sees a heredoc. A guard blind to
+    the way its author actually writes is the documented-not-operational failure
+    this project audits others for, so the reach is closed rather than noted.
+
+    THE TARGET PATH IS STRIPPED BEFORE SCANNING, which is not fussiness. The
+    scope suppressor counts a named file as showing your work, and the write
+    target IS a named file — so `echo "No entry covers x." >> .claude/memory/
+    corrections.md` would suppress itself on the strength of its own
+    destination. Removing the target first is what makes the one-liner case
+    work at all.
+    """
+    targets = [m.group("path") for p in _SHELL_WRITE for m in p.finditer(command)]
+    if not targets:
+        return []
+    text = command
+    for t in targets:
+        text = text.replace(t, " ")
+    return findings(text)
+
+
+#: Shell tool names across the three runtimes. Cursor calls it `Shell`, not
+#: `Bash` — reading only `Bash` would register the hook there and have it no-op,
+#: the same dead-registration class v0.83.0 fixed in the manifests themselves.
+_SHELL_TOOLS = ("Bash", "Shell", "shell")
+
+
+def hits_for(payload: dict) -> list[str]:
+    """Findings for one hook payload, whichever half of the guard applies."""
+    tool_input = payload.get("tool_input")
+    if not isinstance(tool_input, dict):
+        return []
+
+    tool_name = payload.get("tool_name") or ""
+    if tool_name in _SHELL_TOOLS:
+        command = tool_input.get("command")
+        if not isinstance(command, str) or not command.strip():
+            return []
+        return shell_findings(command)
+
+    path = tool_input.get("file_path")
+    if not isinstance(path, str) or not _WATCHED_PATH.search(path):
+        return []
+    text = _payload_text(tool_name, tool_input)
+    return findings(text) if text.strip() else []
+
+
 def main() -> int:
     try:
         payload = json.load(sys.stdin)
     except Exception:                      # noqa: BLE001 — must never break a write
         return 0
 
-    tool_input = payload.get("tool_input")
-    if not isinstance(tool_input, dict):
-        return 0
-    path = tool_input.get("file_path")
-    if not isinstance(path, str) or not _WATCHED_PATH.search(path):
-        return 0
-
-    text = _payload_text(payload.get("tool_name") or "", tool_input)
-    if not text.strip():
-        return 0
-
-    hits = findings(text)
+    hits = hits_for(payload)
     if not hits:
         return 0
 
