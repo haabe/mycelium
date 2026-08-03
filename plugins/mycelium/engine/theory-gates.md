@@ -84,6 +84,13 @@ Evidence sources in canvas provenance objects carry an optional `source_classes`
 - Does NOT satisfy the Source Ratio sub-check's `external_human` criterion
 - Creates a `validated: false` flag that `/assumption-test` can resolve
 
+**`pointer` — a reference, not evidence** (v0.82.0). A source that cites another canvas entry (`purpose.yml#evidence (2026-05-03 …)`, `human-tasks.yml#ht-014`) is a REFERENCE to evidence, not evidence itself. Classify it `pointer`.
+
+- It is **excluded from method diversity**. Two interviews plus a pointer is still one method; a reference cannot contribute coverage it does not itself have. Treating `pointer` as a distinct class would let any single-method claim look triangulated by citing itself.
+- An entry whose sources are **all** pointers is reported UNJUDGEABLE, not passed.
+- **Classifying a source as `pointer` needs no judgement** — the text cites a canvas path — so it should arrive pre-classified, never queued for a human. What is unknown is the TARGET's class, which is a different question from this source's.
+- Their targets are **not auto-resolved, by design.** The target is named in free prose, so a resolver would be guessing at a citation — and the obvious alternative, copying the target's class into the pointer, duplicates a derived value and goes stale the moment the target is reclassified. Resolution is a human call; `check_source_independence` reports how many were set aside so the limit is visible rather than absorbed.
+
 **Enforcement levels**:
 
 | Transition | Scales | Level | Behavior |

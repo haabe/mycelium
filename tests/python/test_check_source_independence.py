@@ -319,3 +319,74 @@ def test_main_without_a_canvas_directory_refuses(scripts_path, tmp_path,
     out = capsys.readouterr().out
     assert code == 1
     assert mod.NO_VERDICT_MARKER in out
+
+
+# ------------------------------------------------- pointer class (v0.82.0)
+# A pointer is a REFERENCE to another canvas entry, not evidence in itself.
+# Founder decision 2026-08-03: do NOT copy the target's class into the pointer —
+# that duplicates a derived value and goes stale the moment the target is
+# reclassified, the same defect that produced a stale correction count and a
+# stale gate heading the same week. Pointers stay unresolved and get surfaced.
+
+
+def test_pointers_do_not_count_as_a_method(scripts_path, tmp_path):
+    """THE PROPERTY. Two real interviews plus a pointer is still ONE method —
+    a reference cannot add coverage it does not itself have."""
+    root = _canvas(tmp_path, body=_opp(
+        ["interview A", "interview B", "purpose.yml#evidence (something)"],
+        ["external_human", "external_human", "pointer"],
+    ))
+    r = _run(scripts_path, root)
+    assert r.returncode == 1, r.stdout
+    assert "all `external_human`" in r.stdout
+    assert "pointer sources set aside" in r.stdout
+
+
+def test_a_pointer_does_not_manufacture_diversity(scripts_path, tmp_path):
+    """The tempting bug: treating `pointer` as a distinct class would make any
+    single-method claim look triangulated by citing itself."""
+    root = _canvas(tmp_path, body=_opp(
+        ["interview A", "interview B", "canvas ref"],
+        ["external_human", "external_human", "pointer"],
+    ))
+    r = _run(scripts_path, root)
+    assert r.returncode == 1, "a pointer must not rescue a single-method claim"
+
+
+def test_real_diversity_still_passes_alongside_pointers(scripts_path, tmp_path):
+    root = _canvas(tmp_path, body=_opp(
+        ["interview A", "analytics snapshot", "canvas ref"],
+        ["external_human", "external_data", "pointer"],
+    ))
+    r = _run(scripts_path, root)
+    assert r.returncode == 0, r.stdout
+    assert "no breadth violations" in r.stdout
+    assert "pointer sources set aside   : 1" in r.stdout
+
+
+def test_all_pointers_is_unjudgeable_and_says_so(scripts_path, tmp_path):
+    """An entry citing only references has no evidence of its own. That is a
+    coverage limit to report, not a pass and not a violation.
+
+    The message deliberately does NOT ask anyone to "resolve" the pointers.
+    Classifying them was never in doubt — the text cites a canvas path. What is
+    missing is evidence, and the fix is to cite what the targets cite."""
+    root = _canvas(tmp_path, body=_opp(
+        ["ref one", "ref two", "ref three"],
+        ["pointer", "pointer", "pointer"],
+    ))
+    r = _run(scripts_path, root)
+    assert "UNJUDGEABLE (all pointers)" in r.stdout
+    assert "carry no evidence of their own" in r.stdout
+    assert "resolve" not in r.stdout.lower(), (
+        "must not manufacture a resolution task for an obvious classification"
+    )
+
+
+def test_pointer_is_a_valid_schema_value(scripts_path):
+    """The enum is what validate_canvas enforces; if it rejects `pointer` the
+    whole decision is unusable."""
+    import json
+    schema = json.loads(
+        (scripts_path.parent / "schemas" / "canvas" / "_common.schema.json").read_text())
+    assert "pointer" in schema["$defs"]["source_class"]["enum"]

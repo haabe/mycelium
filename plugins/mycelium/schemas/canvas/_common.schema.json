@@ -13,7 +13,7 @@
         "test-validated",
         "launch-validated"
       ],
-      "description": "Gilad's evidence ladder. Match the level of evidence to the claim — never overclaim."
+      "description": "Gilad's evidence ladder. Match the level of evidence to the claim \u2014 never overclaim."
     },
     "confidence": {
       "oneOf": [
@@ -40,9 +40,10 @@
         "external_data",
         "internal_stakeholder",
         "internal_desk",
-        "internal_simulated"
+        "internal_simulated",
+        "pointer"
       ],
-      "description": "Classification of an evidence source's origin. external_human = real conversation with a real person (user interview, usability test, survey response). external_data = third-party analytics, behavioral data, market data. internal_stakeholder = founder/PM/team interview — beliefs about users, constraints, strategy; organizational mythology (Brown). Counts toward L0 confidence but does NOT satisfy L2 external_human requirements. internal_desk = desk research, competitive analysis, brainstorming. internal_simulated = mocked persona interview, thought experiment."
+      "description": "Classification of an evidence source's origin. external_human = real conversation with a real person (user interview, usability test, survey response). external_data = third-party analytics, behavioral data, market data. internal_stakeholder = founder/PM/team interview \u2014 beliefs about users, constraints, strategy; organizational mythology (Brown). Counts toward L0 confidence but does NOT satisfy L2 external_human requirements. internal_desk = desk research, competitive analysis, brainstorming. internal_simulated = mocked persona interview, thought experiment. pointer = the source is a REFERENCE to another canvas entry, not evidence in itself (e.g. `purpose.yml#evidence (2026-05-03 \u2026)`); its class is whatever the target carries. Added v0.82.0 after a dogfood classification pass: copying the target's class into the pointer looks tidier and goes stale silently the moment the target is reclassified \u2014 the same duplicate-a-derived-value defect that produced a stale correction count and a stale gate-heading the same week. A pointer is RESOLVED AT READ TIME. An unresolved pointer (target unclassified or missing) is reported as unresolved and is NOT defaulted to internal_desk, because a conservative default here would silently understate external coverage and read as a measurement."
     },
     "provenance": {
       "type": "object",
@@ -64,7 +65,7 @@
           "items": {
             "$ref": "#/$defs/source_class"
           },
-          "description": "Parallel array to evidence_sources classifying each source's origin. Optional — unclassified sources default to internal_desk for ratio calculations. Added in v0.11.0 to address the internal/external evidence ratio Goodhart trap."
+          "description": "Parallel array to evidence_sources classifying each source's origin. Optional \u2014 unclassified sources default to internal_desk for ratio calculations. Added in v0.11.0 to address the internal/external evidence ratio Goodhart trap."
         },
         "source_class": {
           "$ref": "#/$defs/source_class",
@@ -83,10 +84,13 @@
         },
         "notes": {
           "type": "string",
-          "description": "Free-text annotation about how the evidence was gathered, caveats, or context that doesn't fit other fields. Optional. Kept short — provenance is reference metadata, not narrative."
+          "description": "Free-text annotation about how the evidence was gathered, caveats, or context that doesn't fit other fields. Optional. Kept short \u2014 provenance is reference metadata, not narrative."
         }
       },
-      "required": ["evidence_type", "evidence_sources"],
+      "required": [
+        "evidence_type",
+        "evidence_sources"
+      ],
       "additionalProperties": false
     },
     "trace_edge": {
@@ -114,7 +118,10 @@
           "description": "Canonical edge type. Borrowed from BDSK's trace.upstream model (Daniel Bentes feedback)."
         }
       },
-      "required": ["target_id", "edge"],
+      "required": [
+        "target_id",
+        "edge"
+      ],
       "additionalProperties": false
     },
     "trace": {
