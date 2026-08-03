@@ -4,6 +4,73 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-03.
 
+## v0.80.0 - two guardrails that named a level and enforced nothing
+
+`G-D2` and `G-D4` require evidence **breadth**. Both carry a declared `NUDGE`
+enforcement level. Grep the repo for either and every hit is markdown —
+`guardrails.md`, `guardrails-discovery.md`, `guardrails-index.md`. No script, no
+hook, no gate, for the whole life of the framework.
+
+> **G-D2** Never treat a single interview as sufficient evidence. Require
+> triangulation: at least 2 independent evidence types. Single-source evidence is
+> anecdotal (0.3 on Gilad's confidence meter), regardless of how compelling it feels.
+>
+> **G-D4** Never validate opportunities using only one evidence type. Each
+> opportunity in the OST must have evidence from at least 2 sources.
+
+### The vocabulary collision that kept them unenforceable
+
+G-D2 asks for "2 independent evidence **types**" and means METHOD — its own
+examples are "interviews + behavioral data, or interviews + surveys". But
+`evidence_type` in `_common.schema.json` is Gilad's confidence **ladder**
+(speculation → launch-validated). The guardrail named a field that carries a
+different concept. The field that actually carries method is `source_class`, and
+neither guardrail referenced it.
+
+`scripts/check_source_independence.py` binds the rule to the field that can
+answer it.
+
+### Where it came from
+
+A peer practitioner arguing in a public thread that
+evidence strength is a **coverage** problem rather than a weighting one: a
+hypothesis supported by four sources all blind to the same thing is weaker than
+one supported by three blind to different things, even though the counts favour
+the first. Two interviews are two sources and one method — both record what
+someone *said*, neither observes what they *did*.
+
+### What it measures, and what it does not
+
+Distinct `source_class` values. That is **method diversity, a proxy for
+independence and not independence**. It cannot see that two `external_data`
+snapshots came from one vendor, or that five interviews were recruited from one
+channel, and it says nothing about sample size or quality. A claim that clears it
+is not well-evidenced; it merely does not rest on a single method.
+
+### Two false starts, kept in the code rather than hidden
+
+- **Trusting the default.** Unclassified sources default to `internal_desk` for
+  ratio maths. That is safe for the Source Ratio Sub-Check and misleading here —
+  an unclassified 5-source claim looks identical to real monoculture. A first
+  pass reported **40 findings on the dogfood canvas and every one was an
+  artefact.**
+- **Scoping too wide.** Run across the whole canvas it produced **8 more
+  findings, all `landscape.yml` competitor entries** recorded once from one
+  source — nothing either guardrail is about. G-D2 governs research findings and
+  G-D4 the OST, so the check reads discovery canvases only. A guard that fires
+  outside its scope gets muted, and then it is not a guard.
+
+A third near-miss is pinned as a test: a naive G-D4 count check flagged 3
+opportunities for having one source, and all three were labelled `anecdotal` at
+0.3 — obeying G-D2, not breaking G-D4.
+
+### Measured in scope
+
+47 provenance objects, **0 violations**, `source_classes` present on **4**. The
+check ships green and prints that denominator on every run. A verdict over 4 of
+47 wearing the clothes of the whole canvas is the failure v0.77.0–v0.79.0 were
+spent removing.
+
 ## v0.79.0 - the fixes had the same defect as the things they fixed
 
 A max-effort review of the v0.77.0/v0.78.0 batch returned **15 confirmed

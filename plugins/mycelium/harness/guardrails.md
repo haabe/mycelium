@@ -57,6 +57,8 @@ Complex problems (Cynefin) require probe-sense-respond. Applying best practices 
 
 **G-D2: Never treat a single interview as sufficient evidence** `NUDGE` `quality`
 Require triangulation: at least 2 independent evidence types (e.g., interviews + behavioral data, or interviews + surveys). Single-source evidence is anecdotal (0.3 on Gilad's confidence meter), regardless of how compelling it feels.
+**"Evidence type" here means METHOD, and the field that carries it is `source_class` — NOT `evidence_type`, which is Gilad's confidence ladder.** That collision is why this rule sat unenforceable: it named a field that carries a different concept. Two interviews are two sources and ONE method — both record what someone said, neither observes what they did. Diversity is counted as distinct `source_class` values, which is a proxy for independence and not independence (it cannot see two snapshots from one vendor, or five interviews recruited from one channel).
+**Enforced by `scripts/check_source_independence.py` (v0.80.0).** Prose-only before that, for the whole life of the framework.
 *Source: Torres (CDH), Gilad (Evidence Guided)*
 
 **G-D3: Never ask hypothetical or leading questions in research** `NUDGE` `quality`
@@ -65,6 +67,7 @@ Use story-based interviewing: ask about specific past behavior ("Tell me about t
 
 **G-D4: Never validate opportunities using only one evidence type** `NUDGE` `quality`
 Each opportunity in the OST must have evidence from at least 2 sources. Frequency data alone is insufficient -- impact and strategic alignment must also be assessed.
+**A single source is not a violation when the claim is labelled to match it** — one source at `anecdotal`/0.3 is obeying G-D2, not breaking G-D4. The violation is a single source carrying an ESTABLISHED claim. Enforced by `scripts/check_source_independence.py` (v0.80.0).
 *Source: Torres (CDH), Gilad (Evidence Guided)*
 
 **G-D5: Always run bias checklist before conducting research** `NUDGE` `quality`

@@ -42,7 +42,7 @@ Design wants a better experience, but engineering says it's expensive.
 ### Value vs Viability
 Users want it, but business/legal/ethical constraints say no.
 
-**Resolution path**: Business constraints generally win unless user evidence is overwhelming (≥3 independent sources showing strong need). If constraints win, document clearly — the user need doesn't disappear, it waits for constraints to change. If user evidence is overwhelming, escalate: the business constraint itself may need re-evaluation.
+**Resolution path**: Business constraints generally win unless user evidence is overwhelming (≥3 independent sources showing strong need — **independent means distinct `source_class`, per G-D2**; three interviews are one method and do not clear this, and `scripts/check_source_independence.py` is what counts them). If constraints win, document clearly — the user need doesn't disappear, it waits for constraints to change. If user evidence is overwhelming, escalate: the business constraint itself may need re-evaluation.
 
 ### Usability vs Viability
 Design wants a better experience, but business/legal/ethical constraints prevent it.
