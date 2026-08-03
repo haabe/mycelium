@@ -4,6 +4,41 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-03.
 
+## v0.82.0 - a citation is not a method
+
+`source_class` gains **`pointer`**: a source that cites another canvas entry
+(`purpose.yml#evidence (2026-05-03 …)`) is a *reference to* evidence, not
+evidence.
+
+Found in a live classification pass. **14 of 21** unclassified provenance objects
+contain at least one such reference, and since a partial `source_classes` array
+is refused, none could be written however carefully their other sources were
+sorted. The pointer class is what unblocks them.
+
+### The rejected alternative is the point
+
+Copying the target's class into the pointer is tidier and **duplicates a derived
+value** — it goes stale silently the moment the target is reclassified. That is
+the same defect that produced a stale correction count and a stale gate heading
+in the same week, and the same reason the corrections TL;DR count was deleted
+rather than corrected.
+
+So a pointer stays **unresolved**. The target is named in free prose, so any
+resolver would be guessing at a citation; resolution is a human call, surfaced
+rather than invented.
+
+### Semantics, all fixture-pinned
+
+| Case | Behaviour |
+|---|---|
+| pointer among real sources | **excluded** from method diversity |
+| two interviews + a pointer | still **one** method |
+| all sources are pointers | **UNJUDGEABLE**, not passed |
+| any pointers present | count set aside is **printed** |
+
+The second row is the bug worth naming: if `pointer` counted as a distinct class,
+any single-method claim could look triangulated by citing itself.
+
 ## v0.81.1 - the guard's own advice did not work in the shell it shipped for
 
 `shell-safety-guard` (v0.81.0) warns when `$?` follows a pipeline and recommends

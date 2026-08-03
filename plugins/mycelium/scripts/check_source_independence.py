@@ -92,6 +92,26 @@ STRONG_CONFIDENCE = 0.6
 #: two comparisons below cannot drift apart.
 MIN_SOURCES = 2
 
+#: A pointer is a REFERENCE to another canvas entry, not evidence in itself, so
+#: it is not a method and cannot contribute method diversity. It is EXCLUDED from
+#: the diversity count and reported separately.
+#:
+#: CLASSIFYING a source as `pointer` is OBVIOUS and needs no human — the text
+#: cites a canvas path. What is unknown is the TARGET's class, and that is a
+#: different question from this source's class. The first version of this
+#: conflated the two and called pointers "unresolved", which would have
+#: manufactured an interview for the one classification that requires no
+#: judgement (founder correction, 2026-08-03).
+#:
+#: The target is still not auto-resolved, for a separate reason: it is named in
+#: free prose, so a resolver would be guessing at a citation — and copying the
+#: target's class into the pointer duplicates a derived value, which goes stale
+#: the moment the target is reclassified. That is the same defect that produced a
+#: stale correction count and a stale gate heading the same week.
+#: So the pointer IS classified; its target's contribution is simply not counted,
+#: and the count set aside is printed so the limit is visible.
+POINTER = "pointer"
+
 #: G-D2 governs research findings, G-D4 governs the OST. Not the whole canvas.
 DISCOVERY_CANVASES = ("opportunities.yml", "user-needs.yml", "scenarios.yml")
 
@@ -148,6 +168,7 @@ def scan(root: Path) -> dict:
         objects.extend((name, ident, prov) for ident, prov in found)
 
     findings, classified, diversity_judgeable = [], 0, 0
+    pointers_excluded = unjudgeable_all_pointers = 0
     for name, ident, prov in objects:
         n = len(prov["evidence_sources"])
         classes = prov.get("source_classes")
@@ -175,14 +196,24 @@ def scan(root: Path) -> dict:
 
         # RULE 2 (G-D2 triangulation) — needs source_classes to say anything.
         if fully and n >= MIN_SOURCES and _is_established(prov):
+            # Pointers are references, not methods. Judge diversity over the
+            # real sources and SAY how many were set aside, rather than either
+            # counting a reference as a method or silently shrinking the claim.
+            methods = [c for c in classes if c != POINTER]
+            n_ptr = len(classes) - len(methods)
+            pointers_excluded += n_ptr
+            if not methods:
+                unjudgeable_all_pointers += 1
+                continue
             diversity_judgeable += 1
-            if len(set(classes)) == 1:
+            if len(set(methods)) == 1:
                 findings.append({
                     "rule": "G-D2",
                     "file": name,
                     "id": str(ident),
                     "sources": n,
-                    "source_class": classes[0],
+                    "source_class": methods[0],
+                    "pointers_excluded": n_ptr,
                     "confidence": prov.get("confidence"),
                     "detail": (
                         f"{n} sources, all `{classes[0]}`. The count says {n}; the "
@@ -199,6 +230,8 @@ def scan(root: Path) -> dict:
         "provenance_objects": len(objects),
         "fully_classified": classified,
         "diversity_judgeable": diversity_judgeable,
+        "pointers_excluded": pointers_excluded,
+        "unjudgeable_all_pointers": unjudgeable_all_pointers,
         "findings": findings,
         "unparseable": unparseable,
     }
@@ -249,6 +282,15 @@ def main() -> int:
     print(f"  provenance objects         : {result['provenance_objects']}")
     print(f"  declaring source_classes   : {result['fully_classified']}")
     print(f"  judgeable for triangulation: {result['diversity_judgeable']}")
+    if result.get("pointers_excluded"):
+        print(f"  pointer sources set aside   : {result['pointers_excluded']} "
+              "(references, not methods — classified, but their targets'"
+              " coverage is not counted here)")
+    if result.get("unjudgeable_all_pointers"):
+        print(f"  UNJUDGEABLE (all pointers)  : {result['unjudgeable_all_pointers']} "
+              "object(s) cite only references, so they carry no evidence of "
+              "their own. Cite what the targets cite, or accept the entry rests "
+              "on other records rather than on sources.")
     for f in result["findings"]:
         print()
         print(f"  [{f['rule']}] {f['file']} #{f['id']}: {f['detail']}")
