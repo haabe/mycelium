@@ -4,6 +4,28 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-03.
 
+## v0.82.1 - a correct finding that named the wrong culprit
+
+With `source_classes` of `[pointer, internal_desk, pointer]`,
+`check_source_independence` reported:
+
+> 3 sources, all `pointer`
+
+The **verdict was right** — one real method, so a G-D2 finding. The
+**explanation was wrong**: it printed `classes[0]` while the logic correctly
+excluded pointers and judged `internal_desk`. It blamed the one thing the check
+had already set aside.
+
+That is worse than a missed finding. A true report that misnames its cause reads
+as a tool bug and gets dismissed, and the guard loses the benefit of having been
+right.
+
+Now: `1 evidence source(s), all `internal_desk` (2 pointer(s) set aside from 3
+total)`.
+
+Found by reading a live finding against the data it described, rather than
+trusting the sentence.
+
 ## v0.82.0 - a citation is not a method
 
 `source_class` gains **`pointer`**: a source that cites another canvas entry

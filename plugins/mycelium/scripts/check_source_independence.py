@@ -216,11 +216,22 @@ def scan(root: Path) -> dict:
                     "pointers_excluded": n_ptr,
                     "confidence": prov.get("confidence"),
                     "detail": (
-                        f"{n} sources, all `{classes[0]}`. The count says {n}; the "
-                        "coverage says one. Every source shares this method's blind "
-                        "spot, so the claim is supported no more broadly than a "
-                        "single source of this kind. G-D2 asks for 2+ independent "
-                        "evidence types, meaning methods, not repetitions."
+                        # Report the METHODS, not classes[0]. When pointers lead
+                        # the list, classes[0] is `pointer` and the message read
+                        # "3 sources, all `pointer`" for an entry whose single
+                        # method was internal_desk — naming the wrong culprit on a
+                        # correct finding, which is how a true finding gets
+                        # dismissed as a bug.
+                        f"{len(methods)} evidence source(s), all "
+                        f"`{methods[0]}`"
+                        + (f" ({n_ptr} pointer(s) set aside from {n} total)"
+                           if n_ptr else "")
+                        + ". The count says "
+                        f"{len(methods)}; the coverage says one. Every source "
+                        "shares this method's blind spot, so the claim is "
+                        "supported no more broadly than a single source of this "
+                        "kind. G-D2 asks for 2+ independent evidence types, "
+                        "meaning methods, not repetitions."
                     ),
                 })
 
