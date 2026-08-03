@@ -34,6 +34,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 import tempfile
@@ -56,6 +57,17 @@ EXEMPT = {
         "ORPHANED assessments, so zero assessments means zero orphans. That is "
         "a true and useful pass, and flagging it would fail every project that "
         "has simply never run /bvssh-check. Its own test suite asserts this.",
+    "validate_canvas.py":
+        "THREE-STATE BY DESIGN, and this guard only reads the exit code "
+        "(added 2026-08-03). Its states are: no canvas dir -> N/A(0); canvas dir "
+        "with zero .yml -> N/A(0); canvas with files -> PASS/FAIL. There is no "
+        "state where it verifies nothing AND claims a pass, so it satisfies this "
+        "guard's SPIRIT while exiting 0 on the empty case. Encoding N/A as a "
+        "distinct exit code was considered and rejected: the shipped "
+        "git-pre-push-example.sh treats any non-zero as failure, so it would "
+        "re-block every push from a freshly /mycelium:setup project — the exact "
+        "consumer breakage v0.75.1 and this release were fixing. The exemption is "
+        "re-verified below against the file, not trusted from this table.",
     "verify_citations.py":
         "ADVISORY BY DESIGN — main() returns None, so it can never exit "
         "non-zero, and its own output says 'unverified != fabricated'. It "
@@ -73,12 +85,12 @@ EXEMPT = {
 #: Extending this turned an "untestable" skip into a real check, and it found
 #: `validate_canvas.py` printing PASS over an empty directory, which is the
 #: most-read green line in the framework.
-AIM = {
-    "validate_canvas.py": lambda empty: [str(empty / ".claude" / "canvas")],
-}
+AIM = {}
 
-#: The exemption for a stub is only valid while the file still says it is one.
+#: Exemptions are re-verified against the file every run, never trusted from the
+#: table above. Each marker is the sentence the exemption's reason depends on.
 STUB_MARKER = "DRAFT stub. Not yet implemented."
+NA_MARKER = "This is NOT a pass over a populated canvas."
 
 
 def _candidates(scripts_dir: Path) -> list[Path]:
@@ -90,10 +102,29 @@ def _candidates(scripts_dir: Path) -> list[Path]:
     return named
 
 
-def _accepts_root(script: Path) -> bool:
-    """A check we cannot aim at an empty tree cannot be tested this way."""
-    return '"--root"' in script.read_text(errors="replace") or \
-           "'--root'" in script.read_text(errors="replace")
+#: argparse's own words when it rejects a flag we passed. If a child says this,
+#: we never aimed it — its behaviour on empty input is UNKNOWN, not compliant.
+#: argparse's exit code when it rejects the command line it was given.
+ARGPARSE_USAGE_ERROR = 2
+
+_UNAIMED = re.compile(
+    r"unrecognized arguments|invalid choice|error: argument|no such option", re.IGNORECASE
+)
+
+
+def _mentions_root(script: Path) -> bool:
+    """Cheap pre-filter only. NEVER the compliance decision.
+
+    Code review 2026-08-03: this used to BE the decision, as a substring test over
+    the whole file — so a script whose docstring merely said `it does not accept
+    "--root"` was judged aimable, run with a flag it rejects, exited 2 from
+    argparse, and was counted as an honest refusal. A check that always reports
+    green was certified compliant. The real decision now comes from running it and
+    reading what argparse said; this only avoids launching obviously-irrelevant
+    scripts.
+    """
+    src = script.read_text(errors="replace")
+    return '"--root"' in src or "'--root'" in src
 
 
 def scan(root: Path) -> dict:
@@ -121,14 +152,21 @@ def scan(root: Path) -> dict:
             name = script.name
             if name in EXEMPT:
                 reason = EXEMPT[name]
-                if name == "check_gated_by.py" and \
-                        STUB_MARKER not in script.read_text(errors="replace"):
+                src = script.read_text(errors="replace")
+                stale = (
+                    (name == "check_gated_by.py" and STUB_MARKER not in src)
+                    or (name == "validate_canvas.py" and NA_MARKER not in src)
+                )
+                if stale:
                     findings.append({
                         "script": name,
                         "detail": (
-                            "exempt as a DRAFT stub, but the file no longer says "
-                            f"'{STUB_MARKER}'. If it graduated into a real check "
-                            "it must obey the rule; remove it from EXEMPT."
+                            "EXEMPT ON A REASON THAT IS NO LONGER TRUE. The file "
+                            "no longer carries the marker its exemption rests on "
+                            f"({STUB_MARKER!r} for the stub, {NA_MARKER!r} for the "
+                            "three-state canvas validator). An exemption outlives "
+                            "its justification silently, which is a hole exactly "
+                            "where someone stopped looking. Re-verify or remove it."
                         ),
                     })
                 else:
@@ -136,7 +174,7 @@ def scan(root: Path) -> dict:
                 continue
 
             extra = AIM.get(name)
-            if extra is None and not _accepts_root(script):
+            if extra is None and not _mentions_root(script):
                 skipped.append({
                     "script": name,
                     "reason": ("takes no --root, so it cannot be aimed at an "
@@ -156,6 +194,24 @@ def scan(root: Path) -> dict:
             except subprocess.SubprocessError as exc:
                 findings.append({"script": name,
                                  "detail": f"could not be run: {exc}"})
+                continue
+
+            # DID WE ACTUALLY AIM IT? An argparse usage error means the child
+            # never ran its own logic, so its empty-input behaviour is unknown.
+            # Counting that as a refusal is how the guard certified a check it
+            # never executed (code review 2026-08-03).
+            if (proc.returncode == ARGPARSE_USAGE_ERROR
+                    and _UNAIMED.search(proc.stderr or "")):
+                skipped.append({
+                    "script": name,
+                    "reason": (
+                        "REJECTED THE FLAGS WE AIMED IT WITH "
+                        f"({(proc.stderr or '').strip().splitlines()[-1][:120]}). "
+                        "It never ran its own logic, so its empty-input behaviour "
+                        "is UNKNOWN — not compliant. Add an AIM entry so it can "
+                        "be tested, or this is a hole in the guard."
+                    ),
+                })
                 continue
 
             checked.append(name)
@@ -198,9 +254,14 @@ def main(argv=None) -> int:
         return 0
 
     report = scan(root)
+    # Verdict decided BEFORE the output branch (code review 2026-08-03). The JSON
+    # path returned `1 if findings else 0`, which ignores the zero-checks-
+    # discovered refusal below — so THIS GUARD had the very defect it exists to
+    # catch, on its own machine-readable surface.
+    rc = 1 if (report["findings"] or not report["checked"]) else 0
     if args.json:
-        print(json.dumps(report, indent=2))
-        return 1 if report["findings"] else 0
+        print(json.dumps({**report, "verdict": "fail" if rc else "pass"}, indent=2))
+        return rc
 
     print(f"Empty-input honesty: ran {len(report['checked'])} shipped check(s) "
           f"against an empty repository; {len(report['skipped'])} skipped.")

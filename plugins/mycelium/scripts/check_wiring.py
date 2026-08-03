@@ -475,34 +475,51 @@ def main(argv=None):
     report = scan(root)
     findings = report["findings"]
 
-    if args.json:
-        print(json.dumps(report, indent=2))
+    # EXIT CODE IS DECIDED BEFORE THE OUTPUT BRANCH (code review 2026-08-03).
+    # Every refuse-on-empty branch added in v0.74.0/v0.75.0 lived inside the
+    # `else` of `if args.json:`, so the machine-readable path — the one a CI
+    # wrapper actually consumes — still exited 0 over an empty population. The
+    # release built to remove false green shipped false green on its own JSON
+    # surface, and check_empty_input_honesty could not see it because it invokes
+    # children with `--root .` only. The verdict is computed once, here, and both
+    # renderers report it.
+    ex_ = report["examined"]
+    if findings:
+        rc = 1
+    elif not any(ex_.values()):
+        rc = 1                      # refused: every rule matched nothing
     else:
-        ex = report["examined"]
-        print(f"Wiring: {ex['A']} shipped script(s) (A), {ex['B']} "
-              "${CLAUDE_PLUGIN_ROOT} ref(s) (B), "
-              f"{ex['C']} state-path ref(s) (C), {ex['D']} automation claim(s) (D).")
-        if findings:
-            print(f"\nWIRING BREAKS ({len(findings)}):")
-            for f in findings:
-                print(f"  [rule {f['rule']}] {f['target']}\n      {f['detail']}")
-            print("\nA mechanism nothing reaches is absent, not weak — "
-                  "and it reads green.")
-        elif not any(ex.values()):
-            # Refuse the bare pass. Every rule matched an empty population, so
-            # "no wiring breaks" is true and carries no information — and a
-            # reader takes an unqualified green as coverage.
-            print("NOT A PASS: every rule matched an empty population "
-                  "(0/0/0/0). Nothing was verified. Either --root points "
-                  "somewhere without a packaged plugin tree, or the patterns "
-                  "have stopped matching this repo's layout.")
-            return 1
-        else:
-            zeros = [r for r, n in ex.items() if n == 0]
-            scope = (f" Rule(s) {'/'.join(zeros)} matched nothing, so this pass "
-                     "says nothing about them.") if zeros else ""
-            print(f"No wiring breaks across {sum(ex.values())} checked "
-                  f"reference(s).{scope}")
+        rc = 0
+
+    if args.json:
+        print(json.dumps({**report, "verdict": "fail" if rc else "pass"}, indent=2))
+        return rc
+    ex = report["examined"]
+    print(f"Wiring: {ex['A']} shipped script(s) (A), {ex['B']} "
+          "${CLAUDE_PLUGIN_ROOT} ref(s) (B), "
+          f"{ex['C']} state-path ref(s) (C), {ex['D']} automation claim(s) (D).")
+    if findings:
+        print(f"\nWIRING BREAKS ({len(findings)}):")
+        for f in findings:
+            print(f"  [rule {f['rule']}] {f['target']}\n      {f['detail']}")
+        print("\nA mechanism nothing reaches is absent, not weak — "
+              "and it reads green.")
+    elif not any(ex.values()):
+        # Refuse the bare pass. Every rule matched an empty population, so
+        # "no wiring breaks" is true and carries no information — and a
+        # reader takes an unqualified green as coverage.
+        print("NOT A PASS: every rule matched an empty population "
+              "(0/0/0/0). Nothing was verified. Either --root points "
+              "somewhere without a packaged plugin tree, or the patterns "
+              "have stopped matching this repo's layout.")
+        return 1
+    else:
+        zeros = [r for r, n in ex.items() if n == 0]
+        scope = (f" Rule(s) {'/'.join(zeros)} matched nothing, so this pass "
+                 "says nothing about them.") if zeros else ""
+        print(f"No wiring breaks across {sum(ex.values())} checked "
+              f"reference(s).{scope}")
+    return rc
 
     return 1 if findings else 0
 

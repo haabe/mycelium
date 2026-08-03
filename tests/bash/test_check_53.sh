@@ -78,8 +78,19 @@ test_legacy_means_fails() {
 }
 
 test_archived_may_keep_the_legacy_shape() {
+    # Archived scenarios are history and must not be rewritten to satisfy a lint —
+    # so they must not FAIL. But an all-archived file has zero LIVE scenarios, so
+    # it must not PASS either: that would be a pass over an empty live population.
+    #
+    # Updated 2026-08-03 after code review. `checked` was incremented BEFORE the
+    # archived skip, so this fixture printed "all 1 non-archived scenario(s) use
+    # Motivation/Persona/Simulation" having examined none, and the N/A branch
+    # never fired because the counter was non-zero. A project that archives its
+    # scenarios during a rewrite got a confident green over nothing — in the check
+    # written because unmigrated data sat green for a month.
     local output; output=$(capture archived_keeps_legacy)
-    assert_contains "$output" "PASS: Check 53" "archived scenarios are history and must not be rewritten"
+    assert_not_contains "$output" "FAIL: Check 53" "archived scenarios must not be rewritten to satisfy a lint"
+    assert_contains "$output" "N/A" "but zero live scenarios is N/A, not a pass"
 }
 
 test_zero_scenarios_is_not_applicable() {
