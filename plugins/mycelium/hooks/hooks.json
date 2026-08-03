@@ -41,6 +41,10 @@
             "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/autonomous-evidence-guard.sh",
             "timeout": 5,
             "statusMessage": "Mycelium autonomous-evidence-guard (autonomous-mode only)"
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/absence-claim-guard.sh"
           }
         ]
       },

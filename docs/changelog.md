@@ -2,7 +2,48 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-08-03.
+**Last updated**: 2026-08-04.
+
+## v0.83.0 - a note that never fired becomes a hook that does
+
+Five findings in one dogfood session took the same shape: **a narrow read
+promoted to a broad claim without the promotion being noticed.** Two reached the
+canvas and were pushed before being caught. One of them:
+
+> No need covers vocabulary, so his signal has nowhere to go.
+
+False. The concern had its own opportunity (`opp-005`), two evidence items
+logged with IDs, a named failure mode in `purpose.yml` and a segment constraint
+in `scenarios.yml`. The search had covered **one file**; the claim was about the
+repo.
+
+There was already a rule about this in auto-memory. It never fired — notes are
+read at session start and decay. So `absence-claim-guard` now warns at the write,
+when an assertive absence ("no need covers", "nothing checks", "was never
+routed", "nowhere to go") reaches a `.claude/` evidence surface without naming
+the search that grounds it.
+
+**What it deliberately cannot do**, stated because a guard that overstates its
+reach is worse than none: it cannot verify a search happened, or that a claim is
+true, or that the claim's scope matches the search's — which is the case that
+caused the error. The damaging sentence *carried a citation* ("checked all eleven
+statements") and was still wrong, because eleven statements is one file. A guard
+demanding a citation would have passed the instance that motivated it. So the
+message is about scope matching, not about citing.
+
+**Calibrated against 60,010 real sentences, not intuition.** The first draft
+fired on 0.42% of the dogfood corpus, and roughly half were ledger prose — "No
+confidence gate moved", "no skill or framework change applied" — records of what
+a session *did*, which are true when written and need no search behind them.
+Requiring an existence or coverage verb, and no longer treating `;` and `:` as
+sentence ends (they attach evidence to claims, so breaking there punished the
+exact phrasing the guard asks for), brought it to 0.175%.
+
+**It warns and never blocks.** Absence findings are frequently correct and
+valuable — "no consumer has asked for this" is real. A guard that blocks real
+work gets disabled, which is how a guard dies. Registered in all three hook
+manifests; the three use different matcher keys and entry shapes, so each was
+read before writing rather than assumed to match.
 
 ## v0.82.1 - a correct finding that named the wrong culprit
 

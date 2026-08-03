@@ -39,6 +39,18 @@
         "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/autonomous-evidence-guard.sh",
         "type": "command",
         "timeout": 5
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit|edit|write",
+        "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/absence-claim-guard.sh",
+        "type": "command",
+        "timeout": 5
+      },
+      {
+        "matcher": "Shell",
+        "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/shell-safety-guard.sh",
+        "type": "command",
+        "timeout": 5
       }
     ],
     "postToolUse": [
@@ -94,17 +106,6 @@
         "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/preflight.sh",
         "type": "command",
         "timeout": 5
-      }
-    ],
-    "PreToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/shell-safety-guard.sh"
-          }
-        ]
       }
     ]
   }
