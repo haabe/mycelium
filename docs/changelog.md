@@ -2,7 +2,67 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-08-02.
+**Last updated**: 2026-08-03.
+
+## v0.78.0 - who caught it, computed instead of recalled
+
+**The number the correction loop exists to produce was the least automated thing
+in it.** `/corrections-audit`'s headline — *who caught the mistake* — answers the
+only question that changes what you build next: more harness, or more context. It
+was computed by hand, and it had been produced exactly twice, six weeks apart,
+each time because a human remembered to look. The 2026-06-25 entry says the gap
+was "unchanged from the 2026-06-02 read" — two data points, and no mechanism.
+
+`scripts/check_correction_attribution.py` computes it as defect-escape analysis:
+of the defects that occurred, what fraction escaped the automated net. Nothing is
+invented — it automates a measure this project already defined and already acts
+on.
+
+**It prints its denominator every time.** 14 of 72 entries carry a catcher, so
+the rate covers 19% of the corpus. Quoting it bare would be a claim about a
+fifth wearing the clothes of the whole — the exact failure v0.77.0 was spent
+removing from this repo's own checks. `NO RATE AVAILABLE` is not 0%; it means
+nothing in the corpus says who caught anything. The script **exits 0 always**: a
+rate is an input to judgement, and gating on it would reward logging fewer
+user-caught mistakes.
+
+It reads the prose forms already present (`caught by hook`, `Caught by founder`,
+`surfaced by user`) rather than requiring a new field. A structured field would
+be cleaner and would also invalidate all 72 existing entries.
+
+### The gate feeding it was miscounting
+
+`reflexion-gate.sh` fired on any non-zero exit. Several standard tools use
+non-zero to report a **result**, and their own man pages say so — this is a
+category error, not a judgement call:
+
+| Tool | Non-zero meaning |
+|---|---|
+| `grep(1)` | 1 = no lines were selected |
+| `diff(1)` | 1 = differences found |
+| `test(1)` | 1 = the expression is false |
+
+**Measured cost:** 39 firings had accumulated, 23 of them in a single session,
+and the five most recent were all `grep`/`sed` reads. The counter announced "30
+outstanding learnings" at every session start — a number made overwhelmingly of
+greps finding nothing. It was ignored, which is the correct response to a
+counter made of noise, and also how a guard dies.
+
+Documented non-failures are now classified and **still logged, with the reason**.
+Dropping them silently would make the classifier unauditable, which is the
+failure one level up. `reconcile_reflexions.py` excludes them from learning debt
+and states the suppressed count even when nothing remains to reconcile — "no
+reflexions recorded" over a log full of suppressed rows would be a green over a
+population the reader cannot see.
+
+### Also
+
+- **Check 51 gains the `rc==3` PyYAML-skip arm** Checks 50/52/53 received in
+  v0.77.0. Without it the skip fell through to `else` and became a hard `fail`,
+  blocking pushes from any machine without PyYAML installed.
+- `check_empty_input_honesty.py` exempts the new reporter as REPORTER-NOT-A-GATE
+  and re-verifies that claim against the file via a `NO RATE AVAILABLE` marker,
+  rather than trusting its own exemption table.
 
 ## v0.77.0 - the releases built to eliminate green-over-nothing shipped green-over-nothing
 

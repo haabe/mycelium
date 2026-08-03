@@ -68,6 +68,13 @@ EXEMPT = {
         "re-block every push from a freshly /mycelium:setup project — the exact "
         "consumer breakage v0.75.1 and this release were fixing. The exemption is "
         "re-verified below against the file, not trusted from this table.",
+    "check_correction_attribution.py":
+        "REPORTER, NOT A GATE, and it says so in its own docstring: 'Exit 0 "
+        "always — this reports, it does not gate. A rate is an input to "
+        "judgement, and a gate on it would create an incentive to log fewer "
+        "user-caught mistakes.' Its empty-input answer is an explicit N/A that "
+        "refuses to state a rate rather than reporting a flattering 0%. Verified "
+        "below against the file, not trusted from this table.",
     "verify_citations.py":
         "ADVISORY BY DESIGN — main() returns None, so it can never exit "
         "non-zero, and its own output says 'unverified != fabricated'. It "
@@ -91,6 +98,7 @@ AIM = {}
 #: table above. Each marker is the sentence the exemption's reason depends on.
 STUB_MARKER = "DRAFT stub. Not yet implemented."
 NA_MARKER = "This is NOT a pass over a populated canvas."
+NO_RATE_MARKER = "NO RATE AVAILABLE"
 
 
 def _candidates(scripts_dir: Path) -> list[Path]:
@@ -156,6 +164,8 @@ def scan(root: Path) -> dict:
                 stale = (
                     (name == "check_gated_by.py" and STUB_MARKER not in src)
                     or (name == "validate_canvas.py" and NA_MARKER not in src)
+                    or (name == "check_correction_attribution.py"
+                        and NO_RATE_MARKER not in src)
                 )
                 if stale:
                     findings.append({
