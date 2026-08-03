@@ -13,9 +13,9 @@ Compact reference for lazy loading. Load full rule from `guardrails.md` only whe
 | G-S7 | REVIEW | Building user-facing AI interaction | Disclose AI nature (EU AI Act Art 50) |
 | G-S8 | NUDGE | Building AI-powered product | Assess EU AI Act risk classification |
 | G-D1 | REVIEW | Starting work on a Complex-domain problem | Don't skip discovery; probe-sense-respond |
-| G-D2 | NUDGE | Interpreting research findings | Triangulate: 2+ independent evidence types |
+| G-D2 | NUDGE | Interpreting research findings | Triangulate: 2+ independent evidence types (distinct `source_class`) -- `check_source_independence.py` |
 | G-D3 | NUDGE | Designing interview/survey questions | Story-based only; no hypotheticals |
-| G-D4 | NUDGE | Validating opportunities in OST | 2+ evidence sources per opportunity |
+| G-D4 | NUDGE | Validating opportunities in OST | 2+ evidence sources per opportunity -- `check_source_independence.py` |
 | G-D5 | NUDGE | Before conducting any research | Run bias checklist first |
 | G-D6 | NUDGE | Mapping user needs | Include emotional + social, not just functional |
 | G-D7 | NUDGE | User surfaces an idea mid-build | Route to OST now; state where/disposition/scale; challenges resolve visibly |

@@ -215,6 +215,32 @@ Recommended actions:
   - /mycelium:log-evidence -- [if confidence unsupported]
 ```
 
+## Evidence breadth (G-D2 / G-D4)
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_source_independence.py" --root .
+```
+
+**Added v0.80.0.** This skill has cited "Torres: Evidence triangulation" since it
+was written, and nothing computed it. G-D2 (2+ independent evidence *types*) and
+G-D4 (2+ sources per opportunity) both carried a declared `NUDGE` level and
+existed only as prose in three markdown files.
+
+Two things the output means, and one it does not:
+
+- A **G-D2 finding on one source** means a single source is carrying a claim
+  above `anecdotal`/0.3. Either add a second source or lower the claim. One
+  source *labelled* anecdotal is compliant, not a violation.
+- A **G-D2 finding on many sources** means they all share one `source_class`.
+  The count says N; the coverage says one. Two interviews are two sources and one
+  method.
+- The **unclassified count is not a violation.** It is why the triangulation
+  denominator is small. Add `source_classes` to provenance to make those
+  judgeable; until then the check says so rather than passing over them.
+
+Report the denominator whenever quoting the result. A verdict over 4 of 47
+provenance objects is not a statement about the canvas.
+
 ## Theory Citations
 - Karpathy: Knowledge base health checks and auto-maintained indexes
 - aiops3000: Anti-drift through externalized knowledge, versioned reference artifacts
