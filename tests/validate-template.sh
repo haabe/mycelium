@@ -2702,6 +2702,18 @@ if launched:
 if shipped:
     evidence.append(f"cycle-history.yml has {len(shipped)} cycle(s) with artifacts_shipped")
 
+# READ WHAT WE COLLECTED (review 2026-08-03). This check DECLARED PARSE_ERRORS,
+# appended to it in load(), and then never looked at it — Check 52's otherwise
+# identical heredoc has this block and Check 51's did not. So all four load()
+# calls returned {} on a YAML error and the check printed
+# "nothing to reconcile", exit 0. Reproduced: two unparseable canvas files
+# produce PASS. An unparseable canvas is the state MOST likely to hold the drift
+# this check hunts, and it was the one state guaranteed to pass.
+if PARSE_ERRORS:
+    print("UNPARSEABLE (nothing was reconciled in these files):")
+    print("\n".join("  " + e for e in PARSE_ERRORS))
+    sys.exit(1)
+
 if not evidence:
     print("no shipped-delivery evidence recorded -- nothing to reconcile")
     sys.exit(0)
@@ -2757,22 +2769,48 @@ gate_headings = {}
 for m in re.finditer(r"^### (\d+)\.\s+(.+?)\s*$", gates_text, re.M):
     gate_headings[m.group(1)] = m.group(2).strip()
 
-# Correction notes QUOTE the old wrong citation, so blank quoted spans first:
-# documenting a fix must not permanently re-trip the check that prompted it.
-# PER-LINE, AND ONLY ON LINES THAT LOOK LIKE CORRECTION NOTES (review 2026-08-03).
-# This blanked every `"..."` span across the WHOLE file in one pass, which is
-# delimiter pairing, not correction-note detection: a single unpaired quote — an
-# inch mark, a stray quote in a code sample, a smart-quote mismatch — inverts
-# which half of the file is scanned, hiding every live citation between it and
-# the next quote while EXPOSING the historical one. theories.md already holds 29
-# quoted spans. The check would then print "N gates cross-checked" while the
-# miscited gate right below the inch mark was never examined — shipping exactly
-# the gate-10 defect it was written to catch.
-CORRECTION_HINT = re.compile(r"correct|superseded|withdrawn|formerly|was cited|no longer", re.I)
+# Correction notes QUOTE the old wrong citation, so blank quoted spans on lines
+# that say so: documenting a fix must not permanently re-trip the check that
+# prompted it.
+#
+# AN EXPLICIT PRAGMA, NOT A VOCABULARY SNIFF (review 2026-08-03). This used to
+# match a six-word list — correct|superseded|withdrawn|formerly|was cited|
+# no longer — which failed in both directions at once:
+#
+#   TOO WIDE. `correct` fires on "correctly" and "incorrect", and theories.md
+#   paragraphs are ONE LINE EACH (line 15 is 1368 characters). Measured on the
+#   live file: 9 lines blanked, 8 of them triggered by ordinary prose, wiping 19
+#   quoted spans that no correction note was anywhere near. A live miscitation
+#   inside any of those quotes is invisible to this check.
+#
+#   TOO NARROW. A note reading `(Fixed v0.80.0: this read "gate 10 (Delivery
+#   Health)")` matches nothing, so the historical citation IS scanned, the check
+#   fails, and CI goes red because the author wrote "Fixed" instead of
+#   "Corrected". A guard whose pass depends on synonym choice is not a guard.
+#
+# No linter sniffs prose to decide whether to suppress itself. They all take an
+# explicit, machine-readable marker naming the scope:
+#   ruff / flake8  `# noqa: E501`   https://docs.astral.sh/ruff/linter/#error-suppression
+#   ESLint         `// eslint-disable-next-line <rule>`
+#   mypy           `# type: ignore[<code>]`
+# This is the markdown equivalent — an HTML comment, so it renders invisibly.
+# It blanks QUOTED spans only, because a correction note carries the historical
+# citation in quotes and the live one bare; skipping the whole line would stop
+# checking the corrected citation, which is the failure this check exists for.
+IGNORE_PRAGMA = "<!-- validator:historical-citation -->"
 scan_lines = []
-for line in theories.splitlines():
-    if line.count('"') % 2 == 0 and CORRECTION_HINT.search(line):
-        line = re.sub(r'"[^"]*"', lambda q: " " * len(q.group(0)), line)
+for _n, line in enumerate(theories.splitlines(), 1):
+    if IGNORE_PRAGMA in line:
+        if line.count('"') % 2 != 0:
+            # Cannot blank reliably, and silently not blanking would re-trip the
+            # check on the historical citation with a confusing message. Say so.
+            problems.append(
+                f"theories.md line {_n} carries {IGNORE_PRAGMA} but has an odd "
+                "number of double quotes, so the historical citation cannot be "
+                "delimited. Pair the quotes on that line."
+            )
+        else:
+            line = re.sub(r'"[^"]*"', lambda q: " " * len(q.group(0)), line)
     scan_lines.append(line)
 scan = "\n".join(scan_lines)
 citations_checked = 0
@@ -2786,7 +2824,12 @@ for m in re.finditer(r"gate (\d+) \(([^)]+)\)", scan, re.I):
     # claimed name must appear in the real heading (case/punctuation tolerant)
     norm = lambda s: re.sub(r"[^a-z0-9]+", "", s.lower())
     if norm(claimed) not in norm(actual) and norm(actual.replace(" Gate", "")) not in norm(claimed):
-        problems.append(f"theories.md calls gate {num} '{claimed}'; theory-gates.md calls it '{actual}'")
+        problems.append(
+            f"theories.md calls gate {num} '{claimed}'; theory-gates.md calls it "
+            f"'{actual}'. If this is a correction note quoting the OLD citation, "
+            f"put the historical text in double quotes and add {IGNORE_PRAGMA} "
+            "to that line."
+        )
 
 # 2. every backticked path in an "Implemented as:" line must exist
 paths_checked = 0
@@ -2813,8 +2856,21 @@ if problems:
 # len(gate_headings) — a count of headings in the OTHER file — so a citation regex
 # that stopped matching printed a large, reassuring green over zero comparisons.
 # That is the verify_citations shape, in the check written to catch it.
-if not citations_checked and not paths_checked:
-    print("NA:theories.md yielded 0 gate citations and 0 Implemented-as paths")
+# PER-POPULATION REFUSAL, NOT `and` (review 2026-08-03). This read
+# `if not citations_checked and not paths_checked`, so it only refused when BOTH
+# populations were empty. A citation-regex change that dropped citations_checked
+# to 0 still printed a confident green because paths_checked was 9 — one half of
+# the check silently verifying nothing while the other half carried the report.
+# That is the verify_citations shape, in the check written to catch it. Either
+# population being empty is enough to refuse, and the message says WHICH.
+_empty = []
+if not citations_checked:
+    _empty.append("0 gate citations")
+if not paths_checked:
+    _empty.append("0 Implemented-as paths")
+if _empty:
+    print("NA:theories.md yielded " + " and ".join(_empty) +
+          " -- refusing to report a pass over an empty population")
     sys.exit(0)
 print(f"OK:{citations_checked} gate citation(s) and {paths_checked} "
       f"Implemented-as path(s) verified against {len(gate_headings)} gate heading(s)")

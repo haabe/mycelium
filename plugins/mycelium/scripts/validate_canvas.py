@@ -482,22 +482,45 @@ def schemaless_canvas_warnings(canvas_dir: Path) -> list[str]:
     ]
 
 
-def main():
-    # CLI: optional positional argv overrides canvas directory.
-    # Previously the script defaulted to cwd + ignored positional argv —
-    # confusing when invoked with a directory path that got silently dropped
-    # (witnessed 2026-05-23: session-long "PASS" reports were against
-    # framework canvas while user thought they were against roadmap canvas).
-    canvas_dir = CANVAS_DIR
-    if len(sys.argv) > 1:
-        candidate = Path(sys.argv[1]).resolve()
-        if not candidate.exists():
-            print(f"Canvas directory not found: {candidate}", file=sys.stderr)
-            sys.exit(2)
-        canvas_dir = candidate
+def canvas_population_state(canvas_dir: Path) -> tuple[str, list[Path], list[Path]]:
+    """Classify what a canvas directory actually holds, before validating anything.
 
-    all_errors = []
+    Extracted from main() so the three empty-looking states stay distinguishable
+    and separately testable. They mean opposite things and used to share an exit
+    code (code review 2026-08-03):
 
+      "fresh"     — no .yml and nothing authored. A `/mycelium:setup` project
+                    that has not written its canvas yet. Legitimate: N/A, exit 0,
+                    because the shipped pre-push hook gates on the DIRECTORY
+                    existing and any non-zero would block the first push.
+      "broken"    — no .yml but the directory DOES hold authored files. A rename
+                    to `.yaml`, or a layout change that moved the canvas. Not an
+                    early project: the glob stopped matching and every validation
+                    downstream would report N/A over a canvas nobody checked.
+      "populated" — at least one .yml to validate.
+
+    `.gitkeep` and other dotfiles do not count as authored content; treating them
+    as content would fail exactly the fresh-project push the N/A state protects.
+    """
+    canvas_yml = sorted(canvas_dir.glob("*.yml"))
+    other_files = [
+        f for f in sorted(canvas_dir.iterdir())
+        if f.is_file() and not f.name.startswith(".") and f.suffix != ".yml"
+    ]
+    if canvas_yml:
+        return "populated", canvas_yml, other_files
+    return ("broken" if other_files else "fresh"), canvas_yml, other_files
+
+
+def triage_canvas_or_exit(canvas_dir: Path) -> list[Path]:
+    """Decide whether there is anything to validate, and exit if not.
+
+    Extracted from main() 2026-08-03. Four of these five branches are exits
+    added by this review, and leaving them inline pushed main() past the
+    complexity ceiling — which is the linter noticing that 'work out whether
+    to run' and 'run' had become one function. Returns the .yml files to
+    validate; every other outcome terminates here with its own message.
+    """
     # N/A vs REFUSAL vs PASS — three states, and v0.75.0 collapsed two of them
     # (code review 2026-08-03). It made a present-but-empty canvas exit 1 while
     # leaving an ABSENT canvas exiting 0, which is backwards: absent is the
@@ -516,10 +539,71 @@ def main():
               "Nothing was validated, and nothing was supposed to be.")
         sys.exit(0)
 
-    if not SCHEMA_DIR.exists():
-        print("Schema directory not found:", SCHEMA_DIR)
-        print("(no schemas to validate against — silently passing)")
+    # EMPTY-BY-BIRTH vs EMPTY-BY-BREAKAGE (code review 2026-08-03). The N/A above
+    # was extended to "canvas dir holds no .yml" and that covered two states with
+    # opposite meanings:
+    #
+    #   a fresh /mycelium:setup    -> the dir holds only .gitkeep. Legitimate.
+    #   a layout change or rename  -> the dir holds FILES, none of them *.yml.
+    #
+    # .github/workflows/validate.yml runs this bare, so the second state printed
+    # N/A and exited 0: rename the canvas to .yaml, or move it one level down,
+    # and CI goes green over a canvas nobody validated. That is the exact
+    # green-over-nothing shape v0.77.0 was spent removing.
+    #
+    # Distinguish them by whether the directory holds ANYTHING a human wrote.
+    # See canvas_population_state for the three states and why they differ.
+    state, canvas_yml, other_files = canvas_population_state(canvas_dir)
+    if state == "broken":
+        print(f"Canvas validation FAILED: {canvas_dir} holds "
+              f"{len(other_files)} file(s) but none match *.yml — "
+              f"{', '.join(f.name for f in other_files[:5])}. "
+              "A canvas that stopped matching the glob is a broken layout, "
+              "not an empty project: renaming to .yaml or moving the files "
+              "would otherwise make every validation report N/A and pass.")
+        sys.exit(1)
+    if state == "fresh":
+        print(f"Canvas validation: N/A — {canvas_dir} holds no .yml files yet "
+              "(a fresh /mycelium:setup leaves it empty). Nothing was validated. "
+              "This is NOT a pass over a populated canvas.")
         sys.exit(0)
+
+    # NO SILENT PASS OVER A POPULATED CANVAS (code review 2026-08-03). This
+    # printed "(no schemas to validate against — silently passing)" and exited 0.
+    # It is reachable with a FULL canvas whenever CLAUDE_PLUGIN_ROOT points at a
+    # stale plugin-cache path, and it made check_empty_input_honesty's exemption
+    # for this script false: there WAS a state that verified nothing and claimed
+    # a pass. A missing schema directory over real canvas files is a broken
+    # installation, not an early project — the empty-canvas cases above have
+    # already returned by this point, so this can only be the broken one.
+    if not SCHEMA_DIR.exists():
+        print(f"Canvas validation FAILED: schema directory not found at "
+              f"{SCHEMA_DIR}, but {canvas_dir} holds {len(canvas_yml)} canvas "
+              "file(s). Refusing to report a pass over files nothing validated. "
+              "Check CLAUDE_PLUGIN_ROOT — a stale plugin-cache path reaches this "
+              "state with a healthy canvas.", file=sys.stderr)
+        sys.exit(1)
+
+    return canvas_yml
+
+
+def main():
+    # CLI: optional positional argv overrides canvas directory.
+    # Previously the script defaulted to cwd + ignored positional argv —
+    # confusing when invoked with a directory path that got silently dropped
+    # (witnessed 2026-05-23: session-long "PASS" reports were against
+    # framework canvas while user thought they were against roadmap canvas).
+    canvas_dir = CANVAS_DIR
+    if len(sys.argv) > 1:
+        candidate = Path(sys.argv[1]).resolve()
+        if not candidate.exists():
+            print(f"Canvas directory not found: {candidate}", file=sys.stderr)
+            sys.exit(2)
+        canvas_dir = candidate
+
+    all_errors = []
+
+    canvas_yml = triage_canvas_or_exit(canvas_dir)
 
     # Fail-loud YAML parse check (instance 14 fix, 2026-05-23). Must run
     # before schema validation + trace walk so YAML errors surface even on
@@ -559,12 +643,12 @@ def main():
         print(f"  WARN (no schema): {w}")
 
     schemas_present = len(list(SCHEMA_DIR.glob("*.schema.json"))) - 1  # exclude _common
-    canvases_present = len(list(canvas_dir.glob("*.yml")))
-    if not canvases_present:
-        print(f"Canvas validation: N/A — {canvas_dir} holds no .yml files yet "
-              "(a fresh /mycelium:setup leaves it empty). Nothing was validated. "
-              "This is NOT a pass over a populated canvas.")
-        sys.exit(0)
+    canvases_present = len(canvas_yml)
+    # The empty-canvas N/A used to live HERE, and it said "Nothing was validated"
+    # (code review 2026-08-03) — untrue by this point, because validate_diamonds
+    # and enum_consistency_errors have already run and could have failed the
+    # build above. It is decided before any of that now, where the claim is
+    # accurate, so this tail only ever reports a real pass over real files.
 
     print(
         f"Canvas validation: PASS ({canvases_present} canvas files, "
