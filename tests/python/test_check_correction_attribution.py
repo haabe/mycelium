@@ -23,6 +23,7 @@ Scenario-per-guardpost:
   edge    — hook and user in one entry-> first match wins, deterministically
   edge    — coverage below half       -> says so unprompted
 """
+import json
 import sys
 
 import pytest
@@ -250,3 +251,74 @@ def test_bullet_without_a_date_is_not_an_entry(scripts_path, tmp_path):
     ])
     result = mod.scan(root)
     assert result["entries"] == 1, result
+
+
+# ------------------------------------------------- snapshot series (v0.81.0)
+# The rate existed only as prose in hand-written TL;DR paragraphs — three
+# readings across two months, each recomputed by someone who remembered to look,
+# and the top-of-file count was stale by 46 entries when this was added. A rate
+# whose trend cannot be computed answers the wrong question.
+
+
+def test_snapshot_writes_the_metrics_envelope(scripts_path, tmp_path):
+    mod = _import(scripts_path)
+    root = _corpus(tmp_path, [("2026-05-01", "prose. Caught by the user."),
+                              ("2026-05-02", "prose. Caught by the hook.")])
+    out = tmp_path / "series"
+    path = mod.write_snapshot(root, mod.scan(root), out)
+    assert path is not None and path.is_file()
+    d = json.loads(path.read_text())
+    # Matches the existing .claude/evals/metrics/<source>/<date>.json shape
+    # rather than inventing a second convention.
+    for key in ("pulled_at", "source", "source_class", "target",
+                "adapter_version", "fetch_status", "primary_counts"):
+        assert key in d, f"missing envelope key {key}"
+    assert d["source"] == "corrections"
+    assert d["primary_counts"]["entries"] == 2
+    assert d["primary_counts"]["caught_by_hook_or_check"] == 1
+    assert d["escape_rate"] == 0.5
+
+
+def test_snapshot_refuses_when_there_is_no_rate(scripts_path, tmp_path):
+    """Storing a null in a series is how a gap becomes a number later."""
+    mod = _import(scripts_path)
+    root = _corpus(tmp_path, [("2026-05-01", "prose with no catcher named.")])
+    out = tmp_path / "series"
+    assert mod.write_snapshot(root, mod.scan(root), out) is None
+    assert not out.exists(), "no directory should be created for a non-reading"
+
+
+def test_same_day_rerun_overwrites_rather_than_duplicating(scripts_path, tmp_path):
+    """A snapshot is a state-of-day reading, not an event log."""
+    mod = _import(scripts_path)
+    root = _corpus(tmp_path, [("2026-05-01", "prose. Caught by the user.")])
+    out = tmp_path / "series"
+    first = mod.write_snapshot(root, mod.scan(root), out)
+    second = mod.write_snapshot(root, mod.scan(root), out)
+    assert first == second
+    assert len(list(out.glob("*.json"))) == 1
+
+
+def test_snapshot_is_opt_in(scripts_path, tmp_path, capsys):
+    """Reporting must not have a filesystem side effect unless asked."""
+    mod = _import(scripts_path)
+    root = _corpus(tmp_path, [("2026-05-01", "prose. Caught by the user.")])
+    mod.main(["--root", str(root)])
+    capsys.readouterr()
+    assert not (root / mod.SNAPSHOT_REL).exists()
+
+
+def test_snapshot_happens_for_both_output_formats(scripts_path, tmp_path, capsys):
+    """v0.77.0 found five scripts whose behaviour differed between --json and
+    plain because the work lived inside one arm of the output branch."""
+    mod = _import(scripts_path)
+    for as_json in (False, True):
+        root = _corpus(tmp_path / f"r{as_json}",
+                       [("2026-05-01", "prose. Caught by the user.")])
+        argv = ["--root", str(root), "--snapshot"]
+        if as_json:
+            argv.append("--json")
+        mod.main(argv)
+        capsys.readouterr()
+        written = list((root / mod.SNAPSHOT_REL).glob("*.json"))
+        assert len(written) == 1, f"as_json={as_json} wrote {written}"
