@@ -58,16 +58,24 @@ EXEMPT = {
         "a true and useful pass, and flagging it would fail every project that "
         "has simply never run /bvssh-check. Its own test suite asserts this.",
     "validate_canvas.py":
-        "THREE-STATE BY DESIGN, and this guard only reads the exit code "
-        "(added 2026-08-03). Its states are: no canvas dir -> N/A(0); canvas dir "
-        "with zero .yml -> N/A(0); canvas with files -> PASS/FAIL. There is no "
-        "state where it verifies nothing AND claims a pass, so it satisfies this "
-        "guard's SPIRIT while exiting 0 on the empty case. Encoding N/A as a "
-        "distinct exit code was considered and rejected: the shipped "
-        "git-pre-push-example.sh treats any non-zero as failure, so it would "
-        "re-block every push from a freshly /mycelium:setup project — the exact "
-        "consumer breakage v0.75.1 and this release were fixing. The exemption is "
-        "re-verified below against the file, not trusted from this table.",
+        "MULTI-STATE BY DESIGN, and this guard only reads the exit code. Its "
+        "states are: no canvas dir -> N/A(0); canvas dir empty or .gitkeep-only "
+        "-> N/A(0); canvas dir holding non-.yml files -> FAIL(1); schema dir "
+        "missing over a POPULATED canvas -> FAIL(1); canvas with files -> "
+        "PASS/FAIL. There is no state where it verifies nothing AND claims a "
+        "pass, so it satisfies this guard's SPIRIT while exiting 0 on the empty "
+        "case. THAT CLAIM WAS FALSE WHEN FIRST WRITTEN (review 2026-08-03): the "
+        "script still had `if not SCHEMA_DIR.exists(): print(...silently "
+        "passing); sys.exit(0)`, reachable over a full canvas whenever "
+        "CLAUDE_PLUGIN_ROOT points at a stale plugin-cache path. The exemption "
+        "was fixed by fixing the SCRIPT, not by rewording the reason — and the "
+        "re-verification below now checks BOTH markers, because a table entry "
+        "that asserts a property is worth exactly as much as the check that "
+        "re-derives it. Encoding N/A as a distinct exit code was considered and "
+        "rejected: the shipped git-pre-push-example.sh treats any non-zero as "
+        "failure, so it would re-block every push from a freshly "
+        "/mycelium:setup project — the exact consumer breakage v0.75.1 was "
+        "fixing.",
     "check_correction_attribution.py":
         "REPORTER, NOT A GATE, and it says so in its own docstring: 'Exit 0 "
         "always — this reports, it does not gate. A rate is an input to "
@@ -98,6 +106,10 @@ AIM = {}
 #: table above. Each marker is the sentence the exemption's reason depends on.
 STUB_MARKER = "DRAFT stub. Not yet implemented."
 NA_MARKER = "This is NOT a pass over a populated canvas."
+#: validate_canvas must never exit 0 having validated nothing. This is the
+#: sentence that closed the schema-dir hole; if it disappears, the exemption
+#: above has gone stale and this guard must say so rather than keep trusting it.
+NO_UNVALIDATED_SUCCESS_MARKER = "Refusing to report a pass over files nothing validated."
 NO_RATE_MARKER = "NO RATE AVAILABLE"
 
 
@@ -163,7 +175,9 @@ def scan(root: Path) -> dict:
                 src = script.read_text(errors="replace")
                 stale = (
                     (name == "check_gated_by.py" and STUB_MARKER not in src)
-                    or (name == "validate_canvas.py" and NA_MARKER not in src)
+                    or (name == "validate_canvas.py"
+                        and (NA_MARKER not in src
+                             or NO_UNVALIDATED_SUCCESS_MARKER not in src))
                     or (name == "check_correction_attribution.py"
                         and NO_RATE_MARKER not in src)
                 )

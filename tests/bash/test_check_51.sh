@@ -77,9 +77,23 @@ test_delivery_diamond_without_metrics_is_early_not_wrong() {
     assert_contains "$output" "PASS: Check 51" "an L4 diamond with no metrics yet must not fail"
 }
 
+test_unparseable_canvas_is_not_nothing_to_reconcile() {
+    # FINDING 9, 2026-08-03. This check DECLARED PARSE_ERRORS, appended to it in
+    # load(), and never read it — Check 52's otherwise identical heredoc has the
+    # `if PARSE_ERRORS: sys.exit(1)` block and this one did not. So every load()
+    # returned {} on a YAML error and the check printed "nothing to reconcile",
+    # exit 0. Reproduced with two unparseable canvas files: PASS, exit 0.
+    # An unparseable canvas is the state MOST likely to hold the drift this
+    # check hunts, and it was the one state guaranteed to pass.
+    local output; output=$(capture unparseable)
+    assert_contains "$output" "FAIL: Check 51" "a corrupt canvas must not read as nothing to reconcile"
+    assert_contains "$output" "UNPARSEABLE" "and the failure must name the parse error"
+}
+
 run_test test_passes_when_reconciled
 run_test test_fails_on_dora_without_delivery_diamond
 run_test test_fails_on_launched_cycles_without_delivery_diamond
 run_test test_greenfield_has_nothing_to_reconcile
 run_test test_delivery_diamond_without_metrics_is_early_not_wrong
+run_test test_unparseable_canvas_is_not_nothing_to_reconcile
 report
