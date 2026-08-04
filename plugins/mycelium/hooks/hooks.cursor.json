@@ -98,6 +98,11 @@
         "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/stop-check.sh",
         "type": "command",
         "timeout": 5
+      },
+      {
+        "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/ci-signal.sh",
+        "type": "command",
+        "timeout": 10
       }
     ],
     "sessionStart": [
@@ -105,6 +110,11 @@
         "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/session-start.sh",
         "type": "command",
         "timeout": 5
+      },
+      {
+        "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/ci-signal.sh --session-start",
+        "type": "command",
+        "timeout": 10
       }
     ],
     "beforeSubmitPrompt": [

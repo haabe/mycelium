@@ -4,6 +4,49 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-04.
 
+## v0.85.0 - CI had no way back into the session that broke it
+
+The dogfood workflow went red and **stayed red for thirteen consecutive
+pushes** across two days. Every run reported failure. The agent ran
+`gh run watch` on three upstream PRs the same day and never once on the repo it
+was committing to.
+
+The tempting diagnosis is discipline. The real one is architecture: **the flow
+was one-way.** Local push, CI runs, the verdict lives on GitHub and never comes
+back. Five hook points — SessionStart, PreToolUse, PostToolUse, Stop,
+UserPromptSubmit — and not one looked outward. On a pull request you are forced
+to look. On `main` nothing asks.
+
+`ci-signal` runs on **Stop** and on **SessionStart**:
+
+- **Stop is the warm catch and the one that matters.** The failure was *one
+  session with thirteen pushes*; a session-start-only check would not have
+  caught it, because there was no next session for hours.
+- **SessionStart is the cold catch**, and it bypasses the once-per-run dedupe —
+  a new session is a new agent with no memory of what the last one was told, so
+  suppressing on a previous session's behalf reproduces the gap.
+
+**It tracks no pushes.** The obvious build records "a push happened" via a
+PostToolUse matcher and checks it later — new state to create, invalidate and
+get wrong. Unnecessary: GitHub already knows. It compares the newest run's
+`headSha` to local HEAD and speaks only about the commit actually checked out.
+
+That SHA match is load-bearing rather than tidy. The same day, the agent
+reported *"CI: success"* for a push that had **failed** — because
+`gh run list --limit 1` returns the newest run, and 45 seconds after a push that
+is frequently still the previous commit's. Matching the SHA is what makes the
+answer be about your commit.
+
+**Silent on**: green, in-progress, another commit's failure, detached HEAD,
+missing `gh`, no auth, no network, no `.github/workflows`. Reported once per
+run, not per turn — Stop fires after every response, and nagging is how a hook
+gets ignored. Rate-limited to one network call per 90 seconds.
+
+22 tests, scenario-per-guardpost. The rate-limit test counts `gh` invocations
+directly rather than inferring from the return value, because a suppressed call
+and a green build both look like `None` — and it was verified to fail when the
+guard is removed.
+
 ## v0.84.1 - the Cursor fix is unverified, and saying so is the fix
 
 Doc-only. v0.83.0 found two dead hook registrations by reading vendor
