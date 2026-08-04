@@ -4,6 +4,34 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-04.
 
+## v0.84.1 - the Cursor fix is unverified, and saying so is the fix
+
+Doc-only. v0.83.0 found two dead hook registrations by reading vendor
+documentation, corrected both, and `hooks/README.md` then read as though the
+matter were settled.
+
+**Both fixes are correct against the docs, and neither has been observed
+running.** For Codex that gap is small — the manifest lives where Codex looks.
+For Cursor it is the load-bearing half: Cursor's documentation places hooks at
+`.cursor/hooks.json` (project) or `~/.cursor/hooks.json` (user), and this plugin
+ships `hooks/hooks.cursor.json` inside the plugin tree. Whether anything copies
+it to a path Cursor reads is unknown from inside this repository. If nothing
+does, Cursor consumers get **no** Mycelium hooks at all, and the corrected
+registration sits in a file the runtime never opens — necessary but not
+sufficient.
+
+Recorded as unverified rather than left reading as fixed, because *"we corrected
+the entry"* is the same shape of claim as *"registered on all three surfaces"*,
+and that claim is what produced the dead registrations in the first place. It
+cannot be closed by inspecting the manifest again: reading our own file for the
+presence of an entry is exactly the check that failed.
+
+**What would close it**, and it is about five minutes for someone who already
+runs Cursor: install the plugin, run any shell command containing backticks, and
+report whether a shell-safety warning appears. That single observation proves
+discovery *and* the v0.83.0 event-name fix. Tracked as the second question on
+roadmap `ht-053`, which was already waiting on a non-Claude-Code runtime user.
+
 ## v0.84.0 - the guard could not see how its own author writes
 
 v0.83.0's commit message said `absence-claim-guard` "fires at the write." It did
