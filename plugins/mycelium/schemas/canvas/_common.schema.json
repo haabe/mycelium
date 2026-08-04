@@ -147,6 +147,29 @@
       "type": "integer",
       "minimum": 1,
       "description": "Canvas schema version. Increment on breaking changes (additive changes do not require a bump)."
+    },
+    "closure_basis": {
+      "type": "string",
+      "enum": [
+        "observed",
+        "inferred"
+      ],
+      "description": "How the closure reason was established. observed = something happened and was witnessed or recorded (a reply arrived, a message went unanswered, a criterion was measured and missed). inferred = the reason rests on reasoning about what probably happened, most commonly elapsed time ('the window has passed', 'no word since'). An elapsed interval is NOT an observation: nothing new is learned by a calendar advancing. Writing `inferred` is not a failure \u2014 it is the honest label for a defensible guess, and it marks the claim so a later reader does not cite it as fact. Origin: a dogfood closure recorded as fact from a month-old expectation, then cited across 12 sites before anyone asked the person who knew (2026-08-04)."
+    },
+    "closure_discipline": {
+      "title": "Closure discipline",
+      "description": "Applies to any canvas item that can be closed. If a `closure_reason` is asserted, two companions become mandatory: `closure_basis` (was this observed or inferred) and `reopen_trigger` (what would make this wrong). Deliberately conditional rather than always-required \u2014 items that are simply finished need no ceremony; the obligation attaches only when a REASON is claimed. Solution leaves have had an archive protocol since v0.x (archived-solutions.yml, 'Never deleted \u2014 they are learning'); opportunities and human-tasks had none, and hand-rolled reopen semantics appeared 17 times in one dogfood canvas against 0 mentions in its schema.",
+      "if": {
+        "required": [
+          "closure_reason"
+        ]
+      },
+      "then": {
+        "required": [
+          "closure_basis",
+          "reopen_trigger"
+        ]
+      }
     }
   }
 }

@@ -13,57 +13,129 @@
       "items": {
         "type": "object",
         "properties": {
-          "id": {"type": "string"},
+          "id": {
+            "type": "string"
+          },
           "type": {
             "type": "string",
-            "enum": ["interview", "observation", "survey", "usability_test", "stakeholder_meeting", "experiential_research", "outreach"]
+            "enum": [
+              "interview",
+              "observation",
+              "survey",
+              "usability_test",
+              "stakeholder_meeting",
+              "experiential_research",
+              "outreach"
+            ]
           },
-          "objective": {"type": "string"},
-          "target_persona": {"type": "string"},
+          "objective": {
+            "type": "string"
+          },
+          "target_persona": {
+            "type": "string"
+          },
           "key_questions": {
             "type": "array",
-            "items": {"type": "string"}
+            "items": {
+              "type": "string"
+            }
           },
-          "success_criteria": {"type": "string"},
+          "success_criteria": {
+            "type": "string"
+          },
           "created_at": {
             "$ref": "_common.schema.json#/$defs/iso_timestamp"
           },
-          "diamond_ref": {"type": "string"},
+          "diamond_ref": {
+            "type": "string"
+          },
           "canvas_refs": {
             "type": "array",
-            "items": {"type": "string"}
+            "items": {
+              "type": "string"
+            }
           },
           "status": {
             "type": "string",
-            "enum": ["pending", "in_progress", "completed", "cancelled", "stalled", "abandoned"]
+            "enum": [
+              "pending",
+              "in_progress",
+              "completed",
+              "cancelled",
+              "stalled",
+              "abandoned"
+            ]
           },
           "priority": {
             "type": "string",
-            "enum": ["high", "medium", "low"]
+            "enum": [
+              "high",
+              "medium",
+              "low"
+            ]
           },
-          "capture_template": {"type": "string"},
+          "capture_template": {
+            "type": "string"
+          },
           "touch_log": {
             "type": "array",
             "description": "Chronological log of exchanges on this task's channel. Formalised in v0.68.0: it existed as an undocumented convention surviving only on additionalProperties, so nothing could safely read it. `direction` is what makes a task's state legible - without it an inbound and an outbound are indistinguishable, and a task where the CONTACT is waiting on YOU looks identical to one where you are waiting on them.",
             "items": {
               "type": "object",
-              "required": ["date"],
+              "required": [
+                "date"
+              ],
               "properties": {
-                "date": {"type": "string", "description": "ISO date (YYYY-MM-DD) of the exchange."},
+                "date": {
+                  "type": "string",
+                  "description": "ISO date (YYYY-MM-DD) of the exchange."
+                },
                 "direction": {
                   "type": "string",
-                  "enum": ["outbound", "inbound", "bidirectional", "internal"],
+                  "enum": [
+                    "outbound",
+                    "inbound",
+                    "bidirectional",
+                    "internal"
+                  ],
                   "description": "Who moved. `outbound` = you contacted them. `inbound` = they contacted you. `bidirectional` = a two-way exchange captured as one entry (no reply is owed - it completed). `internal` = an observation or note with NO contact (a metric reading, a status note); these are skipped entirely when locating the last contact, so an internal note logged on top of an inbound does not conceal the owed reply. Keep the value bare - annotations belong in `purpose`, since a qualified value like 'outbound (founder-sent)' defeats the machine read this field exists for. NOT required: pre-v0.68.0 logs have none and must keep validating on upgrade; entries without it are unevaluable rather than invalid."
                 },
-                "channel": {"type": "string", "description": "Where the exchange happened."},
-                "purpose": {"type": "string", "description": "What was sent, received, or observed."}
+                "channel": {
+                  "type": "string",
+                  "description": "Where the exchange happened."
+                },
+                "purpose": {
+                  "type": "string",
+                  "description": "What was sent, received, or observed."
+                }
               },
               "additionalProperties": true
             }
+          },
+          "closure_reason": {
+            "type": "string",
+            "description": "Why this was closed. Must name what happened, not how long it has been."
+          },
+          "closure_basis": {
+            "$ref": "_common.schema.json#/$defs/closure_basis"
+          },
+          "reopen_trigger": {
+            "type": "string",
+            "description": "What would make this closure wrong, stated concretely enough to be checked by someone who was not there. This is the field that turns a stale closure into a detectable one."
           }
         },
-        "required": ["id", "type", "objective", "status"],
-        "additionalProperties": true
+        "required": [
+          "id",
+          "type",
+          "objective",
+          "status"
+        ],
+        "additionalProperties": true,
+        "allOf": [
+          {
+            "$ref": "_common.schema.json#/$defs/closure_discipline"
+          }
+        ]
       }
     },
     "completed_tasks": {
@@ -71,21 +143,47 @@
       "items": {
         "type": "object",
         "properties": {
-          "id": {"type": "string"},
+          "id": {
+            "type": "string"
+          },
           "completed_at": {
             "$ref": "_common.schema.json#/$defs/iso_timestamp"
           },
           "evidence_logged_to": {
             "type": "array",
-            "items": {"type": "string"}
+            "items": {
+              "type": "string"
+            }
           },
-          "key_findings": {"type": "string"},
+          "key_findings": {
+            "type": "string"
+          },
           "source_class": {
             "$ref": "_common.schema.json#/$defs/source_class"
+          },
+          "closure_reason": {
+            "type": "string",
+            "description": "Why this was closed. Must name what happened, not how long it has been."
+          },
+          "closure_basis": {
+            "$ref": "_common.schema.json#/$defs/closure_basis"
+          },
+          "reopen_trigger": {
+            "type": "string",
+            "description": "What would make this closure wrong, stated concretely enough to be checked by someone who was not there. This is the field that turns a stale closure into a detectable one."
           }
         },
-        "required": ["id", "completed_at", "source_class"],
-        "additionalProperties": true
+        "required": [
+          "id",
+          "completed_at",
+          "source_class"
+        ],
+        "additionalProperties": true,
+        "allOf": [
+          {
+            "$ref": "_common.schema.json#/$defs/closure_discipline"
+          }
+        ]
       }
     }
   },

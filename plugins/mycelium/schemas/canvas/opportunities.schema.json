@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://mycelium.dev/schemas/canvas/opportunities.schema.json",
   "title": "Opportunity Solution Tree Canvas",
-  "description": "Teresa Torres OST — opportunities discovered through user research. Each opportunity entry requires provenance to prevent the canvas from drifting toward confident speculation (dogfood T4).",
+  "description": "Teresa Torres OST \u2014 opportunities discovered through user research. Each opportunity entry requires provenance to prevent the canvas from drifting toward confident speculation (dogfood T4).",
   "type": "object",
   "properties": {
     "schema_version": {
@@ -11,7 +11,9 @@
     "desired_outcome": {
       "type": "object",
       "properties": {
-        "metric": {"type": "string"},
+        "metric": {
+          "type": "string"
+        },
         "current_value": {},
         "target_value": {}
       }
@@ -21,30 +23,104 @@
       "items": {
         "type": "object",
         "properties": {
-          "name": {"type": "string"},
-          "description": {"type": "string"},
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
           "type": {
             "type": "string",
-            "enum": ["functional", "emotional", "social"]
+            "enum": [
+              "functional",
+              "emotional",
+              "social"
+            ]
           },
-          "frequency": {"type": "string", "enum": ["low", "medium", "high"]},
-          "impact": {"type": "string", "enum": ["low", "medium", "high"]},
-          "strategic_alignment": {"type": "string", "enum": ["low", "medium", "high"]},
-          "cynefin_domain": {"type": "string", "enum": ["clear", "complicated", "complex", "chaotic", "confused"]},
-          "sub_opportunities": {"type": "array"},
-          "solutions": {"type": "array"},
+          "frequency": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ]
+          },
+          "impact": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ]
+          },
+          "strategic_alignment": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ]
+          },
+          "cynefin_domain": {
+            "type": "string",
+            "enum": [
+              "clear",
+              "complicated",
+              "complex",
+              "chaotic",
+              "confused"
+            ]
+          },
+          "sub_opportunities": {
+            "type": "array"
+          },
+          "solutions": {
+            "type": "array"
+          },
           "provenance": {
             "$ref": "_common.schema.json#/$defs/provenance"
           },
           "trace": {
             "$ref": "_common.schema.json#/$defs/trace"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "closed",
+              "resolved",
+              "addressed",
+              "discarded"
+            ],
+            "description": "Lifecycle state. Was an undeclared extra property until v0.86.0, which is how one dogfood canvas drifted to five spellings including an uppercase variant no validator could see."
+          },
+          "closure_reason": {
+            "type": "string",
+            "description": "Why this was closed. Must name what happened, not how long it has been."
+          },
+          "closure_basis": {
+            "$ref": "_common.schema.json#/$defs/closure_basis"
+          },
+          "reopen_trigger": {
+            "type": "string",
+            "description": "What would make this closure wrong, stated concretely enough to be checked by someone who was not there. This is the field that turns a stale closure into a detectable one."
           }
         },
-        "required": ["name", "provenance"],
-        "additionalProperties": true
+        "required": [
+          "name",
+          "provenance"
+        ],
+        "additionalProperties": true,
+        "allOf": [
+          {
+            "$ref": "_common.schema.json#/$defs/closure_discipline"
+          }
+        ]
       }
     },
-    "bias_checks": {"type": "array"},
+    "bias_checks": {
+      "type": "array"
+    },
     "last_updated": {}
   },
   "additionalProperties": true
