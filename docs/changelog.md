@@ -4,6 +4,56 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-04.
 
+## v0.86.0 - A closure could assert a reason and never say how it was known
+
+Solution leaves have had a never-delete archive protocol for a long time:
+`archived-solutions.yml` opens with *"Dead leaves from the OST lifecycle. Never
+deleted -- they are learning"*, and `engine/leaf-lifecycle.md` gives it a reason
+enum, the phase the leaf died at, and snapshots. **Opportunities and human-tasks
+had no equivalent.** `status` was not a declared property on opportunities at
+all, so its vocabulary drifted unpoliced -- one dogfood canvas reached five
+spellings including an uppercase variant no validator could see. Reopen
+semantics appeared **17 times** in that project's `human-tasks.yml` against
+**zero** mentions in its schema: a convention used constantly, declared nowhere.
+
+**What it cost, in the one project that dogfoods this.** A task was closed with
+`closure_reason: channel-ended`. The whole justification was that a month-old
+note recorded the other organisation *expecting* to wind down, and that the
+window had passed. Nobody asked. **The passage of time was treated as an event.**
+Before anyone checked, that reason had been cited as established fact across
+**12 sites** -- eight opportunities, four task closures -- and by the last one it
+appeared as a bare premise with no trace of the inference underneath. A one-line
+message to the person who knew falsified it in hours: the org had not folded, and
+its decision meeting had not happened yet.
+
+**The gate.** Whenever a `closure_reason` is asserted -- on an opportunity or a
+human-task -- two companions are now required:
+
+- `closure_basis`: **`observed`** or **`inferred`**. An elapsed interval is not an
+  observation; nothing is learned by a calendar advancing. Writing `inferred` is
+  not a failure, it is the honest label for a defensible guess, and it marks the
+  claim so a later reader does not cite it as fact.
+- `reopen_trigger`: what would make this closure wrong, concrete enough to be
+  checked by someone who was not there.
+
+**Deliberately conditional.** Work that is simply finished needs no ceremony --
+the obligation attaches only when a REASON is claimed. That keeps the gate off
+the common path, which is what stops a gate being deleted six months later.
+
+**Why this shape and not a status enum alone.** The bad closure used a
+*well-formed* reason value. An enum validates spelling, not reasoning, and would
+have passed it green -- a check that runs, reports pass, and measures less than
+it names. The status enum ships too (it catches the casing drift) but it is the
+tidying, not the mechanism. Field-testing a regex-based detector on real canvases
+returned roughly 2 true positives in 10, with false positives on correction notes
+and on elapsed-time reasoning used *correctly* to argue against closing -- so
+detection stays out of scope and the schema asks the author instead.
+
+`status` remains optional and existing entries without it still validate; only
+entries asserting a `closure_reason` are affected. 10 coverage tests in
+`tests/python/test_closure_discipline_schema.py` across guard, bad, sad and happy
+paths, including that `inferred` must pass.
+
 ## v0.85.0 - CI had no way back into the session that broke it
 
 The dogfood workflow went red and **stayed red for thirteen consecutive
