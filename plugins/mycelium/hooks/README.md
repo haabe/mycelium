@@ -87,6 +87,8 @@ Prevents blind retry. Diagnosis first, then fix.
 
 Returns warnings via `additionalContext` (does not block). This is the "hybrid" pattern: hook detects the condition, injects a message that tells Claude to run the appropriate skill.
 
+- **`ci-signal.sh`** (v0.85.0, on **Stop** and on **SessionStart** with `--session-start`) — reports ONCE when the workflow for the currently checked-out commit has failed. Closes a hole that let the dogfood workflow stay red for **thirteen consecutive pushes**: the flow was one-way — local push, CI runs, verdict lives on GitHub and never returns — and none of the five hook points looked outward. A pull request forces you to look; `main` does not ask. **Tracks no pushes by design**: GitHub already knows, so it matches the newest run's `headSha` against local HEAD and speaks only about the commit actually checked out. That match is load-bearing — reading `gh run list --limit 1` without it reports the PREVIOUS commit's run, which is how a failed push got reported as "CI: success" the same day. Stop is the warm catch (one session, thirteen pushes, needs to hear it mid-session); SessionStart is the cold catch and bypasses the dedupe, because a new session is a new agent with no memory of what the last one was told. Silent on green, in-progress, another commit's failure, detached HEAD, missing `gh`, no auth, no network, no workflows. One network call per 90s, one report per run. Tests: `tests/python/test_ci_signal.py` (22 asserts; the rate-limit test counts `gh` invocations directly, and was verified to fail with the guard removed).
+
 ### Layer 5: SessionStart (`session-start.sh`)
 **Triggers**: When a session starts or resumes
 **Matcher**: `startup|resume`

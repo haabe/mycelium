@@ -145,6 +145,10 @@
             "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/stop-check.sh",
             "timeout": 5,
             "statusMessage": "Mycelium guardrail + feedback loop check"
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/ci-signal.sh"
           }
         ]
       }
@@ -158,6 +162,10 @@
             "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/session-start.sh",
             "timeout": 5,
             "statusMessage": "Mycelium feedback loop check"
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/ci-signal.sh --session-start"
           }
         ]
       }
