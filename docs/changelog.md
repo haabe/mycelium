@@ -4,6 +4,53 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-04.
 
+## v0.87.0 - the release workflow released one version and swallowed six
+
+The workflow that exists to stop releases going missing was itself losing them.
+
+It read `plugin.json` **once, at the tip of the push**, and created exactly one
+Release for that one version. A push carrying more than one version bump released
+only the last — and exited 0. On 2026-07-30, seven versions went by in a single
+push: **v0.66.0 through v0.66.6**, every one documented in this changelog, none on
+the releases page, the job green throughout. Anyone installing from the marketplace
+jumped 0.65.0 to 0.67.0.
+
+It was found five weeks later, by accident, while auditing the version chain for an
+unrelated reason.
+
+**The defect was never "the release step broke".** Nothing distinguished *one
+version, released* from *seven versions, one released*. Absence produced a success —
+the same `fail-open-on-absent-input` shape this project has now logged eleven times,
+here in shipped CI config.
+
+**Two changes, and the second is the one that matters.**
+
+1. Release **every** version the push introduces, each tagged at the commit that
+   first set it — so a backfilled tag points at real history rather than at the tip.
+2. Then re-derive the expected set from this changelog and **fail loudly** if any
+   documented version still has no Release.
+
+Step 1 alone would have fixed 2026-07-30 and stayed silent about the next unforeseen
+route to a gap — a manual tag, a revert, a force-push, a bug in the range walk.
+Step 2 does not care how a gap appeared. That property is the whole point: a check
+that only catches the failure you already understand is a check you have to keep
+being right about.
+
+`Latest` is now set once, after the loop, from the highest version across all
+releases — creating several at once and letting each claim `--latest` leaves the
+badge on whichever finished last.
+
+The detection logic lives in `plugins/mycelium/scripts/release_gaps.py` rather than
+inline in YAML, so it is unit tested: 13 tests in
+`tests/python/test_release_gaps.py`, including the 2026-07-30 case as an explicit
+regression, numeric-not-lexical version ordering (0.9.0 < 0.10.0), and the floor
+boundary. The floor is v0.49.0 — 149 versions were bumped before release automation
+existed, and including them would make the check permanently red and therefore
+permanently ignored.
+
+The seven missing releases were backfilled the same day, each tagging its original
+commit and carrying its changelog section, with a note saying why it arrived late.
+
 ## v0.86.0 - A closure could assert a reason and never say how it was known
 
 Solution leaves have had a never-delete archive protocol for a long time:
