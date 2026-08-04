@@ -6,14 +6,39 @@ name: Auto-release on merge to main
 # page and "Latest" badge track Release objects. This Action creates the Release
 # (which also creates the tag) on the merge that bumps the version, so neither the
 # tag nor the Release can be dropped. Supersedes the earlier tag-only auto-tag.yml.
+#
+# REWRITTEN 2026-08-04 (v0.87.0), because the version above was itself fail-open.
+# It read plugin.json ONCE, at the tip of the push, and created exactly one Release.
+# A push carrying more than one version bump silently released only the last one and
+# exited 0. On 2026-07-30 that swallowed SEVEN versions — v0.66.0 through v0.66.6 —
+# all documented in docs/changelog.md, none on the releases page, the job green
+# throughout. It was found five weeks later by someone auditing the version chain
+# for an unrelated reason.
+#
+# The defect was never "the release step broke". It is that ABSENCE PRODUCED A
+# SUCCESS: nothing distinguished "one version, released" from "seven versions, one
+# released". So two changes, and the second is the one that matters:
+#   1. Release EVERY version the push introduces, each tagged at the commit that
+#      first set it.
+#   2. Then re-derive the expected set from the changelog and FAIL LOUD if any
+#      documented version still has no Release. Step 1 can drift — a manual tag, a
+#      revert, a force-push, a bug in the range walk. Step 2 does not care how the
+#      gap appeared, which is the property step 1 lacks.
+# Detection logic lives in plugins/mycelium/scripts/release_gaps.py so it is unit
+# tested (tests/python/test_release_gaps.py, incl. the 2026-07-30 case) rather than
+# only ever exercised in anger.
 
 on:
   push:
     branches: [main]
-    # plugin.json#version is rewritten by sync_derived.py on every release bump,
-    # so a change here is a reliable "a version landed on main" signal.
+    # plugin.json#version is rewritten by sync_derived.py on every release bump, so a
+    # change here is a reliable "at least one version landed" signal. It is NOT a
+    # reliable signal of WHICH version or HOW MANY — that was the assumption the
+    # 2026-07-30 incident falsified, and why the job walks the pushed range.
     paths:
       - 'plugins/mycelium/.claude-plugin/plugin.json'
+  # Manual re-run: repairs gaps without needing a new version bump.
+  workflow_dispatch:
 
 permissions:
   contents: write   # required to create the tag + Release via the default token
@@ -24,37 +49,97 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # full history so gh release create can tag the merge commit
+          fetch-depth: 0   # full history so releases can tag the originating commit
 
-      - name: Create the GitHub Release if this version has none
+      - name: Release every version this push introduced
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BEFORE: ${{ github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          python3 plugins/mycelium/scripts/release_gaps.py \
+            --introduced "${BEFORE:-}" "${HEAD_SHA}" > introduced.json
+          echo "Introduced by this push: $(cat introduced.json)"
+          python3 - <<'PY'
+          import json, re, subprocess, sys
+
+          items = json.load(open("introduced.json"))
+          if not items:
+              print("No new version in this push — nothing to release.")
+              sys.exit(0)
+
+          lines = open("docs/changelog.md").read().split("\n")
+          heads = [(i, l) for i, l in enumerate(lines) if re.match(r"^## v\d", l)]
+
+          def notes_for(tag):
+              """Title + body from this version's changelog section. Falls back to a
+              bare title if the section is absent — an unreleased version is a worse
+              outcome than an under-documented one, so notes never block a release."""
+              title, body = tag, f"Release {tag} (see docs/changelog.md)."
+              for idx, (i, l) in enumerate(heads):
+                  m = re.match(r"^## (v\d+\.\d+\.\d+)", l)
+                  if m and m.group(1) == tag:
+                      title = l[3:].strip()
+                      end = heads[idx + 1][0] if idx + 1 < len(heads) else len(lines)
+                      body = "\n".join(lines[i + 1:end]).strip() or body
+                      break
+              return title, body
+
+          created = []
+          for it in items:
+              tag = "v" + it["version"]
+              if subprocess.run(["gh", "release", "view", tag],
+                                capture_output=True).returncode == 0:
+                  print(f"Release {tag} already exists — skipping.")
+                  continue
+              title, body = notes_for(tag)
+              open("rel_notes.md", "w").write(body)
+              # --latest=false on every create. The correct "Latest" is set once, in
+              # the next step, from the highest version across ALL releases; letting
+              # each create claim it would leave whichever finished last holding it.
+              subprocess.run(
+                  ["gh", "release", "create", tag, "--target", it["commit"],
+                   "--title", title, "--notes-file", "rel_notes.md", "--latest=false"],
+                  check=True)
+              created.append(tag)
+              print(f"Created Release {tag} at {it['commit'][:9]}")
+
+          print("Created: " + (", ".join(created) if created else "(none)"))
+          PY
+
+      - name: Point "Latest" at the highest released version
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          VERSION="$(python3 -c "import json; print(json.load(open('plugins/mycelium/.claude-plugin/plugin.json'))['version'])")"
-          TAG="v${VERSION}"
-          if [ -z "${VERSION}" ]; then echo "::error::Could not read version from plugin.json"; exit 1; fi
-          if gh release view "${TAG}" >/dev/null 2>&1; then
-            echo "Release ${TAG} already exists — nothing to do."
-            exit 0
-          fi
-          # Pull the title + body from this version's changelog section (## vX.Y.Z ... next ## v).
-          # Falls back to a bare title/body if the section is absent, so the step never fails on notes.
-          python3 - "${VERSION}" <<'PY'
-          import sys, re
-          ver = "v" + sys.argv[1]
-          lines = open('docs/changelog.md').read().split('\n')
-          heads = [(i, l) for i, l in enumerate(lines) if re.match(r'^## v\d', l)]
-          title, body = ver, "Release " + ver + " (see docs/changelog.md)."
-          for idx, (i, l) in enumerate(heads):
-              m = re.match(r'^## (v\d+\.\d+\.\d+)', l)
-              if m and m.group(1) == ver:
-                  title = l[3:].strip()
-                  end = heads[idx + 1][0] if idx + 1 < len(heads) else len(lines)
-                  body = '\n'.join(lines[i + 1:end]).strip() or body
-                  break
-          open('rel_title.txt', 'w').write(title)
-          open('rel_notes.md', 'w').write(body)
+          python3 - <<'PY'
+          import json, subprocess
+          out = subprocess.run(["gh", "release", "list", "--limit", "500",
+                                "--json", "tagName"],
+                               capture_output=True, text=True, check=True).stdout
+          tags = [r["tagName"] for r in json.loads(out or "[]")]
+
+          def key(t):
+              try:
+                  return (0,) + tuple(int(p) for p in t.lstrip("v").split("."))
+              except ValueError:
+                  return (1, t)
+
+          if tags:
+              newest = max(tags, key=key)
+              subprocess.run(["gh", "release", "edit", newest, "--latest"], check=True)
+              print("Latest -> " + newest)
           PY
-          gh release create "${TAG}" --title "$(cat rel_title.txt)" --notes-file rel_notes.md --latest
-          echo "Created Release ${TAG} (tag created if it was missing)"
+
+      - name: Fail if any documented version still has no Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # The backstop, and the reason this workflow can be trusted rather than
+          # merely believed. Re-derives the expected set from docs/changelog.md and
+          # compares it against what exists, so a gap is caught however it arose.
+          # Floor is v0.49.0: earlier versions predate release automation and are
+          # history, not drift (see release_gaps.DEFAULT_FLOOR).
+          python3 plugins/mycelium/scripts/release_gaps.py --check
