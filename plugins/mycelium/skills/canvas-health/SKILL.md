@@ -38,6 +38,15 @@ Audit the canvas knowledge base for quality, consistency, and completeness. The 
      `${CLAUDE_PLUGIN_ROOT}/engine/evidence-decay.md` (strategic 180d, technical
      feasibility 120d, user-needs/competitive/market 90d, delivery metrics 30d,
      regulatory 365d; unlisted files fall back to 90d).
+   - **SKIP any file whose `_meta.applicability` marks it inapplicable** (a value
+     starting `n/a`, or naming a product type this project is not, or saying "NOT
+     actively used"). Added v0.90.0. Two dogfood canvases held ZERO evidence — every
+     metric field null, the only non-null leaves `False` schema defaults — and already
+     said so in their own `_meta`. They decayed on a 30-day horizon anyway, and the only
+     way to silence that warning would have been to date a validation of a file nobody
+     uses: the manufactured-validation move v0.89.0 removed `last_updated` to prevent.
+     Precedents for the marker: `dora-metrics.yml#sre` (`n/a-until-production`) and
+     `dependency-pins.yml` (`scope: local`).
      **This replaced a flat 30-day rule in v0.89.0.** That rule was the only
      staleness number in this skill grounded in nothing — step 7 below has always
      used the decay table — and on the dogfood repo it flagged 20 of 25 canvases,
@@ -57,7 +66,14 @@ Audit the canvas knowledge base for quality, consistency, and completeness. The 
    - Every canvas file with `evidence_type:` should have it set to one of the shipped schema enum values (`schemas/canvas/_common.schema.json#$defs/evidence_type` — Gilad's evidence ladder): `speculation`, `anecdotal`, `data-supported`, `test-validated`, `launch-validated`
    - Flag unknown evidence types (note: `_meta` blocks in the field carry structural markers like `schema` / `assessment` / `not-yet-populated` — flag these only when they appear OUTSIDE `_meta`; inside `_meta` they describe the file, not an evidence claim)
    - Flag evidence graded `anecdotal` or better whose only sources are mocked personas / `internal_simulated` (honesty check — simulated evidence sits at `speculation` on the ladder regardless of how vivid it reads)
-   - Every `source_class:` value should be one of: `external_human`, `external_data`, `internal_stakeholder`, `internal_desk`, `internal_simulated` — flag unknown values
+   - Every `source_class:` value must be one of the values in the SHIPPED SCHEMA
+     enum — read `${CLAUDE_PLUGIN_ROOT}/schemas/canvas/_common.schema.json#$defs/source_class`
+     and compare against that, exactly as the `evidence_type` rule above already does.
+     **Do NOT hardcode the list here.** Until v0.90.0 this step named five values while
+     the schema had six; `pointer` is valid, `check_source_independence.py` handles it
+     correctly, and a dogfood canvas used it 61 times. Following the prose produced 61
+     phantom violations — the documented-rule-diverges-from-enforcement class, in a step
+     whose own sibling rule says to read the schema.
    - Flag `internal_stakeholder` evidence with confidence > 0.5 that has `validated: false` or no `validated` field — stakeholder beliefs should not carry high confidence without external validation (Brown: organizational mythology)
    - Flag L2 opportunity canvas entries where ALL evidence is `internal_stakeholder` or `internal_desk` — no external human voice heard (Spool: secondhand research insufficient)
 
@@ -107,6 +123,12 @@ Audit the canvas knowledge base for quality, consistency, and completeness. The 
 
 8c. **Check build-mode** (Patton/Cagan — the `/define-done` build-mode gate's unconditional backstop):
    - For each diamond in `active.yml` at scale **L0–L3** (build-to-learn), lint its `definition_of_done.outcome` against an earn-verb lexicon (`deploy`, `ship`, `releas`, `production`, `go live`, `roll out`, `launch`, `all users`).
+   - **Ignore a match that sits inside a NEGATION** (`not`, `NOT`, `never`, `rather than`,
+     `instead of` within ~40 characters before it). Added v0.90.0: this fired on two dogfood
+     diamonds whose outcomes read "**NOT** shipped-a-product-through-it" and ("Bet validated",
+     **not** "shipped"). Both explicitly disclaim being earn-bars, and saying so is what tripped
+     the check built to catch earn-bars. Left unfixed it fires on every well-written
+     build-to-learn DoD, because disclaiming the earn-bar is the natural way to write one.
    - On a match → **WARN** (do not auto-fail — this is a keyword tripwire, not the semantic adjudication): *"Possible build-to-earn goal on a build-to-learn (L0–L3) diamond. Confirm this is a ship-to-LEARN outcome (disposable / opt-in, the learning is the done-bar) and not a premature earn-bar. If it's an earn-bar, re-run `/define-done` — production rollout is the L4 outcome."*
    - This converts the birth-only, agent-adjudicated gate into a check that fires regardless of whether the run engaged the gate prose. It routes the semantic call back to a human/agent; it never adjudicates "earn-shaped" itself (that stays with `/define-done`).
 
@@ -115,13 +137,27 @@ Audit the canvas knowledge base for quality, consistency, and completeness. The 
 The failure this catches: a fact about a human-task lives in 2+ places (the task `status`, the evidence file it produced, the contributor's consent registry) and only the salient one gets updated, so the canvas silently drifts from reality. Three sub-checks over `.claude/canvas/human-tasks.yml#pending_tasks`:
 
    - **(a) Status-vs-activity staleness**: for each task whose `status` is non-terminal (NOT `completed`/`abandoned`/`stalled`), compute the latest activity date across `updated_at`, `reopened_at`, `touch_log[].date`, and `partial_findings[].date`. (`reopened_at` MUST count as activity — a task deliberately reopened today is fresh, not stale, even when its other dates are months old; the reopen convention writes `reopened_at`, so omitting it here mis-flags every reopened task. Dogfood 2026-07-05: ht-003, reopened that day, read as 70d stale because this list omitted `reopened_at`.) If the latest is >21 days ago (or no activity date at all), flag: "ht-XXX untouched [N]d while still `[status]` — decide: mark `stalled`, mark `abandoned`, or nudge the contact. Abandonment is a non-event; nothing else will surface this." (The session-start hook flags this at 14d for awareness; canvas-health is the deeper 21d decision prompt.)
-   - **(b) Evidence-exists-but-task-open**: for each non-terminal task, check whether it has already produced evidence — i.e. it has a populated `partial_findings` block, OR its `canvas_refs` resolve to real evidence entries in purpose.yml/user-needs.yml dated at/after the task's activity. If evidence exists but the task is still open, flag: "ht-XXX has captured evidence (partial_findings / linked purpose.yml entry) but status is `[status]` — close it (`completed`) or record why it stays open. Logging evidence and closing the source task are separate steps; this catches the gap." Recommend `/mycelium:log-evidence` should be closing the task going forward.
+   - **(b) Evidence-exists-but-task-open**: for each non-terminal task, check whether it has already produced evidence — i.e. it has a populated `partial_findings` block, OR its `canvas_refs` resolve to real evidence entries in purpose.yml/user-needs.yml dated at/after the task's activity. **FIRST, CHECK `horizon` / `scoring_horizon`. If it is in the FUTURE, do not flag** —
+     a dated horizon IS the recorded reason the task stays open, which is precisely what this
+     sub-check asks the author to supply. Added v0.90.0: the 2026-08-05 dogfood run flagged
+     seven tasks and five had future horizons, so the check demanded a reason that was already
+     written in the field beside it. Only the two horizonless tasks were real findings, and the
+     right remedy for those is a horizon (see the ht-027 precedent), not closure.
+     If evidence exists, the task is still open, AND no future horizon is set, flag: "ht-XXX has captured evidence (partial_findings / linked purpose.yml entry) but status is `[status]` — close it (`completed`) or record why it stays open. Logging evidence and closing the source task are separate steps; this catches the gap." Recommend `/mycelium:log-evidence` should be closing the task going forward.
    - **(c) Consent-registry sync** (best-effort; cross-source): if an attribution registry is available (`$MYCELIUM_ATTRIBUTION_REGISTRY` or a private companion repo's `.claude/memory/attribution-registry.yml`), compare each contributor's `consent` value there against any consent state recorded in the agent's auto-memory (`~/.claude/projects/<id>/memory/`). Flag mismatches: "Consent for [name] is `[X]` in the registry but `[Y]` in auto-memory — the registry is canonical (Check 33 reads it); sync them." If neither source is accessible in the current context, skip this sub-check and note it was skipped. Do NOT print the literal value of any `generic_only`/project-name carve-out term into the report.
 
    - **(d) Untracked-channel evidence** (added v0.39.10, symmetric inverse of `(b)` — closes the drift where outreach produces evidence with no source-task at all): scan recent evidence entries across `.claude/canvas/*.yml` (windowed to entries dated within the last 30 days) for items with `source_class: external_human` whose `provenance.relationship` OR `provenance.evidence_sources[]` names an external contributor by name or handle. For each, check whether ANY `human-tasks.yml` entry (pending OR completed) lists that name in `target_persona`, `touch_log`, or a `backfill_note`. If no match, flag: "purpose.yml#L[NN] (or other canvas) records external_human evidence from [name] dated [date], but `human-tasks.yml` has no task covering this contributor. Backfill an `ht-XXX` with a `backfill_note` so the channel is addressable for follow-ups, learning-target coupling, and consent tracking. `/mycelium:log-evidence` v0.39.10+ catches this at log-time; older entries may need retroactive backfill." Skip names already flagged as registry-private (`generic_only`). NUDGE-tier, not gating.
 
 
-   - **(e) Reply owed** (added v0.68.0 — closes the direction-blindness that `(a)` and the session-start staleness label share): for each non-terminal task, walk `touch_log[]` and find the newest entry whose `direction` is a CONTACT value (`outbound`, `inbound`, `bidirectional`). **Skip `internal` entries and entries with no `direction` when locating it** — an `internal` note (a metric reading, a status line) is not contact, and letting one sit on top of an inbound is precisely how an owed reply disappears. If that newest contact is `inbound` and ≥3 days old, flag: "ht-XXX — the last contact was INBOUND [N]d ago. They wrote; you have not answered. Reply, or record why not." An explicit `reply_owed:` field on the task forces the flag regardless of dates.
+   - **(e) Reply owed** (added v0.68.0 — closes the direction-blindness that `(a)` and the session-start staleness label share): for each non-terminal task, walk `touch_log[]` and find the newest entry whose `direction` is a CONTACT value (`outbound`, `inbound`, `bidirectional`). **Skip `internal` entries and entries with no `direction` when locating it** — an `internal` note (a metric reading, a status line) is not contact, and letting one sit on top of an inbound is precisely how an owed reply disappears. **SAME-DAY TIE-BREAK (added v0.90.0): if the newest contact DATE carries both an
+     inbound and an outbound, treat it as ANSWERED and do not flag.** Dates are day-granular,
+     so `max(date)` cannot order two contacts on the same day, and a reply sent the same day it
+     arrived scored as unanswered. On the 2026-08-05 dogfood run this produced TWO false
+     positives out of two flags — ht-060 and ht-003, whose own records read "REPLY-OWED
+     DISCHARGED" and "REPLY SENT ... the last open reply on the board". A check that is wrong
+     100% of the time it fires is worse than absent: it teaches the reader that reply-owed
+     flags are noise, which is the state this check was built to end. If that newest contact
+     is `inbound` and ≥3 days old, flag: "ht-XXX — the last contact was INBOUND [N]d ago. They wrote; you have not answered. Reply, or record why not." An explicit `reply_owed:` field on the task forces the flag regardless of dates.
      **Why this is not covered by `(a)`.** `(a)` computes the latest activity DATE across `touch_log[].date` and treats any entry as activity. An inbound therefore *refreshes* the staleness clock — so a task where the contact is waiting on you scores as HEALTHIER than one where you sent something and heard nothing. The two states are opposites and the check could not tell them apart. Dogfood 2026-08-01: three unanswered inbounds aged 4-7 days sat entirely invisible behind a green staleness pass, including one from a practitioner who had said the thesis was already his working flow.
      **Migration nudge**: if any non-terminal task has `touch_log` entries lacking `direction`, note that those entries are invisible to this check and to reply-owed detection in `session-start`, and suggest backfilling the field. Pre-v0.68.0 logs predate the contract, so this is a nudge and never a failure. NUDGE-tier, not gating.
    Output all (a)–(d) as warnings (not critical) — they are drift, not breakage. Each names the specific ht-ID (or missing-ht contributor) and the specific action.
@@ -174,6 +210,17 @@ The convention says canvas-health surfaces this. Until v0.23.43 it didn't — th
 
 Concretely:
 - Scan all canvas `.yml` files for ON HOLD markers via the keyword pattern: `(ON HOLD|on hold)` with a parenthetical containing a calendar date in any of: `YYYY-MM-DD`, `Month DD`, `MM/DD/YYYY`, or month-name forms (e.g., "May 7", "May 2026").
+- **Only count a date the gate WAITS FOR, not the date it was AUTHORED ON.** Added v0.90.0.
+  Require the date to sit in a waiting construction — `pending <date>`, `by <date>`,
+  `until <date>`, `after <date>`, `expires <date>` — within the ON HOLD clause. A bare date
+  anywhere in the surrounding prose is usually provenance (when the hold was written, re-gated,
+  or last re-checked), not a deadline. On the 2026-08-05 dogfood run this produced 0 genuine
+  findings from 4 flags: every hold was CONDITION-gated (waiting on a signal, e.g. "≥1
+  theory-fluent tester signal"), and the dates matched were the dates the gates were re-gated.
+  One of them even carried its own maintenance record — "GATE RE-CHECKED 2026-07-03 ... Hold
+  unchanged" — i.e. a gate being tended, reported as rotting.
+- **A condition-gated hold with no awaited date is not overdue and must not be flagged by this
+  check.** Its staleness question is "has the signal arrived?", which no regex can answer.
 - For each match, parse the date. Resolve relative months to the most plausible recent occurrence (e.g., "May 7" → most recent 2026-05-07).
 - Compare to today's date:
   - Future date → no flag (item correctly waiting).
@@ -223,6 +270,23 @@ Recommended actions:
   - /mycelium:interview -- [if evidence gaps found]
   - /mycelium:log-evidence -- [if confidence unsupported]
 ```
+
+## Canvas-recorded framework version vs installed (added v0.90.0)
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_canvas_version_drift.py" --root . --framework-root "${CLAUDE_PLUGIN_ROOT}"
+```
+
+A dogfood canvas was found asserting `ai-tool-metrics.yml :: model_metrics.version:
+"Mycelium 0.16.1"` while the running plugin was **0.89.0 — 73 releases behind**. It sat
+wrong for three months because nothing compared a version a canvas CLAIMS against the one
+actually loaded: `_meta.version` is an integer schema revision, and `sync_derived.py` syncs
+docs rather than canvases.
+
+It reads only values under keys literally named `version` that also name the framework —
+never free prose, because canvases legitimately cite historical versions ("shipped in
+v0.70.0") and flagging those would make it noise on day one. UNKNOWN (exit 2) when no
+plugin.json is readable, never a clean pass it did not earn.
 
 ## Evidence breadth (G-D2 / G-D4)
 
