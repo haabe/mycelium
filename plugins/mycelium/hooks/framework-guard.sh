@@ -33,6 +33,22 @@
 # - exit 0 + JSON hookSpecificOutput.permissionDecision="deny" → block with UI message
 
 set -euo pipefail
+# SELF-LOCATION, added v0.88.0. This script lives at <plugin_root>/hooks/, so
+# its own path resolves the plugin root without anyone setting anything. Needed
+# because CLAUDE_PLUGIN_ROOT is a Claude Code variable: Cursor exports
+# CLAUDE_PROJECT_DIR instead and Codex exports neither, so every
+# "${CLAUDE_PLUGIN_ROOT}/scripts/*.py" lookup below resolved to "/scripts/*.py"
+# there, missed, and fell through to a silent no-op. Same class as the
+# hardcoded cache path removed from the runtime manifests in this release: an
+# artifact asserting a location it cannot know, failing open when wrong.
+if [ -z "${CLAUDE_PLUGIN_ROOT:-}" ]; then
+  _mycelium_self="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")/.." 2>/dev/null && pwd || true)"
+  if [ -n "$_mycelium_self" ] && [ -d "$_mycelium_self/scripts" ]; then
+    CLAUDE_PLUGIN_ROOT="$_mycelium_self"
+    export CLAUDE_PLUGIN_ROOT
+  fi
+fi
+
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
 STATE_FILE="$PROJECT_DIR/.claude/state/upstream.json"

@@ -38,11 +38,14 @@ The one surface difference: Codex has no native `PostToolUseFailure`. Failures s
 git clone https://github.com/haabe/mycelium
 cd mycelium
 
-# 3. Wire the Codex hook config
-mkdir -p .codex
-ln -s "$PWD/plugins/mycelium/hooks/hooks.codex.json" .codex/hooks.json
-#   OR copy:
-#   cp plugins/mycelium/hooks/hooks.codex.json .codex/hooks.json
+# 3. Generate the Codex hook config.
+#    Do NOT symlink or copy hooks.codex.json directly — it is a TEMPLATE whose
+#    commands carry a __MYCELIUM_PLUGIN_ROOT__ placeholder, because a plugin
+#    cannot know its own install path. This script self-locates, substitutes the
+#    real path, and refuses to write unless every hook script it names exists.
+bash plugins/mycelium/hooks/install-runtime-hooks.sh codex "$project_root"
+
+#    Re-run it after every plugin upgrade — the resolved path carries the version.
 
 # 4. Codex does NOT auto-export CLAUDE_PROJECT_DIR. Set it once in your shell:
 #    (add to ~/.zshrc or ~/.bashrc; or wrap each codex invocation)

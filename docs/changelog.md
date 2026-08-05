@@ -4,6 +4,55 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-04.
 
+## v0.88.0 - a plugin cannot know its own install path
+
+`hooks.codex.json` and `hooks.cursor.json` shipped every hook command as
+`${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}`.
+
+**That literal has never resolved on any machine.** The marketplace directory is
+`haabe-mycelium`, not `mycelium-plugin`, and the cache is versioned
+(`.../mycelium/0.87.0/`), so no unversioned path can ever hit. Neither Codex nor
+Cursor sets `CLAUDE_PLUGIN_ROOT` — Cursor exports `CLAUDE_PROJECT_DIR` instead —
+which means **the fallback branch was the live path for every consumer of those
+two manifests**, and it pointed at a file that is not there.
+
+The failure was silent and it failed **open**. `bash /missing/gate.sh` exits 127;
+the hook contract blocks on exit **2**. So every gate on those runtimes reported
+"not blocked" without ever having run. Five more commands carried a bare
+`${CLAUDE_PLUGIN_ROOT}` with no fallback at all, expanding to an empty root.
+
+**The same class sat one layer in, and would have survived a fix to the first.**
+Seven hook scripts resolve their Python helper as
+`"${CLAUDE_PLUGIN_ROOT}/scripts/*.py"` and fall through to a silent `exit 0` when
+it is missing. Wiring the manifests correctly would have started running guards
+that then did nothing. Fixed by self-location: each script lives at
+`<plugin_root>/hooks/`, so its own path answers the question without anyone
+setting anything — the idiom `codex-postfailure-shim.sh` already used.
+
+Changes:
+
+- **Manifests are templates.** `__MYCELIUM_PLUGIN_ROOT__` replaces all 39 path
+  sites across the two files. `hooks.json` keeps `${CLAUDE_PLUGIN_ROOT}` — Claude
+  Code does set it, and changing that would be the mirror-image mistake.
+- **New `hooks/install-runtime-hooks.sh`.** Self-locates, substitutes, and
+  **refuses to write** unless the placeholder is gone and every hook script it
+  names exists on disk. A generated manifest pointing at absent scripts would
+  reproduce the defect one layer down.
+- **Self-location in seven hook scripts**, so a guard invoked with no environment
+  at all still finds its helper.
+- **No guessed path survives.** `provision-skills.sh` now reports
+  `<unresolved>` instead of naming a directory that has never existed, and
+  `setup/SKILL.md` uses `${CLAUDE_PLUGIN_ROOT:?...}`.
+- **Install docs** replace `ln -s`/`cp` with the generator. Symlinking the
+  template is now the documented wrong move.
+- `tests/bash/test_plugin_root_resolution.sh` — 22 asserts pinning both halves.
+
+This also closes the gap `hooks/README.md` has carried as open since v0.85.0:
+"whether anything copies it to a path Cursor reads is unknown from inside this
+repository. If nothing does, Cursor consumers get no Mycelium hooks at all."
+This is the thing that copies it. It remains **unobserved in a live Cursor
+session** — the mechanism is proven by test, not by a running editor.
+
 ## v0.87.0 - the release workflow released one version and swallowed six
 
 The workflow that exists to stop releases going missing was itself losing them.

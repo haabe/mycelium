@@ -5,56 +5,56 @@
     "preToolUse": [
       {
         "matcher": "Write|Edit|MultiEdit|edit|write",
-        "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/gate.sh",
+        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/gate.sh",
         "type": "command",
         "timeout": 5,
         "failClosed": true
       },
       {
         "matcher": "Write|write",
-        "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/discovery-gate.sh",
+        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/discovery-gate.sh",
         "type": "command",
         "timeout": 5
       },
       {
         "matcher": "Write|Edit|MultiEdit|edit|write",
-        "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/brownfield-gate.sh",
+        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/brownfield-gate.sh",
         "type": "command",
         "timeout": 5
       },
       {
         "matcher": "Write|Edit|MultiEdit|edit|write",
-        "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/scope-gate.sh",
+        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/scope-gate.sh",
         "type": "command",
         "timeout": 5
       },
       {
         "matcher": "Write|Edit|MultiEdit|edit|write|Bash|shell|mcp__filesystem__(write_file|edit_file|move_file)",
-        "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/framework-guard.sh",
+        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/framework-guard.sh",
         "type": "command",
         "timeout": 5
       },
       {
         "matcher": "Write|Edit|MultiEdit|edit|write|mcp__filesystem__(write_file|edit_file|move_file)",
-        "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/autonomous-evidence-guard.sh",
+        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/autonomous-evidence-guard.sh",
         "type": "command",
         "timeout": 5
       },
       {
         "matcher": "Write|Edit|MultiEdit|edit|write",
-        "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/absence-claim-guard.sh",
+        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/absence-claim-guard.sh",
         "type": "command",
         "timeout": 5
       },
       {
         "matcher": "Shell",
-        "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/shell-safety-guard.sh",
+        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/shell-safety-guard.sh",
         "type": "command",
         "timeout": 5
       },
       {
         "matcher": "Shell",
-        "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/absence-claim-guard.sh",
+        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/absence-claim-guard.sh",
         "type": "command",
         "timeout": 5
       }
@@ -62,25 +62,25 @@
     "postToolUse": [
       {
         "matcher": "Write|Edit|MultiEdit|edit|write",
-        "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/post-write-nudge.sh",
+        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/post-write-nudge.sh",
         "type": "command",
         "timeout": 3
       },
       {
         "matcher": "Write|Edit|MultiEdit|edit|write",
-        "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/change-log.sh",
+        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/change-log.sh",
         "type": "command",
         "timeout": 3
       },
       {
         "matcher": "Write|Edit|MultiEdit|edit|write",
-        "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/diamond-state-audit.sh",
+        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/diamond-state-audit.sh",
         "type": "command",
         "timeout": 3
       },
       {
         "matcher": "Read|read",
-        "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/read-log.sh",
+        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/read-log.sh",
         "type": "command",
         "timeout": 3
       }
@@ -88,38 +88,38 @@
     "postToolUseFailure": [
       {
         "matcher": "Bash|shell",
-        "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/reflexion-gate.sh",
+        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/reflexion-gate.sh",
         "type": "command",
         "timeout": 10
       }
     ],
     "stop": [
       {
-        "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/stop-check.sh",
+        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/stop-check.sh",
         "type": "command",
         "timeout": 5
       },
       {
-        "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/ci-signal.sh",
+        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/ci-signal.sh",
         "type": "command",
         "timeout": 10
       }
     ],
     "sessionStart": [
       {
-        "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/session-start.sh",
+        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/session-start.sh",
         "type": "command",
         "timeout": 5
       },
       {
-        "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/ci-signal.sh --session-start",
+        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/ci-signal.sh --session-start",
         "type": "command",
         "timeout": 10
       }
     ],
     "beforeSubmitPrompt": [
       {
-        "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/preflight.sh",
+        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/preflight.sh",
         "type": "command",
         "timeout": 5
       }

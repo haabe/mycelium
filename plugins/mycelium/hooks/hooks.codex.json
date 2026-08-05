@@ -7,43 +7,43 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/gate.sh",
+            "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/gate.sh",
             "timeout": 5,
             "statusMessage": "Mycelium preflight gate + secret scan"
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/discovery-gate.sh",
+            "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/discovery-gate.sh",
             "timeout": 5,
             "statusMessage": "Mycelium discovery gate (new source files in discovery-untouched projects)"
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/brownfield-gate.sh",
+            "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/brownfield-gate.sh",
             "timeout": 5,
             "statusMessage": "Mycelium brownfield gate (one-shot: existing code, no discovery state)"
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/scope-gate.sh",
+            "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/scope-gate.sh",
             "timeout": 5,
             "statusMessage": "Mycelium scope enforcement"
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/framework-guard.sh",
+            "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/framework-guard.sh",
             "timeout": 5,
             "statusMessage": "Mycelium framework-guard (dogfood-mode only)"
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/autonomous-evidence-guard.sh",
+            "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/autonomous-evidence-guard.sh",
             "timeout": 5,
             "statusMessage": "Mycelium autonomous-evidence-guard (autonomous-mode only)"
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/absence-claim-guard.sh"
+            "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/absence-claim-guard.sh"
           }
         ]
       },
@@ -52,7 +52,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/framework-guard.sh",
+            "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/framework-guard.sh",
             "timeout": 5
           }
         ]
@@ -62,11 +62,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/shell-safety-guard.sh"
+            "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/shell-safety-guard.sh"
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/absence-claim-guard.sh"
+            "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/absence-claim-guard.sh"
           }
         ]
       }
@@ -77,17 +77,17 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/post-write-nudge.sh",
+            "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/post-write-nudge.sh",
             "timeout": 3
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/change-log.sh",
+            "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/change-log.sh",
             "timeout": 3
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/diamond-state-audit.sh",
+            "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/diamond-state-audit.sh",
             "timeout": 3
           }
         ]
@@ -97,7 +97,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/read-log.sh",
+            "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/read-log.sh",
             "timeout": 3
           }
         ]
@@ -107,7 +107,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/codex-postfailure-shim.sh",
+            "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/codex-postfailure-shim.sh",
             "timeout": 10,
             "statusMessage": "Reflexion: checking failure relevance (Codex shim)"
           }
@@ -120,12 +120,12 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/stop-check.sh",
+            "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/stop-check.sh",
             "timeout": 5
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/ci-signal.sh"
+            "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/ci-signal.sh"
           }
         ]
       }
@@ -136,12 +136,12 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/session-start.sh",
+            "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/session-start.sh",
             "timeout": 5
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/ci-signal.sh --session-start"
+            "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/ci-signal.sh --session-start"
           }
         ]
       }
@@ -152,7 +152,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/hooks/preflight.sh",
+            "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/preflight.sh",
             "timeout": 5
           }
         ]

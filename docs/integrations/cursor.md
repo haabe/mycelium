@@ -38,11 +38,15 @@ The only translation needed is event-name casing (Claude Code `PreToolUse` → C
 git clone https://github.com/haabe/mycelium
 cd mycelium
 
-# 3. Wire the Cursor hook config
-mkdir -p .cursor
-ln -s "$PWD/plugins/mycelium/hooks/hooks.cursor.json" .cursor/hooks.json
-#   OR copy it if you prefer to detach:
-#   cp plugins/mycelium/hooks/hooks.cursor.json .cursor/hooks.json
+# 3. Generate the Cursor hook config.
+#    Do NOT symlink or copy hooks.cursor.json directly — it is a TEMPLATE. Its
+#    commands carry a __MYCELIUM_PLUGIN_ROOT__ placeholder, because a plugin
+#    cannot know where it is installed. This script self-locates and writes a
+#    manifest with the real absolute path baked in, then verifies every hook
+#    script it names actually exists before writing anything.
+bash plugins/mycelium/hooks/install-runtime-hooks.sh cursor "$project_root"
+
+#    Re-run it after every plugin upgrade — the resolved path carries the version.
 
 # 4. Confirm CLAUDE_PROJECT_DIR is exported (Cursor 1.7 sets this automatically;
 #    fall back to a shell-level export if you run hooks from a non-Cursor terminal)
@@ -51,7 +55,10 @@ echo "$CLAUDE_PROJECT_DIR"
 # 5. Restart Cursor. Hooks fire on first tool call.
 ```
 
-For user-level (cross-project) install, drop the same file at `~/.cursor/hooks.json`.
+For user-level (cross-project) install, run the same script with `$HOME` as the
+project root — it writes `~/.cursor/hooks.json`. Do not hand-copy the template
+there; an unsubstituted `__MYCELIUM_PLUGIN_ROOT__` makes every hook exit 127,
+which the hook contract reads as "did not block" rather than as an error.
 
 ## Event-name mapping
 

@@ -232,7 +232,12 @@ overwrite an existing `opencode.json` or `.opencode/` file without explicit cons
 Copy from the plugin's bundled scaffold, idempotently, never clobbering user files:
 
 ```bash
-SRC="${CLAUDE_PLUGIN_ROOT:-$HOME/.claude/plugins/cache/mycelium-plugin/mycelium}/integrations/opencode"
+# No guessed fallback path (v0.88.0): the old default pointed at
+# a cache location that never existed — wrong marketplace directory, and the
+# cache is versioned, so no unversioned literal resolves. Fail loudly here
+# rather than cp-ing from a directory that cannot be there.
+SRC="${CLAUDE_PLUGIN_ROOT:?set CLAUDE_PLUGIN_ROOT to the plugin root before provisioning}/integrations/opencode"
+[ -d "$SRC" ] || { echo "ERROR: no opencode scaffold at $SRC" >&2; exit 1; }
 mkdir -p "$project_root/.opencode/plugin" "$project_root/.opencode/command/mycelium"
 
 # opencode.json — only if absent; if present, show the user the starter and let them merge.
