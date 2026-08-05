@@ -4,6 +4,35 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-05.
 
+## v0.95.2 - the release step could not see two versions in one commit
+
+`plugin.json` holds exactly one version. Walking a push's commits therefore yields one
+version per commit — and a **squash merge** carrying two bumps yields one, the last.
+
+On 2026-08-05, v0.95.0 and v0.95.1 were squashed into a single commit. `plugin.json`
+read `0.95.1`. **v0.95.0 shipped with no GitHub Release**, while a full changelog
+section promised one to consumers.
+
+This is the same defect as the 2026-07-30 seven-version incident, one layer in: that
+was many versions across many *commits*, fixed by walking the range. This is many
+versions inside *one* commit, which walking the range cannot see.
+
+**Both times the backstop caught what the primary mechanism missed.** That is the
+backstop working — and it is exactly why the primary mechanism still needed fixing. A
+step that only ever passes because something behind it catches the miss is not doing its
+job, and the next variant will land somewhere the backstop does not reach.
+
+`versions_introduced()` now takes a second pass over `docs/changelog.md`. The changelog
+is the right source because it is **the claim of record**: a version with a section
+there is one a consumer can reasonably expect a Release for. Each is anchored to the
+commit where its section first appears.
+
+The floor guard on that pass is load-bearing rather than defensive — on a shallow or
+rewritten history, `before` has no readable changelog, every documented version looks
+fresh, and without it the step would try to create 279 Releases.
+
+*Upgrading*: nothing to do.
+
 ## v0.95.1 - a correct finding that named the wrong cause
 
 Check 26 (version-bump discipline) fired correctly and told you the wrong reason.

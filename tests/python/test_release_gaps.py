@@ -274,3 +274,107 @@ def test_version_at_returns_none_when_no_plugin_json(scripts_path, monkeypatch):
     rg = _import(scripts_path)
     monkeypatch.setattr(rg, "_git", lambda *a: "")
     assert rg._version_at("deadbeef") is None
+
+
+# ---------------------------------- squashed multi-version commits (2026-08-05)
+
+
+def _commit_versions(repo, plugin_version, changelog_versions, msg=None):
+    """One commit setting plugin.json AND a changelog documenting several versions.
+    This is the shape a squash merge produces: N sections, one plugin.json value."""
+    p = repo / "plugins" / "mycelium" / ".claude-plugin"
+    p.mkdir(parents=True, exist_ok=True)
+    (p / "plugin.json").write_text(f'{{"version": "{plugin_version}"}}\n')
+    d = repo / "docs"
+    d.mkdir(parents=True, exist_ok=True)
+    (d / "changelog.md").write_text(
+        "# Changelog\n\n"
+        + "\n\n".join(f"## v{v} - section\n\nbody for {v}." for v in changelog_versions)
+        + "\n"
+    )
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-m", msg or f"v{plugin_version}")
+    return subprocess.run(["git", "-C", str(repo), "rev-parse", "HEAD"],
+                          capture_output=True, text=True, check=False).stdout.strip()
+
+
+def _repo(tmp_path, name):
+    repo = tmp_path / name
+    repo.mkdir()
+    _git(repo, "init", "-q")
+    _git(repo, "config", "user.email", "t@t.t")
+    _git(repo, "config", "user.name", "t")
+    return repo
+
+
+def test_squashed_two_version_commit_yields_both(tmp_path, scripts_path, monkeypatch):
+    """THE 2026-08-05 REGRESSION. v0.95.0 and v0.95.1 were squashed into ONE commit.
+    plugin.json holds exactly one version, so the commit-walk saw only 0.95.1 and
+    v0.95.0 shipped with no Release while its changelog section promised one.
+
+    Same defect as the 2026-07-30 seven-version incident, one layer in: that was
+    many versions across many COMMITS, this is many versions inside ONE. Walking the
+    range cannot see it; only the changelog can, because the changelog is the claim
+    of record.
+    """
+    rg = _import(scripts_path)
+    repo = _repo(tmp_path, "squash")
+    before = _commit_versions(repo, "0.94.0", ["0.94.0"])
+    head = _commit_versions(repo, "0.95.1", ["0.94.0", "0.95.0", "0.95.1"])
+
+    monkeypatch.chdir(repo)
+    got = rg.versions_introduced(before, head)
+    assert [g["version"] for g in got] == ["0.95.0", "0.95.1"]
+    # Both anchor to the squash commit, because that is genuinely where both landed.
+    assert {g["commit"] for g in got} == {head}
+
+
+def test_changelog_only_version_is_still_released(tmp_path, scripts_path, monkeypatch):
+    """A version documented but never written to plugin.json at all. The changelog
+    promises it to consumers, so it gets a Release."""
+    rg = _import(scripts_path)
+    repo = _repo(tmp_path, "cl-only")
+    before = _commit_versions(repo, "0.80.0", ["0.80.0"])
+    head = _commit_versions(repo, "0.80.0", ["0.80.0", "0.81.0"])
+
+    monkeypatch.chdir(repo)
+    assert [g["version"] for g in rg.versions_introduced(before, head)] == ["0.81.0"]
+
+
+def test_changelog_pass_respects_the_floor(tmp_path, scripts_path, monkeypatch):
+    """LOAD-BEARING on a shallow or rewritten history. If `before` has no readable
+    changelog, every documented version looks fresh — without the floor the step
+    would try to create a Release for the entire back catalogue."""
+    rg = _import(scripts_path)
+    repo = _repo(tmp_path, "floor")
+    before = _commit_versions(repo, "0.94.0", ["0.94.0"])
+    head = _commit_versions(repo, "0.95.0", ["0.10.0", "0.48.9", "0.94.0", "0.95.0"])
+
+    monkeypatch.chdir(repo)
+    got = [g["version"] for g in rg.versions_introduced(before, head)]
+    assert got == ["0.95.0"]          # 0.10.0 and 0.48.9 are below DEFAULT_FLOOR
+    assert "0.48.9" not in got
+
+
+def test_no_changelog_does_not_break_the_commit_walk(tmp_path, scripts_path, monkeypatch):
+    """A repo with no docs/changelog.md must still release from plugin.json. The
+    changelog pass degrades to empty rather than failing the release step."""
+    rg = _import(scripts_path)
+    repo = _repo(tmp_path, "nocl")
+    before = _commit_version(repo, "0.90.0")
+    head = _commit_version(repo, "0.91.0")
+
+    monkeypatch.chdir(repo)
+    assert [g["version"] for g in rg.versions_introduced(before, head)] == ["0.91.0"]
+
+
+def test_results_are_version_ordered(tmp_path, scripts_path, monkeypatch):
+    """Numeric order, not lexical and not commit order — 0.9.0 before 0.10.0."""
+    rg = _import(scripts_path)
+    repo = _repo(tmp_path, "order")
+    before = _commit_versions(repo, "0.94.0", ["0.94.0"])
+    head = _commit_versions(repo, "0.94.0", ["0.94.0", "0.100.0", "0.95.0", "0.96.0"])
+
+    monkeypatch.chdir(repo)
+    got = [g["version"] for g in rg.versions_introduced(before, head)]
+    assert got == ["0.95.0", "0.96.0", "0.100.0"]

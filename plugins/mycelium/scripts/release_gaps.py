@@ -92,6 +92,16 @@ def _version_at(commit: str) -> str | None:
     return None
 
 
+def _changelog_at(commit: str) -> set[str]:
+    """Documented versions in docs/changelog.md as of `commit`. Empty on any failure —
+    a missing or unreadable changelog must not fail the release step; the gap check is
+    the backstop for anything this misses."""
+    try:
+        return set(parse_changelog_versions(_git("show", f"{commit}:docs/changelog.md")))
+    except Exception:  # noqa: BLE001 — unreadable history degrades, never blocks a release
+        return set()
+
+
 def versions_introduced(before: str, head: str) -> list[dict]:
     """Versions this push adds, each paired with the commit that first set it.
 
@@ -121,6 +131,41 @@ def versions_introduced(before: str, head: str) -> list[dict]:
         if v and v not in seen:
             seen[v] = c
             out.append({"version": v, "commit": c})
+
+    # SECOND PASS: versions documented in the CHANGELOG but never visible in any
+    # commit's plugin.json.
+    #
+    # plugin.json holds exactly ONE version, so the pass above sees one version per
+    # commit. A SQUASH MERGE carrying two version bumps therefore yields one — the
+    # last. That is what happened on 2026-08-05: v0.95.0 and v0.95.1 were squashed
+    # into a single commit, plugin.json read 0.95.1, and v0.95.0 got no Release
+    # despite a full changelog section promising one to consumers.
+    #
+    # This is the SAME defect the 2026-07-30 seven-version incident produced, one
+    # layer in: that one was multiple versions across multiple COMMITS, fixed by
+    # walking the range; this is multiple versions inside ONE commit, and walking
+    # the range cannot see it. Both times the backstop caught what the primary
+    # mechanism missed, which is the backstop working and the primary mechanism
+    # still needing the fix — a gate that only ever passes because something behind
+    # it catches the miss is not doing its job.
+    #
+    # The changelog is the right source because it is the CLAIM OF RECORD: if a
+    # version has a section there, a consumer can reasonably expect a Release.
+    # Anchored to the commit where the section first appears in the range.
+    if not zeroish:
+        base_documented = _changelog_at(before)
+        floor_key = version_key(DEFAULT_FLOOR)
+        for c in commits:
+            fresh = _changelog_at(c) - base_documented
+            for v in sorted(fresh, key=version_key):
+                # Floor guard is load-bearing on a shallow or rewritten history: if
+                # `before` has no readable changelog, `fresh` becomes EVERY documented
+                # version, and without this the step would try to create 279 Releases.
+                if v not in seen and version_key(v) >= floor_key:
+                    seen[v] = c
+                    out.append({"version": v, "commit": c})
+
+    out.sort(key=lambda d: version_key(d["version"]))
     return out
 
 
