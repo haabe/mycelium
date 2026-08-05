@@ -40,14 +40,21 @@ if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -d "${CLAUDE_PLUGIN_ROOT}/skills" ]; th
 elif [ -d "$SCRIPT_DIR/../../skills" ]; then
   PLUGIN_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"            # running from a git clone
 else
-  PLUGIN_ROOT="$HOME/.claude/plugins/cache/mycelium-plugin/mycelium"  # cache fallback
+  # NO GUESSED PATH, v0.88.0. This used to fall back to
+  # $HOME/.claude/plugins/cache/mycelium-plugin/mycelium — a literal that never
+  # resolved: the marketplace directory is `haabe-mycelium` and the cache is
+  # versioned (.../mycelium/0.87.0/). Its only effect was to make the error
+  # below name a directory that has never existed on any machine, sending the
+  # reader to look for the wrong thing. A plugin cannot know where it is
+  # installed; when the two real signals fail, say so instead of guessing.
+  PLUGIN_ROOT=""
 fi
 PROJECT_ROOT="${1:-$PWD}"
 DEST="$PROJECT_ROOT/.claude"
 VENDOR="$DEST/mycelium"
 
-if [ ! -d "$PLUGIN_ROOT/skills" ]; then
-  echo "ERROR: cannot find the Mycelium plugin (no skills/ dir at '$PLUGIN_ROOT')." >&2
+if [ -z "$PLUGIN_ROOT" ] || [ ! -d "$PLUGIN_ROOT/skills" ]; then
+  echo "ERROR: cannot find the Mycelium plugin (no skills/ dir at '${PLUGIN_ROOT:-<unresolved>}')." >&2
   echo "       Run this script from inside a Mycelium checkout, or set" >&2
   echo "       CLAUDE_PLUGIN_ROOT to the plugins/mycelium path and re-run." >&2
   exit 1
