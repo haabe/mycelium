@@ -177,6 +177,13 @@ Any **Red** cell (either table) gets a bolded `**Red**` + a one-line `Blocking:`
 
 Keep the date in the heading — `check_bvssh_reconcile.py` matches heading dates against `assessment_history` dates to detect orphans.
 
+
+## Prior findings first (added v0.96.0)
+
+Before producing new findings, **rule on the previous run's** — per `${CLAUDE_PLUGIN_ROOT}/engine/canvas-guidance.yml#prior_findings_first`. For each: CLOSED (name what closed it), STILL-OPEN (carry it forward with a horizon), or DECLINED (a reason AND a re-open trigger). If there is no prior run, say so and continue.
+
+**Scoring goes first because it is the boring half.** A periodic instrument that produces findings and never scores its old ones accumulates a ranking nobody reads — `theory-audit-2026-04-17.md` ranked its gaps correctly and sat unconsumed for four months. Anything placed after the interesting work is what a long session drops.
+
 ## Theory Citations
 - Smart: Sooner Safer Happier (BVSSH framework)
 - Willis & Humble: CALMS (Willis coined CAMS at DevOpsDays 2010, Humble added Lean -- explains WHY DORA outcomes are what they are)

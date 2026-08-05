@@ -716,6 +716,62 @@ action_flags:
 #     a MISSING SIGNAL track
 #   - assumptions with validated: false carrying confidence > 0.5 (stakeholder
 #     belief not yet externally checked)
+prior_findings_first:
+  # THE SYMMETRIC HALF OF learning_target_coupling, added 2026-08-05.
+  #
+  # That convention governs the INPUT side: a feedback-gathering activity must target an
+  # open gap, so scarce feedback capacity retires something. It is validated, grep-detectable
+  # and checked by canvas-health 8d — and it covers only three skills, all of which ASK
+  # questions.
+  #
+  # NOTHING governed the OUTPUT side. Of seven finding-PRODUCING instruments, six had no
+  # coupling at all: theory-fidelity, framework-health, devils-advocate, bvssh-check,
+  # corrections-audit, dora-check. The framework guaranteed that questions you ASK target an
+  # open gap, and did nothing to ensure findings you PRODUCE are ever read again.
+  #
+  # THE WORKED FAILURE. `theory-audit-2026-04-17.md` graded Wardley fidelity and ranked its
+  # gaps — climatic patterns zero of ~30 HIGH, gameplay 4-5 of 64+ HIGH, inertia not modelled.
+  # The ranking was correct. **Nothing consumed it for four months**, while the map was
+  # repeatedly described as strategy. It surfaced 2026-08-05 only because an agent happened to
+  # search before proposing, one turn after logging a correction about not doing so. An audit
+  # that ranks work and is never re-read is the same shape as a check that runs and is never
+  # looked at.
+  principle: |
+    A periodic instrument's FIRST action is to rule on its own previous run's findings —
+    before producing any new ones. For each prior finding: CLOSED (with what closed it),
+    STILL-OPEN (with a horizon), or DECLINED (with a reason and a re-open trigger).
+  ordering_is_the_mechanism: |
+    Scoring goes FIRST, not last, and the ordering is the whole point rather than a
+    stylistic preference. The failure is never dishonesty — producing findings is
+    interesting and scoring old ones is boring, so anything placed after the interesting
+    work is what gets dropped when a session runs long. The same ordering was shipped in
+    /mycelium:wardley-map Step 0 (v0.95.0) for exactly this reason, and it is the reason
+    that step is numbered 0 rather than 9.
+  declined_is_first_class: |
+    DECLINED is a real outcome and must not be avoided. A gap that is genuinely not worth
+    closing for this project should be declined in writing WITH A RE-OPEN TRIGGER — not
+    left open forever to be re-proposed every audit, and not silently dropped. Worked
+    example 2026-08-05: Wardley's gameplay library (64+ patterns) and doctrine (~40) were
+    declined because most gameplay needs market power a zero-adopter project does not hold
+    and doctrine is attribution rather than capability — with the trigger recorded as "if
+    adoption arrives, re-run the decision rather than inherit it".
+  find_the_prior_run: |
+    An instrument that cannot LOCATE its previous output cannot score it. Each periodic
+    skill therefore writes to a predictable, dated path rather than "the decision log or a
+    report file" — the vagueness that left the 2026-04-17 audit findable only by accident.
+  applies_to:
+    - "/mycelium:theory-fidelity — .claude/evals/theory-audit-YYYY-MM-DD.md"
+    - "/mycelium:framework-health"
+    - "/mycelium:bvssh-check"
+    - "/mycelium:corrections-audit"
+    - "/mycelium:dora-check"
+    - "/mycelium:wardley-map — already implemented as Step 0 (climatic predictions), v0.95.0"
+  not_a_new_artifact: |
+    Deliberately NOT a central open-findings register. This project's standing complaint
+    about itself (opp-019) is that it adds mechanisms and never removes them, and a new
+    register would need its own reader — the same defect one layer up. Findings stay where
+    the instrument already writes them; what changes is that the next run must read them.
+
 learning_target_coupling:
   principle: |
     When a feedback-gathering activity is being designed (an interview, an
