@@ -2,9 +2,12 @@ active_diamonds:
   - id: l0-purpose
     scale: L0
     phase: discover
+    confidence: 0.3  # required v0.92.0+
   - id: l1-strategy
     scale: L1
     phase: discover
+    confidence: 0.3  # required v0.92.0+
   - id: l4-delivery
     scale: L4
     phase: deliver
+    confidence: 0.3  # required v0.92.0+

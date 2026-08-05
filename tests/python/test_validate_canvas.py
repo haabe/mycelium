@@ -265,10 +265,76 @@ def test_validate_diamonds_valid_evidence_type_passes(tmp_path, scripts_path, mo
         "  - id: l0-purpose\n"
         "    scale: L0\n"
         "    phase: deliver\n"
+        "    confidence: 0.7\n"  # required as of v0.92.0; this fixture is about evidence_type
         "    evidence_type: data-supported\n"
     )
     errors = validator.validate_diamonds(canvas_dir, validator.build_registry())
     assert errors == [], f"Valid evidence_type should pass: {errors}"
+
+
+def test_validate_diamonds_missing_confidence_fails(tmp_path, monkeypatch, scripts_path):
+    """A diamond without `confidence` is REJECTED (v0.92.0).
+
+    diamond-rules.md spawns L3 from L2 only when "opportunities have sufficient
+    evidence" and L4 from L3 only when "solutions pass confidence threshold" — so a
+    spawn gate consults this field. It cannot be optional at the point the gate reads
+    it. Before this, absent was indistinguishable from recorded: one downstream
+    consumer defaulted it to 0.5, which reads as a deliberate mid position and passed
+    checks a real 0.5 would have passed. Absent is not low confidence, it is no
+    position.
+    """
+    validator = _import_validator(scripts_path)
+    _point_at_real_schemas(validator, monkeypatch)
+    canvas_dir = tmp_path / ".claude" / "canvas"
+    canvas_dir.mkdir(parents=True)
+    diamonds_dir = tmp_path / ".claude" / "diamonds"
+    diamonds_dir.mkdir(parents=True)
+    (diamonds_dir / "active.yml").write_text(
+        "active_diamonds:\n"
+        "  - id: l0-purpose\n"
+        "    scale: L0\n"
+        "    phase: discover\n"
+    )
+    errors = validator.validate_diamonds(canvas_dir, validator.build_registry())
+    assert any("confidence" in e for e in errors), (
+        f"Diamond without confidence must be rejected, got: {errors}"
+    )
+
+
+def test_validate_diamonds_progression_ruling_enum_enforced(tmp_path, monkeypatch, scripts_path):
+    """`progression_ruling` accepts only the three rulings, and rejects prose.
+
+    Written by /mycelium:diamond-progress on every assessment as of v0.92.0. It is
+    enumerated on purpose: the field's only prior consumer fell back to grepping
+    decision-log prose for "block"/"gate"/"insufficient", which any paragraph
+    EXPLAINING the gates satisfies without a gate having fired. A free-text ruling
+    would reproduce that ambiguity inside the structured field that exists to end it.
+    """
+    validator = _import_validator(scripts_path)
+    _point_at_real_schemas(validator, monkeypatch)
+    canvas_dir = tmp_path / ".claude" / "canvas"
+    canvas_dir.mkdir(parents=True)
+    diamonds_dir = tmp_path / ".claude" / "diamonds"
+    diamonds_dir.mkdir(parents=True)
+    base = (
+        "active_diamonds:\n"
+        "  - id: l0-purpose\n"
+        "    scale: L0\n"
+        "    phase: discover\n"
+        "    confidence: 0.2\n"
+    )
+    registry = validator.build_registry()
+
+    (diamonds_dir / "active.yml").write_text(base + "    progression_ruling: blocked\n")
+    assert validator.validate_diamonds(canvas_dir, registry) == []
+
+    (diamonds_dir / "active.yml").write_text(
+        base + '    progression_ruling: "blocked on insufficient evidence"\n'
+    )
+    errors = validator.validate_diamonds(canvas_dir, registry)
+    assert any("progression_ruling" in e for e in errors), (
+        f"Prose ruling must be rejected, got: {errors}"
+    )
 
 
 def test_validate_diamonds_valid_passes(tmp_path, scripts_path, monkeypatch):

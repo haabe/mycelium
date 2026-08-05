@@ -18,7 +18,19 @@
 #   _meta:
 #     version: <integer>           # Incremented on each meaningful update
 #     last_validated: <YYYY-MM-DD> # Date the content was last confirmed accurate
-#     evidence_type: <string>      # interview | survey | analytics | speculation | assumption
+#     evidence_type: <string>      # Gilad's ladder — see
+#                                  # schemas/canvas/_common.schema.json#/$defs/evidence_type
+#                                  # (speculation | anecdotal | data-supported |
+#                                  #  test-validated | launch-validated). This comment
+#                                  # previously listed `interview | survey | analytics |
+#                                  # speculation | assumption`, which CONFLATED METHOD WITH
+#                                  # STRENGTH: interview/survey/analytics say how evidence
+#                                  # was OBTAINED, which is what `source_class` and the
+#                                  # provenance method tags carry. A canvas could not answer
+#                                  # "how strong is this?" without first disambiguating
+#                                  # "how was it got?". Corrected 2026-08-05 after an agent
+#                                  # wrote `evidence_type: interview` — legal per this list,
+#                                  # off-enum per the schema that actually validates.
 #     structural_level: <string>   # One of: list | schema | taxonomy | reference
 #
 # structural_level (from aiops3000's "spectrum of structured knowledge"):

@@ -2,7 +2,43 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-08-04.
+**Last updated**: 2026-08-05.
+
+## v0.92.0 - absent read as negative, in four places
+
+Four fixes from one dogfood session. Three are the same defect: **a field that is
+missing gets read as a field that says something.**
+
+**`confidence` is now required on a diamond.** `diamond-rules.md` gates L2→L3 on
+"opportunities have sufficient evidence" and L3→L4 on "solutions pass confidence
+threshold", and twelve skills read the field — but the schema left it optional, so
+consumers had to invent a value when it was absent. The auto-dogfood evaluator chose
+`0.5`, which reads as a deliberate middle position and passes every check a real 0.5
+would pass. "Never assessed" and "assessed and unconvinced" became the same state.
+`/interview` already writes `0.15` at birth, so this enforces what the framework
+already told you to do.
+
+*Upgrading*: a diamond without `confidence` now fails `validate_canvas.py`. Add the
+value you would have defended anyway; do not add `0.5` to silence it, since that is
+the exact ambiguity this removes.
+
+**`/diamond-progress` now writes `progression_ruling`.** The field was read by the
+dogfood evaluator and written by no skill, so the rigorous check — is there a recorded
+ruling on the diamond — was dead code, and every `progression_blocked` assertion fell
+through to grepping the decision log for words like "block" and "insufficient". Any
+paragraph *explaining* the gates satisfies that grep without a gate having fired. The
+ruling is now written when the verdict forms, on all three outcomes **including the
+pass**, and it is an enum (`progressed` | `blocked` | `needs-evidence`) rather than
+prose.
+
+**Two `evidence_type` vocabularies collapsed into one.** A comment in
+`canvas-guidance.yml` published `interview | survey | analytics | speculation |
+assumption`, which mixes *how evidence was obtained* with *how strong it is*; the
+schema that actually validates `$ref`s Gilad's ladder. An agent wrote
+`evidence_type: interview` — legal per the comment, invalid per the schema. And
+`/interview` instructed writing `evidence_type: internal_stakeholder`, a `source_class`
+value in a strength field, which produced a schema-invalid diamond. Method belongs in
+`source_class` and the provenance tags; strength belongs on the ladder.
 
 ## v0.91.1 - a test helper that returned false verdicts, one loudly and one silently
 
