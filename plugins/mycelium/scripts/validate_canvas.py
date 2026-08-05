@@ -391,6 +391,114 @@ def validate_diamonds(canvas_dir: Path, registry: Registry) -> list[str]:
     return errors
 
 
+def _ost_declared_roots(data: dict) -> tuple[list[str] | None, list[str]]:
+    """Resolve the declared roots. Returns (root_ids, errors).
+
+    root_ids is None for a single-root file, where `rolls_up_to` has nothing to
+    resolve against. Split out of `ost_root_errors` to keep both halves under the
+    repo's complexity ceiling: a check that polices canvas quality should meet the
+    code policy rather than raise it for itself (same call as v0.91.0's scan split).
+    """
+    errors = []
+    singular = data.get("desired_outcome")
+    roots = data.get("desired_outcomes")
+
+    if singular is not None and roots is not None:
+        errors.append(
+            "opportunities.yml :: declares BOTH desired_outcome and desired_outcomes "
+            "-- pick one. Two competing declarations of the tree root leave every "
+            "consumer to guess which wins."
+        )
+
+    if roots is None or not isinstance(roots, list):
+        return None, errors  # shape of a malformed list is the schema's job
+
+    ids: list[str] = []
+    for i, root in enumerate(roots):
+        if not isinstance(root, dict):
+            continue
+        rid = root.get("id")
+        if not rid:
+            continue
+        if rid in ids:
+            errors.append(
+                f"opportunities.yml :: desired_outcomes.{i} :: duplicate root id "
+                f"'{rid}' -- rolls_up_to could not resolve unambiguously."
+            )
+        else:
+            ids.append(rid)
+    return ids, errors
+
+
+def _ost_opportunity_root_errors(data: dict, ids: list[str] | None) -> list[str]:
+    """Check each opportunity names a root that exists."""
+    errors = []
+    for i, opp in enumerate(data.get("opportunities") or []):
+        if not isinstance(opp, dict):
+            continue
+        label = opp.get("name", "?")
+        target = opp.get("rolls_up_to")
+
+        if ids is None:
+            if target:
+                errors.append(
+                    f"opportunities.yml :: opportunities.{i} ({label}) sets "
+                    f"rolls_up_to='{target}' but the file declares no "
+                    f"desired_outcomes -- the reference points at nothing."
+                )
+            continue
+
+        if not target:
+            errors.append(
+                f"opportunities.yml :: opportunities.{i} ({label}) has no "
+                f"rolls_up_to, and the file declares {len(ids)} roots "
+                f"({', '.join(ids)}). An untagged opportunity in a multi-root "
+                f"tree has no defined parent."
+            )
+        elif target not in ids:
+            errors.append(
+                f"opportunities.yml :: opportunities.{i} ({label}) rolls_up_to "
+                f"'{target}', which is not a declared root. Declared: "
+                f"{', '.join(ids) or '(none)'}."
+            )
+    return errors
+
+
+def ost_root_errors(canvas_dir: Path) -> list[str]:
+    """Every opportunity in a multi-root OST must name the root it serves.
+
+    WHY THIS EXISTS. An OST rooted on a metric the project does not steer by
+    will faithfully optimise the wrong thing: the tree stays busy while the
+    stuck thing stays stuck. The dogfood project ran 29 open opportunities under
+    a single root declaring `north_star_input_ref: off_north_star`, whose own
+    note said user-surfaced opportunities belong in a separate tree — while five
+    such opportunities sat in it, carrying real cohort-tester evidence.
+
+    A SECOND FILE WAS THE OBVIOUS FIX AND IT IS WRONG TWICE. The ID references
+    pointing into the canvas break (286 of them in the dogfood repo alone), and
+    the new file is read by no script, gate or render — the built-not-wired
+    defect this framework audits others for. So the split is logical: roots are
+    declared together in `desired_outcomes`, and opportunities name theirs.
+
+    Untagged opportunities in a multi-root file are an ERROR rather than a
+    default-to-first, because defaulting is exactly how an opportunity ends up
+    under a root nobody chose for it — the original problem, one layer down.
+    """
+    path = canvas_dir / "opportunities.yml"
+    if not path.is_file():
+        return []
+    try:
+        with open(path) as f:
+            data = yaml.safe_load(f)
+    except (yaml.YAMLError, OSError):
+        return []  # parse failures are reported by validate_all_yaml_parses
+    if not isinstance(data, dict):
+        return []
+
+    ids, errors = _ost_declared_roots(data)
+    return errors + _ost_opportunity_root_errors(data, ids)
+
+
 def enum_consistency_errors(canvas_dir: Path) -> list[str]:  # noqa: C901
     # C901 (12 > 10) accepted, not deferred. This is ONE concern — the
     # evidence_type/source_class swap detector — whose branch count comes from
@@ -624,6 +732,7 @@ def main():
     # be in their enum EVERYWHERE they appear, including undeclared entry-level
     # occurrences that additionalProperties waves past per-schema $refs.
     all_errors.extend(enum_consistency_errors(canvas_dir))
+    all_errors.extend(ost_root_errors(canvas_dir))
 
     # Trace edge resolution + cycle detection
     graph, all_ids, collect_errors = collect_trace_graph(canvas_dir)

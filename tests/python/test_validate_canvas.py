@@ -836,3 +836,102 @@ def test_enum_consistency_passes_valid_values(tmp_path, scripts_path, monkeypatc
         "opportunities:\n  - id: opp-1\n    evidence_type: data-supported\n    source_class: external_human\n"
     )
     assert validator.enum_consistency_errors(canvas_dir) == []
+
+
+# ---------------------------------------------------------------------------
+# Multi-root OST (v0.93.0). An OST rooted on a metric the project does not steer
+# by will faithfully optimise the wrong thing. These pin the enforcement that
+# makes a second root usable without breaking the ID references pointing into
+# the canvas, or creating a second file nothing reads.
+# ---------------------------------------------------------------------------
+
+
+def _opps(tmp_path, body: str):
+    canvas_dir = tmp_path / ".claude" / "canvas"
+    canvas_dir.mkdir(parents=True, exist_ok=True)
+    (canvas_dir / "opportunities.yml").write_text(body)
+    return canvas_dir
+
+
+TWO_ROOTS = """
+desired_outcomes:
+  - id: framework
+    metric: framework_correctness
+    north_star_input_ref: off_north_star
+  - id: adoption
+    metric: products_shipped_using_mycelium
+    north_star_input_ref: products_shipped
+opportunities:
+"""
+
+
+def test_single_root_file_needs_no_rolls_up_to(tmp_path, scripts_path):
+    validator = _import_validator(scripts_path)
+    canvas_dir = _opps(
+        tmp_path,
+        "desired_outcome:\n  metric: framework_correctness\n"
+        "opportunities:\n  - name: a\n    provenance: {}\n",
+    )
+    assert validator.ost_root_errors(canvas_dir) == []
+
+
+def test_rolls_up_to_without_declared_roots_is_an_error(tmp_path, scripts_path):
+    """The reference points at nothing. Silent here would be the built-not-wired
+    shape: a field written, read by no root, changing nothing."""
+    validator = _import_validator(scripts_path)
+    canvas_dir = _opps(
+        tmp_path,
+        "desired_outcome:\n  metric: framework_correctness\n"
+        "opportunities:\n  - name: a\n    provenance: {}\n    rolls_up_to: adoption\n",
+    )
+    errors = validator.ost_root_errors(canvas_dir)
+    assert any("points at nothing" in e for e in errors), errors
+
+
+def test_declaring_both_root_forms_is_an_error(tmp_path, scripts_path):
+    validator = _import_validator(scripts_path)
+    canvas_dir = _opps(
+        tmp_path,
+        "desired_outcome:\n  metric: one\n" + TWO_ROOTS + "  - name: a\n    provenance: {}\n",
+    )
+    assert any("BOTH" in e for e in validator.ost_root_errors(canvas_dir))
+
+
+def test_untagged_opportunity_in_multi_root_file_is_an_error(tmp_path, scripts_path):
+    """NOT default-to-first. Defaulting is how an opportunity ends up under a
+    root nobody chose for it -- the original problem, one layer down."""
+    validator = _import_validator(scripts_path)
+    canvas_dir = _opps(tmp_path, TWO_ROOTS + "  - name: a\n    provenance: {}\n")
+    errors = validator.ost_root_errors(canvas_dir)
+    assert any("no defined parent" in e for e in errors), errors
+
+
+def test_rolls_up_to_must_resolve_to_a_declared_root(tmp_path, scripts_path):
+    validator = _import_validator(scripts_path)
+    canvas_dir = _opps(
+        tmp_path,
+        TWO_ROOTS + "  - name: a\n    provenance: {}\n    rolls_up_to: typo-root\n",
+    )
+    errors = validator.ost_root_errors(canvas_dir)
+    assert any("not a declared root" in e for e in errors), errors
+
+
+def test_duplicate_root_ids_rejected(tmp_path, scripts_path):
+    validator = _import_validator(scripts_path)
+    canvas_dir = _opps(
+        tmp_path,
+        TWO_ROOTS.replace("id: adoption", "id: framework")
+        + "  - name: a\n    provenance: {}\n    rolls_up_to: framework\n",
+    )
+    assert any("duplicate root id" in e for e in validator.ost_root_errors(canvas_dir))
+
+
+def test_well_formed_multi_root_file_passes(tmp_path, scripts_path):
+    validator = _import_validator(scripts_path)
+    canvas_dir = _opps(
+        tmp_path,
+        TWO_ROOTS
+        + "  - name: a\n    provenance: {}\n    rolls_up_to: framework\n"
+        + "  - name: b\n    provenance: {}\n    rolls_up_to: adoption\n",
+    )
+    assert validator.ost_root_errors(canvas_dir) == []

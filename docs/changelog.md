@@ -4,6 +4,51 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-05.
 
+## v0.93.0 - an OST can now have more than one root, because one was rooted on the wrong metric
+
+**An OST rooted on a metric the project does not steer by will faithfully optimise the
+wrong thing.** The tree stays busy; the stuck thing stays stuck.
+
+Found in dogfood: 33 opportunities, 29 open, all under one root declaring
+`north_star_input_ref: off_north_star`. That root's own note said user-surfaced
+opportunities belong in a separate tree keyed to a real north-star metric — and five
+such opportunities were already sitting in it. Meanwhile the north star read 0 of 10,
+and the diamond gating it was the project's least confident.
+
+**A second file was the obvious fix and it is wrong twice.** Every
+`opportunities.yml#opp-NNN` reference into the canvas breaks (286 in the dogfood repo),
+and the new file is read by no script, gate or render — built-not-wired, the defect this
+framework audits others for.
+
+So the split is logical. `desired_outcomes:` declares several roots in the file the
+opportunities already live in; each opportunity names its root with `rolls_up_to:`.
+
+```yaml
+desired_outcomes:
+  - id: framework
+    metric: framework_correctness
+    north_star_input_ref: off_north_star     # say it, don't leave it blank
+  - id: adoption
+    metric: products_shipped_using_mycelium
+    north_star_input_ref: products_shipped
+
+opportunities:
+  - name: "..."
+    rolls_up_to: adoption
+```
+
+`validate_canvas.py` enforces it: declaring both root forms is an error, root ids must be
+unique, `rolls_up_to` must resolve, and an **untagged opportunity in a multi-root file is
+an error rather than a default-to-first** — defaulting is how an opportunity ends up under
+a root nobody chose for it.
+
+`ost-render` renders one subtree per root and must print `north_star_input_ref` on the
+root node, including the literal `off_north_star`. A render that hides that label makes an
+off-strategy subtree look as load-bearing as an on-strategy one.
+
+*Upgrading*: nothing to do. Single-root files are unchanged and `desired_outcome` stays
+supported — move to `desired_outcomes` only when you actually need a second root.
+
 ## v0.92.0 - absent read as negative, in four places
 
 Four fixes from one dogfood session. Three are the same defect: **a field that is

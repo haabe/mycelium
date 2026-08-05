@@ -39,6 +39,20 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
 
 1. **Define the desired outcome** at the top of the tree. This comes from the north star metric or current strategic goal.
 
+   **If the outcome you are about to write is NOT a north-star input, say so in the root**
+   via `north_star_input_ref: off_north_star` rather than leaving it blank. A blank reads as
+   on-strategy by default, and an OST rooted on a metric the project does not steer by will
+   faithfully optimise the wrong thing — the tree stays busy while the stuck thing stays stuck.
+
+   **When a second kind of outcome appears — typically the project's own users surfacing
+   opportunities alongside internal/dogfood ones — add a SECOND ROOT rather than starting a
+   second FILE.** Move `desired_outcome` to a `desired_outcomes:` list, give each root an `id`,
+   and tag every opportunity with `rolls_up_to: <root id>`. A separate file breaks every
+   `opportunities.yml#opp-NNN` reference pointing into this canvas, and is read by no script,
+   gate or render — the built-not-wired failure. `validate_canvas.py` enforces that each
+   `rolls_up_to` resolves; untagged opportunities in a multi-root file are an error, not a
+   default-to-first.
+
 2. **Review all research data**: Interview transcripts, behavioral data, analytics, observation notes.
 
 3. **Extract opportunities** (unmet needs, pain points, desires):
