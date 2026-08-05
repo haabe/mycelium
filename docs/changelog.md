@@ -4,6 +4,41 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-04.
 
+## v0.90.0 - seven checks that fired on correct state
+
+The first `/canvas-health` run under v0.89.0 produced five substantive findings.
+**Four were defects in the checks, not the canvas.** Two more surfaced while acting
+on the report.
+
+The shape they share matters more than the individual bugs: **each check fired on
+something already correct, and satisfying it would have required damaging the
+canvas** — dating a validation nobody performed, closing a task whose reason for
+staying open was written in the field beside it, or "fixing" a Definition of Done
+that was already right. A check that fires on correct state trains its reader to
+skip it, and a skipped check reads as coverage while providing none.
+
+| # | Defect | Dogfood evidence |
+|---|---|---|
+| 1 | Step 5 hardcoded 5 `source_class` values; schema has 6 | 61 phantom violations on a valid `pointer` |
+| 2 | Reply-owed could not order same-day contacts | **2 of 2 flags false** |
+| 3 | ON HOLD could not tell awaited from authored dates | **0 genuine from 4 flags** |
+| 4 | Staleness ignored `_meta.applicability` | 2 evidence-free canvases decaying forever |
+| 5 | Nothing compared canvas-claimed vs installed version | `Mycelium 0.16.1` vs 0.89.0 — **73 releases**, 3 months |
+| 6 | 8c(b) never read `horizon` | 5 of 7 flagged tasks had future horizons |
+| 7 | Build-mode matched earn-verbs inside negations | flagged "**NOT** shipped-a-product-through-it" |
+
+Defect 5 ships as a mechanism rather than prose: `check_canvas_version_drift.py`,
+narrow by design — it reads only `version:` keys that also name the framework, never
+free prose, because canvases legitimately cite historical versions and flagging those
+would make it noise by day seven. UNKNOWN (exit 2) when no plugin.json is readable.
+
+Defect 7 is the sharpest: disclaiming an earn-bar is the natural way to write a
+build-to-learn Definition of Done, so the check would have fired on every well-written
+one.
+
+Tests: `tests/bash/test_canvas_health_check_defects.sh` (17 asserts),
+`tests/python/test_canvas_version_drift.py` (10).
+
 ## v0.89.0 - the stamp that duplicated git, and the rule that contradicted its own doc
 
 Two defects found by asking a question nobody had asked of these fields: **what
