@@ -242,11 +242,15 @@ Notes on the fields:
 
 ## Canvas-state timestamp resolution
 
-Specialists read the timestamp in this order:
-1. `_meta.last_validated` if present.
-2. Top-level `last_updated:` field as fallback.
+Specialists read `_meta.last_validated`. There is no fallback, and that is deliberate.
 
-`diamonds/active.yml` currently uses `last_updated:` at file root; other canvases use `_meta.last_validated`. Spec accepts both. Canvas-side normalization is a separate `/mycelium:canvas-health` concern.
+**Normalized in v0.89.0.** This spec previously accepted a top-level `last_updated:` as a second source, noted that `diamonds/active.yml` used it while every other canvas used `_meta.last_validated`, and deferred the cleanup to `/mycelium:canvas-health`. The cleanup is done: `active.yml` now carries `_meta.last_validated` like everything else, and `last_updated` is gone from the canvas schemas that declared it.
+
+The reason it went rather than being kept in sync: **`last_updated` duplicated a fact git already records authoritatively.** A hand-maintained copy of a machine-knowable fact can only ever drift away from the original, and it drifts silently — on the dogfood repo, 10 of 26 canvases carried a stale one, and the session that fixed them destroyed 27k characters of adjacent content in the process. The field had no code consumer anywhere in the plugin: only schema declarations, prose, and the scaffold that wrote it.
+
+`_meta.last_validated` is kept because it is **not** derivable from git. It records the date a human last confirmed the content accurate, which no VCS can know. If it is stale, the render is stale, and the render says so.
+
+**A render must never substitute the file's git mtime or wall-clock for a missing `_meta.last_validated`.** An absent stamp means nobody has confirmed the content, and a render that fills that gap with a machine timestamp converts "unverified" into "verified today" — the fail-open this whole normalization exists to remove. Emit the as-of line with `unvalidated` instead.
 
 ## Staleness check distinction
 

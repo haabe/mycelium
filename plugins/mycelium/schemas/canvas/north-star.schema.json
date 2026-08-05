@@ -30,16 +30,6 @@
       "type": "object",
       "description": "Explicit Goodhart's-Law audit block: how this metric could be gamed and what watches for it."
     },
-    "last_updated": {
-      "oneOf": [
-        {
-          "$ref": "_common.schema.json#/$defs/iso_timestamp"
-        },
-        {
-          "type": "null"
-        }
-      ]
-    },
     "_meta": {
       "type": "object"
     }

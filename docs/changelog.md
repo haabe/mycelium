@@ -4,6 +4,52 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-04.
 
+## v0.89.0 - the stamp that duplicated git, and the rule that contradicted its own doc
+
+Two defects found by asking a question nobody had asked of these fields: **what
+reads them?**
+
+**`last_updated` duplicated git.** It recorded when a file last changed — which
+git records authoritatively — so the hand-maintained copy could only drift from
+the original, and drift silently. On the dogfood repo **10 of 26 canvases carried
+a stale one**. Nothing in the plugin read it: five schema declarations, three
+prose files, and the scaffold that wrote it. No script, no hook, no CI job.
+
+It is **removed**, not policed. A freshness check over a duplicate institutionalises
+the defect — a permanent tax on every canvas edit to keep a copy honest, guarding
+a field with no consumer. The session that prompted this destroyed 27k characters
+of adjacent content while maintaining that copy, which is the cost of the
+duplicate arriving before any benefit did.
+
+`_meta.last_validated` **stays**, because it is not derivable from git: it records
+when a *human* last confirmed the content accurate. `diamonds/active.yml` — the
+one file that used `last_updated` alone — now carries `_meta` like everything
+else, closing an inconsistency `render-conventions.md` had flagged and deferred.
+
+**canvas-health contradicted itself on staleness.** Step 3 flagged
+`_meta.last_validated` older than a flat **30 days**; step 7 of the same skill
+applied the differentiated horizons in `engine/evidence-decay.md`. The flat 30 was
+the only staleness number in the skill grounded in nothing — and it flagged **20 of
+25** dogfood canvases, including `purpose.yml`, a strategic file validated 46 days
+earlier against a **180-day** horizon. Fresh by the framework's own theory, stale
+by its own check. A check that fires on 80% of a corpus teaches its reader to skip
+it, which is what had happened.
+
+Step 3 now inherits the category of the content it covers, via a new canvas→category
+table in `evidence-decay.md`: strategic 180d, technical feasibility 120d,
+user-needs/competitive/market 90d, delivery metrics 30d, regulatory 365d. Unlisted
+files fall back to **90 days**, the median — an unclassified file is unclassified,
+not urgent, and defaulting to the strictest value is how the flat rule got its noise.
+
+Also: the render spec loses its `last_updated` fallback and gains an explicit
+prohibition on substituting git mtime or wall-clock for a missing stamp. An absent
+stamp means nobody confirmed the content; filling it with a machine timestamp would
+convert "unverified" into "verified today".
+
+Upgrade-safe: every touched schema keeps `additionalProperties` permissive, so a
+canvas still carrying `last_updated` validates fine — the field is simply no longer
+declared, read, or written. `tests/bash/test_canvas_stamp_normalization.sh`, 21 asserts.
+
 ## v0.88.0 - a plugin cannot know its own install path
 
 `hooks.codex.json` and `hooks.cursor.json` shipped every hook command as
