@@ -766,6 +766,35 @@ prior_findings_first:
     - "/mycelium:corrections-audit"
     - "/mycelium:dora-check"
     - "/mycelium:wardley-map — already implemented as Step 0 (climatic predictions), v0.95.0"
+  route_high_findings: |
+    A finding ranked HIGH must leave the instrument with a HOME, not just a line in a report.
+    Tag an existing opportunity, or create one, on the FRAMEWORK-side root of the OST
+    (`opportunities.yml`, `rolls_up_to: <framework root id>` — see the multi-root support added
+    in v0.93.0). A finding with no home is one that only exists while someone is reading the
+    report it sits in.
+
+    **WHY THE OST AND NOT human-tasks.yml.** human-tasks is scoped, by its own schema
+    description, to "offline human tasks (interviews, observations, outreach)" and its `type`
+    enum is entirely human-contact activities. An audit finding such as "encode the climatic
+    patterns" is agent-executable engineering work, and filing it as an `interview` would be a
+    finding wearing a human-task's clothes — the same category error as the `source_class:
+    cancelled` instruction corrected 2026-08-03. Considered and rejected 2026-08-05, recorded
+    so it is not re-proposed.
+
+    The OST's framework-side root is already where internal findings live: in the dogfood
+    project opp-019 (adds mechanisms, never removes), opp-023 (blind-green), opp-024
+    (built-not-wired), opp-028 and opp-029 are all audit-shaped. They have status, closure
+    protocol, reopen triggers, and readers — `/canvas-health`, `/ost-render`, `/diamond-assess`.
+  why_this_matters_more_than_scoring: |
+    HONEST LIMIT OF THE SCORING RULE ABOVE, stated because it was missed on first design:
+    `prior_findings_first` only fires WHEN SOMEONE RUNS THE INSTRUMENT. If an audit is annual,
+    its findings sleep for a year, and the rule relocates the trigger from "somebody re-reads
+    the document" to "somebody re-runs the skill" — which are similar odds. It would NOT have
+    caught the four-month theory-audit case on its own; it would have caught it on the next
+    audit, which is exactly the event that had not happened.
+
+    Routing is what closes that. An opportunity is read by instruments that run on their own
+    cadence, so the finding stops depending on anyone remembering the audit exists.
   not_a_new_artifact: |
     Deliberately NOT a central open-findings register. This project's standing complaint
     about itself (opp-019) is that it adds mechanisms and never removes them, and a new

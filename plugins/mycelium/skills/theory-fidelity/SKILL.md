@@ -84,10 +84,24 @@ For each claimed theory, record:
    accident. Include the Step 0 rulings in the report so the NEXT audit can score this one.
 
    Separate cheap doc-fidelity fixes from mechanism/schema builds; gate the latter on real
-   need (JiT), not on the audit's enthusiasm. **Every finding ranked HIGH must leave this
-   skill with a home** — a tracked entry with a horizon, or an explicit decline with a
-   re-open trigger. A HIGH finding that exists only as a line in a report is the failure
-   this skill's own Step 0 now exists to catch.
+   need (JiT), not on the audit's enthusiasm.
+
+   **Every finding ranked HIGH must leave this skill with a HOME** — tag an existing
+   opportunity or create one on the FRAMEWORK-side root of the OST (`opportunities.yml`,
+   `rolls_up_to: <framework root id>`), or decline it explicitly with a re-open trigger. Per
+   `${CLAUDE_PLUGIN_ROOT}/engine/canvas-guidance.yml#prior_findings_first.route_high_findings`.
+
+   **This is the half that actually closes the loop, and Step 0 alone does not.** Step 0 fires
+   only when someone RUNS this skill again — so on an annual cadence, findings sleep for a
+   year, and the rule merely moves the trigger from "somebody re-reads the report" to
+   "somebody re-runs the audit". An opportunity is read by instruments on their own cadence
+   (`/canvas-health`, `/ost-render`, `/diamond-assess`), so the finding stops depending on
+   anyone remembering this audit exists.
+
+   **NOT human-tasks.yml.** That canvas is scoped by its own schema to "offline human tasks
+   (interviews, observations, outreach)" and its `type` enum is entirely human-contact
+   activities. A finding like "encode the climatic patterns" is agent-executable engineering
+   work, and filing it as an `interview` would be a finding wearing a human-task's clothes.
 
 ## Output Format
 

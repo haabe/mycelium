@@ -4,6 +4,46 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-05.
 
+## v0.97.0 - scoring findings is not enough; they need somewhere to live
+
+**v0.96.0's scoring rule does not close the loop on its own.** `prior_findings_first` fires
+only *when someone runs the instrument*. On an annual audit cadence, findings sleep for a
+year — the rule relocates the trigger from "somebody re-reads the report" to "somebody
+re-runs the skill", which are similar odds.
+
+It would **not** have caught the four-month theory-audit case by itself. It would have caught
+it on the next audit, which is exactly the event that had not happened.
+
+### A HIGH finding must leave with a home
+
+Tag or create an opportunity on the **framework-side root** of the OST (`rolls_up_to`, using
+the multi-root support from v0.93.0), or decline it with a re-open trigger.
+
+An opportunity is read by instruments on their own cadence — `/canvas-health`,
+`/ost-render`, `/diamond-assess` — so the finding stops depending on anyone remembering the
+audit exists.
+
+### Not `human-tasks.yml`, and not a central register
+
+`human-tasks.yml` is scoped by its own schema to *"offline human tasks (interviews,
+observations, outreach)"*, and its `type` enum is entirely human-contact activities. Filing
+"encode the climatic patterns" there as an `interview` would be an engineering finding wearing
+a human-task's clothes — the same category error as the `source_class: cancelled` instruction
+corrected 2026-08-03. Considered and rejected in writing so it is not re-proposed.
+
+A **central open-findings register** was also rejected: it duplicates state that already lives
+in each instrument's output, which is the drift that removed `last_updated` from 13 canvases
+in v0.89.0 and left a strategy snapshot diverged from the very tasks it summarised.
+
+### `horizon` is now declared
+
+22 occurrences in the dogfood canvas, read by canvas-health 8c(b) to tell a genuinely stale
+task from one legitimately waiting — and declared nowhere. **A field a shipped check depends
+on must be declared**: undeclared means unvalidated, so a typo like `horizion` degrades the
+check silently instead of failing it.
+
+*Upgrading*: nothing breaks.
+
 ## v0.96.0 - findings you produce must be read again
 
 The framework guaranteed that questions you **ask** target an open gap. It did nothing to

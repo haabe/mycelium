@@ -122,6 +122,11 @@
           "reopen_trigger": {
             "type": "string",
             "description": "What would make this closure wrong, stated concretely enough to be checked by someone who was not there. This is the field that turns a stale closure into a detectable one."
+          },
+          "horizon": {
+            "type": "string",
+            "format": "date",
+            "description": "When this task's outcome should be read, ISO-8601. USED IN PRACTICE AND UNDECLARED UNTIL v0.97.0 \u2014 22 occurrences in the dogfood canvas, and canvas-health check 8c(b) reads it to decide whether an open task is genuinely stale or legitimately waiting. A field a shipped check depends on must be declared: undeclared means unvalidated, so a typo like `horizion` degrades the check silently instead of failing."
           }
         },
         "required": [
