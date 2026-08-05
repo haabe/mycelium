@@ -65,6 +65,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -112,6 +113,61 @@ MIN_SOURCES = 2
 #: and the count set aside is printed so the limit is visible.
 POINTER = "pointer"
 
+# METHOD TAGS (added v0.91.0). Canvases annotate HOW a source was obtained inside
+# the `evidence_sources[]` string — "juniors-dev-presentation [interventional — Frida
+# named four-risks unprompted]". That is the method axis G-D2 actually asks about, and
+# it was invisible to this check, which judged diversity over `source_class` alone.
+#
+# The 2026-08-05 dogfood consequence: need-001 carries observed behaviour, an
+# unprompted articulation and an aggregation — three methods — and reported as
+# single-coverage because all three are `external_human`. Acting on that report would
+# have DOWNGRADED correctly-graded evidence. A check whose remedy damages the canvas is
+# worse than one that stays quiet.
+#
+# Only genuine method markers count. Grade words that also appear in brackets
+# (`anecdotal`, `data`, `speculation`) are ladder positions, not methods.
+METHOD_TAGS = {
+    # Human-research methods
+    "behavior_validated",   # observed doing, not reported doing
+    "interventional",       # articulated under a probe / unprompted in a live setting
+    # Technical-evidence methods. Added v0.91.0 because the human vocabulary above
+    # could not describe self-run technical work, and `external_data` was carrying all
+    # of it: a five-run controlled experiment, a blind replication and log forensics
+    # are three methods with three different blind spots and one source_class.
+    "controlled_experiment",  # one-variable controls, exit codes, a stated control arm
+    "blind_replication",      # reproduced by an agent/person given no access to the diagnosis
+    "artifact_forensics",     # logs, caches, on-disk state — evidence that outlives the run
+    "independent_report",     # someone else's published issue/data about the same behaviour
+}
+
+# Set aside like pointers, and for the same reason — they are not independent
+# observation. `aggregated` is a roll-up of sources already counted elsewhere in the
+# tree; `consistency_only` is correlation the project's own devils-advocate Technique 4
+# exists to downgrade. Letting either supply the second method would let a weak source
+# rescue a single-method claim, which is the anti-pattern this check serves.
+NON_METHOD_TAGS = {"aggregated", "consistency_only"}
+
+TAG_RE = re.compile("\\[([a-z][a-z_]{3,30}?)(?:\\s*[\u2014\\-\u2013]|\\])")
+
+
+def _method_tags(prov):
+    """Distinct method tags across a provenance block's evidence_sources.
+
+    Returns (methods, set_aside). Empty methods means the canvas said nothing about
+    method here and the caller must fall back to source_class.
+    """
+    methods, aside = set(), 0
+    for src in prov.get("evidence_sources") or []:
+        if not isinstance(src, str):
+            continue
+        for m in TAG_RE.finditer(src):
+            tag = m.group(1).strip()
+            if tag in METHOD_TAGS:
+                methods.add(tag)
+            elif tag in NON_METHOD_TAGS:
+                aside += 1
+    return methods, aside
+
 #: G-D2 governs research findings, G-D4 governs the OST. Not the whole canvas.
 DISCOVERY_CANVASES = ("opportunities.yml", "user-needs.yml", "scenarios.yml")
 
@@ -149,6 +205,103 @@ def _is_established(prov: dict) -> bool:
     return prov.get("evidence_type") in STRONG_TYPES
 
 
+
+def _tagged_finding(tagged, ctx):
+    """G-D2 verdict when the canvas declared its methods. None means it triangulates.
+
+    Split out of scan() so this rule does not push that function past the complexity
+    ceiling — the check that guards evidence quality should meet the repo's own.
+    """
+    if len(tagged) > 1:
+        return []
+    n = ctx["n"]
+    return [{
+        "rule": "G-D2", "file": ctx["name"], "id": str(ctx["ident"]), "sources": n,
+        "source_class": min(tagged), "pointers_excluded": ctx["n_aside"],
+        "confidence": ctx["prov"].get("confidence"),
+        "detail": (
+            f"{n} source(s) carrying ONE method, `{min(tagged)}` (judged on the "
+            f"canvas's own method tags, not on source_class). Sources can differ and "
+            f"still share a method's blind spot; G-D2 asks for 2+ independent methods. "
+            f"Add a source obtained a different way, or lower the claim to match "
+            f"single-method coverage."
+        ),
+    }]
+
+
+
+def _single_source_finding(prov, name, ident, n):
+    """RULE 1: one source carrying a claim above anecdotal. List, so callers branch once."""
+    if n >= MIN_SOURCES or not _overclaims_on_one_source(prov):
+        return []
+    return [{
+        "rule": "G-D2", "file": name, "id": str(ident), "sources": n,
+        "evidence_type": prov.get("evidence_type"),
+        "confidence": prov.get("confidence"),
+        "detail": (
+            f"one evidence source carrying `{prov.get('evidence_type')}` / "
+            f"confidence {prov.get('confidence')}. G-D2: single-source evidence is "
+            "anecdotal (0.3), regardless of how compelling it feels. Either add a "
+            "second source or lower the claim."
+        ),
+    }]
+
+
+
+def _diversity_finding(prov, classes, ctx, stats):
+    """RULE 2: does this object's evidence span more than one METHOD?
+
+    Lifted out of scan() in v0.91.0. The method-tag path added a branch that pushed
+    scan past the repo's complexity ceiling, and a check that polices evidence quality
+    should meet the repo's own code policy rather than raise it for itself.
+
+    `stats` is mutated: pointers_excluded, unjudgeable_all_pointers,
+    diversity_judgeable, methods_tagged. Returns a list of findings (0 or 1).
+    """
+    name, ident, n = ctx["name"], ctx["ident"], ctx["n"]
+    methods = [c for c in classes if c != POINTER]
+    n_ptr = len(classes) - len(methods)
+    stats["pointers_excluded"] += n_ptr
+    if not methods:
+        stats["unjudgeable_all_pointers"] += 1
+        return []
+
+    # METHOD TAGS WIN WHEN THE CANVAS SUPPLIES THEM. `source_class` is a coarse proxy
+    # for method: a controlled experiment, a blind replication and log forensics are
+    # all `external_data`; observed behaviour and an unprompted articulation are both
+    # `external_human`. Where the canvas annotated HOW a source was obtained, judge on
+    # that rather than guessing from the class.
+    tagged, tags_aside = _method_tags(prov)
+    if tagged:
+        stats["methods_tagged"] += 1
+        stats["pointers_excluded"] += tags_aside
+        stats["diversity_judgeable"] += 1
+        return _tagged_finding(tagged, {
+            "name": name, "ident": ident, "n": n,
+            "n_aside": n_ptr + tags_aside, "prov": prov})
+
+    stats["diversity_judgeable"] += 1
+    if len(set(methods)) > 1:
+        return []
+    return [{
+        "rule": "G-D2", "file": name, "id": str(ident), "sources": n,
+        # Report the METHODS, not classes[0]. When pointers lead the list, classes[0]
+        # is `pointer` and the message read "3 sources, all `pointer`" for an entry
+        # whose single method was internal_desk — naming the wrong culprit on a correct
+        # finding, which is how a true finding gets dismissed as a bug.
+        "source_class": methods[0], "pointers_excluded": n_ptr,
+        "confidence": prov.get("confidence"),
+        "detail": (
+            f"{len(methods)} evidence source(s), all `{methods[0]}`"
+            + (f" ({n_ptr} pointer(s) set aside from {n} total)" if n_ptr else "")
+            + f". The count says {len(methods)}; the coverage says one. Every source "
+            "shares this method's blind spot, so the claim is supported no more "
+            "broadly than a single source of this kind. G-D2 asks for 2+ independent "
+            "evidence types, meaning methods, not repetitions."
+        ),
+    }]
+
+
 def scan(root: Path) -> dict:
     """Classify every in-scope provenance object, then judge what is judgeable."""
     canvas_dir = root / ".claude" / "canvas"
@@ -167,8 +320,9 @@ def scan(root: Path) -> dict:
         _walk_provenance(data, "", found)
         objects.extend((name, ident, prov) for ident, prov in found)
 
-    findings, classified, diversity_judgeable = [], 0, 0
-    pointers_excluded = unjudgeable_all_pointers = 0
+    findings, classified = [], 0
+    stats = {"pointers_excluded": 0, "unjudgeable_all_pointers": 0,
+             "diversity_judgeable": 0, "methods_tagged": 0}
     for name, ident, prov in objects:
         n = len(prov["evidence_sources"])
         classes = prov.get("source_classes")
@@ -177,72 +331,25 @@ def scan(root: Path) -> dict:
             classified += 1
 
         # RULE 1 (G-D2 / G-D4) — judgeable on every object, no classification needed.
-        if n < MIN_SOURCES and _overclaims_on_one_source(prov):
-            findings.append({
-                "rule": "G-D2",
-                "file": name,
-                "id": str(ident),
-                "sources": n,
-                "evidence_type": prov.get("evidence_type"),
-                "confidence": prov.get("confidence"),
-                "detail": (
-                    f"one evidence source carrying `{prov.get('evidence_type')}` / "
-                    f"confidence {prov.get('confidence')}. G-D2: single-source "
-                    "evidence is anecdotal (0.3), regardless of how compelling it "
-                    "feels. Either add a second source or lower the claim."
-                ),
-            })
+        single = _single_source_finding(prov, name, ident, n)
+        if single:
+            findings.extend(single)
             continue
 
         # RULE 2 (G-D2 triangulation) — needs source_classes to say anything.
         if fully and n >= MIN_SOURCES and _is_established(prov):
-            # Pointers are references, not methods. Judge diversity over the
-            # real sources and SAY how many were set aside, rather than either
-            # counting a reference as a method or silently shrinking the claim.
-            methods = [c for c in classes if c != POINTER]
-            n_ptr = len(classes) - len(methods)
-            pointers_excluded += n_ptr
-            if not methods:
-                unjudgeable_all_pointers += 1
-                continue
-            diversity_judgeable += 1
-            if len(set(methods)) == 1:
-                findings.append({
-                    "rule": "G-D2",
-                    "file": name,
-                    "id": str(ident),
-                    "sources": n,
-                    "source_class": methods[0],
-                    "pointers_excluded": n_ptr,
-                    "confidence": prov.get("confidence"),
-                    "detail": (
-                        # Report the METHODS, not classes[0]. When pointers lead
-                        # the list, classes[0] is `pointer` and the message read
-                        # "3 sources, all `pointer`" for an entry whose single
-                        # method was internal_desk — naming the wrong culprit on a
-                        # correct finding, which is how a true finding gets
-                        # dismissed as a bug.
-                        f"{len(methods)} evidence source(s), all "
-                        f"`{methods[0]}`"
-                        + (f" ({n_ptr} pointer(s) set aside from {n} total)"
-                           if n_ptr else "")
-                        + ". The count says "
-                        f"{len(methods)}; the coverage says one. Every source "
-                        "shares this method's blind spot, so the claim is "
-                        "supported no more broadly than a single source of this "
-                        "kind. G-D2 asks for 2+ independent evidence types, "
-                        "meaning methods, not repetitions."
-                    ),
-                })
+            findings.extend(_diversity_finding(
+                prov, classes, {"name": name, "ident": ident, "n": n}, stats))
 
     return {
         "root": str(root),
         "scope": list(DISCOVERY_CANVASES),
         "provenance_objects": len(objects),
         "fully_classified": classified,
-        "diversity_judgeable": diversity_judgeable,
-        "pointers_excluded": pointers_excluded,
-        "unjudgeable_all_pointers": unjudgeable_all_pointers,
+        "diversity_judgeable": stats["diversity_judgeable"],
+        "pointers_excluded": stats["pointers_excluded"],
+        "methods_tagged": stats["methods_tagged"],
+        "unjudgeable_all_pointers": stats["unjudgeable_all_pointers"],
         "findings": findings,
         "unparseable": unparseable,
     }
@@ -292,6 +399,9 @@ def main() -> int:
     print(f"  scope                      : {', '.join(result['scope'])}")
     print(f"  provenance objects         : {result['provenance_objects']}")
     print(f"  declaring source_classes   : {result['fully_classified']}")
+    if result.get("methods_tagged"):
+        print(f"  judged on METHOD TAGS      : {result['methods_tagged']} "
+              f"(the canvas said how the source was obtained; source_class was not guessed from)")
     print(f"  judgeable for triangulation: {result['diversity_judgeable']}")
     if result.get("pointers_excluded"):
         print(f"  pointer sources set aside   : {result['pointers_excluded']} "

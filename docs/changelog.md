@@ -4,6 +4,48 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-04.
 
+## v0.91.0 - the triangulation check could not see the method
+
+G-D2 asks for **2+ independent evidence methods**. The check judged `source_class`,
+which is a coarse proxy for one: observed behaviour and an unprompted articulation are
+both `external_human`; a controlled experiment, a blind replication and log forensics
+are all `external_data`.
+
+**Canvases already annotate the method** — inside the `evidence_sources[]` string:
+`"juniors-dev-presentation [interventional — Frida named four-risks unprompted]"`. The
+check never read it.
+
+**The cost was not a missed finding, it was a harmful one.** `need-001` carries observed
+behaviour, an unprompted articulation and an aggregation — three methods — and reported
+as single-coverage because all three are `external_human`. Acting on that report would
+have **downgraded correctly-graded evidence**. A check whose remedy damages the canvas is
+worse than one that stays quiet.
+
+Method tags now win where the canvas supplies them, with the vocabulary extended for
+technical work — `controlled_experiment`, `blind_replication`, `artifact_forensics`,
+`independent_report` — because the human-research words could not describe self-run
+evidence, which is why `external_data` was carrying all of it.
+
+Two exclusions, both deliberate:
+
+- **Grade words are not methods.** `[anecdotal]`, `[data]`, `[speculation]` appear in the
+  same brackets and are ladder positions.
+- **`aggregated` and `consistency_only` are set aside like pointers.** One rolls up
+  sources already counted elsewhere; the other is correlation the project's own
+  devils-advocate Technique 4 exists to downgrade. Letting either supply the second
+  method would let a weak source rescue a single-method claim — the anti-pattern this
+  check serves.
+
+**Precise in both directions, which is the test that matters.** On the dogfood canvas,
+violations went **9 → 3**, and it **caught one the proxy had missed**: `need-002`, four
+sources all `interventional`. The three that remain are genuinely single-method.
+
+`scan()` was split into `_single_source_finding` and `_diversity_finding` so the new rule
+did not push it past the repo's complexity ceiling — a check that polices evidence quality
+should meet the code policy rather than raise it for itself.
+
+Tests: `tests/python/test_method_aware_triangulation.py` (10).
+
 ## v0.90.0 - seven checks that fired on correct state
 
 The first `/canvas-health` run under v0.89.0 produced five substantive findings.
