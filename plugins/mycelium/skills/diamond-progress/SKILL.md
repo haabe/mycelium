@@ -132,6 +132,34 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
    - Any REVIEW item fails = **blocked** (list specific blockers with suggested skills)
    - Confidence below threshold = **NEEDS EVIDENCE** (list what would help)
 
+   **Write the ruling to the diamond — MANDATORY, on ALL THREE outcomes, added v0.92.0.**
+   Immediately after deciding, set these fields on the assessed diamond in
+   `.claude/diamonds/active.yml`:
+
+   ```yaml
+   progression_ruling: progressed | blocked | needs-evidence   # one of exactly these
+   progression_ruled_at: <YYYY-MM-DD>
+   progression_blockers:                # REQUIRED when ruling is blocked or needs-evidence;
+     - gate: <which gate or threshold>  # omit entirely when progressed
+       reason: <why it did not clear, in your own words>
+       unblocked_by: <the skill or evidence that would clear it>
+   ```
+
+   **Why this is mandatory rather than nice-to-have.** The verdict was previously
+   narrated to the user and written as prose to the decision log, and nowhere else.
+   Nothing downstream could tell a refusal from a narration ABOUT refusal — the only
+   available check was grepping the log for words like "block", "gate" and
+   "insufficient", which any paragraph explaining the framework's philosophy satisfies
+   without a single gate having fired. Discovered 2026-08-05: `progression_ruling` was
+   read by a consumer and written by no skill, so the rigorous path was dead code and
+   every check silently fell through to the prose grep.
+
+   Write it on a PASS too. A field that only appears on failure cannot distinguish
+   "this diamond was assessed and cleared" from "this diamond was never assessed" —
+   which is the same absent-vs-negative confusion that made `confidence` required on
+   the diamond schema in this release. The ruling records that a judgement happened;
+   its value records which way it went.
+
 9. **If progressing**:
    - **At Define→Develop with a product-leaf solution chosen**: open a cycle record in `.claude/canvas/cycle-history.yml` with `cycle_class: product-leaf` and **copy the solution's `ice_score` from `opportunities.yml` into `predicted.ice_score`**. If the solution has no ICE score, STOP — return "Cannot open product-leaf cycle without ICE. Run `/mycelium:ice-score` on the chosen solution first." This is the gate that prevents permanent dark cells in calibration. See `${CLAUDE_PLUGIN_ROOT}/engine/cycle-learning.md#cycle-class`.
    - **Framework-self-development or observation transitions** (no OST solution leaf chosen — e.g., L2 strategy adjustment, cohort-log capture, validator-check ship): open the cycle record with `cycle_class: meta-dogfood` or `cycle_class: observation` as appropriate. `ice_score` may be zero with a `notes:` line stating why. These cycles are excluded from ICE-calibration aggregates by design.

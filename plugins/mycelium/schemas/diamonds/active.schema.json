@@ -100,7 +100,8 @@
         "confidence": {
           "type": "number",
           "minimum": 0.0,
-          "maximum": 1.0
+          "maximum": 1.0,
+          "description": "REQUIRED as of v0.92.0. Gates depend on it \u2014 diamond-rules.md spawns L3 to L4 only when 'solutions pass confidence threshold', and twelve skills read this field. A field a spawn gate consults cannot be optional at the point the gate reads it. An ABSENT value is not low confidence, it is no position, and consumers were defaulting it (0.5 in one evaluator) which made 'never recorded' indistinguishable from 'recorded too high'. /interview already writes 0.15 at birth, so this enforces existing practice rather than inventing a demand."
         },
         "parent": {
           "type": [
@@ -183,12 +184,52 @@
         },
         "notes": {
           "type": "string"
+        },
+        "progression_ruling": {
+          "type": "string",
+          "enum": [
+            "progressed",
+            "blocked",
+            "needs-evidence"
+          ],
+          "description": "Written by /mycelium:diamond-progress on EVERY assessment, v0.92.0+. Records that a progression judgement happened and which way it went. Absent means never assessed \u2014 not passed. Enumerated rather than free text because the only prior consumer grepped decision-log prose for 'block', which any paragraph explaining the gates satisfies without a gate having fired."
+        },
+        "progression_ruled_at": {
+          "type": "string",
+          "format": "date",
+          "description": "ISO-8601 date the progression_ruling was written. Lets a consumer tell a fresh ruling from a stale one."
+        },
+        "progression_blockers": {
+          "type": "array",
+          "description": "Required when progression_ruling is blocked or needs-evidence; omitted when progressed.",
+          "items": {
+            "type": "object",
+            "required": [
+              "gate",
+              "reason"
+            ],
+            "properties": {
+              "gate": {
+                "type": "string",
+                "description": "Which gate or threshold did not clear."
+              },
+              "reason": {
+                "type": "string",
+                "description": "Why, in the assessing agent's own words."
+              },
+              "unblocked_by": {
+                "type": "string",
+                "description": "The skill or evidence that would clear it."
+              }
+            }
+          }
         }
       },
       "required": [
         "id",
         "scale",
-        "phase"
+        "phase",
+        "confidence"
       ],
       "additionalProperties": true
     },
