@@ -288,6 +288,30 @@ never free prose, because canvases legitimately cite historical versions ("shipp
 v0.70.0") and flagging those would make it noise on day one. UNKNOWN (exit 2) when no
 plugin.json is readable, never a clean pass it did not earn.
 
+## Climatic predictions due for scoring (added v0.95.0)
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_climatic_predictions.py" --root .
+```
+
+`/mycelium:wardley-map`'s Climate step emits dated predictions into
+`landscape.yml#climatic_predictions`. Predictions are the only part of a Wardley map that can
+be WRONG — positions cannot be — so they are the part worth protecting, and they fail in one
+specific way: **nobody scores them.**
+
+Not through dishonesty. Scoring is boring and mapping is interesting, so the unscored pile
+grows until the record means nothing and the project keeps meeting predictable things as news.
+The Climate step tells the agent to score due predictions first, which covers the case where
+someone runs a mapping pass. **This check covers the case where nobody does** — canvas-health
+is periodic and does not wait for anyone to feel like mapping.
+
+Exit 1 lists what is due, overdue, or **undated** (a prediction with no `due` can never be
+overdue, so it can never be scored, so it is free to be right forever). Exit 2 is UNKNOWN and is
+never a pass. Two advisory notes ride along and neither is an error: which of the five climatic
+patterns has never produced a prediction, and — the one worth reading — whether a corpus with
+scored predictions contains **zero** refuted or unscoreable ones. A forecasting record that has
+never been wrong was not at risk.
+
 ## Evidence breadth (G-D2 / G-D4)
 
 ```bash

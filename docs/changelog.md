@@ -4,6 +4,52 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-05.
 
+## v0.95.0 - a Wardley map that can be wrong
+
+**A map that records positions cannot be wrong. Only predictions can be — and
+`/mycelium:wardley-map` made none.**
+
+Wardley's Strategy Cycle runs Purpose → Landscape → **Climate** → Doctrine → Gameplay.
+The skill went landscape → Cynefin → gameplay. The word `climatic` appeared **zero
+times** in it. A theory audit dated **2026-04-17** had already found this and rated it
+HIGH — zero of ~30 climatic patterns encoded — and it sat open for four months.
+
+**New Step 7: Assess Climate.** Five load-bearing patterns, each required to emit a
+dated, scoreable prediction into `landscape.yml#climatic_predictions`:
+
+| Pattern | The question it forces |
+|---|---|
+| everything-evolves | Which component will have moved a stage, by when? |
+| characteristics-change | What stops being true about it as it evolves? |
+| no-choice-over-evolution | What are we resisting that competition decides anyway? |
+| commoditisation-genericisation | Which of our differentiating TERMS becomes category vocabulary? |
+| inertia | Who has a working alternative, and what event would break it? |
+
+**Genericisation applies to vocabulary, not only components** — the case most teams
+miss. The phrase you lead with is a component on the map and commoditises like any
+other: coined, borrowed, category-standard, worthless. The test is cheap: search your
+key phrase, count how many unrelated products use it in their own one-liner.
+
+**Inertia is the non-adoption explanation.** Someone with a working alternative
+switches when it visibly fails them, not when yours is better. Predict the triggering
+**event**, not the argument. If your evidence is people agreeing with your thesis while
+still using their own approach, that is inertia, and it is a prediction you can make.
+
+**Scoring is Step 0, before any mapping.** The failure is never dishonesty — scoring is
+boring and mapping is fun, so the unscored pile grows until the record is worthless.
+`unscoreable` is a first-class status: marking an uncheckable prediction `held`, or
+deleting it, is how a forecasting record launders itself clean.
+
+**New `check_climatic_predictions.py`**, run from `/mycelium:canvas-health` — because a
+skill only runs when someone feels like running it. It reports due/overdue, **undated**
+(a prediction with no `due` can never be overdue, so it can never be scored, so it is
+free to be right forever), a map that holds components but predicts nothing, and — the
+sharpest, advisory — **a corpus with scored predictions and zero refuted ones. A record
+that has never been wrong was never at risk.**
+
+*Upgrading*: nothing breaks. `climatic_predictions` is optional; the check reports
+UNKNOWN rather than a pass when there is no map to read.
+
 ## v0.94.0 - landscape comparators: is that number about you, or about everyone?
 
 Your own counts tell you whether a number moved. They cannot tell you whether it moved for
