@@ -16,6 +16,38 @@
         },
         "current_value": {},
         "target_value": {}
+      },
+      "description": "The tree root. SINGULAR \u2014 retained as the default and only root for the common case. When a project needs more than one root, use `desired_outcomes` instead; declaring both is an error caught by validate_canvas.py."
+    },
+    "desired_outcomes": {
+      "type": "array",
+      "minItems": 1,
+      "description": "MULTIPLE TREE ROOTS in one file, added v0.93.0. An OST rooted on a metric the project does not steer by will faithfully optimise the wrong thing \u2014 the tree stays busy while the stuck thing stays stuck. Splitting into a second FILE was the obvious move and is wrong twice over: the ID references that point into this canvas break, and the new file is read by no script, gate or render, which is the built-not-wired defect this framework audits for. So roots are declared here and opportunities name theirs via `rolls_up_to`, keeping every reference intact and every consumer working.",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "metric"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Stable root id, referenced by `rolls_up_to`."
+          },
+          "metric": {
+            "type": "string",
+            "description": "The outcome this subtree serves."
+          },
+          "north_star_input_ref": {
+            "type": "string",
+            "description": "Which north-star input metric this root feeds, or the literal `off_north_star` when it deliberately serves none. Naming it explicitly is the point: an unlabelled root reads as on-strategy by default."
+          },
+          "current_value": {},
+          "target_value": {},
+          "note": {
+            "type": "string"
+          }
+        }
       }
     },
     "opportunities": {
@@ -104,6 +136,10 @@
           "reopen_trigger": {
             "type": "string",
             "description": "What would make this closure wrong, stated concretely enough to be checked by someone who was not there. This is the field that turns a stale closure into a detectable one."
+          },
+          "rolls_up_to": {
+            "type": "string",
+            "description": "Which declared root in `desired_outcomes` this opportunity serves. Required on every opportunity once a file declares multiple roots \u2014 an untagged opportunity in a multi-root tree has no defined parent, and silently defaulting it to the first root is how the wrong-root problem returns. Ignored, and unnecessary, in a single-root file."
           }
         },
         "required": [

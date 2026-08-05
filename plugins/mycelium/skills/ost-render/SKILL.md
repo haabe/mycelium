@@ -97,7 +97,17 @@ Per `engine/render-conventions.md#consent-value-semantics`:
 ### Step 1: Parse + filter
 
 Read opportunities.yml. Build in-memory tree:
-- Root = `desired_outcome` (top-level field).
+- Root = `desired_outcome` (top-level field) in a single-root file.
+- **Multi-root files (v0.93.0+)**: when `desired_outcomes` is present instead, render ONE
+  SUBTREE PER ROOT, each labelled with its `metric` and its `north_star_input_ref`. Group
+  opportunities under the root named by their `rolls_up_to`.
+  **Show the `north_star_input_ref` on the root node — including the literal
+  `off_north_star`.** That label is the reason multi-root exists: a tree whose root does not
+  feed the north star is optimising something the project has not chosen to steer by, and a
+  render that hides the label makes the two subtrees look equally load-bearing. If one root
+  carries 29 opportunities off-north-star and another carries 5 on it, the picture should say
+  so at a glance.
+- `--root-outcome <id>` selects a single root by `id` and renders only its subtree.
 - Branches = top-level opportunities.
 - Leaves = solutions per opportunity.
 - Apply `--include-status` filter (drop entries that don't match).
