@@ -120,8 +120,7 @@
     },
     "bias_checks": {
       "type": "array"
-    },
-    "last_updated": {}
+    }
   },
   "additionalProperties": true
 }

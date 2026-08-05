@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://mycelium.dev/schemas/diamonds/active.schema.json",
   "title": "Diamond State (active.yml)",
-  "description": "The framework's most-read state file: active/parked/archived/killed diamonds per engine/diamond-rules.md § Diamond State Tracking. Permissive by design (additionalProperties: true) — projects extend freely; the schema pins the load-bearing core: ids, scale/phase enums, confidence range, and the definition_of_done shape (v0.43.0). Added 2026-06-12 after the dogfood repo's active.yml sat committed-unparseable for ≥3 days with zero detection (corrections.md 2026-06-12).",
+  "description": "The framework's most-read state file: active/parked/archived/killed diamonds per engine/diamond-rules.md \u00a7 Diamond State Tracking. Permissive by design (additionalProperties: true) \u2014 projects extend freely; the schema pins the load-bearing core: ids, scale/phase enums, confidence range, and the definition_of_done shape (v0.43.0). Added 2026-06-12 after the dogfood repo's active.yml sat committed-unparseable for \u22653 days with zero detection (corrections.md 2026-06-12).",
   "type": "object",
   "properties": {
     "schema_version": {
@@ -29,15 +29,9 @@
       "type": "boolean",
       "description": "Declared autonomous run (engine/autonomous-mode.md). One of the three declaration surfaces the autonomous-evidence-guard reads."
     },
-    "last_updated": {
-      "oneOf": [
-        {
-          "$ref": "_common.schema.json#/$defs/iso_timestamp"
-        },
-        {
-          "type": "null"
-        }
-      ]
+    "_meta": {
+      "type": "object",
+      "description": "File-level metadata. `last_validated` is the date a human last confirmed the content accurate; staleness horizon per engine/evidence-decay.md (strategic, 180 days). Replaced top-level `last_updated` in v0.89.0 \u2014 that field duplicated what git already records authoritatively, and a hand-maintained copy of a machine-knowable fact can only drift."
     },
     "active_diamonds": {
       "type": "array",
@@ -74,15 +68,34 @@
         },
         "scale": {
           "type": "string",
-          "enum": ["L0", "L1", "L2", "L3", "L4", "L5"]
+          "enum": [
+            "L0",
+            "L1",
+            "L2",
+            "L3",
+            "L4",
+            "L5"
+          ]
         },
         "phase": {
           "type": "string",
-          "enum": ["discover", "define", "develop", "deliver", "complete"]
+          "enum": [
+            "discover",
+            "define",
+            "develop",
+            "deliver",
+            "complete"
+          ]
         },
         "state": {
           "type": "string",
-          "enum": ["active", "blocked", "parked", "archived", "killed"]
+          "enum": [
+            "active",
+            "blocked",
+            "parked",
+            "archived",
+            "killed"
+          ]
         },
         "confidence": {
           "type": "number",
@@ -90,10 +103,16 @@
           "maximum": 1.0
         },
         "parent": {
-          "type": ["string", "null"]
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "parent_id": {
-          "type": ["string", "null"]
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "children": {
           "type": "array",
@@ -139,7 +158,10 @@
           "$ref": "_common.schema.json#/$defs/iso_timestamp"
         },
         "resume_conditions": {
-          "type": ["array", "string"],
+          "type": [
+            "array",
+            "string"
+          ],
           "items": {
             "type": "string"
           }
@@ -151,7 +173,10 @@
           "type": "string"
         },
         "learnings": {
-          "type": ["array", "string"]
+          "type": [
+            "array",
+            "string"
+          ]
         },
         "pivot_history": {
           "type": "array"
@@ -160,7 +185,11 @@
           "type": "string"
         }
       },
-      "required": ["id", "scale", "phase"],
+      "required": [
+        "id",
+        "scale",
+        "phase"
+      ],
       "additionalProperties": true
     },
     "definition_of_done": {
@@ -169,7 +198,7 @@
       "properties": {
         "outcome": {
           "type": "string",
-          "description": "What changes, for WHOM — a behaviour, not a feature. Problem-first."
+          "description": "What changes, for WHOM \u2014 a behaviour, not a feature. Problem-first."
         },
         "signal": {
           "type": "string",
@@ -177,21 +206,51 @@
         },
         "kind": {
           "type": "string",
-          "enum": ["leading", "lagging", "mixed"]
+          "enum": [
+            "leading",
+            "lagging",
+            "mixed"
+          ]
         },
         "threshold": {
-          "type": ["string", "number"]
+          "type": [
+            "string",
+            "number"
+          ]
         },
         "measure": {
           "type": "object",
           "description": "Optional (v0.53.0). Makes `signal` checkable post-ship to close the outcome->discovery loop (/metrics-pull Step 8b). source: 'manual' is first-class. See skills/define-done/SKILL.md.",
           "properties": {
-            "source": { "type": "string", "description": "Metric adapter key (github, plausible, ...) OR 'manual'." },
-            "field": { "type": "string", "description": "Snapshot field path for automated sources; omit for source: manual." },
-            "target": { "type": ["string", "number"] },
-            "check_after": { "type": "string", "description": "When to check — lag matched to `kind`. Per-DoD, not a global window." },
-            "guardrail": { "type": "string", "description": "Counter-metric that must not worsen while `signal` improves (Goodhart guard)." },
-            "last_checked": { "type": ["string", "null"], "description": "Stamped by /metrics-pull; null = never checked." }
+            "source": {
+              "type": "string",
+              "description": "Metric adapter key (github, plausible, ...) OR 'manual'."
+            },
+            "field": {
+              "type": "string",
+              "description": "Snapshot field path for automated sources; omit for source: manual."
+            },
+            "target": {
+              "type": [
+                "string",
+                "number"
+              ]
+            },
+            "check_after": {
+              "type": "string",
+              "description": "When to check \u2014 lag matched to `kind`. Per-DoD, not a global window."
+            },
+            "guardrail": {
+              "type": "string",
+              "description": "Counter-metric that must not worsen while `signal` improves (Goodhart guard)."
+            },
+            "last_checked": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Stamped by /metrics-pull; null = never checked."
+            }
           },
           "additionalProperties": true
         },
@@ -212,14 +271,20 @@
               "type": "string"
             }
           },
-          "required": ["state", "date"],
+          "required": [
+            "state",
+            "date"
+          ],
           "additionalProperties": true
         },
         "provenance": {
           "type": "object"
         }
       },
-      "required": ["outcome", "signal"],
+      "required": [
+        "outcome",
+        "signal"
+      ],
       "additionalProperties": true
     }
   }

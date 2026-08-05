@@ -23,6 +23,46 @@ Different evidence types age at different rates:
 
 These are defaults. Override per-project in `canvas/thresholds.yml` (when it exists, see adaptive-thresholds.md).
 
+## Which threshold applies to which canvas file
+
+Added v0.89.0. The table above governs *evidence citations* inside `provenance`
+blocks, and `/mycelium:canvas-health` step 7 has always applied it correctly. Step
+3 checks something different — the file-level `_meta.last_validated` stamp — and
+applied **a flat 30 days to every canvas**, which is the only staleness number in
+the skill drawn from nowhere in this document.
+
+The consequence was measured on the dogfood repo 2026-08-05: **20 of 25 canvas
+files were flagged stale**, including `purpose.yml`, validated 46 days earlier.
+Purpose is a strategic canvas with a 180-day horizon by the table above, so it
+was *fresh by this framework's own theory and stale by its own check*. A check
+that flags 80% of a corpus teaches its reader to ignore it, and the flat rule was
+producing exactly that.
+
+File-level stamps now inherit the category of the content they cover:
+
+| Canvas file | Category | Threshold |
+|---|---|---|
+| `purpose.yml`, `north-star.yml`, `gist.yml` | Strategic assumptions (L0-L1) | 180 days |
+| `diamonds/active.yml` | Strategic assumptions (L0-L1) | 180 days |
+| `user-needs.yml`, `jobs-to-be-done.yml`, `scenarios.yml` | User needs / interviews | 90 days |
+| `landscape.yml`, `go-to-market.yml`, `trust-signals.yml` | Competitive intelligence / market positioning | 90 days |
+| `opportunities.yml`, `archived-solutions.yml`, `cycle-history.yml` | User needs / interviews | 90 days |
+| `bounded-contexts.yml`, `services.yml`, `value-stream.yml`, `team-shape.yml` | Technical feasibility | 120 days |
+| `threat-model.yml` | Technical feasibility | 120 days |
+| `privacy-assessment.yml` | Regulatory assessment | 365 days |
+| `dora-metrics.yml`, `service-metrics.yml`, `content-metrics.yml`, `ai-tool-metrics.yml` | DORA / delivery metrics | 30 days |
+| `bvssh-health.yml` | DORA / delivery metrics | 30 days |
+| `human-tasks.yml` | User needs / interviews | 90 days |
+| `thresholds.yml` | Strategic assumptions (L0-L1) | 180 days |
+
+Anything not listed falls back to **90 days**, the median of the table, rather
+than to 30 — an unlisted file is an unclassified one, and the strictest default
+is the wrong guess for something nobody has categorised.
+
+**This governs the stamp, not the evidence.** A canvas whose `_meta.last_validated`
+is inside its horizon can still hold evidence citations that are individually
+stale; step 7 catches those and is unaffected by this mapping.
+
 ## How Decay Works
 
 ### 1. Timestamp Requirement

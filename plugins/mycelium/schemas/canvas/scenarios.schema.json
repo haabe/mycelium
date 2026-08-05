@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://mycelium.dev/schemas/canvas/scenarios.schema.json",
   "title": "Scenarios Canvas (Hoskins)",
-  "description": "L2-born Hoskins scenarios that carry user context L2->L5. Hoskins's model has THREE elements — Motivation, Persona, Simulation (corrected 2026-07-01; an earlier in-repo model added a fabricated 4th 'Means' — 'means' folds into the simulation). Permissive by design (additionalProperties: true): pins the load-bearing core (id, status enum, provenance shape) and leaves the element blocks flexible so /user-interview writes them and /canvas-health step 8b does the semantic 3-element completeness check (schema validates shape; canvas-health drives the corrected-model semantics). Legacy instances may still carry a 4-block persona/means/motive/simulation structure; the permissive schema validates both while 8b flags the distortion. Added v0.55.3 (theory-fidelity B7): the canvas had real instances but no schema.",
+  "description": "L2-born Hoskins scenarios that carry user context L2->L5. Hoskins's model has THREE elements \u2014 Motivation, Persona, Simulation (corrected 2026-07-01; an earlier in-repo model added a fabricated 4th 'Means' \u2014 'means' folds into the simulation). Permissive by design (additionalProperties: true): pins the load-bearing core (id, status enum, provenance shape) and leaves the element blocks flexible so /user-interview writes them and /canvas-health step 8b does the semantic 3-element completeness check (schema validates shape; canvas-health drives the corrected-model semantics). Legacy instances may still carry a 4-block persona/means/motive/simulation structure; the permissive schema validates both while 8b flags the distortion. Added v0.55.3 (theory-fidelity B7): the canvas had real instances but no schema.",
   "type": "object",
   "properties": {
     "schema_version": {
@@ -25,7 +25,13 @@
           },
           "status": {
             "type": "string",
-            "enum": ["draft", "active", "tested", "validated", "invalidated"]
+            "enum": [
+              "draft",
+              "active",
+              "tested",
+              "validated",
+              "invalidated"
+            ]
           },
           "persona": {
             "type": "object",
@@ -41,11 +47,11 @@
           },
           "motive": {
             "type": "object",
-            "description": "Legacy field (pre-2026-07-01 4-block model) — superseded by 'motivation'. Kept in the schema so historical instances validate; new scenarios should use 'motivation'."
+            "description": "Legacy field (pre-2026-07-01 4-block model) \u2014 superseded by 'motivation'. Kept in the schema so historical instances validate; new scenarios should use 'motivation'."
           },
           "means": {
             "type": "object",
-            "description": "Legacy field (pre-2026-07-01 4-block model) — 'Means' is NOT a Hoskins element; fold this into the simulation. Kept so historical instances validate."
+            "description": "Legacy field (pre-2026-07-01 4-block model) \u2014 'Means' is NOT a Hoskins element; fold this into the simulation. Kept so historical instances validate."
           },
           "lifecycle": {
             "type": "object"
@@ -57,15 +63,14 @@
             "type": "object"
           }
         },
-        "required": ["id"],
+        "required": [
+          "id"
+        ],
         "additionalProperties": true
       }
     },
     "knowledge_sources": {
       "type": "array"
-    },
-    "last_updated": {
-      "type": ["string", "null"]
     }
   },
   "additionalProperties": true

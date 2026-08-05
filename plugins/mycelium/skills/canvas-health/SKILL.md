@@ -33,7 +33,16 @@ Audit the canvas knowledge base for quality, consistency, and completeness. The 
 3. **Check `_meta` blocks**:
    - For each existing canvas file, check for `_meta:` block
    - Flag missing `_meta` blocks
-   - Flag `last_validated` older than 30 days (staleness warning)
+   - Flag `last_validated` past **the horizon for that file's category**, per the
+     "Which threshold applies to which canvas file" table in
+     `${CLAUDE_PLUGIN_ROOT}/engine/evidence-decay.md` (strategic 180d, technical
+     feasibility 120d, user-needs/competitive/market 90d, delivery metrics 30d,
+     regulatory 365d; unlisted files fall back to 90d).
+     **This replaced a flat 30-day rule in v0.89.0.** That rule was the only
+     staleness number in this skill grounded in nothing — step 7 below has always
+     used the decay table — and on the dogfood repo it flagged 20 of 25 canvases,
+     including a strategic file validated 46 days earlier against a 180-day
+     horizon. A check that fires on 80% of a corpus trains its reader to skip it.
    - Flag `version` field missing or at 0
 
 4. **Check confidence consistency**:

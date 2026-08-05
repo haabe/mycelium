@@ -67,7 +67,12 @@ Use the Write tool to create each file. Each file gets a small starter content, 
 project_type: ""
 dogfood: false
 active_diamonds: []
-last_updated: null
+_meta:
+  # Date a human last confirmed this file's content accurate. NOT "when the file
+  # changed" — git already records that authoritatively, and a hand-maintained
+  # copy of a machine-knowable fact can only drift away from it. Replaced a
+  # top-level `last_updated` in v0.89.0.
+  last_validated: null
 ```
 
 ### `.claude/memory/corrections.md`

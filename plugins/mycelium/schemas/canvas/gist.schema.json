@@ -36,7 +36,7 @@
           },
           "source_leaf_id": {
             "type": "string",
-            "description": "OST leaf this idea derives from — cross-checked by /canvas-health step 8."
+            "description": "OST leaf this idea derives from \u2014 cross-checked by /canvas-health step 8."
           },
           "provenance": {
             "$ref": "_common.schema.json#/$defs/provenance"
@@ -53,16 +53,6 @@
     },
     "current_tasks": {
       "type": "array"
-    },
-    "last_updated": {
-      "oneOf": [
-        {
-          "$ref": "_common.schema.json#/$defs/iso_timestamp"
-        },
-        {
-          "type": "null"
-        }
-      ]
     },
     "_meta": {
       "type": "object"
