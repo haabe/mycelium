@@ -4,6 +4,49 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-05.
 
+## v0.96.0 - findings you produce must be read again
+
+The framework guaranteed that questions you **ask** target an open gap. It did nothing to
+ensure findings you **produce** are ever read again.
+
+`learning_target_coupling` has governed the input side since v0.31.6 — validated,
+grep-detectable, checked by canvas-health 8d. It covers three skills, all of which ask
+questions. Of seven finding-*producing* instruments, **six had no coupling at all**.
+
+**The worked failure.** `theory-audit-2026-04-17.md` graded Wardley fidelity and ranked its
+gaps correctly — climatic patterns zero of ~30 HIGH, gameplay 4–5 of 64+ HIGH, inertia not
+modelled. **Nothing consumed that ranking for four months**, while the map was repeatedly
+described as strategy. It surfaced only because an agent happened to search before
+proposing. Had it not, the next audit would have re-derived the same list and called it new.
+
+### `prior_findings_first`
+
+A periodic instrument's **first** action is to rule on its own previous findings:
+
+- **CLOSED** — name the mechanism, version or commit that closed it.
+- **STILL-OPEN** — carry it forward *with a horizon*. An open finding with no date is how a
+  ranking becomes archaeology.
+- **DECLINED** — a reason **and** a re-open trigger. Declining is first-class: a gap not
+  worth closing for your project should be declined in writing, not re-proposed every audit
+  and not silently dropped.
+
+**Ordering is the mechanism, not a stylistic preference.** The failure is never dishonesty —
+producing findings is interesting and scoring old ones is boring, so anything placed after
+the interesting work is what a long session drops. Same reasoning as `/wardley-map`'s Step 0,
+shipped one release earlier.
+
+`/mycelium:theory-fidelity` gets the concrete implementation plus a **pinned dated output
+path** (`.claude/evals/theory-audit-YYYY-MM-DD.md`). An instrument that cannot *locate* its
+previous output cannot score it — that step previously read "the decision-log (or a report
+file)", which is why the 2026-04-17 audit was findable only by accident.
+
+**Deliberately not a central open-findings register.** A register would need its own reader —
+the same defect one layer up. Findings stay where the instrument already writes them; what
+changes is that the next run must read them.
+
+*Upgrading*: nothing breaks. The first run of any periodic skill under this convention will
+report "no prior findings to score" and continue.
+
 ## v0.95.2 - the release step could not see two versions in one commit
 
 `plugin.json` holds exactly one version. Walking a push's commits therefore yields one

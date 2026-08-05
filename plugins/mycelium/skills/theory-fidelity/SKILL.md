@@ -35,6 +35,30 @@ For each claimed theory, record:
 
 ## Workflow
 
+0. **Rule on the PREVIOUS audit's findings — before producing any new ones.** Per
+   `${CLAUDE_PLUGIN_ROOT}/engine/canvas-guidance.yml#prior_findings_first`.
+
+   Locate the most recent `.claude/evals/theory-audit-*.md`. For every finding it raised,
+   write one of three rulings into the new report, and say what grounds it:
+   - **CLOSED** — name the mechanism, version or commit that closed it.
+   - **STILL-OPEN** — carry it forward WITH A HORIZON. An open finding with no date is how
+     a ranking becomes archaeology.
+   - **DECLINED** — a reason AND a re-open trigger. Declining is a first-class outcome; a
+     gap not worth closing for this project should be declined in writing rather than
+     re-proposed every audit or silently dropped.
+
+   If no prior audit exists, say so and continue — a first audit has nothing to score.
+
+   **WHY THIS IS STEP 0 AND NOT STEP 9.** `theory-audit-2026-04-17.md` graded Wardley
+   fidelity and ranked its gaps correctly: climatic patterns zero of ~30 HIGH, gameplay
+   4-5 of 64+ HIGH, inertia not modelled. **Nothing consumed that ranking for four months**,
+   while the map was repeatedly described as strategy. It surfaced on 2026-08-05 only
+   because an agent happened to search before proposing — and had it not, the next audit
+   would have re-derived the same list and called it new. The failure is not dishonesty:
+   grading theories is interesting and scoring last quarter's grades is not, so anything
+   placed after the interesting work is what a long session drops. Ordering is the
+   mechanism.
+
 1. **Build the claimed-theory inventory.** Read the project's theory doc (`docs/theories.md` for Mycelium). Tier it by load-bearing-ness if the doc does (Mycelium: Tier 1 load-bearing / Tier 2 integrated / Tier 3 citation-only). If no theory doc exists, report that absence and stop — you cannot audit fidelity against an unstated standard.
 
 2. **Set the grounding standard (cost gate).** Source-grounding every theory is expensive; grading from model-knowledge alone is the **anti-pattern #7 trap at the meta-level** — you would be grading the project against your own paraphrase of the theory, which is consistency-as-evidence (see `harness/anti-patterns.md` #7). Default split:
@@ -52,7 +76,18 @@ For each claimed theory, record:
 
 7. **Attribution-fix discipline (the Lopopolo rule).** When the audit finds a wrong citation, do **not** blind-sweep the name across the repo. Ground-truth **every** occurrence first — the same name is often attached to a *different, correct* claim elsewhere. A blind find-replace of a mis-attributed Reflexion citation once would have corrupted ~16 valid citations of the same author for an unrelated concept. Fix only the occurrences that actually carry the wrong claim.
 
-8. **Log + recommend.** Write the scorecard to the decision-log (or a report file). Separate cheap doc-fidelity fixes from mechanism/schema builds; gate the latter on real need (JiT), not on the audit's enthusiasm.
+8. **Log + recommend — to a PREDICTABLE, DATED PATH.** Write the report to
+   `.claude/evals/theory-audit-YYYY-MM-DD.md`, and append a one-paragraph summary plus that
+   path to the decision-log. **The path is pinned because an instrument that cannot LOCATE
+   its previous output cannot score it** — this step previously read "the decision-log (or a
+   report file)", and that vagueness is why the 2026-04-17 audit was findable only by
+   accident. Include the Step 0 rulings in the report so the NEXT audit can score this one.
+
+   Separate cheap doc-fidelity fixes from mechanism/schema builds; gate the latter on real
+   need (JiT), not on the audit's enthusiasm. **Every finding ranked HIGH must leave this
+   skill with a home** — a tracked entry with a horizon, or an explicit decline with a
+   re-open trigger. A HIGH finding that exists only as a line in a report is the failure
+   this skill's own Step 0 now exists to catch.
 
 ## Output Format
 
@@ -87,6 +122,9 @@ For each claimed theory, record:
 - Never blind-sweep an attribution fix — ground-truth every occurrence (step 7).
 - A deliberate adaptation with documented rationale is `Justified-Adaptation`, not a failure — do not flag conscious divergence as infidelity.
 - Surface large fan-outs for re-authorization before spending (scope checkpoint, G-P9).
+- **Never open a fresh audit without ruling on the previous one (Step 0).** An audit that
+  ranks work and is never re-read is the same shape as a check that runs and is never looked
+  at — and this skill produced exactly that on 2026-04-17.
 
 ## Theory Citations
 - Argyris: triple-loop learning (the framework evaluating how faithfully it represents its own foundations).

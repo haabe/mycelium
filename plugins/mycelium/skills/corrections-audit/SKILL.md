@@ -178,6 +178,13 @@ Period: [earliest date] to [latest date]
 [Updated summary for corrections.md TL;DR section]
 ```
 
+
+## Prior findings first (added v0.96.0)
+
+Before producing new findings, **rule on the previous run's** — per `${CLAUDE_PLUGIN_ROOT}/engine/canvas-guidance.yml#prior_findings_first`. For each: CLOSED (name what closed it), STILL-OPEN (carry it forward with a horizon), or DECLINED (a reason AND a re-open trigger). If there is no prior run, say so and continue.
+
+**Scoring goes first because it is the boring half.** A periodic instrument that produces findings and never scores its old ones accumulates a ranking nobody reads — `theory-audit-2026-04-17.md` ranked its gaps correctly and sat unconsumed for four months. Anything placed after the interesting work is what a long session drops.
+
 ## Theory Citations
 - Mycelium internal learning loop
 - APEX framework (origin-aware quality tracking)
