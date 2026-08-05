@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://mycelium.dev/schemas/canvas/landscape.schema.json",
   "title": "Wardley Map Canvas",
-  "description": "Wardley Mapping — components positioned by visibility and evolution. Components require provenance because positioning carries strategic weight.",
+  "description": "Wardley Mapping \u2014 components positioned by visibility and evolution. Components require provenance because positioning carries strategic weight.",
   "type": "object",
   "properties": {
     "schema_version": {
@@ -13,13 +13,29 @@
       "items": {
         "type": "object",
         "properties": {
-          "id": {"type": "string"},
-          "name": {"type": "string"},
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
           "evolution_stage": {
             "type": "string",
-            "enum": ["genesis", "custom", "product", "commodity"]
+            "enum": [
+              "genesis",
+              "custom",
+              "product",
+              "commodity"
+            ]
           },
-          "visibility": {"type": "string", "enum": ["high", "medium", "low"]},
+          "visibility": {
+            "type": "string",
+            "enum": [
+              "high",
+              "medium",
+              "low"
+            ]
+          },
           "provenance": {
             "$ref": "_common.schema.json#/$defs/provenance"
           },
@@ -27,8 +43,78 @@
             "$ref": "_common.schema.json#/$defs/trace"
           }
         },
-        "required": ["name", "provenance"],
+        "required": [
+          "name",
+          "provenance"
+        ],
         "additionalProperties": true
+      }
+    },
+    "climatic_predictions": {
+      "type": "array",
+      "description": "Dated, scoreable predictions emitted by the Climate step of /mycelium:wardley-map, v0.95.0+. A map that records positions cannot be wrong; a map that predicts can. Wardley's climatic patterns are the part of the method that generates falsifiable statements, and a map without them is a picture. Each entry names the pattern it came from, what it expects, and WHEN to look \u2014 so the next mapping pass scores it instead of re-noticing the same thing as news.",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "pattern",
+          "prediction",
+          "made_on",
+          "due",
+          "status"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Stable id, e.g. climpred-001."
+          },
+          "pattern": {
+            "type": "string",
+            "enum": [
+              "everything-evolves",
+              "characteristics-change",
+              "no-choice-over-evolution",
+              "commoditisation-genericisation",
+              "inertia"
+            ],
+            "description": "Which climatic pattern generated this. Enumerated so a pass can check coverage \u2014 an unused pattern is a pattern nobody applied."
+          },
+          "subject": {
+            "type": "string",
+            "description": "Component id, term, or actor the prediction is about."
+          },
+          "prediction": {
+            "type": "string",
+            "description": "What is expected to be observably true by `due`. Must be checkable by someone who was not in the room."
+          },
+          "made_on": {
+            "type": "string",
+            "format": "date"
+          },
+          "due": {
+            "type": "string",
+            "format": "date",
+            "description": "When to look. A prediction with no date is an opinion."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "held",
+              "refuted",
+              "unscoreable"
+            ],
+            "description": "`unscoreable` is a first-class outcome and must not be avoided: a prediction that turned out not to be checkable is a lesson about the prediction, and recording it as `held` or quietly dropping it is how a forecasting record launders itself clean."
+          },
+          "scored_on": {
+            "type": "string",
+            "format": "date"
+          },
+          "outcome": {
+            "type": "string",
+            "description": "What actually happened, and what it cost to be wrong."
+          }
+        }
       }
     }
   },

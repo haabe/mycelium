@@ -35,6 +35,21 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
 
 ## Mapping Process
 
+### 0. Score any due climatic predictions FIRST (added v0.95.0)
+
+Before mapping anything, read `.claude/canvas/climatic_predictions` in `landscape.yml` and settle
+every entry whose `due` date has passed. Set `status` to `held`, `refuted` or `unscoreable`, stamp
+`scored_on`, and write what actually happened in `outcome`.
+
+**This step is first on purpose.** A prediction nobody settles is a wish, and the natural failure
+is not dishonesty — it is that scoring is boring and mapping is fun, so the unscored pile grows
+until the record is worthless. Doing it before the interesting work is the only ordering that
+survives contact with a real session.
+
+**`unscoreable` is a first-class outcome.** If a prediction turned out not to be checkable, say so.
+Marking it `held` because nothing contradicted it, or quietly deleting it, is how a forecasting
+record launders itself clean — and a clean record that was never at risk teaches nothing.
+
 ### 1. Identify the User
 Who is the map for? What scope?
 
@@ -61,7 +76,44 @@ Mark components that are evolving (arrow pointing right). All components evolve 
 - Components in Commodity = Clear domain -> best practice
 - Evolution mismatch = waste (building custom what you should buy as commodity)
 
-### 7. Apply Gameplay
+### 7. Assess Climate — the patterns that act on you whether or not you look (added v0.95.0)
+
+Wardley's Strategy Cycle runs **Purpose → Landscape → Climate → Doctrine → Gameplay → Leadership.**
+Steps 1-6 built the landscape. Climate comes BEFORE gameplay because gameplay chosen against a
+static picture assumes the board stops moving while you think.
+
+**This is the step that makes a map falsifiable.** A map that records positions cannot be wrong.
+Climatic patterns generate statements about what happens NEXT, which can be. Apply each of the five
+below and emit at least one dated prediction per pass into `landscape.yml#climatic_predictions`.
+
+| Pattern | The question it forces | What a prediction from it looks like |
+|---|---|---|
+| **everything-evolves** | Which component will have moved a stage by when? | "comp-0NN reaches product by <date> — a second vendor ships a paid managed version." |
+| **characteristics-change** | What stops being true about a component as it evolves? | "As X commoditises, buyers stop evaluating it on capability and start on price/SLA." |
+| **no-choice-over-evolution** | What are we resisting that competition will decide anyway? | "Our custom-built Y is superseded by a commodity equivalent by <date>." |
+| **commoditisation-genericisation** | **Which of our differentiating TERMS will become category vocabulary?** | "The phrase we lead with appears in 3+ unrelated products' one-liners by <date>." |
+| **inertia** | Who has a working alternative, and what event would break it? | "Self-solvers do not adopt absent a triggering failure; adoption arrives only after a public burn." |
+
+**Genericisation applies to VOCABULARY, not only components, and that is the case most teams miss.**
+The phrase a project leads with is itself a component on the map, and it commoditises like any
+other: coined, then borrowed, then category-standard, then worthless as a differentiator. A team
+that has not predicted this experiences it as a series of unpleasant surprises, each read as news.
+The test is cheap — search your key phrase and count how many unrelated products use it in their
+own one-line description. **Worked instance (dogfood, 2026-08):** a project observed two of its
+lead terms genericise within 24 hours of each other, one having spread to a domain with no
+connection to its own, and treated each as a discovery. Both were predictable from this pattern.
+
+**Inertia is the pattern that explains non-adoption**, and it is usually reached for last because
+it is unflattering. Someone with a working alternative does not switch on evidence that yours is
+better; they switch when their alternative visibly fails them. If your evidence is people agreeing
+with your thesis while continuing to use their own approach, inertia — not persuasion — is the
+thing to model. **Predict the triggering EVENT, not the argument.**
+
+**Coverage is checkable and unused patterns are a finding.** The `pattern` field is enumerated, so a
+pass can ask which of the five produced nothing. A pattern that never emits a prediction is one
+nobody applied, not one that had nothing to say.
+
+### 8. Apply Gameplay
 Strategic options based on the map:
 - Open source: Accelerate commoditization
 - ILC: Innovate -> Leverage -> Commoditize
@@ -69,7 +121,7 @@ Strategic options based on the map:
 - Tower and moat: Invest in defensibility
 
 ## Output
-Update .claude/canvas/landscape.yml with components, evolution stages, movements, and gameplay options.
+Update .claude/canvas/landscape.yml with components, evolution stages, movements, gameplay options, and `climatic_predictions` (new + scored). Report the coverage of the five climatic patterns explicitly, naming any that produced nothing this pass.
 
 ## Decision Log (MANDATORY per G-P4)
 **APPEND** a `### Wardley Map Assessment` entry to `.claude/harness/decision-log.md` with: components mapped, evolution stages, strategic gameplay identified, recommendations.

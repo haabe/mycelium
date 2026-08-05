@@ -755,7 +755,16 @@ check_version_bump_discipline() {
     fi
 
     local curr_version
-    curr_version=$(grep -m1 "^\*Version " CLAUDE.md 2>/dev/null | sed 's/.*Version //' | sed 's/[ —].*//')
+    # ANCHORED, not greedy. `sed 's/.*Version //'` matched the LAST "Version " on
+    # the line, and CLAUDE.md keeps its whole release history on ONE line via the
+    # `Prior:` chain — so it reported the version from ten releases back. Check 26
+    # then failed with a correct finding and a message naming `0.85.0**` (trailing
+    # asterisks included) while the file said 0.95.0. The finding was right and its
+    # stated cause was wrong, which is worse than a missed finding: it reads as a
+    # tool bug and gets dismissed. Same defect class as the pointer-message fix in
+    # the 2026-08-03 line. Line 1406 already used the anchored form; this is the
+    # site that did not.
+    curr_version=$(grep -m1 "^\*Version " CLAUDE.md 2>/dev/null | sed -E 's/^\*Version ([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
     if [ -z "$curr_version" ]; then
         warn "Could not read current Version line from CLAUDE.md"
         return
