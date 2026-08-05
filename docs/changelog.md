@@ -4,6 +4,36 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-04.
 
+## v0.91.1 - a test helper that returned false verdicts, one loudly and one silently
+
+`tests/bash/_assert.sh` built both substring helpers the same way:
+
+```bash
+if echo "$haystack" | grep -qF -- "$needle"; then
+```
+
+`grep -q` exits on the first match and closes the pipe. On a large haystack `echo`
+is still writing, dies of **SIGPIPE**, and `run.sh` sets `set -o pipefail` — so the
+pipeline returns non-zero **even though the needle was found**.
+
+- `assert_contains` reported **"needle not found"** for needles that exist.
+- `assert_not_contains` has the branches inverted, so the same SIGPIPE sent it to
+  the **PASS** branch — reporting ✓ for a needle that IS present.
+
+**The second is the worse half and it had no symptom.** A false failure gets
+investigated; a false pass gets trusted.
+
+Confirmed from the CI log of run `30983562763`: three assertions in
+`test_canvas_health_check_defects.sh` failed naming needles that occur exactly once
+each in the target file, and every ✗ was immediately preceded by a Broken-pipe line.
+Non-deterministic by nature — it needs `echo` to still be writing when grep exits —
+and it does not reproduce on macOS/BSD in 200 iterations. So it presented as a flaky
+CI check: upstream main sat red on it while the same commit had passed its PR run
+four minutes earlier, and a re-run with no code change went green.
+
+Fixed by removing the pipe. A here-string is not a pipeline, so `pipefail` cannot
+turn a SIGPIPE into a verdict.
+
 ## v0.91.0 - the triangulation check could not see the method
 
 G-D2 asks for **2+ independent evidence methods**. The check judged `source_class`,
