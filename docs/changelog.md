@@ -4,6 +4,50 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-05.
 
+## v0.94.0 - landscape comparators: is that number about you, or about everyone?
+
+Your own counts tell you whether a number moved. They cannot tell you whether it moved for
+**you** or for everyone doing this kind of thing.
+
+The GitHub adapter now takes optional comparators — public repos pulled in the *same batch*
+as your own, so both are read through the same platform on the same day. That sameness is the
+mechanism: a divergence between two same-day pulls is about the products; a comparison
+assembled from two different days measures the gap between the days.
+
+```yaml
+sources:
+  github:
+    target: "you/your-repo"
+    comparators:
+      - repo: "someone/similar-repo"
+        why: "same play, narrower scope"     # REQUIRED
+        canvas_ref: "landscape.yml#comp-073"  # optional
+```
+
+**Why this shipped.** A project read its own flat fork count as evidence that nobody forks
+tools of this kind. A competitor found later had more than twice the forks on fewer stars,
+from a repo created ten days after it. The number never changed; what it meant did.
+
+**`why` is required and is not decoration.** A comparator without a stated basis of comparison
+is a leaderboard, and a leaderboard is a Goodhart engine aimed at a number you do not control.
+It is also the falsification hook: when the `why` stops being true, drop the entry.
+
+**The delta rules refuse to rank.** You get "target +N, comparator +M over D days" and never a
+winner or a percentage gap. At the counts a young project has, a ratio is a hypothesis and a
+rank is a fiction. Divergence is flagged only when the two move in *opposite* directions across
+two consecutive pulls.
+
+**Comparators get a stricter privacy rule than your own repo.** Counts only — no stargazer
+dates, no contributors, no traffic. Traffic endpoints need push access and would fail anyway,
+but that is not the reason. For your own repo, per-date stargazer buckets are defensible
+telemetry about your project. For someone else's, a longitudinal record of who-starred-when is
+surveillance of a third party's users, and it stays out regardless of what the API would serve.
+
+A 404 emits `fetch_status: unavailable` and the pull continues — a vanished competitor is
+itself a signal, and an entry that silently disappears reads as never-tracked.
+
+*Upgrading*: nothing to do. Omit `comparators` and the adapter behaves exactly as v1.
+
 ## v0.93.0 - an OST can now have more than one root, because one was rooted on the wrong metric
 
 **An OST rooted on a metric the project does not steer by will faithfully optimise the
