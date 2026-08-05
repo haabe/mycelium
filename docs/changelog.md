@@ -4,6 +4,22 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-05.
 
+## v0.95.1 - a correct finding that named the wrong cause
+
+Check 26 (version-bump discipline) fired correctly and told you the wrong reason.
+
+It parsed the current version with a greedy `sed 's/.*Version //'`. `CLAUDE.md` keeps
+its whole release history on **one line** via the `Prior:` chain, so the match ran to
+the last `Version ` in that line and returned `0.85.0**` — trailing asterisks included —
+while the file's leading token said `0.95.0`.
+
+The finding was right: a test file had been committed after a version bump, and `tests`
+is a material path. But **a true report that misnames its cause reads as a tool bug and
+gets dismissed**, which is worse than a missed finding. Found the hard way — several
+minutes went into chasing a phantom parse bug before the real cause surfaced.
+
+Anchored to the leading token, which is the form line 1406 of the same file already used.
+
 ## v0.95.0 - a Wardley map that can be wrong
 
 **A map that records positions cannot be wrong. Only predictions can be — and
