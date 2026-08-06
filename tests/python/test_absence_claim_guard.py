@@ -393,3 +393,77 @@ def test_past_tense_ledger_prose_still_stays_silent(scripts_path, ledger):
     """The past-tense fix must not swallow the calibration. `moved`, `applied`
     and `drafted` are session-ledger verbs, deliberately absent from the list."""
     assert _warn(scripts_path, ledger) == ""
+
+
+def test_the_2026_08_06_retraction_stays_silent(scripts_path):
+    """VERBATIM FALSE POSITIVE. The dogfood canvas withdrew an absence claim and
+    the guard warned on the withdrawal — asking the author to name a search for
+    a claim they were in the act of deleting."""
+    assert _warn(
+        scripts_path,
+        '"zero external sources" is now false — the third row is external '
+        "and arms-length.",
+    ) == ""
+
+
+@pytest.mark.parametrize("retraction", [
+    "The memory note saying no check exists is now false.",
+    "That nothing covers it is no longer true.",
+    "The claim that no mechanism existed was wrong.",
+    "No entry covers it — that turned out to be false.",
+    "The assertion that nothing tracks this has been falsified.",
+    "No source exists anywhere: refuted by the row above.",
+])
+def test_each_retraction_form_stays_silent(scripts_path, retraction):
+    """A retracted absence has no search to name. The claim is being withdrawn,
+    not asserted."""
+    assert _warn(scripts_path, retraction) == ""
+
+
+@pytest.mark.parametrize("claim", [
+    "No check exists, which is false comfort.",
+    "Nothing covers it, and the false positive rate says so.",
+    "No entry covers the wrong-surface cluster.",
+])
+def test_wrongness_words_qualifying_a_noun_still_warn(scripts_path, claim):
+    """CALIBRATION GUARD ON THE GUARD. `false` and `wrong` attached to a NOUN
+    are ordinary prose in this project's canvas, not a retraction. If these went
+    silent the suppressor would have swallowed a whole vocabulary."""
+    assert "ABSENCE-CLAIM WARNING" in _warn(scripts_path, claim)
+
+
+def test_a_retraction_in_a_different_sentence_does_not_suppress(scripts_path):
+    """Same locality rule as _SCOPE. A correction later in the paragraph does
+    not withdraw this sentence's claim, and treating it as if it did is how a
+    whole entry starts looking cited."""
+    out = _warn(
+        scripts_path,
+        "No mechanism writes to that surface. An earlier version of this "
+        "paragraph was wrong about something else entirely.",
+    )
+    assert "ABSENCE-CLAIM WARNING" in out
+    assert "No mechanism writes" in out
+
+
+def test_an_unrelated_wrongness_mid_sentence_still_warns(scripts_path):
+    """The clause-final rule earns more than it was added for. "was wrong is
+    unclear" is not clause-final, so a live absence claim survives a wrongness
+    word appearing beside it."""
+    assert "ABSENCE-CLAIM WARNING" in _warn(
+        scripts_path,
+        "No source exists and the reason it was wrong is unclear.",
+    )
+
+
+def test_the_residual_over_suppression_is_pinned(scripts_path):
+    """LIMIT, RECORDED AS A TEST SO IT IS A DECISION RATHER THAN A SURPRISE.
+    What still goes silent is a live absence claim ending on a clause-final
+    wrongness about something ELSE. Distinguishing the two needs to know what
+    `wrong` refers to, which a regex cannot. Coverage loses to calibration here
+    on purpose; if this starts failing, someone tightened it and should say
+    why."""
+    assert _warn(
+        scripts_path,
+        "No mechanism writes to that surface, and the earlier estimate "
+        "was wrong.",
+    ) == ""

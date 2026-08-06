@@ -137,6 +137,48 @@ _SCOPE = re.compile(
     re.IGNORECASE,
 )
 
+#: An absence claim being RETRACTED rather than asserted. Suppresses, because
+#: there is no search to name: the sentence is reporting that a previously-held
+#: absence turned out to be false, which is the correction this guard exists to
+#: produce. Warning there asks the author to justify a claim they are in the act
+#: of withdrawing, and a guard that fires hardest on the moment someone admits
+#: they were wrong is training exactly the wrong reflex.
+#:
+#: FROM A REAL FALSE POSITIVE, 2026-08-06: the dogfood canvas recorded
+#: '"zero external sources" is now false — the third row is external', with the
+#: proof three lines above it, and the guard warned. The quoted phrase is the
+#: OLD claim; the sentence is its obituary.
+#:
+#: DELIBERATELY NARROW — the marker has to be a truth predicate about the claim,
+#: which is enforced by requiring it to be CLAUSE-FINAL: `(?!\s+\w)` lets a
+#: comma, dash or full stop follow but not another word. "no check exists, which
+#: is false comfort" therefore still warns, because `false` there qualifies a
+#: noun rather than the assertion. That guard is not decoration — the first
+#: version of this pattern omitted it, this file's comment claimed the narrow
+#: behaviour anyway, and the fixture written to assert it failed on the first
+#: run. The retraction must also be in the SAME sentence, on the same reasoning
+#: as _SCOPE: a correction a paragraph away does not withdraw this claim.
+#:
+#: THE OVER-SUPPRESSION IT ACCEPTS, stated rather than discovered later: a live
+#: absence claim ending on a clause-final wrongness about something ELSE ("no
+#: mechanism writes to that surface, and the earlier estimate was wrong") goes
+#: silent. Telling that from a real retraction needs to know what `wrong` refers
+#: to, which a regex cannot. The shape is rare, the guard is advisory and fails
+#: open by design, and the calibration principle recorded throughout this file
+#: is that a guard which cries wolf gets skimmed. Coverage loses to calibration
+#: here on purpose. Note the cost shrank once clause-finality went in: "the
+#: reason it was wrong is unclear" no longer suppresses, so the residual case is
+#: narrower than the one this comment first claimed to accept.
+_WRONG = r"(?:false|wrong|incorrect|untrue)\b(?!\s+\w)"
+_RETRACTED = re.compile(
+    r"\b(?:is|was|are|were)\s+(?:now\s+)?" + _WRONG
+    + r"|\b(?:is|are)\s+no\s+longer\s+(?:true|accurate|the\s+case)\b"
+    + r"|\bno\s+longer\s+(?:holds|true)\b"
+    + r"|\b(?:turned\s+out|proved|proven)\s+(?:to\s+be\s+)?" + _WRONG
+    + r"|\b(?:disproved|disproven|falsified|refuted)\b",
+    re.IGNORECASE,
+)
+
 #: Sentence-ish split. Keeps the scope test local: a citation three paragraphs
 #: away does not ground this claim, and treating a whole canvas entry as one
 #: context made every absence claim in it look cited.
@@ -171,11 +213,15 @@ _MESSAGE = (
 
 
 def findings(text: str) -> list[str]:
-    """Absence-shaped sentences that name no search. Empty means nothing to say."""
+    """Absence-shaped sentences that name no search. Empty means nothing to say.
+
+    Two suppressions, and they are different in kind: _SCOPE means the author
+    showed their work, _RETRACTED means there is no claim left to ground.
+    """
     out: list[str] = []
     for sentence in _SENTENCE.split(text):
         s = sentence.strip()
-        if not s or _SCOPE.search(s):
+        if not s or _SCOPE.search(s) or _RETRACTED.search(s):
             continue
         if any(p.search(s) for p in _ABSENCE):
             out.append(s if len(s) <= _QUOTE_CHARS

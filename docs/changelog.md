@@ -2,7 +2,42 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-08-05.
+**Last updated**: 2026-08-06.
+
+## v0.97.1 - corrects v0.88.0: the absence-claim guard fired on the retraction
+
+**A guard that warns hardest at the moment someone admits they were wrong is training the
+wrong reflex.** The absence-claim guard was doing exactly that.
+
+Dogfood withdrew an absence claim on its canvas — `"zero external sources" is now false, the
+third row is external` — with the proof three lines above it. The guard warned, demanding a
+named search for a claim that was being *deleted*. The quoted phrase was the old claim; the
+sentence was its obituary.
+
+### `_RETRACTED` suppresses a withdrawal
+
+An absence being retracted in the same sentence no longer warns. This is a different
+suppression in kind from `_SCOPE`, and the distinction is the point:
+
+- **`_SCOPE`** — the author showed their work.
+- **`_RETRACTED`** — there is no claim left to ground.
+
+### The narrowing is load-bearing, and it was verified rather than asserted
+
+The wrongness word must be **clause-final**, so `no check exists, which is false comfort`
+still warns — `false` there qualifies a noun, not the assertion.
+
+The first cut omitted that guard. The source comment claimed the narrow behaviour anyway, and
+the fixture written to assert it **failed on the first run**: the guard's documentation was
+wrong about the guard. Clause-finality then earned more than it was added for — `the reason it
+was wrong is unclear` also stopped suppressing — which shrank the accepted over-suppression to
+a narrower residual case, pinned as its own test rather than left to be discovered.
+
+**Locality is unchanged.** A retraction elsewhere in the paragraph does not withdraw this
+sentence's claim, on the same reasoning `_SCOPE` already used.
+
+76 Python tests, up 6. Found by dogfood, where this hook fired three times in one session and
+two of the three were false positives.
 
 ## v0.97.0 - scoring findings is not enough; they need somewhere to live
 
