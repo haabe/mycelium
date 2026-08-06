@@ -147,6 +147,40 @@ elif status == 'never-recorded':
 fi
 
 # ============================================================
+# CHECK 1d: Corrections that never reached the cluster catalogue (v0.99.0)
+# cluster-instances.md graduates clusters on instance COUNTS, and nothing writes
+# those counts. Measured in dogfood 2026-08-06 (opp-034): corrections.md +24
+# entries over five days, catalogue +1 row. A count-keyed trigger reading a
+# hand-maintained number cannot fire, so "no cluster graduated" and "no cluster
+# crossed its criterion" are indistinguishable from outside.
+#
+# ADVISORY, same tier as the two reminders above. Deciding which cluster a
+# correction belongs to is a judgement; the check asserts only that the hop was
+# CONSIDERED. It detects LAPSE, not under-logging -- see the script header.
+# ============================================================
+CLUSTERCHK=""
+if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check_cluster_reconcile.py" ]; then
+  CLUSTERCHK="${CLAUDE_PLUGIN_ROOT}/scripts/check_cluster_reconcile.py"
+elif [ -f "$PROJECT_DIR/.claude/scripts/check_cluster_reconcile.py" ]; then
+  CLUSTERCHK="$PROJECT_DIR/.claude/scripts/check_cluster_reconcile.py"
+fi
+if [ -n "$CLUSTERCHK" ]; then
+  UNRECONCILED=$(python3 "$CLUSTERCHK" --project-dir "$PROJECT_DIR" --json 2>/dev/null \
+    | python3 -c "
+import json, sys
+try:
+  d = json.load(sys.stdin)
+except Exception:
+  sys.exit(0)
+if d.get('status') == 'unreconciled':
+  print(d.get('unreconciled_count', '?'))
+" 2>/dev/null || echo "")
+  if [ -n "$UNRECONCILED" ]; then
+    REMINDERS="${REMINDERS}${UNRECONCILED} correction(s) logged since the last cluster instance — the corrections-to-cluster hop is unconsidered, so count-keyed graduation is reading a stale number. Log the instances, or add a dated reviewed-no-cluster-applies marker. "
+  fi
+fi
+
+# ============================================================
 # CHECK 2: Delivery metrics cadence (per delivery cycle)
 # Routes to product-type-appropriate metrics canvas (v0.11.0)
 # ============================================================

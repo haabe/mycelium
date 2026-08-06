@@ -4,6 +4,55 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-06.
 
+## v0.99.0 - the count that nothing writes
+
+**`cluster-instances.md` graduates clusters on instance COUNTS ("graduate at instance 6", ">=3
+instances", "next instance in a NEW surface"). Nothing writes those counts.**
+
+Measured in dogfood 2026-08-06: `corrections.md` gained 24 entries between 08-01 and 08-05;
+the catalogue gained one row. `consistency-as-evidence` still read *Total instances: 31 / Most
+recent: 2026-07-27* while at least four August corrections were unmistakably its shape.
+
+A count-keyed trigger reading a hand-maintained number cannot fire on its own. Both clusters
+currently sitting at criterion-met-mechanism-not-built were found by a human reading the file. So
+"no cluster graduated" and "no cluster crossed its criterion" are indistinguishable from outside:
+anti-pattern #9 operating on the accounting *for* anti-pattern #9.
+
+It had already been diagnosed once. The 2026-07-25 re-count found the identical drift and named the
+identical cause, then answered it with another hand re-count. Twelve days later it was stale again.
+
+### `check_cluster_reconcile.py`, and the non-goal is the design
+
+It asserts the corrections-to-cluster hop was **considered**. It does not decide which cluster a
+correction belongs to, and must never learn to: mis-binning silently corrupts a count that *gates a
+mechanism*, which is strictly worse than the drift it replaces, because drift is at least honest
+about being behind.
+
+Two honest routes to green, both requiring a judgement that actually happened:
+
+1. Log the instance as a dated row.
+2. Add `reviewed-no-cluster-applies: YYYY-MM-DD` if none of them belong to a cluster. Dated, so it
+   cannot become a permanent silencer.
+
+### The first implementation shipped a false green, and its own live run caught it
+
+v1 matched any ISO date anywhere in the catalogue. On its first run against the repo that motivated
+it, it went **green** — because that same session had added a dated closure note to an existing
+instance's outcome cell. A dated sentence anywhere would have silenced it forever. That is exactly
+the "cheapest green is a no-op edit" failure the script's own header warns about, found by running
+it rather than reading it. Now anchored to instance-log **rows** only, and pinned by a regression
+test.
+
+### Scope, stated narrowly on purpose
+
+It detects **lapse** (corrections piling up with no new instance logged at all). It does **not**
+detect **under-logging** — twenty corrections answered with one row look the same to it. Telling
+those apart requires classification, the one thing it must not do. A green result means someone
+looked recently; it does not mean the counts are right. Do not widen the claim without solving
+classification first.
+
+Advisory via `session-start.sh`, not a CI gate. 14 new tests.
+
 ## v0.98.1 - corrects v0.98.0: the backfill could not satisfy the rule it shipped under
 
 **v0.98.0 made `calibration.effort_accuracy` the one required field on a meta-dogfood record.
