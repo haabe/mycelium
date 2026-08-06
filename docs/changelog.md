@@ -4,6 +4,28 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-06.
 
+## v0.98.1 - corrects v0.98.0: the backfill could not satisfy the rule it shipped under
+
+**v0.98.0 made `calibration.effort_accuracy` the one required field on a meta-dogfood record.
+Hours later the dogfood project backfilled three arcs, and every one of them had to leave it
+null.**
+
+No estimate was ever set on those arcs. There is nothing for the actual to be wrong about, and a
+reconstructed estimate is a number invented today to grade work done in July. Fabricating it would
+corrupt the single dimension the record exists to protect.
+
+`reconstructed_post_hoc: true` is now an explicit exemption: `effort_accuracy` may be null, and the
+record is excluded from every calibration aggregate.
+
+Without this clause the framework would have shipped a rule and instantly created three violating
+rows, with nothing distinguishing *exempt by design* from *someone skipped the field* — which is
+`documented-rule-diverges-from-enforcement` reproducing itself inside the release meant to close a
+different gap.
+
+**What a reconstructed record is worth**: an audit trail, and a measurement baseline for
+`check_cycle_recording.py`, which measures from the newest `completed_at`. It restores continuity
+and produces **zero calibration data**. Recorded that way rather than counted as a win.
+
 ## v0.98.0 - corrects v0.23.16: framework work was recordable in principle and unrecordable in practice
 
 **Two rules in the same engine file gave opposite answers about whether framework work is a
