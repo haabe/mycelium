@@ -4,6 +4,79 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-06.
 
+## v0.98.0 - corrects v0.23.16: framework work was recordable in principle and unrecordable in practice
+
+**Two rules in the same engine file gave opposite answers about whether framework work is a
+cycle, sixty lines apart, for two months.**
+
+`engine/cycle-learning.md` said both of these:
+
+- **Framework-on-Framework Exemption** (v0.23.16, 2026-05-14) — framework improvements "do
+  **not** populate `cycle-history.yml`".
+- **Cycle Class** (v0.39.0, 2026-06-02) — `meta-dogfood` records exactly that work.
+
+The second was added without reconciling the first. Which one applied was decided by a
+detection test that a dogfood-consumer repo fails on a technicality, so a project followed
+whichever rule its session reached first.
+
+### The exemption is narrowed to fields, not records
+
+The old form dropped the whole record to avoid null columns. Its prediction was right — all
+ten meta-dogfood records in dogfood carry null ICE, null DORA, null user-metrics — but the
+remedy was wrong: stop *requiring* the null fields instead of dropping the row. Now exempt:
+`predicted.ice_score`, `actual.dora_metrics`, `actual.user_metrics`, `calibration.ice_accuracy`,
+`calibration.risk_accuracy`.
+
+**`calibration.effort_accuracy` is REQUIRED, and it is the whole case for keeping the record.**
+It is the one dimension the schema fits framework work, and the one that has paid: effort
+accuracy across meta-dogfood cycles surfaced *scope-expansion-blind-to-user* at N=4, which
+graduated to guardrail **G-P9**. The corrections → cluster path did not produce that finding
+and structurally cannot — a correction records a mistake, not an estimate that was wrong.
+
+### A trigger that fires on what framework work actually does
+
+Every prior trigger in `#when-to-record` was keyed to the leaf lifecycle. The only opener of a
+`meta-dogfood` cycle in the codebase fired at a **diamond phase transition** — and framework
+work does not move diamonds through phases, it ships releases.
+
+New trigger: a cycle is owed when **≥5 minor releases** have shipped since the newest
+`completed_at`. Minor, not patch — the 2026-06-18 ruling that steady-state ops earns no cycle
+still stands. Registered as `cycle_recording_arc` in `thresholds.yml` so it calibrates rather
+than staying a number someone typed once.
+
+### `check_cycle_recording.py` — advisory, not a gate
+
+Wired into `session-start.sh` at the same tier as the BVSSH reminder, deliberately **not** CI.
+A cycle record needs a judgement (where the arc begins, what the effort estimate was); blocking
+a push until someone writes a retrospective is coercion rather than scaffolding, which the
+`/framework-health` Theory X/Y audit exists to catch.
+
+It does not write the record or guess the arc. Guessing would fabricate the effort estimate,
+which is the record's only required calibration field. It asserts the arc was *considered* —
+the `check_bvssh_reconcile.py` shape. It is also not satisfiable by touching the file: the pass
+condition is a cycle newer than the releases, not a modification timestamp.
+
+Three branches earned their own tests by failing first in review:
+
+- **`never-recorded` is its own state, not a very wide arc.** Without it the framework repo — 86
+  minor releases, zero cycles — is told it owes one cycle spanning its entire history. An
+  unmeetable demand gets muted, and a muted check is decorative: the same end state as the drift
+  it was built to stop.
+- **`--release-repo`.** A dogfood consumer records cycles locally while releases ship upstream.
+  Scanning the wrong repo returns a *plausible number*, not an error — the roadmap repo mentions
+  10 upstream versions in its own commit subjects while 48 actually shipped — so the count now
+  always discloses which repo it came from.
+- **`no-releases-matched`.** "None found" and "my pattern is broken" must not be the same output.
+
+**Worked failure**: dogfood shipped 48 minor releases across 49 days (2026-06-18 → 2026-08-06) —
+two validator checks, two engine layers, three skills, four guards — with zero diamond phase
+transitions, therefore zero triggers, therefore zero cycles. Nine of its twelve prior cycles had
+landed in one 19-day window while the cycle machinery was itself being built. The ledger tracked
+attention, not work.
+
+Found by `/mycelium:framework-health` 2026-08-06. 15 new tests. The built-not-wired guard caught
+the new script before it shipped unwired — *"a unit test is not a caller."*
+
 ## v0.97.1 - corrects v0.88.0: the absence-claim guard fired on the retraction
 
 **A guard that warns hardest at the moment someone admits they were wrong is training the

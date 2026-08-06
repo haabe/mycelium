@@ -88,6 +88,15 @@ Every cycle record carries a `cycle_class` field. The class determines which cal
 | Leaf launched | L5 Deliver complete | Full predicted vs actual comparison |
 | Post-launch review | 30 days after launch | User metrics, actual outcome, calibration delta |
 | Rework follow-up | 14 days after completion | Post-delivery corrections, regressions, days to first regression |
+| **Framework work shipped** | **A release arc closes — see below** | **`meta-dogfood` record: effort accuracy, learnings, gates fired. ICE/DORA/user-metrics exempt.** |
+
+**The release-arc trigger (added 2026-08-06, v0.98.0).** Every row above this one is keyed to the *leaf* lifecycle, so until now a `meta-dogfood` cycle could only open where a leaf-shaped event happened to occur — in practice `diamond-progress` at a phase transition, the single opener in the codebase. Framework work does not move diamonds through phases. It ships releases. So framework work was recordable in principle and unrecordable in practice, and the ledger filled only while sessions happened to be thinking about it.
+
+**The trigger**: a `meta-dogfood` cycle is owed when **≥5 minor releases** (`v0.X.0`) have shipped since the newest `completed_at` in `cycle-history.yml`. Minor, not patch — a patch is maintenance, and the 2026-06-18 ruling that steady-state ops gets no cycle still stands. Five is a starting threshold, not a measured one; it is registered in `canvas/thresholds.yml` as `cycle_recording_arc` so it calibrates like every other threshold rather than staying a number someone once typed.
+
+**Enforced by** `scripts/check_cycle_recording.py`, which counts minor-release commits since the newest cycle and fails loud when the arc is owed. It does **not** write the record or guess its boundaries — deciding where an arc begins and ends is a judgement, and a script that guessed would fabricate the effort estimate that is the record's only required calibration field. It asserts the arc was *considered*, the same shape as `check_bvssh_reconcile.py`.
+
+**Worked failure this trigger exists for**: the dogfood project shipped 29 minor releases across 49 days (2026-06-18 → 2026-08-06) — two validator checks, two engine layers, three skills, four guards — with zero diamond phase transitions, therefore zero triggers, therefore zero cycles. Nine of its twelve prior cycles had landed in a single 19-day window while cycle machinery was being built. Attention was the only mechanism, so the ledger tracked attention rather than work.
 
 ## Post-Mortem Trigger
 
@@ -134,11 +143,20 @@ Track at which lifecycle phase leaves are most often discarded:
 
 ## Framework-on-Framework Exemption
 
-When Mycelium is the product (this repo dogfoods itself), framework improvements ship as commits and graduate through `.claude/memory/corrections.md` → mechanism (validator check, guardrail, skill update). They do **not** populate `cycle-history.yml`.
+**NARROWED 2026-08-06 (v0.98.0). It used to exempt the whole record; it now exempts only the fields that genuinely do not apply.** Read the history before applying it, because the old form is still quoted in older decision logs.
 
-**Why**: The cycle schema (`feasibility_risk`, `dora_metrics`, `user_metrics`, ICE prediction) does not map cleanly to "added a validator check" or "graduated a recurring correction to a mechanism." Forcing framework work through the cycle ledger would produce mostly-null rows and mix product-cycle signal with framework-meta signal in `calibration_summary`, degrading both.
+When Mycelium is the product (a repo dogfooding itself), framework improvements ship as commits and graduate through `.claude/memory/corrections.md` → mechanism. That graduation ledger is unchanged and remains the primary framework calibration surface.
 
-**Where framework calibration lives instead**:
+**What is exempt: fields, not records.** Framework-self-development IS recorded, as `cycle_class: meta-dogfood` (see [Cycle Class](#cycle-class)). On such a record:
+
+- `predicted.ice_score` — **exempt**, permitted zero with a `notes:` line. No impact/confidence/ease tradeoff was scored, so a number here would be invented.
+- `actual.dora_metrics`, `actual.user_metrics` — **exempt**, permitted null. Delivery-health and adoption belong to the L4 delivery diamond and to `dora-metrics.yml`, not to a per-cycle row.
+- `calibration.ice_accuracy`, `calibration.risk_accuracy` — **exempt**, permitted null. They are derived from the exempt fields.
+- `calibration.effort_accuracy` — **REQUIRED, and it is the point.** This is the one dimension the schema does fit framework work, and it is the one that has paid: effort accuracy across meta-dogfood cycles surfaced *scope-expansion-blind-to-user* at N=4, the dogfood project's most consistent calibration miss, which graduated to guardrail **G-P9**. The corrections → cluster path did not produce that finding and structurally could not — a correction records a mistake, not an estimate that was wrong.
+
+**Why the old whole-record form was wrong, kept because the reasoning was half right.** The original (v0.23.16, 2026-05-14) argued that forcing framework work through the ledger "would produce mostly-null rows". That prediction was CORRECT — all ten meta-dogfood records in the dogfood project carry null ICE, null DORA and null user-metrics. The error was the remedy: it dropped the record to avoid the nulls, when the fix was to stop *requiring* the null fields. Nineteen days later `cycle_class: meta-dogfood` (v0.39.0, 2026-06-02) was added saying the opposite, and neither rule was reconciled with the other — so from 2026-06-02 to 2026-08-06 this file contained two contradicting answers sixty lines apart, and which one applied was decided by a detection test (below) that a dogfood-consumer repo fails on a technicality. Surfaced by `/mycelium:framework-health` 2026-08-06.
+
+**Where the rest of framework calibration lives**:
 - `corrections.md` — recurrence count is the prediction-error signal
 - Graduation criterion in `cluster-instances.md` — the "actual vs expected" trigger
 - Commit history of `plugins/mycelium/engine/validator.sh` and `harness/anti-patterns.md` — the mechanism ledger
@@ -147,7 +165,9 @@ When Mycelium is the product (this repo dogfoods itself), framework improvements
 
 **Detection** (used by `/mycelium:framework-health` Step 1): the project root contains `plugins/mycelium/plugin.json` AND `CLAUDE.md` begins with `# Mycelium:`. When both hold, the skill routes to the corrections-graduation summary instead of returning early on N=0 cycles.
 
-**Reconsider this exemption if**: Mycelium gains a second product surface (e.g., a hosted service) whose delivery does fit the OST→ICE→launch shape. At that point, the framework-meta work could move to a parallel `framework-cycle-history.yml`. Until then, the existing corrections graduation is the ledger.
+**What the detection does and does NOT gate — the distinction the pre-2026-08-06 form got wrong.** It gates ONLY the `/framework-health` routing: whether that skill reports through the corrections-graduation lens or the five-dimension lens. It does **not** gate whether cycles are recorded. Framework work is recorded as `meta-dogfood` in every repo, matched or not. A repo that fails the detection is not thereby a repo whose framework work is unrecordable — that inference is what produced the contradiction described above, and it is why a dogfood-consumer repo (framework installed as a plugin, own `CLAUDE.md`) spent two months following whichever rule the reading session happened to reach first.
+
+**Reconsider this narrowing if**: effort accuracy stops paying. The whole case for keeping the record rests on one dimension producing real findings; if several consecutive meta-dogfood cycles yield no effort-calibration signal, the original whole-record exemption was right after all and this should revert rather than accumulate ceremony. Log that judgement in the decision log rather than letting the records thin out silently — a ledger that stops being written is indistinguishable from a ledger nothing happened in, which is the failure class this narrowing exists inside (see `harness/anti-patterns.md` #9).
 
 ## Connecting to Existing Systems
 

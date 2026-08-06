@@ -103,6 +103,50 @@ print(','.join(d.get('orphaned_in_log_only') or []))
 fi
 
 # ============================================================
+# CHECK 1c: Framework work shipped without a cycle record (v0.98.0)
+# Every trigger in engine/cycle-learning.md#when-to-record was keyed to the
+# LEAF lifecycle, and the only opener of a meta-dogfood cycle fired at a diamond
+# PHASE TRANSITION. Framework work does not move diamonds — it ships releases.
+# Measured in dogfood 2026-08-06: 48 minor releases across 49 days, zero cycles,
+# and nothing could tell "no cycle owed" from "owed and nobody noticed".
+#
+# ADVISORY, deliberately — the same tier as the BVSSH reminder above and NOT a
+# CI gate. A cycle record requires a judgement (where the arc begins, what the
+# effort estimate was); blocking a push until someone writes a retrospective
+# would be coercion rather than scaffolding, which the /framework-health Theory
+# X/Y audit exists to catch. This surfaces the debt and leaves the call open.
+# ============================================================
+CYCLECHK=""
+if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check_cycle_recording.py" ]; then
+  CYCLECHK="${CLAUDE_PLUGIN_ROOT}/scripts/check_cycle_recording.py"
+elif [ -f "$PROJECT_DIR/.claude/scripts/check_cycle_recording.py" ]; then
+  CYCLECHK="$PROJECT_DIR/.claude/scripts/check_cycle_recording.py"
+fi
+if [ -n "$CYCLECHK" ]; then
+  CYCLE_STATE=$(python3 "$CYCLECHK" --project-dir "$PROJECT_DIR" --json 2>/dev/null \
+    | python3 -c "
+import json, sys
+try:
+  d = json.load(sys.stdin)
+except Exception:
+  sys.exit(0)
+status = d.get('status')
+if status == 'cycle-owed':
+  print('owed:%s' % d.get('releases', '?'))
+elif status == 'never-recorded':
+  print('baseline:%s' % d.get('releases', '?'))
+" 2>/dev/null || echo "")
+  case "$CYCLE_STATE" in
+    owed:*)
+      REMINDERS="${REMINDERS}${CYCLE_STATE#owed:} minor releases have shipped since the last recorded cycle — a meta-dogfood cycle is owed (/mycelium:retrospective). Effort accuracy is its one required calibration field. "
+      ;;
+    baseline:*)
+      REMINDERS="${REMINDERS}No cycle has ever been recorded here while ${CYCLE_STATE#baseline:} minor releases shipped — record ONE baseline cycle (/mycelium:retrospective) and later runs measure from it. "
+      ;;
+  esac
+fi
+
+# ============================================================
 # CHECK 2: Delivery metrics cadence (per delivery cycle)
 # Routes to product-type-appropriate metrics canvas (v0.11.0)
 # ============================================================
