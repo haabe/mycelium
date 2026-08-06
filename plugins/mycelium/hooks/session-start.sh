@@ -181,6 +181,40 @@ if d.get('status') == 'unreconciled':
 fi
 
 # ============================================================
+# CHECK 1e: shipped solution leaves with no ICE (v0.100.0)
+# Check 38 requires non-zero ICE on a product-leaf CYCLE RECORD; nothing
+# required it on the LEAF. So a leaf can ship with the selection gate bypassed
+# and nothing notices -- and in a tree whose opportunities all roll up to the
+# framework, no product-leaf cycle can open to trip Check 38 anyway. The
+# structural zero masks the wiring zero. Dogfood 2026-08-06: 7 of 7 shipped
+# leaves carried no ICE (opp-036).
+#
+# ADVISORY, same tier as the reminders above. Backfilling a score is a
+# judgement, and `ice_exempt` with a reason is a legitimate answer.
+# ============================================================
+LEAFCHK=""
+if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check_leaf_lifecycle.py" ]; then
+  LEAFCHK="${CLAUDE_PLUGIN_ROOT}/scripts/check_leaf_lifecycle.py"
+elif [ -f "$PROJECT_DIR/.claude/scripts/check_leaf_lifecycle.py" ]; then
+  LEAFCHK="$PROJECT_DIR/.claude/scripts/check_leaf_lifecycle.py"
+fi
+if [ -n "$LEAFCHK" ]; then
+  UNSCORED=$(python3 "$LEAFCHK" --project-dir "$PROJECT_DIR" --json 2>/dev/null \
+    | python3 -c "
+import json, sys
+try:
+  d = json.load(sys.stdin)
+except Exception:
+  sys.exit(0)
+if d.get('status') == 'violations':
+  print(len(d.get('violations') or []))
+" 2>/dev/null || echo "")
+  if [ -n "$UNSCORED" ]; then
+    REMINDERS="${REMINDERS}${UNSCORED} shipped solution leaf/leaves carry no ICE and no exemption — the score its selection rested on, and the precondition for a product-leaf cycle. Backfill via /mycelium:ice-score or add ice_exempt with a reason. "
+  fi
+fi
+
+# ============================================================
 # CHECK 2: Delivery metrics cadence (per delivery cycle)
 # Routes to product-type-appropriate metrics canvas (v0.11.0)
 # ============================================================

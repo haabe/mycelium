@@ -4,6 +4,45 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-06.
 
+## v0.100.0 - the leaf-side half of Check 38
+
+**Check 38 requires non-zero ICE on a product-leaf CYCLE RECORD. Nothing required it on the LEAF.**
+
+So a leaf could ship with the selection gate bypassed, and the only consequence was silence — because
+in a tree whose opportunities all roll up to the framework, no product-leaf cycle could ever open to
+trip Check 38 anyway.
+
+**The structural zero masks the wiring zero, and that is the finding.** If the leaf lifecycle does not
+fire for framework leaves today, it will not fire for product leaves tomorrow — and on that day the
+bypass starts eating the ICE-calibration dimension that product-leaf cycles exist to feed.
+
+Dogfood measured **7 of 7 shipped leaves carrying no ICE**, four documenting their own drift in their
+own status text: `SHIPPED-BEFORE-SCORING`, *"open for two months after shipping"*, *"verified in code,
+not inferred from the canvas"*, *"shipped-in-a-different-form"*.
+
+### `check_leaf_lifecycle.py`
+
+Advisory via `session-start.sh`. An `ice_exempt:` field with a reason satisfies it — **a leaf may ship
+unscored; it may not do so silently.** The exemption is a sentence someone had to write.
+
+Deliberately narrow: it does not try to detect a leaf that shipped without its status being updated.
+That needs fuzzy cross-referencing, and a guesser that got it wrong would corrupt the canvas it exists
+to protect. `sol-008a` sat wrong for two months and this check would not have caught it — named in the
+source so the gap is out of scope rather than silently unhandled.
+
+### It was first built in the wrong place, and running it caught that
+
+Written initially as `validate-template.sh` Check 54. That runs in the **framework** repo, whose canvas
+has no shipped leaves — the check reported *"nothing to audit"* and would have read green forever while
+the consumer canvases carried every instance. **The built-not-wired class, committed inside the fix for
+a wiring failure.**
+
+Moved to a plugin script so it reaches the canvas that has the data. `N/A` now prints distinctly from
+`OK`, so *"nothing shipped yet"* and *"everything shipped is scored"* can never look the same.
+
+12 new tests. Found because the founder refused a month-summary that had glued three unrelated zeros
+together, and separating them exposed the one that was actually broken.
+
 ## v0.99.1 - the registry, and the guard that caught its author
 
 **`right-content-wrong-surface` graduates from three point-checks to one general mechanism.**
