@@ -120,6 +120,60 @@ _ABSENCE = [
                r"evidence|records)\b", re.IGNORECASE),
     re.compile(r"\bnobody\s+(?:read|audited|asked|checked|looked|noticed|ran)\b",
                re.IGNORECASE),
+
+    # ---- OBLIGATION CLAIMS (added v0.101.0, 2026-08-06) -------------------
+    # An absence and an OBLIGATION rot the same way, and the obligation rots
+    # more expensively because acting on a stale one contacts a real person.
+    #
+    # WORKED FAILURE, and it is a REPEAT: on 2026-08-06 the agent recommended
+    # writing to a contributor because an auto-memory line read "OWED: founder
+    # reply re: crediting". Four outbound replies had been sent and the task
+    # said in its own text "Nothing is owed to him and nothing is owed by him".
+    # The agent read a June line and skipped the touch_log directly beneath it.
+    # The SAME error, about the SAME person, was already logged on 2026-08-04.
+    # A prose prevention rule was written that day and did not hold; this is the
+    # mechanical form of it.
+    #
+    # Scope note: matches only obligation verbs bound to a debt noun, so
+    # "owed to the reader" or "a reply is owed" fires while ordinary prose that
+    # happens to contain "still" does not.
+    re.compile(r"\b(?:is|are|remains?|stays?|still)\s+"
+               r"(?:owed|outstanding|unanswered|unpaid|pending)\b", re.IGNORECASE),
+    # Separator is [\s:,-]+ and not \s+ because the real sentence that motivated
+    # this reads "OWED: founder reply re: crediting" — a colon, which a
+    # whitespace-only separator misses. Same failure shape as verify_citations
+    # requiring a colon that never occurred: a pattern that does not match the
+    # live text. Caught by testing against the actual line rather than a
+    # synthetic one.
+    re.compile(r"\bowe[sd]?\b[\s:,-]+(?:\w+[\s:,-]+){0,3}"
+               r"(?:an?\s+)?(?:reply|repl(?:y|ies)|response|answer|message|"
+               r"introduction|follow-?up|decision)\b", re.IGNORECASE),
+    re.compile(r"\b(?:has|have|had)\s+not\s+(?:yet\s+)?"
+               r"(?:replied|responded|answered|been\s+told|been\s+sent|been\s+asked)\b",
+               re.IGNORECASE),
+    re.compile(r"\b(?:not|never)\s+(?:yet\s+)?"
+               r"(?:built|shipped|implemented|graduated|wired|mechanized)\b",
+               re.IGNORECASE),
+
+    # ---- ROLE / IDENTITY CLAIMS (added v0.101.0, 2026-08-06) -------------
+    # WORKED FAILURE, same day: a named external practitioner was recorded as
+    # "a senior coach" across SIX surfaces, inferred from marketplace profiles a
+    # search returned. His own site says "Despite 25+ years in tech, I'm a
+    # terrible programmer. AI changed that. Now I ship software fast." Coaching
+    # was one link among a dozen. The label was load-bearing: it set how every
+    # signal in the thread was classified.
+    #
+    # A directory profile describes what someone SELLS, and a search engine
+    # surfaces those first precisely because they are optimised to be found.
+    # This fires on a role assigned to a named person so the author has to say
+    # where the role came from.
+    # Up to three interposed modifiers, because the real sentence was "is a
+    # senior PRODUCT coach" and a fixed adjective list missed it. The role nouns
+    # are specific enough that the wider gap does not over-fire on ordinary
+    # prose ("is a good idea" reaches no role noun).
+    re.compile(r"\b(?:is|was)\s+an?\s+(?:\w+[\s-]+){0,3}"
+               r"(?:coach|consultant|founder|CTO|CEO|advisor|maintainer|"
+               r"practitioner|engineer|developer|researcher)\b", re.IGNORECASE),
 ]
 
 #: A named search scope. Deliberately NARROWER than what would satisfy a careful

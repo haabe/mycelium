@@ -467,3 +467,62 @@ def test_the_residual_over_suppression_is_pinned(scripts_path):
         "No mechanism writes to that surface, and the earlier estimate "
         "was wrong.",
     ) == ""
+
+
+# ---------------------------------------------------------------------------
+# OBLIGATION + IDENTITY claims (v0.101.0, 2026-08-06)
+#
+# Every positive case below is a VERBATIM sentence that shipped or was nearly
+# acted on, not a synthetic one. Both patterns MISSED their own motivating
+# sentence on the first cut -- a colon broke the obligation regex, an interposed
+# adjective broke the identity one -- which is the verify_citations failure
+# exactly: a pattern that does not match the live text. Caught by running them
+# against the real lines instead of invented ones.
+# ---------------------------------------------------------------------------
+
+def test_obligation_claim_fires_on_the_real_dagfinn_line(scripts_path):
+    """The line that nearly produced an unwanted message to a contributor.
+
+    Four replies had been sent and the task said "Nothing is owed to him and
+    nothing is owed by him". The agent read this June line and skipped the
+    touch_log beneath it -- a repeat of a 2026-08-04 correction about the same
+    person, whose prose prevention rule did not hold.
+    """
+    assert _warn(scripts_path, "OWED: founder reply re: crediting + the consent/naming call.")
+
+
+def test_obligation_variants_fire(scripts_path):
+    assert _warn(scripts_path, "A reply is still owed to him.")
+    assert _warn(scripts_path, "He has not yet replied to the crediting question.")
+
+
+def test_not_yet_built_fires_on_the_real_ap9_line(scripts_path):
+    """Read as current three days after the mechanism shipped, and repeated into
+    a /framework-health dashboard as a live open item."""
+    assert _warn(scripts_path, "The mechanism graduation is now triggered and NOT yet built.")
+
+
+def test_identity_claim_fires_on_the_real_mislabel(scripts_path):
+    """"Senior product coach" -- inferred from marketplace profiles a search
+    returned, never from his own site, written across six surfaces. The label
+    set how every signal in the thread was classified."""
+    assert _warn(scripts_path, "Josh Herzig-Marx is a senior product coach.")
+
+
+def test_identity_claim_fires_with_other_modifiers(scripts_path):
+    assert _warn(scripts_path, "He is an early-stage founder and advisor.")
+
+
+def test_session_records_do_not_fire(scripts_path):
+    """"No confidence gate moved" records what a session DID. Always true when
+    written, needs no search behind it."""
+    assert _warn(scripts_path, "No confidence gate moved this session.") == ""
+    assert _warn(scripts_path, "The reply was sent 2026-06-22 and the loop is closed.") == ""
+
+
+def test_ordinary_prose_does_not_reach_a_role_noun(scripts_path):
+    assert _warn(scripts_path, "This is a good idea worth testing.") == ""
+    # The modifier gap caps at three words, so a role noun further away is not
+    # treated as an identity claim. Verified rather than assumed: this was
+    # predicted to over-fire and does not.
+    assert _warn(scripts_path, "That is a reasonable approach for the founder to take.") == ""

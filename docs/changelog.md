@@ -4,6 +4,40 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-06.
 
+## v0.101.0 - an obligation rots like an absence
+
+**The absence-claim guard now fires on obligations and role claims.** Both rot the same way, and an
+obligation rots more expensively — acting on a stale one contacts a real person.
+
+Both patterns exist because the agent made exactly these two errors in a single session:
+
+- It recommended writing to a contributor because an auto-memory line read `OWED: founder reply re:
+  crediting`. Four replies had been sent, and the task said in its own text *"Nothing is owed to him
+  and nothing is owed by him."* The agent read a June line and skipped the touch_log directly beneath
+  it — **a repeat of a correction logged two days earlier about the same person**, whose prose
+  prevention rule did not hold. This is the mechanical form of that rule.
+- It recorded a named practitioner as *"a senior product coach"* across six surfaces, inferred from
+  marketplace profiles a search returned rather than from his own site — which says *"Despite 25+
+  years in tech, I'm a terrible programmer. AI changed that. Now I ship software fast"* and lists
+  coaching as one link among a dozen. The label was load-bearing: it set how every signal in the
+  thread was classified.
+
+### Both new patterns missed their own motivating sentence on the first cut
+
+A colon broke the obligation regex — the real line is `OWED:` and the pattern required `owed ` with
+whitespace. An interposed adjective broke the identity one — the real line is *"a senior **product**
+coach"* and the pattern allowed only a fixed adjective list.
+
+**That is the `verify_citations` failure exactly: a pattern that does not match the live text.** It
+was caught by running both against the real sentences instead of synthetic ones, and every positive
+fixture in the suite is now a verbatim sentence that actually shipped.
+
+One predicted over-fire turned out not to fire — the modifier gap caps at three words, so a role noun
+further away is not read as an identity claim. Verified rather than assumed, and pinned as its own
+test.
+
+7 new tests, 83 on this guard.
+
 ## v0.100.0 - the leaf-side half of Check 38
 
 **Check 38 requires non-zero ICE on a product-leaf CYCLE RECORD. Nothing required it on the LEAF.**
