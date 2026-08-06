@@ -1,0 +1,101 @@
+# Surface Registry
+#
+# For each recurring artifact class: which file is AUTHORITATIVE, and which
+# mechanism READS it. Nothing else.
+#
+# WHY THIS EXISTS (cluster `right-content-wrong-surface`, criterion met
+# 2026-07-26, mechanism built 2026-08-06):
+#
+#   The artifact is produced correctly and on time. The analysis is sound, the
+#   lesson is real, the assessment is honest. It is written to a surface no
+#   downstream mechanism reads. Nothing is lost to the human eye; everything is
+#   lost to the machinery.
+#
+#   The failure is invisible by construction: a reader who opens the surface
+#   where the content DID land sees a complete, well-reasoned artifact and
+#   concludes the loop closed.
+#
+# THREE INSTANCES, and the third is why this is a registry rather than a fourth
+# point-check:
+#   1. BVSSH assessments -> decision-log, never bvssh-health.yml, which is the
+#      canvas the SessionStart hook reads to compute "overdue". Three times.
+#      Point-fixed v0.59.0.
+#   2. A release lesson -> changelog.md, never corrections.md, which is what
+#      /corrections-audit and the cluster catalogue actually read.
+#      Point-fixed v0.59.1.
+#   3. Upstream candidates -> 17 items marked "UPSTREAM CANDIDATE" in a
+#      chronological decision log, read by a human scrolling and by no
+#      mechanism. STILL OPEN. It has no authoritative surface at all, which is
+#      why the registry has to be able to express "none yet" instead of
+#      quietly omitting the row.
+#
+# THE TEST OF THIS FILE: adding a fourth artifact class is a ROW, not a fourth
+# point-check. If someone ships a fourth bespoke checker instead of adding a
+# row here, this registry failed and should be reconsidered rather than kept
+# for appearances.
+#
+# WHAT IT DOES NOT DO. It does not verify that content actually landed — that
+# is per-artifact and belongs to the point-checks. It verifies the WIRING
+# CLAIM: that the declared reader genuinely references the declared surface.
+# A reader that does not is a loop that cannot close, and that is exactly the
+# defect this cluster is about, one level up.
+
+schema_version: 1
+
+surfaces:
+  - artifact_class: bvssh-assessment
+    description: "A /bvssh-check assessment: five dimensions, CALMS, blocking findings."
+    authoritative_surface: ".claude/canvas/bvssh-health.yml"
+    read_by:
+      - "plugins/mycelium/hooks/session-start.sh"          # computes the overdue reminder
+      - "plugins/mycelium/scripts/check_bvssh_reconcile.py" # catches log-only orphans
+    also_written_to: ".claude/harness/decision-log.md"
+    note: >-
+      The decision-log copy is provenance and is CORRECT to keep. The defect was
+      writing ONLY there. Three orphans (2026-05-20, 2026-06-20, 2026-07-11)
+      before the skill was given a mandatory canvas step.
+    point_check: "check_bvssh_reconcile.py (v0.59.0)"
+
+  - artifact_class: release-lesson
+    description: "A process lesson learned while shipping a release."
+    authoritative_surface: ".claude/memory/corrections.md"
+    read_by:
+      - "plugins/mycelium/skills/corrections-audit/SKILL.md"
+      - "plugins/mycelium/skills/framework-health/SKILL.md"  # step 4b cluster graduation
+    also_written_to: "docs/changelog.md"
+    note: >-
+      The changelog is release COMMUNICATION and is correct to keep. corrections.md
+      is what /corrections-audit, the cluster catalogue, and count-keyed graduation
+      read. v0.57.4's lesson went to the changelog only and never reached the memory
+      that feeds graduation.
+    point_check: "Check 48, WARN tier (v0.59.1)"
+
+  - artifact_class: correction-to-cluster-instance
+    description: "A logged correction that is an instance of a known cluster."
+    authoritative_surface: ".claude/memory/cluster-instances.md"
+    read_by:
+      - "plugins/mycelium/scripts/check_cluster_reconcile.py"
+      - "plugins/mycelium/skills/framework-health/SKILL.md"
+    also_written_to: ".claude/memory/corrections.md"
+    note: >-
+      Added 2026-08-06 (opp-034). Cluster graduation is keyed to instance COUNTS
+      and nothing writes them. Measured: corrections +24 over five days, catalogue
+      +1 row. The reader asserts the hop was CONSIDERED; it deliberately does not
+      classify, because mis-binning corrupts a count that gates a mechanism.
+    point_check: "check_cluster_reconcile.py (v0.99.0)"
+
+  - artifact_class: upstream-candidate
+    description: >-
+      A framework change surfaced by a dogfood project, to be authored upstream.
+      Marked "UPSTREAM CANDIDATE" in prose.
+    authoritative_surface: null   # OPEN — there is no such surface yet
+    read_by: []                   # and therefore no reader
+    also_written_to: ".claude/harness/decision-log.md"
+    note: >-
+      THE OPEN INSTANCE, recorded as open rather than omitted. 17 known items sit
+      as prose in a chronological log. Nothing routes them upstream, nothing tracks
+      whether they were authored, nothing surfaces them at the moment someone is
+      working upstream. A registry that could only express solved classes would
+      hide its most important row, so `null` is a legal value here and the checker
+      reports it as an undeclared surface rather than passing over it.
+    point_check: null

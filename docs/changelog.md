@@ -4,6 +4,50 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-06.
 
+## v0.99.1 - the registry, and the guard that caught its author
+
+**`right-content-wrong-surface` graduates from three point-checks to one general mechanism.**
+
+`engine/surface-registry.yml` declares, for each recurring artifact class, which file is
+**authoritative** and which mechanism **reads** it. `check_surface_registry.py` verifies the wiring
+claim: that each declared reader genuinely references its declared surface. A reader that does not
+is a loop that cannot close, which is this cluster one level up.
+
+The cluster's criterion was that a fourth class must be a **row**, not a fourth point-check.
+`correction-to-cluster-instance` was added as a row the same day the registry shipped, which is the
+criterion satisfying itself.
+
+`upstream-candidate` ships as an **open row** — null surface, no reader, 17 known items still
+homeless. A registry that could only express solved classes would hide its most important entry, so
+null is legal and the checker reports it rather than passing over it.
+
+### Then an existing guard caught the new scripts
+
+`check_empty_input_honesty.py` (v0.79.0) runs every shipped check against a genuinely empty
+repository. Both scripts added today exited **0** there, reporting a friendly SKIP — a check that
+verified nothing and reads green forever. That is anti-pattern #9 appearing *inside* the mechanisms
+built to close its sibling cluster.
+
+Both now fail the precondition (exit 2) with a message naming what was not verified, and both gained
+a `--root` alias so the guard could aim at them at all. Without it they were reported as *"NOT a
+clean skip — untestable by this guard and its empty-input behaviour is unknown"*. Coverage went from
+10 scripts to 12.
+
+### The AP#9 cluster record was three days stale
+
+`fail-open-on-absent-input` read *"graduation is now triggered and NOT yet built"* from 2026-07-25
+until today — while its cross-cutting mechanism had shipped on 2026-08-03 as `check_empty_input_honesty.py`.
+A `/framework-health` run read that stale line this morning and repeated it into a dashboard as a
+live open item. Nobody checked the tree.
+
+Corrected, and recorded as a stale-state read on the cluster catalogue itself — the same class as
+instance #19, and `opp-034` in miniature: status fields are hand-maintained and nothing writes them.
+
+**Scope kept honest**: `check_empty_input_honesty.py` catches empty input, not reduced input. A check
+matching 3 of 300 live cases still exits 0. The cluster is graduated for the tractable half.
+
+28 new tests.
+
 ## v0.99.0 - the count that nothing writes
 
 **`cluster-instances.md` graduates clusters on instance COUNTS ("graduate at instance 6", ">=3

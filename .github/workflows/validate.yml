@@ -111,6 +111,15 @@ jobs:
       - name: Run theory-fidelity structural guard (theories.md mechanism refs resolve; gates grounded; no name-only theory)
         run: python3 plugins/mycelium/scripts/check_theory_fidelity.py --root .
 
+      - name: Run surface-registry guard (every declared reader actually reads its surface)
+        # right-content-wrong-surface, criterion met 2026-07-26. An artifact written
+        # to a surface nothing reads is invisible by construction. This verifies the
+        # WIRING CLAIM -- that each declared reader genuinely references its declared
+        # surface -- not that any given artifact landed. Open rows (a class with no
+        # authoritative surface yet) are reported, not failed: they are a recorded gap
+        # with a decision attached, not a regression.
+        run: python3 plugins/mycelium/scripts/check_surface_registry.py
+
       - name: Run Python unit tests with coverage (verbose output for CI logs)
         run: |
           pytest tests/python/ -v \

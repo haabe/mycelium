@@ -307,8 +307,13 @@ def main() -> int:
         description="Fail when framework releases have accumulated with no meta-dogfood cycle."
     )
     parser.add_argument(
-        "--project-dir", default=".",
-        help="project root holding .claude/canvas (default: cwd)",
+        "--project-dir", "--root", dest="project_dir", default=".",
+        help=(
+            "project root holding .claude/canvas (default: cwd). `--root` is an alias so "
+            "check_empty_input_honesty.py can aim this at an empty tree; without it the "
+            "guard reports this script as untestable, and its empty-input behaviour would "
+            "go unverified -- which is the anti-pattern #9 shape one level up."
+        ),
     )
     parser.add_argument(
         "--release-repo",
@@ -352,12 +357,27 @@ def main() -> int:
 
     cycle_file = project_dir / ".claude" / "canvas" / "cycle-history.yml"
     if not cycle_file.is_file():
-        msg = "no cycle-history.yml — project has not started recording cycles, nothing to assess"
+        # PRECONDITION FAILURE (exit 2), not a pass.
+        #
+        # A fresh project genuinely may have no ledger, so the first version
+        # returned 0 here and called it an honest skip. check_empty_input_honesty.py
+        # rejected that, and it is right for a reason worth keeping: exit 0 asserts
+        # "I looked and everything is fine", which is false when nothing was looked
+        # at. Exit 2 says "I could not assess", which is what actually happened.
+        #
+        # Safe to do: this script is ADVISORY via session-start, which reads --json
+        # and reacts only to named statuses, so the exit code changes no consumer
+        # behaviour. It is not a CI gate and cannot redden a fresh project's build.
+        msg = (
+            f"cannot assess: no {cycle_file.relative_to(project_dir)} under {project_dir}. "
+            f"A project that has never recorded a cycle has no baseline to measure an arc "
+            f"from. NOTHING WAS ASSESSED — this is not a pass."
+        )
         if args.json:
-            print(json.dumps({"status": "skip", "reason": msg}))
+            print(json.dumps({"status": "precondition-failed", "reason": msg}))
         else:
-            print(f"check_cycle_recording: SKIP — {msg}")
-        return 0
+            print(f"check_cycle_recording: ERROR — {msg}", file=sys.stderr)
+        return 2
 
     try:
         newest = newest_cycle_completion(cycle_file)

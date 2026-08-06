@@ -113,12 +113,20 @@ def test_two_releases_in_one_subject_both_counted(scripts_path, tmp_path):
 
 # --- absent-input discipline (anti-pattern #9) ------------------------------
 
-def test_no_cycle_history_is_not_a_violation(scripts_path, tmp_path, capsys):
+def test_no_cycle_history_is_a_precondition_failure_not_a_pass(scripts_path, tmp_path, capsys):
+    """Exit 0 would assert "I looked and everything is fine" over nothing looked at.
+
+    This originally returned 0 as an honest skip. check_empty_input_honesty.py
+    rejected it: a check reporting success over an empty population reads green
+    forever. Exit 2 says "I could not assess", which is what happened.
+    """
     mod = _import(scripts_path)
     project = _repo(tmp_path / "proj", ["v0.90.0: a"])
 
-    assert _run(mod, "--project-dir", str(project)) == 0
-    assert "SKIP" in capsys.readouterr().out
+    assert _run(mod, "--project-dir", str(project)) == 2
+    err = capsys.readouterr().err
+    assert "NOTHING WAS ASSESSED" in err
+    assert "not a pass" in err
 
 
 def test_never_recorded_is_its_own_state_not_a_giant_arc(scripts_path, tmp_path, capsys):
