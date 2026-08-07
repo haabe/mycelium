@@ -50,6 +50,50 @@ case "$FILE_PATH" in
   *)  FILE_PATH="$PROJECT_DIR/$FILE_PATH" ;;
 esac
 
+# SCOPE: this gate is about THIS PROJECT, so the target must be INSIDE it.
+#
+# Everything below reads discovery state from $PROJECT_DIR — active.yml, purpose.yml,
+# the skip-ack. Without a containment test the TRIGGER is session-scoped while the
+# STATE is project-scoped, so a write to a file the project does not own is judged by
+# a different project's discovery. Found 2026-08-07: a Cowork session rooted in a
+# Mycelium project blocked a write to ~/Cowork Workspace/personal-os/evals/*.sh, which
+# has no relationship to any diamond, purpose or canvas. Reproduced with both arms.
+#
+# This is the other half of the 2026-07-26 fix below. That one made the EXEMPTION
+# project-relative and left the trigger session-scoped; this closes the asymmetry.
+#
+# The skip-ack is NOT the remedy for that case and must not be used as one: it lives
+# at $PROJECT_DIR/.claude/state/ and is permanent, so acking an out-of-project write
+# would silence the gate forever for a project that never came up, and would record a
+# decision the user was never asked to make.
+#
+# Resolution is physical (pwd -P) on both sides so symlinks and ".." cannot walk out
+# of the root and still compare as inside. The target does not exist yet by
+# definition, so we resolve its nearest EXISTING ancestor — Write may create parents.
+_nearest_existing_dir() {
+  local d="$1"
+  while [ -n "$d" ] && [ "$d" != "/" ] && [ ! -d "$d" ]; do
+    d="$(dirname "$d")"
+  done
+  printf '%s' "$d"
+}
+_real_dir() { (cd "$1" 2>/dev/null && pwd -P); }
+
+PROJECT_REAL="$(_real_dir "$PROJECT_DIR")"
+TARGET_REAL="$(_real_dir "$(_nearest_existing_dir "$(dirname "$FILE_PATH")")")"
+
+# Unresolvable project root: allow. The gate cannot read its own state either, so
+# blocking would mean judging a file against discovery state it could not load. This
+# errs toward allow, consistent with the stated narrow scope and the friction-wall
+# risk — a missed scaffold is recoverable, a wall on an unrelated file is not.
+[ -n "$PROJECT_REAL" ] || exit 0
+[ -n "$TARGET_REAL" ] || exit 0
+case "$TARGET_REAL" in
+  "$PROJECT_REAL") ;;
+  "$PROJECT_REAL"/*) ;;
+  *) exit 0;;
+esac
+
 # Never gate framework/project state or documentation.
 #
 # The .claude/ test is deliberately PROJECT-RELATIVE. Matching `*/.claude/*`

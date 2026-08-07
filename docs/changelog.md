@@ -4,6 +4,43 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-07.
 
+## v0.101.4 - the gate asked "in this session", not "in this project"
+
+**The discovery gate fired on files the project does not own.** It now tests containment first.
+
+Every check in `discovery-gate.sh` reads state from `$PROJECT_DIR` — `active.yml`, `purpose.yml`,
+the skip-ack. Nothing tested whether the *target* was inside that root. So the trigger was
+session-scoped while the state was project-scoped, and a write to an unrelated file got judged by a
+different project's discovery.
+
+Reported 2026-08-07 from a Cowork session rooted in a Mycelium project: a write to
+`personal-os/evals/*.sh` — harness tooling with no relationship to any diamond, purpose or canvas —
+was blocked. Reproduced with both arms: a new `.sh` inside the root blocks, an identical file
+outside the root also blocked, on the same discovery state.
+
+**This is the other half of the 2026-07-26 fix.** That one made the `.claude/` *exemption*
+project-relative and left the *trigger* session-scoped. The asymmetry is now closed.
+
+**The skip-ack was the wrong remedy and is documented as such at the code.** It lives at
+`$PROJECT_DIR/.claude/state/` and is permanent, so acking an out-of-project write would silence the
+gate forever for a project that never came up, and record a decision the user was never asked to
+make. With containment, nothing needs acking — the gate does not fire.
+
+Resolution is physical (`pwd -P`) on both sides, so symlinks and `..` cannot walk out of the root and
+still compare as inside. The target does not exist yet by definition, so the nearest existing
+ancestor is resolved instead — `Write` may create parents. An unresolvable root allows rather than
+blocks: the gate cannot read its own state either, and the stated narrow scope means a missed
+scaffold is recoverable where a wall on an unrelated file is not.
+
+4 new tests, 20 assertions on this guard (was 15), including a negative control asserting the
+in-project block still fires — if containment is ever written too broadly, that test fails rather
+than the gate silently going quiet.
+
+**Caught during the work, worth recording:** the new tests were first appended below the runner's
+`report` call, so they were defined, never invoked, and the suite printed green without them. That is
+the built-not-wired class, committed inside a fix for a scoping bug. Found by noticing the four test
+names were missing from the output, not by any check.
+
 ## v0.101.3 - this file holds one version
 
 **CLAUDE.md carried a rolling window of eight superseded version labels. It now carries the current
