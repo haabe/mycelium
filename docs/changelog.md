@@ -4,6 +4,26 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-07.
 
+## v0.101.3 - this file holds one version
+
+**CLAUDE.md carried a rolling window of eight superseded version labels. It now carries the current
+one only.**
+
+The history already lives here, in `docs/changelog.md`, and CLAUDE.md has always carried a
+`*Full version history*` pointer to it. So every superseded label in that file was a second copy of
+a record with a canonical home — and a second copy is a second thing to drift.
+
+The window also had no eviction rule. It grew by whatever each release happened to leave behind,
+which is how it reached eight entries (v0.101.1 down to v0.97.1) with no principle saying when one
+should go. Two of those eight were added earlier today, in this session, by an agent following the
+shape it found rather than asking what the shape was for.
+
+Nothing read them: 0 files under `plugins/`, `tests/` or `.github/` reference `Superseded label` or
+`Prior version`, so removal is inert to every guard.
+
+**The version prose line stays.** It is the one-glance statement of what the current release
+changed, and it is what a fresh session reads first. One version, not eight.
+
 ## v0.101.2 - the repair path could not repair
 
 **`auto-release.yml` has advertised a manual gap-repair since v0.87.0 and it never worked.**
