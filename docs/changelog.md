@@ -4,6 +4,45 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-07.
 
+## v0.107.0 - the empty quadrant: a closed task whose evidence never landed
+
+`canvas-health` already covered two thirds of the evidence-routing problem:
+
+| | task open | task completed |
+|---|---|---|
+| **evidence exists** | 8c(b) flagged | **nothing** |
+| **no task** | 8c(d) flagged | — |
+
+The third case had no check — and **`canvas_refs`, the field where a task declares which canvases
+its findings belong in, was read by nothing at all.** A grep across `plugins/mycelium/scripts/`
+returned zero matches. It was documentation of an intention with no mechanism behind it.
+
+**Dogfood 2026-08-08, and the timing is the argument.** That morning's `/bvssh-check` rated
+Measurement **amber** for a named, recurring failure: *"measurements generated and never landing
+where they are read."* **Three hours later** ht-055 was scored, closed, and written only into
+`human-tasks.yml` — while ht-055's own `canvas_refs` pointed at `purpose.yml#positioning_evidence`.
+The task said where its evidence belonged, the evidence did not go there, and nothing noticed.
+
+It surfaced because a human asked *"all logged and verified?"*. That is not a mechanism.
+
+**The first run of the new check found seven more, all older.** That is the case for building the
+check rather than repairing the instance: fixing ht-055 alone would have left seven stranded, and
+the repair would have read as completion.
+
+**Why this direction is the expensive one.** An open task with stranded evidence still sits in the
+pending list; something trips over it eventually. A **closed** task is gone from every open-work
+surface, so its findings are not merely unrouted — they are **unreachable**. The next session reads
+the canvas, sees nothing, and concludes the question was never asked.
+
+Exemptions are deliberate: `abandoned`/`cancelled` are terminal but expected to produce nothing —
+the point of abandoning is that nothing came of it — and an explicit `no_evidence_produced:` is
+exempt, because *"we asked and learned nothing"* is a finding that belongs in the task rather than
+in the opportunity tree. Landing in **any one** declared canvas counts; requiring all of them would
+flag correctly-routed evidence and train the reader to ignore the check.
+
+10 tests, regression-proven against the real pre-fix commit rather than a fixture. Wired to
+session-start, so it fires without anyone remembering to run it.
+
 ## v0.106.0 - a gate you can pipe away is not a gate
 
 **The gates were never the defect. The way they get run was.**

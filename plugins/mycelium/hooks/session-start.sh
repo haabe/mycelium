@@ -365,6 +365,46 @@ if [ -n "$REPLYCHK" ]; then
 fi
 
 # ============================================================
+# CHECK 1f: Evidence that never landed (advisory, v0.107.0)
+# ============================================================
+# The empty quadrant. canvas-health flags an OPEN task whose evidence exists
+# (8c(b)) and evidence with NO task (8c(d)). A CLOSED task whose findings never
+# reached the canvas it declared had no check, and `canvas_refs` was read by
+# nothing at all.
+#
+# Dogfood 2026-08-08: ht-055 was scored, closed, and written only into
+# human-tasks.yml while its own canvas_refs pointed at purpose.yml. It surfaced
+# because a human asked "all logged and verified?" — not a mechanism. The first
+# run of the resulting check found SEVEN more, all older.
+#
+# This is the expensive direction: an open task with stranded evidence still sits
+# in the pending list. A closed one is gone from every open-work surface, so its
+# findings are unreachable rather than merely unrouted.
+# ============================================================
+LANDEDCHK=""
+if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check_evidence_landed.py" ]; then
+  LANDEDCHK="${CLAUDE_PLUGIN_ROOT}/scripts/check_evidence_landed.py"
+elif [ -f "$PROJECT_DIR/.claude/scripts/check_evidence_landed.py" ]; then
+  LANDEDCHK="$PROJECT_DIR/.claude/scripts/check_evidence_landed.py"
+fi
+if [ -n "$LANDEDCHK" ]; then
+  STRANDED=$(python3 "$LANDEDCHK" --project-dir "$PROJECT_DIR" --json 2>/dev/null \
+    | python3 -c "
+import json, sys
+try:
+  d = json.load(sys.stdin)
+except Exception:
+  sys.exit(0)
+if d.get('status') == 'violations':
+  v = d.get('violations') or []
+  print(str(len(v)) + ': ' + ', '.join(x.get('id','?') for x in v[:5]))
+" 2>/dev/null || echo "")
+  if [ -n "$STRANDED" ]; then
+    REMINDERS="${REMINDERS}EVIDENCE NEVER LANDED on ${STRANDED} — completed task(s) whose findings never reached the canvas they declared in canvas_refs. A closed task is gone from every open-work surface, so these are unreachable, not merely unrouted. Write the finding into a declared canvas, or record no_evidence_produced with the reason. "
+  fi
+fi
+
+# ============================================================
 # CHECK 2: Delivery metrics cadence (per delivery cycle)
 # Routes to product-type-appropriate metrics canvas (v0.11.0)
 # ============================================================
