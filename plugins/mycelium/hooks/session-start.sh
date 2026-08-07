@@ -251,6 +251,47 @@ if d.get('status') == 'violations':
 fi
 
 # ============================================================
+# CHECK 1c: Source authenticity (advisory, v0.103.0)
+#
+# The evidence tiers grade evidence by WHERE IT CAME FROM. `external_human` means
+# a human outside the team said it, and nothing anywhere checks whether it WAS a
+# human. In a public channel those are different questions.
+#
+# Dogfood 2026-08-07: one templated account, quoted from two threads, was logged
+# as a second practitioner "arriving independently" at a conclusion the framework
+# already held. It appeared three times in one afternoon; counted naively it
+# would have entered canvas as three convergent strangers.
+#
+# Convergence-across-strangers is simultaneously the class this framework weights
+# most heavily and the cheapest one to manufacture — synthetic accounts restate
+# sensible heuristics fluently, so the contamination arrives AGREEING with the
+# theory. Hence rule B carries the higher severity.
+#
+# ADVISORY. Heuristics over prose; a false positive costs a sentence of reading.
+# ============================================================
+AUTHCHK=""
+if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check_source_authenticity.py" ]; then
+  AUTHCHK="${CLAUDE_PLUGIN_ROOT}/scripts/check_source_authenticity.py"
+elif [ -f "$PROJECT_DIR/.claude/scripts/check_source_authenticity.py" ]; then
+  AUTHCHK="$PROJECT_DIR/.claude/scripts/check_source_authenticity.py"
+fi
+if [ -n "$AUTHCHK" ]; then
+  UNCHECKEDSRC=$(python3 "$AUTHCHK" --project-dir "$PROJECT_DIR" --json 2>/dev/null \
+    | python3 -c "
+import json, sys
+try:
+  d = json.load(sys.stdin)
+except Exception:
+  sys.exit(0)
+if d.get('status') == 'violations':
+  print(len(d.get('violations') or []))
+" 2>/dev/null || echo "")
+  if [ -n "$UNCHECKEDSRC" ]; then
+    REMINDERS="${REMINDERS}${UNCHECKEDSRC} record(s) cite a public handle as external evidence with no note that anyone checked the account. A handle is a claim about a person, not a person. Cheapest test first and it is free: does the OP reply. Then persona continuity, whether the account returns to threads, then age and karma. Count accounts, not comments. "
+  fi
+fi
+
+# ============================================================
 # CHECK 2: Delivery metrics cadence (per delivery cycle)
 # Routes to product-type-appropriate metrics canvas (v0.11.0)
 # ============================================================
@@ -450,7 +491,11 @@ try:
     # looks identical to one where you are waiting on them — in fact it looks HEALTHIER,
     # because their reply refreshes the activity clock. Dogfood 2026-08-01: three
     # unanswered inbounds (4-7d) sat invisible behind a green staleness check.
-    # `internal` entries are skipped when locating the last contact, so a metric note
+    # An 'internal' entry is skipped when locating the last contact, so a metric note
+    # (backticks deliberately absent: this comment lives inside a double-quoted
+    # python3 -c string, where a backtick is COMMAND SUBSTITUTION. The pair that used
+    # to sit around this word made every session start run 'internal' as a command and
+    # print 'internal: command not found' to stderr. Harmless, invisible, and shipped.)
     # logged on top of an inbound cannot conceal the owed reply.
     CONTACT_DIRS = ('outbound', 'inbound', 'bidirectional')
     def last_contact(t):

@@ -4,6 +4,61 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-07.
 
+## v0.103.0 - a handle is not a person until someone checked
+
+**`check_source_authenticity.py` — a new advisory, closing a gap no evidence tier covers.**
+
+The tiers (`external_data`, `external_human`, `internal_simulated`, `speculation`) grade evidence
+by **where it came from**. `external_human` means a human outside the team said it, and **nothing
+anywhere checks whether it was a human**. The tier encodes provenance and is silent on
+authenticity. In a public channel those are different questions.
+
+**Dogfood 2026-08-07, mining r/buildinpublic for switch-from evidence.** An account stating a
+discovery heuristic was logged as a second practitioner arriving *independently* at a conclusion
+the framework already held. The profile: nine months old, 10 comment karma, every comment across
+three subs running one template — an affirming clause, then a suggestion opening "I'd". **It
+appeared three times in one afternoon across two threads.** Counted naively, one templated account
+would have entered canvas as three convergent strangers. A second account, posting a first-person
+founder story, had 26 post karma and **zero comment karma**, the same story reskinned across five
+subs with a different product placement in each.
+
+**Why this gets a check rather than a nudge.** Synthetic accounts restate sensible heuristics
+fluently, so the contamination does not arrive as garbage — it arrives **agreeing with the
+framework's own theory**, in the evidence class the framework weights most heavily. Agreement is
+nearly free to manufacture; disagreement carrying receipts is not. A harness that weights
+convergence-across-strangers without asking whether the strangers are people has a hole exactly
+where it is most confident.
+
+Two rules. **A**: an entry marked `external_human`/`external_data` cites a public handle with no
+authenticity note in the record. **B**: the same, plus a convergence or independent-arrival claim,
+and **at least two distinct handles** — a convergence claim resting on one account is not a
+convergence claim. Rule A costs a mislabelled quote; rule B costs a confidence move built on a
+count that may be one account wearing several names.
+
+**The cheapest test came from a channel native, not from us.** A member of the sub, explaining why
+they were leaving: *"Now I have to scroll the thread waiting for OP replies first for one, and then
+look at their post history for two."* **Does the OP reply** is free, runs on the page already open,
+and separated every account checked that day. Adopted ahead of the profile load. Count **accounts**,
+not comments.
+
+**Four defects found by running the first cut against a live canvas rather than a fixture**, which
+is the same discipline that found five in v0.102.0: `@haabe-mycelium` (a plugin marketplace name)
+read as a person; the founder's own `@handle`, quoted inside *inbound* messages written by other
+people, flagged as a source to go and verify; that self-exclusion then silently missing because git
+config carried "Håvard" while the canvas wrote "@Havard" (no accent folding); and rule B firing on
+a single handle. After the fixes: **2 findings on a 25-file canvas, both true, zero false
+positives.** 10 tests, fixtures verbatim from the session.
+
+Session-start advisory, **not** a validate-template check — that runs in the framework repo, whose
+canvas carries no mined external evidence at all, so it would read green forever (the v0.100.0
+lesson).
+
+**Also fixed, and it had been shipping silently.** A comment inside a double-quoted `python3 -c`
+string in `session-start.sh` wrapped a word in backticks. Backticks inside a double-quoted shell
+string are **command substitution**, so every session start ran `internal` as a command and printed
+`internal: command not found` to stderr. Invisible, harmless, and exactly the trap the project's own
+shell-safety hook warns about. Found while smoke-testing the new hook block.
+
 ## v0.102.0 - a record's prose can outlive the field beside it
 
 **`check_stale_prose.py` — a new advisory check, and it exists because v0.101.0 does not cover this.**
