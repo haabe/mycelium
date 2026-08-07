@@ -2,7 +2,63 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-08-06.
+**Last updated**: 2026-08-07.
+
+## v0.101.1 - the critic accepted the fact it could not look up
+
+**Docs only. No behaviour change** — `docs/design/critic-claim-checkability.md` records a design that
+is PROPOSED and not built, plus the dogfood evidence that killed the mechanism it set out to copy.
+
+An external practitioner (author of the closest structural analog to Mycelium) reported that critics
+with access to the builder's reasoning *"create justifications for design mistakes"*, and that a plan
+containing bad reasoning like *"the library we use doesn't support PNG"* gets accepted at face value.
+His fix is a forked-context Critic. Borrowing it looked obvious. **Mycelium had the exposed
+configuration**: a recursive grep of `skills/` and `engine/` for `context: fork` / `blind subagent`
+returns zero hits, and `/reflexion` Step 3 self-critiques inside the builder's own context.
+
+A five-run test was built to justify the borrow. It refuted it, and found something better.
+
+### Claim type predicts auditing — not context, and not authorship
+
+A build plan carried a false but checkable premise (*"PyYAML has no common base exception class"*,
+when `yaml.YAMLError` is the documented base) used to justify a real defect.
+
+| Claim type | opus-5 | sonnet | haiku |
+|---|---|---|---|
+| External factual — needs retrieval | **3/3 audited** | **0/3** | **0/3** |
+| Artifact-verifiable — needs reasoning over material in hand | 3/3 | **3/3** | partial |
+| The critic's OWN prior claim | 3/3 | **2/3** | not run |
+
+**Six consecutive sonnet and haiku runs accepted the false fact** while competently attacking the
+same code on other grounds. **Detection never dropped** — the defect it defended was flagged 3/3 at
+every tier, so a found/not-found metric scores all three identically and sees none of this. At haiku
+a second effect appeared: a hardcoded credential rated HIGH by 3/3 blind reviewers was rated MEDIUM
+by 2/3 informed ones, each quoting the plan's reassurance while downgrading it.
+
+### What that changes
+
+- **Forking the critic's context: rejected as unsupported.** The blind arms never caught the false
+  premise either — they never saw it. Scoped honestly: no arm isolates the effect of hiding the plan,
+  so this is "unsupported by our evidence", not "proven harmful".
+- **Feeding the critic more rationale: also rejected.** That was the conclusion while the test had
+  only run at opus, and it fails at the tiers the dogfood battery actually uses.
+- **Proposed instead:** oblige a plan's load-bearing factual claims to carry a citation, a
+  demonstrating command, or an explicit `UNVERIFIED` tag — converting the claim type that fails into
+  the claim type that holds at every tier. Not built; four preconditions listed in the design doc.
+- **The tool-restriction half of the borrow survives untested and is now more plausible**, since a
+  critic barred from running tests must reason from the artifact.
+
+### The process lesson, which cost the most to learn
+
+**Validate at sonnet and haiku, never at opus alone.** The convention already existed
+(`auto-dogfood/schema.md` pins `mycelium_agent: sonnet`, `user_simulator: haiku`; a prior correction
+records that *"auto-dogfood validity is model-stratified"*). The investigation broke it silently by
+passing no model parameter and inheriting opus, then argued in its own limitations section that the
+uncertainty was harmless. It was not — opus is the one tier that has outgrown the failure, and the
+opus-only run reached the opposite conclusion. Caught by the founder, by no check.
+
+Three pre-registered predictions failed, all assuming a motivational failure (ego, advocacy). The
+real one is epistemic and tier-dependent: models do not check facts they would have to retrieve.
 
 ## v0.101.0 - an obligation rots like an absence
 
