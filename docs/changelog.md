@@ -4,6 +4,38 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-07.
 
+## v0.106.0 - a gate you can pipe away is not a gate
+
+**The gates were never the defect. The way they get run was.**
+
+```bash
+bash tests/validate-template.sh | tail -4 && git commit ...
+```
+
+A pipeline's exit status is its **last** command's. `tail` succeeds at printing a failure, so the
+`&&` chain reads success and the commit lands on red. That happened on 2026-08-07: validate-template
+**failed**, the commit went through, and it was caught only because someone re-read the output by
+eye. The same exit-status trap fired **three times** in that one session.
+
+*"Never pipe a gate"* is a rule, and rules rot — v0.105.0 shipped because one rule had two
+implementations and only one got fixed. So this is not a rule. `scripts/gates.sh` captures each
+gate's own status **before anything can mask it**:
+
+- Runs validate-template, pytest, the bash suite and ruff, each with its status captured directly.
+- Prints the **tail of a failing gate's output** as evidence — a verdict with no evidence sends the
+  reader hunting.
+- Puts the verdict on **stderr as well as stdout**, so piping stdout away cannot hide it.
+- **A missing gate exits 3, not 0.** An absent gate is not a passing gate — the same empty-input
+  honesty v0.102.0 and v0.103.0 enforce for individual checks.
+
+8 tests. The core one is that a failing gate produces a non-zero exit; if that ever passes, the
+wrapper has become decoration and the defect is back.
+
+**Found while writing those tests, and it is the honest kind of finding:** the all-passing fixture
+used an empty `test_stub.py`, so pytest exited 5 (*no tests collected*) and the wrapper refused to
+call it a pass. The wrapper was right and the fixture was wrong. A test harness that verifies
+nothing is exactly what this release exists to stop reading green.
+
 ## v0.105.0 - a rule repaired in the copy that cannot run is not repaired
 
 **Reply-owed had two implementations.** Prose in `canvas-health` step 8c(e), and code in a
