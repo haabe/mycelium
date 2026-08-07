@@ -128,3 +128,34 @@ def test_refuses_over_an_empty_population(scripts_path, tmp_path, monkeypatch, c
     rc = c.main()
     assert rc == 2, "must refuse, not pass, when nothing was scanned"
     assert "PRECONDITION NOT MET" in capsys.readouterr().err
+
+
+# ------------------------------------------------------------------ terminal records (2026-08-07)
+
+def test_rule_b_skips_finished_records(scripts_path):
+    """Rule B's premise -- framing says not-done, log says done -- is EXPECTED and
+    CORRECT on a completed task: the objective describes what the task was FOR.
+    4 of 7 candidates on the dogfood canvas were this, and the only way to silence
+    them would have been to rewrite finished records, destroying provenance to satisfy
+    an advisory."""
+    c = _import(scripts_path)
+    done = HT060_PREFIX.replace("    status: pending", "    status: completed")
+    found = [r for r, _ in c.scan_text(done)]
+    assert not any(r.startswith("B/") for r in found), f"flagged a finished record: {found}"
+
+
+def test_rule_b_still_fires_on_open_records(scripts_path):
+    """The guard must not become 'never fire'. The motivating case is pending."""
+    c = _import(scripts_path)
+    found = [r for r, _ in c.scan_text(HT060_PREFIX)]
+    assert any(r.startswith("B/") for r in found), "terminal guard swallowed the live case"
+
+
+def test_rule_a_still_fires_on_finished_records(scripts_path):
+    """DELIBERATE ASYMMETRY. An unanchored 'today' is wrong the day after it is
+    written whatever the status, and one of the three real finds on 2026-08-07 was a
+    bare 'due today' inside a COMPLETED task's log."""
+    c = _import(scripts_path)
+    txt = "  - id: ht-x\n    status: completed\n    note: the pull is due today, still open\n"
+    found = [r for r, _ in c.scan_text(txt)]
+    assert any(r.startswith("A/") for r in found), f"rule A must survive terminal status: {found}"

@@ -4,6 +4,33 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-07.
 
+## v0.103.2 - a finished task is allowed to say what it was for
+
+**`check_stale_prose.py` rule B no longer fires on terminal records** (`completed`, `cancelled`,
+`abandoned`).
+
+Rule B's premise is that a **framing** field asserting not-done, beside a **log** field recording
+it done, means the prose went stale. On a finished task that is not staleness — it is the record
+working correctly. The objective describes what the task was **for**, in the past tense of intent,
+and the log describes how it ended.
+
+**Dogfood 2026-08-07: 4 of 7 candidates were exactly this.** The only way to silence them would
+have been to rewrite finished records — destroying provenance so an advisory would stop talking,
+which is the Goodhart failure this checker's own docstring warns about.
+
+**Rule A is deliberately NOT skipped.** An unanchored "today" is wrong the day after it is written
+whatever the record's status, and one of the three genuine finds that day was a bare `due today`
+inside a **completed** task's log.
+
+The three real ones, for the record: a **pending** task whose objective advertised an undrafted
+reply that had been sent twelve days earlier; a diamond entry reading "mitigated by today's
+mixed-segment audience" three months after the day in question; and the completed-task `due today`
+above. All three fixed in the consumer canvas, which now reads clean across 130 files instead of
+nagging about four records nobody should touch.
+
+12 tests, 3 new — including the asymmetry guard, so a future tidy-up cannot quietly extend the
+terminal skip to rule A.
+
 ## v0.103.1 - a same-day reply is still a reply
 
 **REPLY-OWED fired on two tasks that had already been answered.**

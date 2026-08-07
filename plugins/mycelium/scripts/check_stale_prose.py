@@ -94,6 +94,21 @@ _LOG_FIELDS = ("touch_log", "completed_at", "outcome", "evidence_logged_to",
                "closure_note", "sent_at", "live_at")
 _FIELD_RE = re.compile(r"^(\s{2,})([a-z_][a-z0-9_]*):", re.MULTILINE)
 
+# A record that is FINISHED. Rule B's whole premise -- a framing field says not-done
+# while a log field says done -- is EXPECTED and CORRECT here: a completed task's
+# objective legitimately describes what it was FOR, in the past tense of intent.
+# Dogfood 2026-08-07: 4 of the 7 candidates on the consumer canvas were exactly this,
+# and the only way to "fix" them would have been to rewrite finished records so an
+# advisory would stop talking -- destroying provenance to satisfy a metric, which is
+# the Goodhart failure this checker's own docstring warns about.
+# RULE A IS DELIBERATELY NOT SKIPPED. An unanchored "today" is wrong the day after it
+# is written whatever the record's status, and one of the three real finds that day
+# was a bare "due today" inside a COMPLETED task's log.
+_TERMINAL_STATUS = re.compile(
+    r"^\s{2,}status:\s*[\"']?(completed|cancelled|abandoned)\b",
+    re.MULTILINE | re.IGNORECASE,
+)
+
 # An explicit reconciliation in the framing field: a human already squared the two.
 _RESOLVED = re.compile(
     r"\b(DISCHARGED|now\s+satisfied|is\s+SATISFIED|was\s+discharged|no\s+longer\s+owed"
@@ -158,6 +173,10 @@ def scan_text(text: str) -> list[tuple[str, str]]:
         window = text[max(0, m.start() - 120): m.end() + 120]
         if not _ISO_DATE.search(window):
             out.append(("A/unanchored-deixis", m.group(0).strip()))
+
+    # Rule B does not apply to finished records. See _TERMINAL_STATUS.
+    if _TERMINAL_STATUS.search(text):
+        return out
 
     fields = split_fields(text)
     framing = " ".join(v for k, v in fields.items() if k in _FRAMING_FIELDS)
