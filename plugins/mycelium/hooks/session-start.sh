@@ -4,6 +4,42 @@
 # Returns additionalContext with overdue loop warnings.
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-.}"
+
+# ============================================================
+# SESSION SOURCE (v0.104.0)
+# ============================================================
+# SessionStart fires for five sources: startup, resume, clear, compact, fork
+# (verified against code.claude.com/docs/en/hooks 2026-08-07). This hook is
+# registered for startup|resume|clear|fork. Everything it PRINTS is read-only
+# orientation and is wanted on all of them -- after a /clear the agent has no
+# canvas, no diamond state and no open loops, which is precisely when the
+# reminders matter most.
+#
+# But CHECK 6 WRITES. It increments a session counter used by longitudinal
+# assumption tests, and a counter that counts hook firings instead of sessions
+# reports a test as more observed than it is. That is the dangerous direction:
+# it inflates N and makes a shadow-log look validated. Widening the matcher
+# without gating the write would have multiplied an error that already exists,
+# since `resume` has been incrementing since v0.68.0.
+#
+# So: read the source, and skip the increment when we KNOW this is a
+# continuation. Unknown source still increments -- runtimes that send no
+# payload (Codex CLI, manual invocation) keep working exactly as before rather
+# than silently freezing every counter, which would be the worse failure.
+SESSION_SOURCE=""
+if [ ! -t 0 ]; then
+  # Only read stdin when it is not a terminal, so a manual run cannot hang.
+  _HOOK_PAYLOAD="$(cat 2>/dev/null || true)"
+  if [ -n "$_HOOK_PAYLOAD" ]; then
+    SESSION_SOURCE="$(printf '%s' "$_HOOK_PAYLOAD" | python3 -c "
+import json, sys
+try:
+    print((json.load(sys.stdin).get('source') or '').strip().lower())
+except Exception:
+    print('')
+" 2>/dev/null || echo "")"
+  fi
+fi
 REMINDERS=""
 NOW=$(date +%s)
 
@@ -561,9 +597,19 @@ fi
 # Increments `sessions` per session start and emits a reminder when
 # `sessions >= target` and `closed` is false. Opt-in by file presence —
 # zero cost for products that don't run shadow-log tests.
+#
+# CONTINUATIONS DO NOT COUNT (v0.104.0). resume / clear / compact / fork are the
+# same working session carrying on; only a real start is a new observation. An
+# unknown source still counts, so runtimes that send no payload keep working.
+# See the SESSION SOURCE block at the top for why the write is gated and the
+# printed reminders are not.
 COUNTER_REMINDER=$(python3 -c "
 import json, glob, os, sys
 project_dir = sys.argv[1]
+source = (sys.argv[2] if len(sys.argv) > 2 else '').strip().lower()
+if source in ('resume', 'clear', 'compact', 'fork'):
+    print('')
+    raise SystemExit(0)
 pattern = os.path.join(project_dir, '.claude/evals/assumption-tests/*.count.json')
 msgs = []
 for f in glob.glob(pattern):
@@ -584,7 +630,7 @@ for f in glob.glob(pattern):
     except Exception:
         pass
 print(' '.join(msgs))
-" "$PROJECT_DIR" 2>/dev/null || echo "")
+" "$PROJECT_DIR" "$SESSION_SOURCE" 2>/dev/null || echo "")
 
 if [ -n "$COUNTER_REMINDER" ]; then
   REMINDERS="${REMINDERS}${COUNTER_REMINDER} "

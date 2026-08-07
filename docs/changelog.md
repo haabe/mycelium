@@ -4,6 +4,45 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-07.
 
+## v0.104.0 - after a /clear the agent has nothing, and got nothing
+
+**SessionStart was registered for `startup|resume` only.** After a `/clear` the agent has no
+canvas, no diamond state, no open loops — and, under that matcher, no reminders either. The one
+moment orientation is most needed was the one moment it was absent.
+
+SessionStart actually fires for **five** sources: `startup`, `resume`, `clear`, `compact`, `fork`
+(verified against [code.claude.com/docs/en/hooks](https://code.claude.com/docs/en/hooks),
+read 2026-08-07). The matcher now covers `startup|resume|clear|fork`.
+
+**`compact` is excluded deliberately.** It fires mid-task, possibly repeatedly, the agent still
+holds a summary of what it just did, and `PreCompact`/`PostCompact` exist for that seam. A full
+orientation preamble in the middle of a task is noise, and an advisory that becomes noise is one
+the reader learns to skip.
+
+**The widening alone would have made things worse, and that is the real finding.**
+
+CHECK 6 **writes**. It increments a session counter used by longitudinal assumption tests. A
+counter that counts *hook firings* rather than *sessions* reports a shadow-log as more observed
+than it is — it inflates N, which is the dangerous direction, the same shape as v0.103.1's false
+REPLY OWED. And `resume` has been incrementing since v0.68.0, so the error **predates** this
+change; widening the matcher would have multiplied it.
+
+So the fix is two-part, split along read/write rather than along source:
+
+- **Everything printed** is read-only orientation and now fires on all four matched sources.
+- **The write** is skipped whenever the source is a known continuation (`resume`, `clear`,
+  `compact`, `fork`). Only a real start is a new observation.
+
+**Unknown source still counts.** Runtimes that send no payload — Codex CLI, manual invocation —
+keep behaving exactly as before rather than silently freezing every counter forever. Over-counting
+in an unknown runtime is bad; a measurement instrument that stops without saying so is worse.
+
+The hook now reads `source` from stdin, guarded by `[ ! -t 0 ]` so a manual run cannot hang on a
+terminal.
+
+8 new bash tests: one per source, plus no-payload and malformed-payload, plus a guard asserting
+that `clear` still produces output — without which the widening would have bought nothing.
+
 ## v0.103.2 - a finished task is allowed to say what it was for
 
 **`check_stale_prose.py` rule B no longer fires on terminal records** (`completed`, `cancelled`,
