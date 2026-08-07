@@ -4,6 +4,47 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-07.
 
+## v0.105.0 - a rule repaired in the copy that cannot run is not repaired
+
+**Reply-owed had two implementations.** Prose in `canvas-health` step 8c(e), and code in a
+`python3 -c` block inside `hooks/session-start.sh`. Both described the same check.
+
+| | |
+|---|---|
+| 2026-08-05 | Dogfood finds the same-day defect — an inbound and its reply on the same date score as unanswered. **Two false positives out of two flags: ht-060, ht-003.** |
+| v0.90.0 | The fix is written into the **skill prose** as a documented tie-break. |
+| 2026-08-07 | `session-start.sh` flags **ht-060 and ht-003**. Same tasks, same cause, two days later. Fixed again as v0.103.1, by an agent who did not know the diagnosis existed. |
+
+**The defect class is not "a bug recurred". It is that the copy which cannot execute was the one
+that got repaired.** Prose can't be run, so nothing compared it to the code; the documentation
+described the fix while the enforcement kept the bug. That is the
+documented-rule-diverges-from-enforcement cluster with the arrow reversed — usually the prose is
+right and unenforced; here the prose was right and the enforcement rotted beside it.
+
+Patching both copies would leave two copies. So there is **one**: `scripts/check_reply_owed.py`,
+called by the hook and by step 8c(e), which now runs it instead of describing an algorithm it
+cannot execute.
+
+15 tests, including the failure-direction cases the framework's own `check_negative_control.py`
+demanded the first time it saw the new script — *"a guard that stops working keeps passing its own
+tests."* It was right; the corpus asserted only the quiet path.
+
+### Two defects in v0.104.0, both found by its own tests
+
+**A hang, shipped.** `cat` on a stdin that is not a terminal, has no data, and is never closed
+waits forever — and `[ ! -t 0 ]` only says stdin is not a terminal, never that data is coming. Any
+wrapper that invokes the hook without redirecting stdin would have **blocked session start
+indefinitely**. Surfaced as `test_session_start_reply_owed.sh` hanging past 120s. Replaced with a
+bounded `read -t 1`.
+
+**Then the bounded read discarded its own payload.** `read` returns **non-zero at EOF even when it
+successfully read data**, so a payload piped without a trailing newline hit the `|| _HOOK_PAYLOAD=""`
+branch and was thrown away — silently restoring the exact counter inflation v0.104.0 had shipped to
+fix. Caught by `test_session_start_source_gating.sh`: every continuation source incremented again.
+`|| true` keeps what was read.
+
+59 bash suites, 828 python tests, 53 checks, ruff clean.
+
 ## v0.104.0 - after a /clear the agent has nothing, and got nothing
 
 **SessionStart was registered for `startup|resume` only.** After a `/clear` the agent has no

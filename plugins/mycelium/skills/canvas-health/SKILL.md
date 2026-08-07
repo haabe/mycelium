@@ -149,17 +149,39 @@ The failure this catches: a fact about a human-task lives in 2+ places (the task
    - **(d) Untracked-channel evidence** (added v0.39.10, symmetric inverse of `(b)` — closes the drift where outreach produces evidence with no source-task at all): scan recent evidence entries across `.claude/canvas/*.yml` (windowed to entries dated within the last 30 days) for items with `source_class: external_human` whose `provenance.relationship` OR `provenance.evidence_sources[]` names an external contributor by name or handle. For each, check whether ANY `human-tasks.yml` entry (pending OR completed) lists that name in `target_persona`, `touch_log`, or a `backfill_note`. If no match, flag: "purpose.yml#L[NN] (or other canvas) records external_human evidence from [name] dated [date], but `human-tasks.yml` has no task covering this contributor. Backfill an `ht-XXX` with a `backfill_note` so the channel is addressable for follow-ups, learning-target coupling, and consent tracking. `/mycelium:log-evidence` v0.39.10+ catches this at log-time; older entries may need retroactive backfill." Skip names already flagged as registry-private (`generic_only`). NUDGE-tier, not gating.
 
 
-   - **(e) Reply owed** (added v0.68.0 — closes the direction-blindness that `(a)` and the session-start staleness label share): for each non-terminal task, walk `touch_log[]` and find the newest entry whose `direction` is a CONTACT value (`outbound`, `inbound`, `bidirectional`). **Skip `internal` entries and entries with no `direction` when locating it** — an `internal` note (a metric reading, a status line) is not contact, and letting one sit on top of an inbound is precisely how an owed reply disappears. **SAME-DAY TIE-BREAK (added v0.90.0): if the newest contact DATE carries both an
-     inbound and an outbound, treat it as ANSWERED and do not flag.** Dates are day-granular,
-     so `max(date)` cannot order two contacts on the same day, and a reply sent the same day it
-     arrived scored as unanswered. On the 2026-08-05 dogfood run this produced TWO false
-     positives out of two flags — ht-060 and ht-003, whose own records read "REPLY-OWED
-     DISCHARGED" and "REPLY SENT ... the last open reply on the board". A check that is wrong
-     100% of the time it fires is worse than absent: it teaches the reader that reply-owed
-     flags are noise, which is the state this check was built to end. If that newest contact
-     is `inbound` and ≥3 days old, flag: "ht-XXX — the last contact was INBOUND [N]d ago. They wrote; you have not answered. Reply, or record why not." An explicit `reply_owed:` field on the task forces the flag regardless of dates.
-     **Why this is not covered by `(a)`.** `(a)` computes the latest activity DATE across `touch_log[].date` and treats any entry as activity. An inbound therefore *refreshes* the staleness clock — so a task where the contact is waiting on you scores as HEALTHIER than one where you sent something and heard nothing. The two states are opposites and the check could not tell them apart. Dogfood 2026-08-01: three unanswered inbounds aged 4-7 days sat entirely invisible behind a green staleness pass, including one from a practitioner who had said the thesis was already his working flow.
-     **Migration nudge**: if any non-terminal task has `touch_log` entries lacking `direction`, note that those entries are invisible to this check and to reply-owed detection in `session-start`, and suggest backfilling the field. Pre-v0.68.0 logs predate the contract, so this is a nudge and never a failure. NUDGE-tier, not gating.
+   - **(e) Reply owed** — **DO NOT re-derive this from prose. Run the script:**
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_reply_owed.py" --project-dir .
+```
+
+     This step used to describe the algorithm here, in parallel with an
+     implementation inside `hooks/session-start.sh`. **One rule, two implementations,
+     and only one of them could be executed.** The same-day tie-break was diagnosed
+     2026-08-05, written into THIS PROSE at v0.90.0, and left live in the hook — which
+     flagged the same two tasks (ht-060, ht-003) again on 2026-08-07, two days later.
+     A rule repaired in the copy that cannot run is not repaired.
+
+     So the logic now lives in `scripts/check_reply_owed.py` and both surfaces call it.
+     What it does, for reading rather than for reimplementing: it walks `touch_log[]`,
+     considers only CONTACT directions (`internal` notes are not contact and must not
+     mask an inbound), takes the newest by date with **ties broken by log position**
+     — dates are day-granular and carry no ordering within a day — and flags a task
+     whose newest contact is `inbound` and ≥3 days old. An explicit `reply_owed:`
+     field forces the flag. The tiebreak is position rather than direction because
+     preferring outbound on a tie would silence the honest case where they wrote BACK
+     the same day.
+
+     **Why this is not covered by `(a)`.** `(a)` treats any `touch_log` entry as
+     activity, so an inbound REFRESHES the staleness clock — a task where the contact
+     is waiting on you scores as HEALTHIER than one where you sent something and heard
+     nothing. Opposite states, indistinguishable. Dogfood 2026-08-01: three unanswered
+     inbounds aged 4–7 days sat invisible behind a green staleness pass.
+
+     **Migration nudge**: entries lacking `direction` are invisible to this check and
+     to `session-start`. Pre-v0.68.0 logs predate the contract, so suggest backfilling
+     and never fail on it. NUDGE-tier.
+
    Output all (a)–(d) as warnings (not critical) — they are drift, not breakage. Each names the specific ht-ID (or missing-ht contributor) and the specific action.
 
 8d. **Learning-target coupling on feedback tasks** (added v0.31.6, closes the "we asked for feedback but didn't ask what we needed to learn" gap — see `engine/canvas-guidance.yml#learning_target_coupling`):

@@ -27,9 +27,24 @@ PROJECT_DIR="${CLAUDE_PROJECT_DIR:-.}"
 # payload (Codex CLI, manual invocation) keep working exactly as before rather
 # than silently freezing every counter, which would be the worse failure.
 SESSION_SOURCE=""
+_HOOK_PAYLOAD=""
+# BOUNDED READ, NOT `cat` (fixed v0.105.0 — v0.104.0 shipped a hang).
+# `[ ! -t 0 ]` only says stdin is not a terminal. It does NOT say data is coming.
+# When a hook is invoked with an inherited, open, empty stdin -- which is what the
+# bash test harness does, and what any wrapper that does not redirect will do --
+# `cat` waits for EOF that never arrives and SESSION START BLOCKS FOREVER. Caught
+# by tests/bash/test_session_start_reply_owed.sh hanging past 120s.
+# `read -t` is a bash builtin with a real timeout and cannot outlast it. Hook
+# payloads are single-line JSON, so one line is the whole thing.
 if [ ! -t 0 ]; then
-  # Only read stdin when it is not a terminal, so a manual run cannot hang.
-  _HOOK_PAYLOAD="$(cat 2>/dev/null || true)"
+  # `|| true`, NOT `|| _HOOK_PAYLOAD=""`. `read` returns NON-ZERO at EOF even when it
+  # successfully read data — a payload piped without a trailing newline hits exactly
+  # that, so clearing the variable on non-zero discarded the very thing just read.
+  # Caught by tests/bash/test_session_start_source_gating.sh: every continuation
+  # source incremented the counter again, because the source was read and thrown away.
+  IFS= read -r -t 1 _HOOK_PAYLOAD 2>/dev/null || true
+fi
+if true; then
   if [ -n "$_HOOK_PAYLOAD" ]; then
     SESSION_SOURCE="$(printf '%s' "$_HOOK_PAYLOAD" | python3 -c "
 import json, sys
@@ -328,6 +343,28 @@ if d.get('status') == 'violations':
 fi
 
 # ============================================================
+# CHECK 1e: Reply owed — delegated, not reimplemented (v0.105.0)
+# ============================================================
+# The rule lives in scripts/check_reply_owed.py. canvas-health step 8c(e) calls
+# the same script. It used to exist twice — prose there, code here — and the
+# 2026-08-05 same-day fix landed only in the prose, so this surface flagged
+# ht-060 and ht-003 again on 2026-08-07. A rule repaired in the copy that cannot
+# execute is not repaired.
+REPLYCHK=""
+if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check_reply_owed.py" ]; then
+  REPLYCHK="${CLAUDE_PLUGIN_ROOT}/scripts/check_reply_owed.py"
+elif [ -f "$PROJECT_DIR/.claude/scripts/check_reply_owed.py" ]; then
+  REPLYCHK="$PROJECT_DIR/.claude/scripts/check_reply_owed.py"
+fi
+if [ -n "$REPLYCHK" ]; then
+  OWED_LINE=$(python3 "$REPLYCHK" --project-dir "$PROJECT_DIR" 2>/dev/null \
+    | grep '^REPLY OWED' || echo "")
+  if [ -n "$OWED_LINE" ]; then
+    REMINDERS="${REMINDERS}${OWED_LINE} "
+  fi
+fi
+
+# ============================================================
 # CHECK 2: Delivery metrics cadence (per delivery cycle)
 # Routes to product-type-appropriate metrics canvas (v0.11.0)
 # ============================================================
@@ -534,45 +571,13 @@ try:
     # print 'internal: command not found' to stderr. Harmless, invisible, and shipped.)
     # logged on top of an inbound cannot conceal the owed reply.
     CONTACT_DIRS = ('outbound', 'inbound', 'bidirectional')
-    # SAME-DAY REPLIES (dogfood 2026-08-07). The comparison was 'dt > best[0]',
-    # strictly greater, so on an equal date the FIRST entry seen won. Inbound is
-    # logged before the reply to it, so 'they wrote, you answered the same day'
-    # scored as UNANSWERED. Both live flags on the dogfood canvas were this bug:
-    # ht-060 (reply sent the same day, founder-final text) and ht-003 (a 2026-08-01
-    # inbound answered on 2026-08-01). A false REPLY OWED is not harmless -- it
-    # sends the operator to contact someone they already answered, which is the
-    # same real-person cost v0.101.0's obligation guard exists to prevent, pointing
-    # the other way.
-    # The tiebreak is LOG POSITION, not direction. Preferring outbound on a tie
-    # would silence the honest case where they wrote BACK after your reply on the
-    # same day. This does not weaken the existing out-of-order guardpost: that one
-    # is about DIFFERENT dates, where the date still wins. Position is only
-    # consulted when the dates are equal and therefore carry no information.
-    def last_contact(t):
-      best = None
-      for i, e in enumerate(t.get('touch_log') or []):
-        if not isinstance(e, dict): continue
-        d = e.get('direction')
-        if d not in CONTACT_DIRS: continue
-        ds = e.get('date')
-        if not isinstance(ds, str): continue
-        try: dt = datetime.strptime(ds[:10], '%Y-%m-%d').date()
-        except Exception: continue
-        if best is None or (dt, i) > (best[0], best[2]): best = (dt, d, i)
-      return best
-    owed = []
-    for t in open_tasks:
-      tid = t.get('id', '?')
-      if t.get('reply_owed'):
-        owed.append((tid, None)); continue
-      lc = last_contact(t)
-      if lc and lc[1] == 'inbound':
-        age = (today - lc[0]).days
-        if age >= 3: owed.append((tid, age))
-    if owed:
-      parts = ['{}{}'.format(i, ' ({}d)'.format(a) if a is not None else '') for i, a in owed[:5]]
-      more = '' if len(owed) <= 5 else ' +{} more'.format(len(owed) - 5)
-      print('REPLY OWED on {} task(s): {}{}. The last CONTACT on these was inbound — they wrote, you have not answered. This is invisible to the staleness check, which counts their reply as activity.'.format(len(owed), ', '.join(parts), more))
+    # REPLY-OWED IS NO LONGER IMPLEMENTED HERE (v0.105.0). It lives in
+    # scripts/check_reply_owed.py, which this hook and canvas-health step 8c(e)
+    # both call. The rule used to exist twice -- as prose in the skill and as code
+    # here -- and on 2026-08-05 the same-day defect was fixed in the PROSE while
+    # this block kept the bug until 2026-08-07, flagging ht-060 and ht-003 again.
+    # A rule repaired in the copy that cannot execute is not repaired. One
+    # implementation now, so there is nothing left to diverge.
 
     summaries = '; '.join(label(t) for t in open_tasks[:3])
     if len(open_tasks) > 3:

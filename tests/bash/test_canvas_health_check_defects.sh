@@ -33,9 +33,17 @@ grep -q 'one of: `external_human`, `external_data`, `internal_stakeholder`, `int
 assert_contains "$body" 'source_class` ' "step 5 points at the schema \$defs/source_class"
 assert_contains "$body" "Do NOT hardcode the list here" "step 5 says not to hardcode it"
 
-# (2) reply-owed must not flag a same-day answered contact ------------------
-assert_contains "$body" "SAME-DAY TIE-BREAK" "8c(e) has a same-day tie-break"
-assert_contains "$body" "treat it as ANSWERED and do not flag" "8c(e) treats same-day in+out as answered"
+# (2) reply-owed must DELEGATE, not restate the algorithm -------------------
+# CHANGED v0.105.0, and the change is the point. This used to assert the prose
+# CONTAINED the same-day tie-break. That is a test that a paragraph exists, and it
+# passed happily for two days while session-start.sh — the copy that actually runs —
+# still had the bug and flagged ht-060 and ht-003 again. Asserting prose is how a
+# rule ends up with two implementations and one of them right.
+# The BEHAVIOUR now has real coverage in tests/python/test_check_reply_owed.py
+# (same-day answered, same-day inbound-after-outbound, internal-note masking).
+# What is left to check here is that the skill DELEGATES rather than re-describes.
+assert_contains "$body" "check_reply_owed.py" "8c(e) calls the single implementation"
+assert_contains "$body" "DO NOT re-derive this from prose" "8c(e) forbids re-deriving the rule"
 
 # (3) 9c must only count a date the gate WAITS FOR --------------------------
 assert_contains "$body" "not the date it was AUTHORED ON" "9c distinguishes awaited from authored dates"
