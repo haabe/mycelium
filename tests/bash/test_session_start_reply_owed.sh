@@ -164,4 +164,36 @@ P=$(mk_project forced "  - id: ht-f1
         direction: \"outbound\"")
 assert_contains "$(run_hook "$P")" "ht-f1" "explicit reply_owed must force the flag"
 
+# --- bad: SAME-DAY reply -> silence (dogfood 2026-08-07) -------------------
+# The comparison was strictly-greater, so on an equal date the first entry seen
+# won. Inbound is logged before the reply to it, so "they wrote, you answered the
+# same day" scored as UNANSWERED. Both live flags on the dogfood canvas were this:
+# ht-060 (reply sent same day) and ht-003 (2026-08-01 inbound, 2026-08-01 reply).
+# A false REPLY OWED sends the operator to contact someone already answered.
+P=$(mk_project sameday "  - id: ht-s1
+    type: outreach
+    objective: they wrote and were answered the same day
+    status: pending
+    touch_log:
+      - date: \"$D5\"
+        direction: \"inbound\"
+      - date: \"$D5\"
+        direction: \"outbound\"")
+assert_not_contains "$(run_hook "$P")" "REPLY OWED" "a same-day reply must discharge the obligation"
+
+# --- sad: same-day, but THEY wrote back last -> must still fire ------------
+# The tiebreak is LOG POSITION, not direction. Preferring outbound on a tie would
+# silence this honest case, where the reply went out and they answered it again
+# the same day. That is a real owed reply.
+P=$(mk_project samedayback "  - id: ht-s2
+    type: outreach
+    objective: answered, then they wrote back the same day
+    status: pending
+    touch_log:
+      - date: \"$D5\"
+        direction: \"outbound\"
+      - date: \"$D5\"
+        direction: \"inbound\"")
+assert_contains "$(run_hook "$P")" "ht-s2" "same-day inbound AFTER an outbound is still owed"
+
 report

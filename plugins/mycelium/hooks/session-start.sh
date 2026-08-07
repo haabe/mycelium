@@ -498,9 +498,23 @@ try:
     # print 'internal: command not found' to stderr. Harmless, invisible, and shipped.)
     # logged on top of an inbound cannot conceal the owed reply.
     CONTACT_DIRS = ('outbound', 'inbound', 'bidirectional')
+    # SAME-DAY REPLIES (dogfood 2026-08-07). The comparison was 'dt > best[0]',
+    # strictly greater, so on an equal date the FIRST entry seen won. Inbound is
+    # logged before the reply to it, so 'they wrote, you answered the same day'
+    # scored as UNANSWERED. Both live flags on the dogfood canvas were this bug:
+    # ht-060 (reply sent the same day, founder-final text) and ht-003 (a 2026-08-01
+    # inbound answered on 2026-08-01). A false REPLY OWED is not harmless -- it
+    # sends the operator to contact someone they already answered, which is the
+    # same real-person cost v0.101.0's obligation guard exists to prevent, pointing
+    # the other way.
+    # The tiebreak is LOG POSITION, not direction. Preferring outbound on a tie
+    # would silence the honest case where they wrote BACK after your reply on the
+    # same day. This does not weaken the existing out-of-order guardpost: that one
+    # is about DIFFERENT dates, where the date still wins. Position is only
+    # consulted when the dates are equal and therefore carry no information.
     def last_contact(t):
       best = None
-      for e in (t.get('touch_log') or []):
+      for i, e in enumerate(t.get('touch_log') or []):
         if not isinstance(e, dict): continue
         d = e.get('direction')
         if d not in CONTACT_DIRS: continue
@@ -508,7 +522,7 @@ try:
         if not isinstance(ds, str): continue
         try: dt = datetime.strptime(ds[:10], '%Y-%m-%d').date()
         except Exception: continue
-        if best is None or dt > best[0]: best = (dt, d)
+        if best is None or (dt, i) > (best[0], best[2]): best = (dt, d, i)
       return best
     owed = []
     for t in open_tasks:

@@ -4,6 +4,32 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-07.
 
+## v0.103.1 - a same-day reply is still a reply
+
+**REPLY-OWED fired on two tasks that had already been answered.**
+
+`last_contact()` compared dates with strictly-greater (`dt > best[0]`), so on an equal date the
+**first entry seen won**. Inbound is logged before the reply to it, so "they wrote, you answered
+the same day" scored as unanswered.
+
+**Dogfood 2026-08-07: both live flags on the consumer canvas were this bug.** ht-060 — reply sent
+the same day, founder-final text, recorded in the task's own touch_log. ht-003 — a 2026-08-01
+inbound answered on 2026-08-01. Neither was owed anything.
+
+**A false REPLY OWED is not the harmless direction of this error.** It sends the operator to
+contact someone they have already answered. That is the same real-person cost v0.101.0's
+obligation guard exists to prevent, pointing the other way — and it lands on the tasks where
+someone actually replied, which are the relationships worth not being strange in.
+
+**The tiebreak is LOG POSITION, not direction.** Preferring outbound on a tie would silence the
+honest case where the reply went out and they wrote *back* the same day. That case now has its own
+test alongside the fix. This does not weaken the existing out-of-order guardpost, which is about
+**different** dates where the date still wins; position is consulted only when dates are equal and
+therefore carry no information.
+
+13 bash tests, 2 new, inserted **above** the runner's `report` call — appending below it defines
+tests that never run and prints green, which is v0.102.0's built-not-wired lesson.
+
 ## v0.103.0 - a handle is not a person until someone checked
 
 **`check_source_authenticity.py` — a new advisory, closing a gap no evidence tier covers.**
