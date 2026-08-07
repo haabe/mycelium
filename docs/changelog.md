@@ -4,6 +4,38 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-07.
 
+## v0.101.2 - the repair path could not repair
+
+**`auto-release.yml` has advertised a manual gap-repair since v0.87.0 and it never worked.**
+Detection was sound; repair was decorative.
+
+On `workflow_dispatch`, `github.event.before` is empty, so `--introduced` degrades to HEAD-only
+and returns the single version already at the tip — which by definition already has a Release. A
+manual re-run therefore offered the one version that needed nothing and repaired no gap.
+
+Found in anger 2026-08-07. A GitHub outage the previous day left **v0.100.0 and v0.101.0**
+committed, changelogged, and unreleased. The next push tripped the backstop, which named both
+correctly — and the documented repair would have re-offered v0.101.1 and fixed neither. Both were
+created directly instead, anchored to their originating commits (`ad95d62`, `7fa5832`) with
+`--latest=false` so the repair could not demote the current release.
+
+**Repair now asks the right question.** `release_gaps.py --repair` returns every documented version
+with no Release, each anchored to the commit it first appeared in, in the same
+`[{version, commit}]` shape the release step already consumes. The workflow branches on
+`github.event_name`: a push asks *what did this introduce*, a dispatch asks *what is missing*.
+
+Anchoring uses the same two passes as `versions_introduced`, so both agree on where a version
+belongs: plugin.json first, then the changelog for versions squashed into a commit whose
+plugin.json shows only the last of them. Only commits touching those files are walked.
+
+A version whose originating commit cannot be found is **named and exits non-zero**. A repair that
+silently emits a shorter list than the gap it was handed is the same fail-open this module exists
+to close, one layer further in.
+
+4 new tests (30 total on this guard). The first is a **negative control**: it asserts the old path,
+on a dispatch-shaped call, returns only the tip version — so if `--repair` ever becomes redundant,
+that test fails and says so rather than letting the new mode sit there as decoration.
+
 ## v0.101.1 - the critic accepted the fact it could not look up
 
 **Docs only. No behaviour change** — `docs/design/critic-claim-checkability.md` records a design that

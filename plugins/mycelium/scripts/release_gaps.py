@@ -169,6 +169,84 @@ def versions_introduced(before: str, head: str) -> list[dict]:
     return out
 
 
+def _rev_list(path: str) -> list[str]:
+    """Commits touching `path`, oldest first. Only these can have changed a version."""
+    return [c for c in _git("rev-list", "--reverse", "HEAD", "--", path).split("\n") if c]
+
+
+def _anchor_by_plugin_json(want: set[str], commits: list[str], version_at) -> dict[str, str]:
+    """Pass 1: the version is literally set in plugin.json. Mutates `want`, removing
+    what it placed, so pass 2 only searches for what is still missing."""
+    found: dict[str, str] = {}
+    for c in commits:
+        if not want:
+            break
+        v = version_at(c)
+        if v in want:
+            found[v] = c
+            want.discard(v)
+    return found
+
+
+def _anchor_by_changelog(want: set[str], commits: list[str], changelog_at) -> dict[str, str]:
+    """Pass 2: versions squashed into a commit whose plugin.json shows only the LAST
+    of them are invisible to pass 1, but their changelog section still appears
+    somewhere. Anchors to the commit where the section first shows up. Mutates `want`."""
+    found: dict[str, str] = {}
+    seen_doc: set[str] = set()
+    for c in commits:
+        if not want:
+            break
+        fresh = changelog_at(c) - seen_doc
+        seen_doc |= fresh
+        for v in sorted(fresh & want, key=version_key):
+            found[v] = c
+            want.discard(v)
+    return found
+
+
+def first_commit_for_versions(
+    versions: set[str],
+    plugin_commits: list[str] | None = None,
+    changelog_commits: list[str] | None = None,
+    version_at=_version_at,
+    changelog_at=_changelog_at,
+) -> dict[str, str]:
+    """Map each wanted version to the commit where it FIRST appeared.
+
+    The repair path needs this and `versions_introduced` cannot supply it: that
+    function answers "what did THIS PUSH add", so a gap created by an outage, a
+    failed job, or a force-push is invisible to it -- the version landed on a push
+    that is long past. Repair has to search history instead of a range.
+
+    Two passes, mirroring `versions_introduced` so both anchor identically:
+      1. commits touching plugin.json -- the version is literally set there;
+      2. commits touching the changelog -- for versions squashed into a commit whose
+         plugin.json shows only the LAST of them (the 2026-08-05 v0.95.0 case).
+
+    Only commits that touched the relevant file are walked, so this stays cheap even
+    though it searches all of history rather than a range.
+
+    Returns only versions it could locate. A version with no anchor is reported by the
+    caller and never silently dropped -- a repair that quietly skips what it cannot
+    place is the same fail-open this module exists to close.
+    """
+    want = set(versions)
+    if not want:
+        return {}
+
+    if plugin_commits is None:
+        plugin_commits = _rev_list(PLUGIN_JSON)
+    found = _anchor_by_plugin_json(want, plugin_commits, version_at)
+
+    if want:
+        if changelog_commits is None:
+            changelog_commits = _rev_list("docs/changelog.md")
+        found.update(_anchor_by_changelog(want, changelog_commits, changelog_at))
+
+    return found
+
+
 def _released_from_gh() -> list[str]:
     r = subprocess.run(
         ["gh", "release", "list", "--limit", "500", "--json", "tagName"],
@@ -190,12 +268,40 @@ def main() -> int:
                     help="print JSON [{version, commit}] introduced by BEFORE..HEAD")
     ap.add_argument("--check", action="store_true",
                     help="exit 1 if any changelog version at/above the floor has no Release")
+    ap.add_argument("--repair", action="store_true",
+                    help="print JSON [{version, commit}] for every documented version that "
+                         "has no Release, anchored to the commit it first appeared in")
     ap.add_argument("--changelog", default="docs/changelog.md")
     ap.add_argument("--floor", default=DEFAULT_FLOOR)
     args = ap.parse_args()
 
     if args.introduced:
         print(json.dumps(versions_introduced(*args.introduced)))
+        return 0
+
+    if args.repair:
+        # The manual-dispatch path. `--introduced` cannot serve it: on a
+        # workflow_dispatch `github.event.before` is empty, so the range degrades to
+        # HEAD alone and yields the ONE version already at the tip -- which is
+        # invariably the version that already has a Release. That is why the
+        # documented "manual re-run repairs gaps" promise did not hold: on 2026-08-07
+        # a GitHub outage left v0.100.0 and v0.101.0 unreleased, and a dispatch would
+        # have re-offered v0.101.1 and repaired neither. Repair must ask "what is
+        # missing", not "what is new".
+        with open(args.changelog) as fh:
+            documented = parse_changelog_versions(fh.read())
+        gaps = missing_releases(documented, _released_from_gh(), args.floor)
+        anchors = first_commit_for_versions(set(gaps))
+        unlocatable = [g for g in gaps if g not in anchors]
+        if unlocatable:
+            # Loud, and non-zero. A repair that silently emits a shorter list than the
+            # gap it was asked to close is the fail-open this module exists to close.
+            print("::error::no originating commit found for: "
+                  + ", ".join("v" + u for u in unlocatable), file=sys.stderr)
+            print(json.dumps([{"version": v, "commit": anchors[v]} for v in gaps
+                              if v in anchors]))
+            return 1
+        print(json.dumps([{"version": v, "commit": anchors[v]} for v in gaps]))
         return 0
 
     if args.check:

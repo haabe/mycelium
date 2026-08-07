@@ -56,11 +56,30 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           BEFORE: ${{ github.event.before }}
           HEAD_SHA: ${{ github.sha }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
         run: |
           set -euo pipefail
-          python3 plugins/mycelium/scripts/release_gaps.py \
-            --introduced "${BEFORE:-}" "${HEAD_SHA}" > introduced.json
-          echo "Introduced by this push: $(cat introduced.json)"
+          # Two entry paths, and they ask DIFFERENT questions.
+          #
+          # push          -> "what did this push introduce?"  (--introduced)
+          # dispatch      -> "what is missing?"               (--repair)
+          #
+          # The dispatch case was broken from the day it was documented. On a
+          # workflow_dispatch `github.event.before` is empty, so --introduced degrades
+          # to HEAD alone and returns the single version at the tip -- which already
+          # has a Release. The header above has promised "manual re-run repairs gaps"
+          # since 2026-08-04 and it never could. Found 2026-08-07, when a GitHub outage
+          # left v0.100.0 and v0.101.0 unreleased: the backstop caught the gap
+          # correctly, and the advertised repair would have re-offered v0.101.1 and
+          # fixed neither. Detection worked; repair was decorative.
+          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            python3 plugins/mycelium/scripts/release_gaps.py --repair > introduced.json
+            echo "Missing Releases to repair: $(cat introduced.json)"
+          else
+            python3 plugins/mycelium/scripts/release_gaps.py \
+              --introduced "${BEFORE:-}" "${HEAD_SHA}" > introduced.json
+            echo "Introduced by this push: $(cat introduced.json)"
+          fi
           python3 - <<'PY'
           import json, re, subprocess, sys
 

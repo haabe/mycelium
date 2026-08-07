@@ -378,3 +378,101 @@ def test_results_are_version_ordered(tmp_path, scripts_path, monkeypatch):
     monkeypatch.chdir(repo)
     got = [g["version"] for g in rg.versions_introduced(before, head)]
     assert got == ["0.95.0", "0.96.0", "0.100.0"]
+
+
+# ------------------------------------------------- first_commit_for_versions / --repair
+
+def test_repair_finds_versions_a_dispatch_range_cannot_see(
+    tmp_path, scripts_path, monkeypatch
+):
+    """THE 2026-08-07 REGRESSION TEST.
+
+    A GitHub outage left two already-landed versions unreleased. The advertised
+    repair path (workflow_dispatch) passes an empty `before`, so `versions_introduced`
+    degrades to HEAD-only and offers the tip version -- which already has a Release.
+    Repair must search history for what is MISSING instead.
+    """
+    rg = _import(scripts_path)
+    repo = tmp_path / "r"
+    repo.mkdir()
+    _git(repo, "init", "-q")
+    _git(repo, "config", "user.email", "t@t.t")
+    _git(repo, "config", "user.name", "t")
+    sha_100 = _commit_version(repo, "0.100.0")
+    sha_101 = _commit_version(repo, "0.101.0")
+    _commit_version(repo, "0.101.1")
+    monkeypatch.chdir(repo)
+
+    # NEGATIVE CONTROL: the old path, on a dispatch-shaped call, sees only the tip.
+    # If this ever returns the missing versions, --repair is redundant and this whole
+    # change should be reverted rather than kept as decoration.
+    introduced = rg.versions_introduced("", "HEAD")
+    assert [g["version"] for g in introduced] == ["0.101.1"]
+
+    # The repair path locates both gaps, each anchored to the commit that set it.
+    found = rg.first_commit_for_versions({"0.100.0", "0.101.0"})
+    assert found == {"0.100.0": sha_100, "0.101.0": sha_101}
+
+
+def test_repair_anchors_a_squashed_version_via_the_changelog(
+    tmp_path, scripts_path, monkeypatch
+):
+    """A version squashed away never appears in any commit's plugin.json (the
+    2026-08-05 v0.95.0 case). It must still be locatable, via the changelog."""
+    rg = _import(scripts_path)
+    repo = tmp_path / "r"
+    repo.mkdir()
+    _git(repo, "init", "-q")
+    _git(repo, "config", "user.email", "t@t.t")
+    _git(repo, "config", "user.name", "t")
+    _commit_version(repo, "0.94.0")
+    # One commit carries BOTH versions in the changelog; plugin.json shows only 0.95.1.
+    docs = repo / "docs"
+    docs.mkdir(parents=True, exist_ok=True)
+    (docs / "changelog.md").write_text("## v0.95.0 - a\n\n## v0.95.1 - b\n")
+    p = repo / "plugins" / "mycelium" / ".claude-plugin"
+    (p / "plugin.json").write_text('{"version": "0.95.1"}\n')
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-m", "squashed")
+    squashed = subprocess.run(["git", "-C", str(repo), "rev-parse", "HEAD"],
+                              capture_output=True, text=True, check=False).stdout.strip()
+    monkeypatch.chdir(repo)
+
+    found = rg.first_commit_for_versions({"0.95.0"})
+    assert found == {"0.95.0": squashed}
+
+
+def test_repair_reports_a_version_it_cannot_locate_rather_than_dropping_it(
+    tmp_path, scripts_path, monkeypatch
+):
+    """The fail-open this module exists to close, in its newest shape: a repair that
+    silently emits a shorter list than the gap it was asked to fix."""
+    rg = _import(scripts_path)
+    repo = tmp_path / "r"
+    repo.mkdir()
+    _git(repo, "init", "-q")
+    _git(repo, "config", "user.email", "t@t.t")
+    _git(repo, "config", "user.name", "t")
+    _commit_version(repo, "0.100.0")
+    monkeypatch.chdir(repo)
+
+    found = rg.first_commit_for_versions({"0.100.0", "0.199.0"})
+    assert "0.100.0" in found
+    assert "0.199.0" not in found  # caller must report it, never silently skip
+
+
+def test_repair_with_no_gaps_returns_empty_rather_than_everything(
+    tmp_path, scripts_path, monkeypatch
+):
+    """Empty input honesty: nothing missing must mean nothing emitted -- not a walk
+    of all history offering every version ever bumped."""
+    rg = _import(scripts_path)
+    repo = tmp_path / "r"
+    repo.mkdir()
+    _git(repo, "init", "-q")
+    _git(repo, "config", "user.email", "t@t.t")
+    _git(repo, "config", "user.name", "t")
+    _commit_version(repo, "0.100.0")
+    monkeypatch.chdir(repo)
+
+    assert rg.first_commit_for_versions(set()) == {}
