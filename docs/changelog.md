@@ -4,6 +4,55 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-07.
 
+## v0.102.0 - a record's prose can outlive the field beside it
+
+**`check_stale_prose.py` — a new advisory check, and it exists because v0.101.0 does not cover this.**
+
+That release made the absence-claim guard fire on obligations and role claims. It inspects a claim
+at the moment it is **written**. It has nothing to say about a claim that was TRUE when written and
+quietly stopped being true when a sibling field moved underneath it.
+
+Dogfood 2026-08-07 found **four instances in a single session**, all in the files the project uses
+to remember things, none caught by any check:
+
+- `ht-060.objective` read *"THE FIRST IS OWED TODAY"* while its own `touch_log`, two entries below,
+  recorded the reply sent that day and the obligation discharged. **It advertised a live obligation
+  to a real person for five days.**
+- `active-metrics.yml` had `last_pulled_at` bumped to today while the comment beside it still
+  described the previous pull, by number.
+- `ht-055.why_still_open` said the pull *"has not run"* — falsified by the pull; the rewrite said
+  the reach half was *"structurally unavailable"* — falsified twenty minutes later by a browser
+  read. Both were true when written.
+
+**Two rules, both heuristics, both advisory.** Rule A: a temporal word with no date beside it is
+wrong the day after it is written. Rule B: a **framing** field asserting not-done while a **log**
+field records it done — deliberately narrower than "record contains both", which fired on 14 of the
+motivating repo's records, most of them noise.
+
+**Not a `validate-template.sh` check, for the reason v0.100.0 records.** That runs in the framework
+repo, whose canvas carries none of these records. It would report nothing-to-audit forever and read
+green. Surfaced via session-start, same tier as the leaf-lifecycle advisory.
+
+### Four bugs found while building it, every one by running against the real pre-fix record
+
+1. A flat field split let `touch_log:` capture only the bytes before its first child, so the
+   discharge text never reached the log side — **the checker missed its own motivating case.**
+2. It re-flagged records that DOCUMENT a fixed instance, because a repair note quotes the stale
+   phrase. An advisory that nags about reconciled records is one the reader learns to skip.
+3. `note` is both a record-level field and a child key inside every `touch_log` entry, so log prose
+   landed in the framing bucket and silenced the instance the check exists for.
+4. `direction: outbound` was treated as a done-marker. It is not — an outbound touch means something
+   was *sent*, not that the outstanding thing was *done*. **The negative control caught it**:
+   "question posted, no reply" is honest open work and was being flagged.
+
+And a fifth, caught by the framework's own guard rather than by me: the first cut **exited 0 over an
+empty repository**, reporting "no candidates across 0 files". `check_empty_input_honesty.py` refused
+it. A green result over an empty population is the one answer that is never true — the exact failure
+this checker was written to report, committed inside the checker. It now exits 2 and names what was
+not verified.
+
+9 tests. The fixtures are verbatim shapes from the session, not invented ones.
+
 ## v0.101.4 - the gate asked "in this session", not "in this project"
 
 **The discovery gate fired on files the project does not own.** It now tests containment first.

@@ -215,6 +215,42 @@ if d.get('status') == 'violations':
 fi
 
 # ============================================================
+# CHECK 1c: Stale prose — a record's sentence outliving the field beside it.
+#
+# v0.101.0 made the absence-claim guard fire on obligations, but that guard
+# inspects a claim as it is WRITTEN. It says nothing about a claim that was
+# true when written and stopped being true when a sibling field moved.
+# Dogfood 2026-08-07 found four in one session, none caught by any check,
+# including a task advertising a live obligation to a real person for five
+# days while its own touch_log recorded the reply sent.
+#
+# ADVISORY. Both rules are heuristics over prose; a false positive costs a
+# sentence of reading, and blocking a session on one would be worse than the
+# defect it reports.
+# ============================================================
+PROSECHK=""
+if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check_stale_prose.py" ]; then
+  PROSECHK="${CLAUDE_PLUGIN_ROOT}/scripts/check_stale_prose.py"
+elif [ -f "$PROJECT_DIR/.claude/scripts/check_stale_prose.py" ]; then
+  PROSECHK="$PROJECT_DIR/.claude/scripts/check_stale_prose.py"
+fi
+if [ -n "$PROSECHK" ]; then
+  STALEPROSE=$(python3 "$PROSECHK" --project-dir "$PROJECT_DIR" --json 2>/dev/null \
+    | python3 -c "
+import json, sys
+try:
+  d = json.load(sys.stdin)
+except Exception:
+  sys.exit(0)
+if d.get('status') == 'violations':
+  print(len(d.get('violations') or []))
+" 2>/dev/null || echo "")
+  if [ -n "$STALEPROSE" ]; then
+    REMINDERS="${REMINDERS}${STALEPROSE} record(s) carry prose that may have outlived the field beside it — a framing field asserting not-done while a log field records it done, or a bare 'today' with no date. Read the record; if the sentence is still true, leave it. "
+  fi
+fi
+
+# ============================================================
 # CHECK 2: Delivery metrics cadence (per delivery cycle)
 # Routes to product-type-appropriate metrics canvas (v0.11.0)
 # ============================================================
