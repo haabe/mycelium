@@ -62,6 +62,39 @@ SCAN_GLOBS = [
 #: here and are not a finding about THIS project.
 SCAN_EXCLUDE_PARTS = {".fixtures", "node_modules", ".pytest_cache", "__pycache__"}
 
+#: THE APPEND-ONLY RECORD, excluded v0.108.2 for the reason `check_legacy_paths`
+#: already excludes it: a decision log, a corrections file and an eval report
+#: legitimately QUOTE link shapes and moved paths while narrating the work that moved
+#: them. Their job is to remember; a README's job is to route.
+#:
+#: THIS CLOSED AN INCONSISTENCY I INTRODUCED. v0.108.0 widened both guards to
+#: `.claude/`, gave `check_legacy_paths` this exclusion and did NOT give it to this
+#: one. Within hours a decision-log entry describing the fix quoted a relative link
+#: shape, and this check correctly read it as a dead link — the third time in one
+#: session that documenting a defect created an instance of it. Every future entry
+#: quoting a link would have done the same, and a guard that fires on the act of
+#: writing about it is a guard that gets muted.
+#:
+#: READMEs STAY IN SCOPE EVEN INSIDE THESE TREES. `.claude/evals/README.md` routes a
+#: reader to `results/`; that is navigation and must keep being checked. The
+#: distinction is the file's job, not its parent directory.
+APPEND_ONLY_PARTS = {"memory", "drafts"}
+APPEND_ONLY_FILES = {"decision-log.md"}
+
+
+def is_append_only_record(path, root) -> bool:
+    """True for historical-record prose whose links are quotations, not navigation."""
+    if path.name == "README.md":
+        return False
+    try:
+        rel = path.relative_to(root)
+    except ValueError:
+        return False
+    parts = set(rel.parts)
+    if ".claude" not in parts:
+        return False
+    return bool(parts & APPEND_ONLY_PARTS) or path.name in APPEND_ONLY_FILES
+
 MD_LINK = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
 
 # A target we never try to resolve (placeholder/glob/external/anchor-only).
@@ -99,6 +132,8 @@ def iter_scan_files(root: Path):
     for g in SCAN_GLOBS:
         for p in root.glob(g):
             if SCAN_EXCLUDE_PARTS & set(p.parts):
+                continue
+            if is_append_only_record(p, root):
                 continue
             if p.is_file() and p not in seen:
                 seen.add(p)

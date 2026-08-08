@@ -136,3 +136,42 @@ def test_fixture_trees_under_claude_are_not_scanned(scripts_path, tmp_path):
         "[logo](./script/output/user_count.svg)",
     )
     assert mod.main(["--root", str(tmp_path)]) == 0
+
+
+# --- append-only record exclusion (v0.108.2) --------------------------------
+#
+# check_legacy_paths got this exclusion in v0.108.0 and this check did not. Within
+# hours a decision-log entry describing that fix quoted a relative link shape, and
+# this check correctly read it as a dead link. A guard that fires on the act of
+# writing about a defect is a guard that gets muted.
+
+def test_decision_log_quoting_a_link_shape_is_not_flagged(scripts_path, tmp_path):
+    mod = _import(scripts_path)
+    _write(tmp_path / ".claude/canvas/purpose.yml", "x: 1")
+    _write(tmp_path / ".claude/canvas/README.md", "See [purpose](purpose.yml).")
+    _write(
+        tmp_path / ".claude/harness/decision-log.md",
+        "We reverted a regex that fired on [engine](../engine/), which resolves fine.",
+    )
+    assert mod.main(["--root", str(tmp_path)]) == 0
+
+
+def test_memory_quoting_a_link_shape_is_not_flagged(scripts_path, tmp_path):
+    mod = _import(scripts_path)
+    _write(tmp_path / ".claude/canvas/purpose.yml", "x: 1")
+    _write(tmp_path / ".claude/canvas/README.md", "See [purpose](purpose.yml).")
+    _write(
+        tmp_path / ".claude/memory/corrections.md",
+        "The old link was [schemas](../schemas/canvas/) and it was dead.",
+    )
+    assert mod.main(["--root", str(tmp_path)]) == 0
+
+
+def test_readme_inside_an_append_only_tree_is_still_scanned(scripts_path, tmp_path):
+    """The distinction is the file's JOB, not its parent directory. A README routes
+    a reader somewhere even when it lives under evals/ or memory/."""
+    mod = _import(scripts_path)
+    _write(tmp_path / ".claude/canvas/purpose.yml", "x: 1")
+    _write(tmp_path / ".claude/canvas/README.md", "See [purpose](purpose.yml).")
+    _write(tmp_path / ".claude/memory/README.md", "See [gone](nope.md).")
+    assert mod.main(["--root", str(tmp_path)]) == 1
