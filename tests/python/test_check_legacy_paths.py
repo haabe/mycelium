@@ -134,3 +134,50 @@ def test_non_scanned_location_not_flagged(scripts_path, tmp_path):
     report = mod.scan(tmp_path)
     assert report["hits"] == []
     assert mod.main(["--root", str(tmp_path)]) == 0
+
+
+# --- consumer-tree scope (v0.108.0) ----------------------------------------
+
+def test_moved_dir_reference_in_consumer_readme_is_flagged(scripts_path, tmp_path):
+    """A consumer's own README routing at the moved framework tree. Before v0.108.0
+    the globs stopped at docs/ and plugins/mycelium/, so .claude/ was never read."""
+    mod = _import(scripts_path)
+    _write(
+        tmp_path / ".claude/canvas/README.md",
+        "Schemas are defined in `.claude/schemas/canvas/`.",
+    )
+    assert mod.main(["--root", str(tmp_path)]) == 1
+
+
+def test_append_only_record_under_claude_is_not_scanned(scripts_path, tmp_path):
+    """The historical record legitimately QUOTES moved paths while narrating the
+    migration that moved them — the same reasoning as the `*Version` line skip.
+    A first cut globbing .claude/**/*.md returned 28 hits on a real repo: 2 genuine
+    and 26 from decision-log.md and memory/. A 13:1 noise ratio gets a guard ignored."""
+    mod = _import(scripts_path)
+    # A real scannable file so the population is non-empty — otherwise the check
+    # correctly REFUSES ("0 doc file(s) were scanned, so nothing was verified")
+    # rather than passing, which is the empty-input honesty contract doing its job.
+    _write(tmp_path / ".claude/canvas/README.md", "Canvas notes, no moved-dir refs.")
+    _write(
+        tmp_path / ".claude/harness/decision-log.md",
+        "2026-05-12: migrated off `.claude/engine/` to plugin form.",
+    )
+    _write(
+        tmp_path / ".claude/memory/corrections.md",
+        "The old path was `.claude/scripts/validate_canvas.py`.",
+    )
+    assert mod.main(["--root", str(tmp_path)]) == 0
+
+
+def test_relative_form_is_not_matched_here(scripts_path, tmp_path):
+    """Deliberate non-goal, reverted the hour it was tried. A regex over a relative
+    path cannot know where it resolves: `[engine](../engine/)` inside
+    plugins/mycelium/harness/ points at a directory that EXISTS. Resolution is
+    check_doc_references.py's job and it catches these correctly."""
+    mod = _import(scripts_path)
+    _write(
+        tmp_path / ".claude/diamonds/README.md",
+        "See [rules](../engine/diamond-rules.md).",
+    )
+    assert mod.main(["--root", str(tmp_path)]) == 0

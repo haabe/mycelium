@@ -2,7 +2,132 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-08-07.
+**Last updated**: 2026-08-08.
+
+## v0.108.1 - the working tree masked what the widening was for
+
+Patch on v0.108.0, kept as its own entry because the failure is more useful than the fix.
+
+Widening `check_doc_references` to scan `.claude/` was the point of v0.108.0. Every
+local run was green — 870 tests, `validate-template.sh` 53/0, every guard. **CI failed
+on the first run**, on an *existing* test, because two READMEs there link to `drafts/`
+and `evals/results/`: directories that are gitignored or untracked, present in the
+author's working tree and absent from the fresh clone CI makes. A third instance of the
+identical shape (`worktrees/`) had been caught locally an hour earlier and was not
+generalised from.
+
+**Widening a guard's file scope changes what counts as its environment.** Before the
+widening the scanned set was tracked files only, so working tree and checkout agreed.
+After it, the untracked files the working tree carries are precisely the ones that mask
+the defect the widening exists to find.
+
+All three are now allowlisted as local-only directories their READMEs correctly
+document. **Re-run a widened guard against a clean checkout before trusting a local
+green** — cloning the pushed branch to a scratch dir reproduced it in two minutes and
+gave the exact failing assertion, where the CI log gave only `pytest: tests failing`
+because `validate-template.sh` swallows pytest output.
+
+## v0.108.0 - the checks were shaped like the repo that wrote them
+
+Two releases' worth of findings landed together, both from the same root: **a check
+that runs is not a check that looked.**
+
+### The checks never matched a consumer repo
+
+A census ran every shipped `check_*.py` against a real plugin CONSUMER on 2026-08-08.
+Nothing had degraded and nothing was unwired. Two guards had been born upstream-shaped
+and had never matched an installation:
+
+- `check_doc_references` and `check_legacy_paths` both carried
+  `SCAN_GLOBS = [CLAUDE.md, README.md, docs/**, plugins/mycelium/**]` — the FRAMEWORK
+  repo's layout. A consumer has no `plugins/mycelium/` tree and keeps its content under
+  `.claude/`. Measured: **29 of 212 markdown files scanned, 158 links unexamined.**
+- Three of those links were dead, pointing at directories removed by that project's
+  plugin migration **88 days earlier** — and `check_legacy_paths` exists specifically to
+  catch that. It reported clean.
+
+**Fixed**: both now scan the consumer tree. `check_legacy_paths` is scoped to files that
+ROUTE (`.claude/**/README.md`, `.claude/skills/**`) rather than the whole tree — a first
+cut globbing `.claude/**/*.md` returned 28 hits, 2 genuine and **26 from the append-only
+record**, which legitimately quotes moved paths while narrating the migration that moved
+them. A guard shipping a 13:1 noise ratio gets ignored, which is the failure it exists
+to prevent arriving from the other side.
+
+**Tried and reverted the same hour**, recorded because the reasoning generalises: a
+regex for the RELATIVE form (`](../engine/`) was added to `check_legacy_paths` and
+immediately false-positived on `plugins/mycelium/harness/README.md`, whose
+relative link to the sibling `engine/` directory resolves to a directory that EXISTS. **A regex over a relative
+path cannot know where it resolves; only resolution can.** `check_doc_references`
+already resolves every target and caught all three real cases once its scope widened.
+
+### `check_theory_fidelity` could not find its own root when installed
+
+Auto-detect used `Path(__file__).parents[3]`, which assumes `<root>/plugins/mycelium/
+scripts/`. The installed plugin cache adds a VERSION directory, so every consumer-side
+run resolved to the marketplace cache root and died with `error: missing
+docs/theories.md under ~/.claude/plugins/cache/haabe-mycelium`. Now it walks up looking
+for the ARTIFACT instead of counting directories, and reports an honest **N/A** when
+there is no framework tree — a consumer can do nothing about a missing framework file,
+and a false alarm is how a check gets ignored.
+
+### New: every check is now run against a consumer-shaped tree
+
+`tests/python/test_consumer_shape_coverage.py`. `check_empty_input_honesty` (v0.79.0)
+closed the EMPTY case and named the limit it could not close: *"this catches EMPTY
+input, not reduced input."* A consumer repo is not empty — it is the wrong shape, and
+the wrong shape is the shipped shape.
+
+For each consumer-applicable check it **plants the defect that check exists to catch**
+and requires it to be FOUND, plus the clean case to prove discrimination. Upstream-only
+checks are listed with a reason and must say N/A rather than PASS. Verified to bite: run
+against the pre-fix code, the two planted-defect cases fail.
+
+Deliberately a TEST, not a 25th shipped check — the parked check-architecture refactor
+names "check count >= 27" as an un-park trigger, and adding shipped checks to fix check
+quality would be the joke that document is about.
+
+## v0.108.0 - the label has to match the source it labels
+
+`external_human` means a human outside the project said it. A sweep of 25 canvas
+files on 2026-08-08 found **ten founder-sourced evidence entries: five correctly
+`internal_stakeholder`, five claiming `external_human`.**
+
+Three things made it worse than a typo:
+
+- **The prose already knew, in three of the five.** One source text read
+  `[anecdotal, non-arms-length]` beside a class of `external_human`. Another block
+  carried a sibling `source_class: internal_desk` whose comment said *"NO external
+  human has..."* four lines above an array claiming `external_human` twice. The
+  comment a human reads and the field a script reads, disagreeing inside one block.
+- **It is machine-consumed.** `check_source_independence.py` counts distinct
+  `source_class` values as method diversity, so a mislabelled founder manufactures
+  corroboration that does not exist.
+- **It inflates one way.** Every mislabel found pointed toward more external
+  evidence than exists. Nobody mislabels an outside voice as internal.
+
+`check_source_authenticity.py` asks whether a cited human is real.
+`check_source_independence.py` asks whether a claim rests on more than one method.
+Both take the class at its word. **Nothing asked the prior question: does this class
+describe the thing sitting next to it?**
+
+**New: `scripts/check_source_class_fidelity.py`** — wired into `validate.yml` as a
+gate and into SessionStart as an advisory. Two rules:
+
+- **Alignment.** `evidence_sources` and `source_classes` are index-parallel.
+  Unequal lengths make every pairing meaningless, so that is a precondition failure.
+- **Fidelity.** A source may not be classed `external_human` when its own text says
+  otherwise — an inline provenance tag that contradicts the class, the project's own
+  voice, or a thing that is not a person (a dogfood run, a subagent, a tree).
+
+Precision over recall, deliberately: the detectors are anchored so that
+`founder-relayed`, `non-founder` and `solo-founder` inside genuinely external sources
+do not fire. The stated cost is real misses — a pointer-to-external-evidence mislabel
+is invisible to it, and the `source_class`/`source_classes` singular-plural
+disagreement is a different defect it does not cover.
+
+**It caught its author on its first live run:** six misaligned blocks in the dogfood
+canvas, one of them written two hours earlier, in the opportunity that reports this
+very defect class.
 
 ## v0.107.0 - the empty quadrant: a closed task whose evidence never landed
 

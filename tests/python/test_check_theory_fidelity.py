@@ -160,3 +160,55 @@ def test_json_output_runs(scripts_path, tmp_path, capsys):
     out = capsys.readouterr().out
     parsed = json.loads(out)
     assert "errors" in parsed and rc == 0
+
+
+# --- root auto-detect across layouts (v0.108.0) -----------------------------
+
+def test_autodetect_finds_the_framework_tree_by_artifact(scripts_path, tmp_path):
+    """Layout-agnostic: locate the theory surface, do not count parent directories.
+
+    The upstream checkout puts this script at <root>/plugins/mycelium/scripts/; the
+    installed plugin cache puts it at <cache>/<marketplace>/<plugin>/<version>/scripts/.
+    The old `parents[3]` got the first right and the second silently wrong — every
+    consumer-side run died with "missing docs/theories.md under
+    ~/.claude/plugins/cache/haabe-mycelium".
+    """
+    import shutil
+    mod = _import(scripts_path)
+
+    cache = tmp_path / "cache/haabe-mycelium/mycelium/0.108.0/scripts"
+    cache.mkdir(parents=True)
+    shutil.copy(scripts_path / "check_theory_fidelity.py", cache)
+
+    # No docs/theories.md anywhere above it — the real plugin-cache situation.
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "tf_cached", cache / "check_theory_fidelity.py"
+    )
+    cached = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(cached)
+    assert cached._autodetect_root() is None
+
+    # And the real upstream tree resolves to the repo root, not to a parent count.
+    found = mod._autodetect_root()
+    assert found is not None
+    assert (found / mod.THEORIES_MD).is_file()
+
+
+def test_no_framework_tree_is_na_not_an_error(scripts_path, tmp_path, capsys):
+    """A consumer can do nothing about a missing framework artifact. N/A is honest;
+    a path error at exit 2 is a false alarm, and false alarms are how a check gets
+    ignored."""
+    import importlib.util
+    cache = tmp_path / "cache/mkt/plugin/1.0.0/scripts"
+    cache.mkdir(parents=True)
+    import shutil
+    shutil.copy(scripts_path / "check_theory_fidelity.py", cache)
+    spec = importlib.util.spec_from_file_location(
+        "tf_na", cache / "check_theory_fidelity.py"
+    )
+    cached = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(cached)
+
+    assert cached.main([]) == 0
+    assert "N/A" in capsys.readouterr().out
