@@ -46,7 +46,21 @@ SCAN_GLOBS = [
     "CONTRIBUTORS.md",
     "docs/**/*.md",
     "plugins/mycelium/**/*.md",
+    # CONSUMER TREE, added v0.108.0. The five globs above are the FRAMEWORK repo's
+    # shape. A plugin consumer has no plugins/mycelium/ tree at all and keeps its
+    # docs under .claude/, so this check scanned 29 of 212 markdown files in a real
+    # dogfood repo and reported "no dead references" while 158 links sat unexamined.
+    # Three of them were dead, pointing at .claude/engine|schemas|scripts/ —
+    # directories that stopped existing at that project's plugin migration 88 days
+    # earlier. A check that reports clean over the tree it was not looking at is the
+    # verify_citations failure mode, and this is where it lives in consumer repos.
+    ".claude/**/*.md",
 ]
+
+#: Trees under .claude/ that are not the project's own documentation. Fixtures and
+#: vendored samples carry links into their own source repos, which do not resolve
+#: here and are not a finding about THIS project.
+SCAN_EXCLUDE_PARTS = {".fixtures", "node_modules", ".pytest_cache", "__pycache__"}
 
 MD_LINK = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
 
@@ -62,6 +76,12 @@ ALLOWLIST = {
     # literal ❌/✅ examples pointing at evaluate.md; they are typography
     # samples, not navigation from the contributing/ subdir.
     ("docs/contributing/style.md", "evaluate.md"),
+    # .claude/README.md documents worktrees/ as "scratch git worktrees for isolated
+    # agent work" — created by the runtime on demand, absent in a clean checkout.
+    # Surfaced 2026-08-08 when this check's scope widened to .claude/. Documenting a
+    # runtime-created directory is correct; the link is unfollowable in a fresh clone
+    # and that is a property of the directory, not a rot.
+    (".claude/README.md", "worktrees/"),
 }
 
 
@@ -69,6 +89,8 @@ def iter_scan_files(root: Path):
     seen = set()
     for g in SCAN_GLOBS:
         for p in root.glob(g):
+            if SCAN_EXCLUDE_PARTS & set(p.parts):
+                continue
             if p.is_file() and p not in seen:
                 seen.add(p)
                 yield p

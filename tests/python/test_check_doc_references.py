@@ -93,3 +93,46 @@ def test_real_repo_has_no_dead_references(scripts_path):
     assert report["dead"] == [], "dead doc references:\n" + "\n".join(
         f"  {s} -> {t}" for s, t in report["dead"]
     )
+
+
+# --- consumer-tree scope (v0.108.0) ----------------------------------------
+#
+# The five original globs are the FRAMEWORK repo's shape. A plugin consumer has no
+# plugins/mycelium/ tree and keeps its docs under .claude/, so on a real dogfood repo
+# this check scanned 29 of 212 markdown files and reported "no dead references" while
+# 158 links sat unexamined — three of them dead for 88 days, pointing at directories
+# removed by that project's plugin migration.
+
+def test_dead_link_in_consumer_claude_tree_is_caught(scripts_path, tmp_path, capsys):
+    """THE NEGATIVE CONTROL for the widened scope: the exact shape found in dogfood."""
+    mod = _import(scripts_path)
+    _write(
+        tmp_path / ".claude/canvas/README.md",
+        "Schemas live in [`../schemas/canvas/`](../schemas/canvas/).",
+    )
+    assert mod.main(["--root", str(tmp_path)]) == 1
+    out = capsys.readouterr().out
+    assert "DEAD" in out
+    assert "../schemas/canvas/" in out
+
+
+def test_live_link_in_consumer_claude_tree_passes(scripts_path, tmp_path):
+    mod = _import(scripts_path)
+    _write(tmp_path / ".claude/canvas/purpose.yml", "x: 1")
+    _write(tmp_path / ".claude/canvas/README.md", "See [purpose](purpose.yml).")
+    assert mod.main(["--root", str(tmp_path)]) == 0
+
+
+def test_fixture_trees_under_claude_are_not_scanned(scripts_path, tmp_path):
+    """Vendored fixtures carry links into their own source repos. Those are not a
+    finding about THIS project, and flagging them is how a guard gets ignored."""
+    mod = _import(scripts_path)
+    # A real scannable link so the population is non-empty; with only the excluded
+    # fixture present the check correctly refuses rather than reporting a pass.
+    _write(tmp_path / ".claude/canvas/purpose.yml", "x: 1")
+    _write(tmp_path / ".claude/canvas/README.md", "See [purpose](purpose.yml).")
+    _write(
+        tmp_path / ".claude/auto-dogfood/.fixtures/vendored/README.md",
+        "[logo](./script/output/user_count.svg)",
+    )
+    assert mod.main(["--root", str(tmp_path)]) == 0

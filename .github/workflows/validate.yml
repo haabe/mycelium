@@ -120,6 +120,18 @@ jobs:
         # with a decision attached, not a regression.
         run: python3 plugins/mycelium/scripts/check_surface_registry.py
 
+      - name: Run source-class fidelity guard (the label must match the source beside it)
+        # Dogfood 2026-08-08: five founder-sourced canvas entries were classed
+        # `external_human` -- the field meaning a human OUTSIDE the project said it --
+        # and in three of them the record's own prose already said otherwise. It is
+        # machine-consumed: check_source_independence.py counts distinct source_class
+        # values as method diversity, so a mislabel manufactures corroboration that
+        # does not exist. Every mislabel found pointed the same way: toward more
+        # external evidence than exists. Also fails on misaligned
+        # evidence_sources/source_classes arrays, since unequal lengths make every
+        # index pairing meaningless.
+        run: python3 plugins/mycelium/scripts/check_source_class_fidelity.py --root .
+
       - name: Run Python unit tests with coverage (verbose output for CI logs)
         run: |
           pytest tests/python/ -v \

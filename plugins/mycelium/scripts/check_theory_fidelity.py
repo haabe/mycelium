@@ -202,6 +202,21 @@ def scan(root: Path):
     return {"errors": errors, "gates_checked": len(gate_sources)}
 
 
+def _autodetect_root() -> Path | None:
+    """Walk up from this file for a tree that actually holds the theory surface.
+
+    Layout-agnostic on purpose. The upstream checkout puts this script at
+    <root>/plugins/mycelium/scripts/; the installed plugin cache puts it at
+    <cache>/<marketplace>/<plugin>/<version>/scripts/. Counting parents gets one of
+    those right and the other silently wrong, which is what happened. Looking for the
+    artifact instead of counting directories is correct in both.
+    """
+    for candidate in Path(__file__).resolve().parents:
+        if (candidate / THEORIES_MD).is_file() and (candidate / GATES_MD).is_file():
+            return candidate
+    return None
+
+
 def main(argv=None):
     p = argparse.ArgumentParser(
         description="Guard the theory→mechanism mapping in docs/theories.md "
@@ -211,7 +226,25 @@ def main(argv=None):
     p.add_argument("--json", action="store_true", help="Emit JSON.")
     args = p.parse_args(argv)
 
-    root = Path(args.root).resolve() if args.root else Path(__file__).resolve().parents[3]
+    root = Path(args.root).resolve() if args.root else _autodetect_root()
+
+    # PRECONDITION vs FINDING. This guard audits the FRAMEWORK repo's own theory
+    # surface (docs/theories.md, engine/theory-gates.md). A plugin consumer has
+    # neither and can do nothing about it, so saying N/A is honest and exiting 2 with
+    # a path error is not. Before v0.108.0 the auto-detect assumed the upstream
+    # layout <root>/plugins/mycelium/scripts/ and used parents[3]; in the installed
+    # plugin cache the path carries an extra VERSION directory
+    # (.../haabe-mycelium/mycelium/0.107.1/scripts/), so parents[3] resolved to the
+    # marketplace cache root and every consumer-side run died with
+    # "error: missing docs/theories.md under ~/.claude/plugins/cache/haabe-mycelium".
+    # A /framework-health run on 2026-08-08 reported this guard GREEN without
+    # recording that it could only have been green against an upstream checkout.
+    if root is None:
+        print("Theory fidelity: N/A — no framework repo found. This guard audits "
+              f"{THEORIES_MD} and {GATES_MD}, which exist in the haabe/mycelium "
+              "repo, not in a plugin consumer. Pass --root <framework-repo> to run "
+              "it.")
+        return 0
 
     for rel in (THEORIES_MD, GATES_MD):
         if not (root / rel).is_file():

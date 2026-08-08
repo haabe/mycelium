@@ -343,6 +343,45 @@ if d.get('status') == 'violations':
 fi
 
 # ============================================================
+# CHECK 1d-ii: Source-class fidelity — the label must match its own source (v0.108.0)
+# ============================================================
+# Sibling to 1d. That one asks whether a cited human is real; this asks the prior
+# question nothing asked — does the class describe the thing next to it. Dogfood
+# 2026-08-08 found five founder-sourced entries classed `external_human`, three of
+# them beside prose that already said non-arms-length. Machine-consumed:
+# check_source_independence.py counts distinct source_class values as method
+# diversity, so a mislabel manufactures corroboration.
+#
+# ADVISORY. Precision over recall — a false positive costs a sentence of reading,
+# and it deliberately cannot see a pointer-to-external-evidence mislabel.
+FIDCHK=""
+if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check_source_class_fidelity.py" ]; then
+  FIDCHK="${CLAUDE_PLUGIN_ROOT}/scripts/check_source_class_fidelity.py"
+elif [ -f "$PROJECT_DIR/.claude/scripts/check_source_class_fidelity.py" ]; then
+  FIDCHK="$PROJECT_DIR/.claude/scripts/check_source_class_fidelity.py"
+fi
+if [ -n "$FIDCHK" ]; then
+  BADCLASS=$(python3 "$FIDCHK" --project-dir "$PROJECT_DIR" --json 2>/dev/null \
+    | python3 -c "
+import json, sys
+try:
+  d = json.load(sys.stdin)
+except Exception:
+  sys.exit(0)
+if d.get('status') == 'violations':
+  n = len(d.get('violations') or [])
+  m = len(d.get('misalignments') or [])
+  if n or m:
+    print(f'{n} {m}')
+" 2>/dev/null || echo "")
+  if [ -n "$BADCLASS" ]; then
+    BC_V=$(echo "$BADCLASS" | cut -d' ' -f1)
+    BC_M=$(echo "$BADCLASS" | cut -d' ' -f2)
+    REMINDERS="${REMINDERS}${BC_V} evidence source(s) are labelled external_human while the source text says otherwise, and ${BC_M} provenance block(s) have evidence_sources and source_classes of different lengths. external_human means someone OUTSIDE this project said it; the independence check counts these as method diversity, so a wrong label invents corroboration. Run check_source_class_fidelity.py for the list. Fix the class, keep the source, and re-derive any confidence that rested on it. "
+  fi
+fi
+
+# ============================================================
 # CHECK 1e: Reply owed — delegated, not reimplemented (v0.105.0)
 # ============================================================
 # The rule lives in scripts/check_reply_owed.py. canvas-health step 8c(e) calls

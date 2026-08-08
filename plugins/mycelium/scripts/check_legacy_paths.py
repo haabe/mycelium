@@ -65,9 +65,41 @@ SCAN_GLOBS = [
     "README.md",
     "docs/**/*.md",
     "plugins/mycelium/**/*.md",
+    # CONSUMER TREE, added v0.108.0 — see the RELATIVE-FORM note below. This guard
+    # existed to catch stale `.claude/{engine,schemas,scripts}/` references and did
+    # not scan `.claude/` itself, which is where a consumer's own READMEs live.
+    #
+    # SCOPED TO FILES THAT ROUTE, NOT TO THE WHOLE TREE, AND THE NUMBERS ARE WHY.
+    # A first cut globbed `.claude/**/*.md` and returned 28 hits on a real dogfood
+    # repo: 2 genuine dead routing pointers and 26 from the append-only record —
+    # decision-log.md (11), memory/*.md (11), dogfood reports and metrics tables.
+    # Those legitimately QUOTE moved paths while narrating the migration that moved
+    # them, exactly like the `*Version` lines this file already skips below. A guard
+    # shipping a 13:1 noise ratio gets ignored, which is the failure it exists to
+    # prevent, arriving from the other side. READMEs and skills are the files whose
+    # job is to route a reader somewhere; the historical record's job is to remember.
+    ".claude/**/README.md",
+    ".claude/skills/**/*.md",
 ]
 
+#: Vendored/fixture trees are not this project's prose.
+SCAN_EXCLUDE_PARTS = {".fixtures", "node_modules", ".pytest_cache", "__pycache__"}
+
 # The moved reference dirs with no legitimate plugin-form runtime path.
+#: THE RELATIVE FORM IS DELIBERATELY *NOT* MATCHED HERE, and the attempt is recorded
+#: because it was tried and reverted the same hour. `.claude/canvas/README.md` links to
+#: `../schemas/canvas/`, which resolves into a dead directory while containing no
+#: `.claude/schemas/` string, so a `\]\(\.\./schemas/` pattern was added to catch it.
+#: It immediately false-positived on `plugins/mycelium/harness/README.md`, which links
+#: `[engine](../engine/)` — resolving to `plugins/mycelium/engine/`, a directory that
+#: EXISTS. A regex over a relative path cannot know where the path resolves; only
+#: resolution can. `check_doc_references.py` already resolves every link target against
+#: the filesystem and caught all three real cases on its own once its scope was widened
+#: to `.claude/`. Two guards pattern-matching the same defect, one of them unable to
+#: tell a live link from a dead one, is worse than one guard resolving it.
+#: THIS FILE'S JOB stays what it was: the ABSOLUTE `.claude/<moved-dir>/` string, which
+#: is unambiguous wherever it appears.
+
 LEGACY_RE = re.compile(
     r"\.claude/(engine|orchestration|schemas|templates|scripts|domains|tests)/"
     # harness/ and jit-tooling/ are SPLIT trees: framework files moved to
@@ -101,6 +133,8 @@ def iter_scan_files(root: Path):
     seen = set()
     for g in SCAN_GLOBS:
         for p in root.glob(g):
+            if SCAN_EXCLUDE_PARTS & set(p.parts):
+                continue
             if p.is_file() and p not in seen:
                 seen.add(p)
                 yield p
