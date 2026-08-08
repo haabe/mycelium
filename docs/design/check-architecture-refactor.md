@@ -330,3 +330,51 @@ rather than to an error. That part is worth fixing regardless of the rest.
 the 24 inline `python3 -c` blocks into one process, leave all 23 checks untouched. That captures
 most of the latency win for a fraction of the risk, and leaves the DRY and consistency work for a
 later cycle. It is the recommended fallback.
+
+---
+
+## 9. DECISION 2026-08-08: PARKED, WITH TRIGGERS THAT DO NOT DEPEND ON ANYONE REMEMBERING
+
+Founder: *"I still think it is worth having an eye on until the debt is growing."*
+
+**Decision: do not refactor now.** The reasoning in §8 stands — this improves the machine that
+improves the framework while `products_shipped` is 0/10, and the founder's attention is better spent
+on opp-037. Parked is the right call.
+
+**But "keep an eye on it" is a memory, and memories are what this project's standing rule was
+written about**: measurements generated and never landing where they are read. So the park carries
+triggers that are numbers, and the numbers are captured by an instrument that already runs.
+
+### Un-park triggers — ANY ONE of these makes the refactor worth a cycle
+
+| # | Trigger | Value at park (2026-08-08) | Why this number |
+|---|---|---:|---|
+| T1 | **Session-start wall time ≥ 4.5 s** | **4.08 s** | 90% of the 5 s hook timeout. At 4.5 s a normal-variance session crosses it, and the failure is silent. |
+| T2 | **Any observed SessionStart timeout** | 0 | The risk becoming real. This alone un-parks immediately, no discussion. |
+| T3 | **`check_*.py` count ≥ 27** | **23** | Four more checks at ~60 lines of boilerplate each is ~240 lines of duplicated plumbing added after the plan existed. |
+| T4 | **A shared primitive written a third time** | `_status()` at 2 | Twice was an accident. Three times is a pattern the plan already predicted and failed to prevent. |
+| T5 | **Checks with empty-input honesty stops rising** | 3 / 23 | If new checks stop inheriting it by copy-paste, the consistency gap widens rather than holds. |
+
+### How the triggers get measured without a new check
+
+**Deliberately no `check_architecture_debt.py`.** Writing a 24th check to measure the cost of having
+23 checks would be the joke this document is about. Instead the numbers ride on `/mycelium:bvssh-check`,
+which already measures Automation with real counts and already writes them to
+`bvssh-health.yml#calms_assessment.automation`. Four of the five triggers are one-line shell
+measurements; the fifth (T2) is observational.
+
+The BVSSH skill's Automation step is where they belong, because that is where "the fitness functions
+show three different empty-input behaviours" was recorded in the first place, and where a reader
+already looks for this class of finding.
+
+### What happens when a trigger fires
+
+Un-park to **step 0 only** — the spike that measures the runner and confirms or refutes the
+0.6–1.0 s projection. Not to the full seven steps. If the spike refutes the projection, re-park with
+the measurement recorded, because the DRY argument alone was never sufficient to justify steps 4–5.
+
+### Review cadence
+
+No calendar. These are threshold triggers, not a date — a date-based review of parked technical debt
+is the thing that quietly expires. The next `/mycelium:bvssh-check` picks them up because they live
+in that skill's Automation measurement, and that skill runs on its own cadence.
