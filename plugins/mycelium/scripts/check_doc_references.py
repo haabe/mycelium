@@ -76,12 +76,21 @@ ALLOWLIST = {
     # literal ❌/✅ examples pointing at evaluate.md; they are typography
     # samples, not navigation from the contributing/ subdir.
     ("docs/contributing/style.md", "evaluate.md"),
-    # .claude/README.md documents worktrees/ as "scratch git worktrees for isolated
-    # agent work" — created by the runtime on demand, absent in a clean checkout.
-    # Surfaced 2026-08-08 when this check's scope widened to .claude/. Documenting a
-    # runtime-created directory is correct; the link is unfollowable in a fresh clone
-    # and that is a property of the directory, not a rot.
+    # LOCAL-ONLY DIRECTORIES THAT THEIR READMEs CORRECTLY DOCUMENT. All three are
+    # created by the runtime or by working use, are gitignored or untracked, and are
+    # therefore absent from a clean checkout. Documenting them is right; the links are
+    # unfollowable in a fresh clone, and that is a property of the directory rather
+    # than rot in the doc.
+    #
+    # SURFACED 2026-08-08 WHEN THIS CHECK'S SCOPE WIDENED TO .claude/, AND THE ORDER
+    # MATTERS AS A LESSON. `worktrees/` was caught locally. The other two were NOT:
+    # they exist in the author's working tree, so every local run was green, and only
+    # CI — which clones fresh — saw them. A guard whose scope has just widened must be
+    # re-run against a CLEAN CHECKOUT, because the working tree masks exactly the
+    # class of defect the widening was meant to expose.
     (".claude/README.md", "worktrees/"),
+    (".claude/README.md", "drafts/"),
+    (".claude/evals/README.md", "results/"),
 }
 
 
