@@ -4,6 +4,29 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-08.
 
+## v0.108.1 - the working tree masked what the widening was for
+
+Patch on v0.108.0, kept as its own entry because the failure is more useful than the fix.
+
+Widening `check_doc_references` to scan `.claude/` was the point of v0.108.0. Every
+local run was green — 870 tests, `validate-template.sh` 53/0, every guard. **CI failed
+on the first run**, on an *existing* test, because two READMEs there link to `drafts/`
+and `evals/results/`: directories that are gitignored or untracked, present in the
+author's working tree and absent from the fresh clone CI makes. A third instance of the
+identical shape (`worktrees/`) had been caught locally an hour earlier and was not
+generalised from.
+
+**Widening a guard's file scope changes what counts as its environment.** Before the
+widening the scanned set was tracked files only, so working tree and checkout agreed.
+After it, the untracked files the working tree carries are precisely the ones that mask
+the defect the widening exists to find.
+
+All three are now allowlisted as local-only directories their READMEs correctly
+document. **Re-run a widened guard against a clean checkout before trusting a local
+green** — cloning the pushed branch to a scratch dir reproduced it in two minutes and
+gave the exact failing assertion, where the CI log gave only `pytest: tests failing`
+because `validate-template.sh` swallows pytest output.
+
 ## v0.108.0 - the checks were shaped like the repo that wrote them
 
 Two releases' worth of findings landed together, both from the same root: **a check
