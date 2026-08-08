@@ -4,6 +4,29 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-08.
 
+## v0.108.2 - a guard that fires on writing about it gets muted
+
+v0.108.0 widened both doc guards to scan `.claude/`. It gave `check_legacy_paths` an
+exclusion for the append-only record — a decision log and a corrections file
+legitimately quote moved paths while narrating the migration that moved them — and did
+not give the same exclusion to `check_doc_references`.
+
+Within hours, a decision-log entry describing that very fix quoted a relative link
+shape, and `check_doc_references` correctly read it as a dead link. **The third time in
+one session that documenting a defect created an instance of it.** Every future entry
+quoting a link would have done the same, and a guard that fires on the act of writing
+about it is a guard that gets muted.
+
+`check_doc_references` now skips the append-only record (`memory/`, `drafts/`,
+`decision-log.md`) under `.claude/`.
+
+**READMEs stay in scope even inside those trees.** `.claude/evals/README.md` routes a
+reader to `results/`; that is navigation and must keep being checked. The distinction is
+the file's *job*, not its parent directory.
+
+3 tests, verified to bite: without the exclusion both quoting cases fail, and a README
+under `memory/` is still flagged.
+
 ## v0.108.1 - the working tree masked what the widening was for
 
 Patch on v0.108.0, kept as its own entry because the failure is more useful than the fix.
