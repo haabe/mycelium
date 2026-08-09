@@ -38,12 +38,29 @@ if [ -f "$CORRECTIONS_FILE" ]; then
 fi
 
 # Count corrections
+#
+# THIS NUMBER IS PRINTED INTO EVERY SESSION'S CONTEXT, before any work starts,
+# which makes it the most-read quantity the framework produces and the one it
+# was least careful about. Until 2026-08-09 the pattern here was `^### `, and it
+# was wrong in both directions at once: it missed `##` and `####` entries, it
+# missed the entire bullet form `- **Title (DATE, class)**:` that most recent
+# entries use, and it counted section headings like `### Prevention rule` as
+# corrections. Measured on the dogfood repo that day it said 100 against a real
+# corpus of 141, and the gap had widened from 30 the day before — it degrades
+# with use, because the invisible form is the one people write now.
+#
+# THE PATTERN BELOW MUST STAY EQUIVALENT TO `ENTRY_RE` in
+# `scripts/_corrections_lib.py`. Bash cannot import it, so the equivalence is
+# held by a test rather than by a shared symbol:
+# `tests/python/test_correction_count_agreement.py` runs THIS hook against
+# `tests/fixtures/corrections/mixed.md` and compares the banner it prints to the
+# library's count. Change one without the other and that test fails.
 CORRECTIONS_COUNT=0
 if [ -f "$CORRECTIONS_FILE" ]; then
   # grep -c prints "0" AND exits 1 on no matches, so `|| echo 0` would append a
   # second "0" → "0\n0" → "integer expected" in the -eq test below. Use `|| true`
   # (grep already prints the count) and normalize to a bare integer.
-  CORRECTIONS_COUNT=$(grep -c '^### ' "$CORRECTIONS_FILE" 2>/dev/null || true)
+  CORRECTIONS_COUNT=$(grep -cE '^#{2,4}[[:space:]]+[0-9]{4}-[0-9]{2}-[0-9]{2}|^-[[:space:]]+\*\*.*\([0-9]{4}-[0-9]{2}-[0-9]{2}[a-z]?[,)]' "$CORRECTIONS_FILE" 2>/dev/null || true)
   CORRECTIONS_COUNT=${CORRECTIONS_COUNT//[^0-9]/}
   CORRECTIONS_COUNT=${CORRECTIONS_COUNT:-0}
 fi

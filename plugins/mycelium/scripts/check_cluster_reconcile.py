@@ -95,12 +95,28 @@ import re
 import sys
 from pathlib import Path
 
+# These scripts run three ways — as `python3 .../scripts/x.py` from any cwd,
+# imported as a package, and loaded by file path from tests. Only the first puts
+# this directory on sys.path, so put it there explicitly before the sibling
+# import. See check_wiring_contract.py for the same idiom and why.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+try:
+    from . import _corrections_lib
+except ImportError:  # invoked as a script, or loaded by file path
+    import _corrections_lib
+
 DEFAULT_THRESHOLD = 5
 
-# `### 2026-08-04 — <title>` and `### 2026-08-02b - <title>`. The optional
-# trailing letter is real: corrections.md carries a "2026-08-02b" entry, and a
-# stricter pattern would silently drop it.
-CORRECTION_RE = re.compile(r"^#{2,4}\s+(\d{4}-\d{2}-\d{2})[a-z]?\b", re.MULTILINE)
+# What counts as a correction entry is defined once, in `_corrections_lib`, and
+# every counter shares it. This script shipped in v0.99.0 on 2026-08-06 — three
+# days AFTER the sibling script was taught the bullet form `- **Title (DATE,
+# class)**:` — with a heading-only pattern, so the entire bullet half of the
+# corpus was invisible to it. Nothing surfaced that, because a wrong denominator
+# looks exactly like a right one from inside the script that holds it.
+#
+# Its impact was zero at the time (no bullet entry was newer than the cluster
+# catalogue's cutoff), which is precisely why it needed a fixture rather than a
+# patch: it was a trap set for the next window, not a live miscount.
 
 # ONLY dates in the second column of an instance-log table row:
 #   | 10 | 2026-08-04 | <title> | <subclass> | <outcome> |
@@ -132,7 +148,7 @@ def newest_date(text: str, pattern: re.Pattern):
 
 def corrections_after(text: str, cutoff):
     """Dated correction entries strictly newer than `cutoff` (all, if None)."""
-    dates = CORRECTION_RE.findall(text)
+    dates = _corrections_lib.entry_dates(text)
     if cutoff is None:
         return sorted(dates), len(dates)
     return sorted(d for d in dates if d > cutoff), len(dates)
@@ -156,14 +172,14 @@ def evaluate(project_dir: Path, threshold: int):
     corrections_text = corrections_file.read_text(encoding="utf-8", errors="replace")
     cluster_text = cluster_file.read_text(encoding="utf-8", errors="replace")
 
-    all_correction_dates = CORRECTION_RE.findall(corrections_text)
+    all_correction_dates = _corrections_lib.entry_dates(corrections_text)
     if not all_correction_dates:
         return {
             "status": "ok",
             "token": "no-dated-corrections",
             "detail": (
                 f"no-dated-corrections — no `### YYYY-MM-DD` entries in corrections.md; "
-                f"pattern was {CORRECTION_RE.pattern!r}"
+                f"pattern was {_corrections_lib.ENTRY_RE.pattern!r}"
             ),
         }
 

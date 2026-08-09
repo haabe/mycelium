@@ -2,7 +2,66 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-08-08.
+**Last updated**: 2026-08-09.
+
+## v0.109.0 - three counters, three answers
+
+Three shipped artifacts counted the entries in `.claude/memory/corrections.md`. On
+2026-08-09 they returned **100, 103 and 141** for the same file:
+
+| Instrument | Fires | Said |
+|---|---|---|
+| `hooks/preflight.sh` | every SessionStart | 100 |
+| `check_cluster_reconcile.py` | on demand | 103 |
+| `check_correction_attribution.py` | on demand | 141 |
+
+Four independent divergences produced that spread, each a small defensible-looking
+choice made in isolation: heading depth (`##`-`###` vs `##`-`####`), the disambiguating
+date suffix (`2026-08-02b`, which one pattern allowed and another terminated with `\b`
+so it could never match), the bullet form `- **Title (DATE, class)**:` that most recent
+entries use and only one counter knew, and a banner that matched no date at all — so it
+counted `### Prevention rule` as a correction while missing every `##` entry.
+
+The banner is the one that matters. Its number is printed into every session's context
+before any work starts, which makes it the most-read quantity the framework produces
+and the one it was least careful about. It also degrades with use: the gap was 30 on
+2026-08-08 and 41 on 2026-08-09, because the invisible form is the one people write now.
+
+**This is the same defect's third instance, and that is the whole argument.**
+corrections.md records it against `check_correction_attribution` on 2026-08-03 — "the
+script written to print an honest denominator had a wrong denominator" — fixed in
+v0.80.1. `check_cluster_reconcile` then shipped in v0.99.0 on 2026-08-06, three days
+after that fix, carrying the identical blind spot. Nothing surfaced it, because a wrong
+denominator looks exactly like a right one from inside the script that holds it.
+
+So the remedy is not a fourth correct regex, which would leave a fifth waiting:
+
+- **`scripts/_corrections_lib.py`** — one definition (`ENTRY_RE`), plus the helpers the
+  counters need. Both existing scripts now reach the definition through it.
+- **`tests/fixtures/corrections/mixed.md`** — the shared definition as a file. Every
+  shape in it is there because a shipped counter got it wrong, and it carries the
+  near-misses too: a `### Prevention rule` section, a bold bullet with no date, a plain
+  list item. Asserting only the total would pass a counter that dropped a real entry and
+  gained a false one, which is precisely what the banner was doing.
+- **`tests/python/test_correction_count_agreement.py`** — 11 tests. Bash cannot import
+  Python, so the hook's agreement is not a shared symbol: the test runs the REAL
+  `preflight.sh` against the REAL fixture in a temp project and compares the banner it
+  prints. A hook edit that drifts from `ENTRY_RE` fails even though nothing imports
+  anything.
+- A guard that no script may anchor its own entry pattern, with a companion test that
+  plants the defect and requires the guard to find it.
+
+**Verified to bite in both directions.** Reverting the hook to `^### ` fails the
+agreement test; removing the bullet form from the library fails five tests. The
+anchor guard's first version false-positived on `CLUSTER_DATE_RE` — a pattern for table
+rows in a different file doing a different job — and was narrowed to the anchor rather
+than the date, because a guard that flags legitimate code teaches people to widen its
+exclusion list until it means nothing.
+
+**Behaviour change on upgrade:** the preflight banner will report a higher number on any
+project whose corrections.md uses `##`, `####`, or the bullet form. Nothing was lost;
+the old number was under-reporting. The three honest states — not initialized, empty,
+N entries — are unchanged and separately tested.
 
 ## v0.108.2 - a guard that fires on writing about it gets muted
 
