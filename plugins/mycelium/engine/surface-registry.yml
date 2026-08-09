@@ -84,6 +84,49 @@ surfaces:
       classify, because mis-binning corrupts a count that gates a mechanism.
     point_check: "check_cluster_reconcile.py (v0.99.0)"
 
+  - artifact_class: metric-measurement
+    description: >-
+      A DORA / APEX measurement taken by /dora-check: the four metrics, their
+      classification, and the window they were computed over.
+    authoritative_surface: ".claude/canvas/dora-metrics.yml#measurement_history"
+    read_by:
+      - "plugins/mycelium/skills/dora-check/SKILL.md"   # the only declared reader that names the field
+    also_written_to: ".claude/canvas/dora-metrics.yml (the per-metric `current:` fields)"
+    note: >-
+      ADDED 2026-08-09, from a live instance rather than from tidiness. On
+      2026-08-08 the four metrics WERE re-measured and written into their
+      `current:` fields — both `deployment_frequency` and `change_failure_rate`
+      literally begin "2026-08-08 MEASURED". No `measurement_history` row was
+      appended and the top-level `last_measured` stamp stayed at 2026-08-02. One
+      file, three dates for one measurement.
+      THE COST WAS NOT COSMETIC. The BVSSH assessment in that same session read
+      the history, found 2026-07-17, reported DORA as 22 days stale and
+      recommended "Pull DORA" — while the numbers were being refreshed into the
+      fields beside it. The recommendation then survived two assessments
+      unactioned, because the pull had already happened somewhere the assessment
+      did not look.
+      WHY `measurement_history` IS AUTHORITATIVE AND `current:` IS NOT. A
+      `current:` field is MUTABLE: the next measurement overwrites it, so it holds
+      at most one reading and leaves no trend. History is append-only. The
+      `current:` fields are correct to keep as the at-a-glance view; writing ONLY
+      there is the defect, exactly as with the decision-log copy of a BVSSH
+      assessment above.
+      THE READ_BY LIST IS SHORTER THAN THE FIRST DRAFT OF THIS ROW, AND THE
+      CORRECTION IS THE POINT. It initially named three readers — dora-check,
+      bvssh-check and canvas-health — and `check_surface_registry.py` rejected two
+      of them on its first run, because those two SKILL files mention
+      `dora-metrics.yml` and never the field. That is not a bookkeeping nicety: an
+      agent told to read "the DORA canvas" for staleness has to pick a date field
+      itself, and on 2026-08-08 it picked the one that had not moved. **A reader
+      with no declared anchor is how the wrong date gets read**, and the registry
+      caught the aspirational claim rather than letting it stand.
+    point_check: null   # OPEN — nothing yet asserts that history advanced when a `current:` field did
+    open_gap: >-
+      Two consumers (bvssh-check, canvas-health) read this file for freshness
+      WITHOUT naming a field. Giving each an explicit anchor is the obvious next
+      change and is deliberately not bundled here: it edits two skills' semantics,
+      which deserves its own pass rather than riding along with a registry row.
+
   - artifact_class: upstream-candidate
     description: >-
       A framework change surfaced by a dogfood project, to be authored upstream.
