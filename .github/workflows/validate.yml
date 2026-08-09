@@ -111,6 +111,15 @@ jobs:
       - name: Run theory-fidelity structural guard (theories.md mechanism refs resolve; gates grounded; no name-only theory)
         run: python3 plugins/mycelium/scripts/check_theory_fidelity.py --root .
 
+      - name: Enforce CI/local gate parity (no gate may run only in CI)
+        # A gate that runs only in CI can go red only AFTER a push. Measured
+        # 2026-08-09 the workflow ran 11 gates and the shipped pre-push hook ran
+        # 4 — the 2026-06-18 "local validation != CI gates" correction recurring,
+        # because the fix was a second hand-maintained list rather than one list.
+        # `local-gate-set.txt` is now the single source and this asserts CI never
+        # outruns it. Add a step here without adding it there and this fails.
+        run: python3 plugins/mycelium/scripts/check_gate_parity.py --root .
+
       - name: Run surface-registry guard (every declared reader actually reads its surface)
         # right-content-wrong-surface, criterion met 2026-07-26. An artifact written
         # to a surface nothing reads is invisible by construction. This verifies the

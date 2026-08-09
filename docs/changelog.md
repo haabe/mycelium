@@ -4,6 +4,79 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-09.
 
+## v0.110.0 - seven gates that could only go red after the push
+
+The CI workflow invoked **11** `check_*.py` gates. The shipped pre-push hook ran **4**.
+
+| | gates |
+|---|---|
+| `.github/workflows/validate.yml` | 11 |
+| `scripts/git-pre-push-example.sh` | 4 |
+| the author's actually-installed hook | 3 |
+
+Seven classes of defect could only ever be discovered *after* a push, as a red build with
+the author already onto something else. And the installed hook had drifted a further gate
+behind the shipped example, silently, because `.git/hooks/` is not version-controlled.
+
+**This is not a new lesson.** `corrections.md` 2026-06-18 records it as "Local validation !=
+CI gates", after `check_legacy_paths.py` shipped CI-only and two later commits went red on CI
+while passing every local check. That entry's own prevention rule was *"when adding a CI-only
+gate, add it to the pre-push hook OR document the run-locally step in the same commit"*. It was
+applied to the gate that motivated it and to none of the seven that came after — because **a
+rule that depends on an author remembering it is a rule with a decay rate.**
+
+### One list, not two
+
+- **`scripts/local-gate-set.txt`** — the declared framework-dev gate set, with a waiver form
+  (`!waived <script> <reason>`) so the first genuinely CI-only gate does not get "fixed" by
+  deleting the guard. A waiver without a reason is not a waiver.
+- **`scripts/check_gate_parity.py`** — every gate invoked in CI must be in the set or waived.
+  It is *in the set*, so it gates itself: CI cannot outrun it silently.
+- **`git-pre-push-example.sh`** now loops over the set instead of naming four scripts. A missing
+  set in a framework tree **blocks** rather than skipping, because a hook that checks nothing
+  while reporting nothing is anti-pattern #9 in the least visible place available.
+- The hook **warns** (never blocks) when the installed copy differs from the shipped example.
+  Blocking a push over a diff from an example would be coercion rather than scaffolding, and the
+  hook cannot tell drift from deliberate customisation.
+
+### Verified to bite, in four directions
+
+Remove a gate from the set → FAIL naming it. Waive it with a reason → OK, reason printed. Waive
+it *without* a reason → still FAIL. Point it at a consumer tree → **N/A, never OK**, because
+"parity holds" over two absent files is the empty-input dishonesty this project audits elsewhere.
+
+**A test found a blind spot in the guard itself.** A fixture using `check_thing_0.py` failed —
+the first pattern matched `check_[a-z_]+`, so a gate whose name contained a digit was invisible
+and the check would report "nothing matched" rather than "gate missing". The pattern was widened
+rather than the fixture renamed: the fixture was right and the pattern was narrower than the
+thing it claimed to scan.
+
+**A false-positive class was designed out before first contact.** `validate.yml` names
+`check_source_independence.py` inside a comment; that script is invoked by the `/canvas-health`
+skill, not by CI. Counting the mention would have manufactured a missing-gate finding about a
+correctly-wired check — which is how a guard earns a permanent exclusion list instead of trust.
+
+### Also: the measurement that landed in a mutable field
+
+`engine/surface-registry.yml` gains a **`metric-measurement`** row. On 2026-08-08 the four DORA
+metrics were re-measured into their `current:` fields — both still begin "2026-08-08 MEASURED" —
+with no `measurement_history` row appended and `last_measured` left at 2026-08-02. One file,
+three dates for one measurement. The BVSSH assessment that same session read the history, found
+the oldest date, reported DORA 22 days stale and recommended "Pull DORA": a recommendation that
+survived two assessments unactioned because the pull had already happened where the assessment
+did not look.
+
+`/dora-check` now carries a **named, mandatory history append**, the same remedy `/bvssh-check`
+got in v0.59.0 for the same shape.
+
+**The registry rejected the first draft of its own row**, and that is the row's most useful
+paragraph. It declared three readers; `check_surface_registry.py` failed two of them, because
+those skills mention `dora-metrics.yml` and never the field. An agent told to read "the DORA
+canvas" for staleness has to choose a date field itself — and on 2026-08-08 it chose the one that
+had not moved. **A reader with no declared anchor is how the wrong date gets read.** The two
+anchor-less consumers are recorded as an `open_gap` rather than silently fixed here, because
+changing two skills' semantics deserves its own pass.
+
 ## v0.109.0 - three counters, three answers
 
 Three shipped artifacts counted the entries in `.claude/memory/corrections.md`. On

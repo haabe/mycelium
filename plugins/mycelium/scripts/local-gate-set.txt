@@ -1,0 +1,48 @@
+# THE FRAMEWORK-DEV GATE SET — one source of truth for CI and the pre-push hook.
+#
+# WHY THIS FILE EXISTS
+# -------------------
+# Until v0.110.0 the gate list lived in two hand-maintained places: the steps in
+# `.github/workflows/validate.yml` and a hard-coded run of four scripts inside
+# `scripts/git-pre-push-example.sh`. Measured 2026-08-09 they had drifted to
+# **11 in CI against 4 in the hook** — seven gates that could only ever go red
+# after a push. That is the precise failure `corrections.md` recorded on
+# 2026-06-18 ("Local validation != CI gates"), whose own prevention rule was
+# "when adding a CI-only gate, add it to the pre-push hook OR document the
+# run-locally step in the same commit". The rule was followed for the gate that
+# motivated it and for nothing after: seven later gates went to CI alone.
+#
+# A hand-maintained list in two files diverges. It is not a discipline problem;
+# it is two lists. So there is one list, here, and `check_gate_parity.py`
+# asserts that every check invoked in CI appears in it.
+#
+# FORMAT
+#   <script-name>[ <args>]      one gate per line; `#` starts a comment
+#   !waived <script-name> <reason>   a CI gate deliberately NOT run locally
+#
+# A waiver needs a reason on the same line. The alternative to supporting
+# waivers is that the first genuinely CI-only gate gets "fixed" by deleting the
+# parity check, and then nothing watches the list at all.
+#
+# SCOPE: framework development only. The hook runs this set solely when
+# `tests/python/` is present; a downstream project consuming the plugin never
+# reaches it.
+
+check_coverage_floor.py --root . --floor 70
+check_legacy_paths.py --root .
+check_doc_references.py --root .
+check_theory_fidelity.py --root .
+
+# Added v0.110.0 — the seven that were CI-only. All seven run in well under a
+# second on this tree, so the reason they were not here was never cost.
+check_wiring.py --root .
+check_wiring_contract.py --root .
+check_negative_control.py --root .
+check_test_authenticity.py --root .
+check_empty_input_honesty.py --root .
+check_source_class_fidelity.py --root .
+check_surface_registry.py
+
+# The parity guard gates itself. If CI gains a check and this file does not, the
+# hook fails before the push rather than CI failing after it.
+check_gate_parity.py --root .
