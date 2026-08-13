@@ -4,6 +4,32 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-13.
 
+## v0.110.2 - the ID-scan preflight reported the wrong maximum
+
+**The preflight was right and its command was wrong.** Twenty-two SKILL.md files carry an ID-scan block telling the
+agent to check the ID space before assigning a new canvas ID. The command was
+`grep "^  - id: <prefix>-" .claude/canvas/<file>.yml | sort -u`.
+
+`sort -u` is a **lexical** sort. It only agrees with numeric order while every ID is padded to the same width.
+On the dogfood repo that assumption already fails: `ht-1` exists alongside `ht-080`, so the shipped command
+returns **`ht-1` as the highest human-task ID**. An agent following the instruction exactly assigns `ht-2` and
+collides with the existing `ht-002`. `ht` is the prefix `/handoff` and `/log-evidence` write most often.
+
+Now:
+
+```
+grep -o "<prefix>-[0-9][0-9]*" .claude/canvas/<file>.yml | sort -u -t- -k2 -n | tail -3
+```
+
+Two changes, both deliberate. The sort is numeric on the ID's number field. And `grep -o` matches IDs
+**wherever they appear** — including cross-references and prose — so an ID promised somewhere but not yet
+defined is not handed out a second time.
+
+Found in dogfood when an agent assigned a duplicate `comp-081`. Worth stating precisely, because the
+diagnosis moved twice: the agent's own error was running `tail` on *unsorted* output, i.e. not following the
+instruction at all. Auditing the instruction afterwards is what surfaced the separate, live defect in the
+command itself. Documentation-only; no behaviour change to any hook, gate or script.
+
 ## v0.110.1 - the indexed field carried the worst copy in the project
 
 The community catalog indexes exactly two things about a plugin: `name` and `description`. The same
