@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-plugin-marketplace.json",
   "name": "haabe-mycelium",
-  "description": "Mycelium framework — theory-grounded product-thinking discipline for AI agents. Single-plugin marketplace.",
+  "description": "Discovery before delivery, enforced by hooks rather than prose. Single-plugin marketplace.",
   "owner": {
     "name": "Håvard Bartnes"
   },
@@ -9,7 +9,7 @@
     {
       "name": "mycelium",
       "source": "./plugins/mycelium",
-      "description": "60 skills, 13 theory gates, six diamond scales (Purpose to Market). Evidence-gated discovery-to-delivery harness. Brownfield-safe: install adds skills, agents, hooks; never modifies project root files.",
+      "description": "I realized I let the agent start coding before I was sure it was working on the right thing, so I built this. Now it doesn't get to write code before there's a reason. The agent asks who this is for. It asks what you're assuming, and what would show you wrong. The rules run as hooks, so the build stays shut until the answers are there. Purpose, strategy, opportunities, then delivery and market feedback. The framework contains 60 skills and 13 theory gates. It adds the skills, agents and hooks, but won't touch files in a repo that already exists unless instructed to.",
       "category": "development",
       "tags": [
         "product-discovery",

@@ -2,7 +2,42 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-08-09.
+**Last updated**: 2026-08-13.
+
+## v0.110.1 - the indexed field carried the worst copy in the project
+
+The community catalog indexes exactly two things about a plugin: `name` and `description`. The same
+`description` is what the `/plugin` Discover pane renders and what third-party directories scrape.
+
+Ours opened with an adjective and a component count:
+
+> Theory-grounded product-thinking discipline for AI agents. 60 skills, 13 theory gates, six diamond
+> scales (Purpose to Market). Discovery to delivery with evidence gates that block on insufficient
+> evidence.
+
+The README, two clicks further in, already said what the thing does. **The best copy in the project sat
+where a stranger arrives last, and the worst sat in the only field a stranger searches.**
+
+Rewritten. The shipped text is the operator's, and three things about how it got there are worth
+recording because they generalise.
+
+**Two agent drafts were killed before it.** Both were written to make the reader agree -- *"agents are
+fast, confident, and glad to build something nobody asked for"* -- and agreement is the one thing this
+project has never lacked and that has converted nobody. Both also buried the hooks. Every practitioner
+who has engaged with this framework engaged with the enforcement mechanism, never with the discovery
+argument.
+
+**The agent had introduced a factual overclaim.** Its drafts said the plugin *never* modifies files in
+your project root. It will, if you instruct it to. The operator's version says
+*"won't touch files in a repo that already exists unless instructed to"* -- an absolute a first user
+could disprove in one session, replaced with something true.
+
+**The name does no work in that catalog.** Ten entries there already carry the string "mycelium",
+all from an unrelated publisher, so the description has to stand on its own.
+
+Also corrected: the marketplace-level description, same problem, smaller stakes.
+
+No behaviour change. No skill, gate, hook or schema is touched.
 
 ## v0.110.0 - seven gates that could only go red after the push
 
