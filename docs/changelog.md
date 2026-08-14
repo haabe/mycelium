@@ -4,6 +4,27 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-13.
 
+## v0.110.3 - the sync script tried to make a true sentence false
+
+`sync_derived.py` sweeps every `<N> skills` token in a list of files and rewrites it to the total skill count.
+That rests on an assumption which lived only in a code comment: *"files whose `<N> skills` tokens all refer to
+the total skill count."*
+
+It is not self-evident, and it was violated the first time anyone wrote about a subset. A v0.110.2 CLAUDE.md
+version note read **"shipped in 22 skills"** — 22 of them, not the total. The next sync would have rewritten it
+to **"60 skills"**, turning a true sentence into a false one, silently, in a file the gate then passed. It was
+caught by hand, not by any check.
+
+The script cannot tell a stale total from a real quantity. It now stops guessing:
+
+- **Ambiguity blocks.** More than one distinct `<N> skills` value in a file → nothing in that file is written,
+  every token is reported with its line number and text, exit code **2**, in `--check` *and* write mode.
+- **`skills-literal`** on a line exempts it. Marked tokens are never rewritten and never count toward ambiguity.
+- **Drift reports name line numbers.** The old output said only `skill count → 60`, which is precisely why this
+  went unnoticed: nothing told a reviewer *which* words were about to change.
+
+Five regression tests, including one asserting the original sentence survives a write attempt. 13 pass.
+
 ## v0.110.2 - the ID-scan preflight reported the wrong maximum
 
 **The preflight was right and its command was wrong.** Twenty-two SKILL.md files carry an ID-scan block telling the
