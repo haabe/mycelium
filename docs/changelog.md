@@ -4,6 +4,29 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-13.
 
+## v0.110.4 - the staleness check could not see most of the activity
+
+Human-task staleness read dates out of field VALUES. Canvases record events in field NAMES:
+`reply_sent_2026_08_11`, `third_reply_inbound_2026_08_12`, `verified_live_2026_08_09`.
+
+On the dogfood canvas **19 open tasks carried their most recent activity that way**, and the effect was
+inverted rather than merely lossy: a task last touched two days ago read as **never touched**. A live
+conversation and an abandoned one scored identically. Eight tasks were labelled STALE; **six were false**.
+
+Field-name dates are now counted, with a floor: a date earlier than the task's own creation date cannot be
+activity on it and is discarded, as are future dates. **Making a task look fresher than it is silences the
+check, which is worse than annoying its reader**, so the gate is deliberately conservative.
+
+Two smaller divergences fixed in the same pass:
+
+- The bare `created` key is now read alongside `created_at`. Nine of 83 dogfood tasks used it and fell
+  through the date fallback entirely.
+- `cancelled` added to the hook's TERMINAL set. It is in the shipped `human-tasks.schema.json` enum and in
+  the `TERMINAL_STATUSES` tuple of **both** `check_reply_owed.py` and `check_evidence_landed.py`. The hook
+  was the only place missing it, so a cancelled task counted as open work forever.
+
+Found by `/mycelium:canvas-health` on the dogfood repo.
+
 ## v0.110.3 - the sync script tried to make a true sentence false
 
 `sync_derived.py` sweeps every `<N> skills` token in a list of files and rewrites it to the total skill count.

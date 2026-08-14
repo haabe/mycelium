@@ -605,7 +605,7 @@ fi
 # ============================================================
 if [ -f "$PROJECT_DIR/.claude/canvas/human-tasks.yml" ]; then
   HUMAN_TASKS=$(python3 -c "
-import yaml, sys
+import yaml, sys, re
 from datetime import date, datetime
 try:
   with open(sys.argv[1]) as f:
@@ -613,13 +613,26 @@ try:
   pending = data.get('pending_tasks', [])
   # Count by status, not raw list length: completed/abandoned/stalled are terminal
   # and must not inflate the 'open work' signal (corrections.md 2026-05-28 canvas-drift).
-  TERMINAL = {'completed', 'abandoned', 'stalled'}
+  # `cancelled` is in the SHIPPED schema enum (human-tasks.schema.json) and in the
+  # TERMINAL_STATUSES tuple of check_reply_owed.py AND check_evidence_landed.py.
+  # It was missing here, so a cancelled task counted as open work forever and could
+  # be labelled STALE indefinitely. One rule, two spellings, and this was the outlier.
+  TERMINAL = {'completed', 'abandoned', 'stalled', 'cancelled'}
   open_tasks = [t for t in pending if t.get('status') not in TERMINAL]
   if open_tasks:
     today = date.today()
+    # KEY_DATE: canvases record events in FIELD NAMES, not only in values -
+    # `reply_sent_2026_08_11`, `third_reply_inbound_2026_08_12`. Dogfood 2026-08-14:
+    # 19 open tasks carried their most recent activity that way and this function
+    # could not see any of it, so a task touched two days earlier read as NEVER
+    # TOUCHED. A live conversation and an abandoned one scored identically.
+    KEY_DATE = re.compile(r'(\d{4})[-_](\d{2})[-_](\d{2})')
     def latest_touch(t):
       ds = []
-      for k in ('updated_at', 'reopened_at', 'created_at', 'commitment_received_at'):
+      # `created` is accepted alongside `created_at`: both forms exist in real
+      # canvases (dogfood 2026-08-14: 9 of 83 tasks used the bare form and fell
+      # through this fallback entirely).
+      for k in ('updated_at', 'reopened_at', 'created_at', 'created', 'commitment_received_at'):
         v = t.get(k)
         if isinstance(v, str): ds.append(v[:10])
       for lk in ('touch_log', 'partial_findings'):
@@ -630,6 +643,20 @@ try:
       for d in ds:
         try: parsed.append(datetime.strptime(d, '%Y-%m-%d').date())
         except Exception: pass
+      # Field-name dates are added LAST and are FLOOR-GATED on the task's own
+      # creation date. Making a task look fresher than it is would be the more
+      # dangerous failure - it silences the check instead of merely annoying the
+      # reader - so a date that predates the task cannot be activity on it and is
+      # discarded. Future dates are discarded for the same reason.
+      born = min(parsed) if parsed else None
+      for k in t.keys():
+        m = KEY_DATE.search(str(k))
+        if not m: continue
+        try: kd = datetime.strptime('{}-{}-{}'.format(*m.groups()), '%Y-%m-%d').date()
+        except Exception: continue
+        if kd > today: continue
+        if born is not None and kd < born: continue
+        parsed.append(kd)
       return max(parsed) if parsed else None
     def label(t):
       obj = (t.get('objective', 'unnamed task') or 'unnamed task')[:70]
