@@ -126,3 +126,62 @@ def test_zero_skills_raises(scripts_path, tmp_path):
     except ValueError:
         return
     raise AssertionError("expected ValueError on zero SKILL.md files")
+
+
+# --- ambiguity guard (v0.110.3) ------------------------------------------------
+# Regression tests for the failure that motivated it: on 2026-08-13 a CLAUDE.md
+# version note read "shipped in 22 skills", meaning 22 of them. The sweep wanted
+# to rewrite it to "60 skills" and make a true sentence false, silently, behind a
+# passing gate.
+
+def test_ambiguous_skill_tokens_block_and_write_nothing(scripts_path, tmp_path):
+    mod = _import(scripts_path)
+    root = _mini_repo(tmp_path, token_count=3)
+    claude = root / "CLAUDE.md"
+    before = claude.read_text()
+    claude.write_text(before + "\nThe ID-scan block ships in 22 skills.\n")
+    original = claude.read_text()
+
+    assert mod.sync(root, check_only=False) == 2
+    # The whole point: the true sentence survives, and so does the real total.
+    assert "22 skills" in claude.read_text()
+    assert claude.read_text() == original
+
+
+def test_ambiguity_blocks_check_mode_too(scripts_path, tmp_path):
+    mod = _import(scripts_path)
+    root = _mini_repo(tmp_path, token_count=3)
+    claude = root / "CLAUDE.md"
+    claude.write_text(claude.read_text() + "\nShipped in 22 skills.\n")
+    assert mod.sync(root, check_only=True) == 2
+
+
+def test_literal_marker_exempts_a_line_and_clears_ambiguity(scripts_path, tmp_path):
+    mod = _import(scripts_path)
+    root = _mini_repo(tmp_path, token_count=2)  # total is 3, so the real token drifts
+    claude = root / "CLAUDE.md"
+    claude.write_text(
+        claude.read_text()
+        + f"\nShipped in 22 skills. <!-- {mod.LITERAL_MARKER} -->\n"
+    )
+
+    assert mod.sync(root, check_only=False) == 0
+    text = claude.read_text()
+    assert "22 skills" in text          # marked line untouched
+    assert "All 3 skills" in text       # real total still synced
+
+
+def test_single_valued_file_still_syncs_normally(scripts_path, tmp_path):
+    """The guard must not break the case the script exists for."""
+    mod = _import(scripts_path)
+    root = _mini_repo(tmp_path, token_count=2)  # every token stale at 2, disk has 3
+    assert mod.sync(root, check_only=False) == 0
+    assert "All 3 skills" in (root / "CLAUDE.md").read_text()
+
+
+def test_drift_report_names_line_numbers(scripts_path, tmp_path, capsys):
+    """--check used to say only 'skill count -> N', which is why nobody looked."""
+    mod = _import(scripts_path)
+    root = _mini_repo(tmp_path, token_count=2)
+    mod.sync(root, check_only=True)
+    assert "line " in capsys.readouterr().out
