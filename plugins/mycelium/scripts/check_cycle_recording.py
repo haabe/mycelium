@@ -206,7 +206,14 @@ def _report_no_matches(as_json, commits_scanned, since_label, pattern) -> int:
         f"since {since_label}; pattern was {pattern.pattern!r}"
     )
     if as_json:
-        print(json.dumps({"status": "ok", "releases": 0, "detail": detail}))
+        # STATUS IS ITS OWN TOKEN, NOT "ok" (2026-08-16). This branch means "the
+        # check could not measure here", which is a different state from "measured
+        # and found nothing owed". Folding it into "ok" made the honesty above
+        # unreachable: session-start.sh reacts only to named statuses, so a project
+        # whose releases ship from a DIFFERENT repo got silence from a check that had
+        # correctly reported it could not see them. Measured in the dogfood repo the
+        # same day: two minor releases shipped upstream, this returned ok/0.
+        print(json.dumps({"status": "no-releases-matched", "releases": 0, "detail": detail}))
     else:
         print(f"check_cycle_recording: OK — {detail}")
     return 0

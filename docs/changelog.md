@@ -4,6 +4,30 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-16.
 
+## v0.110.8 - the check said "I cannot measure here" and the hook rendered it as silence
+
+`check_cycle_recording.py` is honest. Its docstring calls `no-releases-matched` *"the branch most
+likely to be a broken pattern rather than a true absence"* and warns that *"silence here would
+reproduce the exact defect the check is named for."* It emits the token, the pattern it used, and the
+number of commits it scanned.
+
+**Then it returned `status: "ok"`, and `session-start.sh` reacts only to named statuses — so the
+whole message was dropped.** The script reported that it could not measure; the consumer rendered
+that as nothing to report.
+
+Measured in the dogfood project on 2026-08-16: **two minor releases shipped that day** (v0.110.6,
+v0.110.7) from the framework repo, while the consumer repo doing the work returned
+`{"status":"ok","releases":0,"no-releases-matched — 0 minor releases in 45 commit subject(s)"}`.
+A project whose releases ship from a *different* repo got silence from a check that had correctly
+told it so.
+
+- **`no-releases-matched` is now its own status**, not `ok`. "Could not measure" and "measured, nothing owed" are different states.
+- **`session-start.sh` surfaces it**, worded without framework vocabulary and asking for nothing: a reader who has never recorded a cycle should still understand what the check could not do.
+
+**The test that let this through asserted the detail string and never the `status` field**, so it
+passed identically before and after. Two tests added that read the field consumers actually read,
+in both directions.
+
 ## v0.110.7 - the linter policy the project forbade for ruff and practised for shellcheck
 
 `ruff`'s failure message tells contributors *"do not re-introduce a tolerated-debt
