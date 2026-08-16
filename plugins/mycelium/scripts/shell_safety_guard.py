@@ -59,6 +59,36 @@ import sys
 
 #: (id, compiled test, message). Each returns True when the trap is PRESENT.
 _BACKTICK = re.compile(r"`")
+#: A QUOTED heredoc (<<'EOF' / <<"EOF") disables expansion, so backticks inside
+#: one are inert text — and a quoted heredoc is exactly what the backtick message
+#: below tells the author to use. Warning on it is the same defect already fixed
+#: for PIPESTATUS above: telling people who have applied the remedy to apply it.
+#: An UNQUOTED heredoc (<<EOF) still expands, so it is deliberately not stripped.
+_QUOTED_HEREDOC_START = re.compile(r"<<-?\s*(['\"])([A-Za-z_][A-Za-z0-9_]*)\1")
+
+
+def _strip_quoted_heredoc_bodies(command: str) -> str:
+    """Return `command` with the bodies of quoted heredocs removed.
+
+    Only the BODY is removed; the redirection operator itself stays, so a trap
+    written on the same line as the heredoc opener is still seen.
+    """
+    out, pos = [], 0
+    for m in _QUOTED_HEREDOC_START.finditer(command):
+        if m.start() < pos:
+            continue
+        delim = m.group(2)
+        body_start = command.find("\n", m.end())
+        if body_start == -1:
+            continue
+        end = re.compile(r"^\s*" + re.escape(delim) + r"\s*$", re.MULTILINE).search(
+            command, body_start + 1
+        )
+        stop = end.start() if end else len(command)
+        out.append(command[pos:body_start])
+        pos = stop
+    out.append(command[pos:])
+    return "".join(out)
 _PIPE = re.compile(r"(?<!\|)\|(?!\|)")          # a real pipe, not ||
 _DOLLAR_STATUS = re.compile(r"\$\?")
 #: Case-INSENSITIVE: bash spells it PIPESTATUS, zsh spells it pipestatus.
@@ -87,8 +117,8 @@ def findings(command: str) -> list[str]:
                 "`${pipestatus[1]}`. Or drop the pipe."
             )
 
-    # 2. Backticks.
-    if _BACKTICK.search(command):
+    # 2. Backticks — outside quoted heredocs, whose contents do not expand.
+    if _BACKTICK.search(_strip_quoted_heredoc_bodies(command)):
         out.append(
             "Backticks present. ShellCheck SC2006 says use `$(...)`; more "
             "importantly, backticks inside a DOUBLE-QUOTED string are command "

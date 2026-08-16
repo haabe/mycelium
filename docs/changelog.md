@@ -2,7 +2,87 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-08-13.
+**Last updated**: 2026-08-16.
+
+## v0.110.6 - checks whose message did not match their condition
+
+Both fixes are the same defect at different sites: a check that reports one thing
+while the true condition is another, sending the reader to debug the wrong layer.
+
+### The test gate reported "tests failing" when pytest could not run
+
+`validate-template.sh` gated on `command -v pytest` and then invoked bare `pytest`.
+Both can succeed while the tests cannot run: the `pytest` shim on PATH belongs to
+whichever interpreter installed it, which need not be the interpreter holding the
+project's dependencies.
+
+Measured 2026-08-16 on a dev machine — a Homebrew `pytest` was first on PATH, the
+project's `jsonschema` lived in a version-manager interpreter, and **75 tests died on
+`ModuleNotFoundError` while the gate reported "tests failing"**. Under a working runner
+all 906 passed.
+
+Now: prefer `uv run --with-requirements requirements-ci.txt` (one interpreter, pinned
+versions, **no global install**), else a `python3` that can import both pytest and the
+deps, else **warn and skip** — matching the `ruff` branch beside it, because a tool we
+cannot run is not a failing test. The same resolution is applied in
+`git-pre-push-example.sh`.
+
+`ruff` gets the same treatment and it changes the outcome: previously absent, it was
+skipped entirely and four policy tests silently lost their subject. It now resolves via
+`uv` at the **pinned** version — which matters because `ruff.toml` uses `select = ["ALL"]`,
+so the version IS the policy. Running it for real immediately surfaced one live
+`FURB167`, fixed here.
+
+### Two structural checks that inherited a tool's absence as a silent pass
+
+Fixing the runner surfaced two more of the same family, both of which had left `main`
+unable to pass its own pre-push gate:
+
+- **The lint-policy check was nested inside the linter-availability check.** Whether
+  `ruff.toml` exists on disk has nothing to do with whether `ruff` is installed — but on
+  any machine without ruff, the framework could ship with no declared policy at all and
+  the gate said nothing. Hoisted out and now unconditional.
+- **`shellcheck` was skipped on every machine without it**, so the Bash lint check ran only in
+  CI — which is exactly where a local/CI divergence hides. `shellcheck-py` was already declared in
+  `requirements-ci.txt`; it now resolves the same way. Run for real it reports 3 warnings, at the
+  documented baseline.
+- **`gates.sh` marked pytest and ruff MISSING** whenever they were not reachable from the
+  first `python3`/`ruff` on PATH, so a repo with the tools installed under a different
+  interpreter could not pass its own gate. Both now resolve through `uv` when available.
+
+And one defect this release INTRODUCED and its own test caught within the hour: resolving
+ruff *at the pin* made the installed-vs-pinned divergence check vacuous — it printed
+"ruff version matches the pin" because it had just installed that exact pin. The
+comparison now uses the **ambient** ruff only, and reports "not checked" rather than
+"matches" when there is none. The test that caught it was itself environment-dependent
+(it assumed a local ruff) and is now hermetic.
+
+### The backtick guard warned people who had already applied the remedy
+
+`shell-safety-guard`'s backtick rule was `re.compile("`")` — a bare character search. The warning it
+emits says *"use a QUOTED heredoc (`<<'EOF'`)"*, and it fired on commands that were already doing
+exactly that.
+
+Measured on the dogfood project, one session:
+
+| guard | fires | action rate |
+|---|---|---|
+| `absence-claim-guard` | 4 | **4/4 — changed the text every time** |
+| `shell-safety-guard` | ~13 | **~0 — correctly ignored every time** |
+
+**A guard with a near-zero action rate is worse than no guard.** It trains the reader to skim hook
+output, which degrades the guards in the same family that do work. That is the cost this fixes, not
+the annoyance.
+
+Quoted-heredoc bodies are now stripped before the backtick test. Deliberately unchanged:
+
+- **unquoted `<<EOF` still warns** — it expands, so the trap is real there;
+- **a backtick on the heredoc opener still warns** — only the body is inert.
+
+Same defect already fixed once in this file for `PIPESTATUS`, whose comment reads *"A case-sensitive
+test warned people who had already applied the remedy."* Three new guardpost tests; 28 pass.
+
+Reported from dogfood: `mycelium-roadmap` decision-log 2026-08-16, `opportunities.yml#opp-048`.
 
 ## v0.110.4 - the staleness check could not see most of the activity
 

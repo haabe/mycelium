@@ -848,8 +848,28 @@ check_code_quality() {
     # them in their dev env). Install via: pip install -r requirements-ci.txt
 
     # ----- Python: ruff -----
-    if ! command -v ruff >/dev/null 2>&1; then
-        warn "ruff not installed — skipping Python lint check (install via requirements-ci.txt)"
+    # POLICY DECLARATION IS CHECKED FIRST AND UNCONDITIONALLY (2026-08-16).
+    # Whether a lint policy is declared on disk has nothing to do with whether the
+    # linter is installed, but this check used to sit INSIDE the ruff-availability
+    # guard — so on any machine without ruff the framework could ship with no
+    # ruff.toml at all and the gate said nothing. A structural check nested under a
+    # tool-availability check inherits that tool's absence as a silent pass.
+    if [ ! -f "ruff.toml" ]; then
+        if [ -d "plugins/mycelium" ]; then
+            fail "ruff.toml missing in the framework repo — the lint policy must be declared on disk, not inside this script"
+        else
+            info "ruff: no ruff.toml in this project — lint policy is the project's own call (skipped)"
+        fi
+    fi
+
+    local RUFF_RUN="ruff"
+    if ! command -v ruff >/dev/null 2>&1 && command -v uv >/dev/null 2>&1 && [ -f requirements-ci.txt ]; then
+        # uv can supply the PINNED ruff with no global install, which matters here
+        # because ruff.toml uses select=["ALL"] and the version IS the policy.
+        RUFF_RUN="uv run --quiet --with-requirements requirements-ci.txt ruff"
+    fi
+    if ! $RUFF_RUN --version >/dev/null 2>&1; then
+        warn "ruff not runnable — skipping Python lint check (install uv, or ruff via requirements-ci.txt)"
     else
         # POLICY LIVES IN ruff.toml — NOT HERE (v0.61.0).
         #
@@ -891,25 +911,29 @@ check_code_quality() {
             # findings this release fixes. Caught by the negative-control probe
             # before merge, not by reading the code.
             ruff_pin=$(grep -oE '^ruff==[0-9][0-9.]*' requirements-ci.txt | head -1 | cut -d= -f3 || true)
-            ruff_have=$(ruff --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || true)
+            # AMBIENT ruff ONLY — deliberately NOT $RUFF_RUN. The question is whether
+            # a contributor's ruff differs from the pin; resolving ruff AT the pin
+            # answers itself and makes this check vacuous. Introduced and caught by
+            # test_check_17 within the hour, 2026-08-16: the gate printed "ruff version
+            # matches the pin" because it had just installed that exact pin.
+            ruff_have=""
+            if command -v ruff >/dev/null 2>&1; then
+                ruff_have=$(ruff --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || true)
+            fi
             if [ -z "$ruff_pin" ]; then
                 fail "ruff is not pinned in requirements-ci.txt. ruff.toml selects ALL, so the version IS the policy — an unbounded spec lets CI and local disagree about what 'clean' means (PR #17: 0 vs 59 errors)."
             elif [ -n "$ruff_have" ] && [ "$ruff_pin" != "$ruff_have" ]; then
                 fail "ruff version divergence: installed $ruff_have, pinned $ruff_pin. With select=ALL these are DIFFERENT policies. Install the pin (pip install -r requirements-ci.txt), or bump the pin deliberately and triage the newly-firing rules."
+            elif [ -z "$ruff_have" ]; then
+                info "ruff: no ambient ruff on PATH to compare against the pin ($ruff_pin) — divergence NOT checked (this is not a match)"
             else
                 pass "ruff version matches the pin ($ruff_pin) — one policy, not two"
             fi
         fi
 
-        if [ ! -f "ruff.toml" ]; then
-            if [ -d "plugins/mycelium" ]; then
-                fail "ruff.toml missing in the framework repo — the lint policy must be declared on disk, not inside this script"
-            else
-                info "ruff: no ruff.toml in this project — lint policy is the project's own call (skipped)"
-            fi
-        else
+        if [ -f "ruff.toml" ]; then
             local ruff_out ruff_count
-            ruff_out=$( { ruff check . 2>/dev/null || true; } )
+            ruff_out=$( { $RUFF_RUN check . 2>/dev/null || true; } )
             ruff_count=$(printf '%s' "$ruff_out" | grep -oE "Found [0-9]+ error" | grep -oE "[0-9]+" | head -1 || echo "0")
             ruff_count=${ruff_count:-0}
 
@@ -926,8 +950,18 @@ check_code_quality() {
     # These are documented historical tech debt outside the cleanup cycle scope.
     # Threshold tracks REGRESSIONS above that baseline.
     local SHELLCHECK_BASELINE=3
-    if ! command -v shellcheck >/dev/null 2>&1; then
-        warn "shellcheck not installed — skipping Bash lint check (install via requirements-ci.txt)"
+    # Same runner resolution as pytest and ruff above: a lint check that silently
+    # skips on every machine without the tool runs ONLY in CI, which is where a
+    # local/CI divergence hides. shellcheck-py is already declared in
+    # requirements-ci.txt, so uv can supply it with no global install.
+    local SC_RUN=""
+    if command -v shellcheck >/dev/null 2>&1; then
+        SC_RUN="shellcheck"
+    elif command -v uv >/dev/null 2>&1 && [ -f requirements-ci.txt ]; then
+        SC_RUN="uv run --quiet --with-requirements requirements-ci.txt shellcheck"
+    fi
+    if [ -z "$SC_RUN" ]; then
+        warn "shellcheck not runnable — skipping Bash lint check (install uv, or shellcheck via requirements-ci.txt)"
     else
         local sc_files=()
         for f in plugins/mycelium/scripts/*.sh plugins/mycelium/hooks/*.sh tests/*.sh; do
@@ -935,7 +969,7 @@ check_code_quality() {
         done
 
         local sc_warnings
-        sc_warnings=$( { shellcheck -S warning "${sc_files[@]}" 2>/dev/null || true; } | grep -cE "^In " || true)
+        sc_warnings=$( { $SC_RUN -S warning "${sc_files[@]}" 2>/dev/null || true; } | grep -cE "^In " || true)
 
         if [ "$sc_warnings" -le "$SHELLCHECK_BASELINE" ]; then
             pass "shellcheck: $sc_warnings warning(s) — at-or-below baseline ($SHELLCHECK_BASELINE)"
@@ -945,17 +979,42 @@ check_code_quality() {
     fi
 
     # ----- Pytest -----
-    if ! command -v pytest >/dev/null 2>&1; then
-        warn "pytest not installed — skipping unit-test execution (install via requirements-ci.txt)"
+    # PRESENCE ON PATH IS NOT RUNNABILITY (v0.110.5).
+    #
+    # This block used to gate on `command -v pytest` and then invoke bare
+    # `pytest`. Both can succeed while the tests cannot run: the `pytest` shim on
+    # PATH belongs to whichever interpreter installed it, which need not be the
+    # interpreter holding the project's deps. Measured 2026-08-16 — a Homebrew
+    # pytest was first on PATH, the project's jsonschema lived in a version-manager
+    # interpreter, and 75 tests died on ModuleNotFoundError while the gate reported
+    # "tests failing". That sends the reader to debug the tests instead of the
+    # environment, which is the same message-does-not-match-condition defect this
+    # release fixes in shell-safety-guard.
+    #
+    # Order: uv with the declared requirements (one interpreter, pinned, no global
+    # install), else a pytest whose interpreter can import the deps, else WARN AND
+    # SKIP — matching the ruff branch above, because a tool we cannot run is not a
+    # failing test.
+    local PYTEST_RUN=""
+    if command -v uv >/dev/null 2>&1 && [ -f requirements-ci.txt ]; then
+        PYTEST_RUN="uv run --quiet --with-requirements requirements-ci.txt python -m pytest"
+    elif command -v pytest >/dev/null 2>&1 && pytest --version >/dev/null 2>&1 \
+         && python3 -c "import jsonschema, yaml" >/dev/null 2>&1 \
+         && python3 -c "import pytest" >/dev/null 2>&1; then
+        PYTEST_RUN="python3 -m pytest"
+    fi
+
+    if [ -z "$PYTEST_RUN" ]; then
+        warn "pytest cannot run here — no uv, and no single interpreter with both pytest and the project deps. NOT a test failure; install uv or requirements-ci.txt"
     elif [ ! -d "tests/python" ]; then
         warn "pytest tests directory missing — skipping"
     else
-        if pytest tests/python/ -q --tb=no >/dev/null 2>&1; then
+        if $PYTEST_RUN tests/python/ -q --tb=no >/dev/null 2>&1; then
             local test_count
-            test_count=$(pytest tests/python/ --collect-only -q 2>/dev/null | tail -1 | grep -oE "[0-9]+ tests?" | head -1)
+            test_count=$($PYTEST_RUN tests/python/ --collect-only -q 2>/dev/null | tail -1 | grep -oE "[0-9]+ tests?" | head -1)
             pass "pytest: all tests pass${test_count:+ ($test_count)}"
         else
-            fail "pytest: tests failing — run 'pytest tests/python/ -v' for details"
+            fail "pytest: tests failing — run '$PYTEST_RUN tests/python/ -v' for details"
         fi
     fi
 

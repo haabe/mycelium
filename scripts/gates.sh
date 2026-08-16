@@ -68,8 +68,35 @@ else
   MISSING+=("tests/validate-template.sh")
 fi
 
-if [ -d tests/python ]; then
-  run_gate "pytest" python3 -m pytest tests/python -q
+# RESOLVE RUNNERS THAT CAN ACTUALLY RUN (2026-08-16).
+# `python3 -m pytest` and a bare `ruff` both assume the tool is reachable from
+# whatever interpreter is first on PATH. When a version manager changes that
+# interpreter, the gate stops being able to run and says so as MISSING — which is
+# honest, but leaves a repo unable to pass its own gate on a machine where the
+# tools exist under a different interpreter. uv resolves both with no global
+# install, honouring requirements-ci.txt when the project declares one.
+PYTEST_RUN=""
+RUFF_RUN=""
+if command -v uv >/dev/null 2>&1; then
+  if [ -f requirements-ci.txt ]; then
+    PYTEST_RUN="uv run --quiet --with-requirements requirements-ci.txt python -m pytest"
+    RUFF_RUN="uv run --quiet --with-requirements requirements-ci.txt ruff"
+  else
+    PYTEST_RUN="uv run --quiet --with pytest python -m pytest"
+    RUFF_RUN="uv run --quiet --with ruff ruff"
+  fi
+fi
+if [ -z "$PYTEST_RUN" ] && python3 -c "import pytest" >/dev/null 2>&1; then
+  PYTEST_RUN="python3 -m pytest"
+fi
+if [ -z "$RUFF_RUN" ] && command -v ruff >/dev/null 2>&1; then
+  RUFF_RUN="ruff"
+fi
+
+if [ -d tests/python ] && [ -n "$PYTEST_RUN" ]; then
+  run_gate "pytest" $PYTEST_RUN tests/python -q
+elif [ -d tests/python ]; then
+  MISSING+=("a runner for pytest (install uv, or make pytest importable)")
 else
   MISSING+=("tests/python")
 fi
@@ -80,10 +107,12 @@ else
   MISSING+=("tests/bash/run.sh")
 fi
 
-if command -v ruff >/dev/null 2>&1 && [ -f ruff.toml ]; then
-  run_gate "ruff" ruff check --config ruff.toml
+if [ -n "$RUFF_RUN" ] && [ -f ruff.toml ]; then
+  run_gate "ruff" $RUFF_RUN check --config ruff.toml
+elif [ -f ruff.toml ]; then
+  MISSING+=("a runner for ruff (install uv, or put ruff on PATH)")
 else
-  MISSING+=("ruff or ruff.toml")
+  MISSING+=("ruff.toml")
 fi
 
 echo ""

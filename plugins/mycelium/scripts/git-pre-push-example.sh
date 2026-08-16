@@ -85,9 +85,40 @@ elif [ -d "plugins/mycelium/scripts" ]; then
     SCRIPTS_DIR="plugins/mycelium/scripts"
 fi
 
+# RESOLVE A PYTHON THAT CAN ACTUALLY IMPORT THE TEST DEPS (v0.110.5).
+#
+# This gate used to invoke `python3 -m pytest` and report "Tests FAILED" on any
+# non-zero exit — including the exit that means "pytest is not installed for this
+# interpreter". Measured 2026-08-16 on a dev machine: a version manager took over
+# `python3` the previous day, the new interpreter had no pytest, and the gate
+# reported failing tests while 906 tests passed under a working runner. A gate
+# whose MESSAGE does not match its CONDITION sends the reader to debug the wrong
+# thing — the same defect this release fixes in shell-safety-guard's backtick rule.
+#
+# Order: uv with the declared CI requirements (no global install, pinned
+# versions), else a python3 that can import pytest, else FAIL LOUDLY AND
+# DISTINCTLY as "cannot run", never as "failed".
+PYRUN=""
+if command -v uv >/dev/null 2>&1 && [ -f requirements-ci.txt ]; then
+    PYRUN="uv run --with-requirements requirements-ci.txt python"
+elif python3 -c "import pytest" >/dev/null 2>&1; then
+    PYRUN="python3"
+fi
+
+if [ -d "tests/python" ] && [ -n "$SCRIPTS_DIR" ] && [ -z "$PYRUN" ]; then
+    echo "" >&2
+    echo "[mycelium pre-push] TEST GATE CANNOT RUN — this is NOT a test failure." >&2
+    echo "  python3 resolves to: $(command -v python3)" >&2
+    echo "  and it cannot import pytest; uv is unavailable or requirements-ci.txt is missing." >&2
+    echo "  • Install uv (recommended — no global installs, honours the pinned versions), or" >&2
+    echo "  • make pytest importable by that interpreter." >&2
+    echo "  • Emergency bypass: git push --no-verify (and document it)." >&2
+    exit 1
+fi
+
 if [ -d "tests/python" ] && [ -n "$SCRIPTS_DIR" ]; then
-    echo "[mycelium pre-push] Delivery-quality gate: tests + total-coverage floor ..." >&2
-    if ! python3 -m pytest tests/python/ \
+    echo "[mycelium pre-push] Delivery-quality gate: tests + total-coverage floor (runner: $PYRUN) ..." >&2
+    if ! $PYRUN -m pytest tests/python/ \
             --cov=plugins/mycelium/scripts --cov=plugins/mycelium/integrations \
             --cov-report=json --cov-fail-under=85 -q >&2; then
         echo "" >&2
@@ -96,7 +127,7 @@ if [ -d "tests/python" ] && [ -n "$SCRIPTS_DIR" ]; then
         exit 1
     fi
     echo "[mycelium pre-push] Delivery-quality gate: per-file coverage floor (every shipped script must be tested) ..." >&2
-    if ! python3 "$SCRIPTS_DIR/check_coverage_floor.py" --root . --floor 70 >&2; then
+    if ! $PYRUN "$SCRIPTS_DIR/check_coverage_floor.py" --root . --floor 70 >&2; then
         echo "" >&2
         echo "[mycelium pre-push] Per-file coverage floor FAILED — a shipped script lacks a test. Push blocked." >&2
         echo "  • Add tests/python/test_<name>.py exercising the flagged script(s)." >&2

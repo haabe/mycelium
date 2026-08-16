@@ -12,6 +12,8 @@ Scenario-per-guardpost:
   sad   — backticks                                 -> warn, names $(...) and heredocs
   sad   — grep gating an && chain                   -> warn, names grep's exit 1
   edge  — PIPESTATUS already used                   -> silence (author knows)
+  edge  — backticks inside a QUOTED heredoc         -> silence (author knows)
+  edge  — backticks inside an UNQUOTED heredoc      -> warn (it still expands)
   edge  — `$?` BEFORE any pipe                      -> silence
   edge  — `||` is not a pipe                        -> silence
   edge  — several traps in one command              -> several warnings
@@ -93,6 +95,30 @@ def test_pipestatus_present_suppresses_the_warning(scripts_path):
 def test_status_check_before_any_pipe_is_silent(scripts_path):
     """`$?` is only misleading when a pipeline precedes it."""
     assert _warnings(scripts_path, "mycmd; echo $?; other | head") == ""
+
+
+def test_backticks_inside_a_quoted_heredoc_are_silent(scripts_path):
+    """A quoted heredoc is the remedy this very warning recommends.
+
+    Warning on it is the same defect already fixed for PIPESTATUS: telling the
+    author to apply a remedy they have applied. Observed firing ~13 times in one
+    session on commands that were already using `<<'EOF'`, and correctly ignored
+    every time — which is how a guard trains the blindness its neighbours rely on.
+    """
+    cmd = "cat >> notes.md <<'EOF'\nsee `foo | bar` in the docs\nEOF"
+    assert _warnings(scripts_path, cmd) == ""
+
+
+def test_backticks_inside_an_unquoted_heredoc_still_warn(scripts_path):
+    """`<<EOF` without quotes DOES expand, so the trap is real there."""
+    cmd = "cat <<EOF\nsee `date` here\nEOF"
+    assert "SC2006" in _warnings(scripts_path, cmd)
+
+
+def test_backtick_on_the_heredoc_opener_still_warns(scripts_path):
+    """Only the heredoc BODY is inert; the command line around it is not."""
+    cmd = "cat >> `pick_file`.md <<'EOF'\nbody\nEOF"
+    assert "SC2006" in _warnings(scripts_path, cmd)
 
 
 def test_logical_or_is_not_a_pipe(scripts_path):
