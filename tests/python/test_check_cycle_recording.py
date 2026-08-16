@@ -155,6 +155,42 @@ def test_no_releases_matched_says_so_with_its_pattern(scripts_path, tmp_path, ca
     assert "pattern was" in out         # shows its working
 
 
+def test_no_releases_matched_has_its_own_status_not_ok(scripts_path, tmp_path, capsys):
+    """The STATUS field, not just the detail string, must distinguish the branches.
+
+    The sibling test above asserts the token appears in the output — and it passed
+    identically while `status` was `"ok"`, because it never read `status`. A consumer
+    that reacts to named statuses (session-start.sh does) therefore saw "nothing to
+    report" from a check that had correctly reported it could not measure. Observed in
+    the dogfood repo 2026-08-16: two minor releases shipped upstream that day, this
+    returned ok/0, and the reminder stayed silent. Assert the field consumers actually
+    read, in both directions.
+    """
+    import json as _json
+    mod = _import(scripts_path)
+    project = _repo(tmp_path / "proj", ["chore: no version here", "fix: nor here"])
+    _cycles(project, "2000-01-01T00:00:00Z")
+
+    assert _run(mod, "--project-dir", str(project), "--json") == 0
+    payload = _json.loads(capsys.readouterr().out)
+    assert payload["status"] == "no-releases-matched"
+    assert payload["status"] != "ok"        # failure direction: the defect this fixes
+    assert payload["releases"] == 0
+
+
+def test_real_releases_still_report_ok_or_owed(scripts_path, tmp_path, capsys):
+    """Guard the other direction: the new token must not swallow genuine measurements."""
+    import json as _json
+    mod = _import(scripts_path)
+    project = _repo(tmp_path / "proj", ["release: v1.2.0 ship it"])
+    _cycles(project, "2000-01-01T00:00:00Z")
+
+    _run(mod, "--project-dir", str(project), "--json")
+    payload = _json.loads(capsys.readouterr().out)
+    assert payload["status"] in ("ok", "cycle-owed")
+    assert payload["status"] != "no-releases-matched"
+
+
 def test_not_a_git_repo_fails_loud_not_silent(scripts_path, tmp_path, capsys):
     """'I could not look' must never render as 'nothing to report'."""
     mod = _import(scripts_path)
