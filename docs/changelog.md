@@ -33,6 +33,26 @@ skipped entirely and four policy tests silently lost their subject. It now resol
 so the version IS the policy. Running it for real immediately surfaced one live
 `FURB167`, fixed here.
 
+### Two structural checks that inherited a tool's absence as a silent pass
+
+Fixing the runner surfaced two more of the same family, both of which had left `main`
+unable to pass its own pre-push gate:
+
+- **The lint-policy check was nested inside the linter-availability check.** Whether
+  `ruff.toml` exists on disk has nothing to do with whether `ruff` is installed — but on
+  any machine without ruff, the framework could ship with no declared policy at all and
+  the gate said nothing. Hoisted out and now unconditional.
+- **`gates.sh` marked pytest and ruff MISSING** whenever they were not reachable from the
+  first `python3`/`ruff` on PATH, so a repo with the tools installed under a different
+  interpreter could not pass its own gate. Both now resolve through `uv` when available.
+
+And one defect this release INTRODUCED and its own test caught within the hour: resolving
+ruff *at the pin* made the installed-vs-pinned divergence check vacuous — it printed
+"ruff version matches the pin" because it had just installed that exact pin. The
+comparison now uses the **ambient** ruff only, and reports "not checked" rather than
+"matches" when there is none. The test that caught it was itself environment-dependent
+(it assumed a local ruff) and is now hermetic.
+
 ### The backtick guard warned people who had already applied the remedy
 
 `shell-safety-guard`'s backtick rule was `re.compile("`")` — a bare character search. The warning it

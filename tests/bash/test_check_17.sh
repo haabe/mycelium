@@ -90,10 +90,17 @@ test_ruff_pin_divergence_fails() {
     # environments hold two different definitions of "clean" — PR #17 shipped
     # 0 errors locally and 59 in CI for exactly this reason.
     local tmp; tmp=$(mktemp -d)
-    mkdir -p "$tmp/plugins/mycelium"
+    mkdir -p "$tmp/plugins/mycelium" "$tmp/bin"
     cp "$REPO_ROOT/ruff.toml" "$tmp/ruff.toml"
     printf 'ruff==9.9.9\n' > "$tmp/requirements-ci.txt"
-    local out; out=$(cd "$tmp" && check_code_quality 2>&1)
+    # HERMETIC AMBIENT RUFF. The check compares the pin against whatever ruff a
+    # contributor has on PATH, so this test needs one — and must not depend on the
+    # dev machine happening to have ruff installed. It did depend on that until
+    # 2026-08-16, and failed on any machine without ruff: an environment-dependent
+    # test reports the environment, not the code.
+    printf '#!/bin/sh\necho "ruff 0.1.0"\n' > "$tmp/bin/ruff"
+    chmod +x "$tmp/bin/ruff"
+    local out; out=$(cd "$tmp" && PATH="$tmp/bin:$PATH" check_code_quality 2>&1)
     rm -rf "$tmp"
     assert_contains "$out" "ruff version divergence" \
         "installed != pinned -> FAIL (two policies, not one)"

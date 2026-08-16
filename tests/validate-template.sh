@@ -848,6 +848,20 @@ check_code_quality() {
     # them in their dev env). Install via: pip install -r requirements-ci.txt
 
     # ----- Python: ruff -----
+    # POLICY DECLARATION IS CHECKED FIRST AND UNCONDITIONALLY (2026-08-16).
+    # Whether a lint policy is declared on disk has nothing to do with whether the
+    # linter is installed, but this check used to sit INSIDE the ruff-availability
+    # guard — so on any machine without ruff the framework could ship with no
+    # ruff.toml at all and the gate said nothing. A structural check nested under a
+    # tool-availability check inherits that tool's absence as a silent pass.
+    if [ ! -f "ruff.toml" ]; then
+        if [ -d "plugins/mycelium" ]; then
+            fail "ruff.toml missing in the framework repo — the lint policy must be declared on disk, not inside this script"
+        else
+            info "ruff: no ruff.toml in this project — lint policy is the project's own call (skipped)"
+        fi
+    fi
+
     local RUFF_RUN="ruff"
     if ! command -v ruff >/dev/null 2>&1 && command -v uv >/dev/null 2>&1 && [ -f requirements-ci.txt ]; then
         # uv can supply the PINNED ruff with no global install, which matters here
@@ -897,23 +911,27 @@ check_code_quality() {
             # findings this release fixes. Caught by the negative-control probe
             # before merge, not by reading the code.
             ruff_pin=$(grep -oE '^ruff==[0-9][0-9.]*' requirements-ci.txt | head -1 | cut -d= -f3 || true)
-            ruff_have=$($RUFF_RUN --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || true)
+            # AMBIENT ruff ONLY — deliberately NOT $RUFF_RUN. The question is whether
+            # a contributor's ruff differs from the pin; resolving ruff AT the pin
+            # answers itself and makes this check vacuous. Introduced and caught by
+            # test_check_17 within the hour, 2026-08-16: the gate printed "ruff version
+            # matches the pin" because it had just installed that exact pin.
+            ruff_have=""
+            if command -v ruff >/dev/null 2>&1; then
+                ruff_have=$(ruff --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || true)
+            fi
             if [ -z "$ruff_pin" ]; then
                 fail "ruff is not pinned in requirements-ci.txt. ruff.toml selects ALL, so the version IS the policy — an unbounded spec lets CI and local disagree about what 'clean' means (PR #17: 0 vs 59 errors)."
             elif [ -n "$ruff_have" ] && [ "$ruff_pin" != "$ruff_have" ]; then
                 fail "ruff version divergence: installed $ruff_have, pinned $ruff_pin. With select=ALL these are DIFFERENT policies. Install the pin (pip install -r requirements-ci.txt), or bump the pin deliberately and triage the newly-firing rules."
+            elif [ -z "$ruff_have" ]; then
+                info "ruff: no ambient ruff on PATH to compare against the pin ($ruff_pin) — divergence NOT checked (this is not a match)"
             else
                 pass "ruff version matches the pin ($ruff_pin) — one policy, not two"
             fi
         fi
 
-        if [ ! -f "ruff.toml" ]; then
-            if [ -d "plugins/mycelium" ]; then
-                fail "ruff.toml missing in the framework repo — the lint policy must be declared on disk, not inside this script"
-            else
-                info "ruff: no ruff.toml in this project — lint policy is the project's own call (skipped)"
-            fi
-        else
+        if [ -f "ruff.toml" ]; then
             local ruff_out ruff_count
             ruff_out=$( { $RUFF_RUN check . 2>/dev/null || true; } )
             ruff_count=$(printf '%s' "$ruff_out" | grep -oE "Found [0-9]+ error" | grep -oE "[0-9]+" | head -1 || echo "0")
