@@ -848,8 +848,14 @@ check_code_quality() {
     # them in their dev env). Install via: pip install -r requirements-ci.txt
 
     # ----- Python: ruff -----
-    if ! command -v ruff >/dev/null 2>&1; then
-        warn "ruff not installed — skipping Python lint check (install via requirements-ci.txt)"
+    local RUFF_RUN="ruff"
+    if ! command -v ruff >/dev/null 2>&1 && command -v uv >/dev/null 2>&1 && [ -f requirements-ci.txt ]; then
+        # uv can supply the PINNED ruff with no global install, which matters here
+        # because ruff.toml uses select=["ALL"] and the version IS the policy.
+        RUFF_RUN="uv run --quiet --with-requirements requirements-ci.txt ruff"
+    fi
+    if ! $RUFF_RUN --version >/dev/null 2>&1; then
+        warn "ruff not runnable — skipping Python lint check (install uv, or ruff via requirements-ci.txt)"
     else
         # POLICY LIVES IN ruff.toml — NOT HERE (v0.61.0).
         #
@@ -891,7 +897,7 @@ check_code_quality() {
             # findings this release fixes. Caught by the negative-control probe
             # before merge, not by reading the code.
             ruff_pin=$(grep -oE '^ruff==[0-9][0-9.]*' requirements-ci.txt | head -1 | cut -d= -f3 || true)
-            ruff_have=$(ruff --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || true)
+            ruff_have=$($RUFF_RUN --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1 || true)
             if [ -z "$ruff_pin" ]; then
                 fail "ruff is not pinned in requirements-ci.txt. ruff.toml selects ALL, so the version IS the policy — an unbounded spec lets CI and local disagree about what 'clean' means (PR #17: 0 vs 59 errors)."
             elif [ -n "$ruff_have" ] && [ "$ruff_pin" != "$ruff_have" ]; then
@@ -909,7 +915,7 @@ check_code_quality() {
             fi
         else
             local ruff_out ruff_count
-            ruff_out=$( { ruff check . 2>/dev/null || true; } )
+            ruff_out=$( { $RUFF_RUN check . 2>/dev/null || true; } )
             ruff_count=$(printf '%s' "$ruff_out" | grep -oE "Found [0-9]+ error" | grep -oE "[0-9]+" | head -1 || echo "0")
             ruff_count=${ruff_count:-0}
 
@@ -945,17 +951,42 @@ check_code_quality() {
     fi
 
     # ----- Pytest -----
-    if ! command -v pytest >/dev/null 2>&1; then
-        warn "pytest not installed — skipping unit-test execution (install via requirements-ci.txt)"
+    # PRESENCE ON PATH IS NOT RUNNABILITY (v0.110.5).
+    #
+    # This block used to gate on `command -v pytest` and then invoke bare
+    # `pytest`. Both can succeed while the tests cannot run: the `pytest` shim on
+    # PATH belongs to whichever interpreter installed it, which need not be the
+    # interpreter holding the project's deps. Measured 2026-08-16 — a Homebrew
+    # pytest was first on PATH, the project's jsonschema lived in a version-manager
+    # interpreter, and 75 tests died on ModuleNotFoundError while the gate reported
+    # "tests failing". That sends the reader to debug the tests instead of the
+    # environment, which is the same message-does-not-match-condition defect this
+    # release fixes in shell-safety-guard.
+    #
+    # Order: uv with the declared requirements (one interpreter, pinned, no global
+    # install), else a pytest whose interpreter can import the deps, else WARN AND
+    # SKIP — matching the ruff branch above, because a tool we cannot run is not a
+    # failing test.
+    local PYTEST_RUN=""
+    if command -v uv >/dev/null 2>&1 && [ -f requirements-ci.txt ]; then
+        PYTEST_RUN="uv run --quiet --with-requirements requirements-ci.txt python -m pytest"
+    elif command -v pytest >/dev/null 2>&1 && pytest --version >/dev/null 2>&1 \
+         && python3 -c "import jsonschema, yaml" >/dev/null 2>&1 \
+         && python3 -c "import pytest" >/dev/null 2>&1; then
+        PYTEST_RUN="python3 -m pytest"
+    fi
+
+    if [ -z "$PYTEST_RUN" ]; then
+        warn "pytest cannot run here — no uv, and no single interpreter with both pytest and the project deps. NOT a test failure; install uv or requirements-ci.txt"
     elif [ ! -d "tests/python" ]; then
         warn "pytest tests directory missing — skipping"
     else
-        if pytest tests/python/ -q --tb=no >/dev/null 2>&1; then
+        if $PYTEST_RUN tests/python/ -q --tb=no >/dev/null 2>&1; then
             local test_count
-            test_count=$(pytest tests/python/ --collect-only -q 2>/dev/null | tail -1 | grep -oE "[0-9]+ tests?" | head -1)
+            test_count=$($PYTEST_RUN tests/python/ --collect-only -q 2>/dev/null | tail -1 | grep -oE "[0-9]+ tests?" | head -1)
             pass "pytest: all tests pass${test_count:+ ($test_count)}"
         else
-            fail "pytest: tests failing — run 'pytest tests/python/ -v' for details"
+            fail "pytest: tests failing — run '$PYTEST_RUN tests/python/ -v' for details"
         fi
     fi
 

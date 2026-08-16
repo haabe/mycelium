@@ -81,7 +81,7 @@ def _strip_quoted_heredoc_bodies(command: str) -> str:
         body_start = command.find("\n", m.end())
         if body_start == -1:
             continue
-        end = re.compile(r"^\s*" + re.escape(delim) + r"\s*$", re.M).search(
+        end = re.compile(r"^\s*" + re.escape(delim) + r"\s*$", re.MULTILINE).search(
             command, body_start + 1
         )
         stop = end.start() if end else len(command)

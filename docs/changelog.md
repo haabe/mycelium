@@ -4,7 +4,36 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-16.
 
-## v0.110.5 - the guard warned people who had already applied the remedy
+## v0.110.5 - two checks whose message did not match their condition
+
+Both fixes are the same defect at different sites: a check that reports one thing
+while the true condition is another, sending the reader to debug the wrong layer.
+
+### The test gate reported "tests failing" when pytest could not run
+
+`validate-template.sh` gated on `command -v pytest` and then invoked bare `pytest`.
+Both can succeed while the tests cannot run: the `pytest` shim on PATH belongs to
+whichever interpreter installed it, which need not be the interpreter holding the
+project's dependencies.
+
+Measured 2026-08-16 on a dev machine — a Homebrew `pytest` was first on PATH, the
+project's `jsonschema` lived in a version-manager interpreter, and **75 tests died on
+`ModuleNotFoundError` while the gate reported "tests failing"**. Under a working runner
+all 906 passed.
+
+Now: prefer `uv run --with-requirements requirements-ci.txt` (one interpreter, pinned
+versions, **no global install**), else a `python3` that can import both pytest and the
+deps, else **warn and skip** — matching the `ruff` branch beside it, because a tool we
+cannot run is not a failing test. The same resolution is applied in
+`git-pre-push-example.sh`.
+
+`ruff` gets the same treatment and it changes the outcome: previously absent, it was
+skipped entirely and four policy tests silently lost their subject. It now resolves via
+`uv` at the **pinned** version — which matters because `ruff.toml` uses `select = ["ALL"]`,
+so the version IS the policy. Running it for real immediately surfaced one live
+`FURB167`, fixed here.
+
+### The backtick guard warned people who had already applied the remedy
 
 `shell-safety-guard`'s backtick rule was `re.compile("`")` — a bare character search. The warning it
 emits says *"use a QUOTED heredoc (`<<'EOF'`)"*, and it fired on commands that were already doing
