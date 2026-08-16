@@ -2,7 +2,34 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-08-13.
+**Last updated**: 2026-08-16.
+
+## v0.110.5 - the guard warned people who had already applied the remedy
+
+`shell-safety-guard`'s backtick rule was `re.compile("`")` — a bare character search. The warning it
+emits says *"use a QUOTED heredoc (`<<'EOF'`)"*, and it fired on commands that were already doing
+exactly that.
+
+Measured on the dogfood project, one session:
+
+| guard | fires | action rate |
+|---|---|---|
+| `absence-claim-guard` | 4 | **4/4 — changed the text every time** |
+| `shell-safety-guard` | ~13 | **~0 — correctly ignored every time** |
+
+**A guard with a near-zero action rate is worse than no guard.** It trains the reader to skim hook
+output, which degrades the guards in the same family that do work. That is the cost this fixes, not
+the annoyance.
+
+Quoted-heredoc bodies are now stripped before the backtick test. Deliberately unchanged:
+
+- **unquoted `<<EOF` still warns** — it expands, so the trap is real there;
+- **a backtick on the heredoc opener still warns** — only the body is inert.
+
+Same defect already fixed once in this file for `PIPESTATUS`, whose comment reads *"A case-sensitive
+test warned people who had already applied the remedy."* Three new guardpost tests; 28 pass.
+
+Reported from dogfood: `mycelium-roadmap` decision-log 2026-08-16, `opportunities.yml#opp-048`.
 
 ## v0.110.4 - the staleness check could not see most of the activity
 
