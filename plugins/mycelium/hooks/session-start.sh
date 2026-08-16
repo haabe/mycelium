@@ -56,7 +56,6 @@ except Exception:
   fi
 fi
 REMINDERS=""
-NOW=$(date +%s)
 
 # ============================================================
 # CHECK 0: State-file parse sanity (fail-open, but LOUD)
@@ -448,7 +447,12 @@ fi
 # Routes to product-type-appropriate metrics canvas (v0.11.0)
 # ============================================================
 METRICS_CANVAS=""
-METRICS_SKILL="/dora-check"
+# NO METRICS_SKILL VARIABLE. It existed here as a per-product-type routing slot
+# beside METRICS_CANVAS and METRICS_LABEL, but no case arm below ever set it and
+# the reminder hardcodes the skill anyway. Checked before removing: /dora-check
+# handles all four canvases itself (skills/dora-check/SKILL.md routes content_*,
+# ai_tool and service_offering), so ONE skill genuinely serves every product type
+# and the slot was redundant rather than half-wired.
 METRICS_LABEL="Delivery metrics"
 
 # Determine which metrics canvas to check based on product_type.

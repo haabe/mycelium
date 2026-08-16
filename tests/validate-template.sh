@@ -946,10 +946,13 @@ check_code_quality() {
     fi
 
     # ----- Bash: shellcheck -----
-    # Pre-existing warnings as of 2026-05-03: 3 (gate.sh:19, session-start.sh:8/46).
-    # These are documented historical tech debt outside the cleanup cycle scope.
-    # Threshold tracks REGRESSIONS above that baseline.
-    local SHELLCHECK_BASELINE=3
+    # BASELINE IS 0 (2026-08-16). It was 3 — "documented historical tech debt
+    # outside the cleanup cycle scope" — while the ruff branch a few lines above
+    # tells contributors "do not re-introduce a tolerated-debt baseline". The
+    # project forbade for one linter exactly what it practised for the other.
+    # All three were SC2034 assigned-but-unused: a field consumed positionally
+    # (now `_`), a dead NOW=$(date +%s), and a redundant METRICS_SKILL routing slot.
+    local SHELLCHECK_BASELINE=0
     # Same runner resolution as pytest and ruff above: a lint check that silently
     # skips on every machine without the tool runs ONLY in CI, which is where a
     # local/CI divergence hides. shellcheck-py is already declared in

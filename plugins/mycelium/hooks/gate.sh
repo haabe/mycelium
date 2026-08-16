@@ -27,9 +27,10 @@ STAMP_FILE="${TMPDIR:-/tmp}/mycelium-preflight-stamp-${_stamp_uid}-${_stamp_phas
 # correct even if a path contained a newline. On parse failure both vars stay
 # empty (same fallback as before).
 INPUT=$(cat)
-TOOL_NAME=""
 FILE_PATH=""
-{ IFS= read -r -d '' TOOL_NAME; IFS= read -r -d '' FILE_PATH; } < <(
+# The first NUL-delimited field must be CONSUMED to reach FILE_PATH, but its
+# value is unused — `_` is the intentional-discard idiom shellcheck recognises.
+{ IFS= read -r -d '' _; IFS= read -r -d '' FILE_PATH; } < <(
   printf '%s' "$INPUT" | python3 -c '
 import sys, json
 d = json.load(sys.stdin)
