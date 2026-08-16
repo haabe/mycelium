@@ -950,8 +950,18 @@ check_code_quality() {
     # These are documented historical tech debt outside the cleanup cycle scope.
     # Threshold tracks REGRESSIONS above that baseline.
     local SHELLCHECK_BASELINE=3
-    if ! command -v shellcheck >/dev/null 2>&1; then
-        warn "shellcheck not installed — skipping Bash lint check (install via requirements-ci.txt)"
+    # Same runner resolution as pytest and ruff above: a lint check that silently
+    # skips on every machine without the tool runs ONLY in CI, which is where a
+    # local/CI divergence hides. shellcheck-py is already declared in
+    # requirements-ci.txt, so uv can supply it with no global install.
+    local SC_RUN=""
+    if command -v shellcheck >/dev/null 2>&1; then
+        SC_RUN="shellcheck"
+    elif command -v uv >/dev/null 2>&1 && [ -f requirements-ci.txt ]; then
+        SC_RUN="uv run --quiet --with-requirements requirements-ci.txt shellcheck"
+    fi
+    if [ -z "$SC_RUN" ]; then
+        warn "shellcheck not runnable — skipping Bash lint check (install uv, or shellcheck via requirements-ci.txt)"
     else
         local sc_files=()
         for f in plugins/mycelium/scripts/*.sh plugins/mycelium/hooks/*.sh tests/*.sh; do
@@ -959,7 +969,7 @@ check_code_quality() {
         done
 
         local sc_warnings
-        sc_warnings=$( { shellcheck -S warning "${sc_files[@]}" 2>/dev/null || true; } | grep -cE "^In " || true)
+        sc_warnings=$( { $SC_RUN -S warning "${sc_files[@]}" 2>/dev/null || true; } | grep -cE "^In " || true)
 
         if [ "$sc_warnings" -le "$SHELLCHECK_BASELINE" ]; then
             pass "shellcheck: $sc_warnings warning(s) — at-or-below baseline ($SHELLCHECK_BASELINE)"

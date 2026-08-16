@@ -4,7 +4,7 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-16.
 
-## v0.110.5 - two checks whose message did not match their condition
+## v0.110.6 - checks whose message did not match their condition
 
 Both fixes are the same defect at different sites: a check that reports one thing
 while the true condition is another, sending the reader to debug the wrong layer.
@@ -42,6 +42,10 @@ unable to pass its own pre-push gate:
   `ruff.toml` exists on disk has nothing to do with whether `ruff` is installed — but on
   any machine without ruff, the framework could ship with no declared policy at all and
   the gate said nothing. Hoisted out and now unconditional.
+- **`shellcheck` was skipped on every machine without it**, so the Bash lint check ran only in
+  CI — which is exactly where a local/CI divergence hides. `shellcheck-py` was already declared in
+  `requirements-ci.txt`; it now resolves the same way. Run for real it reports 3 warnings, at the
+  documented baseline.
 - **`gates.sh` marked pytest and ruff MISSING** whenever they were not reachable from the
   first `python3`/`ruff` on PATH, so a repo with the tools installed under a different
   interpreter could not pass its own gate. Both now resolve through `uv` when available.
