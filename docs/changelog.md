@@ -4,6 +4,28 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-16.
 
+## v0.110.7 - the linter policy the project forbade for ruff and practised for shellcheck
+
+`ruff`'s failure message tells contributors *"do not re-introduce a tolerated-debt
+baseline"*. `shellcheck` ran against a baseline of 3, described in-file as *"documented
+historical tech debt outside the cleanup cycle scope"*. The project forbade for one
+linter exactly what it practised for the other, and v0.110.6 — which made shellcheck run
+locally for the first time on machines without it — made that visible.
+
+All three were `SC2034`, assigned-but-unused, and one was not lint noise:
+
+- `gate.sh` — the first NUL-delimited field must be **consumed** to reach `FILE_PATH`, but
+  its value is unused. Now `_`, shellcheck's intentional-discard idiom.
+- `session-start.sh` — a dead `NOW=$(date +%s)`.
+- `session-start.sh` — a `METRICS_SKILL` routing slot sitting beside `METRICS_CANVAS` and
+  `METRICS_LABEL`, which **no case arm ever set** while the reminder hardcoded the skill
+  anyway. Checked before removing rather than assumed half-wired: `/dora-check` handles all
+  four metrics canvases itself, so one skill genuinely serves every product type and the
+  slot was redundant.
+
+**Baseline is now 0.** A regression threshold that tolerates known findings cannot
+distinguish "no problems" from "the same three problems".
+
 ## v0.110.6 - checks whose message did not match their condition
 
 Both fixes are the same defect at different sites: a check that reports one thing
