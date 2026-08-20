@@ -4,6 +4,48 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-16.
 
+## v0.111.0 - every route into discovery waits to be invoked
+
+`/assumption-test`, `/user-interview`, `/handoff` — every door into discovery in this framework
+opens from the inside. Each waits for someone to call it.
+
+**The founder's report from dogfood, 2026-08-20:** during ordinary building the author writes
+something whose resolution requires discovery, and *"the user might not be aware that this requires
+discovery in the post."* A skill cannot fire on a case its author did not notice. That is not a
+documentation problem and no amount of prose in a router fixes it.
+
+**`discovery-trigger-guard` (UserPromptSubmit, advisory).** Notices when the author states something
+whose truth depends on other people's wants or behaviour — "users want X", "people won't bother",
+"they'd pay for that" — and says so. Nothing more.
+
+**What it deliberately does not do, and each of these is a design decision with a reason:**
+
+- **It does not propose a study.** The first response to an unvalidated claim is to TYPE it, not to
+  test it. Typing costs seconds, is always correct, and cannot become a nag; escalation to a method
+  is the second step. A guard that asks for real work on its first false positive is switched off by
+  its user within a day, and a switched-off guard has an action rate of zero.
+- **It does not fire on the author's own experience.** "I want", "I keep losing my place" — that is
+  `internal_stakeholder` evidence, which this framework already accepts and types honestly.
+- **It does not fire on grounded claims.** Reported speech, an interview, a survey, a cited evidence
+  id. Nor on questions: "what do users want?" is the right instinct, not a lapse.
+- **It never blocks and fails open on every path**, including a missing helper.
+- **It degrades when there is no access.** If the author cannot reach those people, the advice is to
+  type the assumption and flag the gap — a finding, not homework that cannot be done.
+
+**The instrument ships with the trigger.** Every fire appends one row to
+`.claude/state/discovery-trigger-log.jsonl` — what fired, never the prompt, enough to compute a rate
+and not enough to be a transcript. This is not optional polish: the rule this hook must live under is
+that **a guard whose action rate stays near zero is narrowed or retired rather than left running**,
+and shipping the trigger without the counter would make that rule unenforceable for this hook.
+
+**Calibration is tested as heavily as detection**, because over-triggering is the named way this dies:
+13 suppressor cases against 6 trigger cases, plus fail-open and log-hygiene tests. One real bug was
+caught by that suite before ship — `\bht-\d\b` never matched "ht-064", because the closing word
+boundary lands between digits, so every evidence-id reference leaked through the suppressor.
+
+Provenance: `opportunities.yml#opp-051` sol-051h in the dogfood project, where the four risks this
+design has to survive are recorded alongside it.
+
 ## v0.110.8 - the check said "I cannot measure here" and the hook rendered it as silence
 
 `check_cycle_recording.py` is honest. Its docstring calls `no-releases-matched` *"the branch most

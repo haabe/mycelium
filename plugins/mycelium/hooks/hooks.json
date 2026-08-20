@@ -55,13 +55,13 @@
             "type": "command",
             "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/framework-guard.sh",
             "timeout": 5,
-            "statusMessage": "Mycelium framework-guard (Bash \u2014 dogfood-mode only)"
+            "statusMessage": "Mycelium framework-guard (Bash — dogfood-mode only)"
           },
           {
             "type": "command",
             "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/shell-safety-guard.sh",
             "timeout": 5,
-            "statusMessage": "Mycelium framework-guard (Bash \u2014 dogfood-mode only)"
+            "statusMessage": "Mycelium framework-guard (Bash — dogfood-mode only)"
           },
           {
             "type": "command",
@@ -76,13 +76,13 @@
             "type": "command",
             "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/framework-guard.sh",
             "timeout": 5,
-            "statusMessage": "Mycelium framework-guard (MCP filesystem \u2014 dogfood-mode only)"
+            "statusMessage": "Mycelium framework-guard (MCP filesystem — dogfood-mode only)"
           },
           {
             "type": "command",
             "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/autonomous-evidence-guard.sh",
             "timeout": 5,
-            "statusMessage": "Mycelium autonomous-evidence-guard (MCP filesystem \u2014 autonomous-mode only)"
+            "statusMessage": "Mycelium autonomous-evidence-guard (MCP filesystem — autonomous-mode only)"
           }
         ]
       }
@@ -179,6 +179,10 @@
             "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/preflight.sh",
             "timeout": 5,
             "statusMessage": "Mycelium preflight stamp"
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/discovery-trigger-guard.sh"
           }
         ]
       }

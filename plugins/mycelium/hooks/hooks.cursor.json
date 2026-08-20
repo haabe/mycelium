@@ -122,6 +122,10 @@
         "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/preflight.sh",
         "type": "command",
         "timeout": 5
+      },
+      {
+        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/discovery-trigger-guard.sh",
+        "type": "command"
       }
     ]
   }
