@@ -1,3 +1,20 @@
+---
+# Contract retrofitted 2026-08-20 under v0.112.0 Step 5b. Every value is SOURCED
+# from this file's own header, none chosen today:
+#   frozen_at     — "Created: 2026-06-11"
+#   frozen_before — Stage A was the run; the design and its V1-V8 criteria predate it
+#   score_by      — Stage A completed and was scored the same day, 2026-06-11
+#   status        — "STAGE A COMPLETE — REFUTED". Scored, and refuted, which is the
+#                   state a forecasting record needs some of to have been at risk.
+# Stage B was NOT TRIGGERED per the pre-committed plan ("no point confirming a floor
+# that failed"), so this is complete rather than abandoned.
+type: assumption-test
+frozen_at: 2026-06-11
+frozen_before: "the Stage A Haiku run"
+score_by: 2026-06-11
+status: scored
+---
+
 # Assumption test: cross-model evidence-integrity boundary (autonomous mode)
 
 Created: 2026-06-11
