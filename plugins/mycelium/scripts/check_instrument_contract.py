@@ -77,6 +77,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as _dt
+import hashlib
 import re
 import subprocess
 import sys
@@ -105,6 +106,15 @@ _FROZEN_BLOCK = re.compile(
 )
 
 _REQUIRED = ("type", "frozen_at", "frozen_before", "score_by", "status")
+
+#: A live instrument gated on an EVENT rather than a date cannot honestly carry a
+#: `score_by` — the data may never exist. It must still carry a `review_by`: the date
+#: by which you decide whether to KEEP WAITING. Founder ruling 2026-08-20: "event gated
+#: should have review dates. or even better - if it can trigger a review on/after the
+#: event." The distinction is the point. A scoring date says data must exist by then; a
+#: review date says a DECISION must exist by then, and a decision is always available.
+#: Without it, "waiting on an event" is indistinguishable from "forgotten", which is how
+#: one instrument here held frozen thresholds for 102 days and one for 104.
 _VALID_STATUS = {"live", "scored", "void", "not-an-instrument"}
 
 
@@ -198,14 +208,99 @@ def _git_original(root: Path, path: Path) -> tuple[str | None, str | None]:
         return blob.stdout, first
 
 
-def _expiry(name: str, fm: dict[str, str], today: _dt.date, res: dict) -> None:
-    """Undated or overdue. The field whose absence freed a prediction to be right
-    forever, and the one no instrument in the motivating corpus carried."""
+def _anchor_block(root: Path, ref: str) -> str | None:
+    """The text of a `file#key` anchor under .claude/canvas/, or None.
+
+    Deliberately NOT a YAML parse: this script is stdlib-only so it runs in any
+    consumer, and PyYAML is not stdlib. It finds the first line whose stripped form
+    starts with `key:` and takes everything until a line indented at or below it —
+    the same block-boundary technique used for markdown prediction blocks.
+    """
+    if "#" not in ref:
+        return None
+    fname, _, key = ref.partition("#")
+    key = key.strip().split(".")[-1]
+    path = root / ".claude" / "canvas" / fname.strip()
+    if not path.is_file():
+        return None
+    lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+    for i, line in enumerate(lines):
+        if line.strip().startswith(f"{key}:"):
+            indent = len(line) - len(line.lstrip())
+            out = [line]
+            for nxt in lines[i + 1:]:
+                if nxt.strip() and (len(nxt) - len(nxt.lstrip())) <= indent:
+                    break
+                out.append(nxt)
+            return "\n".join(out)
+    return None
+
+
+def _fingerprint(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()[:16]
+
+
+def _expiry(name: str, fm: dict[str, str], today: _dt.date, res: dict, root: Path) -> None:
+    """Scoring date, review date, and the event trigger — in that order of preference."""
+    status = fm.get("status")
     due = _parse_date(fm.get("score_by"))
-    if due is None:
+    if due is not None:
+        if status == "live" and due < today:
+            res["due"].append((name, str(due), (today - due).days))
+        return
+
+    # No scoring date. For a live instrument that is only legitimate with a REVIEW date,
+    # which is a promise about a decision rather than about data.
+    if status != "live":
         res["undated"].append(name)
-    elif fm.get("status") == "live" and due < today:
-        res["due"].append((name, str(due), (today - due).days))
+        return
+
+    review = _parse_date(fm.get("review_by"))
+    if review is None:
+        res["no_review"].append(name)
+    elif review < today:
+        res["review_due"].append(
+            (name, f"review date {review} passed {(today - review).days} days ago"))
+
+    # THE TRIGGER HALF. It fires on the event rather than on a calendar, WHICH IS BETTER
+    # ONLY WHERE THE EVENT IS ACTUALLY RECORDED SOMEWHERE.
+    #
+    # "HOW CAN WE KNOW WHETHER AN EVENT HAS HAPPENED IF WE DON'T TRACK THEM?" — the founder,
+    # 2026-08-20, and it is the right question to ask of this code. THE ANSWER IS THAT THIS
+    # DOES NOT TRACK EVENTS. It detects CHANGE at an anchor you nominate, and infers the
+    # event from the trace. Three consequences, all of them limits:
+    #
+    #   1. A rewording of the anchor fires it too. Deliberate: a spurious review costs one
+    #      glance, a missed event costs months, and this corpus holds instruments that sat
+    #      102 and 104 days to prove which cost is real.
+    #   2. IT INHERITS THE DISCIPLINE IT IS MEANT TO BACKSTOP. If nobody records the event,
+    #      the anchor never changes and the trigger never fires. Pointing `review_on` at a
+    #      PROSE SUMMARY is the weak form and close to circular — the summary only updates
+    #      when someone already noticed.
+    #   3. So POINT IT AT AN EVENT LOG, not at a conclusion. In a Mycelium project the
+    #      surfaces that actually record events are `human-tasks.yml` touch_log entries
+    #      (191 dated entries over 102 days in the dogfood repo, a discipline that
+    #      demonstrably holds), a new task id, and git history on any canvas file. Those
+    #      are written AS the event happens. A confidence field or a density summary is
+    #      written after someone has drawn a conclusion, which is later and rarer.
+    #
+    # AND WHERE THE EVENT IS RECORDED NOWHERE, THERE IS NO TRIGGER TO BUILD. That case is
+    # exactly why `review_by` is required and this is optional: a date promises a DECISION,
+    # which is always available, where a trigger promises DETECTION, which is not.
+    ref = fm.get("review_on")
+    if not ref:
+        return
+    block = _anchor_block(root, ref)
+    if block is None:
+        res["bad_anchor"].append((name, ref))
+        return
+    recorded = fm.get("review_on_fingerprint", "")
+    now = _fingerprint(block)
+    if not recorded:
+        res["bad_anchor"].append((name, f"{ref} (no fingerprint recorded; current is {now})"))
+    elif recorded != now:
+        res["review_due"].append(
+            (name, f"{ref} CHANGED since the freeze — the event may have occurred"))
 
 
 def _drift(path: Path, root: Path, text: str, fm: dict[str, str], res: dict) -> None:
@@ -257,7 +352,7 @@ def _classify(path: Path, root: Path, today: _dt.date, res: dict) -> None:
     if missing:
         res["incomplete"].append((path.name, ", ".join(missing)))
 
-    _expiry(path.name, fm, today, res)
+    _expiry(path.name, fm, today, res, root)
 
     if status == "scored":
         res["scored"].append(path.name)
@@ -272,7 +367,8 @@ def analyse(root: Path, today: _dt.date) -> dict:
     res: dict[str, list] = {
         "uncontracted": [], "undated": [], "due": [], "drifted": [],
         "untracked": [], "bad_status": [], "contracted": [], "scored": [],
-        "refuted": [], "incomplete": [],
+        "refuted": [], "incomplete": [], "no_review": [], "review_due": [],
+        "bad_anchor": [],
     }
     for path in sorted(d.glob("*.md")):
         _classify(path, root, today, res)
@@ -321,6 +417,18 @@ def main() -> int:
          "enforces is a suggestion, and an agent grepping it gets silence rather than an "
          "answer.",
          lambda t: f"{t[0]} (empty: {t[1]})")
+    emit(r["no_review"],
+         "NO REVIEW DATE — live, gated on an event, and carrying no review_by. A scoring "
+         "date promises DATA by a date, which an event-gated test cannot promise. A review "
+         'date promises a DECISION by a date, which is always available. Without one, '
+         '"waiting" and "forgotten" look identical.')
+    emit(r["review_due"], "REVIEW DUE — decide whether to keep waiting.",
+         lambda t: f"{t[0]}: {t[1]}")
+    emit(r["bad_anchor"],
+         "REVIEW ANCHOR UNUSABLE — review_on names something that cannot be read, or has "
+         "no fingerprint to compare against. An unreadable trigger is a trigger that never "
+         "fires, which is worse than no trigger because it looks like one.",
+         lambda t: f"{t[0]}: {t[1]}")
     emit(r["due"], "DUE / OVERDUE — status is live and score_by has passed.",
          lambda t: f"{t[0]} (due {t[1]}, {t[2]} days ago)")
     emit(r["drifted"],

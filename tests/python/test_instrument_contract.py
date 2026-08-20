@@ -135,13 +135,69 @@ def test_prediction_prose_without_header_is_uncontracted(tmp_path):
     assert cic.analyse(root, TODAY)["uncontracted"] == ["a.md"]
 
 
-def test_missing_score_by_is_undated(tmp_path):
-    """The field whose absence produced the 102-day never-run test."""
+def test_live_without_score_by_or_review_by_is_reported(tmp_path):
+    """The field whose absence produced the 102-day never-run test.
+
+    CHANGED 2026-08-20 on the founder's ruling that event-gated predictions get REVIEW
+    dates: a live instrument with no scoring date is no longer simply "undated", it is
+    missing the review date that would make waiting distinguishable from forgetting.
+    """
     root = _repo(tmp_path)
     _write(root, "a.md", HEADER.format(score_by="", status="live",
                                        prediction="I expect 3 of 5."))
     _commit(root)
-    assert cic.analyse(root, TODAY)["undated"] == ["a.md"]
+    r = cic.analyse(root, TODAY)
+    assert r["no_review"] == ["a.md"]
+    assert not r["undated"], "a live event-gated test is not undated, it is un-reviewed"
+
+
+def test_review_by_satisfies_an_event_gated_instrument(tmp_path):
+    """A date promises a DECISION, which is always available even when data is not."""
+    root = _repo(tmp_path)
+    body = HEADER.format(score_by="", status="live", prediction="I expect 3 of 5.")
+    _write(root, "a.md", body.replace("status: live", "status: live\nreview_by: 2026-09-30"))
+    _commit(root)
+    r = cic.analyse(root, TODAY)
+    assert not r["no_review"] and not r["review_due"]
+
+
+def test_past_review_date_is_review_due(tmp_path):
+    root = _repo(tmp_path)
+    body = HEADER.format(score_by="", status="live", prediction="I expect 3 of 5.")
+    _write(root, "a.md", body.replace("status: live", "status: live\nreview_by: 2026-07-01"))
+    _commit(root)
+    assert cic.analyse(root, TODAY)["review_due"][0][0] == "a.md"
+
+
+def test_unreadable_review_anchor_is_reported_not_ignored(tmp_path):
+    """An unreadable trigger is a trigger that never fires, which is worse than none
+    because it looks like one."""
+    root = _repo(tmp_path)
+    body = HEADER.format(score_by="", status="live", prediction="I expect 3 of 5.")
+    _write(root, "a.md", body.replace(
+        "status: live",
+        "status: live\nreview_by: 2026-09-30\nreview_on: nosuch.yml#whatever"))
+    _commit(root)
+    assert cic.analyse(root, TODAY)["bad_anchor"][0][0] == "a.md"
+
+
+def test_changed_anchor_fires_a_review(tmp_path):
+    """The trigger half: it fires on a trace of the event, not on the calendar."""
+    root = _repo(tmp_path)
+    canvas = root / ".claude" / "canvas"
+    canvas.mkdir(parents=True)
+    (canvas / "purpose.yml").write_text("density: three testers so far\nother: x\n", encoding="utf-8")
+    fp = cic._fingerprint(cic._anchor_block(root, "purpose.yml#density"))
+    body = HEADER.format(score_by="", status="live", prediction="I expect 3 of 5.")
+    _write(root, "a.md", body.replace(
+        "status: live",
+        "status: live\nreview_by: 2026-09-30\nreview_on: purpose.yml#density"
+        f"\nreview_on_fingerprint: {fp}"))
+    _commit(root)
+    assert not cic.analyse(root, TODAY)["review_due"], "unchanged anchor must stay quiet"
+    (canvas / "purpose.yml").write_text("density: FOUR testers so far\nother: x\n", encoding="utf-8")
+    fired = cic.analyse(root, TODAY)["review_due"]
+    assert fired and "CHANGED" in fired[0][1]
 
 
 def test_live_and_past_due_is_reported_with_age(tmp_path):

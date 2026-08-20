@@ -4,6 +4,39 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-20.
 
+## v0.114.0 - a review date promises a decision, not data
+
+Seven live instruments in the dogfood corpus carried no `score_by`. Not carelessness: six are
+gated on an EVENT — a tester landing, a trigger firing — so a scoring date would have been
+invented. The result was that "waiting on something" and "forgotten" looked identical, and two of
+them had been sitting for 102 and 104 days.
+
+**Founder ruling: event-gated instruments carry a `review_by`.** Not a date by which DATA must
+exist, which an event-gated test cannot promise — a date by which a DECISION must exist about
+whether to keep waiting. A decision is always available.
+
+**And, where possible, a trigger instead of a calendar.** Optional `review_on` names an anchor and
+`review_on_fingerprint` records its state at freeze time; when the anchor changes, the review fires.
+
+**THE TRIGGER'S LIMIT IS DOCUMENTED IN THE CODE THAT IMPLEMENTS IT**, because the right question was
+asked of it: *"how can we know whether an event has happened if we don't track them?"*
+
+It does not track events. It detects change at an anchor and infers the event from the trace, which
+means:
+
+- A rewording fires it too. Deliberate — a spurious review costs a glance, a missed event costs
+  months, and this corpus has the receipts for which cost is real.
+- **It inherits the discipline it is meant to backstop.** If nobody records the event, the anchor
+  never changes and nothing fires. Pointing it at a prose summary is close to circular: the summary
+  only updates once someone already noticed.
+- **So point it at an event LOG, not a conclusion** — `human-tasks.yml` touch_log entries (191 dated
+  entries across 102 days in the dogfood repo), a new task id, git history on a canvas file. Those
+  are written AS the event happens.
+
+And where the event is recorded nowhere, there is no trigger to build. That is exactly why
+`review_by` is required and `review_on` is optional: a date promises a decision, which is always
+available; a trigger promises detection, which is not.
+
 ## v0.113.1 - a required field nothing enforces is a suggestion
 
 `check_instrument_contract` shipped with `_REQUIRED` listing five fields and code that acted on one
