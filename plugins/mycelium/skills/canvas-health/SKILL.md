@@ -310,6 +310,25 @@ never free prose, because canvases legitimately cite historical versions ("shipp
 v0.70.0") and flagging those would make it noise on day one. UNKNOWN (exit 2) when no
 plugin.json is readable, never a clean pass it did not earn.
 
+## Decision-log reconcile — a dated event whose canvas row was never written
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_log_reconcile.py" --root .
+```
+
+Registered classes of dated decision-log event are reconciled against the canvas history that
+should have gained a row. **Log-without-canvas is the ORPHAN and fails; canvas-without-log is the
+harmless direction and is INFO** — the canvas is the source of truth, and failing that direction
+trains people to stop writing it.
+
+**It guards two recorded failures**: a BVSSH assessment orphaned to the log, and DORA 2026-08-09
+where the measurement was taken, the history row was never written, and one file ended up carrying
+three different dates for one measurement.
+
+**IT SHIPS GREEN AND SAYS SO EVERY RUN.** It found nothing on the corpus that motivated it. It is a
+regression guard, not a discovery tool, and if it stays green over a long window it should be
+narrowed or retired rather than left running — the near-zero-action-rate rule applies to it too.
+
 ## Instrument contract — frozen predictions with no home, no expiry, or silent edits
 
 ```bash

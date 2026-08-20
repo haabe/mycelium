@@ -4,6 +4,34 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-20.
 
+## v0.114.1 - a regression guard that says it ships green
+
+`check_log_reconcile` generalises the one-off BVSSH orphan check into a registry: dated decision-log
+events reconciled against the canvas history rows they should have produced.
+
+**It guards two recorded failures.** A BVSSH assessment orphaned to the decision log and never
+written to `assessment_history` — the reason `check_bvssh_reconcile` exists. And DORA on 2026-08-09,
+where the measurement WAS taken and written into the metric fields while `measurement_history` never
+gained the row, leaving one file carrying **three different dates for one measurement**, so every
+instrument asking "when was this measured" got a different answer depending on which field it read.
+
+**IT SHIPS GREEN, AND ITS OWN OUTPUT SAYS SO ON EVERY RUN.** On the corpus that motivated it: BVSSH
+8 log events against 14 canvas rows, DORA 3 against 9, zero log-only either way, and zero dangling
+canvas IDs across 253 cited in the log. It is a regression guard, not a discovery tool, and if it
+stays green over a long window it should be narrowed or retired — the near-zero-action-rate rule this
+framework applies to its own guards applies to this one too.
+
+**Direction is asymmetric, inherited rather than invented.** Log-without-canvas is the orphan and
+fails. Canvas-without-log is INFO: the canvas is the source of truth and failing that direction
+trains people to stop writing it.
+
+**BVSSH stays in the registry, DEACTIVATED rather than omitted**, because `check_bvssh_reconcile`
+already owns it with special-case absent-input logic and is wired into `session-start.sh`. An
+omitted class reads as an oversight; a deactivated one reads as a decision.
+
+**Wired into `/mycelium:canvas-health` and deliberately NOT gated.** A gate with no failing instance
+is exactly the guard this framework warns about.
+
 ## v0.114.0 - a review date promises a decision, not data
 
 Seven live instruments in the dogfood corpus carried no `score_by`. Not carelessness: six are
