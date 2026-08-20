@@ -771,6 +771,12 @@ check_version_bump_discipline() {
     fi
 
     # Find the last commit that changed the Version line (-G regex match).
+    # The version as committed at HEAD, so the check can tell "no bump anywhere"
+    # from "bump staged but not yet committed". Without this it can only ask
+    # whether HEAD bumped, which is not the same question.
+    local head_version
+    head_version=$(git show HEAD:CLAUDE.md 2>/dev/null | grep -m1 "^\*Version " | sed -E 's/^\*Version ([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
+
     local last_version_commit
     last_version_commit=$(git log -1 --pretty=format:%H -G "^\*Version " -- CLAUDE.md 2>/dev/null)
     if [ -z "$last_version_commit" ]; then
@@ -822,10 +828,24 @@ check_version_bump_discipline() {
         # Either fold into HEAD (commit --amend before push) or expect to
         # bump again at the next commit. Catches the post-bump-mid-session edit case.
         warn "Version-bump check: HEAD bumped to $curr_version, but $uncommitted_count uncommitted material file(s) waiting. Fold into HEAD (amend before push) or bump again at the next commit."
+    elif [ "$uncommitted_count" -gt 0 ] && [ "$curr_version" != "$head_version" ]; then
+        # PASS: the bump is sitting in the working tree alongside the material
+        # changes, which is what "bump before committing" asks for.
+        #
+        # FOUND BY DOGFOODING 2026-08-20, and it was an UNSATISFIABLE INSTRUCTION.
+        # This branch previously failed whenever HEAD was not itself a version-bump
+        # commit, WITHOUT ever looking at whether the working tree contained a bump.
+        # It only asked "did HEAD bump?". So on the second consecutive material
+        # commit -- bump present, CLAUDE.md modified, everything staged correctly --
+        # it said "Bump CLAUDE.md before committing" while gates.sh printed DO NOT
+        # COMMIT. The only way to clear it was the commit it was blocking.
+        # It stayed hidden because a release usually follows a release: HEAD is then
+        # the previous bump commit and the WARN branch above catches it instead.
+        pass "Version-bump check: $uncommitted_count material file(s) pending with the bump staged in the working tree ($head_version -> $curr_version)"
     elif [ "$uncommitted_count" -gt 0 ]; then
-        # FAIL: uncommitted material changes AND HEAD didn't bump — the next
-        # commit must either bump or be a non-material edit.
-        fail "Version-bump discipline: $uncommitted_count material framework file(s) uncommitted with no version bump in HEAD (currently $curr_version). Bump CLAUDE.md before committing, per plugins/mycelium/engine/version-discipline.md."
+        # FAIL: uncommitted material changes, HEAD didn't bump, and no bump in the
+        # working tree either — the next commit must either bump or be non-material.
+        fail "Version-bump discipline: $uncommitted_count material framework file(s) uncommitted with no version bump in HEAD or the working tree (currently $curr_version). Bump CLAUDE.md before committing, per plugins/mycelium/engine/version-discipline.md."
     elif [ "$last_version_commit" = "$head_commit" ]; then
         pass "Version-bump check: HEAD commit changed the Version line ($curr_version), no pending material changes"
     else

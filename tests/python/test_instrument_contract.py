@@ -212,9 +212,16 @@ def test_bad_today_is_unknown(tmp_path, monkeypatch):
     assert cic.main() == 2
 
 
-def test_output_states_what_it_cannot_check(tmp_path, monkeypatch, capsys):
-    """Preregistration adds no severity on its own. A green here that reads as a
-    quality signal is the veneer-of-rigor failure, so the limit is printed, always."""
+def test_output_separates_interface_integrity_from_quality(tmp_path, monkeypatch, capsys):
+    """The output must make BOTH claims, and keep them apart.
+
+    v0.112.0 printed one line calling a green "about paperwork", which collapsed two
+    different statements. A green IS meaningful — the contract fields parse and agree
+    with git, and that header is the interface a later agent greps to find a live
+    instrument. What it is not is a judgement that the test was any good. Calling the
+    whole thing paperwork under-sold the first claim and left the second doing all the
+    work, so both lines are asserted here and neither may quietly disappear.
+    """
     root = _repo(tmp_path)
     _write(root, "a.md", HEADER.format(score_by="2026-08-30", status="live",
                                        prediction="I expect 3 of 5."))
@@ -222,8 +229,10 @@ def test_output_states_what_it_cannot_check(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(sys, "argv", ["x", "--root", str(root), "--today", "2026-08-20"])
     assert cic.main() == 0
     out = capsys.readouterr().out
-    assert "cannot tell you a prediction was good" in out
-    assert "paperwork" in out
+    assert "WHAT A GREEN MEANS" in out
+    assert "INTERFACE check" in out
+    assert "WHAT A GREEN DOES NOT MEAN" in out
+    assert "veneer-of-rigor" in out
 
 
 if __name__ == "__main__":

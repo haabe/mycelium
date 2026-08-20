@@ -45,4 +45,5 @@ check_surface_registry.py
 
 # The parity guard gates itself. If CI gains a check and this file does not, the
 # hook fails before the push rather than CI failing after it.
+check_instrument_contract.py --root .
 check_gate_parity.py --root .

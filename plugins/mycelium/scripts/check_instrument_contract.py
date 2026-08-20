@@ -328,11 +328,15 @@ def main() -> int:
 
     print(f"\ninstruments under contract: {n}; scored: {len(r['scored'])}; "
           f"problems: {problems}")
-    print("This check verifies FOUR MECHANICAL FACTS about files. It cannot tell you a "
-          "prediction was good, that the method fits the question, or that the test was "
-          "severe. Preregistration adds no severity on its own — treating a green here "
-          "as a quality signal is the veneer-of-rigor failure. Every green is about "
-          "paperwork.")
+    print("WHAT A GREEN MEANS: the contract fields parse and agree with git. That is an "
+          "INTERFACE check, not paperwork — the header is how a later agent finds a frozen "
+          "prediction, tells live from scored, and knows the block was written before the "
+          "data. A malformed header does not mislead a human, who skims past it; it makes "
+          "an agent grepping `status: live` conclude there are no live instruments.")
+    print("WHAT A GREEN DOES NOT MEAN: that the prediction was good, that the method fits "
+          "the question, or that the test was severe. Preregistration adds no severity on "
+          "its own, and reading a green here as a quality signal is the veneer-of-rigor "
+          "failure.")
     return 1 if problems else 0
 
 

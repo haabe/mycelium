@@ -141,6 +141,17 @@ jobs:
         # index pairing meaningless.
         run: python3 plugins/mycelium/scripts/check_source_class_fidelity.py --root .
 
+      - name: Run instrument-contract guard (the header is an agent interface, not paperwork)
+        # THE HEADER IS READ BY MACHINES, WHICH IS WHY THIS IS A GATE AND NOT A REPORT.
+        # An instrument's contract block is how a later agent FINDS a frozen prediction,
+        # decides whether it is still live, and knows whether the block it is reading
+        # was written before the data. A human skims past a malformed header. An agent
+        # greps for `status: live`, gets nothing, and concludes there are no live
+        # instruments -- which is the false-absence failure this project logs most.
+        # Same reasoning as the source-class fidelity guard above: machine-consumed
+        # fields get gated, because the cost of a wrong one is silent.
+        run: python3 plugins/mycelium/scripts/check_instrument_contract.py --root .
+
       - name: Run Python unit tests with coverage (verbose output for CI logs)
         run: |
           pytest tests/python/ -v \

@@ -4,6 +4,50 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-20.
 
+## v0.113.0 - the header is an agent interface, not paperwork
+
+**Also in this release, found while shipping it: Check 26 was issuing an unsatisfiable
+instruction.** The version-bump gate failed with *"Bump CLAUDE.md before committing"* at a moment
+when CLAUDE.md had already been bumped — because it only ever asked *"did HEAD bump?"* and never
+looked at the working tree. `gates.sh` prints DO NOT COMMIT on a failure, so the only way to clear
+it was the commit it was blocking.
+
+It stayed hidden because a release usually follows a release: HEAD is then the previous bump commit
+and a different branch catches it. It fires on the **second consecutive material commit**, which is
+what happens when a non-material commit lands in between. Fixed by comparing the working-tree
+version against HEAD's, with a regression scenario added to `test_check_26.sh` that reproduces the
+exact shape — bump commit, then a non-material commit, then material edits with the bump staged.
+
+
+`check_instrument_contract` shipped in v0.112.0 as an advisory report, and its own output called a
+green **"a green about paperwork"**. That framing was wrong, and the correction came from the
+founder:
+
+> *"the main problem I think is that this is the interface between agents. a missing or misaligned
+> header means less to a human than to an agent using grep and similar to find and evaluate data.
+> the Claude agents have proven over and over again that they are not to be trusted. often not even
+> with simple tasks as writing a structured document."*
+
+**A human skims past a malformed header. An agent greps `status: live`, gets nothing, and concludes
+there are no live instruments** — which is the false-absence failure this project logs more than any
+other class.
+
+**The risk scales with the number of WRITES, not the number of files.** The earlier argument against
+gating was that the framework repo holds one instrument, so drift there is theoretical. That
+measured the wrong thing: every agent that writes an instrument is a fresh chance to write a broken
+header, and the population that matters is writes, not files.
+
+**The precedent was already in this repo.** `check_source_class_fidelity` is gated with the stated
+reason that the field "is machine-consumed" and agents mislabel it. Same class, same remedy.
+
+**Now a CI gate and a pre-push gate** (`local-gate-set.txt` + `validate.yml`; parity requires both).
+
+**And the output no longer collapses two different claims.** It now says what a green DOES mean —
+the contract fields parse and agree with git, which is interface integrity — separately from what it
+does not: that the prediction was good, the method fit, or the test was severe. Those were always
+different statements and the old wording ran them together, which under-sold the first and left the
+second doing all the work.
+
 ## v0.112.1 - the drift report cried wolf on its own header
 
 `check_instrument_contract` shipped in v0.112.0 and was immediately run against a real 36-file
