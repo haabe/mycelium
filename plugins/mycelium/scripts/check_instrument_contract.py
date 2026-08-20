@@ -139,8 +139,27 @@ def _frontmatter(text: str) -> dict[str, str] | None:
     return out
 
 
+def _strip_frontmatter(text: str) -> str:
+    """Body only.
+
+    FOUND BY DOGFOODING ON THE REAL CORPUS, 2026-08-20, and it made the flagship
+    report untrustworthy on its first live run. A `#` comment inside the YAML
+    header is not a markdown heading, but it looks exactly like one, and header
+    comments on THESE files talk about predictions and freezing by definition. The
+    first retrofitted instrument reported DRIFT against itself because the block
+    finder matched a comment reading "# It held frozen thresholds for 102 days".
+    A drift report that fires on the contract header would train its reader to
+    ignore the one report this check exists for.
+    """
+    if not text.startswith("---"):
+        return text
+    end = text.find("\n---", 3)
+    return text if end == -1 else text[end + 4:]
+
+
 def _frozen_block(text: str) -> str | None:
     """Return the prediction block, or None if no prediction heading is present."""
+    text = _strip_frontmatter(text)
     m = _FROZEN_BLOCK.search(text)
     if not m:
         return None

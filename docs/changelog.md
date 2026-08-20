@@ -4,6 +4,26 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-20.
 
+## v0.112.1 - the drift report cried wolf on its own header
+
+`check_instrument_contract` shipped in v0.112.0 and was immediately run against a real 36-file
+corpus. The first instrument retrofitted with a contract header **reported DRIFT against itself.**
+
+A `#` comment inside the YAML frontmatter is not a markdown heading. It looks exactly like one to a
+regex looking for a prediction heading, and **header comments on these files talk about predictions
+and freezing by definition** — the "heading" it matched read *"# It held frozen thresholds for 102
+days"*. The block finder then compared that comment against the real prediction section and
+correctly reported that they differed.
+
+`_frozen_block` now strips frontmatter before searching. Regression test added.
+
+**Why this matters more than a one-line fix suggests:** drift is the report this check exists for,
+and it would have fired on precisely the files carrying the contract. A report that cries wolf on
+its own header trains its reader to ignore it, and an ignored report has an action rate of zero.
+
+**It was findable in exactly one place.** The fixtures passed — all 14 of them, including both drift
+tests. It took running the thing against a corpus nobody wrote for it.
+
 ## v0.112.0 - a prediction with no home is an opinion with a date
 
 `/mycelium:assumption-test` Step 5 asks you to write a prediction before the run. Step 6's outputs

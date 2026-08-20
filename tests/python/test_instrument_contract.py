@@ -228,3 +228,31 @@ def test_output_states_what_it_cannot_check(tmp_path, monkeypatch, capsys):
 
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-q"]))
+
+
+def test_header_comment_mentioning_frozen_is_not_a_heading(tmp_path):
+    """Regression, found by dogfooding on a real corpus 2026-08-20.
+
+    A `#` comment inside the YAML header looked like a markdown heading to the
+    block finder, so the first retrofitted instrument reported DRIFT against
+    itself — the matched "heading" was its own comment reading "# It held frozen
+    thresholds for 102 days". Header comments on these files talk about
+    predictions by definition, so this would have fired on precisely the files
+    the check exists for, and a drift report that cries wolf on its own header
+    trains its reader to ignore the one report that matters.
+    """
+    root = _repo(tmp_path)
+    body = ("---\n"
+            "# It held frozen thresholds for 102 days and the prediction was never scored\n"
+            "type: assumption-test\n"
+            "frozen_at: 2026-05-09\n"
+            'frozen_before: "any session was run"\n'
+            "score_by: 2026-08-19\n"
+            "status: void\n"
+            "---\n\n"
+            "## Pre-commit prediction\n\nI expect 3 of 5.\n")
+    _write(root, "a.md", body)
+    _commit(root)
+    r = cic.analyse(root, TODAY)
+    assert r["contracted"] == ["a.md"]
+    assert not r["drifted"], "a header comment must not be read as the prediction block"
