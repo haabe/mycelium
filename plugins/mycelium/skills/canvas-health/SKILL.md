@@ -310,6 +310,26 @@ never free prose, because canvases legitimately cite historical versions ("shipp
 v0.70.0") and flagging those would make it noise on day one. UNKNOWN (exit 2) when no
 plugin.json is readable, never a clean pass it did not earn.
 
+## Instrument contract — frozen predictions with no home, no expiry, or silent edits
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_instrument_contract.py" --root .
+```
+
+`/mycelium:assumption-test` Step 5b writes a four-field contract header onto every instrument in
+`.claude/evals/assumption-tests/`. This reports the five ways that goes wrong: **uncontracted** (a
+file that reads like an instrument and carries no header), **no expiry** (a prediction that can
+never be overdue, so it can never be scored), **due/overdue**, **not in git** (nothing timestamps
+it), and **drifted** — the prediction block changed after the commit that introduced it with no
+`amended:` note.
+
+**Drift is the one it exists for.** Registries do not fail by fabrication, they fail by nobody
+diffing the registration against the report.
+
+It prints its own limits every run, and that is deliberate: it verifies four mechanical facts about
+files and cannot tell you a prediction was good or a test was severe. **Every green here is a green
+about paperwork.**
+
 ## Climatic predictions due for scoring (added v0.95.0)
 
 ```bash

@@ -2,7 +2,68 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-08-16.
+**Last updated**: 2026-08-20.
+
+## v0.112.0 - a prediction with no home is an opinion with a date
+
+`/mycelium:assumption-test` Step 5 asks you to write a prediction before the run. Step 6's outputs
+were "log in opportunities.yml" and "always update active.yml". **Nothing ever said where the
+prediction itself lands**, so the instrument document carrying it was written by no skill, governed
+by no schema, and read by no check.
+
+**What that costs, measured in dogfood 2026-08-20.** Of 36 files in one project's
+`.claude/evals/assumption-tests/`, **27 stated a freeze convention in prose — in 27 different
+phrasings**: *"PRE-REGISTERED 2026-08-16, BEFORE ANY FETCH"*, *"Prediction was frozen before posting;
+nothing below the prediction was edited after"*, *"Written and committed BEFORE the run"*. The author
+was writing the contract by hand every single time and never the same way twice, **which is exactly
+why nothing could check it**. Four more files were metric adapter specs that had drifted into the
+folder, because a directory with no membership rule collects whatever is nearby.
+
+Two frozen predictions were lost to this: one held its thresholds 102 days and was closed never-run
+because the file sat outside the git tree; one lived in a repo that was never committed, so not even
+a git timestamp existed for it.
+
+**Step 5b: the output contract.** Write the design to
+`.claude/evals/assumption-tests/YYYY-MM-DD-<slug>.md`, commit it with the instrument, and open it
+with four fields:
+
+```yaml
+type: assumption-test
+frozen_at: 2026-08-16
+frozen_before: "any comment is fetched"
+score_by: 2026-08-30
+status: live            # live | scored | void | not-an-instrument
+```
+
+**Four fields, deliberately.** AsPredicted asks nine questions for the whole of science, and its
+stated design goal is to be short and easy to read and include only what needs to be included.
+Length kills completion, and an unfinished instrument protects nothing. **Three of the four are
+lifted from what the corpus already wrote by hand**; only `score_by` is new, and it is the field
+whose absence produced both losses above.
+
+`frozen_before` matters more than `frozen_at`, and it is the corpus's own invention: a date does not
+establish precedence over the DATA. Naming the contaminating event does.
+
+**`check_instrument_contract.py`, run from `/mycelium:canvas-health`,** reports uncontracted,
+undated, overdue, untracked and **drifted** instruments.
+
+**Drift is the one it exists for.** The COMPare project checked 67 trials in the top five medical
+journals against their own registered protocols: each reported an average 62% of its pre-specified
+outcomes while silently adding 5.3 new ones, and primary outcomes were correctly reported a mean 76%
+of the time. Every one of those trials was registered. **What was missing was anybody diffing the
+registration against the report.**
+
+**Amendments are recorded, never forbidden** — add `amended: "<date>, <what changed and why>"`. This
+is the mature practice rather than a compromise: ClinicalTrials.gov keeps every revision in a public
+History of Changes and removes no registered record. **Registries never solved the edit problem by
+preventing edits. They solved it by making every edit permanently visible.** Git gives a consumer the
+same property for free, which is the only reason the remedy was imported at all.
+
+**What it does not buy you, printed in its own output every run.** A filled header does not make a
+test severe, does not mean the method fits the question, and does not stop you writing a prediction
+soft enough to always hold. Treating a registration as a quality signal adds a superficial veneer of
+rigor. **The contract makes an edit visible. It does not make a test good. Every green here is a
+green about paperwork.**
 
 ## v0.111.0 - every route into discovery waits to be invoked
 

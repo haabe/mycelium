@@ -157,6 +157,56 @@ After running, compare prediction to reality. The gap between prediction and out
 
 *Source: Rother (Toyota Kata) — stating predictions before experiments is the core scientific thinking habit.*
 
+## Step 5b: Write it down where something can find it (the output contract)
+
+**A prediction with no named home lands wherever the session happened to be standing.** Two
+recorded losses, both from a frozen prediction nobody could find again: one held its thresholds
+102 days and was closed never-run because the file sat outside the git tree; one lived in a repo
+that was never committed, so not even a git timestamp existed for it.
+
+**Write the design to `.claude/evals/assumption-tests/YYYY-MM-DD-<slug>.md`, and COMMIT IT in the
+same commit as the instrument.** Git is what makes "written before" checkable by anyone but you.
+
+Open the file with this header. **Four fields, deliberately** — AsPredicted asks nine questions
+across all of science and its stated design goal is to be short and easy to read and to include
+only what needs to be included. Length kills completion, and an unfinished instrument protects
+nothing.
+
+```yaml
+---
+type: assumption-test              # membership: without it, unrelated docs drift into the folder
+frozen_at: 2026-08-16              # when the prediction was fixed
+frozen_before: "any comment is fetched"   # THE EVENT it precedes
+score_by: 2026-08-30               # the date by which it must be scored
+status: live                       # live | scored | void | not-an-instrument
+---
+```
+
+**`frozen_before` matters more than `frozen_at`.** A date does not establish precedence over the
+DATA; naming the contaminating event does — "before posting", "before launching the subagent",
+"before any fetch".
+
+**`score_by` is the field that prevents the failure above.** A prediction with no expiry can never
+be overdue, so it can never be scored, so it is free to be right forever.
+
+**Amendments are RECORDED, never forbidden.** If the prediction block genuinely must change, add
+`amended: "<date>, <what changed and why, before or after data>"`. This is the mature practice
+rather than a compromise: ClinicalTrials.gov keeps every revision in a public History of Changes
+and removes no registered record. Registries never solved the edit problem by preventing edits —
+they solved it by making every edit permanently visible.
+
+`check_instrument_contract.py` (run by `/mycelium:canvas-health`) reports uncontracted, undated,
+overdue, untracked and DRIFTED instruments. Drift — the prediction block changed after the commit
+that introduced it, with no `amended:` note — is the one it exists for: the COMPare project checked
+67 trials in top medical journals against their own registered protocols and found each reported an
+average 62% of its pre-specified outcomes while silently adding 5.3 new ones. Every one of those
+trials was registered. **What was missing was anyone diffing the registration against the report.**
+
+**WHAT THE CONTRACT DOES NOT BUY YOU, and this must not be glossed.** A filled header does not make
+a test severe, does not mean the method fits the question, and does not stop you writing a
+prediction soft enough to always hold. Treating a registration as a quality signal adds a
+superficial veneer of rigor. **The contract makes an edit visible. It does not make a test good.**
+
 ## Step 6: Run and Interpret
 
 - Run the test
