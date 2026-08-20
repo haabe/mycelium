@@ -47,6 +47,12 @@
         "timeout": 5
       },
       {
+        "matcher": "Write|Edit|MultiEdit|edit|write",
+        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/correction-attribution-guard.sh",
+        "type": "command",
+        "timeout": 5
+      },
+      {
         "matcher": "Shell",
         "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/shell-safety-guard.sh",
         "type": "command",
@@ -55,6 +61,12 @@
       {
         "matcher": "Shell",
         "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/absence-claim-guard.sh",
+        "type": "command",
+        "timeout": 5
+      },
+      {
+        "matcher": "Shell",
+        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/correction-attribution-guard.sh",
         "type": "command",
         "timeout": 5
       }

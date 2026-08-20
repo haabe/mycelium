@@ -44,6 +44,10 @@
           {
             "type": "command",
             "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/absence-claim-guard.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/correction-attribution-guard.sh"
           }
         ]
       },
@@ -67,6 +71,10 @@
           {
             "type": "command",
             "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/absence-claim-guard.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/correction-attribution-guard.sh"
           }
         ]
       }

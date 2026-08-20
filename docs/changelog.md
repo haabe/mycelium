@@ -4,6 +4,55 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-20.
 
+## v0.115.0 - the first guard that ships red
+
+`correction-attribution-guard` fires at the moment a new entry is written to `.claude/memory/corrections.md`
+without naming who caught the mistake, and asks for one phrase: `caught by user` / `caught by hook` /
+`caught by review` / `self-caught`.
+
+**The rule already existed and was already HARD.** `engine/agent-operating-contract.md` line 57 has
+required it since 2026-08-03 — a rule adopted precisely BECAUSE it had been advisory and 72 of 100
+entries carried no catcher. Measured seventeen days later: **15 of the 91 entries written since carry
+a catcher (16%), lower than the 29% the rule scored while it was still advisory.** Hardening the
+wording moved the number down.
+
+**The pattern is bimodal, and that is the design input rather than the headline.** 9 of 11 on
+2026-08-03, 8 of 9 on 2026-08-08, at or near zero on every other day — 0/13, 0/5, 0/14, 0/4, and 0/5
+on the day this was found. The rule is obeyed on the days the agent is working ON the attribution
+machinery and invisible on ordinary days. It is followed when it is the topic and ignored when it is
+the constraint. **A 16% average describes no day that actually happened.** So the failure is timing,
+not comprehension: the contract is read once at session start and the write happens hundreds of turns
+later.
+
+**It matches Bash, and that is load-bearing rather than thorough.** corrections.md is 540 KB; nobody
+rewrites it with `Write`, and the five unattributed entries that motivated this were appended with
+`cat >> corrections.md` inside a Bash call. A guard registered on `Write|Edit|MultiEdit` alone would
+have shipped green against the exact corpus that motivated it — this framework's own
+`fail-open-on-absent-input` cluster wearing a different hat.
+
+**THIS IS THE FIRST GUARD HERE TO SHIP RED.** It fires on 77% of the existing corpus and 84% of
+entries written since the rule was hardened. Every recent guard has shipped green and carried a note
+that a near-zero action rate trains its reader to skim; this one has a measured high action rate
+before a line of it was written.
+
+**What it cannot do, stated in the script before what it can.** It cannot tell whether the catcher
+named is true — four words buy a green. It cannot see entries appended by a path it does not watch.
+And it is deliberately blind to the 147 existing unattributed entries: who caught a mistake six weeks
+ago is not recoverable by inference, and a guessed catcher corrupts the only number this loop
+produces. It fires only on text containing a NEW entry heading, never on edits to existing prose.
+
+**It warns and never denies**, and the escalation criterion is written into the script rather than
+left to the next person's appetite: if the share of new entries carrying a catcher has not cleared
+80% a month after this ships, warning is the wrong lever; if it has, a deny would have bought
+nothing.
+
+**One shared vocabulary, not two.** The catcher patterns are imported from
+`check_correction_attribution.py`, which owns them. A guard enforcing a rule with its own private
+definition of compliance would be an instance of `documented-rule-diverges-from-enforcement` created
+inside the fix for one.
+
+Registered in all three runtime manifests (Claude Code, Codex, Cursor).
+
 ## v0.114.1 - a regression guard that says it ships green
 
 `check_log_reconcile` generalises the one-off BVSSH orphan check into a registry: dated decision-log
