@@ -265,3 +265,20 @@ def test_header_comment_mentioning_frozen_is_not_a_heading(tmp_path):
     r = cic.analyse(root, TODAY)
     assert r["contracted"] == ["a.md"]
     assert not r["drifted"], "a header comment must not be read as the prediction block"
+
+
+def test_empty_required_field_is_reported_incomplete(tmp_path):
+    """Regression, found retrofitting a real corpus 2026-08-20.
+
+    _REQUIRED listed five fields and only score_by was acted on, so a header with an
+    empty `frozen_before` passed green. That is this check's own failure mode sitting
+    inside it: an agent greps the field, gets silence, and cannot establish that the
+    prediction preceded the data.
+    """
+    root = _repo(tmp_path)
+    body = HEADER.format(score_by="2026-08-30", status="live", prediction="I expect 3 of 5.")
+    _write(root, "a.md", body.replace('frozen_before: "any comment is fetched"', "frozen_before:"))
+    _commit(root)
+    r = cic.analyse(root, TODAY)
+    assert r["incomplete"] == [("a.md", "frozen_before")]
+    assert not r["undated"], "an empty frozen_before is not an expiry problem"

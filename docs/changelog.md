@@ -4,6 +4,23 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-20.
 
+## v0.113.1 - a required field nothing enforces is a suggestion
+
+`check_instrument_contract` shipped with `_REQUIRED` listing five fields and code that acted on one
+of them. A header carrying an empty `frozen_before` passed **green**.
+
+That is the check's own failure mode sitting inside the check. The whole argument for gating it in
+v0.113.0 was that the header is an interface: an agent greps a field and acts on what it finds. An
+empty required field returns silence, and silence is indistinguishable from "this prediction had no
+contaminating event to precede".
+
+**Found by hand-retrofitting a real 32-instrument corpus**, not by fixtures — three of those files
+legitimately state no freeze event anywhere, so their headers were written with the field empty
+rather than with a plausible invention, and the check waved them through.
+
+Now reported as **INCOMPLETE**, separately from the expiry check, because an unenforced requirement
+is worse than an absent one: it looks like a guarantee.
+
 ## v0.113.0 - the header is an agent interface, not paperwork
 
 **Also in this release, found while shipping it: Check 26 was issuing an unsatisfiable

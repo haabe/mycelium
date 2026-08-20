@@ -246,6 +246,17 @@ def _classify(path: Path, root: Path, today: _dt.date, res: dict) -> None:
         return
 
     res["contracted"].append(path.name)
+
+    # EVERY required field, not just the expiry. FOUND 2026-08-20 while retrofitting a
+    # real corpus: _REQUIRED listed five fields and only score_by was ever acted on, so a
+    # header with an empty `frozen_before` passed GREEN. That is the interface failure
+    # this check exists to prevent, sitting inside the check -- an agent greps
+    # frozen_before, gets nothing, and cannot establish that the prediction preceded the
+    # data. A required field nothing enforces is a suggestion.
+    missing = [k for k in _REQUIRED if k != "score_by" and not fm.get(k)]
+    if missing:
+        res["incomplete"].append((path.name, ", ".join(missing)))
+
     _expiry(path.name, fm, today, res)
 
     if status == "scored":
@@ -261,7 +272,7 @@ def analyse(root: Path, today: _dt.date) -> dict:
     res: dict[str, list] = {
         "uncontracted": [], "undated": [], "due": [], "drifted": [],
         "untracked": [], "bad_status": [], "contracted": [], "scored": [],
-        "refuted": [],
+        "refuted": [], "incomplete": [],
     }
     for path in sorted(d.glob("*.md")):
         _classify(path, root, today, res)
@@ -305,6 +316,11 @@ def main() -> int:
     emit(r["undated"],
          "NO EXPIRY — a prediction with no score_by can never be overdue, so it can "
          "never be scored, so it is free to be right forever.")
+    emit(r["incomplete"],
+         "INCOMPLETE — a contract field is present but empty. A required field nothing "
+         "enforces is a suggestion, and an agent grepping it gets silence rather than an "
+         "answer.",
+         lambda t: f"{t[0]} (empty: {t[1]})")
     emit(r["due"], "DUE / OVERDUE — status is live and score_by has passed.",
          lambda t: f"{t[0]} (due {t[1]}, {t[2]} days ago)")
     emit(r["drifted"],
