@@ -4,6 +4,39 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-21.
 
+## v0.118.0 - tasks that cannot be closed
+
+A new WARN-tier check in `validate_canvas.py`: **an open human-task with no closure criterion cannot be
+closed on evidence, only abandoned by neglect.**
+
+**HOW IT WAS FOUND, WHICH IS THE UNCOMFORTABLE PART.** A founder read his own open-task list by eye and
+asked whether two of them were already done. Both were. The sweep that followed found five open tasks
+carrying no `success_criteria`, no `pre_registered_outcomes`, no `scoring_rules` and no `stop_condition` —
+nothing to score an outcome against. Two of those had no horizon either, so nothing would ever have
+prompted anyone to look. **No check saw any of it. A person did.**
+
+The same sweep closed three tasks whose outcomes had been recorded days earlier and left open anyway,
+including one scored as a clear miss against a pre-commitment written two months before.
+
+**WARN AND NEVER FAIL, DELIBERATELY.** Downstream projects carry tasks created before this check existed.
+A hard failure would break their CI for a defect they did not introduce, which is the same
+consumer-breakage reasoning this validator already applies to the empty-canvas case. The check surfaces
+inherited debt; it does not punish inheriting it.
+
+**IT NAMES BOTH DEFECTS WHEN BOTH ARE PRESENT** — a task missing a criterion AND a horizon is the worst
+case, because neither evidence nor time will ever surface it, and the warning says so rather than
+reporting the first problem and stopping.
+
+**15 TESTS, WRITTEN AGAINST THE THREE WAYS IT COULD ROT**: that it never fires (a check that cannot be
+shown failing is indistinguishable from one that is not wired up), that it cries wolf on closed work, and
+that it refuses to see a retro-fitted bar. That last one matters: criteria added after the fact are named
+`success_criteria_RETROFITTED_<date>` so they are visibly not pre-registered, and matching those keys is
+required or the fix reads as the defect.
+
+**WHAT THE CHECK CANNOT DO.** It cannot tell whether a criterion is any good, only whether one exists. A
+bar written after the work is done cannot be severe, and nothing here stops that; it only stops the
+silence.
+
 ## v0.117.5 - sections that just stop
 
 Nothing was rewritten in this release. Five sentences were deleted.

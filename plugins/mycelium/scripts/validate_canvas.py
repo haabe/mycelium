@@ -695,6 +695,50 @@ def triage_canvas_or_exit(canvas_dir: Path) -> list[Path]:
     return canvas_yml
 
 
+def open_task_criterion_warnings(canvas_dir):
+    """WARN-tier: an OPEN human-task with no closure criterion cannot be closed on
+    evidence, only abandoned by neglect.
+
+    Found 2026-08-21 by a founder scanning the open list by eye, not by any check:
+    five open tasks carried no `success_criteria`, no `pre_registered_outcomes`, no
+    `scoring_rules` and no `stop_condition`, and two of those had no horizon either,
+    so nothing would ever prompt a look at them. The same sweep closed three tasks
+    whose outcomes had been recorded days earlier and left open regardless.
+
+    WARN AND NEVER FAIL, deliberately. Downstream projects carry tasks created before
+    this check existed, and a hard failure would break their CI for a defect they did
+    not introduce — the same consumer-breakage reasoning applied to the empty-canvas
+    case in this file. It surfaces the debt; it does not punish inheriting it.
+    """
+    tasks_path = canvas_dir / "human-tasks.yml"
+    if not tasks_path.exists():
+        return []
+    try:
+        data = yaml.safe_load(tasks_path.read_text()) or {}
+    except (yaml.YAMLError, OSError):
+        return []  # parse and read failures are already reported by the fail-loud pass
+    prefixes = (
+        "success_criteria", "pre_registered_outcomes", "scoring_rules",
+        "stop_condition", "watch_trigger", "reopen_trigger",
+    )
+    out = []
+    for task in data.get("pending_tasks") or []:
+        if not isinstance(task, dict):
+            continue
+        if task.get("status") not in ("pending", "in_progress"):
+            continue
+        if any(str(k).startswith(prefixes) for k in task):
+            continue
+        tid = task.get("id", "<no id>")
+        horizon = task.get("horizon")
+        tail = "" if horizon else " AND no horizon, so nothing will prompt a look"
+        out.append(
+            f"{tid}: open with no closure criterion{tail} — it cannot be closed on "
+            f"evidence, only abandoned"
+        )
+    return out
+
+
 def main():
     # CLI: optional positional argv overrides canvas directory.
     # Previously the script defaulted to cwd + ignored positional argv —
@@ -750,6 +794,9 @@ def main():
     warnings = schemaless_canvas_warnings(canvas_dir)
     for w in warnings:
         print(f"  WARN (no schema): {w}")
+
+    for w in open_task_criterion_warnings(canvas_dir):
+        print(f"  WARN (uncloseable task): {w}")
 
     schemas_present = len(list(SCHEMA_DIR.glob("*.schema.json"))) - 1  # exclude _common
     canvases_present = len(canvas_yml)

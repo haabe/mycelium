@@ -98,7 +98,7 @@ To see them filled in on a real project rather than described, [dagfinndybvig/mi
 
 ## Where it sits in the field
 
-Mycelium is one worked example of a pattern the field is converging on: guardrails going in and checks coming back. Others have started naming it too ([Thoughtworks](https://martinfowler.com/articles/harness-engineering.html), [recent research](https://arxiv.org/abs/2605.18747)).
+Mycelium is one worked example of a pattern the field is converging on: guardrails going in and checks coming back. Others have started naming it too. Thoughtworks calls it [harness engineering](https://martinfowler.com/articles/harness-engineering.html). A survey with 42 authors is titled [Code as Agent Harness](https://arxiv.org/abs/2605.18747).
 
 ## How Mycelium got smarter
 
