@@ -4,6 +4,35 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-21.
 
+## v0.118.2 - the entry outside its register
+
+A WARN-tier check in `validate_canvas.py`: **an ID prefix must define entries in exactly one top-level
+section.**
+
+**THE DEFECT, AND WHY NOTHING CAUGHT IT.** Two `comp-NNN` competitor entries were appended to
+`out_of_scope` — a list holding framework boundary and rationale entries — instead of `components`, in a
+6,000-line file where both lists take `- id:` items. Two misfilings on the same day by two different
+routes. **The mechanism that should have caught one of them reported it as landed instead**: a weekly
+harvest check greps the destination FILE for a detection token, the token was present, and the entry was
+recorded as harvested into the register it was not in.
+
+**AN ENTRY OUTSIDE ITS REGISTER IS INVISIBLE TO EVERY COUNT AND RENDER THAT READS THAT LIST, WHILE
+LOOKING PRESENT TO ANYTHING THAT GREPS THE FILE.** That gap between "in the file" and "in the list" is
+the whole defect class.
+
+**MEASURED BEFORE SHIPPING.** Across 25 real canvas files, every ID prefix already lived in exactly one
+section. Zero false positives, so the check fires on the defect and nothing else. That measurement is
+why it ships as a check rather than as a note.
+
+**8 TESTS, WRITTEN AGAINST THE THREE WAYS IT COULD ROT**: that it never fires (reproduced from the real
+shape), that it counts cross-references as definitions (canvases cite their own ids constantly — this is
+the false positive that would mute it on any mature canvas within a week), and that it fires on unrelated
+prefixes sharing one section, which is normal and not a defect.
+
+**WARN AND NEVER FAIL**, like its siblings: a downstream project may carry a legacy misfiling it did not
+introduce. Note that warnings print only after schema validation passes, so a canvas with schema errors
+must be fixed before this one is visible.
+
 ## v0.118.1 - the footer nobody typed
 
 The citation footer was tied with "Who it's not for" as the most generated text in the README, at 8/10 on

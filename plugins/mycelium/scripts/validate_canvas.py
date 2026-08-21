@@ -38,6 +38,7 @@ Exit codes:
 
 import json
 import os
+import re
 import sys
 from collections import defaultdict, deque
 from pathlib import Path
@@ -695,6 +696,69 @@ def triage_canvas_or_exit(canvas_dir: Path) -> list[Path]:
     return canvas_yml
 
 
+ID_PREFIX_RE = re.compile(r"^([a-z][a-z0-9]*(?:-[a-z0-9]+)*?)-\d+$")
+
+
+def _collect_id_prefixes(node, section, seen):
+    """Record which top-level section each ID PREFIX is DEFINED under.
+
+    Only entries carrying an `id` count. A cross-reference to an id inside prose or a
+    field is not a definition and must not register, or every canvas that cites its
+    own entries would look misfiled.
+    """
+    if isinstance(node, dict):
+        ident = node.get("id")
+        if isinstance(ident, str):
+            match = ID_PREFIX_RE.match(ident)
+            if match:
+                seen.setdefault(match.group(1), set()).add(section)
+        for value in node.values():
+            _collect_id_prefixes(value, section, seen)
+    elif isinstance(node, list):
+        for value in node:
+            _collect_id_prefixes(value, section, seen)
+
+
+def id_prefix_section_warnings(canvas_dir):
+    """WARN-tier: an ID prefix should define entries in exactly ONE top-level section.
+
+    Found 2026-08-21, four days late. Two `comp-NNN` competitor entries had been
+    appended to `out_of_scope` — which holds framework boundary/rationale entries —
+    instead of `components`, in a 6,000-line file where both lists take `- id:` items.
+    Nothing noticed: the scout's weekly harvest check greps the destination FILE for a
+    detection token, so the token matched and it recorded the entry as landed in the
+    register it was not in. A competitor outside the competitor register is invisible
+    to every count and every render that reads that list.
+
+    Measured before shipping: across the 25 canvas files of the dogfood project, every
+    ID prefix already lived in exactly one section. Zero false positives, so the check
+    fires on the defect and nothing else.
+
+    WARN and never fail, for the same reason as the other WARN-tier checks here:
+    downstream projects may carry a legacy misfiling they did not introduce.
+    """
+    out = []
+    for path in sorted(canvas_dir.glob("*.yml")):
+        try:
+            data = yaml.safe_load(path.read_text())
+        except (yaml.YAMLError, OSError):
+            continue  # reported by the fail-loud pass
+        if not isinstance(data, dict):
+            continue
+        seen = {}
+        for key, value in data.items():
+            _collect_id_prefixes(value, key, seen)
+        for prefix, sections in sorted(seen.items()):
+            if len(sections) > 1:
+                where = ", ".join(sorted(sections))
+                out.append(
+                    f"{path.name}: '{prefix}-NNN' entries are defined under "
+                    f"{len(sections)} sections ({where}) — one is a misfiling, and an "
+                    f"entry outside its register is invisible to every count that reads it"
+                )
+    return out
+
+
 def open_task_criterion_warnings(canvas_dir):
     """WARN-tier: an OPEN human-task with no closure criterion cannot be closed on
     evidence, only abandoned by neglect.
@@ -797,6 +861,9 @@ def main():
 
     for w in open_task_criterion_warnings(canvas_dir):
         print(f"  WARN (uncloseable task): {w}")
+
+    for w in id_prefix_section_warnings(canvas_dir):
+        print(f"  WARN (misfiled entry): {w}")
 
     schemas_present = len(list(SCHEMA_DIR.glob("*.schema.json"))) - 1  # exclude _common
     canvases_present = len(canvas_yml)
