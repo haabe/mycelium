@@ -210,3 +210,80 @@ def test_missing_project_dir_is_an_input_error(scripts_path, tmp_path, capsys):
     mod = _import(scripts_path)
     assert _run(mod, "--project-dir", str(tmp_path / "nope")) == 2
     assert "not a directory" in capsys.readouterr().err
+
+
+# --- held graduations (v0.116.0) -------------------------------------------
+# The gap this file's own subject names: the reconcile walks corrections INTO
+# the catalogue and nothing walks a cluster OUT of it. A cluster can meet its
+# criterion and sit at `pending` forever, and the catalogue reads identical
+# either way.
+#
+# THE DEFERRAL IS NOT THE DEFECT — an unread deferral is. `pending` alone must
+# never fail, or the check punishes the honest hold that motivated it.
+
+def _cluster(slug, status="pending", review_by=None, dates=("2026-08-20",)):
+    body = f"### {slug}\n\nprose about the shape.\n\n"
+    body += f"**Graduation status:** {status}\n\n"
+    if review_by:
+        body += f"review_by: {review_by}\n\n"
+    return body + "**Instance log:**\n\n" + _rows(*dates) + "\n\n"
+
+
+def _held(scripts_path, tmp_path, capsys, clusters, today):
+    mod = _import(scripts_path)
+    _memory(tmp_path, corrections=_corrections("2026-08-20"), clusters=clusters)
+    rc = _run(mod, "--project-dir", str(tmp_path), "--today", today)
+    return rc, capsys.readouterr().out, mod
+
+
+def test_pending_with_no_review_date_reports_but_does_not_fail(
+        scripts_path, tmp_path, capsys):
+    """Demanding a date before the author has one just produces invented dates."""
+    rc, out, _ = _held(scripts_path, tmp_path, capsys, _cluster("a-shape"), "2026-08-21")
+    assert "UNBOUND" in out
+    assert rc == 0
+
+
+def test_pending_with_a_future_review_date_is_a_quiet_note(
+        scripts_path, tmp_path, capsys):
+    rc, out, _ = _held(scripts_path, tmp_path, capsys,
+                       _cluster("a-shape", review_by="2026-09-30"), "2026-08-21")
+    assert "review due 2026-09-30" in out
+    assert "UNBOUND" not in out
+    assert rc == 0
+
+
+def test_pending_past_its_own_review_date_fails(scripts_path, tmp_path, capsys):
+    """The file set the date. Re-deferring it silently is the failure."""
+    rc, out, _ = _held(scripts_path, tmp_path, capsys,
+                       _cluster("a-shape", review_by="2026-08-01"), "2026-08-21")
+    assert "HELD PAST REVIEW" in out
+    assert rc == 1
+
+
+def test_a_graduated_cluster_is_never_reported(scripts_path, tmp_path, capsys):
+    for status in ("`mechanism` — graduated 2026-06-18", "`anti-pattern` (prose)", "`spec`"):
+        rc, out, _ = _held(scripts_path, tmp_path, capsys,
+                           _cluster("a-shape", status=status), "2026-08-21")
+        assert "UNBOUND" not in out and "HELD PAST" not in out, status
+        assert rc == 0
+
+
+def test_the_template_placeholder_section_is_not_a_cluster(scripts_path, tmp_path, capsys):
+    """`cluster-instances.md` ends with a `### <cluster-slug>` format block whose
+    graduation status is a literal `<pending | pattern | ...>` menu. Counting it
+    would make the check fire on every project that has the file at all."""
+    tmpl = "### <cluster-slug>\n\n**Graduation status:** <pending | pattern | anti-pattern>\n\n"
+    rc, out, _ = _held(scripts_path, tmp_path, capsys, _cluster("real-one") + tmpl, "2026-08-21")
+    assert out.count("UNBOUND") == 1
+    assert "<cluster-slug>" not in out
+
+
+def test_held_graduations_is_pure(scripts_path):
+    mod = _import(scripts_path)
+    text = _cluster("late", review_by="2026-01-01") + _cluster("soon", review_by="2026-12-01") \
+        + _cluster("loose")
+    got = mod.held_graduations(text, "2026-08-21")
+    assert [s for s, _ in got["due"]] == ["late"]
+    assert [s for s, _ in got["bound"]] == ["soon"]
+    assert got["unbound"] == ["loose"]

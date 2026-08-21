@@ -90,6 +90,7 @@ Python stdlib only.
 """
 
 import argparse
+import datetime
 import json
 import re
 import sys
@@ -154,7 +155,57 @@ def corrections_after(text: str, cutoff):
     return sorted(d for d in dates if d > cutoff), len(dates)
 
 
-def evaluate(project_dir: Path, threshold: int):
+# ---------------------------------------------------------------- held graduations
+#
+# THE GAP THIS CLOSES IS NAMED IN THIS FILE'S OWN DOCSTRING: cases "at
+# criterion-met-mechanism-not-built were found by a human reading the file."
+# The reconcile above walks corrections INTO the catalogue; nothing walks a
+# cluster OUT of it. A cluster can meet its stated criterion and sit at
+# `pending` indefinitely, and the catalogue reads identical either way.
+#
+# DEFERRING IS OFTEN RIGHT, WHICH IS WHY THIS DOES NOT FAIL ON `pending`.
+# On 2026-08-20 a cluster hit its criterion and was deliberately held: "two of
+# the three instances are hours old and the remedy has not survived a week of
+# use." That is a good decision. It also carried no date and no reader, so
+# nothing distinguished it from a decision nobody made — the unbound-commitment
+# shape this project files as its own rule: a deferral written where nothing
+# reads it does not bind.
+#
+# SO THE DATE IS WHAT GETS TEETH, NOT THE DEFERRAL. `review_by:` past today
+# FAILS, because the file made that commitment to itself and re-deferring
+# silently is the failure mode. A pending cluster with no `review_by` is
+# REPORTED, never failed: demanding a date before the author has one would just
+# produce invented dates, which is worse than a visible gap.
+_PENDING_STATUS_RE = re.compile(
+    r"^\*\*Graduation status:\*\*\s*`?pending`?", re.MULTILINE | re.IGNORECASE)
+_REVIEW_BY_RE = re.compile(r"review_by:\s*(\d{4}-\d{2}-\d{2})", re.IGNORECASE)
+_CLUSTER_HEADING_RE = re.compile(r"^### (?!<)(\S.*)$", re.MULTILINE)
+
+
+def _cluster_sections(text: str):
+    """(slug, body) per `### <slug>` section, template placeholders excluded."""
+    marks = list(_CLUSTER_HEADING_RE.finditer(text))
+    for i, m in enumerate(marks):
+        end = marks[i + 1].start() if i + 1 < len(marks) else len(text)
+        yield m.group(1).strip(), text[m.end():end]
+
+
+def held_graduations(cluster_text: str, today):
+    """Pending clusters, split by whether their review date binds and has passed."""
+    due, bound, unbound = [], [], []
+    for slug, body in _cluster_sections(cluster_text):
+        if not _PENDING_STATUS_RE.search(body):
+            continue
+        m = _REVIEW_BY_RE.search(body)
+        if not m:
+            unbound.append(slug)
+            continue
+        when = m.group(1)
+        (due if when < today else bound).append((slug, when))
+    return {"due": due, "bound": bound, "unbound": unbound}
+
+
+def _evaluate_core(project_dir: Path, threshold: int, _today: str | None = None):
     """Return a result mapping. Pure — no printing, no exit."""
     memory = project_dir / ".claude" / "memory"
     corrections_file = memory / "corrections.md"
@@ -167,6 +218,7 @@ def evaluate(project_dir: Path, threshold: int):
         return {
             "status": "skip",
             "reason": f"missing {', '.join(missing)} — this loop has not started, not a violation",
+            "held": {"due": [], "bound": [], "unbound": []},
         }
 
     corrections_text = corrections_file.read_text(encoding="utf-8", errors="replace")
@@ -209,6 +261,53 @@ def evaluate(project_dir: Path, threshold: int):
     }
 
 
+def evaluate(project_dir: Path, threshold: int, _today: str | None = None):
+    """`_evaluate_core` plus the held-graduation scan, on one result mapping.
+
+    Wrapped rather than threaded through the four return points inside the core:
+    a field added at three of four sites is the shape that produces a `None`
+    nobody expected, and this file's own history is a check that went green on
+    its first live run because of a detail like that.
+    """
+    result = _evaluate_core(project_dir, threshold, _today)
+    if "held" not in result:
+        cluster_file = project_dir / ".claude" / "memory" / "cluster-instances.md"
+        # LOCAL date, tz-aware. The dates in the catalogue are written by a person
+        # in their own timezone, so comparing them against UTC would fire a review
+        # up to a day early or late for no gain.
+        today = _today or datetime.datetime.now().astimezone().date().isoformat()
+        result["held"] = (
+            held_graduations(cluster_file.read_text(encoding="utf-8", errors="replace"), today)
+            if cluster_file.is_file() else {"due": [], "bound": [], "unbound": []}
+        )
+    return result
+
+
+def _print_held(held: dict) -> None:
+    """Report pending clusters. Extracted from `main` to keep it under the
+    complexity ceiling — three loops in the exit path was the thing ruff
+    objected to, and it was right that it belongs on its own."""
+    for slug, when in held["due"]:
+        print(
+            f"\ncheck_cluster_reconcile: HELD PAST REVIEW — `{slug}` is still `pending`\n"
+            f"  and its own `review_by: {when}` has passed. The file set that date;\n"
+            f"  re-deferring it silently is the failure this reports. Graduate it, or\n"
+            f"  move the date and say why.\n"
+            f"  Graduate to a MECHANISM or do not count it as graduated: the three\n"
+            f"  highest-count clusters all graduated to documentation and kept recurring."
+        )
+    for slug, when in held["bound"]:
+        print(f"check_cluster_reconcile: held — `{slug}` pending, "
+              f"review due {when}. Not a failure.")
+    for slug in held["unbound"]:
+        print(
+            f"check_cluster_reconcile: UNBOUND — `{slug}` is `pending` with no `review_by:`\n"
+            f"  date. Deferring is often right; a deferral nothing reads does not bind.\n"
+            f"  Add `review_by: YYYY-MM-DD` beside the graduation status. Reported, not\n"
+            f"  failed — demanding a date before you have one just produces invented ones."
+        )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Fail when corrections accumulate with no cluster-catalogue movement."
@@ -219,6 +318,10 @@ def main() -> int:
         help=f"unreconciled corrections before failing (default: {DEFAULT_THRESHOLD})",
     )
     parser.add_argument("--json", action="store_true", help="machine-readable output")
+    # Tests must not read the wall clock. A review-date check whose only clock is
+    # `date.today()` has tests that pass on the day they are written and rot after,
+    # which is a green that expires silently.
+    parser.add_argument("--today", default=None, help="override today's date (YYYY-MM-DD)")
     args = parser.parse_args()
 
     project_dir = Path(args.project_dir).resolve()
@@ -229,7 +332,7 @@ def main() -> int:
         print("check_cluster_reconcile: --threshold must be >= 1", file=sys.stderr)
         return 2
 
-    result = evaluate(project_dir, args.threshold)
+    result = evaluate(project_dir, args.threshold, args.today)
 
     if args.json:
         print(json.dumps(result, indent=2))
@@ -276,7 +379,10 @@ def main() -> int:
             f"  gates a mechanism, which is worse than drift that is honest about being behind."
         )
 
-    return 1 if status == "unreconciled" else 0
+    held = result.get("held") or {"due": [], "bound": [], "unbound": []}
+    _print_held(held)
+
+    return 1 if status == "unreconciled" or held["due"] else 0
 
 
 if __name__ == "__main__":

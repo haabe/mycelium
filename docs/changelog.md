@@ -4,6 +4,33 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-20.
 
+## v0.116.0 - a deferral that nothing read
+
+`check_cluster_reconcile` gains the direction it never had. It walks corrections INTO the cluster
+catalogue; nothing walked a cluster OUT of it. **A cluster could meet its stated graduation criterion
+and sit at `pending` indefinitely, and the catalogue read identical either way** — a gap named in the
+script's own docstring, where such cases *"were found by a human reading the file."*
+
+**`pending` alone never fails, and that is the design.** The case that motivated this was a GOOD
+deferral: a cluster hit its criterion on 2026-08-20 and was held because *"two of the three instances
+are hours old and the remedy has not survived a week of use."* A check that punished that would
+punish the honest hold and teach people to graduate early.
+
+**What gets teeth is the date.** The deferral carried no date and no reader, so nothing distinguished
+it from a decision nobody made. A cluster past its own `review_by:` now FAILS — the file made that
+commitment to itself, and re-deferring silently is the failure mode. Moving the date is allowed;
+saying nothing is not. A pending cluster with **no** `review_by:` is reported and never failed:
+demanding a date before the author has one just produces invented dates, which is worse than a
+visible gap.
+
+**Measured on the dogfood corpus**: 7 clusters, 1 report, 0 false positives. The template placeholder
+section (`### <cluster-slug>`, whose status is a literal `<pending | pattern | ...>` menu) is excluded
+by test — counting it would make the check fire on every project that merely has the file.
+
+**Also adds `--today`.** The first version of the tests took a date parameter and never used it, so
+they read the wall clock and passed for the wrong reason. A review-date check whose only clock is
+`date.today()` has tests that pass on the day they are written and rot silently afterwards.
+
 ## v0.115.1 - the guard fires, and using it found what it could not do
 
 **WIRING VERIFIED, which is the check this framework files as opp-024 (built-not-wired).** Running
