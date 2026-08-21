@@ -2,11 +2,9 @@
 
 **Your AI agent should think before it codes.**
 
-AI has made building cheap. It hasn't made *deciding* cheap. Agents will jump from an idea to a pull request without asking why, who for, or whether anyone needs it.
+Building got cheap. Deciding what to build didn't, and an agent will go from an idea to a pull request without asking why, who for, or whether anyone needs it.
 
-The gap shows up the same way across every AI-native team: the agent is fast, confident, and glad to build something nobody asked for. Mycelium puts the deciding back. It doesn't replace your judgment — it gives the agent enough feedback that the judgment that ships is still yours.
-
-**Other tools accelerate delivery. Mycelium makes the agent earn the right to start.**
+The gap shows up the same way across every AI-native team: the agent is fast and glad to build something nobody asked for. Mycelium puts the deciding back. It gives the agent enough feedback that the judgment that ships is still yours.
 
 Built using itself, and released as open source.
 
@@ -24,9 +22,9 @@ This README orients you and gets you installed. Full docs live at [`docs/`](docs
 
 ## What it does
 
-You have an idea. You run `/mycelium:start`. The agent doesn't open an editor; it asks four questions. What's the problem, who has it, what's the riskiest thing you're assuming, and what's the smallest move that would test it. Ten minutes in, you have a written brief and the agent points to the riskiest thing you assumed and asks if you want to test it before building anything.
+You have an idea. You run `/mycelium:start`. The agent asks four questions before it opens an editor. What's the problem, who has it, what's the riskiest thing you're assuming, and what's the smallest move that would test it. Ten minutes in, you have a written brief and the agent points to the riskiest thing you assumed and asks if you want to test it before building anything.
 
-You can say no. A weekend hack gets lighter prompts than a team product, and you can decline depth at any step. What the agent won't do is silently skip past missing evidence and call the work done. It stops where you'd want to be stopped.
+You can say no. A weekend hack gets lighter prompts than a team product, and you can decline depth at any step. What the agent won't do is silently skip past missing evidence and call the work done.
 
 ## What it feels like
 
@@ -50,16 +48,16 @@ The agent just made skipping it free. It goes from idea to pull request faster t
 
 Works for software, online courses, AI tools, and services. One command to start. The agent guides you from there.
 
-If you already do all of this on your own (discovery before delivery, evidence before commitment, your agent not skipping the boring parts under pressure), you don't need Mycelium. If you mean to but the agent does skip them, that's the gap Mycelium fills.
+If you already do all of this on your own (discovery before delivery, and your agent not skipping the boring parts under pressure), you don't need Mycelium. It's for when you mean to and the agent skips them anyway.
 
 ## Who it's not for
 
 Mycelium is for work where deciding what to build is the hard part. Some use cases are better served elsewhere; saying so up front saves frustration.
 
-- **Triage-lane work.** Stale-ticket sweepers, board monitors, fixed-template brief generators. The decision of *what* to do is already made; you need execution velocity, not discovery. Paddo's [boring agents](https://paddo.dev/blog/boring-agents-ship/) patterns fit these directly.
+- **Triage-lane work.** Stale-ticket sweepers, board monitors, fixed-template brief generators. The decision of *what* to do is already made, and what you need is execution velocity. Paddo's [boring agents](https://paddo.dev/blog/boring-agents-ship/) patterns fit these directly.
 - **Pure execution acceleration in a known scope.** The build is decided; just ship it faster. Tools like [Addy Osmani's agent-skills](https://github.com/addyosmani/agent-skills) optimize this. They compose with Mycelium when discovery is missing, but if discovery is settled, use them directly.
 - **Centralized cross-role org workflows.** Mycelium is built for one project, one shared repo, one builder or small team using standard git. PMs, CTOs, developers, and CEOs live-editing the same canvas concurrently is a different architecture: merge semantics on YAML, identity attribution per edit, locks on gate evaluations mid-progress. Not yet built. If you need that shape, Mycelium isn't it.
-- **Projects where the ceremony feels heavier than the value it adds.** Mycelium scales gates to project size, but if your project genuinely lacks wrong-build risk, the discipline reads as bureaucracy. That's a fit signal; listen to it.
+- **Projects where the ceremony feels heavier than the value it adds.** Mycelium scales gates to project size, but if your project genuinely lacks wrong-build risk, the discipline reads as bureaucracy. That's a fit signal.
 
 ## How it works
 
@@ -77,17 +75,30 @@ graph TD
     L5 -.->|"market feedback"| L2
 ```
 
-You don't run all of them. A weekend project might skip strategy entirely. `/mycelium:start` reads your project and tells you which scales matter; it sizes itself to the work, not the other way around.
+You don't run all of them. A weekend project might skip strategy entirely. `/mycelium:start` reads your project and tells you which scales matter.
 
-Each step has to clear an evidence check before it continues. Not "I'm confident enough," but "here's what backs it." If a step can't clear, the agent tells you what's missing and which command closes the gap, then stops there.
+Each step has to clear an evidence check before it continues. The check asks what the claim rests on and where that came from. If a step can't clear, the agent tells you what's missing and which command closes the gap, then stops there.
 
-Your product decisions live as plain YAML in your repo, versioned in git. That's the spec. If the build turns up a bad assumption, the work moves back a step with what you learned, which is the system working, not failing.
+Your product decisions live as plain YAML in your repo, versioned in git. That's the spec. If the build turns up a bad assumption, the work moves back a step with what you learned.
+
+Setup creates six directories and writes nothing outside them:
+
+```
+.claude/canvas/       purpose, opportunities, jobs-to-be-done, and the rest
+.claude/diamonds/     active.yml, what you're deciding and how far it's got
+.claude/harness/      decision-log.md, what you chose and what you rejected
+.claude/memory/       corrections, patterns
+.claude/evals/        assumption tests
+.claude/jit-tooling/  metric adapters, if your project has any
+```
+
+To see them filled in on a real project rather than described, [dagfinndybvig/minilisp](https://github.com/dagfinndybvig/minilisp) is a stranger's Lisp interpreter with its canvas, diamond and decision log left in the repo on purpose.
 
 → Depth: [docs/usage-modes.md](docs/usage-modes.md), [docs/skills/](docs/skills/README.md), [docs/theories.md](docs/theories.md), [docs/philosophy.md](docs/philosophy.md).
 
 ## Where it sits in the field
 
-Mycelium is one worked example of a pattern the field is converging on: guardrails going in, checks coming back, keeping an agent honest. Others have started naming it too ([Thoughtworks](https://martinfowler.com/articles/harness-engineering.html), [recent research](https://arxiv.org/abs/2605.18747)). Mycelium is one take on it, built on plain files in git.
+Mycelium is one worked example of a pattern the field is converging on: guardrails going in and checks coming back. Others have started naming it too ([Thoughtworks](https://martinfowler.com/articles/harness-engineering.html), [recent research](https://arxiv.org/abs/2605.18747)). Mycelium is one take on it, built on plain files in git.
 
 ## How Mycelium got smarter
 

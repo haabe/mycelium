@@ -4,6 +4,37 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-21.
 
+## v0.117.3 - the cadence was the tell
+
+v0.117.2 rewrote the worst-scoring section. It worked, and it changed nothing about the file.
+
+**THE NUMBERS.** Two blind agents, given only the README and no other repo access, same prompts before and
+after. The rewritten section went from 9/10 machine-written to 4/10 and from worst in the file to tenth of
+fourteen. **The file total did not move**: 7/10 both times. Treat the whole-file scores as flat rather than
+as movement, since different instances scoring a subjective 0-10 cannot resolve one point.
+
+**WHY IT DIDN'T MOVE, WHICH IS THE ACTUAL FINDING.** The dominant tell was never in that section. It was
+**fourteen instances of not-X-but-Y**, spread across every prose section, setting a cadence a reader starts
+hearing everywhere by line 60. Fixing the worst paragraph cannot move a file whose rhythm is distributed.
+They are thinned to a handful here, and the ones that survive are the ones carrying a real finding.
+
+**WHAT WENT WITH THEM:** a bolded tagline that carried no argument, an invented line of agent dialogue
+nothing has ever emitted, four terminal maxims, six semicolons doing em-dash work, and a tricolon whose
+third member broke parallel. One em-dash is left in the file, down from three.
+
+**AND THE THING BOTH READERS PUT FIRST WAS NOT PROSE AT ALL.** Neither one's biggest complaint was style.
+It was that a README for a tool whose whole value is the artifacts it produces **showed no artifacts**. It
+now names the six directories setup creates, and points at a stranger's public repo where the canvas,
+diamond and decision log were left in on purpose, so the output can be read on someone else's project
+rather than described on this one.
+
+**1,813 words against 1,815 before any of this began.** The cuts paid for the addition.
+
+**STILL OPEN, AND NAMED RATHER THAN QUIETLY DROPPED:** the incumbent comparison for the case where deciding
+is the hard part; a real session transcript, which cannot be written, only run; and the two quoted objections
+in *Why this exists*, which two separate checks flagged as invented dialogue and which may well be things
+the author actually heard. That last one is a question for him, not a fix.
+
 ## v0.117.2 - the section that scored worst
 
 **CORRECTIONS TO v0.117.1.** That release's changelog stated that no competing tool appears anywhere in the
