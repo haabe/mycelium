@@ -4,6 +4,37 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-21.
 
+## v0.117.5 - sections that just stop
+
+Nothing was rewritten in this release. Five sentences were deleted.
+
+**THE DOMINANT TELL WAS A HABIT, NOT A SENTENCE.** A blind forensic read of the whole file found the
+strongest machine signal was that eight of twelve sections land on a short, self-satisfied closer:
+"A weekend hack meets one." / "That's a fit signal." / "Mycelium is one take on it, built on plain files in
+git." Six sections in a row cannot all naturally arrive at a punchline. Its verdict: cut them and each
+section ends on its last piece of actual information, "which is how humans stop writing when they've run
+out of things to say."
+
+**FIVE CUT, ONE DEFENDED.** The sixth on the list was "That kill alone produced ten of the mechanisms this
+project now runs on." The stated criterion for cutting was that the sentence adds no fact. That one adds a
+number, so it stays, and a second blind reader had independently named it as one of the few lines that
+lands.
+
+**WHY DELETION AND NOT REWRITING, WHICH IS THE TRANSFERABLE PART.** Across four releases today every
+rewrite introduced a new tell and every deletion removed one without adding any. The clearest case: the
+"Why this exists" section had two invented quotes removed and gained a negation-then-triad cadence in their
+place, which the next cold read flagged immediately. **Prose written to fix AI prose is still AI prose.**
+Deletion is the only edit in this class that cannot make the problem worse.
+
+**MEASURED, BOTH WAYS.** File-level machine-written score moved for the first time in four releases, 7/10
+to 6/10. "Why this exists" went 7/10 to 3/10 on the section instrument while a second reader still flagged
+it — the two judges disagree, and that is reported rather than resolved in favour of the flattering one.
+
+**AND THE FINDING THIS RELEASE DOES NOT ADDRESS.** Three independent cold reads, asked the same question
+three times, each named the same thing first without being prompted toward it: the README describes the
+experience in three separate sections and never once shows it. No transcript, no sample output, nothing the
+tool actually produced. That is not a writing problem and no further prose pass will touch it.
+
 ## v0.117.4 - the project it talked me out of
 
 The last three releases fixed how the README sounds. This one fixes what it claims.

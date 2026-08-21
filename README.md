@@ -24,7 +24,7 @@ This README orients you and gets you installed. Full docs live at [`docs/`](docs
 
 You have an idea. You run `/mycelium:start`. The agent asks four questions before it opens an editor. What's the problem, who has it, what's the riskiest thing you're assuming, and what's the smallest move that would test it. Ten minutes in, you have a written brief and the agent points to the riskiest thing you assumed and asks if you want to test it before building anything.
 
-You can say no. A weekend hack gets lighter prompts than a team product, and you can decline depth at any step. What the agent won't do is silently skip past missing evidence and call the work done.
+You can say no. A weekend hack gets lighter prompts than a team product, and you can decline depth at any step. It won't skip past missing evidence and call the work done.
 
 ## What it feels like
 
@@ -34,7 +34,7 @@ Others show up later. A feature the team agreed on three weeks ago and the agent
 
 The last one is quieter. It's out. A few stars, nobody has opened an issue in a week. So you build the next feature, and you know it's a good one because you wanted it yourself. That's a real reason, half of what you use got built that way. Mycelium writes down which it was. That's all it does with it, and next time you wonder why nobody came, the note is there.
 
-How many of these you meet depends on what's at stake. A weekend hack meets one.
+How many of these you meet depends on what's at stake.
 
 ## Why this exists
 
@@ -48,7 +48,7 @@ The agent just made skipping it free. It goes from an idea to a pull request fas
 
 Works for software, online courses, AI tools, and services. One command to start. The agent guides you from there.
 
-If you already do all of this on your own (discovery before delivery, and your agent not skipping the boring parts under pressure), you don't need Mycelium. It's for when you mean to and the agent skips them anyway.
+If you already do all of this on your own (discovery before delivery, and your agent not skipping the boring parts under pressure), you don't need Mycelium.
 
 ## Who it's not for
 
@@ -57,7 +57,7 @@ Mycelium is for work where deciding what to build is the hard part. Some use cas
 - **Triage-lane work.** Stale-ticket sweepers, board monitors, fixed-template brief generators. The decision of *what* to do is already made, and what you need is execution velocity. Paddo's [boring agents](https://paddo.dev/blog/boring-agents-ship/) patterns fit these directly.
 - **Pure execution acceleration in a known scope.** The build is decided; just ship it faster. Tools like [Addy Osmani's agent-skills](https://github.com/addyosmani/agent-skills) optimize this. They compose with Mycelium when discovery is missing, but if discovery is settled, use them directly.
 - **Several people editing the same canvas at once.** Mycelium is built for one project, one shared repo, one builder or a small team using standard git. A whole department working the same files at the same time is a different architecture: merge semantics on YAML, identity attribution per edit, locks on gate evaluations mid-progress. Not yet built. If you need that shape, Mycelium isn't it.
-- **Projects where the ceremony feels heavier than the value it adds.** Mycelium scales gates to project size, but if your project genuinely lacks wrong-build risk, the discipline reads as bureaucracy. That's a fit signal.
+- **Projects where the ceremony feels heavier than the value it adds.** Mycelium scales gates to project size, but if your project genuinely lacks wrong-build risk, the discipline reads as bureaucracy.
 
 ## How it works
 
@@ -98,7 +98,7 @@ To see them filled in on a real project rather than described, [dagfinndybvig/mi
 
 ## Where it sits in the field
 
-Mycelium is one worked example of a pattern the field is converging on: guardrails going in and checks coming back. Others have started naming it too ([Thoughtworks](https://martinfowler.com/articles/harness-engineering.html), [recent research](https://arxiv.org/abs/2605.18747)). Mycelium is one take on it, built on plain files in git.
+Mycelium is one worked example of a pattern the field is converging on: guardrails going in and checks coming back. Others have started naming it too ([Thoughtworks](https://martinfowler.com/articles/harness-engineering.html), [recent research](https://arxiv.org/abs/2605.18747)).
 
 ## How Mycelium got smarter
 
