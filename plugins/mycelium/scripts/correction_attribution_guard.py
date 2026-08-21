@@ -40,6 +40,14 @@ WHAT IT CANNOT DO, STATED BEFORE WHAT IT CAN.
     who was there, and this guard makes no attempt at that.
   * It cannot see an entry appended by a path it does not watch — a different
     tool, an editor outside the session, a script invoked at one remove.
+  * ON A Bash CALL IT READS THE COMMAND TEXT, NOT THE FILE THAT RESULTS. Found by
+    running a wiring probe on 2026-08-21: a command that merely MENTIONS the path
+    after a `>>` and contains a date heading fires the warning, even when nothing
+    is written. This is the fail-safe direction — a spurious warning on a probe
+    costs a sentence, a missed warning costs an unattributed entry — and it is
+    not fixable at PreToolUse, where the file does not yet exist in its new form.
+    Stated because a limitation discovered through use and left undocumented is
+    the thing this docstring's opening promise is against.
   * It cannot fire on the 147 existing unattributed entries. Those are NOT
     backfillable: who caught a mistake six weeks ago is not recoverable by
     inference, and a guessed catcher corrupts the only number this loop produces.

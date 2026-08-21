@@ -4,6 +4,23 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-20.
 
+## v0.115.1 - the guard fires, and using it found what it could not do
+
+**WIRING VERIFIED, which is the check this framework files as opp-024 (built-not-wired).** Running
+`correction-attribution-guard` from the installed plugin on a live Bash call produced the warning —
+so it is registered, resolved and firing on the path that actually produced the failure it was built
+for, not only in tests. A mechanism that ships and is never invoked reads green in every other check.
+
+**The probe surfaced a limitation the script did not declare.** On a Bash call it reads the COMMAND
+TEXT, not the file that results: a command that merely mentions the path after a `>>` and contains a
+date heading fires the warning even when nothing is written. This is the fail-safe direction — a
+spurious warning costs a sentence, a missed warning costs an unattributed entry — and it is not
+fixable at PreToolUse, where the new file state does not yet exist.
+
+Documentation only; no behaviour change. Recorded because that docstring opens by promising what the
+guard cannot do before what it can, and a limitation discovered through use and left unwritten is
+exactly what that promise is against.
+
 ## v0.115.0 - the first guard that ships red
 
 `correction-attribution-guard` fires at the moment a new entry is written to `.claude/memory/corrections.md`
