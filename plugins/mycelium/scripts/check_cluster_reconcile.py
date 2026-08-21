@@ -201,7 +201,12 @@ def held_graduations(cluster_text: str, today):
             unbound.append(slug)
             continue
         when = m.group(1)
-        (due if when < today else bound).append((slug, when))
+        # `<=`, NOT `<`. A review falling due TODAY is due today. The first
+        # version used `<` and reported the due date as quiet until the day
+        # after — found 2026-08-21 by two blind readers who both said the
+        # boundary was untested, and it was untested AND wrong. It shipped in
+        # v0.116.0 past 20 tests, four gates and CI.
+        (due if when <= today else bound).append((slug, when))
     return {"due": due, "bound": bound, "unbound": unbound}
 
 
@@ -304,7 +309,12 @@ def _print_held(held: dict) -> None:
             f"check_cluster_reconcile: UNBOUND — `{slug}` is `pending` with no `review_by:`\n"
             f"  date. Deferring is often right; a deferral nothing reads does not bind.\n"
             f"  Add `review_by: YYYY-MM-DD` beside the graduation status. Reported, not\n"
-            f"  failed — demanding a date before you have one just produces invented ones."
+            f"  failed — demanding a date before you have one just produces invented ones.\n"
+            f"  KNOWN HOLE, NAMED RATHER THAN PAPERED OVER: this carve-out is a permanent\n"
+            f"  exemption. Omit the date and the cluster is reported forever and fails\n"
+            f"  never. Two blind readers found this independently on 2026-08-21. A timeout\n"
+            f"  would close it and every anchor available here is arbitrary, so the honest\n"
+            f"  state is a visible hole rather than an invented deadline."
         )
 
 

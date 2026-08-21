@@ -287,3 +287,23 @@ def test_held_graduations_is_pure(scripts_path):
     assert [s for s, _ in got["due"]] == ["late"]
     assert [s for s, _ in got["bound"]] == ["soon"]
     assert got["unbound"] == ["loose"]
+
+
+def test_a_review_falling_due_today_is_due_today(scripts_path, tmp_path, capsys):
+    """THE BOUNDARY. The first version used `when < today`, so a cluster whose
+    review fell due today reported as quiet and failed a day late. Both blind
+    readers on 2026-08-21 said this boundary was untested; it was untested AND
+    wrong, in code that had passed 20 tests, four gates and CI."""
+    rc, out, _ = _held(scripts_path, tmp_path, capsys,
+                       _cluster("a-shape", review_by="2026-08-27"), "2026-08-27")
+    assert "HELD PAST REVIEW" in out
+    assert rc == 1
+
+
+def test_the_day_before_the_review_date_is_still_quiet(scripts_path, tmp_path, capsys):
+    """The other side of the same boundary, so a later `<=`/`<` slip in either
+    direction is caught rather than only the one that happened."""
+    rc, out, _ = _held(scripts_path, tmp_path, capsys,
+                       _cluster("a-shape", review_by="2026-08-27"), "2026-08-26")
+    assert "review due 2026-08-27" in out
+    assert rc == 0

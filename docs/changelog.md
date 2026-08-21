@@ -4,6 +4,31 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-20.
 
+## v0.116.1 - two blind readers found the boundary
+
+**A REAL OFF-BY-ONE IN CODE THAT SHIPPED AN HOUR EARLIER**, past 20 tests, four local gates and CI.
+`held_graduations` compared `when < today`, so a cluster whose review fell due TODAY was reported as
+quiet and failed only the next day. The live dogfood cluster's 2026-08-27 review would have been
+silently a day late. Fixed to `<=`, with a test on **each** side of the boundary so a slip in either
+direction is caught rather than only the one that happened.
+
+**FOUND BY TWO INDEPENDENT BLIND READERS**, neither with repository access, both reporting zero tool
+use. They were given twelve decision-log claims — mechanically sampled, every third of thirty-four —
+and asked for the single most likely way each was wrong, with explicit permission to decline. Both
+independently said the boundary was untested. It was untested **and** wrong.
+
+**THE SAME PASS CORRECTED A CHERRY-PICK IN THE v0.115.0 NOTE.** Compliance was described as bimodal —
+*"at or near zero on every other day"* — listing only zero days. Recomputing the full table shows four
+days at 25–33% (08-09, 08-11, 08-13, 08-16) that appear in no evidence list. **One day at 89%, four
+around 30%, and ten at zero is a spread, not two modes.** The 16%-vs-29% headline is unaffected: the
+rule made compliance worse, and the mean still describes no day that happened. The SHAPE claim was
+overstated and the topic explanation drawn from it is now marked suggested rather than established.
+
+**A KNOWN HOLE IS NOW PRINTED RATHER THAN PAPERED OVER.** Both readers also found that a pending
+cluster with no `review_by` is exempt permanently — reported forever, failing never. Every timeout
+anchor available here is arbitrary, so the check names the hole in its own output instead of closing
+it with an invented deadline.
+
 ## v0.116.0 - a deferral that nothing read
 
 `check_cluster_reconcile` gains the direction it never had. It walks corrections INTO the cluster
