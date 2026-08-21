@@ -30,23 +30,19 @@ You can say no. A weekend hack gets lighter prompts than a team product, and you
 
 ## What it feels like
 
-Four moments you'll recognize.
+Saturday, an idea, an agent ready to type. The usual ending is a working thing by Sunday that you're not sure anyone needs, yourself included. Mycelium spends the first ten minutes on the questions you'd skip on your own. Who is this for, and what would have to be true for it to work. You still ship this weekend.
 
-**The weekend build.** Saturday, an idea, an agent ready to type. The usual ending: a working thing by Sunday that you're not sure anyone needs, yourself included. With Mycelium the first ten minutes go to the questions you'd skip on your own: who it's for, the riskiest thing you're assuming, the smallest way to check. You still ship this weekend. You just ship the version worth shipping.
+Others show up later. A feature the team agreed on three weeks ago and the agent has been building ever since, nobody having re-checked the assumption underneath it. A Friday night where you're done and the careful step feels optional. Both times the move is the same. "We already decided" doesn't count as evidence, and the check lands at the point you'd have gone past it.
 
-**The decision that went stale.** Your team agreed on a feature three weeks ago; the agent's been building it ever since. Nobody's re-checked the assumption underneath it. At the close, Mycelium won't sign the work off on "we already decided." It asks what evidence says the assumption still holds, and the stale one surfaces now instead of at launch.
+The last one is quieter. It's out. A few stars, nobody has opened an issue in a week. So you build the next feature, and you know it's a good one because you wanted it yourself. That's a real reason, half of what you use got built that way. Mycelium writes down which it was. That's all it does with it, and next time you wonder why nobody came, the note is there.
 
-**The tired Friday.** It's late, you're done, and the careful step feels optional. The agent stops you: "you're about to skip the check that catches the thing you'd regret." It catches you exactly when you'd most like to slip past. Then it hands you the honest picture at the close: what's done, what's still owed.
-
-**The finished thing nobody's using.** It's out. A few stars, nobody has opened an issue in a week. So you build the next feature, and you know it's a good one because you wanted it yourself. That's a real reason, half of what you use got built that way. Mycelium writes down which it was. That's all it does with it, and next time you wonder why nobody came, the note is there.
-
-A weekend hack meets fewer of these moments; a team product meets them all. The intensity scales with what's at stake, not with how much you have to learn.
+How many of these you meet depends on what's at stake. A weekend hack meets one.
 
 ## Why this exists
 
 Skipping discovery is an old habit. You've watched a stakeholder pick a framework because they sat in a workshop with its authors, not because a user asked for it. You've heard "my gut beats the data." You've heard "no point in discovery, users never know what they want anyway." Deciding what is worth building was always the hard part, and there was always a reason to skip it.
 
-The agent just made skipping it free. It runs from idea to pull request without asking why, who for, or whether anyone needs it, faster than any of them ever could. Mycelium answers the old excuses the same way every time: with evidence instead of a shrug.
+The agent just made skipping it free. It goes from idea to pull request faster than any of those excuses ever managed, and it never stops to ask who the thing is for. Mycelium answers the old excuses the same way every time: with evidence instead of a shrug.
 
 ## Who it's for
 

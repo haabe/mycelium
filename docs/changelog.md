@@ -4,6 +4,39 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-21.
 
+## v0.117.2 - the section that scored worst
+
+**CORRECTIONS TO v0.117.1.** That release's changelog stated that no competing tool appears anywhere in the
+README. **That is false.** *Who it's not for* names and links two: Paddo's *boring agents* and Addy Osmani's
+*agent-skills*. The claim came from grepping for comparison phrasing and reading one other section, then
+stating the result as a fact about the whole file. It is corrected here rather than edited out of the
+previous entry, because the previous entry is released.
+
+**WHAT IS ACTUALLY MISSING IS NARROWER AND MORE USEFUL.** Both named tools appear as scope exclusions: use
+them when the build is already decided. There is no comparison for the case where deciding is the hard part,
+which is this project's own ground. The incumbents there are prompting the agent unaided, being your own
+user, and keeping discovery in one tool and delivery in another. That gap is still open.
+
+**AND v0.117.1 ADDED A PARAGRAPH TO THE WORST-SCORING SECTION IN THE FILE.** Two blind readers, given only
+the README, rated it 6/10 and 7/10 machine-written. Both independently named *What it feels like*; the
+forensic read put it at 9/10, the highest in the file, for an announced template ("Four moments you'll
+recognize"), four identical bolded noun-phrase headers, four scenes of the same length each landing on its
+own shortest sentence, and a line of invented agent dialogue no software has ever emitted.
+
+**IT IS REWRITTEN, NOT DELETED.** The recommendation was deletion. The section now runs as prose with
+uneven paragraphs, two of the four moments compressed into single sentences, no bolded headers, no invented
+quote, and no antithesis to close on.
+
+**A VERBATIM REPEAT IS GONE.** The eleven words "without asking why, who for, or whether anyone needs it"
+appeared twice, two sections apart, both times as if fresh.
+
+**THE README IS NOW SHORTER THAN IT WAS BEFORE EITHER RELEASE** — 1783 words against 1815 — which matters,
+because the reader who prompted all of this said it was too wordy before she said anything else.
+
+**ONE GATE FINDING, WORTH MORE THAN THE COPY.** The file carries two em-dashes and ten semicolons, several
+doing exactly the compression an em-dash would. The em-dash lint fires on the character. The sentence shape
+that wants one walks straight past it.
+
 ## v0.117.1 - the readme that read as AI
 
 Two README edits, and both came from readers outside this repo on the same day.
