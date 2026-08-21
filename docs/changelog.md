@@ -4,6 +4,40 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-21.
 
+## v0.117.4 - the project it talked me out of
+
+The last three releases fixed how the README sounds. This one fixes what it claims.
+
+**THE BEST SENTENCE IN THE FILE WAS UNSUPPORTED.** *"The framework you're looking at now is partly built
+from things it stopped itself"* had sat there with its evidence three clicks away in `docs/receipts/`. A
+blind reader called it the most interesting sentence in the README and asked the obvious question: which
+decision did it kill? **A macOS file viewer that never got a line of code written. That kill produced ten
+of the mechanisms this project now runs on.** It is named where the claim is made, and foreshadowed in the
+lede as the project it talked me out of.
+
+**"WHY THIS EXISTS" IS FIRST PERSON AGAIN.** It had been rewritten into assertions about what the reader
+has supposedly seen and heard, including two quoted objections nobody said. A forensic read flagged them
+as invented dialogue and the repo's own claims-about-people hook flagged the same sentences independently,
+minutes apart. The section now says what actually happened, to one person, with the concrete reasons he
+actually saw: end of season, a customer phone call, the C-level with a gut feeling.
+
+**DATED, NOT COUNTED.** "Since 1997" replaces a duration. A count in prose expires silently every year and
+a date does not, and this one also matches what has been said publicly elsewhere, where a mismatched
+figure would have cost more than it bought.
+
+**A MEASURED BOUNCE IS FIXED.** The line listing PMs, CTOs, developers and CEOs was where the first
+non-expert reader of this README lost the thread, on 2026-08-21: the paragraph opens by describing exactly
+who he is, one builder, and then loses him in a role list for an architecture this project does not
+support. It now says "several people editing the same canvas at once" — the replacement wording recorded
+the day the bounce was found.
+
+**ALSO GONE:** an unsupported claim about "every AI-native team", and a terminal aphorism at the close of
+"Why this exists".
+
+**ONE THING TESTED AND REFUSED.** Publishing a scaffold token cost was scoped, given a threshold, and
+killed by its own test in one command: the same measurement across two projects landed a factor of 13.5
+apart against a pass threshold of 2. A single number cannot generalise, so the README states none.
+
 ## v0.117.3 - the cadence was the tell
 
 v0.117.2 rewrote the worst-scoring section. It worked, and it changed nothing about the file.

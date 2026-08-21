@@ -4,9 +4,9 @@
 
 Building got cheap. Deciding what to build didn't, and an agent will go from an idea to a pull request without asking why, who for, or whether anyone needs it.
 
-The gap shows up the same way across every AI-native team: the agent is fast and glad to build something nobody asked for. Mycelium puts the deciding back. It gives the agent enough feedback that the judgment that ships is still yours.
+The gap has the same shape every time I see it: the agent is fast and glad to build something nobody asked for. Mycelium puts the deciding back. It gives the agent enough feedback that the judgment that ships is still yours.
 
-Built using itself, and released as open source.
+Built using itself, and released as open source. That includes [the project it talked me out of](docs/receipts/cases/2026-04-macos-fileviewer.md).
 
 **Prerequisite:** Claude Code, signed in — or another supported agent (see [install paths](docs/install-paths.md)). Then, inside Claude Code:
 
@@ -38,9 +38,9 @@ How many of these you meet depends on what's at stake. A weekend hack meets one.
 
 ## Why this exists
 
-Skipping discovery is an old habit. You've watched a stakeholder pick a framework because they sat in a workshop with its authors, not because a user asked for it. You've heard "my gut beats the data." You've heard "no point in discovery, users never know what they want anyway." Deciding what is worth building was always the hard part, and there was always a reason to skip it.
+I've worked with digital products since 1997, and most of that time I watched teams skip the deciding part. Not deliberately, and not because anyone thought discovery didn't matter. There was always a reason. End of season, a customer phone call, the C-level with a gut feeling.
 
-The agent just made skipping it free. It goes from idea to pull request faster than any of those excuses ever managed, and it never stops to ask who the thing is for. Mycelium answers the old excuses the same way every time: with evidence instead of a shrug.
+The agent just made skipping it free. It goes from an idea to a pull request faster than any of those reasons ever could, and it never stops to ask who the thing is for.
 
 ## Who it's for
 
@@ -56,7 +56,7 @@ Mycelium is for work where deciding what to build is the hard part. Some use cas
 
 - **Triage-lane work.** Stale-ticket sweepers, board monitors, fixed-template brief generators. The decision of *what* to do is already made, and what you need is execution velocity. Paddo's [boring agents](https://paddo.dev/blog/boring-agents-ship/) patterns fit these directly.
 - **Pure execution acceleration in a known scope.** The build is decided; just ship it faster. Tools like [Addy Osmani's agent-skills](https://github.com/addyosmani/agent-skills) optimize this. They compose with Mycelium when discovery is missing, but if discovery is settled, use them directly.
-- **Centralized cross-role org workflows.** Mycelium is built for one project, one shared repo, one builder or small team using standard git. PMs, CTOs, developers, and CEOs live-editing the same canvas concurrently is a different architecture: merge semantics on YAML, identity attribution per edit, locks on gate evaluations mid-progress. Not yet built. If you need that shape, Mycelium isn't it.
+- **Several people editing the same canvas at once.** Mycelium is built for one project, one shared repo, one builder or a small team using standard git. A whole department working the same files at the same time is a different architecture: merge semantics on YAML, identity attribution per edit, locks on gate evaluations mid-progress. Not yet built. If you need that shape, Mycelium isn't it.
 - **Projects where the ceremony feels heavier than the value it adds.** Mycelium scales gates to project size, but if your project genuinely lacks wrong-build risk, the discipline reads as bureaucracy. That's a fit signal.
 
 ## How it works
@@ -110,7 +110,7 @@ Mycelium has been dogfooded on three small projects and tested by outside users 
 - **[Alex's first run](docs/receipts/cases/2026-05-26-alex-cohort-first-run.md):** the deepest single session on record, and it surfaced the output-density and post-build-silence gaps that drove the v0.31.x batch.
 - **[When the checker passed and the paths were still dead](docs/receipts/cases/2026-06-18-legacy-path-rot-guard.md):** a dead-link sweep went green; two days later a house-cleaning found migration debt sitting in code-spans and prose, where a link checker scoped to links by design was never going to look. The green audit had been read as a clean bill of health, and a second guard now covers the class the first one couldn't see.
 
-The framework you're looking at now is partly built from things it stopped itself.
+The framework you're looking at now is partly built from things it stopped itself. It [helped me kill my own project](docs/receipts/cases/2026-04-macos-fileviewer.md) before I became too invested. That kill alone produced ten of the mechanisms this project now runs on.
 
 **Run it on something?** I would like to hear about it either way. The thing you got built, or the point where it got in the way and you stopped. Both are useful and the second kind is rarer, so if you have one of those I am especially interested. Every case above started as someone telling me something I could not have found on my own machine. Open an issue or start a [discussion](https://github.com/haabe/mycelium/discussions).
 
