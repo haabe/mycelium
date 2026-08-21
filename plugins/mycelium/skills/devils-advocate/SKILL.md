@@ -68,6 +68,34 @@ For each, ask: *what specific evidence supports this claim, and does any of it m
 
 This converts the framework's own anti-bias discipline into a per-publish self-check, not just a per-decision ceremony. Graduated 2026-05-09 from corrections.md TL;DR open candidate.
 
+**MEASURED FIRE RATE, 2026-08-16: ZERO — and this note stays until that changes.** In a dogfood session where twelve agent claims were withdrawn or corrected, this trigger fired on none of them. The operator caught six, explicit invocation of this skill caught two, late self-review caught three, one was caught proactively. **A detector keyed on the five shapes above then scored 0 of 5 recall against the claims actually withdrawn**, because those were universals and counts — "nobody left", "every instance", "eight statements" — not causal assertions. **The five shapes named above are the wrong list for the failure population this technique exists to catch.** Keep running it; do not treat it as coverage. Technique 7 is what measured well.
+
+## Technique 7: Blind adversarial pass — the one that measured well
+
+**USE THIS BEFORE A CLAIM LANDS ON A DURABLE SURFACE.** Techniques 3 and 5 ask you to attack your own position. Measured against real withdrawn claims, self-attack found little and the ambient trigger found nothing. This found defects that had already survived self-review, four local gates and CI.
+
+**THE MECHANISM.** Hand a claim — plus one line describing the procedure that produced it, and **nothing else** — to an agent with **no repository access and a hard no-tool instruction**. Ask for the single most likely way it is wrong. **Explicitly permit "NO OBJECTION"**, and say that declining is valued; without that the run cannot distinguish a real finding from a slot being filled. Then **verify each candidate defect against the artifact yourself** — that step is where the value is realised.
+
+**Why it beats a detector**: a detector must recognise an error's shape, and real error shapes are diverse and lexically slippery. A blind reader recognises nothing. It simply was not present when the claim was made, so it does not inherit the reasoning that produced the error.
+
+### Run it like this
+
+- **Sample mechanically** (every Nth claim), never by picking the ones you suspect.
+- **Two readers, not one** — but see the limit below on what agreement does and does not mean.
+- **Pre-commit what each claim already concedes, BEFORE reading any objection.** Deciding afterwards whether the artifact "already said that" is unfalsifiable; almost any objection can be matched to a nearby hedge in hindsight.
+- **Count distinct findings, not objections.** Two readers hitting one claim is one finding counted twice — right for measuring agreement, wrong for counting yield.
+
+### What it cannot do — measured, not guessed
+
+- **AGREEMENT BETWEEN READERS IS NOT INDEPENDENT CONFIRMATION.** Two readers given the same excerpt share the same blind spot. In one run both drew the same false conclusion because the mechanical sample omitted the sentence that disambiguated two different tests. **Their converging is evidence about the excerpt.**
+- **A THIRD OF THE OUTPUT MAY BE UNRULABLE.** An independent scorer marked 40% of a subsample UNSURE — "too little context", "I don't remember". **The excerpt-sized format that makes this cheap is what makes much of its output uncheckable.** Price that in.
+- **"DID IT CHANGE SOMETHING" MEASURES CONVICTION, NOT CORRECTNESS.** Acting on a false objection scores identically to acting on a true one. In one run an objection was acted upon, counted as a hit, and later ruled wrong.
+- **CONVERSATIONAL PROVENANCE IS INVISIBLE TO IT, AND TO GIT.** The objection above was false because the design it attacked came out of a discussion, not from the data — a fact in no file. **A human who was there outranks both the blind reader and the commit log.** This is a ceiling, not a gap to close.
+- **POSITIONING IS INVISIBLE TO IT.** A phrase can be well-sourced and vivid and still be unusable because of what it argues for. Both readers attacked one candidate on provenance; the disqualifying problem was that it took the wrong side.
+- **HEDGING DOES NOT PROTECT A CLAIM — IT GIVES THE READER A TARGET.** Across two runs, two pre-committed inventories predicted heavily-hedged passages would absorb objections. They absorbed one of 45. The sharpest objection of either run landed on the most self-critical passage in the corpus.
+
+**WHAT IS NOT CLAIMED**: that this generalises. Two runs, one author, one project, and the person scoring the objections wanted the method to work. The one independent scorer agreed on eight of the nine items he could rule.
+
 ## Technique 6: Cunningham's Law check (publish-rough-then-iterate)
 
 "The best way to get the right answer on the internet is not to ask a question; it's to post the wrong answer." — Ward Cunningham (community attribution).
@@ -84,7 +112,8 @@ Apply this when the alternative to publishing is "wait until I'm sure." If the c
 - Before architecture decisions
 - Before committing to a specific solution
 - When the team feels "certain" (certainty is a bias signal)
-- **Ambient (per Technique 5)**: any time the agent writes text with assertion-shaped structural claims. This is a quick self-check, not the full ceremony.
+- **Ambient (per Technique 5)**: any time the agent writes text with assertion-shaped structural claims. This is a quick self-check, not the full ceremony. **Its measured fire rate is zero — see the note there. Do not count it as coverage.**
+- **Before a claim lands on a durable surface with an evidence grade (per Technique 7)**: canvas, decision log, a results file, anything a later reader will cite. **This is the technique with a measured positive result**, and it is the one to reach for when the alternative is attacking your own position.
 
 ## Output
 Log the challenge results in .claude/harness/decision-log.md alongside the decision.

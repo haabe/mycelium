@@ -4,6 +4,47 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-20.
 
+## v0.117.0 - the technique that measured well
+
+`devils-advocate` gains **Technique 7: a blind adversarial pass**, and Technique 5 finally carries the
+number it has needed since 2026-08-16.
+
+**TECHNIQUE 5's MEASURED FIRE RATE IS ZERO.** In a dogfood session where twelve agent claims were
+withdrawn or corrected, its ambient trigger caught none. The operator caught six. A detector built on
+the five shapes it names then scored **0 of 5 recall** against the claims actually withdrawn, because
+those were universals and counts — "nobody left", "every instance", "eight statements" — not causal
+assertions. **The named shapes are the wrong list for the failure population the technique exists to
+catch.** It stays, with the note. A technique that measured zero and says nothing about it is the
+divergence between documented rule and enforcement that this framework audits everywhere else.
+
+**TECHNIQUES 3 AND 5 ASK YOU TO ATTACK YOUR OWN POSITION. That measured badly.** Technique 7 removes
+the author instead: hand a claim, plus one line describing the procedure that produced it and nothing
+else, to an agent with no repository access and a hard no-tool instruction. Ask for the single most
+likely way it is wrong. **Explicitly permit "NO OBJECTION"** — without that the run cannot tell a
+finding from a filled slot. Then verify each candidate defect against the artifact yourself.
+
+It found defects that had already survived self-review, four local gates and CI — including an
+off-by-one in code shipped ninety minutes earlier, and a cherry-picked evidence list that had reached
+this changelog.
+
+**IT SHIPS WITH ITS MEASURED LIMITS, NOT WITH A PITCH:**
+
+- **Reader agreement is not independent confirmation.** Two readers given the same excerpt share the
+  same blind spot; in one run both drew the same false conclusion from the same missing sentence.
+- **~40% of the output may be unrulable** by a third party — "too little context", "I don't remember".
+  The excerpt format that makes this cheap is what makes much of it uncheckable.
+- **"Did it change something" measures conviction, not correctness.** An objection was acted upon,
+  counted as a hit, and later ruled wrong.
+- **Conversational provenance is invisible to it and to git.** A human who was there outranks both.
+- **Positioning is invisible to it.** A phrase can be well-sourced and still unusable for what it
+  argues for.
+- **Hedging does not protect a claim; it gives the reader a target.** Two pre-committed inventories
+  predicted hedged passages would absorb objections. They absorbed one of 45.
+
+**Not claimed**: that this generalises. Two runs, one author, one project, and the person scoring the
+objections wanted the method to work — with one independent scorer agreeing on eight of the nine items
+he could rule.
+
 ## v0.116.1 - two blind readers found the boundary
 
 **A REAL OFF-BY-ONE IN CODE THAT SHIPPED AN HOUR EARLIER**, past 20 tests, four local gates and CI.
