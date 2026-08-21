@@ -4,6 +4,24 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-21.
 
+## v0.118.1 - the footer nobody typed
+
+The citation footer was tied with "Who it's not for" as the most generated text in the README, at 8/10 on
+a blind forensic read, and the whole score rested on one phrase: "the intellectual foundations this system
+builds upon."
+
+**BOTH SUBSTANTIVE CLAIMS ARE KEPT.** Not affiliated with the authors or publishers named. Citations
+credit rather than imply endorsement. Those are the two things the line is actually for.
+
+**"FOR EDUCATIONAL PURPOSES" IS DROPPED, AND THE REASONING IS STATED RATHER THAN ASSUMED.** Asserting fair
+use does not create fair use. The phrase was belt-and-braces, not protection, and it was carrying a
+disproportionate share of the machine-written signal for something doing no work.
+
+**WHY A LEGAL-ADJACENT LINE GOT REWRITTEN RATHER THAN CUT.** Every other fix in this batch was a deletion,
+because deletion is the only edit that cannot introduce a new tell. A non-affiliation notice is the one
+place that logic does not apply: you do not delete a disclaimer to improve a writing score. So this one is
+rewritten, deliberately, as the exception.
+
 ## v0.118.0 - tasks that cannot be closed
 
 A new WARN-tier check in `validate_canvas.py`: **an open human-task with no closure criterion cannot be

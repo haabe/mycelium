@@ -148,4 +148,4 @@ MIT License. See [LICENSE](LICENSE).
 
 ---
 
-*Mycelium is not affiliated with any of the authors or publishers referenced. All citations are for educational purposes and to credit the intellectual foundations this system builds upon.*
+*Mycelium is not affiliated with any of the authors or publishers named here. The citations credit the work this is built on. They do not imply endorsement.*
