@@ -30,13 +30,15 @@ You can say no. A weekend hack gets lighter prompts than a team product, and you
 
 ## What it feels like
 
-Three moments you'll recognize.
+Four moments you'll recognize.
 
 **The weekend build.** Saturday, an idea, an agent ready to type. The usual ending: a working thing by Sunday that you're not sure anyone needs, yourself included. With Mycelium the first ten minutes go to the questions you'd skip on your own: who it's for, the riskiest thing you're assuming, the smallest way to check. You still ship this weekend. You just ship the version worth shipping.
 
 **The decision that went stale.** Your team agreed on a feature three weeks ago; the agent's been building it ever since. Nobody's re-checked the assumption underneath it. At the close, Mycelium won't sign the work off on "we already decided." It asks what evidence says the assumption still holds, and the stale one surfaces now instead of at launch.
 
 **The tired Friday.** It's late, you're done, and the careful step feels optional. The agent stops you: "you're about to skip the check that catches the thing you'd regret." It catches you exactly when you'd most like to slip past. Then it hands you the honest picture at the close: what's done, what's still owed.
+
+**The finished thing nobody's using.** It's out. A few stars, nobody has opened an issue in a week. So you build the next feature, and you know it's a good one because you wanted it yourself. That's a real reason, half of what you use got built that way. Mycelium writes down which it was. That's all it does with it, and next time you wonder why nobody came, the note is there.
 
 A weekend hack meets fewer of these moments; a team product meets them all. The intensity scales with what's at stake, not with how much you have to learn.
 
@@ -95,11 +97,11 @@ Mycelium is one worked example of a pattern the field is converging on: guardrai
 
 Mycelium has been dogfooded on three small projects and tested by outside users under realistic time pressure. Each session taught the framework something different. Most of what they taught is in the version you're looking at right now.
 
-- **[Someone I had never met ran the whole thing on Mistral](docs/receipts/cases/2026-06-23-dagfinn-minilisp-vibe-mistral.md):** what Mycelium learned about working away from Claude. A cold contact took a Lisp interpreter end to end on Vibe + Mistral, published [the repo](https://github.com/dagfinndybvig/minilisp), and reported the friction that mattered: the context budget is two problems, not one, and a bigger window fixes only the first.
-- **[Edith-Mari's book project](docs/receipts/cases/2026-05-20-edith-mari-book-project.md):** what Mycelium reached beyond developers. First non-developer user (a writer with a cookbook project) hit the brief-synthesis flow at the affective layer and surfaced the wayfinding-at-phase-transitions correction. The framework's plain-language discipline was load-bearing.
-- **[When the report you cite fact-checks you](docs/receipts/cases/2026-06-07-faros-whiplash-integration.md):** what Mycelium learned about its own observability layer. Faros's *Acceleration Whiplash* and Datadog's *State of AI Engineering* arrived as external prompts; the framework's L5 score landed at 3/5 — strong scaffolding, weak instrumentation. Three changes shipped in one cycle, including the discipline that a schema field becomes a target the moment it's named.
-- **[Alex's first run](docs/receipts/cases/2026-05-26-alex-cohort-first-run.md):** what the deepest single session cost the reader. An outside user's first run surfaced output-density and post-build-silence gaps that drove the v0.31.x batch.
-- **[When the checker passed and the paths were still dead](docs/receipts/cases/2026-06-18-legacy-path-rot-guard.md):** what Mycelium learned about the limits of its own checks. A dead-link sweep went green; two days later a house-cleaning found migration debt sitting in code-spans and prose, where a link checker scoped to links by design was never going to look. The green audit had been read as a clean bill of health, and a second guard now covers the class the first one couldn't see.
+- **[Someone I had never met ran the whole thing on Mistral](docs/receipts/cases/2026-06-23-dagfinn-minilisp-vibe-mistral.md):** a cold contact took a Lisp interpreter end to end on Vibe + Mistral, published [the repo](https://github.com/dagfinndybvig/minilisp), and reported the friction that mattered: the context budget is two problems, not one, and a bigger window fixes only the first.
+- **[Edith-Mari's book project](docs/receipts/cases/2026-05-20-edith-mari-book-project.md):** the first non-developer user, a writer with a cookbook project, hit the brief-synthesis flow at the affective layer and surfaced the wayfinding-at-phase-transitions correction. The plain-language discipline was load-bearing.
+- **[When the report you cite fact-checks you](docs/receipts/cases/2026-06-07-faros-whiplash-integration.md):** Faros's *Acceleration Whiplash* and Datadog's *State of AI Engineering* arrived as external prompts and the framework's L5 score landed at 3/5, strong scaffolding and weak instrumentation. Three changes shipped in one cycle, including the discipline that a schema field becomes a target the moment it's named.
+- **[Alex's first run](docs/receipts/cases/2026-05-26-alex-cohort-first-run.md):** the deepest single session on record, and it surfaced the output-density and post-build-silence gaps that drove the v0.31.x batch.
+- **[When the checker passed and the paths were still dead](docs/receipts/cases/2026-06-18-legacy-path-rot-guard.md):** a dead-link sweep went green; two days later a house-cleaning found migration debt sitting in code-spans and prose, where a link checker scoped to links by design was never going to look. The green audit had been read as a clean bill of health, and a second guard now covers the class the first one couldn't see.
 
 The framework you're looking at now is partly built from things it stopped itself.
 

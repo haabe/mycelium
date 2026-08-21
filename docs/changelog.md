@@ -2,7 +2,37 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-08-20.
+**Last updated**: 2026-08-21.
+
+## v0.117.1 - the readme that read as AI
+
+Two README edits, and both came from readers outside this repo on the same day.
+
+**A SENIOR PRACTITIONER READ THE REPO AND STOPPED BEFORE INSTALLING.** Her words: the readme is too wordy,
+the user showcase is *"full of AI word salad"*, and the incumbent check is missing. **The first two were
+checkable and both checked out.** The showcase ran five consecutive bullets on a single template, *what
+Mycelium learned about X*, five times in a row. That template is gone; each case now opens on what actually
+happened. A framework arguing that unchecked agent output is the problem should not present its evidence in
+visibly templated agent prose.
+
+**A FOURTH MOMENT JOINS "WHAT IT FEELS LIKE", AND IT IS THE POST-SHIP ONE.** The three that were there are
+all pre-build or mid-build: the weekend idea, the stale decision, the tired Friday. **None of them is the
+state most finished projects are actually in** — it is out, nobody came, and you are adding the next feature.
+It is there because a builder described exactly that on the same day, unprompted, and read it as needing more
+testers rather than as a question about whether anyone wants it. The moment does not tell him he was wrong.
+Building from your own list is a real reason and often the right one; the framework's claim is that you
+should know which one you did.
+
+**THE MISSING INCUMBENT CHECK IS NOT FIXED HERE.** "Where it sits in the field" names an article and a paper,
+and no competing tool appears anywhere in the README. That is a positioning decision, not a copy fix, and it
+stays open rather than being papered over in the same release that fixes the two things next to it.
+
+**HOW THE NEW PARAGRAPH WAS WRITTEN, SINCE THE RELEASE IS ABOUT PROSE QUALITY.** It went through the voice
+gate: register lookup, sample receipt verified mechanically, three rounds of a blind discriminator, lint
+green. **The discriminator still fingers it, and it ships anyway with that named** — the two surviving tells,
+a product-name subject and a resolved close, are the house style of every other moment in that section.
+**The same discriminator, handed the currently shipped "tired Friday" paragraph, fingered that one too**, on
+fabricated quoted dialogue and a balanced-pair close. The section's pattern is the next thing to look at.
 
 ## v0.117.0 - the technique that measured well
 
