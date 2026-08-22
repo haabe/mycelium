@@ -52,6 +52,35 @@ Because setup just ran, the canvas is empty — /interview's canvas-state detect
 
 After the brief is rendered and the user picks a depth-menu option, the start skill is done. Hand off to whatever the user chose (`/mycelium:assumption-test` for "Test the biggest assumption", continued discovery for "Go deeper", graceful exit for "Stop for now", etc.).
 
+## Step 3b: Derive purpose properties (immediately after why/how/what land)
+
+**The why/how/what are not decoration — everything below is checked against them, so they have to be
+checkable.** Propose a property list from what the user just wrote, then have them confirm it. Write
+to `purpose.yml#purpose_properties`. Full contract: `docs/purpose-stance.md`.
+
+**For each element, ask yourself: can I name a specific solution that would CONTRADICT this?**
+- Yes → it is a candidate property. Record `verbatim`, `source` (why/how/what), and the contradicting
+  solution in `contradicted_by`.
+- No → **do not force one.** Quality adjectives ("secure", "accessible", "fast", "simple") yield
+  nothing checkable, because every candidate solution claims to satisfy them. Measured 2026-08-23:
+  "accessible and secure" produced no checkable property at all.
+
+**When a word fails, ask the user — and offer candidates rather than an open question:**
+
+> You said "secure". Which of these would you call a violation?
+> (a) passwords stored in plaintext (b) no transport encryption (c) sessions that never expire (d) something else
+
+**Recognition is cheap; generation is not.** If they answer, you have a property. **If they cannot,
+record it as an aspiration** (`aspiration_reason`) and say plainly: *"'secure' stays undefined, so no
+solution will be checked against it."* A skip is a recorded choice, never a blank.
+
+**The user marks `binding: true` on the few whose violation would break the product.** Only those are
+ever checked. Set `confirmed_by: human` once they have.
+
+**This is NOT `/mycelium:user-interview`.** That skill asks about specific past behaviour, which is
+right for discovering user needs and wrong here — this elicits a definition from the builder about
+their own intent, where the question is hypothetical by design.
+
 ## Step 4: Routing for already-initialized projects
 
 If Step 2 detected existing canvas state (the user has Mycelium installed already on this project), do NOT run setup or interview. Instead, print:

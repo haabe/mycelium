@@ -404,6 +404,25 @@ When the project has `dogfood: true` set, stop conditions become Mycelium learni
 
 ---
 
+## Purpose-stance gate (Define -> Develop, and Develop -> Deliver)
+
+**Run before either transition:**
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_purpose_stance.py" --strict
+```
+
+Non-zero exit **blocks the transition**. It fires when a solution carries no stance against a binding
+property, when a verdict has no note, when a declared contradiction has no human override, or when the
+property list was derived from a superseded why/how/what.
+
+**These two transitions and not the earlier ones**, deliberately: they are where a thing becomes real.
+Blocking at Discover or Define turns exploration into paperwork, which is the friction this framework
+is already criticised for.
+
+**Exit 0 with "OK (or not in use)" means the project never adopted `purpose_properties`.** That is a
+pass, not a gap — do not prompt for adoption from inside a transition.
+
 ## Learning Capture (After Every Phase Transition)
 
 After EVERY successful transition (not just Deliver->Complete):

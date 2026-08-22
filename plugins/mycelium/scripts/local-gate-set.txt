@@ -43,6 +43,8 @@ check_empty_input_honesty.py --root .
 check_source_class_fidelity.py --root .
 check_surface_registry.py
 
+check_purpose_stance.py
+
 # The parity guard gates itself. If CI gains a check and this file does not, the
 # hook fails before the push rather than CI failing after it.
 check_instrument_contract.py --root .

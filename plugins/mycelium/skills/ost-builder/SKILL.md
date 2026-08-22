@@ -97,6 +97,28 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
 5. Update confidence scores based on new evidence.
 6. Prune solutions that have been invalidated.
 
+## Purpose stance on every solution (v0.120.0)
+
+**A solution that contradicts the product's own definition must not pass silently.** If
+`purpose.yml#purpose_properties` exists, every solution you write carries a `purpose_stance` against
+each `binding: true` property:
+
+```yaml
+purpose_stance:
+  pp-001: { verdict: preserves, note: "no account required; posts are session-scoped" }
+```
+
+Verdicts: `preserves` | `not_applicable` | `contradicts`. **Every one needs a note, `not_applicable`
+included** — a null must be a claim with an author, or the field fills with whatever makes the record
+look complete.
+
+**You may NOT clear a `contradicts` yourself.** Record it, stop, and tell the user what the
+contradiction is. The override needs a human and a decision-log entry. An agent that declares a
+contradiction and clears it in the same run has nullified the mechanism while leaving the record
+looking complete.
+
+**If the project has no `purpose_properties`, skip this section entirely.** Do not prompt for it here.
+
 ## Rules
 
 - Never add opportunities without evidence citations.

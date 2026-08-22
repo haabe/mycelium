@@ -29,10 +29,16 @@
       "type": "object"
     },
     "workarounds": {
-      "type": ["array", "object"]
+      "type": [
+        "array",
+        "object"
+      ]
     },
     "constraints": {
-      "type": ["array", "object"],
+      "type": [
+        "array",
+        "object"
+      ],
       "description": "Brown constraint surfacing (interview Phase 5b)."
     },
     "technical_capabilities_required": {
@@ -55,13 +61,89 @@
       "type": "object"
     },
     "anti_states": {
-      "type": ["array", "object"]
+      "type": [
+        "array",
+        "object"
+      ]
     },
     "architecture_invariants": {
       "type": "array"
     },
     "_meta": {
       "type": "object"
+    },
+    "purpose_properties": {
+      "type": "object",
+      "description": "Binding properties derived from why/how/what (v0.120.0). Extracted agent-proposed, human-confirmed; checked against every sub-element's purpose_stance. See docs/purpose-stance.md.",
+      "properties": {
+        "derived_from_hash": {
+          "type": "string",
+          "description": "sha256 of normalised why+how+what. A mismatch means the list is stale and every stance below it is superseded."
+        },
+        "derived_at": {
+          "type": "string"
+        },
+        "confirmed_by": {
+          "type": "string",
+          "enum": [
+            "human",
+            "pending"
+          ],
+          "description": "Extraction is agent-proposed and human-confirmed. 'pending' means no human has confirmed; checks stay advisory until they have."
+        },
+        "properties": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^pp-[0-9]{3}$"
+              },
+              "property": {
+                "type": "string",
+                "description": "Short name, e.g. 'anonymous'."
+              },
+              "verbatim": {
+                "type": "string",
+                "description": "The user's own words this came from."
+              },
+              "source": {
+                "type": "string",
+                "enum": [
+                  "why",
+                  "how",
+                  "what"
+                ]
+              },
+              "binding": {
+                "type": "boolean",
+                "description": "Human-marked. Only binding properties are ever checked. This is the anti-noise mechanism."
+              },
+              "contradicted_by": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Named solutions that would violate it. A property with none is not checkable and should be an aspiration instead."
+              },
+              "aspiration_reason": {
+                "type": "string",
+                "description": "Set when a quality adjective could not be made checkable and the builder skipped defining it. Excluded from all checks; recorded so the skip is a choice, not a blank."
+              }
+            },
+            "required": [
+              "id",
+              "property",
+              "source",
+              "binding"
+            ]
+          }
+        }
+      },
+      "required": [
+        "properties"
+      ]
     }
   },
   "additionalProperties": true

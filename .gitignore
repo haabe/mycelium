@@ -60,3 +60,9 @@ __pycache__/
 htmlcov/
 coverage.json
 coverage.xml
+
+# Guard fire/override ledgers are runtime artefacts. v0.119.0 committed one from a
+# bash fixture by accident, so every test run dirtied the tree and the diff had to be
+# discarded by hand. The guards write to $CLAUDE_PROJECT_DIR/.claude/state/, and the
+# bash fixtures set that to a tracked directory.
+tests/bash/.claude/state/

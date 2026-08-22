@@ -36,6 +36,7 @@ Exit codes:
     2 = missing CI dependencies (PyYAML, jsonschema, or referencing)
 """
 
+import importlib.util
 import json
 import os
 import re
@@ -719,6 +720,25 @@ def _collect_id_prefixes(node, section, seen):
             _collect_id_prefixes(value, section, seen)
 
 
+def purpose_stance_findings(canvas_dir):
+    """WARN-tier: does any sub-element contradict the product's own why/how/what?
+
+    Delegated to scripts/check_purpose_stance.py so the same logic serves the validator (advisory)
+    and a transition gate (--strict). WARN AND NEVER FAIL here, deliberately: every project
+    predating `purpose_properties` would otherwise break on a defect it did not introduce — the
+    same consumer-breakage reasoning as the other WARN-tier checks in this file.
+    """
+    try:
+        spec = importlib.util.spec_from_file_location(
+            "_cps", Path(__file__).with_name("check_purpose_stance.py")
+        )
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod.purpose_stance_findings(canvas_dir)
+    except Exception:  # noqa: BLE001 — a broken advisory check must never fail a build
+        return []
+
+
 def id_prefix_section_warnings(canvas_dir):
     """WARN-tier: an ID prefix should define entries in exactly ONE top-level section.
 
@@ -864,6 +884,9 @@ def main():
 
     for w in id_prefix_section_warnings(canvas_dir):
         print(f"  WARN (misfiled entry): {w}")
+
+    for w in purpose_stance_findings(canvas_dir):
+        print(f"  WARN (purpose stance): {w}")
 
     schemas_present = len(list(SCHEMA_DIR.glob("*.schema.json"))) - 1  # exclude _common
     canvases_present = len(canvas_yml)

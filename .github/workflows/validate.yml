@@ -108,6 +108,12 @@ jobs:
       - name: Run legacy-path doc check (no stale .claude/{engine,orchestration,schemas}/ refs)
         run: python3 plugins/mycelium/scripts/check_legacy_paths.py --root .
 
+      - name: Run purpose-stance check (no sub-element silently contradicts the why/how/what)
+        # Advisory by default: a project without `purpose_properties` never opted in and
+        # must not break on a field it does not have. --strict belongs at a diamond
+        # transition, not here.
+        run: python3 plugins/mycelium/scripts/check_purpose_stance.py
+
       - name: Run theory-fidelity structural guard (theories.md mechanism refs resolve; gates grounded; no name-only theory)
         run: python3 plugins/mycelium/scripts/check_theory_fidelity.py --root .
 

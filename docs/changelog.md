@@ -2,7 +2,48 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-08-21.
+**Last updated**: 2026-08-23.
+
+## v0.120.0 - nothing checked the why
+
+A project states a `why`, a `how` and a `what`. **Nothing below ever checked anything against them.**
+
+**MEASURED IN 0.119.0, WHICH IS WHY THIS SHIPS.** Two scripts opened `purpose.yml` and neither read
+those fields. Four hooks referenced the file and all four checked whether it EXISTED or had CHANGED,
+never its content. `engine/theory-gates.md` named Cynefin 22 times, Ries 6, Torres 4, Wardley 3,
+Cagan 2, Gilad, Christensen, Gothelf and Kim once each, **and Sinek zero** — the one theorist whose
+model is the shape of the root canvas file. **So a solution could contradict the product's own
+definition and pass every gate the framework had.**
+
+**WHAT SHIPS.** `purpose.yml#purpose_properties` holds binding properties derived from why/how/what —
+agent-proposed, **human-confirmed**. Every solution carries a `purpose_stance` per binding property:
+`preserves` / `not_applicable` / `contradicts`, **each with a note**.
+`scripts/check_purpose_stance.py` runs advisory in CI and in `validate_canvas.py`, and `--strict` at
+the Define->Develop and Develop->Deliver transitions.
+
+**IT NEVER JUDGES WHETHER A SOLUTION SERVES THE PURPOSE.** That is the judgement class the published
+citation benchmarks put frontier models at 39-77% factual accuracy on, and a checker that accurate on
+its own subject is a second opinion wearing a gate's clothes. **It checks that somebody SAID
+something. Silence is the finding** — an insecure login is not caught by judging it, it is caught
+because nothing said anything about the constraint that forbids it.
+
+**AN AGENT MAY NOT CLEAR A `contradicts`.** Founder's rule, and it closes a real hole: without a human
+on the override an agent could declare a contradiction and clear it in the same run, nullifying the
+mechanism while every record looked complete.
+
+**QUALITY ADJECTIVES ARE CAUGHT AT THE DOOR.** A blind test on 2026-08-23 (record:
+`mycelium-roadmap/.claude/evals/assumption-tests/2026-08-23-how-extractability.md`) falsified all
+three of its frozen predictions. The dividing line is not abstract vs concrete: **all five of the
+dogfood project's abstract `how` principles extracted cleanly, while "accessible and secure"
+extracted NOTHING** — every candidate solution claims to satisfy it, so none can be shown to
+contradict it. Since quality adjectives are what most people write in a `how`, the extractor now
+sends them back to the builder with candidate violations to pick from, and records an undefined one
+as an aspiration excluded from every check.
+
+**Projects without `purpose_properties` see no change.** Every check is silent, by design.
+
+Also: the v0.119.0 release committed a guard ledger from a bash fixture, so every test run dirtied the
+tree. Untracked and ignored.
 
 ## v0.119.0 - the warning nobody counted
 
