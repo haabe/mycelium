@@ -4,6 +4,39 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-21.
 
+## v0.119.0 - the warning nobody counted
+
+`shell-safety-guard` and `absence-claim-guard` now append one line per fire to
+`.claude/state/<hook>-log.jsonl`, each carrying a signature.
+
+**WHY THESE TWO.** A working session on 2026-08-22 measured them, and the result is the reason this
+ships. The shell guard warned about `$?` after a pipe eight or more times; it was read past every time,
+and then a push was reported as successful when it had not landed. The absence guard fired six or more
+times; one false absence claim reached a RELEASED changelog before an outside reader caught it in
+passing. **Both guards were right. Neither changed anything. And the override existed only in a
+transcript, which dies with the session.**
+
+**THE SIGNATURE IS THE POINT.** It is derived from what matched, so the same signature firing again is
+an agent that was warned and carried on — a corrected agent does not re-trigger the same rule. **Nobody
+has to admit anything**, which matters when the thing being measured is the agent doing the measuring.
+Before this, override rate could only be recalled from a transcript by the agent that did the
+overriding.
+
+**IT CLOSES AN EXISTING RULE FOR THESE HOOKS.** `opportunities.yml#sol-048a` requires that a guard whose
+ACTION RATE stays near zero is narrowed or retired rather than left running. That was unenforceable for
+these two without a count. `discovery-trigger-guard` and the reflexion ledger already did this; these two
+did not, and they were the two that failed.
+
+**WHAT IT DELIBERATELY IS NOT.** Not a transcript: the row records what fired, truncated, never the full
+input. Not a blocker: both guards stay advisory, because blocking on a heuristic that false-positives
+would be worse than the failure it fixes. Not a metric yet — one session is a worked example, and the
+agent measuring its own compliance is not an independent source.
+
+**8 TESTS AGAINST THE THREE WAYS IT COULD ROT**: that the ledger breaks a session (every write is wrapped
+and silent on failure, and the warning still emits when logging fails), that the signature is unstable
+(same trap twice must collide, different traps must not), and that it logs when it did not fire — phantom
+rows would make a dead guard look alive, which is the exact failure sol-048a exists to catch.
+
 ## v0.118.2 - the entry outside its register
 
 A WARN-tier check in `validate_canvas.py`: **an ID prefix must define entries in exactly one top-level

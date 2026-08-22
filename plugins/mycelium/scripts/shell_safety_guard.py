@@ -53,9 +53,13 @@ is worse than the traps it catches.
 
 from __future__ import annotations
 
+import hashlib
 import json
+import os
 import re
 import sys
+from datetime import UTC, datetime
+from pathlib import Path
 
 #: (id, compiled test, message). Each returns True when the trap is PRESENT.
 _BACKTICK = re.compile(r"`")
@@ -140,6 +144,41 @@ def findings(command: str) -> list[str]:
     return out
 
 
+
+def _log(hook: str, fires: int, first_match: str, signature: str) -> None:
+    """Append one line per fire so the action rate and the OVERRIDE rate are computable.
+
+    Two rules make this part of the ship rather than a nice-to-have.
+    `opportunities.yml#sol-048a`: a guard whose ACTION RATE stays near zero is narrowed
+    or retired, not left running — unenforceable without an instrument. And a session on
+    2026-08-22 measured the other half: this guard fired correctly, repeatedly, was read
+    past every time, and the error it described happened anyway. **That override was only
+    visible in a transcript, and transcripts die.**
+
+    `signature` is what makes overrides countable without anyone self-reporting: the same
+    signature firing again in the same session is an agent that was warned and carried on.
+    A corrected agent does not re-trigger the same rule.
+
+    Records WHAT fired, never the full input — enough to compute a rate, not enough to be
+    a transcript. Silent on every failure: an instrument that breaks a session is worse
+    than an instrument with a gap.
+    """
+    try:
+        root = Path(os.environ.get("CLAUDE_PROJECT_DIR", ".")) / ".claude" / "state"
+        root.mkdir(parents=True, exist_ok=True)
+        row = {
+            "at": datetime.now(UTC).isoformat(timespec="seconds"),
+            "hook": hook,
+            "fires": fires,
+            "signature": signature,
+            "first_match": first_match[:120],
+        }
+        with (root / f"{hook}-log.jsonl").open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps(row, ensure_ascii=False) + "\n")
+    except Exception:  # noqa: BLE001, S110 — never break a tool call over telemetry
+        pass
+
+
 def main() -> int:
     try:
         payload = json.load(sys.stdin)
@@ -164,6 +203,8 @@ def main() -> int:
         "wrong answer in this project before — see corrections.md, "
         "verification-hygiene class."
     )
+    signature = hashlib.sha256("|".join(sorted(warnings)).encode()).hexdigest()[:10]
+    _log("shell-safety-guard", len(warnings), warnings[0], signature)
     print(json.dumps({
         "hookSpecificOutput": {
             "hookEventName": "PreToolUse",
