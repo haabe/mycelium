@@ -47,5 +47,10 @@ check_purpose_stance.py
 
 # The parity guard gates itself. If CI gains a check and this file does not, the
 # hook fails before the push rather than CI failing after it.
+# Added v0.122.0. The gate-parity guard caught this one being CI-only in the same
+# run that filed P6 — a registry row about a BLOCK guardrail unmet BECAUSE its
+# checks are CI-only. The guard was right about its author.
+check_promise_registry_swept.py --root .
+
 check_instrument_contract.py --root .
 check_gate_parity.py --root .

@@ -2533,6 +2533,48 @@ PY
 #
 # Direction matters: delivery evidence WITHOUT a delivery diamond is the defect.
 # A delivery diamond without metrics yet is simply early, and passes.
+# ---------------------------------------------------------------------------
+# CHECK 54: the Promise registry has been SWEPT, not that its promises are kept
+#
+# The registry held four rows for ten weeks — all closed, all from one analysis —
+# while a rule census found two fresh instances the same day. The registry did not
+# fail; nothing swept it. Its sweep is /framework-health step 4f, prose in a skill,
+# so the file could not tell "nothing to add" from "nobody looked".
+#
+# NOT a promise-kept check. Both forms of that were built and measured on
+# 2026-08-23 and rejected (61 hits broad; 3 false flags narrow, and it missed its
+# own founding case). Numbers are in the spec so it is not re-attempted blind.
+# ---------------------------------------------------------------------------
+check_promise_registry_swept() {
+    section "Check 54: Promise registry swept within cadence (did anyone look?)"
+
+    local script="plugins/mycelium/scripts/check_promise_registry_swept.py"
+    if [ ! -f "$script" ]; then
+        info "Check 54: $script not present — N/A"
+        return
+    fi
+
+    local out rc
+    set +e
+    out=$(python3 "$script" --root . 2>&1)
+    rc=$?
+    set -uo pipefail
+
+    if [ "$rc" -eq 2 ]; then
+        info "Check 54: no framework spec in cwd — precondition unmet, nothing verified"
+    elif echo "$out" | grep -q "MISSING"; then
+        fail "Check 54: Promise registry carries no last_swept marker — the registry cannot distinguish 'nothing to add' from 'nobody looked'"
+    elif echo "$out" | grep -q "FUTURE"; then
+        fail "Check 54: last_swept is dated in the future — that is not a sweep, it is the bypass path"
+    elif echo "$out" | grep -q "STALE"; then
+        warn "Check 54: $(echo "$out" | grep -m1 'STALE' | sed 's/^ *//')"
+    elif [ "$rc" -eq 0 ]; then
+        pass "Check 54: $(echo "$out" | grep -m1 'ok —' | sed 's/^ *//')"
+    else
+        fail "Check 54: sweep-freshness check errored (rc=$rc)"
+    fi
+}
+
 check_scenario_legacy_model() {
     section "Check 53: scenarios migrated off the pre-2026-07-01 4-block model"
 
@@ -3087,6 +3129,7 @@ check_theory_claim_artifacts
 check_delivery_diamond_reconciliation
 check_canonical_field_location
 check_scenario_legacy_model
+check_promise_registry_swept
 
 # ============================================================
 # SUMMARY

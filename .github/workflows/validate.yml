@@ -117,6 +117,12 @@ jobs:
       - name: Run theory-fidelity structural guard (theories.md mechanism refs resolve; gates grounded; no name-only theory)
         run: python3 plugins/mycelium/scripts/check_theory_fidelity.py --root .
 
+      - name: Promise-registry sweep freshness (did anyone look?)
+        # ADVISORY here on purpose. The registry gained no row for ten weeks while the
+        # failure class kept occurring, because its sweep is prose in a skill. This makes
+        # "nobody looked" visible without breaking a build over a date.
+        run: python3 plugins/mycelium/scripts/check_promise_registry_swept.py --root .
+
       - name: Enforce CI/local gate parity (no gate may run only in CI)
         # A gate that runs only in CI can go red only AFTER a push. Measured
         # 2026-08-09 the workflow ran 11 gates and the shipped pre-push hook ran

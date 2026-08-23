@@ -4,6 +4,45 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-23.
 
+## v0.122.0 - the instrument for finding unenforced rules was itself an unenforced rule
+
+A rule census on 2026-08-23 extracted every framework rule naming a **countable corpus** — 135 of
+them, from 468 normative sentences across `engine/`, `harness/` and `skills/` — and asked three
+questions of each: what corpus does it govern, what would detect a violation, what is compliance now.
+**The finding is never "which rules are violated". It is "which rules can nobody state a number for."**
+
+Seven were drifting. Two belong to the framework and ship here as registry rows:
+
+- **P5** — `engine/mutation-log.md` fully specifies `canvas/mutation_log.jsonl`: format, required
+  fields, worked example, and the claim that *"every canvas write is appended as a single JSONL line"*,
+  delivering replay, audit, regression support and drift detection. **The file exists in no project,
+  nothing writes it, nothing reads it**, and it is named in exactly two files in the plugin. **The
+  likely right close is to stop promising, not to build it** — nothing has depended on it for months.
+- **P6** — **G-V14 is tagged `BLOCK`** and states its own failure condition: *"Not satisfied by a CI
+  step alone."* Three of its four named fitness functions run only in CI. **`BLOCK` is the one tier
+  claiming mechanical prevention, so an unmet `BLOCK` is worse than an honest `REVIEW`.**
+
+**But the rows are not the point. The registry is.** It held four entries, all closed, all from a
+single 2026-06-12 analysis, and gained nothing for ten weeks while this failure class kept happening.
+It did not fail — **nothing swept it.** Its sweep lives in `/framework-health` step 4f: prose in a
+skill, run when someone remembers. So the registry could not distinguish *"nothing to add"* from
+*"nobody looked"*, which are the two states it most needs to tell apart.
+
+**What ships:** a `last_swept:` marker on the registry, and **Check 54** +
+`check_promise_registry_swept.py` asserting it is inside the 90-day `/framework-health` cadence.
+Advisory by default (a consumer cannot set that date and must not have their build broken by it),
+`--strict` has teeth. **A future date is refused as its own finding** — that is the bypass path, and
+the cheapest way to turn an instrument into decoration. An absent marker and a stale one are reported
+differently: absent means never adopted, stale means adopted then not honoured.
+
+**A general promised-artifact check was prototyped and REJECTED, with the numbers recorded in the
+spec so nobody re-attempts it blind.** The broad form produced **61 hits**, nearly all consumer-repo
+canvas files that correctly do not ship inside the plugin. The narrow form produced **3 flags, all
+false, and missed the very instance it was written from** — `mutation_log.jsonl` escaped because its
+path sits in a different paragraph from the sentence claiming it is appended to. **A matcher that
+misses its own founding case is worse than no check.** What is mechanizable here is not *"is this
+promise kept"* but *"did anyone look."*
+
 ## v0.121.0 - the fields that closed a dimension nothing read
 
 **`engine/cycle-learning.md` specifies `gates_fired` and `regressions` on every cycle record, each

@@ -198,6 +198,32 @@ Known places where framework prose claims a surface does something that nothing 
 | P2 | WIP limits are enforced (hard ceiling per scale) | `engine/diamond-rules.md` § WIP Limits | **CLOSED v0.47.0** — re-worded to advisory; `Gated by:` a spawn-time count-and-block gate, marked not-yet-built | — |
 | P3 | `/ice-score` checks corrections.md for DORA calibration data before scoring ease | `engine/feedback-loops.md` § DORA → Feasibility | **CLOSED v0.47.0** — re-worded: reverse loop marked aspirational + manual; `Gated by:` an ice-score grep step, not-yet-built | — |
 | P4 | Canvas-sync conflict resolution: "the person with more evidence wins" | `canvas-sync/SKILL.md` § Conflict Resolution | **CLOSED v0.47.0** — re-worded as a manual-resolution heuristic; `Gated by:` a `/canvas-merge` procedure, not-yet-built | — |
+| P5 | `engine/mutation-log.md` specifies `canvas/mutation_log.jsonl` in full — format, required fields, worked example — and states *"every canvas write is appended as a single JSONL line"*, claiming replay, audit, regression support and drift detection | `engine/mutation-log.md` | **OPEN 2026-08-23** — the file exists in no project; NO hook, script or skill writes it; it is named in exactly two files in the plugin (its own spec and `engine/README.md`). Found by the 2026-08-23 rule census | Either a canvas-writing surface appends to it, OR the doc is marked `Gated by:` / removed. **A promise can legitimately close by the doc ceasing to promise, and that is the likely right close here** — nothing has depended on it for months, which is evidence about its value |
+| P6 | **G-V14 is tagged `BLOCK`** and asserts integrity checks run in the per-change verification command, *"not only in CI"*, naming its own failure condition: *"Not satisfied by a CI step alone"* | `harness/guardrails-delivery.md` | **OPEN 2026-08-23** — `check_wiring_contract`, `check_negative_control` and `check_test_authenticity` appear only in `.github/workflows/validate.yml`; 1 of the 4 named fitness functions is reachable from the pre-push path. Found by the 2026-08-23 rule census | The three run in the pre-push/verification command, OR G-V14 is re-tiered to `REVIEW` with the CI-only reality stated. **`BLOCK` is the only tier claiming mechanical prevention, so an unmet `BLOCK` is worse than an honest `REVIEW`** |
+
+**last_swept: 2026-08-23** — asserted by `check_promise_registry_swept.py`. **This field exists because
+the registry went ten weeks without a row while the failure class kept occurring.** Its sweep lives in
+`/framework-health` step 4f, which is prose in a skill invoked when someone remembers, so the registry
+could not distinguish "nothing to add" from "nobody looked" — and those are the two states it most
+needs to tell apart. Update this date whenever 4f runs, whether or not it adds a row: **a sweep that
+found nothing is a measurement, an absent sweep is not.**
+
+### A general promised-artifact check was prototyped 2026-08-23 and REJECTED, with numbers
+
+Recorded so it is not re-attempted blind. Two forms were built and measured against the v0.121.0 tree:
+
+- **Broad form** — every backticked path claimed in `engine/`/`harness/` docs that resolves to no file
+  in the plugin tree: **61 hits**, almost all consumer-repo canvas files (`opportunities.yml`,
+  `purpose.yml`) that correctly do not ship inside the plugin. Unusable.
+- **Narrow form** — only paths in a paragraph carrying a production verb (*appended, written, emitted,
+  auto-updated*): **11 candidates, 3 flagged, and it MISSED the known true positive.** `mutation_log.jsonl`
+  escaped because its path sits in a different paragraph (`File: ...`) from the sentence that claims it
+  is appended to. All 3 flags were false.
+
+**A matcher that misses the one instance it was built from, and flags three that are fine, is worse
+than no check** — this repo removed two other checks for being noisy from the first run. The FP risk
+this spec cited when it chose registry-tracking over a check is real and now measured. **What IS
+mechanizable is not "is this promise kept" but "did anyone look" — hence the `last_swept` field above.**
 
 Adding a row requires only: the claim, its source location, and a concrete close condition with both an implement-path and an honest re-word-path (a promise can legitimately close by the doc stopping to promise). A row OPEN across 3 consecutive `/framework-health` runs escalates to the cluster catalog as a documented-rule-diverges-from-enforcement instance.
 
