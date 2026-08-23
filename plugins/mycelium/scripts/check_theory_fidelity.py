@@ -246,9 +246,28 @@ def main(argv=None):
               "it.")
         return 0
 
+    # THE N/A BRANCH ABOVE ONLY FIRED ON AUTO-DETECT FAILURE, so passing --root
+    # explicitly skipped it and fell straight through to a path error. That is what
+    # /framework-health instructs a consumer to do, and it is why FOUR consecutive
+    # assessments (2026-08-08 through 2026-08-23) reported this guard failing in a
+    # repo that has nothing it audits and can do nothing about it. The comment above
+    # already said exiting 2 with a path error is dishonest for a consumer; the code
+    # said otherwise whenever a root was named. Fixed v0.120.4.
+    #
+    # The distinction that keeps the guard's teeth: NOT-A-FRAMEWORK-TREE is N/A, but
+    # a framework tree MISSING its own theory surface is still a hard error.
+    if not (root / "plugins" / "mycelium").is_dir():
+        print(f"Theory fidelity: N/A — {root} is not the framework repo. This guard "
+              f"audits {THEORIES_MD} and {GATES_MD}, which exist in haabe/mycelium, "
+              "not in a plugin consumer. Nothing here is checked, and nothing here "
+              "could be.")
+        return 0
+
     for rel in (THEORIES_MD, GATES_MD):
         if not (root / rel).is_file():
-            print(f"error: missing {rel} under {root}", file=sys.stderr)
+            print(f"error: missing {rel} under {root} — this IS a framework tree "
+                  "(plugins/mycelium/ present) and its theory surface is incomplete",
+                  file=sys.stderr)
             return 2
 
     report = scan(root)

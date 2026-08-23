@@ -4,6 +4,28 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-23.
 
+## v0.120.4 - the guard that contradicted its own comment
+
+`check_theory_fidelity.py` **failed in every consumer repo, for four consecutive framework-health
+assessments** (2026-08-08 through 2026-08-23), with the same line each time: *"error: missing
+docs/theories.md."*
+
+**The honest N/A branch existed and could not be reached.** It fired only when auto-detect returned
+`None` — so passing `--root` explicitly, **which is exactly what `/mycelium:framework-health`
+instructs**, skipped it and fell through to the path error. Every one of those four runs passed a root.
+
+**The guard's own source already said so.** Its comment reads: *"A plugin consumer has neither and can
+do nothing about it, so saying N/A is honest and exiting 2 with a path error is not."* The code said
+otherwise whenever a root was named.
+
+**Not-a-framework-tree is now N/A and exit 0. A framework tree missing its own theory surface is still
+a hard error** — the fix distinguishes the two rather than softening the guard, and both directions
+carry a test.
+
+**Worth naming: this was reported four times and owned zero times.** Each assessment recorded it,
+carried it forward verbatim, and moved on. A finding that survives four runs unchanged is not a
+finding — the 2026-08-23 assessment called it furniture, and fixing it was one conditional.
+
 ## v0.120.3 - the check that floods on adoption
 
 **v0.120.1 shipped a retrofit path that was unusable the moment anyone walked it.**

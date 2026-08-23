@@ -212,3 +212,33 @@ def test_no_framework_tree_is_na_not_an_error(scripts_path, tmp_path, capsys):
 
     assert cached.main([]) == 0
     assert "N/A" in capsys.readouterr().out
+
+
+# --- consumer-repo N/A, and the teeth that must survive it ------------------------
+# THE DEFECT (fixed v0.120.4). The honest N/A branch fired only when auto-detect
+# returned None, so passing --root explicitly — which is exactly what
+# /mycelium:framework-health instructs — skipped it and fell through to a path error.
+# FOUR consecutive assessments (2026-08-08 .. 2026-08-23) reported this guard failing
+# in a repo that has nothing it audits and can do nothing about it. The guard's own
+# comment already said exiting 2 with a path error is dishonest for a consumer; the
+# code said otherwise whenever a root was named.
+def test_consumer_tree_is_na_not_an_error(tmp_path, scripts_path, capsys):
+    """A plugin consumer has no theory surface and can do nothing about it."""
+    mod = _import(scripts_path)
+    (tmp_path / ".claude" / "canvas").mkdir(parents=True)  # a project, not the framework
+    rc = mod.main(["--root", str(tmp_path)])
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "N/A" in out
+    assert "not the framework repo" in out
+
+
+def test_framework_tree_missing_its_theory_surface_still_fails(tmp_path, scripts_path, capsys):
+    """The teeth. N/A must not become a way for the framework to skip its own audit."""
+    mod = _import(scripts_path)
+    (tmp_path / "plugins" / "mycelium").mkdir(parents=True)  # IS the framework tree
+    rc = mod.main(["--root", str(tmp_path)])
+    err = capsys.readouterr().err
+    assert rc == 2
+    assert "missing" in err
+    assert "IS a framework tree" in err
