@@ -114,6 +114,40 @@ Setting a DoD target and never checking whether it landed leaves the back half o
 - **`guardrail` is the Goodhart guard (advisory, with teeth).** When `signal` becomes a target it degrades; pair it with a counter-metric that must not worsen. It doesn't block, but `/metrics-pull` downgrades a "met" to "met-with-regression" when the guardrail worsened as the signal improved. Five metrics are harder to game than one.
 - Omit `measure` entirely for a directional outcome with no meaningful check — that stays valid.
 
+## Purpose-stance check on the bar you just wrote (WARN — never blocks)
+
+**Run it after writing the field:**
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_purpose_stance.py"
+```
+
+**What it is for, and it is not the solution check wearing a different hat.** A definition of done is
+the one artifact that says what this diamond is FOR. If it drifts from the product's own why/how/what,
+every downstream gate can pass while the diamond delivers something the product no longer claims to be.
+That drift is invisible by construction: nothing else in the framework reads a `definition_of_done`
+against the purpose.
+
+**The failure this closes, measured on the dogfood project 2026-08-23.** An L1 outcome was re-specified
+on 2026-08-15; the `why` and `what` were rewritten on 2026-08-23 and the binding properties derived from
+them the same day. **The bar was therefore written eight days before the definition it had to satisfy
+existed, and nothing re-read it.** The founder found it by asking out loud whether it still fit — not
+from any check. Worse, the script that would have answered him did not open `active.yml` at all until
+plugin 0.123.0.
+
+**If the diamond has no `purpose_stance`, ask for one now, while the bar is fresh.** This is the cheapest
+moment: the builder has just articulated what done means, so the question "does this contradict what you
+said the product is?" is a continuation of the conversation, not an audit weeks later.
+
+**NEVER auto-fill it.** An agent-written `preserves` with no human read is the filler trap with extra
+steps, and a `contradicts` verdict may only be overridden by a human. If the builder does not want to
+answer now, leave the field absent — the WARN is the true state and it will keep reporting. **Absent is
+honest; invented is not.**
+
+**Exit is always 0 here.** This is firing point 7 in the wiring spec — WARN, never fail. A definition of
+done must never be blocked by a stance check, or the skill that exists to make "done" concrete becomes
+one more thing to satisfy first.
+
 ## Failure-mode guards (baked in)
 
 - **No checklist theatre** — step 1 rejects "what you built"; the field is an outcome.

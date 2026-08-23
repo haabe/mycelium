@@ -409,12 +409,24 @@ When the project has `dogfood: true` set, stop conditions become Mycelium learni
 **Run before either transition:**
 
 ```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_purpose_stance.py" --strict
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_purpose_stance.py" --strict --diamond-id <this-diamond-id>
 ```
+
+**Pass `--diamond-id`.** Without it every Develop/Deliver diamond in the canvas is blocking-eligible,
+so this transition can fail on a DIFFERENT diamond's missing stance — a stop for a reason that has
+nothing to do with the step just taken. With it, the block is scoped to the diamond being moved and
+every other one still reports at the never-fail tier.
 
 Non-zero exit **blocks the transition**. It fires when a solution carries no stance against a binding
 property, when a verdict has no note, when a declared contradiction has no human override, or when the
 property list was derived from a superseded why/how/what.
+
+**AND NOW ON THE DIAMOND ITSELF, which is what this gate was always specified to do.** A diamond
+entering Develop or Deliver must carry its own `purpose_stance`, exactly as a solution does. Until
+plugin 0.123.0 the script this gate calls read only `opportunities.yml` — so the gate ran, found the
+solutions clean and returned green **while never opening `active.yml`**. It could not see the artifact
+whose transition it was guarding. Diamonds in other phases, and parked diamonds, report at the
+never-fail tier and never block.
 
 **These two transitions and not the earlier ones**, deliberately: they are where a thing becomes real.
 Blocking at Discover or Define turns exploration into paperwork, which is the friction this framework
