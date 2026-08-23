@@ -4,6 +4,61 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-23.
 
+## v0.123.0 - the BLOCK-tier gate could not see the artifact it was guarding
+
+`purpose-stance` shipped in v0.120.0 to answer one question: does a proposed sub-element contradict
+the product's own why/how/what? Its wiring spec said, from the first day, that stances go on
+**"solutions (`sol-*`) and diamonds entering Develop or Deliver"**, and named three firing points for
+the diamond half — **4** and **5** at the Define→Develop and Develop→Deliver transitions (`BLOCK`),
+and **7** in the validator (`WARN`, never fail).
+
+**Only the solution half was ever implemented.** And `diamond-progress` was already invoking
+`check_purpose_stance.py --strict` at exactly those two transitions. So the gate fired, read
+`opportunities.yml`, found the solutions clean, and returned green — **without ever opening
+`active.yml`.**
+
+**A `BLOCK`-tier check that runs, reports pass, and cannot see the artifact whose transition it
+guards is this framework's own blind-green defect, and it was sitting inside the checker.**
+
+**How it surfaced, which is the part worth keeping.** Not from a check — from a founder answering a
+coaching question about what "done" means for his L1 diamond: *"I wonder if it no longer fits the
+why/what/how, so that it might no longer complete."* His bar had been re-specified on 2026-08-15; the
+`why` and `what` were rewritten on 2026-08-23 and the binding properties derived from them the same
+day. **The bar was written eight days before the definition it had to satisfy existed.** Nothing in
+the framework could tell him whether it still fit. Measured on that canvas: **0 of 4 diamonds carried
+a `purpose_stance`**, and not one was exempt — the 53-entry grandfathering list is solution IDs only,
+so the solutions' exemption prints on every run while the diamonds' absence was silent.
+
+**What ships**
+
+- `check_purpose_stance.py` reads `.claude/diamonds/active.yml` as well as `opportunities.yml`.
+  Default path is `<canvas-dir>/../diamonds/active.yml`; `--diamonds-file` overrides.
+- **Two tiers, and the split is the spec's.** Develop/Deliver diamonds are `BLOCK` (firing points 4
+  and 5). Everything else is `WARN`-never-fail (firing point 7) — **including inside a `--strict`
+  run**, so a coverage warning can never become a surprise CI failure.
+- **`--diamond-id` scopes the block to the diamond being moved.** Firing points 4 and 5 are
+  *transitions*. Without the scope, moving a diamond out of Discover fails on a **different**
+  diamond's missing stance — the builder stopped for a reason unrelated to the step they took, which
+  is the "blocking turns exploration into paperwork" friction this framework is already criticised
+  for. Every other diamond still reports, at the never-fail tier.
+- **Parked diamonds never block.** A parked diamond is not transitioning, and this script runs as a
+  whole-canvas sweep.
+- **A Discover diamond is nagged only once it carries a `definition_of_done`.** No bar written means
+  nothing to drift from yet.
+- **Firing point 6 lands in `/mycelium:define-done`** — WARN, never blocks, at the one moment the
+  builder has just articulated what done means and the question is a continuation of the
+  conversation rather than an audit weeks later. **It must never auto-fill a stance**: an
+  agent-written `preserves` with no human read is the filler trap with extra steps. Absent is honest.
+- **One exemption mechanism, not two.** A diamond ID in `grandfathered` is exempt exactly as a
+  solution is. No diamond is on the dogfood list, by the founder's decision: grandfathering four
+  diamonds would have exempted precisely the artifacts whose fit was in question.
+
+**Adoption is unchanged.** No `purpose_properties` means silence, always — a project that never opted
+in sees nothing, and a project with no `active.yml` is not an error.
+
+**Eleven new tests** pin every branch above, including the two that make it safe: advisory findings
+print as `WARN` inside `--strict`, and a scoped block never fires on another diamond.
+
 ## v0.122.0 - the instrument for finding unenforced rules was itself an unenforced rule
 
 A rule census on 2026-08-23 extracted every framework rule naming a **countable corpus** — 135 of
