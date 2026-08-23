@@ -35,7 +35,6 @@ The engine is the brain of Mycelium. It defines how diamonds work, what gates mu
 - **[autonomous-mode.md](autonomous-mode.md)** — Running Mycelium with no person in the loop: declaration, the substitution ladder, the mandatory run ledger, the evidence-integrity boundary, and the human-only registry.
 
 ### Change Tracking
-- **[mutation-log.md](mutation-log.md)** — Record of structural changes to the engine itself.
 
 ## How It Fits Together
 

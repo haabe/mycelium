@@ -4,6 +4,52 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-23.
 
+## v0.124.0 - the promise closed by the doc ceasing to promise
+
+`engine/mutation-log.md` is **removed**. It specified `canvas/mutation_log.jsonl` in full — format,
+required fields, worked example — and claimed **replay, audit, regression support and drift
+detection**. Nothing wrote it and nothing read it, in any project, ever. It was **P5** in the promise
+registry, opened by the 2026-08-23 rule census.
+
+**The analysis inverted the question rather than answering it.**
+
+- **Replay** and **regression support** are already git. Canvas files are committed.
+- **Audit** — which evidence triggered which change — is already the decision log, richly, in prose.
+  The only gap is queryability.
+- **Drift detection** — canvas changes lacking evidence — is served by nothing. It is the one real
+  gap, and it is better reached from the dependency direction than from a log.
+
+**And the experiment had already been run.** The dogfood project's `.claude/state/change-log.jsonl`
+holds **5,802 entries appended over four months**, one per Edit/Write, recording timestamp, tool, file
+and session. It has **exactly one reader**: `/mycelium:eval-runner`, "read the last 100 entries to
+propose eval scenarios" — a skill that must be remembered to be invoked, which is the framework's own
+named contradiction of `mechanically-enforced`. **A richer-fielded version of an unread log is still an
+unread log**, and that is evidence from a real repo rather than an argument.
+
+**What the builder actually wanted, asked directly:** *"if there are fields that depend on other
+fields, I expect them to auto-update and maybe with a notification."*
+
+**That is a dependency graph with propagation, not an append-only trail, and the difference decides the
+question.** A mutation log would have faithfully recorded a parent diamond's re-specification and
+changed nothing about its child carrying a stale link for eight days — which is exactly what happened
+on the dogfood canvas while the log's spec sat in the engine directory.
+
+**P5 closes by the doc ceasing to promise.** The registry has always allowed that close, and the row
+itself said it was the likely right one: *"nothing has depended on it for months, which is evidence
+about its value."*
+
+**The successor is recorded as a design question, NOT as a new registry row.** This registry tracks
+prose claiming a mechanism exists; no framework prose claims a dependency graph does. Adding a row
+while closing one would manufacture the defect the registry exists to catch. The framework already has
+**one working edge** of that graph — `derived_from_hash` on `purpose_properties` declares a dependency,
+detects staleness mechanically, marks every stance below superseded, and fires unasked at the next
+transition. It covers one relationship; there is no general `depends_on` anywhere in the plugin.
+
+**One caution carried forward from the analysis**, because the builder's own example contained it: his
+illustration auto-adjusted an **ICE score**. ICE is judgement, and `builder-holds-the-decision` is a
+binding purpose property in that project. **Detect-and-notify is safe on any field; auto-update is safe
+only for mechanically-derived values, never for a judgement.**
+
 ## v0.123.0 - the BLOCK-tier gate could not see the artifact it was guarding
 
 `purpose-stance` shipped in v0.120.0 to answer one question: does a proposed sub-element contradict
