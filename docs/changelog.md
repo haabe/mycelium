@@ -4,6 +4,32 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-23.
 
+## v0.120.2 - the altitude question
+
+**A property must sit at the altitude where violation is meaningful.** `/mycelium:purpose-properties`
+now asks it of every candidate, before recording anything:
+
+> What would have to be true for this to be violated — a single move, or a design choice?
+
+**A single move means you extracted a rule about BEHAVIOUR, not a property of the product**, and it is
+not recorded. A property violable by one sentence turns the stance field into a footnote requirement,
+and a check that must be satisfied per action is one people mute.
+
+**FOUND BY RUNNING THE SKILL ON THE DOGFOOD PROJECT, which is the first thing v0.120.1 made possible.**
+From *"Theory-guided decisions: every significant decision is grounded in established frameworks"*,
+two independent blind extractions BOTH produced a per-decision citation requirement. The words invite
+it. The founder's correction: **not everything needs to be grounded for the overall to be grounded** —
+the principle is about how the system is built, not an audit trail on each move. Pitched per-decision
+it is micromanagement, and the same project's `(per: <source>)` convention, injected into every
+session, sits at **4 citations across 197 decision-log entries**.
+
+**The step also asks whether the principle is already mechanised.** That one is — `check_theory_fidelity.py`
+enforces it on every push at the right altitude. **Point at the existing check rather than minting a
+property that duplicates it**; two mechanisms for one claim means one of them drifts unnoticed.
+
+`binding: true` limits how many properties are checked. Altitude limits how granular each one is.
+**Both end the same way if you get them wrong, and only one of them is visible in the field.**
+
 ## v0.120.1 - the retrofit nobody could reach
 
 **v0.120.0 shipped the mechanism and no way for an existing project to reach it.** The extraction

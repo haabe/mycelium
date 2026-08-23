@@ -46,6 +46,35 @@ CONTRADICT this?**
 five abstract framework principles produced clean ones. **The axis is not abstract vs concrete — it
 is quality adjective vs structural claim.** Do not treat concrete-sounding words as safe.
 
+## Step 2b: Check the ALTITUDE of every candidate before you record it
+
+**A property must sit at the altitude where violation is meaningful.** Ask, of each candidate:
+
+> **What would have to be true for this to be violated — a single move, or a design choice?**
+
+- **A design choice** → it is a property of the product. Record it.
+- **A single move** → **you have extracted a rule about BEHAVIOUR, not a property of the product.
+  Do not record it.** A property that can be violated by one sentence turns the stance field into a
+  footnote requirement, and a check people must satisfy per action is one they mute.
+
+**WORKED EXAMPLE, and it is why this step exists.** From *"Theory-guided decisions: every significant
+decision is grounded in established frameworks"*, two independent blind extractions BOTH produced
+*"a significant decision must name the framework it rests on"* — per decision. The words invite it.
+But the founder's reading is the right one: **not everything needs to be grounded for the overall to
+be grounded.** The principle is about how the SYSTEM is built — its gates, skills and structure derive
+from theory — not about an audit trail on each move. Pitched per-decision it is micromanagement; the
+same project's `(per: <source>)` convention, injected into every session, sits at **4 citations
+across 197 decision-log entries**.
+
+**AND CHECK WHETHER IT IS ALREADY MECHANISED BEFORE MINTING A PROPERTY.** That same principle is
+already enforced at the right altitude by `check_theory_fidelity.py` on every push. **Point at the
+existing check; do not mint a property that duplicates it** — two mechanisms for one claim means one
+of them drifts unnoticed.
+
+**`binding` and altitude guard different failures.** `binding: true` limits HOW MANY properties are
+checked. Altitude limits how GRANULAR each one is. **Both end the same way if you get them wrong — a
+check nobody reads — and only one of them is visible in the field.**
+
 ## Step 3: Interview the builder on what failed — with candidates, not an open question
 
 > You said **"secure"**. Which of these would you call a violation?
