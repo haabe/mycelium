@@ -85,6 +85,10 @@ their own intent, where the question is hypothetical by design.
 
 If Step 2 detected existing canvas state (the user has Mycelium installed already on this project), do NOT run setup or interview. Instead, print:
 
+**If the project has canvas state but no `purpose.yml#purpose_properties`, say so in the same
+breath** — it existed before v0.120.0, so nothing below has ever been checked against its own
+why/how/what, and `/mycelium:purpose-properties` is the retrofit. One line, not a sales pitch.
+
 > "This project already has Mycelium state from [date of last write to .claude/diamonds/active.yml]. Last diamond touched: [scale, phase, confidence, name]. Three options:
 >   1. Run `/mycelium:diamond-assess` to see current state and what to work on next.
 >   2. Run `/mycelium:interview` to add a new idea as a sibling diamond on this product.

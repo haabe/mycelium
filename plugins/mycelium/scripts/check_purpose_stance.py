@@ -119,7 +119,8 @@ def _list_findings(pp: dict, purpose: dict) -> list[str]:
         out.append(
             "purpose_properties: derived_from_hash does not match the current "
             "why/how/what. The list was derived from a superseded purpose, so every "
-            "stance below it is superseded too. Re-derive before trusting any stance."
+            "stance below it is superseded too. Re-derive with "
+            "/mycelium:purpose-properties before trusting any stance."
         )
     if pp.get("confirmed_by") != "human":
         out.append(

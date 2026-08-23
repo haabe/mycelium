@@ -126,10 +126,32 @@ Evaluate current diamond state and recommend next action.
 
 12. **Report harness thickness** (informational):
     - Count: total skills, active guardrails, mandatory reads, hooks, theory gates
-    - Current: 60 skills, 38 guardrails, 4 mandatory reads, 5 hook layers, 13 gates
+    - Current: 61 skills, 38 guardrails, 4 mandatory reads, 5 hook layers, 13 gates
     - If thickness has increased since last assess, note it
     - This is observability, not a gate — purely informational
     - *Source: Trivedy (Anatomy of an Agent Harness, LangChain blog — "scaffolding should decrease as models improve," but harnesses remain valuable as they engineer systems around model intelligence)*
+
+## Purpose-properties state (report it, do not fix it here)
+
+Run once during the assessment and report the line verbatim:
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_purpose_stance.py" --canvas-dir .claude/canvas
+```
+
+Three states, three different things to say:
+
+- **"OK (or not in use)" AND `purpose.yml` has no `purpose_properties`** — say once that nothing below
+  has ever been checked against this project's own why/how/what, and that
+  `/mycelium:purpose-properties` derives them. **Once. It is a standing condition, not news, and
+  repeating it every assessment is how a nudge gets muted.**
+- **WARN lines about a stale `derived_from_hash`** — this is the one to surface loudly. The purpose
+  changed after the properties were derived, so **every stance below them was reasoned under a
+  definition that no longer holds.** Report it as invalidated work, not as a lint finding.
+- **Otherwise** — report the findings as part of the assessment and move on.
+
+**Do not derive properties from inside this skill.** Assessment reports state; changing the purpose
+layer is a deliberate act with its own entry point.
 
 ## Output Format
 

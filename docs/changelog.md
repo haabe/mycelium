@@ -4,6 +4,22 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-23.
 
+## v0.120.1 - the retrofit nobody could reach
+
+**v0.120.0 shipped the mechanism and no way for an existing project to reach it.** The extraction
+lived in `/mycelium:start` Step 3b; Step 4 exits for already-initialized projects and never gets
+there. **So every project created before v0.120.0 was silently excluded from the thing that release
+was about** — including the dogfood project it was built in.
+
+`/mycelium:purpose-properties` is the retrofit entry point, following the `/mycelium:metrics-detect`
+precedent. **It is also the re-derive path**, which is the half that matters more: when `why`, `how`
+or `what` change, `derived_from_hash` stops matching and **every stance below was reasoned under a
+definition that no longer holds.** Nothing prompted a re-derive before this.
+
+`/mycelium:diamond-assess` now reports the three states (never adopted / stale hash / clean) and says
+the "never adopted" line **once**, because a nudge repeated every assessment is a nudge that gets
+muted. It does not derive anything itself — assessment reports state.
+
 ## v0.120.0 - nothing checked the why
 
 A project states a `why`, a `how` and a `what`. **Nothing below ever checked anything against them.**

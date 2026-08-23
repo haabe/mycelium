@@ -29,7 +29,7 @@ A **harness**, in Birgitta Böckeler's sense (`plugins/mycelium/harness/README.m
                                    │ invoked as /mycelium:<name>
                                    ▼
                         ┌──────── skills (operations) ─────────┐
-                        │ 60 skills, auto-loaded from SKILL.md │
+                        │ 61 skills, auto-loaded from SKILL.md │
                         └─────────────────────────────────────┘
 ```
 
@@ -38,7 +38,7 @@ A **harness**, in Birgitta Böckeler's sense (`plugins/mycelium/harness/README.m
 | **Engine** | Decision logic: diamonds, scales, theory gates, confidence, routing | `plugins/mycelium/engine/` | — |
 | **Harness** | 38 guardrails in three tiers (BLOCK / REVIEW / NUDGE) that keep the agent honest | `plugins/mycelium/harness/` | both |
 | **Hooks** | Event-fired scripts; computational enforcement of BLOCK-tier guardrails + feedback loops | `plugins/mycelium/hooks/` (`hooks.json`) | computational |
-| **Skills** | 60 skills, invocable as `/mycelium:<name>`, auto-discovered from SKILL.md frontmatter | `plugins/mycelium/skills/` | inferential |
+| **Skills** | 61 skills, invocable as `/mycelium:<name>`, auto-discovered from SKILL.md frontmatter | `plugins/mycelium/skills/` | inferential |
 | **Canvas** | Source-of-truth product **state** (YAML), committed to git | the user's `.claude/canvas/` | — |
 | **Domains** | Per-phase context overlays (discovery / delivery / quality) | `plugins/mycelium/domains/*/CLAUDE.md` | inferential |
 | **Schemas** | Validation contracts for canvas YAML | `plugins/mycelium/schemas/` | computational |
