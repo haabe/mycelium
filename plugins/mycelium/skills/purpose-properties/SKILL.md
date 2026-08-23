@@ -46,6 +46,43 @@ CONTRADICT this?**
 five abstract framework principles produced clean ones. **The axis is not abstract vs concrete — it
 is quality adjective vs structural claim.** Do not treat concrete-sounding words as safe.
 
+## Step 2a: Screen for quality adjectives BEFORE trusting your own refusal
+
+**DO NOT RELY ON NOTICING.** Step 2 says a quality adjective yields nothing checkable and asks you to
+decline. The evidence that an extractor actually declines is **one blind run, one model family** — the
+2026-08-23 test, where the extractor returned NONE for *"accessible and secure"* unprompted. That
+result is real and it is thin, and this skill runs under model families that test never touched, in
+runtimes where no hook fires to catch the difference. **A model that does not refuse produces a
+confident property, marks it binding, and creates a stance field that every solution answers
+`preserves` forever — populated, green, and meaningless.** The mechanism's own failure mode, at its
+entry point.
+
+So the screen is a rule, not a judgement:
+
+**TRIGGER LIST — if an element contains any of these words, it routes to Step 3 REGARDLESS of whether
+you extracted something from it:**
+
+> secure · safe · private · accessible · usable · intuitive · simple · easy · fast · performant ·
+> scalable · reliable · robust · flexible · modern · seamless · delightful · high-quality ·
+> best-in-class · efficient · powerful · lightweight
+
+**Extracting a property from one of these words is not evidence the word was checkable.** It is the
+predicted failure. Route it, let the builder supply the standard, and record what they say.
+
+**AND THE GENERAL TEST, for words the list does not carry** (it cannot be complete, and treating it
+as complete is the next version of this bug):
+
+> **Would every plausible competing solution ALSO claim to satisfy this?**
+> If yes, it is a quality adjective, whatever it sounds like. Route it.
+
+*"Secure"* fails that test — nobody proposes an insecure login. *"Anonymous"* passes it — a solution
+requiring an account plainly does not claim anonymity. **Note that the concrete-sounding word is the
+one that fails.** The axis is never how technical the word looks.
+
+**WHAT IS STILL UNTESTED, stated so nobody reads the list as coverage:** whether a builder actually
+answers the Step 3 prompt. The 2026-08-23 run exercised extraction only — no builder was asked
+anything — so the recovery path has evidence for its necessity and none for its effectiveness.
+
 ## Step 2b: Check the ALTITUDE of every candidate before you record it
 
 **A property must sit at the altitude where violation is meaningful.** Ask, of each candidate:

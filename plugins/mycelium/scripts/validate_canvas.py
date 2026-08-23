@@ -739,6 +739,50 @@ def purpose_stance_findings(canvas_dir):
         return []
 
 
+def print_advisory_warnings(canvas_dir):
+    """Emit the WARN-tier findings that never fail a build.
+
+    Extracted from main() so adding a new advisory check does not push main past the
+    complexity limit — the shape that made the previous addition a lint failure rather
+    than a review question.
+    """
+    for label, findings in (
+        ("purpose stance", purpose_stance_findings(canvas_dir)),
+        ("cycle record", cycle_record_findings(canvas_dir)),
+    ):
+        for w in findings:
+            print(f"  WARN ({label}): {w}")
+
+
+def cycle_record_findings(canvas_dir):
+    """WARN-tier: do recorded cycles carry the fields the spec says feed framework-health?
+
+    Delegated to scripts/check_cycle_recording.py so one definition serves the validator and
+    any future gate — the same arrangement as purpose_stance_findings above.
+
+    THIS DELIBERATELY DOES NOT INVOKE THE RELEASE-CADENCE HALF of that script. That half asks
+    whether a cycle has been recorded recently, keyed on minor releases, and its unit is under
+    review; running it here would put a green row on a dashboard over a stale log. Coverage has
+    no threshold to get wrong.
+
+    WARN AND NEVER FAIL, for the reason the other WARN-tier checks here give: measured across a
+    real project, the fields are absent from every record, and failing on that would break every
+    consumer for a defect they did not introduce.
+    """
+    cycle_file = Path(canvas_dir) / "cycle-history.yml"
+    if not cycle_file.exists():
+        return []
+    try:
+        spec = importlib.util.spec_from_file_location(
+            "_ccr", Path(__file__).with_name("check_cycle_recording.py")
+        )
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod.cycle_field_coverage(cycle_file)
+    except Exception:  # noqa: BLE001 — a broken advisory check must never fail a build
+        return []
+
+
 def id_prefix_section_warnings(canvas_dir):
     """WARN-tier: an ID prefix should define entries in exactly ONE top-level section.
 
@@ -885,8 +929,7 @@ def main():
     for w in id_prefix_section_warnings(canvas_dir):
         print(f"  WARN (misfiled entry): {w}")
 
-    for w in purpose_stance_findings(canvas_dir):
-        print(f"  WARN (purpose stance): {w}")
+    print_advisory_warnings(canvas_dir)
 
     schemas_present = len(list(SCHEMA_DIR.glob("*.schema.json"))) - 1  # exclude _common
     canvases_present = len(canvas_yml)

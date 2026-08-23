@@ -58,14 +58,32 @@ For each dimension, compute the metric and compare against trend (if prior asses
   - **Masking guard (protects real product projects):** if the project is *actually doing product/delivery work* (active L3/L4 product diamonds, shipped features) yet shows 0 product-leaf cycles, that is a **cycle_class mis-assignment to investigate** — NOT an empty-by-design pass. Surface it: "0 product-leaf cycles despite active delivery — check cycle_class on recent entries." Only treat empty as by-design when the absence of product-leaf cycles is itself honest (discovery-phase or framework-self-development).
 
 **Gate Effectiveness**:
+- **SOURCE: `cycle-history.yml#cycles[].gates_fired`.** Named explicitly as of v0.121.0, because
+  this dimension previously said "count the gates" without saying from what — and the field that
+  `engine/cycle-learning.md` added expressly to close it (*"was unInstrumented in cycle records"*)
+  was read by nothing. Producer specced, consumer unwired, dimension computed from air.
 - For each theory gate, count: times checked, times passed, times failed
 - Compute hit rate: failures / total checks
 - Flag rubber stamps (0% failure rate) and hard blocks (>80% failure rate)
+- **IF NO CYCLE CARRIES `gates_fired`, REPORT THE DIMENSION AS `no-data`, NAMING THE COUNT** —
+  *"no-data: 0 of N closed cycles carry gates_fired"* — and say the next `/mycelium:retrospective`
+  populates it. **Do NOT reconstruct gate outcomes from memory, the transcript, or a read of the
+  guards.** A dimension filled by hand at assessment time reports on the assessor, not on the
+  cycles, and it is indistinguishable in the dashboard from one backed by records. The validator
+  already emits this absence as a WARN; the dashboard must not paper over what the validator flags.
 - **Theory X/Y audit** (per `${CLAUDE_PLUGIN_ROOT}/harness/theory-tensions.md` Tension 7): for any hard-block gate, check it is *scaffolding* (surfaces its why, an escape hatch exists, leaves the user more capable), not *coercion* (compliance for its own sake, no surfaced reason, no escape). A high-block gate that fails this audit is a Theory-X drift to remediate, not just a strict gate.
 
 **Regression Rate**:
+- **SOURCE: `cycle-history.yml#cycles[].regressions.in_cycle_count`** (in-cycle phase regressions),
+  named as of v0.121.0 for the same reason as Gate Effectiveness above. **Post-launch defects are
+  NOT regressions here** — they live in `rework.post_delivery_regressions` and belong to a different
+  question. Conflating them double-counts the second and hides the first.
 - Count diamonds that regressed at least once / total diamonds
 - Trend: decreasing (good) / increasing (bad) / stable
+- **IF NO CYCLE CARRIES `regressions`, REPORT `no-data` WITH THE COUNT**, exactly as above. Zero
+  recorded regressions and no field are different findings: the first is a healthy system, the
+  second is an unmeasured one, and reporting them the same way is how an unmeasured system reads
+  as healthy.
 
 ### 2b. Re-run Deferred Design-Verification Eval Scenarios
 

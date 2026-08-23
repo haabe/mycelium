@@ -4,6 +4,49 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-23.
 
+## v0.121.0 - the fields that closed a dimension nothing read
+
+**`engine/cycle-learning.md` specifies `gates_fired` and `regressions` on every cycle record, each
+with a comment naming the `/mycelium:framework-health` dimension it closes** — one says verbatim
+*"was unInstrumented in cycle records"*. **`/mycelium:retrospective` instructs writing them** and adds
+*"absence recorded is a measurement; a missing field is not (anti-pattern #9)."*
+
+**Measured on a real project 2026-08-23: zero of sixteen records carried either field**, including one
+written the same day its cycle closed. Three failures were stacked behind that:
+
+- **The rule lived only in prose.** No schema, no check, nothing to notice.
+- **`cycle-history.yml` had no schema at all** — the validator reported it parse-checked only.
+- **The consumer never read the field anyway.** `framework-health` computed gate effectiveness from
+  *"for each theory gate, count..."* and **named no source**. `gates_fired` appeared in exactly two
+  places in the framework: the spec that defines it and the skill that writes it.
+
+**What ships:**
+
+- **`schemas/canvas/cycle-history.schema.json`.** Requires only what every consumer keys on
+  (`cycle_id`, `leaf_id`, `opportunity_id`, `started_at`, `terminal_state`, `cycle_class`) and types
+  the rest. **`gates_fired`, `regressions` and `rework` are deliberately NOT required** — requiring
+  them would fail every project that has recorded a cycle, and a check that is noisy on day one gets
+  muted. It also **mechanizes one gate that was previously prose only**: a `product-leaf` cycle can
+  no longer be written with a zero or absent ICE total.
+- **`check_cycle_recording.py --coverage`**, surfaced as a WARN by `validate_canvas.py`, reporting how
+  many closed cycles omit each field. **It shares nothing with that script's release-cadence half** —
+  no threshold, no git history — because that half's unit is under review and wiring it would put a
+  green row over a stale log. **A recorded `[]` or `0` is never flagged**; an absent field is.
+  **`rework` is measured only on cycles closed more than 14 days ago**, since it is populated on a
+  14-day lag by design and flagging the rest would alarm on evidence that cannot exist yet.
+- **`framework-health` now names its source** for Gate effectiveness and Regression rate, and reports
+  `no-data` with the count when no cycle carries the field. **It must not reconstruct gate outcomes
+  by hand** — a dimension filled at assessment time reports on the assessor and is indistinguishable
+  in the dashboard from one backed by records.
+- **`purpose-properties` gains a deterministic quality-adjective screen** (Step 2a). v0.120.x relied
+  on the extractor *noticing* that "secure" yields nothing checkable, and the evidence for that
+  refusal is **one blind run, one model family**. A listed adjective now routes to the builder
+  interview regardless of what the extractor produced, with a general test for words the list cannot
+  carry: *would every competing solution also claim to satisfy this?*
+
+**Nothing is required of existing projects.** Every new check is WARN-tier, and the schema accepts
+every record shape already in use.
+
 ## v0.120.4 - the guard that contradicted its own comment
 
 `check_theory_fidelity.py` **failed in every consumer repo, for four consecutive framework-health

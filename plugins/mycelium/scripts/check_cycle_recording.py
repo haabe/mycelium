@@ -72,6 +72,7 @@ Python stdlib + PyYAML (already a framework dependency).
 """
 
 import argparse
+import datetime
 import json
 import re
 import subprocess
@@ -307,6 +308,102 @@ def report(scan: dict, *, as_json: bool) -> int:
         )
 
     return 1 if owed else 0
+
+
+# ---------------------------------------------------------------------------
+# FIELD COVERAGE (v0.121.0) — SEPARATE FROM THE RELEASE-CADENCE CHECK ABOVE.
+#
+# This function shares a file with the cadence scan and shares NOTHING else: no
+# threshold, no release counting, no git history. That separation is deliberate and
+# was requested. The cadence half asks "has a cycle been recorded lately", keyed on
+# minor releases, and its unit is contested — wiring it while the unit is wrong would
+# ship a green CI row over a stale log. Coverage asks a different question with no
+# threshold to get wrong: OF THE CYCLES THAT EXIST, how many carry the fields the spec
+# says feed /framework-health?
+#
+# WHY IT IS WARN-ONLY AND NEVER FAILS. Measured on the dogfood repo 2026-08-23:
+# gates_fired and regressions appeared on ZERO of sixteen records. Failing on that
+# would break every project that has ever run /retrospective, and a check that is
+# noisy from the first run gets muted.
+#
+# THE 14-DAY RULE ON REWORK IS NOT A COURTESY. `rework` is populated fourteen days
+# after completion by design. Counting a cycle that closed on Tuesday as missing it
+# would alarm on evidence that could not exist yet — the failure this project logged
+# as "absence is only a finding once it could have been filled". So recent cycles are
+# excluded from the rework denominator and the exclusion is reported, not hidden.
+REWORK_WINDOW_DAYS = 14
+
+
+def _missing_field_finding(closed, field, feeds):
+    """One coverage line for a spec field, or None when every cycle carries it."""
+    absent = [c.get("cycle_id", "?") for c in closed if field not in c]
+    if not absent:
+        return None
+    return (
+        f"{len(absent)} of {len(closed)} closed cycles carry no `{field}` "
+        f"(feeds {feeds}). An empty list or zero is a measurement; an absent "
+        f"field is not. Oldest affected: {absent[0]}, newest: {absent[-1]}."
+    )
+
+
+def _rework_finding(closed, today):
+    """Rework coverage, measured ONLY on cycles old enough to have it.
+
+    `rework` is populated on a 14-day lag by design, so counting a cycle that closed
+    on Tuesday as missing it would alarm on evidence that cannot exist yet.
+    """
+    eligible, undated = [], 0
+    for c in closed:
+        try:
+            done = datetime.date.fromisoformat(str(c.get("completed_at") or "")[:10])
+        except ValueError:
+            undated += 1
+            continue
+        if (today - done).days >= REWORK_WINDOW_DAYS:
+            eligible.append(c)
+    missing = [c.get("cycle_id", "?") for c in eligible if "rework" not in c]
+    if not missing:
+        return None
+    note = f" ({undated} cycle(s) skipped: unreadable completed_at)" if undated else ""
+    return (
+        f"{len(missing)} of {len(eligible)} cycles closed more than "
+        f"{REWORK_WINDOW_DAYS} days ago carry no `rework` block{note}. Cycles closed "
+        f"more recently are excluded — the field is populated on a {REWORK_WINDOW_DAYS}-day "
+        f"lag by design, and flagging them would alarm on evidence that cannot exist yet."
+    )
+
+
+def cycle_field_coverage(cycle_file, today=None):
+    """WARN-tier findings about spec fields the recorded cycles do not carry.
+
+    Returns a list of human-readable strings; empty when coverage is complete or when
+    there is nothing to measure. Never raises on a malformed file: a coverage report
+    that breaks the validator is worse than one with a gap.
+    """
+    try:
+        data = yaml.safe_load(cycle_file.read_text(encoding="utf-8")) or {}
+    except (OSError, UnicodeDecodeError, yaml.YAMLError):
+        return []
+    cycles = data.get("cycles") if isinstance(data, dict) else None
+    if not isinstance(cycles, list):
+        return []
+
+    closed = [c for c in cycles
+              if isinstance(c, dict) and c.get("terminal_state") != "in_flight"]
+    if not closed:
+        return []
+
+    if today is None:
+        today = datetime.datetime.now(datetime.UTC).date()
+
+    findings = [
+        _missing_field_finding(closed, "gates_fired",
+                               "/mycelium:framework-health Gate effectiveness"),
+        _missing_field_finding(closed, "regressions",
+                               "/mycelium:framework-health Regression rate"),
+        _rework_finding(closed, today),
+    ]
+    return [f for f in findings if f]
 
 
 def main() -> int:
