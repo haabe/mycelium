@@ -259,3 +259,48 @@ def test_strict_mode_exits_zero_when_clean(canvas, monkeypatch):
     _sol(canvas, {"pp-001": {"verdict": "preserves", "note": "session-scoped"}})
     monkeypatch.setattr(sys, "argv", ["check_purpose_stance.py", "--canvas-dir", str(canvas), "--strict"])
     assert m.main() == 0
+
+
+# --- grandfathering: the retrofit must not flood on adoption ----------------------
+# Measured on the dogfood canvas 2026-08-23: retrofitting there would have produced
+# 53 solutions x 8 binding properties = 424 findings on day one, on the only project
+# then able to adopt. A check that floods on adoption is one nobody adopts. The
+# exemption is an explicit list rather than a date comparison, because only 10 of
+# those 53 solutions carried any date at all.
+def test_grandfathered_solutions_are_not_flagged(canvas):
+    m = _mod()
+    doc = _purpose(canvas)
+    pp = _props(m, doc, [BINDING])
+    pp["grandfathered"] = ["sol-001a"]
+    doc["purpose_properties"] = pp
+    (canvas / "purpose.yml").write_text(yaml.safe_dump(doc, allow_unicode=True, sort_keys=False))
+    _sol(canvas)  # no stance at all
+    assert m.purpose_stance_findings(canvas) == []
+
+
+def test_a_solution_not_in_the_list_is_still_flagged(canvas):
+    """The exemption is a list, not an amnesty. New work still carries the obligation."""
+    m = _mod()
+    doc = _purpose(canvas)
+    pp = _props(m, doc, [BINDING])
+    pp["grandfathered"] = ["sol-999z"]
+    doc["purpose_properties"] = pp
+    (canvas / "purpose.yml").write_text(yaml.safe_dump(doc, allow_unicode=True, sort_keys=False))
+    _sol(canvas)
+    assert any("no purpose_stance" in w for w in m.purpose_stance_findings(canvas))
+
+
+def test_the_exemption_is_reported_every_run_never_silently(canvas, monkeypatch, capsys):
+    """An exemption nobody sees becomes the permanent state of the canvas."""
+    m = _mod()
+    doc = _purpose(canvas)
+    pp = _props(m, doc, [BINDING])
+    pp["grandfathered"] = ["sol-001a", "sol-002a"]
+    doc["purpose_properties"] = pp
+    (canvas / "purpose.yml").write_text(yaml.safe_dump(doc, allow_unicode=True, sort_keys=False))
+    _sol(canvas, {"pp-001": {"verdict": "preserves", "note": "fine"}})
+    monkeypatch.setattr(sys, "argv", ["check_purpose_stance.py", "--canvas-dir", str(canvas)])
+    assert m.main() == 0
+    out = capsys.readouterr().out
+    assert "2 solution(s) grandfathered" in out
+    assert "never will be until someone backfills" in out

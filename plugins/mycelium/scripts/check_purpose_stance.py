@@ -158,8 +158,22 @@ def _one_stance(sid: str, pid: str, entry) -> list[str]:
     return out
 
 
-def _stance_findings(canvas_dir: Path, binding: list[dict]) -> list[str]:
-    """Every solution, against every binding property. Silence is the finding."""
+def _stance_findings(canvas_dir: Path, binding: list[dict],
+                     grandfathered: set) -> list[str]:
+    """Every solution, against every binding property. Silence is the finding.
+
+    EXCEPT for solutions that existed when the property list was derived. A solution
+    written before the properties existed could not have declared a stance against
+    them, and flagging it says nothing about the work — it says the project adopted
+    the mechanism. Measured on the dogfood canvas 2026-08-23: retrofitting there would
+    have produced 53 solutions x 8 binding properties = 424 findings on day one, on the
+    only project then able to adopt. A check that floods on adoption is one nobody
+    adopts.
+
+    The exemption is an explicit recorded LIST, not a date comparison: only 10 of those
+    53 solutions carried any date at all, so an inference would have silently exempted
+    the wrong 43.
+    """
     opportunities = _load(canvas_dir / "opportunities.yml")
     if not isinstance(opportunities, dict):
         return []
@@ -167,6 +181,8 @@ def _stance_findings(canvas_dir: Path, binding: list[dict]) -> list[str]:
     out: list[str] = []
     for opp_id, sol in _iter_solutions(opportunities):
         sid = sol.get("id", "<no id>")
+        if sid in grandfathered:
+            continue
         stance = sol.get("purpose_stance")
         if not isinstance(stance, dict):
             out.append(
@@ -197,8 +213,20 @@ def purpose_stance_findings(canvas_dir: Path) -> list[str]:
     out, binding = _property_findings(pp)
     out.extend(_list_findings(pp, purpose))
     if binding:
-        out.extend(_stance_findings(canvas_dir, binding))
+        grandfathered = set(pp.get("grandfathered") or [])
+        out.extend(_stance_findings(canvas_dir, binding, grandfathered))
     return out
+
+
+def _grandfathered_count(canvas_dir: Path) -> int:
+    """How many solutions are exempt. Reported every run, never silently."""
+    purpose = _load(canvas_dir / "purpose.yml")
+    if not isinstance(purpose, dict):
+        return 0
+    pp = purpose.get("purpose_properties")
+    if not isinstance(pp, dict):
+        return 0
+    return len(pp.get("grandfathered") or [])
 
 
 def main() -> int:
@@ -213,6 +241,12 @@ def main() -> int:
     args = ap.parse_args()
 
     findings = purpose_stance_findings(Path(args.canvas_dir))
+    n_exempt = _grandfathered_count(Path(args.canvas_dir))
+    if n_exempt:
+        # Said out loud every run: an exemption nobody sees is an exemption that
+        # quietly becomes the permanent state of the canvas.
+        print(f"purpose-stance: {n_exempt} solution(s) grandfathered at derivation "
+              f"— not checked, and never will be until someone backfills them")
     if not findings:
         print("purpose-stance: OK (or not in use)")
         return 0

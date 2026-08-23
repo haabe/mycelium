@@ -4,6 +4,28 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-23.
 
+## v0.120.3 - the check that floods on adoption
+
+**v0.120.1 shipped a retrofit path that was unusable the moment anyone walked it.**
+
+A solution written before `purpose_properties` existed cannot have declared a stance against them,
+and nothing exempted it. Measured on the dogfood canvas: **53 solutions x 8 binding properties = 424
+findings on day one**, on the only project then able to adopt. **A check that floods on adoption is a
+check nobody adopts** — and it would have flagged not the work, but the fact that the project adopted
+the mechanism at all.
+
+`purpose_properties.grandfathered` is an **explicit list of exempt solution ids**, recorded at
+derivation. **Not a date comparison**: only 10 of those 53 solutions carried any date, so an inference
+would have silently exempted the wrong 43.
+
+**The exempt count prints on every run** — *"N solution(s) grandfathered at derivation, not checked,
+and never will be until someone backfills them"* — because an exemption nobody sees becomes the
+permanent state of the canvas, which is the failure this whole release line exists to catch.
+
+Third defect in this line found by using the thing rather than by testing it. v0.120.0 shipped the
+mechanism, v0.120.1 the way to reach it, v0.120.2 what running it revealed, and this one what
+finishing the run revealed.
+
 ## v0.120.2 - the altitude question
 
 **A property must sit at the altitude where violation is meaningful.** `/mycelium:purpose-properties`
