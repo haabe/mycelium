@@ -156,3 +156,68 @@ def test_firing_is_logged_for_later_tier_calibration(scripts_path, tmp_path, mon
     rec = json.loads(logged.strip().splitlines()[0])
     assert rec["hook"] == "read-before-research-guard"
     assert rec["tool"] == "WebSearch"
+
+
+# ---------------------------------------------------------------------------
+# v0.133.0 — the guard fired on substrings inside longer words
+#
+# MEASURED, not supposed. Six days of `.claude/state/read-before-research-log.jsonl`
+# held 4 firings; 3 were noise. Two of those were one collision: "Verna" matching
+# every occurrence of "go-VERNA-nce". And the noise was not merely additive — in
+# both firings the REAL entities ("Elena", "Lovable") had zero canvas hits, while
+# the collision consumed all three display slots, so a true "nothing known" was
+# presented to the agent as "the canvas already records this".
+# ---------------------------------------------------------------------------
+
+def _boundary_canvas(tmp_path, **files):
+    c = tmp_path / ".claude" / "canvas"
+    c.mkdir(parents=True, exist_ok=True)
+    for name, body in files.items():
+        (c / f"{name}.yml").write_text(body)
+    return tmp_path
+
+
+def test_term_does_not_match_inside_a_longer_word(scripts_path, tmp_path):
+    """THE FAILURE DIRECTION. 'Verna' must not fire on 'governance'."""
+    mod = _import(scripts_path)
+    root = _boundary_canvas(tmp_path, gtm="  governance architecture designed before the pressure\n")
+    assert mod.search_canvas(root, ["Verna"]) == []
+
+
+def test_the_real_token_is_still_found(scripts_path, tmp_path):
+    """The boundary fix must not buy silence by matching nothing."""
+    mod = _import(scripts_path)
+    root = _boundary_canvas(tmp_path, gtm="  Elena Verna, head of growth\n")
+    hits = mod.search_canvas(root, ["Verna"])
+    assert len(hits) == 1 and hits[0][0] == "Verna"
+
+
+def test_boundaries_hold_on_both_sides(scripts_path, tmp_path):
+    mod = _import(scripts_path)
+    root = _boundary_canvas(tmp_path, a="  overnance vernacular governance\n")
+    assert mod.search_canvas(root, ["Verna"]) == []
+
+
+def test_hyphen_and_punctuation_do_not_defeat_a_match(scripts_path, tmp_path):
+    """Lookarounds are used rather than \\b so a term next to punctuation still hits."""
+    mod = _import(scripts_path)
+    root = _boundary_canvas(tmp_path, a="  (Verna) said, 'Verna'.\n")
+    assert len(mod.search_canvas(root, ["Verna"])) >= 1
+
+
+def test_quoted_phrases_still_match_after_the_boundary_change(scripts_path, tmp_path):
+    """Phrases carry spaces and punctuation; re.escape must not break them."""
+    mod = _import(scripts_path)
+    root = _boundary_canvas(tmp_path, a="  the everyone can build era is here\n")
+    assert len(mod.search_canvas(root, ["everyone can build"])) == 1
+
+
+def test_generic_job_titles_are_not_candidates(scripts_path):
+    """From the log: one firing returned three hits, ALL 'Product' matching schema
+    comments like `# Product type: ai_tool`. Whole-word, so the boundary fix does not
+    reach them — they are canvas structural vocabulary, not entities."""
+    mod = _import(scripts_path)
+    got = mod.candidates("Herman Man Ironclad Chief Product Officer")
+    assert "Herman" in got and "Ironclad" in got
+    for generic in ("Chief", "Product", "Officer"):
+        assert generic not in got

@@ -73,6 +73,13 @@ _STOP = {
     "What", "When", "Where", "Which", "Who", "Why", "How", "Does", "Should",
     "The", "This", "That", "There", "Their", "Then", "With", "From", "Into",
     "About", "After", "Before", "Http", "Https", "Search", "Latest", "Best",
+    # ADDED v0.133.0 FROM THE LOG, not from intuition — which is what the note above asks
+    # for. One firing carried terms [Herman, Ironclad, Chief, Product, Officer] and returned
+    # three hits, ALL of them "Product" matching schema comments like `# Product type:
+    # ai_tool`. Whole-word matches, so the boundary fix does not touch them: these are job
+    # titles and canvas structural vocabulary, capitalised in a query without naming an
+    # entity the canvas holds a judgement about.
+    "Product", "Growth", "Chief", "Officer", "Head", "Panel", "Event",
 }
 
 
@@ -104,7 +111,12 @@ def search_canvas(project_dir: Path, terms, per_term=2, cap=3):
     if not files:
         return []
     hits = []
-    lowered = [(t, t.lower()) for t in terms]
+    # WORD-BOUNDARY, NOT SUBSTRING (v0.133.0). This was `low in line.lower()`, so a term
+    # matched anywhere inside a longer word: "Verna" fired on every occurrence of
+    # "go-VERNA-nce". Measured in `.claude/state/read-before-research-log.jsonl` after six
+    # days: of 4 firings, 3 were noise and 2 of those were this exact collision.
+    # Lookarounds rather than \b so quoted PHRASES with punctuation at the edges still work.
+    lowered = [(t, re.compile(r"(?<!\w)" + re.escape(t.lower()) + r"(?!\w)")) for t in terms]
     for path in files:
         try:
             lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
@@ -113,7 +125,7 @@ def search_canvas(project_dir: Path, terms, per_term=2, cap=3):
         for term, low in lowered:
             n = 0
             for i, line in enumerate(lines, 1):
-                if low in line.lower():
+                if low.search(line.lower()):
                     hits.append((term, path.name, i, line.strip()[:160]))
                     n += 1
                     if n >= per_term:

@@ -4,6 +4,28 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-24.
 
+## v0.133.0 - the guard fired on substrings inside longer words
+
+`read_before_research_guard.py` tested `low in line.lower()`, so a term matched anywhere inside a
+longer word. **"Verna" fired on every occurrence of "go*verna*nce."** Matching is now
+word-boundary, using lookarounds rather than `\b` so quoted phrases with punctuation at their edges
+still match.
+
+**Tuned from the log, which is what v0.127.0 shipped the log for.** That release predicted the guard
+would be noisy in a canvas naming hundreds of entities, and committed to measuring rather than
+guessing. Six days on, the log held **4 firings and 3 were noise** — two of them that one collision.
+
+**The noise was not merely additive, and that is the part worth reading.** In both collision firings
+the *real* entities returned zero canvas hits, while the false match consumed all three display
+slots. A true "nothing known" was presented to the agent as "the canvas already records this" —
+the exact inverse of what the guard exists to do.
+
+**A second class, also from the log.** One firing returned three hits, all `Product` matching schema
+comments like `# Product type: ai_tool`. Those are whole-word matches, so the boundary fix does not
+reach them: job titles and canvas structural vocabulary now sit in the stop list (`Product`,
+`Growth`, `Chief`, `Officer`, `Head`, `Panel`, `Event`). The list grew from **observed firings
+only**, per its own note that over-filtering on intuition reintroduces the gap it was built to close.
+
 ## v0.132.0 - sent-and-waiting is not in-progress
 
 **`pending` carried two incompatible meanings** — *not started* and *started, waiting on someone
