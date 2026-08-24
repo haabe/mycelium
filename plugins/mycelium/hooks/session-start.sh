@@ -284,6 +284,51 @@ if d.get('status') == 'violations':
 fi
 
 # ============================================================
+# CHECK 1b-ii: A published page whose source died with the session.
+#
+# i-productified dogfood 2026-08-24: three artifacts published to persistent
+# addresses, sources left in session scratch, addresses recorded only in
+# prose. Had the session ended, no update path existed for any of them.
+#
+# ADVISORY. And note the limit, which is the reason this is a reminder and
+# not a gate: it can only see records that EXIST. A publish that recorded
+# nothing leaves it nothing to fail on — there is no producer to gate. See
+# engine/render-conventions.md § Published output.
+# ============================================================
+PUBCHK=""
+if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check_published_records.py" ]; then
+  PUBCHK="${CLAUDE_PLUGIN_ROOT}/scripts/check_published_records.py"
+elif [ -f "$PROJECT_DIR/.claude/scripts/check_published_records.py" ]; then
+  PUBCHK="$PROJECT_DIR/.claude/scripts/check_published_records.py"
+fi
+if [ -n "$PUBCHK" ]; then
+  PUBN=$(python3 "$PUBCHK" --project-dir "$PROJECT_DIR" --json 2>/dev/null \
+    | python3 -c "
+import json, sys
+try:
+  d = json.load(sys.stdin)
+except Exception:
+  sys.exit(0)
+v = d.get('published_violations') or []
+if v:
+  # Dead sources counted apart: 'the file is gone' is a different sentence
+  # from 'a field is missing', and only the first is unrecoverable.
+  dead = sum(1 for x in v if 'missing on disk' in x.get('problem', ''))
+  print('%d:%d' % (len(v), dead))
+" 2>/dev/null || echo "")
+  if [ -n "$PUBN" ]; then
+    PUB_ALL="${PUBN%%:*}"
+    PUB_DEAD="${PUBN##*:}"
+    if [ "${PUB_DEAD:-0}" != "0" ]; then
+      REMINDERS="${REMINDERS}${PUB_DEAD} published record/records name a source file that is NO LONGER ON DISK — that page is live and can no longer be updated, only replaced. Recover the source or supersede the record. "
+    fi
+    if [ "${PUB_ALL:-0}" != "${PUB_DEAD:-0}" ]; then
+      REMINDERS="${REMINDERS}Published record(s) missing an address, a source or a date. Run check_published_records.py for the list; see engine/render-conventions.md § Published output. "
+    fi
+  fi
+fi
+
+# ============================================================
 # CHECK 1c: Stale prose — a record's sentence outliving the field beside it.
 #
 # v0.101.0 made the absence-claim guard fire on obligations, but that guard

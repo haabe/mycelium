@@ -240,6 +240,63 @@ Notes on the fields:
 - mermaidchart.com handoff omitted for `--format ascii`, `--format json`, and any future non-Mermaid format.
 - If a staleness warning fired per the specialist's staleness check, it prepends the disclaimer.
 
+## Published output: a durable source and a recorded address
+
+**THE GAP THIS CLOSES (i-productified, 2026-08-24).** Everything above assumes a shareable output is
+**a local file a human hands over** — `receipt-render` is explicit that nothing is transmitted and the
+carrier is handed to a colleague. That model is sound and stays. **It has no answer for an output that
+lives at a persistent, updatable address**, and a framework-wide search for `outputs/`,
+`published_at`, `artifact_url`, `hosted_at` and `permalink` returned nothing, so an agent publishing
+one has to invent the whole thing.
+
+**Measured cost, one session**: three artifacts published; addresses recorded only in prose inside long
+canvas entries, and only because the user asked; sources left in session scratch. Had that session
+ended: sources gone, addresses greppable only from prose, no update path, and a 20-minute external
+data pull lost with them.
+
+### The convention
+
+**A publish is not finished when the page is live. It is finished when three things exist.**
+
+1. **A DURABLE SOURCE COPY, outside session scratch.** Agents author in scratch that is wiped; a
+   published page whose source died with the session cannot be updated, only replaced.
+2. **A STRUCTURED RECORD ON THE OWNING CANVAS ENTRY** — not prose, not the decision log alone. Prose
+   is unreachable to any later check and, in practice, to the next session.
+3. **THE SUPPORTING DATA, when the render came from an expensive pull.** Re-running a 20-minute
+   external fetch to regenerate a page is a cost the record can remove.
+
+```yaml
+published:
+  - kind: page              # what the address serves: page | artifact | doc | gist
+    address: "https://..."  # the persistent, updatable location
+    source: "docs/renders/opportunity-tree.html"   # durable copy, project-local path
+    published_at: "2026-08-24"
+    data: ".claude/evals/results/brreg-2026-08-24.json"   # optional; when a pull backs it
+```
+
+### The path is project-local, deliberately
+
+**`outputs/` is NOT promoted to a framework concept.** Different repos already have a layout, and
+hard-coding one would repeat the defect this plugin fixed in v0.88.0 — **an artifact asserting a
+location it cannot know**. The framework concept is *a render records where it went*; the directory is
+the project's call.
+
+### Updating: the failure that produces two live copies and no error
+
+**Republishing from a new session, or from a different source path, mints a NEW address and silently
+leaves the recorded one stale.** Two divergent copies, both live, nothing raised. **So an update means
+republishing to the ADDRESS ALREADY RECORDED**, which is why the address must be findable by a later
+session. If a new address is genuinely intended, the old record is superseded explicitly, not
+abandoned.
+
+### What is checkable and what is not, stated here rather than discovered later
+
+`scripts/check_published_records.py` validates the records that EXIST: an address is present and
+URL-shaped, a durable `source` is named, and that source is still on disk. **It cannot detect a publish
+that recorded nothing** — the render fleet is read-only and need not touch the canvas at all, so there
+is no producer to gate. **That is the `gates_fired` shape** (a field specified with no mechanism
+writing it), named here so a green check is never read as coverage of the common failure.
+
 ## Canvas-state timestamp resolution
 
 Specialists read `_meta.last_validated`. There is no fallback, and that is deliberate.
