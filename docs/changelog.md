@@ -4,6 +4,46 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-23.
 
+## v0.126.0 - counting the population hid the seven
+
+The 2026-08-23 rule census reported **19 of 54** solution leaves carrying a `four_risks` block. Read as
+a population that is a sprawling backlog and nobody's obvious next move.
+
+**Recounted by status, the 35 without one are three different things:**
+
+| | n | |
+|---|---|---|
+| still `candidate` / `proposed` / `open` | 24 | pre-decision. The rule says **should**, and an agent-written risk block on a leaf that may never be pursued is the filler trap |
+| closed (`discarded`, `rejected_*`) | 4 | nothing was invested, so nothing a risk assessment would have protected |
+| **passed a decision point** | **7** | **the finding** — shipped or validated with no risk evaluation at all |
+
+**Counting the population is what hid the seven.** `check_leaf_lifecycle.py` now flags exactly those.
+
+**It extends rather than duplicates.** That script already audits leaves at a decision point for a
+missing selection artifact — ICE on shipped, with an `ice_exempt:` escape hatch. The new half mirrors
+it with `four_risks_exempt:`. One reader, one convention, one place to look.
+
+**The two halves use different populations on purpose**, stated in the code because it looks like an
+inconsistency: ICE keys on **shipped** because it is the Check 38 precondition; four-risks keys on
+shipped **or validated**, because the rule it enforces is about passing a decision and `validated` is
+a decision. Widening the ICE half to match was considered and **refused** — that would change a
+shipped mechanism's behaviour under cover of adding a new one.
+
+**An empty `four_risks:` counts as UNASSESSED.** A key with nothing under it is precisely the shape
+the census exists to find, and passing it would make the check certify the defect it was written for.
+
+**And it does not ask for a backfill.** The rule is *"no scoring without risk evaluation FIRST"*; a
+block written today cannot restore that sequence, it only makes a past decision look compliant — the
+same objection already accepted for the fifteen empty cycle records. **The flag is the honest state.**
+
+**Tier: advisory**, via `session-start`, matching the ICE half it extends. The hook now reports the
+two counts separately — the JSON key `violations` still means ICE, because the hook prints an ICE
+sentence from its length and repurposing it would have rendered a four-risks-only finding as
+"0 shipped leaves carry no ICE".
+
+**Eight new tests**, including the two that matter: an empty risk block is a violation, and the ICE
+half is *not* silently widened to `validated`.
+
 ## v0.125.0 - the name-grep answered a question about behaviour
 
 **P6 closes, and the row's own finding was wrong. That is the more useful half.**

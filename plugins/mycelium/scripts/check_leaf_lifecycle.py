@@ -33,6 +33,29 @@ reporting "nothing to audit" and reading green. That is the built-not-wired clas
 committed inside the fix for a wiring failure. Shipping it as a plugin script means
 it reaches the canvas that actually has the data.
 
+THE SECOND HALF, ADDED 2026-08-24: FOUR RISKS PAST A DECISION POINT.
+    `theory-gates.md` says each solution leaf "should have a `four_risks` block", and
+    `/ice-score` states the harder rule: "ICE without Four Risks is ungrounded estimation."
+    The 2026-08-23 rule census counted 19 of 54 leaves carrying one and read that as a
+    sprawling backlog. Recounted 2026-08-24, split by status, it is three different things:
+    24 still `candidate` (pre-decision, where the rule says SHOULD and a filled block on a
+    leaf that may never be pursued is the filler trap), 4 closed (nothing to assess), and
+    **7 that passed a decision point with no risk evaluation at all.** Those 7 are the finding,
+    and counting the population hid them.
+
+    WHY THE TWO HALVES USE DIFFERENT POPULATIONS, stated because it looks like an
+    inconsistency: the ICE half keys on SHIPPED because ICE is the precondition for a
+    product-leaf cycle (Check 38). The four-risks half keys on SHIPPED **or VALIDATED**
+    because the rule it enforces is about passing a decision, and `validated` is a decision.
+    Founder ruling 2026-08-24. Widening the ICE half to match was considered and refused —
+    that would change a shipped mechanism's behaviour under cover of adding a new one.
+
+    AND IT DOES NOT ASK FOR A BACKFILL. Founder ruling, same day: flag, do not backfill.
+    Row 1 of the census says "no scoring without risk evaluation FIRST"; a block written
+    today cannot restore the sequence, it only makes a past decision look compliant. Same
+    objection this project already accepted for the fifteen empty cycle records. **The flag
+    is the honest state, and it is advisory.**
+
 DELIBERATELY NARROW
     It asserts ONE mechanical thing: a leaf claiming shipped carries the score its
     selection was supposed to rest on. It does NOT try to detect a leaf that shipped
@@ -49,7 +72,7 @@ ESCAPE HATCH
 ABSENT-INPUT DISCIPLINE (anti-pattern #9)
     - No opportunities.yml            -> exit 0, SKIP. Nothing to audit.
     - Unparseable                     -> exit 2, LOUD. Malformed must not read as empty.
-    - Parses but no shipped leaves    -> exit 0 with the `no-shipped-leaves` token, which
+    - Parses, no decision-point leaves -> exit 0 with `no-decision-point-leaves`, which
       is reported as N/A rather than as a pass over a population. "Nothing shipped yet"
       and "everything shipped is scored" are different facts.
 
@@ -57,8 +80,10 @@ Usage:
     check_leaf_lifecycle.py [--project-dir DIR] [--json]
 
 Exit codes:
-    0 — every shipped leaf carries ICE or a recorded exemption (or nothing to audit)
-    1 — a shipped leaf carries neither
+    0 — every shipped leaf carries ICE, and every decision-point leaf carries four_risks
+        (or a recorded exemption for either; or nothing to audit)
+    1 — a shipped leaf carries neither ICE nor an exemption, OR a decision-point leaf
+        carries neither four_risks nor an exemption
     2 — argument/input error
 """
 
@@ -66,6 +91,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
+from typing import NamedTuple
 
 try:
     import yaml
@@ -78,6 +104,18 @@ except ImportError:  # pragma: no cover - dependency is framework-wide
 # `SHIPPED-BEFORE-SCORING`, and an exact-match list would silently miss the next
 # variant someone invents — which is how this class of gap opens in the first place.
 SHIPPED_MARKER = "shipped"
+
+# Decision-point statuses for the FOUR RISKS half. Shipped-variants plus `validated`:
+# a validated leaf passed a decision, which is what the rule is about. `candidate`,
+# `proposed` and `open` are deliberately absent — pre-decision, and the rule says SHOULD.
+# `discarded` / `rejected_*` are absent too: nothing was invested, so there is nothing a
+# risk assessment would have protected. Founder ruling 2026-08-24.
+DECISION_POINT_EXTRA = ("validated",)
+
+
+def _is_decision_point(status: str) -> bool:
+    low = status.lower()
+    return SHIPPED_MARKER in low or any(m in low for m in DECISION_POINT_EXTRA)
 
 
 def _load_opportunities(project_dir: Path):
@@ -97,30 +135,72 @@ def _load_opportunities(project_dir: Path):
     return opps
 
 
+class _Tally:
+    """One half's running counts. Extracted so `audit` stays under the complexity
+    policy after the second half landed — two identical accumulate-and-branch blocks
+    inline is what pushed it over."""
+
+    def __init__(self):
+        self.violations, self.checked, self.exempted = [], 0, 0
+
+    def add(self, verdict, fail_token, leaf, opp):
+        if verdict is None:
+            return
+        self.checked += 1
+        if verdict == "exempt":
+            self.exempted += 1
+        elif verdict == fail_token:
+            self.violations.append({
+                "id": str(leaf.get("id", "<no-id>")),
+                "status": str(leaf.get("status", "")),
+                "opportunity": str(opp.get("id", "<no-id>")),
+            })
+
+
+class LeafAudit(NamedTuple):
+    """Both halves. Named rather than a 6-tuple so a caller cannot swap two counts."""
+    ice_violations: list
+    ice_checked: int
+    ice_exempted: int
+    fr_violations: list
+    fr_checked: int
+    fr_exempted: int
+
+
 def audit(project_dir: Path):
     """Return (violations, checked, exempted). Raises on unparseable input."""
     opps = _load_opportunities(project_dir)
     if opps is None:
-        return None, None, None
+        return None
 
-    violations, checked, exempted = [], 0, 0
+    ice, fr = _Tally(), _Tally()
     for opp in opps:
         if not isinstance(opp, dict):
             continue
         for leaf in opp.get("solutions") or []:
-            verdict = _classify(leaf)
-            if verdict is None:
-                continue
-            checked += 1
-            if verdict == "exempt":
-                exempted += 1
-            elif verdict == "unscored":
-                violations.append({
-                    "id": str(leaf.get("id", "<no-id>")),
-                    "status": str(leaf.get("status", "")),
-                    "opportunity": str(opp.get("id", "<no-id>")),
-                })
-    return violations, checked, exempted
+            ice.add(_classify(leaf), "unscored", leaf, opp)
+            fr.add(_classify_four_risks(leaf), "unassessed", leaf, opp)
+    return LeafAudit(ice.violations, ice.checked, ice.exempted,
+                     fr.violations, fr.checked, fr.exempted)
+
+
+def _classify_four_risks(leaf):
+    """None if not past a decision point, else 'exempt' | 'assessed' | 'unassessed'.
+
+    An empty `four_risks:` counts as UNASSESSED, not as present. A key with nothing
+    under it is the filler trap the census exists to catch, and treating it as a pass
+    would make this check certify the exact shape it was written to find.
+    """
+    if not isinstance(leaf, dict):
+        return None
+    if not _is_decision_point(str(leaf.get("status", ""))):
+        return None
+    if leaf.get("four_risks_exempt"):
+        return "exempt"
+    fr = leaf.get("four_risks")
+    if isinstance(fr, dict) and any(str(v).strip() for v in fr.values()):
+        return "assessed"
+    return "unassessed"
 
 
 def _classify(leaf):
@@ -140,6 +220,104 @@ def _classify(leaf):
     return "scored" if total_i else "unscored"
 
 
+def _report_ice(violations, checked, exempted):
+    """Human-readable ICE half. Extracted from main() when the second half landed."""
+    if violations:
+        print(
+            f"check_leaf_lifecycle: FAIL — {len(violations)} of {checked} shipped "
+            f"leaf/leaves carry no ICE and no exemption."
+        )
+        for v in violations:
+            print(f"    {v['id']:<12} status={v['status']!r}  (under {v['opportunity']})")
+        print(
+            "  A leaf's ICE is the prediction its selection rested on, and it is the\n"
+            "  precondition for a product-leaf cycle (Check 38). Either backfill via\n"
+            "  /mycelium:ice-score, or add\n"
+            "  `ice_exempt:` with a reason. A leaf may ship unscored; it may not do so silently."
+        )
+    elif checked:
+        print(
+            f"check_leaf_lifecycle: OK — {checked} shipped leaf/leaves, "
+            f"{exempted} exempted with a recorded reason."
+        )
+
+
+def _report_four_risks(violations, checked, exempted):
+    """Human-readable four-risks half. The wording is deliberately anti-backfill."""
+    if violations:
+        print(
+            f"check_leaf_lifecycle: FAIL — {len(violations)} of {checked} "
+            f"decision-point leaf/leaves carry no four_risks and no exemption."
+        )
+        for v in violations:
+            print(f"    {v['id']:<12} status={v['status']!r}  (under {v['opportunity']})")
+        print(
+            "  These passed a decision — shipped or validated — with no risk evaluation.\n"
+            "  DO NOT BACKFILL TO SILENCE THIS. The rule is 'no scoring without risk\n"
+            "  evaluation FIRST', and a block written now cannot restore that sequence;\n"
+            "  it only makes a past decision look compliant. The flag IS the honest state.\n"
+            "  Use `four_risks_exempt:` with a reason only when the leaf genuinely did not\n"
+            "  need one. Leaves still `candidate` are not counted: the rule says SHOULD, and\n"
+            "  a filled block on a leaf that may never be pursued is the filler trap."
+        )
+    elif checked:
+        print(
+            f"check_leaf_lifecycle: OK — {checked} decision-point leaf/leaves carry "
+            f"four_risks, {exempted} exempted with a recorded reason."
+        )
+
+
+def _handle_nothing_to_audit(result, args, project_dir):
+    """Exit code when there is nothing to audit, else None. Extracted from main()
+    to keep it under the complexity policy once the second half landed.
+
+    The two cases are DIFFERENT FACTS and must not collapse into one: a missing
+    canvas is a broken precondition (exit 2), a canvas with no decision-point leaf
+    is N/A (exit 0). "Nothing shipped yet" and "everything shipped is assessed" are
+    not the same claim.
+    """
+    if result is None:
+        # PRECONDITION FAILURE (exit 2), not a pass — the third time in one day
+        # that check_empty_input_honesty.py caught a script of mine returning 0
+        # over an empty tree. `opportunities.yml` is a required canvas file; its
+        # absence means the tree is broken or the path is wrong, not that this
+        # project opted out of having an OST.
+        msg = (f"cannot audit: no .claude/canvas/opportunities.yml under {project_dir}. "
+               f"That is a required canvas file, so its absence means a broken tree or a "
+               f"wrong --project-dir. NOTHING WAS AUDITED — this is not a pass.")
+        if args.json:
+            print(json.dumps({"status": "precondition-failed", "reason": msg}))
+        else:
+            print(f"check_leaf_lifecycle: ERROR — {msg}", file=sys.stderr)
+        return 2
+
+    if result.ice_checked == 0 and result.fr_checked == 0:
+        msg = ("no-decision-point-leaves — the tree has no leaf that has shipped or been "
+               "validated. N/A, not a pass over a population.")
+        print(json.dumps({"status": "n/a", "reason": msg}) if args.json
+              else f"check_leaf_lifecycle: N/A — {msg}")
+        return 0
+    return None
+
+
+def _emit_json(result, failed):
+    """Machine-readable output.
+
+    `violations` KEEPS MEANING THE ICE HALF. The session-start hook reads that key and
+    prints an ICE sentence from its length; repurposing it would have made a
+    four-risks-only finding render as "0 shipped leaves carry no ICE".
+    """
+    print(json.dumps({
+        "status": "violations" if failed else "ok",
+        "violations": result.ice_violations,
+        "shipped_leaves": result.ice_checked,
+        "exempted": result.ice_exempted,
+        "four_risks_violations": result.fr_violations,
+        "decision_point_leaves": result.fr_checked,
+        "four_risks_exempted": result.fr_exempted,
+    }, indent=2))
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Fail when a shipped solution leaf carries no ICE and no recorded exemption."
@@ -157,61 +335,26 @@ def main() -> int:
         return 2
 
     try:
-        violations, checked, exempted = audit(project_dir)
+        result = audit(project_dir)
     except (RuntimeError, TypeError) as exc:
         print(f"check_leaf_lifecycle: ERROR — {exc}", file=sys.stderr)
         return 2
 
-    if violations is None:
-        # PRECONDITION FAILURE (exit 2), not a pass — the third time in one day
-        # that check_empty_input_honesty.py caught a script of mine returning 0
-        # over an empty tree. `opportunities.yml` is a required canvas file; its
-        # absence means the tree is broken or the path is wrong, not that this
-        # project opted out of having an OST.
-        msg = (f"cannot audit: no .claude/canvas/opportunities.yml under {project_dir}. "
-               f"That is a required canvas file, so its absence means a broken tree or a "
-               f"wrong --project-dir. NOTHING WAS AUDITED — this is not a pass.")
-        if args.json:
-            print(json.dumps({"status": "precondition-failed", "reason": msg}))
-        else:
-            print(f"check_leaf_lifecycle: ERROR — {msg}", file=sys.stderr)
-        return 2
+    early = _handle_nothing_to_audit(result, args, project_dir)
+    if early is not None:
+        return early
 
-    if checked == 0:
-        msg = ("no-shipped-leaves — the tree has no leaf with a shipped status. "
-               "N/A, not a pass over a population.")
-        print(json.dumps({"status": "n/a", "reason": msg}) if args.json
-              else f"check_leaf_lifecycle: N/A — {msg}")
-        return 0
+    violations, checked, exempted = result.ice_violations, result.ice_checked, result.ice_exempted
+    fr_violations, fr_checked, fr_exempted = (
+        result.fr_violations, result.fr_checked, result.fr_exempted)
 
+    failed = bool(violations or fr_violations)
     if args.json:
-        print(json.dumps({
-            "status": "violations" if violations else "ok",
-            "violations": violations,
-            "shipped_leaves": checked,
-            "exempted": exempted,
-        }, indent=2))
-        return 1 if violations else 0
-
-    if violations:
-        print(
-            f"check_leaf_lifecycle: FAIL — {len(violations)} of {checked} shipped "
-            f"leaf/leaves carry no ICE and no exemption."
-        )
-        for v in violations:
-            print(f"    {v['id']:<12} status={v['status']!r}  (under {v['opportunity']})")
-        print(
-            "  A leaf's ICE is the prediction its selection rested on, and it is the\n"
-            "  precondition for a product-leaf cycle (Check 38). Either backfill via\n"
-            "  /mycelium:ice-score, or add\n"
-            "  `ice_exempt:` with a reason. A leaf may ship unscored; it may not do so silently."
-        )
+        _emit_json(result, failed)
     else:
-        print(
-            f"check_leaf_lifecycle: OK — {checked} shipped leaf/leaves, "
-            f"{exempted} exempted with a recorded reason."
-        )
-    return 1 if violations else 0
+        _report_ice(violations, checked, exempted)
+        _report_four_risks(fr_violations, fr_checked, fr_exempted)
+    return 1 if failed else 0
 
 
 if __name__ == "__main__":
