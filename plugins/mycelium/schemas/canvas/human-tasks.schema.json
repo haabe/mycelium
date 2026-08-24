@@ -155,13 +155,32 @@
             "$ref": "_common.schema.json#/$defs/iso_timestamp"
           },
           "evidence_logged_to": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ],
+            "description": "Where the evidence landed. STRING OR ARRAY, and the reason is measured rather than stylistic: this was `array` only, while all seven real records in four months of dogfood use were STRINGS -- often a single anchor with a parenthetical, e.g. 'opportunities.yml#opp-005.provenance (2026-08-02 entry)'. The records were never checked because `pending_tasks` does not constrain this field at all, so the mismatch only surfaced when they were finally moved here (v0.131.0)."
           },
           "key_findings": {
-            "type": "string"
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ],
+            "description": "What was learned. STRING OR ARRAY, and this one was backwards in the OPPOSITE direction from `evidence_logged_to` above: specified as a string while real records are lists of distinct findings. A schema that had both fields inverted relative to actual use is not a contract anyone was writing against."
           },
           "source_class": {
             "$ref": "_common.schema.json#/$defs/source_class"
@@ -188,7 +207,8 @@
           }
         ],
         "description": "Tasks that closed having produced evidence. `required` was relaxed from [id, completed_at, source_class] to [id] in v0.130.0: measured against four months of real closures in the dogfood project, 47 of 61 completed tasks carried neither field, because no closure path ever populated them. A schema asserting a contract that its own producers never met is the documented-rule-diverges-from-enforcement shape \u2014 and holding the line would have forced 45 invented source_class values, which is worse than an absent field. Both remain STRONGLY RECOMMENDED and are surfaced by a validator WARN."
-      }
+      },
+      "description": "Tasks that closed having produced evidence. Two of this list's item types were corrected in v0.131.0 against four months of real records, and `required` was relaxed in v0.130.0 for the same reason: nothing had ever validated against it, because closures were left in `pending_tasks` -- whose item schema constrains neither field. AN UNUSED SCHEMA DRIFTS SILENTLY, and the drift is only visible the moment something finally uses it."
     },
     "closed_without_evidence": {
       "type": "array",

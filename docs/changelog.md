@@ -4,6 +4,33 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-24.
 
+## v0.131.0 - an unused schema drifts silently
+
+**`completed_tasks` had two of its field types backwards relative to four months of real records,
+in opposite directions.** Nothing noticed, because nothing had ever validated against it.
+
+v0.130.0 gave the dogfood project a `completed_tasks` list to move 61 misfiled closures into. The
+moment they arrived, **11 schema errors fired on records that had been schema-valid the whole time**:
+
+- `evidence_logged_to` specified as **array**, while all seven real records are **strings** — usually
+  one anchor with a parenthetical, e.g. `opportunities.yml#opp-005.provenance (2026-08-02 entry)`.
+- `key_findings` specified as **string**, while real records are **lists** of distinct findings.
+
+Both now accept string-or-array. A schema with both fields inverted relative to actual use was not a
+contract anyone was writing against.
+
+**Why it went unseen**: closures were left in `pending_tasks`, whose item schema constrains neither
+field. The stricter list existed but was empty, so its drift cost nothing until something used it.
+
+**The date type is deliberately NOT loosened.** `completed_at` stays a strict ISO timestamp. Two
+records carry the literal string `unknown`; those are fixed as data, because a date field that
+accepts prose stops being a date.
+
+**The general lesson, and the third instance of this family in one day**: a specced field with no
+reader (`gates_fired`), an instruction with no destination (`/log-evidence` → `completed_tasks`), and
+a schema with no validator all fail identically — they report nothing, for as long as nobody uses
+them. Absence of an error from an unexercised mechanism is not evidence that it works.
+
 ## v0.130.0 - a closed task read as an open commitment
 
 **Of 94 entries under `pending_tasks` in the dogfood project, nine were pending.** 61 `completed`,
