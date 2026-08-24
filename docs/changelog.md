@@ -4,6 +4,50 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-23.
 
+## v0.125.0 - the name-grep answered a question about behaviour
+
+**P6 closes, and the row's own finding was wrong. That is the more useful half.**
+
+The 2026-08-23 rule census reported three architecture fitness functions —
+`check_wiring_contract`, `check_negative_control`, `check_test_authenticity` — as appearing *"only in
+`.github/workflows/validate.yml`"*, making **G-V14** a `BLOCK`-tier guardrail with 3 of its 4 fitness
+functions unreachable locally.
+
+**They were never CI-only.** All four are listed in `scripts/local-gate-set.txt`, and the pre-push
+hook is **data-driven off that file**: it reads the lines and runs each script, **naming none of
+them**. So a grep for a script name finds only `validate.yml` and reads as CI-only — while the gate
+has been blocking every push all along.
+
+**A name-grep answered a question about behaviour.** That is the false-absence class this project logs
+most often, and it produced a `BLOCK`-tier alarm about a gate that was working.
+
+## What was genuinely unmet
+
+G-V14 says it is *"satisfied by the project's verification command (test script, `make check`,
+pre-commit) invoking them"*. The closest thing to that is `scripts/gates.sh` — the command a builder
+runs after a change. **It ran four gates against fifteen in the set, and read a different list from CI
+and pre-push.**
+
+**What ships:** `gates.sh` is now driven off `local-gate-set.txt`, the same single source as CI and
+the pre-push hook, so the three surfaces cannot drift apart again. `check_gate_parity.py` already
+asserts CI is a subset of the set; this closes the last surface reading a different list.
+
+**Two deliberate carve-outs, both stated in the code rather than discovered later:**
+
+- **`check_coverage_floor` is DEFERRED there, with its reason printed.** Its input is a fresh
+  `coverage.json`, produced by the pytest-with-coverage step that CI and pre-push run and this command
+  deliberately does not (plain pytest is seconds; coverage is minutes). Running it here would either
+  read a **stale** `coverage.json` — green on numbers nobody just measured — or fail on a precondition
+  the builder did not break. It still blocks at pre-push and in CI.
+- **An absent gate set is not a failure.** A consumer project running the shipped wrapper has no
+  `plugins/mycelium/scripts`; failing them for that is a defect they cannot have. A gate **named in an
+  existing set but missing on disk** remains a hard failure — a gate set that quietly shrinks reports
+  green while checking less.
+
+**Caught by its own test suite**: the first version of this change failed `test_gates_wrapper.sh`,
+whose fixture is a bare temp repo with no `plugins/` — exactly the consumer case. The test existed
+before the change and did its job.
+
 ## v0.124.0 - the promise closed by the doc ceasing to promise
 
 `engine/mutation-log.md` is **removed**. It specified `canvas/mutation_log.jsonl` in full — format,
