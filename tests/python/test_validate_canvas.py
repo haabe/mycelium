@@ -935,3 +935,101 @@ def test_well_formed_multi_root_file_passes(tmp_path, scripts_path):
         + "  - name: b\n    provenance: {}\n    rolls_up_to: adoption\n",
     )
     assert validator.ost_root_errors(canvas_dir) == []
+
+
+# ---------------------------------------------------------------------------
+# task_list_findings (v0.130.0) — a closed task read as an open commitment
+#
+# THE DEFECT: of 94 entries under `pending_tasks` in the dogfood project, nine were
+# pending. The founder caught it, not the framework. Nothing flagged it because
+# `pending_tasks.items.status` shares the full six-value enum, so a completed task in
+# the pending list is schema-VALID. These tests pin the failure direction first.
+# ---------------------------------------------------------------------------
+
+def _tasks(tmp_path, doc):
+    import yaml
+    canvas = tmp_path / "canvas"
+    canvas.mkdir(parents=True, exist_ok=True)
+    (canvas / "human-tasks.yml").write_text(yaml.safe_dump(doc, sort_keys=False))
+    return canvas
+
+
+def test_completed_task_in_pending_list_is_flagged(tmp_path, scripts_path):
+    """The failure direction. This is the exact shape the founder caught by memory."""
+    v = _import_validator(scripts_path)
+    canvas = _tasks(tmp_path, {"pending_tasks": [
+        {"id": "ht-081", "status": "completed"},
+        {"id": "ht-091", "status": "pending"},
+    ], "completed_tasks": []})
+    out = " ".join(v.task_list_findings(canvas))
+    assert "ht-081" in out
+    assert "completed_tasks" in out
+    assert "ht-091" not in out
+
+
+def test_abandoned_and_cancelled_are_routed_to_the_third_list(tmp_path, scripts_path):
+    v = _import_validator(scripts_path)
+    canvas = _tasks(tmp_path, {"pending_tasks": [
+        {"id": "ht-005", "status": "abandoned"},
+        {"id": "ht-048", "status": "cancelled"},
+    ], "completed_tasks": []})
+    out = " ".join(v.task_list_findings(canvas))
+    assert out.count("closed_without_evidence") == 2
+    assert "completed_tasks" not in out
+
+
+def test_in_progress_is_at_home_in_pending_tasks(tmp_path, scripts_path):
+    """`pending_tasks` holds OPEN work. Flagging in_progress would make the check noise
+    on 16 live tasks and teach the reader to scroll past it."""
+    v = _import_validator(scripts_path)
+    canvas = _tasks(tmp_path, {"pending_tasks": [{"id": "ht-083", "status": "in_progress"}]})
+    assert v.task_list_findings(canvas) == []
+
+
+def test_a_correctly_filed_canvas_is_silent(tmp_path, scripts_path):
+    v = _import_validator(scripts_path)
+    canvas = _tasks(tmp_path, {
+        "pending_tasks": [{"id": "ht-091", "status": "pending"}],
+        "completed_tasks": [{"id": "ht-081", "status": "completed"}],
+        "closed_without_evidence": [{"id": "ht-048", "status": "cancelled",
+                                     "closure_reason": "superseded"}],
+    })
+    assert v.task_list_findings(canvas) == []
+
+
+def test_missing_completed_tasks_list_is_named_as_the_cause(tmp_path, scripts_path):
+    """The root cause, not a symptom: /log-evidence writes to a list that does not exist,
+    so the instruction silently does nothing."""
+    v = _import_validator(scripts_path)
+    canvas = _tasks(tmp_path, {"pending_tasks": [{"id": "ht-081", "status": "completed"}]})
+    out = " ".join(v.task_list_findings(canvas))
+    assert "no `completed_tasks:` list" in out
+
+
+def test_the_finding_names_a_count_and_caps_the_ids(tmp_path, scripts_path):
+    """A bare count is unactionable; sixty ids is scrollable-past, which mutes a warning."""
+    v = _import_validator(scripts_path)
+    canvas = _tasks(tmp_path, {"pending_tasks": [
+        {"id": f"ht-{i:03d}", "status": "completed"} for i in range(1, 11)
+    ], "completed_tasks": []})
+    out = v.task_list_findings(canvas)[0]
+    assert "10 task(s)" in out
+    assert "+6 more" in out
+
+
+def test_absent_file_and_unparseable_file_are_silent(tmp_path, scripts_path):
+    """A broken advisory check must never take the whole canvas validation down."""
+    v = _import_validator(scripts_path)
+    canvas = tmp_path / "empty"
+    canvas.mkdir()
+    assert v.task_list_findings(canvas) == []
+    (canvas / "human-tasks.yml").write_text("pending_tasks: [oops\n")
+    assert v.task_list_findings(canvas) == []
+
+
+def test_entries_without_a_status_are_not_guessed_at(tmp_path, scripts_path):
+    """An absent status is unknown, not 'completed'. Inferring it would put a task in a
+    list on the validator's guess."""
+    v = _import_validator(scripts_path)
+    canvas = _tasks(tmp_path, {"pending_tasks": [{"id": "ht-999"}]})
+    assert v.task_list_findings(canvas) == []

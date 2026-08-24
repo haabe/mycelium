@@ -61,23 +61,39 @@ def test_absent_fields_are_reported(tmp_path):
     assert "gates_fired" in joined
     assert "regressions" in joined
     assert "rework" in joined
+    assert "demand_type" in joined
+
+
+def test_demand_type_absence_is_reported_like_its_siblings(tmp_path):
+    """v0.130.0. demand_type shipped in v0.129.0 WITH its consumer — the fix for the
+    producer-without-reader defect — but WITHOUT the absence WARN gates_fired and
+    regressions carry. A field that goes quiet when unpopulated is how 0-of-16
+    compliance survives for months, so the asymmetry is pinned here."""
+    c = _cycle(gates_fired=[], regressions={"in_cycle_count": 0},
+               rework={"post_delivery_corrections": 0})
+    out = _mod().cycle_field_coverage(_write(tmp_path, [c]), today=TODAY)
+    assert len(out) == 1
+    assert "demand_type" in out[0]
+    assert "Demand mix" in out[0]
 
 
 def test_a_recorded_zero_is_not_a_miss(tmp_path):
     """Rule 1. An honest empty measurement must never be flagged."""
     c = _cycle(gates_fired=[], regressions={"in_cycle_count": 0},
-               rework={"post_delivery_corrections": 0})
+               rework={"post_delivery_corrections": 0}, demand_type="value")
     assert _mod().cycle_field_coverage(_write(tmp_path, [c]), today=TODAY) == []
 
 
 def test_recent_cycles_are_excluded_from_the_rework_denominator(tmp_path):
     """Rule 2. Closed three days ago — the field cannot exist yet."""
-    c = _cycle(completed_at="2026-08-20", gates_fired=[], regressions={"in_cycle_count": 0})
+    c = _cycle(completed_at="2026-08-20", gates_fired=[], regressions={"in_cycle_count": 0},
+               demand_type="value")
     assert _mod().cycle_field_coverage(_write(tmp_path, [c]), today=TODAY) == []
 
 
 def test_an_old_cycle_missing_rework_is_reported(tmp_path):
-    c = _cycle(completed_at="2026-07-01", gates_fired=[], regressions={"in_cycle_count": 0})
+    c = _cycle(completed_at="2026-07-01", gates_fired=[], regressions={"in_cycle_count": 0},
+               demand_type="value")
     out = _mod().cycle_field_coverage(_write(tmp_path, [c]), today=TODAY)
     assert len(out) == 1 and "rework" in out[0]
 
@@ -113,6 +129,7 @@ def test_empty_and_missing_cycle_lists_are_silent(tmp_path):
 
 def test_undated_cycles_are_skipped_and_the_skip_is_reported(tmp_path):
     """Silently dropping them would shrink the denominator without saying so."""
-    c = _cycle(completed_at="not-a-date", gates_fired=[], regressions={"in_cycle_count": 0})
+    c = _cycle(completed_at="not-a-date", gates_fired=[], regressions={"in_cycle_count": 0},
+               demand_type="value")
     out = _mod().cycle_field_coverage(_write(tmp_path, [c]), today=TODAY)
     assert out == [] or "unreadable completed_at" in out[0]
