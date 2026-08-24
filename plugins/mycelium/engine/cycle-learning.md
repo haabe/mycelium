@@ -49,6 +49,28 @@ Every leaf that reaches a terminal state (launched, archived, or killed) generat
     to_phase: null               # phase regressed TO (e.g., Define)
     trigger: ""                  # what invalidated the assumption / forced the step back
 
+  # Demand type — WHY this cycle exists at all. Seddon: VALUE demand is work a user
+  # or goal actually asked for; FAILURE demand is work caused by earlier work being
+  # wrong, missing or incomplete. "Five cycles" reads as throughput; "two value, three
+  # failure" reads as a system generating its own work, and only the second is a
+  # measurement.
+  #
+  # SET AT CYCLE OPEN, NOT AT RETROSPECTIVE. Seddon classifies demand as it ARRIVES,
+  # and origin is knowable when a cycle starts and progressively less knowable
+  # afterwards. A demand type assigned weeks later reports on the assessor.
+  #
+  # NOT AN EXTENSION OF `rework` BELOW. That block is post-delivery-defect scoped — a
+  # 14-day window after completion. Work begun because earlier work was incomplete is
+  # not a post-delivery regression; it is the reason the cycle exists. Different
+  # question, different field.
+  demand_type: value             # REQUIRED — value | failure
+  demand_origin: ""              # REQUIRED when failure: what earlier work caused this cycle.
+                                 # "" when value. A failure cycle that cannot name its cause
+                                 # is usually mis-classed.
+  demand_cost_class: null        # OPTIONAL refinement (Crosby/Juran cost-of-quality):
+                                 # prevention | appraisal | internal-failure | external-failure.
+                                 # null is a fine answer; the binary above is the required unit.
+
   # What was learned
   learnings:
     process: ""  # What would we do differently next time?

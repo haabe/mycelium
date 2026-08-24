@@ -73,6 +73,30 @@ For each dimension, compute the metric and compare against trend (if prior asses
   already emits this absence as a WARN; the dashboard must not paper over what the validator flags.
 - **Theory X/Y audit** (per `${CLAUDE_PLUGIN_ROOT}/harness/theory-tensions.md` Tension 7): for any hard-block gate, check it is *scaffolding* (surfaces its why, an escape hatch exists, leaves the user more capable), not *coercion* (compliance for its own sake, no surfaced reason, no escape). A high-block gate that fails this audit is a Theory-X drift to remediate, not just a strict gate.
 
+**Demand Mix** (Seddon: value demand vs failure demand):
+- **SOURCE: `cycle-history.yml#cycles[].demand_type`.** Named here at the same time the field was
+  added, because the two fields above were specced first and read second — and were still at 0 of 16
+  compliance months later. **A field whose consumer is written afterwards is the `gates_fired`
+  shape**, and this dimension exists so demand type does not repeat it.
+- Report the SPLIT, never the total: *"N cycles: X value, Y failure (Z%)"*. **A cycle count on its
+  own is throughput and measures nothing** — the question is what share of the work was caused by
+  earlier work.
+- **THIS IS THE COUNTER-METRIC TO RELEASE THROUGHPUT, and it is why the dimension is worth having.**
+  A rising release count reads as productivity; the same count with a rising failure share is a
+  system generating its own work. Where a project's health file already praises a rising corrections
+  count as "actively managed learning", that is a Goodhart inversion on this exact dimension —
+  surface it.
+- Flag a failure share above 50% as `warning`, and **say what it does NOT mean**: high failure demand
+  is a finding about the system, not about the people, and remediating it by re-classing cycles is
+  the fastest way to make the dimension useless.
+- **IF NO CYCLE CARRIES `demand_type`, REPORT `no-data`, NAMING THE COUNT** — *"no-data: 0 of N
+  closed cycles carry demand_type"*. **Do NOT infer demand type from commit messages, the
+  transcript, or your own read of what the cycle looked like.** Same rule and same reason as Gate
+  Effectiveness above: a dimension filled at assessment time reports on the assessor.
+- **Cycles marked `reconstructed_post_hoc: true` are reported SEPARATELY and excluded from the
+  split.** Reconstructed demand type is the weakest form of this measurement and must not be
+  averaged into records made at cycle open.
+
 **Regression Rate**:
 - **SOURCE: `cycle-history.yml#cycles[].regressions.in_cycle_count`** (in-cycle phase regressions),
   named as of v0.121.0 for the same reason as Gate Effectiveness above. **Post-launch defects are
@@ -194,6 +218,7 @@ Period: [date range]
 | Discard rate | [avg phase X] | [earlier/stable/later] | [healthy/warning/critical] | False positive rate: [OK/rising] |
 | Confidence calibration | [factor X.XX, or "empty (0 product-leaf)"] | [improving/stable/diverging/—] | [healthy/warning/critical/empty-by-design] | Decision speed: [OK/slowing] |
 | Gate effectiveness | [see detail] | — | [healthy/warning/critical] | Flow speed: [OK/slowing] |
+| Demand mix | [X value / Y failure, Z% failure, or "no-data: 0 of N"] | [improving/stable/degrading] | [healthy/warning/critical] | Throughput: [OK/inflating] |
 | Regression rate | [X%] | [decreasing/stable/increasing] | [healthy/warning/critical] | Innovation rate: [OK/declining] |
 
 ### Threshold Calibration

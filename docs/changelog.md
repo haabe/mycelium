@@ -4,6 +4,39 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-24.
 
+## v0.129.0 - five releases is throughput; two value and three failure is a measurement
+
+**A cycle record could say how much work happened and never why it existed.** The founder named the
+unit: *"most of it is work that is extra work, refactoring, bug fixing, because of missing wiring."*
+That is **Seddon's failure demand vs value demand**, and the dogfood project measured its own day at
+five releases — roughly two value, three failure, plus four corrections which are failure demand by
+definition.
+
+**What ships**
+
+- **`demand_type`** (`value` | `failure`) and **`demand_origin`** on the cycle record, in
+  `engine/cycle-learning.md` and enforced by `schemas/canvas/cycle-history.schema.json`. Optional
+  **`demand_cost_class`** (Crosby/Juran: prevention / appraisal / internal-failure / external-failure)
+  may stay `null` — the binary is the required unit.
+- **A `Demand Mix` dimension in `/mycelium:framework-health`**, reading `cycles[].demand_type`,
+  reporting the SPLIT rather than a total, and `no-data` with a count when nothing carries the field.
+
+**Set at cycle open, not at retrospective.** Seddon classifies demand as it arrives. Origin is
+knowable when a cycle starts and progressively less knowable afterwards, so a type assigned weeks
+later reports on the assessor — which is why reconstructed records are reported separately and
+excluded from the split instead of averaged in.
+
+**Not an extension of `rework`.** That block is post-delivery defects inside a 14-day window. Work
+begun because earlier work was incomplete is not a post-delivery regression; it is the reason the
+cycle exists. Different question, different field.
+
+**The consumer shipped in the same commit as the field, and that is the point.** `gates_fired` and
+`regressions` were each specced to close a named `/framework-health` dimension, were read by nothing
+for months, and sat at **0 of 16** compliance in the dogfood project; v0.121.0 wired their consumers
+after the fact. Demand Mix reads the field from day one, refuses to infer it from commits or
+transcript, and **names itself the counter-metric to release throughput** — a rising release count
+reads as productivity, while the same count with a rising failure share does not.
+
 ## v0.128.0 - a publish is not finished when the page is live
 
 **Mycelium's model of a shareable output was a local file a human hands over.** `receipt-render` is

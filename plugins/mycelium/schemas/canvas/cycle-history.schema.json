@@ -2,124 +2,370 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://mycelium.dev/schemas/canvas/cycle-history.schema.json",
   "title": "Mycelium Cycle History",
-  "description": "Completed-cycle records. Spec: engine/cycle-learning.md#cycle-record-format; written by /mycelium:retrospective; read by /mycelium:framework-health.\n\nWHY THIS SCHEMA EXISTS (added v0.121.0). This canvas had no schema, so validate_canvas.py reported it parse-checked only and nothing could detect a missing field. Measured on the dogfood repo 2026-08-23: gates_fired, regressions and rework are specified on every cycle record and appeared on ZERO of sixteen — including a cycle recorded the same day it closed. The prose instruction to write them cites anti-pattern #9 by number and achieved nothing, because no schema and no check stood behind it.\n\nWHAT IS DELIBERATELY *NOT* REQUIRED. gates_fired, regressions and rework are optional here even though they are the fields whose absence prompted this schema. Requiring them would fail every project that has ever recorded a cycle, which is the day-one-wolf failure: a check noisy from the start gets muted, and a muted check looks like coverage. Their absence is reported instead as a WARN-tier coverage finding by check_cycle_recording.py --coverage, which names how many recent cycles omit them and never fails a build.",
+  "description": "Completed-cycle records. Spec: engine/cycle-learning.md#cycle-record-format; written by /mycelium:retrospective; read by /mycelium:framework-health.\n\nWHY THIS SCHEMA EXISTS (added v0.121.0). This canvas had no schema, so validate_canvas.py reported it parse-checked only and nothing could detect a missing field. Measured on the dogfood repo 2026-08-23: gates_fired, regressions and rework are specified on every cycle record and appeared on ZERO of sixteen \u2014 including a cycle recorded the same day it closed. The prose instruction to write them cites anti-pattern #9 by number and achieved nothing, because no schema and no check stood behind it.\n\nWHAT IS DELIBERATELY *NOT* REQUIRED. gates_fired, regressions and rework are optional here even though they are the fields whose absence prompted this schema. Requiring them would fail every project that has ever recorded a cycle, which is the day-one-wolf failure: a check noisy from the start gets muted, and a muted check looks like coverage. Their absence is reported instead as a WARN-tier coverage finding by check_cycle_recording.py --coverage, which names how many recent cycles omit them and never fails a build.",
   "type": "object",
-  "required": ["cycles"],
+  "required": [
+    "cycles"
+  ],
   "properties": {
-    "schema_version": { "type": ["string", "number"] },
-    "cycles": { "type": "array", "items": { "$ref": "#/$defs/cycle" } },
-    "calibration_summary": { "type": ["object", "null"] },
-    "_meta": { "type": ["object", "null"] }
+    "schema_version": {
+      "type": [
+        "string",
+        "number"
+      ]
+    },
+    "cycles": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/cycle"
+      }
+    },
+    "calibration_summary": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "_meta": {
+      "type": [
+        "object",
+        "null"
+      ]
+    }
   },
   "$defs": {
     "cycle": {
       "type": "object",
       "description": "One completed cycle. additionalProperties stays TRUE: projects add local fields, and a schema that rejected them would punish record-keeping rather than improve it.",
-      "required": ["cycle_id", "leaf_id", "opportunity_id", "started_at", "terminal_state", "cycle_class"],
+      "required": [
+        "cycle_id",
+        "leaf_id",
+        "opportunity_id",
+        "started_at",
+        "terminal_state",
+        "cycle_class"
+      ],
       "properties": {
-        "cycle_id": { "type": "string" },
-        "leaf_id": { "type": "string" },
-        "opportunity_id": { "type": "string" },
-        "diamond_id": { "type": ["string", "null"] },
-        "started_at": { "$ref": "_common.schema.json#/$defs/iso_timestamp" },
+        "cycle_id": {
+          "type": "string"
+        },
+        "leaf_id": {
+          "type": "string"
+        },
+        "opportunity_id": {
+          "type": "string"
+        },
+        "diamond_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "started_at": {
+          "$ref": "_common.schema.json#/$defs/iso_timestamp"
+        },
         "completed_at": {
           "description": "Absent or null while the cycle is in_flight.",
-          "oneOf": [{ "$ref": "_common.schema.json#/$defs/iso_timestamp" }, { "type": "null" }]
+          "oneOf": [
+            {
+              "$ref": "_common.schema.json#/$defs/iso_timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "terminal_state": {
           "type": "string",
-          "enum": ["launched", "archived", "killed", "in_flight"],
+          "enum": [
+            "launched",
+            "archived",
+            "killed",
+            "in_flight"
+          ],
           "description": "archived and killed are discards and pair with discard_reason/discard_phase."
         },
         "cycle_class": {
           "type": "string",
-          "enum": ["product-leaf", "meta-dogfood", "observation"],
-          "description": "Only product-leaf feeds confidence calibration. meta-dogfood and observation carry no ICE BY DESIGN — they are excluded from aggregates, not missing from them."
+          "enum": [
+            "product-leaf",
+            "meta-dogfood",
+            "observation"
+          ],
+          "description": "Only product-leaf feeds confidence calibration. meta-dogfood and observation carry no ICE BY DESIGN \u2014 they are excluded from aggregates, not missing from them."
         },
-        "reconstructed_post_hoc": { "type": ["boolean", "null"] },
+        "reconstructed_post_hoc": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
         "predicted": {
-          "type": ["object", "null"],
+          "type": [
+            "object",
+            "null"
+          ],
           "properties": {
             "ice_score": {
-              "type": ["object", "null"],
+              "type": [
+                "object",
+                "null"
+              ],
               "properties": {
-                "i": { "type": ["number", "null"] },
-                "c": { "type": ["number", "null"] },
-                "e": { "type": ["number", "null"] },
-                "total": { "type": ["number", "null"] }
+                "i": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "c": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "e": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "total": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                }
               }
             },
-            "feasibility_risk": { "type": ["string", "null"] },
-            "estimated_effort": { "type": ["string", "null"] }
-          }
-        },
-        "actual": {
-          "type": ["object", "null"],
-          "properties": {
-            "outcome": {
-              "oneOf": [
-                { "type": "string", "enum": ["success", "partial", "failure"] },
-                { "type": "null" }
+            "feasibility_risk": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "estimated_effort": {
+              "type": [
+                "string",
+                "null"
               ]
             }
           }
         },
-        "calibration": { "type": ["object", "null"] },
-        "learnings": { "type": ["object", "string", "null"] },
+        "actual": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "properties": {
+            "outcome": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "success",
+                    "partial",
+                    "failure"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        "calibration": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "learnings": {
+          "type": [
+            "object",
+            "string",
+            "null"
+          ]
+        },
         "gates_fired": {
-          "type": ["array", "null"],
+          "type": [
+            "array",
+            "null"
+          ],
           "description": "Which theory gates fired. Feeds /framework-health Gate effectiveness. An EMPTY LIST is a measurement (no gate fired); an absent field is not.",
           "items": {
             "type": "object",
-            "required": ["gate", "result"],
+            "required": [
+              "gate",
+              "result"
+            ],
             "properties": {
-              "gate": { "type": "string" },
-              "result": { "type": "string", "enum": ["pass", "fail"] },
-              "caught": { "type": ["string", "null"] }
+              "gate": {
+                "type": "string"
+              },
+              "result": {
+                "type": "string",
+                "enum": [
+                  "pass",
+                  "fail"
+                ]
+              },
+              "caught": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
             }
           }
         },
         "regressions": {
-          "type": ["object", "null"],
+          "type": [
+            "object",
+            "null"
+          ],
           "description": "IN-CYCLE phase regressions only. Post-launch defects belong in rework. Feeds /framework-health Regression rate. Zero recorded is a measurement; absent is not.",
           "properties": {
-            "in_cycle_count": { "type": ["integer", "null"], "minimum": 0 },
-            "from_phase": { "type": ["string", "null"] },
-            "to_phase": { "type": ["string", "null"] },
-            "trigger": { "type": ["string", "null"] }
+            "in_cycle_count": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "from_phase": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "to_phase": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "trigger": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
           }
         },
         "rework": {
-          "type": ["object", "null"],
-          "description": "POST-DELIVERY defects inside the 14-day window. This is NOT a measure of how much of the cycle's own work was caused by earlier incomplete work — that quantity has no field yet.",
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "POST-DELIVERY defects inside the 14-day window. This is NOT a measure of how much of the cycle's own work was caused by earlier incomplete work \u2014 that quantity has no field yet.",
           "properties": {
-            "post_delivery_corrections": { "type": ["integer", "null"], "minimum": 0 },
-            "post_delivery_regressions": { "type": ["integer", "null"], "minimum": 0 },
-            "days_to_first_regression": { "type": ["integer", "null"], "minimum": 0 }
+            "post_delivery_corrections": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "post_delivery_regressions": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            },
+            "days_to_first_regression": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            }
           }
         },
-        "discard_reason": { "type": ["string", "null"] },
-        "discard_phase": { "type": ["integer", "string", "null"] },
-        "related_corrections": { "type": ["array", "string", "null"] }
+        "discard_reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "discard_phase": {
+          "type": [
+            "integer",
+            "string",
+            "null"
+          ]
+        },
+        "related_corrections": {
+          "type": [
+            "array",
+            "string",
+            "null"
+          ]
+        },
+        "demand_type": {
+          "type": "string",
+          "enum": [
+            "value",
+            "failure"
+          ],
+          "description": "Seddon demand type: value = work actually asked for; failure = work caused by earlier work being wrong, missing or incomplete. Set at cycle open."
+        },
+        "demand_origin": {
+          "type": "string",
+          "description": "When demand_type=failure, the earlier work that caused this cycle. Empty for value demand. A failure cycle that cannot name its cause is usually mis-classed."
+        },
+        "demand_cost_class": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "prevention",
+            "appraisal",
+            "internal-failure",
+            "external-failure",
+            null
+          ],
+          "description": "Optional cost-of-quality refinement (Crosby/Juran). null is a valid answer."
+        }
       },
       "allOf": [
         {
           "description": "MECHANIZES AN EXISTING PROSE GATE. /mycelium:retrospective already says a product-leaf cycle must not be written with a zero ICE total, and offers an honest reconstruction (flagged reconstructed_post_hoc) as the remedy. That rule lived only in skill prose and nothing enforced it. It cannot break existing records that honour it, and it fires exactly where calibration would silently ingest a zero.",
           "if": {
-            "properties": { "cycle_class": { "const": "product-leaf" } },
-            "required": ["cycle_class"]
+            "properties": {
+              "cycle_class": {
+                "const": "product-leaf"
+              }
+            },
+            "required": [
+              "cycle_class"
+            ]
           },
           "then": {
-            "required": ["predicted"],
+            "required": [
+              "predicted"
+            ],
             "properties": {
               "predicted": {
                 "type": "object",
-                "required": ["ice_score"],
+                "required": [
+                  "ice_score"
+                ],
                 "properties": {
                   "ice_score": {
                     "type": "object",
-                    "required": ["total"],
-                    "properties": { "total": { "type": "number", "exclusiveMinimum": 0 } }
+                    "required": [
+                      "total"
+                    ],
+                    "properties": {
+                      "total": {
+                        "type": "number",
+                        "exclusiveMinimum": 0
+                      }
+                    }
                   }
                 }
               }
