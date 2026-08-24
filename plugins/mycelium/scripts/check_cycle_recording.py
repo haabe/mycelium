@@ -401,6 +401,13 @@ def cycle_field_coverage(cycle_file, today=None):
                                "/mycelium:framework-health Gate effectiveness"),
         _missing_field_finding(closed, "regressions",
                                "/mycelium:framework-health Regression rate"),
+        # Added v0.130.0. demand_type shipped in v0.129.0 WITH its consumer, which was the
+        # fix for gates_fired's producer-without-reader defect — but it shipped without the
+        # absence WARN its two siblings above have, so a missing demand_type was SILENT where
+        # theirs are noisy. A field that is only quiet when unpopulated is how 0-of-16
+        # compliance goes unnoticed for months.
+        _missing_field_finding(closed, "demand_type",
+                               "/mycelium:framework-health Demand mix"),
         _rework_finding(closed, today),
     ]
     return [f for f in findings if f]

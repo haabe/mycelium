@@ -4,6 +4,42 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-24.
 
+## v0.130.0 - a closed task read as an open commitment
+
+**Of 94 entries under `pending_tasks` in the dogfood project, nine were pending.** 61 `completed`,
+7 `abandoned`, 1 `cancelled`, 16 `in_progress`. The founder caught it, not the framework — he
+remembered closing one of them ten days earlier while it was still being surfaced as owed.
+
+**Nothing caught it because the schema permits it.** `pending_tasks.items.status` shares the full
+six-value enum, so a completed task inside the pending list is schema-valid; the file passed
+validation for four months.
+
+**The root cause is one layer further out.** `/mycelium:log-evidence` says to move a closed task to
+`completed_tasks`. That list did not exist in the canvas. **An instruction whose destination does not
+exist does not fail — it silently does nothing**, which is the same shape as a specced field with no
+reader.
+
+**What ships**
+
+- **A WARN-tier `task list` check in `validate_canvas.py`** — does a task's own `status` agree with
+  the list it sits in? Names the count, the destination, and up to four ids. Also warns when closures
+  exist and no `completed_tasks` list does, because that absence is the cause rather than a symptom.
+- **`closed_without_evidence`** for abandoned / cancelled / stalled work. It requires `id` and
+  `closure_reason` and **deliberately does not require `source_class`** — that field classifies where
+  *evidence* came from, and a task that produced none has no source class. This is the correction
+  `/log-evidence` already took on 2026-08-03; requiring it here would have re-created the defect.
+- **`completed_tasks` relaxed from `[id, completed_at, source_class]` to `[id]`.** Measured against
+  four months of real closures, **47 of 61 carried neither** `completed_at` nor `source_class`,
+  because no closure path populated them. A schema asserting a contract its own producers never met
+  is the divergence; holding the line would have forced 45 invented values, which is worse than an
+  absent field. Both stay strongly recommended and surface in the WARN.
+- **A `demand_type` absence WARN**, closing a gap in v0.129.0 itself: the field shipped with its
+  consumer but without the WARN its two siblings carry, so a missing one was silent where theirs are
+  noisy — which is how 0-of-16 compliance goes unnoticed for months.
+
+**`in_progress` belongs in `pending_tasks`** and is not flagged. That list holds open work; only
+closed states are misfiles.
+
 ## v0.129.0 - five releases is throughput; two value and three failure is a measurement
 
 **A cycle record could say how much work happened and never why it existed.** The founder named the

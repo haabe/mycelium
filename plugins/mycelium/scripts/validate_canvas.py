@@ -749,9 +749,104 @@ def print_advisory_warnings(canvas_dir):
     for label, findings in (
         ("purpose stance", purpose_stance_findings(canvas_dir)),
         ("cycle record", cycle_record_findings(canvas_dir)),
+        ("task list", task_list_findings(canvas_dir)),
     ):
         for w in findings:
             print(f"  WARN ({label}): {w}")
+
+
+def task_list_findings(canvas_dir):
+    """WARN-tier: does a task's own `status` agree with the list it is filed in?
+
+    THE DEFECT THIS EXISTS FOR, measured 2026-08-24 in the dogfood project: of 94 entries
+    under `pending_tasks`, only **9 were pending**. 61 were `completed`, 7 `abandoned`, 1
+    `cancelled`, 16 `in_progress`. One had been closed ten days earlier and was still being
+    read as an open commitment.
+
+    NOTHING CAUGHT IT, AND THE SCHEMA IS WHY. `pending_tasks.items.status` shares the full
+    six-value enum, so a completed task inside the pending list is schema-VALID — the file
+    passed validation for four months. The root cause is one layer further out: `/log-evidence`
+    says to move a closed task to `completed_tasks`, that list did not exist in the canvas, so
+    every closure set `status` in place instead. **An instruction whose destination does not
+    exist does not fail; it silently does nothing**, which is the same shape as a specced field
+    with no reader.
+
+    WARN AND NEVER FAIL. The remedy is moving entries between lists, which is a judgement about
+    someone's real commitments — and a hard failure would block every consumer on a defect the
+    framework's own closure path created.
+    """
+    task_file = Path(canvas_dir) / "human-tasks.yml"
+    if not task_file.exists():
+        return []
+    try:
+        data = yaml.safe_load(task_file.read_text(encoding="utf-8")) or {}
+    except (OSError, UnicodeDecodeError, yaml.YAMLError):
+        return []
+    if not isinstance(data, dict):
+        return []
+
+    # list name -> the statuses that BELONG in it. `pending_tasks` holds open work, so
+    # `in_progress` is at home there; it is not a misfile.
+    belongs = {
+        "pending_tasks": {"pending", "in_progress"},
+        "completed_tasks": {"completed"},
+        "closed_without_evidence": {"abandoned", "cancelled", "stalled"},
+    }
+    findings, closed_seen = [], 0
+    for list_name, allowed in belongs.items():
+        misfiled = _misfiled_by_status(data.get(list_name), allowed)
+        closed_seen += sum(len(v) for k, v in misfiled.items() if k in CLOSED_STATUSES)
+        findings.extend(_misfile_finding(list_name, st, ids)
+                        for st, ids in sorted(misfiled.items()))
+    if closed_seen and not isinstance(data.get("completed_tasks"), list):
+        findings.append(
+            "closures exist but there is no `completed_tasks:` list to move them into — which "
+            "is why they were left in place. /mycelium:log-evidence writes to that list; "
+            "without it the instruction silently does nothing."
+        )
+    return findings
+
+
+#: Statuses meaning the task is CLOSED. Used to decide whether a missing
+#: `completed_tasks` list is the reason closures were left where they were.
+CLOSED_STATUSES = ("completed", "abandoned", "cancelled", "stalled")
+
+#: How many ids to name before summarising. Naming a few makes the WARN actionable;
+#: naming 61 makes it scrollable-past, which is how a warning gets muted.
+_IDS_SHOWN = 4
+
+
+def _misfiled_by_status(entries, allowed):
+    """{status: [ids]} for entries whose own status does not belong in this list."""
+    out = {}
+    if not isinstance(entries, list):
+        return out
+    for t in entries:
+        if not isinstance(t, dict):
+            continue
+        status = str(t.get("status") or "").strip()
+        if status and status not in allowed:
+            out.setdefault(status, []).append(str(t.get("id") or "?"))
+    return out
+
+
+def _misfile_finding(list_name, status, ids):
+    extra = len(ids) - _IDS_SHOWN
+    shown = ", ".join(ids[:_IDS_SHOWN]) + (f", +{extra} more" if extra > 0 else "")
+    return (
+        f"{len(ids)} task(s) in `{list_name}` carry `status: {status}`, which belongs in "
+        f"{_home_for(status)}. A closed task read as an open commitment is the defect; the "
+        f"schema permits it because the status enum is shared. ({shown})"
+    )
+
+
+def _home_for(status):
+    """The list a status belongs in, named so the WARN says where to move it."""
+    if status == "completed":
+        return "`completed_tasks`"
+    if status in ("abandoned", "cancelled", "stalled"):
+        return "`closed_without_evidence`"
+    return "`pending_tasks`"
 
 
 def cycle_record_findings(canvas_dir):
