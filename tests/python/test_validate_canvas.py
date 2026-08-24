@@ -986,6 +986,19 @@ def test_in_progress_is_at_home_in_pending_tasks(tmp_path, scripts_path):
     assert v.task_list_findings(canvas) == []
 
 
+def test_waiting_and_watching_are_open_states_not_misfiles(tmp_path, scripts_path):
+    """v0.132.0. Flagging these would fire on the MAJORITY of a real project's open
+    work — measured 2026-08-24, 13 of 16 in_progress tasks were sent-and-awaiting and
+    3 of 9 pending were watches. A check that noisy gets scrolled past, which is how
+    the probe-specificity advisory went unread for six days."""
+    v = _import_validator(scripts_path)
+    canvas = _tasks(tmp_path, {"pending_tasks": [
+        {"id": "ht-083", "status": "waiting"},
+        {"id": "ht-075", "status": "watching"},
+    ]})
+    assert v.task_list_findings(canvas) == []
+
+
 def test_a_correctly_filed_canvas_is_silent(tmp_path, scripts_path):
     v = _import_validator(scripts_path)
     canvas = _tasks(tmp_path, {

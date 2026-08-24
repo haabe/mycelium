@@ -4,6 +4,41 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-24.
 
+## v0.132.0 - sent-and-waiting is not in-progress
+
+**`pending` carried two incompatible meanings** — *not started* and *started, waiting on someone
+else*. An agent grepping the field could not tell them apart, and the misreading cost a wrong
+recommendation to a founder (surfaced 2026-08-20).
+
+**The evidence arrived 2026-08-24**, once splitting the task lists made the distribution visible:
+of **25 open tasks, 16 were `in_progress` — and 13 of those carried a touch_log**. Sent, replied to,
+ball elsewhere. Their horizons are reply-*scoring* dates, not work deadlines.
+
+**So the overload had moved rather than resolved.** `pending` used to mean not-started-or-waiting;
+`in_progress` had come to mean being-worked-or-waiting, and the second reading was the majority.
+
+**Two values, not one**, because they differ in what a reader should do:
+
+- **`waiting`** — you acted, someone else has the ball. **Can** go stale: a reply that never came is
+  a finding.
+- **`watching`** — nothing is owed, monitoring for a trigger that may never fire. **Cannot** go
+  stale, so flagging it is a false positive.
+
+Three dogfood tasks were self-labelled *"WATCH ONLY. NOTHING IS OWED"* in prose, and the project had
+already hand-exempted its watches from a standing staleness rule — which is the evidence the two
+states are genuinely different rather than one state with a nuance.
+
+**Both readers ship in the same commit**, which is now the standing rule here after `gates_fired`:
+
+- `canvas-health` **8c(a)** skips `watching` entirely — "untouched 90d" is a watch's correct state.
+- `canvas-health` **8c(b)** takes an explicit status as the recorded reason a task stays open,
+  **instead of inferring "legitimately waiting" from a future `horizon` date**. That inference was a
+  proxy for a state the author can now simply declare; the horizon fallback still covers
+  `pending` / `in_progress`.
+- The v0.130.0 list-agreement check treats both as open states belonging in `pending_tasks`.
+
+The enum stays closed — a bogus status is still rejected.
+
 ## v0.131.0 - an unused schema drifts silently
 
 **`completed_tasks` had two of its field types backwards relative to four months of real records,
