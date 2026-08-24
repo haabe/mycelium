@@ -267,10 +267,19 @@ try:
 except Exception:
   sys.exit(0)
 if d.get('status') == 'violations':
-  print(len(d.get('violations') or []))
+  # Two independent counts. Printed on one line as ICE:FR so a four-risks-only
+  # finding cannot render as an ICE sentence with a zero in it.
+  print('%d:%d' % (len(d.get('violations') or []), len(d.get('four_risks_violations') or [])))
 " 2>/dev/null || echo "")
   if [ -n "$UNSCORED" ]; then
-    REMINDERS="${REMINDERS}${UNSCORED} shipped solution leaf/leaves carry no ICE and no exemption — the score its selection rested on, and the precondition for a product-leaf cycle. Backfill via /mycelium:ice-score or add ice_exempt with a reason. "
+    ICE_N="${UNSCORED%%:*}"
+    FR_N="${UNSCORED##*:}"
+    if [ "${ICE_N:-0}" != "0" ]; then
+      REMINDERS="${REMINDERS}${ICE_N} shipped solution leaf/leaves carry no ICE and no exemption — the score its selection rested on, and the precondition for a product-leaf cycle. Backfill via /mycelium:ice-score or add ice_exempt with a reason. "
+    fi
+    if [ "${FR_N:-0}" != "0" ]; then
+      REMINDERS="${REMINDERS}${FR_N} solution leaf/leaves passed a decision — shipped or validated — with no four_risks and no exemption. DO NOT backfill to silence it: the rule is risk evaluation FIRST, so a block written now cannot restore that sequence. The flag is the honest state; use four_risks_exempt with a reason only where one genuinely was not needed. "
+    fi
   fi
 fi
 

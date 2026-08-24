@@ -47,6 +47,11 @@ opportunities:
         status: shipped
 """
 
+# CARRIES four_risks SINCE 2026-08-24, and the reason is recorded rather than silent:
+# this fixture means "a properly recorded shipped leaf", and after the four-risks half
+# shipped, a leaf with ICE and no risk block is a violation by the founder's ruling. The
+# tests below still isolate the ICE dimension — the risk block is here so they are not
+# accidentally asserting the ABSENCE of the new check.
 SHIPPED_WITH_ICE = """
 opportunities:
   - id: opp-001
@@ -54,6 +59,7 @@ opportunities:
       - id: sol-001a
         status: shipped
         ice_score: {i: 8, c: 6, e: 7, total: 336}
+        four_risks: {value: v, usability: u, feasibility: f, viability: vi}
 """
 
 
@@ -128,7 +134,11 @@ opportunities:
 # --- the escape hatch ------------------------------------------------------
 
 def test_ice_exempt_satisfies_the_check(scripts_path, tmp_path, capsys):
-    """A leaf may ship unscored. It may not do so silently."""
+    """A leaf may ship unscored. It may not do so silently.
+
+    Carries `four_risks` since 2026-08-24 so this isolates the ICE escape hatch rather
+    than tripping the four-risks half — see the note on SHIPPED_WITH_ICE.
+    """
     mod = _import(scripts_path)
     _canvas(tmp_path, """
 opportunities:
@@ -137,6 +147,7 @@ opportunities:
       - id: sol-001a
         status: shipped
         ice_exempt: "2026-08-06 — emergent from an audit finding, no tradeoff was scored"
+        four_risks: {value: v, usability: u, feasibility: f, viability: vi}
 """)
     assert _run(mod, "--project-dir", str(tmp_path)) == 0
     assert "1 exempted" in capsys.readouterr().out
@@ -174,7 +185,7 @@ opportunities:
 """)
     assert _run(mod, "--project-dir", str(tmp_path)) == 0
     out = capsys.readouterr().out
-    assert "no-shipped-leaves" in out
+    assert "no-decision-point-leaves" in out
     assert "not a pass over a population" in out
     assert "OK" not in out
 
@@ -207,3 +218,145 @@ def test_json_output(scripts_path, tmp_path, capsys):
     assert payload["status"] == "violations"
     assert payload["violations"][0]["id"] == "sol-001a"
     assert payload["shipped_leaves"] == 1
+
+
+# --- the four-risks half (2026-08-24) --------------------------------------
+# The 2026-08-23 census counted 19 of 54 leaves carrying `four_risks` and read it as a
+# sprawling backlog. Recounted by status it is three different things: 24 still
+# `candidate` (pre-decision, rule says SHOULD, a filled block there is the filler trap),
+# 4 closed (nothing to assess), and 7 that passed a decision with no risk evaluation.
+# These tests pin the split, because counting the population is what hid the 7.
+
+FR_VALIDATED_NO_RISKS = """
+opportunities:
+  - id: opp-001
+    solutions:
+      - id: sol-001a
+        status: validated
+        ice_score: {i: 8, c: 6, e: 7, total: 336}
+"""
+
+FR_CANDIDATE_NO_RISKS = """
+opportunities:
+  - id: opp-001
+    solutions:
+      - id: sol-001a
+        status: candidate
+"""
+
+FR_DISCARDED_NO_RISKS = """
+opportunities:
+  - id: opp-001
+    solutions:
+      - id: sol-001a
+        status: discarded
+"""
+
+FR_SHIPPED_WITH_RISKS = """
+opportunities:
+  - id: opp-001
+    solutions:
+      - id: sol-001a
+        status: shipped
+        ice_score: {i: 8, c: 6, e: 7, total: 336}
+        four_risks:
+          value: "founder-requested directly"
+          usability: "a prompt interrupts at a moment nobody chose"
+          feasibility: "one CI step and one gate-set line"
+          viability: "framework surface"
+"""
+
+FR_SHIPPED_EMPTY_RISKS = """
+opportunities:
+  - id: opp-001
+    solutions:
+      - id: sol-001a
+        status: shipped
+        ice_score: {i: 8, c: 6, e: 7, total: 336}
+        four_risks:
+          value: ""
+          usability: ""
+"""
+
+
+def test_validated_without_four_risks_fails(scripts_path, tmp_path, capsys):
+    """`validated` is a decision point even though it never shipped. Founder ruling."""
+    mod = _import(scripts_path)
+    _canvas(tmp_path, FR_VALIDATED_NO_RISKS)
+    assert _run(mod, "--project-dir", str(tmp_path)) == 1
+    out = capsys.readouterr().out
+    assert "four_risks" in out and "sol-001a" in out
+
+
+def test_candidate_without_four_risks_is_not_flagged(scripts_path, tmp_path):
+    """The 24 the census counted. Pre-decision; the rule says SHOULD, not MUST."""
+    mod = _import(scripts_path)
+    _canvas(tmp_path, FR_CANDIDATE_NO_RISKS)
+    assert _run(mod, "--project-dir", str(tmp_path)) == 0
+
+
+def test_discarded_without_four_risks_is_not_flagged(scripts_path, tmp_path):
+    """Nothing was invested, so there is nothing a risk assessment would have protected."""
+    mod = _import(scripts_path)
+    _canvas(tmp_path, FR_DISCARDED_NO_RISKS)
+    assert _run(mod, "--project-dir", str(tmp_path)) == 0
+
+
+def test_shipped_with_four_risks_passes(scripts_path, tmp_path):
+    mod = _import(scripts_path)
+    _canvas(tmp_path, FR_SHIPPED_WITH_RISKS)
+    assert _run(mod, "--project-dir", str(tmp_path)) == 0
+
+
+def test_empty_four_risks_block_is_unassessed(scripts_path, tmp_path):
+    """A key with nothing under it is the filler trap, not a pass.
+
+    If this ever returns 0 the check certifies the exact shape it was written to find.
+    """
+    mod = _import(scripts_path)
+    _canvas(tmp_path, FR_SHIPPED_EMPTY_RISKS)
+    assert _run(mod, "--project-dir", str(tmp_path)) == 1
+
+
+def test_four_risks_exempt_with_a_reason_satisfies(scripts_path, tmp_path):
+    mod = _import(scripts_path)
+    _canvas(tmp_path, FR_VALIDATED_NO_RISKS.replace(
+        "status: validated",
+        "status: validated\n        four_risks_exempt: 'emergent fix, no selection decision'"))
+    assert _run(mod, "--project-dir", str(tmp_path)) == 0
+
+
+def test_ice_half_is_not_widened_to_validated(scripts_path, tmp_path):
+    """The two halves use different populations ON PURPOSE.
+
+    ICE keys on SHIPPED because it is the Check 38 precondition. Four-risks keys on
+    shipped OR validated because the rule is about passing a decision. Widening the ICE
+    half under cover of adding the new one would change a shipped mechanism's behaviour.
+    This validated leaf has no ICE and must NOT be reported as an ICE violation.
+    """
+    mod = _import(scripts_path)
+    _canvas(tmp_path, """
+opportunities:
+  - id: opp-001
+    solutions:
+      - id: sol-001a
+        status: validated
+        four_risks: {value: "v", usability: "u", feasibility: "f", viability: "vi"}
+""")
+    assert _run(mod, "--project-dir", str(tmp_path)) == 0
+
+
+def test_json_keeps_the_ice_key_meaning_ice(scripts_path, tmp_path, capsys):
+    """session-start.sh reads `violations` and prints an ICE sentence from its length.
+
+    Repurposing that key would make a four-risks-only finding render as
+    "0 shipped leaves carry no ICE". This locks the contract.
+    """
+    mod = _import(scripts_path)
+    _canvas(tmp_path, FR_VALIDATED_NO_RISKS)
+    assert _run(mod, "--project-dir", str(tmp_path), "--json") == 1
+    d = json.loads(capsys.readouterr().out)
+    assert d["status"] == "violations"
+    assert d["violations"] == []                      # ICE half clean
+    assert len(d["four_risks_violations"]) == 1       # the new half
+    assert all(k in d for k in ("shipped_leaves", "exempted"))  # backward compat
