@@ -68,6 +68,50 @@ else
   MISSING+=("tests/validate-template.sh")
 fi
 
+# G-V14: the architecture fitness functions belong in the command run after a change,
+# "not only in CI". They were ALREADY blocking at pre-push — the 2026-08-23 rule census
+# missed that because the pre-push hook is DATA-DRIVEN off local-gate-set.txt and names
+# none of them, so a grep for the script name finds only validate.yml and reads as
+# "CI-only". They were never CI-only. What WAS true: this command, the one a builder
+# actually runs after a change, ran four gates against fifteen in the gate set.
+#
+# Driven off the same single source as CI and pre-push, so the three surfaces cannot
+# drift apart again — check_gate_parity.py already asserts CI is a subset of the gate
+# set, and this closes the last surface that read a different list.
+GATE_SET="plugins/mycelium/scripts/local-gate-set.txt"
+if [ -f "$GATE_SET" ]; then
+  while IFS= read -r gate_line || [ -n "$gate_line" ]; do
+    case "$gate_line" in ''|'#'*) continue ;; esac
+    # shellcheck disable=SC2086 -- gate_line carries its own arguments by design
+    set -- $gate_line
+    gate_script="$1"; shift
+    if [ ! -f "plugins/mycelium/scripts/$gate_script" ]; then
+      # A gate NAMED in the set but absent on disk is a failure, never a skip: a gate
+      # set that quietly shrinks reports green while checking less (anti-pattern #9).
+      FAILED+=("$gate_script (named in gate set, not on disk)")
+      echo "  FAIL  $gate_script — named in $GATE_SET but not in plugins/mycelium/scripts" >&2
+      continue
+    fi
+    if [ "$gate_script" = "check_coverage_floor.py" ]; then
+      # DEFERRED, AND SAID OUT LOUD RATHER THAN DROPPED. Its input is a fresh
+      # coverage.json, produced by the pytest-with-coverage step that CI and the
+      # pre-push hook run and this command deliberately does not (plain pytest here is
+      # seconds, coverage is minutes). Running it here would either read a STALE
+      # coverage.json from some earlier run — green on numbers nobody just measured —
+      # or fail on a precondition the builder did not break. Both are worse than
+      # naming it. It still blocks at pre-push and in CI.
+      [ "$QUIET" -eq 1 ] || echo "  DEFER check_coverage_floor — needs a fresh coverage.json; runs at pre-push and in CI"
+      continue
+    fi
+    run_gate "${gate_script%.py}" python3 "plugins/mycelium/scripts/$gate_script" "$@"
+  done < "$GATE_SET"
+fi
+# NO `else` BRANCH, DELIBERATELY. An absent gate set means this is not the framework
+# repo — a consumer project running the shipped wrapper has no plugins/mycelium/scripts.
+# Treating that as a missing gate would fail every consumer for a defect they cannot
+# have. The framework repo is covered because check_gate_parity.py (itself in the set)
+# fails loudly if the set and CI disagree.
+
 # RESOLVE RUNNERS THAT CAN ACTUALLY RUN (2026-08-16).
 # `python3 -m pytest` and a bare `ruff` both assume the tool is reachable from
 # whatever interpreter is first on PATH. When a version manager changes that
