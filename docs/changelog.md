@@ -2,7 +2,44 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-08-23.
+**Last updated**: 2026-08-24.
+
+## v0.128.0 - a publish is not finished when the page is live
+
+**Mycelium's model of a shareable output was a local file a human hands over.** `receipt-render` is
+explicit that nothing is transmitted and the carrier is handed to a colleague. That model is sound
+and stays. **It had no answer for an output that lives at a persistent, updatable address.** A
+framework-wide search for `outputs/`, `published_at`, `artifact_url`, `hosted_at` and `permalink`
+returned nothing, so an agent publishing one had to invent the whole thing.
+
+**Measured cost, one session** (found by the **i-productified** dogfood project): three artifacts
+published; addresses recorded only in prose inside long canvas entries, and only because the founder
+asked; sources left in session scratch. Had that session ended: sources gone, addresses greppable
+only from prose, no update path, and a 20-minute external data pull lost with them.
+
+**What ships**
+
+- **`engine/render-conventions.md` § Published output** — a publish is finished when three things
+  exist: a durable source copy outside session scratch, a structured record on the owning canvas
+  entry (not prose), and the supporting data when an expensive pull backs the render.
+- **`scripts/check_published_records.py`** — asserts every `published:` record carries an address, a
+  `source` that is STILL ON DISK, and a date. Advisory via SessionStart, alongside the leaf-lifecycle
+  and stale-prose reminders. Dead sources are counted and reported separately: "the file is gone" is
+  a different sentence from "a field is missing", and only the first is unrecoverable.
+
+**Two deliberate limits, both stated in the artifacts rather than left to be discovered**
+
+- **The path is project-local.** `outputs/` is not promoted to a framework concept. Repos already
+  have a layout, and hard-coding one would repeat the v0.88.0 defect — an artifact asserting a
+  location it cannot know. The framework concept is *a render records where it went*.
+- **The check cannot see a publish that recorded nothing.** The render fleet is read-only and need
+  not touch the canvas, so there is no producer to gate. **That is the `gates_fired` shape** — a
+  field fully specified with no mechanism writing it — and it is named in the check's own docstring
+  so a green is never read as coverage of the commonest failure.
+
+**Also**: republishing from a new source path mints a new address and leaves the recorded one stale —
+two live copies, nothing raised. An update means republishing to the address already recorded, which
+is the reason the record has to be findable at all.
 
 ## v0.127.0 - the canvas is not a cache, it is a record of judgements
 
