@@ -60,11 +60,14 @@
             "enum": [
               "pending",
               "in_progress",
+              "waiting",
+              "watching",
               "completed",
               "cancelled",
               "stalled",
               "abandoned"
-            ]
+            ],
+            "description": "OPEN states: `pending` (not started, action owed by you), `in_progress` (you are actively working it), `waiting` (YOU ACTED AND SOMEONE ELSE HAS THE BALL -- sent, replied to, submitted; the correct next action is to wait), `watching` (NOTHING IS OWED -- monitoring for a trigger that may never fire). CLOSED states: `completed`, `cancelled`, `stalled`, `abandoned`.\n\n`waiting` and `watching` added v0.132.0. Before them `pending` meant not-started OR waiting, and an agent grepping the field could not tell them apart -- which cost a wrong recommendation to a founder (surfaced 2026-08-20). MEASURED IN THE DOGFOOD CANVAS 2026-08-24, after a list split made the distribution visible: of 25 open tasks, 16 were `in_progress` and 13 of those carried a touch_log -- sent, ball elsewhere. Separately, 3 of 9 `pending` tasks were self-labelled 'WATCH ONLY. NOTHING IS OWED' in prose. Both states were real, both were the majority reading of the value they hid under, and both were spelled as prose because no value expressed them.\n\nWHY BOTH, and not one: they differ in what a reader should DO. A `waiting` task can go stale -- a reply that never came is a finding. A `watching` task CANNOT: nothing is owed, so a staleness sweep flagging it is a false positive. The dogfood project had already hand-exempted its watches from a standing staleness rule, in prose, which is the evidence the states differ."
           },
           "priority": {
             "type": "string",

@@ -788,7 +788,10 @@ def task_list_findings(canvas_dir):
     # list name -> the statuses that BELONG in it. `pending_tasks` holds open work, so
     # `in_progress` is at home there; it is not a misfile.
     belongs = {
-        "pending_tasks": {"pending", "in_progress"},
+        # `waiting` and `watching` are OPEN states (v0.132.0) and belong here. Flagging them
+        # would fire on the majority of a real project's open work: measured 2026-08-24,
+        # 13 of 16 in_progress tasks were sent-and-awaiting and 3 of 9 pending were watches.
+        "pending_tasks": {"pending", "in_progress", "waiting", "watching"},
         "completed_tasks": {"completed"},
         "closed_without_evidence": {"abandoned", "cancelled", "stalled"},
     }
