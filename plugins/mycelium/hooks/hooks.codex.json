@@ -1,5 +1,5 @@
 {
-  "_description": "Mycelium hooks for OpenAI Codex CLI. Event names match Claude Code (PascalCase) \u2014 Codex deliberately cloned that vocabulary. Stdin field names (tool_name, tool_input, cwd, tool_response) align with Claude Code's. Scripts in this directory are reused verbatim; Codex does not export CLAUDE_PROJECT_DIR, so set it once in your shell or wrap invocations. Codex has no native PostToolUseFailure \u2014 reflexion-gate is invoked via PostToolUse and short-circuits when tool_response shows no error (see codex-postfailure-shim.sh). Symlink or copy this file to <repo>/.codex/hooks.json (or ~/.codex/hooks.json for user-level).",
+  "_description": "Mycelium hooks for OpenAI Codex CLI. Event names match Claude Code (PascalCase) — Codex deliberately cloned that vocabulary. Stdin field names (tool_name, tool_input, cwd, tool_response) align with Claude Code's. Scripts in this directory are reused verbatim; Codex does not export CLAUDE_PROJECT_DIR, so set it once in your shell or wrap invocations. Codex has no native PostToolUseFailure — reflexion-gate is invoked via PostToolUse and short-circuits when tool_response shows no error (see codex-postfailure-shim.sh). Symlink or copy this file to <repo>/.codex/hooks.json (or ~/.codex/hooks.json for user-level).",
   "hooks": {
     "PreToolUse": [
       {
@@ -75,6 +75,17 @@
           {
             "type": "command",
             "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/correction-attribution-guard.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "WebSearch|WebFetch|mcp__brave-search__.*|mcp__fetch__fetch|web_search|fetch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/read-before-research-guard.sh",
+            "timeout": 5,
+            "statusMessage": "Mycelium read-before-research check"
           }
         ]
       }

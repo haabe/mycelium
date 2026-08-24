@@ -4,6 +4,66 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-23.
 
+## v0.127.0 - the canvas is not a cache, it is a record of judgements
+
+**Mycelium had a read-before-WRITE rule and no read-before-RESEARCH rule.** Verified across
+`skills/`, `engine/`, `harness/`, `scripts/`, `hooks/` and the consumer `CLAUDE.md`: 24 skill files
+carry a "Preflight: Read target canvas" step, and nothing anywhere says to check the canvas before
+going outward.
+
+Found by the **i-productified** dogfood project, which produced two failures in one session:
+
+1. Six web searches and four fetches rebuilt a holding company's ownership, subsidiaries and a
+   contact's position in it. **All of it was already in `human-tasks.yml`** from a brreg sweep three
+   weeks earlier — including a worked-out implication for the named contact that was *better* than
+   what the rediscovery produced.
+2. **Minutes later, in the same turn, having just logged instance 1 with the prevention rule "grep
+   the canvas before web-searching"**, the agent recommended a company as *"a genuine find"* — a
+   company `purpose.yml` records the founder arguing against on ethical grounds, whose rebrand he had
+   specifically called greenwashing. He had to hand his own recorded position back to the agent.
+
+## Why the existing preflight does not cover it
+
+The Write/Edit preflight protects **data integrity**: do not clobber what you have not read. This is
+a different failure. The write is fine, the file is fine, the validator passes. What is lost is that
+**research conducted without the canvas is analysis without the constraints the canvas already
+recorded** — quarantine entries, values gates, prior judgements, source caveats.
+
+**This is not a token-efficiency check. It is a constraint-loss check.** Instance 1 lost a better
+answer. Instance 2 lost a *decision*: the founder had already ruled, and the agent handed the ruling
+back to him as a discovery.
+
+## Why it is a hook and not a line in the skills
+
+**Instance 2 happened after the prose rule existed, in the same turn, written by the same agent.**
+"Add a line to the skills" is therefore already falsified. Precedent: `check_reply_owed.py` was
+extracted for exactly this — one rule, two implementations, and only one of them could execute.
+
+It also dissolves the which-skills question. Instance 2 happened in ordinary conversation, inside no
+skill at all.
+
+## What ships
+
+`PreToolUse` on `WebSearch|WebFetch|mcp__brave-search__.*|mcp__fetch__fetch`. Pulls capitalised
+tokens and quoted phrases **from the query string** — what the agent is about to do, short and
+already distilled, rather than from the user turn, which is noisy and can be many turns back
+(instance 1's sweep was three weeks earlier and nothing in that turn named the entity). Greps
+`.claude/canvas/*.yml` and surfaces up to three `file:line` matches.
+
+**WARN, never block, fail open.** Searching for something the canvas mentions is frequently correct,
+and a guard that blocks real work gets disabled. Registered in **all three** runtime manifests, and
+resolving its own plugin root from `BASH_SOURCE` because `CLAUDE_PLUGIN_ROOT` is a Claude Code
+variable that Cursor and Codex do not export.
+
+**It will be noisy in a canvas naming hundreds of entities, and that is planned for rather than
+discovered later.** Every firing logs to `.claude/state/read-before-research-log.jsonl`. The tier and
+any narrowing are to be set by the **measured action rate**, exactly as the absence-claim guard's
+were — and `opportunities.yml#sol-048a` already commits to retiring a guard whose action rate stays
+near zero. If that is this one, retire it.
+
+13 new tests, including the two that matter: the severity case (a recorded *position*, not a fact,
+must surface) and the firing log (without it, the retirement test cannot be run).
+
 ## v0.126.0 - counting the population hid the seven
 
 The 2026-08-23 rule census reported **19 of 54** solution leaves carrying a `four_risks` block. Read as

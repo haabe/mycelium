@@ -93,6 +93,15 @@
             "statusMessage": "Mycelium autonomous-evidence-guard (MCP filesystem — autonomous-mode only)"
           }
         ]
+      },
+      {
+        "matcher": "WebSearch|WebFetch|mcp__brave-search__.*|mcp__fetch__fetch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/read-before-research-guard.sh"
+          }
+        ]
       }
     ],
     "PostToolUse": [
