@@ -317,6 +317,47 @@ def detect_cycles(graph):
     return []
 
 
+def _duplicate_mapping_keys(text: str) -> list[str]:
+    """Report every mapping that holds the same scalar key twice.
+
+    `yaml.safe_load` CANNOT see this. On a duplicate key it keeps the last
+    value and discards the earlier one, so the data is already gone by the
+    time any schema or trace check runs — the file parses, it just no longer
+    says what it said. Composing the node stream is the only layer where the
+    duplicate is still visible.
+
+    There is no benign case in a canvas file: the second key always destroys
+    the first, so a duplicate is a silent deletion by definition.
+
+    Two real instances, both found 2026-08-18 in the dogfood repo, both of
+    which had passed validation, pre-push and CI: an appended touch landed
+    between a list entry's `- date:` line and its own body, duplicating two
+    keys and emptying both entries; and an older duplicate `tested:` made a
+    SCORED assumption test read as `null` — never-run — to every instrument
+    that consumed it.
+    """
+    dups = []
+
+    def walk(node):
+        if isinstance(node, yaml.MappingNode):
+            seen = set()
+            for key_node, value_node in node.value:
+                if isinstance(key_node, yaml.ScalarNode):
+                    if key_node.value in seen:
+                        line_no = key_node.start_mark.line + 1
+                        dups.append(f"line {line_no}: duplicate key '{key_node.value}'")
+                    seen.add(key_node.value)
+                walk(value_node)
+        elif isinstance(node, yaml.SequenceNode):
+            for child in node.value:
+                walk(child)
+
+    for doc in yaml.compose_all(text):
+        if doc is not None:
+            walk(doc)
+    return dups
+
+
 def validate_all_yaml_parses(canvas_dir: Path) -> list[str]:
     """Fail-loud YAML parse check on every canvas file.
 
@@ -338,8 +379,16 @@ def validate_all_yaml_parses(canvas_dir: Path) -> list[str]:
     errors = []
     for canvas_path in sorted(canvas_dir.glob("*.yml")):
         try:
-            with open(canvas_path) as f:
-                yaml.safe_load(f)
+            text = canvas_path.read_text()
+            yaml.safe_load(text)
+            # Duplicate keys are a SEPARATE failure from a parse failure: the
+            # file above parsed fine. Checked here rather than in a new script
+            # so every consumer gets it from the validator they already run.
+            errors.extend(
+                f"Silent data loss in {canvas_path.name}: {dup} "
+                f"(the second value destroys the first)"
+                for dup in _duplicate_mapping_keys(text)
+            )
         except yaml.YAMLError as exc:
             # Strip trailing newlines from yaml error messages for cleaner output
             errors.append(f"YAML parse error in {canvas_path.name}: {str(exc).strip()}")

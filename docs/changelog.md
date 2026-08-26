@@ -2,7 +2,27 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-08-24.
+**Last updated**: 2026-08-26.
+
+## v0.134.0 - validate_canvas was blind to duplicate YAML keys
+
+`yaml.safe_load` resolves a duplicate mapping key by keeping the **last** value and discarding the
+earlier one. The data is therefore already gone before any schema check, trace walk or ID count
+runs — **the file parses, it just no longer says what it said.**
+
+`validate_canvas.py` now composes the node stream alongside the existing parse check, which is the
+only layer where the duplicate is still visible, and reports it as silent data loss.
+
+**There is no benign case in a canvas file.** The second key always destroys the first, so a
+duplicate is a deletion by definition rather than a style issue.
+
+**Surfaced by dogfood, from two real instances that had each passed validation, pre-push and CI.**
+In one, an appended touch landed between a list entry's `- date:` line and its own body, duplicating
+two keys and emptying both entries. In the other, an older duplicate `tested:` made a *scored*
+assumption test read as `null` — never-run — to every instrument that consumed it.
+
+**Negative control run before shipping**: green across 25 upstream and 25 dogfood canvas files, red
+on a planted duplicate. A check that has never been red has not been tested.
 
 ## v0.133.0 - the guard fired on substrings inside longer words
 
