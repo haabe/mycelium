@@ -117,21 +117,33 @@ def owed(tasks: list, today: datetime.date,
     return out
 
 
-def load_tasks(path: Path) -> list:
+def load_tasks(path: Path) -> list | None:
+    """Pending tasks, or None if the file could not be read.
+
+    NONE AND [] ARE DIFFERENT ANSWERS AND USED NOT TO BE. This returned [] on any
+    read or parse failure, and main() then printed "OK: no reply owed across 0
+    task(s)" with status "ok" — a green produced by not being able to look. The
+    branch immediately above it in main() already got this right for a MISSING
+    file ("No task file is not a clean pass; it is nothing to check. Say which."),
+    so the file contained both the failure and its own remedy.
+
+    The old handler also listed `(OSError, UnicodeDecodeError, Exception)`, where
+    the third member makes the first two decorative.
+    """
     try:
         data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-    except (OSError, UnicodeDecodeError, Exception):  # noqa: BLE001 - fail-open by design
-        return []
+    except (OSError, UnicodeDecodeError, yaml.YAMLError):
+        return None
     return data.get("pending_tasks") or [] if isinstance(data, dict) else []
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--project-dir", default=".")
     ap.add_argument("--threshold", type=int, default=DEFAULT_THRESHOLD_DAYS)
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--today", default=None, help="ISO date; for tests")
-    args = ap.parse_args()
+    args = ap.parse_args(argv)
 
     # datetime.now(tz).date() rather than date.today(): DTZ011 — an untimezoned
     # 'today' silently uses the runner's locale, and a reply-owed age is a real number.
@@ -146,6 +158,16 @@ def main() -> int:
         return 0
 
     tasks = load_tasks(path)
+    if tasks is None:
+        msg = (f"UNREADABLE: {path} could not be read or parsed, so whether a reply is "
+               f"owed is UNKNOWN. This is not 'no replies owed'.")
+        if args.json:
+            print(json.dumps({"status": "unreadable", "violations": [],
+                              "detail": msg}))
+        else:
+            print(msg, file=sys.stderr)
+        return 2
+
     flagged = owed(tasks, today, args.threshold)
 
     if args.json:

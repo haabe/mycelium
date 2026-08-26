@@ -211,13 +211,23 @@ def test_cli_bad_project_dir_is_argument_error(scripts_path, tmp_path, monkeypat
 
 
 def test_unparseable_canvas_does_not_crash(scripts_path, tmp_path):
-    """Malformed YAML degrades to 'no canvas dates', it does not raise."""
+    """Malformed YAML does not raise — AND is not reported as a pile of orphans.
+
+    AMENDED 2026-08-26. The intent in the original docstring ("degrades to 'no
+    canvas dates', it does not raise") still holds and is still asserted. What
+    changed is the means: the old assertion `status == "orphaned"` proved the
+    no-crash property by pinning the CONSEQUENCE of the fail-open — an unreadable
+    canvas made every decision-log date look missing from it, so the check
+    reported the wrong thing loudly. Reading a parse failure as data was the
+    defect; the test had frozen it as the contract.
+    """
     mod = _import(scripts_path)
     _log(tmp_path, "2026-07-11")
     _write(tmp_path / ".claude/canvas/bvssh-health.yml", "assessment_history: [oops\n")
 
-    result = mod.check(tmp_path)
-    assert result["status"] == "orphaned"
+    result = mod.check(tmp_path)          # still does not raise
+    assert result["status"] == "unreadable"
+    assert result["unreadable"] == ["bvssh-health.yml"]
 
 
 def test_history_entries_without_dates_are_ignored(scripts_path, tmp_path):

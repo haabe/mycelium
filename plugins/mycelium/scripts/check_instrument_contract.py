@@ -240,10 +240,31 @@ def _fingerprint(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()[:16]
 
 
+_MALFORMED = object()   # "there IS a date and it is garbage" — not the same as absent
+
+
+def _scoring_date(name: str, fm: dict[str, str], res: dict):
+    """The score_by date, None if absent, or _MALFORMED if present and unparseable.
+
+    A MALFORMED DATE IS NOT A MISSING ONE. Both used to take the no-scoring-date
+    path, so an instrument carrying `score_by: 2026-13-45` was reported as having
+    no scoring date — true of the parse, false of the file, and it sends the reader
+    looking for a promise that is already written down.
+    """
+    raw = fm.get("score_by")
+    parsed = _parse_date(raw)
+    if raw and parsed is None:
+        res["undated"].append(f"{name} (score_by is not an ISO date: {raw!r})")
+        return _MALFORMED
+    return parsed
+
+
 def _expiry(name: str, fm: dict[str, str], today: _dt.date, res: dict, root: Path) -> None:
     """Scoring date, review date, and the event trigger — in that order of preference."""
     status = fm.get("status")
-    due = _parse_date(fm.get("score_by"))
+    due = _scoring_date(name, fm, res)
+    if due is _MALFORMED:
+        return
     if due is not None:
         if status == "live" and due < today:
             res["due"].append((name, str(due), (today - due).days))
@@ -262,6 +283,15 @@ def _expiry(name: str, fm: dict[str, str], today: _dt.date, res: dict, root: Pat
         res["review_due"].append(
             (name, f"review date {review} passed {(today - review).days} days ago"))
 
+    _review_trigger(name, fm, res, root)
+
+
+def _review_trigger(name: str, fm: dict[str, str], res: dict, root: Path) -> None:
+    """The optional event-anchored half of the review promise.
+
+    Extracted from `_expiry` 2026-08-26: it answers a different question (has the
+    EVENT happened) from the dates above it (has the DATE passed).
+    """
     # THE TRIGGER HALF. It fires on the event rather than on a calendar, WHICH IS BETTER
     # ONLY WHERE THE EVENT IS ACTUALLY RECORDED SOMEWHERE.
     #

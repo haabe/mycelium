@@ -139,7 +139,11 @@ jobs:
         # 42 such sites (31 silent) and NO baseline was seeded — a tolerated-debt
         # baseline is exactly what ruff.toml forbids. Each needs a written verdict
         # in harness/fail-open-reviewed.yml; add --strict once they exist.
-        run: python3 plugins/mycelium/scripts/check_fail_open.py
+        # --strict as of 2026-08-26, when every one of the 43 sites got a written
+        # verdict. It fails ONLY on an UNREVIEWED handler, so the cost of a new
+        # default-on-exception site is one judgement in fail-open-reviewed.yml —
+        # which is the point. No baseline was ever seeded.
+        run: python3 plugins/mycelium/scripts/check_fail_open.py --strict
 
       - name: touch_log entries are in ascending date order
         # Every reader treats touch_log[-1] as "what happened last". An out-of-order

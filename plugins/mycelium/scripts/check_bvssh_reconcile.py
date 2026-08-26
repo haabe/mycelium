@@ -86,13 +86,19 @@ def _date_only(value) -> str | None:
     return match.group(1) if match else None
 
 
-def collect_log_dates(decision_log: Path) -> list[str]:
+def collect_log_dates(decision_log: Path) -> list[str] | None:
+    """Assessment dates in the decision log, or None if it could not be read.
+
+    NONE IS NOT []. A read failure used to return [], which made `orphaned` empty
+    and printed "BVSSH reconcile: OK — 0 decision-log assessment(s) all present in
+    bvssh-health.yml" — a clean reconcile asserted over a file nobody read.
+    """
     if not decision_log.is_file():
         return []
     try:
         text = decision_log.read_text(encoding="utf-8", errors="replace")
     except OSError:
-        return []
+        return None
     # De-duplicate while preserving order; a date assessed twice in one day
     # reconciles against a single canvas entry.
     seen, dates = set(), []
@@ -104,13 +110,19 @@ def collect_log_dates(decision_log: Path) -> list[str]:
     return dates
 
 
-def collect_canvas_dates(canvas: Path) -> list[str]:
+def collect_canvas_dates(canvas: Path) -> list[str] | None:
+    """Assessment dates in bvssh-health.yml, or None if it could not be read.
+
+    The failure here was the mirror image and no better: [] made every log date
+    look ORPHANED, so an unparseable canvas was reported as a pile of assessments
+    missing from it. Loud, and about the wrong thing.
+    """
     if not canvas.is_file():
         return []
     try:
         data = yaml.safe_load(canvas.read_text(encoding="utf-8")) or {}
     except (OSError, yaml.YAMLError):
-        return []
+        return None
     if not isinstance(data, dict):
         return []
     history = data.get("assessment_history") or []
@@ -137,6 +149,23 @@ def check(project_dir: Path) -> dict:
     log_dates = collect_log_dates(decision_log)
     canvas_dates = collect_canvas_dates(canvas)
 
+    # UNREADABLE IS ITS OWN STATUS. Two of the three failure combinations used to
+    # produce a green: an unreadable log reconciled cleanly against the canvas, and
+    # both unreadable reported "nothing to reconcile".
+    unreadable = [name for name, v in (("decision-log", log_dates),
+                                       ("bvssh-health.yml", canvas_dates)) if v is None]
+    if unreadable:
+        return {
+            "status": "unreadable",
+            "unreadable": unreadable,
+            "detail": (f"could not read {', '.join(unreadable)}, so whether the assessments "
+                       f"reconcile is UNKNOWN — this is not a clean reconcile"),
+            "assessments_in_log": [],
+            "assessments_in_canvas": [],
+            "orphaned": [],
+            "canvas_only_info": [],
+        }
+
     orphaned = [d for d in log_dates if d not in set(canvas_dates)]
     log_only_ok = [d for d in canvas_dates if d not in set(log_dates)]
 
@@ -158,7 +187,7 @@ def check(project_dir: Path) -> dict:
     }
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument(
         "--project-dir",
@@ -166,7 +195,7 @@ def main() -> int:
         help="project root containing .claude/ (default: $CLAUDE_PROJECT_DIR or cwd)",
     )
     parser.add_argument("--json", action="store_true", dest="as_json")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     project_dir = Path(args.project_dir)
     if not project_dir.is_dir():
@@ -178,6 +207,10 @@ def main() -> int:
     if args.as_json:
         print(json.dumps(result, indent=2))
         return 1 if result["status"] == "orphaned" else 0
+
+    if result["status"] == "unreadable":
+        print(f"BVSSH reconcile: UNKNOWN — {result['detail']}.", file=sys.stderr)
+        return 2
 
     if result["status"] == "nothing-to-reconcile":
         print("BVSSH reconcile: no assessments recorded anywhere — nothing to reconcile.")

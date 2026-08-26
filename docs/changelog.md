@@ -4,6 +4,49 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-26.
 
+## v0.137.0 - every fail-open site got a written verdict, and three were real
+
+v0.135.0 shipped `check_fail_open` **report-only with no baseline seeded**, because
+`ruff.toml` forbids re-introducing tolerated debt: each site needed a judgement, not a
+suppression. All 43 now carry one in `plugins/mycelium/harness/fail-open-reviewed.yml`,
+and **CI runs the check `--strict`** — it fails only on an UNREVIEWED handler, so a new
+default-on-exception site costs one written judgement.
+
+**Writing the verdicts found three handlers that produced a green by not being able to
+look.**
+
+**`check_reply_owed`** returned `[]` on an unparseable `human-tasks.yml`, and main() then
+printed *"OK: no reply owed across 0 task(s)"* with status `ok`. The branch immediately
+above it already handled a MISSING file honestly — *"No task file is not a clean pass; it
+is nothing to check. Say which."* — so the file contained both the failure and its own
+remedy. Now reports `unreadable`, exit 2.
+
+**`check_bvssh_reconcile`** had it in **two of the three** failure combinations: an
+unreadable decision log left `orphaned` empty and printed *"OK — 0 decision-log
+assessment(s) all present"*, and both files unreadable reported *"nothing to reconcile"*.
+The third combination was loud but misattributed: an unparseable canvas made every log
+date look orphaned. `unreadable` is now its own status.
+
+**`check_instrument_contract`** conflated a malformed `score_by` with an absent one, so an
+instrument carrying `score_by: 2026-13-45` was reported as having no scoring date — true
+of the parse, false of the file, and it sends the reader looking for a promise that is
+already written down.
+
+**A pre-existing test had pinned one of these as the contract.** `test_unparseable_canvas
+_does_not_crash` asserted `status == "orphaned"` to prove the no-crash property, which
+froze the misattribution as expected behaviour. Its stated intent is kept and still
+asserted; the assertion is amended.
+
+**The register also caught an error in itself.** The id is `basename@<handler hash>`, so
+byte-identical handlers in DIFFERENT files do not share an entry. Three entries were
+written assuming they did, and `check_fail_open` reported them as still NEW.
+
+**Verdicts are not all "accepted".** Sites whose silence is correct only while a named
+condition holds are recorded as `conditional` with the condition and its checked status —
+including one where the condition does NOT fully hold: `check_purpose_stance` is in
+`local-gate-set.txt` and `validate_canvas` is not, so its "the fail-loud pass reports it"
+justification covers pre-push and CI but not a standalone run.
+
 ## v0.136.0 - findings that name people did not become tasks
 
 Every check in `canvas-health` audits **artefacts**: staleness, orphaned references, pre-registration

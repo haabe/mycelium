@@ -1,0 +1,314 @@
+# VERDICTS ON EVERY DEFAULT-ON-EXCEPTION SITE IN THIS TREE.
+#
+# `check_fail_open.py` finds handlers that swallow an exception and return a benign
+# value — anti-pattern #9, absence laundered into a default. It ships REPORT-ONLY and
+# stays that way until every site here carries a judgement, because a baseline seeded
+# without reading the code is the tolerated-debt concession `ruff.toml` forbids.
+#
+# THE ID IS `basename@<content hash of the handler>`. Three consequences, all live in
+# this file:
+#   1. An edited handler gets a NEW id and returns as unreviewed. That is correct — the
+#      verdict was about the old code.
+#   2. Byte-identical handlers in the SAME file share one id, so one verdict covers
+#      several sites and must be true of all of them (`16080a068f` covers two sites in
+#      validate_canvas.py; `5b94899e0a` covers two in session-start.sh).
+#   3. Byte-identical handlers in DIFFERENT files do NOT share an entry, because the
+#      basename is part of the id. This was written the wrong way round on the first
+#      pass of this file — three entries were assumed covered by a twin elsewhere, and
+#      check_fail_open reported them as still NEW. The check caught the register.
+#
+# VERDICTS:
+#   accepted     — the silence is correct and the reason says why.
+#   conditional  — correct ONLY while a named condition holds. The condition is stated
+#                  and its status recorded. This is not a softer "accepted"; it is a
+#                  claim someone can go and check.
+#   FIXED <date> — it was a real fail-open. What it used to do is recorded, because a
+#                  register that only lists survivors teaches nothing.
+schema_version: 1
+last_reviewed: '2026-08-26'
+reviewed:
+
+# ---------------------------------------------------------------------------
+# FIXED — these produced a green by not being able to look.
+# ---------------------------------------------------------------------------
+- id: check_reply_owed.py@08b17cf474
+  verdict: FIXED 2026-08-26
+  reason: >-
+    `load_tasks` returned [] on any read or parse failure and main() then printed
+    "OK: no reply owed across 0 task(s)" with status "ok". THE FILE ALREADY CONTAINED
+    ITS OWN REMEDY one branch earlier, where a MISSING task file is handled honestly:
+    "No task file is not a clean pass; it is nothing to check. Say which." The corrupt
+    case did not get the same courtesy. Now returns None, and main() reports status
+    "unreadable" and exits 2. The old handler also caught
+    `(OSError, UnicodeDecodeError, Exception)`, where the third member makes the first
+    two decorative.
+
+- id: check_bvssh_reconcile.py@55dfb0d50f
+  verdict: FIXED 2026-08-26
+  reason: >-
+    `collect_log_dates` returned [] when the decision log could not be read, which made
+    `orphaned` empty and printed "BVSSH reconcile: OK — 0 decision-log assessment(s) all
+    present in bvssh-health.yml". A clean reconcile asserted over a file nobody read.
+    Now returns None and main() reports UNKNOWN, exit 2.
+
+- id: check_bvssh_reconcile.py@4eca5506ae
+  verdict: FIXED 2026-08-26
+  reason: >-
+    The mirror image, and no better: `collect_canvas_dates` returning [] made EVERY log
+    date look orphaned, so an unparseable canvas was reported as a pile of assessments
+    missing from it — loud, and about the wrong thing. TWO OF THE THREE FAILURE
+    COMBINATIONS PRODUCED A GREEN: unreadable log reconciled cleanly, and both
+    unreadable reported "nothing to reconcile". Now returns None; unreadable is its own
+    status.
+
+# ---------------------------------------------------------------------------
+# accepted — the caller converts the sentinel into a REPORTED unknown.
+# ---------------------------------------------------------------------------
+- id: check_upstream_candidates.py@bbe7efae42
+  verdict: accepted
+  reason: >-
+    Returns `(None, "could not read <file>: <exc>")` — the reason travels with the
+    sentinel and is printed. The registry summary counts these as `unverifiable`,
+    separately from open/shipped/LANDED/REGRESSED. Verified against the live registry:
+    39 candidates, 11 unverifiable, reported in their own bucket.
+
+- id: check_climatic_predictions.py@ca3ae8feb3
+  verdict: accepted
+  reason: >-
+    Returns `([], False, "PyYAML unavailable")`. The middle element is an explicit
+    "did we actually look", and the string is the reason. An optional dependency being
+    absent is reported, not treated as a clean scan.
+
+- id: check_climatic_predictions.py@186f76e55f
+  verdict: accepted
+  reason: >-
+    Same tri-state, for a parse failure: `([], False, "could not parse landscape.yml:
+    <exc>")`. The `False` is what stops an unreadable landscape from reading as a
+    landscape with no predictions.
+
+- id: check_instrument_contract.py@0eb6c6b3f1
+  verdict: accepted
+  reason: >-
+    `_git_original` returns (None, None) when git cannot produce the original blob.
+    The caller does not treat that as "unchanged" — it appends to `res["untracked"]`,
+    and the docstring states the reason: nothing timestamps an untracked file, so
+    nothing distinguishes written-before from written-after. Reported in its own
+    category.
+
+# ---------------------------------------------------------------------------
+# accepted — tri-state date parsing, where None is a distinguished answer.
+# ---------------------------------------------------------------------------
+- id: check_instrument_contract.py@c64529d64a
+  verdict: accepted
+  reason: >-
+    `_parse_date` returning None for an unparseable date is correct AS A HELPER; the
+    defect was at a CALL SITE and is fixed rather than accepted. `_expiry` conflated
+    "no score_by" with "score_by is garbage", so an instrument carrying
+    `score_by: 2026-13-45` was reported as having no scoring date — true of the parse,
+    false of the file, and it sends the reader looking for a promise already written
+    down. `_scoring_date` now returns a `_MALFORMED` sentinel and names the bad value.
+    The byte-identical handler in check_climatic_predictions.py has its own entry, and
+    its caller was checked separately: it does not have the conflation.
+
+- id: check_promise_registry_swept.py@6443bce1c4
+  verdict: accepted
+  reason: >-
+    Returns (None, None) when the sweep marker's date does not parse. The caller reads
+    a None date as "no sweep recorded" and says so, which is the same thing a reader
+    concludes from a marker with a garbled date: nobody can tell when it last ran.
+    Absent and unparseable genuinely coincide here.
+
+# ---------------------------------------------------------------------------
+# conditional — correct only while a named condition holds. Checked, not assumed.
+# ---------------------------------------------------------------------------
+- id: validate_canvas.py@6a09222cbc
+  verdict: conditional
+  reason: >-
+    Returns [] on a parse failure of `opportunities.yml`, justified in-line as "parse
+    failures are reported by validate_all_yaml_parses". CONDITION CHECKED, NOT TAKEN ON
+    THE COMMENT'S WORD: `validate_all_yaml_parses` globs `canvas_dir/*.yml`,
+    opportunities.yml is in canvas_dir, and it runs FIRST in main() with its errors
+    collected into all_errors. The condition holds TODAY. It would break silently if
+    the file moved out of canvas_dir or the fail-loud pass stopped running first —
+    which is why this is `conditional` rather than `accepted`.
+
+- id: validate_canvas.py@b22ca23c3b
+  verdict: conditional
+  reason: >-
+    Same shape and same verified condition, for `human-tasks.yml` — also in canvas_dir,
+    also covered by the *.yml glob of the fail-loud pass.
+
+- id: validate_canvas.py@4bcdefe803
+  verdict: conditional
+  reason: >-
+    Same shape and same verified condition, second `human-tasks.yml` reader (the closure
+    criteria pass).
+
+- id: validate_canvas.py@b057378da6
+  verdict: accepted
+  reason: >-
+    Not silent, despite the classifier's reading: it returns
+    `[f"YAML parse error in {canvas_path.name}: {exc}"]`, which is the error list this
+    function's contract is built on. Flagged because the detector looks for a return of
+    a benign-looking value and cannot tell a populated error list from an empty one.
+    RECORDED AS A KNOWN FALSE-POSITIVE CLASS of the detector, not as a defect here.
+
+- id: check_purpose_stance.py@0f38ab2cf9
+  verdict: conditional
+  reason: >-
+    `_load` returns None on a parse failure and every caller turns that into [] — so an
+    unparseable opportunities.yml, active.yml or purpose file yields "no purpose-stance
+    violations". The in-line justification is "parse failures belong to the fail-loud
+    pass, not here". CONDITION CHECKED AND IT DOES NOT FULLY HOLD:
+    `check_purpose_stance` IS in `local-gate-set.txt`; `validate_canvas.py` IS NOT. The
+    fail-loud pass runs at pre-push (git-pre-push-example.sh) and in CI, so a consumer
+    who installed the example hook is covered — but a standalone run of this check over
+    a corrupt canvas reports clean. `active.yml` is separately covered by session-start,
+    which speaks loudly ("STATE-FILE BROKEN"). LEFT AS-IS DELIBERATELY: the fix is a
+    gate-set question, not a handler question, and changing the handler would put the
+    same parse error in two reports.
+
+# ---------------------------------------------------------------------------
+# accepted — hook protocol. stdout is the harness's channel, not a log.
+# ---------------------------------------------------------------------------
+- id: correction_attribution_guard.py@acaefd6129
+  verdict: accepted
+  reason: >-
+    A classifier failure returns [] and cannot print: stdout is the hook's protocol
+    channel, so a diagnostic there would be parsed as a hook decision. The narrower
+    remedy — stderr — is UNEXPLORED rather than ruled out, and is recorded here as the
+    open question rather than silently treated as impossible. Accepted because a guard
+    that blocks a write when its own classifier throws is worse than one that misses a
+    finding.
+
+- id: autonomous_evidence_guard.py@b62cc010fa
+  verdict: accepted
+  reason: >-
+    Unparseable stdin exits 0 (allow). A gate that blocks every tool call because the
+    harness changed its JSON shape takes the session down; a gate that allows one loses
+    one check. The asymmetry is real and the direction is right.
+
+- id: framework_guard.py@cb2672748f
+  verdict: accepted
+  reason: Same class — stdin parse failure returns None and the caller allows.
+
+- id: framework_guard.py@436ae189fe
+  verdict: accepted
+  reason: >-
+    `_load_state` returns None for both "unreadable" and "explicitly deactivated", and
+    the caller treats both as "guard is off". Conflated, but harmlessly so: this guard
+    is opt-in, and a broken state file leaving it off matches what its absence does.
+
+- id: brownfield-gate.sh@68937f2ba3
+  verdict: accepted
+  reason: Hook stdin parse; exit 0 allows. Same asymmetry as autonomous_evidence_guard.
+- id: change-log.sh@25e2a15134
+  verdict: accepted
+  reason: >-
+    Hook stdin parse; exit 0. The identical handler in diamond-state-audit.sh and
+    read-log.sh carries its own entry each — the basename is part of the id.
+- id: diamond-state-audit.sh@922b5c9efc
+  verdict: accepted
+  reason: >-
+    Append to the audit log fails silently, so a full disk or a read-only path never
+    blocks the user's work. THE DETECTION GAP IS REAL AND BELONGS ELSEWHERE: a dead log
+    and a quiet log look identical from here. That is a freshness check's job, not this
+    handler's — see the `read-log-is-blind-to-bash-reads` upstream candidate.
+- id: change-log.sh@15ed891ef1
+  verdict: accepted
+  reason: Same class as diamond-state-audit's append. Logging never blocks a code change.
+- id: read-log.sh@3fc500022a
+  verdict: accepted
+  reason: Same class. Logging never blocks a read.
+- id: session-start.sh@5d6233d106
+  verdict: accepted
+  reason: >-
+    Parses the published-violations checker's own --json output; unparseable means that
+    sub-check could not report, and session start continues. A SessionStart hook that
+    aborts on a sub-check's malformed output costs the user every other line of the
+    briefing.
+- id: session-start.sh@37934d049f
+  verdict: accepted
+  reason: Same class, for the theory-fidelity checker's --json output.
+
+# ---------------------------------------------------------------------------
+# accepted — cache and best-effort signal readers.
+# ---------------------------------------------------------------------------
+- id: ci_signal.py@3177e574d5
+  verdict: accepted
+  reason: >-
+    `_read_stamp` returns {} for a corrupt stamp file. The stamp is a CACHE of the last
+    seen CI run, regenerated on the next successful read; an empty one means "re-fetch",
+    never "CI is green".
+- id: ci_signal.py@5859ddb672
+  verdict: accepted
+  reason: >-
+    `_run` returns None when the subprocess cannot run (no `gh`, no network, timeout).
+    Every caller treats None as "no signal available" rather than as a passing run.
+- id: ci_signal.py@7f775b35a4
+  verdict: accepted
+  reason: >-
+    Unparseable `gh run list` JSON returns None, which is the same "no signal" the
+    callers already handle. A shape change in gh's output degrades to no-signal rather
+    than to a fabricated conclusion.
+- id: check_canvas_version_drift.py@ba16b8efe2
+  verdict: accepted
+  reason: >-
+    An unreadable plugin.json yields a None version, and a None version means the drift
+    comparison has no left-hand side to compare — the check cannot claim drift OR
+    agreement, and does not.
+- id: check_cycle_recording.py@b2522c59ad
+  verdict: accepted
+  reason: >-
+    Returns [] for a malformed cycle file, with the stated reason that "a coverage
+    report that breaks the validator is worse than one with a gap". Accepted because
+    the consumer of this list is a COVERAGE percentage over cycles that exist — zero
+    cycles reports as nothing to measure rather than as full coverage.
+
+# ---------------------------------------------------------------------------
+# accepted — flagged as "appears to speak", confirmed by reading.
+# ---------------------------------------------------------------------------
+- id: validate_canvas.py@16080a068f
+  verdict: accepted
+  reason: >-
+    Speaks. Covers TWO sites (lines 787 and 929) that are byte-identical; both append a
+    named error rather than returning a benign value.
+- id: validate_mermaid.py@9dc36caa47
+  verdict: accepted
+  reason: Speaks — the parse failure becomes a reported diagram error.
+- id: session-start.sh@ec2739873e
+  verdict: accepted
+  reason: Speaks — prints the condition it caught into the session briefing.
+- id: session-start.sh@b2a1dd9843
+  verdict: accepted
+  reason: Speaks.
+- id: session-start.sh@20655d91c4
+  verdict: accepted
+  reason: Speaks.
+- id: session-start.sh@bea29ee755
+  verdict: accepted
+  reason: Speaks.
+- id: session-start.sh@5b94899e0a
+  verdict: accepted
+  reason: Speaks. Covers two byte-identical sites (lines 357 and 398).
+- id: session-start.sh@8c1831e510
+  verdict: accepted
+  reason: Speaks.
+
+# ---------------------------------------------------------------------------
+# The three the register missed on its first pass, by assuming an id was shared
+# across files when the basename is part of it. Same verdicts, stated separately.
+# ---------------------------------------------------------------------------
+- id: check_climatic_predictions.py@c64529d64a
+  verdict: accepted
+  reason: >-
+    `_parse_date` returns None for an unparseable date. Its caller here — unlike the
+    byte-identical helper's caller in check_instrument_contract, which was fixed — does
+    not conflate absent with malformed: a prediction with no usable date is excluded
+    from the horizon arithmetic rather than treated as due or as not-due.
+- id: diamond-state-audit.sh@25e2a15134
+  verdict: accepted
+  reason: Hook stdin parse; exit 0 allows. Identical handler to change-log.sh's.
+- id: read-log.sh@25e2a15134
+  verdict: accepted
+  reason: Hook stdin parse; exit 0 allows. Identical handler to change-log.sh's.
