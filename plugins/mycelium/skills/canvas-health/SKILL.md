@@ -344,6 +344,25 @@ disagreements that matter: **LANDED** (marked open, but the change is in the tre
 2026-08-17 found six of ten surfaced items already shipped; the log is append-only, so shipped work
 reads as open forever unless something walks back and checks.
 
+## Findings that name people, and no task that reaches them
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_named_people_unactioned.py" --root .
+```
+
+Every other check here audits **artefacts** — staleness, orphaned references, pre-registration,
+unread surfaces. **None of them asks whether a finding names somebody who could simply be asked.**
+
+The case it exists for: a dogfood hand-verification named six public repos under *"REAL EXTERNAL
+CONTACT EVIDENCED"* and sat **eleven days** with zero mentions in `human-tasks.yml`, green in every
+gate the whole time. "Ask them" never emerged as a path, because nothing was looking for that shape.
+
+**Report-only, and not as a placeholder for a gate.** The extractor also matches namespaced paths
+that look like `owner/repo` (`search/code` was the live false positive), so failing on it would be
+worse than the disease. **The file-level ratio is the signal — read the file before acting.** It is
+also NOT a claim that every named identifier deserves a task: the same source file named 28
+hand-classified contaminants alongside the six genuine cases.
+
 ## touch_log order — is the last entry actually the most recent?
 
 ```bash

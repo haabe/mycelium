@@ -4,6 +4,31 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-26.
 
+## v0.136.0 - findings that name people did not become tasks
+
+Every check in `canvas-health` audits **artefacts**: staleness, orphaned references, pre-registration
+headers, unread surfaces. None of them asked whether a finding **names somebody who could simply be
+asked**.
+
+The case: a dogfood hand-verification named six public repos under *"REAL EXTERNAL CONTACT
+EVIDENCED"* and sat **eleven days** with zero mentions in `human-tasks.yml` — green in every gate the
+whole time. "Ask them" never emerged as a path, because nothing was looking for that shape.
+
+**`check_named_people_unactioned`** extracts identifiers (github.com URLs, backticked `owner/repo`,
+`u/handle`) from `.claude/evals/results/` and reports, per file, how many are reachable from
+`human-tasks.yml`.
+
+**Report-only, and not as a placeholder for a gate.** The extractor also matches namespaced paths
+shaped like `owner/repo` — `search/code` was the live false positive — so failing CI on it would be
+worse than the disease. It is also not a claim that every named identifier is owed a task: the same
+source file named 28 hand-classified contaminants alongside the six genuine cases. **The file-level
+ratio is the signal.**
+
+**An any/none rule was built first, and its negative control failed.** Run against the repo state
+before the task existed, 2 of 25 identifiers happened to be referenced elsewhere, so "any match" went
+quiet on the exact eleven-day case the check exists for. The per-file ratio replaced it, and is
+verified in both directions plus the empty-scan case.
+
 ## v0.135.0 - three dogfood checks were proven and never shipped
 
 Three checks had been running in the dogfood repo for weeks, catching real defects there, and
