@@ -4,6 +4,41 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-26.
 
+## v0.135.0 - three dogfood checks were proven and never shipped
+
+Three checks had been running in the dogfood repo for weeks, catching real defects there, and
+existed nowhere a consumer could reach them.
+
+**`check_touch_log_order`** — every reader treats `touch_log[-1]` as "what happened last". An
+out-of-order log looks wrong to nobody and parses cleanly; it just returns the wrong answer to the
+question the file exists to answer. It reported two already-sent replies as unsent. Wired into CI
+and `canvas-health`. A scan finding zero files exits 1: an empty scan is UNKNOWN, never a pass.
+
+**`check_upstream_candidates`** — re-probes a surfaced-friction registry against the live framework
+tree and reports **LANDED** (marked open, but it is in the tree) and **REGRESSED**. Shipped work
+reading as open forever is what makes a candidate pile regrow; a dogfood pass found six of ten
+already built. Wired into `canvas-health`.
+
+**`check_fail_open`** — the anti-pattern #9 signature: an `except` whose handler returns a benign
+value and says nothing, so the caller cannot tell "checked, fine" from "could not look".
+**It ships REPORT-ONLY, and that is the honest state.** It finds 42 sites in this tree, 31 of them
+SILENT, and **no baseline was seeded** — `ruff.toml` explicitly forbids re-introducing tolerated
+debt, and the dogfood precedent is eleven entries each carrying a written judgement, not a bulk
+rubber-stamp. Add `--strict` once `harness/fail-open-reviewed.yml` holds real verdicts.
+
+**All three carry negative-control tests, and writing them found a real bug.**
+`check_negative_control.py` refuses to let a guard ship without a test that proves it can go red, so
+three were written. `check_upstream_candidates` then failed its own REGRESSED test: it called
+`.splitlines()[0]` on an optional field, and `"".splitlines()` is `[]`, so any shipped candidate
+without a `landed_note` raised `IndexError` — **on the REGRESSED path specifically, the one that
+matters most**, since REGRESSED means a shipped fix has silently vanished from the tree. It could
+not surface in the dogfood registry, where every shipped entry happens to carry a note; a consumer
+starting a fresh registry would have hit it immediately. Fixed at both call sites.
+
+**A fourth was deliberately not shipped.** `check_evidence_links` (citation rot) carries 29 lint
+violations against this repo's policy, five of them structural complexity. It needs a genuine
+refactor, and suppressing them would be the concession `ruff.toml` was written to prevent.
+
 ## v0.134.0 - validate_canvas was blind to duplicate YAML keys
 
 `yaml.safe_load` resolves a duplicate mapping key by keeping the **last** value and discarding the

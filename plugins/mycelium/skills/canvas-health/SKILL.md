@@ -329,6 +329,37 @@ three different dates for one measurement.
 regression guard, not a discovery tool, and if it stays green over a long window it should be
 narrowed or retired rather than left running — the near-zero-action-rate rule applies to it too.
 
+## Upstream candidate registry — is surfaced friction already fixed?
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_upstream_candidates.py"
+```
+
+For projects that surface framework friction back upstream. Re-runs every `verify` probe in
+`.claude/harness/upstream-candidates.yml` against the live framework tree and reports the two
+disagreements that matter: **LANDED** (marked open, but the change is in the tree — close it) and
+**REGRESSED** (marked shipped, but the probe can no longer find it).
+
+**The value is knowing what is already built, not remembering what to build.** A dogfood pass on
+2026-08-17 found six of ten surfaced items already shipped; the log is append-only, so shipped work
+reads as open forever unless something walks back and checks.
+
+## touch_log order — is the last entry actually the most recent?
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_touch_log_order.py" --root .
+```
+
+Every reader of a `touch_log` — human, script or agent — treats `touch_log[-1]` as "what happened
+last". An out-of-order log looks wrong to nobody and parses cleanly; it just silently returns the
+wrong answer to the question the file exists to answer: **what happened last, and does anyone owe
+anyone a reply?** Surfaced 2026-08-18 in dogfood, where it reported two already-sent replies as
+unsent.
+
+**A scan that finds zero files exits 1, not 0.** An empty scan is UNKNOWN, and UNKNOWN is never a
+pass — added after a CI run reported "ascending across 0 file(s)" and went green because the scan
+root had not resolved.
+
 ## Instrument contract — frozen predictions with no home, no expiry, or silent edits
 
 ```bash

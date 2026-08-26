@@ -132,6 +132,23 @@ jobs:
         # outruns it. Add a step here without adding it there and this fails.
         run: python3 plugins/mycelium/scripts/check_gate_parity.py --root .
 
+      - name: Fail-open scan (anti-pattern #9 signature) - REPORT ONLY
+        # Flags silent-default read chains: an `except` whose handler returns a
+        # benign value and says nothing, so the caller cannot tell "checked, fine"
+        # from "could not look". Reports rather than fails, because this tree has
+        # 42 such sites (31 silent) and NO baseline was seeded — a tolerated-debt
+        # baseline is exactly what ruff.toml forbids. Each needs a written verdict
+        # in harness/fail-open-reviewed.yml; add --strict once they exist.
+        run: python3 plugins/mycelium/scripts/check_fail_open.py
+
+      - name: touch_log entries are in ascending date order
+        # Every reader treats touch_log[-1] as "what happened last". An out-of-order
+        # log looks wrong to nobody and parses cleanly; it just returns the wrong
+        # answer to the question the file exists to answer. Surfaced in dogfood
+        # 2026-08-18, where it reported two already-sent replies as unsent.
+        # Zero files scanned exits 1 — an empty scan is UNKNOWN, never a pass.
+        run: python3 plugins/mycelium/scripts/check_touch_log_order.py --root .
+
       - name: Run surface-registry guard (every declared reader actually reads its surface)
         # right-content-wrong-surface, criterion met 2026-07-26. An artifact written
         # to a surface nothing reads is invisible by construction. This verifies the

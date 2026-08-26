@@ -54,3 +54,15 @@ check_promise_registry_swept.py --root .
 
 check_instrument_contract.py --root .
 check_gate_parity.py --root .
+
+# touch_log[-1] must genuinely be the most recent entry. An out-of-order log
+# parses cleanly and silently answers "what happened last" wrong.
+check_touch_log_order.py --root .
+
+# REPORT-ONLY until the review registry is populated. Runs without --strict, so it
+# exits 0 and prints. It found 42 fail-open sites in this tree on 2026-08-26, 31 of
+# them SILENT, and NO baseline was seeded: ruff.toml's own policy forbids
+# re-introducing a tolerated-debt baseline, and the dogfood precedent is 11 entries
+# each carrying a written judgement, not a bulk rubber-stamp. Add --strict here once
+# harness/fail-open-reviewed.yml holds real verdicts.
+check_fail_open.py
