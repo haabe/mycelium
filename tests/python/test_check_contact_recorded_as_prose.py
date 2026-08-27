@@ -90,3 +90,22 @@ def test_an_unreadable_task_file_is_not_a_pass(scripts_path, tmp_path, capsys):
     (canvas / "human-tasks.yml").write_text("pending_tasks: [unclosed\n")
     assert mod.main(["--root", str(tmp_path)]) == 2
     assert "UNKNOWN" in capsys.readouterr().err
+
+
+def test_a_field_declaring_the_dates_unknown_is_not_a_contact_claim(scripts_path):
+    """Fired on a field written to EXPLAIN its own findings, the day after shipping."""
+    mod = _import(scripts_path)
+    tasks = [{"id": "ht-090",
+              "touch_dates_unknown_stated_2026_08_27": "the dates are not known",
+              "touch_log": []}]
+    assert mod.scan(tasks) == []
+
+
+def test_corrected_and_retracted_are_still_caught(scripts_path):
+    """Both live true positives are named that way. The exclusion must not reach them."""
+    mod = _import(scripts_path)
+    tasks = [{"id": "ht-090",
+              "TOUCH_CORRECTED_2026_08_25_THE_ASK_WAS_MADE": "x",
+              "RETRACTED_2026_08_24_THE_ASK_WAS_SENT": "x",
+              "touch_log": []}]
+    assert len(mod.scan(tasks)) == 2

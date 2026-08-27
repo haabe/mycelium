@@ -4,6 +4,21 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-26.
 
+## v0.139.1 - the new check fired on a field written to explain its own findings
+
+`touch_dates_unknown_stated_2026_08_27` was added to a task to say that two contacts have
+no known event date. It carries a contact word and a date, so v0.139.0 read it as a claim
+that a contact happened on 2026-08-27 — when that date is simply when the statement was
+made. One false positive against two true ones, on day one.
+
+Fields whose name declares the dates unknown are now skipped. The near neighbours
+`corrected` and `retracted` are deliberately **not** skipped: both live true positives are
+named `TOUCH_CORRECTED_...` and `RETRACTED_...` and describe real contacts, so widening the
+exclusion to them would suppress the findings the check exists for.
+
+Fixed in the check rather than by renaming the field, because the next person to write a
+note about the log's own gaps will reach for the same words.
+
 ## v0.139.0 - the touch_log was checked for order, never for completeness
 
 A dogfood task carries the line *"lost nine touches to prose-only logging"* — and then lost

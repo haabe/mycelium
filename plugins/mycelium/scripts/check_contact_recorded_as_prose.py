@@ -33,6 +33,13 @@ MEASURED BEFORE SHIPPING, on the 26-task dogfood corpus:
   - Negative control: against ht-076's state before the backfill, the rule fires on
     exactly the field that was missed, and goes silent after it.
 
+KNOWN FALSE-POSITIVE CLASS, classified rather than filtered blind. A field written
+ABOUT the log's own gaps carries a contact word and a date, and that date is when the
+STATEMENT was made -- `touch_dates_unknown_stated_2026_08_27` is the live example, and it
+appeared the day after this shipped. Fields declaring the dates unknown are skipped. The
+near neighbours `corrected` and `retracted` are deliberately NOT skipped: both live true
+positives are named that way and describe real contacts.
+
 REPORT-ONLY. A date in a field name is a strong hint, not a contract, and some
 contacts legitimately have no known event date — ht-090's deflected ask is real and
 undated, and inventing a date to satisfy a gate would be worse than the gap.
@@ -55,6 +62,13 @@ DATE_IN_NAME = re.compile(r"(20\d\d)[_-](\d\d)[_-](\d\d)")
 # event. Kept deliberately short: every addition widens the check toward the naive
 # rule the docstring measures at 96% false positives.
 CONTACT_WORD = re.compile(r"inbound|outbound|repl(y|ies)|sent|touch|dm\b|message", re.IGNORECASE)
+# A FIELD THAT SAYS THE DATES ARE UNKNOWN IS NOT CLAIMING A DATED CONTACT.
+# Found the day after shipping, by this check firing on a field written to explain its
+# own two findings: `touch_dates_unknown_stated_2026_08_27` carries a contact word and a
+# date, and that date is when the STATEMENT was made. Narrow on purpose -- `corrected`
+# and `retracted` are deliberately NOT here, because both live true positives are named
+# `TOUCH_CORRECTED_...` and `RETRACTED_...` and describe real contacts.
+NOT_A_CONTACT_CLAIM = re.compile(r"unknown", re.IGNORECASE)
 
 
 def scan(tasks: list) -> list[tuple[str, str, str]]:
@@ -68,6 +82,8 @@ def scan(tasks: list) -> list[tuple[str, str, str]]:
         for field in task:
             m = DATE_IN_NAME.search(field)
             if not m or not CONTACT_WORD.search(field):
+                continue
+            if NOT_A_CONTACT_CLAIM.search(field):
                 continue
             iso = "-".join(m.groups())
             if iso not in logged:
