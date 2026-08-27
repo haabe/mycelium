@@ -363,6 +363,28 @@ worse than the disease. **The file-level ratio is the signal — read the file b
 also NOT a claim that every named identifier deserves a task: the same source file named 28
 hand-classified contaminants alongside the six genuine cases.
 
+## Contacts recorded as prose, never as a touch
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_contact_recorded_as_prose.py" --root .
+```
+
+The check below verifies that the entries which EXIST are ordered. **This one asks whether the log
+is COMPLETE**, which is a different question and was not being asked by anything.
+
+A dogfood task carried the line *"lost nine touches to prose-only logging"* and then lost a tenth
+the same way — **inside the entry that documents the rule.** An inbound was written up as a field
+named `eighth_inbound_2026_08_26_...` and never entered `touch_log`. `check_reply_owed` then read
+the last inbound as five days old when it was one, because it reads the log and the log did not know.
+
+**A field NAME carrying both a date and a contact word is a claim that a contact happened on that
+date.** If no touch shares the date, the claim lives in prose only — invisible to reply-owed, to
+the attribution registry, and to the exclusion duty later sweeps owe an already-touched population.
+
+**REPORT-ONLY, and do not clear a finding by inventing a date.** Some contacts genuinely have no
+known event date; an entry dated by when it was REPORTED asserts an event date nobody has. Either
+log the touch with its real date, or state in the task that the date is unknown.
+
 ## touch_log order — is the last entry actually the most recent?
 
 ```bash

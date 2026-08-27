@@ -4,6 +4,39 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-26.
 
+## v0.139.0 - the touch_log was checked for order, never for completeness
+
+A dogfood task carries the line *"lost nine touches to prose-only logging"* — and then lost
+a tenth the same way, **inside the entry that documents the rule**. An eighth inbound
+arrived, was written up as a field called `eighth_inbound_2026_08_26_...`, and never entered
+`touch_log`.
+
+**`check_touch_log_order` was green throughout, and correctly so.** It verifies that the
+entries which EXIST are in ascending date order. Nothing asked whether the log was COMPLETE.
+Ordering and completeness are different questions and only one was being asked.
+
+**The cost is not tidiness.** `touch_log` is what downstream readers consume:
+`check_reply_owed` reported that reply as five days overdue when it was one day old, because
+it reads the log and the log did not know. A contact recorded only in prose is invisible to
+reply-owed, to the attribution registry, and to the exclusion duty later sweeps owe an
+already-touched population.
+
+**`check_contact_recorded_as_prose`** treats a field NAME carrying both a date and a contact
+word (`inbound`, `reply`, `sent`, `touch`, ...) as a claim that a contact happened on that
+date, and reports it when no touch_log entry shares the date.
+
+**The narrowness IS the check.** Measured on the live 26-task corpus before shipping: 2 real
+hits (both a second, separate instance of the same defect, undetected since 2026-08-24)
+against **47 dated fields correctly skipped** — `FOUNDER_RULING_2026_08_24`,
+`pre_registered_read_2026_08_21`, `label_correction_2026_08_26`. A naive "every dated field
+needs a touch" rule would be 96% false positives. Negative control: against the corpus state
+before the backfill, it fires on exactly the missed field and goes silent after.
+
+**Report-only, and its own output says why.** Some contacts genuinely have no known event
+date — one of the two live findings is a real exchange nobody can date — and an entry dated
+by when it was REPORTED asserts an event date nobody has, which would corrupt the ordering
+guarantee the sibling check exists to provide.
+
 ## v0.138.0 - a correct decision was reported as a permanent defect
 
 `check_instrument_contract` reported four dogfood instruments as INCOMPLETE for an empty
