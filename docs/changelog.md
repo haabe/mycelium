@@ -4,6 +4,34 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-26.
 
+## v0.138.0 - a correct decision was reported as a permanent defect
+
+`check_instrument_contract` reported four dogfood instruments as INCOMPLETE for an empty
+`frozen_before`. **All four are empty on purpose.** Each carries a founder ruling from
+2026-08-20, written in the file: *"Leave empty — the silence is the finding."* Three are
+VOID agent-as-instrument tests that never self-logged, so there is no freeze event to name,
+and inventing a plausible one is precisely the failure the contract exists to prevent.
+
+**The correct state could never satisfy the check.** Every run carried four entries meaning
+"working as intended", and the next genuine INCOMPLETE would have arrived in a list already
+mostly noise. A permanent unfixable warning trains the reader to skip the report.
+
+**A sibling `<field>_absent_reason` key now waives the field.** Three properties matter:
+
+- **The field itself stays empty.** A sentinel value like `deliberately-empty` would honour
+  the ruling's spirit and violate its letter. The waiver records the reason that was already
+  written in a comment, in a key a checker and a `grep` can both read.
+- **A waiver is not free.** The reason must be substantive (20+ characters), so `n/a`, `x`
+  or `TODO` does not buy an exemption more cheaply than filling the field.
+- **A waiver is not silent.** Waived fields print in their own section and do not move the
+  exit code. An exemption nobody sees is how the next one gets granted without argument.
+
+**Fixing it exposed a latent parser bug.** `_frontmatter` is hand-rolled (stdlib-only, by
+design) and read a folded `>-` block as the literal two-character value `">-"`, then skipped
+every continuation line for having no colon — so any long header field parsed as two
+characters, silently. It now folds `>-`, `>`, `|` and `|-` blocks by indentation, and a test
+pins that a folded block does not swallow the following key.
+
 ## v0.137.0 - every fail-open site got a written verdict, and three were real
 
 v0.135.0 shipped `check_fail_open` **report-only with no baseline seeded**, because

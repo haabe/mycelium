@@ -139,13 +139,31 @@ def _frontmatter(text: str) -> dict[str, str] | None:
     if end == -1:
         return None
     out: dict[str, str] = {}
-    for line in text[3:end].splitlines():
-        if not line.strip() or line.lstrip().startswith("#"):
-            continue
-        if ":" not in line:
+    lines = text[3:end].splitlines()
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        i += 1
+        if not line.strip() or line.lstrip().startswith("#") or ":" not in line:
             continue
         k, _, v = line.partition(":")
-        out[k.strip()] = v.strip().strip("\"'")
+        key, val = k.strip(), v.strip().strip("\"'")
+        if val in (">-", ">", "|", "|-"):
+            # FOLDED AND LITERAL BLOCKS. Without this the value parsed as the literal
+            # ">-" and every continuation line was skipped for having no colon — so a
+            # long field read as two characters, silently. Found 2026-08-27 when a
+            # waiver reason written as a folded block failed a length check it passed
+            # on inspection. Indentation-based, which is all a flat header needs.
+            indent = len(line) - len(line.lstrip())
+            parts = []
+            while i < len(lines):
+                nxt = lines[i]
+                if nxt.strip() and (len(nxt) - len(nxt.lstrip())) <= indent:
+                    break
+                parts.append(nxt.strip())
+                i += 1
+            val = " ".join(p for p in parts if p)
+        out[key] = val
     return out
 
 
@@ -257,6 +275,49 @@ def _scoring_date(name: str, fm: dict[str, str], res: dict):
         res["undated"].append(f"{name} (score_by is not an ISO date: {raw!r})")
         return _MALFORMED
     return parsed
+
+
+_MIN_WAIVER_REASON_CHARS = 20
+
+
+def _required_field_state(fm: dict[str, str]) -> tuple[list[str], list[tuple[str, str]]]:
+    """Split empty required fields into UNFILLED and DELIBERATELY EMPTY.
+
+    THE CHECK USED TO REPORT A DECISION AS A DEFECT, PERMANENTLY. Four instruments in
+    the dogfood corpus carry an empty `frozen_before` **on purpose**, each with the
+    reason written in a comment above it: *"DELIBERATELY EMPTY. This file states no
+    freeze event, and inventing a plausible one is exactly the failure that made a bulk
+    retrofit unsafe."* Three are additionally VOID — an agent-as-instrument that never
+    self-logged has no data to score and no freeze event to name.
+
+    The correct state could never satisfy the check, so every run carried four entries
+    meaning "working as intended", and **the next genuine INCOMPLETE would arrive in a
+    list already mostly noise.** A permanent unfixable warning trains the reader to skip
+    the report.
+
+    THE FIELD ITSELF STAYS EMPTY, WHICH IS THE POINT. The waiver goes in a SIBLING key,
+    `<field>_absent_reason`, so nothing writes a fabricated freeze event into
+    `frozen_before` — the founder's 2026-08-20 ruling on those files was "leave empty,
+    the silence is the finding", and a sentinel VALUE would violate its letter while
+    honouring its spirit. This records the reason that was already written, in a key a
+    reader can grep, next to the emptiness it explains.
+
+    A WAIVER IS NOT FREE AND IS NOT SILENT. The reason must be substantive
+    (>= 20 characters, so `x` or `n/a` does not buy an exemption), and waived fields are
+    REPORTED in their own section rather than suppressed — an exemption nobody sees is
+    how the next one gets granted without argument.
+    """
+    missing: list[str] = []
+    waived: list[tuple[str, str]] = []
+    for k in _REQUIRED:
+        if k == "score_by" or fm.get(k):
+            continue
+        reason = str(fm.get(f"{k}_absent_reason", "") or "").strip()
+        if len(reason) >= _MIN_WAIVER_REASON_CHARS:
+            waived.append((k, reason))
+        else:
+            missing.append(k)
+    return missing, waived
 
 
 def _expiry(name: str, fm: dict[str, str], today: _dt.date, res: dict, root: Path) -> None:
@@ -378,9 +439,11 @@ def _classify(path: Path, root: Path, today: _dt.date, res: dict) -> None:
     # this check exists to prevent, sitting inside the check -- an agent greps
     # frozen_before, gets nothing, and cannot establish that the prediction preceded the
     # data. A required field nothing enforces is a suggestion.
-    missing = [k for k in _REQUIRED if k != "score_by" and not fm.get(k)]
+    missing, waived = _required_field_state(fm)
     if missing:
         res["incomplete"].append((path.name, ", ".join(missing)))
+    for field, why in waived:
+        res["waived"].append((path.name, field, why))
 
     _expiry(path.name, fm, today, res, root)
 
@@ -397,7 +460,7 @@ def analyse(root: Path, today: _dt.date) -> dict:
     res: dict[str, list] = {
         "uncontracted": [], "undated": [], "due": [], "drifted": [],
         "untracked": [], "bad_status": [], "contracted": [], "scored": [],
-        "refuted": [], "incomplete": [], "no_review": [], "review_due": [],
+        "refuted": [], "incomplete": [], "waived": [], "no_review": [], "review_due": [],
         "bad_anchor": [],
     }
     for path in sorted(d.glob("*.md")):
@@ -447,6 +510,17 @@ def main() -> int:
          "enforces is a suggestion, and an agent grepping it gets silence rather than an "
          "answer.",
          lambda t: f"{t[0]} (empty: {t[1]})")
+    # NOT via emit(): a waiver is not a problem and must not move the exit code.
+    # It is still PRINTED, because an exemption nobody sees is how the next one gets
+    # granted without argument.
+    if r["waived"]:
+        print("\nWAIVED — a required field is empty and the file says why, in "
+              "`<field>_absent_reason`. NOT a pass and NOT a defect: it is a recorded "
+              "decision that the honest value is no value. Read the reasons; a waiver "
+              "that stops being true is invisible from here.")
+        for name, field, why in r["waived"]:
+            print(f"  {name} ({field}): {why}")
+
     emit(r["no_review"],
          "NO REVIEW DATE — live, gated on an event, and carrying no review_by. A scoring "
          "date promises DATA by a date, which an event-gated test cannot promise. A review "
