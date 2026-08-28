@@ -59,6 +59,12 @@ def _props(m, doc, properties, confirmed="human", stale=False):
     h = m.purpose_hash(doc)
     return {
         "derived_from_hash": "0" * 64 if stale else h,
+        # Stamped since v0.141.0. Without it a mismatch is UNINTERPRETABLE rather than
+        # stale, because the pre-v0.141.0 hash covered evidence as well as intent — so a
+        # fixture missing this marker would exercise the "cannot tell" branch while
+        # claiming to test staleness. Covered directly by
+        # test_stale_marker_says_it_cannot_tell_rather_than_asserting_staleness.
+        "hash_algorithm": "intent-v1",
         "confirmed_by": confirmed,
         "properties": properties,
     }
@@ -447,3 +453,110 @@ def test_advisory_findings_print_as_warn_even_in_strict(canvas, monkeypatch, cap
     out = capsys.readouterr().out
     assert "WARN: l1-strategy" in out
     assert "FAIL" not in out
+
+
+# ---------------------------------------------------------------------------
+# THE HASH WAS 98.9% EVIDENCE (v0.141.0, found in dogfood 2026-08-28).
+#
+# Measured on the real canvas: `what` held 483 characters of intent (`name`,
+# `description`, `positioning`) and 43,210 characters of evidence
+# (`positioning_evidence`, `positioning_candidates`). So appending ONE citation marked
+# nine human-confirmed, backtested properties as superseded, while `why` and `how` were
+# byte-identical across the change.
+#
+# That is this mechanism's own failure mode pointed at itself. Evidence accretion is the
+# most frequent write a live canvas takes, so the staleness signal fired on healthy
+# activity — and a warning that fires on health is muted, and then it is not there on
+# the day the purpose really moves.
+# ---------------------------------------------------------------------------
+
+def _ps():
+    p = Path(__file__).resolve().parents[2] / "plugins/mycelium/scripts/check_purpose_stance.py"
+    spec = importlib.util.spec_from_file_location("cps_hash", p)
+    m = importlib.util.module_from_spec(spec)
+    sys.modules["cps_hash"] = m
+    spec.loader.exec_module(m)
+    return m
+
+
+def _intent_purpose():
+    return {
+        "why": "So that people build things that matter.",
+        "how": ["evidence over opinion", "enforce, don't advise"],
+        "what": [{
+            "name": "Mycelium",
+            "description": "A harness.",
+            "positioning": "The agent earns the right to write code.",
+            "positioning_evidence": ["someone said a thing"],
+            "positioning_candidates": [{"phrase": "x", "note": "y"}],
+        }],
+    }
+
+
+def test_appending_evidence_does_not_change_the_intent_hash():
+    """The defect, exactly: one appended citation must not supersede the properties."""
+    m = _ps()
+    a = _intent_purpose()
+    b = _intent_purpose()
+    b["what"][0]["positioning_evidence"].append("a second source, logged today")
+    b["what"][0]["positioning_candidates"].append({"phrase": "z", "note": "new"})
+    assert m.purpose_hash(a) == m.purpose_hash(b)
+
+
+def test_editing_the_why_does_change_the_intent_hash():
+    """The fix must not cost the check the thing it was built for."""
+    m = _ps()
+    a = _intent_purpose()
+    b = _intent_purpose()
+    b["why"] = "So that people ship faster."
+    assert m.purpose_hash(a) != m.purpose_hash(b)
+
+
+def test_editing_intent_inside_what_still_changes_the_hash():
+    """`what` is not exempt — only its evidence-bearing keys are."""
+    m = _ps()
+    a = _intent_purpose()
+    b = _intent_purpose()
+    b["what"][0]["positioning"] = "Something else entirely."
+    assert m.purpose_hash(a) != m.purpose_hash(b)
+
+
+def test_legacy_hash_still_covers_evidence():
+    """Kept so an upgrade does not hand every project a false staleness warning."""
+    m = _ps()
+    a = _intent_purpose()
+    b = _intent_purpose()
+    b["what"][0]["positioning_evidence"].append("new")
+    assert m.legacy_purpose_hash(a) != m.legacy_purpose_hash(b)
+    assert m.legacy_purpose_hash(a) != m.purpose_hash(a)
+
+
+def test_stale_marker_says_it_cannot_tell_rather_than_asserting_staleness():
+    """A check that cannot distinguish two causes must not report a verdict.
+
+    Pre-v0.141.0 hashes covered evidence, so a mismatch is uninterpretable — not a
+    finding. The message must say so, and must not claim the purpose moved.
+    """
+    m = _ps()
+    p = _intent_purpose()
+    pp = {"derived_from_hash": "deadbeef", "confirmed_by": "human", "properties": []}
+    out = " ".join(m._list_findings(pp, p))
+    assert "CANNOT TELL" in out
+    assert "hash_algorithm: intent-v1" in out
+
+
+def test_marked_algorithm_gives_the_real_staleness_verdict():
+    m = _ps()
+    p = _intent_purpose()
+    pp = {"derived_from_hash": "deadbeef", "hash_algorithm": "intent-v1",
+          "confirmed_by": "human", "properties": []}
+    out = " ".join(m._list_findings(pp, p))
+    assert "superseded" in out and "CANNOT TELL" not in out
+
+
+def test_a_correctly_stamped_hash_is_silent():
+    m = _ps()
+    p = _intent_purpose()
+    pp = {"derived_from_hash": _ps().purpose_hash(p), "hash_algorithm": "intent-v1",
+          "confirmed_by": "human", "properties": []}
+    assert m._list_findings(pp, p) == []
