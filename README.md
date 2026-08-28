@@ -1,151 +1,141 @@
 # Mycelium
 
-**Your AI agent should think before it codes.**
+**Outcome over output.**
 
-Building got cheap. Deciding what to build didn't, and an agent will go from an idea to a pull request without asking why, who for, or whether anyone needs it.
+You know how this goes. The idea turns up on a Thursday and it is a good one. The agent is quick and generous and by Sunday there is a working thing on your screen. It runs. You are pleased with it, and you have every right to be.
 
-The gap has the same shape every time I see it: the agent is fast and glad to build something nobody asked for. Mycelium puts the deciding back. It gives the agent enough feedback that the judgment that ships is still yours.
+The building was never the hard part.
 
-Built using itself, and released as open source. That includes [the project it talked me out of](docs/receipts/cases/2026-04-macos-fileviewer.md).
+The hard part might've happened on Thursday, in about four minutes, mostly in your head. Who this is for. Whether any of them has actually said so. What would have to be true for it to matter to them. Which of those you were betting the weekend on.
 
-**Prerequisite:** Claude Code, signed in — or another supported agent (see [install paths](docs/install-paths.md)). Then, inside Claude Code:
+Or it might not have happened at all. I like it, so other people will too. That is a real feeling, and from the inside it is almost impossible to tell apart from a reason.
+
+Nobody skips that part because they think it doesn't matter. Something is always in the way, and it is usually something reasonable. On your own it is that asking anyone takes days and the agent is ready now. On a team I have watched it be end of season, a customer on the phone, the c-level with a gut feeling. I have got more than fifteen years of that, and I never met anyone who thought discovery was optional.
+
+What changed is that the agent made skipping it free. It goes from an idea to a pull request faster than any of those reasons ever could, and it never once stops to ask who the thing is for.
+
+## The version where that goes well
+
+Conversations with the right people until you stop hearing anything new, at the point where what they say can still change what gets built, rather than after launch when it can only explain what happened. That is where the value gets decided.
+
+An assumption written down on Thursday and knocked over on Friday. Sooner, while it is still cheap, so the weekend goes to the version worth having.
+
+Your reasoning sitting in git next to the code it explains. Sometimes that reasoning is only a hunch, and it goes in as a hunch, which is the point. When nobody turns up in November you can see whether you had a reason back in August or only wanted it, and which of the two it was. Changing your mind gets safer when you can see what you are changing it from.
+
+And feedback loops short enough that you and your agent both stay sharp and on the thing you set out to do, instead of drifting toward whichever shiny piece happened to be easiest to build next. Which is, in the end, a happier way to spend a Saturday.
+
+None of that is faster. It is sooner, which is a different thing and the more useful one. Less of the work gets thrown away, and the difference shows up in what you shipped rather than in how quickly you shipped it.
+
+## Where Mycelium comes in
+
+It puts the questions where your agent works, and it makes the agent earn its first source file.
+
+Four questions, before there is anything to build on. What is the problem, who has it, what are you assuming, what would show you wrong. Ten minutes, and the answers go into your repo as your spec. From there the agent has something to be held to, and so do you.
+
+The gate itself fires the moment the agent reaches for a new source file in a repo where none of that exists yet. Once it does, it is quiet.
+
+The gate is on the agent. The ten minutes are yours. That is the trade, your time up front against the agent's freedom to start without you.
+
+This morning I ran it on a new idea: vibe-rant, a place for people whose AI-built projects have just fallen over to say so to each other. Four questions.
+
+[Here is the whole thing happening](https://youtu.be/_GjMJcKcRjI), unedited, from typing `/mycelium:start` to the point where it starts asking which of the purpose properties are binding. No cuts, no narration, my own terminal.
+
+And here is what it wrote down.
+
+```yaml
+why: >-
+  So that a vibe-coding project crashing hard stops being a private, quiet defeat
+  and becomes something a person takes to peers.
+
+who:
+  today: >-
+    Unknown — not yet observed. Founder has seen rants online but has not spoken to
+    anyone. Founder's own behaviour (in-cohort): fixes silently, tells no one.
+
+workarounds:
+  - workaround: "Go quiet and grind on the fix alone."
+    who: "Founder, self-reported, in-cohort"
+    note: "Directly contradicts the behaviour vibe-rant requires."
+
+evidence:
+  validated: false
+  strength: speculation
+```
+
+[The repo is public](https://github.com/haabe/vibe-rant) if you want the whole file rather than my excerpt, along with the diamond and the decision log it wrote at the same time.
+
+I am in the cohort I am building for, and I do the opposite of what the product needs. I said so out loud answering question two, and again on question three: the thing most likely to sink this is that everyone else *"stays quiet, like me"*. Instead of nodding along, it wrote that down as the most important line in the file and marked the whole brief `speculation`.
+
+Confidence on that idea came out at 0.15. Nothing is blocked, I can still build it this afternoon. But I cannot now pretend I did not notice.
+
+## When I would be wrong
+
+Run it on three real projects. Not one, because writing anything down always feels clarifying the first time and that proves nothing. Three. If across all three the brief never once changed what you actually built, then it did not work for you, and you should say so out loud and uninstall it. That is a result I can be given and cannot argue with.
+
+Here is the weakness I already know about. The discovery gate fires once per repo and then goes quiet for good. Nothing in this brings you back in November to check whether the thing you assumed in August held up. You have to want that, and if you do not, this buys you one good Thursday and no more.
+
+I have got it wrong myself, which is where this started. The first thing Mycelium ever did was stop a macOS file viewer I wanted to build. It never got a line of code. When I went and investigated whether anyone other than me wanted it, that got debunked, including for the one person I had been picturing the whole time.
+
+I do not know what finishing it would have cost me. Nobody does, which is the honest shape of evidence about a thing that did not happen. What I can count is the other side: that kill produced ten of the mechanisms this framework now runs on, and [they are listed in the write-up](docs/receipts/cases/2026-04-macos-fileviewer.md), badly-judged idea and all.
+
+## What it costs
+
+Roughly six thousand tokens a session, always on, measured on my own machine. Everything else loads when you use it.
+
+Four hooks can hold work back, and here are all four. The discovery one fires when the agent creates a brand new source file in a project where nothing has been written down yet. Editing code you already have never reaches it, nor Markdown, and once your purpose file says something real it stops firing at all, so a bug fix on a Tuesday never meets it. The brownfield one asks once, ever, when you bring this to a repo that already has code. The scope one holds writes outside the paths a delivery cycle said it would touch. The preflight one asks for a re-read when your corrections file has changed under you. Seventeen more print a warning and let you past.
+
+If you would rather not, write the date and your own words into `.claude/state/discovery-skip-ack` and it goes quiet in that repo for good. The agent is not allowed to write that file for you. That is what keeps the call yours.
+
+Leaving is `/plugin uninstall`. Your canvas stays behind as plain YAML and reads fine without any of this.
+
+## Start
 
 ```
 /plugin marketplace add haabe/mycelium
-/plugin install mycelium@haabe-mycelium
-/mycelium:start       # one command: setup + 10-minute discovery
+/plugin install mycelium@haabe-mycelium    # the marketplace id is haabe-mycelium
+/mycelium:start
 ```
 
-Plugin install is brownfield-safe; no project-root files are modified. Skills are namespaced `/mycelium:<name>`, and `/myc<Tab>` expands the prefix. Legacy install + migration: [`docs/install-paths.md`](docs/install-paths.md).
+Claude Code, signed in. Other agents in [install paths](docs/install-paths.md), and one of those is how the stranger below ran it.
 
-This README orients you and gets you installed. Full docs live at [`docs/`](docs/README.md): mental model, how-to guides, theory grounding, receipts.
+## Where it is
 
-## What it does
+Still pre-1.0, and the version number is doing real work rather than decoration. Schema and skill names move between minor versions, with migrations when they do. [What shipped and when](https://github.com/haabe/mycelium/releases). Three of my own projects, three people through a test cohort in May whose friction is most of what v0.31 became, and one stranger since.
 
-You have an idea. You run `/mycelium:start`. The agent asks four questions before it opens an editor. What's the problem, who has it, what's the riskiest thing you're assuming, and what's the smallest move that would test it. Ten minutes in, you have a written brief and the agent points to the riskiest thing you assumed and asks if you want to test it before building anything.
+For a team that needs a stable interface this is early. For your own project this afternoon, it has held up for the few of us who have run it, and whether that includes you is the thing the section above is for.
 
-You can say no. A weekend hack gets lighter prompts than a team product, and you can decline depth at any step. It won't skip past missing evidence and call the work done.
+## The rest of the shape
 
-## What it feels like
-
-Saturday, an idea, an agent ready to type. The usual ending is a working thing by Sunday that you're not sure anyone needs, yourself included. Mycelium spends the first ten minutes on the questions you'd skip on your own. Who is this for, and what would have to be true for it to work. You still ship this weekend.
-
-Others show up later. A feature the team agreed on three weeks ago and the agent has been building ever since, nobody having re-checked the assumption underneath it. A Friday night where you're done and the careful step feels optional. Both times the move is the same. "We already decided" doesn't count as evidence, and the check lands at the point you'd have gone past it.
-
-The last one is quieter. It's out. A few stars, nobody has opened an issue in a week. So you build the next feature, and you know it's a good one because you wanted it yourself. That's a real reason, half of what you use got built that way. Mycelium writes down which it was. That's all it does with it, and next time you wonder why nobody came, the note is there.
-
-How many of these you meet depends on what's at stake.
-
-## Why this exists
-
-I've worked with digital products since 1997, and most of that time I watched teams skip the deciding part. Not deliberately, and not because anyone thought discovery didn't matter. There was always a reason. End of season, a customer phone call, the C-level with a gut feeling.
-
-The agent just made skipping it free. It goes from an idea to a pull request faster than any of those reasons ever could, and it never stops to ask who the thing is for.
-
-## Who it's for
-
-**Builders.** Solo developers and small teams using AI agents to build products. If you can't afford to burn runway on the wrong thing, Mycelium helps you find the right thing before you build it.
-
-Works for software, online courses, AI tools, and services. One command to start. The agent guides you from there.
-
-If you already do all of this on your own (discovery before delivery, and your agent not skipping the boring parts under pressure), you don't need Mycelium.
-
-## Who it's not for
-
-Mycelium is for work where deciding what to build is the hard part. Some use cases are better served elsewhere; saying so up front saves frustration.
-
-- **Triage-lane work.** Stale-ticket sweepers, board monitors, fixed-template brief generators. The decision of *what* to do is already made, and what you need is execution velocity. Paddo's [boring agents](https://paddo.dev/blog/boring-agents-ship/) patterns fit these directly.
-- **Pure execution acceleration in a known scope.** The build is decided; just ship it faster. Tools like [Addy Osmani's agent-skills](https://github.com/addyosmani/agent-skills) optimize this. They compose with Mycelium when discovery is missing, but if discovery is settled, use them directly.
-- **Several people editing the same canvas at once.** Mycelium is built for one project, one shared repo, one builder or a small team using standard git. A whole department working the same files at the same time is a different architecture: merge semantics on YAML, identity attribution per edit, locks on gate evaluations mid-progress. Not yet built. If you need that shape, Mycelium isn't it.
-- **Projects where the ceremony feels heavier than the value it adds.** Mycelium scales gates to project size, but if your project genuinely lacks wrong-build risk, the discipline reads as bureaucracy.
-
-## How it works
-
-Two pieces. **Scales** are what you're deciding, from Purpose at the top down to Delivery and Market. **Diamonds** are how you decide: the same Discover, Define, Develop, Deliver loop, run at whatever scale you're working on.
+There is more than one kind of deciding, and they stack. Purpose at the top. Below it, where you are playing, which problem, which solution, the build, and what the market says back.
 
 ```mermaid
 graph TD
-    L0["🎯 L0: Purpose"]
-    L1["🗺️ L1: Strategy"]
-    L2["🔍 L2: Opportunity"]
-    L3["💡 L3: Solution"]
-    L4["🔨 L4: Delivery"]
-    L5["🚀 L5: Market"]
+    L0["L0: Purpose"]
+    L1["L1: Strategy"]
+    L2["L2: Opportunity"]
+    L3["L3: Solution"]
+    L4["L4: Delivery"]
+    L5["L5: Market"]
     L0 --> L1 --> L2 --> L3 --> L4 --> L5
-    L5 -.->|"market feedback"| L2
+    L5 -.-> L2
 ```
 
-You don't run all of them. A weekend project might skip strategy entirely. `/mycelium:start` reads your project and tells you which scales matter.
+The dotted line is what the market says back. It lands on opportunity rather than at the top, because what the market tells you usually changes which problem is worth solving next, not what you are for.
 
-Each step has to clear an evidence check before it continues. The check asks what the claim rests on and where that came from. If a step can't clear, the agent tells you what's missing and which command closes the gap, then stops there.
+You do not run all of them. A weekend project skips most. `/mycelium:start` reads what you have and tells you which ones are worth your afternoon.
 
-Your product decisions live as plain YAML in your repo, versioned in git. That's the spec. If the build turns up a bad assumption, the work moves back a step with what you learned.
+## When to use something else
 
-Setup creates six directories and writes nothing outside them:
+If the decision is already made and you need throughput, Paddo's [boring agents](https://paddo.dev/blog/boring-agents-ship/) fit better. If the scope is settled and you want it built faster, [Addy Osmani's agent-skills](https://github.com/addyosmani/agent-skills). Several people editing one canvas at once is not built. And if the thing you are making carries no risk of being the wrong thing, this will feel like bureaucracy, because for you it would be.
 
-```
-.claude/canvas/       purpose, opportunities, jobs-to-be-done, and the rest
-.claude/diamonds/     active.yml, what you're deciding and how far it's got
-.claude/harness/      decision-log.md, what you chose and what you rejected
-.claude/memory/       corrections, patterns
-.claude/evals/        assumption tests
-.claude/jit-tooling/  metric adapters, if your project has any
-```
+## Someone else's
 
-To see them filled in on a real project rather than described, [dagfinndybvig/minilisp](https://github.com/dagfinndybvig/minilisp) is a stranger's Lisp interpreter with its canvas, diamond and decision log left in the repo on purpose.
+[dagfinndybvig/minilisp](https://github.com/dagfinndybvig/minilisp) is a Lisp interpreter by someone I have never met. Not a developer, ran it on Vibe with Mistral, and left his canvas and decision log in the repo on purpose. [Read what his ten minutes produced](https://github.com/dagfinndybvig/minilisp/blob/main/.claude/canvas/gist.yml) before you install anything of mine.
 
-→ Depth: [docs/usage-modes.md](docs/usage-modes.md), [docs/skills/](docs/skills/README.md), [docs/theories.md](docs/theories.md), [docs/philosophy.md](docs/philosophy.md).
+## Tell me either way
 
-## Where it sits in the field
+The thing you got built, or the point where it got in the way and you stopped. The second kind is rarer and I am more interested in those. [An issue](https://github.com/haabe/mycelium/issues), or [a discussion](https://github.com/haabe/mycelium/discussions).
 
-Mycelium is one worked example of a pattern the field is converging on: guardrails going in and checks coming back. Others have started naming it too. Thoughtworks calls it [harness engineering](https://martinfowler.com/articles/harness-engineering.html). A survey with 42 authors is titled [Code as Agent Harness](https://arxiv.org/abs/2605.18747).
+If there's a business case underneath all this, it's still worth giving away for free. Because who doesn't think the world needs better products?
 
-## How Mycelium got smarter
-
-Mycelium has been dogfooded on three small projects and tested by outside users under realistic time pressure. Each session taught the framework something different. Most of what they taught is in the version you're looking at right now.
-
-- **[Someone I had never met ran the whole thing on Mistral](docs/receipts/cases/2026-06-23-dagfinn-minilisp-vibe-mistral.md):** a cold contact took a Lisp interpreter end to end on Vibe + Mistral, published [the repo](https://github.com/dagfinndybvig/minilisp), and reported the friction that mattered: the context budget is two problems, not one, and a bigger window fixes only the first.
-- **[Edith-Mari's book project](docs/receipts/cases/2026-05-20-edith-mari-book-project.md):** the first non-developer user, a writer with a cookbook project, hit the brief-synthesis flow at the affective layer and surfaced the wayfinding-at-phase-transitions correction. The plain-language discipline was load-bearing.
-- **[When the report you cite fact-checks you](docs/receipts/cases/2026-06-07-faros-whiplash-integration.md):** Faros's *Acceleration Whiplash* and Datadog's *State of AI Engineering* arrived as external prompts and the framework's L5 score landed at 3/5, strong scaffolding and weak instrumentation. Three changes shipped in one cycle, including the discipline that a schema field becomes a target the moment it's named.
-- **[Alex's first run](docs/receipts/cases/2026-05-26-alex-cohort-first-run.md):** the deepest single session on record, and it surfaced the output-density and post-build-silence gaps that drove the v0.31.x batch.
-- **[When the checker passed and the paths were still dead](docs/receipts/cases/2026-06-18-legacy-path-rot-guard.md):** a dead-link sweep went green; two days later a house-cleaning found migration debt sitting in code-spans and prose, where a link checker scoped to links by design was never going to look. The green audit had been read as a clean bill of health, and a second guard now covers the class the first one couldn't see.
-
-The framework you're looking at now is partly built from things it stopped itself. It [helped me kill my own project](docs/receipts/cases/2026-04-macos-fileviewer.md) before I became too invested. That kill alone produced ten of the mechanisms this project now runs on.
-
-**Run it on something?** I would like to hear about it either way. The thing you got built, or the point where it got in the way and you stopped. Both are useful and the second kind is rarer, so if you have one of those I am especially interested. Every case above started as someone telling me something I could not have found on my own machine. Open an issue or start a [discussion](https://github.com/haabe/mycelium/discussions).
-
-→ Full tables, per-mechanism index, per-contributor index: [docs/receipts/](docs/receipts/README.md).
-→ The people who shaped these: [CONTRIBUTORS.md](CONTRIBUTORS.md).
-
-## Resuming work
-
-Returning to a project? Run `/mycelium:diamond-assess`. The agent reads your canvas state and tells you where you are and what to do next. Legacy installs run `/diamond-assess`. Install variants, upgrading, and migration paths: [`docs/install-paths.md`](docs/install-paths.md).
-
-## Going deeper
-
-| If you want to... | Go to |
-|---|---|
-| Build the mental model (how to think in it) | [docs/mental-model.md](docs/mental-model.md) |
-| Understand why Mycelium is opinionated | [docs/philosophy.md](docs/philosophy.md) |
-| Evaluate it for your team | [docs/evaluate.md](docs/evaluate.md) |
-| Look up a specific skill | [docs/skills/](docs/skills/README.md) |
-| Check the theory grounding | [docs/theories.md](docs/theories.md) (30+ frameworks) |
-| Read the full receipts index | [docs/receipts/](docs/receipts/README.md) |
-| Install variants, migration, upgrading | [docs/install-paths.md](docs/install-paths.md) |
-| Read the FAQ | [docs/faq.md](docs/faq.md) |
-| Vocabulary check | [docs/glossary.md](docs/glossary.md) |
-| See version history | [docs/changelog.md](docs/changelog.md) |
-| Contribute or get listed | [CONTRIBUTORS.md](CONTRIBUTORS.md) + [docs/contributing/](docs/contributing/README.md) |
-| Check regulatory exposure | [docs/regulatory.md](docs/regulatory.md) + [docs/ai-system-card.md](docs/ai-system-card.md) |
-
-## Acknowledgments
-
-Mycelium is shaped by the people who used it and helped sharpen it. Credits: [CONTRIBUTORS.md](CONTRIBUTORS.md). Theory authors are credited in [docs/theories.md](docs/theories.md).
-
-## License
-
-MIT License. See [LICENSE](LICENSE).
-
----
-
-*Mycelium is not affiliated with any of the authors or publishers named here. The citations credit the work this is built on. They do not imply endorsement.*
+[Mental model](docs/mental-model.md) · [why it's opinionated](docs/philosophy.md) · [evaluate it](docs/evaluate.md) · [the skills](docs/skills/README.md) · [theory](docs/theories.md) · [other agents](docs/install-paths.md) · [everything](docs/README.md) · [credits](CONTRIBUTORS.md) · MIT
