@@ -80,6 +80,11 @@
           "type": "string",
           "description": "sha256 of normalised why+how+what. A mismatch means the list is stale and every stance below it is superseded."
         },
+        "hash_algorithm": {
+          "type": "string",
+          "const": "intent-v1",
+          "description": "Which algorithm stamped derived_from_hash. Absent means pre-v0.141.0, when the hash covered evidence as well as intent — a mismatch was then uninterpretable, because appending one citation changed it. Record this alongside a hash produced by a v0.141.0+ derivation."
+        },
         "derived_at": {
           "type": "string"
         },

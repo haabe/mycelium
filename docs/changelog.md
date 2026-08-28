@@ -2,7 +2,43 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-08-26.
+**Last updated**: 2026-08-28.
+
+## v0.141.0 - three checks that fired on health, and one that was 98.9% evidence
+
+Found by running the pre-push gates on the dogfood repo and actually reading the warnings instead
+of scrolling past them. All three defects share a shape: **a check firing on the framework working
+correctly.** A warning that fires on health gets muted, and then it is not there on the day the
+thing it watches for really happens.
+
+**The purpose hash was 98.9% evidence.** `purpose_properties` records a hash of `why`/`how`/`what`
+so that a purpose change marks every stance below it superseded. Measured on the dogfood canvas:
+`what` held **483 characters of intent** (`name`, `description`, `positioning`) and **43,210
+characters of evidence** (`positioning_evidence`, `positioning_candidates`). So appending a single
+citation superseded nine human-confirmed properties that had been backtested against 53 solutions
+and 197 decisions, while `why` and `how` were byte-identical across the change. Evidence accretion
+is the most frequent write a live canvas takes, so this fired constantly and meant nothing.
+
+`purpose_hash` now strips evidence-bearing keys before hashing, so it tracks intent. **And the
+upgrade does not fake a verdict it cannot support:** every existing recorded hash was stamped by
+the old algorithm, and a mismatch against those is uninterpretable rather than stale. Where the new
+`hash_algorithm: intent-v1` marker is absent, the check now says it *cannot tell*, and asks for one
+re-derivation. It does not report staleness it has not established.
+
+**The validator contradicted itself twenty lines apart.** `id_prefix_section_warnings` warned that
+`ht-NNN` entries are defined under three sections of `human-tasks.yml` — while `TASK_STATUS_HOMES`,
+in the same module, declared all three to be their legitimate homes. Every project with a closed
+task got this warning forever. The two now read from one source of truth, and the distinction is
+named: `comp-NNN` across `components` and `out_of_scope` is two KINDS sharing a prefix, which is
+the original defect; `ht-NNN` across three task lists is one KIND at three lifecycle STAGES.
+
+That check's docstring claimed "zero false positives, measured across 25 real canvas files". The
+claim was already false when written — the measurement inspected prefixes, and `ht` was not among
+them. The docstring now says so.
+
+**Also honest about its own limits:** the exemption is the declared group only. A task list plus an
+unrelated section still fires, and a test pins that, because a narrow exemption quietly becoming a
+blanket one is how the original defect would return.
 
 ## v0.140.0 - the README shows the run
 

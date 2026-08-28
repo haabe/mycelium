@@ -834,16 +834,7 @@ def task_list_findings(canvas_dir):
     if not isinstance(data, dict):
         return []
 
-    # list name -> the statuses that BELONG in it. `pending_tasks` holds open work, so
-    # `in_progress` is at home there; it is not a misfile.
-    belongs = {
-        # `waiting` and `watching` are OPEN states (v0.132.0) and belong here. Flagging them
-        # would fire on the majority of a real project's open work: measured 2026-08-24,
-        # 13 of 16 in_progress tasks were sent-and-awaiting and 3 of 9 pending were watches.
-        "pending_tasks": {"pending", "in_progress", "waiting", "watching"},
-        "completed_tasks": {"completed"},
-        "closed_without_evidence": {"abandoned", "cancelled", "stalled"},
-    }
+    belongs = TASK_STATUS_HOMES
     findings, closed_seen = [], 0
     for list_name, allowed in belongs.items():
         misfiled = _misfiled_by_status(data.get(list_name), allowed)
@@ -867,6 +858,29 @@ CLOSED_STATUSES = ("completed", "abandoned", "cancelled", "stalled")
 #: naming 61 makes it scrollable-past, which is how a warning gets muted.
 _IDS_SHOWN = 4
 
+
+#: list name -> the statuses that BELONG in it. `pending_tasks` holds open work, so
+#: `in_progress` is at home there; it is not a misfile.
+#:
+#: `waiting` and `watching` are OPEN states (v0.132.0) and belong there. Flagging them
+#: would fire on the majority of a real project's open work: measured 2026-08-24,
+#: 13 of 16 in_progress tasks were sent-and-awaiting and 3 of 9 pending were watches.
+#:
+#: Module-level since v0.141.0 because TWO checks need it and they had DISAGREED:
+#: `id_prefix_section_warnings` warned that `ht-NNN` spans three sections while this
+#: mapping, twenty lines away, declared all three to be its legitimate homes.
+TASK_STATUS_HOMES = {
+    "pending_tasks": {"pending", "in_progress", "waiting", "watching"},
+    "completed_tasks": {"completed"},
+    "closed_without_evidence": {"abandoned", "cancelled", "stalled"},
+}
+
+#: Section groups that ONE id prefix is SUPPOSED to span, because together they form a
+#: single register split by lifecycle stage rather than by kind. An entry moving between
+#: these is the closure path working, not a misfiling.
+#:
+#: Derived from TASK_STATUS_HOMES rather than written out again, so the two cannot drift.
+LIFECYCLE_REGISTER_GROUPS = (frozenset(TASK_STATUS_HOMES),)
 
 def _misfiled_by_status(entries, allowed):
     """{status: [ids]} for entries whose own status does not belong in this list."""
@@ -930,6 +944,16 @@ def cycle_record_findings(canvas_dir):
         return []
 
 
+def _is_lifecycle_split(sections):
+    """True when these sections are one register split by stage, not two kinds sharing a prefix.
+
+    Subset rather than equality: a project whose canvas has open tasks but has never closed
+    one has entries in `pending_tasks` only, and a project mid-migration may not have all
+    three lists. Requiring an exact match would fire on both.
+    """
+    return any(set(sections) <= group for group in LIFECYCLE_REGISTER_GROUPS)
+
+
 def id_prefix_section_warnings(canvas_dir):
     """WARN-tier: an ID prefix should define entries in exactly ONE top-level section.
 
@@ -944,6 +968,18 @@ def id_prefix_section_warnings(canvas_dir):
     Measured before shipping: across the 25 canvas files of the dogfood project, every
     ID prefix already lived in exactly one section. Zero false positives, so the check
     fires on the defect and nothing else.
+
+    THAT MEASUREMENT WAS WRONG WITHIN TWO DAYS, and the correction is the reason
+    `_is_lifecycle_split` exists (v0.141.0). `human-tasks.yml` defines `ht-NNN` under
+    `pending_tasks`, `completed_tasks` AND `closed_without_evidence` — by design, and
+    this same module's `TASK_STATUS_HOMES` says so explicitly. The check was therefore
+    reporting the framework's own closure path as a misfiling, on every run, forever.
+    A permanent warning is worse than no warning: it trains the reader to scroll past
+    the line where a real misfiling would appear.
+
+    The distinction that matters: `comp-NNN` in `components` and `out_of_scope` is two
+    KINDS in one prefix, which is the defect. `ht-NNN` across three task lists is one
+    kind at three LIFECYCLE STAGES, which is the register working.
 
     WARN and never fail, for the same reason as the other WARN-tier checks here:
     downstream projects may carry a legacy misfiling they did not introduce.
@@ -960,7 +996,7 @@ def id_prefix_section_warnings(canvas_dir):
         for key, value in data.items():
             _collect_id_prefixes(value, key, seen)
         for prefix, sections in sorted(seen.items()):
-            if len(sections) > 1:
+            if len(sections) > 1 and not _is_lifecycle_split(sections):
                 where = ", ".join(sorted(sections))
                 out.append(
                     f"{path.name}: '{prefix}-NNN' entries are defined under "

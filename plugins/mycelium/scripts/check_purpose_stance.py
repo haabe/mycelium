@@ -65,17 +65,79 @@ import yaml
 VERDICTS = ("preserves", "not_applicable", "contradicts")
 
 
+#: Marker recorded next to `derived_from_hash` saying which algorithm stamped it.
+#: Absent means pre-v0.141.0, i.e. intent AND evidence were hashed together, and a
+#: mismatch is then UNINTERPRETABLE rather than a staleness finding. Saying so is the
+#: point: a check that cannot tell must not report a verdict it has not earned.
+HASH_ALGORITHM = "intent-v1"
+
+#: Key SUFFIXES (and one exact key) whose values are accreting EVIDENCE about the purpose
+#: rather than statements OF it. Stripped before hashing.
+#:
+#: WHY THIS EXISTS (v0.141.0). Measured on the dogfood canvas 2026-08-28: `what` held 483
+#: characters of intent (`name`, `description`, `positioning`) and 43,210 characters of
+#: evidence (`positioning_evidence`, `positioning_candidates`). The hash was therefore
+#: 98.9% evidence, and appending ONE citation marked nine human-confirmed, backtested
+#: properties as superseded. `why` and `how` were byte-identical across the change.
+#:
+#: That is the failure this whole mechanism exists to prevent, pointed at itself: a
+#: staleness signal that fires on healthy activity teaches its reader to ignore it, and
+#: then it is not there on the day the purpose really moves. Evidence accretion is the
+#: single most frequent write a live canvas takes.
+EVIDENCE_KEY_SUFFIXES = ("_evidence", "_candidates", "_signals")
+EVIDENCE_KEYS_EXACT = ("provenance",)
+
+
+def _is_evidence_key(key) -> bool:
+    """True for a key that carries evidence ABOUT the purpose rather than the purpose."""
+    if not isinstance(key, str):
+        return False
+    return key in EVIDENCE_KEYS_EXACT or key.endswith(EVIDENCE_KEY_SUFFIXES)
+
+
+def strip_evidence(node):
+    """Recursively drop evidence-bearing keys, leaving the statement of intent.
+
+    Deliberately narrow: it removes keys whose NAME declares them evidence, and nothing
+    else. It does not guess from value size or shape, because a long `description` is
+    still intent and a short `positioning_evidence` is still evidence.
+    """
+    if isinstance(node, dict):
+        return {k: strip_evidence(v) for k, v in node.items() if not _is_evidence_key(k)}
+    if isinstance(node, list):
+        return [strip_evidence(v) for v in node]
+    return node
+
+
+def _hash_fields(purpose: dict, strip: bool) -> str:
+    parts = []
+    for key in ("why", "how", "what"):
+        value = purpose.get(key)
+        if strip:
+            value = strip_evidence(value)
+        parts.append(json.dumps(value, sort_keys=True, ensure_ascii=False, default=str))
+    return hashlib.sha256("\x1f".join(parts).encode("utf-8")).hexdigest()
+
+
 def purpose_hash(purpose: dict) -> str:
-    """Hash of the governing fields. A mismatch means every stance below is superseded.
+    """Hash of the INTENT in the governing fields. A mismatch means stances are superseded.
 
     Normalised so that reformatting (indentation, list order in `how`) does not read as a change of
-    intent, while any edit to the words does.
+    intent, while any edit to the words does. Since v0.141.0, evidence-bearing keys are stripped
+    first — see EVIDENCE_KEY_SUFFIXES for the measurement that forced it.
     """
-    parts = [
-        json.dumps(purpose.get(key), sort_keys=True, ensure_ascii=False, default=str)
-        for key in ("why", "how", "what")
-    ]
-    return hashlib.sha256("\x1f".join(parts).encode("utf-8")).hexdigest()
+    return _hash_fields(purpose, strip=True)
+
+
+def legacy_purpose_hash(purpose: dict) -> str:
+    """The pre-v0.141.0 hash, over intent AND evidence.
+
+    Kept so the algorithm change does not hand every existing project a false staleness
+    warning on upgrade. A recorded hash matching this one proves the whole subtree is
+    unchanged, which is STRICTLY STRONGER than proving the intent is unchanged — so
+    accepting it weakens nothing.
+    """
+    return _hash_fields(purpose, strip=False)
 
 
 def _load(path: Path):
@@ -211,13 +273,25 @@ def _list_findings(pp: dict, purpose: dict) -> list[str]:
     """Staleness and confirmation: the anti-drift half, and it needs no judgement."""
     out: list[str] = []
     recorded = pp.get("derived_from_hash")
-    if recorded and recorded != purpose_hash(purpose):
-        out.append(
-            "purpose_properties: derived_from_hash does not match the current "
-            "why/how/what. The list was derived from a superseded purpose, so every "
-            "stance below it is superseded too. Re-derive with "
-            "/mycelium:purpose-properties before trusting any stance."
-        )
+    if recorded and recorded not in (purpose_hash(purpose), legacy_purpose_hash(purpose)):
+        if pp.get("hash_algorithm") == HASH_ALGORITHM:
+            out.append(
+                "purpose_properties: derived_from_hash does not match the INTENT of the "
+                "current why/how/what. Evidence-bearing keys are excluded from this hash, "
+                "so this is not evidence accretion — the words of the purpose itself have "
+                "moved, and every stance below is superseded. Re-derive with "
+                "/mycelium:purpose-properties before trusting any stance."
+            )
+        else:
+            out.append(
+                "purpose_properties: derived_from_hash was stamped by the pre-v0.141.0 "
+                "algorithm, which hashed evidence along with intent. THIS CHECK CANNOT "
+                "TELL YOU WHETHER YOUR PURPOSE MOVED — the old hash changed every time a "
+                "citation was appended, so a mismatch now means nothing either way. "
+                "Re-derive once with /mycelium:purpose-properties and record "
+                f"`hash_algorithm: {HASH_ALGORITHM}` alongside the new hash; from then on "
+                "a mismatch here means what it says."
+            )
     if pp.get("confirmed_by") != "human":
         out.append(
             "purpose_properties: confirmed_by is not 'human'. Extraction is "
