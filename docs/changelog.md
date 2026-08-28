@@ -4,6 +4,40 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-26.
 
+## v0.140.0 - the README shows the run
+
+v0.117.5 ended by naming the thing it could not fix: *"the README describes the experience three
+times and shows it zero times. That cannot be written, only run."* Seven rounds of blind cold reads
+since then said the same thing every round, and every attempt to answer it with better prose failed
+again. This release answers it with a run.
+
+**What is new in the README.** An unedited screen capture of `/mycelium:start` on a fresh idea, from
+the first keystroke to the purpose-properties question. The brief it produced, quoted verbatim. And
+[haabe/vibe-rant](https://github.com/haabe/vibe-rant) public, so the excerpt can be checked against
+the file rather than taken on trust. [dagfinndybvig/minilisp](https://github.com/dagfinndybvig/minilisp)
+stays as the external check — someone who is not the author, on a different agent.
+
+**The demo is the tool contradicting its author.** The founder is inside the cohort vibe-rant is for
+and behaves the opposite way the product requires. He said so answering question two. The brief wrote
+it down as the most important line in the file, marked the whole thing `speculation`, and put
+confidence at 0.15. Nothing was blocked. The point is that it became impossible not to notice.
+
+**A fabrication was found and corrected in the same pass.** The founding story had read *"a file
+viewer I was three days into, an agent happily building it"* and claimed the author could not name a
+person who wanted it. The receipt says the project **never got a line of code** and was killed in L0
+after a persona exercise. **The invented version survived three drafts and six blind judges** — none
+of whom had any way to check it. It was caught only by going to fetch the artifact, which is an
+argument for showing artifacts that has nothing to do with persuasion.
+
+**Written against `engine/audience-register.md#human_persuasive`**, which the file had been breaking
+in three ways: product before recognition, a mechanism claim into a market saturated with mechanism
+claims, and no stated falsifier. The falsifier now names a condition that can come back negative
+(three projects, brief never changed the build) and the README states its own known weakness — the
+discovery gate fires once per repo and then goes quiet.
+
+Also corrected: the version number is no longer hardcoded in the README, since this repo
+auto-releases and it would go stale on the next merge.
+
 ## v0.139.1 - the new check fired on a field written to explain its own findings
 
 `touch_dates_unknown_stated_2026_08_27` was added to a task to say that two contacts have
