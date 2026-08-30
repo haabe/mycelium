@@ -2,7 +2,39 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-08-28.
+**Last updated**: 2026-08-30.
+
+## v0.142.0 - the guard was wrong more often than it was right
+
+The `$?`-after-a-pipeline warning has been firing since it shipped, and this repo has been reading
+its re-fire rate as a discipline signal. **That was the wrong measurement.** A re-fire count says
+how often a signature recurred. It cannot distinguish a warning that was ignored from a warning
+that was WRONG, and it turns out most of these were wrong.
+
+**Measured, not argued.** 12,260 unique Bash commands pulled from 30 dogfood session transcripts,
+scored using the guard's own `_DOLLAR_STATUS` / `_PIPE` / `_PIPESTATUS` regexes imported from the
+shipped module, so what was measured is the shipped rule. Rule 1 fires on 223 of them.
+**135 are effective false positives** -- Tricorder's definition (ICSE 2015): any report the user
+declines to act on. That is a 53-60% rate against a **<10%** bar for an advisory check, and
+essentially-zero for a blocking one. The band is the 16 fires where a command-substitution pipe
+sits on the `$?` line and can honestly be read either way.
+
+**Two causes.** The `|` was often inside a quoted string or a quoted heredoc, where no pipeline
+exists: `grep "a\|b"` is an alternation, `jq '.a[] | select(.b)'` is jq's own language. And the
+`$?` usually belonged to a different command using a redirect -- `cmd > log 2>&1; echo "rc=$?"` --
+which reads that command's status correctly and is the idiom the docs recommend.
+
+**Both narrowed.** Pipes are now detected only outside quotes and quoted heredocs, and the `$?`
+must sit in the segment immediately following the piped one, which is the only shape where `$?`
+reports a pipeline. Rule 2 already stripped quoted heredocs; rule 1 did not, and the helper was
+sitting in the same file.
+
+**Validated against the corpus rather than against intuition: 88 of 88 true positives kept, 135 of
+135 false positives dropped.** Seven new tests pin the shapes.
+
+The general lesson is the one this project keeps relearning: a check that fires on healthy work
+trains its reader to scroll past the line where a real defect would appear, and a ledger that
+counts fires rather than correctness will report that as discipline.
 
 ## v0.141.0 - three checks that fired on health, and one that was 98.9% evidence
 

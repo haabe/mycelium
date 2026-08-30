@@ -255,3 +255,70 @@ def test_a_bare_status_check_after_a_pipe_still_warns(scripts_path):
     """The fix must not silence the actual trap."""
     mod = _import(scripts_path)
     assert len(mod.findings("which opencode | head -1; echo $?")) == 1
+
+
+# ------------------------------------------------- narrowing (2026-08-30)
+#
+# Rule 1 used to ask only "is there a `$?` somewhere after some `|`?", over the
+# raw command. Measured over 12,260 real Bash commands from dogfood session
+# transcripts: 223 fires, 53-60% of them effective false positives — five to six
+# times outside Tricorder's <10% advisory bar. These pin the two shapes that
+# caused it. Ground truth from that corpus: the narrowed rule keeps 88/88 true
+# positives and drops 135/135 false ones.
+
+
+def test_pipe_inside_a_quoted_string_is_not_a_pipeline(scripts_path):
+    """`grep "a\\|b"` is an alternation in an argument, not a shell pipeline.
+
+    The largest single false-positive source in the measured corpus."""
+    mod = _import(scripts_path)
+    assert mod.findings('grep "a\\|b" file; echo $?') == []
+
+
+def test_pipe_inside_a_single_quoted_filter_is_not_a_pipeline(scripts_path):
+    """`jq '.a[] | select(.b)'` — the pipe belongs to jq's language."""
+    mod = _import(scripts_path)
+    assert mod.findings("jq '.a[] | select(.b)' f.json; echo $?") == []
+
+
+def test_status_after_a_redirect_is_correct_and_silent(scripts_path):
+    """`cmd > log 2>&1; echo $?` reads cmd's status. It is the RECOMMENDED
+    idiom, and warning on it taught the reader to scroll past the rule."""
+    mod = _import(scripts_path)
+    assert mod.findings('python3 check.py > /tmp/o.txt 2>&1; echo "rc=$?"') == []
+
+
+def test_a_redirect_on_a_later_line_does_not_inherit_an_earlier_pipe(
+        scripts_path):
+    """The `$?` belongs to the git push, not to the grep two lines up."""
+    mod = _import(scripts_path)
+    cmd = ('bash tests/run.sh 2>&1 | grep -E "Results"\n'
+           'git push origin main > /tmp/p.log 2>&1; echo "push rc=$?"')
+    assert mod.findings(cmd) == []
+
+
+def test_adjacency_the_pipe_must_be_the_previous_command(scripts_path):
+    """A pipe two segments back is not what `$?` reports."""
+    mod = _import(scripts_path)
+    assert mod.findings("a | b; c; echo $?") == []
+    assert len(mod.findings("c; a | b; echo $?")) == 1
+
+
+def test_pipe_inside_a_quoted_heredoc_body_is_not_a_pipeline(scripts_path):
+    """Rule 2 already stripped quoted heredocs; rule 1 did not, and fired on a
+    `|` inside a Python string in a heredoc."""
+    mod = _import(scripts_path)
+    cmd = ("python3 - <<'PY'\n"
+           "print('present:', k in kc, '| chars', n)\n"
+           "PY\n"
+           'python3 check.py > /tmp/v.txt 2>&1; echo "rc=$?"')
+    assert mod.findings(cmd) == []
+
+
+def test_the_real_trap_still_warns_after_narrowing(scripts_path):
+    """Guard against over-narrowing: every shape that IS the trap still fires."""
+    mod = _import(scripts_path)
+    for cmd in ("which opencode | head -1; echo $?",
+                'ls | wc -l\necho "count rc=$?"',
+                'cat f | grep x; echo "rc=$?"'):
+        assert len(mod.findings(cmd)) == 1, cmd
