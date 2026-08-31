@@ -4,6 +4,40 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-31.
 
+## v0.144.0 - the validator now gates the release
+
+`v0.143.0` published as **Latest** while `Validate Template Integrity` was **red on the same commit**.
+Both workflows fire on `push: main`, with no `needs:` and no `workflow_run` between them, so a failing
+validation and a published release were independent events. That is the two-mechanisms-and-neither-
+gates shape this tree audits everywhere — sitting, this time, on the distribution path.
+
+Scoped honestly: what failed was Check 26, version-bump discipline. The 1,228 tests, ruff, shellcheck
+and the other 54 checks passed on that commit, so the shipped code was sound. **The gap in the
+mechanism is the finding; the payload was fine this time.**
+
+A precondition step now waits for the validator to conclude on the release commit and blocks on
+anything but success.
+
+**Blocking is licensed by the error rate, not chosen.** Tricorder (ICSE 2015) requires an effective
+false-positive rate of essentially zero before a check may block, because a blocking gate that is
+sometimes wrong gets bypassed and is then not a gate. Measured over this workflow's last 40 runs:
+**39 success, 1 failure, and that failure was a true positive.** It has earned the right to block.
+
+**A gate step, not a `workflow_run` trigger.** Switching the trigger would drop the `paths:` filter and
+change the meaning of `github.event.before`, which the range walk depends on — the exact assumption
+the 2026-07-30 incident falsified. A precondition keeps every existing semantic and adds one question.
+
+**The deliberate override is `workflow_dispatch`**, which skips the gate by design and is recorded in
+the Actions log. A person can still release a version the validator rejected; it takes a manual act
+with their name on it. That is *unskippable by the agent, deliberately overridable by the person* —
+which this path previously satisfied in neither direction.
+
+**It fails closed.** If the validator never concludes within 15 minutes the release is blocked, not
+waved through. A validator that cannot be read is not a green one.
+
+Verified against real history before shipping: the gate's query returns `failure` for `614ab27` — the
+release it would have stopped — and `success` for `3a5d440`.
+
 ## v0.143.1 - the new handler needed its verdict
 
 v0.143.0 shipped red. The Bash half of the read log introduced one
