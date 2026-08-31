@@ -334,3 +334,15 @@ reviewed:
 - id: read-log.sh@25e2a15134
   verdict: accepted
   reason: Hook stdin parse; exit 0 allows. Identical handler to change-log.sh's.
+- id: validate_canvas.py@72bf56e5e1
+  verdict: accepted
+  reason: >-
+    `purpose_why_findings` returns [] if purpose.yml will not parse. STRONGER THAN THE
+    check_purpose_stance SIBLING ABOVE, and the difference is what makes this accepted
+    rather than conditional: this handler lives INSIDE validate_canvas.py, whose own
+    fail-loud pass reads the same file in the same run and reports
+    "YAML parse error in purpose.yml" (see the load_yaml try/except in
+    validate_yaml_file). So when this handler fires, the parse error is ALREADY on the
+    same output — there is no run in which this silence is the only thing a human sees.
+    Changing the handler would print the same parse error twice, which is the reason the
+    sibling was left as-is too. Added v0.145.0 with the check itself.

@@ -4,6 +4,18 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-31.
 
+## v0.145.1 - ruling on the new check's own fail-open
+
+The pre-push fail-open scan flagged `purpose_why_findings`' exception handler as a NEW silent
+default-on-exception site — a check that cannot say it could not look, added by the release that exists
+because a check could not say it could not look.
+
+Reviewed rather than suppressed, and **accepted** rather than `conditional` like its
+`check_purpose_stance` sibling. The difference is the whole judgement: this handler lives INSIDE
+`validate_canvas.py`, whose own fail-loud pass reads the same file in the same run and reports
+`YAML parse error in purpose.yml`. There is no run in which this silence is the only thing a human
+sees, and changing the handler would print the same parse error twice.
+
 ## v0.145.0 - a staleness hash that could never mismatch
 
 `check_purpose_stance.py` hashes `why`, `how` and `what` to detect whether a purpose moved after its
