@@ -203,3 +203,33 @@ def test_main_reports_unruled_entries(tmp_path, monkeypatch):
     rc, out = _main(monkeypatch, root, "--strict")
     assert rc == 0
     assert "await a founder ruling" in out
+
+
+# --- --similar: step (b) of the four-step new-field rule ---------------------
+# Synonym proliferation is measured, not hypothetical: `surfaced_by` was agent-invented and
+# reached 42 uses beside the existing provenance / source_class mechanism, unreconciled.
+
+
+def test_similar_reports_an_exact_existing_name(tmp_path, monkeypatch):
+    root = _tree(tmp_path, {"kill_criterion": {"type": "string"}})
+    rc, out = _main(monkeypatch, root, "--similar", "kill_criterion")
+    assert rc == 0
+    assert "ALREADY EXISTS" in out
+
+
+def test_similar_finds_a_near_duplicate_name(tmp_path, monkeypatch):
+    """The case the rule exists for: inventing a synonym for something already present."""
+    root = _tree(tmp_path, {"surfaced_by": {"type": "string"},
+                            "decided_by": {"type": "string"}})
+    rc, out = _main(monkeypatch, root, "--similar", "raised_by")
+    assert rc == 0
+    assert "surfaced_by" in out or "decided_by" in out
+
+
+def test_similar_says_so_plainly_when_a_name_is_genuinely_new(tmp_path, monkeypatch):
+    """A check that never clears anything trains people to ignore it."""
+    root = _tree(tmp_path, {"kill_criterion": {"type": "string"}})
+    rc, out = _main(monkeypatch, root, "--similar", "quantum_flux")
+    assert rc == 0
+    assert "none" in out
+    assert "(a), (c) and (d) still apply" in out

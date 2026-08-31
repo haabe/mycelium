@@ -36,6 +36,7 @@ literature converged on: a recurring ratchet, because a one-off audit regrows.
 from __future__ import annotations
 
 import argparse
+import difflib
 import json
 import re
 import sys
@@ -56,6 +57,10 @@ CONSUMER_KINDS = ("code", "render", "skill", "engine")
 #: Recursion ceiling when walking a schema. Deep enough for every shipped schema, finite so a
 #: self-referential $ref cannot hang the gate.
 _MAX_SCHEMA_DEPTH = 8
+
+#: Shortest token that counts as a shared word when hunting synonyms. Two characters and
+#: below ("at", "by", "id") match everything and drown the signal.
+_MIN_TOKEN = 2
 
 
 def _schema_fields(schema_dir: Path) -> dict[str, set[str]]:
@@ -138,13 +143,76 @@ def scan(root: Path) -> tuple[list[tuple[str, list[str], list[str]]], dict]:
     return rows, registry
 
 
+def _existing_names(root: Path, canvas_dir: str | None) -> set[str]:
+    """Every field name the framework already knows: declared, and actually written."""
+    names = set(_schema_fields(root / "schemas"))
+    if canvas_dir:
+        for path in sorted(Path(canvas_dir).glob("*.yml")):
+            try:
+                _yaml_keys(yaml.safe_load(path.read_text()), names)
+            except (yaml.YAMLError, OSError):
+                continue
+    return names
+
+
+def _yaml_keys(node, out: set[str], depth: int = 0) -> None:
+    if depth > _MAX_SCHEMA_DEPTH:
+        return
+    if isinstance(node, dict):
+        for key, val in node.items():
+            if isinstance(key, str):
+                out.add(key)
+            _yaml_keys(val, out, depth + 1)
+    elif isinstance(node, list):
+        for val in node:
+            _yaml_keys(val, out, depth + 1)
+
+
+def _report_similar(root: Path, name: str, canvas_dir: str | None) -> int:
+    """Step (b) of the new-field rule, made mechanical rather than aspirational.
+
+    SYNONYM PROLIFERATION IS THE MEASURED FAILURE, not a hypothetical one: `surfaced_by` was
+    agent-invented and reached 42 uses alongside the existing provenance / source_class
+    mechanism, with nobody reconciling the two. Two names for one idea means each consumer
+    knows one of them and is wrong half the time.
+    """
+    known = _existing_names(root, canvas_dir)
+    if name in known:
+        print(f"`{name}` ALREADY EXISTS. Use it, or say why a second field is needed.")
+        return 0
+    close = difflib.get_close_matches(name, sorted(known), n=12, cutoff=0.6)
+    tokens = {t for t in re.split(r"[_\-]", name.lower()) if len(t) > _MIN_TOKEN}
+    shared = sorted({k for k in known
+                     if tokens & {t for t in re.split(r"[_\-]", k.lower()) if len(t) > _MIN_TOKEN}}
+                    - set(close))[:12]
+    print(f"Existing names close to `{name}` ({len(known)} known):")
+    if not close and not shared:
+        print("  none — no near-duplicate found. Steps (a), (c) and (d) still apply.")
+        return 0
+    for match in close:
+        print(f"  ~ {match}")
+    for match in shared:
+        print(f"  · {match}   (shares a word)")
+    print("\n  If one of these means what you mean, USE IT. A second name for one idea means\n"
+          "  every consumer must know both, and in practice each knows one.")
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--root", default=str(Path(__file__).resolve().parent.parent))
     ap.add_argument("--strict", action="store_true",
                     help="exit 1 on a NEW promise-shaped field with no consumer and no ruling")
+    ap.add_argument("--similar", metavar="NAME",
+                    help="before inventing a field, list existing names close to NAME. Step (b) "
+                         "of the four-step new-field rule in the agent operating contract.")
+    ap.add_argument("--canvas-dir", default=None,
+                    help="with --similar, also search the live canvas, where most keys live")
     args = ap.parse_args()
     root = Path(args.root)
+
+    if args.similar:
+        return _report_similar(root, args.similar, args.canvas_dir)
 
     rows, registry = scan(root)
     if not rows:

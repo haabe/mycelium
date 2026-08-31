@@ -4,6 +4,47 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-31.
 
+## v0.149.0 - a new field is a four-step act, never one
+
+**FOUNDER-SET HARD RULE**, now in `engine/agent-operating-contract.md`, which the SessionStart hook
+injects into every session. Before writing a canvas key the framework has not seen before:
+
+**(a) Is it necessary?** If the value can be DERIVED from what is already recorded, compute it. A
+stored copy of a derivable value is a second source of truth and it will drift from the first.
+
+**(b) Does a similar field already exist?** Now MECHANICAL, not aspirational:
+`check_field_wiring.py --similar <name>` searches the schemas and the live canvas and lists close
+matches. Synonym proliferation is the measured failure, not a hypothetical one — `surfaced_by` was
+agent-invented and reached **42 uses** alongside the existing `provenance` / `source_class`
+mechanism with nobody reconciling them. Asked for `raised_by`, the new flag returns `ruled_by`,
+`gated_by`, `assessed_by`, `scored_by`, `closed_by`, `decided_by`, `written_by`, `contradicted_by`
+and `surfaced_by`. Two names for one idea means each consumer knows one of them and is wrong half
+the time.
+
+**(c) Declare it in the schema, same commit.** Every canvas schema sets `additionalProperties: true`,
+so an undeclared field is *legal* — which is why **88% of live dogfood canvas keys (2210 of 2494) are
+declared by no schema at all**. An undeclared field is invisible to every field-level mechanism:
+nothing validates its type, nothing finds it, and `check_field_wiring.py` cannot even ask whether it
+has a reader.
+
+**(d) Wire it, and name the consumer in the same commit.** The consumer must EXIST, not be planned. A
+renderer counts. `human` is legal once declared in `harness/field-consumers.yml`.
+
+Plus: **content goes in the VALUE, never the key name** — `horizon: 2026-08-28` can be compared,
+sorted and go overdue; `horizon_set_2026_08_28:` can only be grepped.
+
+**WHY A HARD RULE RATHER THAN ADVICE, stated in the contract itself.** Of 38 promise-shaped fields,
+six had no consumer — and `unlocked_at` was written by an agent HOURS EARLIER in the release fixing
+that defect. Three further instances appeared the same day inside their own remediation: a registry
+that laundered its own contents, a gate that passed on empty input, and a checker shipped with no
+caller. **Care demonstrably does not survive one afternoon.** Asked what he had intended by these
+fields, the founder answered: *"All fields are written by an agent, not me... These I have no
+knowledge of."*
+
+**The research behind the ratchet is logged**, not left in a chat: dogfood `landscape.yml#comp-120`
+records consumer-driven contracts, fitness functions, dead-config detection and stale-flag
+automation, with what was adopted, what was deliberately not, and what was not verified.
+
 ## v0.148.0 - content in key position, ruled a real problem
 
 **THE FOUNDER'S RULING.** Asked whether the 66 one-off keys (`horizon_set_2026_08_28`, `ht_010_status`)
