@@ -83,6 +83,61 @@ RECONCILIATIONS = [
 
 _DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
 
+#: CANVAS-TO-CANVAS reconciliations: (name, source file, source block, id field,
+#: target file, target block, id field, states that count as a match).
+#:
+#: The list above reconciles the DECISION LOG against a canvas history. This one
+#: reconciles two CANVASES against each other, because the same failure has the same
+#: shape there: an event recorded on one surface and never on the other, with nothing
+#: comparing them.
+#:
+#: MEASURED 2026-09-01 on the dogfood canvas. `archived-solutions.yml` held THREE killed
+#: leaves — sol-047a, sol-047d, sol-047c-selectivity-half, all `archived_at: 2026-08-16`,
+#: all `reason: failed-assumption`, each with an ice_score_at_archive, an evidence
+#: snapshot and a decision-log ref — while `cycle-history.yml` reported 16 launched and
+#: ZERO killed. The discard discipline was strong; only the cycle row was missing.
+#:
+#: WHY THAT IS WORTH A CHECK RATHER THAN A NOTE: a reader of cycle-history sees a 0%
+#: discard rate, which this framework's own theory treats as a warning sign, and concludes
+#: nothing is ever killed. An agent did exactly that on 2026-09-01 and wrote it up as a
+#: finding before opening the archive.
+CANVAS_RECONCILIATIONS = [
+    (
+        "killed leaves",
+        "archived-solutions.yml", "archived", "leaf_id",
+        "cycle-history.yml", "cycles", "leaf_id",
+    ),
+]
+
+
+def _block_field_values(canvas: Path, block_key: str, field: str) -> set[str] | None:
+    """Every `field:` value inside the `block_key:` block, or None if unreadable.
+
+    Stdlib-only and block-scoped, matching the technique used by _history_dates above —
+    this script family is required to run on a consumer with no third-party deps.
+    """
+    if not canvas.is_file():
+        return None
+    lines = canvas.read_text(encoding="utf-8", errors="replace").splitlines()
+    # The `- ` prefix is NOT optional decoration: the first field of a YAML list item
+    # sits on the dash line (`  - leaf_id: sol-047a`), so a pattern anchored on
+    # whitespace alone silently matches nothing and the class reports "absent or empty"
+    # — which is what it did on first run, over a file holding three entries.
+    pattern = re.compile(
+        rf"^\s*(?:-\s*)?{re.escape(field)}:\s*[\"']?([A-Za-z0-9_.-]+)[\"']?\s*$")
+    for i, line in enumerate(lines):
+        if line.strip().startswith(f"{block_key}:"):
+            indent = len(line) - len(line.lstrip())
+            found = set()
+            for nxt in lines[i + 1:]:
+                if nxt.strip() and (len(nxt) - len(nxt.lstrip())) <= indent:
+                    break
+                m = pattern.match(nxt)
+                if m:
+                    found.add(m.group(1))
+            return found
+    return None
+
 
 def _history_dates(canvas: Path, key: str) -> set[str] | None:
     """Dates inside the `key:` block of a canvas file, or None if unreadable.
@@ -134,7 +189,27 @@ def analyse(root: Path) -> dict:
         only_canvas = sorted(canvas_dates - log_dates)
         if only_canvas:
             res["info"].append((name, len(only_canvas)))
+
+    _reconcile_canvases(root / ".claude" / "canvas", res)
     return res
+
+
+def _reconcile_canvases(canvas_dir: Path, res: dict) -> None:
+    """Canvas-to-canvas pairs. Extracted to keep analyse() under the complexity limit."""
+    for name, src, src_block, src_field, tgt, tgt_block, tgt_field in CANVAS_RECONCILIATIONS:
+        src_ids = _block_field_values(canvas_dir / src, src_block, src_field)
+        if not src_ids:
+            res["skipped"].append((name, f"{src}#{src_block} absent or empty"))
+            continue
+        tgt_ids = _block_field_values(canvas_dir / tgt, tgt_block, tgt_field)
+        if tgt_ids is None:
+            res["orphans"].append((name, f"{tgt}#{tgt_block} unreadable", sorted(src_ids)))
+            continue
+        res["checked"] += 1
+        missing = sorted(src_ids - tgt_ids)
+        if missing:
+            res["orphans"].append(
+                (name, f"in {src}#{src_block}, absent from {tgt}#{tgt_block}", missing))
 
 
 def main() -> int:
@@ -151,7 +226,10 @@ def main() -> int:
         return 2
 
     for name, where, dates in res["orphans"]:
-        print(f"\nORPHANED — {name}: dated in the decision log, absent from {where}")
+        # The source is named by `where` itself for canvas-to-canvas pairs, which already
+        # read "in X, absent from Y". Only the log-to-canvas rows need the prefix.
+        lead = "recorded" if where.startswith("in ") else "dated in the decision log, absent from"
+        print(f"\nORPHANED — {name}: {lead} {where}")
         for d in dates:
             print(f"  {d}")
         print("  The work was done and the recording of it was not. Route it to the canvas;")

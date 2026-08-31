@@ -97,3 +97,58 @@ def test_missing_decision_log_is_unknown_not_clean(tmp_path, monkeypatch):
 
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-q"]))
+
+
+# --- canvas-to-canvas: killed leaves with no cycle row -----------------------
+# Measured 2026-09-01: archived-solutions.yml held THREE killed leaves (all
+# archived_at 2026-08-16, reason failed-assumption, each with ICE at archive and a
+# decision-log ref) while cycle-history.yml reported 16 launched and ZERO killed. Nothing
+# compared the two surfaces, so a reader saw a 0% discard rate and concluded nothing is
+# ever killed — which an agent did, and wrote up as a finding, before opening the archive.
+
+
+def _two_canvases(tmp_path, archived: str, cycles: str):
+    d = tmp_path / ".claude" / "canvas"
+    d.mkdir(parents=True, exist_ok=True)
+    (d / "archived-solutions.yml").write_text(archived)
+    (d / "cycle-history.yml").write_text(cycles)
+    h = tmp_path / ".claude" / "harness"
+    h.mkdir(parents=True, exist_ok=True)
+    (h / "decision-log.md").write_text("# log\n")
+    return tmp_path
+
+
+def test_an_archived_leaf_with_no_cycle_row_is_an_orphan(tmp_path):
+    root = _two_canvases(tmp_path,
+                         'archived:\n  - leaf_id: sol-047a\n    archived_at: "2026-08-16"\n',
+                         "cycles:\n  - leaf_id: meta-something\n    terminal_state: launched\n")
+    res = clr.analyse(root)
+    assert any("sol-047a" in o[2] for o in res["orphans"]), res
+
+
+def test_the_first_field_on_a_dash_line_is_found(tmp_path):
+    """The extractor originally anchored on whitespace alone and matched NOTHING, because
+    the first field of a YAML list item sits on the `- ` line. The class then reported
+    'absent or empty' over a file holding three entries — a silent false pass, caught only
+    because the number looked wrong."""
+    d = tmp_path / ".claude" / "canvas"
+    d.mkdir(parents=True, exist_ok=True)
+    (d / "archived-solutions.yml").write_text(
+        "archived:\n  - leaf_id: sol-047a\n    reason: failed-assumption\n")
+    vals = clr._block_field_values(d / "archived-solutions.yml", "archived", "leaf_id")
+    assert vals == {"sol-047a"}
+
+
+def test_a_matching_cycle_row_clears_it(tmp_path):
+    root = _two_canvases(tmp_path,
+                         "archived:\n  - leaf_id: sol-047a\n",
+                         "cycles:\n  - leaf_id: sol-047a\n    terminal_state: killed\n")
+    res = clr.analyse(root)
+    assert not [o for o in res["orphans"] if "killed leaves" in o[0]], res
+
+
+def test_an_empty_archive_is_skipped_not_passed(tmp_path):
+    """A consumer that has never archived anything must not read as reconciled."""
+    root = _two_canvases(tmp_path, "archived: []\n", "cycles: []\n")
+    res = clr.analyse(root)
+    assert any("killed leaves" in s[0] for s in res["skipped"]), res

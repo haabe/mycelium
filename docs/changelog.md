@@ -4,6 +4,42 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-31.
 
+## v0.155.0 - two canvases disagreed about whether anything had ever been killed
+
+`archived-solutions.yml` and `cycle-history.yml` both record the death of a solution, and **nothing
+compared them.** Measured on the dogfood canvas 2026-09-01: the archive held THREE killed leaves —
+`sol-047a`, `sol-047d`, `sol-047c-selectivity-half`, all `archived_at: 2026-08-16`, all
+`reason: failed-assumption`, each with `ice_score_at_archive`, an evidence snapshot and a
+decision-log ref — while `cycle-history` reported **16 launched and 0 killed**.
+
+**This is not a discipline failure and the distinction matters.** The discard record is strong,
+dated and reasoned; two of those leaves were falsified by their own pre-registered probes. The
+failure is that a reader of `cycle-history` sees a **0% discard rate** — which this framework's own
+theory treats as a warning sign — and concludes nothing is ever killed. **An agent did exactly that
+on 2026-09-01 and wrote it up as a finding before opening the archive.**
+
+**Extended `check_log_reconcile.py` rather than adding a rival**, which is step (b) of the four-step
+new-field rule applied to the framework's own code: that script already reconciles dated decision-log
+events against the canvas rows that should exist. The same failure has the same shape between two
+canvases, so it gained a second list — `CANVAS_RECONCILIATIONS` — pairing a source block and id field
+against a target. Archive-without-cycle reports; cycle-without-archive stays the harmless direction.
+
+**The extractor's first version matched nothing, and reported "absent or empty" over a file holding
+three entries.** It anchored on whitespace alone, and **the first field of a YAML list item sits on
+the `- ` line**. A silent false pass, caught only because the count looked wrong. That is now a test
+that fails by assertion when the dash handling is removed.
+
+**Also corrected in the same pass, and worth reading as one story.** The finding that produced this
+started as "the ICE calibration loop cannot close" and was wrong twice before it was right.
+`engine/cycle-learning.md` already documents that for `cycle_class: meta-dogfood`,
+`predicted.ice_score` is EXEMPT (permitted zero — "a number here would be invented") and
+`calibration.ice_accuracy` is EXEMPT (permitted null, derived from the exempt fields), while
+`effort_accuracy` is REQUIRED and has already paid: it surfaced *scope-expansion-blind-to-user* at
+N=4, which graduated to guardrail G-P9. **The zeros and nulls are correct.** What survived the
+corrections is this reconciliation gap, plus a stale note in the consumer's own
+`thresholds.yml#_meta.calibration_status` blaming `minimum_n` when the real precondition is
+product-leaf cycles.
+
 ## v0.154.0 - the field-wiring gate could not see 88% of the fields
 
 **THE HOLE, stated plainly because it made the previous three releases weaker than they read.**
