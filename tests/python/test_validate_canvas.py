@@ -1164,7 +1164,8 @@ def test_a_real_why_with_derived_properties_passes(tmp_path, scripts_path, monke
 
 def _bvssh_schema():
     import json
-    return json.load(open(_real_schema_dir() / "bvssh-health.schema.json"))
+    with open(_real_schema_dir() / "bvssh-health.schema.json") as fh:
+        return json.load(fh)
 
 
 def _bvssh_errors(doc):
@@ -1196,3 +1197,51 @@ def test_bvssh_stays_permissive_on_the_dimension_blocks():
                        "metrics": {"anything": ["at", "all"]}, "trend": None,
                        "SOME_LOUD_CONSUMER_ANNOTATION": "kept"}}
     assert _bvssh_errors(doc) == []
+
+
+# --- purpose_properties: weight + conditional unlock (consumer finding F5) ----
+# A builder rejected the boolean frame: "I have problem seeing them as booleans. They have a
+# value (say 1-10), and then can be weighed against each other." Both are needed: a pure
+# weighted score permits compensatory trade-offs, so a high total can outvote a violated must.
+
+
+def _purpose_schema_errors(doc):
+    import json
+
+    import jsonschema
+    with open(_real_schema_dir() / "purpose.schema.json") as fh:
+        s = json.load(fh)
+    return list(jsonschema.Draft202012Validator(s).iter_errors(doc))
+
+
+def _pp(**kw):
+    item = dict(id="pp-001", property="anonymous", source="how", **kw)
+    return {"why": "x", "purpose_properties": {"properties": [item]}}
+
+
+def test_a_weighted_non_binding_property_is_allowed():
+    assert _purpose_schema_errors(_pp(binding=False, weight=7)) == []
+
+
+def test_weight_is_pinned_to_the_stated_one_to_ten_range():
+    assert _purpose_schema_errors(_pp(binding=False, weight=44))
+    assert _purpose_schema_errors(_pp(binding=False, weight=0))
+
+
+def test_an_unlock_needs_a_named_state_because_a_soft_unlock_launders_erosion():
+    """'when things get bad enough' fires exactly when judgement is worst, so an empty or
+    missing state must not validate."""
+    assert _purpose_schema_errors(_pp(binding=True, unlock={"state": ""}))
+    assert _purpose_schema_errors(_pp(binding=True, unlock={}))
+    assert _purpose_schema_errors(
+        _pp(binding=True, unlock={"state": "a family conversation held and logged"})) == []
+
+
+def test_an_unlock_on_a_non_binding_property_is_rejected():
+    """Nothing was constraining, so there is nothing to unlock."""
+    assert _purpose_schema_errors(_pp(binding=False, unlock={"state": "something happened"}))
+
+
+def test_the_existing_boolean_shape_still_validates_unchanged():
+    """Every project predating this release must keep passing."""
+    assert _purpose_schema_errors(_pp(binding=True, contradicted_by=["sign-in first"])) == []

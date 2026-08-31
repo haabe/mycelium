@@ -138,6 +138,36 @@ disappoint. Only those get `binding: true`, and only those are ever checked.
 binding turns the check into noise, and noise gets muted. Set `confirmed_by: human` only after they
 have actually answered.
 
+**IF THEY REJECT THE BOOLEAN, THEY ARE PARTLY RIGHT — DO NOT TALK THEM OUT OF IT.** A builder on
+2026-08-31 answered: *"I have problem seeing them as booleans. They have a value (say 1-10), and then
+can be weighed against each other."* The resolution is better than either frame, and the day produced
+all three categories:
+
+- **Constraints** — violate it and the thing is out, no compensation. `binding: true`.
+- **Weighted criteria** — most properties. Set `weight` 1-10 and leave `binding: false`. **No checker
+  reads `weight`**; it is for the human's own trade-offs, and saying so plainly is what keeps the field
+  honest.
+- **Constraints with a named unlock** — the most useful category, and the one nobody asks for
+  unprompted. Not eternal, not tradeable, changeable through one specified event.
+
+**Why not simply switch to weights.** A pure weighted score permits compensatory trade-offs, so a high
+total can outvote a violated must — that is exactly how someone accepts a role that pays well and
+requires the relocation they called non-negotiable. `binding` is guarding something real. Keep it as
+the compensation gate and let `weight` carry everything else.
+
+**Asking for the unlock.** For each `binding: true` property, ask: *"is there anything that would
+legitimately change this, and what exactly would have to happen?"* Record it as `unlock.state`.
+
+> **THE UNLOCK MUST BE AN EVENT, NOT A MOOD.** Worked example: a "Steinkjer base" constraint unlocks on
+> *a family conversation held and logged* — explicitly NOT on income pressure. **An unlock that fires
+> "when things get bad enough" is indistinguishable from erosion, and it fires exactly when judgement is
+> worst.** If they cannot name an observable event, the property has no unlock. Leave it off rather than
+> writing a soft one; a soft unlock is worse than none because it launders a broken constraint as a
+> planned one.
+
+Only `binding: true` properties are checked, exactly as before. Weights and unlocks change what the
+canvas can RECORD, not what the gate enforces.
+
 ## Step 5: Write, then say what changed downstream
 
 Write `purpose_properties` to `purpose.yml` (Read before Write, per the canonical rule). Set

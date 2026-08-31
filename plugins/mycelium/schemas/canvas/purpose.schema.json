@@ -123,7 +123,7 @@
               },
               "binding": {
                 "type": "boolean",
-                "description": "Human-marked. Only binding properties are ever checked. This is the anti-noise mechanism."
+                "description": "Human-marked. Only binding properties are ever checked — this is the anti-noise mechanism, and it is also the COMPENSATION GATE: a violated must cannot be outvoted by a high score elsewhere. Keep it boolean for exactly that reason. Most properties are NOT binding; use `weight` for those."
               },
               "contradicted_by": {
                 "type": "array",
@@ -135,6 +135,39 @@
               "aspiration_reason": {
                 "type": "string",
                 "description": "Set when a quality adjective could not be made checkable and the builder skipped defining it. Excluded from all checks; recorded so the skip is a choice, not a blank."
+              },
+              "weight": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 10,
+                "description": "How much this property matters, 1-10. FOR THE HUMAN'S OWN TRADE-OFFS — no checker reads it, deliberately. Added 2026-08-31 after a builder rejected the boolean frame outright: \"I have problem seeing them as booleans. They have a value (say 1-10), and then can be weighed against each other.\" He was substantially right — most properties are not binary, and forcing them makes the field noise. But a PURE weighted score permits compensatory trade-offs, so a high total can outvote a violated must; that is how someone accepts a role that pays well and requires the relocation they called non-negotiable. Hence both: `binding` gates compensation, `weight` ranks everything else."
+              },
+              "unlock": {
+                "type": "object",
+                "description": "A named mechanism that releases this constraint. Only meaningful with `binding: true` — a conditional constraint is still a constraint until its condition fires. Added 2026-08-31: the third category a real session surfaced, and the most useful one. Not eternal, not tradeable, changeable through ONE specified event.",
+                "additionalProperties": false,
+                "required": [
+                  "state"
+                ],
+                "properties": {
+                  "state": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "THE EVENT THAT RELEASES IT, and it must be an EVENT, NOT A MOOD. Worked example: a 'Steinkjer base' constraint unlocks on \"a family conversation held and logged\" — explicitly NOT on income pressure. AN UNLOCK THAT FIRES 'WHEN THINGS GET BAD ENOUGH' IS INDISTINGUISHABLE FROM EROSION, and it fires exactly when judgement is worst. If you cannot name an observable event, the property has no unlock; leave this off."
+                  },
+                  "unlocked_at": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}",
+                    "description": "Date the state occurred, or null while the constraint still holds."
+                  },
+                  "note": {
+                    "type": "string",
+                    "description": "Why this is the right release condition."
+                  }
+                }
               }
             },
             "required": [
@@ -142,6 +175,23 @@
               "property",
               "source",
               "binding"
+            ],
+            "allOf": [
+              {
+                "if": {
+                  "required": [
+                    "unlock"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "binding": {
+                      "const": true
+                    }
+                  }
+                },
+                "description": "An `unlock` on a non-binding property is meaningless: nothing was constraining."
+              }
             ]
           }
         }

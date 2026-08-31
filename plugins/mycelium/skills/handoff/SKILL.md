@@ -119,9 +119,36 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
 
    Contradicts our assumptions? (yes/no, which one):
 
+   Anything else said in the room (added 2026-08-31 — see below):
+     Who came up in conversation, even in passing:
+     How is this organised — who decides, who pays, where does that sit:
+     What is anyone near them spending time or money on:
+     Did they challenge how you are going about this:
+
    Follow-up needed? (yes/no, what):
    ---
    ```
+
+   **Why those four lines exist (consumer-measured, 2026-08-31).** Across one project, four items
+   surfaced days late, each a DIFFERENT KIND of thing, all said in rooms whose notes were captured:
+   a name mentioned in passing; a structural fact about an organisation ("company X is now owned by
+   company Y"); an organisation's own live effort in the project's subject area, dismissed at the time
+   because the role attached was junior and unpaid; and a challenge to the project's method from a
+   counterpart. **A remedy that asked only "who came up?" catches one of the four.** The common cause is
+   that the template asked about PEOPLE and about the PRE-COMMITTED BAR, and **nothing else said in the
+   room had anywhere to go**. These lines give it somewhere.
+
+4b. **Generate a POCKET CARD — 3 to 5 questions, paper-sized (added 2026-08-31).**
+
+   Produce this as a separate, deliberately tiny artifact alongside the full template: the 3-5 questions
+   that MUST be asked, nothing else, short enough to be copied onto a card by hand.
+
+   **This is not a nicety, and the cost of its absence is measured.** On one project the demand question
+   went unasked TWICE, and the cause was not attention but MEDIUM: **a long HTML run-sheet is unscannable
+   in the ninety seconds between two meetings.** The fix that worked was a paper card. Generate it early
+   enough that it can be written out by hand before the room.
+
+   Pick the 3-5 by what the task is FOR — the pre-committed bar's question always makes the card.
 
 5. **Write to `.claude/canvas/human-tasks.yml`**:
    - Add a `pending_tasks` entry with all fields populated

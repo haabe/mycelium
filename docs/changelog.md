@@ -4,6 +4,55 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-31.
 
+## v0.146.0 - the remaining five consumer findings
+
+v0.145.3 took the three mechanical findings from a consumer running Mycelium on a non-software object.
+These are the five that needed a decision. The founder's ruling was to do them all.
+
+**F2 — the absence-claim guard is loud and was inert, and it now says so itself.** Consumer-measured
+from its own log: **29 fires lifetime, 16 in a single day, and ZERO of the four confirmed agent errors
+that day caught by it.** All four were caught by the operator or by a deliberately-invoked
+`/mycelium:devils-advocate`. It fired instead on future conditionals, on presence claims, and finally
+on the sentence recording the measurement. **This is the second lexical detector to measure zero** —
+`devils-advocate` Technique 5 measured the same on 2026-08-16. The guard's own warning now carries that
+number and the instruction not to read a fire as coverage. The guard is NOT removed: what is
+unfalsifiable from logs is whether it deters errors never made, and that is the honest counter-argument.
+
+**F3 — "state what was searched" governed searches, not summaries.** Two errors shared a shape the rule
+could not reach: a verdict written from one of two comments, and an entry written from one row of a
+five-row grid. Neither is an absence claim about a search; both imply a denominator larger than the one
+consulted. The guidance is now **state the denominator** — when a claim summarises evidence, name how
+much of it was read, in the same sentence.
+
+**F4 — the Definition-of-Done detector keyed on absence and missed the real failure.** A DoD that was
+present, richly specified and refined three times, whose owner then said *"I don't remember what L0
+claims first of all."* `diamond-assess` 7c now asks the human to state it FROM MEMORY before showing
+it. **The divergence is the finding**, and it was invisible to every presence check in the framework.
+Costs one question, needs no new field. On divergence, do not silently correct them — ask which one is
+right, because a DoD the owner has outgrown is a re-run signal, not a memory failure.
+
+**F5 — `binding` as a boolean is the wrong model, and the builder was partly right.** `weight` (1-10)
+now sits alongside it for the properties that genuinely are not binary, and **no checker reads weight**
+— it is for the human's trade-offs, which is stated in the schema so the field stays honest. `binding`
+stays boolean deliberately: a pure weighted score permits compensatory trade-offs, so a high total can
+outvote a violated must, which is how someone accepts a role that pays well and requires the relocation
+they called non-negotiable. **The third category is the valuable one: a constraint with a named
+`unlock`.** Its `state` must be an EVENT, not a mood — the worked example unlocks on *a family
+conversation held and logged*, explicitly not on income pressure, because an unlock that fires "when
+things get bad enough" is indistinguishable from erosion and fires exactly when judgement is worst. An
+`unlock` on a non-binding property is rejected by the schema; nothing was constraining.
+
+**F8 — the capture template asked about people and the bar, and nothing else.** Four items surfaced
+days late across one project, each a different KIND of thing: a name in passing, a structural fact
+about an organisation, an organisation's own live effort in the subject area, and a challenge to the
+project's method. A remedy asking only "who came up?" catches one of four. Three more lines added, plus
+a **pocket card** as a first-class `handoff` output: 3-5 questions, paper-sized. That is not a nicety —
+the demand question went unasked twice and the cause was medium, not attention: a long HTML run-sheet
+is unscannable in the ninety seconds between two meetings.
+
+**MINOR rather than PATCH** because `purpose_properties` gains fields. Existing boolean-only property
+lists validate unchanged, and that is covered by a test.
+
 ## v0.145.3 - three findings from a consumer running Mycelium on a non-software object
 
 A plugin consumer (`i-productified`, whose object is a personal professional direction rather than

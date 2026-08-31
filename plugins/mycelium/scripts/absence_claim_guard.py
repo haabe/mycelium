@@ -264,6 +264,28 @@ _MESSAGE = (
     "eleven statements is ONE FILE and the claim was about the repo. The "
     "concern it declared missing had its own opportunity, two ID'd evidence "
     "items, a named failure mode and a segment constraint.\n"
+    "  STATE THE DENOMINATOR, not merely the search. The rule above governs "
+    "claims about a SEARCH; two errors measured by a plugin consumer on "
+    "2026-08-31 were SUMMARIES of evidence already in hand, which this wording "
+    'did not reach: a verdict said a response "hit none of the four registered '
+    'framings" (written from one of two comments; with both in hand it hit one '
+    'squarely), and an entry said an event "targets the cell that clears" '
+    "(written from one row of a five-row grid). Neither is an absence claim "
+    "about a search, and both imply a denominator larger than the one "
+    "consulted. When a claim summarises evidence, name HOW MUCH OF IT WAS "
+    'READ, in the same sentence: "one of two comments", "the Trondheim row", '
+    '"eleven statements in one file".\n'
+    "  THIS GUARD IS NOT COVERAGE, and its fire count is not a safety record. "
+    "MEASURED BY A CONSUMER 2026-08-31: 29 fires lifetime, 16 in a single day, "
+    "and ZERO of the four confirmed agent errors that day were caught by it — "
+    "all four were caught by the operator or by a deliberately-invoked "
+    "/mycelium:devils-advocate. It fired instead on future conditionals, on "
+    "presence claims, and finally on the sentence recording that measurement. "
+    "This is the SECOND lexical detector to measure zero: devils-advocate "
+    "Technique 5 measured the same on 2026-08-16. What caught real errors on "
+    "that day were STRUCTURAL checks (validate_canvas, check_purpose_stance) "
+    "and a SCHEDULED adversarial pass. Treat this warning as a prompt to "
+    "re-read, never as evidence that a surface was checked.\n"
     "  This is a warning, not a block. Absence findings are often correct and "
     "valuable. See corrections.md 2026-08-04 — fifth instance in one session, "
     "every one caught by re-reading and none by any check."

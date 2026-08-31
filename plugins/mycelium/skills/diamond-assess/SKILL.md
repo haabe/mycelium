@@ -93,7 +93,11 @@ Evaluate current diamond state and recommend next action.
 7c. **Check outcome Definition-of-Done presence** (retrofit detector for `/mycelium:define-done`):
    - Read `.claude/diamonds/active.yml` for this diamond's `definition_of_done` (non-empty `outcome` + `signal`).
    - If **absent**: surface it before the coaching check — "This diamond has no explicit outcome Definition of Done, so 'done' is defaulting to the implicit-harshest bar. Run `/mycelium:define-done` to pin it (problem → signal → kill-criterion)." This is the validated retrofit path — the *question* is what produced a real bar ("fits, not ships") when L0 was retrofitted; a back-filled field is not. Cite `per diamonds/active.yml` (field absent).
-   - If present, carry its `signal` into the coaching check below as the concrete "what does done look like" answer rather than re-eliciting it.
+   - If **present**: **ASK THE HUMAN TO STATE IT FROM MEMORY BEFORE YOU SHOW IT.** *"Before I read it back — what does this diamond's Definition of Done say?"* Then show the recorded one and name any divergence. **The divergence IS the finding**, and it is invisible to every presence check in the framework.
+     - **Why this exists (consumer-reported 2026-08-31).** This detector fires on ABSENCE. On a project whose DoD was present, richly specified and refined three times, the owner asked what L0 claimed answered: *"I don't remember what L0 claims first of all, so it is quite hard to say what to say about status."* **A Definition of Done its owner cannot recall is not steering anything**, and it reads as satisfied to every check there is. The skill's own principle — the *question* is what produced a real bar, a back-filled field is theatre — applies just as much to a field that was well-made and then went unread.
+     - Costs one question, needs no new field. If they state it and it matches, say so and move on; that is a real pass rather than an assumed one.
+     - If it diverges, do NOT quietly correct them to the recorded text. Ask which one is right — a DoD the owner has silently outgrown is a signal to re-run `/mycelium:define-done`, not a memory failure to patch.
+   - Then carry its `signal` into the coaching check below as the concrete "what does done look like" answer rather than re-eliciting it.
 
 8. **Coaching check** (Rother's Coaching Kata):
    Surface these five questions in the output to prompt the human's thinking:
