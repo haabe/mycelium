@@ -145,6 +145,20 @@ jobs:
         # which is the point. No baseline was ever seeded.
         run: python3 plugins/mycelium/scripts/check_fail_open.py --strict
 
+      - name: Field-wiring scan (does a promise-shaped field have a consumer?)
+        # A field can be blessed by a schema, filled by a skill, and read by NOTHING —
+        # populated to a human, inert to the machine. Measured 2026-08-31: of 38
+        # promise-shaped fields, SIX had no consumer, and one of them was added HOURS
+        # EARLIER in the release that fixed this very class. Care did not survive an
+        # afternoon, so it is a gate.
+        # The rule is the founder's and is about PURPOSE, not mechanism: if any writer
+        # intends the field to be read as part of the pipeline — INCLUDING being rendered
+        # into a humane form such as a mermaid chart — it is wired. A renderer is a
+        # consumer. `human` is a legal answer once DECLARED. Only the undeclared case fails.
+        # --strict from the start: the five existing unwired fields are baselined in
+        # harness/field-consumers.yml, so this fails only on a NEW one.
+        run: python3 plugins/mycelium/scripts/check_field_wiring.py --strict
+
       - name: touch_log entries are in ascending date order
         # Every reader treats touch_log[-1] as "what happened last". An out-of-order
         # log looks wrong to nobody and parses cleanly; it just returns the wrong

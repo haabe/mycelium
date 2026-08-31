@@ -281,6 +281,21 @@ def _property_findings(pp: dict) -> tuple[list[str], list[dict]]:
     for prop in pp.get("properties") or []:
         if not isinstance(prop, dict) or not prop.get("binding"):
             continue
+        # AN UNLOCK THAT HAS FIRED RELEASES THE CONSTRAINT. Without this, `unlocked_at` is a
+        # date nothing reads — decorative, and unable to ever take effect. That is the same
+        # defect as a kill_criterion.date with no reader, introduced in the same release that
+        # fixed it (2026-08-31). The unlock is only honoured when its `state` was named up
+        # front, so a constraint cannot be released by writing a bare date after the fact.
+        unlock = prop.get("unlock")
+        if isinstance(unlock, dict) and unlock.get("unlocked_at") and unlock.get("state"):
+            out.append(
+                f"purpose_properties {prop.get('id', '<no id>')} "
+                f"({prop.get('property')!r}): RELEASED on {unlock['unlocked_at']} by its "
+                f"named unlock ({unlock['state']!r}), so it is no longer enforced. Said out "
+                f"loud because a constraint that quietly stops being checked is "
+                f"indistinguishable from one that was never checked."
+            )
+            continue
         binding.append(prop)
         if not prop.get("contradicted_by") and not prop.get("aspiration_reason"):
             out.append(

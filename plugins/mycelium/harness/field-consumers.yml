@@ -1,0 +1,72 @@
+# Which promise-shaped canvas fields have a consumer, and who it is.
+#
+# THE RULE, founder-set 2026-08-31, is about PURPOSE and not about mechanism:
+#
+#   "If the field's purpose is considered, at any stage, by a writer, to be read as part of
+#    the pipeline, it is certainly wired. This also means if the field is to be rendered in
+#    a more humane form, like a mermaid chart."
+#
+# So a RENDERER IS A CONSUMER exactly as a checker is, and `human` is a legal answer the
+# moment it is DECLARED. What this registry forbids is the undeclared case: a field nobody
+# consumes and nobody ever decided shouldn't be consumed.
+#
+# WHY IT EXISTS. Measured 2026-08-31 across the shipped schemas: 38 promise-shaped fields,
+# of which SIX had no consumer of any kind. One of the six — `unlocked_at` — had been added
+# HOURS EARLIER, in the release that fixed exactly this class of defect. A date nothing reads
+# can never fire, which is `kill_criterion.date`'s bug reproduced inside its own remediation.
+# That is why this is a gate and not a note: care did not survive one afternoon.
+#
+# `unlocked_at` is absent from this file on purpose. It was WIRED rather than ruled — a fired
+# unlock now releases the constraint in check_purpose_stance.py, and says so out loud. That
+# is the outcome this gate is for; a registry entry is the fallback, not the goal.
+#
+# HOW TO ADD ONE. `verdict` is the founder's, never the agent's:
+#   wired      — a consumer exists; name it in `consumer`
+#   human-only — deliberately for a person to read; NOT a pipeline input
+#   UNRULED    — baselined, awaiting a ruling. Does not fail the gate; is reported every run.
+
+reviewed:
+  - field: derived_at
+    canvas: purpose
+    consumer: null
+    verdict: UNRULED
+    note: >-
+      Sits beside derived_from_hash, which IS read (check_purpose_stance). If the intent was
+      "when were these properties derived", the hash already answers "are they stale" and this
+      may be human-only. If the intent was a staleness horizon, it needs a reader and does not
+      have one — that is the kill_criterion.date shape again.
+
+  - field: publication_cadence
+    canvas: content-metrics
+    consumer: null
+    verdict: UNRULED
+    note: >-
+      A cadence is a promise with a clock. Nothing computes overdue-ness against it, so it
+      cannot currently fire — compare `last_assessed` in bvssh-health, which session-start.sh
+      does read for exactly this purpose. Either wire it the same way or declare it human-only.
+
+  - field: target_value
+    canvas: opportunities
+    consumer: null
+    verdict: UNRULED
+    note: >-
+      A target nothing compares an actual against. The strongest candidate for real wiring in
+      this list: a target with no comparison is the measurement-theatre shape the framework
+      exists to prevent.
+
+  - field: technical_capabilities_required
+    canvas: purpose
+    consumer: null
+    verdict: UNRULED
+    note: >-
+      Plausibly a human scoping note rather than a pipeline input. Named here so that is a
+      recorded decision rather than an omission.
+
+  - field: validation_status_per_dimension
+    canvas: jobs-to-be-done
+    consumer: null
+    verdict: UNRULED
+    note: >-
+      A per-dimension status that no check aggregates and no renderer draws. Under the rule,
+      rendering it WOULD wire it — a JTBD dimension chart is exactly the "more humane form"
+      the founder named.

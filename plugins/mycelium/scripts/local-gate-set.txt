@@ -66,3 +66,4 @@ check_touch_log_order.py --root .
 # each carrying a written judgement, not a bulk rubber-stamp. Add --strict here once
 # harness/fail-open-reviewed.yml holds real verdicts.
 check_fail_open.py
+check_field_wiring.py --strict

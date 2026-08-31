@@ -4,6 +4,41 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-31.
 
+## v0.147.0 - a field that nothing reads is now a gate, not a discovery
+
+**THE MEASUREMENT.** Across the shipped schemas: **357 declared field names, 234 with no code
+reader.** Raw counts overstate it — a canvas is partly a human document — so the severity sits in
+fields whose NAME asserts a machine-checkable promise (a date, a bar, a gate, a trigger). There are
+**38**, and **six had no consumer of any kind**. One of the six was `unlocked_at`, added HOURS EARLIER
+in v0.146.0, in the release that fixed exactly this defect. A date nothing reads can never fire, which
+is `kill_criterion.date`'s bug reproduced inside its own remediation. **Care did not survive one
+afternoon**, which is why this ships as a gate.
+
+**THE RULE IS THE FOUNDER'S, AND IT IS ABOUT PURPOSE, NOT MECHANISM.** *"If the field's purpose is
+considered, at any stage, by a writer, to be read as part of the pipeline, it is certainly wired. This
+also means if the field is to be rendered in a more humane form, like a mermaid chart."* **A renderer
+is a consumer exactly as a checker is.** An earlier cut of this measurement scanned only `scripts/`
+and `hooks/` and therefore mis-scored `gate`, `started_at`, `theory_gates_status` and `trigger` as
+unwired; the render fleet consumes all four. `human` is a legal answer the moment it is DECLARED. What
+is forbidden is the undeclared case: a field nobody consumes and nobody ever decided shouldn't be.
+
+**`unlocked_at` was WIRED rather than ruled.** A fired unlock now releases its constraint in
+`check_purpose_stance.py` and says so out loud, because a constraint that quietly stops being checked
+is indistinguishable from one that was never checked. That is the outcome this gate is for; a registry
+entry is the fallback, not the goal.
+
+**`check_field_wiring.py --strict`**, in the local gate set and in CI, with parity asserted. Five
+remaining unwired fields are baselined in `harness/field-consumers.yml` as `UNRULED` — reported every
+run, failing nothing, awaiting a founder verdict. Only a NEW promise-shaped field with no consumer
+fails. This is the shape `check_fail_open.py` already uses here, and the shape the feature-flag
+literature converged on: a recurring ratchet, because a one-off audit regrows.
+
+**THE INSTRUMENT LAUNDERED ITSELF ON ITS FIRST RUN, and that is now a test.** `field-consumers.yml`
+names every unwired field and lives under `harness/`, which the scan reads — so the moment the registry
+was written the gate reported 38/38 wired. **A record that a field has no reader was counted as reading
+it.** Caught only because the number moved from 5 to 0 with no code change. The registry is excluded
+from the corpus, and removing that exclusion fails a test by assertion.
+
 ## v0.146.0 - the remaining five consumer findings
 
 v0.145.3 took the three mechanical findings from a consumer running Mycelium on a non-software object.
