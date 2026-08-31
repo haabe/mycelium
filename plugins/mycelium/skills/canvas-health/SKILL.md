@@ -481,3 +481,33 @@ provenance objects is not a statement about the canvas.
 ## Postflight: Verify-After-Write (claim matches state)
 
 **Hard rule** (per CLAUDE.md Communication Rules, anti-pattern #7 *write-narration-verification* — mechanism Check 42, graduated v0.39.18; enforced surface expanded to this skill v0.44.0). This skill mandates multi-field canvas updates. Before narrating "updated / wrote / refreshed [canvas]" in any user-facing summary, RE-READ the value fields this skill's MANDATORY says to update and confirm they actually changed — not just `_meta.last_validated` or a freshness stamp. Each field you claim to have updated must reflect its new value. The symmetric half of the Read-before-Write Preflight: that one protects what gets read before a write; this one protects that the write matches the claim. Worked failures: 2026-06-05 #18 (`/dora-check` narrated "updated" with value fields unchanged) + #19 (`/retrospective` left a cycle-history aggregate un-propagated).
+
+## Content in key position (added 2026-08-31, founder ruling)
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_key_shape.py" --canvas-dir .claude/canvas
+```
+
+A canvas key carrying a date or an entity id in its NAME — `scope_correction_2026_08_27`,
+`ht_010_status` — is content sitting in key position: a sentence wearing a field's clothes. It is
+invisible to every field-level mechanism, no schema can declare it, and **a date in a key can only be
+grepped, which is why `horizon_set_2026_08_28` never goes overdue while `horizon: 2026-08-28` can.**
+
+Measured on the dogfood canvas at the ruling: **523 such keys**, 226 in `human-tasks.yml` alone.
+
+The remedy is to move the content into values:
+
+```yaml
+# instead of
+scope_correction_2026_08_27: "the sweep restates the thesis"
+# write
+notes:
+  - date: 2026-08-27
+    kind: scope_correction
+    note: "the sweep restates the thesis"
+```
+
+**REPORT-ONLY unless `--strict`, and that is proportionality rather than timidity** — a rule written
+today cannot make 523 pre-existing keys a build failure (see the founder's own note on gate-remedy
+proportionality). Seed once with `--write-baseline`; from then on `--strict` fails only on NEW keys, so
+the cost falls on new writing.

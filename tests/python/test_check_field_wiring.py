@@ -98,3 +98,108 @@ def test_empty_input_is_a_refusal_not_a_pass(tmp_path):
                        capture_output=True, text=True, check=False)
     assert r.returncode == 1
     assert "NOT A PASS" in r.stdout
+
+
+# --- main()'s reporting paths, which the scan-level tests never reach ---------
+
+
+def _run(root, *extra):
+    import subprocess
+    return subprocess.run([sys.executable, str(SCRIPT), "--root", str(root), *extra],
+                          capture_output=True, text=True, check=False)
+
+
+def _tree(tmp_path, schema_props, registry=None):
+    root = tmp_path / "plug"
+    for d in ("schemas/canvas", "scripts", "hooks", "skills", "engine", "harness"):
+        (root / d).mkdir(parents=True, exist_ok=True)
+    (root / "schemas/canvas/x.schema.json").write_text(
+        json.dumps({"type": "object", "properties": schema_props}))
+    if registry is not None:
+        import yaml
+        (root / "harness/field-consumers.yml").write_text(yaml.safe_dump(registry))
+    return root
+
+
+def test_a_new_unwired_field_fails_under_strict_and_names_itself(tmp_path):
+    root = _tree(tmp_path, {"review_deadline": {"type": "string"}})
+    r = _run(root, "--strict")
+    assert r.returncode == 1
+    assert "review_deadline" in r.stdout
+    assert "mermaid" in r.stdout, "the remedy must restate the founder's rule"
+
+
+def test_the_same_field_passes_once_it_carries_a_ruling(tmp_path):
+    root = _tree(tmp_path, {"review_deadline": {"type": "string"}},
+                 registry={"reviewed": [{"field": "review_deadline", "consumer": "human",
+                                         "verdict": "human-only"}]})
+    r = _run(root, "--strict")
+    assert r.returncode == 0
+    assert "No NEW unwired field" in r.stdout
+
+
+def test_an_unruled_baseline_entry_is_reported_every_run(tmp_path):
+    """A verdict of UNRULED must not fail, and must not go quiet either — that is how a
+    deferral becomes the permanent state."""
+    root = _tree(tmp_path, {"review_deadline": {"type": "string"}},
+                 registry={"reviewed": [{"field": "review_deadline", "verdict": "UNRULED"}]})
+    r = _run(root, "--strict")
+    assert r.returncode == 0
+    assert "await a founder ruling" in r.stdout
+    assert "review_deadline" in r.stdout
+
+
+def test_a_wired_field_is_counted_by_the_kind_of_consumer(tmp_path):
+    root = _tree(tmp_path, {"review_deadline": {"type": "string"}})
+    (root / "scripts" / "reader.py").write_text('x = data["review_deadline"]\n')
+    r = _run(root, "--strict")
+    assert r.returncode == 0
+    assert "code=1" in r.stdout
+
+
+# --- in-process main(), so the coverage floor actually sees these paths -------
+# The subprocess tests above prove the CLI contract but are invisible to coverage,
+# which traces only the test process. Both matter: the CLI is what CI runs.
+
+
+def _main(monkeypatch, root, *extra):
+    import contextlib
+    import io
+    m = _mod()
+    monkeypatch.setattr(sys, "argv", ["check_field_wiring.py", "--root", str(root), *extra])
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        rc = m.main()
+    return rc, buf.getvalue()
+
+
+def test_main_reports_a_new_unwired_field(tmp_path, monkeypatch):
+    root = _tree(tmp_path, {"review_deadline": {"type": "string"}})
+    rc, out = _main(monkeypatch, root, "--strict")
+    assert rc == 1
+    assert "review_deadline" in out
+
+
+def test_main_passes_with_a_ruling(tmp_path, monkeypatch):
+    root = _tree(tmp_path, {"review_deadline": {"type": "string"}},
+                 registry={"reviewed": [{"field": "review_deadline", "verdict": "human-only"}]})
+    rc, out = _main(monkeypatch, root, "--strict")
+    assert rc == 0
+    assert "No NEW unwired field" in out
+
+
+def test_main_refuses_on_an_empty_tree(tmp_path, monkeypatch):
+    root = tmp_path / "bare"
+    for d in ("schemas", "scripts", "hooks", "skills", "engine", "harness"):
+        (root / d).mkdir(parents=True)
+    rc, out = _main(monkeypatch, root, "--strict")
+    assert rc == 1
+    assert "NOT A PASS" in out
+
+
+def test_main_reports_unruled_entries(tmp_path, monkeypatch):
+    root = _tree(tmp_path, {"review_deadline": {"type": "string"}},
+                 registry={"reviewed": [{"field": "review_deadline", "verdict": "UNRULED"}]})
+    rc, out = _main(monkeypatch, root, "--strict")
+    assert rc == 0
+    assert "await a founder ruling" in out

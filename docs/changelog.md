@@ -4,6 +4,40 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-31.
 
+## v0.148.0 - content in key position, ruled a real problem
+
+**THE FOUNDER'S RULING.** Asked whether the 66 one-off keys (`horizon_set_2026_08_28`, `ht_010_status`)
+should simply be ignored as prose, the answer was that they are **a real problem**: keys carrying dates
+and entity ids in their names defeat every field-level mechanism, and the content belongs in values.
+
+**WHY IT BITES.** A date in a VALUE can be compared, sorted and aged. A date in a KEY can only be
+grepped — which is exactly why `horizon_set_2026_08_28` can never go overdue while `horizon:
+2026-08-28` can. No schema can declare such a key, so `additionalProperties: true` is the only thing
+keeping the canvas valid; the schema has stopped describing the file. And `check_field_wiring` cannot
+reason about them at all: a key used once is indistinguishable from a typo, which is why 66 of the 87
+unwired promise-shaped keys measured that day were of this form.
+
+**`check_key_shape.py`**, REPORT-ONLY by default. That is proportionality, not timidity: 523 such keys
+exist on the dogfood canvas today, and making them a build failure on the day the rule is written is a
+root canal for a floss problem — the founder's own opp-072 note. Seed once with `--write-baseline`;
+`--strict` then fails only on keys ABSENT from the baseline, so the cost of the new pattern falls on
+new writing rather than on a 523-key rewrite. Documented in `/mycelium:canvas-health`.
+
+**THE INTERVIEW THAT PRODUCED THIS ALSO CORRECTED ITS OWN PREMISE.** The fields were put to the founder
+as "what did you intend when you wrote these" — and the answer was *"All fields are written by an
+agent, not me... These I have no knowledge of."* **These are agent-invented fields that no human ever
+ruled on**, which is why their intent is unrecoverable by asking. That is a distinct finding from the
+wiring gap and is recorded rather than absorbed.
+
+**ONE APPARENT CANDIDATE FOUND BY READING VALUES, as the founder suggested.** `source_class_target`
+appears 20 times on `pending_tasks` with a clean enum value (`external_human`), and
+`check_source_class_fidelity.py` already reads `source_class`. **The machinery exists and the target
+field was simply never connected to it** — one hop from live, and unwired only by omission.
+
+**THE GATE'S OWN REGEX WAS WRONG AND ITS OWN TEST CAUGHT IT.** `\b` after `\d{2,4}` never matches
+before `_status`, because an underscore is a word character — so `ht_010_status` scored clean and the
+population was under-counted at 507. Corrected to a `(?!\d)` guard: the real number is **523**.
+
 ## v0.147.0 - a field that nothing reads is now a gate, not a discovery
 
 **THE MEASUREMENT.** Across the shipped schemas: **357 declared field names, 234 with no code
