@@ -4,6 +4,34 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-31.
 
+## v0.153.0 - the same gate had different teeth in CI and locally
+
+**CI WENT RED TWICE AND THE PRE-PUSH HOOK PASSED EVERY TIME.** v0.151.0 and v0.152.0 both failed on
+`check_fail_open.py --strict` in CI while every local push was clean. Both places ran the gate. **CI
+ran it `--strict`; the local set ran it bare.** So the same gate was advisory locally and blocking in
+CI, and `check_gate_parity` reported OK throughout — because it compared script NAMES and not
+invocations.
+
+**That is the 2026-08-09 drift wearing a disguise.** The original failure was 11 CI gates against 4
+local: a MISSING gate. This is a gate with DIFFERENT TEETH in the two places, and it produces the
+identical outcome — a class of defect that can only ever go red after a push. Name parity passing is
+exactly what made it invisible.
+
+**Two fixes, because either alone would leave the class open.** The local set now runs
+`check_fail_open.py --strict`, matching CI. And `check_gate_parity` gained `strict_mismatches`, which
+compares the flags and fails in both directions: CI-strict-but-local-bare (advisory locally, blocking
+in CI) and local-strict-but-CI-bare (a push blocked locally that CI would have allowed). Verified by
+reintroducing the bug: it is caught.
+
+**The immediate cause was two new advisory handlers**, from `technical_capability_findings`
+(v0.151.0) and `source_class_target_findings` (v0.152.0). Both are now reviewed in
+`fail-open-reviewed.yml` with the same reasoning as their two siblings in the same file: they live
+INSIDE `validate_canvas.py`, whose fail-loud pass reads the same file in the same run and reports the
+parse error, so the silence is never the only thing a human sees.
+
+**And the process failure that let it run for two releases: I stopped watching CI after pushing.**
+The founder had to say so. Watching a push to green is part of pushing, not a separate optional step.
+
 ## v0.152.0 - source_class_target was one hop from a reader that already existed
 
 **FOUNDER-RULED "wire it properly".** 20 human-tasks carry `source_class_target` — a clean enum,

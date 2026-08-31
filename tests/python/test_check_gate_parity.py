@@ -216,3 +216,43 @@ def test_the_coverage_floor_is_declared_or_waived_but_never_silently_absent():
         f"{gate} is neither declared nor waived — that is the silent absence this guards")
     if gate in waived:
         assert len(waived[gate].strip()) > 20, "a waiver with no real reason is a silent drop"
+
+
+# --- teeth parity: same gates, different flags -------------------------------
+# CI went red twice on check_fail_open.py while the pre-push hook passed every time. Both
+# places ran the gate; CI ran it --strict and the local set ran it bare. Name-only parity
+# reported OK throughout — the 2026-08-09 drift wearing a disguise: not a MISSING gate, a
+# gate with DIFFERENT TEETH, producing the same outcome (red only after a push).
+
+
+def test_the_real_tree_has_no_strict_mismatch():
+    result = cgp.evaluate(REPO)
+    assert result.get("strict_mismatches") == [], result.get("strict_mismatches")
+
+
+def test_a_gate_strict_in_ci_and_bare_locally_is_caught():
+    workflow = "      - name: x\n        run: python3 plugins/mycelium/scripts/check_foo.py --strict\n"
+    gate_set = "check_foo.py\n"
+    out = cgp.strict_mismatches(workflow, gate_set)
+    assert len(out) == 1
+    assert "advisory" in out[0] and "blocking in CI" in out[0]
+
+
+def test_the_reverse_is_also_caught():
+    """A gate strict locally but not in CI blocks pushes CI would have allowed."""
+    workflow = "        run: python3 plugins/mycelium/scripts/check_foo.py\n"
+    gate_set = "check_foo.py --strict\n"
+    out = cgp.strict_mismatches(workflow, gate_set)
+    assert len(out) == 1
+    assert "blocked locally" in out[0]
+
+
+def test_matching_flags_are_silent():
+    workflow = "        run: python3 plugins/mycelium/scripts/check_foo.py --strict\n"
+    assert cgp.strict_mismatches(workflow, "check_foo.py --strict\n") == []
+
+
+def test_a_gate_missing_locally_is_left_to_the_name_check():
+    """Two findings for one cause would double-report; missing is name-parity's business."""
+    workflow = "        run: python3 plugins/mycelium/scripts/check_foo.py --strict\n"
+    assert cgp.strict_mismatches(workflow, "check_other.py\n") == []

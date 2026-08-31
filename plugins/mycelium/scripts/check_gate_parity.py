@@ -89,6 +89,61 @@ INVOCATION_RE = re.compile(
 
 WAIVER_RE = re.compile(r"^!waived\s+(check_[a-z0-9_]+\.py)\s+(.+?)\s*$")
 
+#: Group index of the trailing-arguments capture. Both invocation patterns capture the
+#: script name first and its arguments second; a pattern with only the name has no group 2.
+_ARGS_GROUP = 2
+
+
+#: The same line as INVOCATION_RE, but keeping what follows the script name so flags can be
+#: compared. Name-only parity was not enough: see strict_mismatches.
+INVOCATION_WITH_ARGS_RE = re.compile(
+    r"^\s*(?:-\s*)?(?:run:\s*)?.*python3?\s+\S*scripts/(check_[a-z0-9_]+\.py)(.*)$",
+    re.MULTILINE,
+)
+
+
+def _strict_flags(lines, pattern) -> dict[str, bool]:
+    out: dict[str, bool] = {}
+    for line in lines:
+        if line.lstrip().startswith("#"):
+            continue
+        m = pattern.match(line)
+        if m:
+            name = m.group(1)
+            args = (m.group(_ARGS_GROUP)
+                    if m.lastindex and m.lastindex >= _ARGS_GROUP else "")
+            out[name] = out.get(name, False) or ("--strict" in args)
+    return out
+
+
+def strict_mismatches(workflow_text: str, gate_set_text: str) -> list[str]:
+    """Gates CI runs with --strict that the local set does not, and vice versa.
+
+    WHY THIS EXISTS (2026-08-31, v0.153.0). CI went red twice on `check_fail_open.py` while the
+    pre-push hook passed every time. Both places ran the gate; CI ran it `--strict` and the
+    local set ran it bare, so the SAME gate was advisory locally and blocking in CI. Name-only
+    parity reported OK throughout.
+
+    That is the 2026-08-09 drift wearing a disguise. The original failure was 11 CI gates
+    against 4 local — a MISSING gate. This one is a gate with DIFFERENT TEETH in the two
+    places, which is invisible to a check that compares names and produces the same outcome:
+    a class of defect that can only ever go red after a push.
+    """
+    ci = _strict_flags(workflow_text.splitlines(), INVOCATION_WITH_ARGS_RE)
+    local_re = re.compile(r"^(check_[a-z0-9_]+\.py)(.*)$")
+    local = _strict_flags([ln.strip() for ln in gate_set_text.splitlines()], local_re)
+    out = []
+    for name, ci_strict in sorted(ci.items()):
+        if name not in local:
+            continue  # a missing gate is the name-parity check's business, not this one
+        if ci_strict and not local[name]:
+            out.append(f"{name}: CI runs it --strict, the local set does not — advisory "
+                       f"locally, blocking in CI, so it can only go red after a push")
+        elif local[name] and not ci_strict:
+            out.append(f"{name}: the local set runs it --strict, CI does not — a push can be "
+                       f"blocked locally by a gate CI would have let through")
+    return out
+
 
 def ci_gates(workflow_text: str) -> list[str]:
     """Gate scripts actually invoked by the workflow, in file order."""
@@ -140,10 +195,10 @@ def evaluate(root: Path) -> dict:
             ),
         }
 
-    ci = ci_gates(workflow.read_text(encoding="utf-8", errors="replace"))
-    declared, waivers = parse_gate_set(
-        gate_set.read_text(encoding="utf-8", errors="replace")
-    )
+    workflow_text = workflow.read_text(encoding="utf-8", errors="replace")
+    gate_set_text = gate_set.read_text(encoding="utf-8", errors="replace")
+    ci = ci_gates(workflow_text)
+    declared, waivers = parse_gate_set(gate_set_text)
 
     if not ci:
         return {
@@ -161,6 +216,9 @@ def evaluate(root: Path) -> dict:
         "ci_count": len(ci),
         "declared_count": len(declared),
         "waived": waivers,
+        # Same gates, different teeth. Computed here so callers and tests can read it
+        # without re-opening the two files. See strict_mismatches for why it exists.
+        "strict_mismatches": strict_mismatches(workflow_text, gate_set_text),
         "missing": missing,
     }
 
@@ -188,6 +246,18 @@ def main(argv: list[str] | None = None) -> int:
         )
         for name, reason in waived.items():
             print(f"  waived: {name} — {reason}")
+        # NAME PARITY IS NOT ENOUGH, and this is checked AFTER the ok branch's own message so
+        # the two findings are never confused: every gate can be present in both places and
+        # still have different teeth. See strict_mismatches.
+        mismatches = result.get("strict_mismatches") or []
+        if mismatches:
+            print("\nGate parity FAILED on FLAGS — same gates, different teeth:")
+            for line in mismatches:
+                print(f"  {line}")
+            print("  Name parity passed. That is the point: a gate present in both places and\n"
+                  "  advisory in one of them produces exactly the outcome name-parity exists to\n"
+                  "  prevent — a defect class that can only go red after a push.")
+            return 1
         return 0
 
     print(

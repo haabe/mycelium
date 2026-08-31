@@ -346,3 +346,18 @@ reviewed:
     same output — there is no run in which this silence is the only thing a human sees.
     Changing the handler would print the same parse error twice, which is the reason the
     sibling was left as-is too. Added v0.145.0 with the check itself.
+- id: validate_canvas.py@646f8e2753
+  verdict: accepted
+  reason: >-
+    `technical_capability_findings` returns [] if purpose.yml will not parse. Same reasoning as
+    validate_canvas.py@72bf56e5e1 above and for the same file: this handler lives INSIDE
+    validate_canvas.py, whose own fail-loud pass reads purpose.yml in the same run and reports
+    "YAML parse error in purpose.yml". The parse error is already on the same output when this
+    fires, so the silence is never the only thing a human sees. Added v0.151.0 with the check.
+- id: validate_canvas.py@8fd42d312b
+  verdict: accepted
+  reason: >-
+    `source_class_target_findings` returns [] if human-tasks.yml will not parse. Identical
+    reasoning to the two handlers above: the fail-loud pass in this same script reads
+    human-tasks.yml in the same run and reports the parse error, so this handler cannot be the
+    only thing that saw the problem. Added v0.152.0 with the check.
