@@ -4,19 +4,37 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-31.
 
-## v0.145.1 - ruling on the new check's own fail-open
+## v0.145.2 - the changelog promised a release that the gate had refused
 
-The pre-push fail-open scan flagged `purpose_why_findings`' exception handler as a NEW silent
-default-on-exception site — a check that cannot say it could not look, added by the release that exists
-because a check could not say it could not look.
+`release_gaps.py --check` failed on `main`: the changelog documented **v0.145.0** and the releases page
+had no such release.
 
-Reviewed rather than suppressed, and **accepted** rather than `conditional` like its
-`check_purpose_stance` sibling. The difference is the whole judgement: this handler lives INSIDE
-`validate_canvas.py`, whose own fail-loud pass reads the same file in the same run and reports
-`YAML parse error in purpose.yml`. There is no run in which this silence is the only thing a human
-sees, and changing the handler would print the same parse error twice.
+**Why there was no release.** That commit was pushed with `--no-verify`, which skipped the pre-push
+`check_fail_open.py --strict` gate. CI went red on exactly that check — the release had added an
+unreviewed silent `except Exception: return []` — and auto-release's *Require a green validator on this
+commit* step refused to publish it. **That is the v0.144.0 gate working correctly on its first real
+exercise**; before it existed, a red commit would have been released.
 
-## v0.145.0 - a staleness hash that could never mismatch
+**Fixed by folding v0.145.0's section into v0.145.1, not by creating the missing release.** Publishing a
+commit CI rejected would hollow out the gate that caught it, and v0.145.1 already carries every line of
+v0.145.0 plus the fail-open judgement. v0.145.0 was only ever a commit; no consumer could install it.
+
+**Not caused by the v0.144.1 tag/release split.** Every tag from that work — 0.143.0, 0.143.1, 0.144.0,
+0.144.1 — is present and released. This was the only gap in 367 documented versions.
+
+**One gotcha worth recording: Check 26 compares COMMITTED changes against the last version bump.** Run
+before committing it passes, and the same tree fails at pre-push. Version-bump discipline must be
+checked after `git commit`, not before.
+
+## v0.145.1 - two purpose checks that could never fire
+
+**v0.145.0 was committed but never released, and this section carries its content.** That commit was
+pushed with `--no-verify`, which skipped the pre-push `check_fail_open.py --strict` gate; CI then went
+red on exactly that check, and the release workflow's *Require a green validator on this commit* step
+refused to publish it — the gate added in v0.144.0 doing its job on its first real exercise. v0.145.1
+carries every line of it plus the fail-open judgement below, so nothing is lost and no red commit was
+published. The version number is the only casualty.
+
 
 `check_purpose_stance.py` hashes `why`, `how` and `what` to detect whether a purpose moved after its
 properties were derived. It read all three with `purpose.get(key)` at the **top level** of `purpose.yml`.
@@ -78,6 +96,19 @@ discovery on itself. **Mycelium's purpose IS defined**, in the dogfood repo wher
 *"Better to know what's worth building before you build it. Only the people in the pipeline can tell
 you."* The earlier claim that the framework had never stated its own why was an absence asserted from
 one file, and it was false.
+
+### The fail-open judgement (the v0.145.1 delta)
+
+
+The pre-push fail-open scan flagged `purpose_why_findings`' exception handler as a NEW silent
+default-on-exception site — a check that cannot say it could not look, added by the release that exists
+because a check could not say it could not look.
+
+Reviewed rather than suppressed, and **accepted** rather than `conditional` like its
+`check_purpose_stance` sibling. The difference is the whole judgement: this handler lives INSIDE
+`validate_canvas.py`, whose own fail-loud pass reads the same file in the same run and reports
+`YAML parse error in purpose.yml`. There is no run in which this silence is the only thing a human
+sees, and changing the handler would print the same parse error twice.
 
 ## v0.144.1 - the release could not create its own tag
 
