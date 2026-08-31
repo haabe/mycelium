@@ -4,6 +4,27 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-31.
 
+## v0.143.1 - the new handler needed its verdict
+
+v0.143.0 shipped red. The Bash half of the read log introduced one
+default-on-exception site, and `check_fail_open --strict` correctly reported it as NEW and unreviewed.
+
+**The step is CI-only** -- not in `tests/validate-template.sh`, not in the pre-push hook -- so the full
+local suite passed and the release went out failing. Every command the workflows run has now been
+enumerated and executed locally; all 17 python gates pass, the only non-zero being
+`check_coverage_floor`, which needs a `coverage.json` that CI generates itself.
+
+**The judgement, recorded as the check asks: ACCEPTED.** The handler wraps one token-to-path
+resolution inside a loop over every token in a shell command, and `continue` means *this token is not
+a resolvable project file* -- the common case, not an error. Making it speak would emit noise on
+nearly every Bash call and train the reader to ignore the hook, which is the muted-guard failure this
+tree has removed from four other checks.
+
+**It cannot launder an absence into a pass**, which is what anti-pattern #9 is actually about. Nothing
+reads this log as evidence a file was NOT read: a missing row means not-observed, never
+confirmed-unread, and `verify_citations` treats an unmatched citation as a signal rather than a
+verdict.
+
 ## v0.143.0 - the record of what was read was empty by construction
 
 `read-log.sh` was bound `PostToolUse matcher=Read`. Reads performed through Bash -- `cat`, `head`,

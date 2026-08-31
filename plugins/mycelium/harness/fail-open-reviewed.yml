@@ -28,6 +28,28 @@ schema_version: 1
 last_reviewed: '2026-08-26'
 reviewed:
 
+- id: read-log.sh@515e4766fd
+  verdict: ACCEPTED 2026-08-31
+  reason: >-
+    Added with the Bash half of the read log in v0.143.0. The handler wraps ONE
+    token-to-path resolution inside a loop over every whitespace token in a shell
+    command, and `continue` means "this token is not a resolvable project file".
+    THAT IS THE COMMON CASE, NOT AN ERROR: most tokens in a command are flags,
+    subcommands and prose. Making it speak would emit noise on nearly every Bash
+    call and train the reader to ignore the hook -- the muted-guard failure this
+    tree has removed from four other checks.
+    IT CANNOT LAUNDER AN ABSENCE INTO A PASS, which is the property anti-pattern #9
+    is actually about. Nothing downstream reads this log as evidence that a file was
+    NOT read; a missing row means "not observed", never "confirmed unread", and the
+    consumer named in the module docstring (`verify_citations`) treats an unmatched
+    citation as a SIGNAL rather than a verdict. The design already declares
+    under-reporting the safe direction and states why: a log that lets an agent prove
+    it read what it only deleted is worse than no log.
+    Measured the same day: with this half in place an ID-citation check flags 1.2% of
+    4,373 real mentions, against 38.9% without it. The handler's silence is what keeps
+    that number a floor rather than an artifact of one unparseable token aborting the
+    scan.
+
 # ---------------------------------------------------------------------------
 # FIXED — these produced a green by not being able to look.
 # ---------------------------------------------------------------------------
