@@ -129,7 +129,19 @@
           "horizon": {
             "type": "string",
             "format": "date",
-            "description": "When this task's outcome should be read, ISO-8601. USED IN PRACTICE AND UNDECLARED UNTIL v0.97.0 \u2014 22 occurrences in the dogfood canvas, and canvas-health check 8c(b) reads it to decide whether an open task is genuinely stale or legitimately waiting. A field a shipped check depends on must be declared: undeclared means unvalidated, so a typo like `horizion` degrades the check silently instead of failing."
+            "description": "When this task's outcome should be read, ISO-8601. USED IN PRACTICE AND UNDECLARED UNTIL v0.97.0 — 22 occurrences in the dogfood canvas, and canvas-health check 8c(b) reads it to decide whether an open task is genuinely stale or legitimately waiting. A field a shipped check depends on must be declared: undeclared means unvalidated, so a typo like `horizion` degrades the check silently instead of failing."
+          },
+          "source_class_target": {
+            "type": "string",
+            "enum": [
+              "external_human",
+              "external_data",
+              "internal_stakeholder",
+              "internal_desk",
+              "internal_simulated",
+              "pointer"
+            ],
+            "description": "The KIND of evidence this task intends to produce, declared up front. Read by validate_canvas.py#source_class_target_findings: a COMPLETED task that declared a target should record where the evidence landed (`evidence_logged_to`), or the intent cannot be checked against an outcome. DECLARED HERE 2026-08-31 because it was in live use on 20 tasks while no schema knew about it — additionalProperties: true made that legal, and check_field_wiring is blind to fields no schema declares. Step (c) of the four-step new-field rule, applied retroactively; the field-wiring backing-test is what forced it."
           }
         },
         "required": [
@@ -209,13 +221,13 @@
             "$ref": "_common.schema.json#/$defs/closure_discipline"
           }
         ],
-        "description": "Tasks that closed having produced evidence. `required` was relaxed from [id, completed_at, source_class] to [id] in v0.130.0: measured against four months of real closures in the dogfood project, 47 of 61 completed tasks carried neither field, because no closure path ever populated them. A schema asserting a contract that its own producers never met is the documented-rule-diverges-from-enforcement shape \u2014 and holding the line would have forced 45 invented source_class values, which is worse than an absent field. Both remain STRONGLY RECOMMENDED and are surfaced by a validator WARN."
+        "description": "Tasks that closed having produced evidence. `required` was relaxed from [id, completed_at, source_class] to [id] in v0.130.0: measured against four months of real closures in the dogfood project, 47 of 61 completed tasks carried neither field, because no closure path ever populated them. A schema asserting a contract that its own producers never met is the documented-rule-diverges-from-enforcement shape — and holding the line would have forced 45 invented source_class values, which is worse than an absent field. Both remain STRONGLY RECOMMENDED and are surfaced by a validator WARN."
       },
       "description": "Tasks that closed having produced evidence. Two of this list's item types were corrected in v0.131.0 against four months of real records, and `required` was relaxed in v0.130.0 for the same reason: nothing had ever validated against it, because closures were left in `pending_tasks` -- whose item schema constrains neither field. AN UNUSED SCHEMA DRIFTS SILENTLY, and the drift is only visible the moment something finally uses it."
     },
     "closed_without_evidence": {
       "type": "array",
-      "description": "Tasks that closed WITHOUT producing evidence \u2014 abandoned, cancelled, stalled-out. DELIBERATELY DOES NOT REQUIRE `source_class`: that field classifies where EVIDENCE came from, and a task that produced none has no source class. /log-evidence was corrected on 2026-08-03 for telling authors to write `source_class: cancelled`, a task outcome wearing an evidence field's name that the enum rejects. `closure_reason` carries the meaning instead, and is required here for exactly that reason.",
+      "description": "Tasks that closed WITHOUT producing evidence — abandoned, cancelled, stalled-out. DELIBERATELY DOES NOT REQUIRE `source_class`: that field classifies where EVIDENCE came from, and a task that produced none has no source class. /log-evidence was corrected on 2026-08-03 for telling authors to write `source_class: cancelled`, a task outcome wearing an evidence field's name that the enum rejects. `closure_reason` carries the meaning instead, and is required here for exactly that reason.",
       "items": {
         "type": "object",
         "required": [

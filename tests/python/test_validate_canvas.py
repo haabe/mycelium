@@ -1295,3 +1295,60 @@ def test_absent_capabilities_block_is_not_an_error(tmp_path, scripts_path):
     canvas.mkdir(parents=True, exist_ok=True)
     (canvas / "purpose.yml").write_text("why: something\n")
     assert v.technical_capability_findings(canvas) == []
+
+
+# --- source_class_target: intent recorded, outcome unrecorded -----------------
+# 20 tasks declared the KIND of evidence they intended to produce. Nothing read it.
+# check_source_class_fidelity already reads `source_class`; the target was one hop away
+# and unwired only by omission.
+
+
+def _tasks_doc(tmp_path, completed=None, pending=None):
+    import yaml
+    canvas = tmp_path / "canvas"
+    canvas.mkdir(parents=True, exist_ok=True)
+    (canvas / "human-tasks.yml").write_text(yaml.safe_dump(
+        {"completed_tasks": completed or [], "pending_tasks": pending or []}, sort_keys=False))
+    return canvas
+
+
+def test_a_completed_task_that_never_said_where_its_evidence_landed_is_flagged(tmp_path, scripts_path):
+    v = _import_validator(scripts_path)
+    out = v.source_class_target_findings(_tasks_doc(
+        tmp_path, completed=[{"id": "ht-001", "source_class_target": "external_human"}]))
+    assert len(out) == 1
+    assert "evidence_logged_to" in out[0]
+
+
+def test_a_pointer_at_top_level_satisfies_it(tmp_path, scripts_path):
+    v = _import_validator(scripts_path)
+    out = v.source_class_target_findings(_tasks_doc(tmp_path, completed=[
+        {"id": "ht-001", "source_class_target": "external_human",
+         "evidence_logged_to": "opportunities.yml#opp-001"}]))
+    assert out == []
+
+
+def test_a_pointer_inside_the_touch_log_also_satisfies_it(tmp_path, scripts_path):
+    """Real entries record it per-touch, not only at the top level."""
+    v = _import_validator(scripts_path)
+    out = v.source_class_target_findings(_tasks_doc(tmp_path, completed=[
+        {"id": "ht-001", "source_class_target": "external_human",
+         "touch_log": [{"date": "2026-08-01",
+                        "evidence_logged_to": "landscape.yml#comp-001"}]}]))
+    assert out == []
+
+
+def test_a_pending_task_is_not_flagged(tmp_path, scripts_path):
+    """A task still running has not produced its evidence yet. Warning about it would fire
+    on every open task from the day it is created, which is how a check gets muted."""
+    v = _import_validator(scripts_path)
+    out = v.source_class_target_findings(_tasks_doc(
+        tmp_path, pending=[{"id": "ht-001", "source_class_target": "external_human"}]))
+    assert out == []
+
+
+def test_a_task_without_the_field_is_not_flagged(tmp_path, scripts_path):
+    v = _import_validator(scripts_path)
+    out = v.source_class_target_findings(_tasks_doc(
+        tmp_path, completed=[{"id": "ht-001"}]))
+    assert out == []

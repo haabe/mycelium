@@ -4,6 +4,34 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-31.
 
+## v0.152.0 - source_class_target was one hop from a reader that already existed
+
+**FOUNDER-RULED "wire it properly".** 20 human-tasks carry `source_class_target` — a clean enum,
+`external_human`, declaring the KIND of evidence the task intends to produce. **Nothing read it, while
+`check_source_class_fidelity.py` already read the sibling `source_class`.** The machinery existed and
+the field sat one hop from it, unwired purely by omission. That is the cheapest possible instance of
+this defect class: not a missing mechanism, a missing connection.
+
+**WHAT IS CHECKED IS THE LOOP, NOT THE LABEL.** A COMPLETED task that declared a target evidence class
+should record where that evidence landed. Measured at the ruling: **15 completed tasks carried the
+target, 5 recorded a pointer, and TEN declared an intended evidence class without ever saying whether
+they produced it.** All ten fire on the dogfood canvas today. An intention nobody can check against an
+outcome is exactly the shape this series exists to remove.
+
+**Pending tasks are exempt, deliberately.** A task still running has not produced its evidence yet, and
+firing on every open task from the day it is created is how a check gets muted.
+
+**THE FIELD-WIRING BACKING-TEST FORCED THE SCHEMA DECLARATION, and that is the four-step rule working
+on itself.** Recording `source_class_target` as wired failed the test that asserts a `wired` verdict is
+backed by a real consumer — not because nothing read it, but because **no schema declared it**, and
+`check_field_wiring` is blind to fields no schema knows about. `additionalProperties: true` made 20
+live uses legal and invisible. It is now declared with its enum and its reader named: step (c) of the
+four-step new-field rule, applied retroactively, and surfaced by a test rather than by anyone
+remembering.
+
+Net: **35 of 37 promise-shaped fields now have a consumer**; the two remaining carry written
+human-only verdicts rather than omissions.
+
 ## v0.151.0 - the five unruled fields, ruled and acted on
 
 The founder ruled all five baselined fields. Four were acted on in code; one was already ruled

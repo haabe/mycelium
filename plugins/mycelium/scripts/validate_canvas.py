@@ -926,6 +926,60 @@ def technical_capability_findings(canvas_dir):
     return out
 
 
+def source_class_target_findings(canvas_dir):
+    """WARN-tier: a task declared what evidence it would produce — did it say where it landed?
+
+    THE GAP (founder ruling 2026-08-31: "wire it properly"). `source_class_target` sits on 20
+    human-tasks — a clean enum value, `external_human`, declaring the KIND of evidence the task
+    intends to produce. `check_source_class_fidelity.py` already reads `source_class`. The
+    target was never connected to anything: the machinery existed and the field was one hop
+    from it, unwired only by omission.
+
+    WHAT IT CHECKS, and it is the loop from intent to outcome rather than the label itself: a
+    COMPLETED task that declared a target evidence class should record where that evidence
+    went. Measured at the ruling: 15 completed tasks carried the target and only 5 recorded a
+    pointer. TEN DECLARED AN INTENDED EVIDENCE CLASS AND NEVER SAID WHETHER THEY PRODUCED IT —
+    which makes the field an intention nobody can check, the shape this release series exists
+    to remove.
+
+    PENDING TASKS ARE NOT FLAGGED. A task still running has not produced its evidence yet, and
+    warning about it would fire on every open task from the day it is created.
+
+    WARN, never fail: the pointer is a convention, and some evidence legitimately lands
+    somewhere this check cannot follow.
+    """
+    path = canvas_dir / "human-tasks.yml"
+    if not path.exists():
+        return []
+    try:
+        doc = load_yaml(path) or {}
+    except Exception:  # noqa: BLE001 — parse failures belong to the fail-loud pass
+        return []
+    if not isinstance(doc, dict):
+        return []
+
+    def has_pointer(task):
+        if any("evidence_logged_to" in str(k) for k in task):
+            return True
+        return any("evidence_logged_to" in str(k)
+                   for entry in (task.get("touch_log") or []) if isinstance(entry, dict)
+                   for k in entry)
+
+    out = []
+    for task in doc.get("completed_tasks") or []:
+        if not isinstance(task, dict) or "source_class_target" not in task:
+            continue
+        if has_pointer(task):
+            continue
+        out.append(
+            f"{task.get('id', '<no id>')}: completed, and declared "
+            f"`source_class_target: {task.get('source_class_target')}` — but records no "
+            f"`evidence_logged_to`. The kind of evidence it intended to produce is stated; "
+            f"whether it produced any is not, so the target cannot be checked against an "
+            f"outcome.")
+    return out
+
+
 def print_advisory_warnings(canvas_dir):
     """Emit the WARN-tier findings that never fail a build.
 
@@ -939,6 +993,7 @@ def print_advisory_warnings(canvas_dir):
         ("task list", task_list_findings(canvas_dir)),
         ("purpose why", purpose_why_findings(canvas_dir)),
         ("tech capability", technical_capability_findings(canvas_dir)),
+        ("evidence target", source_class_target_findings(canvas_dir)),
     ):
         for w in findings:
             print(f"  WARN ({label}): {w}")

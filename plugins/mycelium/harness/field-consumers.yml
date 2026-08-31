@@ -26,6 +26,22 @@
 #   UNRULED    — baselined, awaiting a ruling. Does not fail the gate; is reported every run.
 
 reviewed:
+  - field: source_class_target
+    canvas: human-tasks
+    consumer: scripts/validate_canvas.py#source_class_target_findings
+    verdict: wired
+    note: >-
+      FOUNDER-RULED 2026-08-31 ("wire it properly"). 20 human-tasks declared the KIND of
+      evidence they intended to produce — a clean enum, `external_human` — and nothing read it,
+      while `check_source_class_fidelity.py` already read the sibling `source_class`. The
+      machinery existed and the field was ONE HOP from it, unwired only by omission.
+      WHAT IS CHECKED IS THE LOOP, NOT THE LABEL: a COMPLETED task that declared a target
+      evidence class should record where that evidence landed. Measured at the ruling: 15
+      completed tasks carried the target, 5 recorded a pointer, and TEN declared an intended
+      evidence class without ever saying whether they produced it. Pending tasks are exempt —
+      a task still running has not produced its evidence yet, and firing on those is how a
+      check gets muted.
+
   - field: derived_at
     canvas: purpose
     consumer: human
