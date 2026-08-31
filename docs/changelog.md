@@ -2,7 +2,39 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-08-30.
+**Last updated**: 2026-08-31.
+
+## v0.143.0 - the record of what was read was empty by construction
+
+`read-log.sh` was bound `PostToolUse matcher=Read`. Reads performed through Bash -- `cat`, `head`,
+`sed`, `grep`, `python` -- were logged nowhere, and sessions are routinely instructed to prefer Bash.
+On the dogfood repo the log held **3,401 rows and every one came from the Read tool**.
+
+**The consequence is not bookkeeping.** On 2026-08-31 an agent told the operator that a need's
+population was unreachable, when that entry's own `user_type` field said otherwise; walked him through
+an analysis of two records that had carried `breadth_note`s on the same question since 2026-08-07; and
+called a diamond undated when it carried a `kill_criterion.date`. Every one is a field-level miss
+inside a document the agent was actively citing. All four were caught by the operator and none by any
+check -- because nothing could establish that a record had gone unread.
+
+The matcher is now `Read|Bash`.
+
+**An inferred read is not an observed one, and the log says so.** A Read tool call is proof a file was
+opened. A path named in a shell command is evidence it was consulted: strong, but inference. Bash rows
+carry `inferred: true`, so a consumer can weight or ignore them rather than discovering the
+distinction after building on it.
+
+**It under-reports on purpose.** A read verb must appear, so `rm canvas/x.yml` and `git add
+canvas/x.yml` log nothing; the path must exist on disk, which drops globs and prose; it must resolve
+inside the project, which drops `/tmp` scratch; and redirect targets are stripped, because `> out.txt`
+is a write. A log that would let an agent prove it read what it only deleted is worse than no log.
+
+This is the substrate, not the mechanism. `verify_citations.py` already cross-references citations
+against this log and already names anti-pattern #7 as its target -- it could not work against a record
+that was empty. Two gaps remain and are filed: that checker reads file-shaped citations only, not
+canvas IDs, and its Stop-hook wiring is deferred pending a false-positive measurement.
+
+Thirteen guardpost tests, including the four exclusion cases.
 
 ## v0.142.0 - the guard was wrong more often than it was right
 
