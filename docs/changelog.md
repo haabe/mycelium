@@ -4,6 +4,67 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-31.
 
+## v0.154.0 - the field-wiring gate could not see 88% of the fields
+
+**THE HOLE, stated plainly because it made the previous three releases weaker than they read.**
+`check_field_wiring` reads SCHEMAS. Every canvas schema sets `additionalProperties: true`, so a field
+can be written into the canvas and declared nowhere — measured on the dogfood canvas, **2210 of 2494
+live keys (88%) are declared by no schema.** `unlocked_at` was caught within three hours *only because
+it happened to go through a schema*. `kill_criterion.date` did not, and sat unread for months. The
+gate was the right shape aimed at the smaller half of the problem.
+
+**`--live` scans the canvas itself**, for keys that are undeclared, promise-shaped, and consumed by
+nothing. First run on the dogfood canvas: **40 such fields, 15 with a consumer, 25 without** —
+`closed_at`, `commitment_status`, `decision_status`, `promotion_trigger` and the rest.
+
+**ONE-OFF KEYS ARE EXCLUDED AS PROSE, and that filter is what makes the check usable.** Of 84
+undeclared promise-shaped keys, **65 were used exactly once** and were narrative annotations
+(`horizon_set_2026_08_28`); 19 recurred and were real fields. Recurrence separates them. Without it
+this check would demand a consumer for 65 sentences and be muted inside a day — the failure mode the
+absence-claim guard already demonstrated by firing 16 times and catching nothing.
+
+**Same ratchet as everywhere else**: seed once with `--write-baseline`, then `--strict` fails only on
+a NEW undeclared unconsumed field, so the cost falls on new writing. Verified by injecting one: it
+fails, and passes again on revert. **The baseline lives in the CONSUMER's repo**
+(`.claude/harness/canvas-field-consumers.yml`), not the framework's, because canvas content is
+project-specific — a split the schema-side registry does not need.
+
+**Extended rather than duplicated**, which is step (b) of the four-step new-field rule applied to the
+framework's own code: a second script would have been a synonym for a mechanism that already existed.
+
+**What this changes about the original question** — *"how do we stop meeting the next `why` two months
+late?"* Before this, the honest answer was "only if the field goes through a schema", which is the
+minority path. Now the common path — an agent writing a key straight into the canvas — is covered too,
+on the same commit it appears.
+
+**THE SAME DEFECT WAS IN THREE PLACES, and one environment change found all three.** A background
+`mise` upgrade replaced Python 3.12 with 3.14.7 and deleted the old install, so `python3` lost
+`jsonschema`. Nothing in the framework was broken. What broke was every call site that assumed one
+interpreter:
+
+- `tests/bash/test_validate_canvas_fail_loud.sh` and `..._diamonds.sh` invoked a bare `python3` and
+  reported **"needle 'YAML parse error in broken.yml' not found"** — an environment problem wearing
+  the costume of a broken validator, which sends the reader hunting for a defect that does not exist.
+  Both now resolve an interpreter, fall back to `uv`, and **SKIP with the reason stated** when neither
+  works. A skipped test that names why is honest; a failing one there is a lie about the code.
+- The pre-push canvas gate had the identical problem, below.
+
+**`requirements-ci.txt` already states the intended split** — *"Runtime hooks use Python stdlib only…
+Requiring users to `pip install` would be a footgun"* — and `uv run --with-requirements` materialises
+the CI deps on demand. **Nothing needed installing; the call sites simply did not follow the file's own
+policy.**
+
+**ALSO FIXED, and the founder's machine proved it mid-session:** the pre-push canvas gate invoked a
+bare `python3` and reported **"Canvas validation FAILED"** on any non-zero exit — including the exit
+that means *this interpreter has no jsonschema*. A background `mise` update moved `python3` from
+mise's 3.12 to Homebrew's 3.14.7, and the hook blocked a push reporting a canvas failure **while the
+canvas was perfectly valid**. The same lesson was already learned for pytest further down the same
+file and never applied to the gate that runs FIRST. The canvas gate now resolves an interpreter that
+can actually import jsonschema, falls back to `uv`, and when neither exists says **"CANNOT RUN the
+canvas validator — this is NOT a canvas failure"** and names the likely cause. An interpreter problem
+reported as a data problem sends the operator hunting for an error that does not exist.
+
+
 ## v0.153.1 - three documented versions had no release, for the reason v0.153.0 fixed
 
 `release_gaps.py --check` failed on main: the changelog documented **v0.150.0, v0.151.0 and v0.152.0**

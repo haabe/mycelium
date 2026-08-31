@@ -263,3 +263,83 @@ def test_similar_says_so_plainly_when_a_name_is_genuinely_new(tmp_path, monkeypa
     assert rc == 0
     assert "none" in out
     assert "(a), (c) and (d) still apply" in out
+
+
+# --- live mode: the 88% the schema scan cannot see ---------------------------
+# scan() reads SCHEMAS, so it only sees fields somebody declared. Every canvas schema sets
+# additionalProperties: true, and 2210 of 2494 live keys (88%) are declared by no schema.
+# `unlocked_at` was caught in three hours only because it happened to go through one.
+
+
+def _live_tree(tmp_path, canvas_doc, schema_props=None, code=""):
+    import yaml
+    root = tmp_path / "plug"
+    for d in ("schemas/canvas", "scripts", "hooks", "skills", "engine", "harness"):
+        (root / d).mkdir(parents=True, exist_ok=True)
+    (root / "schemas/canvas/x.schema.json").write_text(
+        json.dumps({"type": "object", "properties": schema_props or {}}))
+    if code:
+        (root / "scripts" / "reader.py").write_text(code)
+    canvas = tmp_path / ".claude" / "canvas"
+    canvas.mkdir(parents=True, exist_ok=True)
+    (canvas / "a.yml").write_text(yaml.safe_dump(canvas_doc, sort_keys=False))
+    return root, canvas
+
+
+def test_a_recurring_undeclared_promise_field_is_found(tmp_path):
+    m = _mod()
+    root, canvas = _live_tree(tmp_path, {"a": {"review_deadline": 1},
+                                         "b": {"review_deadline": 2}})
+    rows = m.live_canvas_fields(canvas, root)
+    assert [(n, u) for n, u, _ in rows] == [("review_deadline", 2)]
+
+
+def test_a_one_off_key_is_prose_and_is_excluded(tmp_path):
+    """65 of 84 undeclared promise-shaped keys were used exactly once and were narrative
+    annotations. Demanding a consumer for a sentence is how a check gets muted."""
+    m = _mod()
+    root, canvas = _live_tree(tmp_path, {"a": {"review_deadline": 1}})
+    assert m.live_canvas_fields(canvas, root) == []
+
+
+def test_a_declared_field_is_left_to_the_schema_scan(tmp_path):
+    """Two findings for one field would double-report."""
+    m = _mod()
+    root, canvas = _live_tree(tmp_path, {"a": {"review_deadline": 1},
+                                         "b": {"review_deadline": 2}},
+                              schema_props={"review_deadline": {"type": "string"}})
+    assert m.live_canvas_fields(canvas, root) == []
+
+
+def test_a_field_with_a_real_consumer_is_not_reported_as_unwired(tmp_path):
+    m = _mod()
+    root, canvas = _live_tree(tmp_path, {"a": {"review_deadline": 1},
+                                         "b": {"review_deadline": 2}},
+                              code='x = data["review_deadline"]\n')
+    rows = m.live_canvas_fields(canvas, root)
+    assert rows and rows[0][2] == ["code"]
+
+
+def test_live_strict_fails_on_a_new_field_and_passes_once_baselined(tmp_path, monkeypatch):
+    import yaml
+    m = _mod()
+    root, canvas = _live_tree(tmp_path, {"a": {"review_deadline": 1},
+                                         "b": {"review_deadline": 2}})
+    assert m._run_live(root, canvas, write_baseline=False, strict=True) == 1
+    assert m._run_live(root, canvas, write_baseline=True, strict=False) == 0
+    base = canvas.parent / m.LIVE_BASELINE_REL
+    assert yaml.safe_load(base.read_text())["fields"] == ["review_deadline"]
+    assert m._run_live(root, canvas, write_baseline=False, strict=True) == 0
+
+
+def test_live_refuses_over_a_missing_canvas(tmp_path):
+    m = _mod()
+    root, _ = _live_tree(tmp_path, {})
+    assert m._run_live(root, tmp_path / "nope", write_baseline=False, strict=True) == 1
+
+
+def test_live_refuses_when_it_finds_nothing_at_all(tmp_path):
+    """Zero promise-shaped keys is not 'everything is wired'."""
+    m = _mod()
+    root, canvas = _live_tree(tmp_path, {"a": {"narrative": 1}, "b": {"narrative": 2}})
+    assert m._run_live(root, canvas, write_baseline=False, strict=True) == 1

@@ -39,8 +39,36 @@ if [ ! -d ".claude/canvas" ]; then
     exit 0
 fi
 
+# PICK AN INTERPRETER THAT CAN ACTUALLY RUN THE VALIDATOR, AND SAY SO WHEN NONE CAN.
+#
+# This gate used to invoke a bare `python3` and report "Canvas validation FAILED" on any
+# non-zero exit — INCLUDING the exit that means "this interpreter has no jsonschema".
+# Measured 2026-08-31 on the framework author's machine: a background `mise` update moved
+# `python3` from mise's 3.12 to Homebrew's 3.14.7, which has no jsonschema, and the hook
+# blocked the push reporting a canvas failure while the canvas was perfectly valid.
+#
+# THE SAME LESSON WAS ALREADY LEARNED FOR PYTEST further down this file, and was never
+# applied here — which is why the identical defect was waiting in the gate that runs FIRST.
+# An interpreter problem must not be reported as a data problem: the operator then goes
+# looking for a canvas error that does not exist.
+CANVAS_PY=""
+if python3 -c "import jsonschema" >/dev/null 2>&1; then
+    CANVAS_PY="python3"
+elif command -v uv >/dev/null 2>&1 && [ -f requirements-ci.txt ]; then
+    CANVAS_PY="uv run --quiet --with-requirements requirements-ci.txt python"
+fi
+if [ -z "$CANVAS_PY" ]; then
+    echo "" >&2
+    echo "[mycelium pre-push] CANNOT RUN the canvas validator — push blocked, and this is NOT" >&2
+    echo "  a canvas failure. The active python3 ($(command -v python3 || echo none)) cannot" >&2
+    echo "  import jsonschema, and no uv + requirements-ci.txt fallback is available." >&2
+    echo "  • pip install jsonschema referencing, or make uv available." >&2
+    echo "  • A version manager updating in the background moves python3; that is the usual cause." >&2
+    exit 1
+fi
+
 echo "[mycelium pre-push] Validating canvas via ${VALIDATOR##*mycelium/} ..." >&2
-if ! python3 "$VALIDATOR" >&2; then
+if ! $CANVAS_PY "$VALIDATOR" >&2; then
     echo "" >&2
     echo "[mycelium pre-push] Canvas validation FAILED — push blocked." >&2
     echo "  • Fix the errors above and re-push." >&2

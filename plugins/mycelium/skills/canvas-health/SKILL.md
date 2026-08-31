@@ -511,3 +511,29 @@ notes:
 today cannot make 523 pre-existing keys a build failure (see the founder's own note on gate-remedy
 proportionality). Seed once with `--write-baseline`; from then on `--strict` fails only on NEW keys, so
 the cost falls on new writing.
+
+## Fields the canvas writes that no schema declares (added 2026-08-31)
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_field_wiring.py" --live --canvas-dir .claude/canvas
+```
+
+**WHY A SECOND MODE EXISTS.** The default scan reads SCHEMAS, so it only sees fields somebody
+declared. Every canvas schema sets `additionalProperties: true`, so a field can be written into the
+canvas and never declared anywhere: measured on the dogfood canvas, **2210 of 2494 live keys (88%) are
+declared by no schema.** `unlocked_at` was caught within three hours only because it happened to go
+through a schema. `kill_criterion.date` did not, and sat unread for months.
+
+**ONE-OFF KEYS ARE EXCLUDED AS PROSE.** Of 84 undeclared promise-shaped keys, **65 were used exactly
+once** and were narrative annotations (`horizon_set_2026_08_28`); 19 recurred and were real fields.
+Recurrence is what separates them, and without that filter this check would demand a consumer for 65
+sentences and be muted within a day.
+
+Seed the per-project baseline once with `--write-baseline`; from then on `--strict` fails only on a
+NEW undeclared, unconsumed field — so the cost falls on new writing. The baseline lives in the
+consumer's own repo (`.claude/harness/canvas-field-consumers.yml`), not in the framework, because
+canvas content is project-specific.
+
+**Each finding gets the four-step new-field rule** from `engine/agent-operating-contract.md`: is it
+necessary, does a similar field already exist (`--similar <name>`), declare it in the schema, and wire
+it or record it as human-only.

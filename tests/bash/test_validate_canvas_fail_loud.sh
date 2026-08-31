@@ -17,10 +17,36 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 FIXTURES_DIR="$SCRIPT_DIR/fixtures/validate_canvas_fail_loud"
 VALIDATOR="$REPO_ROOT/plugins/mycelium/scripts/validate_canvas.py"
 
+# RESOLVE AN INTERPRETER THAT CAN ACTUALLY RUN THE VALIDATOR, AND SKIP HONESTLY IF NONE CAN.
+#
+# These tests asserted validator BEHAVIOUR while invoking a bare `python3`. Measured
+# 2026-08-31: a background `mise` upgrade replaced Python 3.12 with 3.14.7 and deleted the
+# old install, so `python3` lost `jsonschema`. validate_canvas.py then exited 2 with
+# "jsonschema not installed", and these tests reported "needle 'YAML parse error' not found"
+# — an ENVIRONMENT problem wearing the costume of a broken validator, which sends the reader
+# hunting for a defect that does not exist.
+#
+# requirements-ci.txt states the intended split: hooks are stdlib-only, CI deps come from
+# `uv run --with-requirements`. So prefer a python3 that already has them, else uv, else SKIP
+# with the reason said out loud. A skipped test that names why is honest; a failing one here
+# is a lie about the code.
+PYV=""
+if python3 -c "import jsonschema" >/dev/null 2>&1; then
+    PYV="python3"
+elif command -v uv >/dev/null 2>&1 && [ -f "$REPO_ROOT/requirements-ci.txt" ]; then
+    PYV="uv run --quiet --with-requirements $REPO_ROOT/requirements-ci.txt python"
+else
+    echo "SKIP: $(basename "${BASH_SOURCE[0]}") — no interpreter can import jsonschema, so the" >&2
+    echo "  validator cannot run. This is NOT a validator failure and NOT a pass: nothing was" >&2
+    echo "  checked. Install the CI deps, or make uv available." >&2
+    exit 0
+fi
+
+
 # Invoke the validator against a fixture canvas dir, capture exit code + output.
 run_validator() {
     local fixture="$1"
-    python3 "$VALIDATOR" "$FIXTURES_DIR/$fixture/canvas" 2>&1
+    $PYV "$VALIDATOR" "$FIXTURES_DIR/$fixture/canvas" 2>&1
 }
 
 test_fails_loud_on_broken_yaml() {

@@ -40,6 +40,7 @@ import difflib
 import json
 import re
 import sys
+from collections import Counter
 from pathlib import Path
 
 import yaml
@@ -61,6 +62,22 @@ _MAX_SCHEMA_DEPTH = 8
 #: Shortest token that counts as a shared word when hunting synonyms. Two characters and
 #: below ("at", "by", "id") match everything and drown the signal.
 _MIN_TOKEN = 2
+
+#: A canvas key that is a FIELD rather than a narrative annotation: lower snake_case, no
+#: date or entity id baked in, a sane length. Measured 2026-08-31 on the dogfood canvas:
+#: of 84 undeclared promise-shaped keys, 65 were used exactly ONCE and were prose
+#: annotations (`horizon_set_2026_08_28`), and 19 recurred and were real fields. Recurrence
+#: is what separates the two, and without it this check would demand a consumer for 65
+#: sentences and be muted within a day.
+_LIVE_FIELD_RE = re.compile(r"^[a-z][a-z0-9_]{2,34}$")
+
+#: Minimum uses before a live canvas key counts as a field at all.
+_MIN_USES = 2
+
+#: Where the per-project baseline lives. Canvas content is project-specific, so unlike
+#: harness/field-consumers.yml (which ships with the framework and covers schema fields)
+#: this one belongs to the consumer's own repo.
+LIVE_BASELINE_REL = "harness/canvas-field-consumers.yml"
 
 
 def _schema_fields(schema_dir: Path) -> dict[str, set[str]]:
@@ -198,6 +215,95 @@ def _report_similar(root: Path, name: str, canvas_dir: str | None) -> int:
     return 0
 
 
+def live_canvas_fields(canvas_dir: Path, root: Path) -> list[tuple[str, int, list[str]]]:
+    """Promise-shaped keys the canvas actually contains, that no schema declares.
+
+    THE HOLE THIS CLOSES. `scan()` reads SCHEMAS, so it only sees fields somebody declared.
+    Every canvas schema sets `additionalProperties: true`, so a field can be written into the
+    canvas and never declared anywhere: measured 2026-08-31, **2210 of 2494 live keys (88%)
+    are declared by no schema**. `unlocked_at` was caught in three hours only because it
+    happened to go through a schema; `kill_criterion.date` and the 19 fields this mode finds
+    did not, and were invisible.
+
+    Returns (name, use_count, consumer_kinds) for keys that are undeclared, field-shaped and
+    used more than once — one-off keys are prose, see _LIVE_FIELD_RE.
+    """
+    declared = set(_schema_fields(root / "schemas"))
+    counts: Counter[str] = Counter()
+    for path in sorted(canvas_dir.glob("*.yml")):
+        try:
+            _count_keys(yaml.safe_load(path.read_text()), counts)
+        except (yaml.YAMLError, OSError):
+            continue
+    corpora = _corpora(root)
+    rows = []
+    for name, uses in sorted(counts.items()):
+        if name in declared or uses < _MIN_USES:
+            continue
+        if not _LIVE_FIELD_RE.match(name) or not PROMISE.search(name):
+            continue
+        rows.append((name, uses, consumers_of(name, corpora)))
+    return rows
+
+
+def _count_keys(node, counts: Counter, depth: int = 0) -> None:
+    if depth > _MAX_SCHEMA_DEPTH + 4:
+        return
+    if isinstance(node, dict):
+        for key, val in node.items():
+            if isinstance(key, str):
+                counts[key] += 1
+            _count_keys(val, counts, depth + 1)
+    elif isinstance(node, list):
+        for val in node:
+            _count_keys(val, counts, depth + 1)
+
+
+def _run_live(root: Path, canvas_dir: Path, write_baseline: bool, strict: bool) -> int:
+    if not canvas_dir.is_dir():
+        print(f"Field-wiring (live): NOT A PASS — no canvas dir at {canvas_dir}.")
+        return 1
+    rows = live_canvas_fields(canvas_dir, root)
+    base_path = canvas_dir.parent / LIVE_BASELINE_REL
+    if write_baseline:
+        base_path.parent.mkdir(parents=True, exist_ok=True)
+        base_path.write_text(yaml.safe_dump(
+            {"note": "Promise-shaped canvas keys that no schema declares and nothing consumes, "
+                     "as of seeding. Present so the rule costs NEW writing rather than a "
+                     "retro-fit of everything already written. Each should end up either "
+                     "declared and wired, or recorded as human-only.",
+             "fields": sorted(n for n, _, kinds in rows if not kinds)},
+            sort_keys=False))
+        print(f"Field-wiring (live): baseline seeded with "
+              f"{len([1 for _, _, k in rows if not k])} field(s) at {base_path}")
+        return 0
+    baseline = set()
+    if base_path.exists():
+        doc = yaml.safe_load(base_path.read_text()) or {}
+        baseline = set(doc.get("fields") or [])
+    unwired = [(n, u) for n, u, kinds in rows if not kinds]
+    new = [(n, u) for n, u in unwired if n not in baseline]
+    print("Field-wiring scan, LIVE CANVAS (keys no schema declares)")
+    print("=" * 60)
+    if not rows:
+        print("  NOT A PASS — no promise-shaped undeclared key found. Nothing was checked,\n"
+              "  which is not the same as everything being wired.")
+        return 1
+    print(f"  {len(rows)} undeclared promise-shaped field(s) used >{_MIN_USES - 1}x; "
+          f"{len(rows) - len(unwired)} have a consumer, {len(unwired)} do not "
+          f"({len(baseline)} baselined, {len(new)} NEW)")
+    for name, uses in new:
+        print(f"    NEW  {name}  ({uses} uses)")
+    if not new:
+        print("\n  No NEW unconsumed field. One-off keys are excluded as prose: a key used once\n"
+              "  is an annotation, not a field. See _LIVE_FIELD_RE.")
+        return 0
+    print("\n  Each needs the four-step new-field rule applied: is it necessary, does a similar\n"
+          "  field already exist (--similar), declare it in the schema, and wire it or record it\n"
+          "  as human-only. A field no schema declares is invisible to every other check here.")
+    return 1 if strict else 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--root", default=str(Path(__file__).resolve().parent.parent))
@@ -207,12 +313,25 @@ def main() -> int:
                     help="before inventing a field, list existing names close to NAME. Step (b) "
                          "of the four-step new-field rule in the agent operating contract.")
     ap.add_argument("--canvas-dir", default=None,
-                    help="with --similar, also search the live canvas, where most keys live")
+                    help="with --similar, also search the live canvas; with --live, the canvas "
+                         "to scan")
+    ap.add_argument("--live", action="store_true",
+                    help="scan the LIVE CANVAS for promise-shaped keys no schema declares. "
+                         "88%% of canvas keys are undeclared, and the schema scan is blind to "
+                         "every one of them.")
+    ap.add_argument("--write-baseline", action="store_true",
+                    help="with --live: seed the per-project baseline once")
     args = ap.parse_args()
     root = Path(args.root)
 
     if args.similar:
         return _report_similar(root, args.similar, args.canvas_dir)
+
+    if args.live:
+        if not args.canvas_dir:
+            print("Field-wiring (live): NOT A PASS — --live needs --canvas-dir.")
+            return 1
+        return _run_live(root, Path(args.canvas_dir), args.write_baseline, args.strict)
 
     rows, registry = scan(root)
     if not rows:
