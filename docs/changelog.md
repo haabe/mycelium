@@ -4,6 +4,22 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-31.
 
+## v0.153.1 - three documented versions had no release, for the reason v0.153.0 fixed
+
+`release_gaps.py --check` failed on main: the changelog documented **v0.150.0, v0.151.0 and v0.152.0**
+and the releases page had none of them. Each of those commits went red on `check_fail_open.py
+--strict` — the flag-parity defect v0.153.0 fixes — so the release workflow correctly refused to
+publish them. Their content is now folded under v0.153.0 and shipped there.
+
+**Folding rather than back-releasing, for the second time today** (v0.145.0 was the first). A commit
+CI rejected does not get a release, even when the content was sound and is now green. The alternative
+hollows out the gate that caught it.
+
+**The structural cause, recorded because it will recur:** the changelog section is written at COMMIT
+time; the release happens at CI time. Any red commit opens a gap between what the changelog promises
+consumers and what the releases page has. The backstop catches it every time — that is the system
+working — but the gap will keep appearing until those two moments are the same moment.
+
 ## v0.153.0 - the same gate had different teeth in CI and locally
 
 **CI WENT RED TWICE AND THE PRE-PUSH HOOK PASSED EVERY TIME.** v0.151.0 and v0.152.0 both failed on
@@ -32,7 +48,21 @@ parse error, so the silence is never the only thing a human sees.
 **And the process failure that let it run for two releases: I stopped watching CI after pushing.**
 The founder had to say so. Watching a push to green is part of pushing, not a separate optional step.
 
-## v0.152.0 - source_class_target was one hop from a reader that already existed
+
+**v0.150.0, v0.151.0 and v0.152.0 were committed but never released, and their content is below.**
+Each commit went red in CI on `check_fail_open.py --strict` for the reason this release fixes — the
+gate was blocking in CI and advisory locally — so the release workflow correctly refused to publish
+them. **This is the second time today the release gate has produced a documented-but-unreleased
+version** (v0.145.0 was the first, for a different red). Folding rather than back-releasing keeps the
+rule intact: a commit CI rejected does not get a release, even when the content was sound and is now
+green. Nothing is lost; every line shipped in v0.153.0.
+
+**The structural cause is worth naming: the changelog section is written at COMMIT time and the
+release happens at CI time.** Any red commit therefore creates a gap between what the changelog
+promises and what the releases page has. The backstop catches it every time, which is the system
+working — but it will keep happening until the two moments are the same moment.
+
+### v0.152.0 — source_class_target was one hop from a reader that already existed
 
 **FOUNDER-RULED "wire it properly".** 20 human-tasks carry `source_class_target` — a clean enum,
 `external_human`, declaring the KIND of evidence the task intends to produce. **Nothing read it, while
@@ -60,7 +90,7 @@ remembering.
 Net: **35 of 37 promise-shaped fields now have a consumer**; the two remaining carry written
 human-only verdicts rather than omissions.
 
-## v0.151.0 - the five unruled fields, ruled and acted on
+### v0.151.0 — the five unruled fields, ruled and acted on
 
 The founder ruled all five baselined fields. Four were acted on in code; one was already ruled
 by its own schema and only needed recording.
@@ -121,7 +151,7 @@ reader rather than turned into a warning the check cannot justify.
 script so the name-based scanner would see it; **that is gaming the instrument to make a number look
 right.** That test is what surfaced the question the founder then answered correctly.
 
-## v0.150.0 - the pre-push hook was doing CI's job, and it cost two failures in one day
+### v0.150.0 — the pre-push hook was doing CI's job, and it cost two failures in one day
 
 **WHAT THE DURATION ACTUALLY COST, because neither failure looked like a slow hook.** With `--cov` the
 local test step took **192s** and the whole hook **366s**. On 2026-08-31 that produced:
