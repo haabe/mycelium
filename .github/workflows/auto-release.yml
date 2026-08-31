@@ -168,15 +168,36 @@ jobs:
                   continue
               title, body = notes_for(tag)
               open("rel_notes.md", "w").write(body)
+              # THE TAG IS PUSHED OVER GIT FIRST, AND THAT SPLIT IS THE FIX (2026-08-31).
+              # `gh release create --target <sha>` asks the API to do two things: create
+              # a tag REF and create a release. On 2026-08-31 the second worked and the
+              # first did not -- every release whose tag did not already exist failed,
+              # while a release created against an EXISTING tag succeeded immediately.
+              # The errors named none of that: gh reported 403 "workflow scope may be
+              # required", a direct API call returned 404, and a repo PATCH with the same
+              # token succeeded. Three misleading signals for one missing capability.
+              #
+              # git push carries the checkout credential rather than the REST path, and
+              # it is the operation that demonstrably works. Splitting them also makes
+              # the failure legible next time: a tag that exists with no release is a
+              # visibly half-finished release, where a silent 404 was not.
+              #
+              # A tag push does NOT retrigger anything: both workflows here filter on
+              # `push: branches`, and a tag is not a branch.
+              if subprocess.run(["git", "rev-parse", "-q", "--verify",
+                                 f"refs/tags/{tag}"], capture_output=True).returncode != 0:
+                  subprocess.run(["git", "tag", tag, it["commit"]], check=True)
+              subprocess.run(["git", "push", "origin", tag], check=True)
+              # No --target: the tag now exists, so this creates ONLY the release.
               # --latest=false on every create. The correct "Latest" is set once, in
               # the next step, from the highest version across ALL releases; letting
               # each create claim it would leave whichever finished last holding it.
               subprocess.run(
-                  ["gh", "release", "create", tag, "--target", it["commit"],
+                  ["gh", "release", "create", tag,
                    "--title", title, "--notes-file", "rel_notes.md", "--latest=false"],
                   check=True)
               created.append(tag)
-              print(f"Created Release {tag} at {it['commit'][:9]}")
+              print(f"Created tag + Release {tag} at {it['commit'][:9]}")
 
           print("Created: " + (", ".join(created) if created else "(none)"))
           PY

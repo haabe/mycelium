@@ -4,6 +4,33 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-31.
 
+## v0.144.1 - the release could not create its own tag
+
+`gh release create --target <sha>` asks the API for two things: create a tag ref, and create a release.
+On 2026-08-31 the second worked and the first did not. Every release whose tag did not already exist
+failed; a release created against an **existing** tag succeeded immediately.
+
+**The errors named none of that.** `gh` reported `403 — "workflow scope may be required"`, which is its
+own hedged guess and was wrong. A direct API call returned **404**, which GitHub uses in place of 403
+for a write you may not perform. A **422** came first, purely because the request body was malformed —
+schema is validated before authorization. And a repo `PATCH` with the same token succeeded, proving
+general write access. Four signals, none of them pointing at the one missing capability.
+
+Two wrong fixes were pursued on the strength of those signals — a repository Actions-permission change
+(reverted; the run logs showed identical token grants before and after) and an OAuth `workflow` scope
+that the documentation confirms is not even grantable to `GITHUB_TOKEN`. The mechanism was found only
+by splitting the operations and testing each half.
+
+**The fix**: push the tag with `git` first, then create the release against it. `git push` carries the
+credential `actions/checkout` configures, rather than the REST path that failed, and it is the
+operation that demonstrably works.
+
+**The split has a second benefit worth more than the fix.** A tag that exists with no release is a
+visibly half-finished release. A silent 404 was not visible at all — which is the same
+green-and-absent-are-the-same-colour failure this project keeps finding elsewhere.
+
+A tag push retriggers nothing: both workflows filter on `push: branches`, and a tag is not a branch.
+
 ## v0.144.0 - the validator now gates the release
 
 `v0.143.0` published as **Latest** while `Validate Template Integrity` was **red on the same commit**.
