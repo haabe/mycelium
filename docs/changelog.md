@@ -4,6 +4,69 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-31.
 
+## v0.145.0 - a staleness hash that could never mismatch
+
+`check_purpose_stance.py` hashes `why`, `how` and `what` to detect whether a purpose moved after its
+properties were derived. It read all three with `purpose.get(key)` at the **top level** of `purpose.yml`.
+A project whose purpose lives under a nested mapping — `purpose_statement:` holding `why:` — misses all
+three, and the hash becomes `sha256("null\x1fnull\x1fnull")`: **one constant, shared by every project
+in that shape, unchanged by any rewrite of the purpose.**
+
+The recorded hash therefore matched on every run and the drift branch could never fire. The skill's own
+docs call drift *"the state that quietly invalidates work"*. On a canvas in this shape it was not
+skippable but undetectable — and **silent in both directions**, because `purpose.schema.json` declares
+no required fields, so a purpose canvas with no purpose also validates PASS.
+
+**The fix refuses to compare.** When no governing field is present the checker now emits a distinct
+finding saying the hash is meaningless and drift cannot be detected, and skips the comparison rather
+than reporting a match that proves nothing. A silent pass becomes a visible one, which is the property
+the rest of this checker already had. Projects using the ordinary top-level shape are unaffected.
+
+**Found in dogfood**, on a non-software project (`i-productified`) while retrofitting `purpose_properties`
+— a shape no Mycelium-on-Mycelium run produces, which is why a year of dogfooding never surfaced it.
+
+**Two of the five new tests initially passed against the unfixed script.** One asserted only that
+findings were non-empty, which was already true for unrelated reasons — the same false-green this
+release is about, reintroduced inside its own test. It was rewritten to assert the delta between the
+nested and top-level shapes. The two that still pass both ways are labelled as regression and premise
+guards rather than left looking like coverage.
+
+**And the same shape one level up: nothing checked whether `why` existed at all.** `interview/SKILL.md`
+promised that a user who cannot yet name the change *"proceeds, flagged for the deeper Phase-1 purpose
+questions"*. **Nothing performed the flagging** — no script read `purpose["why"]` to test presence, and
+no hook did either. So "permissive at entry" was indistinguishable from "permanently empty, and nobody
+will ever say so".
+
+Two mechanisms now, split by whether work has been derived from the purpose:
+
+- **Entry stays open.** A new `purpose_why_findings` check WARNs, every run, on an absent, empty or
+  whitespace-only `why`. Never fails a build. Sinek's own diagnosis is that people start from what they
+  are building, so eliciting the why is this framework's job, not its entry fee — but the promise that
+  someone comes back for it is now kept by a mechanism instead of a sentence.
+- **Derivation does not.** `purpose.schema.json` gains a `dependentSchemas` rule: once
+  `purpose_properties` exists, `why` is required AND non-empty. Binding properties taken from an absent
+  purpose are taken from nothing.
+
+**`required` alone would not have worked, and the test proves it.** A present-but-empty `why: ""`
+satisfies a bare `required` while carrying no purpose — so `minLength` carries the requirement. That
+shape is not hypothetical: the **legacy (pre-plugin, v0.1.x) canvas template wrote it**, so any project
+that migrated from a legacy install can be carrying one. Current `/mycelium:setup` writes no
+`purpose.yml` at all — it creates `canvas/` with a `.gitkeep` and lets `/mycelium:interview` populate
+it — and an absent file is deliberately NOT flagged, since that is "never started" rather than "started
+without a why". Removing it leaves the empty-purpose test failing, which is how that was verified rather
+than assumed. The same empty-string blindness was found in this release's own first fix: an
+`is not None` test passed `why: ""`, and `("", [], [])` hashes to a second constant with the same
+defect and a different fingerprint. Emptiness now counts as absence in all three places.
+
+**Where the empty-string case was actually found**, stated precisely because a first draft of this
+entry got it wrong. `mycelium/.claude/canvas/purpose.yml` holds `why: ""`, `how: []`, `what: []` — but
+that file is an **empty template stub from the v0.1.0 initial commit (2026-04-07)**, untouched since,
+and the rest of that directory is stubs too. The framework repo authors framework; it does not run
+discovery on itself. **Mycelium's purpose IS defined**, in the dogfood repo where product state lives:
+*"Better to know what's worth building before you build it. Only the people in the pipeline can tell
+you."* The earlier claim that the framework had never stated its own why was an absence asserted from
+one file, and it was false.
+
 ## v0.144.1 - the release could not create its own tag
 
 `gh release create --target <sha>` asks the API for two things: create a tag ref, and create a release.

@@ -788,6 +788,40 @@ def purpose_stance_findings(canvas_dir):
         return []
 
 
+def purpose_why_findings(canvas_dir):
+    """WARN-tier: does purpose.yml carry a `why` at all?
+
+    THE GAP THIS CLOSES (dogfood 2026-08-31). `interview/SKILL.md` promises that a user who
+    cannot yet name the change "proceeds, flagged for the deeper Phase-1 purpose questions".
+    NOTHING DID THE FLAGGING: no script read `purpose["why"]` to test that it was present, and
+    no hook did either. So "permissive at entry" was indistinguishable from "permanently empty,
+    and nobody will ever say so" — the same shape as the staleness hash that could never
+    mismatch, one level up.
+
+    WARN AND NEVER FAIL. An absent `why` at first contact is legitimate: Sinek's own diagnosis
+    is that people start from what they are building. It stops being legitimate once work is
+    derived from it, and THAT case is a hard schema requirement (`dependentSchemas` in
+    purpose.schema.json), not this advisory.
+    """
+    path = canvas_dir / "purpose.yml"
+    if not path.exists():
+        return []  # no purpose canvas at all is a different state, not this one
+    try:
+        doc = load_yaml(path) or {}
+    except Exception:  # noqa: BLE001 — parse failures belong to the fail-loud pass
+        return []
+    why = doc.get("why") if isinstance(doc, dict) else "skip"
+    if why == "skip" or (why.strip() if isinstance(why, str) else why):
+        return []   # EMPTY COUNTS AS ABSENT: legacy-templated canvases carry `why: ""`
+    return [
+        ("purpose.yml has no `why`. That is allowed at entry — most people start from what "
+         "they are building — but nothing else will remind you, so it is said here rather "
+         "than left to a promise. Answer it with /mycelium:interview. Note that "
+         "`purpose_properties` cannot be derived until it is present: binding properties "
+         "taken from an absent purpose are taken from nothing.")
+    ]
+
+
 def print_advisory_warnings(canvas_dir):
     """Emit the WARN-tier findings that never fail a build.
 
@@ -799,6 +833,7 @@ def print_advisory_warnings(canvas_dir):
         ("purpose stance", purpose_stance_findings(canvas_dir)),
         ("cycle record", cycle_record_findings(canvas_dir)),
         ("task list", task_list_findings(canvas_dir)),
+        ("purpose why", purpose_why_findings(canvas_dir)),
     ):
         for w in findings:
             print(f"  WARN ({label}): {w}")

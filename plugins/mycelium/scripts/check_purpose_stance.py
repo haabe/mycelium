@@ -109,9 +109,33 @@ def strip_evidence(node):
     return node
 
 
+#: The fields the staleness hash is over. Read at TOP LEVEL of purpose.yml only.
+#: "All three absent" is NOT a hashable state — three nulls hash to one constant that is
+#: identical for every such project and can never mismatch. See _list_findings.
+GOVERNING_FIELDS = ("why", "how", "what")
+
+
+def _governing_absent(purpose: dict) -> bool:
+    """True when no governing field carries intent, so the hash carries none either.
+
+    EMPTY COUNTS AS ABSENT, and that is the case that actually occurs. The LEGACY (pre-plugin,
+    v0.1.x) canvas template wrote `why: ""`, `how: []`, `what: []`, so any legacy-migrated project
+    can carry one; the framework repo's own v0.1.0 scaffold still held that shape on 2026-08-31.
+    A None-only test passes those through and hashes them to a SECOND constant — the same defect
+    with a different fingerprint. Whitespace-only strings count too.
+    """
+    for key in GOVERNING_FIELDS:
+        value = purpose.get(key)
+        if isinstance(value, str) and value.strip():
+            return False
+        if not isinstance(value, str) and value:
+            return False
+    return True
+
+
 def _hash_fields(purpose: dict, strip: bool) -> str:
     parts = []
-    for key in ("why", "how", "what"):
+    for key in GOVERNING_FIELDS:
         value = purpose.get(key)
         if strip:
             value = strip_evidence(value)
@@ -272,8 +296,24 @@ def _property_findings(pp: dict) -> tuple[list[str], list[dict]]:
 def _list_findings(pp: dict, purpose: dict) -> list[str]:
     """Staleness and confirmation: the anti-drift half, and it needs no judgement."""
     out: list[str] = []
+    # REFUSE TO COMPARE BEFORE COMPARING. With no governing field at top level the hash is
+    # sha256("null\x1fnull\x1fnull") — one constant, shared by every project in this shape,
+    # unchanged by any rewrite of the purpose. A match then proves nothing, so reporting it as
+    # a pass is the silent-green this checker was built to remove. Found 2026-08-31 on a
+    # project whose purpose lived under a nested `purpose_statement:` mapping.
+    governing_absent = _governing_absent(purpose)
+    if governing_absent:
+        out.append(
+            "purpose.yml has no why/how/what at TOP LEVEL, so the staleness hash is taken "
+            "over three nulls. It is the same constant for every project in this shape and "
+            "CANNOT MISMATCH, which makes drift below this purpose undetectable rather than "
+            "merely unreported. A nested mapping (e.g. `purpose_statement:` holding `why:`) "
+            "is the shape that produces this. Move the governing fields to the top level and "
+            "re-derive with /mycelium:purpose-properties."
+        )
     recorded = pp.get("derived_from_hash")
-    if recorded and recorded not in (purpose_hash(purpose), legacy_purpose_hash(purpose)):
+    known = (purpose_hash(purpose), legacy_purpose_hash(purpose))
+    if recorded and not governing_absent and recorded not in known:
         if pp.get("hash_algorithm") == HASH_ALGORITHM:
             out.append(
                 "purpose_properties: derived_from_hash does not match the INTENT of the "

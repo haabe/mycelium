@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://mycelium.dev/schemas/canvas/purpose.schema.json",
   "title": "Purpose Canvas",
-  "description": "L0 Purpose — Sinek Golden Circle (why/how/what) + JTBD anchoring. The framework's entry-point canvas, written first by /interview. Permissive by design: only type-pins the established top-level keys; a fresh brief writes a minimal subset. Added 2026-06-12 (gap analysis: the L0 entry point had no schema).",
+  "description": "L0 Purpose — Sinek Golden Circle (why/how/what) + JTBD anchoring. The framework's entry-point canvas, written first by /interview. Permissive AT ENTRY by design: a fresh brief writes a minimal subset, because Sinek's own diagnosis is that most people start from what they are building and cannot yet name the change they want true in the world — eliciting the why is this framework's job, not its entry fee. NOT permissive once work is DERIVED from it: `dependentSchemas` requires `why` as soon as `purpose_properties` exists, because binding properties derived from an absent purpose are derived from nothing. Added 2026-06-12 (gap analysis: the L0 entry point had no schema); conditional requirement added 2026-08-31 (v0.145.0) after a dogfood finding that nothing anywhere checked whether `why` was present.",
   "type": "object",
   "properties": {
     "schema_version": {
@@ -10,7 +10,7 @@
     },
     "why": {
       "type": "string",
-      "description": "Purpose statement — why this exists (Sinek)."
+      "description": "Purpose statement — why this exists (Sinek). May be absent or empty AT ENTRY, but not once `purpose_properties` exists; see dependentSchemas. The empty form `why: \"\"` comes from the legacy (pre-plugin, v0.1.x) canvas template; current /mycelium:setup writes no purpose.yml at all."
     },
     "how": {
       "type": "array"
@@ -151,5 +151,18 @@
       ]
     }
   },
-  "additionalProperties": true
+  "additionalProperties": true,
+  "dependentSchemas": {
+    "purpose_properties": {
+      "required": [
+        "why"
+      ],
+      "properties": {
+        "why": {
+          "minLength": 1
+        }
+      },
+      "description": "Deriving binding properties from a purpose with no `why` is deriving them from nothing. `required` alone is not enough: a present-but-empty `why: \"\"` — the legacy template's shape — satisfies `required` while carrying no purpose, so minLength pins it. Entry stays open; derivation does not."
+    }
+  }
 }

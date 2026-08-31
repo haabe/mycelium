@@ -1046,3 +1046,109 @@ def test_entries_without_a_status_are_not_guessed_at(tmp_path, scripts_path):
     v = _import_validator(scripts_path)
     canvas = _tasks(tmp_path, {"pending_tasks": [{"id": "ht-999"}]})
     assert v.task_list_findings(canvas) == []
+
+
+# --- purpose.yml carries a `why` at all ---------------------------------------
+# THE GAP (dogfood 2026-08-31). interview/SKILL.md promises a user who cannot yet name the
+# change "proceeds, flagged for the deeper Phase-1 purpose questions". Nothing did the
+# flagging: no script read purpose["why"] to test presence, and no hook did either. So
+# "permissive at entry" was indistinguishable from "permanently empty, and nobody will say
+# so" — the same silent-green this release fixes one level down.
+
+
+def _purpose_canvas(tmp_path, body):
+    canvas = tmp_path / "canvas"
+    canvas.mkdir(parents=True, exist_ok=True)
+    (canvas / "purpose.yml").write_text(body)
+    return canvas
+
+
+def test_absent_why_is_flagged_at_entry(tmp_path, scripts_path):
+    v = _import_validator(scripts_path)
+    out = v.purpose_why_findings(_purpose_canvas(tmp_path, "what:\n  - a microblog\n"))
+    assert out and "no `why`" in out[0]
+
+
+def test_empty_string_why_is_flagged_because_the_template_ships_one(tmp_path, scripts_path):
+    """THE CASE THAT DEFEATED THE FIRST VERSION OF THIS CHECK.
+
+    An `is not None` test passes `why: ""` — the shape the LEGACY (pre-plugin, v0.1.x) canvas
+    template wrote, still sitting in the framework repo's own v0.1.0 scaffold on 2026-08-31.
+    A key that is present and empty satisfies both a naive presence test and a bare
+    JSON-Schema `required`. Current /mycelium:setup writes no purpose.yml at all.
+    """
+    v = _import_validator(scripts_path)
+    assert v.purpose_why_findings(_purpose_canvas(tmp_path, 'why: ""\nhow: []\n'))
+
+
+def test_whitespace_only_why_is_flagged(tmp_path, scripts_path):
+    v = _import_validator(scripts_path)
+    assert v.purpose_why_findings(_purpose_canvas(tmp_path, 'why: "   "\n'))
+
+
+def test_a_real_why_is_not_flagged(tmp_path, scripts_path):
+    v = _import_validator(scripts_path)
+    assert v.purpose_why_findings(
+        _purpose_canvas(tmp_path, "why: know what is worth building\n")) == []
+
+
+def test_no_purpose_file_is_a_different_state_and_is_not_flagged(tmp_path, scripts_path):
+    """Absent canvas is 'never started', not 'started without a why'. Flagging it would fire
+    on every project that has not run /mycelium:setup."""
+    v = _import_validator(scripts_path)
+    canvas = tmp_path / "canvas"
+    canvas.mkdir(parents=True, exist_ok=True)
+    assert v.purpose_why_findings(canvas) == []
+
+
+def test_the_flag_never_fails_a_build(tmp_path, scripts_path):
+    """Entry-tier only. The hard requirement lives in the schema, gated on
+    purpose_properties — see test_deriving_properties_from_an_empty_why_fails_validation."""
+    v = _import_validator(scripts_path)
+    canvas = _purpose_canvas(tmp_path, 'why: ""\n')
+    assert v.purpose_why_findings(canvas)          # it is reported
+    v.print_advisory_warnings(canvas)              # and printing it raises nothing
+
+
+# --- the derived case is a HARD requirement, not an advisory ------------------
+
+
+def _purpose_main(tmp_path, validator, monkeypatch, body):
+    canvas_dir = tmp_path / ".claude" / "canvas"
+    canvas_dir.mkdir(parents=True)
+    (canvas_dir / "purpose.yml").write_text(body)
+    _setup_main_env(validator, monkeypatch, canvas_dir, _real_schema_dir())
+    with __import__("pytest").raises(SystemExit) as exc:
+        validator.main()
+    return exc.value.code
+
+
+def test_deriving_properties_from_an_empty_why_fails_validation(tmp_path, scripts_path, monkeypatch):
+    """`required: [why]` alone would PASS this: the key is present. minLength is what bites."""
+    v = _import_validator(scripts_path)
+    code = _purpose_main(tmp_path, v, monkeypatch,
+                         'why: ""\npurpose_properties:\n  properties: []\n')
+    assert code == 1
+
+
+def test_deriving_properties_from_an_absent_why_fails_validation(tmp_path, scripts_path, monkeypatch):
+    v = _import_validator(scripts_path)
+    code = _purpose_main(tmp_path, v, monkeypatch,
+                         "what: []\npurpose_properties:\n  properties: []\n")
+    assert code == 1
+
+
+def test_an_empty_why_without_derived_properties_still_passes(tmp_path, scripts_path, monkeypatch):
+    """The onboarding path stays open. This is the line the whole design turns on: entry is
+    permissive because Sinek's diagnosis is that people start from what they are building;
+    derivation is not, because properties taken from an absent purpose are taken from nothing."""
+    v = _import_validator(scripts_path)
+    code = _purpose_main(tmp_path, v, monkeypatch, 'why: ""\nhow: []\nwhat: []\n')
+    assert code == 0
+
+
+def test_a_real_why_with_derived_properties_passes(tmp_path, scripts_path, monkeypatch):
+    v = _import_validator(scripts_path)
+    code = _purpose_main(tmp_path, v, monkeypatch,
+                         "why: know what is worth building\npurpose_properties:\n  properties: []\n")
+    assert code == 0

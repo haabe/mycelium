@@ -560,3 +560,83 @@ def test_a_correctly_stamped_hash_is_silent():
     pp = {"derived_from_hash": _ps().purpose_hash(p), "hash_algorithm": "intent-v1",
           "confirmed_by": "human", "properties": []}
     assert m._list_findings(pp, p) == []
+
+
+# --- rot-mode 4: the hash that cannot mismatch --------------------------------
+# Found 2026-08-31 on a non-software project whose purpose lived under a nested
+# `purpose_statement:` mapping. purpose.get("why"/"how"/"what") all missed, the hash was
+# sha256("null\x1fnull\x1fnull") for every such project, and the drift branch could never
+# fire. validate_canvas PASSED and the checker reported OK: silent in both directions.
+
+
+def _nested_purpose(canvas, **over):
+    """A purpose.yml with NO governing field at top level — the shape that broke it."""
+    doc = {"purpose_statement": {"why": "Know what is worth building.",
+                                 "how": ["anonymously"], "what": "a microblog"}}
+    pp = over.pop("purpose_properties", None)
+    doc.update(over)
+    if pp is not None:
+        doc["purpose_properties"] = pp
+    (canvas / "purpose.yml").write_text(yaml.safe_dump(doc, allow_unicode=True, sort_keys=False))
+    return doc
+
+
+def test_the_all_absent_hash_is_a_shared_constant_not_a_project_fingerprint():
+    """The defect itself, asserted directly: two unrelated purposes, one hash."""
+    m = _mod()
+    a = m.purpose_hash({"purpose_statement": {"why": "one thing"}})
+    b = m.purpose_hash({"something_else": {"why": "a completely different thing"}})
+    assert a == b, "distinct purposes must not share a hash"
+    assert m._governing_absent({"purpose_statement": {"why": "x"}}) is True
+    assert m._governing_absent({"why": "x"}) is False
+
+
+def test_absent_governing_fields_are_reported_not_silently_hashed(canvas):
+    m = _mod()
+    doc = _nested_purpose(canvas)
+    doc["purpose_properties"] = _props(m, doc, [BINDING])
+    _nested_purpose(canvas, purpose_properties=doc["purpose_properties"])
+    _sol(canvas, {"verdict": "preserves", "note": "no sign-in anywhere"})
+    out = m.purpose_stance_findings(canvas)
+    assert any("no why/how/what at TOP LEVEL" in f for f in out), out
+
+
+def test_the_nested_shape_reports_exactly_one_finding_more_than_the_top_level_shape(canvas):
+    """The silent half, asserted as a DELTA.
+
+    An earlier version of this test asserted only that findings were non-empty — which was
+    already true for unrelated reasons, so it passed against the unfixed script. That is the
+    same false green this whole module is about, reintroduced in its own test. Comparing the
+    two shapes isolates the one finding the fix adds.
+    """
+    m = _mod()
+    doc = _purpose(canvas)
+    _purpose(canvas, purpose_properties=_props(m, doc, [BINDING]))
+    _sol(canvas, {"verdict": "preserves", "note": "no sign-in anywhere"})
+    baseline = m.purpose_stance_findings(canvas)
+
+    ndoc = _nested_purpose(canvas)
+    _nested_purpose(canvas, purpose_properties=_props(m, ndoc, [BINDING]))
+    nested = m.purpose_stance_findings(canvas)
+
+    extra = [f for f in nested if f not in baseline]
+    assert len(extra) == 1, f"expected exactly one added finding, got {extra}"
+    assert "no why/how/what at TOP LEVEL" in extra[0]
+
+
+def test_rewriting_an_absent_purpose_still_matches_which_is_why_it_is_flagged(canvas):
+    """Proves the drift branch genuinely cannot fire, rather than merely asserting it."""
+    m = _mod()
+    before = m.purpose_hash(_nested_purpose(canvas))
+    after = m.purpose_hash({"purpose_statement": {"why": "TOTALLY REWRITTEN", "what": "x"}})
+    assert before == after, "hash moved; the premise of this bug no longer holds"
+
+
+def test_a_normal_top_level_purpose_is_unaffected(canvas):
+    """The fix must not fire on the shape every existing project uses."""
+    m = _mod()
+    doc = _purpose(canvas)
+    _purpose(canvas, purpose_properties=_props(m, doc, [BINDING]))
+    _sol(canvas, {"verdict": "preserves", "note": "no sign-in anywhere"})
+    out = m.purpose_stance_findings(canvas)
+    assert not any("TOP LEVEL" in f for f in out), out
