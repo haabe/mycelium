@@ -1245,3 +1245,53 @@ def test_an_unlock_on_a_non_binding_property_is_rejected():
 def test_the_existing_boolean_shape_still_validates_unchanged():
     """Every project predating this release must keep passing."""
     assert _purpose_schema_errors(_pp(binding=True, contradicted_by=["sign-in first"])) == []
+
+
+# --- technical_capabilities_required: the OUTER object, read for its meaning --
+# Founder, 2026-08-31: "shouldn't the outer field be the one being wired? that's the data
+# object being used?" Traversing generic `derived_from` links inside an object is not the
+# same as anything reading the object for what it means.
+
+
+def _caps(tmp_path, caps):
+    import yaml
+    canvas = tmp_path / "canvas"
+    canvas.mkdir(parents=True, exist_ok=True)
+    (canvas / "purpose.yml").write_text(
+        yaml.safe_dump({"technical_capabilities_required": caps}, sort_keys=False))
+    return canvas
+
+
+def test_a_capability_with_no_fallback_is_a_silent_dependency(tmp_path, scripts_path):
+    v = _import_validator(scripts_path)
+    out = v.technical_capability_findings(
+        _caps(tmp_path, [{"id": "tcr-001", "substrate_status": {"a": 1}}]))
+    assert any("fallback_if_absent" in f for f in out)
+
+
+def test_a_row_missing_a_column_its_siblings_record_is_flagged(tmp_path, scripts_path):
+    """The matrix is only useful if every row covers the same columns."""
+    v = _import_validator(scripts_path)
+    out = v.technical_capability_findings(_caps(tmp_path, [
+        {"id": "tcr-001", "fallback_if_absent": "x", "substrate_status": {"a": 1, "b": 2}},
+        {"id": "tcr-002", "fallback_if_absent": "y", "substrate_status": {"a": 1}},
+    ]))
+    assert any("omits b" in f and "tcr-002" in f for f in out)
+
+
+def test_a_complete_matrix_is_silent(tmp_path, scripts_path):
+    v = _import_validator(scripts_path)
+    out = v.technical_capability_findings(_caps(tmp_path, [
+        {"id": "tcr-001", "fallback_if_absent": "x", "substrate_status": {"a": 1, "b": 2}},
+        {"id": "tcr-002", "fallback_if_absent": "y", "substrate_status": {"a": 1, "b": 2}},
+    ]))
+    assert out == []
+
+
+def test_absent_capabilities_block_is_not_an_error(tmp_path, scripts_path):
+    """Most projects will never write this block; firing on them is how a check gets muted."""
+    v = _import_validator(scripts_path)
+    canvas = tmp_path / "canvas"
+    canvas.mkdir(parents=True, exist_ok=True)
+    (canvas / "purpose.yml").write_text("why: something\n")
+    assert v.technical_capability_findings(canvas) == []

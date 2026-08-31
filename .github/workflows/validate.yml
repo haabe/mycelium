@@ -159,6 +159,15 @@ jobs:
         # harness/field-consumers.yml, so this fails only on a NEW one.
         run: python3 plugins/mycelium/scripts/check_field_wiring.py --strict
 
+      - name: Target progress (is anything comparing an actual against the target?)
+        # `target_value` sat beside `current_value` and NOTHING read either — the two halves
+        # of a measurement, adjacent in the same object, never compared. Founder-ruled
+        # 2026-08-31 to wire it. REPORT-ONLY (no --strict): the canvas legitimately holds
+        # aspirational targets, and failing a build over an unmeasured one teaches people to
+        # delete the target rather than measure it, which is the inversion the field exists
+        # to prevent.
+        run: python3 plugins/mycelium/scripts/check_target_progress.py --canvas-dir .claude/canvas
+
       - name: touch_log entries are in ascending date order
         # Every reader treats touch_log[-1] as "what happened last". An out-of-order
         # log looks wrong to nobody and parses cleanly; it just returns the wrong

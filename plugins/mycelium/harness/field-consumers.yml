@@ -28,45 +28,72 @@
 reviewed:
   - field: derived_at
     canvas: purpose
-    consumer: null
-    verdict: UNRULED
+    consumer: human
+    verdict: human-only
     note: >-
-      Sits beside derived_from_hash, which IS read (check_purpose_stance). If the intent was
-      "when were these properties derived", the hash already answers "are they stale" and this
-      may be human-only. If the intent was a staleness horizon, it needs a reader and does not
-      have one — that is the kill_criterion.date shape again.
+      FOUNDER-RULED 2026-08-31 ("Agreed"). `derived_from_hash` sits beside it and IS read by
+      check_purpose_stance, and it already answers the question that matters — are these
+      properties stale. `derived_at` answers "when", which nothing needs to compute. Recorded so
+      the absence of a reader is a decision rather than an omission.
+
+  - field: validation_status_per_dimension
+    canvas: jobs-to-be-done
+    consumer: human
+    verdict: human-only
+    note: >-
+      RULED BY ITS OWN SCHEMA, not by asking: the field's description already says "Aggregate
+      provenance.confidence remains the single number used by gates and threshold calculations;
+      this block is for legibility, not gate computation." The intent was declared at the point
+      of definition and simply never recorded here. This is what step (d) of the four-step
+      new-field rule asks for, done in advance by whoever wrote the schema.
+
+  - field: target_value
+    canvas: opportunities, north-star
+    consumer: scripts/check_target_progress.py
+    verdict: wired
+    note: >-
+      FOUNDER-RULED 2026-08-31 ("wire it"). It sat beside `current_value` — the two halves of a
+      measurement, adjacent in the same object — and NOTHING read either one. The new gate
+      computes the gap, and reports "target set, current_value null" as its own state, because a
+      target nothing is measured against cannot fail. First run on the dogfood canvas: 8 targets,
+      2 measured (the north star reads 0 of 10), 6 not comparable and each said out loud.
+
+  - field: technical_capabilities_required
+    canvas: purpose
+    consumer: scripts/validate_canvas.py#technical_capability_findings
+    verdict: wired
+    note: >-
+      FOUNDER-ASKED 2026-08-31 to check whether the tcr- ids form a real pattern. THEY DO: six
+      entries, each with capability / why_required / substrate_status / fallback_if_absent, and
+      `derived_from` links to ai-001..ai-006 that all resolve. Nothing read them, so deleting an
+      ai- invariant would have dangled a tcr- link silently.
+      WHAT THE INVESTIGATION FOUND UNDERNEATH: `derived_from` is a SYNONYM for the canonical
+      `trace.upstream[].target_id`, which appears ZERO times in the entire canvas while
+      `derived_from` appears 12 times. The canonical shape has never once been written. So the
+      alias was wired rather than the data migrated — adoption beats orthodoxy — and the
+      dangling-reference machinery now has edges to check for the first time. Verified by
+      breaking one link: it is caught.
+      FIRST ATTEMPT WAS WRONG AND THE FOUNDER CAUGHT IT. It was recorded as wired because the
+      `derived_from` links INSIDE it had become trace edges — but no script contained the string
+      `technical_capabilities_required`, and this release's own new backing-test said so. His
+      correction: *"shouldn't the outer field be the one being wired? that's the data object
+      being used?"* Right. Traversing generic link attributes inside an object is not the same
+      as anything reading the object for what it MEANS.
+      NOW READ BY NAME, FOR ITS MEANING: `technical_capability_findings` checks that every
+      required capability says what breaks without it (`fallback_if_absent`), and that no row of
+      the substrate matrix omits a column its siblings record — a portability claim nobody made
+      and nobody can check. The `derived_from` edge wiring stays; it is a second, weaker consumer.
+      NOTE FOR A LATER READER: the framework ships `hooks.codex.json` and `hooks.cursor.json`,
+      but no capability's `substrate_status` records codex or cursor. The matrix is internally
+      consistent, so this check stays silent on it — consistency is not coverage.
 
   - field: publication_cadence
     canvas: content-metrics
     consumer: null
-    verdict: UNRULED
+    verdict: DELETED
     note: >-
-      A cadence is a promise with a clock. Nothing computes overdue-ness against it, so it
-      cannot currently fire — compare `last_assessed` in bvssh-health, which session-start.sh
-      does read for exactly this purpose. Either wire it the same way or declare it human-only.
-
-  - field: target_value
-    canvas: opportunities
-    consumer: null
-    verdict: UNRULED
-    note: >-
-      A target nothing compares an actual against. The strongest candidate for real wiring in
-      this list: a target with no comparison is the measurement-theatre shape the framework
-      exists to prevent.
-
-  - field: technical_capabilities_required
-    canvas: purpose
-    consumer: null
-    verdict: UNRULED
-    note: >-
-      Plausibly a human scoping note rather than a pipeline input. Named here so that is a
-      recorded decision rather than an omission.
-
-  - field: validation_status_per_dimension
-    canvas: jobs-to-be-done
-    consumer: null
-    verdict: UNRULED
-    note: >-
-      A per-dimension status that no check aggregates and no renderer draws. Under the rule,
-      rendering it WOULD wire it — a JTBD dimension chart is exactly the "more humane form"
-      the founder named.
+      FOUNDER-RULED 2026-08-31 ("Looks deletable, as there's only one usecase"). Every sub-field
+      was null — {current, target, classification, measurement_period} — so it was not
+      "human-only", it was unfinished. Removed from the schema. Kept in this registry as a
+      tombstone so a later agent proposing the same field finds the ruling instead of
+      reinventing it, per step (b) of the four-step rule.

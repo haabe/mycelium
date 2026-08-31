@@ -4,6 +4,67 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-31.
 
+## v0.151.0 - the five unruled fields, ruled and acted on
+
+The founder ruled all five baselined fields. Four were acted on in code; one was already ruled
+by its own schema and only needed recording.
+
+**`target_value` — WIRED (`check_target_progress.py`).** It sat beside `current_value`: the two halves
+of a measurement, adjacent in the same object, and **nothing read either one**. The new gate computes
+the gap and reports **"target set, current_value null"** as its own state, because a target nothing is
+measured against cannot fail — the same shape as a prediction that can never be overdue. First run on
+the dogfood canvas: 8 targets, **2 measured (the north star reads 0 of 10)**, 6 not comparable, each
+skip stated with its reason. REPORT-ONLY: the canvas legitimately holds aspirational targets, and
+failing a build over one teaches people to delete the target rather than measure it.
+
+**`technical_capabilities_required` — WIRED, and the investigation found something bigger.** The
+`tcr-` ids are a real pattern: six entries with `capability` / `why_required` / `substrate_status` /
+`fallback_if_absent`, and `derived_from` links to `ai-001`..`ai-006` that all resolve. Nothing read
+them, so deleting an `ai-` invariant would have dangled a `tcr-` link in silence.
+**Underneath it: `derived_from` is a synonym for the canonical `trace.upstream[].target_id`, which
+appears ZERO times in the entire canvas while `derived_from` appears 12 times.** The canonical shape
+has never once been written, and the dangling-reference machinery has therefore never had an edge to
+check. **The alias was wired rather than the data migrated** — adoption beats orthodoxy, and 12 real
+links become checkable today instead of after a migration to a shape with no uptake. Bare ids now
+resolve when exactly one canvas defines them; ambiguity is still an error naming the colliding files.
+Verified by breaking a link: caught.
+
+**`publication_cadence` — DELETED.** Every sub-field was null, so it was not human-only, it was
+unfinished. Removed from the schema and kept in `field-consumers.yml` as a **tombstone**, so a later
+agent proposing the same field finds the ruling instead of reinventing it — step (b) of the four-step
+rule, working in the direction it was written for.
+
+**`derived_at` — human-only.** `derived_from_hash` sits beside it, is read, and already answers the
+question that matters. This one answers "when", which nothing needs.
+
+**`validation_status_per_dimension` — human-only, and it ruled itself.** Its schema description
+already said *"this block is for legibility, not gate computation"*. The intent was declared at the
+point of definition and never recorded in the registry — which is exactly what step (d) asks for, done
+in advance by whoever wrote the schema.
+
+Net: **38 promise-shaped fields become 37; unwired drops from 5 to 3**, and all three remaining carry
+a written verdict rather than an omission.
+
+**THE FOUNDER CORRECTED THE ARCHITECTURE, AND HE WAS RIGHT.** The first attempt recorded
+`technical_capabilities_required` as wired because the `derived_from` links INSIDE it had become trace
+edges. His question: *"shouldn't the outer field be the one being wired? that's the data object being
+used?"* Yes. **Traversing generic link attributes inside an object is not the same as anything reading
+the object for what it MEANS.** It is now read by name: `technical_capability_findings` checks that
+every required capability says what breaks without it, and that no row of the substrate matrix omits a
+column its siblings record — a portability claim nobody made and nobody can check.
+
+**A finding that check deliberately stays silent on:** the framework ships `hooks.codex.json` and
+`hooks.cursor.json`, but no capability's `substrate_status` records codex or cursor. The matrix is
+internally CONSISTENT, and consistency is not coverage. Recorded in `field-consumers.yml` for a later
+reader rather than turned into a warning the check cannot justify.
+
+**THIS RELEASE'S OWN NEW TEST CAUGHT THIS RELEASE OVERCLAIMING.** A test added here asserts that a
+`wired` verdict is backed by an actual consumer — and it immediately failed on
+`technical_capabilities_required`, because **no script contains that string**. What was wired is the
+`derived_from` edges INSIDE it, traversed generically. The tempting fix was to name the field in a
+script so the name-based scanner would see it; **that is gaming the instrument to make a number look
+right.** That test is what surfaced the question the founder then answered correctly.
+
 ## v0.150.0 - the pre-push hook was doing CI's job, and it cost two failures in one day
 
 **WHAT THE DURATION ACTUALLY COST, because neither failure looked like a slow hook.** With `--cov` the

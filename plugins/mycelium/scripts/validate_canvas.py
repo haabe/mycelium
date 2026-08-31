@@ -167,6 +167,23 @@ def validate_canvas_against_schema(canvas_path: Path, registry: Registry):
     return errors
 
 
+def _collect_derived_from_edges(node: dict, path_prefix: str, ctx: dict) -> None:
+    """Treat `derived_from` as a trace edge. Prose values are skipped on purpose.
+
+    `derived_from` is also written as a sentence — tcr-006 carries "principle 3 + observed
+    dogfood requirement (not yet in invariants ...)" — and turning that into a dangling
+    reference error would train people to stop writing the field at all.
+    """
+    derived = node.get("derived_from")
+    if derived is None:
+        return
+    source = node.get("id") or path_prefix
+    candidates = derived if isinstance(derived, list) else [derived]
+    for candidate in candidates:
+        if isinstance(candidate, str) and ID_PREFIX_RE.match(candidate.strip()):
+            ctx["graph"][source].add(candidate.strip())
+
+
 def _walk_canvas(node, path_prefix, ctx):  # noqa: C901
     """Recursive descent over a canvas tree; collects ids, trace edges, file_ids.
 
@@ -190,6 +207,20 @@ def _walk_canvas(node, path_prefix, ctx):  # noqa: C901
                         target = edge["target_id"]
                         source = node.get("id") or path_prefix
                         ctx["graph"][source].add(target)
+
+        # `derived_from` IS A TRACE EDGE, and wiring the used name beats migrating to the
+        # unused one. Measured 2026-08-31 on the dogfood canvas: `trace:` blocks appear ZERO
+        # times across every canvas file, while `derived_from` appears 12 times — so the
+        # canonical shape has never once been written, and the dangling-reference machinery
+        # below has never had an edge to check. Agents reached for `derived_from` naturally;
+        # nobody reached for `trace`. Treating it as an alias makes 12 real links checkable
+        # today rather than after a migration to a shape with no adoption.
+        #
+        # ONLY ID-SHAPED VALUES BECOME EDGES. `derived_from` is also written as prose — e.g.
+        # tcr-006 carries "principle 3 + observed dogfood requirement (not yet in invariants
+        # ...)" — and turning a sentence into a dangling-reference error would train people
+        # to stop writing the field. Prose is skipped, silently and on purpose.
+        _collect_derived_from_edges(node, path_prefix, ctx)
 
         for k, v in node.items():
             if k != "trace":
@@ -279,6 +310,23 @@ def resolve_trace_references(graph, all_ids):
                         f"— does not resolve to any known canvas entry",
                     )
             elif target not in all_ids and target not in external_namespaces:
+                # A BARE ENTRY ID RESOLVES IF EXACTLY ONE CANVAS DEFINES IT. Added 2026-08-31
+                # with the `derived_from` alias: those edges are written as bare ids
+                # ("ai-002"), because the author knows the id and not which file holds it.
+                # Requiring `purpose#ai-002` would have failed 12 real, correct links and
+                # taught people to stop writing the field. AMBIGUITY IS STILL AN ERROR: if two
+                # canvases define the same id the reference genuinely does not identify one,
+                # and the message says which files collided.
+                holders = sorted(k.split("#", 1)[0] for k in all_ids
+                                 if "#" in k and k.split("#", 1)[1] == target)
+                if len(holders) == 1:
+                    continue
+                if len(holders) > 1:
+                    errors.append(
+                        f"Trace edge from '{source}' references '{target}' — AMBIGUOUS, "
+                        f"defined in {', '.join(holders)}. Qualify it as <canvas>#{target}.",
+                    )
+                    continue
                 errors.append(
                     f"Trace edge from '{source}' references '{target}' "
                     f"— does not resolve to any canvas file",
@@ -822,6 +870,62 @@ def purpose_why_findings(canvas_dir):
     ]
 
 
+def technical_capability_findings(canvas_dir):
+    """WARN-tier: does each required capability say what happens when it is absent?
+
+    THE GAP (founder, 2026-08-31). `technical_capabilities_required` was recorded as wired
+    because the `derived_from` links inside it had become trace edges. The founder pushed
+    back: *"shouldn't the outer field be the one being wired? that's the data object being
+    used?"* — and that is right. Traversing generic link attributes inside an object is not
+    the same as anything reading the object for what it MEANS. This function reads it by
+    name, for its meaning: a list of capabilities the framework requires from its substrate.
+
+    WHAT IT CHECKS, and both are the same failure in different clothes — a dependency that
+    is silent about its own absence:
+      * a capability with no `fallback_if_absent` does not say what breaks without it;
+      * a capability whose `substrate_status` omits a substrate its SIBLINGS record. The
+        matrix is only useful if every row covers the same columns; a row missing one is a
+        portability claim nobody made and nobody can check.
+
+    WARN, never fail. The matrix is a judgement about other people's tools and will always
+    be partly stale.
+    """
+    path = canvas_dir / "purpose.yml"
+    if not path.exists():
+        return []
+    try:
+        doc = load_yaml(path) or {}
+    except Exception:  # noqa: BLE001 — parse failures belong to the fail-loud pass
+        return []
+    caps = doc.get("technical_capabilities_required") if isinstance(doc, dict) else None
+    if not isinstance(caps, list) or not caps:
+        return []
+
+    out = []
+    covered = {}
+    for cap in caps:
+        if not isinstance(cap, dict):
+            continue
+        cid = cap.get("id", "<no id>")
+        if not cap.get("fallback_if_absent"):
+            out.append(
+                f"technical_capabilities_required {cid}: no `fallback_if_absent`. A required "
+                f"capability that does not say what breaks without it is a silent dependency — "
+                f"nothing downstream can tell a degraded run from a full one.")
+        status = cap.get("substrate_status")
+        covered[cid] = set(status) if isinstance(status, dict) else set()
+
+    every_substrate = set().union(*covered.values()) if covered else set()
+    for cid, subs in covered.items():
+        missing = sorted(every_substrate - subs)
+        if missing:
+            out.append(
+                f"technical_capabilities_required {cid}: `substrate_status` omits "
+                f"{', '.join(missing)}, which sibling capabilities record. A row missing a "
+                f"column is a portability claim nobody made and nobody can check.")
+    return out
+
+
 def print_advisory_warnings(canvas_dir):
     """Emit the WARN-tier findings that never fail a build.
 
@@ -834,6 +938,7 @@ def print_advisory_warnings(canvas_dir):
         ("cycle record", cycle_record_findings(canvas_dir)),
         ("task list", task_list_findings(canvas_dir)),
         ("purpose why", purpose_why_findings(canvas_dir)),
+        ("tech capability", technical_capability_findings(canvas_dir)),
     ):
         for w in findings:
             print(f"  WARN ({label}): {w}")

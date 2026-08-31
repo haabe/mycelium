@@ -186,9 +186,33 @@ def test_the_gate_set_only_names_scripts_that_exist():
     assert not missing, f"gate set names non-existent script(s): {missing}"
 
 
-@pytest.mark.parametrize("gate", ["check_gate_parity.py", "check_coverage_floor.py"])
-def test_the_set_contains_its_own_guard_and_the_coverage_floor(gate):
-    """The parity guard must gate itself, or CI can outrun it silently."""
+def test_the_parity_guard_gates_itself():
+    """It must RUN locally, not merely be named: if the guard that detects CI outrunning
+    the local set is itself CI-only, it can only report the drift after a push."""
     text = (REPO / "plugins" / "mycelium" / "scripts" / "local-gate-set.txt").read_text()
     declared, _ = cgp.parse_gate_set(text)
-    assert gate in declared
+    assert "check_gate_parity.py" in declared
+
+
+def test_the_coverage_floor_is_declared_or_waived_but_never_silently_absent():
+    """The invariant is NOT 'runs locally' — it is 'never quietly missing'.
+
+    Narrowed 2026-08-31 (v0.150.0) when the floor was deliberately waived: it needs a
+    coverage.json from a --cov run costing 192s against 78s without, and that duration
+    caused two failures in one day (GitHub closing the idle SSH connection mid-hook so
+    every push died AFTER passing, and an agent reaching for --no-verify and pushing a red
+    commit). CI enforces the floor on every push, so nothing is unenforced.
+
+    THE ORIGINAL FEAR IS STILL GUARDED, and it is the 2026-08-09 drift: 11 CI gates against
+    4 local, seven classes of defect that could only go red after a push. That happened by
+    SILENCE. A waiver is the opposite — parity prints "17 declared, 1 waived" with the
+    reason on every run. So this asserts presence in one form or the other, and that a
+    waiver carries a real reason rather than an empty string.
+    """
+    text = (REPO / "plugins" / "mycelium" / "scripts" / "local-gate-set.txt").read_text()
+    declared, waived = cgp.parse_gate_set(text)
+    gate = "check_coverage_floor.py"
+    assert gate in declared or gate in waived, (
+        f"{gate} is neither declared nor waived — that is the silent absence this guards")
+    if gate in waived:
+        assert len(waived[gate].strip()) > 20, "a waiver with no real reason is a silent drop"

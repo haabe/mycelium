@@ -35,15 +35,45 @@ def _mod():
 
 
 def test_the_registry_is_not_counted_as_a_consumer():
-    """Rot-mode 1. Every field the registry names must still scan as unwired."""
+    """Rot-mode 1, narrowed 2026-08-31 when the first fields were actually WIRED.
+
+    The invariant is not "every registry entry is unwired" — entries with `verdict: wired`
+    now have real consumers, which is the point of the registry. The invariant is that
+    naming a field in field-consumers.yml must not BY ITSELF make it look consumed. So the
+    check applies to entries that claim no code consumer: human-only, UNRULED, DELETED.
+    Those must still scan as unwired, or the record of a field having no reader is being
+    counted as reading it.
+    """
     m = _mod()
     rows, registry = m.scan(ROOT)
     assert registry, "registry should hold the baselined fields"
     unwired = {n for n, _, kinds in rows if not kinds}
-    for name in registry:
+    for name, entry in registry.items():
+        if entry.get("verdict") in ("wired", "wired-via-contents", "DELETED"):
+            continue
         assert name in unwired, (
             f"{name} is recorded as having NO consumer, yet the scan found one — "
             "the registry is laundering its own contents")
+
+
+def test_a_wired_verdict_is_backed_by_an_actual_consumer():
+    """The other direction, added with the first real wirings: a registry claiming a field
+    is wired while nothing reads it would be a lie that reads as a green.
+
+    `wired-via-contents` is deliberately NOT accepted here. That verdict exists for a container
+    whose inner edges are traversed generically while its own name is read by nothing — and it
+    was created because this test caught `technical_capabilities_required` claiming plain
+    `wired` when no script contained the string. The tempting fix was to name the field in a
+    script so the scanner would see it; that is gaming the instrument.
+    """
+    m = _mod()
+    rows, registry = m.scan(ROOT)
+    consumers = {n: kinds for n, _, kinds in rows}
+    for name, entry in registry.items():
+        if entry.get("verdict") != "wired":
+            continue
+        assert consumers.get(name), (
+            f"{name} is recorded as wired, but the scan finds no consumer for it")
 
 
 def test_a_renderer_counts_as_a_consumer():
