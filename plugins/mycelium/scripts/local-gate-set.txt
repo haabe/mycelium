@@ -28,7 +28,11 @@
 # `tests/python/` is present; a downstream project consuming the plugin never
 # reaches it.
 
-check_coverage_floor.py --root . --floor 70
+!waived check_coverage_floor.py needs a coverage.json from a --cov test run, which costs 192s
+#   against 78s without instrumentation. That duration caused two failures on 2026-08-31: GitHub
+#   closed the idle SSH connection mid-hook so every push died with SIGPIPE after passing, and an
+#   agent reached for --no-verify and put a red commit on main. CI enforces this gate on every
+#   push (validate.yml), so nothing is unenforced — it is just not enforced twice.
 check_legacy_paths.py --root .
 check_doc_references.py --root .
 check_theory_fidelity.py --root .

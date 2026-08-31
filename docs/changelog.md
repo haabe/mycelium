@@ -4,6 +4,45 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-31.
 
+## v0.150.0 - the pre-push hook was doing CI's job, and it cost two failures in one day
+
+**WHAT THE DURATION ACTUALLY COST, because neither failure looked like a slow hook.** With `--cov` the
+local test step took **192s** and the whole hook **366s**. On 2026-08-31 that produced:
+
+1. **Every push died with `exit 141` AFTER all gates passed.** Git opens its connection to the remote
+   BEFORE running `pre-push`; GitHub then closed the idle SSH connection mid-hook, and git wrote to a
+   dead socket. The error said `Connection to github.com closed by remote host` and nothing about SSH
+   appeared in any gate output. **Six attempts were misdiagnosed as a sandbox problem** before the
+   founder's own terminal showed the line.
+2. **An agent reached for `--no-verify`** because the hook was slow, skipping `check_fail_open.py
+   --strict` — which it did not know was in there — and put a red commit on `main`, costing a
+   follow-up release.
+
+**THE SPLIT, which is just the standard one.** Fast lint at pre-commit; the test suite at pre-push;
+slow and comprehensive in CI. The literature names this failure mode exactly: a local suite that
+*"takes long enough that developers disable the hook entirely"* is worse than one that never ran. That
+is not hypothetical here — it happened, twice, on one day.
+
+**WHAT MOVED:** coverage instrumentation and `check_coverage_floor.py`. **WHAT DID NOT:** the test
+suite itself, canvas validation, template integrity, and the 17 declared gates. The identical suite
+runs in **~78s without `--cov`**, so the safety net stays and the tax goes.
+
+**NOTHING BECOMES UNENFORCED.** CI runs the same suite with `--cov-fail-under=85` AND the 70% per-file
+floor on every push. Coverage is enforced once instead of twice. Hooks are early feedback; enforcement
+belongs in CI and branch protection.
+
+**THE DIVERGENCE IS DECLARED, NOT SILENT** — which is the whole reason `check_gate_parity.py` exists.
+`local-gate-set.txt` gained `!waived check_coverage_floor.py <reason>`, so parity now reports "17
+declared, 1 waived" and prints the reason every run. The alternative — quietly dropping it from the
+hook — is the exact 2026-08-09 drift (11 CI gates against 4 local) that the parity check was built to
+catch.
+
+**Consumers must re-install the hook** to get this: `cp "${CLAUDE_PLUGIN_ROOT}/scripts/git-pre-push-example.sh" .git/hooks/pre-push && chmod +x .git/hooks/pre-push`. The hook's own self-drift warning will say so on the next push until they do.
+
+**Also worth knowing if a push still hangs:** `ServerAliveInterval` keeps the SSH connection alive
+through a long hook. `GIT_SSH_COMMAND="ssh -o ServerAliveInterval=20" git push` fixed it immediately
+where six other approaches had not.
+
 ## v0.149.0 - a new field is a four-step act, never one
 
 **FOUNDER-SET HARD RULE**, now in `engine/agent-operating-contract.md`, which the SessionStart hook

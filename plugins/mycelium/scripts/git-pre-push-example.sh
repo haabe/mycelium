@@ -117,21 +117,32 @@ if [ -d "tests/python" ] && [ -n "$SCRIPTS_DIR" ] && [ -z "$PYRUN" ]; then
 fi
 
 if [ -d "tests/python" ] && [ -n "$SCRIPTS_DIR" ]; then
-    echo "[mycelium pre-push] Delivery-quality gate: tests + total-coverage floor (runner: $PYRUN) ..." >&2
-    if ! $PYRUN -m pytest tests/python/ \
-            --cov=plugins/mycelium/scripts --cov=plugins/mycelium/integrations \
-            --cov-report=json --cov-fail-under=85 -q >&2; then
+    # TESTS RUN LOCALLY; COVERAGE MEASUREMENT DOES NOT. Changed 2026-08-31 (v0.150.0).
+    #
+    # WHAT IT COST TO LEARN THIS. With `--cov` this step took 192s and the whole hook
+    # ~366s. Two failures on one day, both caused by the duration and neither looking
+    # like it: (1) git opens its connection to the remote BEFORE running this hook, so
+    # GitHub closed the idle SSH connection mid-run and every push died with SIGPIPE
+    # after all gates had PASSED — an error naming nothing about SSH; (2) the agent
+    # reached for `--no-verify` because the hook was slow, skipped the fail-open gate it
+    # did not know was in here, and put a red commit on main.
+    #
+    # The literature says the same thing and names the failure mode exactly: fast lint at
+    # pre-commit, the test suite at pre-push, slow/comprehensive in CI — because a local
+    # suite that "takes long enough that developers disable the hook entirely" is worse
+    # than one that never ran. That is not a hypothetical here; it happened.
+    #
+    # WHAT IS NOT LOST. CI runs the SAME suite with `--cov-fail-under=85` AND
+    # `check_coverage_floor.py --floor 70` (validate.yml). Coverage is still ENFORCED,
+    # just not twice. Hooks are early feedback; enforcement lives in CI and branch
+    # protection. Coverage instrumentation is what costs the time — the identical suite
+    # runs in ~78s without it, so the safety net stays and the tax goes.
+    echo "[mycelium pre-push] Delivery-quality gate: tests, no coverage (runner: $PYRUN) ..." >&2
+    if ! $PYRUN -m pytest tests/python/ -q >&2; then
         echo "" >&2
-        echo "[mycelium pre-push] Tests / total-coverage gate FAILED — push blocked." >&2
-        echo "  • Emergency bypass: git push --no-verify (and document it)." >&2
-        exit 1
-    fi
-    echo "[mycelium pre-push] Delivery-quality gate: per-file coverage floor (every shipped script must be tested) ..." >&2
-    if ! $PYRUN "$SCRIPTS_DIR/check_coverage_floor.py" --root . --floor 70 >&2; then
-        echo "" >&2
-        echo "[mycelium pre-push] Per-file coverage floor FAILED — a shipped script lacks a test. Push blocked." >&2
-        echo "  • Add tests/python/test_<name>.py exercising the flagged script(s)." >&2
-        echo "  • Emergency bypass: git push --no-verify (and document it)." >&2
+        echo "[mycelium pre-push] Tests FAILED — push blocked." >&2
+        echo "  • Coverage is NOT measured here; CI enforces both the 85% total and the" >&2
+        echo "    70% per-file floor. A push that passes here can still go red on coverage." >&2
         exit 1
     fi
     # THE GATE SET IS DECLARED, NOT HARD-CODED HERE (v0.110.0).
