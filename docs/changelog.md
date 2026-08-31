@@ -4,6 +4,52 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-31.
 
+## v0.145.3 - three findings from a consumer running Mycelium on a non-software object
+
+A plugin consumer (`i-productified`, whose object is a personal professional direction rather than
+software) filed a ten-finding report from one heavy dogfood day. Three were mechanical and are fixed
+here; the rest need a decision and are not silently absorbed.
+
+**`bvssh-health.yml` had no schema** (their F9). `validate_canvas.py` reported it as *"parse-checked
+only"*, while `hooks/session-start.sh` reads `last_assessed` from it every session to compute
+overdue-ness — a canvas a hook depends on, with nothing pinning the field the hook reads. Worse than
+inert: that hook passes the value to `datetime.fromisoformat` and **falls back to an age of 999 days on
+any parse failure**, so a malformed or wrongly-typed value is indistinguishable from a genuinely stale
+assessment. The new schema is permissive on the five BVSSH dimension blocks (their metric sets are
+product-type specific and legitimately vary) and strict on `last_assessed` alone — the split
+`dora-metrics.schema.json` already uses. Validated against both the shipped stub and a fully populated
+consumer canvas, and confirmed to reject the drift case.
+
+**`devils-advocate` Technique 7 never named its dependency** (their F10). It is documented as *the one
+that measured well*, and it requires handing a claim to an agent with no repository access — which
+requires spawning a subagent. In their session the host was instructed not to spawn subagents, so **the
+best-measured technique was silently unavailable** and the run fell back to self-attack, which the
+skill's own notes call weaker. The technique now states the prerequisite before the mechanism, and
+requires an agent that cannot spawn to SAY it is running a degraded pass rather than quietly
+substituting Technique 3 or 5.
+
+**`log-evidence` had no branch for evidence belonging to a COMPLETED task** (their F7). Step 1 read
+`pending_tasks` only, so a closed task that produced the evidence was invisible, and both offered paths
+were wrong: backfilling a new `ht` splits one exchange's `touch_log` across two records, and
+`/handoff` registers a channel that already exists. Across six runs the consumer did the right thing by
+improvisation every time — append a dated sub-entry, do not reopen, do not create — and it was nowhere
+written down. Now it is a first-class branch, checked BEFORE the backfill offer, with the reason
+reopening is wrong stated: it misreports the funnel, and every downstream count then reads a closed
+conversation as live work.
+
+**Also verified and closed: their F1.** Their earlier bug report's residual case — a canvas with no
+`purpose_properties` and no top-level `why`, which they noted the new `dependentSchemas` rule does not
+reach — is covered from the other side by the same release's `purpose_why_findings` WARN. Confirmed by
+running their exact shape. They could not see this from the consumer side because they were reading
+0.144.1 plus a partial view of the schema change.
+
+**Not fixed here, because each needs a decision rather than a patch:** their F2 (the absence-claim
+guard fired 16 times in one day and caught none of four confirmed errors), F3 (extend *state what was
+searched* to *state the denominator*), F4 (ask the owner to recall the Definition of Done from memory),
+F5 (`binding` as a boolean is the wrong model; weights plus a conditional unlock), and F8 (the
+`handoff` capture template asks about people and the bar and nothing else). F2 in particular is
+measured, not argued, and points the same way as this skill's own Technique 5 measurement.
+
 ## v0.145.2 - the changelog promised a release that the gate had refused
 
 `release_gaps.py --check` failed on `main`: the changelog documented **v0.145.0** and the releases page

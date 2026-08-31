@@ -1152,3 +1152,47 @@ def test_a_real_why_with_derived_properties_passes(tmp_path, scripts_path, monke
     code = _purpose_main(tmp_path, v, monkeypatch,
                          "why: know what is worth building\npurpose_properties:\n  properties: []\n")
     assert code == 0
+
+
+# --- bvssh-health schema: the field a hook depends on ------------------------
+# Consumer finding 2026-08-31 (F9): validate_canvas reported bvssh-health.yml as
+# "parse-checked only" while hooks/session-start.sh reads `last_assessed` from it every
+# session. That hook passes the value to datetime.fromisoformat and falls back to an age of
+# 999 days on ANY failure — so a malformed or wrongly-typed value is indistinguishable from
+# a genuinely stale assessment. The schema is strict on that field and permissive elsewhere.
+
+
+def _bvssh_schema():
+    import json
+    return json.load(open(_real_schema_dir() / "bvssh-health.schema.json"))
+
+
+def _bvssh_errors(doc):
+    import jsonschema
+    return list(jsonschema.Draft202012Validator(_bvssh_schema()).iter_errors(doc))
+
+
+def test_bvssh_schema_exists_so_the_canvas_is_not_parse_checked_only():
+    assert (_real_schema_dir() / "bvssh-health.schema.json").exists()
+
+
+def test_bvssh_rejects_a_last_assessed_the_hook_could_not_parse():
+    """The whole point of the schema. A dict here reads to session-start as 999 days overdue."""
+    assert _bvssh_errors({"last_assessed": {"date": "2026-08-31"}})
+    assert _bvssh_errors({"last_assessed": "August 31st"})
+
+
+def test_bvssh_allows_null_last_assessed_because_never_assessed_is_an_honest_state():
+    """The shipped stub carries null, and the hook reports it as 'never assessed'. Rejecting
+    it would fail every project that has not yet run /mycelium:bvssh-check."""
+    assert _bvssh_errors({"last_assessed": None}) == []
+
+
+def test_bvssh_stays_permissive_on_the_dimension_blocks():
+    """Metric sets are product-type specific. A consumer running Mycelium on a non-software
+    object legitimately carries different metrics, and the schema must not fail them."""
+    doc = {"last_assessed": "2026-08-31",
+           "happier": {"description": "n=1: colleagues axis is the builder",
+                       "metrics": {"anything": ["at", "all"]}, "trend": None,
+                       "SOME_LOUD_CONSUMER_ANNOTATION": "kept"}}
+    assert _bvssh_errors(doc) == []

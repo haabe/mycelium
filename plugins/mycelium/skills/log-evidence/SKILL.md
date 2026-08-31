@@ -43,10 +43,16 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
 ## Workflow
 
 1. **Check pending tasks — and handle the no-matching-task case explicitly**:
-   - Read `.claude/canvas/human-tasks.yml` for `pending_tasks`
+   - Read `.claude/canvas/human-tasks.yml` for `pending_tasks` AND `completed_tasks` — evidence frequently attaches to a task that has already closed; see the completed-task branch below
    - List them: "You have [N] pending human task(s): [objective summaries]"
    - Ask: "Which task did you complete? Or paste your notes and I'll match them."
-   - **No-matching-task branch (added v0.39.10, symmetric to `8c(b)`).** If the user's notes describe an exchange with a named contributor and NONE of the pending tasks plausibly matches (no `target_persona` overlap, no `touch_log` entry for that channel), stop and surface the gap before writing evidence:
+   - **BEFORE the no-matching-task branch: search `completed_tasks` too (added 2026-08-31).** Evidence very often arrives days after the conversation that produced it — a name recalled later, a fact that only became relevant once something else landed. If a COMPLETED task is the one that produced this evidence, **that is where it belongs**, and neither path below fits:
+     - **Append a dated sub-entry to the completed task.** Do NOT reopen it, and do NOT create a new `ht`.
+     - **Why not reopen:** the task did complete; reopening it misreports the funnel, and every downstream count (status checks, cadence, reply-owed) then reads a closed conversation as live work.
+     - **Why not backfill a new task:** a late recall about a finished conversation is not a new channel. A second `ht` for one exchange splits its `touch_log` across two records, which is the failure `8c(b)` exists to prevent, arriving from the other direction.
+     - Say which completed task you are appending to and on what date, so the append is auditable rather than silent. Then proceed to step 2 with that `ht`-ID.
+     - Reported by a plugin consumer 2026-08-31 across six `log-evidence` runs: this was done correctly by improvisation every time, and was nowhere written down. Step 5's framing (*"writing evidence and closing the task are one action"*) does not anticipate a task that closed weeks earlier.
+   - **No-matching-task branch (added v0.39.10, symmetric to `8c(b)`).** If the user's notes describe an exchange with a named contributor and NEITHER a pending NOR a completed task plausibly matches (no `target_persona` overlap, no `touch_log` entry for that channel), stop and surface the gap before writing evidence:
      > "I can't find a human-task that covers this exchange. Outreach that produces evidence without a registered task is the symmetric drift of `8c(b)` — it makes the channel invisible to status checks, learning-target coupling, and the attribution registry. Two paths: (a) **backfill** an `ht-XXX` now with a `backfill_note` explaining the channel wasn't pre-registered (good when the outreach was ad-hoc and short — a DM reply, a one-shot reaction); (b) **register-then-log** via `/mycelium:handoff` (good when this is the first touch in a channel that will plausibly have follow-ups). Which fits?"
      - If (a): create the ht with `created_at: today`, `status: pending` (or `completed` if this single exchange closes it), a `backfill_note` field stating "Created retroactively — original [send/inbound] not pre-registered via /mycelium:handoff", and a `touch_log` entry for the exchange. Then proceed to step 2 with the new ht-ID in hand.
      - If (b): pause this skill, invoke `/mycelium:handoff` to register the channel properly, then resume here with the new ht-ID.

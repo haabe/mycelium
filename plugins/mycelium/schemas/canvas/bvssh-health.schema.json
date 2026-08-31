@@ -1,0 +1,170 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mycelium.dev/schemas/canvas/bvssh-health.schema.json",
+  "title": "BVSSH Health Canvas",
+  "description": "Better Value Sooner Safer Happier health, written by /mycelium:bvssh-check. Added 2026-08-31 from a consumer finding: validate_canvas.py reported this file as 'no schema - parse-checked only', while hooks/session-start.sh reads `last_assessed` from it every session to compute overdue-ness. A canvas a hook depends on had nothing pinning the field the hook reads. Permissive on the five dimension blocks - their metric sets are product-type specific and legitimately vary - and strict on `last_assessed` alone, the same split dora-metrics.schema.json uses and for the same reason.",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "last_assessed": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}",
+      "description": "Date of the most recent BVSSH assessment, ISO-8601 (YYYY-MM-DD), or null for never assessed. READ VERBATIM by hooks/session-start.sh, which passes it to datetime.fromisoformat. THIS IS WHY THE FIELD IS PINNED: on any parse failure that hook falls back to an age of 999 days and reports the check as overdue, so a malformed or wrongly-typed value is indistinguishable from a genuinely stale assessment. null is explicitly allowed and reports as 'never assessed', which is a different and honest state."
+    },
+    "better": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "Better - quality of the thing built and of the way it is built.",
+      "additionalProperties": true,
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "metrics": {
+          "description": "Whatever this dimension measures. Deliberately unconstrained: the metric set is product-type specific."
+        },
+        "current_state": {
+          "description": "The reading itself."
+        },
+        "trend": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Direction since the previous assessment."
+        }
+      }
+    },
+    "value": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "Value - outcomes for the people served, not output shipped.",
+      "additionalProperties": true,
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "metrics": {
+          "description": "Whatever this dimension measures. Deliberately unconstrained: the metric set is product-type specific."
+        },
+        "current_state": {
+          "description": "The reading itself."
+        },
+        "trend": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Direction since the previous assessment."
+        }
+      }
+    },
+    "sooner": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "Sooner - flow and cycle time.",
+      "additionalProperties": true,
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "metrics": {
+          "description": "Whatever this dimension measures. Deliberately unconstrained: the metric set is product-type specific."
+        },
+        "current_state": {
+          "description": "The reading itself."
+        },
+        "trend": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Direction since the previous assessment."
+        }
+      }
+    },
+    "safer": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "Safer - security, privacy, compliance, reversibility.",
+      "additionalProperties": true,
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "metrics": {
+          "description": "Whatever this dimension measures. Deliberately unconstrained: the metric set is product-type specific."
+        },
+        "current_state": {
+          "description": "The reading itself."
+        },
+        "trend": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Direction since the previous assessment."
+        }
+      }
+    },
+    "happier": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "Happier - colleagues, customers, citizens, climate. On an n=1 project the colleagues axis becomes the builder himself and citizens/climate stay meaningful (reported by a solo consumer 2026-08-31).",
+      "additionalProperties": true,
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "metrics": {
+          "description": "Whatever this dimension measures. Deliberately unconstrained: the metric set is product-type specific."
+        },
+        "current_state": {
+          "description": "The reading itself."
+        },
+        "trend": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Direction since the previous assessment."
+        }
+      }
+    },
+    "anti_patterns_detected": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "description": "Anti-patterns this assessment found."
+    },
+    "assessment_history": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "description": "Prior assessments."
+    },
+    "calms_assessment": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true,
+      "description": "CALMS reading (Culture, Automation, Lean, Measurement, Sharing) taken alongside BVSSH."
+    }
+  }
+}
