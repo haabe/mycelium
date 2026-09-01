@@ -4,6 +4,33 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-01.
 
+## v0.168.0 - a match token must be as narrow as its ruling
+
+Extending the do-not-cite register from 6 entries to 26 produced a **6-of-6 false positive run** on
+the first pass. Per this project's own rule, a 100% FP rate means the source is refused and the
+classes name the gap. Both classes were real.
+
+**Bare names matched legitimate citations.** `Ulwick` flagged four lines where he is cited correctly
+as the Outcome-Driven Innovation theorist — the ruling concerns one phantom Strategyn working paper,
+not the person. `Jansen` is a common surname. `Standish` flagged a line using the CHAOS
+**cause-ranking**, while the ruling is about its **success rates** — a different and defensible use.
+
+**A token broader than its ruling recreates, inside the register, the exact narrow-true-to-
+over-broad error the register exists to prevent.** That is the third instance of that error in a
+single day: once in a memory rule, once in a correction that rewrote four correct surfaces, and now
+once encoded into the mechanism built to stop it. The rule is now stated in the register file
+itself, where the next person adding an entry will read it: **match the CLAIM, never the NAME.**
+
+**The annotation vocabulary was too narrow.** A live line read "Standish CHAOS cause-ranking (…
+DISPUTED — use ranking only) [anecdotal/contested]" and was reported anyway. `DISPUTED`,
+`contested`, `unverified`, `unsourced` and `not established` now suppress, because flagging a line
+that already discloses its own weakness teaches authors that disclosure is punished — the opposite
+of the behaviour this check exists to produce.
+
+**Detection is proven still live**, which is the risk of widening suppression: in one run against a
+seeded canvas, two uncaveated violations were caught while the self-caveated line was suppressed.
+Both halves are pinned by tests.
+
 ## v0.167.0 - the register gets a reader at the moment of use
 
 A do-not-cite register already existed in one project's agent memory. It was correct. On

@@ -145,3 +145,27 @@ def test_a_malformed_register_is_reported_not_silently_treated_as_absent(tmp_pat
     assert "unreadable" in findings[0][2]["verbatim"]
     sys.argv = ["check_citations.py", "--project-dir", str(p)]
     assert _mod().main() == 1
+
+
+def test_a_line_that_already_caveats_the_claim_is_not_flagged(tmp_path):
+    """MEASURED 2026-09-01: the first extension of the register produced a 6-of-6 FALSE POSITIVE
+    run, and one cause was an annotation vocabulary too narrow. A live canvas line read
+    "Standish CHAOS cause-ranking (... DISPUTED — use ranking only) [anecdotal/contested]" and was
+    reported anyway. Flagging a line that already discloses its own weakness teaches authors that
+    disclosure is punished, which is the opposite of the behaviour wanted.
+    """
+    reg = ('schema_version: 1\nentries:\n  - id: x\n    match: ["42% of teams"]\n'
+           '    verdict: do-not-cite\n    verbatim: no primary\n')
+    for caveat in ("DISPUTED", "contested", "unverified", "unsourced", "not established"):
+        p = _project(tmp_path / caveat,
+                     f"notes: |\n  {caveat}: 42% of teams ship faster.\n", register=reg)
+        assert _mod().scan(p)[0] == [], caveat
+
+
+def test_detection_survives_the_widened_suppression(tmp_path):
+    """The risk of widening the annotation vocabulary is going blind. An UNcaveated claim must
+    still be reported."""
+    reg = ('schema_version: 1\nentries:\n  - id: x\n    match: ["42% of teams"]\n'
+           '    verdict: do-not-cite\n    verbatim: no primary\n')
+    p = _project(tmp_path, "notes: |\n  Research shows 42% of teams ship faster.\n", register=reg)
+    assert len(_mod().scan(p)[0]) == 1

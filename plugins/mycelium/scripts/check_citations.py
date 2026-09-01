@@ -36,7 +36,12 @@ except ImportError:
 # measured: 12 such lines in the dogfood canvas on the day the register was written.
 _ANNOTATED = re.compile(
     r"CORRECTED|WITHDRAWN|RE-CORRECTED|do-not-cite|DO NOT CITE|MISATTRIB|CONFABULAT|"
-    r"debunk|register|verbatim|NO PRIMARY|does not exist|no such",
+    r"debunk|register|verbatim|NO PRIMARY|does not exist|no such|"
+    # Added 2026-09-01 after a 6-of-6 false-positive run. A canvas that ALREADY caveats a claim
+    # is the behaviour this check exists to produce, and flagging it teaches authors that
+    # disclosing a weakness is punished. One live line read "DISPUTED — use ranking only
+    # [anecdotal/contested]" and was reported anyway.
+    r"DISPUTED|contested|unverified|unsourced|not established|use ranking only|anecdotal",
     re.IGNORECASE)
 
 
