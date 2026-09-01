@@ -1697,3 +1697,58 @@ def test_a_bare_dpia_true_is_reported_and_a_referenced_one_is_not(tmp_path, scri
 
     # No canvas at all is a different state, not a finding.
     assert validator.dpia_determination_findings(tmp_path / "nope") == []
+
+
+# --- source_class_target: the two 2026-09-01 corrections --------------------
+
+def _sct(tasks, tmp_path, scripts_path):
+    import yaml
+    validator = _import_validator(scripts_path)
+    (tmp_path / "human-tasks.yml").write_text(
+        yaml.safe_dump({"completed_tasks": tasks}, sort_keys=False))
+    return validator.source_class_target_findings(tmp_path)
+
+
+def test_an_evidence_pointer_counts_wherever_it_is_recorded(tmp_path, scripts_path):
+    """FALSE-POSITIVE FIX. The first version looked only at top-level keys and `touch_log[]`.
+    Three live tasks (ht-037, ht-038, ht-059) record the pointer in `partial_findings[]` and were
+    reported as gaps their own data did not have. The false positives named the missing
+    convention: the rule is "a pointer in the task record", not "in one of two blessed blocks".
+    """
+    base = {"id": "ht-x", "source_class_target": "external_human"}
+    assert _sct([base], tmp_path, scripts_path), "no pointer anywhere must still warn"
+    for block in (
+        {"evidence_logged_to": "purpose.yml#x"},
+        {"touch_log": [{"evidence_logged_to": "purpose.yml#x"}]},
+        {"partial_findings": [{"evidence_logged_to": "purpose.yml#x"}]},        # the regression
+        {"outcomes": {"nested": [{"deep": {"evidence_logged_to": "purpose.yml#x"}}]}},
+    ):
+        assert _sct([{**base, **block}], tmp_path, scripts_path) == [], block
+
+
+def test_a_fully_disciplined_closure_answers_the_question_with_a_null(tmp_path, scripts_path):
+    """A task closed with reason + basis + reopen_trigger has recorded that nothing came of it,
+    why, and what would make that wrong. Demanding an evidence pointer as well would ask it to
+    point at evidence it is explicitly recording the absence of.
+
+    ALL THREE ARE REQUIRED — a bare `closure_reason` is the un-disciplined case the schema
+    already treats as incomplete, and accepting it would let silence pass as an answer.
+    """
+    base = {"id": "ht-y", "source_class_target": "external_human"}
+    full = {"closure_reason": "unanswered", "closure_basis": "inferred",
+            "reopen_trigger": "a cohort member answers"}
+    assert _sct([{**base, **full}], tmp_path, scripts_path) == []
+    for missing in ("closure_reason", "closure_basis", "reopen_trigger"):
+        partial = {k: v for k, v in full.items() if k != missing}
+        assert _sct([{**base, **partial}], tmp_path, scripts_path), f"missing {missing} must warn"
+    # An empty string is not a stated reason.
+    assert _sct([{**base, **full, "closure_reason": "   "}], tmp_path, scripts_path)
+
+
+def test_pending_tasks_are_still_never_flagged(tmp_path, scripts_path):
+    import yaml
+    validator = _import_validator(scripts_path)
+    (tmp_path / "human-tasks.yml").write_text(yaml.safe_dump(
+        {"pending_tasks": [{"id": "ht-z", "source_class_target": "external_human"}],
+         "completed_tasks": []}, sort_keys=False))
+    assert validator.source_class_target_findings(tmp_path) == []

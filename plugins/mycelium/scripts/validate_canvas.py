@@ -926,6 +926,40 @@ def technical_capability_findings(canvas_dir):
     return out
 
 
+def has_pointer(node):
+    """Is an evidence pointer recorded ANYWHERE in this task record?
+
+    FIXED 2026-09-01. The first version looked in exactly two places — top-level keys and
+    `touch_log[]` — and the convention in live use has three: `partial_findings[]` carries
+    `evidence_logged_to` on ht-037, ht-038 and ht-059. All three were reported as gaps that
+    their own data did not have. THE FALSE POSITIVES NAMED THE MISSING CONVENTION: the rule
+    was never "a pointer in one of two blessed blocks", it is "a pointer recorded in the
+    task record", and hardcoding the locations is what manufactured the finding. Walking the
+    structure also means the next block someone invents is covered without another patch.
+    """
+    if isinstance(node, dict):
+        return any("evidence_logged_to" in str(k) or has_pointer(v) for k, v in node.items())
+    if isinstance(node, list):
+        return any(has_pointer(v) for v in node)
+    return False
+
+def closed_with_discipline(task):
+    """A fully-disciplined closure HAS answered "did it produce evidence?" — with a null.
+
+    `_common.schema.json#/$defs/closure_discipline` makes `closure_basis` and
+    `reopen_trigger` mandatory companions once a `closure_reason` is claimed. That trio is
+    the project's existing mechanism for recording that nothing came of something, why, and
+    what would make the judgement wrong. A task carrying all three has closed the loop this
+    check exists to find open; demanding an evidence pointer as well would be asking it to
+    point at evidence it is explicitly recording the absence of.
+
+    ALL THREE ARE REQUIRED. A bare `closure_reason` is the un-disciplined case the schema
+    already treats as incomplete, and accepting it here would let silence pass as an answer.
+    """
+    return all(isinstance(task.get(k), str) and task[k].strip()
+               for k in ("closure_reason", "closure_basis", "reopen_trigger"))
+
+
 def source_class_target_findings(canvas_dir):
     """WARN-tier: a task declared what evidence it would produce — did it say where it landed?
 
@@ -958,18 +992,11 @@ def source_class_target_findings(canvas_dir):
     if not isinstance(doc, dict):
         return []
 
-    def has_pointer(task):
-        if any("evidence_logged_to" in str(k) for k in task):
-            return True
-        return any("evidence_logged_to" in str(k)
-                   for entry in (task.get("touch_log") or []) if isinstance(entry, dict)
-                   for k in entry)
-
     out = []
     for task in doc.get("completed_tasks") or []:
         if not isinstance(task, dict) or "source_class_target" not in task:
             continue
-        if has_pointer(task):
+        if has_pointer(task) or closed_with_discipline(task):
             continue
         out.append(
             f"{task.get('id', '<no id>')}: completed, and declared "

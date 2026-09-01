@@ -4,6 +4,41 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-01.
 
+## v0.160.0 - two-thirds of the warnings were the check being wrong
+
+Nine `evidence target` warnings had stood open on the dogfood canvas for a day, filed as "needs
+per-task judgement". Working through them, **six were the check and only three were the canvas.**
+
+**Three were false positives.** `has_pointer` looked in exactly two places — top-level keys and
+`touch_log[]` — while the convention in live use has three: ht-037, ht-038 and ht-059 all record
+`evidence_logged_to` inside `partial_findings[]`. Those tasks were reported as gaps that their own
+data did not have. The false positives named the missing convention, which is the useful part: the
+rule was never "a pointer in one of two blessed blocks", it is "a pointer recorded in the task
+record". It now walks the structure, so the next block someone invents is covered without another
+patch.
+
+**Three more were tasks that had already answered, with a null.** ht-031, ht-032 and ht-082 carry
+the full `closure_discipline` trio — `closure_reason`, `closure_basis`, `reopen_trigger` — which is
+this project's existing, schema-backed mechanism for recording that nothing came of something, why,
+and what would make that judgement wrong. Demanding an evidence pointer as well asks a task to
+point at evidence it is explicitly recording the absence of. ALL THREE COMPANIONS ARE REQUIRED: a
+bare `closure_reason` is the un-disciplined case the schema already treats as incomplete, and
+accepting it would let silence pass as an answer.
+
+**Three were real, and each was traced rather than waived.** ht-073 → `landscape.yml#comp-014` (the
+BMAD entry does carry the Discord sighting and the Analysis-Phase correction that came out of that
+thread). ht-033 → `opportunities.yml#opp-014` (the near-null reach figures live there; its evidence
+was audience measurement, `external_data`, since no person replied). ht-074 → its own
+`forage_the_thread_is_worth_more_than_the_contact` field, the ht-038 precedent: no contact was ever
+sent, so the external_human target produced nothing, but the thread forage is real and recorded.
+Promoting that forage to comp-039 as N=4 corroboration of the judgment-atrophy cluster is left as
+a live option for the founder, not taken here — it is a weight judgement about positioning-only
+evidence.
+
+A warning that fires on data which satisfies it teaches its reader to skip the whole class. That is
+why the ratio matters more than the count: two-thirds noise is not a backlog, it is a broken
+instrument.
+
 ## v0.159.0 - no canvas is parse-checked only any more
 
 The last three of the seven: **privacy-assessment**, **trust-signals**, **value-stream**.
