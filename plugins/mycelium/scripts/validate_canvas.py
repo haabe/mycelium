@@ -994,9 +994,57 @@ def print_advisory_warnings(canvas_dir):
         ("purpose why", purpose_why_findings(canvas_dir)),
         ("tech capability", technical_capability_findings(canvas_dir)),
         ("evidence target", source_class_target_findings(canvas_dir)),
+        ("dpia", dpia_determination_findings(canvas_dir)),
     ):
         for w in findings:
             print(f"  WARN ({label}): {w}")
+
+
+def dpia_determination_findings(canvas_dir):
+    """WARN-tier: a `dpia_required: true` must point at the DPIA it says is needed.
+
+    WHY THIS FUNCTION EXISTS AT ALL. `dpia_required` sat in the shipped privacy-assessment
+    template with NO CONSUMER — nothing read it, so the determination could say anything and
+    nothing downstream would notice. It stayed invisible until the canvas was given a schema on
+    2026-09-01, at which point check_field_wiring flagged it as promise-shaped-and-unread and
+    blocked the push. The field's purpose is unambiguously to be read: it is a compliance
+    determination, not a note. So it gets a consumer here, per the founder rule of 2026-08-31.
+
+    WHAT IT CHECKS, AND WHERE THAT COMES FROM. engine/theory-gates.md L3 requires "DPIA completed
+    for high-risk processing" and names the DPIA document among its required evidence. So a
+    `true` that points at nothing is the gap: the canvas asserts a DPIA is needed while recording
+    nothing that shows one exists. This is DERIVED, not invented — unlike the schema's
+    rationale-when-false rule, which is labelled in privacy-assessment.schema.json as the schema
+    author's own judgement.
+
+    THE `false` CASE IS DELIBERATELY NOT HERE. privacy-assessment.schema.json already requires a
+    rationale when the determination is false, and enforcing the same rule in two places is the
+    defect this repo keeps finding in itself.
+
+    WARN AND NEVER FAIL: whether the reference is adequate is a human call, and a project that has
+    genuinely completed a DPIA may record it somewhere this cannot see.
+    """
+    path = canvas_dir / "privacy-assessment.yml"
+    if not path.exists():
+        return []
+    try:
+        doc = load_yaml(path) or {}
+    except Exception:  # noqa: BLE001 — parse failures belong to the fail-loud pass
+        return []
+    if not isinstance(doc, dict) or doc.get("dpia_required") is not True:
+        return []   # false/absent is the schema's business, not this check's
+    # Any non-empty prose or reference anywhere in the DPIA fields counts as pointing at one.
+    for key in ("dpia_rationale", "dpia_reference", "dpia_document"):
+        val = doc.get(key)
+        if isinstance(val, str) and val.strip():
+            return []
+    return [
+        ("privacy-assessment.yml declares `dpia_required: true` but records nothing that points "
+         "at the DPIA — no `dpia_rationale`, `dpia_reference` or `dpia_document`. "
+         "engine/theory-gates.md L3 names the DPIA document as required evidence at this gate, so "
+         "a bare `true` asserts the obligation without showing it was met. Run "
+         "/mycelium:privacy-check, or record where the DPIA lives.")
+    ]
 
 
 def task_list_findings(canvas_dir):

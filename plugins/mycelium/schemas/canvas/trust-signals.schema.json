@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "trust-signals.schema.json",
+  "title": "Trust Signals Canvas (L5 Market)",
+  "description": "Status and direction enums come from the template's own YAML comments. This canvas holds four real leaves and is dormant pending L5; the schema exists to guard the first real population, which will happen unobserved.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "_meta": { "type": ["object", "null"], "additionalProperties": true },
+    "transparency": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["mechanism"],
+        "properties": {
+          "mechanism": { "type": "string", "minLength": 1 },
+          "description": { "type": ["string", "null"] },
+          "status": { "$ref": "#/$defs/status" },
+          "canvas_ref": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "security_certifications": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "status": { "type": ["string", "null"], "enum": ["achieved", "in-progress", "planned", null] },
+          "valid_until": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "privacy_communications": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["channel"],
+        "properties": {
+          "channel": { "type": "string", "minLength": 1 },
+          "content": { "type": ["string", "null"] },
+          "user_accessible": { "type": ["boolean", "null"] }
+        }
+      }
+    },
+    "user_control": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["control"],
+        "properties": {
+          "control": { "type": "string", "minLength": 1 },
+          "status": { "$ref": "#/$defs/status" }
+        }
+      }
+    },
+    "ethical_commitments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["commitment"],
+        "properties": {
+          "commitment": { "type": "string", "minLength": 1 },
+          "enforcement": {
+            "type": ["string", "null"],
+            "description": "How it is enforced. A commitment with no enforcement is a statement of intent; the field is kept separate so the difference stays visible."
+          }
+        }
+      }
+    },
+    "behavioral_ethics": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "biases_used_for_users": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["bias"],
+            "properties": {
+              "bias": { "type": "string", "minLength": 1 },
+              "application": { "type": ["string", "null"] }
+            }
+          }
+        },
+        "dark_patterns_prohibited": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "trust_metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "nps": { "type": ["number", "null"] },
+        "trust_score": { "type": ["number", "null"] },
+        "privacy_satisfaction": { "type": ["number", "null"] }
+      }
+    },
+    "value_risk_validation": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source_leaf_id"],
+        "properties": {
+          "source_leaf_id": { "type": "string", "minLength": 1 },
+          "trust_signal": { "type": ["string", "null"] },
+          "direction": { "type": ["string", "null"], "enum": ["improved", "declined", "stable", null] },
+          "evidence": { "type": ["string", "null"] },
+          "value_risk_update": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "last_assessed": { "type": ["string", "null"] },
+    "last_updated": { "type": ["string", "null"] }
+  },
+  "$defs": {
+    "status": { "type": ["string", "null"], "enum": ["implemented", "planned", "not-started", null] }
+  }
+}

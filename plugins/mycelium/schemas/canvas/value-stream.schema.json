@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "value-stream.schema.json",
+  "title": "Value Stream Map (Rother & Shook; Smart/BVSSH)",
+  "description": "This canvas is UNPOPULATED BY DESIGN and says so in its own _meta — solo project, no handoffs or queues to map. The schema is therefore guarding a first population that may never come, which is the point: if a VSM is ever filled in, it will be filled in by an agent months from now with nothing else checking the shape. Times stay strings ('2 days') because that is what the template writes and a duration is not a bare number.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "_meta": { "type": ["object", "null"], "additionalProperties": true },
+    "stages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "description": { "type": ["string", "null"] },
+          "process_time": { "$ref": "#/$defs/duration" },
+          "wait_time": { "$ref": "#/$defs/duration" },
+          "handoffs": { "type": ["integer", "null"], "minimum": 0 },
+          "bottleneck": { "type": ["boolean", "null"] },
+          "notes": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "total_lead_time": { "$ref": "#/$defs/duration" },
+    "total_process_time": { "$ref": "#/$defs/duration" },
+    "flow_efficiency": {
+      "$ref": "#/$defs/duration",
+      "description": "process_time / lead_time * 100; the template's target is >25%."
+    },
+    "total_handoffs": { "type": ["integer", "null"], "minimum": 0 },
+    "improvement_actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["stage"],
+        "properties": {
+          "stage": { "type": "string", "minLength": 1 },
+          "problem": { "type": ["string", "null"] },
+          "action": { "type": ["string", "null"] },
+          "priority": { "type": ["string", "null"], "enum": ["high", "medium", "low", null] },
+          "date_identified": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "last_mapped": { "type": ["string", "null"] },
+    "last_updated": { "type": ["string", "null"] }
+  },
+  "$defs": {
+    "duration": {
+      "type": ["string", "number", "null"],
+      "description": "A duration as written by a human ('2 days', '3h') or as a number. The empty string is the template's not-yet-filled marker and stays legal."
+    }
+  }
+}

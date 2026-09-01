@@ -28,6 +28,24 @@ schema_version: 1
 last_reviewed: '2026-08-26'
 reviewed:
 
+- id: validate_canvas.py@12c1baa344
+  verdict: ACCEPTED 2026-09-01
+  reason: >-
+    The parse guard in `dpia_determination_findings`, matching the one every other
+    *_findings function carries. It is silent, and that is correct HERE because a
+    malformed privacy-assessment.yml is reported LOUDLY BY ANOTHER PASS OVER THE SAME
+    FILE — `validate_canvas_against_schema` emits "YAML parse error in
+    privacy-assessment.yml" and the run exits 1. So nothing is swallowed: the advisory
+    finding declines to speak precisely because the fail-loud pass already has.
+    THIS WAS VERIFIED, NOT ASSUMED, and the distinction matters because the same
+    sentence would have been FALSE YESTERDAY in one respect worth recording: before
+    2026-09-01 privacy-assessment.yml had no schema. It was still parse-checked, so the
+    error would still have surfaced — but the coverage now has two independent sources
+    rather than one. Checked by feeding a deliberately malformed canvas to the real
+    script: exit 1, parse error named, file named.
+    If the fail-loud pass is ever narrowed to schema'd files only, or this function is
+    lifted out of validate_canvas.py, this ruling expires with it.
+
 - id: read-log.sh@515e4766fd
   verdict: ACCEPTED 2026-08-31
   reason: >-

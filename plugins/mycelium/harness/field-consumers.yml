@@ -26,6 +26,26 @@
 #   UNRULED    — baselined, awaiting a ruling. Does not fail the gate; is reported every run.
 
 reviewed:
+  - field: dpia_required
+    canvas: privacy-assessment
+    consumer: scripts/validate_canvas.py#dpia_determination_findings
+    verdict: wired
+    note: >-
+      SURFACED BY SCHEMATISING, 2026-09-01. This field sat in the shipped template with no
+      consumer for the life of the canvas. Nothing read it, so the determination could say
+      anything and nothing downstream would notice — the loop-that-cannot-close shape again.
+      It became visible only when privacy-assessment.yml was given a schema, at which point
+      check_field_wiring flagged it and BLOCKED THE PUSH. That is the gate working: the act of
+      declaring a field is what exposed that nobody read it.
+      RULED WIRED RATHER THAN `consumer: human`, and the reason is the founder rule of
+      2026-08-31 — the field's PURPOSE decides. A DPIA determination exists to be acted on;
+      it is not a note someone might read.
+      WHAT THE CONSUMER CHECKS: a `true` that points at no DPIA at all. That is derived from
+      engine/theory-gates.md L3, which names the DPIA document among required evidence at that
+      gate. The complementary rule — a `false` must carry a rationale — lives in
+      privacy-assessment.schema.json and is labelled there as the SCHEMA AUTHOR'S OWN judgement,
+      not doctrine, so it can be struck. Two rules, two homes, neither duplicated: enforcing the
+      same rule in two places is the defect this repo keeps finding in itself.
   - field: source_class_target
     canvas: human-tasks
     consumer: scripts/validate_canvas.py#source_class_target_findings

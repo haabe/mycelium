@@ -1597,3 +1597,103 @@ def test_every_canvas_schema_accepts_the_template_that_ships_beside_it(scripts_p
         "Empty input must refuse, not pass."
     )
     assert not failures, failures
+
+
+# ---------------------------------------------------------------------------
+# privacy-assessment + trust-signals + value-stream (added 2026-09-01)
+# The last three "parse-checked only" canvases. All three are dormant or near-empty,
+# so these schemas exist to guard a FIRST population that happens unobserved.
+# ---------------------------------------------------------------------------
+
+CAVOUKIAN_SEVEN = (
+    "proactive_not_reactive", "privacy_as_default", "privacy_embedded", "full_functionality",
+    "end_to_end_security", "visibility_transparency", "respect_for_users",
+)
+
+
+def test_cavoukians_seven_principles_are_a_closed_set(tmp_path, scripts_path):
+    """An eighth principle, or a renamed one, is a theory-fidelity break rather than a
+    customisation — and this schema is the only place that can catch it. `privacy_by_default`
+    is the plausible-looking rename that must still fail."""
+    allseven = {"principles": {k: {"assessment": "pass"} for k in CAVOUKIAN_SEVEN}}
+    assert _canvas_errors("privacy-assessment", allseven, tmp_path, scripts_path) == []
+    assert _canvas_errors("privacy-assessment", {"principles": {"data_sovereignty": {}}}, tmp_path, scripts_path)
+    assert _canvas_errors("privacy-assessment", {"principles": {"privacy_by_default": {}}}, tmp_path, scripts_path)
+
+
+def test_a_negative_dpia_determination_must_show_its_reasoning(tmp_path, scripts_path):
+    """SCHEMA-AUTHOR'S RULE, not project doctrine — engine/theory-gates.md requires a DPIA only
+    for HIGH-RISK processing and says nothing about justifying a false. Basis is GDPR Art. 5(2)
+    accountability plus the template pairing the two fields. Recorded here so it can be struck
+    deliberately rather than discovered as folklore."""
+    assert _canvas_errors("privacy-assessment", {"dpia_required": False}, tmp_path, scripts_path)
+    assert _canvas_errors("privacy-assessment",
+                          {"dpia_required": False, "dpia_rationale": "no user data leaves the repo"},
+                          tmp_path, scripts_path) == []
+    # A positive determination needs no rationale here: the DPIA document itself is the artefact.
+    assert _canvas_errors("privacy-assessment", {"dpia_required": True}, tmp_path, scripts_path) == []
+
+
+def test_privacy_enums_come_from_the_templates_own_comments(tmp_path, scripts_path):
+    for good, bad, doc in (
+        ("pass", "mostly", lambda v: {"principles": {"privacy_as_default": {"assessment": v}}}),
+        ("both", "rot13", lambda v: {"data_inventory": [{"data_type": "x", "encryption": v}]}),
+        ("explicit", "assumed", lambda v: {"consent_mechanisms": [{"data_type": "x", "consent_type": v}]}),
+    ):
+        assert _canvas_errors("privacy-assessment", doc(good), tmp_path, scripts_path) == [], good
+        assert _canvas_errors("privacy-assessment", doc(bad), tmp_path, scripts_path), bad
+
+
+def test_trust_signal_status_and_direction_enums(tmp_path, scripts_path):
+    assert _canvas_errors("trust-signals", {"security_certifications": [{"name": "SOC2", "status": "achieved"}]}, tmp_path, scripts_path) == []
+    assert _canvas_errors("trust-signals", {"security_certifications": [{"name": "SOC2", "status": "maybe"}]}, tmp_path, scripts_path)
+    assert _canvas_errors("trust-signals", {"value_risk_validation": [{"source_leaf_id": "sol-1", "direction": "improved"}]}, tmp_path, scripts_path) == []
+    assert _canvas_errors("trust-signals", {"value_risk_validation": [{"source_leaf_id": "sol-1", "direction": "up"}]}, tmp_path, scripts_path)
+
+
+def test_value_stream_keeps_durations_as_written_and_rejects_impossible_counts(tmp_path, scripts_path):
+    """'2 days' is not a bare number, and '' is the template's not-yet-filled marker. Both stay
+    legal. A negative handoff count does not."""
+    assert _canvas_errors("value-stream", {"total_lead_time": "12 days"}, tmp_path, scripts_path) == []
+    assert _canvas_errors("value-stream", {"stages": [{"name": "Idea", "process_time": "", "handoffs": 0}]}, tmp_path, scripts_path) == []
+    assert _canvas_errors("value-stream", {"stages": [{"name": "Idea", "handoffs": -1}]}, tmp_path, scripts_path)
+    assert _canvas_errors("value-stream", {"improvement_actions": [{"stage": "Dev", "priority": "urgent"}]}, tmp_path, scripts_path)
+
+
+def test_no_canvas_is_left_parse_checked_only(scripts_path):
+    """THE POINT OF THE WHOLE SERIES, asserted as a ratchet rather than left as a claim in a
+    changelog. Every canvas the plugin ships a template for now has a schema beside it. A new
+    template added without one fails here, which is the only moment anyone would notice."""
+    repo_canvas = Path(scripts_path).parents[2] / ".claude" / "canvas"
+    if not repo_canvas.is_dir():
+        import pytest
+        pytest.skip("no shipped canvas templates in this checkout")
+    schemas = {p.name[: -len(".schema.json")] for p in _real_schema_dir().glob("*.schema.json")}
+    templates = {p.stem for p in repo_canvas.glob("*.yml")}
+    assert templates, "matched no templates — empty input must refuse, not pass"
+    assert not (templates - schemas), f"canvas templates with no schema: {sorted(templates - schemas)}"
+
+
+def test_a_bare_dpia_true_is_reported_and_a_referenced_one_is_not(tmp_path, scripts_path):
+    """The consumer that check_field_wiring demanded for `dpia_required`, exercised on BOTH
+    sides. A consumer that can never fire would be the same defect one level up — a field
+    declared wired to a check that does nothing.
+    """
+    validator = _import_validator(scripts_path)
+    canvas = tmp_path / "privacy-assessment.yml"
+
+    canvas.write_text("dpia_required: true\n")
+    assert validator.dpia_determination_findings(tmp_path), "a bare true must be reported"
+
+    canvas.write_text("dpia_required: true\ndpia_reference: docs/dpia-2026.md\n")
+    assert validator.dpia_determination_findings(tmp_path) == []
+
+    # false and absent belong to the schema's rationale rule, not to this check — enforcing one
+    # rule in two places is the defect this repo keeps finding in itself.
+    canvas.write_text("dpia_required: false\n")
+    assert validator.dpia_determination_findings(tmp_path) == []
+    canvas.write_text("principles: {}\n")
+    assert validator.dpia_determination_findings(tmp_path) == []
+
+    # No canvas at all is a different state, not a finding.
+    assert validator.dpia_determination_findings(tmp_path / "nope") == []

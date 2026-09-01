@@ -1,0 +1,241 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "privacy-assessment.schema.json",
+  "title": "Privacy by Design Assessment (Cavoukian; GDPR Art. 25)",
+  "description": "Enums taken from the template's own YAML comments, where nothing could enforce them. The `principles` keys are pinned CLOSED because Cavoukian's seven are a fixed, named set: an eighth principle, or a renamed one, is a theory-fidelity break rather than a customisation, and this is the only place that can catch it.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "_meta": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true
+    },
+    "principles": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Exactly Cavoukian's seven. Closed on purpose \u2014 see the schema description.",
+      "properties": {
+        "proactive_not_reactive": {
+          "$ref": "#/$defs/principle"
+        },
+        "privacy_as_default": {
+          "$ref": "#/$defs/principle"
+        },
+        "privacy_embedded": {
+          "$ref": "#/$defs/principle"
+        },
+        "full_functionality": {
+          "$ref": "#/$defs/principle"
+        },
+        "end_to_end_security": {
+          "$ref": "#/$defs/principle"
+        },
+        "visibility_transparency": {
+          "$ref": "#/$defs/principle"
+        },
+        "respect_for_users": {
+          "$ref": "#/$defs/principle"
+        }
+      }
+    },
+    "data_inventory": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "data_type"
+        ],
+        "properties": {
+          "data_type": {
+            "type": "string",
+            "minLength": 1
+          },
+          "purpose": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "necessity": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Data minimisation: why this is NECESSARY, not merely useful."
+          },
+          "retention_period": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "access_controls": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "encryption": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "at_rest",
+              "in_transit",
+              "both",
+              "none",
+              null
+            ]
+          },
+          "deletion_mechanism": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "dpia_required": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "dpia_rationale": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "SCHEMA-AUTHOR'S RULE, NOT PROJECT DOCTRINE \u2014 flagged so it can be struck. The conditional below requires this string whenever dpia_required is false. Basis: GDPR's accountability principle (Art. 5(2)) makes the reasoning for a negative determination the thing you must be able to produce, and the shipped template already pairs the two fields, and the one live canvas populates it. What it is NOT derived from: engine/theory-gates.md L3, which requires a DPIA only for HIGH-RISK processing and says nothing about justifying a false. A bare `false` is the answer that most needs its reasoning shown, which is why the rule seems worth having \u2014 but that is a judgement, not a citation."
+    },
+    "consent_mechanisms": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "data_type"
+        ],
+        "properties": {
+          "data_type": {
+            "type": "string",
+            "minLength": 1
+          },
+          "consent_type": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "explicit",
+              "implicit",
+              "legitimate_interest",
+              null
+            ]
+          },
+          "withdrawal_mechanism": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "data_minimization_check": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "all_data_necessary": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "items_to_remove": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "last_assessed": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "last_updated": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "dpia_required": {
+            "const": false
+          }
+        },
+        "required": [
+          "dpia_required"
+        ]
+      },
+      "then": {
+        "required": [
+          "dpia_rationale"
+        ],
+        "properties": {
+          "dpia_rationale": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "principle": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "assessment": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "pass",
+            "partial",
+            "fail",
+            "not-assessed",
+            null
+          ]
+        },
+        "evidence": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}

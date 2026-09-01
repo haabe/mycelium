@@ -4,6 +4,49 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-01.
 
+## v0.159.0 - no canvas is parse-checked only any more
+
+The last three of the seven: **privacy-assessment**, **trust-signals**, **value-stream**.
+`validate_canvas.py` now reports **25 canvas files, 25 schemas, 0 schema-less**.
+
+**That count is a ratchet, not a claim in a changelog.** `test_no_canvas_is_left_parse_checked_only`
+asserts every shipped template has a schema beside it, so a template added without one fails a
+test — the only moment anyone would notice. The series that produced the count can now no longer
+quietly regress, which is the difference between finishing a cleanup and installing a floor.
+
+**The enums came from the templates, again.** `pass|partial|fail|not-assessed`,
+`at_rest|in_transit|both|none`, `explicit|implicit|legitimate_interest`,
+`improved|declined|stable`, `implemented|planned|not-started` — every one of them was already
+written in a YAML comment where nothing could enforce it. Across all seven canvases this was the
+dominant pattern: the conventions existed and were simply unenforceable.
+
+**Cavoukian's seven principles are pinned CLOSED.** An eighth principle, or the entirely
+plausible-looking rename `privacy_by_default`, is a theory-fidelity break rather than a
+customisation. No other check in the system could catch it, because the file parses fine either
+way and the names read as reasonable.
+
+**One constraint is flagged as the schema author's own, not project doctrine.** A
+`dpia_required: false` must carry a `dpia_rationale`. The basis is GDPR Art. 5(2) accountability
+plus the template already pairing the two fields; what it is NOT derived from is
+`engine/theory-gates.md`, which requires a DPIA only for HIGH-RISK processing and says nothing
+about justifying a negative determination. A bare `false` is the answer that most needs its
+reasoning shown — but that is a judgement, so it is labelled as one in the schema, in its test and
+here, and can be struck deliberately rather than hardening into folklore over time.
+
+**The wiring gate blocked this commit, and it was right to.** Giving privacy-assessment a schema
+made `dpia_required` visible to `check_field_wiring`, which found it promise-shaped and unread —
+it had sat in the shipped template with no consumer for the life of the canvas, so the
+determination could say anything and nothing downstream would notice. Ruled WIRED rather than
+`consumer: human` (a DPIA determination exists to be acted on, not to be read), and given a real
+consumer: `validate_canvas.py#dpia_determination_findings` reports a `true` that points at no DPIA
+at all, derived from `engine/theory-gates.md` L3 naming the DPIA document as required evidence.
+The `false` case stays in the schema. Two rules, two homes, neither duplicated.
+
+**value-stream is dormant by design** and says so in its own `_meta`; its schema guards a first
+population that may never come. That is the bet the whole series makes, and it is most explicit
+here: the moment a canvas is first filled in is unobserved, months from now, by an agent, with
+nothing else checking the shape.
+
 ## v0.158.0 - the team types were re-verified before the enum was pinned
 
 Third and fourth of the seven "parse-checked only" canvases: **team-shape** (61 populated leaves,
