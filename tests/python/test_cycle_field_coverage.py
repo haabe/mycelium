@@ -133,3 +133,57 @@ def test_undated_cycles_are_skipped_and_the_skip_is_reported(tmp_path):
                demand_type="value")
     out = _mod().cycle_field_coverage(_write(tmp_path, [c]), today=TODAY)
     assert out == [] or "unreadable completed_at" in out[0]
+
+
+# --- rot mode 4: it alarms on an observation nobody could have made (v0.161.0) ---
+#
+# The same shape as rot mode 2 above, one step further out. Mode 2 is "the evidence cannot
+# exist YET"; this is "the evidence was never captured and cannot be recovered". A
+# reconstructed record backfills work that shipped before the trigger existed, so nobody was
+# watching which gates fired. engine/cycle-learning.md already exempts these records from every
+# calibration aggregate; this extends that to the two OBSERVATIONAL fields for the same stated
+# reason, and the doc records the extension.
+
+def test_a_reconstructed_record_is_exempt_from_the_observational_fields(tmp_path):
+    """gates_fired/regressions/rework were never observed on a backfilled arc.
+
+    Writing `gates_fired: []` there would not record a measurement — it would add a fabricated
+    zero to framework-health's denominator and deflate measured gate effectiveness.
+    """
+    c = _cycle(reconstructed_post_hoc=True)
+    out = _mod().cycle_field_coverage(_write(tmp_path, [c]), today=TODAY)
+    joined = " ".join(out)
+    for field in ("gates_fired", "regressions", "rework"):
+        assert field not in joined, f"{field} must be exempt on a reconstructed record"
+
+
+def test_demand_type_is_not_exempt_on_a_reconstructed_record(tmp_path):
+    """The exemption is per-field, not per-record, and this is the line it draws.
+
+    Seddon's demand_type classifies WHY the work was asked for, not what was observed while it
+    ran. That stays determinable from the record long afterwards — the dogfood project filled it
+    on three reconstructed cycles from the opportunity they traced to. Exempting a whole record
+    would have silently lost that.
+    """
+    c = _cycle(reconstructed_post_hoc=True)
+    out = " ".join(_mod().cycle_field_coverage(_write(tmp_path, [c]), today=TODAY))
+    assert "demand_type" in out
+
+
+def test_the_exemption_does_not_silence_an_ordinary_gap(tmp_path):
+    """The whole risk of an exemption is that it hides the case the check exists for."""
+    out = _mod().cycle_field_coverage(_write(tmp_path, [_cycle()]), today=TODAY)
+    joined = " ".join(out)
+    for field in ("gates_fired", "regressions", "demand_type", "rework"):
+        assert field in joined, f"{field} must still be reported on an observed cycle"
+
+
+def test_the_count_says_how_many_records_were_excluded(tmp_path):
+    """A coverage number that quietly shrinks its own population is the defect this repo keeps
+    finding. If records are dropped, the line must say so."""
+    cycles = [_cycle(cycle_id="obs"), _cycle(cycle_id="recon", reconstructed_post_hoc=True)]
+    out = " ".join(_mod().cycle_field_coverage(_write(tmp_path, cycles), today=TODAY))
+    assert "1 reconstructed record(s) are excluded" in out
+    assert "1 of 1 closed cycles carry no `gates_fired`" in out, (
+        "the denominator must be the OBSERVED population, not the whole file"
+    )

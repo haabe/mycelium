@@ -4,6 +4,38 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-01.
 
+## v0.161.0 - nobody was watching that arc
+
+`cycle_field_coverage` counted **reconstructed** records — backfills of work that shipped before
+the recording trigger existed — as missing `gates_fired`, `regressions` and `rework`.
+
+They cannot carry those fields. Nobody was watching that arc, so the observation was never made
+and cannot be recovered. Writing `gates_fired: []` would not record a measurement: it would add a
+**fabricated zero** to framework-health's Gate-effectiveness denominator and deflate the number the
+field exists to produce. Same shape as the existing 14-day `rework` lag — "do not alarm on evidence
+that cannot exist" — one step further out: not *cannot exist yet*, but *was never captured*.
+
+**Derived, not invented.** `engine/cycle-learning.md` already exempts reconstructed records from
+every calibration aggregate, on the stated grounds that "a reconstructed estimate is a number
+invented today to grade work done months ago". The precedent is exact: **v0.98.1 exists because a
+rule shipped and instantly created three violating reconstructed rows** — and these are the same
+three rows meeting a different rule. The doc now records the extension rather than leaving it as
+behaviour only the script knows.
+
+**The exemption is per-FIELD, not per-record, and that distinction is the whole design.**
+`demand_type` stays required on a reconstructed record. Seddon's type classifies *why the work was
+asked for*, not what was observed while it ran, and that is recoverable long afterwards. The
+dogfood project filled it on all three cycles by tracing them to `opp-047` — the devil's-advocate
+ambient trigger that shipped as an instruction and measured a **zero** fire rate across twelve
+withdrawn claims. All three are failure demand: work caused by earlier work being incomplete.
+Being *killed* does not make a cycle failure demand, and the launched one is failure demand too;
+the classification is about origin. That moved the project's demand mix to **13 failure / 7 value**
+— a measurement that a whole-record exemption would have silently lost.
+
+**The coverage line now names how many records it excluded**, so a clean result is never read as
+full coverage. Four tests pin it: the exempt fields, the non-exempt field, that an ordinary gap is
+still reported, and that the denominator is the observed population rather than the whole file.
+
 ## v0.160.0 - two-thirds of the warnings were the check being wrong
 
 Nine `evidence target` warnings had stood open on the dogfood canvas for a day, filed as "needs

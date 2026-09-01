@@ -178,6 +178,23 @@ When Mycelium is the product (a repo dogfooding itself), framework improvements 
 
 **The one exemption from the required field: `reconstructed_post_hoc: true`.** A cycle reconstructed after the fact — a backfill of work that shipped before the trigger existed — carries `effort_accuracy: null` and is EXCLUDED from every calibration aggregate. This is not a loophole, it is the only honest option: no estimate was ever set on that arc, so there is nothing for the actual to be wrong about, and a reconstructed estimate is a number invented today to grade work done months ago. Fabricating it would corrupt the single dimension the record exists to protect.
 
+**The exemption extends to the two OBSERVATIONAL fields, added 2026-09-01 (v0.161.0).**
+`gates_fired` and `regressions` — and `rework`, which is derived over the following fortnight —
+are also permitted absent on a reconstructed record, and `check_cycle_recording.py` excludes those
+records from their coverage counts rather than reporting them as gaps. The reason is the one
+stated above, one step further out: nobody was watching that arc, so the observation was never
+made and cannot be recovered. Writing `gates_fired: []` there would not record a measurement; it
+would add a fabricated zero to framework-health's Gate-effectiveness denominator and deflate the
+very number the field exists to produce. The coverage line names how many records it excluded, so
+a clean result is never read as full coverage.
+
+**`demand_type` is NOT exempt, and that is the line.** The exemption is per-FIELD, not
+per-RECORD. Seddon's type classifies *why the work was asked for*, not what was observed while it
+ran, and that stays determinable from the record long afterwards — the dogfood project filled it
+on three reconstructed cycles by tracing them to the opportunity that caused them, which moved its
+demand mix to 13 failure / 7 value. Exempting the whole record would have silently lost a real
+measurement. The test suite pins both halves.
+
 **What a reconstructed record IS worth**: an audit trail, and a measurement baseline for `check_cycle_recording.py`, which measures from the newest `completed_at`. It restores continuity and produces zero calibration data. Record it that way rather than counting it as a win.
 
 **Why this clause exists at all** (added v0.98.1, hours after v0.98.0): the dogfood project backfilled three arcs immediately on shipping the trigger, and every one of them had to leave the newly-required field null. Without this clause the framework would have shipped a rule and instantly created three violating rows, with nothing to distinguish "exempt by design" from "someone skipped the field" — which is the `documented-rule-diverges-from-enforcement` cluster reproducing itself inside the release meant to close a different gap.

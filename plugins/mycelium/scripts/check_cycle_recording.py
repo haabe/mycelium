@@ -334,15 +334,41 @@ def report(scan: dict, *, as_json: bool) -> int:
 REWORK_WINDOW_DAYS = 14
 
 
-def _missing_field_finding(closed, field, feeds):
+def _observed_only(closed):
+    """Drop records reconstructed after the fact.
+
+    SAME PRINCIPLE AS THE 14-DAY REWORK LAG BELOW: do not alarm on evidence that cannot exist.
+    A `reconstructed_post_hoc` record is a backfill of work that shipped before the trigger
+    existed, so nobody was watching which gates fired or whether a regression followed. Those
+    observations were never made and cannot be recovered; writing `gates_fired: []` would not
+    record a measurement, it would add a fabricated zero to framework-health's denominator and
+    deflate measured gate effectiveness.
+
+    DERIVED, NOT INVENTED. engine/cycle-learning.md already exempts reconstructed records from
+    every calibration aggregate, for the stated reason that "a reconstructed estimate is a number
+    invented today to grade work done months ago". Extending that to the two observational fields
+    is this file applying the doc's own reasoning; the doc records the extension explicitly.
+    The precedent is exact: v0.98.1 exists because a rule shipped and instantly created three
+    violating reconstructed rows, and this is the same three rows meeting a different rule.
+
+    `demand_type` IS NOT EXEMPT and is deliberately excluded from this filter. Seddon's type
+    classifies WHY work was asked for, not what was observed while it ran, and that stays
+    determinable from the record long afterwards.
+    """
+    return [c for c in closed if not c.get("reconstructed_post_hoc")]
+
+
+def _missing_field_finding(closed, field, feeds, excluded=0):
     """One coverage line for a spec field, or None when every cycle carries it."""
     absent = [c.get("cycle_id", "?") for c in closed if field not in c]
     if not absent:
         return None
+    note = (f" {excluded} reconstructed record(s) are excluded from this count: the observation "
+            f"was never made and cannot be recovered." if excluded else "")
     return (
         f"{len(absent)} of {len(closed)} closed cycles carry no `{field}` "
         f"(feeds {feeds}). An empty list or zero is a measurement; an absent "
-        f"field is not. Oldest affected: {absent[0]}, newest: {absent[-1]}."
+        f"field is not. Oldest affected: {absent[0]}, newest: {absent[-1]}.{note}"
     )
 
 
@@ -396,11 +422,15 @@ def cycle_field_coverage(cycle_file, today=None):
     if today is None:
         today = datetime.datetime.now(datetime.UTC).date()
 
+    # Observational fields are measured only on records where someone was actually watching.
+    observed = _observed_only(closed)
+    dropped = len(closed) - len(observed)
+
     findings = [
-        _missing_field_finding(closed, "gates_fired",
-                               "/mycelium:framework-health Gate effectiveness"),
-        _missing_field_finding(closed, "regressions",
-                               "/mycelium:framework-health Regression rate"),
+        _missing_field_finding(observed, "gates_fired",
+                               "/mycelium:framework-health Gate effectiveness", dropped),
+        _missing_field_finding(observed, "regressions",
+                               "/mycelium:framework-health Regression rate", dropped),
         # Added v0.130.0. demand_type shipped in v0.129.0 WITH its consumer, which was the
         # fix for gates_fired's producer-without-reader defect — but it shipped without the
         # absence WARN its two siblings above have, so a missing demand_type was SILENT where
@@ -408,7 +438,7 @@ def cycle_field_coverage(cycle_file, today=None):
         # compliance goes unnoticed for months.
         _missing_field_finding(closed, "demand_type",
                                "/mycelium:framework-health Demand mix"),
-        _rework_finding(closed, today),
+        _rework_finding(observed, today),
     ]
     return [f for f in findings if f]
 
