@@ -52,7 +52,9 @@ Each one shapes a specific surface; removable in isolation, but the surface goes
 | GIST Planning | Gilad | `canvas/gist.yml`, `/gist-plan` (L3 prioritization) |
 | ICE Scoring | Ellis (adopted by Gilad) | `/ice-score` (evidence-backed confidence; calibration via `cycle-history.yml`) |
 | North Star Framework | Ellis | `canvas/north-star.yml` (key metric + input metrics) |
-| Team Topologies | Skelton, Pais | `/team-shape` skill (cognitive load, interaction modes) — **advisory-only until multi-team adoption**: `canvas/team-shape.yml` has no schema and nothing else in the system consumes it yet (see philosophy.md "What Mycelium does not yet do") |
+| Team Topologies | Skelton, Pais (**2nd ed., Sept 2025**) | `/team-shape` skill (cognitive load, interaction modes), `schemas/canvas/team-shape.schema.json` (v0.158.0 — pins the FOUR fundamental types and requires each team to state one, re-verified against primary sources 2026-09-01) — **still advisory-only until multi-team adoption**: nothing yet ACTS on the assessment |
+| Peak-End Rule | Kahneman, Fredrickson, Schreiber, Redelmeier (1993) | `hooks/stop-check.sh` (v0.165.0 — the Stop hook is the LAST thing a session says, so its output leads with the actionable finding and the standing question goes last; a session remembered by its worst moment and its end) |
+| Chunking / Working Memory | Miller (1956), via Cowan on the LIMIT | `hooks/stop-check.sh` (v0.165.0 — session-close findings grouped by kind with counts rather than concatenated; **the mechanism, never the number 7** — Miller's own headline figure is revised downward by Cowan) |
 | Good Services | Downe | `canvas/services.yml`, `/service-check` (15 service principles) |
 | OWASP Top 10:2025 / STRIDE | OWASP, Shostack | `canvas/threat-model.yml`, `/threat-model`, `/security-review` (gate 6) |
 | Privacy by Design | Cavoukian | `canvas/privacy-assessment.yml`, `/privacy-check` (gate 7) |

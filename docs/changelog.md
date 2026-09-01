@@ -4,6 +4,36 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-01.
 
+## v0.166.0 - two theory rows that had to be earned first
+
+**Peak-End Rule** (Kahneman et al. 1993) and **Chunking / Working Memory** (Miller 1956) are now
+Tier-2 rows in `docs/theories.md`.
+
+They could not have been added two hours earlier. The doc's bar is that every theory is
+mechanism-mapped — *"citations without mechanism-mapping are theatre"* — and
+`check_theory_fidelity` rule E enforces it on every push: no name-only theory. Until v0.165.0 gave
+the Stop hook a grouped, ordered session-close output, both would have been pure prose and CI would
+have said so. **The order was mechanism first, row second**, which is the only order that leaves the
+citation true.
+
+Cognitive Load and Postel's Law remain OUT for exactly the same reason: no artifact names them yet.
+Being right is not sufficient.
+
+The Chunking row carries **"the mechanism, never the number 7"** in its own text. Miller's headline
+figure is revised downward by Cowan — in a paper linked from Miller's own page on the site this came
+from — so the caveat travels with the citation rather than living somewhere it has to be
+re-discovered.
+
+**A row that had gone false, corrected the same day.** Team Topologies still read
+`canvas/team-shape.yml` "has no schema and nothing else in the system consumes it yet". That stopped
+being true at v0.158.0 this morning, when the canvas got a schema pinning the four fundamental team
+types. The row now cites the schema and the 2nd edition (Sept 2025), and **keeps the honest half**:
+nothing yet ACTS on the assessment, so it remains advisory-only until multi-team adoption. A theory
+row that quietly outlives its own caveat is the same decay this release series keeps finding, in the
+one document whose job is to be accurate about mechanisms.
+
+21 → 23 rows.
+
 ## v0.165.0 - the last thing a session says is now chunked
 
 `stop-check.sh` is the Stop hook. It accumulated up to seven warnings by string concatenation and
