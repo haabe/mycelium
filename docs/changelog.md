@@ -4,6 +4,54 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-01.
 
+## v0.162.0 - the guards watch what an agent asserts, not what it reads
+
+From a consuming project's field report, 2026-09-01. Asked who to contact about a live
+opportunity, an agent read a task's `next_moves` list and named the wrong person. The user caught
+it. The task's own body said otherwise **in capitals**, in a dated entry written **nineteen days
+after** the list; three of the list's five items were dead.
+
+**No shipped guard could have caught this, and that is the finding.** Nothing was inferred, nothing
+was absent, nothing was unsourced — so the absence-claim guard, the read-before-research nudge and
+the citation checks all pass cleanly. The agent trusted a **summary over the detail that superseded
+it**, inside a file it had already read in full. Every guard shipping today watches what an agent
+ASSERTS. This is the first that watches what it READS.
+
+**The canvas design actively produces it.** Entries are append-only and dated; an instruction list
+is neither. The record grows, the instruction list does not. And `next_moves` is the worst field for
+it to happen in: a stale claim buried in prose gets weighed, while a stale instruction gets
+executed.
+
+The check compares dates and reads no prose — no NLP, nothing to fool with wording. It watches a
+SHAPE that projects invent (`next_moves` is not a framework field; no schema defines it) rather
+than a term the framework owns.
+
+**Measured on two real projects before shipping: 6 findings in the reporting project, 0 in the
+dogfood project.** Three false-positive classes were removed, and each named a convention:
+
+- **A list whose NAME declares it retired.** The reporting project keeps its replaced list as
+  `next_moves_SUPERSEDED_2026_08_13_LIST_KEPT_FOR_THE_RECORD`. Flagging that would teach authors
+  that recording what an instruction replaced is punished.
+- **A record closed with the full discipline trio** (reason + basis + reopen_trigger). A reader
+  acts on the closure, not on a leftover list. Reuses v0.160.0's rule rather than minting a second
+  one, and removing it eliminated the dogfood project's only finding.
+- **`next_moves_updated` itself.** It matched the instruction pattern and carried no date in its own
+  name, so the check reported the very field supplied to satisfy it as an undated instruction list.
+  Caught by its own test, not in review.
+
+**The undated case is the common one**: across the reporting project two lists carried a date and
+**five carried none**. A list that cannot be compared to anything is exactly how it goes stale
+unseen — the same reasoning as "an empty list is a measurement; an absent field is not", one field
+over.
+
+**G2 from the same report is deliberately NOT implemented**, and the reason belongs here rather than
+in a silent omission. It asks that a derived dataset's scope limits reach use time — a caveat sat
+one screen from the data and was overridden three times. The proposed remedy was guidance. This
+project has already measured that intervention: the v0.65.0 SessionStart prose nudge was delivered
+and ignored at a byte-identical score, and only the PreToolUse gate changed behaviour. Adding a
+paragraph would satisfy the report and change nothing. It needs a mechanism that fires when a
+derived dataset is read, or it needs to stay unbuilt and honest.
+
 ## v0.161.0 - nobody was watching that arc
 
 `cycle_field_coverage` counted **reconstructed** records — backfills of work that shipped before

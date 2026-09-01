@@ -1007,6 +1007,129 @@ def source_class_target_findings(canvas_dir):
     return out
 
 
+_DATE_IN_TEXT = re.compile(r"(20\d{2})[-_](\d{2})[-_](\d{2})")
+_INSTRUCTION_KEY = re.compile(r"next_moves|next_steps|action_items", re.IGNORECASE)
+# A key that says it is retired is not a stale instruction — it is an archived one. Measured
+# 2026-09-01: without this, the check fires on `next_moves_SUPERSEDED_..._KEPT_FOR_THE_RECORD`,
+# a field whose NAME declares it dead. Flagging that teaches authors that recording what an
+# instruction replaced is punished, which is the opposite of the behaviour wanted.
+_RETIRED_KEY = re.compile(
+    r"superseded|archived|historic|kept_for_the_record|obsolete|old_", re.IGNORECASE)
+_DATE_BEARING_SCALARS = ("updated_at", "completed_at", "reopened_at", "sent_at", "created_at")
+_DATED_LISTS = ("touch_log", "partial_findings")
+
+
+def _newest_dated_entry(record):
+    """The newest date anywhere in this record, by the conventions projects actually use."""
+    found = []
+    for key, value in record.items():
+        match = _DATE_IN_TEXT.search(key)          # dated keys: `foo_2026_08_14`
+        if match:
+            found.append("-".join(match.groups()))
+        if key in _DATE_BEARING_SCALARS and isinstance(value, str):
+            match = _DATE_IN_TEXT.search(value)
+            if match:
+                found.append("-".join(match.groups()))
+        if key in _DATED_LISTS and isinstance(value, list):
+            for entry in value:
+                if isinstance(entry, dict) and isinstance(entry.get("date"), str):
+                    match = _DATE_IN_TEXT.search(entry["date"])
+                    if match:
+                        found.append("-".join(match.groups()))
+    return (max(found), len(found)) if found else (None, 0)
+
+
+def stale_instruction_list_findings(canvas_dir):
+    """WARN-tier: an instruction list that the record around it has moved past.
+
+    THE GAP (dogfood report, 2026-09-01, user-caught). Asked who to contact about a live
+    opportunity, an agent read a task's `next_moves` list and named the wrong person. The task's
+    own body said otherwise IN CAPITALS, in a dated entry written nineteen days after the list.
+    Three of the list's five items were dead.
+
+    WHY NO EXISTING GUARD CATCHES IT, which is the whole reason it is worth a check. Nothing was
+    inferred, nothing was absent, and nothing was unsourced — so the absence-claim guard, the
+    read-before-research nudge and the citation checks all pass. The agent trusted a SUMMARY over
+    the detail that superseded it, inside a file it had already read in full. Every shipped guard
+    watches what an agent ASSERTS; this watches what it READS.
+
+    AND THE CANVAS DESIGN PRODUCES IT. Entries are append-only and dated; an instruction list is
+    neither. The record grows, the instruction list does not. `next_moves` is the worst field for
+    this to land in, because a stale claim buried in prose gets weighed while a stale instruction
+    gets executed.
+
+    TWO SHAPES, AND THE SECOND IS THE COMMON ONE. Measured across the reporting project: two
+    lists carried their own date, five carried none at all. An undated instruction list cannot be
+    compared to anything, which is exactly how it goes stale invisibly — the same reasoning as
+    "an empty list is a measurement; an absent field is not", one field over.
+
+    NOT A LEXICAL CHECK. It compares dates and reads no prose, so it needs no natural-language
+    understanding and cannot be fooled by wording. `next_moves` is not a framework field — no
+    schema defines it — so this watches a SHAPE that projects invent rather than a term the
+    framework owns.
+    """
+    out = []
+    for path in sorted(Path(canvas_dir).glob("*.yml")):
+        try:
+            doc = load_yaml(path) or {}
+        except Exception:  # noqa: BLE001,S112 — parse failures belong to the fail-loud pass,
+            # which reports "YAML parse error in <file>" and exits 1 over the same file. This
+            # advisory declines to speak precisely because that pass already has.
+            continue
+        if not isinstance(doc, dict):
+            continue
+        for records in (v for v in doc.values() if isinstance(v, list)):
+            for record in records:
+                if isinstance(record, dict):
+                    out.extend(_instruction_findings(path.name, record))
+    return out
+
+
+def _instruction_findings(filename, record):
+    newest, count = _newest_dated_entry(record)
+    if not newest:
+        return []   # nothing dated to compare against; silence is correct
+    if closed_with_discipline(record):
+        # A record closed with reason + basis + reopen_trigger has recorded that it is DONE, and a
+        # reader acts on that closure rather than on a leftover instruction list. Reusing the rule
+        # v0.160.0 established for evidence pointers instead of minting a second one.
+        # MEASURED 2026-09-01: this removes the dogfood project's only finding — a completed task
+        # carrying `candidate_next_moves_UNVERIFIED` — which was the check's sole false positive.
+        # The failure this exists for happened on a LIVE task about a LIVE opportunity.
+        return []
+    rid = record.get("id") or record.get("cycle_id") or "<no id>"
+    out = []
+    for key in record:
+        if not _INSTRUCTION_KEY.search(key) or _RETIRED_KEY.search(key):
+            continue
+        if key.endswith("_updated"):
+            # `next_moves_updated` is the DATE MARKER for a list, not a list. Caught by its own
+            # test: without this the marker matched the instruction pattern, carried no date in
+            # its own name, and was reported as an undated instruction list — the check flagging
+            # the very field supplied to satisfy it.
+            continue
+        match = _DATE_IN_TEXT.search(key)
+        own = "-".join(match.groups()) if match else None
+        if own is None:
+            explicit = record.get(f"{key}_updated")
+            if isinstance(explicit, str):
+                match = _DATE_IN_TEXT.search(explicit)
+                own = "-".join(match.groups()) if match else None
+        if own is None:
+            out.append(
+                f"{filename}#{rid}: `{key}` carries no date, and the record around it holds "
+                f"{count} dated entries (newest {newest}). An undated instruction list cannot be "
+                f"checked against the record it summarises, which is how it goes stale unnoticed. "
+                f"Date it (`{key}_updated`, or a date in the key) or fold it into a dated entry.")
+        elif own < newest:
+            out.append(
+                f"{filename}#{rid}: `{key}` is dated {own} and the record has moved since — "
+                f"newest dated entry {newest}. An instruction list older than the record it "
+                f"summarises is something a reader in a hurry will execute. Re-read it against "
+                f"the newer entries before acting on it, and rewrite or retire it.")
+    return out
+
+
 def print_advisory_warnings(canvas_dir):
     """Emit the WARN-tier findings that never fail a build.
 
@@ -1022,6 +1145,7 @@ def print_advisory_warnings(canvas_dir):
         ("tech capability", technical_capability_findings(canvas_dir)),
         ("evidence target", source_class_target_findings(canvas_dir)),
         ("dpia", dpia_determination_findings(canvas_dir)),
+        ("stale instruction", stale_instruction_list_findings(canvas_dir)),
     ):
         for w in findings:
             print(f"  WARN ({label}): {w}")

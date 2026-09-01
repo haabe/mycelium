@@ -1752,3 +1752,85 @@ def test_pending_tasks_are_still_never_flagged(tmp_path, scripts_path):
         {"pending_tasks": [{"id": "ht-z", "source_class_target": "external_human"}],
          "completed_tasks": []}, sort_keys=False))
     assert validator.source_class_target_findings(tmp_path) == []
+
+
+# --- stale instruction lists (v0.162.0) ------------------------------------
+# Source: dogfood report 2026-09-01. An agent read a task's `next_moves`, named the wrong
+# contact, and was corrected by the user. The task's own body said otherwise in a dated entry
+# written 19 days AFTER the list. No shipped guard catches this: nothing was inferred, absent,
+# or unsourced. Every other guard watches what an agent ASSERTS; this watches what it READS.
+
+def _instr(record, tmp_path, scripts_path, filename="human-tasks.yml"):
+    import yaml
+    validator = _import_validator(scripts_path)
+    (tmp_path / filename).write_text(yaml.safe_dump({"pending_tasks": [record]}, sort_keys=False))
+    return validator.stale_instruction_list_findings(tmp_path)
+
+
+def test_an_instruction_list_older_than_its_record_is_reported(tmp_path, scripts_path):
+    rec = {"id": "ht-1", "next_moves_2026_08_13": ["reply to X"],
+           "some_entry_2026_08_26": "the case moved elsewhere"}
+    out = _instr(rec, tmp_path, scripts_path)
+    assert out and "2026-08-13" in out[0] and "2026-08-26" in out[0]
+
+
+def test_an_undated_instruction_list_is_reported_and_this_is_the_common_shape(tmp_path, scripts_path):
+    """Measured on the reporting project: two lists carried a date, FIVE carried none. An undated
+    instruction list cannot be compared to anything, which is exactly how it goes stale unseen —
+    the same reasoning as "an empty list is a measurement; an absent field is not"."""
+    rec = {"id": "ht-2", "next_moves": ["do a thing"], "entry_2026_08_26": "the record moved"}
+    out = _instr(rec, tmp_path, scripts_path)
+    assert out and "carries no date" in out[0]
+
+
+def test_a_dated_list_newer_than_the_record_is_silent(tmp_path, scripts_path):
+    rec = {"id": "ht-3", "next_moves_2026_08_30": ["x"], "entry_2026_08_26": "older"}
+    assert _instr(rec, tmp_path, scripts_path) == []
+
+
+def test_an_explicit_updated_field_dates_the_list(tmp_path, scripts_path):
+    rec = {"id": "ht-4", "next_moves": ["x"], "next_moves_updated": "2026-08-30",
+           "entry_2026_08_26": "older"}
+    assert _instr(rec, tmp_path, scripts_path) == []
+
+
+def test_a_list_whose_name_declares_it_retired_is_not_flagged(tmp_path, scripts_path):
+    """FALSE POSITIVE FOUND BY MEASURING. The reporting project keeps its replaced list as
+    `next_moves_SUPERSEDED_2026_08_13_LIST_KEPT_FOR_THE_RECORD`. Flagging a field whose NAME
+    declares it dead would teach authors that recording what an instruction replaced is punished
+    — the opposite of the behaviour wanted."""
+    rec = {"id": "ht-5", "next_moves_SUPERSEDED_2026_08_13_LIST_KEPT_FOR_THE_RECORD": ["old"],
+           "entry_2026_08_26": "newer"}
+    assert _instr(rec, tmp_path, scripts_path) == []
+
+
+def test_a_record_closed_with_discipline_is_not_flagged(tmp_path, scripts_path):
+    """A reader acts on the closure, not on a leftover instruction list. Reuses the v0.160.0 rule
+    rather than minting a second one. This removed the dogfood project's ONLY finding, which was
+    its sole false positive; the failure this check exists for happened on a LIVE task."""
+    rec = {"id": "ht-6", "next_moves": ["x"], "entry_2026_08_26": "newer",
+           "closure_reason": "unanswered", "closure_basis": "observed",
+           "reopen_trigger": "they reply"}
+    assert _instr(rec, tmp_path, scripts_path) == []
+
+
+def test_a_record_with_no_dated_entries_is_silent(tmp_path, scripts_path):
+    """Nothing to compare against. Silence is correct — the alternative is alarming on evidence
+    that cannot exist."""
+    assert _instr({"id": "ht-7", "next_moves": ["x"]}, tmp_path, scripts_path) == []
+
+
+def test_touch_log_and_partial_findings_dates_count_as_record_movement(tmp_path, scripts_path):
+    for block in ("touch_log", "partial_findings"):
+        rec = {"id": "ht-8", "next_moves_2026_08_01": ["x"], block: [{"date": "2026-08-26"}]}
+        assert _instr(rec, tmp_path, scripts_path), block
+
+
+def test_the_dogfood_canvas_produces_no_findings(scripts_path):
+    """Zero false positives on a 25-file canvas, measured 2026-09-01 before shipping."""
+    validator = _import_validator(scripts_path)
+    live = Path("/Users/bartnes/Repos/mycelium-roadmap/.claude/canvas")
+    if not live.is_dir():
+        import pytest
+        pytest.skip("dogfood canvas not present in this checkout")
+    assert validator.stale_instruction_list_findings(live) == []
