@@ -1,0 +1,178 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mycelium.dev/schemas/canvas/archived-solutions.schema.json",
+  "title": "Archived Solutions Canvas",
+  "description": "Killed solution leaves — the record of work NOT built, which receipt-render calls the load-bearing honesty of a receipt. Added 2026-09-01: this file was one of seven canvases validate_canvas reported as 'parse-checked only', and it had just acquired a DEPENDENT — check_log_reconcile (v0.155.0) reads `archived[].leaf_id` and nothing guaranteed the field existed. Field set and the `reason` enum are taken from engine/leaf-lifecycle.md's documented archive-entry format rather than inferred from the three entries present, so the schema describes the CONTRACT and not this project's sample of it.",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "schema_version": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "archived": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "description": "Killed leaves, never deleted. engine/leaf-lifecycle.md: 'When a leaf is killed at any phase, it is archived — never deleted.'",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": [
+          "leaf_id"
+        ],
+        "properties": {
+          "leaf_id": {
+            "type": [
+              "string"
+            ],
+            "description": "The solution leaf that was killed. READ BY check_log_reconcile.py, which reconciles this file against cycle-history.yml: an archived leaf with no cycle row is an orphan. That check exists because on 2026-08-31 this file held three dated, reasoned kills while cycle-history reported 0 killed, and nothing compared the two."
+          },
+          "opportunity_id": {
+            "type": [
+              "string"
+            ],
+            "description": "The opportunity the leaf sat under."
+          },
+          "archived_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "When it was killed, ISO-8601.",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}"
+          },
+          "archived_at_phase": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Which lifecycle phase it died at, per engine/leaf-lifecycle.md.",
+            "minimum": 1,
+            "maximum": 9
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "failed-assumption",
+              "feasibility-block",
+              "viability-block",
+              "superseded",
+              "market-rejection",
+              "low-ice-score",
+              null
+            ],
+            "description": "Why it died. Enum taken VERBATIM from engine/leaf-lifecycle.md's archive-entry format, which is the documented contract; it is not inferred from the three entries present. `low-ice-score` appears there parenthesised and is included so a real kill for that reason is not forced to mislabel itself."
+          },
+          "ice_score_at_archive": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": true,
+            "properties": {
+              "i": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "c": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "e": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "impact": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "confidence": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ease": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "total": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "score": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "description": "The ICE score the leaf carried when killed — the only record of what was predicted for work that no longer exists. TWO KEY SHAPES ARE PERMITTED AND THAT IS A RECORDED COMPROMISE, NOT AN OVERSIGHT: engine/leaf-lifecycle.md documents `{i, c, e, total}` while the live entries use `{impact, confidence, ease, total}`, and opportunities.yml uses `{impact, confidence, ease, score}`. Pinning one would invalidate real records written in good faith against the other. The divergence is flagged here rather than silently resolved; converging them is a migration, not a schema decision."
+          },
+          "evidence_snapshot": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The evidence as it stood at archival — what was known when the decision was made, not what is known now."
+          },
+          "revival_conditions": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "What would have to be true to revive it. A kill without this is a deletion with extra steps."
+          },
+          "decision_log_ref": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Where the kill was reasoned through in the decision log."
+          },
+          "four_risks_snapshot": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Value/usability/feasibility/viability at archival, per engine/leaf-lifecycle.md.",
+            "additionalProperties": true
+          },
+          "segments_checked": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "description": "Which segments were evaluated before the kill."
+          }
+        }
+      }
+    },
+    "_meta": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true
+    }
+  }
+}

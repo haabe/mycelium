@@ -1352,3 +1352,55 @@ def test_a_task_without_the_field_is_not_flagged(tmp_path, scripts_path):
     out = v.source_class_target_findings(_tasks_doc(
         tmp_path, completed=[{"id": "ht-001"}]))
     assert out == []
+
+
+# --- archived-solutions schema (added 2026-09-01) ----------------------------
+# This canvas was one of seven reported as "parse-checked only" — and it had just acquired a
+# DEPENDENT: check_log_reconcile (v0.155.0) reads `archived[].leaf_id` to reconcile kills
+# against cycle-history, and nothing guaranteed the field existed.
+
+
+def _archived_errors(doc):
+    import json
+
+    import jsonschema
+    with open(_real_schema_dir() / "archived-solutions.schema.json") as fh:
+        return list(jsonschema.Draft202012Validator(json.load(fh)).iter_errors(doc))
+
+
+def test_an_archived_entry_must_carry_the_field_its_consumer_reads(tmp_path):
+    """`leaf_id` is required because check_log_reconcile keys on it. An entry without one is
+    invisible to the reconciliation and reads as though the kill never happened."""
+    assert _archived_errors({"archived": [{"opportunity_id": "opp-001"}]})
+    assert _archived_errors({"archived": [{"leaf_id": "sol-047a"}]}) == []
+
+
+def test_the_reason_enum_comes_from_the_documented_contract(tmp_path):
+    """The enum is engine/leaf-lifecycle.md's, not this project's sample. `low-ice-score`
+    appears there parenthesised and is included, so a real kill for that reason is not forced
+    to mislabel itself."""
+    for good in ("failed-assumption", "feasibility-block", "superseded", "low-ice-score"):
+        assert _archived_errors({"archived": [{"leaf_id": "x", "reason": good}]}) == [], good
+    assert _archived_errors({"archived": [{"leaf_id": "x", "reason": "because-i-said-so"}]})
+
+
+def test_both_recorded_ice_key_shapes_are_accepted(tmp_path):
+    """A RECORDED COMPROMISE, not an oversight. engine/leaf-lifecycle.md documents
+    `{i, c, e, total}`; the live entries use `{impact, confidence, ease, total}`; and
+    opportunities.yml uses `{impact, confidence, ease, score}`. Pinning one would invalidate
+    real records written in good faith against another. Converging them is a migration."""
+    for shape in ({"i": 3, "c": 4, "e": 2, "total": 24},
+                  {"impact": 8, "confidence": 4, "ease": 5, "total": 160},
+                  {"impact": 8, "confidence": 4, "ease": 5, "score": 160}):
+        assert _archived_errors(
+            {"archived": [{"leaf_id": "x", "ice_score_at_archive": shape}]}) == [], shape
+
+
+def test_the_live_dogfood_canvas_validates(tmp_path):
+    """The schema must describe the file that exists, or it is a rule nobody follows."""
+    import yaml
+    live = Path("/Users/bartnes/Repos/mycelium-roadmap/.claude/canvas/archived-solutions.yml")
+    if not live.is_file():
+        import pytest
+        pytest.skip("dogfood canvas not present in this checkout")
+    assert _archived_errors(yaml.safe_load(live.read_text())) == []

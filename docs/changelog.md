@@ -4,6 +4,32 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-31.
 
+## v0.156.0 - a schema for the canvas that had just acquired a dependent
+
+`archived-solutions.yml` was one of seven canvases `validate_canvas` reported as **"parse-checked
+only"** — a warning that had read as cosmetic for months. It stopped being cosmetic in v0.155.0, when
+`check_log_reconcile` began reading `archived[].leaf_id` to reconcile kills against `cycle-history`.
+**A check depended on a field nothing guaranteed existed.**
+
+`leaf_id` is now `required`. An archived entry without one is invisible to the reconciliation and
+reads as though the kill never happened — which is the failure that check was built for.
+
+**THE FIELD SET AND THE `reason` ENUM COME FROM `engine/leaf-lifecycle.md`, NOT FROM THE DATA.** That
+file documents the archive-entry format, including five reasons plus a parenthesised `low-ice-score`,
+which is included so a real kill for that reason is not forced to mislabel itself. Writing the schema
+from the three entries this project happens to hold would have described one sample rather than the
+contract — and after a day in which reading a value without checking its population produced four
+wrong findings, that distinction was worth the extra read.
+
+**A DIVERGENCE THE SCHEMA SURFACES RATHER THAN RESOLVES.** `ice_score_at_archive` appears in three key
+shapes across the framework: `{i, c, e, total}` in the engine doc, `{impact, confidence, ease, total}`
+in the live archive, and `{impact, confidence, ease, score}` in `opportunities.yml`. All three are
+permitted, and that is **a recorded compromise, not an oversight** — pinning one would invalidate real
+records written in good faith against another. Converging them is a migration, not a schema decision,
+and it is flagged here so the next person meets a stated problem instead of a silent one.
+
+Six schemaless canvases remain. This one was done first because it was the only one with a consumer.
+
 ## v0.155.1 - the reconcile check shipped with a false-positive generator
 
 **The extractor added in v0.155.0 could not read the file it was built to read.** Two bugs, both
