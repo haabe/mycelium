@@ -152,3 +152,40 @@ def test_an_empty_archive_is_skipped_not_passed(tmp_path):
     root = _two_canvases(tmp_path, "archived: []\n", "cycles: []\n")
     res = clr.analyse(root)
     assert any("killed leaves" in s[0] for s in res["skipped"]), res
+
+
+def test_a_list_item_at_the_same_indent_as_its_key_stays_in_the_block(tmp_path):
+    """YAML permits `cycles:` at column 0 with `- cycle_id:` also at column 0, and
+    cycle-history.yml is written that way. Breaking on indent alone ended the scan on the
+    first item and returned an EMPTY SET, so every source id read as missing — the check
+    reported three archived leaves as orphaned when two had just been recorded."""
+    d = tmp_path / ".claude" / "canvas"
+    d.mkdir(parents=True, exist_ok=True)
+    (d / "cycle-history.yml").write_text(
+        "cycles:\n- cycle_id: cycle-001\n  leaf_id: sol-047a\n- cycle_id: cycle-002\n"
+        "  leaf_id: sol-047d\n")
+    assert clr._block_field_values(d / "cycle-history.yml", "cycles", "leaf_id") == {
+        "sol-047a", "sol-047d"}
+
+
+def test_a_comment_between_items_does_not_end_the_block(tmp_path):
+    """Canvases carry comment banners between list items. A `#` at the key's indent is not a
+    sibling key — treating it as one ended the scan before the entries below it."""
+    d = tmp_path / ".claude" / "canvas"
+    d.mkdir(parents=True, exist_ok=True)
+    (d / "cycle-history.yml").write_text(
+        "cycles:\n- cycle_id: cycle-001\n  leaf_id: sol-old\n"
+        "# a banner explaining what follows\n"
+        "- cycle_id: cycle-002\n  leaf_id: sol-new\n")
+    assert clr._block_field_values(d / "cycle-history.yml", "cycles", "leaf_id") == {
+        "sol-old", "sol-new"}
+
+
+def test_a_sibling_key_does_end_the_block(tmp_path):
+    """The break must still work, or the scan runs into the next top-level section."""
+    d = tmp_path / ".claude" / "canvas"
+    d.mkdir(parents=True, exist_ok=True)
+    (d / "cycle-history.yml").write_text(
+        "cycles:\n- cycle_id: cycle-001\n  leaf_id: sol-in\n"
+        "calibration_summary:\n  leaf_id: sol-out\n")
+    assert clr._block_field_values(d / "cycle-history.yml", "cycles", "leaf_id") == {"sol-in"}

@@ -130,7 +130,21 @@ def _block_field_values(canvas: Path, block_key: str, field: str) -> set[str] | 
             indent = len(line) - len(line.lstrip())
             found = set()
             for nxt in lines[i + 1:]:
-                if nxt.strip() and (len(nxt) - len(nxt.lstrip())) <= indent:
+                stripped = nxt.strip()
+                nxt_indent = len(nxt) - len(nxt.lstrip())
+                # A LIST ITEM AT THE SAME INDENT AS ITS KEY IS STILL INSIDE THE BLOCK.
+                # YAML permits `cycles:` at column 0 with `- cycle_id:` also at column 0, and
+                # cycle-history.yml is written that way. Breaking on indent alone ended the
+                # scan on the first item and returned an EMPTY SET — so every source id read
+                # as missing from the target. Measured 2026-09-01: this reported three
+                # archived leaves as orphaned when two of them had just been recorded.
+                # A COMMENT IS NOT THE END OF THE BLOCK EITHER. Canvases carry comment
+                # banners between list items, and a `#` at the key's indent is not a
+                # sibling key. Measured the same day: a comment inserted above three new
+                # cycles ended the scan before them, so they read as missing.
+                if stripped.startswith("#"):
+                    continue
+                if stripped and nxt_indent <= indent and not stripped.startswith("- "):
                     break
                 m = pattern.match(nxt)
                 if m:

@@ -4,6 +4,28 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-31.
 
+## v0.155.1 - the reconcile check shipped with a false-positive generator
+
+**The extractor added in v0.155.0 could not read the file it was built to read.** Two bugs, both
+found within the hour by using it on real data:
+
+**It broke on a list whose items share the key's indent.** YAML permits `cycles:` at column 0 with
+`- cycle_id:` also at column 0, and `cycle-history.yml` is written exactly that way. Breaking on
+indent alone ended the scan at the first item and returned an **empty set**, so every source id read
+as missing. It reported three archived leaves as orphaned when two had just been recorded.
+
+**And a comment banner ended the block.** A `#` line at the key's indent is not a sibling key.
+Inserting an explanatory comment above the new cycle rows terminated the scan before them — the check
+was defeated by a comment written in the same commit that added the rows.
+
+Both are now covered by tests that fail by assertion when the handling is removed, plus a third
+asserting a genuine sibling key still ends the block, so the fix cannot swing the other way.
+
+**WHY THIS IS WORTH A RELEASE NOTE RATHER THAN A QUIET PATCH.** A reconciliation check that returns an
+empty set does not fail — it reports **everything** as orphaned, which reads as a dramatic finding.
+The failure mode of a broken comparator is a louder alarm, not a quieter one, and the only reason it
+was caught is that the number disagreed with something already known to be true.
+
 ## v0.155.0 - two canvases disagreed about whether anything had ever been killed
 
 `archived-solutions.yml` and `cycle-history.yml` both record the death of a solution, and **nothing
