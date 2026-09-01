@@ -1,0 +1,164 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bounded-contexts.schema.json",
+  "title": "Bounded Contexts Canvas (Evans, Domain-Driven Design)",
+  "description": "The enums here are NOT invented for this schema. Every one of them was already written in a YAML comment in the canvas template, where nothing could enforce it. This file moves them from prose to enforcement; it does not add rules. The canvas is empty by design on solo projects, which is exactly why it needs this: the first population happens unobserved, months from now, and nothing else checks its shape.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "_meta": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true
+    },
+    "contexts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "ubiquitous_language": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "term"
+              ],
+              "properties": {
+                "term": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "definition": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          },
+          "owning_team": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Free text on purpose: it names a team in team-shape.yml, but no cross-file reference resolver exists, and an enum pinned to one project's team names would be wrong in every other repo."
+          },
+          "type": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "core",
+              "supporting",
+              "generic",
+              null
+            ],
+            "description": "Evans' distillation. core = competitive advantage, supporting = necessary but not differentiating, generic = commodity."
+          },
+          "evolution_stage": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "genesis",
+              "custom",
+              "product",
+              "commodity",
+              null
+            ],
+            "description": "Wardley evolution axis, shared with landscape.yml."
+          }
+        }
+      }
+    },
+    "context_map": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "upstream",
+          "downstream"
+        ],
+        "properties": {
+          "upstream": {
+            "type": "string",
+            "minLength": 1
+          },
+          "downstream": {
+            "type": "string",
+            "minLength": 1
+          },
+          "relationship": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "partnership",
+              "shared_kernel",
+              "customer_supplier",
+              "conformist",
+              "anti_corruption_layer",
+              "open_host_service",
+              "published_language",
+              null
+            ],
+            "description": "The seven DDD context-map patterns, verbatim from the template's own comment block."
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "alignment_check": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "contexts_match_teams": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "issues": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "last_updated": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Top-level convention shared with landscape/opportunities/gist and present in the shipped template. Declared explicitly because this schema sets additionalProperties:false \u2014 unlike the older canvas schemas, which set it true and therefore declare almost nothing. Rejecting a live convention would have been the schema being wrong, not the data."
+    }
+  }
+}

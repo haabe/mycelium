@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mycelium.dev/schemas/canvas/team-shape.schema.json",
+  "title": "Team Shape Canvas",
+  "description": "Team Topologies assessment (Skelton & Pais): team types, cognitive load, interaction modes, Conway's Law alignment. Added 2026-09-01 as the third of seven 'parse-checked only' canvases, and chosen next because it was the LARGEST body of unvalidated data in the dogfood repo — 61 populated leaves across 20KB, none of it checked by anything. The team-type enum comes from skills/team-shape/SKILL.md, which lists the four fundamental types, NOT from this project's single team. A schema written from one stream-aligned entry would have encoded a sample as the contract.",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "teams": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": [
+          "name",
+          "type"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "stream-aligned",
+              "enabling",
+              "complicated-subsystem",
+              "platform",
+              null
+            ],
+            "description": "Skelton's four fundamental team types, taken from skills/team-shape/SKILL.md. MOST TEAMS SHOULD BE stream-aligned; the doc says so, and a canvas where most are not is the finding the assessment exists to surface. `complicated-subsystem` is conditional in the source — 'only when cognitive load justifies' — which a schema cannot check."
+          },
+          "focus": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "size": {
+            "type": [
+              "number",
+              "string",
+              "null"
+            ],
+            "description": "Permitted as a STRING because a real entry reads '1.5' for a solo human plus agents. Coercing that to a number would lose what the value is saying."
+          },
+          "composition": {
+            "type": [
+              "object",
+              "string",
+              "null"
+            ],
+            "additionalProperties": true
+          },
+          "interaction_modes": {
+            "type": [
+              "object",
+              "array",
+              "null"
+            ],
+            "additionalProperties": true,
+            "description": "Modes toward other teams. The three legal values are collaboration, x-as-a-service and facilitating. NOT ENUM-PINNED, deliberately: the live shape is a mapping keyed by the other team, and pinning the VALUE side would reject a legitimate structure this project has not settled. Recorded so the next person meets a stated gap rather than a silent one."
+          },
+          "notes": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "description": "The teams as they actually are, not as an org chart wishes."
+    },
+    "cognitive_load_assessment": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true,
+      "description": "Intrinsic / extraneous / germane load per team. Only extraneous SHOULD be reduced; intrinsic can be managed but not removed, and germane is encouraged."
+    },
+    "conways_law_check": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true,
+      "description": "Whether the system's shape mirrors the communication structure that built it."
+    },
+    "security_alignment": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true
+    },
+    "bounded_context_alignment": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true,
+      "description": "Does each stream-aligned team own a coherent bounded context?"
+    },
+    "pioneers_settlers_town_planners": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true
+    },
+    "last_assessed": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}",
+      "description": "ISO date of the last /mycelium:team-shape run. Read against the technical-feasibility 120-day horizon in engine/evidence-decay.md."
+    },
+    "_meta": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true
+    }
+  }
+}

@@ -9,7 +9,21 @@ metadata:
 
 # Team Shape Assessment
 
-Evaluate organizational design for fast flow. Source: Skelton & Pais (Team Topologies).
+Evaluate organizational design for fast flow. Source: Skelton & Pais, *Team Topologies*,
+**2nd edition (IT Revolution, 23 Sept 2025, ISBN 9781966280002)**.
+
+**Model re-verified against primary sources 2026-09-01** — teamtopologies.com/key-concepts, the
+2nd-edition publisher page, and the 2026 AI material (QCon London keynote 17 Mar 2026; "AI ROI"
+executive report 12 Aug 2026). It is still **four** fundamental team types and **three**
+interaction modes. The authors have added no AI-specific team type, and their stated position is
+that none is needed. Third parties do propose new ones (SAFe, various blogs) and InfoQ's QCon
+report names an "Innovation and Practices Enabling Team" — read the name: that is a *named
+specialization of the existing enabling team*, not a fifth fundamental type. Do not add either to
+the enum in `schemas/canvas/team-shape.schema.json`.
+
+Two caveats worth carrying: the 2nd edition adds **platform grouping** (a platform team may itself
+be one or more teams), and the live site renders the third interaction mode "Facilitation" while
+the book says "facilitating" — which is why that enum is deliberately unpinned.
 
 ## Preflight: Read target canvas file(s) before any Write/Edit
 

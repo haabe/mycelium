@@ -1446,3 +1446,154 @@ def test_the_live_thresholds_canvas_validates(tmp_path):
         import pytest
         pytest.skip("dogfood canvas not present in this checkout")
     assert _thresholds_errors(yaml.safe_load(live.read_text())) == []
+
+
+
+# ---------------------------------------------------------------------------
+# team-shape + bounded-contexts schemas (added 2026-09-01)
+#
+# Both canvases were "parse-checked only" until now. bounded-contexts holds ZERO real
+# leaves, which is the argument FOR schema-ing it rather than against: an empty canvas is
+# first populated later, by an agent, unobserved, and nothing else checks the shape at that
+# moment. Its enums were already written in the template's YAML comments, where nothing
+# could enforce them.
+# ---------------------------------------------------------------------------
+
+def _canvas_errors(stem, doc, tmp_path, scripts_path):
+    """Validate `doc` as <stem>.yml THROUGH THE SHIPPED CODE PATH.
+
+    An earlier version of this helper built a bare Draft202012Validator of its own, with no
+    `referencing` registry — so it could not resolve a $ref into _common.schema.json, and a
+    schema could pass this suite via a path production never takes. Same defect class this
+    repo already documents: one rule, two implementations, only one of which runs.
+    """
+    import yaml
+    validator = _import_validator(scripts_path)
+    canvas = tmp_path / f"{stem}.yml"
+    canvas.write_text(yaml.safe_dump(doc, sort_keys=False))
+    return validator.validate_canvas_against_schema(canvas, validator.build_registry())
+
+
+def _live(stem, scripts_path):
+    """Errors for the real dogfood canvas, or None when this checkout has no roadmap repo."""
+    import yaml
+    live = Path("/Users/bartnes/Repos/mycelium-roadmap/.claude/canvas") / f"{stem}.yml"
+    if not live.is_file():
+        return None
+    validator = _import_validator(scripts_path)
+    yaml.safe_load(live.read_text())  # parse guard: a YAML error must not read as schema-valid
+    return validator.validate_canvas_against_schema(live, validator.build_registry())
+
+
+def test_the_four_skelton_team_types_are_accepted_and_others_are_not(tmp_path, scripts_path):
+    """The enum is the four FUNDAMENTAL types, re-verified against teamtopologies.com on
+    2026-09-01: the second edition (Sept 2025) and the 2026 AI material both still carry
+    exactly four. Third parties propose AI-specific types; the authors do not."""
+    for t in ("stream-aligned", "enabling", "complicated-subsystem", "platform"):
+        assert _canvas_errors("team-shape", {"teams": [{"name": "x", "type": t}]}, tmp_path, scripts_path) == [], t
+    assert _canvas_errors("team-shape", {"teams": [{"name": "x", "type": "devops"}]}, tmp_path, scripts_path)
+
+
+def test_a_team_must_state_its_type_even_if_the_answer_is_unclassified(tmp_path, scripts_path):
+    """`type` is required but nullable: an unclassified team is legal, an entry that never
+    mentions classification is not. Making you answer is the assessment's whole job, and a
+    silently absent field is how that gets skipped."""
+    assert _canvas_errors("team-shape", {"teams": [{"type": "platform"}]}, tmp_path, scripts_path)
+    assert _canvas_errors("team-shape", {"teams": [{"name": "x"}]}, tmp_path, scripts_path)
+    assert _canvas_errors("team-shape", {"teams": [{"name": "x", "type": None}]}, tmp_path, scripts_path) == []
+
+
+def test_team_size_accepts_both_a_number_and_a_string(tmp_path, scripts_path):
+    """The live entry records the float 1.5 — one human plus a primary agent counted as 0.5.
+    A string is accepted too: a team writing '1 + 2 agents' is saying something a number
+    cannot, and this canvas is read by humans as often as by scripts."""
+    assert _canvas_errors("team-shape", {"teams": [{"name": "x", "type": "stream-aligned", "size": 1.5}]}, tmp_path, scripts_path) == []
+    assert _canvas_errors("team-shape", {"teams": [{"name": "x", "type": "stream-aligned", "size": "1 + 2 agents"}]}, tmp_path, scripts_path) == []
+
+
+def test_interaction_modes_are_deliberately_not_enum_pinned(tmp_path, scripts_path):
+    """Three modes exist (collaboration, x-as-a-service, facilitating) but the KEYS here are
+    other teams' names, not mode names. Pinning was also checked against the live site, which
+    renders the third mode 'Facilitation' while the book says 'facilitating' — an enum would
+    have to pick a side of a naming drift the authors themselves have not resolved."""
+    doc = {"teams": [{"name": "x", "type": "platform",
+                      "interaction_modes": {"other-team": "x-as-a-service"}}]}
+    assert _canvas_errors("team-shape", doc, tmp_path, scripts_path) == []
+
+
+def test_team_shape_last_assessed_must_be_a_date(tmp_path, scripts_path):
+    """Read against the 120-day technical-feasibility horizon; prose cannot be compared."""
+    assert _canvas_errors("team-shape", {"last_assessed": "a while ago"}, tmp_path, scripts_path)
+    assert _canvas_errors("team-shape", {"last_assessed": "2026-09-01"}, tmp_path, scripts_path) == []
+
+
+def test_the_seven_ddd_context_map_relationships_are_accepted(tmp_path, scripts_path):
+    """Verbatim from the bounded-contexts template's own comment block — the schema moves
+    them from prose to enforcement, it does not invent them."""
+    for r in ("partnership", "shared_kernel", "customer_supplier", "conformist",
+              "anti_corruption_layer", "open_host_service", "published_language"):
+        doc = {"context_map": [{"upstream": "a", "downstream": "b", "relationship": r}]}
+        assert _canvas_errors("bounded-contexts", doc, tmp_path, scripts_path) == [], r
+    bogus = {"context_map": [{"upstream": "a", "downstream": "b", "relationship": "friends"}]}
+    assert _canvas_errors("bounded-contexts", bogus, tmp_path, scripts_path)
+
+
+def test_bounded_context_type_is_evans_distillation_not_free_text(tmp_path, scripts_path):
+    for t in ("core", "supporting", "generic"):
+        assert _canvas_errors("bounded-contexts", {"contexts": [{"name": "x", "type": t}]}, tmp_path, scripts_path) == []
+    assert _canvas_errors("bounded-contexts", {"contexts": [{"name": "x", "type": "important"}]}, tmp_path, scripts_path)
+
+
+def test_bounded_context_evolution_stage_matches_the_wardley_axis(tmp_path, scripts_path):
+    """Same four stages landscape.yml uses; a context and a component must not disagree."""
+    for st in ("genesis", "custom", "product", "commodity"):
+        assert _canvas_errors("bounded-contexts", {"contexts": [{"name": "x", "evolution_stage": st}]}, tmp_path, scripts_path) == []
+    assert _canvas_errors("bounded-contexts", {"contexts": [{"name": "x", "evolution_stage": "mature"}]}, tmp_path, scripts_path)
+
+
+def test_both_live_canvases_validate(scripts_path):
+    for stem in ("team-shape", "bounded-contexts"):
+        errs = _live(stem, scripts_path)
+        if errs is None:
+            import pytest
+            pytest.skip("dogfood canvas not present in this checkout")
+        assert errs == [], (stem, errs)
+
+
+def test_every_canvas_schema_accepts_the_template_that_ships_beside_it(scripts_path):
+    """A schema that rejects its own shipped template is broken on arrival.
+
+    This is a RATCHET over every schema, not a test of one. It was written because
+    bounded-contexts.schema.json shipped with `additionalProperties: false` and no
+    declaration for `last_updated` — a field sitting in the shipped template itself. The
+    failure surfaced only indirectly, through an unrelated test that happened to validate
+    the whole canvas directory. Nothing was checking the direct question.
+
+    Note this bites ONLY for schemas with additionalProperties:false. The older canvas
+    schemas set it true and would pass this vacuously; that is the gap being closed, not a
+    reason to weaken the check.
+    """
+    validator = _import_validator(scripts_path)
+    repo_canvas = Path(scripts_path).parents[2] / ".claude" / "canvas"
+    if not repo_canvas.is_dir():
+        import pytest
+        pytest.skip("no shipped canvas templates in this checkout")
+
+    registry = validator.build_registry()
+    checked, failures = 0, []
+    for schema in sorted(_real_schema_dir().glob("*.schema.json")):
+        if schema.name.startswith("_"):
+            continue
+        template = repo_canvas / f"{schema.stem.replace('.schema', '')}.yml"
+        if not template.is_file():
+            continue  # schema for a canvas this repo does not itself keep
+        checked += 1
+        errors = validator.validate_canvas_against_schema(template, registry)
+        if errors:
+            failures.append((template.name, errors))
+
+    assert checked > 0, (
+        "matched no templates at all — a green result here would mean nothing. "
+        "Empty input must refuse, not pass."
+    )
+    assert not failures, failures

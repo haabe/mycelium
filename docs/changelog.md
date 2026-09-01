@@ -2,7 +2,55 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-08-31.
+**Last updated**: 2026-09-01.
+
+## v0.158.0 - the team types were re-verified before the enum was pinned
+
+Third and fourth of the seven "parse-checked only" canvases: **team-shape** (61 populated leaves,
+the largest unvalidated body of canvas data in the dogfood repo) and **bounded-contexts** (zero
+real leaves).
+
+**Zero leaves is the argument FOR schematising it, not against.** An empty canvas gets first
+populated later, by an agent, unobserved — and that is precisely the moment nothing checks the
+shape. Same "loop that cannot close" class as the rest of this series.
+
+**The enums were not inferred from the live sample.** This project has exactly one team, so a
+schema written from the data would have encoded "stream-aligned" as the world. team-shape's four
+types come from `skills/team-shape/SKILL.md`'s documented contract. bounded-contexts is starker:
+its seven DDD context-map relationships (`partnership`, `shared_kernel`, `customer_supplier`,
+`conformist`, `anti_corruption_layer`, `open_host_service`, `published_language`), its
+`core|supporting|generic` distillation and its Wardley `genesis|custom|product|commodity` axis were
+**already written in the template's own YAML comments**, where nothing could enforce them. The
+schema moves them from prose to enforcement; it invents nothing.
+
+**The model was re-verified against primary sources before the enum was pinned** (2026-09-01):
+teamtopologies.com/key-concepts, the 2nd-edition publisher page (IT Revolution, 23 Sept 2025, ISBN
+9781966280002) and the 2026 AI material (QCon London keynote 17 Mar 2026, "AI ROI" executive report
+12 Aug 2026). Still **four** fundamental team types and **three** interaction modes. The authors
+have added no AI-specific team type and state that none is needed. Third parties do propose them;
+InfoQ's report of the QCon keynote names an "Innovation and Practices Enabling Team", which — read
+the name — is a *named specialization of the existing enabling team*, not a fifth fundamental type.
+Neither is in the enum. The 2nd edition's one model refinement, **platform grouping** (a platform
+team may itself be one or more teams), is recorded in the skill.
+
+**Interaction modes are deliberately NOT enum-pinned**, and the reason is now written down: the
+live site renders the third mode "Facilitation" while the book says "facilitating". An enum would
+have to pick a side of a naming drift the authors have not resolved, and the keys in that mapping
+are other teams' names anyway.
+
+**A test-harness defect, caught by its own failure.** The new tests built a bare
+`Draft202012Validator` with no `referencing` registry, so they could not resolve a `$ref` into
+`_common.schema.json` at all — meaning a schema could pass the suite through a path production
+never takes, or fail here for a reason production never hits. One rule, two implementations, only
+one of which runs: the same class this repo has now fixed in the reply-owed checker and the gate
+parity check. The tests now call `validate_canvas_against_schema` itself. The same session also
+caught a `$ref` to `_common.schema.json#/$defs/meta`, a definition that **does not exist** — the
+house convention leaves `_meta` free-form and canvas-health owns its rules.
+
+Three schemaless canvases left after this, per `validate_canvas.py`'s own output rather than a
+count kept in my head: `privacy-assessment`, `trust-signals` and `value-stream`. The last of those
+is dormant-by-design and says so in its `_meta`, so its schema will be guarding a first population
+that may never come — which is the same bet bounded-contexts just took.
 
 ## v0.157.0 - a schema for the thresholds, and the ICE loop has its first three data points
 
