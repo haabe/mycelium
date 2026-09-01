@@ -49,7 +49,7 @@ print('yes' if has_l4 else 'no')
     if [ -f "$CANVAS_DIR/threat-model.yml" ]; then
       COMPONENTS_EMPTY=$(grep -c "^components: \[\]" "$CANVAS_DIR/threat-model.yml" 2>/dev/null || echo "0")
       if [ "$COMPONENTS_EMPTY" -gt 0 ]; then
-        WARNINGS="${WARNINGS}GUARDRAIL G-S2: threat-model.yml has no components assessed. If this solution handles user data, run /threat-model before completing delivery. "
+        WARNINGS="${WARNINGS}GUARDRAIL G-S2: threat-model.yml has no components assessed. If this solution handles user data, run /threat-model before completing delivery.@@W@@"
       fi
     fi
 
@@ -58,7 +58,7 @@ print('yes' if has_l4 else 'no')
       NOT_ASSESSED=$(grep -c "not-assessed" "$CANVAS_DIR/services.yml" 2>/dev/null || echo "0")
       TOTAL_PRINCIPLES=15
       if [ "$NOT_ASSESSED" -ge "$TOTAL_PRINCIPLES" ]; then
-        WARNINGS="${WARNINGS}GUARDRAIL G-V2: Downe's 15 service principles have not been assessed. Run /service-check for user-facing work. "
+        WARNINGS="${WARNINGS}GUARDRAIL G-V2: Downe's 15 service principles have not been assessed. Run /service-check for user-facing work.@@W@@"
       fi
     fi
   fi
@@ -112,7 +112,7 @@ except Exception: print('unknown')
 " "$CANVAS_DIR/bvssh-health.yml" 2>/dev/null || echo "unknown")
 
   if [ "$BVSSH_OVERDUE" = "overdue" ] || [ "$BVSSH_OVERDUE" = "never" ]; then
-    WARNINGS="${WARNINGS}FEEDBACK LOOP: BVSSH health check overdue (monthly cadence). Run /bvssh-check. "
+    WARNINGS="${WARNINGS}FEEDBACK LOOP: BVSSH health check overdue (monthly cadence). Run /bvssh-check.@@W@@"
   fi
 fi
 
@@ -157,7 +157,7 @@ except Exception: print('unknown')
 " "$METRICS_CANVAS_STOP" 2>/dev/null || echo "unknown")
 
   if [ "$METRICS_OVERDUE" = "overdue" ]; then
-    WARNINGS="${WARNINGS}FEEDBACK LOOP: Delivery metrics overdue (monthly cadence). Review delivery health. "
+    WARNINGS="${WARNINGS}FEEDBACK LOOP: Delivery metrics overdue (monthly cadence). Review delivery health.@@W@@"
   fi
 fi
 
@@ -173,7 +173,7 @@ if [ -f "$AUDIT_LOG" ]; then
 fi
 
 if [ "$DIAMOND_DIRECT_EDITS" -gt 0 ]; then
-  WARNINGS="${WARNINGS}OBSERVABILITY: ${DIAMOND_DIRECT_EDITS} direct diamond state edit(s) this session (outside /diamond-progress). Verify these were intentional -- /diamond-progress is the idiomatic path for gate evaluation and phase transitions. See .claude/state/diamond-state-audit.jsonl for details. "
+  WARNINGS="${WARNINGS}OBSERVABILITY: ${DIAMOND_DIRECT_EDITS} direct diamond state edit(s) this session (outside /diamond-progress). Verify these were intentional -- /diamond-progress is the idiomatic path for gate evaluation and phase transitions. See .claude/state/diamond-state-audit.jsonl for details.@@W@@"
 fi
 
 # ============================================================
@@ -194,7 +194,7 @@ if [ -f "$RECONCILE" ]; then
   OUTSTANDING=$(python3 "$RECONCILE" --project-dir "$PROJECT_DIR" --json 2>/dev/null \
     | python3 -c "import json,sys;print(json.load(sys.stdin).get('outstanding',0))" 2>/dev/null || echo 0)
   if [ "${OUTSTANDING:-0}" -gt 0 ]; then
-    WARNINGS="${WARNINGS}${OUTSTANDING} reflexion(s) fired this session and produced no recorded decision. Each needs a corrections.md entry OR 'reconcile_reflexions.py --dismiss \"why this was not a learning\"'. Run the script to see which commands. | "
+    WARNINGS="${WARNINGS}${OUTSTANDING} reflexion(s) fired this session and produced no recorded decision. Each needs a corrections.md entry OR 'reconcile_reflexions.py --dismiss \"why this was not a learning\"'. Run the script to see which commands.@@W@@"
   fi
 fi
 
@@ -208,19 +208,73 @@ fi
 # No mechanical signal for it was found, so this asks — and is labelled a
 # stopgap rather than dressed up as a mechanism.
 if [ "$CORRECTIONS_COUNT" -gt 0 ] || [ -n "$WARNINGS" ]; then
-  WARNINGS="${WARNINGS}Before ending: did you fix anything in-flight without recording it — a wrong answer you quietly re-ran, or a bug you fixed and explained only in a code comment? A code comment is read by whoever opens that file; corrections.md is read at every session start. | "
+  WARNINGS="${WARNINGS}Before ending: did you fix anything in-flight without recording it — a wrong answer you quietly re-ran, or a bug you fixed and explained only in a code comment? A code comment is read by whoever opens that file; corrections.md is read at every session start. |@@W@@"
 fi
 
 # ============================================================
 if [ -n "$WARNINGS" ]; then
   python3 -c "
 import json, sys
-warnings = sys.argv[1]
-corrections = sys.argv[2]
-decisions = sys.argv[3]
+
+# GROUPED, NOT CONCATENATED (2026-09-01). This is the LAST thing a session says, and it was a
+# single run-on string: measured at 1272 characters and five findings on a real project, with two
+# chronic large-number warnings drowning the two actionable ones. Three laws apply and all three
+# are surface-independent, so they hold here exactly as they would in a GUI:
+#   Miller  — chunk into named groups of a few, so the reader can hold the list while deciding.
+#   Serial position — first and last are what survive; put the actionable first, the standing
+#             question last.
+#   Peak-end — a session is remembered by its worst moment and its LAST message. Ending on an
+#             undifferentiated wall with no next action is what gets remembered.
+# See auto-memory reference-laws-of-ux. NOTHING IS DROPPED: every warning still appears, and the
+# count is stated so a shorter message is never mistaken for fewer findings.
+
+warnings = [w.strip() for w in sys.argv[1].split('@@W@@') if w.strip()]
+corrections, decisions = sys.argv[2], sys.argv[3]
+
+def group_of(w):
+    if w.startswith('GUARDRAIL'):
+        return 'GUARDRAIL'
+    if w.startswith('FEEDBACK LOOP'):
+        return 'FEEDBACK LOOP'
+    if w.startswith('OBSERVABILITY'):
+        return 'OBSERVABILITY'
+    if 'reflexion' in w[:40]:
+        return 'UNRECORDED'
+    return 'BEFORE YOU STOP'
+
+# Session-specific findings before standing conditions: they are actionable now and they expire.
+# 'BEFORE YOU STOP' is the standing in-flight question, not a finding, so it goes last.
+ORDER = ['UNRECORDED', 'OBSERVABILITY', 'GUARDRAIL', 'FEEDBACK LOOP', 'BEFORE YOU STOP']
+grouped = {}
+for w in warnings:
+    grouped.setdefault(group_of(w), []).append(w)
+
+def strip_prefix(key, w):
+    # The group name is now the label, so repeating it in the body is pure interface-load.
+    # 'GUARDRAIL G-S2' keeps its code — that identifies WHICH guardrail and is problem-load.
+    if key == 'GUARDRAIL' and w.startswith('GUARDRAIL '):
+        return w[len('GUARDRAIL '):]
+    for lead in (key + ': ', key + ':'):
+        if w.startswith(lead):
+            return w[len(lead):]
+    return w
+
+findings = sum(len(v) for k, v in grouped.items() if k != 'BEFORE YOU STOP')
+names = [k for k in ORDER if k in grouped and k != 'BEFORE YOU STOP']
+lines = ['MYCELIUM SESSION CLOSE — %d finding(s) in %d group(s).' % (findings, len(names))]
+for key in ORDER:
+    items = grouped.get(key, [])
+    for i, w in enumerate(items):
+        head = '%s (%d):' % (key, len(items)) if i == 0 else '·'.rjust(len(key) + 1)
+        body = strip_prefix(key, w).rstrip().rstrip('|').rstrip()
+        lines.append('  %s %s' % (head, body))
+# 'in the plugin' is LOAD-BEARING and locked by tests/bash/test_stop_check.sh since v0.49.10:
+# a bare .claude/engine/ path is dead in plugin form. Do not shorten this phrase.
+lines.append('Address these or record why they do not apply for this project type '
+             '(check engine/canvas-guidance.yml in the plugin).')
 output = {
-    'additionalContext': f'MYCELIUM GUARDRAIL WARNINGS: {warnings}Before completing, address these warnings or document why they are not applicable for this project type (check engine/canvas-guidance.yml in the plugin).',
-    'systemMessage': f'Session: {corrections} corrections, {decisions} decisions logged.'
+    'additionalContext': chr(10).join(lines),
+    'systemMessage': f'Session: {corrections} corrections, {decisions} decisions logged.',
 }
 print(json.dumps(output))
 " "$WARNINGS" "$CORRECTIONS_COUNT" "$DECISIONS_COUNT"

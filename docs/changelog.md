@@ -4,6 +4,48 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-01.
 
+## v0.165.0 - the last thing a session says is now chunked
+
+`stop-check.sh` is the Stop hook. It accumulated up to seven warnings by string concatenation and
+emitted them as one run-on paragraph. Measured on a real project before changing anything: **1272
+characters, five findings**, with two chronic large-number warnings — 85 direct diamond edits, 149
+unreconciled reflexions — drowning the two that were actionable.
+
+It is also, by construction, **the last thing a session says.**
+
+Now grouped by kind with counts, session-specific findings before standing conditions, and the
+standing in-flight question last.
+
+**Nothing is dropped, and the character count barely moved: 1272 → 1195.** That is the point. This
+is chunking, not shortening — per Tesler, shortening moves the irreducible complexity into the
+reader's head rather than removing it, so a test pins that every warning body and every remedy
+inside it survives grouping intact.
+
+**Three laws, applied where they were earned rather than cited.** Miller: chunk into named groups so
+the reader can hold the list while deciding. Serial position: first and last are what survive, so
+the actionable finding leads and the standing question goes last. Peak-end: a session is remembered
+by its worst moment and its last message, and ending on an undifferentiated wall with no next action
+is what gets remembered. All three are **surface-independent** — they hold here exactly as they
+would in a GUI, which is why they were the ones worth acting on.
+
+**Three defects in my own work, each caught by a different mechanism:**
+
+- **A tagging regex terminated on an escaped inner quote.** One warning contains
+  `--dismiss \"why this was not a learning\"`; the non-greedy match to the first `"` stopped there
+  and inserted the record delimiter mid-string, breaking shell quoting for the rest of the file.
+  The `count == 7` assertion **passed** — it validated how many edits happened, not where they
+  landed. Caught by `bash -n`.
+- **Three new tests never ran.** They were appended after the runner block, which registers each
+  test by name; the suite reported the same pass count with and without them. The runner now sits
+  at the end of the file, so a test added to it is registered by definition. A test that is not
+  registered is a mechanism with no caller, one layer up.
+- **One test's failure path could not fail.** It called `pass`/`fail` helpers that `_assert.sh`
+  does not define; bash printed "command not found" and the suite still reported 0 failed. Rewritten
+  onto `assert_eq`, then deliberately inverted to prove it fails, then restored.
+
+The v0.49.10 lock survived: the closing line still reads "check engine/canvas-guidance.yml in the
+plugin", and the reason is now a comment beside it so the next rewrite does not quietly drop it.
+
 ## v0.164.0 - the refresh protocol wrote a field the schema forbade
 
 `engine/evidence-decay.md` is the canonical decay protocol. It says, of a refreshed claim: **"update
