@@ -96,6 +96,23 @@ Populated as the project evolves.
 Empty until the first pattern lands.
 ```
 
+### `.claude/harness/do-not-cite.yml`
+
+Copy from `${CLAUDE_PLUGIN_ROOT}/harness/do-not-cite.yml`. It is the project's register of claims
+already investigated and ruled on, and `check_citations.py` reads it — via `/mycelium:canvas-health`
+and as a WARN in `validate_canvas` — reporting any canvas line that repeats one, printing the entry
+VERBATIM.
+
+**Copy it even though the seed is tiny.** The four shipped entries exist to establish the shape; the
+value is in what the project adds. A register that is never extended still costs nothing, and one
+that does not exist means `check_citations` reports NOTHING WAS CHECKED — which is honest, and
+useless.
+
+**Why the seed is small on purpose**: it carries only claims with a PUBLISHED debunking, named in
+the entry. Shipping this framework's own judgements about statistics would make every consumer
+inherit any ruling that turns out wrong — and rulings do turn out wrong. Project-specific findings
+belong in the project's copy, where they can be defended.
+
 ### `.claude/harness/decision-log.md`
 ```markdown
 # Decision log

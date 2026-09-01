@@ -1,0 +1,69 @@
+# DO-NOT-CITE REGISTER — starter template. Copy to <project>/.claude/harness/do-not-cite.yml
+# and add your own rulings. `check_citations.py` reads the PROJECT copy, never this one.
+#
+# WHAT THIS FILE IS FOR. A claim your project has already investigated and ruled on will be
+# re-encountered — by a later session, by a research sweep, by you in six months — and re-used
+# unless something says otherwise at the moment of writing. Measured on the dogfood project
+# 2026-09-01: a register that existed and was CORRECT failed twice in one day, once by not being
+# read before a citation landed in two canvas files, and once by having a narrow entry paraphrased
+# into a broad one that was then acted on, rewriting four surfaces that were already right.
+#
+# TWO RULES, both learned by breaking them:
+#
+#   1. QUOTE THE ENTRY, NEVER PARAPHRASE IT. The paraphrase is where breadth gets added. The
+#      second failure above happened entirely inside a paraphrase of the entry directly below.
+#
+#   2. A MATCH TOKEN MUST BE AS NARROW AS ITS RULING — match the CLAIM, never the NAME. On the
+#      dogfood project's first extension of this file, bare surnames and a bare institution
+#      produced a 6-of-6 FALSE POSITIVE run against legitimate citations: a real theorist cited
+#      correctly, and an institution whose ruling concerns its success RATES while the canvas used
+#      its cause-RANKING. A token broader than its ruling recreates, inside the register, the exact
+#      error the register exists to prevent.
+#
+# WHY THE SHIPPED SEED IS SO SMALL. Only claims with a PUBLISHED debunking are included — a named
+# author correcting them in print, not this framework's own judgement. Mycelium shipping opinions
+# about specific statistics would mean every consumer inherits any ruling that turns out wrong,
+# and rulings do turn out wrong. Everything else belongs in YOUR copy, where you can defend it.
+#
+# `verdict` is one of: do-not-cite | misattributed | confabulated | qualified.
+# `qualified` matters as much as the others: the number is real and the CAVEAT is load-bearing.
+
+schema_version: 1
+
+entries:
+  - id: cost-of-defect-curve
+    match: ["cost of defect", "cost-of-defect", "100x more expensive"]
+    verdict: do-not-cite
+    verbatim: >-
+      The 1x/6.5x/15x/100x "cost of fixing a defect rises by phase" curve has no traceable source.
+      Laurent Bossavit chased it in "The Leprechauns of Software Engineering" and the citation
+      chain dead-ends. Leffingwell 1997, widely cited for it, contains no primary data — it
+      recycles the curve.
+
+  - id: standish-chaos-rates
+    match: ["CHAOS success rate", "Standish success rate", "CHAOS failure rate"]
+    verdict: do-not-cite
+    verbatim: >-
+      Jorgensen & Eveleens, IEEE Software 2010, applied Standish's own definitions and could not
+      reproduce its project success/failure rates. NOTE THE NARROWNESS: this rules on the RATES.
+      The CHAOS cause-ranking is a different and defensible use, so do not widen this to the name.
+
+  - id: sixty-four-percent-features
+    match: ["64% of features", "rarely or never used"]
+    verdict: do-not-cite
+    verbatim: >-
+      Mike Cohn contacted Standish directly and established the underlying sample is n=4. The claim
+      also circulates as 45%, 80% and "two-thirds". Pendo's separate 80% figure DOES rest on a real
+      behavioural dataset (615 subscriptions) — cite Pendo and its n, never this lineage.
+
+  # EXAMPLE of the `qualified` verdict, kept because it is the shape most often got wrong: a real
+  # finding whose meaning inverts when the caveat is dropped.
+  - id: kohavi-one-third
+    match: ["one third of tested ideas", "one-third of tested ideas"]
+    verdict: qualified
+    verbatim: >-
+      Kohavi, Crook & Longbotham (KDD 2009, Microsoft Experimentation Platform): about one third of
+      tested ideas improve the metric they were designed to improve. THE REMEDY MUST TRAVEL WITH
+      THE NUMBER — Kohavi's own conclusion is NOT more upfront discovery, it is CHEAPER TESTING IN
+      PRODUCTION. Citing the statistic without the remedy inverts the author's point, which is an
+      easy mistake to make when the inversion is convenient.

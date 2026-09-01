@@ -4,6 +4,37 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-01.
 
+## v0.169.0 - a seed register, small on purpose
+
+`check_citations.py` shipped in v0.167.0 reading `.claude/harness/do-not-cite.yml` — a file only the
+project that built it possessed. Everywhere else it reported **NOTHING WAS CHECKED**: honest, and
+useless. A mechanism whose input never exists is the shape this series keeps removing, one level out.
+
+`harness/do-not-cite.yml` now ships as a starter template and `/mycelium:setup` copies it into a new
+project, alongside the `decision-log.md` it already creates.
+
+**Four entries, and the smallness is the design.** The seed carries only claims with a PUBLISHED
+debunking, each naming its debunker in the entry text: Bossavit on the 1x/6.5x/15x/100x
+cost-of-defect curve, Jorgensen & Eveleens (IEEE Software 2010) on Standish CHAOS success rates,
+Mike Cohn on the 64%-of-features claim resting on n=4, and Kohavi as the worked `qualified` example.
+
+**Why not ship more.** Shipping this framework's own judgements about statistics would make every
+consumer inherit any ruling that turns out wrong — and two rulings turned out wrong on the day this
+was written, one of them a correction that rewrote four already-correct surfaces. Project-specific
+findings belong in the project's copy, where they can be defended by the person who made them.
+
+**The Standish entry demonstrates the narrowness rule in situ** rather than only stating it: it
+rules on the RATES and says so in its own text, because the CHAOS cause-ranking is a different and
+defensible use. That is the entry whose over-broad token caused a false positive the day before.
+
+**`qualified` ships as a first-class verdict** with Kohavi as the example, because it is the shape
+most often got wrong: a real finding whose meaning inverts when the caveat is dropped. His remedy is
+cheaper testing in production, NOT more upfront discovery — an inversion that would be convenient
+for a discovery framework to make, which is exactly why it is the example.
+
+Two tests assert the seed actually loads as a register and that every entry names a published
+debunker, so the constraint is checked rather than trusted.
+
 ## v0.168.0 - a match token must be as narrow as its ruling
 
 Extending the do-not-cite register from 6 entries to 26 produced a **6-of-6 false positive run** on

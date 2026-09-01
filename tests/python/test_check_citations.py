@@ -169,3 +169,35 @@ def test_detection_survives_the_widened_suppression(tmp_path):
            '    verdict: do-not-cite\n    verbatim: no primary\n')
     p = _project(tmp_path, "notes: |\n  Research shows 42% of teams ship faster.\n", register=reg)
     assert len(_mod().scan(p)[0]) == 1
+
+
+def test_the_shipped_seed_register_is_valid_and_the_check_reads_it(tmp_path):
+    """The seed must actually work as a register, not merely parse.
+
+    It ships at plugins/mycelium/harness/do-not-cite.yml for `setup` to copy. A template that the
+    check cannot consume would be a mechanism with no caller one level out — shipped, documented,
+    and inert.
+    """
+    import shutil
+    seed = SCRIPT.parents[1] / "harness" / "do-not-cite.yml"
+    assert seed.is_file(), "the seed register must ship with the plugin"
+    (tmp_path / ".claude" / "harness").mkdir(parents=True)
+    (tmp_path / ".claude" / "canvas").mkdir(parents=True)
+    shutil.copy(seed, tmp_path / ".claude/harness/do-not-cite.yml")
+    (tmp_path / ".claude/canvas/landscape.yml").write_text(
+        "notes: |\n  Studies show 64% of features are rarely or never used.\n")
+    findings, _, entries = _mod().scan(tmp_path)
+    assert entries == 4, f"seed should load 4 entries, got {entries}"
+    assert len(findings) == 1 and findings[0][3] in ("64% of features", "rarely or never used")
+
+
+def test_every_seed_entry_names_a_published_debunker(tmp_path):
+    """The seed's stated constraint, asserted rather than trusted: it carries only claims someone
+    corrected IN PRINT. Shipping this framework's own statistical judgements would make every
+    consumer inherit any ruling that turns out wrong."""
+    import yaml
+    seed = SCRIPT.parents[1] / "harness" / "do-not-cite.yml"
+    entries = yaml.safe_load(seed.read_text())["entries"]
+    named = ("Bossavit", "Jorgensen", "Cohn", "Kohavi")
+    for entry in entries:
+        assert any(n in entry["verbatim"] for n in named), entry["id"]
