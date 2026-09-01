@@ -1,0 +1,252 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mycelium.dev/schemas/canvas/thresholds.schema.json",
+  "title": "Adaptive Thresholds Canvas",
+  "description": "Thresholds that start at defaults and calibrate from this project's own cycle data. Added 2026-09-01, the second of seven canvases that were 'parse-checked only'. Field set taken from engine/adaptive-thresholds.md's Threshold Registry — default, calibrated, calibrated_at, based_on_n, minimum_n, bounds — rather than inferred from the entries present. WHAT A SCHEMA HERE CANNOT DO, said plainly: it can pin the SHAPE of a calibration record and cannot tell you the calibration ever ran. On the dogfood canvas every `calibrated` is null with `based_on_n: 0`, and until 2026-09-01 the file's own `_meta.calibration_status` explained that by blaming a cycle count that had in fact been exceeded. A schema would not have caught that; only reading the file against cycle-history did.",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "schema_version": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "last_calibrated": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}",
+      "description": "When ANY threshold here was last calibrated. null means never."
+    },
+    "thresholds": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "ice_advance": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "ICE SEQUENCING REFERENCE, AND IT IS NOT AN ADVANCEMENT GATE. The name is historical. engine/adaptive-thresholds.md states it plainly: the advancement gate was REMOVED in v0.54.0 because scoring-for-selection is what Torres cautions against, and leaf-lifecycle.md Phase 5 carries the real gate — the riskiest assumption has a recorded verdict of `validated`. A validated leaf with a low ICE is DEPRIORITISED, never archived. This threshold orders what to do first; it never decides whether to do it at all. CALIBRATION INPUT: the ICE scores of leaves that were LAUNCHED AND SUCCEEDED versus those that FAILED, read from cycle-history.yml. That input was empty until 2026-09-01, when the first product-leaf cycles were recorded.",
+          "additionalProperties": true,
+          "properties": {
+            "default": {
+              "type": [
+                "number",
+                "string",
+                "null"
+              ],
+              "description": "Used until calibration kicks in. A sensible starting point, not evidence."
+            },
+            "calibrated": {
+              "type": [
+                "number",
+                "string",
+                "null"
+              ],
+              "description": "Adjusted from cycle data. null means NOT YET CALIBRATED — which is an honest state, not a gap, until based_on_n reaches minimum_n."
+            },
+            "calibrated_at": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}",
+              "description": "When the calibrated value was set. null while calibrated is null."
+            },
+            "based_on_n": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "description": "How many cycles informed the calibration. 0 with a non-null `calibrated` is a contradiction: a value adjusted from nothing."
+            },
+            "minimum_n": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 1,
+              "description": "Cycles required before the calibrated value overrides the default."
+            },
+            "bounds": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "additionalProperties": true,
+              "description": "Hard limits the calibrated value may never exceed, per engine/adaptive-thresholds.md. They exist so a small sample cannot move a threshold somewhere unreasonable."
+            }
+          }
+        },
+        "confidence_calibration": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "Multiplier applied to stated confidence. Default assumes confidence is already calibrated, i.e. no adjustment.",
+          "additionalProperties": true,
+          "properties": {
+            "default": {
+              "type": [
+                "number",
+                "string",
+                "null"
+              ],
+              "description": "Used until calibration kicks in. A sensible starting point, not evidence."
+            },
+            "calibrated": {
+              "type": [
+                "number",
+                "string",
+                "null"
+              ],
+              "description": "Adjusted from cycle data. null means NOT YET CALIBRATED — which is an honest state, not a gap, until based_on_n reaches minimum_n."
+            },
+            "calibrated_at": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}",
+              "description": "When the calibrated value was set. null while calibrated is null."
+            },
+            "based_on_n": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "description": "How many cycles informed the calibration. 0 with a non-null `calibrated` is a contradiction: a value adjusted from nothing."
+            },
+            "minimum_n": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 1,
+              "description": "Cycles required before the calibrated value overrides the default."
+            },
+            "bounds": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "additionalProperties": true,
+              "description": "Hard limits the calibrated value may never exceed, per engine/adaptive-thresholds.md. They exist so a small sample cannot move a threshold somewhere unreasonable."
+            }
+          }
+        },
+        "evidence_staleness": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "additionalProperties": true,
+          "description": "Per-category decay horizons. THE DEFAULTS HERE MUST AGREE WITH engine/evidence-decay.md, which is the table canvas-health reads: user_needs 90, competitive 90, strategic 180, feasibility 120. Two copies of one number is how they drift, so a disagreement between this file and that table is a defect in whichever was edited last.",
+          "properties": {
+            "user_needs": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "additionalProperties": true
+            },
+            "competitive": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "additionalProperties": true
+            },
+            "strategic": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "additionalProperties": true
+            },
+            "feasibility": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "additionalProperties": true
+            }
+          }
+        },
+        "bakeoff_delta": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "The ICE gap below which two leaves are treated as too close to separate on score alone.",
+          "additionalProperties": true,
+          "properties": {
+            "default": {
+              "type": [
+                "number",
+                "string",
+                "null"
+              ],
+              "description": "Used until calibration kicks in. A sensible starting point, not evidence."
+            },
+            "calibrated": {
+              "type": [
+                "number",
+                "string",
+                "null"
+              ],
+              "description": "Adjusted from cycle data. null means NOT YET CALIBRATED — which is an honest state, not a gap, until based_on_n reaches minimum_n."
+            },
+            "calibrated_at": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}",
+              "description": "When the calibrated value was set. null while calibrated is null."
+            },
+            "based_on_n": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "description": "How many cycles informed the calibration. 0 with a non-null `calibrated` is a contradiction: a value adjusted from nothing."
+            },
+            "minimum_n": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 1,
+              "description": "Cycles required before the calibrated value overrides the default."
+            },
+            "bounds": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "additionalProperties": true,
+              "description": "Hard limits the calibrated value may never exceed, per engine/adaptive-thresholds.md. They exist so a small sample cannot move a threshold somewhere unreasonable."
+            }
+          }
+        }
+      }
+    },
+    "_meta": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true
+    }
+  }
+}

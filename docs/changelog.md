@@ -4,6 +4,45 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-08-31.
 
+## v0.157.0 - a schema for the thresholds, and the ICE loop has its first three data points
+
+Second of the seven "parse-checked only" canvases. Field set taken from
+`engine/adaptive-thresholds.md`'s Threshold Registry — `default`, `calibrated`, `calibrated_at`,
+`based_on_n`, `minimum_n`, `bounds` — rather than inferred from the entries present.
+
+**WHAT THE SCHEMA SAYS ABOUT ITSELF, because it is the honest half.** It can pin the SHAPE of a
+calibration record and cannot tell you the calibration ever ran. On the dogfood canvas every
+`calibrated` is null with `based_on_n: 0`, and until 2026-09-01 that file's own
+`_meta.calibration_status` explained the nulls by blaming a cycle count **that had already been
+exceeded**. No schema would have caught that; only reading the file against `cycle-history` did.
+
+**`ice_advance` is documented in the schema as NOT AN ADVANCEMENT GATE**, because the name says
+otherwise and an agent reading only the name would get it backwards. `engine/adaptive-thresholds.md`
+records that the gate was removed in v0.54.0 — scoring-for-selection is what Torres cautions against —
+and that the real gate lives in `leaf-lifecycle.md` Phase 5: the riskiest assumption has a recorded
+verdict of `validated`. **A validated leaf with a low ICE is deprioritised, never archived.** That
+correction took four weeks to reach the thresholds doc, during which an agent reading there would have
+archived leaves on a score.
+
+**AND THE CALIBRATION INPUT IS NO LONGER EMPTY.** The documented rule is *"track the ICE scores of
+leaves that were launched and succeeded versus those that failed"* — which had never had a single data
+point, because no product-leaf cycle existed. Three were recorded on 2026-09-01 on the founder's
+ruling that ICE must start being scored for real:
+
+| leaf | ICE | outcome |
+|---|---|---|
+| sol-047e | 448 | launched, succeeded |
+| sol-047d | 270 | killed |
+| sol-047a | 160 | killed |
+
+**n=3 against a `minimum_n` of 10, so nothing is calibrated and nothing should be** — but the survivor
+scored highest and both kills scored lowest, which is the direction the calibration rule looks for.
+The loop is fed for the first time.
+
+**Also caught, by ruff rather than by review:** the new live-canvas test duplicated a name added in
+v0.156.0 and would have **silently shadowed it**, disabling the archived-solutions check while
+appearing to add coverage.
+
 ## v0.156.0 - a schema for the canvas that had just acquired a dependent
 
 `archived-solutions.yml` was one of seven canvases `validate_canvas` reported as **"parse-checked

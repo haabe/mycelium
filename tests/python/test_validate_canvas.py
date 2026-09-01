@@ -1404,3 +1404,45 @@ def test_the_live_dogfood_canvas_validates(tmp_path):
         import pytest
         pytest.skip("dogfood canvas not present in this checkout")
     assert _archived_errors(yaml.safe_load(live.read_text())) == []
+
+
+# --- thresholds schema (added 2026-09-01) ------------------------------------
+# Second of the seven "parse-checked only" canvases. Field set from
+# engine/adaptive-thresholds.md's Threshold Registry, not from the entries present.
+
+
+def _thresholds_errors(doc):
+    import json
+
+    import jsonschema
+    with open(_real_schema_dir() / "thresholds.schema.json") as fh:
+        return list(jsonschema.Draft202012Validator(json.load(fh)).iter_errors(doc))
+
+
+def test_an_uncalibrated_threshold_is_valid_because_null_is_an_honest_state(tmp_path):
+    """Every `calibrated` on the dogfood canvas is null with based_on_n 0. That is correct
+    until the sample reaches minimum_n, and a schema that rejected it would push people to
+    invent a number — the exact failure calibration exists to avoid."""
+    assert _thresholds_errors({"thresholds": {"ice_advance": {
+        "default": 100, "calibrated": None, "calibrated_at": None,
+        "based_on_n": 0, "minimum_n": 10}}}) == []
+
+
+def test_a_negative_sample_size_is_rejected(tmp_path):
+    assert _thresholds_errors({"thresholds": {"ice_advance": {"based_on_n": -1}}})
+
+
+def test_a_calibrated_at_that_is_not_a_date_is_rejected(tmp_path):
+    """`last_calibrated` and `calibrated_at` answer "when", and prose there cannot be compared
+    against anything."""
+    assert _thresholds_errors({"thresholds": {"ice_advance": {"calibrated_at": "soon"}}})
+    assert _thresholds_errors({"last_calibrated": "recently"})
+
+
+def test_the_live_thresholds_canvas_validates(tmp_path):
+    import yaml
+    live = Path("/Users/bartnes/Repos/mycelium-roadmap/.claude/canvas/thresholds.yml")
+    if not live.is_file():
+        import pytest
+        pytest.skip("dogfood canvas not present in this checkout")
+    assert _thresholds_errors(yaml.safe_load(live.read_text())) == []
