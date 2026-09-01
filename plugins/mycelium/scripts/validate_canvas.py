@@ -1130,6 +1130,76 @@ def _instruction_findings(filename, record):
     return out
 
 
+def _count_provenance(node):
+    """(provenance blocks seen, how many carry a date) anywhere in this document.
+
+    Recursive because the dogfood canvas nests provenance well below the top level; counting
+    only top-level entries would report a denominator far smaller than the real one.
+    """
+    seen = ok = 0
+    if isinstance(node, dict):
+        prov = node.get("provenance")
+        if isinstance(prov, dict):
+            seen += 1
+            stamp = str(prov.get("captured_at") or prov.get("validated_at") or "")
+            ok += 1 if _DATE_IN_TEXT.search(stamp) else 0
+        children = node.values()
+    elif isinstance(node, list):
+        children = node
+    else:
+        return 0, 0
+    for child in children:
+        child_seen, child_ok = _count_provenance(child)
+        seen += child_seen
+        ok += child_ok
+    return seen, ok
+
+
+def provenance_dating_findings(canvas_dir):
+    """WARN-tier: ONE coverage line for how much provenance carries a date at all.
+
+    THE FAILURE, found in the dogfood canvas 2026-09-01. Eleven landscape entries written over
+    eleven days shipped with no `captured_at`. They were not STALE — they were UNCHECKABLE, which
+    is worse, because a stale entry eventually trips a decay threshold and asks to be revisited
+    while an undated one never does. `canvas-health` step 7 scans provenance blocks for a date and
+    compares what it finds; an absent date is silently skipped, so the entries were invisible to
+    the exact mechanism meant to catch them.
+
+    WHY THIS IS ONE LINE AND NOT ONE PER ENTRY. Measured before shipping: 98 of 346 provenance
+    blocks across a real 25-file canvas carry no date, 93 of them in a single file. A per-entry
+    warning would fire ninety-odd times and teach its reader to skip the whole class — the failure
+    `canvas-health` already recorded when a rule fired on 80% of a corpus. A ratio states the
+    denominator and demands nothing, which is the honest instrument for a gap this size.
+
+    It is deliberately NOT a schema requirement: `provenance` is shared by every canvas through
+    `_common.schema.json`, so requiring `captured_at` there would fail files that have nothing to
+    do with evidence decay.
+    """
+    total = dated = 0
+    per_file = {}
+    for path in sorted(Path(canvas_dir).glob("*.yml")):
+        try:
+            doc = load_yaml(path) or {}
+        except Exception:  # noqa: BLE001,S112 — parse failures belong to the fail-loud pass,
+            # which names the file and exits 1. This advisory declines because that pass spoke.
+            continue
+        seen, ok = _count_provenance(doc)
+        total += seen
+        dated += ok
+        if seen - ok:
+            per_file[path.name] = seen - ok
+
+    if not total or not per_file:
+        return []
+    worst = ", ".join(f"{f} ({n})" for f, n in sorted(per_file.items(), key=lambda kv: -kv[1])[:3])
+    return [(
+        f"{dated} of {total} provenance blocks carry a `captured_at` or `validated_at` date; "
+        f"{total - dated} carry neither. An undated block is not stale, it is UNCHECKABLE — every "
+        f"decay threshold skips it silently, so it never asks to be revisited. Most affected: "
+        f"{worst}. This is a ratio, not a to-do: date the ones whose age would change a decision."
+    )]
+
+
 def print_advisory_warnings(canvas_dir):
     """Emit the WARN-tier findings that never fail a build.
 
@@ -1146,6 +1216,7 @@ def print_advisory_warnings(canvas_dir):
         ("evidence target", source_class_target_findings(canvas_dir)),
         ("dpia", dpia_determination_findings(canvas_dir)),
         ("stale instruction", stale_instruction_list_findings(canvas_dir)),
+        ("provenance dating", provenance_dating_findings(canvas_dir)),
     ):
         for w in findings:
             print(f"  WARN ({label}): {w}")

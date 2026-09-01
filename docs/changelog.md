@@ -4,6 +4,37 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-01.
 
+## v0.163.0 - undated is not stale, it is uncheckable
+
+Eleven `landscape.yml` entries written over eleven days shipped with no `captured_at`.
+
+**They were not stale — they were uncheckable, and that is worse.** A stale entry eventually
+trips a decay threshold and asks to be revisited. An undated one never does. `canvas-health`
+step 7 scans provenance blocks for a date and compares what it FINDS; an absent date is silently
+skipped, so these entries were invisible to the precise mechanism meant to catch them.
+
+**One coverage line, not one warning per entry.** Measured before shipping: 98 of 346 provenance
+blocks across a real 25-file canvas carry no date, 93 of them in a single file. A per-entry
+warning would fire ninety-odd times and teach its reader to skip the whole class — exactly the
+failure `canvas-health` already recorded when one of its own rules fired on 80% of a corpus. A
+ratio states the denominator and demands nothing, which is the honest instrument for a gap this
+size. The line names where the gap concentrates so it is actionable without being a to-do list.
+
+**Deliberately not a schema requirement.** `provenance` is shared by every canvas through
+`_common.schema.json`, so requiring `captured_at` there would fail files that have nothing to do
+with evidence decay.
+
+Two things caught while shipping it, both by the repo's own gates:
+
+- **An empty-id verdict.** The fail-open ruling was written with a blank `id` because the shell
+  extraction returned nothing, and the check went green anyway — the refactored handler had become
+  byte-identical to an already-reviewed sibling in the same file, which the registry treats as one
+  id. So a verdict matching nothing was one commit from landing in the registry whose entire
+  purpose is that every site carries a real judgement. Removed; the check is now green for the
+  right reason (48 sites, 46 reviewed, 0 new).
+- **The complexity limit**, which forced the provenance walker out to module level where it is
+  testable on its own.
+
 ## v0.162.0 - the guards watch what an agent asserts, not what it reads
 
 From a consuming project's field report, 2026-09-01. Asked who to contact about a live

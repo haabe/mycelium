@@ -1834,3 +1834,44 @@ def test_the_dogfood_canvas_produces_no_findings(scripts_path):
         import pytest
         pytest.skip("dogfood canvas not present in this checkout")
     assert validator.stale_instruction_list_findings(live) == []
+
+
+# --- provenance dating coverage (v0.163.0) ---------------------------------
+
+def _prov(files, tmp_path, scripts_path):
+    import yaml
+    validator = _import_validator(scripts_path)
+    for name, doc in files.items():
+        (tmp_path / name).write_text(yaml.safe_dump(doc, sort_keys=False))
+    return validator.provenance_dating_findings(tmp_path)
+
+
+def test_full_dating_coverage_is_silent(tmp_path, scripts_path):
+    doc = {"components": [{"id": "c1", "provenance": {"captured_at": "2026-08-01"}},
+                          {"id": "c2", "provenance": {"validated_at": "2026-08-02"}}]}
+    assert _prov({"landscape.yml": doc}, tmp_path, scripts_path) == []
+
+
+def test_it_reports_a_ratio_and_not_one_line_per_entry(tmp_path, scripts_path):
+    """MEASURED 2026-09-01: 98 of 346 blocks on a real canvas carry no date, 93 in one file. A
+    per-entry warning would fire ninety-odd times and teach its reader to skip the class — the
+    failure canvas-health already recorded when a rule fired on 80% of a corpus."""
+    doc = {"entries": [{"id": f"e{i}", "provenance": {"evidence_type": "anecdotal"}}
+                       for i in range(30)]}
+    out = _prov({"purpose.yml": doc}, tmp_path, scripts_path)
+    assert len(out) == 1, "must be a single coverage line regardless of how many are undated"
+    assert "0 of 30" in out[0]
+    assert "purpose.yml (30)" in out[0], "must name where the gap concentrates"
+
+
+def test_a_nested_provenance_block_is_counted(tmp_path, scripts_path):
+    """The dogfood canvas nests provenance well below the top level; counting only top-level
+    entries would report a denominator far smaller than the real one."""
+    doc = {"a": {"b": [{"c": {"provenance": {"evidence_type": "anecdotal"}}}]}}
+    out = _prov({"purpose.yml": doc}, tmp_path, scripts_path)
+    assert out and "0 of 1" in out[0]
+
+
+def test_no_provenance_anywhere_is_silent_not_a_zero_finding(tmp_path, scripts_path):
+    """Empty input must refuse to report, not report a perfect or a failing score."""
+    assert _prov({"x.yml": {"stages": [{"name": "Idea"}]}}, tmp_path, scripts_path) == []
