@@ -4,6 +4,30 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-01.
 
+## v0.164.0 - the refresh protocol wrote a field the schema forbade
+
+`engine/evidence-decay.md` is the canonical decay protocol. It says, of a refreshed claim: **"update
+`validated_at` to the current date"**. `canvas-health` step 7 scans provenance blocks for
+`validated_at` or `captured_at`. The decay comparison reads the newer of the two.
+
+`_common.schema.json#/$defs/provenance` sets `additionalProperties: false` and **did not declare
+`validated_at`**.
+
+So for the life of the schema, a consumer who followed the documented refresh protocol produced an
+invalid canvas. This is a plausible reason the dogfood project reached 29 entries past their 90-day
+competitive-intelligence horizon with **not one of them ever refreshed**: the decay loop could not
+close, and the thing blocking it was the framework's own validator.
+
+**Found by trying to run the refresh, not by reading about it.** The mismatch is invisible to
+inspection — both halves read correctly on their own, and only the write fails. Same family as the
+gate that reports green and measures nothing, one layer down: a documented action that the system
+rejects at the moment of use.
+
+`validated_at` is now declared, typed as an ISO date so that declaring it does not turn it into a
+free-text hole, with a description recording why it was absent. `captured_at` is untouched and both
+are kept: a refresh records when a claim was RE-CHECKED, and must never overwrite when it was first
+gathered — losing the original capture date would erase the entry's own age.
+
 ## v0.163.0 - undated is not stale, it is uncheckable
 
 Eleven `landscape.yml` entries written over eleven days shipped with no `captured_at`.

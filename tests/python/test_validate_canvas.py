@@ -1875,3 +1875,41 @@ def test_a_nested_provenance_block_is_counted(tmp_path, scripts_path):
 def test_no_provenance_anywhere_is_silent_not_a_zero_finding(tmp_path, scripts_path):
     """Empty input must refuse to report, not report a perfect or a failing score."""
     assert _prov({"x.yml": {"stages": [{"name": "Idea"}]}}, tmp_path, scripts_path) == []
+
+
+def test_provenance_accepts_the_field_the_decay_protocol_tells_you_to_write(tmp_path, scripts_path):
+    """`_common.schema.json#/$defs/provenance` sets additionalProperties:false and, until
+    2026-09-01, did not declare `validated_at` — while `engine/evidence-decay.md` instructs
+    "update `validated_at` to the current date" after a refresh and canvas-health step 7 scans
+    for it. **The framework told you to write a field its own validator rejected.** A consumer
+    following the documented refresh protocol produced an invalid canvas, which is a plausible
+    reason no entry in the dogfood project was ever refreshed: the decay loop could not close.
+
+    This pins both halves — the field is accepted, and `captured_at` still is too, because a
+    refresh must never overwrite when the evidence was first gathered.
+    """
+    import yaml
+    validator = _import_validator(scripts_path)
+    canvas = tmp_path / "landscape.yml"
+    canvas.write_text(yaml.safe_dump({"components": [{
+        "id": "comp-001", "name": "x",
+        "provenance": {"evidence_type": "anecdotal",
+                       "evidence_sources": ["landscape sweep 2026-09-01"],
+                       "captured_at": "2026-05-09",
+                       "validated_at": "2026-09-01",
+                       "notes": "re-validated by survival; captured_at deliberately preserved"},
+    }]}, sort_keys=False))
+    assert validator.validate_canvas_against_schema(canvas, validator.build_registry()) == []
+
+
+def test_a_non_date_validated_at_is_still_rejected(tmp_path, scripts_path):
+    """Declaring the field must not make it a free-text hole — it is compared against a horizon."""
+    import yaml
+    validator = _import_validator(scripts_path)
+    canvas = tmp_path / "landscape.yml"
+    canvas.write_text(yaml.safe_dump({"components": [{
+        "id": "comp-001", "name": "x",
+        "provenance": {"evidence_type": "anecdotal", "evidence_sources": ["x"],
+                       "validated_at": "recently"},
+    }]}, sort_keys=False))
+    assert validator.validate_canvas_against_schema(canvas, validator.build_registry())

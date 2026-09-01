@@ -85,6 +85,10 @@
         "notes": {
           "type": "string",
           "description": "Free-text annotation about how the evidence was gathered, caveats, or context that doesn't fit other fields. Optional. Kept short \u2014 provenance is reference metadata, not narrative."
+        },
+        "validated_at": {
+          "$ref": "#/$defs/iso_timestamp",
+          "description": "When this evidence was last RE-CHECKED and found to still hold \u2014 distinct from `captured_at`, which is when it was first gathered and must never be overwritten. engine/evidence-decay.md makes this the field a refresh writes ('update `validated_at` to the current date'), canvas-health step 7 scans for it, and the decay comparison reads the newer of the two. DECLARED 2026-09-01 BECAUSE IT WAS NOT: this def sets additionalProperties:false, so for the life of the schema the framework instructed a refresh action that its own validator rejected. A consumer following the documented protocol produced an invalid canvas, which is a plausible reason no entry in the dogfood project was ever refreshed \u2014 the decay loop could not close."
         }
       },
       "required": [
