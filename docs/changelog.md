@@ -4,6 +4,44 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-01.
 
+## v0.167.0 - the register gets a reader at the moment of use
+
+A do-not-cite register already existed in one project's agent memory. It was correct. On
+2026-09-01 it failed **twice in one session, in both directions**: once by not being consulted
+before a ruled-on citation was written into two canvas files, and once by having its narrow entry
+("no DORA 2026 **State of DevOps** report") paraphrased into a broad one ("no 2026 DORA report")
+and acted on — rewriting four surfaces that were already correct, and mis-attributing a term to a
+practitioner when it belonged to the research he was citing.
+
+The rule existed, was right, and was not read at the moment of use. **Storage is not filing.**
+
+`check_citations.py` reads `.claude/harness/do-not-cite.yml` and reports any canvas line repeating
+a ruled-on claim, printing the entry **verbatim** — because the paraphrase is where the breadth got
+added, and a summary of a register is the failure mode it is meant to prevent.
+
+**This is not another lexical guard, and the distinction is the design.** `absence-claim-guard`
+matches a prose signature and was consumer-measured at 29 lifetime fires, 16 in one day, zero of
+that day's four confirmed errors caught. This matches a **curated list a human wrote**, so its
+precision is the register's precision. It cannot fire on a claim nobody ruled on, and it cannot be
+improved by tuning a regex — only by someone adding an entry.
+
+**First run against a real 25-file canvas: 3 true positives**, two of them in a file that an
+earlier manual correction pass *on those same two claims* had missed entirely. The check found a
+gap in the work that motivated it.
+
+**Three of its own defects, each caught by a different sibling gate:**
+
+- **Line-level annotation gave 3 false positives out of 6 findings.** Every one sat inside a
+  correction block whose marker was 1–5 lines above — YAML folds prose across lines, so the unit is
+  the block, not the line. The false positives named the missing convention.
+- **It was wired into the BLOCKING pre-push gate set**, where empty-input honesty (refuse over an
+  absent register) collides with the shipped hook treating any non-zero as failure — it would have
+  blocked every push from a project that never wrote a register. `check_empty_input_honesty` caught
+  it. Re-homed as a `validate_canvas` WARN: automatic at push time, never gating.
+- **A malformed register was silently equal to an absent one**, so a single typo would disable
+  every rule while the check read green. `check_fail_open` caught it. Absent is a not-configured
+  state; unreadable is now loud in both callers, because someone believed those rules were live.
+
 ## v0.166.0 - two theory rows that had to be earned first
 
 **Peak-End Rule** (Kahneman et al. 1993) and **Chunking / Working Memory** (Miller 1956) are now

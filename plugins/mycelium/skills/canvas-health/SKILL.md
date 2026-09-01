@@ -109,6 +109,29 @@ Audit the canvas knowledge base for quality, consistency, and completeness. The 
    - Every go-to-market `feedback_loop` entry with `source_leaf_id` → verify leaf exists
    - Flag broken references as warnings ("Zombie Solution" anti-pattern)
 
+7c. **Run the do-not-cite register scan** — do NOT re-derive this from prose:
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_citations.py" --project-dir .
+```
+
+   Reports any canvas line repeating a claim the project has already ruled against, printing the
+   register entry VERBATIM. It reads `.claude/harness/do-not-cite.yml`; with no register it says
+   NOTHING WAS CHECKED rather than passing.
+
+   **Why it is a script and not a rule in this file.** A do-not-cite register existed in one
+   project's agent memory and failed twice in a single day (2026-09-01): once by not being read
+   before a citation was written into two canvas files, and once by having a narrow entry
+   PARAPHRASED into a broad one that was then acted on, rewriting four surfaces that were already
+   correct. The rule was right both times and was not consulted at the moment of use.
+
+   **It is not a lexical guard.** It matches a curated list a human wrote, so it cannot fire on a
+   claim nobody has ruled on. That distinction matters here: the sibling `absence-claim-guard` hook
+   matches a prose signature and was consumer-measured at 29 lifetime fires, 16 in one day, and
+   zero of that day's four confirmed errors caught. On first run against a real 25-file canvas this
+   check found 3 true positives — including two in a file that an earlier manual correction pass on
+   the same claims had missed entirely.
+
 8b. **Check scenario health** (Hoskins):
    - If `.claude/canvas/scenarios.yml` exists:
      - Every scenario must have all three Hoskins elements populated (motivation, persona, simulation) — flag incomplete scenarios (corrected 2026-07-01: the model has THREE elements; the prior "persona/means/motive/simulation" was a distortion — "Means" is not a Hoskins element)

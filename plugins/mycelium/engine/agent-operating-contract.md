@@ -79,3 +79,19 @@ After completing ANY batch of changes, before reporting done: (1) **Verify** —
 All product knowledge lives in `.claude/canvas/*.yml` — the single source of truth, committed to git, updated through evidence not assumption. **Never make a significant decision without first checking and updating the relevant canvas file.** **You cannot progress a diamond by saying "I'm confident enough" — you must demonstrate evidence that satisfies each gate.**
 
 **Canvas writes — Read before Write (HARD RULE).** `Write`/`Edit` on any `.claude/canvas/*.yml` require a prior **`Read` tool** call in the same session (`cat`/`head`/`grep` do NOT satisfy it). `Edit`: `Read limit:1` suffices. `Write`: full Read first. For ID-bearing entries, `grep "^  - id: <prefix>-"` and pick the next free integer before assigning.
+
+## Before recording any statistic or dated source
+
+**Read `.claude/harness/do-not-cite.yml` first — not only when a figure feels wrong.**
+
+A register consulted on suspicion catches nothing, because the dangerous case raises none: a
+REAL finding with the WRONG year checks out to anyone who reads past the date. Measured
+2026-09-01, both directions in one session: a ruled-on citation written into two canvas files
+without the register being opened, then a narrow entry ("no DORA 2026 **State of DevOps**
+report") paraphrased into a broad one ("no 2026 DORA report") and acted on — rewriting four
+surfaces that were already correct, and mis-attributing a term to a practitioner when it
+belonged to the research he was citing.
+
+**Quote the entry verbatim; never paraphrase it.** The paraphrase is where the breadth got
+added. `check_citations.py` enforces the first half at push time and prints entries verbatim;
+it cannot enforce the second, which is why it is stated here.

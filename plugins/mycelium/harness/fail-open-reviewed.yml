@@ -28,6 +28,30 @@ schema_version: 1
 last_reviewed: '2026-08-26'
 reviewed:
 
+- id: check_citations.py@66a0665f8a
+  verdict: ACCEPTED 2026-09-01
+  reason: >-
+    The `except ImportError: sys.exit(0)` guarding the yaml import. Silent, and correct: on a
+    runtime without PyYAML this script has no opinion to offer, and validate_canvas — which
+    imports yaml unconditionally and is the caller that matters — fails loudly first. Duplicating
+    that would produce two messages about one missing dependency.
+    NOTE THE ASYMMETRY THAT MAKES THIS SAFE: the MALFORMED-register case is deliberately NOT
+    silent — it returns a marker and both callers report it — because a typo silently disabling
+    every rule while the check reads green is the exact defect this script exists to prevent.
+    Absent-yaml is an environment fact; an unparseable register is a project fact someone believed
+    was live.
+
+- id: validate_canvas.py@30fe6b04ff
+  verdict: ACCEPTED 2026-09-01
+  reason: >-
+    The delegation guard in `citation_register_findings`, identical in kind to the guards accepted
+    earlier today for dpia_determination_findings and provenance_dating_findings. It wraps a
+    dynamic import of a sibling script; if that import or its scan raises, the advisory declines
+    rather than taking the whole canvas validation down with it. A coverage report that breaks the
+    validator is worse than one with a gap. The register's own failure modes are NOT covered by
+    this handler and are reported explicitly: absent is a not-configured state, unreadable is loud
+    (exit 1 standalone, a WARN through the validator).
+
 - id: validate_canvas.py@12c1baa344
   verdict: ACCEPTED 2026-09-01
   reason: >-

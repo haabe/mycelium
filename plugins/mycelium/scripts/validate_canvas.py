@@ -1200,6 +1200,46 @@ def provenance_dating_findings(canvas_dir):
     )]
 
 
+def citation_register_findings(canvas_dir):
+    """WARN-tier: does a canvas line repeat a claim the project already ruled against?
+
+    Delegated to scripts/check_citations.py so one definition serves the validator, the
+    canvas-health skill and any future gate — the same arrangement as cycle_record_findings.
+
+    WHY THE VALIDATOR AND NOT THE PRE-PUSH GATE SET. The scan is an advisory reporter: over a
+    project with no register it must refuse rather than pass (empty-input honesty), and the
+    shipped pre-push hook treats any non-zero as failure — so gating on it would block every push
+    from a project that has simply never written one. Here it reports and never fails, which gives
+    it an automatic reader at push time without that cost.
+
+    THE FAILURE IT EXISTS FOR (2026-09-01, twice in one session): a ruled-on citation written into
+    two canvas files without the register being read, then a narrow register entry paraphrased into
+    a broad one and acted on, rewriting four surfaces that were already correct.
+    """
+    try:
+        spec = importlib.util.spec_from_file_location(
+            "_cc", Path(__file__).with_name("check_citations.py")
+        )
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        findings, _, entries = mod.scan(Path(canvas_dir).parent.parent)
+    except Exception:  # noqa: BLE001 — a broken advisory check must never fail a build
+        return []
+    if entries == -1:
+        # A malformed register is LOUDER than an absent one: someone believed these rules were
+        # live and every one of them is inert.
+        return [(f"`.claude/harness/do-not-cite.yml` EXISTS but could not be parsed, so every "
+                 f"rule in it is inert. {findings[0][2]['verbatim']}")]
+    if not entries:
+        return []   # no register is a not-configured state here; the standalone script says so
+    return [
+        f"{name}:{num} repeats a claim this project has ruled on ({entry.get('verdict', '?')}) — "
+        f'matched "{token}". Register says, verbatim: '
+        f"{' '.join((entry.get('verbatim') or '').split())}"
+        for name, num, entry, token in findings
+    ]
+
+
 def print_advisory_warnings(canvas_dir):
     """Emit the WARN-tier findings that never fail a build.
 
@@ -1217,6 +1257,7 @@ def print_advisory_warnings(canvas_dir):
         ("dpia", dpia_determination_findings(canvas_dir)),
         ("stale instruction", stale_instruction_list_findings(canvas_dir)),
         ("provenance dating", provenance_dating_findings(canvas_dir)),
+        ("do-not-cite", citation_register_findings(canvas_dir)),
     ):
         for w in findings:
             print(f"  WARN ({label}): {w}")
