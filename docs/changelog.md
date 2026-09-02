@@ -2,7 +2,54 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-09-01.
+**Last updated**: 2026-09-02.
+
+## v0.169.1 - one warning, two parser bugs, and a guard on the wrong trajectory
+
+A consumer reported `correction-attribution-guard` warning **"corrections entry with no catcher
+named"** against entries that named one. It fired twice in one session, was wrong both times, and was
+wrong for two UNRELATED reasons — which is why it read as noise rather than as a bug.
+`scripts/correction_attribution_guard.py` imports both `_corrections_lib.entries` and `classify`, so
+two independent defects reached the author as one indistinguishable message.
+
+**1. `ENTRY_RE`'s bullet form split entries on any parenthesised date.** It accepted a date anywhere on
+a bullet that merely STARTED with bold, so an ordinary body bullet citing a dated sibling —
+`- **Second-order note**: ... (2026-09-01, same day) ...` — split its own entry in two. The phantom
+half carried no catcher, so the guard warned against a compliant entry AND the attribution denominator
+silently grew. The date must now sit inside the first `**...**`. Cross-referencing dated siblings is
+the house style; forbidding the citation was the wrong half to change.
+
+**2. `CATCHERS` could not see the bolded field form.** The corpus writes `- **Caught by**: the
+founder`, which puts `**: ` between "by" and the catcher, and the pattern required `by\s+`. The
+separator is now `by[^A-Za-z0-9]{0,6}` — bounded, so "by" and a catcher word in different clauses do
+not join up. **Measured on the reporting corpus: 3 of 10 entries using this form were affected, and
+recovering them moved coverage 100 → 103 of 250.** Not wrong data; real data the metric could not see.
+A rate that undercounts its own numerator is worse than one that is merely small, because the remedy
+it recommends — "name the catcher" — had already been followed.
+
+**VERIFIED ON A REAL CORPUS 30x THE FIXTURE, not only on the fixture.** Against the reporting
+project's 250-entry `corrections.md`: the parse drops to **242**, and all 8 removed are phantoms —
+body bullets of the form `- **Mistake**: ... (2026-05-10) ...` and `- **Source**: Hoskins transcript
+(2026-04-25) ...` that merely cited a date. **Zero new entries appeared, and all 121 heading-form
+entries survived unchanged.** So that project's SessionStart banner had been over-reporting its own
+correction count by 8, and every rate computed against it carried an inflated denominator.
+
+**Both patterns have a bash twin, and both twins moved.** `ENTRY_ERE` and the inline ERE in
+`hooks/preflight.sh` are back in step; the cross-language agreement test caught the hook drift during
+this fix, which is exactly the case it was written for.
+
+**The fixture gained the near-miss it was missing**, on ONE line deliberately: the pattern is
+line-anchored, so a wrapped bullet whose date lands on a continuation line cannot trip it — a fixture
+written that way passes against the bug it claims to cover. The first attempt was written that way and
+counted 8 under both patterns; the corrected fixture counts 9 under the old and 8 under the new.
+
+**Why this one is worth fixing rather than tolerating.** The guard's own header says it exists because
+the attribution rule "is obeyed on the days the agent is working on the attribution machinery and
+ignored on every other day". A guard built because a rule was ignored had started producing the exact
+experience that earns a guard being ignored — the third lexical detector in this project on that
+trajectory, after the absence-claim guard (29 fires, zero confirmed catches) and devils-advocate
+Technique 5. It is the first whose false positives were two specific parser bugs rather than the
+inherent limit of matching prose.
 
 ## v0.169.0 - a seed register, small on purpose
 

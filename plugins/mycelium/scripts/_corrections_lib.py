@@ -65,6 +65,15 @@ import re
 #:                  `#### 2026-08-02b - second entry that day`
 #:   bullet style   `- **Thing that happened (2026-05-03, some-class)**: ...`
 #:
+#: BULLET FORM, NARROWED 2026-09-02. The date must sit INSIDE the first bold span:
+#: `**...(DATE)**`. It previously accepted a parenthesised date anywhere on a bullet
+#: that merely STARTED with bold, so an ordinary body bullet cross-referencing a dated
+#: sibling -- `- **Second-order note**: ... (2026-09-01, same day) ...` -- split its own
+#: entry in two and manufactured a phantom carrying no catcher. That phantom then made
+#: `correction-attribution-guard` warn "no catcher named" against a compliant entry, and
+#: silently lowered the attribution denominator. Reported by a consumer 2026-09-02.
+#: The house style cross-references dated siblings constantly, so forbidding the citation
+#: was the wrong half to change.
 #: Heading depth is 2-4 and the date may carry a single trailing letter, because
 #: both of those are in the live corpus. A heading with no date is NOT an entry:
 #: `### Prevention rule` is a section inside an entry, and counting it is how the
@@ -72,7 +81,7 @@ import re
 ENTRY_RE = re.compile(
     r"^#{2,4}[ \t]+(\d{4}-\d{2}-\d{2})([a-z]?)(?![\w-])[^\n]*$"      # heading
     r"|"
-    r"^-[ \t]+\*\*[^\n]*?\((\d{4}-\d{2}-\d{2})([a-z]?)[,)][^\n]*$",  # bullet
+    r"^-[ \t]+\*\*[^*\n]*\((\d{4}-\d{2}-\d{2})([a-z]?)[,)][^*\n]*\*\*",  # bullet
     re.MULTILINE,
 )
 
@@ -85,7 +94,7 @@ ENTRY_RE = re.compile(
 ENTRY_ERE = (
     r"^#{2,4}[[:space:]]+[0-9]{4}-[0-9]{2}-[0-9]{2}"
     r"|"
-    r"^-[[:space:]]+\*\*.*\([0-9]{4}-[0-9]{2}-[0-9]{2}[a-z]?[,)]"
+    r"^-[[:space:]]+\*\*[^*]*\([0-9]{4}-[0-9]{2}-[0-9]{2}[a-z]?[,)][^*]*\*\*"
 )
 
 

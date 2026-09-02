@@ -322,3 +322,46 @@ def test_snapshot_happens_for_both_output_formats(scripts_path, tmp_path, capsys
         capsys.readouterr()
         written = list((root / mod.SNAPSHOT_REL).glob("*.json"))
         assert len(written) == 1, f"as_json={as_json} wrote {written}"
+
+
+# ------------------------------------------------------------------ separator
+
+
+def test_catcher_is_seen_through_the_bolded_field_form(scripts_path):
+    """`- **Caught by**: the founder` must classify, not read as unattributed.
+
+    WHY THIS EXISTS (consumer report, 2026-09-02). The corpus writes the
+    attribution as a bolded field label, which puts `**: ` between "by" and the
+    catcher. The pattern required `by\\s+`, so a compliant entry classified as
+    None — while the PreToolUse guard, which imports this classifier, warned
+    "corrections entry with no catcher named" against that same entry.
+
+    The damage was not wrong data. It was real data the metric could not see:
+    3 of 10 entries using this form were affected on the reporting corpus, and
+    recovering them moved coverage 100 -> 103 of 250. A rate that undercounts
+    its own numerator is worse than one that is merely small, because the
+    remedy it recommends ("name the catcher") had already been followed.
+    """
+    mod = _import(scripts_path)
+    for body, expected in [
+        ("- **Caught by**: the founder, with one link.", "user"),
+        ("- **Caught by**: found by the validator, run unfiltered.", "hook_or_check"),
+        ("- **Caught by**: the hook, on the write.", "hook_or_check"),
+        ("- **Surfaced by**: the reviewer.", "review"),
+        ("- **Caught by**: self-caught on the next command.", "agent_self"),
+        # plain prose must keep working — this is the majority shape
+        ("Caught by the user.", "user"),
+        ("surfaced by the hook", "hook_or_check"),
+    ]:
+        assert mod.classify(body) == expected, f"{body!r} -> {mod.classify(body)!r}"
+
+
+def test_separator_bound_does_not_join_unrelated_clauses(scripts_path):
+    """The widened separator is bounded, so "by" and a catcher word in
+    different clauses must NOT join up into a false attribution."""
+    mod = _import(scripts_path)
+    for body in [
+        "The fix was reviewed by, and this is a long aside about, the user.",
+        "Ordered by relevance rather than severity; the founder disagreed later.",
+    ]:
+        assert mod.classify(body) is None, f"{body!r} -> {mod.classify(body)!r}"

@@ -76,6 +76,15 @@ position does.
   use bold-led bullets as sub-points, and treating them as entries inflates the
   count on exactly the long, carefully-written entries.
 
+- **Also not an entry**: bold title, then a parenthesised date in mid-sentence prose (2026-01-08, verification-hygiene) citing a dated sibling.
+  THE DATE MUST BE ON THIS FIRST LINE to test anything — the pattern is
+  line-anchored, so a wrapped bullet whose date lands on a continuation line
+  cannot trip it, and a fixture written that way would pass against the bug it
+  claims to cover. The date must sit INSIDE the first `**...**`; before
+  2026-09-02 it did not, so a bullet like this one split its own entry in two and
+  produced a phantom carrying no catcher — which made the attribution guard warn
+  against a compliant entry and lowered the denominator it reports.
+
 ## 2026-01-07 — final entry, to prove the last body terminates at end-of-file
 
 Entry 8. A counter that slices bodies between marks must handle the last one

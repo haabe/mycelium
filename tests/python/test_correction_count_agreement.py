@@ -115,6 +115,15 @@ def test_non_entries_in_the_fixture_are_not_counted():
         )
     assert not any(m.startswith("- This bullet") for m in matched)
     assert not any("Not an entry either" in m for m in matched)
+    # Added 2026-09-02. A bullet may carry a bold title AND a parenthesised date
+    # and still be prose: the date must sit inside the first bold span. Without
+    # this, a body bullet citing a dated sibling splits its own entry in two and
+    # the phantom half classifies as "no catcher" — which is how a compliant
+    # entry drew a guard warning and lowered the attribution denominator.
+    assert not any("Also not an entry" in m for m in matched), (
+        "A parenthesised date in mid-sentence prose is a citation, not an entry "
+        "marker. ENTRY_RE must require the date inside the leading `**...**`."
+    )
 
 
 def _run_hook(project_dir: Path) -> str:

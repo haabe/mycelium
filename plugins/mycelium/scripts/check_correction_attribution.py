@@ -65,17 +65,26 @@ CORRECTIONS_REL = ".claude/memory/corrections.md"
 #: The catcher vocabulary, in priority order. First match on an entry wins, so
 #: the more specific patterns come first. Derived from the phrasings already in
 #: the corpus rather than imposed on it.
+#: SEPARATOR WIDENED 2026-09-02 from `by\s+` to `by[^A-Za-z0-9]{0,6}`. The corpus writes
+#: the field as `- **Caught by**: the founder`, which puts `**: ` between "by" and the
+#: catcher, so `\s+` could not match and a compliant entry classified as None -- while the
+#: PreToolUse guard simultaneously warned "no catcher named" against it. Measured on a
+#: consumer corpus 2026-09-02: 3 of 10 entries using the bolded field form were affected,
+#: and recovering them moved coverage 100 -> 103 of 250. Not wrong data; real data the
+#: regex could not see. The bound is 6 rather than unlimited so "caught by" and a catcher
+#: word in different clauses do not join up.
 CATCHERS: list[tuple[str, re.Pattern[str]]] = [
     ("hook_or_check", re.compile(
-        r"(caught|surfaced|found|detected|flagged)\s+by\s+"
+        r"(caught|surfaced|found|detected|flagged)\s+by[^A-Za-z0-9]{0,6}"
         r"(the\s+)?(hook|check|ci|validator|test|sweep|guard|linter|script)", re.IGNORECASE)),
     ("review", re.compile(
-        r"(caught|surfaced|found|detected|flagged)\s+by\s+"
+        r"(caught|surfaced|found|detected|flagged)\s+by[^A-Za-z0-9]{0,6}"
         r"(the\s+)?(review|reviewer|code.review|blind|adversar)", re.IGNORECASE)),
     ("agent_self", re.compile(
-        r"(agent[- ]self[- ]caught|self[- ]caught|caught\s+by\s+(the\s+)?agent)", re.IGNORECASE)),
+        r"(agent[- ]self[- ]caught|self[- ]caught"
+        r"|caught\s+by[^A-Za-z0-9]{0,6}(the\s+)?agent)", re.IGNORECASE)),
     ("user", re.compile(
-        r"(caught|surfaced|found|detected|flagged)\s+by\s+"
+        r"(caught|surfaced|found|detected|flagged)\s+by[^A-Za-z0-9]{0,6}"
         r"(the\s+)?(user|founder|operator|human)", re.IGNORECASE)),
 ]
 
