@@ -6,6 +6,7 @@
 
 | Date | Case | Contributor |
 |---|---|---|
+| 2026-08-16 | [l1-population-read](cases/2026-08-16-l1-population-read.md) | Håvard Bartnes (founder, hand-read population sweep) |
 | 2026-06-23 | [dagfinn-minilisp-vibe-mistral](cases/2026-06-23-dagfinn-minilisp-vibe-mistral.md) | Dagfinn Dybvig |
 | 2026-06-19 | [cowork-runtime-gap](cases/2026-06-19-cowork-runtime-gap.md) | Håvard Bartnes (founder self-dogfood) |
 | 2026-06-18 | [legacy-path-rot-guard](cases/2026-06-18-legacy-path-rot-guard.md) | Håvard Bartnes (founder, dogfood-session sweep) |

@@ -4,6 +4,14 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-03.
 
+## v0.176.0 - the README stopped arguing from one person's word
+
+Fifteen years of watching people skip discovery is a real number, and it is also just one person's word for it. So I went and counted a population that owes nobody an answer: 46 posts on r/microsaas, r/SideProject and r/vibecoding, each one a shipped-to-no-traction confession, hand-read for whether the author ever said they talked to anyone who had the problem.
+
+37 of 46 never did. The full read, and what the six who did looked like, is a new receipts case, `docs/receipts/cases/2026-08-16-l1-population-read.md`. The README carries the count and the chart. The case carries the method and the limits.
+
+Three sections got rewritten in the same pass, caught by a craft audit that found the weakest spots by voice, not by keyword. The "goes well" paragraph had zero lived detail in a document built on named numbers. The closing line reached for a rhetorical flourish everywhere else it turns sideways on a fact. The L0-L5 section opened on an isolated one-liner with no concrete instance behind it. All three now carry a number, a name, or both.
+
 ## v0.175.0 - a correct decision that produced a permanent red
 
 `check_log_reconcile.py` reconciles archived leaves against cycle-history rows with a set

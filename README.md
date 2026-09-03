@@ -12,19 +12,25 @@ Or it might not have happened at all. I like it, so other people will too. That 
 
 Nobody skips that part because they think it doesn't matter. Something is always in the way, and it is usually something reasonable. On your own it is that asking anyone takes days and the agent is ready now. On a team I have watched it be end of season, a customer on the phone, the c-level with a gut feeling. I have got more than fifteen years of that, and I never met anyone who thought discovery was optional.
 
+You know there are subreddits where people confess exactly this every week? I dropped down the rabbit hole for a count and found a clear structure. I read 46 posts where someone shipped their awesome product to nobody. Most of them never said they asked anybody if they needed what they built. A handful did. Mostly sideways. Like a sales call or a Facebook favor. Some were lucky enough to have existing users they could ask. I couldn't say that anyone asked their users up front.
+
+```mermaid
+pie showData
+    title 46 posts, shipped and nobody came
+    "Never mentioned talking to anyone" : 37
+    "Talked to problem-holders" : 6
+    "Heard from existing users" : 3
+```
+
+Floor, not a rate. Nobody volunteers the thing they skipped. [The full read, all 46 posts](docs/receipts/cases/2026-08-16-l1-population-read.md).
+
 What changed is that the agent made skipping it free. It goes from an idea to a pull request faster than any of those reasons ever could, and it never once stops to ask who the thing is for.
 
 ## The version where that goes well
 
-Conversations with the right people until you stop hearing anything new, at the point where what they say can still change what gets built, rather than after launch when it can only explain what happened. That is where the value gets decided.
+Most of what gets thrown away in December was obvious back in August, if anyone had asked. Write the assumption down Thursday. Go find out Friday, while being wrong still costs nothing. The reasoning sits in git next to the code, hunch and all, so later you can tell whether you had a reason back in August or only wanted one. And loops short enough that you and the agent stay pointed at the thing you actually meant to build.
 
-An assumption written down on Thursday and knocked over on Friday. Sooner, while it is still cheap, so the weekend goes to the version worth having.
-
-Your reasoning sitting in git next to the code it explains. Sometimes that reasoning is only a hunch, and it goes in as a hunch, which is the point. When nobody turns up in November you can see whether you had a reason back in August or only wanted it, and which of the two it was. Changing your mind gets safer when you can see what you are changing it from.
-
-And feedback loops short enough that you and your agent both stay sharp and on the thing you set out to do, instead of drifting toward whichever shiny piece happened to be easiest to build next. Which is, in the end, a happier way to spend a Saturday.
-
-None of that is faster. It is sooner, which is a different thing and the more useful one. Less of the work gets thrown away, and the difference shows up in what you shipped rather than in how quickly you shipped it.
+Same weekend. Spent once instead of twice.
 
 ## Where Mycelium comes in
 
@@ -106,7 +112,7 @@ For a team that needs a stable interface this is early. For your own project thi
 
 ## The rest of the shape
 
-There is more than one kind of deciding, and they stack. Purpose at the top. Below it, where you are playing, which problem, which solution, the build, and what the market says back.
+Six layers, one diagram, and most projects never touch more than two or three of them in a weekend. Purpose sits at the top and mostly doesn't move. Everything below it does, which problem, which solution, the build, and what the market says back. Vibe-rant's L0 is fixed: a quiet failure becomes something you take to peers. Which problem that actually means, and which solution, is still live.
 
 ```mermaid
 graph TD
@@ -136,6 +142,6 @@ If the decision is already made and you need throughput, Paddo's [boring agents]
 
 The thing you got built, or the point where it got in the way and you stopped. The second kind is rarer and I am more interested in those. [An issue](https://github.com/haabe/mycelium/issues), or [a discussion](https://github.com/haabe/mycelium/discussions).
 
-If there's a business case underneath all this, it's still worth giving away for free. Because who doesn't think the world needs better products?
+If there's a business case underneath all this, it's still worth giving away for free. I have not found the case yet, and I am not looking very hard. I'd rather have the ten of you who actually run it than the argument about the hundred who might.
 
 [Mental model](docs/mental-model.md) · [why it's opinionated](docs/philosophy.md) · [evaluate it](docs/evaluate.md) · [the skills](docs/skills/README.md) · [theory](docs/theories.md) · [other agents](docs/install-paths.md) · [everything](docs/README.md) · [credits](CONTRIBUTORS.md) · MIT
