@@ -1142,6 +1142,18 @@ def _count_provenance(node):
         if isinstance(prov, dict):
             seen += 1
             stamp = str(prov.get("captured_at") or prov.get("validated_at") or "")
+            # THE DATE IS OFTEN ON THE NODE, NOT INSIDE THE BLOCK. Measured on the dogfood
+            # canvas 2026-09-03: this check reported 98 undated blocks, of which 95 carried a
+            # valid date one level up — `purpose.yml :: evidence.sources[]` writes
+            # `date: 2026-04-16` beside a `provenance:` holding a snapshot pointer. Reading
+            # only inside the block called those UNCHECKABLE when the decay date was sitting
+            # in plain sight, and pointed the ratio at the one file with nothing wrong while
+            # burying the three entries that are genuinely undated. A 97% false-positive rate
+            # on a line printed every push teaches its reader to skip the class, which is the
+            # exact failure this check's own docstring says it was shaped to avoid.
+            if not _DATE_IN_TEXT.search(stamp):
+                stamp = str(node.get("date") or node.get("captured_at")
+                            or node.get("validated_at") or "")
             ok += 1 if _DATE_IN_TEXT.search(stamp) else 0
         children = node.values()
     elif isinstance(node, list):

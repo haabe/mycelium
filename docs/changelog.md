@@ -4,6 +4,41 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-03.
 
+## v0.171.1 - the date was on the node, not in the block
+
+The provenance-dating coverage line has printed on every push since v0.163.0:
+
+> `258 of 356 provenance blocks carry a captured_at or validated_at date; 98 carry neither. Most affected: purpose.yml (93)`
+
+**95 of those 98 were dated.** `purpose.yml :: evidence.sources[]` writes the date on the source node
+and keeps a snapshot pointer in the `provenance:` block beneath it:
+
+```yaml
+- type: metrics
+  date: 2026-04-16          # <- the decay date, in plain sight
+  provenance:
+    snapshot: .claude/evals/metrics/github/2026-04-16.json
+    adapter_version: 1
+```
+
+`_count_provenance` looked only inside the block, so it called these UNCHECKABLE. The check exists to
+find dates that are missing; it was reporting dates that were merely one level up.
+
+### Why a noisy warning is worse than no warning
+
+The docstring for this check argues, correctly, that it must be one ratio line rather than ninety
+per-entry warnings, because a rule firing on most of a corpus **teaches its reader to skip the whole
+class**. The false positives defeated that reasoning from the other side: the ratio named
+`purpose.yml (93)` as most-affected, which is the one file with nothing wrong, while the three
+entries that are genuinely undated sat in `opportunities.yml` unnamed and unread.
+
+Real ratio after the fix: **353 of 356**, remaining offenders correctly located.
+
+### What did not change
+
+A block undated at *both* levels is still reported — pinned by its own test, because a widening that
+swallows the real findings would be a worse defect than the noise it removes.
+
 ## v0.171.0 - the threat-model example could not validate
 
 v0.170.0 gave `/mycelium:threat-model` a mandatory canvas destination. The **first dogfood run of it**

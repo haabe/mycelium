@@ -1872,6 +1872,36 @@ def test_a_nested_provenance_block_is_counted(tmp_path, scripts_path):
     assert out and "0 of 1" in out[0]
 
 
+def test_a_date_on_the_node_dates_the_provenance_block_beneath_it(tmp_path, scripts_path):
+    """MEASURED ON THE DOGFOOD CANVAS 2026-09-03: 98 blocks reported undated, 95 of which carried
+    a valid date one level up. `purpose.yml :: evidence.sources[]` writes `date:` on the source
+    node and keeps a snapshot pointer in `provenance:` — the decay date was in plain sight and
+    the check called it UNCHECKABLE. Worse than the noise: the ratio named `purpose.yml (93)` as
+    most-affected, which is the one file with nothing wrong, while the three genuinely undated
+    entries sat in `opportunities.yml` unnamed.
+    """
+    doc = {"evidence": {"sources": [
+        {"type": "metrics", "date": "2026-04-16",
+         "provenance": {"snapshot": "x.json", "adapter_version": 1}},
+        {"type": "interview", "date": "2026-05-01",
+         "provenance": {"evidence_type": "anecdotal", "evidence_sources": ["a"]}},
+    ]}}
+    assert _prov({"purpose.yml": doc}, tmp_path, scripts_path) == []
+
+
+def test_a_block_undated_at_both_levels_is_still_reported(tmp_path, scripts_path):
+    """The widening must not swallow the real ones. opp-072/073/017 carry an evidence-shaped
+    provenance with no date on the block AND none on the node; those are the finding."""
+    doc = {"opportunities": [
+        {"id": "opp-072", "provenance": {"evidence_type": "anecdotal", "confidence": 0.4}},
+        {"id": "opp-dated", "date": "2026-08-01",
+         "provenance": {"evidence_type": "anecdotal", "confidence": 0.4}},
+    ]}
+    out = _prov({"opportunities.yml": doc}, tmp_path, scripts_path)
+    assert out and "1 of 2" in out[0]
+    assert "opportunities.yml (1)" in out[0]
+
+
 def test_no_provenance_anywhere_is_silent_not_a_zero_finding(tmp_path, scripts_path):
     """Empty input must refuse to report, not report a perfect or a failing score."""
     assert _prov({"x.yml": {"stages": [{"name": "Idea"}]}}, tmp_path, scripts_path) == []
