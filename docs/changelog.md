@@ -2,7 +2,67 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-09-02.
+**Last updated**: 2026-09-03.
+
+## v0.170.0 - three assessment skills that never wrote their canvas
+
+A consumer ran `/mycelium:service-check` and asked the question that opened this: **will the result
+reach `services.yml`?** It would not. The skill mentions that file **zero times**. Its only mandatory
+output was an append to the decision log, while `canvas-update`'s routing table already carried the
+answer — *"Service quality scores | services.yml | Downe"*. **The router knew the mapping and the
+producer never called it.**
+
+### What it cost, measured on that project
+
+| canvas file | owning skill | state found |
+|---|---|---|
+| `services.yml` | `service-check` | 15 of 15 principles `not-assessed` — for **103 days** after a full assessment had run and landed in the decision log instead |
+| `privacy-assessment.yml` | `privacy-check` | 7 of 7 `not-assessed`, empty evidence — **and `last_assessed: 2026-05-04`** |
+| `threat-model.yml` | `threat-model` | 0 threats, 0 components, 0 security requirements; the skill named no output surface at all, not even the log |
+
+**`privacy-assessment.yml` is the worst of the three and it is not the emptiest.** A date asserting an
+assessment that never landed is worse than a blank file: a reader checking freshness sees an assessed
+record. **And all three carried a live `_meta.last_validated` stamp written by `xai-check`** — one of
+the three skills that does write canvas, which touched all three while filling none of their content.
+So the files whose owning skills could not write them were exactly the ones kept looking fresh by a
+skill that could.
+
+The Service Quality, Privacy and Security theory gates all read those files. All three are Required at
+L4 for `product_type: ai_tool`. **Three Required gates were reading empty files that looked maintained.**
+
+### The fix
+
+Each of the three skills now carries the `bvssh-check` convention **verbatim, not a new invention**:
+
+> **Canvas (MANDATORY — the source of truth, do this FIRST).** The decision log is provenance; the
+> canvas is what the framework READS. Write the canvas before the decision log — if only one of the
+> two lands, it must be this one.
+
+Each names the exact fields to write, and each gained a Verify-After-Write postflight: read the file
+back and confirm the VALUE fields moved, not just `_meta.last_validated`. `threat-model` also gained
+the decision-log section it never had. Each section states what its own `not-assessed` default means
+after a run — *"`not-assessed` IS A REAL VERDICT AND MUST NOT BE USED AS A DEFAULT"* — because a field
+at its schema default is not a missing record, it is a present record saying nothing was found.
+
+### `check_assessment_landed.py`
+
+Wired into `/mycelium:canvas-health`. **Every other freshness check reads a DATE; this one asks
+whether anything is under it.**
+
+**The discriminator is the whole design.** `trust-signals.yml`, `bounded-contexts.yml` and
+`value-stream.yml` are also empty and say so in `_meta.applicability`. **An empty file that declares
+itself empty is a decision; an empty file that declares itself fresh is a defect.** Only the second
+fires, so this does not become a populate-your-canvas nag on day one.
+
+Report-only unless `--strict`, per gate-remedy proportionality — failing a build over a
+half-finished assessment teaches people to delete the stamp rather than finish the work. **UNKNOWN
+(exit 2) on a missing directory, an unparseable canvas, or a canvas holding none of the registered
+files**, because a scan that checked nothing has not passed. The file/field map is explicit and
+refuses to guess: a wrong guess about which field carries "the assessment" manufactures a finding.
+
+Seven tests: it bites on the real `privacy-assessment.yml` shape including the asserted date, stays
+silent on a file declaring itself empty and on one asserting no freshness at all, and returns UNKNOWN
+rather than clean on all three empty-input paths.
 
 ## v0.169.1 - one warning, two parser bugs, and a guard on the wrong trajectory
 

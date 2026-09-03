@@ -84,6 +84,46 @@ Privacy by Design assessment.
 1. [risk and recommended action]
 ```
 
+## Canvas (MANDATORY — the source of truth, do this FIRST)
+
+`.claude/canvas/privacy-assessment.yml` is the canonical record. The decision log is provenance; the
+canvas is what the framework READS. Write the canvas before the decision log — if only one of the two
+lands, it must be this one.
+
+**WHY THIS SECTION EXISTS (v0.170.0).** On the dogfood project this file carried
+`last_assessed: 2026-05-04` while **all seven** Privacy-by-Design principles read
+`assessment: not-assessed` with empty `evidence`, and `data_inventory` was empty. **A date asserting
+an assessment that never landed is worse than an empty file**: a reader checking freshness sees an
+assessed record, and the `Privacy` theory gate — Required at L2-L4 — reads it. Never stamp
+`last_assessed` in a run that does not also fill the principles.
+
+**UPDATE each of the seven keys in `principles`** (`proactive_not_reactive`, `privacy_as_default`,
+`privacy_embedded`, `full_functionality`, `end_to_end_security`, `visibility_transparency`,
+`respect_for_users`):
+
+```yaml
+  <principle_key>:
+    assessment: pass|partial|fail|not-assessed
+    evidence: "<what was observed, and where>"
+```
+
+**Then:** `data_inventory` (what personal data the product actually touches — an empty list is a
+CLAIM that it touches none, so make it deliberately), `dpia_required` + `dpia_rationale`, and
+`last_assessed`.
+
+**`last_assessed` IS A CLAIM ABOUT THE PRINCIPLES BELOW IT.** Set it only when they were filled in
+the same run. If the assessment is partial, say which keys were judged in `dpia_rationale` rather
+than dating the whole file.
+
+## Postflight: Verify-After-Write (write-narration-verification discipline)
+
+**Hard rule** (per CLAUDE.md Communication Rules, anti-pattern #7 Stage 2 graduation). Before any
+user-facing summary claims the assessment was recorded, use the **Read tool** on the canvas file and
+confirm the VALUE fields above actually changed — not just `_meta.last_validated`. A stamp moving
+while the assessed fields stay at their defaults is the exact failure this skill shipped with: the
+file reads fresh and holds nothing. Preflight protects what gets written; Postflight protects what
+gets claimed about what was written.
+
 ## Decision Log (MANDATORY per G-P4)
 **APPEND** a `### Privacy Assessment` entry to `.claude/harness/decision-log.md` with: principles assessed, data flows identified, risks found, GDPR compliance status.
 

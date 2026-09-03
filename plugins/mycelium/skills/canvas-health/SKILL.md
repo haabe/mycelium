@@ -352,6 +352,31 @@ three different dates for one measurement.
 regression guard, not a discovery tool, and if it stays green over a long window it should be
 narrowed or retired rather than left running — the near-zero-action-rate rule applies to it too.
 
+## A canvas file that claims to be assessed and holds nothing
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_assessment_landed.py" --canvas-dir .claude/canvas
+```
+
+**Every other freshness check here reads a DATE. This one asks whether anything is under it.**
+
+Measured on a consumer 2026-09-03: `services.yml` held 15 of 15 principles at `not-assessed` for
+**103 days** after a full assessment had run and landed in the decision log instead;
+`privacy-assessment.yml` held 7 of 7 at `not-assessed` while carrying `last_assessed: 2026-05-04`;
+`threat-model.yml` held zero threats. **All three had a live `_meta.last_validated` stamp set by a
+different skill that does write canvas.** So a staleness pass saw three recently-validated files and
+the theory gates reading them — Service Quality, Privacy, Security, all Required at L4 — got nothing.
+
+**THE DISCRIMINATOR IS THE WHOLE DESIGN, and it is why this is not just a "populate your canvas"
+nag.** Files that are empty and SAY SO in `_meta.applicability` — *"Schema-only as of ..."*, *"L5
+Market canvas; populate when reached"* — are decisions and are exempt. **An empty file that declares
+itself empty is a decision; an empty file that declares itself fresh is a defect.** Only the second
+fires.
+
+It cannot see a field it was not registered for: the file/field map is explicit and refuses to guess,
+because a wrong guess about which field carries "the assessment" manufactures a finding. Report-only
+unless `--strict`; exit 2 (UNKNOWN, never a pass) on a missing directory or unparseable canvas.
+
 ## Upstream candidate registry — is surfaced friction already fixed?
 
 ```bash

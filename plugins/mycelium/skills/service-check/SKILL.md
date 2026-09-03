@@ -99,6 +99,47 @@ Score: [X/15 Pass, Y/15 Partial, Z/15 Fail]
 Priority fixes: [top 3 items to address]
 ```
 
+## Canvas (MANDATORY — the source of truth, do this FIRST)
+
+`.claude/canvas/services.yml` is the canonical record. The decision log is provenance; the canvas is
+what the framework READS. Write the canvas before the decision log — if only one of the two lands, it
+must be this one.
+
+**WHY THIS SECTION EXISTS (v0.170.0).** It did not, and the cost was measured. A full 15-principle
+assessment ran on the dogfood project on 2026-05-23 (7 Pass / 8 Partial / 0 Fail), landed in the
+decision log, and `services.yml` held every principle at `assessment: not-assessed` with
+`overall_score: null` for **103 days**. The scores existed the whole time and no reader of the canvas
+could see them. The `Service Quality` theory gate reads this file, so a Required gate at L4 had no
+data to read while the data sat in a log nothing gates on.
+
+**UPDATE, per principle, in `principles[]`:**
+
+```yaml
+  - id: <1-15>
+    assessment: pass|partial|fail|not-assessed   # not-assessed ONLY if genuinely not evaluated
+    evidence: "<what was observed, and where — a claim a later reader can check>"
+    issues: ["<specific, actionable>"]           # [] when none
+    last_checked: "YYYY-MM-DD"
+```
+
+**Then set the file-level fields:** `overall_score` (the X pass / Y partial / Z fail tally) and
+`last_assessed` (today).
+
+**`not-assessed` IS A REAL VERDICT AND MUST NOT BE USED AS A DEFAULT.** Leaving a principle at
+`not-assessed` after running this skill records "we looked and could not judge" — which is different
+from "nobody looked", and only one of those is true after a run. If a principle cannot be judged, say
+why in `evidence`. A principle whose own fail criterion is "not tested" (P11 accessibility) is a
+**fail**, not a `not-assessed`: the criterion is about the testing, not about the product.
+
+## Postflight: Verify-After-Write (write-narration-verification discipline)
+
+**Hard rule** (per CLAUDE.md Communication Rules, anti-pattern #7 Stage 2 graduation). Before any
+user-facing summary claims the assessment was recorded, use the **Read tool** on the canvas file and
+confirm the VALUE fields above actually changed — not just `_meta.last_validated`. A stamp moving
+while the assessed fields stay at their defaults is the exact failure this skill shipped with: the
+file reads fresh and holds nothing. Preflight protects what gets written; Postflight protects what
+gets claimed about what was written.
+
 ## Decision Log (MANDATORY per G-P4)
 **APPEND** a `### Service Check` entry to `.claude/harness/decision-log.md` with: principles assessed, scores, priority fixes, overall service quality rating.
 

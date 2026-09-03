@@ -89,6 +89,52 @@ For AI-powered products (`product_type: ai_tool` or any product using LLM compon
 
 For each LLM component in the threat model, assess all 10 threats. Use alongside STRIDE — STRIDE covers system-level threats, OWASP LLM covers model-level threats.
 
+## Canvas (MANDATORY — the source of truth, do this FIRST)
+
+`.claude/canvas/threat-model.yml` is the canonical record. The decision log is provenance; the canvas
+is what the framework READS. Write the canvas before anything else — if only one artifact lands, it
+must be this one.
+
+**WHY THIS SECTION EXISTS (v0.170.0).** This skill previously named no output surface at all — not
+the canvas and not the decision log. On the dogfood project `threat-model.yml` held **0 threats, 0
+components and 0 security requirements** while `_meta.last_validated` read a date two months old,
+stamped by a different skill. The `Security` theory gate — Required at L3-L5 — reads this file, so a
+Required gate at L4 was reading an empty file that looked maintained.
+
+**APPEND to `threats[]`, one entry per identified threat:**
+
+```yaml
+  - id: "<stable id>"
+    category: "<STRIDE category, or OWASP LLM id for agentic surfaces>"
+    description: "<the threat, concretely>"      # REQUIRED by schema
+    severity: critical|high|medium|low
+    provenance: "<how this was identified — skill run, incident, review>"   # REQUIRED by schema
+    trace: "<component or solution id this attaches to>"
+```
+
+**Then populate `components`, `data_classification` and `security_requirements`** for the surfaces
+assessed.
+
+**AN EMPTY `threats[]` AFTER A RUN IS A FINDING, NOT A BLANK.** If the assessment genuinely found no
+threats at a severity worth recording, write that as an explicit entry with its provenance rather
+than leaving the list empty — an empty list is indistinguishable from a skill that never ran, and
+that ambiguity is what this section exists to end.
+
+## Postflight: Verify-After-Write (write-narration-verification discipline)
+
+**Hard rule** (per CLAUDE.md Communication Rules, anti-pattern #7 Stage 2 graduation). Before any
+user-facing summary claims the assessment was recorded, use the **Read tool** on the canvas file and
+confirm the VALUE fields above actually changed — not just `_meta.last_validated`. A stamp moving
+while the assessed fields stay at their defaults is the exact failure this skill shipped with: the
+file reads fresh and holds nothing. Preflight protects what gets written; Postflight protects what
+gets claimed about what was written.
+
+## Decision Log (MANDATORY per G-P4)
+
+**APPEND** a `### Threat Model` entry to `.claude/harness/decision-log.md` with: surfaces assessed,
+threats identified by severity, and what was ruled out and why. This is provenance for the canvas
+rows written above — it does not replace them.
+
 ## Theory Citations
 - STRIDE: Microsoft threat modeling methodology (Shostack)
 - OWASP Top 10:2025: Web application security risks
