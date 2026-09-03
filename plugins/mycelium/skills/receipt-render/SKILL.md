@@ -83,7 +83,8 @@ Numbering resets per render; emit an anon-mapping footnote when redaction occurr
 
 1. Read `.claude/diamonds/active.yml` (full) to resolve the target diamond.
 2. Read `.claude/canvas/archived-solutions.yml`, `.claude/canvas/opportunities.yml`, `.claude/canvas/cycle-history.yml`, and the relevant `.claude/harness/decision-log.md` entries (filtered by `**Diamond**: <id>`). All read-only.
-3. Read the attribution registry per `engine/render-conventions.md#registry-path-resolution`. If absent, surface `⚠ no attribution-registry — consent-redaction not enforceable; do NOT share this receipt externally` in the render header (stricter than the fleet default because audience is `external`).
+3. Read the attribution registry per `engine/render-conventions.md#registry-path-resolution`. **If absent, STOP: emit no receipt.** Report to the operator: `⚠ no attribution-registry — consent-redaction not enforceable; receipt NOT generated`. Audience here is fixed `external`, which is exactly the case `render-conventions.md` blocks (v0.173.0).
+   Until v0.173.0 this step emitted the receipt behind a `do NOT share this receipt externally` header. **That put the artifact in the operator's hands and asked them not to use it** — for a skill whose entire purpose is producing something to hand over, and whose own rationale below says the gate must be "conservative by construction, not by operator vigilance". A header asking someone not to share a shareable artifact IS operator vigilance.
 4. Note canvas-state timestamp per `engine/render-conventions.md#canvas-state-timestamp-resolution`.
 
 ## Arguments

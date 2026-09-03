@@ -14,7 +14,13 @@ This rule is non-skippable. A render that leaks a tester's name (or any identifi
 
 - **Preferred**: `$MYCELIUM_ATTRIBUTION_REGISTRY` environment variable.
 - **Fallback**: `.claude/memory/attribution-registry.yml` (registry lives in roadmap-private memory by design — upstream-public repos must not ship the registry).
-- **Absent**: fail-open with a render-header warning `⚠ no attribution-registry — consent-redaction not enforceable; treat output as roadmap-internal`.
+- **Absent**: depends on audience, and the split closes an inconsistency in this document's own reasoning (v0.173.0).
+  - `founder` / `cohort` — **fail-open** with a render-header warning `⚠ no attribution-registry — consent-redaction not enforceable; treat output as roadmap-internal`. The founder already has access, and `cohort` is semi-private; blocking here would break every fork and CI runner that legitimately has no private companion repo, for no privacy gain.
+  - `external` — **BLOCKED. No artifact is emitted.** Same outcome as an unregistered identifier, and for the same stated reason.
+
+**WHY `external` BLOCKS, WRITTEN OUT BECAUSE THE OLD RULE CONTRADICTED ITSELF.** Two paragraphs below, an identifier that is missing from the registry blocks the WHOLE render and emits nothing — the reason given is that *an unresolved consent state makes the exposure declaration impossible to give honestly*. An absent registry is that same condition applied to **every** identifier at once. Until v0.173.0 the rules were exactly inverted in severity: **one** unknown name produced no artifact, while **all** names unknown produced an artifact plus a warning line. The weaker case was treated more strictly than the stronger one.
+
+The warning was also the wrong instrument for the job. It is prose in a header, and the artifact still exists — so nothing stands between an unverified render and a colleague except the operator reading a line and choosing not to share. `external` is by definition the audience where a leak becomes the violation, so that is where the header has to become a refusal. A nudge is not a control.
 
 ### Registry schema (real, verified)
 

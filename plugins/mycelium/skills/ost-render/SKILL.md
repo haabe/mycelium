@@ -76,7 +76,7 @@ Per `engine/render-conventions.md#consent-value-semantics`:
 ## Preflight: Read sources
 
 1. Read `.claude/canvas/opportunities.yml` with the Read tool. Full read for emit; not `limit:1`.
-2. Read the attribution registry per path-resolution order in `engine/render-conventions.md#registry-path-resolution`: `$MYCELIUM_ATTRIBUTION_REGISTRY` env var first; fall back to `.claude/memory/attribution-registry.yml`. Registry root key is `people:`; each entry has `name`, `consent`, optional `note`. If registry absent, surface `⚠ no attribution-registry — consent-redaction not enforceable; treat output as roadmap-internal` warning in the render header.
+2. Read the attribution registry per path-resolution order in `engine/render-conventions.md#registry-path-resolution`: `$MYCELIUM_ATTRIBUTION_REGISTRY` env var first; fall back to `.claude/memory/attribution-registry.yml`. Registry root key is `people:`; each entry has `name`, `consent`, optional `note`. If registry absent, surface `⚠ no attribution-registry — consent-redaction not enforceable; treat output as roadmap-internal` warning in the render header. **For `--audience external`, an absent registry BLOCKS the render and emits no artifact** (v0.173.0) — same outcome as an unregistered identifier, because an absent registry is that same unresolved-consent condition applied to every identifier at once. The warning-and-emit path is for `founder`/`cohort` only.
 3. Note the source's canvas-state timestamp per `engine/render-conventions.md#canvas-state-timestamp-resolution`: `_meta.last_validated` if present, else top-level `last_updated:`.
 
 ## Arguments

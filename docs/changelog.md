@@ -4,6 +4,53 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-03.
 
+## v0.173.0 - one unknown name blocked; all names unknown did not
+
+threat-003 from the 2026-09-03 STRIDE pass. The defect is not a missing rule — it is an inconsistency
+between two rules already in `render-conventions.md`, in the same section.
+
+| condition | consent state | old behaviour |
+|---|---|---|
+| one identifier missing from the registry | unresolved for **one** name | **whole render blocked, no artifact** |
+| registry entirely absent | unresolved for **every** name | warning in the header, artifact emitted |
+
+The stated reason for blocking on a single unknown name is that *an unresolved consent state makes the
+exposure declaration impossible to give honestly*. An absent registry is that same condition applied to
+everyone at once. **The weaker case was treated more strictly than the stronger one.**
+
+### What changed
+
+An absent registry now **blocks** for `--audience external` and emits no artifact. `founder` and
+`cohort` keep the warn-and-emit path: the founder already has access, `cohort` is semi-private, and
+blocking there would break every fork and CI runner without a private companion repo for no privacy
+gain. `external` is by definition the audience where a leak becomes the violation, so that is where
+the header had to become a refusal.
+
+### The sharpest case was the skill most likely to be shared
+
+`receipt-render` fixes its audience to `external` — it exists to produce a hand-it-over artifact. With
+no registry it emitted the receipt behind a header reading *"do NOT share this receipt externally"*.
+
+That put the artifact in the operator's hands and asked them not to use it. The skill's own rationale,
+four lines further down, says the gate is *"conservative by construction, not by operator vigilance"* —
+and a header asking someone not to share a shareable artifact is precisely operator vigilance. It now
+generates nothing and says why.
+
+**A nudge is not a control.**
+
+### Who this affects on upgrade, stated plainly
+
+If you run `receipt-render` **without** an attribution registry — no `$MYCELIUM_ATTRIBUTION_REGISTRY`
+and no `.claude/memory/attribution-registry.yml` — it produced a receipt before this release and
+produces none after it. That is a capability removed, not a bug fixed, and it is worth naming rather
+than discovering.
+
+The fix is a registry, not a flag: create `.claude/memory/attribution-registry.yml` with a `people:`
+list, or point the env var at one. A project that names nobody still needs the file — an empty
+`people: []` is a *claim* that no identifiers need consent checking, which is exactly the claim the
+gate needs someone to have made. `--audience founder` and `--audience cohort` are unaffected on every
+other render skill.
+
 ## v0.172.0 - canvas text reached every session undelimited
 
 The first STRIDE pass on the harness itself (v0.171.0's dogfood run) rated this its highest-severity
