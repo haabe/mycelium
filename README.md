@@ -15,6 +15,7 @@ Nobody skips that part because they think it doesn't matter. Something is always
 You know there are subreddits where people confess exactly this every week? I dropped down the rabbit hole for a count and found a clear structure. I read 46 posts where someone shipped their awesome product to nobody. Most of them never said they asked anybody if they needed what they built. A handful did. Mostly sideways. Like a sales call or a Facebook favor. Some were lucky enough to have existing users they could ask. I couldn't say that anyone asked their users up front.
 
 ```mermaid
+%%{init: {"themeVariables": {"pie1": "#3987e5", "pie2": "#d95926", "pie3": "#199e70", "pieOpacity": "1", "pieStrokeColor": "#ffffff", "pieStrokeWidth": "2px", "pieOuterStrokeColor": "#8b949e", "pieOuterStrokeWidth": "2px", "pieSectionTextColor": "#000000"}}}%%
 pie showData
     title 46 posts, shipped and nobody came
     "Never mentioned talking to anyone" : 37

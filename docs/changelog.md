@@ -4,6 +4,21 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-03.
 
+## v0.175.2 - the pie was unreadable on a dark background
+
+The chart added in 0.175.1 shipped in near-black fills. On GitHub's dark canvas the largest
+slice was very nearly the page behind it.
+
+Re-picked from the validated categorical palette and checked by running the numbers rather than
+by looking at it. `#3987e5`, `#d95926` and `#199e70` clear WCAG 1.4.11's 3:1 non-text contrast
+against both `#ffffff` and `#0d1117`, carry black section labels at 5.4 to 6.2:1 against
+1.4.3's 4.5:1 floor, and pass the CVD gate in both modes at worst-pair deutan 9.4.
+
+Borders went on for the same reason. White at 2px between slices, which is a separator gap on
+the light surface and a ring on the dark one, and a `#8b949e` outer edge that clears 3:1 on
+both. Title and legend colors are left unset on purpose, so GitHub's own per-mode theme keeps
+supplying them. Pinning those is how a chart ends up legible in exactly one mode.
+
 ## v0.175.1 - the README stopped arguing from one person's word
 
 Fifteen years of watching people skip discovery is a real number, and it is also just one person's word for it. So I went and counted a population that owes nobody an answer: 46 posts on r/microsaas, r/SideProject and r/vibecoding, each one a shipped-to-no-traction confession, hand-read for whether the author ever said they talked to anyone who had the problem.
