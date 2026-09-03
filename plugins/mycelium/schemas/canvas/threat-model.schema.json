@@ -16,7 +16,13 @@
           "id": {"type": "string"},
           "category": {
             "type": "string",
-            "enum": ["spoofing", "tampering", "repudiation", "info_disclosure", "denial_of_service", "elevation_of_privilege"]
+            "enum": ["spoofing", "tampering", "repudiation", "info_disclosure", "denial_of_service", "elevation_of_privilege"],
+            "description": "STRIDE system-level category. Deliberately NOT a place for OWASP LLM ids: the two taxonomies are orthogonal, not alternatives (an indirect prompt injection is LLM01 AND tampering), so one field cannot hold both without making it uncountable. Use owasp_llm alongside."
+          },
+          "owasp_llm": {
+            "type": "string",
+            "enum": ["LLM01", "LLM02", "LLM03", "LLM04", "LLM05", "LLM06", "LLM07", "LLM08", "LLM09", "LLM10"],
+            "description": "OWASP Top 10 for LLM Applications v2025 id, for model-level threats on agentic surfaces. Optional and INDEPENDENT of category — set both when a threat is both."
           },
           "description": {"type": "string"},
           "severity": {"type": "string", "enum": ["low", "medium", "high", "critical"]},

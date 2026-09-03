@@ -82,6 +82,22 @@ GATE_SET="plugins/mycelium/scripts/local-gate-set.txt"
 if [ -f "$GATE_SET" ]; then
   while IFS= read -r gate_line || [ -n "$gate_line" ]; do
     case "$gate_line" in ''|'#'*) continue ;; esac
+    # `!waived <script> <reason>` is DIRECTIVE syntax in the gate set, not a gate name.
+    # git-pre-push-example.sh has skipped it since it was introduced and
+    # check_gate_parity.py parses it; this reader never learned it, so every local run
+    # reported `FAIL !waived — named in gate set, not on disk` and the verdict line was
+    # red on a clean tree. A gate runner that is always red trains you to ignore it,
+    # which is the failure this whole script exists to prevent. Three readers of one
+    # file, one of them never updated — the reply-owed shape again.
+    # Reported rather than silently skipped: an invisible waiver is how a gate set
+    # quietly shrinks (anti-pattern #9), which the not-on-disk branch below guards.
+    case "$gate_line" in
+      '!waived '*)
+        waived_rest="${gate_line#!waived }"
+        echo "  WAIVE $waived_rest"
+        continue
+        ;;
+    esac
     # shellcheck disable=SC2086 -- gate_line carries its own arguments by design
     set -- $gate_line
     gate_script="$1"; shift

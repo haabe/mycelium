@@ -4,6 +4,56 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-03.
 
+## v0.171.0 - the threat-model example could not validate
+
+v0.170.0 gave `/mycelium:threat-model` a mandatory canvas destination. The **first dogfood run of it**
+followed the example that shipped with it and produced a canvas that **failed schema validation on 18
+errors**. Three of the example's six fields were wrong.
+
+| field | example said | schema requires |
+|---|---|---|
+| `provenance` | a scalar string, *"how this was identified"* | an **object** — `evidence_type` (a 5-value enum) + `evidence_sources`, both required |
+| `trace` | a scalar string, *"component or solution id"* | an **object** of `upstream`/`downstream` `{target_id, edge}` edge lists |
+| `category` | *"STRIDE category, **or** OWASP LLM id for agentic surfaces"* | the six STRIDE values, no OWASP branch |
+
+### The `or` was the design error, not the enum
+
+The obvious fix — widen the enum to admit LLM01-LLM10 — is the wrong one. **STRIDE and the OWASP LLM
+top-10 are orthogonal taxonomies, not alternatives.** An indirect prompt injection is LLM01 *and*
+tampering. Excessive agency is LLM06 *and* elevation of privilege. A single field forced a false
+choice, and either resolution lost information: pick the OWASP id and the STRIDE reading vanishes;
+pick STRIDE and the model-level classification has nowhere to live. Worse, a mixed-taxonomy column
+is **uncountable** — you can no longer ask how many tampering threats a project has.
+
+So `category` stays STRIDE-only and **`owasp_llm` is a new optional field, independent of it**
+(LLM01-LLM10). Set both when a threat is both; the shipped dogfood canvas now does.
+
+### Why this was worth a release rather than a backlog row
+
+The `Security` theory gate is **Required at L3-L5** and reads `threat-model.yml`. **An example that
+cannot validate is a gate that cannot be fed** — and the failure mode is quiet, because an agent
+following the documentation in good faith gets a file that looks complete and fails a validator the
+agent may never run.
+
+### Also: `scripts/gates.sh` was red on a clean tree
+
+Found while running the gates for this change, unrelated to it. `local-gate-set.txt` carries
+`!waived <script> <reason>` directive lines. **`git-pre-push-example.sh` skips them and
+`check_gate_parity.py` parses them — `gates.sh` never learned the syntax**, so it read `!waived` as
+the name of a gate, failed to find it on disk, and every local run ended
+`GATES: FAILED — 1 of 23: !waived (named in gate set, not on disk)`.
+
+One rule, three readers, one of them never updated. **A gate runner that is always red trains you to
+ignore it**, which is the exact failure the script's own header says it exists to prevent. Waived
+lines now print `WAIVE <script> <reason>` — reported, not silently skipped, because an invisible
+waiver is how a gate set quietly shrinks. Clean tree now reports `ALL PASSED (22/22)`.
+
+### Checked, and deliberately not generalised
+
+`service-check` and `privacy-check` were changed in the same v0.170.0 commit, so their examples were
+checked too. **Both are correct**: their canvas fields are flat scalars with no `$ref` sub-objects,
+so the defect class does not reach them. No change to either.
+
 ## v0.170.0 - three assessment skills that never wrote their canvas
 
 A consumer ran `/mycelium:service-check` and asked the question that opened this: **will the result

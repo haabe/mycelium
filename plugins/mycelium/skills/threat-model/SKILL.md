@@ -105,12 +105,32 @@ Required gate at L4 was reading an empty file that looked maintained.
 
 ```yaml
   - id: "<stable id>"
-    category: "<STRIDE category, or OWASP LLM id for agentic surfaces>"
+    category: spoofing|tampering|repudiation|info_disclosure|denial_of_service|elevation_of_privilege
+    owasp_llm: "LLM01"        # OPTIONAL, and INDEPENDENT of category — see below
     description: "<the threat, concretely>"      # REQUIRED by schema
     severity: critical|high|medium|low
-    provenance: "<how this was identified — skill run, incident, review>"   # REQUIRED by schema
-    trace: "<component or solution id this attaches to>"
+    provenance:                                  # REQUIRED by schema — an OBJECT, not a string
+      evidence_type: speculation|anecdotal|data-supported|test-validated|launch-validated
+      evidence_sources: ["<where this came from — skill run, incident, code read, review>"]
+      captured_at: "<ISO-8601>"                  # optional
+      confidence: 0.0                            # optional
+      notes: "<why the confidence is what it is>"   # optional
+    trace:                                       # OPTIONAL — an OBJECT of edges, not a string
+      upstream:
+        - target_id: "<component or solution id this attaches to>"
+          edge: derived_from
 ```
+
+**`category` IS STRIDE ONLY, AND `owasp_llm` IS A SEPARATE FIELD ON PURPOSE.** The two taxonomies
+are **orthogonal, not alternatives**: an indirect prompt injection is LLM01 *and* tampering; excessive
+agency is LLM06 *and* elevation of privilege. Putting an OWASP id in `category` makes the field
+uncountable — you can no longer ask "how many tampering threats do we have?" — and it silently drops
+the STRIDE reading of a threat that has one. **Set both when a threat is both.**
+
+*(Corrected v0.171.0. Through v0.170.0 this example read `category: "<STRIDE category, or OWASP LLM
+id>"` with `provenance` and `trace` as scalar strings — an agent following it produced a
+schema-INVALID canvas, which the dogfood run on 2026-09-03 hit on 18 validation errors. The
+`Security` gate reads this file, so an example that cannot validate is a gate that cannot be fed.)*
 
 **Then populate `components`, `data_classification` and `security_requirements`** for the surfaces
 assessed.
