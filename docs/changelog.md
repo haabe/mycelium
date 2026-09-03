@@ -4,7 +4,7 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-03.
 
-## v0.176.0 - the README stopped arguing from one person's word
+## v0.175.1 - the README stopped arguing from one person's word
 
 Fifteen years of watching people skip discovery is a real number, and it is also just one person's word for it. So I went and counted a population that owes nobody an answer: 46 posts on r/microsaas, r/SideProject and r/vibecoding, each one a shipped-to-no-traction confession, hand-read for whether the author ever said they talked to anyone who had the problem.
 
