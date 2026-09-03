@@ -189,3 +189,84 @@ def test_a_sibling_key_does_end_the_block(tmp_path):
         "cycles:\n- cycle_id: cycle-001\n  leaf_id: sol-in\n"
         "calibration_summary:\n  leaf_id: sol-out\n")
     assert clr._block_field_values(d / "cycle-history.yml", "cycles", "leaf_id") == {"sol-in"}
+
+
+# --- reconciliation exemptions (v0.175.0) ----------------------------------
+#
+# A dogfood canvas recorded a deliberate omission -- an archived leaf with no cycle row,
+# because the schema forbids a zero-ICE product-leaf cycle and inventing one to silence a
+# check is the corruption the founder's scoring ruling exists to prevent. The decision was
+# right and was written down IN A YAML COMMENT, which no checker can read. So a correct call
+# produced a permanent exit 1, and a check that is always red is one people stop reading.
+#
+# The exemption must be an ANSWER, not a mute button, so both companions are required --
+# the same discipline closure_reason/closure_basis/reopen_trigger already enforce.
+#
+# Scenario-per-guardpost:
+#   happy — reason + dated decided        -> EXEMPT, exit 0, and still PRINTED
+#   bad   — bare marker, no companions    -> still ORPHANED
+#   bad   — reason too short to be a reason-> still ORPHANED
+#   bad   — reason but no decided date    -> still ORPHANED
+#   bad   — exemption on a DIFFERENT id   -> the real orphan still fails
+
+def _exempt_repo(tmp_path: Path, archived_extra: str) -> Path:
+    c = tmp_path / ".claude" / "canvas"
+    c.mkdir(parents=True, exist_ok=True)
+    (c / "archived-solutions.yml").write_text(
+        "archived:\n  - leaf_id: sol-x\n" + archived_extra, encoding="utf-8")
+    (c / "cycle-history.yml").write_text("cycles:\n- cycle_id: cycle-001\n", encoding="utf-8")
+    h = tmp_path / ".claude" / "harness"
+    h.mkdir(parents=True, exist_ok=True)
+    (h / "decision-log.md").write_text("# log\n", encoding="utf-8")
+    return tmp_path
+
+
+GOOD = ("    reconciliation_exempt:\n"
+        "      reason: >-\n"
+        "        Half a leaf; only the parent carried an ICE score and the schema\n"
+        "        forbids a zero-ICE product-leaf cycle.\n"
+        "      decided: 2026-08-31\n")
+
+
+def test_a_dated_reasoned_exemption_clears_the_orphan(tmp_path):
+    res = clr.analyse(_exempt_repo(tmp_path, GOOD))
+    assert res["orphans"] == [], "a declared, dated, reasoned exemption must not fail"
+    assert any(cid == "sol-x" for _, cid, _ in res.get("exempt", [])), \
+        "and it must still be REPORTED — an exemption changes exit status, not visibility"
+
+
+def test_a_bare_marker_buys_nothing(tmp_path):
+    res = clr.analyse(_exempt_repo(tmp_path, "    reconciliation_exempt: true\n"))
+    assert res["orphans"], "a bare marker with no reason and no date must still be an orphan"
+
+
+def test_a_token_reason_buys_nothing(tmp_path):
+    short = ("    reconciliation_exempt:\n"
+             "      reason: n/a\n"
+             "      decided: 2026-08-31\n")
+    res = clr.analyse(_exempt_repo(tmp_path, short))
+    assert res["orphans"], "`n/a` is not a reason -- >=20 chars, per check_instrument_contract"
+
+
+def test_a_reason_without_a_date_buys_nothing(tmp_path):
+    undated = ("    reconciliation_exempt:\n"
+               "      reason: >-\n"
+               "        Half a leaf; only the parent ever carried an ICE score at all.\n")
+    res = clr.analyse(_exempt_repo(tmp_path, undated))
+    assert res["orphans"], "an undated exemption can never be revisited; it must not clear"
+
+
+def test_an_exemption_on_another_id_does_not_clear_this_one(tmp_path):
+    c = tmp_path / ".claude" / "canvas"
+    c.mkdir(parents=True, exist_ok=True)
+    (c / "archived-solutions.yml").write_text(
+        "archived:\n  - leaf_id: sol-other\n" + GOOD + "  - leaf_id: sol-real\n",
+        encoding="utf-8")
+    (c / "cycle-history.yml").write_text("cycles:\n- cycle_id: cycle-001\n", encoding="utf-8")
+    h = tmp_path / ".claude" / "harness"
+    h.mkdir(parents=True, exist_ok=True)
+    (h / "decision-log.md").write_text("# log\n", encoding="utf-8")
+    res = clr.analyse(tmp_path)
+    flat = [i for _, _, ids in res["orphans"] for i in ids]
+    assert "sol-real" in flat, "an exemption must not leak onto a neighbouring entry"
+    assert "sol-other" not in flat

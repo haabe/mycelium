@@ -4,6 +4,45 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-03.
 
+## v0.175.0 - a correct decision that produced a permanent red
+
+`check_log_reconcile.py` reconciles archived leaves against cycle-history rows with a set
+difference. It had no way to record that an entry **legitimately has no counterpart**.
+
+The dogfood canvas has one. `sol-047c-selectivity-half` is half a leaf, split out when its parent
+was found to bundle two claims; only the parent ever carried an ICE score. The schema forbids a
+product-leaf cycle with a zero ICE total, and that gate is right — **a zero would be ingested by
+calibration as a real score**, which is the corruption the founder's *"ice_score must start being
+scored for real"* ruling exists to prevent.
+
+So the omission was deliberate, correct, and written down. **In a YAML comment**, which no checker
+can read:
+
+> So this archived leaf stays visible to check_log_reconcile as an orphan. THAT IS THE HONEST
+> STATE ... inventing one to silence a check is the failure mode.
+
+A correct decision therefore produced **exit 1 on every run, forever** — and a permanently-red
+check is one people stop reading. That is the same failure this release series has been removing
+all week, arriving from the opposite direction: not a check that misses an event, but a check that
+reports one nobody can act on.
+
+### The shape is borrowed on purpose
+
+`reconciliation_exempt: {reason, decided}` records the decision in a **value**, using the
+`closed_with_discipline` pattern the human-task and privacy checks already use: **a null recorded
+properly is an answer, not a gap.** Both companions are required, and a reason must clear 20
+characters — the same bar `check_instrument_contract` sets so that `x` or `n/a` cannot buy an
+exemption.
+
+### It does not silence anything
+
+The exempted id and its reason are **printed every run**. The comment this replaced asked for
+exactly that visibility, and it was right to: a reason nobody re-reads is how an exemption rots
+into a mute button. What changes is the exit status, not what you see.
+
+Five negative controls ship with it — a bare marker, a token reason, an undated reason, and an
+exemption declared on a neighbouring entry all still fail.
+
 ## v0.174.0 - the horizon exemption never travelled to the sibling sub-check
 
 A `/mycelium:canvas-health` run on the dogfood canvas flagged **11 human-tasks** as untouched past 21

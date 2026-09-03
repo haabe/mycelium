@@ -153,6 +153,62 @@ def _block_field_values(canvas: Path, block_key: str, field: str) -> set[str] | 
     return None
 
 
+# A reason must clear this to count. `x` or `n/a` must not buy an exemption --
+# the same bar check_instrument_contract sets on its own waiver field.
+_MIN_REASON_CHARS = 20
+
+def _reconciliation_exemptions(canvas: Path, field: str) -> dict[str, str]:
+    """ids whose entry declares, in a VALUE, that it has no counterpart and why.
+
+    WHY THIS EXISTS (v0.175.0). A dogfood canvas recorded a deliberate omission —
+    `sol-047c-selectivity-half` is archived and has no cycle row, because the schema forbids
+    a product-leaf cycle with a zero ICE total and inventing one to silence a check is the
+    corruption the founder's scoring ruling exists to prevent. The decision was right, it was
+    reasoned, and it was written down. **In a YAML comment**, which no checker can read. So a
+    correct decision produced a permanent exit 1, and a check that is always red is one people
+    stop reading — the failure this script family keeps finding elsewhere.
+
+    THIS IS THE `closed_with_discipline` SHAPE, borrowed deliberately: a null recorded properly
+    is an ANSWER, not a gap. Both companions are required, for the same reason the closure trio
+    requires all three — a bare marker would be a mute button, and the reason is the whole
+    artifact.
+
+        - leaf_id: sol-047c-selectivity-half
+          reconciliation_exempt:
+            reason: >-
+              Half a leaf; only the parent carried an ICE score, and the schema forbids a
+              zero-ICE product-leaf cycle.
+            decided: 2026-08-31
+
+    IT DOES NOT SILENCE THE ROW. The id is still printed every run, as EXEMPT with its reason,
+    because the canvas comment this replaced asked for exactly that ("stays visible ... THAT IS
+    THE HONEST STATE"). What changes is the exit status, not the visibility.
+    """
+    if not canvas.is_file():
+        return {}
+    text = canvas.read_text(encoding="utf-8", errors="replace")
+    id_re = re.compile(
+        rf"^\s*(?:-\s*)?{re.escape(field)}:\s*[\"']?([A-Za-z0-9_.-]+)[\"']?\s*$",
+        re.MULTILINE)
+    marks = [(m.group(1), m.end()) for m in id_re.finditer(text)]
+    out: dict[str, str] = {}
+    for i, (entry_id, pos) in enumerate(marks):
+        chunk = text[pos:marks[i + 1][1] if i + 1 < len(marks) else len(text)]
+        block = re.search(r"reconciliation_exempt:\s*\n(.*?)(?=\n\S|\Z)",
+                          chunk, re.DOTALL)
+        if not block:
+            continue
+        body = block.group(1)
+        if not re.search(r"decided:\s*\S*\d{4}-\d{2}-\d{2}", body):
+            continue
+        reason_m = re.search(r"reason:\s*[>|]?-?\s*\n?(.*?)(?=\n\s*\w+:|\Z)",
+                             body, re.DOTALL)
+        reason = " ".join(reason_m.group(1).split()) if reason_m else ""
+        if len(reason) >= _MIN_REASON_CHARS:
+            out[entry_id] = reason
+    return out
+
+
 def _history_dates(canvas: Path, key: str) -> set[str] | None:
     """Dates inside the `key:` block of a canvas file, or None if unreadable.
 
@@ -220,7 +276,12 @@ def _reconcile_canvases(canvas_dir: Path, res: dict) -> None:
             res["orphans"].append((name, f"{tgt}#{tgt_block} unreadable", sorted(src_ids)))
             continue
         res["checked"] += 1
+        exempt = _reconciliation_exemptions(canvas_dir / src, src_field)
         missing = sorted(src_ids - tgt_ids)
+        claimed = [m for m in missing if m in exempt]
+        for cid in claimed:
+            res.setdefault("exempt", []).append((name, cid, exempt[cid]))
+        missing = [m for m in missing if m not in exempt]
         if missing:
             res["orphans"].append(
                 (name, f"in {src}#{src_block}, absent from {tgt}#{tgt_block}", missing))
@@ -253,6 +314,14 @@ def main() -> int:
         print(f"INFO — {name}: {n} canvas row(s) with no log entry. Not a failure.")
         print("  The canvas is the source of truth, and failing this direction would")
         print("  train people to stop writing it.")
+
+    for name, cid, reason in res.get("exempt", []):
+        # PRINTED EVERY RUN, DELIBERATELY. The canvas comment this mechanism replaced asked for
+        # exactly this ("stays visible ... THAT IS THE HONEST STATE"). An exemption changes the
+        # exit status, never the visibility — a reason nobody re-reads is how an exemption rots
+        # into a mute button.
+        print(f"EXEMPT — {name}: {cid}")
+        print(f"  reason (declared in the canvas, dated): {reason}")
 
     for name, why in res["skipped"]:
         print(f"skip: {name} — {why}")
