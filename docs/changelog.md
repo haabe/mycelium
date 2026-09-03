@@ -4,6 +4,39 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-03.
 
+## v0.174.0 - the horizon exemption never travelled to the sibling sub-check
+
+A `/mycelium:canvas-health` run on the dogfood canvas flagged **11 human-tasks** as untouched past 21
+days. **All 11 carried a horizon in the future.** Every one had a dated reason, written in the field
+immediately beside it, for being open and quiet.
+
+That is a 100% false-positive rate on a check whose own prose says *"a check that fires on 80% of a
+corpus trains its reader to skip it."*
+
+### The repair already existed, one sub-check away
+
+Sub-check **(b)** got this exact exemption at v0.90.0:
+
+> FIRST, CHECK `horizon` / `scoring_horizon`. If it is in the FUTURE, do not flag — a dated horizon
+> IS the recorded reason the task stays open... the 2026-08-05 dogfood run flagged seven tasks and
+> five had future horizons, so the check demanded a reason that was already written in the field
+> beside it.
+
+Same file. Adjacent sub-check. Same failure, same argument, same remedy — **never carried across to
+(a)**. And (a) was not frozen: v0.132.0 edited it to skip `status: watching`. It was revised after
+the fix existed and the fix still did not travel.
+
+**This is the fourth instance of that shape found in one day**, after the reply-owed rule (repaired
+in prose, left live in the hook), the `gates.sh` waiver parser (two readers knew the syntax, one
+did not), and Check 7's poisoned-file list (guarding the surface read by protocol, missing the one
+injected by hook).
+
+### A passed horizon is the opposite case
+
+(a) now skips a task with a future horizon and **elevates** one whose horizon has passed. A task
+sitting untouched past its own stated deadline is the strongest version of this finding, not an
+exempt one, and the message says so.
+
 ## v0.173.0 - one unknown name blocked; all names unknown did not
 
 threat-003 from the 2026-09-03 STRIDE pass. The defect is not a missing rule — it is an inconsistency
