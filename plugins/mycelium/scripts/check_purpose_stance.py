@@ -57,6 +57,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -193,7 +194,8 @@ def _iter_diamonds(diamonds: dict):
 
 def _diamond_stance_findings(diamonds_path: Path, binding: list[dict],
                              grandfathered: set,
-                             diamond_id: str | None = None) -> tuple[list[str], list[str]]:
+                             diamond_id: str | None = None,
+                             known_decisions: set | None = None) -> tuple[list[str], list[str]]:
     """Diamonds, against every binding property. Returns (blocking, advisory).
 
     THE GAP THIS CLOSES (dogfood 2026-08-23). The wiring doc has said since the day this
@@ -264,8 +266,31 @@ def _diamond_stance_findings(diamonds_path: Path, binding: list[dict],
             )
             continue
         for pid in ids:
-            out.extend(_one_stance(did, pid, stance.get(pid)))
+            out.extend(_one_stance(did, pid, stance.get(pid), known_decisions))
     return blocking, advisory
+
+
+DECISION_REF_RE = re.compile(r"^DL-\d{4}$")
+_DECISION_HEADING_RE = re.compile(r"^#{2,4}\s*\[?(DL-\d{4})\]?", re.MULTILINE)
+
+
+def decision_ids(log_path) -> set:
+    """Every decision-log entry ID. Empty set if the log is absent or unreadable.
+
+    Tolerant of both heading forms this convention has worn -- `### [DL-0974] Title`
+    as originally specified, and the `### DL-1116 - Title` form later entries use.
+    A validator that only accepted the documented spelling would report every real
+    entry as missing, which is a worse failure than the one it is checking for.
+    """
+    try:
+        return set(_DECISION_HEADING_RE.findall(Path(log_path).read_text(encoding="utf-8")))
+    except OSError:
+        return set()
+
+
+def default_decision_log(canvas_dir: Path) -> Path:
+    """`.claude/harness/decision-log.md`, the same location check_log_reconcile uses."""
+    return canvas_dir.parent / "harness" / "decision-log.md"
 
 
 def _property_findings(pp: dict) -> tuple[list[str], list[dict]]:
@@ -356,7 +381,7 @@ def _list_findings(pp: dict, purpose: dict) -> list[str]:
     return out
 
 
-def _one_stance(sid: str, pid: str, entry) -> list[str]:
+def _one_stance(sid: str, pid: str, entry, known_decisions: set | None = None) -> list[str]:
     """Findings for a single property's stance on a single solution."""
     if entry is None:
         return [f"{sid}: purpose_stance says nothing about {pid}."]
@@ -380,11 +405,49 @@ def _one_stance(sid: str, pid: str, entry) -> list[str]:
                 f"override. An agent may not clear this. Record who accepted the "
                 f"trade-off and the decision-log entry carrying it, or change the solution."
             )
+        else:
+            # THE DECISION REFERENCE WAS SHIPPED AND NEVER READ (fixed 2026-09-04).
+            # `docs/purpose-stance.md` shows `override: {human: ..., decision: "DL-1234"}`
+            # as the canonical form and the message above tells the author to record
+            # "the decision-log entry carrying it" -- while this function only ever
+            # looked at `human`. So an override could cite a decision that has never
+            # existed, and the one mechanism the framework has for "a person owned this
+            # trade-off" rested on a string nothing resolved.
+            #
+            # Enforced now rather than later because there are currently ZERO
+            # purpose_stance overrides in existence, so nothing is grandfathered into a
+            # rule it could not have known about. That window closes the first time
+            # someone writes one.
+            ref = override.get("decision")
+            if not ref:
+                out.append(
+                    f"{sid}: purpose_stance[{pid}] has a human override with no "
+                    f"`decision:` reference. Name the decision-log entry that carries "
+                    f"the trade-off (e.g. DL-1234); a named human with no record is a "
+                    f"signature on a document nobody can read."
+                )
+            elif not DECISION_REF_RE.match(str(ref)):
+                out.append(
+                    f"{sid}: purpose_stance[{pid}] override decision {ref!r} is not a "
+                    f"decision-log ID. Expected the form DL-1234."
+                )
+            elif known_decisions and str(ref) not in known_decisions:
+                # OPT-IN BY PRESENCE, deliberately. Resolution is only checked when the
+                # decision log actually uses IDs. A project whose log has none is not
+                # using the convention, and failing its overrides would be inventing a
+                # requirement it never adopted -- the same JiT rule the rest of the
+                # framework follows: detect and generate, never pre-impose.
+                out.append(
+                    f"{sid}: purpose_stance[{pid}] override cites {ref}, which is not "
+                    f"in the decision log. A dangling reference clears a contradiction "
+                    f"with a record that does not exist."
+                )
     return out
 
 
 def _stance_findings(canvas_dir: Path, binding: list[dict],
-                     grandfathered: set) -> list[str]:
+                     grandfathered: set,
+                     known_decisions: set | None = None) -> list[str]:
     """Every solution, against every binding property. Silence is the finding.
 
     EXCEPT for solutions that existed when the property list was derived. A solution
@@ -418,7 +481,7 @@ def _stance_findings(canvas_dir: Path, binding: list[dict],
             )
             continue
         for pid in ids:
-            out.extend(_one_stance(sid, pid, stance.get(pid)))
+            out.extend(_one_stance(sid, pid, stance.get(pid), known_decisions))
     return out
 
 
@@ -451,10 +514,11 @@ def purpose_stance_findings(canvas_dir: Path, diamonds_file: Path | None = None,
     out.extend(_list_findings(pp, purpose))
     if binding:
         grandfathered = set(pp.get("grandfathered") or [])
-        out.extend(_stance_findings(canvas_dir, binding, grandfathered))
+        known = decision_ids(default_decision_log(canvas_dir))
+        out.extend(_stance_findings(canvas_dir, binding, grandfathered, known))
         dpath = diamonds_file or default_diamonds_path(canvas_dir)
         blocking, advisory = _diamond_stance_findings(
-            dpath, binding, grandfathered, diamond_id)
+            dpath, binding, grandfathered, diamond_id, known)
         out.extend(blocking)
         if include_advisory:
             out.extend(advisory)

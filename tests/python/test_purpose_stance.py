@@ -640,3 +640,80 @@ def test_a_normal_top_level_purpose_is_unaffected(canvas):
     _sol(canvas, {"verdict": "preserves", "note": "no sign-in anywhere"})
     out = m.purpose_stance_findings(canvas)
     assert not any("TOP LEVEL" in f for f in out), out
+
+
+# ---------------------------------------------------------------------------
+# THE OVERRIDE'S DECISION REFERENCE, added 2026-09-04.
+#
+# `docs/purpose-stance.md` has shown `override: {human: ..., decision: "DL-1234"}` since
+# the mechanism shipped, and the check's own message tells the author to record "the
+# decision-log entry carrying it" -- while the code only ever read `human`. An override
+# could therefore clear a contradiction by citing a decision that never existed.
+# ---------------------------------------------------------------------------
+
+
+def test_decision_ids_reads_both_heading_forms(tmp_path):
+    """The convention has worn two spellings. A validator that accepted only the
+    documented one would report every real entry as missing -- a worse failure than
+    the one it checks for."""
+    ps = _mod()
+    log = tmp_path / "decision-log.md"
+    log.write_text(
+        "### [DL-0974] The bracketed original form - 2026-08-21\n"
+        "### DL-1116 - the later unbracketed form - 2026-09-02\n",
+        encoding="utf-8",
+    )
+    assert ps.decision_ids(log) == {"DL-0974", "DL-1116"}
+
+
+def test_decision_ids_on_a_missing_log_is_empty_not_an_error(tmp_path):
+    """An absent log must degrade to 'cannot verify', never to 'everything is wrong'."""
+    ps = _mod()
+    assert ps.decision_ids(tmp_path / "nope.md") == set()
+
+
+def test_override_without_a_decision_reference_is_a_finding():
+    """A named human with no record is a signature on a document nobody can read."""
+    ps = _mod()
+    out = ps._one_stance("sol-001a", "pp-001",
+                         {"verdict": "contradicts", "note": "n",
+                          "override": {"human": "havard"}})
+    assert any("no `decision:` reference" in f for f in out)
+
+
+def test_override_with_a_malformed_decision_reference_is_a_finding():
+    ps = _mod()
+    out = ps._one_stance("sol-001a", "pp-001",
+                         {"verdict": "contradicts", "note": "n",
+                          "override": {"human": "havard", "decision": "yesterday"}})
+    assert any("is not a decision-log ID" in f for f in out)
+
+
+def test_override_citing_an_absent_decision_is_a_finding():
+    """The defect this exists for: the reference resolves to nothing."""
+    ps = _mod()
+    out = ps._one_stance("sol-001a", "pp-001",
+                         {"verdict": "contradicts", "note": "n",
+                          "override": {"human": "havard", "decision": "DL-9999"}},
+                         known_decisions={"DL-0974"})
+    assert any("which is not in the decision log" in f for f in out)
+
+
+def test_override_citing_a_real_decision_passes():
+    ps = _mod()
+    out = ps._one_stance("sol-001a", "pp-001",
+                         {"verdict": "contradicts", "note": "n",
+                          "override": {"human": "havard", "decision": "DL-0974"}},
+                         known_decisions={"DL-0974"})
+    assert out == []
+
+
+def test_resolution_is_skipped_when_the_log_uses_no_ids():
+    """OPT-IN BY PRESENCE. A project whose decision log carries no IDs has not adopted
+    the convention, and failing its overrides would impose a rule it never took on."""
+    ps = _mod()
+    out = ps._one_stance("sol-001a", "pp-001",
+                         {"verdict": "contradicts", "note": "n",
+                          "override": {"human": "havard", "decision": "DL-1234"}},
+                         known_decisions=set())
+    assert out == []

@@ -79,6 +79,66 @@ def missing_releases(
     )
 
 
+def undocumented_releases(
+    released_versions, changelog_versions, floor: str = DEFAULT_FLOOR
+) -> list[str]:
+    """The INVERSE of `missing_releases`: released at or above `floor` but never
+    documented. Ascending.
+
+    WHY THIS DIRECTION EXISTS (2026-09-04). `missing_releases` answers "the changelog
+    promised it and the releases page lacks it". Nothing answered the mirror question,
+    and the mirror question has a worse failure: a Release nobody meant to cut is a
+    public claim about what shipped, where a missing Release is only an absence.
+
+    Two instances, found by measuring rather than by any check. v0.176.0 (2026-09-03)
+    was cut because an intermediate commit in a pushed range carried that version in
+    plugin.json; it was deleted by hand within the hour. v0.107.1 (2026-08-08) was cut
+    the same way, its body reading "see docs/changelog.md" against a changelog with no
+    such section -- and it went unnoticed for 27 days, which is what an unmeasured
+    direction looks like.
+
+    Pure on purpose, same as its mirror: the caller supplies both lists.
+    """
+    documented = set(changelog_versions)
+    fk = version_key(floor)
+    return sorted(
+        (v for v in released_versions if v not in documented and version_key(v) >= fk),
+        key=version_key,
+    )
+
+
+def partition_undocumented(introduced, documented) -> tuple[list[dict], list[dict]]:
+    """Split `versions_introduced` output into (releasable, withheld) on whether the
+    version has a changelog section.
+
+    THIS REVERSES A DELIBERATE EARLIER POSITION, so it states why rather than quietly
+    winning. `notes_for` in auto-release.yml carries the note "an unreleased version is
+    a worse outcome than an under-documented one, so notes never block a release". That
+    was right about NOTES and is wrong about EXISTENCE, and the difference is which
+    failure the backstop already covers:
+
+      - A documented version that fails to release is caught, loudly, by `--check` on
+        this or any later push. It cannot go quiet.
+      - An undocumented version that DOES release is caught by nothing, is public
+        immediately, and is remediable only by hand. Both known instances proved it.
+
+    So withholding is the safe side of an asymmetry, not a new risk: if a withheld
+    version was real, documenting it makes `--check` demand it on the next push, and
+    `--repair` can place it. The recovery path for a wrong withhold is automatic; the
+    recovery path for a wrong release is a person deleting a tag.
+
+    Note which versions this can actually withhold. `versions_introduced` has two
+    passes: pass 1 reads plugin.json at each commit, pass 2 reads changelog sections.
+    Pass-2 versions are documented BY CONSTRUCTION and can never be withheld here. The
+    filter therefore bites only on pass-1 versions -- exactly the intermediate-commit
+    class both incidents came from.
+    """
+    have = set(documented)
+    releasable = [it for it in introduced if it["version"] in have]
+    withheld = [it for it in introduced if it["version"] not in have]
+    return releasable, withheld
+
+
 def _git(*args: str) -> str:
     r = subprocess.run(("git", *args), capture_output=True, text=True, check=False)
     return r.stdout.strip() if r.returncode == 0 else ""
@@ -262,10 +322,79 @@ def _released_from_gh() -> list[str]:
     return [x["tagName"].lstrip("v") for x in json.loads(r.stdout or "[]")]
 
 
+def _cmd_repair(args) -> int:
+    # The manual-dispatch path. `--introduced` cannot serve it: on a
+    # workflow_dispatch `github.event.before` is empty, so the range degrades to
+    # HEAD alone and yields the ONE version already at the tip -- which is
+    # invariably the version that already has a Release. That is why the
+    # documented "manual re-run repairs gaps" promise did not hold: on 2026-08-07
+    # a GitHub outage left v0.100.0 and v0.101.0 unreleased, and a dispatch would
+    # have re-offered v0.101.1 and repaired neither. Repair must ask "what is
+    # missing", not "what is new".
+    with open(args.changelog) as fh:
+        documented = parse_changelog_versions(fh.read())
+    gaps = missing_releases(documented, _released_from_gh(), args.floor)
+    anchors = first_commit_for_versions(set(gaps))
+    unlocatable = [g for g in gaps if g not in anchors]
+    if unlocatable:
+        # Loud, and non-zero. A repair that silently emits a shorter list than the
+        # gap it was asked to close is the fail-open this module exists to close.
+        print("::error::no originating commit found for: "
+              + ", ".join("v" + u for u in unlocatable), file=sys.stderr)
+        print(json.dumps([{"version": v, "commit": anchors[v]} for v in gaps
+                          if v in anchors]))
+        return 1
+    print(json.dumps([{"version": v, "commit": anchors[v]} for v in gaps]))
+    return 0
+
+
+def _cmd_audit(args) -> int:
+    # DELIBERATELY NOT A STEP IN auto-release.yml. It can only ever fire AFTER a
+    # Release is public, so as a release-time gate it would add a fourth way to
+    # redden main while preventing nothing -- the enumeration gate above is what
+    # prevents. Its value is finding what is ALREADY wrong: run it on a schedule.
+    # It is the only thing that would ever have surfaced v0.107.1, undocumented
+    # and unnoticed for 27 days.
+    with open(args.changelog) as fh:
+        documented = parse_changelog_versions(fh.read())
+    strays = undocumented_releases(_released_from_gh(), documented, args.floor)
+    if strays:
+        print(f"::error::{len(strays)} Release(s) have no changelog section: "
+              + ", ".join("v" + s_ for s_ in strays))
+        print("A Release is a public claim that a version shipped. Either document "
+              "these in docs/changelog.md or delete them.", file=sys.stderr)
+        return 1
+    print(f"OK: every Release >= v{args.floor} has a changelog section.")
+    return 0
+
+
+def _cmd_check(args) -> int:
+    with open(args.changelog) as fh:
+        documented = parse_changelog_versions(fh.read())
+    gaps = missing_releases(documented, _released_from_gh(), args.floor)
+    if gaps:
+        print(f"::error::{len(gaps)} documented version(s) have no GitHub Release: "
+              + ", ".join("v" + g for g in gaps))
+        print("The changelog promises these to consumers and the releases page does not "
+              "have them. Create them, or remove the changelog sections.", file=sys.stderr)
+        return 1
+    print(f"OK: every changelog version >= v{args.floor} has a Release "
+          f"({len(documented)} documented).")
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--introduced", nargs=2, metavar=("BEFORE", "HEAD"),
                     help="print JSON [{version, commit}] introduced by BEFORE..HEAD")
+    ap.add_argument("--require-documented", action="store_true",
+                    help="with --introduced: withhold any version that has no changelog "
+                         "section, and report what was withheld. Prevents the "
+                         "intermediate-commit phantom release (v0.176.0, v0.107.1).")
+    ap.add_argument("--audit", action="store_true",
+                    help="exit 1 if any Release at/above the floor has no changelog "
+                         "section. The mirror of --check. NOT wired into the release "
+                         "job: see the note in the handler.")
     ap.add_argument("--check", action="store_true",
                     help="exit 1 if any changelog version at/above the floor has no Release")
     ap.add_argument("--repair", action="store_true",
@@ -276,47 +405,34 @@ def main() -> int:
     args = ap.parse_args()
 
     if args.introduced:
-        print(json.dumps(versions_introduced(*args.introduced)))
+        items = versions_introduced(*args.introduced)
+        if args.require_documented:
+            with open(args.changelog) as fh:
+                documented = parse_changelog_versions(fh.read())
+            items, withheld = partition_undocumented(items, documented)
+            for it in withheld:
+                # A WARNING, NOT AN ERROR, AND THE DISTINCTION IS THE WHOLE DESIGN.
+                # Failing here would redden main on a push whose real work landed,
+                # which trains the "it is fine, the release went out" dismissal this
+                # workflow already has one instance of. Nothing is silently wrong
+                # when a withhold fires: the bad artifact simply is not created, and
+                # the fix (write the changelog section) makes the next push release
+                # it. This is the opposite shape from "absence produced a success" --
+                # here presence is what is being prevented.
+                print(f"::warning::withholding v{it['version']}: no `## v{it['version']}` "
+                      f"section in {args.changelog}. A version that appears only in an "
+                      f"intermediate commit is not a release. Document it to ship it.")
+        print(json.dumps(items))
         return 0
 
     if args.repair:
-        # The manual-dispatch path. `--introduced` cannot serve it: on a
-        # workflow_dispatch `github.event.before` is empty, so the range degrades to
-        # HEAD alone and yields the ONE version already at the tip -- which is
-        # invariably the version that already has a Release. That is why the
-        # documented "manual re-run repairs gaps" promise did not hold: on 2026-08-07
-        # a GitHub outage left v0.100.0 and v0.101.0 unreleased, and a dispatch would
-        # have re-offered v0.101.1 and repaired neither. Repair must ask "what is
-        # missing", not "what is new".
-        with open(args.changelog) as fh:
-            documented = parse_changelog_versions(fh.read())
-        gaps = missing_releases(documented, _released_from_gh(), args.floor)
-        anchors = first_commit_for_versions(set(gaps))
-        unlocatable = [g for g in gaps if g not in anchors]
-        if unlocatable:
-            # Loud, and non-zero. A repair that silently emits a shorter list than the
-            # gap it was asked to close is the fail-open this module exists to close.
-            print("::error::no originating commit found for: "
-                  + ", ".join("v" + u for u in unlocatable), file=sys.stderr)
-            print(json.dumps([{"version": v, "commit": anchors[v]} for v in gaps
-                              if v in anchors]))
-            return 1
-        print(json.dumps([{"version": v, "commit": anchors[v]} for v in gaps]))
-        return 0
+        return _cmd_repair(args)
+
+    if args.audit:
+        return _cmd_audit(args)
 
     if args.check:
-        with open(args.changelog) as fh:
-            documented = parse_changelog_versions(fh.read())
-        gaps = missing_releases(documented, _released_from_gh(), args.floor)
-        if gaps:
-            print(f"::error::{len(gaps)} documented version(s) have no GitHub Release: "
-                  + ", ".join("v" + g for g in gaps))
-            print("The changelog promises these to consumers and the releases page does not "
-                  "have them. Create them, or remove the changelog sections.", file=sys.stderr)
-            return 1
-        print(f"OK: every changelog version >= v{args.floor} has a Release "
-              f"({len(documented)} documented).")
-        return 0
+        return _cmd_check(args)
 
     ap.print_help()
     return 0

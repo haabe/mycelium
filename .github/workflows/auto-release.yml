@@ -130,8 +130,15 @@ jobs:
             python3 plugins/mycelium/scripts/release_gaps.py --repair > introduced.json
             echo "Missing Releases to repair: $(cat introduced.json)"
           else
+            # --require-documented added 2026-09-04. Without it this walk releases
+            # EVERY version it finds in the range, including one that exists only in
+            # an intermediate commit's plugin.json and was never meant to ship. That
+            # cut v0.176.0 on 2026-09-03 (deleted by hand within the hour) and
+            # v0.107.1 on 2026-08-08 (unnoticed for 27 days). The gate withholds and
+            # warns rather than failing: see partition_undocumented for why the
+            # asymmetry runs this way.
             python3 plugins/mycelium/scripts/release_gaps.py \
-              --introduced "${BEFORE:-}" "${HEAD_SHA}" > introduced.json
+              --introduced "${BEFORE:-}" "${HEAD_SHA}" --require-documented > introduced.json
             echo "Introduced by this push: $(cat introduced.json)"
           fi
           python3 - <<'PY'
@@ -213,6 +220,31 @@ jobs:
                                 "--json", "tagName"],
                                capture_output=True, text=True, check=True).stdout
           tags = [r["tagName"] for r in json.loads(out or "[]")]
+
+          # LATEST IS THE CLAIM ABOUT WHAT SHIPPED, so it is guarded separately from
+          # what gets released (2026-09-04). The two incidents differ in harm exactly
+          # here: a stray Release is a dead tag nobody installs, but a stray Release
+          # promoted to Latest is a false statement on the surface consumers and the
+          # plugin marketplace read. v0.176.0 became Latest purely by being the max
+          # semver, which is how a bad artifact turned into a bad claim.
+          #
+          # Defence in depth on purpose: the enumeration gate above stops the bad
+          # Release being created by THIS workflow, and this stops an already-existing
+          # stray -- a manual tag, a pre-gate leftover such as v0.107.1, a revert --
+          # from ever holding Latest. Neither subsumes the other.
+          import re as _re
+          _doc = set(_re.findall(r"^## v(\d+\.\d+\.\d+)",
+                                 open("docs/changelog.md").read(), _re.M))
+          _stray = [t for t in tags if t.lstrip("v") not in _doc]
+          if _stray:
+              print("::warning::not eligible for Latest (no changelog section): "
+                    + ", ".join(sorted(_stray)))
+          tags = [t for t in tags if t.lstrip("v") in _doc]
+          if not tags:
+              # Never silently leave Latest pointing wherever it happens to be.
+              print("::error::no released version has a changelog section; "
+                    "refusing to set Latest.")
+              raise SystemExit(1)
 
           def key(t):
               try:

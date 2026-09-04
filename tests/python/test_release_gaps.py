@@ -476,3 +476,83 @@ def test_repair_with_no_gaps_returns_empty_rather_than_everything(
     monkeypatch.chdir(repo)
 
     assert rg.first_commit_for_versions(set()) == {}
+
+
+# ---------------------------------------------------------------------------
+# THE MIRROR DIRECTION, added 2026-09-04.
+#
+# Everything above proves a documented version cannot silently fail to release.
+# Nothing proved the opposite, and the opposite happened twice: v0.176.0, a phantom
+# from an intermediate commit's plugin.json, and v0.107.1, a real release whose
+# changelog section was never written and which went unnoticed for 27 days.
+# ---------------------------------------------------------------------------
+
+
+def test_undocumented_releases_finds_a_release_with_no_changelog_section(scripts_path):
+    """The v0.107.1 shape: a Release exists, the changelog never described it."""
+    rg = _import(scripts_path)
+    assert rg.undocumented_releases(
+        ["0.107.0", "0.107.1"], ["0.107.0"], floor="0.49.0"
+    ) == ["0.107.1"]
+
+
+def test_undocumented_releases_respects_the_floor(scripts_path):
+    """Pre-automation history is history, not drift -- 149 versions predate releases
+    entirely and must not be reported as strays."""
+    rg = _import(scripts_path)
+    assert rg.undocumented_releases(["0.20.0"], [], floor="0.49.0") == []
+
+
+def test_undocumented_releases_is_empty_when_everything_is_documented(scripts_path):
+    """Empty-input honesty, same contract the forward check carries: clean must come
+    back clean, never as 'nothing checked'."""
+    rg = _import(scripts_path)
+    assert rg.undocumented_releases(["0.90.0"], ["0.90.0", "0.91.0"], floor="0.49.0") == []
+
+
+def test_undocumented_releases_is_the_exact_inverse_of_missing_releases(scripts_path):
+    """The two directions must not overlap or leave a hole between them: a version is
+    a gap, a stray, or fine -- never two of those."""
+    rg = _import(scripts_path)
+    documented = ["0.90.0", "0.91.0"]
+    released = ["0.90.0", "0.92.0"]
+    gaps = rg.missing_releases(documented, released, floor="0.49.0")
+    strays = rg.undocumented_releases(released, documented, floor="0.49.0")
+    assert gaps == ["0.91.0"]
+    assert strays == ["0.92.0"]
+    assert not set(gaps) & set(strays)
+
+
+def test_partition_withholds_the_phantom_and_keeps_the_documented(scripts_path):
+    """The v0.176.0 shape: an intermediate commit carried a version that was never
+    meant to ship. It must be withheld; the real one must still go out."""
+    rg = _import(scripts_path)
+    introduced = [
+        {"version": "0.175.2", "commit": "aaa"},
+        {"version": "0.176.0", "commit": "bbb"},
+    ]
+    releasable, withheld = rg.partition_undocumented(introduced, ["0.175.2"])
+    assert [i["version"] for i in releasable] == ["0.175.2"]
+    assert [i["version"] for i in withheld] == ["0.176.0"]
+
+
+def test_partition_preserves_the_commit_anchor(scripts_path):
+    """A withheld or kept version must keep the commit it was anchored to. Losing the
+    anchor would make the later repair path tag the wrong commit -- a quiet lie the
+    module already refuses elsewhere."""
+    rg = _import(scripts_path)
+    introduced = [{"version": "0.175.2", "commit": "deadbeef"}]
+    releasable, withheld = rg.partition_undocumented(introduced, ["0.175.2"])
+    assert releasable[0]["commit"] == "deadbeef"
+    assert withheld == []
+
+
+def test_partition_withholds_everything_when_the_changelog_is_empty(scripts_path):
+    """Fail CLOSED on absent input. An unreadable or empty changelog must not read as
+    'nothing to check, release it all' -- that is the fail-open this module exists to
+    close, arriving from the release side instead of the detection side."""
+    rg = _import(scripts_path)
+    introduced = [{"version": "0.1.0", "commit": "a"}, {"version": "0.2.0", "commit": "b"}]
+    releasable, withheld = rg.partition_undocumented(introduced, [])
+    assert releasable == []
+    assert len(withheld) == 2

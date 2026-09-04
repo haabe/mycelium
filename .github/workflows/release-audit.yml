@@ -1,0 +1,57 @@
+name: Release audit
+
+# THE MIRROR OF auto-release.yml's BACKSTOP, AND DELIBERATELY NOT PART OF IT.
+#
+# auto-release.yml already fails loud when a version documented in the changelog has
+# no Release. Nothing asked the opposite question until 2026-09-04, and the opposite
+# question has the worse failure: a Release nobody meant to cut is a public claim that
+# a version shipped, where a missing Release is only an absence.
+#
+# Two instances, and they are NOT the same class -- the distinction matters for what
+# each mechanism is for:
+#   - v0.176.0 (2026-09-03): a phantom. It existed only in an intermediate commit's
+#     plugin.json inside a pushed range, was never an intended release, became Latest
+#     purely by being the max semver, and was deleted by hand. PREVENTED going forward
+#     by --require-documented and the Latest guard in auto-release.yml, not by this.
+#   - v0.107.1 (2026-08-08): a real, intended doc-only release whose changelog section
+#     was never written. Undetected for 27 days. Repaired 2026-09-04 by writing the
+#     section from the release commit. Only a sweep like this one would ever have
+#     found it.
+#
+# WHY THIS IS NOT A STEP IN THE RELEASE JOB. It can only fire after a Release is
+# already public, so as a release-time gate it would add another way to redden main
+# while preventing nothing -- and a red main on a push whose real work landed trains
+# the "it's fine, the release went out" dismissal. Prevention belongs at enumeration;
+# this is for finding what is already wrong.
+
+on:
+  schedule:
+    - cron: '17 6 * * 1'   # Mondays, 06:17 UTC. Off the hour: scheduled jobs on the
+                           # hour queue behind everyone else's and drift.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Every Release must have a changelog section
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 plugins/mycelium/scripts/release_gaps.py --audit
+
+      - name: And every documented version must still have a Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # Both directions in one sweep. The forward check also runs per-release in
+          # auto-release.yml; running it here too costs nothing and catches a gap
+          # opened by something other than a push -- a deleted Release, a manual tag.
+          python3 plugins/mycelium/scripts/release_gaps.py --check

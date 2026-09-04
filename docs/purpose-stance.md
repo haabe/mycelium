@@ -81,6 +81,17 @@ Three verdicts: `preserves`, `not_applicable`, `contradicts`. **Every one needs 
 one and clear it in the same run, and the mechanism would nullify itself while every record looked
 complete. A solution may knowingly contradict your definition — it may not do so silently.
 
+**Both fields are required, and `decision:` is resolved rather than trusted** (2026-09-04). It must
+match `DL-\d{4}` and name an entry that actually exists in `.claude/harness/decision-log.md`. Until
+this was enforced the check read only `human:` — so an override could clear a contradiction by
+citing a decision nobody ever wrote, and the one mechanism the framework has for *a person owned
+this trade-off* rested on a string nothing resolved. A named human with no readable record is a
+signature on a document nobody can open.
+
+Resolution is **opt-in by presence**: if your decision log carries no `DL-NNNN` IDs, you have not
+adopted the convention and nothing is checked. Both heading forms are accepted — `### [DL-0974]` and
+`### DL-1116`.
+
 **5. Change your purpose and every stance below it is superseded.** The hash stops matching, and the
 check says so. Your reasons for a solution were given under a definition you have since changed.
 

@@ -4,6 +4,61 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-03.
 
+## v0.176.0 - the release pipeline could only ask one of the two questions
+
+`missing_releases()` has asked since v0.87.0 whether a documented version is missing its
+Release. Nothing ever asked the mirror question, and the mirror has the worse failure: a
+missing Release is an absence, while a Release nobody meant to cut is a public claim that
+a version shipped.
+
+Two instances, found by measuring rather than by any check, and **they are not the same
+class** — which is why the fix is three mechanisms and not one:
+
+- **v0.176.0, 2026-09-03 — a phantom.** It existed only in an intermediate commit's
+  `plugin.json` inside a pushed range, was never an intended release, and became Latest
+  purely by being the highest semver. Deleted by hand within the hour.
+- **v0.107.1, 2026-08-08 — a real release with no changelog section.** Intended,
+  doc-only, cut correctly; the author simply never wrote the entry, and its release notes
+  pointed at a changelog that did not describe it. Unnoticed for 27 days. Its section is
+  written now, retroactively and labelled as such, from the release commit rather than
+  from memory.
+
+**1. The enumeration gate.** `--require-documented` withholds any introduced version with
+no `## vX.Y.Z` section and warns rather than failing. Failing would redden main on a push
+whose real work landed, which trains the "it's fine, the release went out" dismissal this
+workflow already has one instance of. Nothing goes silently wrong when it fires: the
+artifact simply is not created, and documenting the version ships it on the next push.
+This reverses `notes_for`'s standing note that "an unreleased version is a worse outcome
+than an under-documented one" — right about NOTES, wrong about EXISTENCE, because the
+forward `--check` already makes a wrongly-withheld version impossible to lose quietly
+while a wrongly-published one is remediable only by a person deleting a tag.
+
+**2. The Latest guard.** Latest is refused to any version without a changelog section.
+The two incidents differ in harm exactly here: a stray Release is a dead tag nobody
+installs, but a stray Release holding Latest is a false statement on the surface
+consumers and the marketplace read.
+
+**3. The audit, on a schedule and NOT in the release job.** `--audit` is the pure inverse
+of `--check`, run weekly by `release-audit.yml`. It can only ever fire after a Release is
+public, so as a release-time gate it would add a fourth way to redden main while
+preventing nothing. It is also the only thing that would ever have surfaced v0.107.1.
+
+**And a shipped field that nothing read.** `purpose_stance` overrides have carried
+`override: {human: ..., decision: "DL-1234"}` in the docs since the mechanism shipped,
+and the check's own error message tells the author to record "the decision-log entry
+carrying it" — while the code only ever looked at `human`. An override could clear a
+contradiction by citing a decision that never existed, so the framework's one mechanism
+for *a person owned this trade-off* rested on a string nothing resolved. Now required,
+format-checked, and resolved against `.claude/harness/decision-log.md`. Resolution is
+opt-in by presence: a log with no `DL-NNNN` IDs has not adopted the convention and is not
+judged by it. Enforced now because there are currently zero overrides in existence, so
+nothing is grandfathered into a rule it could not have known about.
+
+*This version number was cut as the phantom Release above and deleted the same day. It is
+reused deliberately rather than skipped — a silent gap in the version chain is the exact
+habit this release is about.*
+
+
 ## v0.175.2 - the pie was unreadable on a dark background
 
 The chart added in 0.175.1 shipped in near-black fills. On GitHub's dark canvas the largest
@@ -3737,6 +3792,30 @@ disagreement is a different defect it does not cover.
 **It caught its author on its first live run:** six misaligned blocks in the dogfood
 canvas, one of them written two hours earlier, in the opportunity that reports this
 very defect class.
+
+## v0.107.1 - park the refactor plan with numbers, not intentions
+
+*Section written 2026-09-04, retroactively. The Release v0.107.1 was cut on 2026-08-08
+and this section was never written, so for 27 days a published Release pointed at a
+changelog that did not describe it. Nothing detected that, because the only check ran
+in the opposite direction — documented-but-unreleased. The content below is taken from
+the release commit `01fef9d`, not reconstructed from memory.*
+
+Doc-only. The check-architecture refactor is parked rather than run: it improves the
+machine that improves the framework while `products_shipped` is 0/10.
+
+"Keep an eye on it" is a memory, and memories are what the standing rule was written
+about, so the park carries five threshold triggers instead of a date: session-start
+>= 4.5s (4.08 then, against a 5s timeout), any observed timeout, check count >= 27 (23
+then), a shared primitive written a third time (`_status` at 2), or empty-input
+adoption stalling (3 of 23). A trigger un-parks the measurement spike only, not the
+full seven steps, and re-parks if the spike refutes the latency projection.
+
+No `check_architecture_debt.py`: a 24th check measuring the cost of 23 checks is the
+joke the document is about. The numbers ride on `bvssh-check`'s existing Automation
+measurement, where the empty-input inconsistency was first recorded and where a reader
+already looks.
+
 
 ## v0.107.0 - the empty quadrant: a closed task whose evidence never landed
 
