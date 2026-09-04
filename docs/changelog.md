@@ -4,6 +4,46 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-03.
 
+## v0.180.0 - surfaces, without these three rules, is a waiver machine
+
+Two blind adversarial reads on the `surfaces` block shipped hours earlier in v0.179.0. Both said
+the concept is sound and cuts correctly where `product_type` could not. Both also found it
+**structurally under-defended in the same place**, which the proposer had not weighted:
+
+> declaring a surface costs work; declaring its absence costs a word
+
+Accessibility in particular has a long history of being waived on exactly such technical grounds, so
+the asymmetry is not hypothetical. Three constraints now ship with the block:
+
+1. **Surfaces are detected from artifacts and the evidence is recorded** — never self-asserted. An
+   `n/a` whose basis is "the agent decided there was no surface" cannot be falsified later.
+2. **`n/a` must render distinctly from `pass` in every aggregate.** If waiving improves a score, the
+   score will be improved by waiving. "6 pass / 3 n/a" is honest; "9 of 15 clear" is not.
+3. **A floor: every shipped product has at least one human surface — its documentation, at minimum.
+   A fully-`n/a` accessibility result is a DETECTOR BUG, not a clean bill**, and such a run is
+   treated as broken.
+
+**The `terminal` profile was also too thin**, and one reader named the cost precisely: it had become
+*"a licensed waiver, which is worse than the false FAIL, because the FAIL was at least visible."* It
+now binds `NO_COLOR`, structure never carried by box-drawing alone (a screen reader gets characters,
+not shape), output parseable read aloud in order, and docs that survive as plain text. Only contrast
+and font size remain genuinely inherited from the user's terminal.
+
+**And two boundaries are written down rather than left to judgement.**
+
+**Surfaces scope the SUB-CHECKS, never the principle.** Downe P11 "Be usable by everyone" covers
+cost, language, literacy, required prior knowledge and availability. A terminal product may be `n/a`
+on keyboard navigation and still **fail** P11 on jargon that gates a newcomer — which is a live
+finding in this project's own canvas, not a hypothetical.
+
+**Surfaces do not scope security.** Security scopes to trust boundaries and untrusted inputs. A
+headless library has no human surface and a large attack surface, so `headless` would waive exactly
+the product class where supply-chain risk is highest. If security needs conditioning it needs its
+own exposure axis — accepts untrusted input, holds credentials, crosses a network, executes
+user-supplied code — and reusing surfaces because it is the newest abstraction is the
+over-generalisation to refuse.
+
+
 ## v0.179.0 - an instrument aimed at a surface the product does not have
 
 `a11y-check` shipped a WCAG 2.1 AA checklist — semantic HTML, ARIA, keyboard navigation, focus

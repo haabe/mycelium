@@ -260,6 +260,29 @@ dogfood_modifier:
 #
 # DETECT, DO NOT ASK. Surfaces are read off the repository the same way product_type is, per
 # the framework's detect-and-generate philosophy. A product commonly has SEVERAL.
+# THREE CONSTRAINTS WITHOUT WHICH THIS BLOCK IS AN EXCUSE-GENERATOR.
+# Named by an adversarial read on the day it shipped: **declaring a surface costs work; declaring
+# its absence costs a word.** Accessibility in particular has a long history of being waived on
+# exactly such technical grounds, so the asymmetry is not hypothetical.
+#
+#   1. SURFACES ARE DETECTED FROM ARTIFACTS AND THE EVIDENCE IS RECORDED — never self-asserted.
+#      An `n/a` whose basis is "the agent decided there was no surface" is not a finding. Record
+#      WHAT was looked for and WHERE, so a later reader can falsify the absence.
+#   2. `n/a` MUST RENDER DISTINCTLY FROM `pass` IN EVERY AGGREGATE. If waiving a criterion improves
+#      a score, the score will be improved by waiving. A count that reads "6 pass / 3 n/a" is
+#      honest; one that reads "9 of 15 clear" is the failure this constraint exists to stop.
+#   3. THERE IS A FLOOR: EVERY SHIPPED PRODUCT HAS AT LEAST ONE HUMAN SURFACE — its documentation,
+#      at minimum. **A fully-n/a accessibility result is a DETECTOR BUG, not a valid outcome**, and
+#      a run that produces one must be treated as broken rather than clean.
+#
+# AND THE BOUNDARY, because a new abstraction attracts work it should refuse: surfaces answers
+# "who perceives this, and through what". It does NOT scope security. Security scopes to trust
+# boundaries and untrusted inputs — a headless library has no human surface and a large attack
+# surface, and `headless` would n/a exactly the product class where supply-chain risk is highest.
+# If security needs conditioning it needs its OWN axis (accepts untrusted input; holds credentials;
+# crosses a network; executes user-supplied code), and reusing surfaces because it is the newest
+# abstraction is the over-generalisation to refuse.
+
 surfaces:
   web:
     description: HTML/CSS/JS rendered in a browser
@@ -277,9 +300,15 @@ surfaces:
     description: CLI or TUI output read in the user's own terminal
     detect: "a bin entrypoint, argparse/click/cobra/commander usage, curses or a TUI library"
     binds: >-
-      Colour-not-sole-indicator (never signal state by colour alone), and clear error text.
-      **Contrast, font size and screen-reader behaviour are INHERITED from the user's terminal
-      and are not the product's to set.** Most of WCAG cannot bind here.
+      **THE FIRST DRAFT OF THIS ENTRY SAID ONLY "colour-not-sole-indicator and clear error text",
+      AND THAT WAS TOO THIN — an adversarial read called it "a licensed waiver, which is worse than
+      the false FAIL, because the FAIL was at least visible."** What actually binds on a terminal:
+      colour is never the sole signal of state; `NO_COLOR` is honoured; structure is never carried
+      by box-drawing alone, because a screen reader gets the characters and not the shape; output
+      is parseable read aloud, in order, without a rendered layout; and shipped docs survive as
+      plain text. **Contrast, font size and screen-reader behaviour ARE inherited from the user's
+      terminal and are not the product's to set** — that part of WCAG genuinely cannot bind. The
+      rest of this list can, and a terminal product that skips it has not been let off.
   native_app:
     description: iOS, Android or desktop application
     detect: "Info.plist, AndroidManifest.xml, Xcode/Gradle project, Electron/Tauri config"

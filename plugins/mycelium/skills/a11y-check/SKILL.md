@@ -40,6 +40,22 @@ is largely the wrong instrument for a terminal product."* **A delivery bar faile
 that could not bind.** Re-run 2026-09-04 under the surface gate: every applicable criterion passed,
 and the rest were `n/a` by absence of surface rather than unmeasured.
 
+**THREE CONSTRAINTS, OR THIS GATE BECOMES A WAIVER MACHINE.** Declaring a surface costs work;
+declaring its absence costs a word, and accessibility has a long history of being waived on exactly
+such grounds.
+1. **Detect from artifacts and RECORD THE EVIDENCE** — say what you looked for and where. An `n/a`
+   whose basis is "the agent decided" is not a finding and cannot be falsified later.
+2. **`n/a` must never read as `pass` in a total.** "6 pass / 3 n/a" is honest; "9 of 15 clear" is
+   the thing this rule exists to stop.
+3. **FLOOR: every shipped product has at least one human surface — its docs, at minimum. A
+   fully-`n/a` accessibility result is a DETECTOR BUG, not a clean bill.** Treat that run as broken.
+
+**AND SURFACES SCOPE THE SUB-CHECKS, NEVER THE PRINCIPLE.** Downe P11 "Be usable by everyone" is
+broader than perceptual access: it covers cost, language, literacy, required prior knowledge and
+availability. **A terminal product may be `n/a` on keyboard navigation and still FAIL P11 on
+jargon that gates a newcomer.** Bind WCAG's sub-checks to surfaces; never hand the principle itself
+an `n/a`.
+
 **HEADLESS IS THE SHARP CASE.** An API or library has no human surface, so WCAG does not bind at
 all. What binds instead — error-message clarity, documentation quality — lives under other Downe
 principles. Do not rate a headless product on interface criteria.
