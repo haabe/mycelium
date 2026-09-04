@@ -4,6 +4,33 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-03.
 
+## v0.177.0 - a version documented twice was invisible to every reader
+
+`parse_changelog_versions` returns a **set**. Every count, every gap check and every
+release note in this repo reads the changelog through it, so a version carrying two
+`## vX.Y.Z` sections looked exactly like one carrying a single section. The only way to
+see the defect was to count headings, which is nobody's job.
+
+It is not cosmetic. `notes_for` in `auto-release.yml` builds the published Release body
+from the **first** matching section, so a duplicated version ships one section to
+consumers and silently drops the rest.
+
+**v0.108.0 was carrying two unrelated sections since 2026-08-08.** Diagnosed rather than
+guessed: PR #64 moved `plugin.json` from 0.107.1 to 0.108.1 — two versions, three
+sections — and the published Release v0.108.0 is titled *"the checks were shaped like the
+repo that wrote them"*. So the surplus section is demoted to a `###` subsection of the
+release it did ship in, rather than being given a version number it never had.
+
+`duplicate_changelog_versions` now runs inside `--check`, blocking at or above the 0.49.0
+floor.
+
+**Running it without a floor immediately found two more**, v0.26.1 and v0.39.5, both
+pre-automation and both carrying two genuinely *different* bodies under one number. Those
+are reported as a non-blocking notice and deliberately left alone. Reconstructing which
+body belonged to which release, three months on, would be inventing a record — and a
+floor that simply hid them would make them permanently unfindable. Visible beats tidy.
+
+
 ## v0.176.0 - the release pipeline could only ask one of the two questions
 
 `missing_releases()` has asked since v0.87.0 whether a documented version is missing its
@@ -3750,7 +3777,15 @@ Deliberately a TEST, not a 25th shipped check — the parked check-architecture 
 names "check count >= 27" as an un-park trigger, and adding shipped checks to fix check
 quality would be the joke that document is about.
 
-## v0.108.0 - the label has to match the source it labels
+### The label has to match the source it labels
+
+*Heading demoted 2026-09-04. This shipped inside v0.108.0 and carried a duplicate
+`## v0.108.0` heading of its own, so the changelog claimed two different releases under
+one version number. `parse_changelog_versions` de-duplicates via a set, which is why no
+check ever saw it. Diagnosed rather than guessed: PR #64 moved plugin.json from 0.107.1
+to 0.108.1 — two versions, three sections — and the published Release v0.108.0 is titled
+"the checks were shaped like the repo that wrote them", so this is the surplus one and
+v0.108.0 is where it belongs.*
 
 `external_human` means a human outside the project said it. A sweep of 25 canvas
 files on 2026-08-08 found **ten founder-sourced evidence entries: five correctly

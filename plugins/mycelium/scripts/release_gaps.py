@@ -64,6 +64,38 @@ def version_from_plugin_json(text: str) -> str | None:
     return m.group(1) if m else None
 
 
+def duplicate_changelog_versions(text: str, floor: str | None = None) -> list[str]:
+    """Versions carrying more than one `## vX.Y.Z` heading. Ascending.
+
+    WHY THIS IS INVISIBLE WITHOUT A DEDICATED CHECK (2026-09-04). Every reader of the
+    changelog goes through `parse_changelog_versions`, which returns a SET -- so a
+    version documented twice is indistinguishable from one documented once, in the gap
+    checks, in the counts, everywhere. The defect can only be seen by someone counting
+    headings, which is nobody.
+
+    It is not cosmetic. `notes_for` in auto-release.yml builds the published Release
+    body from the FIRST matching section, so a duplicated version ships one section to
+    consumers and silently drops the other. Found on v0.108.0, which carried two
+    unrelated sections under one number from 2026-08-08 until this was written.
+
+    `floor` filters to versions at or above it, matching every other function here.
+    Running it WITHOUT a floor immediately surfaced two more, v0.26.1 and v0.39.5, both
+    from the pre-automation era and both carrying two genuinely different bodies under
+    one number. Those are deliberately reported rather than rewritten: reconstructing
+    which body was which release, three months on, would be inventing a record. The
+    caller blocks above the floor and reports below it, so they stay visible instead of
+    being hidden by a floor that would make them permanently unfindable.
+    """
+    counts: dict[str, int] = {}
+    for v in _CHANGELOG_HEADING_RE.findall(text):
+        counts[v] = counts.get(v, 0) + 1
+    dupes = sorted((v for v, n in counts.items() if n > 1), key=version_key)
+    if floor is None:
+        return dupes
+    fk = version_key(floor)
+    return [v for v in dupes if version_key(v) >= fk]
+
+
 def missing_releases(
     changelog_versions, released_versions, floor: str = DEFAULT_FLOOR
 ) -> list[str]:
@@ -370,7 +402,27 @@ def _cmd_audit(args) -> int:
 
 def _cmd_check(args) -> int:
     with open(args.changelog) as fh:
-        documented = parse_changelog_versions(fh.read())
+        text = fh.read()
+    documented = parse_changelog_versions(text)
+
+    # DUPLICATE HEADINGS FIRST, because every count below reads through a set and so
+    # cannot see them. A version documented twice ships only its FIRST section to
+    # consumers (see `notes_for`) and silently drops the rest.
+    dupes = duplicate_changelog_versions(text, args.floor)
+    if dupes:
+        print(f"::error::{len(dupes)} version(s) have more than one changelog section: "
+              + ", ".join("v" + d for d in dupes))
+        print("A release body is built from the first matching section, so the others "
+              "never reach consumers. Merge them, or renumber if they were different "
+              "releases.", file=sys.stderr)
+        return 1
+    below = [d for d in duplicate_changelog_versions(text) if d not in set(dupes)]
+    if below:
+        # Reported, never blocking. These predate release automation and carry two
+        # genuinely different bodies each; reconstructing which was which three months
+        # on would be inventing a record. Visible beats tidy.
+        print("::notice::pre-floor duplicate changelog sections (not blocking): "
+              + ", ".join("v" + b for b in below))
     gaps = missing_releases(documented, _released_from_gh(), args.floor)
     if gaps:
         print(f"::error::{len(gaps)} documented version(s) have no GitHub Release: "

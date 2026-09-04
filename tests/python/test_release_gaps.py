@@ -556,3 +556,42 @@ def test_partition_withholds_everything_when_the_changelog_is_empty(scripts_path
     releasable, withheld = rg.partition_undocumented(introduced, [])
     assert releasable == []
     assert len(withheld) == 2
+
+
+# ---------------------------------------------------------------------------
+# DUPLICATE CHANGELOG HEADINGS, added 2026-09-04.
+#
+# Every reader goes through parse_changelog_versions, which returns a SET -- so a
+# version documented twice was indistinguishable from one documented once, in every
+# count and every gap check. v0.108.0 carried two unrelated sections under one number
+# from 2026-08-08 until someone counted headings by hand.
+# ---------------------------------------------------------------------------
+
+
+def test_duplicate_changelog_versions_finds_a_doubled_heading(scripts_path):
+    rg = _import(scripts_path)
+    text = "## v0.108.0 - one\nbody\n## v0.108.0 - two\nbody\n## v0.109.0 - three\n"
+    assert rg.duplicate_changelog_versions(text) == ["0.108.0"]
+
+
+def test_a_clean_changelog_has_no_duplicates(scripts_path):
+    """Empty-input honesty: clean must come back clean."""
+    rg = _import(scripts_path)
+    assert rg.duplicate_changelog_versions("## v0.1.0 - a\n## v0.2.0 - b\n") == []
+
+
+def test_duplicate_detection_respects_the_floor(scripts_path):
+    """Pre-automation duplicates are reported by the caller, not blocked here."""
+    rg = _import(scripts_path)
+    text = "## v0.26.1 - a\n## v0.26.1 - b\n## v0.90.0 - c\n## v0.90.0 - d\n"
+    assert rg.duplicate_changelog_versions(text, floor="0.49.0") == ["0.90.0"]
+    assert rg.duplicate_changelog_versions(text) == ["0.26.1", "0.90.0"]
+
+
+def test_parse_changelog_versions_cannot_see_what_this_check_catches(scripts_path):
+    """The reason this function had to exist: the set-based reader is blind to it.
+    If this ever fails, the duplicate check has become redundant -- delete it."""
+    rg = _import(scripts_path)
+    text = "## v0.108.0 - one\n## v0.108.0 - two\n"
+    assert rg.parse_changelog_versions(text) == ["0.108.0"]
+    assert rg.duplicate_changelog_versions(text) == ["0.108.0"]
