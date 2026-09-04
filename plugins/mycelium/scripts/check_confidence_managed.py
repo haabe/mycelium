@@ -138,10 +138,26 @@ def audit(root: Path, today: date | None = None) -> list[dict]:
     for dm in diamonds(root):
         der = dm.get("confidence_derivation")
         if not isinstance(der, dict):
-            # Not opted in. Fall back to the weakest useful signal: has the value EVER been derived?
-            findings.append({"id": dm.get("id"), "level": "INFO",
-                             "msg": "no `confidence_derivation` block — the number cannot be "
-                             "re-derived by anyone, only re-asserted"})
+            # SEVERITY DEPENDS ON WHETHER EVIDENCE EXISTS, and the first version got this backwards
+            # (found 2026-09-04 by running the check across the rest of the board). A diamond with
+            # NO derivation and scored instruments naming it is the WORST case — a number nobody
+            # can re-derive, with evidence sitting against it — and it was being reported at the
+            # LOWEST severity. Measured on the dogfood project the same day: three diamonds in that
+            # state, one of them for 107 days with five instruments against it.
+            ev_any = evidence_since(root, date(1970, 1, 1), dm.get("id"))
+            if ev_any:
+                findings.append({
+                    "id": dm.get("id"), "level": "WARN", "instruments": ev_any,
+                    "msg": (f"no `confidence_derivation` block AND {len(ev_any)} scored "
+                            f"instrument(s) name this diamond. The number cannot be re-derived by "
+                            f"anyone, only re-asserted — and there is evidence standing against "
+                            f"it. Add a derivation naming the components and what would close "
+                            f"each.")})
+            else:
+                findings.append({"id": dm.get("id"), "level": "INFO",
+                                 "msg": "no `confidence_derivation` block — the number cannot be "
+                                 "re-derived by anyone, only re-asserted. No evidence names it "
+                                 "yet, so this is a note rather than a finding."})
             continue
         changed = _parse_date(der.get("changed_at"))
         if not changed:

@@ -142,3 +142,28 @@ def test_a_present_but_silent_empty_file_is_still_refused(tmp_path):
     (tmp_path / ".claude/diamonds").mkdir(parents=True)
     (tmp_path / ".claude/diamonds/active.yml").write_text("", encoding="utf-8")
     assert m.main(["--root", str(tmp_path)]) == 2
+
+
+def test_no_derivation_plus_evidence_is_a_warn_not_a_note(tmp_path, monkeypatch):
+    """THE WORST CASE MUST NOT BE THE QUIETEST ONE. The first version reported "no derivation" at
+    INFO regardless of whether evidence existed — so a diamond with an un-derivable number AND
+    instruments standing against it was the least loudly flagged state in the tool.
+
+    Found 2026-09-04 by running the check across the rest of the board: three diamonds in exactly
+    that state, one of them for 107 days with five scored instruments naming it."""
+    m = _mod()
+    root = _root(tmp_path, None, instruments=2)
+    monkeypatch.setattr(m, "evidence_since", lambda r, s, i=None: ["a.md", "b.md"])
+    f = m.audit(root, today=dt.date(2026, 9, 4))
+    assert f and f[0]["level"] == "WARN"
+    assert "evidence standing against it" in f[0]["msg"]
+
+
+def test_no_derivation_and_no_evidence_stays_a_note(tmp_path, monkeypatch):
+    """A project that has not gathered evidence yet is told about the missing derivation without
+    being failed for it. Opt-in by presence means the adoption path stays open."""
+    m = _mod()
+    root = _root(tmp_path, None, instruments=0)
+    monkeypatch.setattr(m, "evidence_since", lambda r, s, i=None: [])
+    f = m.audit(root, today=dt.date(2026, 9, 4))
+    assert f and f[0]["level"] == "INFO"

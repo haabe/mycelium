@@ -4,6 +4,23 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-03.
 
+## v0.178.1 - the worst case was the quietest one
+
+`check_confidence_managed.py` shipped hours earlier reporting a missing `confidence_derivation`
+block at INFO, unconditionally. So the worst state it could encounter — **a number nobody can
+re-derive, with scored evidence standing against it** — was the quietest thing the tool said.
+
+Found by running the new check across the rest of the dogfood board rather than only the diamond
+that motivated it: **three diamonds in that state**, one of them 107 days unchanged with five
+scored instruments naming it. The defect the check was written for was not isolated; it was the
+pattern, and the check was under-reporting it everywhere except the one place someone had already
+looked by hand.
+
+Severity now depends on whether evidence exists. WARN when instruments name the diamond, INFO when
+none do — so a project that has gathered nothing yet is told about the missing derivation without
+being failed for it, and opt-in by presence keeps the adoption path open.
+
+
 ## v0.178.0 - evidence landed, and nobody asked what it did to the number
 
 Five skills tell an agent to update confidence when evidence arrives: `assumption-test`,
