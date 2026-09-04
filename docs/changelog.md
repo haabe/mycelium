@@ -4,6 +4,47 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-03.
 
+## v0.179.0 - an instrument aimed at a surface the product does not have
+
+`a11y-check` shipped a WCAG 2.1 AA checklist — semantic HTML, ARIA, keyboard navigation, focus
+indicators, touch targets, `lang` attributes — and applied it to every product regardless of shape.
+It referenced `product_type` **zero times**, against the framework's own rule that
+product-type-conditioned gates must check it first.
+
+**Measured on the framework itself.** Mycelium is a terminal product with markdown docs. A service
+assessment rated Downe principle 11 "Be usable by everyone" as **fail**, and said why in its own
+words: *"NOT TESTED, which is this principle's own fail criterion... WCAG 2.1 AA is largely the
+wrong instrument for a terminal product."* **A delivery done-bar failed because an instrument that
+could not bind was never run.**
+
+**`product_type` alone cannot fix this, which is the substantive finding.** `software` covers *"web
+app, mobile app, API, CLI, library, desktop app"* under one `quality_frameworks` list containing
+WCAG. An API has no human interface at all; a CLI inherits accessibility from the user's terminal; a
+web app is fully bound. Same type, opposite answers.
+
+**So the unit is the SURFACE, and surfaces are detected from contents.** Seven profiles in
+`canvas-guidance.yml#surfaces` — `web`, `rendered_markdown`, `terminal`, `native_app`, `video_audio`,
+`document`, `headless` — each naming what it detects on and what binds to it. A product commonly has
+several.
+
+**One rule decides every rating:**
+
+| situation | rating |
+|---|---|
+| surface ABSENT | `n/a`, naming the missing surface |
+| surface PRESENT and measured | `pass` / `partial` / `fail` on the evidence |
+| surface PRESENT and unmeasured | `not-assessed` — a real gap, it could have been measured |
+
+**Marking a criterion `fail` because its surface does not exist is a category error**: it
+manufactures a defect out of a product's shape, and any done-bar built on it fails for a reason no
+work can fix. `headless` is the sharp case — an API or library has no human surface, WCAG does not
+bind at all, and what binds instead (error-message clarity, documentation quality) lives under other
+principles.
+
+This generalises past accessibility. The same shape — an instrument applied where its surface is
+absent — is available to any gate that inherited a checklist written for one product shape.
+
+
 ## v0.178.1 - the worst case was the quietest one
 
 `check_confidence_managed.py` shipped hours earlier reporting a missing `confidence_derivation`

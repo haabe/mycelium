@@ -167,3 +167,21 @@ def test_no_derivation_and_no_evidence_stays_a_note(tmp_path, monkeypatch):
     monkeypatch.setattr(m, "evidence_since", lambda r, s, i=None: [])
     f = m.audit(root, today=dt.date(2026, 9, 4))
     assert f and f[0]["level"] == "INFO"
+
+
+def test_last_considered_beats_changed_at(tmp_path, monkeypatch):
+    """CONSIDERED-AND-UNCHANGED MUST BE EXPRESSIBLE, or the check cannot implement its own stated
+    principle. Found 2026-09-04 on a real diamond whose value had been examined four times and
+    deliberately held: reading only `changed_at` scored it stale from the day it last MOVED, so a
+    project doing the right thing scored identically to one doing nothing."""
+    m = _mod()
+    root = _root(tmp_path, {"changed_at": "2020-01-01", "last_considered": "2026-09-04"},
+                 instruments=2)
+    seen = {}
+
+    def fake(r, since, i=None):
+        seen["since"] = since
+        return []
+    monkeypatch.setattr(m, "evidence_since", fake)
+    m.audit(root, today=dt.date(2026, 9, 4))
+    assert seen["since"] == dt.date(2026, 9, 4), "staleness must count from last_considered"

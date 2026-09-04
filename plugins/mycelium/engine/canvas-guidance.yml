@@ -237,6 +237,71 @@ dogfood_modifier:
 # Stored in diamonds/active.yml as product_type.
 # ============================================================
 
+# ---------------------------------------------------------------------------
+# SURFACES — WHICH QUALITY CRITERIA BIND, DECIDED BY WHAT THE PRODUCT ACTUALLY HAS
+#
+# WHY THIS EXISTS (2026-09-04). `product_types` above is the right idea at the wrong
+# granularity for interface questions. `software` covers "web app, mobile app, API, CLI,
+# library, desktop app" and lists WCAG in its quality_frameworks — but an API has no human
+# interface at all, a CLI inherits accessibility from the user's terminal, and a web app is
+# fully bound. Same product_type, opposite answers.
+#
+# MEASURED ON THE FRAMEWORK ITSELF. Mycelium is a terminal product with markdown docs. A
+# service-quality assessment rated Downe P11 "Be usable by everyone" as FAIL, and the entry
+# said plainly why: "NOT TESTED, which is this principle's own fail criterion... WCAG 2.1 AA
+# is largely the wrong instrument for a terminal product." **A bar was failed because an
+# instrument that could not bind was never run.** That is not a finding about the product.
+#
+# THE RULE, AND IT IS THE WHOLE POINT:
+#   surface ABSENT  -> the criterion is `n/a`. Recording it as `fail` is a category error and
+#                      manufactures a defect out of a product's shape.
+#   surface PRESENT but unmeasured -> `not-assessed`, and a gate may treat that as failing.
+#                      That IS a real gap: it could have been measured and was not.
+#
+# DETECT, DO NOT ASK. Surfaces are read off the repository the same way product_type is, per
+# the framework's detect-and-generate philosophy. A product commonly has SEVERAL.
+surfaces:
+  web:
+    description: HTML/CSS/JS rendered in a browser
+    detect: "*.html, JSX/TSX/Vue/Svelte components, a web framework in the manifest, a public site"
+    binds: FULL WCAG 2.1 AA — perceivable, operable, understandable, robust
+  rendered_markdown:
+    description: Markdown rendered by a host (GitHub, GitLab, a docs site)
+    detect: "README.md, docs/**/*.md, mkdocs/docusaurus config"
+    binds: >-
+      Heading hierarchy, descriptive link text, image alt text, colour-not-sole-indicator, and
+      contrast ONLY where the document pins its own colours (a themed diagram, an inline style).
+      Everything else — keyboard, focus, ARIA, lang, page titles — is the HOST's, not the
+      author's.
+  terminal:
+    description: CLI or TUI output read in the user's own terminal
+    detect: "a bin entrypoint, argparse/click/cobra/commander usage, curses or a TUI library"
+    binds: >-
+      Colour-not-sole-indicator (never signal state by colour alone), and clear error text.
+      **Contrast, font size and screen-reader behaviour are INHERITED from the user's terminal
+      and are not the product's to set.** Most of WCAG cannot bind here.
+  native_app:
+    description: iOS, Android or desktop application
+    detect: "Info.plist, AndroidManifest.xml, Xcode/Gradle project, Electron/Tauri config"
+    binds: >-
+      PLATFORM accessibility APIs rather than WCAG — VoiceOver/TalkBack labels, dynamic type,
+      touch-target size, focus order. Testing WCAG here measures the wrong contract.
+  video_audio:
+    description: Video or audio the product ships
+    detect: "*.srt, *.vtt, episode outlines, a podcast RSS, a media production pipeline"
+    binds: Captions, transcripts, audio description, no autoplay, controllable playback
+  document:
+    description: A distributed document — PDF, EPUB, DOCX
+    detect: "*.epub, *.pdf in the deliverable path, manuscript or chapter structure"
+    binds: Tagged structure, reading order, alt text, real text rather than images of text
+  headless:
+    description: API, library or SDK with no human-facing surface
+    detect: "an OpenAPI/GraphQL schema or a published package, AND no surface above present"
+    binds: >-
+      **WCAG DOES NOT BIND AT ALL.** The consumer is a program. What binds instead is error-message
+      clarity and documentation quality, which live under other Downe principles. Rating a headless
+      product `fail` on an interface criterion is the category error this block exists to stop.
+
 product_types:
 
   software:

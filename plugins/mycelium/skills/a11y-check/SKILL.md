@@ -1,6 +1,6 @@
 ---
 name: a11y-check
-description: "Accessibility audit against WCAG 2.1 AA. Checks semantic HTML, ARIA, keyboard navigation, color contrast, screen reader compatibility."
+description: "Accessibility audit, scoped to the surfaces a product actually has. Detects web / rendered_markdown / terminal / native_app / video_audio / document / headless, then applies only the criteria that bind. WCAG 2.1 AA in full for web; not at all for headless."
 metadata:
   instruction_budget: "26"
   framework_dependency: "mycelium"
@@ -9,9 +9,44 @@ metadata:
 
 # Accessibility Audit
 
-Evaluate user-facing work against WCAG 2.1 AA. Accessibility is a design constraint, not a polish step (Downe Principle 11).
+Evaluate user-facing work against the criteria that BIND TO ITS SURFACES. Accessibility is a design
+constraint, not a polish step (Downe Principle 11) — and an instrument aimed at a surface the product
+does not have measures nothing while looking like a failure.
 
-## WCAG 2.1 AA Checklist by Principle
+## STEP 1 — SURFACE GATE. Run this BEFORE the checklist, every time.
+
+**The checklist below is written for web pages. Most products are not web pages.** Detect which
+user-facing surfaces this product actually has, from the repository, and evaluate ONLY the criteria
+that bind to them. Profiles and detection hints: `engine/canvas-guidance.yml#surfaces` —
+`web` · `rendered_markdown` · `terminal` · `native_app` · `video_audio` · `document` · `headless`.
+A product commonly has several. State which you found and how, in the output.
+
+**THE RULE THAT DECIDES EVERY RATING:**
+
+| situation | rating |
+|---|---|
+| the surface is ABSENT | **`n/a`** — and say which surface is missing |
+| the surface is PRESENT and you measured it | `pass` / `partial` / `fail` on the evidence |
+| the surface is PRESENT and you did NOT measure it | `not-assessed` — a real gap, it could have been measured |
+
+**MARKING A CRITERION `fail` BECAUSE ITS SURFACE DOES NOT EXIST IS A CATEGORY ERROR.** It
+manufactures a defect out of a product's shape, and a done-bar built on it fails for a reason no
+work can fix.
+
+**MEASURED, WHICH IS WHY THIS SECTION EXISTS.** On 2026-09-03 this skill's checklist was applied to
+Mycelium — a terminal product with markdown docs — and Downe principle 11 was rated **fail**, with
+the entry stating plainly: *"NOT TESTED, which is this principle's own fail criterion... WCAG 2.1 AA
+is largely the wrong instrument for a terminal product."* **A delivery bar failed on an instrument
+that could not bind.** Re-run 2026-09-04 under the surface gate: every applicable criterion passed,
+and the rest were `n/a` by absence of surface rather than unmeasured.
+
+**HEADLESS IS THE SHARP CASE.** An API or library has no human surface, so WCAG does not bind at
+all. What binds instead — error-message clarity, documentation quality — lives under other Downe
+principles. Do not rate a headless product on interface criteria.
+
+## STEP 2 — WCAG 2.1 AA Checklist by Principle
+
+**Applies in full to `web`. Partially to `rendered_markdown`, `native_app`, `document`. Barely to `terminal`. Not at all to `headless`.**
 
 ### 1. Perceivable
 - [ ] All images have meaningful alt text (or alt="" for decorative)

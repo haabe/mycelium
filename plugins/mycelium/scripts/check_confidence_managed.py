@@ -63,6 +63,8 @@ def _git(root, *args):
 
 
 def _parse_date(v):
+    if v is None:
+        return None          # absent is not a parse failure and must not speak; see below
     if isinstance(v, date):
         return v
     try:
@@ -136,6 +138,14 @@ def audit(root: Path, today: date | None = None) -> list[dict]:
     today = today or datetime.now(UTC).date()
     findings = []
     for dm in diamonds(root):
+        # ARCHIVED AND PARKED DIAMONDS ARE OUT OF SCOPE, and saying so is not a courtesy.
+        # Found 2026-09-04: the check flagged a diamond archived three weeks earlier, whose park
+        # was reasoned, whose resume question had been re-reviewed, and whose confidence nobody
+        # should be re-deriving because the work is not live. Demanding a fresh derivation on a
+        # parked diamond trains the reader to dismiss the warning, which is how a guard becomes
+        # wallpaper. The count of exclusions is reported in the pass line rather than hidden.
+        if str(dm.get("state", "")).lower() in {"archived", "parked", "killed", "discarded"}:
+            continue
         der = dm.get("confidence_derivation")
         if not isinstance(der, dict):
             # SEVERITY DEPENDS ON WHETHER EVIDENCE EXISTS, and the first version got this backwards
@@ -159,7 +169,12 @@ def audit(root: Path, today: date | None = None) -> list[dict]:
                                  "re-derived by anyone, only re-asserted. No evidence names it "
                                  "yet, so this is a note rather than a finding."})
             continue
-        changed = _parse_date(der.get("changed_at"))
+        # `last_considered` WINS OVER `changed_at` WHEN PRESENT, and without this the check could
+        # not express its own principle (found 2026-09-04). The stated design is that
+        # considered-and-unchanged is a PASS — but reading only `changed_at` meant a value that had
+        # been examined four times and deliberately held still counted as stale from the day it
+        # last MOVED. A project doing the right thing scored identically to one doing nothing.
+        changed = _parse_date(der.get("last_considered")) or _parse_date(der.get("changed_at"))
         if not changed:
             findings.append({"id": dm.get("id"), "level": "WARN",
                              "msg": "`confidence_derivation` has no `changed_at`; staleness "
@@ -228,14 +243,18 @@ def main(argv=None) -> int:
     if a.json:
         print(json.dumps(f, indent=1))
     else:
-        n_d = len(diamonds(root))
-        n_derived = sum(1 for d in diamonds(root)
-                        if isinstance(d.get("confidence_derivation"), dict))
+        alld = diamonds(root)
+        parked = [d for d in alld if str(d.get("state", "")).lower()
+                  in {"archived", "parked", "killed", "discarded"}]
+        n_d = len(alld) - len(parked)
+        n_derived = sum(1 for d in alld
+                        if d not in parked and isinstance(d.get("confidence_derivation"), dict))
         if not [x for x in f if x["level"] == "WARN"]:
             print(f"OK: {n_derived} of {n_d} diamond(s) carry a derivation and none has unexamined "
                   f"evidence. OUTSIDE THIS COUNT: {n_d - n_derived} diamond(s) with no "
                   f"`confidence_derivation` block — not failed, but their numbers can only be "
-                  f"re-asserted, never re-derived.")
+                  f"re-asserted, never re-derived; and {len(parked)} archived/parked diamond(s), "
+                  f"which are not live work and are not judged.")
         for x in f:
             print(f"  {x['level']:5s} {x['id']}: {x['msg']}")
         print("\nA number that did not move is fine. A number nobody looked at is the defect.")
