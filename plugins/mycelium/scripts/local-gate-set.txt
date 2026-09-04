@@ -77,3 +77,4 @@ check_fail_open.py --strict
 #   missing gate, a gate with different teeth in the two places.
 check_field_wiring.py --strict
 check_target_progress.py --canvas-dir .claude/canvas
+check_confidence_managed.py

@@ -403,3 +403,16 @@ reviewed:
     reasoning to the two handlers above: the fail-loud pass in this same script reads
     human-tasks.yml in the same run and reports the parse error, so this handler cannot be the
     only thing that saw the problem. Added v0.152.0 with the check.
+- id: check_confidence_managed.py@a420d9acca
+  verdict: accepted
+  reason: >-
+    `_parse_date` returns None on an unparseable date, and the handler now PRINTS the offending
+    value to stderr before doing so. Both callers already speak on the None: `audit` emits a WARN
+    reading "`confidence_derivation` has no `changed_at`; staleness is unmeasurable", and
+    `evidence_since` falls through to the file-mtime path rather than silently dropping the
+    instrument. So a human is told twice — once by the handler, once by the caller — and the
+    silence is never the only thing they see. Added v0.178.0 with the check.
+    THE SIBLING HANDLER WAS *NOT* ACCEPTED AND WAS FIXED INSTEAD: `diamonds()` returning [] on an
+    unreadable canvas surfaced downstream as "no diamonds found", which tells the operator their
+    project has no diamonds when the truth is that their canvas will not parse. Two very different
+    problems, one reading. It now names the file and the exception and says NOTHING WAS VERIFIED.

@@ -108,6 +108,12 @@ jobs:
       - name: Run legacy-path doc check (no stale .claude/{engine,orchestration,schemas}/ refs)
         run: python3 plugins/mycelium/scripts/check_legacy_paths.py --root .
 
+      - name: Evidence landed — was the confidence it bears on ever looked at again?
+        # Never demands that a number MOVE. Considered-and-unchanged is a pass; unexamined is not.
+        # A check that pushed confidence upward would be an inflation engine pointed at the one
+        # value a project must not inflate.
+        run: python3 plugins/mycelium/scripts/check_confidence_managed.py --root .
+
       - name: Run purpose-stance check (no sub-element silently contradicts the why/how/what)
         # Advisory by default: a project without `purpose_properties` never opted in and
         # must not break on a field it does not have. --strict belongs at a diamond

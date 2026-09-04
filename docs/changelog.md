@@ -4,6 +4,41 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-03.
 
+## v0.178.0 - evidence landed, and nobody asked what it did to the number
+
+Five skills tell an agent to update confidence when evidence arrives: `assumption-test`,
+`log-evidence`, `handoff`, `ost-builder`, `launch-tier`. **Nothing checked that it happened.** The
+only occurrence of "stale confidence" anywhere in the framework was an example string inside a
+report template.
+
+**Measured on the dogfood project.** A diamond's confidence had moved exactly once in the project's
+history. In the twenty days after, 21 scored instruments naming it landed, a pre-registered test
+returned SUPPORTS on the first attribution evidence the bet had ever had, and a crossing condition
+written *in advance* — "sweep 2 reproducing the nine through a different family is what earns the
+crossing" — was met three times over. The number never moved and nothing noticed it should.
+
+`check_confidence_managed.py` closes the gap. **The design constraint matters more than the check:
+it never demands that a number MOVE.** Evidence can legitimately arrive and leave a value unchanged;
+that is a finding. Considered-and-unchanged, recorded with a date, is a pass. **Unexamined is the
+defect.** A guard that pushed confidence upward would be an inflation engine aimed at the one value
+a project must not inflate.
+
+Opt-in by presence: a diamond with no `confidence_derivation` block is not failed for lacking one,
+but is told that its number can only ever be re-asserted, never re-derived.
+
+**Two failures are recorded in the code because both will recur.**
+
+**The derivation was stored in a YAML comment and a later rewrite deleted it.** Its components, its
+open items and its crossing condition survived only in a decision-log entry nobody diffed against
+new evidence. Comments are not data. A derivation that must be re-read is a field.
+
+**And the first version of this guard did not bite.** It used a 30-day staleness threshold against a
+defect that was 20 days old, so it passed the exact case it was built for — caught by running it
+against the known instance before shipping. The trigger is now evidence, not the calendar, per the
+standing rule that an alarm fires on evidence the event happened rather than on a date advancing.
+The negative control is a test.
+
+
 ## v0.177.0 - a version documented twice was invisible to every reader
 
 `parse_changelog_versions` returns a **set**. Every count, every gap check and every
