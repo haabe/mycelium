@@ -12,7 +12,7 @@ Or it might not have happened at all. I like it, so other people will too. That 
 
 Nobody skips that part because they think it doesn't matter. Something is always in the way, and it is usually something reasonable. On your own it is that asking anyone takes days and the agent is ready now. On a team I have watched it be end of season, a customer on the phone, the c-level with a gut feeling. I have got more than fifteen years of that, and I never met anyone who thought discovery was optional.
 
-You know there are subreddits where people confess exactly this every week? I dropped down the rabbit hole for a count and found a clear structure. I read 46 posts where someone shipped their awesome product to nobody. Most of them never said they asked anybody if they needed what they built. A handful did. Mostly sideways. Like a sales call or a Facebook favor. Some were lucky enough to have existing users they could ask. I couldn't say that anyone asked their users up front.
+You know there are subreddits where people confess exactly this every week? I dropped down the rabbit hole for a count and found a clear structure. I read 46 posts where someone shipped their awesome product to nobody. Most of them never said they asked anybody if they needed what they built. A handful did. Mostly sideways. Like a sales call or a Facebook favor. Some were lucky enough to have existing users they could ask. Whether any of those nine asked before they built, the posts don't say.
 
 ```mermaid
 %%{init: {"themeVariables": {"pie1": "#3987e5", "pie2": "#d95926", "pie3": "#199e70", "pieOpacity": "1", "pieStrokeColor": "#ffffff", "pieStrokeWidth": "2px", "pieOuterStrokeColor": "#8b949e", "pieOuterStrokeWidth": "2px", "pieSectionTextColor": "#000000"}}}%%
@@ -47,7 +47,7 @@ This morning I ran it on a new idea: vibe-rant, a place for people whose AI-buil
 
 [![The first hundred seconds: typing /mycelium:start, the setup, the first question, and me starting to answer it](docs/media/start.gif)](https://youtu.be/_GjMJcKcRjI)
 
-[Here is the whole thing happening](https://youtu.be/_GjMJcKcRjI), unedited, from typing `/mycelium:start` to the point where it starts asking which of the purpose properties are binding. No cuts, no narration, my own terminal.
+[Here is the whole thing happening](https://youtu.be/_GjMJcKcRjI), unedited, from typing `/mycelium:start` through the four questions and a bit past them, to where it starts asking which of the purpose properties are binding. No cuts, no narration, my own terminal.
 
 And here is what it wrote down.
 

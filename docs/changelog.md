@@ -4,6 +4,14 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-06.
 
+## v0.180.3 - two sentences the judges caught
+
+Six blind readers of the README, in two groups of three that never saw each other, found the same
+thing: the pie says six posters talked to someone who had the problem, and the sentence under it said
+nobody asked their users up front. The read behind the pie did not code timing, so the sentence now
+says that. Two of the six also read "four questions" against a video that runs past the fourth; the
+video sentence now says where it ends. Nothing else changed.
+
 ## v0.180.2 - the first hundred seconds, inline
 
 The demo video linked from the README had zero views in the 28 days after it went up, against 18
