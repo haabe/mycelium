@@ -4,6 +4,15 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-06.
 
+## v0.180.2 - the first hundred seconds, inline
+
+The demo video linked from the README had zero views in the 28 days after it went up, against 18
+unique README visitors in the last 14. A link nobody clicks shows nobody anything. The README now
+carries a GIF of the first hundred seconds, cut from the original recording: `/mycelium:start`, the
+setup, the first question, and the answer being typed. Frames only where the terminal changed, each
+held for as long as it was on screen, so the pauses are the real ones. It links to the full video.
+93 frames, 1.25 MB, under `docs/media/`.
+
 ## v0.180.1 - the name, in the founder's words
 
 The README gains a short section on why the framework is called Mycelium. Two jobs in a forest:

@@ -45,6 +45,8 @@ The gate is on the agent. The ten minutes are yours. That is the trade, your tim
 
 This morning I ran it on a new idea: vibe-rant, a place for people whose AI-built projects have just fallen over to say so to each other. Four questions.
 
+[![The first hundred seconds: typing /mycelium:start, the setup, the first question, and me starting to answer it](docs/media/start.gif)](https://youtu.be/_GjMJcKcRjI)
+
 [Here is the whole thing happening](https://youtu.be/_GjMJcKcRjI), unedited, from typing `/mycelium:start` to the point where it starts asking which of the purpose properties are binding. No cuts, no narration, my own terminal.
 
 And here is what it wrote down.
