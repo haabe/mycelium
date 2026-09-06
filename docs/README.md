@@ -19,6 +19,7 @@ Three common entry paths, each anchored on a specific user task. Pick the one th
 ## Contents
 
 - `get-started.md` — install (plugin or legacy) + first-run for a new or existing project
+- `nobody-used-it.md` — for the builder who shipped and nothing happened; what the four questions are for, in their situation, and what this does not do
 - `architecture.md` — how Mycelium is built and connected: engine / harness / hooks / skills / canvas, the context surface (always-on vs JiT), packaging + release + install
 - `mental-model.md` — how to think in Mycelium: scales, diamonds, gates, taught through one worked example
 - `philosophy.md` — why opinionated discipline, why theory-grounded, why in-loop preventive

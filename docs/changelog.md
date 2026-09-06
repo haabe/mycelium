@@ -4,6 +4,14 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-06.
 
+## v0.180.4 - a page for the builder who is in one of those posts
+
+Four things a burned builder types into a search engine reached no page of this repo on
+2026-09-06. `docs/nobody-used-it.md` is one page for that reader, written in the grammar those
+posts use: it shipped, nothing happened, and the sentence that says what it is for will not come.
+It carries the 46-post count with its limit, the one kill the author was there for, and a plain
+line on what this does not do. Linked from the README and the docs index.
+
 ## v0.180.3 - two sentences the judges caught
 
 Six blind readers of the README, in two groups of three that never saw each other, found the same

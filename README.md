@@ -23,7 +23,7 @@ pie showData
     "Heard from existing users" : 3
 ```
 
-Floor, not a rate. Nobody volunteers the thing they skipped. [The full read, all 46 posts](docs/receipts/cases/2026-08-16-l1-population-read.md).
+Floor, not a rate. Nobody volunteers the thing they skipped. [The full read, all 46 posts](docs/receipts/cases/2026-08-16-l1-population-read.md). If you are in one of those posts right now, [start here](docs/nobody-used-it.md).
 
 What changed is that the agent made skipping it free. It goes from an idea to a pull request faster than any of those reasons ever could, and it never once stops to ask who the thing is for.
 
