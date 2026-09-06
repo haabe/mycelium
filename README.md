@@ -131,6 +131,10 @@ The dotted line is what the market says back. It lands on opportunity rather tha
 
 You do not run all of them. A weekend project skips most. `/mycelium:start` reads what you have and tells you which ones are worth your afternoon.
 
+## The name
+
+In the forest, mycelium has two major tasks. It connects separate trees through one system, and it turns whatever died into what feeds the next lifeform. This framework does both. Thirty-odd theories are wired into one plugin instead of thirty books collecting dust in your bookshelf. And the mistakes it catches go back into the system, helping you stay clear the next run.
+
 ## When to use something else
 
 If the decision is already made and you need throughput, Paddo's [boring agents](https://paddo.dev/blog/boring-agents-ship/) fit better. If the scope is settled and you want it built faster, [Addy Osmani's agent-skills](https://github.com/addyosmani/agent-skills). Several people editing one canvas at once is not built. And if the thing you are making carries no risk of being the wrong thing, this will feel like bureaucracy, because for you it would be.

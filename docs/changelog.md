@@ -2,7 +2,23 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-09-03.
+**Last updated**: 2026-09-06.
+
+## v0.180.1 - the name, in the founder's words
+
+The README gains a short section on why the framework is called Mycelium. Two jobs in a forest:
+connect separate trees through one system, and turn what died into what feeds the next lifeform. The
+plugin does both, and the section says so in five sentences.
+
+Two claims inside it were checked against the tree before they went in. "Thirty-odd theories" holds
+against `docs/theories.md`: 8 tier-1 and 23 tier-2 entries are wired to a mechanism, and the 16
+tier-3 entries are citation-only and not counted. The earlier draft said every failure the framework
+catches becomes a check; that is not what the record shows (selective graduation from a corrections
+log of a couple of hundred entries), so the shipped wording is "the mistakes it catches go back into
+the system", which the session-start corrections read supports.
+
+Written by the founder after three blind-discriminator rounds rejected the agent drafts. README only;
+no engine, hook or skill changed.
 
 ## v0.180.0 - surfaces, without these three rules, is a waiver machine
 
