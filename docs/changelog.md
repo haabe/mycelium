@@ -2,7 +2,15 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-09-06.
+**Last updated**: 2026-09-08.
+
+## v0.180.5 - the H1 says what category this is
+
+Eight GitHub repositories are named mycelium and none of them is in this category. The README's
+H1 was the bare name with a motto beneath it. One subtitle line now names the category and the
+mechanism, in the words the About line already uses: a Claude Code harness that asks who this is
+for before the agent writes code. README only; findability is measured by Test B on the dogfood
+side.
 
 ## v0.180.4 - a page for the builder who is in one of those posts
 

@@ -1,5 +1,7 @@
 # Mycelium
 
+A Claude Code harness that asks who this is for before the agent writes code.
+
 **Outcome over output.**
 
 You know how this goes. The idea turns up on a Thursday and it is a good one. The agent is quick and generous and by Sunday there is a working thing on your screen. It runs. You are pleased with it, and you have every right to be.
