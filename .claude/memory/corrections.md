@@ -44,6 +44,16 @@ Each correction entry follows this structure:
 
 ## Generalizable Corrections
 
+### 2026-09-08 - Version bump committed before the derived-token sync; 0.180.5 blocked at Check 40
+- **Scope**: delivery
+- **Category**: process
+- **Origin**: ai-generated
+- **Mistake**: A README patch was bumped to 0.180.5 across CLAUDE.md, plugin.json and the changelog, committed and pushed. `docs/ai-system-card.md` still carried 0.180.4 because the sync script was invoked at `scripts/sync_derived.py` (the path the card's own note implies) and does not exist there; it is `plugins/mycelium/scripts/sync_derived.py`. The push passed the local pre-push hook, CI failed Check 40, the release was blocked. A follow-up commit with the synced card was then rejected by Check 26 (material file after the bump), and the clean fix, a force-push, could not be run from the operator's Remote Control session. 0.180.6 is the correction release.
+- **Correction**: Run `python3 plugins/mycelium/scripts/sync_derived.py` BEFORE the bump commit, and include its output in the same commit as the version change. Verify with `--check` before pushing.
+- **Prevention**: Fix the path in the system card's note so it names the real location; make the local pre-push hook run Check 40 (it ran Check 26 and 30 and passed, which is why the red commit reached origin). Never plan a fix that needs a force-push when the operator is on Remote Control.
+- **Source**: Hoskins, friction log; this project's own version-discipline doc.
+
+
 _Corrections that apply broadly across projects and contexts._
 
 ### 2026-05-30 - Skipped the visible Pre-Ship analysis (G-P-pre) — validator-green treated as the gate

@@ -4,6 +4,13 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-08.
 
+## v0.180.6 - the system card was left behind by the last bump
+
+0.180.5 never released: its validator failed Check 40 because `docs/ai-system-card.md` still said
+0.180.4. The sync script is at `plugins/mycelium/scripts/sync_derived.py`, not where the card's own
+note points, and it was run after the bump commit. This release is the synced card and nothing else;
+the README subtitle from 0.180.5 ships with it. Corrections entry 2026-09-08.
+
 ## v0.180.5 - the H1 says what category this is
 
 Eight GitHub repositories are named mycelium and none of them is in this category. The README's
