@@ -99,6 +99,11 @@ Returns warnings via `additionalContext` (does not block). This is the "hybrid" 
 
 - **`ci-signal.sh`** (v0.85.0, on **Stop** and on **SessionStart** with `--session-start`) — reports ONCE when the workflow for the currently checked-out commit has failed. Closes a hole that let the dogfood workflow stay red for **thirteen consecutive pushes**: the flow was one-way — local push, CI runs, verdict lives on GitHub and never returns — and none of the five hook points looked outward. A pull request forces you to look; `main` does not ask. **Tracks no pushes by design**: GitHub already knows, so it matches the newest run's `headSha` against local HEAD and speaks only about the commit actually checked out. That match is load-bearing — reading `gh run list --limit 1` without it reports the PREVIOUS commit's run, which is how a failed push got reported as "CI: success" the same day. Stop is the warm catch (one session, thirteen pushes, needs to hear it mid-session); SessionStart is the cold catch and bypasses the dedupe, because a new session is a new agent with no memory of what the last one was told. Silent on green, in-progress, another commit's failure, detached HEAD, missing `gh`, no auth, no network, no workflows. One network call per 90s, one report per run. Tests: `tests/python/test_ci_signal.py` (22 asserts; the rate-limit test counts `gh` invocations directly, and was verified to fail with the guard removed).
 
+### Layer 4b: Stop (`next-action-check.sh`) — a framework turn ends on one next action
+**Triggers**: When Claude finishes responding, after `stop-check.sh`
+**Type**: `command` (5s timeout)
+**Check**: if a `mycelium:*` skill ran in this turn (a `Skill` tool_use in the transcript) and the closing message (`last_assistant_message`, transcript fallback) has no line beginning `Next:`, returns `{"decision":"block","reason":...}` so the agent ends on exactly one next action. Silent on turns with no framework skill run. Honours `stop_hook_active`; reports via `systemMessage` when it cannot read its input or the transcript (Cursor, Codex) rather than failing silently. Person override `MYCELIUM_NEXT_ACTION_CHECK=off`. Downe P10; operating-contract rule 12; dogfood opp-006/sol-006b. Gate blocks (PreToolUse denies) are not yet in scope.
+
 ### Layer 5: SessionStart (`session-start.sh`)
 **Triggers**: When a session starts or resumes
 **Matcher**: `startup|resume`
@@ -206,7 +211,7 @@ Different hooks have different failure semantics. The choice is deliberate.
 **Rationale**: a silently disabled enforcement hook is worse than no hook. If `gate.sh` crashes, secret detection is gone. If `scope-gate.sh` cannot read state, scope enforcement is gone. These hooks must announce their failure by blocking the operation.
 
 **Fail-open** (allow on failure) — used for **observability and nudging**:
-- `post-write-nudge.sh`, `change-log.sh`, `diamond-state-audit.sh`, `reflexion-gate.sh`, `stop-check.sh`, `session-start.sh`
+- `post-write-nudge.sh`, `change-log.sh`, `diamond-state-audit.sh`, `reflexion-gate.sh`, `stop-check.sh`, `session-start.sh`, `next-action-check.sh` (fail-open on a missing transcript by design: a Stop hook that blocked on its own read errors would trap the session; the validator checks its wiring instead)
 
 **Rationale**: an audit log failure should never block a code change. The cost of missing a nudge is small; the cost of blocking a legitimate edit because logging broke is large.
 

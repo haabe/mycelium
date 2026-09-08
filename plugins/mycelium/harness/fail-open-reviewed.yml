@@ -416,3 +416,11 @@ reviewed:
     unreadable canvas surfaced downstream as "no diamonds found", which tells the operator their
     project has no diamonds when the truth is that their canvas will not parse. Two very different
     problems, one reading. It now names the file and the exception and says NOTHING WAS VERIFIED.
+- id: next-action-check.sh@4a96a82a97
+  verdict: accepted
+  reason: >-
+    next-action-check.sh line 45: except handler prints a systemMessage ('did not run this turn: ...') and exits 0. It speaks, so the human sees the check could not look; it does not block because a Stop hook that blocked on its own read failure would trap the session (documented in the hook header). Reviewed 2026-09-08, v0.181.0.
+- id: next-action-check.sh@86ce935ded
+  verdict: accepted
+  reason: >-
+    next-action-check.sh line 59: except handler prints a systemMessage ('did not run this turn: ...') and exits 0. It speaks, so the human sees the check could not look; it does not block because a Stop hook that blocked on its own read failure would trap the session (documented in the hook header). Reviewed 2026-09-08, v0.181.0.

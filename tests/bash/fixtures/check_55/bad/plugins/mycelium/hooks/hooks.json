@@ -165,12 +165,6 @@
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/next-action-check.sh",
-            "timeout": 5,
-            "statusMessage": "Mycelium next-action check"
-          },
-          {
-            "type": "command",
             "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/ci-signal.sh"
           }
         ]
@@ -212,3 +206,4 @@
     ]
   }
 }
+

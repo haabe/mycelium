@@ -4,6 +4,34 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-08.
 
+## v0.181.0 - a framework turn ends on one next action
+
+Downe P10, "have no dead ends", has been `fail` on the dogfood canvas since 2026-05-31, when a
+cohort tester named the stall moment: "the framework goes quiet and you're not sure what to run
+next." v0.31.1 fixed one such moment (the post-build nudge). This is the general case.
+
+**The rule.** Operating-contract rule 12: any turn in which a Mycelium skill ran ends with exactly
+one line beginning `Next:` (a skill to run, a question to answer, or `Next: nothing until <event>`).
+Ordinary answers need no such line; a framework state is what must not dead-end.
+
+**The teeth.** `hooks/next-action-check.sh` runs on Stop. If a `mycelium:*` skill ran in the turn
+and the closing message has no `Next:` line, it returns `decision: block` so the agent finishes on
+one next action. It reads `last_assistant_message`, because the hooks reference says the transcript
+is written asynchronously and can lag the current turn. It honours `stop_hook_active`, is silent on
+turns with no framework skill run, and says so in a `systemMessage` when it cannot read its input or the transcript (Cursor, Codex), which the
+hook header states rather than hides. Person override: `MYCELIUM_NEXT_ACTION_CHECK=off`.
+
+**The check.** Check 55 verifies the three parts agree: the rule is in the contract, the hook
+exists and blocks, and `hooks.json`, `hooks.codex.json` and `hooks.cursor.json` all register it.
+Each could lapse alone; a hook that exists and is not registered is the built-not-wired shape this
+framework audits others for. Fixture tests: `tests/bash/test_next_action_check.sh` (8 cases) and
+`tests/bash/test_check_55.sh`.
+
+**Not in scope, named.** Gate blocks (PreToolUse denies) end on their own reason strings and are not
+detected by this hook; that is the next change. Dogfood: opp-006, sol-006b built with sol-006c as
+the stated control, DL-1204. P10 stays `fail` until a stall moment is observed to end in a next
+action; shipping the line is not the pass.
+
 ## v0.180.6 - the system card was left behind by the last bump
 
 0.180.5 never released: its validator failed Check 40 because `docs/ai-system-card.md` still said

@@ -2575,6 +2575,52 @@ check_promise_registry_swept() {
     fi
 }
 
+# ============================================================
+# Check 55: a framework turn ends on one next action — the wiring exists
+# ============================================================
+# Downe P10 ("have no dead ends") was rated fail on the dogfood canvas from
+# 2026-05-31: a tester named the stall moment where the framework goes quiet
+# and nothing says what to run next. The fix has three parts and each can lapse
+# on its own: the rule in the operating contract (what the agent is told), the
+# Stop hook that blocks a turn end without a Next: line (what happens if it is
+# not), and the hook's registration in every runtime manifest (whether it runs
+# at all). This check verifies the three agree. It does not verify the hook's
+# logic; tests/bash/test_next_action_check.sh does.
+check_next_action_wiring() {
+    section "Check 55: framework turns end on one next action (contract rule + Stop hook + manifests agree)"
+
+    local contract="plugins/mycelium/engine/agent-operating-contract.md"
+    local hook="plugins/mycelium/hooks/next-action-check.sh"
+    local cc="plugins/mycelium/hooks/hooks.json"
+    local codex="plugins/mycelium/hooks/hooks.codex.json"
+    local cursor="plugins/mycelium/hooks/hooks.cursor.json"
+
+    if [ ! -f "$contract" ] && [ ! -f "$hook" ]; then
+        info "Check 55: no plugin tree in cwd — N/A"
+        return
+    fi
+    if [ ! -f "$contract" ] || ! grep -qE 'beginning `Next:`' "$contract"; then
+        fail "Check 55: operating contract carries no next-action rule (a line beginning \`Next:\` at the end of a framework turn) — the hook would enforce a rule the agent was never told"
+        return
+    fi
+    if [ ! -f "$hook" ]; then
+        fail "Check 55: $hook missing — the contract promises enforcement on Stop and nothing performs it"
+        return
+    fi
+    if ! grep -q 'decision.*block' "$hook"; then
+        fail "Check 55: $hook never emits decision=block — a next-action check that only warns is the advisory tier this framework measures as skipped"
+        return
+    fi
+    local m
+    for m in "$cc" "$codex" "$cursor"; do
+        if [ ! -f "$m" ] || ! grep -q "next-action-check.sh" "$m"; then
+            fail "Check 55: $m does not register next-action-check.sh on Stop — the hook exists and never runs on that runtime"
+            return
+        fi
+    done
+    pass "Check 55: next-action rule in the contract, blocking Stop hook present, registered in hooks.json, hooks.codex.json and hooks.cursor.json"
+}
+
 check_scenario_legacy_model() {
     section "Check 53: scenarios migrated off the pre-2026-07-01 4-block model"
 
@@ -3130,6 +3176,7 @@ check_delivery_diamond_reconciliation
 check_canonical_field_location
 check_scenario_legacy_model
 check_promise_registry_swept
+check_next_action_wiring
 
 # ============================================================
 # SUMMARY
