@@ -69,13 +69,31 @@ def _is_live(leaf: dict) -> bool:
     return str(leaf.get("status") or "candidate").lower().startswith(LIVE_LEAF)
 
 
-def _opps_for(opps_doc, did: str) -> list[dict]:
+def _outcome_key(v) -> str:
+    """`opportunities.yml#desired_outcomes.adoption`, `desired_outcomes.adoption` and `adoption`
+    all name the same outcome: the last dotted segment, lowercased."""
+    return str(v or "").strip().split("#")[-1].split(".")[-1].strip().lower()
+
+
+def _diamond_outcomes(d: dict) -> set[str]:
+    """Outcomes the diamond rolls up to, read from its top level and its definition_of_done.
+    A tree rooted on outcomes ("one root, one tree") links opportunities to a diamond only
+    through these; nothing there carries a diamond id."""
+    vals = [d.get("rolls_up_to"), (d.get("definition_of_done") or {}).get("rolls_up_to")]
+    return {k for k in (_outcome_key(v) for v in vals if isinstance(v, str)) if k}
+
+
+def _opps_for(opps_doc, did: str, outcomes: set[str] | None = None) -> list[dict]:
+    """Open opportunities that cite the diamond by id in a link key, OR roll up to an outcome
+    the diamond itself rolls up to. Without the second branch an outcome-rooted tree reads as
+    0 of 0 leaves for every diamond, which the dogfood repo hit the day this script shipped."""
     out = []
     for o in opps_doc.get("opportunities") or []:
         if not isinstance(o, dict) or str(o.get("status", "open")).lower() != "open":
             continue
         links = yaml.dump({k: v for k, v in o.items() if k in LINK_KEYS}, allow_unicode=True)
-        if did in links:
+        by_outcome = bool(outcomes) and _outcome_key(o.get("rolls_up_to")) in outcomes
+        if did in links or by_outcome:
             out.append(o)
     return out
 
@@ -150,7 +168,8 @@ def derive(root: Path, did: str) -> dict | None:
     if d is None:
         return None
     opps_path, tasks_path = canvas / "opportunities.yml", canvas / "human-tasks.yml"
-    opps = _opps_for(load_yaml(opps_path) if opps_path.exists() else {}, did)
+    outcomes = _diamond_outcomes(d)
+    opps = _opps_for(load_yaml(opps_path) if opps_path.exists() else {}, did, outcomes)
     tasks = _open_tasks_for(load_yaml(tasks_path) if tasks_path.exists() else {}, did)
     gates = {k: v for k, v in (d.get("theory_gates_status") or {}).items()
              if str(v).lower() != "pass"}
@@ -158,7 +177,7 @@ def derive(root: Path, did: str) -> dict | None:
     stale = [g for g in gates if g == "four_risks" and total and reviewed == total]
     return {"diamond": d, "gates": gates, "leaves": _leaf_rows(opps), "tasks": tasks,
             "stale": stale, "owed": _owed(opps), "n_opps": len(opps),
-            "leaf_totals": (total, reviewed)}
+            "leaf_totals": (total, reviewed), "outcomes": sorted(outcomes)}
 
 
 def _gate_row(g: str, v, r: dict) -> str:
@@ -213,6 +232,11 @@ def main(argv=None) -> int:
     plural = "y" if r["n_opps"] == 1 else "ies"
     print(f"closing-path: {args.diamond_id} ({d.get('scale', '?')} {d.get('phase', '?')}, "
           f"confidence {d.get('confidence', '?')}); {r['n_opps']} open opportunit{plural} cite it")
+    if r["n_opps"] == 0:
+        via = (f"by id or by outcome ({', '.join(r['outcomes'])})" if r["outcomes"]
+               else "by id, and the diamond names no rolls_up_to outcome")
+        print(f"no open opportunity links to this diamond {via}; the leaf rows below are the tree "
+              "unread, not the tree empty")
     print("gate | what would flip it | owner | date")
     if not r["gates"]:
         print("(none pending) | every gate in theory_gates_status reads pass | - | -")

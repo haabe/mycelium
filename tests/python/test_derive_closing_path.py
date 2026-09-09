@@ -144,3 +144,56 @@ def test_unparseable_file_speaks(tmp_path, capsys):
     _project(tmp_path, "active_diamonds: [\n")
     rc, out = _run(tmp_path, capsys)
     assert rc == 0 and "cannot parse" in out and "N/A" in out
+
+
+OUTCOME_ACTIVE = """active_diamonds:
+- id: l1
+  scale: L1
+  phase: define
+  confidence: 0.6
+  definition_of_done:
+    rolls_up_to: opportunities.yml#desired_outcomes.adoption
+  theory_gates_status:
+    four_risks: pending
+"""
+
+OUTCOME_OPPS = """opportunities:
+- id: opp-1
+  status: open
+  rolls_up_to: adoption
+  solutions:
+  - id: sol-1a
+    status: candidate
+    four_risks: {value: high, usability: medium, feasibility: low, viability: medium}
+    assumptions:
+    - id: a-1a-1
+      statement: outcome-linked leaf is seen
+      verdict: null
+"""
+
+
+def test_outcome_rooted_tree_is_seen(tmp_path, capsys):
+    """Dogfood 2026-09-09: every opportunity carried `rolls_up_to: adoption` (an outcome, per the
+    one-root ruling) and no diamond id, so the script read 0 of 0 leaves for every diamond."""
+    _project(tmp_path, OUTCOME_ACTIVE, OUTCOME_OPPS)
+    rc, out = _run(tmp_path, capsys)
+    assert rc == 0
+    assert "1 open opportunity cite it" in out
+    assert "a-1a-1" in out and "outcome-linked leaf is seen" in out
+    assert "tree unread" not in out
+
+
+def test_no_link_by_id_or_outcome_says_so(tmp_path, capsys):
+    """An empty leaf table must be distinguishable from a tree the script cannot read."""
+    _project(tmp_path, OUTCOME_ACTIVE, OUTCOME_OPPS.replace("rolls_up_to: adoption",
+                                                            "rolls_up_to: retention"))
+    rc, out = _run(tmp_path, capsys)
+    assert rc == 0
+    assert "0 open opportunities cite it" in out
+    assert "by id or by outcome (adoption)" in out and "tree unread" in out
+
+
+def test_no_outcome_on_diamond_names_that(tmp_path, capsys):
+    _project(tmp_path, ACTIVE, OUTCOME_OPPS)
+    rc, out = _run(tmp_path, capsys)
+    assert rc == 0 and "names no rolls_up_to outcome" in out

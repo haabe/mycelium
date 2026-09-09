@@ -732,7 +732,7 @@ try:
   pending = data.get('pending_tasks', [])
   # Count by status, not raw list length: completed/abandoned/stalled are terminal
   # and must not inflate the 'open work' signal (corrections.md 2026-05-28 canvas-drift).
-  # `cancelled` is in the SHIPPED schema enum (human-tasks.schema.json) and in the
+  # 'cancelled' is in the SHIPPED schema enum (human-tasks.schema.json) and in the
   # TERMINAL_STATUSES tuple of check_reply_owed.py AND check_evidence_landed.py.
   # It was missing here, so a cancelled task counted as open work forever and could
   # be labelled STALE indefinitely. One rule, two spellings, and this was the outlier.
@@ -741,14 +741,14 @@ try:
   if open_tasks:
     today = date.today()
     # KEY_DATE: canvases record events in FIELD NAMES, not only in values -
-    # `reply_sent_2026_08_11`, `third_reply_inbound_2026_08_12`. Dogfood 2026-08-14:
+    # 'reply_sent_2026_08_11', 'third_reply_inbound_2026_08_12'. Dogfood 2026-08-14:
     # 19 open tasks carried their most recent activity that way and this function
     # could not see any of it, so a task touched two days earlier read as NEVER
     # TOUCHED. A live conversation and an abandoned one scored identically.
     KEY_DATE = re.compile(r'(\d{4})[-_](\d{2})[-_](\d{2})')
     def latest_touch(t):
       ds = []
-      # `created` is accepted alongside `created_at`: both forms exist in real
+      # 'created' is accepted alongside 'created_at': both forms exist in real
       # canvases (dogfood 2026-08-14: 9 of 83 tasks used the bare form and fell
       # through this fallback entirely).
       for k in ('updated_at', 'reopened_at', 'created_at', 'created', 'commitment_received_at'):

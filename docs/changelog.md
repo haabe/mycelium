@@ -4,6 +4,35 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-09.
 
+## v0.183.1 - the closing path reads an outcome-rooted tree, and the hook stops shouting
+
+Two defects, both found by running 0.183.0 on the dogfood repo the evening it shipped.
+
+**The closing path could not see the tree it was written for.** `derive_closing_path.py` matched
+opportunities to a diamond only when a diamond id appeared in a link key. On a tree rooted on
+outcomes, where every opportunity carries `rolls_up_to: adoption` and the diamond's
+`definition_of_done.rolls_up_to` names `opportunities.yml#desired_outcomes.adoption`, that is
+never, so every diamond read "0 open opportunities cite it" and the four_risks row said "0 of 0
+live leaves have a block" while six blind-reviewed blocks sat under the tree. The script now also
+matches an opportunity whose `rolls_up_to` names an outcome the diamond rolls up to, read from the
+diamond's top level or its `definition_of_done`, comparing the last dotted segment so
+`opportunities.yml#desired_outcomes.adoption`, `desired_outcomes.adoption` and `adoption` agree.
+When nothing links by id or by outcome, one line says so and names the outcomes searched, so an
+empty leaf table reads as the tree unread rather than the tree empty. Known limit, stated in that
+line: a diamond whose `rolls_up_to` is another diamond and not an outcome still reads empty; the
+dogfood L1 is that case by the founder's own ruling that the tree belongs to the root, and the
+line now tells a reader why.
+
+**The session-start hook wrote to stderr on every start.** CHECK 5 embeds Python inside a
+double-quoted `python3 -c "..."` string, and four Python comment lines in it used markdown
+backticks. Bash command-substitutes those before Python runs, so every SessionStart printed
+`line 836: cancelled: command not found` and four siblings. Harmless to the injected context (the
+substitution landed inside a comment) and invisible in Claude Code, which swallows hook stderr; a
+comment in the same block already recorded the trap biting once before. Backticks replaced with
+quotes, and `tests/bash/test_session_start_stderr_clean.sh` runs the hook on a populated project
+and on one with no canvas and asserts the WHOLE stderr is empty, so the next backtick anywhere in
+an embedded string fails a test rather than a hand run.
+
 ## v0.183.0 - the framework says what is runnable and what nothing reads
 
 Three shapes of one gap, all named by the dogfood founder on 2026-09-09 and all filed as upstream
