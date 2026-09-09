@@ -775,7 +775,11 @@ check_version_bump_discipline() {
     # from "bump staged but not yet committed". Without this it can only ask
     # whether HEAD bumped, which is not the same question.
     local head_version
-    head_version=$(git show HEAD:CLAUDE.md 2>/dev/null | grep -m1 "^\*Version " | sed -E 's/^\*Version ([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
+    # `grep -m1` here closed the pipe after the first match while `git show` was still
+    # writing; git took SIGPIPE, `pipefail` reported 141, and `set -e` aborted the whole
+    # validator mid-run with no FAIL line (seen 2026-09-09, intermittent, more likely as
+    # CLAUDE.md grew). sed reads to end of input, so the producer always finishes.
+    head_version=$(git show HEAD:CLAUDE.md 2>/dev/null | sed -n -E 's/^\*Version ([0-9]+\.[0-9]+\.[0-9]+).*/\1/p' | tail -1)
 
     local last_version_commit
     last_version_commit=$(git log -1 --pretty=format:%H -G "^\*Version " -- CLAUDE.md 2>/dev/null)

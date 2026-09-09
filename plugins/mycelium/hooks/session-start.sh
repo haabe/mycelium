@@ -506,6 +506,25 @@ if d.get('status') == 'violations':
   fi
 fi
 
+# ------------------------------------------------------------
+# Evidence landing over EVERY source class (v0.182.0). check_evidence_landed.py
+# above covers closed tasks with a declared destination; this one covers every
+# evidence-bearing source, gated on regression against the project's committed
+# baseline. It prints only when there is a regression to act on: a clean run is
+# silent here because the number is printed by the gate set on every push.
+# ------------------------------------------------------------
+LANDINGCHK=""
+if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check_evidence_landing.py" ]; then
+  LANDINGCHK="${CLAUDE_PLUGIN_ROOT}/scripts/check_evidence_landing.py"
+fi
+if [ -n "$LANDINGCHK" ] && [ -d "$PROJECT_DIR/.claude/canvas" ]; then
+  LANDING_OUT=$(python3 "$LANDINGCHK" --project-dir "$PROJECT_DIR" 2>/dev/null || true)
+  LANDING_FAIL=$(printf '%s\n' "$LANDING_OUT" | grep '^FAIL:' | head -2 | tr '\n' ' ')
+  if [ -n "$LANDING_FAIL" ]; then
+    REMINDERS="${REMINDERS}EVIDENCE LANDING REGRESSED — ${LANDING_FAIL}Cite each source on the entry it evidences, or add it to .claude/harness/evidence-landing-ledger.yml with a reason (check_evidence_landing.py). "
+  fi
+fi
+
 # ============================================================
 # CHECK 2: Delivery metrics cadence (per delivery cycle)
 # Routes to product-type-appropriate metrics canvas (v0.11.0)

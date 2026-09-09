@@ -78,3 +78,4 @@ check_fail_open.py --strict
 check_field_wiring.py --strict
 check_target_progress.py --canvas-dir .claude/canvas
 check_confidence_managed.py
+check_evidence_landing.py --project-dir .

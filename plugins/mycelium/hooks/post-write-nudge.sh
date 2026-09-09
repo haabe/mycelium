@@ -39,7 +39,7 @@ case "$FILE_PATH" in
     NUDGE="User needs canvas edited. Consider /user-needs-map for Allen's methodology (needs independent of solutions). Every need entry needs provenance (evidence_type, sources) — see schema."
     ;;
   *".claude/canvas/landscape.yml"*)
-    NUDGE="Wardley map edited. Consider /wardley-map for the structured mapping workflow. Components need provenance — strategic positioning carries weight."
+    NUDGE="Wardley map edited. Consider /wardley-map for the structured mapping workflow. Components need provenance — strategic positioning carries weight. If this write logged a new external source (a transcript, a thread, a DM, a sighting), it has NOT been scanned for opportunities: sources are scanned only when /ost-builder is run over them. Run it, or note the source as unscanned."
     ;;
   *".claude/canvas/threat-model.yml"*)
     NUDGE="Threat model edited. Consider /threat-model for STRIDE walkthrough (OWASP). Each threat entry needs provenance — distinguish hypothetical from observed."
@@ -54,7 +54,7 @@ case "$FILE_PATH" in
     NUDGE="Services canvas edited. Consider /service-check for Downe's 15 Good Services principles — required REVIEW gate for user-facing work."
     ;;
   *".claude/canvas/go-to-market.yml"*)
-    NUDGE="Go-to-market canvas edited. Consider /launch-tier for Lauchengco's Loved framework. Buyer personas and competitive intelligence need provenance."
+    NUDGE="Go-to-market canvas edited. Consider /launch-tier for Lauchengco's Loved framework. Buyer personas and competitive intelligence need provenance. If this write logged a new external source (a transcript, a thread, a DM, a sighting), it has NOT been scanned for opportunities: sources are scanned only when /ost-builder is run over them. Run it, or note the source as unscanned."
     ;;
   *".claude/canvas/dora-metrics.yml"*)
     NUDGE="DORA metrics canvas edited. Consider /dora-check for Forsgren's four + APEX metrics. Remember Loop 3 cadence: per delivery cycle."

@@ -156,6 +156,13 @@ python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_citations.py" --project-dir .
    - This converts the birth-only, agent-adjudicated gate into a check that fires regardless of whether the run engaged the gate prose. It routes the semantic call back to a human/agent; it never adjudicates "earn-shaped" itself (that stays with `/define-done`).
 
 8c. **Human-task reconciliation** (added v0.31.3, closes the evidence/status/consent decoupling drift — corrections.md 2026-05-28):
+   - **8c(e), added v0.182.0: every evidence-bearing source lands or is an orphan.** Run
+     `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_evidence_landing.py" --project-dir .` It reports every
+     task with inbound touches or findings, every assumption-test and report file, and every user need
+     as LANDED / CLAIMED_NOT_LANDED / ORPHAN / REVIEWED, and fails only on regression against the
+     baseline the project committed with `--write-baseline`. 8c(b) and 8c(d) see two thirds of the
+     routing problem from the task side; this sees it from the source side, for every source class.
+     A CLAIMED_NOT_LANDED row is a write that reported success and did not happen: fix it first.
 
 The failure this catches: a fact about a human-task lives in 2+ places (the task `status`, the evidence file it produced, the contributor's consent registry) and only the salient one gets updated, so the canvas silently drifts from reality. Three sub-checks over `.claude/canvas/human-tasks.yml#pending_tasks`:
 

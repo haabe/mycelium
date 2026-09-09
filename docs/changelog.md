@@ -4,6 +4,45 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-08.
 
+## v0.182.0 - every source either lands or is an orphan
+
+**What was missing.** `check_evidence_landed.py` covered one quadrant of the routing problem: a
+CLOSED task whose `canvas_refs` declared a destination its findings never reached. Every other
+evidence-bearing source, a task with an inbound reply, an assumption-test file, a report, a user
+need, could sit uncited forever and nothing would say so. On the dogfood canvas a three-reader
+coverage sweep on 2026-09-06 found 49 of 98 human tasks cited nowhere in opportunities.yml, and the
+strongest replicated result in the corpus not on the opportunity that states that need.
+
+**`check_evidence_landing.py`.** For every source: LANDED if a reader canvas names it;
+CLAIMED_NOT_LANDED if the task says `evidence_logged_to` and no reader names the task (a write that
+reported success, the sharpest class); ORPHAN if it carries evidence and nothing cites it;
+NO_EVIDENCE, fine; REVIEWED if a human listed it in `.claude/harness/evidence-landing-ledger.yml`
+with a reason. The ledger may also add `source_dirs` for a project's own report folders.
+
+**Why it fails only on regression.** A backlog nobody can clear in an afternoon makes a red gate a
+gate people learn to scroll past. `--write-baseline` records the current orphan set to
+`.claude/evals/evidence-landing-baseline.json`; the check fails on a source not in it, and prints
+how much of the baseline has landed since, so the number is watched rather than stored. Measured
+where it was born: 63 orphans at adoption on 2026-09-06, 0 on 2026-09-09, 233 sources, no
+regressions. Ported from that dogfood script with the paths generalised and a `--project-dir` flag.
+
+**Wiring.** Added to `local-gate-set.txt`, so pre-push, `gates.sh` and CI run it alike (gate parity
+holds at 21). No `.claude/canvas` prints N/A and exits 0: a fresh project is told, not failed.
+Tests: `tests/python/test_check_evidence_landing.py`, eight cases including the N/A branch.
+
+**A validator bug found on the way out.** Check 26 read the committed version with
+`git show HEAD:CLAUDE.md | grep -m1`; grep closed the pipe after the first match, git took SIGPIPE,
+`pipefail` reported 141 and `set -e` aborted the validator mid-run, with no FAIL line and a truncated
+report. Intermittent, and more likely as CLAUDE.md grew. Now read with a consumer that finishes the
+input. A validator that stops silently at check 26 of 55 is the green-over-nothing class this
+framework audits in others; it is recorded here rather than fixed quietly.
+
+**The other half, named and not shipped.** The founder's ask that day was "I thought this was
+automated": a source logged on go-to-market or the landscape is scanned for opportunities only when
+someone runs the OST builder over it. The post-write nudge on those two files now says so in one
+sentence. A visible unscanned state per source, which is what would make the gap measurable, is
+not in this release; the dogfood candidate stays open for it.
+
 ## v0.181.0 - a framework turn ends on one next action
 
 Downe P10, "have no dead ends", has been `fail` on the dogfood canvas since 2026-05-31, when a
