@@ -2,7 +2,53 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-09-08.
+**Last updated**: 2026-09-09.
+
+## v0.183.0 - the framework says what is runnable and what nothing reads
+
+Three shapes of one gap, all named by the dogfood founder on 2026-09-09 and all filed as upstream
+candidates with probes reading absent on 0.182.1: the framework recorded and reported after the
+fact, and the human had to know what to ask. His words, on the first shape: *"too passive about
+keeping up with data and progress ... The user most certainly doesn't have the state of every
+nitbits of the project, and can't tell the agent what is needed to progress."* On the third: *"the
+sitting-and-waiting for no one is a gap just like the one we tried to close earlier today. this is
+the framework being retroactive instead of proactive."*
+
+**Closing path, derived, not asked for.** `scripts/derive_closing_path.py --diamond-id <id>` reads
+the diamond's `theory_gates_status`, the leaves under the opportunities that cite it (assumptions
+with no verdict, and whether a test is named for each), the open human tasks whose `diamond_ref`
+names it with their horizons, a `four_risks` status that is stale against reviewed blocks, and
+rulings already asked in `what_would_move_it`. It prints one row per pending gate: what would flip
+it, who owns that, the date if the record holds one; and "nothing on record moves any pending gate"
+when that is the case, which is the finding. `/diamond-assess` runs it and prints the output under a
+`## Closing path` heading before the coaching questions. The instance: the assessment gave status,
+the founder asked twice, and every input to the path had been on disk since the session opened.
+
+**A node that nothing reads.** `scripts/check_idle_opportunities.py` lists every open opportunity
+with no open task naming it, no leaf carrying a live assumption with a named test, and no
+`what_would_move_it` or `reader` line, as IDLE with its age, oldest first. WARN tier by default,
+`--strict` for projects that have cleared the backlog, `--verbose` for every node's readers. Wired
+into canvas-health as 8c(f) and into session-start as one line with the count and the oldest.
+Measured the day it was written: 50 of 66 open nodes on the dogfood canvas, 33 with no leaf at all.
+The rule it carries from the same day: silence is routing, not evidence. Four of seven discards
+recommended by a blind triage had to be withdrawn because no task had ever been pointed at the
+node; the remedy is a reader, a park with a resume condition, or a merge, and discard only on the
+record. The check never says discard.
+
+**A test that waits for no one.** The assumption-test header gains `runs_on`: `disk` (data already
+in the repo or the plugin tree), `network` (public data an agent can fetch), `human` (a send, a
+call, a ruling). The rule: a disk or network test is run in the session that designs it, or given a
+dated `score_by` within 14 days and one line on why not now. `check_instrument_contract.py` lists
+every live disk-or-network instrument as RUNNABLE NOW, NEVER RUN, oldest first, WARN past 14 days,
+never counted as a problem; session-start repeats the oldest. Measured: a zero-build retrodiction
+designed 2026-06-12 ran on 2026-09-09, in an hour, once the founder asked "why wait?"; a second
+designed test ran the same evening; the same evening's contract check found fifteen problems that
+nobody had run it to see.
+
+**What none of this does.** Nothing here scores a test, flips a gate, discards a node or moves a
+confidence value. The reading stays pre-registered and the ruling stays human; only the surfacing
+is automatic. `main()` on the contract check now takes `argv` so it can be tested in-process.
+22 in-process tests across three files; wiring and fail-open scans clean.
 
 ## v0.182.1 - the tests ran the script where coverage could not see it
 

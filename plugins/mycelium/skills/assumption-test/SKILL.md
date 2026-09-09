@@ -179,12 +179,23 @@ frozen_at: 2026-08-16              # when the prediction was fixed
 frozen_before: "any comment is fetched"   # THE EVENT it precedes
 score_by: 2026-08-30               # the date by which it must be scored
 status: live                       # live | scored | void | not-an-instrument
+runs_on: disk                      # disk | network | human — WHO OR WHAT CAN RUN IT (v0.183.0)
 ---
 ```
 
 **`frozen_before` matters more than `frozen_at`.** A date does not establish precedence over the
 DATA; naming the contaminating event does — "before posting", "before launching the subagent",
 "before any fetch".
+
+**`runs_on` is the field that stops a test waiting for no one.** `disk` means the data is already in
+the repo or the plugin tree and an agent can run it now; `network` means public data an agent can
+fetch; `human` means a send, a call or a ruling. **A test that runs on disk or network is run in the
+session that designs it, or given a dated `score_by` within 14 days and one line saying why not
+now.** Measured on the dogfood record 2026-09-09: a zero-build retrodiction designed 2026-06-12 ran
+89 days later, in an hour, once the founder asked "why wait?"; a second designed test ran the same
+evening. `check_instrument_contract.py` lists every live disk-or-network instrument as RUNNABLE NOW,
+NEVER RUN, oldest first, WARN past 14 days, and the session-start hook repeats the oldest. The reading
+stays pre-registered; only the running is meant to be automatic.
 
 **`score_by` is the field that prevents the failure above.** A prediction with no expiry can never
 be overdue, so it can never be scored, so it is free to be right forever.

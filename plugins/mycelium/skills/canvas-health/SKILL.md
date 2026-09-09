@@ -163,6 +163,15 @@ python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_citations.py" --project-dir .
      baseline the project committed with `--write-baseline`. 8c(b) and 8c(d) see two thirds of the
      routing problem from the task side; this sees it from the source side, for every source class.
      A CLAIMED_NOT_LANDED row is a write that reported success and did not happen: fix it first.
+   - **8c(f), added v0.183.0: an open opportunity that nothing reads.** Run
+     `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_idle_opportunities.py" --project-dir .` It lists
+     every open opportunity with no open task naming it, no leaf carrying a live assumption with a
+     named test, and no `what_would_move_it`, as IDLE with its age, WARN tier. Measured the day it
+     was written: 50 of 66 open nodes on the dogfood canvas, 33 with no leaf at all. **Silence is
+     routing, not evidence**: four of seven discards recommended that day had to be withdrawn because
+     no task had ever been pointed at the node. The remedy is a reader (a task, a test, a declared
+     line), a park with a resume condition, or a merge; discard only on the record. `--strict` exits
+     1 for projects that have cleared the backlog.
 
 The failure this catches: a fact about a human-task lives in 2+ places (the task `status`, the evidence file it produced, the contributor's consent registry) and only the salient one gets updated, so the canvas silently drifts from reality. Three sub-checks over `.claude/canvas/human-tasks.yml#pending_tasks`:
 

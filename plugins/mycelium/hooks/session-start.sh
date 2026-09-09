@@ -525,6 +525,38 @@ if [ -n "$LANDINGCHK" ] && [ -d "$PROJECT_DIR/.claude/canvas" ]; then
   fi
 fi
 
+# ------------------------------------------------------------
+# Idle opportunities and runnable-never-run instruments (v0.183.0). Both are the
+# proactive half of two checks that only ever reported after the fact: a node
+# nothing reads, and a test an agent could run from disk today. Each prints one
+# line with a count and the oldest item, so the session opens on work that needs
+# no one to ask for it. WARN tier: neither fails anything here.
+# ------------------------------------------------------------
+IDLECHK=""
+if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check_idle_opportunities.py" ]; then
+  IDLECHK="${CLAUDE_PLUGIN_ROOT}/scripts/check_idle_opportunities.py"
+fi
+if [ -n "$IDLECHK" ] && [ -f "$PROJECT_DIR/.claude/canvas/opportunities.yml" ]; then
+  IDLE_OUT=$(python3 "$IDLECHK" --project-dir "$PROJECT_DIR" 2>/dev/null || true)
+  IDLE_N=$(printf '%s\n' "$IDLE_OUT" | sed -n 's/.* \([0-9][0-9]*\) IDLE$/\1/p' | head -1)
+  IDLE_OLDEST=$(printf '%s\n' "$IDLE_OUT" | grep -E '^  opp-' | head -1 | awk '{print $1" ("$2")"}')
+  if [ -n "$IDLE_N" ] && [ "$IDLE_N" != "0" ]; then
+    REMINDERS="${REMINDERS}IDLE OPPORTUNITIES — ${IDLE_N} open node(s) that no task, live test or declared reader touches; oldest ${IDLE_OLDEST}. Silence is routing, not evidence: name a reader, park with a resume condition, or merge (check_idle_opportunities.py --verbose). "
+  fi
+fi
+RUNCHK=""
+if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check_instrument_contract.py" ]; then
+  RUNCHK="${CLAUDE_PLUGIN_ROOT}/scripts/check_instrument_contract.py"
+fi
+if [ -n "$RUNCHK" ] && [ -d "$PROJECT_DIR/.claude/evals/assumption-tests" ]; then
+  RUN_OUT=$(python3 "$RUNCHK" --root "$PROJECT_DIR" 2>/dev/null || true)
+  RUN_OLDEST=$(printf '%s\n' "$RUN_OUT" | sed -n '/^RUNNABLE NOW, NEVER RUN/,/^$/p' | grep -E '^  ' | head -1 | sed 's/^  //')
+  RUN_N=$(printf '%s\n' "$RUN_OUT" | sed -n '/^RUNNABLE NOW, NEVER RUN/,/^$/p' | grep -cE '^  ' || true)
+  if [ -n "$RUN_OLDEST" ]; then
+    REMINDERS="${REMINDERS}RUNNABLE, NEVER RUN — ${RUN_N} live instrument(s) an agent can run from disk or network; oldest: ${RUN_OLDEST}. Run it this session or give it a dated score_by and say why not now (runs_on, assumption-test skill). "
+  fi
+fi
+
 # ============================================================
 # CHECK 2: Delivery metrics cadence (per delivery cycle)
 # Routes to product-type-appropriate metrics canvas (v0.11.0)

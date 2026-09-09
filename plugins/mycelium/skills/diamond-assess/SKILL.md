@@ -135,6 +135,31 @@ Evaluate current diamond state and recommend next action.
     - This is observability, not a gate — purely informational
     - *Source: Trivedy (Anatomy of an Agent Harness, LangChain blog — "scaffolding should decrease as models improve," but harnesses remain valuable as they engineer systems around model intelligence)*
 
+## Closing path (derive it; do not make the human ask for it)
+
+**Run once during the assessment and print its output verbatim under a `## Closing path` heading,
+before the coaching check:**
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/derive_closing_path.py" --project-dir . --diamond-id <this-diamond-id>
+```
+
+It reads the diamond's `theory_gates_status`, the leaves under the opportunities that cite the
+diamond (assumptions with no verdict, and whether a test is named for each), the open human tasks
+whose `diamond_ref` names it (with horizons), a gate whose status is stale against the leaves under it,
+and rulings already asked in `what_would_move_it`. It prints one row per pending gate: what would
+flip it, who owns that, and the date if the record holds one.
+
+**Why this exists (consumer-reported 2026-09-09).** The assessment reported status; the founder
+asked twice ("what's needed to close define?", "work through the distance points") before the path
+was derived, and every input to it was on disk before the session opened: leaf assumptions with null
+verdicts and a read dated four days out, a `four_risks: pending` field stale since a blind review three
+days earlier, a ruling already on his desk. His words on the framework: *"too passive about keeping
+up with data and progress ... The user most certainly doesn't have the state of every nitbits of the
+project, and can't tell the agent what is needed to progress."* The script derives; this skill prints.
+Where the script says "nothing on record moves any pending gate", say that: it is the finding, and it
+is what the human needs to hear before being asked five coaching questions.
+
 ## Purpose-properties state (report it, do not fix it here)
 
 Run once during the assessment and report the line verbatim:

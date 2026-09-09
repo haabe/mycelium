@@ -434,3 +434,21 @@ reviewed:
     sibling risk (an unreadable READER canvas making every source look orphaned) is bounded the
     same way: the parse message names the file, and the run that follows fails loudly on the new
     orphans rather than passing. Reviewed 2026-09-09, v0.182.0.
+- id: check_idle_opportunities.py@d529493692
+  verdict: accepted
+  reason: >-
+    load_yaml (line 66) prints "idle-opportunities: cannot parse <file>: <error>" to stdout before
+    returning an empty document. An unparseable opportunities.yml then yields zero open nodes and
+    the summary line shows "0 open node(s)", which UNDER-reports (nothing is flagged idle) rather
+    than over-reports, and the parse message names the file. An unparseable human-tasks.yml yields
+    no open task texts, so every node loses its TASK reader and MORE nodes read idle, which is the
+    loud direction. WARN tier either way: this check never fails a push. Reviewed 2026-09-09, v0.183.0.
+- id: derive_closing_path.py@362c4ab362
+  verdict: accepted
+  reason: >-
+    load_yaml (line 55) prints "closing-path: cannot parse <file>: <error>" before returning an empty
+    document. An unparseable active.yml then finds no diamond and prints N/A with the diamond id,
+    so the reader sees both the parse message and that nothing was derived; an unparseable
+    opportunities.yml or human-tasks.yml drops that input and the "nothing on record moves any
+    pending gate" line fires, which names the absence rather than passing it. This script is a
+    derivation and exits 0 by design; it gates nothing. Reviewed 2026-09-09, v0.183.0.

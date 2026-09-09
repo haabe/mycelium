@@ -116,6 +116,11 @@ _REQUIRED = ("type", "frozen_at", "frozen_before", "score_by", "status")
 #: Without it, "waiting on an event" is indistinguishable from "forgotten", which is how
 #: one instrument here held frozen thresholds for 102 days and one for 104.
 _VALID_STATUS = {"live", "scored", "void", "not-an-instrument"}
+#: `runs_on` values that mean "an agent can run this now": data on disk, or public data it
+#: can fetch. `human` (a send, a call, a ruling) is the third value and is never listed here.
+_RUNNABLE = {"disk", "network"}
+#: A runnable instrument older than this, still live, is a WARN in the report.
+_RUNNABLE_WARN_DAYS = 14
 
 
 def _parse_date(value: str | None) -> _dt.date | None:
@@ -447,6 +452,17 @@ def _classify(path: Path, root: Path, today: _dt.date, res: dict) -> None:
 
     _expiry(path.name, fm, today, res, root)
 
+    # RUNNABLE, NEVER RUN (v0.183.0). A live instrument whose `runs_on` is `disk` or `network`
+    # needs no human and no new data; every day it stays live it reads as "pending" to a
+    # reader who cannot tell it from one that waits on a send. Measured on the dogfood
+    # record 2026-09-09: a zero-build retrodiction designed 2026-06-12 ran 89 days later, in
+    # an hour, once someone asked "why wait?". Reported beside the problems, never counted
+    # as one: the run is what should be automatic, the reading stays pre-registered.
+    if status == "live" and fm.get("runs_on", "").strip().lower() in _RUNNABLE:
+        frozen = _parse_date(fm.get("frozen_at"))
+        age = (today - frozen).days if frozen else None
+        res["runnable"].append((path.name, fm["runs_on"].strip().lower(), age))
+
     if status == "scored":
         res["scored"].append(path.name)
         if re.search(r"\b(refuted|falsifi|missed|did not hold|void)\b", text, re.IGNORECASE):
@@ -461,18 +477,34 @@ def analyse(root: Path, today: _dt.date) -> dict:
         "uncontracted": [], "undated": [], "due": [], "drifted": [],
         "untracked": [], "bad_status": [], "contracted": [], "scored": [],
         "refuted": [], "incomplete": [], "waived": [], "no_review": [], "review_due": [],
-        "bad_anchor": [],
+        "bad_anchor": [], "runnable": [],
     }
     for path in sorted(d.glob("*.md")):
         _classify(path, root, today, res)
     return res
 
 
-def main() -> int:
+def _emit_runnable(r: dict) -> None:
+    """RUNNABLE NOW, NEVER RUN: a to-do, not a defect. Printed among the advisories and never
+    counted, because it names work an agent can do in this session without asking anyone."""
+    if not r["runnable"]:
+        return
+    print("\nRUNNABLE NOW, NEVER RUN — live, and `runs_on` says disk or network: no human "
+          "and no new data needed. Run the oldest in this session, or give it a dated "
+          "score_by and say why not now. Oldest first.")
+    undated = 10**6
+    for name, how, age in sorted(r["runnable"], key=lambda t: -(t[2] if t[2] is not None else
+    undated)):
+        flag = "  WARN" if age is not None and age > _RUNNABLE_WARN_DAYS else ""
+        shown = age if age is not None else "?"
+        print(f"  {name} (runs_on {how}, {shown} days live){flag}")
+
+
+def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Check the instrument output contract.")
     ap.add_argument("--root", default=".", help="project root containing .claude/")
     ap.add_argument("--today", default=None, help="ISO date override (testing)")
-    args = ap.parse_args()
+    args = ap.parse_args(argv)
 
     # tz-aware: a due-date check on local time disagrees with itself across
     # machines, and the disagreement shows up as overdue-here-not-there.
@@ -546,6 +578,8 @@ def main() -> int:
          "written-before from written-after.")
     emit(r["bad_status"], "BAD STATUS — must be live | scored | void | not-an-instrument.",
          lambda t: f"{t[0]}: {t[1]}")
+
+    _emit_runnable(r)
 
     n = len(r["contracted"])
     if r["scored"] and not r["refuted"]:
