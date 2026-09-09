@@ -4,6 +4,18 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-08.
 
+## v0.182.1 - the tests ran the script where coverage could not see it
+
+Corrects v0.182.0, which never released: CI's per-file coverage floor read
+`check_evidence_landing.py` at 0%. Its ten tests exercised every branch, but as a subprocess, and
+coverage counts only what the test process itself imports. The tests now import the module and call
+`main()` in-process, with `capsys` for the output; the file reads 94%. No other change.
+
+Why it reached origin: the local validator waives the coverage floor (`!waived` in the gate set, for
+its 192-second cost), so 55 of 55 passed here and CI did not. Gate parity compares script names, and
+a waived gate is by construction a gate with different teeth in the two places. Second release in two
+days to go red on a CI-only gate; corrections entry 2026-09-09.
+
 ## v0.182.0 - every source either lands or is an orphan
 
 **What was missing.** `check_evidence_landed.py` covered one quadrant of the routing problem: a

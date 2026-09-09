@@ -44,6 +44,15 @@ Each correction entry follows this structure:
 
 ## Generalizable Corrections
 
+### 2026-09-09 - Tests exercised a new script as a subprocess; the per-file coverage floor read it at 0% and 0.182.0 never released
+- **Scope**: delivery
+- **Category**: process
+- **Origin**: ai-generated
+- **Mistake**: `check_evidence_landing.py` shipped with ten passing tests that ran it via `subprocess.run`. Coverage counts only code the test process imports, so CI's per-file floor (70%) read the file at 0% and blocked the release. The local validator waives that gate for cost, so 55 of 55 passed locally.
+- **Correction**: Import the module and call `main()` in-process (`capsys` for output); coverage 94%. Shipped as 0.182.1, which corrects v0.182.0.
+- **Prevention**: A test for a shipped script imports it. When a gate is `!waived` locally, run it once by hand before the bump commit (`pytest --cov --cov-report=json` then `check_coverage_floor.py`), or accept that the push is the first run. Second CI-only red in two days (0.180.5 was Check 40); both were gates the local run does not execute the same way.
+- **Source**: this project's own gate-parity doc and Check 37 (G-V12); the 2026-06-18 "Local validation != CI gates" entry.
+
 ### 2026-09-08 - Version bump committed before the derived-token sync; 0.180.5 blocked at Check 40
 - **Scope**: delivery
 - **Category**: process
