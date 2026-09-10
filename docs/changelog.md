@@ -4,6 +4,23 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-09.
 
+## v0.188.1 - two things the first real prompt said
+
+Both read off the first background block that `preflight.sh` delivered in the real harness,
+minutes after 0.186.0's split went live on the dogfood repo.
+
+**The async tier obeyed a budget nobody was waiting on.** The block carried "SESSION-START BUDGET:
+this hook took 28s against an in-hook budget of 25s ... Skipped for time: external-evidence-ratio".
+That budget exists so the synchronous tier emits before the harness cancels it; the background tier
+has no reader waiting and async hooks are exempt from timeout enforcement, so cutting it defeated the
+tier's purpose. `--async` now runs to a 600 s ceiling unless `MYCELIUM_SESSION_START_BUDGET` is set.
+
+**A resumed session never settled the ledger.** The block ended "advisory ledger: same session seen
+twice; not settled against itself". A resumed session carries the same `session_id` as the start it
+resumes, and the ledger keyed settles on that id. The unit the ledger settles is a START, so the key
+is now `session_id@<start epoch>` in the hook and `session_id@<cache epoch>` in preflight's
+delivery. One bash test runs two starts under one session id and asserts one settle.
+
 ## v0.188.0 - one item per boundary, with its verb attached
 
 The third of the three leaves the dogfood founder ruled on 2026-09-10 (opp-006 sol-006f).

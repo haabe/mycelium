@@ -40,6 +40,12 @@ over_budget() { [ $(( $(date +%s) - _SS_T0 )) -ge "$_SS_BUDGET" ]; }
 # with a fresh cache), never on a partial one; preflight settles when it delivers.
 _SS_MODE="full"
 case "${1:-}" in --fast) _SS_MODE="fast";; --async) _SS_MODE="async";; esac
+# The background tier has no reader waiting and no manifest timeout (async hooks are exempt), so
+# the in-hook budget must not cut it: on the dogfood canvas the first real async run reported
+# "28 s against 25 s; skipped external-evidence-ratio", which defeated the tier's whole purpose.
+if [ "$_SS_MODE" = "async" ] && [ -z "${MYCELIUM_SESSION_START_BUDGET:-}" ]; then
+  _SS_BUDGET=600
+fi
 _SS_CACHE="$PROJECT_DIR/.claude/state/session-checks.json"
 _SS_PENDING="$PROJECT_DIR/.claude/state/session-checks.pending"
 _SS_CACHE_TTL_S="${MYCELIUM_SESSION_CACHE_TTL:-43200}"
@@ -1411,7 +1417,10 @@ except Exception:
     print('')
 ")"
   fi
-  _LEDGERED="$(printf '%s' "$REMINDERS" | python3 "$LEDGER" settle --project-dir "$PROJECT_DIR" --session "${_SESSION_ID:-unknown-$(date +%Y%m%d%H%M%S)}")"
+  # A resumed session carries the SAME session_id as the start it resumes, so keying the ledger
+  # on session_id alone made every resume read "same session seen twice; not settled". The unit
+  # the ledger settles is a START, so the key is session_id plus this start's epoch.
+  _LEDGERED="$(printf '%s' "$REMINDERS" | python3 "$LEDGER" settle --project-dir "$PROJECT_DIR" --session "${_SESSION_ID:-unknown}@${_SS_T0}")"
   if [ -n "$_LEDGERED" ]; then
     REMINDERS="$_LEDGERED "
   else

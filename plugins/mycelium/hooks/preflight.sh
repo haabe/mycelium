@@ -112,7 +112,10 @@ if d.get("session") == sid and d.get("delivered_to") != sid and d.get("reminders
   if [ -n "$_PF_BLOCK" ]; then
     _PF_LEDGER="${CLAUDE_PLUGIN_ROOT:-}/scripts/advisory_ledger.py"
     if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "$_PF_LEDGER" ] && [ "${MYCELIUM_ADVISORY_LEDGER:-on}" != "off" ]; then
-      _PF_SETTLED="$(printf '%s' "$_PF_BLOCK" | python3 "$_PF_LEDGER" settle --project-dir "$PROJECT_DIR" --session "$_PF_SID" 2>&1)"
+      # Keyed on the start that produced the block (session id + the cache's own epoch), so a
+      # resumed session with the same id still settles; see session-start.sh for the reason.
+      _PF_EPOCH="$(python3 -c 'import json,sys; print(int(float(json.load(open(sys.argv[1])).get("generated_epoch") or 0)))' "$_PF_CACHE" 2>/dev/null || date +%s)"
+      _PF_SETTLED="$(printf '%s' "$_PF_BLOCK" | python3 "$_PF_LEDGER" settle --project-dir "$PROJECT_DIR" --session "${_PF_SID}@${_PF_EPOCH}" 2>&1)"
       [ -n "$_PF_SETTLED" ] && _PF_BLOCK="$_PF_SETTLED"
     fi
     echo "MYCELIUM FEEDBACK LOOPS (background run, delivered now): ${_PF_BLOCK}"

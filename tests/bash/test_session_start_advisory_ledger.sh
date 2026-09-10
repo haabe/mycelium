@@ -65,6 +65,15 @@ assert_eq "1" "$(grep -c '"kind": "settled"' "$LEDGER")" "second start settles t
 assert_contains "$(cat "$LEDGER")" '"open-human-tasks": "still_firing"' "the unchanged advisory settles as still_firing"
 assert_contains "$OUT2" "OPEN human task" "the advisory is still emitted (not yet at the mute threshold)"
 
+# --- happy: a RESUME keeps the session id; the second start must still settle ------
+# (0.188.1: keyed on start, not session; before this, every resume read "seen twice")
+P5=$(mk_project resume)
+run_hook "$P5" same-id >/dev/null
+sleep 1
+OUT5=$(run_hook "$P5" same-id)
+assert_eq "$(grep -c '"kind": "settled"' "$P5/.claude/state/advisory-ledger.jsonl")" "1" "two starts with one session id still settle once"
+assert_not_contains "$OUT5" "same session seen twice" "a resume is a new start, not the same start"
+
 # --- sad: override off -> nothing written --------------------------------
 P2=$(mk_project off)
 printf '{"session_id":"x"}' | MYCELIUM_ADVISORY_LEDGER=off MYCELIUM_CROSS_REPO_WATCH="" \
