@@ -11,7 +11,7 @@ This is not a marketing document, a technical whitepaper, or a compliance certif
 ## 1. Identity
 
 - **System name:** Mycelium — Theory-Guided Agentic Product Development Framework
-- **Version:** 0.193.0 (canonical source: the `*Version X.Y.Z` line in `CLAUDE.md`; mechanical tokens here — version, skill count — are kept in sync by `scripts/sync_derived.py`, not hand-edited)
+- **Version:** 0.194.0 (canonical source: the `*Version X.Y.Z` line in `CLAUDE.md`; mechanical tokens here — version, skill count — are kept in sync by `scripts/sync_derived.py`, not hand-edited)
 - **Last updated:** 2026-06-11 (fifth audit — `/xai-check` refresh disclosing the autonomous operational mode + the `autonomous-evidence-guard`; see §9 / `services.yml :: svc-mycelium.xai.remediation_history`)
 - **Maintained by:** Håvard Bartnes (haabe). Issues + correspondence: [github.com/haabe/mycelium/issues](https://github.com/haabe/mycelium/issues)
 - **AI Act risk tier:** **Limited** (canonical, assessed 2026-05-04 by `/regulatory-review` — see `canvas/threat-model.yml :: regulatory_classification` for the full assessment). Mycelium is not in any EU AI Act Annex III high-risk category. AI outputs reach end users (developers) in user-affecting ways via the runtime, so Article 50 transparency obligations apply and are satisfied by this card + README + CLAUDE.md framing + runtime-level disclosure.
@@ -94,6 +94,8 @@ The runtime model is therefore **the actual decision-maker** — except in a dec
 - **Opt-out.** N/A at the Mycelium layer — Mycelium itself doesn't collect anything. The user's relationship is with the runtime vendor.
 - **Sensitive content.** `.claude/.gitignore` excludes some research-private artifacts by convention (`hoskins-feedback/`, `linkedin-source.md`). For products built using Mycelium, run `/privacy-check` to assess data flows in the product itself.
 
+**State logs (added 0.194.0, security review DL-1262).** Advisory hooks append one JSON line per fire under `.claude/state/`, gitignored by the setup skill: a timestamp, the hook name, a fire count and a signature. Since 0.194.0 the discovery-trigger log records a digest and length of the matching sentence rather than the sentence, so no fragment of a prompt is persisted. The shell-safety log records the warning text the framework wrote, and the absence-claim log records the agent's own claim sentence; neither records the user's prompt.
+
 ## 8. Ethical considerations
 
 - **Stakeholders affected.** Direct: developers using Mycelium. Indirect: end users of products built using Mycelium (the framework's discovery and quality gates shape what gets shipped).
@@ -106,6 +108,8 @@ The runtime model is therefore **the actual decision-maker** — except in a dec
 - **Recommended next audit.** This card is re-reviewed annually or after any material change to the framework's recommendation logic (new mandatory protocol, major skill set change, runtime portability work).
 - **Last full audit:** 2026-06-11 via `/mycelium:xai-check` against `svc-mycelium` (fifth audit — autonomous-mode disclosure refresh). A docs-consistency audit found the card silent on the autonomous operational mode (v0.41.0) + `autonomous-evidence-guard` (v0.42.0) — a Stage-4 disclosure gap on a substantive new capability (an AI that can run with no human in the loop). Remediated across §2 (two operational modes; autonomous is declaration-only, present human outranks the flag), §3 (guard added to hook list), §4 (autonomous evidence-integrity is model-dependent — enforced for the cardinal write-path, prose-only otherwise, does NOT transfer below Fable 5 per opp-011 Stage A; operating rule + residual gaps), §5 (disclosed + gated, mandatory substitution ledger). Stages 1 (tier **Limited**, unchanged), 3 (C1 fidelity, no formal faithfulness audit yet), 5 (recourse pass) carried forward. Record at `.claude/canvas/services.yml :: svc-mycelium.xai.remediation_history[2026-06-11]`.
 - **Prior full audit:** 2026-06-05 (fourth full audit; tier held Limited; Stage 2 8/10 cells pass with `end_user.output` + `deployer_developer.why` partial pending Juniors.dev data; Stage 3 fidelity reframed to C1 mechanical capture after the 2026-05-12 eval closed INSTRUMENT FAILED; Stages 4/5 pass). Earlier meta-findings (a `/canvas-health` spot-check missed Stage 3 staleness; the card had drifted on its mechanical version token) drove Check 40 + the `/canvas-health` 9b sub-check in v0.39.14.
+
+**Distribution is unsigned.** The plugin installs through the Claude Code marketplace as a pull of this repository's `main`; there is no artifact signing in that channel, and `/plugin update` takes whatever `main` holds at the time. What stands in for signing: every release is tagged at the commit that set its version, the release job refuses a commit whose validator was red, Actions are pinned to commit SHAs, and CI dependencies are pinned exactly and audited on every push (`pip-audit`, `zizmor`). An adopter who needs stronger provenance should pin the plugin to a release tag.
 
 ## 10. Contact and feedback
 

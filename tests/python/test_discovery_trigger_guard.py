@@ -266,3 +266,18 @@ def test_log_appends_rather_than_truncates(scripts_path, tmp_path, monkeypatch):
         .read_text().splitlines() if x.strip()
     ]
     assert [r["fires"] for r in rows] == [1, 2], "each fire is one row, appended"
+
+
+# ------------------------------------------------------------------ security review DL-1262 (0.194.0)
+
+def test_the_log_never_carries_the_prompt(tmp_path):
+    """A state log is not the place for a fragment of what the user typed. Digest and
+    length only: enough to tell two fires apart, none of the text."""
+    prompt = "Our customers prefer a single dashboard over separate views."
+    assert advises(prompt, cwd=tmp_path)
+    log = tmp_path / ".claude" / "state" / "discovery-trigger-log.jsonl"
+    text = log.read_text()
+    rows = [json.loads(line) for line in text.splitlines() if line.strip()]
+    assert rows and "first_match" not in rows[-1]
+    assert len(rows[-1]["match_sha"]) == 12 and rows[-1]["match_len"] > 0
+    assert "single dashboard" not in text and "separate views" not in text

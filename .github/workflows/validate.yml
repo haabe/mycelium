@@ -27,11 +27,15 @@ on:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read   # security review DL-1262: the default token scope was unspecified
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: '3.x'
           cache: 'pip'
@@ -39,6 +43,14 @@ jobs:
 
       - name: Install CI dependencies
         run: pip install -r requirements-ci.txt
+
+      # Supply-chain gates (security review DL-1262, finding 4). Both are pinned in
+      # requirements-ci.txt so the auditors are themselves audited.
+      - name: Audit CI dependencies for known vulnerabilities (pip-audit)
+        run: pip-audit -r requirements-ci.txt --strict
+
+      - name: Lint the workflows themselves (zizmor)
+        run: zizmor --no-progress --min-severity medium .github/workflows
 
       # Check 33 (plugin tree must not contain unconsented personal identifiers)
       # fails open here by design — MYCELIUM_ATTRIBUTION_REGISTRY is intentionally

@@ -47,9 +47,10 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4  # zizmor: ignore[artipacked] this job pushes tags with git and needs the checkout credential; contents:write is the job's declared scope
         with:
           fetch-depth: 0   # full history so releases can tag the originating commit
+          # persist-credentials stays on: this job pushes tags with git (zizmor artipacked accepted, see below)
 
       # ---------------------------------------------------------------------
       # THE VALIDATOR NOW GATES THE RELEASE. Added 2026-08-31 after v0.143.0

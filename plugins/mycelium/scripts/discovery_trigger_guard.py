@@ -47,6 +47,7 @@ advise. Never denies.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
@@ -164,7 +165,11 @@ def _log(hits: list[str]) -> None:
             "at": datetime.now(UTC).isoformat(timespec="seconds"),
             "hook": "discovery-trigger-guard",
             "fires": len(hits),
-            "first_match": hits[0][:120],
+            # The sentence itself is the user's prompt, and a state log is not the place
+            # for it (security review DL-1262, finding 5). A digest and a length let two
+            # fires be compared without persisting the text.
+            "match_sha": hashlib.sha256(hits[0].encode("utf-8")).hexdigest()[:12],
+            "match_len": len(hits[0]),
         }
         with (root / "discovery-trigger-log.jsonl").open("a", encoding="utf-8") as fh:
             fh.write(json.dumps(row, ensure_ascii=False) + "\n")

@@ -4,6 +4,31 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-09.
 
+## v0.194.0 - supply chain and logs, to the standard the review named
+
+The two LOW findings from the 2026-09-10 security review (dogfood DL-1262), on the founder's "fix them
+all according to best practices".
+
+**Workflows.** Every `uses:` is pinned to a commit SHA with the tag in a trailing comment. The
+validate job declares `permissions: contents: read`; before this its token scope was whatever the
+repository default was. Checkouts set `persist-credentials: false`, except the release job, which
+pushes tags with git under its declared `contents: write` and carries a scoped `zizmor: ignore`
+saying so. `zizmor` (workflow linter) and `pip-audit` (dependency vulnerabilities) run as CI steps
+and as local gates in `scripts/gates.sh`, so a push cannot be blocked by a gate that only exists
+in CI. Both auditors are pinned in `requirements-ci.txt`.
+
+**Pins.** `requirements-ci.txt` is exact-pinned; a floating lower bound resolves to whatever PyPI
+holds on the day, which is the shape pip-audit cannot see. `gates.sh`'s no-requirements fallback
+pins pytest and ruff too. pip-audit on the pinned set: no known vulnerabilities.
+
+**Logs.** The discovery-trigger log recorded 120 characters of the matching sentence, which is the
+user's prompt. It records a twelve-character digest and a length now, enough to compare two fires,
+none of the text. The shell-safety and absence-claim logs record framework warning text and the
+agent's own claim respectively, and are unchanged.
+
+**System card.** §7 names the state logs and what they hold; §9 states that marketplace
+distribution is an unsigned pull of `main` and what stands in for signing.
+
 ## v0.193.0 - the plugin reviewed as the product
 
 `/mycelium:security-review` had never been run on the framework itself. On 2026-09-10 it was, with

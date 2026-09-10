@@ -142,8 +142,8 @@ if command -v uv >/dev/null 2>&1; then
     PYTEST_RUN="uv run --quiet --with-requirements requirements-ci.txt python -m pytest"
     RUFF_RUN="uv run --quiet --with-requirements requirements-ci.txt ruff"
   else
-    PYTEST_RUN="uv run --quiet --with pytest python -m pytest"
-    RUFF_RUN="uv run --quiet --with ruff ruff"
+    PYTEST_RUN="uv run --quiet --with pytest==9.1.1 python -m pytest"
+    RUFF_RUN="uv run --quiet --with ruff==0.16.0 ruff"
   fi
 fi
 if [ -z "$PYTEST_RUN" ] && python3 -c "import pytest" >/dev/null 2>&1; then
@@ -173,6 +173,21 @@ elif [ -f ruff.toml ]; then
   MISSING+=("a runner for ruff (install uv, or put ruff on PATH)")
 else
   MISSING+=("ruff.toml")
+fi
+
+# SUPPLY-CHAIN GATES (security review DL-1262, finding 4). CI runs both; the local set
+# runs them too so a push cannot be blocked by a gate that only exists in CI. Pinned to
+# the versions in requirements-ci.txt. pip-audit needs the network; on a machine
+# without it the gate says MISSING rather than passing.
+if command -v uvx >/dev/null 2>&1; then
+  if [ -d .github/workflows ]; then
+    run_gate "zizmor" uvx zizmor==1.30.1 --no-progress --min-severity medium .github/workflows
+  fi
+  if [ -f requirements-ci.txt ]; then
+    run_gate "pip-audit" uvx pip-audit==2.10.1 -r requirements-ci.txt --strict
+  fi
+else
+  MISSING+=("uvx, for zizmor and pip-audit (install uv)")
 fi
 
 echo ""

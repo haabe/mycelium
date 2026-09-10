@@ -1,51 +1,18 @@
 # Mycelium CI dependencies
 #
 # These packages are installed in CI ONLY (GitHub Actions workflow), not in
-# runtime hooks. Runtime hooks use Python stdlib only — no third-party deps.
+# runtime hooks. Runtime hooks use Python stdlib plus PyYAML where a canvas is read.
 #
-# Why the split:
-# - Runtime hooks fire on every Edit/Write and must work with zero setup.
-#   Requiring users to `pip install` would be a footgun.
-# - CI runs in a controlled environment where `pip install` is acceptable.
-#   Schema validation, trace edge resolution, and DAG cycle detection live in CI.
-#
-# See .claude/scripts/validate_canvas.py for the validator that uses these.
-# See .claude/state/README.md for the dependency philosophy.
-
-PyYAML>=6.0
-jsonschema>=4.18.0
-referencing>=0.30.0
-
-# Code-quality + test deps (used by .claude/tests/validate-template.sh Check 17
-# and .claude/tests/python/ unit tests). Same rationale as PyYAML — CI-only,
-# never required at hook runtime.
-pytest>=7.0
-pytest-cov>=4.0
-# PINNED, and the pin is LOAD-BEARING (2026-07-26).
-#
-# ruff.toml uses `select = ["ALL"]`, which means the RUFF VERSION IS PART OF THE
-# LINT POLICY: a newer ruff adds rules, `ALL` silently expands, and the
-# FAIL-at-zero gate breaks on a dependency bump nobody made deliberately.
-# That is exactly what happened on PR #17 — local ruff 0.15.12 reported 0 errors
-# while CI resolved `ruff>=0.1.0` to 0.16.0 and reported 59, failing Check 17 and
-# (via the fixture) test_check_17. The unbounded spec turned a declared policy
-# into a moving target — the same enumerate-vs-derive defect this release is
-# about, one level out in the dependency graph.
-#
-# Bumping this pin is a DELIBERATE REVIEW TASK: expect newly-added rules to fire,
-# read them, then either fix or add a reasoned ignore to ruff.toml. Check 17
-# verifies the installed ruff matches this pin, so a divergence fails loudly
-# instead of producing two different meanings of "clean".
-#
-# UPGRADED 2026-07-26 (the named follow-up, completed): 0.15.12 -> 0.16.0.
-# Its 59 additional findings were triaged three ways rather than blanket-ignored:
-#   - CPY001 (43) per-file copyright headers -> ignored in ruff.toml as a policy
-#     choice (MIT with one LICENSE file; duplicated headers are noise here).
-#   - ISC004  (9) unparenthesized implicit concat inside a collection -> FIXED,
-#     not ignored. The rule catches a real footgun (a missing comma silently
-#     concatenates two list items); 6 of the 9 were introduced by the previous
-#     day's refactor. Parenthesized so the intent is explicit.
-#   - PLR0917 (7) too-many-positional-args, all pytest fixture signatures ->
-#     scoped to tests/, the same place its sibling PLR0913 already lives.
+# EXACT PINS since 2026-09-10 (security review DL-1262, finding 4): a floating lower
+# bound resolves to whatever PyPI holds on the day CI runs, which is the supply-chain
+# shape pip-audit exists to catch and cannot when the set moves. Bump deliberately.
+# pip-audit and zizmor are pinned here too, so the auditors are audited.
+PyYAML==6.0.3
+jsonschema==4.26.0
+referencing==0.37.0
+pytest==9.1.1
+pytest-cov==7.1.0
 ruff==0.16.0
-shellcheck-py>=0.9.0
+shellcheck-py==0.11.0.1
+pip-audit==2.10.1
+zizmor==1.30.1
