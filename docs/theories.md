@@ -52,7 +52,7 @@ Each one shapes a specific surface; removable in isolation, but the surface goes
 | GIST Planning | Gilad | `canvas/gist.yml`, `/gist-plan` (L3 prioritization) |
 | ICE Scoring | Ellis (adopted by Gilad) | `/ice-score` (evidence-backed confidence; calibration via `cycle-history.yml`) |
 | North Star Framework | Ellis | `canvas/north-star.yml` (key metric + input metrics) |
-| Team Topologies | Skelton, Pais (**2nd ed., Sept 2025**) | `/team-shape` skill (cognitive load, interaction modes), `schemas/canvas/team-shape.schema.json` (v0.158.0 — pins the FOUR fundamental types and requires each team to state one, re-verified against primary sources 2026-09-01) — **still advisory-only until multi-team adoption**: nothing yet ACTS on the assessment |
+| Team Topologies | Skelton, Pais (**2nd ed., Sept 2025**) | `/team-shape` skill (cognitive load, interaction modes), `schemas/canvas/team-shape.schema.json` (v0.158.0 — pins the FOUR fundamental types and requires the `type` key on every team, with `null` permitted for a team not yet typed; re-verified against primary sources 2026-09-01, edition and date confirmed 2026-09-10) — **still advisory-only until multi-team adoption**: nothing yet ACTS on the assessment |
 | Peak-End Rule | Kahneman, Fredrickson, Schreiber, Redelmeier (1993) | `hooks/stop-check.sh` (v0.165.0 — the Stop hook is the LAST thing a session says, so its output leads with the actionable finding and the standing question goes last; a session remembered by its worst moment and its end) |
 | Chunking / Working Memory | Miller (1956), via Cowan on the LIMIT | `hooks/stop-check.sh` (v0.165.0 — session-close findings grouped by kind with counts rather than concatenated; **the mechanism, never the number 7** — Miller's own headline figure is revised downward by Cowan) |
 | Good Services | Downe | `canvas/services.yml`, `/service-check` (15 service principles) |
@@ -83,6 +83,7 @@ These show up as citations and inform the framework's ethics or peripheral mecha
 - **SRE** (Beyer, Jones, Petoff, Murphy) — error budgets, toil, SLIs/SLOs vocabulary
 - **TPS / Lean** (Ohno, Toyoda) — 7 Wastes (TIMWOOD) checklist in `domains/delivery/CLAUDE.md` + `/retrospective` (corrected 2026-07-01: previously said `value-stream.yml`, which carries Goldratt's Theory of Constraints)
 - **Norman** (visible affordances) — UX surface for footgun-to-affordance graduations (`diamond-progress` prompt template; corrected 2026-07-01: the "wayfinding strict marker" example carried no Norman attribution in-repo and was removed)
+- **Serial position effect** (Ebbinghaus 1885; Murdock 1962) — first and last items in a list are what survive recall; `hooks/stop-check.sh` puts the actionable finding first and the standing question last (added 2026-09-10: the hook's comment cited it and the doc did not)
 - **Liao et al. (2020)** — contrastive explanations land harder than purely positive ones; informs `decision-log.md` `why_not_alternatives` field
 - **Lanham et al. (2023)** — citations must be faithful, not after-the-fact rationalization; informs the `(per: <source>)` discipline
 - **Mitchell et al. (2019)** — Model Cards format adapted to AI System Card (`docs/ai-system-card.md`)

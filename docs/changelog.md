@@ -4,6 +4,10 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-09.
 
+## v0.190.1 - three words the theory doc owed
+
+From the 2026-09-10 theory-fidelity audit (dogfood `.claude/evals/theory-audit-2026-09-10.md`), the three rows that changed on 2026-09-01 were read against their sources. Two are faithful and one was a notch stronger than its mechanism: the Team Topologies row said each team must state a type, and the schema requires the key while admitting null. The row now says what the schema does. The Stop hook's comment cites the serial position effect, which had no line in `docs/theories.md`; it has one now, in Tier 3, with the hook as its mechanism. Nielsen's heuristics are dated 1994 with the note that the titles are unchanged and the definitions were refined in 2020, which closes a LOW finding carried unverified since April. Docs only.
+
 ## v0.190.0 - a judgement the check can read
 
 The first advisory block the dogfood agent ever received through the harness (DL-1253, after
