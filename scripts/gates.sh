@@ -98,7 +98,8 @@ if [ -f "$GATE_SET" ]; then
         continue
         ;;
     esac
-    # shellcheck disable=SC2086 -- gate_line carries its own arguments by design
+    # gate_line carries its own arguments by design (word-splitting is the point)
+    # shellcheck disable=SC2086
     set -- $gate_line
     gate_script="$1"; shift
     if [ ! -f "plugins/mycelium/scripts/$gate_script" ]; then
@@ -154,6 +155,7 @@ if [ -z "$RUFF_RUN" ] && command -v ruff >/dev/null 2>&1; then
 fi
 
 if [ -d tests/python ] && [ -n "$PYTEST_RUN" ]; then
+  # shellcheck disable=SC2086
   run_gate "pytest" $PYTEST_RUN tests/python -q
 elif [ -d tests/python ]; then
   MISSING+=("a runner for pytest (install uv, or make pytest importable)")
@@ -168,6 +170,7 @@ else
 fi
 
 if [ -n "$RUFF_RUN" ] && [ -f ruff.toml ]; then
+  # shellcheck disable=SC2086
   run_gate "ruff" $RUFF_RUN check --config ruff.toml
 elif [ -f ruff.toml ]; then
   MISSING+=("a runner for ruff (install uv, or put ruff on PATH)")
@@ -179,15 +182,29 @@ fi
 # runs them too so a push cannot be blocked by a gate that only exists in CI. Pinned to
 # the versions in requirements-ci.txt. pip-audit needs the network; on a machine
 # without it the gate says MISSING rather than passing.
-if command -v uvx >/dev/null 2>&1; then
-  if [ -d .github/workflows ]; then
+# Runner resolution mirrors the pytest/ruff block: the pip-installed binary first (CI installs
+# both from requirements-ci.txt and has no uv), then uvx pinned, then MISSING. A tree without
+# the inputs (no workflows, no requirements file) owes neither gate; that is what keeps the
+# gates-wrapper fixture honest rather than failing every consumer for a file it never had.
+if [ -d .github/workflows ]; then
+  # `command -v` is not enough: a version-manager shim can resolve and then exit 126 (seen
+  # locally 2026-09-11 with pip-audit). Ask the binary to run before trusting it.
+  if zizmor --version >/dev/null 2>&1; then
+    run_gate "zizmor" zizmor --no-progress --min-severity medium .github/workflows
+  elif command -v uvx >/dev/null 2>&1; then
     run_gate "zizmor" uvx zizmor==1.30.1 --no-progress --min-severity medium .github/workflows
+  else
+    MISSING+=("zizmor (pip install zizmor==1.30.1, or install uv for uvx)")
   fi
-  if [ -f requirements-ci.txt ]; then
+fi
+if [ -f requirements-ci.txt ]; then
+  if pip-audit --version >/dev/null 2>&1; then
+    run_gate "pip-audit" pip-audit -r requirements-ci.txt --strict
+  elif command -v uvx >/dev/null 2>&1; then
     run_gate "pip-audit" uvx pip-audit==2.10.1 -r requirements-ci.txt --strict
+  else
+    MISSING+=("pip-audit (pip install pip-audit==2.10.1, or install uv for uvx)")
   fi
-else
-  MISSING+=("uvx, for zizmor and pip-audit (install uv)")
 fi
 
 echo ""

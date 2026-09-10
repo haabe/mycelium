@@ -1080,6 +1080,16 @@ check_code_quality() {
             # CI even when tests had visible ✗ markers. `|| true` tolerates
             # expected SIGPIPE from head's early close (pipefail + set -e
             # would otherwise abort the validator mid-diagnostic).
+            # THE FAILING SUITE FIRST (2026-09-11): with 70 suites the 200-line cap below
+            # showed thirteen green ones and hid the red one entirely, and the CI log for
+            # v0.194.0 carried no name to act on. Print each suite summary with a non-zero
+            # failure count and the 40 lines before it; ASCII pattern on purpose (see the
+            # UTF-8 note above).
+            { echo "$bash_test_output" | grep -n -E '[1-9][0-9]* failed' | grep -v ' 0 failed' | while IFS=: read -r ln _; do
+                  start=$(( ln > 40 ? ln - 40 : 1 ))
+                  echo "    ---- failing suite context (lines $start-$ln) ----"
+                  echo "$bash_test_output" | sed -n "${start},${ln}p" | sed 's/^/    /'
+              done; } || true
             { echo "$bash_test_output" | head -200 | sed 's/^/    /'; } || true
         fi
     fi

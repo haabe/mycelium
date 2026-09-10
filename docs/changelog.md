@@ -4,6 +4,17 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-09.
 
+## v0.194.1 - the two new gates resolve like the old ones
+
+0.194.0 never released. CI has no `uv`, so `scripts/gates.sh` declared uvx MISSING for the two new
+auditors and the gates-wrapper suite, which expects a clean fixture to pass, went red. The
+validator's diagnostic then capped at 200 lines and showed thirteen green suites and not the red
+one, so the CI log carried no name to act on. Three fixes: the auditors resolve the way pytest and
+ruff do (pip-installed binary, then uvx pinned, then MISSING) and only when a workflows directory
+or a requirements file exists; the validator prints each failing suite's summary with forty lines
+of context before the capped dump; and a `# shellcheck disable=... -- reason` directive that the
+newer pinned shellcheck rejects is split into a comment and a directive. Docs and tooling only.
+
 ## v0.194.0 - supply chain and logs, to the standard the review named
 
 The two LOW findings from the 2026-09-10 security review (dogfood DL-1262), on the founder's "fix them
