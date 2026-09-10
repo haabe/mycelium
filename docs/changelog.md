@@ -4,6 +4,13 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-09.
 
+## v0.192.1 - the runner meets the floor it exists beside
+
+0.192.0 never released: the CI-only per-file coverage floor read `mutation_sample.py` at exactly 70%
+and blocked the release, which is the floor doing its job on the script that measures test adequacy.
+Four end-to-end tests drive `main`, the real pytest runner and the JSON path on a throwaway module;
+95% now. No behaviour change.
+
 ## v0.192.0 - a test that names a mechanism, and something that makes the naming true
 
 The founder asked what share of the tests follow best practice and what share are slop that secures

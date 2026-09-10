@@ -67,3 +67,57 @@ def test_a_root_with_nothing_to_mutate_is_unknown(tmp_path, capsys):
     m = _mod()
     assert m.main(["--root", str(tmp_path)]) == 2
     assert "UNKNOWN" in capsys.readouterr().out
+
+
+# ------------------------------------------------------------------ end to end on a throwaway module
+
+FAKE_CHECK = "def verdict(a, b):\n    return 1 if a == b else 0\n"
+FAKE_TEST = (
+    "import sys, importlib\n"
+    "sys.path.insert(0, sys.argv[0] and __import__('os').path.dirname(__file__) + '/../../plugins/mycelium/scripts')\n"
+    "m = importlib.import_module('check_x')\n"
+    "def test_equal():\n    assert m.verdict(1, 1) == 1\n"
+    "def test_unequal():\n    assert m.verdict(1, 2) == 0\n"
+)
+
+
+def _fake_repo(tmp_path):
+    (tmp_path / "plugins/mycelium/scripts").mkdir(parents=True)
+    (tmp_path / "tests/python").mkdir(parents=True)
+    (tmp_path / "plugins/mycelium/scripts/check_x.py").write_text(FAKE_CHECK)
+    (tmp_path / "tests/python/test_check_x.py").write_text(FAKE_TEST)
+    return tmp_path
+
+
+def test_main_runs_the_real_pytest_runner_and_reports_a_score(tmp_path, capsys):
+    m = _mod()
+    root = _fake_repo(tmp_path)
+    rc = m.main(["--root", str(root), "--modules", "1", "--mutants-per-module", "2", "--seed", "3"])
+    out = capsys.readouterr().out
+    assert rc == 0, out
+    assert "mutation-sample: 1 module(s), 2 mutant(s)" in out and "score" in out
+    assert (root / "plugins/mycelium/scripts/check_x.py").read_text() == FAKE_CHECK
+
+
+def test_json_output_carries_modules_and_score(tmp_path, capsys):
+    import json as _json
+    m = _mod()
+    root = _fake_repo(tmp_path)
+    rc = m.main(["--root", str(root), "--modules", "1", "--mutants-per-module", "1", "--json"])
+    payload = _json.loads(capsys.readouterr().out)
+    assert rc == 0 and payload["mutants"] == 1 and payload["modules"][0]["module"] == "check_x.py"
+
+
+def test_run_tests_returns_the_pytest_exit_code(tmp_path):
+    m = _mod()
+    root = _fake_repo(tmp_path)
+    assert m.run_tests(root, root / "tests/python/test_check_x.py") == 0
+    (root / "tests/python/test_check_x.py").write_text("def test_fails():\n    assert False\n")
+    assert m.run_tests(root, root / "tests/python/test_check_x.py") != 0
+
+
+def test_untokenizable_source_is_said_not_swallowed(capsys):
+    m = _mod()
+    sites = m.mutation_sites('x = "unterminated\nif a == b:\n    pass\n')
+    assert "could not tokenize" in capsys.readouterr().out
+    assert isinstance(sites, list)
