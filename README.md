@@ -128,7 +128,8 @@ graph TD
     L4["L4: Delivery"]
     L5["L5: Market"]
     L0 --> L1 --> L2 --> L3 --> L4 --> L5
-    L5 -.-> L2
+    L5 -.->|channel reads: is the segment reachable| L1
+    L5 -.->|market signals: was the opportunity right| L2
 ```
 
 The dotted line is what the market says back. It lands on opportunity rather than at the top, because what the market tells you usually changes which problem is worth solving next, not what you are for.

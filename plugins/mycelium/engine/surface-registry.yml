@@ -56,6 +56,56 @@ surfaces:
       before the skill was given a mandatory canvas step.
     point_check: "check_bvssh_reconcile.py (v0.59.0)"
 
+  - artifact_class: channel-evidence
+    description: "What a channel did when tried: reach, reply rate, post-shape ladders, reachability of a segment, posture rulings."
+    authoritative_surface: ".claude/canvas/go-to-market.yml"
+    read_by:
+      - "plugins/mycelium/skills/handoff/SKILL.md"       # step 1b: read the channel map before naming a channel
+      - "plugins/mycelium/skills/diamond-assess/SKILL.md" # step 6c: L1 reads reachability, L2 reads channel outcomes
+      - "plugins/mycelium/skills/launch-tier/SKILL.md"   # L5 go-to-market plan
+    also_written_to: ".claude/canvas/human-tasks.yml"
+    note: >-
+      The touch logs in human-tasks.yml are the raw record and are correct to keep; the ledger of what
+      a channel DID lives under go-to-market.yml#channel_intelligence. Until 0.191.0 the only declared
+      reader was /launch-tier, which runs at L5, so on a project that had not spawned L5 the ledger
+      had no reader at all. Dogfood 2026-08-25: a full session on acquisition proposed channels for
+      hours and never retrieved a ledger that already held 18 of 24 standard channels with decisions
+      attached; the gap was retrieval, not knowledge. /handoff drafts outreach and names channels
+      every time it runs, so it is the reader that closes the loop before L5. Dogfood 2026-09-10: the
+      file was flagged stale on a 90-day stamp while 17 dated blocks had landed in it since August.
+    point_check: null
+
+  - artifact_class: positioning-candidate
+    description: "A candidate key benefit, positioning line or segment sheet that is not yet the positioning."
+    authoritative_surface: ".claude/canvas/go-to-market.yml"
+    read_by:
+      - "plugins/mycelium/skills/launch-tier/SKILL.md"   # promotes a candidate into positioning at L5
+    also_written_to: ".claude/harness/decision-log.md"
+    note: >-
+      Candidates sit under go-to-market.yml#positioning beside the six empty fields they may one day
+      fill (target_customer, category, key_benefit, differentiators, proof_points,
+      messaging_statement). /launch-tier is the only framework reader and it is L5-only; a project
+      drafting public copy before L5 reads them through its own drafting skill, which is
+      project-side and is declared there, not here. The row exists so the candidates are a class with
+      a surface, not dated prose keys nothing lists.
+    point_check: null
+
+  - artifact_class: competitor-evidence
+    description: "What a named competitor, comparator or landscape entry does, with a dated read."
+    authoritative_surface: ".claude/canvas/landscape.yml"
+    read_by:
+      - "plugins/mycelium/skills/wardley-map/SKILL.md"
+      - "plugins/mycelium/skills/launch-tier/SKILL.md"
+      - "plugins/mycelium/skills/diamond-assess/SKILL.md"
+    also_written_to: ".claude/canvas/go-to-market.yml"
+    note: >-
+      go-to-market.yml#competitive_intelligence is Lauchengco's slot for the same thing and it is
+      correct to keep as a POINTER into landscape.yml (which comp id, what it means for positioning).
+      It is not correct as a second home: on the dogfood canvas the one entry there was dated
+      2026-05-03 and read as stale on 2026-09-10 while landscape.yml held the same competitor
+      re-read four times since. Two homes for one class is this cluster one level up.
+    point_check: null
+
   - artifact_class: release-lesson
     description: "A process lesson learned while shipping a release."
     authoritative_surface: ".claude/memory/corrections.md"

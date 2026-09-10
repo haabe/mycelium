@@ -4,6 +4,38 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-09.
 
+## v0.191.0 - the channel ledger gets a reader before L5
+
+A dogfood canvas-health run flagged `go-to-market.yml` stale on a 90-day stamp. The founder read the
+file and named the cause rather than the symptom: "another gap in routing and wiring." The evidence
+held. The go-to-market schema declared two of fourteen sections, so `check_field_wiring` could not see
+the rest. The only framework reader of the file was `/launch-tier`, which runs at L5, so on a project
+that had not spawned L5 the 17 dated channel-intelligence blocks that landed there since August had
+no reader at all. `/handoff` names channels every time it runs and never opened the ledger; on
+2026-08-25 a full session on acquisition proposed channels for hours while the file already held 18
+of 24 standard channels with decisions attached. And competitor evidence had two homes, one of which
+went stale while the other was re-read four times.
+
+**Three registry rows.** `engine/surface-registry.yml` gains `channel-evidence` (authoritative
+`go-to-market.yml`, read by `/handoff` and `/launch-tier`), `positioning-candidate` (same file, read
+by `/launch-tier`; a project drafting public copy before L5 declares its own reader project-side),
+and `competitor-evidence` (authoritative `landscape.yml`; the go-to-market slot is a pointer).
+`check_surface_registry.py` verifies each reader names its surface on every push.
+
+**`/handoff` step 1b.** Before naming a channel, read `go-to-market.yml#channel_intelligence`, state
+in the brief what the record shows worked and what was ruled out, with dates; posture rulings bind.
+A canvas with no ledger is said so in the brief.
+
+**And the loop does not wait for L5.** The founder's second point the same hour: "L5 should probably
+share data with multiple of the previous diamonds, as well as pass relevant data back to L2." So
+`/diamond-assess` step 6c reads the market canvas at L1 (is the segment reachable, by what posture)
+and at L2 (did a channel confirm or contradict the opportunity), `engine/feedback-loops.md` says the
+L5 -> L2 loop runs on every assessment rather than once per launch, and the README's scale chart
+carries both dotted arrows.
+
+**Schema.** Every section the skills write is declared at type level, `additionalProperties` kept,
+so undeclared-field checks can see the file. No content changes.
+
 ## v0.190.1 - three words the theory doc owed
 
 From the 2026-09-10 theory-fidelity audit (dogfood `.claude/evals/theory-audit-2026-09-10.md`), the three rows that changed on 2026-09-01 were read against their sources. Two are faithful and one was a notch stronger than its mechanism: the Team Topologies row said each team must state a type, and the schema requires the key while admitting null. The row now says what the schema does. The Stop hook's comment cites the serial position effect, which had no line in `docs/theories.md`; it has one now, in Tier 3, with the hook as its mechanism. Nielsen's heuristics are dated 1994 with the note that the titles are unchanged and the definitions were refined in 2020, which closes a LOW finding carried unverified since April. Docs only.

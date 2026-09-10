@@ -49,6 +49,17 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
    - Identify which canvas sections lack `external_human` or `external_data` evidence
    - State the gap plainly: "We have [N] evidence sources but none from real conversations."
 
+1b. **Read the channel map before naming a channel** (added 0.191.0). If the brief will be an
+   `outreach` or names any channel, open `.claude/canvas/go-to-market.yml#channel_intelligence`
+   first and state, in the brief, what the record shows worked and what was ruled out, with the
+   entry's date. Posture rulings recorded there bind the brief (a channel ruled inbound-only is not
+   proposed as outbound). If the file has no such section, say so in the brief: "no channel ledger
+   on this canvas" is a fact the reader needs, and it is not the same as "no channel has been
+   tried". Why: on 2026-08-25 a dogfood session proposed acquisition channels for hours and never
+   retrieved a ledger that already held 18 of 24 standard channels with decisions attached. The
+   surface registry (`engine/surface-registry.yml#channel-evidence`) declares this skill as that
+   ledger's reader, and `check_surface_registry.py` fails if this step stops naming the file.
+
 2. **Determine task type**:
    - `interview` -- structured conversation with a target user/stakeholder
    - `observation` -- watch someone use a competitor product or perform a task

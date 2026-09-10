@@ -137,6 +137,14 @@ L5 Market (launch complete)
 
 This is triggered by `/launch-tier` completion and `/retrospective` after market diamonds.
 
+**And it does not wait for L5 (0.191.0).** Market data accumulates in `go-to-market.yml` long
+before a Market diamond exists: channel reads, reachability of a segment, posture rulings, positioning
+candidates. `/diamond-assess` step 6c reads that canvas at L1 (is the segment reachable, and how) and
+at L2 (did a channel confirm or contradict the opportunity), so the loop above runs on every
+assessment rather than once per launch. The founder's framing, 2026-09-10: L5 shares data with
+several earlier diamonds and passes relevant data back to L2. The README's scale chart shows both
+arrows. Readers are declared in `engine/surface-registry.yml#channel-evidence` and verified on push.
+
 ## Goodhart's Law Protection
 
 **"When a measure becomes a target, it ceases to be a good measure."** (Strathern's 1997 generalization, commonly attributed to Goodhart. Goodhart's 1975 original: "Any observed statistical regularity will tend to collapse once pressure is placed upon it for control purposes.")

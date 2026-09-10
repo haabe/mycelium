@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://mycelium.dev/schemas/canvas/go-to-market.schema.json",
   "title": "Go-to-Market Canvas",
-  "description": "Lauchengco Loved framework. buyer_personas and competitive_intelligence entries require provenance because positioning evidence matters.",
+  "description": "Lauchengco Loved framework. buyer_personas and competitive_intelligence entries require provenance because positioning evidence matters. Since 0.191.0 every section the skills write is declared here at type level so check_field_wiring can see them; competitive_intelligence entries are POINTERS into landscape.yml, which is the authoritative surface for competitor evidence (engine/surface-registry.yml#competitor-evidence).",
   "type": "object",
   "properties": {
     "schema_version": {
@@ -13,9 +13,15 @@
       "items": {
         "type": "object",
         "properties": {
-          "id": {"type": "string"},
-          "name": {"type": "string"},
-          "role": {"type": "string"},
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
           "provenance": {
             "$ref": "_common.schema.json#/$defs/provenance"
           },
@@ -23,7 +29,9 @@
             "$ref": "_common.schema.json#/$defs/trace"
           }
         },
-        "required": ["provenance"],
+        "required": [
+          "provenance"
+        ],
         "additionalProperties": true
       }
     },
@@ -32,8 +40,12 @@
       "items": {
         "type": "object",
         "properties": {
-          "id": {"type": "string"},
-          "competitor": {"type": "string"},
+          "id": {
+            "type": "string"
+          },
+          "competitor": {
+            "type": "string"
+          },
           "provenance": {
             "$ref": "_common.schema.json#/$defs/provenance"
           },
@@ -41,9 +53,199 @@
             "$ref": "_common.schema.json#/$defs/trace"
           }
         },
-        "required": ["provenance"],
+        "required": [
+          "provenance"
+        ],
         "additionalProperties": true
       }
+    },
+    "positioning": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "target_customer": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "key_benefit": {
+          "type": "string"
+        },
+        "differentiators": {
+          "type": "array"
+        },
+        "proof_points": {
+          "type": "array"
+        },
+        "messaging_statement": {
+          "type": "string"
+        },
+        "candidates": {
+          "type": "array",
+          "description": "Positioning candidates not yet promoted into the six fields; each dated with a source. Registry class positioning-candidate."
+        },
+        "notes": {
+          "type": "array"
+        }
+      },
+      "description": "Lauchengco positioning. The six named fields are L5 output; candidates and notes accumulate before that."
+    },
+    "messaging_framework": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "headline": {
+          "type": "string"
+        },
+        "subhead": {
+          "type": "string"
+        },
+        "proof_points": {
+          "type": "array"
+        }
+      }
+    },
+    "gtm_motion": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "product-led",
+        "sales-led",
+        "channel-led",
+        "community-led",
+        "hybrid",
+        "",
+        null
+      ],
+      "description": "'' is the template default before the motion is decided."
+    },
+    "commercialization_stance": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "decision": {
+          "type": "string"
+        },
+        "decided": {
+          "type": "string"
+        },
+        "motivations": {
+          "type": "array"
+        },
+        "provenance": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "launch_tier": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "enum": [
+        1,
+        2,
+        3,
+        null
+      ]
+    },
+    "win_loss_analysis": {
+      "type": "array"
+    },
+    "launch_plan": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "pre_launch": {
+          "type": "array"
+        },
+        "launch_day": {
+          "type": "array"
+        },
+        "post_launch": {
+          "type": "array"
+        }
+      }
+    },
+    "feedback_loop": {
+      "type": "array"
+    },
+    "behavioral_tactics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "bias_leveraged": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "application": {
+            "type": "string"
+          },
+          "ethical_check": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "engagement_design": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "hook_canvas": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "manipulation_matrix": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "social_proof": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "quote": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "channel": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "acquisition_feedback_study": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "channel_intelligence": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "The channel ledger: what each channel did when tried, dated. Registry class channel-evidence; read by /handoff step 1b and /launch-tier. Keys are dated entries today; a list with date/kind/note is the target shape."
+    },
+    "audience_vocabulary": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Their words and ours that bounce; read before drafting anything external-facing."
+    },
+    "notes": {
+      "type": "array"
     }
   },
   "additionalProperties": true

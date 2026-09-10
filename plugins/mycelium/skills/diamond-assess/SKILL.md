@@ -73,6 +73,23 @@ Evaluate current diamond state and recommend next action.
    - Report any critical or warning-level findings
    - This catches silent canvas degradation before it affects progression decisions
 
+6c. **Read the market canvas at L1 and L2, not only at L5** (added 0.191.0, founder ruling
+   2026-09-10: "L5 should share data with multiple of the previous diamonds, as well as pass
+   relevant data back to L2"). `.claude/canvas/go-to-market.yml` is Lauchengco's L5 canvas, but
+   two of its sections are inputs to earlier scales and were read by nothing before L5:
+   - **L1 Strategy**: read `go-to-market.yml#channel_intelligence`. Whether the chosen segment is
+     REACHABLE, and by what posture, is a strategy fact; a strategy diamond that closes Define
+     without a read of reachability is choosing a segment blind. State the newest dated entry
+     read and what it says about the segment under assessment.
+   - **L2 Opportunity**: read the same section for channel OUTCOMES that confirm or contradict an
+     opportunity's assumptions (the L5 -> L2 loop in `engine/feedback-loops.md`, which until now
+     fired only on launch completion). A channel that returned nothing on a named population is
+     evidence about the opportunity, and it belongs on the opportunity's record.
+   - If the file has no `channel_intelligence` section, say so: "no channel ledger on this canvas"
+     is a gate finding at L1, not an omission to pass over.
+   The surface registry (`engine/surface-registry.yml#channel-evidence`) declares this skill as a
+   reader, and `check_surface_registry.py` fails if this step stops naming the file.
+
 6b. **Check metric snapshot freshness** (v0.14; L0/L1/L2/L5 only):
    - If the current diamond scale is L0, L1, L2, or L5 AND `.claude/jit-tooling/active-metrics.yml` exists:
      - For each `status: active` source, find the newest file in `.claude/evals/metrics/<source>/`.
