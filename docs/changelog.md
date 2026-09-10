@@ -4,15 +4,13 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-09.
 
-## v0.192.1 - the runner meets the floor it exists beside
+## v0.192.2 - the changelog claims only what shipped
 
-0.192.0 never released: the CI-only per-file coverage floor read `mutation_sample.py` at exactly 70%
-and blocked the release, which is the floor doing its job on the script that measures test adequacy.
-Four end-to-end tests drive `main`, the real pytest runner and the JSON path on a throwaway module;
-95% now. No behaviour change.
+0.192.1 released, and its release job then failed its own backstop: the changelog documented a v0.192.0 that never had a Release. The designed repair is a manual dispatch that releases the missing version at its originating commit, whose validator was red; that override is a person's to make, and it was not made. This entry folds 0.192.0 into 0.192.1 instead, so every documented version is one a consumer can install. Docs only.
 
-## v0.192.0 - a test that names a mechanism, and something that makes the naming true
+## v0.192.1 - a test that names a mechanism, and something that makes the naming true
 
+*0.192.0 was bumped, documented and never released: the CI-only per-file coverage floor read the new runner at exactly 70% and blocked the release, which is the floor doing its job on the script that measures test adequacy. Its section is folded here; there is no v0.192.0 Release and there will not be one. 0.192.1 adds four end-to-end tests that take the runner to 95%.*
 The founder asked what share of the tests follow best practice and what share are slop that secures
 nothing. A structural classifier over 1,396 pytest functions answered 97% run production code and
 assert on its output, 2% assert only an exit code, 1% assert nothing, 0% assert a string in prose;
