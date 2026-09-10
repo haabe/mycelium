@@ -220,6 +220,37 @@ Error budgets are the social contract: reliability earns the right to ship faste
 
 If NOT defined: "Consider defining SLIs/SLOs to balance velocity with reliability."
 
+### The delivery SLI comes first for plugin-form products (v0.189.0)
+
+**A product whose runtime is a harness has "did it run" as its first SLI, before any rate about
+its own checks.** Dogfood, 2026-09-10 (DL-1247, DL-1254): the reliability adjunct read "2 of 3
+SLOs at 100%" through a month in which the plugin's own SessionStart hook was cancelled by the
+harness on 32 of 33 session starts. The three SLOs measured validate-template exit-0 on main and two
+artifact-level rates, all of which were true while no operating contract and no advisory reached the
+agent. A reliability figure of 100% over a month in which the product did not run for its primary
+consumer is a measurement of the wrong thing.
+
+For any product delivered as a Claude Code / Codex / Cursor plugin, the SLO set MUST carry:
+
+```yaml
+  - sli_id: rel-delivery
+    sli: contract-delivering hook success rate on the consumer's own transcripts
+         (hook_success / all runs of the SessionStart hook)
+    slo: ">= 99% over rolling 30 days"
+    measurement_source: >-
+      scripts/check_hook_delivery.py --project-dir . --days 30 (reads
+      ~/.claude/projects/<slug>/*.jsonl; runs at every session start and in canvas-health 8c(h))
+    classification: <elite | low | unmeasured>
+```
+
+Read it with the same bands as the other four: **meets target = elite; a single cancelled run of the
+contract-delivering hook in the window = low**, because one cancelled start is one session that ran
+with no rules and no advisories, and the harness discards the output rather than degrading it.
+`unmeasured` is the honest value on a runtime that keeps no transcripts, and it must render
+distinctly from `elite` in every aggregate (the surfaces rule: a waiver can never improve a score).
+When this SLI reads low, it is the DORA bottleneck regardless of what the four delivery metrics say:
+elite delivery of a thing that does not run is output without outcome.
+
 ## Decision Log (MANDATORY)
 **Always APPEND** a `### DORA Assessment` or `### Delivery Metrics Assessment` entry to `.claude/harness/decision-log.md` with:
 - Each metric assessed, current baseline, target, and classification level

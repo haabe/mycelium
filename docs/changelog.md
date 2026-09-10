@@ -4,6 +4,26 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-09.
 
+## v0.189.0 - "did it run" is the first SLI
+
+The dogfood `/dora-check` on 2026-09-10 rated reliability as "2 of 3 SLOs at 100%" for the month in
+which the plugin's own SessionStart hook had been cancelled by the harness on 32 of 33 session starts
+(DL-1247, DL-1254). The three SLOs measured validate-template exit-0 on main and two artifact-level
+rates, all true while no operating contract and no advisory reached the agent. A reliability figure
+of 100% over a month in which the product did not run for its primary consumer measures the wrong
+thing, and the four delivery metrics, all elite, could not see it either: elite delivery of a thing
+that does not run is output without outcome.
+
+**What ships.** `/dora-check` Part 3 requires a delivery SLI for any product delivered as a Claude
+Code, Codex or Cursor plugin: `rel-delivery`, the contract-delivering hook's success rate on the
+consumer's own transcripts, target 99% over a rolling 30 days, measured by `check_hook_delivery.py`
+from 0.185.0, which already runs at every session start and in canvas-health 8c(h). It is read with
+DORA's bands: meets target is elite; one cancelled run in the window is low, because that session
+ran with no rules and the harness discards the output; `unmeasured` on a runtime that keeps no
+transcripts, rendered distinctly from elite so a waiver can never improve a score. When it reads
+low it is the DORA bottleneck regardless of the delivery metrics. Skill text only; the dogfood canvas
+carries the first instance as rel-004, with its first clean 30-day window opening 2026-09-10.
+
 ## v0.188.1 - two things the first real prompt said
 
 Both read off the first background block that `preflight.sh` delivered in the real harness,
