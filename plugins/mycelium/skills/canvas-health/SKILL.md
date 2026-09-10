@@ -172,6 +172,17 @@ python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_citations.py" --project-dir .
      no task had ever been pointed at the node. The remedy is a reader (a task, a test, a declared
      line), a park with a resume condition, or a merge; discard only on the record. `--strict` exits
      1 for projects that have cleared the backlog.
+   - **8c(g), added v0.184.0: does anything follow an advisory.** Run
+     `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/advisory_ledger.py" report --project-dir .` It prints,
+     per session-start advisory, how many sessions it was seen, how often the condition cleared by the
+     next session, how often it was still firing, the clear rate, and the current firing streak in
+     distinct days; and which advisories are muted, since when, and under what ruling. Report the
+     streaks at or past the mute threshold and the clear rate of anything that has fired more than
+     five times; cite these numbers under Measurement in `/bvssh-check`, which rated that dimension
+     amber three assessments running on advisories nobody counted. A muted advisory is a request for a
+     ruling: `advisory_ledger.py rule --id <id> --ruling keep|fix|drop --note "..."`. The ledger is
+     `.claude/state/advisory-ledger.jsonl`, append-only. N/A with no ledger is a project that has not
+     opened a session on 0.184.0 yet, not a clean bill.
 
 The failure this catches: a fact about a human-task lives in 2+ places (the task `status`, the evidence file it produced, the contributor's consent registry) and only the salient one gets updated, so the canvas silently drifts from reality. Three sub-checks over `.claude/canvas/human-tasks.yml#pending_tasks`:
 

@@ -1214,6 +1214,41 @@ for candidate in \
   if [ -n "$candidate" ] && [ -f "$candidate" ]; then CONTRACT_FILE="$candidate"; break; fi
 done
 
+# ============================================================
+# ADVISORY LEDGER (v0.184.0, opp-006 sol-006d): every advisory above counts whether
+# anything followed it, and mutes itself when nothing does.
+# ============================================================
+# The ledger (.claude/state/advisory-ledger.jsonl, append-only) reads the assembled
+# REMINDERS, records which advisories are present this
+# session, settles last session's as cleared / still_firing (the condition cleared, or
+# did not), and replaces any advisory that has fired on MUTE_DAYS distinct days with
+# one line asking for a ruling. Muting is a request for a ruling, not a deletion.
+#
+# FAIL-OPEN, DELIBERATELY AND SAID SO: the script prints the ORIGINAL text plus one
+# spoken line on any failure, so the hook never goes quiet because its ledger did.
+# The only silent branch here is an empty result, which cannot come from the script
+# (it always echoes its input) and so means python itself did not run; that case is
+# named in the reminder rather than swallowed. Person override: MYCELIUM_ADVISORY_LEDGER=off.
+LEDGER="${CLAUDE_PLUGIN_ROOT}/scripts/advisory_ledger.py"
+if [ -f "$LEDGER" ] && [ -n "$REMINDERS" ] && [ "${MYCELIUM_ADVISORY_LEDGER:-on}" != "off" ]; then
+  _SESSION_ID=""
+  if [ -n "$_HOOK_PAYLOAD" ]; then
+    _SESSION_ID="$(printf '%s' "$_HOOK_PAYLOAD" | python3 -c "
+import json, sys
+try:
+    print((json.load(sys.stdin).get('session_id') or '').strip())
+except Exception:
+    print('')
+")"
+  fi
+  _LEDGERED="$(printf '%s' "$REMINDERS" | python3 "$LEDGER" settle --project-dir "$PROJECT_DIR" --session "${_SESSION_ID:-unknown-$(date +%Y%m%d%H%M%S)}")"
+  if [ -n "$_LEDGERED" ]; then
+    REMINDERS="$_LEDGERED "
+  else
+    REMINDERS="${REMINDERS}ADVISORY LEDGER did not run (python3 returned nothing); advisories above are unrecorded this session. "
+  fi
+fi
+
 python3 -c "
 import json, sys
 contract_file = sys.argv[1]

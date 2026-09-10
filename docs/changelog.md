@@ -4,6 +4,61 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-09.
 
+## v0.184.0 - every advisory counts whether anything follows
+
+The first of three leaves the dogfood founder ruled on 2026-09-10 (opp-006 sol-006d), after a
+five-sweep discovery on the cause he had named the evening before: *"inexperienced builders
+can't be asking for tasks they don't know should be happening."* The other two, a closing-condition
+controller and one proposal per boundary, follow in that order.
+
+**The gap.** `hooks/session-start.sh` computes some twenty advisories and emits them in one block.
+Nothing recorded whether the named remedy ever happened, so a check firing daily for a month with
+no response was indistinguishable from one acted on every time. Measured the night it was designed:
+"BVSSH health check is 32 days overdue" and "AI tool metrics are 101 days old" had fired at every
+session start for as long as their numbers say, and the BVSSH assessment that finally ran rated
+Measurement amber for the third consecutive time on exactly this. The evidence behind the design
+is in the dogfood research file for 2026-09-09: every reminder is paid for by the reader who does
+not act on it (Damgaard and Gravert 2018), false alarms cause disuse of the whole system
+(Parasuraman and Riley 1997), fatigue is measured as a sustained decay in response to appropriate
+alerts (Ray-Wilson 2026), and the products that survive mute by instance or mute themselves first.
+This repo's own rule since 2026-08-11: a muted check looks like coverage.
+
+**What ships.** `scripts/advisory_ledger.py`, three verbs. `settle` reads the assembled reminders
+on stdin, records which advisories are present by a signature registry (with a count where the
+text carries one; ages like "N days overdue" are deliberately not counts, they rise while
+unaddressed), settles the previous session's advisories as `cleared` or `still_firing`, and
+replaces any advisory that has fired on seven distinct calendar days with one line asking for a
+ruling. `report` prints the per-advisory table: sessions seen, cleared, still firing, clear rate,
+firing streak in days, muted since, ruling. `rule` records keep (unmute, reset the streak), fix
+(stay muted until the condition clears on its own) or drop (never show again; the report still
+lists it, so the silence is visible). State is `.claude/state/advisory-ledger.jsonl`, append-only.
+
+**What it measures, and what it does not.** It does not know what a human did. It knows whether
+the condition cleared by the next session start, which is the Kubernetes reading of "did the
+remedy happen": re-derive, compare. That needs no per-check detector and it is honest about the
+two shapes it cannot see. A remedy of "read it and leave it" never clears, so the check must
+honour a reviewed marker, which is the check's job; an awareness-only line (the corrections count)
+is not an advisory and is not counted. The threshold is in distinct days, not sessions, because a
+busy day opens many sessions and would otherwise mute a check the afternoon it first fired.
+
+**Fail-open, deliberately and said so.** On any failure the script echoes its input plus one
+spoken line, so the hook never goes quiet because its ledger did. A corrupt ledger line is named
+and skipped, never discarded; a project with no `.claude` directory gets its text back unrecorded
+and is told so. The one silent branch in the hook, an empty result, cannot come from the script
+and is named in the reminder as python not having run. Person override
+`MYCELIUM_ADVISORY_LEDGER=off`.
+
+**Wiring.** The hook calls `settle` between the assembled reminders and the emit. `canvas-health`
+gains 8c(g), the report, so `/bvssh-check` can cite a clear rate under Measurement instead of a
+recurrence count. Surface-registry row `advisory-response`. Fifteen in-process Python tests; one
+bash test runs the hook twice on a fixture and asserts a `seen` event each time and a `settled`
+event on the second, that the override writes nothing, and that a corrupt ledger neither silences
+the advisories nor goes unmentioned.
+
+**Dogfood control window.** The do-nothing arm (0.183.0 alone, frozen 2026-09-09: `runs_on` on 0
+of 100 instruments and an empty runnable list on 2026-09-23) is scored as the pre-ship baseline.
+This release dates the end of that window: 2026-09-10.
+
 ## v0.183.1 - the closing path reads an outcome-rooted tree, and the hook stops shouting
 
 Two defects, both found by running 0.183.0 on the dogfood repo the evening it shipped.

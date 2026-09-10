@@ -142,3 +142,21 @@ surfaces:
       hide its most important row, so `null` is a legal value here and the checker
       reports it as an undeclared surface rather than passing over it.
     point_check: null
+
+  - artifact_class: advisory-response
+    description: >-
+      Whether a session-start advisory was followed by anything: the condition cleared by the
+      next session, or it did not; and the mute and ruling events that follow a streak.
+    authoritative_surface: ".claude/state/advisory-ledger.jsonl"
+    read_by:
+      - "plugins/mycelium/hooks/session-start.sh"          # settle: records, settles, mutes
+      - "plugins/mycelium/skills/canvas-health/SKILL.md"   # 8c(g): report
+    also_written_to: null
+    note: >-
+      Added 2026-09-10 (opp-006 sol-006d). Before this row, an advisory that fired daily for a
+      month with no response was indistinguishable from one acted on every time; BVSSH rated
+      Measurement amber three assessments running on exactly that. The ledger measures the
+      condition clearing, not the human's action, and says so; the two shapes it cannot see (a
+      "read it and leave it" remedy, an awareness-only line) are the check's job to mark, not
+      the ledger's to guess.
+    point_check: "advisory_ledger.py report (canvas-health 8c(g), v0.184.0)"
