@@ -4,6 +4,27 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-09.
 
+## v0.192.0 - a test that names a mechanism, and something that makes the naming true
+
+The founder asked what share of the tests follow best practice and what share are slop that secures
+nothing. A structural classifier over 1,396 pytest functions answered 97% run production code and
+assert on its output, 2% assert only an exit code, 1% assert nothing, 0% assert a string in prose;
+78 of 85 files carry a failure-direction case; 67 of 70 bash tests execute the script they test. A
+hand read of sixteen agreed. Then a mutation pass answered the question the classifier cannot: of
+129 code mutants across twelve sampled checks, 31 survived. The survivors were not noise. Four checks
+returned 0 on their clean path and no test asserted it; two OR-predicates had never been exercised
+one branch at a time; two `<` boundaries had no fixture sitting on them; one marker guard accepted
+junk entries.
+
+**The runner ships.** `scripts/mutation_sample.py` mutates code tokens only, never strings, comments
+or docstrings, which are equivalent mutants; runs each module's own tests with bytecode caching
+disabled and `__pycache__` cleared per mutant, because a same-size mutant written and restored within
+one second runs the stale bytecode and reads as a survivor (the first pass said 52%, the honest one
+76%); and prints the survivors by line. `/framework-health` step 4h runs it as the coverage
+counter-metric `engine/feedback-loops.md` has named since the table was written.
+
+**Eleven killing tests** across ten suites. Nothing in the checks themselves changed.
+
 ## v0.191.0 - the channel ledger gets a reader before L5
 
 A dogfood canvas-health run flagged `go-to-market.yml` stale on a 90-day stamp. The founder read the

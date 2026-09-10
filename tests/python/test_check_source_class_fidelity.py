@@ -269,3 +269,18 @@ def test_label_reviewed_skips_one_index_only(scripts_path, tmp_path, capsys):
     out = capsys.readouterr().out
     assert "[1]" in out or "index 1" in out or rc == 1, out
     assert out.count("Hunter") <= 1 or rc == 1
+
+
+# --- mutation survivors (2026-09-10) ----------------------------------------
+
+def test_junk_label_reviewed_entries_are_ignored_and_the_label_still_fires(scripts_path, tmp_path, capsys):
+    """A string, a dict without an index and a non-numeric index are all ignored; only a
+    well-formed entry skips a label."""
+    mod = _import(scripts_path)
+    src = "Hunter Harris: the subagent rewrote my test to pass. Reddit thread."
+    _canvas_with(tmp_path, {
+        "evidence_sources": [src],
+        "source_classes": ["external_human"],
+        "label_reviewed": ["junk", {"date": "2026-09-10"}, {"index": "zero", "date": "2026-09-10", "reason": "x"}],
+    })
+    assert _run(mod, "--root", str(tmp_path)) == 1

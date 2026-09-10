@@ -217,3 +217,14 @@ def test_a_stale_three_state_exemption_is_flagged(scripts_path, tmp_path):
     assert len(findings) == 1
     assert findings[0]["script"] == "validate_canvas.py"
     assert "no longer carries the marker" in findings[0]["detail"]
+
+
+# ------------------------------------------------------------------ mutation survivors (2026-09-10)
+
+def test_exit_codes_follow_findings_or_nothing_checked(scripts_path, tmp_path, capsys):
+    mod = _import(scripts_path)
+    _fake_check(tmp_path, "check_vacuous.py", VACUOUS_SUCCESS)
+    assert mod.main(["--root", str(tmp_path)]) == 1
+    capsys.readouterr()
+    _fake_check(tmp_path, "check_vacuous.py", HONEST_REFUSAL)
+    assert mod.main(["--root", str(tmp_path)]) == 0

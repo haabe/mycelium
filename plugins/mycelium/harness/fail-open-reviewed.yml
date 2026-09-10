@@ -517,3 +517,11 @@ reviewed:
     `_reply_not_owed_date`: a `reply_not_owed.date` that is not ISO means the marker does
     not apply (the safe direction: the inbound still fires), and the handler appends the
     raw value to UNREADABLE_DATES, which main() prints. Reviewed 2026-09-10, v0.190.0.
+
+- id: mutation_sample.py@30934a269c
+  verdict: accepted
+  reason: >-
+    `run_tests`: a pytest subprocess that exceeds its timeout returns None, which
+    `mutate_module` counts under `timeouts` and `main` prints per module. A timeout is
+    neither killed nor survived and is never folded into the score. Reviewed 2026-09-10,
+    v0.192.0.

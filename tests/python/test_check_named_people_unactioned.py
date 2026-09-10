@@ -73,3 +73,18 @@ def test_missing_results_dir_is_the_same_answer_as_an_empty_one(scripts_path, tm
     rc = mod.main(["--root", str(tmp_path)])
     assert rc == 1
     assert "UNKNOWN" in capsys.readouterr().out
+
+
+# ------------------------------------------------------------------ mutation survivors (2026-09-10)
+
+def test_all_actioned_exits_zero(scripts_path, tmp_path, capsys):
+    mod = _import(scripts_path)
+    root = _project(tmp_path, "pending_tasks:\n  - id: ht-001\n    note: metapardo/Mobile-Services alp82/aistack\n")
+    assert mod.main(["--root", str(root)]) == 0
+
+
+def test_findings_are_report_only_and_exit_zero(scripts_path, tmp_path, capsys):
+    mod = _import(scripts_path)
+    root = _project(tmp_path, "pending_tasks: []\n")
+    assert mod.main(["--root", str(root)]) == 0
+    assert "NAME PEOPLE AND HAVE NO TASK" in capsys.readouterr().out

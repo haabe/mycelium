@@ -252,3 +252,17 @@ def test_absent_precondition_is_not_applicable_not_a_refusal(scripts_path, tmp_p
     assert "Every guard asserts" not in out, (
         "N/A must not be dressed up as a clean pass either"
     )
+
+
+# ------------------------------------------------------------------ mutation survivors (2026-09-10)
+
+def test_a_consumer_tree_without_the_plugin_is_not_applicable(scripts_path, tmp_path, capsys):
+    mod = _import(scripts_path)
+    assert mod.main(["--root", str(tmp_path)]) == 0
+    assert "N/A" in capsys.readouterr().out
+
+
+def test_a_plugin_tree_with_zero_guards_is_not_a_pass(scripts_path, tmp_path, capsys):
+    mod = _import(scripts_path)
+    (tmp_path / "plugins/mycelium/scripts").mkdir(parents=True)
+    assert mod.main(["--root", str(tmp_path)]) == 1

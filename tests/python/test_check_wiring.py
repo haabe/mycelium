@@ -412,3 +412,19 @@ def test_present_precondition_with_empty_population_still_refuses(
     assert rc == 1
     assert "NOT A PASS" in out
     assert "0/0/0/0" in out
+
+
+# ------------------------------------------------------------------ mutation survivors (2026-09-10)
+
+def test_a_rule_that_matched_nothing_is_named_in_the_green_line(scripts_path, tmp_path, capsys):
+    """A green over a rule with an empty population must say which rule said nothing."""
+    mod = _import(scripts_path)
+    _write(_plugin(tmp_path) / "scripts/used.py", "print('hi')\n")
+    _write(
+        _plugin(tmp_path) / "skills/x/SKILL.md",
+        "run: python3 ${CLAUDE_PLUGIN_ROOT}/scripts/used.py\n",
+    )
+    rc = mod.main(["--root", str(tmp_path)])
+    out = capsys.readouterr().out
+    assert rc == 0, out
+    assert "matched nothing" in out and "C/D" in out, out

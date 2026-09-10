@@ -151,3 +151,31 @@ def test_unparseable_canvas_is_unknown_not_clean(scripts_path, tmp_path):
     mod = _import(scripts_path)
     c = _canvas(tmp_path, {"services.yml": "principles: [\n  broken\n"})
     assert _run(mod, c) == 2
+
+
+# ------------------------------------------------------------------ mutation survivors (2026-09-10)
+
+@pytest.mark.parametrize("app", [
+    "n/a-until-production",
+    "Schema-only as of 2026-06-04",
+    "L5 Market canvas; populate when reached",
+    "NOT actively used by this project",
+    "not yet populated",
+])
+def test_each_self_declared_empty_phrase_exempts_on_its_own(scripts_path, app):
+    """Each phrase is sufficient alone; the predicate is OR, not AND."""
+    mod = _import(scripts_path)
+    assert mod._declares_itself_empty({"applicability": app}) == app
+
+
+def test_a_meta_block_that_is_present_is_read_not_replaced(scripts_path):
+    mod = _import(scripts_path)
+    assert mod._freshness({"_meta": {"last_validated": "2026-09-03"}}) == ("_meta.last_validated", "2026-09-03")
+    assert mod._freshness({"_meta": {}}) is None
+
+
+def test_assessed_file_with_a_stamp_reads_ok(scripts_path, tmp_path, capsys):
+    mod = _import(scripts_path)
+    canvas = _canvas(tmp_path, {"services.yml": SERVICES_ASSESSED})
+    assert _run(mod, canvas, "--strict") == 0
+    assert "ok" in capsys.readouterr().out

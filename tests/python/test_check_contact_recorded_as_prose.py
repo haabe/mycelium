@@ -109,3 +109,42 @@ def test_corrected_and_retracted_are_still_caught(scripts_path):
               "RETRACTED_2026_08_24_THE_ASK_WAS_SENT": "x",
               "touch_log": []}]
     assert len(mod.scan(tasks)) == 2
+
+
+# ------------------------------------------------------------------ mutation survivors (2026-09-10)
+
+def test_pending_tasks_that_is_not_a_list_is_unknown(scripts_path, tmp_path, capsys):
+    """A mapping under pending_tasks is not a task list; that is UNKNOWN (2), not a pass."""
+    mod = _import(scripts_path)
+    (tmp_path / ".claude" / "canvas").mkdir(parents=True)
+    (tmp_path / ".claude" / "canvas" / "human-tasks.yml").write_text("pending_tasks:\n  ht-1: x\n")
+    assert mod.main(["--root", str(tmp_path)]) == 2
+    assert "UNKNOWN" in capsys.readouterr().err
+
+
+def test_a_clean_file_exits_zero_and_says_every_field_has_a_touch(scripts_path, tmp_path, capsys):
+    mod = _import(scripts_path)
+    (tmp_path / ".claude" / "canvas").mkdir(parents=True)
+    (tmp_path / ".claude" / "canvas" / "human-tasks.yml").write_text(
+        "pending_tasks:\n- id: ht-1\n  reply_2026_08_26: prose\n  touch_log:\n  - date: '2026-08-26'\n"
+    )
+    assert mod.main(["--root", str(tmp_path)]) == 0
+    assert "Every field naming a dated contact has a touch_log entry" in capsys.readouterr().out
+
+
+def test_findings_are_report_only_so_the_exit_is_still_zero(scripts_path, tmp_path, capsys):
+    mod = _import(scripts_path)
+    (tmp_path / ".claude" / "canvas").mkdir(parents=True)
+    (tmp_path / ".claude" / "canvas" / "human-tasks.yml").write_text(
+        "pending_tasks:\n- id: ht-1\n  reply_2026_08_26: prose\n  touch_log: []\n"
+    )
+    assert mod.main(["--root", str(tmp_path)]) == 0
+    out = capsys.readouterr().out
+    assert "RECORDED AS PROSE" in out and "1 finding(s)" in out
+
+
+def test_a_document_that_parses_to_nothing_is_unknown(scripts_path, tmp_path, capsys):
+    mod = _import(scripts_path)
+    (tmp_path / ".claude" / "canvas").mkdir(parents=True)
+    (tmp_path / ".claude" / "canvas" / "human-tasks.yml").write_text("# only a comment\n")
+    assert mod.main(["--root", str(tmp_path)]) == 2

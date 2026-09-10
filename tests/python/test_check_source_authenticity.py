@@ -236,3 +236,28 @@ def test_handles_checked_marker_silences_the_record(scripts_path):
         "      handles_checked: '2026-09-10 both accounts opened; one templated, withdrawn'\n"
     )
     assert c.scan_text(marked) == [], "a record with handles_checked was re-flagged"
+
+
+# ------------------------------------------------------------------ mutation survivors (2026-09-10)
+
+def test_self_handles_keep_fragments_at_the_minimum_and_drop_shorter(scripts_path, monkeypatch):
+    c = _import(scripts_path)
+    import subprocess
+
+    class R:
+        def __init__(self, s): self.stdout = s
+    answers = iter(["Bo Abc Defg", "ab@example.com"])
+    monkeypatch.setattr(subprocess, "run", lambda *a, **k: R(next(answers)))
+    got = c._self_handles()
+    assert "abc" in got and "defg" in got
+    assert "bo" not in got and "ab" not in got
+
+
+def test_self_handles_survive_an_empty_git_config(scripts_path, monkeypatch):
+    c = _import(scripts_path)
+    import subprocess
+
+    class R:
+        stdout = ""
+    monkeypatch.setattr(subprocess, "run", lambda *a, **k: R())
+    assert c._self_handles() == set()

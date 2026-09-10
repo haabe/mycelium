@@ -201,3 +201,27 @@ def test_every_seed_entry_names_a_published_debunker(tmp_path):
     named = ("Bossavit", "Jorgensen", "Cohn", "Kohavi")
     for entry in entries:
         assert any(n in entry["verbatim"] for n in named), entry["id"]
+
+
+# ------------------------------------------------------------------ mutation survivors (2026-09-10)
+
+def test_a_clean_canvas_exits_zero_and_says_what_that_means(tmp_path, capsys, monkeypatch):
+    p = _project(tmp_path, "notes: |\n  Nothing ruled-on here.\n")
+    monkeypatch.setattr(sys, "argv", ["check_citations", "--project-dir", str(p)])
+    assert _mod().main() == 0
+    out = capsys.readouterr().out
+    assert "No unannotated occurrence" in out and "0 unannotated" in out
+
+
+def test_an_annotation_on_the_very_first_line_still_covers_the_block(tmp_path):
+    """The walk-back must inspect index 0; `j < 0` is the stop, not `j <= 0`."""
+    m = _mod()
+    lines = ["  DISPUTED, do not cite:", "  Research shows 42% of teams ship faster."]
+    assert m._annotated_block(lines, 1) is True
+
+
+def test_the_lookback_reaches_exactly_lookback_lines(tmp_path):
+    m = _mod()
+    lines = ["  DISPUTED:"] + ["  filler"] * 11 + ["  42% of teams"]
+    assert m._annotated_block(lines, 12, lookback=12) is True
+    assert m._annotated_block(lines, 12, lookback=11) is False

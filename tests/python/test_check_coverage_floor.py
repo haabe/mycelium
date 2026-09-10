@@ -106,3 +106,11 @@ def test_evaluate_helper_directly(tmp_path):
     }, 70.0)
     assert checked == 2
     assert ("plugins/mycelium/scripts/b.py", 50.0) in violations
+
+
+# ------------------------------------------------------------------ mutation survivors (2026-09-10)
+
+def test_exactly_at_the_floor_passes(tmp_path, capsys):
+    root = _make_root(tmp_path, {"a.py": 70})
+    _cov_json(tmp_path, {"plugins/mycelium/scripts/a.py": 70.0})
+    assert ccf.main(["--root", str(root), "--floor", "70"]) == 0

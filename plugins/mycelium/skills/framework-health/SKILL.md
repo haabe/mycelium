@@ -199,6 +199,25 @@ On each quarterly run:
 - **Confirm the structural guard is green**: run `check_theory_fidelity.py` inline and report. A guard failure is a structural-drift finding (phantom skill/gate ref, name-only theory) for the dashboard; it does NOT substitute for the semantic audit.
 - Temporal-independence (4e) applies.
 
+### 4h. Test adequacy: the mutation sample (added 0.192.0)
+
+`engine/feedback-loops.md` names the mutation testing score as the counter-metric for test coverage,
+and until 0.192.0 nothing computed it. Run:
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/mutation_sample.py" --root <framework repo> --modules 12 --mutants-per-module 12
+```
+
+It mutates code tokens in a seeded random sample of the shipped checks (never strings, comments or
+docstrings), runs each module's own tests with bytecode caching disabled, and reports killed versus
+survived. **Report the survivor lines, not only the score**: each survivor is a line whose behaviour
+no test constrains. On the framework repo the first honest run (2026-09-10) read 76% over 129
+mutants, with exit codes on clean paths, an OR-predicate never exercised branch by branch, and
+`<`-versus-`<=` boundaries as the survivors; eleven tests were written against them the same day.
+A rising score with a falling first-pass rate is the gaming shape; read it beside the coverage floor
+and the negative-control check. Framework-repo only: a consumer without `plugins/mycelium/scripts`
+gets UNKNOWN, which is not a pass. Same-session re-runs are not two observations (4e).
+
 ### 5. Generate Dashboard
 
 ## Output

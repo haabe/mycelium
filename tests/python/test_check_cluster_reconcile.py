@@ -307,3 +307,14 @@ def test_the_day_before_the_review_date_is_still_quiet(scripts_path, tmp_path, c
                        _cluster("a-shape", review_by="2026-08-27"), "2026-08-26")
     assert "review due 2026-08-27" in out
     assert rc == 0
+
+
+# ------------------------------------------------------------------ mutation survivors (2026-09-10)
+
+def test_more_than_eight_unreconciled_dates_are_summarised_with_a_count(scripts_path, tmp_path, capsys):
+    mod = _import(scripts_path)
+    dates = [f"2026-08-{d:02d}" for d in range(10, 20)]
+    _memory(tmp_path, corrections=_corrections(*dates), clusters=_cluster("a-shape", dates=("2026-08-01",)))
+    rc = _run(mod, "--project-dir", str(tmp_path), "--today", "2026-08-21")
+    out = capsys.readouterr().out
+    assert rc == 1 and "(+2 more)" in out, out
