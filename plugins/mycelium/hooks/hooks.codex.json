@@ -150,6 +150,11 @@
           {
             "type": "command",
             "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/ci-signal.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/next-item-repeat.sh",
+            "timeout": 5
           }
         ]
       }

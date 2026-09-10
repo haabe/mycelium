@@ -249,3 +249,38 @@ def test_settle_crash_passes_text_through_and_speaks(tmp_path, capsys, monkeypat
     monkeypatch.setattr(m, "settle", lambda *a, **k: (_ for _ in ()).throw(RuntimeError("boom")))
     rc, out = _settle(tmp_path, capsys, BVSSH, "s1", "2026-09-01", monkeypatch)
     assert rc == 0 and out.startswith(BVSSH) and "could not run (RuntimeError: boom)" in out
+
+
+def test_ruling_snooze_silences_until_date_then_returns(tmp_path, capsys, monkeypatch):
+    m = _mod()
+    (tmp_path / ".claude").mkdir()
+    _settle(tmp_path, capsys, BVSSH + TASKS, "s1", "2026-09-01", monkeypatch)
+    assert (
+        m.main(
+            ["rule", "--project-dir", str(tmp_path), "--id", "bvssh-overdue", "--ruling", "snooze"]
+        )
+        == 0
+    )
+    assert "needs --until" in capsys.readouterr().out
+    m.main(
+        [
+            "rule",
+            "--project-dir",
+            str(tmp_path),
+            "--id",
+            "bvssh-overdue",
+            "--ruling",
+            "snooze",
+            "--until",
+            "2026-09-05",
+            "--today",
+            "2026-09-02",
+        ]
+    )
+    assert "ruled snooze until 2026-09-05" in capsys.readouterr().out
+    rc, out = _settle(tmp_path, capsys, BVSSH + TASKS, "s2", "2026-09-03", monkeypatch)
+    assert "days overdue" not in out and "OPEN human task" in out
+    rc, out = _settle(tmp_path, capsys, BVSSH + TASKS, "s3", "2026-09-06", monkeypatch)
+    assert "days overdue" in out
+    m.main(["report", "--project-dir", str(tmp_path)])
+    assert "snoozed until 2026-09-05" in capsys.readouterr().out

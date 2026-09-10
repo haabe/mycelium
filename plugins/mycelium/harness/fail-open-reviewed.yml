@@ -471,3 +471,33 @@ reviewed:
     fallback substitutes a unique "unfingerprinted-<epoch>" value, which can match no cache, so the
     hook takes the announced-background path rather than serving a stale block. Either way the
     reader sees a BACKGROUND CHECKS line, not silence. Reviewed 2026-09-10, v0.186.0.
+
+- id: next-item-repeat.sh@39fb26d047
+  verdict: accepted
+  reason: >-
+    The Stop repeat hook. An unreadable next-item.json prints a systemMessage naming the path and the
+    error and says the item from session start stands; an unreadable ledger only loses the
+    "ruled since" check, in which case the item is repeated once (the conservative direction: a
+    repeat the human already answered costs one line, a swallowed repeat costs the item). A bad
+    JSON line in the ledger is skipped inside a loop that still reads the rest. Reviewed 2026-09-10,
+    v0.188.0.
+
+- id: next-item-repeat.sh@b0cc4ee989
+  verdict: accepted
+  reason: >-
+    The Stop repeat hook. An unreadable next-item.json prints a systemMessage naming the path and the
+    error and says the item from session start stands; an unreadable ledger only loses the
+    "ruled since" check, in which case the item is repeated once (the conservative direction: a
+    repeat the human already answered costs one line, a swallowed repeat costs the item). A bad
+    JSON line in the ledger is skipped inside a loop that still reads the rest. Reviewed 2026-09-10,
+    v0.188.0.
+
+- id: next_item.py@9ba5418f64
+  verdict: accepted
+  reason: >-
+    Two guarded imports at module top (PyYAML, advisory_ledger) and the diamonds-file read in
+    _fired_proposals. Each failure is SPOKEN: _fired_proposals returns a note ("PyYAML unavailable"
+    / "diamonds/active.yml unreadable (<error>); fired proposals unread") and _ledger_state returns
+    "advisory ledger module unavailable"; pick() joins the notes and main() prints them to STDOUT
+    (the hook drops stderr), so the line the human sees names what could not be read rather than
+    presenting a lesser item as the whole picture. Reviewed 2026-09-10, v0.188.0.

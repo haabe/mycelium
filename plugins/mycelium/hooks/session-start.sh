@@ -1433,6 +1433,23 @@ json.dump({"fingerprint": fp, "session": sid, "generated_epoch": time.time(),
   exit 0
 fi
 
+# ------------------------------------------------------------
+# NEXT ITEM (v0.188.0, opp-006 sol-006f): one proposal for the human, with its verb attached.
+# Picked from the block above (fired proposals first, then muted advisories, then the oldest
+# firing advisory that has a command). Prepended to the agent block, and on resume or fork also
+# sent as a systemMessage, which is the channel a human sees. Silent when nothing qualifies.
+# ------------------------------------------------------------
+NEXT_ITEM=""
+NEXTCHK="${CLAUDE_PLUGIN_ROOT:-}/scripts/next_item.py"
+if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "$NEXTCHK" ] && [ "${MYCELIUM_NEXT_ITEM:-on}" != "off" ] && [ "$_SS_MODE" != "async" ]; then
+  NEXT_ITEM="$(printf '%s' "$REMINDERS" | python3 "$NEXTCHK" --project-dir "$PROJECT_DIR" --session "${_SESSION_ID_EARLY:-unknown}" --write-state 2>/dev/null || true)"
+  if [ -n "$NEXT_ITEM" ]; then
+    REMINDERS="${NEXT_ITEM} ${REMINDERS}"
+  fi
+fi
+NEXT_ITEM_HUMAN=""
+case "$SESSION_SOURCE" in resume|fork) NEXT_ITEM_HUMAN="$NEXT_ITEM";; esac
+
 python3 -c "
 import json, sys
 contract_file = sys.argv[1]
@@ -1455,6 +1472,7 @@ if contract_file:
 if reminders:
     parts.append(f'MYCELIUM FEEDBACK LOOPS: {reminders}Memory state: {corrections_phrase}.')
 context = '\n\n'.join(p for p in parts if p)
+human_line = sys.argv[4] if len(sys.argv) > 4 else ''
 if context:
     output = {
         'hookSpecificOutput': {
@@ -1462,8 +1480,10 @@ if context:
             'additionalContext': context,
         }
     }
+    if human_line:
+        output['systemMessage'] = human_line
     print(json.dumps(output))
-" "$CONTRACT_FILE" "$REMINDERS" "$CORRECTIONS_COUNT"
+" "$CONTRACT_FILE" "$REMINDERS" "$CORRECTIONS_COUNT" "$NEXT_ITEM_HUMAN"
 
 exit 0
 

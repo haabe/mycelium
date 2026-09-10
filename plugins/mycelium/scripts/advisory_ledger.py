@@ -64,7 +64,7 @@ from pathlib import Path
 
 LEDGER_REL = Path(".claude") / "state" / "advisory-ledger.jsonl"
 MUTE_DAYS = 7
-RULINGS = ("keep", "fix", "drop")
+RULINGS = ("keep", "fix", "drop", "snooze")
 
 #: (id, regex). A regex with a `count` group carries a number whose DECREASE reads as cleared. Ages
 #: ("N days overdue", "N days old") are deliberately NOT count groups: they rise while unaddressed.
@@ -197,7 +197,7 @@ def append_events(path: Path, events: list[dict]) -> None:
 # ---------------------------------------------------------------- state derivation
 
 
-def state(events: list[dict]) -> dict[str, dict]:  # noqa: C901 — one pass over four event kinds
+def state(events: list[dict]) -> dict[str, dict]:  # noqa: C901, PLR0912 — one pass, four event kinds
     """Per-advisory derived state from the event stream, in order."""
     st: dict[str, dict] = {}
 
@@ -210,6 +210,7 @@ def state(events: list[dict]) -> dict[str, dict]:  # noqa: C901 — one pass ove
                 "still_firing": 0,
                 "streak_days": [],
                 "muted_since": None,
+                "snoozed_until": None,
                 "ruling": None,
                 "first_seen": None,
                 "last_seen": None,
@@ -247,6 +248,9 @@ def state(events: list[dict]) -> dict[str, dict]:  # noqa: C901 — one pass ove
             x = s(ev.get("id"))
             r = ev.get("ruling")
             x["ruling"] = r
+            if r == "snooze":
+                x["snoozed_until"] = ev.get("until")
+                x["ruling"] = None
             if r == "keep":
                 x["muted_since"] = None
                 x["streak_days"] = []
@@ -264,7 +268,7 @@ def last_seen_event(events: list[dict]) -> dict | None:
 # ---------------------------------------------------------------- verbs
 
 
-def settle(root: Path, session: str, text: str, today: str) -> tuple[str, list[dict], list[str]]:
+def settle(root: Path, session: str, text: str, today: str) -> tuple[str, list[dict], list[str]]:  # noqa: C901 — one pass over present ids
     """Returns (text to emit, events appended, notes). Pure apart from the ledger append."""
     path = ledger_path(root)
     events, problems = read_events(path)
@@ -299,6 +303,9 @@ def settle(root: Path, session: str, text: str, today: str) -> tuple[str, list[d
         if x["ruling"] == "drop":
             replacements[aid] = ""
             continue
+        if x.get("snoozed_until") and str(x["snoozed_until"]) >= today:
+            replacements[aid] = ""  # snoozed: silent until the date; the report still counts it
+            continue
         if x["muted_since"] is None and len(x["streak_days"]) >= MUTE_DAYS:
             since = x["streak_days"][0]
             new_events.append(
@@ -324,6 +331,10 @@ def settle(root: Path, session: str, text: str, today: str) -> tuple[str, list[d
     return out, new_events, notes
 
 
+def _snoozed_label(x: dict) -> str:
+    return f"snoozed until {x['snoozed_until']}" if x.get("snoozed_until") else "-"
+
+
 def report_lines(root: Path) -> list[str]:
     path = ledger_path(root)
     events, problems = read_events(path)
@@ -343,7 +354,8 @@ def report_lines(root: Path) -> list[str]:
         rate = f"{x['cleared'] / settled:.2f}" if settled else "-"
         lines.append(
             f"{aid} | {x['seen']} | {x['cleared']} | {x['still_firing']} | {rate} | "
-            f"{len(x['streak_days'])} | {x['muted_since'] or '-'} | {x['ruling'] or '-'}"
+            f"{len(x['streak_days'])} | {x['muted_since'] or '-'} | "
+            f"{x['ruling'] or _snoozed_label(x)}"
         )
     firing = [a for a, x in st.items() if len(x["streak_days"]) >= MUTE_DAYS]
     if firing:
@@ -354,14 +366,19 @@ def report_lines(root: Path) -> list[str]:
     return lines
 
 
-def rule(root: Path, aid: str, ruling: str, note: str, today: str) -> str:
+def rule(  # noqa: PLR0913, PLR0917 — a CLI verb with one argument per flag
+    root: Path, aid: str, ruling: str, note: str, today: str, until: str = ""
+) -> str:
     if ruling not in RULINGS:
         return f"advisory ledger: ruling must be one of {', '.join(RULINGS)}"
-    append_events(
-        ledger_path(root),
-        [{"kind": "ruled", "id": aid, "date": today, "ruling": ruling, "note": note}],
-    )
-    return f"advisory ledger: {aid} ruled {ruling} on {today}"
+    if ruling == "snooze" and not until:
+        return "advisory ledger: snooze needs --until YYYY-MM-DD"
+    ev = {"kind": "ruled", "id": aid, "date": today, "ruling": ruling, "note": note}
+    if until:
+        ev["until"] = until
+    append_events(ledger_path(root), [ev])
+    tail = f" until {until}" if until else ""
+    return f"advisory ledger: {aid} ruled {ruling}{tail} on {today}"
 
 
 # ---------------------------------------------------------------- cli
@@ -378,6 +395,7 @@ def main(argv=None) -> int:
     ap.add_argument("--id", default="")
     ap.add_argument("--ruling", default="")
     ap.add_argument("--note", default="")
+    ap.add_argument("--until", default="", help="for --ruling snooze: silent until this date")
     args = ap.parse_args(argv)
     root = args.project_dir.resolve()
 
@@ -412,7 +430,7 @@ def main(argv=None) -> int:
     if not args.id or not args.ruling:
         print("advisory ledger: rule needs --id and --ruling keep|fix|drop")
         return 2
-    print(rule(root, args.id, args.ruling, args.note, args.today))
+    print(rule(root, args.id, args.ruling, args.note, args.today, args.until))
     return 0
 
 

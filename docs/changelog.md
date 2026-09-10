@@ -4,6 +4,43 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-09.
 
+## v0.188.0 - one item per boundary, with its verb attached
+
+The third of the three leaves the dogfood founder ruled on 2026-09-10 (opp-006 sol-006f).
+
+**The gap.** The session-start hook computed every advisory it could and emitted them in one block,
+eleven in one line on the dogfood canvas, to the agent and to nobody else. The 2026-09-09 discovery
+measured the shape: boundary-timed single items are engaged with (52% at workflow boundaries against
+62% dismissed mid-task; 45 s to read against 101 s), every unanswered line is paid for by the reader,
+and the products that work attach the verb to the item (incident.io's buttons; Linear Triage's
+accept / duplicate / decline / snooze). The founder's cause statement sits under all of it: a
+builder who does not know the discipline cannot ask for the step, so the step must arrive with the
+command on it.
+
+**What ships.** `scripts/next_item.py` picks ONE item from the assembled advisory block, in a fixed
+order: a parked `CLOSING PATH FIRED` proposal (a named input landed; the ruling is the human's),
+then a muted advisory awaiting a ruling (the ledger asked; nothing answered), then the oldest-firing
+advisory that has a mapped command, oldest streak first. Twenty-seven advisory ids map to the skill
+that does the thing. Anything ruled `drop`, or `snooze` with a date still ahead, is skipped. The line
+carries the exact command and the fixed verb set: run, rule, snooze-until DATE, drop. It is prepended
+to the agent block on every start, and on `resume` and `fork` it is also sent as a `systemMessage`,
+the channel a human sees, which is the re-entry moment the record names (Alex, ht-057). Silent when
+nothing qualifies; a clean canvas gets no line.
+
+**Repeated once.** `hooks/next-item-repeat.sh` on Stop repeats the item once, at the first Stop
+after it was emitted, if nothing has been ruled on it since; then it stays quiet. One repeat, not one
+per turn: a line on every turn is how a reminder gets muted.
+
+**Snooze.** `advisory_ledger.py rule --id <id> --ruling snooze --until YYYY-MM-DD` silences an
+advisory until the date; the report still counts it and shows the date.
+
+**Tests.** Six in-process Python tests (silent when nothing qualifies; oldest streak first with all
+four verbs rendered; muted outranks live; a fired proposal outranks everything; drop and snooze
+respected, snooze expiring; state written) plus one ledger test for snooze, and one bash test that
+runs the hook on startup (line in context, no systemMessage, state written), on resume (the
+systemMessage), the Stop repeat once then silent, a ruling silencing the repeat, the override, and a
+canvas with nothing qualifying. Person override `MYCELIUM_NEXT_ITEM=off`.
+
 ## v0.187.0 - the closing path is stored where it fires
 
 The second of the three leaves the dogfood founder ruled on 2026-09-10 (opp-006 sol-006e).
