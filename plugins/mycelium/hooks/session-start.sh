@@ -6,6 +6,24 @@
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-.}"
 
 # ============================================================
+# IN-HOOK DEADLINE (v0.185.0). Read this before adding a check.
+# ============================================================
+# hooks.json carried `"timeout": 5` on this hook from 2026-05-09 while the hook grew to
+# some twenty checks and ~18 s on the dogfood canvas. The harness cancelled it on 32 of 33
+# session starts between 2026-08-09 and 2026-09-10, and a cancelled hook delivers NOTHING:
+# stdout is discarded, so the operating contract and every advisory below reached no agent
+# for a month, while every test of this script passed (tests run the script, not the harness).
+# Two defences now: the manifest timeout is 60 s (Claude Code's own default is 600 s), and
+# this hook stops starting OPTIONAL checks once MYCELIUM_SESSION_START_BUDGET seconds have
+# elapsed, names what it skipped, and still emits. The contract file is read at the end and
+# costs nothing; it must never be the thing that gets cut.
+_SS_T0=$(date +%s)
+_SS_BUDGET="${MYCELIUM_SESSION_START_BUDGET:-25}"
+_SS_MANIFEST_TIMEOUT=60
+SKIPPED_FOR_TIME=""
+over_budget() { [ $(( $(date +%s) - _SS_T0 )) -ge "$_SS_BUDGET" ]; }
+
+# ============================================================
 # SESSION SOURCE (v0.104.0)
 # ============================================================
 # SessionStart fires for five sources: startup, resume, clear, compact, fork
@@ -172,6 +190,7 @@ if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check
 elif [ -f "$PROJECT_DIR/.claude/scripts/check_cycle_recording.py" ]; then
   CYCLECHK="$PROJECT_DIR/.claude/scripts/check_cycle_recording.py"
 fi
+over_budget && { SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}cycle-recording "; CYCLECHK=""; }
 if [ -n "$CYCLECHK" ]; then
   CYCLE_STATE=$(python3 "$CYCLECHK" --project-dir "$PROJECT_DIR" --json 2>/dev/null \
     | python3 -c "
@@ -224,6 +243,7 @@ if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check
 elif [ -f "$PROJECT_DIR/.claude/scripts/check_cluster_reconcile.py" ]; then
   CLUSTERCHK="$PROJECT_DIR/.claude/scripts/check_cluster_reconcile.py"
 fi
+over_budget && { SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}corrections-to-cluster "; CLUSTERCHK=""; }
 if [ -n "$CLUSTERCHK" ]; then
   UNRECONCILED=$(python3 "$CLUSTERCHK" --project-dir "$PROJECT_DIR" --json 2>/dev/null \
     | python3 -c "
@@ -301,6 +321,7 @@ if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check
 elif [ -f "$PROJECT_DIR/.claude/scripts/check_published_records.py" ]; then
   PUBCHK="$PROJECT_DIR/.claude/scripts/check_published_records.py"
 fi
+over_budget && { SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}published-records "; PUBCHK=""; }
 if [ -n "$PUBCHK" ]; then
   PUBN=$(python3 "$PUBCHK" --project-dir "$PROJECT_DIR" --json 2>/dev/null \
     | python3 -c "
@@ -348,6 +369,7 @@ if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check
 elif [ -f "$PROJECT_DIR/.claude/scripts/check_stale_prose.py" ]; then
   PROSECHK="$PROJECT_DIR/.claude/scripts/check_stale_prose.py"
 fi
+over_budget && { SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}stale-prose "; PROSECHK=""; }
 if [ -n "$PROSECHK" ]; then
   STALEPROSE=$(python3 "$PROSECHK" --project-dir "$PROJECT_DIR" --json 2>/dev/null \
     | python3 -c "
@@ -389,6 +411,7 @@ if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check
 elif [ -f "$PROJECT_DIR/.claude/scripts/check_source_authenticity.py" ]; then
   AUTHCHK="$PROJECT_DIR/.claude/scripts/check_source_authenticity.py"
 fi
+over_budget && { SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}source-authenticity "; AUTHCHK=""; }
 if [ -n "$AUTHCHK" ]; then
   UNCHECKEDSRC=$(python3 "$AUTHCHK" --project-dir "$PROJECT_DIR" --json 2>/dev/null \
     | python3 -c "
@@ -423,6 +446,7 @@ if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check
 elif [ -f "$PROJECT_DIR/.claude/scripts/check_source_class_fidelity.py" ]; then
   FIDCHK="$PROJECT_DIR/.claude/scripts/check_source_class_fidelity.py"
 fi
+over_budget && { SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}source-class-fidelity "; FIDCHK=""; }
 if [ -n "$FIDCHK" ]; then
   BADCLASS=$(python3 "$FIDCHK" --project-dir "$PROJECT_DIR" --json 2>/dev/null \
     | python3 -c "
@@ -458,6 +482,7 @@ if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check
 elif [ -f "$PROJECT_DIR/.claude/scripts/check_reply_owed.py" ]; then
   REPLYCHK="$PROJECT_DIR/.claude/scripts/check_reply_owed.py"
 fi
+over_budget && { SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}reply-owed "; REPLYCHK=""; }
 if [ -n "$REPLYCHK" ]; then
   OWED_LINE=$(python3 "$REPLYCHK" --project-dir "$PROJECT_DIR" 2>/dev/null \
     | grep '^REPLY OWED' || echo "")
@@ -517,6 +542,7 @@ LANDINGCHK=""
 if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check_evidence_landing.py" ]; then
   LANDINGCHK="${CLAUDE_PLUGIN_ROOT}/scripts/check_evidence_landing.py"
 fi
+over_budget && { SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}evidence-landing "; LANDINGCHK=""; }
 if [ -n "$LANDINGCHK" ] && [ -d "$PROJECT_DIR/.claude/canvas" ]; then
   LANDING_OUT=$(python3 "$LANDINGCHK" --project-dir "$PROJECT_DIR" 2>/dev/null || true)
   LANDING_FAIL=$(printf '%s\n' "$LANDING_OUT" | grep '^FAIL:' | head -2 | tr '\n' ' ')
@@ -536,6 +562,7 @@ IDLECHK=""
 if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check_idle_opportunities.py" ]; then
   IDLECHK="${CLAUDE_PLUGIN_ROOT}/scripts/check_idle_opportunities.py"
 fi
+over_budget && { SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}idle-opportunities "; IDLECHK=""; }
 if [ -n "$IDLECHK" ] && [ -f "$PROJECT_DIR/.claude/canvas/opportunities.yml" ]; then
   IDLE_OUT=$(python3 "$IDLECHK" --project-dir "$PROJECT_DIR" 2>/dev/null || true)
   IDLE_N=$(printf '%s\n' "$IDLE_OUT" | sed -n 's/.* \([0-9][0-9]*\) IDLE$/\1/p' | head -1)
@@ -548,6 +575,7 @@ RUNCHK=""
 if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check_instrument_contract.py" ]; then
   RUNCHK="${CLAUDE_PLUGIN_ROOT}/scripts/check_instrument_contract.py"
 fi
+over_budget && { SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}runnable-instruments "; RUNCHK=""; }
 if [ -n "$RUNCHK" ] && [ -d "$PROJECT_DIR/.claude/evals/assumption-tests" ]; then
   RUN_OUT=$(python3 "$RUNCHK" --root "$PROJECT_DIR" 2>/dev/null || true)
   RUN_OLDEST=$(printf '%s\n' "$RUN_OUT" | sed -n '/^RUNNABLE NOW, NEVER RUN/,/^$/p' | grep -E '^  ' | head -1 | sed 's/^  //')
@@ -1213,6 +1241,36 @@ for candidate in \
   "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)/engine/agent-operating-contract.md"; do
   if [ -n "$candidate" ] && [ -f "$candidate" ]; then CONTRACT_FILE="$candidate"; break; fi
 done
+
+# ------------------------------------------------------------
+# BUDGET REPORT (v0.185.0): say what was skipped for time, and how close to the manifest
+# timeout this run came, so a slow canvas is visible before the harness starts cancelling.
+# ------------------------------------------------------------
+_SS_ELAPSED=$(( $(date +%s) - _SS_T0 ))
+if [ -n "$SKIPPED_FOR_TIME" ] || [ "$_SS_ELAPSED" -ge $(( _SS_MANIFEST_TIMEOUT / 2 )) ]; then
+  REMINDERS="${REMINDERS}SESSION-START BUDGET: this hook took ${_SS_ELAPSED}s against an in-hook budget of ${_SS_BUDGET}s and a manifest timeout of ${_SS_MANIFEST_TIMEOUT}s."
+  if [ -n "$SKIPPED_FOR_TIME" ]; then
+    REMINDERS="${REMINDERS} Skipped for time, so they ran NOWHERE this session: ${SKIPPED_FOR_TIME}— run /mycelium:canvas-health for them, or raise MYCELIUM_SESSION_START_BUDGET."
+  fi
+  REMINDERS="${REMINDERS} "
+fi
+
+# ------------------------------------------------------------
+# HOOK DELIVERY (v0.185.0): did the harness cancel this hook last time? Read off the
+# harness's own transcripts, which are the only record of a cancellation. Cheap: a line
+# scan of the transcripts modified in the last 7 days for hook attachments.
+# ------------------------------------------------------------
+DELIVERYCHK=""
+if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check_hook_delivery.py" ]; then
+  DELIVERYCHK="${CLAUDE_PLUGIN_ROOT}/scripts/check_hook_delivery.py"
+fi
+if [ -n "$DELIVERYCHK" ]; then
+  DELIVERY_OUT=$(python3 "$DELIVERYCHK" --project-dir "$PROJECT_DIR" --days 7 2>&1 || true)
+  DELIVERY_BAD=$(printf '%s\n' "$DELIVERY_OUT" | grep -E '^hook-delivery (FAIL|WARN)' | head -3 | tr '\n' ' ')
+  if [ -n "$DELIVERY_BAD" ]; then
+    REMINDERS="${REMINDERS}${DELIVERY_BAD}"
+  fi
+fi
 
 # ============================================================
 # ADVISORY LEDGER (v0.184.0, opp-006 sol-006d): every advisory above counts whether

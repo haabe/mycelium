@@ -132,7 +132,7 @@
       {
         "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/session-start.sh",
         "type": "command",
-        "timeout": 5
+        "timeout": 60
       },
       {
         "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/ci-signal.sh --session-start",

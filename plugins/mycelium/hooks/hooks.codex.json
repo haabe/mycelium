@@ -161,7 +161,7 @@
           {
             "type": "command",
             "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/session-start.sh",
-            "timeout": 5
+            "timeout": 60
           },
           {
             "type": "command",

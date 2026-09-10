@@ -183,6 +183,16 @@ python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_citations.py" --project-dir .
      ruling: `advisory_ledger.py rule --id <id> --ruling keep|fix|drop --note "..."`. The ledger is
      `.claude/state/advisory-ledger.jsonl`, append-only. N/A with no ledger is a project that has not
      opened a session on 0.184.0 yet, not a clean bill.
+   - **8c(h), added v0.185.0: did the harness deliver our hooks at all.** Run
+     `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_hook_delivery.py" --project-dir . --days 30`. It
+     reads the harness's own transcripts for this project (the only record of a hook being
+     cancelled) and reports, per hook, how many runs succeeded and how many were cancelled on
+     timeout. FAIL when the SessionStart hook was cancelled: a cancelled hook delivers NOTHING, the
+     operating contract included, and every check in this skill that also runs at session start
+     ran nowhere. Measured on the dogfood repo 2026-09-10: 32 of 33 session starts in a month were
+     cancelled at the manifest's own 5-second timeout while every test stayed green, because tests
+     run the script and not the harness. Report this line FIRST; every other finding in this pass
+     is conditional on it. N/A on a runtime that keeps no transcripts.
 
 The failure this catches: a fact about a human-task lives in 2+ places (the task `status`, the evidence file it produced, the contributor's consent registry) and only the salient one gets updated, so the canvas silently drifts from reality. Three sub-checks over `.claude/canvas/human-tasks.yml#pending_tasks`:
 

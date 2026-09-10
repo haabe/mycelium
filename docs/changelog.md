@@ -4,6 +4,53 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-09.
 
+## v0.185.0 - the hook that delivers the contract was being cancelled
+
+The worst finding in the project's record, and it was found by an accident of sequence: 0.184.0
+shipped a ledger that counts whether anything follows a session-start advisory, the founder
+restarted with `--resume` to see it record, and it had not. The transcript Claude Code keeps for
+every session held the reason as a single line: `hook_cancelled`, "Mycelium feedback loop check",
+5018 ms, timed out, timeout 5000 ms.
+
+**What was wrong.** `hooks/hooks.json` had carried `"timeout": 5` on the SessionStart hook since the
+plugin migration on 2026-05-09. Claude Code's own default for a command hook is ten minutes; the
+manifest overrode it. Meanwhile the hook grew from a few reminders to some twenty checks, and on the
+dogfood canvas it now takes about eighteen seconds. Read off every transcript on the founder's
+machine: 32 of 33 session starts between 2026-08-09 and 2026-09-10 were cancelled at 5.0 s (the one
+success took 2.9 s on a light day). A cancelled hook's stdout is discarded by the harness. So for a
+month no operating contract and no advisory reached any agent on that repo, while every test of the
+hook stayed green, because the tests run the script and not the harness, and while the dogfood
+record kept saying things like "the session-start reminder surfaced" and "this advisory has fired
+daily for 32 days". Those advisories had been computed and thrown away. The Measurement finding
+behind 0.184.0 ("nobody acts on the advisories") was wrong in the way the 2026-08 correction
+"check the harness before blaming the gate" names: the reporter is part of the measurement.
+
+**Three defences, none of them "make the hook faster", because a hook that has to be fast to be
+delivered will be cancelled again the next time it grows.** (1) The manifest timeout is 60 s on all
+three runtime manifests (Claude Code, Codex, Cursor). (2) An in-hook deadline: after
+`MYCELIUM_SESSION_START_BUDGET` seconds (default 25) the hook stops starting the ten optional
+script-backed checks (cycle recording, cluster reconcile, published records, stale prose, source
+authenticity, source-class fidelity, reply owed, evidence landing, idle opportunities, runnable
+instruments), names them as having run NOWHERE this session, and still emits everything it has.
+The contract file is read last and costs nothing, so it is never the thing that gets cut. A budget
+line appears whenever a run passes half the manifest timeout, so a slow canvas is visible before the
+harness starts cancelling. (3) `scripts/check_hook_delivery.py`, run at session start and in
+`canvas-health` 8c(h): it reads the project's transcripts under `~/.claude/projects/` for hook
+outcome attachments and reports, per hook, runs succeeded and runs cancelled, the last cancellation
+and the manifest timeout; FAIL when the contract-delivering hook was cancelled. It runs inside the
+hook it audits, which is why (2) exists: the next start has to survive to say the last one did not.
+
+**Also.** The `$schema` key in hooks.json, which Claude Code 2.1.267 reports as an unknown key,
+is removed. Five in-process Python tests for the delivery check (N/A, FAIL with timeout named and
+`--strict`, WARN for other hooks, OK, window). One bash test for the deadline: a zero budget skips
+the optional checks, names them, and still delivers the contract; a fixture run at the default
+budget skips nothing and finishes inside the manifest timeout.
+
+**Measured after the change, on the dogfood canvas.** Default budget: 18 s, nothing skipped, well
+inside 60 s. Budget forced to 5 s: 9 s, six checks named as skipped, contract delivered. Delivery
+check on the real transcripts: eleven cancellations in the last seven days, which is the line the
+next session start will now be able to say.
+
 ## v0.184.0 - every advisory counts whether anything follows
 
 The first of three leaves the dogfood founder ruled on 2026-09-10 (opp-006 sol-006d), after a
