@@ -452,3 +452,22 @@ reviewed:
     opportunities.yml or human-tasks.yml drops that input and the "nothing on record moves any
     pending gate" line fires, which names the absence rather than passing it. This script is a
     derivation and exits 0 by design; it gates nothing. Reviewed 2026-09-09, v0.183.0.
+
+- id: preflight.sh@8f7fd96fa8
+  verdict: accepted
+  reason: >-
+    The cache-read handler in the background-check delivery block. On an unreadable
+    session-checks.json it prints an __UNREADABLE__ marker which the bash below turns into a spoken
+    line ("the background session-start checks could not be delivered (<error>); run
+    /mycelium:canvas-health for them") and clears the pending marker, so the undelivered heavy tier
+    is named at the very prompt where it would otherwise have silently not arrived. Reviewed
+    2026-09-10, v0.186.0.
+
+- id: session-start.sh@75b167c29b
+  verdict: accepted
+  reason: >-
+    The canvas-fingerprint computation. A file that vanishes between glob and stat is skipped
+    (continue) and the digest still reflects every other file; if python itself fails, the bash
+    fallback substitutes a unique "unfingerprinted-<epoch>" value, which can match no cache, so the
+    hook takes the announced-background path rather than serving a stale block. Either way the
+    reader sees a BACKGROUND CHECKS line, not silence. Reviewed 2026-09-10, v0.186.0.

@@ -117,13 +117,15 @@
             "type": "command",
             "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/change-log.sh",
             "timeout": 3,
-            "statusMessage": "Mycelium change log"
+            "statusMessage": "Mycelium change log",
+            "async": true
           },
           {
             "type": "command",
             "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/diamond-state-audit.sh",
             "timeout": 3,
-            "statusMessage": "Mycelium diamond state audit"
+            "statusMessage": "Mycelium diamond state audit",
+            "async": true
           }
         ]
       },
@@ -134,7 +136,8 @@
             "type": "command",
             "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/read-log.sh",
             "timeout": 3,
-            "statusMessage": "Mycelium read log"
+            "statusMessage": "Mycelium read log",
+            "async": true
           }
         ]
       }
@@ -181,13 +184,19 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/session-start.sh",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/session-start.sh --fast",
             "timeout": 60,
-            "statusMessage": "Mycelium feedback loop check"
+            "statusMessage": "Mycelium feedback loop check (fast tier)"
           },
           {
             "type": "command",
             "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/ci-signal.sh --session-start"
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/session-start.sh --async",
+            "async": true,
+            "statusMessage": "Mycelium feedback loop check (background tier)"
           }
         ]
       }

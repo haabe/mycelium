@@ -26,7 +26,7 @@ HOOK="$PLUGIN_ROOT/hooks/session-start.sh"
 MANIFEST_TIMEOUT=$(python3 -c "
 import json
 d=json.load(open('$PLUGIN_ROOT/hooks/hooks.json'))
-print([h['timeout'] for e in d['hooks']['SessionStart'] for h in e['hooks'] if 'session-start.sh' in h['command']][0])")
+print([h['timeout'] for e in d['hooks']['SessionStart'] for h in e['hooks'] if 'session-start.sh' in h['command'] and 'timeout' in h][0])")
 
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT

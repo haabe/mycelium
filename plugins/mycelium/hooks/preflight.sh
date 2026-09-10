@@ -80,6 +80,51 @@ EOF
 # Disambiguate "memory not yet initialized" from "memory has zero entries"
 # from "memory has N entries" — bare "0 corrections" reads as a possible
 # counting failure to first-run users (per opp-001).
+# ------------------------------------------------------------
+# BACKGROUND-CHECK DELIVERY (v0.186.0). The fast session-start tier announces the heavy
+# checks as running in the background and leaves a pending marker; the async tier writes
+# their text to session-checks.json. UserPromptSubmit stdout is added to context, so this
+# is the documented place to deliver it. Delivered once per pending session; the advisory
+# ledger settles here, on the full block, never on the partial one the fast tier emitted.
+# ------------------------------------------------------------
+_PF_CACHE="$PROJECT_DIR/.claude/state/session-checks.json"
+_PF_PENDING="$PROJECT_DIR/.claude/state/session-checks.pending"
+if [ -f "$_PF_PENDING" ] && [ -f "$_PF_CACHE" ]; then
+  _PF_SID="$(cat "$_PF_PENDING" 2>/dev/null || echo "")"
+  _PF_BLOCK="$(python3 -c '
+import json, sys
+sid, path = sys.argv[1], sys.argv[2]
+try:
+    d = json.load(open(path))
+except Exception as e:  # SPEAKS: an unreadable cache is an undelivered heavy tier, and says so below
+    print("__UNREADABLE__ " + type(e).__name__ + ": " + str(e)[:120], end="")
+    sys.exit(0)
+if d.get("session") == sid and d.get("delivered_to") != sid and d.get("reminders"):
+    print(d["reminders"], end="")
+' "$_PF_SID" "$_PF_CACHE" 2>/dev/null || true)"
+  case "$_PF_BLOCK" in
+    __UNREADABLE__*)
+      echo "MYCELIUM: the background session-start checks could not be delivered (${_PF_BLOCK#__UNREADABLE__ }); run /mycelium:canvas-health for them."
+      rm -f "$_PF_PENDING"
+      _PF_BLOCK=""
+      ;;
+  esac
+  if [ -n "$_PF_BLOCK" ]; then
+    _PF_LEDGER="${CLAUDE_PLUGIN_ROOT:-}/scripts/advisory_ledger.py"
+    if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "$_PF_LEDGER" ] && [ "${MYCELIUM_ADVISORY_LEDGER:-on}" != "off" ]; then
+      _PF_SETTLED="$(printf '%s' "$_PF_BLOCK" | python3 "$_PF_LEDGER" settle --project-dir "$PROJECT_DIR" --session "$_PF_SID" 2>&1)"
+      [ -n "$_PF_SETTLED" ] && _PF_BLOCK="$_PF_SETTLED"
+    fi
+    echo "MYCELIUM FEEDBACK LOOPS (background run, delivered now): ${_PF_BLOCK}"
+    python3 -c '
+import json, sys
+sid, path = sys.argv[1], sys.argv[2]
+d = json.load(open(path)); d["delivered_to"] = sid; json.dump(d, open(path, "w"))
+' "$_PF_SID" "$_PF_CACHE" 2>/dev/null || true
+    rm -f "$_PF_PENDING"
+  fi
+fi
+
 if [ ! -f "$CORRECTIONS_FILE" ]; then
   echo "Mycelium preflight complete. Memory not yet initialized — run /mycelium:setup if this is a fresh install."
 elif [ "$CORRECTIONS_COUNT" -eq 0 ]; then

@@ -4,6 +4,48 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-09.
 
+## v0.186.0 - the contract now, the heavy checks at your next prompt
+
+The founder, on 0.185.0: *"waiting for 1 minute is a long time."* And then the sharper ask: every
+hook must be evaluated for whether it can or should run async, and those that can, edited as part
+of a general optimisation.
+
+**Measured before designing.** The session-start hook's 18 s on the dogfood canvas were 39 Python
+steps re-parsing a 5 MB canvas (a 16,000-line opportunities file at the centre), not interpreter
+start-up, which was 1.2 s in total. So the fix is not "fewer processes"; it is "do the heavy work
+where nobody waits, and only when the canvas changed".
+
+**The rule for every hook.** Claude Code's `async: true` runs a command hook without blocking and
+without timeout enforcement, but its output is not documented as delivered anywhere. That decides
+the table. Anything that returns a block decision or injects context stays synchronous: the six
+PreToolUse gates, the four PreToolUse guards, Stop's next-action check, and everything that emits
+`additionalContext`; all of them already run in 65 to 430 ms on the transcripts. Pure side effects
+go async: the three PostToolUse loggers (`change-log.sh`, `diamond-state-audit.sh`,
+`read-log.sh`), which fire on every Read, Bash and Edit and print nothing.
+
+**SessionStart is split, not made async.** The contract cannot ride an undocumented delivery path.
+`session-start.sh --fast` is the synchronous tier: it delivers the operating contract and the cheap
+checks now, announces the heavy tier as running in the background, and leaves a pending marker.
+`session-start.sh --async` is the background tier: the full run, no stdout, written to
+`.claude/state/session-checks.json` with a fingerprint of the canvas, diamonds, memory, assumption
+tests and harness files. `preflight.sh`, on UserPromptSubmit, whose stdout the docs say is added to
+context, delivers that block once at the next prompt and settles the advisory ledger then, never on
+the partial block the fast tier emitted. At the next start, an unchanged canvas within the cache
+TTL (12 h, `MYCELIUM_SESSION_CACHE_TTL`) is served inline with a line saying when the background run
+was. No flag means the full run, which is what the Codex and Cursor manifests, every existing test
+and a hand run get; nothing they relied on changed.
+
+**What moved to the heavy tier.** The ten script-backed checks already behind the 0.185.0 deadline
+guard, plus the external-evidence ratio scan (2 s on its own, a YAML walk of every canvas file).
+Everything else stays in the fast tier.
+
+**Measured after.** Fast tier on the dogfood canvas: 3 s with no cache, 3 s with a fresh one.
+Async tier: 18 s, in the background. Preflight delivery: 0.1 s. One bash test walks the
+whole cycle: fast with no cache (contract delivered, heavy tier announced, no ledger settle on a
+partial block), async (cache written, no stdout), preflight (delivered once, ledger settled,
+marker removed, nothing on the second prompt), fast with a fresh cache (served inline), a canvas
+edit (fingerprint invalidates), and full mode unchanged.
+
 ## v0.185.0 - the hook that delivers the contract was being cancelled
 
 The worst finding in the project's record, and it was found by an accident of sequence: 0.184.0

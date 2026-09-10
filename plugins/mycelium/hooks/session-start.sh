@@ -24,6 +24,67 @@ SKIPPED_FOR_TIME=""
 over_budget() { [ $(( $(date +%s) - _SS_T0 )) -ge "$_SS_BUDGET" ]; }
 
 # ============================================================
+# SPLIT START (v0.186.0): fast tier now, heavy tier in the background, delivered at the
+# next prompt; and a canvas fingerprint so an unchanged canvas costs nothing.
+# ============================================================
+# The founder, on 0.185.0: "waiting for 1 minute is a long time." The 18 s were real work
+# (39 Python steps re-parsing a 5 MB canvas), not start-up. Claude Code's `async: true`
+# runs a hook without blocking or timeout but its output is not documented as delivered,
+# so the contract must stay on the synchronous tier. Modes:
+#   (none)    full run, emit everything (Codex/Cursor manifests, tests, hand runs)
+#   --fast    synchronous tier: contract + cheap checks; the ten heavy checks come from
+#             the cache if the canvas fingerprint matches, else are announced as running
+#             in the background and delivered by preflight.sh at the next prompt
+#   --async   background tier: full run, no stdout; writes the cache
+# The advisory ledger settles only when a FULL block is delivered (full mode, or fast mode
+# with a fresh cache), never on a partial one; preflight settles when it delivers.
+_SS_MODE="full"
+case "${1:-}" in --fast) _SS_MODE="fast";; --async) _SS_MODE="async";; esac
+_SS_CACHE="$PROJECT_DIR/.claude/state/session-checks.json"
+_SS_PENDING="$PROJECT_DIR/.claude/state/session-checks.pending"
+_SS_CACHE_TTL_S="${MYCELIUM_SESSION_CACHE_TTL:-43200}"
+_SS_FINGERPRINT="$(python3 -c '
+import hashlib, os, sys, glob
+root = sys.argv[1]
+h = hashlib.sha1()
+pats = [".claude/canvas/*.yml", ".claude/diamonds/*.yml", ".claude/memory/*.md",
+        ".claude/evals/assumption-tests/*.md", ".claude/harness/*.yml"]
+for pat in pats:
+    for p in sorted(glob.glob(os.path.join(root, pat))):
+        try:
+            st = os.stat(p)
+        except OSError:
+            continue
+        h.update(f"{p}:{st.st_mtime_ns}:{st.st_size};".encode())
+print(h.hexdigest())
+' "$PROJECT_DIR" 2>/dev/null || echo "unfingerprinted-$(date +%s)")"
+_SS_HEAVY="run"
+_SS_CACHED_REMINDERS=""
+_SS_CACHE_AGE=""
+if [ "$_SS_MODE" = "fast" ]; then
+  _SS_HEAVY="skip"
+  if [ -f "$_SS_CACHE" ]; then
+    _SS_CACHED_REMINDERS="$(python3 -c '
+import json, sys, time
+fp, path, ttl = sys.argv[1], sys.argv[2], float(sys.argv[3])
+try:
+    d = json.load(open(path))
+except Exception as e:
+    print("", end=""); sys.exit(0)
+age = time.time() - float(d.get("generated_epoch") or 0)
+if d.get("fingerprint") == fp and age <= ttl:
+    print(d.get("reminders") or "", end="")
+' "$_SS_FINGERPRINT" "$_SS_CACHE" "$_SS_CACHE_TTL_S" 2>/dev/null || true)"
+    if [ -n "$_SS_CACHED_REMINDERS" ]; then
+      _SS_CACHE_AGE="$(python3 -c '
+import json, sys, time
+d = json.load(open(sys.argv[1])); print(int((time.time() - float(d.get("generated_epoch") or 0)) / 60))
+' "$_SS_CACHE" 2>/dev/null || echo "?")"
+    fi
+  fi
+fi
+
+# ============================================================
 # SESSION SOURCE (v0.104.0)
 # ============================================================
 # SessionStart fires for five sources: startup, resume, clear, compact, fork
@@ -74,6 +135,16 @@ except Exception:
   fi
 fi
 REMINDERS=""
+_SESSION_ID_EARLY=""
+if [ -n "$_HOOK_PAYLOAD" ]; then
+  _SESSION_ID_EARLY="$(printf '%s' "$_HOOK_PAYLOAD" | python3 -c "
+import json, sys
+try:
+    print((json.load(sys.stdin).get('session_id') or '').strip())
+except Exception:
+    print('')
+" 2>/dev/null || echo "")"
+fi
 
 # ============================================================
 # CHECK 0: State-file parse sanity (fail-open, but LOUD)
@@ -190,7 +261,7 @@ if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check
 elif [ -f "$PROJECT_DIR/.claude/scripts/check_cycle_recording.py" ]; then
   CYCLECHK="$PROJECT_DIR/.claude/scripts/check_cycle_recording.py"
 fi
-over_budget && { SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}cycle-recording "; CYCLECHK=""; }
+{ over_budget || [ "$_SS_HEAVY" = skip ]; } && { SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}cycle-recording "; CYCLECHK=""; }
 if [ -n "$CYCLECHK" ]; then
   CYCLE_STATE=$(python3 "$CYCLECHK" --project-dir "$PROJECT_DIR" --json 2>/dev/null \
     | python3 -c "
@@ -243,7 +314,7 @@ if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check
 elif [ -f "$PROJECT_DIR/.claude/scripts/check_cluster_reconcile.py" ]; then
   CLUSTERCHK="$PROJECT_DIR/.claude/scripts/check_cluster_reconcile.py"
 fi
-over_budget && { SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}corrections-to-cluster "; CLUSTERCHK=""; }
+{ over_budget || [ "$_SS_HEAVY" = skip ]; } && { SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}corrections-to-cluster "; CLUSTERCHK=""; }
 if [ -n "$CLUSTERCHK" ]; then
   UNRECONCILED=$(python3 "$CLUSTERCHK" --project-dir "$PROJECT_DIR" --json 2>/dev/null \
     | python3 -c "
@@ -321,7 +392,7 @@ if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check
 elif [ -f "$PROJECT_DIR/.claude/scripts/check_published_records.py" ]; then
   PUBCHK="$PROJECT_DIR/.claude/scripts/check_published_records.py"
 fi
-over_budget && { SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}published-records "; PUBCHK=""; }
+{ over_budget || [ "$_SS_HEAVY" = skip ]; } && { SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}published-records "; PUBCHK=""; }
 if [ -n "$PUBCHK" ]; then
   PUBN=$(python3 "$PUBCHK" --project-dir "$PROJECT_DIR" --json 2>/dev/null \
     | python3 -c "
@@ -369,7 +440,7 @@ if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check
 elif [ -f "$PROJECT_DIR/.claude/scripts/check_stale_prose.py" ]; then
   PROSECHK="$PROJECT_DIR/.claude/scripts/check_stale_prose.py"
 fi
-over_budget && { SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}stale-prose "; PROSECHK=""; }
+{ over_budget || [ "$_SS_HEAVY" = skip ]; } && { SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}stale-prose "; PROSECHK=""; }
 if [ -n "$PROSECHK" ]; then
   STALEPROSE=$(python3 "$PROSECHK" --project-dir "$PROJECT_DIR" --json 2>/dev/null \
     | python3 -c "
@@ -411,7 +482,7 @@ if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check
 elif [ -f "$PROJECT_DIR/.claude/scripts/check_source_authenticity.py" ]; then
   AUTHCHK="$PROJECT_DIR/.claude/scripts/check_source_authenticity.py"
 fi
-over_budget && { SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}source-authenticity "; AUTHCHK=""; }
+{ over_budget || [ "$_SS_HEAVY" = skip ]; } && { SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}source-authenticity "; AUTHCHK=""; }
 if [ -n "$AUTHCHK" ]; then
   UNCHECKEDSRC=$(python3 "$AUTHCHK" --project-dir "$PROJECT_DIR" --json 2>/dev/null \
     | python3 -c "
@@ -446,7 +517,7 @@ if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check
 elif [ -f "$PROJECT_DIR/.claude/scripts/check_source_class_fidelity.py" ]; then
   FIDCHK="$PROJECT_DIR/.claude/scripts/check_source_class_fidelity.py"
 fi
-over_budget && { SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}source-class-fidelity "; FIDCHK=""; }
+{ over_budget || [ "$_SS_HEAVY" = skip ]; } && { SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}source-class-fidelity "; FIDCHK=""; }
 if [ -n "$FIDCHK" ]; then
   BADCLASS=$(python3 "$FIDCHK" --project-dir "$PROJECT_DIR" --json 2>/dev/null \
     | python3 -c "
@@ -482,7 +553,7 @@ if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check
 elif [ -f "$PROJECT_DIR/.claude/scripts/check_reply_owed.py" ]; then
   REPLYCHK="$PROJECT_DIR/.claude/scripts/check_reply_owed.py"
 fi
-over_budget && { SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}reply-owed "; REPLYCHK=""; }
+{ over_budget || [ "$_SS_HEAVY" = skip ]; } && { SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}reply-owed "; REPLYCHK=""; }
 if [ -n "$REPLYCHK" ]; then
   OWED_LINE=$(python3 "$REPLYCHK" --project-dir "$PROJECT_DIR" 2>/dev/null \
     | grep '^REPLY OWED' || echo "")
@@ -542,7 +613,7 @@ LANDINGCHK=""
 if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check_evidence_landing.py" ]; then
   LANDINGCHK="${CLAUDE_PLUGIN_ROOT}/scripts/check_evidence_landing.py"
 fi
-over_budget && { SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}evidence-landing "; LANDINGCHK=""; }
+{ over_budget || [ "$_SS_HEAVY" = skip ]; } && { SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}evidence-landing "; LANDINGCHK=""; }
 if [ -n "$LANDINGCHK" ] && [ -d "$PROJECT_DIR/.claude/canvas" ]; then
   LANDING_OUT=$(python3 "$LANDINGCHK" --project-dir "$PROJECT_DIR" 2>/dev/null || true)
   LANDING_FAIL=$(printf '%s\n' "$LANDING_OUT" | grep '^FAIL:' | head -2 | tr '\n' ' ')
@@ -562,7 +633,7 @@ IDLECHK=""
 if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check_idle_opportunities.py" ]; then
   IDLECHK="${CLAUDE_PLUGIN_ROOT}/scripts/check_idle_opportunities.py"
 fi
-over_budget && { SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}idle-opportunities "; IDLECHK=""; }
+{ over_budget || [ "$_SS_HEAVY" = skip ]; } && { SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}idle-opportunities "; IDLECHK=""; }
 if [ -n "$IDLECHK" ] && [ -f "$PROJECT_DIR/.claude/canvas/opportunities.yml" ]; then
   IDLE_OUT=$(python3 "$IDLECHK" --project-dir "$PROJECT_DIR" 2>/dev/null || true)
   IDLE_N=$(printf '%s\n' "$IDLE_OUT" | sed -n 's/.* \([0-9][0-9]*\) IDLE$/\1/p' | head -1)
@@ -575,7 +646,7 @@ RUNCHK=""
 if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check_instrument_contract.py" ]; then
   RUNCHK="${CLAUDE_PLUGIN_ROOT}/scripts/check_instrument_contract.py"
 fi
-over_budget && { SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}runnable-instruments "; RUNCHK=""; }
+{ over_budget || [ "$_SS_HEAVY" = skip ]; } && { SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}runnable-instruments "; RUNCHK=""; }
 if [ -n "$RUNCHK" ] && [ -d "$PROJECT_DIR/.claude/evals/assumption-tests" ]; then
   RUN_OUT=$(python3 "$RUNCHK" --root "$PROJECT_DIR" 2>/dev/null || true)
   RUN_OLDEST=$(printf '%s\n' "$RUN_OUT" | sed -n '/^RUNNABLE NOW, NEVER RUN/,/^$/p' | grep -E '^  ' | head -1 | sed 's/^  //')
@@ -699,6 +770,10 @@ fi
 # CHECK 4: External evidence ratio (v0.11.0)
 # ============================================================
 # Scan canvas provenance for source_classes. Warn if all evidence is internal.
+EVIDENCE_WARNING=""
+if { over_budget || [ "$_SS_HEAVY" = skip ]; }; then
+  SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}external-evidence-ratio "
+else
 EVIDENCE_WARNING=$(python3 -c "
 import yaml, glob, sys, os
 
@@ -742,6 +817,7 @@ if total > 3 and external == 0:
 elif total > 5 and external > 0 and (external / total) < 0.2:
     print('External evidence is thin ({}/{} sources). Consider more external conversations via /handoff.'.format(external, total))
 " "$PROJECT_DIR" 2>/dev/null || echo "")
+fi
 
 if [ -n "$EVIDENCE_WARNING" ]; then
   REMINDERS="${REMINDERS}${EVIDENCE_WARNING} "
@@ -1247,6 +1323,20 @@ done
 # timeout this run came, so a slow canvas is visible before the harness starts cancelling.
 # ------------------------------------------------------------
 _SS_ELAPSED=$(( $(date +%s) - _SS_T0 ))
+_SS_DELIVER_FULL="yes"
+if [ "$_SS_MODE" = "fast" ]; then
+  if [ -n "$_SS_CACHED_REMINDERS" ]; then
+    # Fresh cache: the heavy tier's text, generated by a background run on the same canvas.
+    REMINDERS="${REMINDERS}${_SS_CACHED_REMINDERS}(The preceding checks are from a background run ${_SS_CACHE_AGE} min ago; the canvas is unchanged since.) "
+    SKIPPED_FOR_TIME=""
+  else
+    _SS_DELIVER_FULL="no"
+    REMINDERS="${REMINDERS}BACKGROUND CHECKS: ${SKIPPED_FOR_TIME}are running in the background now; their results arrive with your next prompt. "
+    SKIPPED_FOR_TIME=""
+    mkdir -p "$PROJECT_DIR/.claude/state" 2>/dev/null || true
+    ( umask 077; printf '%s' "${_SESSION_ID_EARLY:-unknown}" > "$_SS_PENDING" 2>/dev/null ) || true
+  fi
+fi
 if [ -n "$SKIPPED_FOR_TIME" ] || [ "$_SS_ELAPSED" -ge $(( _SS_MANIFEST_TIMEOUT / 2 )) ]; then
   REMINDERS="${REMINDERS}SESSION-START BUDGET: this hook took ${_SS_ELAPSED}s against an in-hook budget of ${_SS_BUDGET}s and a manifest timeout of ${_SS_MANIFEST_TIMEOUT}s."
   if [ -n "$SKIPPED_FOR_TIME" ]; then
@@ -1288,7 +1378,7 @@ fi
 # (it always echoes its input) and so means python itself did not run; that case is
 # named in the reminder rather than swallowed. Person override: MYCELIUM_ADVISORY_LEDGER=off.
 LEDGER="${CLAUDE_PLUGIN_ROOT}/scripts/advisory_ledger.py"
-if [ -f "$LEDGER" ] && [ -n "$REMINDERS" ] && [ "${MYCELIUM_ADVISORY_LEDGER:-on}" != "off" ]; then
+if [ -f "$LEDGER" ] && [ -n "$REMINDERS" ] && [ "${MYCELIUM_ADVISORY_LEDGER:-on}" != "off" ] && [ "$_SS_MODE" != "async" ] && [ "$_SS_DELIVER_FULL" = "yes" ]; then
   _SESSION_ID=""
   if [ -n "$_HOOK_PAYLOAD" ]; then
     _SESSION_ID="$(printf '%s' "$_HOOK_PAYLOAD" | python3 -c "
@@ -1305,6 +1395,20 @@ except Exception:
   else
     REMINDERS="${REMINDERS}ADVISORY LEDGER did not run (python3 returned nothing); advisories above are unrecorded this session. "
   fi
+fi
+
+if [ "$_SS_MODE" = "async" ]; then
+  # Background tier: write the heavy-tier text for preflight.sh to deliver, emit nothing.
+  # The contract is NOT cached; it is delivered by the fast tier every start.
+  mkdir -p "$PROJECT_DIR/.claude/state" 2>/dev/null || true
+  python3 -c '
+import json, sys, time
+fp, sid, path, reminders = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
+json.dump({"fingerprint": fp, "session": sid, "generated_epoch": time.time(),
+           "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+           "reminders": reminders, "delivered_to": None}, open(path, "w"))
+' "$_SS_FINGERPRINT" "${_SESSION_ID_EARLY:-unknown}" "$_SS_CACHE" "$REMINDERS" 2>/dev/null || true
+  exit 0
 fi
 
 python3 -c "
