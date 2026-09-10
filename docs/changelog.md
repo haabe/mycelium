@@ -4,18 +4,13 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-09.
 
-## v0.194.1 - the two new gates resolve like the old ones
+## v0.194.2 - the changelog claims only what shipped, again
 
-0.194.0 never released. CI has no `uv`, so `scripts/gates.sh` declared uvx MISSING for the two new
-auditors and the gates-wrapper suite, which expects a clean fixture to pass, went red. The
-validator's diagnostic then capped at 200 lines and showed thirteen green suites and not the red
-one, so the CI log carried no name to act on. Three fixes: the auditors resolve the way pytest and
-ruff do (pip-installed binary, then uvx pinned, then MISSING) and only when a workflows directory
-or a requirements file exists; the validator prints each failing suite's summary with forty lines
-of context before the capped dump; and a `# shellcheck disable=... -- reason` directive that the
-newer pinned shellcheck rejects is split into a comment and a directive. Docs and tooling only.
+0.194.1 released and its release job failed the documented-version backstop on v0.194.0, exactly as 0.192.1 did on v0.192.0. Same remedy: the never-released section is folded into the released one. Docs only. Twice in one day is a pattern, and it is recorded in the dogfood decision log as a candidate for the release script: a version bumped and folded before release should not need a third release to say so.
 
-## v0.194.0 - supply chain and logs, to the standard the review named
+## v0.194.1 - supply chain and logs, to the standard the review named
+
+*0.194.0 was bumped, documented and never released: CI has no uv, the two new local gates reported uvx MISSING, the gates-wrapper suite went red, and the validator's capped diagnostic hid which one. Its section is folded here; there is no v0.194.0 Release and there will not be one. 0.194.1 adds the resolver fix (a binary that answers `--version`, then uvx pinned, then MISSING, and only when the inputs exist), the failing-suite-first diagnostic, and a shellcheck directive rewrite for the pinned 0.11.*
 
 The two LOW findings from the 2026-09-10 security review (dogfood DL-1262), on the founder's "fix them
 all according to best practices".
