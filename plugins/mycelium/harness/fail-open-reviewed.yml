@@ -501,3 +501,19 @@ reviewed:
     "advisory ledger module unavailable"; pick() joins the notes and main() prints them to STDOUT
     (the hook drops stderr), so the line the human sees names what could not be read rather than
     presenting a lesser item as the whole picture. Reviewed 2026-09-10, v0.188.0.
+
+- id: check_reply_owed.py@ce4f01f7f1
+  verdict: accepted
+  reason: >-
+    `_entry_date`: a touch_log date that is not ISO is skipped when ordering contacts, and
+    the skip is SPOKEN: the handler appends "ht-id touch_log[i]: <raw>" to UNREADABLE_DATES,
+    which main() prints as a NOTE line (and as `unreadable_dates` under --json), so an
+    inbound hidden by a typo'd date is named rather than passed over. Reviewed 2026-09-10,
+    v0.190.0.
+
+- id: check_reply_owed.py@1db3251134
+  verdict: accepted
+  reason: >-
+    `_reply_not_owed_date`: a `reply_not_owed.date` that is not ISO means the marker does
+    not apply (the safe direction: the inbound still fires), and the handler appends the
+    raw value to UNREADABLE_DATES, which main() prints. Reviewed 2026-09-10, v0.190.0.

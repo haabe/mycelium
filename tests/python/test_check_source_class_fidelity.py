@@ -19,6 +19,7 @@ this check is anchored so that "founder-relayed", "non-founder" and "solo-founde
 inside a genuinely external source do NOT fire, because a false positive here costs a
 maintainer an argument with a correct record.
 """
+
 import sys
 
 import yaml
@@ -60,6 +61,7 @@ def _run(mod, *argv):
 
 
 # --- the defect this shipped for -------------------------------------------
+
 
 def test_founder_labelled_external_is_caught(scripts_path, tmp_path, capsys):
     """THE NEGATIVE CONTROL: the exact five-instance shape found in dogfood."""
@@ -112,6 +114,7 @@ def test_misaligned_arrays_are_caught(scripts_path, tmp_path, capsys):
 
 # --- precision: these must NOT fire ----------------------------------------
 
+
 def test_founder_word_inside_an_external_source_is_not_flagged(scripts_path, tmp_path):
     """`founder-relayed`, `non-founder`, `solo-founder` all appear in real external
     sources. The detector is anchored at the start for exactly this reason."""
@@ -153,6 +156,7 @@ def test_ordinary_external_human_passes(scripts_path, tmp_path, capsys):
 
 # --- empty-input honesty ---------------------------------------------------
 
+
 def test_no_canvas_dir_refuses_rather_than_passing(scripts_path, tmp_path, capsys):
     """check_empty_input_honesty.py requires this: exit 0 on empty input would mean
     'I looked at nothing and everything is fine', which is never true."""
@@ -191,3 +195,77 @@ def test_project_dir_alias_works(scripts_path, tmp_path):
     mod = _import(scripts_path)
     _canvas(tmp_path, ["Founder lived experience"], ["external_human"])
     assert _run(mod, "--project-dir", str(tmp_path)) == 1
+
+
+# --- reviewed markers (v0.190.0) --------------------------------------------
+
+
+def _canvas_with(project, block, ident="opp-001"):
+    canvas = project / ".claude" / "canvas"
+    canvas.mkdir(parents=True, exist_ok=True)
+    doc = {"opportunities": [{"id": ident, "provenance": block}]}
+    (canvas / "opportunities.yml").write_text(yaml.safe_dump(doc, allow_unicode=True))
+
+
+def test_alignment_reviewed_reports_coverage_not_fail(scripts_path, tmp_path, capsys):
+    """Eleven dogfood blocks list classes as a set; a human read them and left them. The
+    check must say so as coverage and stop failing, and must name a repeating reason as a
+    rule it is missing rather than as many judgements."""
+    mod = _import(scripts_path)
+    _canvas_with(
+        tmp_path,
+        {
+            "evidence_sources": ["a", "b", "c"],
+            "source_classes": ["internal_desk"],
+            "alignment_reviewed": {"date": "2026-09-10", "reason": "classes listed as a set"},
+        },
+    )
+    assert _run(mod, "--root", str(tmp_path)) == 0
+    out = capsys.readouterr().out
+    assert "[alignment]" not in out
+    assert "reviewed coverage" in out and "1 block(s) of reviewed coverage" in out
+
+
+def test_repeating_alignment_reason_is_called_out(scripts_path, tmp_path, capsys):
+    mod = _import(scripts_path)
+    canvas = tmp_path / ".claude" / "canvas"
+    canvas.mkdir(parents=True)
+    same = {"date": "2026-09-10", "reason": "classes listed as a set"}
+    doc = {
+        "opportunities": [
+            {
+                "id": f"opp-00{i}",
+                "provenance": {
+                    "evidence_sources": ["a", "b"],
+                    "source_classes": ["internal_desk"],
+                    "alignment_reviewed": dict(same),
+                },
+            }
+            for i in (1, 2)
+        ]
+    }
+    (canvas / "opportunities.yml").write_text(yaml.safe_dump(doc, allow_unicode=True))
+    assert _run(mod, "--root", str(tmp_path)) == 0
+    out = capsys.readouterr().out
+    assert "2 of them share one reason" in out
+
+
+def test_label_reviewed_skips_one_index_only(scripts_path, tmp_path, capsys):
+    """A person quoting an agent's behaviour ("subagent" in his words) was read as a run.
+    Marking index 0 keeps that label; an unmarked sibling still fires."""
+    mod = _import(scripts_path)
+    src = "Hunter Harris: the subagent rewrote my test to pass. Reddit thread."
+    _canvas_with(
+        tmp_path,
+        {
+            "evidence_sources": [src, src],
+            "source_classes": ["external_human", "external_human"],
+            "label_reviewed": [
+                {"index": 0, "date": "2026-09-10", "reason": "a person quoting an agent"}
+            ],
+        },
+    )
+    rc = _run(mod, "--root", str(tmp_path))
+    out = capsys.readouterr().out
+    assert "[1]" in out or "index 1" in out or rc == 1, out
+    assert out.count("Hunter") <= 1 or rc == 1

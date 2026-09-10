@@ -102,7 +102,10 @@ _SUBREDDIT = re.compile(r"(?<![\w/])/?r/[A-Za-z0-9_]{2,}")
 # Evidence that SOMEONE LOOKED. Generous by design: the cost of missing a real check is
 # a nag on a record that already did the work, and that is how advisories get ignored.
 _AUTHENTICITY_NOTE = re.compile(
-    r"\b(OP[- ]replies?|replies?\s+to\s+(?:every|nearly every|people)"
+    # `handles_checked:` is the REVIEWED MARKER (v0.190.0): a key whose value says what was
+    # checked and when, per canvas-guidance reviewed_markers. Dogfood instance: ht-107, where
+    # five of twelve handles had replied and the record said so in a field this missed.
+    r"\b(handles_checked|OP[- ]replies?|replies?\s+to\s+(?:every|nearly every|people)"
     r"|profile\s+(?:checked|load|read)|account(?:s)?\s+(?:checked|was\s+checked)"
     r"|authenticity\s+(?:checked|test)|CHECKED\s+AND\s+CREDIBLE"
     r"|persona\s+continuity|comment\s+karma|post\s+karma"

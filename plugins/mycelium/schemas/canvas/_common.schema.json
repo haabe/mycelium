@@ -13,7 +13,7 @@
         "test-validated",
         "launch-validated"
       ],
-      "description": "Gilad's evidence ladder. Match the level of evidence to the claim \u2014 never overclaim."
+      "description": "Gilad's evidence ladder. Match the level of evidence to the claim — never overclaim."
     },
     "confidence": {
       "oneOf": [
@@ -43,7 +43,7 @@
         "internal_simulated",
         "pointer"
       ],
-      "description": "Classification of an evidence source's origin. external_human = real conversation with a real person (user interview, usability test, survey response). external_data = third-party analytics, behavioral data, market data. internal_stakeholder = founder/PM/team interview \u2014 beliefs about users, constraints, strategy; organizational mythology (Brown). Counts toward L0 confidence but does NOT satisfy L2 external_human requirements. internal_desk = desk research, competitive analysis, brainstorming. internal_simulated = mocked persona interview, thought experiment. pointer = the source is a REFERENCE to another canvas entry, not evidence in itself (e.g. `purpose.yml#evidence (2026-05-03 \u2026)`); its class is whatever the target carries. Added v0.82.0 after a dogfood classification pass: copying the target's class into the pointer looks tidier and goes stale silently the moment the target is reclassified \u2014 the same duplicate-a-derived-value defect that produced a stale correction count and a stale gate-heading the same week. A pointer is RESOLVED AT READ TIME. An unresolved pointer (target unclassified or missing) is reported as unresolved and is NOT defaulted to internal_desk, because a conservative default here would silently understate external coverage and read as a measurement."
+      "description": "Classification of an evidence source's origin. external_human = real conversation with a real person (user interview, usability test, survey response). external_data = third-party analytics, behavioral data, market data. internal_stakeholder = founder/PM/team interview — beliefs about users, constraints, strategy; organizational mythology (Brown). Counts toward L0 confidence but does NOT satisfy L2 external_human requirements. internal_desk = desk research, competitive analysis, brainstorming. internal_simulated = mocked persona interview, thought experiment. pointer = the source is a REFERENCE to another canvas entry, not evidence in itself (e.g. `purpose.yml#evidence (2026-05-03 …)`); its class is whatever the target carries. Added v0.82.0 after a dogfood classification pass: copying the target's class into the pointer looks tidier and goes stale silently the moment the target is reclassified — the same duplicate-a-derived-value defect that produced a stale correction count and a stale gate-heading the same week. A pointer is RESOLVED AT READ TIME. An unresolved pointer (target unclassified or missing) is reported as unresolved and is NOT defaulted to internal_desk, because a conservative default here would silently understate external coverage and read as a measurement."
     },
     "provenance": {
       "type": "object",
@@ -65,7 +65,7 @@
           "items": {
             "$ref": "#/$defs/source_class"
           },
-          "description": "Parallel array to evidence_sources classifying each source's origin. Optional \u2014 unclassified sources default to internal_desk for ratio calculations. Added in v0.11.0 to address the internal/external evidence ratio Goodhart trap."
+          "description": "Parallel array to evidence_sources classifying each source's origin. Optional — unclassified sources default to internal_desk for ratio calculations. Added in v0.11.0 to address the internal/external evidence ratio Goodhart trap."
         },
         "source_class": {
           "$ref": "#/$defs/source_class",
@@ -84,11 +84,52 @@
         },
         "notes": {
           "type": "string",
-          "description": "Free-text annotation about how the evidence was gathered, caveats, or context that doesn't fit other fields. Optional. Kept short \u2014 provenance is reference metadata, not narrative."
+          "description": "Free-text annotation about how the evidence was gathered, caveats, or context that doesn't fit other fields. Optional. Kept short — provenance is reference metadata, not narrative."
         },
         "validated_at": {
           "$ref": "#/$defs/iso_timestamp",
-          "description": "When this evidence was last RE-CHECKED and found to still hold \u2014 distinct from `captured_at`, which is when it was first gathered and must never be overwritten. engine/evidence-decay.md makes this the field a refresh writes ('update `validated_at` to the current date'), canvas-health step 7 scans for it, and the decay comparison reads the newer of the two. DECLARED 2026-09-01 BECAUSE IT WAS NOT: this def sets additionalProperties:false, so for the life of the schema the framework instructed a refresh action that its own validator rejected. A consumer following the documented protocol produced an invalid canvas, which is a plausible reason no entry in the dogfood project was ever refreshed \u2014 the decay loop could not close."
+          "description": "When this evidence was last RE-CHECKED and found to still hold — distinct from `captured_at`, which is when it was first gathered and must never be overwritten. engine/evidence-decay.md makes this the field a refresh writes ('update `validated_at` to the current date'), canvas-health step 7 scans for it, and the decay comparison reads the newer of the two. DECLARED 2026-09-01 BECAUSE IT WAS NOT: this def sets additionalProperties:false, so for the life of the schema the framework instructed a refresh action that its own validator rejected. A consumer following the documented protocol produced an invalid canvas, which is a plausible reason no entry in the dogfood project was ever refreshed — the decay loop could not close."
+        },
+        "alignment_reviewed": {
+          "type": "object",
+          "description": "Reviewed marker (canvas-guidance.yml#reviewed_markers): a human read this unequal-length block and judged the labels sound. Dated with a reason; check_source_class_fidelity reports it as coverage, not FAIL.",
+          "required": [
+            "date",
+            "reason"
+          ],
+          "properties": {
+            "date": {
+              "type": "string"
+            },
+            "reason": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "label_reviewed": {
+          "type": "array",
+          "description": "Reviewed marker: one source's label was read and kept. Index into evidence_sources, dated, with a reason.",
+          "items": {
+            "type": "object",
+            "required": [
+              "index",
+              "date",
+              "reason"
+            ],
+            "properties": {
+              "index": {
+                "type": "integer"
+              },
+              "date": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
         }
       },
       "required": [
@@ -158,11 +199,11 @@
         "observed",
         "inferred"
       ],
-      "description": "How the closure reason was established. observed = something happened and was witnessed or recorded (a reply arrived, a message went unanswered, a criterion was measured and missed). inferred = the reason rests on reasoning about what probably happened, most commonly elapsed time ('the window has passed', 'no word since'). An elapsed interval is NOT an observation: nothing new is learned by a calendar advancing. Writing `inferred` is not a failure \u2014 it is the honest label for a defensible guess, and it marks the claim so a later reader does not cite it as fact. Origin: a dogfood closure recorded as fact from a month-old expectation, then cited across 12 sites before anyone asked the person who knew (2026-08-04)."
+      "description": "How the closure reason was established. observed = something happened and was witnessed or recorded (a reply arrived, a message went unanswered, a criterion was measured and missed). inferred = the reason rests on reasoning about what probably happened, most commonly elapsed time ('the window has passed', 'no word since'). An elapsed interval is NOT an observation: nothing new is learned by a calendar advancing. Writing `inferred` is not a failure — it is the honest label for a defensible guess, and it marks the claim so a later reader does not cite it as fact. Origin: a dogfood closure recorded as fact from a month-old expectation, then cited across 12 sites before anyone asked the person who knew (2026-08-04)."
     },
     "closure_discipline": {
       "title": "Closure discipline",
-      "description": "Applies to any canvas item that can be closed. If a `closure_reason` is asserted, two companions become mandatory: `closure_basis` (was this observed or inferred) and `reopen_trigger` (what would make this wrong). Deliberately conditional rather than always-required \u2014 items that are simply finished need no ceremony; the obligation attaches only when a REASON is claimed. Solution leaves have had an archive protocol since v0.x (archived-solutions.yml, 'Never deleted \u2014 they are learning'); opportunities and human-tasks had none, and hand-rolled reopen semantics appeared 17 times in one dogfood canvas against 0 mentions in its schema.",
+      "description": "Applies to any canvas item that can be closed. If a `closure_reason` is asserted, two companions become mandatory: `closure_basis` (was this observed or inferred) and `reopen_trigger` (what would make this wrong). Deliberately conditional rather than always-required — items that are simply finished need no ceremony; the obligation attaches only when a REASON is claimed. Solution leaves have had an archive protocol since v0.x (archived-solutions.yml, 'Never deleted — they are learning'); opportunities and human-tasks had none, and hand-rolled reopen semantics appeared 17 times in one dogfood canvas against 0 mentions in its schema.",
       "if": {
         "required": [
           "closure_reason"

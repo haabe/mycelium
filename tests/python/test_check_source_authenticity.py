@@ -4,6 +4,7 @@ Fixtures are VERBATIM shapes from the 2026-08-07 dogfood session that motivated 
 check, not invented ones. Three defects were found by running the first cut against a
 LIVE canvas rather than a fixture; each has a regression test here.
 """
+
 import sys
 
 import pytest
@@ -12,6 +13,7 @@ import pytest
 def _import(scripts_path):
     sys.path.insert(0, str(scripts_path))
     import check_source_authenticity
+
     return check_source_authenticity
 
 
@@ -49,13 +51,16 @@ def test_authenticity_note_suppresses_the_finding(scripts_path):
 
 # ------------------------------------------------------------------ negative controls
 
+
 def test_named_person_without_a_handle_is_not_flagged(scripts_path):
     """NEGATIVE CONTROL. A named person the founder actually corresponded with is a
     different evidence situation entirely. If this fires, the rule has degenerated into
     'flag every external_human entry'."""
     c = _import(scripts_path)
-    txt = ("    summary: Brooks Talley replied the same day and answered both questions.\n"
-           "    source_class: external_human\n")
+    txt = (
+        "    summary: Brooks Talley replied the same day and answered both questions.\n"
+        "    source_class: external_human\n"
+    )
     assert c.scan_text(txt) == []
 
 
@@ -75,6 +80,7 @@ def test_subreddit_is_not_a_person(scripts_path):
 
 
 # ------------------------------------------------------------------ defects found on a live canvas
+
 
 def test_package_scope_is_not_a_person(scripts_path):
     """DEFECT 1, found by running against a live canvas. `@haabe-mycelium` is a plugin
@@ -100,8 +106,10 @@ def test_convergence_rule_needs_two_distinct_accounts(scripts_path):
     convergence-across-strangers claim. Firing rule B on a single account overstates
     what the record did. It still gets rule A."""
     c = _import(scripts_path)
-    txt = ("    summary: u/OnlyOne said it, convergence with our own read.\n"
-           "    source_class: external_human\n")
+    txt = (
+        "    summary: u/OnlyOne said it, convergence with our own read.\n"
+        "    source_class: external_human\n"
+    )
     rules = [r for r, _ in c.scan_text(txt)]
     assert rules and all(r.startswith("A/") for r in rules), rules
 
@@ -115,6 +123,7 @@ def test_handles_are_counted_once_each(scripts_path):
 
 
 # ------------------------------------------------------------------ empty-input honesty
+
 
 def test_refuses_over_an_empty_population(scripts_path, tmp_path, monkeypatch, capsys):
     """EMPTY-INPUT HONESTY. check_empty_input_honesty.py caught check_stale_prose.py
@@ -158,11 +167,13 @@ def test_text_report_names_the_rule_and_the_remedy(scripts_path, tmp_path, monke
     assert "Count ACCOUNTS, not comments" in out
 
 
-def test_json_report_carries_the_scanned_count_even_when_clean(scripts_path, tmp_path,
-                                                               monkeypatch, capsys):
+def test_json_report_carries_the_scanned_count_even_when_clean(
+    scripts_path, tmp_path, monkeypatch, capsys
+):
     """Empty-input honesty at the reporting layer: 'nothing found' must stay
     distinguishable from 'nothing looked at'."""
     import json as _json
+
     c = _import(scripts_path)
     d = tmp_path / ".claude"
     d.mkdir()
@@ -176,6 +187,7 @@ def test_json_report_carries_the_scanned_count_even_when_clean(scripts_path, tmp
 
 def test_json_report_lists_violations(scripts_path, tmp_path, monkeypatch, capsys):
     import json as _json
+
     c = _import(scripts_path)
     root = _canvas(tmp_path)
     monkeypatch.setattr(sys, "argv", ["x", "--root", str(root), "--json"])
@@ -206,6 +218,21 @@ def test_unreadable_file_is_skipped_not_fatal(scripts_path, tmp_path):
     """A non-UTF-8 file in the tree must not abort the whole scan."""
     c = _import(scripts_path)
     from pathlib import Path
+
     p = tmp_path / "bad.yml"
     p.write_bytes(b"\xff\xfe\x00binary")
     assert list(c.iter_records(Path(p))) == []
+
+
+# ------------------------------------------------------------------ reviewed marker (v0.190.0)
+
+
+def test_handles_checked_marker_silences_the_record(scripts_path):
+    """`handles_checked: 'YYYY-MM-DD <what was checked>'` is the field form of the prose
+    note above (canvas-guidance.yml#reviewed_markers): one convention for all four checks."""
+    c = _import(scripts_path)
+    assert c.scan_text(CONVERGENCE_UNCHECKED) != [], "control: the unchecked text still fires"
+    marked = CONVERGENCE_UNCHECKED + (
+        "      handles_checked: '2026-09-10 both accounts opened; one templated, withdrawn'\n"
+    )
+    assert c.scan_text(marked) == [], "a record with handles_checked was re-flagged"

@@ -165,9 +165,19 @@ def split_fields(chunk: str) -> dict[str, str]:
     return fields
 
 
+#: REVIEWED MARKER (v0.190.0). A record carrying `stale_prose_reviewed: 'YYYY-MM-DD ...'` has been
+#: read by a human who judged the flagged prose still true; both rules stay silent on it. The
+#: value carries the date (content in the value, never in the key name, per canvas-guidance
+#: reviewed_markers). Dogfood instance: sol-047e's "tasks due today reported as quiet" is a bug
+#: description, not a bare temporal word, and had no way to say so.
+_REVIEWED_MARKER = re.compile(r"^\s*stale_prose_reviewed:\s*\S", re.MULTILINE)
+
+
 def scan_text(text: str) -> list[tuple[str, str]]:
     """Return (rule, evidence) findings for one record's text."""
     out: list[tuple[str, str]] = []
+    if _REVIEWED_MARKER.search(text):
+        return out
 
     for m in _DEIXIS.finditer(text):
         window = text[max(0, m.start() - 120): m.end() + 120]

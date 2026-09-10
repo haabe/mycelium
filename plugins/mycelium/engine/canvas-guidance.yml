@@ -895,6 +895,46 @@ prior_findings_first:
     register would need its own reader — the same defect one layer up. Findings stay where
     the instrument already writes them; what changes is that the next run must read them.
 
+reviewed_markers:
+  # ADDED 2026-09-10 (v0.190.0), from the first advisory block the dogfood agent ever received
+  # through the harness (DL-1253). Four of its lines were judged false positives on a read and
+  # had no way to say so: a bug description flagged as a bare "today", a person flagged as not a
+  # person because his quote contained "subagent", eleven provenance blocks whose classes are
+  # listed as a set, and an inbound that asked nothing. Each would fire at every start until its
+  # check learned a marker. The advisory ledger (sol-006d) measures whether a condition CLEARED;
+  # a judged-and-left case never clears, which is the ledger's stated blind spot. These markers
+  # are how a human judgement becomes a state the check can read.
+  #
+  # THE RULE: content in the VALUE, never in the key name. `stale_prose_reviewed: '2026-09-10
+  # bug description'` can be dated and compared; `stale_prose_reviewed_2026_09_10:` can only be
+  # grepped and never expires. Every marker carries a date and a reason; a marker with neither
+  # is a mute, and a mute looks like coverage.
+  markers:
+    - check: check_stale_prose.py
+      key: stale_prose_reviewed
+      shape: "'YYYY-MM-DD <reason>'  (record-level)"
+      effect: both rules silent on that record
+    - check: check_source_authenticity.py
+      key: handles_checked
+      shape: "'YYYY-MM-DD <what was checked and how>'  (record-level)"
+      effect: rules A and B silent on that record
+    - check: check_source_class_fidelity.py
+      key: alignment_reviewed
+      shape: "{date: YYYY-MM-DD, reason: <why the arrays differ>}  (on the provenance block)"
+      effect: unequal-length block reported as reviewed coverage, never FAIL
+    - check: check_source_class_fidelity.py
+      key: label_reviewed
+      shape: "[{index: N, date: YYYY-MM-DD, reason: <why the label stands>}]  (on the provenance block)"
+      effect: that index skipped by the contradiction detector
+    - check: check_reply_owed.py
+      key: reply_not_owed
+      shape: "{date: YYYY-MM-DD, reason: <what the inbound was>}  (task-level); or `owed: false` on one inbound touch"
+      effect: inbound touches dated on or before the date count as answered; a later inbound still fires
+  what_a_marker_is_not: >-
+    A marker is a ruling on ONE record on ONE date. It is not a way to turn a check off, and a
+    check that finds many markers with the same reason should say so in its report, because a
+    reason that repeats is a rule the check is missing, not eleven judgements.
+
 learning_target_coupling:
   principle: |
     When a feedback-gathering activity is being designed (an interview, an

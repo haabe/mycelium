@@ -4,6 +4,7 @@ The regression fixtures are VERBATIM shapes from the 2026-08-07 dogfood session 
 motivated the check, not invented ones. Three bugs were found while building it, each
 by running against the real pre-fix record; each has a test here so they cannot return.
 """
+
 import sys
 
 import pytest
@@ -12,6 +13,7 @@ import pytest
 def _import(scripts_path):
     sys.path.insert(0, str(scripts_path))
     import check_stale_prose
+
     return check_stale_prose
 
 
@@ -48,8 +50,7 @@ def test_nested_touch_log_does_not_hide_the_done_marker(scripts_path):
     child, so 'Reply sent' never reached the log side and the case produced NO finding."""
     c = _import(scripts_path)
     fields = c.split_fields(HT060_PREFIX)
-    assert "Reply sent" in fields.get("touch_log", ""), \
-        "touch_log must own its nested children"
+    assert "Reply sent" in fields.get("touch_log", ""), "touch_log must own its nested children"
 
 
 def test_child_keys_are_not_classified_as_record_fields(scripts_path):
@@ -58,8 +59,9 @@ def test_child_keys_are_not_classified_as_record_fields(scripts_path):
     where the resolution-suppressor silenced the very instance this check exists for."""
     c = _import(scripts_path)
     fields = c.split_fields(HT060_PREFIX)
-    assert "DISCHARGED" not in fields.get("note", ""), \
+    assert "DISCHARGED" not in fields.get("note", ""), (
         "nested note: must not be classified as the record's framing note"
+    )
 
 
 def test_quoted_stale_phrase_in_a_repair_note_is_not_flagged(scripts_path):
@@ -69,13 +71,14 @@ def test_quoted_stale_phrase_in_a_repair_note_is_not_flagged(scripts_path):
     c = _import(scripts_path)
     repaired = HT060_PREFIX.replace(
         "TWO THINGS, AND THE FIRST IS OWED TODAY.",
-        'ONE THING LIVE; (1) DISCHARGED 2026-08-02. The objective kept reading '
+        "ONE THING LIVE; (1) DISCHARGED 2026-08-02. The objective kept reading "
         '"THE FIRST IS OWED TODAY" until 2026-08-07 because the touch_log moved and this '
-        'line did not.',
+        "line did not.",
     )
     found = [r for r, _ in c.scan_text(repaired)]
-    assert not any(r.startswith("B/") for r in found), \
+    assert not any(r.startswith("B/") for r in found), (
         f"re-flagged a record that was already repaired: {found}"
+    )
 
 
 def test_honest_open_work_is_not_flagged(scripts_path):
@@ -97,6 +100,7 @@ def test_honest_open_work_is_not_flagged(scripts_path):
 
 
 # ------------------------------------------------------------------ Rule A: unanchored deixis
+
 
 def test_unanchored_today_is_flagged(scripts_path):
     c = _import(scripts_path)
@@ -132,6 +136,7 @@ def test_refuses_over_an_empty_population(scripts_path, tmp_path, monkeypatch, c
 
 # ------------------------------------------------------------------ terminal records (2026-08-07)
 
+
 def test_rule_b_skips_finished_records(scripts_path):
     """Rule B's premise -- framing says not-done, log says done -- is EXPECTED and
     CORRECT on a completed task: the objective describes what the task was FOR.
@@ -159,3 +164,19 @@ def test_rule_a_still_fires_on_finished_records(scripts_path):
     txt = "  - id: ht-x\n    status: completed\n    note: the pull is due today, still open\n"
     found = [r for r, _ in c.scan_text(txt)]
     assert any(r.startswith("A/") for r in found), f"rule A must survive terminal status: {found}"
+
+
+# ------------------------------------------------------------------ reviewed marker (v0.190.0)
+
+
+def test_stale_prose_reviewed_marker_silences_the_record(scripts_path):
+    """A record a human has read and ruled sound must not fire at every start (dogfood
+    2026-09-10: a bug description containing "due today" was flagged as a bare temporal
+    word). The marker carries a date and a reason, content in the value, per
+    canvas-guidance.yml#reviewed_markers."""
+    c = _import(scripts_path)
+    assert c.scan_text(HT060_PREFIX) != [], "control: the motivating text still fires unmarked"
+    marked = HT060_PREFIX + (
+        "    stale_prose_reviewed: '2026-09-10 the phrase is a bug description, not a date'\n"
+    )
+    assert c.scan_text(marked) == [], "a reviewed record was re-flagged"

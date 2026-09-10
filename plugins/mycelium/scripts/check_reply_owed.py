@@ -68,6 +68,43 @@ def is_terminal(task: dict) -> bool:
     return _status(task) in TERMINAL_STATUSES
 
 
+#: Dates this run could not read, as "ht-id touch_log[i]: <raw>". An unreadable date on an
+#: inbound would hide an obligation, so main() prints the list rather than passing over it.
+UNREADABLE_DATES: list[str] = []
+
+
+def _entry_date(entry: dict, where: str = "") -> datetime.date | None:
+    raw = entry.get("date")
+    if not isinstance(raw, str):
+        return None
+    try:
+        return datetime.date.fromisoformat(raw[:10])
+    except ValueError:
+        UNREADABLE_DATES.append(f"{where}: {raw!r}")  # spoken by main(); never a silent skip
+        return None
+
+
+def _reply_not_owed_date(task: dict) -> datetime.date | None:
+    """The date on a task-level `reply_not_owed: {date, reason}` marker, or None."""
+    rno = task.get("reply_not_owed")
+    if isinstance(rno, dict) and isinstance(rno.get("date"), str):
+        try:
+            return datetime.date.fromisoformat(rno["date"][:10])
+        except ValueError:
+            # spoken by main(); an unreadable marker date means the marker does not apply
+            UNREADABLE_DATES.append(f"{task.get('id', '?')} reply_not_owed: {rno['date']!r}")
+            return None
+    return None
+
+
+def _reviewed_as_answered(entry: dict, when: datetime.date, rno_date) -> bool:
+    """An inbound a human judged to ask nothing: `owed: false` on the touch, or a task-level
+    marker dated on or after the touch."""
+    if entry.get("owed") is False:
+        return True
+    return rno_date is not None and when <= rno_date
+
+
 def last_contact(task: dict) -> tuple[datetime.date, str, int] | None:
     """Newest CONTACT entry as (date, direction, index), ties broken by log position.
 
@@ -75,19 +112,25 @@ def last_contact(task: dict) -> tuple[datetime.date, str, int] | None:
     date, so the out-of-order-log guardpost is unaffected.
     """
     best: tuple[datetime.date, str, int] | None = None
+    # REVIEWED MARKER (v0.190.0). An inbound entry carrying `owed: false` was read by a human
+    # who judged it asked nothing; it counts as answered. A task-level `reply_not_owed:
+    # {date, reason}` does the same for every inbound dated on or before that date, so a
+    # later inbound on the same task still fires. Dogfood instance: ht-109, whose last three
+    # touches were one recipient's messages logged verbatim as "No question asked; nothing
+    # owed", and whose only way to clear the advisory was an outbound that would have
+    # contaminated a control arm.
+    rno_date = _reply_not_owed_date(task)
     for i, entry in enumerate(task.get("touch_log") or []):
         if not isinstance(entry, dict):
             continue
         direction = entry.get("direction")
         if direction not in CONTACT_DIRECTIONS:
             continue
-        raw = entry.get("date")
-        if not isinstance(raw, str):
+        when = _entry_date(entry, f"{task.get('id', '?')} touch_log[{i}]")
+        if when is None:
             continue
-        try:
-            when = datetime.date.fromisoformat(raw[:10])
-        except ValueError:
-            continue
+        if direction == "inbound" and _reviewed_as_answered(entry, when, rno_date):
+            direction = "outbound"
         if best is None or (when, i) > (best[0], best[2]):
             best = (when, direction, i)
     return best
@@ -175,8 +218,12 @@ def main(argv: list[str] | None = None) -> int:
             "status": "violations" if flagged else "ok",
             "tasks_scanned": len(tasks),
             "violations": flagged,
+            "unreadable_dates": list(UNREADABLE_DATES),
         }))
         return 0
+
+    for bad in UNREADABLE_DATES:
+        print(f"NOTE: unreadable date, skipped when ordering contacts: {bad}")
 
     if not flagged:
         print(f"OK: no reply owed across {len(tasks)} task(s).")

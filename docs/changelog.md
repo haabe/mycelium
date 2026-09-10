@@ -4,6 +4,32 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-09.
 
+## v0.190.0 - a judgement the check can read
+
+The first advisory block the dogfood agent ever received through the harness (DL-1253, after
+0.185.0 repaired delivery) carried four lines it ruled false positives on a read: a bug
+description flagged as a bare "today"; a person flagged as not a person because his quote
+contained "subagent"; eleven provenance blocks whose classes are listed as a set rather than
+index-parallel; an inbound that asked nothing, logged three times as owing no reply. None of the
+four checks had a way to record the ruling, so each would fire at every start until it did, and
+the advisory ledger from 0.184.0 cannot see a judged-and-left case, because a judged case never
+clears. That is the ledger's stated blind spot, and this release is the marker it was waiting for.
+
+**One convention, five keys.** `engine/canvas-guidance.yml#reviewed_markers`: content in the
+value and never in the key name, so a marker can be dated and compared; every marker carries a
+date and a reason, because a marker with neither is a mute and a mute looks like coverage.
+`stale_prose_reviewed: 'YYYY-MM-DD <reason>'` silences both stale-prose rules on that record.
+`handles_checked: 'YYYY-MM-DD <what was checked>'` silences both authenticity rules.
+`alignment_reviewed: {date, reason}` on a provenance block reports an unequal-length block as
+reviewed coverage rather than FAIL, and the report names it when several blocks share one reason,
+because a reason that repeats is a rule the check is missing, not that many judgements.
+`label_reviewed: [{index, date, reason}]` skips one source's label. `reply_not_owed: {date,
+reason}` on a task, or `owed: false` on one inbound touch, counts inbounds dated on or before that
+date as answered, so a later inbound on the same task still fires.
+
+**Tests.** One case per marker in the existing test files for the four checks, plus the
+repeating-reason line. No behaviour changes for records without a marker.
+
 ## v0.189.0 - "did it run" is the first SLI
 
 The dogfood `/dora-check` on 2026-09-10 rated reliability as "2 of 3 SLOs at 100%" for the month in
