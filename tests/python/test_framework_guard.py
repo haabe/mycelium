@@ -4,6 +4,8 @@ import json
 import subprocess
 import sys
 
+import pytest
+
 
 def _import_guard(scripts_path):
     """Import framework_guard via sys.path (not packaged)."""
@@ -891,3 +893,34 @@ class TestMainInProcess:
         # Fail-closed deny message routes operator to fix manifest
         assert "Fix manifest.yml" in out
         assert "permissionDecision" in out
+
+
+# ------------------------------------------------------------------ security review DL-1262 (0.193.0)
+
+def test_a_malformed_state_file_denies_not_allows(project_dir, manifest_path, scripts_path, monkeypatch, capsys):
+    """A broken state file is not an off-switch: the agent can write `.claude/**`, so an
+    allow here would let it disable the guard by corrupting one JSON file."""
+    guard = _import_guard(scripts_path)
+    state_file = project_dir / ".claude" / "state" / "broken.json"
+    state_file.parent.mkdir(parents=True, exist_ok=True)
+    state_file.write_text("{ not json")
+    monkeypatch.setattr(sys, "argv", ["framework_guard.py", str(state_file), str(project_dir)])
+    monkeypatch.setattr(sys, "stdin", io.StringIO(json.dumps({"tool_name": "Write", "tool_input": {"file_path": "x"}})))
+    with pytest.raises(SystemExit):
+        guard.main()
+    out = json.loads(capsys.readouterr().out)
+    assert out["hookSpecificOutput"]["permissionDecision"] == "deny"
+    assert "state file unreadable" in out["hookSpecificOutput"]["permissionDecisionReason"]
+
+
+def test_a_non_object_state_file_also_denies(project_dir, scripts_path):
+    guard = _import_guard(scripts_path)
+    state_file = project_dir / "list.json"
+    state_file.write_text("[1, 2]")
+    with pytest.raises(guard.StateBrokenError):
+        guard._load_state(state_file)
+
+
+def test_an_absent_state_file_still_allows(project_dir, scripts_path):
+    guard = _import_guard(scripts_path)
+    assert guard._load_state(project_dir / "nope.json") is None

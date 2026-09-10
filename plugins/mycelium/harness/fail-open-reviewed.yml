@@ -525,3 +525,20 @@ reviewed:
     `mutate_module` counts under `timeouts` and `main` prints per module. A timeout is
     neither killed nor survived and is never folded into the score. Reviewed 2026-09-10,
     v0.192.0.
+
+- id: framework_guard.py@5908d40b42
+  verdict: accepted
+  reason: >-
+    `_load_state`, `except FileNotFoundError: return None`. An ABSENT state file means the
+    project is not a dogfood instance and the guard has nothing to protect; the shell hook
+    already exits 0 before the helper runs in that case, and main() allows. Silence is the
+    correct output for a project the guard does not apply to. A file that EXISTS and cannot be
+    read is the other branch, and it raises. Reviewed 2026-09-10, v0.193.0 (DL-1262 finding 2).
+
+- id: framework_guard.py@539e32a56d
+  verdict: accepted
+  reason: >-
+    `_load_state`, the broad read/parse handler re-raises as StateBrokenError with the path
+    and the exception named; main() catches it and prints a DENY with that reason. Not silent:
+    this is the fix that made a broken state file stop being an off-switch. Reviewed
+    2026-09-10, v0.193.0.

@@ -48,6 +48,7 @@ except OSError:
     pass
 if ruled:
     sys.exit(0)
-print(json.dumps({"systemMessage": "Still open from session start. " + str(st.get("text", ""))}))
+# text_human is the plain, bounded form (0.193.0); older state files carry only "text".
+print(json.dumps({"systemMessage": "Still open from session start. " + str(st.get("text_human") or st.get("text", ""))}))
 PY
 exit 0

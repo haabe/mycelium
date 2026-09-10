@@ -217,9 +217,31 @@ def pick(root: Path, reminders: str, today: str) -> tuple[dict | None, str]:
     return None, note
 
 
+_UT_OPEN, _UT_CLOSE = "<untrusted_user_content>", "</untrusted_user_content>"
+
+
+def _untrusted(text: str) -> str:
+    """Canvas-derived prose reaches the agent as DATA, never as instruction (security review
+    DL-1262, finding 1). Same escaping session-start.sh applies to task objectives: a closing
+    tag inside the text cannot end the wrapper early."""
+    return _UT_OPEN + text.replace(_UT_CLOSE, "</untrusted_user_content_ESCAPED>") + _UT_CLOSE
+
+
+def render_human(item: dict, limit: int = 240) -> str:
+    """The systemMessage form: plain, no tags, bounded. A human reads it, a wrapper means nothing
+    to them, and a canvas string cannot be allowed to fill the screen."""
+    text = " ".join(str(item["text"]).split())
+    if len(text) > limit:
+        text = text[: limit - 1] + "…"
+    return f"NEXT ITEM: {text} run `{item['command']}` | rule | snooze-until DATE | drop."
+
+
 def render(item: dict) -> str:
+    text = str(item["text"])
+    if str(item.get("id", "")).startswith("fired:"):
+        text = _untrusted(text)  # a proposal read back from active.yml is canvas content
     return (
-        f"NEXT ITEM: {item['text']} run `{item['command']}` | rule (say what you decide) | "
+        f"NEXT ITEM: {text} run `{item['command']}` | rule (say what you decide) | "
         f"snooze-until DATE (`advisory_ledger.py rule --id {item['id']} "
         "--ruling snooze --until DATE`) | "
         f"drop (`--ruling drop`)."
@@ -239,6 +261,9 @@ def main(argv=None) -> int:
     ap.add_argument(
         "--json", action="store_true", help="print the item as JSON instead of the one line"
     )
+    ap.add_argument(
+        "--human", action="store_true", help="also print the plain, bounded systemMessage form"
+    )
     args = ap.parse_args(argv)
     root = args.project_dir.resolve()
     reminders = sys.stdin.read() if not sys.stdin.isatty() else ""
@@ -257,6 +282,7 @@ def main(argv=None) -> int:
                 {
                     "id": item["id"],
                     "text": render(item),
+                    "text_human": render_human(item),
                     "session": args.session,
                     "emitted_at": args.today,
                     "repeated_at_stop": False,
@@ -265,6 +291,8 @@ def main(argv=None) -> int:
             )
         )
     print(json.dumps(item, ensure_ascii=False) if args.json else render(item))
+    if args.human:
+        print(render_human(item))
     return 0
 
 

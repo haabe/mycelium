@@ -390,13 +390,29 @@ def _handle_mcp_filesystem_move(tool_input, project_dir, framework, upstream_rep
             _deny_file_edit(rel_path, rule, upstream_repo)
 
 
+class StateBrokenError(Exception):
+    """The state file exists and cannot be read as the guard's config."""
+
+
 def _load_state(state_file):
-    """Read the upstream-config state file. Returns dict or None on error/disabled."""
+    """Read the upstream-config state file.
+
+    Returns the dict, or None when the file is absent (not a dogfood instance) or explicitly
+    `active: false`. A file that EXISTS and cannot be parsed raises StateBrokenError, and main()
+    denies on it: until the 2026-09-10 security review (DL-1262, finding 2) a malformed file
+    was an allow, which put this guard's off-switch inside the agent's own write set, since
+    `.claude/**` edits are always permitted by the scope gate. Absent helper already denied;
+    broken state now matches it.
+    """
     try:
         with open(state_file) as f:
             state = json.load(f)
-    except (OSError, json.JSONDecodeError):
+    except FileNotFoundError:
         return None
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError) as exc:
+        raise StateBrokenError(f"{state_file}: {type(exc).__name__}: {exc}") from exc
+    if not isinstance(state, dict):
+        raise StateBrokenError(f"{state_file}: expected a JSON object, got {type(state).__name__}")
     if not state.get("active", True):
         return None
     return state
@@ -420,9 +436,23 @@ def main():
     state_file = sys.argv[1]
     project_dir = sys.argv[2]
 
-    state = _load_state(state_file)
+    try:
+        state = _load_state(state_file)
+    except StateBrokenError as exc:
+        print(json.dumps({
+            "hookSpecificOutput": {
+                "hookEventName": "PreToolUse",
+                "permissionDecision": "deny",
+                "permissionDecisionReason": (
+                    f"Mycelium framework-guard: state file unreadable ({exc}). A broken state "
+                    'file is not an off-switch. Repair it, or set `"active": false` in it to '
+                    "disable the guard on purpose."
+                ),
+            }
+        }))
+        sys.exit(0)
     if state is None:
-        sys.exit(0)  # missing/malformed/disabled → fail open
+        sys.exit(0)  # absent (not a dogfood instance) or explicitly disabled → allow
     upstream_repo = state.get("upstream_repo", "the upstream framework repo")
 
     input_data = _load_input()

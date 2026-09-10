@@ -168,9 +168,14 @@ def build_message(hits):
         "MYCELIUM READ-BEFORE-RESEARCH WARNING (the search still runs):",
         "  You are about to search externally for something the canvas ALREADY records:",
     ]
+    # The excerpts are canvas prose quoted back to the agent: DATA, never instruction (security
+    # review DL-1262, finding 1). Same wrapper and escaping as session-start.sh.
+    lines.append("  <untrusted_user_content>")
     for term, fname, no, text in hits:
+        safe = str(text).replace("</untrusted_user_content>", "</untrusted_user_content_ESCAPED>")
         lines.append(f"    {term} -> .claude/canvas/{fname}:{no}")
-        lines.append(f"        {text}")
+        lines.append(f"        {safe}")
+    lines.append("  </untrusted_user_content>")
     lines += [
         "  READ THOSE FIRST. This is not about saving tokens. Research conducted without",
         "  the canvas is analysis without the constraints the canvas already recorded —",

@@ -1457,7 +1457,12 @@ if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "$NEXTCHK" ] && [ "${MYCELIUM_NEXT_I
   fi
 fi
 NEXT_ITEM_HUMAN=""
-case "$SESSION_SOURCE" in resume|fork) NEXT_ITEM_HUMAN="$NEXT_ITEM";; esac
+case "$SESSION_SOURCE" in resume|fork)
+  # The human form: plain and bounded, read from the state next_item.py just wrote (0.193.0).
+  NEXT_ITEM_HUMAN="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("text_human") or "")' "$PROJECT_DIR/.claude/state/next-item.json" 2>/dev/null || true)"
+  [ -z "$NEXT_ITEM_HUMAN" ] && NEXT_ITEM_HUMAN="$NEXT_ITEM"
+  ;;
+esac
 
 python3 -c "
 import json, sys

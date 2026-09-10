@@ -8,37 +8,37 @@
           {
             "type": "command",
             "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/gate.sh",
-            "timeout": 5,
+            "timeout": 30,
             "statusMessage": "Mycelium preflight gate + secret scan"
           },
           {
             "type": "command",
             "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/discovery-gate.sh",
-            "timeout": 5,
+            "timeout": 30,
             "statusMessage": "Mycelium discovery gate (new source files in discovery-untouched projects)"
           },
           {
             "type": "command",
             "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/brownfield-gate.sh",
-            "timeout": 5,
+            "timeout": 30,
             "statusMessage": "Mycelium brownfield gate (one-shot: existing code, no discovery state)"
           },
           {
             "type": "command",
             "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/scope-gate.sh",
-            "timeout": 5,
+            "timeout": 30,
             "statusMessage": "Mycelium scope enforcement"
           },
           {
             "type": "command",
             "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/framework-guard.sh",
-            "timeout": 5,
+            "timeout": 30,
             "statusMessage": "Mycelium framework-guard (dogfood-mode only)"
           },
           {
             "type": "command",
             "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/autonomous-evidence-guard.sh",
-            "timeout": 5,
+            "timeout": 30,
             "statusMessage": "Mycelium autonomous-evidence-guard (autonomous-mode only)"
           },
           {
@@ -57,7 +57,7 @@
           {
             "type": "command",
             "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/framework-guard.sh",
-            "timeout": 5
+            "timeout": 30
           }
         ]
       },

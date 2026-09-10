@@ -4,6 +4,39 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-09.
 
+## v0.193.0 - the plugin reviewed as the product
+
+`/mycelium:security-review` had never been run on the framework itself. On 2026-09-10 it was, with
+the hooks and scripts as the attack surface and the canvas as the untrusted input (dogfood DL-1262).
+The classic sinks were clean: no eval, no unsafe YAML loader, no shell=True, no network call, no
+secret in the tree. The findings were on the framework's own shape, and two were on code from the
+same week.
+
+**Finding 1, LLM01.** Twelve hooks feed text into the agent's context and one wrapped it. The NEXT
+ITEM line rendered a `closes_on.fired[].proposal` string straight out of `active.yml`, and the
+read-before-research guard quoted the matching canvas line raw. In a solo repo the canvas author is
+the founder; in a team repo a contributor's canvas edit becomes a session-start instruction. Both
+now wrap canvas-derived text in `<untrusted_user_content>` with the same closing-tag escape
+session-start applies to task objectives. Framework-authored items are not wrapped. The
+`systemMessage` form, which a human reads, is plain and bounded at 240 characters (`render_human`,
+stored as `text_human`; the Stop-hook repeat reads it).
+
+**Finding 2, LLM06.** `framework_guard.py` allowed on a missing, malformed or disabled state file,
+and the scope gate always allows `.claude/**` edits, so an agent could disable the guard that keeps
+it out of framework files by corrupting one JSON file. The guard already denied when its helper
+was absent; a state file that exists and cannot be parsed now denies the same way, with the reason
+and the deliberate off-switch (`"active": false`) named. Absent still allows: that is a project
+that is not a dogfood instance.
+
+**Finding 3, A10b.** All six blocking PreToolUse hooks carried `timeout: 5`, the value that cancelled
+SessionStart 32 times in a month, and a cancelled blocking hook is an allow. Measured over 1,457
+blocking runs: zero cancellations, p95 380 ms, max 3.8 s, a 1.3x margin. They run at 30 s now in
+the Claude Code, Codex and Cursor manifests.
+
+Two LOW findings (Actions pinned to tags, floating CI pins, no `permissions:` block on the validate
+workflow; a state log that keeps a prompt fragment, gitignored) are recorded in DL-1262 and not
+in this release.
+
 ## v0.192.2 - the changelog claims only what shipped
 
 0.192.1 released, and its release job then failed its own backstop: the changelog documented a v0.192.0 that never had a Release. The designed repair is a manual dispatch that releases the missing version at its originating commit, whose validator was red; that override is a person's to make, and it was not made. This entry folds 0.192.0 into 0.192.1 instead, so every documented version is one a consumer can install. Docs only.
