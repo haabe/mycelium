@@ -642,6 +642,28 @@ if [ -n "$IDLECHK" ] && [ -f "$PROJECT_DIR/.claude/canvas/opportunities.yml" ]; 
     REMINDERS="${REMINDERS}IDLE OPPORTUNITIES — ${IDLE_N} open node(s) that no task, live test or declared reader touches; oldest ${IDLE_OLDEST}. Silence is routing, not evidence: name a reader, park with a resume condition, or merge (check_idle_opportunities.py --verbose). "
   fi
 fi
+# ------------------------------------------------------------
+# CLOSING-PATH CONTROLLER (v0.187.0, opp-006 sol-006e): store the derivation where it fires,
+# re-derive it every start, and say when a named input has landed. Heavy tier (a full parse of
+# the tree per diamond); skipped in --fast and served from the cache like the others.
+# ------------------------------------------------------------
+CTLCHK=""
+if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/derive_closing_path.py" ]; then
+  CTLCHK="${CLAUDE_PLUGIN_ROOT}/scripts/derive_closing_path.py"
+fi
+{ over_budget || [ "$_SS_HEAVY" = skip ]; } && { SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}closing-path-controller "; CTLCHK=""; }
+if [ -n "$CTLCHK" ] && [ -f "$PROJECT_DIR/.claude/diamonds/active.yml" ] && [ "${MYCELIUM_CLOSING_PATH_WRITE:-on}" != "off" ]; then
+  CTL_OUT=$(python3 "$CTLCHK" --project-dir "$PROJECT_DIR" --all --write 2>/dev/null || true)
+  CTL_FIRED=$(printf '%s\n' "$CTL_OUT" | grep '^CLOSING PATH FIRED' | head -3 | tr '\n' ' ')
+  CTL_NOTHING=$(printf '%s\n' "$CTL_OUT" | grep -c 'NOTHING ON RECORD' || true)
+  if [ -n "$CTL_FIRED" ]; then
+    REMINDERS="${REMINDERS}${CTL_FIRED}"
+  fi
+  if [ "${CTL_NOTHING:-0}" != "0" ]; then
+    REMINDERS="${REMINDERS}CLOSING PATH: ${CTL_NOTHING} diamond(s) have a pending gate that nothing on record moves (no live assumption, no open task, no declared reader); that is the finding, not a quiet state. "
+  fi
+fi
+
 RUNCHK=""
 if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check_instrument_contract.py" ]; then
   RUNCHK="${CLAUDE_PLUGIN_ROOT}/scripts/check_instrument_contract.py"

@@ -4,6 +4,47 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-09.
 
+## v0.187.0 - the closing path is stored where it fires
+
+The second of the three leaves the dogfood founder ruled on 2026-09-10 (opp-006 sol-006e).
+
+**The gap.** 0.183.0 taught `/diamond-assess` to derive what would close a diamond's phase and print
+it. The same evening the founder asked: *"did you log what would close define so that when it
+happens it actually does so?"* It had not been. The derivation went to the decision log, which
+nothing reads at the moment the condition is met; the assumption that would fire it carried no
+reader; the task that would score it said nothing about the diamond. The dogfood fix was a
+hand-written field on the diamond plus `reader` and `on_close` stamps. This release does that
+from the derivation.
+
+**What ships.** `derive_closing_path.py --write` stores the derivation on the diamond as
+`closes_on`: the pending gates with what would flip each, the watched inputs (assumptions without a
+verdict, open tasks, and any route named by hand), what has fired, and when it was stored (`stored_at`; the name `derived_at` is taken by the purpose layer and registered human-only). It
+stamps `reader` on each watched assumption and `on_close` on each watched task, only where absent,
+so a hand-written reader is never overwritten. Hand-written sub-keys under `closes_on`
+(`routes_on_record`, `then_do`, `caveat`, `why_a_field`, `does_not_close`) survive re-derivation;
+only the derived keys are replaced. `--all --write` walks every diamond, and the session-start
+heavy tier runs it, so a stored condition is never older than the last start; a stored condition
+can go stale against the tree, and re-deriving beats trusting the last write.
+
+**What it acts on, and what it never does.** It stores, it stamps, and it detects that a named input
+has landed: an assumption got a verdict, a task closed. That is reported once, as a `CLOSING PATH
+FIRED` line naming the next command (`/mycelium:diamond-progress <id>`, or rule that the verdict
+chooses no path and say why), and recorded under `closes_on.fired` so it is not reported twice. It
+never flips a gate, moves confidence or chooses a path. Per the discovery this leaf came from: do
+the derivable step, park the ruling as a proposal with its options.
+
+**Outcome-rooted trees.** The script cannot link an opportunity that rolls up to an outcome rather
+than a diamond, and it says so since 0.183.1. Routes named by hand in a sibling `*closes_on`
+field (the dogfood canvas wrote `define_closes_on` before this existed) are watched anyway, so the
+assumption on a closed parent node that actually closes Define still fires.
+
+**Writes.** Text-level: the `closes_on` block is replaced or inserted inside the diamond's entry
+and no other line changes (asserted: a second write is byte-identical). Every scalar is JSON-quoted
+after the first dry run wrote `owner: -` and broke the file. Nine in-process tests: store and
+stamp, idempotence, hand reader preserved, verdict fires once, task close fires, sibling routes
+watched, preserved sub-keys, --all with an all-pass diamond, empty file N/A, nothing-on-record
+named. Person override `MYCELIUM_CLOSING_PATH_WRITE=off`.
+
 ## v0.186.0 - the contract now, the heavy checks at your next prompt
 
 The founder, on 0.185.0: *"waiting for 1 minute is a long time."* And then the sharper ask: every

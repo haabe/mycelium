@@ -141,9 +141,12 @@ Evaluate current diamond state and recommend next action.
 before the coaching check:**
 
 ```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/scripts/derive_closing_path.py" --project-dir . --diamond-id <this-diamond-id>
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/derive_closing_path.py" --project-dir . --diamond-id <this-diamond-id> --write
 ```
 
+`--write` (v0.187.0) also STORES the derivation on the diamond as `closes_on`, stamps `reader` on the
+assumptions and `on_close` on the tasks it names, and reports when a named input has landed since the
+last store as a `CLOSING PATH FIRED` proposal; act on that proposal before the coaching check.
 It reads the diamond's `theory_gates_status`, the leaves under the opportunities that cite the
 diamond (assumptions with no verdict, and whether a test is named for each), the open human tasks
 whose `diamond_ref` names it (with horizons), a gate whose status is stale against the leaves under it,
