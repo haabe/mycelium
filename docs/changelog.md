@@ -4,6 +4,21 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-09.
 
+## v0.195.0 - the different-builder test is a rule with a check
+
+The dogfood cluster `generalising-from-the-dogfood-instance` (three instances in 48 hours in August,
+two over-generalised and one under-generalised, all caught by the founder) named `opp-065` as its
+home, and that opportunity was discarded on 2026-09-09 because its conclusion is an operating rule,
+not a node. Founder ruling 2026-09-11, after an interview: the home is the rule.
+
+**The rule**, in `engine/agent-operating-contract.md`: every finding proposed upstream carries one
+sentence saying what it looks like for a different builder on a different product. A scenario, not a
+label; an enum invites the convenient answer.
+
+**The check**: `check_upstream_candidates.py` reports any candidate surfaced on or after 2026-09-11
+with no `different_builder:` sentence and fails on it under `--strict`. Earlier candidates are not
+backfilled, since a bulk backfill is the filler trap the rule exists to avoid. Three tests.
+
 ## v0.194.2 - the changelog claims only what shipped, again
 
 0.194.1 released and its release job failed the documented-version backstop on v0.194.0, exactly as 0.192.1 did on v0.192.0. Same remedy: the never-released section is folded into the released one. Docs only. Twice in one day is a pattern, and it is recorded in the dogfood decision log as a candidate for the release script: a version bumped and folded before release should not need a third release to say so.

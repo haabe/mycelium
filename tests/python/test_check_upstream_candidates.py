@@ -63,3 +63,43 @@ def test_missing_registry_is_a_setup_error_not_a_clean_run(scripts_path, tmp_pat
     """No registry must not read as 'nothing outstanding'."""
     mod = _import(scripts_path)
     assert mod.main(["--registry", str(tmp_path / "nope.yml")]) != 0
+
+
+# ------------------------------------------------------------------ the different-builder test (0.195.0)
+
+def _registry_dated(tmp_path, surfaced, scenario):
+    reg = tmp_path / "registry.yml"
+    extra = f"    different_builder: {scenario}\n" if scenario else ""
+    reg.write_text(
+        "candidates:\n"
+        "  - id: thing\n"
+        f'    surfaced: "{surfaced}"\n'
+        "    status: open\n"
+        "    summary: a finding\n"
+        + extra
+    )
+    return reg
+
+
+def test_a_new_candidate_without_a_scenario_is_refused_under_strict(scripts_path, tmp_path, capsys):
+    mod = _import(scripts_path)
+    tree = _tree(tmp_path, "x")
+    reg = _registry_dated(tmp_path, "2026-09-12", None)
+    assert mod.main(["--registry", str(reg), "--framework-root", str(tree), "--strict"]) == 1
+    assert "NO DIFFERENT-BUILDER SCENARIO" in capsys.readouterr().out
+
+
+def test_a_new_candidate_with_a_scenario_passes(scripts_path, tmp_path, capsys):
+    mod = _import(scripts_path)
+    tree = _tree(tmp_path, "x")
+    reg = _registry_dated(tmp_path, "2026-09-12", "a solo dev on a CLI tool hits the same silent allow")
+    assert mod.main(["--registry", str(reg), "--framework-root", str(tree), "--strict"]) == 0
+    assert "NO DIFFERENT-BUILDER SCENARIO" not in capsys.readouterr().out
+
+
+def test_an_older_candidate_is_not_backfilled(scripts_path, tmp_path, capsys):
+    mod = _import(scripts_path)
+    tree = _tree(tmp_path, "x")
+    reg = _registry_dated(tmp_path, "2026-09-01", None)
+    assert mod.main(["--registry", str(reg), "--framework-root", str(tree), "--strict"]) == 0
+

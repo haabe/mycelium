@@ -41,6 +41,8 @@ UNVERIFIABLE = "unverifiable"
 UNREADABLE = "unreadable"
 
 # Consumer-relative: the registry lives in the USER's project, not in the plugin.
+#: Candidates surfaced on or after this date must carry a `different_builder:` sentence.
+SCENARIO_RULE_DATE = "2026-09-11"
 DEFAULT_REGISTRY = Path(".claude/harness/upstream-candidates.yml")
 
 # Where the framework tree might be, most specific first. CI checks the framework
@@ -120,12 +122,32 @@ def _first_line(text: str | None) -> str:
     return lines[0][:90] if lines else "(no note recorded)"
 
 
+def _no_scenario(entries: list) -> list:
+    """Candidates surfaced on or after the rule date with no `different_builder:` sentence."""
+    return [
+        e for e in entries
+        if str(e.get("surfaced", "")) >= SCENARIO_RULE_DATE
+        and not str(e.get("different_builder") or "").strip()
+    ]
+
+
+def _report_no_scenario(no_scenario: list) -> None:
+    if not no_scenario:
+        return
+    print(f"\nNO DIFFERENT-BUILDER SCENARIO — {len(no_scenario)} candidate(s) surfaced on or "
+          f"after {SCENARIO_RULE_DATE} carry no `different_builder:` sentence. A finding that\n"
+          "cannot say what it looks like for another builder on another product has not shown\n"
+          "it is a framework finding (engine/agent-operating-contract.md):")
+    for e in no_scenario:
+        print(f"  {e['id']}  (surfaced {e.get('surfaced', '?')})")
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--registry", default=str(DEFAULT_REGISTRY))
     ap.add_argument("--framework-root", default=None)
     ap.add_argument("--strict", action="store_true",
-                    help="exit 1 on LANDED or REGRESSED")
+                    help="exit 1 on LANDED, REGRESSED, or a new candidate with no scenario")
     args = ap.parse_args(argv)
 
 
@@ -135,6 +157,13 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     registry = yaml.safe_load(reg_path.read_text()) or {}
     entries = registry.get("candidates") or []
+
+    # THE DIFFERENT-BUILDER TEST (engine/agent-operating-contract.md, founder ruling
+    # 2026-09-11). A candidate surfaced on or after the rule date must carry one sentence
+    # saying what the finding looks like for a different builder on a different product.
+    # Earlier candidates are not backfilled: a bulk backfill is the filler trap the rule
+    # exists to avoid. Reported always; fails only under --strict.
+    no_scenario = _no_scenario(entries)
 
     root = resolve_root(args.framework_root)
     if root is None:
@@ -177,11 +206,13 @@ def main(argv: list[str] | None = None) -> int:
         for e in unver:
             print(f"  {e['id']}")
 
+    _report_no_scenario(no_scenario)
+
     open_n = sum(1 for e in entries if e.get("status") == "open")
     print(f"\n{len(entries)} candidates: {open_n} open, "
           f"{sum(1 for e in entries if e.get('status') == 'shipped')} shipped, "
           f"{len(landed)} LANDED, {len(regressed)} REGRESSED, {len(unver)} unverifiable")
-    return 1 if (args.strict and (landed or regressed)) else 0
+    return 1 if (args.strict and (landed or regressed or no_scenario)) else 0
 
 
 if __name__ == "__main__":

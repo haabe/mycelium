@@ -97,3 +97,28 @@ belonged to the research he was citing.
 **Quote the entry verbatim; never paraphrase it.** The paraphrase is where the breadth got
 added. `check_citations.py` enforces the first half at push time and prints entries verbatim;
 it cannot enforce the second, which is why it is stated here.
+
+## Before proposing anything upstream: the different-builder test
+
+**Write the scenario, not a label.** Every finding you propose as a framework change carries one
+sentence answering: *if a different builder used Mycelium on a completely different product, would
+this still be true, and what would it look like there?* Three honest answers exist. **Yes** is a
+workflow truth and a legitimate candidate. **No, it is about Mycelium's own design** is a product
+truth that stays in the dogfood repo, and shipping it imposes this product's choices on every adopter.
+**No, it is about how this person works** is an instance truth that stays in the session.
+
+The dogfood repo is the worst possible reference for what an adopter has: it is the richest
+Mycelium instance in existence, every field filled by hand over months, so a mechanism designed
+against what is in front of you works here and fails everywhere the framework is for. Measured
+2026-08-22 and 2026-08-23: three findings in 48 hours, two over-generalised and one under-generalised,
+all by the same agent, all caught by the founder. The cluster
+`memory/cluster-instances.md#generalising-from-the-dogfood-instance` holds them, and this rule is
+its home (founder ruling 2026-09-11).
+
+**Why a sentence and not a field.** A `transfers: workflow|product|instance` enum invites the
+convenient answer; "workflow" is what anyone who wants a finding to travel will type. A scenario has
+to name the other builder and the other product, and a scenario that cannot be written is the
+answer. `check_upstream_candidates.py` refuses a candidate surfaced on or after 2026-09-11 that has
+no `different_builder:` sentence; earlier candidates are not backfilled, because backfilling is the
+filler trap in bulk.
+
