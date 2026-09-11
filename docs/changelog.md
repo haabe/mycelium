@@ -4,23 +4,13 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-09.
 
-## v0.196.2 - the autonomous guard's new paths are covered in-process
+## v0.196.3 - the changelog claims only what shipped, third time
 
-0.196.1 never released: the per-file coverage floor, which runs in CI only and counts in-process
-pytest alone, read `autonomous_evidence_guard.py` at 69%. Its YAML walk, post-edit scan, Bash branch
-and un-declare guard were exercised by the bash suites, which the floor does not see. Ten in-process
-tests take it to 95%; the floor check was then run locally the way CI runs it. No behaviour change.
+0.196.2 released and its release job failed the documented-version backstop on 0.196.0 and 0.196.1, exactly as 0.192.1 and 0.194.1 did before it. Same fold. Docs only. The pattern is filed upstream as `a-version-folded-before-release-costs-a-third-release`; this is its third observation in two days, and the fix belongs in `release_gaps.py`, not in more folds.
 
-## v0.196.1 - the sourced library finds its helper by its own location
+## v0.196.2 - six blocking hooks, one reading of the tool call
 
-0.196.0 never released. The shell gates' new library resolved `scripts/_hook_input.py` only through
-`CLAUDE_PLUGIN_ROOT`, which a Claude Code session exports into every shell it opens and CI never
-sets. Every gate suite was green locally and red on CI, fifteen of nineteen cases in the brownfield
-suite alone, because the helper was "not found" and the gate refused. The library now resolves its
-sibling by its own path first, and `scripts/gates.sh` unsets the variable so a local run matches CI.
-Nothing changes in a real session, where the harness sets the variable anyway.
-
-## v0.196.0 - six blocking hooks, one reading of the tool call
+*0.196.0 and 0.196.1 were bumped, documented and never released. 0.196.0: the shell gates' new library resolved its helper only through CLAUDE_PLUGIN_ROOT, which a session exports and CI never sets, so every gate suite was green locally and red on CI; the library now resolves its sibling by its own path and `scripts/gates.sh` unsets the variable so a local run is a CI run. 0.196.1: the CI-only per-file coverage floor read the autonomous guard at 69%, its new paths covered only by bash suites the floor does not count; ten in-process tests take it to 95%. Both sections are folded here; there is no v0.196.0 or v0.196.1 Release and there will not be one.*
 
 The founder asked for an adversarial pass on the six blocking hooks by someone who did not write
 them, and ruled it: a blind subagent, fresh context, white box plus a sandbox, a finding only with a
