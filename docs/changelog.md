@@ -4,6 +4,13 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-09.
 
+## v0.196.2 - the autonomous guard's new paths are covered in-process
+
+0.196.1 never released: the per-file coverage floor, which runs in CI only and counts in-process
+pytest alone, read `autonomous_evidence_guard.py` at 69%. Its YAML walk, post-edit scan, Bash branch
+and un-declare guard were exercised by the bash suites, which the floor does not see. Ten in-process
+tests take it to 95%; the floor check was then run locally the way CI runs it. No behaviour change.
+
 ## v0.196.1 - the sourced library finds its helper by its own location
 
 0.196.0 never released. The shell gates' new library resolved `scripts/_hook_input.py` only through

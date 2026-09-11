@@ -12,6 +12,8 @@ import json
 import subprocess
 import sys
 
+import pytest
+
 
 def _import(scripts_path):
     sys.path.insert(0, str(scripts_path))
@@ -233,3 +235,104 @@ def test_unparseable_stdin_denies(scripts_path, tmp_path):
     )
     assert r.returncode == 0
     assert '"permissionDecision": "deny"' in r.stdout
+
+
+# ---------------------------------------------------------------------------
+# 0.196.x: the YAML walk, the post-edit scan, the Bash branch, the un-declare guard
+# ---------------------------------------------------------------------------
+
+def _decision(capsys):
+    out = capsys.readouterr().out.strip()
+    return json.loads(out)["hookSpecificOutput"] if out else None
+
+
+@pytest.mark.parametrize(("text", "expect"), [
+    ("- {id: o1, source_class: external_human}", "source_class: external_human"),
+    ("- id: o1\n  validated: yes", "validated: true"),
+    ("- id: o1\n  evidence_type: Anecdotal", "evidence_type above speculation"),
+    ("- &a external_data\n- id: o1\n  source_class: *a", "source_class: external_data"),
+    ("nested:\n  deeper:\n    - validated: true", "validated: true"),
+])
+def test_forbidden_in_walks_every_yaml_spelling(scripts_path, text, expect):
+    mod = _import(scripts_path)
+    assert expect in mod.forbidden_in(text)
+
+
+def test_forbidden_in_regex_fallback_on_unparseable_yaml(scripts_path):
+    mod = _import(scripts_path)
+    assert "validated: true" in mod.forbidden_in("- id: [unclosed\nvalidated: true\n")
+    assert mod.forbidden_in("- id: o1\n  source_class: internal_simulated\n") == []
+
+
+def test_apply_edits_shows_the_file_as_it_would_be(scripts_path):
+    mod = _import(scripts_path)
+    disk = "- id: o1\n  source_class: internal_simulated\n  validated: false\n"
+    after = mod._apply_edits("Edit", {"old_string": "internal_simulated", "new_string": "external_human"}, disk)
+    assert "external_human" in after
+    after = mod._apply_edits("MultiEdit", {"edits": [{"old_string": "false", "new_string": "true"}]}, disk)
+    assert "validated: true" in after
+    after = mod._apply_edits("mcp__filesystem__edit_file", {"edits": [{"oldText": "o1", "newText": "o2"}]}, disk)
+    assert "id: o2" in after
+    assert mod._apply_edits("Write", {"content": "fresh"}, disk) == "fresh"
+    assert mod._apply_edits("Edit", {"old_string": "", "new_string": "tail"}, disk).endswith("tail")
+
+
+def test_edit_that_replaces_only_the_value_is_denied(scripts_path, monkeypatch, tmp_path, capsys):
+    mod = _import(scripts_path)
+    canvas = tmp_path / ".claude" / "canvas"
+    canvas.mkdir(parents=True)
+    (canvas / "opportunities.yml").write_text("- id: o1\n  source_class: internal_simulated\n")
+    payload = {"tool_name": "Edit", "tool_input": {"file_path": str(canvas / "opportunities.yml"),
+               "old_string": "internal_simulated", "new_string": "external_human"}}
+    _call_main(mod, monkeypatch, tmp_path, payload, env={"MYCELIUM_AUTONOMOUS_RUN": "1"})
+    d = _decision(capsys)
+    assert d and d["permissionDecision"] == "deny"
+
+
+def test_bash_append_to_canvas_is_denied(scripts_path, monkeypatch, tmp_path, capsys):
+    mod = _import(scripts_path)
+    (tmp_path / ".claude" / "canvas").mkdir(parents=True)
+    payload = {"tool_name": "Bash", "tool_input": {
+        "command": "printf 'source_class: external_human\\n' >> .claude/canvas/opportunities.yml"}}
+    _call_main(mod, monkeypatch, tmp_path, payload, env={"MYCELIUM_AUTONOMOUS_RUN": "1"})
+    d = _decision(capsys)
+    assert d and d["permissionDecision"] == "deny"
+
+
+def test_bash_that_does_not_touch_the_canvas_is_allowed(scripts_path, monkeypatch, tmp_path, capsys):
+    mod = _import(scripts_path)
+    payload = {"tool_name": "Bash", "tool_input": {"command": "git status"}}
+    _call_main(mod, monkeypatch, tmp_path, payload, env={"MYCELIUM_AUTONOMOUS_RUN": "1"})
+    assert _decision(capsys) is None
+
+
+def test_undeclaring_the_run_is_denied(scripts_path, monkeypatch, tmp_path, capsys):
+    mod = _import(scripts_path)
+    diamonds = tmp_path / ".claude" / "diamonds"
+    diamonds.mkdir(parents=True)
+    (diamonds / "active.yml").write_text("autonomous: true\nactive_diamonds: []\n")
+    payload = {"tool_name": "Write", "tool_input": {"file_path": str(diamonds / "active.yml"),
+               "content": "autonomous: false\nactive_diamonds: []\n"}}
+    _call_main(mod, monkeypatch, tmp_path, payload)
+    d = _decision(capsys)
+    assert d and d["permissionDecision"] == "deny" and "un-declare" in d["permissionDecisionReason"]
+
+
+def test_autonomous_active_reads_yaml_and_regex_forms(scripts_path, tmp_path, monkeypatch):
+    mod = _import(scripts_path)
+    monkeypatch.delenv("MYCELIUM_AUTONOMOUS_RUN", raising=False)
+    diamonds = tmp_path / ".claude" / "diamonds"
+    diamonds.mkdir(parents=True)
+    (diamonds / "active.yml").write_text("autonomous: yes\n")
+    assert mod.autonomous_active(str(tmp_path))
+    (diamonds / "active.yml").write_text("autonomous: false\n")
+    assert not mod.autonomous_active(str(tmp_path))
+    assert mod._autonomous_in_text("- [broken\nautonomous: true\n")
+
+
+def test_canvas_target_matches_by_real_path_anywhere(scripts_path, tmp_path):
+    mod = _import(scripts_path)
+    import _hook_input as hi
+    assert mod._canvas_target(hi.resolve("/elsewhere/.claude/canvas/x.yml", str(tmp_path)))
+    assert mod._canvas_target(hi.resolve(".claude/diamonds/sub/a.yaml", str(tmp_path)))
+    assert not mod._canvas_target(hi.resolve("docs/notes.md", str(tmp_path)))
