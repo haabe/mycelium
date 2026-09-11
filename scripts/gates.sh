@@ -78,6 +78,12 @@ fi
 # Driven off the same single source as CI and pre-push, so the three surfaces cannot
 # drift apart again — check_gate_parity.py already asserts CI is a subset of the gate
 # set, and this closes the last surface that read a different list.
+# RUN AS CI RUNS (2026-09-11). A Claude Code session exports CLAUDE_PLUGIN_ROOT into every
+# shell it opens, so a hook that resolved its helper only through that variable passed every
+# local gate and failed fifteen of nineteen cases on CI, where it is unset. The gates run with
+# it unset; a suite that needs it sets it explicitly, as the hook suites do.
+unset CLAUDE_PLUGIN_ROOT
+
 GATE_SET="plugins/mycelium/scripts/local-gate-set.txt"
 if [ -f "$GATE_SET" ]; then
   while IFS= read -r gate_line || [ -n "$gate_line" ]; do

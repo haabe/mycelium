@@ -11,8 +11,13 @@
 # Requires INPUT (the raw stdin JSON), PROJECT_DIR and CLAUDE_PLUGIN_ROOT (or a legacy tree).
 # shellcheck disable=SC2034  # the HI_* variables are read by the sourcing gate, not here
 hi_read_input() {
-  local helper=""
-  if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/_hook_input.py" ]; then
+  # The helper is this library's sibling; resolve it by this file's own location first. CI has
+  # no CLAUDE_PLUGIN_ROOT (0.196.0 went red there on every gate suite while green locally).
+  local here helper=""
+  here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  if [ -f "$here/_hook_input.py" ]; then
+    helper="$here/_hook_input.py"
+  elif [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/_hook_input.py" ]; then
     helper="${CLAUDE_PLUGIN_ROOT}/scripts/_hook_input.py"
   elif [ -f "$PROJECT_DIR/.claude/scripts/_hook_input.py" ]; then
     helper="$PROJECT_DIR/.claude/scripts/_hook_input.py"
@@ -50,7 +55,10 @@ hi_ask() {  # $1 reason
 }
 
 hi_discovery_engaged() {  # exit 0 if a real purpose or an active diamond exists
-  local helper="${CLAUDE_PLUGIN_ROOT:-}/scripts/_hook_input.py"
+  local here helper
+  here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  helper="$here/_hook_input.py"
+  [ -f "$helper" ] || helper="${CLAUDE_PLUGIN_ROOT:-}/scripts/_hook_input.py"
   [ -f "$helper" ] || helper="$PROJECT_DIR/.claude/scripts/_hook_input.py"
   python3 "$helper" --project-dir "$PROJECT_DIR" --discovery-state 2>/dev/null
 }

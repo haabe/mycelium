@@ -4,6 +4,15 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-09.
 
+## v0.196.1 - the sourced library finds its helper by its own location
+
+0.196.0 never released. The shell gates' new library resolved `scripts/_hook_input.py` only through
+`CLAUDE_PLUGIN_ROOT`, which a Claude Code session exports into every shell it opens and CI never
+sets. Every gate suite was green locally and red on CI, fifteen of nineteen cases in the brownfield
+suite alone, because the helper was "not found" and the gate refused. The library now resolves its
+sibling by its own path first, and `scripts/gates.sh` unsets the variable so a local run matches CI.
+Nothing changes in a real session, where the harness sets the variable anyway.
+
 ## v0.196.0 - six blocking hooks, one reading of the tool call
 
 The founder asked for an adversarial pass on the six blocking hooks by someone who did not write
