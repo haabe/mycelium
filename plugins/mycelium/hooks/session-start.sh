@@ -567,6 +567,24 @@ if [ -n "$REPLYCHK" ]; then
     REMINDERS="${REMINDERS}${OWED_LINE} "
   fi
 fi
+# READ DUE (v0.197.0): a pre-registered read on an open task whose date has passed with
+# nothing recorded since. One implementation, in scripts/check_reads_due.py, which reads the
+# states off derive_closing_path.reads_for; this hook only relays the line. Dogfood 2026-09-10:
+# two 48-hour reads fell due, five sessions ran, nothing read them, because only horizon was watched.
+READSCHK=""
+if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check_reads_due.py" ]; then
+  READSCHK="${CLAUDE_PLUGIN_ROOT}/scripts/check_reads_due.py"
+elif [ -f "$PROJECT_DIR/.claude/scripts/check_reads_due.py" ]; then
+  READSCHK="$PROJECT_DIR/.claude/scripts/check_reads_due.py"
+fi
+{ over_budget || [ "$_SS_HEAVY" = skip ]; } && { SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}reads-due "; READSCHK=""; }
+if [ -n "$READSCHK" ]; then
+  READS_LINE=$(python3 "$READSCHK" --project-dir "$PROJECT_DIR" 2>/dev/null \
+    | grep '^READ DUE' || echo "")
+  if [ -n "$READS_LINE" ]; then
+    REMINDERS="${REMINDERS}${READS_LINE} "
+  fi
+fi
 
 # ============================================================
 # CHECK 1f: Evidence that never landed (advisory, v0.107.0)

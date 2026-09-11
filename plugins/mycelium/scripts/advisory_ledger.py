@@ -92,6 +92,7 @@ SIGNATURES: list[tuple[str, str]] = [
     ("unchecked-handle", r"(?P<count>\d+) record\(s\) cite a public handle as external evidence"),
     ("source-class-fidelity", r"(?P<count>\d+) evidence source\(s\) are labelled external_human"),
     ("reply-owed", r"REPLY OWED on (?P<count>\d+) task"),
+    ("read-due", r"READ DUE on (?P<count>\d+) task"),
     ("evidence-never-landed", r"EVIDENCE NEVER LANDED on (?P<count>\d+)"),
     ("evidence-landing-regressed", r"EVIDENCE LANDING REGRESSED"),
     ("idle-opportunities", r"IDLE OPPORTUNITIES — (?P<count>\d+) open node"),

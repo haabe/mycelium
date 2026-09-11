@@ -197,3 +197,79 @@ def test_no_outcome_on_diamond_names_that(tmp_path, capsys):
     _project(tmp_path, ACTIVE, OUTCOME_OPPS)
     rc, out = _run(tmp_path, capsys)
     assert rc == 0 and "names no rolls_up_to outcome" in out
+
+
+# --- 0.197.0: pre-registered reads, prose rolls_up_to ---------------------------------------
+
+TASKS_WITH_READS = """schema_version: 1
+pending_tasks:
+- id: ht-1
+  status: waiting
+  horizon: '2026-09-22'
+  diamond_ref: l1
+  created_at: '2026-09-08'
+  read_dates:
+  - '2026-09-10 (48 h): views, ratio, removal check'
+  - '2026-09-22 (+14): full read'
+- id: ht-2
+  status: waiting
+  horizon: '2026-09-22'
+  diamond_ref: l1
+  created_at: '2026-09-08'
+  read_48h_2026_09_11: recorded a day late
+  read_dates:
+  - date: '2026-09-10'
+    what: 48 h read
+"""
+
+
+def _run_today(root, capsys, today, did="l1"):
+    rc = _mod().main(["--project-dir", str(root), "--diamond-id", did, "--today", today])
+    return rc, capsys.readouterr().out
+
+
+def test_read_due_is_printed_when_unrecorded(tmp_path, capsys):
+    _project(tmp_path, ACTIVE, tasks=TASKS_WITH_READS)
+    _, out = _run_today(tmp_path, capsys, "2026-09-11")
+    assert "READ DUE on 1 task(s)" in out
+    assert "ht-1 | read dated 2026-09-10 | 48 h): views, ratio, removal check" in out
+    # ht-2 recorded activity on 09-11 (a dated field name), so its 09-10 read is not due
+    assert "ht-2 | read dated" not in out
+    # the future read shows as the task's next read, not as due
+    assert "ht-1 waiting | horizon 2026-09-22 | next read 2026-09-22" in out
+
+
+def test_read_not_due_before_its_date(tmp_path, capsys):
+    _project(tmp_path, ACTIVE, tasks=TASKS_WITH_READS)
+    _, out = _run_today(tmp_path, capsys, "2026-09-09")
+    assert "READ DUE" not in out
+    assert "next read 2026-09-10" in out
+
+
+def test_reads_for_states_and_undated_strings():
+    m = _mod()
+    t = {
+        "read_dates": ["2026-09-10 (48 h)", "no date here", {"date": "2026-09-30", "what": "x"}],
+        "touch_log": [{"date": "2026-09-10", "direction": "internal"}],
+    }
+    rows = m.reads_for(t, "2026-09-11")
+    assert [r["state"] for r in rows] == ["recorded", "upcoming"]
+    assert rows[0]["what"] == "48 h"
+
+
+def test_prose_rolls_up_to_is_named_not_silent(tmp_path, capsys):
+    active = ACTIVE + """  definition_of_done:
+    rolls_up_to: 'l0-purpose - evidence that the switch happens in the wild.'
+"""
+    opps = "opportunities:\n- id: opp-1\n  status: open\n  rolls_up_to: adoption\n  solutions: []\n"
+    _project(tmp_path, active, opps=opps)
+    _, out = _run(tmp_path, capsys)
+    assert "0 open opportunities cite it" in out
+    assert "is prose that keys to no outcome id" in out
+    assert "opportunities.yml#desired_outcomes.<id>" in out
+
+
+def test_outcome_key_rejects_prose():
+    m = _mod()
+    assert m._outcome_key("opportunities.yml#desired_outcomes.adoption") == "adoption"
+    assert m._outcome_key("l0-purpose - evidence that x. y.") == ""

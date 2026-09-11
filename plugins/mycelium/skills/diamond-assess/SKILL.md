@@ -170,6 +170,17 @@ whose `diamond_ref` names it (with horizons), a gate whose status is stale again
 and rulings already asked in `what_would_move_it`. It prints one row per pending gate: what would
 flip it, who owns that, and the date if the record holds one.
 
+**Three lines added in v0.197.0, each from a dogfood day.** (1) `READ DUE on N task(s)`: a task's
+`read_dates` entry whose date has passed with no activity recorded on the task since. Run that read
+before the gate table; two 48-hour reads fell due on 2026-09-10 and five sessions walked past them
+because only `horizon` was watched. The same line reaches session start via
+`scripts/check_reads_due.py`. (2) When a `CLOSING PATH FIRED` proposal does not choose a path, say
+so on the record: write `ruling:` and `ruled_at:` under that entry in `closes_on.fired`; the block is
+script-owned but those two keys survive re-derivation. (3) If the summary says the diamond's
+`rolls_up_to` is prose that keys to no outcome id, the tree is unread, not empty: set `rolls_up_to`
+to the outcome id the opportunities roll up to (`opportunities.yml#desired_outcomes.<id>`). The
+dogfood L1 read "0 of 0 live leaves" for two days on exactly that, and the fix was one field.
+
 **Why this exists (consumer-reported 2026-09-09).** The assessment reported status; the founder
 asked twice ("what's needed to close define?", "work through the distance points") before the path
 was derived, and every input to it was on disk before the session opened: leaf assumptions with null

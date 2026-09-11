@@ -17,7 +17,11 @@ WHAT IT DERIVES, per diamond, from three files:
             with an assumption lacking a verdict, and whether a test is named for it (the input the
             Four Risks and Cynefin gates wait on).
   TASKS     open human tasks whose `diamond_ref` names the diamond, with their `horizon`: the dated
-            reads the path waits on.
+            reads the path waits on. Since 0.197.0 also each task's `read_dates` (a pre-registered
+            intermediate read such as "+48h"): a read whose date has passed with no activity on the
+            task on or after it is printed as READ DUE. Dogfood 2026-09-10: two 48-hour reads were
+            registered on two tasks, five sessions ran that day, and nothing read them, because only
+            `horizon` was watched.
   STALE     a gate marked pending/fail while every live leaf under the diamond's opportunities
             carries a four_risks block (the 2026-09-09 case: `four_risks: pending` three days after
             a blind review wrote the blocks). Reported as a field to reconcile, not as a pass.
@@ -75,7 +79,20 @@ def _is_live(leaf: dict) -> bool:
 def _outcome_key(v) -> str:
     """`opportunities.yml#desired_outcomes.adoption`, `desired_outcomes.adoption` and `adoption`
     all name the same outcome: the last dotted segment, lowercased."""
-    return str(v or "").strip().split("#")[-1].split(".")[-1].strip().lower()
+    s = str(v or "").strip()
+    if " " in s:
+        # Prose ("l0-purpose - evidence that ...") is a note, not an id. Dogfood 2026-09-11: a
+        # definition_of_done.rolls_up_to holding a paragraph keyed to "" by luck of a trailing
+        # full stop and the diamond read as unlinked for two days; without the full stop it
+        # would have keyed to the last sentence fragment and matched nothing, silently.
+        return ""
+    return s.split("#")[-1].split(".")[-1].strip().lower()
+
+
+def _rolls_up_to_prose(d: dict) -> list[str]:
+    """`rolls_up_to` values on the diamond that are prose rather than an outcome id."""
+    vals = [d.get("rolls_up_to"), (d.get("definition_of_done") or {}).get("rolls_up_to")]
+    return [v.strip() for v in vals if isinstance(v, str) and v.strip() and " " in v.strip()]
 
 
 def _diamond_outcomes(d: dict) -> set[str]:
@@ -142,10 +159,64 @@ def _leaf_totals(opps: list[dict]) -> tuple[int, int]:
     return total, reviewed
 
 
-def _open_tasks_for(tasks_doc, did: str) -> list[dict]:
+_READ_DATE = re.compile(r"(\d{4})[-_](\d{2})[-_](\d{2})")
+
+
+def _activity_dates(t: dict) -> list[str]:
+    """Every ISO date the task itself carries: touch_log dates, dated field NAMES
+    (`read_48h_2026_09_11`, `reply_sent_2026_08_11`), updated_at. The same sources
+    session-start's staleness label reads, so a read counts as recorded by exactly the
+    activity that would refresh the task's clock."""
+    out = []
+    for k in ("updated_at", "reopened_at", "commitment_received_at"):
+        v = t.get(k)
+        if isinstance(v, str) and _READ_DATE.match(v):
+            out.append(v[:10])
+    for lk in ("touch_log", "partial_findings"):
+        for e in t.get(lk) or []:
+            d = e.get("date") if isinstance(e, dict) else None
+            if isinstance(d, str) and _READ_DATE.match(d):
+                out.append(d[:10])
+    for k in t:
+        m = _READ_DATE.search(str(k))
+        if m:
+            out.append("-".join(m.groups()))
+    return out
+
+
+def reads_for(t: dict, today: str) -> list[dict]:
+    """Pre-registered reads on a task, from `read_dates` (strings led by a date, or
+    {date, what} mappings). A read is DUE when its date is on or before `today` and the task
+    holds no activity dated on or after it; UPCOMING when its date is after today; RECORDED
+    otherwise. Reads with no parseable date are skipped: a string nothing can date is prose."""
+    out = []
+    acts = _activity_dates(t)
+    for r in t.get("read_dates") or []:
+        if isinstance(r, dict):
+            date, what = str(r.get("date") or ""), str(r.get("what") or "")
+        else:
+            date, what = str(r), ""
+        m = _READ_DATE.search(date)
+        if not m:
+            continue
+        iso = "-".join(m.groups())
+        if not what:
+            what = date[m.end() :].strip(" :()-")
+        if iso > today:
+            state = "upcoming"
+        elif any(a >= iso for a in acts):
+            state = "recorded"
+        else:
+            state = "DUE"
+        out.append({"date": iso, "what": what, "state": state})
+    return out
+
+
+def _open_tasks_for(tasks_doc, did: str, today: str | None = None) -> list[dict]:
     out = []
     if not isinstance(tasks_doc, dict):
         return out
+    today = today or _dt.datetime.now(tz=_dt.UTC).date().isoformat()
     for key, lst in tasks_doc.items():
         if not isinstance(lst, list) or key == "completed_tasks":
             continue
@@ -154,7 +225,12 @@ def _open_tasks_for(tasks_doc, did: str) -> list[dict]:
                 continue
             if did in str(t.get("diamond_ref", "")):
                 out.append(
-                    {"id": t.get("id"), "status": t.get("status"), "horizon": t.get("horizon")}
+                    {
+                        "id": t.get("id"),
+                        "status": t.get("status"),
+                        "horizon": t.get("horizon"),
+                        "reads": reads_for(t, today),
+                    }
                 )
     return out
 
@@ -169,7 +245,7 @@ def _owed(opps: list[dict]) -> list[tuple[str, str]]:
     return out
 
 
-def derive(root: Path, did: str) -> dict | None:
+def derive(root: Path, did: str, today: str | None = None) -> dict | None:
     canvas = root / ".claude" / "canvas"
     active = root / ".claude" / "diamonds" / "active.yml"
     if not active.exists():
@@ -180,7 +256,7 @@ def derive(root: Path, did: str) -> dict | None:
     opps_path, tasks_path = canvas / "opportunities.yml", canvas / "human-tasks.yml"
     outcomes = _diamond_outcomes(d)
     opps = _opps_for(load_yaml(opps_path) if opps_path.exists() else {}, did, outcomes)
-    tasks = _open_tasks_for(load_yaml(tasks_path) if tasks_path.exists() else {}, did)
+    tasks = _open_tasks_for(load_yaml(tasks_path) if tasks_path.exists() else {}, did, today)
     gates = {
         k: v for k, v in (d.get("theory_gates_status") or {}).items() if str(v).lower() != "pass"
     }
@@ -196,6 +272,10 @@ def derive(root: Path, did: str) -> dict | None:
         "n_opps": len(opps),
         "leaf_totals": (total, reviewed),
         "outcomes": sorted(outcomes),
+        "rolls_up_to_prose": _rolls_up_to_prose(d),
+        "reads_due": [
+            (t["id"], r) for t in tasks for r in t.get("reads") or [] if r["state"] == "DUE"
+        ],
     }
 
 
@@ -232,10 +312,19 @@ def _print_inputs(r: dict) -> None:
                 else "NO TEST NAMED; design one or archive the leaf"
             )
             print(f"  {lr['opp']} {lr['leaf']} {lr['assumption']} | {lr['statement']} | {how}")
+    if r["reads_due"]:
+        print(
+            f"READ DUE on {len(r['reads_due'])} task(s): a pre-registered read whose date has "
+            "passed with nothing recorded on the task since (run it, record it on the task):"
+        )
+        for tid, rd in r["reads_due"]:
+            print(f"  {tid} | read dated {rd['date']} | {rd['what'] or 'no description'}")
     if r["tasks"]:
         print("open human tasks on this diamond (dated reads the path waits on):")
         for t in sorted(r["tasks"], key=lambda x: str(x.get("horizon") or "9999")):
-            print(f"  {t['id']} {t['status']} | horizon {t.get('horizon') or 'undated'}")
+            nxt = [x for x in t.get("reads") or [] if x["state"] == "upcoming"]
+            tail = f" | next read {min(x['date'] for x in nxt)}" if nxt else ""
+            print(f"  {t['id']} {t['status']} | horizon {t.get('horizon') or 'undated'}{tail}")
     if r["owed"]:
         print("rulings already asked (say owed, do not re-ask):")
         for oid, line in r["owed"]:
@@ -281,6 +370,27 @@ def _block_scalar(key: str, text: str, indent: int) -> list[str]:
     return out
 
 
+def _render_fired(fired: list[dict], indent: int) -> list[str]:
+    pad = " " * indent
+    if not fired:
+        return [f"{pad}  fired: []"]
+    out = [f"{pad}  fired:"]
+    for f in fired:
+        out.append(f"{pad}  - id: {f['id']}")
+        out.append(f"{pad}    kind: {f['kind']}")
+        out.append(f"{pad}    landed_as: {json.dumps(f['landed_as'])}")
+        out.append(f"{pad}    noticed_at: '{f['noticed_at']}'")
+        out += _block_scalar("proposal", f["proposal"], indent + 4)
+        # A hand-written ruling on a fired entry is preserved: the block is script-owned but
+        # the answer to its own question is not (dogfood 2026-09-11: the first FIRED was ruled
+        # "does not choose a path" and the ruling had nowhere to live).
+        if f.get("ruling"):
+            out += _block_scalar("ruling", str(f["ruling"]), indent + 4)
+        if f.get("ruled_at"):
+            out.append(f"{pad}    ruled_at: '{f['ruled_at']}'")
+    return out
+
+
 def _render_closes_on(entry: dict, indent: int) -> list[str]:
     """Render the closes_on mapping as YAML lines at `indent` (the diamond's field indent)."""
     pad = " " * indent
@@ -303,16 +413,7 @@ def _render_closes_on(entry: dict, indent: int) -> list[str]:
         out.append(f"{pad}    state: {json.dumps(inp['state'])}")
         if inp.get("date"):
             out.append(f"{pad}    date: '{inp['date']}'")
-    if entry.get("fired"):
-        out.append(f"{pad}  fired:")
-        for f in entry["fired"]:
-            out.append(f"{pad}  - id: {f['id']}")
-            out.append(f"{pad}    kind: {f['kind']}")
-            out.append(f"{pad}    landed_as: {json.dumps(f['landed_as'])}")
-            out.append(f"{pad}    noticed_at: '{f['noticed_at']}'")
-            out += _block_scalar("proposal", f["proposal"], indent + 4)
-    else:
-        out.append(f"{pad}  fired: []")
+    out += _render_fired(entry.get("fired") or [], indent)
     for k in PRESERVED_KEYS:
         if k in entry and entry[k] is not None:
             out += _render_preserved(k, entry[k], indent + 2)
@@ -516,7 +617,8 @@ def build_closes_on(  # noqa: C901, PLR0912, PLR0915 — one derivation, three i
                             f"{pid} has a verdict ({v}), the first input named on this "
                             f"diamond's closing path to land. The path can now be chosen: "
                             f"run /mycelium:diamond-progress "
-                            f"{did}, or rule that this verdict does not choose one and say why."
+                            f"{did}, or rule that this verdict does not choose one: write "
+                            f"`ruling:` and `ruled_at:` under this fired entry and say why."
                         ),
                     }
                 )
@@ -740,7 +842,7 @@ def main(argv=None) -> int:
             return 0
     if not args.diamond_id:
         ap.error("--diamond-id or --all is required")
-    r = derive(root, args.diamond_id)
+    r = derive(root, args.diamond_id, args.today)
     if r is None:
         print(
             f"closing-path: N/A — no diamond {args.diamond_id} in "
@@ -754,11 +856,17 @@ def main(argv=None) -> int:
         f"confidence {d.get('confidence', '?')}); {r['n_opps']} open opportunit{plural} cite it"
     )
     if r["n_opps"] == 0:
-        via = (
-            f"by id or by outcome ({', '.join(r['outcomes'])})"
-            if r["outcomes"]
-            else "by id, and the diamond names no rolls_up_to outcome"
-        )
+        if r["outcomes"]:
+            via = f"by id or by outcome ({', '.join(r['outcomes'])})"
+        elif r["rolls_up_to_prose"]:
+            first = r["rolls_up_to_prose"][0][:60]
+            via = (
+                f"by id, and its rolls_up_to is prose that keys to no outcome id "
+                f"('{first}...'); set rolls_up_to to the id the opportunities roll up to, "
+                f"e.g. opportunities.yml#desired_outcomes.<id>"
+            )
+        else:
+            via = "by id, and the diamond names no rolls_up_to outcome"
         print(
             f"no open opportunity links to this diamond {via}; the leaf rows below are the tree "
             "unread, not the tree empty"

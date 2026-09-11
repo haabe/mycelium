@@ -2,7 +2,17 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-09-09.
+**Last updated**: 2026-09-11.
+
+## v0.197.0 - a read that falls due is said out loud
+
+Dogfood 2026-09-10: two observation tasks carried `read_dates` with a 48-hour read due that day. Five sessions ran, thirteen releases shipped, and one decision-log entry cited "the 48-hour reads are on 2026-09-10" as a reason not to build something else. Nothing read them. The field was free text no script consumed; the closing-path controller watched `horizon`, the staleness label watched activity, and a due read looked like any other day.
+
+- **`scripts/check_reads_due.py`** (new): walks every open human task, computes each `read_dates` entry as DUE / recorded / upcoming (recorded means the task carries activity dated on or after the read: a touch entry, a dated field name, `updated_at`), and prints `READ DUE on N task(s): ...`. Session start relays the line the way it relays REPLY OWED; `advisory_ledger.py` and `next_item.py` know the id `read-due`. Unreadable file speaks; it is never read as nothing due.
+- **`derive_closing_path.py`**: `reads_for()` is the single implementation the check imports. The per-diamond output prints READ DUE rows above the task list and each task's next upcoming read beside its horizon.
+- **A ruling slot on fired proposals.** The first `CLOSING PATH FIRED` in the dogfood repo (2026-09-11, three feasibility verdicts) was ruled "does not choose a path", and the ruling had nowhere to live because the `fired` block is script-owned. `ruling:` and `ruled_at:` under a fired entry are now preserved and rendered across re-derivation; the proposal text says to write them there.
+- **A prose `rolls_up_to` is named, not silent.** The dogfood L1 diamond read "0 of 0 live leaves; the tree unread" from 0.187.0 until 2026-09-11 because its `definition_of_done.rolls_up_to` was a paragraph that keyed to "" by the luck of a trailing full stop. `_outcome_key` now treats any value with whitespace as prose, and the summary line says "its rolls_up_to is prose that keys to no outcome id" with the fix (set it to `opportunities.yml#desired_outcomes.<id>`). Wiring that one field turned 0 leaves into 38.
+- diamond-assess SKILL.md documents the three lines. Tests: `test_check_reads_due.py` (new, 5), `test_derive_closing_path.py` (+5), `test_closing_path_controller.py` (+1).
 
 ## v0.196.3 - the changelog claims only what shipped, third time
 

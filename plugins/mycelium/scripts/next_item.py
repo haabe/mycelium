@@ -64,6 +64,10 @@ COMMANDS: dict[str, tuple[str, str]] = {
     ),
     "open-human-tasks": ("Open human tasks are waiting on a read.", "/mycelium:log-evidence"),
     "reply-owed": ("Someone wrote and has not been answered.", "/mycelium:log-evidence"),
+    "read-due": (
+        "A pre-registered read fell due and is not recorded on its task.",
+        "/mycelium:log-evidence",
+    ),
     "corrections-to-cluster": (
         "Corrections have not been read against the cluster catalogue.",
         "/mycelium:corrections-audit",

@@ -222,3 +222,27 @@ def test_nothing_on_record_is_named(tmp_path, capsys):
     _project(tmp_path, opps="opportunities: []\n", tasks="schema_version: 1\npending_tasks: []\n")
     rc, out = _run(tmp_path, capsys, "--diamond-id", "l1", "--write")
     assert "NOTHING ON RECORD moves a pending gate" in out
+
+
+def test_ruling_on_fired_entry_is_preserved_and_rendered(tmp_path, capsys):
+    """0.197.0: the fired block is script-owned, but the answer to its own question is not.
+    A hand-written `ruling:` and `ruled_at:` under a fired entry survive re-derivation."""
+    _project(tmp_path)
+    _run(tmp_path, capsys, "--diamond-id", "l1", "--write")
+    opps = OPPS.replace("      verdict: null\n", "      verdict: validated\n", 1)
+    (tmp_path / ".claude" / "canvas" / "opportunities.yml").write_text(opps)
+    _run(tmp_path, capsys, "--diamond-id", "l1", "--write")
+    fired = _l1(tmp_path)["closes_on"]["fired"]
+    assert fired and fired[0]["id"] == "a-1a-1"
+    assert "write `ruling:` and `ruled_at:`" in fired[0]["proposal"]
+    text = (tmp_path / ".claude" / "diamonds" / "active.yml").read_text()
+    text = text.replace(
+        "      noticed_at: '2026-09-10'\n",
+        "      noticed_at: '2026-09-10'\n      ruling: not the riskiest assumption; does not choose\n      ruled_at: '2026-09-11'\n",
+        1,
+    )
+    (tmp_path / ".claude" / "diamonds" / "active.yml").write_text(text)
+    _run(tmp_path, capsys, "--diamond-id", "l1", "--write")
+    fired = _l1(tmp_path)["closes_on"]["fired"]
+    assert fired[0]["ruling"] == "not the riskiest assumption; does not choose"
+    assert fired[0]["ruled_at"] == "2026-09-11"
