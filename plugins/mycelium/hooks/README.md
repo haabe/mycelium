@@ -31,7 +31,7 @@ Total hook overhead: ~6,000 tokens/session (negligible vs typical 50K-200K sessi
 - CI/CD pipeline is the final safety net
 
 **Excludes**: `.claude/` directory edits (always allowed)
-**Only gates**: `src/`, `scripts/`, `tests/`, `lib/`, `app/`, `pages/`, `components/`, `server/`, `api/`
+**Gates every real path inside the project that is not under `.claude/`** (until 0.196.0 a directory list; `config.py`, `source/` and `Src/` all fell outside it, adversarial pass 2026-09-11). Reads the tool call through `scripts/_hook_input.py`: every path key, resolved to its real location, MultiEdit edits included, Bash write targets scanned; a write to guard state (`upstream.json`, `manifest.yml`, `active-execution.json`, the two ack files) returns `ask` so the person decides, with `MYCELIUM_GUARD_STATE_EDIT=1` in the human's own shell as the setup-time override.
 
 **Sibling PreToolUse hooks (same Write/Edit/MultiEdit matcher, run alongside `gate.sh`):**
 - **`discovery-gate.sh`** (v0.56.0) — blocks scaffolding NEW source files in a project where discovery has never been engaged (no diamond in `active.yml`, no populated `purpose.yml`). The teeth for the deliver-framed-opening routing gap: router-discipline prose alone did not stop "build me X" first messages from producing code on an empty canvas (founder dogfood 2026-06-08/09; mechanically reproduced by roadmap auto-dogfood 2026-07-02). Deliberately narrow to avoid a friction wall: Write tool only (Edit/MultiEdit never gated — brownfield untouched), new files only, source/infra shapes only, and a one-time on-the-record escape hatch (`.claude/state/discovery-skip-ack`, written after the USER explicitly declines discovery). Block message routes to `/mycelium:start`. Tests: `tests/bash/test_discovery_gate.sh` (13 asserts, scenario-per-guardpost).
@@ -251,3 +251,19 @@ See `../state/README.md` for the full data format philosophy.
 - [Daniel Bentes — BDSK comparison feedback](../../../CONTRIBUTORS.md) — the inspiration for scope enforcement and trace audit patterns
 - `../state/README.md` — runtime state philosophy
 - `../tests/validate-template.sh` — the structural integrity validator (a different kind of computational enforcement)
+
+## One reading of the tool call (0.196.0)
+
+The six blocking hooks (`gate.sh`, `discovery-gate.sh`, `brownfield-gate.sh`, `scope-gate.sh`,
+`framework-guard.sh`, `autonomous-evidence-guard.sh`) read the tool call through
+`scripts/_hook_input.py` (Python helpers import it; shell gates source
+`scripts/_hook_input_read.sh`, which calls it). It resolves every path key to its real location
+inside the project (`..`, symlinks, the other case on a case-insensitive disk), includes MultiEdit
+`edits[]` in the written content, scans a Bash command for write targets across newlines, `cd`,
+`./`, `$PWD`, absolute paths and the writers a regex tends to forget (perl -i, dd of=, ed, awk -i
+inplace, rsync, python open()), refuses a tool call whose fields are not the documented type instead
+of crashing into an allow, and turns a write to guard state into an `ask`. All six are registered
+on `Write|Edit|MultiEdit|NotebookEdit`, `Bash` and the filesystem MCP tools in all three manifests.
+`tests/bash/test_hooks_adversarial.sh` replays the 2026-09-11 blind pass's demonstrated bypasses and
+expects every one to block or ask.
+

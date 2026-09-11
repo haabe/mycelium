@@ -31,48 +31,47 @@
 #   - Escape hatch: .claude/state/brownfield-ack — records the USER's answer
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-.}"
+# shellcheck disable=SC2034  # INPUT is read by hi_read_input in the sourced library
 INPUT=$(cat)
-
-# --- already answered? then never again -------------------------------------
 [ -f "$PROJECT_DIR/.claude/state/brownfield-ack" ] && exit 0
-# A user who already declined discovery wholesale has answered this too.
 [ -f "$PROJECT_DIR/.claude/state/discovery-skip-ack" ] && exit 0
-
-# --- which tool? -------------------------------------------------------------
-TOOL_NAME=$(printf '%s' "$INPUT" | python3 -c '
-import json,sys
-try:
-    d = json.load(sys.stdin)
-except Exception:
-    sys.exit(0)
-sys.stdout.write(d.get("tool_name", ""))
-' 2>/dev/null)
-case "$TOOL_NAME" in
-  Write|Edit|MultiEdit) ;;
+HI_LIB="$(dirname "${BASH_SOURCE[0]}")/../scripts/_hook_input_read.sh"
+# shellcheck source=/dev/null
+. "$HI_LIB"
+hi_read_input
+if [ -n "$HI_BAD" ]; then
+  hi_deny "Mycelium brownfield gate: refused, tool input is not the documented shape ($HI_BAD)."
+fi
+case "$HI_TOOL" in
+  Write|Edit|MultiEdit|NotebookEdit|Bash|mcp__filesystem__write_file|mcp__filesystem__edit_file) ;;
   *) exit 0 ;;
 esac
+# Only a write to SOURCE fires this gate. Writes under .claude/ (the ack file, the canvas) do not:
+# 2026-09-11 the documented remedy, writing the ack, was itself blocked by this gate.
+TOUCHES_SOURCE=0
+while IFS=$'\t' read -r target _exists _size; do
+  case "$target" in
+    ""|GUARD:*|OUTSIDE:*) ;;
+    OPAQUE:*) TOUCHES_SOURCE=1;;
+    .claude/*|*/.claude/*) ;;
+    *) TOUCHES_SOURCE=1;;
+  esac
+done <<< "$HI_TARGETS"
+[ "$TOUCHES_SOURCE" = "1" ] || exit 0
 
-# --- discovery already engaged? then this is not a brownfield entry ----------
-ACTIVE_FILE="$PROJECT_DIR/.claude/diamonds/active.yml"
-PURPOSE_FILE="$PROJECT_DIR/.claude/canvas/purpose.yml"
-if [ -f "$ACTIVE_FILE" ] && grep -qE '^[[:space:]]*-[[:space:]]*(id|scale):' "$ACTIVE_FILE" 2>/dev/null; then
-  exit 0
-fi
-if [ -f "$PURPOSE_FILE" ] && [ "$(wc -c < "$PURPOSE_FILE" 2>/dev/null || echo 0)" -gt 60 ]; then
-  exit 0
-fi
+hi_discovery_engaged && exit 0
 
-# --- is there actually pre-existing code? -----------------------------------
-# Bounded: stops at 30 hits, prunes vendor and framework trees. A greenfield
-# project must NOT trip this — that is /mycelium:start's job, not this gate's.
 SRC_COUNT=$(find "$PROJECT_DIR" \
     \( -path "$PROJECT_DIR/.git" -o -path "$PROJECT_DIR/.claude" \
        -o -path "$PROJECT_DIR/plugins" -o -name node_modules -o -name vendor \
        -o -name .venv -o -name dist -o -name build \) -prune -o \
-    -type f \( -name '*.py' -o -name '*.ts' -o -name '*.tsx' -o -name '*.js' \
-       -o -name '*.jsx' -o -name '*.go' -o -name '*.rs' -o -name '*.rb' \
-       -o -name '*.java' -o -name '*.kt' -o -name '*.swift' -o -name '*.cs' \
-       -o -name '*.php' -o -name '*.vue' \) -print 2>/dev/null \
+    -type f \( -iname '*.py' -o -iname '*.ts' -o -iname '*.tsx' -o -iname '*.js' \
+       -o -iname '*.jsx' -o -iname '*.mjs' -o -iname '*.go' -o -iname '*.rs' -o -iname '*.rb' \
+       -o -iname '*.java' -o -iname '*.kt' -o -iname '*.swift' -o -iname '*.cs' \
+       -o -iname '*.php' -o -iname '*.vue' -o -iname '*.svelte' -o -iname '*.c' \
+       -o -iname '*.cc' -o -iname '*.cpp' -o -iname '*.h' -o -iname '*.hpp' -o -iname '*.sh' \
+       -o -iname '*.scala' -o -iname '*.sql' -o -iname '*.dart' -o -iname '*.lua' \
+       -o -iname '*.ex' -o -iname '*.exs' -o -iname '*.zig' -o -iname '*.hs' \) -print 2>/dev/null \
   | head -30 | wc -l | tr -d ' ')
 
 # 12+ source files means a real project, not a stray script or fresh scaffold.

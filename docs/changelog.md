@@ -4,6 +4,45 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-09.
 
+## v0.196.0 - six blocking hooks, one reading of the tool call
+
+The founder asked for an adversarial pass on the six blocking hooks by someone who did not write
+them, and ruled it: a blind subagent, fresh context, white box plus a sandbox, a finding only with a
+repro, fixes shipped the same day. It got past all six (dogfood
+`evals/security/2026-09-11-adversarial-pass-six-blocking-hooks.md`). The moves repeated across hooks:
+a path with `..`, a symlink, or the other case on a case-insensitive disk; a `file`, `path` or
+`notebook_path` key the hook did not read; a MultiEdit whose `edits[]` nobody scanned; a Bash command
+with `./`, `$PWD`, an absolute path, a newline, a `cd`, or a writer the regex did not know; a list
+where a string belonged, which crashed the helper into exit 1, which the harness reads as allow;
+every off-switch file writable from inside a tool call; and, for the autonomous guard, nine YAML
+spellings of one assignment against a line-anchored regex, plus an Edit that replaced only the
+value.
+
+**One reading.** `scripts/_hook_input.py` (stdlib) is what every blocking hook now reads the tool
+call through: every path key, resolved to its real location inside the project; MultiEdit edits in
+the content; Bash write targets scanned across newlines, `cd`, `./`, `$PWD`, absolute paths, perl
+-i, dd of=, ed, awk -i inplace, rsync and python open(); a tool call whose fields are not the
+documented type is refused, never guessed at. Python helpers import it; the shell gates source
+`scripts/_hook_input_read.sh`.
+
+**Guard state is human-owned.** A write to `upstream.json`, `manifest.yml`,
+`active-execution.json` or either ack file returns `ask`, so the harness puts it in front of the
+person and the agent cannot answer for them; the designed flows still work, with one keypress.
+`MYCELIUM_GUARD_STATE_EDIT=1` in the human's own shell is the setup-time override. An autonomous
+run cannot remove its own `autonomous: true`.
+
+**Per hook.** The autonomous guard parses YAML when PyYAML is present and scans the file as it
+would be after an Edit; the framework guard classifies by real, case-folded path, denies when active
+with no manifest or a comment-only one, and reads Bash through the scanner; the scope gate resolves
+paths and judges Bash targets; the discovery gate counts a zero-byte file as new, gates thirty more
+extensions and the build files, and requires a purpose with words or an active diamond with an id;
+the brownfield gate counts C, C++, shell and eight more languages and no longer blocks the ack write
+it asks for; `gate.sh` scans every real path outside `.claude/` and MultiEdit edits. All six run on
+`Write|Edit|MultiEdit|NotebookEdit`, `Bash` and the filesystem MCP tools in all three manifests.
+
+**The suite.** `tests/bash/test_hooks_adversarial.sh` replays 92 of the pass's cases with the exact
+inputs and expects a block or an ask. What the pass left unproven stays listed in the report.
+
 ## v0.195.0 - the different-builder test is a rule with a check
 
 The dogfood cluster `generalising-from-the-dogfood-instance` (three instances in 48 hours in August,

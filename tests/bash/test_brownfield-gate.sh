@@ -95,7 +95,9 @@ P=$(make_brownfield_project)
 assert_eq "0" "$(run_gate "$P" "$(tool_json Read)")" \
     "Read is not gated"
 assert_eq "0" "$(run_gate "$P" "$(tool_json Bash)")" \
-    "Bash is not gated"
+    "Bash with no write is not gated"
+assert_eq "2" "$(run_gate "$P" '{"tool_name":"Bash","tool_input":{"command":"sed -i \"\" s/x/y/ src/mod1.py"}}' | tail -1)" \
+    "Bash that edits source IS gated (adversarial pass 2026-09-11, B1)"
 rm -rf "$P"
 
 # -------------------------------------------------------- ONE-SHOT GUARANTEE
@@ -118,11 +120,11 @@ assert_eq "0" "$(run_gate "$P" "$(tool_json Edit)")" \
     "existing discovery-skip-ack satisfies this gate"
 rm -rf "$P"
 
-# ------------------------------------------------------------------ FAIL-OPEN
-# A hook must never take a session down. Malformed stdin passes through.
+# ------------------------------------------------------------------ BAD INPUT
+# 2026-09-11: malformed stdin is refused with a deny payload (exit 0), never a silent allow.
 P=$(make_brownfield_project)
-assert_eq "0" "$(run_gate "$P" 'not json at all')" \
-    "malformed input fails open"
+OUT="$(run_gate "$P" 'not json at all')"
+assert_contains "$OUT" '"permissionDecision": "deny"' "malformed input is refused, not passed through"
 assert_eq "0" "$(run_gate "$P" '{}')" \
     "empty payload fails open"
 rm -rf "$P"

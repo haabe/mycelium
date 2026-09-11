@@ -3,7 +3,7 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Write|Edit|MultiEdit",
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit",
         "hooks": [
           {
             "type": "command",
@@ -73,6 +73,36 @@
           {
             "type": "command",
             "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/correction-attribution-guard.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/gate.sh",
+            "timeout": 30,
+            "statusMessage": "Mycelium preflight gate + secret scan"
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/discovery-gate.sh",
+            "timeout": 30,
+            "statusMessage": "Mycelium discovery gate (new source files in discovery-untouched projects)"
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/brownfield-gate.sh",
+            "timeout": 30,
+            "statusMessage": "Mycelium brownfield gate (one-shot: existing code, no discovery state)"
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/scope-gate.sh",
+            "timeout": 30,
+            "statusMessage": "Mycelium scope enforcement"
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/autonomous-evidence-guard.sh",
+            "timeout": 30,
+            "statusMessage": "Mycelium autonomous-evidence-guard (autonomous-mode only)"
           }
         ]
       },
@@ -90,6 +120,30 @@
             "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/autonomous-evidence-guard.sh",
             "timeout": 30,
             "statusMessage": "Mycelium autonomous-evidence-guard (MCP filesystem — autonomous-mode only)"
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/gate.sh",
+            "timeout": 30,
+            "statusMessage": "Mycelium preflight gate + secret scan"
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/discovery-gate.sh",
+            "timeout": 30,
+            "statusMessage": "Mycelium discovery gate (new source files in discovery-untouched projects)"
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/brownfield-gate.sh",
+            "timeout": 30,
+            "statusMessage": "Mycelium brownfield gate (one-shot: existing code, no discovery state)"
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/scope-gate.sh",
+            "timeout": 30,
+            "statusMessage": "Mycelium scope enforcement"
           }
         ]
       },

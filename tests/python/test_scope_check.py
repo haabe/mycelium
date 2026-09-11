@@ -173,7 +173,7 @@ def test_no_file_path_in_input_allows(scripts_path, tmp_path, monkeypatch, capsy
     assert payload is None
 
 
-def test_corrupt_hook_input_allows(scripts_path, tmp_path, monkeypatch, capsys):
+def test_corrupt_hook_input_denies(scripts_path, tmp_path, monkeypatch, capsys):
     """Hook stdin is not JSON → allow (defensive: hook contract violated by caller)."""
     state_file = tmp_path / "active-execution.json"
     state_file.write_text(json.dumps({"in_scope_paths": ["src/**"]}))
@@ -183,7 +183,8 @@ def test_corrupt_hook_input_allows(scripts_path, tmp_path, monkeypatch, capsys):
     with pytest.raises(SystemExit) as ei:
         sc.main()
     assert ei.value.code == 0
-    assert capsys.readouterr().out.strip() == ""
+    out = json.loads(capsys.readouterr().out)
+    assert out["hookSpecificOutput"]["permissionDecision"] == "deny"  # 2026-09-11: a guard that cannot read the call does not guess
 
 
 def test_no_args_denies(scripts_path, monkeypatch, capsys):

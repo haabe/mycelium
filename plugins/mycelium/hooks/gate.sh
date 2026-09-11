@@ -26,46 +26,44 @@ STAMP_FILE="${TMPDIR:-/tmp}/mycelium-preflight-stamp-${_stamp_uid}-${_stamp_phas
 # avoid paying a second interpreter startup per edit. NUL separation keeps it
 # correct even if a path contained a newline. On parse failure both vars stay
 # empty (same fallback as before).
+# shellcheck disable=SC2034  # INPUT is read by hi_read_input in the sourced library
 INPUT=$(cat)
-FILE_PATH=""
-# The first NUL-delimited field must be CONSUMED to reach FILE_PATH, but its
-# value is unused — `_` is the intentional-discard idiom shellcheck recognises.
-{ IFS= read -r -d '' _; IFS= read -r -d '' FILE_PATH; } < <(
-  printf '%s' "$INPUT" | python3 -c '
-import sys, json
-d = json.load(sys.stdin)
-ti = d.get("tool_input", {})
-sys.stdout.write(d.get("tool_name", "") + "\0" + ti.get("file_path", ti.get("file", "")) + "\0")
-' 2>/dev/null
-) || true
+HI_LIB="$(dirname "${BASH_SOURCE[0]}")/../scripts/_hook_input_read.sh"
+# shellcheck source=/dev/null
+. "$HI_LIB"
+hi_read_input
+if [ -n "$HI_BAD" ]; then
+  hi_deny "Mycelium gate: refused, tool input is not the documented shape ($HI_BAD). A guard that cannot read the call does not guess (adversarial pass 2026-09-11)."
+fi
 
-# Normalize path: ensure leading / so patterns match consistently
-# Claude Code may pass relative paths (e.g., "src/foo.js") or absolute paths.
-case "$FILE_PATH" in
-  /*) ;; # already absolute
-  *)  FILE_PATH="/$FILE_PATH" ;; # prepend / so "/src/" patterns match "src/..."
-esac
+# CHECK 0: guard state is human-owned. A write to the file that switches a blocking hook off asks
+# the person; the agent cannot answer for them (adversarial pass 2026-09-11, every off-switch was
+# agent-writable). MYCELIUM_GUARD_STATE_EDIT=1 in the human's own shell skips the ask.
+if [ "${MYCELIUM_GUARD_STATE_EDIT:-}" != "1" ]; then
+  while IFS=$'\t' read -r target _exists _size; do
+    case "$target" in
+      GUARD:*) hi_ask "Mycelium gate: ${target#GUARD:} switches a blocking hook off, and this tool call writes it. A person decides that, not the agent. Approve if you asked for it; set MYCELIUM_GUARD_STATE_EDIT=1 in your own shell for setup work.";;
+    esac
+  done <<< "$HI_TARGETS"
+fi
 
-# Always allow .claude/ edits (config/harness/canvas changes)
-case "$FILE_PATH" in *"/.claude/"*) exit 0;; esac
-
-# Only gate source code paths
-case "$FILE_PATH" in
-  *"/src/"*|*"/scripts/"*|*"/tests/"*|*"/test/"*|*"/lib/"*|*"/app/"*|*"/pages/"*|*"/components/"*|*"/server/"*|*"/api/"*) ;;
-  *) exit 0;;
-esac
+# Which targets does the secret scan apply to? Every real path inside the project that is not
+# under .claude/ (2026-09-11: config.py, source/, Src/ were all outside the old directory list).
+SCAN=0
+while IFS=$'\t' read -r target _exists _size; do
+  case "$target" in
+    ""|OUTSIDE:*|GUARD:*|OPAQUE:*) ;;
+    .claude/*) ;;
+    *) SCAN=1;;
+  esac
+done <<< "$HI_TARGETS"
+[ "$HI_TOOL" = "Bash" ] && SCAN=1   # the command text itself can carry the secret
+[ "$SCAN" = "1" ] || exit 0
 
 # ============================================================
 # CHECK 1: Secret detection in content being written (G-S1)
 # ============================================================
-# Extract content from Write or new_string from Edit
-CONTENT=$(echo "$INPUT" | python3 -c '
-import sys, json
-d = json.load(sys.stdin)
-ti = d.get("tool_input", {})
-# Write tool uses "content", Edit uses "new_string"
-print(ti.get("content", ti.get("new_string", "")))
-' 2>/dev/null || echo "")
+CONTENT="$HI_CONTENT"
 
 if [ -n "$CONTENT" ]; then
   # Check for common secret patterns

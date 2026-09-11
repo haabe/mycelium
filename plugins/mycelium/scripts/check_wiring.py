@@ -227,6 +227,9 @@ def _is_invocation(line: str, name: str) -> bool:
         re.search(r"^\s*(?:from\s+[.\w]*\s+)?import\s+[^\n]*\b" + stem + r"\b", line)
         or re.search(r"^\s*from\s+[.\w]*\b" + stem + r"\b\s+import\b", line)
         or re.search(r"(?:python3?|bash|sh)\b[^\n]*" + esc, line)   # python3 …/x.py
+        # A SOURCED LIBRARY IS REACHED BY `source` OR `.`, not by an interpreter (0.196.0:
+        # scripts/_hook_input_read.sh is sourced by three gates and read as an orphan).
+        or re.search(r"(?:^|[\s;&|])(?:source|\.)\s+[\"']?[^\n]*" + esc, line)
         or re.search(r"(?:^|[\s\"'(=])\./[^\s\"']*" + esc, line)  # ./x.sh
         or re.search(r"\$\{?\w+\}?/[^\s\"']*" + esc, line)        # "$S/x.py"
         # A shell assignment of the script's path is programmatic use: Check 40
@@ -234,7 +237,9 @@ def _is_invocation(line: str, name: str) -> bool:
         # `python3 "$sync_script" --check`, so the interpreter and the filename
         # never share a line. Without this the guard false-positives on every
         # variable-indirected caller.
-        or re.search(r"\w+=[\"']?[^\s\"']*" + esc, line),
+        # The value may be built from $(dirname …) and quotes before the name lands
+        # (0.196.0: HI_LIB="$(dirname "${BASH_SOURCE[0]}")/../scripts/_hook_input_read.sh").
+        or re.search(r"\w+=[\"']?[^\n]*" + esc, line),
     )
 
 

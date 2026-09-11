@@ -4,38 +4,38 @@
   "hooks": {
     "preToolUse": [
       {
-        "matcher": "Write|Edit|MultiEdit|edit|write",
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit|edit|write|Bash|shell|mcp__filesystem__(write_file|edit_file|move_file)",
         "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/gate.sh",
         "type": "command",
         "timeout": 30,
         "failClosed": true
       },
       {
-        "matcher": "Write|write",
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit|edit|write|Bash|shell|mcp__filesystem__(write_file|edit_file|move_file)",
         "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/discovery-gate.sh",
         "type": "command",
         "timeout": 30
       },
       {
-        "matcher": "Write|Edit|MultiEdit|edit|write",
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit|edit|write|Bash|shell|mcp__filesystem__(write_file|edit_file|move_file)",
         "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/brownfield-gate.sh",
         "type": "command",
         "timeout": 30
       },
       {
-        "matcher": "Write|Edit|MultiEdit|edit|write",
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit|edit|write|Bash|shell|mcp__filesystem__(write_file|edit_file|move_file)",
         "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/scope-gate.sh",
         "type": "command",
         "timeout": 30
       },
       {
-        "matcher": "Write|Edit|MultiEdit|edit|write|Bash|shell|mcp__filesystem__(write_file|edit_file|move_file)",
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit|edit|write|Bash|shell|mcp__filesystem__(write_file|edit_file|move_file)",
         "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/framework-guard.sh",
         "type": "command",
         "timeout": 30
       },
       {
-        "matcher": "Write|Edit|MultiEdit|edit|write|mcp__filesystem__(write_file|edit_file|move_file)",
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit|edit|write|Bash|shell|mcp__filesystem__(write_file|edit_file|move_file)",
         "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/autonomous-evidence-guard.sh",
         "type": "command",
         "timeout": 30
@@ -154,6 +154,16 @@
       {
         "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/discovery-trigger-guard.sh",
         "type": "command"
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": []
+      },
+      {
+        "matcher": "mcp__filesystem__(write_file|edit_file|move_file)",
+        "hooks": []
       }
     ]
   }

@@ -428,3 +428,14 @@ def test_a_rule_that_matched_nothing_is_named_in_the_green_line(scripts_path, tm
     out = capsys.readouterr().out
     assert rc == 0, out
     assert "matched nothing" in out and "C/D" in out, out
+
+
+def test_rule_a_sourced_library_counts_as_called(scripts_path, tmp_path):
+    """`. "$LIB"` and `source …/x.sh` are call sites (0.196.0: the shared hook-input library)."""
+    mod = _import(scripts_path)
+    _write(_plugin(tmp_path) / "scripts/_lib.sh", "hi() { :; }\n")
+    _write(_plugin(tmp_path) / "hooks/some-gate.sh",
+           'LIB="$(dirname "${BASH_SOURCE[0]}")/../scripts/_lib.sh"\n. "$LIB"\n')
+    findings, _ = mod.check_orphan_scripts(tmp_path)
+    assert findings == []
+

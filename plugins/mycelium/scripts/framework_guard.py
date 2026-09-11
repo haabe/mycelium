@@ -29,7 +29,11 @@ import json
 import os
 import re
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from pathlib import Path
+
+import _hook_input as hi  # sibling module, after the path insert
 
 # Shared parser — see _manifest_lib.py
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -84,7 +88,7 @@ _WRITE_OP_PATTERNS = [
     (re.compile(r"\btee\s+(-a\s+)?"), "tee"),
     (re.compile(r"\bsed\s+(?:-[^\s]*i[^\s]*|-i)\s+"), "sed -i"),
     (
-        re.compile(r"\bopen\s*\(\s*['\"]([^'\"]+)['\"]\s*,\s*['\"][wa]"),
+        re.compile(r"\bopen\s*\(\s*['\"]"),
         "python file write",
     ),
     (re.compile(r"\brm\s+(-[a-z]+\s+)*"), "rm"),
@@ -335,20 +339,49 @@ def _deny_bash_write(fp, op, upstream_repo):
     )
 
 
+def _classify_resolved(r, project_dir, framework):
+    """Classify by the REAL relative path (2026-09-11: `..`, symlinks and the other case on a
+    case-insensitive disk all reached CLAUDE.md past an exact-string match)."""
+    if not r.inside:
+        return False, None
+    proj_real = os.path.realpath(project_dir)
+    rel = r.rel or ""
+    matched, rule = is_framework(r.real, proj_real, framework)
+    if matched or not hi.case_insensitive_fs(proj_real):
+        return matched, rule
+    # case-insensitive disk: the same bytes in another case are the same file
+    for candidate in _extract_framework_paths(framework):
+        if candidate.lower() == rel.lower():
+            return is_framework(os.path.join(proj_real, candidate), proj_real, framework)
+    return False, None
+
+
 def _handle_file_edit(tool_input, project_dir, framework, upstream_repo):
-    file_path = tool_input.get("file_path", "")
-    if not file_path:
-        return  # no path → can't classify → fail open
-    matched, rule = is_framework(file_path, project_dir, framework)
-    if matched:
-        rel_path = os.path.relpath(os.path.abspath(file_path), project_dir)
-        _deny_file_edit(rel_path, rule, upstream_repo)
+    for key, path in hi.target_paths(tool_input):
+        r = hi.resolve(path, project_dir, key=key)
+        matched, rule = _classify_resolved(r, project_dir, framework)
+        if matched:
+            _deny_file_edit(r.rel, rule, upstream_repo)
 
 
 def _handle_bash(tool_input, project_dir, framework, upstream_repo):
-    cmd = tool_input.get("command", "")
+    cmd = str(tool_input.get("command", "") or "")
     if not cmd:
-        return  # no command → fail open
+        return
+    scan = hi.bash_write_targets(cmd, project_dir)
+    for r in scan.targets:
+        matched, _rule = _classify_resolved(r, project_dir, framework)
+        if matched:
+            _deny_bash_write(r.rel, r.key.removeprefix("bash:"), upstream_repo)
+    if scan.opaque:
+        # a writer whose target the scanner cannot read: deny only when the command also
+        # mentions a framework path, so `f=x; echo > $f` on a non-framework file still runs
+        fw = {p.lower() for p in _extract_framework_paths(framework)}
+        mentioned = [m for m in scan.mentions if m.lower() in fw
+                     or os.path.basename(m).lower() in {os.path.basename(f) for f in fw}]
+        if mentioned:
+            _deny_bash_write(mentioned[0], "an indirect write (" + scan.opaque[0] + ")",
+                             upstream_repo)
     matched, fp, op = is_framework_write_in_command(cmd, project_dir, framework)
     if matched:
         _deny_bash_write(fp, op, upstream_repo)
@@ -365,13 +398,7 @@ def _handle_mcp_filesystem_path(tool_input, project_dir, framework, upstream_rep
     mcp__filesystem__create_directory) remain uncovered — extend handlers and
     the hooks.json matcher together when they become a real bypass risk.
     """
-    file_path = tool_input.get("path", "")
-    if not file_path:
-        return  # no path → fail open
-    matched, rule = is_framework(file_path, project_dir, framework)
-    if matched:
-        rel_path = os.path.relpath(os.path.abspath(file_path), project_dir)
-        _deny_file_edit(rel_path, rule, upstream_repo)
+    _handle_file_edit(tool_input, project_dir, framework, upstream_repo)
 
 
 def _handle_mcp_filesystem_move(tool_input, project_dir, framework, upstream_repo):
@@ -380,14 +407,15 @@ def _handle_mcp_filesystem_move(tool_input, project_dir, framework, upstream_rep
     Move into framework path = framework write; move out of framework path =
     framework deletion. Both classify as framework-modifying.
     """
-    for field in ("source", "destination"):
-        path = tool_input.get(field, "")
-        if not path:
-            continue
-        matched, rule = is_framework(path, project_dir, framework)
-        if matched:
-            rel_path = os.path.relpath(os.path.abspath(path), project_dir)
-            _deny_file_edit(rel_path, rule, upstream_repo)
+    _handle_file_edit(tool_input, project_dir, framework, upstream_repo)
+
+
+def _parse_manifest_or_raise(manifest_path):
+    framework = parse_manifest(manifest_path)
+    if not _extract_framework_paths(framework):
+        raise ValueError("manifest.yml classifies no path as framework (empty or comment-only), "
+                         "which would make every file writable.")
+    return framework
 
 
 class StateBrokenError(Exception):
@@ -429,9 +457,11 @@ def _load_input():
 EXPECTED_ARGV_LEN = 3  # script_name + state_file + project_dir
 
 
+@hi.fail_closed("framework-guard")
 def main():
     if len(sys.argv) != EXPECTED_ARGV_LEN:
-        sys.exit(0)  # misconfigured → fail open
+        hi.decision("deny", "Mycelium framework-guard: invoked without state file and project "
+                            "dir. A misconfigured guard used to allow; it refuses now.")
 
     state_file = sys.argv[1]
     project_dir = sys.argv[2]
@@ -455,16 +485,21 @@ def main():
         sys.exit(0)  # absent (not a dogfood instance) or explicitly disabled → allow
     upstream_repo = state.get("upstream_repo", "the upstream framework repo")
 
-    input_data = _load_input()
-    if input_data is None:
-        sys.exit(0)
-
-    tool_name = input_data.get("tool_name", "")
-    tool_input = input_data.get("tool_input", {})
+    input_data = hi.read_input()
+    tool_name = str(input_data.get("tool_name") or "")
+    tool_input = input_data.get("tool_input") or {}
+    hi.guard_state_check("framework-guard", tool_name, tool_input, project_dir)
 
     manifest_path = Path(project_dir) / ".claude" / "manifest.yml"
+    if not manifest_path.is_file():
+        hi.decision("deny", "Mycelium framework-guard: upstream.json declares this project a "
+                            "dogfood instance but .claude/manifest.yml is absent, so nothing is "
+                            "classified and the guard would protect nothing (adversarial pass "
+                            '2026-09-11, G0). Add the manifest, or set `"active": false` in '
+                            ".claude/state/upstream.json if this plugin-form project has no "
+                            "framework files to guard.")
     try:
-        framework = parse_manifest(manifest_path)
+        framework = _parse_manifest_or_raise(manifest_path)
     except ValueError as exc:
         # Structural drift in manifest.yml (see _manifest_lib.parse_manifest).
         # parse yielded zero protected paths from a non-empty manifest, which
@@ -489,6 +524,7 @@ def main():
         "Write":                          _handle_file_edit,
         "Edit":                           _handle_file_edit,
         "MultiEdit":                      _handle_file_edit,
+        "NotebookEdit":                   _handle_file_edit,
         "Bash":                           _handle_bash,
         "mcp__filesystem__write_file":    _handle_mcp_filesystem_path,
         "mcp__filesystem__edit_file":     _handle_mcp_filesystem_path,

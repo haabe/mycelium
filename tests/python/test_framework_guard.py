@@ -805,7 +805,8 @@ class TestMainInProcess:
         assert code == 0
         assert out == ""
 
-    def test_main_wrong_argv_len_fails_open(self, scripts_path, monkeypatch, capsys):
+    def test_main_wrong_argv_len_denies(self, scripts_path, monkeypatch, capsys):
+        """2026-09-11: a misconfigured guard refuses; it used to allow."""
         guard = _import_guard(scripts_path)
         monkeypatch.setattr(sys, "argv", ["framework_guard.py"])  # missing args
         code = None
@@ -814,7 +815,8 @@ class TestMainInProcess:
         except SystemExit as e:
             code = e.code
         assert code == 0
-        assert capsys.readouterr().out == ""
+        out = json.loads(capsys.readouterr().out)
+        assert out["hookSpecificOutput"]["permissionDecision"] == "deny"
 
     def test_main_inactive_state_fails_open(self, project_dir, manifest_path, scripts_path, monkeypatch, capsys):
         guard = _import_guard(scripts_path)
@@ -827,7 +829,7 @@ class TestMainInProcess:
         assert code == 0
         assert out == ""
 
-    def test_main_bad_input_fails_open(self, project_dir, manifest_path, upstream_state, scripts_path, monkeypatch, capsys):
+    def test_main_bad_input_denies(self, project_dir, manifest_path, upstream_state, scripts_path, monkeypatch, capsys):
         guard = _import_guard(scripts_path)
         monkeypatch.setattr(
             sys, "argv",
@@ -840,7 +842,8 @@ class TestMainInProcess:
         except SystemExit as e:
             code = e.code
         assert code == 0
-        assert capsys.readouterr().out == ""
+        out = json.loads(capsys.readouterr().out)
+        assert out["hookSpecificOutput"]["permissionDecision"] == "deny"
 
     def test_main_uses_default_upstream_repo_when_missing(self, project_dir, manifest_path, scripts_path, monkeypatch, capsys):
         """State active but no upstream_repo key → default phrase used in message."""
@@ -857,11 +860,11 @@ class TestMainInProcess:
     def test_module_entrypoint_runs_main(self, scripts_path, monkeypatch, capsys):
         """Executing the module as __main__ invokes main() (covers the guard).
 
-        Stub argv to the misconfigured shape so main() fails open (exit 0)
-        without needing real state/stdin.
+        Stub argv to the misconfigured shape; since 2026-09-11 that is a deny (exit 0
+        with a deny payload), not a silent allow.
         """
         import runpy
-        monkeypatch.setattr(sys, "argv", ["framework_guard.py"])  # wrong argc → fail open
+        monkeypatch.setattr(sys, "argv", ["framework_guard.py"])  # wrong argc → deny
         try:
             runpy.run_path(
                 str(scripts_path / "framework_guard.py"),
@@ -869,7 +872,8 @@ class TestMainInProcess:
             )
         except SystemExit as e:
             assert e.code == 0
-        assert capsys.readouterr().out == ""
+        out = json.loads(capsys.readouterr().out)
+        assert out["hookSpecificOutput"]["permissionDecision"] == "deny"
 
     def test_main_manifest_drift_fails_closed(self, project_dir, scripts_path, monkeypatch, capsys):
         """Non-empty manifest that parses to zero protected paths → deny (fail closed)."""

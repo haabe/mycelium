@@ -122,3 +122,14 @@ answer. `check_upstream_candidates.py` refuses a candidate surfaced on or after 
 no `different_builder:` sentence; earlier candidates are not backfilled, because backfilling is the
 filler trap in bulk.
 
+## Guard state is human-owned
+
+`.claude/state/upstream.json`, `.claude/manifest.yml`, `.claude/state/active-execution.json`,
+`.claude/state/discovery-skip-ack`, `.claude/state/brownfield-ack` and the `autonomous:` flag in
+`.claude/diamonds/active.yml` each switch a blocking hook off. A tool call that writes one of them is
+put in front of the person by the hook (`permissionDecision: ask`), and an autonomous run cannot
+un-declare itself. When a gate tells you to write an ack file after the user has answered, write
+it; the ask is the user confirming their own answer, and it costs one keypress. Do not work around
+the ask with Bash, a variable, or a different path: the hooks read those too (0.196.0, after the
+2026-09-11 adversarial pass found every off-switch inside the agent's write set).
+

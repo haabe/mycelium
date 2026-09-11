@@ -210,7 +210,7 @@ def test_main_allow_non_enforced_path_in_process(scripts_path, monkeypatch, tmp_
     assert capsys.readouterr().out.strip() == ""
 
 
-def test_main_fail_open_bad_json_in_process(scripts_path, monkeypatch, tmp_path, capsys):
+def test_main_bad_json_denies_in_process(scripts_path, monkeypatch, tmp_path, capsys):
     import io
     mod = _import(scripts_path)
     monkeypatch.setattr("sys.argv", ["autonomous_evidence_guard.py", str(tmp_path)])
@@ -220,10 +220,11 @@ def test_main_fail_open_bad_json_in_process(scripts_path, monkeypatch, tmp_path,
         mod.main()
     except SystemExit as exc:
         assert exc.code in (0, None)
-    assert capsys.readouterr().out.strip() == ""
+    out = json.loads(capsys.readouterr().out)
+    assert out["hookSpecificOutput"]["permissionDecision"] == "deny"  # 2026-09-11: no guess on bad input
 
 
-def test_fail_open_on_unparseable_stdin(scripts_path, tmp_path):
+def test_unparseable_stdin_denies(scripts_path, tmp_path):
     r = subprocess.run(
         ["python3", str(scripts_path / "autonomous_evidence_guard.py"),
          str(tmp_path)],
@@ -231,4 +232,4 @@ def test_fail_open_on_unparseable_stdin(scripts_path, tmp_path):
         env={"MYCELIUM_AUTONOMOUS_RUN": "1", "PATH": __import__("os").environ["PATH"]},
     )
     assert r.returncode == 0
-    assert r.stdout.strip() == ""
+    assert '"permissionDecision": "deny"' in r.stdout
