@@ -2,7 +2,11 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-09-11.
+**Last updated**: 2026-09-12.
+
+## v0.197.1 - the approved text of a message is not an unlogged send
+
+`check_contact_recorded_as_prose` treats a dated field name with a contact word as a claim that a contact happened on that date. `message_approved_2026_09_04` on the dogfood ht-107 is the approved wording of eleven cold DMs, dated by the day it was approved; the sends are eleven touch entries on 2026-09-05 that cite it. The check fired on the field the moment the task reopened on its trigger. Second classified false-positive class beside the "dates unknown" one: skipped only when `message` is the sole contact word in the name and the name also says approved, draft, template or wording. `reply_draft_sent_...` still fires, because `sent` is a claim. Two tests.
 
 ## v0.197.0 - a read that falls due is said out loud
 

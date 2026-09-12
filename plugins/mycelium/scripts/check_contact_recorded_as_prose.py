@@ -38,7 +38,10 @@ ABOUT the log's own gaps carries a contact word and a date, and that date is whe
 STATEMENT was made -- `touch_dates_unknown_stated_2026_08_27` is the live example, and it
 appeared the day after this shipped. Fields declaring the dates unknown are skipped. The
 near neighbours `corrected` and `retracted` are deliberately NOT skipped: both live true
-positives are named that way and describe real contacts.
+positives are named that way and describe real contacts. SECOND CLASS (2026-09-11): a field
+holding the approved TEXT of a message (`message_approved_2026_09_04`), dated by its approval,
+is not a send; skipped only when `message` is the sole contact word and the name says
+approved/draft/template/wording.
 
 REPORT-ONLY. A date in a field name is a strong hint, not a contract, and some
 contacts legitimately have no known event date — ht-090's deflected ask is real and
@@ -69,6 +72,14 @@ CONTACT_WORD = re.compile(r"inbound|outbound|repl(y|ies)|sent|touch|dm\b|message
 # and `retracted` are deliberately NOT here, because both live true positives are named
 # `TOUCH_CORRECTED_...` and `RETRACTED_...` and describe real contacts.
 NOT_A_CONTACT_CLAIM = re.compile(r"unknown", re.IGNORECASE)
+# A FIELD THAT HOLDS THE TEXT OF A MESSAGE IS NOT CLAIMING THE MESSAGE WAS SENT.
+# Second classified class, dogfood 2026-09-11: `message_approved_2026_09_04` on ht-107 is
+# the approved wording of eleven cold DMs, dated by the day the founder approved it; the
+# eleven sends are touch entries dated 2026-09-05 that cite the field. The check fired on
+# the field the moment the task reopened. Narrow on purpose: only when the SOLE contact
+# word in the name is `message` and the name also says it is wording (approved, draft,
+# template, wording). `reply_draft_sent_...` still fires, because `sent` is a claim.
+MESSAGE_TEXT_NOT_A_SEND = re.compile(r"approved|draft|template|wording", re.IGNORECASE)
 
 
 def scan(tasks: list) -> list[tuple[str, str, str]]:
@@ -84,6 +95,9 @@ def scan(tasks: list) -> list[tuple[str, str, str]]:
             if not m or not CONTACT_WORD.search(field):
                 continue
             if NOT_A_CONTACT_CLAIM.search(field):
+                continue
+            only_message = {m.group(0).lower() for m in CONTACT_WORD.finditer(field)} == {"message"}
+            if only_message and MESSAGE_TEXT_NOT_A_SEND.search(field):
                 continue
             iso = "-".join(m.groups())
             if iso not in logged:

@@ -148,3 +148,22 @@ def test_a_document_that_parses_to_nothing_is_unknown(scripts_path, tmp_path, ca
     (tmp_path / ".claude" / "canvas").mkdir(parents=True)
     (tmp_path / ".claude" / "canvas" / "human-tasks.yml").write_text("# only a comment\n")
     assert mod.main(["--root", str(tmp_path)]) == 2
+
+
+def test_the_approved_text_of_a_message_is_not_a_send(scripts_path):
+    """ht-107, 2026-09-11: `message_approved_2026_09_04` holds the wording of eleven DMs,
+    dated by approval; the sends are touches on 2026-09-05. Not a contact claim."""
+    mod = _import(scripts_path)
+    tasks = [{
+        "id": "ht-107",
+        "message_approved_2026_09_04": "Hey NN, ...",
+        "touch_log": [{"date": "2026-09-05", "direction": "outbound"}],
+    }]
+    assert mod.scan(tasks) == []
+
+
+def test_a_draft_that_says_sent_is_still_a_claim(scripts_path):
+    """`sent` is a contact word in its own right; a draft field that claims a send fires."""
+    mod = _import(scripts_path)
+    tasks = [{"id": "ht-1", "reply_draft_sent_2026_09_06": "x", "touch_log": []}]
+    assert mod.scan(tasks) == [("ht-1", "reply_draft_sent_2026_09_06", "2026-09-06")]
