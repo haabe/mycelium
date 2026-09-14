@@ -77,6 +77,7 @@ import json
 import re
 import subprocess
 import sys
+from collections import Counter
 from pathlib import Path
 
 try:
@@ -90,6 +91,7 @@ DEFAULT_THRESHOLD = 5
 # Cap on release tokens printed inline. The full set is always available via
 # --json; a wall of 48 versions in a reminder is noise, not evidence.
 MAX_RELEASES_SHOWN = 12
+MAX_GATE_ROWS_SHOWN = 6
 
 # Matches a minor release token anywhere in a commit subject, e.g. "v0.97.0".
 # Anchored on a non-word boundary rather than start-of-string because one
@@ -441,6 +443,129 @@ def cycle_field_coverage(cycle_file, today=None):
         _rework_finding(observed, today),
     ]
     return [f for f in findings if f]
+
+
+# Keys in `calibration_summary` that are a pure function of the `cycles` list, with the rule
+# that derives each. Every key is optional in the summary; only keys the summary CARRIES are
+# compared, so a project that keeps a two-line summary is never told to grow it.
+def _summary_expected(cycles):
+    terminal = Counter(str(c.get("terminal_state")) for c in cycles)
+    classes = Counter(str(c.get("cycle_class")) for c in cycles if c.get("cycle_class"))
+    outcomes = Counter(
+        str(c["actual"].get("outcome"))
+        for c in cycles
+        if isinstance(c.get("actual"), dict) and c["actual"].get("outcome")
+    )
+    return {
+        "total_cycles": len(cycles),
+        "launched": terminal.get("launched", 0),
+        "killed": terminal.get("killed", 0),
+        "archived": terminal.get("archived", 0),
+        "in_flight_observation": terminal.get("in_flight", 0),
+        "reconstructed_post_hoc_count": sum(
+            1 for c in cycles if c.get("reconstructed_post_hoc") is True
+        ),
+        "cycle_class_distribution": dict(classes),
+        "outcome_distribution": dict(outcomes),
+    }
+
+
+def _summary_mismatches(summary, expected):
+    """Each (key, summary value, list value) where the summary carries the key and disagrees."""
+    out = []
+    for key, want in expected.items():
+        if key not in summary:
+            continue
+        have = summary[key]
+        if isinstance(want, dict):
+            if not isinstance(have, dict):
+                out.append((key, have, want))
+                continue
+            # A sub-key the summary carries and the list never produces is a claim of N
+            # where the list gives 0 — compared, not skipped.
+            out.extend(
+                (f"{key}.{sub}", have[sub], want.get(sub, 0))
+                for sub in sorted(have)
+                if have[sub] != want.get(sub, 0)
+            )
+        elif have != want:
+            out.append((key, have, want))
+    return out
+
+
+def cycle_integrity_findings(cycle_file):
+    """WARN-tier: does the record agree with itself?
+
+    TWO DEFECTS, BOTH FOUND BY /framework-health ON 2026-09-14 AND NEITHER FOR THE FIRST TIME.
+
+    1. `calibration_summary` is a hand-maintained aggregate of the `cycles` list in the SAME
+       FILE, and it has read wrong against that list four times (2026-06-05, 08-28, 09-02,
+       09-14). On 2026-09-02 the stale figure was handed to two blind adversarial readers who
+       built their central argument on it. Every instance was found by an audit cadence, none
+       at write time, because nothing compared the two halves. This compares them, for every
+       summary key that is a pure count over the list, and names each disagreement with both
+       numbers. Keys the summary does not carry are not demanded.
+
+    2. A `gates_fired` row with `result: pass` and a non-empty `caught` contradicts the field's
+       own definition (`engine/cycle-learning.md`: fail = the gate caught a gap; caught is
+       empty when it passed clean). The first record ever to carry the field coded six catches
+       as `pass`; the next three coded catches as `fail`. Framework-health then reads a 50% or
+       an 80% gate failure rate from the same four records depending on which convention it
+       believes. The row is reported, never re-coded: the author rules, the check only says the
+       two fields disagree.
+
+    WARN and never fail, and never raise on a malformed file, for the reasons
+    `cycle_field_coverage` gives. Returns human-readable strings; empty when consistent.
+    """
+    try:
+        data = yaml.safe_load(cycle_file.read_text(encoding="utf-8")) or {}
+    except (OSError, UnicodeDecodeError, yaml.YAMLError):
+        return []
+    if not isinstance(data, dict):
+        return []
+    cycles = [c for c in (data.get("cycles") or []) if isinstance(c, dict)]
+    if not cycles:
+        return []
+    findings = []
+
+    summary = data.get("calibration_summary")
+    if isinstance(summary, dict):
+        bad = _summary_mismatches(summary, _summary_expected(cycles))
+        if bad:
+            detail = "; ".join(
+                f"`{k}` reads {have}, the list gives {want}" for k, have, want in bad
+            )
+            findings.append(
+                f"cycle-history.yml: `calibration_summary` disagrees with its own `cycles` list "
+                f"on {len(bad)} field(s): {detail}. The summary is what a reader in a hurry "
+                f"consults; recompute it from the list (counts over all {len(cycles)} entries; "
+                f"reconstructed_post_hoc_count counts rows flagged true)."
+            )
+
+    contradictory = _contradictory_gate_rows(cycles)
+    if contradictory:
+        shown = ", ".join(contradictory[:MAX_GATE_ROWS_SHOWN])
+        if len(contradictory) > MAX_GATE_ROWS_SHOWN:
+            shown += " ..."
+        findings.append(
+            f"cycle-history.yml: {len(contradictory)} `gates_fired` row(s) read `result: pass` "
+            f"with a non-empty `caught` ({shown}). By the field's definition a gate that "
+            f"surfaced something failed; write `fail`, or empty `caught`. Left as written: the "
+            f"author rules, and framework-health reports the gate dimension both ways until then."
+        )
+    return findings
+
+
+def _contradictory_gate_rows(cycles):
+    """`cycle/gate` for every gates_fired row coded pass beside a non-empty caught."""
+    return [
+        f"{c.get('cycle_id', '?')}/{row.get('gate', '?')}"
+        for c in cycles
+        for row in c.get("gates_fired") or []
+        if isinstance(row, dict)
+        and row.get("result") == "pass"
+        and str(row.get("caught") or "").strip()
+    ]
 
 
 def main() -> int:

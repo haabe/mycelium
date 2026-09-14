@@ -187,3 +187,82 @@ def test_the_count_says_how_many_records_were_excluded(tmp_path):
     assert "1 of 1 closed cycles carry no `gates_fired`" in out, (
         "the denominator must be the OBSERVED population, not the whole file"
     )
+
+
+# --- cycle_integrity_findings (v0.199.0): the record against itself -------------------------
+#
+# Two defects /framework-health found on 2026-09-14, neither for the first time: a hand-kept
+# `calibration_summary` that had drifted from its own `cycles` list a fourth time, and a
+# `gates_fired` row coded `pass` beside a paragraph of what it caught. The tests pin the
+# three ways this could rot: demanding keys the summary never carried, re-coding a record
+# instead of reporting it, and breaking the validator on a malformed file.
+
+
+def _gate(result, caught=""):
+    return {"gate": "g", "result": result, "caught": caught}
+
+
+def test_summary_that_matches_its_list_is_silent(tmp_path):
+    cycles = [_cycle(cycle_id="c1"), _cycle(cycle_id="c2", terminal_state="killed",
+                                                cycle_class="product-leaf")]
+    f = tmp_path / "cycle-history.yml"
+    f.write_text(yaml.safe_dump({
+        "cycles": cycles,
+        "calibration_summary": {"total_cycles": 2, "launched": 1, "killed": 2 - 1,
+                                "cycle_class_distribution": {"meta-dogfood": 1, "product-leaf": 1}},
+    }, sort_keys=False))
+    assert _mod().cycle_integrity_findings(f) == []
+
+
+def test_stale_summary_names_each_field_with_both_numbers(tmp_path):
+    cycles = [_cycle(cycle_id=f"c{i}") for i in range(3)]
+    cycles[2]["reconstructed_post_hoc"] = True
+    cycles[2]["actual"] = {"outcome": "partial"}
+    f = tmp_path / "cycle-history.yml"
+    f.write_text(yaml.safe_dump({
+        "cycles": cycles,
+        "calibration_summary": {"total_cycles": 2, "launched": 3,
+                                "reconstructed_post_hoc_count": 0,
+                                "outcome_distribution": {"partial": 0, "success": 9}},
+    }, sort_keys=False))
+    out = _mod().cycle_integrity_findings(f)
+    assert len(out) == 1
+    line = out[0]
+    assert "`total_cycles` reads 2, the list gives 3" in line
+    assert "`reconstructed_post_hoc_count` reads 0, the list gives 1" in line
+    assert "`outcome_distribution.partial` reads 0, the list gives 1" in line
+    assert "`outcome_distribution.success` reads 9, the list gives 0" in line
+    assert "`launched`" not in line  # 3 launched is correct
+
+
+def test_keys_the_summary_does_not_carry_are_not_demanded(tmp_path):
+    f = tmp_path / "cycle-history.yml"
+    f.write_text(yaml.safe_dump({"cycles": [_cycle()],
+                                 "calibration_summary": {"notes": "two lines only"}},
+                                sort_keys=False))
+    assert _mod().cycle_integrity_findings(f) == []
+
+
+def test_a_pass_row_that_caught_something_is_reported_not_recoded(tmp_path):
+    f = _write(tmp_path, [
+        _cycle(cycle_id="c1", gates_fired=[_gate("pass", "THREE TIMES, all real"), _gate("fail", "x")]),
+        _cycle(cycle_id="c2", gates_fired=[_gate("pass"), _gate("pass", None)]),
+    ])
+    mod = _mod()
+    out = mod.cycle_integrity_findings(f)
+    assert len(out) == 1
+    assert "1 `gates_fired` row(s)" in out[0]
+    assert "c1/g" in out[0]
+    assert "author rules" in out[0]
+    # The file is untouched: reporting is not re-coding.
+    assert yaml.safe_load(f.read_text())["cycles"][0]["gates_fired"][0]["result"] == "pass"
+
+
+def test_integrity_is_silent_on_a_malformed_or_empty_file(tmp_path):
+    f = tmp_path / "cycle-history.yml"
+    f.write_text("cycles: [\n")
+    assert _mod().cycle_integrity_findings(f) == []
+    f.write_text("- not a mapping\n")
+    assert _mod().cycle_integrity_findings(f) == []
+    f.write_text("cycles: []\n")
+    assert _mod().cycle_integrity_findings(f) == []

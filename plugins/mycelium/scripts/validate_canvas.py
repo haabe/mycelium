@@ -1489,7 +1489,9 @@ def cycle_record_findings(canvas_dir):
         )
         mod = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod)
-        return mod.cycle_field_coverage(cycle_file)
+        # v0.199.0: the same module also checks the record against itself (summary vs list,
+        # a pass row that caught something). Same WARN tier, same reasons.
+        return mod.cycle_field_coverage(cycle_file) + mod.cycle_integrity_findings(cycle_file)
     except Exception:  # noqa: BLE001 — a broken advisory check must never fail a build
         return []
 

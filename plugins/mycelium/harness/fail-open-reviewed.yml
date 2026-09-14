@@ -328,6 +328,16 @@ reviewed:
     report that breaks the validator is worse than one with a gap". Accepted because
     the consumer of this list is a COVERAGE percentage over cycles that exist — zero
     cycles reports as nothing to measure rather than as full coverage.
+- id: check_cycle_recording.py@b22ca23c3b
+  verdict: accepted
+  reason: >-
+    cycle_integrity_findings, the sibling of the handler above (v0.199.0): returns []
+    for an unreadable or malformed cycle file for the same reason and under the same
+    contract — the validator's fail-loud pass already reports the unreadable file by
+    name, so a second finding here would double-report, and an integrity check that
+    raised would take the whole canvas validation down with it. Its output is a list of
+    disagreements; an unreadable file has no disagreements to report, not zero of them.
+    Reviewed 2026-09-14.
 
 # ---------------------------------------------------------------------------
 # accepted — flagged as "appears to speak", confirmed by reading.
