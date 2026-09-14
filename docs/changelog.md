@@ -4,6 +4,14 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-14.
 
+## v0.205.0 - a citation you cannot open is decay on a second axis
+
+Two dogfood candidates from 2026-08-17, closed on the fifth backlog pass of 2026-09-14.
+
+- **`scripts/check_evidence_links.py`** (new upstream; ran in the dogfood tree from 2026-08-17). Every other Mycelium consumer had a canvas full of citations and no way to know whether any still resolved. The script probes every http(s) URL cited under `.claude/canvas`, `diamonds`, `harness`, `memory`, `evals` and `docs/` of `--project-dir`, and writes a dated snapshot to `.claude/evals/metrics/evidence-links/`. Its three rules each trace to a failure the dogfood project had: a failed probe (429, 5xx, timeout, DNS, TLS) is UNKNOWN and never rot; 401/403 is a bot wall, not a dead page, and becomes an ASK for a browser verdict that is recorded so the ask stops; one 404 is `pending` and only a second failing run on a later DAY makes it ROTTED (a same-day re-run is not a second strike). GitHub answers robots with 404, so a GitHub 404 is confirmed against the API before it counts. Reserved documentation domains, `api.*` hosts and templated URLs are illustrations, not citations. The framework's own docs are never scanned for a consumer. Ported changes: paths resolve from `--project-dir`; no `.claude/` there is a refusal (exit 2), not a pass; a corrupt snapshot is reported rather than silently skipped; a YAML escape dragged into a URL (`...mycelium\n` from a double-quoted scalar, found on the first upstream run) is stripped. Fourteen tests, none touching the network; 91% coverage.
+- **`/canvas-health` step 7a** reads it: age was the only decay axis the skill asked about. The step says how to read the four buckets and what NOT to do with them (search the title before deleting a rotted citation; a large unknown count means throttling, not rot).
+- First upstream run against the dogfood canvas: 558 cited URLs across 35 files, 542 ok, 1 ROTTED, 3 pending, 7 blocked, 5 unknown. The rotted one is a competitor's roadmap page that moved; recorded on the dogfood side.
+
 ## v0.204.0 - a block leaves a line
 
 Three dogfood candidates, closed on the fourth backlog pass of 2026-09-14.

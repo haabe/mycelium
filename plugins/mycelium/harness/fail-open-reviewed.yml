@@ -339,6 +339,27 @@ reviewed:
     disagreements; an unreadable file has no disagreements to report, not zero of them.
     Reviewed 2026-09-14.
 
+- id: check_evidence_links.py@e4fb004d00
+  verdict: accepted
+  reason: >-
+    load_verified (0.205.0): a corrupt browser-verdict store prints a WARNING naming the
+    file and saying every recorded verdict is being ignored this run, then returns {} so
+    the probe can proceed and ask again. Speaks, and the docstring explains why silence
+    would launder every human verdict into an absence.
+- id: check_evidence_links.py@dc0af467cb
+  verdict: accepted
+  reason: >-
+    github_api_confirms, HTTPError branch (0.205.0): returns False on a 404 from the API and
+    None on any other status. The caller (_classify_http_error) turns None into UNKNOWN
+    with the detail "404 and the GitHub API could not settle it", which the report prints
+    under "unknown — could not be checked". Not silent downstream; a 404 that the API could
+    not settle is never counted as rot.
+- id: check_evidence_links.py@81f553250b
+  verdict: accepted
+  reason: >-
+    github_api_confirms, broad handler (0.205.0): DNS, TLS and timeout on the API call
+    return None, same downstream path as above (UNKNOWN, printed, never rot). The broad
+    except is the documented rule 1 of the module: a failed probe means WE could not look.
 # ---------------------------------------------------------------------------
 # accepted — flagged as "appears to speak", confirmed by reading.
 # ---------------------------------------------------------------------------

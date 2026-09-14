@@ -93,6 +93,17 @@ Audit the canvas knowledge base for quality, consistency, and completeness. The 
    - Suggest refresh actions: "Evidence in [file] is [N] days old. Run `/mycelium:user-interview` or `/mycelium:log-evidence` to refresh."
    - Note: corrections and patterns do NOT decay — process learnings are timeless
 
+7a. **Check that citations still resolve** (link rot, v0.205.0). Age is one axis of decay; a citation that 404s is the other, and until 0.205.0 nothing here asked. Run:
+   ```bash
+   python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_evidence_links.py" --project-dir .
+   ```
+   It probes every http(s) URL cited under `.claude/canvas`, `diamonds`, `harness`, `memory`, `evals` and `docs/`, and writes a dated snapshot to `.claude/evals/metrics/evidence-links/`. It self-throttles to once per 14 days (`--force` to run anyway), so on most runs it prints "skipped" and the previous snapshot stands. Read the buckets, not the total:
+   - **ROTTED** (failed on two consecutive runs) → a warning naming the claim that cites it. Before deleting anything: the four found on 2026-08-17 had all MOVED, two under a different title. Search for the title before the URL.
+   - **pending** (first failing run) → info only; a single 404 can be a deploy blip. It is confirmed or cleared on the next run, never by a same-day re-run.
+   - **blocked** (401/403) → NOT rot; a human can open these. Those marked `needs_browser_check` are an ASK: open them in the browser and record the verdict with `--mark-verified <url> --verdict ok|gone|unclear`, so the check stops asking.
+   - **unknown** (429, 5xx, timeout, DNS/TLS) → not a finding in either direction; a large count means the run was throttled, not the evidence base rotting.
+   The framework's own citations are not the consumer's to check and are never scanned (a dead link in a skill doc is one upstream defect, not N project findings).
+
 7b. **Check metric snapshot freshness** (v0.14):
    - If `.claude/jit-tooling/active-metrics.yml` exists, for each `status: active` source:
      - Find the newest snapshot in `.claude/evals/metrics/<source>/`.

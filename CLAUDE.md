@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.204.0 -- **A block leaves a line** (MINOR). `gate.sh` logs every block it issues (reason, session id) to `.claude/state/gate-block-log.jsonl` and `check_hook_delivery.py` reports blocks per session beside hook delivery, so the cost of the gate is a count; a changelog heading may say `(never released; folded into vX.Y.Z)` and the release backstop reads it, so a folded version no longer costs a third release; the contact-as-prose check names the remedy of last resort as such.
+*Version 0.205.0 -- **A citation you cannot open is decay on a second axis** (MINOR). `check_evidence_links.py` ships from the dogfood tree: it probes every cited URL under the project's canvas, diamonds, harness, memory, evals and docs, escalates to ROTTED only on two separate days, treats bot walls and transient failures as not-rot, records browser verdicts, and self-throttles to once per fortnight; `/canvas-health` step 7a reads it.
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 
