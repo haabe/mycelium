@@ -109,6 +109,7 @@ If the top two scores are within noise of each other (see Noise Check below), sa
 
 ## Canvas Output
 Update `.claude/canvas/opportunities.yml` — write `four_risks` and `ice_score` per solution leaf.
+When a scored leaf ships, write `shipped_at: YYYY-MM-DD` on the leaf (declared field, v0.203.0); the outcome-check lag and cycle-history read the field, and a ship date that lives only in a `shipped_note` is invisible to both.
 Update `.claude/canvas/gist.yml` with idea ICE scores and confidence levels.
 
 ## Theory Citations

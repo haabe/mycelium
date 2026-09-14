@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://mycelium.dev/schemas/canvas/opportunities.schema.json",
   "title": "Opportunity Solution Tree Canvas",
-  "description": "Teresa Torres OST \u2014 opportunities discovered through user research. Each opportunity entry requires provenance to prevent the canvas from drifting toward confident speculation (dogfood T4).",
+  "description": "Teresa Torres OST — opportunities discovered through user research. Each opportunity entry requires provenance to prevent the canvas from drifting toward confident speculation (dogfood T4).",
   "type": "object",
   "properties": {
     "schema_version": {
@@ -17,12 +17,12 @@
         "current_value": {},
         "target_value": {}
       },
-      "description": "The tree root. SINGULAR \u2014 retained as the default and only root for the common case. When a project needs more than one root, use `desired_outcomes` instead; declaring both is an error caught by validate_canvas.py."
+      "description": "The tree root. SINGULAR — retained as the default and only root for the common case. When a project needs more than one root, use `desired_outcomes` instead; declaring both is an error caught by validate_canvas.py."
     },
     "desired_outcomes": {
       "type": "array",
       "minItems": 1,
-      "description": "MULTIPLE TREE ROOTS in one file, added v0.93.0. An OST rooted on a metric the project does not steer by will faithfully optimise the wrong thing \u2014 the tree stays busy while the stuck thing stays stuck. Splitting into a second FILE was the obvious move and is wrong twice over: the ID references that point into this canvas break, and the new file is read by no script, gate or render, which is the built-not-wired defect this framework audits for. So roots are declared here and opportunities name theirs via `rolls_up_to`, keeping every reference intact and every consumer working.",
+      "description": "MULTIPLE TREE ROOTS in one file, added v0.93.0. An OST rooted on a metric the project does not steer by will faithfully optimise the wrong thing — the tree stays busy while the stuck thing stays stuck. Splitting into a second FILE was the obvious move and is wrong twice over: the ID references that point into this canvas break, and the new file is read by no script, gate or render, which is the built-not-wired defect this framework audits for. So roots are declared here and opportunities name theirs via `rolls_up_to`, keeping every reference intact and every consumer working.",
       "items": {
         "type": "object",
         "required": [
@@ -107,7 +107,56 @@
             "type": "array"
           },
           "solutions": {
-            "type": "array"
+            "type": "array",
+            "description": "Solution leaves under this opportunity. Items were untyped until v0.203.0, which is how `evidence_type: research` passed on five leaves (dogfood 2026-09-10). Only the declared keys are constrained; everything else a leaf carries is still allowed.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "provenance": {
+                  "type": [
+                    "object",
+                    "null"
+                  ],
+                  "description": "Solution-leaf provenance. Deliberately NOT the strict `_common` provenance object: leaves carry extra provenance keys in practice (blind_review, n_events, retrofit_note on the dogfood canvas, 2026-09-14), and the point of v0.203.0 is the ladder enum, not a key whitelist.",
+                  "properties": {
+                    "evidence_type": {
+                      "$ref": "_common.schema.json#/$defs/evidence_type"
+                    },
+                    "source_class": {
+                      "$ref": "_common.schema.json#/$defs/source_class"
+                    },
+                    "source_classes": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "_common.schema.json#/$defs/source_class"
+                      }
+                    },
+                    "evidence_sources": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "additionalProperties": true
+                },
+                "shipped_at": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "ISO date the leaf shipped. A field, so the outcome-check lag and cycle-history can read it instead of inferring the date from prose (v0.203.0)."
+                },
+                "minted_by": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "The skill or surface that minted the leaf (e.g. /mycelium:ost-builder, a scout harvest, a founder ruling). Provenance as a field, not prose (v0.203.0)."
+                }
+              },
+              "additionalProperties": true
+            }
           },
           "provenance": {
             "$ref": "_common.schema.json#/$defs/provenance"
@@ -139,7 +188,7 @@
           },
           "rolls_up_to": {
             "type": "string",
-            "description": "Which declared root in `desired_outcomes` this opportunity serves. Required on every opportunity once a file declares multiple roots \u2014 an untagged opportunity in a multi-root tree has no defined parent, and silently defaulting it to the first root is how the wrong-root problem returns. Ignored, and unnecessary, in a single-root file."
+            "description": "Which declared root in `desired_outcomes` this opportunity serves. Required on every opportunity once a file declares multiple roots — an untagged opportunity in a multi-root tree has no defined parent, and silently defaulting it to the first root is how the wrong-root problem returns. Ignored, and unnecessary, in a single-root file."
           }
         },
         "required": [

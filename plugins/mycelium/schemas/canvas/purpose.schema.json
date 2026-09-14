@@ -58,7 +58,26 @@
       "description": "L0 outcome bar (worked instance lives here in dogfood; canonical per-diamond field is diamonds/active.yml — see schemas/diamonds/active.schema.json)."
     },
     "evidence": {
-      "type": "object"
+      "type": "object",
+      "description": "Market and purpose evidence. `sources[]` items were untyped until v0.203.0, which is how `evidence_type: tracking` passed on a market signal (dogfood 2026-09-10).",
+      "properties": {
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "evidence_type": {
+                "$ref": "_common.schema.json#/$defs/evidence_type"
+              },
+              "source_class": {
+                "$ref": "_common.schema.json#/$defs/source_class"
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      },
+      "additionalProperties": true
     },
     "anti_states": {
       "type": [

@@ -136,6 +136,8 @@ looking complete.
 
 **Always update `.claude/canvas/opportunities.yml`** with the OST contents after building or updating. This is the single source of truth for the opportunity space.
 
+Every leaf this skill mints carries `minted_by: /mycelium:ost-builder` (or the surface that actually minted it: a scout harvest, a founder ruling). It is a declared field (`opportunities.schema.json`, v0.203.0), so provenance is read by checks rather than inferred from prose.
+
 Also update:
 - `.claude/canvas/scenarios.yml` if scenarios were created or refined (step 5)
 - `.claude/canvas/user-needs.yml` if new needs were identified

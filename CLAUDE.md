@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.202.0 -- **A mention is not a claim** (MINOR). The absence-claim guard skips text inside backticks, block quotes and caught/trigger record fields, and reports how many it skipped; `check_test_authenticity` builds its patched set from comment-stripped code so a commented-out patch no longer marks a real test fully-mocked; `touch_log[].direction` gains `retracted` for a message sent and then deleted.
+*Version 0.203.0 -- **The ladder reaches the leaves** (MINOR). `evidence_type` on solution-leaf provenance and on purpose evidence sources is bound to Gilad's ladder; `shipped_at` and `minted_by` are declared on leaves and the two skills that produce them say so; `check_key_shape` scans `diamonds/` beside the canvas.
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

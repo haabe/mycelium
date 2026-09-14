@@ -179,3 +179,19 @@ def test_main_truncates_a_long_list(tmp_path, monkeypatch):
     d = _canvas(tmp_path, {f"item_{i}_2026_08_{(i % 28) + 1:02d}": "x" for i in range(40)})
     _, out = _main(monkeypatch, d)
     assert "and 15 more" in out
+
+
+def test_diamonds_beside_the_canvas_are_scanned_and_named(tmp_path):
+    """v0.203.0. An agent wrote a dated key into diamonds/active.yml minutes after the check
+    caught the same shape in two canvas files; diamonds were not in the scan."""
+    d = _canvas(tmp_path, {"ok": 1})
+    dd = d.parent / "diamonds"
+    dd.mkdir()
+    (dd / "active.yml").write_text(yaml.safe_dump({"perspective_conflict_check_2026_09_02": "x"}))
+    found = _mod().scan(d)
+    assert ("diamonds/active", "perspective_conflict_check_2026_09_02") in found
+
+
+def test_a_missing_diamonds_dir_is_not_an_error(tmp_path):
+    d = _canvas(tmp_path, {"horizon_set_2026_08_28": "x"})
+    assert len(_mod().scan(d)) == 1

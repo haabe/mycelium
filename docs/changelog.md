@@ -4,6 +4,16 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-14.
 
+## v0.203.0 - the ladder reaches the leaves
+
+Three dogfood candidates, closed on the third backlog pass of 2026-09-14.
+
+- **`schemas/canvas/opportunities.schema.json`**: `solutions` was `{"type": "array"}` with no item schema, which is how `evidence_type: research` validated on five leaves until a prose walk found it (candidate 2026-09-10). Items are now objects with three declared keys and everything else still allowed: `provenance` (a permissive object whose `evidence_type`, `source_class` and `source_classes` are bound to `_common`; deliberately NOT the strict common provenance object, because leaves carry `blind_review`, `n_events` and `retrofit_note` in practice and the point is the ladder, not a key whitelist — the first draft used the strict ref and failed six dogfood leaves), `shipped_at` (ISO date) and `minted_by` (the surface that minted the leaf). The dogfood canvas validates unchanged.
+- **`schemas/canvas/purpose.schema.json`**: `evidence` was a bare object, which is how `evidence_type: tracking` validated on a market signal. `evidence.sources[]` items now bind `evidence_type` and `source_class` to `_common`; every other key stays free.
+- **`ost-builder` and `ice-score`** say which of them writes `minted_by` and `shipped_at`, so the two fields agents had been writing unasked (13 and 6 uses on the dogfood canvas) become skill output rather than habit (candidate 2026-09-10; `derived_by` and `measured_by`, the other two fields that row named, had zero live uses by today and are not declared).
+- **`scripts/check_key_shape.py`** scans `<canvas-dir>/../diamonds/*.yml` as `diamonds/<stem>` (candidate 2026-09-02: an agent wrote `perspective_conflict_check_2026_09_02` into `diamonds/active.yml` minutes after the check caught the same shape twice in the canvas). A baseline seeded before this release shows diamond keys as NEW once; that is the honest reading, and the report stays report-only without `--strict`.
+- Tests: two validator negatives (an off-ladder value on a leaf and on a purpose source are rejected; extra leaf provenance keys are not), two key-shape (diamonds scanned and named; a missing diamonds dir is silent).
+
 ## v0.202.0 - a mention is not a claim
 
 Three dogfood candidates, closed against the tree on the second backlog pass of 2026-09-14.

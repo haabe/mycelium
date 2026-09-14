@@ -76,12 +76,27 @@ def offending(node, canvas: str, out: list[tuple[str, str]], depth: int = 0) -> 
 
 
 def scan(canvas_dir: Path) -> list[tuple[str, str]]:
+    """Every canvas file, and the diamonds beside them.
+
+    Diamonds were not scanned until v0.203.0, and the gap was found by walking into it: an
+    agent wrote `perspective_conflict_check_2026_09_02` into `diamonds/active.yml` minutes
+    after this check had caught two identical keys in two canvas files (dogfood 2026-09-02).
+    The third would have baselined silently. Diamond keys are reported as `diamonds/<stem>`
+    so a baseline seeded before v0.203.0 shows them as NEW once, which is the honest reading.
+    """
     found: list[tuple[str, str]] = []
     for path in sorted(canvas_dir.glob("*.yml")):
         try:
             offending(yaml.safe_load(path.read_text()), path.stem, found)
         except (yaml.YAMLError, OSError):
             continue  # parse failures belong to validate_canvas, not here
+    diamonds = canvas_dir.parent / "diamonds"
+    if diamonds.is_dir():
+        for path in sorted(diamonds.glob("*.yml")):
+            try:
+                offending(yaml.safe_load(path.read_text()), f"diamonds/{path.stem}", found)
+            except (yaml.YAMLError, OSError):
+                continue
     return found
 
 

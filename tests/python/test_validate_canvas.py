@@ -1943,3 +1943,44 @@ def test_a_non_date_validated_at_is_still_rejected(tmp_path, scripts_path):
                        "validated_at": "recently"},
     }]}, sort_keys=False))
     assert validator.validate_canvas_against_schema(canvas, validator.build_registry())
+
+
+# --- v0.203.0: the ladder enum reaches solution leaves and purpose sources ----------------
+
+
+def test_off_ladder_evidence_type_on_a_solution_leaf_is_rejected(tmp_path, scripts_path, monkeypatch):
+    """`evidence_type: research` passed on five leaves (dogfood 2026-09-10) because
+    `solutions` was an untyped array."""
+    validator = _import_validator(scripts_path)
+    _point_at_real_schemas(validator, monkeypatch)
+    canvas = tmp_path / "opportunities.yml"
+    canvas.write_text(textwrap.dedent("""\
+        opportunities:
+          - id: opp-001
+            name: x
+            solutions:
+              - id: sol-001a
+                name: y
+                provenance:
+                  evidence_type: research
+                  blind_review: extra keys stay allowed
+    """))
+    errors = validator.validate_canvas_against_schema(canvas, validator.build_registry())
+    assert any("solutions.0.provenance.evidence_type" in e for e in errors), errors
+    assert not any("Additional properties" in e for e in errors), errors
+
+
+def test_off_ladder_evidence_type_on_a_purpose_source_is_rejected(tmp_path, scripts_path, monkeypatch):
+    validator = _import_validator(scripts_path)
+    _point_at_real_schemas(validator, monkeypatch)
+    canvas = tmp_path / "purpose.yml"
+    canvas.write_text(textwrap.dedent("""\
+        evidence:
+          sources:
+            - type: market_signal
+              date: "2026-09-10"
+              summary: a metrics pull
+              evidence_type: tracking
+    """))
+    errors = validator.validate_canvas_against_schema(canvas, validator.build_registry())
+    assert any("sources.0.evidence_type" in e for e in errors), errors
