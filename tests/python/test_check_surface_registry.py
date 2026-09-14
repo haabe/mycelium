@@ -237,6 +237,9 @@ def test_shipped_registry_is_honest(scripts_path):
     findings, open_rows, checked = mod.evaluate(plugin_root, repo_root)
     assert findings == [], f"broken wiring claims in the shipped registry: {findings}"
     assert checked > 0, "the shipped registry verified zero readers — it is not doing anything"
-    # The upstream-candidate row is knowingly open; assert it stays visible
-    # rather than silently disappearing.
-    assert any(o["artifact_class"] == "upstream-candidate" for o in open_rows)
+    # The upstream-candidate row was knowingly open from 2026-07-26 and this test pinned
+    # that it stayed visible. Closed 0.201.0 against the register that had existed since
+    # 2026-07-27: it must now be a verified wiring claim, not an open row, and no open row
+    # may vanish silently — the registry currently declares none.
+    assert not any(o["artifact_class"] == "upstream-candidate" for o in open_rows)
+    assert open_rows == [], f"open rows appeared without a test pinning them: {open_rows}"

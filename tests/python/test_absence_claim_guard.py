@@ -526,3 +526,41 @@ def test_ordinary_prose_does_not_reach_a_role_noun(scripts_path):
     # treated as an identity claim. Verified rather than assumed: this was
     # predicted to over-fire and does not.
     assert _warn(scripts_path, "That is a reasonable approach for the founder to take.") == ""
+
+
+# --- v0.201.0: a wrapped line is the rest of the sentence, not a new one ------------------
+#
+# The guard split on every newline, so a claim whose search was named on the previous
+# wrapped line was quoted as unscoped (dogfood 2026-08-30, and twice on 2026-09-14). The
+# three shapes where a newline IS a break are pinned so the fix cannot over-join.
+
+
+def test_a_wrapped_sentence_keeps_its_scope_across_the_line_break(scripts_path):
+    mod = _import(scripts_path)
+    wrapped = ("Nothing in the canvas tracks this, on a grep of .claude/canvas/*.yml\n"
+               "run 2026-09-14 across all 25 files.")
+    assert mod.findings(wrapped) == []
+
+
+def test_a_blank_line_still_separates_two_claims(scripts_path):
+    mod = _import(scripts_path)
+    assert len(mod.findings("No entry covers it.\n\nnothing in the canvas tracks it")) == 2
+
+
+def test_a_bullet_or_numbered_line_is_its_own_sentence(scripts_path):
+    mod = _import(scripts_path)
+    assert len(mod.findings("- No entry covers alpha\n- no entry covers beta\n"
+                            "1. no entry covers gamma\n2) no entry covers delta")) == 4
+
+
+def test_a_yaml_key_line_is_its_own_sentence(scripts_path):
+    mod = _import(scripts_path)
+    text = "note: nothing in the canvas tracks this\nsearch: grep over .claude/canvas/*.yml"
+    out = mod.findings(text)
+    assert len(out) == 1
+    assert out[0].startswith("note:")
+
+
+def test_a_wrapped_unscoped_claim_still_fires_once(scripts_path):
+    mod = _import(scripts_path)
+    assert len(mod.findings("Nothing in the framework distinguishes\nthe two cases at all.")) == 1

@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.200.0 -- **The disclosure moves when the hooks do** (MINOR). Dogfood 2026-09-14, sixth `/xai-check`: the AI system card was a quarter behind the hooks for the second time, silent on five boundary behaviours shipped in one September week. §2, §3, §5, §6 and `docs/context-surface.md` refreshed; `check_system_card_hooks.py` stamps a digest of the hook surface in the card and fails the gate set when the surface moves and the stamp does not.
+*Version 0.201.0 -- **A wrapped line is the rest of the sentence** (MINOR). The absence-claim guard split on every newline, so a claim whose search was named on the previous wrapped line was quoted as unscoped; it now breaks only at sentence ends, blank lines, list items and YAML keys. Surface registry's upstream-candidate row closed against the register that has existed since July; system card names the real sync-script path.
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

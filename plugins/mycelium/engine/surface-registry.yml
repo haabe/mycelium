@@ -181,17 +181,19 @@ surfaces:
     description: >-
       A framework change surfaced by a dogfood project, to be authored upstream.
       Marked "UPSTREAM CANDIDATE" in prose.
-    authoritative_surface: null   # OPEN — there is no such surface yet
-    read_by: []                   # and therefore no reader
+    authoritative_surface: ".claude/harness/upstream-candidates.yml"
+    read_by:
+      - "plugins/mycelium/scripts/check_upstream_candidates.py"   # probes each candidate against the tree; --strict since 0.195.0
     also_written_to: ".claude/harness/decision-log.md"
     note: >-
-      THE OPEN INSTANCE, recorded as open rather than omitted. 17 known items sit
-      as prose in a chronological log. Nothing routes them upstream, nothing tracks
-      whether they were authored, nothing surfaces them at the moment someone is
-      working upstream. A registry that could only express solved classes would
-      hide its most important row, so `null` is a legal value here and the checker
-      reports it as an undeclared surface rather than passing over it.
-    point_check: null
+      CLOSED 2026-09-14 (v0.201.0), and this row was the last to say otherwise. It read
+      `null` / "17 known items sit as prose in a chronological log" from 2026-07-26 until
+      today, while the dogfood project had kept `.claude/harness/upstream-candidates.yml`
+      since 2026-07-27 (115 rows by 2026-09-14, 36 shipped) and
+      `check_upstream_candidates.py` had read it since 0.109.0: the registry that exists
+      to catch right-content-wrong-surface was itself right-content in a stale row. The
+      decision-log copy stays as provenance; the defect was ever writing ONLY there.
+    point_check: "check_upstream_candidates.py --strict (0.195.0: different_builder required on rows surfaced on or after 2026-09-11)"
 
   - artifact_class: advisory-response
     description: >-

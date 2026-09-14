@@ -246,7 +246,22 @@ _RETRACTED = re.compile(
 #: citation and an orphaned claim — then warned on the orphan. Attaching evidence
 #: to an assertion with a colon or semicolon is exactly how this is written in
 #: practice, so breaking there punishes the phrasing the guard is asking for.
-_SENTENCE = re.compile(r"(?<=[.!?])\s+|\n")
+#:
+#: A BARE NEWLINE IS NOT A BREAK EITHER, since v0.201.0. It was, and the guard
+#: split on EVERY newline: a claim whose scoping clause sat on the previous
+#: wrapped line was quoted as unscoped, and a correction entry wrapped at 100
+#: columns fired on the sentence written to satisfy the guard (dogfood 2026-08-30;
+#: two of the four fires on 2026-09-14 were wrapped sentences that named their
+#: search on the line above). What still breaks a line: a blank line (a new
+#: paragraph), a line that starts a bullet or numbered item, and a line that
+#: starts a YAML key — the three shapes where the next line is a new thought
+#: rather than the rest of this one.
+_SENTENCE = re.compile(
+    r"(?<=[.!?])\s+"                                  # end of a sentence
+    r"|\n[ \t]*\n"                                    # a blank line: new paragraph
+    r"|\n(?=[ \t]*(?:[-*•]|\d+[.)])[ \t]+)"           # next line is a list item
+    r"|\n(?=[ \t]*[A-Za-z_][\w.-]*:[ \t])"           # next line is a YAML key
+)
 
 #: How much of an offending sentence to quote back, and how many to quote. The
 #: warning has to fit in front of the agent without becoming the thing it skims:
