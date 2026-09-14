@@ -564,3 +564,51 @@ def test_a_yaml_key_line_is_its_own_sentence(scripts_path):
 def test_a_wrapped_unscoped_claim_still_fires_once(scripts_path):
     mod = _import(scripts_path)
     assert len(mod.findings("Nothing in the framework distinguishes\nthe two cases at all.")) == 1
+
+
+# --- v0.202.0: a mention is not a claim ---------------------------------------------------
+#
+# The guard fired on a cycle record whose `gates_fired` quoted the claims it had caught, and
+# on correction entries quoting the claim they correct. Backticks, block quotes and record
+# fields are skipped, and the skip is COUNTED so a real hit inside a quote is never lost silently.
+
+
+def test_a_backticked_mention_is_skipped_and_counted(scripts_path):
+    mod = _import(scripts_path)
+    hits, skipped = mod.scan("The guard fired on `nothing in the framework distinguishes them`.")
+    assert hits == []
+    assert skipped == 1
+
+
+def test_a_block_quote_is_skipped_and_counted(scripts_path):
+    mod = _import(scripts_path)
+    hits, skipped = mod.scan("> No entry covers vocabulary.\n\nThe quoted line above was wrong.")
+    assert hits == []
+    assert skipped == 1
+
+
+def test_a_record_field_and_its_block_scalar_are_skipped(scripts_path):
+    mod = _import(scripts_path)
+    text = ("gates_fired:\n"
+            "  - gate: absence-claim-guard\n"
+            "    result: fail\n"
+            "    caught: >-\n"
+            "      DL-1067 'no mechanism exists' for rule 6; nothing in the framework\n"
+            "      distinguishes the two.\n"
+            "    other: nothing in the framework distinguishes the two cases")
+    hits, skipped = mod.scan(text)
+    assert skipped == 1
+    assert len(hits) == 1 and hits[0].startswith("other:")
+
+
+def test_a_claim_outside_the_mention_still_fires(scripts_path):
+    mod = _import(scripts_path)
+    hits, skipped = mod.scan("The record says `x`. Nothing in the framework distinguishes them.")
+    assert len(hits) == 1
+    assert skipped == 1
+
+
+def test_the_warning_reports_the_skip_count(scripts_path):
+    out = _warn(scripts_path, "> No entry covers alpha.\n\nNo entry covers beta.")
+    assert "No entry covers beta" in out
+    assert "1 mention" in out

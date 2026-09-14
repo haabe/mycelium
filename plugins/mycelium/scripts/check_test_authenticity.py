@@ -294,7 +294,11 @@ def _check_python(path: Path, text: str, prod: set[str]) -> list[Finding]:
         ))
         return out
     # A test that patches every production module it touches executes none of it.
-    patched = {m.split(".")[0] for m in re.findall(r"patch(?:\.object)?\(\s*['\"]?([\w.]+)", text)}
+    # v0.202.0: read from the same comment-stripped text as `touched`. Built from the raw
+    # text, a commented-out `patch(...)` line inflated the patched set until a test that
+    # genuinely runs production code was reported as exercising mocks only (dogfood 2026-08-30).
+    patched = {m.split(".")[0] for m in
+               re.findall(r"patch(?:\.object)?\(\s*['\"]?([\w.]+)", _strip_comments(text))}
     if patched and touched <= patched:
         out.append(Finding(
             path, "fully-mocked",

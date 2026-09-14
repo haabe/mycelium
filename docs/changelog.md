@@ -4,6 +4,15 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-14.
 
+## v0.202.0 - a mention is not a claim
+
+Three dogfood candidates, closed against the tree on the second backlog pass of 2026-09-14.
+
+- **`hooks/absence_claim_guard.py`**: a check that scans prose could not tell a mention from a use, and the record OF a check's catches is prose. It fired on a cycle record whose `gates_fired` quoted the three absence claims it had caught earlier that day, and on correction entries quoting the claim they correct (candidates 2026-08-16 and 2026-08-28). Three shapes are now skipped before the sentence split: text inside backticks, block-quote lines, and the value of a `caught`, `trigger`, `demand_origin` or `quoted` field including the indented continuation of its block scalar. **The skip is counted and reported in the warning** ("N mention(s) ... were skipped"), never dropped silently, so a real hit inside a quote can still be re-read. `scan()` and `scan_for()` return the pair; `findings()` and `hits_for()` keep their shape. Five tests. The 2026-08-16 candidate asked for entry-scoped suppression; this closes its quoted-claim half and leaves the "a search named anywhere in the entry" half open on purpose, because that would let one citation ground every claim in a long entry — the exact over-join the sentence split exists to prevent.
+- **`scripts/check_test_authenticity.py`**: `fully-mocked` compared a comment-aware set (`touched`) against a comment-blind one (`patched`, built from the raw text), so a commented-out `patch(...)` line inflated the right-hand side until a test that genuinely runs production code was reported as exercising mocks only (candidate 2026-08-30). `patched` now reads the same comment-stripped text. One test plants the commented-out line and requires no finding.
+- **`schemas/canvas/human-tasks.schema.json`**: `touch_log[].direction` gains `retracted`, a message sent and then deleted (candidate 2026-08-31). Not a contact for `check_reply_owed` (its `CONTACT_DIRECTIONS` is unchanged, so the value is excluded by construction), and not `internal` either, since something went out and may have been seen. The description says which.
+- Found already landed on this pass and closed in the dogfood register with the version named: the corrections entry regex splitting on any parenthesised date (fixed 0.169.1), the reply-owed check with no way to record a considered no (`reply_not_owed` marker, 0.190.0), and canvas-health 8c(a) lacking the horizon carve-out (0.174.0).
+
 ## v0.201.0 - a wrapped line is the rest of the sentence
 
 Three open dogfood candidates, closed against the tree on the day the backlog was worked.

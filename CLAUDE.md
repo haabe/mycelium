@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.201.0 -- **A wrapped line is the rest of the sentence** (MINOR). The absence-claim guard split on every newline, so a claim whose search was named on the previous wrapped line was quoted as unscoped; it now breaks only at sentence ends, blank lines, list items and YAML keys. Surface registry's upstream-candidate row closed against the register that has existed since July; system card names the real sync-script path.
+*Version 0.202.0 -- **A mention is not a claim** (MINOR). The absence-claim guard skips text inside backticks, block quotes and caught/trigger record fields, and reports how many it skipped; `check_test_authenticity` builds its patched set from comment-stripped code so a commented-out patch no longer marks a real test fully-mocked; `touch_log[].direction` gains `retracted` for a message sent and then deleted.
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

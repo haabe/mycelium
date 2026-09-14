@@ -307,12 +307,50 @@ _MESSAGE = (
 )
 
 
-def findings(text: str) -> list[str]:
-    """Absence-shaped sentences that name no search. Empty means nothing to say.
+#: A MENTION IS NOT A CLAIM (v0.202.0). The record OF a check's catches is prose,
+#: and a guard that scans prose fired on it: a cycle record whose `gates_fired`
+#: QUOTED the three absence claims this guard had caught earlier the same day,
+#: and every correction entry, which quotes the claim it corrects (dogfood
+#: 2026-08-16 and 2026-08-28, three checkers in one day). Three shapes are
+#: skipped before splitting, and the count of what was skipped is REPORTED in
+#: the warning rather than dropped, so a real hit inside a quote is never lost
+#: silently: text inside backticks, block-quote lines, and the value of a field
+#: whose name marks it as a record of a catch (`caught`, `trigger`,
+#: `demand_origin`, `quoted`), including the indented continuation of a block
+#: scalar under it.
+_CODE_SPAN = re.compile(r"`[^`\n]+`")
+_BLOCKQUOTE_LINE = re.compile(r"^[ \t]*>")
+_RECORD_FIELD = re.compile(r"^([ \t]*)(?:-[ \t]+)?(?:caught|trigger|demand_origin|quoted)[ \t]*:")
 
-    Two suppressions, and they are different in kind: _SCOPE means the author
-    showed their work, _RETRACTED means there is no claim left to ground.
-    """
+
+def _without_mentions(text: str) -> tuple[str, int]:
+    """`text` with mentions blanked, and how many were blanked."""
+    skipped = 0
+    text, n = _CODE_SPAN.subn(" ", text)
+    skipped += n
+    kept: list[str] = []
+    record_indent: int | None = None
+    for line in text.split("\n"):
+        indent = len(line) - len(line.lstrip(" \t"))
+        if record_indent is not None:
+            if line.strip() and indent > record_indent:
+                continue                       # continuation of the record field's block scalar
+            record_indent = None
+        if _BLOCKQUOTE_LINE.match(line):
+            skipped += 1
+            continue
+        m = _RECORD_FIELD.match(line)
+        if m:
+            skipped += 1
+            record_indent = len(m.group(1))
+            continue
+        kept.append(line)
+    return "\n".join(kept), skipped
+
+
+def scan(text: str) -> tuple[list[str], int]:
+    """(absence claims that name no search, mentions skipped). See `findings`."""
+    text, skipped = _without_mentions(text)
     out: list[str] = []
     for sentence in _SENTENCE.split(text):
         s = sentence.strip()
@@ -321,7 +359,18 @@ def findings(text: str) -> list[str]:
         if any(p.search(s) for p in _ABSENCE):
             out.append(s if len(s) <= _QUOTE_CHARS
                        else s[:_QUOTE_CHARS - 3] + "...")
-    return out
+    return out, skipped
+
+
+def findings(text: str) -> list[str]:
+    """Absence-shaped sentences that name no search. Empty means nothing to say.
+
+    Two suppressions, and they are different in kind: _SCOPE means the author
+    showed their work, _RETRACTED means there is no claim left to ground. A third
+    is a skip, not a suppression: a mention (backticks, block quote, a record
+    field) is not a claim, and `scan` reports how many were passed over.
+    """
+    return scan(text)[0]
 
 
 def _payload_text(tool_name: str, tool_input: dict) -> str:
@@ -374,30 +423,46 @@ def shell_findings(command: str) -> list[str]:
     return findings(text)
 
 
+def shell_scan(command: str) -> tuple[list[str], int]:
+    """`shell_findings` with the skipped-mention count."""
+    targets = [m.group("path") for p in _SHELL_WRITE for m in p.finditer(command)]
+    if not targets:
+        return [], 0
+    text = command
+    for t in targets:
+        text = text.replace(t, " ")
+    return scan(text)
+
+
 #: Shell tool names across the three runtimes. Cursor calls it `Shell`, not
 #: `Bash` — reading only `Bash` would register the hook there and have it no-op,
 #: the same dead-registration class v0.83.0 fixed in the manifests themselves.
 _SHELL_TOOLS = ("Bash", "Shell", "shell")
 
 
-def hits_for(payload: dict) -> list[str]:
-    """Findings for one hook payload, whichever half of the guard applies."""
+def scan_for(payload: dict) -> tuple[list[str], int]:
+    """(findings, mentions skipped) for one hook payload, whichever half applies."""
     tool_input = payload.get("tool_input")
     if not isinstance(tool_input, dict):
-        return []
+        return [], 0
 
     tool_name = payload.get("tool_name") or ""
     if tool_name in _SHELL_TOOLS:
         command = tool_input.get("command")
         if not isinstance(command, str) or not command.strip():
-            return []
-        return shell_findings(command)
+            return [], 0
+        return shell_scan(command)
 
     path = tool_input.get("file_path")
     if not isinstance(path, str) or not _WATCHED_PATH.search(path):
-        return []
+        return [], 0
     text = _payload_text(tool_name, tool_input)
-    return findings(text) if text.strip() else []
+    return scan(text) if text.strip() else ([], 0)
+
+
+def hits_for(payload: dict) -> list[str]:
+    """Findings for one hook payload, whichever half of the guard applies."""
+    return scan_for(payload)[0]
 
 
 
@@ -441,13 +506,17 @@ def main() -> int:
     except Exception:                      # noqa: BLE001 — must never break a write
         return 0
 
-    hits = hits_for(payload)
+    hits, skipped = scan_for(payload)
     if not hits:
         return 0
 
     quoted = "\n".join(f"    > {h}" for h in hits[:_QUOTE_MAX])
     if len(hits) > _QUOTE_MAX:
         quoted += f"\n    ... and {len(hits) - _QUOTE_MAX} more in this write."
+    if skipped:
+        quoted += (f"\n    ({skipped} mention(s) inside backticks, block quotes or a "
+                   f"caught/trigger field were skipped: a record of a catch is not a claim. "
+                   f"Re-read them if one is yours.)")
     signature = hashlib.sha256(hits[0].encode()).hexdigest()[:10]
     _log("absence-claim-guard", len(hits), hits[0], signature)
     print(json.dumps({

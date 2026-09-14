@@ -316,3 +316,19 @@ def test_unreadable_test_file_is_a_finding_not_a_skip(tmp_path):
     if findings:  # root can read anything; only assert when the chmod took effect
         assert checked is True
         assert findings[0].rule == "unreadable"
+
+
+def test_a_commented_out_patch_does_not_make_a_real_test_fully_mocked(tmp_path):
+    """v0.202.0. `patched` was built from the raw text while `touched` was comment-aware, so a
+    commented-out patch line inflated the right-hand side of `touched <= patched`."""
+    root = _repo(tmp_path, {
+        "src/thing.py": "def go():\n    return 1\n",
+        "tests/test_x.py": (
+            "import thing\n\n"
+            "def test_x():\n"
+            "    # with patch('thing.go', return_value=2):  # kept for the reader\n"
+            "    assert thing.go() == 1\n"
+        ),
+    })
+    n, findings = _run(root)
+    assert not any(f.rule == "fully-mocked" for f in findings), [f.rule for f in findings]

@@ -99,9 +99,10 @@
                     "outbound",
                     "inbound",
                     "bidirectional",
-                    "internal"
+                    "internal",
+                    "retracted"
                   ],
-                  "description": "Who moved. `outbound` = you contacted them. `inbound` = they contacted you. `bidirectional` = a two-way exchange captured as one entry (no reply is owed - it completed). `internal` = an observation or note with NO contact (a metric reading, a status note); these are skipped entirely when locating the last contact, so an internal note logged on top of an inbound does not conceal the owed reply. Keep the value bare - annotations belong in `purpose`, since a qualified value like 'outbound (founder-sent)' defeats the machine read this field exists for. NOT required: pre-v0.68.0 logs have none and must keep validating on upgrade; entries without it are unevaluable rather than invalid."
+                  "description": "Who moved. `retracted` (v0.202.0) = a message sent and then deleted by you; it is not a contact for reply-owed purposes and is not `internal` (something did go out, and the recipient may have seen it), so it gets its own value rather than a qualified one. `outbound` = you contacted them. `inbound` = they contacted you. `bidirectional` = a two-way exchange captured as one entry (no reply is owed - it completed). `internal` = an observation or note with NO contact (a metric reading, a status note); these are skipped entirely when locating the last contact, so an internal note logged on top of an inbound does not conceal the owed reply. Keep the value bare - annotations belong in `purpose`, since a qualified value like 'outbound (founder-sent)' defeats the machine read this field exists for. NOT required: pre-v0.68.0 logs have none and must keep validating on upgrade; entries without it are unevaluable rather than invalid."
                 },
                 "channel": {
                   "type": "string",
