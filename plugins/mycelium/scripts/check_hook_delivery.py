@@ -117,6 +117,44 @@ def report(per: dict[str, dict], days: int, contract_marker: str) -> tuple[int, 
     return worst, lines
 
 
+GATE_BLOCK_LOG = Path(".claude/state/gate-block-log.jsonl")
+
+
+def gate_blocks(project: Path, since: datetime) -> str | None:
+    """One line on gate.sh blocks in the window, from the log gate.sh writes since 0.204.0.
+
+    None when the project has no log: a project on a plugin older than 0.204.0, or one where
+    the gate has never blocked, and the two cannot be told apart from here — so the line says
+    "no gate-block log", not "no blocks".
+    """
+    path = project / GATE_BLOCK_LOG
+    if not path.is_file():
+        return None
+    blocks = 0
+    sessions: set[str] = set()
+    reasons: dict[str, int] = {}
+    unreadable = 0
+    for raw in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        try:
+            e = json.loads(raw)
+            ts = datetime.fromisoformat(str(e["ts"]))
+        except (ValueError, KeyError, TypeError):
+            unreadable += 1
+            continue
+        if ts < since:
+            continue
+        blocks += 1
+        sessions.add(str(e.get("session_id") or "?"))
+        r = str(e.get("reason") or "?")
+        reasons[r] = reasons.get(r, 0) + 1
+    detail = ", ".join(f"{k} {v}" for k, v in sorted(reasons.items()))
+    note = f"; {unreadable} unreadable line(s) skipped" if unreadable else ""
+    days = max(1, (datetime.now(tz=UTC) - since).days)
+    return (f"gate-block: {blocks} block(s) in {len(sessions)} session(s) over {days} day(s)"
+            f"{' (' + detail + ')' if detail else ''}{note}. This is the cost side of the "
+            f"gate; opp-072 asks whether it exceeds what the gate caught.")
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Did the harness run our hooks, or cancel them?")
     ap.add_argument("--project-dir", type=Path, default=Path("."))
@@ -128,11 +166,17 @@ def main(argv=None) -> int:
     tdir = transcript_dir(args.project_dir, args.claude_home)
     if not tdir.is_dir():
         print(f"hook-delivery: N/A — no transcript directory at {tdir}; no record kept here")
+        line = gate_blocks(args.project_dir, datetime.now(tz=UTC) - timedelta(days=args.days))
+        print(line or "gate-block: no gate-block log under .claude/state (plugin older than "
+              "0.204.0, or the gate has never blocked here; not the same thing)")
         return 0
     since = datetime.now(tz=UTC) - timedelta(days=args.days)
     worst, lines = report(scan(tdir, since), args.days, args.contract_hook)
     for line in lines:
         print(line)
+    print(gate_blocks(args.project_dir, since) or "gate-block: no gate-block log under "
+          ".claude/state (plugin older than 0.204.0, or the gate has never blocked here; not "
+          "the same thing)")
     return 1 if (args.strict and worst == SEV_FAIL) else 0
 
 

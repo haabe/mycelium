@@ -25,6 +25,8 @@ Total hook overhead: ~6,000 tokens/session (negligible vs typical 50K-200K sessi
 - G-P5: Corrections.md hash consistency (re-read if changed)
 - G-S1: Secret detection — regex scan for API keys, tokens, passwords, connection strings in content being written
 
+**Logs (v0.204.0)**: every block on the stamp or hash path appends one JSON line (`ts`, `hook`, `reason` = `stale-stamp` | `corrections-hash`, `session_id`) to `.claude/state/gate-block-log.jsonl`, gitignored with the rest of `state/`. `scripts/check_hook_delivery.py` reports blocks per session beside hook delivery, so "does the gate cost more than it catches" (opp-072) is a count.
+
 **Important on secret detection**: The regex patterns in gate.sh are a **fast first-pass tripwire** (~5ms, catches the obvious 80%). For thorough secret scanning, the validation suite should use proper tools (semgrep, gitleaks, trufflehog) which are JiT-detected and configured per tech stack. Both layers are needed:
 - gate.sh catches secrets BEFORE they're written to disk
 - Validation suite tools catch what regex misses BEFORE commit

@@ -595,3 +595,25 @@ def test_parse_changelog_versions_cannot_see_what_this_check_catches(scripts_pat
     text = "## v0.108.0 - one\n## v0.108.0 - two\n"
     assert rg.parse_changelog_versions(text) == ["0.108.0"]
     assert rg.duplicate_changelog_versions(text) == ["0.108.0"]
+
+
+# --- v0.204.0: a heading may say its version never released ------------------------------
+
+
+def test_a_folded_heading_is_documented_but_not_expected_to_release(scripts_path):
+    rg = _import(scripts_path)
+    text = (
+        "## v0.194.1 - the fix\n\nbody\n\n"
+        "## v0.194.0 - the attempt (never released; folded into v0.194.1)\n\nbody\n\n"
+        "## v0.193.0 - earlier\n"
+    )
+    assert rg.folded_changelog_versions(text) == {"0.194.0"}
+    assert rg.parse_changelog_versions(text) == ["0.193.0", "0.194.1"]
+    assert rg.missing_releases(rg.parse_changelog_versions(text), ["0.193.0", "0.194.1"], "0.100.0") == []
+
+
+def test_the_marker_needs_both_halves(scripts_path):
+    rg = _import(scripts_path)
+    assert rg.folded_changelog_versions("## v0.1.0 - x (never released)\n") == set()
+    assert rg.folded_changelog_versions("## v0.1.0 - x (folded into v0.1.1)\n") == set()
+    assert rg.folded_changelog_versions("## v0.1.0 - x (never released, folded into v0.1.1)\n") == {"0.1.0"}

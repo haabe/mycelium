@@ -148,6 +148,11 @@ def main(argv: list[str] | None = None) -> int:
     print("\nDO NOT INVENT A DATE TO CLEAR THIS. Some contacts genuinely have no known event "
           "date;\nan entry dated by when it was REPORTED asserts an event date nobody has. "
           "Either log\nthe touch with its real date, or say in the task that the date is unknown.")
+    print("BEFORE SAYING THE DATE IS UNKNOWN, OPEN THE CHANNEL. Chat threads carry a timestamp "
+          "on every\nmessage; reading one took minutes, eight days after a field had asserted "
+          "that nobody could\nknow when it happened and only the founder could close it "
+          "(dogfood 2026-09-02). Escalating\nto human recall is the remedy of last resort, "
+          "not the first.")
     return 0
 
 

@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.203.0 -- **The ladder reaches the leaves** (MINOR). `evidence_type` on solution-leaf provenance and on purpose evidence sources is bound to Gilad's ladder; `shipped_at` and `minted_by` are declared on leaves and the two skills that produce them say so; `check_key_shape` scans `diamonds/` beside the canvas.
+*Version 0.204.0 -- **A block leaves a line** (MINOR). `gate.sh` logs every block it issues (reason, session id) to `.claude/state/gate-block-log.jsonl` and `check_hook_delivery.py` reports blocks per session beside hook delivery, so the cost of the gate is a count; a changelog heading may say `(never released; folded into vX.Y.Z)` and the release backstop reads it, so a folded version no longer costs a third release; the contact-as-prose check names the remedy of last resort as such.
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

@@ -118,6 +118,29 @@ else
   fi
 fi
 
+# A BLOCK LEAVES A LINE (v0.204.0). gate.sh exits 2 on a stale preflight stamp or a changed
+# corrections hash, mid-session, on every source write, and until now wrote nothing anywhere
+# when it did: no log, no session id, no count. The one human complaint on record about
+# "too many gates" (plugin 0.23.4) predates every hook that was checked when it was ruled
+# on, and this is the hook that fires repeatedly mid-flow; whether it fires on real users
+# was unmeasurable for the same reason discovery-gate's was. One JSON line per block to
+# .claude/state/gate-block-log.jsonl (gitignored with the rest of state/), read by
+# check_hook_delivery.py. Best effort: a log that cannot be written never changes the verdict.
+_gate_block_log() {  # $1 reason
+  local dir="$PROJECT_DIR/.claude/state"
+  mkdir -p "$dir" 2>/dev/null || return 0
+  printf '%s' "$INPUT" | python3 -c '
+import json, sys, datetime
+reason = sys.argv[1]
+try:
+    sid = (json.load(sys.stdin) or {}).get("session_id", "")
+except Exception:
+    sid = ""
+ts = datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z")
+print(json.dumps({"ts": ts, "hook": "gate.sh", "reason": reason, "session_id": sid}))
+' "$1" >> "$dir/gate-block-log.jsonl" 2>/dev/null || true
+}
+
 if [ "$NEEDS_RENEWAL" -eq 1 ]; then
   # Preflight resolution — prefer plugin path (post-0.20.x), fall back to legacy.
   # Mirrors framework-guard.sh: plugin installs have no .claude/hooks/ tree, so
@@ -131,6 +154,7 @@ if [ "$NEEDS_RENEWAL" -eq 1 ]; then
   fi
   if [ -n "$PREFLIGHT" ]; then
     bash "$PREFLIGHT" 2>/dev/null || {
+      _gate_block_log "stale-stamp"
       echo '{"message": "Mycelium preflight required. Read corrections.md and run validation before code changes."}' >&2
       exit 2
     }
@@ -152,6 +176,7 @@ if [ -f "$CORRECTIONS_FILE" ] && [ -f "$STAMP_FILE" ]; then
   STAMP_HASH=$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1]))["corrections_hash"])' "$STAMP_FILE" 2>/dev/null || echo "")
 
   if [ "$CURRENT_HASH" != "unknown" ] && [ -n "$STAMP_HASH" ] && [ "$CURRENT_HASH" != "$STAMP_HASH" ]; then
+    _gate_block_log "corrections-hash"
     echo '{"message": "corrections.md changed since last preflight. Re-read corrections and re-run preflight."}' >&2
     rm -f "$STAMP_FILE"
     exit 2

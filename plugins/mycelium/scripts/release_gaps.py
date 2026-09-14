@@ -43,6 +43,16 @@ LEGACY_PLUGIN_JSON = ".claude-plugin/plugin.json"
 
 _VERSION_RE = re.compile(r'"version"\s*:\s*"([^"]+)"')
 _CHANGELOG_HEADING_RE = re.compile(r"^## v(\d+\.\d+\.\d+)", re.MULTILINE)
+#: A heading that says its version never released, in a form the backstop reads (v0.204.0).
+#: Twice in one day (0.192.0, 0.194.0) a version was bumped, blocked at CI, fixed under the next
+#: patch, and the release job then failed on the version that never released; the repair was a
+#: third release whose only content was deleting the heading. The heading may now stay, marked:
+#:     ## v0.194.0 - ... (never released; folded into v0.194.1)
+#: and it is neither expected to have a Release nor counted as a duplicate.
+_FOLDED_HEADING_RE = re.compile(
+    r"^## v(\d+\.\d+\.\d+)[^\n]*\(never released[;:,]?\s*folded into v\d+\.\d+\.\d+\)",
+    re.MULTILINE,
+)
 
 
 def version_key(v: str) -> tuple:
@@ -53,10 +63,17 @@ def version_key(v: str) -> tuple:
         return (1, v)
 
 
+def folded_changelog_versions(text: str) -> set[str]:
+    """Versions whose heading carries the `(never released; folded into vX.Y.Z)` marker."""
+    return set(_FOLDED_HEADING_RE.findall(text))
+
+
 def parse_changelog_versions(text: str) -> list[str]:
-    """Every version with a `## vX.Y.Z` section. The changelog is the claim of record:
-    if a version is documented there, a consumer can reasonably expect a Release."""
-    return sorted(set(_CHANGELOG_HEADING_RE.findall(text)), key=version_key)
+    """Every version with a `## vX.Y.Z` section, minus the ones marked never released.
+    The changelog is the claim of record: if a version is documented there, a consumer can
+    reasonably expect a Release — unless the heading itself says there is none."""
+    folded = folded_changelog_versions(text)
+    return sorted(set(_CHANGELOG_HEADING_RE.findall(text)) - folded, key=version_key)
 
 
 def version_from_plugin_json(text: str) -> str | None:

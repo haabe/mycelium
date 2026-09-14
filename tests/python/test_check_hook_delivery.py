@@ -110,3 +110,50 @@ def test_old_transcript_outside_window_is_ignored(tmp_path, capsys):
     )
     rc, out = _run(proj, home, capsys, "--days", "7")
     assert rc == 0 and "no hook outcomes recorded" in out
+
+
+# --- v0.204.0: the gate-block log has a reader --------------------------------------------
+
+
+def _block_log(project, lines):
+    d = project / ".claude" / "state"
+    d.mkdir(parents=True, exist_ok=True)
+    (d / "gate-block-log.jsonl").write_text("\n".join(json.dumps(x) for x in lines) + "\n")
+
+
+def test_gate_blocks_are_counted_per_session_and_reason(tmp_path, capsys):
+    project = tmp_path / "p"
+    now = "2026-09-14T10:00:00Z"
+    _block_log(project, [
+        {"ts": now, "hook": "gate.sh", "reason": "stale-stamp", "session_id": "s1"},
+        {"ts": now, "hook": "gate.sh", "reason": "corrections-hash", "session_id": "s1"},
+        {"ts": now, "hook": "gate.sh", "reason": "stale-stamp", "session_id": "s2"},
+        {"ts": "2020-01-01T00:00:00Z", "hook": "gate.sh", "reason": "stale-stamp", "session_id": "old"},
+    ])
+    from datetime import UTC, datetime, timedelta
+    line = _mod().gate_blocks(project, datetime.now(tz=UTC) - timedelta(days=3650))
+    assert line.startswith("gate-block: 4 block(s) in 3 session(s)")
+    line = _mod().gate_blocks(project, datetime(2026, 9, 1, tzinfo=UTC))
+    assert line.startswith("gate-block: 3 block(s) in 2 session(s)")
+    assert "corrections-hash 1, stale-stamp 2" in line
+
+
+def test_no_log_is_reported_as_no_log_not_as_no_blocks(tmp_path, capsys):
+    project = tmp_path / "p"
+    project.mkdir()
+    from datetime import UTC, datetime
+    assert _mod().gate_blocks(project, datetime(2026, 9, 1, tzinfo=UTC)) is None
+    rc, out = _run(project, tmp_path / "home", capsys)
+    assert "no gate-block log" in out
+    assert "not the same thing" in out
+
+
+def test_unreadable_log_lines_are_counted_not_crashed_on(tmp_path):
+    project = tmp_path / "p"
+    d = project / ".claude" / "state"
+    d.mkdir(parents=True)
+    (d / "gate-block-log.jsonl").write_text('{"ts": "2026-09-14T10:00:00Z", "reason": "stale-stamp"}\nnot json\n{"no": "ts"}\n')
+    from datetime import UTC, datetime
+    line = _mod().gate_blocks(project, datetime(2026, 9, 1, tzinfo=UTC))
+    assert "1 block(s)" in line
+    assert "2 unreadable line(s) skipped" in line

@@ -4,6 +4,14 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-14.
 
+## v0.204.0 - a block leaves a line
+
+Three dogfood candidates, closed on the fourth backlog pass of 2026-09-14.
+
+- **`hooks/gate.sh`** (candidate 2026-09-06): the hook exits 2 on a stale preflight stamp or a changed corrections hash, mid-session, on every source write, and wrote nothing anywhere when it did. The one human complaint on record about "too many gates" (plugin 0.23.4) predates every hook that was read when opp-072 was ruled on, and this is the hook that fires repeatedly mid-flow; whether it fires on real users was unmeasurable for the same reason discovery-gate's was. Each block now appends one JSON line (`ts`, `hook`, `reason` = `stale-stamp` | `corrections-hash`, `session_id`; no content) to `.claude/state/gate-block-log.jsonl`, gitignored with the rest of `state/`. Best effort: a log that cannot be written never changes the verdict, and the bash test proves it on a read-only state dir. **The log has a reader from the day it ships**: `check_hook_delivery.py` prints `gate-block: N block(s) in M session(s) over D day(s) (reasons)` beside hook delivery, and says "no gate-block log" rather than "no blocks" when the file is absent, because a pre-0.204.0 plugin and a gate that never fired look the same from there. Three Python tests, one bash test (sad, happy, bad). System card §7 and `hooks/README.md` updated; the hook-surface digest re-stamped after the read.
+- **`scripts/release_gaps.py`** (candidate 2026-09-11): twice in one day a version was bumped, blocked at CI, fixed under the next patch, and the release job then failed its documented-version backstop on the version that never released; the repair was a third release whose only content was deleting a heading. A heading may now stay and say so: `## v0.194.0 - ... (never released; folded into v0.194.1)`. `folded_changelog_versions()` collects the marker and `parse_changelog_versions()` subtracts it, so the version is documented, not expected to have a Release, and not a duplicate. The marker needs both halves; `(never released)` alone is not it. Two tests.
+- **`scripts/check_contact_recorded_as_prose.py`** (candidate 2026-09-02): the check was right and the remedy path an agent took on its flag was wrong — a field asserting the contacts were undateable and only the founder could close them, about a chat thread with a timestamp on every message. The report now ends with the order of remedies: open the channel first; human recall is the last resort.
+
 ## v0.203.0 - the ladder reaches the leaves
 
 Three dogfood candidates, closed on the third backlog pass of 2026-09-14.
