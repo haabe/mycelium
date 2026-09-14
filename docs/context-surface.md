@@ -2,7 +2,7 @@
 
 **Audience**: practitioners + evaluators wanting to understand what the agent has access to mid-session, and operators auditing Mycelium against transparency expectations.
 **Time to read**: 8 min.
-**Last updated**: 2026-06-05.
+**Last updated**: 2026-09-14.
 
 This document answers a question the audit (`/xai-check` on `svc-mycelium`, 2026-05-04) flagged as a Stage 2 partial: **"What data does the agent see when it makes a recommendation under Mycelium?"** Today the answer is distributed across many files. This is the consolidated map.
 
@@ -10,7 +10,7 @@ This document answers a question the audit (`/xai-check` on `svc-mycelium`, 2026
 
 ## Per-task read order
 
-When the agent starts any non-trivial task, it loads context in this order (per `CLAUDE.md :: Mandatory Pre-Task Protocol`):
+In plugin form the always-on rules arrive by hook, not by file: `hooks/session-start.sh --fast` injects `engine/agent-operating-contract.md` at every session start (startup, resume, clear, fork), followed by the cheap checks; a second `--async` tier runs the heavy checks in the background and delivers them at the next prompt. The hook also emits the ONE item the framework wants acted on (`next_item.py`, see "Hooks" below), and on resume and fork that item reaches the human as a `systemMessage`. Then, when the agent starts any non-trivial task, it loads context in this order (per the contract's Pre-Task Protocol):
 
 1. **`.claude/diamonds/active.yml`** — which diamond is active. Determines scale (L0/L1/L2/L3/L4/L5) and phase (Discover/Define/Develop/Deliver).
 2. **`${CLAUDE_PLUGIN_ROOT}/domains/{discovery|delivery|quality}/CLAUDE.md`** — the appropriate domain context for the active scale.
@@ -59,7 +59,7 @@ The product's source of truth. Each file is committed to git; any session can re
 |---|---|
 | `corrections.md` | Friction log (Hoskins Ch. 4) — agent-introduced failures with prevention rules |
 | `patterns.md` | Successful patterns to reuse |
-| `warnings-log.md` | CI signals (validator + upgrade WARN/FAIL) — auto-updated by `ingest_warnings.py` |
+| `cluster-instances.md` | Recurring correction shapes, their counts, and their graduation state — read by `check_cluster_reconcile.py` at session start |
 
 ### Decision log (`.claude/harness/decision-log.md`)
 
@@ -71,28 +71,39 @@ Every significant decision: context, alternatives, theory, evidence, confidence.
 |---|---|
 | `upstream.json` | Dogfood instances: pointer to upstream framework repo (activates framework-guard) |
 | `active-execution.json` | L4 delivery: in-scope and out-of-scope path lists (consumed by `scope-gate.sh`) |
+| `advisory-ledger.jsonl` | Per session start: which advisories fired, which cleared, which are muted, and human rulings (snooze/drop). Gitignored. |
+| `next-item.json` | The one item last put in front of the human, and whether the Stop hook repeated it. Gitignored. |
+| `read-log.jsonl` | Every Read (and inferred Bash read) the agent made, for citation auditing. Gitignored. |
+| `*-guard-log.jsonl` | One line per advisory-guard fire (a timestamp, the hook, a count, a digest of the matching sentence; not the sentence). Gitignored. |
 
 ### JiT detection (`.claude/jit-tooling/`)
 
 | File | Holds |
 |---|---|
-| `active-stack.yml` | Detected language stack + AI components (Step 1c output of `delivery-bootstrap`). Gitignored. |
+| `active-stack.yml` | Detected language stack + AI components (Step 1c output of `delivery-bootstrap`). Gitignored. Absent until that skill has run; `/xai-check` says so rather than treating absence as "no AI". |
 | `active-metrics.yml` | Detected metric sources for `/metrics-pull` |
 
 ## Skills the agent can invoke
 
-61 skills auto-discovered from `.claude/skills/*/SKILL.md`. The agent reads the skill's SKILL.md when it invokes the skill — not all 58 at once. Type `/` to see the current list, or read `surfaces.yml` for the index.
+61 skills auto-discovered from `.claude/skills/*/SKILL.md`. The agent reads the skill's SKILL.md when it invokes the skill — not all of them at once. Type `/` to see the current list, or read `surfaces.yml` for the index.
 
 ## Hooks that constrain the agent
 
 These run automatically and can block the agent's actions:
 
+The full table, per runtime, is `plugins/mycelium/hooks/README.md`. The ones that change what the agent may do or what the human sees:
+
 | Hook | Triggers on | Effect |
 |---|---|---|
-| `framework-guard.sh` | Edit/Write/Bash on framework files in dogfood instances | Blocks; redirects to upstream-then-sync flow |
+| `gate.sh`, `discovery-gate.sh`, `brownfield-gate.sh` | Write/Edit/Bash | Block until the phase's evidence or the brownfield entry is on record |
+| `framework-guard.sh` | Edit/Write/Bash on framework files in dogfood instances | Blocks; redirects to upstream-then-sync flow; denies on a broken state file |
 | `scope-gate.sh` | Edit/Write outside in_scope_paths during L4 | Blocks; allows .claude/** unconditionally |
-| `prompt-injection-defense.sh` | Skill outputs handling user-supplied content | Wraps untrusted content per security-trust.md |
-| Reflexion (PostToolUseFailure) | Bash/tool failures | Prompts the agent to diagnose + log |
+| `autonomous-evidence-guard.sh` | Canvas writes during a declared autonomous run | Blocks fabricated or elevated evidence; no-op with a human present |
+| `absence-claim-guard.sh`, `shell-safety-guard.sh`, `correction-attribution-guard.sh`, `discovery-trigger-guard.sh`, `read-before-research-guard.sh` | Write/Bash/prompt/research calls | Advise, never block; each names the measurement it fired on |
+| `session-start.sh` | Session start | Injects the operating contract; wraps quoted canvas text as `<untrusted_user_content>`; emits one NEXT ITEM |
+| `next-action-check.sh` | Stop | Blocks the end of a framework turn that has no `Next:` line |
+| `next-item-repeat.sh` | Stop | Repeats the NEXT ITEM once if nothing followed it |
+| `reflexion-gate.sh` | Bash/tool failures | Prompts the agent to diagnose before retrying |
 
 ## What the agent does NOT have access to
 
@@ -110,4 +121,4 @@ To audit what the agent saw on a given task: read the corresponding entries in `
 
 ---
 
-*This doc closes the Stage 2 `input` partial finding from the 2026-05-04 `/xai-check` audit (`services.yml :: svc-mycelium.xai.surfaces.{end_user,deployer_developer}.input`). It's deliberately a single page — the underlying files are the source of truth; this map exists so a new developer doesn't have to read all of CLAUDE.md to know what shapes the agent's reasoning.*
+*Refreshed 2026-09-14 after the sixth `/xai-check` found it a quarter behind the hooks. This doc closes the Stage 2 `input` partial finding from the 2026-05-04 `/xai-check` audit (`services.yml :: svc-mycelium.xai.surfaces.{end_user,deployer_developer}.input`). It's deliberately a single page — the underlying files are the source of truth; this map exists so a new developer doesn't have to read all of CLAUDE.md to know what shapes the agent's reasoning.*

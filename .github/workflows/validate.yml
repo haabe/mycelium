@@ -135,6 +135,13 @@ jobs:
       - name: Run theory-fidelity structural guard (theories.md mechanism refs resolve; gates grounded; no name-only theory)
         run: python3 plugins/mycelium/scripts/check_theory_fidelity.py --root .
 
+      - name: System card hook-surface review (the disclosure must move when the hooks do)
+        # The AI system card fell a quarter behind the hooks twice (2026-06-11, 2026-09-14),
+        # found by audit both times, because the release path synced only its version token.
+        # A digest over hooks/ plus the manifest is stamped in the card; when the surface
+        # moves and the stamp does not, this fails. Remedy: read the diff, fix the card, --write.
+        run: python3 plugins/mycelium/scripts/check_system_card_hooks.py --root .
+
       - name: Promise-registry sweep freshness (did anyone look?)
         # ADVISORY here on purpose. The registry gained no row for ten weeks while the
         # failure class kept occurring, because its sweep is prose in a skill. This makes

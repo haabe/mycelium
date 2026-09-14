@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.199.0 -- **The record is checked against itself** (MINOR). Dogfood 2026-09-14: `cycle-history.yml#calibration_summary` had drifted from its own `cycles` list a fourth time, and the first `gates_fired` record ever written coded six catches as `pass`. `cycle_integrity_findings` in `check_cycle_recording.py` now compares every count the summary carries against the list, and reports a pass row with a non-empty `caught`; the validator prints both as WARN.
+*Version 0.200.0 -- **The disclosure moves when the hooks do** (MINOR). Dogfood 2026-09-14, sixth `/xai-check`: the AI system card was a quarter behind the hooks for the second time, silent on five boundary behaviours shipped in one September week. §2, §3, §5, §6 and `docs/context-surface.md` refreshed; `check_system_card_hooks.py` stamps a digest of the hook surface in the card and fails the gate set when the surface moves and the stamp does not.
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

@@ -56,6 +56,10 @@ check_purpose_stance.py
 # checks are CI-only. The guard was right about its author.
 check_promise_registry_swept.py --root .
 
+# Added v0.200.0. The system card is re-read when the hook surface moves: digest over
+# hooks/ plus the manifest, stamped in the card, checked here and in CI.
+check_system_card_hooks.py --root .
+
 check_instrument_contract.py --root .
 check_gate_parity.py --root .
 
