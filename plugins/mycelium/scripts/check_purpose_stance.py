@@ -525,15 +525,65 @@ def purpose_stance_findings(canvas_dir: Path, diamonds_file: Path | None = None,
     return out
 
 
-def _grandfathered_count(canvas_dir: Path) -> int:
-    """How many solutions are exempt. Reported every run, never silently."""
+SCOPE_NOTE = (
+    "scope: solutions in opportunities.yml and diamonds in active.yml. Conclusions "
+    "written anywhere else in the canvas are not compared against purpose.yml"
+)
+
+
+def purpose_stance_coverage(canvas_dir: Path,
+                            diamonds_file: Path | None = None) -> str | None:
+    """One line saying what this check actually looked at. None if never opted in.
+
+    THE GAP THIS CLOSES (dogfood 2026-09-14). The exemption count was printed by this
+    script's `main()` and by nothing else. `validate_canvas.py` imports this module and
+    calls `purpose_stance_findings()`, which returns FINDINGS and not the count — so the
+    documented path printed "Canvas validation: PASS (25 canvas files, ...)" with no
+    purpose-stance line at all, on a canvas where 53 of 72 solutions were exempt at
+    derivation and 19 were actually checked. **A verdict reported without its denominator
+    is the blind-green shape this framework exists to catch**, and it was sitting one
+    import away from the checker built to catch it.
+
+    Returning a STRING rather than a finding is deliberate. A coverage line is not a
+    defect and must not be printed as one: a project with a large grandfather list has
+    not done anything wrong, it has an unfinished backfill, and dressing that as a WARN
+    trains readers to mute the tier that carries real contradictions.
+
+    The rot-mode-1 silence is preserved exactly. A project that never opted in gets None,
+    not "0 of 0 checked" — a coverage line on a canvas with no `purpose_properties` would
+    be the same unasked-for noise the adoption path exists to prevent.
+    """
     purpose = _load(canvas_dir / "purpose.yml")
     if not isinstance(purpose, dict):
-        return 0
+        return None
     pp = purpose.get("purpose_properties")
-    if not isinstance(pp, dict):
-        return 0
-    return len(pp.get("grandfathered") or [])
+    if not isinstance(pp, dict) or not pp.get("properties"):
+        return None
+
+    grandfathered = set(pp.get("grandfathered") or [])
+    opportunities = _load(canvas_dir / "opportunities.yml")
+    total = checked = 0
+    if isinstance(opportunities, dict):
+        for _opp, sol in _iter_solutions(opportunities):
+            total += 1
+            if sol.get("id") not in grandfathered:
+                checked += 1
+
+    dpath = diamonds_file or default_diamonds_path(canvas_dir)
+    diamonds = _load(dpath)
+    n_diamonds = 0
+    if isinstance(diamonds, dict):
+        n_diamonds = sum(1 for dm in _iter_diamonds(diamonds)
+                         if dm.get("id") not in grandfathered)
+
+    n_exempt = len(grandfathered)
+    line = (f"checked {checked} of {total} solution(s) and {n_diamonds} diamond(s)")
+    if n_exempt:
+        # Said out loud every run: an exemption nobody sees is an exemption that
+        # quietly becomes the permanent state of the canvas.
+        line += (f"; {n_exempt} solution(s) grandfathered at derivation — not checked, "
+                 f"and never will be until someone backfills them")
+    return f"{line}. {SCOPE_NOTE}"
 
 
 def main() -> int:
@@ -569,12 +619,9 @@ def main() -> int:
     blocking = (purpose_stance_findings(canvas_dir, diamonds_file, include_advisory=False,
                                         diamond_id=args.diamond_id)
                 if args.strict else findings)
-    n_exempt = _grandfathered_count(canvas_dir)
-    if n_exempt:
-        # Said out loud every run: an exemption nobody sees is an exemption that
-        # quietly becomes the permanent state of the canvas.
-        print(f"purpose-stance: {n_exempt} solution(s) grandfathered at derivation "
-              f"— not checked, and never will be until someone backfills them")
+    coverage = purpose_stance_coverage(canvas_dir, diamonds_file)
+    if coverage:
+        print(f"purpose-stance: {coverage}")
     if not findings:
         print("purpose-stance: OK (or not in use)")
         return 0

@@ -2,7 +2,19 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-09-12.
+**Last updated**: 2026-09-14.
+
+## v0.198.0 - a gate reports its own denominator, not just its verdict
+
+Dogfood 2026-09-14. `check_purpose_stance.py` is the check that asks whether a sub-element contradicts the product's own why/how/what. It exempts every solution that predates `purpose_properties`, and it says so — from its own `main()`, and from nowhere else. `validate_canvas.py` imports the module, calls `purpose_stance_findings()`, and that function returns findings, not the count. So the documented path printed `Canvas validation: PASS (25 canvas files, ...)` with no purpose-stance line at all, on a canvas where **53 of 72 solutions were grandfathered and 19 were actually checked**. The surface that reports the verdict was reporting it without the denominator, which is the blind-green shape this check itself exists to catch, sitting one import away from it.
+
+- **`purpose_stance_coverage(canvas_dir, diamonds_file=None)`** (new, in `check_purpose_stance.py`): returns one line — how many solutions were checked out of how many, how many diamonds, how many are exempt at derivation, and the scope boundary (`solutions in opportunities.yml and diamonds in active.yml`; conclusions written anywhere else in the canvas are not compared against `purpose.yml`). Returns `None` when the project never opted in, so rot-mode 1 silence is preserved exactly — a coverage line on a canvas with no `purpose_properties` is the noise the adoption path exists to prevent.
+- **`validate_canvas.py`** gains the matching wrapper and prints `COVERAGE (purpose stance): ...` above the advisory block. **Deliberately not a WARN.** A large grandfather list is an unfinished backfill, not a defect, and dressing it as a warning trains readers to mute the tier that carries real contradictions.
+- **The validator's handler speaks rather than returning `None`.** The first push attempt was blocked by `check_fail_open.py`: the new wrapper swallowed a load failure and returned `None`, which is indistinguishable from "never opted in" and would have printed nothing — the exact silent-denominator defect this release closes, reintroduced inside the fix. It now returns `unavailable — the purpose-stance check could not be loaded (...)`.
+- `_grandfathered_count()` removed — `purpose_stance_coverage` subsumes it and it had no other caller.
+- No change to what is checked, what blocks, or any exit code. Five tests, including the two silence cases and a canvas with no `opportunities.yml`.
+
+**What this does NOT fix, stated because the measurement is the interesting part.** The same dogfood pass counted **162 undeclared durable keys across 13 canvas files**, 56 of them in `go-to-market.yml`, whose schema sets `additionalProperties: true`. One of those keys held a conclusion that contradicted `purpose.yml#what` outright, and the purpose gate could not have caught it because it never opens that file. Requiring a stance on every such key would raise 162 warnings on one canvas, which is this check's own documented rot-mode 1. So the read-set question is left open and is now at least **visible in the output** rather than invisible. That is the whole of the claim.
 
 ## v0.197.1 - the approved text of a message is not an unlogged send
 

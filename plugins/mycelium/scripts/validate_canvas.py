@@ -836,6 +836,33 @@ def purpose_stance_findings(canvas_dir):
         return []
 
 
+def purpose_stance_coverage(canvas_dir):
+    """The purpose-stance check's own denominator, or None if the project never opted in.
+
+    THE GAP THIS CLOSES (dogfood 2026-09-14). `check_purpose_stance.py` prints how many
+    solutions it exempted, but only from its own `main()`. This file imported the module,
+    took `purpose_stance_findings()` and dropped the count — so the documented path
+    reported "Canvas validation: PASS" with no purpose-stance line at all, on a canvas
+    where 53 of 72 solutions were exempt at derivation. **The surface that reports the
+    verdict was reporting it without the denominator**, which is the same blind-green
+    shape the purpose-stance check itself exists to catch.
+    """
+    try:
+        spec = importlib.util.spec_from_file_location(
+            "_cps", Path(__file__).with_name("check_purpose_stance.py")
+        )
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod.purpose_stance_coverage(canvas_dir)
+    except Exception as exc:  # noqa: BLE001 — never fail a build, but never go quiet
+        # THE HANDLER SPEAKS, and the reason is this function's own subject. Returning
+        # None here would be indistinguishable from "the project never opted in", so a
+        # broken import would print nothing and read as a clean canvas — which is the
+        # exact silent-denominator defect this function was added to close, reintroduced
+        # inside the fix. Caught by check_fail_open.py on the first push attempt.
+        return f"unavailable — the purpose-stance check could not be loaded ({exc})"
+
+
 def purpose_why_findings(canvas_dir):
     """WARN-tier: does purpose.yml carry a `why` at all?
 
@@ -1259,6 +1286,11 @@ def print_advisory_warnings(canvas_dir):
     complexity limit — the shape that made the previous addition a lint failure rather
     than a review question.
     """
+    coverage = purpose_stance_coverage(canvas_dir)
+    if coverage:
+        # NOT a WARN. A coverage line is not a defect, and printing it as one would
+        # train readers to mute the tier that carries real contradictions.
+        print(f"  COVERAGE (purpose stance): {coverage}")
     for label, findings in (
         ("purpose stance", purpose_stance_findings(canvas_dir)),
         ("cycle record", cycle_record_findings(canvas_dir)),

@@ -717,3 +717,64 @@ def test_resolution_is_skipped_when_the_log_uses_no_ids():
                           "override": {"human": "havard", "decision": "DL-1234"}},
                          known_decisions=set())
     assert out == []
+
+
+# --- coverage reporting (v0.198.0) -------------------------------------------
+# THE GAP: the exemption count was printed by main() and by nothing else, so
+# validate_canvas.py — which imports this module — reported PASS with no denominator
+# on a canvas where 53 of 72 solutions were exempt. A verdict without its denominator
+# is the blind-green shape this check exists to catch.
+def test_coverage_is_silent_when_the_project_never_opted_in(canvas):
+    """Rot-mode 1 applies to coverage too: no purpose_properties, no line at all."""
+    _purpose(canvas)
+    _sol(canvas)
+    assert _mod().purpose_stance_coverage(canvas) is None
+
+
+def test_coverage_is_silent_when_purpose_is_missing_entirely(canvas):
+    _sol(canvas)
+    assert _mod().purpose_stance_coverage(canvas) is None
+
+
+def test_coverage_counts_checked_solutions_and_names_the_scope(canvas):
+    m = _mod()
+    doc = _purpose(canvas)
+    _sol(canvas, stance={"pp-001": {"verdict": "preserves", "note": "no login"}})
+    (canvas / "purpose.yml").write_text(yaml.safe_dump(
+        {**doc, "purpose_properties": _props(m, doc, [BINDING])},
+        allow_unicode=True, sort_keys=False))
+    line = m.purpose_stance_coverage(canvas)
+    assert line is not None
+    assert "checked 1 of 1 solution(s)" in line
+    # The scope boundary is stated, so a reader knows what was NOT looked at.
+    assert "opportunities.yml" in line and "active.yml" in line
+    # Nothing is exempt here, so the grandfather clause must not be mentioned.
+    assert "grandfathered" not in line
+
+
+def test_coverage_reports_the_exempt_denominator(canvas):
+    """The number that was invisible: exempt solutions are named, not just skipped."""
+    m = _mod()
+    doc = _purpose(canvas)
+    (canvas / "opportunities.yml").write_text(yaml.safe_dump(
+        {"opportunities": [{"id": "opp-001", "solutions": [
+            {"id": "sol-001a"}, {"id": "sol-002a"}, {"id": "sol-003a"}]}]},
+        allow_unicode=True, sort_keys=False))
+    pp = _props(m, doc, [BINDING])
+    pp["grandfathered"] = ["sol-001a", "sol-002a"]
+    (canvas / "purpose.yml").write_text(yaml.safe_dump(
+        {**doc, "purpose_properties": pp}, allow_unicode=True, sort_keys=False))
+    line = m.purpose_stance_coverage(canvas)
+    assert "checked 1 of 3 solution(s)" in line
+    assert "2 solution(s) grandfathered at derivation" in line
+
+
+def test_coverage_survives_a_missing_opportunities_file(canvas):
+    """A fresh project has purpose.yml before it has solutions; that is not an error."""
+    m = _mod()
+    doc = _purpose(canvas)
+    (canvas / "purpose.yml").write_text(yaml.safe_dump(
+        {**doc, "purpose_properties": _props(m, doc, [BINDING])},
+        allow_unicode=True, sort_keys=False))
+    line = m.purpose_stance_coverage(canvas)
+    assert "checked 0 of 0 solution(s)" in line
