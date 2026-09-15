@@ -1306,6 +1306,7 @@ def print_advisory_warnings(canvas_dir):
         ("affects entries", affects_entries_findings(canvas_dir)),
         ("opportunity mover", opportunity_mover_findings(canvas_dir)),
         ("unscanned source", unscanned_source_findings(canvas_dir)),
+        ("stale blocker", stale_blocker_findings(canvas_dir)),
     ):
         for w in findings:
             print(f"  WARN ({label}): {w}")
@@ -1475,6 +1476,62 @@ def unscanned_source_findings(canvas_dir):
         except (yaml.YAMLError, OSError):
             continue
         _unscanned_in(data, name, name.split(".")[0], out)
+    return out
+
+
+_CONF_IN_PROSE = re.compile(r"[Cc]onfidence (?:of |at |is |was |reads )?(\d\.\d+)")
+_CONF_TOLERANCE = 1e-9
+
+
+def stale_blocker_findings(canvas_dir):
+    """WARN-tier: a diamond's blocker or ruling still describes a confidence that moved.
+
+    v0.210.0 (dogfood 2026-09-04 to 09-06). `l1-strategy.confidence` moved 0.48 to 0.60 with the
+    derivation written as a field; `progression_blockers` kept quoting "Confidence 0.48 against
+    an effective threshold of 0.578" as the only blocker, and two days later an agent read it as
+    current and reported the diamond blocked. Two one-read comparisons, no history: a blocker
+    reason quoting a confidence value that differs from the diamond's current one, and a
+    needs-evidence or blocked ruling stamped before the confidence derivation last changed.
+    Report, never rewrite: the reconciliation is a judgement.
+    """
+    path = Path(canvas_dir).parent / "diamonds" / "active.yml"
+    if not path.exists():
+        return []
+    try:
+        data = yaml.safe_load(path.read_text()) or {}
+    except (yaml.YAMLError, OSError):
+        return []
+    diamonds = data.get("active_diamonds") if isinstance(data, dict) else None
+    if not isinstance(diamonds, list):
+        return []
+    out = []
+    for dm in diamonds:
+        if not isinstance(dm, dict):
+            continue
+        did = dm.get("id", "?")
+        current = dm.get("confidence")
+        for b in dm.get("progression_blockers") or []:
+            reason = b.get("reason", "") if isinstance(b, dict) else str(b)
+            m = _CONF_IN_PROSE.search(reason)
+            moved = (m is not None and current is not None
+                     and abs(float(m.group(1)) - float(current)) > _CONF_TOLERANCE)
+            if moved:
+                out.append(
+                    f"diamonds/active.yml: {did} has a blocker quoting confidence {m.group(1)} "
+                    f"while the diamond's confidence is {current} — the blocker describes a "
+                    f"state that moved; re-read it against the current derivation"
+                )
+        ruling = dm.get("progression_ruling")
+        ruled_at = str(dm.get("progression_ruled_at") or "")[:10]
+        derivation = dm.get("confidence_derivation")
+        changed = ""
+        if isinstance(derivation, dict):
+            changed = str(derivation.get("changed_at") or "")[:10]
+        if ruling in ("needs-evidence", "blocked") and ruled_at and changed and ruled_at < changed:
+            out.append(
+                f"diamonds/active.yml: {did} is ruled {ruling} on {ruled_at}, but its confidence "
+                f"derivation changed on {changed} — the ruling predates the evidence it rests on"
+            )
     return out
 
 

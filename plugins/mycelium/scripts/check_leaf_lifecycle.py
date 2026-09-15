@@ -88,7 +88,9 @@ Exit codes:
 """
 
 import argparse
+import importlib.util
 import json
+import re
 import sys
 from pathlib import Path
 from typing import NamedTuple
@@ -318,6 +320,74 @@ def _emit_json(result, failed):
     }, indent=2))
 
 
+#: v0.210.0. A candidate leaf whose change shipped stays `candidate` unless a human notices:
+#: seven such leaves in one dogfood triage (2026-09-09). Leaves may now carry the same `verify`
+#: probe the upstream-candidates register uses; a candidate leaf whose probe finds the fix is
+#: reported LANDED, and a candidate leaf that names an upstream artifact with no probe is
+#: reported so the omission is visible. No status is changed here; the report is the reader.
+_CANDIDATE_STATUSES = ("candidate", "proposed", None)
+_NO_PROBE_SHOWN = 8
+_ARTIFACT_RE = re.compile(r"\b[\w-]+\.(?:py|sh)\b|/mycelium:[\w-]+|\bskills/[\w-]+")
+
+
+def _probe_tools():
+    """The candidates register's probe and root resolution, imported so there is one definition."""
+    spec = importlib.util.spec_from_file_location(
+        "_cuc", Path(__file__).with_name("check_upstream_candidates.py"))
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def leaf_probe_report(project_dir: Path, framework_root: str | None = None) -> dict:
+    """{root, landed:[(id, detail)], no_probe:[id], probed:int} over candidate leaves."""
+    out = {"root": None, "landed": [], "no_probe": [], "probed": 0}
+    opps = _load_opportunities(project_dir)
+    if not opps:
+        return out
+    tools = _probe_tools()
+    root = tools.resolve_root(framework_root)
+    out["root"] = str(root) if root else None
+    for opp in opps:
+        if not isinstance(opp, dict):
+            continue
+        for leaf in opp.get("solutions") or []:
+            if not isinstance(leaf, dict) or leaf.get("status") not in _CANDIDATE_STATUSES:
+                continue
+            verify = leaf.get("verify")
+            if verify:
+                if root is None:
+                    continue
+                out["probed"] += 1
+                found, detail = tools.probe(verify, root)
+                expect_present = verify.get("expect", "present") == "present"
+                if found is not None and (found if expect_present else not found):
+                    out["landed"].append((leaf.get("id", "?"), detail))
+            elif _ARTIFACT_RE.search(str(leaf.get("description", ""))):
+                out["no_probe"].append(leaf.get("id", "?"))
+    return out
+
+
+def _report_leaf_probes(rep: dict) -> None:
+    if not rep["landed"] and not rep["no_probe"] and not rep["probed"]:
+        return
+    print("\nCandidate leaves against the framework tree (v0.210.0):")
+    if rep["root"] is None:
+        print("  framework tree not found (no CLAUDE_PLUGIN_ROOT, mycelium/ or "
+              ".claude/state/upstream.json); leaf probes NOT run — not the same as none landed")
+    else:
+        print(f"  {rep['probed']} candidate leaf probe(s) run against {rep['root']}")
+    for lid, detail in rep["landed"]:
+        print(f"  LANDED   {lid}: {detail} — the change shipped and the leaf still reads "
+              f"candidate; rule on its status")
+    if rep["no_probe"]:
+        shown = ", ".join(rep["no_probe"][:_NO_PROBE_SHOWN])
+        if len(rep["no_probe"]) > _NO_PROBE_SHOWN:
+            shown += " ..."
+        print(f"  NO PROBE {len(rep['no_probe'])} candidate leaf/leaves name an upstream artifact "
+              f"and carry no `verify:` ({shown}) — nothing can tell when they ship")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Fail when a shipped solution leaf carries no ICE and no recorded exemption."
@@ -327,6 +397,8 @@ def main() -> int:
         help="project root holding .claude/canvas (default: cwd)",
     )
     parser.add_argument("--json", action="store_true", help="machine-readable output")
+    parser.add_argument("--framework-root", default=None,
+                        help="framework tree for candidate-leaf probes (default: resolved)")
     args = parser.parse_args()
 
     project_dir = Path(args.project_dir).resolve()
@@ -354,6 +426,7 @@ def main() -> int:
     else:
         _report_ice(violations, checked, exempted)
         _report_four_risks(fr_violations, fr_checked, fr_exempted)
+        _report_leaf_probes(leaf_probe_report(project_dir, args.framework_root))
     return 1 if failed else 0
 
 

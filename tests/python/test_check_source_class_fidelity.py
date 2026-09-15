@@ -102,14 +102,27 @@ def test_dogfood_run_labelled_external_is_caught(scripts_path, tmp_path, capsys)
     assert "not-a-person" in capsys.readouterr().out
 
 
-def test_misaligned_arrays_are_caught(scripts_path, tmp_path, capsys):
-    """Unequal lengths make every pairing meaningless — a precondition failure."""
+def test_misaligned_arrays_are_coverage_not_fail(scripts_path, tmp_path, capsys):
+    """Unequal lengths make every pairing meaningless — fidelity cannot be evaluated there.
+    v0.210.0: that is a COVERAGE state the contract calls expected, not a FAIL; it printed FAIL
+    at every dogfood session start for a month with 0 contradicted labels."""
     mod = _import(scripts_path)
-    _canvas(tmp_path, ["a", "b", "c"], ["internal_desk"])
-    assert _run(mod, "--root", str(tmp_path)) == 1
+    _canvas(tmp_path, ["a", "b", "c"], ["internal_desk", "external_human"])
+    assert _run(mod, "--root", str(tmp_path)) == 0
     out = capsys.readouterr().out
-    assert "[alignment]" in out
-    assert "3 evidence_sources vs 1 source_classes" in out
+    assert "COVERAGE: 1 block(s) have unequal" in out
+    assert "3 sources vs 2 classes" in out
+
+
+def test_a_one_class_list_is_the_convenience_form_and_is_evaluated(scripts_path, tmp_path, capsys):
+    """21 of the 42 dogfood misalignments were one class beside N sources: the schema's
+    singular `source_class` intent in the other spelling. Expanded, then labels are checked."""
+    mod = _import(scripts_path)
+    _canvas(tmp_path, ["interview with Bentes", "Founder's own note on the same"], ["external_human"])
+    assert _run(mod, "--root", str(tmp_path)) == 1   # the second source contradicts the label
+    out = capsys.readouterr().out
+    assert "COVERAGE" not in out
+    assert "idx1" in out
 
 
 # --- precision: these must NOT fire ----------------------------------------

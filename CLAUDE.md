@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.209.0 -- **A design says what it cannot show, a node says what would move it, a source says whether it was read for opportunities** (MINOR). Three date-gated fields: `does_not_reproduce` on assumption tests frozen from 2026-09-15, `what_would_move_it` on opportunities minted from that date, `scan_status` on research sources landed from it; the instrument contract, the validator and the idle-opportunity check read them, and nothing written before the date is failed.
+*Version 0.210.0 -- **A check that fails on the state its own contract predicts gates nothing** (MINOR). `check_source_class_fidelity` fails only on a label contradicted by its source and reports unequal arrays as coverage, with the one-class list read as the schema's singular convention; a candidate solution leaf may carry a `verify:` probe and `check_leaf_lifecycle` reports it LANDED when the tree has the change; the validator reports a diamond blocker or ruling that still describes a confidence that moved; the Deliver→Complete checklist gains a WAIVED verdict and skips build-shaped items for a diamond whose done-bar names no build.
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

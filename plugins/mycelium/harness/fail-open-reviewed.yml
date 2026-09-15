@@ -373,6 +373,13 @@ reviewed:
     affects_entries_findings (0.207.0): same contract as the sibling above, on landscape.yml.
     An unreadable file has no relations to resolve, not zero of them, and the fail-loud pass
     names it first.
+- id: validate_canvas.py@5f81039b10
+  verdict: accepted
+  reason: >-
+    stale_blocker_findings (0.210.0): returns [] on an unreadable diamonds/active.yml under the
+    same contract as every advisory reader in this file — validate_diamonds has already reported
+    the unparseable file by name before the advisory tier runs, and an advisory that raised
+    would take the canvas check down with it.
 # ---------------------------------------------------------------------------
 # accepted — flagged as "appears to speak", confirmed by reading.
 # ---------------------------------------------------------------------------

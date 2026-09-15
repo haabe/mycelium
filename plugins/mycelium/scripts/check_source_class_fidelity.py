@@ -151,55 +151,58 @@ def classify(source: str) -> tuple[str, str] | None:
 def _walk(node, filename: str, ident, misalignments: list, violations: list) -> None:
     if isinstance(node, dict):
         ident = node.get("id") or node.get("scenario_id") or ident
-        sources = node.get("evidence_sources")
-        classes = node.get("source_classes")
-        if isinstance(sources, list) and isinstance(classes, list):
-            # REVIEWED MARKERS (v0.190.0). `alignment_reviewed: {date, reason}` on the block
-            # says a human read the unequal arrays and ruled them a coverage state (classes
-            # listed as a set, written before the parallel-arrays rule); it is reported as
-            # reviewed coverage, never as FAIL. `label_reviewed: [{index, date, reason}]` says
-            # a specific source's label was read against its text and stands; that index is
-            # skipped. Content in the value, never in the key name.
-            reviewed = node.get("alignment_reviewed")
-            label_ok = {
-                int(r["index"])
-                for r in (node.get("label_reviewed") or [])
-                if isinstance(r, dict) and str(r.get("index", "")).lstrip("-").isdigit()
-            }
-            if len(sources) != len(classes):
-                misalignments.append(
-                    {
-                        "file": filename,
-                        "id": ident,
-                        "sources": len(sources),
-                        "classes": len(classes),
-                        "reviewed": bool(isinstance(reviewed, dict) and reviewed.get("date")),
-                        "reviewed_reason": (reviewed or {}).get("reason", "")
-                        if isinstance(reviewed, dict)
-                        else "",
-                    }
-                )
-            else:
-                for i, (src, cls) in enumerate(zip(sources, classes, strict=True)):
-                    if not isinstance(src, str) or cls != GUARDED_CLASS or i in label_ok:
-                        continue
-                    hit = classify(src)
-                    if hit:
-                        violations.append(
-                            {
-                                "file": filename,
-                                "id": ident,
-                                "index": i,
-                                "detector": hit[0],
-                                "why": hit[1],
-                                "source": src[:160],
-                            }
-                        )
+        if isinstance(node.get("evidence_sources"), list) and isinstance(
+                node.get("source_classes"), list):
+            _evaluate_block(node, filename, ident, (misalignments, violations))
         for value in node.values():
             _walk(value, filename, ident, misalignments, violations)
     elif isinstance(node, list):
         for item in node:
             _walk(item, filename, ident, misalignments, violations)
+
+
+def _evaluate_block(node: dict, filename: str, ident, out: tuple[list, list]) -> None:
+    """One provenance block: reviewed markers, the one-class convention, alignment, labels.
+
+    REVIEWED MARKERS (v0.190.0). `alignment_reviewed: {date, reason}` on the block says a
+    human read the unequal arrays and ruled them a coverage state; it is reported as reviewed
+    coverage, never as FAIL, and the one-class convention below is NOT applied over a human
+    ruling. `label_reviewed: [{index, date, reason}]` says a specific source's label was read
+    against its text and stands; that index is skipped.
+
+    ONE-CLASS CONVENTION (v0.210.0). The schema's singular `source_class` is the sanctioned
+    form for "every source is the same class"; a block that wrote that intent as a one-item
+    `source_classes` list beside N sources is the same claim in the other spelling (21 of the
+    42 dogfood misalignments on 2026-08-30). It is expanded and its labels evaluated, not
+    reported as unequal arrays.
+    """
+    misalignments, violations = out
+    sources, classes = node["evidence_sources"], node["source_classes"]
+    reviewed = node.get("alignment_reviewed")
+    is_reviewed = bool(isinstance(reviewed, dict) and reviewed.get("date"))
+    label_ok = {
+        int(r["index"])
+        for r in (node.get("label_reviewed") or [])
+        if isinstance(r, dict) and str(r.get("index", "")).lstrip("-").isdigit()
+    }
+    if len(classes) == 1 and len(sources) > 1 and not is_reviewed:
+        classes = classes * len(sources)
+    if len(sources) != len(classes):
+        misalignments.append({
+            "file": filename, "id": ident, "sources": len(sources), "classes": len(classes),
+            "reviewed": is_reviewed,
+            "reviewed_reason": reviewed.get("reason", "") if isinstance(reviewed, dict) else "",
+        })
+        return
+    for i, (src, cls) in enumerate(zip(sources, classes, strict=True)):
+        if not isinstance(src, str) or cls != GUARDED_CLASS or i in label_ok:
+            continue
+        hit = classify(src)
+        if hit:
+            violations.append({
+                "file": filename, "id": ident, "index": i,
+                "detector": hit[0], "why": hit[1], "source": src[:160],
+            })
 
 
 def evaluate(root: Path) -> dict:
@@ -232,8 +235,13 @@ def evaluate(root: Path) -> dict:
             "unreadable": unreadable,
         }
 
-    unreviewed = [m for m in misalignments if not m.get("reviewed")]
-    status = "violations" if (violations or unreviewed) else "ok"
+    # TWO VERDICTS, SEPARATED (v0.210.0). A label contradicted by its own source text is a
+    # defect and fails. Unequal arrays are a COVERAGE state: the operating contract that
+    # created the field says the class is set at write time and "not recoverable by a
+    # script", so failing on it implied the one remedy the rule forbids, at the top of every
+    # session, gating nothing (42 blocks, 0 contradicted labels, 2026-08-30). They are
+    # printed as coverage every run and never as FAIL.
+    status = "violations" if violations else "ok"
     return {
         "status": status,
         "files_examined": parsed,
@@ -263,6 +271,9 @@ def _report_reviewed(result: dict) -> None:
                 f"    {n} of them share one reason ({reason[:80]!r}): a reason that repeats "
                 "is a rule this check is missing, not that many judgements."
             )
+
+
+_COVERAGE_SHOWN = 6
 
 
 def _report(result: dict) -> int:
@@ -296,6 +307,7 @@ def _report(result: dict) -> int:
             f"check_source_class_fidelity: OK — {result['files_examined']} canvas "
             f"file(s); no `{GUARDED_CLASS}` label contradicted by its own source text{tail}."
         )
+        _print_coverage(result)
         _report_reviewed(result)
         return 0
 
@@ -304,19 +316,29 @@ def _report(result: dict) -> int:
         f"contradicted by their own source, {len(result['misalignments'])} misaligned "
         f"block(s), across {result['files_examined']} canvas file(s)."
     )
-    for m in result["misalignments"]:
-        if m.get("reviewed"):
-            continue
-        print(
-            f"  [alignment] {m['file']} {m['id']}: {m['sources']} evidence_sources vs "
-            f"{m['classes']} source_classes."
-        )
+    _print_coverage(result)
     _report_reviewed(result)
-    if [m for m in result["misalignments"] if not m.get("reviewed")]:
-        print(
-            "    The arrays are index-parallel. Unequal lengths make every pairing\n"
-            "    meaningless, so fidelity could not be evaluated in those blocks."
-        )
+    _print_violations(result)
+    return 1
+
+
+def _print_coverage(result: dict) -> None:
+    unreviewed = [m for m in result["misalignments"] if not m.get("reviewed")]
+    if not unreviewed:
+        return
+    print(
+        f"  COVERAGE: {len(unreviewed)} block(s) have unequal evidence_sources / "
+        f"source_classes arrays, so fidelity could not be evaluated there. Not a defect: "
+        f"the class is set at write time and the contract says it is not recoverable by a "
+        f"script. Coverage rises as the canvas grows."
+    )
+    for m in unreviewed[:_COVERAGE_SHOWN]:
+        print(f"    {m['file']} {m['id']}: {m['sources']} sources vs {m['classes']} classes")
+    if len(unreviewed) > _COVERAGE_SHOWN:
+        print(f"    ... and {len(unreviewed) - _COVERAGE_SHOWN} more")
+
+
+def _print_violations(result: dict) -> None:
     for v in result["violations"]:
         print(f"  [{v['detector']}] {v['file']} {v['id']} idx{v['index']}")
         print(f"      {v['source']}")
@@ -330,7 +352,6 @@ def _report(result: dict) -> int:
             "    Fixing a class may weaken a confidence value that rested on it —\n"
             "    re-derive it deliberately rather than leaving the number untouched."
         )
-    return 1
 
 
 def main() -> int:

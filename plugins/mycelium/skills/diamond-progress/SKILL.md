@@ -197,6 +197,10 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
 
 When transitioning from Deliver to Complete, run this checklist. Items marked `REVIEW` block progression. Items marked `PROMPTED` are asked but don't block.
 
+**Two rules before any item (v0.210.0, dogfood `l2-framework-reliability` 2026-09-02, where both fired on one transition).**
+- **WAIVED is a verdict.** A required field that is legitimately empty carries a sibling `<field>_absent_reason` or `<field>_applicability` with a substantive reason (the contract `check_instrument_contract.py` already reads). An item whose field is waived reports **WAIVED — not a pass and not a defect**, printed in the checklist output so the exemption is seen, and does not fail the gate. The dogfood canvas carried `accuracy_score_applicability: n/a-until-n10` beside a null score for nine days while this checklist read GATE FAILED against it; the checklist and a recorded founder decision disagreed, and the skill had no third verdict.
+- **The build-shaped items apply to builds.** Tests, type-check, lint and eval scores are keyed to `product_type`, never to what the diamond's own `definition_of_done` asks for. When the diamond's `definition_of_done.outcome` names no build (a recorded verdict, a ruling, an archived leaf) or its cycle class is `meta-dogfood` or `observation`, skip those items and say so in one line; a gate a correct diamond cannot satisfy enforces nothing and teaches its reader to route around it. Observed on one transition; a second verdict-shaped done-bar would confirm the shape.
+
 ### Auto-Checked (Machine Verifiable)
 
 Check `product_type` from `.claude/diamonds/active.yml` to determine which auto-checks apply.

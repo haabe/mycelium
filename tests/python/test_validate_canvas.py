@@ -2067,3 +2067,32 @@ def test_a_dated_long_source_without_scan_status_is_reported(tmp_path, scripts_p
     """))
     out = validator.unscanned_source_findings(tmp_path)
     assert len(out) == 1 and "comp-002" in out[0]
+
+
+# --- v0.210.0: a blocker that quotes a confidence the diamond no longer has ---------------
+
+
+def test_a_blocker_quoting_an_old_confidence_is_reported(tmp_path, scripts_path):
+    validator = _import_validator(scripts_path)
+    canvas = tmp_path / ".claude" / "canvas"
+    canvas.mkdir(parents=True)
+    (tmp_path / ".claude" / "diamonds").mkdir()
+    (tmp_path / ".claude" / "diamonds" / "active.yml").write_text(textwrap.dedent("""\
+        active_diamonds:
+          - id: l1-strategy
+            confidence: 0.60
+            progression_ruling: needs-evidence
+            progression_ruled_at: "2026-09-01"
+            confidence_derivation: {changed_at: "2026-09-04"}
+            progression_blockers:
+              - reason: "Confidence 0.48 against an effective threshold of 0.578"
+          - id: l4-ok
+            confidence: 0.85
+            progression_ruling: progressed
+            progression_blockers:
+              - reason: "Confidence 0.85 is above threshold; blocked on a founder read instead"
+    """))
+    out = validator.stale_blocker_findings(canvas)
+    assert len(out) == 2
+    assert any("quoting confidence 0.48" in w and "0.6" in w for w in out)
+    assert any("ruled needs-evidence on 2026-09-01" in w for w in out)

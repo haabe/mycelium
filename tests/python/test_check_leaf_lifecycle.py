@@ -360,3 +360,50 @@ def test_json_keeps_the_ice_key_meaning_ice(scripts_path, tmp_path, capsys):
     assert d["violations"] == []                      # ICE half clean
     assert len(d["four_risks_violations"]) == 1       # the new half
     assert all(k in d for k in ("shipped_leaves", "exempted"))  # backward compat
+
+
+# --- v0.210.0: candidate leaves against the framework tree ---------------------------------
+
+_LEAVES = """\
+opportunities:
+  - id: opp-001
+    solutions:
+      - id: sol-001a
+        status: candidate
+        description: "ships as plugins/mycelium/scripts/thing.py"
+        verify: {file: plugins/mycelium/scripts/thing.py, pattern: "def go", expect: present}
+      - id: sol-001b
+        status: candidate
+        description: "a change to check_wiring.py that nobody probed"
+      - id: sol-001c
+        status: shipped
+        ice_score: {total: 100}
+        description: "already shipped, not a candidate"
+"""
+
+
+def _framework(tmp_path):
+    root = tmp_path / "fw"
+    (root / "plugins" / "mycelium" / "scripts").mkdir(parents=True)
+    (root / "plugins" / "mycelium" / "scripts" / "thing.py").write_text("def go():\n    pass\n")
+    return root
+
+
+def test_a_candidate_leaf_whose_probe_finds_the_fix_is_landed(scripts_path, tmp_path):
+    mod = _import(scripts_path)
+    _canvas(tmp_path, _LEAVES)
+    rep = mod.leaf_probe_report(tmp_path, str(_framework(tmp_path)))
+    assert [lid for lid, _ in rep["landed"]] == ["sol-001a"]
+    assert rep["no_probe"] == ["sol-001b"]
+    assert rep["probed"] == 1
+
+
+def test_no_framework_tree_is_said_not_passed(scripts_path, tmp_path, capsys, monkeypatch):
+    mod = _import(scripts_path)
+    monkeypatch.delenv("CLAUDE_PLUGIN_ROOT", raising=False)
+    _canvas(tmp_path, _LEAVES)
+    rep = mod.leaf_probe_report(tmp_path, str(tmp_path / "nowhere"))
+    assert rep["root"] is None and rep["landed"] == [] and rep["probed"] == 0
+    mod._report_leaf_probes(rep)
+    out = capsys.readouterr().out
+    assert "leaf probes NOT run" in out and "sol-001b" in out
