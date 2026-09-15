@@ -4,6 +4,15 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-14.
 
+## v0.213.0 - four instruments that were measuring the wrong thing
+
+Four dogfood candidates closed on the eighth backlog pass of 2026-09-15.
+
+- **`check_source_independence.py`** and **G-D2** (candidate 2026-08-31): v0.91.0 gave G-D2 a technical vocabulary and left its ceiling calibrated to interviews. `internal_measurement` (what an artifact does when run, the blind spot opposite `artifact_forensics`) joins the method tags, with `measurement` as the bare alias the dogfood canvas uses; a code-read beside a run-count now counts as two methods. And a single reproducible technical method — `controlled_experiment`, `blind_replication`, `internal_measurement` — is labelled by reproduction, not capped at anecdotal: a CI-reproduced defect at `test-validated` was scored as a violation of a rule written about what one person said. `artifact_forensics` and `independent_report` stay under the ceiling. The guardrail text says which. Three tests.
+- **`metrics-pull`** step 8 (candidate 2026-08-17): a drafted entry had no state, so a silent no and a forgotten yes were indistinguishable, and a draft sat unappended for ten days. The step now opens the previous report, checks each drafted entry against its destination canvas, and lists the unreached ones as PENDING SINCE before asking about today's.
+- **`check_hook_delivery.py`** and **`setup`** (candidate 2026-08-18): Codex and Cursor get Mycelium's enforcement only if someone ran `install-runtime-hooks.sh`, and skipping it was silent. The delivery report now says, for each of `.codex/` and `.cursor/` that exists, whether `hooks.json` is present; the setup skill's AGENTS.md text says so too. `docs/integrations/codex.md` replaces "end-to-end run not yet executed" with the 2026-08-18 receipt: hooks fired, the contract held, and without the manifest the same model cut two agent-contract files by 81% and 85%. Two tests.
+- **`absence_claim_guard.py`** (candidate 2026-09-02): two consumers measured the guard at zero catches over about thirty fires; what it does when it works is prompt a re-read. The instrument is now that: each fire row carries the file and session, and when the same session fired on the same file before and the quoted sentence is absent from the text being written now, the row records `prior_fire_changed_text`. `--report` prints fires, distinct sentences, and the changed ratio, and says the fire count is not a safety record. Retire-or-rescope on a third consumer stays the rule; this is the measurement it needs. Rows written before 0.213.0 carry no file and never count. Two tests.
+
 ## v0.212.0 - one concept, one spelling; one nudge, one session
 
 Two dogfood candidates closed on the seventh backlog pass of 2026-09-15.

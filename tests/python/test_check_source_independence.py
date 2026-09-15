@@ -407,3 +407,34 @@ def test_finding_names_the_method_not_the_first_pointer(scripts_path, tmp_path):
     assert "all `internal_desk`" in r.stdout
     assert "all `pointer`" not in r.stdout
     assert "2 pointer(s) set aside from 3 total" in r.stdout
+
+
+# --- v0.213.0: the ceiling is for testimony; a reproduced technical method is labelled by it -
+
+
+def test_a_single_reproducible_technical_method_is_not_capped(scripts_path, tmp_path):
+    root = _canvas(tmp_path, body=_opp(
+        ['"[controlled_experiment] five CI runs, path leak reproduces across model classes"'],
+        etype="test-validated", conf=0.4,
+    ))
+    r = _run(scripts_path, root)
+    assert r.returncode == 0, r.stdout
+
+
+def test_a_single_read_only_technical_method_still_is(scripts_path, tmp_path):
+    root = _canvas(tmp_path, body=_opp(
+        ['"[artifact_forensics] the grep as written in preflight.sh"'],
+        etype="test-validated", conf=0.4,
+    ))
+    r = _run(scripts_path, root)
+    assert r.returncode == 1, r.stdout
+    assert "single-source evidence is" in r.stdout
+
+
+def test_internal_measurement_beside_forensics_is_two_methods(scripts_path, tmp_path):
+    root = _canvas(tmp_path, body=_opp(
+        ['"[artifact_forensics] the grep as written"', '"[internal_measurement] the same file counted three ways"'],
+        etype="data-supported", conf=0.6,
+    ))
+    r = _run(scripts_path, root)
+    assert r.returncode == 0, r.stdout

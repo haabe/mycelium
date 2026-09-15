@@ -157,3 +157,18 @@ def test_unreadable_log_lines_are_counted_not_crashed_on(tmp_path):
     line = _mod().gate_blocks(project, datetime(2026, 9, 1, tzinfo=UTC))
     assert "1 block(s)" in line
     assert "2 unreadable line(s) skipped" in line
+
+
+# --- v0.213.0: runtime manifests --------------------------------------------------------
+
+
+def test_runtime_dirs_report_manifest_presence_and_absent_dirs_say_nothing(tmp_path):
+    project = tmp_path / "p"
+    (project / ".codex").mkdir(parents=True)
+    (project / ".cursor").mkdir()
+    (project / ".cursor" / "hooks.json").write_text("{}")
+    lines = _mod().runtime_manifests(project)
+    assert len(lines) == 2
+    assert any("NO hooks.json" in x and "codex" in x for x in lines)
+    assert any("present" in x and "cursor" in x for x in lines)
+    assert _mod().runtime_manifests(tmp_path / "none") == []

@@ -91,7 +91,7 @@ No mapping needed — Codex uses PascalCase event names identical to Claude Code
 - **Skill discovery** — Codex's plugin manifest format (`.codex-plugin/plugin.json`) differs from Claude Code's; the 61 skills load as files but `/skill-name` invocation parity may require a Codex-side skill loader. Mycelium's slash commands work; full parity needs verification.
 - **`CLAUDE_PROJECT_DIR` not auto-exported** — set it in your shell. (Cursor exports this alias automatically; Codex doesn't.)
 
-Verified primitives match against [Codex hooks docs](https://developers.openai.com/codex/hooks) 2026-05-26. End-to-end Mycelium-on-Codex run not yet executed — adopt and report friction back via PR on `docs/receipts/cases/`.
+Verified primitives match against [Codex hooks docs](https://developers.openai.com/codex/hooks) 2026-05-26. **End-to-end Mycelium-on-Codex run executed 2026-08-18** (dogfood A/B): with the manifest installed, the hooks fired, the operating contract held, and version-bump plus decision-log discipline ran unprompted; without it, the same model on the same prompt cut two agent-contract files by 81% and 85%. The manifest is the enforcement. Adopt and report friction back via PR on `docs/receipts/cases/`.
 
 ## Related receipts
 

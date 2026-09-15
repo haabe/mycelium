@@ -380,6 +380,19 @@ reviewed:
     same contract as every advisory reader in this file — validate_diamonds has already reported
     the unparseable file by name before the advisory tier runs, and an advisory that raised
     would take the canvas check down with it.
+- id: absence_claim_guard.py@ac77bbdc69
+  verdict: accepted
+  reason: >-
+    _last_fire_on, unreadable log (0.213.0): returns None, which the caller reads as "no prior
+    fire in this session on this file", so the row records prior_fire_changed_text: false. The
+    instrument degrades toward under-counting re-reads, never toward suppressing a warning or
+    inventing a change; a telemetry read must never break a tool call.
+- id: absence_claim_guard.py@aedbf87b0a
+  verdict: accepted
+  reason: >-
+    _last_fire_on, one unparseable log line (0.213.0): skipped, same contract as the line above;
+    the newest readable row for the session and file still wins, and --report counts the
+    readable rows only.
 # ---------------------------------------------------------------------------
 # accepted — flagged as "appears to speak", confirmed by reading.
 # ---------------------------------------------------------------------------

@@ -138,7 +138,22 @@ METHOD_TAGS = {
     "blind_replication",      # reproduced by an agent/person given no access to the diagnosis
     "artifact_forensics",     # logs, caches, on-disk state — evidence that outlives the run
     "independent_report",     # someone else's published issue/data about the same behaviour
+    # v0.213.0. `internal_measurement` records what an artifact DOES when run, a different
+    # blind spot from `artifact_forensics` (what it says); the dogfood canvas used it 14 times
+    # while it was absent from this set, so a code-read beside a run-count scored as one
+    # method. `measurement` is the bare spelling the same canvas also uses; alias, not defect.
+    "internal_measurement",
+    "measurement",
 }
+
+#: A single TECHNICAL method is labelled by reproducibility, not capped at anecdotal
+#: (v0.213.0, guardrails-discovery.md G-D2). A defect reproduced by a controlled
+#: experiment, a blind replication or an internal measurement is validated by the
+#: reproduction however many methods produced it; the interview ceiling was written about
+#: what one person said. `artifact_forensics` and `independent_report` read what something
+#: SAYS and stay under the ceiling.
+REPRODUCIBLE_METHODS = {"controlled_experiment", "blind_replication",
+                        "internal_measurement", "measurement"}
 
 # Set aside like pointers, and for the same reason — they are not independent
 # observation. `aggregated` is a roll-up of sources already counted elsewhere in the
@@ -214,6 +229,8 @@ def _tagged_finding(tagged, ctx):
     """
     if len(tagged) > 1:
         return []
+    if tagged and min(tagged) in REPRODUCIBLE_METHODS:
+        return []   # reproduced, so labelled by reproduction: G-D2's ceiling is for testimony
     n = ctx["n"]
     return [{
         "rule": "G-D2", "file": ctx["name"], "id": str(ctx["ident"]), "sources": n,
@@ -234,6 +251,9 @@ def _single_source_finding(prov, name, ident, n):
     """RULE 1: one source carrying a claim above anecdotal. List, so callers branch once."""
     if n >= MIN_SOURCES or not _overclaims_on_one_source(prov):
         return []
+    methods, _aside = _method_tags(prov)
+    if methods and methods <= REPRODUCIBLE_METHODS:
+        return []   # v0.213.0: reproduced, so labelled by reproduction, not the testimony ceiling
     return [{
         "rule": "G-D2", "file": name, "id": str(ident), "sources": n,
         "evidence_type": prov.get("evidence_type"),

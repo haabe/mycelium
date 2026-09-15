@@ -172,7 +172,7 @@ NEVER touch CLAUDE.md, README.md, CONTRIBUTORS.md, or LICENSE. Those are the use
 
 This project uses [Mycelium](https://github.com/haabe/mycelium) for product-thinking discipline.
 
-The Mycelium plugin ships skills, agents, and hooks that auto-load when Claude Code is run in this project. Cross-agent users (Codex, Cursor, Aider, Copilot) read this file for orientation.
+The Mycelium plugin ships skills, agents, and hooks that auto-load when Claude Code is run in this project. Cross-agent users (Codex, Cursor, Aider, Copilot) read this file for orientation. **Codex and Cursor users: the hooks are not installed until you run `install-runtime-hooks.sh codex` or `install-runtime-hooks.sh cursor` from the plugin's `hooks/` directory.** Without the manifest the operating contract is prose only; with it the same model on the same prompt left every agent-contract file untouched where it had cut two by 81% and 85% (A/B, 2026-08-18). `check_hook_delivery.py` says which of `.codex/` and `.cursor/` carry a manifest.
 
 ## Project state
 

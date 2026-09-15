@@ -466,7 +466,24 @@ def hits_for(payload: dict) -> list[str]:
 
 
 
-def _log(hook: str, fires: int, first_match: str, signature: str) -> None:
+def _last_fire_on(root: Path, hook: str, session: str, file: str) -> dict | None:
+    """The most recent logged fire in this session on this file, or None."""
+    try:
+        rows = (root / f"{hook}-log.jsonl").read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return None
+    for raw in reversed(rows[-400:]):
+        try:
+            row = json.loads(raw)
+        except ValueError:
+            continue
+        if row.get("session") == session and row.get("file") == file:
+            return row
+    return None
+
+
+def _log(hook: str, fires: int, first_match: str, signature: str,
+         ctx: dict | None = None) -> None:
     """Append one line per fire so the action rate and the OVERRIDE rate are computable.
 
     Two rules make this part of the ship rather than a nice-to-have.
@@ -487,12 +504,25 @@ def _log(hook: str, fires: int, first_match: str, signature: str) -> None:
     try:
         root = Path(os.environ.get("CLAUDE_PROJECT_DIR", ".")) / ".claude" / "state"
         root.mkdir(parents=True, exist_ok=True)
+        # PROMPTED A RE-READ THAT CHANGED THE TEXT (v0.213.0). Two consumers measured this
+        # guard at zero catches over ~30 fires; what it does when it works is prompt a re-read.
+        # So the instrument is that, not the fire count: when this session fired on this file
+        # before and the sentence it quoted is no longer in the text being written now, the
+        # earlier fire changed the text. Reported by `--report` as a ratio over fires.
+        ctx = ctx or {}
+        file, session, text = ctx.get("file", ""), ctx.get("session", ""), ctx.get("text", "")
+        prior = _last_fire_on(root, hook, session, file) if (session and file) else None
+        changed = bool(prior and prior.get("first_match")
+                       and prior["first_match"] not in text)
         row = {
             "at": datetime.now(UTC).isoformat(timespec="seconds"),
             "hook": hook,
             "fires": fires,
             "signature": signature,
             "first_match": first_match[:120],
+            "file": file,
+            "session": session,
+            "prior_fire_changed_text": changed,
         }
         with (root / f"{hook}-log.jsonl").open("a", encoding="utf-8") as fh:
             fh.write(json.dumps(row, ensure_ascii=False) + "\n")
@@ -500,7 +530,32 @@ def _log(hook: str, fires: int, first_match: str, signature: str) -> None:
         pass
 
 
+def report(root: Path) -> str:
+    """Fires, distinct signatures, and how many fires were followed by a changed text."""
+    path = root / ".claude" / "state" / "absence-claim-guard-log.jsonl"
+    if not path.is_file():
+        return "absence-claim-guard: no log yet (no fires recorded here)"
+    fires = changed = 0
+    sigs: set[str] = set()
+    for raw in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        try:
+            row = json.loads(raw)
+        except ValueError:
+            continue
+        fires += 1
+        sigs.add(str(row.get("signature")))
+        changed += bool(row.get("prior_fire_changed_text"))
+    ratio = f"{changed / fires:.0%}" if fires else "n/a"
+    return (f"absence-claim-guard: {fires} fire(s), {len(sigs)} distinct sentence(s), "
+            f"{changed} followed by a re-write of that file without the quoted sentence "
+            f"({ratio}). The fire count is not a safety record; the ratio is the "
+            f"instrument. Rows written before 0.213.0 carry no file and never count.")
+
+
 def main() -> int:
+    if len(sys.argv) > 1 and sys.argv[1] == "--report":
+        print(report(Path(os.environ.get("CLAUDE_PROJECT_DIR", "."))))
+        return 0
     try:
         payload = json.load(sys.stdin)
     except Exception:                      # noqa: BLE001 — must never break a write
@@ -518,7 +573,11 @@ def main() -> int:
                    f"caught/trigger field were skipped: a record of a catch is not a claim. "
                    f"Re-read them if one is yours.)")
     signature = hashlib.sha256(hits[0].encode()).hexdigest()[:10]
-    _log("absence-claim-guard", len(hits), hits[0], signature)
+    tool_input = payload.get("tool_input") if isinstance(payload.get("tool_input"), dict) else {}
+    file = os.path.basename(str(tool_input.get("file_path") or ""))
+    _log("absence-claim-guard", len(hits), hits[0], signature, {
+        "file": file, "session": str(payload.get("session_id") or ""),
+        "text": _payload_text(str(payload.get("tool_name") or ""), tool_input)})
     print(json.dumps({
         "hookSpecificOutput": {
             "hookEventName": "PreToolUse",

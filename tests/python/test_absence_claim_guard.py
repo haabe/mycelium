@@ -612,3 +612,44 @@ def test_the_warning_reports_the_skip_count(scripts_path):
     out = _warn(scripts_path, "> No entry covers alpha.\n\nNo entry covers beta.")
     assert "No entry covers beta" in out
     assert "1 mention" in out
+
+
+# --- v0.213.0: the instrument is the re-read, not the fire ---------------------------------
+
+
+def _fire(scripts_path, project, text, session="s-1", path=CANVAS):
+    import os
+    env = {**os.environ, "CLAUDE_PROJECT_DIR": str(project)}
+    payload = json.dumps({"tool_name": "Write", "session_id": session,
+                          "tool_input": {"file_path": path, "content": text}})
+    return subprocess.run([sys.executable, str(scripts_path / SCRIPT)], input=payload,
+                          capture_output=True, text=True, check=False, env=env)
+
+
+def test_a_fire_followed_by_a_rewrite_without_the_sentence_is_recorded(scripts_path, tmp_path):
+    project = tmp_path / "p"
+    (project / ".claude" / "state").mkdir(parents=True)
+    _fire(scripts_path, project, "No entry covers alpha.")
+    _fire(scripts_path, project, "No entry covers beta.")          # alpha sentence gone: changed
+    _fire(scripts_path, project, "No entry covers beta. Nothing tracks gamma.")   # beta still there
+    rows = [json.loads(x) for x in
+            (project / ".claude/state/absence-claim-guard-log.jsonl").read_text().splitlines()]
+    assert [r["prior_fire_changed_text"] for r in rows] == [False, True, False]
+    assert rows[0]["file"] == "user-needs.yml" and rows[0]["session"] == "s-1"
+
+
+def test_report_prints_the_changed_ratio_not_only_the_fire_count(scripts_path, tmp_path):
+    import os
+    project = tmp_path / "p"
+    (project / ".claude" / "state").mkdir(parents=True)
+    _fire(scripts_path, project, "No entry covers alpha.")
+    _fire(scripts_path, project, "No entry covers beta.")
+    r = subprocess.run([sys.executable, str(scripts_path / SCRIPT), "--report"],
+                       capture_output=True, text=True, check=False,
+                       env={**os.environ, "CLAUDE_PROJECT_DIR": str(project)})
+    assert "2 fire(s), 2 distinct sentence(s), 1 followed by a re-write" in r.stdout
+    assert "(50%)" in r.stdout
+    r2 = subprocess.run([sys.executable, str(scripts_path / SCRIPT), "--report"],
+                        capture_output=True, text=True, check=False,
+                        env={**os.environ, "CLAUDE_PROJECT_DIR": str(tmp_path / "empty")})
+    assert "no log yet" in r2.stdout

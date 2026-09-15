@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.212.0 -- **One concept, one spelling; one nudge, one session** (MINOR). `check_key_shape` reports stem collisions: keys that are one concept under several spellings, ranked by whether a plain field exists to fold them into, with a twin that disagrees with the field it copies named as a divergence; `post-write-nudge.sh` emits each canvas's nudge once per session instead of once per write.
+*Version 0.213.0 -- **Four instruments that were measuring the wrong thing** (MINOR). G-D2 knows `internal_measurement` and labels a single reproducible technical method by reproduction, not by the interview ceiling; `/metrics-pull` settles the previous run's unanswered drafts before asking again; `check_hook_delivery` says whether `.codex/` and `.cursor/` carry the Mycelium manifest, and the Codex doc carries the 2026-08-18 receipt; the absence-claim guard records whether a fire was followed by a re-write without the quoted sentence and reports that ratio, which is its instrument, instead of its fire count.
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

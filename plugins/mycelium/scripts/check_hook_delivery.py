@@ -155,6 +155,35 @@ def gate_blocks(project: Path, since: datetime) -> str | None:
             f"gate; opp-072 asks whether it exceeds what the gate caught.")
 
 
+RUNTIME_DIRS = {"codex": ".codex", "cursor": ".cursor"}
+
+
+def runtime_manifests(project: Path) -> list[str]:
+    """One line per non-Claude runtime the project is set up for, saying whether the
+    Mycelium hook manifest is installed there (v0.213.0).
+
+    Codex and Cursor get Mycelium's enforcement only if someone ran
+    `install-runtime-hooks.sh <runtime>`, and skipping it was silent: an A/B on 2026-08-18
+    showed the same model cutting two agent-contract files by 81% and 85% without the
+    manifest and leaving them untouched with it. Nothing anywhere asked whether it was run.
+    A runtime dir with no `hooks.json` is the finding; a runtime dir absent is not a
+    project that uses that runtime, and says nothing.
+    """
+    out = []
+    for runtime, rel in RUNTIME_DIRS.items():
+        d = project / rel
+        if not d.is_dir():
+            continue
+        if (d / "hooks.json").is_file():
+            out.append(f"runtime-hooks: {rel}/hooks.json present — Mycelium enforcement installed "
+                       f"for {runtime}")
+        else:
+            out.append(f"runtime-hooks: {rel}/ exists with NO hooks.json — Mycelium enforcement is "
+                       f"not installed for {runtime}; the contract there is prose only. Run "
+                       f"install-runtime-hooks.sh {runtime}")
+    return out
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Did the harness run our hooks, or cancel them?")
     ap.add_argument("--project-dir", type=Path, default=Path("."))
@@ -177,6 +206,8 @@ def main(argv=None) -> int:
     print(gate_blocks(args.project_dir, since) or "gate-block: no gate-block log under "
           ".claude/state (plugin older than 0.204.0, or the gate has never blocked here; not "
           "the same thing)")
+    for line in runtime_manifests(args.project_dir):
+        print(line)
     return 1 if (args.strict and worst == SEV_FAIL) else 0
 
 
