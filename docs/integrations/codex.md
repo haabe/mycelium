@@ -17,7 +17,7 @@ The one surface difference: Codex has no native `PostToolUseFailure`. Failures s
 |---|---|---|
 | Canvas YAML, memory, decision-log, corrections, patterns | ✅ Fully portable | Pure files. |
 | `AGENTS.md` instructions | ✅ Read natively | Codex's primary; Mycelium ships it. |
-| Skills (61 skills, frontmatter-driven discovery) | ⚠️ Depends on Codex skill discovery | Codex has plugin manifests (`.codex-plugin/plugin.json`); skill-discovery glue may be needed for full parity. Substrate loads either way. |
+| Skills (62 skills, frontmatter-driven discovery) | ⚠️ Depends on Codex skill discovery | Codex has plugin manifests (`.codex-plugin/plugin.json`); skill-discovery glue may be needed for full parity. Substrate loads either way. |
 | Validators (`validate_canvas.py`, `validate-template.sh`) | ✅ Run unchanged | Harness-agnostic. |
 | MCP server integrations | ✅ Native | Both speak MCP. |
 | Pre-task gate (Read-before-Edit, preflight, scope, framework-guard) | ✅ Hook-enforced | `PreToolUse` identical event + payload. |
@@ -88,7 +88,7 @@ No mapping needed — Codex uses PascalCase event names identical to Claude Code
 ## Honest gaps
 
 - **No native `PostToolUseFailure`** — covered by the shim above. If/when Codex adds the event, drop the shim and point the hook at `reflexion-gate.sh` directly.
-- **Skill discovery** — Codex's plugin manifest format (`.codex-plugin/plugin.json`) differs from Claude Code's; the 61 skills load as files but `/skill-name` invocation parity may require a Codex-side skill loader. Mycelium's slash commands work; full parity needs verification.
+- **Skill discovery** — Codex's plugin manifest format (`.codex-plugin/plugin.json`) differs from Claude Code's; the 62 skills load as files but `/skill-name` invocation parity may require a Codex-side skill loader. Mycelium's slash commands work; full parity needs verification.
 - **`CLAUDE_PROJECT_DIR` not auto-exported** — set it in your shell. (Cursor exports this alias automatically; Codex doesn't.)
 
 Verified primitives match against [Codex hooks docs](https://developers.openai.com/codex/hooks) 2026-05-26. **End-to-end Mycelium-on-Codex run executed 2026-08-18** (dogfood A/B): with the manifest installed, the hooks fired, the operating contract held, and version-bump plus decision-log discipline ran unprompted; without it, the same model on the same prompt cut two agent-contract files by 81% and 85%. The manifest is the enforcement. Adopt and report friction back via PR on `docs/receipts/cases/`.

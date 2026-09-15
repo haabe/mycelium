@@ -4,6 +4,13 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-14.
 
+## v0.218.0 - a value that names its source, and a builder's own row
+
+Two dogfood candidates closed on the thirteenth backlog pass of 2026-09-15.
+
+- **Derived fields: `source_ref`** (candidate 2026-09-02, "the canvas has no derived field, so every derivable value is stored twice"): `north-star.schema.json` gains `$defs/source_ref`, a pointer in two forms, `metrics/<source>#<dotted.path>` (newest snapshot under `.claude/evals/metrics/<source>/`) and `<file>.yml#<dotted.path>[|count[ key=value]]` (a canvas, diamonds or harness file; the path walks keys, list indexes and item ids), with an optional `value` cache beside it. **`check_derived_fields.py`** resolves every pointer in canvas/, diamonds/ and harness/, reports each cache that disagrees with its source and each pointer that does not resolve, and refuses to guess. The row's own corrected ranking put reconciliation on a running surface first and derived-not-stored second; this ships the affordance and the reader, and leaves the write a human's (the cache is what a reader without the check sees). The dogfood prototype `check_kpi_against_snapshot.py` carried a hand-written field map that would not transfer; the pointer is what transfers. Canvas-health section. Three tests.
+- **`/mycelium:count`** and **`count_builder_row.py`** (candidate 2026-09-07, the north-star hypothesis DL-1177): a builder runs it and reads one line from their own record, sent nowhere: first source file (first commit adding a code file outside `.claude/` and `docs/`), decisions in the decision log before it, of which citing outside evidence (a lexical proxy and an upper bound, said in the output), kills before code, sessions. The discovery-layer condition is not applied, because entries carry no scale and guessing one would manufacture the count. The maintainer's proxy sheet gains rows only from what people choose to paste. Four tests.
+
 ## v0.217.0 - the two justifiers that had no gate, and the door from a record to a cycle
 
 Three dogfood candidates closed on the twelfth backlog pass of 2026-09-15.

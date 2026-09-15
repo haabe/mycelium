@@ -687,6 +687,22 @@ rule that would have caught it was injected and not consulted. Report-only. Mark
 not scanned, and the sibling co-presence rule (a conclusion cites both the local record and the
 literature) is not built; both are said in the script's header.
 
+## Derived fields: a value that names its source is read from it (added v0.218.0)
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_derived_fields.py" --project-dir .
+```
+
+Any mapping in a canvas, diamond or harness file may carry `source_ref`, a pointer to where the
+value lives (`metrics/github#primary_counts.stars`, `cycle-history.yml#cycles|count
+terminal_state=killed`), with an optional `value` cache beside it. The check resolves every pointer
+and reports each cache that disagrees with its source, and each pointer that does not resolve, and
+refuses to guess. **The durable fix for KPI rot is to stop storing a second copy**: the dogfood
+canvas measured drifts of 17 to 76 days on hand-typed input metrics, and the block that diagnosed the
+mechanism in prose rotted again 19 days after the diagnosis was written. Report each DIVERGED row
+with the source value beside the cache; the write stays a human's, since the cache is what a reader
+without the check sees. A pointer alone, no cache, cannot rot.
+
 ## Fields the canvas writes that no schema declares (added 2026-08-31)
 
 ```bash

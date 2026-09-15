@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.217.0 -- **The two justifiers that had no gate, and the door from a record to a cycle** (MINOR). Landscape and Capacity gates at NUDGE tier with a mechanical join that reports any primary theory ungated at its scale; a scale-occupancy diagnostic plus the ost-builder and ice-score exits that open a cycle from the catalogue; an off-outcome root must carry a review date.
+*Version 0.218.0 -- **A value that names its source, and a builder's own row** (MINOR). A canvas value may be a `source_ref` pointer resolved at read time instead of a transcribed copy, with a check that reports every cache that disagrees with its source; `/mycelium:count` prints a builder's own north-star row from their own record and sends nothing anywhere.
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 
@@ -121,7 +121,7 @@ See `plugins/mycelium/orchestration/modes.md` for usage patterns and `plugins/my
 
 ## Skills
 
-All 61 skills are auto-discovered from SKILL.md frontmatter — in plugin form (`plugins/mycelium/skills/*/SKILL.md`, recommended) or legacy form (`.claude/skills/*/SKILL.md`, supported during transition). Suggested skills are surfaced at diamond transitions by `/diamond-progress` and `/diamond-assess`, and contextually by hooks. Type `/` to see the current list.
+All 62 skills are auto-discovered from SKILL.md frontmatter — in plugin form (`plugins/mycelium/skills/*/SKILL.md`, recommended) or legacy form (`.claude/skills/*/SKILL.md`, supported during transition). Suggested skills are surfaced at diamond transitions by `/diamond-progress` and `/diamond-assess`, and contextually by hooks. Type `/` to see the current list.
 
 ## Getting Started
 

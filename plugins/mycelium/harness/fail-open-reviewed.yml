@@ -401,6 +401,18 @@ reviewed:
     (dated and entity-scoped keys) still runs on the text. A new canvas file has no prior
     spellings to collide with; a broken one is the sweep's finding, not this guard's. Advisory
     hook, must never break a write.
+- id: check_derived_fields.py@ebc370c848
+  verdict: accepted
+  reason: >-
+    pointers, one unreadable or unparseable canvas file (0.218.0): that file contributes no
+    pointers and the others are still resolved; the report then says NOT A PASS if nothing at
+    all carried a pointer. A malformed canvas is the schema tier's finding.
+- id: count_builder_row.py@a35b8d07ba
+  verdict: accepted
+  reason: >-
+    first_source_date, git unavailable or timing out (0.218.0): returns None, which the row
+    prints as `first source file unknown` with zero decisions before it, the conservative
+    direction for a self-reported count that a builder pastes by choice.
 - id: check_scale_occupancy.py@10262e6ce8
   verdict: accepted
   reason: >-

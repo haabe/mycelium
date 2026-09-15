@@ -10,11 +10,11 @@
     },
     "metric": {
       "type": "object",
-      "description": "The North Star metric itself: name, definition, current value."
+      "description": "The North Star metric itself: name, definition, current value. `current_value` may carry a `source_ref` pointer (see `$defs/source_ref`) when the count lives in a file."
     },
     "input_metrics": {
       "type": "array",
-      "description": "Leading input metrics that drive the North Star."
+      "description": "Leading input metrics that drive the North Star. Any value inside `current_value` may be written as `{source_ref: <pointer>, value: <cache>}` instead of a literal; see `$defs/source_ref`."
     },
     "trust_dimension": {
       "type": "object"
@@ -34,5 +34,12 @@
       "type": "object"
     }
   },
-  "additionalProperties": true
+  "additionalProperties": true,
+  "$defs": {
+    "source_ref": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_./-]+#[^|]*(\\|count( [A-Za-z0-9_.-]+=.*)?)?$",
+      "description": "A DERIVED field (v0.218.0): a pointer to where the value lives, resolved at read time by check_derived_fields.py, instead of a transcribed copy. Forms: `metrics/<source>#<dotted.path>` (newest .claude/evals/metrics/<source>/*.json) or `<file>.yml#<dotted.path>[|count[ key=value]]` (a canvas, diamonds or harness file; the path walks keys, list indexes and item ids; `|count` counts a list, optionally filtered). A mapping may carry `value` beside it as a cache; the check reports every cache that disagrees with its source. Why: the dogfood canvas measured five hand-copied KPI drifts of 17 to 76 days, and the block carrying the sentence 'a KPI block hand-copied from a snapshot directory will keep rotting until something reads the directory instead' was itself 19 days stale when read. A pointer cannot rot because nothing is stored to go stale."
+    }
+  }
 }

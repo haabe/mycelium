@@ -155,7 +155,7 @@ Report the line for each scale with records: "73 opportunity records, 0 active L
 
 12. **Report harness thickness** (informational):
     - Count: total skills, active guardrails, mandatory reads, hooks, theory gates
-    - Current: 61 skills, 38 guardrails, 4 mandatory reads, 5 hook layers, 13 gates
+    - Current: 62 skills, 38 guardrails, 4 mandatory reads, 5 hook layers, 13 gates
     - If thickness has increased since last assess, note it
     - This is observability, not a gate — purely informational
     - *Source: Trivedy (Anatomy of an Agent Harness, LangChain blog — "scaffolding should decrease as models improve," but harnesses remain valuable as they engineer systems around model intelligence)*
