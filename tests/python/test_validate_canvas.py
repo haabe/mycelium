@@ -2022,3 +2022,48 @@ def test_affects_entries_resolve_and_a_bare_non_action_needs_a_note(tmp_path, sc
     assert len(out) == 2
     assert any("comp-404" in w for w in out)
     assert any("landed: false and no note" in w for w in out)
+
+
+# --- v0.209.0: a new node names what would move it; a new source says if it was scanned ---
+
+
+def test_a_node_minted_after_the_rule_without_a_mover_is_reported(tmp_path, scripts_path):
+    validator = _import_validator(scripts_path)
+    (tmp_path / "opportunities.yml").write_text(textwrap.dedent("""\
+        opportunities:
+          - id: opp-001
+            name: old node
+            provenance: {captured_at: "2026-08-01"}
+          - id: opp-002
+            name: new node, no mover
+            provenance: {captured_at: "2026-09-20"}
+          - id: opp-003
+            name: new node with mover
+            provenance: {captured_at: "2026-09-20"}
+            what_would_move_it: "ht-120 close, or a second verbatim voice"
+    """))
+    out = validator.opportunity_mover_findings(tmp_path)
+    assert len(out) == 1 and "opp-002" in out[0]
+
+
+def test_a_dated_long_source_without_scan_status_is_reported(tmp_path, scripts_path):
+    validator = _import_validator(scripts_path)
+    long = "x" * 3000
+    (tmp_path / "landscape.yml").write_text(textwrap.dedent(f"""\
+        components:
+          - id: comp-001
+            name: old
+            provenance: {{captured_at: "2026-08-01"}}
+            transcript: "{long}"
+          - id: comp-002
+            name: new unscanned
+            provenance: {{captured_at: "2026-09-20"}}
+            transcript: "{long}"
+          - id: comp-003
+            name: new scanned
+            provenance: {{captured_at: "2026-09-20"}}
+            transcript: "{long}"
+            scan_status: "scanned 2026-09-21"
+    """))
+    out = validator.unscanned_source_findings(tmp_path)
+    assert len(out) == 1 and "comp-002" in out[0]

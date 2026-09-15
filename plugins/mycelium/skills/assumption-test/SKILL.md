@@ -167,7 +167,7 @@ that was never committed, so not even a git timestamp existed for it.
 **Write the design to `.claude/evals/assumption-tests/YYYY-MM-DD-<slug>.md`, and COMMIT IT in the
 same commit as the instrument.** Git is what makes "written before" checkable by anyone but you.
 
-Open the file with this header. **Four fields, deliberately** — AsPredicted asks nine questions
+Open the file with this header. **Few fields, deliberately** — AsPredicted asks nine questions
 across all of science and its stated design goal is to be short and easy to read and to include
 only what needs to be included. Length kills completion, and an unfinished instrument protects
 nothing.
@@ -180,8 +180,19 @@ frozen_before: "any comment is fetched"   # THE EVENT it precedes
 score_by: 2026-08-30               # the date by which it must be scored
 status: live                       # live | scored | void | not-an-instrument
 runs_on: disk                      # disk | network | human — WHO OR WHAT CAN RUN IT (v0.183.0)
+does_not_reproduce: "the enforcement layer: no preflight, no hooks fire in the subagent"   # what this run CANNOT show (v0.209.0)
 ---
 ```
+
+**`does_not_reproduce` is the line that says what this test cannot show.** One sentence naming
+the conditions the run does not reproduce: the hook layer absent in a subagent, a logged-in
+browser the probe does not have, the founder's tone in a message an agent sent. Required on
+instruments frozen on or after 2026-09-15 (`check_instrument_contract.py` reports it INCOMPLETE
+without one; `does_not_reproduce_absent_reason` waives it with a reason). It does not prevent
+the failure it names; it makes the gap visible at design time, where stating it is free.
+`mocked-persona-interview` has required the equivalent declaration for a simulated PERSON since
+May; nothing asked it of a simulated RUN, and the dogfood record shows the line written
+voluntarily twice in a fortnight and recorded nowhere a check could read.
 
 **`frozen_before` matters more than `frozen_at`.** A date does not establish precedence over the
 DATA; naming the contaminating event does — "before posting", "before launching the subagent",

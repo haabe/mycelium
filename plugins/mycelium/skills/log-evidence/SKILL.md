@@ -135,6 +135,8 @@ All user-facing summaries above follow the interface-load/problem-load disciplin
 
 ## Canvas Output
 
+**A source with long external text gets a `scan_status` when it lands** (v0.209.0): `unscanned` at write time, `scanned YYYY-MM-DD` once `/mycelium:ost-builder` has been run over it. Landing evidence on a node is not the same as scanning the source for the opportunities it voices; the founder found two filed transcripts unscanned on 2026-09-09 and the hand-run scan mapped nineteen needs. `validate_canvas` lists dated sources on go-to-market and landscape with long text and no status.
+
 - Updates: relevant canvas file provenance (evidence_sources, source_classes, evidence_type, confidence)
 - Updates: `.claude/canvas/human-tasks.yml` (moves task to completed)
 - May update: `.claude/canvas/opportunities.yml`, `.claude/canvas/user-needs.yml`, `.claude/canvas/jobs-to-be-done.yml` depending on findings

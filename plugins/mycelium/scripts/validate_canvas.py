@@ -1304,6 +1304,8 @@ def print_advisory_warnings(canvas_dir):
         ("do-not-cite", citation_register_findings(canvas_dir)),
         ("sub-opportunity", sub_opportunity_findings(canvas_dir)),
         ("affects entries", affects_entries_findings(canvas_dir)),
+        ("opportunity mover", opportunity_mover_findings(canvas_dir)),
+        ("unscanned source", unscanned_source_findings(canvas_dir)),
     ):
         for w in findings:
             print(f"  WARN ({label}): {w}")
@@ -1377,6 +1379,102 @@ def affects_entries_findings(canvas_dir):
                     f"landscape.yml: {c.get('id', '?')} {rel.get('relation', '?')} '{target}' "
                     f"with landed: false and no note — a deliberate non-action needs its reason"
                 )
+    return out
+
+
+MINT_RULES_SINCE = "2026-09-15"
+
+
+def _captured_on(entry: dict):
+    prov = entry.get("provenance")
+    stamp = prov.get("captured_at") if isinstance(prov, dict) else None
+    stamp = stamp or entry.get("captured_at") or entry.get("date") or entry.get("added")
+    return str(stamp)[:10] if stamp else None
+
+
+def opportunity_mover_findings(canvas_dir):
+    """WARN-tier: an opportunity minted on or after MINT_RULES_SINCE names what would move it.
+
+    v0.209.0. ost-builder gated a mint on two independent voices and asked nothing about what
+    would change the node afterwards; the dogfood tree grew 33 open opportunities with no leaf
+    and no task (2026-09-09). The reader half (`check_idle_opportunities` reads
+    `what_would_move_it` / `reader`) shipped in 0.183.0; this is the mint half, date-gated so
+    the existing tree is listed by the idle check rather than failed by this one.
+    """
+    path = Path(canvas_dir) / "opportunities.yml"
+    if not path.exists():
+        return []
+    try:
+        data = yaml.safe_load(path.read_text()) or {}
+    except (yaml.YAMLError, OSError):
+        return []
+    opps = data.get("opportunities") if isinstance(data, dict) else None
+    if not isinstance(opps, list):
+        return []
+    return [
+        f"opportunities.yml: {o.get('id', '?')} was minted {_captured_on(o)} with no "
+        f"`what_would_move_it` (or `reader`) — a node nothing can move is a parking space; "
+        f"name a task id, a leaf with a test, a sweep, or a dated review"
+        for o in opps if isinstance(o, dict)
+        if (_captured_on(o) or "") >= MINT_RULES_SINCE
+        and not (o.get("what_would_move_it") or o.get("reader"))
+    ]
+
+
+LONG_SOURCE_CHARS = 2500
+SOURCE_CANVASES = ("go-to-market.yml", "landscape.yml")
+
+
+def _long_text(entry: dict) -> bool:
+    return any(isinstance(v, str) and len(v) >= LONG_SOURCE_CHARS for v in entry.values())
+
+
+_SOURCE_WALK_DEPTH = 8
+
+
+def _unscanned_in(node, name: str, label: str, out: list, depth: int = 0) -> None:
+    if depth > _SOURCE_WALK_DEPTH:
+        return
+    if isinstance(node, dict):
+        stamp = _captured_on(node)
+        if (stamp and stamp >= MINT_RULES_SINCE and _long_text(node)
+                and not node.get("scan_status")):
+            out.append(
+                f"{name}: {node.get('id') or label} ({stamp}) carries a long external text and "
+                f"no `scan_status` — nothing says whether it was scanned for opportunities; "
+                f"write `scan_status: unscanned`, or `scanned YYYY-MM-DD` after running "
+                f"ost-builder over it"
+            )
+        for k, val in node.items():
+            if isinstance(val, dict | list):
+                _unscanned_in(val, name, f"{label}.{k}", out, depth + 1)
+    elif isinstance(node, list):
+        for i, val in enumerate(node):
+            _unscanned_in(val, name, f"{label}[{i}]", out, depth + 1)
+
+
+def unscanned_source_findings(canvas_dir):
+    """WARN-tier: a research source landed on or after MINT_RULES_SINCE says whether it was
+    scanned for opportunities.
+
+    v0.209.0. Founder, 2026-09-09, after two transcripts were filed on go-to-market: "Scan it
+    for opportunities and solutions. I thought this was automated." It is not, and the hand-run
+    scan that day mapped nineteen voiced needs onto nodes. The scan stays human-invoked (it
+    mints tree nodes); what this makes visible is which sources never had one. An entry in a
+    source canvas with a date on or after the release date, carrying a long external text and
+    no `scan_status` (`unscanned` | `scanned YYYY-MM-DD`), is listed. Date-gated: 87 long texts
+    on the dogfood canvases predate the rule and are not the finding.
+    """
+    out: list = []
+    for name in SOURCE_CANVASES:
+        path = Path(canvas_dir) / name
+        if not path.exists():
+            continue
+        try:
+            data = yaml.safe_load(path.read_text()) or {}
+        except (yaml.YAMLError, OSError):
+            continue
+        _unscanned_in(data, name, name.split(".")[0], out)
     return out
 
 

@@ -95,3 +95,25 @@ def test_a_folded_block_does_not_swallow_the_next_key(scripts_path):
     fm = _fm(mod, extra=GOOD)
     assert fm["score_by"] == "2026-12-01"
     assert fm["type"] == "assumption-test"
+
+
+# --- v0.209.0: does_not_reproduce, required on instruments frozen on or after 2026-09-15 -----
+
+
+def test_an_old_instrument_is_not_asked_for_does_not_reproduce(scripts_path):
+    mod = _import(scripts_path)
+    missing, _ = mod._required_field_state(_fm(mod, fb=' "x"'))
+    assert "does_not_reproduce" not in missing          # frozen_at 2026-05-02 in HEADER
+
+
+def test_a_new_instrument_without_it_is_incomplete_and_a_reason_waives_it(scripts_path):
+    mod = _import(scripts_path)
+    new = HEADER.replace("frozen_at: 2026-05-02", "frozen_at: 2026-09-20")
+    fm = mod._frontmatter(new.format(extra="", fb=' "x"', status="live"))
+    missing, _ = mod._required_field_state(fm)
+    assert "does_not_reproduce" in missing
+    fm = mod._frontmatter(new.format(extra='does_not_reproduce: "the hook layer in a subagent"\n', fb=' "x"', status="live"))
+    assert "does_not_reproduce" not in mod._required_field_state(fm)[0]
+    fm = mod._frontmatter(new.format(extra="does_not_reproduce_absent_reason: >-\n  A live run on the real machine reproduces everything; nothing is simulated here.\n", fb=' "x"', status="live"))
+    missing, waived = mod._required_field_state(fm)
+    assert "does_not_reproduce" not in missing and waived[0][0] == "does_not_reproduce"

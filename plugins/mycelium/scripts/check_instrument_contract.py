@@ -108,6 +108,14 @@ _FROZEN_BLOCK = re.compile(
 )
 
 _REQUIRED = ("type", "frozen_at", "frozen_before", "score_by", "status")
+#: Fields required only on instruments frozen on or after a date (v0.209.0), so a new rule does
+#: not fail a corpus written before it existed — the 0.195.0 shape (`different_builder` on
+#: candidates surfaced on or after 2026-09-11). `does_not_reproduce`: one line naming the
+#: conditions the test does NOT reproduce. The cheapest countermeasure the
+#: subagent-simulation-misses-lived-friction cluster proposed in May, done voluntarily twice
+#: in a fortnight and recorded nowhere; `mocked-persona-interview` already requires the
+#: equivalent declaration for a simulated PERSON, and nothing asked it of a simulated RUN.
+_REQUIRED_SINCE = {"does_not_reproduce": _dt.date(2026, 9, 15)}
 
 #: A live instrument gated on an EVENT rather than a date cannot honestly carry a
 #: `score_by` — the data may never exist. It must still carry a `review_by`: the date
@@ -316,7 +324,9 @@ def _required_field_state(fm: dict[str, str]) -> tuple[list[str], list[tuple[str
     """
     missing: list[str] = []
     waived: list[tuple[str, str]] = []
-    for k in _REQUIRED:
+    frozen = _parse_date(fm.get("frozen_at"))
+    dated = [k for k, since in _REQUIRED_SINCE.items() if frozen is not None and frozen >= since]
+    for k in (*_REQUIRED, *dated):
         if k == "score_by" or fm.get(k):
             continue
         reason = str(fm.get(f"{k}_absent_reason", "") or "").strip()

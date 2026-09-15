@@ -80,6 +80,13 @@
               },
               "additionalProperties": true
             }
+          },
+          "scan_status": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Whether this source was scanned for opportunities with ost-builder: `unscanned`, or `scanned YYYY-MM-DD` (v0.209.0). validate_canvas warns on a dated entry with long external text and no value."
           }
         },
         "required": [

@@ -4,6 +4,14 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-14.
 
+## v0.209.0 - a design says what it cannot show, a node says what would move it, a source says whether it was read
+
+Three dogfood candidates, closed on the fourth backlog pass of 2026-09-15. Each adds one field and one reader, and each is date-gated to instruments, nodes or sources created on or after 2026-09-15, so the existing corpus is listed by the retrofit path rather than failed on day one (the 0.195.0 shape).
+
+- **`does_not_reproduce`** on assumption-test headers (candidate 2026-08-17): one sentence naming the conditions the run does not reproduce — the hook layer absent in a subagent, a browser the probe does not have. `mocked-persona-interview` has required the equivalent declaration for a simulated person since May; nothing asked it of a simulated run, and the dogfood record shows the line written voluntarily twice and recorded nowhere a check could read. `check_instrument_contract.py` reports it INCOMPLETE on instruments frozen from 2026-09-15 and honours `does_not_reproduce_absent_reason`; the assumption-test template carries the line. Two tests.
+- **`what_would_move_it`** at mint (candidate 2026-09-09; the reader half shipped in 0.183.0): ost-builder gated a mint on two voices and asked nothing about what would change the node afterwards; the dogfood tree grew 33 open opportunities with no leaf and no task. Step 3 now requires the field on every node minted from 2026-09-15 (a task id, a leaf with a named test, a sweep, or a dated review), `validate_canvas` warns on a new node without it, and `check_idle_opportunities` keeps listing the older ones. One test.
+- **`scan_status`** on research sources (candidate 2026-09-09; the nudge half shipped in 0.182.1): "Scan it for opportunities. I thought this was automated." It is not, and stays human-invoked because the scan mints tree nodes; what is automated now is that an unscanned source is visible. A dated entry on go-to-market or landscape carrying a long external text and no `scan_status` (`unscanned` | `scanned YYYY-MM-DD`) is listed by `validate_canvas`; `log-evidence` writes the field when a source lands; the landscape schema declares it. Date-gated because the two dogfood canvases hold 87 long texts that predate the rule. One test.
+
 ## v0.208.0 - a write, then a commit, with nothing between them
 
 Two dogfood candidates closed, one found already landed, on the third backlog pass of 2026-09-15.
