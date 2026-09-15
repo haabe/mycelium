@@ -170,8 +170,30 @@ if [ -z "$NUDGE" ]; then
   esac
 fi
 
-# Return as additionalContext if we have something
+# ONCE PER SESSION PER CANVAS (v0.212.0). A skill that writes five canvas files got five
+# reminders to run the skill it was already running (found 2026-06-05, registered 2026-08-18,
+# left as "would require session-state infrastructure not present"). The state dir exists
+# now. The nudge for a given canvas file is emitted once per session; a repeat in the same
+# session for the same file is a reminder the reader has already had. Keyed on session_id;
+# with no session_id every write is its own session, which is the old behaviour. Best effort:
+# an unwritable ledger never suppresses a nudge.
 if [ -n "$NUDGE" ]; then
+  SEEN_FILE="$PROJECT_DIR/.claude/state/nudge-seen.jsonl"
+  NUDGE_KEY=$(printf '%s' "$INPUT" | python3 -c '
+import json, sys, os
+try:
+    d = json.load(sys.stdin)
+except Exception:
+    d = {}
+sid = str(d.get("session_id") or "")
+print(sid + "|" + os.path.basename(sys.argv[1]) if sid else "")
+' "$FILE_PATH" 2>/dev/null)
+  if [ -n "$NUDGE_KEY" ] && [ -f "$SEEN_FILE" ] && grep -qxF "$NUDGE_KEY" "$SEEN_FILE" 2>/dev/null; then
+    exit 0
+  fi
+  if [ -n "$NUDGE_KEY" ]; then
+    mkdir -p "$(dirname "$SEEN_FILE")" 2>/dev/null && printf '%s\n' "$NUDGE_KEY" >> "$SEEN_FILE" 2>/dev/null || true
+  fi
   python3 -c "
 import json, sys
 print(json.dumps({

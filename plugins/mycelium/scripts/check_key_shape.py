@@ -108,6 +108,108 @@ def scan(canvas_dir: Path) -> list[tuple[str, str]]:
     return found
 
 
+#: v0.212.0. Across 2,512 distinct dogfood keys, 36 stems carried more than one spelling and 95
+#: keys were absorbed by them (founder, 2026-09-02: "similar-looking keys that probably should
+#: be the same key"). Three shapes: a dated twin beside a live field (`status` plus
+#: `status_2026_08_05`), a concept that exists only in dated form (`reply_sent_2026_08_03`, never
+#: `reply_sent`), and casing-only twins. Two of the three entity-scoped copies found were already
+#: stale (`ht_010_status: in_progress` beside `status: abandoned`). Nothing compared a key
+#: against its own near-twin. This report groups spellings by stem using the two regexes above,
+#: ranks the fixable case (a plain spelling exists) first, and compares an entity-scoped twin's
+#: value against the plain field on the same object.
+_CASING_SPLIT = re.compile(r"[-\s]+")
+#: Strip a full date (with an optional trailing letter suffix) before the bare-year form, so
+#: `status_2026_08_05` stems to `status`, not `status08_05`: DATE_IN_KEY's second alternative
+#: starts one character earlier and would win the substitution.
+_FULL_DATE = re.compile(r"_?(19|20)\d{2}[_-]?\d{2}[_-]?\d{2}[a-z]?")
+_SPELLINGS_SHOWN = 5
+
+
+def stem_of(key: str) -> str:
+    """Normalise a key to its stem: strip dates and entity ids, casefold, hyphens to underscores."""
+    s = _FULL_DATE.sub("", key)
+    s = DATE_IN_KEY.sub("", s)
+    s = ENTITY_IN_KEY.sub(lambda m: m.group(1), s)
+    s = _CASING_SPLIT.sub("_", s.lower())
+    return re.sub(r"_+", "_", s).strip("_")
+
+
+def _is_twin(key: str) -> bool:
+    return bool(ENTITY_IN_KEY.search(key) or DATE_IN_KEY.search(key))
+
+
+def _divergence(node: dict, key: str, val, canvas: str, here: str) -> str | None:
+    plain = stem_of(key)
+    if plain == key or plain not in node:
+        return None
+    other = node[plain]
+    if isinstance(other, dict | list) or isinstance(val, dict | list) or other == val:
+        return None
+    return (f"{canvas}: {here} carries `{plain}: {other}` and `{key}: {val}` — the twin "
+            f"disagrees with the field it copies")
+
+
+def _collect_stems(node, canvas: str, label: str, state: dict, depth: int = 0) -> None:
+    """Walk one canvas; `state` holds `spellings` (stem -> set of keys) and `divergences`."""
+    if depth > _MAX_DEPTH:
+        return
+    if isinstance(node, dict):
+        here = str(node.get("id") or label)
+        for key, val in node.items():
+            if not isinstance(key, str):
+                continue
+            state["spellings"].setdefault(stem_of(key), set()).add(key)
+            if _is_twin(key):
+                d = _divergence(node, key, val, canvas, here)
+                if d:
+                    state["divergences"].append(d)
+            _collect_stems(val, canvas, f"{here}.{key}", state, depth + 1)
+    elif isinstance(node, list):
+        for i, val in enumerate(node):
+            _collect_stems(val, canvas, f"{label}[{i}]", state, depth + 1)
+
+
+def stem_collisions(canvas_dir: Path) -> tuple[list[tuple[str, bool, list[str]]], list[str]]:
+    """(collisions, divergences).
+
+    collisions: (stem, plain_exists, spellings) for every stem with more than one spelling,
+    fixable-first (a plain spelling exists to fold the twins into).
+    divergences: an entity-scoped or dated twin (`ht_010_status`) on the same object as the
+    plain field (`status`) whose values differ — a snapshot wearing a current-state name.
+    """
+    state: dict = {"spellings": {}, "divergences": []}
+    for path in sorted(canvas_dir.glob("*.yml")):
+        try:
+            _collect_stems(yaml.safe_load(path.read_text()), path.stem, path.stem, state)
+        except (yaml.YAMLError, OSError):
+            continue
+    out = [(stem, stem in names, sorted(names))
+           for stem, names in state["spellings"].items() if len(names) > 1 and stem]
+    out.sort(key=lambda t: (not t[1], -len(t[2]), t[0]))
+    return out, state["divergences"]
+
+
+def _report_stem_collisions(canvas_dir: Path) -> None:
+    collisions, divergences = stem_collisions(canvas_dir)
+    if not collisions and not divergences:
+        return
+    fixable = [c for c in collisions if c[1]]
+    print(f"\nStem collisions (one concept, several spellings): {len(collisions)} stem(s), "
+          f"{sum(len(c[2]) for c in collisions)} keys; {len(fixable)} have a plain spelling to "
+          f"fold into, {len(collisions) - len(fixable)} exist only in dated or scoped form")
+    for stem, plain, names in collisions[:_NAME_LIMIT]:
+        kind = "FOLD   " if plain else "MISSING"
+        more = " ..." if len(names) > _SPELLINGS_SHOWN else ""
+        print(f"  {kind} {stem}: {', '.join(names[:_SPELLINGS_SHOWN])}{more}")
+    if len(collisions) > _NAME_LIMIT:
+        print(f"  ... and {len(collisions) - _NAME_LIMIT} more")
+    for d in divergences:
+        print(f"  DIVERGE {d}")
+    print("  FOLD: move the twins' values into the plain field as dated list entries.\n"
+          "  MISSING: the field was never created; create it and fold. DIVERGE: two names for\n"
+          "  one state disagree; the plain field is what every reader uses, the twin is stale.")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--canvas-dir", default=".claude/canvas")
@@ -150,6 +252,7 @@ def main() -> int:
     if not new:
         print("\n  No NEW content-in-key. A date in a VALUE can be compared and can go overdue;\n"
               "  a date in a KEY can only be grepped, which is why such a key never fires.")
+        _report_stem_collisions(canvas_dir)
         return 0
     print(f"\n  {len(new)} NEW:")
     for item in new[:_NAME_LIMIT]:
@@ -159,6 +262,7 @@ def main() -> int:
     print("\n  Move it into a value. Instead of `thing_happened_2026_08_27: <text>`, write a\n"
           "  list entry with `date:` and `note:` keys — then it can be sorted, aged and read\n"
           "  by something other than grep.")
+    _report_stem_collisions(canvas_dir)
     return 1 if args.strict else 0
 
 

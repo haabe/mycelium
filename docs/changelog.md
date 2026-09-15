@@ -4,6 +4,13 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-14.
 
+## v0.212.0 - one concept, one spelling; one nudge, one session
+
+Two dogfood candidates closed on the seventh backlog pass of 2026-09-15.
+
+- **`scripts/check_key_shape.py`**, stem collisions (candidate 2026-09-02, raised by the founder as a forward risk and measured the same hour: 36 stems, 95 keys). Nothing compared a key against its own near-twin, so a concept split into `status` plus `status_2026_08_05`, `reply_sent` that existed only in dated form, and casing-only twins, and each reader saw only the spelling it was written to expect. The report normalises every key to its stem (dates, entity ids, casing, hyphens), groups spellings, and ranks FOLD (a plain field exists) before MISSING (the concept was never created plain). A dated or entity-scoped twin on the same object as its plain field, with a different value, is a DIVERGE line: two of the three such twins on the dogfood canvas were already stale on 09-02 (`ht_010_status: in_progress` beside `status: abandoned`). Measured on the dogfood canvas today: 50 stems, 121 keys, 41 fold, 9 missing. Report-only, printed on both report paths. The write-time PreToolUse guard the founder ranked first on 09-02 is not built; this is the sweep that finds what a guard was never installed for, and the guard is filed to follow. Three tests, and a fix found on the way: `DATE_IN_KEY`'s bare-year alternative starts one character earlier than its full-date one, so a naive substitution left `status08_05`.
+- **`hooks/post-write-nudge.sh`**, once per session per canvas (candidate 2026-06-05, registered 08-18 as "would require session-state infrastructure not present"). A skill writing five canvas files got five reminders to run the skill it was running. The hook now records `session_id|canvas` in `.claude/state/nudge-seen.jsonl` and stays silent on a repeat in the same session; a new session nudges again, and a payload with no session id keeps the old behaviour. Best effort: an unwritable ledger never suppresses a nudge. Two bash tests.
+
 ## v0.211.0 - five rules that had lived only in the decision log
 
 Five dogfood candidates, three to seven months old, closed on the sixth backlog pass of 2026-09-15. Each is a rule the dogfood project had already learned and written in its decision log, and that the framework's own surfaces did not carry.

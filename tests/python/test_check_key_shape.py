@@ -195,3 +195,37 @@ def test_diamonds_beside_the_canvas_are_scanned_and_named(tmp_path):
 def test_a_missing_diamonds_dir_is_not_an_error(tmp_path):
     d = _canvas(tmp_path, {"horizon_set_2026_08_28": "x"})
     assert len(_mod().scan(d)) == 1
+
+
+# --- v0.212.0: stem collisions ---------------------------------------------------------------
+
+
+def test_spellings_of_one_stem_are_grouped_and_ranked_fixable_first(tmp_path):
+    d = _canvas(tmp_path, {
+        "a": {"status": "open", "status_2026_08_05": "old", "outcome_2026_08_02": "x",
+              "outcome_2026_08_14": "y", "WHAT_THIS_IS_NOT": 1, "what_this_is_not": 2},
+    })
+    collisions, divergences = _mod().stem_collisions(d)
+    stems = [c[0] for c in collisions]
+    assert stems[:2] == ["status", "what_this_is_not"]      # plain spelling exists: FOLD first
+    assert ("outcome", False, ["outcome_2026_08_02", "outcome_2026_08_14"]) in collisions
+    # `status: open` beside `status_2026_08_05: old` is a dated twin disagreeing with its field
+    assert len(divergences) == 1 and "status_2026_08_05" in divergences[0]
+
+
+def test_an_entity_scoped_twin_that_disagrees_with_the_plain_field_is_a_divergence(tmp_path):
+    d = _canvas(tmp_path, {"pending_tasks": [
+        {"id": "ht-010", "status": "abandoned", "ht_010_status": "in_progress"},
+        {"id": "ht-011", "status": "completed", "ht_011_status": "completed"},
+    ]}, name="human-tasks.yml")
+    _, divergences = _mod().stem_collisions(d)
+    assert len(divergences) == 1 and "ht-010" in divergences[0] and "in_progress" in divergences[0]
+
+
+def test_stem_of_strips_dates_ids_and_casing(tmp_path):
+    m = _mod()
+    assert m.stem_of("status_2026_08_05") == "status"
+    assert m.stem_of("ht_010_status") == "status"
+    assert m.stem_of("WHAT_THIS_IS_NOT") == "what_this_is_not"
+    assert m.stem_of("reply-sent") == "reply_sent"
+    assert m.stem_of("notes") != m.stem_of("note")

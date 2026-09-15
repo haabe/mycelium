@@ -47,7 +47,33 @@ test_noncanvas_path_clean() {
     assert_not_contains "$out" "Schema exists" "schema branch not entered for non-canvas path"
 }
 
+test_same_session_same_canvas_nudges_once() {
+    # v0.212.0: the second write to the same canvas in one session is silent; a new session fires again.
+    local pdir; pdir="$(mktemp -d)"; mkdir -p "$pdir/.claude/state"
+    local j1='{"session_id":"s-1","tool_input":{"file_path":"/p/.claude/canvas/opportunities.yml"}}'
+    local j2='{"session_id":"s-2","tool_input":{"file_path":"/p/.claude/canvas/opportunities.yml"}}'
+    local first second third
+    first="$(run_nudge "$PLUGIN" "$pdir" "$j1")"
+    second="$(run_nudge "$PLUGIN" "$pdir" "$j1")"
+    third="$(run_nudge "$PLUGIN" "$pdir" "$j2")"
+    assert_contains "$first" "Opportunity Solution Tree edited" "first write in a session nudges"
+    assert_eq "$second" "" "second write to the same canvas in the same session is silent"
+    assert_contains "$third" "Opportunity Solution Tree edited" "a new session nudges again"
+    rm -rf "$pdir"
+}
+
+test_no_session_id_keeps_the_old_behaviour() {
+    local pdir; pdir="$(mktemp -d)"; mkdir -p "$pdir/.claude/state"
+    local a b
+    a="$(run_nudge "$PLUGIN" "$pdir" "$OPP_JSON")"; b="$(run_nudge "$PLUGIN" "$pdir" "$OPP_JSON")"
+    assert_contains "$a" "Opportunity Solution Tree edited" "no session id: fires"
+    assert_contains "$b" "Opportunity Solution Tree edited" "no session id: fires again"
+    rm -rf "$pdir"
+}
+
 run_test test_plugin_form_schema_nudge_fires
+run_test test_same_session_same_canvas_nudges_once
+run_test test_no_session_id_keeps_the_old_behaviour
 run_test test_legacy_fallback_no_error
 run_test test_noncanvas_path_clean
 

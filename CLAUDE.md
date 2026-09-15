@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.211.0 -- **Five rules that had lived only in the decision log** (MINOR). A recommended deferral names what it waits on, not only when; recalled friction is version-anchored before it is classified; a public issue tracker is research data for the OST; guardposts have a not-yet path; and the model-variance law (mechanise before trimming prose, never trim and hope) has a home in the design principles.
+*Version 0.212.0 -- **One concept, one spelling; one nudge, one session** (MINOR). `check_key_shape` reports stem collisions: keys that are one concept under several spellings, ranked by whether a plain field exists to fold them into, with a twin that disagrees with the field it copies named as a divergence; `post-write-nudge.sh` emits each canvas's nudge once per session instead of once per write.
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 
