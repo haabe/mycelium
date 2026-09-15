@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://mycelium.dev/schemas/canvas/cycle-history.schema.json",
   "title": "Mycelium Cycle History",
-  "description": "Completed-cycle records. Spec: engine/cycle-learning.md#cycle-record-format; written by /mycelium:retrospective; read by /mycelium:framework-health.\n\nWHY THIS SCHEMA EXISTS (added v0.121.0). This canvas had no schema, so validate_canvas.py reported it parse-checked only and nothing could detect a missing field. Measured on the dogfood repo 2026-08-23: gates_fired, regressions and rework are specified on every cycle record and appeared on ZERO of sixteen \u2014 including a cycle recorded the same day it closed. The prose instruction to write them cites anti-pattern #9 by number and achieved nothing, because no schema and no check stood behind it.\n\nWHAT IS DELIBERATELY *NOT* REQUIRED. gates_fired, regressions and rework are optional here even though they are the fields whose absence prompted this schema. Requiring them would fail every project that has ever recorded a cycle, which is the day-one-wolf failure: a check noisy from the start gets muted, and a muted check looks like coverage. Their absence is reported instead as a WARN-tier coverage finding by check_cycle_recording.py --coverage, which names how many recent cycles omit them and never fails a build.",
+  "description": "Completed-cycle records. Spec: engine/cycle-learning.md#cycle-record-format; written by /mycelium:retrospective; read by /mycelium:framework-health.\n\nWHY THIS SCHEMA EXISTS (added v0.121.0). This canvas had no schema, so validate_canvas.py reported it parse-checked only and nothing could detect a missing field. Measured on the dogfood repo 2026-08-23: gates_fired, regressions and rework are specified on every cycle record and appeared on ZERO of sixteen — including a cycle recorded the same day it closed. The prose instruction to write them cites anti-pattern #9 by number and achieved nothing, because no schema and no check stood behind it.\n\nWHAT IS DELIBERATELY *NOT* REQUIRED. gates_fired, regressions and rework are optional here even though they are the fields whose absence prompted this schema. Requiring them would fail every project that has ever recorded a cycle, which is the day-one-wolf failure: a check noisy from the start gets muted, and a muted check looks like coverage. Their absence is reported instead as a WARN-tier coverage finding by check_cycle_recording.py --coverage, which names how many recent cycles omit them and never fails a build.",
   "type": "object",
   "required": [
     "cycles"
@@ -92,7 +92,7 @@
             "meta-dogfood",
             "observation"
           ],
-          "description": "Only product-leaf feeds confidence calibration. meta-dogfood and observation carry no ICE BY DESIGN \u2014 they are excluded from aggregates, not missing from them."
+          "description": "Only product-leaf feeds confidence calibration. meta-dogfood and observation carry no ICE BY DESIGN — they are excluded from aggregates, not missing from them."
         },
         "reconstructed_post_hoc": {
           "type": [
@@ -259,7 +259,7 @@
             "object",
             "null"
           ],
-          "description": "POST-DELIVERY defects inside the 14-day window. This is NOT a measure of how much of the cycle's own work was caused by earlier incomplete work \u2014 that quantity has no field yet.",
+          "description": "POST-DELIVERY defects inside the 14-day window. This is NOT a measure of how much of the cycle's own work was caused by earlier incomplete work — that quantity has no field yet.",
           "properties": {
             "post_delivery_corrections": {
               "type": [
@@ -333,11 +333,16 @@
       },
       "allOf": [
         {
-          "description": "MECHANIZES AN EXISTING PROSE GATE. /mycelium:retrospective already says a product-leaf cycle must not be written with a zero ICE total, and offers an honest reconstruction (flagged reconstructed_post_hoc) as the remedy. That rule lived only in skill prose and nothing enforced it. It cannot break existing records that honour it, and it fires exactly where calibration would silently ingest a zero.",
+          "description": "MECHANIZES AN EXISTING PROSE GATE. /mycelium:retrospective already says a product-leaf cycle must not be written with a zero ICE total, and offers an honest reconstruction (flagged reconstructed_post_hoc) as the remedy. That rule lived only in skill prose and nothing enforced it. It cannot break existing records that honour it, and it fires exactly where calibration would silently ingest a zero. v0.207.0: the exemption the description names is now wired. A row flagged reconstructed_post_hoc: true is exempt, because the honest value for a leaf whose estimate was never set is no value; the gate keeps firing on every row opened live (dogfood 2026-09-03: cycle-020 could not be recorded because the flag was declared and not read by this conditional).",
           "if": {
             "properties": {
               "cycle_class": {
                 "const": "product-leaf"
+              },
+              "reconstructed_post_hoc": {
+                "not": {
+                  "const": true
+                }
               }
             },
             "required": [

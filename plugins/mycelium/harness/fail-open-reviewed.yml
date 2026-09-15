@@ -360,6 +360,19 @@ reviewed:
     github_api_confirms, broad handler (0.205.0): DNS, TLS and timeout on the API call
     return None, same downstream path as above (UNKNOWN, printed, never rot). The broad
     except is the documented rule 1 of the module: a failed probe means WE could not look.
+- id: validate_canvas.py@fff2363de6
+  verdict: accepted
+  reason: >-
+    sub_opportunity_findings (0.207.0): returns [] on an unreadable opportunities.yml for the
+    reason every advisory reader in this file gives — the validator's fail-loud pass has already
+    reported the unparseable file by name before the advisory tier runs, so a second line here
+    would double-report, and an advisory that raised would take the whole canvas check down.
+- id: validate_canvas.py@063ed88dcc
+  verdict: accepted
+  reason: >-
+    affects_entries_findings (0.207.0): same contract as the sibling above, on landscape.yml.
+    An unreadable file has no relations to resolve, not zero of them, and the fail-loud pass
+    names it first.
 # ---------------------------------------------------------------------------
 # accepted — flagged as "appears to speak", confirmed by reading.
 # ---------------------------------------------------------------------------

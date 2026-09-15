@@ -61,6 +61,7 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
    - Look for frequency across interviews, not just intensity in one.
 
 4. **Structure hierarchically**: Group related opportunities. Identify parent-child relationships.
+   Record children in the parent's `sub_opportunities` (declared field since v0.207.0): a string is the id of a sibling opportunity and must resolve (`validate_canvas` warns when it does not); an object is an inline sub-case that is not a node of its own and carries `id` and `name`. Honest limit: `ost-render` does not walk this field yet, so the structure is read by the validator and by humans, not drawn.
    - Before structuring, ensure each opportunity has been examined from **all three trio perspectives** (product, design, engineering). Product lens sees user value; design lens sees experience gaps; engineering lens sees technical constraints or enablers.
    - Classify each opportunity's **Cynefin domain** (clear/complicated/complex). Complex-domain opportunities must produce probes (experiments), not fully-designed solutions. See `${CLAUDE_PLUGIN_ROOT}/engine/cynefin-routing.md`.
 

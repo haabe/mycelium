@@ -4,6 +4,16 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-14.
 
+## v0.207.0 - five fields get the reader they were declared for
+
+Five dogfood candidates from 2026-08-25 to 09-03, closed on the second backlog pass of 2026-09-15. Each is a field that existed and was read by nothing, or a rule whose own description named an exemption it did not implement.
+
+- **`schemas/canvas/cycle-history.schema.json`**: the product-leaf ICE conditional's own description said an honest reconstruction "flagged `reconstructed_post_hoc`" was the remedy, and the conditional did not read the flag, so cycle-020 (a leaf archived with no estimate ever set) could not be recorded and north-star's "Waste prevented" undercounted by one in prose for twelve days. The `if` now excludes `reconstructed_post_hoc: true`; every row opened live is gated exactly as before.
+- **`schemas/canvas/opportunities.schema.json`** and **`validate_canvas.py`**: `sub_opportunities` was a bare array read by nothing since v0.1 while ost-builder step 4 told every run to record parent-child relationships into it. Items are now a sibling id (must resolve; `WARN (sub-opportunity)` when it does not) or an inline sub-case object with `id` and `name`, which is the two shapes the dogfood canvas had already grown. ost-builder says which is which and that ost-render does not draw the field yet.
+- **`schemas/canvas/landscape.schema.json`** and **`validate_canvas.py`**: a decision record can say an id was considered and deliberately not acted on; an entity record could not, so 18 one-off key names carried "this sharpens / contradicts / supersedes that" across 110 dogfood components. `affects_entries[]` is the one key: `id`, `relation` (sharpens, contradicts, supersedes, duplicates, extends), `landed` (true, false, null) and `note`. The validator warns on an id that does not resolve and on `landed: false` with no note.
+- **`schemas/canvas/opportunities.schema.json`** and **`check_purpose_stance.py`**: `written_by` on a stance block was the unwired half of a declared pair; `confirmed_by` alone cannot tell an unconfirmed agent-written block from a founder-written one. Declared beside `confirmed_by` and `derived_at`, and the COVERAGE line now counts "N stance block(s) written by the agent and not confirmed by a human".
+- **`check_instrument_contract.py`**: it scanned `.claude/evals/assumption-tests/` and nothing else, so it reported "problems: 0" while `human-tasks.yml#ht-060` carried a prediction one day past its horizon; the task-staleness rule caught it as "untouched 32d" and offered to nudge a contact the task forbade nudging. A new section, PREDICTIONS IN THE CANVAS, OUTSIDE THE CONTRACT, walks every canvas file for `frozen_prediction` beside a `horizon`, and reports due / live / scored / undated. Not counted as problems and not asked to move; canvas-health 8c(a) now says "due for scoring" instead of offering the three stale-task remedies. Three tests.
+
 ## v0.206.0 - a metric that cannot go overdue never will
 
 Four dogfood candidates, closed on the first backlog pass of 2026-09-15.

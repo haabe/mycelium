@@ -778,3 +778,16 @@ def test_coverage_survives_a_missing_opportunities_file(canvas):
         allow_unicode=True, sort_keys=False))
     line = m.purpose_stance_coverage(canvas)
     assert "checked 0 of 0 solution(s)" in line
+
+
+def test_coverage_counts_agent_written_unconfirmed_stances(canvas):
+    """v0.207.0: written_by was declared beside confirmed_by and read by nothing."""
+    m = _mod()
+    doc = _purpose(canvas)
+    _sol(canvas, stance={"written_by": "agent", "confirmed_by": None,
+                         "pp-001": {"verdict": "preserves", "note": "no login"}})
+    (canvas / "purpose.yml").write_text(yaml.safe_dump(
+        {**doc, "purpose_properties": _props(m, doc, [BINDING])},
+        allow_unicode=True, sort_keys=False))
+    line = m.purpose_stance_coverage(canvas)
+    assert "1 stance block(s) written by the agent and not confirmed by a human" in line

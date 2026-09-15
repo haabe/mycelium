@@ -83,6 +83,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import yaml
+
 #: Where instruments live. A single directory, because a checker needs somewhere to
 #: look and "wherever the session happened to be standing" is how a 102-day-old
 #: frozen prediction goes unnoticed in an untracked scratch repo.
@@ -500,6 +502,80 @@ def _emit_runnable(r: dict) -> None:
         print(f"  {name} (runs_on {how}, {shown} days live){flag}")
 
 
+CANVAS_DIR = Path(".claude") / "canvas"
+SCORED_KEYS = ("prediction_scored", "scored", "scored_at", "score", "outcome")
+_CANVAS_WALK_DEPTH = 12
+
+
+def _classify_canvas_prediction(node: dict, canvas: str, today: _dt.date, res: dict) -> None:
+    label = f"{canvas}#{node.get('id', '?')}"
+    horizon = _parse_date(str(node.get("horizon") or node.get("score_by") or ""))
+    if any(k in node for k in SCORED_KEYS):
+        res["scored"].append(label)
+    elif horizon is None:
+        res["undated"].append(label)
+    elif horizon < today:
+        res["due"].append((label, str(horizon), (today - horizon).days))
+    else:
+        res["live"].append((label, str(horizon)))
+
+
+def canvas_predictions(root: Path, today: _dt.date) -> dict[str, list]:
+    """Frozen predictions that live in canvas files, outside the instruments directory.
+
+    v0.207.0. This check scanned `.claude/evals/assumption-tests/` and nothing else, so on
+    2026-09-03 it reported "problems: 0" while `human-tasks.yml#ht-060` carried a prediction
+    frozen 2026-08-02 with a horizon one day past. What noticed was the task-staleness
+    rule, which called it "untouched 32d" and offered to nudge a contact the task's own
+    `do_not` forbade nudging. A prediction beside a horizon is the same object this check
+    governs wherever it lives. Reported, never required to move: a prediction separated
+    from the task it is about is the one that goes unscored.
+
+    Scored is inferred from any of SCORED_KEYS on the same node; a task closed with no
+    such key and a passed horizon is DUE, and that is the finding the staleness rule
+    pointed at the wrong remedy.
+    """
+    res: dict[str, list] = {"due": [], "live": [], "scored": [], "undated": []}
+    cdir = root / CANVAS_DIR
+    if not cdir.is_dir():
+        return res
+    for path in sorted(cdir.glob("*.yml")):
+        try:
+            doc = yaml.safe_load(path.read_text(encoding="utf-8"))
+        except (yaml.YAMLError, OSError):
+            continue  # parse failures belong to validate_canvas
+        _walk_canvas_predictions(doc, path.stem, today, res)
+    return res
+
+
+def _walk_canvas_predictions(node, canvas: str, today: _dt.date, res: dict, depth: int = 0):
+    if depth > _CANVAS_WALK_DEPTH:
+        return
+    if isinstance(node, dict):
+        if "frozen_prediction" in node:
+            _classify_canvas_prediction(node, canvas, today, res)
+        for v in node.values():
+            _walk_canvas_predictions(v, canvas, today, res, depth + 1)
+    elif isinstance(node, list):
+        for v in node:
+            _walk_canvas_predictions(v, canvas, today, res, depth + 1)
+
+
+def _emit_canvas_predictions(cp: dict[str, list]) -> None:
+    total = sum(len(v) for v in cp.values())
+    if not total:
+        return
+    print(f"\nPREDICTIONS IN THE CANVAS, OUTSIDE THE CONTRACT — {total}: {len(cp['due'])} due "
+          f"for scoring, {len(cp['live'])} live, {len(cp['scored'])} scored, "
+          f"{len(cp['undated'])} with no horizon. Not counted as problems and not asked to "
+          f"move: a prediction beside the task it is about is where it gets scored.")
+    for label, when, days in cp["due"]:
+        print(f"  DUE     {label} (horizon {when}, {days} days ago) — score it; this is not "
+              f"a stale task and the remedy is not a nudge")
+    for label in cp["undated"]:
+        print(f"  UNDATED {label} — a prediction with no horizon can never be overdue")
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Check the instrument output contract.")
     ap.add_argument("--root", default=".", help="project root containing .claude/")
@@ -580,6 +656,7 @@ def main(argv=None) -> int:
          lambda t: f"{t[0]}: {t[1]}")
 
     _emit_runnable(r)
+    _emit_canvas_predictions(canvas_predictions(root, today))
 
     n = len(r["contracted"])
     if r["scored"] and not r["refuted"]:

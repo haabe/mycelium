@@ -1984,3 +1984,41 @@ def test_off_ladder_evidence_type_on_a_purpose_source_is_rejected(tmp_path, scri
     """))
     errors = validator.validate_canvas_against_schema(canvas, validator.build_registry())
     assert any("sources.0.evidence_type" in e for e in errors), errors
+
+
+# --- v0.207.0: sub_opportunities and affects_entries have readers ------------------------
+
+
+def test_a_sub_opportunity_id_that_does_not_resolve_is_reported(tmp_path, scripts_path):
+    validator = _import_validator(scripts_path)
+    (tmp_path / "opportunities.yml").write_text(textwrap.dedent("""\
+        opportunities:
+          - id: opp-001
+            name: parent
+            sub_opportunities: ["opp-002", "opp-999", {id: opp-001-b1, name: inline sub-case}]
+          - id: opp-002
+            name: child
+    """))
+    out = validator.sub_opportunity_findings(tmp_path)
+    assert len(out) == 1 and "opp-999" in out[0]
+
+
+def test_affects_entries_resolve_and_a_bare_non_action_needs_a_note(tmp_path, scripts_path):
+    validator = _import_validator(scripts_path)
+    (tmp_path / "landscape.yml").write_text(textwrap.dedent("""\
+        components:
+          - id: comp-001
+            name: a
+            provenance: {evidence_type: speculation}
+            affects_entries:
+              - {id: comp-002, relation: sharpens, landed: true}
+              - {id: comp-002, relation: contradicts, landed: false}
+              - {id: comp-404, relation: supersedes}
+          - id: comp-002
+            name: b
+            provenance: {evidence_type: speculation}
+    """))
+    out = validator.affects_entries_findings(tmp_path)
+    assert len(out) == 2
+    assert any("comp-404" in w for w in out)
+    assert any("landed: false and no note" in w for w in out)

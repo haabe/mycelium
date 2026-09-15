@@ -1302,9 +1302,82 @@ def print_advisory_warnings(canvas_dir):
         ("stale instruction", stale_instruction_list_findings(canvas_dir)),
         ("provenance dating", provenance_dating_findings(canvas_dir)),
         ("do-not-cite", citation_register_findings(canvas_dir)),
+        ("sub-opportunity", sub_opportunity_findings(canvas_dir)),
+        ("affects entries", affects_entries_findings(canvas_dir)),
     ):
         for w in findings:
             print(f"  WARN ({label}): {w}")
+
+
+def sub_opportunity_findings(canvas_dir):
+    """WARN-tier: a `sub_opportunities` string id must name an opportunity in this file.
+
+    The field was a bare array read by nothing from v0.1 to v0.207.0, while ost-builder
+    step 4 told every run to "identify parent-child relationships" (dogfood 2026-09-02:
+    the instruction had been followed into an inert field, so a founder's proposal to nest
+    52 opportunities was correctly NOT done — it would have produced structure nothing
+    consumed). This is the smallest reader: string items resolve or are reported; object
+    items are inline sub-cases and must carry id and name (the schema enforces that).
+    """
+    path = Path(canvas_dir) / "opportunities.yml"
+    if not path.exists():
+        return []
+    try:
+        data = yaml.safe_load(path.read_text()) or {}
+    except (yaml.YAMLError, OSError):
+        return []
+    opps = data.get("opportunities") if isinstance(data, dict) else None
+    if not isinstance(opps, list):
+        return []
+    ids = {o.get("id") for o in opps if isinstance(o, dict) and o.get("id")}
+    return [
+        f"opportunities.yml: {o.get('id', '?')} lists sub-opportunity '{child}' and no "
+        f"opportunity with that id exists in this file — a child nothing can find is a "
+        f"parent-child relationship recorded for nobody"
+        for o in opps if isinstance(o, dict)
+        for child in o.get("sub_opportunities") or []
+        if isinstance(child, str) and child not in ids
+    ]
+
+
+def affects_entries_findings(canvas_dir):
+    """WARN-tier: an `affects_entries[].id` must name a component in landscape.yml.
+
+    v0.207.0. The relation an entry claims to another entry (sharpens, contradicts,
+    supersedes, ...) had no declared key, so it was carried in 18 one-off key names across
+    110 components and nothing could say whether the claim was acted on. Now it has one
+    key, a `landed` flag, and this resolver.
+    """
+    path = Path(canvas_dir) / "landscape.yml"
+    if not path.exists():
+        return []
+    try:
+        data = yaml.safe_load(path.read_text()) or {}
+    except (yaml.YAMLError, OSError):
+        return []
+    comps = data.get("components") if isinstance(data, dict) else None
+    if not isinstance(comps, list):
+        return []
+    ids = {c.get("id") for c in comps if isinstance(c, dict) and c.get("id")}
+    out = []
+    for c in comps:
+        if not isinstance(c, dict):
+            continue
+        for rel in c.get("affects_entries") or []:
+            if not isinstance(rel, dict):
+                continue
+            target = rel.get("id")
+            if target not in ids:
+                out.append(
+                    f"landscape.yml: {c.get('id', '?')} says it {rel.get('relation', '?')} "
+                    f"'{target}', which is not a component in this file"
+                )
+            elif rel.get("landed") is False and not rel.get("note"):
+                out.append(
+                    f"landscape.yml: {c.get('id', '?')} {rel.get('relation', '?')} '{target}' "
+                    f"with landed: false and no note — a deliberate non-action needs its reason"
+                )
+    return out
 
 
 def dpia_determination_findings(canvas_dir):

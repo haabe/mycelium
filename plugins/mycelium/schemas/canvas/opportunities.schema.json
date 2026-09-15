@@ -104,7 +104,32 @@
             ]
           },
           "sub_opportunities": {
-            "type": "array"
+            "type": "array",
+            "description": "Children of this opportunity (v0.207.0; a bare array with no reader from v0.1 until then). Two item shapes: a string is the id of a sibling opportunity in this file and must resolve (validate_canvas warns when it does not); an object is an inline sub-case that is not a node of its own and must carry id and name. ost-builder writes it; ost-render does not walk it yet, and the ost-builder skill says so.",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^opp-[0-9]{3}$"
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "name"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              ]
+            }
           },
           "solutions": {
             "type": "array",
@@ -153,6 +178,39 @@
                     "null"
                   ],
                   "description": "The skill or surface that minted the leaf (e.g. /mycelium:ost-builder, a scout harvest, a founder ruling). Provenance as a field, not prose (v0.203.0)."
+                },
+                "purpose_stance": {
+                  "type": [
+                    "object",
+                    "null"
+                  ],
+                  "description": "Per-property stance of this leaf against purpose_properties (docs/purpose-stance.md). Keys are pp-NNN ids mapping to {verdict, note, override?}; a few meta keys sit beside them. written_by (v0.207.0) says who authored the block — the agent or a human — which confirmed_by alone cannot tell you: absent confirmation is not evidence of agent authorship.",
+                  "properties": {
+                    "written_by": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "enum": [
+                        "agent",
+                        "human",
+                        null
+                      ]
+                    },
+                    "confirmed_by": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "derived_at": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "additionalProperties": true
                 }
               },
               "additionalProperties": true

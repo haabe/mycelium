@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.206.0 -- **A metric that cannot go overdue never will** (MINOR). `check_target_progress` gains a freshness pass independent of the target: every metric's `as_of` is aged and reported FRESH, STALE or UNDATED, so a live metric with no target can no longer rot green; `/retrospective` names the cycle, not the diamond, as its trigger; `check_key_shape` and `check_field_wiring` each say which question they answer about a one-off key; the kill criterion is surfaced as the invalidation criterion where builders meet it.
+*Version 0.207.0 -- **Five fields get the reader they were declared for** (MINOR). A reconstructed product-leaf cycle may carry no ICE (the exemption the schema described is wired); `sub_opportunities` has an item schema and a resolver; `affects_entries` gives a landscape entry a declared relation to another entry with a `landed` flag; `written_by` on a stance block is declared and counted; frozen predictions in canvas files are visible to the instrument-contract check.
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

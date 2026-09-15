@@ -562,12 +562,19 @@ def purpose_stance_coverage(canvas_dir: Path,
 
     grandfathered = set(pp.get("grandfathered") or [])
     opportunities = _load(canvas_dir / "opportunities.yml")
-    total = checked = 0
+    total = checked = agent_unconfirmed = 0
     if isinstance(opportunities, dict):
         for _opp, sol in _iter_solutions(opportunities):
             total += 1
             if sol.get("id") not in grandfathered:
                 checked += 1
+            # v0.207.0: `written_by` was the unwired half of a declared pair. Read here so
+            # a block the agent wrote and nobody countersigned is a number, not a field
+            # only a human scrolling the file would notice.
+            ps = sol.get("purpose_stance")
+            if (isinstance(ps, dict) and ps.get("written_by") == "agent"
+                    and not ps.get("confirmed_by")):
+                agent_unconfirmed += 1
 
     dpath = diamonds_file or default_diamonds_path(canvas_dir)
     diamonds = _load(dpath)
@@ -578,6 +585,9 @@ def purpose_stance_coverage(canvas_dir: Path,
 
     n_exempt = len(grandfathered)
     line = (f"checked {checked} of {total} solution(s) and {n_diamonds} diamond(s)")
+    if agent_unconfirmed:
+        line += (f"; {agent_unconfirmed} stance block(s) written by the agent and not "
+                 f"confirmed by a human")
     if n_exempt:
         # Said out loud every run: an exemption nobody sees is an exemption that
         # quietly becomes the permanent state of the canvas.
