@@ -66,13 +66,15 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
    - JTBD signals: functional job, emotional job, social job?
    - Any follow-up conversations needed?
 
-3. **Classify the evidence** on Gilad's ladder:
+3. **Version-anchor recalled friction before classifying it (v0.211.0).** When a user reports friction from memory ("it felt heavy", "too many gates"), ask, or read from the task's touch log, which framework version they last used and when, and write it on the evidence entry as `felt_on_version: <version or date>`. A complaint about a build three releases ago is evidence about that build, not about the shipped one. On 2026-08-18 a churn answer described the framework as "cognitively heavy" across three sessions, two of which ran on a pre-BLUF build; the confound was caught by hand only because a task note happened to carry the update date, and it had already reached a confidence number. Classify on the ladder AFTER the anchor is written, and say in the entry whether the friction is known to survive the versions since.
+
+4. **Classify the evidence** on Gilad's ladder:
    - Single conversation -> `anecdotal` (0.3)
    - 2 conversations with consistent signals -> `anecdotal` (0.3), note convergence
    - 3+ triangulated conversations -> `data-supported` (0.5-0.6)
    - Explain the classification: "One conversation is anecdotal evidence. We'd need 2-3 more to call it data-supported."
 
-4. **Update canvas provenance**:
+5. **Update canvas provenance**:
    - Identify the relevant canvas file and section (from the task's `canvas_refs`)
    - **Close the learning-target loop** (per `engine/canvas-guidance.yml#learning_target_coupling`): if any answered question carried a `[target → <file>#<anchor>]` tag, route the captured evidence to that exact entry, then prompt whether the open gap can now move — ON HOLD → OPEN, RE-GATED → met, or a confidence bump. Logging the evidence and retiring the gap are separate steps; the tag makes the second one explicit. If the awaited answer did NOT arrive, say so — the absence is itself a finding (the gap stays open with a note).
    - If the canvas entry has NO provenance object yet (early project), create one:
@@ -91,7 +93,7 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
    - Update `confidence` score with explicit reasoning
    - Update `captured_at` timestamp
 
-5. **Close the source task — coupled to the evidence-write, not a separate afterthought** (`.claude/canvas/human-tasks.yml`):
+6. **Close the source task — coupled to the evidence-write, not a separate afterthought** (`.claude/canvas/human-tasks.yml`):
 
    Writing evidence and closing the task that produced it are *one* action, not two. The drift `/canvas-health` sub-check `8c(b)` catches — "evidence exists but the task is still open" — forms precisely when step 4 lands and this step is skipped. Do not report the evidence as logged until this is done.
    - **Default (evidence answers the task)**: move the task from `pending_tasks` to `completed_tasks`. Record: `completed_at`, `evidence_logged_to` (the canvas file#anchor from step 4), `key_findings`, `source_class: external_human`.

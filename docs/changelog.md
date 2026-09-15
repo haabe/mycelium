@@ -4,6 +4,15 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-14.
 
+## v0.211.0 - five rules that had lived only in the decision log
+
+Five dogfood candidates, three to seven months old, closed on the sixth backlog pass of 2026-09-15. Each is a rule the dogfood project had already learned and written in its decision log, and that the framework's own surfaces did not carry.
+
+- **`bvssh-check`**: a recommended deferral says what it is waiting on. Capacity-deferred work gets a date; evidence-gated work names the dependency and who holds it, with a review date rather than a due date. Three evidence-gated items were framed as capacity-deferred on 2026-05-23, and three horizons set through a holiday expired into "findings" on 2026-08-18; a deferral that names its dependency waits instead of expiring.
+- **`log-evidence`**: recalled friction is version-anchored before it is classified (`felt_on_version`). A complaint about a build three releases ago is evidence about that build. On 2026-08-18 a churn answer reached a confidence number with two of its three sessions on a pre-BLUF build, and the confound was caught only because a task note happened to carry the update date.
+- **`ost-builder`**: a public issue tracker is research data. The dogfood reader classified 15 of 53 open issues into actionable shapes on its first run where a Reddit scout of the same shape produced nothing in 46 runs; 72% came back unclassified, so it is data for a human to read, not an automatic tree. The reader itself stays a dogfood prototype; what ships is the input named in the contract.
+- **`harness/design-principles.md`**, two sections. *Guardposts have four paths*: not-yet, where a check runs before the event it observes could have happened, and its correct-by-its-own-logic false positive is never a finding; rediscovered twice and missed once in one day. *Model variance*: convert judgement-assuming prose to a model-agnostic mechanism, then trim, never trim and hope; three enforcement tiers, and prose enforced by a Claude Code hook is still the only enforcement the hookless tier has. The 07-25 law that the dogfood log carried for seven weeks now has a surface a framework author reads.
+
 ## v0.210.0 - a check that fails on the state its own contract predicts gates nothing
 
 Four dogfood candidates closed and one declined, on the fifth backlog pass of 2026-09-15.

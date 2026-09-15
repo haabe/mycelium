@@ -53,7 +53,7 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
    `rolls_up_to` resolves; untagged opportunities in a multi-root file are an error, not a
    default-to-first.
 
-2. **Review all research data**: Interview transcripts, behavioral data, analytics, observation notes.
+2. **Review all research data**: Interview transcripts, behavioral data, analytics, observation notes — and, for a project with a public issue tracker, its open issues and discussions (v0.211.0). Issues are invited, structured statements of the opportunity space by the people who have it; the dogfood reader classified 15 of 53 open issues across two repos into actionable shapes on its first run (artifact requests, invited feedback, open questions, design decisions) while a Reddit scout of the same shape produced zero engage candidates in 46 runs. Honest limits: 72% of issues came back unclassified, so the tracker is research data for a human to read, not an automatic tree; and a reader is not a user.
 
 3. **Extract opportunities** (unmet needs, pain points, desires):
    - Each opportunity must cite at least 2 evidence sources.

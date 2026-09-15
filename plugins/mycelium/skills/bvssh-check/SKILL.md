@@ -144,6 +144,8 @@ Overall: [summary and recommended actions]
 
 Any **Red** cell (either table) gets a bolded `**Red**` + a one-line `Blocking:`-style callout under its table — never left as an undifferentiated table value.
 
+**A recommended deferral says what it is waiting on, not only when (v0.211.0).** Two kinds of deferral have opposite remedies and one date-shaped sentence hides which is which. **Capacity-deferred** work waits on the founder's hours: give it a date. **Evidence-gated** work waits on someone else to act (a cohort's output, a reply, a third party's calendar): name the dependency and who holds it, and give it a review date, not a due date. Every deferral in the recommended actions carries one of the two words. On 2026-05-23 a run framed three evidence-gated items as capacity-deferred; on 2026-08-18 three horizons set through a holiday expired and were read as findings. A deferral that names its dependency does not expire, it waits.
+
 ## Canvas (MANDATORY — the source of truth, do this FIRST)
 
 `.claude/canvas/bvssh-health.yml` is the canonical record. The decision log is provenance; the canvas is what the framework READS. Write the canvas before the decision log — if only one of the two lands, it must be this one.

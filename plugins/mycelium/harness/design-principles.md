@@ -55,6 +55,38 @@ Mycelium's guardrails are built on **Theory Y**: they exist to *elevate a capabl
 
 Extrinsic reward crowds out intrinsic motivation — the **overjustification effect**. Never gamify the framework's own discipline loop (points, badges, streaks, XP, leaderboards). It substitutes a token for the craft and collapses the moment the token stops mattering. Full detection rule and the boundary with legitimate *end-user* reward design: `${CLAUDE_PLUGIN_ROOT}/harness/anti-patterns.md` → "Gamified Discipline (Overjustification)".
 
+## Guardposts have four paths, not three (the not-yet path)
+
+Checks, gates and watchers are designed against happy, sad and bad paths: the expected input, the
+wrong input, the malformed input. A fourth path exists wherever the designed thing observes state
+produced by an event OUTSIDE itself: **not yet**, the state where the check runs before the event
+it observes could have happened. Its signature failure is a false positive that is correct by the
+check's own logic — "no outcome landed" reported as "missed" on the day the leaf shipped, a freshness
+check reporting STALE the morning after a retune, a version pin permanently DRIFT on a benign
+expected state. The framework rediscovered the path from scratch twice in one day (`/metrics-pull`
+step 8b's lag gate; `check_scout_freshness.py`) and missed it once the same morning. Name it at
+design time: every check that reads an event's consequences states what it reports before the
+event could have occurred, and that report is never a finding. Scope: checks, gates, guardposts,
+watchers. A pure input validator has no not-yet state, and a permanently N/A column is the noise
+this rule exists to prevent.
+
+## Model variance: convert prose to mechanism, then trim; never trim and hope
+
+A harness serving heterogeneous models cannot shed constraints on the assumption of strong-model
+judgement. The model owner's advice to remove most of the system prompt and trust the model is the
+model owner's luxury; it does not transfer to a framework whose users run Codex, Cursor, opencode,
+Aider and older open models. The move is always the same: convert a judgement-assuming rule into a
+model-agnostic mechanism (a validator, a hook, a schema enum, a gate with teeth), which holds on any
+model, and only then trim the now-redundant prose. Enforcement is three tiers: Claude Code, where
+hooks fire; Codex and Cursor, where they fire only if the user ran the installer (unmeasured); and
+runtimes with no hook layer, where prose is the only carrier. Prose that is enforced by a Claude Code
+hook is still the only enforcement tier three has, so a rule mechanised in tier one keeps its
+sentence for tier three. Measured on the operating contract (2026-08-28): zero trim candidates; the
+audit's value was the build list. And a hard rule measured at 16% compliance, down from 29% while
+advisory, is the number that says stricter wording moves the wrong way. The Goodhart pair is
+scaffold token cost against first-pass success on a weaker model and a non-Claude harness; a trim
+looks free until both are read.
+
 ## The chat is a UI — perception & cognitive-load axioms (Mycelium's own interface)
 
 The motivation layer above governs *whether* the human stays willing. This layer governs *whether the output lands* once they are. An agentic chat has no visual canvas to lay out — the interface **is** the text stream — so the classic UX axioms (Hick, Miller, Zeigarnik…) apply to *how the agent emits*, not to pixels. Most of the Communication Rules in `CLAUDE.md` are already applied UX axioms; naming them makes the discipline auditable and surfaces the ones we under-exploit.
