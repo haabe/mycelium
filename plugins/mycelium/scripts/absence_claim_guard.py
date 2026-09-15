@@ -362,6 +362,22 @@ def scan(text: str) -> tuple[list[str], int]:
     return out, skipped
 
 
+#: Rule ids, one per `_ABSENCE` pattern, by position. THE SIGNATURE HASHES THE RULE, NOT
+#: THE SENTENCE (v0.216.0, register row guard-ledgers-cannot-tell-appropriate-overrides-
+#: from-noise, scored on ht-091): the sentence-hash made every fire a distinct signature,
+#: so a re-fire in the same session, the one event the ledger exists to count, was
+#: structurally impossible to see (34 fires, 34 signatures, an override rate of 0% that
+#: measured nothing). Sentry fingerprint rules and Alertmanager group_by both group on the
+#: stable rule for the same reason. The ids are positional so a pattern edit does not
+#: renumber the ledger; append new patterns at the end.
+_RULE_IDS = [f"absence-{i:02d}" for i in range(len(_ABSENCE))]
+
+
+def rules_hit(sentence: str) -> list[str]:
+    """Ids of every `_ABSENCE` pattern matching one sentence, in table order."""
+    return [rid for rid, p in zip(_RULE_IDS, _ABSENCE, strict=True) if p.search(sentence)]
+
+
 def findings(text: str) -> list[str]:
     """Absence-shaped sentences that name no search. Empty means nothing to say.
 
@@ -519,6 +535,7 @@ def _log(hook: str, fires: int, first_match: str, signature: str,
             "hook": hook,
             "fires": fires,
             "signature": signature,
+            "rules": ctx.get("rules") or [],
             "first_match": first_match[:120],
             "file": file,
             "session": session,
@@ -535,8 +552,9 @@ def report(root: Path) -> str:
     path = root / ".claude" / "state" / "absence-claim-guard-log.jsonl"
     if not path.is_file():
         return "absence-claim-guard: no log yet (no fires recorded here)"
-    fires = changed = 0
+    fires = changed = refires = 0
     sigs: set[str] = set()
+    seen_in_session: set[tuple[str, str]] = set()
     for raw in path.read_text(encoding="utf-8", errors="replace").splitlines():
         try:
             row = json.loads(raw)
@@ -545,11 +563,20 @@ def report(root: Path) -> str:
         fires += 1
         sigs.add(str(row.get("signature")))
         changed += bool(row.get("prior_fire_changed_text"))
+        # A re-fire is the same RULE set in the same session (rows from 0.216.0 carry
+        # `rules`; earlier rows hashed the sentence and cannot re-fire by construction).
+        if row.get("rules") and row.get("session"):
+            key = (str(row["session"]), "|".join(row["rules"]))
+            refires += key in seen_in_session
+            seen_in_session.add(key)
     ratio = f"{changed / fires:.0%}" if fires else "n/a"
-    return (f"absence-claim-guard: {fires} fire(s), {len(sigs)} distinct sentence(s), "
+    return (f"absence-claim-guard: {fires} fire(s), {len(sigs)} distinct signature(s), "
+            f"{refires} re-fire(s) of the same rule in the same session, "
             f"{changed} followed by a re-write of that file without the quoted sentence "
-            f"({ratio}). The fire count is not a safety record; the ratio is the "
-            f"instrument. Rows written before 0.213.0 carry no file and never count.")
+            f"({ratio}). The fire count is not a safety record; the re-fire count and the "
+            f"ratio are the instruments. Rows written before 0.213.0 carry no file and "
+            f"never count toward the ratio; rows before 0.216.0 carry no rule and never "
+            f"count as re-fires.")
 
 
 def main() -> int:
@@ -572,12 +599,14 @@ def main() -> int:
         quoted += (f"\n    ({skipped} mention(s) inside backticks, block quotes or a "
                    f"caught/trigger field were skipped: a record of a catch is not a claim. "
                    f"Re-read them if one is yours.)")
-    signature = hashlib.sha256(hits[0].encode()).hexdigest()[:10]
+    rules = sorted({r for h in hits for r in rules_hit(h)})
+    signature = hashlib.sha256("|".join(rules).encode()).hexdigest()[:10]
     tool_input = payload.get("tool_input") if isinstance(payload.get("tool_input"), dict) else {}
     file = os.path.basename(str(tool_input.get("file_path") or ""))
     _log("absence-claim-guard", len(hits), hits[0], signature, {
         "file": file, "session": str(payload.get("session_id") or ""),
-        "text": _payload_text(str(payload.get("tool_name") or ""), tool_input)})
+        "text": _payload_text(str(payload.get("tool_name") or ""), tool_input),
+        "rules": rules})
     print(json.dumps({
         "hookSpecificOutput": {
             "hookEventName": "PreToolUse",

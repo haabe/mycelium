@@ -29,6 +29,7 @@ Scenario-per-guardpost:
 """
 
 import json
+import os
 import subprocess
 import sys
 
@@ -647,9 +648,38 @@ def test_report_prints_the_changed_ratio_not_only_the_fire_count(scripts_path, t
     r = subprocess.run([sys.executable, str(scripts_path / SCRIPT), "--report"],
                        capture_output=True, text=True, check=False,
                        env={**os.environ, "CLAUDE_PROJECT_DIR": str(project)})
-    assert "2 fire(s), 2 distinct sentence(s), 1 followed by a re-write" in r.stdout
+    assert "2 fire(s), 1 distinct signature(s), 1 re-fire(s) of the same rule in the same session, 1 followed by a re-write" in r.stdout
     assert "(50%)" in r.stdout
     r2 = subprocess.run([sys.executable, str(scripts_path / SCRIPT), "--report"],
                         capture_output=True, text=True, check=False,
                         env={**os.environ, "CLAUDE_PROJECT_DIR": str(tmp_path / "empty")})
     assert "no log yet" in r2.stdout
+
+
+# --- v0.216.0: the signature hashes the rule, so a re-fire in one session is countable ----
+
+
+def test_signature_is_stable_across_sentences_that_hit_the_same_rule(scripts_path, tmp_path, monkeypatch):
+    """Two different sentences, one rule: one signature, and the second is a re-fire."""
+    monkeypatch.setenv("CLAUDE_PROJECT_DIR", str(tmp_path))
+    for sentence in ("No need covers vocabulary.", "No need covers the reply either."):
+        payload = json.dumps({"tool_name": "Write", "session_id": "s1",
+                              "tool_input": {"file_path": CANVAS, "content": sentence}})
+        r = _run(scripts_path, payload)
+        assert r.returncode == 0 and r.stdout.strip()
+    rows = [json.loads(x) for x in
+            (tmp_path / ".claude/state/absence-claim-guard-log.jsonl").read_text().splitlines()]
+    assert len(rows) == 2 and rows[0]["signature"] == rows[1]["signature"]
+    assert rows[0]["rules"] and rows[0]["rules"] == rows[1]["rules"]
+    out = subprocess.run([sys.executable, str(scripts_path / SCRIPT), "--report"],
+                         capture_output=True, text=True, check=False,
+                         env={**os.environ, "CLAUDE_PROJECT_DIR": str(tmp_path)}).stdout
+    assert "1 re-fire(s) of the same rule in the same session" in out
+
+
+def test_rules_hit_names_the_positional_rule_ids(scripts_path):
+    sys.path.insert(0, str(scripts_path))
+    import absence_claim_guard as g
+    ids = g.rules_hit("Nothing checks the summary against the body.")
+    assert ids and all(i.startswith("absence-") for i in ids)
+    assert g.rules_hit("confidence 0.45 holds") == []

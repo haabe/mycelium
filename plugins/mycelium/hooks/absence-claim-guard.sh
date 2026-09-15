@@ -12,6 +12,9 @@
 # auto-memory rule against exactly this already existed and did not fire, because
 # notes are read at session start and decay. This fires at the write.
 #
+# The ledger row carries a rule_id list and a signature hashed from the RULES that
+# fired, not the sentence (v0.216.0), so a re-fire of the same rule in one session
+# is countable; see scripts/absence_claim_guard.py `_RULE_IDS`.
 # Contract: exit 0 silent = nothing to say; exit 0 + JSON additionalContext =
 # warn. NEVER denies — absence findings are frequently correct and valuable, and
 # a guard that blocks real work gets disabled. Fails open.

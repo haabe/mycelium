@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.215.0 -- **Three reports for what the gates never asked** (MINOR). The validator resolves every `file.yml#key` pointer and reports the ones that name nothing; an opportunity-shape report says whether each OST node reads as a user need, as a triage list and never a gate; a retirement report lists every skill, hook and check with its last evidence of use and its readers, and the decision stays with the maintainer.
+*Version 0.216.0 -- **Two loops that could not close** (MINOR). The calibration loop gets its ratchet: the validator says when a threshold's calibration became possible and did not happen, when its file blames the wrong reason, and which terminal leaves never fed it; the absence guard's ledger hashes the rule that fired instead of the sentence, so a warned-and-carried-on re-fire is countable for the first time.
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

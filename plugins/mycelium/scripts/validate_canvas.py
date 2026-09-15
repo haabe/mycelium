@@ -1732,7 +1732,11 @@ def cycle_record_findings(canvas_dir):
         spec.loader.exec_module(mod)
         # v0.199.0: the same module also checks the record against itself (summary vs list,
         # a pass row that caught something). Same WARN tier, same reasons.
-        return mod.cycle_field_coverage(cycle_file) + mod.cycle_integrity_findings(cycle_file)
+        # v0.216.0: two more from the same module — a calibration that became possible
+        # and did not happen, and a terminal leaf that never fed the loop.
+        return (mod.cycle_field_coverage(cycle_file) + mod.cycle_integrity_findings(cycle_file)
+                + mod.calibration_due_findings(canvas_dir)
+                + mod.terminal_leaf_without_cycle_findings(canvas_dir))
     except Exception:  # noqa: BLE001 — a broken advisory check must never fail a build
         return []
 

@@ -2140,3 +2140,78 @@ def test_opportunity_shape_summary_is_a_coverage_line(tmp_path, scripts_path):
     """))
     line = validator.opportunity_shape_summary(canvas)
     assert line.startswith("framework: n=1 mean=0.00 <=1: 1")
+
+
+# --- v0.216.0: calibration that became possible and did not happen; terminal leaf, no cycle
+
+
+def _ccr(scripts_path):
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("_ccr_t", scripts_path / "check_cycle_recording.py")
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m
+
+
+def _cycle_canvas(tmp_path, cycles, thresholds=None, solutions=None):
+    canvas = tmp_path / ".claude" / "canvas"
+    canvas.mkdir(parents=True, exist_ok=True)
+    import yaml as _y
+    (canvas / "cycle-history.yml").write_text(_y.safe_dump({"cycles": cycles}, sort_keys=False))
+    if thresholds is not None:
+        (canvas / "thresholds.yml").write_text(_y.safe_dump({"thresholds": thresholds}))
+    if solutions is not None:
+        (canvas / "opportunities.yml").write_text(_y.safe_dump(
+            {"opportunities": [{"id": "opp-1", "solutions": solutions}]}, sort_keys=False))
+    return canvas
+
+
+def test_calibration_due_fires_when_the_input_count_reaches_the_minimum(tmp_path, scripts_path):
+    m = _ccr(scripts_path)
+    cycles = [{"cycle_class": "product-leaf", "calibration": {"ice_accuracy": 0.8}} for _ in range(3)]
+    cycles.append({"cycle_class": "product-leaf", "reconstructed_post_hoc": True,
+                   "calibration": {"ice_accuracy": 0.9}})
+    cycles += [{"cycle_class": "meta-dogfood", "calibration": {"ice_accuracy": None,
+                                                                 "effort_accuracy": "x"}}] * 5
+    canvas = _cycle_canvas(tmp_path, cycles, thresholds={
+        "ice_advance": {"based_on_n": 0, "minimum_n": 3},
+        "confidence_calibration": {"based_on_n": 0, "minimum_n": 3},
+        "cycle_recording_arc": {"based_on_n": 2, "minimum_n": 5},
+        "evidence_staleness": {"user_needs": {}},
+    })
+    assert m.calibration_input_counts(canvas / "cycle-history.yml")["ice_advance"] == 3
+    out = m.calibration_due_findings(canvas)
+    assert len(out) == 2
+    assert any("ice_advance: calibration is due" in w and "3 product-leaf cycles" in w for w in out)
+    assert any("confidence_calibration: uncalibrated because 0 of 9" in w for w in out)
+
+
+def test_calibration_due_is_silent_without_thresholds_or_below_every_minimum(tmp_path, scripts_path):
+    m = _ccr(scripts_path)
+    canvas = _cycle_canvas(tmp_path, [{"cycle_class": "meta-dogfood"}])
+    assert m.calibration_due_findings(canvas) == []
+    canvas = _cycle_canvas(tmp_path, [{"cycle_class": "meta-dogfood"}],
+                           thresholds={"ice_advance": {"based_on_n": 0, "minimum_n": 10}})
+    assert m.calibration_due_findings(canvas) == []
+
+
+def test_a_terminal_leaf_without_a_cycle_is_reported(tmp_path, scripts_path):
+    m = _ccr(scripts_path)
+    canvas = _cycle_canvas(tmp_path, [{"leaf_id": "sol-001", "cycle_class": "product-leaf"}],
+                           solutions=[{"id": "sol-001", "status": "shipped"},
+                                      {"id": "sol-002", "status": "ARCHIVED-2026-08-02"},
+                                      {"id": "sol-003", "status": "candidate"},
+                                      {"id": "not-a-leaf", "status": "shipped"}])
+    out = m.terminal_leaf_without_cycle_findings(canvas)
+    assert len(out) == 1 and "sol-002" in out[0] and "ARCHIVED-2026-08-02" in out[0]
+
+
+def test_the_validator_carries_both_cycle_findings(tmp_path, scripts_path):
+    validator = _import_validator(scripts_path)
+    canvas = _cycle_canvas(tmp_path, [{"leaf_id": "x", "cycle_class": "product-leaf",
+                                       "calibration": {"ice_accuracy": 0.5}}],
+                           thresholds={"ice_advance": {"based_on_n": 0, "minimum_n": 1}},
+                           solutions=[{"id": "sol-009", "status": "discarded"}])
+    out = validator.cycle_record_findings(canvas)
+    assert any("calibration is due" in w for w in out)
+    assert any("sol-009" in w for w in out)

@@ -130,6 +130,17 @@ If cycle count ≥ minimum_n for any threshold in `.claude/canvas/thresholds.yml
 - Update calibrated values
 - Log changes in .claude/harness/decision-log.md
 
+**The ratchet (added 0.216.0).** `validate_canvas.py` now carries two findings from
+`check_cycle_recording.py` so this step cannot be skipped silently: `calibration is due` when the
+eligible input count for a threshold has reached its `minimum_n` while `based_on_n` is still 0, and
+`uncalibrated because N of M cycles are <class> cycles carrying <field>` when the count is below the
+minimum but the total is not, which is the case a `calibration_status` note blaming the cycle count
+gets wrong (the dogfood canvas carried that note for three months against 17 cycles and a minimum of
+10; the real reason was zero product-leaf cycles with a non-null `ice_accuracy`). A third finding
+names every solution leaf in a terminal state with no cycle row, because that is how the loop goes
+unfed. Neither computes a value: calibrating a product threshold on meta-dogfood cycles is a category
+error, and the output is the prompt with the numbers in it.
+
 ### 4. Check Goodhart Counter-Metrics
 
 For each dimension, verify the counter-metric is not degrading:

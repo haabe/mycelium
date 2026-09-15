@@ -568,6 +568,126 @@ def _contradictory_gate_rows(cycles):
     ]
 
 
+#: Which recorded field feeds each calibratable threshold, and which cycle class it may be
+#: calibrated on. Product thresholds calibrate on product-leaf cycles only: the dogfood
+#: register (2026-09-01) measured 15 meta-dogfood cycles against 0 product-leaf and named
+#: calibrating a PRODUCT threshold on framework-maintenance cycles a category error.
+_CALIBRATION_INPUT = {
+    "ice_advance": ("product-leaf", "ice_accuracy"),
+    "confidence_calibration": ("product-leaf", "risk_accuracy"),
+    "bakeoff_delta": ("product-leaf", "ice_accuracy"),
+    "cycle_recording_arc": (None, "effort_accuracy"),
+}
+#: A solution status that is a terminal state in engine/cycle-learning.md's sense
+#: (launched, archived, killed), in the spellings canvases actually use.
+_TERMINAL_STATUS = re.compile(
+    r"^(shipped|launched|launch-validated|discarded|killed|archived|validated|rejected|not-built)",
+    re.IGNORECASE)
+_LEAF_ID = re.compile(r"^sol-", re.IGNORECASE)
+
+
+def _load_yaml(path):
+    try:
+        return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    except (OSError, yaml.YAMLError):
+        return {}
+
+
+def calibration_input_counts(cycle_file):
+    """threshold -> number of cycles carrying the input it calibrates from (class-filtered,
+    reconstructed rows excluded, as engine/cycle-learning.md excludes them from aggregates)."""
+    data = _load_yaml(Path(cycle_file))
+    cycles = data.get("cycles") if isinstance(data, dict) else None
+    counts = dict.fromkeys(_CALIBRATION_INPUT, 0)
+    for c in cycles or []:
+        if not isinstance(c, dict) or c.get("reconstructed_post_hoc") is True:
+            continue
+        cal = c.get("calibration") if isinstance(c.get("calibration"), dict) else {}
+        for name, (klass, field) in _CALIBRATION_INPUT.items():
+            if (klass is None or c.get("cycle_class") == klass) and cal.get(field) is not None:
+                counts[name] += 1
+    return counts
+
+
+def calibration_due_findings(canvas_dir):
+    """WARN-tier: a threshold whose calibration became possible and did not happen, and a
+    threshold whose own file says why it is uncalibrated with a reason the record contradicts.
+
+    v0.216.0, from the register row adaptive-thresholds-calibration-loop-cannot-close
+    (2026-09-01, corrected the same day). The framework ships the FIELDS (`based_on_n`,
+    `minimum_n`) and five consumers of thresholds.yml, and nothing computed the step between:
+    `_meta.calibration_status` on the dogfood canvas blamed a cycle count of 17 against a
+    minimum of 10 for three months. Two findings, both ratchets in the shape check_fail_open
+    uses: (1) the eligible input count has reached `minimum_n` while `based_on_n` is still 0;
+    (2) `based_on_n` is 0, the count is BELOW the minimum, and the count is also below the
+    total cycle count, so the honest reason is "no eligible cycles carry the input", not
+    "too few cycles". Never calibrates anything: the output is a prompt with the numbers in
+    it, and calibrating a product threshold on meta cycles is a category error.
+    """
+    canvas = Path(canvas_dir)
+    thresholds = _load_yaml(canvas / "thresholds.yml")
+    table = thresholds.get("thresholds") if isinstance(thresholds, dict) else None
+    cycle_file = canvas / "cycle-history.yml"
+    if not isinstance(table, dict) or not cycle_file.exists():
+        return []
+    counts = calibration_input_counts(cycle_file)
+    total = len(_load_yaml(cycle_file).get("cycles") or [])
+    out = []
+    for name, entry in table.items():
+        if not isinstance(entry, dict) or name not in _CALIBRATION_INPUT:
+            continue
+        based_on, minimum = entry.get("based_on_n"), entry.get("minimum_n")
+        if not isinstance(minimum, int) or based_on not in (0, None):
+            continue
+        klass, field = _CALIBRATION_INPUT[name]
+        have = counts[name]
+        scope = f"{klass} cycles" if klass else "cycles"
+        if have >= minimum:
+            out.append(f"thresholds.yml#{name}: calibration is due — {have} {scope} carry "
+                       f"`calibration.{field}` against minimum_n {minimum}, and based_on_n is "
+                       f"still 0. Run the framework-health calibration step; the value is not "
+                       f"computed here")
+        elif total >= minimum:
+            out.append(f"thresholds.yml#{name}: uncalibrated because {have} of {total} cycles "
+                       f"are {scope} carrying `calibration.{field}` (minimum_n {minimum}), not "
+                       f"because the cycle count is low; a calibration_status note blaming the "
+                       f"count is stale")
+    return out
+
+
+def terminal_leaf_without_cycle_findings(canvas_dir):
+    """WARN-tier: a solution leaf in a terminal state with no cycle record naming it.
+
+    engine/cycle-learning.md line 7: every leaf that reaches a terminal state generates a
+    cycle record. The dogfood canvas (2026-09-01) had three `sol-` leaves at VALIDATED or
+    DISCARDED and no cycle for any, which is why `calibration.ice_accuracy` had no input and
+    `ice_advance` sat at based_on_n 0 with the precondition long met: the loop was never fed.
+    Measured before shipping: 22 terminal solutions without a cycle on that canvas, 4 with.
+    The finding names the leaf and its status; recording the cycle is the remedy, and a
+    reconstructed record with null calibration fields is the honest shape for old ones.
+    """
+    canvas = Path(canvas_dir)
+    opps = _load_yaml(canvas / "opportunities.yml")
+    cycles = _load_yaml(canvas / "cycle-history.yml")
+    if not isinstance(opps, dict) or not isinstance(cycles, dict):
+        return []
+    leaves = {str(c.get("leaf_id")) for c in (cycles.get("cycles") or []) if isinstance(c, dict)}
+    out = []
+    for opp in opps.get("opportunities") or []:
+        if not isinstance(opp, dict):
+            continue
+        for sol in opp.get("solutions") or []:
+            if not isinstance(sol, dict):
+                continue
+            sid, status = str(sol.get("id", "")), str(sol.get("status") or "")
+            if _LEAF_ID.match(sid) and _TERMINAL_STATUS.match(status) and sid not in leaves:
+                out.append(f"opportunities.yml#{sid}: status `{status}` is terminal and no "
+                           f"cycle-history.yml row carries leaf_id {sid}; the calibration loop "
+                           f"was not fed (engine/cycle-learning.md: every terminal leaf "
+                           f"generates a cycle record)")
+    return out
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Fail when framework releases have accumulated with no meta-dogfood cycle."

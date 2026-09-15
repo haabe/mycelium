@@ -401,6 +401,14 @@ reviewed:
     (dated and entity-scoped keys) still runs on the text. A new canvas file has no prior
     spellings to collide with; a broken one is the sweep's finding, not this guard's. Advisory
     hook, must never break a write.
+- id: check_cycle_recording.py@10262e6ce8
+  verdict: accepted
+  reason: >-
+    _load_yaml, missing or unparseable thresholds.yml / cycle-history.yml / opportunities.yml
+    (0.216.0): returns an empty mapping, so calibration_due_findings and
+    terminal_leaf_without_cycle_findings report nothing for that file. Both are WARN-tier
+    advisories inside the validator; a malformed canvas file is the schema tier's finding,
+    and the release-cadence half of this script still exits 2 on its own preconditions.
 - id: check_retirement_candidates.py@2eb6be8b21
   verdict: accepted
   reason: >-

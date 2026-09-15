@@ -658,6 +658,19 @@ writes would evict real opportunities, which is worse than the drift. Rule on th
 batches; when the first run of the prototype measured both roots at 47% low, it killed the agent's
 own eviction proposal, which is the shape of a report doing its job.
 
+## The calibration loop: fed, due, or blamed on the wrong reason (added v0.216.0)
+
+Three `WARN (cycle record)` lines from `validate_canvas.py`, computed by `check_cycle_recording.py`:
+a threshold whose eligible input count has reached `minimum_n` with `based_on_n` still 0
+(`calibration is due`; run the framework-health calibration step); a threshold that is uncalibrated
+because too few cycles of the right class carry the input, while the total cycle count is past the
+minimum (so a note blaming the count is stale); and a solution leaf in a terminal state with no
+cycle-history row naming it as `leaf_id`. engine/cycle-learning.md line 7: every terminal leaf
+generates a cycle record. On the dogfood canvas at shipping, 22 terminal solutions had no cycle and
+4 did, and every product threshold read "0 of 24 cycles are product-leaf cycles carrying
+`calibration.ice_accuracy`". Recording the missing cycles is the remedy; a reconstructed row with
+null calibration fields is the honest shape for old ones and is excluded from the counts.
+
 ## A claim of novelty says what it was checked against (added v0.208.0, founder ruling 2026-09-14)
 
 ```bash
