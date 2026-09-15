@@ -9,7 +9,7 @@ metadata:
 
 # Retrospective
 
-Run after every completed delivery diamond or significant milestone. Source: Forsgren (learning culture).
+Run after every completed **cycle**: a solution leaf reaching a terminal state (launched, archived, killed), or a framework-development arc that shipped. Not only after a diamond completes — a diamond at L0 to L2 can stay open for months while cycles close under it weekly. Measured on the dogfood repo (2026-08-30): 17 cycles in 116 days, median 3.5 days apart, while every diamond stayed open the whole time; the earlier wording ("after every completed delivery diamond or significant milestone") named two units forty times apart and the load-bearing one was the vague one. Source: Forsgren (learning culture).
 
 ## Preflight: Read target canvas file(s) before any Write/Edit
 

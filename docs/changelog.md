@@ -4,6 +4,15 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-14.
 
+## v0.206.0 - a metric that cannot go overdue never will
+
+Four dogfood candidates, closed on the first backlog pass of 2026-09-15.
+
+- **`scripts/check_target_progress.py`** (candidate 2026-09-02): a north-star input metric with no `target_value` reported `n/a` and could never be reported overdue, so "Waste prevented" sat active for 17 days reading 0 while the one check that read it stayed green. A second pass now ages every metric that carries `target_value`, by its `as_of` (on the node or inside a dict-valued `current_value`), independently of whether a target exists: FRESH, STALE (over `--stale-days`, default 30) or UNDATED. Undated is reported too, because a metric with no `as_of` cannot go overdue, which is the same hole one layer down. Report-only; `--strict` stays about targets. The candidate's other half, age "against a declared source", is not built: no canvas field names a source today, and the docstring says so. First run on the dogfood canvas: 3 fresh, 1 stale (User satisfaction, 89 days), 4 undated. Four tests.
+- **`retrospective/SKILL.md`** (candidate 2026-08-30): the trigger read "after every completed delivery diamond or significant milestone", two units forty times apart on the dogfood canvas (17 cycles in 116 days, median 3.5 days apart, every diamond open throughout), and the load-bearing half was the vague one. It now names the cycle.
+- **`check_key_shape.py` and `check_field_wiring.py`** (candidate 2026-09-02): they returned opposite verdicts on the same one-off dated key, and both were right. Each docstring now says which question it answers: field-wiring asks whether a FIELD has a consumer (a one-off cannot be a field, so `_MIN_USES = 2`); key-shape asks whether a KEY is carrying content (a one-off dated key is the purest case). Opposite verdicts are two questions, not a contradiction. No behaviour change.
+- **`define-done/SKILL.md` and `engine/diamond-rules.md`** (candidate 2026-09-02): `kill_criterion` is a completion path named as a termination; every kill on the dogfood canvas states what to RETHINK, not what to abandon, and the Deliver→Complete gate passes on it. The prose builders meet now calls it the invalidation criterion, with the schema key kept so nothing breaks. The candidate also named `diamond-progress` and `diamond-assess`; neither carries kill prose today (grep 2026-09-15), so there was nothing to alias there.
+
 ## v0.205.1 - two verdict cases the port had not pinned
 
 Tests only. When the dogfood project retired its private copy of `check_evidence_links.py` (2026-09-15) and its tests, two of those tests had no twin in the shipped suite: a browser verdict of `unclear` keeps the citation UNKNOWN and clears `needs_browser_check` (forcing ok or gone would invent an answer), and a browser verdict older than `--browser-verify-days` is asked for again. Both now live in `tests/python/test_check_evidence_links.py` (16 tests). No script change.

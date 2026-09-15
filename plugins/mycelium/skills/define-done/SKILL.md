@@ -39,7 +39,7 @@ Ask these in order. The teaching is in the **sequencing** (problem → signal �
 **3. *(optional)* "Is there a point where it's ENOUGH?"** → `threshold`, only if one genuinely fits.
    A number is **optional, not mandatory** — directional outcomes are legitimate. When you do set one, pair it with a qualitative guard ("3 warm bodies who bounce ≠ done") so it can't be gamed (Goodhart).
 
-**4. Pre-mortem for the kill-criterion.** Ask in the past tense: *"It's [review date]. This diamond failed. What happened?"* (premortem finds ~30% more real failure reasons than "might it fail?" — Klein). From the answer derive a concrete **state + date** that means *kill, not finish*:
+**4. Pre-mortem for the invalidation criterion** (schema key `kill_criterion`; the name is the worst reading of what it is — a pre-committed state and date at which the goal is shown WRONG, which is a completion path, not a termination; see `diamond-rules.md` Deliver→Complete). Ask in the past tense: *"It's [review date]. This diamond failed. What happened?"* (premortem finds ~30% more real failure reasons than "might it fail?" — Klein). From the answer derive a concrete **state + date** that means *kill, not finish*:
    - `state` — an objective benchmark that means this goal is **wrong**.
    - `date` — the review date by which the state must hold. Pre-commit BOTH, before the data (anti-HARKing).
    Invalidation-with-evidence at that date is a legitimate "done" — routed through `/mycelium:diamond-progress kill` + `dogfood-mode`, not silently declared.
@@ -96,7 +96,7 @@ definition_of_done:
     guardrail:   "<counter-metric that must NOT worsen while `signal` improves — Goodhart guard (advisory: downgrades a 'met' to 'met-with-regression')>"
     last_checked: null                                                # stamped by /metrics-pull when the outcome-check runs
   rolls_up_to: "<parent diamond id + which parent outcome this serves>"  # child diamonds only
-  kill_criterion:
+  kill_criterion:                                                       # the invalidation criterion; schema key kept for compatibility
     state: "<concrete benchmark that means this goal is WRONG>"
     date:  "<YYYY-MM-DD review date by which state must hold>"
     premortem: "<the failure it was generated from>"
@@ -152,7 +152,7 @@ one more thing to satisfy first.
 
 - **No checklist theatre** — step 1 rejects "what you built"; the field is an outcome.
 - **No Goodhart** — number optional; when set, pair with a qualitative guard.
-- **Kill-path honesty** — done-by-invalidation requires the pre-committed state+date to have actually **fired with evidence** at the scheduled gate, logged via `dogfood-mode` + decision-log. It is not a way to declare failed work done.
+- **Invalidation-path honesty** — done-by-invalidation requires the pre-committed state+date to have actually **fired with evidence** at the scheduled gate, logged via `dogfood-mode` + decision-log. It is not a way to declare failed work done.
 - **Problem-first sequencing** prevents the metric-availability trap (picking the number you can measure over the outcome you care about).
 
 ## Provisional wording

@@ -12,6 +12,7 @@ WAYS THIS COULD ROT:
      covers a fraction of its population while printing a pass.
   3. IT PASSES OVER NOTHING. No canvas, or no targets at all, must refuse rather than pass.
 """
+import datetime
 import importlib.util
 import sys
 from pathlib import Path
@@ -112,3 +113,53 @@ def test_a_canvas_with_no_targets_at_all_refuses_rather_than_passing(tmp_path, m
     rc, out = _main(monkeypatch, d, "--strict")
     assert rc == 1
     assert "NOT A PASS" in out
+
+
+# --- v0.206.0: the freshness pass is independent of the target ----------------------------
+
+
+def test_freshness_reads_as_of_inside_a_dict_current_value(tmp_path):
+    m = _mod()
+    d = _canvas(tmp_path, {"input_metrics": [
+        {"name": "Waste prevented", "target_value": None,
+         "current_value": {"killed": 2, "as_of": "2026-09-02"}},
+    ]})
+    fresh, stale, undated = m.scan_freshness(d, datetime.date(2026, 9, 14), 30)
+    assert [r[1] for r in fresh] == ["Waste prevented"]
+    assert "12 days ago" in fresh[0][2]
+    assert stale == [] and undated == []
+
+
+def test_a_metric_with_no_target_can_still_be_stale(tmp_path):
+    """The defect: no target meant n/a meant never overdue, so a live metric rotted green."""
+    m = _mod()
+    d = _canvas(tmp_path, {"input_metrics": [
+        {"name": "Waste prevented", "target_value": None,
+         "current_value": {"killed": 0, "as_of": "2026-06-18"}},
+    ]})
+    fresh, stale, undated = m.scan_freshness(d, datetime.date(2026, 9, 14), 30)
+    assert [r[1] for r in stale] == ["Waste prevented"]
+    assert "88 days ago (limit 30)" in stale[0][2]
+
+
+def test_an_undated_metric_is_reported_as_unable_to_go_overdue(tmp_path):
+    m = _mod()
+    d = _canvas(tmp_path, {"input_metrics": [
+        {"name": "Adoption", "target_value": 10, "current_value": 3},
+        {"name": "Odd", "target_value": 1, "as_of": "not-a-date"},
+    ]})
+    fresh, stale, undated = m.scan_freshness(d, datetime.date(2026, 9, 14), 30)
+    labels = sorted(r[1] for r in undated)
+    assert labels == ["Adoption", "Odd"]
+    assert any("cannot go overdue" in r[2] for r in undated)
+    assert any("unreadable" in r[2] for r in undated)
+
+
+def test_freshness_is_printed_and_never_fails_strict(tmp_path, monkeypatch):
+    d = _canvas(tmp_path, {"input_metrics": [
+        {"name": "Old", "target_value": 5, "current_value": {"v": 1, "as_of": "2020-01-01"}},
+    ]})
+    rc, out = _main(monkeypatch, d, "--strict", "--today", "2026-09-14", "--stale-days", "30")
+    assert rc == 0                       # measured against a target; stale is report-only
+    assert "1 STALE (> 30 d)" in out
+    assert "STALE      [north-star] Old" in out

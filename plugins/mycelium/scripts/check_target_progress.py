@@ -29,6 +29,7 @@ rather than measure it — the exact inversion the field exists to prevent.
 from __future__ import annotations
 
 import argparse
+import datetime
 import sys
 from pathlib import Path
 
@@ -73,6 +74,42 @@ def classify(node: dict, canvas: str) -> tuple[str, tuple[str, str, str]]:
     return "na", (canvas, label, detail)
 
 
+STALE_DAYS_DEFAULT = 30
+
+
+def _as_of(node: dict):
+    """The metric's own `as_of`, on the node or inside a dict-valued current_value."""
+    for holder in (node, node.get("current_value")):
+        if isinstance(holder, dict) and holder.get("as_of") is not None:
+            return str(holder["as_of"])[:10]
+    return None
+
+
+def freshness(node: dict, canvas: str, today: datetime.date, stale_days: int):
+    """(bucket, row) for the freshness pass: FRESH / STALE / UNDATED.
+
+    INDEPENDENT OF THE TARGET, on purpose (dogfood 2026-09-02). A metric with no
+    `target_value` reports `n/a` above and could never be reported overdue, so
+    north-star's "Waste prevented" sat active for 17 days reading 0 while the one check
+    that read it stayed green. Age is a fact about the measurement, not about the target;
+    a metric that carries an `as_of` can be stale whether or not anything compares it.
+    UNDATED is reported too: a metric with no `as_of` cannot go overdue, which is the same
+    hole one layer down. The candidate also asked for age "against a declared source";
+    no canvas field names a source today, so that half is not built.
+    """
+    label = _label(node, "<unnamed>")
+    stamp = _as_of(node)
+    if stamp is None:
+        return "undated", (canvas, label, "no `as_of` — cannot go overdue, so it never will")
+    try:
+        age = (today - datetime.date.fromisoformat(stamp)).days
+    except ValueError:
+        return "undated", (canvas, label, f"`as_of` unreadable ({stamp!r})")
+    if age > stale_days:
+        return "stale", (canvas, label, f"as_of {stamp}, {age} days ago (limit {stale_days})")
+    return "fresh", (canvas, label, f"as_of {stamp}, {age} days ago")
+
+
 def scan(canvas_dir: Path):
     """Return (measured, unmeasured, not_applicable) triples of (canvas, label, detail)."""
     measured, unmeasured, na = [], [], []
@@ -98,11 +135,39 @@ def scan(canvas_dir: Path):
     return measured, unmeasured, na
 
 
+def scan_freshness(canvas_dir: Path, today: datetime.date, stale_days: int):
+    """(fresh, stale, undated) rows over every node that carries `target_value`."""
+    fresh, stale, undated = [], [], []
+
+    def walk(node, canvas: str, depth: int = 0):
+        if depth > _MAX_DEPTH:
+            return
+        if isinstance(node, dict):
+            if "target_value" in node:
+                bucket, row = freshness(node, canvas, today, stale_days)
+                {"fresh": fresh, "stale": stale, "undated": undated}[bucket].append(row)
+            for val in node.values():
+                walk(val, canvas, depth + 1)
+        elif isinstance(node, list):
+            for val in node:
+                walk(val, canvas, depth + 1)
+
+    for path in sorted(canvas_dir.glob("*.yml")):
+        try:
+            walk(yaml.safe_load(path.read_text()), path.stem)
+        except (yaml.YAMLError, OSError):
+            continue
+    return fresh, stale, undated
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--canvas-dir", default=".claude/canvas")
     ap.add_argument("--strict", action="store_true",
                     help="exit 1 when a target has never been measured against")
+    ap.add_argument("--stale-days", type=int, default=STALE_DAYS_DEFAULT,
+                    help="freshness pass: an as_of older than this is STALE (report-only)")
+    ap.add_argument("--today", default=None, help="override for testing (YYYY-MM-DD)")
     args = ap.parse_args()
 
     canvas_dir = Path(args.canvas_dir)
@@ -129,6 +194,23 @@ def main() -> int:
     if unmeasured:
         print("\n  A TARGET NOTHING IS MEASURED AGAINST CANNOT FAIL, and a bar that cannot fail\n"
               "  is not a bar. Either measure it, or say in the entry why it is aspirational.")
+
+    # The freshness pass (v0.206.0), independent of the target pass above: age is a fact
+    # about the measurement. Report-only; --strict stays about targets.
+    today = (datetime.date.fromisoformat(args.today) if args.today
+             else datetime.datetime.now().astimezone().date())
+    fresh, stale, undated = scan_freshness(canvas_dir, today, args.stale_days)
+    print("\nFreshness (how old is each measurement, target or no target?)")
+    print(f"  {len(fresh)} fresh, {len(stale)} STALE (> {args.stale_days} d), "
+          f"{len(undated)} undated")
+    for canvas, label, detail in stale:
+        print(f"  STALE      [{canvas}] {label}: {detail}")
+    for canvas, label, detail in undated:
+        print(f"  UNDATED    [{canvas}] {label}: {detail}")
+    if stale or undated:
+        print("  A metric that cannot go overdue never will. Restamp `as_of` when the number is\n"
+              "  re-read, and give an undated metric one, or say in the entry that it is not\n"
+              "  re-read on a cadence.")
     return 1 if (args.strict and unmeasured) else 0
 
 

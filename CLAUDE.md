@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.205.1 -- **Two verdict cases the port had not pinned** (PATCH). Tests only: a browser verdict of `unclear` keeps a citation UNKNOWN and stops the ask; a browser verdict older than the verify window is asked for again. Both were pinned in the dogfood tree's private tests, retired 2026-09-15 when that tree switched to the shipped script.
+*Version 0.206.0 -- **A metric that cannot go overdue never will** (MINOR). `check_target_progress` gains a freshness pass independent of the target: every metric's `as_of` is aged and reported FRESH, STALE or UNDATED, so a live metric with no target can no longer rot green; `/retrospective` names the cycle, not the diamond, as its trigger; `check_key_shape` and `check_field_wiring` each say which question they answer about a one-off key; the kill criterion is surfaced as the invalidation criterion where builders meet it.
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

@@ -16,6 +16,14 @@ clothes, and it is invisible to everything that reasons about fields:
 
 MEASURED at the ruling: 527 such keys across 8 canvases, 226 in human-tasks.yml alone.
 
+TWO CHECKS, TWO QUESTIONS, ONE KEY (ruled 2026-09-15). `check_field_wiring.py` skips a key
+used once (`_MIN_USES = 2`: "a key used once is an annotation, not a field") and this check
+flags it. Both are right, because they ask different things: field-wiring asks whether a
+FIELD has a consumer, and a one-off cannot be a field; this check asks whether a KEY is
+carrying content, and a one-off dated key is the purest case of exactly that. A key that
+field-wiring ignores and this check flags is not a disagreement to reconcile; it is a
+sentence in key position, which is the defect.
+
 THE FOUNDER'S WORDS: content like this belongs in VALUES, not in key names.
 
   # instead of

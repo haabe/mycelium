@@ -71,7 +71,11 @@ _MIN_TOKEN = 2
 #: sentences and be muted within a day.
 _LIVE_FIELD_RE = re.compile(r"^[a-z][a-z0-9_]{2,34}$")
 
-#: Minimum uses before a live canvas key counts as a field at all.
+#: Minimum uses before a live canvas key counts as a field at all. A key used once is an
+#: annotation, not a field, and is NOT this check's business; it is `check_key_shape.py`'s,
+#: which asks the other question (is this key carrying content?) and flags exactly the
+#: one-offs skipped here. Opposite verdicts on the same key are two questions, not a
+#: contradiction (ruled 2026-09-15).
 _MIN_USES = 2
 
 #: Where the per-project baseline lives. Canvas content is project-specific, so unlike
