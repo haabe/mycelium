@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.218.0 -- **A value that names its source, and a builder's own row** (MINOR). A canvas value may be a `source_ref` pointer resolved at read time instead of a transcribed copy, with a check that reports every cache that disagrees with its source; `/mycelium:count` prints a builder's own north-star row from their own record and sends nothing anywhere.
+*Version 0.219.0 -- **The async interview, the inline obligation, and the hand-typed number** (MINOR). `/user-interview` gains an async drip mode (two questions a message, the next pair chosen from the answers), the four agent-contract files a hook-less run trimmed now restate the do-not-trim obligation at the top, and the validator reports every north-star number that carries neither a `source_ref` nor a stated manual reason.
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

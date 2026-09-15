@@ -172,6 +172,17 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
    - Any screenshots or artifacts
    - Your overall impression in a sentence or two"
 
+## Async drip brief (added v0.219.0)
+
+When the brief is for an async exchange rather than a meeting, write it as pairs: a permission
+message, then three or four pairs of two story-based questions each, then the closing question
+("that's all from me; any closing thoughts?"). Say in the brief that the next pair goes out only
+after the previous pair is answered, and that the sender chooses the next pair from the answers,
+which is where the follow-up lives. Shape and evidence in `/mycelium:user-interview` § Async drip
+mode (one practitioner, 9 of 10 completions, self-reported). Needs no scheduling, no calendar
+overlap, no timezone and no video, which for a solo builder is the largest single unit of friction
+the discovery loop removes; it is a second mode, not a replacement for the live brief.
+
 ## Canvas Output
 
 - Writes to: `.claude/canvas/human-tasks.yml` (pending_tasks section)

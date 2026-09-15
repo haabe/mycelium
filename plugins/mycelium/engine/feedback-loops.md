@@ -1,5 +1,7 @@
 # Mycelium Feedback Loop System
 
+> **`agent_contract` file (engine/audience-register.md): the wording is the mechanism where hooks do not fire. Do not trim it for concision, and do not rewrite it in a doc-tightening pass.** On 2026-08-18 a hook-less run asked to "tighten these docs by about 20%" cut this file by 81% and a sibling by 85% while the register saying not to sat open; with the runtime hooks installed (`install-runtime-hooks.sh <runtime>`) the same model left both untouched. The rule is restated here because a rule behind a link did not reach the edit.
+
 Feedback loops are how Mycelium learns, corrects, and improves. They operate at four speeds, mapped to Argyris's learning levels and Meadows's leverage points.
 
 ## Kim's Three Ways of DevOps (The DevOps Handbook, 2016; Wiring the Winning Organisation, 2023)

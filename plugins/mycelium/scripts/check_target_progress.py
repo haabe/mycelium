@@ -40,7 +40,15 @@ _MAX_DEPTH = 12
 
 
 def _numeric(value):
-    """A value we can actually subtract. bool is excluded: True is not a measurement."""
+    """A value we can actually subtract. bool is excluded: True is not a measurement.
+
+    A `{value: N, source_ref: ...}` or `{value: N, manual: ...}` mapping (0.218.0 derived
+    fields, 0.219.0 hand-typed ratchet) reads as N: the pointer or the reason travels with
+    the number, and a reader that saw only a dict would turn the north star's own row into
+    n/a the day it gained a stated reason.
+    """
+    if isinstance(value, dict) and "value" in value:
+        value = value["value"]
     if isinstance(value, bool):
         return None
     if isinstance(value, (int, float)):

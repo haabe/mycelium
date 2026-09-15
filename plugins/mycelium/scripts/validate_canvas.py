@@ -1315,6 +1315,7 @@ def print_advisory_warnings(canvas_dir):
         ("stale blocker", stale_blocker_findings(canvas_dir)),
         ("cross-reference", cross_reference_findings(canvas_dir)),
         ("off-outcome root", off_north_star_root_findings(canvas_dir)),
+        ("hand-typed metric", hand_typed_metric_findings(canvas_dir)),
     ):
         for w in findings:
             print(f"  WARN ({label}): {w}")
@@ -2001,6 +2002,58 @@ def off_north_star_root_findings(canvas_dir):
                        f"needs a date and a condition on which it is resolved or retired, or it "
                        f"is a parking lot with a label")
     return out
+
+
+_NS_METRIC_ROOTS = ("metric", "input_metrics")
+
+
+def _hand_typed(node, label, out, depth=0):
+    if depth > _XREF_DEPTH:
+        return
+    if isinstance(node, dict):
+        if "source_ref" in node or "manual" in node:
+            return
+        for k, v in node.items():
+            _hand_typed(v, f"{label}.{k}", out, depth + 1)
+    elif isinstance(node, list):
+        for i, v in enumerate(node):
+            _hand_typed(v, f"{label}[{i}]", out, depth + 1)
+    elif isinstance(node, int | float) and not isinstance(node, bool):
+        out.append((label, node))
+
+
+def hand_typed_metric_findings(canvas_dir):
+    """WARN-tier: a numeric north-star value with no `source_ref` and no stated `manual` reason.
+
+    v0.219.0, register row canvas-field-ships-without-the-computation-that-fills-it (dogfood
+    2026-06-07, registered 2026-08-18): a canvas field with a measurable signal can ship with no
+    computation behind it, validate, and read "not measured yet" indefinitely; every consumer
+    inherits a null it cannot tell from a real zero. `north-star.yml` → Waste prevented named
+    its own source in prose ("tracked via cycle-history.yml terminal_state counts") and read 0
+    for 17 days after that source moved. The 0.218.0 `source_ref` pointer is the computation
+    carrier; this is the ratchet that asks each numeric value to carry one or to say why not
+    (`{value: 0, manual: "needs a live API call"}`). Report only.
+    """
+    path = Path(canvas_dir) / "north-star.yml"
+    if not path.exists():
+        return []
+    try:
+        data = yaml.safe_load(path.read_text()) or {}
+    except (yaml.YAMLError, OSError):
+        return []
+    if not isinstance(data, dict):
+        return []
+    rows = []
+    metric = data.get("metric")
+    if isinstance(metric, dict) and "current_value" in metric:
+        _hand_typed({"current_value": metric["current_value"]}, "metric", rows)
+    for i, m in enumerate(data.get("input_metrics") or []):
+        if isinstance(m, dict) and "current_value" in m:
+            _hand_typed({"current_value": m["current_value"]},
+                        f"input_metrics[{m.get('id') or m.get('name') or i}]", rows)
+    return [f"north-star.yml#{label} = {value}: hand-typed, no `source_ref` and no `manual` "
+            f"reason; a number nothing computes reads as measured and rots unseen"
+            for label, value in rows]
 
 
 def main():

@@ -4,6 +4,14 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-14.
 
+## v0.219.0 - the async interview, the inline obligation, and the hand-typed number
+
+Three dogfood candidates closed on the fourteenth backlog pass of 2026-09-15.
+
+- **Async drip mode** in `/user-interview`, with the matching brief shape in `/handoff` (candidate 2026-08-26): a practitioner in the target population ran his discovery async over DMs and got 9 completions from 10 asks (N=1, self-reported, six weeks after the fact, said so in the skill). The framework had modelled async as "one-shot, no follow-ups"; the drip is the follow-up mechanism, two questions per message and the next pair chosen from the answers, six to eight questions per person, closed with "any closing thoughts?", which by his account produced the most valuable feedback. A second mode with its own shape, not a replacement for the live interview and not a default. Recorded with `mode: async-drip` and the pair counts so a second account can corroborate or split the N=1.
+- **Inline obligation on agent-contract files** (candidate 2026-08-18, revised the same day after an A/B): a hook-less Codex run asked to tighten docs cut `harness/anti-patterns.md` by 81% and `engine/feedback-loops.md` by 85% while `engine/audience-register.md`, which says not to, sat open; the same model with `install-runtime-hooks.sh codex` run left both untouched. The enforcement ports and the prose does not, so 0.213.0 made the missing manifest visible at session start; this release adds the belt-and-braces half the row's probe asks for: the obligation restated at the top of the four files that were trimmed, because a rule behind a link did not reach the edit. Still not bindingness, and the register says so.
+- **`validate_canvas.hand_typed_metric_findings`** (candidate 2026-06-07, registered 2026-08-18): every numeric value under the north star's `current_value` blocks that carries neither a `source_ref` (0.218.0) nor a `manual` reason is a `WARN (hand-typed metric)`. A field with a measurable signal that ships without its computation reads "not measured yet" indefinitely, and every consumer inherits a null it cannot tell from a real zero. Dogfood at shipping: nine such values; five took pointers, four a stated reason, the same day, and two pointers written at lists `active.yml` does not declare were reported unresolved rather than counted as zero. `check_target_progress._numeric` reads a `{value: N, ...}` mapping as N, so the north star's own row keeps its "0 of 5" line after gaining a stated reason. Two tests.
+
 ## v0.218.0 - a value that names its source, and a builder's own row
 
 Two dogfood candidates closed on the thirteenth backlog pass of 2026-09-15.

@@ -2249,3 +2249,29 @@ def test_an_off_north_star_root_without_a_review_date_is_reported(tmp_path, scri
     assert len(out) == 1
     assert "#parking" in out[0] and "2 opportunities" in out[0]
     assert "`review_by` or `review_condition`" in out[0]
+
+
+# --- v0.219.0: a numeric north-star value carries a source_ref or a manual reason ----------
+
+
+def test_hand_typed_metric_values_are_reported(tmp_path, scripts_path):
+    validator = _import_validator(scripts_path)
+    canvas = tmp_path / ".claude" / "canvas"
+    canvas.mkdir(parents=True)
+    (canvas / "north-star.yml").write_text(textwrap.dedent("""\
+        metric:
+          name: x
+          current_value: 0
+        input_metrics:
+          - id: adoption
+            current_value:
+              stars_total: {source_ref: 'metrics/github#primary_counts.stars', value: 45}
+              watchers_total: 1
+              issues_ever_filed: {value: 0, manual: "needs a live API call"}
+              nested: {deep: 2.5, flag: true}
+    """))
+    out = validator.hand_typed_metric_findings(canvas)
+    assert len(out) == 3
+    assert any("#metric.current_value = 0" in w for w in out)
+    assert any("input_metrics[adoption].current_value.watchers_total = 1" in w for w in out)
+    assert any("nested.deep = 2.5" in w for w in out)

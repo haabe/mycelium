@@ -106,6 +106,39 @@ This is where the most surprising insights surface. The interviewee has been pri
 
 *Source: Brown (EightShapes), NNGroup, IxDF.*
 
+## Async drip mode (added v0.219.0; a second mode, not a degraded live interview)
+
+A practitioner in the target population ran his discovery async over DMs, on purpose, and got
+9 completions from 10 asks (Alper Ortac, Discord DM 2026-08-26, recounting interviews of 15 to 18
+July; N=1, self-reported, recalled six weeks later, response rate his number). No live brief in
+the dogfood project has come near that rate. The framework had modelled async as "one-shot, no
+follow-ups", which is a different and weaker thing. **The drip IS the follow-up mechanism**: a
+live interview needs to be live because story-based probing branches on the answer, and two
+questions at a time reproduce that branching in async at the cost of latency, not depth.
+
+Use this mode when the person cannot be scheduled (a stranger, a timezone, a solo builder who
+will not take a 45-minute call) and the questions can wait a day between pairs. Do not use it to
+replace live interviewing where a call is available; Torres's method depends on probing that
+async slows badly.
+
+**The shape, as practised:**
+
+1. **Recruit where you already are.** Communities the interviewer was already in, people with
+   prior contact. Cold DMs are a different instrument with a different base rate.
+2. **Ask permission first, as its own message.** "Would you be willing to answer a few
+   questions?" All ten said yes; the ask that converts is the permission, not the first question.
+3. **Two questions per message, and the next pair only after the previous pair is answered.**
+   Read the answers, then choose the next pair: this is the branching. Story-based rules above
+   apply unchanged (past behaviour, never hypotheticals).
+4. **Six to eight questions per person in total.** Three or four pairs; stop before fatigue.
+5. **Close with "that's all from me; any closing thoughts?"** The closing question is an
+   instrument, not a courtesy: by his account the most valuable feedback came there. It is the
+   async analogue of the silence a good interviewer leaves at the end.
+
+**Record it the same way.** The post-interview snapshot below applies per person; note
+`mode: async-drip`, the number of pairs sent and answered, and the days between pairs, so a
+second practitioner's account can corroborate or split the N=1 this mode rests on.
+
 ## Output
 - Update .claude/canvas/opportunities.yml with new evidence
 - Update .claude/canvas/user-needs.yml

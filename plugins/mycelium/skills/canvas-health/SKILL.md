@@ -703,6 +703,12 @@ mechanism in prose rotted again 19 days after the diagnosis was written. Report 
 with the source value beside the cache; the write stays a human's, since the cache is what a reader
 without the check sees. A pointer alone, no cache, cannot rot.
 
+**The ratchet (v0.219.0).** `validate_canvas.py` reports every numeric value under `north-star.yml`'s
+`metric.current_value` and `input_metrics[].current_value` that carries neither a `source_ref` nor a
+`manual` reason (`{value: 0, manual: "needs a live API call"}`) as `WARN (hand-typed metric)`. A
+number nothing computes reads as measured and rots unseen; nine on the dogfood canvas at shipping,
+five of which took a pointer and four a stated reason the same day.
+
 ## Fields the canvas writes that no schema declares (added 2026-08-31)
 
 ```bash

@@ -401,6 +401,12 @@ reviewed:
     (dated and entity-scoped keys) still runs on the text. A new canvas file has no prior
     spellings to collide with; a broken one is the sweep's finding, not this guard's. Advisory
     hook, must never break a write.
+- id: validate_canvas.py@a7e642008d
+  verdict: accepted
+  reason: >-
+    hand_typed_metric_findings, unparseable north-star.yml (0.219.0): returns no findings; the
+    schema tier reports the parse failure, and a WARN-tier advisory must not fail a build twice
+    for one defect.
 - id: check_derived_fields.py@ebc370c848
   verdict: accepted
   reason: >-

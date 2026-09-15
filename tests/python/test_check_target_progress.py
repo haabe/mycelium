@@ -179,3 +179,11 @@ def test_off_north_star_root_review_dates_are_reported_overdue_or_pending(tmp_pa
     overdue, pending = m.overdue_root_reviews(canvas, _dt.date(2026, 9, 15))
     assert [r[1] for r in overdue] == ["late"] and [r[1] for r in pending] == ["soon"]
     assert "none stated" in overdue[0][2] and "condition: c" in pending[0][2]
+
+
+def test_a_value_mapping_with_a_pointer_or_reason_reads_as_its_number():
+    m = _mod()
+    assert m._numeric({"value": 3, "source_ref": "x#y"}) == 3.0
+    assert m._numeric({"value": 0, "manual": "why"}) == 0.0
+    assert m._numeric({"value": True}) is None
+    assert m._numeric({"stars": 1}) is None
