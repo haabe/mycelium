@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.216.0 -- **Two loops that could not close** (MINOR). The calibration loop gets its ratchet: the validator says when a threshold's calibration became possible and did not happen, when its file blames the wrong reason, and which terminal leaves never fed it; the absence guard's ledger hashes the rule that fired instead of the sentence, so a warned-and-carried-on re-fire is countable for the first time.
+*Version 0.217.0 -- **The two justifiers that had no gate, and the door from a record to a cycle** (MINOR). Landscape and Capacity gates at NUDGE tier with a mechanical join that reports any primary theory ungated at its scale; a scale-occupancy diagnostic plus the ost-builder and ice-score exits that open a cycle from the catalogue; an off-outcome root must carry a review date.
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 
@@ -45,7 +45,7 @@ Conflicting product/design/engineering perspectives → structured resolution in
 
 ## Theory Gates (Decision Checkpoints)
 
-Every diamond transition must pass applicable gates from: Evidence, Four Risks, JTBD, Cynefin, Bias, Security, Privacy, BVSSH, Service Quality, Delivery Metrics, Corrections, Regulatory, Explainability. See `plugins/mycelium/engine/theory-gates.md` for complete definitions, pass/fail criteria, and suggested skills.
+Every diamond transition must pass applicable gates from: Evidence, Four Risks, JTBD, Cynefin, Bias, Security, Privacy, BVSSH, Service Quality, Delivery Metrics, Corrections, Regulatory, Explainability, Landscape, Capacity. See `plugins/mycelium/engine/theory-gates.md` for complete definitions, pass/fail criteria, and suggested skills.
 
 **You cannot progress a diamond by saying "I'm confident enough." You must demonstrate evidence that satisfies each gate.**
 

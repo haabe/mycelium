@@ -107,6 +107,7 @@ If the top two scores are within noise of each other (see Noise Check below), sa
 - Review for bias after scoring, before acting.
 - **No OST leaf advances to selected without an ICE score.** A solution leaf may be sketched without ICE while still a candidate. The moment it is picked up for delivery (cycle opens, diamond progresses Define→Develop with this leaf as the chosen solution), `ice_score` on the solution entry in `opportunities.yml` must be non-zero. This is what makes the calibration dimension measurable later — a cycle that ships without a prior ICE prediction is a permanent dark cell in `cycle-history.yml`. See `engine/cycle-learning.md#cycle-class` for how this propagates into `cycle-history.yml.predicted.ice_score`.
 
+- **Scoring is the last step before a cycle, not a filing (v0.217.0).** When a leaf is `selected`, offer to open an L3 diamond on it (`object_ref` = the solution id) or record in one line why it waits. A selected leaf with no cycle is what `check_scale_occupancy.py` reports as an intake with no outlet.
 ## Canvas Output
 Update `.claude/canvas/opportunities.yml` — write `four_risks` and `ice_score` per solution leaf.
 When a scored leaf ships, write `shipped_at: YYYY-MM-DD` on the leaf (declared field, v0.203.0); the outcome-check lag and cycle-history read the field, and a ship date that lives only in a `shipped_note` is invisible to both.

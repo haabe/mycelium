@@ -389,6 +389,40 @@ This gate is **operational** — it asks "have you actually run `/xai-check`?" a
 
 ---
 
+### 14. Landscape Gate (NUDGE, v0.217.0)
+
+**Source**: Wardley (Wardley Mapping); the LANDSCAPE justifier
+
+**Applies to**: Define->Develop and Develop->Deliver at L1; Define->Develop at L2 and L3. **Tier: NUDGE, never a block.**
+
+| Pass Criteria | Fail Criteria |
+|--------------|---------------|
+| `landscape.yml` names at least one component or competitor in the space this diamond bets on, with a provenance date | The bet's space has no entry in `landscape.yml`, or its newest entry predates the diamond's `last_progressed` by more than the `competitive` staleness window |
+| The diamond's `definition_of_done` or the opportunity it serves states what already exists and why this differs | "Does it already exist?" was not asked, or was answered from memory rather than from the map |
+
+**Why a gate at all.** Of the three things that justify a commitment (EVIDENCE: is it worth building; LANDSCAPE: does it already exist; CAPACITY: can the people hold what gets produced), the gate set enforced only the first until 0.217.0. `diamond-rules.md` names Wardley Mapping as PRIMARY for L1, and L1's required gates did not include it; a dogfood canvas held 123 tracked competitors and the map had never blocked, or nudged, anything (register row two-of-the-three-justifiers-have-no-gate-at-any-tier, 2026-09-02). All three justifiers were self-policing while building was expensive; agents removed the policing from each, and the two that lost it are the two that had no gate.
+
+**Why NUDGE.** opp-072 in the same canvas records that gate remedies are routinely disproportionate to their triggers. A nudge that fires is more than this justifier had; promote to REVIEW only on measured fires that were read past.
+
+**Evidence required**: the `landscape.yml` entries the bet was checked against, named in the diamond record or the opportunity.
+
+**Suggested skill**: `/wardley-map`
+
+### 15. Capacity Gate (NUDGE, v0.217.0)
+
+**Source**: Skelton & Pais (Team Topologies); the CAPACITY justifier
+
+**Applies to**: Develop->Deliver at L1, L3 and L4. **Tier: NUDGE, never a block.**
+
+| Pass Criteria | Fail Criteria |
+|--------------|---------------|
+| `team-shape.yml` states who absorbs what this diamond produces (review, operation, support) and their current cognitive load | Nothing names the reader, reviewer or operator of the output; the output is planned as if absorption were free |
+| At L4: the delivery's review throughput is stated beside its production rate | Production rate stated with no absorption rate, the shape of the review-throughput gap (Cherny: engineers -> reviews -> judgment) |
+
+**Why a gate at all.** `diamond-rules.md` names Team Topologies as PRIMARY for L1 and no L1 gate asked whether anyone could hold what a strategy produces. The only capacity question in the set was the BVSSH gate's `Happier` row, at Deliver->Complete, retrospective, one sentence sufficient. Same register row as the Landscape gate.
+
+**Why NUDGE.** Same reason. **Evidence required**: the `team-shape.yml` block the assessment read. **Suggested skill**: `/team-shape`
+
 ## Transition Matrix
 
 Summary of which gates apply to which transitions:
@@ -407,6 +441,8 @@ Summary of which gates apply to which transitions:
 | Delivery Metrics | -- | -- | -- | Required (L3-5) |
 | Corrections | Required | Required | Required | Required |
 | Regulatory | -- | Required (L3-5) | Required (L3-5) | -- |
+| Landscape | -- | NUDGE (L1-3) | NUDGE (L1) | -- |
+| Capacity | -- | -- | NUDGE (L1, L3-4) | -- |
 
 **Product type conditioning** (v0.11.0): Gates marked with product_type conditions (Security, DORA/Delivery Metrics, Service Quality) use the delivery profile from `canvas-guidance.yml#product_types`. The `product_type` is set during `/interview` Phase 6 and stored in `diamonds/active.yml`. When checking these gates, always verify which product_type applies before evaluating pass criteria.
 

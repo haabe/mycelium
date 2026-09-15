@@ -1314,6 +1314,7 @@ def print_advisory_warnings(canvas_dir):
         ("unscanned source", unscanned_source_findings(canvas_dir)),
         ("stale blocker", stale_blocker_findings(canvas_dir)),
         ("cross-reference", cross_reference_findings(canvas_dir)),
+        ("off-outcome root", off_north_star_root_findings(canvas_dir)),
     ):
         for w in findings:
             print(f"  WARN ({label}): {w}")
@@ -1959,6 +1960,47 @@ def opportunity_shape_summary(canvas_dir):
         return _shape_summarise(path)
     except Exception:                      # noqa: BLE001 — a coverage line must never fail the validator
         return ""
+
+
+_OFF_NORTH_STAR = "off_north_star"
+
+
+def off_north_star_root_findings(canvas_dir):
+    """WARN-tier: a root that declares itself off-outcome must carry a review date and a condition.
+
+    v0.217.0, register row off-north-star-root-licenses-a-parking-lot (2026-09-02). The
+    `off_north_star` label on a root is displayed by design (ost-render), and an assumption
+    test on the dogfood canvas found it IS read every time the tree renders; the defect is
+    what it licenses. 58 of 73 opportunities sat under such a root for months, correctly
+    labelled and therefore invisible as a problem, until the founder closed it in one line:
+    roots are outcomes. Remedy (2) of the row, keeping the visibility and removing the
+    permanence: an off-outcome root carries `review_by` and `review_condition`, and
+    check_target_progress reports the date when it passes. A root without both is reported
+    here. Report only; the decision about the root is the founder's.
+    """
+    path = Path(canvas_dir) / "opportunities.yml"
+    if not path.exists():
+        return []
+    try:
+        data = yaml.safe_load(path.read_text()) or {}
+    except (yaml.YAMLError, OSError):
+        return []
+    roots = data.get("desired_outcomes") if isinstance(data, dict) else None
+    opps = data.get("opportunities") if isinstance(data, dict) else None
+    out = []
+    for root in roots or []:
+        if not isinstance(root, dict) or root.get("north_star_input_ref") != _OFF_NORTH_STAR:
+            continue
+        rid = str(root.get("id", "?"))
+        under = sum(1 for o in (opps or []) if isinstance(o, dict) and o.get("rolls_up_to") == rid)
+        missing = [k for k in ("review_by", "review_condition") if not root.get(k)]
+        if missing:
+            out.append(f"opportunities.yml#{rid}: root is `off_north_star` with {under} "
+                       f"opportunit{'y' if under == 1 else 'ies'} under it and no "
+                       f"{' or '.join(f'`{k}`' for k in missing)}; a root that serves no outcome "
+                       f"needs a date and a condition on which it is resolved or retired, or it "
+                       f"is a parking lot with a label")
+    return out
 
 
 def main():

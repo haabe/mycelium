@@ -46,6 +46,14 @@ Evaluate current diamond state and recommend next action.
    - For each, evaluate `resume_conditions` against current canvas/world state. If the awaited condition now holds, surface it as resumable: "Parked: [id] (parked [date], condition: '[condition]'). That looks satisfied — resume?" If not yet met, list it with its condition in one line. If a parked diamond has NO `resume_conditions`, flag it (unreachable except by memory — add conditions or decide park → kill).
    - Implements the surface promised in `/mycelium:diamond-progress` § Park; found unimplemented by the 2026-06-12 gap analysis (no skill read `resume_conditions`).
 
+2c. **Scale occupancy (records against cycles, v0.217.0)**:
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_scale_occupancy.py" --canvas-dir .claude/canvas
+```
+
+Report the line for each scale with records: "73 opportunity records, 0 active L2 cycles" is the one-line diagnostic that would have surfaced the dogfood project's shape in May 2026, four months before a founder named it from lived experience ("how I never could get past L1 whilst the product already existed"). A record and a cycle are different objects; a scale with records and no cycle ever opened has an intake and no outlet, and the exits are in `/ost-builder` and `/ice-score`. An unvalidated parent does not forbid work below it; it makes that work invisible to the model unless a cycle is opened.
+
 3. **Check theory gates for next transition**:
    - Reference ${CLAUDE_PLUGIN_ROOT}/engine/theory-gates.md for the current transition
    - Check `product_type` from `.claude/diamonds/active.yml` -- gates conditioned on product_type include:

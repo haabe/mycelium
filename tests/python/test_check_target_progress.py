@@ -163,3 +163,19 @@ def test_freshness_is_printed_and_never_fails_strict(tmp_path, monkeypatch):
     assert rc == 0                       # measured against a target; stale is report-only
     assert "1 STALE (> 30 d)" in out
     assert "STALE      [north-star] Old" in out
+
+
+def test_off_north_star_root_review_dates_are_reported_overdue_or_pending(tmp_path):
+    import datetime as _dt
+    m = _mod()
+    canvas = tmp_path / ".claude" / "canvas"
+    canvas.mkdir(parents=True)
+    (canvas / "opportunities.yml").write_text(
+        "desired_outcomes:\n"
+        "  - {id: late, metric: x, north_star_input_ref: off_north_star, review_by: '2026-09-01'}\n"
+        "  - {id: soon, metric: x, north_star_input_ref: off_north_star, review_by: '2026-12-01', review_condition: c}\n"
+        "  - {id: undated, metric: x, north_star_input_ref: off_north_star}\n"
+        "  - {id: onstar, metric: x, north_star_input_ref: activation, review_by: '2026-01-01'}\n")
+    overdue, pending = m.overdue_root_reviews(canvas, _dt.date(2026, 9, 15))
+    assert [r[1] for r in overdue] == ["late"] and [r[1] for r in pending] == ["soon"]
+    assert "none stated" in overdue[0][2] and "condition: c" in pending[0][2]

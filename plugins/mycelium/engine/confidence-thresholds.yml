@@ -45,6 +45,8 @@ scales:
       - bias
       - bvssh
       - corrections
+      - landscape   # NUDGE tier, v0.217.0: does it already exist? (Wardley, primary at L1)
+      - capacity    # NUDGE tier, v0.217.0: can the people hold it? (Skelton, primary at L1)
     human_approval:
       discover_to_define: required
       define_to_develop: required

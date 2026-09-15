@@ -160,6 +160,50 @@ def scan_freshness(canvas_dir: Path, today: datetime.date, stale_days: int):
     return fresh, stale, undated
 
 
+def overdue_root_reviews(canvas_dir: Path, today: datetime.date):
+    """(overdue, pending) rows for `off_north_star` roots that carry a `review_by` date.
+
+    v0.217.0: the companion of validate_canvas.off_north_star_root_findings. That check
+    says a root serving no outcome needs a date; this one says when the date has passed.
+    A root that is off-outcome past its own review date is the parking lot with the label
+    still on, which is the permanence the register row asked to remove.
+    """
+    overdue, pending = [], []
+    path = canvas_dir / "opportunities.yml"
+    if not path.exists():
+        return overdue, pending
+    try:
+        data = yaml.safe_load(path.read_text()) or {}
+    except (yaml.YAMLError, OSError):
+        return overdue, pending
+    for root in (data.get("desired_outcomes") or []) if isinstance(data, dict) else []:
+        if not isinstance(root, dict) or root.get("north_star_input_ref") != "off_north_star":
+            continue
+        stamp = root.get("review_by")
+        try:
+            due = datetime.date.fromisoformat(str(stamp)[:10])
+        except ValueError:
+            continue
+        detail = (f"off_north_star root, review_by {due}, condition: "
+                  f"{root.get('review_condition') or 'none stated'}")
+        row = ("opportunities", str(root.get("id", "?")), detail)
+        (overdue if due < today else pending).append(row)
+    return overdue, pending
+
+
+def _print_root_reviews(overdue, pending) -> None:
+    if not (overdue or pending):
+        return
+    print("\nOff-outcome roots (a root serving no outcome carries a review date)")
+    for canvas, label, detail in overdue:
+        print(f"  OVERDUE    [{canvas}] {label}: {detail}")
+    for canvas, label, detail in pending:
+        print(f"  pending    [{canvas}] {label}: {detail}")
+    if overdue:
+        print("  Resolve the root (name the outcome it serves) or retire it; a review date\n"
+              "  that passes unread is the permanence the label was meant to prevent.")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--canvas-dir", default=".claude/canvas")
@@ -211,6 +255,7 @@ def main() -> int:
         print("  A metric that cannot go overdue never will. Restamp `as_of` when the number is\n"
               "  re-read, and give an undated metric one, or say in the entry that it is not\n"
               "  re-read on a cadence.")
+    _print_root_reviews(*overdue_root_reviews(canvas_dir, today))
     return 1 if (args.strict and unmeasured) else 0
 
 

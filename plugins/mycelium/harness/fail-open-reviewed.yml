@@ -401,6 +401,19 @@ reviewed:
     (dated and entity-scoped keys) still runs on the text. A new canvas file has no prior
     spellings to collide with; a broken one is the sweep's finding, not this guard's. Advisory
     hook, must never break a write.
+- id: check_scale_occupancy.py@10262e6ce8
+  verdict: accepted
+  reason: >-
+    _load, missing or unparseable opportunities.yml / diamonds/active.yml (0.217.0): returns an
+    empty mapping, so records or cycles count as zero for that file and the report says NOT A
+    PASS when both are empty. A malformed file is the schema tier's finding; this is a report
+    that opens nothing.
+- id: validate_canvas.py@b42ea5c507
+  verdict: accepted
+  reason: >-
+    off_north_star_root_findings, unparseable opportunities.yml (0.217.0): returns no findings;
+    the schema tier reports the parse failure, and a WARN-tier advisory must not fail a build
+    twice for one defect.
 - id: check_cycle_recording.py@10262e6ce8
   verdict: accepted
   reason: >-

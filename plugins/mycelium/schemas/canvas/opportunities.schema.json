@@ -42,6 +42,15 @@
             "type": "string",
             "description": "Which north-star input metric this root feeds, or the literal `off_north_star` when it deliberately serves none. Naming it explicitly is the point: an unlabelled root reads as on-strategy by default."
           },
+          "review_by": {
+            "type": "string",
+            "format": "date",
+            "description": "REQUIRED IN PRACTICE when north_star_input_ref is `off_north_star` (validate_canvas reports its absence, v0.217.0): the date by which this root is resolved into an outcome or retired. check_target_progress reports it once passed. A root that serves no outcome and has no date is a parking lot with a label; the label is read (ost-render shows it), and what it licensed on the dogfood canvas was 58 of 73 opportunities parked for months."
+          },
+          "review_condition": {
+            "type": "string",
+            "description": "What would resolve or retire this off-outcome root: the outcome it is expected to serve once named, or the state in which its entries are re-homed. Required beside review_by for an `off_north_star` root."
+          },
           "current_value": {},
           "target_value": {},
           "note": {

@@ -68,6 +68,14 @@ For each claimed theory, record:
 
 3. **Map each theory to its mechanism — and READ the mechanism.** Open the cited skill/gate/schema/canvas before grading. A claim in the theory doc is not evidence of the mechanism's state; only reading the artifact is (anti-pattern #7 Read-before-claim). To grade `Justified-Adaptation`, search the repo (theory doc, philosophy doc, changelog, decision-log, the skill itself) for the documented rationale — absent rationale ⇒ `Distorted`.
 
+3b. **Join primary theories against gates, mechanically (v0.217.0).** Run:
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_primary_theory_gated.py"
+```
+
+It reads the scale table in `engine/diamond-rules.md` and each scale's `required_theory_gates` in `engine/confidence-thresholds.yml` and reports every theory named PRIMARY for a scale that is not a gate at that scale, refusing to guess for theories its mapping table does not know. This is the check that would have surfaced, years earlier, that all three of L1's primary theories were ungated at L1 (dogfood, 2026-09-02; the Landscape and Capacity gates, 14 and 15 in `theory-gates.md`, are the remedy at NUDGE tier). Carry every UNGATED row into the findings as a mechanism gap on that theory, graded against its tier; an unmapped row is a table gap to fix in the script, not a finding about the theory.
+
 4. **Grade** on the three axes. For each: the mechanism + path, representation, fidelity grade, evidence-basis, a 2–4 sentence justification citing **both** the theory's real claim and the repo mechanism, the specific gap/distortion, and a one-line fix.
 
 5. **Premortem (how is THIS audit wrong?).** State it explicitly: model-knowledge grades inherit the same fidelity risk they measure; subagents may anchor on the project's own framing; single-pass grades have no adversarial second opinion. Name the lowest-regret findings (self-contradictions in-repo are unimpeachable regardless of theory knowledge).

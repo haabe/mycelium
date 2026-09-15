@@ -2215,3 +2215,37 @@ def test_the_validator_carries_both_cycle_findings(tmp_path, scripts_path):
     out = validator.cycle_record_findings(canvas)
     assert any("calibration is due" in w for w in out)
     assert any("sol-009" in w for w in out)
+
+
+# --- v0.217.0: an off-outcome root carries a review date and a condition --------------------
+
+
+def test_an_off_north_star_root_without_a_review_date_is_reported(tmp_path, scripts_path):
+    validator = _import_validator(scripts_path)
+    canvas = tmp_path / ".claude" / "canvas"
+    canvas.mkdir(parents=True)
+    (canvas / "opportunities.yml").write_text(textwrap.dedent("""\
+        desired_outcomes:
+          - id: adoption
+            metric: weekly users
+            north_star_input_ref: activation
+          - id: parking
+            metric: none
+            north_star_input_ref: off_north_star
+          - id: dated
+            metric: none
+            north_star_input_ref: off_north_star
+            review_by: "2026-10-01"
+            review_condition: "re-homed under adoption or retired"
+        opportunities:
+          - id: opp-1
+            name: x
+            rolls_up_to: parking
+          - id: opp-2
+            name: y
+            rolls_up_to: parking
+    """))
+    out = validator.off_north_star_root_findings(canvas)
+    assert len(out) == 1
+    assert "#parking" in out[0] and "2 opportunities" in out[0]
+    assert "`review_by` or `review_condition`" in out[0]
