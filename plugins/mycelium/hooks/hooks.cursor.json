@@ -48,6 +48,12 @@
       },
       {
         "matcher": "Write|Edit|MultiEdit|edit|write",
+        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/key-shape-guard.sh",
+        "type": "command",
+        "timeout": 5
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit|edit|write",
         "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/correction-attribution-guard.sh",
         "type": "command",
         "timeout": 5

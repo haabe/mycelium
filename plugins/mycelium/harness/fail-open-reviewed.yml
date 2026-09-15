@@ -393,6 +393,14 @@ reviewed:
     _last_fire_on, one unparseable log line (0.213.0): skipped, same contract as the line above;
     the newest readable row for the session and file still wins, and --report counts the
     readable rows only.
+- id: key_shape_guard.py@4fc2bad88a
+  verdict: accepted
+  reason: >-
+    _file_spellings, target file missing or unparseable (0.214.0): returns an empty stem map, so
+    the collision half has nothing to compare against and stays silent while the regex half
+    (dated and entity-scoped keys) still runs on the text. A new canvas file has no prior
+    spellings to collide with; a broken one is the sweep's finding, not this guard's. Advisory
+    hook, must never break a write.
 # ---------------------------------------------------------------------------
 # accepted — flagged as "appears to speak", confirmed by reading.
 # ---------------------------------------------------------------------------

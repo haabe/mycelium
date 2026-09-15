@@ -99,7 +99,7 @@ The full table, per runtime, is `plugins/mycelium/hooks/README.md`. The ones tha
 | `framework-guard.sh` | Edit/Write/Bash on framework files in dogfood instances | Blocks; redirects to upstream-then-sync flow; denies on a broken state file |
 | `scope-gate.sh` | Edit/Write outside in_scope_paths during L4 | Blocks; allows .claude/** unconditionally |
 | `autonomous-evidence-guard.sh` | Canvas writes during a declared autonomous run | Blocks fabricated or elevated evidence; no-op with a human present |
-| `absence-claim-guard.sh`, `shell-safety-guard.sh`, `correction-attribution-guard.sh`, `discovery-trigger-guard.sh`, `read-before-research-guard.sh` | Write/Bash/prompt/research calls | Advise, never block; each names the measurement it fired on |
+| `absence-claim-guard.sh`, `key-shape-guard.sh`, `shell-safety-guard.sh`, `correction-attribution-guard.sh`, `discovery-trigger-guard.sh`, `read-before-research-guard.sh` | Write/Bash/prompt/research calls | Advise, never block; each names the measurement it fired on |
 | `session-start.sh` | Session start | Injects the operating contract; wraps quoted canvas text as `<untrusted_user_content>`; emits one NEXT ITEM |
 | `next-action-check.sh` | Stop | Blocks the end of a framework turn that has no `Next:` line |
 | `next-item-repeat.sh` | Stop | Repeats the NEXT ITEM once if nothing followed it |

@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.213.0 -- **Four instruments that were measuring the wrong thing** (MINOR). G-D2 knows `internal_measurement` and labels a single reproducible technical method by reproduction, not by the interview ceiling; `/metrics-pull` settles the previous run's unanswered drafts before asking again; `check_hook_delivery` says whether `.codex/` and `.cursor/` carry the Mycelium manifest, and the Codex doc carries the 2026-08-18 receipt; the absence-claim guard records whether a fire was followed by a re-write without the quoted sentence and reports that ratio, which is its instrument, instead of its fire count.
+*Version 0.214.0 -- **Content in key position, caught at the keystroke** (MINOR). A PreToolUse guard on canvas and diamond writes names a dated or entity-scoped key, or a second spelling of a stem the file already holds, while the author still holds the reason; the 0.212.0 sweep stays as the retrofit path. Calibrated on 60 dogfood commits: 141 such keys in five days.
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

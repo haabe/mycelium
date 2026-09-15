@@ -4,6 +4,14 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-14.
 
+## v0.214.0 - content in key position, caught at the keystroke
+
+One dogfood candidate closed on the ninth backlog pass of 2026-09-15: the write-time half of the near-duplicate-keys row, split out when the sweep half shipped in 0.212.0.
+
+- **`hooks/key-shape-guard.sh`** + **`scripts/key_shape_guard.py`** (candidate 2026-09-15, founder ruling 2026-09-02): a PreToolUse guard on Write/Edit/MultiEdit into `.claude/canvas/**` and `.claude/diamonds/**`. It names a key whose name carries a date or an entity id (`promoted_2026_09_02`, `ht_010_status`) and a key that is a second spelling of a stem the target file already holds (`reply-sent` beside `reply_sent`), with the plain key to use and the `notes[]` form the convention prescribes. Advisory, never a block; the sweep stays as the retrofit path. It imports the sweep's two regexes and `stem_of`, so the guard and the sweep cannot disagree. Wired in all three runtime manifests; logs to `.claude/state/key-shape-guard-log.jsonl` through the absence guard's writer, so the re-write ratio is computable the same way.
+- **Calibrated before wiring**, by replaying the added lines of the last 60 dogfood canvas commits (2026-09-10 to 2026-09-15) as writes: 141 dated or entity-scoped keys were added in that window, in 26 of 83 file-writes, and the guard names every one at the keystroke. The spelling half fired seven times, and four were `Date:` and `CLASSIFICATION:` inside a task's prose, so lines inside a block scalar or an unclosed quoted string are not keys, case-only variants are left to the sweep, and writing the plain spelling beside a dated twin (`posted` beside `POSTED_2026_08_10`, two of the seven) is the fix rather than a finding. Bare date keys (`2026-06-11:`) are skipped because YAML reads them as dates and the sweep cannot see them either. Thirteen tests.
+- Docs: `hooks/README.md` row, `docs/context-surface.md` advisory-hook row, system card hook count and digest.
+
 ## v0.213.0 - four instruments that were measuring the wrong thing
 
 Four dogfood candidates closed on the eighth backlog pass of 2026-09-15.
