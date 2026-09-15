@@ -4,6 +4,14 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-14.
 
+## v0.208.0 - a write, then a commit, with nothing between them
+
+Two dogfood candidates closed, one found already landed, on the third backlog pass of 2026-09-15.
+
+- **`scripts/shell_safety_guard.py`**, rule 4 (candidate 2026-09-09): twice in one day a canvas-writing python heredoc exited 1 and the decision-log append, `git add`, `git commit` and `git push` on the following lines all ran, so origin received a log entry describing writes that had not happened; on the second occasion `set -e` at the top of the command did not stop the chain under the agent's Bash tool. The guard now splits a command into steps at `;` and newlines outside quotes and quoted-heredoc bodies (a path written from inside a heredoc belongs to the step that opened it), and warns when a step that writes under `.claude/canvas`, `diamonds`, `harness` or `memory` is followed by a later step that commits or pushes. Steps joined by `&&` are one step, which is the remedy the warning names. Same tier as the other three: a warning, never a block. Six tests, the two 2026-09-09 shapes among them.
+- **`scripts/check_merge_markers.py`** (new; candidate 2026-09-14, founder: "if it exists and is still broken, it isn't strict enough"): a 77-source sweep proposed as "the one original, untested mechanism" a question `interview/SKILL.md` has always asked; the read-before-recommend rule was injected that session and not consulted, and a fourth prose restatement was proposed as the fix. The mechanism instead: a canvas entry whose prose calls a mechanism, idea or feature original, untested or built by nobody must carry `checked_skills: YYYY-MM-DD` or `checked_against: <surface>` on the same entry, the reviewed-marker pattern the framework already ships. It never judges the claim; it asks whether anyone looked. Measured before shipping on the dogfood canvas: 12 sentences matched the broad phrase list, 3 the narrowed one, of which one is the exact instance the founder caught and two are market claims that take `checked_against: landscape.yml`. Not built, and said in the header: the co-presence rule (a conclusion cites both the local record and the literature), which has no lexical shape that would hold under the 5% bar, and a decision-log scan, which would flag a year of history. Wired into `/canvas-health`; report-only; four tests.
+- Found already landed: the evidence-cites-back check (`check_evidence_landing.py`, 0.182.0, wired in canvas-health step 8c) closes the 2026-09-06 candidate; the `/log-evidence` post-condition half is covered one run later by the landing check and is not built separately.
+
 ## v0.207.0 - five fields get the reader they were declared for
 
 Five dogfood candidates from 2026-08-25 to 09-03, closed on the second backlog pass of 2026-09-15. Each is a field that existed and was read by nothing, or a rule whose own description named an exemption it did not implement.

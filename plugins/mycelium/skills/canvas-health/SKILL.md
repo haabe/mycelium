@@ -625,6 +625,22 @@ today cannot make 523 pre-existing keys a build failure (see the founder's own n
 proportionality). Seed once with `--write-baseline`; from then on `--strict` fails only on NEW keys, so
 the cost falls on new writing.
 
+## A claim of novelty says what it was checked against (added v0.208.0, founder ruling 2026-09-14)
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_merge_markers.py" --canvas-dir .claude/canvas
+```
+
+A canvas entry that calls a mechanism, idea or feature original, untested, or built by nobody
+must carry `checked_skills: YYYY-MM-DD` (the product's own skills and engine were read) or
+`checked_against: <surface>` on the same entry. The check does not judge the claim; it asks
+whether anyone looked. It exists because a 77-source sweep proposed as "the one original,
+untested mechanism" a question the interview skill has always asked, and the read-before-recommend
+rule that would have caught it was injected and not consulted. Report-only. Market claims
+("nobody has built a tool that...") take `checked_against: landscape.yml`. The decision log is
+not scanned, and the sibling co-presence rule (a conclusion cites both the local record and the
+literature) is not built; both are said in the script's header.
+
 ## Fields the canvas writes that no schema declares (added 2026-08-31)
 
 ```bash

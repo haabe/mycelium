@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.207.0 -- **Five fields get the reader they were declared for** (MINOR). A reconstructed product-leaf cycle may carry no ICE (the exemption the schema described is wired); `sub_opportunities` has an item schema and a resolver; `affects_entries` gives a landscape entry a declared relation to another entry with a `landed` flag; `written_by` on a stance block is declared and counted; frozen predictions in canvas files are visible to the instrument-contract check.
+*Version 0.208.0 -- **A write, then a commit, with nothing between them** (MINOR). The shell-safety guard gains a fourth rule: a durable write followed by `git commit` or `git push` across a newline or `;` is an ungated commit and is named as one; `check_merge_markers.py` asks every canvas entry that calls something original or untested what it was checked against, the mechanism the founder ruled for on 2026-09-14 instead of a fourth prose rule.
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

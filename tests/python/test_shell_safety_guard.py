@@ -322,3 +322,60 @@ def test_the_real_trap_still_warns_after_narrowing(scripts_path):
                 'ls | wc -l\necho "count rc=$?"',
                 'cat f | grep x; echo "rc=$?"'):
         assert len(mod.findings(cmd)) == 1, cmd
+
+
+# ---------------------------------------------------------------- rule 4 (v0.208.0)
+#
+# Two dogfood commands from 2026-09-09: a canvas-writing python heredoc that exited 1, followed
+# on new lines by a decision-log append, git add, commit and push, all of which ran. The rule
+# fires on that shape and stays silent when the steps are gated with && or the commit is in a
+# separate command.
+
+_WRITE_THEN_COMMIT = (
+    "python3 - <<'EOF'\n"
+    "from pathlib import Path\n"
+    "p = Path('.claude/canvas/opportunities.yml'); t = p.read_text()\n"
+    "assert t.count('x') == 1; p.write_text(t.replace('x', 'y'))\n"
+    "EOF\n"
+    "cat >> .claude/harness/decision-log.md <<'EOF'\n## DL-1230\nEOF\n"
+    "git add -A\n"
+    "git commit -q -m 'DL-1230'\n"
+    "git push origin main\n"
+)
+
+
+def test_a_durable_write_then_commit_on_separate_lines_warns(scripts_path):
+    assert "ungated commit" in _warnings(scripts_path, _WRITE_THEN_COMMIT)
+
+
+def test_semicolons_are_the_same_shape(scripts_path):
+    cmd = "sed -i '' 's/a/b/' .claude/canvas/purpose.yml; git add -A; git commit -m x"
+    assert "ungated commit" in _warnings(scripts_path, cmd)
+
+
+def test_and_gating_is_silent(scripts_path):
+    """With a heredoc the gate lives on the opener line: the whole chain is one step."""
+    gated = ("python3 - <<'EOF' && git add -A && git commit -m x && git push\n"
+             "p='.claude/canvas/x.yml'; open(p,'w').write('a')\n"
+             "EOF")
+    assert "ungated commit" not in _warnings(scripts_path, gated)
+    plain = "sed -i '' 's/a/b/' .claude/canvas/purpose.yml && git add -A && git commit -m x"
+    assert "ungated commit" not in _warnings(scripts_path, plain)
+
+
+def test_a_commit_with_no_durable_write_is_silent(scripts_path):
+    assert "ungated commit" not in _warnings(scripts_path, "git add -A\ngit commit -m x\ngit push")
+
+
+def test_a_write_after_the_commit_is_silent(scripts_path):
+    cmd = "git commit -m x\necho note >> .claude/memory/notes.md"
+    assert "ungated commit" not in _warnings(scripts_path, cmd)
+
+
+def test_a_path_inside_a_heredoc_counts_as_the_heredoc_steps_write(scripts_path):
+    """The path is inside the quoted heredoc body, which the other rules strip; this rule
+    must still see it as the write of the step that opened the heredoc."""
+    cmd = ("python3 - <<'EOF'\nfrom pathlib import Path\n"
+           "Path('.claude/diamonds/active.yml').write_text('x')\nEOF\n"
+           "git commit -am x")
+    assert "ungated commit" in _warnings(scripts_path, cmd)

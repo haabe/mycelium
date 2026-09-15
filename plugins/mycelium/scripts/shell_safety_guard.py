@@ -131,6 +131,62 @@ _DOLLAR_STATUS = re.compile(r"\$\?")
 #: in the shell this project actually runs.
 _PIPESTATUS = re.compile(r"pipestatus", re.IGNORECASE)
 _GREP_AND = re.compile(r"\b(grep|pgrep|rg)\b[^\n;]*?&&")
+#: Rule 4 (v0.208.0). A step that writes a durable project file, followed later in the same
+#: command by `git commit` or `git push`, with a newline or `;` between them: a failed write
+#: does not stop the commit. Twice on 2026-09-09 a canvas-writing python heredoc exited 1 and
+#: the decision-log append, the commit and the push after it still ran, so origin received a
+#: log entry describing writes that had not happened; on the second occasion `set -e` at the
+#: top of the command did not stop the chain under the agent's Bash tool.
+_DURABLE_PATH = re.compile(r"\.claude/(?:canvas|diamonds|harness|memory)/")
+_WRITE_SHAPE = re.compile(
+    r"(?:>>?|\bsed\s+-i|\btee\b|\bpython3?\s+-(?:\s|$|c\b)|<<-?\s*['\"]?\w+|safe_replace|"
+    r"\.write_text\(|open\([^)]*['\"][wa]['\"]\))"
+)
+_GIT_LANDS = re.compile(r"\bgit\s+(?:commit|push)\b")
+
+
+def _raw_steps(command: str) -> list[str]:
+    """Split a command into steps at `;` and newlines OUTSIDE quotes and quoted-heredoc bodies.
+
+    Each step keeps its own heredoc body, so a path written from inside a python heredoc
+    belongs to the step that opened the heredoc. Steps joined by `&&` or `||` are one step:
+    that join is the gating the rule asks for.
+    """
+    steps, start, i, n = [], 0, 0, len(command)
+    while i < n:
+        ch = command[i]
+        if ch in "'\"":
+            j = i + 1
+            while j < n and command[j] != ch:
+                j += 2 if command[j] == "\\" else 1
+            i = j + 1
+            continue
+        m = _QUOTED_HEREDOC_START.match(command, i)
+        if m:
+            body_start = command.find("\n", m.end())
+            if body_start == -1:
+                break
+            end = re.compile(r"^\s*" + re.escape(m.group(2)) + r"\s*$", re.MULTILINE).search(
+                command, body_start + 1)
+            i = end.end() if end else n
+            continue
+        if ch in ";\n":
+            steps.append(command[start:i])
+            start = i + 1
+        i += 1
+    steps.append(command[start:])
+    return [s for s in steps if s.strip()]
+
+
+def _ungated_commit(command: str) -> bool:
+    """True when a durable write precedes a commit or push in a LATER step."""
+    write_seen = False
+    for step in _raw_steps(command):
+        if write_seen and _GIT_LANDS.search(_blank_quoted(step)):
+            return True
+        if _DURABLE_PATH.search(step) and _WRITE_SHAPE.search(step):
+            write_seen = True
+    return False
 
 
 def _status_reads_a_pipeline(base: str, scan: str) -> bool:
@@ -209,6 +265,18 @@ def findings(command: str) -> list[str]:
             "and zero matches is often the desired answer, so the right-hand "
             "side is skipped silently. Test the output rather than the status, "
             "or append `|| true`."
+        )
+
+    # 4. A durable write, then a commit or push, with nothing gating the commit on the write.
+    if _GIT_LANDS.search(command) and _DURABLE_PATH.search(command) and _ungated_commit(command):
+        out.append(
+            "A write to a canvas, diamond, harness or memory file precedes `git commit` "
+            "or `git push` in this command with a newline or `;` between them: an "
+            "ungated commit. If the write fails, the commit and push still run, and "
+            "origin receives a record of a change that did not happen (twice on "
+            "2026-09-09; `set -e` did not stop the chain under this tool). Chain every "
+            "step from the first write to the push with `&&`, or commit in a separate "
+            "command after reading the write's output."
         )
 
     return out
