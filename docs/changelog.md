@@ -4,6 +4,10 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-14.
 
+## v0.205.1 - two verdict cases the port had not pinned
+
+Tests only. When the dogfood project retired its private copy of `check_evidence_links.py` (2026-09-15) and its tests, two of those tests had no twin in the shipped suite: a browser verdict of `unclear` keeps the citation UNKNOWN and clears `needs_browser_check` (forcing ok or gone would invent an answer), and a browser verdict older than `--browser-verify-days` is asked for again. Both now live in `tests/python/test_check_evidence_links.py` (16 tests). No script change.
+
 ## v0.205.0 - a citation you cannot open is decay on a second axis
 
 Two dogfood candidates from 2026-08-17, closed on the fifth backlog pass of 2026-09-14.

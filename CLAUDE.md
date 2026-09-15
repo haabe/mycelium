@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.205.0 -- **A citation you cannot open is decay on a second axis** (MINOR). `check_evidence_links.py` ships from the dogfood tree: it probes every cited URL under the project's canvas, diamonds, harness, memory, evals and docs, escalates to ROTTED only on two separate days, treats bot walls and transient failures as not-rot, records browser verdicts, and self-throttles to once per fortnight; `/canvas-health` step 7a reads it.
+*Version 0.205.1 -- **Two verdict cases the port had not pinned** (PATCH). Tests only: a browser verdict of `unclear` keeps a citation UNKNOWN and stops the ask; a browser verdict older than the verify window is asked for again. Both were pinned in the dogfood tree's private tests, retired 2026-09-15 when that tree switched to the shipped script.
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

@@ -228,3 +228,31 @@ def test_a_yaml_escape_dragged_into_the_url_is_stripped(tmp_path):
     root = _project(tmp_path, {".claude/canvas/h.yml": 'note: "see https://github.com/o/r\\n and more"\n'})
     mod.ROOT = root
     assert set(mod.collect()) == {"https://github.com/o/r"}
+
+
+# --- 0.205.1: two cases the dogfood tree pinned that the port had not ----------------------
+
+
+def test_browser_unclear_stays_unknown(tmp_path, monkeypatch):
+    """A human looked and still could not tell. Forcing ok or gone would invent an answer."""
+    mod = _mod()
+    root = _project(tmp_path, {".claude/canvas/c.yml": "u: https://gone.example-real.com/x\n"})
+    monkeypatch.setattr(mod, "_urlopen", _fake_urlopen({"https://gone.example-real.com/x": 404}))
+    assert mod.main(["--project-dir", str(root), "--today", "2026-09-14",
+                     "--mark-verified", "https://gone.example-real.com/x", "--verdict", "unclear"]) == 0
+    _run(mod, root)
+    rec = _snapshot(mod, root, "2026-09-14")["https://gone.example-real.com/x"]
+    assert rec["status"] == mod.UNKNOWN
+    assert rec["needs_browser_check"] is False
+
+
+def test_a_stale_browser_verdict_is_asked_for_again(tmp_path, monkeypatch):
+    mod = _mod()
+    root = _project(tmp_path, {".claude/canvas/c.yml": "u: https://wall.example-real.com/x\n"})
+    monkeypatch.setattr(mod, "_urlopen", _fake_urlopen({"https://wall.example-real.com/x": 403}))
+    mod.ROOT = root
+    mod.mark_verified("https://wall.example-real.com/x", "ok", "", datetime.date(2020, 1, 1))
+    _run(mod, root)
+    rec = _snapshot(mod, root, "2026-09-14")["https://wall.example-real.com/x"]
+    assert rec["status"] == mod.BLOCKED
+    assert rec["needs_browser_check"] is True
