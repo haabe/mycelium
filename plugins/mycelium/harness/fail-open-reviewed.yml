@@ -401,6 +401,18 @@ reviewed:
     (dated and entity-scoped keys) still runs on the text. A new canvas file has no prior
     spellings to collide with; a broken one is the sweep's finding, not this guard's. Advisory
     hook, must never break a write.
+- id: check_retirement_candidates.py@2eb6be8b21
+  verdict: accepted
+  reason: >-
+    _last_date_in_state_file, unreadable or undated state file (0.215.0): returns None, which
+    the report prints as "never" for that hook, the conservative direction (an unreadable
+    log makes a hook look quieter, never busier). The report is advisory and removes nothing.
+- id: validate_canvas.py@112551523a
+  verdict: accepted
+  reason: >-
+    opportunity_shape_summary (0.215.0): a COVERAGE line that must never fail the validator;
+    on any error the line is omitted, and the schema and WARN tiers are unaffected. The full
+    report is check_opportunity_shape.py, which exits 1 or 2 on its own failures.
 # ---------------------------------------------------------------------------
 # accepted — flagged as "appears to speak", confirmed by reading.
 # ---------------------------------------------------------------------------

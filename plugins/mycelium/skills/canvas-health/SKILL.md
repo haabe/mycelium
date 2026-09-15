@@ -625,6 +625,39 @@ today cannot make 523 pre-existing keys a build failure (see the founder's own n
 proportionality). Seed once with `--write-baseline`; from then on `--strict` fails only on NEW keys, so
 the cost falls on new writing.
 
+## A pointer that names nothing (added v0.215.0)
+
+`validate_canvas.py` now resolves every `file.yml#key` anchor written into a canvas, diamond or
+harness value against the file it names, by key, by `id` or by `type`, at any depth, and reports
+each one that resolves to nothing as `WARN (cross-reference)`. Two consumer projects surfaced the
+class on the same day (2026-09-02): a status citing a register key that was never written; a summary
+naming a key renamed a fortnight earlier. **The summary is what a reader in a hurry consults, so when
+its pointer dangles it is the dangling version that gets acted on.** Measured on the dogfood canvas
+before shipping: 380 distinct anchors, 20 unresolved, and the largest cluster was anchors written as
+the short form of a key that carries a date in its name (`#finding_9` for
+`finding_9_fourth_mine_..._2026_08_07`), which is the content-in-key defect above seen from the
+other end. For each finding: fix the pointer, or move the content it names to a plain key. What this
+does NOT catch, so a clean run is not read as more than it is: a pointer that resolves and
+misdescribes what it points at.
+
+## Is each OST node a user need, or a maintenance ticket? (added v0.215.0, founder 2026-09-02)
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_opportunity_shape.py" --canvas-dir .claude/canvas
+```
+
+The validator checks that the tree is well-connected and nothing checked that a node is the right
+KIND of thing: a framework-maintenance finding with a resolving `rolls_up_to` passed every gate. On
+the dogfood canvas 52 entries accumulated under an off-north-star root over months, and the only
+check that fired was the founder looking at a rendered tree and saying it felt wrong. Three markers
+on the NAME (Torres need-language, a human subject) plus one entry-level fact (a solution leaf),
+scored 0 to 3, grouped by root. `validate_canvas.py` prints the per-root summary as a COVERAGE line.
+**A low score is a question for a human, never a verdict, and this must not become a write gate**:
+lexical detectors have twice measured zero recall in the dogfood project, and a lexical gate on
+writes would evict real opportunities, which is worse than the drift. Rule on the triage list in
+batches; when the first run of the prototype measured both roots at 47% low, it killed the agent's
+own eviction proposal, which is the shape of a report doing its job.
+
 ## A claim of novelty says what it was checked against (added v0.208.0, founder ruling 2026-09-14)
 
 ```bash

@@ -4,6 +4,14 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-14.
 
+## v0.215.0 - three reports for what the gates never asked
+
+Three dogfood candidates closed on the tenth backlog pass of 2026-09-15. Each is a report over a population the gates were already walking without asking the question.
+
+- **`validate_canvas.py` cross-reference resolver** (candidate 2026-09-02, two consumer projects the same day): every `file.yml#key` anchor written into a canvas, diamond or harness value is resolved against the file it names, by key, by `id` or by `type`, at any depth, and each one that names nothing is a `WARN (cross-reference)`. Measured on the dogfood canvas before shipping: 380 distinct anchors, 20 unresolved; the largest cluster was anchors written as the short form of a dated key (`#finding_9`), the key-shape defect from the other end. Resolution by `type` was added after the first measurement, when `purpose.yml#community_feedback` turned out to name the entries typed so, not a key. The status-comment lint half of that row stays open: the row's own evidence is that structural checks caught real errors and lexical nags caught none.
+- **`check_opportunity_shape.py`** (candidate 2026-09-02, founder: nine agent proposals all preserved the data): the dogfood prototype ported as shipped. Three markers on an opportunity's NAME (Torres need-language, a human subject) and one entry fact (a solution leaf), scored 0 to 3 and grouped by root, as a triage list. `validate_canvas.py` carries the per-root summary as a COVERAGE line, deliberately not a WARN and never a write gate: lexical detectors have twice measured zero recall in the dogfood project, and a lexical gate on writes would evict real opportunities. Dogfood at shipping: one root, 79 entries, mean 1.92, 21 scoring at most 1. Canvas-health section.
+- **`check_retirement_candidates.py`** (candidate 2026-09-07): for every skill, hook and check, the last evidence of use from the project's own records (dated decision-log and corrections mentions, read-log rows, the newest row of the state file the hook writes, read from the hook's source) and its readers (skills, engine docs, hooks, the runtime manifests, the gate set). A candidate has no fire in the window and no reader. It names the hooks that write no record as unmeasurable rather than skipping them, lists the quiet-but-read rows so a reader can disagree, and says that no runtime records a skill invocation. First dogfood run over 60 days: 136 mechanisms, 3 candidates, 10 unmeasurable hooks. No project record is NOT A PASS. Framework-health section 4i. Nothing is removed by the script.
+
 ## v0.214.0 - content in key position, caught at the keystroke
 
 One dogfood candidate closed on the ninth backlog pass of 2026-09-15: the write-time half of the near-duplicate-keys row, split out when the sweep half shipped in 0.212.0.

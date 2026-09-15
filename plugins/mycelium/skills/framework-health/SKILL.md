@@ -218,6 +218,29 @@ A rising score with a falling first-pass rate is the gaming shape; read it besid
 and the negative-control check. Framework-repo only: a consumer without `plugins/mycelium/scripts`
 gets UNKNOWN, which is not a pass. Same-session re-runs are not two observations (4e).
 
+### 4i. Retirement candidates: what could go (added 0.215.0)
+
+The framework only grows: at 0.180.4 it carried 61 skills and 23 gates with none retired, and no
+mechanism reported another as unread or unfired. Run:
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_retirement_candidates.py" --project-dir . --window-days 60
+```
+
+For every skill, hook and check it prints the last evidence of use from the records this project
+already writes (a dated decision-log or corrections mention, a read-log row, the newest row of the
+state file the hook writes, the gate list) and who reads it (another skill, an engine doc, a hook, a
+runtime manifest, the gate set). **A candidate is a mechanism with no fire in the window and no
+reader.** Three things to report beside the list, because each bounds what it means: the hooks that
+write no record and so cannot be measured (the first fix there is a record, not retirement); the
+"quiet but read" rows, which are not candidates and are listed so a reader can disagree; and that no
+runtime records a skill invocation, so a skill used and never written about is invisible here. The
+first dogfood run (2026-09-15, 60 days) listed 136 mechanisms, 3 candidates after the two new
+checks gained their callers (`/canvas-sync`, last named 2026-06-14; `check_gated_by.py`, a
+self-declared draft stub; one guard whose log file the installed plugin did not yet write), and 10
+hooks with no record. Retirement happens by release with the row's evidence in the changelog. The
+script removes nothing.
+
 ### 5. Generate Dashboard
 
 ## Output

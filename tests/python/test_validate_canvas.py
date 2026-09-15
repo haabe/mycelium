@@ -2096,3 +2096,47 @@ def test_a_blocker_quoting_an_old_confidence_is_reported(tmp_path, scripts_path)
     assert len(out) == 2
     assert any("quoting confidence 0.48" in w and "0.6" in w for w in out)
     assert any("ruled needs-evidence on 2026-09-01" in w for w in out)
+
+
+# --- v0.215.0: a `file.yml#key` anchor must name something in that file ----------------
+
+
+def test_a_dangling_anchor_is_reported_and_a_typed_entry_resolves(tmp_path, scripts_path):
+    validator = _import_validator(scripts_path)
+    canvas = tmp_path / ".claude" / "canvas"
+    canvas.mkdir(parents=True)
+    (canvas / "purpose.yml").write_text(textwrap.dedent("""\
+        evidence:
+          - type: community_feedback
+            note: "x"
+        deep:
+          nested_key: {inner: 1}
+    """))
+    (canvas / "human-tasks.yml").write_text(textwrap.dedent("""\
+        tasks:
+          - id: ht-001
+            note: "see purpose.yml#community_feedback and purpose.yml#nested_key.inner"
+          - id: ht-002
+            note: "see purpose.yml#finding_9 and purpose.yml#L770 and other.yml#x"
+          - id: ht-003
+            note: "see human-tasks.yml#ht-001.note and human-tasks.yml#ht-001.gone"
+    """))
+    out = validator.cross_reference_findings(canvas)
+    assert len(out) == 2
+    assert any("`purpose.yml#finding_9`" in w for w in out)
+    assert any("`human-tasks.yml#ht-001.gone`" in w and "on that path" in w for w in out)
+
+
+def test_opportunity_shape_summary_is_a_coverage_line(tmp_path, scripts_path):
+    validator = _import_validator(scripts_path)
+    canvas = tmp_path / ".claude" / "canvas"
+    canvas.mkdir(parents=True)
+    assert validator.opportunity_shape_summary(canvas) == ""
+    (canvas / "opportunities.yml").write_text(textwrap.dedent("""\
+        opportunities:
+          - id: opp-1
+            name: Refactor the validator
+            rolls_up_to: framework
+    """))
+    line = validator.opportunity_shape_summary(canvas)
+    assert line.startswith("framework: n=1 mean=0.00 <=1: 1")

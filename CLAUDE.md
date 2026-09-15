@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.214.0 -- **Content in key position, caught at the keystroke** (MINOR). A PreToolUse guard on canvas and diamond writes names a dated or entity-scoped key, or a second spelling of a stem the file already holds, while the author still holds the reason; the 0.212.0 sweep stays as the retrofit path. Calibrated on 60 dogfood commits: 141 such keys in five days.
+*Version 0.215.0 -- **Three reports for what the gates never asked** (MINOR). The validator resolves every `file.yml#key` pointer and reports the ones that name nothing; an opportunity-shape report says whether each OST node reads as a user need, as a triage list and never a gate; a retirement report lists every skill, hook and check with its last evidence of use and its readers, and the decision stays with the maintainer.
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

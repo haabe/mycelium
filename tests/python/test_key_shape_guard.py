@@ -141,3 +141,42 @@ def test_prose_inside_a_block_scalar_or_quoted_string_is_not_a_key():
 def test_writing_the_plain_spelling_beside_a_dated_twin_is_the_fix_not_a_finding():
     m = _mod()
     assert m.findings("posted: true\n", {"posted": {"POSTED_2026_08_10"}}) == []
+
+
+# ---------------------------------------------------------------- in-process (coverage of the hook path)
+
+
+def _payload_dict(path, text, tool="Write"):
+    key = "content" if tool == "Write" else "new_string"
+    return {"tool_name": tool, "tool_input": {"file_path": str(path), key: text}}
+
+
+def test_scan_for_reads_the_target_file_and_ignores_unwatched_paths(tmp_path):
+    m = _mod()
+    canvas = tmp_path / ".claude/canvas/human-tasks.yml"
+    canvas.parent.mkdir(parents=True)
+    canvas.write_text("- id: ht-001\n  reply_sent: false\n  nested:\n    - deep_key: 1\n")
+    assert m.scan_for(_payload_dict(canvas, "  reply-sent: true\n", "Edit"))
+    assert m.scan_for(_payload_dict(tmp_path / "docs/x.md", "reply-sent: true\n")) == []
+    assert m.scan_for({"tool_name": "Write", "tool_input": "not a dict"}) == []
+    assert m.scan_for(_payload_dict(canvas, "   \n")) == []
+    assert "deep_key" in m._file_spellings(str(canvas))
+    assert m._file_spellings(str(tmp_path / "missing.yml")) == {}
+
+
+def test_main_prints_the_advisory_and_logs_in_process(tmp_path, monkeypatch, capsys):
+    import io
+    m = _mod()
+    monkeypatch.setenv("CLAUDE_PROJECT_DIR", str(tmp_path))
+    hits = "\n".join(f"  k{i}_2026_09_{10 + i}: x" for i in range(7))
+    monkeypatch.setattr("sys.stdin", io.StringIO(json.dumps(
+        _payload_dict(tmp_path / ".claude/canvas/purpose.yml", hits + "\n"))))
+    assert m.main() == 0
+    out = json.loads(capsys.readouterr().out)["hookSpecificOutput"]["additionalContext"]
+    assert "and 2 more in this write" in out and "notes:" in out
+    assert (tmp_path / ".claude/state/key-shape-guard-log.jsonl").exists()
+    monkeypatch.setattr("sys.stdin", io.StringIO("not json"))
+    assert m.main() == 0 and capsys.readouterr().out == ""
+    monkeypatch.setattr("sys.stdin", io.StringIO(json.dumps(
+        _payload_dict(tmp_path / ".claude/canvas/purpose.yml", "plain: 1\n"))))
+    assert m.main() == 0 and capsys.readouterr().out == ""

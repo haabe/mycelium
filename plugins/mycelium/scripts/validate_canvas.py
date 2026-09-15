@@ -44,6 +44,12 @@ import sys
 from collections import defaultdict, deque
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+try:
+    from check_opportunity_shape import summarise as _shape_summarise
+except ImportError:                        # a partial install keeps the validator whole
+    _shape_summarise = None
+
 # Try imports — fail gracefully with clear message
 try:
     import yaml
@@ -1307,9 +1313,16 @@ def print_advisory_warnings(canvas_dir):
         ("opportunity mover", opportunity_mover_findings(canvas_dir)),
         ("unscanned source", unscanned_source_findings(canvas_dir)),
         ("stale blocker", stale_blocker_findings(canvas_dir)),
+        ("cross-reference", cross_reference_findings(canvas_dir)),
     ):
         for w in findings:
             print(f"  WARN ({label}): {w}")
+    shape = opportunity_shape_summary(canvas_dir)
+    if shape:
+        # A coverage line, not a WARN: a low opportunity-shape score is a question for a
+        # human, never a verdict (the report's own rule), so it must not share the tier
+        # that carries contradictions.
+        print(f"  COVERAGE (opportunity shape): {shape}")
 
 
 def sub_opportunity_findings(canvas_dir):
@@ -1828,6 +1841,120 @@ def open_task_criterion_warnings(canvas_dir):
             f"evidence, only abandoned"
         )
     return out
+
+
+_ANCHOR = re.compile(r"\b([a-z][a-z0-9-]*\.yml)#([A-Za-z0-9_][A-Za-z0-9_.\-]*)")
+_LINE_ANCHOR = re.compile(r"^L\d+$")
+_XREF_DIRS = ("canvas", "diamonds", "harness")
+_XREF_DEPTH = 14
+
+
+def _xref_files(canvas_dir):
+    """name -> parsed document for every project yml a `file.yml#key` anchor can name."""
+    base = Path(canvas_dir).parent
+    out = {}
+    for sub in _XREF_DIRS:
+        for path in sorted((base / sub).glob("*.yml")):
+            try:
+                out[path.name] = yaml.safe_load(path.read_text()) or {}
+            except (yaml.YAMLError, OSError):
+                continue
+    return out
+
+
+def _xref_strings(node, out, depth=0):
+    if depth > _XREF_DEPTH:
+        return
+    if isinstance(node, dict):
+        for v in node.values():
+            _xref_strings(v, out, depth + 1)
+    elif isinstance(node, list):
+        for v in node:
+            _xref_strings(v, out, depth + 1)
+    elif isinstance(node, str) and "#" in node:
+        out.append(node)
+
+
+def _xref_matches(node, seg, depth=0):
+    """Every subtree named `seg`: a mapping key, or an entry whose id or type is `seg`."""
+    hits = []
+    if depth > _XREF_DEPTH:
+        return hits
+    if isinstance(node, dict):
+        if str(node.get("id")) == seg or str(node.get("type")) == seg:
+            hits.append(node)
+        for k, v in node.items():
+            if k == seg:
+                hits.append(v)
+            hits.extend(_xref_matches(v, seg, depth + 1))
+    elif isinstance(node, list):
+        for v in node:
+            hits.extend(_xref_matches(v, seg, depth + 1))
+    return hits
+
+
+def _xref_resolves(doc, path):
+    nodes = [doc]
+    for seg in (s for s in path.strip(".").split(".") if s):
+        nodes = [hit for n in nodes for hit in _xref_matches(n, seg)]
+        if not nodes:
+            return False
+    return True
+
+
+def cross_reference_findings(canvas_dir):
+    """WARN-tier: a `file.yml#key` anchor must name a key, id or type that exists in that file.
+
+    v0.215.0, from two consumer projects on the same day (2026-09-02): a status citing a
+    register key that was never written; a summary naming a key renamed a fortnight earlier.
+    The summary is what a reader in a hurry consults, so when its pointer dangles it is the
+    dangling version that gets acted on. Measured on the dogfood canvas before shipping: 380
+    distinct anchors, 25 unresolved, and the largest cluster was anchors written as the short
+    form of a key that carries a date in its name (`#finding_9` for
+    `finding_9_fourth_mine_..._2026_08_07`), which is the key-shape defect seen from the
+    other end. Segments resolve at any depth, by key, by `id` or by `type`, because that is
+    how the canvas writes them (`purpose.yml#community_feedback` names the entries typed so).
+    A target file outside canvas/, diamonds/ and harness/ is not checked. Report only.
+    """
+    files = _xref_files(canvas_dir)
+    if not files:
+        return []
+    seen = {}
+    for name, doc in files.items():
+        strings = []
+        _xref_strings(doc, strings)
+        for s in strings:
+            for m in _ANCHOR.finditer(s):
+                target, anchor = m.group(1), m.group(2)
+                if target not in files or _LINE_ANCHOR.match(anchor):
+                    continue
+                seen.setdefault((target, anchor), name)
+    out = []
+    for (target, anchor), origin in sorted(seen.items()):
+        if not _xref_resolves(files[target], anchor):
+            out.append(f"{origin}: `{target}#{anchor}` names nothing in {target} "
+                       f"(no key, id or type `{anchor.strip('.').split('.')[0]}`"
+                       f"{' on that path' if '.' in anchor.strip('.') else ''}); "
+                       f"the pointer is what a hurried reader acts on")
+    return out
+
+
+def opportunity_shape_summary(canvas_dir):
+    """One line: how many OST entries read as user needs, by root. Never a WARN.
+
+    The report itself is `check_opportunity_shape.py` (v0.215.0, prototyped in the dogfood
+    repo 2026-09-02). This is the smallest reader the validator can carry without turning a
+    lexical proxy into a gate.
+    """
+    path = Path(canvas_dir) / "opportunities.yml"
+    if not path.exists():
+        return ""
+    if _shape_summarise is None:
+        return ""
+    try:
+        return _shape_summarise(path)
+    except Exception:                      # noqa: BLE001 — a coverage line must never fail the validator
+        return ""
 
 
 def main():
