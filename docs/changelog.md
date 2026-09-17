@@ -4,6 +4,15 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-17.
 
+## v0.226.2 - five versions that were pushed and never released
+
+**2026-09-17.** Tests only. Corrects v0.223.0, shipped the same day.
+
+- **v0.223.0, v0.224.0, v0.225.0, v0.226.0 and v0.226.1 were pushed to `main` and none of them was released.** CI failed on all five at the per-file coverage floor: `shell_safety_guard.py` at 68% against a floor of 70%. The code in those versions is on `main` and behaves as their entries say; what was missing is the Release and tag for each, which `auto-release.yml` creates only on a green run and back-fills from this changelog.
+- **Cause.** Rule 5 (the half-applying multi-file edit, v0.223.0) and its tests drive the hook as a subprocess. `coverage.py` does not instrument a child interpreter, so about forty new lines counted as untested. The test file's own in-process section opens with a comment naming this exact mistake.
+- **Fix.** Ten parametrized in-process cases for rules 4 and 5, two for `_raw_steps`, one for `_masked_trigger`: the same commands, called directly. The file is at 95%. Run locally with CI's exact arguments before this bump: 1,811 passed, total 91%, all 84 shipped scripts at or above the floor.
+- **Not changed.** The push gate still does not measure coverage. That was decided in v0.150.0 for a stated reason (with `--cov` the hook ran about 366 seconds, long enough that GitHub closed the idle SSH connection mid-push) and one incident does not reopen it. What failed was reading the push's exit code as "released" five times without once looking at the run. See the corrections entry.
+
 ## v0.226.1 - the authenticity check knows the project's own handle
 
 **2026-09-17.** Found on the dogfood canvas while triaging four advisories: one of the "external authors" was the maintainer.

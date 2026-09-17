@@ -497,3 +497,80 @@ def test_the_trigger_is_truncated(scripts_path, tmp_path):
     long = "grep -c foo " + "x" * 600 + " | head -1; echo $?"
     _run_in(scripts_path, tmp_path, long, MYCELIUM_LEDGER_TRIGGER="on")
     assert len(_ledger_rows(tmp_path)[0]["trigger"]) <= 200
+
+
+# ------------------------------------------------- in-process, rules 4 and 5 (v0.226.2)
+# WHY THESE EXIST. Every test of rules 4 and 5 above drives a subprocess, so none of it
+# counted toward coverage. Rule 5 landed in v0.223.0 and took this file to 68%, under the
+# 70% per-file floor. That floor runs in CI only, so the push gate passed and FOUR versions
+# (0.223.0 to 0.226.0) were pushed and never released. The header of the in-process section
+# above already named this mistake; it was made a third time. Same commands, called directly.
+
+_LATE_CHECK = (
+    "python3 - <<'PY'\n"
+    "s=open('plugin.json').read(); open('plugin.json','w').write(s.replace('0.1','0.2'))\n"
+    "t=open('CHANGELOG.md').read(); assert t.count('## v0.1')==1\n"
+    "open('CHANGELOG.md','w').write(t.replace('## v0.1','## v0.2'))\n"
+    "PY"
+)
+_EARLY_CHECK = (
+    "python3 - <<'PY'\n"
+    "a=open('a').read(); b=open('b').read(); assert a.count('x')==1 and b.count('x')==1\n"
+    "open('a','w').write(a.replace('x','y')); open('b','w').write(b.replace('x','y'))\n"
+    "PY"
+)
+_NO_CHECK = (
+    "python3 -c \"open('a','w').write(open('a').read().replace('x','y')); "
+    "open('b','w').write(open('b').read().replace('x','y'))\""
+)
+_ONE_FILE = (
+    "python3 - <<'PY'\n"
+    "s=open('a.yml').read(); assert s.count('x')==1\n"
+    "s=s.replace('x','y'); open('a.yml','w').write(s)\n"
+    "PY"
+)
+_GATED = ("python3 - <<'EOF' && git add -A && git commit -m x\n"
+          "p='.claude/canvas/x.yml'; open(p,'w').write('a')\n"
+          "EOF")
+
+
+@pytest.mark.parametrize(
+    ("command", "phrase", "warns"),
+    [
+        (_LATE_CHECK, _HALF, True),
+        (_NO_CHECK, _HALF, True),
+        (_EARLY_CHECK, _HALF, False),
+        (_ONE_FILE, _HALF, False),
+        ("python3 scripts/safe_replace.py --spec edits.json", _HALF, False),
+        (_WRITE_THEN_COMMIT, "ungated commit", True),
+        ("sed -i '' 's/a/b/' .claude/canvas/purpose.yml; git add -A; git commit -m x",
+         "ungated commit", True),
+        (_GATED, "ungated commit", False),
+        ("git commit -m x\necho note >> .claude/memory/notes.md", "ungated commit", False),
+        ("echo 'a; git commit' >> .claude/memory/n.md", "ungated commit", False),
+    ],
+)
+def test_rules_four_and_five_in_process(scripts_path, command, phrase, warns):
+    got = _import(scripts_path).findings(command)
+    assert isinstance(got, list)
+    assert any(phrase in w for w in got) is warns, got
+
+
+def test_raw_steps_keep_a_heredoc_body_with_the_step_that_opened_it(scripts_path):
+    mod = _import(scripts_path)
+    steps = mod._raw_steps("python3 - <<'EOF'\na = 1; b = 2\nEOF\ngit status; echo 'x; y'")
+    assert len(steps) == 3, steps
+    assert "a = 1; b = 2" in steps[0]
+    assert steps[2].strip() == "echo 'x; y'"
+
+
+def test_raw_steps_survive_a_heredoc_with_no_body(scripts_path):
+    assert _import(scripts_path)._raw_steps("cat <<'EOF'") == ["cat <<'EOF'"]
+
+
+def test_masked_trigger_in_process(scripts_path):
+    mod = _import(scripts_path)
+    out = mod._masked_trigger("GITHUB_TOKEN=ghp_abcdefghijklmnopqrstuvwxyz0123 gh api user " + "x" * 600)
+    assert "ghp_abcdefghijklmnopqrstuvwxyz0123" not in out
+    assert "<masked>" in out
+    assert len(out) <= 200

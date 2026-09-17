@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.226.1 -- **The authenticity check knows the project's own handle** (PATCH). `check_source_authenticity.py` now also reads the owner of the `origin` remote, so a maintainer whose forum handle matches their GitHub owner is no longer reported as an unchecked external author.*
+*Version 0.226.2 -- **Five versions that were pushed and never released** (PATCH). Tests only. A shell-safety rule added in v0.223.0 was tested through a subprocess alone, which coverage cannot see; the file fell to 68%, under the 70% per-file floor that runs in CI, and every push from v0.223.0 to v0.226.1 went red and cut no Release. The same cases now also run in-process (95%). Corrects v0.223.0.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

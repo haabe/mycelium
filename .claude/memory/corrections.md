@@ -529,3 +529,18 @@ The framing that matters: the whole point of the change was to stop the policy l
 **Prevention rule**: **a sentence in shipped docs that says what a mechanism is FOR cites the mechanism's own header or is checked against it before the commit.** Reading a hook's first twenty lines costs seconds. The tell that should have prompted it: the claim explained away a result the author did not like.
 
 **Generalization**: same family as the 2026-08-06 entry (a comment asserting a property nobody tested), one layer out: there it was a regex's narrowness, here a hook's purpose. Both were settled by running the thing on a real input. Found on the way and left open deliberately: the guard is also silent on "freelancers will pay", because its subject list is generic nouns and a named segment is not among them. That is a calibration question with its own evidence bar, not a docs fix.
+
+### 2026-09-17 - Five versions reported as shipped on the strength of `git push` exiting 0 (v0.226.2 corrects v0.223.0)
+- **Scope**: framework / release process
+- **Category**: a success signal read from the wrong stage; subprocess-only tests invisible to coverage (third instance)
+- **Origin**: dogfood, mycelium-roadmap DL-1331; the agent's own error, caught by the agent on the fifth push
+
+**Mistake.** v0.223.0 added rule 5 to `shell_safety_guard.py` with tests that run the hook as a subprocess. The file fell to 68% and the CI-only per-file floor (70%) failed. The agent then pushed four more versions the same day and reported each as shipped, because the local push gate passed and the push exited 0. None had a Release. The founder ran a plugin update in between and was told it had picked up the new version.
+
+**How it was caught**: `gh release list` after the v0.226.1 push, run to confirm the release and showing v0.222.0 as latest.
+
+**Correction**: in-process tests (95%); one green run lets `auto-release.yml` back-fill the five Releases from the changelog.
+
+**Prevention rule**: **a version is shipped when its Release exists, and that is read from `gh release list`, never from the exit code of `git push`.** The push gate says the tree is pushable; it has said plainly since v0.150.0 that a push passing it "can still go red on coverage". Second, cheaper rule: **when new branches land in a script whose tests use `subprocess.run`, run that one test file with `--cov` before the bump.** It takes three seconds and it is the only place the floor can be seen locally.
+
+**Generalization**: the same shape as a background wrapper's exit code read as the push's, earlier the same day: the signal was real, it belonged to an earlier stage, and nothing downstream was read. Each stage that can fail on its own needs its own reading.
