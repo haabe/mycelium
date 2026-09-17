@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.226.2 -- **Five versions that were pushed and never released** (PATCH). Tests only. A shell-safety rule added in v0.223.0 was tested through a subprocess alone, which coverage cannot see; the file fell to 68%, under the 70% per-file floor that runs in CI, and every push from v0.223.0 to v0.226.1 went red and cut no Release. The same cases now also run in-process (95%). Corrects v0.223.0.*
+*Version 0.226.3 -- **Three checks that were wrong about their own output** (PATCH). `derive_closing_path.py` listed a hand-routed input twice once it landed, and the framework's own validator rejected the result. `check_instrument_contract.py` reported eleven already-scored predictions as due because it read five exact key names nobody writes. The push gate now says on its passing path that pushed is not released.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

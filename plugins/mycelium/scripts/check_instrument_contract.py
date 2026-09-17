@@ -517,13 +517,33 @@ SCORED_KEYS = ("prediction_scored", "scored", "scored_at", "score", "outcome")
 _CANVAS_WALK_DEPTH = 12
 
 
+_CLOSED_STATUS = ("completed", "closed", "done", "cancelled")
+
+
+def _has_score(node: dict) -> bool:
+    """A score is an exact SCORED_KEYS name, `outcome_scored`, or any key that STARTS with `scored`.
+
+    v0.226.3. Read by hand on the dogfood canvas 2026-09-17: eleven of eleven DUE lines were
+    already scored, under `scored_at_horizon`, `scored_2026_08_18`, `outcome_scored`,
+    `SCORED_2026_08_25_...`. The prefix is `scored` and never `score` or `outcome`: the dangerous
+    direction is hiding an unscored prediction, and `score_by` is a date, `outcome_classes` a plan.
+    """
+    for k in node:
+        low = str(k).lower()
+        if low in SCORED_KEYS or low == "outcome_scored" or low.startswith("scored"):
+            return True
+    return False
+
+
 def _classify_canvas_prediction(node: dict, canvas: str, today: _dt.date, res: dict) -> None:
     label = f"{canvas}#{node.get('id', '?')}"
     horizon = _parse_date(str(node.get("horizon") or node.get("score_by") or ""))
-    if any(k in node for k in SCORED_KEYS):
+    if _has_score(node):
         res["scored"].append(label)
     elif horizon is None:
         res["undated"].append(label)
+    elif horizon < today and str(node.get("status") or "").lower() in _CLOSED_STATUS:
+        res["closed_unscored"].append((label, str(horizon)))
     elif horizon < today:
         res["due"].append((label, str(horizon), (today - horizon).days))
     else:
@@ -545,7 +565,8 @@ def canvas_predictions(root: Path, today: _dt.date) -> dict[str, list]:
     such key and a passed horizon is DUE, and that is the finding the staleness rule
     pointed at the wrong remedy.
     """
-    res: dict[str, list] = {"due": [], "live": [], "scored": [], "undated": []}
+    res: dict[str, list] = {"due": [], "live": [], "scored": [], "undated": [],
+                            "closed_unscored": []}
     cdir = root / CANVAS_DIR
     if not cdir.is_dir():
         return res
@@ -577,11 +598,16 @@ def _emit_canvas_predictions(cp: dict[str, list]) -> None:
         return
     print(f"\nPREDICTIONS IN THE CANVAS, OUTSIDE THE CONTRACT — {total}: {len(cp['due'])} due "
           f"for scoring, {len(cp['live'])} live, {len(cp['scored'])} scored, "
-          f"{len(cp['undated'])} with no horizon. Not counted as problems and not asked to "
+          f"{len(cp['undated'])} with no horizon, {len(cp['closed_unscored'])} closed with no "
+          f"score found. Not counted as problems and not asked to "
           f"move: a prediction beside the task it is about is where it gets scored.")
     for label, when, days in cp["due"]:
         print(f"  DUE     {label} (horizon {when}, {days} days ago) — score it; this is not "
               f"a stale task and the remedy is not a nudge")
+    for label, when in cp["closed_unscored"]:
+        print(f"  CLOSED  {label} (horizon {when}) — the task is closed and no score was found "
+              f"under a known key; if it was scored in prose or under another name, add "
+              f"`prediction_scored:` pointing at it. Not called DUE: nothing here is overdue work")
     for label in cp["undated"]:
         print(f"  UNDATED {label} — a prediction with no horizon can never be overdue")
 

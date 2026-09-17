@@ -171,6 +171,20 @@ def test_hand_written_sibling_routes_are_watched(tmp_path, capsys):
     )
     rc, out = _run(tmp_path, capsys, "--diamond-id", "l1", "--write")
     assert "CLOSING PATH FIRED for l1: a-9a-1 has a verdict (REFUTES)" in out
+    # v0.226.3: a landed input is listed under `fired` and nowhere else. A hand-named route stays in
+    # routes_on_record for good, so it was re-added to `inputs` on every run, the same id sat in both
+    # lists, and validate_canvas rejected the script's own output on a duplicate id. Met on the dogfood
+    # canvas 2026-09-17, the first time a hand-routed input got a verdict.
+    stored = _l1(tmp_path)["closes_on"]
+    assert "a-9a-1" in {f["id"] for f in stored["fired"]}
+    assert "a-9a-1" not in {i["id"] for i in stored["inputs"]}
+    ids = [e["id"] for e in stored["inputs"] + stored["fired"]]
+    assert len(ids) == len(set(ids)), ids
+    # and it stays that way on the next run, which is when the re-adding happened
+    _run(tmp_path, capsys, "--diamond-id", "l1", "--write")
+    again = _l1(tmp_path)["closes_on"]
+    ids = [e["id"] for e in again["inputs"] + again["fired"]]
+    assert len(ids) == len(set(ids)), ids
 
 
 def test_preserved_subkeys_survive(tmp_path, capsys):

@@ -236,4 +236,11 @@ if [ -n "${SCRIPTS_DIR:-}" ] && [ -f "$SCRIPTS_DIR/git-pre-push-example.sh" ] &&
     fi
 fi
 
+# THE PASSING PATH SAYS WHAT IT DID NOT CHECK (v0.226.3). The sentence "a push that passes here
+# can still go red on coverage" was printed only when tests FAILED, so nobody on the passing path
+# ever read it. Measured 2026-09-17 on this repository: five versions pushed green through this
+# hook, five red CI runs on a coverage floor this hook does not measure, none of them read, all
+# five reported as shipped. One line, on the path where the misreading happens.
+echo "[mycelium pre-push] Local gates passed. Pushed is not released: coverage and any release step run in CI only. Read the run (gh run list) before calling this shipped." >&2
+
 exit 0

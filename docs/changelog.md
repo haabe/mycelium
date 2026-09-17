@@ -4,6 +4,15 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-17.
 
+## v0.226.3 - three checks that were wrong about their own output
+
+**2026-09-17.** Three dogfood findings from one evening, each found by running the thing on the real canvas.
+
+- **`derive_closing_path.py` no longer lists a landed input twice.** A route named by hand in `routes_on_record` stays there for good, so it was re-added to `inputs` on every run. Once it got a verdict it sat in `inputs` and in `fired` under one id, and `validate_canvas.py` rejects a duplicate id: the script failed the framework's own validator with its own output. First met on 2026-09-17, the first time a hand-routed input landed. A landed input is now reported under `fired` and nowhere else. The existing hand-route test was extended to pin it, and failed before the fix.
+- **`check_instrument_contract.py` can see a score it did not name.** On the dogfood canvas it reported eleven predictions as "DUE, score it", the oldest for 40 days. Read by hand, all eleven were scored and closed, under `scored_at_horizon`, `scored_2026_08_18`, `outcome_scored`, `SCORED_2026_08_25_...`, or in prose. A key that starts with `scored` now counts, as does `outcome_scored`. The prefix is deliberately not `score` or `outcome`: hiding an unscored prediction is the dangerous direction, and `score_by` is a date. A CLOSED task with no recognised score is reported as that, with the fix named (`prediction_scored:` pointing at the prose), and is no longer called due. Same canvas after the change: 0 due, 7 scored, 6 closed with no score found.
+- **`/mycelium:log-evidence` names the key.** No skill that writes a score said where to write it, which is how eleven scores ended up under eleven names.
+- **The push gate says what it did not check, on the path where it matters.** "A push that passes here can still go red on coverage" was printed only when tests failed. The passing path now ends with one line: pushed is not released, read the run. See v0.226.2 for what the silence cost. An installed copy of the hook will report itself as differing from the shipped example until it is refreshed; the note says how.
+
 ## v0.226.2 - five versions that were pushed and never released
 
 **2026-09-17.** Tests only. Corrects v0.223.0, shipped the same day.

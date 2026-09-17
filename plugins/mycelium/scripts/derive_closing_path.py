@@ -642,6 +642,12 @@ def build_closes_on(  # noqa: C901, PLR0912, PLR0915 — one derivation, three i
                         ),
                     }
                 )
+    # A landed input is reported under `fired` and nowhere else (v0.226.3). A hand-named route
+    # stays in routes_on_record for good, so _route_refs re-added it to `inputs` on every run:
+    # one id in two lists, and validate_canvas rejects that as a duplicate id. The script was
+    # failing the framework's own validator with its own output.
+    landed = {f.get("id") for f in fired if isinstance(f, dict)}
+    inputs = [i for i in inputs if i.get("id") not in landed]
     entry = {"stored_at": today, "gates": gates, "inputs": inputs, "fired": fired}
     for k in PRESERVED_KEYS:
         if prev and k in prev:
