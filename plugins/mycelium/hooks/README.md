@@ -155,7 +155,9 @@ Full reference: https://code.claude.com/docs/en/hooks
 ## Helper Scripts (Not Standalone Hooks)
 
 ### preflight.sh
-Called BY `gate.sh` when the preflight stamp is expired/missing. Creates a stamp file with corrections.md hash and timestamp. NOT a standalone hook -- it's a helper that gate.sh invokes internally. Users can also run it manually: `bash .claude/hooks/preflight.sh`
+Registered on `UserPromptSubmit` (5 s timeout) AND called by `gate.sh` when the preflight stamp is expired or missing. Creates a stamp file with the corrections.md hash and a timestamp, prints the corrections count, and delivers the background session-start checks once per session (v0.186.0). This section said "NOT a standalone hook" until 0.222.0; it has been registered in `hooks.json` for a long time and the text had not followed.
+
+**Discovery pre-warning (v0.222.0).** While the project has no discovery state and no `discovery-skip-ack`, it also prints one line telling the model that `discovery-gate.sh` will refuse new source files, so it should ask who, what problem and what evidence before drafting a design, and to ignore the line when the prompt is not a build request. The condition is `hi_discovery_engaged`, the function the gate itself calls, so the warning and the block cannot disagree. State-keyed: it reads nothing from the prompt. Advisory: it never blocks. Why it exists: the gate fires only after the model has drafted the work it refuses.
 
 ---
 
@@ -244,7 +246,7 @@ See `../state/README.md` for the full data format philosophy.
 | `reflexion-gate.sh` | PostToolUseFailure Bash | NUDGE (filtered) | Fail-open |
 | `stop-check.sh` | Stop | NUDGE + warning | Fail-open |
 | `session-start.sh` | SessionStart startup/resume | NUDGE | Fail-open |
-| `preflight.sh` | (called by gate.sh) | Helper | N/A |
+| `preflight.sh` | UserPromptSubmit (also called by gate.sh) | Advisory | N/A |
 
 ---
 

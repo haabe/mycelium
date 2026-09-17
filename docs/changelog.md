@@ -4,6 +4,17 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-17.
 
+## v0.222.0 - the gate's verdict, before the work
+
+**2026-09-17.** One dogfood candidate, closed against a frozen prediction.
+
+- **`hooks/preflight.sh` discovery pre-warning.** The discovery gate binds, but late. On "Build me a habit tracker app... Start with the data model" in an empty project, 0 of 3 runs on 0.221.0 routed to discovery: the routing rule arrives at SessionStart as prose and did not hold, the model drafted the whole schema, and only then met the gate refusing the write. The pre-warning gives the model that verdict before it works: one line on UserPromptSubmit, emitted while `hi_discovery_engaged` is false and no `discovery-skip-ack` exists, which is the gate's own condition read through the gate's own function, so the two cannot drift. It reads no words from the prompt (two lexical detectors in this framework have measured zero catches), and it tells the model to ignore it when the prompt is not a build request.
+- **Tested against a pre-registration** committed in the dogfood repo before any code changed (`9386b4a`): prediction A at least 2 of 3, B 3 of 3, with reversion, not rewording, on a miss. Result: **A 3 of 3** (each reply stopped before a schema and asked who it is for, what problem, what evidence), **B 3 of 3** (the git question answered in one turn with the pre-warning in context). One wording, one batch. Cost per build-framed run fell from about $0.75 to $0.30, since the model no longer drafts what the gate would refuse. Weaknesses stated in the pre-registration and unchanged by the result: n=3 on one model, the judge is the agent that built it, and prompt A is the prompt it was designed against, so this shows the mechanism can work, not how often it does across openings.
+- **Cost.** The strict discovery-state check is a python start, about 0.2 s, and preflight runs on every prompt of every project under a 5 s timeout. A grep goes first (a worded `why:` or a diamond `id:` looks engaged and skips the python), which puts an initialized project back at 0.04 s. A hand-faked file can fool the grep where it cannot fool the parse; being fooled means silence, the safe direction for an advisory, and the gate still runs the strict parse. The 3-of-3 batch ran before this speed-up; what an empty project is told did not change, and the test below is what holds that.
+- `tests/bash/test_preflight_discovery_prewarning.sh` locks the condition, not the wording: emitted on an empty project and on a whitespace-only purpose.yml; silent after a skip-ack, a populated purpose, or an active diamond.
+- **Reaches Codex and Cursor too**, since both adapters run the same `preflight.sh`. Not reached: `claude plugin eval`, whose sessions fire SessionStart hooks only.
+- `integrations/opencode/README.md`: the code-mode bypass question from 0.221.0 is answered from source. Inner calls go through the same `beforeExecute` and `executeTool` as direct calls, so the guard has no bypass there by design. Still not observed.
+
 ## v0.221.1 - the eval note, corrected
 
 **2026-09-17.** Docs only. Corrects v0.221.0, shipped the same day.

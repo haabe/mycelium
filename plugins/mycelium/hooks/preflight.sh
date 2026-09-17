@@ -128,6 +128,37 @@ d = json.load(open(path)); d["delivered_to"] = sid; json.dump(d, open(path, "w")
   fi
 fi
 
+# ------------------------------------------------------------
+# DISCOVERY PRE-WARNING (v0.222.0). Same condition as hooks/discovery-gate.sh, read
+# through the same function, so the two cannot drift: no skip-ack, no discovery state.
+# WHY HERE: the gate binds, but late. Measured 2026-09-17 on a build-framed opening in
+# an empty project, 0 of 3 runs routed to discovery; the model drafted the whole data
+# model, and only then met the gate refusing the write. The routing rule arrives at
+# SessionStart as prose and did not hold. This line gives the model the gate's verdict
+# BEFORE it does the work the gate exists to prevent. State-keyed, not prompt-keyed: it
+# reads no words from the prompt, and it goes silent for good once discovery state or
+# the user's skip-ack exists. It asks for nothing on a prompt that is not a build.
+# ------------------------------------------------------------
+# COST: this runs on every prompt of every project, and the strict check is a python
+# start (~0.2 s, measured 2026-09-17). So a grep goes first: a purpose.yml with a worded
+# `why:` or an active.yml with an `id:` entry LOOKS engaged, and the python is skipped.
+# The grep can be fooled by a hand-faked file where the strict parse cannot; being
+# fooled means silence, which is the safe direction for an advisory, and the gate
+# still runs the strict parse before it allows a write.
+_PF_HI_LIB="$(dirname "${BASH_SOURCE[0]}")/../scripts/_hook_input_read.sh"
+_PF_LOOKS_ENGAGED=0
+if grep -qE '^[[:space:]]*why:[[:space:]]*["'"'"'>|]?[[:space:]]*[[:alnum:]]' "$PROJECT_DIR/.claude/canvas/purpose.yml" 2>/dev/null \
+   || grep -qE '^[[:space:]]*-[[:space:]]+id:[[:space:]]*[[:alnum:]]' "$PROJECT_DIR/.claude/diamonds/active.yml" 2>/dev/null; then
+  _PF_LOOKS_ENGAGED=1
+fi
+if [ "$_PF_LOOKS_ENGAGED" -eq 0 ] && [ -f "$_PF_HI_LIB" ] && [ ! -f "$PROJECT_DIR/.claude/state/discovery-skip-ack" ]; then
+  # shellcheck source=/dev/null
+  . "$_PF_HI_LIB"
+  if ! hi_discovery_engaged; then
+    echo "MYCELIUM DISCOVERY STATE: none in this project (no purpose, no active diamond). If this prompt asks you to design or build something, new source files WILL BE REFUSED by the discovery gate, so do not draft the design first: ask who it is for, what problem it solves and what evidence there is, or offer /mycelium:start. If the prompt is not a build request, ignore this line and answer it."
+  fi
+fi
+
 if [ ! -f "$CORRECTIONS_FILE" ]; then
   echo "Mycelium preflight complete. Memory not yet initialized — run /mycelium:setup if this is a fresh install."
 elif [ "$CORRECTIONS_COUNT" -eq 0 ]; then

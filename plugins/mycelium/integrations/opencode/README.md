@@ -38,7 +38,7 @@ is not enough." So `plugin/mycelium.ts` does nothing on 2.x, silently. The 2.x f
 **Not observed, so do not rely on it:**
 
 - The allow path of the guard (read, then edit). The one attempt was routed by the 8B model through 2.x's `execute` code-mode tool and fumbled.
-- **Whether `read`/`edit` calls made INSIDE the `execute` code-mode tool pass through `execute.before` at all.** If they do not, the guard has a bypass on 2.x. Unverified either way.
+- **`read`/`edit` calls made INSIDE the `execute` code-mode tool.** Read in source, not observed: at v2.0.5, `packages/core/src/tool.ts` builds the code-mode tool with a callback that runs every inner call through `beforeExecute(name, input, context)` and then `executeTool`, the same two functions a direct call uses, so inner calls reach both hooks by design and the guard has no bypass there. The one attempt to observe it (2026-09-17) logged a single `execute` event carrying the code string and no inner event, but the inner call never resolved: the 8B model guessed a wrong API path. A model that can drive code mode is needed to see it.
 - Only `Tool.Error` failures take the `execute.after` error path in the 2.0.5 source; thrown defects and provider errors were not exercised.
 - The shipped `opencode.json` is 1.x-shaped (`provider`, `permission`, `instructions`). The 2.x runs above used a bare config: 2.x discovers a local Ollama on its own, and its permission config is a single ordered `permissions` array with renamed tools (`bash` is `shell`; `write` and `patch` are `edit`). Whether 2.x accepts the 1.x file was not tested.
 - **2.x reads `AGENTS.md` only.** "It does not use CLAUDE.md as a fallback." Create one (see `docs/integrations/opencode.md`).

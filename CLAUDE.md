@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.221.1 -- **The eval note, corrected** (PATCH). Docs only. The `plugins/mycelium/evals/README.md` note shipped in 0.221.0 misdescribed `discovery-trigger-guard.sh` as a router for build-framed openings; it is not one, and nothing at prompt level is. The note now also carries the run that separated its two readings: in plain headless mode every hook fires, the model still drafts the schema, and the PreToolUse discovery gate is what stops the write.*
+*Version 0.222.0 -- **The gate's verdict, before the work** (MINOR). In a project with no discovery state, `preflight.sh` now adds one line on every prompt telling the model that the discovery gate will refuse new source files, so it should ask who, what problem and what evidence before drafting a design. It is keyed on the same function the gate uses, reads no words from the prompt, tells the model to ignore it when the prompt is not a build request, and goes silent for good once a purpose, a diamond or the user's skip-ack exists. Measured against a prediction frozen before the code was written: a build-framed opening in an empty project went from 0 of 3 routed to 3 of 3, and a plain git question was still answered directly 3 of 3.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 
