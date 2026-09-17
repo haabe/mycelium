@@ -43,11 +43,26 @@ first case, with the trace kept, also scored 0.00. That trace shows the plugin l
 model still opened with a PostgreSQL schema. Two readings, and the pilot cannot separate them:
 
 1. **The runner under-represents the plugin.** Only `SessionStart` hook events appear in the
-   trace. No `UserPromptSubmit` hook fired, and `discovery-trigger-guard.sh`, the hook built to
-   catch exactly this opening, is a `UserPromptSubmit` hook. The case measures the contract and
-   the skills without the prompt-level router.
+   trace; no `UserPromptSubmit`, `PreToolUse` or `Stop` hook fired in the eval session.
 2. **The contract alone does not route a build-framed opening in an empty project.** That is
    the claim the case was written to test, and on two runs it failed it.
+
+**Separated the same day, one run.** The same prompt through plain headless `claude -p` in an
+empty folder, plugin loaded, same read-only tools: every hook class fired (3 SessionStart, 2
+UserPromptSubmit, 27 PreToolUse, 4 Stop), so reading 1 is true of the runner. Reading 2 held
+anyway: no skill was invoked, the model drafted the schema, and what stopped it was the
+**PreToolUse discovery gate refusing the write**, after which the model explained the gate
+and listed the product decisions it had been making on the user's behalf. So on this opening
+the plugin's routing did nothing and its enforcement did the work, and enforcement is the part
+this runner cannot see, because eval sessions remove `Write` and `Edit`.
+
+*Corrected in 0.221.1:* the first version of this note called `discovery-trigger-guard.sh` "the
+hook built to catch exactly this opening". It is not. That hook advises when the author asserts
+what other people want or will do; a bare build request contains no such claim and the hook is
+silent on it by design. Nothing at prompt level routes a build-framed opening. (The same check
+found that the hook is also silent on the second case's prompt, "I'm sure freelancers will
+pay $20 a month": its subject list is generic nouns such as users, customers and people, and
+a named segment is not in it.)
 
 The cases were not adjusted after the result. A case that fails is the suite working.
 

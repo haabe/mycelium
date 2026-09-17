@@ -4,6 +4,14 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-17.
 
+## v0.221.1 - the eval note, corrected
+
+**2026-09-17.** Docs only. Corrects v0.221.0, shipped the same day.
+
+- **`plugins/mycelium/evals/README.md`** said of the zero-delta pilot that `discovery-trigger-guard.sh` was "the hook built to catch exactly this opening". It is not: that hook advises on claims about what other people want, a bare build request contains none, and its silence there is by design. Nothing at prompt level routes a build-framed opening. The error was the agent's, made without opening the hook, and found by running both eval prompts through it.
+- The note now carries the run that separated its two readings. Plain headless `claude -p`, empty folder, plugin loaded: every hook class fired, so the eval runner does under-represent the plugin (it fired SessionStart hooks only). The model still drafted a schema with no skill invoked, and the **PreToolUse discovery gate refusing the write** is what stopped it. Routing did nothing; enforcement did the work; and eval sessions remove `Write` and `Edit`, so enforcement is the part that runner cannot score. One run.
+- Found on the way and NOT changed here: the trigger guard is also silent on "I'm sure freelancers will pay $20 a month". Its subject list is generic nouns (users, customers, people); a named segment is not in it. A calibrated detector is not retuned on one example; it is filed in the dogfood register.
+
 ## v0.221.0 - the runtimes moved
 
 Six dogfood candidates from one sweep of what the agent runtimes shipped between 2026-08-15 and 2026-09-17 (roadmap DL-1319). Every external claim below was read in a primary source on 2026-09-17; what was only read and not run says so.

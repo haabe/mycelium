@@ -514,3 +514,18 @@ The framing that matters: the whole point of the change was to stop the policy l
 **Prevention rule**: **a comment asserting that a pattern is narrow owes a fixture proving the narrowing, in the same commit.** "Deliberately does not match X" is a testable claim, and an untested one is just an intention. Concretely for regex guards: every documented non-match gets a test case, and it is written before the comment is believed. Note the asymmetry this closes — `check_negative_control.py` already proves every guard BITES; nothing proved a guard STOPS biting where its author said it would, and the suppression side is exactly where a guard turns into noise.
 
 **Generalization**: the inverse of the fail-open-on-absent-input cluster. That class is a check silently missing the state it exists to catch; this is a check confidently firing on a state it exists to permit. Both come from exercising one side of the branch only, and both were found by running the thing on a real sentence rather than reading it. The retraction case is also a reminder that a durable evidence surface carries corrections as first-class content, not only claims — any guard reading that surface needs to tell an assertion from its withdrawal.
+
+### 2026-09-17 - A shipped README named a hook's purpose without opening the hook (v0.221.1 corrects v0.221.0)
+- **Scope**: framework / docs accuracy
+- **Category**: claim about a mechanism made from its name and event, not its source
+- **Origin**: dogfood, mycelium-roadmap DL-1320 and DL-1321; the agent's own error, caught by the agent
+
+**Mistake.** 0.221.0 shipped `plugins/mycelium/evals/README.md` with a note explaining a zero-delta eval pilot. It said no `UserPromptSubmit` hook had fired in the eval session and that `discovery-trigger-guard.sh` was "the hook built to catch exactly this opening", a bare build request. The first half was read off a trace and is true. The second half was inferred from the hook's name and its event and is false: the hook advises when the author asserts what other people want or will do, a build request contains no such claim, and the hook is silent on it by design. The false sentence carried weight, because it offered a comfortable reading of an uncomfortable number: the plugin scored zero because its router was missing from the run.
+
+**How it was caught**: by doing the separating run the note itself proposed, the same day. In plain headless mode the hook fired and returned nothing. Its header comment, opened only then, states its purpose in the first paragraph. Feeding it both eval prompts directly confirmed silence on each.
+
+**Correction**: the note now says what the hook is for, that nothing at prompt level routes a build-framed opening, and what the separating run showed: routing did nothing and the PreToolUse discovery gate stopped the write.
+
+**Prevention rule**: **a sentence in shipped docs that says what a mechanism is FOR cites the mechanism's own header or is checked against it before the commit.** Reading a hook's first twenty lines costs seconds. The tell that should have prompted it: the claim explained away a result the author did not like.
+
+**Generalization**: same family as the 2026-08-06 entry (a comment asserting a property nobody tested), one layer out: there it was a regex's narrowness, here a hook's purpose. Both were settled by running the thing on a real input. Found on the way and left open deliberately: the guard is also silent on "freelancers will pay", because its subject list is generic nouns and a named segment is not among them. That is a calibration question with its own evidence bar, not a docs fix.
