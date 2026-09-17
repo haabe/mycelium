@@ -260,3 +260,115 @@ def test_ruling_on_fired_entry_is_preserved_and_rendered(tmp_path, capsys):
     fired = _l1(tmp_path)["closes_on"]["fired"]
     assert fired[0]["ruling"] == "not the riskiest assumption; does not choose"
     assert fired[0]["ruled_at"] == "2026-09-11"
+
+
+# --------------------------------------- an L0 or L1 diamond closes on its own bar (v0.227.0)
+# Each scale has its own object and only two of them are leaves. Dogfood 2026-09-17: a verdict
+# landed on a solution-level assumption, this script announced "the path can now be chosen" on
+# the STRATEGY diamond, and the founder ruled that it could not: that diamond is decided by its
+# definition of done, read from one task. The script was asking an L3 question of an L1 object.
+
+DOD = """  definition_of_done:
+    signal: three counts, read from human-tasks.yml#ht-9
+    kill_criterion:
+      state: two kills
+      date: '2026-10-28'
+    log:
+    - date: '2026-09-01'
+      text: history that mentions ht-77, which is not an input to anything
+"""
+
+TASKS_DOD = TASKS + """- id: ht-9
+  status: pending
+  horizon: '2026-10-28'
+- id: ht-77
+  status: pending
+  horizon: '2026-12-01'
+"""
+
+
+def _input_ids(root):
+    return {i["id"] for i in _l1(root)["closes_on"]["inputs"]}
+
+
+def test_an_l1_diamond_with_a_bar_watches_what_the_bar_reads_not_leaves(tmp_path, capsys):
+    _project(tmp_path, active=ACTIVE + DOD, tasks=TASKS_DOD)
+    _run(tmp_path, capsys, "--diamond-id", "l1", "--write")
+    ids = _input_ids(tmp_path)
+    assert "ht-9" in ids, "the task the bar reads from is an input even with no diamond_ref"
+    assert "ht-1" in ids, "a task that names the diamond is still an input"
+    assert "a-1a-1" not in ids and "a-1a-2" not in ids, "a leaf assumption does not close a strategy bet"
+    assert "ht-77" not in ids, "a task mentioned only in the bar's LOG is history, not an input"
+
+
+def test_the_printed_path_names_the_bar_its_date_and_its_tasks(tmp_path, capsys):
+    _project(tmp_path, active=ACTIVE + DOD, tasks=TASKS_DOD)
+    rc, out = _run(tmp_path, capsys, "--diamond-id", "l1")
+    assert "definition of done" in out.lower()
+    assert "2026-10-28" in out and "ht-9" in out
+    assert "leaf assumptions without a verdict" not in out
+    assert "DATE PASSED" not in out
+
+
+def test_an_unlinked_tree_is_not_reported_on_a_diamond_that_closes_on_its_bar(tmp_path, capsys):
+    _project(tmp_path, active=ACTIVE + DOD, opps="opportunities: []\n", tasks=TASKS_DOD)
+    rc, out = _run(tmp_path, capsys, "--diamond-id", "l1")
+    assert "tree unread" not in out and "definition of done" in out.lower()
+
+
+def test_a_passed_date_is_said_out_loud(tmp_path, capsys):
+    _project(tmp_path, active=ACTIVE + DOD, tasks=TASKS_DOD)
+    _mod().main(["--project-dir", str(tmp_path), "--today", "2026-11-01", "--diamond-id", "l1"])
+    assert "DATE PASSED" in capsys.readouterr().out
+
+
+def test_the_four_risks_row_stops_asking_an_l1_diamond_for_a_leaf(tmp_path, capsys):
+    _project(tmp_path, active=ACTIVE + DOD, tasks=TASKS_DOD)
+    rc, out = _run(tmp_path, capsys, "--diamond-id", "l1")
+    row = next(ln for ln in out.splitlines() if ln.startswith("four_risks"))
+    assert "definition of done" in row and "chosen leaf" not in row
+
+
+def test_a_solution_diamond_keeps_its_leaves(tmp_path, capsys):
+    """NEGATIVE CONTROL. L2 and L3 ARE closed by leaves; a bar on them changes nothing here."""
+    _project(tmp_path, active=(ACTIVE + DOD).replace("scale: L1", "scale: L3"), tasks=TASKS_DOD)
+    _run(tmp_path, capsys, "--diamond-id", "l1", "--write")
+    assert "a-1a-1" in _input_ids(tmp_path)
+
+
+def test_an_l1_diamond_with_no_bar_is_unchanged(tmp_path, capsys):
+    """NEGATIVE CONTROL. No definition_of_done, nothing to read: the old derivation stands."""
+    _project(tmp_path)
+    _run(tmp_path, capsys, "--diamond-id", "l1", "--write")
+    assert "a-1a-1" in _input_ids(tmp_path)
+
+
+def test_a_definition_of_done_that_only_points_at_an_outcome_is_not_a_bar(tmp_path, capsys):
+    """NEGATIVE CONTROL, found by an existing test failing while this was built: a block holding
+    only `rolls_up_to` names no signal, no date and no task, so there is nothing to derive from."""
+    pointer = "  definition_of_done:\n    rolls_up_to: opportunities.yml#desired_outcomes.adoption\n"
+    _project(tmp_path, active=ACTIVE + pointer)
+    _run(tmp_path, capsys, "--diamond-id", "l1", "--write")
+    assert "a-1a-1" in _input_ids(tmp_path)
+
+
+def test_routes_under_a_superseded_condition_are_no_longer_watched(tmp_path, capsys):
+    active = ACTIVE + """  define_closes_on:
+    superseded: retired by the founder; the bar decides this diamond now
+    routes_on_record:
+    - assumption: opportunities.yml#opp-9.sol-9a.assumptions[a-9a-1]
+      fires_when: hand-named route, kept as history
+"""
+    opps = OPPS + """- id: opp-9
+  status: closed
+  solutions:
+  - id: sol-9a
+    status: candidate
+    assumptions:
+    - id: a-9a-1
+      statement: on a closed node
+      verdict: null
+"""
+    _project(tmp_path, active=active, opps=opps)
+    _run(tmp_path, capsys, "--diamond-id", "l1", "--write")
+    assert "a-9a-1" not in _input_ids(tmp_path)

@@ -215,7 +215,40 @@ def reads_for(t: dict, today: str) -> list[dict]:
     return out
 
 
-def _open_tasks_for(tasks_doc, did: str, today: str | None = None) -> list[dict]:
+# EACH SCALE HAS ITS OWN OBJECT, AND ONLY TWO OF THEM ARE LEAVES (v0.227.0). L0 is a purpose
+# and L1 a strategy bet; neither is closed by a solution leaf, and both say in their own
+# definition_of_done what closes them and where that is read. Dogfood 2026-09-17: a verdict
+# landed on a solution-level assumption, this script announced "the path can now be chosen" on
+# the L1 diamond, and the founder ruled that it could not, because that diamond is decided by its
+# bar, read from one task. So for L0 and L1, when a bar exists, the inputs are the bar's: its
+# date, and the tasks its live fields name. Leaves stay the inputs for L2 and L3, and for an L0
+# or L1 diamond with no bar, where there is nothing else to read.
+DOD_SCALES = ("L0", "L1")
+#: The bar's LIVE fields. `log` and `testimony_instances` are history and name many tasks.
+_DOD_LIVE_KEYS = ("signal", "signal_source", "threshold", "kill_criterion", "branches",
+                  "measure", "evidence_ref", "offers")
+_TASK_REF = re.compile(r"\bht-\d+\b")
+
+
+def _dod_inputs(d: dict) -> dict | None:
+    dod = d.get("definition_of_done")
+    if str(d.get("scale") or "").upper() not in DOD_SCALES or not isinstance(dod, dict):
+        return None
+    live = {k: dod[k] for k in _DOD_LIVE_KEYS if k in dod}
+    if not live:
+        # A definition_of_done that only points at an outcome (`rolls_up_to`) is not a bar:
+        # nothing in it says what closes the diamond, so the leaf derivation still applies.
+        return None
+    kc = dod.get("kill_criterion") if isinstance(dod.get("kill_criterion"), dict) else {}
+    return {
+        "date": str(kc.get("date") or ""),
+        "tasks": sorted(set(_TASK_REF.findall(yaml.safe_dump(live, allow_unicode=True)))),
+    }
+
+
+def _open_tasks_for(
+    tasks_doc, did: str, today: str | None = None, named: tuple[str, ...] = ()
+) -> list[dict]:
     out = []
     if not isinstance(tasks_doc, dict):
         return out
@@ -226,7 +259,7 @@ def _open_tasks_for(tasks_doc, did: str, today: str | None = None) -> list[dict]
         for t in lst:
             if not isinstance(t, dict) or str(t.get("status", "")).lower() in TERMINAL_TASK:
                 continue
-            if did in str(t.get("diamond_ref", "")):
+            if did in str(t.get("diamond_ref", "")) or str(t.get("id")) in named:
                 out.append(
                     {
                         "id": t.get("id"),
@@ -258,17 +291,26 @@ def derive(root: Path, did: str, today: str | None = None) -> dict | None:
         return None
     opps_path, tasks_path = canvas / "opportunities.yml", canvas / "human-tasks.yml"
     outcomes = _diamond_outcomes(d)
+    dod = _dod_inputs(d)
     opps = _opps_for(load_yaml(opps_path) if opps_path.exists() else {}, did, outcomes)
-    tasks = _open_tasks_for(load_yaml(tasks_path) if tasks_path.exists() else {}, did, today)
+    tasks = _open_tasks_for(
+        load_yaml(tasks_path) if tasks_path.exists() else {},
+        did,
+        today,
+        tuple(dod["tasks"]) if dod else (),
+    )
     gates = {
         k: v for k, v in (d.get("theory_gates_status") or {}).items() if str(v).lower() != "pass"
     }
     total, reviewed = _leaf_totals(opps)
-    stale = [g for g in gates if g == "four_risks" and total and reviewed == total]
+    stale = [g for g in gates if g == "four_risks" and total and reviewed == total and not dod]
+    today_s = today or _dt.datetime.now(tz=_dt.UTC).date().isoformat()
     return {
         "diamond": d,
         "gates": gates,
-        "leaves": _leaf_rows(opps),
+        "dod": dod,
+        "dod_date_passed": bool(dod and dod["date"] and dod["date"] < today_s),
+        "leaves": [] if dod else _leaf_rows(opps),
         "tasks": tasks,
         "stale": stale,
         "owed": _owed(opps),
@@ -289,6 +331,12 @@ def _gate_row(g: str, v, r: dict) -> str:
             f"{g} ({v}) | STALE FIELD: all {reviewed} of {total} live leaves carry a "
             "four_risks block; reconcile the status, do not re-review | agent | now"
         )
+    if g == "four_risks" and r.get("dod"):
+        scale = str(r["diamond"].get("scale") or "?")
+        return (
+            f"{g} ({v}) | sourced from solution leaves, which do not close an {scale} diamond; "
+            f"this one closes on its definition of done | human | {r['dod']['date'] or '-'}"
+        )
     if g == "four_risks":
         return (
             f"{g} ({v}) | a chosen leaf with four_risks and a validated riskiest assumption "
@@ -305,7 +353,20 @@ def _gate_row(g: str, v, r: dict) -> str:
     return f"{g} ({v}) | nothing on record names an input for this gate | - | -"
 
 
+def _print_dod(r: dict) -> None:
+    dod = r.get("dod")
+    if not dod:
+        return
+    scale = str(r["diamond"].get("scale") or "?")
+    print(f"definition of done (what closes an {scale} diamond; solution leaves do not):")
+    print(f"  bar date {dod['date'] or 'NOT SET: a bar with no date cannot expire'}")
+    print(f"  read from {', '.join(dod['tasks']) or 'NO TASK NAMED in the live fields of the bar'}")
+    if r.get("dod_date_passed"):
+        print(f"  DATE PASSED on {dod['date']}: apply the bar's first true line, or say why not")
+
+
 def _print_inputs(r: dict) -> None:
+    _print_dod(r)
     if r["leaves"]:
         print("leaf assumptions without a verdict (the inputs Four Risks and Cynefin wait on):")
         for lr in r["leaves"]:
@@ -494,7 +555,10 @@ def _route_refs(existing: dict | None, diamond: dict | None = None) -> list[str]
     refs = []
     routes = list((existing or {}).get("routes_on_record") or [])
     for k, v in (diamond or {}).items():
-        if k != "closes_on" and str(k).endswith("closes_on") and isinstance(v, dict):
+        # A hand-written condition marked `superseded` is history: its routes stop being watched,
+        # or a retired condition keeps firing proposals its owner has already ruled against.
+        if (k != "closes_on" and str(k).endswith("closes_on") and isinstance(v, dict)
+                and not v.get("superseded")):
             routes += list(v.get("routes_on_record") or [])
     for r in routes:
         if not isinstance(r, dict):
@@ -864,7 +928,8 @@ def main(argv=None) -> int:
         f"closing-path: {args.diamond_id} ({d.get('scale', '?')} {d.get('phase', '?')}, "
         f"confidence {d.get('confidence', '?')}); {r['n_opps']} open opportunit{plural} cite it"
     )
-    if r["n_opps"] == 0:
+    # A diamond that closes on its bar is not waiting on the tree: an unlinked tree is no finding.
+    if r["n_opps"] == 0 and not r.get("dod"):
         if r["outcomes"]:
             via = f"by id or by outcome ({', '.join(r['outcomes'])})"
         elif r["rolls_up_to_prose"]:
