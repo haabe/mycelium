@@ -10,7 +10,7 @@ Nothing. Mycelium does not collect, store, or transmit any personal data, usage 
 
 ## Where your data lives
 
-Everything Mycelium creates (your canvas, diamonds, memory, decision log, and evaluations) is written to plain files under `.claude/` in your own project directory. That includes small local logs of which guard rules fired. By default those logs record the rule and never your command; if you set `MYCELIUM_LEDGER_TRIGGER=on` yourself, they also keep the first 200 characters of the command with obvious secrets masked. They are plain files under `.claude/state/` and go wherever you take that directory: if you commit it, they are committed with it. Those files stay on your machine. They never leave it unless you choose to commit or share them yourself. Mycelium has no way to read them outside your local session.
+Everything Mycelium creates (your canvas, diamonds, memory, decision log, and evaluations) is written to plain files under `.claude/` in your own project directory. That includes small local logs of which guard rules fired. By default those logs record the rule and never your command; if you set `MYCELIUM_LEDGER_TRIGGER=on` yourself, they also keep the first 200 characters of the command with obvious secrets masked. They are plain files under `.claude/state/`. Since version 0.226.0, `/mycelium:setup` adds an ignore file there so they are not committed; if your project was set up earlier, run `git ls-files .claude/state` to see whether any are tracked. Those files stay on your machine. They never leave it unless you choose to commit or share them yourself. Mycelium has no way to read them outside your local session.
 
 ## Network activity
 

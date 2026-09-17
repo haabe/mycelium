@@ -4,6 +4,15 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-17.
 
+## v0.226.0 - runtime logs stay out of git
+
+**2026-09-17.** One dogfood candidate (`plugin-form-setup-leaves-claude-state-tracked`), found while checking a sentence drafted for `PRIVACY.md`.
+
+- **`/mycelium:setup` creates `.claude/state/.gitignore`** when the directory is created, and never overwrites one that exists. It ignores everything except itself, `README.md`, `upstream.json` and two files that are not runtime noise: `discovery-skip-ack` and `brownfield-ack`. Those record a decision the user made, once per project ("one conversation per project, then the gate is silent forever"), and a fresh clone should not be asked again. *Keeping the acks tracked is the agent's call and is easy to reverse: delete the two `!` lines.* If a project already tracks files under `.claude/state/`, the skill reports them and does not untrack anything itself.
+- **A false paragraph in the skill, replaced.** It said `.claude/state/` "is created and owned by Claude Code itself… Mycelium does not write to it." About forty plugin hooks and scripts write there: `read-log.jsonl` (every path the agent opened), `change-log.jsonl`, the guard ledgers, session stamps, the advisory ledger. In plugin form nothing ignored it, so a first commit carried all of it and a public push published it. The dogfood repo never noticed because it inherited an ignore file inside that directory from the legacy templated install; this is the second defect this week that the dogfood repo's history hid from its own maintainer (the first was the privacy policy's network claim, 0.224.0).
+- **`PRIVACY.md`** now states the default: setup keeps the runtime logs out of git, and projects set up before 0.226.0 should check `git ls-files .claude/state`.
+- Verified in a scratch repository with the template: two log files ignored, the ack and `upstream.json` tracked. Not verified: an end-to-end `/mycelium:setup` run by a model following the new step.
+
 ## v0.225.0 - the bar and its log are two things
 
 **2026-09-17.** One dogfood candidate (`definition-of-done-grows-into-a-log-its-owner-cannot-recall`).

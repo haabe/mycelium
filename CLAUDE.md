@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.225.0 -- **The bar and its log are two things** (MINOR). A Definition of Done now has a `log[]`: dated updates go there as `{date, text}`, never as new dated keys beside or inside the bar. `check_dod_shape.py` prints, per diamond, how many characters are the bar (outcome, signal, threshold, kill_criterion), how many are the log, and how many are everything else, and flags any dated key written as a field. `/diamond-assess` shows those numbers after it asks the owner to state the Definition of Done from memory, never before. No size threshold is applied, because none has been measured.*
+*Version 0.226.0 -- **Runtime logs stay out of git** (MINOR). `/mycelium:setup` now creates `.claude/state/` with an ignore file, so a new user's first commit no longer carries the log of every file their agent read, the guard ledgers and the session stamps. Two files stay tracked on purpose, `discovery-skip-ack` and `brownfield-ack`: they record a decision the user made once per project. The skill's previous text said the directory was owned by Claude Code and that Mycelium did not write to it; about forty plugin files do.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

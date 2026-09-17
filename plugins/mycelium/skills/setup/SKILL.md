@@ -43,7 +43,27 @@ Create these directories in the user's project (using Bash `mkdir -p`):
 
 These directories hold project-specific state that the user's project owns and commits to git. Framework reference content (skills, hooks, theory gates) lives in the plugin cache and is not duplicated here.
 
-A `.claude/state/` directory may also be present — that one is created and owned by Claude Code itself for runtime state (audit logs, etc.), not by Mycelium. Mycelium does not write to it; if you see it, it's expected.
+**`.claude/state/` is Mycelium's runtime state, and it must not be committed by accident (v0.226.0).** Until this version the paragraph here said the directory was "created and owned by Claude Code itself" and that "Mycelium does not write to it". That was false: the plugin's hooks and scripts write there on almost every tool call: `read-log.jsonl` (every path the agent opened), `change-log.jsonl`, the guard ledgers, session stamps, the advisory ledger. Nothing git-ignored it in plugin form, so a new user's first commit carried all of it, and a public push published a log of what their agent read. (The dogfood repo never noticed: it inherited a `.gitignore` inside that directory from the legacy templated install.)
+
+Create the directory and its ignore file now, **only if the ignore file does not already exist: never overwrite one**:
+
+```bash
+mkdir -p <project_root>/.claude/state
+[ -f <project_root>/.claude/state/.gitignore ] || cat > <project_root>/.claude/state/.gitignore <<'EOF'
+# Mycelium runtime state: logs, ledgers and session stamps the hooks write during sessions.
+# Not committed. Canonical project state lives in .claude/canvas/ and .claude/diamonds/.
+*
+!.gitignore
+!README.md
+# Kept under version control on purpose: these record a DECISION the user made, once per
+# project, and a fresh clone should not be asked again.
+!discovery-skip-ack
+!brownfield-ack
+!upstream.json
+EOF
+```
+
+Tell the user in one line that you did it and why ("runtime logs stay out of git; your two recorded gate decisions stay in"). If the project already tracks files under `.claude/state/`, do NOT untrack them yourself; say which are tracked (`git ls-files .claude/state`) and let the user decide.
 
 **Important — empty dirs and git**: directories that don't get a starter file in Step 3 (`canvas/`, `evals/`, `jit-tooling/`) are empty after Step 2 and would not survive a git commit. Drop a `.gitkeep` stub in each so they remain in the user's repo:
 
