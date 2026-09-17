@@ -142,7 +142,7 @@ In the forest, mycelium has two major tasks. It connects separate trees through 
 
 ## When to use something else
 
-If the decision is already made and you need throughput, Paddo's [boring agents](https://paddo.dev/blog/boring-agents-ship/) fit better. If the scope is settled and you want it built faster, [Addy Osmani's agent-skills](https://github.com/addyosmani/agent-skills). Several people editing one canvas at once is not built. And if the thing you are making carries no risk of being the wrong thing, this will feel like bureaucracy, because for you it would be.
+If the decision is already made and you need throughput, Paddo's [boring agents](https://paddo.dev/blog/boring-agents-ship/) fit better. If the scope is settled and you want it built faster, [Addy Osmani's agent-skills](https://github.com/addyosmani/agent-skills). If the work is decided and you want a smaller token bill using model routing, check out Spotify's [shunt](https://github.com/spotify/portal-ai-plugins/tree/main/plugins/shunt). Several people editing one canvas at once is not built. And if the thing you are making carries no risk of being the wrong thing, this will feel like bureaucracy, because for you it would be.
 
 ## Someone else's
 

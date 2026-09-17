@@ -4,6 +4,12 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-17.
 
+## v0.227.1 - one sentence for the reader who came for cheaper tokens
+
+**2026-09-17.** README only.
+
+- **"When to use something else" names the cost-routing class.** The section already sent delivery-only readers to Paddo's boring agents and Addy Osmani's agent-skills; it said nothing to a reader who wants a smaller token bill on work that is already decided. That is model routing, which Mycelium neither advocates nor builds (ruled 2026-09-07). One sentence now sends that reader to Spotify's [shunt](https://github.com/spotify/portal-ai-plugins/tree/main/plugins/shunt), a Claude Code plugin that uses the same hook layer for a different decision: which model does the work, where Mycelium decides whether the work may start. No savings figure is quoted, because this project has not measured one. Shunt depends on Spotify's Portal, so it is named as an instance of the class. The sentence is the founder's own; three agent drafts were each picked out of the paragraph by a blind reader.
+
 ## v0.227.0 - three things that now read what the record actually says
 
 **2026-09-17.** Three founder rulings taken the same day, each on a finding from the dogfood canvas. Every test below was written before its code and failed first.

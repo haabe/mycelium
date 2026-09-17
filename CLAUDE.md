@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.227.0 -- **Three things that now read what the record actually says** (MINOR). An L0 or L1 diamond closes on its own definition of done, not on solution leaves. A bar has to say what happens when its date passes, and someone who did not write it resolves invented cases with it before it is accepted. `handles_checked` clears the handles it names, not the whole record.*
+*Version 0.227.1 -- **One sentence for the reader who came for cheaper tokens** (PATCH). The README's "When to use something else" section now sends on a reader who wants a smaller token bill through model routing, to Spotify's shunt. Mycelium neither advocates nor builds model routing.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 
