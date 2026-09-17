@@ -310,12 +310,28 @@
             },
             "premortem": {
               "type": "string"
+            },
+            "on_expiry": {
+              "type": "string",
+              "description": "What happens when `date` passes and neither the outcome nor the kill has fired. The default is stop, or re-pitch with a new written date; 'continues' is not an answer (v0.227.0)."
             }
           },
           "required": [
             "state",
             "date"
           ],
+          "additionalProperties": true
+        },
+        "reader_test": {
+          "type": "object",
+          "description": "Step 5 of /mycelium:define-done (v0.227.0): someone who did not write the bar resolved invented result sets with it. `resolved` short of `cases` means a word in the bar failed.",
+          "properties": {
+            "date": {"type": "string"},
+            "reader": {"type": "string"},
+            "cases": {"type": "integer", "minimum": 0},
+            "resolved": {"type": "integer", "minimum": 0},
+            "note": {"type": "string"}
+          },
           "additionalProperties": true
         },
         "log": {

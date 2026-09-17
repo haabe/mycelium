@@ -135,3 +135,80 @@ def test_a_file_with_no_diamonds_says_so(mod, tmp_path, capsys):
     p = _write(tmp_path, [])
     assert mod.main(["--diamonds", str(p)]) == 0
     assert "no diamond carries" in capsys.readouterr().out
+
+
+# ------------------------------------------------ a bar that cannot stay in limbo (v0.227.0)
+# Founder ruling 2026-09-17, after the dogfood L1 bar was found able to stay open six ways at
+# once while every check was green: ship the two parts that actually caught defects. A bar says
+# what happens when its date passes, and the default is stop. And someone who did not write it
+# resolved invented cases with it before it was accepted: on that bar the author's own mechanical
+# checks passed four broken drafts, and a blind reader found the defect in each.
+
+def _bar(**kc):
+    base = {"state": "fewer than 2 of 10", "date": "2026-10-28", "premortem": "x"}
+    base.update(kc)
+    return {"id": "l1", "scale": "L1",
+            "definition_of_done": {"outcome": "o", "signal": "s", "kill_criterion": base}}
+
+
+def test_a_bar_with_no_date_cannot_expire(mod):
+    d = _bar()
+    del d["definition_of_done"]["kill_criterion"]["date"]
+    assert "NO-DATE" in mod.measure(d)["limbo"]
+
+
+def test_a_bar_that_does_not_say_what_happens_at_its_date(mod):
+    assert "NO-EXPIRY" in mod.measure(_bar())["limbo"]
+
+
+def test_on_expiry_answers_it(mod):
+    limbo = mod.measure(_bar(on_expiry="Stop. Continuing is a new bar with a new date."))["limbo"]
+    assert "NO-EXPIRY" not in limbo and "CONTINUES-BY-DEFAULT" not in limbo
+
+
+def test_a_catch_all_branch_answers_it_too(mod):
+    """The branch shape the dogfood bar took: an ordered list whose last line is 'anything else'."""
+    d = _bar()
+    d["definition_of_done"]["branches"] = [
+        {"id": "confirm", "when": "T >= 4", "then": "done"},
+        {"id": "stop", "when": "anything else", "then": "Stop and write down the numbers."},
+    ]
+    assert "NO-EXPIRY" not in mod.measure(d)["limbo"]
+
+
+def test_continue_is_not_an_answer(mod):
+    limbo = mod.measure(_bar(on_expiry="Otherwise the bet continues."))["limbo"]
+    assert "CONTINUES-BY-DEFAULT" in limbo
+
+
+def test_continue_with_a_new_bar_is_an_answer(mod):
+    """NEGATIVE CONTROL. 'continuing is a NEW bar' is the stop-by-default wording, not a loophole."""
+    limbo = mod.measure(_bar(on_expiry="Stop. Continuing is a new bar, never an extension."))["limbo"]
+    assert "CONTINUES-BY-DEFAULT" not in limbo
+
+
+def test_a_bar_nobody_else_has_read(mod):
+    assert "NOT-READ" in mod.measure(_bar(on_expiry="Stop."))["limbo"]
+    d = _bar(on_expiry="Stop.")
+    d["definition_of_done"]["reader_test"] = {"date": "2026-09-17", "cases": 12, "resolved": 12}
+    assert "NOT-READ" not in mod.measure(d)["limbo"]
+
+
+def test_a_reader_who_could_not_resolve_every_case_is_not_a_pass(mod):
+    d = _bar(on_expiry="Stop.")
+    d["definition_of_done"]["reader_test"] = {"date": "2026-09-17", "cases": 12, "resolved": 9}
+    assert "READER-STUCK" in mod.measure(d)["limbo"]
+
+
+def test_a_stub_bar_at_birth_is_left_alone(mod):
+    """NEGATIVE CONTROL. At L0/L1 birth an outcome and a signal are enough; there is no kill
+    criterion yet, so there is no date to pass and nothing here applies."""
+    d = {"id": "l0", "scale": "L0", "definition_of_done": {"outcome": "o", "signal": "s"}}
+    assert mod.measure(d)["limbo"] == []
+
+
+def test_the_report_names_each_finding_in_words(mod, tmp_path, capsys):
+    path = _write(tmp_path, [_bar()])
+    assert mod.main(["--diamonds", str(path)]) == 0
+    out = capsys.readouterr().out
+    assert "NO-EXPIRY" in out and "NOT-READ" in out and "advisory" in out.lower()

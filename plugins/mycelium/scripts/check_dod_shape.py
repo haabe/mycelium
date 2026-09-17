@@ -75,6 +75,62 @@ def _dated_keys(node, path: str = "definition_of_done") -> list[str]:
     return found
 
 
+# A BAR THAT CANNOT STAY IN LIMBO (v0.227.0). On 2026-09-17 the dogfood L1 bar was audited as a
+# decision procedure and could stay open six ways at once while every check was green: no state
+# in which it was done, "otherwise the bet continues", a kill needing 5 of the next 5 replies.
+# Research the same day gave nine criteria. The founder ruled to ship the two that had caught
+# defects: the bar says what happens when its date passes and the default is STOP, and someone
+# who did not write it resolved invented cases with it before it was accepted (the author's own
+# mechanical checks had passed four broken drafts; a blind reader found the defect in each).
+# ADVISORY, like everything in this script: findings are reported, nothing blocks.
+_CATCH_ALL = re.compile(r"\b(anything else|otherwise|else|in every other case)\b", re.IGNORECASE)
+_CONTINUES = re.compile(r"\bcontinu", re.IGNORECASE)
+_ENDS = re.compile(r"\b(stop|re-?pitch|ends?|new bar|kill|close[sd]?)\b", re.IGNORECASE)
+
+
+def _expiry_text(dod: dict, kc: dict) -> str:
+    """What the bar says happens at its date: `on_expiry`, or the catch-all line of `branches`."""
+    if kc.get("on_expiry"):
+        return str(kc["on_expiry"])
+    branches = dod.get("branches")
+    last = branches[-1] if isinstance(branches, list) and branches else None
+    if isinstance(last, dict) and _CATCH_ALL.search(str(last.get("when") or "")):
+        return str(last.get("then") or "")
+    return ""
+
+
+def limbo_findings(dod: dict) -> list[str]:
+    kc = dod.get("kill_criterion")
+    if not isinstance(kc, dict):
+        return []  # a stub bar at birth: no date to pass yet, so nothing here applies
+    out = []
+    if not kc.get("date"):
+        out.append("NO-DATE")
+    expiry = _expiry_text(dod, kc)
+    if not expiry:
+        out.append("NO-EXPIRY")
+    elif _CONTINUES.search(expiry) and not _ENDS.search(expiry):
+        out.append("CONTINUES-BY-DEFAULT")
+    reader = dod.get("reader_test")
+    if not isinstance(reader, dict):
+        out.append("NOT-READ")
+    elif reader.get("resolved") != reader.get("cases"):
+        out.append("READER-STUCK")
+    return out
+
+
+LIMBO_WORDS = {
+    "NO-DATE": "the kill criterion has no date, so the bar can never expire",
+    "NO-EXPIRY": ("nothing says what happens when the date passes: add kill_criterion.on_expiry, "
+                  "or end `branches` with an 'anything else' line"),
+    "CONTINUES-BY-DEFAULT": ("at its date the bar continues; the default has to be stop or "
+                             "re-pitch with a new written date, or it never ends"),
+    "NOT-READ": ("no reader_test: nobody who did not write this bar has resolved invented cases "
+                 "with it (see /mycelium:define-done)"),
+    "READER-STUCK": "the reader could not resolve every case; the words they asked about fail",
+}
+
+
 def measure(diamond: dict) -> dict | None:
     """Sizes for one diamond, or None when it carries no Definition of Done mapping."""
     dod = diamond.get("definition_of_done")
@@ -92,6 +148,7 @@ def measure(diamond: dict) -> dict | None:
         "other": other,
         "total": bar + log + other,
         "log_entries": len(entries) if isinstance(entries, list) else 0,
+        "limbo": limbo_findings(dod),
         # The log subtree is skipped: a dated key INSIDE a log entry is the key-shape
         # guard's finding, not an update that was written as a field of the bar.
         "log_as_keys": _dated_keys({k: v for k, v in dod.items() if k != LOG_KEY}),
@@ -118,6 +175,7 @@ def render(rows: list[dict]) -> str:
             out.append(f"    LOG-AS-KEYS: {len(r['log_as_keys'])} dated key name(s) ({shown}). "
                        "A dated update is an entry under definition_of_done.log[] "
                        "({date, text}), not a new field.")
+        out.extend(f"    {code} (advisory): {LIMBO_WORDS[code]}." for code in r["limbo"])
     out.append("  No size threshold is applied: how long a bar can be before its owner cannot "
                "state it has not been measured. Read these beside the recall question.")
     return "\n".join(out)

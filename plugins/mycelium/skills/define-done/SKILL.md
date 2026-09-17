@@ -43,6 +43,9 @@ Ask these in order. The teaching is in the **sequencing** (problem → signal �
    - `state` — an objective benchmark that means this goal is **wrong**.
    - `date` — the review date by which the state must hold. Pre-commit BOTH, before the data (anti-HARKing).
    Invalidation-with-evidence at that date is a legitimate "done" — routed through `/mycelium:diamond-progress kill` + `dogfood-mode`, not silently declared.
+   - `on_expiry` — **what happens when the date passes and NEITHER the outcome nor the kill has fired (v0.227.0).** Most results land between the lines, and a bar that is silent there stays open for good. The default is **stop**, or re-pitch as a NEW bar with a new written date. "Otherwise the bet continues" is not an answer: it is how a bar stays in limbo with every field filled. A bar written as an ordered `branches` list may say this in a last line whose `when` is "anything else".
+
+**5. Hand the bar to someone who did not write it, before you accept it (v0.227.0).** Invent a handful of result sets, including awkward ones between the lines, and ask a reader who has NOT seen the conversation to say what the bar tells you to do in each. For a solo builder the reader is a blind subagent given only the bar's text. If they have to ask what a word means, or two cases resolve to nothing, the bar is not done: fix the wording and ask a FRESH reader. Record the result on the bar as `reader_test: {date, reader, cases, resolved, note}`. This step is not optional polish. Dogfood 2026-09-17: the author ran every mechanical check on four successive drafts of one bar and all four passed; a blind reader found a real defect in each (an extension rule that read two ways, a kill tied to an exact count that one extra offer missed, "the last taker" with nobody to refer to). The author checks the bar he meant; the reader checks the bar he wrote. And because a self-written stop rule is the weakest kind there is (Boulding et al. 1997: pre-committing to a rule you wrote yourself barely reduces escalation; a rule someone else applies does), the same reader, or another, applies the bar again AT its date. `check_dod_shape.py` reports a bar with no `on_expiry` and no `reader_test`, as advisories.
 
 ## Per-scale "done" + lead/lag defaults
 
@@ -100,6 +103,8 @@ definition_of_done:
     state: "<concrete benchmark that means this goal is WRONG>"
     date:  "<YYYY-MM-DD review date by which state must hold>"
     premortem: "<the failure it was generated from>"
+    on_expiry: "<what happens when the date passes and neither outcome nor kill fired — default STOP, or re-pitch as a new bar with a new date; never 'continues'>"
+  reader_test: { date: "<YYYY-MM-DD>", reader: "<blind subagent | a named person>", cases: 0, resolved: 0, note: "<what they had to ask about>" }   # step 5; re-run at the bar's date
   provenance: { source_class: internal_stakeholder, validated: false, captured_at: "<YYYY-MM-DD>" }
   log: []                                                               # dated updates go here: [{date: "<YYYY-MM-DD>", text: "<what was scored, re-specified or ruled>"}]
 ```
