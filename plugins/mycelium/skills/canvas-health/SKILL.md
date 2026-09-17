@@ -640,6 +640,14 @@ other end. For each finding: fix the pointer, or move the content it names to a 
 does NOT catch, so a clean run is not read as more than it is: a pointer that resolves and
 misdescribes what it points at.
 
+## Has a Definition of Done turned into a log? (added v0.225.0)
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_dod_shape.py"
+```
+
+Per diamond: characters in the BAR (outcome, signal, threshold, kill_criterion, measure, kind), in `definition_of_done.log[]`, and in everything else, plus LOG-AS-KEYS, any dated key name under the Definition of Done outside the log. Every other check on a Definition of Done reads presence and key shape, so a bar buried in the record of its own scoring reads as satisfied; on the dogfood project the only thing that noticed was the owner failing to state it (2026-09-16). Report the numbers as they are. **No size threshold exists and none should be invented here**: LOG-AS-KEYS is a defect to fix (move the entries into `log[]`); a large bar is a question to put to the owner, best answered by `/mycelium:diamond-assess` step 7c, which asks them to state it first.
+
 ## Is each OST node a user need, or a maintenance ticket? (added v0.215.0, founder 2026-09-02)
 
 ```bash

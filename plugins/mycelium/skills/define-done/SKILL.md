@@ -101,7 +101,10 @@ definition_of_done:
     date:  "<YYYY-MM-DD review date by which state must hold>"
     premortem: "<the failure it was generated from>"
   provenance: { source_class: internal_stakeholder, validated: false, captured_at: "<YYYY-MM-DD>" }
+  log: []                                                               # dated updates go here: [{date: "<YYYY-MM-DD>", text: "<what was scored, re-specified or ruled>"}]
 ```
+
+**The bar and its log are two things (v0.225.0).** `outcome`, `signal`, `threshold` and `kill_criterion` are the BAR: what the owner steers by, short enough to state from memory. Everything that happens to the bar afterwards (a sweep scored against the kill criterion, a re-specification, a ruling, a tally) is an entry appended to `log[]` as `{date, text}`. **Never add a dated key (`state_2026_09_01:`, `sweep_3_result:`) beside or inside the bar, and never grow `kill_criterion.state` into a history of itself.** When the bar itself changes, rewrite the bar field and put the OLD wording and the reason in a log entry. Dogfood 2026-09-16: a Definition of Done reached 76,904 characters, 59,229 of them dated notes under `kill_criterion`, and its owner could not state it; after the notes moved to `log[]` the bar was still 21,559 characters, so moving the log out is necessary and does not by itself make the bar short. When re-running this skill on an existing diamond, run `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_dod_shape.py" --diamond-id <id>` first and show the owner the bar size before asking whether the bar still says what they mean.
 
 `outcome` and `signal` are required; everything else is optional or scale-defaulted. At L0/L1 birth from the brief, a one-line `outcome` + `signal` stub is enough — depth comes from re-running this skill.
 

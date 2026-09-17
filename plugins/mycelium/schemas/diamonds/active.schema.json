@@ -318,6 +318,30 @@
           ],
           "additionalProperties": true
         },
+        "log": {
+          "type": "array",
+          "description": "Dated record of how this Definition of Done has been scored, re-specified or ruled on. Updates go HERE, never as new dated keys beside or inside the bar (outcome, signal, threshold, kill_criterion). The bar is what the owner steers by and has to stay short enough to state from memory; the log is allowed to grow. check_dod_shape.py reports the two sizes.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "date": {
+                "type": "string",
+                "description": "YYYY-MM-DD the update was made."
+              },
+              "text": {
+                "type": "string"
+              },
+              "moved_from": {
+                "type": "string",
+                "description": "Retrofit only: the dated key this entry used to be."
+              }
+            },
+            "required": [
+              "date"
+            ],
+            "additionalProperties": true
+          }
+        },
         "provenance": {
           "type": "object"
         }

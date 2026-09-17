@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.224.0 -- **A rate by default, the command on request; and a privacy line made true** (MINOR). The shell-safety ledger records that a rule fired, never the command, because commands can carry tokens and names. With `MYCELIUM_LEDGER_TRIGGER=on` it also records the first 200 characters with obvious secrets masked, for a maintainer who needs to tell a correct fire from noise without rebuilding the numbers from transcripts. `PRIVACY.md` said Mycelium makes no automatic network calls; since 0.85.0 the CI-status hook has asked GitHub, through the user's own `gh`, for the latest run on the current branch in projects that have workflows. The policy now says so.*
+*Version 0.225.0 -- **The bar and its log are two things** (MINOR). A Definition of Done now has a `log[]`: dated updates go there as `{date, text}`, never as new dated keys beside or inside the bar. `check_dod_shape.py` prints, per diamond, how many characters are the bar (outcome, signal, threshold, kill_criterion), how many are the log, and how many are everything else, and flags any dated key written as a field. `/diamond-assess` shows those numbers after it asks the owner to state the Definition of Done from memory, never before. No size threshold is applied, because none has been measured.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

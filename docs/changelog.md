@@ -4,6 +4,16 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-17.
 
+## v0.225.0 - the bar and its log are two things
+
+**2026-09-17.** One dogfood candidate (`definition-of-done-grows-into-a-log-its-owner-cannot-recall`).
+
+- **The finding.** `/diamond-assess` step 7c asks the owner to state the Definition of Done from memory before it is read back. On the dogfood L1, 2026-09-16: "I honestly don't remember the dod." The record was 76,904 characters; `kill_criterion` alone was 59,229 across 21 sub-keys, 17 of them dated update notes. Every sweep result and every ruling had been appended where the reader who scores the kill looks. Every check the framework ran on a Definition of Done read presence and key shape, so a bar buried in the record of its own scoring read as satisfied. The owner failing to answer was the only check that could notice.
+- **`definition_of_done.log[]`** in the diamonds schema: `{date, text}` entries, `moved_from` for retrofits. `/define-done` and `/diamond-progress` now say where updates go: appended to the log, never as a dated key beside or inside the bar, and never by growing `kill_criterion.state` into a history of itself. When the bar changes, the bar field is rewritten and the old wording goes in a log entry with the reason.
+- **`check_dod_shape.py`**, read-only, exit 0: per diamond, characters in the bar (outcome, signal, threshold, kill_criterion, measure, kind), in `log[]`, and in everything else, plus LOG-AS-KEYS, any dated key name under the Definition of Done outside the log. Dated keys inside a log entry are left to the key-shape guard. Wired into `/canvas-health` and into `/diamond-assess` step 7c, where it is shown AFTER the recall answer: the number explains the answer and must not prompt it. 11 tests, 96% of the script.
+- **No size threshold, on purpose.** Measured on the dogfood diamonds the day this shipped: L0 bar 681 characters, L4 705, L1 21,559, and that last figure is AFTER its dated notes had already been moved out to a 49,169-character log. So moving the log out is necessary and does not make a bar short: the L1 bar's own prose carries its history ("REWRITTEN 2026-08-24 ON THE FOUNDER'S RULING..."). How long a bar can be before its owner cannot state it is not known; the sample is three diamonds, one recall failure and no recall success on record. A number invented here would be obeyed as if it had been measured. Step 7c now records the pair (recalled or not, bar size) in the decision log, which is the data that would set one.
+- *Process, because it cost a release cycle:* 0.224.0's first push was blocked by this script. It was created in the working tree while the pre-push gate for 0.224.0 was still reading that tree, with no test file yet, and `check_negative_control.py` refused the push, correctly. The gate reads the tree, not the commit.
+
 ## v0.224.0 - a rate by default, the command on request; and a privacy line made true
 
 **2026-09-17.** One dogfood candidate, and one inaccuracy found while documenting it.
