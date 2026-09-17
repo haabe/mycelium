@@ -337,3 +337,82 @@ def test_the_maintainers_own_handle_is_not_an_external_author(scripts_path, monk
     assert c.scan_text(own) == []
     stranger = own.replace("u/haabe", "u/NoShame9976 and u/NoCucumber4783")
     assert c.scan_text(stranger) != [], "the exclusion swallowed real external handles"
+
+
+# ------------------------------------------------ the marker names what it covers (v0.227.0)
+# Until now one `handles_checked` anywhere cleared every handle in the record. Dogfood
+# 2026-09-17: go-to-market.yml#sp-001 is one record of about 113,000 characters citing six
+# handles; four were checked and two could not be fetched, and writing the marker would have
+# recorded all six as checked. So it was not written, and the marker was unusable where it
+# mattered most. Founder ruling the same day: the marker lists the handles it covers.
+
+
+def test_a_marker_that_names_handles_clears_only_those(scripts_path):
+    c = _import(scripts_path)
+    txt = CONVERGENCE_UNCHECKED + (
+        "    handles_checked: >-\n"
+        "      2026-09-17 u/NoShame9976: profile read, replies to people, account two years old.\n"
+    )
+    found = c.scan_text(txt)
+    assert len(found) == 1, found
+    rule, evidence = found[0]
+    assert "nocucumber4783" in evidence.lower() and "noshame9976" not in evidence.lower()
+    assert "1 of 2" in evidence, evidence
+    # one unchecked account cannot carry a convergence claim, so this is rule A, not B
+    assert rule.startswith("A/"), rule
+
+
+def test_a_marker_naming_every_handle_clears_the_record(scripts_path):
+    c = _import(scripts_path)
+    txt = CONVERGENCE_UNCHECKED + (
+        "    handles_checked: '2026-09-17 NoShame9976 and NoCucumber4783, both profiles read'\n"
+    )
+    assert c.scan_text(txt) == []
+    assert c.bare_marker(txt) is False
+
+
+def test_a_marker_naming_no_handle_keeps_its_reach_and_is_counted(scripts_path):
+    """NOT BROKEN ON PURPOSE. Records written before this version say what was checked in words
+    ("both accounts opened") and name nobody. They keep clearing the record, and the report counts
+    them so the reach can be withdrawn later with warning instead of by surprise."""
+    c = _import(scripts_path)
+    txt = CONVERGENCE_UNCHECKED + "    handles_checked: '2026-09-10 both accounts opened'\n"
+    assert c.scan_text(txt) == []
+    assert c.bare_marker(txt) is True
+    assert c.bare_marker(CONVERGENCE_UNCHECKED) is False
+
+
+def test_a_mention_of_the_marker_in_prose_is_not_a_marker(scripts_path):
+    """`(ht-107 handles_checked)` inside a sentence far from any handle is a cross-reference. It
+    was clearing whole records, which is the loose-word bug of v0.223.0 again under another name."""
+    c = _import(scripts_path)
+    txt = CONVERGENCE_UNCHECKED + _FILLER + "      five of twelve replied (ht-107 handles_checked).\n"
+    assert c.scan_text(txt) != []
+    assert c.bare_marker(txt) is False
+
+
+def test_the_value_ends_where_the_next_key_begins(scripts_path):
+    """A handle named in a LATER field is not covered by the marker above it."""
+    c = _import(scripts_path)
+    txt = (
+        "  - id: finding_y\n"
+        "    handles_checked: '2026-09-17 u/NoShame9976 profile read'\n"
+        "    summary: >-\n"
+        "      Second sighting. u/NoShame9976 and u/NoCucumber4783 say the same thing. Convergence.\n"
+        "    source_class: external_human\n"
+    )
+    found = c.scan_text(txt)
+    assert len(found) == 1 and "nocucumber4783" in found[0][1].lower()
+
+
+def test_the_text_report_counts_bare_markers(scripts_path, tmp_path, monkeypatch, capsys):
+    c = _import(scripts_path)
+    d = tmp_path / ".claude" / "canvas"
+    d.mkdir(parents=True)
+    (d / "x.yml").write_text(
+        CONVERGENCE_UNCHECKED + "    handles_checked: '2026-09-10 both accounts opened'\n"
+    )
+    monkeypatch.setattr(sys, "argv", ["x", "--root", str(tmp_path)])
+    assert c.main() == 0
+    out = capsys.readouterr().out
+    assert "names no handle" in out and "1 record" in out

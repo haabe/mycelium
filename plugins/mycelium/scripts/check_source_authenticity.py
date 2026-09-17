@@ -128,10 +128,62 @@ _NOTE_WINDOW = 400
 _REVIEWED_MARKER = re.compile(r"\bhandles_checked\b", re.IGNORECASE)
 
 
+# THE MARKER NAMES WHAT IT COVERS (v0.227.0). One `handles_checked` used to clear every handle
+# in its record. Dogfood 2026-09-17: a 113,000-character record cited six handles, four were
+# checked and two could not be fetched, and writing the marker would have recorded all six as
+# checked, so it was not written and the marker was unusable where it mattered most. Now the
+# marker's VALUE is read: handles named there are cleared and the rest are still reported. A
+# marker that names no handle ("both accounts opened") keeps its old reach, because records
+# written before this version say it that way, and main() counts those so the reach can be
+# withdrawn later with warning. Only the KEY is a marker: `(ht-107 handles_checked)` inside a
+# sentence is a cross-reference, and falls under the distance rule like any other loose word.
+_MARKER_LINE = re.compile(r"^([ \t]*)(?:-[ \t]+)?handles_checked[ \t]*:(.*)$", re.IGNORECASE)
+_NAME_TOKEN = re.compile(r"[a-z0-9_][a-z0-9_.-]*")
+
+
+def _marker_values(text: str) -> list[str]:
+    """The value of every `handles_checked:` key: the rest of its line plus the more-indented
+    lines under it. It ends where the next key at the same depth begins."""
+    out: list[str] = []
+    lines = text.split("\n")
+    i = 0
+    while i < len(lines):
+        m = _MARKER_LINE.match(lines[i])
+        if not m:
+            i += 1
+            continue
+        depth = len(m.group(1).expandtabs())
+        value = [m.group(2)]
+        i += 1
+        while i < len(lines) and (
+            not lines[i].strip()
+            or len(lines[i].expandtabs()) - len(lines[i].expandtabs().lstrip()) > depth
+        ):
+            value.append(lines[i])
+            i += 1
+        out.append("\n".join(value))
+    return out
+
+
+def _named_in(values: list[str], handles: list[str]) -> set[str]:
+    """Which of the record's handles a marker value names, with or without the u/ or @ prefix."""
+    tokens: set[str] = set()
+    for v in values:
+        tokens.update(t.strip(".-") for t in _NAME_TOKEN.findall(_fold(v)))
+    return {h for h in handles if h in tokens}
+
+
+def bare_marker(text: str) -> bool:
+    """True when the record carries a marker key that names none of its handles."""
+    values = _marker_values(text)
+    if not values or not _EXTERNAL_TIER.search(text):
+        return False
+    handles = distinct_handles(text)
+    return bool(handles) and not _named_in(values, handles)
+
+
 def _note_covers_handles(text: str) -> bool:
-    """A reviewed marker anywhere, or a loose note within _NOTE_WINDOW of some handle."""
-    if _REVIEWED_MARKER.search(text):
-        return True
+    """A loose note within _NOTE_WINDOW of some handle. The marker key is handled by its value."""
     starts = [h.start() for h in _HANDLE.finditer(text)]
     return any(
         abs(n.start() - s) <= _NOTE_WINDOW
@@ -246,6 +298,51 @@ def distinct_handles(text: str) -> list[str]:
     return out
 
 
+def _shown(items: list[str]) -> str:
+    return ", ".join(items[:_HANDLES_SHOWN]) + ("..." if len(items) > _HANDLES_SHOWN else "")
+
+
+def _unnamed_findings(text: str, handles: list[str], named: set[str]) -> list[tuple[str, str]]:
+    """PRECISE MODE. Whoever named handles is held to the names: a loose word elsewhere in the
+    record does not cover the rest, or the marker's own prose ("profile read") would."""
+    left = [h for h in handles if h not in named]
+    if not left:
+        return []
+    convergent = len(left) >= _MIN_CONVERGENCE_ACCOUNTS and _CONVERGENCE.search(text)
+    rule = ("B/convergence-claimed-authors-unchecked" if convergent
+            else "A/external-human-author-unchecked")
+    evidence = (f"{len(left)} of {len(handles)} handle(s) not named in handles_checked "
+                f"({_shown(left)}); the other {len(handles) - len(left)} are")
+    return [(rule, evidence)]
+
+
+def _bare_note(bare: list[str]) -> str:
+    if not bare:
+        return ""
+    return (f"NOTE: {len(bare)} record(s) carry a `handles_checked` that names no handle "
+            f"({_shown(bare)}). It still clears the whole record. Name the handles it covers "
+            "and only those are cleared; the record-wide reach is kept for records written "
+            "before v0.227.0 and will be withdrawn.")
+
+
+def _say(note: str) -> None:
+    if note:
+        print("\n" + note)
+
+
+def _scan(root: Path, targets: list[Path]) -> tuple[list[tuple[str, str, str, str]], list[str]]:
+    findings: list[tuple[str, str, str, str]] = []
+    bare: list[str] = []
+    for f in targets:
+        rel = f.relative_to(root)
+        for rec_id, text in iter_records(f):
+            for rule, evidence in scan_text(text):
+                findings.append((str(rel), rec_id, rule, evidence))
+            if bare_marker(text):
+                bare.append(f"{rel} [{rec_id}]")
+    return findings, bare
+
+
 def scan_text(text: str) -> list[tuple[str, str]]:
     """Return (rule, evidence) findings for one record's text."""
     if not _EXTERNAL_TIER.search(text):
@@ -255,10 +352,16 @@ def scan_text(text: str) -> list[tuple[str, str]]:
         # An external claim with no handle is a named person, an org, or a metric.
         # Authenticity of a public account is not the question there.
         return []
-    if _note_covers_handles(text):
+    values = _marker_values(text)
+    named = _named_in(values, handles) if values else set()
+    if named:
+        return _unnamed_findings(text, handles, named)
+    # A marker that names nobody keeps its record-wide reach (main() counts it); with no marker
+    # at all, a loose note near a handle is the evidence that someone looked.
+    if values or _note_covers_handles(text):
         return []
 
-    shown = ", ".join(handles[:_HANDLES_SHOWN]) + ("..." if len(handles) > _HANDLES_SHOWN else "")
+    shown = _shown(handles)
     # Rule B needs TWO OR MORE distinct accounts. A convergence claim resting on a
     # single handle is not a convergence-across-strangers claim, and firing rule B on
     # one account overstates what the record actually did. It still gets rule A.
@@ -304,13 +407,7 @@ def main() -> int:
 
     root = Path(args.project_dir or args.root)
     targets = sorted((root / ".claude").rglob("*.yml"))
-    findings: list[tuple[str, str, str, str]] = []
-
-    for f in targets:
-        rel = f.relative_to(root)
-        for rec_id, text in iter_records(f):
-            for rule, evidence in scan_text(text):
-                findings.append((str(rel), rec_id, rule, evidence))
+    findings, bare = _scan(root, targets)
 
     # EMPTY-INPUT HONESTY. check_empty_input_honesty.py caught check_stale_prose.py
     # exiting 0 over an empty repository on 2026-08-07, reporting "no candidates across
@@ -332,6 +429,7 @@ def main() -> int:
         print(json.dumps({
             "status": "violations" if findings else "ok",
             "files_scanned": len(targets),
+            "bare_markers": bare,
             "violations": [
                 {"file": f, "record": r, "rule": rule, "evidence": ev}
                 for f, r, rule, ev in findings
@@ -339,9 +437,11 @@ def main() -> int:
         }))
         return 0
 
+    bare_note = _bare_note(bare)
     if not findings:
         if not args.quiet_when_clean:
-            print(f"OK: no unchecked external authors across {len(targets)} canvas/state file(s).")
+            print(f"OK: no unchecked external authors across {len(targets)} canvas/state file(s)."
+                  + (f"\n{bare_note}" if bare_note else ""))
         return 0
 
     print(f"ADVISORY: {len(findings)} record(s) cite a public handle as external evidence "
@@ -355,6 +455,7 @@ def main() -> int:
           "then whether the account returns to threads, then age and karma.")
     print("Count ACCOUNTS, not comments. Both rules are heuristics; if the record already "
           "did the work in words this misses, leave it.")
+    _say(bare_note)
     return 0
 
 
