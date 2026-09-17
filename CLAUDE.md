@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.226.3 -- **Three checks that were wrong about their own output** (PATCH). `derive_closing_path.py` listed a hand-routed input twice once it landed, and the framework's own validator rejected the result. `check_instrument_contract.py` reported eleven already-scored predictions as due because it read five exact key names nobody writes. The push gate now says on its passing path that pushed is not released.*
+*Version 0.227.0 -- **Three things that now read what the record actually says** (MINOR). An L0 or L1 diamond closes on its own definition of done, not on solution leaves. A bar has to say what happens when its date passes, and someone who did not write it resolves invented cases with it before it is accepted. `handles_checked` clears the handles it names, not the whole record.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

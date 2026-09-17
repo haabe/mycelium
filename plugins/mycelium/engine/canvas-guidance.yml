@@ -916,8 +916,11 @@ reviewed_markers:
       effect: both rules silent on that record
     - check: check_source_authenticity.py
       key: handles_checked
-      shape: "'YYYY-MM-DD <what was checked and how>'  (record-level)"
-      effect: rules A and B silent on that record
+      shape: "'YYYY-MM-DD <the handles it covers, by name, and how each was checked>'"
+      effect: >-
+        rules A and B silent for the handles the value NAMES (v0.227.0); the rest are still reported.
+        A value that names no handle clears the whole record, kept for records written before
+        v0.227.0 and counted in the report so it can be withdrawn with warning
     - check: check_source_class_fidelity.py
       key: alignment_reviewed
       shape: "{date: YYYY-MM-DD, reason: <why the arrays differ>}  (on the provenance block)"
