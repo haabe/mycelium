@@ -436,3 +436,64 @@ def test_multi_file_edit_with_every_check_before_the_first_write_is_silent(scrip
 def test_using_the_helper_is_silent(scripts_path):
     cmd = "python3 scripts/safe_replace.py --spec edits.json"
     assert _HALF not in _warnings(scripts_path, cmd)
+
+
+# ------------------------------------------------------------------ opt-in trigger (v0.224.0)
+# Default is a rate, not a transcript. With MYCELIUM_LEDGER_TRIGGER=on the ledger row also
+# carries the first 200 characters of the command, obvious secrets masked.
+
+_PIPE_STATUS = 'grep -c foo bar.txt | head -1; echo "rc=$?"'
+
+
+def _ledger_rows(tmp_path):
+    f = tmp_path / ".claude" / "state" / "shell-safety-guard-log.jsonl"
+    return [json.loads(line) for line in f.read_text().splitlines()] if f.exists() else []
+
+
+def _run_in(scripts_path, tmp_path, command, **env):
+    import os
+
+    full = dict(os.environ, CLAUDE_PROJECT_DIR=str(tmp_path), **env)
+    full.pop("MYCELIUM_LEDGER_TRIGGER", None) if "MYCELIUM_LEDGER_TRIGGER" not in env else None
+    return subprocess.run(
+        [sys.executable, str(scripts_path / "shell_safety_guard.py")],
+        input=_cmd(command), capture_output=True, text=True, env=full, check=False,
+    )
+
+
+def test_by_default_the_ledger_carries_no_trigger(scripts_path, tmp_path):
+    """THE DEFAULT IS THE PRIVACY PROMISE. A fire is ledgered; the command is not."""
+    _run_in(scripts_path, tmp_path, _PIPE_STATUS)
+    rows = _ledger_rows(tmp_path)
+    assert len(rows) == 1, "the guard did not fire, so this test would prove nothing"
+    assert "trigger" not in rows[0]
+
+
+def test_opt_in_records_the_command(scripts_path, tmp_path):
+    _run_in(scripts_path, tmp_path, _PIPE_STATUS, MYCELIUM_LEDGER_TRIGGER="on")
+    rows = _ledger_rows(tmp_path)
+    assert len(rows) == 1
+    assert rows[0]["trigger"].startswith("grep -c foo bar.txt | head -1")
+
+
+@pytest.mark.parametrize(
+    ("command", "secret"),
+    [
+        ('curl -H "Authorization: Bearer abcDEF1234567890xyz" https://x.test | head; echo $?', "abcDEF1234567890xyz"),
+        ("GITHUB_TOKEN=ghp_abcdefghijklmnopqrstuvwxyz0123 gh api user | head -1; echo $?", "ghp_abcdefghijklmnopqrstuvwxyz0123"),
+        ("git clone https://haabe:hunter2secret@github.com/haabe/x.git | tail; echo $?", "hunter2secret"),
+        ('mysql --password hunter2pass -e "select 1" | head; echo $?', "hunter2pass"),
+    ],
+)
+def test_opt_in_masks_the_obvious_secret_shapes(scripts_path, tmp_path, command, secret):
+    _run_in(scripts_path, tmp_path, command, MYCELIUM_LEDGER_TRIGGER="on")
+    rows = _ledger_rows(tmp_path)
+    assert len(rows) == 1
+    assert secret not in rows[0]["trigger"], rows[0]["trigger"]
+    assert "<masked>" in rows[0]["trigger"]
+
+
+def test_the_trigger_is_truncated(scripts_path, tmp_path):
+    long = "grep -c foo " + "x" * 600 + " | head -1; echo $?"
+    _run_in(scripts_path, tmp_path, long, MYCELIUM_LEDGER_TRIGGER="on")
+    assert len(_ledger_rows(tmp_path)[0]["trigger"]) <= 200

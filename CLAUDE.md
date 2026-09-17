@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.223.0 -- **Two checks that had gone quiet, measured before they were changed** (MINOR). `check_source_authenticity.py` counted any one of about twenty loose words anywhere in a record as proof that someone had checked its handles; records run to 100k characters, and the record behind the check's first two true findings went green when an unrelated WITHDRAWN was added to it. A loose word now counts only within 400 characters of a handle; the `handles_checked:` marker still counts anywhere. `shell-safety-guard` gains rule 5, a warning on scripted multi-file edits that can half-apply, scoped by measurement over 14,419 real commands: the broad form of the contract's safe_replace rule would have fired on 11% of all commands, this form fires on 2.1%.*
+*Version 0.224.0 -- **A rate by default, the command on request; and a privacy line made true** (MINOR). The shell-safety ledger records that a rule fired, never the command, because commands can carry tokens and names. With `MYCELIUM_LEDGER_TRIGGER=on` it also records the first 200 characters with obvious secrets masked, for a maintainer who needs to tell a correct fire from noise without rebuilding the numbers from transcripts. `PRIVACY.md` said Mycelium makes no automatic network calls; since 0.85.0 the CI-status hook has asked GitHub, through the user's own `gh`, for the latest run on the current branch in projects that have workflows. The policy now says so.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

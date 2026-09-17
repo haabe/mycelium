@@ -327,7 +327,38 @@ def findings(command: str) -> list[str]:
 
 
 
-def _log(hook: str, fires: int, first_match: str, signature: str) -> None:
+# Opt-in trigger recording (v0.224.0). OFF unless MYCELIUM_LEDGER_TRIGGER=on.
+_TRIGGER_CHARS = 200
+_SECRET_SHAPES = (
+    # provider-shaped tokens
+    re.compile(r"\b(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|sk-[A-Za-z0-9_-]{16,}"
+               r"|xox[abprs]-[A-Za-z0-9-]{10,}|AKIA[0-9A-Z]{16}|eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9._-]{10,})"),
+    # Authorization headers
+    re.compile(r"(?i)\b((?:bearer|basic|token)\s+)[A-Za-z0-9._~+/=-]{8,}"),
+    # NAME=value where the name says it is a secret
+    re.compile(r"(?i)\b([A-Z0-9_]*(?:TOKEN|SECRET|PASSWORD|PASSWD|API_?KEY|CREDENTIALS?)[A-Z0-9_]*=)\S+"),
+    # --password x / --token=x style flags
+    re.compile(r"(?i)(--?(?:password|passwd|token|secret|api-?key)[= ])\S+"),
+    # credentials inside a URL
+    re.compile(r"(?i)\b([a-z][a-z0-9+.-]*://)[^\s/:@]+:[^\s/@]+@"),
+)
+
+
+def _masked_trigger(command: str) -> str:
+    """First _TRIGGER_CHARS of the command with obvious secret shapes replaced.
+
+    Masking is BEST EFFORT and says so: it knows token prefixes, auth headers, secret-named
+    assignments and flags, and URL credentials. A secret in none of those shapes is recorded
+    as typed. That is why this is opt-in and off by default; it is for a maintainer scoring
+    their own guard. The ledger lives under .claude/state/, which setup does not git-ignore.
+    """
+    text = command
+    for pat in _SECRET_SHAPES:
+        text = pat.sub(lambda m: (m.group(1) if m.lastindex else "") + "<masked>", text)
+    return " ".join(text.split())[:_TRIGGER_CHARS]
+
+
+def _log(hook: str, fires: int, first_match: str, signature: str, command: str = "") -> None:
     """Append one line per fire so the action rate and the OVERRIDE rate are computable.
 
     Two rules make this part of the ship rather than a nice-to-have.
@@ -344,6 +375,13 @@ def _log(hook: str, fires: int, first_match: str, signature: str) -> None:
     Records WHAT fired, never the full input — enough to compute a rate, not enough to be
     a transcript. Silent on every failure: an instrument that breaks a session is worse
     than an instrument with a gap.
+
+    OPT-IN EXCEPTION (v0.224.0): with MYCELIUM_LEDGER_TRIGGER=on the row also carries
+    `trigger`, the first 200 characters of the command with obvious secrets masked. A rate
+    says how often a rule fires; it cannot say whether a fire was right, and both times
+    this guard was narrowed (2026-08-30, 2026-09-17) the false-positive numbers had to be
+    rebuilt from session transcripts, which rotate away. Default stays a rate: commands
+    can carry tokens and names, and the default is what other people's projects get.
     """
     try:
         root = Path(os.environ.get("CLAUDE_PROJECT_DIR", ".")) / ".claude" / "state"
@@ -355,6 +393,8 @@ def _log(hook: str, fires: int, first_match: str, signature: str) -> None:
             "signature": signature,
             "first_match": first_match[:120],
         }
+        if command and os.environ.get("MYCELIUM_LEDGER_TRIGGER", "").lower() == "on":
+            row["trigger"] = _masked_trigger(command)
         with (root / f"{hook}-log.jsonl").open("a", encoding="utf-8") as fh:
             fh.write(json.dumps(row, ensure_ascii=False) + "\n")
     except Exception:  # noqa: BLE001, S110 — never break a tool call over telemetry
@@ -386,7 +426,7 @@ def main() -> int:
         "verification-hygiene class."
     )
     signature = hashlib.sha256("|".join(sorted(warnings)).encode()).hexdigest()[:10]
-    _log("shell-safety-guard", len(warnings), warnings[0], signature)
+    _log("shell-safety-guard", len(warnings), warnings[0], signature, command)
     print(json.dumps({
         "hookSpecificOutput": {
             "hookEventName": "PreToolUse",

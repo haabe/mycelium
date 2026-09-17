@@ -81,6 +81,16 @@ def test_a_repo_with_no_workflows_never_calls_out(mod, tmp_path, monkeypatch):
     assert called == [], "made a subprocess call before checking for workflows"
 
 
+def test_the_opt_out_never_calls_out(mod, project, monkeypatch):
+    """MYCELIUM_CI_SIGNAL=off: a project WITH workflows and a red build makes no call at all.
+    This is the plugin's one automatic network call, so the switch has to be total."""
+    called = []
+    monkeypatch.setattr(mod, "_run", lambda *a, **k: called.append(a) or None)
+    monkeypatch.setenv("MYCELIUM_CI_SIGNAL", "off")
+    assert mod.check(project, fresh_session=True) is None
+    assert called == [], "called out despite the opt-out"
+
+
 # ---------------------------------------------------------------- sad
 
 

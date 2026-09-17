@@ -137,6 +137,10 @@ def check(project: Path, now: float | None = None,
     suppressing a red build because a PREVIOUS session heard about it would
     reproduce the exact gap this closes — which is how thirteen pushes happened.
     """
+    # OPT-OUT (v0.224.0). This is the plugin's one automatic network call, and until now
+    # the only way to stop it was to edit the plugin's hooks.json, which an update puts back.
+    if os.environ.get("MYCELIUM_CI_SIGNAL", "").lower() == "off":
+        return None
     now = time.time() if now is None else now
     ctx = _repo_context(project)
     if ctx is None:
