@@ -52,9 +52,49 @@ import json
 import sys
 from pathlib import Path
 
+try:
+    import yaml
+except ImportError:  # spoken by check_parses: YAML targets are then written unchecked
+    yaml = None
+
 
 class AnchorError(Exception):
     """One or more anchors did not match. Raised before anything is written."""
+
+
+class ParseError(Exception):
+    """A staged YAML or JSON file would not parse after the edit. Raised before any write."""
+
+
+def check_parses(path: Path, text: str) -> None:
+    """Raise ParseError if `text`, destined for `path`, is not valid YAML (.yml/.yaml) or JSON
+    (.json). Other suffixes pass. Cheap, and the one check that turns a mis-indented list
+    item from a broken canvas on disk into a refused write.
+
+    WHY (dogfood 2026-09-17): a script moved a tally on active.yml, wrote the file, THEN
+    parsed it; the inserted list item was two spaces short and the diamonds file was invalid
+    until the next command. The order was the bug, the same bug this module already fixes
+    for anchors: `write; check` leaves the tree in a state nobody described, `check; write`
+    cannot."""
+    suffix = path.suffix.lower()
+    try:
+        if suffix in (".yml", ".yaml"):
+            if yaml is None:
+                print(f"safe_replace: PyYAML missing, {path} written unchecked", file=sys.stderr)
+                return
+            yaml.safe_load(text)
+        elif suffix == ".json":
+            json.loads(text)
+    except Exception as exc:
+        raise ParseError(
+            f"{path}: the edited text does not parse ({exc}); NOTHING was written"
+        ) from exc
+
+
+def write_checked(path: Path, text: str, encoding: str = "utf-8") -> None:
+    """Parse, then write. The single entry point for scripts that edit a canvas file by text."""
+    check_parses(path, text)
+    path.write_text(text, encoding=encoding)
 
 
 def _validate(edits: list[dict]) -> list[tuple[Path, str, str]]:
@@ -113,6 +153,8 @@ def _validate(edits: list[dict]) -> list[tuple[Path, str, str]]:
 def apply_edits(edits: list[dict], dry_run: bool = False) -> list[Path]:
     """Validate every anchor, then write every file. Returns paths written."""
     resolved = _validate(edits)
+    for path, text, _ in resolved:  # every staged file parses, or nothing is written
+        check_parses(path, text)
     if dry_run:
         return [p for p, _, _ in resolved]
     written = []
@@ -142,7 +184,7 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         written = apply_edits(edits, dry_run=args.dry_run)
-    except AnchorError as exc:
+    except (AnchorError, ParseError) as exc:
         print(f"safe_replace: {exc}", file=sys.stderr)
         return 1
 

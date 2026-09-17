@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.219.0 -- **The async interview, the inline obligation, and the hand-typed number** (MINOR). `/user-interview` gains an async drip mode (two questions a message, the next pair chosen from the answers), the four agent-contract files a hook-less run trimmed now restate the do-not-trim obligation at the top, and the validator reports every north-star number that carries neither a `source_ref` nor a stated manual reason.
+*Version 0.220.0 -- **Parse before write** (MINOR). Every canvas text edit made by a plugin script now parses the edited file before writing it: `safe_replace.py` gains `check_parses` and `write_checked`, `apply_edits` refuses a whole batch when any staged `.yml` or `.json` would not parse, and `derive_closing_path.py` routes both of its writes through the checked path. A mis-indented list item is now a refused write with the parser's message, not a broken canvas on disk.
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

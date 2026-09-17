@@ -273,3 +273,21 @@ def test_outcome_key_rejects_prose():
     m = _mod()
     assert m._outcome_key("opportunities.yml#desired_outcomes.adoption") == "adoption"
     assert m._outcome_key("l0-purpose - evidence that x. y.") == ""
+
+
+def test_write_closes_on_refuses_a_render_that_would_not_parse(tmp_path, monkeypatch):
+    """Parse-before-write (0.220.0): if the rendered block would leave active.yml unparseable,
+    nothing is written and the file on disk is the file that was there."""
+    mod = _mod()
+    _project(tmp_path, ACTIVE)
+    path = tmp_path / ".claude" / "diamonds" / "active.yml"
+    before = path.read_text()
+    monkeypatch.setattr(mod, "_render_closes_on", lambda entry, indent: [" " * indent + "closes_on: [", " " * indent + "  - broken"])
+    import safe_replace
+    try:
+        mod.write_closes_on(tmp_path, "l1", {"stored_at": "2026-09-17", "gates": [], "inputs": []})
+    except safe_replace.ParseError as exc:
+        assert "NOTHING was written" in str(exc)
+    else:
+        raise AssertionError("expected ParseError")
+    assert path.read_text() == before

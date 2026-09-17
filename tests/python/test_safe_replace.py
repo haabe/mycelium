@@ -237,3 +237,70 @@ def test_main_returns_1_on_bad_anchor_and_writes_nothing(scripts_path, tmp_path,
     assert mod.main([]) == 1
     assert (tmp_path / "a").read_text() == "hello\n"
     assert "NOTHING was written" in capsys.readouterr().err
+
+
+# --- parse-before-write (0.220.0): a staged .yml/.json that would not parse is refused, and
+# NOTHING is written, including the other files in the same batch. Dogfood 2026-09-17: a tally
+# script wrote active.yml two spaces short and parsed it afterwards.
+
+
+def test_yaml_edit_that_breaks_the_parse_writes_nothing(scripts_path, tmp_path):
+    mod = _import(scripts_path)
+    a = tmp_path / "a.yml"
+    a.write_text("items:\n  - one\n  - two\n")
+    b = tmp_path / "b.md"
+    b.write_text("hello foo\n")
+    with pytest.raises(mod.ParseError) as exc:
+        mod.apply_edits([
+            {"path": str(a), "old": "  - two\n", "new": "  - two\n - three\n"},
+            {"path": str(b), "old": "foo", "new": "bar"},
+        ])
+    assert "NOTHING was written" in str(exc.value)
+    assert a.read_text() == "items:\n  - one\n  - two\n"
+    assert b.read_text() == "hello foo\n"
+
+
+def test_yaml_edit_that_parses_is_written(scripts_path, tmp_path):
+    mod = _import(scripts_path)
+    a = tmp_path / "a.yml"
+    a.write_text("items:\n  - one\n")
+    mod.apply_edits([{"path": str(a), "old": "  - one\n", "new": "  - one\n  - two\n"}])
+    assert a.read_text() == "items:\n  - one\n  - two\n"
+
+
+def test_json_edit_that_breaks_the_parse_writes_nothing(scripts_path, tmp_path):
+    mod = _import(scripts_path)
+    j = tmp_path / "c.json"
+    j.write_text('{"a": 1}')
+    with pytest.raises(mod.ParseError):
+        mod.apply_edits([{"path": str(j), "old": "1}", "new": "1,}"}])
+    assert j.read_text() == '{"a": 1}'
+
+
+def test_write_checked_refuses_invalid_yaml_and_leaves_the_file(scripts_path, tmp_path):
+    mod = _import(scripts_path)
+    a = tmp_path / "d.yml"
+    a.write_text("k: v\n")
+    with pytest.raises(mod.ParseError):
+        mod.write_checked(a, "k: v\n- broken\n")
+    assert a.read_text() == "k: v\n"
+    mod.write_checked(a, "k: v\nlist:\n  - ok\n")
+    assert a.read_text() == "k: v\nlist:\n  - ok\n"
+
+
+def test_check_parses_passes_other_suffixes(scripts_path, tmp_path):
+    mod = _import(scripts_path)
+    mod.check_parses(tmp_path / "notes.md", "k: v\n- broken\n")  # not a parsed suffix
+
+
+def test_main_returns_1_on_parse_error_and_writes_nothing(scripts_path, tmp_path,
+                                                         monkeypatch, capsys):
+    import io
+    mod = _import(scripts_path)
+    a = tmp_path / "e.yml"
+    a.write_text("items:\n  - one\n")
+    spec = json.dumps([{"path": str(a), "old": "  - one\n", "new": "  - one\n - two\n"}])
+    monkeypatch.setattr(sys, "stdin", io.StringIO(spec))
+    assert mod.main([]) == 1
+    assert a.read_text() == "items:\n  - one\n"
+    assert "NOTHING was written" in capsys.readouterr().err

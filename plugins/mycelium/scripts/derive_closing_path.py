@@ -47,6 +47,9 @@ from pathlib import Path
 
 import yaml
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from safe_replace import write_checked  # parse-before-write for every canvas text edit (0.220.0)
+
 TERMINAL_TASK = {"completed", "closed", "cancelled", "abandoned", "done", "scored", "withdrawn"}
 LIVE_LEAF = ("candidate", "proposed", "open")
 TEST_KEYS = ("cheapest_test", "smallest_test", "falsifier", "test_design")
@@ -704,7 +707,7 @@ def write_closes_on(root: Path, did: str, entry: dict) -> bool:  # noqa: C901 â€
     text = "\n".join(new)
     if text == "\n".join(lines):
         return False
-    path.write_text(text, encoding="utf-8")
+    write_checked(path, text)
     return True
 
 
@@ -730,7 +733,7 @@ def _stamp_after_id(path: Path, id_line_re: str, key: str, text: str) -> bool:
         return False
     ins = _block_scalar(key, text, field_indent)
     new = lines[: start + 1] + ins + lines[start + 1 :]
-    path.write_text("\n".join(new), encoding="utf-8")
+    write_checked(path, "\n".join(new))
     return True
 
 

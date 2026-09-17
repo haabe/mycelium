@@ -2,7 +2,13 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-09-14.
+**Last updated**: 2026-09-17.
+
+## v0.220.0 - parse before write
+
+One dogfood finding closed the day it was made (2026-09-17).
+
+- **`safe_replace.check_parses` / `write_checked`**, and `apply_edits` now refuses a whole batch when any staged `.yml`/`.yaml`/`.json` text would not parse, before anything is written; `derive_closing_path.py`'s two canvas writes go through the checked path. The finding: an agent script moved a kill tally on `active.yml`, wrote the file, then parsed it; the inserted list item was two spaces short (a substring match on a 6-space prefix passed against an 8-space line) and the diamonds file was invalid until the next command. Same ordering bug this module already fixed for anchors in August (`write; check` leaves a state nobody described), one step earlier. Founder: "fix the script upstream so that validation and writing happens in the correct order." Six tests on the helper, one on the closing-path writer (a render that would not parse leaves the file byte-identical). PyYAML missing: YAML targets are written unchecked and stderr says so.
 
 ## v0.219.0 - the async interview, the inline obligation, and the hand-typed number
 
