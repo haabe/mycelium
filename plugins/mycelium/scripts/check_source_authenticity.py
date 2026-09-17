@@ -110,10 +110,34 @@ _AUTHENTICITY_NOTE = re.compile(
     r"|authenticity\s+(?:checked|test)|CHECKED\s+AND\s+CREDIBLE"
     r"|persona\s+continuity|comment\s+karma|post\s+karma"
     r"|not\s+inspectable|uninspectable|unverifiable"
-    r"|WITHDRAWN|DISCOUNTED|templated|returns?\s+to\s+threads?"
-    r"|count\s+accounts,?\s+not\s+comments)\b",
+    r"|WITHDRAWN|DISCOUNTED|templated|returns?\s+to\s+threads?)\b",
     re.IGNORECASE,
 )
+
+# SCOPE OF A NOTE (v0.223.0). The pattern above is generous about WORDS and was also
+# generous about DISTANCE: any one of them anywhere in a record counted as "someone
+# looked". Records are not small. On the dogfood canvas 2026-09-17 four records of 40k to
+# 113k characters were silenced by one unrelated word each, and the record that produced
+# this check's first two true findings (ten X handles, no note) went green when the word
+# WITHDRAWN was added to it about something else. So a loose word counts only when it
+# sits within this many characters of a handle. The structured marker `handles_checked:`
+# still counts anywhere in the record: it is a key written to say exactly this.
+# "count accounts, not comments" was removed from the pattern: it is this check's own
+# remedy text, and a canvas that quotes the advice has not thereby followed it.
+_NOTE_WINDOW = 400
+_REVIEWED_MARKER = re.compile(r"\bhandles_checked\b", re.IGNORECASE)
+
+
+def _note_covers_handles(text: str) -> bool:
+    """A reviewed marker anywhere, or a loose note within _NOTE_WINDOW of some handle."""
+    if _REVIEWED_MARKER.search(text):
+        return True
+    starts = [h.start() for h in _HANDLE.finditer(text)]
+    return any(
+        abs(n.start() - s) <= _NOTE_WINDOW
+        for n in _AUTHENTICITY_NOTE.finditer(text)
+        for s in starts
+    )
 
 # A claim that several independent people arrived at the same place. This is the class
 # that is cheapest to fake and that this framework weights most heavily, hence rule B.
@@ -205,7 +229,7 @@ def scan_text(text: str) -> list[tuple[str, str]]:
         # An external claim with no handle is a named person, an org, or a metric.
         # Authenticity of a public account is not the question there.
         return []
-    if _AUTHENTICITY_NOTE.search(text):
+    if _note_covers_handles(text):
         return []
 
     shown = ", ".join(handles[:_HANDLES_SHOWN]) + ("..." if len(handles) > _HANDLES_SHOWN else "")

@@ -261,3 +261,45 @@ def test_self_handles_survive_an_empty_git_config(scripts_path, monkeypatch):
         stdout = ""
     monkeypatch.setattr(subprocess, "run", lambda *a, **k: R())
     assert c._self_handles() == set()
+
+
+# ------------------------------------------------------------------ scope of a note (v0.223.0)
+# The note pattern was generous about words AND about distance: one loose word anywhere in
+# a record counted as "someone looked". Dogfood 2026-09-17: the record behind this check's
+# first two true findings (ten handles, no note) went green when the word WITHDRAWN was
+# added to it about something else, and four records of 40k to 113k characters on the live
+# canvas were each silenced by one unrelated word.
+
+_FILLER = "      unrelated prose about a pricing page and a changelog entry.\n" * 12
+
+
+def test_a_loose_word_far_from_any_handle_does_not_suppress(scripts_path):
+    """THE REGRESSION. 'WITHDRAWN' about something else, ~800 characters from the handles."""
+    c = _import(scripts_path)
+    txt = CONVERGENCE_UNCHECKED + _FILLER + "      The Discord post was WITHDRAWN on the founder's call.\n"
+    assert len(_FILLER) > c._NOTE_WINDOW, "fixture no longer exceeds the window it is testing"
+    rules = [r for r, _ in c.scan_text(txt)]
+    assert any(r.startswith("B/") for r in rules), f"a distant unrelated word silenced the record: {rules}"
+
+
+def test_the_same_word_near_a_handle_still_suppresses(scripts_path):
+    """The other half: the fix must not turn a record that did the work into a nag."""
+    c = _import(scripts_path)
+    txt = CONVERGENCE_UNCHECKED + "      u/NoShame9976 is templated; convergence WITHDRAWN.\n" + _FILLER
+    assert c.scan_text(txt) == []
+
+
+def test_the_reviewed_marker_counts_anywhere_in_the_record(scripts_path):
+    """`handles_checked:` is a key written to say exactly this, so distance does not apply."""
+    c = _import(scripts_path)
+    txt = CONVERGENCE_UNCHECKED + _FILLER + "    handles_checked: '2026-09-10 both accounts opened'\n"
+    assert c.scan_text(txt) == []
+
+
+def test_quoting_the_checks_own_advice_is_not_a_check(scripts_path):
+    """'Count accounts, not comments' is this script's remedy text. A canvas that echoes the
+    advice beside the handles has not thereby followed it."""
+    c = _import(scripts_path)
+    txt = CONVERGENCE_UNCHECKED + "      Reminder to self: count accounts, not comments.\n"
+    rules = [r for r, _ in c.scan_text(txt)]
+    assert any(r.startswith("B/") for r in rules), f"the tool's own phrase suppressed the finding: {rules}"

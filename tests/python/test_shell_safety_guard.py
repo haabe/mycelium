@@ -379,3 +379,60 @@ def test_a_path_inside_a_heredoc_counts_as_the_heredoc_steps_write(scripts_path)
            "Path('.claude/diamonds/active.yml').write_text('x')\nEOF\n"
            "git commit -am x")
     assert "ungated commit" in _warnings(scripts_path, cmd)
+
+
+# ------------------------------------------------------------------ rule 5 (v0.223.0)
+# A scripted multi-file edit that can half-apply. Scope was set by measurement before it
+# shipped (14,419 real commands): the broad form fires on 11% of all commands, this one on
+# 2.1%, and every one of those can leave the tree half-edited.
+
+_HALF = "safe_replace.py"  # the phrase that identifies rule 5's warning
+
+
+def test_multi_file_edit_with_a_late_anchor_check_warns(scripts_path):
+    """THE SHAPE. File a is written, then file b's anchor is asserted: if it fails, a is
+    already changed. Verbatim the shape of a version-bump script from the 2026-09-17 session."""
+    cmd = (
+        "python3 - <<'PY'\n"
+        "s=open('plugin.json').read(); open('plugin.json','w').write(s.replace('0.1','0.2'))\n"
+        "t=open('CHANGELOG.md').read(); assert t.count('## v0.1')==1\n"
+        "open('CHANGELOG.md','w').write(t.replace('## v0.1','## v0.2\\n\\n## v0.1'))\n"
+        "PY"
+    )
+    assert _HALF in _warnings(scripts_path, cmd)
+
+
+def test_multi_file_edit_with_no_anchor_check_at_all_warns(scripts_path):
+    cmd = (
+        "python3 -c \"open('a','w').write(open('a').read().replace('x','y')); "
+        "open('b','w').write(open('b').read().replace('x','y'))\""
+    )
+    assert _HALF in _warnings(scripts_path, cmd)
+
+
+def test_single_file_edit_is_silent_however_many_anchors(scripts_path):
+    """NEGATIVE CONTROL, and the reason the rule was narrowed: 1,300+ real commands have
+    this shape and none of them can half-apply."""
+    cmd = (
+        "python3 - <<'PY'\n"
+        "s=open('a.yml').read(); assert s.count('x')==1\n"
+        "s=s.replace('x','y').replace('q','r'); open('a.yml','w').write(s)\n"
+        "PY"
+    )
+    assert _HALF not in _warnings(scripts_path, cmd)
+
+
+def test_multi_file_edit_with_every_check_before_the_first_write_is_silent(scripts_path):
+    """The rule's substance kept by hand. Warning here would punish the careful script."""
+    cmd = (
+        "python3 - <<'PY'\n"
+        "a=open('a').read(); b=open('b').read(); assert a.count('x')==1 and b.count('x')==1\n"
+        "open('a','w').write(a.replace('x','y')); open('b','w').write(b.replace('x','y'))\n"
+        "PY"
+    )
+    assert _HALF not in _warnings(scripts_path, cmd)
+
+
+def test_using_the_helper_is_silent(scripts_path):
+    cmd = "python3 scripts/safe_replace.py --spec edits.json"
+    assert _HALF not in _warnings(scripts_path, cmd)

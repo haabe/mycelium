@@ -144,6 +144,36 @@ _WRITE_SHAPE = re.compile(
 )
 _GIT_LANDS = re.compile(r"\bgit\s+(?:commit|push)\b")
 
+# Rule 5: a scripted multi-file text edit that can half-apply.
+_PY_REPLACE = re.compile(r"\.replace\(")
+_EDIT_HELPER = re.compile(r"safe_replace|apply_edits|write_checked")
+_PY_OPEN_WRITE = re.compile(r"open\(\s*([A-Za-z_][\w.]*|['\"][^'\"]+['\"])\s*,\s*['\"][wa]['\"]")
+_PY_WRITE_TEXT = re.compile(r"([A-Za-z_][\w.]*|Path\([^)]*\))\.write_text\(")
+_PY_ANCHOR_CHECK = re.compile(r"\bassert\b|\.count\(")
+
+
+def _half_applying_edit(command: str) -> bool:
+    """Replaces text, writes two or more DISTINCT files, skips the helper, and either checks
+    an anchor after the first write or checks none.
+
+    NARROWED BEFORE IT SHIPPED, 2026-09-17, over 14,419 real Bash commands from dogfood
+    transcripts. The contract's HARD RULE names safe_replace.py for any scripted edit of
+    more than one file or anchor; 1,960 commands were replace-and-write scripts and 123
+    used the helper. A rule warning on the other 1,626 would fire on 11% of all commands,
+    which is a nag, and most of them are one file with every anchor asserted before the
+    write: the rule's substance, kept by hand. What the rule exists to prevent is a tree
+    left half-edited, and that needs two files and a check that can fail after the first
+    one is written. That shape: 299 commands, 2.1%.
+    """
+    if not _PY_REPLACE.search(command) or _EDIT_HELPER.search(command):
+        return False
+    writes = list(_PY_OPEN_WRITE.finditer(command)) + list(_PY_WRITE_TEXT.finditer(command))
+    if len({m.group(1) for m in writes}) < 2:  # noqa: PLR2004 -- two files is the rule's own threshold
+        return False
+    first_write = min(m.start() for m in writes)
+    checks = [m.start() for m in _PY_ANCHOR_CHECK.finditer(command)]
+    return not checks or max(checks) > first_write
+
 
 def _raw_steps(command: str) -> list[str]:
     """Split a command into steps at `;` and newlines OUTSIDE quotes and quoted-heredoc bodies.
@@ -277,6 +307,20 @@ def findings(command: str) -> list[str]:
             "2026-09-09; `set -e` did not stop the chain under this tool). Chain every "
             "step from the first write to the push with `&&`, or commit in a separate "
             "command after reading the write's output."
+        )
+
+    # 5. A multi-file scripted edit that can half-apply. See _half_applying_edit for the
+    # measurement that set its scope.
+    if _half_applying_edit(command):
+        out.append(
+            "This script replaces text and writes two or more files without "
+            "`safe_replace.py`, and an anchor check runs after the first write or not at "
+            "all. If a later anchor fails, the earlier files are already written and the "
+            "tree is in a state nobody described (agent-operating-contract, scripted "
+            "multi-file edits, HARD RULE). Pass the edits to "
+            '`python3 "${CLAUDE_PLUGIN_ROOT}/scripts/safe_replace.py" --spec edits.json` '
+            "(try `--dry-run` first), or import `apply_edits`: every anchor is validated "
+            "before any file is touched."
         )
 
     return out
