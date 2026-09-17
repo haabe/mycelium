@@ -283,7 +283,12 @@ elif [ "$CORRECTIONS_COUNT" -gt 0 ] || [ "$DECISIONS_COUNT" -gt 0 ]; then
   # Silence is the correct output when nothing happened — emitting
   # "Session ended. 0 corrections, 0 decisions logged." on every turn
   # reads as visual noise / error to first-run users (per opp-003).
-  echo "{\"systemMessage\": \"Session: ${CORRECTIONS_COUNT} corrections, ${DECISIONS_COUNT} decisions logged.\"}"
+  # Serialised, not interpolated: Claude Code 2.1.248 reports brace-led stdout
+  # that is not valid JSON as a hook error instead of showing it as text.
+  python3 -c "
+import json, sys
+print(json.dumps({'systemMessage': 'Session: %s corrections, %s decisions logged.' % (sys.argv[1].strip(), sys.argv[2].strip())}))
+" "$CORRECTIONS_COUNT" "$DECISIONS_COUNT"
 fi
 
 exit 0

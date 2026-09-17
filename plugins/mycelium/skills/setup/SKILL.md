@@ -233,6 +233,7 @@ command -v opencode >/dev/null 2>&1                                          # o
 > What it provisions (copied from the plugin, never overwriting your `.opencode/` files):
 > - `opencode.json` — a starter config (local-model provider example; edit `model` for your setup)
 > - `.opencode/plugin/mycelium.ts` — enforcement plugin with the two clean hooks: preflight context injection + read-before-edit guard
+> - `.opencode/plugins/mycelium/index.ts` — the same enforcement for **opencode 2.x**, which does not load 1.x plugins; adds the reflexion prompt on a failed tool call. Both files are provisioned: each opencode major reads only its own directory
 > - `.opencode/command/mycelium/interview.md` — an example `/mycelium:interview` entry command
 > - **the skills** — vendored into `.claude/skills/` + their reference files into `.claude/mycelium/`, with `${CLAUDE_PLUGIN_ROOT}` paths rewritten so opencode can resolve them (opencode does no variable substitution, so this rewrite is required for the 36 reference-heavy skills to work)
 >
@@ -260,13 +261,15 @@ Copy from the plugin's bundled scaffold, idempotently, never clobbering user fil
 # rather than cp-ing from a directory that cannot be there.
 SRC="${CLAUDE_PLUGIN_ROOT:?set CLAUDE_PLUGIN_ROOT to the plugin root before provisioning}/integrations/opencode"
 [ -d "$SRC" ] || { echo "ERROR: no opencode scaffold at $SRC" >&2; exit 1; }
-mkdir -p "$project_root/.opencode/plugin" "$project_root/.opencode/command/mycelium"
+mkdir -p "$project_root/.opencode/plugin" "$project_root/.opencode/plugins/mycelium" "$project_root/.opencode/command/mycelium"
 
 # opencode.json — only if absent; if present, show the user the starter and let them merge.
 test -f "$project_root/opencode.json" || cp "$SRC/opencode.json" "$project_root/opencode.json"
 
 # plugin + command — copy with -n (no-clobber)
 cp -n "$SRC/plugin/mycelium.ts" "$project_root/.opencode/plugin/mycelium.ts"
+# opencode 2.x does not load 1.x plugins; it auto-discovers .opencode/plugins/<id>/index.ts
+cp -n "$SRC/plugins-v2/mycelium/index.ts" "$project_root/.opencode/plugins/mycelium/index.ts"
 cp -n "$SRC/command/mycelium/interview.md" "$project_root/.opencode/command/mycelium/interview.md"
 
 # Skill provisioning (the load-bearing part): vendor the skills + their referenced

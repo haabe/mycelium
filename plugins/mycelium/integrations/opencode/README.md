@@ -20,6 +20,29 @@ surface.
   hook on failure; there is no clean workaround until the upstream `tool.execute.error`
   event lands. Everything else has a clean path.
 
+## opencode 2.x — a separate plugin, because 2.x does not load 1.x plugins
+
+opencode 2.0 went stable on npm (`@opencode/cli`) on 2026-09-11. Its migration page:
+"V1 plugin implementations do not run in V2. Moving a file or renaming its config entry
+is not enough." So `plugin/mycelium.ts` does nothing on 2.x, silently. The 2.x form is
+`plugins-v2/mycelium/index.ts`, installed to `.opencode/plugins/mycelium/index.ts`
+(auto-discovered, no config entry). `/mycelium:setup` provisions both.
+
+**Observed on opencode 2.0.5, 2026-09-17, headless `opencode run --standalone`, local Ollama models at a 16K context:**
+
+- The plugin loads from `.opencode/plugins/mycelium/` with no config entry.
+- `context` hook: fires headless; a marker pushed onto `event.system` came back in the model's answer.
+- `execute.before` guard: an `edit` with no prior `read` was refused, the thrown message reached the model (`llama3.1:8b`), and the file was unchanged.
+- `execute.after` with `status: "error"`: a failed `read` fired the hook, and the reflexion prompt appended to the error message reached the model, which then reasoned about the failure. **This is the #27900 gap, closed by 2.x.** The 1.x gap stands; the upstream issue was closed by a stale bot and never answered.
+
+**Not observed, so do not rely on it:**
+
+- The allow path of the guard (read, then edit). The one attempt was routed by the 8B model through 2.x's `execute` code-mode tool and fumbled.
+- **Whether `read`/`edit` calls made INSIDE the `execute` code-mode tool pass through `execute.before` at all.** If they do not, the guard has a bypass on 2.x. Unverified either way.
+- Only `Tool.Error` failures take the `execute.after` error path in the 2.0.5 source; thrown defects and provider errors were not exercised.
+- The shipped `opencode.json` is 1.x-shaped (`provider`, `permission`, `instructions`). The 2.x runs above used a bare config: 2.x discovers a local Ollama on its own, and its permission config is a single ordered `permissions` array with renamed tools (`bash` is `shell`; `write` and `patch` are `edit`). Whether 2.x accepts the 1.x file was not tested.
+- **2.x reads `AGENTS.md` only.** "It does not use CLAUDE.md as a fallback." Create one (see `docs/integrations/opencode.md`).
+
 ## Config notes (runtime-verified on 1.17.7)
 
 - `opencode.json` is **strict JSON** — opencode's schema rejects unrecognized keys
@@ -49,6 +72,7 @@ surface.
 | File | Purpose |
 |---|---|
 | `opencode.json` | Minimal opencode config: local-model provider (Ollama example), `AGENTS.md` as instructions, skill permission. Edit the `model` / provider to your setup. |
+| `plugins-v2/mycelium/index.ts` | The same skeleton for **opencode 2.x** (`Plugin.define`), plus the reflexion prompt on a failed tool call. See "opencode 2.x" above for what was observed. |
 | `plugin/mycelium.ts` | Enforcement plugin **skeleton**. Covers the two clean hooks: preflight context injection (`chat.message`, fires headless too — #27899) and read-before-edit guard (`tool.execute.before` throw — #27901). Gate/scope/secret-scan and post-write nudge are TODO. |
 | `command/mycelium/interview.md` | Example user-typed entry command (`/mycelium:interview`). Copy this shape for other typed entry points. |
 | `check-tool-calling.py` | Diagnostic: asks a model to call a tool and reports whether Ollama returns structured `tool_calls` (PASS = usable in opencode) or leaks it as text (FAIL). Run `python3 check-tool-calling.py <model>` before relying on any local model — the #1 cause of "nothing happens" on opencode. |

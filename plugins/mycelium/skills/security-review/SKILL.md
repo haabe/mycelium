@@ -105,6 +105,21 @@ Language-agnostic security review based on OWASP Secure by Design.
 - [ ] **LLM09 Misinformation**: Hallucination controls in high-stakes contexts; users informed of limitations
 - [ ] **LLM10 Unbounded Consumption**: Rate limits + resource caps against denial-of-wallet / resource exhaustion
 
+## OWASP Agentic Skills Top 10 (AST10)
+
+*Apply ONLY when the product under review ships or installs agent skills, plugins, hooks or MCP servers: a skill pack, a coding-agent plugin, an internal skills registry. Skip it otherwise. Source: OWASP Agentic Skills Top 10 (owasp.org/www-project-agentic-skills-top-10), risk pages read 2026-09-17. A young project: treat it as a checklist of where to look, not as a settled standard.*
+
+- [ ] **AST01 Malicious Skills**: Skill prose and bundled scripts reviewed as code; no hidden instructions, credential access or outbound calls the stated function does not need
+- [ ] **AST02 Supply Chain Compromise**: Skills and plugins come from a source with provenance (signed or pinned commits, protected release branch); release path cannot be taken over by one compromised account
+- [ ] **AST03 Over-Privileged Skills**: `allowed-tools` and permission grants are the minimum the skill needs; no blanket shell grants such as `Bash(python:*)`
+- [ ] **AST04 Insecure Metadata**: Name, description and frontmatter are treated as attacker-controlled input by whatever loads them; a description cannot impersonate a trusted skill or smuggle instructions
+- [ ] **AST05 Untrusted External Instructions**: Skills do not tell the agent to fetch and follow remote content at runtime; where they must, the source is pinned and the content is handled as data
+- [ ] **AST06 Weak Isolation**: Hooks and skill scripts run with the narrowest filesystem, shell and network reach the runtime offers; sandbox settings are not weakened by the install
+- [ ] **AST07 Update Drift**: Installed versions are pinned and visible; an update is a reviewed change, not a silent pull
+- [ ] **AST08 Poor Scanning**: Do not rely on a code scanner's clean result for a skill; natural-language instructions are outside what it reads
+- [ ] **AST09 No Governance**: There is an inventory of installed skills, an owner per skill, and a way to revoke one
+- [ ] **AST10 Cross-Platform Reuse**: A skill ported to another agent runtime keeps its security properties; what the source runtime enforced (permissions, hook gates, trust prompts) is re-checked on the target, not assumed
+
 ## Decision Log (MANDATORY per G-P4)
 **APPEND** a `### Security Review` entry to `.claude/harness/decision-log.md` with: OWASP categories assessed, findings, risk ratings, remediation recommendations.
 

@@ -89,6 +89,25 @@ For AI-powered products (`product_type: ai_tool` or any product using LLM compon
 
 For each LLM component in the threat model, assess all 10 threats. Use alongside STRIDE — STRIDE covers system-level threats, OWASP LLM covers model-level threats.
 
+## OWASP Agentic Skills Top 10 (AST10)
+
+For products that ship or install agent skills, plugins, hooks or MCP servers, add the skill layer to the model. Skip this section for every other product. The skill layer is a trust boundary of its own: a skill runs with the host agent's permissions, and its instructions are natural language that a code scanner does not read.
+
+| # | Threat | Description |
+|---|--------|-------------|
+| AST01 | Malicious Skills | A skill that looks legitimate carries a hidden payload in its prose or scripts |
+| AST02 | Supply Chain Compromise | Registry, marketplace or repository takeover; mass uploads; dependency confusion |
+| AST03 | Over-Privileged Skills | Broader tool or data grants than the stated function needs, widening blast radius |
+| AST04 | Insecure Metadata | Name, description and frontmatter are attacker-controlled input read with little validation |
+| AST05 | Untrusted External Instructions | Remote content fetched at runtime becomes part of the skill's instructions |
+| AST06 | Weak Isolation | Skills and hooks run in the host agent's security context with no containment |
+| AST07 | Update Drift | Unpinned installs: patches never applied, or upstream changes applied blindly |
+| AST08 | Poor Scanning | Signature and pattern scanners miss threats expressed in natural language |
+| AST09 | No Governance | No inventory, approval, audit trail or revocation for installed skills |
+| AST10 | Cross-Platform Reuse | Security properties of the source runtime are lost when a skill is ported |
+
+*Source: OWASP Agentic Skills Top 10 (owasp.org/www-project-agentic-skills-top-10), risk pages read 2026-09-17. A young project; use it to locate threats, then rate them with STRIDE as usual.*
+
 ## Canvas (MANDATORY — the source of truth, do this FIRST)
 
 `.claude/canvas/threat-model.yml` is the canonical record. The decision log is provenance; the canvas
@@ -159,6 +178,7 @@ rows written above — it does not replace them.
 - STRIDE: Microsoft threat modeling methodology (Shostack)
 - OWASP Top 10:2025: Web application security risks
 - OWASP Top 10 for LLM Applications v2025: AI/LLM-specific security risks
+- OWASP Agentic Skills Top 10 (AST10): risks specific to agent skills, plugins and MCP servers
 
 ## Handling User-Supplied Content
 

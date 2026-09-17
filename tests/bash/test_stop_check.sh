@@ -25,6 +25,7 @@ test_warnings_message_is_plugin_form() {
     assert_contains "$out" "engine/canvas-guidance.yml in the plugin" "v0.49.10 fix: plugin-form phrasing, not a dead .claude/ path"
     assert_not_contains "$out" ".claude/engine/canvas-guidance.yml" "no bare legacy .claude/engine/ path in the message"
     assert_contains "$out" "additionalContext" "emits valid hook JSON shape"
+    assert_stdout_json_or_text "$out" "warnings branch stdout parses"
 }
 
 test_clean_session_no_error() {
@@ -93,6 +94,19 @@ test_standing_question_is_last_not_first() {
 }
 
 
+test_counts_only_branch_emits_valid_json() {
+    # The counts-only branch was the one hand-interpolated JSON object in the hook
+    # tree until 0.221.0. One ### heading in corrections.md makes the count non-zero without
+    # setting a warning.
+    local tmp; tmp=$(mktemp -d)
+    mkdir -p "$tmp/.claude/memory"
+    printf '### a correction\n\nbody\n' > "$tmp/.claude/memory/corrections.md"
+    local out; out=$(printf '%s' "$STOP_JSON" | CLAUDE_PROJECT_DIR="$tmp" bash "$HOOK")
+    rm -rf "$tmp"
+    assert_contains "$out" "1 corrections" "counts-only branch fired (guards against a vacuous pass on empty stdout)"
+    assert_stdout_json_or_text "$out" "counts-only branch stdout parses"
+}
+
 # Runner LAST, so a test function added to this file is registered by definition.
 # Moved 2026-09-01: three new tests were appended after the old runner block and silently
 # never ran — the suite reported 5 passed either way. A test that is not registered is the
@@ -102,5 +116,6 @@ run_test test_clean_session_no_error
 run_test test_output_is_grouped_and_counted
 run_test test_nothing_is_dropped_by_grouping
 run_test test_standing_question_is_last_not_first
+run_test test_counts_only_branch_emits_valid_json
 
 report

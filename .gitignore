@@ -66,3 +66,6 @@ coverage.xml
 # discarded by hand. The guards write to $CLAUDE_PROJECT_DIR/.claude/state/, and the
 # bash fixtures set that to a tracked directory.
 tests/bash/.claude/state/
+
+# claude plugin eval output
+plugins/mycelium/evals/results/

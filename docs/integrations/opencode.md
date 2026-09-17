@@ -5,6 +5,8 @@
 **Last updated**: 2026-07-19 (upstream status refresh — see "Known runtime gaps").
 **Status**: Mycelium works on opencode as a substrate-portable framework. Of the three runtime safety mechanisms that Mycelium relies on in Claude Code, **one genuine hard gap remains** (reflexion / tool-failure events, #27900); the other two now have clean structural paths — headless context injection is effectively addressed upstream (#27899), and read-before-edit is solvable by a thin plugin guard (#27901). Honest details below. (Gap re-assessment 2026-06-15: the headless-injection (#27899) and read-before-edit (#27901) paths are **runtime-verified on opencode 1.17.7** — the starter scaffold loads and both hooks fire live; reflexion (#27900) remains the gap. Behaviour on other opencode versions may differ; re-verify against your build.)
 
+> **opencode 2.x (2026-09-17).** Everything below was verified on opencode **1.x**. opencode 2.0 went stable on npm on 2026-09-11 and **does not load 1.x plugins**, so a 1.x-only install loses all enforcement on 2.x without an error. Mycelium now ships a 2.x plugin beside the 1.x one, and on 2.x the one hard gap below is closed: `execute.after` fires with `status: "error"` on a failed tool call, and the reflexion prompt was observed reaching the model on 2.0.5. What was and was not observed on 2.x, including an unverified guard bypass through 2.x's code-mode tool, is in [`integrations/opencode/README.md`](../../plugins/mycelium/integrations/opencode/README.md). 2.x reads `AGENTS.md` only, with no `CLAUDE.md` fallback.
+
 ## Why this might fit
 
 The AI coding scene in mid-2026 has visible tension around pricing: subscription tiers shifting, per-token costs accumulating, and a steady drift toward self-hosted setups (laptop, VPS, dedicated inference box). [opencode](https://github.com/anomalyco/opencode) is the most-cited Claude Code alternative — provider-agnostic, TUI-first, runs against Anthropic, OpenAI, Google, or local providers via Ollama or LM Studio.
@@ -61,6 +63,9 @@ bash ~/src/mycelium/plugins/mycelium/integrations/opencode/provision-skills.sh ~
 # skills but NONE of the runtime enforcement (see "What you lose" below).
 mkdir -p ~/my-project/.opencode/plugin ~/my-project/.opencode/command
 cp -R ~/src/mycelium/plugins/mycelium/integrations/opencode/plugin/. ~/my-project/.opencode/plugin/
+# opencode 2.x reads a different directory and ignores the 1.x file. Install both:
+mkdir -p ~/my-project/.opencode/plugins
+cp -R ~/src/mycelium/plugins/mycelium/integrations/opencode/plugins-v2/. ~/my-project/.opencode/plugins/
 cp -R ~/src/mycelium/plugins/mycelium/integrations/opencode/command/. ~/my-project/.opencode/command/
 
 # 5. Configure opencode. Start from the shipped config rather than retyping it:

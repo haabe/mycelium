@@ -63,6 +63,28 @@ assert_not_contains() {
     fi
 }
 
+assert_stdout_json_or_text() {
+    # A hook's stdout must be empty, plain text that does not open with a brace,
+    # or a JSON object that parses. Claude Code 2.1.248 stopped treating
+    # brace-led stdout that is not valid JSON as plain text and reports it as a
+    # hook error, so a hand-interpolated object with a stray quote or newline now
+    # breaks the hook instead of degrading it. NO PIPE: see assert_contains.
+    local out="$1"
+    local msg="${2:-stdout is empty, plain text, or valid JSON}"
+    local trimmed="${out#"${out%%[![:space:]]*}"}"
+    if [ -z "$trimmed" ] || [ "${trimmed:0:1}" != "{" ]; then
+        _ASSERT_PASSED=$((_ASSERT_PASSED + 1))
+        echo "    ✓ ${_ASSERT_CURRENT}: $msg"
+    elif python3 -c 'import json,sys; json.loads(sys.stdin.read())' <<< "$out" 2>/dev/null; then
+        _ASSERT_PASSED=$((_ASSERT_PASSED + 1))
+        echo "    ✓ ${_ASSERT_CURRENT}: $msg"
+    else
+        _ASSERT_FAILED=$((_ASSERT_FAILED + 1))
+        echo "    ✗ ${_ASSERT_CURRENT}: $msg (brace-led stdout does not parse as JSON)" >&2
+        echo "        stdout: ${out:0:200}" >&2
+    fi
+}
+
 run_test() {
     _ASSERT_CURRENT="$1"
     echo "  RUN: $1"

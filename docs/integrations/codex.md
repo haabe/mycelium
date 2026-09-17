@@ -53,10 +53,24 @@ export CLAUDE_PROJECT_DIR="$(pwd)"
 
 # 5. Verify hook discovery
 codex --help  # confirm CLI is installed
-# Hook scripts will fire on first tool call.
+
+# 6. TRUST the hooks, or none of them run. Open /hooks inside Codex, review the
+#    Mycelium entries, and trust them. See "A configured hook is not a running hook".
 ```
 
 For user-level (cross-project) install, drop the same file at `~/.codex/hooks.json`. If you prefer TOML, the same definitions can be inlined under `[[hooks.PreToolUse]]` etc. in `~/.codex/config.toml`.
+
+## A configured hook is not a running hook
+
+On Codex, installing the hook config is not enough. Three conditions decide whether Mycelium's gates execute, and the plugin cannot see any of them from the inside: a skipped hook produces no error and no output.
+
+1. **Hook trust.** Codex docs: "Before a non-managed hook can run, Codex requires you to review and trust the exact hook definition. Codex records trust against the hook's current hash, so new or changed hooks are marked for review and skipped until trusted." Trust the Mycelium hooks through `/hooks` after step 3. **Do it again after every plugin upgrade**: step 3 rewrites the resolved path into each command, which changes the hash, so every hook returns to *skipped* until you re-trust it.
+2. **Project trust.** Project-level hooks load only when the project's `.codex/` layer is trusted, and since Codex CLI 0.150.0 "Untrusted projects no longer supply project-level `AGENTS.md` instructions". In an untrusted project you get neither the gates nor the operating contract.
+3. **Managed-hooks-only organisations.** An administrator can set `allow_managed_hooks_only = true` in `requirements.toml`, which ignores user, project, session and plugin hooks. There you get Mycelium's method (skills, canvas, AGENTS.md once trusted) without its enforcement, unless your administrator adds the hooks to the managed set.
+
+**How to tell.** Ask the agent to edit a source file in a fresh project before any discovery work. With the hooks running, the discovery gate answers. If the edit goes straight through, open `/hooks` and look for entries marked for review.
+
+Read from the [Codex hooks docs](https://learn.chatgpt.com/docs/hooks) and the 0.150.0 release notes on 2026-09-17. Not dated: which release introduced hook trust. The 2026-08-18 end-to-end run below had the hooks firing, so either the hooks were trusted during that run or the gate arrived later.
 
 ## The PostToolUseFailure gap
 
@@ -89,6 +103,7 @@ No mapping needed — Codex uses PascalCase event names identical to Claude Code
 
 - **No native `PostToolUseFailure`** — covered by the shim above. If/when Codex adds the event, drop the shim and point the hook at `reflexion-gate.sh` directly.
 - **Skill discovery** — Codex's plugin manifest format (`.codex-plugin/plugin.json`) differs from Claude Code's; the 62 skills load as files but `/skill-name` invocation parity may require a Codex-side skill loader. Mycelium's slash commands work; full parity needs verification.
+- **Enforcement is opt-in and revocable** — hook trust, project trust and managed-hooks-only policy each switch the gates off silently. See "A configured hook is not a running hook" above.
 - **`CLAUDE_PROJECT_DIR` not auto-exported** — set it in your shell. (Cursor exports this alias automatically; Codex doesn't.)
 
 Verified primitives match against [Codex hooks docs](https://developers.openai.com/codex/hooks) 2026-05-26. **End-to-end Mycelium-on-Codex run executed 2026-08-18** (dogfood A/B): with the manifest installed, the hooks fired, the operating contract held, and version-bump plus decision-log discipline ran unprompted; without it, the same model on the same prompt cut two agent-contract files by 81% and 85%. The manifest is the enforcement. Adopt and report friction back via PR on `docs/receipts/cases/`.
