@@ -246,11 +246,13 @@ def test_self_handles_keep_fragments_at_the_minimum_and_drop_shorter(scripts_pat
 
     class R:
         def __init__(self, s): self.stdout = s
-    answers = iter(["Bo Abc Defg", "ab@example.com"])
+    # Three git calls since v0.226.1: user.name, user.email, then the origin remote.
+    answers = iter(["Bo Abc Defg", "ab@example.com", "git@github.com:zed/tool.git"])
     monkeypatch.setattr(subprocess, "run", lambda *a, **k: R(next(answers)))
     got = c._self_handles()
     assert "abc" in got and "defg" in got
     assert "bo" not in got and "ab" not in got
+    assert "zed" in got, "the remote owner is part of the project's own identity"
 
 
 def test_self_handles_survive_an_empty_git_config(scripts_path, monkeypatch):
@@ -303,3 +305,35 @@ def test_quoting_the_checks_own_advice_is_not_a_check(scripts_path):
     txt = CONVERGENCE_UNCHECKED + "      Reminder to self: count accounts, not comments.\n"
     rules = [r for r, _ in c.scan_text(txt)]
     assert any(r.startswith("B/") for r in rules), f"the tool's own phrase suppressed the finding: {rules}"
+
+
+# ------------------------------------------------------------------ the maintainer's own handle (v0.226.1)
+
+@pytest.mark.parametrize(
+    ("url", "owner"),
+    [
+        ("git@github.com:haabe/mycelium.git", "haabe"),
+        ("https://github.com/haabe/mycelium", "haabe"),
+        ("https://github.com/Haabe/mycelium.git\n", "haabe"),
+        ("ssh://git@gitlab.example.com/some-org/tool.git", "some-org"),
+        ("", ""),
+        ("not a url", ""),
+    ],
+)
+def test_owner_is_read_from_the_remote_url(scripts_path, url, owner):
+    c = _import(scripts_path)
+    assert c._owner_from_remote(url) == owner
+
+
+def test_the_maintainers_own_handle_is_not_an_external_author(scripts_path, monkeypatch):
+    """THE DOGFOOD CASE. `u/haabe` is the founder's own Reddit account and was reported as an
+    unchecked external author, because git config yields name fragments and the handle is
+    neither. With the remote owner in the self set, a record whose ONLY handle is his own
+    raises nothing; the same record with a stranger's handle still does."""
+    c = _import(scripts_path)
+    monkeypatch.setattr(c, "_self_handles", lambda: {"havard", "bartnes", "haabe"})
+    own = ("  - id: finding_y\n    summary: Live as u/haabe, top-level, in two threads. Convergence, weak.\n"
+           "    source_class: external_human\n")
+    assert c.scan_text(own) == []
+    stranger = own.replace("u/haabe", "u/NoShame9976 and u/NoCucumber4783")
+    assert c.scan_text(stranger) != [], "the exclusion swallowed real external handles"

@@ -4,6 +4,13 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-17.
 
+## v0.226.1 - the authenticity check knows the project's own handle
+
+**2026-09-17.** Found on the dogfood canvas while triaging four advisories: one of the "external authors" was the maintainer.
+
+- **`check_source_authenticity.py` adds the owner of the `origin` remote to the project's own handles.** Until now they came from `git config user.name` and `user.email` only, so a maintainer who posts as `u/<owner>` and commits under a full name and a different mailbox was counted as an outside voice. SSH and HTTPS remote forms are both read; no remote, or an owner shorter than the existing minimum fragment length, adds nothing.
+- Two tests added and one updated (it mocked exactly two git calls; there are now three). Not covered: a fork, where `origin` names the forker and not the upstream maintainer. That errs toward reporting, which is the safe side for this check.
+
 ## v0.226.0 - runtime logs stay out of git
 
 **2026-09-17.** One dogfood candidate (`plugin-form-setup-leaves-claude-state-tracked`), found while checking a sentence drafted for `PRIVACY.md`.

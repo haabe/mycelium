@@ -169,6 +169,24 @@ def _fold(s: str) -> str:
                    if not unicodedata.combining(c))
 
 
+_REMOTE_OWNER = re.compile(r"[:/]([A-Za-z0-9][A-Za-z0-9_.-]*)/[^/\s]+?(?:\.git)?/?$")
+
+
+def _owner_from_remote(url: str) -> str:
+    """The account segment of a git remote URL, folded; empty when there is none.
+
+    `git@github.com:haabe/mycelium.git` and `https://github.com/haabe/mycelium` both give
+    `haabe`. Added v0.226.1: the git-config derivation below yields name fragments
+    (`havard`, `bartnes`) and a maintainer's public HANDLE is often neither. On the dogfood
+    canvas `u/haabe`, the founder's own Reddit account, was reported as an unchecked
+    external author eight times. The remote already knows the handle. If the owner is an
+    organisation the cost is that `@thatorg` is never flagged, which is the same trade the
+    name fragments make.
+    """
+    m = _REMOTE_OWNER.search((url or "").strip())
+    return _fold(m.group(1)) if m else ""
+
+
 def _self_handles() -> set[str]:
     """The project's OWN identity, which is never external evidence about anyone.
 
@@ -195,6 +213,14 @@ def _self_handles() -> set[str]:
         for part in re.split(r"[.\s_-]+", val):
             if len(part) >= _MIN_NAME_FRAGMENT:
                 out.add(part)
+    try:
+        r = subprocess.run(["git", "remote", "get-url", "origin"],
+                           capture_output=True, text=True, timeout=5, check=False)
+        owner = _owner_from_remote(r.stdout or "")
+        if len(owner) >= _MIN_NAME_FRAGMENT:
+            out.add(owner)
+    except (OSError, subprocess.SubprocessError):
+        pass
     return out
 
 

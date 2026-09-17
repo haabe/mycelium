@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.226.0 -- **Runtime logs stay out of git** (MINOR). `/mycelium:setup` now creates `.claude/state/` with an ignore file, so a new user's first commit no longer carries the log of every file their agent read, the guard ledgers and the session stamps. Two files stay tracked on purpose, `discovery-skip-ack` and `brownfield-ack`: they record a decision the user made once per project. The skill's previous text said the directory was owned by Claude Code and that Mycelium did not write to it; about forty plugin files do.*
+*Version 0.226.1 -- **The authenticity check knows the project's own handle** (PATCH). `check_source_authenticity.py` now also reads the owner of the `origin` remote, so a maintainer whose forum handle matches their GitHub owner is no longer reported as an unchecked external author.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 
