@@ -1,6 +1,8 @@
 # Mycelium
 
-A Claude Code harness that asks who this is for before the agent writes code.
+A harness that asks who this is for before the agent writes code.
+
+Built on Claude Code, where the gates are structural. The files and skills port to [opencode](docs/integrations/opencode.md), [Codex](docs/integrations/codex.md) and [Cursor](docs/integrations/cursor.md).
 
 **Outcome over output.**
 

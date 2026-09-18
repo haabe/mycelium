@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.227.1 -- **One sentence for the reader who came for cheaper tokens** (PATCH). The README's "When to use something else" section now sends on a reader who wants a smaller token bill through model routing, to Spotify's shunt. Mycelium neither advocates nor builds model routing.*
+*Version 0.227.2 -- **The first line no longer turns away every reader on another runtime** (PATCH). The README opened with "A Claude Code harness", so a reader on opencode, Codex or Cursor learned at line 3 that this was not for them and at line 149 that a non-developer had run it on Mistral. The runtime answer now sits under the hook instead of inside it.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

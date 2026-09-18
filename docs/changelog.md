@@ -2,7 +2,13 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-09-17.
+**Last updated**: 2026-09-18.
+
+## v0.227.2 - the first line no longer turns away every reader on another runtime
+
+**2026-09-18.** README only.
+
+- **The door said "Claude Code harness" and the evidence said otherwise.** Line 3 read "A Claude Code harness that asks who this is for before the agent writes code", while line 149 tells the story of a non-developer who ran the whole discovery loop on Vibe with Mistral, and `docs/integrations/` has carried opencode, Codex and Cursor pages for months. A reader on any of those runtimes decided at line 3 that this was not for them, which is a reach cost paid on every visit. The hook sentence is unchanged apart from dropping the two words; the runtime answer now sits on its own line under it, links to the three integration pages, and says where the gates are structural rather than implying they are structural everywhere. Found while answering the founder's question about why the people who talk about this problem never encounter the project, and named in public in his dev.to essay the same day before it was fixed.
 
 ## v0.227.1 - one sentence for the reader who came for cheaper tokens
 
