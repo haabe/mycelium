@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.227.2 -- **The first line no longer turns away every reader on another runtime** (PATCH). The README opened with "A Claude Code harness", so a reader on opencode, Codex or Cursor learned at line 3 that this was not for them and at line 149 that a non-developer had run it on Mistral. The runtime answer now sits under the hook instead of inside it.*
+*Version 0.227.3 -- **An advisory that must not be cleared no longer reports as neglected** (PATCH). The advisory ledger scored every advisory with a clear rate, so a permanent record of a past state and an advisory nobody acted on both read 0.00. The dogfood project's own health assessment misread one as the other and retracted hours later.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

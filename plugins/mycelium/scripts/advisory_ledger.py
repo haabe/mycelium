@@ -66,6 +66,29 @@ LEDGER_REL = Path(".claude") / "state" / "advisory-ledger.jsonl"
 MUTE_DAYS = 7
 RULINGS = ("keep", "fix", "drop", "snooze")
 
+#: Advisories whose flag is a PERMANENT RECORD of a past state, not a defect awaiting a fix.
+#: A clear rate is meaningless for these: the only way to clear one is to falsify the record, and
+#: the check that emits it says so in its own output. Reporting them at 0.00 beside genuinely
+#: unactioned advisories invites the exact action the emitting check forbids.
+#:
+#: MEMBERSHIP NEEDS A QUOTED INSTRUCTION FROM THE EMITTING CHECK, not a judgement about whether
+#: clearing seems desirable. `decided-leaves-no-four-risks` qualifies because
+#: `check_leaf_lifecycle.py` prints: "DO NOT BACKFILL TO SILENCE THIS. The rule is 'no scoring
+#: without risk evaluation FIRST', and a block written now cannot restore that sequence; it only
+#: makes a past decision look compliant. The flag IS the honest state."
+#:
+#: NOTE THE CONTRAST THAT MAKES THIS PER-ADVISORY RATHER THAN PER-CHECK: the SAME check also emits
+#: `shipped-leaves-no-ice`, and that one says "Either backfill via /mycelium:ice-score, or add
+#: `ice_exempt:` with a reason" — clearable. Two advisories, one check, opposite clearability.
+#:
+#: `open-human-tasks` is a deliberate NON-member. It can never reach zero in a working project, so
+#: its rate is arguably as meaningless — but no check tells anyone not to clear it, and guessing
+#: would be the judgement this rule exists to exclude. Recorded as a candidate, not admitted.
+#:
+#: Added 0.227.3 after the dogfood project's own BVSSH assessment #15 read this advisory's 0.00 as
+#: a neglect signal, recommended acting on it, and had to retract hours later.
+UNCLEARABLE: frozenset[str] = frozenset({"decided-leaves-no-four-risks"})
+
 #: (id, regex). A regex with a `count` group carries a number whose DECREASE reads as cleared. Ages
 #: ("N days overdue", "N days old") are deliberately NOT count groups: they rise while unaddressed.
 #: Ordered so that the more specific pattern wins where two could match.
@@ -352,11 +375,19 @@ def report_lines(root: Path) -> list[str]:
     )
     for aid, x in sorted(st.items(), key=lambda kv: (-len(kv[1]["streak_days"]), kv[0])):
         settled = x["cleared"] + x["still_firing"]
-        rate = f"{x['cleared'] / settled:.2f}" if settled else "-"
+        clearable_rate = f"{x['cleared'] / settled:.2f}" if settled else "-"
+        rate = "n/a" if aid in UNCLEARABLE else clearable_rate
         lines.append(
             f"{aid} | {x['seen']} | {x['cleared']} | {x['still_firing']} | {rate} | "
             f"{len(x['streak_days'])} | {x['muted_since'] or '-'} | "
             f"{x['ruling'] or _snoozed_label(x)}"
+        )
+    seen_unclearable = sorted(a for a in st if a in UNCLEARABLE)
+    if seen_unclearable:
+        lines.append(
+            "clear_rate n/a: " + ", ".join(seen_unclearable) + " — a permanent record of a past "
+            "state, not a defect awaiting a fix. The emitting check says not to backfill it; a "
+            "0.00 here would read as neglect and invite falsifying the record."
         )
     firing = [a for a, x in st.items() if len(x["streak_days"]) >= MUTE_DAYS]
     if firing:

@@ -51,6 +51,7 @@ def _events(root):
 BVSSH = "BVSSH health check is 32 days overdue (monthly cadence). Run /bvssh-check. "
 TASKS = "You have 26 OPEN human task(s) (0 closed/parked, not counted). If you completed offline work, run /log-evidence. "
 CLUSTER = "27 correction(s) logged since the last cluster instance — the corrections-to-cluster hop is unconsidered. "
+FOURRISKS = "11 solution leaf/leaves passed a decision with no risk evaluation. See /devils-advocate. "
 
 
 def test_first_session_records_seen(tmp_path, capsys, monkeypatch):
@@ -224,6 +225,46 @@ def test_report_na_then_table(tmp_path, capsys, monkeypatch):
     assert "2 session(s) recorded" in rep
     assert "corrections-to-cluster | 1 | 1 | 0 | 1.00 | 0" in rep
     assert "bvssh-overdue | 2 | 0 | 1 | 0.00 | 2" in rep
+
+
+def test_unclearable_advisory_reports_na_not_a_zero_clear_rate(tmp_path, capsys, monkeypatch):
+    """An advisory whose flag is a permanent record must not be scored like a defect.
+
+    `decided-leaves-no-four-risks` can only be cleared by falsifying the record, and
+    check_leaf_lifecycle says so in its own output. A 0.00 beside genuinely unactioned
+    advisories reads as neglect: the dogfood project's own BVSSH #15 made exactly that
+    misreading and retracted it. The contrast is the point — `bvssh-overdue` fires the same
+    number of times in this test and DOES get a rate, because it is clearable.
+    """
+    m = _mod()
+    (tmp_path / ".claude").mkdir()
+    _settle(tmp_path, capsys, FOURRISKS + BVSSH, "s1", "2026-09-01", monkeypatch)
+    _settle(tmp_path, capsys, FOURRISKS + BVSSH, "s2", "2026-09-02", monkeypatch)
+    m.main(["report", "--project-dir", str(tmp_path)])
+    rep = capsys.readouterr().out
+    assert "decided-leaves-no-four-risks | 2 | 0 | 1 | n/a |" in rep
+    assert "decided-leaves-no-four-risks | 2 | 0 | 1 | 0.00 |" not in rep
+    assert "bvssh-overdue | 2 | 0 | 1 | 0.00 |" in rep
+    assert "clear_rate n/a: decided-leaves-no-four-risks" in rep
+    assert "not to backfill" in rep
+
+
+def test_membership_in_unclearable_is_narrow(tmp_path, capsys, monkeypatch):
+    """open-human-tasks is a deliberate non-member and the test pins that.
+
+    It can never reach zero in a working project, so its rate is arguably as meaningless —
+    but no check tells anyone not to clear it, and admitting it on that reasoning is the
+    judgement the rule excludes. If someone adds it, this fails and they must say why.
+    """
+    m = _mod()
+    assert frozenset({"decided-leaves-no-four-risks"}) == m.UNCLEARABLE
+    (tmp_path / ".claude").mkdir()
+    _settle(tmp_path, capsys, TASKS, "s1", "2026-09-01", monkeypatch)
+    _settle(tmp_path, capsys, TASKS, "s2", "2026-09-02", monkeypatch)
+    m.main(["report", "--project-dir", str(tmp_path)])
+    rep = capsys.readouterr().out
+    assert "open-human-tasks | 2 | 0 | 1 | 0.00 |" in rep
+    assert "clear_rate n/a" not in rep
 
 
 def test_rule_validation(tmp_path, capsys):

@@ -2,7 +2,18 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-09-18.
+**Last updated**: 2026-09-19.
+
+## v0.227.3 - an advisory that must not be cleared no longer reports as neglected
+
+**2026-09-19.** One script, two tests.
+
+- **The ledger scored every advisory as if every advisory were clearable.** `advisory_ledger.py report` prints a clear rate per advisory id. For most that is right: an unactioned advisory at 0.00 is a real signal, and this is the instrument built to surface exactly that. But some advisories are a PERMANENT RECORD of a past state, and the only way to clear one is to falsify the record — so 0.00 means "nobody should act" and reads identically to "nobody acted".
+- **Found by the failure it causes, in this project's own dogfood.** Its BVSSH assessment #15 read two advisories at 0.00, named both as neglect signals, and recommended acting on them. One was neglect (7 idle opportunities, fixed the same day). The other was `decided-leaves-no-four-risks`, and `check_leaf_lifecycle.py` says in its own output: *"DO NOT BACKFILL TO SILENCE THIS. The rule is 'no scoring without risk evaluation FIRST', and a block written now cannot restore that sequence; it only makes a past decision look compliant. The flag IS the honest state."* The assessment was corrected hours later. **A false-neglect signal inside the instrument built to measure neglect, and it cost a wrong reading in a real health check before anyone noticed.**
+- **Fix.** An `UNCLEARABLE` set; members render `n/a` instead of a rate, and the report adds one line naming them and why. Membership requires a QUOTED instruction from the emitting check, not a judgement that clearing seems undesirable.
+- **Why this is per-advisory and not per-check.** The same check emits `shipped-leaves-no-ice`, which says *"Either backfill via `/mycelium:ice-score`, or add `ice_exempt:` with a reason"* — clearable. Two advisories, one check, opposite clearability.
+- **What was deliberately NOT admitted.** `open-human-tasks` can never reach zero in a working project, so its rate is arguably as meaningless. No check tells anyone not to clear it, and admitting it on that reasoning is the judgement the rule excludes. A test pins the set to one member, so adding a second requires saying why.
+- **Tests.** Two: one asserting `n/a` for the unclearable advisory while `bvssh-overdue` still gets `0.00` from the same run, and one pinning membership with `open-human-tasks` shown scored normally.
 
 ## v0.227.2 - the first line no longer turns away every reader on another runtime
 
