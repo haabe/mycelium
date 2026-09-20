@@ -66,6 +66,7 @@ Every skill lives in its own directory with a `SKILL.md` file that defines the c
 | `/canvas-update` | Update a canvas file with new evidence |
 | `/log-evidence` | Log evidence from human tasks back into canvas |
 | `/corrections-audit` | Audit corrections.md for recurring patterns |
+| `/friction-log` | Draft a short account of where USING Mycelium was confusing, for the user to edit and choose whether to send (Hoskins) |
 | `/retrospective` | Structured retrospective after delivery |
 | `/regulatory-review` | EU AI Act and regulatory compliance check |
 | `/team-shape` | Assess team topology (Skelton & Pais) |

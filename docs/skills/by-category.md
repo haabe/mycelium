@@ -4,7 +4,7 @@
 **Time to read**: 3 min.
 **Last updated**: 2026-06-08.
 
-Alternate index to the phase-first [skills/README.md](README.md). Same 62 skills, different ordering.
+Alternate index to the phase-first [skills/README.md](README.md). Same 63 skills, different ordering.
 
 ## Research & discovery
 
@@ -24,7 +24,7 @@ User research, interviews, evidence-gathering, classification. Use when you do n
 Turn research into decisions. Use when discovery has produced enough signal to converge.
 
 - `/ost-builder` — Opportunity Solution Tree (Torres)
-- `/ice-score` — Impact × Confidence × Ease (Ellis)
+- `/ice-score` — average of Impact, Confidence and Ease (Ellis)
 - `/gist-plan` — GIST planning (Gilad)
 - `/assumption-test` — smallest viable test (Torres + Gilad AFTER)
 - `/diamond-progress` — move a diamond through gate checks
@@ -110,6 +110,7 @@ Mycelium itself. Use when dogfooding the framework or as part of `/framework-hea
 - `/feedback-review` — aggregate active feedback loops
 - `/eval-runner` — benchmark scenarios
 - `/corrections-audit` — trend analysis on corrections
+- `/friction-log` — report where using Mycelium was confusing; user edits and decides whether to send (Hoskins)
 - `/prompt-optimizer` — A/B test instruction changes
 - `/framework-health` — quarterly self-assessment
 - `/theory-fidelity` — audit whether claimed theories are faithfully operationalized (source-grounds the load-bearing ones)
@@ -118,5 +119,5 @@ Mycelium itself. Use when dogfooding the framework or as part of `/framework-hea
 
 ## See also
 
-- [README.md](README.md) — phase-first index of the same 62 skills
+- [README.md](README.md) — phase-first index of the same 63 skills
 - [glossary.md](../glossary.md) — vocabulary

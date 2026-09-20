@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.227.3 -- **An advisory that must not be cleared no longer reports as neglected** (PATCH). The advisory ledger scored every advisory with a clear rate, so a permanent record of a past state and an advisory nobody acted on both read 0.00. The dogfood project's own health assessment misread one as the other and retracted hours later.*
+*Version 0.229.0 -- **Two scoring skills computed the wrong arithmetic, and a competitive gate read a field nothing wrote** (MINOR). Primary-source verification against Ellis, Ulwick, Snowden, Wardley and Rother found six executed-algorithm errors: ICE multiplied where Ellis averages, the opportunity score subtracted where Ulwick adds back the gap, Cynefin carried a liminal transition Snowden excludes, and Wardley's doctrine was absent. `docs/errata.md` records all six with the quotations that settle them. New `/friction-log` skill carries Ellis's Must-Have Survey follow-ups as an inbound channel.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 
@@ -121,7 +121,7 @@ See `plugins/mycelium/orchestration/modes.md` for usage patterns and `plugins/my
 
 ## Skills
 
-All 62 skills are auto-discovered from SKILL.md frontmatter — in plugin form (`plugins/mycelium/skills/*/SKILL.md`, recommended) or legacy form (`.claude/skills/*/SKILL.md`, supported during transition). Suggested skills are surfaced at diamond transitions by `/diamond-progress` and `/diamond-assess`, and contextually by hooks. Type `/` to see the current list.
+All 63 skills are auto-discovered from SKILL.md frontmatter — in plugin form (`plugins/mycelium/skills/*/SKILL.md`, recommended) or legacy form (`.claude/skills/*/SKILL.md`, supported during transition). Suggested skills are surfaced at diamond transitions by `/diamond-progress` and `/diamond-assess`, and contextually by hooks. Type `/` to see the current list.
 
 ## Getting Started
 

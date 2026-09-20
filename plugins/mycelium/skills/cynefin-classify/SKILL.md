@@ -76,13 +76,28 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
 Update `.claude/diamonds/active.yml` with the `cynefin_domain` field for the relevant diamond.
 If Wardley mapping was referenced, update `.claude/canvas/landscape.yml` component evolution stages.
 
-## Liminal Zones (Snowden, 2022+)
+## Liminal Zones (Snowden, 2019 — Confused followed in 2020)
 
 Most real decisions happen in **liminal zones** — transitional states between domains where characteristics of two adjacent domains blend. If the classification feels uncertain, you may be in a liminal zone rather than a pure domain.
 
+> **THERE IS NO LIMINALITY AT CLEAR, AND THAT IS NOT A GAP — IT IS WHY THE CLIFF EXISTS.** Snowden:
+> *"The liminal line is open at the top, closed at the bottom, and **intersects all domains except
+> Clear. Liminality in the Clear domain is not visible**, making the boundary between Clear and
+> Chaotic a cliff or catastrophic fold."* He names exactly four liminal states — in **Complex**
+> ("still uncertain but transiting to Complicated"), **Chaos** ("the **deliberate** removal of
+> effective constraints for decision support and/or innovation"), **Complicated** ("where the
+> analysis method or type of expertise is in question") and **Confusion** ("one of aporia, a state of
+> authentic confusion i.e., being confused and aware").
+>
+> **So do not mark a Clear situation as liminal.** A `Clear → Complicated` row was listed here until
+> 2026-09-20; it is removed. Believing you are easing out of Clear through a transitional zone is the
+> precise belief the catastrophic fold punishes.
+>
+> Note also that the **Chaos** liminal state is a *deliberate entry*, not an involuntary slide — the
+> opposite posture from the transition table below.
+
 | Transition | What it feels like | Action |
 |---|---|---|
-| Clear → Complicated | "We have a process but it's not covering edge cases" | Add expert analysis to the existing practice |
 | Complicated → Complex | "Experts disagree and new factors keep emerging" | Shift from analysis to experimentation |
 | Complex → Chaotic | "Our experiments aren't converging, things are getting worse" | Stabilize first, experiment later |
 | Chaotic → Complex | "We've stopped the bleeding, now what?" | Design safe-to-fail probes |

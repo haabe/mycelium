@@ -4,6 +4,73 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-19.
 
+## v0.229.0 - six skills were executing arithmetic their cited authors do not use, and one gate got easier to pass the longer it was ignored
+
+**2026-09-20.** Every Tier-1 source read at the primary source for the first time. **Six defects
+changed what the framework told a user to do**; they are fixed here. The full list, including the
+misattributions that changed nothing, is in **[docs/errata.md](errata.md)** — written for someone who
+used an affected skill and wants to know whether a decision of theirs was influenced.
+
+- **`/ice-score` now averages instead of multiplying.** Ellis: *"Then those ratings are **averaged**
+  to provide an aggregate score."* Multiplying is a common variant but is not his operation, and it
+  changes rankings — on a 1-10 scale (10,10,1) and (7,7,7) both average 7.0 but multiply to 100 and
+  343, **systematically demoting bold-but-hard ideas**. A scale note that said Confidence was 0.0-1.0
+  while the step above and the bands below said 1-10 now says 1-10.
+- **`/user-needs-map` now uses Ulwick's actual algorithm**, `importance + max(importance − satisfaction, 0)`.
+  The previous subtraction **could rank a trivial need above a critical one**: (3,1) scored 2 while
+  (9,8) scored 1. Importance is weighted twice precisely to prevent that. **And the inputs are
+  population percentages**, not one person's rating — *"the percentage of people rating that attribute
+  a 4 or a 5"* — so the skill now says the instrument needs a sample and the bands mean nothing
+  without one. The Allen attribution is corrected: his dependency mapping is capability→capability at
+  his Steps 4-5, and the team-boundary content credited to him is Skelton and Pais's.
+- **`/cynefin-classify` no longer offers a liminal transition out of Clear.** Snowden: the liminal
+  line *"intersects all domains **except Clear**... making the boundary between Clear and Chaotic a
+  cliff."* **Clear has no liminal zone because its exit is a cliff** — a user told they were easing
+  out of it held the exact belief the fold punishes. Dating corrected from "2022+" to 2019.
+- **`/wardley-map` gains the doctrine step it never had.** The framework shipped Climate and Gameplay
+  — the two classes you select from — and omitted doctrine, which is *"universally applicable...
+  **Don't pick and choose, apply them all**."* Includes Wardley's adoption order, whose first four
+  steps need no second person, and the note that doctrine is an **open set** that grows with practice,
+  so no coverage ratio against a fixed denominator is possible.
+- **`/diamond-assess` asks Rother's questions in conditional order.** *"before a target condition has
+  been established, the order of questions 1 and 2 is reversed."* Asking "what is the target
+  condition?" of a diamond that has none was the failure this prevents. The freeze rule is documented
+  too: *"its content and achieve-by date are not easily changed."*
+- **A theory gate no longer reads a field nothing writes.** The competitive gate compares the
+  landscape against `last_progressed` — and nothing in the plugin wrote it. As it decayed, the
+  threshold moved into the past and **the gate got easier to pass the longer it was neglected.**
+  `/diamond-progress` now writes it on every `progressed` ruling, and the gate fails closed.
+  **Third instance of this class**: `progression_ruling` (fixed 2026-08-05) and `completed_diamonds`
+  (read by `check_scale_occupancy.py`, written by nothing) are the others. **A gate may not read a
+  field nothing writes.**
+
+**New: `/friction-log`.** Mycelium can see its own friction and has no way to send it back — of 91
+completed outreach tasks in the dogfood repo, ~71 were outbound and ~4 inbound. This drafts a short
+account of where *using* the framework was confusing, for the user to edit and choose whether to
+send. It **reports experience and never prescribes fixes**, which is Hoskins's mechanism rather than a
+style rule: *"My job as friction logger is just to call attention to the problem."* Nothing is sent
+without an explicit yes. It carries Ellis's qualitative follow-up questions, which work at any sample
+size, and deliberately **does not** compute a PMF percentage, which does not.
+
+**The descriptions were carrying the old algorithm after the algorithm was fixed.** Correcting
+`/ice-score` left five other surfaces still advertising `Impact × Confidence × Ease` — `glossary.md`,
+`engine/leaf-lifecycle.md`, both skill catalogues, **and the theory-citation line at the bottom of
+`ice-score/SKILL.md` itself**, so the fixed skill still told the reader it multiplied. The phrases
+`tripartite` and `Four Forces`, which appear **zero times** in *Competing Against Luck*, are removed
+from `theories.md` and the skills index; the three dimensions are Christensen's, the collective nouns
+are ours. Historical records — `changelog.md`'s older entries, `corrections.md`, `cluster-instances.md`
+— are left as written, because a log that gets edited to match the present is not a log.
+
+**Known-red gate, deliberately not patched here.** `v0.228.0` changed `plugin.json` to `0.228.0` but
+never touched CLAUDE.md's canonical `*Version` line, so Check 26 has failed on that commit ever since,
+with six material files committed unbumped. The check's first branch fires on **history alone**, which
+pre-empts the later branch whose whole purpose is to pass when the bump is already written in the
+working tree — reintroducing, from the opposite direction, the unsatisfiable instruction that branch
+documents fixing on 2026-08-20: the only remedy is a version-bump commit, while `gates.sh` prints DO
+NOT COMMIT. **This release clears it the legitimate way** — the bump commit moves `last_version_commit`
+to HEAD and zeroes the count — rather than by editing the gate to accept a failure. The guard itself
+is left for a change that is about the gate, not smuggled into a release the gate is blocking.
+
 ## v0.228.0 - theory citations get a currency axis and an evidence class, after a book read found the framework citing a tier table its author does not publish
 
 **2026-09-20.** Four surfaces, one cause: a theory cited at book-date reads as faithful forever.

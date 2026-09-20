@@ -139,11 +139,30 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
    ```yaml
    progression_ruling: progressed | blocked | needs-evidence   # one of exactly these
    progression_ruled_at: <YYYY-MM-DD>
+   last_progressed: <YYYY-MM-DD>       # ONLY when ruling is `progressed` — see below
    progression_blockers:                # REQUIRED when ruling is blocked or needs-evidence;
      - gate: <which gate or threshold>  # omit entirely when progressed
        reason: <why it did not clear, in your own words>
        unblocked_by: <the skill or evidence that would clear it>
    ```
+
+   **`last_progressed` HAS NO OTHER WRITER, AND A THEORY GATE READS IT (added 2026-09-20).** Set it
+   whenever the ruling is `progressed`. Until now nothing in the plugin wrote this field — it
+   appeared only in the schema (not required), in `diamond-render`, and in `engine/theory-gates.md`,
+   where the **competitive gate compares it against the landscape's newest entry.** Measured in the
+   dogfood repo 2026-09-20: stale on four of five diamonds, by up to 3.5 months, while every one of
+   those diamonds was being actively edited.
+
+   **Work the direction through, because it is the dangerous part.** That gate FAILS when the
+   landscape entry predates `last_progressed` by more than the staleness window. As the field decays
+   backwards relative to real work, the threshold moves further into the past, the failure condition
+   gets harder to satisfy, and **the gate gets EASIER to pass the longer nobody maintains the
+   field** — a staleness check whose own staleness silently loosens it.
+
+   **This is the third instance of one defect class in this file's own history**: `progression_ruling`
+   was read by a consumer and written by no skill (fixed 2026-08-05), `completed_diamonds` is read by
+   `check_scale_occupancy.py` and written by nothing, and this. **A gate may not read a field that
+   nothing writes.**
 
    **Why this is mandatory rather than nice-to-have.** The verdict was previously
    narrated to the user and written as prose to the decision log, and nowhere else.

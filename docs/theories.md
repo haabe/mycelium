@@ -16,7 +16,7 @@ The L0 Purpose canvas (`canvas/purpose.yml`) follows the Why → How → What or
 
 ### Christensen — Jobs to be Done
 
-JTBD with the Christensen tripartite (functional, emotional, social). Each canvas entry can carry per-dimension evidence after the v0.17.0 schema fix (`validation_status_per_dimension`). Implemented as: `canvas/jobs-to-be-done.yml`, `/jtbd-map` skill, **gate 3 (JTBD) at Discover→Define and Define→Develop, L1-L3** (phase transitions across three scales — not the L2→L3 scale transition, as this line previously said).
+JTBD across Christensen's functional, emotional and social dimensions. ("Tripartite" is Mycelium's word, not his — and he cautions *"Let's not separate those three things"*; see `errata.md` §B.) Each canvas entry can carry per-dimension evidence after the v0.17.0 schema fix (`validation_status_per_dimension`). Implemented as: `canvas/jobs-to-be-done.yml`, `/jtbd-map` skill, **gate 3 (JTBD) at Discover→Define and Define→Develop, L1-L3** (phase transitions across three scales — not the L2→L3 scale transition, as this line previously said).
 
 ### Torres — Continuous Discovery / Opportunity Solution Tree
 

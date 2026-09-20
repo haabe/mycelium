@@ -113,8 +113,39 @@ thing to model. **Predict the triggering EVENT, not the argument.**
 pass can ask which of the five produced nothing. A pattern that never emits a prediction is one
 nobody applied, not one that had nothing to say.
 
+### 7b. Apply Doctrine — the half you do NOT choose from (added 2026-09-20)
+
+**Wardley's three classes have OPPOSITE selection semantics, and shipping only two of them inverted
+him.** Climate *"will apply to you regardless of your choice."* Doctrine is *"universally
+applicable... **Don't pick and choose, apply them all.**"* Gameplay is the opposite: *"they are not
+universal and you have to learn when and where to use them."*
+
+Until 2026-09-20 this skill had a Climate step and a Gameplay step and **no doctrine step at all** —
+so it offered the two classes you select from and omitted the one you are told not to select from.
+
+**Run Wardley's own adoption order. Steps 1-4 need no second person:**
+
+1. **Focus on user needs.** (Step 1-2 above already did this — check it held.)
+2. **Know the details** — describe the value chain that supports those needs.
+3. **Focus on situational awareness** — the map itself, steps 3-5 above.
+4. **Use appropriate methods; remove bias and duplication.** One method does not fit every component:
+   see `/mycelium:cynefin-classify`, and check whether two parts of the map are the same thing.
+5. *(needs an organisation)* Cell-based structure with autonomous teams.
+6. *(needs an organisation)* Pioneer / Settler / Town Planner attitudes.
+
+He prefixes the order with *"The answer to this is, I don't know"* and calls it *"a rough order"* —
+so it is a starting sequence, not a ranking.
+
+**DOCTRINE IS AN OPEN SET AND GROWS WITH PRACTICE.** *"the more you play the game then the more forms
+of doctrine you'll discover. It's important to learn these continuously, so **get used to using maps
+as a retrospective. Look for what has changed and always ask why?**"* His own list is explicitly
+*"not an exhaustive list"*. **So do not report a coverage ratio against a fixed denominator** — there
+isn't one, and a percentage against an invented total is what this skill's audit did until it was
+corrected.
+
 ### 8. Apply Gameplay
-Strategic options based on the map:
+**Context specific — unlike doctrine, you DO pick and choose here.** *"they are not universal and
+you have to learn when and where to use them."* Strategic options based on the map:
 - Open source: Accelerate commoditization
 - ILC: Innovate -> Leverage -> Commoditize
 - Ecosystem: Build platform, commoditize lower layers

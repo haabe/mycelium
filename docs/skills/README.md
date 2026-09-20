@@ -4,7 +4,7 @@
 **Time to read**: 5 min for the table; depth lives in each `SKILL.md`.
 **Last updated**: 2026-06-12.
 
-This index lists all 62 skills. Each skill's full behaviour lives in its `SKILL.md` — `plugins/mycelium/skills/<name>/SKILL.md` in plugin form (recommended), or `.claude/skills/<name>/SKILL.md` in legacy form (supported during transition). Loaded JIT by Claude Code. This page is an orientation map by phase; [by-category.md](by-category.md) is the alternate index by category of work.
+This index lists all 63 skills. Each skill's full behaviour lives in its `SKILL.md` — `plugins/mycelium/skills/<name>/SKILL.md` in plugin form (recommended), or `.claude/skills/<name>/SKILL.md` in legacy form (supported during transition). Loaded JIT by Claude Code. This page is an orientation map by phase; [by-category.md](by-category.md) is the alternate index by category of work.
 
 ## Onboarding & navigation
 
@@ -22,12 +22,12 @@ This index lists all 62 skills. Each skill's full behaviour lives in its `SKILL.
 | `/user-interview` | Story-based interviews with bias mitigation (Torres) | Evidence, JTBD |
 | `/mocked-persona-interview` | Disciplined mocked personas when real users unavailable | Evidence (with speculation tag) |
 | `/user-needs-map` | Map needs independently of solutions (Allen) | Evidence |
-| `/jtbd-map` | Jobs to be Done mapping (Christensen tripartite) | JTBD |
+| `/jtbd-map` | Jobs to be Done mapping — functional, emotional and social dimensions (Christensen) | JTBD |
 | `/cynefin-classify` | Classify problem domain (Snowden) | Domain Fit |
 | `/wardley-map` | Strategic landscape mapping (L1) | Evidence (L1) |
 | `/ost-builder` | Build Opportunity Solution Tree from research (L2) | Evidence, Four Risks (per leaf) |
 | `/assumption-test` | Design smallest viable test for an assumption (Torres + Gilad AFTER) | Four Risks |
-| `/ice-score` | Impact × Confidence × Ease prioritization (Ellis) | — |
+| `/ice-score` | Prioritization by the average of Impact, Confidence and Ease (Ellis) | — |
 | `/handoff` | Structured handoff for offline human tasks (interviews, observations, outreach) | — |
 | `/log-evidence` | Record findings from completed offline conversations back into canvas | Evidence |
 
@@ -118,6 +118,7 @@ Read-only rendering of canvas + state surfaces. All five skills share `engine/re
 | `/feedback-review` | Aggregate feedback signals across active loops, check health | — |
 | `/eval-runner` | Run benchmark scenarios to measure framework effectiveness | — |
 | `/corrections-audit` | Analyze correction trends, surface recurring patterns, flag graduation candidates | — |
+| `/friction-log` | Draft an account of where *using* Mycelium was confusing, for the user to edit and choose whether to send (Hoskins) | — |
 | `/prompt-optimizer` | A/B test instruction changes against eval benchmarks | — |
 | `/framework-health` | Quarterly self-assessment: cycle velocity, discard trends, calibration, regression rate | — |
 | `/theory-fidelity` | Audit whether the theories the project claims are faithfully operationalized (source-grounds load-bearing ones); pair with `/framework-health` quarterly | — |

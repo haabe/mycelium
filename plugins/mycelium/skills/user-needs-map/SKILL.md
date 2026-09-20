@@ -64,12 +64,43 @@ From interviews, observations, support tickets, and behavioral data, extract dis
 
 ### 3. Score Needs (Importance vs Satisfaction)
 
-*Source: Ulwick (Outcome-Driven Innovation) for opportunity scoring. Allen's contribution is the dependency mapping (steps 6-7), not the scoring method.*
+*Source: **Ulwick** (Outcome-Driven Innovation) for the opportunity algorithm and the
+importance/satisfaction questions — verified in `What Customers Want` (2005) and `Jobs to be Done:
+Theory to Practice`. **Allen states the same two questions and explicitly defers the method**:
+"detailed outcome validation and prioritisation techniques go beyond what we'll cover in this book...
+Frameworks like Outcome Driven Innovation (ODI) provide a structured way to use this data."*
+
+> **Attribution corrected 2026-09-20 after reading Allen in full.** The previous note read "Allen's
+> contribution is the dependency mapping (steps 6-7)", which is wrong three ways: his dependency
+> mapping is **capability→capability**, not need→need (needs are siblings under a user and never
+> depend on each other); it is his **Steps 4-5**, not 6-7; and the team-boundary content credited to
+> him — fracture planes, Independent Service Heuristics, the four topologies — is Skelton and Pais's,
+> which Allen credits explicitly. **What IS his:** the packaged seven-step sequence, the fixed canvas
+> with a visibility axis, the two-colour team overlay, and the "walk the value chain in sentences"
+> sense-check.
 
 For each need:
-- **Importance** (1-10): How critical is this to the user?
-- **Current satisfaction** (1-10): How well do existing solutions meet this need?
-- **Underserved score**: importance - current_satisfaction (higher = bigger opportunity)
+- **Importance**: How critical is this to the user?
+- **Current satisfaction**: How well do existing solutions meet this need?
+- **Opportunity score** = `importance + max(importance − satisfaction, 0)`
+
+> **The formula is Ulwick's, verbatim**, from `What Customers Want`: *"opportunity = [importance +
+> max (importance - satisfaction, 0)]"*. **Importance is weighted twice and the result is clamped
+> non-negative** — and that double weighting is what stops a trivial need outranking a critical one.
+> Mycelium previously used `importance − satisfaction`, which inverts rankings: on a 1-10 scale a
+> trivial need slightly unmet (3,1) scored 2 while a critical need mostly met (9,8) scored 1, so the
+> trivial one ranked higher. Under Ulwick they score 5 and 10. Corrected 2026-09-20.
+>
+> **THE INPUTS ARE POPULATION PERCENTAGES, NOT ONE PERSON'S RATING — and this is the part no
+> secondary source carries.** Ulwick: *"The value for importance for each attribute equals **the
+> percentage of people rating that attribute a 4 or a 5 on a scale of 1 to 5**... an attribute that
+> 75 percent of the population rated a 4 or a 5 for importance would be put into the algorithm as
+> 7.5."* His worked 9.5 means 95% of interviewees; 3.2 means 32%.
+>
+> **So this instrument needs a SAMPLE.** One person assigning 8 from judgement is not "80% of
+> surveyed users rated this 4 or 5". With fewer than ~10 respondents, **use the ranking and do not
+> report the bands** — Ulwick's own bands (>15 extreme opportunity, <10 overserved) only mean
+> anything on percentage-derived inputs.
 
 ### 4. Classify Need States
 
