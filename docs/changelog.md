@@ -4,6 +4,17 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-19.
 
+## v0.228.0 - theory citations get a currency axis and an evidence class, after a book read found the framework citing a tier table its author does not publish
+
+**2026-09-20.** Four surfaces, one cause: a theory cited at book-date reads as faithful forever.
+
+- **`/theory-fidelity` grows from three axes to five.** **Currency** (`current` / `behind` / `book-date` / `unmarked`, plus LIVING or STABLE) and **evidence class of the theory itself** (`research` / `synthesis` / `judgement`). The first three axes cannot see a faithful implementation of a superseded edition, and nothing asked what kind of knowledge a cited theory is.
+- **Why currency needed an axis rather than a doc pass.** Measured across the skill surface: currency was tracked well on about half the theory-bearing skills and **absent from seven** (`service-check`, `jtbd-map`, `ost-builder`, `wardley-map`, `user-needs-map`, `gist-plan`, `user-interview` carried no year marker at all). **And the best-tracked skill was still one cycle behind** — `/dora-check` correctly carries the 2021 and 2023 DORA changes, while dora.dev now lists **five** metrics and **35** capabilities against the book's four and 24, and its current metrics guide no longer uses the Elite/High/Medium/Low vocabulary. Tracking once is not tracking.
+- **`/launch-tier` corrected — it was citing an instrument the author does not publish.** *LOVED* ch. 12 prescribes a **Release Scale** whose *"sole purpose is to create shared vocabulary and expectations"*, built by each team from **its own past releases** — *"Don't make this an academic exercise of a potential future release"* — with the calibration names the team chooses (*"be it levels, grades, names, numbers, or tiers"*) and a worked example running to **Level 5**. The skill shipped a fixed Tier 1/2/3 table with pre-filled activity lists. The table is now labelled **an example calibration, not the scale**, and a project with no release history is told it does not have one yet.
+- **`trust-signals` attribution corrected.** The `dark_patterns_prohibited` block was headed as Shotton's. **His own ethics writing places no prohibition on techniques** — his test is upstream of them (*"Are you selling snake-oil? Or are you selling something of substance?"*). The prohibition framing is Eyal's Manipulation Matrix, which `/launch-tier` already carries.
+- **`docs/theories.md` gains a graded table — graded only where the source was actually checked.** Eight rows carry a currency grade and an evidence class; the rest are marked **ungraded** rather than guessed, for the next `/theory-fidelity` run. It also carries the caveat that *Accelerate*'s sample excluded teams unfamiliar with CI and IaC — *"we miss a cohort that are likely performing even worse than our low performers"* — which overlaps the solo builders this framework serves.
+- **Not a quality ranking.** A `judgement` theory can be excellent and a `research` one can be over-read; the column exists so a reader knows which they hold, and so a framework that grades its users' evidence does not cite its own ungraded.
+
 ## v0.227.3 - an advisory that must not be cleared no longer reports as neglected
 
 **2026-09-19.** One script, two tests.

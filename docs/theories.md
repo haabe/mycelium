@@ -42,6 +42,36 @@ Four core delivery metrics (deployment frequency, lead time, change failure rate
 
 **Motivation + Persona + Simulation** (Hoskins's three elements). Born at L2 from interview stories, designed against at L3, tested at L4, validated at L5. Primary source: Hoskins, *The Product-Minded Engineer* (O'Reilly), ch. 1 — the scenario as the core primitive of product thinking. (**Corrected 2026-07-01:** an earlier in-repo model claimed FOUR elements — Persona/Means/Motive/Simulation — but **"Means" is not a Hoskins element** (a distortion); and the cited "SAP talk 'Attention to Users Is All You Need'" was **fabricated**. Both removed; "how they interact with tools" lives inside the Simulation.) Implemented as: `canvas/scenarios.yml`, scenario extraction in `/user-interview`, scenario wiring through leaf-lifecycle phases 1, 5, 8, 10.
 
+## Currency and evidence class — graded where verified (2026-09-20)
+
+Two properties this list did not carry until now, added because a citation frozen at book-date reads
+as faithful and an ungraded theory borrows more authority than it has. **Graded only where the source
+or the current authoritative version was actually checked. The rest are ungraded, and say so —
+`/mycelium:theory-fidelity` axes 4 and 5 grade them on its next run.**
+
+| Theory | Cited version | Current version | Currency | Class | Checked how |
+|---|---|---|---|---|---|
+| DORA (Forsgren, Humble, Kim) | *Accelerate* 2018 + 2024 report | **five** metrics, **35** capabilities, tier vocabulary dropped from the current metrics guide | `behind` · **LIVING** | research | book read in full; dora.dev fetched 2026-09-20 |
+| Loved (Lauchengco) | book, 2022 | unchanged | `book-date` · STABLE | **judgement** — no study, dataset or citation in 295pp | book read in full |
+| Continuous Discovery (Torres) | book, 2021 | book unchanged; "AI evals as a discovery habit" added 2026-09 | `behind` on one addition · **LIVING** | synthesis — cites named researchers, flags its own thin spots | book read in full |
+| Four risks (Cagan) | *INSPIRED* | **unchanged and current**; *TRANSFORMED* (2024) adds the product operating model, not carried here | `current` · SEMI-LIVING | judgement | svpg.com checked |
+| Team Topologies (Skelton, Pais) | **2nd ed, 2025** | 2nd ed | `current` · SEMI-LIVING | judgement | 2nd-ed deltas checked |
+| Cynefin (Snowden) | Clear / Confused | Clear; Aporetic-Confused + liminality, 2021 | `current` on naming; liminal Cynefin absent | judgement | cynefin.io checked |
+| Usability heuristics (Nielsen) | 1994, definitions refined 2020 | same | `current` · **STABLE** | research (1994 heuristic evaluation studies) | nngroup.com checked |
+| OWASP Top 10 | 2025 | 2025 | `current` · **LIVING** | synthesis | owasp.org checked |
+| *(all other rows)* | — | — | **ungraded** | **ungraded** | not yet checked |
+
+**How to read the Class column.** `research` = empirical study with a stated method · `synthesis` =
+practitioner work citing research · `judgement` = practitioner authority and case narrative.
+**It is not a quality ranking.** The `judgement` entries here include some of the most load-bearing
+theories in the framework. The column exists so a reader knows which kind of claim they are holding —
+and so that a framework which grades its users' evidence does not cite its own ungraded.
+
+**One caveat carried from the source, because it bears on every adopter.** *Accelerate*'s sample
+excluded teams unfamiliar with configuration management, IaC and CI — in its own words, *"we miss a
+cohort that are likely performing even worse than our low performers."* That cohort overlaps with the
+solo and small-team builders this framework serves, and the book makes no claim about team size.
+
 ## Tier 2 — Integrated theories
 
 Each one shapes a specific surface; removable in isolation, but the surface goes with it.

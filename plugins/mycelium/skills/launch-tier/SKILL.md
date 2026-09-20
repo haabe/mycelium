@@ -9,7 +9,41 @@ metadata:
 
 # Launch Tier Classification
 
-Every release gets classified before planning begins. Source: Lauchengco (Loved).
+**The instrument is Lauchengco's RELEASE SCALE, and this skill had it wrong until 2026-09-20.**
+Corrected after reading *LOVED* chapter 12 directly. What the book actually says:
+
+> *"Developing a shared understanding of how a release should be categorized and what go-to-market
+> activities will get done is the purpose of a Release Scale. It's a simple tool whose **sole purpose
+> is to create shared vocabulary and expectations** between the product and go-to-market teams."*
+> *"**This is different from a detailed organizational plan** for every action needed for a product
+> launch."*
+
+**Three consequences for how this skill is used.**
+
+1. **THE SCALE IS BUILT, NOT ADOPTED.** Her step 1: *"Decide on the calibration scale. **Be it
+   levels, grades, names, numbers, or tiers**, I encourage using something that doesn't require a
+   legend for people to understand."* Tiers are one of five options **the user picks** — not the
+   instrument. Her worked example runs to **Level 5** (*"it's important for the company to have one
+   or two Level 5 releases a year"*), not three.
+2. **CALIBRATE ON YOUR OWN PAST RELEASES — she flags this as the most-skipped step.** Step 2:
+   *"Use known past releases as examples to define the levels. **This is an important and often
+   missed step. Don't make this an academic exercise of a potential future release.** By using known
+   reference points, people have a known comparison to calibrate from."*
+   **So a project with no release history cannot build a release scale yet, and a generic table
+   handed to it is precisely the academic exercise she forbids.** Say so rather than filling one in.
+3. **IT IS AN ALIGNMENT TOOL, NOT A GATE.** Its job is shared vocabulary between functions. A solo
+   builder has no second function to align with; the honest reduced form is the *customer-impact*
+   and *marketing-objective* questions (her steps 3 and 4), which one person can answer, without the
+   resourcing, lead-time and planning-meeting steps (5–7) that assume a company.
+
+**Her definitions, which this skill did not carry** — *"A **release** makes public a new product or
+combination of features that provides value to customers"*; *"For go-to-market teams, a **launch** is
+a major, cross-functionally supported release that the entire company gets behind. It's usually
+oriented around a set date… **Most companies won't attempt more than one to two major launches a
+year**."*
+
+The table below is **an example calibration, not the scale** — use it to see the shape, then build
+your own from your own history. Source: Lauchengco (*Loved*, ch. 12).
 
 ## Preflight: Read target canvas file(s) before any Write/Edit
 
@@ -33,7 +67,11 @@ If this skill writes to multiple canvas files, register each one first (limit:1 
 
 See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
 
-## Tier Definitions
+## Tier Definitions — AN EXAMPLE CALIBRATION, NOT THE SCALE
+
+*Build your own from your own past releases (see the correction above). If you have no release
+history yet, you do not have a release scale yet — record that rather than adopting this table.*
+
 
 | Tier | Type | Effort | Examples |
 |------|------|--------|---------|
