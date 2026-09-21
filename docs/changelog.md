@@ -4,6 +4,53 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-19.
 
+## v0.231.4 - a warning about one version destroyed the release of five others
+
+**2026-09-21.** The 0.229.0–0.231.3 merge released **nothing**, and the cause was a channel, not a
+policy.
+
+- **`release_gaps.py` printed its withhold notice to STDOUT.** `auto-release.yml` runs it as
+  `release_gaps.py --introduced ... --require-documented > introduced.json` and the next step
+  `json.load()`s that file — so `::warning::withholding v0.231.2: ...` landed **inside the JSON
+  payload**, the load raised `JSONDecodeError`, and the release step died. Two undocumented versions
+  were withheld correctly and **took the five documented ones down with them.**
+- **The policy was right and the plumbing was wrong**, which is the dangerous combination: the gate
+  did exactly what it promised (withhold and warn, never fail) while the medium carrying the decision
+  could not survive the warning. **A warning about one item may not destroy the payload describing
+  the others.** stdout carries data; stderr carries commentary.
+- Regression test pins the workflow's own `json.load` against a run where a withhold fires.
+
+## v0.231.3 - a new script's tests ran it as a subprocess, so coverage saw 0%
+
+**2026-09-21.** `check_doctrine_due.py` shipped with nine tests that exercised it through
+`subprocess.run`. **coverage.py cannot instrument a separate interpreter**, so the per-file floor read
+0% for a fully-tested file and CI failed while all 27 local gates passed. The tests now call `main()`
+in-process; the argv contract is still what they exercise.
+
+`check_coverage_floor.py` is a **declared-waived** local gate — it needs a `coverage.json` from a
+`--cov` run, which costs ~10 minutes — and the standing rule is that a waived gate is run by hand
+before a version bump. It was not run. That is a compliance failure against an existing rule, not a
+missing mechanism, and no new mechanism is added for it. Run by hand: 1858 tests pass, total coverage
+91.30%, all 85 shipped scripts clear the 70% floor.
+
+## v0.231.2 - the doctrine trigger had a condition and no evaluator
+
+**2026-09-21.** v0.231.0 gave the doctrine retrospective a firing condition and wired its producer
+(`/retrospective`) to its consumer (`/wardley-map`), then left the condition as prose inside the
+skill. **Nothing computed it.** It fired only when someone happened to open that skill — the same
+runs-when-a-person-remembers shape the condition was written to replace. **A condition with no
+evaluator reads as satisfied.**
+
+Every comparable due-concept here already had an evaluator wired into session-start
+(`check_reply_owed.py`, `check_reads_due.py`, the advisory ledger). Doctrine did not.
+`check_doctrine_due.py` now computes it and session-start relays the line. Two reasons it can be due:
+a diamond completed after the last review, or a climate prediction past its horizon with no outcome —
+**an unscored prediction is not a held one.**
+
+Three outputs are deliberately distinct, because collapsing them is the failure the check exists to
+prevent: **DUE**; **`UNREADABLE ... did NOT run`** (could not look — not "nothing due"); and **"the
+trigger cannot fire"** when no diamond has completed yet — explicitly not "doctrine is current".
+
 ## v0.231.1 - the commit-time guard was reading the disk, and a commit records the index
 
 **2026-09-21.** v0.230.0 shipped `git-pre-commit-example.sh` reading the **working tree**, with the

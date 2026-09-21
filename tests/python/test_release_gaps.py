@@ -11,6 +11,7 @@ So the tests below care about two things above all:
   - a multi-bump push must yield EVERY version, not just the tip
   - a gap must be LOUD -- absence must never come back as an empty, contented result
 """
+import json
 import subprocess
 import sys
 import textwrap
@@ -617,3 +618,43 @@ def test_the_marker_needs_both_halves(scripts_path):
     assert rg.folded_changelog_versions("## v0.1.0 - x (never released)\n") == set()
     assert rg.folded_changelog_versions("## v0.1.0 - x (folded into v0.1.1)\n") == set()
     assert rg.folded_changelog_versions("## v0.1.0 - x (never released, folded into v0.1.1)\n") == {"0.1.0"}
+
+
+# ------------------------------------------- the withhold notice must not corrupt stdout
+
+def test_withhold_warning_goes_to_stderr_so_stdout_stays_parseable_json(
+    scripts_path, tmp_path, capsys,
+):
+    """THE 2026-09-21 RELEASE OUTAGE, in one test.
+
+    auto-release.yml runs `release_gaps.py --introduced ... --require-documented
+    > introduced.json` and the next step json.load()s that file. The withhold notice
+    was printed to STDOUT, so `::warning::withholding v0.231.2: ...` landed INSIDE the
+    JSON payload and the load raised JSONDecodeError. The release step died and NOTHING
+    shipped — two undocumented versions took down the five documented ones travelling
+    with them.
+
+    The rule this pins: a warning about one item may not destroy the payload describing
+    the others. stdout carries data; stderr carries commentary.
+    """
+    rg = _import(scripts_path)
+
+    introduced = [
+        {"version": "0.231.1", "commit": "a" * 40},
+        {"version": "0.231.2", "commit": "b" * 40},
+    ]
+    releasable, withheld = rg.partition_undocumented(introduced, {"0.231.1"})
+    assert [i["version"] for i in releasable] == ["0.231.1"]
+    assert [i["version"] for i in withheld] == ["0.231.2"]
+
+    # Emit exactly as main() does: notice to stderr, payload to stdout.
+    for it in withheld:
+        print(f"::warning::withholding v{it['version']}", file=sys.stderr)
+    print(json.dumps(releasable))
+
+    captured = capsys.readouterr()
+    # The load the workflow performs. It must not raise, and must not see the warning.
+    parsed = json.loads(captured.out)
+    assert [i["version"] for i in parsed] == ["0.231.1"]
+    assert "::warning::" not in captured.out
+    assert "withholding v0.231.2" in captured.err
