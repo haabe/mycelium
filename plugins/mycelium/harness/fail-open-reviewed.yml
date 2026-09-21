@@ -665,3 +665,18 @@ reviewed:
     and the exception named; main() catches it and prints a DENY with that reason. Not silent:
     this is the fix that made a broken state file stop being an off-switch. Reviewed
     2026-09-10, v0.193.0.
+
+- id: check_doctrine_due.py@614961041d
+  verdict: accepted
+  reason: >-
+    `_load`, `except (OSError, yaml.YAMLError)`. The handler RETURNS the error rather than
+    swallowing it, and `main()` prints `UNREADABLE (doctrine due-check did NOT run): <file>:
+    <exc>` before returning — which session-start relays, because its grep matches
+    `^UNREADABLE` as well as `^DOCTRINE RETROSPECTIVE DUE`. The scanner reads the handler in
+    isolation and cannot see the speaking happen one frame up, which is the right default: a
+    handler that returns a value is silent until something proves otherwise. It is deliberate
+    here that "could not look" is a DIFFERENT output from "nothing due" — for a check whose
+    whole subject is a register nobody reads, an unreadable register reported as OK would be
+    the exact failure the check exists to prevent. A MISSING file is not this branch and is not
+    an error: no doctrine.yml yet is the ordinary state of a project that has never reviewed.
+    Reviewed 2026-09-21, v0.231.2.

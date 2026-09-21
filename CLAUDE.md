@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.231.1 -- **The commit-time guard was reading the disk, and a commit records the index** (PATCH). Shipped in 0.230.0 with that limitation written in its own header, which closed the common case and left the named one open. A staged drift plus a repaired working tree slipped a bad commit through; an unstaged edit blocked a clean one. It now materialises the index read-only and checks that — never `git stash --keep-index`, which mutates the worktree to perform a read.*
+*Version 0.231.2 -- **The doctrine trigger had a condition and no evaluator** (PATCH). 0.231.0 wired the producer to the consumer and left the firing condition as prose inside `/retrospective`, so it fired only when someone opened that skill — the same runs-when-a-person-remembers shape the condition was written to replace. `check_doctrine_due.py` now computes it and session-start relays the line.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

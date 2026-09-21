@@ -585,6 +585,28 @@ if [ -n "$READSCHK" ]; then
     REMINDERS="${REMINDERS}${READS_LINE} "
   fi
 fi
+# DOCTRINE RETROSPECTIVE DUE (v0.231.2). v0.231.0 gave the doctrine retrospective a firing
+# condition and wired producer to consumer, but NOTHING EVALUATED THE CONDITION — it sat as prose
+# inside /retrospective, so it fired only when someone opened that skill. That is the same
+# "runs when a person remembers" shape the condition replaced, and a condition with no evaluator
+# reads as satisfied. Same relay shape as the two checks above, for the same reason: one
+# implementation, in scripts/check_doctrine_due.py, and this hook only carries the line.
+DOCCHK=""
+if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check_doctrine_due.py" ]; then
+  DOCCHK="${CLAUDE_PLUGIN_ROOT}/scripts/check_doctrine_due.py"
+elif [ -f "$PROJECT_DIR/.claude/scripts/check_doctrine_due.py" ]; then
+  DOCCHK="$PROJECT_DIR/.claude/scripts/check_doctrine_due.py"
+fi
+{ over_budget || [ "$_SS_HEAVY" = skip ]; } && { SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}doctrine-due "; DOCCHK=""; }
+if [ -n "$DOCCHK" ]; then
+  # UNREADABLE is relayed too, deliberately. "Could not look" and "nothing due" are
+  # indistinguishable from the outside unless the first one says so.
+  DOC_LINE=$(python3 "$DOCCHK" --project-dir "$PROJECT_DIR" 2>/dev/null \
+    | grep -E '^(DOCTRINE RETROSPECTIVE DUE|UNREADABLE)' || echo "")
+  if [ -n "$DOC_LINE" ]; then
+    REMINDERS="${REMINDERS}${DOC_LINE} "
+  fi
+fi
 
 # ============================================================
 # CHECK 1f: Evidence that never landed (advisory, v0.107.0)
