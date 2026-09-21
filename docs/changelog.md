@@ -4,6 +4,47 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-19.
 
+## v0.233.0 - BREAKING: the ladder had no entry to its own top rung
+
+**2026-09-21.** Every scale had a spawn rule except the one at the top. `engine/diamond-rules.md`
+listed L0→L1, L1→L2, L2→L3, L3→L4, L4→sub-L4 and L5→L2 — **an exit from L5 and no entry to it** — so
+a market diamond could only ever be opened by hand, and the scale the whole ladder points at sat
+unreachable by the process meant to reach it.
+
+**BREAKING CHANGE, and it is deliberate.** `go-to-market.yml#launch_tier` is retired and a non-null
+value now **fails validation**. The user base is small enough that one break is cheaper than carrying
+a field that cannot do its job, and silently tolerating the old value would leave the new spawn edge
+reading a number nobody maintains — which is how a mechanism looks wired and fires never. Migration:
+move the value into a `releases[]` entry.
+
+- **Why the old field could not carry the trigger.** It was **one scalar for the whole project**,
+  overwritten by each later release, so "which release was a major launch" was structurally
+  unanswerable. It was **capped at `1|2|3`** — the fixed tier table `docs/errata.md` already records
+  as *not* Lauchengco's instrument, whose own worked example runs to **Level 5**. And it had **zero
+  readers**, repo-wide.
+- **Third instance of fix-the-skill-leave-another-surface.** v0.229.0 corrected the *skill* that
+  published that table and left the *schema* asserting it, exactly as the ICE correction left five
+  surfaces still advertising multiplication and `canvas-guidance.yml` kept quoting "64+ patterns".
+  Recorded in `errata.md` beside the others.
+- **`releases[]` is the substrate a Release Scale needs**, because hers is calibrated on what you
+  have actually shipped — *"Don't make this an academic exercise of a potential future release."*
+  `band_label` is **free text**, because the names are the team's (*"be it levels, grades, names,
+  numbers, or tiers"*); `is_major_launch` is the single machine-readable bit, because a trigger needs
+  a fixed shape. A project with no entries **has no scale yet**, which is a state to record rather
+  than a reason to borrow someone else's table.
+- **The detector shipped BEFORE the spawn, on purpose.** `check_scale_occupancy.py` now covers L5: a
+  release marked `is_major_launch` with no `spawned_l5` is reported as *"the categorisation was made
+  and nothing acted on it."* Without it an unfired spawn is indistinguishable from a working one —
+  the failure this release exists to end, and one this project has now made three times.
+- **The spawn itself**, in `/launch-tier`: a major launch opens an L5, gated on product/market fit
+  (Cagan: L5 *"is not reachable before it"*), measured with Ellis's Must-Have Survey. **`band:
+  not-yet-measurable` is first-class** — below a real sample a percentage is not a percentage, and an
+  L5 recording that it has no PMF evidence is a true record where a manufactured 40% is not. Ellis's
+  five follow-up questions work at any n and are available immediately. `pmf` is typed on the diamond
+  and read by `/diamond-assess`, so it is not another write-only field.
+- **One open L5 at a time.** L5 recurs on the market, not the release; a second L5 splits one market
+  question across two records.
+
 ## v0.231.4 - a warning about one version destroyed the release of five others
 
 **2026-09-21.** The 0.229.0–0.231.3 merge released **nothing**, and the cause was a channel, not a

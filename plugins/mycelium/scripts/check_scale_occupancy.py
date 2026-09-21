@@ -43,6 +43,20 @@ def _load(path: Path):
         return {}
 
 
+def major_launches(canvas_dir: Path) -> list[dict]:
+    """Releases categorised as the TOP band of this project's own scale.
+
+    THE L5 INTAKE (v0.233.0). Until this existed, `records()` counted L2 and L3 only, so the
+    "intake and no outlet" finding could not be made at L5 — and L5 was the one scale with no
+    spawn edge into it at all. A major launch IS the L4->L5 trigger (Lauchengco: "what does or
+    doesn't get done flows from how releases are categorized"), so a major launch with no L5 is
+    exactly the shape this check was built to make visible: a decision recorded and not acted on.
+    """
+    data = _load(canvas_dir / "go-to-market.yml")
+    rows = data.get("releases") if isinstance(data, dict) else None
+    return [r for r in rows or [] if isinstance(r, dict) and r.get("is_major_launch")]
+
+
 def records(canvas_dir: Path) -> dict[str, int]:
     """L2 and L3 record counts from opportunities.yml (terminal solutions excluded)."""
     data = _load(canvas_dir / "opportunities.yml")
@@ -81,6 +95,19 @@ def cycles(canvas_dir: Path) -> dict[str, dict[str, int]]:
 def findings(canvas_dir: Path) -> list[str]:
     rec, cyc = records(canvas_dir), cycles(canvas_dir)
     out = []
+    # L5 FIRST, because it is the scale whose absence was structural rather than incidental.
+    launches = major_launches(canvas_dir)
+    unspawned = [r for r in launches if not r.get("spawned_l5")]
+    if unspawned and cyc.get("L5", {}).get("ever", 0) == 0:
+        ids = ", ".join(str(r.get("id") or "<unnamed>") for r in unspawned[:5])
+        out.append(f"L5: {len(unspawned)} release(s) categorised as a MAJOR LAUNCH and no L5 "
+                   f"diamond has ever been opened ({ids}); the categorisation was made and "
+                   f"nothing acted on it. A major launch is the L4->L5 spawn trigger "
+                   f"(engine/diamond-rules.md)")
+    elif unspawned:
+        ids = ", ".join(str(r.get("id") or "<unnamed>") for r in unspawned[:5])
+        out.append(f"L5: {len(unspawned)} major launch(es) with no `spawned_l5` recorded ({ids}); "
+                   f"an L5 exists, so name which launch it answers or open one")
     for scale, n in rec.items():
         row = cyc.get(scale, {"active": 0, "ever": 0})
         if n and row["ever"] == 0:
@@ -100,7 +127,13 @@ def report(canvas_dir: Path) -> int:
     print("=" * 70)
     for scale in ("L0", "L1", "L2", "L3", "L4", "L5"):
         row = cyc.get(scale, {"active": 0, "ever": 0})
-        recs = f"{rec[scale]} record(s)" if scale in rec else "records not counted at this scale"
+        if scale in rec:
+            recs = f"{rec[scale]} record(s)"
+        elif scale == "L5":
+            n_ml = len(major_launches(canvas_dir))
+            recs = f"{n_ml} major launch(es) recorded" if n_ml else "no major launch recorded"
+        else:
+            recs = "records not counted at this scale"
         print(f"  {scale}: {recs}; {row['active']} active diamond(s), {row['ever']} ever")
     hits = findings(canvas_dir)
     print()
