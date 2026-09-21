@@ -4,6 +4,41 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-21.
 
+## v0.237.0 - the L5 confidence bar, derived instead of inherited
+
+**2026-09-21.** Behaviour-changing at L5: the bar to progress rises, and one project_type can no
+longer lower a launch approval.
+
+- **`confidence_threshold` at L5: 0.6 → 0.8.** v0.235.0 corrected the L5 taxonomy everywhere except
+  this number, and flagged it in place rather than guess. Deriving it turned up that **the comment
+  explaining the ladder was wrong about the ladder**. It claimed the descent (L0 0.9 → L4 0.7)
+  tracked "increasing atomicity"; nothing in the file says that. What the file says is the L0 note:
+  *"Purpose-level decisions are foundational. Highest bar."* **The ladder tracks consequence — blast
+  radius and reversibility — not unit size.**
+- **So the ladder is no longer monotone, and that is the finding.** 0.9, 0.85, 0.8, 0.75, 0.7,
+  **0.8**. L5 is the only scale whose output reaches people outside the team, and a launch, a
+  positioning or a market claim cannot be rolled back the way a deploy can. The monotone descent was
+  an artifact of reading the ladder as atomicity. 0.8 is also this file's own Gilad anchor for
+  A/B-test-grade evidence (8/10): reaching the market should take experiment-grade confidence, not
+  the 0.5 "market data" anchor.
+- **The `not-yet-measurable` objection, answered rather than dropped.** The old comment argued a high
+  bar would block an honest early L5. It does not: `confidence` and `pmf.band` are different axes.
+  *"band: not-yet-measurable, n=3, as_of …"* is a well-evidenced true statement about the state of
+  the evidence and can be held at high confidence. The threshold asks how well-evidenced the claim
+  is, not whether fit is proven. An early L5 clears it by being honest and sourced, and fails it by
+  asserting more than it can show.
+- **A project_type could make a launch self-approvable, and now cannot.** `human_approval_override`
+  lets a project_type relax approval to `optional` on every transition. For `solo_hobby` that
+  re-opened, for the commonest consumer shape, **the exact hole v0.235.0 closed** — an agent
+  autonomously declaring a launch complete. L5 `develop_to_deliver` and `deliver_to_complete` are now
+  NO_REDUCTION. A solo hobbyist launching to the public still reaches the public; blast radius is a
+  property of the audience, not of the team's size. The floor is wired into `/diamond-progress` where
+  approval is actually resolved, not left as a config line nothing reads, and the skill must say out
+  loud when an override would have lowered it.
+- **The anti-gaming list never learned about the L5 REVIEW.** It enumerates what the Evidence Gate
+  enforces and still named only the L0/L2 cases, three releases after v0.235.0 added an L5 one —
+  fix-one-surface-leave-another, in the file that release was editing.
+
 ## v0.236.0 - the ten hooks that could not be measured are now six fewer
 
 **2026-09-21.** No behaviour change to what any hook advises or blocks. What changes is that six

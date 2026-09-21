@@ -108,6 +108,7 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
 
 4. **Check human approval requirement**:
    - Per ${CLAUDE_PLUGIN_ROOT}/engine/confidence-thresholds.yml, is human approval required/recommended/optional?
+   - **Apply `human_approval_override` from the project_type — EXCEPT at L5 `develop_to_deliver` and `deliver_to_complete`, which are NO_REDUCTION and stay `required` whatever the override says** (added 0.237.0). These are the two transitions that reach people outside the team, and an override cannot make a launch self-approvable. A solo hobbyist launching to the public still reaches the public. If an override would have lowered one of these, say so out loud rather than silently applying the floor: *"project_type <x> would set this to optional; L5 outward-facing transitions are NO_REDUCTION, so approval is still required."*
    - If required: present assessment and wait for approval.
    - **When asking for approval, include the interaction convention explicitly in the prompt** — do not leave it implicit. Use this template (or paraphrase faithfully):
      > "Reply **yes** to advance, **no** to stay. Re-invoking `/mycelium:diamond-progress` is also treated as approval (shortcut). Type **evaluate again** to re-run gates from scratch."
