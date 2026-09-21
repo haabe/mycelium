@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.237.0 -- **The L5 confidence bar was the one instrument still saying the scale was low-stakes, and the ladder it sat on was misread** (MINOR, behaviour-changing at L5). 0.6 -> 0.8, derived from the file's own Gilad anchor rather than guessed. The descent was never about atomicity; it tracks consequence, so the bar rises again at the only scale that reaches people outside the team. Plus the two holes found while deriving it: a stale anti-gaming list that never learned about the L5 REVIEW, and a project_type override that let a solo project make a launch self-approvable.*
+*Version 0.238.0 -- **The ICE erratum told consumers to re-check their scores and nothing checked whether they had** (MINOR). `check_ice_aggregate.py` verifies a stored ICE aggregate against the Ellis mean the skill and errata A1 both document. Measured on the dogfood canvas: 14 of 14 verifiable aggregates were products, zero were averages, three releases after the erratum shipped. Baseline-gated, because re-scoring a closed decision is backfill, not a fix.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

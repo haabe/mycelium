@@ -134,6 +134,34 @@ Audit the canvas knowledge base for quality, consistency, and completeness. The 
    - Every go-to-market `feedback_loop` entry with `source_leaf_id` → verify leaf exists
    - Flag broken references as warnings ("Zombie Solution" anti-pattern)
 
+7d. **Check that stored ICE aggregates use the algorithm the framework documents:**
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_ice_aggregate.py" --project-dir .
+```
+
+   `ice-score` and `docs/errata.md` A1 both say ICE is the **average** of Impact, Confidence and
+   Ease (Ellis, *Hacking Growth*: *"those ratings are averaged"*). A1 also tells consumers to
+   *"re-check decisions that turned on them"*, and until v0.238.0 nothing checked whether anyone
+   did. Measured on the dogfood canvas the day this step was written: **14 of 14 verifiable
+   aggregates were products, zero were averages**, three releases after the erratum shipped.
+
+   **It is baseline-gated on purpose, and the baseline is not a snooze.** The corpus present at
+   adoption is recorded and the check fails only on aggregates written or changed afterwards. A
+   product-shaped aggregate on a shipped or discarded leaf is the honest record of how that call was
+   actually made; re-scoring it now would only make a closed decision look compliant, which is the
+   backfill `check_leaf_lifecycle` refuses in plain words. Run `--write-baseline` ONCE at adoption.
+   **Adding a new failure to the baseline is the one use of that flag that is wrong** — it records a
+   fresh mistake as history.
+
+   **Read the UNVERIFIABLE bucket, it is not a pass.** An aggregate stored without its factors
+   cannot be recomputed at all; the check says so rather than counting it clean.
+
+   **What a green does NOT mean.** It checks one arithmetic identity. Whether Impact, Confidence and
+   Ease were honestly assessed is invisible from here — and a nearly-constant Ease column across a
+   corpus (8 of 15 at exactly 5 on the dogfood canvas) is the usual sign that one dimension is
+   carrying no information and ICE has quietly become a two-factor score.
+
 7c. **Run the do-not-cite register scan** — do NOT re-derive this from prose:
 
 ```bash

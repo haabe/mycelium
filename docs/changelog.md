@@ -4,6 +4,38 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-21.
 
+## v0.238.0 - the ICE erratum told consumers to re-check, and nothing checked whether they had
+
+**2026-09-21.** A new project-side check. No behaviour change to any skill's output.
+
+- **The gap.** v0.229.0 shipped `docs/errata.md` A1: `ice-score` multiplied where Ellis averages
+  (*"those ratings are averaged to provide an aggregate score for each idea"* — `Hacking Growth`).
+  The erratum ends by telling consumers to **"re-check decisions that turned on them"**, and nothing
+  verified that anyone did. Measured on the dogfood canvas three releases later: **14 of 14
+  verifiable aggregates were still products, zero were averages.** The correction was authored,
+  released, and never reached the data it was about — a fix with no reader.
+- **`check_ice_aggregate.py`** recomputes the mean from the stored factors and reports any aggregate
+  that is the product instead. Wired into `/canvas-health` as step 7d.
+- **It is baseline-gated, and that is the design rather than a compromise.** A product-shaped
+  aggregate on a shipped or discarded leaf is the honest record of how that call was actually made.
+  Rewriting it now would only make a closed decision look compliant — the backfill
+  `check_leaf_lifecycle` already refuses in plain words. The corpus at adoption is recorded; the
+  check fails only on aggregates written or changed afterwards. **Adding a new failure to the
+  baseline is the one use of `--write-baseline` that is wrong.**
+- **It reads the shapes a real canvas actually has.** Seven distinct block shapes were found on one
+  canvas: factors as `impact/confidence/ease` or abbreviated `i/c/e`, aggregate as `total` or
+  `score`, both `ice` and `ice_score` keys live and *not* synonyms (one project keeps the original
+  score under one and a later blind re-derivation under the other), plus aggregates stored with no
+  factors at all. The abbreviated form alone hid two product-shaped aggregates from a hand-written
+  scan of the same canvas on the same day, which is why the test pins it.
+- **UNVERIFIABLE is reported separately and is not a pass.** An aggregate with no factors cannot be
+  recomputed; saying so beats counting it clean.
+- **The green is deliberately narrow.** It asserts one arithmetic identity. Whether the three
+  factors were honestly assessed is invisible to it — and a nearly-constant Ease column (8 of 15 at
+  exactly 5 on the dogfood canvas) is the usual sign that one dimension carries no information and
+  ICE has quietly become a two-factor score. The check says this in its own output rather than
+  letting a green imply otherwise.
+
 ## v0.237.0 - the L5 confidence bar, derived instead of inherited
 
 **2026-09-21.** Behaviour-changing at L5: the bar to progress rises, and one project_type can no
