@@ -234,6 +234,21 @@ Three states, three different things to say:
   definition that no longer holds.** Report it as invalidated work, not as a lint finding.
 - **Otherwise** — report the findings as part of the assessment and move on.
 
+**The PMF read, at L5 only (v0.232.0).** Read the diamond's `pmf` block — it is L5's entry condition
+and nothing else consults it.
+
+- **`band: not-yet-measurable`** — report it as the true state and say what would change it: a sample
+  large enough for a percentage to mean anything. **Do not treat it as a failure** and do not suggest
+  estimating the number; the band exists precisely so an L5 can run honestly without one.
+  Ellis's five follow-up questions work at any n and are available now — surface them as the move.
+- **A band with a stale or missing `as_of`, or an `n` small enough to make the percentage noise** —
+  say so beside the band. PMF is exactly the kind of number that goes stale, and a percentage over a
+  handful of users reads as authoritative while carrying almost no information.
+- **`very_disappointed_pct: null` with a band other than `not-yet-measurable`** — that is a band with
+  no reading behind it. Flag it; it is the shape a fabricated gate-clearance takes.
+- **`green`** — report it plainly, with `n` and `as_of` in the same sentence. It is a licence to
+  pursue growth (Ellis), not a licence to stop measuring.
+
 **The bearing check, at L0 only (v0.230.0).** Read `purpose.yml#just_cause`.
 
 - **Present** — run its own check against what has actually happened since `reviewed`: does any

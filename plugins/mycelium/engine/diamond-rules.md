@@ -45,7 +45,24 @@ Diamonds spawn child diamonds when complexity or scope requires it:
 - L2 spawns L3 when opportunities have sufficient evidence for solution design
 - L3 spawns L4 when solutions pass confidence threshold and need building
 - L4 can spawn sub-L4 diamonds for complex features requiring their own discovery
+- **L4 spawns L5 when a release is categorised as a MAJOR LAUNCH on the project's own release scale** (v0.232.0, written by `/launch-tier`)
 - L5 spawns L2 when market feedback reveals new opportunities (feedback loop)
+
+**The L4→L5 edge was missing until v0.232.0, and its absence is why L5 never opened by itself.** Every
+other rung had a spawn; the top one had only an exit (L5→L2) and no entry, so an L5 could be created
+only by hand. The trigger is Lauchengco's, and it is mechanical rather than temporal — *"The
+distinctions between a minor release and a major launch are really important... what does or doesn't
+get done flows from how releases are categorized"* — so the categorisation `/launch-tier` already
+makes IS the trigger. It was being made and nothing acted on it.
+
+**Entry condition: product/market fit**, which L5 is not reachable before (Cagan). The instrument is
+Ellis's Must-Have Survey, typed on the diamond as `pmf`. **`band: not-yet-measurable` is a first-class
+answer** — below a real sample a percentage is not a percentage, and an L5 that records having no PMF
+evidence is a true record where a manufactured 40% is not. **Major launch means the top band of YOUR
+scale**; a project with no release history has no scale, so it cannot categorise and this cannot fire.
+
+**One open L5 at a time.** L5 recurs on the market, not on the release: a second L5 for a later launch
+splits one market question across two records. Add the release to the open one.
 
 **Constraints:**
 - Parent diamond remains active while children execute (smooth flow)

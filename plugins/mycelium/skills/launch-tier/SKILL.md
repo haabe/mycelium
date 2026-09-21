@@ -84,6 +84,79 @@ history yet, you do not have a release scale yet — record that rather than ado
 - Does this strengthen existing positioning? -> Tier 2
 - Is this an incremental improvement? -> Tier 3
 
+## The categorisation SPAWNS AN L5 — do this before the per-tier activities (v0.232.0)
+
+**A release categorised as a MAJOR LAUNCH spawns an L5 Market diamond.** Not a date, not a window:
+the categorisation you just made is the trigger, and it is a decision already being taken here at L4.
+Lauchengco is explicit that this is the consequential moment — *"The distinctions between a minor
+release and a major launch are really important... **What does or doesn't get done flows from how
+releases are categorized.**"* Until v0.232.0 the classification was made and **nothing acted on it**:
+the skill spawned an L2 on new market signals and never an L5, so the top of the ladder had no entry
+edge and L5 diamonds could only be opened by hand.
+
+**"Major launch" means the TOP BAND OF YOUR OWN SCALE**, not Tier 1 of the example table above. If
+you have no release history you have no scale yet, so you cannot categorise, so this does not fire —
+say that rather than borrowing the example's Tier 1.
+
+### Step 1 — check the entry condition before opening anything
+
+**L5's entry condition is product/market fit, and it is not reachable before it.** Cagan, in *LOVED*'s
+foreword: *"the single most important concept in all of product is the concept of product/market
+fit... really the only thing that matters."*
+
+The instrument is **Sean Ellis's Must-Have Survey** (*Hacking Growth*), verbatim: *"How disappointed
+would you be if this product no longer existed tomorrow? a) Very disappointed b) Somewhat disappointed
+c) Not disappointed (it really isn't that useful) d) N/A - I no longer use it."* His bands, his words:
+**≥40% "very disappointed"** — *"the green light to move full speed ahead gunning for growth"*;
+**25-40%** — *"tweaks either to the product **or to the language used to describe the product**"*;
+**<25%** — *"either the audience you've attracted is the wrong fit for your product, or the product
+itself needs more substantial development."* His reason for the wording is the instrument design:
+*"disappointment was a much better gauge of product loyalty than satisfaction."*
+
+**THE THRESHOLD IS NOT RUNNABLE BELOW A REAL SAMPLE, AND SAYING SO IS THE HONEST ANSWER.** A
+percentage over four users is not a percentage. State the n you have. If it is too small, record
+`pmf: not-yet-measurable (n=<N>)` and **open the L5 anyway with the gate explicitly unmet** — an L5
+that knows it has no PMF evidence is a true record; a fabricated 40% is not, and manufacturing one to
+clear a gate is the theatre this framework refuses everywhere else.
+
+**His five follow-up questions are qualitative and work at ANY n**, so they are available immediately
+even when the threshold is not: *"What would you likely use as an alternative to [product] if it were
+no longer available?"*; *"What is the primary benefit that you have received?"*; *"Have you recommended
+[product] to anyone? (Please explain how you described it)"*; *"What type of person do you think would
+benefit most?"*; *"How can we improve [product] to better meet your needs?"* The third is a direct
+instrument for the positioning half of the 25-40% band.
+
+### Step 2 — open the L5
+
+Add to `.claude/diamonds/active.yml#active_diamonds`:
+
+```yaml
+- id: l5-<slug>
+  scale: L5
+  phase: discover
+  confidence: <0.0-1.0>
+  parent: <the L4 diamond this release came from>
+  spawned_by: launch-tier
+  spawn_trigger: "release categorised as a major launch on this project's own scale"
+  pmf:
+    instrument: ellis-must-have-survey
+    very_disappointed_pct: <N or null>
+    n: <sample size>
+    band: green | tweak-product-or-language | wrong-audience-or-underbuilt | not-yet-measurable
+    as_of: <YYYY-MM-DD>
+```
+
+Then run `/mycelium:define-done` on it before it goes live, like any other spawned diamond.
+
+**Write the L5's id back onto the release** as `spawned_l5`. That is not bookkeeping: it is the half
+that makes an unfired spawn visible. `check_scale_occupancy.py` reports every major launch with no
+`spawned_l5` as *"the categorisation was made and nothing acted on it"*, on every run. Leave it null
+and the report is correct and about you.
+
+**Do NOT spawn a second L5 for a later major launch while one is open.** L5 recurs on the market, not
+on the release; a second open L5 splits one market question across two records. Add the release to the
+open one.
+
 ## Per-Tier Activities
 
 ### Software (default)
@@ -114,7 +187,33 @@ Use biases ETHICALLY to help users understand value:
 - **Never**: Confirmshaming, hidden costs, forced continuity, misdirection
 
 ## Canvas Output
-Update `.claude/canvas/go-to-market.yml` with tier classification and launch plan.
+
+**Append this release to `.claude/canvas/go-to-market.yml#releases`** — one entry per release, which
+is what makes a Release Scale possible at all, since hers is calibrated on what you have actually
+shipped (*"Don't make this an academic exercise of a potential future release"*):
+
+```yaml
+releases:
+  - id: <version, tag or slug>
+    name: <what shipped>
+    date: <YYYY-MM-DD>
+    band_label: <the band, IN YOUR OWN WORDS — "levels, grades, names, numbers, or tiers">
+    is_major_launch: <true|false>   # is this the TOP band of your scale?
+    rationale: <why this band>
+    spawned_l5: <the L5 diamond id, once opened — or null>
+```
+
+**`band_label` is free text and `is_major_launch` is the only fixed bit.** The vocabulary is yours
+because Lauchengco says so; the boolean exists because a spawn trigger needs a shape it can read.
+Write `spawned_l5` back as soon as the L5 exists — `check_scale_occupancy.py` reads it, and a major
+launch with no L5 is reported every run as a categorisation nobody acted on.
+
+**BREAKING, v0.233.0: the old `launch_tier:` scalar is retired and now fails validation.** It was one
+project-wide integer capped at `1|2|3`, overwritten by every later release, read by nothing — so it
+could not say *which* release was a major launch, and it re-asserted the fixed tier table
+`docs/errata.md` records as not Lauchengco's. Move any existing value into a `releases[]` entry.
+
+Also update the launch plan as before.
 
 ## Ethical Engagement Design (Eyal -- Hook Model + Indistractable)
 

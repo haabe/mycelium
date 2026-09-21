@@ -231,6 +231,17 @@
               }
             }
           }
+        },
+        "pmf": {
+          "$ref": "#/$defs/pmf"
+        },
+        "spawned_by": {
+          "type": "string",
+          "description": "Which skill opened this diamond, when it was opened by a mechanism rather than by hand (v0.232.0). `launch-tier` for an L5 spawned by a major-launch categorisation."
+        },
+        "spawn_trigger": {
+          "type": "string",
+          "description": "The condition that fired the spawn, in words, so a later reader can tell a mechanical spawn from a judgement call."
         }
       },
       "required": [
@@ -239,6 +250,48 @@
         "phase",
         "confidence"
       ],
+      "additionalProperties": true
+    },
+    "pmf": {
+      "type": "object",
+      "description": "L5's entry condition, measured with Ellis's Must-Have Survey (v0.232.0). Cagan puts product/market fit as the condition L5 is not reachable before; Ellis supplies the only operational test in this corpus. Typed rather than left free-form because the failure this prevents is a band asserted without a sample behind it.",
+      "required": [
+        "band"
+      ],
+      "properties": {
+        "instrument": {
+          "type": "string",
+          "description": "Which test produced the band. `ellis-must-have-survey` is the one this framework ships; name another if you used one, so a later reader knows what the number means."
+        },
+        "very_disappointed_pct": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "Percent answering 'very disappointed'. NULL when not measured \u2014 null and 0 are different claims, and writing 0 for 'we did not ask' is the error this nullability exists to prevent.",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "n": {
+          "type": "integer",
+          "description": "Sample size. REQUIRED reading before believing any percentage here: a percentage over four users is not a percentage.",
+          "minimum": 0
+        },
+        "band": {
+          "type": "string",
+          "enum": [
+            "green",
+            "tweak-product-or-language",
+            "wrong-audience-or-underbuilt",
+            "not-yet-measurable"
+          ],
+          "description": "Ellis's three bands plus the honest fourth. green = >=40%, 'the green light to move full speed ahead'. tweak-product-or-language = 25-40%, and note his own wording puts LANGUAGE beside product. wrong-audience-or-underbuilt = <25%. not-yet-measurable = the sample is too small to state a percentage, which is a real answer and the expected one for a young project \u2014 an L5 that knows it has no PMF evidence is a true record."
+        },
+        "as_of": {
+          "type": "string",
+          "description": "YYYY-MM-DD the survey was run. A PMF reading with no date cannot go stale, and PMF is exactly the kind of number that does."
+        }
+      },
       "additionalProperties": true
     },
     "completed_diamond": {
@@ -268,7 +321,7 @@
               "properties": {
                 "signal_observed": {
                   "type": "string",
-                  "description": "What was actually OBSERVED, in the observer's words — not a restatement of the DoD's signal. If you can only restate the target, the signal was not observed."
+                  "description": "What was actually OBSERVED, in the observer's words \u2014 not a restatement of the DoD's signal. If you can only restate the target, the signal was not observed."
                 },
                 "verified_by": {
                   "type": "string",
@@ -386,11 +439,23 @@
           "type": "object",
           "description": "Step 5 of /mycelium:define-done (v0.227.0): someone who did not write the bar resolved invented result sets with it. `resolved` short of `cases` means a word in the bar failed.",
           "properties": {
-            "date": {"type": "string"},
-            "reader": {"type": "string"},
-            "cases": {"type": "integer", "minimum": 0},
-            "resolved": {"type": "integer", "minimum": 0},
-            "note": {"type": "string"}
+            "date": {
+              "type": "string"
+            },
+            "reader": {
+              "type": "string"
+            },
+            "cases": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "resolved": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "note": {
+              "type": "string"
+            }
           },
           "additionalProperties": true
         },

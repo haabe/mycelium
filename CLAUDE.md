@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.231.4 -- **A warning about one version destroyed the release of five others** (PATCH). `release_gaps.py` printed its withhold notice to stdout, which `auto-release.yml` redirects into the JSON payload it then parses — so two undocumented versions crashed the release step and the five documented ones shipped nothing. Notices now go to stderr.*
+*Version 0.233.0 -- **BREAKING. The ladder had no entry to its own top rung, and the field the trigger needed was write-only** (MINOR, breaking a canvas schema). Every scale had a spawn rule except L5, which had only an exit. `go-to-market.yml#launch_tier` is RETIRED and now fails validation: one project-wide integer capped at 1|2|3, overwritten by each release, read by nothing. `releases[]` replaces it — band names are the team's, one boolean carries the trigger — a major launch spawns an L5 gated on PMF, and `check_scale_occupancy.py` reports a major launch with no L5 as a categorisation nobody acted on.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

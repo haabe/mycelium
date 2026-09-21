@@ -142,16 +142,8 @@
       }
     },
     "launch_tier": {
-      "type": [
-        "integer",
-        "null"
-      ],
-      "enum": [
-        1,
-        2,
-        3,
-        null
-      ]
+      "type": "null",
+      "description": "REMOVED in v0.233.0 \u2014 BREAKING. Was `enum: [1,2,3,null]`: one scalar for the WHOLE PROJECT, overwritten by the next categorisation, capped at three bands, and read by nothing. Three things were wrong with it. (a) Lauchengco's instrument is a Release Scale BUILT FROM YOUR OWN PAST RELEASES, with the names the team chooses -- 'be it levels, grades, names, numbers, or tiers' -- and a worked example running to Level 5, which an enum capped at 3 cannot record. v0.229.0 corrected the SKILL that said otherwise and left this schema still asserting the instrument docs/errata.md says she does not publish. (b) A single project-wide value cannot answer 'which releases were major launches', so nothing could hang a trigger on it. (c) It had zero readers. Use `releases[]` below. A non-null value here now fails validation on purpose: silently accepting the old field would leave the L4->L5 spawn reading a number nobody maintains."
     },
     "win_loss_analysis": {
       "type": "array"
@@ -246,6 +238,51 @@
     },
     "notes": {
       "type": "array"
+    },
+    "releases": {
+      "type": "array",
+      "description": "The release history, and the substrate Lauchengco's Release Scale is built FROM (v0.233.0). Her scale's 'sole purpose is to create shared vocabulary and expectations', and it is calibrated on what this project has actually shipped -- 'Don't make this an academic exercise of a potential future release.' A project with no entries here HAS NO SCALE YET, which is a real state to record rather than a reason to borrow someone else's table.",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "band_label",
+          "is_major_launch"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Stable id for this release (a version, a tag, a slug)."
+          },
+          "name": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "description": "YYYY-MM-DD it shipped."
+          },
+          "band_label": {
+            "type": "string",
+            "description": "The band on THIS project's own scale, in THIS project's own words. Free-form on purpose: the author chooses the vocabulary ('be it levels, grades, names, numbers, or tiers'), and an enum here would re-impose the fixed table this field replaced."
+          },
+          "is_major_launch": {
+            "type": "boolean",
+            "description": "Is this the TOP band of this project's scale? The one machine-readable bit, and the L4->L5 spawn trigger: 'what does or doesn't get done flows from how releases are categorized'. Separate from band_label because a trigger needs a fixed shape while the vocabulary must stay the team's."
+          },
+          "rationale": {
+            "type": "string",
+            "description": "Why this band. The calibration is only reusable if the reasoning is legible to the next release."
+          },
+          "spawned_l5": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The id of the L5 diamond this launch spawned, or null. Read by check_scale_occupancy.py: a major launch with no L5 is intake with no outlet, which is how an unfired spawn becomes visible instead of silent."
+          }
+        },
+        "additionalProperties": true
+      }
     }
   },
   "additionalProperties": true
