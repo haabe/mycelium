@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.231.3 -- **A new script's tests ran it as a subprocess, so coverage saw 0%** (PATCH). Nine tests exercised `check_doctrine_due.py` through `subprocess.run`, which coverage.py cannot instrument, so the per-file floor failed in CI while every local gate passed. The tests now call `main()` in-process. The floor is a DECLARED-WAIVED local gate; it must be run by hand before a bump, and was not.*
+*Version 0.231.4 -- **A warning about one version destroyed the release of five others** (PATCH). `release_gaps.py` printed its withhold notice to stdout, which `auto-release.yml` redirects into the JSON payload it then parses — so two undocumented versions crashed the release step and the five documented ones shipped nothing. Notices now go to stderr.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

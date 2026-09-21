@@ -488,9 +488,20 @@ def main() -> int:
                 # the fix (write the changelog section) makes the next push release
                 # it. This is the opposite shape from "absence produced a success" --
                 # here presence is what is being prevented.
+                # STDERR, NOT STDOUT, AND THIS LINE IS LOAD-BEARING (2026-09-21).
+                # The caller does `release_gaps.py --introduced ... > introduced.json`
+                # and the next step json.load()s that file. Printing the warning to
+                # stdout put `::warning::...` INSIDE the JSON payload, so the load
+                # raised JSONDecodeError and the whole release step died. Measured
+                # cost on the 0.229.0-0.231.3 merge: two undocumented versions
+                # withheld correctly, and the FIVE documented ones shipped nothing,
+                # because the withhold notice corrupted the channel carrying them.
+                # A warning about one item must not be able to destroy the payload
+                # describing the others.
                 print(f"::warning::withholding v{it['version']}: no `## v{it['version']}` "
                       f"section in {args.changelog}. A version that appears only in an "
-                      f"intermediate commit is not a release. Document it to ship it.")
+                      f"intermediate commit is not a release. Document it to ship it.",
+                      file=sys.stderr)
         print(json.dumps(items))
         return 0
 
