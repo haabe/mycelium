@@ -39,5 +39,15 @@ if [ ! -f "$HELPER" ]; then
   [ -f "$HELPER" ] || exit 0
 fi
 
-printf '%s' "$INPUT" | python3 "$HELPER" "$@"
+# FIRE RECORD, added v0.236.0. Logged ONLY when the helper actually produced output.
+# Logging on invocation instead would record every matching tool call as a fire, and a
+# mechanism that "fires" on every call cannot be told from one that fires on none -- which
+# is the opposite of what check_retirement_candidates.py asks this record. Capture, then
+# decide, then emit unchanged. The path is a LITERAL because that regex reads the source.
+_myc_out=$(printf '%s' "$INPUT" | python3 "$HELPER" "$@")
+if [ -n "$_myc_out" ]; then
+  . "${CLAUDE_PLUGIN_ROOT:-$(dirname "${BASH_SOURCE[0]}")/..}/scripts/_hook_fire_log.sh" 2>/dev/null || true
+  mycelium_log_fire ".claude/state/ci-signal-fires.jsonl" "fired" 2>/dev/null || true
+  printf '%s\n' "$_myc_out"
+fi
 exit 0

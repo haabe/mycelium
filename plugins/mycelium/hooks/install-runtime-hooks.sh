@@ -109,4 +109,12 @@ echo "Wrote $TARGET"
 echo "  plugin root: $PLUGIN_ROOT"
 echo "  $count hook command(s), every referenced script verified present"
 echo
+# FIRE RECORD, added v0.236.0. An installer is not an event hook, and "did it fire in the
+# window" reads oddly for one -- but the question check_retirement_candidates.py actually
+# asks is whether a mechanism still earns its place, and for a provisioner that is exactly
+# a usage count. Logged after the manifest is written, so a run that died in validation
+# above leaves no row claiming success.
+. "${CLAUDE_PLUGIN_ROOT:-$(dirname "${BASH_SOURCE[0]}")/..}/scripts/_hook_fire_log.sh" 2>/dev/null || true
+mycelium_log_fire ".claude/state/install-runtime-hooks-fires.jsonl" "fired" 2>/dev/null || true
+
 echo "Re-run this after upgrading the plugin — the resolved path carries the version."
