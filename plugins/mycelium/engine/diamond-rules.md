@@ -180,7 +180,10 @@ The **Deliver→Complete** gate passes only when the diamond's DoD `signal` is m
 ### Diamond States
 - **active**: Currently being worked on or recently progressed
 - **blocked**: Waiting on dependency, evidence, or decision (document the blocker)
-- **archived**: Completed or deliberately paused. Canvas data preserved. Removed from active tracking.
+- **completed**: The Definition of Done was **met, with evidence** (`completed_at` + `dod_verdict`, written by `/diamond-progress` Step 9b into `completed_diamonds`). Canvas data preserved.
+- **archived**: Work that **STOPPED without meeting its bar** — deliberately paused, superseded, or no longer tracked. Canvas data preserved. Removed from active tracking.
+
+  *Until v0.230.0 this single state read "Completed or deliberately paused", putting two opposite outcomes in one bucket. With them merged, nothing downstream could tell work that MET its bar from work that merely stopped, so compliance with completion was unverifiable by construction — the count of finished cycles and the count of abandoned ones were the same number. `check_scale_occupancy.py` had been reading a `completed_diamonds` key that no schema defined and no skill wrote, so it counted zero completions at every scale no matter what shipped.*
 - **killed**: Abandoned with documented reason. Canvas data preserved with "killed" marker.
 
 ### Stale Diamond Detection
@@ -191,10 +194,11 @@ A diamond is stale when:
 
 ### Cleanup Process
 1. Run `/diamond-assess` to identify stale diamonds
-2. For each stale diamond: decide to continue, archive, or kill
-3. **Archive**: Move to `archived_diamonds` section in active.yml. Canvas data stays.
-4. **Kill**: Remove from active.yml. Log reason in decision-log.md. Canvas data stays with "killed" note.
-5. **Never delete canvas artifacts** -- they're learning, even from killed work
+2. For each stale diamond: decide to continue, complete, archive, or kill
+3. **Complete**: DoD met — move to `completed_diamonds` with `completed_at` and a `dod_verdict` carrying `signal_observed` and `verified_by`. The schema rejects a completion without them, so this cannot be asserted in passing.
+4. **Archive**: Stopped WITHOUT meeting the DoD — move to `archived_diamonds` in active.yml. Canvas data stays. Choosing archive over complete is a real answer; reaching for it because the verdict is awkward to write is the thing the split exists to expose.
+5. **Kill**: Remove from active.yml. Log reason in decision-log.md. Canvas data stays with "killed" note.
+6. **Never delete canvas artifacts** -- they're learning, even from killed work
 
 See `../orchestration/operations.md` for full maintenance schedules.
 

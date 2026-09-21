@@ -4,6 +4,56 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-19.
 
+## v0.231.0 - completion was not a state you could enter, and the bearing L0 steers by did not exist
+
+**2026-09-21.** The three items the working model listed as open. Each turned out to be a **field or
+state that was read, referenced or promised by something, and written by nothing.**
+
+- **`completed_diamonds` is now real, and completion must be evidenced.** `check_scale_occupancy.py`
+  has read that key since it shipped, counting toward "ever opened" at each scale. **No schema defined
+  it and no skill wrote it**, so every occupancy report counted **zero** completed cycles at every
+  scale no matter what had shipped — and its "intake and no outlet" finding could never be retired by
+  finishing work. **Fourth instance of the class**, after `progression_ruling` (2026-08-05),
+  `last_progressed` (v0.229.0) and the competitive gate.
+- **The root cause was a definition, not a missing writer.** `engine/diamond-rules.md` defined
+  `archived` as *"Completed or deliberately paused"* — **one bucket for two opposite outcomes**. With
+  those merged, nothing downstream could tell work that MET its bar from work that merely STOPPED, so
+  compliance with completion was unverifiable **by construction**: the count of finished cycles and
+  the count of abandoned ones were the same number. They are now separate states.
+- **A completion carries a verdict or it is rejected.** `completed_at` plus a `dod_verdict` with
+  `signal_observed` and `verified_by` are **required by the schema**, so `validate_canvas.py` refuses
+  an unevidenced completion instead of accepting it quietly. `signal_observed` may not restate the
+  DoD's own signal — if the only sentence available is the target repeated back, it was not observed,
+  and that is a `blocked` ruling. A `shortfall` field exists so completing with a stated shortfall is
+  available and honest, which removes the incentive to round the bar up.
+- **The Just Cause has a schema — the BEARING.** L0 holds three references: `why` is the ORIGIN
+  (backward, fixed), the North Star metric reads POSITION, and the bearing is forward and
+  deliberately not arrivable. Without it **drift has nothing to be drift from** — an origin and a
+  position give you a line, not a direction. `contradicting_decision` is the whole check: name a
+  decision that would contradict the bearing, or **it is not a bearing, it is a pleasantry** that
+  every future decision satisfies. Written by `/purpose-properties` Step 6, read by `/diamond-assess`
+  at L0. Nothing is computed from the three — they are references, not coordinates.
+- **Stated rather than quietly skipped**: Sinek's five criteria for a Just Cause (*The Infinite Game*)
+  are **not** encoded, because the book is not on disk here and they were not read at the primary
+  source. The one check that *is* encoded is taken verbatim from a transcript already in the corpus.
+  Encode the five when someone has read them; do not reconstruct them from memory.
+- **The doctrine retrospective has a firing condition.** *"Learn these continuously"* is not a
+  trigger. It is now **due when `doctrine.yml#last_reviewed` is absent or older than the newest
+  `completed_at` in `completed_diamonds`** — an event that already gets recorded, not a calendar
+  someone must keep. It became checkable only because completion got a writer in this same release.
+  New `doctrine.yml` schema holds two registers that **grow and never complete**, so **no coverage
+  ratio is computable against them** — which is what made the 2026-04 audit's ratios unscoreable, with
+  numbers that turned out not to be in the book at all. Climate predictions are **dated and scored**,
+  and `unscored` may never be reported as `held`.
+- **Caught by the repo's own gate, in this release's own work**: `check_field_wiring` flagged
+  `superseded_by` on the new doctrine schema as promise-shaped with no consumer. It is now wired —
+  `/wardley-map` must NOT apply a superseded entry — rather than declared human-read, because
+  applying retired doctrine would be a live defect.
+- **Also corrected**: `engine/canvas-guidance.yml`'s worked example still asserted Wardley's
+  *"64+ patterns"* and *"~40"* doctrine as fact after v0.229.0 established that neither number is in
+  the book. Its declined-decision example also predated v0.229.0 **reversing** the doctrine half, which
+  the re-open trigger existed to allow; both are recorded in place.
+
 ## v0.230.0 - a gate that fires on history had no legal move out of the state it fires in
 
 **2026-09-21.** Two defects, one cause: **mechanical consistency was only ever enforced at the tip**,

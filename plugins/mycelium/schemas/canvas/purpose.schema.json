@@ -10,7 +10,30 @@
     },
     "why": {
       "type": "string",
-      "description": "Purpose statement — why this exists (Sinek). May be absent or empty AT ENTRY, but not once `purpose_properties` exists; see dependentSchemas. The empty form `why: \"\"` comes from the legacy (pre-plugin, v0.1.x) canvas template; current /mycelium:setup writes no purpose.yml at all."
+      "description": "Purpose statement — why this exists (Sinek). The ORIGIN: fixed, singular, found by looking backward. May be absent or empty AT ENTRY, but not once `purpose_properties` exists; see dependentSchemas. The empty form `why: \"\"` comes from the legacy (pre-plugin, v0.1.x) canvas template; current /mycelium:setup writes no purpose.yml at all."
+    },
+    "just_cause": {
+      "type": "object",
+      "description": "The BEARING (v0.230.0). L0 holds three references, not one: `why` is the ORIGIN (backward, fixed, singular), the North Star metric reads POSITION, and this is the bearing — forward, and deliberately NOT arrivable. Without it, drift has nothing to be drift FROM: an origin and a position give you a line, not a direction. Optional; a project may run without one, and an absent bearing is honest where an invented one is not.",
+      "properties": {
+        "statement": {
+          "type": "string",
+          "description": "What you are heading toward. It is not a goal and is not meant to be reached — a bearing you can arrive at stops being one the day you do."
+        },
+        "contradicting_decision": {
+          "type": "string",
+          "description": "THE CHECK, and the reason this field is not decoration: name a concrete decision this project could plausibly take that would CONTRADICT the bearing. If nothing could contradict it, it is not a bearing, it is a pleasantry — the same shape as Sinek's test for a why, recorded verbatim from his 2026-09-08 A Bit of Optimism appearance: 'is it a statement of belief, could you argue against it, is it self-explanatory, is it one point'. Drift is then CHECKABLE rather than computable; the three references are not coordinates and no arithmetic runs on them."
+        },
+        "reviewed": {
+          "type": "string",
+          "description": "YYYY-MM-DD the bearing was last checked against actual decisions. A bearing nobody re-reads is a bearing nobody steers by."
+        },
+        "source_note": {
+          "type": "string",
+          "description": "NOT YET IMPLEMENTED, stated rather than silently skipped: Sinek's five criteria for a Just Cause (The Infinite Game) are not encoded here, because that book is not on disk in this project and the criteria were not verified at the primary source. What IS encoded is the structure the model requires and one check taken verbatim from a transcript in the corpus. Encode the five criteria when someone has read them; do not reconstruct them from memory."
+        }
+      },
+      "additionalProperties": true
     },
     "how": {
       "type": "array"

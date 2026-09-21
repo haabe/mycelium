@@ -234,6 +234,20 @@ Three states, three different things to say:
   definition that no longer holds.** Report it as invalidated work, not as a lint finding.
 - **Otherwise** — report the findings as part of the assessment and move on.
 
+**The bearing check, at L0 only (v0.230.0).** Read `purpose.yml#just_cause`.
+
+- **Present** — run its own check against what has actually happened since `reviewed`: does any
+  decision taken in that window resemble `contradicting_decision`? If one does, **that is the
+  finding**, and it is a finding about the project, not about the field. Say which decision, cite
+  it, and let the user rule. Restamp `reviewed` when they do. **Do not compute a drift score** —
+  origin, bearing and position are three references, not coordinates, and nothing arithmetical runs
+  on them.
+- **Absent** — say once, at L0 only, that the project has an origin and a position but no bearing,
+  so there is nothing for drift to be measured against, and that `/mycelium:purpose-properties`
+  Step 6 offers one. **Once.** An absent bearing is a legitimate state and a project may run
+  without one; repeating this every assessment is how a nudge gets muted, which the bullet above
+  already learned the hard way.
+
 **Do not derive properties from inside this skill.** Assessment reports state; changing the purpose
 layer is a deliberate act with its own entry point.
 

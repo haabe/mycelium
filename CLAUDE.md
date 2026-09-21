@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.230.0 -- **A gate that fires on history had no legal move out, and the drift it punishes was only ever checkable after the fact** (MINOR). Check 26's hard stop fired on committed debt alone, pre-empting the branch that exists to pass once the bump is written — so one unbumped commit wedged every later session. It now requires that no bump exist anywhere. And the derived-token check moves to a new pre-commit hook, because a pre-push gate only ever sees the tip and cannot protect history.*
+*Version 0.231.0 -- **Completion was not a state you could enter, and the bearing L0 steers by did not exist** (MINOR). `completed_diamonds` had been read since it shipped while no schema defined it and no skill wrote it, and `archived` meant both 'met its bar' and 'stopped'. Completion is now evidenced and separate, the Just Cause has a schema with a falsifiability check, and the doctrine retrospective fires on completion instead of on 'continuously'.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

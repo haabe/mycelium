@@ -184,6 +184,46 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
    - **Framework-self-development or observation transitions** (no OST solution leaf chosen — e.g., L2 strategy adjustment, cohort-log capture, validator-check ship): open the cycle record with `cycle_class: meta-dogfood` or `cycle_class: observation` as appropriate. `ice_score` may be zero with a `notes:` line stating why. These cycles are excluded from ICE-calibration aggregates by design.
    - Update diamond state in `.claude/diamonds/active.yml`.
    - **At Deliver→Complete: stamp `completed_at`** on the diamond (ISO-8601 — the true ship timestamp; no other diamond field records completion). This times the outcome→discovery loop: `/metrics-pull` Step 8b (DoD outcome-check) and the `session-start` overdue nudge both read `completed_at` to know when a shipped diamond's outcome is due for verification. Without it, the back half of the loop can't fire.
+   - **At Deliver→Complete: MOVE the diamond into `completed_diamonds` and write its `dod_verdict`** (v0.230.0). Not `archived_diamonds` — see 9b.
+
+9b. **Completing a diamond — the state that had a reader and no writer.**
+
+   Move the diamond out of `active_diamonds` into **`completed_diamonds`** in
+   `.claude/diamonds/active.yml`, carrying its fields and adding:
+
+   ```yaml
+   completed_at: <YYYY-MM-DD>
+   dod_verdict:
+     signal_observed: <what you actually SAW, in your own words>
+     verified_by: <metric snapshot | named person | test | link | self-assessed>
+     threshold_met: <the DoD threshold's real value, where it declared one>   # optional
+     shortfall: <where the outcome fell short but you completed anyway>        # optional
+   ```
+
+   **`signal_observed` may not restate the DoD's `signal`.** If the only sentence you can write
+   is the target back again, you did not observe it — that is the DoD un-met, and this is a
+   `blocked` ruling, not a completion. The schema requires `signal_observed` and `verified_by`,
+   so an unevidenced completion is rejected by `validate_canvas.py` rather than accepted quietly.
+
+   **`shortfall` exists so the bar does not have to be rounded up.** Completing with a stated
+   shortfall is honest and permitted; completing by quietly reinterpreting the DoD is the failure
+   this field removes the incentive for.
+
+   **WHY THIS IS A SEPARATE STATE FROM `archived`.** `engine/diamond-rules.md` defined archived as
+   *"Completed or deliberately paused"* — one bucket for two opposite outcomes. With those merged,
+   no reader can distinguish work that MET its bar from work that merely STOPPED, so **compliance
+   with completion was unverifiable by construction**: the count of finished cycles and the count
+   of abandoned ones were the same number. Archived now means stopped-without-meeting-the-bar;
+   completed means the bar was met and here is the evidence. Killed is unchanged.
+
+   **FOURTH INSTANCE OF THE READER-WITH-NO-WRITER CLASS, and the one that sat longest.**
+   `check_scale_occupancy.py` has read `completed_diamonds` since it shipped — it is in that
+   script's key list, counting toward "ever opened" at each scale. **No schema defined the key and
+   no skill wrote it**, so every occupancy report counted zero completed cycles at every scale
+   regardless of how much work had finished, and its "intake and no outlet" finding could never be
+   retired by finishing anything. See `progression_ruling` (fixed 2026-08-05), `last_progressed`
+   (fixed 2026-09-20, above) and the competitive gate in `docs/errata.md`.
+   **A gate may not read a field that nothing writes — and a state nothing can enter is not a state.**
    - **Render the updated journey map**: Follow `${CLAUDE_PLUGIN_ROOT}/engine/wayfinding.md` to show the user where they've moved to. This makes the transition visible — the user sees their position shift on the map.
    - Log transition in `.claude/harness/decision-log.md`. If threshold was adapted, include: "Threshold adapted from [base] to [effective] because project_type=[type]. Would increase with [action]."
    - Update `.claude/memory/product-journal.md`.

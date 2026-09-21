@@ -136,6 +136,22 @@ so it offered the two classes you select from and omitted the one you are told n
 He prefixes the order with *"The answer to this is, I don't know"* and calls it *"a rough order"* —
 so it is a starting sequence, not a ranking.
 
+**Then read this project's OWN doctrine** (v0.230.0). Wardley's list is the universal half; the
+register at `.claude/canvas/doctrine.yml#doctrine` is what *this* project has learned applies
+universally to its own work. Apply every entry — *"don't pick and choose"* applies to the local
+register exactly as it does to his — **except entries carrying `superseded_by`, which you must NOT
+apply.** Those were replaced as the project learned, and they are kept in place rather than deleted
+because the reason they were once believed is itself the learning. Read the successor instead, and
+if a superseded entry still looks right, that is a finding to raise, not a licence to apply it. **If the file is absent or its `doctrine` list is empty, say so
+and carry on**: a young project has not learned any yet, and an empty register is honest where an
+imported one is not. It is written by `/mycelium:retrospective`'s doctrine retrospective, which fires
+when a diamond completes.
+
+**Do not report doctrine coverage as a fraction.** The set is open — *"the more you play the game
+then the more forms of doctrine you'll discover"*, and his own list is *"not an exhaustive list"* —
+so there is no denominator. A ratio against one was the 2026-04 audit's unscoreable finding, and the
+numbers it used turned out not to be in the book at all (`docs/errata.md`).
+
 **DOCTRINE IS AN OPEN SET AND GROWS WITH PRACTICE.** *"the more you play the game then the more forms
 of doctrine you'll discover. It's important to learn these continuously, so **get used to using maps
 as a retrospective. Look for what has changed and always ask why?**"* His own list is explicitly
