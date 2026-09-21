@@ -4,6 +4,32 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-19.
 
+## v0.234.1 - a crashed test reported as a passing test
+
+**2026-09-21.** `run_test` in `tests/bash/_assert.sh` called each test function and **discarded its
+exit status**. A body that died partway — a typo'd assertion name (`command not found`, 127), an
+unset variable under `set -u`, a helper that exited — recorded nothing, and **every assertion after
+the death silently did not run.** The suite printed a green.
+
+- **Found by doing it.** Writing `assert_equals` where this harness provides `assert_eq` produced
+  `command not found` on stderr and **"7 passed, 0 failed"** on stdout, with one assertion never
+  executed. That is the same false-green class these tests exist to catch, living in the thing that
+  runs them — and it guarded 76 suites.
+- **A test that asserts nothing now fails too.** Zero assertions executed is an empty check, and an
+  empty check reporting green is worse than no check: it occupies the slot where a real one would go.
+- **Neither guard broke anything.** All 76 existing bash suites pass unchanged, so no test was
+  relying on the old behaviour — which is the result that makes this safe to ship rather than a
+  finding to file.
+- **The v0.234.0 hook logger arrives with the tests it shipped without.** `_hook_fire_log.sh` gets
+  five: it writes a readable row, it names the CALLING hook rather than itself (otherwise the
+  per-hook question the retirement check asks is unanswerable), it truncates the detail label, an
+  empty path is a no-op, and — the clause that matters — **an unwritable target still returns 0.**
+  A gate that started failing because a disk was full would be a far worse defect than a missing
+  row. `autonomous_evidence_guard._log_fire` gets the same three, including a `PROJECT_DIR` pointing
+  at a regular file so `os.makedirs` raises and the guard must still not propagate.
+- **All of that was hand-verified when it shipped and not pinned**, which is the gap this closes: a
+  claim verified once and never asserted is a claim that degrades silently.
+
 ## v0.234.0 - two conventions a check had learned and the prose had not
 
 **2026-09-21.** Both found by running the framework's own periodic skills against the dogfood repo,

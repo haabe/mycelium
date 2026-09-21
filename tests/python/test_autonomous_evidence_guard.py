@@ -336,3 +336,46 @@ def test_canvas_target_matches_by_real_path_anywhere(scripts_path, tmp_path):
     assert mod._canvas_target(hi.resolve("/elsewhere/.claude/canvas/x.yml", str(tmp_path)))
     assert mod._canvas_target(hi.resolve(".claude/diamonds/sub/a.yaml", str(tmp_path)))
     assert not mod._canvas_target(hi.resolve("docs/notes.md", str(tmp_path)))
+
+
+# ------------------------------------------------- the fire log must never change the verdict
+
+def test_log_fire_writes_a_row_a_consumer_can_read(scripts_path, tmp_path, monkeypatch):
+    """The guard is BLOCKING and wrote no record until v0.234.0, so how often it refused a
+    write was unmeasurable — `check_retirement_candidates.py` could answer neither of its two
+    questions for it."""
+    mod = _import(scripts_path)
+    monkeypatch.setenv("PROJECT_DIR", str(tmp_path))
+    mod._log_fire("blocked", "source_class,validated")
+    rows = (tmp_path / ".claude/state/autonomous-evidence-guard-fires.jsonl").read_text().strip()
+    import json
+    row = json.loads(rows)
+    assert row["outcome"] == "blocked"
+    assert row["hook"] == "autonomous-evidence-guard.sh"
+    assert row["detail"] == "source_class,validated"
+    assert row["ts"].endswith("Z")
+
+
+def test_log_fire_swallows_an_unwritable_target(scripts_path, tmp_path, monkeypatch):
+    """THE CLAUSE THAT MATTERS, and it was hand-verified and never asserted until now.
+
+    A guard that started DENYING WRITES because its own log could not be written would be a
+    far worse defect than a missing row. Here PROJECT_DIR points at a regular file, so
+    `os.makedirs` raises — and the function must still return without propagating.
+    """
+    mod = _import(scripts_path)
+    blocker = tmp_path / "not-a-dir"
+    blocker.write_text("x")
+    monkeypatch.setenv("PROJECT_DIR", str(blocker))
+    mod._log_fire("blocked", "anything")  # must not raise
+
+
+def test_log_fire_omits_an_empty_detail_rather_than_writing_a_blank(scripts_path, tmp_path, monkeypatch):
+    """A row carries a label or no label; an empty string is neither, and a consumer
+    counting labelled rows would count it."""
+    mod = _import(scripts_path)
+    monkeypatch.setenv("PROJECT_DIR", str(tmp_path))
+    mod._log_fire("blocked")
+    import json
+    row = json.loads((tmp_path / ".claude/state/autonomous-evidence-guard-fires.jsonl").read_text().strip())
+    assert "detail" not in row

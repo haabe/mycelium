@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.234.0 -- **Every blocking hook now keeps a record, and two conventions a check had learned catch up with the prose** (MINOR). Four hooks that can refuse a tool call or refuse to end a turn wrote nothing, so 40% of the hook surface sat outside the only instrument that asks whether a mechanism still earns its place. `scripts/_hook_fire_log.sh` is the shared writer -- ten bespoke loggers in a 25-hook system is the defect, not the fix.*
+*Version 0.234.1 -- **A crashed test reported as a passing test** (PATCH). `run_test` called each test function and discarded its exit status, so a body that died -- a typo'd assertion name, an unset variable, a helper that exited -- recorded nothing while every assertion after the death silently did not run. Found by writing `assert_equals` where the harness provides `assert_eq`: 7 passed, 0 failed, one assertion never executed. A test that asserts nothing now fails too. Plus the tests the v0.234.0 hook logger shipped without.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 
