@@ -63,10 +63,11 @@ For solo developers: apply perspectives sequentially as distinct evaluation pass
 | L2 | 5+ user interviews with triangulated findings; behavioral data | Fewer than 3 evidence sources; no triangulation |
 | L3 | Prototype tested with users; measurable feedback collected. Design hypotheses validated using Lean UX format (Gothelf). If multi-domain: bounded contexts identified (DDD/Evans). If significant architecture decisions: tradeoffs documented in ADRs (Nygard format: Context/Decision/Consequences). | Solution chosen without user validation; architecture choices made without documented rationale |
 | L4 | Acceptance criteria defined with measurable outcomes | Vague or missing acceptance criteria |
-| L5 (software) | Test cases written before or alongside implementation | No tests; untested code |
-| L5 (content) | Content reviewed against objectives; accessibility verified | Unreviewed content; missing captions/alt text |
-| L5 (ai_tool) | Eval cases passing; safety checks clean | No evaluation; untested prompts/models |
-| L5 (service) | Delivery step documented and repeatable | Undocumented delivery process |
+| L4 (software) | Test cases written before or alongside implementation | No tests; untested code |
+| L4 (content) | Content reviewed against objectives; accessibility verified | Unreviewed content; missing captions/alt text |
+| L4 (ai_tool) | Eval cases passing; safety checks clean | No evaluation; untested prompts/models |
+| L4 (service) | Delivery step documented and repeatable | Undocumented delivery process |
+| L5 | Release categorised against a scale built from this project's own past releases (Lauchengco); PMF read against a stated instrument, or `band: not-yet-measurable` with the reason; positioning stated; at least one market signal from outside the team | Launch size asserted without a scale; PMF claimed from enthusiasm or from usage the team generated; no signal from anyone who is not building it |
 
 **Evidence required**: Interview transcripts, analytics screenshots, research synthesis documents, test results.
 
@@ -101,7 +102,8 @@ Evidence sources in canvas provenance objects carry an optional `source_classes`
 | Define->Develop | L0-L2 | NUDGE | If zero `external_human` or `external_data` sources across all canvas provenance for this diamond: warn. "All evidence is desk-derived. Consider `/handoff` to plan an external conversation or `/user-interview` to conduct one." |
 | Develop->Deliver | L0, L2 | REVIEW | Blocks progression. Purpose (L0) is foundational -- shipping it without any external voice means the entire product is built on unvalidated assumptions. Opportunity (L2) without external validation is the core Goodhart trap. |
 | Develop->Deliver | L1 | NUDGE | Warn but don't block. Strategy can sometimes proceed on desk research (competitive analysis, Wardley mapping) if the project type warrants it. |
-| All other transitions | L3-L5 | -- | No source ratio check (delivery-level evidence is validation results, not user research) |
+| All other transitions | L3-L4 | -- | No source ratio check (delivery-level evidence is validation results, not user research) |
+| Any transition | L5 | REVIEW | Blocks progression. **L5 is Market, and market evidence is external by definition** -- a PMF reading, a positioning claim or a launch-size call sourced only from `internal_*` is the L2 Goodhart trap one scale further along, where it is most expensive to be wrong. The honest escape is not an internal source: it is `band: not-yet-measurable` with the reason, which clears this gate. (Until 0.235.0 L5 sat inside the L3-L5 exemption above, on the premise that it was the task scale. It is not -- see `engine/diamond-rules.md`.) |
 
 **Dogfood modifier**: When `dogfood: true` in `diamonds/active.yml`, the L0/L2 REVIEW gate accepts `internal_simulated` (mocked persona) as ONE of the required external sources -- but still requires at least one source classified as `external_human` or `external_data` before clearing the REVIEW. This means dogfood projects can use mocked personas to supplement real evidence, but cannot replace it entirely. The dogfood report's #1 finding was that the system under-pushes for external evidence; weakening this gate would make that problem worse.
 
@@ -196,7 +198,8 @@ All four risks must be assessed, and the assessment must demonstrate that **thre
 |-------|--------------|---------------|
 | L3 | STRIDE threat model completed; security architecture reviewed | No threat analysis |
 | L4 | OWASP Top 10:2025 addressed; input validation; auth/authz verified | Known vulnerability unaddressed |
-| L5 | Code-level security checks passing; no hardcoded secrets; dependencies scanned | Security scan findings ignored |
+| L4 | Code-level security checks passing; no hardcoded secrets; dependencies scanned | Security scan findings ignored |
+| L5 | Trust signals the market can verify: what the product does with user data stated publicly; incident/disclosure path named before launch, not after | Launch with no stated data handling; disclosure path improvised under an incident |
 
 **Evidence required**: STRIDE analysis, security review checklist, dependency scan results, SAST/DAST results.
 
@@ -276,7 +279,7 @@ Two quality layers for user-facing work:
 
 **Source**: Forsgren (Accelerate)
 
-**Applies to**: Deliver->Complete, L3-L5
+**Applies to**: Deliver->Complete, L3-L4
 
 **Product type routing** (v0.11.0): This gate measures delivery health using the metrics canvas appropriate for the product type. The principle is the same (are you delivering at a sustainable cadence with acceptable quality?) but the specific metrics differ.
 
@@ -600,7 +603,7 @@ Use this matrix to determine exactly which gates to evaluate for a given scale a
 | Corrections | R | R | R | R |
 | Regulatory | -- | R | R | -- |
 
-**Applicable gates**: Evidence, Cynefin, Bias, Security, BVSSH, Delivery Metrics, Corrections, Regulatory (8 gates)
+**Applicable gates**: Evidence, Cynefin, Bias, Security, BVSSH, Corrections, Regulatory (7 gates)
 
 **Trio guidance for L5**:
 - **Product**: Is the positioning aligned with validated user needs? Does the GTM motion match the buyer journey? (Strong)
@@ -616,4 +619,4 @@ Use this matrix to determine exactly which gates to evaluate for a given scale a
 | L2 | 9 | Evidence, Four Risks, JTBD, Cynefin, Bias, Privacy, BVSSH, Service Quality, Corrections |
 | L3 | 12 | All gates |
 | L4 | 11 | All except JTBD |
-| L5 | 8 | Evidence, Cynefin, Bias, Security, BVSSH, Delivery Metrics, Corrections, Regulatory |
+| L5 | 7 | Evidence, Cynefin, Bias, Security, BVSSH, Corrections, Regulatory |

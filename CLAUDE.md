@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.234.2 -- **A row correctly filed as completed failed validation on the field naming what it is** (PATCH). v0.231.0 created `completed_diamonds`, defined its shape and documented `completed` as a state in diamond-rules.md, while leaving it out of the `state` enum. Found by moving this project's first real completion into the list. Plus the absent-case branch the L5 PMF read shipped without.*
+*Version 0.235.0 -- **L5 was named Task in the gates and Market everywhere else, and the gates were wrong** (MINOR, behaviour-changing at L5). `engine/diamond-rules.md` says atomic tasks within delivery do not get their own diamond, so a per-scale gate set for "L5 Task" gated a unit that never becomes a diamond -- it refuted itself. Four framework surfaces carried the task reading; the trio table in the same file already said Market. L5 now gates on release categorisation, PMF, positioning and market signal, its source-ratio exemption is REVOKED, and the delivery-metrics gate moves to L4 where deploys happen.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 
