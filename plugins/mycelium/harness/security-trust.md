@@ -79,7 +79,7 @@ For solutions handling personal data:
 - Separation of duties: no single point of compromise.
 - Trust boundaries: explicitly define where trust transitions occur.
 
-## L4 - Feature Stage
+## L4 - Delivery Stage
 
 ### OWASP Secure Coding
 Apply for every feature implementation:
@@ -117,7 +117,15 @@ Apply for every feature implementation:
 - [ ] File upload validation (type, size, content)
 - [ ] Parameterized queries for all database access
 
-## L5 - Task Stage
+## L5 - Market Stage
+
+**RETITLED v0.235.0, and this section was MIXED rather than simply misfiled.** It read "L5 - Task
+Stage" and held two different things. The Transparency & Trust Signals below are genuinely market
+work — `trust-signals.yml` is documented as an L5 canvas in `docs/context-surface.md`, and every
+item is about what a person outside the project sees and believes. They stay. The **Code-Level
+Security Checks** that followed them are delivery work and are marked as such below: L4 already
+carries OWASP secure coding, and a market diamond gated on "no secrets in code" was one of the
+three consequences named when this taxonomy split was surfaced on 2026-09-19.
 
 ### Transparency & Trust Signals
 - Error messages are clear and helpful without leaking system details.
@@ -127,7 +135,10 @@ Apply for every feature implementation:
 - Privacy policy is understandable, not legalese.
 - Trust indicators (HTTPS, security badges) are honest and verifiable.
 
-### Code-Level Security Checks
+### Code-Level Security Checks — DELIVERY (L4), listed here for continuity
+
+*These are L4 checks. They are kept in this section rather than moved so no checklist item is lost in a retitle, and marked so a market diamond is not gated on them. The authoritative home is L4's OWASP Secure Coding above.*
+
 - [ ] No secrets in code or config files
 - [ ] No SQL injection vectors
 - [ ] No XSS vectors

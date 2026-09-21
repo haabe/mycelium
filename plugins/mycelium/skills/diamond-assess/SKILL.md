@@ -237,6 +237,17 @@ Three states, three different things to say:
 **The PMF read, at L5 only (v0.232.0).** Read the diamond's `pmf` block — it is L5's entry condition
 and nothing else consults it.
 
+- **ABSENT entirely** — say so once, and say which of two things it means, because they are opposite.
+  An L5 opened by `/launch-tier`'s spawn edge always carries one, so a missing block means either
+  **this diamond predates v0.232.0** (ordinary for any L5 opened by hand — report it, offer
+  `/mycelium:launch-tier`'s Step 1 to fill it, and move on) or **it was opened bypassing the spawn
+  edge**, which is worth one question: what categorised the release as a major launch? **Absent is
+  not `not-yet-measurable`.** The latter is a recorded judgement that the sample is too small; the
+  former is nobody having looked. Reporting them the same way is how an unasked question reads as an
+  answered one. *(Branch added v0.234.2: the bands below shipped without it, while the L0 bearing
+  check one section down carried its own absent-case from the start — the same rule written in one
+  place and not the adjacent one, which is the shape this file already documents twice.)*
+
 - **`band: not-yet-measurable`** — report it as the true state and say what would change it: a sample
   large enough for a percentage to mean anything. **Do not treat it as a failure** and do not suggest
   estimating the number; the band exists precisely so an L5 can run honestly without one.

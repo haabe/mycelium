@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.234.1 -- **A crashed test reported as a passing test** (PATCH). `run_test` called each test function and discarded its exit status, so a body that died -- a typo'd assertion name, an unset variable, a helper that exited -- recorded nothing while every assertion after the death silently did not run. Found by writing `assert_equals` where the harness provides `assert_eq`: 7 passed, 0 failed, one assertion never executed. A test that asserts nothing now fails too. Plus the tests the v0.234.0 hook logger shipped without.*
+*Version 0.235.0 -- **L5 was named Task in the gates and Market everywhere else, and the gates were wrong** (MINOR, behaviour-changing at L5). `engine/diamond-rules.md` says atomic tasks within delivery do not get their own diamond, so a per-scale gate set for "L5 Task" gated a unit that never becomes a diamond -- it refuted itself. Four framework surfaces carried the task reading; the trio table in the same file already said Market. L5 now gates on release categorisation, PMF, positioning and market signal, its source-ratio exemption is REVOKED, and the delivery-metrics gate moves to L4 where deploys happen.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

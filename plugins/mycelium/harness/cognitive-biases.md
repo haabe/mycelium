@@ -48,7 +48,7 @@ Review the relevant stage checklist before every research activity, decision poi
 | **Optimism bias** | Underestimating implementation difficulty | Conduct technical spikes. Ask engineers for worst-case estimates. |
 | **Bandwagon** | Choosing solutions because competitors or industry use them | Evaluate against your specific JTBD and context. |
 
-### L4 - Feature Stage
+### L4 - Delivery Stage
 
 | Bias | Risk | Mitigation |
 |------|------|------------|
@@ -57,15 +57,25 @@ Review the relevant stage checklist before every research activity, decision poi
 | **Dunning-Kruger** | Overconfidence with unfamiliar technologies | Timebox spikes. Seek help early. Admit uncertainty. |
 | **Anchoring** | First design approach dominates | Sketch 2-3 approaches before committing. |
 | **Status quo** | Using familiar patterns even when they don't fit | Evaluate fit for this specific context. Cynefin-classify the problem. |
+| **Framing effect** | The task or ticket description frames the implementation approach, and the first framing survives to the commit | Read the acceptance criteria rather than the title. Consider an alternative implementation before committing. *(Moved here from the former "L5 - Task Stage" in v0.235.0 — it is a delivery bias, and L4 is where delivery lives.)* |
 
-### L5 - Task Stage
+### L5 - Market Stage
+
+**RETITLED AND REWRITTEN v0.235.0.** This section was "L5 - Task Stage" and its four rows were
+implementation biases — planning fallacy on a 2-hour task, copying a pattern from StackOverflow,
+a task description framing the approach. Those belong to delivery and are kept, below, under L4.
+The scale they were filed at is Market (`engine/diamond-rules.md`), and **this framework's own
+launch skill calls L5 the highest-risk context for bias precisely because the framing pressure is
+explicit** — so the rows that were here were not merely misfiled, they were absent where they
+matter most.
 
 | Bias | Risk | Mitigation |
 |------|------|------------|
-| **Planning fallacy** | "This will take 10 minutes" for a 2-hour task | Track actual time. Compare to estimates. Calibrate. |
-| **Optimism bias** | Skipping tests or security checks because "it's a small change" | Follow the process regardless of perceived size. Small changes cause outages too. |
-| **Anchoring** | Copying a pattern from StackOverflow/AI without evaluating fit | Understand the code. Evaluate for this context. Test thoroughly. |
-| **Framing effect** | Task description frames the implementation approach | Read acceptance criteria. Consider alternative implementations. |
+| **Framing effect** | The launch narrative is written before the evidence, then evidence is read to fit it. `/launch-tier` names this scale as the one where framing pressure is explicit. | Write what each outcome would MEAN before the release goes out, not after. A reading fixed in advance cannot be renarrated. |
+| **Confirmation bias** | Reading early adoption signal as product/market fit because the launch has already happened | Use the pre-registered instrument. `pmf.band: not-yet-measurable` is a real answer; a percentage over a handful of users is not a percentage. |
+| **Survivorship bias** | Hearing only from people who stayed, and calling it retention | Ask who left and why. A cohort that flattens at 10% and one that flattens at 50% look identical if you only count the ones still there. |
+| **Optimism bias** | Treating a major-launch categorisation as a prediction of reception | The categorisation sets what work gets done (Lauchengco), not how it will land. Those are different claims. |
+| **Sunk cost** | Keeping positioning that the market has already answered, because the assets were expensive | Ellis's 25-40% band names the remedy as changing the product OR the language. The language is the cheaper half. |
 
 ## Foundation: Dual-Process Cognition (Kahneman; Haidt)
 
