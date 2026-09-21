@@ -4,6 +4,41 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-19.
 
+## v0.230.0 - a gate that fires on history had no legal move out of the state it fires in
+
+**2026-09-21.** Two defects, one cause: **mechanical consistency was only ever enforced at the tip**,
+and a commit is where the damage is done.
+
+- **Check 26's hard stop no longer wedges the repo.** Its first branch fired on `committed_count > 0`
+  — on **history alone** — which pre-empted the later branch whose entire purpose is to pass once the
+  bump is written in the working tree. The consequence is not a noisy gate, it is a **repo with no
+  legal move**: after any single commit that lands material files without bumping, every later session
+  is told *"Bump CLAUDE.md"* at a moment when CLAUDE.md is already bumped, while `gates.sh` prints DO
+  NOT COMMIT over the one action that settles it — because the settling act **is** a commit, which
+  moves `last_version_commit` to HEAD and zeroes the count. The branch now also requires that no bump
+  exist anywhere (`curr_version = head_version`), so **the canonical error is still caught** and a
+  pending bump is allowed to pay committed debt. A test asserts both halves, including that the guard
+  did not become a bypass.
+- **This is the same bug as the one fixed on 2026-08-20, arriving from the other side.** That fix
+  taught the *other* branch to ask "is there a bump in the working tree?"; this branch was never
+  asked. Its regression fixture (`pending_with_bump_staged`) **deliberately inserts a non-material
+  commit so `committed_count` stays 0** — built, in good faith, to isolate the branch under test, and
+  in doing so routing around the one now broken. That is why 27/27 green never caught it.
+- **New `git-pre-commit-example.sh`, and the reason is structural.** On 2026-09-20 a release commit set
+  `plugin.json` to `0.228.0` while CLAUDE.md's canonical `*Version` line stayed `0.227.3`. **Check 40
+  detects that state precisely** — run against that commit it exits 1 and names the file. It never ran,
+  because it runs on **push**, and later work repaired the working tree before any push. The push then
+  passed 27/27. **The gates only ever see the tip; they cannot protect history.** The new hook checks
+  one invariant — derived tokens match canonical — at the moment the state is created. It is inert
+  outside the framework repo, runs in under a second, and **distinguishes "the script failed to run"
+  from "tokens drifted"**, because `sync_derived.py` exits 1 for both and a crash reported as a finding
+  is a tool failure wearing a gate's clothes.
+
+**What this does not fix.** The hook validates the **working tree, not the index**, so a partial
+`git add` can still commit a drifted subset; Check 40 pre-push remains the backstop for that, and the
+hook's header says so rather than leaving it to be assumed. `--no-verify` bypasses it, as with any git
+hook.
+
 ## v0.229.0 - six skills were executing arithmetic their cited authors do not use, and one gate got easier to pass the longer it was ignored
 
 **2026-09-20.** Every Tier-1 source read at the primary source for the first time. **Six defects

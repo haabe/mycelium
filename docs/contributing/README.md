@@ -91,6 +91,21 @@ chmod +x .git/hooks/pre-push
 
 Emergency bypass: `git push --no-verify`. Document any use — the hook exists because shipping a duplicate-ID or schema-violation to `origin/main` blocks downstream consumers and leaves the broken commit publicly visible until a follow-up fix lands.
 
+### The pre-commit hook, and why a pre-push gate was not enough
+
+A second reference hook ships at `$CLAUDE_PLUGIN_ROOT/scripts/git-pre-commit-example.sh`. It checks one invariant — **derived tokens match their canonical source** — and it exists because of a failure a pre-push gate structurally cannot catch:
+
+```bash
+cp "$CLAUDE_PLUGIN_ROOT/scripts/git-pre-commit-example.sh" .git/hooks/pre-commit
+chmod +x .git/hooks/pre-commit
+```
+
+On 2026-09-20 a release commit set `plugin.json` to `0.228.0` while CLAUDE.md's canonical `*Version` line stayed at `0.227.3`. Check 40 (`sync_derived.py --check`) detects that state exactly — run against that commit it exits 1 and names the file. It never ran, because it runs on **push**, and the working tree was repaired by later work before any push happened. The push then passed 27/27.
+
+**The gates only ever see the tip.** The broken commit is permanent, nothing downstream can repair it, and Check 26 reads history — so it fired on that commit in every later session. The state a commit is made in is only checkable at commit time, which is where this hook is.
+
+It is deliberately narrow: no test suite, no linting, nothing that would tempt anyone to bypass it routinely. It runs in well under a second, is inert outside the framework repo, and distinguishes "the script failed to run" from "tokens drifted" rather than reporting a crash as a finding. Bypass with `git commit --no-verify`.
+
 ## Where to start
 
 Three concrete entry points:

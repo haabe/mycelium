@@ -78,6 +78,31 @@ build_and_run() {
                 printf '\nmore\n' >> plugins/mycelium/skills/foo/SKILL.md
                 sed -i.bak 's/0\.2\.0/0.3.0/' CLAUDE.md && rm -f CLAUDE.md.bak
                 ;;
+            committed_debt_with_bump_pending)
+                # THE WEDGED-REPO CASE, found in dogfood 2026-09-21 and uncovered by
+                # every scenario above. A release commit landed material files WITHOUT
+                # bumping the canonical Version line (real instance: 0.228.0 changed
+                # plugin.json and not CLAUDE.md). That debt is permanent -- it is in
+                # history -- so `committed_count` stays > 0 forever, and the first
+                # branch fired on it ALONE, pre-empting the pending-bump branch.
+                # Result: every later session is told to bump a file it has already
+                # bumped, while gates.sh prints DO NOT COMMIT over the only move that
+                # settles it. The distinguishing feature versus pending_with_bump_staged
+                # is that the intervening commit here is MATERIAL, so committed_count
+                # is non-zero -- that fixture inserts a NON-material commit precisely
+                # so the count stays 0, which is why it never reached this branch.
+                cp "$TEMPLATES_DIR/claude_md_initial.md" CLAUDE.md
+                git add CLAUDE.md
+                git commit --quiet -m "initial"
+                # Material commit with NO bump: this is the debt.
+                mkdir -p plugins/mycelium/skills/foo
+                cp "$TEMPLATES_DIR/material_change.md" plugins/mycelium/skills/foo/SKILL.md
+                git add -A
+                git commit --quiet -m "material change WITHOUT bumping (the debt)"
+                # The bump now sits in the working tree, uncommitted. The next commit
+                # carries it and settles the debt.
+                cp "$TEMPLATES_DIR/claude_md_bumped.md" CLAUDE.md
+                ;;
             *)
                 echo "unknown scenario: $scenario" >&2
                 exit 1
@@ -120,8 +145,31 @@ test_check_26_passes_when_bump_is_staged_in_the_working_tree() {
     assert_contains "$output" "bump staged in the working tree" "says why it passed"
 }
 
+test_check_26_settles_committed_debt_when_a_bump_is_pending() {
+    # REGRESSION, dogfood 2026-09-21. Committed material debt plus a pending bump
+    # used to hard-fail on the debt alone, which wedges the repo: the instruction
+    # is "bump CLAUDE.md", CLAUDE.md is already bumped, and the only thing that
+    # clears it is the commit gates.sh is forbidding. A pending bump settles the
+    # debt, because the commit carrying it moves last_version_commit to HEAD.
+    local output
+    output=$(build_and_run "committed_debt_with_bump_pending")
+    assert_not_contains "$output" "FAIL: Version-bump discipline" "does not wedge on committed debt when a bump is pending"
+    assert_contains "$output" "settles" "says the pending bump settles the committed debt"
+}
+
+test_check_26_still_hard_stops_when_no_bump_exists_anywhere() {
+    # THE GUARD MUST NOT BECOME A BYPASS. The fix above adds a second conjunct to
+    # the hard-stop branch, so this asserts the canonical error is still caught
+    # when there is no bump in HEAD and none in the working tree either.
+    local output
+    output=$(build_and_run "material_change_no_bump")
+    assert_contains "$output" "FAIL: Version-bump discipline" "committed debt with no bump anywhere still hard-stops"
+}
+
 echo "=== test_check_26: Check 26 (version-bump discipline) ==="
 run_test test_check_26_flags_material_change_without_bump
 run_test test_check_26_passes_head_bumped_no_pending
 run_test test_check_26_passes_when_bump_is_staged_in_the_working_tree
+run_test test_check_26_settles_committed_debt_when_a_bump_is_pending
+run_test test_check_26_still_hard_stops_when_no_bump_exists_anywhere
 report

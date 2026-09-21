@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.229.0 -- **Two scoring skills computed the wrong arithmetic, and a competitive gate read a field nothing wrote** (MINOR). Primary-source verification against Ellis, Ulwick, Snowden, Wardley and Rother found six executed-algorithm errors: ICE multiplied where Ellis averages, the opportunity score subtracted where Ulwick adds back the gap, Cynefin carried a liminal transition Snowden excludes, and Wardley's doctrine was absent. `docs/errata.md` records all six with the quotations that settle them. New `/friction-log` skill carries Ellis's Must-Have Survey follow-ups as an inbound channel.*
+*Version 0.230.0 -- **A gate that fires on history had no legal move out, and the drift it punishes was only ever checkable after the fact** (MINOR). Check 26's hard stop fired on committed debt alone, pre-empting the branch that exists to pass once the bump is written — so one unbumped commit wedged every later session. It now requires that no bump exist anywhere. And the derived-token check moves to a new pre-commit hook, because a pre-push gate only ever sees the tip and cannot protect history.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 
