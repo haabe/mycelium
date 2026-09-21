@@ -101,9 +101,11 @@
             "active",
             "blocked",
             "parked",
+            "completed",
             "archived",
             "killed"
-          ]
+          ],
+          "description": "Lifecycle state, per engine/diamond-rules.md. `completed` added v0.234.2 and its absence was a defect in v0.231.0: that release created the `completed_diamonds` list, defined the `completed_diamond` shape, and documented `completed` as a distinct state in diamond-rules.md -- while leaving this enum on the old five, so a row correctly filed as completed failed validation on the very field naming what it is. Found 2026-09-21 by moving the first real completion into the list. Third surface of one change: the list, the rules doc, and the enum."
         },
         "confidence": {
           "type": "number",

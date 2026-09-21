@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.234.1 -- **A crashed test reported as a passing test** (PATCH). `run_test` called each test function and discarded its exit status, so a body that died -- a typo'd assertion name, an unset variable, a helper that exited -- recorded nothing while every assertion after the death silently did not run. Found by writing `assert_equals` where the harness provides `assert_eq`: 7 passed, 0 failed, one assertion never executed. A test that asserts nothing now fails too. Plus the tests the v0.234.0 hook logger shipped without.*
+*Version 0.234.2 -- **A row correctly filed as completed failed validation on the field naming what it is** (PATCH). v0.231.0 created `completed_diamonds`, defined its shape and documented `completed` as a state in diamond-rules.md, while leaving it out of the `state` enum. Found by moving this project's first real completion into the list. Plus the absent-case branch the L5 PMF read shipped without.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

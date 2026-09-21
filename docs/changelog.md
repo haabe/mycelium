@@ -2,7 +2,46 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-09-19.
+**Last updated**: 2026-09-21.
+
+## v0.234.2 - a row correctly filed as completed failed validation on the field naming what it is
+
+**2026-09-21.** Two gaps in v0.231.0 and v0.232.0, both found by using them rather than by auditing.
+
+- **`completed` was missing from the `state` enum.** v0.231.0 created the `completed_diamonds` list,
+  defined the `completed_diamond` shape with its required verdict, and documented `completed` as a
+  distinct state in `diamond-rules.md` — and left this enum on the old five. So the first real
+  completion moved into the list **failed validation on `state`**, the field whose whole job is to
+  name what the row is. Third surface of one change, after the list and the rules doc.
+- **The L5 PMF read had no absent-case branch.** v0.232.0 gave `/diamond-assess` bullets for each
+  band and none for the block being missing — while the L0 bearing check one section down carried
+  its own absent-case from the start. **Absent is not `not-yet-measurable`**: the latter is a
+  recorded judgement that the sample is too small, the former is nobody having looked, and reporting
+  them alike is how an unasked question reads as an answered one.
+
+**A THIRD GAP IS NAMED HERE AND DELIBERATELY NOT FIXED — AND IT WAS ALREADY ON THE REGISTER.**
+`L5` means two things inside the framework. `diamond-rules.md`, `architecture.md`, `glossary.md`,
+`context-surface.md` and the README all say **L5 = Market**. `confidence-thresholds.yml` — the file
+the gating machinery reads — says **`L5: name: Task`**, threshold 0.6, human approval `not_required`
+at all four transitions on the rationale *"Tasks are atomic. Agent can progress autonomously"*, with
+`min_sources: 1`, the lowest floor in the framework at the market scale. Roughly 8 rows in
+`theory-gates.md` match that older model (*"no hardcoded secrets"*, *"test cases written"*) against 2
+that say Market, and the same taxonomy survives in `harness/security-trust.md` and
+`cognitive-biases.md`.
+
+**This was surfaced on 2026-09-19, not today**, as the dogfood candidate
+`l4-and-l5-carry-two-taxonomies-and-the-machine-read-one-is-the-stale-one`, which also recorded the
+sequence the fix requires: **resolve which L5 is real BEFORE wiring an entrance to it**, because
+*"adding a spawn rule alone would open Market diamonds onto a lint-gated, human-approval-free ladder
+with a one-source floor."*
+
+**v0.233.0 wired the entrance first.** The L4→L5 spawn edge shipped before the taxonomy was
+resolved, which is the order that candidate warned against, and its predicted consequence is now the
+live state: a major launch opens an L5 that the machine-read gate table governs as an atomic task.
+The `pmf` block added in the same release sits on the diamond and does not change what the gating
+files say. **Not repaired in this patch because it is a rename that stopped halfway in May across
+four files, and the half that governs behaviour is the stale half** — a correction at that surface
+deserves its own release and its own reading, not a tail-end edit.
 
 ## v0.234.1 - a crashed test reported as a passing test
 
