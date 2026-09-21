@@ -106,6 +106,12 @@ On 2026-09-20 a release commit set `plugin.json` to `0.228.0` while CLAUDE.md's 
 
 It is deliberately narrow: no test suite, no linting, nothing that would tempt anyone to bypass it routinely. It runs in well under a second, is inert outside the framework repo, and distinguishes "the script failed to run" from "tokens drifted" rather than reporting a crash as a finding. Bypass with `git commit --no-verify`.
 
+**It checks the index, not the working tree** — because a commit records the index, and the gap between the two is exactly where a partial `git add` lives. v0.230.0 shipped this hook reading the disk, with the limitation noted in its header; v0.231.1 closed it, because **documenting a hole is not closing it**. Both directions were wrong: stage a drifted file and then repair the working tree, and a disk-reading hook passes a drifted commit; edit a file without staging it, and the same hook blocks a commit that is perfectly clean. The second failure is the more corrosive one — a gate that cries wolf on work in progress is a gate people `--no-verify` by habit, which switches it off for the case it exists for.
+
+The mechanism is `git checkout-index --all --prefix=<tmp>/`, which materialises exactly what the commit will contain into a scratch directory and runs the checker there with `--root`. It never touches your worktree, index, or refs. The widely-copied alternative, `git stash --keep-index`, is **deliberately not used**: it mutates the working tree in order to perform a read, so an interrupted hook can leave uncommitted work in a stash the author does not know exists. A verification step must not be able to lose the thing it is verifying.
+
+During a merge or rebase with unresolved conflicts the hook steps aside and **says so** — an unmerged index cannot be materialised, and a skip that stays quiet gets cited later as a pass.
+
 ## Where to start
 
 Three concrete entry points:

@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.231.0 -- **Completion was not a state you could enter, and the bearing L0 steers by did not exist** (MINOR). `completed_diamonds` had been read since it shipped while no schema defined it and no skill wrote it, and `archived` meant both 'met its bar' and 'stopped'. Completion is now evidenced and separate, the Just Cause has a schema with a falsifiability check, and the doctrine retrospective fires on completion instead of on 'continuously'.*
+*Version 0.231.1 -- **The commit-time guard was reading the disk, and a commit records the index** (PATCH). Shipped in 0.230.0 with that limitation written in its own header, which closed the common case and left the named one open. A staged drift plus a repaired working tree slipped a bad commit through; an unstaged edit blocked a clean one. It now materialises the index read-only and checks that — never `git stash --keep-index`, which mutates the worktree to perform a read.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

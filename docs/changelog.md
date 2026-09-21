@@ -4,6 +4,34 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-19.
 
+## v0.231.1 - the commit-time guard was reading the disk, and a commit records the index
+
+**2026-09-21.** v0.230.0 shipped `git-pre-commit-example.sh` reading the **working tree**, with the
+limitation written into its own header. **Documenting a hole is not closing it**, and this one was
+reachable in one extra step from the defect the hook was built for.
+
+- **Both directions were wrong.** Stage a drifted `plugin.json`, then put the working tree back: the
+  commit carries the drift and a disk-reading hook sees a spotless tree and **passes**. Edit a file
+  without staging it: the commit is clean and the same hook **blocks anyway**. The second is the more
+  corrosive one — a gate that cries wolf on work in progress is a gate people `--no-verify` by habit,
+  which switches it off for the case it exists for.
+- **Proven before it was fixed.** Both scenarios were written as tests against the v0.230.0 hook and
+  both failed in the predicted direction — a drifted index passing, a clean index blocked — then
+  passed after the change. That order is the receipt; a test written after a fix only proves the fix
+  agrees with itself.
+- **The mechanism, and the rejected alternative.** `git checkout-index --all --prefix=<tmp>/`
+  materialises exactly what the commit will contain and the checker runs there via `--root`. It is
+  read-only with respect to the author's work: no worktree, index or ref is touched, and it costs
+  ~0.24s across 866 tracked files. The widely-copied `git stash --keep-index` is **deliberately not
+  used** — it MUTATES the working tree in order to perform a read, so an interrupted hook (Ctrl-C, a
+  crash, a checker that exits before the pop) can leave uncommitted work in a stash the author does
+  not know exists. **A verification step must not be able to lose the thing it is verifying.**
+- **The checker is resolved from the staged tree too**, so committed state is validated by committed
+  logic — the same principle as reading the index rather than the disk.
+- **A skip now announces itself.** On an unresolved merge the index cannot be materialised, so the
+  hook steps aside and says `SKIPPED (not passed)`. A quiet skip is the thing that gets cited later
+  as a pass.
+
 ## v0.231.0 - completion was not a state you could enter, and the bearing L0 steers by did not exist
 
 **2026-09-21.** The three items the working model listed as open. Each turned out to be a **field or

@@ -68,8 +68,85 @@ build_and_run() {
                 if [ "$scenario" = "missing_target" ]; then
                     # A declared target that is absent makes sync_derived raise, not
                     # report drift. The hook must not relabel that as a finding.
+                    # Removed BEFORE staging, so it is absent from the index too —
+                    # the hook reads the index, and a file deleted after `git add`
+                    # would still be in the commit.
                     rm -f docs/ai-system-card.md
                 fi
+                # The hook validates the INDEX, so these fixtures need one. Index and
+                # working tree agree here; the two scenarios below are the ones that
+                # pull them apart deliberately.
+                git init --quiet
+                git config user.email "fixture@test.local"
+                git config user.name "Fixture"
+                git add -A
+                ;;
+            staged_drift_clean_worktree|clean_index_dirty_worktree)
+                # THE INDEX CASES. A commit records the INDEX, not the working tree,
+                # so a hook that reads the disk is answering a question nobody asked.
+                # Both of these have a clean answer on one side and a dirty one on the
+                # other, and only the index side decides what the commit contains.
+                mkdir -p plugins/mycelium/scripts plugins/mycelium/.claude-plugin \
+                         plugins/mycelium/skills/alpha plugins/mycelium/skills/diamond-assess \
+                         .claude-plugin docs/skills docs/integrations
+                cp "$REPO_ROOT/plugins/mycelium/scripts/sync_derived.py" \
+                   plugins/mycelium/scripts/sync_derived.py
+                printf '# SKILL alpha\n' > plugins/mycelium/skills/alpha/SKILL.md
+                printf '# diamond-assess\n\nReads 2 skills.\n' \
+                    > plugins/mycelium/skills/diamond-assess/SKILL.md
+                printf '*Version 0.5.0 -- fixture\n\nShips 2 skills.\n' > CLAUDE.md
+                for f in README.md docs/README.md docs/skills/README.md \
+                         docs/skills/by-category.md docs/context-surface.md \
+                         docs/architecture.md docs/integrations/opencode.md \
+                         docs/integrations/codex.md docs/integrations/cursor.md; do
+                    printf 'Ships 2 skills.\n' > "$f"
+                done
+                printf '**Version:** 0.5.0\n\nShips 2 skills.\n' > docs/ai-system-card.md
+                printf '{\n  "description": "2 skills"\n}\n' > .claude-plugin/marketplace.json
+                printf '{\n  "version": "0.5.0",\n  "description": "2 skills"\n}\n' \
+                    > plugins/mycelium/.claude-plugin/plugin.json
+                git init --quiet
+                git config user.email "fixture@test.local"
+                git config user.name "Fixture"
+                git add -A
+                git commit --quiet -m "in sync"
+                if [ "$scenario" = "staged_drift_clean_worktree" ]; then
+                    # THE HOLE, EXACTLY. Stage a drifted plugin.json, then put the
+                    # working tree back. The commit WILL contain 0.6.0 against a
+                    # canonical 0.5.0; the disk says everything is fine.
+                    printf '{\n  "version": "0.6.0",\n  "description": "2 skills"\n}\n' \
+                        > plugins/mycelium/.claude-plugin/plugin.json
+                    git add plugins/mycelium/.claude-plugin/plugin.json
+                    printf '{\n  "version": "0.5.0",\n  "description": "2 skills"\n}\n' \
+                        > plugins/mycelium/.claude-plugin/plugin.json
+                else
+                    # THE MIRROR: the commit is clean, the disk is mid-edit. Blocking
+                    # here is a FALSE POSITIVE, and a hook that cries wolf on work in
+                    # progress is a hook people disable with --no-verify by habit.
+                    printf '{\n  "version": "0.7.0",\n  "description": "2 skills"\n}\n' \
+                        > plugins/mycelium/.claude-plugin/plugin.json
+                fi
+                ;;
+            unmerged_index)
+                # A CONFLICTED INDEX CANNOT BE MATERIALISED — `git checkout-index`
+                # fails on unmerged paths. The hook must step aside and SAY it
+                # skipped, not report the tooling limit as a clean pass and not
+                # report it as drift.
+                mkdir -p plugins/mycelium/skills/alpha
+                printf '# SKILL alpha\n' > plugins/mycelium/skills/alpha/SKILL.md
+                printf '*Version 0.5.0 -- base\n' > CLAUDE.md
+                git init --quiet
+                git config user.email "fixture@test.local"
+                git config user.name "Fixture"
+                git add -A
+                git commit --quiet -m "base"
+                git checkout --quiet -b other
+                printf '*Version 0.6.0 -- other\n' > CLAUDE.md
+                git commit --quiet -am "other"
+                git checkout --quiet -
+                printf '*Version 0.7.0 -- main\n' > CLAUDE.md
+                git commit --quiet -am "main"
+                git merge other --quiet >/dev/null 2>&1 || true
                 ;;
             *)
                 echo "unknown scenario: $scenario" >&2
@@ -123,9 +200,44 @@ test_pre_commit_does_not_relabel_a_crash_as_drift() {
     assert_not_contains "$output" "DERIVED TOKENS DRIFT FROM CANONICAL" "does not claim drift"
 }
 
+test_pre_commit_reads_the_index_not_the_working_tree() {
+    # THE HOLE THIS SUITE SHIPPED WITH (v0.230.0), closed in v0.231.1. A commit
+    # records the INDEX. Reading the disk answers a different question, and the gap
+    # between the two is exactly where a partial `git add` lives. Here the staged
+    # plugin.json is 0.6.0 against a canonical 0.5.0 — the commit is drifted — while
+    # the working tree has been put back to 0.5.0 and looks spotless.
+    local output
+    output=$(build_and_run "staged_drift_clean_worktree")
+    assert_contains "$output" "rc=1" "blocks a commit whose INDEX is drifted"
+    assert_contains "$output" "DRIFT FROM CANONICAL" "names the failure"
+}
+
+test_pre_commit_does_not_block_on_unstaged_work_in_progress() {
+    # THE MIRROR, and it matters as much. The index is clean, so the commit is
+    # clean; the disk is mid-edit. A hook that blocks here is crying wolf on work in
+    # progress, and a hook that cries wolf gets --no-verify'd by habit — which
+    # disables it for the case it was built for.
+    local output
+    output=$(build_and_run "clean_index_dirty_worktree")
+    assert_contains "$output" "rc=0" "lets a clean commit through despite a dirty worktree"
+    assert_not_contains "$output" "DRIFT FROM CANONICAL" "does not report unstaged edits as drift"
+}
+
+test_pre_commit_steps_aside_on_a_conflicted_index() {
+    # A skip must ANNOUNCE itself. The failure mode being prevented is a hook that
+    # hits a state it cannot evaluate, exits 0, and is later cited as having passed.
+    local output
+    output=$(build_and_run "unmerged_index")
+    assert_contains "$output" "rc=0" "does not block a conflict resolution"
+    assert_contains "$output" "SKIPPED (not passed)" "says it skipped rather than implying a pass"
+}
+
 echo "=== test_git_pre_commit_hook: commit-time derived-token guard ==="
 run_test test_pre_commit_blocks_derived_version_drift
 run_test test_pre_commit_passes_when_derived_tokens_are_in_sync
 run_test test_pre_commit_is_inert_in_a_consumer_project
 run_test test_pre_commit_does_not_relabel_a_crash_as_drift
+run_test test_pre_commit_reads_the_index_not_the_working_tree
+run_test test_pre_commit_does_not_block_on_unstaged_work_in_progress
+run_test test_pre_commit_steps_aside_on_a_conflicted_index
 report
