@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.236.0 -- **The ten hooks that could not be measured are now six fewer, and the record says "it warned", not "it ran"** (MINOR). v0.234.0 gave the BLOCKING hooks a shared fire-logger and left the advisory ones writing nothing. The six remaining now log -- but only on the path where they actually produced output, because a row written at entry would say the mechanism fires on every matching tool call, which is the opposite of what the retirement check asks.*
+*Version 0.237.0 -- **The L5 confidence bar was the one instrument still saying the scale was low-stakes, and the ladder it sat on was misread** (MINOR, behaviour-changing at L5). 0.6 -> 0.8, derived from the file's own Gilad anchor rather than guessed. The descent was never about atomicity; it tracks consequence, so the bar rises again at the only scale that reaches people outside the team. Plus the two holes found while deriving it: a stale anti-gaming list that never learned about the L5 REVIEW, and a project_type override that let a solo project make a launch self-approvable.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

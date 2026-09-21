@@ -154,14 +154,34 @@ scales:
     # delivery do NOT need their own diamond". A Task never becomes a diamond, so a per-scale
     # DIAMOND gate named Task was gating a unit that cannot exist at this scale. Task granularity
     # lives inside L4's Deliver phase and in nested sub-L4 diamonds, not on the ladder.
-    confidence_threshold: 0.6
-    # NOT YET DERIVED FOR MARKET — THE ONE NUMBER HERE THAT IS STILL A JUDGEMENT.
-    # 0.6 is inherited verbatim from the Task row, where a descending ladder
-    # (L0 0.9 -> L5 0.6) tracked increasing atomicity. Market is not more atomic than Delivery, so
-    # the rationale does not carry over. It is left unchanged rather than guessed because a
-    # threshold change alters gate behaviour at the top of the ladder, and because L5 deliberately
-    # permits `pmf.band: not-yet-measurable` — a high bar would block an honest early L5. Needs a
-    # founder ruling; flagged rather than silently picked.
+    confidence_threshold: 0.8
+    # DERIVED 2026-09-21 (founder ruling: "apply the best practices for its purpose and set the
+    # value to the correct value"). Was 0.6, inherited verbatim from the Task row.
+    #
+    # THE 0.235.0 COMMENT HERE WAS WRONG ABOUT ITS OWN LADDER and is corrected rather than edited
+    # away. It claimed the descent tracked "increasing atomicity". Nothing in this file says that.
+    # What the file DOES say is the L0 note: "Purpose-level decisions are foundational. Highest bar
+    # for evidence and approval." The ladder tracks CONSEQUENCE — how far the blast radius reaches
+    # and how hard the call is to take back — not how small the unit is.
+    #
+    # WHY 0.8, AND WHY THE LADDER IS NO LONGER MONOTONE. On consequence, L5 is the only scale whose
+    # output reaches people outside the team, and a launch, a positioning and a market claim cannot
+    # be taken back the way a deploy can be rolled back. So the bar rises again at the bottom of the
+    # ladder: 0.9, 0.85, 0.8, 0.75, 0.7, 0.8. The dip-then-rise is the finding, not an inconsistency
+    # — a monotone descent was only ever an artifact of reading the ladder as atomicity.
+    # 0.8 is also the file header's own Gilad anchor for A/B-test-grade evidence (8/10). Reaching
+    # the market should require experiment-grade confidence, not the 0.5 "market data" anchor.
+    #
+    # THE not-yet-measurable OBJECTION, ANSWERED. The 0.235.0 comment argued a high bar would block
+    # an honest early L5. It would not: `confidence` and `pmf.band` are different axes. "band:
+    # not-yet-measurable, n=3, as_of 2026-09-21" is a well-evidenced TRUE statement about the state
+    # of the evidence, and can be held at high confidence. The threshold asks how well-evidenced
+    # your claim is, not whether product-market fit is proven. An early L5 clears this by being
+    # honest and sourced, and fails it by asserting more than it can show — which is the intent.
+    #
+    # CONSISTENT WITH THE REST OF 0.235.0, which raised human_approval to `required` on the two
+    # outward-facing transitions and min_sources 1 -> 3. Three instruments now say the same thing
+    # about this scale; a 0.6 threshold was the one that still said the opposite.
     required_evidence:
       # Market evidence at the market scale. The previous list was test_results / lint_clean /
       # security_scan_clean — delivery checks, which L4 already requires.
@@ -342,6 +362,15 @@ project_type_adaptations:
     # levels against production thresholds (remove dogfood modifier) before making ship decisions.
     transferability_warning: "Confidence levels achieved in dogfood mode reflect reduced thresholds. If this project transitions from dogfood to production, all diamond confidence levels must be re-evaluated against production thresholds (without the dogfood modifier). A diamond that passes at 0.612 in dogfood mode would need 0.9 in production."
 
+# L5 HUMAN-APPROVAL FLOOR (added 0.237.0). `human_approval_override` lets a project_type relax
+# approval to `optional` on every transition. For solo_hobby that re-opened, for the commonest
+# consumer shape, the exact hole 0.235.0 closed: AN AGENT AUTONOMOUSLY DECLARING A LAUNCH COMPLETE.
+# A solo hobbyist launching to the public still reaches the public; blast radius is a property of
+# the audience, not of the team's size. So L5 `develop_to_deliver` and `deliver_to_complete` are
+# NO_REDUCTION: an override may not lower them below `required`. This is the same principle as
+# external_evidence_min below — you may lower HOW MUCH, never WHO IS ACCOUNTABLE at the boundary
+# where the work reaches people who did not build it.
+#
 # Anti-gaming rule: external_evidence_min: NO_REDUCTION means that the
 # external evidence ratio gate (theory-gates.md Evidence Gate) is never
 # lowered by project_type adaptations. You can lower HOW MUCH evidence
@@ -349,6 +378,9 @@ project_type_adaptations:
 #
 # What the Evidence Gate actually enforces (theory-gates.md):
 # - At L0/L2 Develop->Deliver: REVIEW if zero external_human sources (blocks progression)
+# - At L5 ANY transition: REVIEW if the market claim rests only on `internal_*` sources
+#   (added 0.235.0; this list did not learn it until 0.237.0 — the same
+#   fix-one-surface-leave-another shape that release was itself correcting, in the file it edited)
 # - At L0-L2 Define->Develop: NUDGE if zero external_human sources (warns only)
 # - Dogfood projects: mocked personas (internal_simulated) supplement but don't replace
 #   external_human -- still need at least one real conversation for REVIEW gates.
