@@ -38,7 +38,7 @@ INPUT=$(cat)
 [ -n "$INPUT" ] || exit 0
 
 python3 - "$INPUT" <<'PY'
-import json, sys, re
+import json, os, sys, re
 
 try:
     d = json.loads(sys.argv[1])
@@ -119,6 +119,20 @@ reason = (
     "'Next: <one action>' (a skill to run, a question to answer, or 'Next: nothing until <event>'). "
     "One line, then stop." % ran_skill
 )
+# One line per block to .claude/state/next-action-check-fires.jsonl (v0.234.0). A Stop hook
+# that can refuse to end a turn and keeps no record cannot be measured, so it can never be
+# retired and never defended. Records the skill that triggered it, never the turn text.
+try:
+    import datetime
+    _d = os.path.join(os.environ.get("PROJECT_DIR")
+                      or os.environ.get("CLAUDE_PROJECT_DIR") or ".", ".claude/state")
+    os.makedirs(_d, exist_ok=True)
+    _ts = datetime.datetime.now(datetime.UTC).isoformat().replace("+00:00", "Z")
+    with open(os.path.join(_d, "next-action-check-fires.jsonl"), "a", encoding="utf-8") as _fh:
+        _fh.write(json.dumps({"ts": _ts, "hook": "next-action-check.sh",
+                              "outcome": "blocked", "detail": ran_skill}) + "\n")
+except OSError:
+    pass
 print(json.dumps({"decision": "block", "reason": reason}))
 PY
 exit 0

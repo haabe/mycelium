@@ -88,7 +88,30 @@ assert_stdout_json_or_text() {
 run_test() {
     _ASSERT_CURRENT="$1"
     echo "  RUN: $1"
+    local _before_f="$_ASSERT_FAILED" _before_p="$_ASSERT_PASSED"
     "$1"
+    local _rc=$?
+    # A TEST BODY THAT DIES MUST NOT REPORT GREEN (v0.234.1).
+    # `run_test` used to call the function and discard its status, so a body that
+    # exited early -- a typo'd assertion name (`command not found`, 127), an unset
+    # variable under `set -u`, a helper that exited -- recorded nothing, and every
+    # assertion after the death silently did not run. Found 2026-09-21 by writing
+    # `assert_equals` where this harness provides `assert_eq`: the suite printed
+    # "7 passed, 0 failed" with one assertion never executed. That is the same
+    # false-green class these tests exist to catch, living in the thing that runs them.
+    if [ "$_rc" -ne 0 ] && [ "$_ASSERT_FAILED" -eq "$_before_f" ]; then
+        _ASSERT_FAILED=$((_ASSERT_FAILED + 1))
+        printf '    \xe2\x9c\x97 %s: TEST BODY EXITED %s WITHOUT AN ASSERTION FAILING\n' "$1" "$_rc"
+        printf '        Assertions after that point did not run. A crashed test is not a passing test.\n'
+    fi
+    # A TEST THAT ASSERTS NOTHING IS AN EMPTY CHECK, and an empty check that reports
+    # green is worse than no check: it occupies the slot where a real one would go.
+    if [ "$_rc" -eq 0 ] \
+       && [ "$_ASSERT_FAILED" -eq "$_before_f" ] && [ "$_ASSERT_PASSED" -eq "$_before_p" ]; then
+        _ASSERT_FAILED=$((_ASSERT_FAILED + 1))
+        printf '    \xe2\x9c\x97 %s: RAN AND ASSERTED NOTHING\n' "$1"
+        printf '        Zero assertions executed. Either assert something or delete the test.\n'
+    fi
 }
 
 report() {

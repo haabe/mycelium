@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.233.0 -- **BREAKING. The ladder had no entry to its own top rung, and the field the trigger needed was write-only** (MINOR, breaking a canvas schema). Every scale had a spawn rule except L5, which had only an exit. `go-to-market.yml#launch_tier` is RETIRED and now fails validation: one project-wide integer capped at 1|2|3, overwritten by each release, read by nothing. `releases[]` replaces it — band names are the team's, one boolean carries the trigger — a major launch spawns an L5 gated on PMF, and `check_scale_occupancy.py` reports a major launch with no L5 as a categorisation nobody acted on.*
+*Version 0.234.1 -- **A crashed test reported as a passing test** (PATCH). `run_test` called each test function and discarded its exit status, so a body that died -- a typo'd assertion name, an unset variable, a helper that exited -- recorded nothing while every assertion after the death silently did not run. Found by writing `assert_equals` where the harness provides `assert_eq`: 7 passed, 0 failed, one assertion never executed. A test that asserts nothing now fails too. Plus the tests the v0.234.0 hook logger shipped without.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

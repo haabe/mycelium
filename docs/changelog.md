@@ -4,6 +4,91 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-19.
 
+## v0.234.1 - a crashed test reported as a passing test
+
+**2026-09-21.** `run_test` in `tests/bash/_assert.sh` called each test function and **discarded its
+exit status**. A body that died partway — a typo'd assertion name (`command not found`, 127), an
+unset variable under `set -u`, a helper that exited — recorded nothing, and **every assertion after
+the death silently did not run.** The suite printed a green.
+
+- **Found by doing it.** Writing `assert_equals` where this harness provides `assert_eq` produced
+  `command not found` on stderr and **"7 passed, 0 failed"** on stdout, with one assertion never
+  executed. That is the same false-green class these tests exist to catch, living in the thing that
+  runs them — and it guarded 76 suites.
+- **A test that asserts nothing now fails too.** Zero assertions executed is an empty check, and an
+  empty check reporting green is worse than no check: it occupies the slot where a real one would go.
+- **Neither guard broke anything.** All 76 existing bash suites pass unchanged, so no test was
+  relying on the old behaviour — which is the result that makes this safe to ship rather than a
+  finding to file.
+- **The v0.234.0 hook logger arrives with the tests it shipped without.** `_hook_fire_log.sh` gets
+  five: it writes a readable row, it names the CALLING hook rather than itself (otherwise the
+  per-hook question the retirement check asks is unanswerable), it truncates the detail label, an
+  empty path is a no-op, and — the clause that matters — **an unwritable target still returns 0.**
+  A gate that started failing because a disk was full would be a far worse defect than a missing
+  row. `autonomous_evidence_guard._log_fire` gets the same three, including a `PROJECT_DIR` pointing
+  at a regular file so `os.makedirs` raises and the guard must still not propagate.
+- **All of that was hand-verified when it shipped and not pinned**, which is the gap this closes: a
+  claim verified once and never asserted is a claim that degrades silently.
+
+## v0.234.0 - two conventions a check had learned and the prose had not
+
+**2026-09-21.** Both found by running the framework's own periodic skills against the dogfood repo,
+and both are the same shape: **a mechanical check was repaired and the words it was derived from
+were left alone**, so every reader who is not that check still gets the old answer.
+
+- **`/canvas-health` step 3 now exempts append-only logs from `_meta` staleness.** Step 9b already
+  exempts them from its length budget — for such a file the line count IS the value, and
+  pages-as-shape is a category error. **The identical reasoning applies to a validation DATE on a
+  file with nothing to validate**, and step 3 never got the rule. A dogfood `archived-solutions.yml`
+  — a registry of discarded leaves whose own `_meta` read "no quality bar to validate against" — was
+  flagged stale on every pass. Its author had written the exemption in prose **and appended "flagged
+  as missing `_meta` in recurring canvas-health passes" to the marker**, and it went on being
+  flagged. A finding the author has pre-emptively annotated as noise is a check being routed around,
+  which is the condition that same step warns trains a reader to skip it.
+- **`action_flags.timeout_handling` now says which dates it governs.** The escalation clause applies
+  only to a date the hold WAITS FOR — `pending`, `by`, `until`, `after`, `expires`. A bare date
+  elsewhere is provenance: when the hold was written, re-gated, or last re-checked. **A
+  condition-gated hold ("≥1 theory-fluent tester signal") has no awaited date and is never overdue**;
+  its question is whether the signal arrived, which no date answers.
+- **Two independent readers made the identical misreading, which is why this is prose and not a
+  second check.** `/canvas-health` step 9c flagged four holds on 2026-08-05 and produced **zero
+  genuine findings** — every matched date a re-gate or re-check stamp, one entry carrying its own
+  "GATE RE-CHECKED 2026-07-03 ... Hold unchanged", a gate being tended and reported as rotting. That
+  check was repaired in v0.90.0. **On 2026-09-21 an agent reading the convention cold, with no
+  repository history, reached the same wrong conclusion from an 80-day-old re-check date.** The check
+  is one consumer of this convention; the others are agents routed here by AGENTS.md, and they read
+  these words instead.
+
+### Every blocking hook now keeps a record, and the writing is shared
+
+**10 of 25 hooks wrote no record**, so `check_retirement_candidates.py` could answer neither of its
+two questions — did it fire, does anything read it — for **40% of the hook surface**. Four of the ten
+were BLOCKING hooks: mechanisms that can refuse a tool call or refuse to end a turn, with no
+measurement of how often they do. The framework only grows; at 0.180.4 it carried 61 skills and 23
+gates with none ever retired. **A hook that cannot be measured can never be retired and can never be
+defended.**
+
+- **`scripts/_hook_fire_log.sh` is the shared writer**, and that was a correction to the first plan.
+  Ten bespoke loggers in a 25-hook system is the defect, not the fix — it is ten chances to get the
+  atomicity, the failure mode or the privacy rule subtly different, in a codebase that already shares
+  `_hook_input.sh`, `_hook_input_read.sh` and `_corrections_lib.py` for exactly this reason.
+- **The call site passes the path, and that is deliberate.** `check_retirement_candidates.py` finds a
+  hook's state file by regexing `.claude/state/<name>.jsonl` out of the hook's source, so a helper
+  that COMPUTED the filename would be invisible to it. And one shared log file would be worse than
+  none: the check reads a file's newest row, so a single file would report every hook as having fired
+  whenever any hook did. One file per hook, literal at the call site, shared behaviour behind it.
+- **Shipped for all four blockers**: `discovery-gate`, `brownfield-gate`,
+  `autonomous-evidence-guard` (via its Python helper, where the deny is actually emitted) and the
+  `next-action-check` Stop hook. Verified by running the consumer: it discovers all four.
+- **Privacy rule unchanged and applied**: outcome plus a short label — the triggering skill, the
+  field names that tripped a guard — never a prompt, file contents or the user's words, per the
+  DL-1262 review that shaped the existing logs. Best effort throughout: a log that cannot be written
+  must never change a hook's verdict.
+- **Six advisory hooks still have no record** (`ci-signal`, `codex-postfailure-shim`,
+  `correction-attribution-guard`, `install-runtime-hooks`, `reflexion-gate`, `shell-safety-guard`).
+  They are named here rather than quietly left out: the blockers were done first because they are the
+  ones that can refuse a user, and with the helper in place the rest is mechanical.
+
 ## v0.233.0 - BREAKING: the ladder had no entry to its own top rung
 
 **2026-09-21.** Every scale had a spawn rule except the one at the top. `engine/diamond-rules.md`
