@@ -10,7 +10,8 @@ an unreadable register must not read as "nothing due".
 
 from __future__ import annotations
 
-import subprocess
+import contextlib
+import io
 import sys
 import textwrap
 from pathlib import Path
@@ -18,7 +19,15 @@ from pathlib import Path
 import pytest
 
 REPO = Path(__file__).resolve().parents[2]
-SCRIPT = REPO / "plugins/mycelium/scripts/check_doctrine_due.py"
+SCRIPTS = REPO / "plugins/mycelium/scripts"
+sys.path.insert(0, str(SCRIPTS))
+
+# IN-PROCESS ON PURPOSE. These ran the script via subprocess until 2026-09-21, which
+# exercises it just as well but is invisible to coverage.py — a separate interpreter
+# is not instrumented — so the per-file coverage floor read 0% for a file with nine
+# tests and CI failed while every local gate passed. Testing a CLI through its main()
+# keeps the coverage signal honest; the argv contract is still what is exercised.
+import check_doctrine_due  # noqa: E402
 
 COMPLETED = textwrap.dedent("""\
     schema_version: 1
@@ -36,13 +45,10 @@ COMPLETED = textwrap.dedent("""\
 
 
 def run(project: Path, today: str = "2026-09-21") -> tuple[int, str]:
-    proc = subprocess.run(
-        [sys.executable, str(SCRIPT), "--project-dir", str(project), "--today", today],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    return proc.returncode, proc.stdout.strip()
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        rc = check_doctrine_due.main(["--project-dir", str(project), "--today", today])
+    return rc, buf.getvalue().strip()
 
 
 def make(tmp_path: Path, diamonds: str | None, doctrine: str | None) -> Path:
