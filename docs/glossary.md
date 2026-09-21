@@ -36,7 +36,7 @@ Two-to-four sentences per entry. No theory teaching here — entries link out to
 
 **Harness** — The set of mechanisms that constrain agent behavior: hooks, guardrails, gates, validators, pre/post-task protocols. The harness is what makes the framework's claims load-bearing rather than aspirational.
 
-**ICE score** — Impact × Confidence × Ease (Ellis, adopted by Gilad within GIST). Used to prioritize ideas at L3. Confidence must be evidence-backed. See [theories.md#ice](theories.md).
+**ICE score** — the average of Impact, Confidence and Ease (Ellis, adopted by Gilad within GIST). Ellis averages the three ratings; Mycelium multiplied them until v0.229.0 (`errata.md` §A). Used to prioritize ideas at L3. Confidence must be evidence-backed. See [theories.md#ice](theories.md).
 
 **In-loop preventive** — Mycelium's strategic positioning: gates fire DURING the agent's loop to block progression on insufficient evidence; they do not score outputs after the fact. Distinct from post-run evaluative tools (like Anthropic Outcomes).
 

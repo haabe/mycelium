@@ -45,7 +45,15 @@
         "$ref": "#/$defs/diamond"
       }
     },
+    "completed_diamonds": {
+      "type": "array",
+      "description": "Diamonds whose Definition of Done was MET, with evidence. Distinct from archived_diamonds, which is where work goes when it STOPS. Added v0.230.0: check_scale_occupancy.py had read this key since it shipped, while no schema defined it and no skill wrote it, so 'ever opened' could never count a finished cycle and compliance with completion was unverifiable. Written by /diamond-progress; see its Step 9b.",
+      "items": {
+        "$ref": "#/$defs/completed_diamond"
+      }
+    },
     "archived_diamonds": {
+      "description": "Work that STOPPED and is no longer tracked, without its DoD being met. NOT a synonym for completed - that conflation is why completion was uncheckable before v0.230.0.",
       "type": "array",
       "items": {
         "$ref": "#/$defs/diamond"
@@ -232,6 +240,58 @@
         "confidence"
       ],
       "additionalProperties": true
+    },
+    "completed_diamond": {
+      "description": "A diamond in completed_diamonds. Everything a diamond has, PLUS proof that the Definition of Done was met. The extra requirements are the point: 'completed' asserted without a verdict is the state this schema exists to make impossible, because an unevidenced completion is indistinguishable from work that merely stopped (v0.230.0).",
+      "allOf": [
+        {
+          "$ref": "#/$defs/diamond"
+        },
+        {
+          "type": "object",
+          "required": [
+            "completed_at",
+            "dod_verdict"
+          ],
+          "properties": {
+            "completed_at": {
+              "type": "string",
+              "description": "YYYY-MM-DD the DoD was judged met."
+            },
+            "dod_verdict": {
+              "type": "object",
+              "description": "How the pinned DoD was judged met. Written by /diamond-progress Step 9b.",
+              "required": [
+                "signal_observed",
+                "verified_by"
+              ],
+              "properties": {
+                "signal_observed": {
+                  "type": "string",
+                  "description": "What was actually OBSERVED, in the observer's words — not a restatement of the DoD's signal. If you can only restate the target, the signal was not observed."
+                },
+                "verified_by": {
+                  "type": "string",
+                  "description": "How it was checked: a metric snapshot, a named person, a test, a link. 'self-assessed' is permitted and is a real answer; an empty one is not."
+                },
+                "threshold_met": {
+                  "type": [
+                    "string",
+                    "number",
+                    "boolean"
+                  ],
+                  "description": "The DoD threshold's actual value at completion, where the DoD declared one."
+                },
+                "shortfall": {
+                  "type": "string",
+                  "description": "Where the outcome fell short of the DoD but the diamond was completed anyway. Recording it keeps 'completed' honest instead of forcing a binary that invites rounding up."
+                }
+              },
+              "additionalProperties": true
+            }
+          }
+        }
+      ]
     },
     "definition_of_done": {
       "type": "object",

@@ -4,6 +4,197 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-19.
 
+## v0.231.1 - the commit-time guard was reading the disk, and a commit records the index
+
+**2026-09-21.** v0.230.0 shipped `git-pre-commit-example.sh` reading the **working tree**, with the
+limitation written into its own header. **Documenting a hole is not closing it**, and this one was
+reachable in one extra step from the defect the hook was built for.
+
+- **Both directions were wrong.** Stage a drifted `plugin.json`, then put the working tree back: the
+  commit carries the drift and a disk-reading hook sees a spotless tree and **passes**. Edit a file
+  without staging it: the commit is clean and the same hook **blocks anyway**. The second is the more
+  corrosive one — a gate that cries wolf on work in progress is a gate people `--no-verify` by habit,
+  which switches it off for the case it exists for.
+- **Proven before it was fixed.** Both scenarios were written as tests against the v0.230.0 hook and
+  both failed in the predicted direction — a drifted index passing, a clean index blocked — then
+  passed after the change. That order is the receipt; a test written after a fix only proves the fix
+  agrees with itself.
+- **The mechanism, and the rejected alternative.** `git checkout-index --all --prefix=<tmp>/`
+  materialises exactly what the commit will contain and the checker runs there via `--root`. It is
+  read-only with respect to the author's work: no worktree, index or ref is touched, and it costs
+  ~0.24s across 866 tracked files. The widely-copied `git stash --keep-index` is **deliberately not
+  used** — it MUTATES the working tree in order to perform a read, so an interrupted hook (Ctrl-C, a
+  crash, a checker that exits before the pop) can leave uncommitted work in a stash the author does
+  not know exists. **A verification step must not be able to lose the thing it is verifying.**
+- **The checker is resolved from the staged tree too**, so committed state is validated by committed
+  logic — the same principle as reading the index rather than the disk.
+- **A skip now announces itself.** On an unresolved merge the index cannot be materialised, so the
+  hook steps aside and says `SKIPPED (not passed)`. A quiet skip is the thing that gets cited later
+  as a pass.
+
+## v0.231.0 - completion was not a state you could enter, and the bearing L0 steers by did not exist
+
+**2026-09-21.** The three items the working model listed as open. Each turned out to be a **field or
+state that was read, referenced or promised by something, and written by nothing.**
+
+- **`completed_diamonds` is now real, and completion must be evidenced.** `check_scale_occupancy.py`
+  has read that key since it shipped, counting toward "ever opened" at each scale. **No schema defined
+  it and no skill wrote it**, so every occupancy report counted **zero** completed cycles at every
+  scale no matter what had shipped — and its "intake and no outlet" finding could never be retired by
+  finishing work. **Fourth instance of the class**, after `progression_ruling` (2026-08-05),
+  `last_progressed` (v0.229.0) and the competitive gate.
+- **The root cause was a definition, not a missing writer.** `engine/diamond-rules.md` defined
+  `archived` as *"Completed or deliberately paused"* — **one bucket for two opposite outcomes**. With
+  those merged, nothing downstream could tell work that MET its bar from work that merely STOPPED, so
+  compliance with completion was unverifiable **by construction**: the count of finished cycles and
+  the count of abandoned ones were the same number. They are now separate states.
+- **A completion carries a verdict or it is rejected.** `completed_at` plus a `dod_verdict` with
+  `signal_observed` and `verified_by` are **required by the schema**, so `validate_canvas.py` refuses
+  an unevidenced completion instead of accepting it quietly. `signal_observed` may not restate the
+  DoD's own signal — if the only sentence available is the target repeated back, it was not observed,
+  and that is a `blocked` ruling. A `shortfall` field exists so completing with a stated shortfall is
+  available and honest, which removes the incentive to round the bar up.
+- **The Just Cause has a schema — the BEARING.** L0 holds three references: `why` is the ORIGIN
+  (backward, fixed), the North Star metric reads POSITION, and the bearing is forward and
+  deliberately not arrivable. Without it **drift has nothing to be drift from** — an origin and a
+  position give you a line, not a direction. `contradicting_decision` is the whole check: name a
+  decision that would contradict the bearing, or **it is not a bearing, it is a pleasantry** that
+  every future decision satisfies. Written by `/purpose-properties` Step 6, read by `/diamond-assess`
+  at L0. Nothing is computed from the three — they are references, not coordinates.
+- **Stated rather than quietly skipped**: Sinek's five criteria for a Just Cause (*The Infinite Game*)
+  are **not** encoded, because the book is not on disk here and they were not read at the primary
+  source. The one check that *is* encoded is taken verbatim from a transcript already in the corpus.
+  Encode the five when someone has read them; do not reconstruct them from memory.
+- **The doctrine retrospective has a firing condition.** *"Learn these continuously"* is not a
+  trigger. It is now **due when `doctrine.yml#last_reviewed` is absent or older than the newest
+  `completed_at` in `completed_diamonds`** — an event that already gets recorded, not a calendar
+  someone must keep. It became checkable only because completion got a writer in this same release.
+  New `doctrine.yml` schema holds two registers that **grow and never complete**, so **no coverage
+  ratio is computable against them** — which is what made the 2026-04 audit's ratios unscoreable, with
+  numbers that turned out not to be in the book at all. Climate predictions are **dated and scored**,
+  and `unscored` may never be reported as `held`.
+- **Caught by the repo's own gate, in this release's own work**: `check_field_wiring` flagged
+  `superseded_by` on the new doctrine schema as promise-shaped with no consumer. It is now wired —
+  `/wardley-map` must NOT apply a superseded entry — rather than declared human-read, because
+  applying retired doctrine would be a live defect.
+- **Also corrected**: `engine/canvas-guidance.yml`'s worked example still asserted Wardley's
+  *"64+ patterns"* and *"~40"* doctrine as fact after v0.229.0 established that neither number is in
+  the book. Its declined-decision example also predated v0.229.0 **reversing** the doctrine half, which
+  the re-open trigger existed to allow; both are recorded in place.
+
+## v0.230.0 - a gate that fires on history had no legal move out of the state it fires in
+
+**2026-09-21.** Two defects, one cause: **mechanical consistency was only ever enforced at the tip**,
+and a commit is where the damage is done.
+
+- **Check 26's hard stop no longer wedges the repo.** Its first branch fired on `committed_count > 0`
+  — on **history alone** — which pre-empted the later branch whose entire purpose is to pass once the
+  bump is written in the working tree. The consequence is not a noisy gate, it is a **repo with no
+  legal move**: after any single commit that lands material files without bumping, every later session
+  is told *"Bump CLAUDE.md"* at a moment when CLAUDE.md is already bumped, while `gates.sh` prints DO
+  NOT COMMIT over the one action that settles it — because the settling act **is** a commit, which
+  moves `last_version_commit` to HEAD and zeroes the count. The branch now also requires that no bump
+  exist anywhere (`curr_version = head_version`), so **the canonical error is still caught** and a
+  pending bump is allowed to pay committed debt. A test asserts both halves, including that the guard
+  did not become a bypass.
+- **This is the same bug as the one fixed on 2026-08-20, arriving from the other side.** That fix
+  taught the *other* branch to ask "is there a bump in the working tree?"; this branch was never
+  asked. Its regression fixture (`pending_with_bump_staged`) **deliberately inserts a non-material
+  commit so `committed_count` stays 0** — built, in good faith, to isolate the branch under test, and
+  in doing so routing around the one now broken. That is why 27/27 green never caught it.
+- **New `git-pre-commit-example.sh`, and the reason is structural.** On 2026-09-20 a release commit set
+  `plugin.json` to `0.228.0` while CLAUDE.md's canonical `*Version` line stayed `0.227.3`. **Check 40
+  detects that state precisely** — run against that commit it exits 1 and names the file. It never ran,
+  because it runs on **push**, and later work repaired the working tree before any push. The push then
+  passed 27/27. **The gates only ever see the tip; they cannot protect history.** The new hook checks
+  one invariant — derived tokens match canonical — at the moment the state is created. It is inert
+  outside the framework repo, runs in under a second, and **distinguishes "the script failed to run"
+  from "tokens drifted"**, because `sync_derived.py` exits 1 for both and a crash reported as a finding
+  is a tool failure wearing a gate's clothes.
+
+**What this does not fix.** The hook validates the **working tree, not the index**, so a partial
+`git add` can still commit a drifted subset; Check 40 pre-push remains the backstop for that, and the
+hook's header says so rather than leaving it to be assumed. `--no-verify` bypasses it, as with any git
+hook.
+
+## v0.229.0 - six skills were executing arithmetic their cited authors do not use, and one gate got easier to pass the longer it was ignored
+
+**2026-09-20.** Every Tier-1 source read at the primary source for the first time. **Six defects
+changed what the framework told a user to do**; they are fixed here. The full list, including the
+misattributions that changed nothing, is in **[docs/errata.md](errata.md)** — written for someone who
+used an affected skill and wants to know whether a decision of theirs was influenced.
+
+- **`/ice-score` now averages instead of multiplying.** Ellis: *"Then those ratings are **averaged**
+  to provide an aggregate score."* Multiplying is a common variant but is not his operation, and it
+  changes rankings — on a 1-10 scale (10,10,1) and (7,7,7) both average 7.0 but multiply to 100 and
+  343, **systematically demoting bold-but-hard ideas**. A scale note that said Confidence was 0.0-1.0
+  while the step above and the bands below said 1-10 now says 1-10.
+- **`/user-needs-map` now uses Ulwick's actual algorithm**, `importance + max(importance − satisfaction, 0)`.
+  The previous subtraction **could rank a trivial need above a critical one**: (3,1) scored 2 while
+  (9,8) scored 1. Importance is weighted twice precisely to prevent that. **And the inputs are
+  population percentages**, not one person's rating — *"the percentage of people rating that attribute
+  a 4 or a 5"* — so the skill now says the instrument needs a sample and the bands mean nothing
+  without one. The Allen attribution is corrected: his dependency mapping is capability→capability at
+  his Steps 4-5, and the team-boundary content credited to him is Skelton and Pais's.
+- **`/cynefin-classify` no longer offers a liminal transition out of Clear.** Snowden: the liminal
+  line *"intersects all domains **except Clear**... making the boundary between Clear and Chaotic a
+  cliff."* **Clear has no liminal zone because its exit is a cliff** — a user told they were easing
+  out of it held the exact belief the fold punishes. Dating corrected from "2022+" to 2019.
+- **`/wardley-map` gains the doctrine step it never had.** The framework shipped Climate and Gameplay
+  — the two classes you select from — and omitted doctrine, which is *"universally applicable...
+  **Don't pick and choose, apply them all**."* Includes Wardley's adoption order, whose first four
+  steps need no second person, and the note that doctrine is an **open set** that grows with practice,
+  so no coverage ratio against a fixed denominator is possible.
+- **`/diamond-assess` asks Rother's questions in conditional order.** *"before a target condition has
+  been established, the order of questions 1 and 2 is reversed."* Asking "what is the target
+  condition?" of a diamond that has none was the failure this prevents. The freeze rule is documented
+  too: *"its content and achieve-by date are not easily changed."*
+- **A theory gate no longer reads a field nothing writes.** The competitive gate compares the
+  landscape against `last_progressed` — and nothing in the plugin wrote it. As it decayed, the
+  threshold moved into the past and **the gate got easier to pass the longer it was neglected.**
+  `/diamond-progress` now writes it on every `progressed` ruling, and the gate fails closed.
+  **Third instance of this class**: `progression_ruling` (fixed 2026-08-05) and `completed_diamonds`
+  (read by `check_scale_occupancy.py`, written by nothing) are the others. **A gate may not read a
+  field nothing writes.**
+
+**New: `/friction-log`.** Mycelium can see its own friction and has no way to send it back — of 91
+completed outreach tasks in the dogfood repo, ~71 were outbound and ~4 inbound. This drafts a short
+account of where *using* the framework was confusing, for the user to edit and choose whether to
+send. It **reports experience and never prescribes fixes**, which is Hoskins's mechanism rather than a
+style rule: *"My job as friction logger is just to call attention to the problem."* Nothing is sent
+without an explicit yes. It carries Ellis's qualitative follow-up questions, which work at any sample
+size, and deliberately **does not** compute a PMF percentage, which does not.
+
+**The descriptions were carrying the old algorithm after the algorithm was fixed.** Correcting
+`/ice-score` left five other surfaces still advertising `Impact × Confidence × Ease` — `glossary.md`,
+`engine/leaf-lifecycle.md`, both skill catalogues, **and the theory-citation line at the bottom of
+`ice-score/SKILL.md` itself**, so the fixed skill still told the reader it multiplied. The phrases
+`tripartite` and `Four Forces`, which appear **zero times** in *Competing Against Luck*, are removed
+from `theories.md` and the skills index; the three dimensions are Christensen's, the collective nouns
+are ours. Historical records — `changelog.md`'s older entries, `corrections.md`, `cluster-instances.md`
+— are left as written, because a log that gets edited to match the present is not a log.
+
+**Known-red gate, deliberately not patched here.** `v0.228.0` changed `plugin.json` to `0.228.0` but
+never touched CLAUDE.md's canonical `*Version` line, so Check 26 has failed on that commit ever since,
+with six material files committed unbumped. The check's first branch fires on **history alone**, which
+pre-empts the later branch whose whole purpose is to pass when the bump is already written in the
+working tree — reintroducing, from the opposite direction, the unsatisfiable instruction that branch
+documents fixing on 2026-08-20: the only remedy is a version-bump commit, while `gates.sh` prints DO
+NOT COMMIT. **This release clears it the legitimate way** — the bump commit moves `last_version_commit`
+to HEAD and zeroes the count — rather than by editing the gate to accept a failure. The guard itself
+is left for a change that is about the gate, not smuggled into a release the gate is blocking.
+
+## v0.228.0 - theory citations get a currency axis and an evidence class, after a book read found the framework citing a tier table its author does not publish
+
+**2026-09-20.** Four surfaces, one cause: a theory cited at book-date reads as faithful forever.
+
+- **`/theory-fidelity` grows from three axes to five.** **Currency** (`current` / `behind` / `book-date` / `unmarked`, plus LIVING or STABLE) and **evidence class of the theory itself** (`research` / `synthesis` / `judgement`). The first three axes cannot see a faithful implementation of a superseded edition, and nothing asked what kind of knowledge a cited theory is.
+- **Why currency needed an axis rather than a doc pass.** Measured across the skill surface: currency was tracked well on about half the theory-bearing skills and **absent from seven** (`service-check`, `jtbd-map`, `ost-builder`, `wardley-map`, `user-needs-map`, `gist-plan`, `user-interview` carried no year marker at all). **And the best-tracked skill was still one cycle behind** — `/dora-check` correctly carries the 2021 and 2023 DORA changes, while dora.dev now lists **five** metrics and **35** capabilities against the book's four and 24, and its current metrics guide no longer uses the Elite/High/Medium/Low vocabulary. Tracking once is not tracking.
+- **`/launch-tier` corrected — it was citing an instrument the author does not publish.** *LOVED* ch. 12 prescribes a **Release Scale** whose *"sole purpose is to create shared vocabulary and expectations"*, built by each team from **its own past releases** — *"Don't make this an academic exercise of a potential future release"* — with the calibration names the team chooses (*"be it levels, grades, names, numbers, or tiers"*) and a worked example running to **Level 5**. The skill shipped a fixed Tier 1/2/3 table with pre-filled activity lists. The table is now labelled **an example calibration, not the scale**, and a project with no release history is told it does not have one yet.
+- **`trust-signals` attribution corrected.** The `dark_patterns_prohibited` block was headed as Shotton's. **His own ethics writing places no prohibition on techniques** — his test is upstream of them (*"Are you selling snake-oil? Or are you selling something of substance?"*). The prohibition framing is Eyal's Manipulation Matrix, which `/launch-tier` already carries.
+- **`docs/theories.md` gains a graded table — graded only where the source was actually checked.** Eight rows carry a currency grade and an evidence class; the rest are marked **ungraded** rather than guessed, for the next `/theory-fidelity` run. It also carries the caveat that *Accelerate*'s sample excluded teams unfamiliar with CI and IaC — *"we miss a cohort that are likely performing even worse than our low performers"* — which overlaps the solo builders this framework serves.
+- **Not a quality ranking.** A `judgement` theory can be excellent and a `research` one can be over-read; the column exists so a reader knows which they hold, and so a framework that grades its users' evidence does not cite its own ungraded.
+
 ## v0.227.3 - an advisory that must not be cleared no longer reports as neglected
 
 **2026-09-19.** One script, two tests.

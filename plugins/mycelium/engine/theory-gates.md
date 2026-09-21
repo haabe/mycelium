@@ -399,7 +399,14 @@ This gate is **operational** — it asks "have you actually run `/xai-check`?" a
 
 | Pass Criteria | Fail Criteria |
 |--------------|---------------|
-| `landscape.yml` names at least one component or competitor in the space this diamond bets on, with a provenance date | The bet's space has no entry in `landscape.yml`, or its newest entry predates the diamond's `last_progressed` by more than the `competitive` staleness window |
+| `landscape.yml` names at least one component or competitor in the space this diamond bets on, with a provenance date | The bet's space has no entry in `landscape.yml`; **or `last_progressed` is absent or older than the diamond's most recent edit (FAIL CLOSED — see below)**; or its newest entry predates the diamond's `last_progressed` by more than the `competitive` staleness window |
+
+> **FAIL CLOSED ON A STALE `last_progressed` (added 2026-09-20).** This gate reads `last_progressed`,
+> and until 2026-09-20 nothing wrote it — so the field decayed backwards relative to real work, which
+> moved this gate's threshold into the past and made it **easier to pass the longer it was
+> neglected**. `/mycelium:diamond-progress` now writes the field on every `progressed` ruling. A gate
+> that reads an unmaintained field must fail closed rather than open, because the failure mode of
+> failing open is invisible.
 | The diamond's `definition_of_done` or the opportunity it serves states what already exists and why this differs | "Does it already exist?" was not asked, or was answered from memory rather than from the map |
 
 **Why a gate at all.** Of the three things that justify a commitment (EVIDENCE: is it worth building; LANDSCAPE: does it already exist; CAPACITY: can the people hold what gets produced), the gate set enforced only the first until 0.217.0. `diamond-rules.md` names Wardley Mapping as PRIMARY for L1, and L1's required gates did not include it; a dogfood canvas held 123 tracked competitors and the map had never blocked, or nudged, anything (register row two-of-the-three-justifiers-have-no-gate-at-any-tier, 2026-09-02). All three justifiers were self-policing while building was expensive; agents removed the policing from each, and the two that lost it are the two that had no gate.

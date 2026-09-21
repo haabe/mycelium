@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.227.3 -- **An advisory that must not be cleared no longer reports as neglected** (PATCH). The advisory ledger scored every advisory with a clear rate, so a permanent record of a past state and an advisory nobody acted on both read 0.00. The dogfood project's own health assessment misread one as the other and retracted hours later.*
+*Version 0.231.3 -- **A new script's tests ran it as a subprocess, so coverage saw 0%** (PATCH). Nine tests exercised `check_doctrine_due.py` through `subprocess.run`, which coverage.py cannot instrument, so the per-file floor failed in CI while every local gate passed. The tests now call `main()` in-process. The floor is a DECLARED-WAIVED local gate; it must be run by hand before a bump, and was not.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 
@@ -121,7 +121,7 @@ See `plugins/mycelium/orchestration/modes.md` for usage patterns and `plugins/my
 
 ## Skills
 
-All 62 skills are auto-discovered from SKILL.md frontmatter — in plugin form (`plugins/mycelium/skills/*/SKILL.md`, recommended) or legacy form (`.claude/skills/*/SKILL.md`, supported during transition). Suggested skills are surfaced at diamond transitions by `/diamond-progress` and `/diamond-assess`, and contextually by hooks. Type `/` to see the current list.
+All 63 skills are auto-discovered from SKILL.md frontmatter — in plugin form (`plugins/mycelium/skills/*/SKILL.md`, recommended) or legacy form (`.claude/skills/*/SKILL.md`, supported during transition). Suggested skills are surfaced at diamond transitions by `/diamond-progress` and `/diamond-assess`, and contextually by hooks. Type `/` to see the current list.
 
 ## Getting Started
 

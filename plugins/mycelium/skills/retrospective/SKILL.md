@@ -236,6 +236,49 @@ After delivery retrospective, always ask:
 4. Update .claude/canvas/bvssh-health.yml if dimensions changed
 5. Log in .claude/harness/decision-log.md
 6. Record cycle in `.claude/canvas/cycle-history.yml` (see Cycle History Recording above)
+7. **Doctrine retrospective, when it is due** — see below.
+
+## The doctrine retrospective, and its firing condition (v0.230.0)
+
+Doctrine is the one register with a named producer and, until this release, **no trigger**.
+*"Learn these continuously"* is not a trigger, and an un-triggered retrospective is the shape that
+has failed repeatedly in this project — a mechanism that runs when someone remembers is a mechanism
+that reads green while doing nothing.
+
+**IT IS DUE WHEN**: `.claude/canvas/doctrine.yml#last_reviewed` is **absent**, or **earlier than the
+newest `completed_at` in `diamonds/active.yml#completed_diamonds`** — or a climate prediction is
+past its `horizon` with no `outcome`. That is the trigger — an event that already gets recorded,
+not a calendar someone has to keep. It became checkable only in this same release, when completion
+stopped being conflated with archival and got a writer; before that there was no event to hang it on.
+
+**YOU DO NOT HAVE TO REMEMBER TO ASK.** `scripts/check_doctrine_due.py` evaluates the condition and
+`session-start` relays its line, so a due retrospective arrives unprompted. Run it directly any time:
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_doctrine_due.py" --project-dir .
+```
+
+*v0.231.0 shipped this condition with no evaluator — it lived only as the paragraph you are reading,
+so it fired when someone happened to open this skill. That is the "runs when a person remembers"
+shape the condition was written to replace, and **a condition nothing computes reads as satisfied**.
+The evaluator landed in v0.231.2. Note what it will NOT say: with no diamond in `completed_diamonds`
+it reports that the trigger cannot fire, explicitly not that doctrine is current.*
+
+When it is due, ask Wardley's question — *"look for what has changed and always ask why?"* — and
+write to `.claude/canvas/doctrine.yml`:
+
+- **Doctrine**: did something we learned turn out to apply *universally* to our own work? Add it with
+  the incident it came from. **`learned_from` is required**, because a principle with no incident
+  behind it was imported rather than learned. Doctrine **grows and never completes** — *"the more you
+  play the game then the more forms of doctrine you'll discover"* — so **do not compute coverage
+  against a total.** There is no total. That is what made the 2026-04 audit's ratios unscoreable.
+- **Climate**: score any prediction whose horizon has passed — `held`, `failed`, or `unclear`.
+  **`unclear` is a real answer** and beats forcing a verdict; leaving it `unscored` is also honest,
+  but `unscored` must never be reported as `held`. Add new predictions **dated**, because a
+  prediction that cannot go stale cannot be scored.
+
+Then stamp `last_reviewed`. **An empty doctrine register after a review is a legitimate outcome** —
+write the stamp anyway, or the trigger fires forever and the nudge gets muted.
 
 ## Counter-Argument Check (Bias Mitigation)
 

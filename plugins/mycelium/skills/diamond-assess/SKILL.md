@@ -127,6 +127,13 @@ Report the line for each scale with records: "73 opportunity records, 0 active L
 
 8. **Coaching check** (Rother's Coaching Kata):
    Surface these five questions in the output to prompt the human's thinking:
+   **ORDER IS CONDITIONAL — ask Q2 first when no target condition exists yet.** Rother: *"Note that
+   **before a target condition has been established, the order of questions 1 and 2 is reversed**
+   from what is shown here."* The five questions presuppose a target: *"The five questions come into
+   play once you are 'on the staircase,' that is, in the PDCA phase of the improvement kata, **after
+   a target condition has been established**."* Asking "what is the target condition?" of a diamond
+   that has none is the failure this ordering exists to prevent.
+
    1. What is the **target condition** for this diamond? (What does "done" look like?)
    2. What is the **actual condition** right now? (Summarize from steps 2-7 above)
    3. What **obstacles** are preventing progress? Which one are you addressing now?
@@ -134,6 +141,14 @@ Report the line for each scale with records: "73 opportunity records, 0 active L
    5. When can we **check what we learned** from that step? (Commit to a review point)
    The coach (human) should answer these, not the agent. The agent surfaces them.
    *Source: Rother (Toyota Kata) — the 5 questions install scientific thinking as a daily habit.*
+
+   **Once set, a target condition is FROZEN.** Rother: *"Once a target condition is established —
+   even an initially vague one — **its content and achieve-by date are not easily changed**."* And
+   the target comes before the work: *"Toyota will usually not start trying to improve or move
+   forward before a target condition has been defined. This ensures that people's efforts will be
+   focused on actual needs rather than on various ideas and opinions about what we can do."*
+   **Amending a target at closing time is how a cycle passes by moving its own goalposts** — record a
+   supersede with a reason instead of editing.*
 
    **Autonomous mode** (per `${CLAUDE_PLUGIN_ROOT}/engine/autonomous-mode.md`): rung (b) — the declared persona answers all five, the answers are ledgered and tagged `internal_simulated`, and question 5's review point is a committed date the next human session can check.
 
@@ -156,7 +171,7 @@ Report the line for each scale with records: "73 opportunity records, 0 active L
 
 12. **Report harness thickness** (informational):
     - Count: total skills, active guardrails, mandatory reads, hooks, theory gates
-    - Current: 62 skills, 38 guardrails, 4 mandatory reads, 5 hook layers, 13 gates
+    - Current: 63 skills, 38 guardrails, 4 mandatory reads, 5 hook layers, 13 gates
     - If thickness has increased since last assess, note it
     - This is observability, not a gate — purely informational
     - *Source: Trivedy (Anatomy of an Agent Harness, LangChain blog — "scaffolding should decrease as models improve," but harnesses remain valuable as they engineer systems around model intelligence)*
@@ -218,6 +233,20 @@ Three states, three different things to say:
   changed after the properties were derived, so **every stance below them was reasoned under a
   definition that no longer holds.** Report it as invalidated work, not as a lint finding.
 - **Otherwise** — report the findings as part of the assessment and move on.
+
+**The bearing check, at L0 only (v0.230.0).** Read `purpose.yml#just_cause`.
+
+- **Present** — run its own check against what has actually happened since `reviewed`: does any
+  decision taken in that window resemble `contradicting_decision`? If one does, **that is the
+  finding**, and it is a finding about the project, not about the field. Say which decision, cite
+  it, and let the user rule. Restamp `reviewed` when they do. **Do not compute a drift score** —
+  origin, bearing and position are three references, not coordinates, and nothing arithmetical runs
+  on them.
+- **Absent** — say once, at L0 only, that the project has an origin and a position but no bearing,
+  so there is nothing for drift to be measured against, and that `/mycelium:purpose-properties`
+  Step 6 offers one. **Once.** An absent bearing is a legitimate state and a project may run
+  without one; repeating this every assessment is how a nudge gets muted, which the bullet above
+  already learned the hard way.
 
 **Do not derive properties from inside this skill.** Assessment reports state; changing the purpose
 layer is a deliberate act with its own entry point.

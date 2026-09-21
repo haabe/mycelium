@@ -823,9 +823,32 @@ check_version_bump_discipline() {
     local uncommitted_count
     uncommitted_count=$(git diff --name-only HEAD -- "${material_paths[@]}" 2>/dev/null | wc -l | tr -d ' ')
 
-    if [ "$committed_count" -gt 0 ]; then
-        # FAIL: committed material changes without a version bump. Hard stop —
-        # the canonical error this check exists to catch.
+    if [ "$committed_count" -gt 0 ] && [ "$curr_version" = "$head_version" ]; then
+        # FAIL: committed material changes and NO bump anywhere — not in HEAD, not
+        # in the working tree. The canonical error this check exists to catch.
+        #
+        # THE SECOND CONJUNCT IS LOAD-BEARING, AND ITS ABSENCE WAS THE SAME BUG AS
+        # THE ONE DOCUMENTED ON THE BRANCH BELOW, ARRIVING FROM THE OTHER SIDE
+        # (dogfood 2026-09-21). This branch used to fire on `committed_count` ALONE,
+        # i.e. on HISTORY, so it pre-empted the working-tree branch below whose whole
+        # purpose is to pass once the bump is written. The consequence is not a noisy
+        # gate, it is a WEDGED repo: after any single commit that lands material files
+        # without bumping, EVERY later session is told "Bump CLAUDE.md" at a moment
+        # when CLAUDE.md is already bumped, while gates.sh prints DO NOT COMMIT over
+        # the one action that clears it — because the clearing act is a commit, which
+        # moves last_version_commit to HEAD and zeroes committed_count.
+        #
+        # A PENDING BUMP GENUINELY PAYS COMMITTED DEBT, which is why this is a real
+        # fix and not a silenced gate: the very next commit carries the bump, and the
+        # debt is settled by that commit. If no bump is pending anywhere
+        # (curr_version = head_version) the hard stop fires exactly as before, so the
+        # canonical error is still caught. What is no longer possible is a state the
+        # gate declares wrong and offers no legal move out of.
+        #
+        # This is the THIRD member of a class the repo keeps rediscovering: a gate
+        # whose remedy is unreachable from the state it fires in. See the 2026-08-20
+        # comment below, and `docs/errata.md` on the competitive gate that read a
+        # field nothing wrote.
         fail "Version-bump discipline: $committed_count material framework file(s) committed since the last version bump (currently $curr_version). Bump CLAUDE.md Version line per plugins/mycelium/engine/version-discipline.md (semver: new skill/feature → minor; backwards-incompatible → major; doc-only → patch)."
     elif [ "$uncommitted_count" -gt 0 ] && [ "$last_version_commit" = "$head_commit" ]; then
         # WARN: HEAD bumped the version, but new material edits are pending.
@@ -845,7 +868,11 @@ check_version_bump_discipline() {
         # COMMIT. The only way to clear it was the commit it was blocking.
         # It stayed hidden because a release usually follows a release: HEAD is then
         # the previous bump commit and the WARN branch above catches it instead.
-        pass "Version-bump check: $uncommitted_count material file(s) pending with the bump staged in the working tree ($head_version -> $curr_version)"
+        if [ "$committed_count" -gt 0 ]; then
+            pass "Version-bump check: $uncommitted_count material file(s) pending with the bump staged in the working tree ($head_version -> $curr_version); this bump also settles $committed_count material file(s) committed unbumped before it"
+        else
+            pass "Version-bump check: $uncommitted_count material file(s) pending with the bump staged in the working tree ($head_version -> $curr_version)"
+        fi
     elif [ "$uncommitted_count" -gt 0 ]; then
         # FAIL: uncommitted material changes, HEAD didn't bump, and no bump in the
         # working tree either — the next commit must either bump or be non-material.

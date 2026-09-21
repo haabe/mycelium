@@ -80,6 +80,14 @@ ORPHAN_ALLOWLIST = {
         "documented DRAFT stub, parked pending a 2nd hard violation (see its header)",
     "git-pre-push-example.sh":
         "copy-me template for consumers; invoking it from CI would be wrong",
+    "git-pre-commit-example.sh":
+        "copy-me template for consumers, same class as the pre-push example: its "
+        "caller is .git/hooks/pre-commit after a human installs it, and .git/ is "
+        "not version-controlled. Invoking it from CI would be worse than wrong — "
+        "it would be a lie about what protects a commit, since CI runs after the "
+        "commit exists and this gate's whole reason for being is that the state a "
+        "commit is made in is only checkable at commit time (v0.230.0). "
+        "Installation is documented in docs/contributing/README.md.",
     "upgrade.sh":
         "legacy (npx-degit) install path, deprecated; invoked by consumers not us",
     "verify_citations.py":

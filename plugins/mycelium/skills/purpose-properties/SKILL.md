@@ -187,6 +187,39 @@ the old definition and now needs re-reading. Do not silently leave stale stances
 - **It does not write a stance on any solution.** That belongs to `/mycelium:ost-builder`.
 - **It does not clear a `contradicts`.** Only a human can, and the check enforces it.
 
+## Step 6: Offer the BEARING, and take "no" for an answer (v0.230.0)
+
+L0 holds **three** references, and only two of them existed before this release: `why` is the
+**ORIGIN** (backward, fixed, singular) and the North Star metric reads **POSITION**. The third is a
+**BEARING** — forward, and deliberately not arrivable. Without it, drift has nothing to be drift
+*from*: an origin and a position give you a line, not a direction.
+
+After Step 5, read `purpose.yml#just_cause`. If it is absent, say so once and offer to write it:
+
+```yaml
+just_cause:
+  statement: <what you are heading toward, which you do not expect to arrive at>
+  contradicting_decision: <a concrete decision this project could take that would contradict it>
+  reviewed: <YYYY-MM-DD>
+```
+
+**`contradicting_decision` is the whole check, and the field is worthless without it.** If the user
+cannot name a decision that would contradict the bearing, **the bearing is not a bearing** — it is a
+pleasantry that every future decision will satisfy. Say that plainly and write nothing rather than
+record an unfalsifiable one. This is the same shape as Sinek's test for a why, recorded verbatim from
+his 2026-09-08 *A Bit of Optimism* appearance: *"is it a statement of belief, could you argue against
+it, is it self-explanatory, is it one point"*.
+
+**An absent bearing is a legitimate state.** The field is optional, a project may run without one,
+and offering it every run would make it nag-shaped. Offer on the retrofit and drift cases, not on
+every invocation. **Do not compute anything from these three references** — they are not coordinates.
+Drift here is *checkable*, by naming a decision, and not computable.
+
+**NOT IMPLEMENTED, and stated rather than quietly skipped**: Sinek's five criteria for a Just Cause
+(*The Infinite Game*) are not encoded, because that book is not on disk in this project and the
+criteria were not read at the primary source. Encode them when someone has read them; do not
+reconstruct them from memory.
+
 ## Theory grounding
 
 Sinek (*Start With Why*) — the why/how/what ordering, and the reason the innermost ring governs the

@@ -74,6 +74,7 @@
         }
       }
     },
+    "_behavioral_ethics_attribution_corrected_2026_09_20": "The dark-patterns prohibition here is NOT Shotton's argument, corrected after reading his own ethics writing. His line is upstream of technique: 'If nudging, like rhetoric, is merely a tool then what matters, is to what ends you harness it. Are you selling snake-oil? Or are you selling something of substance?' He places no prohibition on techniques and does not require disclosure of them. The prohibition framing belongs to Eyal's Manipulation Matrix, which /launch-tier already carries. What IS faithful to Shotton is the truth test on a claim.",
     "behavioral_ethics": {
       "type": "object",
       "additionalProperties": false,

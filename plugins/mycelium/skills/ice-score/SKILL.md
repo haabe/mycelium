@@ -49,7 +49,8 @@ If any risk dimension is missing, assess it first. Each dimension must have its 
 
 ### Step 2: Derive ICE from the Four Risks
 
-For each solution, score three dimensions (1-10):
+For each solution, score three dimensions on a **1-10 scale** — the scale Ellis states: *"the
+submitter should rate each idea on a ten-point scale, across each of the following three criteria"*:
 
 **Impact** — derived from value + usability + viability risks:
 - What does the value risk assessment say about user demand?
@@ -61,7 +62,11 @@ For each solution, score three dimensions (1-10):
 
 **Confidence** — how well-tested are the risk assessments?
 
-> *Scale note: Mycelium uses 0.0-1.0. Gilad's original Confidence Meter uses 0-10 non-linear (0.01=opinion, 1=anecdotal, 5=market data, 8=A/B test, 10=launch data). The non-linear penalty is preserved through evidence-class weighting.*
+> *Scale note: **Confidence is scored 1-10 here, like the other two dimensions** — the bands below
+> are 1-3 / 4-6 / 7-10. (Before 2026-09-20 this note said "Mycelium uses 0.0-1.0", which contradicted
+> both the step above and the bands below.) Gilad's original Confidence Meter uses 0-10 non-linear
+> (0.01=opinion, 1=anecdotal, 5=market data, 8=A/B test, 10=launch data); the non-linear penalty is
+> preserved through evidence-class weighting.*
 - 1-3: Risk assessments based on gut feel or desk research
 - 4-6: Some direct evidence (interviews, analogues, small tests)
 - 7-10: Strong evidence (user tests, prototypes, data). Requires test-validated evidence.
@@ -75,7 +80,14 @@ For each solution, score three dimensions (1-10):
 
 ### Step 3: Calculate and rank
 
-ICE = Impact x Confidence x Ease. Rank solution leaves by ICE score.
+**ICE = the AVERAGE of Impact, Confidence and Ease.** Rank solution leaves by ICE score.
+
+> **Why an average, and why this note exists.** Ellis defines it that way: *"Then those ratings are
+> **averaged** to provide an aggregate score for each idea"* (`Hacking Growth`). Mycelium previously
+> multiplied, which is a common variant but is **not** the cited author's operation, and it changes
+> rankings: on a 1-10 scale (10,10,1) and (7,7,7) both average 7.0, but multiply to 100 and 343 — so
+> a bold idea that is hard to build was demoted by arithmetic the source does not use. Corrected
+> 2026-09-20 after a primary-source read.
 
 ### Step 4: Identify riskiest assumptions
 
@@ -114,7 +126,7 @@ When a scored leaf ships, write `shipped_at: YYYY-MM-DD` on the leaf (declared f
 Update `.claude/canvas/gist.yml` with idea ICE scores and confidence levels.
 
 ## Theory Citations
-- Ellis: ICE scoring (Impact × Confidence × Ease — Sean Ellis invented the ICE framework as part of growth methodology)
+- Ellis: ICE scoring (Impact, Confidence, Ease — **averaged**, not multiplied: *"those ratings are averaged to provide an aggregate score for each idea"*. Sean Ellis invented the ICE framework as part of growth methodology; see `docs/errata.md` §A)
 - Gilad: Evidence-Guided (Confidence Meter — the evidence-grading layer on top of Ellis's ICE, mapping evidence types to confidence levels)
 - Torres: Continuous Discovery Habits (OST leaves as unit of evaluation)
 - Torres: Product Trio (three perspectives feeding risk assessment)

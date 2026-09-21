@@ -845,10 +845,18 @@ prior_findings_first:
     DECLINED is a real outcome and must not be avoided. A gap that is genuinely not worth
     closing for this project should be declined in writing WITH A RE-OPEN TRIGGER — not
     left open forever to be re-proposed every audit, and not silently dropped. Worked
-    example 2026-08-05: Wardley's gameplay library (64+ patterns) and doctrine (~40) were
-    declined because most gameplay needs market power a zero-adopter project does not hold
-    and doctrine is attribution rather than capability — with the trigger recorded as "if
-    adoption arrives, re-run the decision rather than inherit it".
+    example 2026-08-05: Wardley's gameplay library and doctrine were declined because most
+    gameplay needs market power a zero-adopter project does not hold and doctrine is
+    attribution rather than capability — with the trigger recorded as "if adoption arrives,
+    re-run the decision rather than inherit it".
+    TWO CORRECTIONS, AND BOTH ARE THE POINT OF KEEPING RE-OPEN TRIGGERS. (a) This example
+    used to quantify those sets as "64+ patterns" and "~40" doctrine. Neither number is in
+    the book, and the author states both sets are OPEN — doctrine's list is "not an
+    exhaustive list", gameplay has "a constant pipeline of new forms" — so a count was never
+    available to decline against (`docs/errata.md`, v0.229.0). (b) The doctrine half of the
+    decision was RE-OPENED and reversed in v0.229.0: `/wardley-map` now has an Apply Doctrine
+    step, because doctrine is "universally applicable" and needs no market power. A declined
+    gap that later reverses is the mechanism working, not a failure of it.
   find_the_prior_run: |
     An instrument that cannot LOCATE its previous output cannot score it. Each periodic
     skill therefore writes to a predictable, dated path rather than "the decision log or a

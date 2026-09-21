@@ -19,7 +19,7 @@ The framework's own stated bar (`docs/theories.md`): *"every theory is mechanism
 - After adding/citing a new theory, or after editing a theory's mechanism (skill/gate/schema).
 - When a citation looks decorative, or when a doc claims a mechanism you suspect doesn't exist.
 
-## The Grading Rubric (three axes)
+## The Grading Rubric (five axes)
 
 For each claimed theory, record:
 
@@ -31,7 +31,17 @@ For each claimed theory, record:
    - `Distorted` — diverges without rationale, or misrepresents the theory.
    - `Over-claim` — the theory doc claims more than the mechanism delivers (the project's own "theatre" failure mode).
    - `Name-only` — cited but not actually mechanized.
-3. **Evidence-basis** — `source-grounded` (verified against the author's canonical work) · `model-knowledge` (from the agent's training — **provisional / consistency-only**).
+3. **Evidence-basis** — `source-grounded` (verified against the author's canonical work) · `model-knowledge` (from the agent's training — **provisional / consistency-only**). *This axis is about how YOU know. Axes 4 and 5 are about the theory itself; do not collapse them.*
+4. **Currency** — `current` (the version cited is the newest authoritative one) · `behind` (a newer edition, report or revision exists and the difference is material) · `book-date` (cited at the founding work, which is correct for a stable theory) · `unmarked` (no version signal anywhere on the surface). Record **what version is cited**, **what is current**, and whether the theory is **LIVING** (annual reports, new editions, an author still revising) or **STABLE** (unchanged since the founding work). *A LIVING theory graded `unmarked` is the finding; a STABLE one graded `book-date` is fine.*
+5. **Evidence class of the theory itself** — `research` (empirical study with a stated method) · `synthesis` (practitioner work that cites research) · `judgement` (practitioner authority and case narrative, no cited study). Plus, where the theory makes population claims, **the population the evidence came from**. *This is not a quality ranking. A `judgement` theory can be excellent and a `research` one can be over-read; the point is that the reader knows which they are holding.*
+
+### Why axes 4 and 5 exist (dogfood 2026-09-20)
+
+**Axis 4.** A theory can score `Mechanized` + `Faithful` + `source-grounded` and still be faithful to a superseded edition — the first three axes cannot see it. Measured in the dogfood repo: currency was tracked well on roughly half the theory-bearing skills and **absent from seven of them** (`service-check`, `jtbd-map`, `ost-builder`, `wardley-map`, `user-needs-map`, `gist-plan`, `user-interview` carried no year marker at all). **The best-tracked skill was still one cycle behind**: `/dora-check` correctly carried the 2021 and 2023 DORA changes and the Elite tier, while dora.dev had moved to **five metrics** (deployment rework rate added 2024) and **35 capabilities** against the book's 24, and dropped the Elite/High/Medium/Low vocabulary from its current metrics guide. **Tracking once is not tracking** — which is why this is an axis with a trigger rather than a documentation pass.
+
+**Axis 5.** A framework that grades its USERS' evidence on the Gilad ladder while citing its own theories ungraded holds a double standard. Three primary-source reads bracket the range: one cited book contains no study, dataset or citation at all; another cites named researchers and flags its own thin spots (*"the research is limited and conflicting"*); a third rests on >23,000 survey responses **and self-locates below causal** — *"The analyses presented in this book fall into the first three categories"* of Leek's six. **Citing the third as proof that a practice CAUSES an outcome over-reads it by one tier**, and the over-read is licensed by its chapter titles rather than by its methods appendix.
+
+**The model to copy, from the same sweep:** `/team-shape` already does axis 4 without being asked — it carries the 2nd-edition platform-grouping correction *and* notes that *"the live site renders the third interaction mode 'Facilitation' while the book says 'facilitating' — which is why that enum is deliberately unpinned."* Someone checked the source against the live site and left the reasoning in place. **That is what a `current` grade looks like.**
 
 ## Workflow
 
@@ -119,9 +129,17 @@ It reads the scale table in `engine/diamond-rules.md` and each scale's `required
 > **Verdict: [N theories · X Faithful · Y Partial · Z Distorted/Over-claim]** — [one-line headline; e.g. "engine faithful, theory doc is the weakest artifact"]
 
 ### Scorecard
-| Theory (Author) | Representation | Fidelity | Basis | Mechanism / path |
-|---|---|---|---|---|
-| ... | Mechanized | **Distorted** | source-grounded | ... |
+| Theory (Author) | Representation | Fidelity | Basis | Currency | Class | Mechanism / path |
+|---|---|---|---|---|---|---|
+| ... | Mechanized | **Distorted** | source-grounded | `behind` (cites 2018, current 2024) LIVING | judgement | ... |
+
+**Currency column:** grade · what is cited vs what is current · LIVING or STABLE. **Every LIVING
+theory graded `unmarked` or `behind` gets a re-check horizon in the findings**, because a living
+theory re-goes-stale on its own schedule and the last audit's pass does not carry forward.
+
+**Class column:** `research` · `synthesis` · `judgement`. A theory whose citation in
+`docs/theories.md` implies more than its class supports is an **Over-claim** on axis 2, and should
+be graded as one.
 
 (Render Distorted / Over-claim / Name-only rows so they POP — leading bold — per Von Restorff; they are the rows the reader must not scroll past.)
 

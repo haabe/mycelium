@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mycelium.dev/schemas/canvas/doctrine.schema.json",
+  "title": "Doctrine and climate — the two registers that stand beside the ladder",
+  "description": "NEITHER IS EMITTED BY A DIAMOND, and that is the point (v0.230.0). Doctrine is 'universally applicable' — every inquiry at every scale is subject to it, so it belongs to no scale. Climate 'will apply to you regardless of your choice', so giving it a diamond would invent a maker for something the world makes. Both GROW rather than complete: 'the more you play the game then the more forms of doctrine you'll discover.' That is why the 2026-04 audit's coverage ratios against a fixed denominator were unscoreable — the sets are open by design, and no percentage of them can be computed.",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "$ref": "_common.schema.json#/$defs/schema_version"
+    },
+    "last_reviewed": {
+      "type": "string",
+      "description": "YYYY-MM-DD of the last doctrine retrospective. READ AS A FIRING CONDITION: a retrospective is DUE when a diamond has entered completed_diamonds with a completed_at later than this date. 'Learn these continuously' is not a trigger, and an un-triggered retrospective is the shape that has failed repeatedly in this project — so the trigger is an event that already gets recorded, not a calendar."
+    },
+    "doctrine": {
+      "type": "array",
+      "description": "What this project has learned applies universally to its own work. GROWS; never completes. An empty register is honest for a young project.",
+      "items": {
+        "type": "object",
+        "required": ["id", "principle", "learned_from"],
+        "properties": {
+          "id": {"type": "string"},
+          "principle": {
+            "type": "string",
+            "description": "Stated so it can be applied without further interpretation. 'Don't pick and choose, apply them all' — a principle held selectively is not doctrine."
+          },
+          "learned_from": {
+            "type": "string",
+            "description": "The concrete thing that changed and prompted this — 'look for what has changed and always ask why?'. A principle with no incident behind it was imported, not learned, and should say so here."
+          },
+          "added": {"type": "string"},
+          "universal": {
+            "type": "boolean",
+            "description": "Wardley's own split: doctrine is universally applicable, gameplay is context-specific. Set false and it is not doctrine — move it."
+          },
+          "superseded_by": {
+            "type": "string",
+            "description": "Doctrine may be replaced as the project learns. Supersede in place; do not delete, because the reason it was believed is the learning."
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "climate": {
+      "type": "array",
+      "description": "Forces that apply regardless of choice. What an inquiry emits FROM climate is a DATED PREDICTION — which is what makes a climate entry scoreable later, and an undated one merely an opinion about the weather.",
+      "items": {
+        "type": "object",
+        "required": ["id", "prediction", "as_of"],
+        "properties": {
+          "id": {"type": "string"},
+          "prediction": {
+            "type": "string",
+            "description": "What this force implies will happen, stated so it can be wrong."
+          },
+          "as_of": {
+            "type": "string",
+            "description": "YYYY-MM-DD the prediction was made. Required: a prediction that cannot go stale cannot be scored, and an unscoreable prediction is not evidence."
+          },
+          "horizon": {
+            "type": "string",
+            "description": "When it should be checked. Optional, but a prediction with no horizon tends never to be read again."
+          },
+          "outcome": {
+            "type": "string",
+            "enum": ["held", "failed", "unclear", "unscored"],
+            "description": "Scored at the doctrine retrospective. 'unclear' is a real answer and beats forcing a verdict; 'unscored' means nobody has looked yet and must not be read as 'held'."
+          },
+          "scored_at": {"type": "string"}
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}
