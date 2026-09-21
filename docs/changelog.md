@@ -4,6 +4,39 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-21.
 
+## v0.236.0 - the ten hooks that could not be measured are now six fewer
+
+**2026-09-21.** No behaviour change to what any hook advises or blocks. What changes is that six
+mechanisms that were invisible to `check_retirement_candidates.py` now leave a record.
+
+- **The gap v0.234.0 left.** That release built the shared fire-logger and adopted it in the
+  blocking hooks, on the reasoning that a mechanism able to refuse a user's tool call must be
+  measurable. The advisory hooks were the other two thirds of the same argument and were not done:
+  `ci-signal`, `codex-postfailure-shim`, `correction-attribution-guard`, `install-runtime-hooks`,
+  `reflexion-gate` and `shell-safety-guard` wrote nothing at all, so neither of the retirement
+  check's two questions -- did it fire, does anything read it -- had an answer for any of them.
+- **THE RECORD IS WRITTEN ON THE EMIT PATH, NOT AT ENTRY, AND THAT IS THE WHOLE DESIGN.** Three of
+  the six are thin shims that pipe their input into a Python helper; the helper, not the shim,
+  decides whether there is anything to say. Logging where the shim starts would have recorded a
+  fire on **every matching tool call** -- a mechanism that "fires" always is indistinguishable from
+  one that never discriminates, and that number would have been worse than no number, because it
+  reads as data. Each shim now captures the helper's output, logs only when it is non-empty, and
+  re-emits it unchanged. `reflexion-gate` logs at the bottom, reachable only past its two no-fire
+  branches. `codex-postfailure-shim` logs when it delegates, keeping its own count separate from
+  the gate's, since "is the Codex shim still earning its place" is not answered by a count that
+  also includes native runs.
+- **`install-runtime-hooks` is a provisioner, not an event hook**, and "did it fire in the window"
+  reads oddly for one. It is instrumented anyway because the question the check actually asks is
+  whether a mechanism still earns its place, and for an installer that is a usage count. The row is
+  written after the manifest lands, so a run that died in validation leaves nothing claiming
+  success.
+- **Tested on both halves.** `tests/bash/test_advisory_hook_fire_logs.sh` asserts for each case that
+  a firing input writes a row **and that a quiet input does not** -- the second is the load-bearing
+  one, since an entry-logger would pass the first and be a regression that reads as coverage. It
+  also pins that the advice still reaches the caller after the capture-and-re-emit change, and that
+  every instrumented hook carries its state path as a **literal**, because the retirement check
+  finds the log by regexing the source and a computed filename would be invisible to it.
+
 ## v0.235.0 - L5 was named Task in the gates and Market everywhere else, and the gates were wrong
 
 **2026-09-21.** Behaviour-changing for any project with an L5 diamond: a new gate can block, and one

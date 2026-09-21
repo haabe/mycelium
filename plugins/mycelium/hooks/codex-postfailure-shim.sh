@@ -37,5 +37,11 @@ if [ "$IS_FAILURE" != "1" ]; then
   exit 0
 fi
 
+# FIRE RECORD, added v0.236.0. Logged here and not at entry: everything above this point
+# is the failure detection, and the shim has only DONE something once it delegates. Its own
+# record is separate from reflexion-gate's because the question "is the Codex shim still
+# earning its place" is not answered by the gate's count -- the gate also runs natively.
+. "${CLAUDE_PLUGIN_ROOT:-$(dirname "${BASH_SOURCE[0]}")/..}/scripts/_hook_fire_log.sh" 2>/dev/null || true
+mycelium_log_fire ".claude/state/codex-postfailure-shim-fires.jsonl" "fired" 2>/dev/null || true
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 printf '%s' "$INPUT" | bash "$SCRIPT_DIR/reflexion-gate.sh"

@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.235.0 -- **L5 was named Task in the gates and Market everywhere else, and the gates were wrong** (MINOR, behaviour-changing at L5). `engine/diamond-rules.md` says atomic tasks within delivery do not get their own diamond, so a per-scale gate set for "L5 Task" gated a unit that never becomes a diamond -- it refuted itself. Four framework surfaces carried the task reading; the trio table in the same file already said Market. L5 now gates on release categorisation, PMF, positioning and market signal, its source-ratio exemption is REVOKED, and the delivery-metrics gate moves to L4 where deploys happen.*
+*Version 0.236.0 -- **The ten hooks that could not be measured are now six fewer, and the record says "it warned", not "it ran"** (MINOR). v0.234.0 gave the BLOCKING hooks a shared fire-logger and left the advisory ones writing nothing. The six remaining now log -- but only on the path where they actually produced output, because a row written at entry would say the mechanism fires on every matching tool call, which is the opposite of what the retirement check asks.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

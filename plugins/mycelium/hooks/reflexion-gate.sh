@@ -207,4 +207,10 @@ output = {
 print(json.dumps(output))
 "
 
+# FIRE RECORD, added v0.236.0. This line is reached ONLY on the emit path -- the two
+# no-fire branches above return at their own `exit 0`, so reaching here means the prompt
+# was produced. That is why it is at the bottom rather than at entry.
+. "${CLAUDE_PLUGIN_ROOT:-$(dirname "${BASH_SOURCE[0]}")/..}/scripts/_hook_fire_log.sh" 2>/dev/null || true
+mycelium_log_fire ".claude/state/reflexion-gate-fires.jsonl" "fired" 2>/dev/null || true
+
 exit 0
