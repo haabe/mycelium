@@ -81,4 +81,6 @@ Instead:
 Do not write the ack file on your own judgment — it records the USER's
 decision, not yours.
 EOF
+. "${CLAUDE_PLUGIN_ROOT:-$(dirname "${BASH_SOURCE[0]}")/..}/scripts/_hook_fire_log.sh" 2>/dev/null || true
+mycelium_log_fire ".claude/state/discovery-gate-fires.jsonl" "blocked" 2>/dev/null || true
 exit 2

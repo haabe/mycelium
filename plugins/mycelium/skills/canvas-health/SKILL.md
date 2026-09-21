@@ -40,7 +40,21 @@ Audit the canvas knowledge base for quality, consistency, and completeness. The 
      regulatory 365d; unlisted files fall back to 90d).
    - **SKIP any file whose `_meta.applicability` marks it inapplicable** (a value
      starting `n/a`, or naming a product type this project is not, or saying "NOT
-     actively used"). Added v0.90.0. Two dogfood canvases held ZERO evidence — every
+     actively used", **or declaring the file an append-only log with no quality bar to
+     validate against**). Added v0.90.0; the append-only form added v0.234.0.
+     **WHY THE APPEND-ONLY FORM WAS MISSING FOR SO LONG, AND WHY IT IS THE SAME RULE.**
+     Step 9b below already exempts append-only logs from its length budget, on the
+     reasoning that for such a file the line count IS the value and pages-as-shape is a
+     category error. **The identical reasoning applies to a validation DATE on a file
+     with nothing to validate**, and this step never got the rule — so a dogfood
+     `archived-solutions.yml`, a registry of discarded leaves whose own `_meta` said
+     "no quality bar to validate against", was flagged as stale on every pass. Its author
+     had written the exemption in prose AND appended "flagged as missing `_meta` in
+     recurring canvas-health passes" to the marker, and it went on being flagged: **a
+     finding the author has pre-emptively annotated as noise is a check being routed
+     around**, which is the condition this very step warns trains a reader to skip it
+     (2026-09-21). Same one-rule-two-places shape as the horizon exemption written into
+     8c(b) and not carried to 8c(a). Two dogfood canvases held ZERO evidence — every
      metric field null, the only non-null leaves `False` schema defaults — and already
      said so in their own `_meta`. They decayed on a 30-day horizon anyway, and the only
      way to silence that warning would have been to date a validation of a file nobody

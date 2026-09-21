@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.233.0 -- **BREAKING. The ladder had no entry to its own top rung, and the field the trigger needed was write-only** (MINOR, breaking a canvas schema). Every scale had a spawn rule except L5, which had only an exit. `go-to-market.yml#launch_tier` is RETIRED and now fails validation: one project-wide integer capped at 1|2|3, overwritten by each release, read by nothing. `releases[]` replaces it — band names are the team's, one boolean carries the trigger — a major launch spawns an L5 gated on PMF, and `check_scale_occupancy.py` reports a major launch with no L5 as a categorisation nobody acted on.*
+*Version 0.234.0 -- **Every blocking hook now keeps a record, and two conventions a check had learned catch up with the prose** (MINOR). Four hooks that can refuse a tool call or refuse to end a turn wrote nothing, so 40% of the hook surface sat outside the only instrument that asks whether a mechanism still earns its place. `scripts/_hook_fire_log.sh` is the shared writer -- ten bespoke loggers in a 25-hook system is the defect, not the fix.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

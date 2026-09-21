@@ -33,6 +33,8 @@ I/O contract (Claude Code PreToolUse):
   exit 0 + JSON permissionDecision=deny          -> block with UI message
 Fail-open on unparseable input (a guard bug must never brick all writes).
 """
+import datetime
+import json
 import os
 import re
 import sys
@@ -187,7 +189,31 @@ def deny(hits):
         "diamonds/active.yml, then retry."
         + ("" if _yaml is not None else " (PyYAML absent: regex scan only.)")
     )
+    _log_fire("blocked", ",".join(hits)[:120])
     hi.decision("deny", reason)
+
+
+def _log_fire(outcome: str, detail: str = "") -> None:
+    """One line per fire to .claude/state/autonomous-evidence-guard-fires.jsonl.
+
+    A BLOCKING guard that keeps no record cannot be measured, so it can never be
+    retired and never defended (v0.234.0). Records the OUTCOME and the field names
+    that tripped it -- never the canvas content, per the 2026-09-04 security review.
+    Best effort: a log that cannot be written must never change a guard's verdict.
+    """
+    root = os.environ.get("PROJECT_DIR") or os.environ.get("CLAUDE_PROJECT_DIR") or "."
+    try:
+        d = os.path.join(root, ".claude/state")
+        os.makedirs(d, exist_ok=True)
+        ts = datetime.datetime.now(datetime.UTC).isoformat().replace("+00:00", "Z")
+        row = {"ts": ts, "hook": "autonomous-evidence-guard.sh", "outcome": outcome}
+        if detail:
+            row["detail"] = detail
+        with open(os.path.join(d, "autonomous-evidence-guard-fires.jsonl"), "a",
+                  encoding="utf-8") as fh:
+            fh.write(json.dumps(row) + "\n")
+    except OSError:
+        return
 
 
 def _judge_file_write(tool_name, tool_input, r) -> None:

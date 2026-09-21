@@ -785,6 +785,24 @@ action_flags:
       description: "ON HOLD entries with calendar conditions (e.g., 'pending May 7 evidence') that pass their named date without resolution should be flagged, not silently expired."
       when_date_passes: "Surface as a stale flagged item via /canvas-health (existing staleness machinery applies). Do NOT auto-transition to OPEN — the absence of the awaited evidence is itself a finding worth surfacing to the user."
       escalation: "After 30 days past a named date with no resolution, suggest re-evaluating whether the condition is still relevant or whether the underlying assumption has changed."
+      what_counts_as_a_named_date: >-
+        ONLY a date the hold WAITS FOR, in a waiting construction — `pending <date>`, `by <date>`,
+        `until <date>`, `after <date>`, `expires <date>`. A bare date elsewhere in the entry is
+        almost always PROVENANCE: when the hold was written, re-gated, or last re-checked. Added
+        v0.234.0.
+      a_condition_gated_hold_is_never_overdue: >-
+        A hold whose gate is a SIGNAL rather than a date ("≥1 theory-fluent tester signal") has no
+        awaited date, so nothing above applies to it and elapsed time does not make it stale. Its
+        question is "has the signal arrived?", which no date can answer. **Do not read the date of
+        the last re-check as a deadline** — that is the observed failure, twice, by two independent
+        readers. `/canvas-health` step 9c flagged four holds on 2026-08-05 and produced ZERO genuine
+        findings, every matched date being a re-gate or re-check stamp; one flagged entry carried
+        its own maintenance record, "GATE RE-CHECKED 2026-07-03 ... Hold unchanged" — a gate being
+        tended, reported as rotting. The check was repaired in v0.90.0 by requiring the waiting
+        construction. **This prose was not, and on 2026-09-21 an agent reading it cold with no
+        repository history made the identical inference**, concluding an 80-day-old re-check meant a
+        condition-gated hold was due. The check is only one consumer of this convention; the others
+        are agents routed here by AGENTS.md, and they read these words rather than the check.
 
   # Concurrency note: transitions are intentionally idempotent. If two agents
   # observe the same condition met simultaneously and both attempt to transition

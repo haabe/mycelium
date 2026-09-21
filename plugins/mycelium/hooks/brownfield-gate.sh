@@ -101,4 +101,6 @@ Do not write the ack file on your own judgment — it records the USER's decisio
 not yours. And do not treat this as permission to skip the work they asked for;
 if they say carry on, carry on.
 EOF
+. "${CLAUDE_PLUGIN_ROOT:-$(dirname "${BASH_SOURCE[0]}")/..}/scripts/_hook_fire_log.sh" 2>/dev/null || true
+mycelium_log_fire ".claude/state/brownfield-gate-fires.jsonl" "blocked" 2>/dev/null || true
 exit 2
