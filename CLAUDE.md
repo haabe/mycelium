@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.242.3 -- **The page stated the rule and not the reason, so an agent filed the reason as a defect — twice** (PATCH). `diamond-rules.md` named two catalogue doors and never said why only two. It now carries what each level RECURS ON, and the rule that falls out: a door is possible only where a level recurs on a pile. L1, L4 and L5 recur on events, which have no queue to open on.*
+*Version 0.242.4 -- **The L3 catalogue door was gated on a state nothing could set** (PATCH). "When a leaf is `selected`" — and `solutions[]` has no status field, the only status enum belongs to the opportunity, and the word appears in three places in the plugin, all describing the gate and none setting it. A door gated on a state with no writer never opens, which is why a consumer canvas held 53 solutions and no L3 diamond ever.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

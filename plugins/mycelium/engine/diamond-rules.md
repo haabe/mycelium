@@ -83,7 +83,7 @@ the books, three adversarial rounds and founder correction.*
 
 ## Spawning Rules
 
-**A record and a cycle are different objects (v0.217.0).** An opportunity in `opportunities.yml` is a record; an L2 diamond is a cycle of work on it. Scoring, evidence and a resolving `rolls_up_to` make a good record and open nothing. A cycle is opened by a spawn from the parent (below) OR from the catalogue: `/ost-builder` offers an L2 on a scored, evidence-backed opportunity and `/ice-score` offers an L3 on a selected leaf, whether or not the parent has progressed. An unvalidated parent does not forbid the cycle; it bounds how far it can go.
+**A record and a cycle are different objects (v0.217.0).** An opportunity in `opportunities.yml` is a record; an L2 diamond is a cycle of work on it. Scoring, evidence and a resolving `rolls_up_to` make a good record and open nothing. A cycle is opened by a spawn from the parent (below) OR from the catalogue: `/ost-builder` offers an L2 on a scored, evidence-backed opportunity and `/ice-score` offers an L3 on the highest-ranked scored leaf, whether or not the parent has progressed. An unvalidated parent does not forbid the cycle; it bounds how far it can go.
 
 Diamonds spawn child diamonds when complexity or scope requires it:
 

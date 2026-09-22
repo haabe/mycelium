@@ -4,6 +4,36 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-22.
 
+## v0.242.4 - a door gated on a state nothing could set
+
+**2026-09-22.** `/ice-score` carries the L3 catalogue door added in v0.217.0, and its condition
+could not be met.
+
+- **The condition was `selected`, and nothing sets it.** `opportunities[].solutions[]` carries
+  `minted_by`, `provenance`, `purpose_stance`, `shipped_at` — **no status field**. The only status
+  enum in that schema belongs to the opportunity (`open`/`closed`/`resolved`/`addressed`/
+  `discarded`). A grep of every `.md`, `.yml` and `.json` under `plugins/mycelium/` finds the word
+  in three places, all describing this gate and none setting it.
+- **The consequence is a number the framework already printed about itself.** A consumer canvas
+  held **53 solution records and no L3 diamond ever opened**, which `check_scale_occupancy.py`
+  reports verbatim as *"the catalogue has an intake and no outlet at this scale"* — the exact
+  condition this door was added to fix.
+- **Found by a run, not by a check.** A full-ladder dogfood run whose journey carried a
+  gate-clearing skill for every blocking gate at every claimed scale, and a human "yes" at every
+  approval prompt, completed its whole journey with two diamonds. `/ice-score` scored six
+  solutions, ranked one first, recommended it as "test first", and correctly declined to open
+  anything — closing with *"`diamonds/active.yml` is not modified by this entry."* **It ranked; it
+  did not select, because there was nothing to select into.**
+- **Repaired by mirroring the sibling door that works**, rather than by adding a state. `/ost-builder`
+  offers an L2 *"after an opportunity is scored and evidence-backed"* — properties of the record,
+  checkable on sight. `/ice-score` now offers an L3 **on the highest-ranked scored leaf**, with the
+  same one-line decline form (*"sol-NNN stays a record"*), and **the human's answer IS the
+  selection**. No schema change; `diamond-rules.md` updated to match.
+- **Pinned as a property, not a wording**: no door sentence may gate on a status value that no
+  canvas schema declares. The regression test allows the old phrase to APPEAR — the repaired text
+  quotes it to say what changed — but not to be stated as a live condition, the same exemption the
+  Hoskins drift guard makes for prose that names an error in order to correct it.
+
 ## v0.242.3 - the page stated the rule and not the reason
 
 **2026-09-22.** `diamond-rules.md` said a cycle can be opened from the catalogue, named
