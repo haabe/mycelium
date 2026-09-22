@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.242.0 -- **A Cynefin domain drives method selection and nothing could tell whether one was stale** (MINOR). The gate fires at one transition per diamond and never re-runs; `cynefin_domain` was a bare enum with no date, so "has the data changed since?" was unaskable. Measured at adoption on the dogfood canvas: 75 classifications, 0 checkable. Also fixes an enum drift that made `confused` impossible to record on a service.*
+*Version 0.242.1 -- **The 2026-07-01 Hoskins correction fixed the checking surfaces and left the teaching ones** (PATCH). `scenarios.schema.json` and `canvas-health` have recorded since July that "Means" is a fabricated fourth element and the model has THREE (Motivation, Persona, Simulation) — while `ost-builder`, `user-interview` and `domains/discovery/CLAUDE.md` went on instructing agents to build the four-element version. A schema is consulted; an instruction is followed. Found by a dogfood agent that hit the contradiction mid-run and resolved it correctly on its own.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 
