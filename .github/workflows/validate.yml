@@ -135,6 +135,13 @@ jobs:
       - name: Run theory-fidelity structural guard (theories.md mechanism refs resolve; gates grounded; no name-only theory)
         run: python3 plugins/mycelium/scripts/check_theory_fidelity.py --root .
 
+      # Every copy of the per-scale gate set must agree with confidence-thresholds.yml,
+      # which is what the gating machinery reads. Seven drifts across six files in two
+      # days, each found by accident after the last was fixed; this discovers copies
+      # rather than assuming a known list.
+      - name: Run gate-set drift scanner (no doc may disagree with the machinery)
+        run: python3 plugins/mycelium/scripts/check_gate_set_drift.py --root .
+
       - name: System card hook-surface review (the disclosure must move when the hooks do)
         # The AI system card fell a quarter behind the hooks twice (2026-06-11, 2026-09-14),
         # found by audit both times, because the release path synced only its version token.

@@ -4,6 +4,44 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-21.
 
+## v0.241.0 - seven copies drifted in two days, so the fix is a scanner not an eighth patch
+
+**2026-09-22.** No gate behaviour changed. What changed is that copies of the gate set are now
+discovered and compared, rather than corrected one at a time as each is stumbled over.
+
+- **The treadmill this ends.** v0.240.0 fixed `theory-gates.md`'s Quick Reference. Within hours,
+  three more copies surfaced: `interview/SKILL.md` carrying the identical drift (and it is the
+  SECOND table an agent initialises `theory_gates_status` from, so which gates a diamond got
+  depended on which document was read), plus `hooks/README.md` and `engine/README.md` both
+  claiming thirteen gates against fifteen defined. Each fix was followed by finding the next copy
+  by accident.
+- **`check_gate_set_drift.py` scans instead of assuming.** It walks the plugin tree for any line
+  enumerating four or more gate names, classifies each, and compares every scale-keyed row to
+  `confidence-thresholds.yml`. **On its first run it found a seventh drift** —
+  `theory-gates.md:558`, "Applicable gates: All 12 gates" — in the very file whose table had been
+  corrected that morning. Fixing a table and walking past a line six hundred lines below it is
+  exactly the failure a scanner exists to remove.
+- **It distinguishes authoritative from illustrative, and that is load-bearing.**
+  `engine/feedback-loops.md` names seven gates and ends "etc." — a partial list is allowed to be
+  partial. A check that fires on correct prose is one a reader learns to skip, so "etc.", "e.g."
+  and "such as" mark a line as informational and exempt it from comparison.
+- **An UNDECLARED copy is reported even when it agrees.** Every drift so far began as a copy
+  nobody was comparing, so a file enumerating gates that is not in the declared registry is
+  surfaced on the day it appears rather than the day it misleads someone.
+- **Stale counts are caught without any name changing.** "all N gates" drifts silently as gates
+  are added; two such claims were live at adoption.
+- **It scans its own directory, and that is deliberate.** The scanner matched its own docstring
+  twice during development. Both times the prose was reworded rather than the file exempted —
+  **a check that excludes itself has a hole shaped exactly like the checker** — and a test asserts
+  `scripts/` is still scanned.
+- **Consumer-side finding, reported upstream because the shape is general.** A consuming project's
+  test harness hardcoded one twelve-gate list for every scale. An L0 diamond was consequently
+  initialised with `jtbd`, which the Applicability Matrix marks "--" at every L0 transition, and
+  **eight progression attempts were then correctly refused on a gate that should never have been
+  there.** The framework was right at every step; the instruction handed to the agent was wrong.
+  That is the strongest argument for this scanner: a doc that disagrees with the machinery is
+  consulted, but a task template that disagrees is obeyed.
+
 ## v0.240.0 - the table an agent reads disagreed with the machinery that gates it
 
 **2026-09-22.** Documentation correction plus the check that stops it recurring. No gate behaviour

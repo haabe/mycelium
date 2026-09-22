@@ -31,6 +31,14 @@ ROOT = Path(__file__).resolve().parents[2]
 TABLE = ROOT / "plugins" / "mycelium" / "engine" / "theory-gates.md"
 THRESHOLDS = ROOT / "plugins" / "mycelium" / "engine" / "confidence-thresholds.yml"
 
+#: The SECOND machine-followed gate table. `/interview` tells an agent to initialise
+#: `theory_gates_status` from this one, so it has the same authority as the engine table
+#: and drifted identically — L1 at 7, "All 12 gates" at L3, "All except jtbd" at L4.
+#: v0.240.0 fixed the engine table and left this one, which is the fix-one-surface class
+#: inside the fix for the fix-one-surface class. Any future per-scale gate list belongs
+#: in this tuple; a table nothing compares is a table that drifts.
+INTERVIEW = ROOT / "plugins" / "mycelium" / "skills" / "interview" / "SKILL.md"
+
 #: Prose name in the table -> key in required_theory_gates.
 ALIASES = {
     "delivery metrics": "delivery_metrics",
@@ -133,6 +141,62 @@ def test_guard_bites_on_a_divergent_table(tmp_path, monkeypatch):
     assert sorted(required - documented) == ["capacity", "landscape"], (
         "the negative control must reproduce the SPECIFIC historical drift, not any difference"
     )
+
+
+def _interview_rows() -> dict[str, set[str]]:
+    """`/interview`'s own initialisation table, which uses bare keys rather than prose."""
+    text = INTERVIEW.read_text(encoding="utf-8")
+    start = text.index("| Scale | Gates to Initialize |")
+    rest = text[start:]
+    end = rest.find("\n\n")
+    rows = {}
+    for scale, names in re.findall(r"^\| (L[0-5]) \| (.+?) \|$", rest[:end], re.MULTILINE):
+        rows[scale] = {n.strip().replace("**", "") for n in names.split(",") if n.strip()}
+    return rows
+
+
+@pytest.mark.parametrize("scale", sorted(_machinery()))
+def test_interview_table_matches_machinery(scale):
+    """THE SECOND TABLE, and the reason this file now takes a tuple of surfaces.
+
+    An agent initialising from `/interview` must get the same gate set as one
+    initialising from `theory-gates.md`. They disagreed until v0.241.0: the engine
+    table was corrected and this one was not, so which gates a diamond carried
+    depended on which document the agent happened to read."""
+    documented = _interview_rows()[scale]
+    required = _machinery()[scale]
+    assert documented == required, (
+        f"{scale}: /interview documents {sorted(documented)}, "
+        f"machinery requires {sorted(required)}. "
+        f"Missing: {sorted(required - documented)}. Extra: {sorted(documented - required)}."
+    )
+
+
+def test_interview_table_uses_no_relative_count():
+    """Same ban, same reason: `All 12 gates` was true once and is now wrong."""
+    text = INTERVIEW.read_text(encoding="utf-8")
+    start = text.index("| Scale | Gates to Initialize |")
+    rest = text[start:]
+    end = rest.find("\n\n")
+    offenders = [
+        line.strip() for line in rest[:end].splitlines()
+        if re.match(r"^\| L[0-5] \|", line) and re.search(r"\ball\b", line, re.IGNORECASE)
+    ]
+    assert not offenders, f"/interview gate rows must name every gate: {offenders}"
+
+
+def test_the_two_tables_agree_with_each_other():
+    """Belt and braces. Both could match the machinery per-scale and still be
+    compared here, but a direct table-to-table assertion fails with a clearer
+    message when a new gate lands in one and not the other."""
+    engine = {s: g for s, (_c, g) in _table_rows().items()}
+    interview = _interview_rows()
+    for scale in sorted(set(engine) & set(interview)):
+        assert engine[scale] == interview[scale], (
+            f"{scale}: theory-gates.md and /interview disagree. "
+            f"engine-only: {sorted(engine[scale] - interview[scale])}, "
+            f"interview-only: {sorted(interview[scale] - engine[scale])}"
+        )
 
 
 def test_every_documented_gate_is_actually_defined():

@@ -555,7 +555,7 @@ Use this matrix to determine exactly which gates to evaluate for a given scale a
 | Corrections | R | R | R | R |
 | Regulatory | -- | R | R | -- |
 
-**Applicable gates**: All 12 gates
+**Applicable gates**: evidence, four_risks, jtbd, cynefin, bias, security, privacy, bvssh, service_quality, delivery_metrics, corrections, regulatory (12 of the 15 defined; Explainability is conditional on AI components, Landscape and Capacity apply at L1)
 
 **Trio guidance for L3**:
 - **Product**: Does the solution address the validated opportunity? Is there evidence users want this? (Strong)

@@ -36,6 +36,7 @@
 check_legacy_paths.py --root .
 check_doc_references.py --root .
 check_theory_fidelity.py --root .
+check_gate_set_drift.py --root .
 
 # Added v0.110.0 — the seven that were CI-only. All seven run in well under a
 # second on this tree, so the reason they were not here was never cost.
