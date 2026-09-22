@@ -4,6 +4,42 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-22.
 
+## v0.242.3 - the page stated the rule and not the reason
+
+**2026-09-22.** `diamond-rules.md` said a cycle can be opened from the catalogue, named
+`/ost-builder` for L2 and `/ice-score` for L3, and said nothing about why only those two.
+
+- **Measured cost of the omission.** A consumer agent enumerated the doors, found the asymmetry and
+  filed it as a probable defect — **twice in one session**, the second time after a blind reviewer
+  had already corrected the first attempt. The correcting reasoning existed, in that project's design
+  notes, five days before the first attempt. It was not on the page that states the rule.
+- **What was added.** A per-level table of what each scale EMITS, what it RECURS ON, and what ENTERS
+  it, placed BEFORE the Spawning Rules so it is read before a proposal is written. And the rule it
+  implies, stated plainly: **a catalogue door is possible only where a level recurs on a PILE.** L2
+  recurs continuously and L3 per candidate; L1, L4 and L5 recur on an event — a decision, an
+  increment, a categorisation — and an event has no queue to select from.
+- **L1 is named specifically, because its files DO carry ids and that is the trap.**
+  `landscape.yml#components[]`, `#climatic_predictions[]` and `doctrine.yml#doctrine[]` all have
+  ids and none is a proposal awaiting a decision. Wardley separates them: doctrine is *"universally
+  applicable... Don't pick and choose, apply them all"*; climate *"will apply to you regardless of
+  your choice"*, so it has no producer and must not be given a diamond. Gameplay IS a proposal — and
+  Wardley states the set is **open**, so it is a library chosen FROM, not a backlog drawn DOWN.
+- **L4 is named too**, with its real gap: no canvas schema carries an id-bearing delivery increment,
+  and what L4 lacks is a promotion trigger rather than a door — the `four_risks` gate fires and
+  nothing consumes its result.
+- **Pinned by a test that compares the two**, not the prose: the scales named in the catalogue
+  sentence must equal the scales whose recurrence is pile-shaped. Adding a door without a pile, or
+  changing a recurrence to an event while leaving its door, fails. Verified in both directions.
+- **AND THE ADDITION BROKE A SHIPPED CHECK, WHICH IS THE MORE USEFUL HALF OF THIS RELEASE.**
+  `check_primary_theory_gated.py` matched ANY line shaped `| **L0** |` anywhere in the file and let
+  later matches overwrite earlier ones, so the new table — bolded, same row shape, positioned below —
+  silently became the source of truth for theory gating and the join went empty. **An empty join
+  reports no ungated pairs, which is indistinguishable from everything being gated.** One test stood
+  between that and a silently dead theory-fidelity mechanism. The parser is now anchored on the
+  theory table's own header and stops at the table's end; the new table also no longer imitates its
+  row shape. Either fix alone suffices — the parser one is the fix, the table change removes the
+  collision that exposed it. Regression test carries a two-table fixture.
+
 ## v0.242.2 - a release gate that could only ask half its question
 
 **2026-09-22.** `release_gaps.py --check` asked *"does every DOCUMENTED version have a

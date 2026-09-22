@@ -67,15 +67,31 @@ THEORY_TO_GATE: dict[str, str | None] = {
 _SCALE_ROW = re.compile(r"\|\s*\*\*(L[0-5])\*\*\s*\|")
 _THEORY_SPLIT = re.compile(r",(?![^(]*\))")
 _MIN_CELLS = 6
+#: The header row of the ONE table this parser may read. Matching the header rather than
+#: the row shape is what stops a lookalike table below it from taking over.
+_THEORY_HEADER = re.compile(r"\|\s*Scale\s*\|.*Primary Theories", re.IGNORECASE)
+
 _THEORY_CELL = 4
 
 
 def parse_primary_theories(rules_path: Path) -> dict[str, list[str]]:
     """scale -> primary theories, from the L0-L5 table in diamond-rules.md."""
     out: dict[str, list[str]] = {}
+    # ANCHORED ON THE HEADER, NOT ON ROW SHAPE (2026-09-22). This scanned every line for
+    # `| **L0** |` and let later matches overwrite earlier ones, so a SECOND table in the
+    # same file silently became the source of truth for theory gating. v0.242.3 added a
+    # per-level recurrence table below this one and the join went empty — caught by a
+    # single test, and by nothing else: with no theories parsed the checker reports no
+    # ungated pairs, which reads exactly like a clean result.
+    in_table = False
     for line in rules_path.read_text(encoding="utf-8").splitlines():
+        if _THEORY_HEADER.search(line):
+            in_table = True
+            continue
+        if in_table and not line.lstrip().startswith("|"):
+            break  # the table ended; anything below is a different table
         m = _SCALE_ROW.match(line)
-        if not m:
+        if not in_table or not m:
             continue
         cells = [c.strip() for c in line.split("|")]
         if len(cells) < _MIN_CELLS:

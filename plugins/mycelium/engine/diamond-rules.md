@@ -34,6 +34,53 @@ Diamonds operate at different scales of abstraction:
 
 **Note on L4 sub-diamonds**: Complex features within L4 can spawn their own sub-L4 diamonds (e.g., a large feature broken into independently deliverable slices). These are still L4 scale but nested. Atomic tasks within delivery do NOT need their own diamond -- they are simply tasks within the L4 Deliver phase.
 
+## What each level RECURS ON — and why only two scales have a catalogue door
+
+**Read this before proposing a catalogue door for L0, L1, L4 or L5.** Added v0.242.3 after an agent
+enumerated the doors, found two, and filed the asymmetry as a probable defect — twice, in one
+session, the second time after a blind reviewer had already corrected the first attempt. The
+reasoning existed; it was not on this page.
+
+A level's unit is one diverge→converge cycle that **emits** something and **recurs** on something.
+The shape is uniform; the trigger is not, and the trigger is what decides whether a door is possible.
+
+| scale | the inquiry emits | recurs on | entered by |
+|---|---|---|---|
+| L0 | a WHY (once), and Just Causes (plural) | drift | founding; there is one purpose |
+| L1 | triggers | **a decision** | a constraint from L0 |
+| L2 | a validated or killed opportunity | **continuously** | parent spawn **or the catalogue** |
+| L3 | a build-or-kill verdict | **per candidate** | parent spawn **or the catalogue** |
+| L4 | an increment; a closed session | **per increment** | the L3→L4 four-risks verdict, as an entry permit |
+| L5 | a launch | **a release categorised as a major launch** | the L4→L5 spawn (v0.232.0) |
+
+**THE RULE THAT FALLS OUT OF IT: a catalogue door is possible only where a level recurs on a PILE.**
+L2 recurs continuously and L3 per candidate — both are drawn from an enumerable set of project
+records, so `/ost-builder` and `/ice-score` can offer the door. L1, L4 and L5 recur on **events** —
+a decision, an increment, a categorisation. An event has no queue to select from, so there is
+nothing for a door to open ON, and building one would mean inventing a record type the level does
+not produce.
+
+**L1 SPECIFICALLY, because its files DO carry id-bearing records and that is the trap.**
+`landscape.yml#components[]`, `landscape.yml#climatic_predictions[]` and `doctrine.yml#doctrine[]`
+all have ids, and none of them is a proposal awaiting a decision to work on it. Wardley separates
+them himself: doctrine is *"universally applicable... Don't pick and choose, apply them all"* —
+a class you apply in full, not a menu; climate *"will apply to you regardless of your choice"*, so
+it has no producer and **must not be given a diamond**, which would invent a maker for something the
+world makes. Gameplay is the one Wardley output that IS a proposal — and he states the gameplay and
+doctrine sets are **open**, so it is a library you choose FROM, not a project backlog you draw DOWN.
+
+**L4 SPECIFICALLY.** No canvas schema carries an id-bearing record for a delivery increment:
+`gist.yml#steps[]` and `#current_tasks[]` have no `id`, and GIST belongs to L3 in any case. L4's own
+theories supply no catalogue — DORA measures a continuous stream, OWASP supplies checks, SOLID
+supplies design rules. An increment is decomposed from the solution above it, not selected from a
+pile. **What L4 is actually missing is a promotion trigger, not a door**: the `four_risks` gate
+already fires and nothing consumes its result to open the L4. That is the open item.
+
+*Sources: Wardley (doctrine/climate/gameplay as quoted); Cagan (four risks as the discovery exit);
+Lauchengco (release categorisation); Forsgren (DORA as stream measurement); Rother (target before
+work). The per-level table is the consolidated reading recorded by a consumer project after reading
+the books, three adversarial rounds and founder correction.*
+
 ## Spawning Rules
 
 **A record and a cycle are different objects (v0.217.0).** An opportunity in `opportunities.yml` is a record; an L2 diamond is a cycle of work on it. Scoring, evidence and a resolving `rolls_up_to` make a good record and open nothing. A cycle is opened by a spawn from the parent (below) OR from the catalogue: `/ost-builder` offers an L2 on a scored, evidence-backed opportunity and `/ice-score` offers an L3 on a selected leaf, whether or not the parent has progressed. An unvalidated parent does not forbid the cycle; it bounds how far it can go.

@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.242.2 -- **A release gate that could only ask half its question** (PATCH). `release_gaps.py --check` verified that every DOCUMENTED version has a Release and could not ask whether the CURRENT version is documented at all. v0.242.1 was bumped, merged with every gate green, and shipped no Release: auto-release builds its body from the changelog section, found none, did nothing, and reported success. A consumer then updated to it off main, running a version whose notes exist nowhere.*
+*Version 0.242.3 -- **The page stated the rule and not the reason, so an agent filed the reason as a defect — twice** (PATCH). `diamond-rules.md` named two catalogue doors and never said why only two. It now carries what each level RECURS ON, and the rule that falls out: a door is possible only where a level recurs on a pile. L1, L4 and L5 recur on events, which have no queue to open on.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 
