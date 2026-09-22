@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.238.0 -- **The ICE erratum told consumers to re-check their scores and nothing checked whether they had** (MINOR). `check_ice_aggregate.py` verifies a stored ICE aggregate against the Ellis mean the skill and errata A1 both document. Measured on the dogfood canvas: 14 of 14 verifiable aggregates were products, zero were averages, three releases after the erratum shipped. Baseline-gated, because re-scoring a closed decision is backfill, not a fix.*
+*Version 0.239.0 -- **The technique with the best measured result now carries its measured problem: it fires on 14 days out of 32** (PATCH-shaped, MINOR by content). A prediction frozen the day Technique 7 shipped asked whether evidence in a skill file changes behaviour. Scored 2026-09-22 against its own frozen rule: FAILED. The pre-registered remedy was not better wording -- a technique needs a trigger, and where none can exist the skill must say so instead of letting a reader assume ambient coverage.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

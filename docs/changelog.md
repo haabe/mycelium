@@ -4,6 +4,38 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-21.
 
+## v0.239.0 - the technique with the best measured result now carries its measured problem
+
+**2026-09-22.** Documentation only. No code, no gate, no behaviour change — which is itself the
+finding.
+
+- **The prediction, frozen 2026-08-21, the day Technique 7 shipped.** Does a technique with a
+  demonstrated positive result get invoked when nobody asks? That is the question of whether
+  **evidence in a skill file changes agent behaviour** — written because T7 has no trigger and the
+  ambient trigger it replaced (Technique 5) had already measured zero.
+- **Scored 2026-09-22 against its own frozen rule: FAILED.** Over a 32-day window, 47 recorded blind
+  runs against 985 commits touching a durable surface — low single digits against a 30% bar. For the
+  rate to clear the bar, eligible occasions would have to number 157 or fewer, under one claim per six
+  commits in a month when the canvas, decision log and eval corpus all grew.
+- **The bimodal shape is the real result. 47 runs fall on 14 distinct days, and 18 of them — 38% — on
+  two days.** More than half the window has none. That is the same shape the corrections-attribution
+  rule showed and the same shape Technique 5 shows, so the honest reading is that **neither technique
+  works ambiently; the difference between them is only in what happens once invoked.**
+- **The remedy was pre-registered and is NOT "write it more persuasively".** It is that a technique
+  needs a TRIGGER, and where none can exist the skill must say so rather than let a reader assume
+  ambient coverage. So T7 now carries a measured-fire-rate paragraph in the same form Technique 5 has
+  carried since 2026-08-16, and the two other places that called it "the one that measured well" —
+  the heading and the When-to-Use line — now say **measured well WHEN RUN**. A reader should not be
+  able to reach any of the three and come away thinking the technique happens by itself.
+- **What is deliberately not in this release.** No trigger was invented. Designing one is a real
+  design question — the claim lands hundreds of turns after the session-start read — and shipping a
+  plausible-looking mechanism in the same release that measured the absence of one would be the
+  built-not-wired shape this project keeps finding.
+- **The scoring conflict, since it cuts toward the verdict.** The instrument said in advance that its
+  counter is the measured population, and that *"a pass on a rate this low would be weak evidence; a
+  fail would be strong."* The counter scored a fail. Occasions where nobody thought of T7 are
+  invisible by construction, so the true rate is at or below the one reported.
+
 ## v0.238.0 - the ICE erratum told consumers to re-check, and nothing checked whether they had
 
 **2026-09-21.** A new project-side check. No behaviour change to any skill's output.
