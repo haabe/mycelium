@@ -2,7 +2,54 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-09-21.
+**Last updated**: 2026-09-22.
+
+## v0.242.2 - a release gate that could only ask half its question
+
+**2026-09-22.** `release_gaps.py --check` asked *"does every DOCUMENTED version have a
+Release?"* and had no way to ask *"is the CURRENT version documented at all?"* Every count in
+that command reads the parsed changelog, so a version with no section is invisible to all of
+them.
+
+- **Measured, not hypothesised.** v0.242.1 was bumped in `CLAUDE.md` and `plugin.json`, merged
+  to main with all 22 local gates and CI green, and shipped **no GitHub Release**. Auto-release
+  builds its body from the changelog section, found none, did nothing, and **reported success
+  for doing nothing**. The check then printed *"OK: every changelog version >= v0.49.0 has a
+  Release (498 documented)"* — true, and useless, because v0.242.1 was not among the 498.
+- **The consumer symptom is why this is a gate and not a habit.** `claude plugin update` moved
+  a real install 0.242.0 → 0.242.1 off main, so a consumer was running a version whose release
+  notes existed nowhere while two green checks agreed nothing was wrong.
+- **Exit 2 when it cannot tell.** `check_fail_open.py` blocked this change's first push: the
+  version reader returned a silent `None` for an unreadable `CLAUDE.md`, which made the caller
+  skip its branch — the gate passing *because it could not look*, which is the shape the change
+  exists to catch, reproduced inside it. The reader now says why, and the caller exits 2.
+- **`--version-file` is an argument, not a hardcoded path.** The first draft read `CLAUDE.md`
+  from the cwd while the rest of the command read `--changelog`, so a fixture pointing at a temp
+  changelog was compared against the real repo version. Three existing tests went red on that
+  and were right to.
+
+## v0.242.1 - the Hoskins correction fixed the checking surfaces and left the teaching ones
+
+**2026-09-22.** Hoskins's scenario model has THREE elements — Motivation, Persona, Simulation. An
+earlier in-repo model added a fourth, "Means", which is not his; how someone interacts folds into
+the Simulation. That was corrected on 2026-07-01 in `schemas/canvas/scenarios.schema.json` and in
+`canvas-health` step 8b.
+
+- **The correction fixed the surfaces that CHECK and left the surfaces that TEACH**, for nearly
+  three months. `skills/ost-builder/SKILL.md`, `skills/user-interview/SKILL.md` and
+  `domains/discovery/CLAUDE.md` all went on instructing agents to build the four-element model. A
+  schema is consulted; an instruction is followed — and `domains/discovery/CLAUDE.md` is injected as
+  context into discovery work, which made it the most-followed and least-visible of the three.
+- **Found by a consumer run, not by a check.** A dogfood full-ladder agent building `scenarios.yml`
+  hit the contradiction mid-run, reported that the skill's loaded instructions still described the
+  stale version, and resolved it correctly by treating the schema as authoritative. It should not
+  have had to: an agent trusting the instruction over the schema would have written the fabricated
+  model into a canvas, where `canvas-health` 8b would later flag it as incomplete.
+- **The guard scans the tree, not the three known files.** `test_hoskins_model_has_three_elements.py`
+  walks every shipped `.md`/`.yml`/`.json` under the plugin, because the July correction missed three
+  surfaces precisely by fixing the ones someone thought of. It exempts prose that NAMES the error in
+  order to correct it — the schema must keep the `means` field so historical instances validate, and
+  forcing those mentions out would delete the reason the rule exists.
 
 ## v0.242.0 - a Cynefin domain drives method selection, and nothing could tell if one was stale
 

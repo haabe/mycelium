@@ -225,8 +225,14 @@ def test_check_exits_1_and_names_the_gaps(scripts_path, monkeypatch, tmp_path, c
     rg = _import(scripts_path)
     cl = tmp_path / "changelog.md"
     cl.write_text("## v0.85.0 - a\n\n## v0.66.0 - b\n")
+    # The fixture declares its own canonical version (v0.242.1 added a check that the
+    # CURRENT version is documented; without this the real repo's version would be
+    # compared against this temp changelog).
+    vf = tmp_path / "CLAUDE.md"
+    vf.write_text("*Version 0.85.0 -- fixture*\n")
     monkeypatch.setattr(rg, "_released_from_gh", lambda: ["0.85.0"])
-    monkeypatch.setattr(sys, "argv", ["release_gaps.py", "--check", "--changelog", str(cl)])
+    monkeypatch.setattr(sys, "argv", ["release_gaps.py", "--check", "--changelog", str(cl),
+                                      "--version-file", str(vf)])
     assert rg.main() == 1
     out = capsys.readouterr()
     assert "v0.66.0" in out.out, "the gap must be NAMED, not just counted"
@@ -236,8 +242,11 @@ def test_check_exits_0_when_complete(scripts_path, monkeypatch, tmp_path, capsys
     rg = _import(scripts_path)
     cl = tmp_path / "changelog.md"
     cl.write_text("## v0.85.0 - a\n")
+    vf = tmp_path / "CLAUDE.md"
+    vf.write_text("*Version 0.85.0 -- fixture*\n")
     monkeypatch.setattr(rg, "_released_from_gh", lambda: ["0.85.0"])
-    monkeypatch.setattr(sys, "argv", ["release_gaps.py", "--check", "--changelog", str(cl)])
+    monkeypatch.setattr(sys, "argv", ["release_gaps.py", "--check", "--changelog", str(cl),
+                                      "--version-file", str(vf)])
     assert rg.main() == 0
     assert "OK:" in capsys.readouterr().out
 
@@ -247,8 +256,11 @@ def test_check_ignores_pre_floor_history_end_to_end(scripts_path, monkeypatch, t
     rg = _import(scripts_path)
     cl = tmp_path / "changelog.md"
     cl.write_text("## v0.23.8 - old\n\n## v0.31.0 - old\n\n## v0.85.0 - current\n")
+    vf = tmp_path / "CLAUDE.md"
+    vf.write_text("*Version 0.85.0 -- fixture*\n")
     monkeypatch.setattr(rg, "_released_from_gh", lambda: ["0.85.0"])
-    monkeypatch.setattr(sys, "argv", ["release_gaps.py", "--check", "--changelog", str(cl)])
+    monkeypatch.setattr(sys, "argv", ["release_gaps.py", "--check", "--changelog", str(cl),
+                                      "--version-file", str(vf)])
     assert rg.main() == 0
 
 
