@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.242.1 -- **The 2026-07-01 Hoskins correction fixed the checking surfaces and left the teaching ones** (PATCH). `scenarios.schema.json` and `canvas-health` have recorded since July that "Means" is a fabricated fourth element and the model has THREE (Motivation, Persona, Simulation) — while `ost-builder`, `user-interview` and `domains/discovery/CLAUDE.md` went on instructing agents to build the four-element version. A schema is consulted; an instruction is followed. Found by a dogfood agent that hit the contradiction mid-run and resolved it correctly on its own.*
+*Version 0.242.2 -- **A release gate that could only ask half its question** (PATCH). `release_gaps.py --check` verified that every DOCUMENTED version has a Release and could not ask whether the CURRENT version is documented at all. v0.242.1 was bumped, merged with every gate green, and shipped no Release: auto-release builds its body from the changelog section, found none, did nothing, and reported success. A consumer then updated to it off main, running a version whose notes exist nowhere.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

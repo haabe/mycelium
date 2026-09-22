@@ -417,6 +417,77 @@ def _cmd_audit(args) -> int:
     return 0
 
 
+def _current_version(path: str = "CLAUDE.md") -> str | None:
+    """The canonical version from CLAUDE.md's `*Version X.Y.Z` line.
+
+    Read from the same source `sync_derived.py` treats as canonical, so the two cannot
+    disagree about what "current" means."""
+    try:
+        with open(path) as fh:
+            text = fh.read()
+    except OSError:
+        # NOT a silent None. `check_fail_open.py` blocked this file's first push for
+        # exactly this handler, and it was right: an unreadable CLAUDE.md makes the
+        # caller skip its branch, so the gate passes BECAUSE it could not look. That is
+        # the shape this whole check was written to catch, reproduced inside it.
+        # The caller turns a None into a precondition failure; this says why out loud.
+        print(f"release_gaps: cannot read {path} — the canonical version is unknown, "
+              "so the current-version check below examined NOTHING.", file=sys.stderr)
+        return None
+    m = re.search(r"^\*Version\s+(\d+\.\d+\.\d+)", text, re.MULTILINE)
+    if not m:
+        print(f"release_gaps: {path} has no `*Version X.Y.Z` line — the canonical "
+              "version is unknown, so the current-version check examined NOTHING.",
+              file=sys.stderr)
+        return None
+    return m.group(1)
+
+
+def _ge_floor(version: str, floor: str) -> bool:
+    """Numeric compare, not lexical: "0.9.0" sorts above "0.49.0" as a string."""
+    return [int(x) for x in version.split(".")] >= [int(x) for x in floor.split(".")]
+
+
+def _cmd_require_current_documented(args) -> int:
+    """Does the CURRENT version have a changelog section? Nothing else.
+
+    SEPARATE FROM `--check` BECAUSE OF WHEN EACH CAN RUN. `--check` also asserts that
+    every documented version has a Release, which is FALSE by construction between the
+    bump commit and the merge that triggers auto-release — so it can never be a pre-push
+    gate. This question has no such window: a bump without its section is wrong the
+    moment it is written, and right after one edit.
+
+    THE GAP IT CLOSES, measured 2026-09-22. `--check` asks "a documented version with no
+    Release". `--audit` (release-audit.yml, weekly) asks the opposite, "a Release with no
+    changelog section". **v0.242.1 had neither a section nor a Release, so it fell between
+    both questions** and every mechanism reported green: 22 local gates, CI, and an
+    auto-release workflow that built its body from a section that did not exist, did
+    nothing, and succeeded.
+    """
+    with open(args.changelog) as fh:
+        documented = parse_changelog_versions(fh.read())
+    current = _current_version(getattr(args, "version_file", "CLAUDE.md"))
+    if current is None:
+        print("::error::PRECONDITION FAILED — could not determine the current version",
+              file=sys.stderr)
+        return 2
+    if not _ge_floor(current, args.floor):
+        print(f"OK: v{current} is below the v{args.floor} floor; not required to be "
+              "documented.")
+        return 0
+    if current not in documented:
+        print(f"::error::the current version v{current} has no changelog section")
+        print(f"CLAUDE.md declares v{current} and `{args.changelog}` does not document "
+              "it. Auto-release builds its body from that section, so merging this ships "
+              "a silent no-op: the workflow succeeds, no Release appears, and neither "
+              "`--check` nor `--audit` can see it — one asks about documented versions, "
+              "the other about existing Releases, and this version has neither.",
+              file=sys.stderr)
+        return 1
+    print(f"OK: the current version v{current} has a changelog section.")
+    return 0
+
+
 def _cmd_check(args) -> int:
     with open(args.changelog) as fh:
         text = fh.read()
@@ -440,6 +511,40 @@ def _cmd_check(args) -> int:
         # on would be inventing a record. Visible beats tidy.
         print("::notice::pre-floor duplicate changelog sections (not blocking): "
               + ", ".join("v" + b for b in below))
+
+    # THE OTHER DIRECTION, AND THE ONE THAT WAS MISSING (2026-09-22).
+    # Everything above asks "does every DOCUMENTED version have a Release?". Nothing
+    # asked "is the CURRENT version documented at all?" — and a version with no
+    # changelog section is invisible to every count here, because they all read
+    # `documented`.
+    #
+    # Measured the day this was added: v0.242.1 was bumped in CLAUDE.md and
+    # plugin.json, merged to main with all gates green, and shipped NO GitHub Release.
+    # The auto-release workflow builds a release body from the changelog section, found
+    # none, did nothing, and **reported success for doing nothing**. This check then
+    # printed "OK: every changelog version has a Release" — true, and useless, because
+    # the version in question was not in the changelog to be counted.
+    #
+    # The consumer symptom is the bad part: `claude plugin update` moved a real install
+    # 0.242.0 -> 0.242.1 off main, so a consumer ran a version whose release notes exist
+    # nowhere, while both this gate and the release workflow read green.
+    current = _current_version(getattr(args, "version_file", "CLAUDE.md"))
+    if current is None:
+        # EXIT 2, not 0 and not 1: nothing was examined. Same rule the project applies
+        # everywhere — a check that could not look must not report a verdict, because
+        # only the exit code is read by CI and the pre-push hook.
+        print("::error::PRECONDITION FAILED — could not determine the current version",
+              file=sys.stderr)
+        return 2
+    if current not in documented and _ge_floor(current, args.floor):
+        print(f"::error::the current version v{current} has no changelog section")
+        print(f"CLAUDE.md declares v{current} and `docs/changelog.md` does not document "
+              "it. Release automation builds its body from that section, so this ships "
+              "as a silent no-op: the workflow succeeds, no Release appears, and the "
+              "checks above cannot see the gap because they only count DOCUMENTED "
+              "versions. Add the section before merging the bump.", file=sys.stderr)
+        return 1
+
     gaps = missing_releases(documented, _released_from_gh(), args.floor)
     if gaps:
         print(f"::error::{len(gaps)} documented version(s) have no GitHub Release: "
@@ -464,12 +569,22 @@ def main() -> int:
                     help="exit 1 if any Release at/above the floor has no changelog "
                          "section. The mirror of --check. NOT wired into the release "
                          "job: see the note in the handler.")
+    ap.add_argument("--require-current-documented", action="store_true",
+                    help="assert the CURRENT version has a changelog section; safe to "
+                         "run pre-push, unlike --check")
     ap.add_argument("--check", action="store_true",
                     help="exit 1 if any changelog version at/above the floor has no Release")
     ap.add_argument("--repair", action="store_true",
                     help="print JSON [{version, commit}] for every documented version that "
                          "has no Release, anchored to the commit it first appeared in")
     ap.add_argument("--changelog", default="docs/changelog.md")
+    # THE CANONICAL VERSION FILE IS AN ARGUMENT, not a hardcoded path, for the same
+    # reason `--changelog` is: the first draft of the current-version check read
+    # `CLAUDE.md` from the cwd while the rest of the command read `args.changelog`, so a
+    # fixture pointing at a temp changelog was compared against the REAL repo version.
+    # Three existing tests turned red on that inconsistency and were right to.
+    ap.add_argument("--version-file", default="CLAUDE.md",
+                    help="file carrying the canonical `*Version X.Y.Z` line")
     ap.add_argument("--floor", default=DEFAULT_FLOOR)
     args = ap.parse_args()
 
@@ -510,6 +625,9 @@ def main() -> int:
 
     if args.audit:
         return _cmd_audit(args)
+
+    if args.require_current_documented:
+        return _cmd_require_current_documented(args)
 
     if args.check:
         return _cmd_check(args)

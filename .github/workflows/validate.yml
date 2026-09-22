@@ -177,6 +177,20 @@ jobs:
         # which is the point. No baseline was ever seeded.
         run: python3 plugins/mycelium/scripts/check_fail_open.py --strict
 
+      - name: Current version has a changelog section
+        # WHY IN CI AS WELL AS PRE-PUSH: a local gate can be skipped with --no-verify,
+        # and the failure this catches is invisible afterwards. v0.242.1 was bumped,
+        # merged with every gate and CI green, and shipped NO Release — auto-release
+        # builds its body from the changelog section, found none, did nothing, and
+        # reported success. A consumer then updated to it off main.
+        #
+        # NOT `--check`, deliberately: that also requires every documented version to
+        # have a Release, which is false by construction on any PR that bumps a version,
+        # so it can only run after the release exists (release-audit.yml, weekly).
+        # `--check` asks about documented versions and `--audit` asks about existing
+        # Releases; v0.242.1 had neither, so it fell between both questions.
+        run: python3 plugins/mycelium/scripts/release_gaps.py --require-current-documented
+
       - name: Field-wiring scan (does a promise-shaped field have a consumer?)
         # A field can be blessed by a schema, filled by a skill, and read by NOTHING —
         # populated to a human, inert to the machine. Measured 2026-08-31: of 38

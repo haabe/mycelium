@@ -84,3 +84,25 @@ check_field_wiring.py --strict
 check_target_progress.py --canvas-dir .claude/canvas
 check_confidence_managed.py
 check_evidence_landing.py --project-dir .
+
+# ADDED 2026-09-22. Asserts the CURRENT version has a changelog section, and nothing
+# else. `--check` cannot live here: it also requires every documented version to have a
+# Release, which is false by construction between the bump commit and the merge that
+# creates it, so it would block every release push. This question has no such window.
+#
+# WHY IT IS A GATE. v0.242.1 was bumped, merged with all gates and CI green, and shipped
+# NO Release: auto-release builds its body from the changelog section, found none, did
+# nothing, and reported success. `--check` asks about documented versions; `--audit`
+# asks about existing Releases; that version had neither, so it fell between both and
+# every mechanism read green while a consumer updated to it off main.
+#
+# PARITY CANNOT SEE THIS LINE, AND THAT IS NOT A TYPO. `check_gate_parity.py` matches
+# `scripts/(check_[a-z0-9_]+\.py)` in both directions, so any gate whose script is not
+# named `check_*` is invisible to it. Verified 2026-09-22: after adding this gate to BOTH
+# validate.yml and this file, parity still reported "all 22 CI gates are in the local set"
+# — it had compared neither entry. The same blindness covers `validate_canvas.py`, which
+# runs in CI and is not in this file.
+# **So this line and its validate.yml step must be kept in sync BY HAND.** Filed upstream
+# rather than fixed here, because broadening the pattern turns the gate red on
+# `validate_canvas.py`, which is real pre-existing drift and a separate decision.
+release_gaps.py --require-current-documented
