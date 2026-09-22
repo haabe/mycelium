@@ -134,6 +134,29 @@ Audit the canvas knowledge base for quality, consistency, and completeness. The 
    - Every go-to-market `feedback_loop` entry with `source_leaf_id` → verify leaf exists
    - Flag broken references as warnings ("Zombie Solution" anti-pattern)
 
+7e. **Check that Cynefin classifications have not gone stale:**
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_cynefin_freshness.py" --project-dir .
+```
+
+   The Cynefin gate is Required at exactly ONE transition — Define→Develop — so a domain is
+   classified once per diamond and nothing re-runs it. **That matters because the domain drives
+   METHOD selection**: Complicated routes to expert analysis, Complex to probe-sense-respond. A
+   node classified on three interviews and never revisited after twenty more is routed by the
+   wrong method, confidently, on current data.
+
+   **Read UNCHECKABLE as a finding, not a pass.** A classification with no `cynefin_classified_at`
+   cannot be compared to anything. Measured on the dogfood canvas at adoption: **75
+   classifications, 0 checkable.** Baseline-gated for exactly that reason — failing all 75 would
+   force backfilling dates nobody knows, and inventing a classification date is the fabrication
+   this framework refuses elsewhere. Run `--write-baseline` ONCE; a classification written
+   afterwards must carry its date.
+
+   **A STALE row is a prompt to re-run `/mycelium:cynefin-classify`, never a verdict that the old
+   domain was wrong.** Evidence can land and leave a classification correct. What is not
+   acceptable is routing work by a classification that has never seen the data.
+
 7d. **Check that stored ICE aggregates use the algorithm the framework documents:**
 
 ```bash

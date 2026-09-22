@@ -13,27 +13,57 @@
       "items": {
         "type": "object",
         "properties": {
-          "id": {"type": "string"},
-          "name": {"type": "string"},
-          "gist_id": {"type": "string"},
-          "description": {"type": "string"},
-          "bounded_context": {"type": "string"},
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "gist_id": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "bounded_context": {
+            "type": "string"
+          },
           "cynefin_domain": {
             "type": "string",
-            "enum": ["clear", "complicated", "complex", "chaotic"]
+            "enum": [
+              "clear",
+              "complicated",
+              "complex",
+              "chaotic",
+              "confused"
+            ],
+            "description": "Cynefin domain. Drives METHOD selection (clear=best practice, complicated=expert analysis, complex=probe-sense-respond, chaotic=act-sense-respond, confused=stop and establish which domain you are in), so a stale classification routes real work through the wrong method. v0.242.0 added `cynefin_classified_at` and `cynefin_basis` as siblings: until then this was a bare enum with no timestamp and no evidence reference, so it could not be known to be stale and could not be traced to what it rested on. A classification made on early evidence and never revisited is the defect; the sibling fields are what make it detectable."
           },
-          "created_at": {"type": ["string", "null"]},
+          "created_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
           "xai": {
             "type": "object",
-            "description": "XAI quality dimensions for AI-containing services. Populated by /xai-check when active-stack.yml :: ai_components.detected is true. Optional — absence means /xai-check has not been run for this service or service has no AI components.",
+            "description": "XAI quality dimensions for AI-containing services. Populated by /xai-check when active-stack.yml :: ai_components.detected is true. Optional \u2014 absence means /xai-check has not been run for this service or service has no AI components.",
             "properties": {
               "tier": {
                 "type": "string",
-                "enum": ["minimal", "limited", "high", "prohibited"],
+                "enum": [
+                  "minimal",
+                  "limited",
+                  "high",
+                  "prohibited"
+                ],
                 "description": "EU AI Act risk tier (Annex III + Art. 50 routing). Set by /xai-check Stage 1, ideally read from /regulatory-review's prior classification."
               },
               "last_assessed_at": {
-                "type": ["string", "null"],
+                "type": [
+                  "string",
+                  "null"
+                ],
                 "description": "ISO timestamp of last /xai-check run for this service."
               },
               "surfaces": {
@@ -43,19 +73,42 @@
                   "type": "object",
                   "additionalProperties": {
                     "type": "string",
-                    "enum": ["pass", "partial", "fail", "N-A"]
+                    "enum": [
+                      "pass",
+                      "partial",
+                      "fail",
+                      "N-A"
+                    ]
                   }
                 }
               },
               "recourse": {
                 "type": "object",
-                "description": "Recourse path for users contesting AI-driven outputs (Selbst & Barocas 2018 — substance check).",
+                "description": "Recourse path for users contesting AI-driven outputs (Selbst & Barocas 2018 \u2014 substance check).",
                 "properties": {
-                  "path_exists": {"type": "boolean"},
-                  "max_clicks_to_human": {"type": ["integer", "null"]},
-                  "sla_documented": {"type": "boolean"},
-                  "logs_contestation": {"type": "boolean"},
-                  "verdict": {"type": "string", "enum": ["pass", "partial", "fail"]}
+                  "path_exists": {
+                    "type": "boolean"
+                  },
+                  "max_clicks_to_human": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  },
+                  "sla_documented": {
+                    "type": "boolean"
+                  },
+                  "logs_contestation": {
+                    "type": "boolean"
+                  },
+                  "verdict": {
+                    "type": "string",
+                    "enum": [
+                      "pass",
+                      "partial",
+                      "fail"
+                    ]
+                  }
                 },
                 "additionalProperties": true
               },
@@ -63,10 +116,33 @@
                 "type": "object",
                 "description": "Empirical audit that surfaced rationales actually drove the surfaced decisions (Lanham et al. 2023). Aggregate stats; raw samples live under .claude/evals/xai-fidelity/<service>/YYYY-MM-DD.json.",
                 "properties": {
-                  "samples_audited": {"type": "integer", "minimum": 0},
-                  "blind_prediction_accuracy": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
-                  "verdict": {"type": "string", "enum": ["pass", "partial", "fail", "not_applicable"]},
-                  "last_audited_at": {"type": ["string", "null"]}
+                  "samples_audited": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "blind_prediction_accuracy": {
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "verdict": {
+                    "type": "string",
+                    "enum": [
+                      "pass",
+                      "partial",
+                      "fail",
+                      "not_applicable"
+                    ]
+                  },
+                  "last_audited_at": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
                 },
                 "additionalProperties": true
               },
@@ -74,21 +150,44 @@
                 "type": "object",
                 "description": "Reference to the published AI System Card (Mitchell et al. 2019) for this service.",
                 "properties": {
-                  "path": {"type": "string"},
-                  "sections_present": {"type": "array", "items": {"type": "string"}},
-                  "sections_missing": {"type": "array", "items": {"type": "string"}},
-                  "verdict": {"type": "string", "enum": ["pass", "partial", "fail"]}
+                  "path": {
+                    "type": "string"
+                  },
+                  "sections_present": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "sections_missing": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "verdict": {
+                    "type": "string",
+                    "enum": [
+                      "pass",
+                      "partial",
+                      "fail"
+                    ]
+                  }
                 },
                 "additionalProperties": true
               },
               "validated_functionally": {
                 "type": "array",
-                "items": {"type": "string"},
-                "description": "List of stages the /xai-check run validated via static analysis only. Honesty rule per Doshi-Velez & Kim 2017 — distinguishes from items that need user-grounded validation."
+                "items": {
+                  "type": "string"
+                },
+                "description": "List of stages the /xai-check run validated via static analysis only. Honesty rule per Doshi-Velez & Kim 2017 \u2014 distinguishes from items that need user-grounded validation."
               },
               "needs_user_testing": {
                 "type": "array",
-                "items": {"type": "string"},
+                "items": {
+                  "type": "string"
+                },
                 "description": "List of stages or specific findings that require application-grounded validation (real users, real tasks). Static check is insufficient."
               }
             },
@@ -96,15 +195,32 @@
           },
           "trace": {
             "$ref": "_common.schema.json#/$defs/trace"
+          },
+          "cynefin_classified_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "ISO date the domain was classified. REQUIRED IN PRACTICE once cynefin_domain is set: without it the classification cannot be compared against evidence that landed later, and check_cynefin_freshness reports it as UNCHECKABLE rather than fresh. Absent is not the same as current."
+          },
+          "cynefin_basis": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "One line naming what the classification rested on \u2014 the evidence, the uncertainty, or the reason a domain was chosen. A domain with no basis cannot be re-argued when the data changes; the next reader can only accept or discard it."
           }
         },
-        "required": ["id", "name"],
+        "required": [
+          "id",
+          "name"
+        ],
         "additionalProperties": true
       }
     },
     "principles": {
       "type": "array",
-      "description": "Downe's 15 principles assessment block. Permissive — existing canvas uses this without strict per-field requirements.",
+      "description": "Downe's 15 principles assessment block. Permissive \u2014 existing canvas uses this without strict per-field requirements.",
       "items": {
         "type": "object",
         "additionalProperties": true
