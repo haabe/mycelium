@@ -68,9 +68,9 @@ For each, ask: *what specific evidence supports this claim, and does any of it m
 
 This converts the framework's own anti-bias discipline into a per-publish self-check, not just a per-decision ceremony. Graduated 2026-05-09 from corrections.md TL;DR open candidate.
 
-**MEASURED FIRE RATE, 2026-08-16: ZERO — and this note stays until that changes.** In a dogfood session where twelve agent claims were withdrawn or corrected, this trigger fired on none of them. The operator caught six, explicit invocation of this skill caught two, late self-review caught three, one was caught proactively. **A detector keyed on the five shapes above then scored 0 of 5 recall against the claims actually withdrawn**, because those were universals and counts — "nobody left", "every instance", "eight statements" — not causal assertions. **The five shapes named above are the wrong list for the failure population this technique exists to catch.** Keep running it; do not treat it as coverage. Technique 7 is what measured well.
+**MEASURED FIRE RATE, 2026-08-16: ZERO — and this note stays until that changes.** In a dogfood session where twelve agent claims were withdrawn or corrected, this trigger fired on none of them. The operator caught six, explicit invocation of this skill caught two, late self-review caught three, one was caught proactively. **A detector keyed on the five shapes above then scored 0 of 5 recall against the claims actually withdrawn**, because those were universals and counts — "nobody left", "every instance", "eight statements" — not causal assertions. **The five shapes named above are the wrong list for the failure population this technique exists to catch.** Keep running it; do not treat it as coverage. Technique 7 is what measured well WHEN RUN — and as of 2026-09-22 it has its own measured problem about whether it runs at all. See its section.
 
-## Technique 7: Blind adversarial pass — the one that measured well
+## Technique 7: Blind adversarial pass — measured well when run, and rarely run
 
 **USE THIS BEFORE A CLAIM LANDS ON A DURABLE SURFACE.** Techniques 3 and 5 ask you to attack your own position. Measured against real withdrawn claims, self-attack found little and the ambient trigger found nothing. This found defects that had already survived self-review, four local gates and CI.
 
@@ -98,6 +98,12 @@ This converts the framework's own anti-bias discipline into a per-publish self-c
 
 **WHAT IS NOT CLAIMED**: that this generalises. Two runs, one author, one project, and the person scoring the objections wanted the method to work. The one independent scorer agreed on eight of the nine items he could rule.
 
+**MEASURED FIRE RATE, 2026-09-22: IT FIRES ON 14 DAYS OUT OF 32, AND THIS NOTE STAYS UNTIL THAT CHANGES.** A prediction frozen on the day this technique shipped asked whether a technique with a demonstrated result gets invoked when nobody asks — i.e. whether evidence in a skill file changes behaviour. It was scored against its own frozen rule and **FAILED**. Over 32 days: 47 recorded blind runs against 985 commits touching a durable surface, a rate in low single digits against a 30% bar. **Eighteen of the 47 — 38% — landed on two days.** More than half the window has none.
+
+**THAT BIMODAL SHAPE IS THE POINT, AND IT IS THE SAME SHAPE TECHNIQUE 5 SHOWS.** T5 measured zero because nothing triggers it. T7 measures well when run and still clusters onto the days its own machinery is the topic. **The pre-registered conclusion, fixed before the data, was NOT "write it more persuasively":** a technique needs a TRIGGER, and where none can exist the skill must say so rather than let a reader assume ambient coverage. This paragraph is that saying-so.
+
+**SO DO NOT TREAT THIS SECTION AS COVERAGE EITHER.** Nothing invokes Technique 7. It fires when an agent reads this file and chooses to, and the operating contract is read at session start while claims land hundreds of turns later. If a durable claim matters, invoke it explicitly — by name, at the moment of the claim — rather than trusting that having read this will be enough. The one thing the measurement cannot see is the occasions nobody noticed, so **the true rate is at or below the one reported here.**
+
 ## Technique 6: Cunningham's Law check (publish-rough-then-iterate)
 
 "The best way to get the right answer on the internet is not to ask a question; it's to post the wrong answer." — Ward Cunningham (community attribution).
@@ -115,7 +121,7 @@ Apply this when the alternative to publishing is "wait until I'm sure." If the c
 - Before committing to a specific solution
 - When the team feels "certain" (certainty is a bias signal)
 - **Ambient (per Technique 5)**: any time the agent writes text with assertion-shaped structural claims. This is a quick self-check, not the full ceremony. **Its measured fire rate is zero — see the note there. Do not count it as coverage.**
-- **Before a claim lands on a durable surface with an evidence grade (per Technique 7)**: canvas, decision log, a results file, anything a later reader will cite. **This is the technique with a measured positive result**, and it is the one to reach for when the alternative is attacking your own position.
+- **Before a claim lands on a durable surface with an evidence grade (per Technique 7)**: canvas, decision log, a results file, anything a later reader will cite. **This is the technique with a measured positive result WHEN INVOKED**, and it is the one to reach for when the alternative is attacking your own position. **It also has a measured negative result about being invoked at all** (2026-09-22, below): do not read "best technique" as "technique that happens".
 
 ## Output
 Log the challenge results in .claude/harness/decision-log.md alongside the decision.
