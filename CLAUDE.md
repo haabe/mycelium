@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.241.0 -- **Seven copies of the gate set drifted in two days, so the fix is a scanner rather than an eighth patch** (MINOR). `check_gate_set_drift.py` discovers every enumeration of which gates apply at which scale and compares each to the machinery, instead of assuming a known list. It found a stale claim in the file whose table had just been corrected, plus `interview/SKILL.md` carrying the same drift v0.240.0 fixed next door.*
+*Version 0.242.0 -- **A Cynefin domain drives method selection and nothing could tell whether one was stale** (MINOR). The gate fires at one transition per diamond and never re-runs; `cynefin_domain` was a bare enum with no date, so "has the data changed since?" was unaskable. Measured at adoption on the dogfood canvas: 75 classifications, 0 checkable. Also fixes an enum drift that made `confused` impossible to record on a service.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

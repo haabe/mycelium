@@ -680,3 +680,21 @@ reviewed:
     the exact failure the check exists to prevent. A MISSING file is not this branch and is not
     an error: no doctrine.yml yet is the ordinary state of a project that has never reviewed.
     Reviewed 2026-09-21, v0.231.2.
+
+- id: check_cynefin_freshness.py@ba9dacf76d
+  reason: >-
+    `_parse`, `except ValueError` on a date string. The handler APPENDS to the module-level
+    `UNREADABLE` list and `main()` prints every entry — quoting the value it could not read —
+    and RETURNS 1 before it can reach the OK path. So an unreadable date fails the check loudly
+    instead of vanishing from the comparison. The scanner reads the handler in isolation and
+    cannot see the speaking happen one frame up, which is the right default.
+    THIS WAS A REAL FAIL-OPEN WHEN FIRST WRITTEN, and check_fail_open blocked the push that
+    would have shipped it: `_parse` returned None for anything unparseable, so a present-but-
+    malformed evidence date was silently dropped and the node then read as CURRENT — a check
+    reporting freshness when it had failed to read the evidence, which is the exact shape this
+    script exists to catch. The fix was to make the handler speak, not to register the excuse.
+    Note the deliberate asymmetry: a value of None is ABSENT and is NOT recorded here, because
+    absence is already handled as UNCHECKABLE and conflating the two would make every
+    pre-adoption node look like corrupt data. Both branches are pinned by
+    tests/python/test_check_cynefin_freshness.py.
+    Reviewed 2026-09-22, v0.242.0.

@@ -4,6 +4,42 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-21.
 
+## v0.242.0 - a Cynefin domain drives method selection, and nothing could tell if one was stale
+
+**2026-09-22.** Schema change plus the check it makes possible. Founder-directed: *"the cynefin
+wherever it fits and whenever data changes so that the cynefin classification light change."*
+
+- **Why this is a product defect and not bookkeeping.** The Cynefin gate is Required at exactly ONE
+  transition — Define→Develop — at every scale, so a domain is classified once per diamond and
+  nothing ever re-runs it. **The domain drives METHOD selection**: Clear routes to best practice,
+  Complicated to expert analysis, Complex to probe-sense-respond, Chaotic to act-sense-respond. A
+  node classified Complicated on three interviews, then given twenty more showing irreducible
+  uncertainty, is still routed to expert analysis — the wrong method, applied confidently, to
+  current work.
+- **The fix had to be a timestamp before it could be a check.** `cynefin_domain` was a bare string
+  enum: no date, no reference to what it rested on. "Has the data changed since?" was not a question
+  anything could ask. It now carries `cynefin_classified_at` and `cynefin_basis` — the second so a
+  domain can be **re-argued** when data changes rather than only accepted or discarded.
+- **`check_cynefin_freshness.py`** compares a classification's date against evidence dates beneath
+  the same node, across five date spellings a real canvas uses. **Measured at adoption: 75
+  classifications on the dogfood canvas, 0 checkable.**
+- **Baseline-gated, and the reason is the same one that shaped the ICE check.** Failing all 75 would
+  force backfilling dates nobody knows, and inventing a classification date is the fabrication this
+  framework refuses everywhere else. The undated set is recorded; a classification written afterwards
+  must carry its date. Each baselined row is retired by RE-CLASSIFYING, which writes a real date.
+- **It never re-classifies, and a STALE row is a prompt rather than a verdict.** Which domain a thing
+  is in is judgement, and it belongs to `/mycelium:cynefin-classify` and a human. Evidence can land
+  and leave a classification correct; what is unacceptable is routing work by one that has never seen
+  the data.
+- **Enum drift fixed in passing.** `opportunities` allowed five domains, `services` four — so a
+  service could never be classified **Confused**, which is the domain meaning "we do not yet know
+  which domain we are in". Arguably the most important one to be able to record.
+- **What was deliberately NOT added.** Bias checks on `receipt-render` and `gist-plan`. The absence
+  of the word is not the absence of the mechanism: the receipt already forces *"what was killed and
+  what was kept"* and *"surfaces behaviour, never solicits praise"*; gist-plan already gates on
+  *"never commit to an idea until evidence supports it."* Adding a step there is ceremony on a
+  working design, and this project has measured gate fatigue.
+
 ## v0.241.0 - seven copies drifted in two days, so the fix is a scanner not an eighth patch
 
 **2026-09-22.** No gate behaviour changed. What changed is that copies of the gate set are now
