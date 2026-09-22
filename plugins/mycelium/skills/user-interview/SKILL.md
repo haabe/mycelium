@@ -143,7 +143,7 @@ second practitioner's account can corroborate or split the N=1 this mode rests o
 - Update .claude/canvas/opportunities.yml with new evidence
 - Update .claude/canvas/user-needs.yml
 - Update .claude/canvas/jobs-to-be-done.yml
-- Update .claude/canvas/scenarios.yml with extracted scenarios (if four elements present)
+- Update .claude/canvas/scenarios.yml with extracted scenarios (if all three Hoskins elements are present: Motivation, Persona, Simulation)
 - Add snapshot to `.claude/memory/product-journal.md`
 
 ## Handling User-Supplied Content
