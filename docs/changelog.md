@@ -4,6 +4,35 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-21.
 
+## v0.240.0 - the table an agent reads disagreed with the machinery that gates it
+
+**2026-09-22.** Documentation correction plus the check that stops it recurring. No gate behaviour
+changed; what changed is that the documented gate set now matches the enforced one.
+
+- **The divergence, and it ran for three months.** `theory-gates.md`'s "Quick Reference: Gates per
+  Scale" exists for `theory_gates_status` initialization — it is what an agent reads when setting up a
+  diamond. It documented **7 gates at L1**; `confidence-thresholds.yml`, which the gating machinery
+  reads, requires **9**. The Landscape and Capacity gates were added to the machinery in v0.217.0 and
+  never added to the table. **An agent following the table produced a diamond missing two required
+  keys, silently.**
+- **Two rows were relative, and a relative count cannot survive a gate addition.** `L3 | All gates`
+  and `L4 | All except JTBD` were both true when twelve gates existed and became wrong the moment a
+  thirteenth was defined. Fifteen are now defined. Every row names its gates explicitly, and
+  `test_no_row_uses_a_relative_count` bans the shorthand outright rather than correcting it each time.
+- **Explainability is in no scale's required list**, which is why the rows sum to fewer than fifteen.
+  It is conditional on `active-stack.yml :: ai_components.detected`. Stated in the table's own note so
+  the shortfall reads as a design fact rather than an omission.
+- **`tests/python/test_gate_table_parity.py` compares the two files** — the SET per scale, not just
+  the count, because a table can carry the right number of the wrong gates. Its negative control
+  rebuilds the exact historical drift (L1 with Landscape and Capacity dropped) and asserts the real
+  parser catches it; an earlier draft compared two literals, which is true of any two different sets
+  and proves nothing about the check above it.
+- **Found by hand, which is the uncomfortable part.** Walking the six scales for an unrelated
+  end-to-end feasibility question surfaced it. The divergence was mechanically decidable the whole
+  time and no check looked, so whether it was caught depended on someone reading both files in one
+  sitting. **This is the same shape as the L4/L5 gate-list fix in v0.235.0 — corrected there, left at
+  L1 and L3 by the same edit.**
+
 ## v0.239.0 - the technique with the best measured result now carries its measured problem
 
 **2026-09-22.** Documentation only. No code, no gate, no behaviour change — which is itself the
