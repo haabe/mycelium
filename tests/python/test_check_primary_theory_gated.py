@@ -72,3 +72,34 @@ def test_cli_reports_and_refuses_over_nothing(tmp_path, capsys, monkeypatch):
     r = subprocess.run([sys.executable, str(SCRIPT), "--framework-root", str(root)],
                        capture_output=True, text=True, check=False)
     assert r.returncode == 0 and "primary-theory/scale pairs" in r.stdout
+
+
+def test_a_lookalike_table_below_does_not_hijack_the_parse(tmp_path):
+    """REGRESSION (2026-09-22). `parse_primary_theories` scanned every line for a
+    `| **L0** |` row and let LATER matches overwrite earlier ones, so a second table in
+    the same file became the source of truth for theory gating.
+
+    v0.242.3 added a per-level recurrence table below the scale table and the join went
+    empty. **With no theories parsed the checker reports no ungated pairs, which reads
+    exactly like a clean result** — one test stood between that and a silently dead
+    theory-fidelity mechanism.
+    """
+    mod = _mod()  # the file's own loader; the script is not importable by name
+
+    rules = tmp_path / "diamond-rules.md"
+    rules.write_text(
+        "| Scale | Name | Focus | Primary Theories | Duration |\n"
+        "|---|---|---|---|---|\n"
+        "| **L1** | Strategy | Where to play | Wardley Mapping, Team Topologies | Weeks |\n"
+        "\n"
+        "## Some other section\n"
+        "\n"
+        "| scale | emits | recurs on | entered by |\n"
+        "|---|---|---|---|\n"
+        "| **L1** | triggers | a decision | a constraint |\n",
+        encoding="utf-8")
+
+    parsed = mod.parse_primary_theories(rules)
+    assert parsed.get("L1") == ["Wardley Mapping", "Team Topologies"], (
+        f"the lookalike table below hijacked the parse: got {parsed.get('L1')}"
+    )
