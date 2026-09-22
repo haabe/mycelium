@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.240.0 -- **The table an agent reads to set up a diamond disagreed with the machinery that gates it** (PATCH-shaped, MINOR by content). `theory-gates.md` documented 7 gates at L1 where `confidence-thresholds.yml` required 9, and said "All gates" at L3 and "All except JTBD" at L4 -- both true at twelve gates, both wrong once a thirteenth existed. Every row now names its gates, no row may say "all", and a test compares the two files.*
+*Version 0.241.0 -- **Seven copies of the gate set drifted in two days, so the fix is a scanner rather than an eighth patch** (MINOR). `check_gate_set_drift.py` discovers every enumeration of which gates apply at which scale and compares each to the machinery, instead of assuming a known list. It found a stale claim in the file whose table had just been corrected, plus `interview/SKILL.md` carrying the same drift v0.240.0 fixed next door.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

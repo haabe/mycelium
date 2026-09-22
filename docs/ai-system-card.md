@@ -11,9 +11,9 @@ This is not a marketing document, a technical whitepaper, or a compliance certif
 ## 1. Identity
 
 - **System name:** Mycelium — Theory-Guided Agentic Product Development Framework
-- **Version:** 0.240.0 (canonical source: the `*Version X.Y.Z` line in `CLAUDE.md`; mechanical tokens here — version, skill count — are kept in sync by `plugins/mycelium/scripts/sync_derived.py`, not hand-edited)
+- **Version:** 0.241.0 (canonical source: the `*Version X.Y.Z` line in `CLAUDE.md`; mechanical tokens here — version, skill count — are kept in sync by `plugins/mycelium/scripts/sync_derived.py`, not hand-edited)
 - **Last updated:** 2026-09-21 (hook-surface review: 0.236.0 instrumented the last six advisory hooks; §3 state-logs paragraph updated. Prior full audit 2026-09-14, sixth audit — `/xai-check` found the card a quarter behind the hooks; §2, §3, §5, §6 refreshed and the hook-surface review line below added so the release gate fails when the hooks move and the card does not; see §9 / `services.yml :: svc-mycelium.xai.remediation_history`)
-- **Hook surface reviewed:** 2026-09-21 (digest 272ffaca48dd)
+- **Hook surface reviewed:** 2026-09-22 (digest e65854f6be03)
 - **Maintained by:** Håvard Bartnes (haabe). Issues + correspondence: [github.com/haabe/mycelium/issues](https://github.com/haabe/mycelium/issues)
 - **AI Act risk tier:** **Limited** (canonical, assessed 2026-05-04 by `/regulatory-review` — see `canvas/threat-model.yml :: regulatory_classification` for the full assessment). Mycelium is not in any EU AI Act Annex III high-risk category. AI outputs reach end users (developers) in user-affecting ways via the runtime, so Article 50 transparency obligations apply and are satisfied by this card + README + CLAUDE.md framing + runtime-level disclosure.
 

@@ -427,10 +427,10 @@ When creating the L0 diamond in `active.yml`, initialize `theory_gates_status` w
 | Scale | Gates to Initialize |
 |-------|-------------------|
 | L0 | evidence, cynefin, bias, bvssh, corrections |
-| L1 | evidence, four_risks, jtbd, cynefin, bias, bvssh, corrections |
+| L1 | evidence, four_risks, jtbd, cynefin, bias, bvssh, corrections, **landscape, capacity** |
 | L2 | evidence, four_risks, jtbd, cynefin, bias, privacy, bvssh, service_quality, corrections |
-| L3 | All 12 gates |
-| L4 | All except jtbd (11 gates) |
+| L3 | evidence, four_risks, jtbd, cynefin, bias, security, privacy, bvssh, service_quality, delivery_metrics, corrections, regulatory |
+| L4 | evidence, four_risks, cynefin, bias, security, privacy, bvssh, service_quality, delivery_metrics, corrections, regulatory |
 | L5 | evidence, cynefin, bias, security, bvssh, corrections, regulatory |
 
 Set each to `pending`. Example for L0:
