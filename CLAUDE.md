@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.239.0 -- **The technique with the best measured result now carries its measured problem: it fires on 14 days out of 32** (PATCH-shaped, MINOR by content). A prediction frozen the day Technique 7 shipped asked whether evidence in a skill file changes behaviour. Scored 2026-09-22 against its own frozen rule: FAILED. The pre-registered remedy was not better wording -- a technique needs a trigger, and where none can exist the skill must say so instead of letting a reader assume ambient coverage.*
+*Version 0.240.0 -- **The table an agent reads to set up a diamond disagreed with the machinery that gates it** (PATCH-shaped, MINOR by content). `theory-gates.md` documented 7 gates at L1 where `confidence-thresholds.yml` required 9, and said "All gates" at L3 and "All except JTBD" at L4 -- both true at twelve gates, both wrong once a thirteenth existed. Every row now names its gates, no row may say "all", and a test compares the two files.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

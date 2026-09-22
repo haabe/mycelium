@@ -612,11 +612,26 @@ Use this matrix to determine exactly which gates to evaluate for a given scale a
 
 ### Quick Reference: Gates per Scale (for `theory_gates_status` initialization)
 
+> **EVERY ROW NAMES ITS GATES, AND THE ABBREVIATIONS THAT USED TO BE HERE ARE WHY (v0.240.0).**
+> This table said `L1 | 7` while `confidence-thresholds.yml` — the file the machinery reads — required
+> **9**: the Landscape and Capacity gates, added in v0.217.0, were never added here. It also said
+> `L3 | All gates` and `L4 | All except JTBD`, which were true when twelve gates existed and became
+> wrong the moment a thirteenth was defined. **An agent initialising `theory_gates_status` from this
+> table produced a diamond missing two required keys at L1, silently.** Found 2026-09-22 by walking
+> the six scales for an end-to-end feasibility test, not by any check.
+> **So: no row may say "all" or "all except".** A relative count cannot stay true across a gate
+> addition; an explicit list fails loudly instead of drifting quietly. Fifteen gates are now defined.
+> **Explainability (gate 13) is in no scale's required list** — it is conditional on
+> `active-stack.yml :: ai_components.detected`, which is why the rows below sum to fewer than 15 and
+> is not an omission. When adding a gate, update this table AND `confidence-thresholds.yml`; the
+> machinery reads the second one.
+
+
 | Scale | Total Gates | Gate Names |
 |-------|-----------|------------|
 | L0 | 5 | Evidence, Cynefin, Bias, BVSSH, Corrections |
-| L1 | 7 | Evidence, Four Risks, JTBD, Cynefin, Bias, BVSSH, Corrections |
+| L1 | 9 | Evidence, Four Risks, JTBD, Cynefin, Bias, BVSSH, Corrections, **Landscape, Capacity** |
 | L2 | 9 | Evidence, Four Risks, JTBD, Cynefin, Bias, Privacy, BVSSH, Service Quality, Corrections |
-| L3 | 12 | All gates |
-| L4 | 11 | All except JTBD |
+| L3 | 12 | Evidence, Four Risks, JTBD, Cynefin, Bias, Security, Privacy, BVSSH, Service Quality, Delivery Metrics, Corrections, Regulatory |
+| L4 | 11 | Evidence, Four Risks, Cynefin, Bias, Security, Privacy, BVSSH, Service Quality, Delivery Metrics, Corrections, Regulatory |
 | L5 | 7 | Evidence, Cynefin, Bias, Security, BVSSH, Corrections, Regulatory |
