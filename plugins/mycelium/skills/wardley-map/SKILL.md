@@ -167,6 +167,16 @@ you have to learn when and where to use them."* Strategic options based on the m
 - Ecosystem: Build platform, commoditize lower layers
 - Tower and moat: Invest in defensibility
 
+### 9. Offer the L1 cycle on the strategic decision (v0.243.0)
+A map that surfaces a choice (where to play, which gameplay to adopt, what to build, buy or leave)
+has produced **an L1 event: a strategic decision**. L1 recurs on decisions, not on a pile, so it has
+no catalogue door; **this offer is its entrance**. Ask whether to open an L1 Strategy diamond on
+that decision, naming it in one line (`object_ref`: the decision, e.g. "which segment to lead with"),
+or record in one line why not: "no strategic decision open". **Offer it whether or not the L0 parent
+has progressed**: diamonds progress at their own speed (`engine/diamond-rules.md`). Before v0.243.0
+L1 was entered only by a sentence saying L0 would spawn it; no skill did, and across dogfood
+full-ladder runs 6 to 20 no L1 was ever created, including three in which L0 reached define.
+
 ## Output
 Update .claude/canvas/landscape.yml with components, evolution stages, movements, gameplay options, and `climatic_predictions` (new + scored). Report the coverage of the five climatic patterns explicitly, naming any that produced nothing this pass.
 

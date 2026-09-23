@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.242.6 -- **Two bias audits met every pass criterion and failed the gate anyway, reading "mitigation documented" as "mitigation executed"** (PATCH). A planned mitigation now counts as documented, and a cited disconfirming source as sought, stated in the gate and in the skill that records it; running the experiment stays with Cynefin and Four Risks.*
+*Version 0.243.0 -- **Two scales had no way in: L1 and L4 were described as spawned and no skill spawned them** (MINOR). Every scale is now enterable: event offers in `/wardley-map` and `/diamond-progress` (L1) and `/preflight` (L4), and diamonds progress at their own speed, replacing the undefined parent "bound". A test fails if any scale loses its way in.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

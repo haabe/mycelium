@@ -47,10 +47,10 @@ The shape is uniform; the trigger is not, and the trigger is what decides whethe
 | scale | the inquiry emits | recurs on | entered by |
 |---|---|---|---|
 | L0 | a WHY (once), and Just Causes (plural) | drift | founding; there is one purpose |
-| L1 | triggers | **a decision** | a constraint from L0 |
+| L1 | triggers | **a decision** | an event offer when a strategic decision arises: `/wardley-map` after gameplay, or `/diamond-progress` when an L0 enters define (v0.243.0) |
 | L2 | a validated or killed opportunity | **continuously** | parent spawn **or the catalogue** |
 | L3 | a build-or-kill verdict | **per candidate** | parent spawn **or the catalogue** |
-| L4 | an increment; a closed session | **per increment** | the L3→L4 four-risks verdict, as an entry permit |
+| L4 | an increment; a closed session | **per increment** | an event offer when an increment is ready to build: `/preflight` passing on a solution (v0.243.0) |
 | L5 | a launch | **a release categorised as a major launch** | the L4→L5 spawn (v0.232.0) |
 
 **THE RULE THAT FALLS OUT OF IT: a catalogue door is possible only where a level recurs on a PILE.**
@@ -59,6 +59,22 @@ records, so `/ost-builder` and `/ice-score` can offer the door. L1, L4 and L5 re
 a decision, an increment, a categorisation. An event has no queue to select from, so there is
 nothing for a door to open ON, and building one would mean inventing a record type the level does
 not produce.
+
+**BUT EVERY SCALE MUST BE ENTERABLE, AND THAT IS THE HIGHER RULE (v0.243.0).** The founder's
+principle, stated when this page was found to leave L1 and L4 unreachable: *"If there's no way to
+progress into and out of all or any of the diamonds, the model is wrong."* No pile means no
+catalogue door; it does not mean no entrance. **A scale that recurs on an event is entered by an
+EVENT OFFER**: the skill that is running when the event happens offers to open the cycle, names
+what the cycle is on, and records one line if it is declined. L1's event is a strategic decision
+(`/wardley-map`, and `/diamond-progress` when an L0 enters define); L4's is an increment ready to
+build (`/preflight`); L5's is a release categorised as a major launch (`/launch-tier`). Until
+v0.243.0 L1 and L4 had only a sentence saying they would be spawned, and no skill that did it:
+in dogfood full-ladder runs 6 to 20 neither was ever created, including three runs in which L0
+reached define. **A route that is documented and never fires is no route.**
+
+**Every product has some kind of delivery**, so L4 is never optional. Its form follows the product
+type, as the Evidence gate's L4 rows already say: tested code for software, reviewed and accessible
+content, passing evals for an AI tool, a documented and repeatable step for a service.
 
 **L1 SPECIFICALLY, because its files DO carry id-bearing records and that is the trap.**
 `landscape.yml#components[]`, `landscape.yml#climatic_predictions[]` and `doctrine.yml#doctrine[]`
@@ -73,8 +89,9 @@ doctrine sets are **open**, so it is a library you choose FROM, not a project ba
 `gist.yml#steps[]` and `#current_tasks[]` have no `id`, and GIST belongs to L3 in any case. L4's own
 theories supply no catalogue — DORA measures a continuous stream, OWASP supplies checks, SOLID
 supplies design rules. An increment is decomposed from the solution above it, not selected from a
-pile. **What L4 is actually missing is a promotion trigger, not a door**: the `four_risks` gate
-already fires and nothing consumes its result to open the L4. That is the open item.
+pile. **What L4 was missing was a promotion trigger, not a door**: the `four_risks` gate fired and
+nothing consumed its result to open the L4. Closed in v0.243.0 by the event offer in `/preflight`,
+which is where `leaf-lifecycle.md` Phase 8 had always said the delivery diamond is spawned.
 
 *Sources: Wardley (doctrine/climate/gameplay as quoted); Cagan (four risks as the discovery exit);
 Lauchengco (release categorisation); Forsgren (DORA as stream measurement); Rother (target before
@@ -83,14 +100,14 @@ the books, three adversarial rounds and founder correction.*
 
 ## Spawning Rules
 
-**A record and a cycle are different objects (v0.217.0).** An opportunity in `opportunities.yml` is a record; an L2 diamond is a cycle of work on it. Scoring, evidence and a resolving `rolls_up_to` make a good record and open nothing. A cycle is opened by a spawn from the parent (below) OR from the catalogue: `/ost-builder` offers an L2 on a scored, evidence-backed opportunity and `/ice-score` offers an L3 on the highest-ranked scored leaf, whether or not the parent has progressed. An unvalidated parent does not forbid the cycle; it bounds how far it can go.
+**A record and a cycle are different objects (v0.217.0).** An opportunity in `opportunities.yml` is a record; an L2 diamond is a cycle of work on it. Scoring, evidence and a resolving `rolls_up_to` make a good record and open nothing. A cycle is opened by a spawn from the parent (below) OR from the catalogue: `/ost-builder` offers an L2 on a scored, evidence-backed opportunity and `/ice-score` offers an L3 on the highest-ranked scored leaf, whether or not the parent has progressed. **Diamonds progress at their own speed** (founder ruling, v0.243.0): a child moves through its own transitions on its own gates and may be ahead of its parent. An unvalidated parent is context the child names, never a hold on it. (Until v0.243.0 this said the parent set a bound on the child without saying what was bounded; a dogfood run read it as "children cannot progress while the parent is blocked" and never assessed the L2 and L3 diamonds at all.)
 
 Diamonds spawn child diamonds when complexity or scope requires it:
 
-- L0 spawns L1 when purpose is defined and strategic questions arise
+- L0 spawns L1 when purpose is defined and strategic questions arise (the event offer above: `/wardley-map`, `/diamond-progress`)
 - L1 spawns L2 when landscape is mapped and opportunities need exploration
 - L2 spawns L3 when opportunities have sufficient evidence for solution design
-- L3 spawns L4 when solutions pass confidence threshold and need building
+- L3 spawns L4 when an increment is ready to build (the event offer above: `/preflight`)
 - L4 can spawn sub-L4 diamonds for complex features requiring their own discovery
 - **L4 spawns L5 when a release is categorised as a MAJOR LAUNCH on the project's own release scale** (v0.232.0, written by `/launch-tier`)
 - L5 spawns L2 when market feedback reveals new opportunities (feedback loop)

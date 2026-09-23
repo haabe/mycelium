@@ -99,6 +99,19 @@ Success criteria:
 - [ ] DoD criteria reviewed and understood
 - [ ] All criteria are achievable within this task
 
+## If Every Item Passes: offer the L4 cycle (v0.243.0)
+
+A passing preflight means **an increment is ready to build, which is L4's event**. L4 recurs per
+increment, not on a pile, so it has no catalogue door; **this offer is its entrance**
+(`engine/leaf-lifecycle.md` Phase 8: "Delivery diamond spawned (L3 spawns L4)"). If no L4 diamond is
+open on this increment, ask whether to open an L4 Delivery diamond on it (`object_ref`: the solution
+id and the increment, e.g. "sol-003, swap request + single approval"), or record in one line why not:
+"increment not opened". **Every product has some kind of delivery**, and its shape follows the
+product type: tested code for software, reviewed and accessible content, passing evals for an AI
+tool, a documented and repeatable step for a service. Offer it whether or not the parent diamonds
+have progressed. Before v0.243.0 nothing opened an L4: the Four Risks verdict was described as its
+"entry permit" and no skill consumed it.
+
 ## If Any Item Fails
 
 Do not proceed to implementation. Instead:
