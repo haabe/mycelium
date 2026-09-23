@@ -45,6 +45,7 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
 
 Read `.claude/canvas/purpose.yml` and `.claude/diamonds/active.yml` at session start. Determine state:
 
+- **An interview was started and not finished** (`.claude/state/interview-in-progress.md` exists): **resume it, do not restart it.** Show the answers already saved in one short list, ask the next unanswered question, and continue the Universal Brief Flow from there. This check comes FIRST, before the two below: a half-finished interview can sit beside diamonds opened later, and the project still has no purpose.
 - **Canvas empty** (template-only fields, no diamonds in `active_diamonds`): proceed to **Universal Brief Flow** below.
 - **Canvas populated** (purpose statement set OR diamonds present): proceed to **Continuing-Project Routing** below.
 
@@ -62,6 +63,8 @@ Goal: the user walks away in ~10 minutes with a one-page brief on their idea tha
 2. "Tell me about the last time someone in that group hit the problem you're trying to solve. What did they actually do?" (Torres past-behavior — not "would they want X")
 3. "If you had to bet on one thing being wrong about this idea, what would it be?"
 4. "What's the smallest move you could make this week to find out?"
+
+**Save each answer as it lands (v0.244.0).** After each answer, append the question and the user's answer to `.claude/state/interview-in-progress.md` (create it on the first answer). Delete that file only after the brief is rendered and `purpose.yml` is written. A user can leave after any question; before this, everything they had said lived only in the chat, and in an end-to-end dogfood run a session ended after question 3 left the project with no purpose at all: the next sessions built on top of it, and the purpose check passed only because there was no purpose to check against.
 
 **Format constraint discipline** (per ht-012 cohort-log f4, shipped v0.23.21): the format spec (e.g., "one sentence") MUST appear before the question text and as a bolded mechanical constraint, not as a prose prefix that can be read as a rhetorical politeness. The "In one sentence, X?" framing was misread as "succinctly, X?" — the user answered in 2-3 sentences before discovering the constraint was hard. Render format specs as parenthetical or bolded prefixes; do not rely on prose to carry the constraint.
 

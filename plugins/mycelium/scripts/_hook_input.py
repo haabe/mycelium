@@ -345,6 +345,27 @@ def _purpose_has_words(doc, text: str) -> bool:
     return bool(m and len(m.group(1).split()) >= _MIN_PURPOSE_WORDS)
 
 
+def has_purpose(project_dir: str) -> bool:
+    """purpose.yml carries a purpose statement with words in it. Separate from has_discovery_state,
+    which a diamond alone satisfies: an end-to-end dogfood run (v0.244.0) had diamonds and no
+    purpose, because /mycelium:start was interrupted, and nothing noticed."""
+    try:
+        import yaml  # noqa: PLC0415 — optional; _purpose_has_words has a regex fallback
+    except ImportError:
+        yaml = None
+    path = os.path.join(project_dir, ".claude", "canvas", "purpose.yml")
+    try:
+        with open(path, encoding="utf-8") as fh:
+            text = fh.read()
+    except OSError:
+        return False
+    try:
+        doc = yaml.safe_load(text) if yaml else None
+    except ValueError:
+        doc = None
+    return _purpose_has_words(doc, text)
+
+
 def has_discovery_state(project_dir: str) -> bool:
     """A populated purpose.yml (a `why` with words in it) or an active diamond with an id.
     2026-09-11: sixty-one spaces in purpose.yml and a one-line `- id: fake` both passed the
@@ -391,7 +412,11 @@ def cli() -> int:
     ap.add_argument("--project-dir", default=os.environ.get("CLAUDE_PROJECT_DIR", "."))
     ap.add_argument("--discovery-state", action="store_true",
                     help="exit 0 if discovery has been engaged, 1 if not; reads no stdin")
+    ap.add_argument("--purpose-state", action="store_true",
+                    help="exit 0 if purpose.yml has a purpose statement, 1 if not; reads no stdin")
     args = ap.parse_args()
+    if args.purpose_state:
+        return 0 if has_purpose(args.project_dir) else 1
     if args.discovery_state:
         return 0 if has_discovery_state(args.project_dir) else 1
     data = read_input()
