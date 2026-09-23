@@ -4,6 +4,28 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-22.
 
+## v0.242.5 - the door was re-closed by the reason it was opened
+
+**2026-09-23.** v0.217.0 added the catalogue doors because *"a stuck parent closed the only door
+through which every scale below it could begin."* On a dogfood full-ladder run, `/ice-score` made
+the L3 offer — for the first time, after v0.242.4 repaired its condition — and then **withheld it**,
+recording that the L0 parent had Evidence, BVSSH and Privacy open.
+
+- **The agent was reasoning from the page it had.** `engine/diamond-rules.md:39` states that a door
+  opens *"whether or not the parent has progressed. An unvalidated parent does not forbid the cycle;
+  it bounds how far it can go."* Neither `ice-score/SKILL.md` nor `ost-builder/SKILL.md` said so. An
+  agent reading the skill that makes the offer had no reason to know the parent was irrelevant, and
+  a conservative reading of open parent gates is to wait.
+- **So the door re-closed on exactly the condition it was built to bypass** — a stuck parent. The
+  defect v0.217.0 fixed, reproduced from inside the fix, because the rule and the decision lived on
+  different pages.
+- **Both door skills now state it where the offer is made**: offer regardless of the parent; if the
+  parent's state should shape the cycle, say so in the offer rather than skipping it.
+- **The run still produced the L3** — a human "yes" answered the withheld offer — which is why this
+  shows up as a finding rather than a stall. Without that answer the ladder stops at L2 again.
+- Pinned: both skills must state parent-independence, same as the rule that the door's condition
+  must be something the tree can set.
+
 ## v0.242.4 - a door gated on a state nothing could set
 
 **2026-09-22.** `/ice-score` carries the L3 catalogue door added in v0.217.0, and its condition

@@ -106,3 +106,22 @@ def test_both_doors_state_the_decline_form():
     an offer with no way to decline on the record is an offer that gets silently skipped."""
     assert "stays a record" in OST.read_text(encoding="utf-8")
     assert "stays a record" in ICE.read_text(encoding="utf-8")
+
+
+@pytest.mark.parametrize("path", [ICE, OST], ids=lambda p: p.name)
+def test_both_doors_state_they_open_regardless_of_the_parent(path):
+    """REGRESSION (2026-09-23, dogfood full-ladder run 13). `/ice-score` offered the L3 door and then
+    WITHHELD it because the L0 parent had Evidence, BVSSH and Privacy open. `diamond-rules.md:39`
+    says the door opens "whether or not the parent has progressed" — but that rule lived only in the
+    engine doc, never in the skill that makes the offer, so an agent reading the skill had no reason
+    to know it.
+
+    **That re-closes the door this mechanism was built to open.** v0.217.0 added the catalogue door
+    because "a stuck parent closed the only door". An agent that shuts it because the parent is stuck
+    reproduces the original defect from inside the fix. The rule has to be on the page where the
+    decision is made."""
+    text = path.read_text(encoding="utf-8")
+    assert "whether or not the parent" in text, (
+        f"{path.name} makes a catalogue offer but does not state it is independent of the parent; "
+        "an agent will reasonably withhold it when the parent's gates are open"
+    )
