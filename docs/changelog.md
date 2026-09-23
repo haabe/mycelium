@@ -2,7 +2,29 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-09-22.
+**Last updated**: 2026-09-23.
+
+## v0.242.6 - the bias gate asked for a resolution its criteria never named
+
+**2026-09-23.** On a dogfood full-ladder run, every Discover->Define gate passed on the L0, L2
+and L3 diamonds except Bias, and two bias audits held it on all three. Both met the four pass
+criteria as written: checklist reviewed, biases named with mitigations documented, disconfirming
+evidence sought and cited, the agent's own biases examined. Both recorded `not-passed`: *"a
+citation is not a resolution, and no probe has run."*
+
+- **The criteria never asked for a resolution.** "Mitigation documented" was read as "mitigation
+  executed", and "disconfirming evidence actively sought" as "resolved". With that reading no
+  diamond can leave Discover until an experiment has run, which is the work its own later
+  transitions exist to do.
+- **Running the experiment is already required, where it belongs:** by the Cynefin gate at
+  Define->Develop for a complex domain, and by Four Risks.
+- **Founder ruling:** a planned mitigation (a named action and the test, owner or later transition
+  that carries it out) counts as documented; a cited, weighed disconfirming source counts as
+  sought. Stated in `engine/theory-gates.md` §5 and in `/bias-check`, which records the gate,
+  because v0.242.5 found a rule in the engine doc being missed by the skill that acted.
+- The fail column is unchanged. A bias that is present and unacknowledged, a review with only
+  confirming evidence, or a named bias with no mitigation at all still fails.
+- Pinned in both places by a test.
 
 ## v0.242.5 - the door was re-closed by the reason it was opened
 
