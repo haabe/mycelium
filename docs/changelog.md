@@ -4,6 +4,28 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-23.
 
+## v0.244.0 - what a user leaves with survives the session
+
+**2026-09-23.** Found by the first end-to-end dogfood runs on the installed plugin: a simulated founder
+used Mycelium across several sessions, and the harness only played the user (no scripted skills, no
+task prompts).
+
+- **Take-away material lived only in the chat.** A call script Mycelium drafted in one session was
+  asked for in the next, and the new session answered "I never wrote one"; in another run, "I have no
+  record of your earlier backup question". The operating contract now says anything the user will act
+  on later is written to a file when produced (`.claude/handoffs/` unless a skill names the file), and
+  that a session referred to earlier work it cannot find says it cannot see earlier conversations,
+  never that the work was not done.
+- **An interrupted `/mycelium:start` left the project without a purpose, permanently.** The founder
+  left after question 3; later sessions opened an L3 diamond and built code, and the purpose check
+  passed only because there was no purpose to check against. The interview now saves each answer to
+  `.claude/state/interview-in-progress.md` and resumes from it; SessionStart nudges, once, when setup
+  ran and there is no purpose statement but an interview is half-done or diamonds exist anyway.
+- **Withdrawn before release:** the same runs looked like delivery without an L4 diamond. It was
+  build-to-learn at L3 with one opted-in site, which `/define-done` says is by design.
+- Pinned by `tests/python/test_work_survives_the_end_of_a_session.py` and
+  `tests/bash/test_session_start_unfinished_discovery.sh`, both failing without the change.
+
 ## v0.243.0 - every scale has a way in
 
 **2026-09-23.** The founder's principle: *"If there's no way to progress into and out of all or

@@ -1370,6 +1370,26 @@ Say it once, in one line, then do what the user asks. This is a nudge, not a gat
 fi
 
 # ============================================================
+# Unfinished discovery: setup ran, the interview did not finish (v0.244.0)
+# ============================================================
+# Found in an end-to-end dogfood run on the installed plugin: the founder left /mycelium:start
+# after question 3, and the next sessions opened diamonds and built code on a project with NO
+# purpose. The purpose check then passed only because there was nothing to check against, and
+# nothing ever offered to finish the interview. A NUDGE, once per session, like the brownfield one.
+_HI_PY="${CLAUDE_PLUGIN_ROOT:-$(dirname "${BASH_SOURCE[0]}")/..}/scripts/_hook_input.py"
+if [ -d "$PROJECT_DIR/.claude/diamonds" ] && [ -f "$_HI_PY" ] \
+   && ! python3 "$_HI_PY" --project-dir "$PROJECT_DIR" --purpose-state 2>/dev/null; then
+  _INTERVIEW_WIP="$PROJECT_DIR/.claude/state/interview-in-progress.md"
+  if [ -f "$_INTERVIEW_WIP" ] \
+     || python3 "$_HI_PY" --project-dir "$PROJECT_DIR" --discovery-state 2>/dev/null; then
+    REMINDERS="${REMINDERS}
+UNFINISHED DISCOVERY: /mycelium:start was begun here but no purpose was written (purpose.yml has no statement)$( [ -f "$_INTERVIEW_WIP" ] && printf ', and the answers so far are saved in .claude/state/interview-in-progress.md' ). Work opened since then has no purpose to answer to.
+
+Before other work, offer in one line to finish the interview where it stopped: /mycelium:start resumes from the saved answers. Then do what the user asks. This is a nudge, not a gate."
+  fi
+fi
+
+# ============================================================
 # Build output
 # ============================================================
 # ALWAYS inject the agent operating contract (the always-on rules) so it binds

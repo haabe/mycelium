@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.243.0 -- **Two scales had no way in: L1 and L4 were described as spawned and no skill spawned them** (MINOR). Every scale is now enterable: event offers in `/wardley-map` and `/diamond-progress` (L1) and `/preflight` (L4), and diamonds progress at their own speed, replacing the undefined parent "bound". A test fails if any scale loses its way in.*
+*Version 0.244.0 -- **Work handed to the user vanished at the end of a session, and an interrupted start left a project with no purpose for good** (MINOR). Take-away material is written to a file when produced, a new session never denies earlier work it cannot see, the interview saves each answer and resumes, and SessionStart offers to finish an unfinished discovery.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 
