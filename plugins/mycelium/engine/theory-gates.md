@@ -181,6 +181,22 @@ All four risks must be assessed, and the assessment must demonstrate that **thre
 
 **Evidence required**: Completed bias checklist, documented mitigation actions.
 
+**"Mitigation documented" and "sought" mean what they say, most of all at Discover->Define
+(v0.242.6).** A documented mitigation may be PLANNED: a named action and the test, owner or later
+transition that will carry it out. This gate does not require that the mitigation has already
+run, or that the disconfirming evidence has been resolved. A disconfirming source that is cited
+and weighed has been *sought*; it is not *unacknowledged*. Running the experiment is required
+where the experiment belongs: the Cynefin gate at Define->Develop for a complex domain, and the
+Four Risks gate. Demanding it here gates every diamond's first transition on work that its own
+later transitions exist to do. Record `not-passed` for what the fail column names: no review, a
+bias present and unacknowledged, only confirming evidence collected, the agent's own biases
+unexamined, or a named bias with no mitigation at all.
+
+*Why this is stated here: on a dogfood full-ladder run, two bias audits met all four pass criteria
+and recorded `not-passed` on the L0, L2 and L3 diamonds alike, because "a citation is not a
+resolution, and no probe has run". That held every diamond in Discover while Evidence, Corrections
+and JTBD had passed. The criteria never asked for a resolution; the reading added it.*
+
 **Suggested skill**: `/bias-check`
 
 ### 6. Security Gate

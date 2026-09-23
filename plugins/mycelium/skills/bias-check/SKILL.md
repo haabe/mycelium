@@ -97,6 +97,15 @@ This skill should be triggered:
 ## Canvas Output
 Record bias check in `.claude/canvas/opportunities.yml` under `bias_checks` section with date, biases mitigated, and research design adjustments made.
 
+## Recording the Bias gate
+When this check feeds a diamond's `bias` gate, apply the pass criteria in
+`${CLAUDE_PLUGIN_ROOT}/engine/theory-gates.md` §5 as written. **A planned mitigation counts as
+documented**: a named action and the test, owner or later transition that will carry it out. A
+disconfirming source that is cited and weighed has been sought, even though it is not yet resolved.
+"A citation is not a resolution" is true, and it is not this gate's test: resolution is demanded by
+the Cynefin gate (Define->Develop, complex domain) and the Four Risks gate. Record `not-passed` for
+what the fail column names, or for a named bias with no mitigation at all.
+
 ## Decision Log (MANDATORY per G-P4)
 **APPEND** a `### Bias Check` entry to `.claude/harness/decision-log.md` with: activity assessed, active bias risks found, mitigations applied, agent self-check results.
 

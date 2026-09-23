@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.242.5 -- **An agent re-closed the catalogue door because the parent was stuck — the failure the door was built to remove** (PATCH). The rule that doors open "whether or not the parent has progressed" lived only in `diamond-rules.md`, never in the two skills that make the offer. Now stated where the decision is made.*
+*Version 0.242.6 -- **Two bias audits met every pass criterion and failed the gate anyway, reading "mitigation documented" as "mitigation executed"** (PATCH). A planned mitigation now counts as documented, and a cited disconfirming source as sought, stated in the gate and in the skill that records it; running the experiment stays with Cynefin and Four Risks.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 
