@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.242.4 -- **The L3 catalogue door was gated on a state nothing could set** (PATCH). "When a leaf is `selected`" — and `solutions[]` has no status field, the only status enum belongs to the opportunity, and the word appears in three places in the plugin, all describing the gate and none setting it. A door gated on a state with no writer never opens, which is why a consumer canvas held 53 solutions and no L3 diamond ever.*
+*Version 0.242.5 -- **An agent re-closed the catalogue door because the parent was stuck — the failure the door was built to remove** (PATCH). The rule that doors open "whether or not the parent has progressed" lived only in `diamond-rules.md`, never in the two skills that make the offer. Now stated where the decision is made.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 
