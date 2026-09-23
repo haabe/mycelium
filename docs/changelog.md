@@ -4,6 +4,33 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-23.
 
+## v0.243.0 - every scale has a way in
+
+**2026-09-23.** The founder's principle: *"If there's no way to progress into and out of all or
+any of the diamonds, the model is wrong."* Measured against what the skills actually do, L1 and L4
+had no way in.
+
+- **L1 and L4 were entered by a sentence, not a skill.** `engine/diamond-rules.md` said "L0 spawns
+  L1" and "L3 spawns L4". L1's only instruction was a passive line in `/diamond-progress` ("identify
+  if child diamonds should be spawned"); L4's "entry permit", the Four Risks verdict, had no
+  consumer. In dogfood full-ladder runs 6 to 20 neither was ever created, including three runs in
+  which L0 reached define.
+- **v0.242.3 closed this as correct by design, and was half right.** A scale that recurs on an event
+  cannot have a catalogue door, because there is no pile to open on. That still stands. It never
+  followed that the scale needs no entrance.
+- **Event offers.** The skill running when the event happens now offers the cycle, with a one-line
+  decline: `/wardley-map` step 9 and `/diamond-progress` (an L0 entering define) offer an L1 on a
+  strategic decision; `/preflight`, when every item passes, offers an L4 on the increment, which is
+  where `leaf-lifecycle.md` Phase 8 always said the delivery diamond is spawned. Every product has
+  some kind of delivery; its shape follows the product type.
+- **Diamonds progress at their own speed** (founder ruling). The phrase that an unvalidated parent
+  "bounds" its child named no bound, and a dogfood run read it as "children cannot progress while the
+  parent is blocked", then never assessed its L2 and L3 diamonds. Replaced in `diamond-rules.md`,
+  `/ost-builder` and `/ice-score`.
+- **Pinned:** `test_every_scale_has_a_way_in.py` requires a skill that opens each of L0 to L5, both
+  exits in `/diamond-progress`, event offers that do not wait on a parent, and no page stating a
+  parent bound. It fails 5 of 10 checks against 0.242.6.
+
 ## v0.242.6 - the bias gate asked for a resolution its criteria never named
 
 **2026-09-23.** On a dogfood full-ladder run, every Discover->Define gate passed on the L0, L2
