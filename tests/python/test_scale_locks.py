@@ -128,9 +128,14 @@ def test_l3_lock_includes_the_locks_above_it(tmp_path):
 # ---------------------------------------------------------------- L4 and L5
 
 
-def _l3(evidence="anecdotal"):
-    return {"id": "l3-a", "scale": "L3", "phase": "develop", "object_ref": "sol-001",
-            "evidence_type": evidence}
+BUILD_PASSED = {"four_risks": "pass", "privacy": "pass-with-risk"}
+EXPOSE_PASSED = {**BUILD_PASSED, "security": "pass", "service_quality": "pass"}
+
+
+def _l3(evidence="anecdotal", phase="develop", gates=None):
+    return {"id": "l3-a", "scale": "L3", "phase": phase, "object_ref": "sol-001",
+            "evidence_type": evidence,
+            "theory_gates_status": dict(BUILD_PASSED if gates is None else gates)}
 
 
 def test_l4_needs_its_l3_at_medium_confidence(tmp_path):
@@ -204,7 +209,7 @@ def test_a_completed_l3_does_not_carry_code(tmp_path):
 
 
 def test_the_users_ack_overrides_one_diamond(tmp_path):
-    bare = {"id": "l3-x", "scale": "L3", "phase": "discover"}
+    bare = {"id": "l3-x", "scale": "L3", "phase": "develop", "theory_gates_status": BUILD_PASSED}
     p = _project(tmp_path, purpose=PURPOSE, diamonds=[bare],
                  ack="l3-x L3 2026-09-24 user: prototype now, I will fill the tree after\n")
     assert sl.delivery_state(p)[0]
@@ -346,7 +351,7 @@ def test_ack_counts_only_a_well_formed_line_for_that_id_and_scale(tmp_path):
 
 def test_odd_references_and_shapes_do_not_crash(tmp_path):
     l3 = {"id": "l3-a", "scale": "L3", "phase": "develop", "object_ref": ", sol-001",
-          "evidence_type": "data-supported"}
+          "evidence_type": "data-supported", "theory_gates_status": BUILD_PASSED}
     l4 = {"id": "l4-a", "scale": "L4", "phase": "develop", "object_ref": ", sol-001"}
     p = _project(tmp_path, purpose=PURPOSE, opps={"opportunities": "not a list"}, diamonds=[l3, l4])
     assert isinstance(sl.report(p)[0], list)
@@ -391,3 +396,84 @@ def test_hook_reads_a_move_onto_the_diamonds_file(tmp_path):
             "tool_input": {"source": str(staged),
                            "destination": str(tmp_path / ".claude/diamonds/active.yml")}}
     assert sl.new_diamond_violations(p, move)
+
+
+# ---------------------------------------------------------------- phase follows the work (0.246.0)
+
+
+def test_code_waits_for_develop_and_its_gates(tmp_path):
+    """E2E run 10: an L3 sat in define, every gate pending, while code that stores phone numbers
+    and private link tokens was built and put live. Code is built in Develop, behind Four Risks
+    and Privacy."""
+    p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), diamonds=[_l3(phase="define")])
+    ok, why = sl.delivery_state(p)
+    assert not ok and "in Develop or Deliver (now `define`)" in why
+    p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(),
+                 diamonds=[_l3(gates={"four_risks": "pass", "privacy": "pending"})])
+    ok, why = sl.delivery_state(p)
+    assert not ok and "privacy gate passed" in why
+
+
+def test_a_gate_the_diamond_never_recorded_is_not_passed(tmp_path):
+    """The run-10 L3 was born with the L0 gate set: no privacy or security key at all."""
+    l0_set = {"evidence": "pass", "cynefin": "pass", "bias": "pass"}
+    p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), diamonds=[_l3(gates=l0_set)])
+    ok, why = sl.delivery_state(p)
+    assert not ok and "`not recorded`" in why
+
+
+def test_exposure_needs_deliver_and_security(tmp_path):
+    p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), diamonds=[_l3()])
+    assert sl.delivery_state(p)[0], "Develop with Four Risks and Privacy carries code"
+    ok, why = sl.exposure_state(p)
+    assert not ok and "in Deliver" in why and "security gate passed" in why
+    p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(),
+                 diamonds=[_l3(phase="deliver", gates=EXPOSE_PASSED)])
+    assert sl.exposure_state(p)[0]
+
+
+def test_the_scale_lock_ack_waives_the_chain_never_the_phase(tmp_path):
+    """Founder, 2026-09-24: "Even a prototype should follow best practices"."""
+    bare = {"id": "l3-x", "scale": "L3", "phase": "define"}
+    p = _project(tmp_path, purpose=PURPOSE, diamonds=[bare],
+                 ack="l3-x L3 2026-09-24 user: prototype now\n")
+    ok, why = sl.delivery_state(p)
+    assert not ok and "desired outcome" not in why and "Develop or Deliver" in why
+
+
+def _bash(cmd):
+    return {"tool_name": "Bash", "tool_input": {"command": cmd}}
+
+
+@pytest.mark.parametrize("cmd", [
+    "fly deploy", "vercel --prod", "netlify deploy --prod", "git push heroku main",
+    "kubectl apply -f k8s/", "helm upgrade app ./chart", "docker push me/app:1",
+    "gcloud run deploy app", "terraform apply -auto-approve", "npm publish",
+    "ssh app@host 'cd app && git pull && systemctl restart cadence'",
+    "rsync -az app/ deploy@cadencepro.eu:/srv/app/", "scp site.json root@1.2.3.4:/srv/"])
+def test_deploys_are_seen(tmp_path, cmd):
+    p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), diamonds=[_l3()])
+    assert sl.exposure_violation(p, _bash(cmd)), cmd
+
+
+@pytest.mark.parametrize("cmd", [
+    "git push origin main", "ssh host tail -f /var/log/app.log", "python -m pytest",
+    "rsync -a src/ build/", "docker compose up -d", "npm install", "cat deploy.md"])
+def test_ordinary_commands_are_not_deploys(tmp_path, cmd):
+    p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), diamonds=[_l3()])
+    assert sl.exposure_violation(p, _bash(cmd)) is None, cmd
+
+
+def test_a_ready_cycle_deploys_and_an_unengaged_project_is_not_judged(tmp_path):
+    p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(),
+                 diamonds=[_l3(phase="deliver", gates=EXPOSE_PASSED)])
+    assert sl.exposure_violation(p, _bash("fly deploy")) is None
+    assert sl.exposure_violation(_project(tmp_path / "bare"), _bash("fly deploy")) is None
+
+
+def test_exposure_hook_blocks_with_the_remedy(tmp_path, monkeypatch, capsys):
+    p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), diamonds=[_l3()])
+    monkeypatch.setattr(sys, "stdin", __import__("io").StringIO(json.dumps(_bash("fly deploy"))))
+    assert sl.main(["--project-dir", p, "--exposure-hook"]) == 2
+    err = capsys.readouterr().err
+    assert "Even" not in err and "/mycelium:threat-model" in err and "delivery-skip-ack" in err

@@ -23,6 +23,12 @@
         "timeout": 10
       },
       {
+        "matcher": "Bash|shell",
+        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/exposure-gate.sh",
+        "type": "command",
+        "timeout": 10
+      },
+      {
         "matcher": "Write|Edit|MultiEdit|NotebookEdit|edit|write|Bash|shell|mcp__filesystem__(write_file|edit_file|move_file)",
         "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/brownfield-gate.sh",
         "type": "command",

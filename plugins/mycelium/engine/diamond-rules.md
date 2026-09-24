@@ -128,6 +128,15 @@ the books, three adversarial rounds and founder correction.*
 
 **`solo_hobby` skips the L1 diamond, not the L1 lock.** With no L1 cycle, the L2 lock still needs the purpose and the desired outcome; the artefact, not the diamond, is what it reads.
 
+### Phase follows the work (v0.246.0)
+
+**The entry lock says a cycle may exist; the phase says what work it may carry.** Code is built in **Develop**, after Define->Develop has passed Four Risks and Privacy (privacy by design). Real people meet it in **Deliver**, after Develop->Deliver has passed Security, Privacy and Service Quality. These are the matrix's own L3 and L4 gates (L5: Security at Develop->Deliver); nothing new is required, only that the work cannot walk around them. E2E dogfood run 10 on 0.245.0 had an SMS app holding staff phone numbers and private link tokens built, put live at one site and rolled out to a second, under an L3 still in define with every gate pending and no threat model or privacy assessment: the gates existed and were never reached because the phase never moved. **Build to learn is an evidence bar, not a safety bar** (founder, 2026-09-24: "Even a prototype should follow best practices, even if it is only a pilot").
+
+- **Mechanical:** the discovery gate's second stage refuses new source files unless an L3/L4/L5 whose chain holds is in Develop or Deliver with Four Risks and Privacy passed; `hooks/exposure-gate.sh` refuses a deploy, publish or remote pull-and-restart the agent runs unless one is in Deliver with Security, Privacy and Service Quality passed. Gate outcomes are read from `theory_gates_status`; a gate the diamond never recorded is not passed.
+- **Rule, where no hook can see:** a deploy the USER runs. Operating contract rule 14 and `/mycelium:preflight` carry it.
+- **The scale-lock override waives the chain, never the phase.** Only `delivery-skip-ack` (the user declares the work untracked) lifts both.
+- **A diamond is born with its scale's gate set** (`engine/theory-gates.md`, Quick Reference). The run-10 L3 was initialised with the L0 set, so it had no Security or Privacy entry to pass.
+
 **What the locks cannot do.** They check that the parent's artefact EXISTS, not that it is true: an evidence type and a source are fields an agent can write. The L3 lock therefore asks for a named source as well as a type, which makes an invented one visible in review; the truth of evidence stays with the evidence gates and the human.
 
 Diamonds spawn child diamonds, each through its lock above:

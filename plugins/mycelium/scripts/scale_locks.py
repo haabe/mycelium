@@ -69,6 +69,32 @@ DELIVERY_SCALES = ("L3", "L4", "L5")
 CLOSED = {"complete", "completed", "killed", "parked", "archived"}
 DEAD = {"killed", "archived"}
 MEDIUM_OR_BETTER = {"data-supported", "test-validated", "launch-validated"}
+PASSED = {"pass", "passed", "pass-with-risk"}
+#: PHASE FOLLOWS THE WORK (v0.246.0). The gates the matrix requires on the way INTO the phase that
+#: carries each kind of work (engine/theory-gates.md, Scale x Transition). Code is built in Develop,
+#: behind Define->Develop: Four Risks, and Privacy, i.e. privacy by design. Real people meet it in
+#: Deliver, behind Develop->Deliver: Security, Privacy and Service Quality. L5 carries neither Four
+#: Risks nor Privacy in the matrix, and Security at Develop->Deliver.
+_BUILD = ("four_risks", "privacy")
+_EXPOSE = ("four_risks", "privacy", "security", "service_quality")
+STAGES = {
+    "build": ({"develop", "deliver"}, {"L3": _BUILD, "L4": _BUILD, "L5": ()},
+              "code is built in Develop, after Define->Develop has passed Four Risks and Privacy"),
+    "expose": ({"deliver"}, {"L3": _EXPOSE, "L4": _EXPOSE, "L5": ("security",)},
+               ("real people meet it in Deliver, after Develop->Deliver has passed Security, "
+                "Privacy and Service Quality")),
+}
+#: Commands that put something in front of real people. Narrow on purpose: a deploy CLI's deploy
+#: verb, a package publish, or a remote shell/copy that pulls, restarts or syncs onto a host.
+_DEPLOY = re.compile(
+    r"\b(?:fly(?:ctl)?\s+deploy|netlify\s+deploy|vercel\b[^|;&]*(?:--prod|\bdeploy\b)"
+    r"|git\s+push\s+(?:heroku|dokku|production|prod)\b|kubectl\s+(?:apply|rollout|set\s+image)"
+    r"|helm\s+(?:install|upgrade)|docker\s+push|gcloud\b[^|;&]*\bdeploy\b"
+    r"|aws\b[^|;&]*\b(?:deploy|update-function-code|s3\s+sync)\b|terraform\s+apply|pulumi\s+up"
+    r"|(?:serverless|sls)\s+deploy|npm\s+publish|twine\s+upload|cargo\s+publish"
+    r"|ssh\b[^\n]*\b(?:git\s+pull|systemctl\s+(?:re)?start|docker\s+compose\s+up"
+    r"|pm2\s+(?:re)?start|service\s+\S+\s+restart)"
+    r"|(?:scp|rsync)\b[^|;&]*\s[\w.@-]+:\S*)", re.IGNORECASE)
 CLOSED_OPPORTUNITY = {"closed", "discarded", "resolved", "addressed"}
 SHIPPED_PHASES = {"deliver", "complete", "completed"}
 ACK_REL = os.path.join(".claude", "state", "scale-lock-ack")
@@ -358,6 +384,25 @@ class State:
                     return p
         return None
 
+    def stage_missing(self, d: dict, stage: str) -> list[str]:
+        """What stands between this diamond and carrying `stage` work: its phase, and each gate the
+        matrix requires on the way into that phase, read from `theory_gates_status`. A gate that is
+        absent counts as not passed: an L3 born with the L0 gate set (E2E run 10) has no Security
+        or Privacy entry to pass, and nothing else would ever say so."""
+        phases, gates, why = STAGES[stage]
+        did, phase = str(d.get("id", "?")), str(d.get("phase") or "").lower()
+        miss = []
+        if phase not in phases:
+            where = "Develop or Deliver" if stage == "build" else "Deliver"
+            miss.append(f"{did}: in {where} (now `{phase or 'no phase'}`): {why}. Run "
+                        f"/mycelium:diamond-progress {did}")
+        status = _as_dict(d.get("theory_gates_status"))
+        for g in gates.get(_scale(d), ()):
+            v = str(status.get(g) or "not recorded").lower()
+            if v not in PASSED:
+                miss.append(f"{did}: the {g} gate passed (theory_gates_status.{g} is `{v}`)")
+        return miss
+
     def verdict(self, d: dict, entry: bool = False) -> tuple[bool, list[str]]:
         miss = self.missing(d, entry)
         return (not miss or (str(d.get("id")), _scale(d)) in self.acked), miss
@@ -366,20 +411,53 @@ class State:
 # ---------------------------------------------------------------- questions
 
 
-def delivery_state(project_dir: str) -> tuple[bool, str]:
-    """May new source files be written? Only under an open L3, L4 or L5 whose chain holds."""
-    st = State(project_dir)
+def _work_state(st: State, stage: str) -> tuple[bool, str]:
+    """Is there an open L3, L4 or L5 whose chain holds (or the user overrode) AND whose phase and
+    gates carry `stage` work? The user's scale-lock ack waives the chain, never the phase: a pilot
+    that meets real people follows security and privacy practice whatever its scale (founder,
+    2026-09-24: "Even a prototype should follow best practices")."""
     delivery = [d for d in st.active if _scale(d) in DELIVERY_SCALES and st.is_open(d)]
     if not delivery:
         return False, "no diamond that delivers (L3, L4 or L5) is open"
     reasons = []
     for d in delivery:
-        ok, miss = st.verdict(d)
-        if ok:
-            return True, f"{d.get('id')} ({d.get('scale')}) holds its lock"
+        chain_ok, chain_miss = st.verdict(d)
+        miss = ([] if chain_ok else chain_miss) + st.stage_missing(d, stage)
+        if not miss:
+            return True, (f"{d.get('id')} ({d.get('scale')}) holds its lock and is in "
+                          f"{d.get('phase')}")
         reasons.append(f"{d.get('id')} ({d.get('scale')}) is missing:\n    - "
                        + "\n    - ".join(miss))
     return False, "\n  ".join(reasons)
+
+
+def delivery_state(project_dir: str) -> tuple[bool, str]:
+    """May new source files be written? Under an open L3/L4/L5 whose chain holds, in Develop or
+    Deliver, with Four Risks and Privacy passed."""
+    return _work_state(State(project_dir), "build")
+
+
+def exposure_state(project_dir: str) -> tuple[bool, str]:
+    """May it be put in front of real people? Under an open L3/L4/L5 whose chain holds, in Deliver,
+    with Security, Privacy and Service Quality passed."""
+    return _work_state(State(project_dir), "expose")
+
+
+def exposure_violation(project_dir: str, payload: dict) -> str | None:
+    """A Bash command that deploys or publishes, in a project whose delivering cycle is not in
+    Deliver with its gates passed. Projects with no diamonds at all are not this gate's business."""
+    command = str(_as_dict(payload.get("tool_input")).get("command") or "")
+    m = _DEPLOY.search(command)
+    if not m:
+        return None
+    st = State(project_dir)
+    if not st.active:
+        return None
+    ok, why = _work_state(st, "expose")
+    if ok:
+        return None
+    return (f"`{m.group(0).strip()[:80]}` puts the work in front of real people, and no delivery "
+            f"cycle is ready for that:\n  {why}")
 
 
 def can_open(project_dir: str, scale: str, object_ref=None, parent=None) -> list[str]:
@@ -491,6 +569,15 @@ in .claude/state/scale-lock-ack: `<id> <scale> <YYYY-MM-DD> <their own words>`. 
 file on your own judgement."""
 
 
+_EXPOSE_TAIL = """
+A pilot or prototype that meets real people follows security and privacy practice whatever its
+scale: anything user-facing that holds data can let strangers in or leak it out. Progress the
+cycle to Deliver with /mycelium:diamond-progress, which runs Security (/mycelium:threat-model,
+/mycelium:security-review), Privacy (/mycelium:privacy-check) and Service Quality, then retry.
+Only if the USER explicitly says this work is not to be tracked, they record it in
+.claude/state/delivery-skip-ack. Do not write that file on your own judgement."""
+
+
 def _run_hook(project_dir: str) -> int:
     try:
         violations = new_diamond_violations(project_dir, json.loads(sys.stdin.read() or "{}"))
@@ -534,9 +621,26 @@ def _run_check(project_dir: str) -> int:
     return EXIT_LOCKED if any(not r[3] for r in rows) else EXIT_HOLDS
 
 
+def _run_exposure_hook(project_dir: str) -> int:
+    try:
+        found = exposure_violation(project_dir, json.loads(sys.stdin.read() or "{}"))
+    except json.JSONDecodeError:
+        return EXIT_HOLDS  # SPEAKS: the runtime refuses a malformed payload before any command runs
+    if not found:
+        return EXIT_HOLDS
+    print("Mycelium exposure gate: " + found + "\n" + _EXPOSE_TAIL, file=sys.stderr)
+    return 2
+
+
 def _run(args) -> int:
     if args.hook:
         return _run_hook(args.project_dir)
+    if args.exposure_hook:
+        return _run_exposure_hook(args.project_dir)
+    if args.exposure_state:
+        ok, why = exposure_state(args.project_dir)
+        print(why)
+        return EXIT_HOLDS if ok else EXIT_LOCKED
     if args.delivery_state:
         ok, why = delivery_state(args.project_dir)
         print(why)
@@ -556,6 +660,10 @@ def main(argv=None) -> int:
     mode.add_argument("--can-open", metavar="SCALE", help="may a diamond at SCALE open now?")
     mode.add_argument("--hook", action="store_true",
                       help="PreToolUse payload on stdin; exit 2 blocks")
+    mode.add_argument("--exposure-state", action="store_true",
+                      help="exit 0 if the work may be put in front of real people")
+    mode.add_argument("--exposure-hook", action="store_true",
+                      help="PreToolUse Bash payload on stdin; exit 2 blocks a deploy or publish")
     ap.add_argument("--object-ref")
     ap.add_argument("--parent")
     args = ap.parse_args(argv)

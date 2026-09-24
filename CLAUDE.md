@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.245.0 -- **Every scale locks on its parent** (MINOR). Each diamond scale opens only on what its parent has established (purpose, desired outcome, target opportunity with evidence, medium confidence, launch data; `scripts/scale_locks.py`), enforced by a new scale-lock gate and by the discovery gate's second stage, which now needs an L3, L4 or L5 whose whole chain holds before new source files. Once open, a diamond still moves at its own speed.*
+*Version 0.246.0 -- **Phase follows the work** (MINOR). New code needs its delivery cycle in Develop with Four Risks and Privacy passed, and nothing meets real people until it is in Deliver with Security, Privacy and Service Quality passed: a new exposure gate blocks the deploys the agent runs, and operating contract rule 14 covers the ones the user runs. A pilot is not exempt. Prior: 0.245.0 every scale locks on its parent.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

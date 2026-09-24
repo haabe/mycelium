@@ -61,7 +61,7 @@ test_bad_path_blocks_new_source_on_cold_project() {
 
 test_happy_path_chained_l3_allows() {
     local p; p=$(make_chained_project)
-    printf 'active_diamonds:\n  - id: d-001\n    scale: L3\n    phase: deliver\n    object_ref: sol-001\n' \
+    printf 'active_diamonds:\n  - id: d-001\n    scale: L3\n    phase: develop\n    object_ref: sol-001\n    theory_gates_status: {four_risks: pass, privacy: pass}\n' \
         > "$p/.claude/diamonds/active.yml"
     local code; code=$(run_gate "$p" "$(write_json "$p/app/export.py")")
     assert_eq "$code" "0" "an open L3 whose chain holds -> new source allowed"
@@ -119,7 +119,7 @@ test_completed_l3_only_blocks() {
 test_open_l4_allows() {
     local p; p=$(make_chained_project)
     # The L3 has completed; its L4 carries the build. Parent is named, as /preflight writes it.
-    printf 'active_diamonds:\n  - id: d-003\n    scale: L3\n    phase: complete\n    object_ref: sol-001\n    evidence_type: data-supported\n  - id: d-004\n    scale: L4\n    phase: develop\n    parent: d-003\n' \
+    printf 'active_diamonds:\n  - id: d-003\n    scale: L3\n    phase: complete\n    object_ref: sol-001\n    evidence_type: data-supported\n  - id: d-004\n    scale: L4\n    phase: develop\n    parent: d-003\n    theory_gates_status: {four_risks: pass, privacy: pass}\n' \
         > "$p/.claude/diamonds/active.yml"
     local code; code=$(run_gate "$p" "$(write_json "$p/app/rollout.py")")
     assert_eq "$code" "0" "an open L4 on an L3 at medium confidence -> allowed"
