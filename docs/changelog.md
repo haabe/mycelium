@@ -4,6 +4,22 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.248.1 - the happy path writes a canvas Mycelium itself accepts
+
+**2026-09-24.** The first E2E run built to test Mycelium's own behaviour (run 18, happy path L0 to L5)
+failed Mycelium's own `validate_canvas.py` in its first session, on state Mycelium's own skills wrote
+following their own instructions. Three defects, one class: an instruction or a validator that
+disagreed with the schema.
+
+- **YAML dates.** `created: 2026-09-24`, written unquoted as every author writes a date, loads as a
+  date object, and the `iso_timestamp` string pattern rejected it. The validator now reads YAML dates
+  as ISO strings (`iso_dates`) before checking any schema.
+- **The interview's JTBD stub** carried a provenance block without `evidence_type` and
+  `evidence_sources`, which the jobs schema requires. The instruction now gives the full block.
+- **`/purpose-properties` aspirations** were recorded with `aspiration_reason` and no `binding`, which
+  the purpose schema requires on every property. The instruction now says `binding: false`.
+- Pinned by `tests/python/test_happy_path_canvas_valid.py`.
+
 ## v0.248.0 - a phase move leaves a record
 
 **2026-09-24.** Two findings, three E2E runs. Runs 12, 14 and 16 moved diamonds forward with an empty

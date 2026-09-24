@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.248.0 -- **A phase move leaves a record** (MINOR). The scale-lock gate refuses a write that moves a diamond forward unless each transition it crosses has the matrix's required gates passed and a progression_history entry; the matrix is one table in scale_locks.py that the code, exposure and phase-move checks all read. Prior: 0.247.0 a parent diamond at every rung.*
+*Version 0.248.1 -- **The happy path writes a canvas Mycelium itself accepts** (PATCH). The first E2E happy-path run failed Mycelium's own validator in its first session, on state its own skills wrote as instructed: YAML dates now validate as ISO strings, the interview's JTBD stub carries a complete provenance, and /purpose-properties writes binding: false on aspirations. Prior: 0.248.0 a phase move leaves a record.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

@@ -36,6 +36,7 @@ Exit codes:
     2 = missing CI dependencies (PyYAML, jsonschema, or referencing)
 """
 
+import datetime
 import importlib.util
 import json
 import os
@@ -106,10 +107,25 @@ CANVAS_DIR, SCHEMA_DIR = _resolve_paths()
 COMMON_SCHEMA = SCHEMA_DIR / "_common.schema.json"
 
 
+def iso_dates(obj):
+    """YAML dates as ISO strings (v0.248.1). An unquoted `created: 2026-09-24` is how every author,
+    human or agent, writes a date, and yaml.safe_load turns it into a date object that the schemas'
+    `iso_timestamp` (a string pattern) then rejected. The first E2E happy-path run (run 18) failed
+    Mycelium's own validator on the L0 the interview had just written. The file was right; the
+    validator was reading YAML as if it were JSON."""
+    if isinstance(obj, (datetime.date, datetime.datetime)):
+        return obj.isoformat()
+    if isinstance(obj, dict):
+        return {k: iso_dates(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [iso_dates(v) for v in obj]
+    return obj
+
+
 def load_yaml(path: Path):
-    """Load a YAML file. Returns the parsed object or raises."""
+    """Load a YAML file, with dates as ISO strings. Returns the parsed object or raises."""
     with open(path) as f:
-        return yaml.safe_load(f)
+        return iso_dates(yaml.safe_load(f))
 
 
 def load_schema(path: Path):
@@ -472,7 +488,7 @@ def validate_diamonds(canvas_dir: Path, registry: Registry) -> list[str]:
     for path in sorted(diamonds_dir.glob("*.yml")):
         try:
             with open(path) as f:
-                data = yaml.safe_load(f)
+                data = iso_dates(yaml.safe_load(f))
         except yaml.YAMLError as exc:
             msg = str(exc).strip()
             errors.append(f"YAML parse error in diamonds/{path.name}: {msg}")
