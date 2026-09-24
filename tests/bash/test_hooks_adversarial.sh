@@ -116,7 +116,10 @@ assert_eq "$(run discovery-gate.sh "$D" "$(w "$D/src/app2.py" x)")" BLOCK "disc:
 printf 'why: We help hikers decide with real trail conditions.\nwho:\n  description: day hikers\n' > "$D/.claude/canvas/purpose.yml"
 printf 'desired_outcome:\n  metric: hikes planned on current conditions\nopportunities:\n  - id: opp-1\n    name: stale reports\n    provenance:\n      evidence_type: anecdotal\n      evidence_sources: [a hiker interview]\n' > "$D/.claude/canvas/opportunities.yml"
 printf 'active_diamonds:\n  - id: d-003\n    scale: L3\n    phase: discover\n    object_ref: opp-1\n' > "$D/.claude/diamonds/active.yml"
-assert_eq "$(run discovery-gate.sh "$D" "$(w "$D/src/app2.py" x)")" "ALLOW(rc=0)" "disc: an L3 whose chain holds allows"
+# v0.246.0: the chain holds, but code is built in Develop, behind Four Risks and Privacy.
+assert_eq "$(run discovery-gate.sh "$D" "$(w "$D/src/app2.py" x)")" BLOCK "disc: a chained L3 still in discover blocks (phase follows the work)"
+printf 'active_diamonds:\n  - id: d-003\n    scale: L3\n    phase: develop\n    object_ref: opp-1\n    theory_gates_status: {four_risks: pass, privacy: pass}\n' > "$D/.claude/diamonds/active.yml"
+assert_eq "$(run discovery-gate.sh "$D" "$(w "$D/src/app2.py" x)")" "ALLOW(rc=0)" "disc: a chained L3 in develop with its gates passed allows"
 assert_eq "$(run gate.sh "$D" "$(w "$D/.claude/state/scale-lock-ack" "d-009 agent wrote this")")" ASK "D10c agent writing the scale-lock ack asks the human"
 assert_eq "$(run gate.sh "$D" "$(w "$D/.claude/state/delivery-skip-ack" "agent wrote this")")" ASK "D10b agent writing the delivery ack asks the human"
 

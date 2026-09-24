@@ -99,6 +99,10 @@ Success criteria:
 - [ ] DoD criteria reviewed and understood
 - [ ] All criteria are achievable within this task
 
+## Before anything meets real people (v0.246.0)
+
+A pilot is real people. Before the increment is deployed, published or sent to anyone, the diamond carrying it is in **Deliver** with **Security, Privacy and Service Quality passed**: `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/scale_locks.py" --exposure-state`. If it prints what is missing, that is the next step, before any "pull and restart" instruction to the user. The exposure gate blocks the deploys the agent runs; this line is the guard on the ones the user runs.
+
 ## If Every Item Passes: offer the L4 cycle (v0.243.0)
 
 A passing preflight means **an increment is ready to build, which is L4's event**. L4 recurs per

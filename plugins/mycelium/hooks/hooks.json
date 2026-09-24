@@ -98,6 +98,12 @@
           },
           {
             "type": "command",
+            "timeout": 10,
+            "statusMessage": "Mycelium exposure gate (a deploy waits for Deliver with Security and Privacy passed)",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/exposure-gate.sh"
+          },
+          {
+            "type": "command",
             "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/brownfield-gate.sh",
             "timeout": 30,
             "statusMessage": "Mycelium brownfield gate (one-shot: existing code, no discovery state)"

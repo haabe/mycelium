@@ -4,6 +4,33 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.246.0 - phase follows the work
+
+**2026-09-24.** Found by E2E dogfood run 10, the first on 0.245.0's scale locks. The locks held: the
+builder set a desired outcome from the pilot data, cited real lines of research for the opportunity
+and opened the L3 only then. Then it built an SMS swap app that stores staff phone numbers and private
+link tokens, the founder put it live at one site and started onboarding a second, and the L3 stayed in
+**define** throughout, every gate `pending`, no threat model, no privacy assessment. The matrix does
+require Security and Privacy at L3, at Develop->Deliver and Define->Develop; the phase never moved, so
+the gates were never reached. The founder: *"Even a prototype should follow best practices, even if
+it is only a pilot. Anything user facing collecting data of any sorts can wreck havoc if there are
+holes that allows strangers on the inside or leak data out."*
+
+- **Code is built in Develop.** The discovery gate's second stage now also needs the delivering
+  diamond in Develop or Deliver, with Four Risks and Privacy passed in `theory_gates_status`. A gate
+  the diamond never recorded is not passed (the run-10 L3 was born with the L0 gate set).
+- **Real people meet it in Deliver.** New hook `exposure-gate.sh` (Bash) refuses a deploy, publish or
+  remote pull-and-restart until a delivering diamond is in Deliver with Security, Privacy and Service
+  Quality passed. Operating contract rule 14 and `/mycelium:preflight` carry the rule for deploys the
+  user runs, which no hook can see.
+- **No new gate.** These are the matrix's existing L3/L4 gates (L5: Security); what changed is that
+  the work cannot walk around them. Build to learn is an evidence bar, not a safety bar.
+- The scale-lock override waives the chain, never the phase; `delivery-skip-ack` lifts both.
+- `scale_locks.py` gains `--exposure-state` and `--exposure-hook`; the interview's handoff initialises
+  the L3 with the L3 gate set and progresses it before code and before anything goes live.
+- Pinned by `tests/python/test_scale_locks.py` (75), `tests/bash/test_exposure_gate.sh` (9) and
+  changed cases in `test_discovery_gate.sh` and `test_hooks_adversarial.sh`.
+
 ## v0.245.0 - every scale locks on its parent
 
 **2026-09-24.** Two findings, one release. An end-to-end dogfood run on the installed plugin (a

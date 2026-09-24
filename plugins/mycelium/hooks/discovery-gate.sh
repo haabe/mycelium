@@ -77,9 +77,10 @@ if hi_discovery_engaged; then
   esac
   cat >&2 <<EOF
 Mycelium delivery gate: you are about to create a new source file ($BASENAME),
-and no delivery cycle with its chain in place is open. Code is written under
-an L3 (build to learn), L4 or L5 diamond whose parents have established what
-it builds on. What is missing:
+and no delivery cycle is ready to carry code. Code is written under an L3
+(build to learn), L4 or L5 diamond whose parents have established what it
+builds on, and which is in Develop with Four Risks and Privacy passed (phase
+follows the work, v0.246.0; a pilot is not exempt). What is missing:
 
   ${HI_DELIVERY_WHY}
 
@@ -87,7 +88,8 @@ Each scale opens on its parent (engine/diamond-rules.md, Entry locks): L1 on
 a purpose (who and why), L2 on a desired outcome, L3 on a target opportunity
 with evidence, L4 on an L3 at medium confidence, L5 on launch data. Produce
 what is missing with the skill named above, open the L3 with object_ref naming
-the opportunity or solution, then retry.
+the opportunity or solution, progress it to Develop with
+/mycelium:diamond-progress, then retry.
   python3 \${CLAUDE_PLUGIN_ROOT}/scripts/scale_locks.py --can-open L3
 says what is still missing.
 
