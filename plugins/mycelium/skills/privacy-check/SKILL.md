@@ -108,8 +108,14 @@ assessed record, and the `Privacy` theory gate — Required at L2-L4 — reads i
 ```
 
 **Then:** `data_inventory` (what personal data the product actually touches — an empty list is a
-CLAIM that it touches none, so make it deliberately), `dpia_required` + `dpia_rationale`, and
-`last_assessed`.
+CLAIM that it touches none, so make it deliberately), `processors` (every party outside the product
+that receives or stores that data, with `role`, `data_types`, `location`, `retention_period` and
+`agreement`: the answers to "Who accesses it?" and "Where is it stored?" above), `dpia_required` +
+`dpia_rationale`, and `last_assessed`.
+
+**A reassessment updates these same fields; it does not add a new block.** What changed, and why,
+goes in the decision-log entry below. The schema rejects any root key it does not name, and from
+v0.250.0 the write is checked as it lands.
 
 **`last_assessed` IS A CLAIM ABOUT THE PRINCIPLES BELOW IT.** Set it only when they were filled in
 the same run. If the assessment is partial, say which keys were judged in `dpia_rationale` rather

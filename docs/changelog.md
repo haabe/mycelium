@@ -4,6 +4,25 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.250.0 - a canvas write is checked as it lands
+
+**2026-09-24.** E2E run 19 (happy path, plugin 0.249.0) wrote `privacy-assessment.yml` with a root
+`reassessment:` block that the schema rejects. The post-write nudge had said "Schema exists ...
+validate with validate_canvas.py" once that session; the invalid file stood until the harness ran the
+validator at the end of the turn. A reminder to run a check is not the check. The block itself was
+legitimate content with no home: `/privacy-check` asks "Who accesses it?" and "Where is it stored?",
+and the reassessment had just found an SMS provider keeping message bodies for 60 days.
+
+- **New PostToolUse hook `canvas-schema-check.sh`** (`scripts/canvas_write_check.py`): after a write
+  to `.claude/canvas/*.yml` or `.claude/diamonds/*.yml`, it runs `validate_canvas.py`'s own schema
+  functions on that one file and, if it fails, returns the errors to the agent (`decision: block`,
+  shown in the same turn). It never blocks a write and never exits non-zero. Without PyYAML and
+  jsonschema it says once per session that it could not run, so runtime hooks still need no install.
+- **`privacy-assessment` schema gains `processors`**: name, role, data types, location, retention and
+  agreement, per GDPR Art. 28 and 30. `/privacy-check` names it, and says a reassessment updates these
+  fields rather than adding a block.
+- Pinned by `tests/python/test_canvas_write_check.py`.
+
 ## v0.249.0 - the next item moves the ladder
 
 **2026-09-24.** E2E run 18, the first happy-path run built to test Mycelium's own behaviour: four

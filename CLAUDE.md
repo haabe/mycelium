@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.249.0 -- **The next item moves the ladder** (MINOR). The session-start next item now proposes /mycelium:diamond-progress for a diamond whose phase has never been assessed, or was last ruled on before new evidence landed, delivering diamonds first. Until now it proposed that step only for a fired closing path, so on the happy path a diamond moved only if the driver remembered to move it. Prior: 0.248.1 the happy path writes a canvas Mycelium itself accepts.*
+*Version 0.250.0 -- **A canvas write is checked as it lands** (MINOR). A new PostToolUse hook runs the schema on each canvas or diamonds file right after it is written and hands the exact errors to the agent in the same turn; before, a reminder to run the validator was all it got, and E2E run 19 left an invalid privacy-assessment.yml standing. The privacy schema gains `processors`, the home for the "who receives it, where is it stored" answers /privacy-check asks for. Prior: 0.249.0 the next item moves the ladder.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

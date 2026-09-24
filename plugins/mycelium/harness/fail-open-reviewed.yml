@@ -732,3 +732,14 @@ reviewed:
     into what session-start prints. So an unreadable file is reported once, where the human reads
     it, and is never mistaken for "no diamond needs assessing". Pinned by the existing next-item
     tests and tests/python/test_next_item_moves_the_ladder.py. Reviewed 2026-09-24, v0.249.0.
+
+- id: canvas_write_check.py@3c770fccdd
+  verdict: accepted
+  reason: >-
+    `_load_validator` catches the SystemExit that validate_canvas.py's import guard raises when
+    PyYAML, jsonschema or referencing is missing, and returns (None, "missing <modules>"). Silent at
+    the site and correct: main() turns that into an additionalContext note, once per session, that
+    names the file, says it "has not been checked against its schema", and gives the pip command.
+    So a runtime without the dependencies hears that the check could not look, and a missing module
+    is never read as a valid file. It never blocks, because runtime hooks must work without an
+    install. Pinned by tests/python/test_canvas_write_check.py. Reviewed 2026-09-24, v0.250.0.

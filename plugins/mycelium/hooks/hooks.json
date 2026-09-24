@@ -202,6 +202,12 @@
             "timeout": 3,
             "statusMessage": "Mycelium diamond state audit",
             "async": true
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/canvas-schema-check.sh",
+            "timeout": 10,
+            "statusMessage": "Mycelium canvas schema check"
           }
         ]
       },
