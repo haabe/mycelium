@@ -4,6 +4,25 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.248.0 - a phase move leaves a record
+
+**2026-09-24.** Two findings, three E2E runs. Runs 12, 14 and 16 moved diamonds forward with an empty
+`progression_history`, so the canvas showed where a diamond ended up and never how it got there. Run
+14 moved an L3 to develop with its evidence gate still `pending`; only the code gate caught it, later.
+Founder: "Fix upstream before the next run."
+
+- **The scale-lock gate now judges forward phase moves.** A write that moves an existing diamond
+  forward is refused unless, for each transition it crosses, the matrix's required gates are passed
+  in `theory_gates_status` (Security and Privacy backed by their records) and `progression_history`
+  has an entry for that transition. A two-step jump needs both. Moving back, parking, killing and
+  edits that leave the phase alone are never judged.
+- **The matrix is one table.** `scripts/scale_locks.py` now holds the Scale x Transition matrix as
+  data (`_MATRIX`, `transition_gates`); the code, exposure and phase-move checks all read it, so they
+  cannot disagree about what a transition needs. The derived sets equal 0.247.0's hand-written ones.
+- `/diamond-progress` appends one `progression_history` entry per transition crossed, in the same
+  write as the phase and the gate statuses; the diamonds schema declares the field.
+- Pinned by `tests/python/test_scale_locks.py` (84) and `tests/bash/test_scale_lock_gate.sh` (12).
+
 ## v0.247.0 - a parent diamond at every rung
 
 **2026-09-24.** Two findings from E2E dogfood run 11, the first on 0.246.0, and one founder question.

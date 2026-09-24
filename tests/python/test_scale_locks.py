@@ -255,12 +255,40 @@ def test_hook_blocks_adding_a_locked_diamond(tmp_path):
     assert len(out) == 1 and "l3-x (L3) cannot open yet" in out[0]
 
 
-def test_hook_never_rejudges_a_diamond_already_in_the_file(tmp_path):
-    """Opened under older rules: editing its phase is never blocked here (--check reports it)."""
+def test_hook_never_rejudges_an_existing_diamonds_entry(tmp_path):
+    """Opened under older rules: its entry lock is never re-judged on edit (--check reports it). An
+    edit that leaves the phase alone, or moves it back, passes."""
     old = {"id": "l4-old", "scale": "L4", "phase": "develop", "parent": "l1"}
     p = _project(tmp_path, purpose=PURPOSE, diamonds=[old])
-    new = yaml.safe_dump({"active_diamonds": [{**old, "phase": "deliver"}]})
-    assert sl.new_diamond_violations(p, _write(new)) == []
+    for changed in ({**old, "notes": "renamed"}, {**old, "phase": "define"}, {**old, "phase": "parked"}):
+        assert sl.new_diamond_violations(p, _write(yaml.safe_dump({"active_diamonds": [changed]}))) == []
+
+
+def test_a_forward_phase_move_needs_its_gates_and_a_history_entry(tmp_path):
+    """v0.248.0: runs 12, 14 and 16 moved diamonds forward with an empty progression_history, and
+    run 14 moved one to develop with its evidence gate pending."""
+    l3 = {"id": "l3-a", "scale": "L3", "phase": "define", "object_ref": "sol-001",
+          "theory_gates_status": {**BUILD_PASSED, "evidence": "pending"}}
+    p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), diamonds=[l3])
+    out = sl.new_diamond_violations(p, _write(yaml.safe_dump({"active_diamonds": [
+        *BASE, {**l3, "phase": "develop"}]})))
+    assert len(out) == 1 and "cannot move to develop" in out[0]
+    assert "define->develop: the evidence gate passed" in out[0]
+    assert "define->develop: a `progression_history` entry" in out[0]
+    ok = {**l3, "phase": "develop", "theory_gates_status": BUILD_PASSED,
+          "progression_history": [{"transition": "define -> develop", "date": "2026-09-24",
+                                   "ruling": "progressed"}]}
+    assert sl.new_diamond_violations(p, _write(yaml.safe_dump({"active_diamonds": [*BASE, ok]}))) == []
+
+
+def test_a_two_phase_jump_needs_both_transitions(tmp_path):
+    l3 = {"id": "l3-a", "scale": "L3", "phase": "discover", "object_ref": "sol-001"}
+    p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), diamonds=[l3])
+    jump = {**l3, "phase": "develop", "theory_gates_status": BUILD_PASSED,
+            "progression_history": [{"from": "define", "to": "develop"}]}
+    out = sl.new_diamond_violations(p, _write(yaml.safe_dump({"active_diamonds": [*BASE, jump]})))
+    assert len(out) == 1 and "discover->define: a `progression_history` entry" in out[0]
+    assert "define->develop: a `progression_history`" not in out[0]
 
 
 def test_hook_applies_an_edit_before_judging(tmp_path):

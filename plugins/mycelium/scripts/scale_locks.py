@@ -72,33 +72,59 @@ DEAD = {"killed", "archived"}
 MEDIUM_OR_BETTER = {"data-supported", "test-validated", "launch-validated"}
 PASSED = {"pass", "passed", "pass-with-risk"}
 NOT_APPLICABLE = {"n/a", "not-applicable"}
-#: PHASE FOLLOWS THE WORK (v0.246.0; full gate sets v0.247.0). The gates the matrix REQUIRES on each
-#: transition, per delivering scale (engine/theory-gates.md, "Summary of which gates apply to which
-#: transitions"; NUDGE rows excluded). 0.246.0 read two of them, and E2E run 11 wrote a new L3
-#: straight into develop with exactly those two marked passed and four others pending.
-_DIS_DEF = {"L3": ("evidence", "jtbd", "bias", "corrections"),
-            "L4": ("evidence", "bias", "corrections"), "L5": ("evidence", "bias", "corrections")}
-_DEF_DEV = {"L3": ("evidence", "four_risks", "jtbd", "cynefin", "bias", "privacy", "corrections",
-                   "regulatory"),
-            "L4": ("evidence", "four_risks", "cynefin", "bias", "privacy", "corrections",
-                   "regulatory"),
-            "L5": ("evidence", "cynefin", "bias", "corrections", "regulatory")}
-_DEV_DEL = {"L3": ("evidence", "four_risks", "bias", "security", "privacy", "service_quality",
-                   "corrections", "regulatory"),
-            "L4": ("evidence", "four_risks", "bias", "security", "privacy", "service_quality",
-                   "corrections", "regulatory"),
-            "L5": ("evidence", "bias", "security", "corrections", "regulatory")}
+#: THE MATRIX, AS DATA (v0.248.0). engine/theory-gates.md, "Summary of which gates apply to which
+#: transitions", REQUIRED rows only (NUDGE rows excluded): gate -> {transition: its scales}.
+#: One table serves the code and exposure checks (0.246.0/0.247.0) and the phase-move check
+#: (0.248.0), so the three can never disagree about what a transition needs.
+PHASE_ORDER = ("discover", "define", "develop", "deliver", "complete")
+_ALL = ("L0", "L1", "L2", "L3", "L4", "L5")
+_MATRIX = {
+    "evidence": {"discover->define": _ALL, "define->develop": _ALL, "develop->deliver": _ALL,
+                 "deliver->complete": _ALL},
+    "four_risks": {"define->develop": ("L1", "L2", "L3", "L4"),
+                   "develop->deliver": ("L1", "L2", "L3", "L4")},
+    "jtbd": {"discover->define": ("L1", "L2", "L3"), "define->develop": ("L1", "L2", "L3")},
+    "cynefin": {"define->develop": _ALL},
+    "bias": {"discover->define": _ALL, "define->develop": _ALL, "develop->deliver": _ALL,
+             "deliver->complete": _ALL},
+    "security": {"develop->deliver": ("L3", "L4", "L5"), "deliver->complete": ("L3", "L4", "L5")},
+    "privacy": {"define->develop": ("L2", "L3", "L4"), "develop->deliver": ("L2", "L3", "L4")},
+    "bvssh": {"deliver->complete": _ALL},
+    "service_quality": {"develop->deliver": ("L2", "L3", "L4"),
+                        "deliver->complete": ("L2", "L3", "L4")},
+    "delivery_metrics": {"deliver->complete": ("L3", "L4", "L5")},
+    "corrections": {"discover->define": _ALL, "define->develop": _ALL, "develop->deliver": _ALL,
+                    "deliver->complete": _ALL},
+    "regulatory": {"define->develop": ("L3", "L4", "L5"), "develop->deliver": ("L3", "L4", "L5")},
+}
 
 
-def _union(*maps) -> dict[str, tuple[str, ...]]:
-    return {s: tuple(dict.fromkeys(g for m in maps for g in m.get(s, ()))) for s in DELIVERY_SCALES}
+def transition_gates(scale: str, transition: str) -> tuple[str, ...]:
+    """The gates the matrix requires for one transition at one scale, in matrix order."""
+    return tuple(g for g, rows in _MATRIX.items() if scale in rows.get(transition, ()))
 
 
+def _crossed(start: str, end: str) -> list[str]:
+    """Each transition between two phases, forward only: define -> deliver is two."""
+    i, j = PHASE_ORDER.index(start), PHASE_ORDER.index(end)
+    return [f"{PHASE_ORDER[k]}->{PHASE_ORDER[k + 1]}" for k in range(i, j)]
+
+
+def _reach(phase: str) -> dict[str, tuple[str, ...]]:
+    """Every gate on the way from discover INTO `phase`, per delivering scale."""
+    return {sc: tuple(dict.fromkeys(g for t in _crossed("discover", phase)
+                                    for g in transition_gates(sc, t)))
+            for sc in DELIVERY_SCALES}
+
+
+#: PHASE FOLLOWS THE WORK (v0.246.0; full gate sets v0.247.0; from the matrix table v0.248.0).
+#: 0.246.0 read two gates, and E2E run 11 wrote a new L3 straight into develop with exactly those
+#: two marked passed and four others pending.
 STAGES = {
-    "build": ({"develop", "deliver"}, _union(_DIS_DEF, _DEF_DEV),
+    "build": ({"develop", "deliver"}, _reach("develop"),
               ("code is built in Develop, after Discover->Define and Define->Develop have passed "
                "their gates (Four Risks and Privacy among them)")),
-    "expose": ({"deliver"}, _union(_DIS_DEF, _DEF_DEV, _DEV_DEL),
+    "expose": ({"deliver"}, _reach("deliver"),
                ("real people meet it in Deliver, after Develop->Deliver has passed its gates "
                 "(Security, Privacy and Service Quality among them)")),
 }
@@ -209,6 +235,24 @@ def _ref_key(ref) -> str:
 
 def _scale(d: dict) -> str:
     return str(d.get("scale") or "").strip().upper()
+
+
+def _phase(d: dict) -> str:
+    p = str(d.get("phase") or "discover").strip().lower()
+    return "complete" if p == "completed" else p
+
+
+def _history_has(d: dict, transition: str) -> bool:
+    """A progression_history entry for `transition`: `transition: "define -> develop"` (any arrow or
+    spacing), or `from:`/`to:` keys."""
+    want = transition.replace("->", " ").split()
+    for raw in _as_list(d.get("progression_history")):
+        h = _as_dict(raw)
+        text = str(h.get("transition") or "").lower().replace("→", " ").replace("->", " ")
+        ends = [str(h.get("from", "")).lower(), str(h.get("to", "")).lower()]
+        if want in (text.split(), ends):
+            return True
+    return False
 
 
 def _read_acks(project_dir: str) -> tuple[set[tuple[str, str]], list[str]]:
@@ -475,15 +519,41 @@ class State:
             where = "Develop or Deliver" if stage == "build" else "Deliver"
             miss.append(f"{did}: in {where} (now `{phase or 'no phase'}`): {why}. Run "
                         f"/mycelium:diamond-progress {did}")
-        status = _as_dict(d.get("theory_gates_status"))
         for g in gates.get(_scale(d), ()):
-            v = str(status.get(g) or "not recorded").lower()
-            ok = v in PASSED or (v in NOT_APPLICABLE and g not in SAFETY_RECORD)
-            if not ok:
-                miss.append(f"{did}: the {g} gate passed (theory_gates_status.{g} is `{v}`)")
-            elif g in SAFETY_RECORD and not self.records[g]:
-                miss.append(f"{did}: the {g} gate says `{v}` with no record behind it: "
-                            f"{SAFETY_RECORD[g]}")
+            why = self.gate_missing(d, g)
+            if why:
+                miss.append(f"{did}: {why}")
+        return miss
+
+    def gate_missing(self, d: dict, gate: str) -> str | None:
+        """Why one gate does not count as passed on this diamond, or None when it does."""
+        v = str(_as_dict(d.get("theory_gates_status")).get(gate) or "not recorded").lower()
+        if not (v in PASSED or (v in NOT_APPLICABLE and gate not in SAFETY_RECORD)):
+            return f"the {gate} gate passed (theory_gates_status.{gate} is `{v}`)"
+        if gate in SAFETY_RECORD and not self.records[gate]:
+            return f"the {gate} gate says `{v}` with no record behind it: {SAFETY_RECORD[gate]}"
+        return None
+
+    def move_missing(self, d: dict, before: str | None) -> list[str]:
+        """PHASE MOVES LEAVE A RECORD AND PASS THEIR GATES (v0.248.0). A forward move must carry,
+        for each transition it crosses, the matrix's required gates passed and a
+        `progression_history` entry. E2E runs 12, 14 and 16 moved diamonds forward with an empty
+        history, and run 14 moved one to develop with its evidence gate pending. Moving back,
+        parking, killing and edits that leave the phase alone are never judged here."""
+        after = _phase(d)
+        if before not in PHASE_ORDER or after not in PHASE_ORDER:
+            return []
+        if PHASE_ORDER.index(after) <= PHASE_ORDER.index(before):
+            return []
+        miss = []
+        for t in _crossed(before, after):
+            for g in transition_gates(_scale(d), t):
+                why = self.gate_missing(d, g)
+                if why:
+                    miss.append(f"{t}: {why}")
+            if not _history_has(d, t):
+                miss.append(f"{t}: a `progression_history` entry for it (`transition: "
+                            f"\"{t.replace('->', ' -> ')}\"`, with the date and the ruling)")
         return miss
 
     def verdict(self, d: dict, entry: bool = False) -> tuple[bool, list[str]]:
@@ -625,12 +695,17 @@ def new_diamond_violations(project_dir: str, payload: dict) -> list[str]:
     new_doc = _parse(after, "the proposed diamonds/active.yml")  # raises: refused, see _run_hook
     if not isinstance(new_doc, dict):
         new_doc = {}
-    was_open = {str(d.get("id")): _scale(d) for d in _as_list(old_doc.get("active_diamonds"))
-                if isinstance(d, dict)}
+    was_open = {str(d.get("id")): (_scale(d), _phase(d))
+                for d in _as_list(old_doc.get("active_diamonds")) if isinstance(d, dict)}
     st = State(project_dir, diamonds_doc=new_doc)
     out = []
     for d in st.active:
-        if was_open.get(str(d.get("id"))) == _scale(d) and _scale(d):
+        before_scale, before_phase = was_open.get(str(d.get("id")), (None, None))
+        if before_scale == _scale(d) and _scale(d):
+            moved = st.move_missing(d, before_phase)
+            if moved:
+                out.append(f"{d.get('id')} ({d.get('scale')}) cannot move to "
+                           f"{_phase(d)} yet:\n    - " + "\n    - ".join(moved))
             continue
         ok, miss = st.verdict(d, entry=True)
         miss = [] if ok else miss

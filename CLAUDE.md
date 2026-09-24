@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.247.0 -- **A parent diamond at every rung** (MINOR). No scale is skipped: L2 opens only under a live L1 strategy diamond with a North Star and a mapped landscape, L3 only under a live L2 on its opportunity. Every diamond is born in discover; reaching Develop or Deliver needs the matrix's full gate set, and Security and Privacy count only with a threat model and a privacy assessment on record. Prior: 0.246.0 phase follows the work.*
+*Version 0.248.0 -- **A phase move leaves a record** (MINOR). The scale-lock gate refuses a write that moves a diamond forward unless each transition it crosses has the matrix's required gates passed and a progression_history entry; the matrix is one table in scale_locks.py that the code, exposure and phase-move checks all read. Prior: 0.247.0 a parent diamond at every rung.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

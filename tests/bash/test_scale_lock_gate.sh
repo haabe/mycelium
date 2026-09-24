@@ -69,10 +69,21 @@ test_edit_adding_l2_without_outcome_blocks() {
 }
 
 test_existing_diamond_edit_never_blocks() {
+    # Its entry lock is never re-judged on edit; an edit that leaves the phase alone passes.
+    local p; p=$(make_project)
+    printf "$L0"'  - id: l4-old\n    scale: L4\n    phase: develop\n' > "$p/.claude/diamonds/active.yml"
+    local code; code=$(run_gate "$p" "$(write_active "$p" "$(printf "$L0"'  - id: l4-old\n    scale: L4\n    phase: develop\n    notes: renamed\n')")")
+    assert_eq "$code" "0" "editing an existing (pre-lock) L4 without moving it -> allowed; --check reports it"
+    rm -rf "$p"
+}
+
+test_forward_move_without_record_blocks() {
+    # v0.248.0: a forward phase move needs its transition gates and a progression_history entry.
     local p; p=$(make_project)
     printf "$L0"'  - id: l4-old\n    scale: L4\n    phase: develop\n' > "$p/.claude/diamonds/active.yml"
     local code; code=$(run_gate "$p" "$(write_active "$p" "$(printf "$L0"'  - id: l4-old\n    scale: L4\n    phase: deliver\n')")")
-    assert_eq "$code" "0" "moving an existing (pre-lock) L4 -> allowed; --check reports it"
+    assert_eq "$code" "2" "moving an L4 to deliver with no gates and no history -> blocked"
+    assert_contains "$(cat "$ERR")" "progression_history" "names the missing record"
     rm -rf "$p"
 }
 
@@ -99,6 +110,7 @@ run_test test_l1_on_a_stated_purpose_passes
 run_test test_l1_without_a_purpose_blocks
 run_test test_edit_adding_l2_without_outcome_blocks
 run_test test_existing_diamond_edit_never_blocks
+run_test test_forward_move_without_record_blocks
 run_test test_users_ack_overrides
 run_test test_other_files_pass_without_python
 
