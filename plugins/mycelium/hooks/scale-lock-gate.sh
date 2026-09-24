@@ -4,8 +4,9 @@
 # Blocks a write to .claude/diamonds/active.yml that ADDS a diamond whose parent has not yet
 # established what the child builds on (v0.245.0). The locks themselves live in one place,
 # scripts/scale_locks.py, which the delivery gate and /mycelium:canvas-health read too:
-#   L1 on a purpose, L2 on a desired outcome, L3 on a target opportunity with evidence,
-#   L4 on an L3 at medium confidence, L5 on launch data from a shipped L4.
+#   L1 on a purpose, L2 on a strategy (an L1 diamond, a North Star, the landscape) and a desired
+#   outcome, L3 on a target opportunity with evidence in an L2 diamond, L4 on an L3 at medium
+#   confidence, L5 on launch data from a shipped L4. Every diamond is born in discover (v0.247.0).
 #
 # Provenance: the founder's model, restated 2026-09-24, "all scales have a natural lock per se";
 # three releases (0.217.0, 0.242.5, 0.243.0) had opened every door "whether or not the parent has

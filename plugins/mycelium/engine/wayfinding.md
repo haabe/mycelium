@@ -41,7 +41,7 @@ Read `diamonds/active.yml` and render the map. Rules:
 | Active diamond exists | `◆` | This scale has a diamond in progress |
 | Completed | `✦` | This scale's diamond completed |
 | Not yet started | `○` | No diamond spawned for this scale yet |
-| Skipped | `–` | Skipped (e.g., L1 for solo_hobby) |
+| Skipped | `–` | Not used since v0.247.0: no scale is skipped (every rung needs its parent diamond) |
 
 ### Phase indicators (for active/completed diamonds)
 
