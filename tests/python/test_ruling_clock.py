@@ -72,7 +72,7 @@ def test_evidence_later_the_same_day_is_since_the_ruling(tmp_path):
     _at(root / "research" / "pilot.md", NOW + dt.timedelta(hours=5))
     items = ni._unassessed(root, "2026-09-24")
     assert [i["diamond"] for i in items] == ["l3-x"]
-    assert "1 evidence file(s) changed since" in items[0]["text"]
+    assert "1 new evidence entry since" in items[0]["text"]
 
 
 def test_a_typed_date_ahead_of_the_clock_does_not_silence_it(tmp_path):

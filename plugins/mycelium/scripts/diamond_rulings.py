@@ -13,7 +13,8 @@ This records, on every write to diamonds/active.yml, the machine time at which a
 `next_item.py` then compares machine time with machine time, to the second, and ignores files the
 ruling session itself wrote (the agent that ruled had them in front of it).
 
-State: `.claude/state/diamond-rulings.json`, `{id: {sig, ts, session}}`. A diamond first seen gets
+State: `.claude/state/diamond-rulings.json`, `{id: {sig, ts, session, evidence_n}}`; `evidence_n`
+is how much evidence the project held at that assessment (v0.251.0). A diamond first seen gets
 `ts: null`: never ruled, or ruled at an unknown time. next_item then uses the diamond's own fields.
 Stdlib plus PyYAML; without PyYAML it records nothing and next_item falls back to the typed date.
 """
@@ -40,6 +41,35 @@ def signature(d: dict) -> str:
                      str(len(hist) if isinstance(hist, list) else 0)))
 
 
+def _sources(node, depth: int = 0) -> int:
+    """How many evidence sources a canvas node lists, at any depth."""
+    if depth > 40:  # noqa: PLR2004 - a canvas is never this deep; guards a pathological file
+        return 0
+    if isinstance(node, dict):
+        n = len(node["evidence_sources"]) if isinstance(node.get("evidence_sources"), list) else 0
+        return n + sum(_sources(v, depth + 1) for k, v in node.items() if k != "evidence_sources")
+    if isinstance(node, list):
+        return sum(_sources(v, depth + 1) for v in node)
+    return 0
+
+
+def evidence_count(root: Path) -> int | None:
+    """Evidence in the project: research notes plus evidence sources listed on the canvas
+    (v0.251.0). A COUNT, not a date, so it needs no clock. E2E run 21: "N evidence file(s) changed
+    since" fired on every canvas edit, the agent's own synthesis included, so the item was always on
+    and the human snoozed every diamond in turn, burying the one move go-live needed. An edit that
+    adds no source adds no evidence. None when PyYAML is missing (the caller falls back)."""
+    if yaml is None:
+        return None
+    n = sum(1 for f in (root / "research").glob("**/*") if f.is_file())
+    for f in (root / ".claude" / "canvas").glob("*.yml"):
+        try:
+            n += _sources(yaml.safe_load(f.read_text(encoding="utf-8")))
+        except (yaml.YAMLError, OSError, UnicodeDecodeError):
+            continue  # an unreadable canvas file is the schema check's finding, not this count's
+    return n
+
+
 def load(root: Path) -> dict:
     try:
         data = json.loads((root / STATE).read_text())
@@ -59,6 +89,7 @@ def record(root: Path, session: str, now: str | None = None) -> dict:
         return {}  # an unparseable file is the schema check's finding, reported at the same write
     now = now or _dt.datetime.now(tz=_dt.UTC).isoformat()
     old = load(root)
+    evidence = evidence_count(root)
     new = {}
     for d in doc.get("active_diamonds") or [] if isinstance(doc, dict) else []:
         if not isinstance(d, dict) or not d.get("id"):
@@ -70,9 +101,9 @@ def record(root: Path, session: str, now: str | None = None) -> dict:
             # already ruled has an unknown one. Either way `ts` is None and next_item uses what
             # the diamond says ("never assessed", or the typed date). 0.250.0 set `now` for a
             # never-ruled diamond, which read as "last assessed" and hid it until evidence landed.
-            new[did] = {"sig": sig, "ts": None, "session": session}
+            new[did] = {"sig": sig, "ts": None, "session": session, "evidence_n": evidence}
         elif prev.get("sig") != sig:
-            new[did] = {"sig": sig, "ts": now, "session": session}
+            new[did] = {"sig": sig, "ts": now, "session": session, "evidence_n": evidence}
         else:
             new[did] = prev
     try:

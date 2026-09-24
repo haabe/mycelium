@@ -126,6 +126,7 @@ COMMANDS: dict[str, tuple[str, str]] = {
 VERBS = ("run", "rule", "snooze-until", "drop")
 STATE_REL = Path(".claude") / "state" / "next-item.json"
 LOG_REL = Path(".claude") / "state" / "next-item-log.jsonl"
+SNOOZE_ASKED = "asked"  # the open-ended snooze: until the human rules again
 
 # THE LADDER (v0.250.0). E2E run 19: the agent had the same next item in its context for 16
 # sessions and never acted, and the human line said the same words every session. Nothing
@@ -240,7 +241,8 @@ def _blocked(x: dict, today: str) -> bool:
     if x.get("ruling") == "drop":
         return True
     su = x.get("snoozed_until")
-    return bool(su) and str(su) >= today
+    # "asked" (v0.251.0): snoozed until the human rules again. The ledger report still lists it.
+    return bool(su) and (su == SNOOZE_ASKED or str(su) >= today)
 
 
 def _fired_proposals(root: Path) -> tuple[list[dict], str]:
@@ -335,6 +337,7 @@ def _unassessed(root: Path, today: str) -> list[dict]:
         return []  # SPEAKS: _fired_proposals reads the same file and reports it unreadable
     newest = _newest_evidence(root)
     rulings = dr.load(root) if dr else {}
+    evidence = dr.evidence_count(root) if dr else None
     out = []
     for d in doc.get("active_diamonds") or []:
         if not isinstance(d, dict) or not d.get("id"):
@@ -345,13 +348,19 @@ def _unassessed(root: Path, today: str) -> list[dict]:
         ruled = str(d.get("progression_ruled_at") or "")[:10]
         rec = rulings.get(str(d["id"])) or {}
         if dr and rec.get("ts") and rec.get("sig") == dr.signature(d):
-            # Machine clock against machine clock (v0.250.0): the recorded time of the last
-            # assessment, and files written after it by anyone but the session that made it.
-            n = _landed_since(root, rec["ts"], str(rec.get("session") or ""))
-            if not n:
+            # New EVIDENCE since the recorded assessment (v0.251.0): a count of research notes and
+            # canvas evidence sources, so an edit that adds no source does not re-propose the
+            # diamond. Records written before 0.251.0 carry no count and use file times (0.250.0).
+            if evidence is not None and isinstance(rec.get("evidence_n"), int):
+                n = evidence - rec["evidence_n"]
+                what = "new evidence entr" + ("y" if n == 1 else "ies")
+            else:
+                n = _landed_since(root, rec["ts"], str(rec.get("session") or ""))
+                what = "evidence file(s) changed"
+            if n <= 0:
                 continue
             ruled = ruled or rec["ts"][:10]
-            why = f"was last assessed {rec['ts'][:10]}, and {n} evidence file(s) changed since"
+            why = f"was last assessed {rec['ts'][:10]}, and {n} {what} since"
         elif ruled and ruled >= newest:
             continue  # typed date, no machine record: ruled on since the newest evidence
         else:
@@ -369,6 +378,33 @@ def _unassessed(root: Path, today: str) -> list[dict]:
     return sorted(out, key=lambda r: r["rank"])
 
 
+LADDER_ID = "unassessed"
+
+
+def _ladder_item(root: Path, today: str, st: dict) -> dict | None:
+    """One item for every diamond that could move (v0.251.0). E2E run 21: one item per diamond
+    rotated through L3, L0, L1 and L2 session after session, the human snoozed each in turn and
+    asked for "until I ask", and the L3 move that go-live needed was buried with the rest. One item,
+    delivering diamonds first, one ruling for the family. Per-diamond rulings from 0.250.x still
+    hold for their diamond."""
+    if _blocked(st.get(LADDER_ID, {}), today):
+        return None
+    rows = [u for u in _unassessed(root, today) if not _blocked(st.get(u["id"], {}), today)]
+    if not rows:
+        return None
+    lead = rows[0]
+    if len(rows) == 1:
+        text = lead["text"]
+    else:
+        rest = ", ".join(f"{r['diamond']} ({r['text'].split('(', 1)[1].split(')', 1)[0]})"
+                         for r in rows[1:])
+        text = f"{lead['text']} Also waiting: {rest}."
+    done = [str(r.get("assessed_at")) for r in rows if r.get("assessed_at")]
+    return {"id": LADDER_ID, "diamond": lead["diamond"], "since": lead["since"], "text": text,
+            "command": lead["command"], "assessed_at": max(done) if done else None,
+            "why": "the path to a release moves only when a diamond is assessed"}
+
+
 def pick(root: Path, reminders: str, today: str) -> tuple[dict | None, str]:
     """The one item, and a note when something could not be read."""
     st, note = _ledger_state(root)
@@ -379,12 +415,11 @@ def pick(root: Path, reminders: str, today: str) -> tuple[dict | None, str]:
     for f in fired:
         if not _blocked(st.get(f["id"], {}), today):
             return {**f, "why": "a named input on a closing path landed; the ruling is yours"}, note
-    # 2. a diamond whose phase nobody has assessed since the evidence changed (v0.249.0)
-    for u in _unassessed(root, today):
-        if not _blocked(st.get(u["id"], {}), today):
-            item = {k: v for k, v in u.items() if k != "rank"}
-            why = "the path to a release moves only when a diamond is assessed"
-            return {**item, "why": why}, note
+    # 2. diamonds whose phase nobody has assessed since the evidence changed (v0.249.0), as ONE
+    #    item for the ladder (v0.251.0), so one ruling covers them and the delivering one leads
+    ladder = _ladder_item(root, today, st)
+    if ladder:
+        return ladder, note
     # 3. muted advisories awaiting a ruling
     muted = [
         (x.get("muted_since") or "", aid)
@@ -446,9 +481,9 @@ def render_human(item: dict, limit: int = 240) -> str:
         text = text[: limit - 1] + "…"
     if _escalated(item):
         return (f"NEXT ITEM, unanswered for {item['shown']} sessions since {item['first_shown']}: "
-                f"{text} Decide one: run `{item['command']}` | rule | snooze-until DATE | drop. "
-                "If the item is wrong, say so; drop records that.")
-    return f"NEXT ITEM: {text} run `{item['command']}` | rule | snooze-until DATE | drop."
+                f"{text} Decide one: run `{item['command']}` | rule | snooze-until DATE or "
+                "asked | drop. If the item is wrong, say so; drop records that.")
+    return f"NEXT ITEM: {text} run `{item['command']}` | rule | snooze-until DATE or asked | drop."
 
 
 def _escalated(item: dict) -> bool:
@@ -465,8 +500,8 @@ def render(item: dict) -> str:
                 "(put it to the user this session and record the answer)")
     return (
         f"{head}: {text} run `{item['command']}` | rule (say what you decide) | "
-        f"snooze-until DATE (`advisory_ledger.py rule --id {item['id']} "
-        "--ruling snooze --until DATE`) | "
+        f"snooze-until DATE or asked (`advisory_ledger.py rule --id {item['id']} "
+        "--ruling snooze --until DATE|asked`) | "
         f"drop (`--ruling drop`)."
     )
 

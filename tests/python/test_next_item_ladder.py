@@ -65,7 +65,7 @@ def test_any_ruling_resets_the_ladder(tmp_path, monkeypatch):
     root = _project(tmp_path)
     for i, day in enumerate(("2026-09-24", "2026-09-25", "2026-09-26")):
         _session(root, f"s{i}", day, monkeypatch)
-    _rule(root, "unassessed:l0-x", "2026-09-26")
+    _rule(root, "unassessed", "2026-09-26")
     st = _session(root, "s4", "2026-09-27", monkeypatch)
     assert st["shown"] == 1 and st["first_shown"] == "2026-09-27"
 
@@ -78,11 +78,11 @@ def test_the_agent_gets_it_once_per_session_beside_the_request(tmp_path, monkeyp
     _session(root, "s3", "2026-09-26", monkeypatch)
     line = ni.prompt_line(root)
     assert line.startswith("MYCELIUM OPEN ITEM, unanswered for 3 sessions")
-    assert "--id unassessed:l0-x" in line
+    assert "--id unassessed" in line
     assert "The item: NEXT ITEM, unanswered for 3 sessions" in line and "{" not in line
     assert ni.prompt_line(root) == ""  # later prompts in the same session: quiet
     _session(root, "s4", "2026-09-27", monkeypatch)
-    _rule(root, "unassessed:l0-x", "2026-09-27")
+    _rule(root, "unassessed", "2026-09-27")
     assert ni.prompt_line(root) == ""  # answered this session: quiet
 
 
@@ -95,7 +95,7 @@ def test_an_item_that_leaves_is_recorded_with_its_count(tmp_path, monkeypatch):
     ni.main(["--project-dir", str(root), "--session", "s3", "--today", "2026-09-26", "--write-state"])
     assert not (root / ni.STATE_REL).exists()
     row = json.loads((root / ni.LOG_REL).read_text().splitlines()[-1])
-    assert row == {"id": "unassessed:l0-x", "first_shown": "2026-09-24", "shown": 2,
+    assert row == {"id": "unassessed", "first_shown": "2026-09-24", "shown": 2,
                    "left": "2026-09-26", "outcome": "left"}
 
 
@@ -159,3 +159,65 @@ def test_doing_what_the_item_asks_resets_the_ladder(tmp_path, monkeypatch):
     assert ni.carry(tmp_path, prev, later, "s3", "2026-09-26") == (1, "2026-09-26")
     before = {"id": "unassessed:l3-x", "assessed_at": "2026-09-24T08:00:00+00:00"}
     assert ni.carry(tmp_path, prev, before, "s3", "2026-09-26") == (3, "2026-09-24")
+
+
+# --- v0.251.0: one item for the ladder, evidence counted, snooze until asked ------------------
+# E2E run 21: one item per diamond fired on every canvas edit, rotated through all four diamonds,
+# and the human snoozed each in turn, burying the L3 move go-live needed.
+
+FOUR = """\
+active_diamonds:
+  - id: l0-x
+    scale: L0
+    phase: discover
+  - id: l3-x
+    scale: L3
+    phase: develop
+"""
+
+
+def test_one_item_covers_every_diamond_and_the_delivering_one_leads(tmp_path, monkeypatch):
+    (tmp_path / ".claude" / "diamonds").mkdir(parents=True)
+    (tmp_path / ".claude" / "diamonds" / "active.yml").write_text(FOUR)
+    st = _session(tmp_path, "s1", "2026-09-24", monkeypatch)
+    assert st["id"] == "unassessed"
+    assert st["text_human"].startswith("NEXT ITEM: l3-x (L3)")
+    assert "Also waiting: l0-x (L0)" in st["text_human"]
+
+
+def test_one_snooze_covers_the_family_until_asked(tmp_path, monkeypatch):
+    (tmp_path / ".claude" / "diamonds").mkdir(parents=True)
+    (tmp_path / ".claude" / "diamonds" / "active.yml").write_text(FOUR)
+    (tmp_path / ".claude" / "state").mkdir(parents=True)
+    with (tmp_path / ".claude" / "state" / "advisory-ledger.jsonl").open("a") as f:
+        f.write(json.dumps({"kind": "ruled", "id": "unassessed", "date": "2026-09-24",
+                            "ruling": "snooze", "until": "asked"}) + "\n")
+    item, _ = ni.pick(tmp_path, "", "2099-01-01")  # no date ever reaches "asked"
+    assert item is None or item["id"] != "unassessed"
+
+
+def test_an_edit_that_adds_no_evidence_does_not_repropose(tmp_path, monkeypatch):
+    import diamond_rulings as dr
+    (tmp_path / ".claude" / "diamonds").mkdir(parents=True)
+    (tmp_path / ".claude" / "canvas").mkdir(parents=True)
+    active = tmp_path / ".claude" / "diamonds" / "active.yml"
+    active.write_text("active_diamonds:\n  - id: l3-x\n    scale: L3\n    phase: develop\n")
+    canvas = tmp_path / ".claude" / "canvas" / "opportunities.yml"
+    canvas.write_text("o:\n  - id: opp-1\n    provenance: {evidence_sources: [a]}\n")
+    dr.record(tmp_path, "s0")
+    active.write_text(active.read_text() + "    progression_ruled_at: '2026-09-24'\n")
+    dr.record(tmp_path, "s1")  # the assessment, with 1 source on the canvas
+    canvas.write_text("o:\n  - id: opp-1\n    note: reworded\n    provenance: {evidence_sources: [a]}\n")
+    assert ni._unassessed(tmp_path, "2026-09-25") == []  # synthesis, not evidence
+    canvas.write_text("o:\n  - id: opp-1\n    provenance: {evidence_sources: [a, b]}\n")
+    items = ni._unassessed(tmp_path, "2026-09-25")
+    assert items and "1 new evidence entry since" in items[0]["text"]
+
+
+def test_the_ledger_accepts_and_labels_snooze_until_asked(tmp_path):
+    import advisory_ledger as al
+    out = al.rule(tmp_path, "unassessed", "snooze", "", "2026-09-24", until="asked")
+    assert "until asked" in out
+    events, _ = al.read_events(al.ledger_path(tmp_path))
+    x = al.state(events)["unassessed"]
+    assert al._snoozed_label(x) == "snoozed until you ask"

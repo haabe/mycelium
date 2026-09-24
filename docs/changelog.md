@@ -4,6 +4,33 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.251.0 - one item for the ladder, and only new evidence moves it
+
+**2026-09-24.** E2E run 21 (0.250.1), the first run whose founder saw what Mycelium shows a human:
+the "assess this diamond" next item fired every session, one diamond at a time (L3, then L0, L1, L2),
+because "N evidence file(s) changed since" counted every canvas edit, the agent's own synthesis
+included. The founder snoozed each in turn ("it's not what I need this week"), asked twice to snooze
+"until I ask", which the ledger could not express, and the L3 develop -> deliver move that go-live
+needed was buried with the rest. A proposal that is almost always on is the cry-wolf the 0.250.0
+ladder was meant to prevent; the fault was what it fired on, not how often it repeated.
+
+- **Only new evidence re-proposes a diamond.** `diamond_rulings.py` records `evidence_n` at each
+  assessment: research notes plus `evidence_sources` entries on the canvas, a count that needs no
+  clock. `next_item.py` proposes the diamond when the count has grown ("N new evidence entries
+  since"). A canvas edit that adds no source adds no evidence. Records from before 0.251.0 fall back
+  to file times.
+- **One item for the ladder.** Every diamond that could move is one next item, id `unassessed`:
+  the lead (delivering diamonds first) with its command, then "Also waiting: …". One ruling covers
+  the family; per-diamond rulings from 0.250.x still hold for their diamond.
+- **Snooze until asked.** `advisory_ledger.py rule --ruling snooze --until asked` silences an item
+  until the human rules again; the ledger report lists it as "snoozed until you ask".
+- **A `cd` outside the project no longer drags later paths inside it** (`_hook_input.py`). The
+  shell-command reader recorded the sentinel `__outside__` as the working directory and joined it
+  into later paths, so `cd /other/repo && sed -i ... tests/x.py` became the nonexistent in-project
+  file `__outside__/tests/x.py`, and the delivery gate refused it as a new source file. Found in
+  this session, editing upstream from the dogfood repo. Pinned by `tests/python/test_hook_input.py`.
+- Pinned by `tests/python/test_next_item_ladder.py` and `tests/python/test_ruling_clock.py`.
+
 ## v0.250.2 - doing what the item asks answers it
 
 **2026-09-24.** E2E run 21 (0.250.1) escalated `unassessed:dia-004` as "unanswered for 3 sessions"
