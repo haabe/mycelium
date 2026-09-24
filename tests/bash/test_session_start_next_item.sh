@@ -72,10 +72,19 @@ OUT=$(run_hook "$P" resume s2)
 MSG="${OUT%%|||*}"
 assert_contains "$MSG" "NEXT ITEM: Open human tasks are waiting on a read." "resume sends the item as a systemMessage"
 
-# --- Stop: repeat once, then silent ----------------------------------------------
-R1=$(run_repeat "$P")
+# --- Stop after a resume: silent, the human already had it this sitting (v0.250.1) -----
+R0=$(run_repeat "$P")
+assert_eq "$R0" "" "Stop after a resume that showed the item is silent"
+OUT=$(run_hook "$P" resume s2)
+MSG="${OUT%%|||*}"
+assert_eq "$MSG" "" "a second resume in the same sitting sends nothing (resume-per-message drivers)"
+
+# --- Stop after a startup: repeat once, then silent ----------------------------------
+P1=$(mk_project a1)
+run_hook "$P1" startup s1 >/dev/null
+R1=$(run_repeat "$P1")
 assert_contains "$R1" "Still open from session start. NEXT ITEM:" "first Stop repeats the item once"
-R2=$(run_repeat "$P")
+R2=$(run_repeat "$P1")
 assert_eq "$R2" "" "second Stop is silent"
 
 # --- a ruling after emission silences the repeat --------------------------------

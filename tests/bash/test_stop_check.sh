@@ -107,6 +107,23 @@ test_counts_only_branch_emits_valid_json() {
     assert_stdout_json_or_text "$out" "counts-only branch stdout parses"
 }
 
+test_counts_are_said_once_per_change() {
+    # v0.250.1: Stop fires after every response, and the count line reached the human every turn
+    # (E2E run 20). Said again only when a count changes.
+    local tmp; tmp=$(mktemp -d)
+    mkdir -p "$tmp/.claude/memory"
+    printf '### a correction\n\nbody\n' > "$tmp/.claude/memory/corrections.md"
+    local first second third
+    first=$(printf '%s' "$STOP_JSON" | CLAUDE_PROJECT_DIR="$tmp" bash "$HOOK")
+    second=$(printf '%s' "$STOP_JSON" | CLAUDE_PROJECT_DIR="$tmp" bash "$HOOK")
+    printf '### a correction\n\nbody\n### another\n\nbody\n' > "$tmp/.claude/memory/corrections.md"
+    third=$(printf '%s' "$STOP_JSON" | CLAUDE_PROJECT_DIR="$tmp" bash "$HOOK")
+    rm -rf "$tmp"
+    assert_contains "$first" "1 corrections" "first Stop says the count"
+    assert_not_contains "$second" "corrections, " "an unchanged count is not repeated"
+    assert_contains "$third" "2 corrections" "a changed count is said again"
+}
+
 # Runner LAST, so a test function added to this file is registered by definition.
 # Moved 2026-09-01: three new tests were appended after the old runner block and silently
 # never ran — the suite reported 5 passed either way. A test that is not registered is the
@@ -117,5 +134,6 @@ run_test test_output_is_grouped_and_counted
 run_test test_nothing_is_dropped_by_grouping
 run_test test_standing_question_is_last_not_first
 run_test test_counts_only_branch_emits_valid_json
+run_test test_counts_are_said_once_per_change
 
 report

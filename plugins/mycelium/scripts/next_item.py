@@ -32,6 +32,7 @@ the Stop hook has repeated it once. Read by hooks/next-item-repeat.sh.
 from __future__ import annotations
 
 import argparse
+import contextlib
 import datetime as _dt
 import json
 import sys
@@ -164,15 +165,39 @@ def _ruled_since(root: Path, item_id: str, since: str) -> bool:
     return False
 
 
+def same_sitting(prev: dict, item_id: str, session: str, today: str) -> bool:
+    """One sitting = one session on one day (v0.250.1). A driver that resumes the session for
+    every message (an Agent SDK app; the E2E harness) fires SessionStart:resume per message, and
+    E2E run 20 showed the human the item twice per message. A resume on a LATER day is a new
+    sitting: that is the re-entry moment the human line on resume exists for, and it counts toward
+    escalation, since a long-lived session would otherwise never escalate (the ledger counts days
+    for the same reason)."""
+    return (prev.get("id") == item_id and prev.get("session") == session
+            and prev.get("emitted_at") == today)
+
+
 def carry(root: Path, prev: dict, item_id: str, session: str, today: str) -> tuple[int, str]:
-    """(sessions shown, first shown) for this item, counted since its last ruling."""
+    """(sittings shown, first shown) for this item, counted since its last ruling."""
     if prev.get("id") != item_id:
         return 1, today
     first = str(prev.get("first_shown") or prev.get("emitted_at") or today)
     if _ruled_since(root, item_id, first):
         return 1, today  # acknowledged: the ladder starts again
     shown = int(prev.get("shown") or 1)
-    return (shown if prev.get("session") == session else shown + 1), first
+    return (shown if same_sitting(prev, item_id, session, today) else shown + 1), first
+
+
+def claim_human(root: Path) -> str:
+    """The human line, if the human has not been shown this item in this sitting; marks it shown.
+    Used by session-start on resume and fork, so the Stop repeat does not say it a second time."""
+    st = _read_state(root)
+    if not st.get("id") or st.get("_unreadable") or st.get("repeated_at_stop"):
+        return ""
+    st["repeated_at_stop"] = True
+    # An unwritable state still returns the line; at worst the Stop repeat says it once more.
+    with contextlib.suppress(OSError):
+        (root / STATE_REL).write_text(json.dumps(st, ensure_ascii=False))
+    return str(st.get("text_human") or st.get("text") or "")
 
 
 def _log_leave(root: Path, prev: dict, today: str) -> None:
@@ -490,13 +515,17 @@ def main(argv=None) -> int:
         "--human", action="store_true", help="also print the plain, bounded systemMessage form"
     )
     ap.add_argument(
+        "--claim-human", action="store_true",
+        help="print the human line if not yet shown this sitting, mark it shown, and exit",
+    )
+    ap.add_argument(
         "--prompt-line", action="store_true",
         help="print the escalated item for the agent once per session (UserPromptSubmit), and exit",
     )
     args = ap.parse_args(argv)
     root = args.project_dir.resolve()
-    if args.prompt_line:
-        line = prompt_line(root)
+    if args.claim_human or args.prompt_line:
+        line = claim_human(root) if args.claim_human else prompt_line(root)
         if line:
             print(line)
         return 0
@@ -532,7 +561,9 @@ def main(argv=None) -> int:
                     "emitted_at": args.today,
                     "first_shown": item["first_shown"],
                     "shown": item["shown"],
-                    "repeated_at_stop": False,
+                    # the human has seen it this sitting (Stop repeat or resume line): keep that
+                    "repeated_at_stop": bool(prev.get("repeated_at_stop")) and same_sitting(
+                        prev, item["id"], args.session, args.today),
                 },
                 ensure_ascii=False,
             )
