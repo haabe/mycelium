@@ -17,6 +17,12 @@
         "timeout": 30
       },
       {
+        "matcher": "Write|Edit|MultiEdit|edit|write|mcp__filesystem__(write_file|edit_file|move_file)",
+        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/scale-lock-gate.sh",
+        "type": "command",
+        "timeout": 10
+      },
+      {
         "matcher": "Write|Edit|MultiEdit|NotebookEdit|edit|write|Bash|shell|mcp__filesystem__(write_file|edit_file|move_file)",
         "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/brownfield-gate.sh",
         "type": "command",

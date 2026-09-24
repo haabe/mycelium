@@ -98,10 +98,10 @@ For each diamond to render:
 
 ### Step 2a: Spawn-relationship arrows (multi-diamond renders)
 
-When rendering multiple diamonds and a child's `parent_id` is set:
-- Emit between-state arrow after per-diamond blocks: `<parent_id> --> <child_id> : spawned <YYYY-MM-DD>`.
+When rendering multiple diamonds and a child's `parent` is set (canonical since v0.245.0; fall back to the deprecated `parent_id`, which this step read while `/launch-tier` wrote `parent`):
+- Emit between-state arrow after per-diamond blocks: `<parent> --> <child_id> : spawned <YYYY-MM-DD>`.
 - Date from child's `created_at` field.
-- If `parent_id` is null OR `created_at` missing, skip the arrow.
+- If both `parent` and `parent_id` are null OR `created_at` missing, skip the arrow.
 
 ### Step 3: Staleness check
 

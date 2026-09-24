@@ -108,8 +108,12 @@ open on this increment, ask whether to open an L4 Delivery diamond on it (`objec
 id and the increment, e.g. "sol-003, swap request + single approval"), or record in one line why not:
 "increment not opened". **Every product has some kind of delivery**, and its shape follows the
 product type: tested code for software, reviewed and accessible content, passing evals for an AI
-tool, a documented and repeatable step for a service. Offer it whether or not the parent diamonds
-have progressed. Before v0.243.0 nothing opened an L4: the Four Risks verdict was described as its
+tool, a documented and repeatable step for a service. Offer it only when the L4 entry lock holds
+(`engine/diamond-rules.md`, Entry locks, v0.245.0): the L3 it delivers, named as the L4's `parent`, at
+medium confidence or higher (`data-supported`, `test-validated` or `launch-validated`; Gilad,
+*Evidence-Guided* p158-159: most ideas reach medium-high before delivery, bigger or riskier ones go
+further). Run `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/scale_locks.py" --can-open L4 --parent <l3-id>`. A passing checklist on an L3 still at `anecdotal` is an
+increment ready to build TO LEARN, which stays in the L3. Before v0.243.0 nothing opened an L4: the Four Risks verdict was described as its
 "entry permit" and no skill consumed it.
 
 ## If Any Item Fails

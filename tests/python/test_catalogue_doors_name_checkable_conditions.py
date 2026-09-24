@@ -109,19 +109,20 @@ def test_both_doors_state_the_decline_form():
 
 
 @pytest.mark.parametrize("path", [ICE, OST], ids=lambda p: p.name)
-def test_both_doors_state_they_open_regardless_of_the_parent(path):
-    """REGRESSION (2026-09-23, dogfood full-ladder run 13). `/ice-score` offered the L3 door and then
-    WITHHELD it because the L0 parent had Evidence, BVSSH and Privacy open. `diamond-rules.md:39`
-    says the door opens "whether or not the parent has progressed" — but that rule lived only in the
-    engine doc, never in the skill that makes the offer, so an agent reading the skill had no reason
-    to know it.
+def test_both_doors_ask_the_lock_and_not_the_parents_phase(path):
+    """TWO REGRESSIONS, in opposite directions, and this pins the line between them.
 
-    **That re-closes the door this mechanism was built to open.** v0.217.0 added the catalogue door
-    because "a stuck parent closed the only door". An agent that shuts it because the parent is stuck
-    reproduces the original defect from inside the fix. The rule has to be on the page where the
-    decision is made."""
+    Run 13 (2026-09-23): `/ice-score` offered the L3 door and then WITHHELD it because the L0 parent
+    had Evidence, BVSSH and Privacy open. v0.242.5 answered by making both doors open "whether or
+    not the parent has progressed", which removed the lock altogether: an L3 could open with nothing
+    above it, and the founder's model is that every scale locks on its parent (v0.245.0).
+
+    **The lock is the parent's ARTEFACT, never its phase or its open gates.** So each door must
+    (a) ask the lock before offering, and (b) say on the page that the parent's phase is not the
+    lock, or an agent will reasonably withhold the offer while the parent's gates are open."""
     text = path.read_text(encoding="utf-8")
-    assert "whether or not the parent" in text, (
-        f"{path.name} makes a catalogue offer but does not state it is independent of the parent; "
-        "an agent will reasonably withhold it when the parent's gates are open"
+    assert 'scale_locks.py" --can-open' in text, f"{path.name} offers a cycle without asking its lock"
+    assert re.search(r"(phase|open gates)[^.]*is not the lock|not its phase", text, re.IGNORECASE), (
+        f"{path.name} does not say the parent's phase is not the lock; an agent will withhold the "
+        "offer while the parent's gates are open, which is run 13's failure"
     )

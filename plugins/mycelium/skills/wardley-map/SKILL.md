@@ -172,8 +172,10 @@ A map that surfaces a choice (where to play, which gameplay to adopt, what to bu
 has produced **an L1 event: a strategic decision**. L1 recurs on decisions, not on a pile, so it has
 no catalogue door; **this offer is its entrance**. Ask whether to open an L1 Strategy diamond on
 that decision, naming it in one line (`object_ref`: the decision, e.g. "which segment to lead with"),
-or record in one line why not: "no strategic decision open". **Offer it whether or not the L0 parent
-has progressed**: diamonds progress at their own speed (`engine/diamond-rules.md`). Before v0.243.0
+or record in one line why not: "no strategic decision open". **Offer it only when the L1 entry lock
+holds** (`engine/diamond-rules.md`, Entry locks, v0.245.0): a stated purpose, who it is for and why
+(`python3 "${CLAUDE_PLUGIN_ROOT}/scripts/scale_locks.py" --can-open L1`). A strategy without a purpose has nothing to be a strategy for (Wardley p12). The
+L0's phase is not the lock; its purpose statement is. Before v0.243.0
 L1 was entered only by a sentence saying L0 would spawn it; no skill did, and across dogfood
 full-ladder runs 6 to 20 no L1 was ever created, including three in which L0 reached define.
 

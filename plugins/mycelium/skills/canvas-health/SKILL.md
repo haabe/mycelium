@@ -220,6 +220,18 @@ python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_citations.py" --project-dir .
      - **Grounding check:** a scenario listed in any `lifecycle.designed_against[]`, OR carrying `confidence > 0.3`, must have `provenance.source_class` of `external_human` or `external_data` — flag any `internal_simulated` / `evidence_type: speculation` scenario that is driving design or confidence (envision-only scenarios stay `status: draft` until a real source grounds them; a fabricated scenario feels like research because it is a story)
    - If `.claude/canvas/scenarios.yml` does NOT exist but project_type requires it (per ${CLAUDE_PLUGIN_ROOT}/engine/canvas-guidance.yml): flag as warning
 
+8b2. **Check the entry locks** (v0.245.0). Run
+   `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/scale_locks.py" --check`. Each open diamond is reported
+   as `holds`, `overridden by the user` (a well-formed line for it in `.claude/state/scale-lock-ack`) or `LOCKED`,
+   with what its parent has not yet established. A LOCKED diamond is a **warning**, and the finding
+   is the missing artefact, not the diamond: produce the purpose, the desired outcome, the
+   opportunity's evidence or the L3's confidence it names. Diamonds opened before v0.245.0 are
+   judged by the same locks; editing them is never blocked, but a LOCKED delivery diamond cannot
+   carry new source files (the discovery gate reads the same chain). Report any
+   `scale-lock-ack line ignored` line too: an override the user meant and the lock cannot read. The locks, their
+   sources and why they are artefacts at L1-L3 and a confidence band at L4-L5: `engine/diamond-rules.md`,
+   Entry locks.
+
 8c. **Check build-mode** (Patton/Cagan — the `/define-done` build-mode gate's unconditional backstop):
    - For each diamond in `active.yml` at scale **L0–L3** (build-to-learn), lint its `definition_of_done.outcome` against an earn-verb lexicon (`deploy`, `ship`, `releas`, `production`, `go live`, `roll out`, `launch`, `all users`).
    - **Ignore a match that sits inside a NEGATION** (`not`, `NOT`, `never`, `rather than`,

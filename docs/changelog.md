@@ -2,7 +2,67 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-09-23.
+**Last updated**: 2026-09-24.
+
+## v0.245.0 - every scale locks on its parent
+
+**2026-09-24.** Two findings, one release. An end-to-end dogfood run on the installed plugin (a
+simulated founder; the harness only played the user) asked for the next release right after the
+interview, and Mycelium built and deployed it over 31 commits to two sites with only the L0 open, in
+discover, at 0.15, for all 111 minutes. Asked how the next scale unlocks, the founder then named the
+deeper defect: *"The original idea was that all scales have a natural lock per se. It might be unwise
+to build a strategy unless you have a purpose. It would be unwise to start looking into opportunities
+without knowing who to reach doing what (L0+L1). And so on. There's a dependency tree."*
+
+- **The lock had been undone in three steps.** `engine/diamond-rules.md` has said "L0 spawns L1 when
+  purpose is defined ... L2 spawns L3 when opportunities have sufficient evidence" since the plugin
+  migration, and nothing read it. 0.217.0 added the catalogue doors "whether or not the parent has
+  progressed"; 0.242.5 treated `/ice-score` withholding an L3 on its parent as the bug; 0.243.0 wrote
+  the founder's SPEED ruling (*"a child of the same L can progress faster than the parent"*) up as an
+  ENTRY rule, and pinned it with a test forbidding any page to say a parent limits its child. Every
+  scale could open at once, and nothing stopped building the wrong thing straight away.
+- **Entry locks, from the sources** (`engine/diamond-rules.md`, new section). L1 opens on a stated
+  purpose (who and why); L2 on a desired outcome; L3 on a target opportunity with evidence; L4 on an
+  L3 at medium confidence or higher; L5 on launch data from a shipped L4. Artefacts at L1-L3 and a
+  confidence band only at L4-L5, because every source read orders the levels top-down (Wardley,
+  Cagan, Torres, Gilad) and none locks the upper levels on a score, while Gilad puts his only numbers
+  before delivery and launch. **ICE ranks and never unlocks**: Gilad calls the scores "just a way to
+  compare ideas".
+- **Speed is unchanged, and now said apart from entry.** Once open, a diamond moves on its own gates,
+  may run ahead of its parent, and may revise it; a revised parent marks the child for a re-check.
+- **Mechanical, in one place.** `scripts/scale_locks.py` defines the locks (`--check`, `--can-open`,
+  `--delivery-state`, `--hook`). New hook `scale-lock-gate.sh` refuses a write to `diamonds/active.yml`
+  that OPENS a diamond (new, rescaled or revived) before its lock holds, naming what is missing; a
+  diamond already open is never re-judged on edit. Override: one line per diamond in
+  `.claude/state/scale-lock-ack`, `<id> <scale> <YYYY-MM-DD> <their own words>`, guard state, so only the user can grant it.
+- **The discovery gate gains a second stage, on the chain.** Once discovery is engaged, a new source
+  file is refused until an open L3, L4 or L5 whose chain holds, or the user's `delivery-skip-ack`. Any
+  open L3 is not enough: `/mycelium:start` leaves a purpose and nothing else, so an L3 opened on it
+  builds on a guess. The interview's Handoff to Delivery now builds the chain in three small steps
+  (desired outcome, the opportunity with the evidence the user has, the L3) instead of "create an L3,
+  don't ask".
+- **Every door asks its lock**: `/wardley-map` and `/diamond-progress` (L1), `/ost-builder` (L2),
+  `/ice-score` (L3), `/preflight` (L4), `/launch-tier` (L5). The L5 no longer opens "with the gate
+  explicitly unmet": not-yet-measurable PMF stays an honest answer about PMF, and launch data is what
+  opens it. `/diamond-assess` and `/canvas-health` report every open diamond's lock.
+- **One parent field.** `parent` is canonical and read by the locks; `parent_id` (which
+  `/diamond-render` read while `/launch-tier` wrote `parent`) is a deprecated fallback. `object_ref`
+  and `launch_data` are declared in the diamonds schema.
+- **The one fail-open, spoken.** Without PyYAML the locks cannot be read and both gates allow;
+  `preflight.sh` then says on every prompt of an engaged project that the locks are not being checked.
+- **What changes for existing projects:** a diamond already open past its lock is reported by
+  `--check`, not blocked, but it cannot carry new source files; the block names what to produce.
+- **An adversarial review before release** (read-only, fixtures only) found eight defects, all fixed
+  and pinned: the L5 door could never pass its own check; `/mycelium:start` output lacked `who` in 4
+  of 8 real runs, so L1-L3 all locked; an opportunity marked `addressed` after shipping re-locked its
+  open L3; a killed L3 could parent an L4; the ack file counted any word as an id; path spellings,
+  rescaling, a scaleless diamond, a two-step broken write and `move_file` got past the hook. The L3
+  lock now also asks for the evidence's source, so an invented one is visible in review; the locks
+  still check that an artefact EXISTS, not that it is true, and say so.
+- Pinned by `tests/python/test_scale_locks.py` (49), `tests/bash/test_scale_lock_gate.sh` (10), new
+  and changed cases in `test_discovery_gate.sh`, `test_hooks_adversarial.sh`, and
+  `test_every_scale_has_a_way_in.py`, whose parent-independence tests are replaced by one requiring
+  every door to check its lock.
 
 ## v0.244.0 - what a user leaves with survives the session
 

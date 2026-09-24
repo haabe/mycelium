@@ -111,19 +111,38 @@
           "type": "number",
           "minimum": 0.0,
           "maximum": 1.0,
-          "description": "REQUIRED as of v0.92.0. Gates depend on it \u2014 diamond-rules.md spawns L3 to L4 only when 'solutions pass confidence threshold', and twelve skills read this field. A field a spawn gate consults cannot be optional at the point the gate reads it. An ABSENT value is not low confidence, it is no position, and consumers were defaulting it (0.5 in one evaluator) which made 'never recorded' indistinguishable from 'recorded too high'. /interview already writes 0.15 at birth, so this enforces existing practice rather than inventing a demand."
+          "description": "REQUIRED as of v0.92.0. An ABSENT value is not low confidence, it is no position, and consumers were defaulting it (0.5 in one evaluator), which made 'never recorded' indistinguishable from 'recorded too high'. /interview already writes 0.15 at birth. Entry locks (v0.245.0, scripts/scale_locks.py) read `evidence_type`, not this number: the L4 lock needs its L3 at data-supported or better."
         },
         "parent": {
           "type": [
             "string",
             "null"
-          ]
+          ],
+          "description": "The diamond this one was spawned from. CANONICAL name (v0.245.0): scripts/scale_locks.py reads it to resolve the entry lock (an L4 names the L3 it delivers, an L5 the L4 whose release it is). Written by /launch-tier and the spawn offers."
         },
         "parent_id": {
           "type": [
             "string",
             "null"
-          ]
+          ],
+          "description": "DEPRECATED alias of `parent` (v0.245.0); read as a fallback, never written. /diamond-render read this name while /launch-tier wrote `parent`, so no reader and writer agreed."
+        },
+        "object_ref": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "What this cycle works on, by id: the opportunity (L2), the opportunity or solution (L3), the solution and increment (L4). The L3 entry lock resolves it against canvas/opportunities.yml (v0.245.0); written by the /ost-builder, /ice-score and /preflight offers since v0.217.0/0.243.0 and undeclared until now."
+        },
+        "launch_data": {
+          "type": "object",
+          "description": "L5 entry lock (v0.245.0): launch data from the shipped L4, at any n (Gilad, Evidence-Guided p123). At least one of the three must say something.",
+          "properties": {
+            "usage": {},
+            "feedback": {},
+            "metric_movement": {}
+          },
+          "additionalProperties": true
         },
         "children": {
           "type": "array",

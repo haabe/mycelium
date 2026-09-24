@@ -72,6 +72,10 @@ v0.243.0 L1 and L4 had only a sentence saying they would be spawned, and no skil
 in dogfood full-ladder runs 6 to 20 neither was ever created, including three runs in which L0
 reached define. **A route that is documented and never fires is no route.**
 
+**Every entrance in the table passes through its scale's entry lock** (Spawning Rules, Entry locks,
+v0.245.0): a door or event offer is made only once the parent has established what the child builds
+on. Being enterable and being locked are both required; v0.243.0 got the first and dropped the second.
+
 **Every product has some kind of delivery**, so L4 is never optional. Its form follows the product
 type, as the Evidence gate's L4 rows already say: tested code for software, reviewed and accessible
 content, passing evals for an AI tool, a documented and repeatable step for a service.
@@ -100,16 +104,40 @@ the books, three adversarial rounds and founder correction.*
 
 ## Spawning Rules
 
-**A record and a cycle are different objects (v0.217.0).** An opportunity in `opportunities.yml` is a record; an L2 diamond is a cycle of work on it. Scoring, evidence and a resolving `rolls_up_to` make a good record and open nothing. A cycle is opened by a spawn from the parent (below) OR from the catalogue: `/ost-builder` offers an L2 on a scored, evidence-backed opportunity and `/ice-score` offers an L3 on the highest-ranked scored leaf, whether or not the parent has progressed. **Diamonds progress at their own speed** (founder ruling, v0.243.0): a child moves through its own transitions on its own gates and may be ahead of its parent. An unvalidated parent is context the child names, never a hold on it. (Until v0.243.0 this said the parent set a bound on the child without saying what was bounded; a dogfood run read it as "children cannot progress while the parent is blocked" and never assessed the L2 and L3 diamonds at all.)
+**A record and a cycle are different objects (v0.217.0).** An opportunity in `opportunities.yml` is a record; an L2 diamond is a cycle of work on it. Scoring, evidence and a resolving `rolls_up_to` make a good record and open nothing. A cycle is opened by a spawn from the parent (below) OR from the catalogue: `/ost-builder` offers an L2 on a scored, evidence-backed opportunity and `/ice-score` offers an L3 on the highest-ranked scored leaf. Both doors open only when the scale's entry lock holds.
 
-Diamonds spawn child diamonds when complexity or scope requires it:
+### Entry locks: each scale opens on what its parent has established (v0.245.0)
 
-- L0 spawns L1 when purpose is defined and strategic questions arise (the event offer above: `/wardley-map`, `/diamond-progress`)
-- L1 spawns L2 when landscape is mapped and opportunities need exploration
-- L2 spawns L3 when opportunities have sufficient evidence for solution design
-- L3 spawns L4 when an increment is ready to build (the event offer above: `/preflight`)
+**Two questions, never answered with each other.** ENTRY: what must exist above a child before it opens. SPEED: once open, how fast it moves. The founder's model is a dependency tree — *"It might be unwise to build a strategy unless you have a purpose. It would be unwise to start looking into opportunities without knowing who to reach doing what (L0+L1). And so on."* — and the speed ruling of v0.243.0 (*"a child of the same L can progress faster than the parent"*) is about SPEED only. Between v0.217.0 and v0.243.0 every door offered its cycle regardless of the parent, which answered ENTRY with the speed ruling: every scale could open at once, and nothing stopped a user building the wrong thing straight away. An end-to-end dogfood run shipped a release over 31 commits under an L0 in discover.
+
+| Child opens | when the parent has established | Read from | Source |
+|---|---|---|---|
+| **L1** Strategy | a stated purpose: who it is for and why (provisional; L1 may revise it) | `purpose.yml` `why` (3+ words) and `who` (or `target_users`) | Wardley p12; Cagan, *Empowered* p113-118 |
+| **L2** Opportunity | the L1 lock, plus a desired outcome: who to reach, doing what. A learning goal is enough to start | `opportunities.yml` `desired_outcome.metric` (or a `desired_outcomes[].metric`) | Torres, *CDH* p27, p44-47 |
+| **L3** Solution | the L2 lock, plus a chosen target opportunity with evidence behind it (anecdotal or better, with the source it came from). The choice is reversible | the diamond's `object_ref` (or its L2 parent's) resolves to an opportunity with `provenance.evidence_type` and `evidence_sources`; at entry it must be open and, with several roots, name one in `rolls_up_to` | Torres p101-107; Gilad, *Testing Product Ideas* p9 |
+| **L4** Delivery | the L3 lock on the L3 it delivers, plus that L3's evidence at **medium confidence or higher**: `data-supported`, `test-validated` or `launch-validated`. The bar rises with cost and risk | the L4's `parent` (or the L3 with the same `object_ref`) and its `evidence_type` | Gilad, *Evidence-Guided* p158-159; *ICE Done Right* p14 |
+| **L5** Market | the L4 lock on its parent L4, that L4 shipped, and launch data: usage, feedback or movement in the target metric | the L5's `parent`, and `launch_data` on that L4 or the L5 | Gilad, *Evidence-Guided* p123 |
+
+**Code sits inside the chain.** New source files are written under an open L3 (build to learn), L4 or L5 whose lock holds — the discovery gate's second stage reads it. An L3 opened straight after `/mycelium:start` does not qualify: the interview leaves a purpose and nothing else.
+
+**Artefacts at L1-L3, a confidence band only at L4 and L5, and why.** Every source read orders the levels top-down (Wardley p12, Cagan p113-118, Torres p27, Gilad *Evidence-Guided* p43), and none locks the upper levels on a score: Torres works the tree "bottom-up … evolving the entire tree at once" (p35) and has strategy emerge from discovery decisions (p101); Wardley's purpose changes as you act (p32). Gilad's numbers are for ideas only, and he calls the ICE scores themselves "meaningless — they're just a way to compare ideas" (*ICE Done Right* p4). So the lock at L1-L3 is that the parent's artefact EXISTS, and the only numeric lock is the Confidence band where Gilad puts it, before delivery and launch. ICE ranks; it never unlocks.
+
+**The locks are mechanical.** `scripts/scale_locks.py` is the one place they are defined. `hooks/scale-lock-gate.sh` refuses a write to `diamonds/active.yml` that OPENS a diamond (a new id, a rescaled one, or one moved back into the active list) whose lock does not hold, naming what is missing; the discovery gate refuses new source files outside a held chain; `scale_locks.py --check` reports every open diamond (canvas-health reads it); `--can-open <scale>` answers the doors. **Override:** only the user can open a diamond past its lock, with one line per diamond in `.claude/state/scale-lock-ack`: `<id> <scale> <YYYY-MM-DD> <their own words>`, valid for that id at that scale only (guarded state: the agent writing it gets an ASK).
+
+**Once open, a diamond moves at its own speed.** A child moves through its own transitions on its own gates and may be ahead of its parent; the parent stays active while children execute. **Findings flow upward**: a child may revise its parent (Torres p35, Wardley p32), and a parent revised under an open child marks the child for a re-check at its next `/diamond-assess`, it does not close it. **What entry means once a diamond is open:** the open-opportunity check applies at entry only, so an opportunity marked `addressed` after shipping re-locks nothing. What an open delivery cycle must still have to carry NEW source files is its chain: a purpose, an outcome, a target with evidence. **Diamonds opened before v0.245.0** are never blocked on edit, and `--check` lists any whose chain does not hold; such a diamond cannot carry new source files until the missing artefact exists or the user acks it.
+
+**`solo_hobby` skips the L1 diamond, not the L1 lock.** With no L1 cycle, the L2 lock still needs the purpose and the desired outcome; the artefact, not the diamond, is what it reads.
+
+**What the locks cannot do.** They check that the parent's artefact EXISTS, not that it is true: an evidence type and a source are fields an agent can write. The L3 lock therefore asks for a named source as well as a type, which makes an invented one visible in review; the truth of evidence stays with the evidence gates and the human.
+
+Diamonds spawn child diamonds, each through its lock above:
+
+- L0 spawns L1 when purpose is stated and a strategic question arises (the event offer: `/wardley-map`, `/diamond-progress`)
+- L1 spawns L2 when the desired outcome is set and opportunities need exploration (`/ost-builder`)
+- L2 spawns L3 when a target opportunity has evidence for solution design (`/ice-score`)
+- L3 spawns L4 when an increment is ready to build and the L3 is at medium confidence (the event offer: `/preflight`)
 - L4 can spawn sub-L4 diamonds for complex features requiring their own discovery
-- **L4 spawns L5 when a release is categorised as a MAJOR LAUNCH on the project's own release scale** (v0.232.0, written by `/launch-tier`)
+- **L4 spawns L5 when a release is categorised as a MAJOR LAUNCH on the project's own release scale** and launch data exists (v0.232.0, written by `/launch-tier`)
 - L5 spawns L2 when market feedback reveals new opportunities (feedback loop)
 
 **The L4→L5 edge was missing until v0.232.0, and its absence is why L5 never opened by itself.** Every
@@ -119,11 +147,14 @@ distinctions between a minor release and a major launch are really important... 
 get done flows from how releases are categorized"* — so the categorisation `/launch-tier` already
 makes IS the trigger. It was being made and nothing acted on it.
 
-**Entry condition: product/market fit**, which L5 is not reachable before (Cagan). The instrument is
-Ellis's Must-Have Survey, typed on the diamond as `pmf`. **`band: not-yet-measurable` is a first-class
-answer** — below a real sample a percentage is not a percentage, and an L5 that records having no PMF
-evidence is a true record where a manufactured 40% is not. **Major launch means the top band of YOUR
-scale**; a project with no release history has no scale, so it cannot categorise and this cannot fire.
+**Entry lock: launch data from the shipped L4** (Entry locks table above). Until v0.245.0 the L5 could
+open with its entry condition "explicitly unmet", which made it the one scale whose lock was optional.
+**Product/market fit is what the L5 works toward and measures** (Cagan), with Ellis's Must-Have Survey
+typed on the diamond as `pmf`. **`band: not-yet-measurable` stays a first-class answer about PMF** —
+below a real sample a percentage is not a percentage, and a manufactured 40% is theatre — but it is no
+longer a way in: the launch data (usage, feedback, metric movement) must exist at any n. **Major launch
+means the top band of YOUR scale**; a project with no release history has no scale, so it cannot
+categorise and this cannot fire.
 
 **One open L5 at a time.** L5 recurs on the market, not on the release: a second L5 for a later launch
 splits one market question across two records. Add the release to the open one.

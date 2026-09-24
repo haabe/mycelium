@@ -61,7 +61,44 @@ done <<< "$HI_TARGETS"
 BASENAME="${GATED_FILE##*/}"
 
 [ -f "$PROJECT_DIR/.claude/state/discovery-skip-ack" ] && exit 0
-hi_discovery_engaged && exit 0
+
+if hi_discovery_engaged; then
+  # SECOND STAGE (v0.245.0): discovery is under way, so the question is whether this build sits
+  # inside a delivery cycle whose whole chain holds (scripts/scale_locks.py): an open L3, L4 or
+  # L5 with a purpose, a desired outcome and a target opportunity with evidence above it. Any
+  # open L3 was not enough: /mycelium:start leaves a purpose and nothing else, so an L3 opened
+  # straight after it builds on a guess, the "wrong thing right away" the scale locks exist to
+  # stop. An end-to-end dogfood run shipped a release over 31 commits under an L0 in discover.
+  [ -f "$PROJECT_DIR/.claude/state/delivery-skip-ack" ] && exit 0
+  hi_delivery_state
+  case $? in
+    0) exit 0 ;;
+    3) exit 0 ;;  # PyYAML missing: the locks cannot be read, and preflight.sh says so every prompt
+  esac
+  cat >&2 <<EOF
+Mycelium delivery gate: you are about to create a new source file ($BASENAME),
+and no delivery cycle with its chain in place is open. Code is written under
+an L3 (build to learn), L4 or L5 diamond whose parents have established what
+it builds on. What is missing:
+
+  ${HI_DELIVERY_WHY}
+
+Each scale opens on its parent (engine/diamond-rules.md, Entry locks): L1 on
+a purpose (who and why), L2 on a desired outcome, L3 on a target opportunity
+with evidence, L4 on an L3 at medium confidence, L5 on launch data. Produce
+what is missing with the skill named above, open the L3 with object_ref naming
+the opportunity or solution, then retry.
+  python3 \${CLAUDE_PLUGIN_ROOT}/scripts/scale_locks.py --can-open L3
+says what is still missing.
+
+Only if the USER explicitly says this work should not be tracked, write
+.claude/state/delivery-skip-ack with the date and their own words. Do not
+write the ack file on your own judgement.
+EOF
+  . "${CLAUDE_PLUGIN_ROOT:-$(dirname "${BASH_SOURCE[0]}")/..}/scripts/_hook_fire_log.sh" 2>/dev/null || true
+  mycelium_log_fire ".claude/state/discovery-gate-fires.jsonl" "blocked-delivery" 2>/dev/null || true
+  exit 2
+fi
 
 cat >&2 <<EOF
 Mycelium discovery gate: this project has no discovery state yet (no active

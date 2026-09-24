@@ -52,7 +52,7 @@ Evaluate current diamond state and recommend next action.
 python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_scale_occupancy.py" --canvas-dir .claude/canvas
 ```
 
-Report the line for each scale with records: "73 opportunity records, 0 active L2 cycles" is the one-line diagnostic that would have surfaced the dogfood project's shape in May 2026, four months before a founder named it from lived experience ("how I never could get past L1 whilst the product already existed"). A record and a cycle are different objects; a scale with records and no cycle ever opened has an intake and no outlet, and the exits are in `/ost-builder` and `/ice-score`. An unvalidated parent does not forbid work below it; it makes that work invisible to the model unless a cycle is opened.
+Report the line for each scale with records: "73 opportunity records, 0 active L2 cycles" is the one-line diagnostic that would have surfaced the dogfood project's shape in May 2026, four months before a founder named it from lived experience ("how I never could get past L1 whilst the product already existed"). A record and a cycle are different objects; a scale with records and no cycle ever opened has an intake and no outlet, and the exits are in `/ost-builder` and `/ice-score`. A parent's phase does not forbid work below it; its missing ARTEFACT does (Entry locks, v0.245.0). Also run `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/scale_locks.py" --check` and report each open diamond whose lock does not hold, with what is missing: that is the next thing to produce, ahead of any work inside the diamond.
 
 3. **Check theory gates for next transition**:
    - Reference ${CLAUDE_PLUGIN_ROOT}/engine/theory-gates.md for the current transition
