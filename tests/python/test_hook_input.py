@@ -218,3 +218,17 @@ def test_cli_discovery_state_flag(tmp_path, monkeypatch, capsys):
     m = _m()
     monkeypatch.setattr(sys, "argv", ["_hook_input.py", "--project-dir", str(tmp_path), "--discovery-state"])
     assert m.cli() == 1
+
+
+def test_a_flag_is_not_a_writing_command(tmp_path):
+    """v0.252.0: `\\bln\\b` matched the `ln` in `grep -ln`, so a read-only search counted as creating
+    a link and the delivery gate refused it. Writers are matched as command words only."""
+    m = _m()
+    # NOT covered, on purpose: a bare argument word (`grep -rn cp src/a.py`) still reads as a
+    # command. Anchoring writers to the start of a segment would stop catching `xargs rm` and
+    # `find -exec rm`; for a gate, over-blocking a rare search beats missing a write.
+    for cmd in ('grep -ln "x" tests/bash/*.sh', "ls -ln src/app.py", "echo --rm-dist src/a.py"):
+        assert not m.bash_write_targets(cmd, str(tmp_path)).targets, cmd
+    for cmd in ("ln -s a.py src/b.py", "/bin/rm src/a.py", "cp a.py src/b.py",
+                "sed -i '' 's/a/b/' src/a.py", "x=1; rm src/a.py", "ls | xargs rm src/a.py"):
+        assert m.bash_write_targets(cmd, str(tmp_path)).targets, cmd

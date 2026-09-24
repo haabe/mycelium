@@ -781,3 +781,11 @@ reviewed:
     quiet is chosen over repeating on every prompt, which is the failure the ladder exists to avoid.
     The human still gets the escalated item from next-item-repeat.sh at Stop, so the item is not
     lost. Reviewed 2026-09-24, v0.250.0.
+
+- id: scale_locks.py@a1279116e1
+  verdict: accepted
+  reason: >-
+    `exposure_line` treats an unreadable `.claude/state/exposure-line-said` as "never said". Silent
+    at the site and correct: the consequence is that the not-ready line is said (again), which is
+    the safe direction for a safety notice; nothing is suppressed by the failure. Reviewed
+    2026-09-25, v0.252.0.

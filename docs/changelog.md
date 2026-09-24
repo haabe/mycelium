@@ -4,6 +4,32 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.252.0 - not ready for real people is said where the agent reasons
+
+**2026-09-25.** E2E run 21 (0.250.1): the product went to real staff while its L3 sat in Develop
+with Security and Service Quality pending. The in-world developer deployed build `7c3e1a9`; the
+agent verified the deployed code and told the founder when to give the staff link. Contract rule 14
+says nothing meets real people before Deliver, and Mycelium's own exposure check agreed the work was
+not ready, but the exposure gate (`exposure-gate.sh`) only ever sees the AGENT's deploy commands, and
+nothing told the agent. In real use someone else usually does the deploy (CI, a developer), so the
+gate was guarding the least common path.
+
+- **The exposure state is said at the prompt.** `scale_locks.py --exposure-line`, called by
+  `preflight.sh`, prints `MYCELIUM EXPOSURE STATE` when a delivering diamond is open and not ready:
+  what is missing, that this covers a pilot, a link sent to staff or users and a deploy someone else
+  does, and to tell the user and progress the diamond before helping expose it. Once per sitting
+  (session and day), and again on any prompt about going live, a pilot, production, staff, links,
+  customers or a launch. Silent when ready or when no delivering diamond is open.
+- **The session-count line reaches the human once per sitting**, and again only when the
+  corrections count changes. "When a count changes" still fired 46 times in 78 turns of run 21,
+  because an agent logs a decision on most turns, and the line asks for nothing.
+- **A writing command is matched as a command, never inside a flag** (`_hook_input.py`). `\bln\b`
+  matched the `ln` in `grep -ln`, so a read-only search was taken for creating a link and the
+  delivery gate refused it. Found in this session. A bare argument word (`grep -rn cp x`) can still
+  match; anchoring to the segment start would stop catching `xargs rm`, and a gate should over-block.
+- Pinned by `tests/python/test_scale_locks.py`, `tests/python/test_hook_input.py`,
+  `tests/bash/test_preflight_discovery_prewarning.sh` and `tests/bash/test_stop_check.sh`.
+
 ## v0.251.0 - one item for the ladder, and only new evidence moves it
 
 **2026-09-24.** E2E run 21 (0.250.1), the first run whose founder saw what Mycelium shows a human:

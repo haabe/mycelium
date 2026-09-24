@@ -112,6 +112,27 @@ test_delivery_ack_silences_delivery_warning() {
     assert_not_contains "$out" "$DMARK" "the user's recorded delivery skip silences it"
 }
 
+EMARK="MYCELIUM EXPOSURE STATE"
+
+# v0.252.0, E2E run 21: a developer deployed and the agent coordinated the go-live while the L3 sat
+# in Develop with Security pending; the exposure gate sees only the agent's own deploy commands.
+test_not_ready_l3_is_said_once_per_sitting_and_on_go_live_prompts() {
+    local tmp; tmp=$(mktemp -d)
+    mkdir -p "$tmp/.claude/diamonds"
+    printf 'active_diamonds:\n  - id: dia-001\n    scale: L0\n    phase: discover\n  - id: d-003\n    scale: L3\n    phase: develop\n' > "$tmp/.claude/diamonds/active.yml"
+    local first second golive
+    first=$(printf '%s' '{"prompt":"morning","session_id":"s1"}' | CLAUDE_PROJECT_DIR="$tmp" CLAUDE_PLUGIN_ROOT="$PLUGIN_ROOT" bash "$HOOK" 2>/dev/null)
+    second=$(printf '%s' '{"prompt":"fix the typo","session_id":"s1"}' | CLAUDE_PROJECT_DIR="$tmp" CLAUDE_PLUGIN_ROOT="$PLUGIN_ROOT" bash "$HOOK" 2>/dev/null)
+    golive=$(printf '%s' '{"prompt":"send Tom the link for staff","session_id":"s1"}' | CLAUDE_PROJECT_DIR="$tmp" CLAUDE_PLUGIN_ROOT="$PLUGIN_ROOT" bash "$HOOK" 2>/dev/null)
+    rm -rf "$tmp"
+    assert_contains "$first" "$EMARK" "an L3 not ready for real people: the state is said at the first prompt"
+    assert_contains "$first" "a deploy someone else does" "it covers exposure the agent does not perform itself"
+    assert_not_contains "$second" "$EMARK" "a neutral prompt in the same sitting: not repeated"
+    assert_contains "$golive" "$EMARK" "a prompt about going live: said again"
+    assert_contains "$golive" "Mycelium preflight complete" "the ordinary preflight line still follows"
+}
+
+run_test test_not_ready_l3_is_said_once_per_sitting_and_on_go_live_prompts
 run_test test_empty_project_is_warned
 run_test test_skip_ack_silences_it
 run_test test_populated_purpose_silences_it

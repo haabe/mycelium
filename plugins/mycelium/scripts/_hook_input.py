@@ -198,17 +198,21 @@ _TOK = r"(?:'[^']*'|\"[^\"]*\"|[^\s;&|<>()]+)"
 _SEG_SPLIT = re.compile(r"(?:\r?\n|&&|\|\||;|\|(?!\|))")
 _CD = re.compile(rf"^\s*cd\s+(?P<dir>{_TOK})")
 _PATHISH = re.compile(_TOK)
+# A command word, never part of a flag or a longer word (v0.252.0): `\bln\b` matched the `ln` in
+# `grep -ln`, so a read-only search counted as creating a link and the delivery gate refused it.
+# A path prefix still matches (`/bin/rm`).
+_CMD = r"(?<![-\w.])"
 _WRITERS = [
     (re.compile(rf">{{1,2}}\|?\s*(?P<t>{_TOK})"), "redirect"),
-    (re.compile(rf"\btee\s+(?:-[a-z]+\s+)*(?P<t>{_TOK})"), "tee"),
-    (re.compile(rf"\bsed\b.*?\s-[a-zA-Z]*i\b.*\s(?P<t>{_TOK})\s*$"), "sed -i"),
-    (re.compile(rf"\bperl\b.*?\s-[a-zA-Z]*i\b.*\s(?P<t>{_TOK})\s*$"), "perl -i"),
-    (re.compile(rf"\b(?:cp|mv|install|ln|rsync)\b.*\s(?P<t>{_TOK})\s*$"), "copy/move/link"),
-    (re.compile(rf"\b(?:rm|touch|chmod|chown|truncate)\b(?:\s+-\S+)*\s+(?P<t>{_TOK})"),
+    (re.compile(rf"{_CMD}tee\s+(?:-[a-z]+\s+)*(?P<t>{_TOK})"), "tee"),
+    (re.compile(rf"{_CMD}sed\b.*?\s-[a-zA-Z]*i\b.*\s(?P<t>{_TOK})\s*$"), "sed -i"),
+    (re.compile(rf"{_CMD}perl\b.*?\s-[a-zA-Z]*i\b.*\s(?P<t>{_TOK})\s*$"), "perl -i"),
+    (re.compile(rf"{_CMD}(?:cp|mv|install|ln|rsync)\b.*\s(?P<t>{_TOK})\s*$"), "copy/move/link"),
+    (re.compile(rf"{_CMD}(?:rm|touch|chmod|chown|truncate)\b(?:\s+-\S+)*\s+(?P<t>{_TOK})"),
      "rm/touch/chmod"),
-    (re.compile(rf"\bdd\b.*\bof=(?P<t>{_TOK})"), "dd of="),
-    (re.compile(rf"\bed\s+(?:-[a-z]+\s+)*(?P<t>{_TOK})"), "ed"),
-    (re.compile(rf"\bg?awk\b.*-i\s*inplace.*\s(?P<t>{_TOK})\s*$"), "awk -i inplace"),
+    (re.compile(rf"{_CMD}dd\b.*\bof=(?P<t>{_TOK})"), "dd of="),
+    (re.compile(rf"{_CMD}ed\s+(?:-[a-z]+\s+)*(?P<t>{_TOK})"), "ed"),
+    (re.compile(rf"{_CMD}g?awk\b.*-i\s*inplace.*\s(?P<t>{_TOK})\s*$"), "awk -i inplace"),
     (re.compile(r"\bopen\s*\(\s*(?P<t>'[^']*'|\"[^\"]*\")\s*,\s*['\"][wax]"), "python open()"),
     (re.compile(r"\bwrite_text\s*\("), "python write_text"),
 ]
