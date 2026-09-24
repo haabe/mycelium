@@ -4,6 +4,21 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.249.0 - the next item moves the ladder
+
+**2026-09-24.** E2E run 18, the first happy-path run built to test Mycelium's own behaviour: four
+diamonds, L0 to L3, sat in discover for three sessions with no progression ruling while research notes
+landed every session. No gate held them; nothing proposed moving them. The session-start next item
+(`scripts/next_item.py`) proposed `/mycelium:diamond-progress` only for a FIRED closing path, so on the
+happy path a diamond moved only if the driver remembered to move it. A route that never fires is no
+route.
+
+- **New next-item step, after fired closing paths:** an open diamond whose phase has never been
+  assessed, or whose last `progression_ruled_at` predates the newest canvas or research change, is
+  proposed with its next transition and `/mycelium:diamond-progress <id>`. Delivering diamonds (L3 and
+  up) come first; closed and parked diamonds never. Snooze and drop work as for every next item.
+- Pinned by `tests/python/test_next_item_moves_the_ladder.py`.
+
 ## v0.248.1 - the happy path writes a canvas Mycelium itself accepts
 
 **2026-09-24.** The first E2E run built to test Mycelium's own behaviour (run 18, happy path L0 to L5)

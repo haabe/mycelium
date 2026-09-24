@@ -168,6 +168,55 @@ def _fired_proposals(root: Path) -> tuple[list[dict], str]:
     return sorted(out, key=lambda r: r["since"]), ""
 
 
+_CLOSED = {"complete", "completed", "killed", "parked", "archived"}
+_NEXT = {"discover": "define", "define": "develop", "develop": "deliver", "deliver": "complete"}
+
+
+def _newest_evidence(root: Path) -> str:
+    """The newest date any canvas file or research note was written (YYYY-MM-DD), or ''."""
+    stamps = [f.stat().st_mtime for pat in (".claude/canvas/*.yml", "research/**/*")
+              for f in root.glob(pat) if f.is_file()]
+    return (_dt.datetime.fromtimestamp(max(stamps), tz=_dt.UTC).date().isoformat()
+            if stamps else "")
+
+
+def _unassessed(root: Path, today: str) -> list[dict]:
+    """Open diamonds whose phase nobody has assessed: never ruled on, or ruled on before the newest
+    evidence landed (v0.249.0). E2E run 18, the first happy-path run built to test Mycelium's own
+    behaviour: four diamonds sat in discover for three sessions with no ruling while research notes
+    arrived every session, and nothing in Mycelium proposed the step that moves them. Only a FIRED
+    closing path was ever proposed, so a diamond moved only if the driver remembered to move it.
+    Delivering diamonds (L3 and up) come first: they carry the path to a release."""
+    p = root / ".claude" / "diamonds" / "active.yml"
+    if yaml is None or not p.exists():
+        return []
+    try:
+        doc = yaml.safe_load(p.read_text(encoding="utf-8")) or {}
+    except (yaml.YAMLError, OSError):
+        return []  # SPEAKS: _fired_proposals reads the same file and reports it unreadable
+    newest = _newest_evidence(root)
+    out = []
+    for d in doc.get("active_diamonds") or []:
+        if not isinstance(d, dict) or not d.get("id"):
+            continue
+        phase = str(d.get("phase") or "discover").lower()
+        if phase in _CLOSED or phase not in _NEXT:
+            continue
+        ruled = str(d.get("progression_ruled_at") or "")[:10]
+        if ruled and ruled >= newest:
+            continue  # ruled on since the newest evidence: nothing new to assess
+        scale = str(d.get("scale") or "").upper()
+        why = (f"has never been assessed, so it has never moved from {phase}" if not ruled
+               else f"was last ruled on {ruled}, and evidence has landed since")
+        out.append({"id": f"unassessed:{d['id']}", "diamond": d["id"],
+                    "since": ruled or str(d.get("created") or today)[:10],
+                    "rank": (0 if scale in ("L3", "L4", "L5") else 1, ruled or ""),
+                    "text": f"{d['id']} ({scale}) {why}. Its next transition is "
+                            f"{phase} -> {_NEXT[phase]}.",
+                    "command": f"/mycelium:diamond-progress {d['id']}"})
+    return sorted(out, key=lambda r: r["rank"])
+
+
 def pick(root: Path, reminders: str, today: str) -> tuple[dict | None, str]:
     """The one item, and a note when something could not be read."""
     st, note = _ledger_state(root)
@@ -178,7 +227,13 @@ def pick(root: Path, reminders: str, today: str) -> tuple[dict | None, str]:
     for f in fired:
         if not _blocked(st.get(f["id"], {}), today):
             return {**f, "why": "a named input on a closing path landed; the ruling is yours"}, note
-    # 2. muted advisories awaiting a ruling
+    # 2. a diamond whose phase nobody has assessed since the evidence changed (v0.249.0)
+    for u in _unassessed(root, today):
+        if not _blocked(st.get(u["id"], {}), today):
+            item = {k: v for k, v in u.items() if k != "rank"}
+            why = "the path to a release moves only when a diamond is assessed"
+            return {**item, "why": why}, note
+    # 3. muted advisories awaiting a ruling
     muted = [
         (x.get("muted_since") or "", aid)
         for aid, x in st.items()
@@ -195,7 +250,7 @@ def pick(root: Path, reminders: str, today: str) -> tuple[dict | None, str]:
             "command": cmd,
             "why": "muted; the ledger asked for a ruling and none was recorded",
         }, note
-    # 3. present advisories with a command, oldest streak first
+    # 4. present advisories with a command, oldest streak first
     cands = []
     for aid in ids:
         if aid not in COMMANDS or _blocked(st.get(aid, {}), today):
