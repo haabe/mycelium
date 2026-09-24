@@ -13,8 +13,8 @@ This records, on every write to diamonds/active.yml, the machine time at which a
 `next_item.py` then compares machine time with machine time, to the second, and ignores files the
 ruling session itself wrote (the agent that ruled had them in front of it).
 
-State: `.claude/state/diamond-rulings.json`, `{id: {sig, ts, session}}`. A diamond first seen
-already ruled gets `ts: null` (when it was ruled is unknown), and the typed date is used for it.
+State: `.claude/state/diamond-rulings.json`, `{id: {sig, ts, session}}`. A diamond first seen gets
+`ts: null`: never ruled, or ruled at an unknown time. next_item then uses the diamond's own fields.
 Stdlib plus PyYAML; without PyYAML it records nothing and next_item falls back to the typed date.
 """
 from __future__ import annotations
@@ -66,8 +66,11 @@ def record(root: Path, session: str, now: str | None = None) -> dict:
         did, sig = str(d["id"]), signature(d)
         prev = old.get(did)
         if prev is None:
-            ruled = bool(d.get("progression_ruled_at") or d.get("progression_history"))
-            new[did] = {"sig": sig, "ts": None if ruled else now, "session": session}
+            # First sight is not an assessment (v0.250.2). A never-ruled diamond has no time; one
+            # already ruled has an unknown one. Either way `ts` is None and next_item uses what
+            # the diamond says ("never assessed", or the typed date). 0.250.0 set `now` for a
+            # never-ruled diamond, which read as "last assessed" and hid it until evidence landed.
+            new[did] = {"sig": sig, "ts": None, "session": session}
         elif prev.get("sig") != sig:
             new[did] = {"sig": sig, "ts": now, "session": session}
         else:

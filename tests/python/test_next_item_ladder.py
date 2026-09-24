@@ -148,3 +148,14 @@ def test_claim_human_flag_prints_once(tmp_path, monkeypatch):
         monkeypatch.setattr("sys.stdout", out)
         assert ni.main(["--project-dir", str(root), "--claim-human"]) == 0
         assert bool(out.getvalue().strip()) is expected
+
+
+def test_doing_what_the_item_asks_resets_the_ladder(tmp_path, monkeypatch):
+    """v0.250.2, E2E run 21: an L3 assessed in session 1 was escalated as unanswered in session 3
+    because new evidence brought the same item back. Assessing the diamond answers the item."""
+    prev = {"id": "unassessed:l3-x", "session": "s2", "emitted_at": "2026-09-25", "shown": 2,
+            "first_shown": "2026-09-24", "first_shown_at": "2026-09-24T09:00:00+00:00"}
+    later = {"id": "unassessed:l3-x", "assessed_at": "2026-09-24T19:29:00+00:00"}
+    assert ni.carry(tmp_path, prev, later, "s3", "2026-09-26") == (1, "2026-09-26")
+    before = {"id": "unassessed:l3-x", "assessed_at": "2026-09-24T08:00:00+00:00"}
+    assert ni.carry(tmp_path, prev, before, "s3", "2026-09-26") == (3, "2026-09-24")

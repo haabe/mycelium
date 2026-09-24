@@ -113,7 +113,7 @@ def test_the_recorder_runs_from_the_hook_payload(tmp_path, monkeypatch):
         {"session_id": "s1", "tool_input": {"file_path": str(active)}})))
     assert dr.main() == 0
     rec = dr.load(root)
-    assert rec["l3-x"]["session"] == "s1" and rec["l3-x"]["ts"]  # never ruled: first sight is now
+    assert rec["l3-x"]["session"] == "s1" and rec["l3-x"]["ts"] is None  # first sight: no time
 
 
 def test_the_recorder_ignores_other_payloads(tmp_path, monkeypatch):
@@ -138,3 +138,14 @@ def test_an_unchanged_diamond_keeps_its_recorded_time(tmp_path):
     _rule(root, NOW)
     again = dr.record(root, "s-later", now=(NOW + dt.timedelta(days=3)).isoformat())
     assert again["l3-x"]["ts"] == NOW.isoformat() and again["l3-x"]["session"] == "s-rule"
+
+
+def test_a_never_assessed_diamond_stays_never_assessed_after_the_recorder_sees_it(tmp_path):
+    """v0.250.2: 0.250.0 stamped first sight as an assessment, which hid a never-ruled diamond."""
+    (tmp_path / ".claude" / "diamonds").mkdir(parents=True)
+    (tmp_path / ".claude" / "diamonds" / "active.yml").write_text(
+        "active_diamonds:\n  - id: l0-x\n    scale: L0\n    phase: discover\n")
+    dr.record(tmp_path, "s1", now=NOW.isoformat())
+    items = ni._unassessed(tmp_path, "2026-09-24")
+    assert [i["diamond"] for i in items] == ["l0-x"]
+    assert "has never been assessed" in items[0]["text"]

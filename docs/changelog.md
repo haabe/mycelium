@@ -4,6 +4,22 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.250.2 - doing what the item asks answers it
+
+**2026-09-24.** E2E run 21 (0.250.1) escalated `unassessed:dia-004` as "unanswered for 3 sessions"
+in session 3, although that L3 had been assessed and moved discover -> develop in session 1. New
+evidence brought the same item back, and the ladder counted on, because only a ledger ruling reset it.
+A false escalation is the cry-wolf the ladder was built to avoid. Reading the run's state found a
+second defect: `diamond_rulings.py` stamped a diamond's first sighting as an assessment, so a
+never-ruled diamond read "last assessed <date>" and was not proposed until evidence landed after it.
+
+- **The ladder resets when the item's action is done.** A diamond-assessment item carries
+  `assessed_at` (the recorded machine time); if it is later than the state's new `first_shown_at`
+  (a timestamp, not a day), the count starts again.
+- **First sight is not an assessment.** The recorder stores `ts: null` for every diamond it first
+  sees; a time is recorded only when the phase, ruling date or history changes.
+- Pinned by `tests/python/test_next_item_ladder.py` and `tests/python/test_ruling_clock.py`.
+
 ## v0.250.1 - once per sitting
 
 **2026-09-24.** E2E run 20, the first run whose simulated founder saw what Mycelium shows a human,
