@@ -105,3 +105,63 @@ def test_privacy_check_names_the_processors_field():
     text = (PLUGIN / "skills" / "privacy-check" / "SKILL.md").read_text(encoding="utf-8")
     assert "`processors`" in text
     assert "A reassessment updates these same fields; it does not add a new block." in text
+
+
+# In-process tests: the per-file coverage floor counts only what runs inside pytest's own process.
+import importlib.util as _ilu  # noqa: E402
+import io  # noqa: E402
+
+_spec = _ilu.spec_from_file_location("canvas_write_check", PLUGIN / "scripts" / "canvas_write_check.py")
+cwc = _ilu.module_from_spec(_spec)
+_spec.loader.exec_module(cwc)
+
+
+def _main(monkeypatch, payload) -> str:
+    monkeypatch.setattr("sys.stdin", io.StringIO(payload if isinstance(payload, str)
+                                                 else json.dumps(payload)))
+    out = io.StringIO()
+    monkeypatch.setattr("sys.stdout", out)
+    assert cwc.main() == 0
+    return out.getvalue().strip()
+
+
+def test_in_process_invalid_file_blocks(tmp_path, monkeypatch):
+    _write(tmp_path, "canvas/privacy-assessment.yml", "reassessment: {}\n")
+    got = _main(monkeypatch, {"tool_input": {"file_path": str(tmp_path / ".claude/canvas/privacy-assessment.yml")}})
+    assert json.loads(got)["decision"] == "block"
+
+
+def test_in_process_many_errors_are_capped(tmp_path, monkeypatch):
+    keys = "".join(f"k{i}: 1\n" for i in range(12))
+    _write(tmp_path, "diamonds/active.yml", "active_diamonds:\n" + "".join(
+        f"  - id: d{i}\n    scale: L9\n    phase: nowhere\n" for i in range(6)) + keys)
+    got = json.loads(_main(monkeypatch, {"tool_input": {"file_path": str(tmp_path / ".claude/diamonds/active.yml")}}))
+    assert "more" in got["reason"]
+
+
+def test_in_process_ignores_bad_input_and_other_paths(tmp_path, monkeypatch):
+    assert _main(monkeypatch, "not json") == ""
+    assert _main(monkeypatch, "[]") == ""
+    assert _main(monkeypatch, {"tool_input": {}}) == ""
+    assert _main(monkeypatch, {"tool_input": {"file_path": "notes.md"}}) == ""
+    assert _main(monkeypatch, {"tool_input": {"file_path": str(tmp_path / ".claude/canvas/gone.yml")}}) == ""
+
+
+def test_relative_paths_resolve_against_the_project(tmp_path, monkeypatch):
+    monkeypatch.setenv("CLAUDE_PROJECT_DIR", str(tmp_path))
+    assert cwc._target({"tool_input": {"file_path": ".claude/canvas/x.yml"}}) == tmp_path / ".claude/canvas/x.yml"
+
+
+def test_missing_dependencies_are_said_once_per_session(tmp_path, monkeypatch):
+    _write(tmp_path, "canvas/purpose.yml", "why: x\n")
+    monkeypatch.setattr(cwc, "_load_validator", lambda: (None, "missing jsonschema"))
+    payload = {"session_id": "s9", "tool_input": {"file_path": str(tmp_path / ".claude/canvas/purpose.yml")}}
+    first = json.loads(_main(monkeypatch, payload))
+    assert "did not run" in first["hookSpecificOutput"]["additionalContext"]
+    assert _main(monkeypatch, payload) == ""  # the same session is not told twice
+    assert cwc._said_once(tmp_path, "") is False  # no session id: every write is its own session
+
+
+def test_the_validator_loads_or_says_why():
+    mod, why = cwc._load_validator()
+    assert (mod is not None and why == "") or why.startswith("missing")

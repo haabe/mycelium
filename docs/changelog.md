@@ -4,7 +4,7 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
-## v0.250.0 - a canvas write is checked as it lands
+## v0.250.0 - a canvas write is checked as it lands; an unanswered next item escalates
 
 **2026-09-24.** E2E run 19 (happy path, plugin 0.249.0) wrote `privacy-assessment.yml` with a root
 `reassessment:` block that the schema rejects. The post-write nudge had said "Schema exists ...
@@ -22,6 +22,32 @@ and the reassessment had just found an SMS provider keeping message bodies for 6
   agreement, per GDPR Art. 28 and 30. `/privacy-check` names it, and says a reassessment updates these
   fields rather than adding a block.
 - Pinned by `tests/python/test_canvas_write_check.py`.
+
+**The next item that nobody answered.** In the same run the agent had the same next item in its
+context for 16 sessions and never acted, and the human line said the same words every session:
+`next-item.json` was rewritten from scratch at each start, so nothing counted and nothing escalated.
+Separately, the delivering L3 was never proposed at all, because "evidence since the last ruling"
+compared a date the agent types with file times, to the day.
+
+- **One clock.** `scripts/diamond_rulings.py`, run from `diamond-state-audit.sh`, records the machine
+  time at which a diamond's phase, ruling date or history changed, and the session that changed it.
+  `next_item.py` compares file times with that, to the second, and ignores files the ruling session
+  wrote itself. The typed date is the fallback only when there is no record. Same-day evidence after a
+  ruling now counts, and a typed date ahead of the clock no longer silences a diamond.
+- **A ladder that stops on any answer.** The item's state now carries `shown` (sessions) and
+  `first_shown`; any ledger ruling on the id resets them. From the third unanswered session
+  (`ESCALATE_AT`), the human line says how long and how often it has gone unanswered and asks for a
+  decision, including "drop if the item is wrong"; and the agent gets it once per session at the first
+  prompt (`preflight.sh`, `next_item.py --prompt-line`), beside the request rather than at the top of
+  a long context. Nothing blocks, nothing repeats per turn.
+- **Response is recorded.** When an item leaves, `.claude/state/next-item-log.jsonl` gets its id, how
+  many sessions it was shown and whether it was ruled, so the threshold can be tuned on response rate.
+- **Sources** (in `next_item.py`): Anderson et al. CHI 2015 and Ancker et al. 2017 (identical repeats
+  decay after the second), PagerDuty escalation policies (stop on acknowledgement), Bravo-Lillo et al.
+  SOUPS 2014 and Strom et al. 2010 (require a choice, never a hard stop), Iqbal & Bailey CHI 2008
+  (boundaries), Liu et al. TACL 2024 (placement in long context). The agent rung is a hypothesis: no
+  study covers an LLM ranking a recurring line, and the E2E harness is where it is measured.
+- Pinned by `tests/python/test_ruling_clock.py` and `tests/python/test_next_item_ladder.py`.
 
 ## v0.249.0 - the next item moves the ladder
 

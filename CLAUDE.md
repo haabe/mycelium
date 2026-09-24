@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.250.0 -- **A canvas write is checked as it lands** (MINOR). A new PostToolUse hook runs the schema on each canvas or diamonds file right after it is written and hands the exact errors to the agent in the same turn; before, a reminder to run the validator was all it got, and E2E run 19 left an invalid privacy-assessment.yml standing. The privacy schema gains `processors`, the home for the "who receives it, where is it stored" answers /privacy-check asks for. Prior: 0.249.0 the next item moves the ladder.*
+*Version 0.250.0 -- **A canvas write is checked as it lands; an unanswered next item escalates** (MINOR). A PostToolUse hook runs the schema on each canvas or diamonds file as it is written and names the errors to the agent in the same turn; the privacy schema gains `processors`. The next item now counts the sessions it has gone unanswered, and from the third asks the human for a decision and reaches the agent beside its first request, resetting on any ruling; "evidence since the last assessment" is judged on the machine clock, to the second. Both found by E2E run 19. Prior: 0.249.0 the next item moves the ladder.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 
