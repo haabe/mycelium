@@ -117,6 +117,21 @@ def test_bash_absolute_path_and_cd_are_followed(tmp_path):
     assert [t.rel for t in scan.targets] == [".claude/engine/foo.md"]
 
 
+def test_a_cd_outside_the_project_keeps_later_paths_outside(tmp_path):
+    """v0.251.0: the sentinel `__outside__` was joined into later paths as a folder name, so an edit
+    in another repo became a nonexistent in-project file and the delivery gate refused it."""
+    m = _m()
+    proj, other = tmp_path / "proj", tmp_path / "other"
+    (proj / ".claude").mkdir(parents=True)
+    (other / "tests").mkdir(parents=True)
+    (other / "tests" / "x.py").write_text("x = 1\n")
+    scan = m.bash_write_targets(f"cd {other} && sed -i '' 's/1/2/' tests/x.py", str(proj))
+    assert scan.targets and all(not t.inside for t in scan.targets)
+    assert all("__outside__" not in t.given for t in scan.targets)
+    scan = m.bash_write_targets(f"cd {other} && cd tests && echo y > x.py", str(proj))
+    assert scan.targets and all(not t.inside for t in scan.targets)
+
+
 def test_bash_variable_targets_are_opaque_not_ignored(tmp_path):
     m = _m()
     scan = m.bash_write_targets("f=CLAUDE.md; echo x > $f", str(tmp_path))

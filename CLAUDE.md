@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.250.2 -- **Doing what the item asks answers it** (PATCH). The next-item ladder now resets when the item's own action was taken after it was first shown (a diamond assessed), not only on a written ruling, and a diamond the ruling recorder merely saw is no longer treated as assessed. E2E run 21 escalated an L3 that had been moved to develop two sessions earlier. Prior: 0.250.1 once per sitting.*
+*Version 0.251.0 -- **One item for the ladder, and only new evidence moves it** (MINOR). Diamond-assessment proposals now arrive as ONE next item listing every diamond that could move, delivering diamonds first, so one ruling covers them; a diamond is re-proposed only when evidence was ADDED since its last assessment (research notes plus canvas evidence sources, counted), not on any canvas edit; and a snooze can run until you ask. E2E run 21: the per-diamond item fired on every edit, the human snoozed all four in turn, and the L3 move go-live needed was buried with them. Prior: 0.250.2 doing what the item asks answers it.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

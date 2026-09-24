@@ -238,7 +238,11 @@ def _cd_target(seg: str, cwd_rel: str, project_dir: str) -> str | None:
     d = _unquote(m.group("dir"))
     if os.path.isabs(d):
         r = resolve(d, project_dir)
-        return r.rel or "" if r.inside else "__outside__"
+        # Outside the project: keep the ABSOLUTE directory, so what follows resolves outside and is
+        # skipped. v0.251.0: the sentinel "__outside__" was joined into later paths as a folder
+        # name, so `cd /other/repo && sed -i ... tests/x.py` became the in-project, nonexistent
+        # `__outside__/tests/x.py`, and the delivery gate refused it as a new source file.
+        return r.rel or "" if r.inside else r.real
     return os.path.normpath(os.path.join(cwd_rel, d)) if cwd_rel else d
 
 

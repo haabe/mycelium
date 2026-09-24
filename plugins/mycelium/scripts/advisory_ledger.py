@@ -327,7 +327,9 @@ def settle(root: Path, session: str, text: str, today: str) -> tuple[str, list[d
         if x["ruling"] == "drop":
             replacements[aid] = ""
             continue
-        if x.get("snoozed_until") and str(x["snoozed_until"]) >= today:
+        su = x.get("snoozed_until")
+        # "asked" (v0.251.0): until the human rules again; the report below still lists it
+        if su and (su == "asked" or str(su) >= today):
             replacements[aid] = ""  # snoozed: silent until the date; the report still counts it
             continue
         if x["muted_since"] is None and len(x["streak_days"]) >= MUTE_DAYS:
@@ -356,6 +358,8 @@ def settle(root: Path, session: str, text: str, today: str) -> tuple[str, list[d
 
 
 def _snoozed_label(x: dict) -> str:
+    if x.get("snoozed_until") == "asked":
+        return "snoozed until you ask"
     return f"snoozed until {x['snoozed_until']}" if x.get("snoozed_until") else "-"
 
 
@@ -404,7 +408,7 @@ def rule(  # noqa: PLR0913, PLR0917 — a CLI verb with one argument per flag
     if ruling not in RULINGS:
         return f"advisory ledger: ruling must be one of {', '.join(RULINGS)}"
     if ruling == "snooze" and not until:
-        return "advisory ledger: snooze needs --until YYYY-MM-DD"
+        return "advisory ledger: snooze needs --until YYYY-MM-DD or --until asked"
     ev = {"kind": "ruled", "id": aid, "date": today, "ruling": ruling, "note": note}
     if until:
         ev["until"] = until
@@ -427,7 +431,8 @@ def main(argv=None) -> int:
     ap.add_argument("--id", default="")
     ap.add_argument("--ruling", default="")
     ap.add_argument("--note", default="")
-    ap.add_argument("--until", default="", help="for --ruling snooze: silent until this date")
+    ap.add_argument("--until", default="",
+                    help="for --ruling snooze: silent until this date, or `asked` (until you rule)")
     args = ap.parse_args(argv)
     root = args.project_dir.resolve()
 
