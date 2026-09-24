@@ -145,7 +145,20 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
      - gate: <which gate or threshold>  # omit entirely when progressed
        reason: <why it did not clear, in your own words>
        unblocked_by: <the skill or evidence that would clear it>
+   progression_history:                 # APPEND one entry per transition, when progressed (v0.248.0)
+     - transition: "define -> develop"  # one entry for EACH transition crossed; two for a two-step move
+       date: <YYYY-MM-DD>
+       ruling: progressed
+       gates: {evidence: pass, privacy: pass-with-risk, ...}   # the statuses this move relied on
    ```
+
+   **Move the phase, record the gates and append the history IN THE SAME WRITE (v0.248.0).** The
+   scale-lock gate refuses a write that moves a diamond forward unless, for every transition it
+   crosses, the matrix's required gates are passed in `theory_gates_status` (Security and Privacy
+   backed by a threat model and a privacy assessment on the canvas) and `progression_history` has an
+   entry for that transition. E2E runs 12, 14 and 16 moved diamonds forward leaving the history
+   empty, so the record showed where a diamond ended up and never how; run 14 moved one to develop
+   with its evidence gate still pending. Moving back, parking and killing are not judged.
 
    **`last_progressed` HAS NO OTHER WRITER, AND A THEORY GATE READS IT (added 2026-09-20).** Set it
    whenever the ruling is `progressed`. Until now nothing in the plugin wrote this field — it

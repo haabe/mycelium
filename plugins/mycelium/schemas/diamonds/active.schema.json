@@ -253,6 +253,14 @@
             }
           }
         },
+        "progression_history": {
+          "type": "array",
+          "description": "One entry per transition crossed, appended by /mycelium:diamond-progress (v0.248.0): `transition` (\"define -> develop\") or `from`/`to`, `date`, `ruling`, and the gate statuses relied on. The scale-lock gate refuses a forward phase move without one for each transition it crosses.",
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
         "pmf": {
           "$ref": "#/$defs/pmf"
         },
