@@ -8,6 +8,7 @@
 set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/_assert.sh"
+source "$SCRIPT_DIR/_ladder.sh"
 
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 GATE="$REPO_ROOT/plugins/mycelium/hooks/discovery-gate.sh"
@@ -33,13 +34,15 @@ make_cold_project() {
     echo "$tmp"
 }
 
-# A project whose entry-lock chain holds up to L3 (v0.245.0): purpose, desired outcome, and an
-# opportunity with anecdotal evidence carrying sol-001.
+# A project whose entry-lock chain holds up to L3 (v0.245.0; the full ladder since 0.247.0, see
+# _ladder.sh): purpose, strategy, a desired outcome naming its North Star, and an opportunity with
+# anecdotal evidence carrying sol-001.
 make_chained_project() {
     local tmp; tmp=$(make_cold_project)
+    write_ladder "$tmp"
     printf 'why: "Swaps are approved in one place so nobody relays them"\nwho:\n  description: "Shift leads at cafes"\n' \
         > "$tmp/.claude/canvas/purpose.yml"
-    printf 'desired_outcome:\n  metric: "swaps approved without a phone call"\nopportunities:\n  - id: opp-001\n    name: "Approver is off"\n    provenance:\n      evidence_type: anecdotal\n      evidence_sources: [founder story]\n    solutions:\n      - id: sol-001\n' \
+    printf 'desired_outcome:\n  metric: "swaps approved without a phone call"\n%s\nopportunities:\n  - id: opp-001\n    name: "Approver is off"\n    provenance:\n      evidence_type: anecdotal\n      evidence_sources: [founder story]\n    solutions:\n      - id: sol-001\n' "$OUTCOME_LINK" \
         > "$tmp/.claude/canvas/opportunities.yml"
     echo "$tmp"
 }
@@ -61,8 +64,9 @@ test_bad_path_blocks_new_source_on_cold_project() {
 
 test_happy_path_chained_l3_allows() {
     local p; p=$(make_chained_project)
-    printf 'active_diamonds:\n  - id: d-001\n    scale: L3\n    phase: develop\n    object_ref: sol-001\n    theory_gates_status: {four_risks: pass, privacy: pass}\n' \
-        > "$p/.claude/diamonds/active.yml"
+    { printf 'active_diamonds:\n'; ladder_diamonds opp-001
+      printf '  - id: d-001\n    scale: L3\n    phase: develop\n    object_ref: sol-001\n    theory_gates_status: %s\n' "$BUILD_GATES"
+    } > "$p/.claude/diamonds/active.yml"
     local code; code=$(run_gate "$p" "$(write_json "$p/app/export.py")")
     assert_eq "$code" "0" "an open L3 whose chain holds -> new source allowed"
     rm -rf "$p"
@@ -119,8 +123,9 @@ test_completed_l3_only_blocks() {
 test_open_l4_allows() {
     local p; p=$(make_chained_project)
     # The L3 has completed; its L4 carries the build. Parent is named, as /preflight writes it.
-    printf 'active_diamonds:\n  - id: d-003\n    scale: L3\n    phase: complete\n    object_ref: sol-001\n    evidence_type: data-supported\n  - id: d-004\n    scale: L4\n    phase: develop\n    parent: d-003\n    theory_gates_status: {four_risks: pass, privacy: pass}\n' \
-        > "$p/.claude/diamonds/active.yml"
+    { printf 'active_diamonds:\n'; ladder_diamonds opp-001
+      printf '  - id: d-003\n    scale: L3\n    phase: complete\n    object_ref: sol-001\n    evidence_type: data-supported\n  - id: d-004\n    scale: L4\n    phase: develop\n    parent: d-003\n    theory_gates_status: %s\n' "$BUILD_GATES"
+    } > "$p/.claude/diamonds/active.yml"
     local code; code=$(run_gate "$p" "$(write_json "$p/app/rollout.py")")
     assert_eq "$code" "0" "an open L4 on an L3 at medium confidence -> allowed"
     rm -rf "$p"

@@ -9,6 +9,7 @@
 set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/_assert.sh"
+source "$SCRIPT_DIR/_ladder.sh"
 
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 GATE="$REPO_ROOT/plugins/mycelium/hooks/exposure-gate.sh"
@@ -24,16 +25,18 @@ run_gate() {  # <project_dir> <command> -> exit code; stderr in $ERR
 make_project() {  # <phase> <gates yaml flow map>
     local p; p=$(mktemp -d)
     mkdir -p "$p/.claude/diamonds" "$p/.claude/canvas" "$p/.claude/state"
+    write_ladder "$p"
     printf 'why: "Swaps are approved in one place so nobody relays them"\nwho:\n  description: "Shift leads"\n' \
         > "$p/.claude/canvas/purpose.yml"
-    printf 'desired_outcome:\n  metric: "swaps recorded in the app"\nopportunities:\n  - id: opp-001\n    name: "Approver away"\n    provenance:\n      evidence_type: anecdotal\n      evidence_sources: [research/pilot.md]\n    solutions:\n      - id: sol-001\n' \
+    printf 'desired_outcome:\n  metric: "swaps recorded in the app"\n%s\nopportunities:\n  - id: opp-001\n    name: "Approver away"\n    provenance:\n      evidence_type: anecdotal\n      evidence_sources: [research/pilot.md]\n    solutions:\n      - id: sol-001\n' "$OUTCOME_LINK" \
         > "$p/.claude/canvas/opportunities.yml"
-    printf 'active_diamonds:\n  - id: l3-a\n    scale: L3\n    phase: %s\n    object_ref: sol-001\n    theory_gates_status: %s\n' "$1" "$2" \
-        > "$p/.claude/diamonds/active.yml"
+    { printf 'active_diamonds:\n'; ladder_diamonds opp-001
+      printf '  - id: l3-a\n    scale: L3\n    phase: %s\n    object_ref: sol-001\n    theory_gates_status: %s\n' "$1" "$2"
+    } > "$p/.claude/diamonds/active.yml"
     echo "$p"
 }
 
-READY='{four_risks: pass, privacy: pass, security: pass, service_quality: pass-with-risk}'
+READY="$EXPOSE_GATES"
 
 test_deploy_under_define_blocks() {
     local p; p=$(make_project define '{evidence: pending}')

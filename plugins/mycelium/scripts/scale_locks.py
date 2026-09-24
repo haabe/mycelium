@@ -27,9 +27,10 @@ levels on a score (Torres p35 and p101, Wardley p32: the levels are worked toget
 other), and Gilad's only thresholds are on ideas (launch at medium confidence or above, ICE Done
 Right p14; medium-high before delivery for most ideas, Evidence-Guided p158-159).
 
-  L1  a stated purpose: purpose.yml `why` (three words or more) and who it is for (`who`).
-  L2  the L1 lock, plus a desired outcome, the root of the opportunity tree (Torres p27, p44-47):
-      opportunities.yml `desired_outcome` (`.metric`, or a line) or a `desired_outcomes[].metric`.
+  L1  a live L0 and a stated purpose: purpose.yml `why` (three words or more) and `who`.
+  L2  the L1 lock, plus a strategy (v0.247.0: a live L1 diamond on its decision, a North Star in
+      north-star.yml, the landscape in landscape.yml) and a desired outcome derived from it:
+      opportunities.yml `desired_outcome.metric` naming the North Star (Torres p27, p44-47).
   L3  the L2 lock, plus a chosen target opportunity with evidence behind it: the diamond's
       `object_ref` (or its L2 parent's) resolves to an opportunity with an evidence type above
       speculation AND a source it came from; at entry it must also be open, and name its root when
@@ -70,20 +71,45 @@ CLOSED = {"complete", "completed", "killed", "parked", "archived"}
 DEAD = {"killed", "archived"}
 MEDIUM_OR_BETTER = {"data-supported", "test-validated", "launch-validated"}
 PASSED = {"pass", "passed", "pass-with-risk"}
-#: PHASE FOLLOWS THE WORK (v0.246.0). The gates the matrix requires on the way INTO the phase that
-#: carries each kind of work (engine/theory-gates.md, Scale x Transition). Code is built in Develop,
-#: behind Define->Develop: Four Risks, and Privacy, i.e. privacy by design. Real people meet it in
-#: Deliver, behind Develop->Deliver: Security, Privacy and Service Quality. L5 carries neither Four
-#: Risks nor Privacy in the matrix, and Security at Develop->Deliver.
-_BUILD = ("four_risks", "privacy")
-_EXPOSE = ("four_risks", "privacy", "security", "service_quality")
+NOT_APPLICABLE = {"n/a", "not-applicable"}
+#: PHASE FOLLOWS THE WORK (v0.246.0; full gate sets v0.247.0). The gates the matrix REQUIRES on each
+#: transition, per delivering scale (engine/theory-gates.md, "Summary of which gates apply to which
+#: transitions"; NUDGE rows excluded). 0.246.0 read two of them, and E2E run 11 wrote a new L3
+#: straight into develop with exactly those two marked passed and four others pending.
+_DIS_DEF = {"L3": ("evidence", "jtbd", "bias", "corrections"),
+            "L4": ("evidence", "bias", "corrections"), "L5": ("evidence", "bias", "corrections")}
+_DEF_DEV = {"L3": ("evidence", "four_risks", "jtbd", "cynefin", "bias", "privacy", "corrections",
+                   "regulatory"),
+            "L4": ("evidence", "four_risks", "cynefin", "bias", "privacy", "corrections",
+                   "regulatory"),
+            "L5": ("evidence", "cynefin", "bias", "corrections", "regulatory")}
+_DEV_DEL = {"L3": ("evidence", "four_risks", "bias", "security", "privacy", "service_quality",
+                   "corrections", "regulatory"),
+            "L4": ("evidence", "four_risks", "bias", "security", "privacy", "service_quality",
+                   "corrections", "regulatory"),
+            "L5": ("evidence", "bias", "security", "corrections", "regulatory")}
+
+
+def _union(*maps) -> dict[str, tuple[str, ...]]:
+    return {s: tuple(dict.fromkeys(g for m in maps for g in m.get(s, ()))) for s in DELIVERY_SCALES}
+
+
 STAGES = {
-    "build": ({"develop", "deliver"}, {"L3": _BUILD, "L4": _BUILD, "L5": ()},
-              "code is built in Develop, after Define->Develop has passed Four Risks and Privacy"),
-    "expose": ({"deliver"}, {"L3": _EXPOSE, "L4": _EXPOSE, "L5": ("security",)},
-               ("real people meet it in Deliver, after Develop->Deliver has passed Security, "
-                "Privacy and Service Quality")),
+    "build": ({"develop", "deliver"}, _union(_DIS_DEF, _DEF_DEV),
+              ("code is built in Develop, after Discover->Define and Define->Develop have passed "
+               "their gates (Four Risks and Privacy among them)")),
+    "expose": ({"deliver"}, _union(_DIS_DEF, _DEF_DEV, _DEV_DEL),
+               ("real people meet it in Deliver, after Develop->Deliver has passed its gates "
+                "(Security, Privacy and Service Quality among them)")),
 }
+#: The two safety gates count as passed only with their record on the canvas (v0.247.0): a status
+#: word can be written without the work, and a threat model or a privacy assessment cannot.
+SAFETY_RECORD = {
+    "security": "a threat model: canvas/threat-model.yml `threats` (/mycelium:threat-model)",
+    "privacy": ("a privacy assessment: canvas/privacy-assessment.yml `last_assessed` and "
+                "`data_inventory` (/mycelium:privacy-check)"),
+}
+_NORTH_STAR_LINKS = ("north_star_input_ref", "north_star_ref", "north_star", "serves")
 #: Commands that put something in front of real people. Narrow on purpose: a deploy CLI's deploy
 #: verb, a package publish, or a remote shell/copy that pulls, restarts or syncs onto a host.
 _DEPLOY = re.compile(
@@ -211,6 +237,20 @@ class State:
         _require_yaml()
         self.purpose = _as_dict(_load(project_dir, "canvas", "purpose.yml"))
         self.opps_doc = _as_dict(_load(project_dir, "canvas", "opportunities.yml"))
+        north = _as_dict(_load(project_dir, "canvas", "north-star.yml"))
+        land = _as_dict(_load(project_dir, "canvas", "landscape.yml"))
+        threats = _as_dict(_load(project_dir, "canvas", "threat-model.yml"))
+        priv = _as_dict(_load(project_dir, "canvas", "privacy-assessment.yml"))
+        self.has_north_star = _filled(north.get("metric"))
+        self.has_landscape = any(_filled(_as_dict(c).get("name"))
+                                 for c in _as_list(land.get("components")))
+        self.records = {
+            "security": any(_filled(_as_dict(t).get("description"))
+                            for t in _as_list(threats.get("threats"))),
+            "privacy": _filled(priv.get("last_assessed")) and (
+                _filled(priv.get("data_inventory"))
+                or _filled(priv.get("data_minimization_check"))),
+        }
         if diamonds_doc is None:
             diamonds_doc = _load(project_dir, "diamonds", "active.yml") or {}
         if not isinstance(diamonds_doc, dict):
@@ -246,10 +286,40 @@ class State:
         return many + ([one] if isinstance(one, dict) else [])
 
     def outcome_missing(self) -> list[str]:
-        if any(_filled(r.get("metric")) for r in self.roots()):
-            return []
-        return [("a desired outcome, the root of the opportunity tree: canvas/opportunities.yml "
-                 "`desired_outcome.metric` (Torres; /mycelium:ost-builder)")]
+        roots = [r for r in self.roots() if _filled(r.get("metric"))]
+        if not roots:
+            return [("a desired outcome, the root of the opportunity tree: "
+                     "canvas/opportunities.yml `desired_outcome.metric` "
+                     "(Torres; /mycelium:ost-builder)")]
+        if not any(_filled(r.get(k)) for r in roots for k in _NORTH_STAR_LINKS):
+            return [("the desired outcome naming the North Star it serves: "
+                     "`desired_outcome.north_star_input_ref` (Torres: the outcome is derived from "
+                     "strategic intent, not set at the tree root)")]
+        return []
+
+    def live(self, scale: str) -> list[dict]:
+        return [d for d in self.by_id.values() if _scale(d) == scale and self._alive(d)]
+
+    def l0_missing(self) -> list[str]:
+        miss = self.purpose_missing()
+        if not self.live("L0"):
+            miss.append("a live L0 (purpose) diamond (/mycelium:start)")
+        return miss
+
+    def strategy_missing(self) -> list[str]:
+        """L1's artefacts, which an L2 builds on (v0.247.0). Founder, 2026-09-24: "How can a product
+        exist without a strategy? It makes no sense." Until then L2 opened on a desired outcome that
+        lives in L2's own file, so L1 was never needed and never opened in any E2E run."""
+        miss = []
+        if not any(_filled(d.get("object_ref")) for d in self.live("L1")):
+            miss.append("a live L1 (strategy) diamond on its strategic decision, `object_ref` "
+                        "naming the decision (/mycelium:wardley-map step 9)")
+        if not self.has_north_star:
+            miss.append("a North Star: canvas/north-star.yml `metric` (Gilad: goals before ideas)")
+        if not self.has_landscape:
+            miss.append("the landscape the strategy chooses against: canvas/landscape.yml "
+                        "`components` (Wardley: purpose, landscape, then choice)")
+        return miss
 
     def opportunities(self) -> list[dict]:
         out, stack = [], list(_as_list(self.opps_doc.get("opportunities")))
@@ -295,8 +365,8 @@ class State:
             return [f"{did}: its parent chain loops back on itself"]
         check = {
             "L0": lambda *_: [],
-            "L1": lambda *_: self.purpose_missing(),
-            "L2": lambda *_: self.purpose_missing() + self.outcome_missing(),
+            "L1": lambda *_: self.l0_missing(),
+            "L2": lambda *_: self.l0_missing() + self.strategy_missing() + self.outcome_missing(),
             "L3": self._l3_missing, "L4": self._l4_missing, "L5": self._l5_missing,
         }.get(scale)
         if check is None:
@@ -304,7 +374,7 @@ class State:
         return check(d, entry, _seen | {did})
 
     def _l3_missing(self, d: dict, entry: bool, _seen: frozenset) -> list[str]:
-        miss = self.purpose_missing() + self.outcome_missing()
+        miss = self.l0_missing() + self.strategy_missing() + self.outcome_missing()
         did = str(d.get("id", "?"))
         opp = self.find_opportunity(d.get("object_ref"))
         if opp is None:
@@ -315,7 +385,7 @@ class State:
                         "opportunity or solution id in canvas/opportunities.yml)")
             return miss
         oid = opp.get("id", opp.get("name", "?"))
-        miss += self._evidence_missing(opp, oid)
+        miss += self._evidence_missing(opp, oid) + self._l2_missing(d, opp, oid)
         status = str(opp.get("status", "")).lower()
         if entry and status in CLOSED_OPPORTUNITY:
             miss.append(f"{oid}: an open opportunity (it is `{status}`)")
@@ -324,6 +394,15 @@ class State:
                 str(r["id"]) for r in roots}:
             miss.append(f"{oid}: `rolls_up_to` naming which desired outcome it serves")
         return miss
+
+    def _l2_missing(self, d: dict, opp: dict, oid) -> list[str]:
+        """The opportunity cycle this solution comes out of (v0.247.0, a parent diamond at every
+        rung): the L3's live L2 parent, or a live L2 whose object_ref is the same opportunity."""
+        if self._parent_at(d, "L2") or any(self.find_opportunity(p.get("object_ref")) is opp
+                                           for p in self.live("L2")):
+            return []
+        return [(f"{d.get('id', '?')}: a live L2 diamond on {oid} (`object_ref`), the opportunity "
+                 "cycle this solution comes out of (/mycelium:ost-builder offers it)")]
 
     @staticmethod
     def _evidence_missing(opp: dict, oid) -> list[str]:
@@ -399,8 +478,12 @@ class State:
         status = _as_dict(d.get("theory_gates_status"))
         for g in gates.get(_scale(d), ()):
             v = str(status.get(g) or "not recorded").lower()
-            if v not in PASSED:
+            ok = v in PASSED or (v in NOT_APPLICABLE and g not in SAFETY_RECORD)
+            if not ok:
                 miss.append(f"{did}: the {g} gate passed (theory_gates_status.{g} is `{v}`)")
+            elif g in SAFETY_RECORD and not self.records[g]:
+                miss.append(f"{did}: the {g} gate says `{v}` with no record behind it: "
+                            f"{SAFETY_RECORD[g]}")
         return miss
 
     def verdict(self, d: dict, entry: bool = False) -> tuple[bool, list[str]]:
@@ -550,9 +633,15 @@ def new_diamond_violations(project_dir: str, payload: dict) -> list[str]:
         if was_open.get(str(d.get("id"))) == _scale(d) and _scale(d):
             continue
         ok, miss = st.verdict(d, entry=True)
-        if not ok:
-            out.append(f"{d.get('id')} ({d.get('scale')}) cannot open yet. Its parent has not "
-                       "established:\n    - " + "\n    - ".join(miss))
+        miss = [] if ok else miss
+        phase = str(d.get("phase") or "discover").lower()
+        if phase != "discover":
+            # v0.247.0: E2E run 11 wrote a new L3 straight into develop, so no transition ran.
+            miss.append(f"{d.get('id')}: born in discover (it is written as `{phase}`); later "
+                        "phases are reached through /mycelium:diamond-progress and their gates")
+        if miss:
+            out.append(f"{d.get('id')} ({d.get('scale')}) cannot open yet:\n    - "
+                       + "\n    - ".join(miss))
     return out
 
 
@@ -560,9 +649,10 @@ def new_diamond_violations(project_dir: str, payload: dict) -> list[str]:
 
 _GATE_TAIL = """
 Each scale opens on what its parent has established (engine/diamond-rules.md, Entry locks):
-L1 on a purpose, L2 on a desired outcome, L3 on a target opportunity with evidence, L4 on an L3 at
-medium confidence, L5 on launch data. Produce what is missing, then retry; the lines above say which
-skill does it. Once open, a diamond moves at its own speed.
+L1 on a purpose, L2 on a strategy (an L1 diamond, a North Star, the landscape) and a desired
+outcome, L3 on a target opportunity with evidence in an L2 diamond, L4 on an L3 at medium
+confidence, L5 on launch data. Every diamond is born in discover. Produce what is missing, then
+retry; the lines above say which skill does it. Once open, a diamond moves at its own speed.
 
 Only if the USER explicitly wants this diamond opened anyway, they record it, one line per diamond
 in .claude/state/scale-lock-ack: `<id> <scale> <YYYY-MM-DD> <their own words>`. Do not write that

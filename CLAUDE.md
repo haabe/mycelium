@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.246.0 -- **Phase follows the work** (MINOR). New code needs its delivery cycle in Develop with Four Risks and Privacy passed, and nothing meets real people until it is in Deliver with Security, Privacy and Service Quality passed: a new exposure gate blocks the deploys the agent runs, and operating contract rule 14 covers the ones the user runs. A pilot is not exempt. Prior: 0.245.0 every scale locks on its parent.*
+*Version 0.247.0 -- **A parent diamond at every rung** (MINOR). No scale is skipped: L2 opens only under a live L1 strategy diamond with a North Star and a mapped landscape, L3 only under a live L2 on its opportunity. Every diamond is born in discover; reaching Develop or Deliver needs the matrix's full gate set, and Security and Privacy count only with a threat model and a privacy assessment on record. Prior: 0.246.0 phase follows the work.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

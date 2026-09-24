@@ -4,6 +4,31 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.247.0 - a parent diamond at every rung
+
+**2026-09-24.** Two findings from E2E dogfood run 11, the first on 0.246.0, and one founder question.
+
+- **"How can a product exist without a strategy? It makes no sense."** No E2E run had ever opened an
+  L1. The L2 lock read a desired outcome that lives in L2's own file, so L2 supplied its own parent,
+  and `solo_hobby` projects skipped L1 by rule. **L2 now opens only under a live L1 diamond on its
+  strategic decision, with a North Star (`north-star.yml`) and the landscape it chooses against
+  (`landscape.yml`), and the desired outcome must name the North Star it serves** (Gilad: goals before
+  ideas; Wardley: purpose, landscape, then choice; Torres: the outcome is derived from strategic
+  intent). **L3 opens only under a live L2 on its opportunity.** A parent diamond at every rung; no
+  scale is skipped. A small strategy is still a strategy.
+- **Run 11 wrote a new L3 straight into develop**, with exactly the two gates 0.246.0 read marked
+  `pass-with-risk` and Evidence, JTBD, Cynefin and Bias still pending. The builder's reasoning for the
+  two was real; the transition that should have produced it never ran. **Every diamond is now born in
+  discover** (the scale-lock gate refuses one written later), and **reaching Develop or Deliver needs
+  the matrix's full gate set** for that scale, not a sample. `n/a` counts except for the safety gates.
+- **Security and Privacy need their record, not a status word.** Security counts as passed only with
+  a threat model on the canvas (`threat-model.yml`), Privacy only with a privacy assessment
+  (`privacy-assessment.yml`). A status word can be written without the work; these cannot.
+- The interview's handoff builds the strategy first (North Star, landscape, the where-to-play decision
+  as an L1 diamond), then the outcome, the opportunity with its evidence, its L2, then the L3.
+- Pinned by `tests/python/test_scale_locks.py` (82) and a shared bash fixture, `tests/bash/_ladder.sh`,
+  that the discovery, exposure and adversarial suites build their ladder from.
+
 ## v0.246.0 - phase follows the work
 
 **2026-09-24.** Found by E2E dogfood run 10, the first on 0.245.0's scale locks. The locks held: the

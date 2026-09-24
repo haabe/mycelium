@@ -29,14 +29,22 @@ _spec.loader.exec_module(sl)
 
 PURPOSE = {"why": "Swaps are approved in one place so nobody relays them by hand",
            "who": {"description": "Shift leads at cafes with 2-10 sites"}}
-OUTCOME = {"desired_outcome": {"metric": "share of swaps approved without a phone call"}}
+OUTCOME = {"desired_outcome": {"metric": "share of swaps approved without a phone call",
+                               "north_star_input_ref": "swaps settled in the app per week"}}
+#: The ladder above an L3, present by default so each test states only what it is about (v0.247.0).
+BASE = [{"id": "l0", "scale": "L0", "phase": "define"},
+        {"id": "l1", "scale": "L1", "phase": "develop", "object_ref": "lead with multi-site cafes"},
+        {"id": "l2", "scale": "L2", "phase": "define", "object_ref": "opp-001"}]
 OPP = {"id": "opp-001", "name": "Approver is off", "status": "open",
        "provenance": {"evidence_type": "anecdotal",
                       "evidence_sources": ["founder story: Tom off, three swaps relayed by phone"]},
        "solutions": [{"id": "sol-001", "name": "Backup approver"}]}
 
 
-def _project(tmp_path: Path, purpose=None, opps=None, diamonds=None, ack=None) -> str:
+def _project(tmp_path: Path, purpose=None, opps=None, diamonds=None, ack=None, *,
+             ladder=True, base=None, records=True) -> str:
+    """`ladder` writes the strategy artefacts and the L0/L1/L2 diamonds above an L3 (`base`
+    overrides which); `records` writes a threat model and a privacy assessment."""
     c = tmp_path / ".claude"
     (c / "canvas").mkdir(parents=True, exist_ok=True)
     (c / "diamonds").mkdir(parents=True, exist_ok=True)
@@ -45,7 +53,20 @@ def _project(tmp_path: Path, purpose=None, opps=None, diamonds=None, ack=None) -
         (c / "canvas" / "purpose.yml").write_text(yaml.safe_dump(purpose))
     if opps is not None:
         (c / "canvas" / "opportunities.yml").write_text(yaml.safe_dump(opps))
-    (c / "diamonds" / "active.yml").write_text(yaml.safe_dump({"active_diamonds": diamonds or []}))
+    if ladder:
+        (c / "canvas" / "north-star.yml").write_text(yaml.safe_dump(
+            {"metric": {"name": "swaps settled in the app per week"}}))
+        (c / "canvas" / "landscape.yml").write_text(yaml.safe_dump(
+            {"components": [{"id": "comp-1", "name": "group chat swaps"}]}))
+    if records:
+        (c / "canvas" / "threat-model.yml").write_text(yaml.safe_dump(
+            {"threats": [{"id": "t1", "description": "a guessed link token approves a swap"}]}))
+        (c / "canvas" / "privacy-assessment.yml").write_text(yaml.safe_dump(
+            {"last_assessed": "2026-09-24", "data_inventory": [{"data_type": "phone number"}]}))
+    given = diamonds or []
+    ids = {str(d.get("id")) for d in given}
+    top = [d for d in (BASE if base is None else base) if d["id"] not in ids] if ladder else []
+    (c / "diamonds" / "active.yml").write_text(yaml.safe_dump({"active_diamonds": top + given}))
     if ack is not None:
         (c / "state" / "scale-lock-ack").write_text(ack)
     return str(tmp_path)
@@ -76,7 +97,8 @@ def test_l2_needs_a_desired_outcome(tmp_path):
 
 
 def test_l2_accepts_one_of_several_roots(tmp_path):
-    opps = {"desired_outcomes": [{"id": "adoption", "metric": "weekly active sites"}]}
+    opps = {"desired_outcomes": [{"id": "adoption", "metric": "weekly active sites",
+                                  "north_star_input_ref": "swaps settled in the app"}]}
     assert sl.can_open(_project(tmp_path, purpose=PURPOSE, opps=opps), "L2") == []
 
 
@@ -128,7 +150,9 @@ def test_l3_lock_includes_the_locks_above_it(tmp_path):
 # ---------------------------------------------------------------- L4 and L5
 
 
-BUILD_PASSED = {"four_risks": "pass", "privacy": "pass-with-risk"}
+BUILD_PASSED = dict.fromkeys(("evidence", "jtbd", "bias", "corrections", "four_risks",
+                              "cynefin", "privacy", "regulatory"), "pass")
+BUILD_PASSED["privacy"] = "pass-with-risk"
 EXPOSE_PASSED = {**BUILD_PASSED, "security": "pass", "service_quality": "pass"}
 
 
@@ -213,7 +237,7 @@ def test_the_users_ack_overrides_one_diamond(tmp_path):
     p = _project(tmp_path, purpose=PURPOSE, diamonds=[bare],
                  ack="l3-x L3 2026-09-24 user: prototype now, I will fill the tree after\n")
     assert sl.delivery_state(p)[0]
-    row = sl.report(p)[0][0]
+    row = next(r for r in sl.report(p)[0] if r[0] == "l3-x")
     assert row[3] is True and row[2]  # overridden, and still names what is missing
 
 
@@ -245,7 +269,7 @@ def test_hook_applies_an_edit_before_judging(tmp_path):
     after_tail = "- id: l2-a\n  scale: L2\n  phase: discover\n"
     edit = {"tool_name": "Edit", "tool_input": {
         "file_path": str(tmp_path / ".claude/diamonds/active.yml"),
-        "old_string": before, "new_string": "active_diamonds:\n" + after_tail}}
+        "old_string": before, "new_string": before + after_tail}}
     assert sl.new_diamond_violations(p, edit) == []  # L2 lock holds: purpose + outcome
 
 
@@ -304,8 +328,10 @@ def test_l1_accepts_the_who_the_interview_actually_writes(tmp_path):
 
 
 def test_a_string_desired_outcome_counts(tmp_path):
+    """A one-line outcome is an outcome; it still has to name the North Star it serves."""
     p = _project(tmp_path, purpose=PURPOSE, opps={"desired_outcome": "swaps approved in one place"})
-    assert sl.can_open(p, "L2") == []
+    miss = sl.can_open(p, "L2")
+    assert len(miss) == 1 and "North Star it serves" in miss[0]
 
 
 def test_evidence_needs_a_named_source(tmp_path):
@@ -468,7 +494,8 @@ def test_a_ready_cycle_deploys_and_an_unengaged_project_is_not_judged(tmp_path):
     p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(),
                  diamonds=[_l3(phase="deliver", gates=EXPOSE_PASSED)])
     assert sl.exposure_violation(p, _bash("fly deploy")) is None
-    assert sl.exposure_violation(_project(tmp_path / "bare"), _bash("fly deploy")) is None
+    bare = _project(tmp_path / "bare", ladder=False, records=False)
+    assert sl.exposure_violation(bare, _bash("fly deploy")) is None
 
 
 def test_exposure_hook_blocks_with_the_remedy(tmp_path, monkeypatch, capsys):
@@ -477,3 +504,68 @@ def test_exposure_hook_blocks_with_the_remedy(tmp_path, monkeypatch, capsys):
     assert sl.main(["--project-dir", p, "--exposure-hook"]) == 2
     err = capsys.readouterr().err
     assert "Even" not in err and "/mycelium:threat-model" in err and "delivery-skip-ack" in err
+
+
+# ---------------------------------------------------------------- a parent at every rung (0.247.0)
+
+
+def test_l2_needs_the_strategy_above_it(tmp_path):
+    """Founder, 2026-09-24: "How can a product exist without a strategy? It makes no sense." L2 used
+    to open on a desired outcome that lives in L2's own file, so L1 was never needed."""
+    p = _project(tmp_path, purpose=PURPOSE, opps=OUTCOME, ladder=False)
+    miss = " ".join(sl.can_open(p, "L2"))
+    assert "live L0" in miss and "live L1" in miss and "North Star" in miss and "landscape" in miss
+
+
+def test_an_l1_needs_its_decision_named(tmp_path):
+    base = [BASE[0], {"id": "l1", "scale": "L1", "phase": "discover"}]
+    p = _project(tmp_path, purpose=PURPOSE, opps=OUTCOME, base=base)
+    assert any("live L1" in m for m in sl.can_open(p, "L2"))
+
+
+def test_l3_needs_a_live_l2_on_its_opportunity(tmp_path):
+    p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), base=BASE[:2])
+    assert any("live L2 diamond on opp-001" in m for m in sl.can_open(p, "L3", object_ref="sol-001"))
+    dead = [*BASE[:2], {**BASE[2], "phase": "killed"}]
+    p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), base=dead)
+    assert any("live L2" in m for m in sl.can_open(p, "L3", object_ref="sol-001"))
+
+
+def test_build_needs_the_full_define_develop_set(tmp_path):
+    """Run 11 marked the two gates 0.246.0 read and left evidence, JTBD, Cynefin and Bias pending."""
+    two = {"four_risks": "pass-with-risk", "privacy": "pass-with-risk"}
+    p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), diamonds=[_l3(gates=two)])
+    ok, why = sl.delivery_state(p)
+    assert not ok and "evidence gate passed" in why and "cynefin gate passed" in why
+
+
+def test_a_safety_gate_needs_its_record(tmp_path):
+    p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), diamonds=[_l3()], records=False)
+    ok, why = sl.delivery_state(p)
+    assert not ok and "privacy gate says `pass-with-risk` with no record behind it" in why
+    p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), records=False,
+                 diamonds=[_l3(phase="deliver", gates=EXPOSE_PASSED)])
+    assert "canvas/threat-model.yml" in sl.exposure_state(p)[1]
+
+
+def test_not_applicable_counts_except_for_safety(tmp_path):
+    gates = {**BUILD_PASSED, "regulatory": "n/a"}
+    p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), diamonds=[_l3(gates=gates)])
+    assert sl.delivery_state(p)[0]
+    gates = {**BUILD_PASSED, "privacy": "n/a"}
+    p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), diamonds=[_l3(gates=gates)])
+    assert not sl.delivery_state(p)[0]
+
+
+def test_a_diamond_is_born_in_discover(tmp_path):
+    """Run 11 wrote l3-001 straight into develop: no transition, so no gate, ever ran."""
+    p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps())
+    before = (tmp_path / ".claude/diamonds/active.yml").read_text()
+    born = "- id: l3-n\n  scale: L3\n  phase: develop\n  object_ref: sol-001\n"
+    edit = {"tool_name": "Edit", "tool_input": {
+        "file_path": str(tmp_path / ".claude/diamonds/active.yml"),
+        "old_string": before, "new_string": before + born}}
+    out = sl.new_diamond_violations(p, edit)
+    assert len(out) == 1 and "born in discover" in out[0]
+    edit["tool_input"]["new_string"] = before + born.replace("develop", "discover")
+    assert sl.new_diamond_violations(p, edit) == []
