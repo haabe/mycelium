@@ -98,9 +98,16 @@ edge and L5 diamonds could only be opened by hand.
 you have no release history you have no scale yet, so you cannot categorise, so this does not fire —
 say that rather than borrowing the example's Tier 1.
 
-### Step 1 — check the entry condition before opening anything
+### Step 1 — check the entry lock before opening anything
 
-**L5's entry condition is product/market fit, and it is not reachable before it.** Cagan, in *LOVED*'s
+**The L5 opens on launch data from the shipped L4** (`engine/diamond-rules.md`, Entry locks, v0.245.0;
+Gilad, *Evidence-Guided* p123): usage, feedback, or movement in the target metric, at any n. Write the launch data you
+have on the L4 whose release this is (`launch_data:` with `usage`, `feedback` or `metric_movement`), then
+run `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/scale_locks.py" --can-open L5 --parent <l4-id>`; if it prints what is missing, the L5 waits and the release stays in the L4.
+The lock also re-checks the chain below: an L4 whose L3 never reached medium confidence cannot launch
+into an L5.
+
+**What the L5 works toward is product/market fit.** Cagan, in *LOVED*'s
 foreword: *"the single most important concept in all of product is the concept of product/market
 fit... really the only thing that matters."*
 
@@ -115,9 +122,10 @@ itself needs more substantial development."* His reason for the wording is the i
 
 **THE THRESHOLD IS NOT RUNNABLE BELOW A REAL SAMPLE, AND SAYING SO IS THE HONEST ANSWER.** A
 percentage over four users is not a percentage. State the n you have. If it is too small, record
-`pmf: not-yet-measurable (n=<N>)` and **open the L5 anyway with the gate explicitly unmet** — an L5
-that knows it has no PMF evidence is a true record; a fabricated 40% is not, and manufacturing one to
-clear a gate is the theatre this framework refuses everywhere else.
+`pmf: not-yet-measurable (n=<N>)` — an L5 that knows it has no PMF evidence is a true record; a
+fabricated 40% is not, and manufacturing one is the theatre this framework refuses everywhere else.
+**Not-yet-measurable PMF no longer stands in for the entry lock** (until v0.245.0 the L5 opened "with
+the gate explicitly unmet"): the launch data above is what opens it, and it exists at any n.
 
 **His five follow-up questions are qualitative and work at ANY n**, so they are available immediately
 even when the threshold is not: *"What would you likely use as an alternative to [product] if it were
@@ -138,6 +146,7 @@ Add to `.claude/diamonds/active.yml#active_diamonds`:
   parent: <the L4 diamond this release came from>
   spawned_by: launch-tier
   spawn_trigger: "release categorised as a major launch on this project's own scale"
+  # the entry lock reads `launch_data` on the parent L4 (written in Step 1) or here (Gilad p123)
   pmf:
     instrument: ellis-must-have-survey
     very_disappointed_pct: <N or null>

@@ -45,6 +45,8 @@ GUARD_STATE_REL = (
     ".claude/manifest.yml",
     ".claude/state/active-execution.json",
     ".claude/state/discovery-skip-ack",
+    ".claude/state/delivery-skip-ack",
+    ".claude/state/scale-lock-ack",
     ".claude/state/brownfield-ack",
 )
 _QUOTED_MIN = 2

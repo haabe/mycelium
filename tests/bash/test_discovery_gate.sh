@@ -33,6 +33,17 @@ make_cold_project() {
     echo "$tmp"
 }
 
+# A project whose entry-lock chain holds up to L3 (v0.245.0): purpose, desired outcome, and an
+# opportunity with anecdotal evidence carrying sol-001.
+make_chained_project() {
+    local tmp; tmp=$(make_cold_project)
+    printf 'why: "Swaps are approved in one place so nobody relays them"\nwho:\n  description: "Shift leads at cafes"\n' \
+        > "$tmp/.claude/canvas/purpose.yml"
+    printf 'desired_outcome:\n  metric: "swaps approved without a phone call"\nopportunities:\n  - id: opp-001\n    name: "Approver is off"\n    provenance:\n      evidence_type: anecdotal\n      evidence_sources: [founder story]\n    solutions:\n      - id: sol-001\n' \
+        > "$tmp/.claude/canvas/opportunities.yml"
+    echo "$tmp"
+}
+
 write_json() { # <path>
     printf '{"tool_name":"Write","tool_input":{"file_path":"%s","content":"x"}}' "$1"
 }
@@ -48,21 +59,91 @@ test_bad_path_blocks_new_source_on_cold_project() {
     rm -rf "$p"
 }
 
-test_happy_path_diamond_present_allows() {
-    local p; p=$(make_cold_project)
-    printf 'active_diamonds:\n  - id: d-001\n    scale: L3\n    phase: deliver\n' \
+test_happy_path_chained_l3_allows() {
+    local p; p=$(make_chained_project)
+    printf 'active_diamonds:\n  - id: d-001\n    scale: L3\n    phase: deliver\n    object_ref: sol-001\n' \
         > "$p/.claude/diamonds/active.yml"
     local code; code=$(run_gate "$p" "$(write_json "$p/app/export.py")")
-    assert_eq "$code" "0" "diamond present (any phase) -> new source allowed"
+    assert_eq "$code" "0" "an open L3 whose chain holds -> new source allowed"
     rm -rf "$p"
 }
 
-test_populated_purpose_allows() {
+test_bare_l3_after_start_blocks() {
+    # v0.245.0: /mycelium:start leaves a purpose and nothing else; an L3 opened straight on it
+    # builds on a guess. Any open L3 used to be enough.
+    local p; p=$(make_cold_project)
+    printf 'why: "Swaps are approved in one place so nobody relays them"\nwho:\n  description: "Shift leads"\n' \
+        > "$p/.claude/canvas/purpose.yml"
+    printf 'active_diamonds:\n  - id: d-001\n    scale: L3\n    phase: discover\n' \
+        > "$p/.claude/diamonds/active.yml"
+    local code; code=$(run_gate "$p" "$(write_json "$p/app/export.py")")
+    assert_eq "$code" "2" "an L3 with nothing above it but a purpose -> blocked"
+    assert_contains "$(gate_err)" "desired outcome" "the block names the missing artefact"
+    assert_contains "$(gate_err)" "--can-open L3" "the block names the command that says what is missing"
+    rm -rf "$p"
+}
+
+test_populated_purpose_without_delivery_diamond_blocks() {
+    # CHANGED in v0.245.0. This asserted "allowed" until the process-cliff gate: a purpose with no
+    # delivery-scale diamond is discovery engaged and delivery untracked, which is the state an
+    # end-to-end dogfood run shipped a whole release from.
     local p; p=$(make_cold_project)
     printf 'purpose:\n  statement: "Hikers decide with past knowledge instead of guessing on trail conditions"\n' \
         > "$p/.claude/canvas/purpose.yml"
     local code; code=$(run_gate "$p" "$(write_json "$p/src/index.ts")")
-    assert_eq "$code" "0" "populated purpose.yml -> allowed (discovery engaged mid-flow)"
+    assert_eq "$code" "2" "populated purpose, no L3/L4/L5 -> blocked by the delivery gate"
+    assert_contains "$(gate_err)" "delivery gate" "the block names the delivery gate, not discovery"
+    assert_contains "$(gate_err)" "Entry locks" "the block points at the entry locks"
+    rm -rf "$p"
+}
+
+test_only_l0_open_blocks_new_source() {
+    local p; p=$(make_cold_project)
+    printf 'active_diamonds:\n  - id: dia-001\n    scale: L0\n    phase: discover\n' \
+        > "$p/.claude/diamonds/active.yml"
+    local code; code=$(run_gate "$p" "$(write_json "$p/app/cadence/approval.py")")
+    assert_eq "$code" "2" "only L0 open (E2E run 9's state) -> blocked"
+    assert_contains "$(gate_err)" "delivery-skip-ack" "the block names its escape hatch"
+    rm -rf "$p"
+}
+
+test_completed_l3_only_blocks() {
+    local p; p=$(make_cold_project)
+    printf 'active_diamonds:\n  - id: d-003\n    scale: L3\n    phase: complete\n' \
+        > "$p/.claude/diamonds/active.yml"
+    local code; code=$(run_gate "$p" "$(write_json "$p/app/next.py")")
+    assert_eq "$code" "2" "a completed L3 is not an open delivery cycle -> blocked"
+    rm -rf "$p"
+}
+
+test_open_l4_allows() {
+    local p; p=$(make_chained_project)
+    # The L3 has completed; its L4 carries the build. Parent is named, as /preflight writes it.
+    printf 'active_diamonds:\n  - id: d-003\n    scale: L3\n    phase: complete\n    object_ref: sol-001\n    evidence_type: data-supported\n  - id: d-004\n    scale: L4\n    phase: develop\n    parent: d-003\n' \
+        > "$p/.claude/diamonds/active.yml"
+    local code; code=$(run_gate "$p" "$(write_json "$p/app/rollout.py")")
+    assert_eq "$code" "0" "an open L4 on an L3 at medium confidence -> allowed"
+    rm -rf "$p"
+}
+
+test_l4_on_an_anecdotal_l3_blocks() {
+    local p; p=$(make_chained_project)
+    printf 'active_diamonds:\n  - id: d-003\n    scale: L3\n    phase: complete\n    object_ref: sol-001\n    evidence_type: anecdotal\n  - id: d-004\n    scale: L4\n    phase: develop\n    parent: d-003\n' \
+        > "$p/.claude/diamonds/active.yml"
+    local code; code=$(run_gate "$p" "$(write_json "$p/app/rollout.py")")
+    assert_eq "$code" "2" "an L4 whose L3 is only anecdotal -> blocked"
+    assert_contains "$(gate_err)" "medium confidence" "the block names the confidence band"
+    rm -rf "$p"
+}
+
+test_delivery_ack_allows() {
+    local p; p=$(make_cold_project)
+    printf 'active_diamonds:\n  - id: dia-001\n    scale: L0\n    phase: discover\n' \
+        > "$p/.claude/diamonds/active.yml"
+    printf '2026-09-24 user: "just a throwaway script, do not track it"\n' \
+        > "$p/.claude/state/delivery-skip-ack"
+    local code; code=$(run_gate "$p" "$(write_json "$p/scratch.py")")
+    assert_eq "$code" "0" "user-recorded delivery ack -> allowed"
     rm -rf "$p"
 }
 
@@ -180,8 +261,14 @@ test_new_nested_dirs_inside_project_still_block() {
 }
 
 run_test test_bad_path_blocks_new_source_on_cold_project
-run_test test_happy_path_diamond_present_allows
-run_test test_populated_purpose_allows
+run_test test_happy_path_chained_l3_allows
+run_test test_bare_l3_after_start_blocks
+run_test test_populated_purpose_without_delivery_diamond_blocks
+run_test test_only_l0_open_blocks_new_source
+run_test test_completed_l3_only_blocks
+run_test test_open_l4_allows
+run_test test_l4_on_an_anecdotal_l3_blocks
+run_test test_delivery_ack_allows
 run_test test_ack_file_allows
 run_test test_edit_tool_never_blocked
 run_test test_existing_file_write_allowed

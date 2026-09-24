@@ -54,6 +54,16 @@ hi_ask() {  # $1 reason
   exit 0
 }
 
+hi_delivery_state() {  # exit 0 if new code may be written under an open L3/L4/L5 whose chain holds
+  # (v0.245.0, scripts/scale_locks.py). Exit 1 = locked, with the reasons in HI_DELIVERY_WHY;
+  # exit 3 = cannot check (PyYAML missing), which hooks/preflight.sh says on every prompt.
+  local here locks
+  here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  locks="$here/scale_locks.py"
+  [ -f "$locks" ] || locks="${CLAUDE_PLUGIN_ROOT:-}/scripts/scale_locks.py"
+  HI_DELIVERY_WHY="$(python3 "$locks" --project-dir "$PROJECT_DIR" --delivery-state 2>&1)"
+}
+
 hi_discovery_engaged() {  # exit 0 if a real purpose or an active diamond exists
   local here helper
   here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

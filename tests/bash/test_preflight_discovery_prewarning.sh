@@ -79,10 +79,46 @@ test_blank_purpose_does_not_silence_it() {
     assert_contains "$out" "$MARK" "a blank purpose.yml is not discovery state, here as at the gate"
 }
 
+DMARK="MYCELIUM DELIVERY STATE"
+
+# v0.245.0: the discovery gate's second stage refuses new source files while no L3/L4/L5 is open,
+# so the same prompt hook warns once discovery is engaged and no delivery diamond exists.
+test_engaged_without_delivery_diamond_is_warned() {
+    local tmp; tmp=$(mktemp -d)
+    mkdir -p "$tmp/.claude/diamonds"
+    printf 'active_diamonds:\n  - id: dia-001\n    scale: L0\n    phase: discover\n' > "$tmp/.claude/diamonds/active.yml"
+    local out; out=$(_run "$tmp")
+    rm -rf "$tmp"
+    assert_contains "$out" "$DMARK" "L0 only: the delivery pre-warning is emitted"
+    assert_not_contains "$out" "$MARK" "and not the discovery one, which is satisfied"
+}
+
+test_open_l3_silences_delivery_warning() {
+    local tmp; tmp=$(mktemp -d)
+    mkdir -p "$tmp/.claude/diamonds"
+    printf 'active_diamonds:\n  - id: dia-001\n    scale: L0\n    phase: discover\n  - id: d-003\n    scale: L3\n    phase: discover\n' > "$tmp/.claude/diamonds/active.yml"
+    local out; out=$(_run "$tmp")
+    rm -rf "$tmp"
+    assert_not_contains "$out" "$DMARK" "an L3 silences the delivery pre-warning"
+}
+
+test_delivery_ack_silences_delivery_warning() {
+    local tmp; tmp=$(mktemp -d)
+    mkdir -p "$tmp/.claude/diamonds" "$tmp/.claude/state"
+    printf 'active_diamonds:\n  - id: dia-001\n    scale: L0\n    phase: discover\n' > "$tmp/.claude/diamonds/active.yml"
+    printf '2026-09-24 user: "do not track this"\n' > "$tmp/.claude/state/delivery-skip-ack"
+    local out; out=$(_run "$tmp")
+    rm -rf "$tmp"
+    assert_not_contains "$out" "$DMARK" "the user's recorded delivery skip silences it"
+}
+
 run_test test_empty_project_is_warned
 run_test test_skip_ack_silences_it
 run_test test_populated_purpose_silences_it
 run_test test_active_diamond_silences_it
 run_test test_blank_purpose_does_not_silence_it
+run_test test_engaged_without_delivery_diamond_is_warned
+run_test test_open_l3_silences_delivery_warning
+run_test test_delivery_ack_silences_delivery_warning
 
 report

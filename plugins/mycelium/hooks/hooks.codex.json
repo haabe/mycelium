@@ -19,6 +19,12 @@
           },
           {
             "type": "command",
+            "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/scale-lock-gate.sh",
+            "timeout": 10,
+            "statusMessage": "Mycelium scale-lock gate (a new diamond opens only on what its parent established)"
+          },
+          {
+            "type": "command",
             "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/brownfield-gate.sh",
             "timeout": 30,
             "statusMessage": "Mycelium brownfield gate (one-shot: existing code, no discovery state)"
@@ -143,6 +149,12 @@
             "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/discovery-gate.sh",
             "timeout": 30,
             "statusMessage": "Mycelium discovery gate (new source files in discovery-untouched projects)"
+          },
+          {
+            "type": "command",
+            "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/scale-lock-gate.sh",
+            "timeout": 10,
+            "statusMessage": "Mycelium scale-lock gate (a new diamond opens only on what its parent established)"
           },
           {
             "type": "command",

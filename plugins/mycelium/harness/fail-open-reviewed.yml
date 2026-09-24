@@ -698,3 +698,28 @@ reviewed:
     pre-adoption node look like corrupt data. Both branches are pinned by
     tests/python/test_check_cynefin_freshness.py.
     Reviewed 2026-09-22, v0.242.0.
+- id: scale_locks.py@793a74cfa6
+  verdict: accepted
+  reason: >-
+    `_load` returns None when a canvas or diamonds file does not exist. That is not a default
+    that passes: every lock reads a missing file as a MISSING ARTEFACT and names it ("a purpose
+    statement: canvas/purpose.yml `why`", "a desired outcome ... opportunities.yml"), so the
+    diamond is LOCKED and the delivery gate refuses, with the name in the refusal. An absent file
+    fails closed and speaks. The other exits speak where they are raised: a file that exists and
+    does not parse raises UnreadableError (--delivery-state exit 1 with "does not parse"; --hook
+    exit 2); PyYAML absent raises CannotCheckError, exit 3, the one real fail-open, which
+    hooks/preflight.sh names on every prompt of an engaged project. Pinned by
+    tests/python/test_scale_locks.py. Reviewed 2026-09-24, v0.245.0 (re-reviewed after the
+    adversarial review changed the handler's comment; the previous id 94ddcb71d0 is retired).
+- id: scale_locks.py@1e0c5d2847
+  verdict: accepted
+  reason: >-
+    `_run_hook` allows when the payload is not JSON or the proposed edit does not apply to the
+    file (EditNotAppliedError). In both cases the tool call itself fails with its own message and
+    nothing is written, so there is no state for the lock to judge; refusing here would add a
+    second error to the same failed call. Everything else fails closed: an unparseable proposed
+    file is refused with "does not parse" (exit 2), and any unexpected exception now escapes to a
+    traceback, which scale-lock-gate.sh treats as a refusal (rc not 0 or 3). Before the
+    2026-09-24 adversarial review this handler also caught LookupError and a parse error, which
+    turned an IndexError on `object_ref: ", sol-001"` and a two-step broken write into silent
+    allows; both are pinned in tests/python/test_scale_locks.py. Reviewed 2026-09-24, v0.245.0.

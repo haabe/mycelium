@@ -157,6 +157,18 @@ if [ "$_PF_LOOKS_ENGAGED" -eq 0 ] && [ -f "$_PF_HI_LIB" ] && [ ! -f "$PROJECT_DI
   if ! hi_discovery_engaged; then
     echo "MYCELIUM DISCOVERY STATE: none in this project (no purpose, no active diamond). If this prompt asks you to design or build something, new source files WILL BE REFUSED by the discovery gate, so do not draft the design first: ask who it is for, what problem it solves and what evidence there is, or offer /mycelium:start. If the prompt is not a build request, ignore this line and answer it."
   fi
+elif [ "$_PF_LOOKS_ENGAGED" -eq 1 ] && [ ! -f "$PROJECT_DIR/.claude/state/delivery-skip-ack" ] \
+     && ! grep -qE '^[[:space:]]*scale:[[:space:]]*["'"'"']?L[345]\b' "$PROJECT_DIR/.claude/diamonds/active.yml" 2>/dev/null; then
+  # The discovery gate's second stage (v0.245.0) refuses new source files until an L3/L4/L5 whose
+  # chain holds is open (scripts/scale_locks.py). Said once per prompt, cheaply, so the agent builds
+  # the chain before drafting code rather than after a refusal. A grep, like the check above: fooled
+  # means silence, and the gate parses strictly.
+  echo "MYCELIUM DELIVERY STATE: no diamond that delivers (L3, L4 or L5) is open. If this prompt asks you to build or change code, the chain comes first, because each scale opens on its parent: a desired outcome (/mycelium:ost-builder), a target opportunity with evidence, then an L3 whose object_ref names it. The discovery gate refuses new source files until then; scripts/scale_locks.py --can-open L3 says what is missing. If the prompt is not a build request, ignore this line and answer it."
+fi
+# The scale locks read YAML. Without PyYAML they cannot be checked, and both gates then allow every
+# write; this line is what makes that fail-open speak (fail-open-reviewed.yml, scale_locks.py).
+if [ "$_PF_LOOKS_ENGAGED" -eq 1 ] && ! python3 -c 'import yaml' 2>/dev/null; then
+  echo "MYCELIUM: the scale locks are NOT being checked on this machine (PyYAML is not installed: pip install pyyaml). Until it is, nothing stops a diamond opening before its parent is ready or code being written outside a delivery cycle."
 fi
 
 if [ ! -f "$CORRECTIONS_FILE" ]; then

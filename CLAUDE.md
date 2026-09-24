@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.244.0 -- **Work handed to the user vanished at the end of a session, and an interrupted start left a project with no purpose for good** (MINOR). Take-away material is written to a file when produced, a new session never denies earlier work it cannot see, the interview saves each answer and resumes, and SessionStart offers to finish an unfinished discovery.*
+*Version 0.245.0 -- **Every scale locks on its parent** (MINOR). Each diamond scale opens only on what its parent has established (purpose, desired outcome, target opportunity with evidence, medium confidence, launch data; `scripts/scale_locks.py`), enforced by a new scale-lock gate and by the discovery gate's second stage, which now needs an L3, L4 or L5 whose whole chain holds before new source files. Once open, a diamond still moves at its own speed.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 
