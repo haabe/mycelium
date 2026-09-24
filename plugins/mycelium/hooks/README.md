@@ -196,6 +196,16 @@ Addresses dogfood report finding M1: "agent bypassed `/diamond-progress` by hand
 
 This is **not** a guardrail — it does NOT block. The hook cannot reliably distinguish between edits from `/diamond-progress` (legitimate) and direct agent edits (bypass). Observability creates traceability without false positives. The agent learns from seeing the audit count, not from being blocked.
 
+### canvas-schema-check.sh (PostToolUse — schema feedback, v0.250.0)
+**Triggers**: PostToolUse on Edit/Write/MultiEdit (filtered to `.claude/canvas/*.yml` and `.claude/diamonds/*.yml`)
+**Type**: `command` (10s timeout)
+**Tier**: Feedback (tells the agent; does not block the write, which has already happened)
+**Fail policy**: Fail-open, spoken: without PyYAML/jsonschema it says once per session that it could not run
+
+Runs `validate_canvas.py`'s schema functions on the file just written (`scripts/canvas_write_check.py`) and, if it fails, returns the errors as `decision: block` so the agent sees them in the same turn. Found by E2E run 19: an invalid `privacy-assessment.yml` stood after the post-write nudge had already said "validate with validate_canvas.py". A reminder to run a check is not the check.
+
+**v0.250.0 additions to existing hooks.** `diamond-state-audit.sh` also runs `scripts/diamond_rulings.py`, which records the machine time a diamond's phase or ruling changed, so `next_item.py` judges "evidence since the last assessment" on one clock. `preflight.sh` prints the next item once per session, beside the first request, when it has gone unanswered for three sessions (`next_item.py --prompt-line`); silent otherwise and with `MYCELIUM_NEXT_ITEM=off`.
+
 ### reflexion-gate.sh (PostToolUseFailure — filtered NUDGE)
 **Triggers**: PostToolUseFailure on Bash
 **Type**: `command` (10s timeout)
@@ -246,6 +256,7 @@ See `../state/README.md` for the full data format philosophy.
 | `post-write-nudge.sh` | PostToolUse Edit/Write/MultiEdit | NUDGE | Fail-open |
 | `change-log.sh` | PostToolUse Edit/Write/MultiEdit | Observability | Fail-open |
 | `diamond-state-audit.sh` | PostToolUse Edit/Write/MultiEdit | Observability | Fail-open |
+| `canvas-schema-check.sh` | PostToolUse Edit/Write/MultiEdit | Feedback | Fail-open, spoken |
 | `reflexion-gate.sh` | PostToolUseFailure Bash | NUDGE (filtered) | Fail-open |
 | `stop-check.sh` | Stop | NUDGE + warning | Fail-open |
 | `session-start.sh` | SessionStart startup/resume | NUDGE | Fail-open |

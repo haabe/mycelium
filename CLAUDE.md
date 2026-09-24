@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.249.0 -- **The next item moves the ladder** (MINOR). The session-start next item now proposes /mycelium:diamond-progress for a diamond whose phase has never been assessed, or was last ruled on before new evidence landed, delivering diamonds first. Until now it proposed that step only for a fired closing path, so on the happy path a diamond moved only if the driver remembered to move it. Prior: 0.248.1 the happy path writes a canvas Mycelium itself accepts.*
+*Version 0.250.0 -- **A canvas write is checked as it lands; an unanswered next item escalates** (MINOR). A PostToolUse hook runs the schema on each canvas or diamonds file as it is written and names the errors to the agent in the same turn; the privacy schema gains `processors`. The next item now counts the sessions it has gone unanswered, and from the third asks the human for a decision and reaches the agent beside its first request, resetting on any ruling; "evidence since the last assessment" is judged on the machine clock, to the second. Both found by E2E run 19. Prior: 0.249.0 the next item moves the ladder.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

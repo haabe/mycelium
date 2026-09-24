@@ -171,6 +171,15 @@ if [ "$_PF_LOOKS_ENGAGED" -eq 1 ] && ! python3 -c 'import yaml' 2>/dev/null; the
   echo "MYCELIUM: the scale locks are NOT being checked on this machine (PyYAML is not installed: pip install pyyaml). Until it is, nothing stops a diamond opening before its parent is ready or code being written outside a delivery cycle."
 fi
 
+# The next-item ladder (v0.250.0): once an item has gone unanswered for ESCALATE_AT sessions, the
+# agent gets it once per session HERE, beside the first request, rather than only at the top of a
+# long context (E2E run 19: read past for 16 sessions). next_item.py decides; silent otherwise.
+_PF_NI="${CLAUDE_PLUGIN_ROOT:-}/scripts/next_item.py"
+if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "$_PF_NI" ] && [ "${MYCELIUM_NEXT_ITEM:-on}" != "off" ] \
+   && [ -f "$PROJECT_DIR/.claude/state/next-item.json" ]; then
+  python3 "$_PF_NI" --project-dir "$PROJECT_DIR" --prompt-line 2>/dev/null || true
+fi
+
 if [ ! -f "$CORRECTIONS_FILE" ]; then
   echo "Mycelium preflight complete. Memory not yet initialized — run /mycelium:setup if this is a fresh install."
 elif [ "$CORRECTIONS_COUNT" -eq 0 ]; then

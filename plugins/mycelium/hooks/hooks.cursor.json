@@ -115,6 +115,12 @@
         "timeout": 3
       },
       {
+        "matcher": "Write|Edit|MultiEdit|edit|write",
+        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/canvas-schema-check.sh",
+        "type": "command",
+        "timeout": 10
+      },
+      {
         "matcher": "Read|read",
         "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/read-log.sh",
         "type": "command",

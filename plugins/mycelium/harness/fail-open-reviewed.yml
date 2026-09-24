@@ -732,3 +732,52 @@ reviewed:
     into what session-start prints. So an unreadable file is reported once, where the human reads
     it, and is never mistaken for "no diamond needs assessing". Pinned by the existing next-item
     tests and tests/python/test_next_item_moves_the_ladder.py. Reviewed 2026-09-24, v0.249.0.
+
+- id: canvas_write_check.py@3c770fccdd
+  verdict: accepted
+  reason: >-
+    `_load_validator` catches the SystemExit that validate_canvas.py's import guard raises when
+    PyYAML, jsonschema or referencing is missing, and returns (None, "missing <modules>"). Silent at
+    the site and correct: main() turns that into an additionalContext note, once per session, that
+    names the file, says it "has not been checked against its schema", and gives the pip command.
+    So a runtime without the dependencies hears that the check could not look, and a missing module
+    is never read as a valid file. It never blocks, because runtime hooks must work without an
+    install. Pinned by tests/python/test_canvas_write_check.py. Reviewed 2026-09-24, v0.250.0.
+
+- id: diamond_rulings.py@bff840b2fb
+  verdict: accepted
+  reason: >-
+    `load` returns {} when diamond-rulings.json is missing or unreadable. With no machine record,
+    next_item uses the typed `progression_ruled_at`, which is exactly the pre-0.250.0 comparison, so
+    the failure degrades to the old behaviour rather than to silence about a diamond. A missing file
+    is also the normal state before the first diamonds write. Reviewed 2026-09-24, v0.250.0.
+
+- id: diamond_rulings.py@4a1d668fd2
+  verdict: accepted
+  reason: >-
+    `record` returns {} when diamonds/active.yml cannot be parsed. Silent here and correct: the same
+    write runs canvas-schema-check.sh, which names the YAML parse error to the agent in that turn;
+    reporting it twice would be two messages about one fault. The previous record is left in place.
+    Reviewed 2026-09-24, v0.250.0.
+
+- id: next_item.py@4e0f24035a
+  verdict: accepted
+  reason: >-
+    `_ruled_since` returns False when the advisory ledger is missing. That reads as "not ruled", so
+    the unanswered count keeps rising and the item escalates to ask the human: the failure errs
+    toward asking, never toward silence. Reviewed 2026-09-24, v0.250.0.
+
+- id: next_item.py@73be22ee97
+  verdict: accepted
+  reason: >-
+    `_last_writer` returns {} when change-log.jsonl is missing. Every evidence file then counts as
+    landed after the ruling, so the diamond is proposed rather than skipped: the conservative
+    direction. Reviewed 2026-09-24, v0.250.0.
+
+- id: next_item.py@12bf99debc
+  verdict: accepted
+  reason: >-
+    `prompt_line` returns "" when it cannot record that the line was said this session. Staying
+    quiet is chosen over repeating on every prompt, which is the failure the ladder exists to avoid.
+    The human still gets the escalated item from next-item-repeat.sh at Stop, so the item is not
+    lost. Reviewed 2026-09-24, v0.250.0.

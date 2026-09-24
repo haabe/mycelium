@@ -18,6 +18,11 @@ Mycelium canvas schema validator.
 ║   CI validation: pip install full dependencies                     ║
 ╚════════════════════════════════════════════════════════════════════╝
 
+ONE OPTIONAL RUNTIME CALLER (v0.250.0): hooks/canvas-schema-check.sh runs
+scripts/canvas_write_check.py, which imports this module WHEN its dependencies
+are installed and otherwise says once per session that it could not run. It
+never requires them, so the zero-setup rule above still holds.
+
 Validates each .claude/canvas/*.yml file against its corresponding schema in
 $CLAUDE_PLUGIN_ROOT/schemas/canvas/<basename>.schema.json (plugin form; falls back
 to .claude/schemas/canvas/ in legacy form). Schemas not present are silently

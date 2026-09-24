@@ -76,4 +76,8 @@ except Exception:
 sys.exit(0)
 " 2>/dev/null
 
+# v0.250.0: record, on the machine's clock, when a diamond's phase or ruling changed, so next_item
+# can tell whether evidence landed after the assessment (scripts/diamond_rulings.py).
+printf '%s' "$INPUT" | python3 "${CLAUDE_PLUGIN_ROOT:-$(dirname "$0")/..}/scripts/diamond_rulings.py" 2>/dev/null || true
+
 exit 0

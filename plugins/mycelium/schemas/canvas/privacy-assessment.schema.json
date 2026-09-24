@@ -114,6 +114,69 @@
       ],
       "description": "SCHEMA-AUTHOR'S RULE, NOT PROJECT DOCTRINE \u2014 flagged so it can be struck. The conditional below requires this string whenever dpia_required is false. Basis: GDPR's accountability principle (Art. 5(2)) makes the reasoning for a negative determination the thing you must be able to produce, and the shipped template already pairs the two fields, and the one live canvas populates it. What it is NOT derived from: engine/theory-gates.md L3, which requires a DPIA only for HIGH-RISK processing and says nothing about justifying a false. A bare `false` is the answer that most needs its reasoning shown, which is why the rule seems worth having \u2014 but that is a judgement, not a citation."
     },
+    "processors": {
+      "type": "array",
+      "description": "Every party outside the product that receives or stores the personal data: hosting, SMS or email providers, analytics, payment. GDPR Art. 28 (processors need a contract) and Art. 30(1)(d)-(e) (recipients and transfers belong in the record). /privacy-check asks 'Who accesses it?' and 'Where is it stored?'; until v0.250.0 this file had nowhere to put the answer, and the E2E happy path invented a root key for it, which the schema rejected.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "role": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "processor",
+              "sub_processor",
+              "joint_controller",
+              "recipient",
+              null
+            ]
+          },
+          "purpose": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "data_types": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The data_inventory entries this party receives."
+          },
+          "location": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Where the data is stored or processed, and the transfer mechanism if it leaves the EEA."
+          },
+          "retention_period": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "agreement": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The contract that covers it (a DPA, signed or not, with its date). Null means none is known."
+          }
+        }
+      }
+    },
     "consent_mechanisms": {
       "type": "array",
       "items": {
