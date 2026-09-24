@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.251.0 -- **One item for the ladder, and only new evidence moves it** (MINOR). Diamond-assessment proposals now arrive as ONE next item listing every diamond that could move, delivering diamonds first, so one ruling covers them; a diamond is re-proposed only when evidence was ADDED since its last assessment (research notes plus canvas evidence sources, counted), not on any canvas edit; and a snooze can run until you ask. E2E run 21: the per-diamond item fired on every edit, the human snoozed all four in turn, and the L3 move go-live needed was buried with them. Prior: 0.250.2 doing what the item asks answers it.*
+*Version 0.252.0 -- **Not ready for real people is said where the agent reasons** (MINOR). When a delivering diamond is open and may not yet meet real people, the per-prompt hook tells the agent what is missing, once per sitting and on any prompt about going live, a pilot, production or links to staff, and says it covers exposure someone else performs. The exposure gate had only ever seen the agent's own deploy commands; in E2E run 21 a developer deployed and the agent coordinated the go-live of an L3 still in Develop with Security pending. Also: the session-count line reaches the human once per sitting, and a writer command in the shell parser is matched as a command, never inside a flag (`grep -ln` was read as `ln`). Prior: 0.251.0 one item for the ladder, and only new evidence moves it.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

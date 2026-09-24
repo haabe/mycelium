@@ -20,6 +20,10 @@ if [ -z "$PROJECT_DIR" ]; then
   PROJECT_DIR="${PROJECT_DIR:-.}"
 fi
 CORRECTIONS_FILE="$PROJECT_DIR/.claude/memory/corrections.md"
+# The UserPromptSubmit payload (prompt, session_id), read once. Never from a terminal: run by hand
+# with no pipe, `cat` would wait for input.
+_PF_INPUT=""
+[ -t 0 ] || _PF_INPUT="$(cat 2>/dev/null)"
 
 # Stamp path: per-user + per-project under $TMPDIR — must match gate.sh exactly.
 # See gate.sh for rationale (world-predictable shared /tmp path was the bug).
@@ -178,6 +182,15 @@ _PF_NI="${CLAUDE_PLUGIN_ROOT:-}/scripts/next_item.py"
 if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "$_PF_NI" ] && [ "${MYCELIUM_NEXT_ITEM:-on}" != "off" ] \
    && [ -f "$PROJECT_DIR/.claude/state/next-item.json" ]; then
   python3 "$_PF_NI" --project-dir "$PROJECT_DIR" --prompt-line 2>/dev/null || true
+fi
+
+# EXPOSURE STATE (v0.252.0). The exposure gate sees only the agent's own deploy commands; in E2E
+# run 21 a developer deployed and the agent coordinated the go-live while the L3 sat in Develop with
+# Security and Service Quality pending. So the state is said where the agent reasons: once per
+# sitting, and on any prompt about going live, when a delivering diamond is open and not ready.
+_PF_SL="${CLAUDE_PLUGIN_ROOT:-}/scripts/scale_locks.py"
+if [ "$_PF_LOOKS_ENGAGED" -eq 1 ] && [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "$_PF_SL" ]; then
+  printf '%s' "$_PF_INPUT" | python3 "$_PF_SL" --project-dir "$PROJECT_DIR" --exposure-line 2>/dev/null || true
 fi
 
 if [ ! -f "$CORRECTIONS_FILE" ]; then

@@ -55,6 +55,7 @@ bad input; 3 cannot check (PyYAML missing: printed, and repeated each prompt by 
 from __future__ import annotations
 
 import argparse
+import datetime as _dt
 import json
 import os
 import re
@@ -613,6 +614,58 @@ def exposure_violation(project_dir: str, payload: dict) -> str | None:
             f"cycle is ready for that:\n  {why}")
 
 
+# Words that mean real people are about to meet the work, whoever does the exposing. Broad on
+# purpose: a false match prints one status line; a miss let a pilot reach staff in E2E run 21.
+_GO_LIVE = re.compile(
+    r"\b(?:deploy\w*|go(?:es|ing)?[- ]live|live\b|launch\w*|releas\w*|roll(?:ed|ing)?[- ]?out"
+    r"|pilot\w*|production|prod\b|real (?:users?|people|customers?|staff|data)|customers?|staff"
+    r"|(?:send|post|share)\w* (?:the |a )?link|link (?:to|out)|ship\w*|onboard\w*|beta|waitlist)",
+    re.IGNORECASE)
+EXPOSURE_SAID = os.path.join(".claude", "state", "exposure-line-said")
+
+
+def exposure_line(project_dir: str, payload: dict, today: str | None = None) -> str:
+    """What the agent is told, at the prompt, when the work may not yet meet real people (v0.252.0).
+
+    E2E run 21: the product went to real staff while its L3 sat in Develop with Security and
+    Service Quality pending. A developer deployed it and the agent coordinated the go-live; the
+    exposure gate only ever sees the AGENT's own deploy commands, and nothing told the agent the
+    project was not ready. In real use someone else usually does the deploy (CI, a developer), so
+    the state belongs where the agent reasons, not only at its shell.
+
+    Silent when ready, when no delivering diamond is open (the delivery-state line covers that), and
+    when already said this sitting (session + day) unless the prompt is about going live."""
+    st = State(project_dir)
+    if not [d for d in st.active if _scale(d) in DELIVERY_SCALES and st.is_open(d)]:
+        return ""
+    ok, why = _work_state(st, "expose")
+    if ok:
+        return ""
+    today = today or _dt.datetime.now(tz=_dt.UTC).date().isoformat()
+    sitting = f"{payload.get('session_id') or ''}|{today}"
+    path = os.path.join(project_dir, EXPOSURE_SAID)
+    try:
+        with open(path, encoding="utf-8") as f:
+            said = f.read().strip()
+    except OSError:
+        said = ""  # never said: say it now
+    if said == sitting and not _GO_LIVE.search(str(payload.get("prompt") or "")):
+        return ""
+    try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(sitting + "\n")
+    except OSError:
+        pass  # SPEAKS: the line is still returned; at worst it is said again next prompt
+    missing = "\n".join(why.splitlines()[:6])
+    return ("MYCELIUM EXPOSURE STATE: nothing built here may meet real people yet, and that "
+            "includes a pilot, a link sent to staff or users, and a deploy someone else does. "
+            f"What is missing:\n  {missing}\nIf this prompt is about going live, a pilot, "
+            "production or real users, tell the user plainly that it is not ready and what is "
+            "missing, and progress the diamond (/mycelium:diamond-progress) before helping expose "
+            "it. If it is not about that, ignore this line.")
+
+
 def can_open(project_dir: str, scale: str, object_ref=None, parent=None) -> list[str]:
     st = State(project_dir)
     probe = {"id": "the new diamond", "scale": scale, "object_ref": object_ref, "parent": parent}
@@ -797,19 +850,31 @@ def _run_exposure_hook(project_dir: str) -> int:
     return 2
 
 
+def _run_exposure_line(project_dir: str) -> int:
+    try:
+        payload = json.loads(sys.stdin.read() or "{}")
+    except json.JSONDecodeError:
+        payload = {}  # a prompt hook with no payload still gets the once-per-sitting line
+    line = exposure_line(project_dir, payload if isinstance(payload, dict) else {})
+    if line:
+        print(line)
+    return EXIT_HOLDS
+
+
+def _run_state(fn, project_dir: str) -> int:
+    ok, why = fn(project_dir)
+    print(why)
+    return EXIT_HOLDS if ok else EXIT_LOCKED
+
+
 def _run(args) -> int:
-    if args.hook:
-        return _run_hook(args.project_dir)
-    if args.exposure_hook:
-        return _run_exposure_hook(args.project_dir)
-    if args.exposure_state:
-        ok, why = exposure_state(args.project_dir)
-        print(why)
-        return EXIT_HOLDS if ok else EXIT_LOCKED
-    if args.delivery_state:
-        ok, why = delivery_state(args.project_dir)
-        print(why)
-        return EXIT_HOLDS if ok else EXIT_LOCKED
+    runners = [(args.hook, _run_hook), (args.exposure_hook, _run_exposure_hook),
+               (args.exposure_line, _run_exposure_line),
+               (args.exposure_state, lambda p: _run_state(exposure_state, p)),
+               (args.delivery_state, lambda p: _run_state(delivery_state, p))]
+    for chosen, fn in runners:
+        if chosen:
+            return fn(args.project_dir)
     if args.can_open:
         return _run_can_open(args)
     return _run_check(args.project_dir)
@@ -827,6 +892,8 @@ def main(argv=None) -> int:
                       help="PreToolUse payload on stdin; exit 2 blocks")
     mode.add_argument("--exposure-state", action="store_true",
                       help="exit 0 if the work may be put in front of real people")
+    mode.add_argument("--exposure-line", action="store_true",
+                      help="UserPromptSubmit payload on stdin; print the not-ready line if due")
     mode.add_argument("--exposure-hook", action="store_true",
                       help="PreToolUse Bash payload on stdin; exit 2 blocks a deploy or publish")
     ap.add_argument("--object-ref")

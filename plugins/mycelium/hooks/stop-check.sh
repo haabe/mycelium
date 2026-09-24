@@ -215,9 +215,19 @@ fi
 # repeated on every turn once anything had been logged: identical repetition, the pattern that stops
 # being read after the second showing (Anderson et al., CHI 2015). E2E run 20 relayed it to the human
 # three turns running. The count is now said when it has changed since it was last said.
+# ONCE PER SITTING (v0.252.0). "When a count changes" still fired 46 times in 78 turns of E2E run
+# 21, because an agent logs a decision on most turns, and the line asks for nothing: it is status,
+# not an action (Google SRE: every page actionable). Now once per session per day, and again only
+# when the CORRECTIONS count changes, which is rarer and is the one a human should hear about.
 COUNTS_SEEN="$PROJECT_DIR/.claude/state/stop-check-counts-shown"
 SAY_COUNTS=0
-_COUNTS_NOW="${CORRECTIONS_COUNT} ${DECISIONS_COUNT}"
+_SC_SID=""
+[ -t 0 ] || _SC_SID="$(python3 -c 'import json,sys
+try:
+    print(json.load(sys.stdin).get("session_id") or "")
+except Exception:
+    print("")' 2>/dev/null)"
+_COUNTS_NOW="${_SC_SID}|$(date -u +%Y-%m-%d)|${CORRECTIONS_COUNT}"
 if [ "$(cat "$COUNTS_SEEN" 2>/dev/null)" != "$_COUNTS_NOW" ]; then
   SAY_COUNTS=1
   { mkdir -p "$(dirname "$COUNTS_SEEN")" && printf '%s\n' "$_COUNTS_NOW" > "$COUNTS_SEEN"; } 2>/dev/null || true

@@ -597,3 +597,46 @@ def test_a_diamond_is_born_in_discover(tmp_path):
     assert len(out) == 1 and "born in discover" in out[0]
     edit["tool_input"]["new_string"] = before + born.replace("develop", "discover")
     assert sl.new_diamond_violations(p, edit) == []
+
+
+# ---------------------------------------------------------------- the exposure line (v0.252.0)
+# E2E run 21: a developer deployed and the agent coordinated the go-live while the L3 sat in
+# Develop with Security and Service Quality pending. The exposure gate sees only the agent's own
+# deploy commands, so the state is now said at the prompt, where the agent reasons.
+
+
+def test_the_agent_is_told_at_the_prompt_when_the_work_may_not_meet_people(tmp_path):
+    p = _project(tmp_path, PURPOSE, _full_opps(), [_l3(phase="develop", gates=BUILD_PASSED)])
+    line = sl.exposure_line(p, {"session_id": "s1", "prompt": "morning"}, today="2026-10-28")
+    assert line.startswith("MYCELIUM EXPOSURE STATE")
+    assert "a deploy someone else does" in line and "security" in line
+
+
+def test_once_per_sitting_unless_the_prompt_is_about_going_live(tmp_path):
+    p = _project(tmp_path, PURPOSE, _full_opps(), [_l3(phase="develop", gates=BUILD_PASSED)])
+    first = {"session_id": "s1", "prompt": "morning"}
+    assert sl.exposure_line(p, first, today="2026-10-28")
+    assert sl.exposure_line(p, {"session_id": "s1", "prompt": "fix the typo"},
+                            today="2026-10-28") == ""
+    for prompt in ("give Tom the link to post to staff", "is it ready to go live?",
+                   "the developer deployed 7c3e1a9", "start the pilot at Harbour"):
+        assert sl.exposure_line(p, {"session_id": "s1", "prompt": prompt}, today="2026-10-28"), prompt
+    assert sl.exposure_line(p, {"session_id": "s1", "prompt": "hi"}, today="2026-10-29")  # new day
+
+
+def test_silent_when_ready_or_when_nothing_delivers(tmp_path):
+    ready = _project(tmp_path / "a", PURPOSE, _full_opps(),
+                     [_l3(phase="deliver", gates=EXPOSE_PASSED)])
+    assert sl.exposure_line(ready, {"prompt": "deploy it"}) == ""
+    none = _project(tmp_path / "b", PURPOSE, _full_opps())
+    assert sl.exposure_line(none, {"prompt": "deploy it"}) == ""
+
+
+def test_the_exposure_line_flag_reads_the_prompt_payload(tmp_path, monkeypatch, capsys):
+    import io
+    p = _project(tmp_path, PURPOSE, _full_opps(), [_l3(phase="develop", gates=BUILD_PASSED)])
+    monkeypatch.setattr("sys.stdin", io.StringIO(json.dumps({"session_id": "s", "prompt": "go live"})))
+    assert sl.main(["--project-dir", p, "--exposure-line"]) == 0
+    assert "MYCELIUM EXPOSURE STATE" in capsys.readouterr().out
+    monkeypatch.setattr("sys.stdin", io.StringIO("not json"))
+    assert sl.main(["--project-dir", p, "--exposure-line"]) == 0
