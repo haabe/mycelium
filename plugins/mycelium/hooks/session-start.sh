@@ -1519,8 +1519,12 @@ fi
 NEXT_ITEM_HUMAN=""
 case "$SESSION_SOURCE" in resume|fork)
   # The human form: plain and bounded, read from the state next_item.py just wrote (0.193.0).
-  NEXT_ITEM_HUMAN="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).get("text_human") or "")' "$PROJECT_DIR/.claude/state/next-item.json" 2>/dev/null || true)"
-  [ -z "$NEXT_ITEM_HUMAN" ] && NEXT_ITEM_HUMAN="$NEXT_ITEM"
+  # Once per sitting (v0.250.1): --claim-human prints the line only if the human has not had it this
+  # session today, and marks it so the Stop repeat does not say it again. A driver that resumes per
+  # message showed it twice per message before (E2E run 20). Empty means already shown: no fallback.
+  if [ -n "$NEXT_ITEM" ] && [ -f "$NEXTCHK" ]; then
+    NEXT_ITEM_HUMAN="$(python3 "$NEXTCHK" --project-dir "$PROJECT_DIR" --claim-human 2>/dev/null || true)"
+  fi
   ;;
 esac
 

@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.250.0 -- **A canvas write is checked as it lands; an unanswered next item escalates** (MINOR). A PostToolUse hook runs the schema on each canvas or diamonds file as it is written and names the errors to the agent in the same turn; the privacy schema gains `processors`. The next item now counts the sessions it has gone unanswered, and from the third asks the human for a decision and reaches the agent beside its first request, resetting on any ruling; "evidence since the last assessment" is judged on the machine clock, to the second. Both found by E2E run 19. Prior: 0.249.0 the next item moves the ladder.*
+*Version 0.250.1 -- **Once per sitting** (PATCH). The next item reaches the human once per session per day, however often the session is resumed, and the session-count line is said only when a count changes rather than after every response. E2E run 20 relayed both to the human on every turn of a resume-per-message driver. Prior: 0.250.0 a canvas write is checked as it lands; an unanswered next item escalates.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

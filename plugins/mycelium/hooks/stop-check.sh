@@ -211,6 +211,18 @@ if [ "$CORRECTIONS_COUNT" -gt 0 ] || [ -n "$WARNINGS" ]; then
   WARNINGS="${WARNINGS}Before ending: did you fix anything in-flight without recording it — a wrong answer you quietly re-ran, or a bug you fixed and explained only in a code comment? A code comment is read by whoever opens that file; corrections.md is read at every session start. |@@W@@"
 fi
 
+# SAID ONCE PER CHANGE (v0.250.1). Stop fires after EVERY response, so the human line below was
+# repeated on every turn once anything had been logged: identical repetition, the pattern that stops
+# being read after the second showing (Anderson et al., CHI 2015). E2E run 20 relayed it to the human
+# three turns running. The count is now said when it has changed since it was last said.
+COUNTS_SEEN="$PROJECT_DIR/.claude/state/stop-check-counts-shown"
+SAY_COUNTS=0
+_COUNTS_NOW="${CORRECTIONS_COUNT} ${DECISIONS_COUNT}"
+if [ "$(cat "$COUNTS_SEEN" 2>/dev/null)" != "$_COUNTS_NOW" ]; then
+  SAY_COUNTS=1
+  { mkdir -p "$(dirname "$COUNTS_SEEN")" && printf '%s\n' "$_COUNTS_NOW" > "$COUNTS_SEEN"; } 2>/dev/null || true
+fi
+
 # ============================================================
 if [ -n "$WARNINGS" ]; then
   python3 -c "
@@ -272,13 +284,12 @@ for key in ORDER:
 # a bare .claude/engine/ path is dead in plugin form. Do not shorten this phrase.
 lines.append('Address these or record why they do not apply for this project type '
              '(check engine/canvas-guidance.yml in the plugin).')
-output = {
-    'additionalContext': chr(10).join(lines),
-    'systemMessage': f'Session: {corrections} corrections, {decisions} decisions logged.',
-}
+output = {'additionalContext': chr(10).join(lines)}
+if sys.argv[4] == '1':
+    output['systemMessage'] = f'Session: {corrections} corrections, {decisions} decisions logged.'
 print(json.dumps(output))
-" "$WARNINGS" "$CORRECTIONS_COUNT" "$DECISIONS_COUNT"
-elif [ "$CORRECTIONS_COUNT" -gt 0 ] || [ "$DECISIONS_COUNT" -gt 0 ]; then
+" "$WARNINGS" "$CORRECTIONS_COUNT" "$DECISIONS_COUNT" "$SAY_COUNTS"
+elif { [ "$CORRECTIONS_COUNT" -gt 0 ] || [ "$DECISIONS_COUNT" -gt 0 ]; } && [ "$SAY_COUNTS" = 1 ]; then
   # Surface counts only when something was actually logged this session.
   # Silence is the correct output when nothing happened — emitting
   # "Session ended. 0 corrections, 0 decisions logged." on every turn

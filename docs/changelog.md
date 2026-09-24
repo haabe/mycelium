@@ -4,6 +4,26 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.250.1 - once per sitting
+
+**2026-09-24.** E2E run 20, the first run whose simulated founder saw what Mycelium shows a human,
+relayed three messages on every builder turn: the next item (sent on every `resume`), the Stop
+repeat of the same item, and "Session: N corrections, M decisions logged." A driver that resumes the
+session per message, as an Agent SDK app does, fires SessionStart:resume per message, and each resume
+rewrote the next item's state with its repeat flag cleared. Stop fires after every response in any
+driver, so the count line was already repeated per turn in interactive use. Identical repetition is
+the pattern 0.250.0's ladder was built to avoid.
+
+- **The next item reaches the human once per sitting** (one session on one day). Session start on
+  resume claims the showing (`next_item.py --claim-human`) and the Stop repeat then stays silent; a
+  resume in the same sitting sends nothing. A resume on a later day is a new sitting: it shows the
+  item again and counts toward escalation, so a long-lived session still escalates.
+- **The session-count line is said when a count changes** (`stop-check.sh`,
+  `.claude/state/stop-check-counts-shown`), not after every response. The agent-facing close block
+  is unchanged.
+- Pinned by `tests/python/test_next_item_ladder.py`, `tests/bash/test_session_start_next_item.sh`
+  and `tests/bash/test_stop_check.sh`.
+
 ## v0.250.0 - a canvas write is checked as it lands; an unanswered next item escalates
 
 **2026-09-24.** E2E run 19 (happy path, plugin 0.249.0) wrote `privacy-assessment.yml` with a root

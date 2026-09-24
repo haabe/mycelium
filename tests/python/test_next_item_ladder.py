@@ -119,3 +119,32 @@ def test_an_unreadable_state_is_said_and_the_count_restarts(tmp_path, monkeypatc
     ni.main(["--project-dir", str(root), "--session", "s2", "--today", "2026-09-25", "--write-state"])
     assert "unreadable" in out.getvalue()
     assert json.loads((root / ni.STATE_REL).read_text())["shown"] == 1
+
+
+def test_resumes_in_one_sitting_neither_count_nor_repeat(tmp_path, monkeypatch):
+    """v0.250.1: a driver that resumes per message fired session start per message (E2E run 20)."""
+    root = _project(tmp_path)
+    _session(root, "s1", "2026-09-24", monkeypatch)
+    assert ni.claim_human(root).startswith("NEXT ITEM")  # the human gets it once
+    st = _session(root, "s1", "2026-09-24", monkeypatch)  # a resume, same session, same day
+    assert st["shown"] == 1 and st["repeated_at_stop"] is True
+    assert ni.claim_human(root) == ""  # not again this sitting
+
+
+def test_a_resume_on_a_later_day_is_a_new_sitting(tmp_path, monkeypatch):
+    root = _project(tmp_path)
+    _session(root, "s1", "2026-09-24", monkeypatch)
+    ni.claim_human(root)
+    st = _session(root, "s1", "2026-09-26", monkeypatch)
+    assert st["shown"] == 2 and st["repeated_at_stop"] is False
+    assert ni.claim_human(root)  # the re-entry moment shows it again
+
+
+def test_claim_human_flag_prints_once(tmp_path, monkeypatch):
+    root = _project(tmp_path)
+    _session(root, "s1", "2026-09-24", monkeypatch)
+    for expected in (True, False):
+        out = io.StringIO()
+        monkeypatch.setattr("sys.stdout", out)
+        assert ni.main(["--project-dir", str(root), "--claim-human"]) == 0
+        assert bool(out.getvalue().strip()) is expected
