@@ -121,7 +121,9 @@ check nobody reads — and only one of them is visible in the field.**
 and expect (d) to be where the real answer lives.
 
 - **They answer** → you have a property; record the violation in `contradicted_by`.
-- **They cannot, or decline** → record `aspiration_reason` and say the consequence out loud:
+- **They cannot, or decline** → record `binding: false` and `aspiration_reason` (the schema requires
+  `binding` on every property; an aspiration without it fails validation, found by the first E2E
+  happy-path run, v0.248.1), and say the consequence out loud:
   *"'secure' stays undefined, so no solution will ever be checked against it."* **A skip is a
   recorded choice, never a blank.**
 
