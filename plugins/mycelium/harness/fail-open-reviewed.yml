@@ -723,3 +723,12 @@ reviewed:
     2026-09-24 adversarial review this handler also caught LookupError and a parse error, which
     turned an IndexError on `object_ref: ", sol-001"` and a two-step broken write into silent
     allows; both are pinned in tests/python/test_scale_locks.py. Reviewed 2026-09-24, v0.245.0.
+- id: next_item.py@564a06b27f
+  verdict: accepted
+  reason: >-
+    `_unassessed` returns [] when diamonds/active.yml cannot be read. Silent at the site and correct:
+    `pick()` reads the same file first through `_fired_proposals`, which returns the note
+    "diamonds/active.yml unreadable (<error>); fired proposals unread", and pick() joins that note
+    into what session-start prints. So an unreadable file is reported once, where the human reads
+    it, and is never mistaken for "no diamond needs assessing". Pinned by the existing next-item
+    tests and tests/python/test_next_item_moves_the_ladder.py. Reviewed 2026-09-24, v0.249.0.

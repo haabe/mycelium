@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.248.1 -- **The happy path writes a canvas Mycelium itself accepts** (PATCH). The first E2E happy-path run failed Mycelium's own validator in its first session, on state its own skills wrote as instructed: YAML dates now validate as ISO strings, the interview's JTBD stub carries a complete provenance, and /purpose-properties writes binding: false on aspirations. Prior: 0.248.0 a phase move leaves a record.*
+*Version 0.249.0 -- **The next item moves the ladder** (MINOR). The session-start next item now proposes /mycelium:diamond-progress for a diamond whose phase has never been assessed, or was last ruled on before new evidence landed, delivering diamonds first. Until now it proposed that step only for a fired closing path, so on the happy path a diamond moved only if the driver remembered to move it. Prior: 0.248.1 the happy path writes a canvas Mycelium itself accepts.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 
