@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.250.1 -- **Once per sitting** (PATCH). The next item reaches the human once per session per day, however often the session is resumed, and the session-count line is said only when a count changes rather than after every response. E2E run 20 relayed both to the human on every turn of a resume-per-message driver. Prior: 0.250.0 a canvas write is checked as it lands; an unanswered next item escalates.*
+*Version 0.250.2 -- **Doing what the item asks answers it** (PATCH). The next-item ladder now resets when the item's own action was taken after it was first shown (a diamond assessed), not only on a written ruling, and a diamond the ruling recorder merely saw is no longer treated as assessed. E2E run 21 escalated an L3 that had been moved to develop two sessions earlier. Prior: 0.250.1 once per sitting.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

@@ -176,13 +176,23 @@ def same_sitting(prev: dict, item_id: str, session: str, today: str) -> bool:
             and prev.get("emitted_at") == today)
 
 
-def carry(root: Path, prev: dict, item_id: str, session: str, today: str) -> tuple[int, str]:
-    """(sittings shown, first shown) for this item, counted since its last ruling."""
+def carry(root: Path, prev: dict, item: dict, session: str, today: str) -> tuple[int, str]:
+    """(sittings shown, first shown) for this item, counted since it was last answered.
+
+    Answered = a ledger ruling on the id, OR (v0.250.2) the item's own action done since it was
+    first shown: for a diamond-assessment item, the diamond assessed after `first_shown_at`. E2E
+    run 21: an L3 moved discover -> develop in session 1, new evidence brought the same item back,
+    and it was escalated as "unanswered for 3 sessions" in session 3. A false escalation is the
+    cry-wolf the ladder exists to avoid (Breznitz 1984; Google SRE: every page actionable)."""
+    item_id = item["id"]
     if prev.get("id") != item_id:
         return 1, today
     first = str(prev.get("first_shown") or prev.get("emitted_at") or today)
     if _ruled_since(root, item_id, first):
         return 1, today  # acknowledged: the ladder starts again
+    done = str(item.get("assessed_at") or "")
+    if done and done > str(prev.get("first_shown_at") or ""):
+        return 1, today  # its action was taken after it was first shown: answered
     shown = int(prev.get("shown") or 1)
     return (shown if same_sitting(prev, item_id, session, today) else shown + 1), first
 
@@ -353,7 +363,9 @@ def _unassessed(root: Path, today: str) -> list[dict]:
                     "rank": (0 if scale in ("L3", "L4", "L5") else 1, ruled or ""),
                     "text": f"{d['id']} ({scale}) {why}. Its next transition is "
                             f"{phase} -> {_NEXT[phase]}.",
-                    "command": f"/mycelium:diamond-progress {d['id']}"})
+                    "command": f"/mycelium:diamond-progress {d['id']}",
+                    "assessed_at": rec.get("ts") if rec.get("sig") == (
+                        dr.signature(d) if dr else None) else None})
     return sorted(out, key=lambda r: r["rank"])
 
 
@@ -548,7 +560,10 @@ def main(argv=None) -> int:
     if args.write_state:
         if prev.get("id") and prev.get("id") != item["id"]:
             _log_leave(root, prev, args.today)
-        item["shown"], item["first_shown"] = carry(root, prev, item["id"], args.session, args.today)
+        item["shown"], item["first_shown"] = carry(root, prev, item, args.session, args.today)
+        first_at = (str(prev.get("first_shown_at") or "") if item["shown"] > 1
+                    or same_sitting(prev, item["id"], args.session, args.today) else "")
+        item["first_shown_at"] = first_at or _dt.datetime.now(tz=_dt.UTC).isoformat()
         p = root / STATE_REL
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text(
@@ -560,6 +575,7 @@ def main(argv=None) -> int:
                     "session": args.session,
                     "emitted_at": args.today,
                     "first_shown": item["first_shown"],
+                    "first_shown_at": item["first_shown_at"],
                     "shown": item["shown"],
                     # the human has seen it this sitting (Stop repeat or resume line): keep that
                     "repeated_at_stop": bool(prev.get("repeated_at_stop")) and same_sitting(
