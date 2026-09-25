@@ -350,8 +350,8 @@ def settle(root: Path, session: str, text: str, today: str) -> tuple[str, list[d
             n = len(x["streak_days"])
             replacements[aid] = (
                 f"MUTED ADVISORY {aid}: fired on {n} day(s) since {x['muted_since']}, nothing "
-                f"followed; muted until you rule (advisory_ledger.py rule --id {aid} "
-                f"--ruling keep|fix|drop)."
+                f'followed; muted until you rule (python3 "{Path(__file__).resolve()}" rule '
+                f"--id {aid} --ruling keep|fix|drop)."
             )
 
     append_events(path, new_events)
