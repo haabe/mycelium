@@ -113,11 +113,12 @@ id and the increment, e.g. "sol-003, swap request + single approval"), or record
 "increment not opened". **Every product has some kind of delivery**, and its shape follows the
 product type: tested code for software, reviewed and accessible content, passing evals for an AI
 tool, a documented and repeatable step for a service. Offer it only when the L4 entry lock holds
-(`engine/diamond-rules.md`, Entry locks, v0.245.0): the L3 it delivers, named as the L4's `parent`, at
-medium confidence or higher (`data-supported`, `test-validated` or `launch-validated`; Gilad,
-*Evidence-Guided* p158-159: most ideas reach medium-high before delivery, bigger or riskier ones go
-further). Run `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/scale_locks.py" --can-open L4 --parent <l3-id>`. A passing checklist on an L3 still at `anecdotal` is an
-increment ready to build TO LEARN, which stays in the L3. Before v0.243.0 nothing opened an L4: the Four Risks verdict was described as its
+(`engine/diamond-rules.md`, Entry locks, v0.256.0): the L3 it delivers, named as the L4's `parent`,
+with its riskiest assumption's test named and not failed. The L4 is the delivery: when that test
+needs real use (a pilot, early adopters, an alpha), the L4 is how the increment reaches the people
+the test needs, through its Security, Privacy and Service Quality gates. The medium-confidence bar
+(Gilad, *Evidence-Guided* p158-159) sits on the release to the market, the L5, and this delivery's
+verdict is what meets it. Run `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/scale_locks.py" --can-open L4 --parent <l3-id>`. Before v0.243.0 nothing opened an L4: the Four Risks verdict was described as its
 "entry permit" and no skill consumed it.
 
 ## If Any Item Fails

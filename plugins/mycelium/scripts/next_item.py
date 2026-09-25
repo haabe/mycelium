@@ -422,8 +422,10 @@ def _door_item(root: Path, today: str, st: dict) -> dict | None:
             if not _blocked(st.get(iid, {}), today) and not sl.can_open(
                     str(root), "L4", parent=did):
                 return {"id": iid, "diamond": did, "since": today, "command": "/mycelium:preflight",
-                        "text": f"{did} (L3) is at medium confidence or better and no L4 is "
-                                "open on it: its increment can be delivered. Open an L4 on it.",
+                        "text": f"{did} (L3) is building and has named the test of its riskiest "
+                                "assumption, and no L4 is open on it. Open an L4 to deliver the "
+                                "increment to the people that test needs; its verdict is what "
+                                "the market release waits on.",
                         "why": "the L4 lock holds and nothing is delivering the increment"}
         if scale == "L4" and phase in _SHIPPED and not _children(active, d, "L5"):
             iid = f"door-l5:{did}"
@@ -433,7 +435,8 @@ def _door_item(root: Path, today: str, st: dict) -> dict | None:
             text = (f"{did} (L4) has shipped and its launch data is recorded: open the L5 market "
                     "diamond on it." if ready else
                     f"{did} (L4) has shipped. Record its launch data (usage, feedback or metric "
-                    "movement) and categorise the release; a first market release opens an L5.")
+                    "movement) and its test's verdict on the riskiest assumption, and categorise "
+                    "the release; a first market release opens an L5.")
             return {"id": iid, "diamond": did, "since": today,
                     "command": "/mycelium:launch-tier", "text": text,
                     "why": "a shipped L4 is the L5's event"}

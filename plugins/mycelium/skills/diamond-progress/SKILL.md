@@ -105,7 +105,11 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
    production infrastructure and still give test-validated evidence. A real hosted pilot is allowed;
    name it here as the test, so building infrastructure is a choice and not the default. E2E runs
    19 to 23 each built a server, an SMS provider, a domain and a security review inside the L3, and
-   each stalled there.
+   each stalled there. **A test that needs the build in real use runs through an L4** (v0.256.0):
+   the L3 builds the increment, and an L4 delivers it to the people the test needs, through its
+   Security, Privacy and Service Quality gates. The L4 opens once the test is named; its verdict is
+   what the market release (L5) waits on. E2E run 29 named a live trial at a pilot site and had no
+   way to run it: the L4 lock waited on the trial's result.
 
 3. **Calculate confidence**:
    - Apply scoring rules from `${CLAUDE_PLUGIN_ROOT}/engine/confidence-thresholds.yml`.
