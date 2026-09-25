@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.253.1 -- **Fail fast, then parallel** (PATCH). CI is a fast lane (security audits, workflow lint, the validator, the cheap gates) followed by parallel pytest and bash jobs behind one required `validate` check; pytest runs once, in parallel; each whole-repo scan runs once; pre-push is a fast check (~1 min) and CI is the gate; the release trusts the merged PR's green run when the tree is identical. A release took 35-45 min with the same checks run 3-4 times. Prior: 0.253.0 test before you build, and the L4 reads the evidence.*
+*Version 0.253.2 -- **A shell command cannot change diamond state unjudged** (PATCH). A new guard runs before and after every shell command: it refuses a command that visibly writes `diamonds/active.yml` (the scale-lock gate only ever judged the Edit and Write tools, so `sed -i` or a heredoc could open a diamond past its lock or move it without its gates), and afterwards schema-checks any canvas file the command changed and judges a changed diamonds file with the scale locks. E2E run 24 wrote the privacy canvas through a shell command and nothing checked it. Prior: 0.253.1 fail fast, then parallel.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

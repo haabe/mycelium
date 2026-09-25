@@ -127,6 +127,11 @@
             "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/autonomous-evidence-guard.sh",
             "timeout": 30,
             "statusMessage": "Mycelium autonomous-evidence-guard (autonomous-mode only)"
+          },
+          {
+            "type": "command",
+            "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/bash-state-guard.sh pre",
+            "timeout": 10
           }
         ]
       },
@@ -233,6 +238,11 @@
             "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/codex-postfailure-shim.sh",
             "timeout": 10,
             "statusMessage": "Reflexion: checking failure relevance (Codex shim)"
+          },
+          {
+            "type": "command",
+            "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/bash-state-guard.sh post",
+            "timeout": 15
           }
         ]
       }

@@ -4,6 +4,28 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.253.2 - a shell command cannot change diamond state unjudged
+
+**2026-09-25.** E2E run 24 (0.253.0) wrote `privacy-assessment.yml` through a shell command: the
+change log shows its last Write/Edit at 05:33, and the file then held `open_blockers` and
+`notice_status` keys the schema rejects. The canvas schema check (0.250.0) is a PostToolUse hook on
+Write/Edit/MultiEdit, so it never saw it. Reading the registrations showed the larger hole:
+`scale-lock-gate.sh` is registered on the edit tools only. A `sed -i`, a redirect or a Python
+one-liner could open a diamond past its entry lock or move it forward without its gates, and neither
+the locks, the ruling recorder nor the schema check would run.
+
+- **`bash-state-guard.sh`, before every shell command:** refuses one that visibly writes
+  `.claude/diamonds/active.yml` (a redirect, `sed -i`, `tee`, or a script that names the file and
+  writes), pointing to Edit/Write. Reads are never refused; Mycelium's own `derive_closing_path.py`
+  is allowed. Snapshots the file and stamps the time.
+- **After every shell command:** each canvas or diamonds file changed since the stamp is checked
+  against its schema, and a changed diamonds file is judged against the snapshot by the same verdict
+  the write hook uses (`scale_locks.violations_between`, split out for this) and its rulings
+  recorded. Findings go to the agent in the same turn. Nothing is undone automatically.
+- Fails open on a crash and says so: it runs before every shell command, and failing closed on a
+  broken script would lock the agent out of the shell.
+- Pinned by `tests/python/test_bash_state_guard.py`.
+
 ## v0.253.1 - fail fast, then parallel
 
 **2026-09-25.** Founder: "Find the best practices to optimize the CICD pipeline so that we don't lower
