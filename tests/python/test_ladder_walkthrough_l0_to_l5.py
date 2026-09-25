@@ -5,7 +5,8 @@ manually." Twenty-four E2E runs never got past L3, so L4 and L5 had never been e
 This drives no agent. It writes each artefact in the order a project produces them and pushes every
 change to diamonds/active.yml through `hooks/scale-lock-gate.sh`, the hook Claude Code runs. At each
 rung it asserts both halves: the door stays SHUT one artefact short, and OPENS once the artefact is
-on record. Every phase move carries its transition's gates and a history entry, as the gate demands.
+on record. Since v0.255.0 it also asserts, at every rung, that Mycelium PROPOSES the door once its
+lock holds, and not before or after: a door the test opens itself proves the lock, not the door. Every phase move carries its transition's gates and a history entry, as the gate demands.
 """
 
 from __future__ import annotations
@@ -111,14 +112,19 @@ def test_the_ladder_opens_rung_by_rung_from_l0_to_l5(tmp_path):
     l1 = {"id": "l1", "scale": "L1", "phase": "discover",
           "object_ref": "lead with multi-site cafes"}
     p.refused(p.add(l1), "purpose")
+    assert _proposed(tmp_path) != "door-l1:l0", "no L1 door before the purpose is stated"
     p.canvas_file("purpose.yml", {
         "why": "Swaps are approved in one place so nobody relays them by hand",
         "who": {"description": "Shift leads at cafes with 2-10 sites"}})
+    # v0.255.0: every door is asserted to be PROPOSED, not only to open when a test opens it.
+    assert _proposed(tmp_path) == "door-l1:l0", "the L1 door is proposed once the purpose is stated"
     p.write(p.add(l1))
+    assert _proposed(tmp_path) != "door-l1:l0", "and not again once the L1 is open"
 
     # L2 opens on a strategy (the L1, a North Star, the landscape) and a desired outcome.
     l2 = {"id": "l2", "scale": "L2", "phase": "discover", "object_ref": "opp-001"}
     p.refused(p.add(l2), "north-star")
+    assert _proposed(tmp_path) != "door-l2:l1", "no L2 door before the strategy is on record"
     p.canvas_file("north-star.yml", {"metric": {"name": "swaps settled in the app per week"}})
     p.canvas_file("landscape.yml", {"components": [{"id": "comp-1", "name": "group chat"}]})
     opps = {"desired_outcome": {"metric": "share of swaps approved without a phone call",
@@ -127,16 +133,21 @@ def test_the_ladder_opens_rung_by_rung_from_l0_to_l5(tmp_path):
                                "provenance": {"evidence_type": "speculation"},
                                "solutions": [{"id": "sol-001", "name": "Backup approver"}]}]}
     p.canvas_file("opportunities.yml", opps)
+    assert _proposed(tmp_path) == "door-l2:l1", "the L2 door is proposed once its lock holds"
     p.write(p.add(l2))
+    assert _proposed(tmp_path) != "door-l2:l1", "and not again once the L2 is open"
 
     # L3 opens on a target opportunity with evidence and a source.
     l3 = {"id": "l3", "scale": "L3", "phase": "discover", "object_ref": "sol-001", "parent": "l2"}
     p.refused(p.add(l3), "evidence behind the opportunity")
+    assert _proposed(tmp_path) != "door-l3:l2", "no L3 door before the opportunity has evidence"
     opps["opportunities"][0]["provenance"] = {
         "evidence_type": "anecdotal",
         "evidence_sources": ["decliner calls: 3 of 5 sites lost swaps while the manager was off"]}
     p.canvas_file("opportunities.yml", opps)
+    assert _proposed(tmp_path) == "door-l3:l2", "the L3 door is proposed once its lock holds"
     p.write(p.add(l3))
+    assert _proposed(tmp_path) != "door-l3:l2", "and not again once the L3 is open"
 
     # The L3 builds only after naming the lightest test of its riskiest assumption (v0.253.0), and
     # the safety gates need their records.
@@ -165,20 +176,25 @@ def test_the_ladder_opens_rung_by_rung_from_l0_to_l5(tmp_path):
     p.write(p.add(l4))
     assert _proposed(tmp_path) != "door-l4:l3", "and not again once the L4 is open"
 
+    _ship_and_open_l5(p, tmp_path)
+
+
+def _ship_and_open_l5(p: Project, root: Path) -> None:
+    """The second half of the walk: the L4 ships and the L5 opens on it."""
     # L4 ships: through define and develop into deliver, gates passed at every step.
     for phase in ("define", "develop", "deliver"):
         p.write(p.moved("l4", phase))
-    assert sl.exposure_state(str(tmp_path))[0], "a shipped L4 may meet real people"
+    assert sl.exposure_state(str(root))[0], "a shipped L4 may meet real people"
 
     # L5 opens on the shipped L4 plus launch data; the shipped L4 is the L5 door's event (v0.254.0).
-    assert _proposed(tmp_path) == "door-l5:l4", "a shipped L4 proposes the L5 door"
+    assert _proposed(root) == "door-l5:l4", "a shipped L4 proposes the L5 door"
     l5 = {"id": "l5", "scale": "L5", "phase": "discover", "parent": "l4"}
     p.refused(p.add(l5), "launch data")
     p.write([{**d, "launch_data": {"usage": "12 sites, 41 swaps in week one"}}
              if d["id"] == "l4" else d for d in p.diamonds])
-    assert _proposed(tmp_path) == "door-l5:l4", "still proposed, now to open the L5"
+    assert _proposed(root) == "door-l5:l4", "still proposed, now to open the L5"
     p.write(p.add(l5))
-    assert _proposed(tmp_path) != "door-l5:l4", "and not again once the L5 is open"
+    assert _proposed(root) != "door-l5:l4", "and not again once the L5 is open"
 
     # And the L5 can itself move through its phases.
     for phase in ("define", "develop", "deliver"):

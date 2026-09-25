@@ -397,7 +397,7 @@ def _children(active: list[dict], parent: dict, scale: str) -> list[dict]:
 
 
 def _door_item(root: Path, today: str, st: dict) -> dict | None:
-    """The L4 and L5 doors, proposed when they can open (v0.254.0).
+    """The L4 and L5 doors, proposed when they can open (v0.254.0); then the L1 to L3 doors.
 
     E2E runs 19-26: no run reached L4. Its only entrance was /preflight's offer when an L3 enters
     develop, which under test-first (0.253.0) comes before the test that raises the L3's evidence,
@@ -437,6 +437,45 @@ def _door_item(root: Path, today: str, st: dict) -> dict | None:
             return {"id": iid, "diamond": did, "since": today,
                     "command": "/mycelium:launch-tier", "text": text,
                     "why": "a shipped L4 is the L5's event"}
+    return _entry_door(root, today, st, active)
+
+
+# The way into each scale below L4, deepest first (v0.255.0): the scale, the parent scale, the
+# skill whose offer is that scale's entrance, and what the door says.
+_ENTRY_DOORS = (
+    ("L3", "L2", "/mycelium:ice-score",
+     ("{pid} (L2) has evidence behind its opportunity and no L3 is open: score its solutions "
+      "and open an L3 on the highest-ranked one.")),
+    ("L2", "L1", "/mycelium:ost-builder",
+     ("{pid} (L1) has a strategy, a North Star and a desired outcome, and no L2 is open: open "
+      "an L2 on the opportunity that serves the outcome best.")),
+    ("L1", "L0", "/mycelium:wardley-map",
+     ("{pid} (L0) has its purpose stated and no L1 is open: open an L1 Strategy diamond on "
+      "the first strategic decision, or record that none is open.")),
+)
+
+
+def _entry_door(root: Path, today: str, st: dict, active: list[dict]) -> dict | None:
+    """The L1, L2 and L3 doors (v0.255.0). Each scale's entrance was an offer inside one skill
+    (/wardley-map, /ost-builder, /ice-score), so a project that never ran that skill was never
+    asked, and no test asserted any of the three fired. Founder, 2026-09-25, on the L4 and L5
+    doors that had been documented and never fired: "a major mismatch from what I was promised".
+    Proposed once the scale's lock holds and nothing at that scale is open; L1 to L3 are the way
+    into strategy, opportunity and solution work, where L4 and L5 are one per increment."""
+    def live(scale: str) -> list[dict]:
+        return [d for d in active if str(d.get("scale", "")).upper() == scale
+                and str(d.get("phase") or "discover").lower() not in _CLOSED]
+    for scale, parent_scale, command, text in _ENTRY_DOORS:
+        if live(scale):
+            continue
+        for p in live(parent_scale):
+            pid = str(p["id"])
+            iid = f"door-{scale.lower()}:{pid}"
+            if _blocked(st.get(iid, {}), today) or sl.can_open(str(root), scale, parent=pid):
+                continue
+            return {"id": iid, "diamond": pid, "since": today, "command": command,
+                    "text": text.format(pid=pid),
+                    "why": f"the {scale} lock holds and nothing at {scale} is open"}
     return None
 
 
