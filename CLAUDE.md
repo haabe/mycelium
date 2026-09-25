@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.254.1 -- **A snooze until a condition reaches the agent** (PATCH). An item snoozed "until asked" whose ruling names a condition ("ask after the test design is frozen") is listed for the agent once per sitting, so it can put the item to the user again when the condition is met; the human is not shown it. Before, such a snooze could only come back if the human remembered. Prior: 0.254.0 the L4 and L5 doors are proposed when they can open.*
+*Version 0.255.0 -- **The L1, L2 and L3 doors are proposed when they can open** (MINOR). Each scale's entrance below L4 was an offer inside one skill, so a project that never ran that skill was never asked, and no test asserted any of the three fired. The next item now proposes the L1, L2 and L3 doors once each lock holds and nothing at that scale is open, and the L0-to-L5 walkthrough asserts every door is proposed exactly when it can open. Prior: 0.254.1 a snooze until a condition reaches the agent.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

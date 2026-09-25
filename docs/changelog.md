@@ -4,6 +4,22 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.255.0 - the L1, L2 and L3 doors are proposed when they can open
+
+**2026-09-25.** Founder, on the L4 and L5 doors that had been claimed since 0.232.0 and 0.243.0 and
+never fired until 0.254.0: "a major mismatch from what I was promised". The same test applied to L1
+to L3: each scale's entrance was an offer inside one skill (`/wardley-map`, `/ost-builder`,
+`/ice-score`). E2E runs 22 to 28 opened L1 to L3 every time, on the agent's own initiative, but a
+project whose agent never ran that skill was never asked, and no test asserted any of the three.
+
+- **The next item proposes the L1, L2 and L3 doors**, after the L4 and L5 doors and before the
+  assessment ladder, deepest first: `door-l1:<l0>`, `door-l2:<l1>`, `door-l3:<l2>`, each once its
+  lock holds and nothing at that scale is open. Snooze and drop work as for every next item.
+- **The walkthrough asserts every door, L1 to L5**: not proposed one artefact short, proposed once
+  the lock holds, not proposed again once the child is open. A door the test opens itself proves the
+  lock, not the door; the L4 and L5 claims passed every check on exactly that.
+- `engine/diamond-rules.md` says so under the spawn rules.
+
 ## v0.254.1 - a snooze until a condition reaches the agent
 
 **2026-09-25.** E2E run 27: the founder answered the escalated L3 item "not now, ask after the
