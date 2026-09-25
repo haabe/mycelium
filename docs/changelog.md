@@ -4,6 +4,35 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.253.0 - test before you build, and the L4 reads the evidence
+
+**2026-09-25.** Why the ladder stopped at L3 in every E2E run (founder, 2026-09-25: "How can L3 give
+real use if there's no infra to deliver it to test users?"). Two causes, one in the model's use and
+one in its wiring:
+
+- **Runs 19 to 23 each went straight to a real pilot inside the L3**: a server, an SMS provider, a
+  domain, a processor agreement, a security review. That is L4-grade work, and every run stalled on
+  it. The L4 bar is `data-supported` OR `test-validated`, and a concierge, Wizard-of-Oz or
+  early-adopter test reaches test-validated with no production infrastructure (Gilad AFTER; Torres).
+  Nothing asked for the lightest test before building.
+- **The L4 lock read a field nothing updates.** It checked the L3's own `evidence_type`;
+  `/log-evidence` grades canvas entries, `/assumption-test` updated confidence, `/diamond-progress`
+  touched neither. In run 19 the product had real use (11 real requests, 7 decided in the app) and
+  the L3 still read `anecdotal`.
+
+What changes:
+
+- **An L3 moving Define -> Develop names the lightest test of its riskiest assumption**
+  (`riskiest_assumption.cheapest_test` or `test_design` on the solution it builds, or on the
+  diamond; a sentence, not a label). The scale-lock gate refuses the move without it. A real hosted
+  pilot is allowed: it is named as the test, so infrastructure is a choice, not the default.
+- **The L4 lock reads the solution's evidence**: the best of the L3's `evidence_type`, the solution's
+  `provenance.evidence_type`, and `test-validated` when its riskiest assumption has a `validated`
+  verdict.
+- `/diamond-progress` (step 2d) and `/assumption-test` now say where the test and its verdict are
+  recorded; `engine/diamond-rules.md` Entry locks names the new source.
+- Pinned by `tests/python/test_scale_locks.py`.
+
 ## v0.252.2 - an answer in plain words is pointed at the command that records it
 
 **2026-09-25.** E2E run 22 (0.252.0): the founder answered the open next item in plain words,

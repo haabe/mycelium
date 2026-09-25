@@ -277,7 +277,10 @@ def test_a_forward_phase_move_needs_its_gates_and_a_history_entry(tmp_path):
     assert "define->develop: a `progression_history` entry" in out[0]
     ok = {**l3, "phase": "develop", "theory_gates_status": BUILD_PASSED,
           "progression_history": [{"transition": "define -> develop", "date": "2026-09-24",
-                                   "ruling": "progressed"}]}
+                                   "ruling": "progressed"}],
+          "riskiest_assumption": {"statement": "a named backup approves when the manager is off",
+                                  "cheapest_test": "concierge: the founder texts Tom each request "
+                                                   "by hand for two weeks"}}
     assert sl.new_diamond_violations(p, _write(yaml.safe_dump({"active_diamonds": [*BASE, ok]}))) == []
 
 
@@ -650,3 +653,67 @@ def test_the_exposure_line_flag_reads_the_prompt_payload(tmp_path, monkeypatch, 
     assert "MYCELIUM EXPOSURE STATE" in capsys.readouterr().out
     monkeypatch.setattr("sys.stdin", io.StringIO("not json"))
     assert sl.main(["--project-dir", p, "--exposure-line"]) == 0
+
+
+# ---------------------------------------------------------------- test before you build (v0.253.0)
+# E2E runs 19-23 went straight to a real pilot inside the L3 and stalled; and in run 19 real use
+# was recorded on the canvas while the L3 still read `anecdotal`, so the L4 lock never opened.
+
+
+def _sol_opps(**sol):
+    return {**OUTCOME, "opportunities": [{**OPP, "solutions": [
+        {"id": "sol-001", "name": "Backup approver", **sol}]}]}
+
+
+def test_l4_reads_the_evidence_recorded_on_the_solution(tmp_path):
+    opps = _sol_opps(provenance={"evidence_type": "data-supported",
+                                 "evidence_sources": ["11 real requests, 7 decided in the app"]})
+    p = _project(tmp_path, purpose=PURPOSE, opps=opps, diamonds=[_l3("anecdotal")])
+    assert sl.can_open(p, "L4", parent="l3-a") == []
+
+
+def test_a_validated_riskiest_assumption_counts_as_test_validated(tmp_path):
+    opps = _sol_opps(riskiest_assumption={"statement": "a backup approves",
+                                          "cheapest_test": "concierge for two weeks at Harbour",
+                                          "verdict": "validated"})
+    p = _project(tmp_path, purpose=PURPOSE, opps=opps, diamonds=[_l3("anecdotal")])
+    assert sl.State(p).l3_evidence(_l3("anecdotal")) == "test-validated"
+    assert sl.can_open(p, "L4", parent="l3-a") == []
+
+
+def test_an_untested_solution_does_not_open_l4(tmp_path):
+    opps = _sol_opps(riskiest_assumption={"statement": "a backup approves",
+                                          "cheapest_test": "concierge for two weeks at Harbour"})
+    p = _project(tmp_path, purpose=PURPOSE, opps=opps, diamonds=[_l3("anecdotal")])
+    assert any("medium confidence" in m for m in sl.can_open(p, "L4", parent="l3-a"))
+
+
+def _move_to_develop(tmp_path, opps, **extra):
+    l3 = {"id": "l3-a", "scale": "L3", "phase": "define", "object_ref": "sol-001",
+          "theory_gates_status": BUILD_PASSED}
+    p = _project(tmp_path, purpose=PURPOSE, opps=opps, diamonds=[l3])
+    moved = {**l3, **extra, "phase": "develop", "progression_history": [
+        {"transition": "define -> develop", "date": "2026-09-25", "ruling": "progressed"}]}
+    return sl.new_diamond_violations(p, _write(yaml.safe_dump({"active_diamonds": [*BASE, moved]})))
+
+
+def test_an_l3_names_its_lightest_test_before_it_builds(tmp_path):
+    out = _move_to_develop(tmp_path, _sol_opps())
+    assert len(out) == 1 and "the lightest test that answers it" in out[0]
+    assert "Wizard-of-Oz" in out[0] and "a real pilot is allowed" in out[0]
+
+
+def test_a_test_named_on_the_solution_opens_develop(tmp_path):
+    opps = _sol_opps(riskiest_assumption={"statement": "a backup approves",
+                                          "cheapest_test": "Wizard of Oz: founder relays by hand"})
+    assert _move_to_develop(tmp_path, opps) == []
+
+
+def test_a_real_pilot_is_allowed_when_it_is_named_as_the_test(tmp_path):
+    ra = {"statement": "staff use a link", "test_design": "a real pilot at Harbour, hosted, 2 weeks"}
+    assert _move_to_develop(tmp_path, _sol_opps(), riskiest_assumption=ra) == []
+
+
+def test_a_one_word_label_is_not_a_test_design(tmp_path):
+    opps = _sol_opps(riskiest_assumption={"statement": "x", "cheapest_test": "pilot"})
+    assert _move_to_develop(tmp_path, opps)

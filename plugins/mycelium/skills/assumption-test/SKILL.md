@@ -238,7 +238,12 @@ superficial veneer of rigor. **The contract makes an edit visible. It does not m
 - Update ICE score for the solution
 - If assumption validated: move to next riskiest assumption. **Update confidence** in the relevant canvas entry (opportunities.yml, .claude/diamonds/active.yml) to reflect the validated assumption — typically +0.1 to +0.15. **If the validated assumption originated from a stakeholder interview** (`source_class: internal_stakeholder` with `validated: false`): set `validated: true` in the provenance block. This resolves the organizational mythology flag (Brown) — the stakeholder belief is now confirmed by external evidence.
 - If assumption invalidated: pivot the solution or explore alternatives. **Decrease confidence** by 0.1-0.2 to reflect the failed assumption. **If the invalidated assumption was a stakeholder belief**: update the canvas entry to reflect reality, not the stakeholder's original claim. Note the divergence in the decision log — the gap between belief and reality is a learning.
-- Log in .claude/canvas/opportunities.yml under the solution's experiments
+- Log in .claude/canvas/opportunities.yml under the solution's experiments, and on the solution
+  itself record `riskiest_assumption: {statement, cheapest_test, verdict}` (v0.253.0). The name of
+  the test is what lets an L3 move to Develop; the `verdict` (`validated` / `invalidated`) and the
+  solution's `provenance.evidence_type` (`test-validated` when the test held) are what the L4 lock
+  reads. Before 0.253.0 the L4 lock read only the diamond's own `evidence_type`, which no skill
+  updated, so a tested solution never opened its L4.
 - **Always update .claude/diamonds/active.yml** confidence to match the test outcome
 
 ## Bias Warning
