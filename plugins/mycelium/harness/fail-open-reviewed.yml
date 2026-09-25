@@ -798,3 +798,12 @@ reviewed:
     answer" pointer for that one prompt; the escalated prompt line and the Stop repeat are
     unaffected, and a real answer left unrecorded is caught when the item is asked again.
     Reviewed 2026-09-25, v0.252.2.
+
+- id: bash_state_guard.py@dbdd70eea3
+  verdict: accepted
+  reason: >-
+    `_load` returns None when a sibling script cannot be imported (a missing dependency raises
+    SystemExit or ImportError at import). Silent at the site and correct: every caller turns None
+    into a spoken finding to the agent ("schema not checked: PyYAML/jsonschema are not installed",
+    "the scale locks could not be loaded"), so a missing module is never read as a clean command.
+    Reviewed 2026-09-25, v0.253.2.

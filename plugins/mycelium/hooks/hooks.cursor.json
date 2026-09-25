@@ -93,6 +93,12 @@
         "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/read-before-research-guard.sh",
         "type": "command",
         "timeout": 5
+      },
+      {
+        "matcher": "Bash|shell|Shell",
+        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/bash-state-guard.sh pre",
+        "type": "command",
+        "timeout": 10
       }
     ],
     "postToolUse": [
@@ -125,6 +131,12 @@
         "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/read-log.sh",
         "type": "command",
         "timeout": 3
+      },
+      {
+        "matcher": "Bash|shell|Shell",
+        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/bash-state-guard.sh post",
+        "type": "command",
+        "timeout": 15
       }
     ],
     "postToolUseFailure": [

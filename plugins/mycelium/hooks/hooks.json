@@ -119,6 +119,12 @@
             "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/autonomous-evidence-guard.sh",
             "timeout": 30,
             "statusMessage": "Mycelium autonomous-evidence-guard (autonomous-mode only)"
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/bash-state-guard.sh pre",
+            "timeout": 10,
+            "statusMessage": "Mycelium shell-state guard"
           }
         ]
       },
@@ -220,6 +226,17 @@
             "timeout": 3,
             "statusMessage": "Mycelium read log",
             "async": true
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/bash-state-guard.sh post",
+            "timeout": 15,
+            "statusMessage": "Mycelium shell-state check"
           }
         ]
       }

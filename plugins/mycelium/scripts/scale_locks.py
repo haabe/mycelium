@@ -820,6 +820,13 @@ def new_diamond_violations(project_dir: str, payload: dict) -> list[str]:
     after = _proposed_text(payload, target, before, project_dir)
     if after is None:
         return []
+    return violations_between(project_dir, before, after)
+
+
+def violations_between(project_dir: str, before: str, after: str) -> list[str]:
+    """The lock verdict on one change to diamonds/active.yml, given its text before and after.
+    Shared by the write hook (before = on disk, after = the proposed write) and, since v0.253.2,
+    by the shell guard (before = a snapshot taken before the command, after = on disk)."""
     try:
         old_doc = _as_dict(_parse(before, "diamonds/active.yml")) if before else {}
     except UnreadableError:
