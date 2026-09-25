@@ -254,3 +254,15 @@ def test_the_prompt_hook_passes_the_prompt_through(tmp_path, monkeypatch):
     assert ni.main(["--project-dir", str(root), "--prompt-line"]) == 0
     assert "--id unassessed" in out.getvalue()
     assert ni._prompt_of("not json") == "" and ni._prompt_of("[]") == ""
+
+
+def test_mycelium_today_sets_the_date_rulings_and_snoozes_use(monkeypatch):
+    """v0.253.4, E2E run 25: a snooze given in a simulated calendar never expired on the machine's."""
+    import advisory_ledger as al
+    monkeypatch.setenv("MYCELIUM_TODAY", "2026-10-13")
+    assert al.today_iso() == "2026-10-13"
+    assert ni._blocked({"snoozed_until": "2026-10-12"}, al.today_iso()) is False  # expired
+    monkeypatch.setenv("MYCELIUM_TODAY", "next tuesday")
+    assert al.today_iso() != "next tuesday"  # malformed: the real date
+    monkeypatch.delenv("MYCELIUM_TODAY")
+    assert len(al.today_iso()) == 10

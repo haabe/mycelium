@@ -57,9 +57,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 LEDGER_REL = Path(".claude") / "state" / "advisory-ledger.jsonl"
@@ -402,6 +403,20 @@ def report_lines(root: Path) -> list[str]:
     return lines
 
 
+def today_iso() -> str:
+    """Today for rulings, snoozes and streaks: MYCELIUM_TODAY when set to a YYYY-MM-DD date, else
+    the machine's UTC date (v0.253.4). The E2E harness runs a simulated calendar ahead of the
+    machine's, so a snooze "until 12 October" given in that world never expired and the item it
+    silenced never came back (run 25). Unset outside a harness, where nothing changes."""
+    v = os.environ.get("MYCELIUM_TODAY", "")
+    if v:
+        try:
+            return date.fromisoformat(v).isoformat()
+        except ValueError:
+            pass  # a malformed override is ignored: the real date is always safe
+    return datetime.now(tz=UTC).date().isoformat()
+
+
 def rule(  # noqa: PLR0913, PLR0917 — a CLI verb with one argument per flag
     root: Path, aid: str, ruling: str, note: str, today: str, until: str = ""
 ) -> str:
@@ -427,7 +442,7 @@ def main(argv=None) -> int:
     ap.add_argument("verb", choices=("settle", "report", "rule"))
     ap.add_argument("--project-dir", type=Path, default=Path("."))
     ap.add_argument("--session", default="")
-    ap.add_argument("--today", default=datetime.now(tz=UTC).date().isoformat())
+    ap.add_argument("--today", default=today_iso())
     ap.add_argument("--id", default="")
     ap.add_argument("--ruling", default="")
     ap.add_argument("--note", default="")
