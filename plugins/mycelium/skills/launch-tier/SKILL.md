@@ -108,9 +108,8 @@ against. The next item proposes this step when an L4 ships (v0.254.0).
 Gilad, *Evidence-Guided* p123): usage, feedback, or movement in the target metric, at any n. Write the launch data you
 have on the L4 whose release this is (`launch_data:` with `usage`, `feedback` or `metric_movement`), then
 run `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/scale_locks.py" --can-open L5 --parent <l4-id>`; if it prints what is missing, the L5 waits and the release stays in the L4.
-It also needs the L3 at medium confidence or higher (v0.256.0, moved from the L4 lock): the verdict of
-the test the L4 delivered, recorded on the riskiest assumption. A delivery whose test has not read out
-is not yet a market release.
+The lock also re-checks the chain below: an L4 whose L3 never reached medium confidence cannot launch
+into an L5.
 
 **What the L5 works toward is product/market fit.** Cagan, in *LOVED*'s
 foreword: *"the single most important concept in all of product is the concept of product/market

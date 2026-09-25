@@ -417,15 +417,17 @@ def _door_item(root: Path, today: str, st: dict) -> dict | None:
         scale = str(d.get("scale", "")).upper()
         phase = str(d.get("phase") or "discover").lower()
         did = str(d["id"])
+        if scale == "L3" and phase == "develop" and not _children(active, d, "L4"):
+            item = _learning_delivery_item(root, today, st, d)
+            if item:
+                return item
         if scale == "L3" and phase in ("develop", "deliver") and not _children(active, d, "L4"):
             iid = f"door-l4:{did}"
             if not _blocked(st.get(iid, {}), today) and not sl.can_open(
                     str(root), "L4", parent=did):
                 return {"id": iid, "diamond": did, "since": today, "command": "/mycelium:preflight",
-                        "text": f"{did} (L3) is building and has named the test of its riskiest "
-                                "assumption, and no L4 is open on it. Open an L4 to deliver the "
-                                "increment to the people that test needs; its verdict is what "
-                                "the market release waits on.",
+                        "text": f"{did} (L3) is at medium confidence or better and no L4 is "
+                                "open on it: its increment can be delivered. Open an L4 on it.",
                         "why": "the L4 lock holds and nothing is delivering the increment"}
         if scale == "L4" and phase in _SHIPPED and not _children(active, d, "L5"):
             iid = f"door-l5:{did}"
@@ -435,12 +437,40 @@ def _door_item(root: Path, today: str, st: dict) -> dict | None:
             text = (f"{did} (L4) has shipped and its launch data is recorded: open the L5 market "
                     "diamond on it." if ready else
                     f"{did} (L4) has shipped. Record its launch data (usage, feedback or metric "
-                    "movement) and its test's verdict on the riskiest assumption, and categorise "
-                    "the release; a first market release opens an L5.")
+                    "movement) and categorise the release; a first market release opens an L5.")
             return {"id": iid, "diamond": did, "since": today,
                     "command": "/mycelium:launch-tier", "text": text,
                     "why": "a shipped L4 is the L5's event"}
     return _entry_door(root, today, st, active)
+
+
+def _learning_delivery_item(root: Path, today: str, st: dict, d: dict) -> dict | None:
+    """The L3's own Deliver, proposed while its test waits on real use (v0.257.0). In 21 E2E runs
+    one L3 ever reached Deliver (run 19); the rest stalled in develop, where nothing offered the
+    move, and 0.256.0 routed the test through an L4 instead. The L3 delivers to LEARN: its test
+    runs with a named, opted-in audience until a date, through Security, Privacy and Service
+    Quality, and the verdict is what opens the L4."""
+    did = str(d["id"])
+    iid = f"deliver-l3:{did}"
+    if _blocked(st.get(iid, {}), today):
+        return None
+    state = sl.State(str(root))
+    if state.test_design_missing(d) or state.l3_evidence(d) in sl.MEDIUM_OR_BETTER or \
+            state.failed_assumption(d):
+        return None
+    need = [g.replace("_", " ").title() for g in ("security", "privacy", "service_quality")
+            if state.gate_missing(d, g)]
+    if state.learning_delivery_missing({**d, "phase": "deliver"}):
+        need.append("its learning delivery (audience, until, means)")
+    text = (f"{did} (L3) has built what its test needs and the test has not run. Take the L3 to "
+            "Deliver to run it with its audience: a named, opted-in group, until a date, by means "
+            "that fit the product (for web software, infrastructure as code for an environment "
+            "that can be torn down). The verdict is what opens the L4.")
+    if need:
+        text += " Still needed: " + ", ".join(need) + "."
+    return {"id": iid, "diamond": did, "since": today,
+            "command": f"/mycelium:diamond-progress {did}", "text": text,
+            "why": "the test waits on real use, and the L3 delivers to learn"}
 
 
 # The way into each scale below L4, deepest first (v0.255.0): the scale, the parent scale, the
