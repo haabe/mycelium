@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.252.1 -- **The exposure line is said twice a sitting at most, on acts of going live** (PATCH). 0.252.0's go-live word list included "pilot", "staff", "launch" and "waitlist", which in a staff-scheduling product are the domain: it matched about 80% of founder prompts in E2E runs 21 and 22. It now matches acts of exposure (deploy, go live, production, rolling out, sending or posting a link, real users), and the line is said at a sitting's first prompt and its first go-live prompt, not on every one. Prior: 0.252.0 not ready for real people is said where the agent reasons.*
+*Version 0.252.2 -- **An answer in plain words is pointed at the command that records it** (PATCH). When a prompt looks like the user's answer to the open next item ("snooze it", "drop it", "not now", "until asked"), the per-prompt hook names the item and the exact ledger command, beside that prompt. E2E run 22: the founder snoozed an item in plain words, the agent never recorded it, and the item came back as "unanswered for 3 sessions". Prior: 0.252.1 the exposure line, twice a sitting, on acts of going live.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

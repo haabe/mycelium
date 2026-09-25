@@ -204,6 +204,8 @@ This is **not** a guardrail — it does NOT block. The hook cannot reliably dist
 
 Runs `validate_canvas.py`'s schema functions on the file just written (`scripts/canvas_write_check.py`) and, if it fails, returns the errors as `decision: block` so the agent sees them in the same turn. Found by E2E run 19: an invalid `privacy-assessment.yml` stood after the post-write nudge had already said "validate with validate_canvas.py". A reminder to run a check is not the check.
 
+**v0.252.2.** `preflight.sh` passes the prompt payload to `next_item.py --prompt-line`, which, when the prompt looks like the user's answer to the open next item, names the item and the `advisory_ledger.py rule` command that records it. Nothing of the prompt is stored.
+
 **v0.252.0 additions.** `preflight.sh` prints `MYCELIUM EXPOSURE STATE` (from `scale_locks.py --exposure-line`) when a delivering diamond is open and not ready for real people: once per sitting, and on prompts about going live. The exposure gate sees only the agent's own deploy commands; this reaches the agent when someone else deploys. `stop-check.sh` shows the session counts once per sitting.
 
 **v0.250.0 additions to existing hooks.** `diamond-state-audit.sh` also runs `scripts/diamond_rulings.py`, which records the machine time a diamond's phase or ruling changed, so `next_item.py` judges "evidence since the last assessment" on one clock. `preflight.sh` prints the next item once per session, beside the first request, when it has gone unanswered for three sessions (`next_item.py --prompt-line`); silent otherwise and with `MYCELIUM_NEXT_ITEM=off`.

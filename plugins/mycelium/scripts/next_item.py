@@ -35,6 +35,7 @@ import argparse
 import contextlib
 import datetime as _dt
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -518,6 +519,30 @@ def _read_state(root: Path) -> dict:
     return st if isinstance(st, dict) else {"_unreadable": "not a JSON object"}
 
 
+# A human answering the open item in plain words (v0.252.2). The human line offers these verbs,
+# so they are what an answer uses. E2E run 22: the founder said "snooze it until 2026-10-26", the
+# agent never recorded it, and the item escalated back to the human as "unanswered for 3 sessions".
+_ANSWER = re.compile(
+    r"\b(?:snooz\w*|drop (?:it|that|this|the (?:open )?item)|until (?:i|you) ask|until asked"
+    r"|not now|park (?:it|that|this))\b", re.IGNORECASE)
+
+
+def answer_line(root: Path, prompt: str) -> str:
+    """When the prompt looks like the human's answer to the open item: which item, and the exact
+    command that records it. The ladder only stops when an answer is RECORDED; an answer the agent
+    does not write down is asked again, which is the cry-wolf the ladder exists to avoid."""
+    st = _read_state(root)
+    if not st.get("id") or st.get("_unreadable") or not _ANSWER.search(prompt or ""):
+        return ""
+    if _ruled_since(root, str(st["id"]), str(st.get("emitted_at") or "")):
+        return ""
+    return (f"MYCELIUM: this prompt looks like the user's answer to the open next item "
+            f"`{st['id']}` ({' '.join(str(st.get('text_human') or '').split())[:160]}). If it is, "
+            f"record it now, in their words: `advisory_ledger.py rule --id {st['id']} --ruling "
+            'snooze --until YYYY-MM-DD|asked --note "..."` (or `--ruling drop|keep|fix`). An '
+            "answer that is not recorded is asked again.")
+
+
 def prompt_line(root: Path) -> str:
     """The escalated item for the agent, once per session, at the first prompt (v0.250.0).
 
@@ -543,6 +568,27 @@ def prompt_line(root: Path) -> str:
             f"item is wrong). Record a ruling with `advisory_ledger.py rule --id {st['id']} "
             "--ruling keep|fix|drop|snooze`. The item: "
             f"{st.get('text_human') or st.get('text', '')}")
+
+
+def _one_line(root: Path, *, claim: bool) -> int:
+    """--claim-human (session start on resume) or --prompt-line (each user prompt)."""
+    if claim:
+        line = claim_human(root)
+    else:
+        prompt = _prompt_of(sys.stdin.read() if not sys.stdin.isatty() else "")
+        line = "\n".join(x for x in (prompt_line(root), answer_line(root, prompt)) if x)
+    if line:
+        print(line)
+    return 0
+
+
+def _prompt_of(payload: str) -> str:
+    """The prompt text from a UserPromptSubmit payload, or '' when there is none."""
+    try:
+        d = json.loads(payload) if payload.strip() else {}
+    except ValueError:
+        return ""  # no payload is not an answer: nothing to record
+    return str(d.get("prompt") or "") if isinstance(d, dict) else ""
 
 
 def main(argv=None) -> int:
@@ -572,10 +618,7 @@ def main(argv=None) -> int:
     args = ap.parse_args(argv)
     root = args.project_dir.resolve()
     if args.claim_human or args.prompt_line:
-        line = claim_human(root) if args.claim_human else prompt_line(root)
-        if line:
-            print(line)
-        return 0
+        return _one_line(root, claim=args.claim_human)
     reminders = sys.stdin.read() if not sys.stdin.isatty() else ""
     item, note = pick(root, reminders, args.today)
     if note:
