@@ -21,6 +21,8 @@ that gets ignored — which is how the original holes survived.
 """
 import sys
 
+import pytest
+
 
 def _import(scripts_path):
     sys.path.insert(0, str(scripts_path))
@@ -306,6 +308,7 @@ def test_self_exempt_covers_only_this_checker(scripts_path):
     assert {"plugins/mycelium/scripts/check_wiring.py"} == mod.SELF_EXEMPT
 
 
+@pytest.mark.realrepo
 def test_real_repo_is_wired(scripts_path):
     """The shipped tree must satisfy its own guard (the live gate, not a fixture)."""
     mod = _import(scripts_path)

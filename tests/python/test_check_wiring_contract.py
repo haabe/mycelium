@@ -225,6 +225,7 @@ def test_max_ungoverned_can_gate(tmp_path, capsys):
     assert "exceeds" in capsys.readouterr().out
 
 
+@pytest.mark.realrepo
 def test_this_repo_satisfies_its_own_contract():
     """Mycelium dogfoods the contract it ships."""
     root = Path(__file__).resolve().parents[2]

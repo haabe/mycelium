@@ -1058,7 +1058,12 @@ check_code_quality() {
         PYTEST_RUN="python3 -m pytest"
     fi
 
-    if [ -z "$PYTEST_RUN" ]; then
+    # MYCELIUM_VALIDATOR_SUITES=elsewhere (2026-09-25): the caller runs pytest and the bash suite
+    # itself (CI's parallel test jobs; the pre-push hook's own parallel pytest), so running them here
+    # would run them twice. Said as INFO, never PASS: nothing is claimed for a suite that did not run.
+    if [ "${MYCELIUM_VALIDATOR_SUITES:-run}" = "elsewhere" ]; then
+        info "pytest and the bash suite: not run here (MYCELIUM_VALIDATOR_SUITES=elsewhere); the caller runs them"
+    elif [ -z "$PYTEST_RUN" ]; then
         warn "pytest cannot run here — no uv, and no single interpreter with both pytest and the project deps. NOT a test failure; install uv or requirements-ci.txt"
     elif [ ! -d "tests/python" ]; then
         warn "pytest tests directory missing — skipping"
@@ -1083,7 +1088,9 @@ check_code_quality() {
     # 2026-05-24 when bash tests passed locally on macOS+BSD but failed on
     # CI's Linux+GNU runner — silent stdout/stderr swallowing forced
     # diagnostic-by-environment-replication rather than read-the-log.
-    if [ ! -d "tests/bash" ]; then
+    if [ "${MYCELIUM_VALIDATOR_SUITES:-run}" = "elsewhere" ]; then
+        :  # said once above, with pytest
+    elif [ ! -d "tests/bash" ]; then
         warn "tests/bash directory missing — skipping Bash check tests"
     elif [ ! -f "tests/bash/run.sh" ]; then
         warn "tests/bash/run.sh missing — skipping Bash check tests"

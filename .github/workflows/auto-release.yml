@@ -86,8 +86,32 @@ jobs:
         run: |
           set -euo pipefail
           WF="Validate Template Integrity"
+          # THE PULL REQUEST'S GREEN RUN, WHEN IT TESTED THESE EXACT FILES (2026-09-25, founder
+          # ruling: CI is required before merge, and the release trusts it). A squash merge makes a
+          # new SHA, so validate ran a second time on main over byte-identical content: ~14 min per
+          # release spent re-testing a tree CI had already passed. The tree hash is
+          # content-addressed: if the merged PR's head has the same tree as this commit and its
+          # validate run succeeded, that run tested exactly what is being released. With main's
+          # ruleset requiring the PR to be up to date, the PR run's merge ref has that same tree.
+          # Anything else falls through to waiting for the run on this commit, as before.
+          TREE=$(git rev-parse "${HEAD_SHA}^{tree}")
+          PR_HEAD=$(gh api "repos/${GITHUB_REPOSITORY}/commits/${HEAD_SHA}/pulls" \
+            --jq '[.[] | select(.merged_at != null)] | first | .head.sha // empty' || true)
+          if [ -n "${PR_HEAD}" ] && git fetch --quiet origin "${PR_HEAD}" 2>/dev/null \
+             && [ "$(git rev-parse "${PR_HEAD}^{tree}")" = "${TREE}" ]; then
+            PR_CONCLUSION=$(gh run list --workflow=validate.yml --commit "${PR_HEAD}" --event pull_request \
+              --json status,conclusion \
+              --jq '[.[] | select(.status == "completed")] | first | .conclusion // empty' || true)
+            if [ "${PR_CONCLUSION}" = "success" ]; then
+              echo "validator green on the merged PR head ${PR_HEAD}, same tree ${TREE}: releasing."
+              exit 0
+            fi
+            echo "PR head ${PR_HEAD} has the same tree but its validate run is '${PR_CONCLUSION:-missing}'; waiting for this commit's run."
+          fi
           echo "Waiting for '$WF' to conclude on ${HEAD_SHA} ..."
-          for i in $(seq 1 60); do
+          # 120 x 15 s = 30 min. It was 15 min against a ~14 min validate job: one slow runner from
+          # blocking a green release.
+          for i in $(seq 1 120); do
             CONCLUSION=$(gh run list --workflow=validate.yml --limit 20 \
               --json headSha,status,conclusion \
               --jq "[.[] | select(.headSha == \"${HEAD_SHA}\") | select(.status == \"completed\")] | first | .conclusion // empty")
@@ -102,7 +126,7 @@ jobs:
             fi
             sleep 15
           done
-          echo "::error::Release BLOCKED — '$WF' did not conclude on ${HEAD_SHA} within 15 minutes."
+          echo "::error::Release BLOCKED — '$WF' did not conclude on ${HEAD_SHA} within 30 minutes."
           echo "::error::A validator that cannot be read is not a green one. Re-run it, or dispatch deliberately."
           exit 1
 

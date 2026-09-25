@@ -4,6 +4,32 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.253.1 - fail fast, then parallel
+
+**2026-09-25.** Founder: "Find the best practices to optimize the CICD pipeline so that we don't lower
+security, and still fail. Fail fast and early." Measured first: a release took 35-45 min; pytest ran
+twice per stage (inside the validator, then again); three whole-repo scans (`check_wiring_contract`,
+`check_test_authenticity`, `check_wiring`) ran three times each, ~70% of the 14-min CI job; ~50
+checks totalling ~6 s ran after 6 minutes of slow ones; validate ran on the PR and again after the
+squash merge over byte-identical files; and nothing on GitHub required CI before merge. The release
+waited up to 15 minutes for a 14-minute job.
+
+- **CI: fail fast, then parallel, one required check.** A `fast` job (pip-audit, zizmor, the
+  validator with `MYCELIUM_VALIDATOR_SUITES=elsewhere`, the cheap gates) comes first; `pytest`
+  (parallel via pytest-xdist, with coverage and the per-file floor) and `bash-suite` run after it,
+  side by side; `validate` is green only if all three are. No workflow `paths:` filter, so a
+  required check always reports. Superseded pull-request runs are cancelled; main never is.
+- **Each whole-repo scan runs once**, as its real-repo test (`@pytest.mark.realrepo`) in the pytest
+  job; the separate CI steps and local gate-set lines for the three are gone, and parity holds.
+- **The validator does not re-run the suites** when its caller runs them
+  (`MYCELIUM_VALIDATOR_SUITES=elsewhere`, reported as INFO, never PASS).
+- **Pre-push is a fast check** (founder ruling): canvas, the validator without suites, the gate set,
+  and the parallel fast tests (`-m "not realrepo"`), ~1 min instead of 9-10. CI is the gate.
+- **The release trusts the merged PR's green run when the tree is identical** (content-addressed),
+  otherwise waits for the run on the merge commit as before; the wait limit is 30 min, not 15.
+- Security is unchanged or stronger: every audit still runs, first; pinned action SHAs,
+  `contents: read`, `persist-credentials: false`; and main's ruleset now requires `validate`.
+
 ## v0.253.0 - test before you build, and the L4 reads the evidence
 
 **2026-09-25.** Why the ladder stopped at L3 in every E2E run (founder, 2026-09-25: "How can L3 give

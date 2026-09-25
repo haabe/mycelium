@@ -90,7 +90,12 @@ fi
 
 if [ -n "$TEMPLATE_VALIDATOR" ]; then
     echo "[mycelium pre-push] Validating template integrity via $TEMPLATE_VALIDATOR ..." >&2
-    if ! bash "$TEMPLATE_VALIDATOR" >&2; then
+    # FAST PRE-PUSH, CI IS THE GATE (founder ruling 2026-09-25). In a framework tree this hook runs
+    # pytest itself below, so the validator does not run it again; the bash suite runs in CI's
+    # parallel job. Before this, a push ran pytest twice and the bash suite once: 9-10 minutes.
+    _VT_SUITES="run"
+    [ -d "tests/python" ] && _VT_SUITES="elsewhere"
+    if ! MYCELIUM_VALIDATOR_SUITES="$_VT_SUITES" bash "$TEMPLATE_VALIDATOR" >&2; then
         echo "" >&2
         echo "[mycelium pre-push] Template validation FAILED — push blocked." >&2
         echo "  • Fix the errors above and re-push." >&2
@@ -165,8 +170,13 @@ if [ -d "tests/python" ] && [ -n "$SCRIPTS_DIR" ]; then
     # just not twice. Hooks are early feedback; enforcement lives in CI and branch
     # protection. Coverage instrumentation is what costs the time — the identical suite
     # runs in ~78s without it, so the safety net stays and the tax goes.
-    echo "[mycelium pre-push] Delivery-quality gate: tests, no coverage (runner: $PYRUN) ..." >&2
-    if ! $PYRUN -m pytest tests/python/ -q >&2; then
+    # Parallel, and without the three whole-repo scans (`-m "not realrepo"`, ~110 s), which CI's
+    # pytest job enforces. About 11 s on an 8-core machine, against ~150 s serial with the scans.
+    _PYTEST_PAR=""
+    $PYRUN -c "import xdist" >/dev/null 2>&1 && _PYTEST_PAR="-n auto"
+    echo "[mycelium pre-push] Delivery-quality gate: fast tests (runner: $PYRUN; whole-repo scans run in CI) ..." >&2
+    # shellcheck disable=SC2086  # _PYTEST_PAR is empty or two words, split on purpose
+    if ! $PYRUN -m pytest tests/python/ -q $_PYTEST_PAR -m "not realrepo" >&2; then
         echo "" >&2
         echo "[mycelium pre-push] Tests FAILED — push blocked." >&2
         echo "  • Coverage is NOT measured here; CI enforces both the 85% total and the" >&2

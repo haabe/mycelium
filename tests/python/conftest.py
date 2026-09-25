@@ -5,6 +5,14 @@ from pathlib import Path
 import pytest
 
 
+def pytest_configure(config):
+    # 2026-09-25: the three whole-repo scans (check_wiring_contract, check_test_authenticity,
+    # check_wiring on the shipped tree) are ~110 s of a ~150 s suite. CI runs them in its parallel
+    # pytest job, where they are the enforcement point; the fast pre-push tier deselects them with
+    # `-m "not realrepo"`.
+    config.addinivalue_line("markers", "realrepo: scans the whole shipped repo (slow; CI enforces)")
+
+
 @pytest.fixture
 def project_dir(tmp_path):
     """Create a temporary project dir with .claude/manifest.yml + state/."""
