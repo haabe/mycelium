@@ -4,6 +4,20 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.253.3 - the whole ladder is tested, L0 to L5
+
+**2026-09-25.** Founder: "What about L3->L4 and then L5?!" Twenty-four E2E runs never got past L3, so
+the L4 and L5 doors, and the L4 and L5 phase moves, had never been exercised by anything.
+
+- **`tests/python/test_ladder_walkthrough_l0_to_l5.py`** drives no agent. It writes each artefact in
+  the order a project produces them (purpose; North Star, landscape, desired outcome; an opportunity
+  with evidence and a source; threat model and privacy record; the L3's named lightest test and its
+  validated verdict; launch data) and pushes every change to `diamonds/active.yml` through
+  `hooks/scale-lock-gate.sh`, the hook Claude Code runs. At each rung the door is refused one
+  artefact short, with the reason, and opens once the artefact is on record. The L3, L4 and L5 each
+  move through their phases with their transition's gates and history. It passed on the first run:
+  the mechanics allow the whole ladder.
+
 ## v0.253.2 - a shell command cannot change diamond state unjudged
 
 **2026-09-25.** E2E run 24 (0.253.0) wrote `privacy-assessment.yml` through a shell command: the
