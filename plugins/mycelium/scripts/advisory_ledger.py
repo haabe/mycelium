@@ -275,6 +275,7 @@ def state(events: list[dict]) -> dict[str, dict]:  # noqa: C901, PLR0912 — one
             x["ruling"] = r
             if r == "snooze":
                 x["snoozed_until"] = ev.get("until")
+                x["snooze_note"] = str(ev.get("note") or "")  # its condition, when "asked"
                 x["ruling"] = None
             if r == "keep":
                 x["muted_since"] = None

@@ -4,6 +4,19 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.254.1 - a snooze until a condition reaches the agent
+
+**2026-09-25.** E2E run 27: the founder answered the escalated L3 item "not now, ask after the
+backup-approver test design is frozen". The ledger holds a date or `asked`, so it was recorded as
+`asked` with the condition in its note. "Ask me after X" means the tool asks, and only the agent can
+tell when X has happened; nothing brought the item back, so the ladder would stall at L3.
+
+- The ledger state keeps a snooze's note (`snooze_note`).
+- `next_item.py --prompt-line` lists, for the AGENT and once per sitting, each item snoozed until
+  asked whose note names a condition, so it can put the item to the user again once the condition is
+  met. The human is not shown it.
+- Pinned by `tests/python/test_next_item_ladder.py`.
+
 ## v0.254.0 - the L4 and L5 doors are proposed when they can open
 
 **2026-09-25.** Founder: "What's blocking L4+L5 now?" The walkthrough test (0.253.3) proved the LOCKS

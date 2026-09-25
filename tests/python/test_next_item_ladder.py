@@ -266,3 +266,24 @@ def test_mycelium_today_sets_the_date_rulings_and_snoozes_use(monkeypatch):
     assert al.today_iso() != "next tuesday"  # malformed: the real date
     monkeypatch.delenv("MYCELIUM_TODAY")
     assert len(al.today_iso()) == 10
+
+
+def test_a_conditional_snooze_reaches_the_agent_once_per_sitting(tmp_path):
+    """v0.254.1, E2E run 27: "not now, ask after the test design is frozen" became a snooze "until
+    asked" that nothing would bring back. The condition now reaches the agent, never the human."""
+    root = _project(tmp_path)
+    (root / ".claude" / "state").mkdir(parents=True, exist_ok=True)
+    ledger = root / ".claude" / "state" / "advisory-ledger.jsonl"
+    ledger.write_text(json.dumps({"kind": "ruled", "id": "unassessed", "date": "2026-09-24",
+                                  "ruling": "snooze", "until": "asked",
+                                  "note": "ask after the test design is frozen"}) + "\n"
+                      + json.dumps({"kind": "ruled", "id": "bvssh-overdue", "date": "2026-09-24",
+                                    "ruling": "snooze", "until": "2026-12-01",
+                                    "note": "after the quarter"}) + "\n")
+    line = ni.conditions_line(root, "s1", "2026-09-24")
+    assert "`unassessed`: ask after the test design is frozen" in line
+    assert "bvssh-overdue" not in line  # a dated snooze comes back on its own
+    assert ni.conditions_line(root, "s1", "2026-09-24") == ""  # once per sitting
+    assert ni.conditions_line(root, "s2", "2026-09-24")  # a new sitting says it again
+    assert ni._session_of(json.dumps({"session_id": "s9"})) == "s9"
+    assert ni._session_of("x") == ""

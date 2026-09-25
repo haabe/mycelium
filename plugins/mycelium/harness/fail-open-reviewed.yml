@@ -815,3 +815,10 @@ reviewed:
     correct: `pick()` reads the same file first through `_fired_proposals`, which reports it as
     unreadable in the note printed where the human reads it, so a broken file is never mistaken for
     "no door to open". Reviewed 2026-09-25, v0.254.0.
+
+- id: next_item.py@31b33fa8f8
+  verdict: accepted
+  reason: >-
+    `_session_of` returns "" when the prompt payload is not JSON. Silent and correct: the only use
+    is keying the conditional-snooze reminder's sitting, which then keys on the date alone, so the
+    reminder is at most said once more per day. Nothing is suppressed. Reviewed 2026-09-25, v0.254.1.
