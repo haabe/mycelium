@@ -614,12 +614,17 @@ def exposure_violation(project_dir: str, payload: dict) -> str | None:
             f"cycle is ready for that:\n  {why}")
 
 
-# Words that mean real people are about to meet the work, whoever does the exposing. Broad on
-# purpose: a false match prints one status line; a miss let a pilot reach staff in E2E run 21.
+# ACTS of exposure, not topic words (v0.252.1). 0.252.0 matched "pilot", "staff", "launch" and
+# "waitlist", which in a staff-scheduling product are the domain: 77 of 101 founder prompts in E2E
+# run 21 and 18 of 22 in run 22 matched, so the line would have fired on ~80% of prompts. These
+# phrases matched 4 of 22 in run 22, and in runs 19 and 21 fell in the go-live stretches.
 _GO_LIVE = re.compile(
-    r"\b(?:deploy\w*|go(?:es|ing)?[- ]live|live\b|launch\w*|releas\w*|roll(?:ed|ing)?[- ]?out"
-    r"|pilot\w*|production|prod\b|real (?:users?|people|customers?|staff|data)|customers?|staff"
-    r"|(?:send|post|share)\w* (?:the |a )?link|link (?:to|out)|ship\w*|onboard\w*|beta|waitlist)",
+    r"\b(?:deploy(?:s|ed|ing|ment)?\b|go(?:es|ing)?[- ]live|went live"
+    r"|switch(?:es|ed|ing)? (?:it )?on"
+    r"|(?:to|in|into) production\b|roll(?:s|ed|ing)? (?:it )?out|release(?:s|d)? (?:it )?to\b"
+    r"|(?:send|post|share|give|hand)\w* (?:\w+ ){0,3}(?:the |a |their |his |her )?link"
+    r"|real (?:users?|customers?|people|data)\b"
+    r"|invit(?:e|es|ed|ing) (?:the )?(?:first|staff|users|customers))",
     re.IGNORECASE)
 EXPOSURE_SAID = os.path.join(".claude", "state", "exposure-line-said")
 
@@ -634,7 +639,8 @@ def exposure_line(project_dir: str, payload: dict, today: str | None = None) -> 
     the state belongs where the agent reasons, not only at its shell.
 
     Silent when ready, when no delivering diamond is open (the delivery-state line covers that), and
-    when already said this sitting (session + day) unless the prompt is about going live."""
+    otherwise said at most twice a sitting (session + day): at its first prompt, and at its first
+    prompt about an act of going live."""
     st = State(project_dir)
     if not [d for d in st.active if _scale(d) in DELIVERY_SCALES and st.is_open(d)]:
         return ""
@@ -649,12 +655,17 @@ def exposure_line(project_dir: str, payload: dict, today: str | None = None) -> 
             said = f.read().strip()
     except OSError:
         said = ""  # never said: say it now
-    if said == sitting and not _GO_LIVE.search(str(payload.get("prompt") or "")):
+    # At most twice a sitting (v0.252.1): at its first prompt, and at its first go-live prompt. A
+    # go-live stretch runs many sessions; the same line on every such prompt is read past.
+    golive = bool(_GO_LIVE.search(str(payload.get("prompt") or "")))
+    first_prompt = said.split("#")[0] != sitting
+    if not first_prompt and (not golive or said.endswith("#golive")):
         return ""
+    mark = sitting + ("#golive" if golive else "")
     try:
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, "w", encoding="utf-8") as f:
-            f.write(sitting + "\n")
+            f.write(mark + "\n")
     except OSError:
         pass  # SPEAKS: the line is still returned; at worst it is said again next prompt
     missing = "\n".join(why.splitlines()[:6])

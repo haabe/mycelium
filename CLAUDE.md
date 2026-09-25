@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.252.0 -- **Not ready for real people is said where the agent reasons** (MINOR). When a delivering diamond is open and may not yet meet real people, the per-prompt hook tells the agent what is missing, once per sitting and on any prompt about going live, a pilot, production or links to staff, and says it covers exposure someone else performs. The exposure gate had only ever seen the agent's own deploy commands; in E2E run 21 a developer deployed and the agent coordinated the go-live of an L3 still in Develop with Security pending. Also: the session-count line reaches the human once per sitting, and a writer command in the shell parser is matched as a command, never inside a flag (`grep -ln` was read as `ln`). Prior: 0.251.0 one item for the ladder, and only new evidence moves it.*
+*Version 0.252.1 -- **The exposure line is said twice a sitting at most, on acts of going live** (PATCH). 0.252.0's go-live word list included "pilot", "staff", "launch" and "waitlist", which in a staff-scheduling product are the domain: it matched about 80% of founder prompts in E2E runs 21 and 22. It now matches acts of exposure (deploy, go live, production, rolling out, sending or posting a link, real users), and the line is said at a sitting's first prompt and its first go-live prompt, not on every one. Prior: 0.252.0 not ready for real people is said where the agent reasons.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 
