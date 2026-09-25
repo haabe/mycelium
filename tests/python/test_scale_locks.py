@@ -156,10 +156,23 @@ BUILD_PASSED["privacy"] = "pass-with-risk"
 EXPOSE_PASSED = {**BUILD_PASSED, "security": "pass", "service_quality": "pass"}
 
 
-def _l3(evidence="anecdotal", phase="develop", gates=None):
-    return {"id": "l3-a", "scale": "L3", "phase": phase, "object_ref": "sol-001",
-            "evidence_type": evidence,
-            "theory_gates_status": dict(BUILD_PASSED if gates is None else gates)}
+LEARNING = {"audience": "Harbour's nine staff, opted in by the site lead",
+            "until": "2026-10-25",
+            "means": "infrastructure as code: one environment, torn down after the trial"}
+
+
+@pytest.fixture(autouse=True)
+def _today(monkeypatch):
+    monkeypatch.setenv("MYCELIUM_TODAY", "2026-09-25")
+
+
+def _l3(evidence="anecdotal", phase="develop", gates=None, learning=None):
+    d = {"id": "l3-a", "scale": "L3", "phase": phase, "object_ref": "sol-001",
+         "evidence_type": evidence,
+         "theory_gates_status": dict(BUILD_PASSED if gates is None else gates)}
+    if learning is not None:
+        d["learning_delivery"] = learning
+    return d
 
 
 TESTED = {"statement": "a named backup approves when the manager is off",
@@ -170,14 +183,14 @@ def _tested(**ra):
     return _sol_opps(riskiest_assumption={**TESTED, **ra})
 
 
-def test_l4_opens_on_the_test_its_delivery_carries(tmp_path):
-    """v0.256.0: the L4 IS the delivery. It opens on an anecdotal L3 whose riskiest assumption has
-    a named test, because a test that needs real use can only run through a delivery (E2E run 29);
-    with no named test it does not, however well evidenced the L3."""
-    p = _project(tmp_path, purpose=PURPOSE, opps=_tested(), diamonds=[_l3("anecdotal")])
-    assert sl.can_open(p, "L4", parent="l3-a") == []
+def test_l4_needs_its_l3_at_medium_confidence(tmp_path):
+    """v0.257.0 (0.256.0 reverted): the L4 builds to earn and waits on the verdict of the L3's
+    learning delivery, however well the test is designed."""
     p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), diamonds=[_l3("data-supported")])
-    assert any("what this delivery tests" in m for m in sl.can_open(p, "L4", parent="l3-a"))
+    assert sl.can_open(p, "L4", parent="l3-a") == []
+    p = _project(tmp_path, purpose=PURPOSE, opps=_tested(), diamonds=[_l3("anecdotal")])
+    assert any("medium confidence" in m and "learning" in m
+               for m in sl.can_open(p, "L4", parent="l3-a"))
 
 
 def test_a_failed_riskiest_assumption_is_not_delivered(tmp_path):
@@ -397,18 +410,6 @@ def test_l5_door_opens_on_launch_data_written_to_the_l4(tmp_path):
     assert sl.can_open(p, "L5", parent="l4-a") == []
 
 
-def test_the_market_release_needs_the_evidence_the_delivery_produced(tmp_path):
-    """v0.256.0: Gilad's medium-confidence bar sits before the release to the market (the L5),
-    and the L4's delivery is what produces it: the test's verdict on the riskiest assumption."""
-    l4 = {"id": "l4-a", "scale": "L4", "phase": "deliver", "parent": "l3-a",
-          "launch_data": {"usage": "Harbour: 41 requests in the app over three weeks"}}
-    p = _project(tmp_path, purpose=PURPOSE, opps=_tested(), diamonds=[_l3("anecdotal"), l4])
-    assert any("release to the market" in m for m in sl.can_open(p, "L5", parent="l4-a"))
-    p = _project(tmp_path, purpose=PURPOSE, opps=_tested(verdict="validated"),
-                 diamonds=[_l3("anecdotal"), l4])
-    assert sl.can_open(p, "L5", parent="l4-a") == []
-
-
 def test_a_closed_opportunity_relocks_nothing_already_open(tmp_path):
     """SPEED: an L3's opportunity is `addressed` once it ships. That must not lock the open L3 or
     stop its L4; the open-opportunity check is an entry check."""
@@ -514,8 +515,30 @@ def test_exposure_needs_deliver_and_security(tmp_path):
     ok, why = sl.exposure_state(p)
     assert not ok and "in Deliver" in why and "security gate passed" in why
     p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(),
-                 diamonds=[_l3(phase="deliver", gates=EXPOSE_PASSED)])
+                 diamonds=[_l3(phase="deliver", gates=EXPOSE_PASSED, learning=LEARNING)])
     assert sl.exposure_state(p)[0]
+
+
+def test_an_l3_reaches_real_people_only_through_a_bounded_learning_delivery(tmp_path):
+    """v0.257.0: the L3 delivers to LEARN, to a named audience until a date, by recorded means;
+    production for everyone is an L4. E2E run 10 had an SMS app live at two sites under an L3."""
+    p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(),
+                 diamonds=[_l3(phase="deliver", gates=EXPOSE_PASSED)])
+    ok, why = sl.exposure_state(p)
+    assert not ok and "learning_delivery" in why and "audience, until, means" in why
+    thin = {k: v for k, v in LEARNING.items() if k != "means"}
+    p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(),
+                 diamonds=[_l3(phase="deliver", gates=EXPOSE_PASSED, learning=thin)])
+    ok, why = sl.exposure_state(p)
+    assert not ok and "(means missing)" in why and "infrastructure as code" in why
+
+
+def test_a_learning_delivery_past_its_end_date_stops_exposing(tmp_path, monkeypatch):
+    monkeypatch.setenv("MYCELIUM_TODAY", "2026-10-26")
+    p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(),
+                 diamonds=[_l3(phase="deliver", gates=EXPOSE_PASSED, learning=LEARNING)])
+    ok, why = sl.exposure_state(p)
+    assert not ok and "still running" in why and "through an L4" in why
 
 
 def test_the_scale_lock_ack_waives_the_chain_never_the_phase(tmp_path):
@@ -552,7 +575,7 @@ def test_ordinary_commands_are_not_deploys(tmp_path, cmd):
 
 def test_a_ready_cycle_deploys_and_an_unengaged_project_is_not_judged(tmp_path):
     p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(),
-                 diamonds=[_l3(phase="deliver", gates=EXPOSE_PASSED)])
+                 diamonds=[_l3(phase="deliver", gates=EXPOSE_PASSED, learning=LEARNING)])
     assert sl.exposure_violation(p, _bash("fly deploy")) is None
     bare = _project(tmp_path / "bare", ladder=False, records=False)
     assert sl.exposure_violation(bare, _bash("fly deploy")) is None
@@ -668,7 +691,7 @@ def test_go_live_means_an_act_of_exposure_not_a_topic_word():
 
 def test_silent_when_ready_or_when_nothing_delivers(tmp_path):
     ready = _project(tmp_path / "a", PURPOSE, _full_opps(),
-                     [_l3(phase="deliver", gates=EXPOSE_PASSED)])
+                     [_l3(phase="deliver", gates=EXPOSE_PASSED, learning=LEARNING)])
     assert sl.exposure_line(ready, {"prompt": "deploy it"}) == ""
     none = _project(tmp_path / "b", PURPOSE, _full_opps())
     assert sl.exposure_line(none, {"prompt": "deploy it"}) == ""
@@ -710,12 +733,11 @@ def test_a_validated_riskiest_assumption_counts_as_test_validated(tmp_path):
     assert sl.can_open(p, "L4", parent="l3-a") == []
 
 
-def test_a_named_test_not_yet_run_opens_l4_and_the_delivery_runs_it(tmp_path):
+def test_an_untested_solution_does_not_open_l4(tmp_path):
     opps = _sol_opps(riskiest_assumption={"statement": "a backup approves",
                                           "cheapest_test": "concierge for two weeks at Harbour"})
     p = _project(tmp_path, purpose=PURPOSE, opps=opps, diamonds=[_l3("anecdotal")])
-    assert sl.can_open(p, "L4", parent="l3-a") == []
-    assert sl.State(p).l3_evidence(_l3("anecdotal")) == "anecdotal"
+    assert any("medium confidence" in m for m in sl.can_open(p, "L4", parent="l3-a"))
 
 
 def _move_to_develop(tmp_path, opps, **extra):

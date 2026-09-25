@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.256.0 -- **The L4 opens on what its delivery tests, not on the result** (MINOR). The L4 is the delivery, and it waited on the L3 reaching medium confidence, which an assumption only real use can answer could reach only through a delivery: E2E run 29 froze a live pilot trial as its test and had no way to run it. The L4 now opens once the L3's riskiest assumption has a named test that has not failed; Gilad's medium-confidence bar moves to the release to the market (the L5), which the delivery's verdict meets. Exposure still needs the L4's Security, Privacy and Service Quality gates. Prior: 0.255.0 the L1, L2 and L3 doors are proposed when they can open.*
+*Version 0.257.0 -- **The L3 delivers to learn, the L4 to earn** (MINOR). A test that needs real use runs in the L3's own Deliver, to a named opted-in audience until a date, by means that fit the product type (for web software, infrastructure as code for an environment that can be torn down), through Security, Privacy and Service Quality; the next item proposes that step, which one L3 in 21 E2E runs ever took. The verdict is the medium-confidence evidence the L4 opens on. Reverts 0.256.0, which opened the L4 before anything was delivered on a misdiagnosis of run 29. Prior: 0.256.0 the L4 opens on what its delivery tests (reverted).*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

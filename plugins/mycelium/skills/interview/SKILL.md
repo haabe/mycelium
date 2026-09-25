@@ -451,7 +451,7 @@ theory_gates_status:
 3. **Suggest next step**: "Run `/mycelium:diamond-assess` to see your starting state and what to work on next."
 4. **The typical flow from here**:
    - `/mycelium:diamond-progress` to advance L0 through its phases
-   - Each scale opens on what its parent has established (`engine/diamond-rules.md`, Entry locks): L1 on the purpose this interview states, L2 on a strategy (an L1 diamond, a North Star, the landscape) and a desired outcome derived from it, L3 on a target opportunity with evidence worked in an L2 diamond, L4 on an L3 that names the test its delivery carries, L5 on launch data and the L3 at medium confidence. No scale is skipped, solo_hobby included: a small strategy is still a strategy (v0.247.0)
+   - Each scale opens on what its parent has established (`engine/diamond-rules.md`, Entry locks): L1 on the purpose this interview states, L2 on a strategy (an L1 diamond, a North Star, the landscape) and a desired outcome derived from it, L3 on a target opportunity with evidence worked in an L2 diamond, L4 on an L3 at medium confidence. No scale is skipped, solo_hobby included: a small strategy is still a strategy (v0.247.0)
    - L1 spawns L2 (Opportunity) when the desired outcome is set
    - Each progression runs theory gates automatically
 

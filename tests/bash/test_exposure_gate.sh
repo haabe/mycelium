@@ -22,7 +22,11 @@ run_gate() {  # <project_dir> <command> -> exit code; stderr in $ERR
     echo $?
 }
 
-make_project() {  # <phase> <gates yaml flow map>
+# The L3's learning delivery is dated (v0.257.0); pin the day so the fixture never expires.
+export MYCELIUM_TODAY=2026-09-25
+LEARNING='    learning_delivery:\n      audience: "Harbour staff, opted in"\n      until: "2026-10-25"\n      means: "infrastructure as code, torn down after"\n'
+
+make_project() {  # <phase> <gates yaml flow map> [extra L3 yaml lines]
     local p; p=$(mktemp -d)
     mkdir -p "$p/.claude/diamonds" "$p/.claude/canvas" "$p/.claude/state"
     write_ladder "$p"
@@ -32,6 +36,7 @@ make_project() {  # <phase> <gates yaml flow map>
         > "$p/.claude/canvas/opportunities.yml"
     { printf 'active_diamonds:\n'; ladder_diamonds opp-001
       printf '  - id: l3-a\n    scale: L3\n    phase: %s\n    object_ref: sol-001\n    theory_gates_status: %s\n' "$1" "$2"
+      printf "${3:-}"
     } > "$p/.claude/diamonds/active.yml"
     echo "$p"
 }
@@ -49,8 +54,14 @@ test_deploy_under_define_blocks() {
 }
 
 test_ready_cycle_deploys() {
-    local p; p=$(make_project deliver "$READY")
+    local p; p=$(make_project deliver "$READY" "$LEARNING")
     assert_eq "$(run_gate "$p" "fly deploy")" "0" "Deliver with its gates passed -> the deploy runs"
+    rm -rf "$p"
+}
+
+test_l3_without_a_learning_delivery_blocks() {
+    local p; p=$(make_project deliver "$READY")
+    assert_eq "$(run_gate "$p" "fly deploy")" "2" "an L3 names its audience before it deploys"
     rm -rf "$p"
 }
 
@@ -76,6 +87,7 @@ test_delivery_skip_overrides() {
 
 run_test test_deploy_under_define_blocks
 run_test test_ready_cycle_deploys
+run_test test_l3_without_a_learning_delivery_blocks
 run_test test_ordinary_commands_pass
 run_test test_unengaged_project_not_judged
 run_test test_delivery_skip_overrides

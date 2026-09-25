@@ -20,14 +20,14 @@ TWO QUESTIONS, NEVER ANSWERED WITH EACH OTHER:
   chain still EXISTS: a purpose, an outcome, a target with evidence (`entry=False`: --check and the
   delivery gate's question, "may this cycle carry new code").
 
-THE LOCKS. They read the parent's ARTEFACT at L1-L4 and a confidence band only at L5, because
+THE LOCKS. They read the parent's ARTEFACT at L1-L3 and a confidence band only at L4 and L5, because
 that is where the sources put numbers: the ordering is top-down in every source read (Wardley p12,
 Cagan Empowered p113-118, Torres CDH p27, Gilad Evidence-Guided p43), none of them locks the upper
 levels on a score (Torres p35 and p101, Wardley p32: the levels are worked together and revise each
 other), and Gilad's only thresholds are on ideas (launch at medium confidence or above, ICE Done
-Right p14; medium-high before delivery for most ideas, Evidence-Guided p158-159). Delivery there is
-the release to the market; his own tests include early adopters, alpha and beta, which are
-deliveries to test users, and that is what an L4 is (v0.256.0).
+Right p14; medium-high before delivery for most ideas, Evidence-Guided p158-159). His early
+adopters, alpha and beta are tests that come before that delivery: in Mycelium they are the L3's
+learning delivery (v0.257.0).
 
   L1  a live L0 and a stated purpose: purpose.yml `why` (three words or more) and `who`.
   L2  the L1 lock, plus a strategy (v0.247.0: a live L1 diamond on its decision, a North Star in
@@ -38,15 +38,13 @@ deliveries to test users, and that is what an L4 is (v0.256.0).
       speculation AND a source it came from; at entry it must also be open, and name its root when
       the tree has more than one (Torres p101-107, Gilad Testing Product Ideas p9).
   L4  the L3 lock on the L3 it delivers (its `parent`, or the L3 with the same `object_ref`; never a
-      killed or archived one), plus the test the delivery carries: the L3's riskiest assumption with
-      a named test, not recorded as failed (v0.256.0). The L4 is the delivery; it cannot wait on a
-      result only a delivery produces. An L3 moving from Define to Develop must name the lightest
-      test of its riskiest assumption (v0.253.0).
-  L5  the L4 lock on its parent L4, that L4 shipped, launch data (`launch_data`: usage, feedback
-      or metric movement, on the L4 or the L5; Gilad Evidence-Guided p123), and the L3's evidence
-      at medium confidence or better (data-supported, test-validated or launch-validated: the best
-      of its own `evidence_type` and the evidence on the solution it builds, v0.253.0), which the
-      L4's delivery produces (moved from the L4 lock in v0.256.0).
+      killed or archived one), plus that L3's evidence at data-supported or better: the best of its
+      own `evidence_type` and the evidence on the solution it builds (v0.253.0), which the L3's
+      learning delivery produces (v0.257.0), and no riskiest assumption recorded as failed. An L3
+      moving from Define to Develop must name the lightest test of its riskiest assumption
+      (v0.253.0).
+  L5  the L4 lock on its parent L4, that L4 shipped, and launch data (`launch_data`: usage, feedback
+      or metric movement, on the L4 or the L5; Gilad Evidence-Guided p123).
 
 WHAT THE LOCKS CANNOT DO. They check that the parent's artefact EXISTS, not that it is true: an
 evidence type and a source are agent-writable fields. Requiring a named source makes an invented one
@@ -547,20 +545,24 @@ class State:
                 "test")
 
     def _l4_missing(self, d: dict, entry: bool, seen: frozenset) -> list[str]:
-        """The L4 IS the delivery, so it opens on what the delivery will test, not on the result
-        (v0.256.0). Until then it needed the L3 at medium confidence, and an assumption that only
-        real use can answer could reach medium only through a delivery: E2E run 29 froze a live
-        trial at a pilot site as its test, which needed the build live, which needed the L4.
-        Founder, 2026-09-25: "for L4 to open there must be some sort of delivery involved." The
-        confidence bar moves to where Gilad puts it, before the release to the market (the L5)."""
+        """The L4 builds to EARN, so it opens on evidence at medium confidence (Gilad), which the
+        L3's learning delivery produces (v0.257.0): the L3 delivers to learn, to a named opt-in
+        audience through its own Deliver gates, and the verdict of that delivery opens the L4.
+        Founder, 2026-09-25: "for L4 to open there must be some sort of delivery involved." 0.256.0
+        opened the L4 on a named test instead, before anything was delivered, on a misread of run
+        29: its L3 could have run the trial itself in Deliver."""
         l3 = self._parent_at(d, "L3")
         if l3 is None:
             return [f"{d.get('id')}: the L3 it delivers, named as `parent` (a live one)"]
         miss = self.missing(l3, entry, seen)
-        if self.test_design_missing(l3):
-            miss.append(f"{l3.get('id')}: what this delivery tests: its riskiest assumption with "
-                        "a named test (`riskiest_assumption.cheapest_test` on the solution, via "
-                        "/mycelium:assumption-test), so the delivery produces a verdict")
+        ev = self.l3_evidence(l3)
+        if ev not in MEDIUM_OR_BETTER:
+            miss.append(f"{l3.get('id')}: evidence at medium confidence or higher before "
+                        f"delivery (now `{ev}`; needs data-supported, test-validated or "
+                        "launch-validated, Gilad Evidence-Guided p158-159). The L3's learning "
+                        "delivery produces it: take the L3 to Deliver, run its test with the "
+                        "audience in `learning_delivery`, and record the verdict on the riskiest "
+                        "assumption")
         failed = self.failed_assumption(l3)
         if failed:
             miss.append(f"{l3.get('id')}: a riskiest assumption that has not failed its test "
@@ -573,14 +575,6 @@ class State:
         if l4 is None:
             return [f"{d.get('id')}: the L4 whose release this is, named as `parent`"]
         miss = self.missing(l4, entry, seen)
-        l3 = self._parent_at(l4, "L3")
-        ev = self.l3_evidence(l3) if l3 is not None else "none"
-        if l3 is not None and ev not in MEDIUM_OR_BETTER:
-            miss.append(f"{l3.get('id')}: evidence at medium confidence or higher before a "
-                        f"release to the market (now `{ev}`; needs data-supported, "
-                        "test-validated or launch-validated, Gilad Evidence-Guided p158-159). "
-                        "The L4's delivery produces it: record its test's verdict on the "
-                        "riskiest assumption")
         shipped = (l4.get("completed_at") or str(l4.get("id")) in self.completed_ids
                    or str(l4.get("phase", "")).lower() in SHIPPED_PHASES)
         if not shipped:
@@ -622,7 +616,37 @@ class State:
             why = self.gate_missing(d, g)
             if why:
                 miss.append(f"{did}: {why}")
+        if stage == "expose" and _scale(d) == "L3":
+            miss += self.learning_delivery_missing(d)
         return miss
+
+    def learning_delivery_missing(self, d: dict) -> list[str]:
+        """AN L3 DELIVERS TO LEARN, AND SAYS TO WHOM AND UNTIL WHEN (v0.257.0). The L3 may put a
+        learning build in front of real people (Cagan's live-data prototype, Gilad's early adopters
+        and alpha, Patton's build to learn), through the same gates as any delivery. Bounded, so a
+        learning build cannot quietly become production: E2E run 10 had an SMS app live at two
+        sites under an L3. `means` is what reaching them takes for this product type: for web
+        software, infrastructure as code for an environment that can be torn down (founder,
+        2026-09-25); for courseware, a pilot cohort on an existing platform; for a service, by
+        hand."""
+        ld = _as_dict(d.get("learning_delivery"))
+        did = str(d.get("id", "?"))
+        gaps = [k for k in ("audience", "until", "means") if not _filled(ld.get(k))]
+        if gaps:
+            msg = (f"{did}: its learning delivery recorded in `learning_delivery` "
+                   f"({', '.join(gaps)} missing): who the learning build reaches (named, "
+                   "opted in), until when, and by what means (web software: infrastructure as "
+                   "code for an environment that can be torn down; courseware: a pilot cohort; "
+                   "service: by hand). Production for everyone is an L4")
+            return [msg]
+        until = str(ld.get("until"))[:10]
+        today = os.environ.get("MYCELIUM_TODAY") or _dt.datetime.now(_dt.UTC).date().isoformat()
+        if re.fullmatch(r"\d{4}-\d{2}-\d{2}", until) and until < today:
+            msg = (f"{did}: a learning delivery still running (`learning_delivery.until` is "
+                   f"{until}): record the verdict, extend it with the audience's agreement, or "
+                   "deliver through an L4")
+            return [msg]
+        return []
 
     def gate_missing(self, d: dict, gate: str) -> str | None:
         """Why one gate does not count as passed on this diamond, or None when it does."""

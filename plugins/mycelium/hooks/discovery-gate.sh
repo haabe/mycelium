@@ -87,8 +87,7 @@ follows the work, v0.246.0; a pilot is not exempt). What is missing:
 Each scale opens on its parent (engine/diamond-rules.md, Entry locks): L1 on
 a purpose (who and why), L2 on a strategy (an L1 diamond, a North Star, the
 landscape) and a desired outcome, L3 on a target opportunity with evidence in
-an L2 diamond, L4 on an L3 that names the test its delivery carries, L5 on
-launch data and the L3 at medium confidence. Produce
+an L2 diamond, L4 on an L3 at medium confidence, L5 on launch data. Produce
 what is missing with the skill named above, open the L3 with object_ref naming
 the opportunity or solution, progress it to Develop with
 /mycelium:diamond-progress, then retry.

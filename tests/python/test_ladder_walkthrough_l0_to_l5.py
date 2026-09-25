@@ -101,7 +101,8 @@ class Project:
         return out
 
 
-def test_the_ladder_opens_rung_by_rung_from_l0_to_l5(tmp_path):
+def test_the_ladder_opens_rung_by_rung_from_l0_to_l5(tmp_path, monkeypatch):
+    monkeypatch.setenv("MYCELIUM_TODAY", DAY)
     p = Project(tmp_path)
 
     # L0: the idea. Nothing above it.
@@ -156,12 +157,6 @@ def test_the_ladder_opens_rung_by_rung_from_l0_to_l5(tmp_path):
                                              "data_inventory": [{"data_type": "phone number"}]})
     p.write(p.moved("l3", "define"))
     p.refused(p.moved("l3", "develop"), "the lightest test that answers it")
-    # v0.256.0: the L4 is the delivery, so it opens on the test the delivery carries, not on its
-    # result. With no test named there is nothing for a delivery to answer.
-    l4 = {"id": "l4", "scale": "L4", "phase": "discover", "parent": "l3",
-          "object_ref": "sol-001"}
-    p.refused(p.add(l4), "what this delivery tests")
-    assert _proposed(tmp_path) != "door-l4:l3", "no L4 door before the L3 names its test"
     sol = opps["opportunities"][0]["solutions"][0]
     sol["riskiest_assumption"] = {"statement": "a named backup approves when the manager is off",
                                   "cheapest_test": "live trial at Harbour while Ines is away, "
@@ -170,17 +165,40 @@ def test_the_ladder_opens_rung_by_rung_from_l0_to_l5(tmp_path):
     p.write(p.moved("l3", "develop"))
     assert sl.delivery_state(str(tmp_path))[0], "code may be written once the L3 is in develop"
 
-    # The L3 is building and its test is named: the L4 that delivers it (and runs the test, which
-    # needs real use) is proposed and opens, with the L3 still anecdotal (E2E run 29).
-    assert _proposed(tmp_path) == "door-l4:l3", "the L4 door is proposed once its lock holds"
+    _deliver_to_learn_then_open_l4(p, tmp_path, opps)
+    _ship_and_open_l5(p, tmp_path)
+
+
+def _deliver_to_learn_then_open_l4(p: Project, root: Path, opps: dict) -> None:
+    """The L3 delivers to learn, its trial reads out, and the L4 opens on the verdict."""
+    # v0.257.0: the L3 DELIVERS TO LEARN. Its test needs real use, so its own Deliver is proposed;
+    # the L4 builds to earn and waits on the verdict (E2E run 29, where 0.256.0 routed it wrong).
+    l4 = {"id": "l4", "scale": "L4", "phase": "discover", "parent": "l3",
+          "object_ref": "sol-001"}
+    p.refused(p.add(l4), "medium confidence")
+    assert _proposed(root) == "deliver-l3:l3", "the L3's learning delivery is proposed"
+    p.write(p.moved("l3", "deliver"))
+    assert _proposed(root) != "deliver-l3:l3", "and not again once the L3 is in Deliver"
+    ok, why = sl.exposure_state(str(root))
+    assert not ok and "learning_delivery" in why, "no audience recorded, nobody meets it"
+    p.write([{**d, "learning_delivery": {
+        "audience": "Harbour's nine staff, opted in by the site lead",
+        "until": "2026-10-25",
+        "means": "infrastructure as code: one environment, torn down after the trial"}}
+        if d["id"] == "l3" else d for d in p.diamonds])
+    assert sl.exposure_state(str(root))[0], "the learning build may meet its audience"
+    assert _proposed(root) != "door-l4:l3", "no L4 door while the trial has not read out"
+
+    # The trial reads out: the verdict is the medium-confidence evidence the L4 opens on.
+    opps["opportunities"][0]["solutions"][0]["riskiest_assumption"]["verdict"] = "validated"
+    p.canvas_file("opportunities.yml", opps)
+    assert _proposed(root) == "door-l4:l3", "the L4 door is proposed once its lock holds"
     p.write(p.add(l4))
-    assert _proposed(tmp_path) != "door-l4:l3", "and not again once the L4 is open"
-
-    _ship_and_open_l5(p, tmp_path, opps)
+    assert _proposed(root) != "door-l4:l3", "and not again once the L4 is open"
 
 
-def _ship_and_open_l5(p: Project, root: Path, opps: dict) -> None:
-    """The second half of the walk: the L4 ships, its test reads out, and the L5 opens on it."""
+def _ship_and_open_l5(p: Project, root: Path) -> None:
+    """The second half of the walk: the L4 ships and the L5 opens on it."""
     # L4 ships: through define and develop into deliver, gates passed at every step.
     for phase in ("define", "develop", "deliver"):
         p.write(p.moved("l4", phase))
@@ -192,10 +210,6 @@ def _ship_and_open_l5(p: Project, root: Path, opps: dict) -> None:
     p.refused(p.add(l5), "launch data")
     p.write([{**d, "launch_data": {"usage": "Harbour: 41 swap requests in three weeks"}}
              if d["id"] == "l4" else d for d in p.diamonds])
-    # v0.256.0: the market release needs the L3 at medium confidence, which the delivery produced.
-    p.refused(p.add(l5), "release to the market")
-    opps["opportunities"][0]["solutions"][0]["riskiest_assumption"]["verdict"] = "validated"
-    p.canvas_file("opportunities.yml", opps)
     assert _proposed(root) == "door-l5:l4", "still proposed, now to open the L5"
     p.write(p.add(l5))
     assert _proposed(root) != "door-l5:l4", "and not again once the L5 is open"

@@ -4,6 +4,36 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.257.0 - the L3 delivers to learn, the L4 to earn
+
+**2026-09-25.** 0.256.0 was built on a wrong diagnosis. E2E run 29's L3 named a live trial at a pilot
+site as its test, and the agent called it a circle (the trial needs the build live, which needs an
+L4, which needs the trial). It was not: the exposure rule already let an L3 in Deliver, past
+Security, Privacy and Service Quality, put a build in front of people. Run 30's builder saw it at
+once ("L3-001 in Deliver can clear the exposure gate on its own"), which left two routes to real
+people and an L4 opened before anything had been delivered. Founder: "for L4 to open there must be
+some sort of delivery involved", and on where the infrastructure belongs: "Maybe iac means it
+belongs in L3 for web based software. Maybe something else for courseware".
+
+The record: in 21 E2E runs one L3 ever reached Deliver (run 19). The rest stalled in develop, where
+nothing offered the move.
+
+- **The L3 delivers to learn.** A test that needs real use runs in the L3's own Deliver (Cagan's
+  live-data prototype, Gilad's early adopters and alpha, Patton's build to learn). An L3 reaches
+  real people only with `learning_delivery: {audience, until, means}` recorded and only until
+  `until`; `means` follows the product type (web software: infrastructure as code for an environment
+  that can be torn down; courseware: a pilot cohort; service: by hand). Production for everyone is
+  an L4. Checked by `exposure_state`, so the exposure gate and the prompt line both enforce it.
+- **The next item proposes it** (`deliver-l3:<l3>`) while the L3 is in develop with a named test
+  that has no verdict, naming the gates and the learning-delivery record still missing.
+- **The L4 opens on medium confidence again**, which the learning delivery's verdict produces. A
+  riskiest assumption recorded as failed still refuses the L4 (kept from 0.256.0).
+- The walkthrough runs the whole path: the L3's Deliver proposed, exposure refused without an
+  audience, the trial reads out, the L4 door, the L4 ships, the L5 opens. Disabling the new offer
+  fails it at "the L3's learning delivery is proposed".
+- `engine/diamond-rules.md`, `/diamond-progress` 2d, `/preflight` and the diamond schema
+  (`learning_delivery`) say so; the 0.256.0 wording elsewhere is reverted.
+
 ## v0.256.0 - the L4 opens on what its delivery tests, not on the result
 
 **2026-09-25.** E2E run 29: the L3 froze a live trial at a pilot site as the test of its riskiest
