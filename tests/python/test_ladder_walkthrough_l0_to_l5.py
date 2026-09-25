@@ -156,31 +156,31 @@ def test_the_ladder_opens_rung_by_rung_from_l0_to_l5(tmp_path):
                                              "data_inventory": [{"data_type": "phone number"}]})
     p.write(p.moved("l3", "define"))
     p.refused(p.moved("l3", "develop"), "the lightest test that answers it")
+    # v0.256.0: the L4 is the delivery, so it opens on the test the delivery carries, not on its
+    # result. With no test named there is nothing for a delivery to answer.
+    l4 = {"id": "l4", "scale": "L4", "phase": "discover", "parent": "l3",
+          "object_ref": "sol-001"}
+    p.refused(p.add(l4), "what this delivery tests")
+    assert _proposed(tmp_path) != "door-l4:l3", "no L4 door before the L3 names its test"
     sol = opps["opportunities"][0]["solutions"][0]
     sol["riskiest_assumption"] = {"statement": "a named backup approves when the manager is off",
-                                  "cheapest_test": "concierge: the founder relays each request "
-                                                   "to Tom by hand for two weeks"}
+                                  "cheapest_test": "live trial at Harbour while Ines is away, "
+                                                   "thresholds frozen before the window"}
     p.canvas_file("opportunities.yml", opps)
     p.write(p.moved("l3", "develop"))
     assert sl.delivery_state(str(tmp_path))[0], "code may be written once the L3 is in develop"
 
-    # L4 opens once the L3's evidence is at medium confidence: here, the test held.
-    l4 = {"id": "l4", "scale": "L4", "phase": "discover", "parent": "l3",
-          "object_ref": "sol-001"}
-    p.refused(p.add(l4), "medium confidence")
-    assert _proposed(tmp_path) != "door-l4:l3", "no L4 door before the L3 is at medium confidence"
-    sol["riskiest_assumption"]["verdict"] = "validated"
-    p.canvas_file("opportunities.yml", opps)
-    # v0.254.0: the L4 door is PROPOSED once its lock holds; before, nothing offered it again.
+    # The L3 is building and its test is named: the L4 that delivers it (and runs the test, which
+    # needs real use) is proposed and opens, with the L3 still anecdotal (E2E run 29).
     assert _proposed(tmp_path) == "door-l4:l3", "the L4 door is proposed once its lock holds"
     p.write(p.add(l4))
     assert _proposed(tmp_path) != "door-l4:l3", "and not again once the L4 is open"
 
-    _ship_and_open_l5(p, tmp_path)
+    _ship_and_open_l5(p, tmp_path, opps)
 
 
-def _ship_and_open_l5(p: Project, root: Path) -> None:
-    """The second half of the walk: the L4 ships and the L5 opens on it."""
+def _ship_and_open_l5(p: Project, root: Path, opps: dict) -> None:
+    """The second half of the walk: the L4 ships, its test reads out, and the L5 opens on it."""
     # L4 ships: through define and develop into deliver, gates passed at every step.
     for phase in ("define", "develop", "deliver"):
         p.write(p.moved("l4", phase))
@@ -190,8 +190,12 @@ def _ship_and_open_l5(p: Project, root: Path) -> None:
     assert _proposed(root) == "door-l5:l4", "a shipped L4 proposes the L5 door"
     l5 = {"id": "l5", "scale": "L5", "phase": "discover", "parent": "l4"}
     p.refused(p.add(l5), "launch data")
-    p.write([{**d, "launch_data": {"usage": "12 sites, 41 swaps in week one"}}
+    p.write([{**d, "launch_data": {"usage": "Harbour: 41 swap requests in three weeks"}}
              if d["id"] == "l4" else d for d in p.diamonds])
+    # v0.256.0: the market release needs the L3 at medium confidence, which the delivery produced.
+    p.refused(p.add(l5), "release to the market")
+    opps["opportunities"][0]["solutions"][0]["riskiest_assumption"]["verdict"] = "validated"
+    p.canvas_file("opportunities.yml", opps)
     assert _proposed(root) == "door-l5:l4", "still proposed, now to open the L5"
     p.write(p.add(l5))
     assert _proposed(root) != "door-l5:l4", "and not again once the L5 is open"

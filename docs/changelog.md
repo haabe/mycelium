@@ -4,6 +4,30 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.256.0 - the L4 opens on what its delivery tests, not on the result
+
+**2026-09-25.** E2E run 29: the L3 froze a live trial at a pilot site as the test of its riskiest
+assumption ("a named backup approver keeps swaps moving while the manager is away"). Only real use
+answers that. The trial needed the build live at the site, which needs an L4 in deliver, and the L4
+lock needed the L3 at medium confidence, which only the trial could produce. A circle: the build
+could never lawfully reach the site. Founder: "for L4 to open there must be some sort of delivery
+involved... you are avoiding fixing the actual problem" (the agent had proposed steering the test
+away from delivery instead).
+
+- **The L4 lock** (`scale_locks.py`): the L3 lock, plus the L3's riskiest assumption with a named
+  test (`cheapest_test` or `test_design`) that is not recorded as failed. The L4 is the delivery; it
+  opens on the test it carries. A failed assumption is not delivered: pivot or stop in the L3.
+- **The medium-confidence bar moves to the L5**, where Gilad puts it: before the release to the
+  market (*Evidence-Guided* p158-159). His own tests include early adopters, alpha and beta, which
+  are deliveries to test users; that is an L4. The L4's verdict, recorded on the riskiest
+  assumption, is what meets the bar.
+- **Nothing about exposure loosens.** An L4 reaches people only in deliver, through Security,
+  Privacy and Service Quality.
+- The L4 and L5 offers, `/preflight`, `/launch-tier`, `/diamond-progress` 2d, `engine/diamond-rules.md`,
+  the discovery gate's text, `/interview` and `hooks/README.md` say so.
+- The L0-to-L5 walkthrough now runs the run-29 shape: a live trial named as the test, the L4 offered
+  and opened on an anecdotal L3, the L5 refused until the delivery's verdict is recorded.
+
 ## v0.255.0 - the L1, L2 and L3 doors are proposed when they can open
 
 **2026-09-25.** Founder, on the L4 and L5 doors that had been claimed since 0.232.0 and 0.243.0 and

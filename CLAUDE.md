@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.255.0 -- **The L1, L2 and L3 doors are proposed when they can open** (MINOR). Each scale's entrance below L4 was an offer inside one skill, so a project that never ran that skill was never asked, and no test asserted any of the three fired. The next item now proposes the L1, L2 and L3 doors once each lock holds and nothing at that scale is open, and the L0-to-L5 walkthrough asserts every door is proposed exactly when it can open. Prior: 0.254.1 a snooze until a condition reaches the agent.*
+*Version 0.256.0 -- **The L4 opens on what its delivery tests, not on the result** (MINOR). The L4 is the delivery, and it waited on the L3 reaching medium confidence, which an assumption only real use can answer could reach only through a delivery: E2E run 29 froze a live pilot trial as its test and had no way to run it. The L4 now opens once the L3's riskiest assumption has a named test that has not failed; Gilad's medium-confidence bar moves to the release to the market (the L5), which the delivery's verdict meets. Exposure still needs the L4's Security, Privacy and Service Quality gates. Prior: 0.255.0 the L1, L2 and L3 doors are proposed when they can open.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

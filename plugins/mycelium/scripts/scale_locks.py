@@ -20,12 +20,14 @@ TWO QUESTIONS, NEVER ANSWERED WITH EACH OTHER:
   chain still EXISTS: a purpose, an outcome, a target with evidence (`entry=False`: --check and the
   delivery gate's question, "may this cycle carry new code").
 
-THE LOCKS. They read the parent's ARTEFACT at L1-L3 and a confidence band only at L4 and L5, because
+THE LOCKS. They read the parent's ARTEFACT at L1-L4 and a confidence band only at L5, because
 that is where the sources put numbers: the ordering is top-down in every source read (Wardley p12,
 Cagan Empowered p113-118, Torres CDH p27, Gilad Evidence-Guided p43), none of them locks the upper
 levels on a score (Torres p35 and p101, Wardley p32: the levels are worked together and revise each
 other), and Gilad's only thresholds are on ideas (launch at medium confidence or above, ICE Done
-Right p14; medium-high before delivery for most ideas, Evidence-Guided p158-159).
+Right p14; medium-high before delivery for most ideas, Evidence-Guided p158-159). Delivery there is
+the release to the market; his own tests include early adopters, alpha and beta, which are
+deliveries to test users, and that is what an L4 is (v0.256.0).
 
   L1  a live L0 and a stated purpose: purpose.yml `why` (three words or more) and `who`.
   L2  the L1 lock, plus a strategy (v0.247.0: a live L1 diamond on its decision, a North Star in
@@ -36,11 +38,15 @@ Right p14; medium-high before delivery for most ideas, Evidence-Guided p158-159)
       speculation AND a source it came from; at entry it must also be open, and name its root when
       the tree has more than one (Torres p101-107, Gilad Testing Product Ideas p9).
   L4  the L3 lock on the L3 it delivers (its `parent`, or the L3 with the same `object_ref`; never a
-      killed or archived one), plus that L3's evidence at data-supported or better: the best of its
-      own `evidence_type` and the evidence on the solution it builds (v0.253.0). An L3 moving from
-      Define to Develop must name the lightest test of its riskiest assumption (v0.253.0).
-  L5  the L4 lock on its parent L4, that L4 shipped, and launch data (`launch_data`: usage, feedback
-      or metric movement, on the L4 or the L5; Gilad Evidence-Guided p123).
+      killed or archived one), plus the test the delivery carries: the L3's riskiest assumption with
+      a named test, not recorded as failed (v0.256.0). The L4 is the delivery; it cannot wait on a
+      result only a delivery produces. An L3 moving from Define to Develop must name the lightest
+      test of its riskiest assumption (v0.253.0).
+  L5  the L4 lock on its parent L4, that L4 shipped, launch data (`launch_data`: usage, feedback
+      or metric movement, on the L4 or the L5; Gilad Evidence-Guided p123), and the L3's evidence
+      at medium confidence or better (data-supported, test-validated or launch-validated: the best
+      of its own `evidence_type` and the evidence on the solution it builds, v0.253.0), which the
+      L4's delivery produces (moved from the L4 lock in v0.256.0).
 
 WHAT THE LOCKS CANNOT DO. They check that the parent's artefact EXISTS, not that it is true: an
 evidence type and a source are agent-writable fields. Requiring a named source makes an invented one
@@ -80,6 +86,7 @@ EVIDENCE_RANK = ["none", "speculation", "anecdotal", "data-supported", "test-val
 TEST_KEYS = ("cheapest_test", "smallest_test", "falsifier", "test_design")
 MIN_TEST_TEXT = 20  # shorter is a label, not a design
 ASSUMPTION_VALIDATED = {"validated", "passed", "held"}
+ASSUMPTION_FAILED = {"invalidated", "failed", "falsified", "refuted"}
 PASSED = {"pass", "passed", "pass-with-risk"}
 NOT_APPLICABLE = {"n/a", "not-applicable"}
 #: THE MATRIX, AS DATA (v0.248.0). engine/theory-gates.md, "Summary of which gates apply to which
@@ -508,6 +515,15 @@ class State:
         known = [g for g in grades if g in EVIDENCE_RANK]
         return max(known, key=EVIDENCE_RANK.index) if known else grades[0]
 
+    def failed_assumption(self, d: dict) -> str | None:
+        """The statement of a riskiest assumption the L3 builds on that its test failed."""
+        for s in self.build_solutions(d):
+            for a in [_as_dict(s.get("riskiest_assumption"))] + [
+                    x for x in _as_list(s.get("assumptions")) if isinstance(x, dict)]:
+                if str(a.get("verdict", "")).lower() in ASSUMPTION_FAILED:
+                    return str(a.get("statement") or a.get("id") or "an assumption")[:80]
+        return None
+
     def test_design_missing(self, d: dict) -> str | None:
         """Before an L3 builds, the lightest test that answers its riskiest assumption is named
         (v0.253.0). E2E runs 19 to 23 each went straight to a real pilot (a server, an SMS
@@ -531,15 +547,25 @@ class State:
                 "test")
 
     def _l4_missing(self, d: dict, entry: bool, seen: frozenset) -> list[str]:
+        """The L4 IS the delivery, so it opens on what the delivery will test, not on the result
+        (v0.256.0). Until then it needed the L3 at medium confidence, and an assumption that only
+        real use can answer could reach medium only through a delivery: E2E run 29 froze a live
+        trial at a pilot site as its test, which needed the build live, which needed the L4.
+        Founder, 2026-09-25: "for L4 to open there must be some sort of delivery involved." The
+        confidence bar moves to where Gilad puts it, before the release to the market (the L5)."""
         l3 = self._parent_at(d, "L3")
         if l3 is None:
             return [f"{d.get('id')}: the L3 it delivers, named as `parent` (a live one)"]
         miss = self.missing(l3, entry, seen)
-        ev = self.l3_evidence(l3)
-        if ev not in MEDIUM_OR_BETTER:
-            miss.append(f"{l3.get('id')}: evidence at medium confidence or higher before "
-                        f"delivery (now `{ev}`; needs data-supported, test-validated or "
-                        "launch-validated, Gilad Evidence-Guided p158-159)")
+        if self.test_design_missing(l3):
+            miss.append(f"{l3.get('id')}: what this delivery tests: its riskiest assumption with "
+                        "a named test (`riskiest_assumption.cheapest_test` on the solution, via "
+                        "/mycelium:assumption-test), so the delivery produces a verdict")
+        failed = self.failed_assumption(l3)
+        if failed:
+            miss.append(f"{l3.get('id')}: a riskiest assumption that has not failed its test "
+                        f"(`{failed}` is recorded as failed: pivot or stop in the L3, do not "
+                        "deliver it)")
         return miss
 
     def _l5_missing(self, d: dict, entry: bool, seen: frozenset) -> list[str]:
@@ -547,6 +573,14 @@ class State:
         if l4 is None:
             return [f"{d.get('id')}: the L4 whose release this is, named as `parent`"]
         miss = self.missing(l4, entry, seen)
+        l3 = self._parent_at(l4, "L3")
+        ev = self.l3_evidence(l3) if l3 is not None else "none"
+        if l3 is not None and ev not in MEDIUM_OR_BETTER:
+            miss.append(f"{l3.get('id')}: evidence at medium confidence or higher before a "
+                        f"release to the market (now `{ev}`; needs data-supported, "
+                        "test-validated or launch-validated, Gilad Evidence-Guided p158-159). "
+                        "The L4's delivery produces it: record its test's verdict on the "
+                        "riskiest assumption")
         shipped = (l4.get("completed_at") or str(l4.get("id")) in self.completed_ids
                    or str(l4.get("phase", "")).lower() in SHIPPED_PHASES)
         if not shipped:

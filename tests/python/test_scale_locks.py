@@ -162,15 +162,32 @@ def _l3(evidence="anecdotal", phase="develop", gates=None):
             "theory_gates_status": dict(BUILD_PASSED if gates is None else gates)}
 
 
-def test_l4_needs_its_l3_at_medium_confidence(tmp_path):
-    p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), diamonds=[_l3("data-supported")])
+TESTED = {"statement": "a named backup approves when the manager is off",
+          "cheapest_test": "live trial at Harbour while Ines is away, thresholds frozen"}
+
+
+def _tested(**ra):
+    return _sol_opps(riskiest_assumption={**TESTED, **ra})
+
+
+def test_l4_opens_on_the_test_its_delivery_carries(tmp_path):
+    """v0.256.0: the L4 IS the delivery. It opens on an anecdotal L3 whose riskiest assumption has
+    a named test, because a test that needs real use can only run through a delivery (E2E run 29);
+    with no named test it does not, however well evidenced the L3."""
+    p = _project(tmp_path, purpose=PURPOSE, opps=_tested(), diamonds=[_l3("anecdotal")])
     assert sl.can_open(p, "L4", parent="l3-a") == []
-    p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), diamonds=[_l3("anecdotal")])
-    assert any("medium confidence" in m for m in sl.can_open(p, "L4", parent="l3-a"))
+    p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), diamonds=[_l3("data-supported")])
+    assert any("what this delivery tests" in m for m in sl.can_open(p, "L4", parent="l3-a"))
+
+
+def test_a_failed_riskiest_assumption_is_not_delivered(tmp_path):
+    p = _project(tmp_path, purpose=PURPOSE, opps=_tested(verdict="invalidated"),
+                 diamonds=[_l3("anecdotal")])
+    assert any("recorded as failed" in m for m in sl.can_open(p, "L4", parent="l3-a"))
 
 
 def test_l4_finds_its_l3_by_object_ref(tmp_path):
-    p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), diamonds=[_l3("test-validated")])
+    p = _project(tmp_path, purpose=PURPOSE, opps=_tested(), diamonds=[_l3("test-validated")])
     assert sl.can_open(p, "L4", object_ref="sol-001, swap request + single approval") == []
 
 
@@ -184,13 +201,13 @@ def test_l4_with_no_l3_is_locked(tmp_path):
 def test_l5_needs_a_shipped_l4_and_launch_data(tmp_path):
     l4 = {"id": "l4-a", "scale": "L4", "phase": "deliver", "parent": "l3-a"}
     base = [_l3("data-supported"), l4]
-    p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), diamonds=base)
+    p = _project(tmp_path, purpose=PURPOSE, opps=_tested(), diamonds=base)
     miss = sl.can_open(p, "L5", parent="l4-a")
     assert len(miss) == 1 and "launch data" in miss[0]
     l5 = {"id": "l5-m", "scale": "L5", "phase": "discover", "parent": "l4-a",
           "launch_data": {"usage": "3 sites used it daily for two weeks"},
           "pmf": {"band": "not-yet-measurable"}}
-    p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), diamonds=[*base, l5])
+    p = _project(tmp_path, purpose=PURPOSE, opps=_tested(), diamonds=[*base, l5])
     assert sl.report(p)[0][-1] == ("l5-m", "L5", [], True)
 
 
@@ -376,7 +393,19 @@ def test_l5_door_opens_on_launch_data_written_to_the_l4(tmp_path):
     readable from the L4 whose release it is."""
     l4 = {"id": "l4-a", "scale": "L4", "phase": "deliver", "parent": "l3-a",
           "launch_data": {"feedback": "two leads asked for it at the third site"}}
-    p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), diamonds=[_l3("data-supported"), l4])
+    p = _project(tmp_path, purpose=PURPOSE, opps=_tested(), diamonds=[_l3("data-supported"), l4])
+    assert sl.can_open(p, "L5", parent="l4-a") == []
+
+
+def test_the_market_release_needs_the_evidence_the_delivery_produced(tmp_path):
+    """v0.256.0: Gilad's medium-confidence bar sits before the release to the market (the L5),
+    and the L4's delivery is what produces it: the test's verdict on the riskiest assumption."""
+    l4 = {"id": "l4-a", "scale": "L4", "phase": "deliver", "parent": "l3-a",
+          "launch_data": {"usage": "Harbour: 41 requests in the app over three weeks"}}
+    p = _project(tmp_path, purpose=PURPOSE, opps=_tested(), diamonds=[_l3("anecdotal"), l4])
+    assert any("release to the market" in m for m in sl.can_open(p, "L5", parent="l4-a"))
+    p = _project(tmp_path, purpose=PURPOSE, opps=_tested(verdict="validated"),
+                 diamonds=[_l3("anecdotal"), l4])
     assert sl.can_open(p, "L5", parent="l4-a") == []
 
 
@@ -669,7 +698,7 @@ def test_l4_reads_the_evidence_recorded_on_the_solution(tmp_path):
     opps = _sol_opps(provenance={"evidence_type": "data-supported",
                                  "evidence_sources": ["11 real requests, 7 decided in the app"]})
     p = _project(tmp_path, purpose=PURPOSE, opps=opps, diamonds=[_l3("anecdotal")])
-    assert sl.can_open(p, "L4", parent="l3-a") == []
+    assert sl.State(p).l3_evidence(_l3("anecdotal")) == "data-supported"
 
 
 def test_a_validated_riskiest_assumption_counts_as_test_validated(tmp_path):
@@ -681,11 +710,12 @@ def test_a_validated_riskiest_assumption_counts_as_test_validated(tmp_path):
     assert sl.can_open(p, "L4", parent="l3-a") == []
 
 
-def test_an_untested_solution_does_not_open_l4(tmp_path):
+def test_a_named_test_not_yet_run_opens_l4_and_the_delivery_runs_it(tmp_path):
     opps = _sol_opps(riskiest_assumption={"statement": "a backup approves",
                                           "cheapest_test": "concierge for two weeks at Harbour"})
     p = _project(tmp_path, purpose=PURPOSE, opps=opps, diamonds=[_l3("anecdotal")])
-    assert any("medium confidence" in m for m in sl.can_open(p, "L4", parent="l3-a"))
+    assert sl.can_open(p, "L4", parent="l3-a") == []
+    assert sl.State(p).l3_evidence(_l3("anecdotal")) == "anecdotal"
 
 
 def _move_to_develop(tmp_path, opps, **extra):

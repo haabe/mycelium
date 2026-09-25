@@ -126,18 +126,21 @@ test_open_l4_allows() {
     { printf 'active_diamonds:\n'; ladder_diamonds opp-001
       printf '  - id: d-003\n    scale: L3\n    phase: complete\n    object_ref: sol-001\n    evidence_type: data-supported\n  - id: d-004\n    scale: L4\n    phase: develop\n    parent: d-003\n    theory_gates_status: %s\n' "$BUILD_GATES"
     } > "$p/.claude/diamonds/active.yml"
+    # v0.256.0: the L4 opens on the test its delivery carries, named on the solution.
+    printf '        riskiest_assumption:\n          statement: "a named backup approves"\n          cheapest_test: "live trial at Harbour while the manager is away"\n' \
+        >> "$p/.claude/canvas/opportunities.yml"
     local code; code=$(run_gate "$p" "$(write_json "$p/app/rollout.py")")
-    assert_eq "$code" "0" "an open L4 on an L3 at medium confidence -> allowed"
+    assert_eq "$code" "0" "an open L4 on an L3 whose test is named -> allowed"
     rm -rf "$p"
 }
 
-test_l4_on_an_anecdotal_l3_blocks() {
+test_l4_with_no_named_test_blocks() {
     local p; p=$(make_chained_project)
     printf 'active_diamonds:\n  - id: d-003\n    scale: L3\n    phase: complete\n    object_ref: sol-001\n    evidence_type: anecdotal\n  - id: d-004\n    scale: L4\n    phase: develop\n    parent: d-003\n' \
         > "$p/.claude/diamonds/active.yml"
     local code; code=$(run_gate "$p" "$(write_json "$p/app/rollout.py")")
-    assert_eq "$code" "2" "an L4 whose L3 is only anecdotal -> blocked"
-    assert_contains "$(gate_err)" "medium confidence" "the block names the confidence band"
+    assert_eq "$code" "2" "an L4 whose L3 names no test for the delivery -> blocked"
+    assert_contains "$(gate_err)" "what this delivery tests" "the block names the missing test"
     rm -rf "$p"
 }
 
@@ -272,7 +275,7 @@ run_test test_populated_purpose_without_delivery_diamond_blocks
 run_test test_only_l0_open_blocks_new_source
 run_test test_completed_l3_only_blocks
 run_test test_open_l4_allows
-run_test test_l4_on_an_anecdotal_l3_blocks
+run_test test_l4_with_no_named_test_blocks
 run_test test_delivery_ack_allows
 run_test test_ack_file_allows
 run_test test_edit_tool_never_blocked
