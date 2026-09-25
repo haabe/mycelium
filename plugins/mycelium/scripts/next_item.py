@@ -595,7 +595,8 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="One proposal per boundary, with its verb attached.")
     ap.add_argument("--project-dir", type=Path, default=Path("."))
     ap.add_argument("--session", default="unknown")
-    ap.add_argument("--today", default=_dt.datetime.now(tz=_dt.UTC).date().isoformat())
+    ap.add_argument("--today", default=(
+        al.today_iso() if al is not None else _dt.datetime.now(tz=_dt.UTC).date().isoformat()))
     ap.add_argument(
         "--write-state",
         action="store_true",

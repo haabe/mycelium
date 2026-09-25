@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.253.3 -- **The whole ladder is tested, L0 to L5** (PATCH). A new test walks a project from L0 to L5 through the real scale-lock gate: each door stays shut one artefact short and opens once the artefact is on record, and every phase move carries its gates and history. Twenty-four E2E runs never got past L3, so L4 and L5 had never been exercised; every CI run now does. Prior: 0.253.2 a shell command cannot change diamond state unjudged.*
+*Version 0.253.4 -- **MYCELIUM_TODAY** (PATCH). The date the next item and the advisory ledger treat as today can be set with `MYCELIUM_TODAY=YYYY-MM-DD` (a malformed value is ignored). The E2E harness runs a simulated calendar ahead of the machine's, and a snooze until a date in that world never expired. Unset, nothing changes. Prior: 0.253.3 the whole ladder is tested, L0 to L5.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

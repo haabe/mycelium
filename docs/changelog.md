@@ -4,6 +4,18 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.253.4 - MYCELIUM_TODAY
+
+**2026-09-25.** E2E run 25: the founder answered the escalated L3 item "not now, ask me again after
+the Harbour run starts on 12 October". The simulated world runs ahead of the machine's calendar, so a
+snooze to that date would never expire during the run and the item could not come back.
+
+- `advisory_ledger.today_iso()`: `MYCELIUM_TODAY` when set to a `YYYY-MM-DD` date, else the machine's
+  UTC date; a malformed value is ignored. `advisory_ledger.py` and `next_item.py` default `--today`
+  to it, so rulings, snoozes, streaks and the next item agree on one date. Timestamps that order
+  events against each other (`first_shown_at`, `diamond-rulings.json`) stay on the machine clock.
+- Unset outside a harness: nothing changes. Pinned by `tests/python/test_next_item_ladder.py`.
+
 ## v0.253.3 - the whole ladder is tested, L0 to L5
 
 **2026-09-25.** Founder: "What about L3->L4 and then L5?!" Twenty-four E2E runs never got past L3, so
