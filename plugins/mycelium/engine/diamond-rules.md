@@ -148,9 +148,9 @@ Diamonds spawn child diamonds, each through its lock above:
 - L0 spawns L1 when purpose is stated and a strategic question arises (the event offer: `/wardley-map`, `/diamond-progress`)
 - L1 spawns L2 when the desired outcome is set and opportunities need exploration (`/ost-builder`)
 - L2 spawns L3 when a target opportunity has evidence for solution design (`/ice-score`)
-- L3 spawns L4 when an increment is ready to build and the L3 is at medium confidence (the event offer: `/preflight`)
+- L3 spawns L4 when an increment is ready to build and the L3 is at medium confidence (the event offer: `/preflight`; since v0.254.0 the next item proposes it as soon as the L4 lock holds, because under test-first the L3 enters develop before its test raises the evidence)
 - L4 can spawn sub-L4 diamonds for complex features requiring their own discovery
-- **L4 spawns L5 when a release is categorised as a MAJOR LAUNCH on the project's own release scale** and launch data exists (v0.232.0, written by `/launch-tier`)
+- **L4 spawns L5 when a release is categorised as a MAJOR LAUNCH on the project's own release scale** and launch data exists (v0.232.0, written by `/launch-tier`). **A product's first release to its market counts as the top band** (founder, 2026-09-25): with no release history there is no scale to categorise against, and the first launch would otherwise never reach L5. Since v0.254.0 the next item proposes `/launch-tier` when an L4 ships
 - L5 spawns L2 when market feedback reveals new opportunities (feedback loop)
 
 **The L4→L5 edge was missing until v0.232.0, and its absence is why L5 never opened by itself.** Every

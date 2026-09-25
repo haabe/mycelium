@@ -26,6 +26,15 @@ _spec = importlib.util.spec_from_file_location("scale_locks", PLUGIN / "scripts"
 sl = importlib.util.module_from_spec(_spec)
 sys.modules["scale_locks"] = sl
 _spec.loader.exec_module(sl)
+_nspec = importlib.util.spec_from_file_location("next_item", PLUGIN / "scripts" / "next_item.py")
+ni = importlib.util.module_from_spec(_nspec)
+_nspec.loader.exec_module(ni)
+
+
+def _proposed(root: Path) -> str:
+    """The id of the one item Mycelium proposes at the next session start."""
+    item, _ = ni.pick(root, "", DAY)
+    return item["id"] if item else ""
 
 DAY = "2026-09-25"
 
@@ -148,21 +157,28 @@ def test_the_ladder_opens_rung_by_rung_from_l0_to_l5(tmp_path):
     l4 = {"id": "l4", "scale": "L4", "phase": "discover", "parent": "l3",
           "object_ref": "sol-001"}
     p.refused(p.add(l4), "medium confidence")
+    assert _proposed(tmp_path) != "door-l4:l3", "no L4 door before the L3 is at medium confidence"
     sol["riskiest_assumption"]["verdict"] = "validated"
     p.canvas_file("opportunities.yml", opps)
+    # v0.254.0: the L4 door is PROPOSED once its lock holds; before, nothing offered it again.
+    assert _proposed(tmp_path) == "door-l4:l3", "the L4 door is proposed once its lock holds"
     p.write(p.add(l4))
+    assert _proposed(tmp_path) != "door-l4:l3", "and not again once the L4 is open"
 
     # L4 ships: through define and develop into deliver, gates passed at every step.
     for phase in ("define", "develop", "deliver"):
         p.write(p.moved("l4", phase))
     assert sl.exposure_state(str(tmp_path))[0], "a shipped L4 may meet real people"
 
-    # L5 opens on the shipped L4 plus launch data.
+    # L5 opens on the shipped L4 plus launch data; the shipped L4 is the L5 door's event (v0.254.0).
+    assert _proposed(tmp_path) == "door-l5:l4", "a shipped L4 proposes the L5 door"
     l5 = {"id": "l5", "scale": "L5", "phase": "discover", "parent": "l4"}
     p.refused(p.add(l5), "launch data")
     p.write([{**d, "launch_data": {"usage": "12 sites, 41 swaps in week one"}}
              if d["id"] == "l4" else d for d in p.diamonds])
+    assert _proposed(tmp_path) == "door-l5:l4", "still proposed, now to open the L5"
     p.write(p.add(l5))
+    assert _proposed(tmp_path) != "door-l5:l4", "and not again once the L5 is open"
 
     # And the L5 can itself move through its phases.
     for phase in ("define", "develop", "deliver"):

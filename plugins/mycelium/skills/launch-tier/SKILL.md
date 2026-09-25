@@ -95,8 +95,12 @@ the skill spawned an L2 on new market signals and never an L5, so the top of the
 edge and L5 diamonds could only be opened by hand.
 
 **"Major launch" means the TOP BAND OF YOUR OWN SCALE**, not Tier 1 of the example table above. If
-you have no release history you have no scale yet, so you cannot categorise, so this does not fire —
-say that rather than borrowing the example's Tier 1.
+you have no release history you have no scale yet, so you cannot categorise a LATER release — say
+that rather than borrowing the example's Tier 1. **The one exception is the product's first release
+to its market** (founder ruling, 2026-09-25): the first release beyond the test sites, to paying
+customers or the target segment, is the top band by definition and opens an L5 on its launch data.
+Without it a product's first launch could never reach L5, because it has no history to categorise
+against. The next item proposes this step when an L4 ships (v0.254.0).
 
 ### Step 1 — check the entry lock before opening anything
 

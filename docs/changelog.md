@@ -4,6 +4,31 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.254.0 - the L4 and L5 doors are proposed when they can open
+
+**2026-09-25.** Founder: "What's blocking L4+L5 now?" The walkthrough test (0.253.3) proved the LOCKS
+let L4 and L5 open, but it opened the diamonds itself. Nothing in Mycelium did:
+
+- **The L4 door fired once, too early.** Its only entrance was `/preflight`'s offer when an L3
+  enters develop, and only if the L4 lock held then. Under test-first (0.253.0) the L3 enters develop
+  before its test raises its evidence, so the lock could not hold, the offer fell back to "increment
+  not opened", and nothing offered the L4 again once the lock held.
+- **The L5 door was prompted by nothing**, and its rule ("a major launch on your own release scale;
+  no history, no scale, does not fire") meant a product's first launch could never open an L5.
+
+What changes:
+
+- **The next item proposes the doors**, after fired closing paths and before the assessment ladder:
+  `door-l4:<l3>` when an L3 in develop or deliver has no open L4 and its L4 lock holds
+  (`/mycelium:preflight`); `door-l5:<l4>` when an L4 has shipped with no open L5, first to record
+  its launch data and categorise the release, then to open the L5 once its lock holds
+  (`/mycelium:launch-tier`). Snooze and drop work as for every next item.
+- **A product's first release to its market opens an L5** (founder ruling, 2026-09-25): the first
+  release beyond the test sites is the top band by definition. Later releases are still categorised
+  against the project's own history. `/launch-tier` and `engine/diamond-rules.md` say so;
+  `/diamond-progress` directs an L4 entering deliver to `/launch-tier`.
+- The walkthrough test now asserts each door is proposed exactly when it can open, and not after.
+
 ## v0.253.4 - MYCELIUM_TODAY
 
 **2026-09-25.** E2E run 25: the founder answered the escalated L3 item "not now, ask me again after
