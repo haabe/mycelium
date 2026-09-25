@@ -223,6 +223,7 @@ def test_empty_repo_is_not_a_pass(tmp_path, capsys):
     assert "no test files found" in capsys.readouterr().out
 
 
+@pytest.mark.realrepo
 def test_real_repo_is_clean():
     """Mycelium's own suite must pass its own gate."""
     root = Path(__file__).resolve().parents[2]

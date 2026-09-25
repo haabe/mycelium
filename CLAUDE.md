@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.253.0 -- **Test before you build, and the L4 reads the evidence** (MINOR). An L3 cannot move from Define to Develop until the lightest test of its riskiest assumption is named on the solution it builds (concierge, Wizard of Oz, early adopters; a real pilot is allowed, named as the test), and the L4 lock reads the evidence recorded on that solution rather than only the diamond's own field, which no skill updated. E2E runs 19 to 23 each built production infrastructure inside the L3 and stalled; in run 19 real use was recorded and the L4 still never opened. Prior: 0.252.2 an answer in plain words is pointed at the command that records it.*
+*Version 0.253.1 -- **Fail fast, then parallel** (PATCH). CI is a fast lane (security audits, workflow lint, the validator, the cheap gates) followed by parallel pytest and bash jobs behind one required `validate` check; pytest runs once, in parallel; each whole-repo scan runs once; pre-push is a fast check (~1 min) and CI is the gate; the release trusts the merged PR's green run when the tree is identical. A release took 35-45 min with the same checks run 3-4 times. Prior: 0.253.0 test before you build, and the L4 reads the evidence.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

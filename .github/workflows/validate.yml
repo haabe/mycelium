@@ -1,34 +1,38 @@
 name: Validate Template Integrity
 
+# FAIL FAST, THEN PARALLEL, ONE REQUIRED CHECK (2026-09-25, founder: "fail fast and early", without
+# lowering security). Measured before: one 29-step job, ~14 min; pytest ran twice (inside the
+# validator and again with coverage); three whole-repo scans ran three times each (~70% of the job);
+# ~50 checks that take ~6 s in total ran after 6 minutes of slow ones. Now:
+#   fast        security audits, workflow lint, the validator without its suites, the cheap gates (~1.5 min)
+#   pytest      after fast: the suite once, in parallel, with coverage and the per-file floor
+#   bash-suite  after fast, in parallel with pytest
+#   validate    the one check main's ruleset requires; green only if all three are green
+# Nothing that ran before is dropped. The three whole-repo scans run once, as their real-repo tests
+# in the pytest job (`@pytest.mark.realrepo`), which fail on the same findings the scripts gate on.
+#
+# No workflow-level `paths:` filter: a required check whose workflow never starts leaves a pull
+# request pending forever (GitHub docs, "troubleshooting required status checks").
+
 on:
   push:
     branches: [main]
-    paths:
-      - 'plugins/mycelium/**'
-      - '.claude-plugin/**'
-      - '.claude/**'
-      - 'tests/**'
-      - 'docs/**'
-      - '*.md'
-      - 'requirements-ci.txt'
-      - '.github/workflows/validate.yml'
   pull_request:
     branches: [main]
-    paths:
-      - 'plugins/mycelium/**'
-      - '.claude-plugin/**'
-      - '.claude/**'
-      - 'tests/**'
-      - 'docs/**'
-      - '*.md'
-      - 'requirements-ci.txt'
-      - '.github/workflows/validate.yml'
+
+permissions:
+  contents: read   # security review DL-1262: the default token scope was unspecified
+
+concurrency:
+  # A newer push to the same pull request supersedes the running one. Never cancelled on main.
+  group: validate-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  validate:
+  fast:
+    name: fast lane (security, lint, cheap checks)
     runs-on: ubuntu-latest
-    permissions:
-      contents: read   # security review DL-1262: the default token scope was unspecified
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
@@ -45,7 +49,8 @@ jobs:
         run: pip install -r requirements-ci.txt
 
       # Supply-chain gates (security review DL-1262, finding 4). Both are pinned in
-      # requirements-ci.txt so the auditors are themselves audited.
+      # requirements-ci.txt so the auditors are themselves audited. First, so a vulnerable or
+      # dangerous change fails in the first minute.
       - name: Audit CI dependencies for known vulnerabilities (pip-audit)
         run: pip-audit -r requirements-ci.txt --strict
 
@@ -58,13 +63,15 @@ jobs:
       # publishing the very names whose private-channel attribution it tracks;
       # CI on this public repo has no credentials to fetch it. The check's real
       # enforcement point is the maintainer's pre-push validation; CI fail-open
-      # is the accepted residual. If a backstop becomes necessary (e.g., a real
-      # incident where a leak slipped past pre-push), revisit by piping a
-      # names-only subset via a GitHub Actions secret.
-      - name: Run structural integrity validation (includes Check 17 — ruff/shellcheck/pytest with baseline-aware logic)
+      # is the accepted residual.
+      - name: Run structural integrity validation (every check; pytest and the bash suite run in their own jobs)
+        # MYCELIUM_VALIDATOR_SUITES=elsewhere: Check 17 still runs ruff and shellcheck here, and says
+        # (INFO, not PASS) that pytest and the bash suite run in the jobs below.
         # Output is teed so the warning-ingestion step below can classify it.
         # pipefail is required: without it the step would report tee's exit code
         # and a validator failure would pass silently.
+        env:
+          MYCELIUM_VALIDATOR_SUITES: elsewhere
         run: |
           set -o pipefail
           bash tests/validate-template.sh 2>&1 | tee validator-output.txt
@@ -82,31 +89,12 @@ jobs:
         # run is a broken wire, which is the whole point of this step.
         run: python3 plugins/mycelium/scripts/ingest_warnings.py --dry-run -f validator-output.txt
 
-      - name: Run wiring guard (no orphan scripts; plugin-root refs resolve; one path per state file; automation claims kept)
-        run: python3 plugins/mycelium/scripts/check_wiring.py --root .
-
       - name: Run negative-control guard (every guard's test proves the guard BITES)
         # Check 37 asks "does every check have a test?" — never whether that test
         # would FAIL if the check broke. verify_citations.py shipped 14 green tests
         # while matching 0% of real citations for ~2.5 months. This gates the
         # difference between "we tested the sad path" and "we only tested green".
         run: python3 plugins/mycelium/scripts/check_negative_control.py --root .
-
-      - name: Run test-authenticity guard (every test reaches real production code)
-        # The third question in the series. check_wiring asks "does this mechanism
-        # have a caller?"; check_negative_control asks "can this guard fail?";
-        # this asks "when the test runs, does production code run?" A test can
-        # import nothing, assert a tautology, or mock away the thing it names and
-        # still be green AND covered — coverage measures which lines ran, never
-        # whether the assertion after them meant anything.
-        run: python3 plugins/mycelium/scripts/check_test_authenticity.py --root .
-
-      - name: Run wiring-contract guard (project's own integration conventions hold)
-        # check_wiring.py enforces Mycelium's OWN hard-coded wiring rules. This
-        # enforces the contract DERIVED from a repo's majority convention, so it
-        # works in a consumer project whose joins the framework cannot know.
-        # Ungoverned files are reported, never silently excluded.
-        run: python3 plugins/mycelium/scripts/check_wiring_contract.py --root .
 
       - name: Run canvas schema + trace validation
         run: python3 plugins/mycelium/scripts/validate_canvas.py
@@ -254,9 +242,32 @@ jobs:
         # fields get gated, because the cost of a wrong one is silent.
         run: python3 plugins/mycelium/scripts/check_instrument_contract.py --root .
 
-      - name: Run Python unit tests with coverage (verbose output for CI logs)
+  pytest:
+    name: python tests (parallel, coverage)
+    needs: fast
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.x'
+          cache: 'pip'
+          cache-dependency-path: requirements-ci.txt
+
+      - name: Install CI dependencies
+        run: pip install -r requirements-ci.txt
+
+      - name: Run Python unit tests with coverage (parallel; includes the whole-repo scans)
+        # -n auto (pytest-xdist): measured 2144 tests in ~91 s against ~154 s serial on an 8-core
+        # machine. The realrepo tests are the enforcement point for check_wiring,
+        # check_wiring_contract and check_test_authenticity.
         run: |
-          pytest tests/python/ -v \
+          pytest tests/python/ -v -n auto \
             --cov=plugins/mycelium/scripts \
             --cov=plugins/mycelium/integrations \
             --cov-report=term \
@@ -268,6 +279,47 @@ jobs:
         # --cov-fail-under gates the TOTAL; this gates EACH file so a new untested
         # script can't hide under the average (the v0.49.6 check_legacy_paths gap).
         run: python3 plugins/mycelium/scripts/check_coverage_floor.py --root . --floor 70
+
+  bash-suite:
+    name: bash tests
+    needs: fast
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.x'
+          cache: 'pip'
+          cache-dependency-path: requirements-ci.txt
+
+      - name: Install CI dependencies
+        run: pip install -r requirements-ci.txt
+
+      - name: Run the bash check tests (G-V12 coverage proofs)
+        run: bash tests/bash/run.sh
+
+  validate:
+    # The single check main's ruleset requires. It runs even when a job before it failed or was
+    # skipped, and is green only when every one of them succeeded.
+    name: validate
+    needs: [fast, pytest, bash-suite]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: All jobs green
+        env:
+          FAST: ${{ needs.fast.result }}
+          PYTEST: ${{ needs.pytest.result }}
+          BASH_SUITE: ${{ needs.bash-suite.result }}
+        run: |
+          echo "fast=$FAST pytest=$PYTEST bash-suite=$BASH_SUITE"
+          test "$FAST" = success && test "$PYTEST" = success && test "$BASH_SUITE" = success
 
       # Note: standalone ruff and shellcheck checks are not run here — Check 17
       # in validate-template.sh runs both with the correct baseline-aware

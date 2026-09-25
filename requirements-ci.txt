@@ -12,6 +12,7 @@ jsonschema==4.26.0
 referencing==0.37.0
 pytest==9.1.1
 pytest-cov==7.1.0
+pytest-xdist==3.8.0
 ruff==0.16.0
 shellcheck-py==0.11.0.1
 pip-audit==2.10.1

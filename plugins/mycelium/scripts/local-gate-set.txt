@@ -40,10 +40,12 @@ check_gate_set_drift.py --root .
 
 # Added v0.110.0 — the seven that were CI-only. All seven run in well under a
 # second on this tree, so the reason they were not here was never cost.
-check_wiring.py --root .
-check_wiring_contract.py --root .
 check_negative_control.py --root .
-check_test_authenticity.py --root .
+# check_wiring, check_wiring_contract and check_test_authenticity left this list 2026-09-25 (founder
+# ruling: pre-push is a fast check, CI is the gate). Each scans the whole repo, together ~110 s of a
+# local push; they were measured 2026-09-25 at 68 s, 33 s and 9 s, not "well under a second". CI
+# enforces all three through their real-repo tests (`@pytest.mark.realrepo`), which fail on the same
+# findings the scripts gate on, so CI no longer runs them as separate steps and parity holds.
 check_empty_input_honesty.py --root .
 check_source_class_fidelity.py --root .
 check_surface_registry.py
