@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.257.0 -- **The L3 delivers to learn, the L4 to earn** (MINOR). A test that needs real use runs in the L3's own Deliver, to a named opted-in audience until a date, by means that fit the product type (for web software, infrastructure as code for an environment that can be torn down), through Security, Privacy and Service Quality; the next item proposes that step, which one L3 in 21 E2E runs ever took. The verdict is the medium-confidence evidence the L4 opens on. Reverts 0.256.0, which opened the L4 before anything was delivered on a misdiagnosis of run 29. Prior: 0.256.0 the L4 opens on what its delivery tests (reverted).*
+*Version 0.257.1 -- **Commands Mycelium shows run this plugin's own script** (PATCH). The next item named `advisory_ledger.py` with no path; in E2E run 32 the agent searched for it, ran a copy 37 versions old from the plugin cache, and the founder's answer was stamped with a date before the question, so the item kept escalating after it was answered. Every shown command now carries the plugin's absolute path, and the answer prompts say which ruling fits which answer ("not now, ask me after X" is a snooze until asked with X as the note). Prior: 0.257.0 the L3 delivers to learn, the L4 to earn.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

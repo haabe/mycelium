@@ -4,6 +4,26 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.257.1 - commands Mycelium shows run this plugin's own script
+
+**2026-09-25.** E2E run 32, session 6: the founder answered the escalated L3 item "not before
+Monday's demo and not before the data gate clears ... Ask me again after Wednesday's check". The
+next item told the agent to record it with `advisory_ledger.py rule ...`, no path. The agent ran
+`find . ~/.claude/plugins -name advisory_ledger.py | head -1` and got plugin cache 0.220.0, 37
+versions old and without `MYCELIUM_TODAY`, so the ruling was dated by the machine (2026-09-25),
+before the item was first shown in the simulated world (2026-09-30). The ruling never counted, the
+item escalated for four more sessions, and the condition was lost: the agent chose a bare `keep`.
+With the condition gone, nothing brought the question back once Wednesday passed, and the L3 sat
+in develop with its Deliver gates never run. Any real install keeps old versions in its cache.
+
+- **Every command the next item, the answer prompt, the open-item nudge and the muted-advisory line
+  show carries the plugin's absolute path** (`python3 "<plugin>/scripts/advisory_ledger.py" rule ...`).
+- **The answer prompts say which ruling fits which answer:** "not now, ask me after X" is
+  `--ruling snooze --until asked --note "X"`; a date is `--until YYYY-MM-DD`; "this is wrong" is
+  `--ruling drop`.
+- Pinned by `tests/python/test_shown_commands_run_this_plugin.py`, which copies the command as
+  shown, runs it, and checks the ruling carries the in-world date and the condition.
+
 ## v0.257.0 - the L3 delivers to learn, the L4 to earn
 
 **2026-09-25.** 0.256.0 was built on a wrong diagnosis. E2E run 29's L3 named a live trial at a pilot

@@ -625,6 +625,19 @@ def _escalated(item: dict) -> bool:
     return int(item.get("shown") or 1) >= ESCALATE_AT
 
 
+# EVERY COMMAND WE SHOW CARRIES THIS PLUGIN'S OWN PATH (v0.258.0). E2E run 32: the item said
+# `advisory_ledger.py rule ...` with no path, the agent ran `find ... | head -1`, got the copy in
+# plugin cache 0.220.0 (37 versions old, no MYCELIUM_TODAY), and stamped the founder's answer with a
+# date before the question, so the answer never counted and the item escalated for sessions after it
+# was answered. Any real install keeps old versions in its cache.
+LEDGER = f'python3 "{Path(__file__).resolve().parent / "advisory_ledger.py"}"'
+
+# Which ruling fits which answer. Run 32: "not before Monday's demo ... ask me again after
+# Wednesday" was recorded as a bare `keep`, and the condition 0.254.1 exists to carry was lost.
+RULING_GUIDE = ('"not now, ask me after X" is `--ruling snooze --until asked --note "X"`; '
+                'a date is `--until YYYY-MM-DD`; "this is wrong" is `--ruling drop`')
+
+
 def render(item: dict) -> str:
     text = str(item["text"])
     if str(item.get("id", "")).startswith("fired:"):
@@ -635,8 +648,8 @@ def render(item: dict) -> str:
                 "(put it to the user this session and record the answer)")
     return (
         f"{head}: {text} run `{item['command']}` | rule (say what you decide) | "
-        f"snooze-until DATE or asked (`advisory_ledger.py rule --id {item['id']} "
-        "--ruling snooze --until DATE|asked`) | "
+        f"snooze-until DATE or asked (`{LEDGER} rule --id {item['id']} "
+        '--ruling snooze --until DATE|asked --note "..."`) | '
         f"drop (`--ruling drop`)."
     )
 
@@ -672,9 +685,9 @@ def answer_line(root: Path, prompt: str) -> str:
         return ""
     return (f"MYCELIUM: this prompt looks like the user's answer to the open next item "
             f"`{st['id']}` ({' '.join(str(st.get('text_human') or '').split())[:160]}). If it is, "
-            f"record it now, in their words: `advisory_ledger.py rule --id {st['id']} --ruling "
-            'snooze --until YYYY-MM-DD|asked --note "..."` (or `--ruling drop|keep|fix`). An '
-            "answer that is not recorded is asked again.")
+            f"record it now, in their words: `{LEDGER} rule --id {st['id']} --ruling "
+            'snooze --until YYYY-MM-DD|asked --note "..."` (or `--ruling drop|keep|fix`). '
+            f"{RULING_GUIDE}. An answer that is not recorded is asked again.")
 
 
 def prompt_line(root: Path) -> str:
@@ -699,8 +712,8 @@ def prompt_line(root: Path) -> str:
     return (f"MYCELIUM OPEN ITEM, unanswered for {st['shown']} sessions since "
             f"{st.get('first_shown')}: when you have answered this prompt, put this item to the "
             "user and ask them to decide: run, rule, snooze until a date, or drop (drop if the "
-            f"item is wrong). Record a ruling with `advisory_ledger.py rule --id {st['id']} "
-            "--ruling keep|fix|drop|snooze`. The item: "
+            f"item is wrong). Record it with `{LEDGER} rule --id {st['id']} --ruling ...`: "
+            f"{RULING_GUIDE}. The item: "
             f"{st.get('text_human') or st.get('text', '')}")
 
 
