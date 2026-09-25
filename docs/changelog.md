@@ -4,6 +4,21 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.252.1 - the exposure line: twice a sitting, on acts of going live
+
+**2026-09-25.** Measured against the founder prompts of E2E runs 21 and 22 before run 22 had gone far:
+0.252.0's go-live list ("pilot", "staff", "launch", "waitlist", "customers", "live") matched 77 of 101
+and 18 of 22 prompts, because in a staff-scheduling product those words are the domain, not an act.
+A line said on ~80% of prompts is the cry-wolf the ladder work set out to avoid, aimed at the agent.
+
+- **Acts, not topics.** `_GO_LIVE` now matches deploying, going or switching live, production,
+  rolling out, releasing to someone, sending, posting, giving or handing a link, real users and
+  inviting users: 4 of 22 prompts in run 22, and in runs 19 and 21 the matches fall in the go-live
+  stretches.
+- **At most twice a sitting**: at its first prompt, and at its first prompt about an act of going
+  live. A go-live stretch runs many sessions; the same line on every such prompt is read past.
+- Pinned by `tests/python/test_scale_locks.py`.
+
 ## v0.252.0 - not ready for real people is said where the agent reasons
 
 **2026-09-25.** E2E run 21 (0.250.1): the product went to real staff while its L3 sat in Develop

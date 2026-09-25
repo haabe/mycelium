@@ -612,16 +612,26 @@ def test_the_agent_is_told_at_the_prompt_when_the_work_may_not_meet_people(tmp_p
     assert "a deploy someone else does" in line and "security" in line
 
 
-def test_once_per_sitting_unless_the_prompt_is_about_going_live(tmp_path):
+def test_at_most_twice_a_sitting_first_prompt_and_first_go_live_prompt(tmp_path):
+    """v0.252.1: 0.252.0 re-said the line on every go-live prompt, and its word list matched ~80%
+    of founder prompts in runs 21 and 22."""
     p = _project(tmp_path, PURPOSE, _full_opps(), [_l3(phase="develop", gates=BUILD_PASSED)])
-    first = {"session_id": "s1", "prompt": "morning"}
-    assert sl.exposure_line(p, first, today="2026-10-28")
-    assert sl.exposure_line(p, {"session_id": "s1", "prompt": "fix the typo"},
-                            today="2026-10-28") == ""
-    for prompt in ("give Tom the link to post to staff", "is it ready to go live?",
-                   "the developer deployed 7c3e1a9", "start the pilot at Harbour"):
-        assert sl.exposure_line(p, {"session_id": "s1", "prompt": prompt}, today="2026-10-28"), prompt
-    assert sl.exposure_line(p, {"session_id": "s1", "prompt": "hi"}, today="2026-10-29")  # new day
+    day = "2026-10-28"
+    assert sl.exposure_line(p, {"session_id": "s1", "prompt": "morning"}, today=day)
+    assert sl.exposure_line(p, {"session_id": "s1", "prompt": "fix the typo"}, today=day) == ""
+    assert sl.exposure_line(p, {"session_id": "s1", "prompt": "give Tom the link"}, today=day)
+    assert sl.exposure_line(p, {"session_id": "s1", "prompt": "is it ready to go live?"},
+                            today=day) == ""  # the go-live repeat is spent for this sitting
+    assert sl.exposure_line(p, {"session_id": "s1", "prompt": "hi"}, today="2026-10-29")
+
+
+def test_go_live_means_an_act_of_exposure_not_a_topic_word():
+    for prompt in ("the developer deployed 7c3e1a9", "is it ready to go live?",
+                   "Tom posted the link to staff", "roll it out to Harbour", "real users next week"):
+        assert sl._GO_LIVE.search(prompt), prompt
+    for prompt in ("the pilot sites paid", "staff swap shifts in the chat", "the launch date",
+                   "three owners on the waitlist", "Ines approves swaps"):
+        assert not sl._GO_LIVE.search(prompt), prompt
 
 
 def test_silent_when_ready_or_when_nothing_delivers(tmp_path):
