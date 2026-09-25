@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.253.2 -- **A shell command cannot change diamond state unjudged** (PATCH). A new guard runs before and after every shell command: it refuses a command that visibly writes `diamonds/active.yml` (the scale-lock gate only ever judged the Edit and Write tools, so `sed -i` or a heredoc could open a diamond past its lock or move it without its gates), and afterwards schema-checks any canvas file the command changed and judges a changed diamonds file with the scale locks. E2E run 24 wrote the privacy canvas through a shell command and nothing checked it. Prior: 0.253.1 fail fast, then parallel.*
+*Version 0.253.3 -- **The whole ladder is tested, L0 to L5** (PATCH). A new test walks a project from L0 to L5 through the real scale-lock gate: each door stays shut one artefact short and opens once the artefact is on record, and every phase move carries its gates and history. Twenty-four E2E runs never got past L3, so L4 and L5 had never been exercised; every CI run now does. Prior: 0.253.2 a shell command cannot change diamond state unjudged.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 
