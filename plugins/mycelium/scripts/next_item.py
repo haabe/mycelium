@@ -637,11 +637,54 @@ def _one_line(root: Path, *, claim: bool) -> int:
     if claim:
         line = claim_human(root)
     else:
-        prompt = _prompt_of(sys.stdin.read() if not sys.stdin.isatty() else "")
-        line = "\n".join(x for x in (prompt_line(root), answer_line(root, prompt)) if x)
+        payload = sys.stdin.read() if not sys.stdin.isatty() else ""
+        prompt = _prompt_of(payload)
+        line = "\n".join(x for x in (prompt_line(root), answer_line(root, prompt),
+                                      conditions_line(root, _session_of(payload),
+                                                      al.today_iso() if al else "")) if x)
     if line:
         print(line)
     return 0
+
+
+CONDITIONS_SAID = Path(".claude") / "state" / "conditional-snoozes-said"
+
+
+def conditions_line(root: Path, session: str, today: str) -> str:
+    """Items snoozed "until asked" whose ruling names a condition, for the AGENT, once per sitting
+    (v0.254.1). E2E run 27: the founder answered the L3 item "not now, ask after the backup-approver
+    test design is frozen". The ledger holds a date or "asked", so it became "asked" with the
+    condition in the note, and nothing would ever bring it back: "ask me after X" means the tool
+    asks, and only the agent can tell when X has happened. This puts the condition where the agent
+    reads it; the human is not shown it."""
+    if al is None:
+        return ""
+    st, _ = _ledger_state(root)
+    held = [(aid, x.get("snooze_note")) for aid, x in st.items()
+            if x.get("snoozed_until") == SNOOZE_ASKED and x.get("snooze_note")]
+    if not held:
+        return ""
+    sitting = f"{session}|{today}"
+    path = root / CONDITIONS_SAID
+    try:
+        if path.read_text().strip() == sitting:
+            return ""
+    except OSError:
+        pass  # never said this sitting: say it now
+    with contextlib.suppress(OSError):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(sitting + "\n")
+    rows = "; ".join(f"`{aid}`: {' '.join(str(n).split())[:160]}" for aid, n in held[:5])
+    return ("MYCELIUM: items the user snoozed until a condition is met. When one is met, put the "
+            f"item to them again (the next item's verbs): {rows}")
+
+
+def _session_of(payload: str) -> str:
+    try:
+        d = json.loads(payload) if payload.strip() else {}
+    except ValueError:
+        return ""  # no payload: the sitting is keyed on the date alone
+    return str(d.get("session_id") or "") if isinstance(d, dict) else ""
 
 
 def _prompt_of(payload: str) -> str:

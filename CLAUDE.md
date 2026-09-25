@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.254.0 -- **The L4 and L5 doors are proposed when they can open** (MINOR). The next item proposes opening an L4 as soon as an L3's L4 lock holds, and proposes `/launch-tier` when an L4 ships; a product's first release to its market counts as the top band and opens an L5 (founder ruling). Before, the L4 was offered once, when the L3 entered develop and before its test raised the evidence, and never again; the L5 was prompted by nothing, and a first launch could never open one. Prior: 0.253.4 MYCELIUM_TODAY.*
+*Version 0.254.1 -- **A snooze until a condition reaches the agent** (PATCH). An item snoozed "until asked" whose ruling names a condition ("ask after the test design is frozen") is listed for the agent once per sitting, so it can put the item to the user again when the condition is met; the human is not shown it. Before, such a snooze could only come back if the human remembered. Prior: 0.254.0 the L4 and L5 doors are proposed when they can open.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 
