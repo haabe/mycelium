@@ -4,6 +4,19 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.252.2 - an answer in plain words is pointed at the command that records it
+
+**2026-09-25.** E2E run 22 (0.252.0): the founder answered the open next item in plain words,
+"snooze it until 2026-10-26", and the agent replied about everything else in the message. Nothing
+was recorded, so the ladder counted on and put the same item back to the human as "unanswered for 3
+sessions". The ladder stops only on a RECORDED answer, and recording depended on the agent
+remembering a command it last saw at the top of its context.
+
+- **`next_item.py --prompt-line` now reads the prompt.** When it looks like an answer to the open
+  item (snooze, "drop it", "not now", "until asked", "park it"), the agent is told which item and the
+  exact `advisory_ledger.py rule` command, beside that prompt. Silent once a ruling is recorded.
+- Pinned by `tests/python/test_next_item_ladder.py`.
+
 ## v0.252.1 - the exposure line: twice a sitting, on acts of going live
 
 **2026-09-25.** Measured against the founder prompts of E2E runs 21 and 22 before run 22 had gone far:

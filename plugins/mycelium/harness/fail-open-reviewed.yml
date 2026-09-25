@@ -789,3 +789,12 @@ reviewed:
     at the site and correct: the consequence is that the not-ready line is said (again), which is
     the safe direction for a safety notice; nothing is suppressed by the failure. Reviewed
     2026-09-25, v0.252.0.
+
+- id: next_item.py@eb91df9bcf
+  verdict: accepted
+  reason: >-
+    `_prompt_of` returns "" when the UserPromptSubmit payload is not JSON. Silent and correct: an
+    unreadable payload carries no answer to detect, so the only thing lost is the "record this
+    answer" pointer for that one prompt; the escalated prompt line and the Stop repeat are
+    unaffected, and a real answer left unrecorded is caught when the item is asked again.
+    Reviewed 2026-09-25, v0.252.2.

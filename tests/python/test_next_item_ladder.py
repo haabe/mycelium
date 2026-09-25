@@ -221,3 +221,36 @@ def test_the_ledger_accepts_and_labels_snooze_until_asked(tmp_path):
     events, _ = al.read_events(al.ledger_path(tmp_path))
     x = al.state(events)["unassessed"]
     assert al._snoozed_label(x) == "snoozed until you ask"
+
+
+# --- v0.252.2: an answer in plain words is pointed at the command that records it -------------
+# E2E run 22: the founder said "snooze it until 2026-10-26"; the agent never recorded it, and the
+# item came back to the human as "unanswered for 3 sessions".
+
+
+def test_a_plain_words_answer_gets_the_record_command(tmp_path, monkeypatch):
+    root = _project(tmp_path)
+    _session(root, "s1", "2026-09-24", monkeypatch)
+    line = ni.answer_line(root, "On the desk-derived evidence item: snooze it until 2026-10-26.")
+    assert line.startswith("MYCELIUM: this prompt looks like the user's answer")
+    assert "--id unassessed" in line and "--ruling" in line
+    assert ni.answer_line(root, "not now, ask me after the pilot")
+    assert ni.answer_line(root, "Build the request page first.") == ""
+
+
+def test_no_answer_prompt_once_the_answer_is_recorded(tmp_path, monkeypatch):
+    root = _project(tmp_path)
+    _session(root, "s1", "2026-09-24", monkeypatch)
+    _rule(root, "unassessed", "2026-09-24")
+    assert ni.answer_line(root, "snooze it") == ""
+
+
+def test_the_prompt_hook_passes_the_prompt_through(tmp_path, monkeypatch):
+    root = _project(tmp_path)
+    _session(root, "s1", "2026-09-24", monkeypatch)
+    out = io.StringIO()
+    monkeypatch.setattr("sys.stdin", io.StringIO(json.dumps({"prompt": "drop it, that's wrong"})))
+    monkeypatch.setattr("sys.stdout", out)
+    assert ni.main(["--project-dir", str(root), "--prompt-line"]) == 0
+    assert "--id unassessed" in out.getvalue()
+    assert ni._prompt_of("not json") == "" and ni._prompt_of("[]") == ""

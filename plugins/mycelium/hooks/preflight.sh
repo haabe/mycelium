@@ -181,7 +181,7 @@ fi
 _PF_NI="${CLAUDE_PLUGIN_ROOT:-}/scripts/next_item.py"
 if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "$_PF_NI" ] && [ "${MYCELIUM_NEXT_ITEM:-on}" != "off" ] \
    && [ -f "$PROJECT_DIR/.claude/state/next-item.json" ]; then
-  python3 "$_PF_NI" --project-dir "$PROJECT_DIR" --prompt-line 2>/dev/null || true
+  printf '%s' "$_PF_INPUT" | python3 "$_PF_NI" --project-dir "$PROJECT_DIR" --prompt-line 2>/dev/null || true
 fi
 
 # EXPOSURE STATE (v0.252.0). The exposure gate sees only the agent's own deploy commands; in E2E
