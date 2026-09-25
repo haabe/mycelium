@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.253.4 -- **MYCELIUM_TODAY** (PATCH). The date the next item and the advisory ledger treat as today can be set with `MYCELIUM_TODAY=YYYY-MM-DD` (a malformed value is ignored). The E2E harness runs a simulated calendar ahead of the machine's, and a snooze until a date in that world never expired. Unset, nothing changes. Prior: 0.253.3 the whole ladder is tested, L0 to L5.*
+*Version 0.254.0 -- **The L4 and L5 doors are proposed when they can open** (MINOR). The next item proposes opening an L4 as soon as an L3's L4 lock holds, and proposes `/launch-tier` when an L4 ships; a product's first release to its market counts as the top band and opens an L5 (founder ruling). Before, the L4 was offered once, when the L3 entered develop and before its test raised the evidence, and never again; the L5 was prompted by nothing, and a first launch could never open one. Prior: 0.253.4 MYCELIUM_TODAY.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

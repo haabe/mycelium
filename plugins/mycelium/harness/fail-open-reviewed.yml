@@ -807,3 +807,11 @@ reviewed:
     into a spoken finding to the agent ("schema not checked: PyYAML/jsonschema are not installed",
     "the scale locks could not be loaded"), so a missing module is never read as a clean command.
     Reviewed 2026-09-25, v0.253.2.
+
+- id: next_item.py@1794cca41e
+  verdict: accepted
+  reason: >-
+    `_door_item` returns None when diamonds/active.yml cannot be parsed. Silent at the site and
+    correct: `pick()` reads the same file first through `_fired_proposals`, which reports it as
+    unreadable in the note printed where the human reads it, so a broken file is never mistaken for
+    "no door to open". Reviewed 2026-09-25, v0.254.0.

@@ -50,6 +50,10 @@ try:
 except ImportError:  # spoken by _ledger_state: streaks and rulings are then reported as unread
     al = None
 try:
+    import scale_locks as sl
+except ImportError:  # a partial install: no door is proposed, and the ladder item still is
+    sl = None
+try:
     import diamond_rulings as dr
 except ImportError:  # a partial install: _unassessed falls back to the typed ruling date
     dr = None
@@ -380,6 +384,60 @@ def _unassessed(root: Path, today: str) -> list[dict]:
 
 
 LADDER_ID = "unassessed"
+_SHIPPED = {"deliver", "complete", "completed"}
+
+
+def _children(active: list[dict], parent: dict, scale: str) -> list[dict]:
+    """Open diamonds at `scale` that name `parent` (by `parent`, or by the same `object_ref`)."""
+    pid, ref = str(parent.get("id")), str(parent.get("object_ref") or "")
+    return [d for d in active if str(d.get("scale", "")).upper() == scale
+            and str(d.get("phase") or "discover").lower() not in _CLOSED
+            and (str(d.get("parent") or d.get("parent_id") or "") == pid
+                 or (ref and str(d.get("object_ref") or "") == ref))]
+
+
+def _door_item(root: Path, today: str, st: dict) -> dict | None:
+    """The L4 and L5 doors, proposed when they can open (v0.254.0).
+
+    E2E runs 19-26: no run reached L4. Its only entrance was /preflight's offer when an L3 enters
+    develop, which under test-first (0.253.0) comes before the test that raises the L3's evidence,
+    so the lock could not hold then, and nothing offered the L4 again once it did. The L5's
+    entrance, /launch-tier, was prompted by nothing when an L4 shipped. "Every diamond needs a way
+    in; a documented route that never fires is none" (founder). Each door is proposed once its lock
+    holds (L4) or once its L4 has shipped (L5, which starts with recording the launch data)."""
+    p = root / ".claude" / "diamonds" / "active.yml"
+    if sl is None or yaml is None or not p.exists():
+        return None
+    try:
+        active = [d for d in (yaml.safe_load(p.read_text(encoding="utf-8")) or {}).get(
+            "active_diamonds") or [] if isinstance(d, dict) and d.get("id")]
+    except (yaml.YAMLError, OSError, AttributeError):
+        return None  # SPEAKS: _fired_proposals reads the same file and reports it unreadable
+    for d in active:
+        scale = str(d.get("scale", "")).upper()
+        phase = str(d.get("phase") or "discover").lower()
+        did = str(d["id"])
+        if scale == "L3" and phase in ("develop", "deliver") and not _children(active, d, "L4"):
+            iid = f"door-l4:{did}"
+            if not _blocked(st.get(iid, {}), today) and not sl.can_open(
+                    str(root), "L4", parent=did):
+                return {"id": iid, "diamond": did, "since": today, "command": "/mycelium:preflight",
+                        "text": f"{did} (L3) is at medium confidence or better and no L4 is "
+                                "open on it: its increment can be delivered. Open an L4 on it.",
+                        "why": "the L4 lock holds and nothing is delivering the increment"}
+        if scale == "L4" and phase in _SHIPPED and not _children(active, d, "L5"):
+            iid = f"door-l5:{did}"
+            if _blocked(st.get(iid, {}), today):
+                continue
+            ready = not sl.can_open(str(root), "L5", parent=did)
+            text = (f"{did} (L4) has shipped and its launch data is recorded: open the L5 market "
+                    "diamond on it." if ready else
+                    f"{did} (L4) has shipped. Record its launch data (usage, feedback or metric "
+                    "movement) and categorise the release; a first market release opens an L5.")
+            return {"id": iid, "diamond": did, "since": today,
+                    "command": "/mycelium:launch-tier", "text": text,
+                    "why": "a shipped L4 is the L5's event"}
+    return None
 
 
 def _ladder_item(root: Path, today: str, st: dict) -> dict | None:
@@ -416,7 +474,11 @@ def pick(root: Path, reminders: str, today: str) -> tuple[dict | None, str]:
     for f in fired:
         if not _blocked(st.get(f["id"], {}), today):
             return {**f, "why": "a named input on a closing path landed; the ruling is yours"}, note
-    # 2. diamonds whose phase nobody has assessed since the evidence changed (v0.249.0), as ONE
+    # 2. a door that now holds: an L4 on an L3 whose lock holds, an L5 on a shipped L4 (v0.254.0)
+    door = _door_item(root, today, st)
+    if door:
+        return door, note
+    # 3. diamonds whose phase nobody has assessed since the evidence changed (v0.249.0), as ONE
     #    item for the ladder (v0.251.0), so one ruling covers them and the delivering one leads
     ladder = _ladder_item(root, today, st)
     if ladder:
