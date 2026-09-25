@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.252.2 -- **An answer in plain words is pointed at the command that records it** (PATCH). When a prompt looks like the user's answer to the open next item ("snooze it", "drop it", "not now", "until asked"), the per-prompt hook names the item and the exact ledger command, beside that prompt. E2E run 22: the founder snoozed an item in plain words, the agent never recorded it, and the item came back as "unanswered for 3 sessions". Prior: 0.252.1 the exposure line, twice a sitting, on acts of going live.*
+*Version 0.253.0 -- **Test before you build, and the L4 reads the evidence** (MINOR). An L3 cannot move from Define to Develop until the lightest test of its riskiest assumption is named on the solution it builds (concierge, Wizard of Oz, early adopters; a real pilot is allowed, named as the test), and the L4 lock reads the evidence recorded on that solution rather than only the diamond's own field, which no skill updated. E2E runs 19 to 23 each built production infrastructure inside the L3 and stalled; in run 19 real use was recorded and the L4 still never opened. Prior: 0.252.2 an answer in plain words is pointed at the command that records it.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

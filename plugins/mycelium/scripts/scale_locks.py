@@ -36,7 +36,9 @@ Right p14; medium-high before delivery for most ideas, Evidence-Guided p158-159)
       speculation AND a source it came from; at entry it must also be open, and name its root when
       the tree has more than one (Torres p101-107, Gilad Testing Product Ideas p9).
   L4  the L3 lock on the L3 it delivers (its `parent`, or the L3 with the same `object_ref`; never a
-      killed or archived one), plus that L3's evidence at data-supported or better.
+      killed or archived one), plus that L3's evidence at data-supported or better: the best of its
+      own `evidence_type` and the evidence on the solution it builds (v0.253.0). An L3 moving from
+      Define to Develop must name the lightest test of its riskiest assumption (v0.253.0).
   L5  the L4 lock on its parent L4, that L4 shipped, and launch data (`launch_data`: usage, feedback
       or metric movement, on the L4 or the L5; Gilad Evidence-Guided p123).
 
@@ -71,6 +73,13 @@ DELIVERY_SCALES = ("L3", "L4", "L5")
 CLOSED = {"complete", "completed", "killed", "parked", "archived"}
 DEAD = {"killed", "archived"}
 MEDIUM_OR_BETTER = {"data-supported", "test-validated", "launch-validated"}
+EVIDENCE_RANK = ["none", "speculation", "anecdotal", "data-supported", "test-validated",
+                 "launch-validated"]
+#: Where a test design is named on a solution's riskiest assumption (same keys as
+#: check_idle_opportunities.py and derive_closing_path.py read).
+TEST_KEYS = ("cheapest_test", "smallest_test", "falsifier", "test_design")
+MIN_TEST_TEXT = 20  # shorter is a label, not a design
+ASSUMPTION_VALIDATED = {"validated", "passed", "held"}
 PASSED = {"pass", "passed", "pass-with-risk"}
 NOT_APPLICABLE = {"n/a", "not-applicable"}
 #: THE MATRIX, AS DATA (v0.248.0). engine/theory-gates.md, "Summary of which gates apply to which
@@ -466,12 +475,67 @@ class State:
                      "naming where it came from (a conversation, a note, a record)")]
         return []
 
+    def build_solutions(self, d: dict) -> list[dict]:
+        """The solution(s) an L3 builds: the one its `object_ref` names, or the live solutions of
+        the opportunity it names."""
+        key = _ref_key(d.get("object_ref"))
+        opp = self.find_opportunity(d.get("object_ref"))
+        if opp is None:
+            return []
+        sols = [s for s in _as_list(opp.get("solutions")) if isinstance(s, dict)]
+        named = [s for s in sols if str(s.get("id", "")) == key]
+        if named:
+            return named
+        return [s for s in sols if str(s.get("status", "")).lower() not in
+                {"killed", "archived", "discarded", "dropped", "parked"}]
+
+    def l3_evidence(self, d: dict) -> str:
+        """How well-evidenced the thing an L3 builds is (v0.253.0): the best of the diamond's own
+        `evidence_type` and the evidence on the solution it builds, where a validated riskiest
+        assumption counts as test-validated.
+
+        E2E run 19: the product was live with real use (11 real requests, 7 decided in the app) and
+        the L3 still read `anecdotal`, because the L4 lock read the diamond's own field and no skill
+        ever updates it: /log-evidence grades canvas entries, /assumption-test updates confidence,
+        /diamond-progress touches neither. The lock now reads the canvas, where the evidence is."""
+        grades = [str(d.get("evidence_type") or "none")]
+        for s in self.build_solutions(d):
+            grades.append(str(_as_dict(s.get("provenance")).get("evidence_type") or "none"))
+            ras = [_as_dict(s.get("riskiest_assumption"))] + [
+                a for a in _as_list(s.get("assumptions")) if isinstance(a, dict)]
+            if any(str(a.get("verdict", "")).lower() in ASSUMPTION_VALIDATED for a in ras):
+                grades.append("test-validated")
+        known = [g for g in grades if g in EVIDENCE_RANK]
+        return max(known, key=EVIDENCE_RANK.index) if known else grades[0]
+
+    def test_design_missing(self, d: dict) -> str | None:
+        """Before an L3 builds, the lightest test that answers its riskiest assumption is named
+        (v0.253.0). E2E runs 19 to 23 each went straight to a real pilot (a server, an SMS
+        provider, a domain, a security review) inside the L3, and each stalled there. A concierge,
+        Wizard-of-Oz or early-adopter test needs none of that and still yields test-validated
+        evidence (Gilad AFTER; Torres). A real pilot stays allowed: it is named here as the test."""
+        def named(obj) -> bool:
+            o = _as_dict(obj)
+            return any(isinstance(o.get(k), str) and len(o[k].strip()) >= MIN_TEST_TEXT
+                       for k in TEST_KEYS)
+        if named(d.get("riskiest_assumption")):
+            return None
+        for s in self.build_solutions(d):
+            if named(s.get("riskiest_assumption")) or any(
+                    named(a) for a in _as_list(s.get("assumptions")) if isinstance(a, dict)):
+                return None
+        return (f"{d.get('id', '?')}: its riskiest assumption and the lightest test that answers "
+                "it, named before building (`riskiest_assumption.cheapest_test` on the solution, "
+                "via /mycelium:assumption-test). A concierge, Wizard-of-Oz or early-adopter test "
+                "needs no production infrastructure; a real pilot is allowed, named here as the "
+                "test")
+
     def _l4_missing(self, d: dict, entry: bool, seen: frozenset) -> list[str]:
         l3 = self._parent_at(d, "L3")
         if l3 is None:
             return [f"{d.get('id')}: the L3 it delivers, named as `parent` (a live one)"]
         miss = self.missing(l3, entry, seen)
-        ev = str(l3.get("evidence_type") or "none")
+        ev = self.l3_evidence(l3)
         if ev not in MEDIUM_OR_BETTER:
             miss.append(f"{l3.get('id')}: evidence at medium confidence or higher before "
                         f"delivery (now `{ev}`; needs data-supported, test-validated or "
@@ -550,6 +614,10 @@ class State:
         for t in _crossed(before, after):
             for g in transition_gates(_scale(d), t):
                 why = self.gate_missing(d, g)
+                if why:
+                    miss.append(f"{t}: {why}")
+            if t == "define->develop" and _scale(d) == "L3":
+                why = self.test_design_missing(d)
                 if why:
                     miss.append(f"{t}: {why}")
             if not _history_has(d, t):

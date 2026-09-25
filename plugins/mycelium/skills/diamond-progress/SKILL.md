@@ -96,6 +96,17 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
    This is awareness only — it does not change gate requirements or routing. The human's answer is informational context, not a gate input.
    *Source: Cagan (SVPG), Patton (build to learn vs build to earn). Added as NUDGE per risk analysis — conceptual awareness, not process gate.*
 
+2d. **L3 Define → Develop: the lightest test is named first** (v0.253.0, enforced by the scale-lock
+   gate). Before an L3 builds, run `/mycelium:assumption-test` on the riskiest assumption of the
+   solution it builds and record, on that solution in `opportunities.yml`,
+   `riskiest_assumption: {statement, cheapest_test}` (or `test_design`), a sentence, not a label.
+   Offer the light options first: concierge (a person does by hand what the product would do),
+   Wizard of Oz (a real-looking front, a person behind it), a few early adopters. They need no
+   production infrastructure and still give test-validated evidence. A real hosted pilot is allowed;
+   name it here as the test, so building infrastructure is a choice and not the default. E2E runs
+   19 to 23 each built a server, an SMS provider, a domain and a security review inside the L3, and
+   each stalled there.
+
 3. **Calculate confidence**:
    - Apply scoring rules from `${CLAUDE_PLUGIN_ROOT}/engine/confidence-thresholds.yml`.
    - Look up `project_type` and `dogfood` from `.claude/diamonds/active.yml`.
