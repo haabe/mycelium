@@ -22,6 +22,11 @@
         "service_offering"
       ]
     },
+    "product_paths": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Where this product's own files live, repo-relative: folders (`pilot/`) or patterns (`course/**/*.md`), v0.270.0. New files there are built through the ladder like code, whatever their kind: a service's documents, a course's lessons, a publication's chapters. `[]` declares the product code only; absent, Mycelium asks."
+    },
     "dogfood": {
       "type": "boolean"
     },

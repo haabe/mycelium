@@ -37,6 +37,8 @@ import os
 import re
 import sys
 from dataclasses import dataclass, field
+from fnmatch import fnmatch
+from pathlib import Path
 
 PATH_KEYS = ("file_path", "file", "path", "notebook_path", "source", "destination", "target")
 CONTENT_KEYS = ("content", "new_string", "newText", "new_source", "text")
@@ -415,6 +417,42 @@ def _line_for(r: Resolved) -> str:
     return f"{where}\t{int(r.exists)}\t{r.size}"
 
 
+def product_paths(project_dir: str) -> list[str] | None:
+    """The project's `product_paths` from diamonds/active.yml: where its product's own files live,
+    whatever their kind (v0.270.0). None when not declared; [] when declared as code only."""
+    p = Path(project_dir) / ".claude" / "diamonds" / "active.yml"
+    try:
+        doc = _yaml().safe_load(p.read_text(encoding="utf-8")) or {}
+    except Exception:  # noqa: BLE001 - SPEAKS: the scale lock reports an unreadable diamonds file
+        return None
+    paths = doc.get("product_paths") if isinstance(doc, dict) else None
+    return [str(x) for x in paths if str(x).strip()] if isinstance(paths, list) else None
+
+
+def in_product_paths(project_dir: str, rel: str) -> bool:
+    """Whether a repo-relative path lies in a declared product path: a folder (`pilot/`), or a
+    glob (`course/**/*.md`, `*.docx`). THE PRODUCT IS NOT ALWAYS CODE (v0.270.0): the E2E second
+    world, a bookkeeping service, wrote its client agreement, intake checklist and price sheet
+    under pilot/ with only an L0 in discover, and the delivery gate, which knew only code
+    extensions and skipped every .md, never fired. A course's lessons and a publication's
+    chapters are the same case."""
+    rel = rel.removeprefix("./")
+    for raw in product_paths(project_dir) or []:
+        pat = raw.strip().removeprefix("./")
+        if pat.endswith("/"):
+            if rel.startswith(pat):
+                return True
+        elif fnmatch(rel, pat) or rel.startswith(pat + "/"):
+            return True
+    return False
+
+
+def _yaml():
+    """PyYAML, imported when a product path is asked about: the other hook modes need none."""
+    import yaml  # noqa: PLC0415 - optional dependency, only this mode reads YAML
+    return yaml
+
+
 def cli() -> int:
     """For shell hooks: tool name; one line per target (rel | OUTSIDE:real | GUARD:name |
     OPAQUE:label, tab, exists, tab, size); a `---CONTENT---` line; then the written content."""
@@ -424,9 +462,17 @@ def cli() -> int:
                     help="exit 0 if discovery has been engaged, 1 if not; reads no stdin")
     ap.add_argument("--purpose-state", action="store_true",
                     help="exit 0 if purpose.yml has a purpose statement, 1 if not; reads no stdin")
+    ap.add_argument("--product-file", nargs="*", default=None, metavar="REL",
+                    help="print the first of these repo-relative paths that lies in the project's "
+                         "`product_paths`, exit 0; exit 1 if none does; reads no stdin")
     args = ap.parse_args()
     if args.purpose_state:
         return 0 if has_purpose(args.project_dir) else 1
+    if args.product_file is not None:
+        hit = next((t for t in args.product_file if in_product_paths(args.project_dir, t)), None)
+        if hit:
+            print(hit)
+        return 0 if hit else 1
     if args.discovery_state:
         return 0 if has_discovery_state(args.project_dir) else 1
     data = read_input()

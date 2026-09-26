@@ -50,6 +50,14 @@ Invoke the interview workflow inline. Follow the instructions in `${CLAUDE_PLUGI
 
 Because setup just ran, the canvas is empty — /interview's canvas-state detection will route to the Universal Brief Flow (the 4-question brief shape, not the legacy time-budget-routed ceremony). Render the brief, write canvas state, render the depth menu. Per opp-006 narration discipline in interview/SKILL.md, do not narrate phase numbers to the user — reference the outcome (e.g., "the brief", "the project-type question") instead of the phase index.
 
+**Where the product lives (v0.270.0).** Before the depth menu, ask in one line where the product's
+own files will live and record the answer as `product_paths` at the top of
+`.claude/diamonds/active.yml`: `app/` for software, `pilot/` for a service's documents, `course/`
+for lessons, `manuscript/` for a book, or `[]` if the product is code only. The delivery gate knows
+code by its extension and everything else only by this: a bookkeeping service in the E2E second
+world wrote its whole client pack under an L0 in discover and nothing noticed. If the user does not
+know yet, leave it; the next session start asks again.
+
 After the brief is rendered and the user picks a depth-menu option, the start skill is done. Hand off to whatever the user chose (`/mycelium:assumption-test` for "Test the biggest assumption", continued discovery for "Go deeper", graceful exit for "Stop for now", etc.).
 
 ## Step 3b: Derive purpose properties (immediately after why/how/what land)

@@ -719,6 +719,37 @@ def _ladder_item(root: Path, today: str, st: dict) -> dict | None:
             "why": "the path to a release moves only when a diamond is assessed"}
 
 
+def _product_paths_item(root: Path, today: str, st: dict) -> dict | None:
+    """Ask once where the product's own files live (v0.270.0). The delivery gate knows code by its
+    extension; a service's documents, a course's lessons or a publication's chapters it can only
+    know by where the project keeps them. E2E second world: a bookkeeping service wrote its whole
+    client pack with only an L0 in discover and the gate never fired. Asked as soon as an L0
+    exists, of every product type: `app/` for software, `pilot/` for a service, `[]` for code
+    only."""
+    iid = "product-paths"
+    if _blocked(st.get(iid, {}), today):
+        return None
+    p = root / ".claude" / "diamonds" / "active.yml"
+    if yaml is None or not p.exists():
+        return None
+    try:
+        doc = yaml.safe_load(p.read_text(encoding="utf-8")) or {}
+    except (yaml.YAMLError, OSError):
+        return None  # SPEAKS: _fired_proposals reads the same file and reports it unreadable
+    if not isinstance(doc, dict) or "product_paths" in doc:
+        return None
+    if not any(isinstance(d, dict) and str(d.get("scale", "")).upper() == "L0"
+               for k in ("active_diamonds", "completed_diamonds") for d in doc.get(k) or []):
+        return None
+    return {"id": iid, "since": today, "command": "/mycelium:diamond-assess",
+            "text": ("Say where this product's own files live, as `product_paths` at the top of "
+                     ".claude/diamonds/active.yml: folders or patterns (`app/` for software, "
+                     "`pilot/` for a service's documents, `course/` for lessons), or "
+                     "`product_paths: []` if the product is code only. New files there are built "
+                     "through the ladder, whatever their kind; code is gated either way."),
+            "why": "the delivery gate cannot see a product it does not know the place of"}
+
+
 def pick(root: Path, reminders: str, today: str) -> tuple[dict | None, str]:
     """The one item, and a note when something could not be read."""
     st, note = _ledger_state(root)
@@ -729,8 +760,9 @@ def pick(root: Path, reminders: str, today: str) -> tuple[dict | None, str]:
     for f in fired:
         if not _blocked(st.get(f["id"], {}), today):
             return {**f, "why": "a named input on a closing path landed; the ruling is yours"}, note
-    # 2. a door that now holds: an L4 on an L3 whose lock holds, an L5 on a shipped L4 (v0.254.0)
-    door = _door_item(root, today, st)
+    # 2. where the product's own files live, while nobody has said (v0.270.0); then a door that
+    #    now holds: an L4 on an L3 whose lock holds, an L5 on a shipped L4 (v0.254.0)
+    door = _product_paths_item(root, today, st) or _door_item(root, today, st)
     if door:
         return door, note
     # 3. diamonds whose phase nobody has assessed since the evidence changed (v0.249.0), as ONE

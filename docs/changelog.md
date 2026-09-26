@@ -4,6 +4,28 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.270.0 - the delivery gate sees a product that is not code
+
+**2026-09-26.** The E2E second world, built so Mycelium is tested on more than one kind of builder,
+is a bookkeeper's fixed-price service delivered by hand: no software. In its second session, with
+only an L0 in discover, the builder wrote the whole client pack (service blueprint, intake
+checklist, client agreement with its data annex, summary template, onboarding steps, price sheet)
+and scored it in a service check. The delivery gate never fired: it knows the product by code
+extensions and skips every .md, .txt and .rst file. For a service, a course or a publication, those
+files are the product.
+
+- **`product_paths`** at the top of `.claude/diamonds/active.yml` says where the product's own files
+  live: folders (`pilot/`) or patterns (`course/**/*.docx`). A new file there is gated like code,
+  whatever its kind. `[]` declares the product code only. Code stays gated everywhere, as before.
+- **The next item asks once an L0 exists and nobody has said**, of every product type: `app/` for
+  software, `pilot/` for a service, `course/` for lessons, `manuscript/` for a book.
+- `/mycelium:start` asks the same one line after the brief.
+- Tests: the gate on a service document, a glob, a research note and a look-alike name, and the
+  undeclared control; a walkthrough step for the item.
+
+Checked against: a service's documents, a course's lessons, a book's chapters, a software app. Not
+solved here: a project that never answers is still gated on code only.
+
 ## v0.269.0 - evidence and test sizing fit the product type
 
 **2026-09-26.** The rest of the overfit audit from 0.268.0: three rules asked every builder for what

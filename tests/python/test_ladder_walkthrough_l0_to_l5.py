@@ -51,6 +51,7 @@ class Project:
         self.active.parent.mkdir(parents=True)
         (root / ".claude" / "state").mkdir()
         self.diamonds: list[dict] = []
+        self.top: dict = {}  # top-level keys beside the diamonds, e.g. product_paths (v0.270.0)
         self.active.write_text(yaml.safe_dump({"active_diamonds": []}))
 
     def canvas_file(self, name: str, doc: dict) -> None:
@@ -59,7 +60,8 @@ class Project:
     def gate(self, diamonds: list[dict]) -> tuple[int, str]:
         payload = {"tool_name": "Write", "tool_input": {
             "file_path": str(self.active),
-            "content": yaml.safe_dump({"active_diamonds": diamonds}, sort_keys=False)}}
+            "content": yaml.safe_dump({**self.top, "active_diamonds": diamonds},
+                                      sort_keys=False)}}
         env = {**os.environ, "CLAUDE_PROJECT_DIR": str(self.root),
                "CLAUDE_PLUGIN_ROOT": str(PLUGIN)}
         r = subprocess.run(["bash", str(GATE)], input=json.dumps(payload), capture_output=True,
@@ -71,7 +73,8 @@ class Project:
         rc, err = self.gate(diamonds)
         assert rc == 0, f"the gate refused a write the ladder allows:\n{err}"
         self.diamonds = diamonds
-        self.active.write_text(yaml.safe_dump({"active_diamonds": diamonds}, sort_keys=False))
+        self.active.write_text(yaml.safe_dump({**self.top, "active_diamonds": diamonds},
+                                              sort_keys=False))
 
     def refused(self, diamonds: list[dict], because: str) -> None:
         """The write must be refused, and say why."""
@@ -108,6 +111,12 @@ def test_the_ladder_opens_rung_by_rung_from_l0_to_l5(tmp_path, monkeypatch):
     # L0: the idea. Nothing above it.
     l0 = {"id": "l0", "scale": "L0", "phase": "discover"}
     p.write(p.add(l0))
+    # v0.270.0: once there is an L0, Mycelium asks where the product's own files live, so the
+    # delivery gate can see a product that is not code. This one is software, under app/.
+    assert _proposed(tmp_path) == "product-paths", "asked once an L0 exists"
+    p.top["product_paths"] = ["app/"]
+    p.write(p.diamonds)
+    assert _proposed(tmp_path) != "product-paths", "and not again once answered"
 
     # L1 opens on a stated purpose (why and who).
     l1 = {"id": "l1", "scale": "L1", "phase": "discover",
