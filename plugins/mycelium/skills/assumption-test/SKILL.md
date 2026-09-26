@@ -61,6 +61,28 @@ Plot each assumption on:
 
 Organized by Gilad's AFTER model (Assessment → Fact-Finding → Tests → Experiments → Release Results). Always start from the top and pick the lightest test that produces meaningful signal. Don't build a prototype when a survey would suffice.
 
+### Size the test to the decision it informs (v0.264.0)
+
+**First class the DECISION, then pick a test no heavier than it.** The cost of a test should
+scale with the cost of getting the decision wrong, not with how rigorous the test can be made.
+
+| `decision_class` | The decision is… | A `test_weight` that fits |
+|---|---|---|
+| **light** | reversible within days, seen by a small opted-in audience, an error caught before it harms anyone | **light**: one pass/fail bar on what is already at hand (the testers' own use, a hand count, a few real examples); no blind sampling, no outside datasets, no new recruiting |
+| **standard** | costly to reverse, or reaching people who did not opt in | **standard**: a frozen bar with a stated sample, recruited if needed |
+| **heavy** | hard or impossible to reverse, a wide audience, money, health or safety | **heavy**: the full design (blind samples, outside data, experiments) |
+
+Record both in the header (`decision_class`, `test_weight`). `check_instrument_contract.py`
+reports a test heavier than its decision as **OVERSIZED**. E2E runs 53-55: a recipe page for
+five opted-in testers pre-registered a re-test needing twelve blind recipe lines and a
+government nutrition dataset, and stalled three sessions on inputs nobody could supply.
+
+**The founder can choose a costlier test, with the reason written down.** Put
+`costly_test_reason:` (why the heavier test is worth its cost, at least a sentence) and
+`costly_test_by: founder` in the header. The check then prints it as COSTLY BY CHOICE instead
+of reporting it. The agent does not grant itself this: the override is the founder's decision,
+and a proposal to run a heavier test is put to them with the cost stated.
+
 ### Assessment (internal, cheapest — hours)
 
 | Test Type | Effort | Signal Quality | When to Use |
@@ -181,6 +203,10 @@ score_by: 2026-08-30               # the date by which it must be scored
 status: live                       # live | scored | void | not-an-instrument
 runs_on: disk                      # disk | network | human — WHO OR WHAT CAN RUN IT (v0.183.0)
 does_not_reproduce: "the enforcement layer: no preflight, no hooks fire in the subagent"   # what this run CANNOT show (v0.209.0)
+decision_class: light              # light | standard | heavy — what the decision costs to get wrong (v0.264.0)
+test_weight: light                 # light | standard | heavy — what the test costs; no heavier than the decision
+# costly_test_reason: "..."        # only when test_weight > decision_class: the founder's reason
+# costly_test_by: founder           # and who decided
 ---
 ```
 
