@@ -115,7 +115,20 @@ _REQUIRED = ("type", "frozen_at", "frozen_before", "score_by", "status")
 #: subagent-simulation-misses-lived-friction cluster proposed in May, done voluntarily twice
 #: in a fortnight and recorded nowhere; `mocked-persona-interview` already requires the
 #: equivalent declaration for a simulated PERSON, and nothing asked it of a simulated RUN.
-_REQUIRED_SINCE = {"does_not_reproduce": _dt.date(2026, 9, 15)}
+_REQUIRED_SINCE = {"does_not_reproduce": _dt.date(2026, 9, 15),
+                   "decision_class": _dt.date(2026, 9, 27),
+                   "test_weight": _dt.date(2026, 9, 27)}
+
+#: A TEST SIZED TO THE DECISION IT INFORMS (v0.264.0). `decision_class` is how costly the
+#: decision the test feeds is to get wrong (light: reversible, small opted-in audience, an
+#: error caught before harm; heavy: hard to reverse, wide audience, money or safety);
+#: `test_weight` is what the test costs to run. E2E runs 53-55 (a recipe page for five
+#: opted-in testers) pre-registered a re-test needing twelve blind recipe lines and a
+#: government nutrition dataset, and stalled three sessions on inputs the world could not
+#: supply. A heavier test than its decision is allowed only by the founder, with the reason
+#: written: `costly_test_reason` (>= 40 characters) and `costly_test_by: founder`.
+_WEIGHTS = {"light": 0, "standard": 1, "heavy": 2}
+_MIN_COSTLY_REASON_CHARS = 40
 
 #: A live instrument gated on an EVENT rather than a date cannot honestly carry a
 #: `score_by` — the data may never exist. It must still carry a `review_by`: the date
@@ -428,6 +441,29 @@ def _drift(path: Path, root: Path, text: str, fm: dict[str, str], res: dict) -> 
         res["drifted"].append((path.name, sha[:8] if sha else "?"))
 
 
+def _proportion(name: str, fm: dict[str, str], res: dict) -> None:
+    """Whether the test is sized to its decision (v0.264.0). An unknown class or weight is
+    reported; a heavier test than its decision is OVERSIZED unless the founder overrode it with a
+    written reason, which is then printed beside the report, never hidden."""
+    cls = str(fm.get("decision_class", "") or "").strip().lower()
+    weight = str(fm.get("test_weight", "") or "").strip().lower()
+    if not cls or not weight:
+        return  # a missing field is INCOMPLETE, reported by _required_field_state
+    bad = [f"{k}: {v!r}" for k, v in (("decision_class", cls), ("test_weight", weight))
+           if v not in _WEIGHTS]
+    if bad:
+        res["bad_proportion"].append((name, ", ".join(bad)))
+        return
+    if _WEIGHTS[weight] <= _WEIGHTS[cls]:
+        return
+    reason = str(fm.get("costly_test_reason", "") or "").strip()
+    by = str(fm.get("costly_test_by", "") or "").strip().lower()
+    if len(reason) >= _MIN_COSTLY_REASON_CHARS and by and by != "agent":
+        res["costly_override"].append((name, f"{weight} test, {cls} decision", by, reason))
+    else:
+        res["oversized"].append((name, f"{weight} test for a {cls} decision"))
+
+
 def _classify(path: Path, root: Path, today: _dt.date, res: dict) -> None:
     """Route one file into the report buckets."""
     text = path.read_text(encoding="utf-8", errors="replace")
@@ -462,6 +498,7 @@ def _classify(path: Path, root: Path, today: _dt.date, res: dict) -> None:
     for field, why in waived:
         res["waived"].append((path.name, field, why))
 
+    _proportion(path.name, fm, res)
     _expiry(path.name, fm, today, res, root)
 
     # RUNNABLE, NEVER RUN (v0.183.0). A live instrument whose `runs_on` is `disk` or `network`
@@ -489,11 +526,31 @@ def analyse(root: Path, today: _dt.date) -> dict:
         "uncontracted": [], "undated": [], "due": [], "drifted": [],
         "untracked": [], "bad_status": [], "contracted": [], "scored": [],
         "refuted": [], "incomplete": [], "waived": [], "no_review": [], "review_due": [],
-        "bad_anchor": [], "runnable": [],
+        "bad_anchor": [], "runnable": [], "oversized": [], "costly_override": [],
+        "bad_proportion": [],
     }
     for path in sorted(d.glob("*.md")):
         _classify(path, root, today, res)
     return res
+
+
+def _emit_proportion(r: dict, emit) -> None:
+    """OVERSIZED and BAD SIZE count as problems; a founder override is printed, never counted
+    (v0.264.0)."""
+    emit(r["oversized"],
+         "OVERSIZED — the test costs more than the decision it informs (v0.264.0). Choose a "
+         "lighter test, or have the founder override it with `costly_test_reason` (why the "
+         "heavier test is worth it) and `costly_test_by: founder`.",
+         lambda t: f"{t[0]}: {t[1]}")
+    emit(r["bad_proportion"],
+         "BAD SIZE — decision_class and test_weight are light | standard | heavy.",
+         lambda t: f"{t[0]}: {t[1]}")
+    # NOT via emit(): an override is a recorded founder decision, not a problem. Printed so
+    # it stays visible, the way waivers are.
+    if r["costly_override"]:
+        print("\nCOSTLY BY CHOICE — a test heavier than its decision, overridden with a reason.")
+        for name, size, by, why in r["costly_override"]:
+            print(f"  {name} ({size}, by {by}): {why}")
 
 
 def _emit_runnable(r: dict) -> None:
@@ -690,6 +747,7 @@ def main(argv=None) -> int:
          "written-before from written-after.")
     emit(r["bad_status"], "BAD STATUS — must be live | scored | void | not-an-instrument.",
          lambda t: f"{t[0]}: {t[1]}")
+    _emit_proportion(r, emit)
 
     _emit_runnable(r)
     _emit_canvas_predictions(canvas_predictions(root, today))

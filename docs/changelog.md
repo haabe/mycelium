@@ -4,6 +4,26 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.264.0 - a test is sized to the decision it informs
+
+**2026-09-26.** E2E runs 53-55 (a recipe page for five opted-in testers) failed a salt-and-leavening
+test, revised the rule, and pre-registered a re-test that needed twelve blind recipe lines from the
+founder's own bakes and a government nutrition dataset. The world could not supply either, and the
+runs stalled three sessions on it. Mycelium pushes pre-registration and evidence at every step and
+never asked whether a test's cost fits the decision it informs.
+
+- **`/mycelium:assumption-test` classes the decision first** (`decision_class`: light, standard,
+  heavy, by how costly it is to get wrong) and picks a test no heavier (`test_weight`). A light
+  decision (reversible, small opted-in audience, errors caught before harm) gets one pass/fail bar
+  on what is at hand: no blind sampling, no outside datasets, no new recruiting.
+- **`check_instrument_contract.py` reports a test heavier than its decision as OVERSIZED**, and
+  the two fields are required on instruments frozen from 2026-09-27.
+- **The founder can override** (founder, 2026-09-26: "have an override flag that lets a founder run
+  costly tests if reasoned well"): `costly_test_reason` (at least 40 characters) and
+  `costly_test_by: founder`. The check prints it as COSTLY BY CHOICE; the agent never grants itself
+  the override.
+- Pinned by `tests/python/test_instrument_contract_proportion.py`.
+
 ## v0.263.0 - a failed assumption offers the way on
 
 **2026-09-26.** E2E run 53 (scripted world) ran the whole L3 loop live: the page was built, delivered
