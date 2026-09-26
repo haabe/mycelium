@@ -4,6 +4,23 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.261.0 - the L4's threshold is its exit bar too
+
+**2026-09-26.** E2E run 47 had the first L4 any run has opened, on a test-validated verdict from
+its L3's learning delivery (4 of 5 testers returned against a frozen bar of 3). The builder then
+held it in discover: "Confidence on dia-005 is 0.15 against the 0.7 needed at this scale". The
+L4's own confidence field had started at the default, and the 0.7 threshold was read at its first
+transition, the shape 0.259.0 removed from the L3. The L4 lock already demands medium-confidence
+evidence at entry, so the threshold there duplicated the lock with a number nothing had set.
+
+- **The L4's threshold is its exit bar** (`confidence-thresholds.yml#L4.threshold_applies_at:
+  [deliver_to_complete]`), where it reads the release's own launch evidence.
+- **Each L4 transition names its evidence** (`evidence_by_transition`), from the L4 rows of
+  `engine/theory-gates.md`: acceptance criteria with measurable outcomes to define; tests written
+  before or alongside the code to develop; security, privacy and accessibility to deliver; launch
+  data to complete. L0-L2 and L5 keep the threshold at every transition.
+- Pinned by `tests/python/test_l3_bars_rise_with_its_phases.py`.
+
 ## v0.260.0 - a scored test asks for its verdict
 
 **2026-09-26.** E2E run 46 (Batch) reached the moment the ladder exists for: the L3 had delivered
