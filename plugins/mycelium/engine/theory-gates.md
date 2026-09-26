@@ -75,7 +75,9 @@ For solo developers: apply perspectives sequentially as distinct evaluation pass
 at every transition, "prototype tested with users" asked the L3 for what it exists to produce
 before it could define. E2E runs 42-43 spent three in-world months on four no-code tests to reach
 Define, and never built. The L3's confidence threshold is likewise its exit bar
-(`confidence-thresholds.yml#L3.threshold_applies_at`).
+(`confidence-thresholds.yml#L3.threshold_applies_at`). **So is the L4's** (v0.261.0): its lock
+admits it on the L3's verdict, and its rows above are read transition by transition,
+acceptance criteria to define, tests to develop, security and accessibility to deliver.
 
 **External metric snapshots count as `external_data`** (v0.14): snapshots produced by `/metrics-pull` (`.claude/evals/metrics/<source>/*.json`) satisfy the `external_data` source_class at L0/L1/L2/L5. They do NOT substitute for `external_human` conversations where the L2 source-ratio gate requires them, but they satisfy the Evidence gate's "behavioral data" criterion and freshen traction evidence at L0/L5. Adapter `provenance.snapshot` path must be included in the canvas evidence entry.
 

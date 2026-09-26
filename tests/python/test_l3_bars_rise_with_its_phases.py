@@ -20,9 +20,17 @@ def test_the_l3_threshold_is_compared_only_at_its_exit():
     assert THRESHOLDS["L3"]["threshold_applies_at"] == ["deliver_to_complete"]
 
 
+def test_the_l4_threshold_is_its_exit_bar_too():
+    """v0.261.0, E2E run 47: the first L4 any run opened sat at 0.15 against 0.7 in discover,
+    after its lock had admitted it on a test-validated verdict."""
+    l4 = THRESHOLDS["L4"]
+    assert l4["threshold_applies_at"] == ["deliver_to_complete"]
+    assert tuple(l4["evidence_by_transition"]) == TRANSITIONS
+
+
 def test_other_scales_keep_their_threshold_at_every_transition():
     for scale, entry in THRESHOLDS.items():
-        if scale != "L3":
+        if scale not in ("L3", "L4"):
             assert "threshold_applies_at" not in entry, scale
 
 

@@ -124,6 +124,17 @@ scales:
   L4:
     name: Delivery
     confidence_threshold: 0.7
+    # THE L4'S THRESHOLD IS ITS EXIT BAR TOO (v0.261.0). The L4 lock admits an L4 only on
+    # medium-confidence evidence from its L3's learning delivery, so reading 0.7 again at
+    # discover -> define duplicated the lock with a number nothing had set: E2E run 47 held the
+    # first L4 any run opened at 0.15 against 0.7. Here the threshold reads the release's own
+    # launch evidence, when the L4 closes.
+    threshold_applies_at: [deliver_to_complete]
+    evidence_by_transition:
+      discover_to_define: [acceptance_criteria_with_measurable_outcomes]
+      define_to_develop: [test_cases_written_before_or_alongside_the_code]
+      develop_to_deliver: [security_review, privacy_review, accessibility_check]
+      deliver_to_complete: [launch_data_from_the_release]
     required_evidence:
       software:
         - acceptance_criteria
