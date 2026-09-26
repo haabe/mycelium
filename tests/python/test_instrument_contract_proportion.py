@@ -20,7 +20,8 @@ def _run(mod, extra, frozen="2026-10-01"):
             "\nfrozen_before: the first tester opens the page\nscore_by: 2026-12-01\n"
             "does_not_reproduce: nothing outside the five testers\n" + extra + "---\nbody\n")
     fm = mod._frontmatter(text)
-    res = {"oversized": [], "costly_override": [], "bad_proportion": []}
+    res = {"oversized": [], "costly_override": [], "bad_proportion": [], "undersized": [],
+           "misclassed": []}
     mod._proportion("t.md", fm, res)
     return fm, res
 
@@ -29,11 +30,46 @@ REASON = ("costly_test_reason: the leavening rule decides whether a public page 
           "blind sample is the only way to know\n")
 
 
-def test_a_test_no_heavier_than_its_decision_passes(scripts_path):
+EMPTY = {"oversized": [], "costly_override": [], "bad_proportion": [], "undersized": [],
+         "misclassed": []}
+
+
+def test_a_test_sized_to_its_decision_passes(scripts_path):
     mod = _import(scripts_path)
-    for cls, weight in (("light", "light"), ("standard", "light"), ("heavy", "heavy")):
-        _, res = _run(mod, f"decision_class: {cls}\ntest_weight: {weight}\n")
-        assert res == {"oversized": [], "costly_override": [], "bad_proportion": []}
+    for cls in ("light", "standard", "heavy"):
+        _, res = _run(mod, f"decision_class: {cls}\ntest_weight: {cls}\n")
+        assert res == EMPTY, cls
+
+
+def test_a_light_test_for_a_heavier_decision_is_undersized(scripts_path):
+    """v0.269.0, overfit audit: only OVERSIZED was checked, so a paid subscription or a safety
+    question on a one-bar hand count passed silently. The decision owner can accept it."""
+    mod = _import(scripts_path)
+    _, res = _run(mod, "decision_class: standard\ntest_weight: light\n")
+    assert res["undersized"] == [("t.md", "light test for a standard decision")]
+    _, res = _run(mod, "decision_class: heavy\ntest_weight: light\nlight_test_reason: the "
+                  "lighter test is enough because the pilot can be stopped within the day\n"
+                  "light_test_by: product lead\n")
+    assert res["undersized"] == [] and res["costly_override"][0][2] == "product lead"
+
+
+def test_the_class_comes_from_the_recorded_axes(scripts_path):
+    """v0.269.0, overfit audit: one class carried reversibility, reach and harm, so three paying
+    clients (opted in, money) or ten households lent a hardware prototype (opted in, safety) fitted
+    no class, and choosing "heavy" silenced OVERSIZED. The heaviest recorded axis sets the class."""
+    mod = _import(scripts_path)
+    concierge = ("decision_reversible: days\ndecision_reach: opted_in\ndecision_harm: money\n")
+    _, res = _run(mod, "decision_class: standard\ntest_weight: standard\n" + concierge)
+    assert res == EMPTY
+    hardware = ("decision_reversible: weeks\ndecision_reach: opted_in\n"
+                "decision_harm: health_or_safety\n")
+    _, res = _run(mod, "decision_class: light\ntest_weight: light\n" + hardware)
+    assert res["misclassed"] and res["undersized"] == [("t.md", "light test for a heavy decision")]
+    beta = "decision_reversible: days\ndecision_reach: opted_in\ndecision_harm: none\n"
+    _, res = _run(mod, "decision_class: light\ntest_weight: light\n" + beta)
+    assert res == EMPTY, "a 500-person free beta that can be rolled back is light"
+    _, res = _run(mod, "decision_class: light\ntest_weight: light\ndecision_harm: lots\n")
+    assert res["bad_proportion"] == [("t.md", "decision_harm: 'lots'")]
 
 
 def test_a_heavy_test_for_a_light_decision_is_oversized(scripts_path):

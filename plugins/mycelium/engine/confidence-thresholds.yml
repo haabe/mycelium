@@ -93,8 +93,14 @@ scales:
     evidence_by_transition:
       discover_to_define: [problem_evidence_from_outside_the_team]
       define_to_develop: [lightest_test_named_with_success_and_failure_bars]
-      develop_to_deliver: [prototype_feedback, usability_test_results,
-                           technical_feasibility_spike, security_threat_model]
+      # What the delivery puts in front of people has had one trial outside the team, in the
+      # form the product takes (v0.269.0): a usability session with a prototype (software, AI
+      # tool), a dry run of the service or its script (service), a walkthrough of the pilot
+      # lesson or protocol (course, content). Until then this read "prototype feedback, usability
+      # test results, technical feasibility spike": a concierge test or a pilot cohort, whose
+      # delivery IS the first contact, had nothing to show (overfit audit, 2026-09-26).
+      develop_to_deliver: [one_trial_outside_the_team_of_what_the_delivery_puts_in_front_of_people,
+                           security_threat_model]
       deliver_to_complete: [learning_delivery_verdict_on_the_riskiest_assumption]
     required_evidence:
       - prototype_feedback
@@ -131,9 +137,21 @@ scales:
     # launch evidence, when the L4 closes.
     threshold_applies_at: [deliver_to_complete]
     evidence_by_transition:
+      # By product type where the evidence differs (v0.269.0), the same keys as
+      # `required_evidence` below; `software` is the fallback for a type not listed. Until then
+      # every product type was asked for code tests at define -> develop (overfit audit,
+      # 2026-09-26): a company-wide course, a scaled service or an AI tool has none.
       discover_to_define: [acceptance_criteria_with_measurable_outcomes]
-      define_to_develop: [test_cases_written_before_or_alongside_the_code]
-      develop_to_deliver: [security_review, privacy_review, accessibility_check]
+      define_to_develop:
+        software: [test_cases_written_before_or_alongside_the_code]
+        content: [quality_review_checklist_written_before_the_content]
+        ai_tool: [eval_cases_written_before_the_prompts_or_model_changes]
+        service_offering: [service_blueprint_and_onboarding_steps]
+      develop_to_deliver:
+        software: [security_review, privacy_review, accessibility_check]
+        content: [quality_review, accessibility_check, privacy_review]
+        ai_tool: [eval_results, safety_review, privacy_review, regulatory_classification]
+        service_offering: [client_onboarding_test, privacy_review]
       deliver_to_complete: [launch_data_from_the_release]
     required_evidence:
       software:

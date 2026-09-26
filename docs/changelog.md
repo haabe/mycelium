@@ -4,6 +4,36 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.269.0 - evidence and test sizing fit the product type
+
+**2026-09-26.** The rest of the overfit audit from 0.268.0: three rules asked every builder for what
+a software web page has.
+
+- **The L4's evidence per transition is keyed by product type**, with the same keys as its
+  `required_evidence` (`software`, `content`, `ai_tool`, `service_offering`; `software` is the
+  fallback). A company-wide course is asked for a quality checklist before the content, an AI tool
+  for eval cases before the prompts, a service for its blueprint and onboarding steps, where 0.261.0
+  asked all of them for code tests.
+- **The L3's Develop->Deliver asks for one trial outside the team of what the delivery puts in front
+  of people**, in the form the product takes: a usability session with a prototype, a dry run of a
+  service, a walkthrough of a pilot lesson or protocol. A concierge test or a pilot cohort, whose
+  delivery is the first contact, had no prototype or spike to show.
+- **Test sizing records what the class stands for.** Optional `decision_reversible` (days, weeks,
+  hard), `decision_reach` (opted_in, not_opted_in, everyone) and `decision_harm` (none, money,
+  health_or_safety); the class is the heaviest of them, and a recorded class below it is MISCLASSED.
+  Three paying clients in a concierge test are standard; ten households lent a hardware prototype
+  are heavy; a free 500-person beta that can be rolled back is light.
+- **A test lighter than its decision is UNDERSIZED**, as a heavier one is OVERSIZED. Either can be
+  accepted by the decision owner (founder, product lead, the team) with a written reason:
+  `costly_test_reason`/`costly_test_by` or `light_test_reason`/`light_test_by`.
+- **"Heavy" names the design the risk needs**: an experiment or outside data for how many or how
+  much, a paid pilot or signed commitment for money, the domain's safety or compliance testing for
+  health or safety.
+
+Checked against: a course pilot, a concierge service for paying clients, a hardware loan, a staged
+app beta, an internal team. Not solved here: `product_type` has no hardware or physical-product
+value, so a hardware builder falls back to software's evidence.
+
 ## v0.268.0 - the learning-delivery rules fit builders beyond the test world
 
 **2026-09-26.** Releases 0.258.0 to 0.267.0 were each driven by one simulated world: a solo founder's
