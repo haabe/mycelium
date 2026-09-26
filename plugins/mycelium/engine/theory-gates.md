@@ -216,16 +216,16 @@ and JTBD had passed. The criteria never asked for a resolution; the reading adde
 
 **Applies to**: Develop->Deliver and Deliver->Complete, L3-L5
 
-**Product type conditioning** (v0.11.0):
-- **software, ai_tool**: Full OWASP + STRIDE as below
-- **content_course, content_publication, content_media**: Security applies only to the distribution platform (LMS, paywall, hosting), not the content itself. If content is self-hosted or behind access control, STRIDE applies to the access control mechanism.
-- **service_offering**: STRIDE applies to any digital infrastructure used to deliver the service (client portal, scheduling system, data storage). If purely offline service, this gate is N/A.
+**Scoped to what the product holds and does** (v0.271.0; product type conditioning since v0.11.0). `/mycelium:security-review` Step 0 records `scope` (runs code, accounts, personal data, money, reach) in threat-model.yml, and only the matching checks apply; the rest are recorded `n/a` with a reason. Product type is a hint, not the test: most projects never set it, and a service can run code while a web page can hold no data.
+- **software, ai_tool**: OWASP + STRIDE where the product runs code; authentication checks only where it has accounts
+- **content_course, content_publication, content_media**: the distribution platform (LMS, paywall, hosting) and any access control, not the content itself
+- **service_offering**: the handling of client data by people and by any digital infrastructure (a client portal, a file share, a scheduling system). A service with nothing digital still has a threat model (a mis-sent document, a lost folder): the gate is never N/A, because the lock counts Security only with a threat model on record.
 
 | Scale | Pass Criteria | Fail Criteria |
 |-------|--------------|---------------|
 | L3 | STRIDE threat model completed; security architecture reviewed | No threat analysis |
-| L4 | OWASP Top 10:2025 addressed; input validation; auth/authz verified | Known vulnerability unaddressed |
-| L4 | Code-level security checks passing; no hardcoded secrets; dependencies scanned | Security scan findings ignored |
+| L4 | The checks the scope calls for addressed (for code: OWASP Top 10:2025, input validation, auth/authz where there are accounts) | Known vulnerability unaddressed |
+| L4 | Where the product runs code: code-level security checks passing; no hardcoded secrets; dependencies scanned | Security scan findings ignored |
 | L5 | Trust signals the market can verify: what the product does with user data stated publicly; incident/disclosure path named before launch, not after | Launch with no stated data handling; disclosure path improvised under an incident |
 
 **Evidence required**: STRIDE analysis, security review checklist, dependency scan results, SAST/DAST results.

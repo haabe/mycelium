@@ -11,7 +11,49 @@ metadata:
 
 Language-agnostic security review based on OWASP Secure by Design.
 
-## Checklist (OWASP Top 10:2025)
+## Step 0: Scope the review to what the product holds and does (v0.271.0)
+
+**Record the scope first, then apply only the sections it calls for.** Every product has threats,
+but not every product has a login, code, or personal data. Founder, 2026-09-26: "2fa and so on
+might not be applicable for all products." A bookkeeping service delivered by hand was reviewed
+against this web checklist (CORS, SQL parameters, security headers, multi-factor login), most of
+which has nothing to act on there. Write in `.claude/canvas/threat-model.yml`:
+
+```yaml
+scope:
+  runs_code: true | false          # software the product runs (a web app, an API, a script)
+  accounts: true | false           # people log in to something the product provides
+  personal_data: "none" | what     # e.g. "client bank exports and receipts", "email addresses"
+  money: true | false              # the product takes or moves payments
+  reach: who can get at it         # e.g. "three named clients", "anyone with the link"
+```
+
+Then apply, and name each section as applied or `n/a: <reason>` in the decision-log entry:
+
+| Section | Applies when |
+|---|---|
+| OWASP web categories below (A01-A10b) | `runs_code` |
+| Authentication items (A07: sessions, passwords, multi-factor) | `accounts` |
+| Data protection items (A02, and Documents and data handled by people) | `personal_data` is not "none" |
+| Payment integrity (who can change amounts, refunds, receipts) | `money` |
+| OWASP LLM Top 10 | the product runs a model (`ai_tool`) |
+| OWASP Agentic Skills Top 10 | the product ships agent skills, plugins, hooks or MCP servers |
+
+Controls follow the data and the reach: multi-factor login where accounts guard sensitive data,
+encryption where personal data is stored or sent electronically, not as defaults for every
+product. A section that does not apply is recorded as `n/a` with its reason, never silently
+skipped, so a later reader sees it was considered. **The threat model is never `n/a`**: a service
+with nothing digital still has threats (a mis-sent document, a lost folder, a wrong person
+asking for a client's figures).
+
+### Documents and data handled by people (services, courses, publications)
+- [ ] Where client or learner data is kept, and who can open it
+- [ ] How documents move between people (the channel, and what never goes by it)
+- [ ] What happens when a document is mis-sent, lost or seen by the wrong person
+- [ ] How long it is kept, and how it is removed
+- [ ] Who else handles it (assistants, subcontractors, providers) and on what terms
+
+## Checklist (OWASP Top 10:2025, applies when `runs_code`)
 
 *Updated to OWASP Top 10:2025 (released January 2025). Previous 2021 edition had different groupings.*
 
@@ -121,7 +163,7 @@ Language-agnostic security review based on OWASP Secure by Design.
 - [ ] **AST10 Cross-Platform Reuse**: A skill ported to another agent runtime keeps its security properties; what the source runtime enforced (permissions, hook gates, trust prompts) is re-checked on the target, not assumed
 
 ## Decision Log (MANDATORY per G-P4)
-**APPEND** a `### Security Review` entry to `.claude/harness/decision-log.md` with: OWASP categories assessed, findings, risk ratings, remediation recommendations.
+**APPEND** a `### Security Review` entry to `.claude/harness/decision-log.md` with: the scope from Step 0, each section applied or `n/a: <reason>`, findings, risk ratings, remediation recommendations.
 
 ## Stack-Specific Tools
 Consult `${CLAUDE_PLUGIN_ROOT}/jit-tooling/security-scanning.md` for tool selection per stack.

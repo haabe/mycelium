@@ -34,7 +34,7 @@ Privacy by Design assessment.
    - [ ] Avoid false dichotomies: privacy vs. security, privacy vs. business value
 
 5. **End-to-End Security**: Data protected throughout its lifecycle?
-   - [ ] Encryption at rest and in transit
+   - [ ] Stored and sent the way the data needs: encryption where personal data is stored or sent electronically; for paper or in-person handling, who holds it and where (v0.271.0)
    - [ ] Secure deletion when no longer needed
    - [ ] Access controls throughout the data lifecycle
 
@@ -50,6 +50,10 @@ Privacy by Design assessment.
    - [ ] Consent is informed, specific, and revocable
 
 ### Data Protection Assessment
+
+**If the product holds no personal data, say so in the data inventory, with how you know** (a
+page that stores nothing, a book): the principles above then need only a line each confirming
+nothing is collected. Controls are proportional to what is held; none are defaults (v0.271.0).
 
 - **What data is collected?** List all personal data fields.
 - **Why?** Lawful basis for each data element.

@@ -8,6 +8,18 @@
     "schema_version": {
       "$ref": "_common.schema.json#/$defs/schema_version"
     },
+    "scope": {
+      "type": "object",
+      "description": "What the product holds and does, recorded by /mycelium:security-review Step 0 before its checklist (v0.271.0). Only the checks the scope calls for apply; the rest are recorded n/a with a reason. Multi-factor login, encryption and the OWASP web categories are not defaults for every product.",
+      "properties": {
+        "runs_code": {"type": "boolean"},
+        "accounts": {"type": "boolean"},
+        "personal_data": {"type": "string", "description": "\"none\", or what is held"},
+        "money": {"type": "boolean"},
+        "reach": {"type": "string"}
+      },
+      "additionalProperties": true
+    },
     "threats": {
       "type": "array",
       "items": {

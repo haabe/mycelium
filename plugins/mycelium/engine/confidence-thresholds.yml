@@ -177,7 +177,7 @@ scales:
       - four_risks
       - cynefin
       - bias
-      - security              # conditioned on product_type in theory-gates.md
+      - security              # scoped to what the product holds and does (theory-gates.md, v0.271.0)
       - privacy
       - bvssh
       - service_quality
@@ -252,7 +252,7 @@ scales:
       - evidence
       - cynefin
       - bias
-      - security              # conditioned on product_type in theory-gates.md
+      - security              # scoped to what the product holds and does (theory-gates.md, v0.271.0)
       - bvssh
       # delivery_metrics REMOVED in 0.235.0 with the L5 Task->Market correction. Deployment
       # frequency, lead time and change failure rate are questions about how a team delivers, and

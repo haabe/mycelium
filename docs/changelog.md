@@ -4,6 +4,34 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.271.0 - security and privacy checks fit what the product holds
+
+**2026-09-26.** Founder, watching the E2E second world: "2fa and so on might not be applicable for
+all products." The service world, a bookkeeper's month-end delivered by hand, was held to the OWASP
+web checklist: CORS, parameterised queries, security headers, SBOMs, password hashing, multi-factor
+login. The gate text claimed Security was conditioned on product type; the product-type profiles
+held no such conditioning, most projects never set a type, and the text called an offline
+service's gate N/A, which the scale lock cannot accept (it counts Security only with a threat model
+on record).
+
+- **`/mycelium:security-review` Step 0 records the scope** in threat-model.yml: `runs_code`,
+  `accounts`, `personal_data`, `money`, `reach`. Only the sections it calls for apply: the OWASP web
+  categories where the product runs code, authentication checks (multi-factor included) where it
+  has accounts, data protection where it holds personal data, payment integrity where it moves
+  money. Each section not applied is recorded `n/a` with its reason, never skipped silently.
+- **A service or content product has its own section**: where client data is kept and who can open
+  it, how documents move, what happens when one is mis-sent or lost, how long it is kept, who else
+  handles it.
+- **The threat model is never N/A**: a service with nothing digital still has threats.
+- **Privacy controls are proportional**: encryption where personal data is stored or sent
+  electronically; a product that holds no personal data says so, with how it knows, and the
+  principles need a line each.
+- theory-gates.md and confidence-thresholds.yml say what is enforced; the threat-model schema gives
+  `scope` its place. Tests pin each.
+
+Checked against: a service handled by people, a free web page holding no data, a course on an LMS,
+a paid app with accounts.
+
 ## v0.270.0 - the delivery gate sees a product that is not code
 
 **2026-09-26.** The E2E second world, built so Mycelium is tested on more than one kind of builder,
