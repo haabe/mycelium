@@ -198,8 +198,19 @@ def _deliver_to_learn_then_open_l4(p: Project, root: Path, opps: dict) -> None:
     assert sl.exposure_state(str(root))[0], "the learning build may meet its audience"
     assert _proposed(root) != "door-l4:l3", "no L4 door while the trial has not read out"
 
-    # The trial reads out: the verdict is the medium-confidence evidence the L4 opens on.
-    opps["opportunities"][0]["solutions"][0]["riskiest_assumption"]["verdict"] = "validated"
+    # The trial reads out and is scored in its test file. E2E run 46 (v0.260.0): a score that stays
+    # in the test file never reaches the lock, so the next item asks for the verdict by name.
+    ra = opps["opportunities"][0]["solutions"][0]["riskiest_assumption"]
+    tests = root / ".claude" / "evals" / "assumption-tests"
+    tests.mkdir(parents=True, exist_ok=True)
+    (tests / "2026-10-26-backup-trial.md").write_text(
+        "---\ntype: assumption-test\nstatus: scored\n---\n4 of 5 met the bar.\n")
+    ra["cheapest_test"] = ".claude/evals/assumption-tests/2026-10-26-backup-trial.md"
+    p.canvas_file("opportunities.yml", opps)
+    assert _proposed(root) == "verdict-l3:l3", "a scored test with no verdict asks for the verdict"
+
+    # The verdict is the medium-confidence evidence the L4 opens on.
+    ra["verdict"] = "validated"
     p.canvas_file("opportunities.yml", opps)
     assert _proposed(root) == "door-l4:l3", "the L4 door is proposed once its lock holds"
     p.write(p.add(l4))
