@@ -4,6 +4,25 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.262.0 - the L3's JTBD and Privacy gates are phased too
+
+**2026-09-26.** E2E run 50 held its L3 in discover on two gates read as needing evidence from use
+at the L3's first transitions: JTBD recorded `fail` because "the emotional and social sides of the
+job are unknown" until testers answered, and Privacy `pending` because it "can't pass until the page
+is built". Mycelium's own rows ask for neither: JTBD at L3 is that the solution addresses the three
+dimensions, Privacy at L3 is a DPIA where processing is high-risk and data minimisation, both of
+which are done on a design. Only the evidence row said what each transition asks, so the other rows
+read as one bar at every transition; 0.259.0 fixed the evidence row and left these.
+
+- **JTBD at L3, by transition:** Discover->Define, the functional, emotional and social dimensions of
+  the job are stated, from the L2's research or as hypotheses the learning delivery will test;
+  Define->Develop, the solution's design says how it serves each one. Evidence from use belongs to
+  the learning delivery, not to this gate.
+- **Privacy at L3, by transition:** Define->Develop, privacy by design on the design (a data
+  inventory, minimisation, and a DPIA where the processing is high-risk; nothing built is needed);
+  Develop->Deliver, the built thing checked against that design.
+- Pinned by `tests/python/test_l3_bars_rise_with_its_phases.py`.
+
 ## v0.261.0 - the L4's threshold is its exit bar too
 
 **2026-09-26.** E2E run 47 had the first L4 any run has opened, on a test-validated verdict from
