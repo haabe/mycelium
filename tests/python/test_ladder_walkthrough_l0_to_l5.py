@@ -286,7 +286,8 @@ def _ship_and_open_l5(p: Project, root: Path) -> None:
     assert sl.exposure_state(str(root))[0], "a shipped L4 may meet real people"
 
     # L5 opens on the shipped L4 plus launch data; the shipped L4 is the L5 door's event (v0.254.0).
-    assert _proposed(root) == "door-l5:l4", "a shipped L4 proposes the L5 door"
+    # v0.275.1: until the release and its launch data are recorded, that record is the agent's.
+    assert _proposed(root) == "launch-data-l4:l4", "a shipped L4 asks for its launch record"
     l5 = {"id": "l5", "scale": "L5", "phase": "discover", "parent": "l4"}
     p.refused(p.add(l5), "launch data")
     # v0.275.0 (E2E rung L5-refused): launch data comes after the release, both dated.
