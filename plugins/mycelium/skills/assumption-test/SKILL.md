@@ -274,7 +274,9 @@ superficial veneer of rigor. **The contract makes an edit visible. It does not m
   solution needs held, whichever way the statement is worded. E2E run 46's statement read "the
   testers will not come back"; 4 of 5 came back, which is `validated`. Word new statements as
   what must be true. **Write the verdict in the same pass that scores the test file**: a score
-  left in the file and the decision log never reaches the L4 lock.
+  left in the file and the decision log never reaches the L4 lock. **The verdict is one word**
+  (`validated` or `invalidated`), with the reasoning in `verdict_note` (v0.265.0): the lock reads
+  only its own words, and an E2E rung's prose verdict ("met on 2026-11-18 ... 4 of 5") left it shut.
 - **Always update .claude/diamonds/active.yml** confidence to match the test outcome
 
 ## Bias Warning
