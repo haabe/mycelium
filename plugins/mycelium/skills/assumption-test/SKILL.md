@@ -70,18 +70,29 @@ scale with the cost of getting the decision wrong, not with how rigorous the tes
 |---|---|---|
 | **light** | reversible within days, seen by a small opted-in audience, an error caught before it harms anyone | **light**: one pass/fail bar on what is already at hand (the testers' own use, a hand count, a few real examples); no blind sampling, no outside datasets, no new recruiting |
 | **standard** | costly to reverse, or reaching people who did not opt in | **standard**: a frozen bar with a stated sample, recruited if needed |
-| **heavy** | hard or impossible to reverse, a wide audience, money, health or safety | **heavy**: the full design (blind samples, outside data, experiments) |
+| **heavy** | hard or impossible to reverse, a wide audience, money, health or safety | **heavy**: the design the risk needs: for a question of how many or how much, blind samples, outside data or an experiment; for money, a paid pilot or a signed commitment; for health or safety, the testing that domain requires (a safety standard, a compliance check) |
+
+**Or record the three things the class stands for, and let the check derive it** (v0.269.0):
+`decision_reversible: days | weeks | hard`, `decision_reach: opted_in | not_opted_in | everyone`,
+`decision_harm: none | money | health_or_safety`. The class is the heaviest of them: three paying
+clients in a concierge test are `opted_in` but `money` (standard); ten households lent a hardware
+prototype are `opted_in` but `health_or_safety` (heavy); a 500-person app beta is `opted_in` and
+`days` (light) unless it takes payment. A recorded `decision_class` lighter than its axes is
+reported MISCLASSED.
 
 Record both in the header (`decision_class`, `test_weight`). `check_instrument_contract.py`
-reports a test heavier than its decision as **OVERSIZED**. E2E runs 53-55: a recipe page for
+reports a test heavier than its decision as **OVERSIZED**, and a test lighter than its decision
+as **UNDERSIZED** (v0.269.0): a paid subscription or a safety question on a one-bar hand count is
+the failure the other way round. E2E runs 53-55: a recipe page for
 five opted-in testers pre-registered a re-test needing twelve blind recipe lines and a
 government nutrition dataset, and stalled three sessions on inputs nobody could supply.
 
-**The founder can choose a costlier test, with the reason written down.** Put
-`costly_test_reason:` (why the heavier test is worth its cost, at least a sentence) and
-`costly_test_by: founder` in the header. The check then prints it as COSTLY BY CHOICE instead
-of reporting it. The agent does not grant itself this: the override is the founder's decision,
-and a proposal to run a heavier test is put to them with the cost stated.
+**The decision owner can choose another size, with the reason written down.** For a heavier
+test put `costly_test_reason:` (why it is worth its cost, at least a sentence) and
+`costly_test_by:` (their role: founder, product lead, the team) in the header; for a lighter one,
+`light_test_reason:` and `light_test_by:`. The check then prints it as SIZED BY CHOICE instead of
+reporting it. The agent does not grant itself this: the override is the decision owner's, and a
+proposal to run a heavier or lighter test is put to them with the cost and the risk stated.
 
 ### Assessment (internal, cheapest — hours)
 

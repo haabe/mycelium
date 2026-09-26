@@ -130,6 +130,18 @@ _REQUIRED_SINCE = {"does_not_reproduce": _dt.date(2026, 9, 15),
 _WEIGHTS = {"light": 0, "standard": 1, "heavy": 2}
 _MIN_COSTLY_REASON_CHARS = 40
 
+#: THE CLASS FROM THREE AXES (v0.269.0). One class carried three things (reversibility, reach and
+#: harm), so three paying B2B clients (small, opted in, money) or ten households with a hardware
+#: prototype (small, opted in, safety) fitted no class, and choosing "heavy" silenced OVERSIZED
+#: (overfit audit, 2026-09-26). When the axes are recorded, the class is the heaviest of them and
+#: a recorded class below it is MISCLASSED; a test lighter than its class is UNDERSIZED, overridden
+#: the same way as a costly one, by the decision owner with a reason.
+_AXES = {
+    "decision_reversible": {"days": 0, "weeks": 1, "hard": 2},
+    "decision_reach": {"opted_in": 0, "not_opted_in": 1, "everyone": 2},
+    "decision_harm": {"none": 0, "money": 1, "health_or_safety": 2},
+}
+
 #: A live instrument gated on an EVENT rather than a date cannot honestly carry a
 #: `score_by` — the data may never exist. It must still carry a `review_by`: the date
 #: by which you decide whether to KEEP WAITING. Founder ruling 2026-08-20: "event gated
@@ -454,14 +466,36 @@ def _proportion(name: str, fm: dict[str, str], res: dict) -> None:
     if bad:
         res["bad_proportion"].append((name, ", ".join(bad)))
         return
-    if _WEIGHTS[weight] <= _WEIGHTS[cls]:
+    derived = _derived_class(fm, name, res)
+    if derived is not None and _WEIGHTS[cls] < _WEIGHTS[derived]:
+        res["misclassed"].append((name, f"decision_class {cls}, and its axes make it {derived}"))
+        cls = derived
+    if _WEIGHTS[weight] == _WEIGHTS[cls]:
         return
-    reason = str(fm.get("costly_test_reason", "") or "").strip()
-    by = str(fm.get("costly_test_by", "") or "").strip().lower()
+    key, bucket = ("costly", "oversized") if _WEIGHTS[weight] > _WEIGHTS[cls] \
+        else ("light", "undersized")
+    reason = str(fm.get(f"{key}_test_reason", "") or "").strip()
+    by = str(fm.get(f"{key}_test_by", "") or "").strip().lower()
     if len(reason) >= _MIN_COSTLY_REASON_CHARS and by and by != "agent":
         res["costly_override"].append((name, f"{weight} test, {cls} decision", by, reason))
     else:
-        res["oversized"].append((name, f"{weight} test for a {cls} decision"))
+        res[bucket].append((name, f"{weight} test for a {cls} decision"))
+
+
+def _derived_class(fm: dict[str, str], name: str, res: dict) -> str | None:
+    """The heaviest of the recorded decision axes, or None when none is recorded (v0.269.0)."""
+    levels = []
+    for axis, scale in _AXES.items():
+        v = str(fm.get(axis, "") or "").strip().lower()
+        if not v:
+            continue
+        if v not in scale:
+            res["bad_proportion"].append((name, f"{axis}: {v!r}"))
+            return None
+        levels.append(scale[v])
+    if not levels:
+        return None
+    return {n: k for k, n in _WEIGHTS.items()}[max(levels)]
 
 
 def _classify(path: Path, root: Path, today: _dt.date, res: dict) -> None:
@@ -527,7 +561,7 @@ def analyse(root: Path, today: _dt.date) -> dict:
         "untracked": [], "bad_status": [], "contracted": [], "scored": [],
         "refuted": [], "incomplete": [], "waived": [], "no_review": [], "review_due": [],
         "bad_anchor": [], "runnable": [], "oversized": [], "costly_override": [],
-        "bad_proportion": [],
+        "bad_proportion": [], "undersized": [], "misclassed": [],
     }
     for path in sorted(d.glob("*.md")):
         _classify(path, root, today, res)
@@ -539,8 +573,17 @@ def _emit_proportion(r: dict, emit) -> None:
     (v0.264.0)."""
     emit(r["oversized"],
          "OVERSIZED — the test costs more than the decision it informs (v0.264.0). Choose a "
-         "lighter test, or have the founder override it with `costly_test_reason` (why the "
-         "heavier test is worth it) and `costly_test_by: founder`.",
+         "lighter test, or have the decision owner override it with `costly_test_reason` "
+         "(why the heavier test is worth it) and `costly_test_by` (their role: founder, product "
+         "lead, team).",
+         lambda t: f"{t[0]}: {t[1]}")
+    emit(r["undersized"],
+         "UNDERSIZED — the test is lighter than the decision it informs (v0.269.0). Choose a "
+         "heavier test, or have the decision owner accept it with `light_test_reason` and "
+         "`light_test_by` (their role).",
+         lambda t: f"{t[0]}: {t[1]}")
+    emit(r["misclassed"],
+         "MISCLASSED — decision_class is lighter than its recorded axes (v0.269.0).",
          lambda t: f"{t[0]}: {t[1]}")
     emit(r["bad_proportion"],
          "BAD SIZE — decision_class and test_weight are light | standard | heavy.",
@@ -548,7 +591,8 @@ def _emit_proportion(r: dict, emit) -> None:
     # NOT via emit(): an override is a recorded founder decision, not a problem. Printed so
     # it stays visible, the way waivers are.
     if r["costly_override"]:
-        print("\nCOSTLY BY CHOICE — a test heavier than its decision, overridden with a reason.")
+        print("\nSIZED BY CHOICE — a test heavier or lighter than its decision, accepted by "
+              "its decision owner with a reason.")
         for name, size, by, why in r["costly_override"]:
             print(f"  {name} ({size}, by {by}): {why}")
 

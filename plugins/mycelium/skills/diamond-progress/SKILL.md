@@ -135,7 +135,7 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
      - `effective_min_sources = ceil(base_min_sources * min_sources_multiplier)`
    - Compare confidence to the **effective** threshold (not the base), **on the transitions where it
      applies**: if the scale lists `threshold_applies_at`, only on those. On the others, report the
-     confidence, check the evidence that transition names in `evidence_by_transition`, and do not
+     confidence, check the evidence that transition names in `evidence_by_transition` (keyed by `product_type` where the evidence differs, `software` the fallback: v0.269.0), and do not
      hold the move on the number (v0.259.0). The L3's threshold is its exit bar: an L3 defines on a
      real problem, develops once its lightest test is named, and delivers once the prototype has
      met users. E2E runs 42-43 held an L3 in discover for three in-world months, 0.6 against 0.64,

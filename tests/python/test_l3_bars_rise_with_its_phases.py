@@ -67,3 +67,21 @@ def test_the_evidence_gate_row_is_phased_and_the_skills_read_the_key():
         assert step in row, step
     for skill in ("diamond-progress", "diamond-assess"):
         assert "threshold_applies_at" in (ROOT / "skills" / skill / "SKILL.md").read_text(), skill
+
+
+def test_the_evidence_per_transition_fits_the_product_type():
+    """v0.269.0, overfit audit: every product type was asked for code tests at the L4's define ->
+    develop, and the L3's develop -> deliver asked for a software prototype, so a course pilot, a
+    concierge service or an AI tool had nothing that counted."""
+    l4 = THRESHOLDS["L4"]["evidence_by_transition"]
+    for t in ("define_to_develop", "develop_to_deliver"):
+        assert set(l4[t]) >= {"software", "content", "ai_tool", "service_offering"}, t
+        assert set(l4[t]) <= set(THRESHOLDS["L4"]["required_evidence"]), "same keys as required"
+        for kind in ("content", "ai_tool", "service_offering"):
+            assert not any("code" in e for e in l4[t][kind]), (t, kind)
+    l3 = THRESHOLDS["L3"]["evidence_by_transition"]["develop_to_deliver"]
+    assert not {"prototype_feedback", "technical_feasibility_spike"} & set(l3)
+    assert any("outside_the_team" in e for e in l3)
+    row = next(line for line in (ROOT / "engine" / "theory-gates.md").read_text().splitlines()
+               if line.startswith("| L3 | "))
+    assert "dry run of a service" in row, "the gate row names forms beyond a software prototype"
