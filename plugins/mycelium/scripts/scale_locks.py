@@ -563,6 +563,9 @@ class State:
                         "delivery produces it: take the L3 to Deliver, run its test with the "
                         "audience in `learning_delivery`, and record the verdict on the riskiest "
                         "assumption")
+        delivered = self.learning_delivery_recorded(l3)
+        if delivered:
+            miss.append(f"{l3.get('id')}: {delivered}")
         failed = self.failed_assumption(l3)
         if failed:
             miss.append(f"{l3.get('id')}: a riskiest assumption that has not failed its test "
@@ -620,6 +623,30 @@ class State:
             miss += self.learning_delivery_missing(d)
         return miss
 
+    def learning_delivery_recorded(self, d: dict) -> str | None:
+        """What the L4 lock still needs to count the L3's evidence as DELIVERED (v0.258.0), or
+        None. The evidence has to come from the L3's learning delivery: the L3 in Deliver (or
+        complete), with its audience, end date and means recorded. A pass from a test run
+        before the L3's Deliver is evidence, and it does not open an L4: the people it reached
+        never went through Security, Privacy and Service Quality. E2E run 41: a hand-run trial
+        at a real site, scored at an L3 still in develop, with the backup approver timed
+        without being told; one recorded verdict would have opened the L4. The builder held
+        the verdict back for exactly that reason, and the lock is now what holds it.
+        Founder, 2026-09-25: "for L4 to open there must be some sort of delivery involved."
+        Any means counts, a concierge or hand-run test included (Gilad's Tests stage)."""
+        phase = str(d.get("phase", "")).lower()
+        ld = _as_dict(d.get("learning_delivery"))
+        gaps = [k for k in ("audience", "until", "means") if not _filled(ld.get(k))]
+        if (phase in SHIPPED_PHASES or d.get("completed_at")) and not gaps:
+            return None
+        return ("its learning delivery: the L3 in Deliver with `learning_delivery` recorded "
+                f"(now phase `{phase or 'discover'}`"
+                + (f", {', '.join(gaps)} missing" if gaps else "") + "). The L4 opens on "
+                "evidence from real use by a named audience who knew they were in it, "
+                "through Security, Privacy and Service Quality; a test run before the L3's "
+                "Deliver does not count. Any means counts, a concierge or hand-run test "
+                "included")
+
     def learning_delivery_missing(self, d: dict) -> list[str]:
         """AN L3 DELIVERS TO LEARN, AND SAYS TO WHOM AND UNTIL WHEN (v0.257.0). The L3 may put a
         learning build in front of real people (Cagan's live-data prototype, Gilad's early adopters
@@ -628,7 +655,8 @@ class State:
         sites under an L3. `means` is what reaching them takes for this product type: for web
         software, infrastructure as code for an environment that can be torn down (founder,
         2026-09-25); for courseware, a pilot cohort on an existing platform; for a service, by
-        hand."""
+        hand. These are examples, not a rule per type: a concierge or hand-run test is a means
+        for any product (Gilad's Tests stage; Cagan's concierge test) (v0.258.0)."""
         ld = _as_dict(d.get("learning_delivery"))
         did = str(d.get("id", "?"))
         gaps = [k for k in ("audience", "until", "means") if not _filled(ld.get(k))]
@@ -637,7 +665,8 @@ class State:
                    f"({', '.join(gaps)} missing): who the learning build reaches (named, "
                    "opted in), until when, and by what means (web software: infrastructure as "
                    "code for an environment that can be torn down; courseware: a pilot cohort; "
-                   "service: by hand). Production for everyone is an L4")
+                   "service, or a concierge test of any product: by hand). Production for "
+                   "everyone is an L4")
             return [msg]
         until = str(ld.get("until"))[:10]
         today = os.environ.get("MYCELIUM_TODAY") or _dt.datetime.now(_dt.UTC).date().isoformat()
