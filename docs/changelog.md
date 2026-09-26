@@ -4,6 +4,25 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.274.0 - a learning delivery's start is on the record
+
+**2026-09-26.** The E2E service world's L3 reached Deliver scoped to a pilot with three existing
+clients. Over the next seven sessions the client pack grew from about 4,100 to 7,100 words (notice
+periods, the court for disputes, the fee on notice, a fallback for a file-share outage) while nobody
+was served, and the pilot's month-ends passed. 0.273.0 told the agent to build only what the test
+needs, but only while the L3 was in develop; nothing recorded whether a delivery had started.
+
+- **`learning_delivery.started`** is the day the first person in the audience took part.
+- **An L3 in Deliver with no start date is offered the start** at each session: start it, record the
+  date, or say what blocks the start; build only what the start needs.
+- **Once that item is overdue**, the agent gets the same instruction as a growing build in develop:
+  stop extending it, name only what blocks the start, send the rest to the tree or to L4. Starting
+  stays the founder's decision.
+- `/mycelium:diamond-progress` says so; a walkthrough step and a render test pin it.
+
+Checked against: a service pilot, a course cohort that has not met, a beta whose invitations have not
+gone out, a hardware loan not yet handed over.
+
 ## v0.273.1 - a duplicate key is named as it is written
 
 **2026-09-26.** The E2E service world's builder wrote three duplicate keys (`requirement`, `when`,

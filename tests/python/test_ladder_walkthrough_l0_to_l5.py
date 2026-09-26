@@ -207,6 +207,11 @@ def _deliver_to_learn_then_open_l4(p: Project, root: Path, opps: dict) -> None:
         if d["id"] == "l3" else d for d in p.diamonds])
     assert sl.exposure_state(str(root))[0], "the learning build may meet its audience"
     assert _proposed(root) != "door-l4:l3", "no L4 door while the trial has not read out"
+    # v0.274.0 (E2E service world run 4): a delivery that has not started is offered its start.
+    assert _proposed(root) == "start-l3:l3", "the test's start is proposed"
+    p.write([{**d, "learning_delivery": {**d["learning_delivery"], "started": "2026-09-26"}}
+             if d["id"] == "l3" else d for d in p.diamonds])
+    assert _proposed(root) != "start-l3:l3", "and not once it has started"
     # v0.268.0: once the delivery has run its course, the verdict is asked for wherever the result
     # was kept (a gradebook, a CRM, a return sheet), not only from a test file in Mycelium's folder.
     after = ni.pick(root, "", "2026-10-30")[0]

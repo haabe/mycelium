@@ -121,6 +121,11 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
    its verdict may call for a new test; that is the opportunity solution tree working, not a gap in
    this one. E2E service world run 3 grew 8,500 words of client documents for a two-month, hand-run
    pilot with three existing clients, and the pilot never started.
+   **The test starts, on the record** (v0.274.0). Record `learning_delivery.started` with the day
+   the first person in the audience took part. An L3 in Deliver with no start date is offered the
+   start at every session; once that is overdue, stop extending the build, name only what blocks
+   the start, and send the rest to the tree or to L4. E2E service world run 4 grew its client pack
+   from 4,100 to 7,100 words in Deliver while nobody was served.
    **Once the L3 delivers, its audience changes on the record, and the delivery ends when the L3
    completes** (v0.267.0, v0.268.0). The audience is identifiable and opted in: a named list, a
    cohort, a pre-release channel. Record each change in `learning_delivery.changes` as `{on,

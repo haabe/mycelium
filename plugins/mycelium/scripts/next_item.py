@@ -444,6 +444,7 @@ def _l3_item(root: Path, today: str, st: dict, d: dict, phase: str) -> dict | No
     item = _pivot_item(root, today, st, d) \
         or _inconclusive_item(root, today, st, d) \
         or (_learning_delivery_item(root, today, st, d) if phase == "develop" else None) \
+        or (_start_item(today, st, d) if phase == "deliver" else None) \
         or _verdict_item(root, today, st, d)
     if item:
         return item
@@ -462,6 +463,29 @@ def _l3_item(root: Path, today: str, st: dict, d: dict, phase: str) -> dict | No
             "text": f"{did} (L3) has delivered to learn, its verdict holds, and no L4 is open "
                     "on it: its increment can be delivered. Open an L4 on it." + beyond,
             "why": "the L4 lock holds and nothing is delivering the increment"}
+
+
+def _start_item(today: str, st: dict, d: dict) -> dict | None:
+    """An L3 in Deliver whose test has not started (v0.274.0). `learning_delivery.started` is the
+    day the first person in the audience took part. E2E service world run 4: the L3 reached Deliver
+    scoped to a pilot with three existing clients, then grew its client pack from about 4,100 to
+    7,100 words over seven sessions while nobody was served; 0.273.0 caught a growing build only in
+    develop. Starting is the founder's decision: it puts the test in front of people."""
+    ld = d.get("learning_delivery") if isinstance(d.get("learning_delivery"), dict) else {}
+    if not ld.get("audience") or str(ld.get("started") or "").strip():
+        return None
+    did = str(d["id"])
+    iid = f"start-l3:{did}"
+    if _blocked(st.get(iid, {}), today):
+        return None
+    return {"id": iid, "diamond": did, "since": today,
+            "command": f"/mycelium:diamond-progress {did}",
+            "text": (f"{did} (L3) is in Deliver and its test has not started: nobody in its "
+                     "audience has taken part. Start it, and record `learning_delivery.started` "
+                     "with the date the first person took part, or say what blocks the start. "
+                     "Build only what the start needs; anything else is the next test on the "
+                     "tree or L4 work."),
+            "why": "a learning delivery that never starts never reads out"}
 
 
 def _inconclusive_item(root: Path, today: str, st: dict, d: dict) -> dict | None:
@@ -893,7 +917,7 @@ def render(item: dict) -> str:
     if _escalated(item):
         head = (f"NEXT ITEM, unanswered for {item['shown']} sessions since {item['first_shown']} "
                 "(put it to the user this session and record the answer)")
-    if _escalated(item) and str(item.get("id", "")).startswith("deliver-l3:"):
+    if _escalated(item) and str(item.get("id", "")).startswith(("deliver-l3:", "start-l3:")):
         # v0.273.0: a build that grows while the test waits. The test lands small; what it cannot
         # answer is the next test on the tree (founder, 2026-09-26: "that's the ost working its
         # way"), not more build now.
