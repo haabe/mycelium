@@ -823,12 +823,32 @@ def _untrusted(text: str) -> str:
     return _UT_OPEN + text.replace(_UT_CLOSE, "</untrusted_user_content_ESCAPED>") + _UT_CLOSE
 
 
+#: ITEMS THAT ARE THE AGENT'S TO DO, NOT THE HUMAN'S TO DECIDE (v0.272.0). Recording a test's
+#: verdict against the bar it was frozen with is Mycelium's own record work; only a result the bar
+#: leaves unclear needs the founder. E2E service world, 2026-09-26: the pilot met its frozen bar (5
+#: of 6 month-ends on time, all three clients continuing), the verdict item was shown to the
+#: founder as "Decide one: run | rule | snooze | drop" for three sessions, the builder said "until
+#: you say, I'll leave it alone", and the L4 stayed locked on a verdict nobody wrote. Founder,
+#: 2026-09-25: "The founder shouldn't care about the 'paperwork' mycelium has to build."
+AGENT_OWNED = ("verdict-l3:",)
+
+
+def agent_owned(item: dict) -> bool:
+    owner = str(item.get("owner") or "")
+    return owner == "agent" or str(item.get("id", "")).startswith(AGENT_OWNED)
+
+
 def render_human(item: dict, limit: int = 240) -> str:
     """The systemMessage form: plain, no tags, bounded. A human reads it, a wrapper means nothing
     to them, and a canvas string cannot be allowed to fill the screen."""
     text = " ".join(str(item["text"]).split())
     if len(text) > limit:
         text = text[: limit - 1] + "…"
+    if agent_owned(item):
+        late = (f" Not done for {item['shown']} sessions since {item['first_shown']}; ask the "
+                "tool to do it now.") if _escalated(item) else ""
+        return (f"MYCELIUM IS RECORDING: {text} The tool does this and tells you the result; it "
+                f"asks you only if the result needs your judgment.{late}")
     if _escalated(item):
         return (f"NEXT ITEM, unanswered for {item['shown']} sessions since {item['first_shown']}: "
                 f"{text} Decide one: run `{item['command']}` | rule | snooze-until DATE or "
@@ -857,6 +877,13 @@ def render(item: dict) -> str:
     text = str(item["text"])
     if str(item.get("id", "")).startswith("fired:"):
         text = _untrusted(text)  # a proposal read back from active.yml is canvas content
+    if agent_owned(item):
+        late = (f", left undone for {item['shown']} sessions since {item['first_shown']}"
+                if _escalated(item) else "")
+        return (f"NEXT ITEM{late} (YOURS TO DO NOW, not the user's to decide: run "
+                f"`{item['command']}`, record the result against the bar the test was frozen with, "
+                "then tell the user what it found; ask them only if the bar leaves the result "
+                f"unclear): {text}")
     head = "NEXT ITEM"
     if _escalated(item):
         head = (f"NEXT ITEM, unanswered for {item['shown']} sessions since {item['first_shown']} "
