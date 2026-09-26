@@ -57,6 +57,21 @@ while IFS=$'\t' read -r target exists size; do
     *.py|*.pyw|*.js|*.mjs|*.cjs|*.ts|*.mts|*.cts|*.tsx|*.jsx|*.vue|*.svelte|*.html|*.htm|*.css|*.scss|*.go|*.rs|*.java|*.kt|*.kts|*.scala|*.rb|*.php|*.c|*.cc|*.cpp|*.h|*.hpp|*.cs|*.swift|*.m|*.mm|*.sql|*.sh|*.bash|*.zsh|*.ps1|*.lua|*.dart|*.ex|*.exs|*.erl|*.hs|*.clj|*.zig|*.nim|*.jl|*.r|*.pl|*.tf|*.ipynb) GATED_FILE="$target"; break;;
   esac
 done <<< "$HI_TARGETS"
+if [ -z "$GATED_FILE" ]; then
+  # THE PRODUCT IS NOT ALWAYS CODE (v0.270.0): a new file in the project's declared
+  # `product_paths` (a service's documents, a course's lessons) is building, whatever its kind.
+  CANDIDATES=()
+  while IFS=$'\t' read -r target exists size; do
+    case "$target" in ""|OUTSIDE:*|GUARD:*|OPAQUE:*|.claude/*|*/.claude/*) continue;; esac
+    if [ "$exists" = "1" ] && [ "${size:-0}" -gt 0 ]; then continue; fi
+    CANDIDATES+=("$target")
+  done <<< "$HI_TARGETS"
+  if [ "${#CANDIDATES[@]}" -gt 0 ]; then
+    PF_HELPER="$(dirname "${BASH_SOURCE[0]}")/../scripts/_hook_input.py"
+    [ -f "$PF_HELPER" ] || PF_HELPER="${CLAUDE_PLUGIN_ROOT:-}/scripts/_hook_input.py"
+    GATED_FILE="$(python3 "$PF_HELPER" --project-dir "$PROJECT_DIR" --product-file "${CANDIDATES[@]}" 2>/dev/null)" || GATED_FILE=""
+  fi
+fi
 [ -n "$GATED_FILE" ] || exit 0
 BASENAME="${GATED_FILE##*/}"
 

@@ -111,6 +111,37 @@ test_only_l0_open_blocks_new_source() {
     rm -rf "$p"
 }
 
+test_product_paths_gate_a_product_that_is_not_code() {
+    # v0.270.0, E2E second world: a bookkeeping service wrote its client agreement, intake checklist
+    # and price sheet under pilot/ with only an L0 in discover; the gate knew only code. A project
+    # declares where its product lives, and new files there are gated whatever their kind.
+    local p; p=$(make_cold_project)
+    printf 'product_paths: [pilot/, "course/**/*.docx"]\nactive_diamonds:\n  - id: dia-001\n    scale: L0\n    phase: discover\n' \
+        > "$p/.claude/diamonds/active.yml"
+    local code
+    code=$(run_gate "$p" "$(write_json "$p/pilot/03-client-agreement.md")")
+    assert_eq "$code" "2" "a service document in product_paths, only L0 open -> blocked"
+    assert_contains "$(gate_err)" "delivery-skip-ack" "the block names its escape hatch"
+    code=$(run_gate "$p" "$(write_json "$p/course/week-1/lesson.docx")")
+    assert_eq "$code" "2" "a glob in product_paths gates too"
+    code=$(run_gate "$p" "$(write_json "$p/research/owner-interviews.md")")
+    assert_eq "$code" "0" "a research note outside product_paths -> not gated"
+    code=$(run_gate "$p" "$(write_json "$p/pilotnotes.md")")
+    assert_eq "$code" "0" "a name that only starts like the folder is not in it"
+    rm -rf "$p"
+}
+
+test_undeclared_product_paths_leave_documents_ungated() {
+    # Control: with no product_paths the gate knows code only, as before 0.270.0; the next item
+    # asks where the product lives (tests/python/test_ladder_walkthrough_l0_to_l5.py).
+    local p; p=$(make_cold_project)
+    printf 'active_diamonds:\n  - id: dia-001\n    scale: L0\n    phase: discover\n' \
+        > "$p/.claude/diamonds/active.yml"
+    local code; code=$(run_gate "$p" "$(write_json "$p/pilot/03-client-agreement.md")")
+    assert_eq "$code" "0" "undeclared -> a document is not gated"
+    rm -rf "$p"
+}
+
 test_completed_l3_only_blocks() {
     local p; p=$(make_cold_project)
     printf 'active_diamonds:\n  - id: d-003\n    scale: L3\n    phase: complete\n' \
@@ -271,6 +302,8 @@ run_test test_happy_path_chained_l3_allows
 run_test test_bare_l3_after_start_blocks
 run_test test_populated_purpose_without_delivery_diamond_blocks
 run_test test_only_l0_open_blocks_new_source
+run_test test_product_paths_gate_a_product_that_is_not_code
+run_test test_undeclared_product_paths_leave_documents_ungated
 run_test test_completed_l3_only_blocks
 run_test test_open_l4_allows
 run_test test_l4_on_an_anecdotal_l3_blocks

@@ -21,7 +21,8 @@ _spec = importlib.util.spec_from_file_location("next_item", SCRIPTS / "next_item
 ni = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(ni)
 
-L0 = "active_diamonds:\n  - id: l0-x\n    scale: L0\n    phase: discover\n"
+# product_paths declared, so the where-the-product-lives item (v0.270.0) is answered here.
+L0 = "product_paths: []\nactive_diamonds:\n  - id: l0-x\n    scale: L0\n    phase: discover\n"
 
 
 def _project(tmp_path: Path) -> Path:
@@ -166,6 +167,7 @@ def test_doing_what_the_item_asks_resets_the_ladder(tmp_path, monkeypatch):
 # and the human snoozed each in turn, burying the L3 move go-live needed.
 
 FOUR = """\
+product_paths: []
 active_diamonds:
   - id: l0-x
     scale: L0

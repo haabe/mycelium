@@ -843,3 +843,17 @@ reviewed:
     with no last good state, a repair of a broken diamonds file is judged whole, as before 0.266.0,
     and the scale lock refuses it with its own message naming each diamond. Nothing opens on this
     path. Reviewed 2026-09-26, v0.266.0.
+- id: _hook_input.py@92f8a65ce8
+  verdict: accepted
+  reason: >-
+    `product_paths` returns None when diamonds/active.yml is missing or does not parse. The delivery
+    gate then knows the product by code extensions only, which is its behaviour before 0.270.0, and
+    the scale lock separately refuses and reports a diamonds file that does not parse. Nothing is
+    let through that the gate caught before. Reviewed 2026-09-26, v0.270.0.
+- id: next_item.py@5a627bf2e4
+  verdict: accepted
+  reason: >-
+    `_product_paths_item` offers no item when diamonds/active.yml cannot be read. `_fired_proposals`
+    reads the same file in the same pick and reports it unreadable in the note shown with the item,
+    and the scale lock refuses a diamonds file that does not parse. Asking where the product lives
+    on top of a broken file would add nothing. Reviewed 2026-09-26, v0.270.0.

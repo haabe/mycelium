@@ -27,7 +27,7 @@ def _project(tmp_path: Path, diamonds: list[dict]) -> Path:
     (tmp_path / ".claude" / "diamonds").mkdir(parents=True)
     (tmp_path / ".claude" / "canvas").mkdir(parents=True)
     (tmp_path / ".claude" / "diamonds" / "active.yml").write_text(
-        yaml.safe_dump({"active_diamonds": diamonds}))
+        yaml.safe_dump({"product_paths": [], "active_diamonds": diamonds}))
     note = tmp_path / ".claude" / "canvas" / "purpose.yml"
     note.write_text("why: a purpose\n")
     stamp = time.mktime((2026, 9, 24, 12, 0, 0, 0, 0, -1))
