@@ -113,6 +113,14 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
    the L3 to Deliver through Security, Privacy and Service Quality, run the test, and record the
    verdict on the riskiest assumption; that verdict is the medium-confidence evidence the L4 opens
    on. The L4 then builds to earn, for everyone. Production for everyone is never an L3's.
+   **The L3 builds only what its test needs to run** (v0.273.0). Not a finished product: the
+   smallest thing that lets the named, opted-in audience take part and the test read out. A question
+   the build raises that the test does not need (a refund edge case, a full export pipeline, terms
+   for a stranger) is recorded, not answered now: as a next assumption on the solution
+   (`assumptions:` in opportunities.yml), to be tested in turn, or as L4 work. The test lands, and
+   its verdict may call for a new test; that is the opportunity solution tree working, not a gap in
+   this one. E2E service world run 3 grew 8,500 words of client documents for a two-month, hand-run
+   pilot with three existing clients, and the pilot never started.
    **Once the L3 delivers, its audience changes on the record, and the delivery ends when the L3
    completes** (v0.267.0, v0.268.0). The audience is identifiable and opted in: a named list, a
    cohort, a pre-release channel. Record each change in `learning_delivery.changes` as `{on,

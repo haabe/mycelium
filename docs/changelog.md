@@ -4,6 +4,30 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.273.0 - an L3 builds only what its test needs
+
+**2026-09-26.** The E2E service world's L3 (a bookkeeper's fixed-price month-end, piloted by hand
+with three existing clients for two months) never reached Deliver. By session 13 the build was about
+8,500 words: an agreement with refund and payback clauses, a blueprint, a checklist, onboarding
+steps, a price sheet, a summary template and an export pipeline. Each edge case became a question for
+the founder, each answer raised new ones, and the item "has built what its test needs, take the L3 to
+Deliver" stood for sessions. Mycelium sized the test to its decision (0.264.0, 0.269.0), and nothing
+sized the build to the test.
+
+- **The learning-delivery item says to build only what the test needs to run**; a question the build
+  raises that the test does not need is the next test on the tree (an assumption on the solution) or
+  L4 work.
+- **Once the item is overdue**, the agent is told the build is growing while the test waits: stop
+  extending it, name only what the test still needs, record every other open question as a next
+  assumption or as L4 work, and propose the move to Deliver. The move stays the founder's decision.
+- `/mycelium:diamond-progress` and `/mycelium:assumption-test` say the same: the test lands small,
+  and a result that calls for a new test is the tree working. Founder: "I read 1 as a small test that,
+  when landed, might conclude a new test is in order. But that's the ost working its way."
+- Tests: the overdue item, a fresh one and a door as controls; a walkthrough step.
+
+Checked against: a service's client documents, a course's pilot lesson, a web prototype's feature
+list, a hardware loan's paperwork.
+
 ## v0.272.0 - Mycelium records its own verdicts
 
 **2026-09-26.** The E2E service world's pilot (three paying clients, two month-ends, delivered by hand)

@@ -186,6 +186,7 @@ def _deliver_to_learn_then_open_l4(p: Project, root: Path, opps: dict) -> None:
           "object_ref": "sol-001"}
     p.refused(p.add(l4), "medium confidence")
     assert _proposed(root) == "deliver-l3:l3", "the L3's learning delivery is proposed"
+    assert "Build only what the test needs" in ni.pick(root, "", DAY)[0]["text"], "v0.273.0"
     # E2E run 41 (v0.258.0): a pass from a test run before the L3's Deliver is evidence, not a
     # delivery. The L4 stays locked and the L3's Deliver stays proposed, or nothing would be.
     ra = opps["opportunities"][0]["solutions"][0]["riskiest_assumption"]
