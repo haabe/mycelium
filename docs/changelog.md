@@ -4,6 +4,20 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.275.1 - recording the launch is Mycelium's work, and the item names the fields
+
+**2026-09-26.** In the E2E rung L5-open on 0.275.0 the builder recorded `released_on` correctly, then
+wrote the launch figures into a log entry with an `as_of` date. The L5 lock reads only the L4's
+`launch_data`, so the L5 could not open, and the item that asked for it said "record its launch data"
+without naming the field. It was also shown to the founder as a decision for four sessions, although
+recording a release and its figures is Mycelium's record work (the 0.272.0 class).
+
+- **Until the launch is recorded, the item is the agent's** (`launch-data-l4:`): it names
+  `released_on` and `launch_data: {usage | feedback | metric_movement, as_of}` on the L4, and says the
+  lock reads those fields and nothing else.
+- **Once the lock holds, the L5 door is the founder's decision**, as before.
+- Tests: the item is agent-owned, the door is not; the walkthrough sees the record item first.
+
 ## v0.275.0 - launch data comes after the release
 
 **2026-09-26.** The E2E rung L5-refused starts from a shipped L4 and withholds its launch: the world

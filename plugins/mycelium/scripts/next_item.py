@@ -422,15 +422,21 @@ def _door_item(root: Path, today: str, st: dict) -> dict | None:
             if item:
                 return item
         if scale == "L4" and phase in _SHIPPED and not _children(active, d, "L5"):
-            iid = f"door-l5:{did}"
+            ready = not sl.can_open(str(root), "L5", parent=did)
+            # Recording the release and its launch data is Mycelium's record work, the agent's to
+            # do; opening the L5 is the founder's decision (v0.275.1). E2E rung L5-open on 0.275.0:
+            # the item asked the founder for four sessions, and the builder wrote the launch
+            # figures into a log entry, not the `launch_data` field the lock reads.
+            iid = f"door-l5:{did}" if ready else f"launch-data-l4:{did}"
             if _blocked(st.get(iid, {}), today):
                 continue
-            ready = not sl.can_open(str(root), "L5", parent=did)
             text = (f"{did} (L4) has shipped and its launch data is recorded: open the L5 market "
                     "diamond on it." if ready else
-                    f"{did} (L4) has shipped. Record `released_on` (the day it reached its users) "
-                    "and, once people have used it, its launch data with `as_of` after that day "
-                    "(usage, feedback or metric movement); a first market release opens an L5.")
+                    f"{did} (L4) has shipped. On the L4 in diamonds/active.yml, record "
+                    "`released_on: YYYY-MM-DD` (the day it reached its users) and, once people "
+                    "have used it, `launch_data: {usage | feedback | metric_movement, as_of: "
+                    "YYYY-MM-DD}` with `as_of` after the release; the L5 lock reads those fields "
+                    "and nothing else. A first market release then opens an L5.")
             return {"id": iid, "diamond": did, "since": today,
                     "command": "/mycelium:launch-tier", "text": text,
                     "why": "a shipped L4 is the L5's event"}
@@ -860,7 +866,7 @@ def _untrusted(text: str) -> str:
 #: founder as "Decide one: run | rule | snooze | drop" for three sessions, the builder said "until
 #: you say, I'll leave it alone", and the L4 stayed locked on a verdict nobody wrote. Founder,
 #: 2026-09-25: "The founder shouldn't care about the 'paperwork' mycelium has to build."
-AGENT_OWNED = ("verdict-l3:",)
+AGENT_OWNED = ("verdict-l3:", "launch-data-l4:")
 
 
 def agent_owned(item: dict) -> bool:

@@ -31,6 +31,14 @@ def test_a_verdict_is_the_agents_to_record():
     assert "ask the tool to do it now" in human, "an overdue one says so, to the right party"
 
 
+def test_recording_launch_data_is_the_agents():
+    """v0.275.1, E2E rung L5-open: the record was asked of the founder for four sessions."""
+    rec = {"id": "launch-data-l4:l4-a", "text": "l4-a (L4) has shipped. Record launch_data.",
+           "command": "/mycelium:launch-tier", "shown": 3, "first_shown": "2026-11-18"}
+    assert ni.agent_owned(rec) and "YOURS TO DO NOW" in ni.render(rec)
+    assert not ni.agent_owned({**rec, "id": "door-l5:l4-a"}), "opening the L5 is the founder's"
+
+
 def test_a_door_stays_the_founders_decision():
     """Control: a real decision keeps its menu for the human."""
     assert "put it to the user" in ni.render(DOOR)
