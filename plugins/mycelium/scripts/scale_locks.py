@@ -65,6 +65,7 @@ import datetime as _dt
 import json
 import os
 import re
+import subprocess
 import sys
 
 try:
@@ -911,6 +912,39 @@ def new_diamond_violations(project_dir: str, payload: dict) -> list[str]:
     return violations_between(project_dir, before, after)
 
 
+def _last_good(project_dir: str) -> dict:
+    """The diamonds as they last stood when the file on disk does not parse: the committed file,
+    else the scale and phase the write hook recorded for each diamond (`diamond_rulings.py`), else
+    nothing, and every diamond in the repair is judged as new.
+
+    v0.266.0. Until then a broken file read as no diamonds at all, so a write that repaired it
+    was judged as opening every diamond in it, and a diamond past discover can never open: the
+    E2E rung L4-ship broke its diamonds file with a shell write, Mycelium's shell check said to
+    fix it with Edit, and the scale lock refused that Edit as opening the L3 in deliver and the L4
+    in develop. The file stayed broken to the end of the run. Anything the repair changes against
+    the last good state is still judged: a new diamond, a rescale, a phase moved without its gates.
+    """
+    try:
+        r = subprocess.run(["git", "show", "HEAD:./.claude/diamonds/active.yml"], cwd=project_dir,
+                           capture_output=True, text=True, timeout=10, check=False)
+        if r.returncode == 0:
+            doc = _as_dict(_parse(r.stdout, "the committed diamonds/active.yml"))
+            if _as_list(doc.get("active_diamonds")):
+                return doc
+    except (OSError, subprocess.SubprocessError, UnreadableError):
+        pass  # SPEAKS: no git, or a committed file that is broken too: the record below, else none
+    try:
+        with open(os.path.join(project_dir, ".claude", "state", "diamond-rulings.json"),
+                  encoding="utf-8") as fh:
+            rec = json.load(fh)
+    except (OSError, ValueError):
+        return {}  # SPEAKS: fails closed: the repair is judged whole, refused with the lock message
+    rows = [{"id": did, "scale": r["scale"], "phase": str(r.get("sig") or "discover").split("|")[0]}
+            for did, r in (rec.items() if isinstance(rec, dict) else [])
+            if isinstance(r, dict) and r.get("scale")]
+    return {"active_diamonds": rows}
+
+
 def violations_between(project_dir: str, before: str, after: str) -> list[str]:
     """The lock verdict on one change to diamonds/active.yml, given its text before and after.
     Shared by the write hook (before = on disk, after = the proposed write) and, since v0.253.2,
@@ -918,7 +952,7 @@ def violations_between(project_dir: str, before: str, after: str) -> list[str]:
     try:
         old_doc = _as_dict(_parse(before, "diamonds/active.yml")) if before else {}
     except UnreadableError:
-        old_doc = {}  # a broken file is repaired by this write: judge every diamond in it
+        old_doc = _last_good(project_dir)  # a repair is judged against what was last known open
     new_doc = _parse(after, "the proposed diamonds/active.yml")  # raises: refused, see _run_hook
     if not isinstance(new_doc, dict):
         new_doc = {}

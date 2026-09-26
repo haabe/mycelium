@@ -836,3 +836,10 @@ reviewed:
     item does not fire and the L4 lock names the missing verdict; `check_instrument_contract.py`
     (canvas-health) separately reports an instrument whose header is unreadable. Reviewed 2026-09-26,
     v0.260.0.
+- id: scale_locks.py@aa159f6af9
+  verdict: accepted
+  reason: >-
+    `_last_good` returns {} when the rulings record is missing or unreadable. That fails closed:
+    with no last good state, a repair of a broken diamonds file is judged whole, as before 0.266.0,
+    and the scale lock refuses it with its own message naming each diamond. Nothing opens on this
+    path. Reviewed 2026-09-26, v0.266.0.

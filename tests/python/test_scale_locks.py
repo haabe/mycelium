@@ -482,6 +482,52 @@ def test_hook_refuses_an_unparseable_proposal_and_judges_a_repair(tmp_path, monk
     assert sl.new_diamond_violations(p, _write(repair)), "a repair write is judged whole"
 
 
+def _commit(tmp_path: Path) -> None:
+    import subprocess
+    git = ["git", "-c", "user.name=t", "-c", "user.email=t@t.invalid"]
+    subprocess.run([*git, "init", "-q"], cwd=tmp_path, check=True)
+    subprocess.run([*git, "add", "-A"], cwd=tmp_path, check=True)
+    subprocess.run([*git, "commit", "-qm", "good"], cwd=tmp_path, check=True)
+
+
+def test_a_repair_is_judged_against_the_last_good_state(tmp_path):
+    """E2E rung L4-ship (0.265.0): a shell write broke diamonds/active.yml, the shell check said to
+    fix it with Edit, and the lock refused the Edit as opening the L3 in deliver and the L4 in
+    develop, since a broken file read as no diamonds. The file stayed broken to the end of the run.
+    A repair is now judged against the committed file; what it changes is still judged."""
+    open_l3 = {"id": "l3-x", "scale": "L3", "phase": "develop", "theory_gates_status": BUILD_PASSED}
+    p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), diamonds=[open_l3])
+    good = (tmp_path / ".claude/diamonds/active.yml").read_text()
+    _commit(tmp_path)
+    (tmp_path / ".claude/diamonds/active.yml").write_text("a: [broken")
+    assert sl.new_diamond_violations(p, _write(good)) == [], "the same diamonds, repaired"
+    doc = yaml.safe_load(good)
+    doc["active_diamonds"].append({"id": "l3-y", "scale": "L3", "phase": "develop"})
+    out = sl.new_diamond_violations(p, _write(yaml.safe_dump(doc)))
+    assert out and all("l3-y" in v for v in out), "a diamond the repair adds is judged as new"
+    doc = yaml.safe_load(good)
+    next(d for d in doc["active_diamonds"] if d["id"] == "l3-x")["phase"] = "complete"
+    assert sl.new_diamond_violations(p, _write(yaml.safe_dump(doc))), "a phase moved is judged"
+
+
+def test_with_no_git_a_repair_reads_the_recorded_scale_and_phase(tmp_path):
+    spec = importlib.util.spec_from_file_location("diamond_rulings", SCRIPT.parent / "diamond_rulings.py")
+    dr = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(dr)
+    open_l3 = {"id": "l3-x", "scale": "L3", "phase": "develop", "theory_gates_status": BUILD_PASSED}
+    p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), diamonds=[open_l3])
+    good = (tmp_path / ".claude/diamonds/active.yml").read_text()
+    dr.record(tmp_path, "s1")
+    (tmp_path / ".claude/diamonds/active.yml").write_text("a: [broken")
+    assert sl.new_diamond_violations(p, _write(good)) == []
+    state = tmp_path / ".claude/state/diamond-rulings.json"
+    rec = json.loads(state.read_text())
+    for r in rec.values():
+        r.pop("scale")  # a record written before 0.266.0
+    state.write_text(json.dumps(rec))
+    assert sl.new_diamond_violations(p, _write(good)), "with no scale on record, judged whole"
+
+
 def test_hook_reads_a_move_onto_the_diamonds_file(tmp_path):
     p = _project(tmp_path, purpose=PURPOSE)
     staged = tmp_path / "staged.yml"

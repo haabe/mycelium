@@ -4,6 +4,23 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.266.0 - a broken diamonds file can be repaired
+
+**2026-09-26.** The E2E rung test L4-ship (a real builder from a saved L4-in-Develop state) broke
+`diamonds/active.yml` with a shell write: a plain YAML value containing `Approximate: a shared ...`.
+Mycelium's shell check caught it at once and said to fix it with Edit. The builder tried, and the
+scale lock refused the Edit as opening the L3 in deliver and the L4 in develop: a file that does not
+parse read as no diamonds at all, so the repair was judged as opening every diamond in it, and a
+diamond past discover can never open. The builder moved on and the file stayed broken to the end of
+the run, with every gate that reads it failing closed.
+
+- **A repair is judged against the last good state**: the committed file, else the scale and phase
+  the write hook recorded for each diamond. Anything the repair changes is still judged as before: a
+  new diamond, a rescale, a phase moved without its gates. With neither on record, the repair is
+  judged whole, as it was.
+- **The rulings record (`.claude/state/diamond-rulings.json`) carries each diamond's scale**, so the
+  fallback works in a project with no git.
+
 ## v0.265.0 - a verdict the lock cannot read is asked for again
 
 **2026-09-26.** The E2E rung test L4-open (a real builder from a saved L3-in-Deliver state) scored the
