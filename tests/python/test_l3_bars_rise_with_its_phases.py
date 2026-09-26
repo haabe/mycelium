@@ -20,6 +20,23 @@ def test_the_l3_threshold_is_compared_only_at_its_exit():
     assert THRESHOLDS["L3"]["threshold_applies_at"] == ["deliver_to_complete"]
 
 
+def _l3_rows(heading: str) -> list[str]:
+    text = (ROOT / "engine" / "theory-gates.md").read_text()
+    section = text[text.index(heading):]
+    section = section[:section.index("\n### ", 1)]
+    return [line for line in section.splitlines() if line.startswith("| L3 | ")]
+
+
+def test_the_l3_jtbd_and_privacy_rows_are_phased_too():
+    """v0.262.0, E2E run 50: JTBD `fail` until testers answered and Privacy `pending` until the
+    page was built, two design-time gates read as needing evidence from use."""
+    (jtbd,) = _l3_rows("### 3. JTBD Gate")
+    assert "Discover->Define" in jtbd and "Define->Develop" in jtbd and "hypotheses" in jtbd
+    (privacy,) = _l3_rows("### 7. Privacy Gate")
+    assert "Define->Develop" in privacy and "Develop->Deliver" in privacy
+    assert "Nothing built is needed" in privacy
+
+
 def test_the_l4_threshold_is_its_exit_bar_too():
     """v0.261.0, E2E run 47: the first L4 any run opened sat at 0.15 against 0.7 in discover,
     after its lock had admitted it on a test-validated verdict."""

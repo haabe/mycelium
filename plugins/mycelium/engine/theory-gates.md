@@ -152,9 +152,12 @@ All four risks must be assessed, and the assessment must demonstrate that **thre
 |-------|--------------|---------------|
 | L1 | Strategic jobs identified with all 3 dimensions | Jobs described only functionally |
 | L2 | Opportunity-level jobs mapped from research data | Jobs assumed without research |
-| L3 | Solution explicitly addresses functional, emotional, and social dimensions | Solution addresses only functional job |
+| L3 | **By transition (v0.262.0).** Discover->Define: the functional, emotional and social dimensions of the job are stated, from the L2's research or as hypotheses the learning delivery will test. Define->Develop: the solution's design says how it serves each dimension. Evidence from use is the learning delivery's, not this gate's. | Discover->Define: only the functional job stated. Define->Develop: a design that serves only the functional job |
 
 **Evidence required**: JTBD statements with all three dimensions (functional, emotional, social), linked to interview data.
+At L3 the dimensions may be hypotheses at Discover->Define (v0.262.0): E2E run 50 held an L3 in discover
+on `fail` because "the emotional and social sides are unknown" until testers answered, which is what
+its learning delivery exists to find out.
 
 **Suggested skill**: `/jtbd-map`
 
@@ -238,7 +241,7 @@ and JTBD had passed. The criteria never asked for a resolution; the reading adde
 | Scale | Pass Criteria | Fail Criteria |
 |-------|--------------|---------------|
 | L2 | Data subjects identified; purpose limitation defined | Collecting data without defined purpose |
-| L3 | DPIA completed for high-risk processing; data minimization applied | Processing PII without impact assessment |
+| L3 | **By transition (v0.262.0).** Define->Develop: privacy by design on the design: a data inventory, data minimisation, and a DPIA where the processing is high-risk. Nothing built is needed. Develop->Deliver: the built thing checked against that design (what it collects, sends and keeps matches the inventory). | Define->Develop: processing personal data with no inventory or impact assessment. Develop->Deliver: a build that collects or sends more than the design says |
 | L4 | Consent mechanisms implemented; data retention defined; right to deletion supported | No consent flow; unlimited retention |
 
 **Evidence required**: Data flow diagram, DPIA document, consent mechanism design, retention policy.
