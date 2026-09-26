@@ -651,6 +651,11 @@ def _learning_delivery_item(root: Path, today: str, st: dict, d: dict) -> dict |
             "is what opens the L4.")
     if need:
         text += " Still needed: " + ", ".join(need) + "."
+    # v0.273.0: the L3 builds only what its test needs to run. E2E service world run 3: this item
+    # stood for sessions while the build grew to 8,500 words of client documents for a two-month,
+    # hand-run pilot with three existing clients, each edge case a new question for the founder.
+    text += (" Build only what the test needs to run; a question it raises that the test does not "
+             "need is the next test on the tree (an assumption on the solution) or L4 work.")
     return {"id": iid, "diamond": did, "since": today,
             "command": f"/mycelium:diamond-progress {did}", "text": text,
             "why": "the test waits on real use, and the L3 delivers to learn"}
@@ -888,6 +893,14 @@ def render(item: dict) -> str:
     if _escalated(item):
         head = (f"NEXT ITEM, unanswered for {item['shown']} sessions since {item['first_shown']} "
                 "(put it to the user this session and record the answer)")
+    if _escalated(item) and str(item.get("id", "")).startswith("deliver-l3:"):
+        # v0.273.0: a build that grows while the test waits. The test lands small; what it cannot
+        # answer is the next test on the tree (founder, 2026-09-26: "that's the ost working its
+        # way"), not more build now.
+        head += (" THE BUILD IS GROWING WHILE THE TEST WAITS: stop extending it. Name only what "
+                 "the test still needs to run with its audience; record every other open question "
+                 "as a next assumption on the solution (`assumptions:` in opportunities.yml) or as "
+                 "L4 work; then propose the move to Deliver")
     return (
         f"{head}: {text} run `{item['command']}` | rule (say what you decide) | "
         f"snooze-until DATE or asked (`{LEDGER} rule --id {item['id']} "
