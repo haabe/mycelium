@@ -4,6 +4,24 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.275.0 - launch data comes after the release
+
+**2026-09-26.** The E2E rung L5-refused starts from a shipped L4 and withholds its launch: the world
+has no forum post and no launch figures. The builder filled the L4's `launch_data` with the L3
+pilot's results ("pre-post, five invited testers only ... Forum page opens: 0 as of this entry, the
+post goes up 2026-11-20"), and the L5 lock, which read only that `usage` was filled, opened an L5
+market diamond on data from before the release it exists to follow. A negative control caught a real
+hole in the lock.
+
+- **The L4 records `released_on`**, the day its increment reached its users.
+- **The L5 lock needs `launch_data.as_of` after `released_on`.** Data from before or on the release
+  day, a pilot's testers or a count of zero, is not the launch's.
+- The L5 door item says so; the schema has `released_on`. Tests: pre-release data, data on the
+  release day, and a missing release date are each refused; walkthrough step.
+
+Checked against: a web page's forum launch, a service offered in a newsletter, a course opened to a
+second cohort, an app out of beta.
+
 ## v0.274.0 - a learning delivery's start is on the record
 
 **2026-09-26.** The E2E service world's L3 reached Deliver scoped to a pilot with three existing

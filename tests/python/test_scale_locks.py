@@ -218,13 +218,14 @@ def test_l4_with_no_l3_is_locked(tmp_path):
 
 
 def test_l5_needs_a_shipped_l4_and_launch_data(tmp_path):
-    l4 = {"id": "l4-a", "scale": "L4", "phase": "deliver", "parent": "l3-a"}
+    l4 = {"id": "l4-a", "scale": "L4", "phase": "deliver", "parent": "l3-a",
+          "released_on": "2026-09-01"}
     base = [_delivered("data-supported"), l4]
     p = _project(tmp_path, purpose=PURPOSE, opps=_tested(), diamonds=base)
     miss = sl.can_open(p, "L5", parent="l4-a")
     assert len(miss) == 1 and "launch data" in miss[0]
     l5 = {"id": "l5-m", "scale": "L5", "phase": "discover", "parent": "l4-a",
-          "launch_data": {"usage": "3 sites used it daily for two weeks"},
+          "launch_data": {"usage": "3 sites used it daily for two weeks", "as_of": "2026-09-15"},
           "pmf": {"band": "not-yet-measurable"}}
     p = _project(tmp_path, purpose=PURPOSE, opps=_tested(), diamonds=[*base, l5])
     assert sl.report(p)[0][-1] == ("l5-m", "L5", [], True)
@@ -411,10 +412,26 @@ def test_l5_door_opens_on_launch_data_written_to_the_l4(tmp_path):
     """The door runs --can-open L5 --parent <l4> BEFORE the L5 exists, so the data it needs must be
     readable from the L4 whose release it is."""
     l4 = {"id": "l4-a", "scale": "L4", "phase": "deliver", "parent": "l3-a",
-          "launch_data": {"feedback": "two leads asked for it at the third site"}}
+          "released_on": "2026-09-01",
+          "launch_data": {"feedback": "two leads asked for it at the third site",
+                          "as_of": "2026-09-10"}}
     p = _project(tmp_path, purpose=PURPOSE, opps=_tested(),
                  diamonds=[_delivered("data-supported"), l4])
     assert sl.can_open(p, "L5", parent="l4-a") == []
+
+
+def test_launch_data_from_before_the_release_does_not_open_an_l5(tmp_path):
+    """v0.275.0, E2E rung L5-refused: with the launch withheld, the builder wrote the L3 pilot's
+    five-tester results into the L4's launch_data, and the lock opened the L5 on them."""
+    pilot = {"usage": "4 of 5 testers came back; forum page opens: 0", "as_of": "2026-09-01"}
+    for l4_extra, why in (({}, "released_on"),
+                          ({"released_on": "2026-09-01"}, "after the release"),
+                          ({"released_on": "2026-09-05"}, "after the release")):
+        l4 = {"id": "l4-a", "scale": "L4", "phase": "deliver", "parent": "l3-a",
+              "launch_data": pilot, **l4_extra}
+        p = _project(tmp_path / why.replace(" ", "-") / str(len(l4_extra)), purpose=PURPOSE,
+                     opps=_tested(), diamonds=[_delivered("data-supported"), l4])
+        assert any(why in m for m in sl.can_open(p, "L5", parent="l4-a")), (l4_extra, why)
 
 
 def test_a_closed_opportunity_relocks_nothing_already_open(tmp_path):

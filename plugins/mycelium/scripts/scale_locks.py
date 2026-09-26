@@ -594,7 +594,30 @@ class State:
         if not any(_filled(data.get(k)) for k in ("usage", "feedback", "metric_movement")):
             miss.append(f"{l4.get('id')}: launch data from its release in `launch_data` (usage, "
                         "feedback or metric_movement; Gilad Evidence-Guided p123)")
+        else:
+            why = self.launch_after_release_missing(l4, data)
+            if why:
+                miss.append(why)
         return miss
+
+    @staticmethod
+    def launch_after_release_missing(l4: dict, data: dict) -> str | None:
+        """LAUNCH DATA COMES AFTER THE RELEASE (v0.275.0). The L4 records `released_on`, the day its
+        increment reached its users, and `launch_data.as_of` is a later day. E2E rung L5-refused
+        (Batch, 0.274.0): with the launch withheld, the builder wrote the L3 pilot's five-tester
+        results into the L4's `launch_data` (\"Forum page opens: 0 ... the post goes up
+        2026-11-20\"), and the lock, which read only that usage was filled, opened the L5."""
+        rel = str(l4.get("released_on") or "")[:10]
+        as_of = str(data.get("as_of") or "")[:10]
+        dated = re.compile(r"\d{4}-\d{2}-\d{2}")
+        if not dated.fullmatch(rel):
+            return (f"{l4.get('id')}: `released_on`, the day its increment reached its users; "
+                    "launch data is measured after it")
+        if not dated.fullmatch(as_of) or as_of <= rel:
+            return (f"{l4.get('id')}: `launch_data.as_of` after the release ({rel}); data from "
+                    "before or on the release day (a pilot's testers, a count of zero) is not the "
+                    "launch's")
+        return None
 
     def _parent_at(self, d: dict, scale: str) -> dict | None:
         """The live diamond at `scale` this one names: by `parent`, else by a shared `object_ref`.

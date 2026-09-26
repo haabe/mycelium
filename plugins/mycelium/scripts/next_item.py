@@ -428,8 +428,9 @@ def _door_item(root: Path, today: str, st: dict) -> dict | None:
             ready = not sl.can_open(str(root), "L5", parent=did)
             text = (f"{did} (L4) has shipped and its launch data is recorded: open the L5 market "
                     "diamond on it." if ready else
-                    f"{did} (L4) has shipped. Record its launch data (usage, feedback or metric "
-                    "movement) and categorise the release; a first market release opens an L5.")
+                    f"{did} (L4) has shipped. Record `released_on` (the day it reached its users) "
+                    "and, once people have used it, its launch data with `as_of` after that day "
+                    "(usage, feedback or metric movement); a first market release opens an L5.")
             return {"id": iid, "diamond": did, "since": today,
                     "command": "/mycelium:launch-tier", "text": text,
                     "why": "a shipped L4 is the L5's event"}

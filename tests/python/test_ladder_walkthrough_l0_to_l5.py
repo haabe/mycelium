@@ -289,7 +289,12 @@ def _ship_and_open_l5(p: Project, root: Path) -> None:
     assert _proposed(root) == "door-l5:l4", "a shipped L4 proposes the L5 door"
     l5 = {"id": "l5", "scale": "L5", "phase": "discover", "parent": "l4"}
     p.refused(p.add(l5), "launch data")
+    # v0.275.0 (E2E rung L5-refused): launch data comes after the release, both dated.
     p.write([{**d, "launch_data": {"usage": "Harbour: 41 swap requests in three weeks"}}
+             if d["id"] == "l4" else d for d in p.diamonds])
+    p.refused(p.add(l5), "released_on")
+    p.write([{**d, "released_on": "2026-09-01",
+              "launch_data": {**d["launch_data"], "as_of": "2026-09-22"}}
              if d["id"] == "l4" else d for d in p.diamonds])
     assert _proposed(root) == "door-l5:l4", "still proposed, now to open the L5"
     p.write(p.add(l5))
