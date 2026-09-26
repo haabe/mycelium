@@ -417,19 +417,10 @@ def _door_item(root: Path, today: str, st: dict) -> dict | None:
         scale = str(d.get("scale", "")).upper()
         phase = str(d.get("phase") or "discover").lower()
         did = str(d["id"])
-        if scale == "L3" and phase == "develop" and not _children(active, d, "L4"):
-            item = _learning_delivery_item(root, today, st, d)
+        if scale == "L3" and phase in ("develop", "deliver") and not _children(active, d, "L4"):
+            item = _l3_item(root, today, st, d, phase)
             if item:
                 return item
-        if scale == "L3" and phase in ("develop", "deliver") and not _children(active, d, "L4"):
-            iid = f"door-l4:{did}"
-            if not _blocked(st.get(iid, {}), today) and not sl.can_open(
-                    str(root), "L4", parent=did):
-                return {"id": iid, "diamond": did, "since": today, "command": "/mycelium:preflight",
-                        "text": f"{did} (L3) has delivered to learn, its verdict holds, and no "
-                                "L4 is open on it: its increment can be delivered. Open an L4 on "
-                                "it.",
-                        "why": "the L4 lock holds and nothing is delivering the increment"}
         if scale == "L4" and phase in _SHIPPED and not _children(active, d, "L5"):
             iid = f"door-l5:{did}"
             if _blocked(st.get(iid, {}), today):
@@ -443,6 +434,81 @@ def _door_item(root: Path, today: str, st: dict) -> dict | None:
                     "command": "/mycelium:launch-tier", "text": text,
                     "why": "a shipped L4 is the L5's event"}
     return _entry_door(root, today, st, active)
+
+
+def _l3_item(root: Path, today: str, st: dict, d: dict, phase: str) -> dict | None:
+    """What an L3 in develop or deliver with no L4 needs next: its learning delivery, the verdict
+    of a scored test (v0.260.0), or the L4 door once the lock holds."""
+    did = str(d["id"])
+    item = (_learning_delivery_item(root, today, st, d) if phase == "develop" else None) \
+        or _verdict_item(root, today, st, d)
+    if item:
+        return item
+    iid = f"door-l4:{did}"
+    if _blocked(st.get(iid, {}), today) or sl.can_open(str(root), "L4", parent=did):
+        return None
+    return {"id": iid, "diamond": did, "since": today, "command": "/mycelium:preflight",
+            "text": f"{did} (L3) has delivered to learn, its verdict holds, and no L4 is open "
+                    "on it: its increment can be delivered. Open an L4 on it.",
+            "why": "the L4 lock holds and nothing is delivering the increment"}
+
+
+_TEST_PATH = re.compile(r"[\w./-]*\.claude/evals/assumption-tests/[\w.-]+\.md")
+
+
+def _front_matter(path: Path) -> dict:
+    """The YAML header of an instrument file, or {} when it has none or cannot be read."""
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return {}
+    if yaml is None or not text.startswith("---"):
+        return {}
+    _, _, rest = text.partition("---")
+    header, sep, _ = rest.partition("---")
+    try:
+        data = yaml.safe_load(header) if sep else None
+    except yaml.YAMLError:
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def _verdict_item(root: Path, today: str, st: dict, d: dict) -> dict | None:
+    """An L3 whose named test is scored and whose verdict is not recorded (v0.260.0). The L4 lock
+    reads `riskiest_assumption.verdict`; a score written only into the test file and the decision
+    log never reaches it, and nothing else was offered. E2E run 46: 4 of 5 testers returned against
+    a bar of 3, the file said `status: scored`, and the next session started with no offer at
+    all. Run 41 had the same shape. The verdict is on the BET the solution needs, whichever way
+    its statement is worded: run 46's read \"testers will NOT come back\", so a literal reading
+    of a pass is `invalidated`, which the lock reads as a failed assumption."""
+    did = str(d["id"])
+    iid = f"verdict-l3:{did}"
+    if _blocked(st.get(iid, {}), today):
+        return None
+    state = sl.State(str(root))
+    if state.l3_evidence(d) in sl.MEDIUM_OR_BETTER or state.failed_assumption(d):
+        return None
+    for sol in state.build_solutions(d):
+        ra = sol.get("riskiest_assumption")
+        if not isinstance(ra, dict) or str(ra.get("verdict") or "").strip():
+            continue
+        m = _TEST_PATH.search(str(ra.get("cheapest_test") or ""))
+        if not m:
+            continue
+        path = root / m.group(0)[m.group(0).find(".claude/"):]
+        if str(_front_matter(path).get("status", "")).lower() != "scored":
+            continue
+        rel = path.relative_to(root)
+        return {"id": iid, "diamond": did, "since": today,
+                "command": "/mycelium:assumption-test",
+                "text": (f"{did} (L3) has scored its test ({rel}) and no verdict is recorded "
+                         f"on {sol.get('id', 'its solution')}'s riskiest assumption, so the L4 "
+                         "lock cannot read the result. Record `verdict: validated` if the bet "
+                         "the solution needs held, `invalidated` if it did not, whichever way "
+                         "the statement is worded. A validated verdict from this learning "
+                         "delivery is what opens the L4."),
+                "why": "a scored test whose verdict never reaches the lock"}
+    return None
 
 
 def _learning_delivery_item(root: Path, today: str, st: dict, d: dict) -> dict | None:
