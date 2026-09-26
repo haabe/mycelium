@@ -72,6 +72,16 @@ def test_the_privacy_schema_has_a_home_for_processors(tmp_path):
     assert "landlord" in out["reason"]  # the enum is checked, so the field is really schema'd
 
 
+def test_a_duplicate_key_is_named_as_it_is_written(tmp_path):
+    """v0.273.1, E2E service world run 4: three duplicate keys in threat-model.yml parsed, met the
+    schema, and dropped their first values; the full validator said so, the write check did not."""
+    _write(tmp_path, "canvas/privacy-assessment.yml",
+           PRIVACY_OK + 'last_assessed: "2026-10-13"\n')
+    out = json.loads(_run(tmp_path, "canvas/privacy-assessment.yml"))
+    assert out["decision"] == "block"
+    assert "duplicate key 'last_assessed'" in out["reason"]
+
+
 def test_broken_yaml_is_named(tmp_path):
     _write(tmp_path, "canvas/privacy-assessment.yml", "last_assessed: [unclosed\n")
     out = json.loads(_run(tmp_path, "canvas/privacy-assessment.yml"))

@@ -433,6 +433,10 @@ def _duplicate_mapping_keys(text: str) -> list[str]:
     return dups
 
 
+
+# The write check (canvas_write_check.py) calls this as the file is written (v0.273.1).
+duplicate_mapping_keys = _duplicate_mapping_keys
+
 def validate_all_yaml_parses(canvas_dir: Path) -> list[str]:
     """Fail-loud YAML parse check on every canvas file.
 

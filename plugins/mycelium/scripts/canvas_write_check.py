@@ -57,12 +57,22 @@ def _load_validator():
 
 
 def errors_for(path: Path, vc) -> list[str]:
-    """Schema errors for one file, from validate_canvas's own functions."""
+    """Schema errors for one file, from validate_canvas's own functions, and its duplicate keys.
+
+    Duplicate keys since v0.273.1: YAML keeps the second value and drops the first without a word,
+    so the file parses and matches its schema. The full validator reported it; this check, the one
+    that runs as the file is written, did not. E2E service world run 4 wrote three duplicate keys
+    into threat-model.yml, nothing told the builder, and the canvas stayed invalid."""
+    try:
+        dups = [f"Silent data loss in {path.name}: {d} (the second value destroys the first)"
+                for d in vc.duplicate_mapping_keys(path.read_text(encoding="utf-8"))]
+    except (OSError, ValueError, vc.yaml.YAMLError):
+        dups = []  # SPEAKS: an unreadable or unparseable file is named by the schema check below
     registry = vc.build_registry()
     if path.parent.name == "canvas":
-        return vc.validate_canvas_against_schema(path, registry)
+        return dups + vc.validate_canvas_against_schema(path, registry)
     found = vc.validate_diamonds(path.parent.parent / "canvas", registry)
-    return [e for e in found if f"diamonds/{path.name}" in e]
+    return dups + [e for e in found if f"diamonds/{path.name}" in e]
 
 
 def _said_once(project: Path, session: str) -> bool:
