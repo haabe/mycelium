@@ -113,13 +113,18 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
    the L3 to Deliver through Security, Privacy and Service Quality, run the test, and record the
    verdict on the riskiest assumption; that verdict is the medium-confidence evidence the L4 opens
    on. The L4 then builds to earn, for everyone. Production for everyone is never an L3's.
-   **The audience is fixed once the L3 delivers, and the delivery ends when the L3 completes**
-   (v0.267.0). A founder who wants the build in front of more people after a pass (a public post,
-   a wider cohort, no end date) is asking for a release beyond the learning delivery: open the L4
-   on this L3 first, and deliver through it; the lock refuses an L3 whose `audience` is widened
-   with no L4. When the L3 completes, record `learning_delivery.ended`: taken down (with the
-   date), or handed to the L4 that now carries it, by id. E2E rung L4-open made the page public
-   under the L3 on reviews scoped to five testers, and completed the L3 with the page still up.
+   **Once the L3 delivers, its audience changes on the record, and the delivery ends when the L3
+   completes** (v0.267.0, v0.268.0). The audience is identifiable and opted in: a named list, a
+   cohort, a pre-release channel. Record each change in `learning_delivery.changes` as `{on,
+   audience_was, kind, why}`: `narrowed` or `reworded` (a learner left, a typo, a translation);
+   `widened`, a bigger test audience that is still identifiable and opted in (a second beta wave, a
+   larger cohort), with `reassessed: [security, privacy, service_quality]` re-run for it; or
+   `everyone`, a release to all, which is the L4's: open the L4 on this L3 first and deliver
+   through it. When the L3 completes, record `learning_delivery.ended: {how, on, l4, note}`: `how`
+   is `withdrawn` (taken down, devices collected back, the cohort or engagement over) or
+   `handed_to_l4` with the L4's id in `l4`; `note` is free text in any language. E2E rung L4-open
+   made a web page public under its L3 on reviews scoped to five testers; the same rules hold a
+   course pilot, a concierge service, a hardware loan or a staged app beta.
 
 3. **Calculate confidence**:
    - Apply scoring rules from `${CLAUDE_PLUGIN_ROOT}/engine/confidence-thresholds.yml`.

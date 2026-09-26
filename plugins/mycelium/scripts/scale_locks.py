@@ -216,6 +216,11 @@ def _load(project_dir: str, *rel: str):
     return _parse(text, "/".join(rel))
 
 
+def _today() -> str:
+    """Mycelium's today: MYCELIUM_TODAY when set (a stated date, or a simulated world), else UTC."""
+    return os.environ.get("MYCELIUM_TODAY") or _dt.datetime.now(_dt.UTC).date().isoformat()
+
+
 def _as_list(value) -> list:
     return value if isinstance(value, list) else []
 
@@ -644,10 +649,10 @@ class State:
         return ("its learning delivery: the L3 in Deliver with `learning_delivery` recorded "
                 f"(now phase `{phase or 'discover'}`"
                 + (f", {', '.join(gaps)} missing" if gaps else "") + "). The L4 opens on "
-                "evidence from real use by a named audience who knew they were in it, "
-                "through Security, Privacy and Service Quality; a test run before the L3's "
-                "Deliver does not count. Any means counts, a concierge or hand-run test "
-                "included")
+                "evidence from real use by an identifiable, opted-in audience (a named list, "
+                "a cohort, a pre-release channel), through Security, Privacy and Service "
+                "Quality; a test run before the L3's Deliver does not count. Any means "
+                "counts, a concierge or hand-run test included")
 
     def learning_delivery_missing(self, d: dict) -> list[str]:
         """AN L3 DELIVERS TO LEARN, AND SAYS TO WHOM AND UNTIL WHEN (v0.257.0). The L3 may put a
@@ -664,8 +669,9 @@ class State:
         gaps = [k for k in ("audience", "until", "means") if not _filled(ld.get(k))]
         if gaps:
             msg = (f"{did}: its learning delivery recorded in `learning_delivery` "
-                   f"({', '.join(gaps)} missing): who the learning build reaches (named, "
-                   "opted in), until when, and by what means (web software: infrastructure as "
+                   f"({', '.join(gaps)} missing): who the learning build reaches (identifiable and "
+                   "opted in: a named list, a cohort, a pre-release channel), until when, and "
+                   "by what means (web software: infrastructure as "
                    "code for an environment that can be torn down; courseware: a pilot cohort; "
                    "service, or a concierge test of any product: by hand). Production for "
                    "everyone is an L4")
@@ -686,44 +692,86 @@ class State:
                 and str((self._parent_at(x, "L3") or {}).get("id")) == did]
 
     def learning_delivery_end_missing(self, d: dict) -> str | None:
-        """AN L3'S LEARNING DELIVERY ENDS WHEN IT COMPLETES, AND SAYS HOW (v0.267.0). The build
-        was taken down, or it was handed to an L4 that now carries it. E2E rung L4-open made the
-        page public under the L3, then completed the L3 with the page still up; its record still
-        read "the five early testers, until 2026-11-27, taken down on the end date". A learning
-        build that outlives its L3 with no L4 is production nobody is delivering."""
+        """AN L3'S LEARNING DELIVERY ENDS WHEN IT COMPLETES, AND SAYS HOW (v0.267.0, recorded as
+        fields in v0.268.0). `learning_delivery.ended: {how, on, l4, note}`: `how` is `withdrawn`
+        (it no longer reaches its audience: taken down, devices collected back, the cohort ended,
+        the engagement closed, the pre-release yanked) or `handed_to_l4` (an L4 now carries it,
+        named in `l4`); `on` is the date, not in the future; `note` is free text in any language
+        and is never read. 0.267.0 matched words ("taken down") and refused every other honest
+        ending, in every other language, while accepting "not taken down" (overfit audit,
+        2026-09-26). E2E rung L4-open completed its L3 with the page public and its record still
+        naming five testers: a learning build that outlives its L3 with no L4 is production
+        nobody is delivering."""
         ld = _as_dict(d.get("learning_delivery"))
         if not _filled(ld.get("audience")):
             return None  # no learning delivery was run: nothing to end
-        ended = str(ld.get("ended") or "")
+        ended = _as_dict(ld.get("ended"))
+        how = str(ended.get("how") or "").strip().lower()
+        on = str(ended.get("on") or "")[:10]
         ids = [str(x.get("id")) for x in self.l4_children(d)]
-        if any(i and i in ended for i in ids):
+        problem = None
+        if how not in ("withdrawn", "handed_to_l4"):
+            problem = "`how` is `withdrawn` or `handed_to_l4`"
+        elif not re.fullmatch(r"\d{4}-\d{2}-\d{2}", on) or on > _today():
+            problem = "`on` is the date it ended, not a future one"
+        elif how == "handed_to_l4" and str(ended.get("l4") or "") not in ids:
+            problem = ("`l4` names the L4 that carries it" + (f" ({', '.join(ids)})" if ids
+                                                              else "; no L4 names this L3 yet"))
+        if problem is None:
             return None
-        if re.search(r"taken[ -]down|torn down|switched off|removed", ended, re.IGNORECASE):
-            return None
-        return ("how its learning delivery ended, in `learning_delivery.ended`: taken down (with "
-                "the date), or handed to the L4 that now carries it, by id"
-                + (f" ({', '.join(ids)})" if ids else "; no L4 names this L3 yet")
-                + ". A learning build that outlives its L3 is production, and production is "
-                "the L4's")
+        return ("how its learning delivery ended, in `learning_delivery.ended: {how, on, l4, "
+                f"note}}`: {problem}. `withdrawn` when it no longer reaches its audience (taken "
+                "down, collected back, the cohort or engagement over); `handed_to_l4` when an L4 "
+                "carries it on. A learning build that outlives its L3 with no L4 is production")
 
-    def audience_widening(self, before: dict, after: dict) -> str | None:
-        """WHO AN L3 REACHES IS FIXED ONCE IT DELIVERS (v0.267.0). Its Security, Privacy and
-        Service Quality were passed for that audience. Widening it (a public post, a wider cohort)
-        is a release beyond the learning delivery: it goes through an L4, which runs those gates
-        for the new audience. Extending `until` with the same audience's agreement is not this.
-        E2E rung L4-open made the page public under the L3 on reviews scoped to five testers,
-        and ran the public-audience security review afterwards."""
+    def audience_change_missing(self, before: dict, after: dict) -> str | None:
+        """AN L3'S AUDIENCE CHANGES ON THE RECORD ONCE IT DELIVERS (v0.267.0, recorded in
+        v0.268.0). Its Security, Privacy and Service Quality were passed for that audience. A
+        change carries an entry in `learning_delivery.changes`: `{on, audience_was, kind, why}`,
+        where `kind` is `narrowed` or `reworded` (allowed: a learner left, a typo, a translation),
+        `widened` (still an identifiable, opted-in audience, a bigger cohort or a second beta
+        wave: allowed with `reassessed` naming security, privacy and service_quality, re-run for
+        the new audience), or `everyone` (a release to all: the L4's, so an L4 on this L3 first).
+        0.267.0 refused any change to the text, narrowing and typos included, and treated a
+        second beta wave as production (overfit audit, 2026-09-26). E2E rung L4-open made the
+        page public under the L3 on reviews scoped to five testers."""
         if _scale(after) != "L3" or _phase(before) not in ("deliver", "complete"):
             return None
         old = str(_as_dict(before.get("learning_delivery")).get("audience") or "").strip()
         new = str(_as_dict(after.get("learning_delivery")).get("audience") or "").strip()
-        if not old or new == old or self.l4_children(after):
+        if not old or new == old:
             return None
-        return (f"{after.get('id')} (L3) cannot widen its learning delivery: its audience was "
-                f"`{old}`, and the write makes it `{new}`. Its Security, Privacy and Service "
-                "Quality were passed for that audience; a release beyond it is the L4's. Open "
-                "an L4 on this L3 and deliver through it (/mycelium:preflight). Extending "
-                "`until` with the same audience's agreement is allowed")
+        did = after.get("id")
+        entry = next((c for c in reversed(_as_list(_as_dict(after.get("learning_delivery"))
+                                                   .get("changes")))
+                      if isinstance(c, dict) and str(c.get("audience_was") or "").strip() == old),
+                     None)
+        if entry is None:
+            return (f"{did} (L3): its learning delivery's audience changes from `{old}`, and "
+                    "`learning_delivery.changes` has no entry for it. Add `{on, audience_was, "
+                    "kind, why}`, with `kind` one of `narrowed`, `reworded`, `widened` (a bigger "
+                    "identifiable, opted-in audience: name the re-run gates in `reassessed`) or "
+                    "`everyone` (the L4's: open an L4 on this L3 first)")
+        return self._change_kind_missing(after, entry)
+
+    def _change_kind_missing(self, after: dict, entry: dict) -> str | None:
+        """What one recorded audience change still needs, by its kind."""
+        did = after.get("id")
+        kind = str(entry.get("kind") or "").strip().lower()
+        if kind in ("narrowed", "reworded"):
+            return None
+        if kind == "widened":
+            redone = {str(g).strip().lower() for g in _as_list(entry.get("reassessed"))}
+            gaps = [g for g in ("security", "privacy", "service_quality") if g not in redone]
+            return None if not gaps else (
+                f"{did} (L3): a wider audience re-runs the gates that were passed for the old "
+                f"one; `reassessed` on the change entry does not name {', '.join(gaps)}")
+        if kind == "everyone":
+            return None if self.l4_children(after) else (
+                f"{did} (L3): a release to everyone is the L4's. Open an L4 on this L3 "
+                "(/mycelium:preflight) and deliver through it; its gates are passed for everyone")
+        return (f"{did} (L3): the change entry's `kind` is `{kind or 'missing'}`; it is one of "
+                "`narrowed`, `reworded`, `widened`, `everyone`")
 
     def gate_missing(self, d: dict, gate: str) -> str | None:
         """Why one gate does not count as passed on this diamond, or None when it does."""
@@ -969,9 +1017,11 @@ def new_diamond_violations(project_dir: str, payload: dict) -> list[str]:
 
 
 def _last_good(project_dir: str) -> dict:
-    """The diamonds as they last stood when the file on disk does not parse: the committed file,
-    else the scale and phase the write hook recorded for each diamond (`diamond_rulings.py`), else
-    nothing, and every diamond in the repair is judged as new.
+    """The diamonds as they last stood when the file on disk does not parse: the scale and phase
+    the write hook recorded for each diamond (`diamond_rulings.py`, written on every good write),
+    with the committed file filling in any diamond the record lacks; else nothing, and every
+    diamond in the repair is judged as new. v0.268.0 put the record first: the commit is only as
+    fresh as the user's last commit (overfit audit, 2026-09-26).
 
     v0.266.0. Until then a broken file read as no diamonds at all, so a write that repaired it
     was judged as opening every diamond in it, and a diamond past discover can never open: the
@@ -980,13 +1030,14 @@ def _last_good(project_dir: str) -> dict:
     in develop. The file stayed broken to the end of the run. Anything the repair changes against
     the last good state is still judged: a new diamond, a rescale, a phase moved without its gates.
     """
+    rows: dict[str, dict] = {}
     try:
         r = subprocess.run(["git", "show", "HEAD:./.claude/diamonds/active.yml"], cwd=project_dir,
                            capture_output=True, text=True, timeout=10, check=False)
         if r.returncode == 0:
             doc = _as_dict(_parse(r.stdout, "the committed diamonds/active.yml"))
-            if _as_list(doc.get("active_diamonds")):
-                return doc
+            rows = {str(d.get("id")): d for d in _as_list(doc.get("active_diamonds"))
+                    if isinstance(d, dict)}
     except (OSError, subprocess.SubprocessError, UnreadableError):
         pass  # SPEAKS: no git, or a committed file that is broken too: the record below, else none
     try:
@@ -994,18 +1045,21 @@ def _last_good(project_dir: str) -> dict:
                   encoding="utf-8") as fh:
             rec = json.load(fh)
     except (OSError, ValueError):
-        return {}  # SPEAKS: fails closed: the repair is judged whole, refused with the lock message
-    rows = [{"id": did, "scale": r["scale"], "phase": str(r.get("sig") or "discover").split("|")[0]}
-            for did, r in (rec.items() if isinstance(rec, dict) else [])
-            if isinstance(r, dict) and r.get("scale")]
-    return {"active_diamonds": rows}
+        rec = {}  # SPEAKS: fails closed: with no commit either, the repair is judged whole
+    # The record is written on every good write; the commit only as often as the user commits.
+    # The record wins where it has the diamond, the commit fills in the rest (v0.268.0).
+    for did, r in (rec.items() if isinstance(rec, dict) else []):
+        if isinstance(r, dict) and r.get("scale"):
+            rows[did] = {**rows.get(did, {}), "id": did, "scale": r["scale"],
+                         "phase": str(r.get("sig") or "discover").split("|")[0]}
+    return {"active_diamonds": list(rows.values())} if rows else {}
 
 
 def _closing_violations(st: State, new_doc: dict, old_active: dict) -> list[str]:
     """Two changes the active-list loop never saw (v0.267.0). A diamond moved from the active list
     into the completed one is a move to complete, judged like any other: until then a completion
     written straight into completed_diamonds passed no gate at all. And an L3 whose learning
-    delivery's audience is widened once it delivers."""
+    delivery's audience changes, off the record, once it delivers."""
     out = []
     completed = [d for d in _as_list(new_doc.get("completed_diamonds")) if isinstance(d, dict)]
     for d in completed:
@@ -1018,7 +1072,7 @@ def _closing_violations(st: State, new_doc: dict, old_active: dict) -> list[str]
                        + "\n    - ".join(moved))
     for d in [*st.active, *completed]:
         prev = old_active.get(str(d.get("id")))
-        why = st.audience_widening(prev, d) if prev else None
+        why = st.audience_change_missing(prev, d) if prev else None
         if why:
             out.append(why)
     return out
