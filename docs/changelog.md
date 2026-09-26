@@ -4,6 +4,15 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.264.1 - the lock verdicts are pinned against reordering
+
+**2026-09-26.** The E2E study recommended metamorphic checks under the deterministic walkthrough.
+Reordering the diamonds, the opportunities or their solutions, or adding a parked diamond elsewhere,
+must never change which diamonds hold or whether the L4 and L5 may open. A lock whose verdict moved
+with list order would pass the walkthrough and fail a project whose agent wrote its YAML in another
+order. `tests/python/test_scale_locks_properties.py`, with a control that the comparison sees a
+change that matters. Tests only; no behaviour change.
+
 ## v0.264.0 - a test is sized to the decision it informs
 
 **2026-09-26.** E2E runs 53-55 (a recipe page for five opted-in testers) failed a salt-and-leavening
