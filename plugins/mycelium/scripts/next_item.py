@@ -477,6 +477,10 @@ def _pivot_item(root: Path, today: str, st: dict, d: dict) -> dict | None:
             "why": "a failed assumption is an outcome, and the L3 needs a way on from it"}
 
 
+#: The verdict words the L4 lock reads, and the honest not-yet words (v0.265.0).
+_READABLE_VERDICTS = ({"validated", "passed", "held"}
+                      | {"invalidated", "failed", "falsified", "refuted"}
+                      | {"untested", "inconclusive", "partial", "pending"})
 _TEST_PATH = re.compile(r"[\w./-]*\.claude/evals/assumption-tests/[\w.-]+\.md")
 
 
@@ -514,7 +518,24 @@ def _verdict_item(root: Path, today: str, st: dict, d: dict) -> dict | None:
         return None
     for sol in state.build_solutions(d):
         ra = sol.get("riskiest_assumption")
-        if not isinstance(ra, dict) or str(ra.get("verdict") or "").strip():
+        if not isinstance(ra, dict):
+            continue
+        said = str(ra.get("verdict") or "").strip()
+        # A verdict the lock cannot read is no verdict (v0.265.0). E2E rung L4-open, 2026-09-26: the
+        # builder recorded the pass as prose ("met on 2026-11-18 ... 4 of 5 testers came back"); the
+        # L4 lock reads only its own words, stayed shut, and this item stood down because the field
+        # was not empty.
+        if said and said.lower() not in _READABLE_VERDICTS:
+            sid = sol.get("id", "its solution")
+            return {"id": iid, "diamond": did, "since": today,
+                    "command": "/mycelium:assumption-test",
+                    "text": (f"{did} (L3): the verdict on {sid}'s riskiest assumption is prose "
+                             f'the L4 lock cannot read ("{said[:60]}"). Write '
+                             "`verdict: validated` if the bet the solution needs held or "
+                             "`invalidated` if it did not, and keep the reasoning in "
+                             "`verdict_note`."),
+                    "why": "a verdict the lock cannot read never reaches it"}
+        if said:
             continue
         m = _TEST_PATH.search(str(ra.get("cheapest_test") or ""))
         if not m:

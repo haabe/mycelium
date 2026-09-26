@@ -4,6 +4,20 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.265.0 - a verdict the lock cannot read is asked for again
+
+**2026-09-26.** The E2E rung test L4-open (a real builder from a saved L3-in-Deliver state) scored the
+return-use test correctly, 4 of 5 against a bar of 3, and recorded it on the riskiest assumption as
+prose: `verdict: 'met on 2026-11-18, scored on a 7-day window: 4 of 5 testers came back ...'`. The L4
+lock reads only its own words (`validated`, `passed`, `held`), so it read the L3 as untested and
+stayed shut; the 0.260.0 verdict item stood down because the field was not empty. The pass never
+reached the lock, and nothing said so.
+
+- **The verdict item fires on a verdict the lock cannot read**, quotes it, and asks for
+  `verdict: validated` or `invalidated`, with the reasoning in `verdict_note`.
+- `/mycelium:assumption-test` says the verdict is one word, with the reasoning beside it.
+- Pinned by a step in the L0-to-L5 walkthrough.
+
 ## v0.264.1 - the lock verdicts are pinned against reordering
 
 **2026-09-26.** The E2E study recommended metamorphic checks under the deterministic walkthrough.

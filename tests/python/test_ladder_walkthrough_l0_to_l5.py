@@ -215,6 +215,12 @@ def _deliver_to_learn_then_open_l4(p: Project, root: Path, opps: dict) -> None:
     assert _proposed(root) == "pivot-l3:l3", "a failed assumption offers the pivot, not silence"
     p.refused(p.add(l4), "recorded as failed")
 
+    # v0.265.0: a verdict written as prose never reaches the lock, so it is asked for again.
+    ra["verdict"] = "met on 2026-11-18: 4 of 5 came back against a bar of 3"
+    p.canvas_file("opportunities.yml", opps)
+    assert _proposed(root) == "verdict-l3:l3", "a prose verdict is asked for again"
+    p.refused(p.add(l4), "medium confidence")
+
     # The verdict is the medium-confidence evidence the L4 opens on.
     ra["verdict"] = "validated"
     p.canvas_file("opportunities.yml", opps)
