@@ -844,9 +844,10 @@ def test_a_one_word_label_is_not_a_test_design(tmp_path):
     assert _move_to_develop(tmp_path, opps)
 
 
-# ---------------------------------------------------------------- the learning delivery's audience and end (0.267.0)
+# ---------------------------------------------------------------- the learning delivery's audience and end (0.267.0, 0.268.0)
 
 COMPLETE_PASSED = {**EXPOSE_PASSED, **dict.fromkeys(("bvssh", "delivery_metrics"), "pass")}
+L4_CHILD = {"id": "l4-a", "scale": "L4", "phase": "discover", "parent": "l3-a"}
 
 
 def _closing(tmp_path, l3_after: dict, l4=None, *, into_completed=True):
@@ -862,18 +863,21 @@ def _closing(tmp_path, l3_after: dict, l4=None, *, into_completed=True):
     return sl.new_diamond_violations(p, _write(yaml.safe_dump(doc)))
 
 
-def _completed(**learning):
-    d = _l3("data-supported", phase="complete", gates=COMPLETE_PASSED,
-            learning={**LEARNING, **learning})
+def _completed(ended=None):
+    learning = {**LEARNING, **({"ended": ended} if ended is not None else {})}
+    d = _l3("data-supported", phase="complete", gates=COMPLETE_PASSED, learning=learning)
     d["progression_history"] = [{"transition": "deliver -> complete", "date": "2026-10-26",
                                  "ruling": "progressed"}]
     return d
 
 
+WITHDRAWN = {"how": "withdrawn", "on": "2026-09-20", "note": "trial environment torn down"}
+
+
 def test_a_completion_written_into_the_completed_list_is_judged(tmp_path):
     """E2E rung L4-open completed its L3 by moving it into completed_diamonds; the hook read only
     the active list, so the move passed no gate. It is now judged like any move to complete."""
-    ok = _completed(ended="taken down 2026-10-25")
+    ok = _completed(WITHDRAWN)
     assert _closing(tmp_path / "a", ok) == []
     bare = {**ok, "progression_history": []}
     assert any("progression_history" in v for v in _closing(tmp_path / "b", bare))
@@ -881,42 +885,88 @@ def test_a_completion_written_into_the_completed_list_is_judged(tmp_path):
     assert any("security" in v for v in _closing(tmp_path / "c", gates))
 
 
+@pytest.mark.parametrize("note", [
+    "all 10 devices collected back from the households",   # hardware loan
+    "cohort finished; module unpublished on the LMS",       # course pilot
+    "engagements closed with the three clients",            # concierge service
+    "rc1 yanked from the pre-release channel",              # open-source pre-release
+    "sidene er tatt ned",                                   # Norwegian
+])
+def test_any_honest_ending_in_any_words_completes_the_l3(tmp_path, note):
+    """0.267.0 matched `taken down` and refused every other honest ending, in every other language
+    (overfit audit, 2026-09-26). The ending is recorded as fields; the note is never read."""
+    ended = {"how": "withdrawn", "on": "2026-09-20", "note": note}
+    assert _closing(tmp_path, _completed(ended)) == []
+
+
 def test_an_l3_completes_by_saying_how_its_learning_delivery_ended(tmp_path):
-    """E2E rung L4-open completed its L3 with the page public and the record still saying five
-    testers until 27 November. The end is now recorded: taken down, or handed to its L4."""
-    out = _closing(tmp_path / "a", _completed())
-    assert any("learning_delivery.ended" in v for v in out), out
-    assert _closing(tmp_path / "b", _completed(ended="taken down 2026-10-25"),
-                    into_completed=False) == []
-    l4 = {"id": "l4-a", "scale": "L4", "phase": "discover", "parent": "l3-a"}
-    assert _closing(tmp_path / "c", _completed(ended="handed to l4-a"), l4) == []
-    out = _closing(tmp_path / "d", _completed(ended="handed to l4-zz"), l4)
-    assert any("l4-a" in v for v in out), "an L4 that does not name this L3 does not count"
+    """E2E rung L4-open completed its L3 with the page public and its record still naming five
+    testers. How it ended is recorded: withdrawn, or handed to its L4 by id; never in the future."""
+    assert any("learning_delivery.ended" in v for v in _closing(tmp_path / "a", _completed()))
+    words = "handed to l4-a, not taken down"  # 0.267.0 accepted this for its words
+    assert any("`how`" in v for v in _closing(tmp_path / "b", _completed(words), L4_CHILD))
+    handed = {"how": "handed_to_l4", "on": "2026-09-20", "l4": "l4-a"}
+    assert _closing(tmp_path / "c", _completed(handed), L4_CHILD) == []
+    assert any("l4-a" in v for v in _closing(tmp_path / "d", _completed({**handed, "l4": "l4-zz"}),
+                                             L4_CHILD)), "an L4 that does not name this L3"
+    future = {**WITHDRAWN, "on": "2999-01-01"}
+    assert any("future" in v for v in _closing(tmp_path / "e", _completed(future)))
+    assert _closing(tmp_path / "f", _completed(WITHDRAWN), into_completed=False) == []
 
 
-def test_an_l3_cannot_widen_its_audience_without_an_l4(tmp_path):
-    """E2E rung L4-open made the page public under the L3, on Security and Privacy passed for five
-    testers. Widening the audience of an L3 that delivers now needs an L4 on it."""
-    public = {**_delivered("data-supported"),
-              "learning_delivery": {**LEARNING, "audience": "everyone on the Crumb forum"}}
-    p = _project(tmp_path / "a", purpose=PURPOSE, opps=_full_opps(),
+def _audience_write(tmp_path, audience: str, change=None, extra=()):
+    """The delivered L3 on disk; the write changes its audience, with or without a change entry."""
+    p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(),
                  diamonds=[_delivered("data-supported")])
-    doc = yaml.safe_load((tmp_path / "a/.claude/diamonds/active.yml").read_text())
-    doc["active_diamonds"] = [public if d["id"] == "l3-a" else d for d in doc["active_diamonds"]]
-    out = sl.new_diamond_violations(p, _write(yaml.safe_dump(doc)))
-    assert any("cannot widen" in v for v in out), out
-    later = {**_delivered("data-supported"),
-             "learning_delivery": {**LEARNING, "until": "2026-11-30"}}
-    doc["active_diamonds"] = [later if d["id"] == "l3-a" else d for d in doc["active_diamonds"]]
-    assert sl.new_diamond_violations(p, _write(yaml.safe_dump(doc))) == [], "a later until is not"
-    l4 = {"id": "l4-a", "scale": "L4", "phase": "discover", "parent": "l3-a"}
-    doc["active_diamonds"] = [public if d["id"] == "l3-a" else d
-                              for d in doc["active_diamonds"]] + [l4]
-    out = sl.new_diamond_violations(p, _write(yaml.safe_dump(doc)))
-    assert not any("cannot widen" in v for v in out), "with an L4 on it, the release is the L4's"
+    doc = yaml.safe_load((tmp_path / ".claude/diamonds/active.yml").read_text())
+    ld = {**LEARNING, "audience": audience}
+    if change is not None:
+        ld["changes"] = [{"on": "2026-10-20", "audience_was": LEARNING["audience"], **change}]
+    doc["active_diamonds"] = [{**d, "learning_delivery": ld} if d["id"] == "l3-a" else d
+                              for d in doc["active_diamonds"]] + list(extra)
+    return sl.new_diamond_violations(p, _write(yaml.safe_dump(doc)))
+
+
+def test_an_audience_change_is_recorded_and_judged_by_its_kind(tmp_path):
+    """0.267.0 refused any change to the audience text, narrowing and typos included, and read a
+    second beta wave as production (overfit audit, 2026-09-26). A change is recorded with its kind:
+    narrowed and reworded pass; widened re-runs the gates for the wider audience; everyone is the
+    L4's. E2E rung L4-open made a page public under its L3 on reviews scoped to five testers."""
+    new = "Harbour's eight staff (one left)"
+    assert any("changes" in v for v in _audience_write(tmp_path / "a", new)), "off the record"
+    assert _audience_write(tmp_path / "b", new, {"kind": "narrowed", "why": "one left"}) == []
+    assert _audience_write(tmp_path / "c", "Harbours ni ansatte", {"kind": "reworded"}) == []
+    wave = "Harbour's and Quay's staff, 40 people, opted in by their site leads"
+    out = _audience_write(tmp_path / "d", wave, {"kind": "widened"})
+    assert any("reassessed" in v for v in out), "a bigger test re-runs its gates"
+    redone = {"kind": "widened", "reassessed": ["security", "privacy", "service_quality"]}
+    assert _audience_write(tmp_path / "e", wave, redone) == [], "and then stays in the L3"
+    out = _audience_write(tmp_path / "f", "everyone", {"kind": "everyone"})
+    assert any("L4" in v for v in out), "a release to everyone is the L4's"
+    assert not any("L4's" in v for v in _audience_write(tmp_path / "g", "everyone",
+                                                        {"kind": "everyone"}, [L4_CHILD]))
     early = {**_l3("data-supported", phase="develop"), "learning_delivery": LEARNING}
-    p = _project(tmp_path / "b", purpose=PURPOSE, opps=_full_opps(), diamonds=[early])
-    doc = yaml.safe_load((tmp_path / "b/.claude/diamonds/active.yml").read_text())
-    doc["active_diamonds"] = [{**early, "learning_delivery": public["learning_delivery"]}
+    p = _project(tmp_path / "h", purpose=PURPOSE, opps=_full_opps(), diamonds=[early])
+    doc = yaml.safe_load((tmp_path / "h/.claude/diamonds/active.yml").read_text())
+    doc["active_diamonds"] = [{**early, "learning_delivery": {**LEARNING, "audience": wave}}
                               if d["id"] == "l3-a" else d for d in doc["active_diamonds"]]
     assert sl.new_diamond_violations(p, _write(yaml.safe_dump(doc))) == [], "before Deliver: free"
+
+
+def test_a_repair_reads_the_record_before_a_stale_commit(tmp_path):
+    """0.266.0 judged a repair against the committed file first; a diamond opened since the last
+    commit then read as new and was refused (overfit audit, 2026-09-26). The record wins."""
+    spec = importlib.util.spec_from_file_location("diamond_rulings", SCRIPT.parent / "diamond_rulings.py")
+    dr = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(dr)
+    p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), diamonds=[])
+    _commit(tmp_path)  # committed before the L3 existed
+    open_l3 = {"id": "l3-x", "scale": "L3", "phase": "develop", "theory_gates_status": BUILD_PASSED}
+    doc = yaml.safe_load((tmp_path / ".claude/diamonds/active.yml").read_text())
+    doc["active_diamonds"].append(open_l3)
+    good = yaml.safe_dump(doc)
+    (tmp_path / ".claude/diamonds/active.yml").write_text(good)
+    dr.record(tmp_path, "s1")
+    dr.record(tmp_path, "s1")
+    (tmp_path / ".claude/diamonds/active.yml").write_text("a: [broken")
+    assert sl.new_diamond_violations(p, _write(good)) == []

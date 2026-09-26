@@ -4,6 +4,44 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.268.0 - the learning-delivery rules fit builders beyond the test world
+
+**2026-09-26.** Releases 0.258.0 to 0.267.0 were each driven by one simulated world: a solo founder's
+recipe web page, five invited testers, a forum launch. The founder asked that Mycelium fit the needs
+of builders in general, not the test scenario. An independent audit read each rule against eight
+builders: a course pilot on an LMS, a concierge service for three paying clients, a hardware loan to
+ten households, a six-person internal tool team, a staged app beta (50, then 500, then public), an
+open-source pre-release, a founder writing in Norwegian or Spanish, and a project without git. The
+0.267.0 rules were the worst fit, and are rewritten here.
+
+- **How a learning delivery ended is recorded, not matched.** `learning_delivery.ended: {how, on,
+  l4, note}`: `how` is `withdrawn` (taken down, devices collected back, the cohort or engagement
+  over, a pre-release yanked) or `handed_to_l4` with the L4's id; `on` is not in the future; `note`
+  is free text in any language and is never read. 0.267.0 accepted only web-hosting words, refused
+  "all 10 devices collected back" and "tatt ned", and accepted "not taken down".
+- **An audience change is recorded with its kind.** Once the L3 delivers, a change to
+  `learning_delivery.audience` carries an entry in `learning_delivery.changes` (`on`,
+  `audience_was`, `kind`, `why`). `narrowed` and `reworded` pass (a learner left, a typo, a
+  translation). `widened` is a bigger test audience that is still identifiable and opted in (a
+  second beta wave, a larger cohort), with Security, Privacy and Service Quality re-run for it in
+  `reassessed`; it stays in the L3. `everyone` is a release to all and needs an L4 on the L3.
+  0.267.0 refused any change to the text and read a second beta wave as production.
+- **A repair of a broken diamonds file reads the fresher record first.** The rulings record is
+  written on every good write; the commit only as often as the user commits. 0.266.0 read the
+  commit first, so a diamond opened since the last commit read as new and the repair was refused.
+- **An inconclusive or partial test has a way on**: run it again with a changed sample or
+  audience, revise and go back to define, or stop. Such a verdict made the verdict item stand down,
+  the pivot stay quiet and the L4 stay shut, with nothing offered.
+- **The verdict is asked for once the learning delivery's `until` has passed**, wherever the result
+  was kept (a gradebook, a CRM, a return sheet), not only from a scored file in Mycelium's folder.
+- **The wording says "an identifiable, opted-in audience (a named list, a cohort, a pre-release
+  channel)"** where it said "named": an open-source pre-release has no names.
+- Tests pin each rule with builders from the audit, and each fails against the old behaviour.
+
+Still to fit (next release): the L4's per-transition evidence names code tests for every product
+type, the L3's Develop->Deliver evidence assumes a software prototype, and the 0.264.0 test sizing
+carries three axes in one class.
+
 ## v0.267.0 - an L3's learning delivery keeps its audience, and ends when the L3 does
 
 **2026-09-26.** The E2E rung test L4-open (a real builder from a saved L3-in-Deliver state) passed:

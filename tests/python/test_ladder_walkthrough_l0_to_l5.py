@@ -197,6 +197,10 @@ def _deliver_to_learn_then_open_l4(p: Project, root: Path, opps: dict) -> None:
         if d["id"] == "l3" else d for d in p.diamonds])
     assert sl.exposure_state(str(root))[0], "the learning build may meet its audience"
     assert _proposed(root) != "door-l4:l3", "no L4 door while the trial has not read out"
+    # v0.268.0: once the delivery has run its course, the verdict is asked for wherever the result
+    # was kept (a gradebook, a CRM, a return sheet), not only from a test file in Mycelium's folder.
+    after = ni.pick(root, "", "2026-10-30")[0]
+    assert after["id"] == "verdict-l3:l3" and "ran until 2026-10-25" in after["text"]
 
     # The trial reads out and is scored in its test file. E2E run 46 (v0.260.0): a score that stays
     # in the test file never reaches the lock, so the next item asks for the verdict by name.
@@ -215,6 +219,12 @@ def _deliver_to_learn_then_open_l4(p: Project, root: Path, opps: dict) -> None:
     assert _proposed(root) == "pivot-l3:l3", "a failed assumption offers the pivot, not silence"
     p.refused(p.add(l4), "recorded as failed")
 
+    # v0.268.0: an inconclusive test is an outcome with a way on too (an underpowered beta, a noisy
+    # cohort); until then the verdict item stood down, the pivot stayed quiet, and nothing came.
+    ra["verdict"] = "inconclusive"
+    p.canvas_file("opportunities.yml", opps)
+    assert _proposed(root) == "rerun-l3:l3", "an inconclusive test offers a re-run, not silence"
+
     # v0.265.0: a verdict written as prose never reaches the lock, so it is asked for again.
     ra["verdict"] = "met on 2026-11-18: 4 of 5 came back against a bar of 3"
     p.canvas_file("opportunities.yml", opps)
@@ -226,18 +236,30 @@ def _deliver_to_learn_then_open_l4(p: Project, root: Path, opps: dict) -> None:
     p.canvas_file("opportunities.yml", opps)
     assert _proposed(root) == "door-l4:l3", "the L4 door is proposed once its lock holds"
 
-    # v0.267.0 (E2E rung L4-open, which went public under its L3): who an L3 reaches is fixed once
-    # it delivers. The door names that audience, and widening it without an L4 is refused.
+    _audience_changes_then_the_l3_ends(p, root, l4)
+
+
+def _audience_changes_then_the_l3_ends(p: Project, root: Path, l4: dict) -> None:
+    """The L3's audience changes on the record, the L4 opens, and the L3 ends by handing on."""
+    # v0.267.0-0.268.0 (E2E rung L4-open, which went public under its L3): once an L3 delivers, its
+    # audience changes on the record, and a release to everyone is the L4's. The door names who.
     assert "Harbour's nine staff" in ni.pick(root, "", DAY)[0]["text"], "the door names who"
-    p.refused([{**d, "learning_delivery": {**d["learning_delivery"],
-                                           "audience": "every Harbour customer"}}
-               if d["id"] == "l3" else d for d in p.diamonds], "cannot widen")
+    was = "Harbour's nine staff, opted in by the site lead"
+
+    def audience(who: str, **change) -> list[dict]:
+        ld = {"audience": who, "changes": [{"on": DAY, "audience_was": was, **change}]}
+        return [{**d, "learning_delivery": {**d["learning_delivery"], **ld}}
+                if d["id"] == "l3" else d for d in p.diamonds]
+    p.refused(audience("every Harbour customer", kind="everyone"), "L4's")
+    p.write(audience("Harbour's and Quay's staff, opted in", kind="widened",
+                     reassessed=["security", "privacy", "service_quality"]))
     p.write(p.add(l4))
     assert _proposed(root) != "door-l4:l3", "and not again once the L4 is open"
 
     # The L3 completes by saying how its learning delivery ended: here, handed to the L4.
     p.refused(p.moved("l3", "complete"), "learning_delivery.ended")
-    p.write([{**d, "learning_delivery": {**d["learning_delivery"], "ended": "handed to l4"}}
+    ended = {"how": "handed_to_l4", "on": DAY, "l4": "l4"}
+    p.write([{**d, "learning_delivery": {**d["learning_delivery"], "ended": ended}}
              if d["id"] == "l3" else d for d in p.moved("l3", "complete")])
 
 

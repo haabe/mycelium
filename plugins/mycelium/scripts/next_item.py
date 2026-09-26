@@ -442,6 +442,7 @@ def _l3_item(root: Path, today: str, st: dict, d: dict, phase: str) -> dict | No
     the lock holds."""
     did = str(d["id"])
     item = _pivot_item(root, today, st, d) \
+        or _inconclusive_item(root, today, st, d) \
         or (_learning_delivery_item(root, today, st, d) if phase == "develop" else None) \
         or _verdict_item(root, today, st, d)
     if item:
@@ -453,13 +454,38 @@ def _l3_item(root: Path, today: str, st: dict, d: dict, phase: str) -> dict | No
     # a founder wants to launch, and E2E rung L4-open went public under the L3 at that moment.
     ld = d.get("learning_delivery") if isinstance(d.get("learning_delivery"), dict) else {}
     who = str(ld.get("audience") or "").strip()
-    beyond = (f" Its learning delivery reaches {who}; releasing to anyone else goes through the "
-              "L4, which passes Security, Privacy and Service Quality for the wider audience. "
-              "Open the L4 before the build reaches them." if who else "")
+    beyond = (f" Its learning delivery reaches {who}. A release to everyone goes through the L4, "
+              "which passes Security, Privacy and Service Quality for them: open it before the "
+              "build reaches them. A bigger test audience stays in the L3, recorded as a change "
+              "to its learning delivery with those gates re-run." if who else "")
     return {"id": iid, "diamond": did, "since": today, "command": "/mycelium:preflight",
             "text": f"{did} (L3) has delivered to learn, its verdict holds, and no L4 is open "
                     "on it: its increment can be delivered. Open an L4 on it." + beyond,
             "why": "the L4 lock holds and nothing is delivering the increment"}
+
+
+def _inconclusive_item(root: Path, today: str, st: dict, d: dict) -> dict | None:
+    """The way on from a test that read out inconclusive or partial (v0.268.0). Such a verdict is
+    readable, so the verdict item stands down; it is not a failure, so the pivot item stays quiet;
+    and the L4 stays shut. An underpowered beta or a noisy cohort was offered nothing at all
+    (overfit audit, 2026-09-26). Three ways on, all in the L3."""
+    did = str(d["id"])
+    iid = f"rerun-l3:{did}"
+    if _blocked(st.get(iid, {}), today):
+        return None
+    for sol in sl.State(str(root)).build_solutions(d):
+        ra = sol.get("riskiest_assumption")
+        said = str(ra.get("verdict") or "").strip().lower() if isinstance(ra, dict) else ""
+        if said in ("inconclusive", "partial"):
+            return {"id": iid, "diamond": did, "since": today,
+                    "command": "/mycelium:assumption-test",
+                    "text": (f"{did} (L3): the test of {sol.get('id', 'its solution')}'s riskiest "
+                             f"assumption read out `{said}`. Choose one: run it again with a "
+                             "changed sample or audience (a wider one is recorded on the learning "
+                             "delivery, with its gates re-run); revise the assumption or the test "
+                             "and go back to define; or stop the L3 with the reason."),
+                    "why": "an inconclusive test is an outcome with a way on, not a dead end"}
+    return None
 
 
 def _pivot_item(root: Path, today: str, st: dict, d: dict) -> dict | None:
@@ -508,6 +534,23 @@ def _front_matter(path: Path) -> dict:
     return data if isinstance(data, dict) else {}
 
 
+def _delivery_ended_item(iid: str, today: str, d: dict, sol: dict) -> dict | None:
+    """The delivery has run its course and no verdict is in (v0.268.0), wherever the result was
+    kept: a gradebook, a CRM, a device-return sheet, not only a test file in Mycelium's folder.
+    Until then the verdict item fired only on a scored file there (overfit audit, 2026-09-26)."""
+    ld = d.get("learning_delivery") if isinstance(d.get("learning_delivery"), dict) else {}
+    until = str(ld.get("until") or "")[:10]
+    if not (re.fullmatch(r"\d{4}-\d{2}-\d{2}", until) and until < today):
+        return None
+    did = str(d["id"])
+    return {"id": iid, "diamond": did, "since": today, "command": "/mycelium:assumption-test",
+            "text": (f"{did} (L3): its learning delivery ran until {until} and no verdict is "
+                     f"recorded on {sol.get('id', 'its solution')}'s riskiest assumption. "
+                     "Record `verdict: validated`, `invalidated` or `inconclusive` from wherever "
+                     "the result was kept, with the reasoning in `verdict_note`."),
+            "why": "a delivery that has ended owes its verdict"}
+
+
 def _verdict_item(root: Path, today: str, st: dict, d: dict) -> dict | None:
     """An L3 whose named test is scored and whose verdict is not recorded (v0.260.0). The L4 lock
     reads `riskiest_assumption.verdict`; a score written only into the test file and the decision
@@ -542,25 +585,38 @@ def _verdict_item(root: Path, today: str, st: dict, d: dict) -> dict | None:
                              "`invalidated` if it did not, and keep the reasoning in "
                              "`verdict_note`."),
                     "why": "a verdict the lock cannot read never reaches it"}
+        if said and said.lower() not in ("pending", "untested"):
+            continue
+        ended = _delivery_ended_item(iid, today, d, sol)
+        if ended:
+            return ended
         if said:
             continue
-        m = _TEST_PATH.search(str(ra.get("cheapest_test") or ""))
-        if not m:
-            continue
-        path = root / m.group(0)[m.group(0).find(".claude/"):]
-        if str(_front_matter(path).get("status", "")).lower() != "scored":
-            continue
-        rel = path.relative_to(root)
-        return {"id": iid, "diamond": did, "since": today,
-                "command": "/mycelium:assumption-test",
-                "text": (f"{did} (L3) has scored its test ({rel}) and no verdict is recorded "
-                         f"on {sol.get('id', 'its solution')}'s riskiest assumption, so the L4 "
-                         "lock cannot read the result. Record `verdict: validated` if the bet "
-                         "the solution needs held, `invalidated` if it did not, whichever way "
-                         "the statement is worded. A validated verdict from this learning "
-                         "delivery is what opens the L4."),
-                "why": "a scored test whose verdict never reaches the lock"}
+        item = _scored_file_item(root, iid, today, did, sol)
+        if item:
+            return item
     return None
+
+
+def _scored_file_item(root: Path, iid: str, today: str, did: str, sol: dict) -> dict | None:
+    """A test file in Mycelium's folder marked scored, with no verdict recorded (v0.260.0)."""
+    ra = sol.get("riskiest_assumption") if isinstance(sol.get("riskiest_assumption"), dict) else {}
+    m = _TEST_PATH.search(str(ra.get("cheapest_test") or ""))
+    if not m:
+        return None
+    path = root / m.group(0)[m.group(0).find(".claude/"):]
+    if str(_front_matter(path).get("status", "")).lower() != "scored":
+        return None
+    rel = path.relative_to(root)
+    return {"id": iid, "diamond": did, "since": today,
+            "command": "/mycelium:assumption-test",
+            "text": (f"{did} (L3) has scored its test ({rel}) and no verdict is recorded "
+                     f"on {sol.get('id', 'its solution')}'s riskiest assumption, so the L4 "
+                     "lock cannot read the result. Record `verdict: validated` if the bet "
+                     "the solution needs held, `invalidated` if it did not, whichever way "
+                     "the statement is worded. A validated verdict from this learning "
+                     "delivery is what opens the L4."),
+            "why": "a scored test whose verdict never reaches the lock"}
 
 
 def _learning_delivery_item(root: Path, today: str, st: dict, d: dict) -> dict | None:
