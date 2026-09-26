@@ -216,7 +216,7 @@ and JTBD had passed. The criteria never asked for a resolution; the reading adde
 
 **Applies to**: Develop->Deliver and Deliver->Complete, L3-L5
 
-**Scoped to what the product holds and does** (v0.271.0; product type conditioning since v0.11.0). `/mycelium:security-review` Step 0 records `scope` (runs code, accounts, personal data, money, reach) in threat-model.yml, and only the matching checks apply; the rest are recorded `n/a` with a reason. Product type is a hint, not the test: most projects never set it, and a service can run code while a web page can hold no data.
+**Scoped to what the product holds and does** (v0.271.0; product type conditioning since v0.11.0). `/mycelium:security-review` Step 0 records `security_scope` (runs code, accounts, personal data, money, reach) in threat-model.yml, and only the matching checks apply; the rest are recorded `n/a` with a reason. Product type is a hint, not the test: most projects never set it, and a service can run code while a web page can hold no data.
 - **software, ai_tool**: OWASP + STRIDE where the product runs code; authentication checks only where it has accounts
 - **content_course, content_publication, content_media**: the distribution platform (LMS, paywall, hosting) and any access control, not the content itself
 - **service_offering**: the handling of client data by people and by any digital infrastructure (a client portal, a file share, a scheduling system). A service with nothing digital still has a threat model (a mis-sent document, a lost folder): the gate is never N/A, because the lock counts Security only with a threat model on record.

@@ -4,6 +4,16 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.271.1 - the security scope has its own key
+
+**2026-09-26.** 0.271.0 recorded a product's security scope under `scope` in threat-model.yml, a name
+threat models already use: the threat-model skill's first step is "define scope", and builders write
+it as a sentence. The E2E service world's threat model had one ("Three pilot clients, one live
+month ...") and failed the canvas check on its next write, as would every project that wrote its
+scope that way. The structured record is `security_scope` now, and `scope` is the threat model's
+own again. A test runs the canvas validator on a threat model carrying both, and fails on 0.271.0's
+schema.
+
 ## v0.271.0 - security and privacy checks fit what the product holds
 
 **2026-09-26.** Founder, watching the E2E second world: "2fa and so on might not be applicable for

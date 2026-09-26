@@ -17,10 +17,12 @@ Language-agnostic security review based on OWASP Secure by Design.
 but not every product has a login, code, or personal data. Founder, 2026-09-26: "2fa and so on
 might not be applicable for all products." A bookkeeping service delivered by hand was reviewed
 against this web checklist (CORS, SQL parameters, security headers, multi-factor login), most of
-which has nothing to act on there. Write in `.claude/canvas/threat-model.yml`:
+which has nothing to act on there. Write in `.claude/canvas/threat-model.yml`, under its own key
+(`scope` stays the threat model's own sentence on what is being modelled; 0.271.0 reused that name and
+broke every threat model that had one):
 
 ```yaml
-scope:
+security_scope:
   runs_code: true | false          # software the product runs (a web app, an API, a script)
   accounts: true | false           # people log in to something the product provides
   personal_data: "none" | what     # e.g. "client bank exports and receipts", "email addresses"
@@ -163,7 +165,7 @@ asking for a client's figures).
 - [ ] **AST10 Cross-Platform Reuse**: A skill ported to another agent runtime keeps its security properties; what the source runtime enforced (permissions, hook gates, trust prompts) is re-checked on the target, not assumed
 
 ## Decision Log (MANDATORY per G-P4)
-**APPEND** a `### Security Review` entry to `.claude/harness/decision-log.md` with: the scope from Step 0, each section applied or `n/a: <reason>`, findings, risk ratings, remediation recommendations.
+**APPEND** a `### Security Review` entry to `.claude/harness/decision-log.md` with: the `security_scope` from Step 0, each section applied or `n/a: <reason>`, findings, risk ratings, remediation recommendations.
 
 ## Stack-Specific Tools
 Consult `${CLAUDE_PLUGIN_ROOT}/jit-tooling/security-scanning.md` for tool selection per stack.
