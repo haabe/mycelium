@@ -175,6 +175,11 @@ def _l3(evidence="anecdotal", phase="develop", gates=None, learning=None):
     return d
 
 
+def _delivered(evidence="anecdotal"):
+    """An L3 that has delivered to learn: in Deliver, gates passed, audience recorded."""
+    return _l3(evidence, phase="deliver", gates=EXPOSE_PASSED, learning=LEARNING)
+
+
 TESTED = {"statement": "a named backup approves when the manager is off",
           "cheapest_test": "live trial at Harbour while Ines is away, thresholds frozen"}
 
@@ -186,9 +191,10 @@ def _tested(**ra):
 def test_l4_needs_its_l3_at_medium_confidence(tmp_path):
     """v0.257.0 (0.256.0 reverted): the L4 builds to earn and waits on the verdict of the L3's
     learning delivery, however well the test is designed."""
-    p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), diamonds=[_l3("data-supported")])
+    p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(),
+                 diamonds=[_delivered("data-supported")])
     assert sl.can_open(p, "L4", parent="l3-a") == []
-    p = _project(tmp_path, purpose=PURPOSE, opps=_tested(), diamonds=[_l3("anecdotal")])
+    p = _project(tmp_path, purpose=PURPOSE, opps=_tested(), diamonds=[_delivered("anecdotal")])
     assert any("medium confidence" in m and "learning" in m
                for m in sl.can_open(p, "L4", parent="l3-a"))
 
@@ -200,7 +206,7 @@ def test_a_failed_riskiest_assumption_is_not_delivered(tmp_path):
 
 
 def test_l4_finds_its_l3_by_object_ref(tmp_path):
-    p = _project(tmp_path, purpose=PURPOSE, opps=_tested(), diamonds=[_l3("test-validated")])
+    p = _project(tmp_path, purpose=PURPOSE, opps=_tested(), diamonds=[_delivered("test-validated")])
     assert sl.can_open(p, "L4", object_ref="sol-001, swap request + single approval") == []
 
 
@@ -213,7 +219,7 @@ def test_l4_with_no_l3_is_locked(tmp_path):
 
 def test_l5_needs_a_shipped_l4_and_launch_data(tmp_path):
     l4 = {"id": "l4-a", "scale": "L4", "phase": "deliver", "parent": "l3-a"}
-    base = [_l3("data-supported"), l4]
+    base = [_delivered("data-supported"), l4]
     p = _project(tmp_path, purpose=PURPOSE, opps=_tested(), diamonds=base)
     miss = sl.can_open(p, "L5", parent="l4-a")
     assert len(miss) == 1 and "launch data" in miss[0]
@@ -406,7 +412,8 @@ def test_l5_door_opens_on_launch_data_written_to_the_l4(tmp_path):
     readable from the L4 whose release it is."""
     l4 = {"id": "l4-a", "scale": "L4", "phase": "deliver", "parent": "l3-a",
           "launch_data": {"feedback": "two leads asked for it at the third site"}}
-    p = _project(tmp_path, purpose=PURPOSE, opps=_tested(), diamonds=[_l3("data-supported"), l4])
+    p = _project(tmp_path, purpose=PURPOSE, opps=_tested(),
+                 diamonds=[_delivered("data-supported"), l4])
     assert sl.can_open(p, "L5", parent="l4-a") == []
 
 
@@ -728,9 +735,29 @@ def test_a_validated_riskiest_assumption_counts_as_test_validated(tmp_path):
     opps = _sol_opps(riskiest_assumption={"statement": "a backup approves",
                                           "cheapest_test": "concierge for two weeks at Harbour",
                                           "verdict": "validated"})
-    p = _project(tmp_path, purpose=PURPOSE, opps=opps, diamonds=[_l3("anecdotal")])
+    p = _project(tmp_path, purpose=PURPOSE, opps=opps, diamonds=[_delivered()])
     assert sl.State(p).l3_evidence(_l3("anecdotal")) == "test-validated"
     assert sl.can_open(p, "L4", parent="l3-a") == []
+
+
+def test_a_pass_from_a_test_run_before_the_l3s_deliver_does_not_open_l4(tmp_path):
+    """E2E run 41 (v0.258.0): a hand-run trial at a real site, scored at an L3 still in develop,
+    with nobody recorded as its audience. It is evidence; it is not a delivery, and the L4 opens
+    on a delivery (founder, 2026-09-25)."""
+    opps = _sol_opps(riskiest_assumption={"statement": "a backup approves",
+                                          "cheapest_test": "hand-run for two weeks at Harbour",
+                                          "verdict": "validated"})
+    for l3, gap in ((_l3("anecdotal"), "phase `develop`"),
+                    (_l3("anecdotal", phase="deliver", gates=EXPOSE_PASSED), "audience"),
+                    (_l3("anecdotal", phase="deliver", gates=EXPOSE_PASSED,
+                         learning={**LEARNING, "means": ""}), "means missing")):
+        p = _project(tmp_path, purpose=PURPOSE, opps=opps, diamonds=[l3])
+        miss = sl.can_open(p, "L4", parent="l3-a")
+        assert len(miss) == 1 and "its learning delivery" in miss[0] and gap in miss[0], miss
+    hand = {**LEARNING, "means": "by hand: the founder relays each request in the chat"}
+    p = _project(tmp_path, purpose=PURPOSE, opps=opps, diamonds=[
+        _l3("anecdotal", phase="deliver", gates=EXPOSE_PASSED, learning=hand)])
+    assert sl.can_open(p, "L4", parent="l3-a") == [], "a hand-run delivery counts"
 
 
 def test_an_untested_solution_does_not_open_l4(tmp_path):

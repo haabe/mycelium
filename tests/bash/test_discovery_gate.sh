@@ -122,9 +122,10 @@ test_completed_l3_only_blocks() {
 
 test_open_l4_allows() {
     local p; p=$(make_chained_project)
-    # The L3 has completed; its L4 carries the build. Parent is named, as /preflight writes it.
+    # The L3 has completed its learning delivery; its L4 carries the build. Parent is named, as
+    # /preflight writes it. v0.258.0: the L4 opens only on the verdict of a recorded delivery.
     { printf 'active_diamonds:\n'; ladder_diamonds opp-001
-      printf '  - id: d-003\n    scale: L3\n    phase: complete\n    object_ref: sol-001\n    evidence_type: data-supported\n  - id: d-004\n    scale: L4\n    phase: develop\n    parent: d-003\n    theory_gates_status: %s\n' "$BUILD_GATES"
+      printf '  - id: d-003\n    scale: L3\n    phase: complete\n    object_ref: sol-001\n    evidence_type: data-supported\n    learning_delivery:\n      audience: nine staff at one site, opted in\n      until: "2026-10-25"\n      means: by hand\n  - id: d-004\n    scale: L4\n    phase: develop\n    parent: d-003\n    theory_gates_status: %s\n' "$BUILD_GATES"
     } > "$p/.claude/diamonds/active.yml"
     local code; code=$(run_gate "$p" "$(write_json "$p/app/rollout.py")")
     assert_eq "$code" "0" "an open L4 on an L3 at medium confidence -> allowed"

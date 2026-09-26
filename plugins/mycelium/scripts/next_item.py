@@ -426,8 +426,9 @@ def _door_item(root: Path, today: str, st: dict) -> dict | None:
             if not _blocked(st.get(iid, {}), today) and not sl.can_open(
                     str(root), "L4", parent=did):
                 return {"id": iid, "diamond": did, "since": today, "command": "/mycelium:preflight",
-                        "text": f"{did} (L3) is at medium confidence or better and no L4 is "
-                                "open on it: its increment can be delivered. Open an L4 on it.",
+                        "text": f"{did} (L3) has delivered to learn, its verdict holds, and no "
+                                "L4 is open on it: its increment can be delivered. Open an L4 on "
+                                "it.",
                         "why": "the L4 lock holds and nothing is delivering the increment"}
         if scale == "L4" and phase in _SHIPPED and not _children(active, d, "L5"):
             iid = f"door-l5:{did}"
@@ -455,17 +456,25 @@ def _learning_delivery_item(root: Path, today: str, st: dict, d: dict) -> dict |
     if _blocked(st.get(iid, {}), today):
         return None
     state = sl.State(str(root))
-    if state.test_design_missing(d) or state.l3_evidence(d) in sl.MEDIUM_OR_BETTER or \
-            state.failed_assumption(d):
+    if state.test_design_missing(d) or state.failed_assumption(d):
         return None
+    # v0.258.0: a pass from a test run outside the L3's Deliver no longer opens the L4, so
+    # this item stays up after it, or nothing would be offered at all (E2E run 41).
+    early = state.l3_evidence(d) in sl.MEDIUM_OR_BETTER
     need = [g.replace("_", " ").title() for g in ("security", "privacy", "service_quality")
             if state.gate_missing(d, g)]
     if state.learning_delivery_missing({**d, "phase": "deliver"}):
         need.append("its learning delivery (audience, until, means)")
-    text = (f"{did} (L3) has built what its test needs and the test has not run. Take the L3 to "
+    text = (f"{did} (L3) has evidence from a test run before its Deliver, and that does not "
+            "open the L4: the people it reached never went through Security, Privacy and "
+            "Service Quality. Take the L3 to Deliver and run its learning delivery with a named "
+            "audience who knows they are in it, until a date; a concierge or hand-run test "
+            "counts. Its verdict is what opens the L4." if early else
+            f"{did} (L3) has built what its test needs and the test has not run. Take the L3 to "
             "Deliver to run it with its audience: a named, opted-in group, until a date, by means "
             "that fit the product (for web software, infrastructure as code for an environment "
-            "that can be torn down). The verdict is what opens the L4.")
+            "that can be torn down; for any product, a concierge or hand-run test). The verdict "
+            "is what opens the L4.")
     if need:
         text += " Still needed: " + ", ".join(need) + "."
     return {"id": iid, "diamond": did, "since": today,

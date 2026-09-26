@@ -4,6 +4,28 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.258.0 - the L4 opens only on the verdict of a learning delivery
+
+**2026-09-26.** E2E run 41 ran its L3's test by hand at a real site: the approval step shelved, a
+named backup approving swaps in the chat for two weeks, and the founder counting the result. The
+trial passed its frozen bars, and the L3 was still in develop, with no audience recorded and the
+backup approver timed without being told. The L4 lock read only the verdict, so one line
+(`verdict: validated`) would have opened the L4 on people who never went through Security, Privacy
+and Service Quality. The builder held the verdict back on its own judgement; nothing in Mycelium
+did. The founder's rule is that the L4 opens on a delivery (2026-09-25), and the docs already said
+the verdict of the learning delivery is what opens it. The code did not.
+
+- **The L4 lock also needs the L3 in Deliver (or complete) with `learning_delivery` recorded**
+  (audience, until, means). A pass from a test run before the L3's Deliver is evidence and does not
+  open an L4.
+- **Any means counts.** A concierge or hand-run test is a learning delivery for any product, not
+  only a service (Gilad puts the concierge test in the Tests stage with early adopters and alpha;
+  Cagan lists it among discovery techniques). The per-type means are now stated as examples.
+- **The next item keeps proposing the L3's Deliver after an early pass**, and says why the pass does
+  not open the L4. Before, a medium verdict silenced that item while the L4 stayed shut.
+- Pinned by `test_a_pass_from_a_test_run_before_the_l3s_deliver_does_not_open_l4` and a step in the
+  L0-to-L5 walkthrough. Five lock tests opened an L4 from an L3 in develop; they now deliver first.
+
 ## v0.257.1 - commands Mycelium shows run this plugin's own script
 
 **2026-09-25.** E2E run 32, session 6: the founder answered the escalated L3 item "not before
