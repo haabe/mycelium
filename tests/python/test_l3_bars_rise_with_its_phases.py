@@ -1,0 +1,44 @@
+"""The L3's bars rise with its phases (v0.259.0).
+
+E2E runs 42-43: the L3's 0.75 confidence threshold and its "prototype tested with users" evidence row
+were read at every transition, so an L3 could not define before it had the validated prototype it
+exists to produce. Four no-code tests over three in-world months, confidence 0.5 -> 0.6 against 0.64,
+and no line of code. The threshold is the L3's exit bar; each transition names its own evidence.
+"""
+from __future__ import annotations
+
+from pathlib import Path
+
+import yaml
+
+ROOT = Path(__file__).resolve().parents[2] / "plugins" / "mycelium"
+THRESHOLDS = yaml.safe_load((ROOT / "engine" / "confidence-thresholds.yml").read_text())["scales"]
+TRANSITIONS = ("discover_to_define", "define_to_develop", "develop_to_deliver", "deliver_to_complete")
+
+
+def test_the_l3_threshold_is_compared_only_at_its_exit():
+    assert THRESHOLDS["L3"]["threshold_applies_at"] == ["deliver_to_complete"]
+
+
+def test_other_scales_keep_their_threshold_at_every_transition():
+    for scale, entry in THRESHOLDS.items():
+        if scale != "L3":
+            assert "threshold_applies_at" not in entry, scale
+
+
+def test_each_l3_transition_names_its_own_evidence():
+    by = THRESHOLDS["L3"]["evidence_by_transition"]
+    assert tuple(by) == TRANSITIONS
+    entry = set(by["discover_to_define"]) | set(by["define_to_develop"])
+    assert not entry & {"prototype_feedback", "usability_test_results"}, (
+        "a prototype tested with users is what the L3 builds toward, not what it enters on")
+    assert "learning_delivery_verdict_on_the_riskiest_assumption" in by["deliver_to_complete"]
+
+
+def test_the_evidence_gate_row_is_phased_and_the_skills_read_the_key():
+    row = next(line for line in (ROOT / "engine" / "theory-gates.md").read_text().splitlines()
+               if line.startswith("| L3 | "))
+    for step in ("Discover->Define", "Define->Develop", "Develop->Deliver", "Deliver->Complete"):
+        assert step in row, step
+    for skill in ("diamond-progress", "diamond-assess"):
+        assert "threshold_applies_at" in (ROOT / "skills" / skill / "SKILL.md").read_text(), skill

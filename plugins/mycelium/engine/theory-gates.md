@@ -61,7 +61,7 @@ For solo developers: apply perspectives sequentially as distinct evaluation pass
 | L0 | Market research, competitive analysis, stakeholder interviews documented | Assumptions stated without supporting data |
 | L1 | Strategic evidence from multiple sources; quantified opportunity size | Strategy based on opinion or single data point |
 | L2 | 5+ user interviews with triangulated findings; behavioral data | Fewer than 3 evidence sources; no triangulation |
-| L3 | Prototype tested with users; measurable feedback collected. Design hypotheses validated using Lean UX format (Gothelf). If multi-domain: bounded contexts identified (DDD/Evans). If significant architecture decisions: tradeoffs documented in ADRs (Nygard format: Context/Decision/Consequences). | Solution chosen without user validation; architecture choices made without documented rationale |
+| L3 | **By transition (v0.259.0).** Discover->Define: the target problem is real, on evidence from outside the team (the L2's evidence on its opportunity carries over). Define->Develop: the lightest test of the riskiest assumption is named, with success and failure bars (Lean UX hypothesis, Gothelf). Develop->Deliver: the prototype tried with users and measurable feedback collected. Deliver->Complete: the learning delivery's verdict on the riskiest assumption. If multi-domain: bounded contexts identified (DDD/Evans). If significant architecture decisions: tradeoffs documented in ADRs (Nygard format: Context/Decision/Consequences). | For the transition at hand: a target with no outside evidence (Discover->Define); no named test (Define->Develop); nothing tried with a user (Develop->Deliver); no verdict (Deliver->Complete). Architecture choices made without documented rationale |
 | L4 | Acceptance criteria defined with measurable outcomes | Vague or missing acceptance criteria |
 | L4 (software) | Test cases written before or alongside implementation | No tests; untested code |
 | L4 (content) | Content reviewed against objectives; accessibility verified | Unreviewed content; missing captions/alt text |
@@ -70,6 +70,12 @@ For solo developers: apply perspectives sequentially as distinct evaluation pass
 | L5 | Release categorised against a scale built from this project's own past releases (Lauchengco); PMF read against a stated instrument, or `band: not-yet-measurable` with the reason; positioning stated; at least one market signal from outside the team | Launch size asserted without a scale; PMF claimed from enthusiasm or from usage the team generated; no signal from anyone who is not building it |
 
 **Evidence required**: Interview transcripts, analytics screenshots, research synthesis documents, test results.
+
+**The L3 row is phased because the L3 is where the learning happens** (v0.259.0). Read as one bar
+at every transition, "prototype tested with users" asked the L3 for what it exists to produce
+before it could define. E2E runs 42-43 spent three in-world months on four no-code tests to reach
+Define, and never built. The L3's confidence threshold is likewise its exit bar
+(`confidence-thresholds.yml#L3.threshold_applies_at`).
 
 **External metric snapshots count as `external_data`** (v0.14): snapshots produced by `/metrics-pull` (`.claude/evals/metrics/<source>/*.json`) satisfy the `external_data` source_class at L0/L1/L2/L5. They do NOT substitute for `external_human` conversations where the L2 source-ratio gate requires them, but they satisfy the Evidence gate's "behavioral data" criterion and freshen traction evidence at L0/L5. Adapter `provenance.snapshot` path must be included in the canvas evidence entry.
 

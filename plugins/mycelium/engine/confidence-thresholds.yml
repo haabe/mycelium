@@ -82,6 +82,20 @@ scales:
   L3:
     name: Solution
     confidence_threshold: 0.75
+    # THE L3'S THRESHOLD IS ITS EXIT BAR (v0.259.0). The L3 builds to learn: its prototype, its
+    # test with users and its learning delivery are what it exists to produce, so the bar rises
+    # with its phases and the number is compared only when it closes. Applied at every
+    # transition, 0.75 asked for a validated prototype before the L3 could even define, which
+    # is a higher entry bar than the L4 (0.7) builds to earn on. E2E runs 42-43: three hand-run
+    # concierge rounds and a forum poll over three in-world months, confidence 0.5 -> 0.6
+    # against 0.64, and no line of code. Other scales keep the threshold at every transition.
+    threshold_applies_at: [deliver_to_complete]
+    evidence_by_transition:
+      discover_to_define: [problem_evidence_from_outside_the_team]
+      define_to_develop: [lightest_test_named_with_success_and_failure_bars]
+      develop_to_deliver: [prototype_feedback, usability_test_results,
+                           technical_feasibility_spike, security_threat_model]
+      deliver_to_complete: [learning_delivery_verdict_on_the_riskiest_assumption]
     required_evidence:
       - prototype_feedback
       - usability_test_results

@@ -67,7 +67,9 @@ Report the line for each scale with records: "73 opportunity records, 0 active L
 4. **Check confidence threshold**:
    - Reference ${CLAUDE_PLUGIN_ROOT}/engine/confidence-thresholds.yml for the current scale
    - Apply `project_type_adaptations` to compute effective threshold (see ${CLAUDE_PLUGIN_ROOT}/engine/confidence-thresholds.yml)
-   - Compare current confidence to the **effective** threshold
+   - Compare current confidence to the **effective** threshold, only on the transitions the scale's
+     `threshold_applies_at` lists when it has one (the L3's is its exit, v0.259.0); otherwise
+     name the evidence the next transition needs from `evidence_by_transition`
    - Identify what would increase confidence
 
 5. **Check for anti-patterns**:

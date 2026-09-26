@@ -4,6 +4,27 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.259.0 - the L3's bars rise with its phases
+
+**2026-09-26.** E2E runs 42-43 (Batch, a recipe scaler) held their L3 in discover for three in-world
+months. The L3's confidence threshold (0.75, 0.64 for a solo product) and its evidence row
+("prototype tested with users; design hypotheses validated") were read at every transition,
+including the first, so the L3 could not define before it had the validated prototype it exists to
+produce. The founder ran three concierge rounds by hand and a forum poll; confidence rose honestly
+from 0.5 to 0.6 and stopped, and no line of code was written. That entry bar was higher than the
+L4's (0.7), which builds to earn. The builder did everything right: every prediction frozen before
+the data, nothing rounded up. The thresholds sent it round the loop.
+
+- **The L3's threshold is its exit bar** (`confidence-thresholds.yml#L3.threshold_applies_at:
+  [deliver_to_complete]`). Other scales keep theirs at every transition.
+- **Each L3 transition names its own evidence** (`evidence_by_transition`): Discover->Define, the
+  problem is real on outside evidence; Define->Develop, the lightest test named with its bars;
+  Develop->Deliver, the prototype tried with users; Deliver->Complete, the learning delivery's
+  verdict. The evidence gate's L3 row in `engine/theory-gates.md` says the same.
+- `/mycelium:diamond-progress` and `/mycelium:diamond-assess` compare confidence only where the
+  scale's threshold applies, and otherwise name the evidence the next transition needs.
+- Pinned by `tests/python/test_l3_bars_rise_with_its_phases.py`.
+
 ## v0.258.0 - the L4 opens only on the verdict of a learning delivery
 
 **2026-09-26.** E2E run 41 ran its L3's test by hand at a real site: the approval step shelved, a
