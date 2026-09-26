@@ -4,6 +4,26 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.272.0 - Mycelium records its own verdicts
+
+**2026-09-26.** The E2E service world's pilot (three paying clients, two month-ends, delivered by hand)
+met the bar its test was frozen with: 5 of 6 month-ends on time, all three clients continuing. The
+0.268.0 item asked for the verdict once the delivery's end date passed, as designed, and put it to the
+founder as "Decide one: run | rule | snooze | drop". For three sessions the founder worked on other
+things, the builder said "until you say, I'll leave it alone", and the L4 stayed locked on a verdict
+nobody wrote. Scoring a test against its own frozen bar is Mycelium's record work, and handing it to
+the founder also invites re-judging a bar she fixed in advance.
+
+- **A next item says whose it is.** The verdict items (a scored test, a prose verdict, a delivery past
+  its end date) are the agent's: it is told to run the skill now, record the result against the bar
+  the test was frozen with, tell the user what it found, and ask them only if the bar leaves the result
+  unclear. The human sees "MYCELIUM IS RECORDING", not a menu.
+- **A decision stays the founder's**: a door, a release, a pivot, an inconclusive test's way on.
+- Tests: the verdict item in both renderings, and a door as the control. The AI system card says so.
+
+Checked against: a solo founder, a team whose product lead owns decisions, a builder who works
+through Mycelium's records daily and one who never reads them.
+
 ## v0.271.1 - the security scope has its own key
 
 **2026-09-26.** 0.271.0 recorded a product's security scope under `scope` in threat-model.yml, a name
