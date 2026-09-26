@@ -842,3 +842,81 @@ def test_a_real_pilot_is_allowed_when_it_is_named_as_the_test(tmp_path):
 def test_a_one_word_label_is_not_a_test_design(tmp_path):
     opps = _sol_opps(riskiest_assumption={"statement": "x", "cheapest_test": "pilot"})
     assert _move_to_develop(tmp_path, opps)
+
+
+# ---------------------------------------------------------------- the learning delivery's audience and end (0.267.0)
+
+COMPLETE_PASSED = {**EXPOSE_PASSED, **dict.fromkeys(("bvssh", "delivery_metrics"), "pass")}
+
+
+def _closing(tmp_path, l3_after: dict, l4=None, *, into_completed=True):
+    """The delivered L3 on disk; the write completes it (into completed_diamonds, or in place)."""
+    diamonds = [_delivered("data-supported")] + ([l4] if l4 else [])
+    p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), diamonds=diamonds)
+    doc = yaml.safe_load((tmp_path / ".claude/diamonds/active.yml").read_text())
+    doc["active_diamonds"] = [d for d in doc["active_diamonds"] if d["id"] != "l3-a"]
+    if into_completed:
+        doc["completed_diamonds"] = [l3_after]
+    else:
+        doc["active_diamonds"].append(l3_after)
+    return sl.new_diamond_violations(p, _write(yaml.safe_dump(doc)))
+
+
+def _completed(**learning):
+    d = _l3("data-supported", phase="complete", gates=COMPLETE_PASSED,
+            learning={**LEARNING, **learning})
+    d["progression_history"] = [{"transition": "deliver -> complete", "date": "2026-10-26",
+                                 "ruling": "progressed"}]
+    return d
+
+
+def test_a_completion_written_into_the_completed_list_is_judged(tmp_path):
+    """E2E rung L4-open completed its L3 by moving it into completed_diamonds; the hook read only
+    the active list, so the move passed no gate. It is now judged like any move to complete."""
+    ok = _completed(ended="taken down 2026-10-25")
+    assert _closing(tmp_path / "a", ok) == []
+    bare = {**ok, "progression_history": []}
+    assert any("progression_history" in v for v in _closing(tmp_path / "b", bare))
+    gates = {**ok, "theory_gates_status": {**COMPLETE_PASSED, "security": "pending"}}
+    assert any("security" in v for v in _closing(tmp_path / "c", gates))
+
+
+def test_an_l3_completes_by_saying_how_its_learning_delivery_ended(tmp_path):
+    """E2E rung L4-open completed its L3 with the page public and the record still saying five
+    testers until 27 November. The end is now recorded: taken down, or handed to its L4."""
+    out = _closing(tmp_path / "a", _completed())
+    assert any("learning_delivery.ended" in v for v in out), out
+    assert _closing(tmp_path / "b", _completed(ended="taken down 2026-10-25"),
+                    into_completed=False) == []
+    l4 = {"id": "l4-a", "scale": "L4", "phase": "discover", "parent": "l3-a"}
+    assert _closing(tmp_path / "c", _completed(ended="handed to l4-a"), l4) == []
+    out = _closing(tmp_path / "d", _completed(ended="handed to l4-zz"), l4)
+    assert any("l4-a" in v for v in out), "an L4 that does not name this L3 does not count"
+
+
+def test_an_l3_cannot_widen_its_audience_without_an_l4(tmp_path):
+    """E2E rung L4-open made the page public under the L3, on Security and Privacy passed for five
+    testers. Widening the audience of an L3 that delivers now needs an L4 on it."""
+    public = {**_delivered("data-supported"),
+              "learning_delivery": {**LEARNING, "audience": "everyone on the Crumb forum"}}
+    p = _project(tmp_path / "a", purpose=PURPOSE, opps=_full_opps(),
+                 diamonds=[_delivered("data-supported")])
+    doc = yaml.safe_load((tmp_path / "a/.claude/diamonds/active.yml").read_text())
+    doc["active_diamonds"] = [public if d["id"] == "l3-a" else d for d in doc["active_diamonds"]]
+    out = sl.new_diamond_violations(p, _write(yaml.safe_dump(doc)))
+    assert any("cannot widen" in v for v in out), out
+    later = {**_delivered("data-supported"),
+             "learning_delivery": {**LEARNING, "until": "2026-11-30"}}
+    doc["active_diamonds"] = [later if d["id"] == "l3-a" else d for d in doc["active_diamonds"]]
+    assert sl.new_diamond_violations(p, _write(yaml.safe_dump(doc))) == [], "a later until is not"
+    l4 = {"id": "l4-a", "scale": "L4", "phase": "discover", "parent": "l3-a"}
+    doc["active_diamonds"] = [public if d["id"] == "l3-a" else d
+                              for d in doc["active_diamonds"]] + [l4]
+    out = sl.new_diamond_violations(p, _write(yaml.safe_dump(doc)))
+    assert not any("cannot widen" in v for v in out), "with an L4 on it, the release is the L4's"
+    early = {**_l3("data-supported", phase="develop"), "learning_delivery": LEARNING}
+    p = _project(tmp_path / "b", purpose=PURPOSE, opps=_full_opps(), diamonds=[early])
+    doc = yaml.safe_load((tmp_path / "b/.claude/diamonds/active.yml").read_text())
+    doc["active_diamonds"] = [{**early, "learning_delivery": public["learning_delivery"]}
+                              if d["id"] == "l3-a" else d for d in doc["active_diamonds"]]
+    assert sl.new_diamond_violations(p, _write(yaml.safe_dump(doc))) == [], "before Deliver: free"

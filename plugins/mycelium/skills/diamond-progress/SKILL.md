@@ -113,6 +113,13 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
    the L3 to Deliver through Security, Privacy and Service Quality, run the test, and record the
    verdict on the riskiest assumption; that verdict is the medium-confidence evidence the L4 opens
    on. The L4 then builds to earn, for everyone. Production for everyone is never an L3's.
+   **The audience is fixed once the L3 delivers, and the delivery ends when the L3 completes**
+   (v0.267.0). A founder who wants the build in front of more people after a pass (a public post,
+   a wider cohort, no end date) is asking for a release beyond the learning delivery: open the L4
+   on this L3 first, and deliver through it; the lock refuses an L3 whose `audience` is widened
+   with no L4. When the L3 completes, record `learning_delivery.ended`: taken down (with the
+   date), or handed to the L4 that now carries it, by id. E2E rung L4-open made the page public
+   under the L3 on reviews scoped to five testers, and completed the L3 with the page still up.
 
 3. **Calculate confidence**:
    - Apply scoring rules from `${CLAUDE_PLUGIN_ROOT}/engine/confidence-thresholds.yml`.

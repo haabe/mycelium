@@ -679,6 +679,52 @@ class State:
             return [msg]
         return []
 
+    def l4_children(self, d: dict) -> list[dict]:
+        """The live L4s that name this L3 as their parent."""
+        did = str(d.get("id"))
+        return [x for x in self.by_id.values() if _scale(x) == "L4" and self._alive(x)
+                and str((self._parent_at(x, "L3") or {}).get("id")) == did]
+
+    def learning_delivery_end_missing(self, d: dict) -> str | None:
+        """AN L3'S LEARNING DELIVERY ENDS WHEN IT COMPLETES, AND SAYS HOW (v0.267.0). The build
+        was taken down, or it was handed to an L4 that now carries it. E2E rung L4-open made the
+        page public under the L3, then completed the L3 with the page still up; its record still
+        read "the five early testers, until 2026-11-27, taken down on the end date". A learning
+        build that outlives its L3 with no L4 is production nobody is delivering."""
+        ld = _as_dict(d.get("learning_delivery"))
+        if not _filled(ld.get("audience")):
+            return None  # no learning delivery was run: nothing to end
+        ended = str(ld.get("ended") or "")
+        ids = [str(x.get("id")) for x in self.l4_children(d)]
+        if any(i and i in ended for i in ids):
+            return None
+        if re.search(r"taken[ -]down|torn down|switched off|removed", ended, re.IGNORECASE):
+            return None
+        return ("how its learning delivery ended, in `learning_delivery.ended`: taken down (with "
+                "the date), or handed to the L4 that now carries it, by id"
+                + (f" ({', '.join(ids)})" if ids else "; no L4 names this L3 yet")
+                + ". A learning build that outlives its L3 is production, and production is "
+                "the L4's")
+
+    def audience_widening(self, before: dict, after: dict) -> str | None:
+        """WHO AN L3 REACHES IS FIXED ONCE IT DELIVERS (v0.267.0). Its Security, Privacy and
+        Service Quality were passed for that audience. Widening it (a public post, a wider cohort)
+        is a release beyond the learning delivery: it goes through an L4, which runs those gates
+        for the new audience. Extending `until` with the same audience's agreement is not this.
+        E2E rung L4-open made the page public under the L3 on reviews scoped to five testers,
+        and ran the public-audience security review afterwards."""
+        if _scale(after) != "L3" or _phase(before) not in ("deliver", "complete"):
+            return None
+        old = str(_as_dict(before.get("learning_delivery")).get("audience") or "").strip()
+        new = str(_as_dict(after.get("learning_delivery")).get("audience") or "").strip()
+        if not old or new == old or self.l4_children(after):
+            return None
+        return (f"{after.get('id')} (L3) cannot widen its learning delivery: its audience was "
+                f"`{old}`, and the write makes it `{new}`. Its Security, Privacy and Service "
+                "Quality were passed for that audience; a release beyond it is the L4's. Open "
+                "an L4 on this L3 and deliver through it (/mycelium:preflight). Extending "
+                "`until` with the same audience's agreement is allowed")
+
     def gate_missing(self, d: dict, gate: str) -> str | None:
         """Why one gate does not count as passed on this diamond, or None when it does."""
         v = str(_as_dict(d.get("theory_gates_status")).get(gate) or "not recorded").lower()
@@ -705,14 +751,24 @@ class State:
                 why = self.gate_missing(d, g)
                 if why:
                     miss.append(f"{t}: {why}")
-            if t == "define->develop" and _scale(d) == "L3":
-                why = self.test_design_missing(d)
-                if why:
-                    miss.append(f"{t}: {why}")
+            why = self._l3_transition_missing(d, t)
+            if why:
+                miss.append(f"{t}: {why}")
             if not _history_has(d, t):
                 miss.append(f"{t}: a `progression_history` entry for it (`transition: "
                             f"\"{t.replace('->', ' -> ')}\"`, with the date and the ruling)")
         return miss
+
+    def _l3_transition_missing(self, d: dict, t: str) -> str | None:
+        """What an L3 transition asks beyond its gates: a named test to develop, and how the
+        learning delivery ended to complete (v0.267.0)."""
+        if _scale(d) != "L3":
+            return None
+        if t == "define->develop":
+            return self.test_design_missing(d)
+        if t == "deliver->complete":
+            return self.learning_delivery_end_missing(d)
+        return None
 
     def verdict(self, d: dict, entry: bool = False) -> tuple[bool, list[str]]:
         miss = self.missing(d, entry)
@@ -945,6 +1001,29 @@ def _last_good(project_dir: str) -> dict:
     return {"active_diamonds": rows}
 
 
+def _closing_violations(st: State, new_doc: dict, old_active: dict) -> list[str]:
+    """Two changes the active-list loop never saw (v0.267.0). A diamond moved from the active list
+    into the completed one is a move to complete, judged like any other: until then a completion
+    written straight into completed_diamonds passed no gate at all. And an L3 whose learning
+    delivery's audience is widened once it delivers."""
+    out = []
+    completed = [d for d in _as_list(new_doc.get("completed_diamonds")) if isinstance(d, dict)]
+    for d in completed:
+        prev = old_active.get(str(d.get("id")))
+        if prev is None:
+            continue
+        moved = st.move_missing({**d, "phase": "complete"}, _phase(prev))
+        if moved:
+            out.append(f"{d.get('id')} ({d.get('scale')}) cannot move to complete yet:\n    - "
+                       + "\n    - ".join(moved))
+    for d in [*st.active, *completed]:
+        prev = old_active.get(str(d.get("id")))
+        why = st.audience_widening(prev, d) if prev else None
+        if why:
+            out.append(why)
+    return out
+
+
 def violations_between(project_dir: str, before: str, after: str) -> list[str]:
     """The lock verdict on one change to diamonds/active.yml, given its text before and after.
     Shared by the write hook (before = on disk, after = the proposed write) and, since v0.253.2,
@@ -956,10 +1035,11 @@ def violations_between(project_dir: str, before: str, after: str) -> list[str]:
     new_doc = _parse(after, "the proposed diamonds/active.yml")  # raises: refused, see _run_hook
     if not isinstance(new_doc, dict):
         new_doc = {}
-    was_open = {str(d.get("id")): (_scale(d), _phase(d))
-                for d in _as_list(old_doc.get("active_diamonds")) if isinstance(d, dict)}
+    old_active = {str(d.get("id")): d for d in _as_list(old_doc.get("active_diamonds"))
+                  if isinstance(d, dict)}
+    was_open = {i: (_scale(d), _phase(d)) for i, d in old_active.items()}
     st = State(project_dir, diamonds_doc=new_doc)
-    out = []
+    out = _closing_violations(st, new_doc, old_active)
     for d in st.active:
         before_scale, before_phase = was_open.get(str(d.get("id")), (None, None))
         if before_scale == _scale(d) and _scale(d):

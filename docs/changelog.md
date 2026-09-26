@@ -4,6 +4,30 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.267.0 - an L3's learning delivery keeps its audience, and ends when the L3 does
+
+**2026-09-26.** The E2E rung test L4-open (a real builder from a saved L3-in-Deliver state) passed:
+the L4 opened under its lock. On the way, the founder made the page public with one forum post
+while only the L3 was open. The L3's Security and Privacy had been passed for five invited testers,
+and the public-audience security review ran afterwards. The L3 was then completed with the page
+still up, and its record still read "the five early testers, until 2026-11-27, taken down on the
+end date". The in-run agent named the rule ("a public release is build-to-earn, the L4's") and
+treated opening the L4 first as optional; nothing in Mycelium held it.
+
+- **Who an L3 reaches is fixed once it delivers.** Widening `learning_delivery.audience` on an L3
+  in Deliver is refused unless an L4 is open on it; the L4 passes the gates for the wider audience.
+  Extending `until` with the same audience's agreement is not widening.
+- **An L3 completes by saying how its learning delivery ended**, in `learning_delivery.ended`:
+  taken down (with the date), or handed to the L4 that now carries it, by id.
+- **A completion written straight into `completed_diamonds` is judged** like any move to complete.
+  The scale lock read only the active list, so such a move passed no gate at all.
+- **The L4 door names the audience** it is the way past: right after a pass is when a founder
+  wants to launch.
+- `/mycelium:diamond-progress` says so; walkthrough steps and tests with controls pin each rule.
+
+What this cannot see: a founder who uploads by hand and records nothing. It makes the honest record
+route the release through an L4, and makes the L3's end a recorded fact.
+
 ## v0.266.0 - a broken diamonds file can be repaired
 
 **2026-09-26.** The E2E rung test L4-ship (a real builder from a saved L4-in-Develop state) broke
