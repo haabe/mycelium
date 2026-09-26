@@ -562,7 +562,8 @@ class State:
                         "launch-validated, Gilad Evidence-Guided p158-159). The L3's learning "
                         "delivery produces it: take the L3 to Deliver, run its test with the "
                         "audience in `learning_delivery`, and record the verdict on the riskiest "
-                        "assumption")
+                        "assumption (`validated` when the bet the solution needs held, however "
+                        "the statement is worded)")
         delivered = self.learning_delivery_recorded(l3)
         if delivered:
             miss.append(f"{l3.get('id')}: {delivered}")

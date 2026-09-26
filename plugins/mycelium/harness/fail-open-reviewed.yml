@@ -822,3 +822,17 @@ reviewed:
     `_session_of` returns "" when the prompt payload is not JSON. Silent and correct: the only use
     is keying the conditional-snooze reminder's sitting, which then keys on the date alone, so the
     reminder is at most said once more per day. Nothing is suppressed. Reviewed 2026-09-25, v0.254.1.
+- id: next_item.py@f71c188164
+  verdict: accepted
+  reason: >-
+    `_front_matter` returns {} when the named test file cannot be read. The verdict item then does
+    not fire, and the L4 lock still names what is missing in its own message ("record the verdict on
+    the riskiest assumption"), which the L4 door and /preflight show. Nothing reads a clean state
+    from the silence. Reviewed 2026-09-26, v0.260.0.
+- id: next_item.py@de55cb0e4b
+  verdict: accepted
+  reason: >-
+    `_front_matter` returns {} when the test file's YAML header does not parse. As above, the verdict
+    item does not fire and the L4 lock names the missing verdict; `check_instrument_contract.py`
+    (canvas-health) separately reports an instrument whose header is unreadable. Reviewed 2026-09-26,
+    v0.260.0.

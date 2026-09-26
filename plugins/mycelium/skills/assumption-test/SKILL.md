@@ -244,6 +244,11 @@ superficial veneer of rigor. **The contract makes an edit visible. It does not m
   solution's `provenance.evidence_type` (`test-validated` when the test held) are what the L4 lock
   reads. Before 0.253.0 the L4 lock read only the diamond's own `evidence_type`, which no skill
   updated, so a tested solution never opened its L4.
+  **The verdict is on the BET, not the sentence** (v0.260.0): `validated` means the belief the
+  solution needs held, whichever way the statement is worded. E2E run 46's statement read "the
+  testers will not come back"; 4 of 5 came back, which is `validated`. Word new statements as
+  what must be true. **Write the verdict in the same pass that scores the test file**: a score
+  left in the file and the decision log never reaches the L4 lock.
 - **Always update .claude/diamonds/active.yml** confidence to match the test outcome
 
 ## Bias Warning

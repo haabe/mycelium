@@ -4,6 +4,24 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.260.0 - a scored test asks for its verdict
+
+**2026-09-26.** E2E run 46 (Batch) reached the moment the ladder exists for: the L3 had delivered
+to five opted-in testers through its gates, 4 of 5 came back against a frozen bar of 3, and the
+builder scored the test (`status: scored`) and logged it. It never wrote the verdict on the
+solution's riskiest assumption, which is the only thing the L4 lock reads, and the next session
+started with an offer to assess the L3, not to record the verdict or open the L4. Run 41 had the
+same shape. The statement was also worded as the risk ("the testers will not come back"), so a
+literal reading of the pass is `invalidated`, which the lock reads as a failed assumption.
+
+- **A new next item, `verdict-l3:<l3>`**: when the L3's named test file (`cheapest_test`) says
+  `status: scored` and no verdict is recorded, it names the file and the solution and asks for the
+  verdict, ahead of the L4 door.
+- **The verdict is on the bet, not the sentence.** `validated` means the belief the solution needs
+  held, whichever way the statement is worded. `/mycelium:assumption-test` and the L4 lock's
+  message say so.
+- Pinned by a step in the L0-to-L5 walkthrough (fails without the item).
+
 ## v0.259.0 - the L3's bars rise with its phases
 
 **2026-09-26.** E2E runs 42-43 (Batch, a recipe scaler) held their L3 in discover for three in-world
