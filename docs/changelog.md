@@ -4,6 +4,15 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.273.1 - a duplicate key is named as it is written
+
+**2026-09-26.** The E2E service world's builder wrote three duplicate keys (`requirement`, `when`,
+`status`) into threat-model.yml. YAML keeps the second value of a duplicate key and drops the first
+without a word, so the file parsed and met its schema. The full canvas validator reports it as
+"silent data loss"; the check that runs as each canvas or diamonds file is written did not, so the
+builder was never told and the canvas stayed invalid. The write check now runs the validator's own
+duplicate-key pass and names each one to the agent. A test fails on 0.273.0's check.
+
 ## v0.273.0 - an L3 builds only what its test needs
 
 **2026-09-26.** The E2E service world's L3 (a bookkeeper's fixed-price month-end, piloted by hand
