@@ -437,10 +437,12 @@ def _door_item(root: Path, today: str, st: dict) -> dict | None:
 
 
 def _l3_item(root: Path, today: str, st: dict, d: dict, phase: str) -> dict | None:
-    """What an L3 in develop or deliver with no L4 needs next: its learning delivery, the verdict
-    of a scored test (v0.260.0), or the L4 door once the lock holds."""
+    """What an L3 in develop or deliver with no L4 needs next: a way on from a failed assumption
+    (v0.263.0), its learning delivery, the verdict of a scored test (v0.260.0), or the L4 door once
+    the lock holds."""
     did = str(d["id"])
-    item = (_learning_delivery_item(root, today, st, d) if phase == "develop" else None) \
+    item = _pivot_item(root, today, st, d) \
+        or (_learning_delivery_item(root, today, st, d) if phase == "develop" else None) \
         or _verdict_item(root, today, st, d)
     if item:
         return item
@@ -451,6 +453,28 @@ def _l3_item(root: Path, today: str, st: dict, d: dict, phase: str) -> dict | No
             "text": f"{did} (L3) has delivered to learn, its verdict holds, and no L4 is open "
                     "on it: its increment can be delivered. Open an L4 on it.",
             "why": "the L4 lock holds and nothing is delivering the increment"}
+
+
+def _pivot_item(root: Path, today: str, st: dict, d: dict) -> dict | None:
+    """The way on from an L3 whose riskiest assumption failed its test (v0.263.0). The L4 lock says
+    "pivot or stop in the L3, do not deliver it", and until 0.263.0 nothing else was offered: E2E
+    run 53 recorded `invalidated` on the salt-and-leavening assumption and the next session started
+    with no item at all. Every diamond needs a way in and out (founder); a failed test is an
+    outcome, and it has three exits, all in the L3 or its L2."""
+    did = str(d["id"])
+    iid = f"pivot-l3:{did}"
+    if _blocked(st.get(iid, {}), today):
+        return None
+    failed = sl.State(str(root)).failed_assumption(d)
+    if not failed:
+        return None
+    return {"id": iid, "diamond": did, "since": today,
+            "command": f"/mycelium:diamond-progress {did}",
+            "text": (f'{did} (L3): its riskiest assumption failed its test ("{failed}"), so '
+                     "it does not go on to an L4. Choose the way on: revise the solution and "
+                     "name a new test (the L3 goes back to define), take the next solution from "
+                     "its L2 (/mycelium:ice-score), or stop the L3 and record why."),
+            "why": "a failed assumption is an outcome, and the L3 needs a way on from it"}
 
 
 _TEST_PATH = re.compile(r"[\w./-]*\.claude/evals/assumption-tests/[\w.-]+\.md")

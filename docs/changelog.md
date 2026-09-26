@@ -4,6 +4,20 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.263.0 - a failed assumption offers the way on
+
+**2026-09-26.** E2E run 53 (scripted world) ran the whole L3 loop live: the page was built, delivered
+to five opted-in testers through its gates, the salt-and-leavening test was scored, 0.260.0's item
+asked for the verdict, and the founder recorded `invalidated` (3 of 5 bakes against). The L4 lock
+correctly refused an L4 ("pivot or stop in the L3, do not deliver it"), the L3's Deliver and verdict
+items correctly stood down, and the next session started with no item at all. A failed test is an
+outcome, and the L3 had no wired way on from it.
+
+- **A new next item, `pivot-l3:<l3>`**, when an L3's riskiest assumption is recorded as failed: revise
+  the solution and name a new test (the L3 goes back to define), take the next solution from its L2
+  (`/mycelium:ice-score`), or stop the L3 and record why.
+- Pinned by a step in the L0-to-L5 walkthrough (fails without the item).
+
 ## v0.262.0 - the L3's JTBD and Privacy gates are phased too
 
 **2026-09-26.** E2E run 50 held its L3 in discover on two gates read as needing evidence from use

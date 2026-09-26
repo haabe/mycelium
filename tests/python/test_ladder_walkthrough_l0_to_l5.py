@@ -209,6 +209,12 @@ def _deliver_to_learn_then_open_l4(p: Project, root: Path, opps: dict) -> None:
     p.canvas_file("opportunities.yml", opps)
     assert _proposed(root) == "verdict-l3:l3", "a scored test with no verdict asks for the verdict"
 
+    # E2E run 53 (v0.263.0): a failed assumption is an outcome with a way on, not a dead end.
+    ra["verdict"] = "invalidated"
+    p.canvas_file("opportunities.yml", opps)
+    assert _proposed(root) == "pivot-l3:l3", "a failed assumption offers the pivot, not silence"
+    p.refused(p.add(l4), "recorded as failed")
+
     # The verdict is the medium-confidence evidence the L4 opens on.
     ra["verdict"] = "validated"
     p.canvas_file("opportunities.yml", opps)
