@@ -46,9 +46,31 @@ def test_the_gate_text_matches_what_the_lock_enforces():
 def test_the_scope_has_a_place_in_the_threat_model_schema():
     import json
     schema = json.loads(_text("schemas/canvas/threat-model.schema.json"))
-    scope = schema["properties"]["scope"]["properties"]
+    scope = schema["properties"]["security_scope"]["properties"]
     assert set(scope) == {"runs_code", "accounts", "personal_data", "money", "reach"}
-    doc = yaml.safe_load("scope:\n  runs_code: false\n  accounts: false\n"
+    doc = yaml.safe_load("security_scope:\n  runs_code: false\n  accounts: false\n"
                          "  personal_data: client bank exports\n  money: true\n"
                          "  reach: three named clients\n")
-    assert isinstance(doc["scope"]["runs_code"], bool)
+    assert isinstance(doc["security_scope"]["runs_code"], bool)
+
+
+def test_a_threat_model_that_says_its_scope_in_words_stays_valid(tmp_path):
+    """0.271.0 defined `scope` as an object, and the E2E service world's threat model, which
+    wrote its scope as a sentence ("Three pilot clients, one live month ...") as the threat-model
+    skill's first step asks, failed the canvas check on the next write. v0.271.1."""
+    import os
+    import subprocess
+    import sys
+    canvas = tmp_path / ".claude" / "canvas"
+    canvas.mkdir(parents=True)
+    (canvas / "threat-model.yml").write_text(yaml.safe_dump({
+        "scope": "Three pilot clients, one live month, documents by file share",
+        "security_scope": {"runs_code": False, "accounts": True,
+                           "personal_data": "client bank exports", "money": True,
+                           "reach": "three named clients"},
+        "threats": [{"id": "T1", "description": "a summary sent to the wrong client"}]}))
+    r = subprocess.run([sys.executable, str(ROOT / "scripts" / "validate_canvas.py")],
+                       cwd=tmp_path, capture_output=True, text=True, check=False,
+                       env={**os.environ, "CLAUDE_PLUGIN_ROOT": str(ROOT)})
+    errors = [ln for ln in (r.stdout + r.stderr).splitlines() if "threat-model.yml ::" in ln]
+    assert not [ln for ln in errors if "scope" in ln], errors
