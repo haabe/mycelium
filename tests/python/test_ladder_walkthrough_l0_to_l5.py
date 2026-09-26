@@ -225,8 +225,20 @@ def _deliver_to_learn_then_open_l4(p: Project, root: Path, opps: dict) -> None:
     ra["verdict"] = "validated"
     p.canvas_file("opportunities.yml", opps)
     assert _proposed(root) == "door-l4:l3", "the L4 door is proposed once its lock holds"
+
+    # v0.267.0 (E2E rung L4-open, which went public under its L3): who an L3 reaches is fixed once
+    # it delivers. The door names that audience, and widening it without an L4 is refused.
+    assert "Harbour's nine staff" in ni.pick(root, "", DAY)[0]["text"], "the door names who"
+    p.refused([{**d, "learning_delivery": {**d["learning_delivery"],
+                                           "audience": "every Harbour customer"}}
+               if d["id"] == "l3" else d for d in p.diamonds], "cannot widen")
     p.write(p.add(l4))
     assert _proposed(root) != "door-l4:l3", "and not again once the L4 is open"
+
+    # The L3 completes by saying how its learning delivery ended: here, handed to the L4.
+    p.refused(p.moved("l3", "complete"), "learning_delivery.ended")
+    p.write([{**d, "learning_delivery": {**d["learning_delivery"], "ended": "handed to l4"}}
+             if d["id"] == "l3" else d for d in p.moved("l3", "complete")])
 
 
 def _ship_and_open_l5(p: Project, root: Path) -> None:

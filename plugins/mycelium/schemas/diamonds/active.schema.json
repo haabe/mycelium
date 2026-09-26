@@ -146,11 +146,12 @@
         },
         "learning_delivery": {
           "type": "object",
-          "description": "An L3's learning delivery (v0.257.0): the L3 reaches real people only with all three filled and only until `until`, through Security, Privacy and Service Quality. `means` follows the product type (web software: infrastructure as code for an environment that can be torn down; courseware: a pilot cohort; service: by hand). Production for everyone is an L4.",
+          "description": "An L3's learning delivery (v0.257.0): the L3 reaches real people only with all three filled and only until `until`, through Security, Privacy and Service Quality. `means` follows the product type (web software: infrastructure as code for an environment that can be torn down; courseware: a pilot cohort; service: by hand). Production for everyone is an L4. The audience is fixed once the L3 delivers: a wider audience goes through an L4 (v0.267.0).",
           "properties": {
             "audience": {"type": "string"},
             "until": {"type": "string"},
-            "means": {"type": "string"}
+            "means": {"type": "string"},
+            "ended": {"type": "string", "description": "How the learning delivery ended, written when the L3 completes (v0.267.0): taken down (with the date), or handed to the L4 that now carries it, by id."}
           },
           "additionalProperties": true
         },

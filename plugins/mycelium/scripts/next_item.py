@@ -449,9 +449,16 @@ def _l3_item(root: Path, today: str, st: dict, d: dict, phase: str) -> dict | No
     iid = f"door-l4:{did}"
     if _blocked(st.get(iid, {}), today) or sl.can_open(str(root), "L4", parent=did):
         return None
+    # The door names the audience it is the only way past (v0.267.0): right after a pass is when
+    # a founder wants to launch, and E2E rung L4-open went public under the L3 at that moment.
+    ld = d.get("learning_delivery") if isinstance(d.get("learning_delivery"), dict) else {}
+    who = str(ld.get("audience") or "").strip()
+    beyond = (f" Its learning delivery reaches {who}; releasing to anyone else goes through the "
+              "L4, which passes Security, Privacy and Service Quality for the wider audience. "
+              "Open the L4 before the build reaches them." if who else "")
     return {"id": iid, "diamond": did, "since": today, "command": "/mycelium:preflight",
             "text": f"{did} (L3) has delivered to learn, its verdict holds, and no L4 is open "
-                    "on it: its increment can be delivered. Open an L4 on it.",
+                    "on it: its increment can be delivered. Open an L4 on it." + beyond,
             "why": "the L4 lock holds and nothing is delivering the increment"}
 
 
