@@ -156,6 +156,7 @@
             "audience": {"type": "string"},
             "until": {"type": "string"},
             "means": {"type": "string"},
+            "started": {"type": "string", "description": "The day the first person in the audience took part (v0.274.0). Until it is set, the next item asks for the start, or what blocks it."},
             "ended": {"type": "object", "description": "How the learning delivery ended, written when the L3 completes (v0.268.0): how (withdrawn | handed_to_l4), on (the date, not in the future), l4 (the L4's id when handed on), note (free text, any language, never read by a check).", "properties": {"how": {"type": "string", "enum": ["withdrawn", "handed_to_l4"]}, "on": {"type": "string"}, "l4": {"type": "string"}, "note": {"type": "string"}}, "additionalProperties": true},
             "changes": {"type": "array", "description": "Each change to the audience once the L3 delivers (v0.268.0): on, audience_was, kind (narrowed | reworded | widened | everyone), why; `reassessed` names the gates re-run for a widened audience. `everyone` is the L4's.", "items": {"type": "object"}}
           },

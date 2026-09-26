@@ -52,3 +52,10 @@ def test_an_overdue_learning_delivery_cuts_the_build_to_the_test():
     assert "put it to the user" in overdue, "the move to Deliver stays the founder's decision"
     assert "BUILD IS GROWING" not in ni.render({**DELIVER, "shown": 1})
     assert "BUILD IS GROWING" not in ni.render(DOOR)
+
+
+def test_an_overdue_start_cuts_the_build_too():
+    """v0.274.0, E2E service world run 4: in Deliver, the pack grew while nobody was served."""
+    start = {**DELIVER, "id": "start-l3:dia-004"}
+    assert "THE BUILD IS GROWING WHILE THE TEST WAITS" in ni.render(start)
+    assert "put it to the user" in ni.render(start), "starting stays the founder's decision"
