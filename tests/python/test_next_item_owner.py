@@ -7,6 +7,7 @@ against a frozen bar is Mycelium's record work; a decision (a door, a release, a
 founder's.
 """
 import importlib.util
+import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -37,6 +38,38 @@ def test_recording_launch_data_is_the_agents():
            "command": "/mycelium:launch-tier", "shown": 3, "first_shown": "2026-11-18"}
     assert ni.agent_owned(rec) and "YOURS TO DO NOW" in ni.render(rec)
     assert not ni.agent_owned({**rec, "id": "door-l5:l4-a"}), "opening the L5 is the founder's"
+
+
+def test_the_prompt_beside_the_request_says_do_it_for_an_agents_item(tmp_path):
+    """v0.277.0, E2E rung L5-open on 0.276.0: the escalated line beside the founder's request
+    told the builder to put the launch record to her to decide, and it did."""
+    def line(item_id: str) -> str:
+        state = tmp_path / item_id.replace(":", "-") / ni.STATE_REL
+        state.parent.mkdir(parents=True)
+        state.write_text(json.dumps({"id": item_id, "session": "s3", "shown": 3,
+                                     "first_shown": "2026-11-18", "emitted_at": "2026-11-25",
+                                     "text": "YOURS TO DO NOW: record it.",
+                                     "text_human": "MYCELIUM IS RECORDING: it."}))
+        return ni.prompt_line(state.parents[2])
+    mine = line("launch-data-l4:l4-a")
+    assert "do it now" in mine and "YOURS TO DO NOW" in mine
+    assert "ask them to decide" not in mine
+    theirs = line("door-l5:l4-a")
+    assert "ask them to decide" in theirs, "control: a door is still put to the founder"
+
+
+def test_an_agents_item_comes_beside_the_first_request_at_once(tmp_path):
+    """The session-start copy was read past twice in E2E rung L5-open; record work asks nothing
+    of the human, so it does not wait for the escalation a decision waits for."""
+    def line(item_id: str) -> str:
+        state = tmp_path / item_id.replace(":", "-") / ni.STATE_REL
+        state.parent.mkdir(parents=True)
+        state.write_text(json.dumps({"id": item_id, "session": "s1", "shown": 1,
+                                     "first_shown": "2026-11-18", "emitted_at": "2026-11-18",
+                                     "text": "YOURS TO DO NOW: record it."}))
+        return ni.prompt_line(state.parents[2])
+    assert "do it now" in line("launch-data-l4:l4-a")
+    assert line("door-l5:l4-a") == "", "control: a decision still waits for its escalation"
 
 
 def test_a_door_stays_the_founders_decision():

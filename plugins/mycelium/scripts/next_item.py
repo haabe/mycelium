@@ -398,7 +398,9 @@ def _move_text(state, d: dict, phase: str, why: str) -> tuple[str, str, bool]:
     waits = _waits_on(state, d, f"{phase}->{_NEXT[phase]}")
     text = f"{d['id']} ({scale}) {why}. Its next transition is {phase} -> {_NEXT[phase]}."
     if waits:
-        text += f" It waits on {waits}."
+        # Only the move waits (v0.276.1): E2E rung L4-open on 0.276.0 read "It waits on" as the
+        # whole L3 waiting, snoozed it, and left a scorable test unscored for four sessions.
+        text += f" That move waits on {waits}; scoring its test and its verdict do not."
     # The bar is drafted, not asked for (v0.276.0). E2E rung L4-define on 0.275.0: the L4 was
     # opened with no bar, its first assessment could only say needs-evidence, and two sessions
     # went on asking the founder to write a definition of done and a stance she had decided.
@@ -696,7 +698,8 @@ def _verdict_item(root: Path, today: str, st: dict, d: dict) -> dict | None:
                     "why": "a verdict the lock cannot read never reaches it"}
         if said and said.lower() not in ("pending", "untested"):
             continue
-        ended = _delivery_ended_item(iid, today, d, sol)
+        ended = _delivery_ended_item(iid, today, d, sol) or _overdue_test_item(root, today, st, did,
+                                                                              sol)
         if ended:
             return ended
         if said:
@@ -705,6 +708,37 @@ def _verdict_item(root: Path, today: str, st: dict, d: dict) -> dict | None:
         if item:
             return item
     return None
+
+
+def _overdue_test_item(root: Path, today: str, st: dict, did: str, sol: dict) -> dict | None:
+    """The L3's test file is still live past its `score_by` (v0.276.1). E2E rung L4-open on
+    0.276.0: 4 of 5 testers came back against a frozen bar of 3, the builder offered to write the
+    result ("say the word") and did not, and nothing asked until the learning delivery ended four
+    sessions later, past the budget. The verdict item fired only on a file already marked scored.
+    Scoring against a frozen bar is Mycelium's record work, and so is saying the result is not in
+    yet."""
+    ra = sol.get("riskiest_assumption") if isinstance(sol.get("riskiest_assumption"), dict) else {}
+    m = _TEST_PATH.search(str(ra.get("cheapest_test") or ""))
+    if not m:
+        return None
+    path = root / m.group(0)[m.group(0).find(".claude/"):]
+    head = _front_matter(path)
+    due = str(head.get("score_by") or "")[:10]
+    if str(head.get("status", "")).lower() != "live" or not (
+            re.fullmatch(r"\d{4}-\d{2}-\d{2}", due) and due < today):
+        return None
+    iid = f"score-l3:{did}:{due}"
+    if _blocked(st.get(iid, {}), today):
+        return None
+    rel = path.relative_to(root)
+    return {"id": iid, "diamond": did, "since": today, "command": f"edit {rel}",
+            "text": (f"{did} (L3): its test ({rel}) was due to be scored by {due} and is still "
+                     "live, so no verdict can reach the L4 lock."),
+            "does": ("score the test yourself against the bar it was frozen with, from the result "
+                     "notes (write the result, set `status: scored`), then record the verdict on "
+                     f"{sol.get('id', 'the solution')}'s riskiest assumption and tell the user; if "
+                     "no result is in yet, set a new `score_by` and say why in an `amended:` line"),
+            "why": "a test past its score date owes its score"}
 
 
 def _scored_file_item(root: Path, iid: str, today: str, did: str, sol: dict) -> dict | None:
@@ -945,7 +979,7 @@ def _untrusted(text: str) -> str:
 #: founder as "Decide one: run | rule | snooze | drop" for three sessions, the builder said "until
 #: you say, I'll leave it alone", and the L4 stayed locked on a verdict nobody wrote. Founder,
 #: 2026-09-25: "The founder shouldn't care about the 'paperwork' mycelium has to build."
-AGENT_OWNED = ("verdict-l3:", "launch-data-l4:")
+AGENT_OWNED = ("verdict-l3:", "launch-data-l4:", "score-l3:")
 
 
 def agent_owned(item: dict) -> bool:
@@ -1064,7 +1098,11 @@ def prompt_line(root: Path) -> str:
     has gone unanswered for ESCALATE_AT sessions, and asks for the one thing the ladder needs: the
     human's decision, recorded. Silent below the threshold, after a ruling, and on later prompts."""
     st = _read_state(root)
-    if not st.get("id") or int(st.get("shown") or 1) < ESCALATE_AT:
+    # An agent's own item comes beside the first request at once (v0.277.0): the wait exists so a
+    # human is not asked for a decision every session, and record work asks nothing of them. E2E
+    # rung L5-open: the session-start copy said YOURS TO DO NOW twice and was read past both times.
+    due = 1 if agent_owned(st) else ESCALATE_AT
+    if not st.get("id") or int(st.get("shown") or 1) < due:
         return ""
     if st.get("prompt_line_session") == st.get("session"):
         return ""
@@ -1075,6 +1113,15 @@ def prompt_line(root: Path) -> str:
         (root / STATE_REL).write_text(json.dumps(st, ensure_ascii=False))
     except OSError:
         return ""  # could not record it was said: stay quiet rather than repeat on every prompt
+    if agent_owned(st):
+        # An agent's item is done, not put to the user (v0.277.0). E2E rung L5-open on 0.276.0:
+        # this line told the builder to "put this item to the user and ask them to decide" for
+        # the launch record, the session state said YOURS TO DO NOW, and the builder asked the
+        # founder to run, rule, snooze or drop it. Every agent-owned item since 0.272.0 met this.
+        return (f"MYCELIUM OPEN ITEM, shown {st['shown']} session(s) since "
+                f"{st.get('first_shown')}: when you have answered this prompt, do it now. It is "
+                "yours, not the user's to decide; tell them what you recorded. The item: "
+                f"{st.get('text', '')}")
     return (f"MYCELIUM OPEN ITEM, unanswered for {st['shown']} sessions since "
             f"{st.get('first_shown')}: when you have answered this prompt, put this item to the "
             "user and ask them to decide: run, rule, snooze until a date, or drop (drop if the "
