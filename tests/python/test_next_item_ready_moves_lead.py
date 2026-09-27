@@ -51,7 +51,7 @@ def test_the_move_that_can_happen_now_leads(tmp_path):
     assert item["diamond"] == "l4-a", item["text"]
     assert "Also waiting: l3-a (L3)" in item["text"]
     rows = {r["diamond"]: r for r in ni._unassessed(tmp_path, TODAY)}
-    assert "It waits on its learning delivery ending" in rows["l3-a"]["text"]
+    assert "That move waits on its learning delivery ending" in rows["l3-a"]["text"]
     assert "waits on" not in rows["l4-a"]["text"]
 
 
@@ -136,3 +136,39 @@ def _l3(root: Path) -> dict:
     import yaml
     doc = yaml.safe_load((root / ".claude" / "diamonds" / "active.yml").read_text())
     return doc["active_diamonds"][0]
+
+
+TEST_REL = ".claude/evals/assumption-tests/2026-10-01-return-use.md"
+
+
+def _l3_with_test(tmp_path: Path, status: str, score_by: str) -> tuple[Path, dict]:
+    root = _project(tmp_path, L3_PILOT)
+    f = root / TEST_REL
+    f.parent.mkdir(parents=True)
+    f.write_text(f"---\ntype: assumption-test\nstatus: {status}\nscore_by: {score_by}\n---\n")
+    sol = {"id": "sol-001", "riskiest_assumption": {"cheapest_test": TEST_REL}}
+    return root, sol
+
+
+def test_a_test_past_its_score_date_is_scored_by_the_agent(tmp_path):
+    """E2E rung L4-open on 0.276.0: 4 of 5 came back against a bar of 3, the builder offered to
+    write it and did not, and nothing asked until the delivery ended, past the budget."""
+    root, sol = _l3_with_test(tmp_path, "live", "2026-10-30")
+    item = ni._overdue_test_item(root, "2026-11-18", {}, "l3-a", sol)
+    assert item["id"] == "score-l3:l3-a:2026-10-30" and ni.agent_owned(item)
+    agent = ni.render({**item, "shown": 1, "first_shown": "2026-11-18"})
+    assert "score the test yourself" in agent and "new `score_by`" in agent
+    assert ni.render_human(item).startswith("MYCELIUM IS RECORDING")
+
+
+def test_control_a_test_not_yet_due_or_already_scored_asks_nothing(tmp_path):
+    root, sol = _l3_with_test(tmp_path / "a", "live", "2026-12-01")
+    assert ni._overdue_test_item(root, "2026-11-18", {}, "l3-a", sol) is None, "not yet due"
+    root, sol = _l3_with_test(tmp_path / "b", "scored", "2026-10-30")
+    assert ni._overdue_test_item(root, "2026-11-18", {}, "l3-a", sol) is None, "scored item's job"
+
+
+def test_the_waiting_move_does_not_stop_the_verdict(tmp_path):
+    """0.276.0 said "It waits on its learning delivery ending"; the builder snoozed the L3."""
+    rows = {r["diamond"]: r for r in ni._unassessed(_project(tmp_path, L3_PILOT + L4), TODAY)}
+    assert "scoring its test and its verdict do not" in rows["l3-a"]["text"]

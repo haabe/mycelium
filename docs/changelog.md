@@ -4,6 +4,24 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.277.0 - a test past its score date is scored by Mycelium
+
+**2026-09-27.** E2E rung L4-open on 0.276.0 (run 1 of 3): the return-use test's result landed in
+session 10, 4 of 5 testers came back against a frozen bar of 3, and the builder offered to write it
+into the test file ("say the word") and did not. The verdict item fired only on a file already
+marked `status: scored`, so nothing asked until the learning delivery ended four sessions later,
+past the budget. 0.276.0's ladder line "It waits on its learning delivery ending" made it worse:
+the builder read it as the whole L3 waiting and snoozed the L3.
+
+- **A test past its `score_by` and still live is the agent's to score** (`score-l3:`, agent-owned):
+  from the result notes, against the bar it was frozen with, then the verdict; or, when no result
+  is in yet, a new `score_by` with the reason in an `amended:` line. The id carries the date, so a
+  re-dated test asks again when the new date passes.
+- **The ladder says only the move waits.** An L3 whose learning delivery has not ended reads
+  "That move waits on its learning delivery ending; scoring its test and its verdict do not."
+- Tests: the item fires past the date and is the agent's (a mutant that drops it from the agent's
+  items is killed); not before the date, and not on a scored file; the ladder line.
+
 ## v0.276.0 - a move that can happen now is proposed first, and an item says what to do
 
 **2026-09-27.** Three failures from the E2E rungs on 0.275.0 and 0.275.1, one shape: Mycelium put the
