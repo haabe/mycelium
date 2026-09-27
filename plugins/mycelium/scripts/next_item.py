@@ -1098,7 +1098,11 @@ def prompt_line(root: Path) -> str:
     has gone unanswered for ESCALATE_AT sessions, and asks for the one thing the ladder needs: the
     human's decision, recorded. Silent below the threshold, after a ruling, and on later prompts."""
     st = _read_state(root)
-    if not st.get("id") or int(st.get("shown") or 1) < ESCALATE_AT:
+    # An agent's own item comes beside the first request at once (v0.277.0): the wait exists so a
+    # human is not asked for a decision every session, and record work asks nothing of them. E2E
+    # rung L5-open: the session-start copy said YOURS TO DO NOW twice and was read past both times.
+    due = 1 if agent_owned(st) else ESCALATE_AT
+    if not st.get("id") or int(st.get("shown") or 1) < due:
         return ""
     if st.get("prompt_line_session") == st.get("session"):
         return ""
@@ -1109,6 +1113,15 @@ def prompt_line(root: Path) -> str:
         (root / STATE_REL).write_text(json.dumps(st, ensure_ascii=False))
     except OSError:
         return ""  # could not record it was said: stay quiet rather than repeat on every prompt
+    if agent_owned(st):
+        # An agent's item is done, not put to the user (v0.277.0). E2E rung L5-open on 0.276.0:
+        # this line told the builder to "put this item to the user and ask them to decide" for
+        # the launch record, the session state said YOURS TO DO NOW, and the builder asked the
+        # founder to run, rule, snooze or drop it. Every agent-owned item since 0.272.0 met this.
+        return (f"MYCELIUM OPEN ITEM, shown {st['shown']} session(s) since "
+                f"{st.get('first_shown')}: when you have answered this prompt, do it now. It is "
+                "yours, not the user's to decide; tell them what you recorded. The item: "
+                f"{st.get('text', '')}")
     return (f"MYCELIUM OPEN ITEM, unanswered for {st['shown']} sessions since "
             f"{st.get('first_shown')}: when you have answered this prompt, put this item to the "
             "user and ask them to decide: run, rule, snooze until a date, or drop (drop if the "

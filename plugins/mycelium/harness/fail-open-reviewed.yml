@@ -866,3 +866,11 @@ reviewed:
     elsewhere: `_fired_proposals` reports an unreadable diamonds file in the note shown with the
     item, and the scale-lock gate says the locks are unknown on the next write. Reviewed
     2026-09-27, v0.276.0.
+- id: next_item.py@d7a3b8a3f7
+  verdict: accepted
+  reason: >-
+    The same `prompt_line` handler as next_item.py@12bf99debc, re-fingerprinted when 0.277.0 added
+    the agent-owned wording after it. It returns "" when it cannot record that the line was said
+    this session; quiet is chosen over repeating on every prompt. The human still gets the item from
+    next-item-repeat.sh at Stop, and for an agent's item the session-start copy (YOURS TO DO NOW)
+    still reaches the agent, so the item is not lost. Reviewed 2026-09-27, v0.277.0.

@@ -19,8 +19,17 @@ the builder read it as the whole L3 waiting and snoozed the L3.
   re-dated test asks again when the new date passes.
 - **The ladder says only the move waits.** An L3 whose learning delivery has not ended reads
   "That move waits on its learning delivery ending; scoring its test and its verdict do not."
+- **The line beside the request no longer hands the agent's work to the user.** E2E rung L5-open on
+  0.276.0: the escalated line told the builder to "put this item to the user and ask them to
+  decide" for the launch record, while the session state said YOURS TO DO NOW, and the builder asked
+  the founder to run, rule, snooze or drop it. Every agent-owned item since 0.272.0 met that line.
+  For an agent's item it now says to do it now and tell the user what was recorded, and it comes
+  from the first session: the escalation wait exists so a human is not asked for a decision every
+  session, and record work asks nothing of them. The session-start copy had been read past twice.
 - Tests: the item fires past the date and is the agent's (a mutant that drops it from the agent's
-  items is killed); not before the date, and not on a scored file; the ladder line.
+  items is killed); not before the date, and not on a scored file; the ladder line; the prompt
+  line says do it for an agent's item from the first session, and a door keeps both its wording and
+  its wait.
 
 ## v0.276.0 - a move that can happen now is proposed first, and an item says what to do
 
