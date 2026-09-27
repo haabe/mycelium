@@ -25,9 +25,20 @@ wrong thing in front of the builder, or the right thing with the wrong instructi
   with"); the builder had the launch figures in session 10 and wrote them only when the founder said
   so in session 12. The item now says to write the fields from the figures in the notes, saying what
   they count, and to record `released_on` alone when no usage is in yet.
+- **A learning delivery past its last day says so, whatever was snoozed before.** E2E service
+  world run 5: the pilot's test read inconclusive, the re-run item was snoozed "until the first
+  cohort's close is scored", no stranger ever joined, and the delivery ran a month past its `until`
+  with nothing asking; the builder wrote its own `closed:` block, which no lock reads, while the
+  three clients carried on paying with no L4. A new item (its id carries the date, so no earlier
+  snooze covers it) asks how it ended: withdrawn, handed to an L4 because carrying on is
+  production, or extended with a reason.
+- **A hand-typed end date is read.** `on` is a YAML 1.1 boolean, so `on: 2027-06-04` typed as the
+  schema names it loads as the key `True`, and the lock refused every such end as undated. Every
+  test wrote the record through `yaml.safe_dump`, which quotes the key. Found replaying run 5.
 - Tests: the ready move leads, with a control where nothing waits; the draft hint appears on a bare
   diamond and not on one with a bar; the launch record has its own instruction and the verdict keeps
-  its own.
+  its own; the delivery-over item fires past `until` through an earlier snooze and not on an ended
+  or running delivery; a hand-typed `on:` is read and a missing one still refused.
 
 ## v0.275.1 - recording the launch is Mycelium's work, and the item names the fields
 

@@ -90,3 +90,49 @@ def test_control_the_verdict_keeps_its_own_instruction():
     verdict = {"id": "verdict-l3:l3-a", "text": "l3-a (L3): no verdict is recorded.",
                "command": "/mycelium:assumption-test", "shown": 1, "first_shown": TODAY}
     assert "record the result against the bar the test was frozen with" in ni.render(verdict)
+
+
+OVER = """  - id: l3-a
+    scale: L3
+    phase: deliver
+    riskiest_assumption: {verdict: inconclusive}
+    learning_delivery:
+      audience: three paying clients who opted in
+      started: '2026-10-17'
+      until: '2027-06-03'
+"""
+
+
+def test_a_delivery_past_its_last_day_asks_how_it_ended(tmp_path):
+    """E2E service world run 5: the re-run item was snoozed until a cohort that never came, and
+    the delivery ran a month past its last day with no item; the builder wrote its own `closed:`
+    block while the clients carried on paying with no L4."""
+    root = _project(tmp_path, OVER + "      closed: {outcome: no one came}\n")
+    snoozed = {"rerun-l3:l3-a": {"until": "asked"}}
+    item = ni._door_item(root, "2027-07-08", snoozed)
+    assert item["id"] == "delivery-over-l3:l3-a:2027-06-03", item
+    assert "`learning_delivery.ended: {how: withdrawn, on}`" in item["text"]
+    assert "that is production: open an L4" in item["text"]
+    assert not ni.agent_owned(item), "ending or carrying on is the founder's decision"
+
+
+def test_control_an_ended_or_running_delivery_asks_nothing(tmp_path, monkeypatch):
+    monkeypatch.setenv("MYCELIUM_TODAY", "2027-07-08")  # the lock's own clock
+    ended = OVER + "      ended: {how: withdrawn, on: '2027-06-04'}\n"
+    assert ni._delivery_over_item(_project(tmp_path / "a", ended), "2027-07-08", {},
+                                  _l3(tmp_path / "a")) is None
+    assert ni._delivery_over_item(_project(tmp_path / "b", OVER), "2027-05-01", {},
+                                  _l3(tmp_path / "b")) is None, "before its last day"
+
+
+def test_an_extension_is_a_new_item_not_the_snoozed_one(tmp_path):
+    root = _project(tmp_path, OVER.replace("2027-06-03", "2027-07-01"))
+    snoozed = {"delivery-over-l3:l3-a:2027-06-03": {"until": "asked"}}
+    item = ni._delivery_over_item(root, "2027-07-08", snoozed, _l3(root))
+    assert item and item["id"].endswith(":2027-07-01")
+
+
+def _l3(root: Path) -> dict:
+    import yaml
+    doc = yaml.safe_load((root / ".claude" / "diamonds" / "active.yml").read_text())
+    return doc["active_diamonds"][0]

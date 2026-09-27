@@ -501,7 +501,8 @@ def _l3_item(root: Path, today: str, st: dict, d: dict, phase: str) -> dict | No
         or _inconclusive_item(root, today, st, d) \
         or (_learning_delivery_item(root, today, st, d) if phase == "develop" else None) \
         or (_start_item(today, st, d) if phase == "deliver" else None) \
-        or _verdict_item(root, today, st, d)
+        or _verdict_item(root, today, st, d) \
+        or _delivery_over_item(root, today, st, d)
     if item:
         return item
     iid = f"door-l4:{did}"
@@ -631,6 +632,32 @@ def _delivery_ended_item(iid: str, today: str, d: dict, sol: dict) -> dict | Non
                      "Record `verdict: validated`, `invalidated` or `inconclusive` from wherever "
                      "the result was kept, with the reasoning in `verdict_note`."),
             "why": "a delivery that has ended owes its verdict"}
+
+
+def _delivery_over_item(root: Path, today: str, st: dict, d: dict) -> dict | None:
+    """A learning delivery past its `until` with no recorded end (v0.276.0). The id carries the
+    date, so an extension makes a new item and a snooze of an earlier item never covers it. E2E
+    service world run 5: the test read inconclusive, the re-run item was snoozed "until the first
+    cohort's close is scored", no stranger ever joined, and the delivery ran past its last day with
+    nothing asking; the builder wrote its own `closed:` block, which no lock reads, while the three
+    clients carried on paying with no L4. Ending or carrying on is the founder's decision."""
+    ld = d.get("learning_delivery") if isinstance(d.get("learning_delivery"), dict) else {}
+    until = str(ld.get("until") or "")[:10]
+    if not (re.fullmatch(r"\d{4}-\d{2}-\d{2}", until) and until < today):
+        return None
+    missing = sl.State(str(root)).learning_delivery_end_missing(d)  # _verdict_item reads it first
+    did = str(d["id"])
+    iid = f"delivery-over-l3:{did}:{until}"
+    if not missing or _blocked(st.get(iid, {}), today):
+        return None
+    return {"id": iid, "diamond": did, "since": today,
+            "command": f"/mycelium:diamond-progress {did}",
+            "text": (f"{did} (L3): its learning delivery ran until {until} and how it ended is "
+                     "not recorded. If it no longer reaches its audience, record "
+                     "`learning_delivery.ended: {how: withdrawn, on}`. If it carries on for "
+                     "them, that is production: open an L4 on it and record `how: handed_to_l4`. "
+                     "Or extend `until`, with the reason."),
+            "why": "a learning delivery past its last day is production or over, and says which"}
 
 
 def _verdict_item(root: Path, today: str, st: dict, d: dict) -> dict | None:
