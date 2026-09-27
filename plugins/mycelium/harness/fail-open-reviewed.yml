@@ -857,3 +857,12 @@ reviewed:
     reads the same file in the same pick and reports it unreadable in the note shown with the item,
     and the scale lock refuses a diamonds file that does not parse. Asking where the product lives
     on top of a broken file would add nothing. Reviewed 2026-09-26, v0.270.0.
+- id: next_item.py@77141fe10f
+  verdict: accepted
+  reason: >-
+    `_lock_state` returns None when the scale locks cannot read the canvas, and the ladder then
+    orders its rows as it did before 0.276.0: every row is still shown, only the "waits on its
+    learning delivery ending" rank is lost, so the failure hides no diamond. It is spoken
+    elsewhere: `_fired_proposals` reports an unreadable diamonds file in the note shown with the
+    item, and the scale-lock gate says the locks are unknown on the next write. Reviewed
+    2026-09-27, v0.276.0.

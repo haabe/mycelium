@@ -342,6 +342,7 @@ def _unassessed(root: Path, today: str) -> list[dict]:
         return []  # SPEAKS: _fired_proposals reads the same file and reports it unreadable
     newest = _newest_evidence(root)
     rulings = dr.load(root) if dr else {}
+    state = _lock_state(root)
     evidence = dr.evidence_count(root) if dr else None
     out = []
     for d in doc.get("active_diamonds") or []:
@@ -372,15 +373,54 @@ def _unassessed(root: Path, today: str) -> list[dict]:
             why = (f"has never been assessed, so it has never moved from {phase}" if not ruled
                    else f"was last ruled on {ruled}, and evidence has landed since")
         scale = str(d.get("scale") or "").upper()
+        text, hint, waits = _move_text(state, d, phase, why)
         out.append({"id": f"unassessed:{d['id']}", "diamond": d["id"],
                     "since": ruled or str(d.get("created") or today)[:10],
-                    "rank": (0 if scale in ("L3", "L4", "L5") else 1, ruled or ""),
-                    "text": f"{d['id']} ({scale}) {why}. Its next transition is "
-                            f"{phase} -> {_NEXT[phase]}.",
+                    # A move that can happen now leads one that waits on the world (v0.276.0).
+                    "rank": (0 if scale in ("L3", "L4", "L5") else 1, bool(waits), ruled or ""),
+                    "text": text, "hint": hint,
                     "command": f"/mycelium:diamond-progress {d['id']}",
                     "assessed_at": rec.get("ts") if rec.get("sig") == (
                         dr.signature(d) if dr else None) else None})
     return sorted(out, key=lambda r: r["rank"])
+
+
+def _lock_state(root: Path):
+    try:
+        return sl.State(str(root)) if sl else None
+    except Exception:  # noqa: BLE001  SPEAKS: _door_item reads the same locks and reports them
+        return None
+
+
+def _move_text(state, d: dict, phase: str, why: str) -> tuple[str, str, bool]:
+    """A ladder row's text, the hint that follows the list, and whether the move waits."""
+    scale = str(d.get("scale") or "").upper()
+    waits = _waits_on(state, d, f"{phase}->{_NEXT[phase]}")
+    text = f"{d['id']} ({scale}) {why}. Its next transition is {phase} -> {_NEXT[phase]}."
+    if waits:
+        text += f" It waits on {waits}."
+    # The bar is drafted, not asked for (v0.276.0). E2E rung L4-define on 0.275.0: the L4 was
+    # opened with no bar, its first assessment could only say needs-evidence, and two sessions
+    # went on asking the founder to write a definition of done and a stance she had decided.
+    hint = ("" if waits or scale not in ("L3", "L4", "L5") or d.get("definition_of_done")
+            else f" {d['id']} has no bar yet: draft its `definition_of_done` (on an L4, its "
+                 "`purpose_stance` too) from what the user has already decided, and put the "
+                 "draft to them to confirm; do not ask them to write it.")
+    return text, hint, bool(waits)
+
+
+def _waits_on(state, d: dict, transition: str) -> str:
+    """What a move waits on that no assessment can produce, or "" (v0.276.0). An L3 in Deliver
+    cannot complete until its learning delivery has ended, and the pilot ending is the world's
+    doing, not a ruling's. E2E rungs L4-define and L4-develop on 0.275.0: the L3's pilot notes
+    arrived every session, so the L3 led the ladder, and the L4 whose next move was desk work sat
+    under "Also waiting" until the budget ran out (1 of 3 reached develop). Founder, 2026-09-27:
+    propose a move once what it needs is on record."""
+    if state is None or str(d.get("scale") or "").upper() != "L3":
+        return ""
+    if transition == "deliver->complete":
+        return "its learning delivery ending" if state.learning_delivery_end_missing(d) else ""
+    return ""
 
 
 LADDER_ID = "unassessed"
@@ -437,9 +477,18 @@ def _door_item(root: Path, today: str, st: dict) -> dict | None:
                     "have used it, `launch_data: {usage | feedback | metric_movement, as_of: "
                     "YYYY-MM-DD}` with `as_of` after the release; the L5 lock reads those fields "
                     "and nothing else. A first market release then opens an L5.")
+            # What the agent does, in its own words (v0.276.0). E2E rung L5-open on 0.275.1: the
+            # item borrowed the verdict's instruction ("run /mycelium:launch-tier, record the
+            # result against the bar the test was frozen with"), which fits no launch record, and
+            # the builder held figures it already had for two sessions asking "say the word".
+            does = ("write the fields yourself from the release and usage figures already in the "
+                    "notes, saying what the figures count (page opens are not uses), then tell "
+                    "the user what you recorded; if no note carries usage yet, record "
+                    "`released_on` and say what is still to come")
             return {"id": iid, "diamond": did, "since": today,
-                    "command": "/mycelium:launch-tier", "text": text,
-                    "why": "a shipped L4 is the L5's event"}
+                    "command": "/mycelium:launch-tier" if ready else "edit diamonds/active.yml",
+                    "text": text, "why": "a shipped L4 is the L5's event",
+                    **({} if ready else {"does": does})}
     return _entry_door(root, today, st, active)
 
 
@@ -452,7 +501,8 @@ def _l3_item(root: Path, today: str, st: dict, d: dict, phase: str) -> dict | No
         or _inconclusive_item(root, today, st, d) \
         or (_learning_delivery_item(root, today, st, d) if phase == "develop" else None) \
         or (_start_item(today, st, d) if phase == "deliver" else None) \
-        or _verdict_item(root, today, st, d)
+        or _verdict_item(root, today, st, d) \
+        or _delivery_over_item(root, today, st, d)
     if item:
         return item
     iid = f"door-l4:{did}"
@@ -468,7 +518,9 @@ def _l3_item(root: Path, today: str, st: dict, d: dict, phase: str) -> dict | No
               "to its learning delivery with those gates re-run." if who else "")
     return {"id": iid, "diamond": did, "since": today, "command": "/mycelium:preflight",
             "text": f"{did} (L3) has delivered to learn, its verdict holds, and no L4 is open "
-                    "on it: its increment can be delivered. Open an L4 on it." + beyond,
+                    "on it: its increment can be delivered. Open an L4 on it, with a draft "
+                    "`definition_of_done` and `purpose_stance` built from what the user has "
+                    "already decided, for them to confirm." + beyond,
             "why": "the L4 lock holds and nothing is delivering the increment"}
 
 
@@ -580,6 +632,32 @@ def _delivery_ended_item(iid: str, today: str, d: dict, sol: dict) -> dict | Non
                      "Record `verdict: validated`, `invalidated` or `inconclusive` from wherever "
                      "the result was kept, with the reasoning in `verdict_note`."),
             "why": "a delivery that has ended owes its verdict"}
+
+
+def _delivery_over_item(root: Path, today: str, st: dict, d: dict) -> dict | None:
+    """A learning delivery past its `until` with no recorded end (v0.276.0). The id carries the
+    date, so an extension makes a new item and a snooze of an earlier item never covers it. E2E
+    service world run 5: the test read inconclusive, the re-run item was snoozed "until the first
+    cohort's close is scored", no stranger ever joined, and the delivery ran past its last day with
+    nothing asking; the builder wrote its own `closed:` block, which no lock reads, while the three
+    clients carried on paying with no L4. Ending or carrying on is the founder's decision."""
+    ld = d.get("learning_delivery") if isinstance(d.get("learning_delivery"), dict) else {}
+    until = str(ld.get("until") or "")[:10]
+    if not (re.fullmatch(r"\d{4}-\d{2}-\d{2}", until) and until < today):
+        return None
+    missing = sl.State(str(root)).learning_delivery_end_missing(d)  # _verdict_item reads it first
+    did = str(d["id"])
+    iid = f"delivery-over-l3:{did}:{until}"
+    if not missing or _blocked(st.get(iid, {}), today):
+        return None
+    return {"id": iid, "diamond": did, "since": today,
+            "command": f"/mycelium:diamond-progress {did}",
+            "text": (f"{did} (L3): its learning delivery ran until {until} and how it ended is "
+                     "not recorded. If it no longer reaches its audience, record "
+                     "`learning_delivery.ended: {how: withdrawn, on}`. If it carries on for "
+                     "them, that is production: open an L4 on it and record `how: handed_to_l4`. "
+                     "Or extend `until`, with the reason."),
+            "why": "a learning delivery past its last day is production or over, and says which"}
 
 
 def _verdict_item(root: Path, today: str, st: dict, d: dict) -> dict | None:
@@ -749,6 +827,7 @@ def _ladder_item(root: Path, today: str, st: dict) -> dict | None:
         rest = ", ".join(f"{r['diamond']} ({r['text'].split('(', 1)[1].split(')', 1)[0]})"
                          for r in rows[1:])
         text = f"{lead['text']} Also waiting: {rest}."
+    text += lead.get("hint", "")
     done = [str(r.get("assessed_at")) for r in rows if r.get("assessed_at")]
     return {"id": LADDER_ID, "diamond": lead["diamond"], "since": lead["since"], "text": text,
             "command": lead["command"], "assessed_at": max(done) if done else None,
@@ -916,10 +995,11 @@ def render(item: dict) -> str:
     if agent_owned(item):
         late = (f", left undone for {item['shown']} sessions since {item['first_shown']}"
                 if _escalated(item) else "")
-        return (f"NEXT ITEM{late} (YOURS TO DO NOW, not the user's to decide: run "
-                f"`{item['command']}`, record the result against the bar the test was frozen with, "
-                "then tell the user what it found; ask them only if the bar leaves the result "
-                f"unclear): {text}")
+        does = str(item.get("does") or (
+            f"run `{item['command']}`, record the result against the bar the test was frozen "
+            "with, then tell the user what it found; ask them only if the bar leaves the result "
+            "unclear"))
+        return f"NEXT ITEM{late} (YOURS TO DO NOW, not the user's to decide: {does}): {text}"
     head = "NEXT ITEM"
     if _escalated(item):
         head = (f"NEXT ITEM, unanswered for {item['shown']} sessions since {item['first_shown']} "

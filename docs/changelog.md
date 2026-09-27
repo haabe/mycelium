@@ -4,6 +4,42 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.276.0 - a move that can happen now is proposed first, and an item says what to do
+
+**2026-09-27.** Three failures from the E2E rungs on 0.275.0 and 0.275.1, one shape: Mycelium put the
+wrong thing in front of the builder, or the right thing with the wrong instruction.
+
+- **A move that waits on the world follows one that can happen now.** An L3 in Deliver cannot
+  complete until its learning delivery has ended, and a pilot ends on the world's schedule, not on a
+  ruling. Its notes arrived every session, so it led the ladder, and the L4 whose next move was desk
+  work sat under "Also waiting" until the session budget ran out (L4-develop reached develop 1 of 3).
+  Its row now says "It waits on its learning delivery ending" and ranks after rows that can move.
+  Founder, 2026-09-27: propose a move once what it needs is on record.
+- **A bare diamond gets its bar drafted, not asked for.** L4-define opened the L4 with no definition
+  of done; its first assessment could only say needs-evidence, and two sessions went on asking the
+  founder to write a bar and a purpose stance she had already decided. An L3-L5 with no
+  `definition_of_done` now tells the agent to draft it (on an L4, the `purpose_stance` too) from the
+  founder's decisions and put the draft to her; the L4 door says to open it that way.
+- **An agent-owned item carries its own instruction.** 0.275.1 made the launch-data item the agent's
+  but rendered it with the verdict's words ("record the result against the bar the test was frozen
+  with"); the builder had the launch figures in session 10 and wrote them only when the founder said
+  so in session 12. The item now says to write the fields from the figures in the notes, saying what
+  they count, and to record `released_on` alone when no usage is in yet.
+- **A learning delivery past its last day says so, whatever was snoozed before.** E2E service
+  world run 5: the pilot's test read inconclusive, the re-run item was snoozed "until the first
+  cohort's close is scored", no stranger ever joined, and the delivery ran a month past its `until`
+  with nothing asking; the builder wrote its own `closed:` block, which no lock reads, while the
+  three clients carried on paying with no L4. A new item (its id carries the date, so no earlier
+  snooze covers it) asks how it ended: withdrawn, handed to an L4 because carrying on is
+  production, or extended with a reason.
+- **A hand-typed end date is read.** `on` is a YAML 1.1 boolean, so `on: 2027-06-04` typed as the
+  schema names it loads as the key `True`, and the lock refused every such end as undated. Every
+  test wrote the record through `yaml.safe_dump`, which quotes the key. Found replaying run 5.
+- Tests: the ready move leads, with a control where nothing waits; the draft hint appears on a bare
+  diamond and not on one with a bar; the launch record has its own instruction and the verdict keeps
+  its own; the delivery-over item fires past `until` through an earlier snooze and not on an ended
+  or running delivery; a hand-typed `on:` is read and a missing one still refused.
+
 ## v0.275.1 - recording the launch is Mycelium's work, and the item names the fields
 
 **2026-09-26.** In the E2E rung L5-open on 0.275.0 the builder recorded `released_on` correctly, then

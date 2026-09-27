@@ -730,7 +730,10 @@ class State:
             return None  # no learning delivery was run: nothing to end
         ended = _as_dict(ld.get("ended"))
         how = str(ended.get("how") or "").strip().lower()
-        on = str(ended.get("on") or "")[:10]
+        # `on` is a YAML 1.1 boolean: a hand-written `on: 2027-06-04` loads as the key True
+        # (v0.276.0). Every test wrote the record through yaml.safe_dump, which quotes it, so an
+        # agent typing the field as the schema names it was refused as having no date.
+        on = str(ended.get("on") or ended.get(True) or "")[:10]
         ids = [str(x.get("id")) for x in self.l4_children(d)]
         problem = None
         if how not in ("withdrawn", "handed_to_l4"):

@@ -931,6 +931,21 @@ def test_an_l3_completes_by_saying_how_its_learning_delivery_ended(tmp_path):
     assert _closing(tmp_path / "f", _completed(WITHDRAWN), into_completed=False) == []
 
 
+def test_an_end_date_typed_by_hand_is_read(tmp_path, monkeypatch):
+    """`on` is a YAML 1.1 boolean, so a hand-typed `on: 2027-06-04` loads as the key True; every
+    test before 0.276.0 wrote the record with yaml.safe_dump, which quotes it. Found replaying E2E
+    service world run 5."""
+    monkeypatch.setenv("MYCELIUM_TODAY", "2027-07-08")
+    typed = yaml.safe_load("learning_delivery:\n  audience: three paying clients\n"
+                           "  ended:\n    how: withdrawn\n    on: 2027-06-04\n")
+    assert True in typed["learning_delivery"]["ended"], "the trap is real"
+    state = sl.State(str(tmp_path))
+    assert state.learning_delivery_end_missing({"id": "l3-a", **typed}) is None
+    no_date = yaml.safe_load("learning_delivery:\n  audience: three paying clients\n"
+                             "  ended:\n    how: withdrawn\n")
+    assert "`on`" in state.learning_delivery_end_missing({"id": "l3-a", **no_date}), "control"
+
+
 def _audience_write(tmp_path, audience: str, change=None, extra=()):
     """The delivered L3 on disk; the write changes its audience, with or without a change entry."""
     p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(),
