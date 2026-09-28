@@ -33,6 +33,13 @@ def _item() -> dict:
             "first_shown": "2026-09-30"}
 
 
+def test_an_item_only_its_doing_answers_offers_a_dated_snooze_only():
+    """v0.280.0: the ledger refuses `--until asked` on it, so the item does not offer it."""
+    line = ni.render(_item())
+    assert "--until DATE --note" in line and "DATE|asked" not in line
+    assert "DATE|asked" in ni.render({**_item(), "id": "door-l4:d-004"}), "control: a door"
+
+
 def test_the_shown_command_names_this_plugins_own_script():
     line = ni.render(_item())
     assert f'python3 "{OWN}" rule --id deliver-l3:d-004' in line
@@ -59,7 +66,8 @@ def test_the_answer_prompts_say_which_ruling_fits_which_answer(tmp_path):
 def test_running_the_shown_command_records_the_answer_with_the_in_world_date(tmp_path):
     """Copy the command as shown, run it: this plugin's script, today's date from the harness, the
     condition kept in the note."""
-    shown = re.search(r"`(python3 \"[^\"]+\" rule --id \S+)", ni.render(_item())).group(1)
+    door = {**_item(), "id": "door-l4:d-004"}  # deliver-l3 is snoozed to a date only (v0.280.0)
+    shown = re.search(r"`(python3 \"[^\"]+\" rule --id \S+)", ni.render(door)).group(1)
     cmd = (f'{shown} --ruling snooze --until asked --note "after Wednesday\'s check" '
            f'--project-dir "{tmp_path}"')
     env = {"MYCELIUM_TODAY": "2026-10-04",

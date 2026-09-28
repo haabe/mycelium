@@ -1046,10 +1046,15 @@ def render(item: dict) -> str:
                  "the test still needs to run with its audience; record every other open question "
                  "as a next assumption on the solution (`assumptions:` in opportunities.yml) or as "
                  "L4 work; then propose the move to Deliver")
+    # An item only its doing can answer is snoozed to a date, never until asked (v0.280.0): the
+    # ledger refuses the latter, so the item must not offer it.
+    dated = str(item.get("id", "")).startswith(getattr(al, "DONE_TO_BE_ANSWERED", ()) or ())
+    until, label = ("DATE", "snooze-until DATE") if dated else ("DATE|asked",
+                                                                 "snooze-until DATE or asked")
     return (
         f"{head}: {text} run `{item['command']}` | rule (say what you decide) | "
-        f"snooze-until DATE or asked (`{LEDGER} rule --id {item['id']} "
-        '--ruling snooze --until DATE|asked --note "..."`) | '
+        f"{label} (`{LEDGER} rule --id {item['id']} "
+        f'--ruling snooze --until {until} --note "..."`) | '
         f"drop (`--ruling drop`)."
     )
 
