@@ -914,6 +914,50 @@ _GO_LIVE = re.compile(
     r"|invit(?:e|es|ed|ing) (?:the )?(?:first|staff|users|customers))",
     re.IGNORECASE)
 EXPOSURE_SAID = os.path.join(".claude", "state", "exposure-line-said")
+#: The last exposure state Mycelium saw, `ready` or `not-ready` (v0.279.0).
+EXPOSURE_LAST = os.path.join(".claude", "state", "exposure-last")
+
+
+def _exposure_now(st: State) -> tuple[bool, str]:
+    """Whether real people may meet the work now; not ready when nothing is delivering."""
+    if not [d for d in st.active if _scale(d) in DELIVERY_SCALES and st.is_open(d)]:
+        return False, ""
+    return _work_state(st, "expose")
+
+
+def _swap_exposure_last(project_dir: str, ok: bool) -> str:
+    """Store the state now and return the one stored before (\"\" when none was)."""
+    path = os.path.join(project_dir, EXPOSURE_LAST)
+    try:
+        with open(path, encoding="utf-8") as f:
+            before = f.read().strip()
+    except OSError:
+        before = ""  # never recorded: no change can be claimed, only the state from now on
+    try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(("ready" if ok else "not-ready") + "\n")
+    except OSError:
+        pass  # SPEAKS: the prompt-time exposure line still says the state on the next prompt
+    return before
+
+
+def exposure_change_line(project_dir: str) -> str:
+    """What the agent is told right after a write takes the work from ready to not ready for real
+    people (v0.279.0). E2E rung L4-open on 0.278.0: in one turn the builder completed the L3 as
+    handed to its new L4, which opened in discover, then told the founder her public launch post
+    was \"ready to post whenever you are\". The exposure line speaks only at a prompt, and the state
+    flipped inside the turn, so nothing told the builder; the founder posted it."""
+    ok, why = _exposure_now(State(project_dir))
+    if _swap_exposure_last(project_dir, ok) != "ready" or ok:
+        return ""
+    missing = "\n".join(why.splitlines()[:6])
+    return ("MYCELIUM EXPOSURE STATE CHANGED WITH THIS WRITE: before it, the work could meet its "
+            "audience; now nothing built here may meet real people, and that includes a launch "
+            "post, a link, a pilot for someone new and a deploy someone else does. What is "
+            f"missing:\n  {missing}\nIf a release or a post is in hand, tell the user plainly now "
+            "that it is not ready and what is missing, before they act, and say it before any "
+            "draft of it.")
 
 
 def exposure_line(project_dir: str, payload: dict, today: str | None = None) -> str:
@@ -929,10 +973,10 @@ def exposure_line(project_dir: str, payload: dict, today: str | None = None) -> 
     otherwise said at most twice a sitting (session + day): at its first prompt, and at its first
     prompt about an act of going live."""
     st = State(project_dir)
-    if not [d for d in st.active if _scale(d) in DELIVERY_SCALES and st.is_open(d)]:
-        return ""
-    ok, why = _work_state(st, "expose")
-    if ok:
+    delivering = [d for d in st.active if _scale(d) in DELIVERY_SCALES and st.is_open(d)]
+    ok, why = _exposure_now(st)
+    _swap_exposure_last(project_dir, ok)  # the baseline a write's change is judged against
+    if not delivering or ok:
         return ""
     today = today or _dt.datetime.now(tz=_dt.UTC).date().isoformat()
     sitting = f"{payload.get('session_id') or ''}|{today}"
@@ -1229,6 +1273,14 @@ def _run_exposure_line(project_dir: str) -> int:
     return EXIT_HOLDS
 
 
+def _run_exposure_change(project_dir: str) -> int:
+    line = exposure_change_line(project_dir)
+    if line:
+        print(json.dumps({"hookSpecificOutput": {"hookEventName": "PostToolUse",
+                                                "additionalContext": line}}))
+    return EXIT_HOLDS
+
+
 def _run_state(fn, project_dir: str) -> int:
     ok, why = fn(project_dir)
     print(why)
@@ -1238,6 +1290,7 @@ def _run_state(fn, project_dir: str) -> int:
 def _run(args) -> int:
     runners = [(args.hook, _run_hook), (args.exposure_hook, _run_exposure_hook),
                (args.exposure_line, _run_exposure_line),
+               (args.exposure_change, _run_exposure_change),
                (args.exposure_state, lambda p: _run_state(exposure_state, p)),
                (args.delivery_state, lambda p: _run_state(delivery_state, p))]
     for chosen, fn in runners:
@@ -1264,6 +1317,8 @@ def main(argv=None) -> int:
                       help="UserPromptSubmit payload on stdin; print the not-ready line if due")
     mode.add_argument("--exposure-hook", action="store_true",
                       help="PreToolUse Bash payload on stdin; exit 2 blocks a deploy or publish")
+    mode.add_argument("--exposure-change", action="store_true",
+                      help="PostToolUse: tell the agent when a write made the work not ready")
     ap.add_argument("--object-ref")
     ap.add_argument("--parent")
     args = ap.parse_args(argv)
