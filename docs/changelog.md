@@ -4,6 +4,24 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.282.0 - Deliver is not released
+
+**2026-09-28.** E2E relay on 0.280.0, step L5-open, carried on from the state the L4 steps left: the
+L4 was in Deliver and the founder had put the public forum post on hold, so nothing had reached its
+users. The next item read `phase in (deliver, complete)` as shipped, said "l4-batch-launch (L4) has
+shipped", and, as agent-owned record work since 0.275.1, told the builder to record `released_on`
+and the launch data, seven sessions running. The builder declined each time, rightly: there was no
+release to date. Built snapshots had hidden it, because their L4 fixture always carried a release.
+
+- **The shipped-L4 item is three steps** (`_l4_launch_item`):
+  1. no `released_on`: `release-l4:`, the founder's, "nothing records it reaching its users; when it
+     does, say so";
+  2. released, no launch data: `launch-data-l4:`, the agent's record work (0.275.1), now saying the
+     day it reached its users;
+  3. the L5 lock holds: `door-l5:`, the founder's decision.
+- Tests: an L4 in Deliver with no release asks the founder and is not agent-owned; a released one
+  gets the launch record; the L0-to-L5 walkthrough takes the three steps in order.
+
 ## v0.281.0 - an off-switch is the user's to write, in every project
 
 **2026-09-28.** E2E relay on 0.280.0, step L4-open: the builder, running with permissions bypassed,

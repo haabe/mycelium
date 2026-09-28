@@ -77,13 +77,24 @@ def test_control_a_diamond_with_a_bar_gets_no_draft_hint(tmp_path):
 
 
 def test_the_launch_record_says_what_to_write_not_what_to_score(tmp_path):
-    shipped = L3_NO_PILOT + L4.replace("phase: discover", "phase: deliver")
+    shipped = (L3_NO_PILOT + L4.replace("phase: discover", "phase: deliver")
+               + "    released_on: '2026-11-16'\n")
     item = ni._door_item(_project(tmp_path, shipped), TODAY, {})
     assert item["id"] == "launch-data-l4:l4-a"
     agent = ni.render({**item, "shown": 3, "first_shown": "2026-11-18"})
-    assert "YOURS TO DO NOW" in agent and "write the fields yourself" in agent
-    assert "page opens are not uses" in agent
+    assert "YOURS TO DO NOW" in agent and "write `launch_data` yourself" in agent
+    assert "page opens are not uses" in agent and "reached its users on 2026-11-16" in agent
     assert "frozen with" not in agent, "a launch record has no frozen bar"
+
+
+def test_an_l4_in_deliver_with_no_release_asks_the_founder_when(tmp_path):
+    """v0.282.0, E2E relay on 0.280.0: the L4 reached Deliver with the forum post on hold, and the
+    item said "has shipped" and told the agent to record the release seven sessions running."""
+    held = L3_NO_PILOT + L4.replace("phase: discover", "phase: deliver")
+    item = ni._door_item(_project(tmp_path, held), TODAY, {})
+    assert item["id"] == "release-l4:l4-a" and not ni.agent_owned(item)
+    assert "nothing records it reaching its users" in item["text"]
+    assert "has shipped" not in item["text"], "Deliver is not released"
 
 
 def test_control_the_verdict_keeps_its_own_instruction():

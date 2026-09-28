@@ -438,6 +438,46 @@ def _children(active: list[dict], parent: dict, scale: str) -> list[dict]:
                  or (ref and str(d.get("object_ref") or "") == ref))]
 
 
+def _l4_launch_item(root: Path, today: str, st: dict, d: dict, did: str) -> dict | None:
+    """What an L4 in Deliver needs on the way to its L5 (v0.282.0), in three steps.
+
+    1. Nothing records it reaching its users: the founder's, to say when it does (`release-l4:`).
+       E2E relay on 0.280.0: the L4 reached Deliver with the forum post on hold, and the item said
+       "has shipped" and told the agent to record the release seven sessions running; the builder
+       rightly declined, since nothing had gone out. Deliver is not released.
+    2. Released, launch data not yet recorded: the agent's record work (`launch-data-l4:`, 0.275.1).
+    3. The L5 lock holds: the L5 door, the founder's decision (`door-l5:`)."""
+    ready = not sl.can_open(str(root), "L5", parent=did)
+    released = str(d.get("released_on") or "")[:10]
+    if ready:
+        iid, command = f"door-l5:{did}", "/mycelium:launch-tier"
+        text = (f"{did} (L4) has shipped and its launch data is recorded: open the L5 market "
+                "diamond on it.")
+    elif not re.fullmatch(r"\d{4}-\d{2}-\d{2}", released):
+        iid, command = f"release-l4:{did}", "/mycelium:launch-tier"
+        text = (f"{did} (L4) is in Deliver and nothing records it reaching its users. When it "
+                "does, the day the first person outside the team has it, say so, and it is "
+                "recorded as `released_on`. The launch data, and then an L5, follow from there.")
+    else:
+        iid, command = f"launch-data-l4:{did}", "edit diamonds/active.yml"
+        text = (f"{did} (L4) reached its users on {released}. On the L4 in "
+                "diamonds/active.yml, record `launch_data: {usage | feedback | metric_movement, "
+                "as_of: YYYY-MM-DD}` once people have used it, with `as_of` after the release; the "
+                "L5 lock reads those fields and nothing else. A first market release then opens "
+                "an L5.")
+    if _blocked(st.get(iid, {}), today):
+        return None
+    item = {"id": iid, "diamond": did, "since": today, "command": command, "text": text,
+            "why": "a released L4 is the L5's event"}
+    if iid.startswith("launch-data-l4:"):
+        # What the agent does, in its own words (v0.276.0).
+        item["does"] = ("write `launch_data` yourself from the usage figures already in the "
+                        "notes, saying what the figures count (page opens are not uses), then tell "
+                        "the user what you recorded; if no note carries usage yet, say what is "
+                        "still to come")
+    return item
+
+
 def _door_item(root: Path, today: str, st: dict) -> dict | None:
     """The L4 and L5 doors, proposed when they can open (v0.254.0); then the L1 to L3 doors.
 
@@ -464,33 +504,10 @@ def _door_item(root: Path, today: str, st: dict) -> dict | None:
             if item:
                 return item
         if scale == "L4" and phase in _SHIPPED and not _children(active, d, "L5"):
-            ready = not sl.can_open(str(root), "L5", parent=did)
-            # Recording the release and its launch data is Mycelium's record work, the agent's to
-            # do; opening the L5 is the founder's decision (v0.275.1). E2E rung L5-open on 0.275.0:
-            # the item asked the founder for four sessions, and the builder wrote the launch
-            # figures into a log entry, not the `launch_data` field the lock reads.
-            iid = f"door-l5:{did}" if ready else f"launch-data-l4:{did}"
-            if _blocked(st.get(iid, {}), today):
+            item = _l4_launch_item(root, today, st, d, did)
+            if item is None:
                 continue
-            text = (f"{did} (L4) has shipped and its launch data is recorded: open the L5 market "
-                    "diamond on it." if ready else
-                    f"{did} (L4) has shipped. On the L4 in diamonds/active.yml, record "
-                    "`released_on: YYYY-MM-DD` (the day it reached its users) and, once people "
-                    "have used it, `launch_data: {usage | feedback | metric_movement, as_of: "
-                    "YYYY-MM-DD}` with `as_of` after the release; the L5 lock reads those fields "
-                    "and nothing else. A first market release then opens an L5.")
-            # What the agent does, in its own words (v0.276.0). E2E rung L5-open on 0.275.1: the
-            # item borrowed the verdict's instruction ("run /mycelium:launch-tier, record the
-            # result against the bar the test was frozen with"), which fits no launch record, and
-            # the builder held figures it already had for two sessions asking "say the word".
-            does = ("write the fields yourself from the release and usage figures already in the "
-                    "notes, saying what the figures count (page opens are not uses), then tell "
-                    "the user what you recorded; if no note carries usage yet, record "
-                    "`released_on` and say what is still to come")
-            return {"id": iid, "diamond": did, "since": today,
-                    "command": "/mycelium:launch-tier" if ready else "edit diamonds/active.yml",
-                    "text": text, "why": "a shipped L4 is the L5's event",
-                    **({} if ready else {"does": does})}
+            return item
     return _entry_door(root, today, st, active)
 
 
