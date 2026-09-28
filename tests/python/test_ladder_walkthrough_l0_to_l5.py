@@ -286,16 +286,18 @@ def _ship_and_open_l5(p: Project, root: Path) -> None:
     assert sl.exposure_state(str(root))[0], "a shipped L4 may meet real people"
 
     # L5 opens on the shipped L4 plus launch data; the shipped L4 is the L5 door's event (v0.254.0).
-    # v0.275.1: until the release and its launch data are recorded, that record is the agent's.
-    assert _proposed(root) == "launch-data-l4:l4", "a shipped L4 asks for its launch record"
+    # v0.282.0 (E2E relay on 0.280.0): Deliver is not released. Until a release is recorded the
+    # item is the founder's, to say when it reaches its users; then the launch record is the agent's.
+    assert _proposed(root) == "release-l4:l4", "an L4 in Deliver asks when it reaches its users"
     l5 = {"id": "l5", "scale": "L5", "phase": "discover", "parent": "l4"}
     p.refused(p.add(l5), "launch data")
     # v0.275.0 (E2E rung L5-refused): launch data comes after the release, both dated.
     p.write([{**d, "launch_data": {"usage": "Harbour: 41 swap requests in three weeks"}}
              if d["id"] == "l4" else d for d in p.diamonds])
     p.refused(p.add(l5), "released_on")
-    p.write([{**d, "released_on": "2026-09-01",
-              "launch_data": {**d["launch_data"], "as_of": "2026-09-22"}}
+    p.write([{**d, "released_on": "2026-09-01"} if d["id"] == "l4" else d for d in p.diamonds])
+    assert _proposed(root) == "launch-data-l4:l4", "released: the launch record is the agent's"
+    p.write([{**d, "launch_data": {**d["launch_data"], "as_of": "2026-09-22"}}
              if d["id"] == "l4" else d for d in p.diamonds])
     assert _proposed(root) == "door-l5:l4", "still proposed, now to open the L5"
     p.write(p.add(l5))
