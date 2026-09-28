@@ -1,0 +1,24 @@
+#!/bin/bash
+# Mycelium guard-state gate (PreToolUse on Write|Edit|MultiEdit|NotebookEdit, Bash and the
+# filesystem MCP writes), v0.281.0
+#
+# The files that switch a blocking hook off (the ack files, upstream.json, manifest.yml,
+# active-execution.json; `_hook_input.GUARD_STATE_REL`) are the user's to write. A write to one asks
+# the human in a permission mode where someone is asked, and is refused where nobody would be
+# (permissions bypassed, or an automated mode). The three guards that did this before were each
+# conditional, so in an ordinary project nothing guarded them; E2E relay on 0.280.0 had the agent
+# write its own scale-lock override under bypassed permissions.
+#
+# Exit 0 always; the decision (ask or deny) is the PreToolUse JSON the helper prints.
+
+PROJECT_DIR="${CLAUDE_PROJECT_DIR:-.}"
+INPUT=$(cat)
+# Cheap exit: only a call that names a guard-state file needs python.
+case "$INPUT" in
+  *-ack*|*upstream.json*|*manifest.yml*|*active-execution.json*) ;;
+  *) exit 0 ;;
+esac
+HELPER="$(dirname "${BASH_SOURCE[0]}")/../scripts/_hook_input.py"
+[ -f "$HELPER" ] || HELPER="${CLAUDE_PLUGIN_ROOT:-}/scripts/_hook_input.py"
+printf '%s' "$INPUT" | python3 "$HELPER" --project-dir "$PROJECT_DIR" --guard-state guard-state-gate
+exit 0

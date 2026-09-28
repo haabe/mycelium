@@ -53,7 +53,8 @@ with the evidence gates and the human.
 
 OVERRIDE. One line per diamond in `.claude/state/scale-lock-ack`: `<id> <scale> <YYYY-MM-DD> <the
 user's own words>`. Only a line in that shape counts, and only for that id AT that scale. The file
-is guarded state (`_hook_input.GUARD_STATE_REL`): the agent writing it gets an ASK.
+is guarded state (`_hook_input.GUARD_STATE_REL`): the agent writing it gets an ASK where a person
+is asked, and a refusal where nobody is (hooks/guard-state-gate.sh, every project, since 0.281.0).
 
 Exit codes: 0 holds / report clean; 1 a lock does not hold (reasons printed); 2 precondition or
 bad input; 3 cannot check (PyYAML missing: printed, and repeated each prompt by hooks/preflight.sh).

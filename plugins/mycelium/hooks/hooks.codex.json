@@ -25,6 +25,12 @@
           },
           {
             "type": "command",
+            "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/guard-state-gate.sh",
+            "timeout": 10,
+            "statusMessage": "Mycelium guard-state gate (the files that switch a gate off are the user's to write)"
+          },
+          {
+            "type": "command",
             "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/brownfield-gate.sh",
             "timeout": 30,
             "statusMessage": "Mycelium brownfield gate (one-shot: existing code, no discovery state)"
@@ -132,6 +138,11 @@
             "type": "command",
             "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/bash-state-guard.sh pre",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/guard-state-gate.sh",
+            "timeout": 10
           }
         ]
       },
@@ -166,6 +177,12 @@
             "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/scale-lock-gate.sh",
             "timeout": 10,
             "statusMessage": "Mycelium scale-lock gate (a new diamond opens only on what its parent established)"
+          },
+          {
+            "type": "command",
+            "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/guard-state-gate.sh",
+            "timeout": 10,
+            "statusMessage": "Mycelium guard-state gate (the files that switch a gate off are the user's to write)"
           },
           {
             "type": "command",

@@ -488,7 +488,8 @@ def main():
     input_data = hi.read_input()
     tool_name = str(input_data.get("tool_name") or "")
     tool_input = input_data.get("tool_input") or {}
-    hi.guard_state_check("framework-guard", tool_name, tool_input, project_dir)
+    hi.guard_state_check("framework-guard", tool_name, tool_input, project_dir,
+                         input_data.get("permission_mode"))
 
     manifest_path = Path(project_dir) / ".claude" / "manifest.yml"
     if not manifest_path.is_file():
