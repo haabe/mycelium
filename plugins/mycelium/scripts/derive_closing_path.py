@@ -48,6 +48,7 @@ from pathlib import Path
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import scale_locks as sl  # the transition matrix the gates are read against (0.278.0)
 from safe_replace import write_checked  # parse-before-write for every canvas text edit (0.220.0)
 
 TERMINAL_TASK = {"completed", "closed", "cancelled", "abandoned", "done", "scored", "withdrawn"}
@@ -57,6 +58,25 @@ LINK_KEYS = ("rolls_up_to", "diamond_ref", "diamond", "canvas_refs", "parent_dia
 #: A four_risks block with fewer dimensions than this is a note, not a block.
 FOUR_RISK_DIMS = 4
 _RULING = re.compile(r"\b(ruling|founder|human|decide|decision)\b", re.IGNORECASE)
+
+
+#: A gate the next transition needs with no status at all (v0.278.0).
+NOT_RECORDED = "not recorded"
+
+
+def _unrecorded_gates(d: dict) -> dict:
+    """Gates the matrix requires for this diamond's next transition that have no status at all
+    (v0.278.0). E2E rung L4-define on 0.276.0: an L4 with an empty `theory_gates_status` printed
+    "every gate reads pass; nothing to store", the builder read that as nothing to do, and the L4
+    stayed in discover for three sessions. A gate never evaluated is pending, not passed."""
+    phase = str(d.get("phase") or "discover").lower()
+    order = list(sl.PHASE_ORDER)
+    if phase not in order or order.index(phase) + 1 >= len(order):
+        return {}
+    have = d.get("theory_gates_status") or {}
+    t = f"{phase}->{order[order.index(phase) + 1]}"
+    return {g: NOT_RECORDED for g in sl.transition_gates(str(d.get("scale") or "").upper(), t)
+            if g not in have}
 
 
 def load_yaml(p: Path):
@@ -302,6 +322,7 @@ def derive(root: Path, did: str, today: str | None = None) -> dict | None:
     gates = {
         k: v for k, v in (d.get("theory_gates_status") or {}).items() if str(v).lower() != "pass"
     }
+    gates.update(_unrecorded_gates(d))
     total, reviewed = _leaf_totals(opps)
     stale = [g for g in gates if g == "four_risks" and total and reviewed == total and not dod]
     today_s = today or _dt.datetime.now(tz=_dt.UTC).date().isoformat()
@@ -325,6 +346,16 @@ def derive(root: Path, did: str, today: str | None = None) -> dict | None:
 
 
 def _gate_row(g: str, v, r: dict) -> str:
+    if v == NOT_RECORDED:
+        did = r["diamond"].get("id", "?")
+        return (
+            f"{g} ({v}) | never evaluated: the assessment judges it and records the result "
+            f"(/mycelium:diamond-progress {did}) | agent | now"
+        )
+    return _recorded_gate_row(g, v, r)
+
+
+def _recorded_gate_row(g: str, v, r: dict) -> str:
     total, reviewed = r["leaf_totals"]
     if g in r["stale"]:
         return (
@@ -947,7 +978,7 @@ def main(argv=None) -> int:
         )
     print("gate | what would flip it | owner | date")
     if not r["gates"]:
-        print("(none pending) | every gate in theory_gates_status reads pass | - | -")
+        print("(none pending) | every gate the next transition needs reads pass | - | -")
     for g, v in r["gates"].items():
         print(_gate_row(g, v, r))
     _print_inputs(r)

@@ -62,7 +62,14 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
      a. State the gate name and source theory.
      b. **Surface the suggested skill**: "Run `/skill-name` to satisfy this gate."
      c. Evaluate pass criteria against available evidence.
-     d. Record Pass / Fail / Insufficient Evidence.
+     d. Record Pass / Fail / Insufficient Evidence **in `theory_gates_status` on the diamond, on
+        every outcome, not only when it progresses** (`pass`, `fail`, or `pending` with what is
+        missing in `progression_blockers`). Added v0.278.0: E2E rung L4-define ran this skill on an
+        L4, ruled needs-evidence, and wrote no gate result, since the only instruction to record
+        gates sat under the phase move. The next session read "no gate results are recorded" as a
+        blocker, the closing path read the empty field as every gate passing, and the L4 sat in
+        discover. A gate evaluated and not written is a gate the next assessment re-derives from
+        nothing.
      e. If Fail: document what is missing, recommend the skill to run, and do NOT proceed.
 
    **CRITICAL — Perspective conflict check (do this BEFORE evaluating any other gate)**:
