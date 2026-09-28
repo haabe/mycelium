@@ -4,6 +4,31 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.281.0 - an off-switch is the user's to write, in every project
+
+**2026-09-28.** E2E relay on 0.280.0, step L4-open: the builder, running with permissions bypassed,
+wrote `.claude/state/scale-lock-ack` itself, in the founder's voice ("My judgment call, my override"),
+and opened an L4 on an L3 whose evidence was anecdotal and whose riskiest assumption had read
+inconclusive. Two holes let it through:
+
+- **An `ask` protects only where a person is asked.** A write to guard state returned `ask`; with
+  permissions bypassed, or in an automated mode, nobody sees it and it goes through.
+- **In an ordinary project nothing asked at all.** The three guards that called the check
+  (`autonomous-evidence-guard`, `scope-gate`, `framework-guard`) are each conditional on a mode or a
+  repo, while `scale_locks.py`'s docstring said the agent writing the ack "gets an ASK".
+
+What changes:
+- **`guard-state-gate.sh`** (new, PreToolUse on writes, shell commands and the filesystem MCP writes,
+  in every project): a write to any file in `_hook_input.GUARD_STATE_REL` asks the human in
+  `default`, `acceptEdits` and `plan`, and is refused in any other permission mode, with the words to
+  write it yourself; an absent mode (another runtime) keeps the ask. `MYCELIUM_GUARD_STATE_EDIT=1` in
+  your own shell still skips it for setup work.
+- The three conditional guards pass the permission mode too, so they refuse in the same modes.
+- Registered in all three runtime manifests; system card and hooks README updated.
+- Tests: refused where nobody is asked (bypassed, automated, dontAsk), asked where a person is (and
+  with no mode), a shell append judged the same, a control that another file is not the gate's
+  business, and the hook itself deciding in a project with no autonomous run, scope or framework repo.
+
 ## v0.280.0 - an item only its doing can answer is not snoozed until asked
 
 **2026-09-28.** E2E service world run 7 (0.278.0; invalid on a founder error, and read for Mycelium's

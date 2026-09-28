@@ -328,17 +328,34 @@ def _targets_of(tool_name: str, tool_input, project_dir: str) -> list[Resolved]:
     return [resolve(p, project_dir, key=k) for k, p in target_paths(tool_input)]
 
 
-def guard_state_check(name: str, tool_name: str, tool_input, project_dir: str) -> None:
-    """Shared step: a write to guard state asks the human. Returns when there is nothing to say."""
+#: Permission modes in which an `ask` reaches a person (v0.281.0). In any other mode nobody is
+#: asked: E2E relay on 0.280.0 ran the builder with permissions bypassed, the `ask` went through,
+#: and the agent wrote its own scale-lock override "My judgment call, my override". An unknown or
+#: absent mode (another runtime) keeps the ask.
+ASKS_A_HUMAN = ("default", "acceptEdits", "plan")
+
+
+def guard_state_check(name: str, tool_name: str, tool_input, project_dir: str,
+                      permission_mode: str | None = None) -> None:
+    """Shared step: a write to guard state asks the human, or is refused where nobody would be
+    asked. Returns when there is nothing to say."""
     if human_override():
         return
     for r in _targets_of(tool_name, tool_input, project_dir):
         g = is_guard_state(r.rel)
-        if g:
-            decision("ask", f"Mycelium {name}: {g} switches a blocking hook off, and this tool "
-                            f"call writes it. A person decides that, not the agent (adversarial "
-                            f"pass 2026-09-11). Approve if you asked for it; set "
-                            f"MYCELIUM_GUARD_STATE_EDIT=1 in your own shell for setup work.")
+        if not g:
+            continue
+        mode = str(permission_mode or "")
+        if mode and mode not in ASKS_A_HUMAN:
+            decision("deny", f"Mycelium {name}: {g} switches a blocking hook off, and only a "
+                             f"person may write it. In this permission mode ({mode}) nobody is "
+                             "asked, so the agent cannot write it. If you want it, write it "
+                             "yourself in your own terminal, or set MYCELIUM_GUARD_STATE_EDIT=1 in "
+                             "your own shell for setup work.")
+        decision("ask", f"Mycelium {name}: {g} switches a blocking hook off, and this tool "
+                        f"call writes it. A person decides that, not the agent (adversarial "
+                        f"pass 2026-09-11). Approve if you asked for it; set "
+                        f"MYCELIUM_GUARD_STATE_EDIT=1 in your own shell for setup work.")
 
 
 _MIN_PURPOSE_WORDS = 3
@@ -453,6 +470,19 @@ def _yaml():
     return yaml
 
 
+def _guard_state_hook(name: str, project_dir: str) -> int:
+    """The guard-state gate for every project (v0.281.0). The three guards that asked were each
+    conditional (autonomous runs, a scope, the framework's own repo), so in an ordinary project
+    nothing guarded the ack files, though scale_locks' docstring said the agent "gets an ASK"."""
+    @fail_closed(name)
+    def run() -> int:
+        data = read_input()
+        guard_state_check(name, str(data.get("tool_name") or ""), data.get("tool_input") or {},
+                          project_dir, data.get("permission_mode"))
+        return 0
+    return run()
+
+
 def cli() -> int:
     """For shell hooks: tool name; one line per target (rel | OUTSIDE:real | GUARD:name |
     OPAQUE:label, tab, exists, tab, size); a `---CONTENT---` line; then the written content."""
@@ -465,7 +495,11 @@ def cli() -> int:
     ap.add_argument("--product-file", nargs="*", default=None, metavar="REL",
                     help="print the first of these repo-relative paths that lies in the project's "
                          "`product_paths`, exit 0; exit 1 if none does; reads no stdin")
+    ap.add_argument("--guard-state", metavar="HOOK_NAME", default=None,
+                    help="PreToolUse payload on stdin: ask or deny a write to guard state")
     args = ap.parse_args()
+    if args.guard_state:
+        return _guard_state_hook(args.guard_state, args.project_dir)
     if args.purpose_state:
         return 0 if has_purpose(args.project_dir) else 1
     if args.product_file is not None:

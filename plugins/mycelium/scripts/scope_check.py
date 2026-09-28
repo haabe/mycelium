@@ -166,7 +166,8 @@ def main():
     hook_input = hi.read_input()
     tool_name = str(hook_input.get("tool_name") or "")
     tool_input = hook_input.get("tool_input") or {}
-    hi.guard_state_check("scope-gate", tool_name, tool_input, project_dir)
+    hi.guard_state_check("scope-gate", tool_name, tool_input, project_dir,
+                         hook_input.get("permission_mode"))
     in_scope, out_of_scope, diamond_id = _scope_lists(state)
     if tool_name == "Bash":
         scan = hi.bash_write_targets(str(tool_input.get("command", "") or ""), project_dir)

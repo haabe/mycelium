@@ -246,7 +246,8 @@ def main():
     tool_input = data.get("tool_input") or {}
     if not autonomous_active(project_dir):
         sys.exit(0)
-    hi.guard_state_check("autonomous-evidence-guard", tool_name, tool_input, project_dir)
+    hi.guard_state_check("autonomous-evidence-guard", tool_name, tool_input, project_dir,
+                         data.get("permission_mode"))
     if tool_name == "Bash":
         cmd = str(tool_input.get("command", "") or "")
         scan = hi.bash_write_targets(cmd, project_dir)
