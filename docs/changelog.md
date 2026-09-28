@@ -4,6 +4,24 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.283.0 - an untried opportunity's door comes first
+
+**2026-09-28.** E2E service run 9 (invalid as a run on its world gaps and an invented founder result,
+read for Mycelium's behaviour): two L2s under the L1 could open an L3. Mycelium's entry door took the
+first live parent in file order, which was the L2 whose L3 had completed and whose solution was
+already in production. It offered that door every session; the founder ruled it done ("nothing left
+to score"), and the untried L2, the association members the new L5 was about, was never offered.
+In session 21 she asked for it herself.
+
+- **Among parents whose lock holds, one that never had a child at that scale comes first**, reading
+  completed and archived diamonds too. File order holds within each group, and the served parent is
+  still offered next, not hidden.
+- Not changed: a `fix` ruling keeps an item until its cause clears, as designed for every item; the
+  ruling for an item that is wrong is `drop`, which the item's own text already offers. The run's
+  builder recorded `fix` where the founder meant `drop`.
+- Tests: the untried L2 first (a mutant that ignores history is killed); with no history, file
+  order; once the untried door is dropped, the served one is offered.
+
 ## v0.282.0 - Deliver is not released
 
 **2026-09-28.** E2E relay on 0.280.0, step L5-open, carried on from the state the L4 steps left: the

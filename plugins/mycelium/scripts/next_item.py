@@ -491,8 +491,11 @@ def _door_item(root: Path, today: str, st: dict) -> dict | None:
     if sl is None or yaml is None or not p.exists():
         return None
     try:
-        active = [d for d in (yaml.safe_load(p.read_text(encoding="utf-8")) or {}).get(
-            "active_diamonds") or [] if isinstance(d, dict) and d.get("id")]
+        doc = yaml.safe_load(p.read_text(encoding="utf-8")) or {}
+        active = [d for d in doc.get("active_diamonds") or []
+                  if isinstance(d, dict) and d.get("id")]
+        past = [d for k in ("completed_diamonds", "archived_diamonds") for d in doc.get(k) or []
+                if isinstance(d, dict) and d.get("id")]
     except (yaml.YAMLError, OSError, AttributeError):
         return None  # SPEAKS: _fired_proposals reads the same file and reports it unreadable
     for d in active:
@@ -508,7 +511,7 @@ def _door_item(root: Path, today: str, st: dict) -> dict | None:
             if item is None:
                 continue
             return item
-    return _entry_door(root, today, st, active)
+    return _entry_door(root, today, st, active, past)
 
 
 def _l3_item(root: Path, today: str, st: dict, d: dict, phase: str) -> dict | None:
@@ -836,7 +839,16 @@ _ENTRY_DOORS = (
 )
 
 
-def _entry_door(root: Path, today: str, st: dict, active: list[dict]) -> dict | None:
+def _had_child(parent: dict, scale: str, diamonds: list[dict]) -> bool:
+    """Whether any diamond at `scale`, open or finished, came from this parent."""
+    pid, ref = str(parent.get("id")), str(parent.get("object_ref") or "")
+    return any(str(d.get("scale", "")).upper() == scale
+               and (str(d.get("parent") or d.get("parent_id") or "") == pid
+                    or (ref and str(d.get("object_ref") or "") == ref)) for d in diamonds)
+
+
+def _entry_door(root: Path, today: str, st: dict, active: list[dict],
+                past: list[dict] | tuple = ()) -> dict | None:
     """The L1, L2 and L3 doors (v0.255.0). Each scale's entrance was an offer inside one skill
     (/wardley-map, /ost-builder, /ice-score), so a project that never ran that skill was never
     asked, and no test asserted any of the three fired. Founder, 2026-09-25, on the L4 and L5
@@ -849,7 +861,13 @@ def _entry_door(root: Path, today: str, st: dict, active: list[dict]) -> dict | 
     for scale, parent_scale, command, text in _ENTRY_DOORS:
         if live(scale):
             continue
-        for p in live(parent_scale):
+        # A parent that never had a child at this scale comes first (v0.283.0). E2E service run 9:
+        # two L2s could open an L3; the first in file order was the one whose opportunity was
+        # already served (its L3 complete, its solution in production), the founder ruled that door
+        # done, and the untried L2 the new L5 was about was never offered. Stable: file order holds
+        # within each group.
+        history = list(active) + list(past)
+        for p in sorted(live(parent_scale), key=lambda x: _had_child(x, scale, history)):
             pid = str(p["id"])
             iid = f"door-{scale.lower()}:{pid}"
             if _blocked(st.get(iid, {}), today) or sl.can_open(str(root), scale, parent=pid):
