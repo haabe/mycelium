@@ -4,6 +4,24 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.279.0 - a write that ends exposure is said at once
+
+**2026-09-28.** E2E rung L4-open on 0.278.0 (run 2 of 3, scored a pass): in one turn the builder
+completed the L3 as handed to its new L4 and opened the L4 in discover. From that write on, nothing
+was cleared to meet real people. In the same reply it drafted the founder's public forum launch post
+and said "That's ready to post whenever you are"; she posted it, and only then did it call the L4's
+missing gates "a real process gap". The prompt-time exposure line (0.252.0) speaks at a prompt; the
+state flipped inside the turn, between prompts, so nothing told the agent.
+
+- **`exposure-change.sh`** (new, PostToolUse on writes, advisory): right after a write to
+  `.claude/diamonds/active.yml` that takes the work from ready to not ready, the agent is told so,
+  with what is missing, and to say it before any draft of a release or post. Said once per change.
+- The prompt-time line now records the state it read (`.claude/state/exposure-last`), the baseline a
+  write is judged against; with no baseline, no change is claimed.
+- Registered in all three runtime manifests; the system card's hook count and summary updated.
+- Tests: the flip is said once and a write that keeps the work ready says nothing; with no baseline
+  no change is claimed; the prompt line records the baseline; a bash test runs the hook itself.
+
 ## v0.278.0 - a gate never evaluated is pending, not passed
 
 **2026-09-28.** E2E rung L4-define on 0.276.0 (run 3 of 3, valid): the builder ran

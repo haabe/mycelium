@@ -589,6 +589,37 @@ def test_exposure_needs_deliver_and_security(tmp_path):
     assert sl.exposure_state(p)[0]
 
 
+def test_a_write_that_ends_exposure_is_said_at_once(tmp_path):
+    """v0.279.0, E2E rung L4-open on 0.278.0: one turn completed the L3 as handed to a new L4 in
+    discover, and the builder then called the founder's public launch post "ready to post". The
+    exposure line speaks only at a prompt; the state flipped inside the turn."""
+    live = _l3(phase="deliver", gates=EXPOSE_PASSED, learning=LEARNING)
+    p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), diamonds=[live])
+    assert sl.exposure_change_line(p) == "", "the first reading only sets the baseline"
+    assert sl.exposure_change_line(p) == "", "control: still ready, nothing to say"
+    handed = {**LEARNING, "ended": {"how": "handed_to_l4", "on": "2026-09-25", "l4": "l4-a"}}
+    done = _l3(phase="complete", gates=EXPOSE_PASSED, learning=handed)
+    active = tmp_path / ".claude" / "diamonds" / "active.yml"
+    doc = yaml.safe_load(active.read_text())
+    doc["active_diamonds"] = [d for d in doc["active_diamonds"] if d["id"] != "l3-a"] + [L4_CHILD]
+    doc["completed_diamonds"] = [done]
+    active.write_text(yaml.safe_dump(doc))
+    line = sl.exposure_change_line(p)
+    assert line.startswith("MYCELIUM EXPOSURE STATE CHANGED WITH THIS WRITE")
+    assert "launch post" in line and "before they act" in line
+    assert sl.exposure_change_line(p) == "", "said once, at the change, not on every write"
+
+
+def test_the_prompt_line_sets_the_baseline_a_write_is_judged_against(tmp_path):
+    """Control: with no prompt-time or earlier reading, a not-ready state claims no change."""
+    p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), diamonds=[_l3()])
+    assert sl.exposure_change_line(p) == ""
+    live = _l3(phase="deliver", gates=EXPOSE_PASSED, learning=LEARNING)
+    q = _project(tmp_path / "q", purpose=PURPOSE, opps=_full_opps(), diamonds=[live])
+    assert sl.exposure_line(q, {"session_id": "s1", "prompt": "hi"}) == ""
+    assert (Path(q) / sl.EXPOSURE_LAST).read_text().strip() == "ready"
+
+
 def test_an_l3_reaches_real_people_only_through_a_bounded_learning_delivery(tmp_path):
     """v0.257.0: the L3 delivers to LEARN, to a named audience until a date, by recorded means;
     production for everyone is an L4. E2E run 10 had an SMS app live at two sites under an L3."""

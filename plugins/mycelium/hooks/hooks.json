@@ -214,6 +214,12 @@
             "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/canvas-schema-check.sh",
             "timeout": 10,
             "statusMessage": "Mycelium canvas schema check"
+          },
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/exposure-change.sh",
+            "timeout": 10,
+            "statusMessage": "Mycelium exposure change (a write that makes the work not ready for real people)"
           }
         ]
       },
