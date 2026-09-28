@@ -66,6 +66,11 @@ from pathlib import Path
 LEDGER_REL = Path(".claude") / "state" / "advisory-ledger.jsonl"
 MUTE_DAYS = 7
 RULINGS = ("keep", "fix", "drop", "snooze")
+#: Items whose evidence arrives only once they are done (v0.280.0). E2E service world run 7: the
+#: pilot's start item was snoozed "until real first-month-end data lands", data that exists only
+#: after the pilot starts; the past-its-last-day item was snoozed the same way, and the founder
+#: asked for the same month-end data six sessions running. Nothing would ever ask.
+DONE_TO_BE_ANSWERED = ("start-l3:", "deliver-l3:", "delivery-over-l3:")
 
 #: Advisories whose flag is a PERMANENT RECORD of a past state, not a defect awaiting a fix.
 #: A clear rate is meaningless for these: the only way to clear one is to falsify the record, and
@@ -425,6 +430,10 @@ def rule(  # noqa: PLR0913, PLR0917 — a CLI verb with one argument per flag
         return f"advisory ledger: ruling must be one of {', '.join(RULINGS)}"
     if ruling == "snooze" and not until:
         return "advisory ledger: snooze needs --until YYYY-MM-DD or --until asked"
+    if ruling == "snooze" and until == "asked" and aid.startswith(DONE_TO_BE_ANSWERED):
+        return (f"advisory ledger: refused. {aid} cannot be snoozed until asked: the evidence it "
+                "waits on arrives only once it is done, so nothing would ever ask. Snooze it to a "
+                "date (--until YYYY-MM-DD), or drop it with the reason.")
     ev = {"kind": "ruled", "id": aid, "date": today, "ruling": ruling, "note": note}
     if until:
         ev["until"] = until
@@ -483,8 +492,11 @@ def main(argv=None) -> int:
     if not args.id or not args.ruling:
         print("advisory ledger: rule needs --id and --ruling keep|fix|drop")
         return 2
-    print(rule(root, args.id, args.ruling, args.note, args.today, args.until))
-    return 0
+    msg = rule(root, args.id, args.ruling, args.note, args.today, args.until)
+    print(msg)
+    # A refusal exits 2 (v0.280.0): it printed and exited 0 before, so a caller that checked the
+    # status read an unrecorded ruling as recorded.
+    return 0 if " ruled " in msg else 2
 
 
 if __name__ == "__main__":

@@ -12,6 +12,8 @@ import json
 import sys
 from pathlib import Path
 
+import pytest
+
 SCRIPTS = Path(__file__).resolve().parents[2] / "plugins" / "mycelium" / "scripts"
 
 
@@ -271,8 +273,30 @@ def test_rule_validation(tmp_path, capsys):
     m = _mod()
     (tmp_path / ".claude").mkdir()
     assert m.main(["rule", "--project-dir", str(tmp_path)]) == 2
-    assert m.main(["rule", "--project-dir", str(tmp_path), "--id", "x", "--ruling", "maybe"]) == 0
+    # A refused ruling exits 2 (v0.280.0); it exited 0, so a caller read it as recorded.
+    assert m.main(["rule", "--project-dir", str(tmp_path), "--id", "x", "--ruling", "maybe"]) == 2
     assert "must be one of" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("aid", ["start-l3:l3-a", "deliver-l3:l3-a",
+                                 "delivery-over-l3:l3-a:2026-11-03"])
+def test_an_item_only_its_doing_answers_cannot_wait_until_asked(tmp_path, capsys, aid):
+    """v0.280.0, E2E service world run 7: the pilot's start item was snoozed until month-end data
+    that exists only once the pilot starts, and nothing ever asked."""
+    m = _mod()
+    (tmp_path / ".claude").mkdir()
+    base = ["rule", "--project-dir", str(tmp_path), "--id", aid, "--ruling", "snooze"]
+    assert m.main([*base, "--until", "asked", "--note", "when the data lands"]) == 2
+    assert "cannot be snoozed until asked" in capsys.readouterr().out
+    assert not (tmp_path / ".claude" / "state" / "advisory-ledger.jsonl").exists()
+    assert m.main([*base, "--until", "2026-12-01"]) == 0, "a dated snooze is still allowed"
+
+
+def test_control_other_items_still_wait_until_asked(tmp_path, capsys):
+    m = _mod()
+    (tmp_path / ".claude").mkdir()
+    assert m.main(["rule", "--project-dir", str(tmp_path), "--id", "door-l4:l3-a",
+                   "--ruling", "snooze", "--until", "asked"]) == 0
 
 
 def test_unregistered_text_is_left_with_the_segment_before_it(tmp_path, capsys, monkeypatch):
@@ -300,7 +324,7 @@ def test_ruling_snooze_silences_until_date_then_returns(tmp_path, capsys, monkey
         m.main(
             ["rule", "--project-dir", str(tmp_path), "--id", "bvssh-overdue", "--ruling", "snooze"]
         )
-        == 0
+        == 2
     )
     assert "needs --until" in capsys.readouterr().out
     m.main(

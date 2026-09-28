@@ -4,6 +4,28 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.280.0 - an item only its doing can answer is not snoozed until asked
+
+**2026-09-28.** E2E service world run 7 (0.278.0; invalid on a founder error, and read for Mycelium's
+behaviour all the same): the L3 reached Deliver and its pilot never started. The start item was
+snoozed twice "until real first-month-end data lands", and that data exists only after the pilot
+starts; the item for a learning delivery past its last day was snoozed the same way, and so were the
+two advisories after it. With every item that could say "your pilot has not started" silent, the
+founder asked for the same month-end data six sessions running and the world answered "not known
+yet" each time.
+
+- **`advisory_ledger.py rule` refuses `--until asked` on `start-l3:`, `deliver-l3:` and
+  `delivery-over-l3:` items**: the evidence they wait on arrives only once they are done, so nothing
+  would ever ask. A dated snooze is still accepted, and so is drop with a reason.
+- **Those items offer a dated snooze only** in the command they show (`--until DATE`), so the
+  item never suggests what the ledger refuses; every other item still offers `DATE|asked`.
+- **A refused ruling exits 2.** Every refusal (an unknown ruling, a snooze with no `--until`, the one
+  above) printed its message and exited 0, so a caller that read the status took an unrecorded ruling
+  as recorded.
+- Tests: the three items refuse a snooze until asked and record nothing, and accept a date; the
+  control, a door item, still snoozes until asked; the two tests that pinned exit 0 on a refusal now
+  expect 2.
+
 ## v0.279.0 - a write that ends exposure is said at once
 
 **2026-09-28.** E2E rung L4-open on 0.278.0 (run 2 of 3, scored a pass): in one turn the builder
