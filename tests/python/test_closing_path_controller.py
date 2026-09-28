@@ -37,6 +37,10 @@ ACTIVE = """active_diamonds:
   theory_gates_status:
     evidence: pass
     four_risks: pending
+    jtbd: pass
+    cynefin: pass
+    bias: pass
+    corrections: pass
   notes: keep me
 """
 
@@ -215,6 +219,13 @@ def test_all_walks_every_diamond_and_all_pass_stores_nothing(tmp_path, capsys):
   phase: deliver
   theory_gates_status:
     dora: pass
+    evidence: pass
+    bias: pass
+    security: pass
+    bvssh: pass
+    service_quality: pass
+    delivery_metrics: pass
+    corrections: pass
 """
     )
     _project(tmp_path, active=active)
@@ -224,6 +235,26 @@ def test_all_walks_every_diamond_and_all_pass_stores_nothing(tmp_path, capsys):
     assert "closes_on" not in next(
         d for d in _active(tmp_path)["active_diamonds"] if d["id"] == "l4"
     )
+
+
+def test_a_gate_never_evaluated_is_pending_not_passed(tmp_path, capsys):
+    """v0.278.0, E2E rung L4-define on 0.276.0: an L4 with no gate status printed "every gate
+    reads pass; nothing to store", and the builder read that as nothing to do."""
+    bare = ACTIVE + "- id: l4\n  scale: L4\n  phase: discover\n"
+    _project(tmp_path, active=bare)
+    rc, out = _run(tmp_path, capsys, "--all")
+    assert "closing-path l4: every gate reads pass" not in out
+    assert "closing-path l4: 3 gate(s) pending" in out  # evidence, bias, corrections
+    rc, out = _run(tmp_path, capsys, "--diamond-id", "l4")
+    assert "evidence (not recorded) | never evaluated" in out and "| agent | now" in out
+
+
+def test_the_assessment_records_gates_on_every_outcome():
+    """The closing path reads `theory_gates_status`; the skill that evaluates gates must write it
+    on a needs-evidence ruling too, or the next session re-derives every gate from nothing."""
+    skill = (Path(__file__).resolve().parents[2] / "plugins" / "mycelium" / "skills"
+             / "diamond-progress" / "SKILL.md").read_text()
+    assert "in `theory_gates_status` on the diamond, on\n        every outcome" in skill
 
 
 def test_all_on_empty_file_is_na(tmp_path, capsys):

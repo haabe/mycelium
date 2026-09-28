@@ -4,6 +4,25 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.278.0 - a gate never evaluated is pending, not passed
+
+**2026-09-28.** E2E rung L4-define on 0.276.0 (run 3 of 3, valid): the builder ran
+`/mycelium:diamond-progress` on the L4, ruled needs-evidence, and wrote no gate result. Step 2 said
+to "record Pass / Fail / Insufficient Evidence" without saying where, and the only instruction to
+write `theory_gates_status` sat under the phase move. The next session reported "no gate results
+are recorded" as a blocker, and `derive_closing_path.py` printed "every gate reads pass; nothing to
+store" for a diamond whose gate status was empty: it listed only recorded gates that were not
+`pass`, so a gate never evaluated read as passed. The L4 stayed in discover for the rest of the run.
+
+- **The closing path counts a gate the next transition needs and has no status as pending**, shown
+  as `(not recorded) | never evaluated: the assessment judges it and records the result | agent |
+  now`. "Every gate reads pass" now means every gate the next transition needs.
+- **`/mycelium:diamond-progress` records each gate's result in `theory_gates_status` on every
+  outcome**, not only when the diamond progresses, with what is missing in `progression_blockers`.
+- Tests: an L4 with no gate status lists its three discover->define gates as pending and the agent's;
+  the control, an L4 with every deliver->complete gate passed, still reads all-pass and stores
+  nothing; the two fixtures that recorded only some of their transition's gates now record them all.
+
 ## v0.277.0 - a test past its score date is scored by Mycelium
 
 **2026-09-27.** E2E rung L4-open on 0.276.0 (run 1 of 3): the return-use test's result landed in
