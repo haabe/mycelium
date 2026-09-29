@@ -202,3 +202,33 @@ def test_control_a_hook_matching_fewer_tools_on_codex_is_caught():
     claude = {("PostToolUse", "read-log.sh"): {"Read", "Bash"}}
     codex = {("PostToolUse", "read-log.sh"): {"Read", "read"}}
     assert _parity_gaps(claude, codex) == ["('PostToolUse', 'read-log.sh') misses ['Bash'] on Codex"]
+
+
+# ------------------------------------------------------------------ skill names (v0.286.3)
+
+_ni_spec = importlib.util.spec_from_file_location("next_item_names", SCRIPTS / "next_item.py")
+ni = importlib.util.module_from_spec(_ni_spec)
+_ni_spec.loader.exec_module(ni)
+ITEM = {"id": "door-l5:x", "text": "Open the L5.", "command": "/mycelium:launch-tier",
+        "shown": 1}
+
+
+def test_on_codex_the_human_line_says_the_skill_the_way_codex_mentions_it(monkeypatch):
+    monkeypatch.setenv("MYCELIUM_RUNTIME", "codex")
+    assert "run `$mycelium:launch-tier`" in ni.render_human(ITEM)
+
+
+def test_control_on_claude_code_it_stays_a_slash_command(monkeypatch):
+    monkeypatch.delenv("MYCELIUM_RUNTIME", raising=False)
+    assert "run `/mycelium:launch-tier`" in ni.render_human(ITEM)
+
+
+def test_a_path_command_is_left_alone_on_codex(monkeypatch):
+    monkeypatch.setenv("MYCELIUM_RUNTIME", "codex")
+    item = {**ITEM, "command": 'python3 "/x/plugins/mycelium/scripts/advisory_ledger.py" rule'}
+    assert item["command"] in ni.render_human(item)
+
+
+def test_the_contract_tells_the_agent_the_codex_form():
+    text = (PLUGIN / "engine" / "agent-operating-contract.md").read_text()
+    assert "`$mycelium:x`" in text

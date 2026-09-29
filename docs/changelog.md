@@ -4,6 +4,22 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.286.3 - on Codex, the next item names a skill the way Codex users type it
+
+**2026-09-29.** Codex CLI 0.158.0 lists Mycelium's skills as `mycelium:diamond-progress` (read from
+`codex debug prompt-input`) and its users invoke a skill by mentioning it with `$` (Codex skills
+docs). Every next item told the person to run `/mycelium:...`, which is not how anyone types it
+there.
+
+- The human line (`render_human`) renders `$mycelium:x` when the hook runs under Codex; the Codex
+  hook commands already carry `MYCELIUM_RUNTIME=codex`. Commands that are script paths are left
+  alone.
+- The operating contract's path-convention section gains one line: `/mycelium:x` in any Mycelium
+  text is the skill `mycelium:x`, mentioned on Codex as `$mycelium:x`. The 63 skills' own text is
+  unchanged.
+- Tests: the Codex form on Codex, the slash form on Claude Code (control), a script path untouched,
+  and the contract line present.
+
 ## v0.286.2 - Codex logs shell reads too
 
 **2026-09-29.** Checking the read-before gates on Codex, which 0.286.0 listed as not yet measured:
