@@ -144,3 +144,61 @@ def test_start_checks_it_inside_its_one_first_command():
     block = re.search(r"```bash\n(.+?)\n```", step2, re.DOTALL).group(1)
     assert "\n" not in block and "hooks-alive" in block and "${CLAUDE_PROJECT_DIR:-.}" in block
     assert "hooks-alive" not in text[:text.index("## Step 2")], "no second check before it"
+
+
+# ------------------------------------------------------------------ matcher parity (v0.286.2)
+
+#: Tools Codex does not have, so a Claude Code matcher naming them has nothing to cover there.
+NOT_ON_CODEX = {"NotebookEdit"}
+#: Registrations that differ by design, each named in hooks.codex.json's description or the doc.
+BY_DESIGN = {
+    ("PostToolUseFailure", "reflexion-gate.sh"),    # no such event; codex-postfailure-shim.sh
+    ("PostToolUse", "codex-postfailure-shim.sh"),   # the shim itself
+    ("SessionStart", "session-start.sh --async"),   # Codex drops async hooks; one sync tier
+    ("SessionStart", "session-start.sh --fast"),
+    ("SessionStart", "session-start.sh"),
+}
+
+
+def _registrations(doc: dict) -> dict:
+    out: dict = {}
+    for event, groups in doc["hooks"].items():
+        for g in groups:
+            tools = {t for t in (g.get("matcher") or "").split("|") if t}
+            for h in g["hooks"]:
+                m = re.search(r"hooks/([\w.-]+\.sh)(.*?)\"?$", h["command"])
+                out.setdefault((event, (m.group(1) + m.group(2)).strip()), set()).update(tools)
+    return out
+
+
+def _parity_gaps(claude: dict, codex: dict) -> list[str]:
+    gaps = []
+    for key, tools in claude.items():
+        if key in BY_DESIGN:
+            continue
+        if key not in codex:
+            gaps.append(f"{key} is not registered for Codex")
+            continue
+        if not codex[key]:  # an empty matcher matches every tool
+            continue
+        missing = tools - codex[key] - NOT_ON_CODEX
+        if key[0] == "SessionStart":
+            missing = set()  # startup|resume|clear|fork are Claude Code sources; Codex's is empty
+        if missing:
+            gaps.append(f"{key} misses {sorted(missing)} on Codex")
+    return gaps
+
+
+def test_every_claude_code_hook_sees_the_same_tools_on_codex():
+    """v0.286.2: read-log.sh took `Read|Bash` on Claude Code since v0.143.0 and `Read|read` on
+    Codex, which has no Read tool, so on Codex no read was ever logged and verify_citations.py had
+    no ground truth. Check 44 compares which scripts are registered, not what they match."""
+    claude = _registrations(json.loads((PLUGIN / "hooks" / "hooks.json").read_text()))
+    codex = _registrations(json.loads((PLUGIN / "hooks" / "hooks.codex.json").read_text()))
+    assert _parity_gaps(claude, codex) == []
+
+
+def test_control_a_hook_matching_fewer_tools_on_codex_is_caught():
+    claude = {("PostToolUse", "read-log.sh"): {"Read", "Bash"}}
+    codex = {("PostToolUse", "read-log.sh"): {"Read", "read"}}
+    assert _parity_gaps(claude, codex) == ["('PostToolUse', 'read-log.sh') misses ['Bash'] on Codex"]
