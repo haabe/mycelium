@@ -4,6 +4,29 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.285.0 - a snoozed door wakes when the product changes
+
+**2026-09-29.** E2E relay on 0.283.0, rung L3-open: the builder added fractions and ranges to the
+recipe code by editing an existing file (the discovery gate blocks new files only, by design), the
+founder snoozed the L1 door "until asked" because the build was already under way, and nothing was
+offered for the rest of the run. Service run 10 ended the same way: two items snoozed until asked
+and 12 silent sessions while the pilot ran outside the ladder.
+
+- **A snooze until asked on a way into the ladder (`door-*`) or on the ladder itself
+  (`unassessed`) ends when a product file changes after the ruling**: any file git sees outside
+  `.claude/` and the evidence folders, committed or not. The item comes back saying how many files
+  changed since it was snoozed.
+- What the ruling session wrote does not count: the ruling records its machine time and the session
+  the item was shown in, and the change log names each file's last writer.
+- Not changed: research notes and canvas writes do not wake it, so an active project is not asked
+  every session; other items, and snoozes to a date, keep their ruling. Outside a git repo nothing
+  wakes. No new blocking.
+- Not fixed by this: service run 10's pilot documents were pasted into the chat after the gate
+  blocked them, so no product file changed and nothing would wake.
+- Tests: a change after the snooze wakes the door; controls for no change, the ruling session's own
+  write, a research note, another advisory and a dated snooze; pick offers the woken door and says
+  why; a ruling records its time and session.
+
 ## v0.284.0 - the outside trial is Develop's, not a release
 
 **2026-09-29.** E2E relay on 0.283.0, rung L3-deliver: the L3's Develop -> Deliver gate asks for one

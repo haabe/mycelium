@@ -874,3 +874,17 @@ reviewed:
     this session; quiet is chosen over repeating on every prompt. The human still gets the item from
     next-item-repeat.sh at Stop, and for an agent's item the session-start copy (YOURS TO DO NOW)
     still reaches the agent, so the item is not lost. Reviewed 2026-09-27, v0.277.0.
+- id: advisory_ledger.py@a0ce9985c4
+  verdict: accepted
+  reason: >-
+    `_item_session` returns "" when next-item.json is missing or unreadable. The ruling is still
+    recorded; only the session whose own writes are excluded from waking a snooze is unknown, so
+    every later product write counts and the door comes back sooner, saying why: the failure errs
+    toward asking, never toward silence. Reviewed 2026-09-29, v0.285.0.
+- id: next_item.py@56994ef7a5
+  verdict: accepted
+  reason: >-
+    `_product_files` returns [] when git cannot run or the directory is not a repo. Nothing wakes, so
+    a snooze until asked holds exactly as it did before 0.285.0 and as the human ruled it; the
+    ruling itself stays listed in the ledger report. The wake is an addition on top of a ruling the
+    human made, and without it the ruling is what they asked for. Reviewed 2026-09-29, v0.285.0.

@@ -36,6 +36,7 @@ import contextlib
 import datetime as _dt
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -324,6 +325,50 @@ def _landed_since(root: Path, ts: str, session: str) -> int:
     writer = _last_writer(root)
     return sum(1 for f in _evidence_files(root)
                if f.stat().st_mtime > cut and writer.get(str(f.resolve())) != session)
+
+
+def _product_files(root: Path) -> list[Path]:
+    """What the product is made of: every file git sees outside `.claude/` and the evidence
+    folders, committed or not. Outside a git repo there is nothing to read, so nothing wakes."""
+    try:
+        out = subprocess.run(["git", "ls-files", "-co", "--exclude-standard", "-z"], cwd=root,
+                             capture_output=True, text=True, timeout=10, check=False)
+    except (OSError, subprocess.SubprocessError):
+        return []  # SPEAKS: no wake is the old behaviour, the snooze holds as ruled
+    if out.returncode != 0:
+        return []
+    evidence = {f.resolve() for f in _evidence_files(root)}
+    names = [n for n in out.stdout.split("\0") if n and not n.startswith((".claude/", ".git/"))]
+    return [f for f in (root / n for n in names) if f.is_file() and f.resolve() not in evidence]
+
+
+#: A snooze "until asked" on a way into the ladder, or on the ladder itself, ends when the product
+#: changes after it (v0.285.0). E2E relay L3-open and service run 10 on 0.283.0: the product was
+#: being built outside the ladder, the founder snoozed the door "until asked", and Mycelium said
+#: nothing for the rest of the run while the work went on.
+WAKES_ON_WORK = ("door-", "unassessed")
+
+
+def _woken(root: Path, st: dict) -> dict[str, int]:
+    """Items snoozed until asked whose product files changed after the ruling, not counting what
+    the ruling session wrote itself: id -> how many files."""
+    out: dict[str, int] = {}
+    files: list[Path] | None = None
+    for aid, x in st.items():
+        if (x.get("snoozed_until") != SNOOZE_ASKED or not x.get("snooze_ts")
+                or not str(aid).startswith(WAKES_ON_WORK)):
+            continue
+        try:
+            cut = _dt.datetime.fromisoformat(str(x["snooze_ts"])).timestamp()
+        except ValueError:
+            continue
+        files = _product_files(root) if files is None else files
+        writer = _last_writer(root)
+        n = sum(1 for f in files if f.stat().st_mtime > cut
+                and writer.get(str(f.resolve())) != str(x.get("snooze_session") or ""))
+        if n:
+            out[str(aid)] = n
+    return out
 
 
 def _unassessed(root: Path, today: str) -> list[dict]:
@@ -940,6 +985,18 @@ def _product_paths_item(root: Path, today: str, st: dict) -> dict | None:
 def pick(root: Path, reminders: str, today: str) -> tuple[dict | None, str]:
     """The one item, and a note when something could not be read."""
     st, note = _ledger_state(root)
+    woken = _woken(root, st)
+    for aid in woken:
+        st[aid] = {**st[aid], "snoozed_until": None}
+    item, note = _pick_from(root, reminders, today, st, note)
+    if item and item.get("id") in woken:
+        item = {**item, "text": (f"Snoozed until asked; since then {woken[item['id']]} product "
+                                 "file(s) changed, so it is asked again. " + item["text"])}
+    return item, note
+
+
+def _pick_from(root: Path, reminders: str, today: str, st: dict,
+               note: str) -> tuple[dict | None, str]:
     ids = set(al.scan(reminders)) if al is not None else set()
     fired, fnote = _fired_proposals(root)
     note = "; ".join(x for x in (note, fnote) if x)
