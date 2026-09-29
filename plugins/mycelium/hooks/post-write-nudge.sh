@@ -34,6 +34,10 @@ NUDGE=""
 case "$FILE_PATH" in
   *".claude/canvas/opportunities.yml"|*".claude/canvas/opportunities.yml"*)
     NUDGE="Opportunity Solution Tree edited. Consider /ost-builder for the structured OST discipline (Torres). Remember: opportunities come from research, never from brainstorming."
+    # v0.287.0: what the leaves this write touched still owe (a cycle row, a purpose stance),
+    # said now; the validator used to name them days later, when nothing could fill them.
+    _OWED="$(printf '%s' "$INPUT" | python3 "$(dirname "${BASH_SOURCE[0]}")/../scripts/leaf_record_nudge.py" 2>/dev/null)"
+    [ -n "$_OWED" ] && NUDGE="$_OWED $NUDGE"
     ;;
   *".claude/canvas/user-needs.yml"*)
     NUDGE="User needs canvas edited. Consider /user-needs-map for Allen's methodology (needs independent of solutions). Every need entry needs provenance (evidence_type, sources) — see schema."

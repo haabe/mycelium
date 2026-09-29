@@ -1906,13 +1906,51 @@ def _xref_strings(node, out, depth=0):
         out.append(node)
 
 
+#: Fields an entry is addressed by (v0.287.0 adds the last two): archived-solutions keys its
+#: entries by `leaf_id`, the upstream surface registry by `artifact_class`.
+_XREF_ID_FIELDS = ("id", "type", "leaf_id", "artifact_class")
+
+
+def _entry_named(node: dict, seg: str) -> bool:
+    """An entry named `seg` by an id-like field, or a dated note whose `kind` plus `date` spell it
+    (v0.287.0): the key-shape guard tells agents to turn `<name>_2026_09_09:` into a notes entry
+    with `kind` and `date`, and every pointer to the old key then dangled."""
+    if any(str(node.get(f)) == seg for f in _XREF_ID_FIELDS):
+        return True
+    kind = node.get("kind")
+    if kind is None:
+        return False
+    date = str(node.get("date") or "").replace("-", "_")
+    return seg in (str(kind), f"{kind}_{date}") if date else seg == str(kind)
+
+
+def _moved_here(node, segs, i, depth=0) -> bool:
+    """An entry a restructure moved keeps its old address (v0.287.0): `moved_from` holds the path
+    it had, `former_key` the key. 9 of the 13 pointers left dangling on the dogfood canvas on
+    2026-09-29 named entries moved into a list this way; the entries were there all along."""
+    if depth > _XREF_DEPTH:
+        return False
+    if isinstance(node, dict):
+        mf = str(node.get("moved_from") or "")
+        rest = ".".join(segs[i:])
+        if mf and (mf == rest or mf.endswith("." + rest)
+                   or any(mf == ".".join(segs[j:]) for j in range(i + 1))):
+            return True
+        if i == len(segs) - 1 and str(node.get("former_key") or "") == segs[i]:
+            return True
+        return any(_moved_here(v, segs, i, depth + 1) for v in node.values())
+    if isinstance(node, list):
+        return any(_moved_here(v, segs, i, depth + 1) for v in node)
+    return False
+
+
 def _xref_matches(node, seg, depth=0):
-    """Every subtree named `seg`: a mapping key, or an entry whose id or type is `seg`."""
+    """Every subtree named `seg`: a mapping key, or an entry named by an id-like field."""
     hits = []
     if depth > _XREF_DEPTH:
         return hits
     if isinstance(node, dict):
-        if str(node.get("id")) == seg or str(node.get("type")) == seg:
+        if _entry_named(node, seg):
             hits.append(node)
         for k, v in node.items():
             if k == seg:
@@ -1925,12 +1963,27 @@ def _xref_matches(node, seg, depth=0):
 
 
 def _xref_resolves(doc, path):
+    segs = [s for s in path.strip(".").split(".") if s]
     nodes = [doc]
-    for seg in (s for s in path.strip(".").split(".") if s):
-        nodes = [hit for n in nodes for hit in _xref_matches(n, seg)]
-        if not nodes:
-            return False
+    for i, seg in enumerate(segs):
+        hits = [hit for n in nodes for hit in _xref_matches(n, seg)]
+        if not hits:
+            # From the file's root: an entry moved into a sibling list (`kill_criterion.x` into
+            # `definition_of_done.log`) is not under the node the path failed at.
+            return _moved_here(doc, segs, i)
+        nodes = hits
     return True
+
+
+def _plugin_engine_doc(name: str):
+    """The plugin's own engine/<name>, for a pointer at a framework file that shares its name with
+    a project file (v0.287.0): `surface-registry.yml#channel-evidence` means the plugin's
+    registry, and was checked only against the project's harness file of the same name."""
+    path = Path(__file__).resolve().parents[1] / "engine" / name
+    try:
+        return yaml.safe_load(path.read_text()) or {} if path.is_file() else None
+    except (yaml.YAMLError, OSError):
+        return None  # SPEAKS: the pointer is then reported as dangling, exactly as before
 
 
 def cross_reference_findings(canvas_dir):
@@ -1959,10 +2012,14 @@ def cross_reference_findings(canvas_dir):
                 target, anchor = m.group(1), m.group(2)
                 if target not in files or _LINE_ANCHOR.match(anchor):
                     continue
+                if s[m.end():m.end() + 1] == "[":
+                    continue  # `file.yml#releases[].id` names a schema field, not an entry
                 seen.setdefault((target, anchor), name)
     out = []
     for (target, anchor), origin in sorted(seen.items()):
-        if not _xref_resolves(files[target], anchor):
+        engine = _plugin_engine_doc(target)
+        if not _xref_resolves(files[target], anchor) and not (
+                engine is not None and _xref_resolves(engine, anchor)):
             out.append(f"{origin}: `{target}#{anchor}` names nothing in {target} "
                        f"(no key, id or type `{anchor.strip('.').split('.')[0]}`"
                        f"{' on that path' if '.' in anchor.strip('.') else ''}); "
