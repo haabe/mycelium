@@ -4,6 +4,21 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.287.1 - a closing-path proposal ruled on the record stops being offered
+
+**2026-09-29.** Found in a diamond assessment of the dogfood repo, the first on 0.287.0. The top next
+item was `fired:ht-046`, a proposal that l1-strategy's closing path raised when ht-046 closed. It had
+been settled on 2026-09-16 the way `/mycelium:diamond-assess` says to settle one that chooses no path,
+`ruling:` and `ruled_at:` under the fired entry, keys `derive_closing_path.py` keeps across
+re-derivations. `next_item.py`'s `_fired_proposals` never read them, so only a separate advisory-ledger
+ruling could silence the item, and the prompt hook kept asking whether each user message was the answer
+to it.
+
+- `_fired_proposals` skips an entry that carries `ruling`. The two unruled entries on the dogfood L1
+  (ht-071, ht-092) are offered as before.
+- Tests: a ruled entry is not offered and the unruled one after it is; the test fails on the old
+  picker.
+
 ## v0.287.0 - a leaf's missing record is said at the write, and moved entries keep their address
 
 **2026-09-29.** Asked to fix the sources of the dogfood canvas's validator warnings rather than the
