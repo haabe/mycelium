@@ -100,12 +100,23 @@ def test_guard_state_is_recognised_by_real_path(tmp_path):
     "rsync /tmp/x CLAUDE.md",
     "cp /tmp/x CLAUDE.md",
     "python3 -c \"open('CLAUDE.md','w').write('x')\"",
+    "python3 -c 'from pathlib import Path; Path(\"CLAUDE.md\").write_text(\"x\")'",
+    "node -e \"require('fs').writeFileSync('CLAUDE.md', 'x')\"",
+    # verbatim shape of Codex CLI 0.158.0's recorded command, 2026-09-29
+    ("/bin/zsh -lc \"mkdir -p app && python3 -c 'from pathlib import Path; "
+     "Path(\\\"CLAUDE.md\\\").write_text(\\\"x\\\")'\""),
     "rm CLAUDE.md",
 ])
 def test_bash_writers_name_their_target(tmp_path, cmd):
     m = _m()
     scan = m.bash_write_targets(cmd, str(tmp_path))
     assert any(t.rel == "CLAUDE.md" for t in scan.targets), (cmd, scan)
+
+
+def test_control_a_write_text_with_no_literal_path_stays_unknown(tmp_path):
+    """v0.286.1 reads the path only where the call names one; a computed path is still opaque."""
+    scan = _m().bash_write_targets("python3 -c 'p=f(); p.write_text(\"x\")'", str(tmp_path))
+    assert not scan.targets and "python write_text" in scan.opaque
 
 
 def test_bash_absolute_path_and_cd_are_followed(tmp_path):

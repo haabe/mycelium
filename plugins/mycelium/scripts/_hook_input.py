@@ -216,6 +216,14 @@ _WRITERS = [
     (re.compile(rf"{_CMD}ed\s+(?:-[a-z]+\s+)*(?P<t>{_TOK})"), "ed"),
     (re.compile(rf"{_CMD}g?awk\b.*-i\s*inplace.*\s(?P<t>{_TOK})\s*$"), "awk -i inplace"),
     (re.compile(r"\bopen\s*\(\s*(?P<t>'[^']*'|\"[^\"]*\")\s*,\s*['\"][wax]"), "python open()"),
+    # v0.286.1: a literal path in the call is a target, not an unknown. Codex CLI writes through
+    # its shell, and on 0.158.0 with Mycelium's hooks trusted it created app/hello.py with
+    # `python3 -c 'Path("app/hello.py").write_text(...)'`; the entry below only recorded "a write,
+    # path unknown", which the discovery gate skips, so a new source file went through.
+    # The quotes may arrive escaped: Codex records `/bin/zsh -lc "... Path(\"app/hello.py\") ..."`.
+    (re.compile(r"\bPath\s*\(\s*\\?['\"](?P<t>[^'\"\\]+)\\?['\"]\s*\)\s*\.\s*write_(?:text|bytes)\s*\("),
+     "python Path.write_text"),
+    (re.compile(r"\bwriteFileSync\s*\(\s*\\?['\"](?P<t>[^'\"\\]+)\\?['\"]"), "node writeFileSync"),
     (re.compile(r"\bwrite_text\s*\("), "python write_text"),
 ]
 _OPAQUE = re.compile(r"\$\(|`|\$\{?[A-Za-z_]")
