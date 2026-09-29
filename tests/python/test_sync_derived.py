@@ -37,9 +37,11 @@ def _mini_repo(root, version="1.2.3", n_skills=3, plugin_version="1.2.3", token_
         f"# AI System Card\n\n- **Version:** {card_version or plugin_version}\n\n"
         f"- **Skills:** {token_count} skills define the procedures.\n"
     )
-    (root / "plugins/mycelium/.claude-plugin/plugin.json").write_text(
-        f'{{\n  "version": "{plugin_version}",\n  "description": "{token_count} skills, 13 gates."\n}}\n'
-    )
+    for manifest in (".claude-plugin", ".codex-plugin"):  # the Codex manifest since v0.286.0
+        (root / f"plugins/mycelium/{manifest}").mkdir(parents=True, exist_ok=True)
+        (root / f"plugins/mycelium/{manifest}/plugin.json").write_text(
+            f'{{\n  "version": "{plugin_version}",\n  "description": "{token_count} skills, 13 gates."\n}}\n'
+        )
     (root / ".claude-plugin/marketplace.json").write_text(
         f'{{\n  "description": "{token_count} skills, six scales."\n}}\n'
     )

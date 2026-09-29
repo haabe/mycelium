@@ -31,12 +31,22 @@ Output a short welcome before doing anything. Do NOT skip this — the install-t
 Run exactly this check, and only this check:
 
 ```bash
-test -f "$CLAUDE_PROJECT_DIR/.claude/diamonds/active.yml"
+test -f "${CLAUDE_PROJECT_DIR:-.}/.claude/diamonds/active.yml"; echo "state=$?"; find .claude/state/hooks-alive -mmin -60 2>/dev/null
 ```
 
-- **If exit code 0** (file EXISTS): the project already has Mycelium state. Skip directly to Step 4 routing output. **Do NOT run setup. Do NOT run mkdir. Do NOT touch `.gitkeep` stubs.** Setup-style operations on an already-initialized project waste tokens and trigger Read-before-Write tool errors when the agent then tries to write to existing files. Detected during 2026-05-09 plugin-form dogfood — the agent ran `mkdir -p .claude/...` before honoring this gate, then hit a Write error on `active.yml` and only then realized the project was initialized. The fix is structural: the gate is the first action.
+(`${CLAUDE_PROJECT_DIR:-.}` since v0.286.0: Codex CLI does not set the variable, and the bare form
+tested `/.claude/...`, so an initialized project read as new and setup ran over it.)
 
-- **If exit code 1** (file does NOT exist): invoke the setup workflow inline. Follow the instructions in `${CLAUDE_PLUGIN_ROOT}/skills/setup/SKILL.md` exactly — same Step 1 detection (which will fall through), Step 2 directory creation with `.gitkeep` stubs, Step 3 starter file writes, Step 5 confirmation message — **but DEFER setup's Step 4 (the AGENTS.md prompt) to after the brief** (see below). Do not duplicate the setup logic here; reference it.
+- **Hooks (v0.286.0)**: if the `find` printed nothing, Mycelium's hooks did not run in this
+  session: its gates and the rules it gives the agent at session start are off, and nothing else
+  will say so. Tell the user in one line before going on: "Mycelium's hooks are not running in
+  this session, so its gates are off. On Codex CLI, open `/hooks`, trust Mycelium's hooks and
+  start a new session; on Claude Code, check the plugin is enabled in `/plugin`." Then continue
+  with the state result below. If it printed the path, say nothing about it.
+
+- **If `state=0`** (file EXISTS): the project already has Mycelium state. Skip directly to Step 4 routing output. **Do NOT run setup. Do NOT run mkdir. Do NOT touch `.gitkeep` stubs.** Setup-style operations on an already-initialized project waste tokens and trigger Read-before-Write tool errors when the agent then tries to write to existing files. Detected during 2026-05-09 plugin-form dogfood — the agent ran `mkdir -p .claude/...` before honoring this gate, then hit a Write error on `active.yml` and only then realized the project was initialized. The fix is structural: the gate is the first action.
+
+- **If `state=1`** (file does NOT exist): invoke the setup workflow inline. Follow the instructions in `${CLAUDE_PLUGIN_ROOT}/skills/setup/SKILL.md` exactly — same Step 1 detection (which will fall through), Step 2 directory creation with `.gitkeep` stubs, Step 3 starter file writes, Step 5 confirmation message — **but DEFER setup's Step 4 (the AGENTS.md prompt) to after the brief** (see below). Do not duplicate the setup logic here; reference it.
 
 **AGENTS.md deferral (v0.56.0)**: in the /start composition, setup's Step 4 question does NOT fire before the interview. A first-time user's opening minutes must go to their idea, not to file administration — the 2026-07-02 roadmap dogfood run showed the AGENTS.md exchange consuming the first two conversational rounds before Question 1 was asked. Instead: after the brief is rendered and the depth menu is answered, IF `<project_root>/AGENTS.md` is absent or lacks a Mycelium section, ask setup's Step 4 question then (one exchange, at the natural pause). Setup's detect-first rule still applies: an AGENTS.md that already covers Mycelium is skipped silently. When `/mycelium:setup` is run standalone (not via /start), its Step 4 order is unchanged.
 

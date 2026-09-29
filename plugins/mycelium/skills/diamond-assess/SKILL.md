@@ -9,6 +9,15 @@ metadata:
 
 # Diamond Assess Skill
 
+## First: are Mycelium's hooks running here? (v0.286.0)
+
+Run `find .claude/state/hooks-alive -mmin -60 2>/dev/null`. If it prints the path, say nothing
+about it and go on. If it prints nothing, Mycelium's hooks did not run in this session: its gates
+and the rules it gives the agent at session start are off, and nothing else will say so. Tell the
+user in one line before anything else: "Mycelium's hooks are not running in this session, so its
+gates are off. On Codex CLI, open `/hooks`, trust Mycelium's hooks and start a new session; on
+Claude Code, check the plugin is enabled in `/plugin`." Then carry on with this skill.
+
 Evaluate current diamond state and recommend next action.
 
 ## Preflight: Read-before-Recommend (gate-narration discipline)

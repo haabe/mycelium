@@ -5,6 +5,13 @@
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-.}"
 
+# HOOKS-ALIVE (v0.286.0): the one file a skill can read to tell that Mycelium's hooks run in this
+# session. Codex CLI runs no plugin hook until the user trusts it in /hooks, and E2E on Codex
+# 0.158.0 showed a session with every gate and the operating contract silently absent; skills
+# still load, so the entry skills check this file's age and say so. Written first, so a hook
+# cancelled later still counts as having run.
+mkdir -p "$PROJECT_DIR/.claude/state" 2>/dev/null && touch "$PROJECT_DIR/.claude/state/hooks-alive" 2>/dev/null || true
+
 # ============================================================
 # IN-HOOK DEADLINE (v0.185.0). Read this before adding a check.
 # ============================================================

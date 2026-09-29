@@ -2198,7 +2198,7 @@ check_render_identifier_exposure_declaration() {
 # Documented divergence allowlist (runtime differences, not drift):
 #   - reflexion-gate.sh missing from codex: Codex has no native
 #     PostToolUseFailure; codex-postfailure-shim.sh wraps it (see
-#     hooks.codex.json _description).
+#     hooks.codex.json description).
 #   - codex-postfailure-shim.sh present only on codex: it IS the
 #     divergence mechanism.
 check_hooks_registration_parity() {

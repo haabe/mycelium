@@ -8,6 +8,15 @@ metadata:
 
 # Mycelium plugin setup
 
+## First: are Mycelium's hooks running here? (v0.286.0)
+
+Run `find .claude/state/hooks-alive -mmin -60 2>/dev/null`. If it prints the path, say nothing
+about it and go on. If it prints nothing, Mycelium's hooks did not run in this session: its gates
+and the rules it gives the agent at session start are off, and nothing else will say so. Tell the
+user in one line before anything else: "Mycelium's hooks are not running in this session, so its
+gates are off. On Codex CLI, open `/hooks`, trust Mycelium's hooks and start a new session; on
+Claude Code, check the plugin is enabled in `/plugin`." Then carry on with this skill.
+
 When this skill runs, do the following sequence. The skill is designed to be safe to re-run — every step is idempotent.
 
 ## Step 1: Detect initialization state
@@ -15,7 +24,7 @@ When this skill runs, do the following sequence. The skill is designed to be saf
 Check whether the user's project already has Mycelium project-state. The signal that initialization has happened:
 
 ```bash
-test -f "$CLAUDE_PROJECT_DIR/.claude/diamonds/active.yml"
+test -f "${CLAUDE_PROJECT_DIR:-.}/.claude/diamonds/active.yml"
 ```
 
 If the file exists, print:

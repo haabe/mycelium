@@ -333,6 +333,10 @@ def _targets_of(tool_name: str, tool_input, project_dir: str) -> list[Resolved]:
 #: and the agent wrote its own scale-lock override "My judgment call, my override". An unknown or
 #: absent mode (another runtime) keeps the ask.
 ASKS_A_HUMAN = ("default", "acceptEdits", "plan")
+#: Runtimes whose hooks cannot ask (v0.286.0). Codex parses `permissionDecision: "ask"`, marks the
+#: hook run failed and lets the tool call through, so an ask there is an allow. Its hook commands
+#: carry MYCELIUM_RUNTIME=codex (hooks.codex.json and the plugin file derived from it).
+CANNOT_ASK = ("codex",)
 
 
 def guard_state_check(name: str, tool_name: str, tool_input, project_dir: str,
@@ -346,10 +350,13 @@ def guard_state_check(name: str, tool_name: str, tool_input, project_dir: str,
         if not g:
             continue
         mode = str(permission_mode or "")
-        if mode and mode not in ASKS_A_HUMAN:
+        runtime = os.environ.get("MYCELIUM_RUNTIME", "")
+        if runtime in CANNOT_ASK or (mode and mode not in ASKS_A_HUMAN):
+            why = (f"This runtime ({runtime}) cannot ask a person" if runtime in CANNOT_ASK
+                   else f"In this permission mode ({mode}) nobody is asked")
             decision("deny", f"Mycelium {name}: {g} switches a blocking hook off, and only a "
-                             f"person may write it. In this permission mode ({mode}) nobody is "
-                             "asked, so the agent cannot write it. If you want it, write it "
+                             f"person may write it. {why}, so the agent cannot write it. If you "
+                             "want it, write it "
                              "yourself in your own terminal, or set MYCELIUM_GUARD_STATE_EDIT=1 in "
                              "your own shell for setup work.")
         decision("ask", f"Mycelium {name}: {g} switches a blocking hook off, and this tool "
