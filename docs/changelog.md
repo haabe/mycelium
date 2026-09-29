@@ -4,6 +4,25 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.286.1 - a file written by an interpreter one-liner is a write
+
+**2026-09-29.** The measurement 0.286.0 left open, run on Codex CLI 0.158.0 from the published
+marketplace with the hooks trusted for one invocation: the PreToolUse shell hooks ran (the
+shell-safety guard fired on the agent's first command), and the agent still created `app/hello.py`
+in a project with no discovery state. It wrote the file with
+`python3 -c 'from pathlib import Path; Path("app/hello.py").write_text(...)'`. The shell-write parser
+recognised `write_text` but recorded it as a write with no known path, and the discovery gate skips
+those. Codex writes through its shell by default, so this is its common path, and the same command
+passed on Claude Code.
+
+- A literal path in `Path("x").write_text(`/`write_bytes(` or `writeFileSync("x", ...)` is now a
+  target, including with the quotes escaped the way Codex records the command
+  (`/bin/zsh -lc "... Path(\"x\") ..."`). Replayed through `discovery-gate.sh`, Codex's exact
+  command is refused.
+- Not changed: a computed path (`p.write_text(...)`) stays a write with an unknown path.
+- Tests: both new forms and Codex's verbatim command name their target; a computed path stays
+  unknown (control).
+
 ## v0.286.0 - Mycelium on Codex runs its own hooks, and says when none run
 
 **2026-09-29.** Measured on Codex CLI 0.158.0, installing from the haabe-mycelium marketplace into
