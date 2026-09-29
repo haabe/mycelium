@@ -278,6 +278,24 @@ def test_the_users_ack_overrides_one_diamond(tmp_path):
     assert row[3] is True and row[2]  # overridden, and still names what is missing
 
 
+def test_an_override_never_waives_what_an_l4_delivers(tmp_path):
+    """v0.288.0: the dogfood L4 shipped five months on an override with no L3 and nothing named."""
+    bare = {"id": "l4-x", "scale": "L4", "phase": "develop"}
+    p = _project(tmp_path, purpose=PURPOSE, diamonds=[bare],
+                 ack="l4-x L4 2026-09-29 user: ship the stream, I will define it later\n")
+    row = next(r for r in sl.report(p)[0] if r[0] == "l4-x")
+    assert row[3] is False, "an override with nothing named still does not hold"
+    assert any("name the solution this L4 delivers" in m for m in row[2])
+
+
+def test_control_an_override_waives_the_l3_once_the_delivered_thing_is_named(tmp_path):
+    named = {"id": "l4-x", "scale": "L4", "phase": "develop", "object_ref": "sol-001"}
+    p = _project(tmp_path, purpose=PURPOSE, diamonds=[named],
+                 ack="l4-x L4 2026-09-29 user: ship sol-001 untested, my call\n")
+    row = next(r for r in sl.report(p)[0] if r[0] == "l4-x")
+    assert row[3] is True and any("the L3 it delivers" in m for m in row[2])
+
+
 # ---------------------------------------------------------------- the hook: only ADDED diamonds
 
 
