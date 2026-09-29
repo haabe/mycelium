@@ -56,6 +56,10 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
 PLUGIN = "plugins/mycelium/.claude-plugin/plugin.json"
+# The Codex manifest (v0.286.0) carries the same version and description: Codex reads it for a
+# marketplace install, so a stale copy would be what Codex users see.
+CODEX_PLUGIN = "plugins/mycelium/.codex-plugin/plugin.json"
+OPTIONAL_TARGETS = frozenset({CODEX_PLUGIN})
 CARD = "docs/ai-system-card.md"
 
 VERSION_RE = re.compile(r"^\*Version (\d+\.\d+\.\d+)", re.MULTILINE)
@@ -73,6 +77,7 @@ LITERAL_MARKER = "skills-literal"
 # its own file's version form, so applying all of them to a file is safe.
 VERSION_TARGETS = [
     (PLUGIN, PLUGIN_VERSION_RE, r"\g<1>{v}\g<2>"),
+    (CODEX_PLUGIN, PLUGIN_VERSION_RE, r"\g<1>{v}\g<2>"),
     (CARD, CARD_VERSION_RE, r"\g<1>{v}"),
 ]
 
@@ -84,6 +89,7 @@ SKILL_COUNT_FILES = [
     # added v0.40.4: by-category.md had a hardcoded skill count that drifted
     "docs/skills/by-category.md",
     PLUGIN,
+    CODEX_PLUGIN,
     ".claude-plugin/marketplace.json",
     CARD,
     # SKILL.md files whose lone "<N> skills" token is the total count. Without
@@ -170,6 +176,11 @@ def _compute_drift(
 
     # version → each target's own version token
     for rel, pattern, repl in VERSION_TARGETS:
+        # The Codex manifest is optional (v0.286.0): a tree from before it, or a consumer's own
+        # fixture repo, has none, and a missing optional target is not drift. The pre-commit hook
+        # tests crashed here with FileNotFoundError before they could report the drift they plant.
+        if rel in OPTIONAL_TARGETS and rel not in staged and not (root / rel).exists():
+            continue
         old = current(rel)
         new = pattern.sub(repl.format(v=version), old)
         if new != old:
@@ -240,6 +251,17 @@ def sync(root: Path, check_only: bool) -> int:
     return 0
 
 
+def _codex_plugin_hooks(root: Path, check_only: bool) -> int:
+    """hooks/hooks.codex-plugin.json is derived from hooks.codex.json (v0.286.0). Kept in step here,
+    so the check that catches a drifted version (Check 40) catches a drifted Codex file too."""
+    plugin = root / "plugins" / "mycelium"
+    if not (plugin / "hooks" / "hooks.codex.json").is_file():
+        return 0  # a tree without the Codex template has nothing to derive
+    sys.path.insert(0, str(plugin / "scripts"))
+    import codex_plugin_hooks  # noqa: PLC0415 — the plugin's own script, found from --root
+    return codex_plugin_hooks.main(["--root", str(plugin), *(["--check"] if check_only else [])])
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument(
@@ -251,7 +273,7 @@ def main(argv: list[str] | None = None) -> int:
         help="repo root (default: inferred from script location)",
     )
     args = ap.parse_args(argv)
-    return sync(Path(args.root), args.check)
+    return sync(Path(args.root), args.check) or _codex_plugin_hooks(Path(args.root), args.check)
 
 
 if __name__ == "__main__":

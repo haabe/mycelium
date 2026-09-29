@@ -4,6 +4,42 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.286.0 - Mycelium on Codex runs its own hooks, and says when none run
+
+**2026-09-29.** Measured on Codex CLI 0.158.0, installing from the haabe-mycelium marketplace into
+a throwaway Codex home. All 63 skills loaded. With the hooks untrusted (the default until the user
+opens `/hooks`), no hook ran: a prompt to create `app/hello.py` in a fresh project wrote it, and the
+agent said nothing stopped it. With the hooks trusted, the session-start contract held and the
+agent stopped to ask who the file was for. Codex had no manifest of its own to read, so it fell back
+to `hooks/hooks.json`, whose four `async` hooks it drops at load, and `hooks.codex.json` (built for
+Codex) was used only by a manual installer.
+
+- **`.codex-plugin/plugin.json`** names `hooks/hooks.codex-plugin.json`, generated from
+  `hooks.codex.json` by `scripts/codex_plugin_hooks.py` with the plugin root taken from
+  `CLAUDE_PLUGIN_ROOT`, which Codex sets for plugin hooks. Verified on Codex before release, with no
+  model call: a probe hook in the derived file fired and one in `hooks.json` did not. The same run
+  found Codex refusing the file for its `_description` key ("expected `description` or `hooks`"),
+  which would have loaded no hooks at all; both Codex files now use `description`.
+- **Off-switch files on Codex are refused, not asked.** Codex parses a hook's `ask`, marks it failed
+  and lets the call through. Every Codex hook command carries `MYCELIUM_RUNTIME=codex`, and the
+  guard denies there.
+- **The entry skills say when the hooks are not running.** `session-start.sh` and `preflight.sh`
+  touch `.claude/state/hooks-alive`; start, setup, adopt, interview and diamond-assess check its age
+  (`find ... -mmin -60`) and tell the user to trust the hooks in `/hooks` when it is missing. Skills
+  load without trust, so they reach exactly the user the hooks cannot. In `start` the check is part
+  of its one first command, since its hard gate allows no other.
+- **`start`, `setup` and `migrate-from-legacy` test `${CLAUDE_PROJECT_DIR:-.}`.** Codex does not set
+  the variable, and the bare form tested `/.claude/...`, so an initialised project read as new.
+- `sync_derived.py` carries the version into the Codex manifest and keeps the derived hooks file in
+  step (Check 40 catches either drifting). `docs/integrations/codex.md` gains the plugin route and
+  the measured gaps.
+- Not yet measured: whether a trusted PreToolUse gate blocks a write on Codex, how the read-before
+  gates behave without a Read tool, and Windows.
+- Tests: the manifest names the derived file and matches the Claude manifest's version; the derived
+  file is current (a stale copy is caught); it holds no async hook, no PostToolUseFailure and every
+  script exists; on Codex the guard denies, on Claude Code it asks (control); a prompt refreshes the
+  marker, and outside a Mycelium project creates nothing (control); the entry skills carry the check.
+
 ## v0.285.0 - a snoozed door wakes when the product changes
 
 **2026-09-29.** E2E relay on 0.283.0, rung L3-open: the builder added fractions and ranges to the

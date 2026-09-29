@@ -2,8 +2,8 @@
 
 **Audience**: developers using [Codex CLI](https://github.com/openai/codex) as their primary AI coding runtime who want Mycelium's product-thinking discipline and runtime enforcement.
 **Time to read**: 4 min.
-**Last updated**: 2026-05-26.
-**Status**: Mycelium's full hook surface runs on Codex CLI. One minor gap (no native `PostToolUseFailure` event) is covered by a shim script.
+**Last updated**: 2026-09-29.
+**Status**: Mycelium installs as a Codex plugin, its 63 skills load, and once you trust its hooks the session-start contract and the discovery routing work (measured on Codex CLI 0.158.0, 2026-09-29). Until you trust them, no hook runs and nothing says so; the entry skills now check and tell you. Gaps below.
 
 ## Why this fits cleanly
 
@@ -30,7 +30,30 @@ The one surface difference: Codex has no native `PostToolUseFailure`. Failures s
 
 **Net**: Mycelium-on-Codex is functionally equivalent to Mycelium-on-Claude-Code at the hook layer once the shim is in place.
 
-## Setup
+## Setup as a plugin (recommended, v0.286.0)
+
+```bash
+codex plugin marketplace add haabe/mycelium
+codex plugin add mycelium@haabe-mycelium
+```
+
+Then open `/hooks` inside Codex, review the Mycelium entries, trust them, and start a new session.
+**Until you do, no Mycelium hook runs**: no gates, no operating contract at session start, and no
+error. Measured 2026-09-29: the same prompt in a fresh project wrote a source file with the hooks
+untrusted, and stopped to ask who the file was for with them trusted. The entry skills (`$start`,
+`$setup`, `$adopt`, `$interview`, `$diamond-assess`) check a file the hooks write,
+`.claude/state/hooks-alive`, and tell you when it is missing or over an hour old.
+
+Codex reads `.codex-plugin/plugin.json`, which points at `hooks/hooks.codex-plugin.json`: the same
+hooks as `hooks.codex.json`, generated from it, with the plugin root taken from
+`CLAUDE_PLUGIN_ROOT`, which Codex sets for plugin hooks. Without that manifest Codex falls back to
+the Claude Code file `hooks/hooks.json` and drops its four `async` hooks at load (change-log,
+read-log, diamond-state-audit and the background session-start checks).
+
+Skills are invoked with `$name` on Codex (`$start`), not `/mycelium:start`; the skill text still
+names the Claude Code form.
+
+## Setup from a clone (hooks for one project, no plugin)
 
 ```bash
 # 1. Install Codex CLI (see github.com/openai/codex for current method)
@@ -102,7 +125,10 @@ No mapping needed — Codex uses PascalCase event names identical to Claude Code
 ## Honest gaps
 
 - **No native `PostToolUseFailure`** — covered by the shim above. If/when Codex adds the event, drop the shim and point the hook at `reflexion-gate.sh` directly.
-- **Skill discovery** — Codex's plugin manifest format (`.codex-plugin/plugin.json`) differs from Claude Code's; the 63 skills load as files but `/skill-name` invocation parity may require a Codex-side skill loader. Mycelium's slash commands work; full parity needs verification.
+- **Skill invocation** — all 63 skills load from the plugin (measured 2026-09-29); Codex invokes them as `$name`, and the skill text still says `/mycelium:name`. References to `${CLAUDE_PLUGIN_ROOT}/...` inside a skill are not expanded for skills (openai/codex#35702); the agent has to find the file under the plugin's skill root.
+- **No `ask` from a hook** — Codex parses `permissionDecision: "ask"`, marks the hook failed and lets the call through. The guard that protects Mycelium's off-switch files therefore refuses on Codex (the hook commands carry `MYCELIUM_RUNTIME=codex`) where on Claude Code it asks you. Write those files yourself, or set `MYCELIUM_GUARD_STATE_EDIT=1` in your own shell.
+- **No Read tool** — Codex reads files through the shell, so the gates that key on a prior `Read` (read-before-edit, read-before-research) see shell reads only through the `Bash` matcher. Not yet measured whether they block or pass there.
+- **Not yet measured** — whether a trusted PreToolUse gate actually blocks a write on Codex (the 2026-09-29 run stopped on the session-start routing before any gate had to fire), and behaviour on Windows, where `bash` in a hook can resolve to the WSL shim (openai/codex#38295).
 - **Enforcement is opt-in and revocable** — hook trust, project trust and managed-hooks-only policy each switch the gates off silently. See "A configured hook is not a running hook" above.
 - **`CLAUDE_PROJECT_DIR` not auto-exported** — set it in your shell. (Cursor exports this alias automatically; Codex doesn't.)
 

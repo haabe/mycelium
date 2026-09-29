@@ -15,8 +15,8 @@ When this skill runs, walk the user through moving from legacy install to plugin
 Check the project's `.claude/` directory:
 
 ```bash
-test -d "$CLAUDE_PROJECT_DIR/.claude/skills" && echo "legacy framework files present" || echo "no legacy framework files"
-test -d "$CLAUDE_PROJECT_DIR/.claude/canvas" && echo "project state present" || echo "no project state"
+test -d "${CLAUDE_PROJECT_DIR:-.}/.claude/skills" && echo "legacy framework files present" || echo "no legacy framework files"
+test -d "${CLAUDE_PROJECT_DIR:-.}/.claude/canvas" && echo "project state present" || echo "no project state"
 ```
 
 Three states:

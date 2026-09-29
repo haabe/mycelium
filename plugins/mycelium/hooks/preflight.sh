@@ -20,6 +20,9 @@ if [ -z "$PROJECT_DIR" ]; then
   PROJECT_DIR="${PROJECT_DIR:-.}"
 fi
 CORRECTIONS_FILE="$PROJECT_DIR/.claude/memory/corrections.md"
+# HOOKS-ALIVE (v0.286.0): refreshed on every prompt, so a skill run from this prompt sees a fresh
+# file; see session-start.sh. Only in a project that already has .claude/.
+[ -d "$PROJECT_DIR/.claude/state" ] && touch "$PROJECT_DIR/.claude/state/hooks-alive" 2>/dev/null || true
 # The UserPromptSubmit payload (prompt, session_id), read once. Never from a terminal: run by hand
 # with no pipe, `cat` would wait for input.
 _PF_INPUT=""
