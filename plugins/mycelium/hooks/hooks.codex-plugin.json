@@ -243,7 +243,7 @@
         ]
       },
       {
-        "matcher": "Read|read",
+        "matcher": "Read|read|Bash|shell",
         "hooks": [
           {
             "type": "command",

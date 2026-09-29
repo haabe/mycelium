@@ -4,6 +4,24 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.286.2 - Codex logs shell reads too
+
+**2026-09-29.** Checking the read-before gates on Codex, which 0.286.0 listed as not yet measured:
+none of them blocks on the read log, but `read-log.sh` was registered on `Read|read` in
+`hooks.codex.json` while `hooks.json` has registered it on `Read|Bash` since v0.143.0. Codex has no
+Read tool and reads through its shell, so on Codex no read was ever logged, and
+`verify_citations.py`, which checks cited files against what the agent opened, had nothing to check
+against.
+
+- `read-log.sh` now also matches `Bash|shell` on Codex; the plugin-route file is regenerated.
+- A matcher-parity test compares every hook's tools between `hooks.json` and `hooks.codex.json`.
+  Check 44 compares which scripts are registered, not what they match, which is how this drift
+  lived for months. The differences that are by design are named in the test: no NotebookEdit on
+  Codex, one sync session-start tier, the PostToolUseFailure shim, and Codex's empty SessionStart
+  matcher.
+- Tests: parity holds on the shipped files and fails with the old matcher; a planted drift is
+  caught (control).
+
 ## v0.286.1 - a file written by an interpreter one-liner is a write
 
 **2026-09-29.** The measurement 0.286.0 left open, run on Codex CLI 0.158.0 from the published
