@@ -281,6 +281,8 @@ def state(events: list[dict]) -> dict[str, dict]:  # noqa: C901, PLR0912 — one
             if r == "snooze":
                 x["snoozed_until"] = ev.get("until")
                 x["snooze_note"] = str(ev.get("note") or "")  # its condition, when "asked"
+                x["snooze_ts"] = ev.get("ts")  # machine time: product work after it wakes a door
+                x["snooze_session"] = ev.get("session")
                 x["ruling"] = None
             if r == "keep":
                 x["muted_since"] = None
@@ -423,6 +425,16 @@ def today_iso() -> str:
     return datetime.now(tz=UTC).date().isoformat()
 
 
+def _item_session(root: Path, aid: str) -> str:
+    """The session the open next item was shown in, when it is the item being ruled (v0.285.0):
+    what that session wrote was in front of the ruling, so it does not wake a snooze."""
+    try:
+        st = json.loads((root / ".claude" / "state" / "next-item.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return ""  # no open item recorded: every later write counts, the conservative reading
+    return str(st.get("session") or "") if isinstance(st, dict) and st.get("id") == aid else ""
+
+
 def rule(  # noqa: PLR0913, PLR0917 — a CLI verb with one argument per flag
     root: Path, aid: str, ruling: str, note: str, today: str, until: str = ""
 ) -> str:
@@ -434,7 +446,9 @@ def rule(  # noqa: PLR0913, PLR0917 — a CLI verb with one argument per flag
         return (f"advisory ledger: refused. {aid} cannot be snoozed until asked: the evidence it "
                 "waits on arrives only once it is done, so nothing would ever ask. Snooze it to a "
                 "date (--until YYYY-MM-DD), or drop it with the reason.")
-    ev = {"kind": "ruled", "id": aid, "date": today, "ruling": ruling, "note": note}
+    ev = {"kind": "ruled", "id": aid, "date": today, "ruling": ruling, "note": note,
+          "ts": datetime.now(tz=UTC).isoformat(timespec="seconds"),
+          "session": _item_session(root, aid)}
     if until:
         ev["until"] = until
     append_events(ledger_path(root), [ev])
