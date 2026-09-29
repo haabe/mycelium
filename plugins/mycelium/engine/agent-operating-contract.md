@@ -7,6 +7,7 @@ Heavy reference (diamond scales, theory-gate catalogue, learning-metabolism, gua
 ## Path convention (read once)
 
 - **Framework reference files** (engine, harness, domains, orchestration, skills, schemas) live under `${CLAUDE_PLUGIN_ROOT}/` in plugin form, or `.claude/` in a legacy install. When this file names one (e.g. `harness/guardrails-core.md`), resolve it against that root: plugin cache first, then `.claude/`.
+- **Skill names on Codex CLI (v0.286.3).** A skill named here or in any Mycelium text as `/mycelium:x` is the skill `mycelium:x`; on Codex the user mentions it as `$mycelium:x`, so say it that way to them.
 - **Project state** (canvas, memory, diamonds, decision-log) always lives in your project's `.claude/` — `.claude/canvas/*.yml`, `.claude/memory/`, `.claude/diamonds/active.yml`, `.claude/harness/decision-log.md`.
 
 ## Communication Rules

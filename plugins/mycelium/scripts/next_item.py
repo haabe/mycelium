@@ -35,6 +35,7 @@ import argparse
 import contextlib
 import datetime as _dt
 import json
+import os
 import re
 import subprocess
 import sys
@@ -1082,6 +1083,16 @@ def agent_owned(item: dict) -> bool:
     return owner == "agent" or str(item.get("id", "")).startswith(AGENT_OWNED)
 
 
+def _shown_command(item: dict) -> str:
+    """The command in the form the user types (v0.286.3): `/mycelium:x` on Claude Code,
+    `$mycelium:x` on Codex CLI, whose users mention a skill with `$`. The hook commands in the Codex
+    manifests carry MYCELIUM_RUNTIME=codex, and this line is rendered inside those hooks."""
+    cmd = str(item.get("command") or "")
+    if os.environ.get("MYCELIUM_RUNTIME") == "codex":
+        return re.sub(r"(?<![\w$])/mycelium:", "$mycelium:", cmd)
+    return cmd
+
+
 def render_human(item: dict, limit: int = 240) -> str:
     """The systemMessage form: plain, no tags, bounded. A human reads it, a wrapper means nothing
     to them, and a canvas string cannot be allowed to fill the screen."""
@@ -1095,9 +1106,10 @@ def render_human(item: dict, limit: int = 240) -> str:
                 f"asks you only if the result needs your judgment.{late}")
     if _escalated(item):
         return (f"NEXT ITEM, unanswered for {item['shown']} sessions since {item['first_shown']}: "
-                f"{text} Decide one: run `{item['command']}` | rule | snooze-until DATE or "
+                f"{text} Decide one: run `{_shown_command(item)}` | rule | snooze-until DATE or "
                 "asked | drop. If the item is wrong, say so; drop records that.")
-    return f"NEXT ITEM: {text} run `{item['command']}` | rule | snooze-until DATE or asked | drop."
+    return (f"NEXT ITEM: {text} run `{_shown_command(item)}` | rule | snooze-until DATE or asked "
+            "| drop.")
 
 
 def _escalated(item: dict) -> bool:
