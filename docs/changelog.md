@@ -4,6 +4,30 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.287.0 - a leaf's missing record is said at the write, and moved entries keep their address
+
+**2026-09-29.** Asked to fix the sources of the dogfood canvas's validator warnings rather than the
+warnings. Two sources explained all but two of the 44 that remained after a data pass.
+
+- **The record a leaf owes, at the write that creates the gap.** 23 solution leaves had reached a
+  terminal status (15 `shipped`) with no cycle-history row, and 7 new solutions had no purpose
+  stance. Each was written straight into `opportunities.yml` by an agent, outside the skills that
+  ask for those records, and the validator named them days or weeks later. `post-write-nudge.sh`
+  now runs `scripts/leaf_record_nudge.py` on every write to the tree: for the `sol-` ids the write
+  touched, it reuses the terminal-leaf check and the purpose-stance check (grandfathering intact)
+  and says what is owed, first in the nudge. Advisory; about 1.4 s on the dogfood canvas.
+- **Moved entries keep their address.** The cross-reference resolver now reads an entry by
+  `leaf_id` and `artifact_class` as well as `id` and `type`; a dated note by `kind` plus `date`,
+  which is the shape the key-shape guard tells agents to turn `<name>_2026_09_09:` keys into; and an
+  entry moved elsewhere in the file by its `moved_from` path or `former_key`, searched from the file
+  root because entries move into sibling lists. `file.yml#releases[].id` is schema notation and no
+  longer read as a pointer, and a pointer at a file the plugin ships in `engine/` (such as
+  `surface-registry.yml`) is also checked there. On the dogfood canvas: 13 dangling pointers to 2,
+  and those 2 are real (a pointer into another repository, and a key that never existed).
+- Tests: the nudge names an owed cycle row, and is silent for a leaf that has one and for a leaf
+  the write did not touch (controls), and the hook carries it; each resolver rule resolves, and a
+  pointer to nothing still dangles (control). The resolver test fails with the old validator.
+
 ## v0.286.3 - on Codex, the next item names a skill the way Codex users type it
 
 **2026-09-29.** Codex CLI 0.158.0 lists Mycelium's skills as `mycelium:diamond-progress` (read from

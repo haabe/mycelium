@@ -2127,6 +2127,48 @@ def test_a_dangling_anchor_is_reported_and_a_typed_entry_resolves(tmp_path, scri
     assert any("`human-tasks.yml#ht-001.gone`" in w and "on that path" in w for w in out)
 
 
+def test_entries_a_restructure_moved_keep_their_old_address(tmp_path, scripts_path):
+    """v0.287.0: 9 of 13 dangling pointers on the dogfood canvas named entries moved into a list,
+    addressed there by `moved_from`, `former_key`, `leaf_id`, or `kind` plus `date` (the shape the
+    key-shape guard tells agents to use); 2 were schema notation or a plugin engine file."""
+    validator = _import_validator(scripts_path)
+    canvas = tmp_path / ".claude" / "canvas"
+    canvas.mkdir(parents=True)
+    (canvas / "purpose.yml").write_text(textwrap.dedent("""\
+        diamonds:
+          - id: l1-strategy
+            definition_of_done:
+              kill_criterion: {live: 1}
+              log:
+                - moved_from: definition_of_done.kill_criterion.sweeps_completed
+                  note: x
+        notes:
+          - date: '2026-09-09'
+            kind: presentation_craft
+            note: x
+        tasks:
+          - id: ht-083
+            notes:
+              - former_key: CLARIFIER_ANSWERED
+                note: x
+        archived:
+          - leaf_id: sol-047c-half
+    """))
+    (canvas / "human-tasks.yml").write_text(textwrap.dedent("""\
+        tasks:
+          - id: ht-900
+            note: >-
+              purpose.yml#l1-strategy.definition_of_done.kill_criterion.sweeps_completed
+              purpose.yml#l1-strategy.kill_criterion.sweeps_completed
+              purpose.yml#presentation_craft_2026_09_09 purpose.yml#ht-083.CLARIFIER_ANSWERED
+              purpose.yml#sol-047c-half purpose.yml#releases[].id
+              purpose.yml#l1-strategy.definition_of_done.kill_criterion.never_existed
+    """))
+    out = validator.cross_reference_findings(canvas)
+    assert len(out) == 1, out
+    assert "kill_criterion.never_existed" in out[0], "control: a pointer to nothing still dangles"
+
+
 def test_opportunity_shape_summary_is_a_coverage_line(tmp_path, scripts_path):
     validator = _import_validator(scripts_path)
     canvas = tmp_path / ".claude" / "canvas"

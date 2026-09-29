@@ -888,3 +888,10 @@ reviewed:
     a snooze until asked holds exactly as it did before 0.285.0 and as the human ruled it; the
     ruling itself stays listed in the ledger report. The wake is an addition on top of a ruling the
     human made, and without it the ruling is what they asked for. Reviewed 2026-09-29, v0.285.0.
+- id: validate_canvas.py@aea77e7a58
+  verdict: accepted
+  reason: >-
+    `_plugin_engine_doc` returns None when the plugin's own engine/<file> cannot be read or parsed.
+    The pointer is then checked against the project file alone and reported as dangling if it
+    names nothing there, which is exactly the pre-0.287.0 behaviour: the failure errs toward a
+    warning, never toward silence. Reviewed 2026-09-29, v0.287.0.
