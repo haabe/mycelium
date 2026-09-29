@@ -1001,9 +1001,20 @@ def exposure_line(project_dir: str, payload: dict, today: str | None = None) -> 
     except OSError:
         pass  # SPEAKS: the line is still returned; at worst it is said again next prompt
     missing = "\n".join(why.splitlines()[:6])
+    # v0.284.0: the L3's Develop -> Deliver gate asks for one trial outside the team of what the
+    # delivery puts in front of people, and this line forbade exactly that. E2E relay on 0.283.0:
+    # the builder read both correctly and refused to let one tester paste a recipe into the page,
+    # so the gate could only be passed by the founder doing the trial behind Mycelium's back.
+    trial = ("\nOne exception, which the L3's Develop -> Deliver gate asks for: one trial of what "
+             "the delivery will put in front of people, with one or a few named people outside "
+             "the team and run with the founder (a usability session with the prototype, a dry "
+             "run of the service, a walkthrough of the lesson), is Develop's own evidence, not a "
+             "release. Help run it and record it as that trial."
+             if any(_scale(d) == "L3" and str(d.get("phase", "")).lower() == "develop"
+                    for d in delivering) else "")
     return ("MYCELIUM EXPOSURE STATE: nothing built here may meet real people yet, and that "
             "includes a pilot, a link sent to staff or users, and a deploy someone else does. "
-            f"What is missing:\n  {missing}\nIf this prompt is about going live, a pilot, "
+            f"What is missing:\n  {missing}{trial}\nIf this prompt is about going live, a pilot, "
             "production or real users, tell the user plainly that it is not ready and what is "
             "missing, and progress the diamond (/mycelium:diamond-progress) before helping expose "
             "it. If it is not about that, ignore this line.")

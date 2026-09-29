@@ -790,6 +790,21 @@ def test_go_live_means_an_act_of_exposure_not_a_topic_word():
         assert not sl._GO_LIVE.search(prompt), prompt
 
 
+def test_in_develop_the_outside_trial_its_gate_asks_for_is_not_exposure(tmp_path):
+    """v0.284.0, E2E relay on 0.283.0: the Develop -> Deliver gate asked for one trial outside the
+    team, this line said nothing built may meet anyone, and the builder refused to let one tester
+    paste a recipe into the page. The gate could only pass by the founder going around Mycelium."""
+    dev = _project(tmp_path / "a", PURPOSE, _full_opps(),
+                   [_l3(phase="develop", gates=BUILD_PASSED)])
+    line = sl.exposure_line(dev, {"session_id": "s1", "prompt": "morning"}, today="2026-10-28")
+    assert "Develop's own evidence, not a release" in line
+    # Control: in Deliver the trial is past; what is missing there is the delivery's own gates.
+    dlv = _project(tmp_path / "b", PURPOSE, _full_opps(),
+                   [_l3(phase="deliver", gates=BUILD_PASSED)])
+    line = sl.exposure_line(dlv, {"session_id": "s1", "prompt": "morning"}, today="2026-10-28")
+    assert line.startswith("MYCELIUM EXPOSURE STATE") and "Develop's own evidence" not in line
+
+
 def test_silent_when_ready_or_when_nothing_delivers(tmp_path):
     ready = _project(tmp_path / "a", PURPOSE, _full_opps(),
                      [_l3(phase="deliver", gates=EXPOSE_PASSED, learning=LEARNING)])
