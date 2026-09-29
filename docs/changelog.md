@@ -2,7 +2,25 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-09-24.
+**Last updated**: 2026-09-29.
+
+## v0.288.0 - an override never waives what an L4 delivers
+
+**2026-09-29.** The dogfood repo's standing framework L4 shipped every release from April to
+September on a scale-lock override, with no L3 behind it and nothing named as the solution it
+delivered. The override waived the L4's whole chain in `scale_locks.verdict`, so the lock read green
+on a delivery of nothing in particular. The founder, reviewing it: "We can't create a delivery of
+something we don't know what is."
+
+- **What an L4 delivers is now outside the override.** An L4 with no L3 parent must name the solution
+  it delivers in `object_ref` (a leaf id, even an untested one). `_l4_missing` reports that as
+  `WHAT IS DELIVERED, which no override waives: ...`, and `verdict` refuses the ack while any such
+  item is present.
+- **What the override still waives is unchanged.** It may waive the L3 and that L3's evidence:
+  shipping an untested bet stays the user's call. It cannot waive the bet itself.
+- `engine/diamond-rules.md` states the rule beside "the override waives the chain, never the phase".
+- Tests: a bare L4 with an ack still fails the lock and names the missing object (fails on 0.287.2);
+  the same L4 with `object_ref` set passes on the ack (control).
 
 ## v0.287.2 - a released L4 with its launch data recorded is told what the L5 lock still misses
 

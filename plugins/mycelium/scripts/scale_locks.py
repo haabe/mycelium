@@ -167,6 +167,12 @@ _DEPLOY = re.compile(
 CLOSED_OPPORTUNITY = {"closed", "discarded", "resolved", "addressed"}
 SHIPPED_PHASES = {"deliver", "complete", "completed"}
 ACK_REL = os.path.join(".claude", "state", "scale-lock-ack")
+#: What a scale-lock override can never waive (v0.288.0): WHAT an L4 delivers. An override may
+#: waive the L3 behind it and that L3's evidence (shipping an untested bet is the user's call), but
+#: not the bet itself. The dogfood L4 shipped five months of releases on an override with no L3
+#: and no named solution; founder, 2026-09-29: "We can't create a delivery of something we don't
+#: know what is."
+UNWAIVABLE = "WHAT IS DELIVERED, which no override waives: "
 _MIN_PURPOSE_WORDS = 3
 _BOOKKEEPING = {"source_class", "evidence_type", "validated", "_meta", "confidence", "captured_at"}
 _WHO_KEYS = ("who", "target_users", "for_whom")
@@ -560,7 +566,12 @@ class State:
         29: its L3 could have run the trial itself in Deliver."""
         l3 = self._parent_at(d, "L3")
         if l3 is None:
-            return [f"{d.get('id')}: the L3 it delivers, named as `parent` (a live one)"]
+            miss = [f"{d.get('id')}: the L3 it delivers, named as `parent` (a live one)"]
+            if not str(d.get("object_ref") or "").strip():
+                miss.append(f"{UNWAIVABLE}{d.get('id')}: name the solution this L4 delivers in "
+                            "`object_ref` (a leaf id, even an untested one); an override may "
+                            "waive the L3 and its evidence, never what is being delivered")
+            return miss
         miss = self.missing(l3, entry, seen)
         ev = self.l3_evidence(l3)
         if ev not in MEDIUM_OR_BETTER:
@@ -847,7 +858,9 @@ class State:
 
     def verdict(self, d: dict, entry: bool = False) -> tuple[bool, list[str]]:
         miss = self.missing(d, entry)
-        return (not miss or (str(d.get("id")), _scale(d)) in self.acked), miss
+        waived = ((str(d.get("id")), _scale(d)) in self.acked
+                  and not any(m.startswith(UNWAIVABLE) for m in miss))
+        return (not miss or waived), miss
 
 
 # ---------------------------------------------------------------- questions
