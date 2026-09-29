@@ -811,7 +811,10 @@ def _learning_delivery_item(root: Path, today: str, st: dict, d: dict) -> dict |
             "Deliver to run it with its audience: a named, opted-in group, until a date, by means "
             "that fit the product (for web software, infrastructure as code for an environment "
             "that can be torn down; for any product, a concierge or hand-run test). The verdict "
-            "is what opens the L4.")
+            "is what opens the L4. Before Deliver, its gate asks for one trial outside the team of "
+            "what the delivery puts in front of people (a usability session with the prototype, a "
+            "dry run of the service, a walkthrough of the lesson), with a named person and run "
+            "with you; that trial is part of Develop, not a release.")
     if need:
         text += " Still needed: " + ", ".join(need) + "."
     # v0.273.0: the L3 builds only what its test needs to run. E2E service world run 3: this item

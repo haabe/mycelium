@@ -4,6 +4,26 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.284.0 - the outside trial is Develop's, not a release
+
+**2026-09-29.** E2E relay on 0.283.0, rung L3-deliver: the L3's Develop -> Deliver gate asks for one
+trial outside the team of what the delivery puts in front of people (a usability session with the
+prototype, a dry run of the service, a walkthrough of the lesson). The exposure line said nothing
+built may meet real people before Deliver, "a link sent to staff or users" included. The builder
+read both correctly: it ran the gate, found the trial missing, and then refused to let one tester
+paste a recipe into the page because the exposure state forbade it. The founder said he would ask
+the tester himself, so the only way through the gate was a trial run behind Mycelium's back.
+
+- **While an L3 is in Develop, the exposure line names the exception**: one trial with one or a
+  few named people outside the team, run with the founder, is Develop's own evidence and not a
+  release; the agent is told to help run it and record it as that trial. In Deliver the line is
+  unchanged.
+- **The L3's Deliver item says the trial comes first**, so the gate's evidence is not discovered
+  only when the gate is run. The item for a test that already ran before Deliver does not say it.
+- Tests: the line in Develop names the exception, and in Deliver it does not (control); the
+  Deliver item names it, and the early-evidence variant does not (control). Both fail with the
+  fix removed.
+
 ## v0.283.0 - an untried opportunity's door comes first
 
 **2026-09-28.** E2E service run 9 (invalid as a run on its world gaps and an invented founder result,
