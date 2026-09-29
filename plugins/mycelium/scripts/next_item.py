@@ -286,6 +286,14 @@ def _fired_proposals(root: Path) -> tuple[list[dict], str]:
 
 
 _CLOSED = {"complete", "completed", "killed", "parked", "archived"}
+
+
+def _state_closed(d: dict) -> bool:
+    """`state` closes a diamond as surely as `phase` (v0.287.2). The schema's `state` enum carries
+    archived, parked and killed, and scale_locks.is_open reads both fields; the picker read phase
+    only, so the dogfood L4, archived in place with `state: archived`, kept being offered its
+    launch items."""
+    return str(d.get("state") or "").lower() in _CLOSED
 _NEXT = {"discover": "define", "define": "develop", "develop": "deliver", "deliver": "complete"}
 
 
@@ -399,7 +407,7 @@ def _unassessed(root: Path, today: str) -> list[dict]:
         if not isinstance(d, dict) or not d.get("id"):
             continue
         phase = str(d.get("phase") or "discover").lower()
-        if phase in _CLOSED or phase not in _NEXT:
+        if phase in _CLOSED or phase not in _NEXT or _state_closed(d):
             continue
         ruled = str(d.get("progression_ruled_at") or "")[:10]
         rec = rulings.get(str(d["id"])) or {}
@@ -497,8 +505,12 @@ def _l4_launch_item(root: Path, today: str, st: dict, d: dict, did: str) -> dict
        rightly declined, since nothing had gone out. Deliver is not released.
     2. Released, launch data not yet recorded: the agent's record work (`launch-data-l4:`, 0.275.1).
     3. The L5 lock holds: the L5 door, the founder's decision (`door-l5:`)."""
-    ready = not sl.can_open(str(root), "L5", parent=did)
+    missing = sl.can_open(str(root), "L5", parent=did)
+    ready = not missing
     released = str(d.get("released_on") or "")[:10]
+    data = sl._as_dict(d.get("launch_data"))  # noqa: SLF001 — the lock's own reader, not a copy
+    recorded = (any(sl._filled(data.get(k)) for k in ("usage", "feedback", "metric_movement"))  # noqa: SLF001
+                and sl.State.launch_after_release_missing(d, data) is None)
     if ready:
         iid, command = f"door-l5:{did}", "/mycelium:launch-tier"
         text = (f"{did} (L4) has shipped and its launch data is recorded: open the L5 market "
@@ -508,6 +520,14 @@ def _l4_launch_item(root: Path, today: str, st: dict, d: dict, did: str) -> dict
         text = (f"{did} (L4) is in Deliver and nothing records it reaching its users. When it "
                 "does, the day the first person outside the team has it, say so, and it is "
                 "recorded as `released_on`. The launch data, and then an L5, follow from there.")
+    elif recorded:
+        # v0.287.2: released and its launch data recorded, and the L5 lock still does not hold for
+        # another reason. The dogfood L4 (on an override, no L3 parent) was told to record launch
+        # data it already carried, and the blocker the lock names was never shown.
+        iid, command = f"l5-lock-l4:{did}", "/mycelium:diamond-assess"
+        text = (f"{did} (L4) reached its users on {released} and its launch data is recorded, "
+                "but the L5 lock does not hold yet: " + "; ".join(missing) + ". That is the next "
+                "thing to produce before its launch opens an L5.")
     else:
         iid, command = f"launch-data-l4:{did}", "edit diamonds/active.yml"
         text = (f"{did} (L4) reached its users on {released}. On the L4 in "
@@ -543,9 +563,11 @@ def _door_item(root: Path, today: str, st: dict) -> dict | None:
     try:
         doc = yaml.safe_load(p.read_text(encoding="utf-8")) or {}
         active = [d for d in doc.get("active_diamonds") or []
-                  if isinstance(d, dict) and d.get("id")]
+                  if isinstance(d, dict) and d.get("id") and not _state_closed(d)]
         past = [d for k in ("completed_diamonds", "archived_diamonds") for d in doc.get(k) or []
                 if isinstance(d, dict) and d.get("id")]
+        past += [d for d in doc.get("active_diamonds") or []
+                 if isinstance(d, dict) and d.get("id") and _state_closed(d)]
     except (yaml.YAMLError, OSError, AttributeError):
         return None  # SPEAKS: _fired_proposals reads the same file and reports it unreadable
     for d in active:

@@ -183,3 +183,34 @@ def test_the_waiting_move_does_not_stop_the_verdict(tmp_path):
     """0.276.0 said "It waits on its learning delivery ending"; the builder snoozed the L3."""
     rows = {r["diamond"]: r for r in ni._unassessed(_project(tmp_path, L3_PILOT + L4), TODAY)}
     assert "scoring its test and its verdict do not" in rows["l3-a"]["text"]
+
+
+def test_recorded_launch_data_and_a_lock_that_still_fails_names_the_real_blocker(tmp_path):
+    """v0.287.2, the dogfood repo: an L4 on an override with no L3 parent, released and with its
+    launch data recorded, was told to record launch data again, and the missing L3 was never shown."""
+    orphan = ("  - id: l4-a\n    scale: L4\n    phase: deliver\n    released_on: '2026-04-11'\n"
+              "    launch_data:\n      as_of: '2026-09-28'\n      usage: 3 validated external runs\n")
+    item = ni._door_item(_project(tmp_path, orphan), TODAY, {})
+    assert item["id"] == "l5-lock-l4:l4-a", item
+    assert "launch data is recorded" in item["text"] and "the L3 it delivers" in item["text"]
+    assert not ni.agent_owned(item), "the missing parent is a decision, not record work"
+
+
+def test_control_without_launch_data_the_agent_is_still_asked_to_record_it(tmp_path):
+    orphan = ("  - id: l4-a\n    scale: L4\n    phase: deliver\n    released_on: '2026-04-11'\n")
+    item = ni._door_item(_project(tmp_path, orphan), TODAY, {})
+    assert item["id"] == "launch-data-l4:l4-a"
+
+
+def test_a_diamond_archived_in_place_is_not_offered(tmp_path):
+    """v0.287.2: the dogfood L4 was archived with `state: archived` and kept its launch items."""
+    archived = ("  - id: l4-a\n    scale: L4\n    phase: deliver\n    state: archived\n"
+                "    released_on: '2026-04-11'\n")
+    item = ni._door_item(_project(tmp_path, archived), TODAY, {})
+    assert item is None or not str(item["id"]).endswith(":l4-a"), item
+
+
+def test_control_the_same_diamond_without_the_state_is_offered(tmp_path):
+    live = "  - id: l4-a\n    scale: L4\n    phase: deliver\n    released_on: '2026-04-11'\n"
+    item = ni._door_item(_project(tmp_path, live), TODAY, {})
+    assert item["id"] == "launch-data-l4:l4-a"
