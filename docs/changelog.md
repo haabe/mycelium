@@ -4,6 +4,27 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-24.
 
+## v0.287.2 - a released L4 with its launch data recorded is told what the L5 lock still misses
+
+**2026-09-29.** The dogfood repo, on 0.287.1: once its standing L4 carried `released_on` and
+`launch_data`, the next item still said to record `launch_data`. `_l4_launch_item` has three branches
+(release not recorded, launch data owed, L5 door open) and fell to the second whenever the L5 lock
+failed with a valid release date, whatever the lock was actually missing. Here it was the L4's own L3
+parent: the L4 stands on a founder override. The E2E worlds never reach this, since their L4s always
+sit under an L3; a real project that overrode its way to an L4 does.
+
+- A fourth branch, `l5-lock-l4:`: released, launch data recorded (filled and dated after the
+  release, by the lock's own readers), and the lock still failing. It names what `can_open` reports.
+  It is the founder's, not the agent's: what is missing is a structural decision, not record work.
+- **A closed `state` closes a diamond for the picker too.** The schema's `state` enum carries
+  archived, parked and killed, and `scale_locks.is_open` reads both `phase` and `state`; the picker
+  read `phase` only. The same evening the dogfood L4 was archived in place (`state: archived`, phase
+  kept at deliver, because the schema allows `archived` only as a state or a list) and was still
+  offered its launch items. Diamonds closed by state now count as past, not live.
+- Tests: the real blocker is named and the item is not agent-owned; without launch data the agent is
+  still asked to record it (control); an L4 archived in place is not offered, and the same L4 without
+  the state is (control). The first test fails on the old picker.
+
 ## v0.287.1 - a closing-path proposal ruled on the record stops being offered
 
 **2026-09-29.** Found in a diamond assessment of the dogfood repo, the first on 0.287.0. The top next
