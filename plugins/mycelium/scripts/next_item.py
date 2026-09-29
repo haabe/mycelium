@@ -276,7 +276,11 @@ def _fired_proposals(root: Path) -> tuple[list[dict], str]:
         for d in (doc.get(key) or [])
         if isinstance(d, dict)
         for f in ((d.get("closes_on") or {}).get("fired") or [])
-        if isinstance(f, dict) and f.get("proposal")
+        # A proposal ruled on the record is settled (v0.287.1). diamond-assess tells the agent to
+        # write `ruling:` and `ruled_at:` under a fired entry that does not choose a path, and
+        # derive_closing_path keeps those keys; this picker never read them, so the dogfood L1
+        # offered ht-046 as its top item for 13 days after it was ruled on 2026-09-16.
+        if isinstance(f, dict) and f.get("proposal") and not f.get("ruling")
     ]
     return sorted(out, key=lambda r: r["since"]), ""
 

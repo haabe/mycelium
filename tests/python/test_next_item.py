@@ -105,6 +105,25 @@ def test_fired_proposal_outranks_everything(tmp_path, capsys, monkeypatch):
     assert "a-1 has a verdict" in item["text"]
 
 
+def test_a_fired_proposal_ruled_on_the_record_is_not_offered_again(tmp_path, capsys, monkeypatch):
+    """v0.287.1: the dogfood L1 offered fired:ht-046 as its top item for 13 days after the entry
+    carried `ruling:` and `ruled_at:`, the settlement diamond-assess tells the agent to write."""
+    (tmp_path / ".claude" / "diamonds").mkdir(parents=True)
+    (tmp_path / ".claude" / "diamonds" / "active.yml").write_text(
+        "active_diamonds:\n- id: l1\n  closes_on:\n    fired:\n"
+        "    - id: ht-046\n      noticed_at: '2026-09-09'\n"
+        "      proposal: ht-046 closed; read it against the gate.\n"
+        "      ruling: 'does not choose a path: closed with no evidence'\n"
+        "      ruled_at: '2026-09-16'\n"
+        "    - id: ht-071\n      noticed_at: '2026-09-18'\n"
+        "      proposal: ht-071 closed; read it against the gate.\n"
+    )
+    _seen(tmp_path, "2026-09-01", {"bvssh-overdue": None})
+    rc, out = _run(tmp_path, capsys, monkeypatch, BVSSH, "--json")
+    item = json.loads(out)
+    assert item["id"] == "fired:ht-071", "the ruled one is settled; the unruled one still comes"
+
+
 def test_drop_and_snooze_are_respected(tmp_path, capsys, monkeypatch):
     (tmp_path / ".claude").mkdir()
     _, al = _mods()
