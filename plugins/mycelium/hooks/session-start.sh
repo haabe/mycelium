@@ -1294,9 +1294,11 @@ try:
   with open(sys.argv[1]) as f:
     data = yaml.safe_load(f) or {}
   overdue, no_measure, no_ts = [], [], []
-  for d in data.get('active_diamonds', []) or []:
-    if d.get('phase') != 'complete':
-      continue
+  # Completed diamonds live in active_diamonds with phase: complete, or in completed_diamonds
+  # (v0.289.0: the dogfood project keeps them there, and this check never saw them).
+  done = [d for d in (data.get('active_diamonds') or []) if isinstance(d, dict) and d.get('phase') == 'complete']
+  done += [d for d in (data.get('completed_diamonds') or []) if isinstance(d, dict)]
+  for d in done:
     dod = d.get('definition_of_done') or {}
     if not isinstance(dod, dict) or not dod.get('signal'):
       continue

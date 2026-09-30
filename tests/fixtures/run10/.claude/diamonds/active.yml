@@ -1,0 +1,124 @@
+# E2E run 10's recorded diamond state (dogfood auto-dogfood results e2e-20260924-061643), verbatim.
+# The world is simulated: Harbour, Ines and Tom are fixture names, not people.
+# Mycelium active diamonds state
+# See plugin reference for diamond scales (L0 Purpose -> L5 Market).
+project_type: ""
+dogfood: false
+active_diamonds:
+  - id: l0-001
+    name: "Cadence Pro: swaps recorded, not lost to the group chat"
+    scale: L0
+    phase: discover
+    confidence: 0.15
+    evidence_type: speculation
+    source_class: internal_stakeholder
+    created_via: brief
+    theory_gates_status:
+      evidence: pending
+      cynefin: pending
+      bias: pending
+      bvssh: pending
+      corrections: pending
+    closes_on:
+      stored_at: '2026-09-24'
+      gates:
+      - gate: evidence
+        status: "pending"
+        what_would_flip_it: >-
+          an external source landed on a canvas entry this diamond cites
+        owner: "human + agent"
+        date: "-"
+      - gate: cynefin
+        status: "pending"
+        what_would_flip_it: >-
+          assumption-test evidence on record for a complex domain
+        owner: "agent"
+        date: "-"
+      - gate: bias
+        status: "pending"
+        what_would_flip_it: >-
+          nothing on record names an input for this gate
+        owner: "-"
+        date: "-"
+      - gate: bvssh
+        status: "pending"
+        what_would_flip_it: >-
+          nothing on record names an input for this gate
+        owner: "-"
+        date: "-"
+      - gate: corrections
+        status: "pending"
+        what_would_flip_it: >-
+          nothing on record names an input for this gate
+        owner: "-"
+        date: "-"
+      inputs: []
+      fired: []
+    definition_of_done:
+      outcome: "Shift leads stop relaying swaps by hand, and owners' timesheets match what actually happened, because swaps stay in the app even when the usual approver is away."
+      signal: "At Harbour (Ines away from 2026-10-12, Tom as backup), the share of ~14 weekly swap requests approved in-app and present in the timesheet export over three weeks; pass line, set 2026-09-24: at least 90% in-app and no more than 1 chat-only swap a week by Tom's tally."
+      kind: lagging
+      provenance:
+        source_class: internal_stakeholder
+        validated: false
+  - id: l3-001
+    name: "Named backup approver: swaps stay in the app when the usual approver is away"
+    scale: L3
+    phase: define
+    object_ref: sol-001
+    rolls_up_to: l0-001
+    confidence: 0.15
+    evidence_type: speculation
+    source_class: internal_stakeholder
+    created_via: manual
+    theory_gates_status:
+      evidence: pending
+      cynefin: pending
+      bias: pending
+      bvssh: pending
+      corrections: pending
+    closes_on:
+      stored_at: '2026-09-24'
+      gates:
+      - gate: evidence
+        status: "pending"
+        what_would_flip_it: >-
+          an external source landed on a canvas entry this diamond cites
+        owner: "human + agent"
+        date: "-"
+      - gate: cynefin
+        status: "pending"
+        what_would_flip_it: >-
+          assumption-test evidence on record for a complex domain
+        owner: "agent"
+        date: "-"
+      - gate: bias
+        status: "pending"
+        what_would_flip_it: >-
+          nothing on record names an input for this gate
+        owner: "-"
+        date: "-"
+      - gate: bvssh
+        status: "pending"
+        what_would_flip_it: >-
+          nothing on record names an input for this gate
+        owner: "-"
+        date: "-"
+      - gate: corrections
+        status: "pending"
+        what_would_flip_it: >-
+          nothing on record names an input for this gate
+        owner: "-"
+        date: "-"
+      inputs: []
+      fired: []
+    definition_of_done:
+      outcome: "When Ines is away, Harbour's swap requests are approved in the app by Tom instead of moving to the group chat."
+      signal: "Harbour, 2026-10-12 to 2026-11-01: at least 90% of swaps approved in-app and no more than 1 chat-only swap a week by Tom's tally, scored per .claude/evals/assumption-tests/2026-09-24-named-backup-approver.md (denominator fixed there)."
+      kind: lagging
+      provenance:
+        source_class: internal_stakeholder
+        validated: false
+    notes: "2026-09-24: build started without the Lena call (unreachable); see decision-log 2026-09-24. Tom is off Sundays and Mondays; design set 2026-09-24: the primary approver approves from wherever they are (see decision-log)."
+_meta:
+  last_validated: null

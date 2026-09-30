@@ -10,6 +10,8 @@ Mycelium uses semver for the framework version line in `CLAUDE.md`. This documen
 | **MINOR** (0.X.0) | New skill, new mandatory protocol, new gate, new convention with structural impact, new directory in manifest | Adding `/xai-check`; shipping G-V12; adding `agent_runtime_target` detector category; landing the warnings ingestor |
 | **PATCH** (0.0.X) | Bug fixes, doc-only updates, ruff cleanup, eval-only changes, single-line typo fix in framework files | Fix to `validate_canvas.py` ID-uniqueness; doc clarification in CLAUDE.md without behavioral change; ruff lint pass |
 
+**Before 1.0.0, a backwards-incompatible change is a MINOR bump with a BREAKING section in the changelog** (founder ruling 2026-09-30, for the phase migration: "We're not at 1.0.0 yet"). Semver allows anything to change in 0.y.z; the BREAKING section is what keeps the upgrade signal the MAJOR tier would otherwise carry.
+
 The semver-tier choice is judgment, not arithmetic. When in doubt, **bump conservatively** (MINOR over PATCH) — overreporting a change is cheaper than underreporting it. Underreporting wastes the upgrade signal: downstream agents see "version unchanged" and assume nothing material happened, missing the actual delta.
 
 ## What counts as "material framework change"

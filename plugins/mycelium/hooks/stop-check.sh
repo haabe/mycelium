@@ -35,11 +35,23 @@ WARNINGS=""
 # ============================================================
 # Check if we have active L4 delivery diamonds
 if [ -f "$ACTIVE_FILE" ]; then
+  # An open L4 building or delivering, read from the YAML (v0.289.0). Until then this matched the
+  # substrings "L4" and "deliver" anywhere in the file, so a note mentioning them fired it and an
+  # L4 written as scale: 'L4' beside phase text elsewhere could be missed. Without PyYAML it falls
+  # back to the old substring test, which errs toward the warning.
   HAS_L4=$(python3 -c "
 import sys
-content = open(sys.argv[1]).read()
-# Simple check: does active.yml contain 'scale: L4' or 'L4' with 'deliver' phase
-has_l4 = 'L4' in content and ('deliver' in content.lower() or 'develop' in content.lower())
+path = sys.argv[1]
+try:
+    import yaml
+except ImportError:
+    content = open(path).read()
+    print('yes' if 'L4' in content and ('deliver' in content.lower() or 'develop' in content.lower()) else 'no')
+    sys.exit(0)
+doc = yaml.safe_load(open(path)) or {}
+live = [d for d in (doc.get('active_diamonds') or []) if isinstance(d, dict)]
+has_l4 = any(str(d.get('scale')) == 'L4' and str(d.get('phase')) in ('develop', 'deliver')
+             and str(d.get('state') or '') not in ('archived', 'parked', 'killed') for d in live)
 print('yes' if has_l4 else 'no')
 " "$ACTIVE_FILE" 2>/dev/null || echo "no")
 

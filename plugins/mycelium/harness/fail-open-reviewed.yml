@@ -902,3 +902,9 @@ reviewed:
     skips the version test and falls back to the ledger and record checks, which is exactly the
     0.288.0 behaviour: the failure errs toward offering a stored item that might be stale, never
     toward hiding one that is open. Reviewed 2026-09-30, v0.288.1.
+- id: stop-check.sh@0ab7c7edc7
+  verdict: accepted
+  reason: >-
+    CHECK 1's "an open L4 is building or delivering" falls back to the old substring test when PyYAML
+    cannot be imported. The fallback errs toward the G-S2 and G-V2 warnings (it matches more, not
+    less), and the hook is advisory: it never blocks. Reviewed 2026-09-30, v0.289.0.

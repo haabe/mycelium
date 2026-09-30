@@ -243,6 +243,16 @@
         ]
       },
       {
+        "matcher": "mcp__filesystem__(write_file|edit_file|move_file)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "MYCELIUM_RUNTIME=codex bash __MYCELIUM_PLUGIN_ROOT__/hooks/exposure-change.sh",
+            "timeout": 10
+          }
+        ]
+      },
+      {
         "matcher": "Read|read|Bash|shell",
         "hooks": [
           {
