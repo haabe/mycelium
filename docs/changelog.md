@@ -4,6 +4,32 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-30.
 
+## v0.296.0 - an L3's learning delivery can be its exposure record
+
+**2026-09-30.** Phase migration stage 2b. Not breaking: a diamond that records `learning_delivery`
+is read exactly as before, and every message to it is unchanged.
+
+- **One record, not two.** The rules on an L3's learning delivery (audience, end date and means
+  recorded; still running past its end date; how it ended when the L3 completes; a change to its
+  audience, end date, channel or data once it delivers; the L4 lock's "delivered" check) read
+  `learning_delivery` when the diamond carries it and the exposure record otherwise: the running
+  one, else the latest. The exposure's `channel` is the means and its `data_class` the data (the
+  words in `data` are not compared).
+- **Recording an exposure is not a start.** An exposure is recorded before it runs, so only its
+  `started` date says the L3 reaches people; `recorded_at` does not.
+- **The messages name the record in use** (`exposures[].ended`, `exposures[].changes`): told to
+  add `learning_delivery.changes` to a diamond that records its delivery as an exposure, an agent
+  would create a `learning_delivery`, which is read first and hides the exposure from every rule.
+- The schema takes `ended` as a date or as `{how, on, l4, note}`, and `started` and `changes` on
+  an exposure. `next_item` reads through the same accessor, falling back to the field when
+  `scale_locks` is not installed.
+- **Alternatives considered:** copy the exposure into `learning_delivery` on each write (two copies
+  that drift, the failure the migration exists to remove); rewrite each rule to read `exposures`
+  directly (nine call sites in two scripts, each free to diverge); retire `learning_delivery` now
+  (breaks every existing record; that is stage 5, with the phase).
+- Tests: `test_delivery_record.py`, 8 tests, all failing on 0.295.0; the existing suite passes
+  unchanged (2378).
+
 ## v0.295.0 - the release gate reads exposure records
 
 **2026-09-30.** Phase migration stage 2, founder ruling DL-1365 (option B). Not breaking: a project

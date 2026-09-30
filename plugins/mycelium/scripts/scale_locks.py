@@ -718,11 +718,12 @@ class State:
         Founder, 2026-09-25: "for L4 to open there must be some sort of delivery involved."
         Any means counts, a concierge or hand-run test included (Gilad's Tests stage)."""
         phase = str(d.get("phase", "")).lower()
-        ld = _as_dict(d.get("learning_delivery"))
+        ld = delivery_of(d)
         gaps = [k for k in ("audience", "until", "means") if not _filled(ld.get(k))]
         if (phase in SHIPPED_PHASES or d.get("completed_at")) and not gaps:
             return None
-        return ("its learning delivery: the L3 in Deliver with `learning_delivery` recorded "
+        return ("its learning delivery: the L3 in Deliver with its delivery recorded "
+                "(`learning_delivery`, or an exposure record) "
                 f"(now phase `{phase or 'discover'}`"
                 + (f", {', '.join(gaps)} missing" if gaps else "") + "). The L4 opens on "
                 "evidence from real use by an identifiable, opted-in audience (a named list, "
@@ -740,11 +741,11 @@ class State:
         2026-09-25); for courseware, a pilot cohort on an existing platform; for a service, by
         hand. These are examples, not a rule per type: a concierge or hand-run test is a means
         for any product (Gilad's Tests stage; Cagan's concierge test) (v0.258.0)."""
-        ld = _as_dict(d.get("learning_delivery"))
+        ld = delivery_of(d)
         did = str(d.get("id", "?"))
         gaps = [k for k in ("audience", "until", "means") if not _filled(ld.get(k))]
         if gaps:
-            msg = (f"{did}: its learning delivery recorded in `learning_delivery` "
+            msg = (f"{did}: its learning delivery recorded in `{delivery_key(d)}` "
                    f"({', '.join(gaps)} missing): who the learning build reaches (identifiable and "
                    "opted in: a named list, a cohort, a pre-release channel), until when, and "
                    "by what means (web software: infrastructure as "
@@ -755,9 +756,9 @@ class State:
         until = str(ld.get("until"))[:10]
         today = os.environ.get("MYCELIUM_TODAY") or _dt.datetime.now(_dt.UTC).date().isoformat()
         if re.fullmatch(r"\d{4}-\d{2}-\d{2}", until) and until < today:
-            msg = (f"{did}: a learning delivery still running (`learning_delivery.until` is "
-                   f"{until}): record the verdict, extend it with the audience's agreement, or "
-                   "deliver through an L4")
+            msg = (f"{did}: a learning delivery still running (`{delivery_key(d, 'until')}` "
+                   f"is {until}): record the verdict, extend it with the "
+                   "audience's agreement, or deliver through an L4")
             return [msg]
         return []
 
@@ -778,7 +779,7 @@ class State:
         2026-09-26). E2E rung L4-open completed its L3 with the page public and its record still
         naming five testers: a learning build that outlives its L3 with no L4 is production
         nobody is delivering."""
-        ld = _as_dict(d.get("learning_delivery"))
+        ld = delivery_of(d)
         if not _filled(ld.get("audience")):
             return None  # no learning delivery was run: nothing to end
         ended = _as_dict(ld.get("ended"))
@@ -798,10 +799,11 @@ class State:
                                                               else "; no L4 names this L3 yet"))
         if problem is None:
             return None
-        return ("how its learning delivery ended, in `learning_delivery.ended: {how, on, l4, "
-                f"note}}`: {problem}. `withdrawn` when it no longer reaches its audience (taken "
-                "down, collected back, the cohort or engagement over); `handed_to_l4` when an L4 "
-                "carries it on. A learning build that outlives its L3 with no L4 is production")
+        return (f"how its learning delivery ended, in `{delivery_key(d, 'ended')}: {{how, "
+                f"on, l4, note}}`: {problem}. `withdrawn` when it no longer reaches its "
+                "audience (taken down, collected back, the cohort or engagement over); "
+                "`handed_to_l4` when an L4 carries it on. A learning build that outlives its L3 "
+                "with no L4 is production")
 
     def audience_change_missing(self, before: dict, after: dict) -> str | None:
         """AN L3'S AUDIENCE CHANGES ON THE RECORD ONCE IT DELIVERS (v0.267.0, recorded in
@@ -819,18 +821,19 @@ class State:
         widened = self._reach_change_missing(before, after)
         if widened:
             return widened
-        old = str(_as_dict(before.get("learning_delivery")).get("audience") or "").strip()
-        new = str(_as_dict(after.get("learning_delivery")).get("audience") or "").strip()
+        old = str(delivery_of(before).get("audience") or "").strip()
+        new = str(delivery_of(after).get("audience") or "").strip()
         if not old or new == old:
             return None
         did = after.get("id")
-        entry = next((c for c in reversed(_as_list(_as_dict(after.get("learning_delivery"))
+        entry = next((c for c in reversed(_as_list(delivery_of(after)
                                                    .get("changes")))
                       if isinstance(c, dict) and str(c.get("audience_was") or "").strip() == old),
                      None)
         if entry is None:
             return (f"{did} (L3): its learning delivery's audience changes from `{old}`, and "
-                    "`learning_delivery.changes` has no entry for it. Add `{on, audience_was, "
+                    f"`{delivery_key(after, 'changes')}` has no entry for it. Add "
+                    "`{on, audience_was, "
                     "kind, why}`, with `kind` one of `narrowed`, `reworded`, `widened` (a bigger "
                     "identifiable, opted-in audience: name the re-run gates in `reassessed`) or "
                     "`everyone` (the L4's: open an L4 on this L3 first)")
@@ -845,8 +848,8 @@ class State:
         Before, only the audience text was compared, so a pilot could run longer, move from a
         moderated session to an unattended link, or start taking new data with no gate re-run
         (dogfood a-f check, 2026-09-30). An earlier end date narrows and passes."""
-        was = _as_dict(before.get("learning_delivery"))
-        now = _as_dict(after.get("learning_delivery"))
+        was = delivery_of(before)
+        now = delivery_of(after)
         for field, label in self._REACH_FIELDS:
             old = str(was.get(field) or "").strip()
             new = str(now.get(field) or "").strip()
@@ -859,7 +862,8 @@ class State:
                           and str(c.get(f"{field}_was") or "").strip() == old), None)
             if entry is None:
                 return (f"{after.get('id')} (L3): its learning delivery's {label} changes from "
-                        f"`{old}`, and `learning_delivery.changes` has no entry for it. Add "
+                        f"`{old}`, and `{delivery_key(after, 'changes')}` has no entry for "
+                        "it. Add "
                         f"`{{on, {field}_was, kind, why}}`, with `kind` `narrowed`, `reworded` or "
                         "`widened` (name the re-run gates in `reassessed`: security, privacy, "
                         "service_quality)")
@@ -1480,9 +1484,45 @@ EXPOSURE_GATES = ("security", "privacy", "service_quality", "regulatory")
 PERSON_DATA = ("personal", "sensitive")
 
 
+def delivery_of(d: dict) -> dict:
+    """AN L3'S LEARNING DELIVERY, WHEREVER IT IS RECORDED (v0.296.0, phase migration stage 2b).
+    `learning_delivery` when the diamond carries it; otherwise read from its exposure record (the
+    running one, else the latest), with `channel` as the means and `data_class` as the data (the
+    words in `data` are not compared). It has started when it says `started`: an exposure is
+    recorded before it runs, so recording one is not a start. One record, not two: the rules on
+    the start, a widening, the end and the teardown apply to either. `learning_delivery` retires
+    with the phase (stage 5)."""
+    ld = d.get("learning_delivery")
+    if isinstance(ld, dict) and ld:
+        return ld
+    recs = [e for e in _as_list(d.get("exposures")) if isinstance(e, dict)]
+    if not recs:
+        return {}
+    running = [e for e in recs if not e.get("ended")]
+    # reversed: on a tie in recorded_at, the record listed last wins
+    e = max(reversed(running or recs), key=lambda x: str(x.get("recorded_at") or ""))
+    view = {"audience": e.get("audience"), "until": e.get("until"), "means": e.get("channel"),
+            "data": e.get("data_class"), "started": e.get("started"), "ended": e.get("ended"),
+            "changes": e.get("changes")}
+    return {k: v for k, v in view.items() if v}
+
+
+def delivery_key(d: dict, field: str = "") -> str:
+    """The path of an L3's learning delivery (or one field of it), for the messages that tell the
+    agent what to add: an entry added to `learning_delivery` on a diamond that records its
+    delivery as an exposure would hide the exposure record from every rule (`delivery_of` reads
+    the field first)."""
+    ld = d.get("learning_delivery")
+    base = "learning_delivery"
+    if (not (isinstance(ld, dict) and ld)
+            and any(isinstance(e, dict) for e in _as_list(d.get("exposures")))):
+        base = "exposures[]"
+    return f"{base}.{field}" if field else base
+
+
 def _reaches_people(d: dict) -> str:
     """Why this diamond's work reaches people now, or "" when it does not (yet)."""
-    ld = _as_dict(d.get("learning_delivery"))
+    ld = delivery_of(d)
     if _scale(d) == "L3" and (ld.get("started") or _phase(d) in ("deliver", "complete")):
         return "its learning delivery has started" if ld.get("started") else "it is in deliver"
     if _scale(d) in ("L4", "L5") and _phase(d) in ("deliver", "complete"):
