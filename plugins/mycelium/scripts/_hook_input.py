@@ -443,6 +443,31 @@ def has_discovery_state(project_dir: str) -> bool:
     return False
 
 
+def discovery_state_code(project_dir: str) -> int:
+    """0 engaged, 1 not engaged, 3 cannot check (v0.290.0): without PyYAML the diamonds file is
+    not read, so a project with diamonds read as one with none, and the gate refused for a reason
+    that was false."""
+    if has_discovery_state(project_dir):
+        return 0
+    return 3 if _diamonds_unread(project_dir) else 1
+
+
+def _diamonds_unread(project_dir: str) -> bool:
+    """PyYAML is missing and the diamonds file holds entries: engagement cannot be judged."""
+    try:
+        import yaml  # noqa: F401, PLC0415 - only its absence matters here
+    except ImportError:
+        pass
+    else:
+        return False
+    active = os.path.join(project_dir, ".claude", "diamonds", "active.yml")
+    try:
+        with open(active, encoding="utf-8") as fh:
+            return re.search(r"^\s*-\s*id:\s*\S", fh.read(), re.MULTILINE) is not None
+    except OSError:
+        return False
+
+
 def _line_for(r: Resolved) -> str:
     g = is_guard_state(r.rel)
     where = f"GUARD:{g}" if g else (r.rel if r.inside else f"OUTSIDE:{r.real}")
@@ -523,7 +548,7 @@ def cli() -> int:
             print(hit)
         return 0 if hit else 1
     if args.discovery_state:
-        return 0 if has_discovery_state(args.project_dir) else 1
+        return discovery_state_code(args.project_dir)
     data = read_input()
     tool = str(data.get("tool_name") or "")
     ti = data.get("tool_input") or {}

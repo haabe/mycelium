@@ -16,6 +16,7 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -34,6 +35,11 @@ def run10(tmp_path: Path) -> Path:
 
 
 def _hook(name: str, project: Path, payload: dict, *, no_pyyaml: Path | None = None) -> int:
+    return _hook_err(name, project, payload, no_pyyaml=no_pyyaml)[0]
+
+
+def _hook_err(name: str, project: Path, payload: dict, *, no_pyyaml: Path | None = None,
+              extra: dict | None = None) -> tuple[int, str]:
     # The user's own environment (their python3 is what the hooks run), minus Mycelium settings.
     env = {k: v for k, v in os.environ.items() if not k.startswith(("MYCELIUM_", "CLAUDE_"))}
     env.update({"CLAUDE_PROJECT_DIR": str(project), "MYCELIUM_TODAY": "2026-09-25", "PYTHONPATH": ""})
@@ -41,9 +47,10 @@ def _hook(name: str, project: Path, payload: dict, *, no_pyyaml: Path | None = N
         # A yaml.py that raises ImportError shadows PyYAML: the same path as "not installed".
         (no_pyyaml / "yaml.py").write_text('raise ImportError("simulated: PyYAML not installed")\n')
         env["PYTHONPATH"] = str(no_pyyaml)
+    env.update(extra or {})
     res = subprocess.run(["bash", str(HOOKS / name)], input=json.dumps(payload), text=True,
                          capture_output=True, env=env, timeout=60, check=False)
-    return res.returncode
+    return res.returncode, res.stderr
 
 
 def _write(project: Path, rel: str) -> dict:
@@ -79,29 +86,47 @@ def test_a_remote_release_is_stopped(run10):
                  _shell("ssh app@host 'cd app && git pull && systemctl restart cadence'")) == 2
 
 
-@pytest.mark.xfail(strict=True, reason=f"tunnels are not in the release detector; {OPEN_UNTIL_0B}")
 def test_a_tunnel_to_the_running_app_is_stopped(run10):
     assert _hook("exposure-gate.sh", run10, _shell("ngrok http 8000")) == 2
 
 
-@pytest.mark.xfail(strict=True, reason=f"a push to a host that goes live on push passes; {OPEN_UNTIL_0B}")
 def test_a_push_to_a_host_that_goes_live_on_push_is_stopped(run10):
     (run10 / "vercel.json").write_text("{}\n")
     assert _hook("exposure-gate.sh", run10, _shell("git push origin main")) == 2
 
 
-@pytest.mark.xfail(strict=True, reason=f"without PyYAML the release gate lets it through; {OPEN_UNTIL_0B}")
 def test_a_remote_release_is_stopped_even_without_pyyaml(run10, tmp_path_factory):
-    """macOS's own python3 has no PyYAML, and neither the README nor /setup asks for it. The build
-    gate fails closed without it; on 2026-09-30 the release gate failed open (exit 0, with a stdout
-    line a PreToolUse hook does not show the agent)."""
+    """macOS's own python3 has no PyYAML, and neither the README nor /setup asked for it. On
+    2026-09-30 the release gate failed open here (exit 0, with a stdout line a PreToolUse hook does
+    not show the agent). Closed in 0.290.0: it refuses, and says how to fix it."""
     shim = tmp_path_factory.mktemp("no-pyyaml")
     assert _hook("exposure-gate.sh", run10, _shell(RELEASE), no_pyyaml=shim) == 2
 
 
-def test_control_the_build_gate_already_fails_closed_without_pyyaml(run10, tmp_path_factory):
+def test_the_build_gate_refuses_without_pyyaml_and_says_why(run10, tmp_path_factory):
+    """0.289.0 called this a control that "already fails closed". It refused, but for a false reason:
+    without PyYAML the diamonds went unread, so the project looked undiscovered ("no discovery state
+    yet"). Since 0.290.0 the check says it cannot read them, and the gate refuses with the fix."""
     shim = tmp_path_factory.mktemp("no-pyyaml")
-    assert _hook("discovery-gate.sh", run10, _write(run10, "app/cadence/web.py"), no_pyyaml=shim) == 2
+    code, err = _hook_err("discovery-gate.sh", run10, _write(run10, "app/cadence/web.py"), no_pyyaml=shim)
+    assert code == 2
+    assert "PyYAML is not available" in err and "no discovery state" not in err
+
+
+def test_the_release_gate_uses_myceliums_own_environment_when_path_python_lacks_pyyaml(
+        run10, tmp_path_factory):
+    """/mycelium:setup can create ${CLAUDE_PLUGIN_DATA}/pyenv; the gates then check with it. The
+    stand-in environment is a wrapper that runs this python3 without the shim that hides PyYAML."""
+    shim = tmp_path_factory.mktemp("no-pyyaml")
+    data = tmp_path_factory.mktemp("plugin-data")
+    (data / "pyenv" / "bin").mkdir(parents=True)
+    own = data / "pyenv" / "bin" / "python"
+    own.write_text(f'#!/bin/sh\nPYTHONPATH= exec "{sys.executable}" "$@"\n')
+    own.chmod(0o755)
+    code, err = _hook_err("exposure-gate.sh", run10, _shell(RELEASE), no_pyyaml=shim,
+                          extra={"CLAUDE_PLUGIN_DATA": str(data)})
+    assert code == 2 and "PyYAML is not available" not in err  # refused on the locks, not on PyYAML
+    assert "no delivery" in err or "missing" in err
 
 
 def test_control_an_ordinary_push_with_no_live_host_is_not_stopped(run10):

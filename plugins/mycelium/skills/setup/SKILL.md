@@ -19,6 +19,35 @@ Claude Code, check the plugin is enabled in `/plugin`." Then carry on with this 
 
 When this skill runs, do the following sequence. The skill is designed to be safe to re-run — every step is idempotent.
 
+## Then: can the gates read the canvas? (v0.290.0)
+
+The safety gates read YAML, so they need a Python with PyYAML. Claude Code installs a plugin's Node
+packages but not its Python ones, and documents `${CLAUDE_PLUGIN_DATA}` as the place for a plugin's
+installed dependencies. Check first; install only if it is missing, and only with the user's yes:
+
+```bash
+python3 -c "import yaml; print('PyYAML', yaml.__version__)" 2>/dev/null \
+  || "${CLAUDE_PLUGIN_DATA}/pyenv/bin/python" -c "import yaml; print('PyYAML (Mycelium env)', yaml.__version__)" 2>/dev/null \
+  || echo "PyYAML missing"
+```
+
+**If it prints a version, say nothing and go on.** If it prints `PyYAML missing`, tell the user plainly:
+*"Mycelium's safety gates cannot read your project without PyYAML, so they refuse new source files and
+releases until it is there. I can install it for Mycelium only, in the plugin's own data directory
+(`${CLAUDE_PLUGIN_DATA}/pyenv`, removed when the plugin is uninstalled), pinned to the version
+Mycelium's CI tests. Shall I?"* On a yes:
+
+```bash
+python3 -m venv "${CLAUDE_PLUGIN_DATA}/pyenv" \
+  && "${CLAUDE_PLUGIN_DATA}/pyenv/bin/python" -m pip install --quiet --disable-pip-version-check "PyYAML==6.0.3" \
+  && "${CLAUDE_PLUGIN_DATA}/pyenv/bin/python" -c "import yaml; print('installed PyYAML', yaml.__version__)"
+```
+
+Report the last line verbatim. On a no, say what stays refused, and that `pip3 install pyyaml` for their
+own `python3` works as well. **Never install without asking**: it downloads a package, and the pin is
+exact (6.0.3, the version `requirements-ci.txt` pins) so what is installed is what CI tested. If
+`${CLAUDE_PLUGIN_DATA}` did not expand (a runtime other than Claude Code), use `pip3 install pyyaml`.
+
 ## Step 1: Detect initialization state
 
 Check whether the user's project already has Mycelium project-state. The signal that initialization has happened:

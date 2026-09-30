@@ -4,6 +4,34 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-30.
 
+## v0.290.0 - the release gate closes three holes, and the safety gates refuse when they cannot read
+
+**2026-09-30. Adds blocks.** Stage 0b-1 of the phase migration (dogfood design page Part 3, ruled
+2026-09-30). Three of the five holes the run-10 replay pinned in 0.289.0 are closed here; each strict
+expected failure flipped and its marker is removed. The other two (editing product code, widening the
+audience) are stage 0b-2.
+
+- **Without PyYAML, the build and release gates refuse, and say how to fix it.** The release gate let
+  a release through (exit 0 with a stdout line a PreToolUse hook does not show the agent), and the build
+  gate refused for a false reason: the diamonds went unread, so the project looked undiscovered. Now the
+  discovery check reports "cannot check" (exit 3) and both gates refuse with the fix. The scale-lock gate
+  on the diamonds file still allows without PyYAML, and preflight says so on every prompt.
+- **Mycelium's own Python environment, never installed silently.** Claude Code installs a plugin's Node
+  packages but not its Python ones, and documents `${CLAUDE_PLUGIN_DATA}` for installed dependencies.
+  `scripts/_python.sh` picks the PATH `python3` if it has PyYAML, else `${CLAUDE_PLUGIN_DATA}/pyenv`.
+  `/mycelium:setup` checks, and only if PyYAML is missing asks to create that environment, pinned to
+  PyYAML 6.0.3 (the version CI tests). Founder ruling 2026-09-30: best practice, not bundling.
+- **Tunnels are releases**: ngrok, cloudflared tunnels, localtunnel, tailscale funnel and serve, and
+  `ssh -R` remote forwards.
+- **A plain `git push` is a release when the host publishes what is pushed**: `vercel.json`,
+  `netlify.toml`, `render.yaml`, `.vercel/project.json`, or a workflow triggered on push that deploys
+  (Pages, Vercel, Netlify, Fly, Wrangler, Firebase, Heroku). Vercel and Netlify publish every branch.
+- **Text that is only carried is not a release.** Heredoc bodies are dropped, and quoted strings too,
+  except where the quoted string is itself run (ssh, bash -c, sh -c, eval). The gate refused two
+  documentation edits on 2026-09-30 because their heredocs mentioned a release verb.
+- Tests: the run-10 replay (8 passed, 2 strict expected failures left for 0b-2), a resolver test that
+  the gates use Mycelium's own environment, and `test_release_detector.py` (16, with controls).
+
 ## v0.289.0 - the safety net pinned before the phase migration
 
 **2026-09-30.** The founder ruled to replace the four-phase diamond at every level with a learning

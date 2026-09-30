@@ -77,7 +77,16 @@ BASENAME="${GATED_FILE##*/}"
 
 [ -f "$PROJECT_DIR/.claude/state/discovery-skip-ack" ] && exit 0
 
-if hi_discovery_engaged; then
+hi_discovery_engaged; HI_ENGAGED=$?
+if [ "$HI_ENGAGED" -eq 3 ]; then
+  # Diamonds exist but cannot be read without PyYAML (v0.290.0): refuse with the real reason.
+  [ -f "$PROJECT_DIR/.claude/state/delivery-skip-ack" ] && exit 0
+  printf 'Mycelium delivery gate: you are about to create a new source file (%s). %s\n' "$BASENAME" "$MYCELIUM_NO_YAML_FIX" >&2
+  . "${CLAUDE_PLUGIN_ROOT:-$(dirname "${BASH_SOURCE[0]}")/..}/scripts/_hook_fire_log.sh" 2>/dev/null || true
+  mycelium_log_fire ".claude/state/discovery-gate-fires.jsonl" "blocked-cannot-check" 2>/dev/null || true
+  exit 2
+fi
+if [ "$HI_ENGAGED" -eq 0 ]; then
   # SECOND STAGE (v0.245.0): discovery is under way, so the question is whether this build sits
   # inside a delivery cycle whose whole chain holds (scripts/scale_locks.py): an open L3, L4 or
   # L5 with a purpose, a desired outcome and a target opportunity with evidence above it. Any
@@ -88,7 +97,11 @@ if hi_discovery_engaged; then
   hi_delivery_state
   case $? in
     0) exit 0 ;;
-    3) exit 0 ;;  # PyYAML missing: the locks cannot be read, and preflight.sh says so every prompt
+    3)  # PyYAML missing: refuse and say how to fix it (v0.290.0; it allowed until then)
+      printf 'Mycelium delivery gate: you are about to create a new source file (%s). %s\n' "$BASENAME" "$MYCELIUM_NO_YAML_FIX" >&2
+      . "${CLAUDE_PLUGIN_ROOT:-$(dirname "${BASH_SOURCE[0]}")/..}/scripts/_hook_fire_log.sh" 2>/dev/null || true
+      mycelium_log_fire ".claude/state/discovery-gate-fires.jsonl" "blocked-cannot-check" 2>/dev/null || true
+      exit 2 ;;
   esac
   cat >&2 <<EOF
 Mycelium delivery gate: you are about to create a new source file ($BASENAME),
