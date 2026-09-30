@@ -157,3 +157,46 @@ def test_prose_spellings_normalise_to_keys(prose, expected):
     """Real tables write gates in prose. A scanner that only matched key form would miss
     every markdown table — which is where all seven drifts actually lived."""
     assert mod._normalise(prose) == expected
+
+
+# --- The per-transition matrix (v0.292.0) ------------------------------------------------------
+
+def _copy_with_table(tmp_path: Path, old: str, new: str) -> Path:
+    import shutil  # only these tests copy the plugin tree
+    shutil.copytree(REAL_ROOT / "plugins", tmp_path / "plugins")
+    tg = tmp_path / "plugins" / "mycelium" / "engine" / "theory-gates.md"
+    text = tg.read_text(encoding="utf-8")
+    assert text.count(old) == 1
+    tg.write_text(text.replace(old, new), encoding="utf-8")
+    return tmp_path
+
+
+def test_the_documented_matrix_agrees_with_the_code():
+    assert mod.matrix_drift(REAL_ROOT) == []
+
+
+def test_a_changed_cell_is_caught(tmp_path):
+    root = _copy_with_table(tmp_path, "| Regulatory | -- | Required (L3-5) | Required (L3-5) | -- |",
+                            "| Regulatory | -- | Required (L3-4) | Required (L3-5) | -- |")
+    found = mod.matrix_drift(root)
+    assert any("regulatory" in f and "define->develop" in f for f in found)
+
+
+def test_a_missing_row_is_caught(tmp_path):
+    """XAI was Gate 13 in the prose and in no table the code read, until 0.292.0."""
+    root = _copy_with_table(
+        tmp_path,
+        "| XAI | -- | -- | Required (L3-5, when AI detected) | Required (L3-5, when AI detected) |\n", "")
+    assert any("no row for `explainability`" in f for f in mod.matrix_drift(root))
+
+
+@pytest.mark.parametrize(("cell", "scales"), [
+    ("Required", ("L0", "L1", "L2", "L3", "L4", "L5")),
+    ("Required (L1-4)", ("L1", "L2", "L3", "L4")),
+    ("Required (L1, L3-4)", ("L1", "L3", "L4")),
+    ("Required (L3-5, when AI detected)", ("L3", "L4", "L5")),
+    ("NUDGE (L1-3)", ()),
+    ("--", ()),
+])
+def test_cells_are_read_as_scales(cell, scales):
+    assert mod._scales_in(cell) == scales

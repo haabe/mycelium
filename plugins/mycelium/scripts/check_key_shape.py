@@ -58,6 +58,17 @@ DATE_IN_KEY = re.compile(r"(19|20)\d{2}[_-]?\d{2}[_-]?\d{2}|_(19|20)\d{2}(_|$)")
 #: first real run and was caught only by this module's own test.
 ENTITY_IN_KEY = re.compile(r"(^|[^a-z0-9])(ht|comp|opp|sol|pp|need|cyc|dl|jtbd)[_-]\d{2,4}(?!\d)",
                            re.IGNORECASE)
+#: A key that IS an entity id (v0.292.0): an id-keyed map, such as a purpose stance's `pp-016:`,
+#: which the stance schema keys by property id. The rule is about an id smuggled into a field
+#: name (`ht_010_status`), and it fired on every `pp-###` key the stance re-derivation wrote.
+ID_AS_KEY = re.compile(r"(ht|comp|opp|sol|pp|need|cyc|dl|jtbd)[_-]\d{2,4}[a-z]?", re.IGNORECASE)
+
+
+def carries_date_or_id(key: str) -> bool:
+    """A date or an entity id in a key NAME; a key that is exactly an id is a map key, not this."""
+    if ID_AS_KEY.fullmatch(key):
+        return False
+    return bool(DATE_IN_KEY.search(key) or ENTITY_IN_KEY.search(key))
 
 #: Recursion ceiling walking a canvas. Deep enough for every shipped canvas, finite so a
 #: pathological nesting cannot hang the gate.
@@ -75,7 +86,7 @@ def offending(node, canvas: str, out: list[tuple[str, str]], depth: int = 0) -> 
         return
     if isinstance(node, dict):
         for key, val in node.items():
-            if isinstance(key, str) and (DATE_IN_KEY.search(key) or ENTITY_IN_KEY.search(key)):
+            if isinstance(key, str) and carries_date_or_id(key):
                 out.append((canvas, key))
             offending(val, canvas, out, depth + 1)
     elif isinstance(node, list):
@@ -135,7 +146,7 @@ def stem_of(key: str) -> str:
 
 
 def _is_twin(key: str) -> bool:
-    return bool(ENTITY_IN_KEY.search(key) or DATE_IN_KEY.search(key))
+    return carries_date_or_id(key)
 
 
 def _divergence(node: dict, key: str, val, canvas: str, here: str) -> str | None:

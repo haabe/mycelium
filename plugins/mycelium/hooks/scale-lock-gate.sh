@@ -37,8 +37,10 @@ esac
 shopt -u nocasematch
 LOCKS="$(dirname "${BASH_SOURCE[0]}")/../scripts/scale_locks.py"
 [ -f "$LOCKS" ] || LOCKS="${CLAUDE_PLUGIN_ROOT:-}/scripts/scale_locks.py"
-printf '%s' "$INPUT" | python3 "$LOCKS" --project-dir "$PROJECT_DIR" --hook
-rc=$?
+# shellcheck source=../scripts/_python.sh
+. "$(dirname "$LOCKS")/_python.sh"  # mycelium_python (v0.292.0)
+printf '%s' "$INPUT" | "$(mycelium_python)" "$LOCKS" --project-dir "$PROJECT_DIR" --hook
+rc=${PIPESTATUS[1]}
 # 0 = allowed, 3 = PyYAML missing (hooks/preflight.sh says the locks are unchecked, every prompt).
 # Anything else is a refusal, including a crash: its traceback is on stderr, and a lock checker that
 # fell over must not read as a lock that held.

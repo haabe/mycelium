@@ -474,12 +474,13 @@ Summary of which gates apply to which transitions:
 | Cynefin | -- | Required | -- | -- |
 | Bias | Required | Required | Required | Required |
 | Security | -- | -- | Required (L3-5) | Required (L3-5) |
-| Privacy | -- | Required (L2-4) | Required (L2-4) | -- |
+| Privacy | -- | Required (L2-4) | Required (L2-5) | -- |
 | BVSSH | -- | -- | -- | Required |
-| Service Quality | -- | -- | Required (L2-4) | Required (L2-4) |
+| Service Quality | -- | -- | Required (L2-5) | Required (L2-5) |
 | Delivery Metrics | -- | -- | -- | Required (L3-5) |
 | Corrections | Required | Required | Required | Required |
 | Regulatory | -- | Required (L3-5) | Required (L3-5) | -- |
+| XAI | -- | -- | Required (L3-5, when AI detected) | Required (L3-5, when AI detected) |
 | Landscape | -- | NUDGE (L1-3) | NUDGE (L1) | -- |
 | Capacity | -- | -- | NUDGE (L1, L3-4) | -- |
 
@@ -623,14 +624,21 @@ Use this matrix to determine exactly which gates to evaluate for a given scale a
 | Cynefin | -- | R | -- | -- |
 | Bias | R | R | R | R |
 | Security | -- | -- | R | R |
-| Privacy | -- | -- | -- | -- |
+| Privacy | -- | -- | R | -- |
 | BVSSH | -- | -- | -- | R |
-| Service Quality | -- | -- | -- | -- |
+| Service Quality | -- | -- | R | R |
 | Delivery Metrics | -- | -- | -- | R |
 | Corrections | R | R | R | R |
 | Regulatory | -- | R | R | -- |
+| XAI (when AI detected) | -- | -- | R | R |
 
 **Applicable gates**: Evidence, Cynefin, Bias, Security, BVSSH, Corrections, Regulatory (7 gates)
+
+**Since v0.292.0** Privacy and Service Quality are required before an L5 delivers (founder ruling f,
+2026-09-30: a sign-up form, analytics or a campaign collects data from people who did not build it),
+and the explainability gate when the product records AI components. The phase gates read the
+per-transition matrix above; the per-scale list a diamond is born with is reconciled with it in the
+migration's stage 3.
 
 **Trio guidance for L5**:
 - **Product**: Is the positioning aligned with validated user needs? Does the GTM motion match the buyer journey? (Strong)

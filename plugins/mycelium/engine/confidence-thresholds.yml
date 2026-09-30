@@ -414,6 +414,11 @@ project_type_adaptations:
 # external_evidence_min below — you may lower HOW MUCH, never WHO IS ACCOUNTABLE at the boundary
 # where the work reaches people who did not build it.
 #
+# ENFORCED IN CODE SINCE 0.292.0 (founder ruling DL-1364): until then no code read this floor.
+# A write that moves an L5 into deliver or complete now asks the person in the permission
+# dialog (scale_locks._launch_approval), and is refused where nobody would be asked
+# (bypassed permissions, Codex).
+#
 # Anti-gaming rule: external_evidence_min: NO_REDUCTION means that the
 # external evidence ratio gate (theory-gates.md Evidence Gate) is never
 # lowered by project_type adaptations. You can lower HOW MUCH evidence

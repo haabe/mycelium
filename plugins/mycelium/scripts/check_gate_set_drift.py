@@ -54,6 +54,7 @@ ALIASES = {
     "service & usability quality": "service_quality",
     "delivery metrics": "delivery_metrics",
     "dora / delivery metrics": "delivery_metrics",
+    "xai": "explainability",
 }
 
 #: A line carrying one of these is ILLUSTRATIVE — it does not claim to be the whole set, so
@@ -188,7 +189,7 @@ def main(argv=None) -> int:
 
     required = machinery(root)
     found, undeclared = scan(root)
-    return _report(found, undeclared, required)
+    return _report(found, undeclared, required, matrix_drift(root))
 
 
 def _print_illustrative(found: Findings) -> None:
@@ -223,7 +224,74 @@ def _print_undeclared(undeclared: list) -> list:
     return out
 
 
-def _report(found: Findings, undeclared: list, required: dict) -> int:
+#: The transition columns of the theory-gates.md Transition Matrix, in order.
+_COLUMNS = ("discover->define", "define->develop", "develop->deliver", "deliver->complete")
+_ALL_SCALES = ("L0", "L1", "L2", "L3", "L4", "L5")
+
+
+def _scales_in(cell: str) -> tuple[str, ...]:
+    """`Required` -> every scale; `Required (L1-4)` or `(L1, L3-4)` -> those; `--` or NUDGE ->
+    none."""
+    cell = cell.strip()
+    if not cell.lower().startswith("required"):
+        return ()
+    inner = re.search(r"\(([^)]*)\)", cell)
+    if not inner:
+        return _ALL_SCALES
+    out = []
+    for part in re.findall(r"L(\d)(?:\s*-\s*L?(\d))?", inner.group(1)):
+        lo, hi = int(part[0]), int(part[1] or part[0])
+        out += [f"L{n}" for n in range(lo, hi + 1)]
+    return tuple(out)
+
+
+MATRIX_NOT_COMPARED: list[str] = []
+
+
+def matrix_drift(root: Path) -> list[str]:
+    """THE PER-TRANSITION MATRIX, compared both ways (v0.292.0). This check compared only the
+    per-scale gate-set copies; the per-transition table in theory-gates.md and the `_MATRIX` the
+    phase gates read had no comparison, and the XAI gate lived in the one and not the other."""
+    MATRIX_NOT_COMPARED.clear()
+    tg = root / "plugins" / "mycelium" / "engine" / "theory-gates.md"
+    sl_py = root / "plugins" / "mycelium" / "scripts" / "scale_locks.py"
+    if not tg.exists() or not sl_py.exists():
+        # A partial tree (a test fixture): say it was not compared, never a silent pass.
+        MATRIX_NOT_COMPARED.append("theory-gates.md or scale_locks.py is absent in this tree")
+        return []
+    section = tg.read_text(encoding="utf-8").split("## Transition Matrix", 1)
+    if len(section) == 1:
+        MATRIX_NOT_COMPARED.append("theory-gates.md has no `## Transition Matrix` section")
+        return []
+    documented: dict[str, dict[str, set[str]]] = {}
+    for line in section[1].split("\n## ", 1)[0].splitlines():
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        header = cells[0].lower() in ("gate", "") or set(cells[0]) <= {"-"}
+        if len(cells) != 1 + len(_COLUMNS) or header:
+            continue
+        key = _normalise(cells[0])
+        documented[key] = {t: set(_scales_in(c)) for t, c in zip(_COLUMNS, cells[1:], strict=True)}
+    sys.path.insert(0, str(root / "plugins" / "mycelium" / "scripts"))
+    import scale_locks  # noqa: PLC0415 - the table the phase gates read
+    code = {g: {t: set(rows.get(t, ())) for t in _COLUMNS}
+            for g, rows in scale_locks.gate_matrix().items()}
+    out = []
+    for g in sorted(set(code) | {k for k, v in documented.items() if any(v.values())}):
+        want, have = code.get(g), documented.get(g)
+        if have is None:
+            out.append(f"    theory-gates.md Transition Matrix has no row for `{g}`, which the "
+                       "code requires")
+            continue
+        if want is None:
+            out.append(f"    theory-gates.md requires `{g}`, which the code's _MATRIX does not "
+                       "have")
+            continue
+        out.extend(f"    `{g}` at {t}: code {sorted(want[t])}, theory-gates.md {sorted(have[t])}"
+                   for t in _COLUMNS if want[t] != have[t])
+    return out
+
+
+def _report(found: Findings, undeclared: list, required: dict, matrix: list | None = None) -> int:
     """Print the findings and decide the exit code. Split from `main` so argument
     handling and judgement are separate functions."""
 
@@ -246,6 +314,9 @@ def _report(found: Findings, undeclared: list, required: dict) -> int:
     _print_illustrative(found)
     failures += _print_counts(found)
     failures += _print_undeclared(undeclared)
+    failures += list(matrix or [])
+    if MATRIX_NOT_COMPARED:
+        print(f"  per-transition matrix NOT COMPARED: {MATRIX_NOT_COMPARED[0]}")
 
     if failures:
         print(f"\nFAIL: {len(failures)} problem(s).")

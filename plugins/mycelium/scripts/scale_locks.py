@@ -105,20 +105,46 @@ _MATRIX = {
     "bias": {"discover->define": _ALL, "define->develop": _ALL, "develop->deliver": _ALL,
              "deliver->complete": _ALL},
     "security": {"develop->deliver": ("L3", "L4", "L5"), "deliver->complete": ("L3", "L4", "L5")},
-    "privacy": {"define->develop": ("L2", "L3", "L4"), "develop->deliver": ("L2", "L3", "L4")},
+    # L5 gains Privacy and Service Quality before it reaches people (founder ruling f, 2026-09-30):
+    # a sign-up form, analytics or a campaign collects data from people who did not build it.
+    "privacy": {"define->develop": ("L2", "L3", "L4"),
+                "develop->deliver": ("L2", "L3", "L4", "L5")},
     "bvssh": {"deliver->complete": _ALL},
-    "service_quality": {"develop->deliver": ("L2", "L3", "L4"),
-                        "deliver->complete": ("L2", "L3", "L4")},
+    "service_quality": {"develop->deliver": ("L2", "L3", "L4", "L5"),
+                        "deliver->complete": ("L2", "L3", "L4", "L5")},
     "delivery_metrics": {"deliver->complete": ("L3", "L4", "L5")},
     "corrections": {"discover->define": _ALL, "define->develop": _ALL, "develop->deliver": _ALL,
                     "deliver->complete": _ALL},
     "regulatory": {"define->develop": ("L3", "L4", "L5"), "develop->deliver": ("L3", "L4", "L5")},
+    # XAI, only when the product has AI components (`_AI_ONLY`; v0.292.0). It was in theory-gates.md
+    # as Gate 13 and in no table the code read, so a table-driven migration would drop it silently.
+    "explainability": {"develop->deliver": ("L3", "L4", "L5"),
+                       "deliver->complete": ("L3", "L4", "L5")},
 }
+#: Gates that apply only when the product has AI components (`ai_components.detected` in
+#: `.claude/jit-tooling/active-stack.yml`, written by /mycelium:delivery-bootstrap).
+_AI_ONLY = frozenset({"explainability"})
 
 
-def transition_gates(scale: str, transition: str) -> tuple[str, ...]:
-    """The gates the matrix requires for one transition at one scale, in matrix order."""
-    return tuple(g for g, rows in _MATRIX.items() if scale in rows.get(transition, ()))
+def gate_matrix() -> dict[str, dict[str, tuple[str, ...]]]:
+    """The per-transition gate table, read-only, for checks that compare it to its documentation."""
+    return {g: dict(rows) for g, rows in _MATRIX.items()}
+
+
+def transition_gates(scale: str, transition: str, *, ai: bool = True) -> tuple[str, ...]:
+    """The gates the matrix requires for one transition at one scale, in matrix order. With
+    `ai=False` the AI-only gates are left out (a product with no AI components)."""
+    return tuple(g for g, rows in _MATRIX.items() if scale in rows.get(transition, ())
+                 and (ai or g not in _AI_ONLY))
+
+
+def ai_detected(project_dir: str) -> bool:
+    """Whether the project records AI components (`ai_components.detected: true`)."""
+    try:
+        stack = _as_dict(_load(project_dir, "jit-tooling", "active-stack.yml"))
+    except (UnreadableError, CannotCheckError):
+        return False  # errs toward not requiring XAI; the regulatory gate still applies
+    return bool(_as_dict(stack.get("ai_components")).get("detected"))
 
 
 def _crossed(start: str, end: str) -> list[str]:
@@ -320,6 +346,7 @@ class State:
 
     def __init__(self, project_dir: str, diamonds_doc=None):
         _require_yaml()
+        self.ai = ai_detected(project_dir)  # AI-only gates apply only with AI components (0.292.0)
         self.purpose = _as_dict(_load(project_dir, "canvas", "purpose.yml"))
         self.opps_doc = _as_dict(_load(project_dir, "canvas", "opportunities.yml"))
         north = _as_dict(_load(project_dir, "canvas", "north-star.yml"))
@@ -861,6 +888,8 @@ class State:
 
     def gate_missing(self, d: dict, gate: str) -> str | None:
         """Why one gate does not count as passed on this diamond, or None when it does."""
+        if gate in _AI_ONLY and not self.ai:
+            return None  # an AI-only gate on a product with no AI components
         v = str(_as_dict(d.get("theory_gates_status")).get(gate) or "not recorded").lower()
         if not (v in PASSED or (v in NOT_APPLICABLE and gate not in SAFETY_RECORD)):
             return f"the {gate} gate passed (theory_gates_status.{gate} is `{v}`)"
@@ -1342,9 +1371,82 @@ Only if the USER explicitly says this work is not to be tracked, they record it 
 .claude/state/delivery-skip-ack. Do not write that file on your own judgement."""
 
 
+#: Permission modes in which an `ask` reaches a person, and runtimes whose hooks cannot ask: the
+#: same lists `_hook_input.guard_state_check` uses (v0.281.0, v0.286.0).
+_ASKS_A_HUMAN = ("default", "acceptEdits", "plan")
+_CANNOT_ASK = ("codex",)
+#: The two outward L5 moves (confidence-thresholds.yml, L5 human-approval floor, NO_REDUCTION).
+_LAUNCH_PHASES = ("deliver", "complete", "completed")
+
+
+def launch_moves(before_text: str, after_text: str) -> list[str]:
+    """The L5 diamonds a write moves into deliver or complete (v0.292.0). A diamond already there
+    before the write is not a move. An unreadable `before` counts every such L5 as a move, which
+    errs toward asking."""
+    def rows(text: str) -> dict:
+        try:
+            doc = _as_dict(_parse(text, "diamonds/active.yml")) if text.strip() else {}
+        except UnreadableError:
+            return {}
+        out = {}
+        for key in ("active_diamonds", "completed_diamonds", "archived_diamonds"):
+            for d in _as_list(doc.get(key)):
+                if isinstance(d, dict) and d.get("id"):
+                    phase = "complete" if key == "completed_diamonds" else _phase(d)
+                    out[str(d["id"])] = (_scale(d), phase)
+        return out
+    was, now = rows(before_text), rows(after_text)
+    return [did for did, (scale, phase) in now.items()
+            if scale == "L5" and phase in _LAUNCH_PHASES
+            and was.get(did, ("", ""))[1] not in _LAUNCH_PHASES]
+
+
+def _launch_approval(project_dir: str, payload: dict) -> None:
+    """THE L5 HUMAN-APPROVAL FLOOR, ENFORCED (v0.292.0; founder ruling DL-1364). Until now it was
+    prose in confidence-thresholds.yml that no code read, so an agent could move a launch to
+    deliver or complete on its own. A write that does so asks the person in the permission dialog,
+    and is refused where nobody would be asked. No project type lowers it. An `approved_by` field
+    or the git author were rejected: the agent can write the first and commits under the second."""
+    target = os.path.join(project_dir, ".claude", "diamonds", "active.yml")
+    try:
+        with open(target, encoding="utf-8", errors="replace") as fh:
+            before = fh.read()
+    except OSError:
+        before = ""
+    try:
+        after = _proposed_text(payload, target, before, project_dir)
+    except EditNotAppliedError:
+        return
+    moved = launch_moves(before, after) if after is not None else []
+    if not moved:
+        return
+    mode = str(payload.get("permission_mode") or "")
+    runtime = os.environ.get("MYCELIUM_RUNTIME", "")
+    what = ", ".join(moved)
+    if runtime in _CANNOT_ASK or (mode and mode not in _ASKS_A_HUMAN):
+        why = (f"this runtime ({runtime}) cannot ask a person" if runtime in _CANNOT_ASK
+               else f"in this permission mode ({mode}) nobody is asked")
+        decision, reason = "deny", (
+            f"Mycelium launch approval: this write moves {what} (L5) into delivery or "
+            f"completion, where the work reaches people who did not build it. A person "
+            f"approves that, and {why}. "
+            "Ask the user to make this move themselves, or to run the session where they "
+            "are asked.")
+    else:
+        decision, reason = "ask", (
+            f"Mycelium launch approval: this write moves {what} (L5) into delivery or "
+            "completion, where the work reaches people who did not build it. Approve only if "
+            "you, the person, want this launch to go ahead now (L5 human-approval floor, no "
+            "project type lowers it).")
+    print(json.dumps({"hookSpecificOutput": {"hookEventName": "PreToolUse",
+                                             "permissionDecision": decision,
+                                             "permissionDecisionReason": reason}}))
+
+
 def _run_hook(project_dir: str) -> int:
     try:
-        violations = new_diamond_violations(project_dir, json.loads(sys.stdin.read() or "{}"))
+        payload = json.loads(sys.stdin.read() or "{}")
+        violations = new_diamond_violations(project_dir, payload)
     except (EditNotAppliedError, json.JSONDecodeError):
         return EXIT_HOLDS  # SPEAKS: a malformed payload or a non-applying edit is refused by the
         # tool itself, with its own message; this hook has nothing to judge
@@ -1354,6 +1456,7 @@ def _run_hook(project_dir: str) -> int:
               file=sys.stderr)
         return 2
     if not violations:
+        _launch_approval(project_dir, payload)
         return EXIT_HOLDS
     print("Mycelium scale lock: this write opens a diamond before its parent is ready.\n\n"
           + "\n".join(violations) + "\n" + _GATE_TAIL, file=sys.stderr)
