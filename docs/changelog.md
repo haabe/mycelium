@@ -4,6 +4,31 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-30.
 
+## v0.291.0 - editing product code counts as building; an exposed pilot cannot widen unseen
+
+**2026-09-30. Adds blocks.** Stage 0b-2 of the phase migration. The run-10 replay now carries no
+expected failures: every hole it pinned in 0.289.0 is closed.
+
+- **Edits count as building once discovery is engaged.** Edit and MultiEdit exited the build gate, so a
+  prototype could be edited into the product with no gate firing. They are now gated like new files:
+  a source-shaped file, or one in `product_paths`, needs the decision to build. Where discovery has not
+  started, edits stay untouched (the brownfield gate's case). Checked against the founder's repos
+  before release: upstream is not engaged, the dogfood repo keeps its code under `.claude/`, and the
+  interview repo has no source files yet.
+- **`prototype_paths` (new, optional, in `diamonds/active.yml`)**: throwaway discovery code, free to
+  write and edit. Releasing it is the decision to build, and the release gate holds that.
+- **Widening is any increase in audience, end date, channel or data** (founder ruling b, 2026-09-30).
+  Only the audience of an exposed L3 was compared; now an extended `until`, a changed `means` or `data`
+  needs a `learning_delivery.changes` entry (`{field}_was`, kind, why; `reassessed` naming security,
+  privacy and service_quality for a widening). Ending sooner is a narrowing and passes.
+- **The replay's widening step was re-modelled on the founder's ruling** ("So as recommended"): the
+  first version refused a recorded audience on an L3 still in define, which would block planning. A
+  widening the user performs inside a running app with nothing recorded is beyond any hook; the frozen
+  bet says so rather than counting it as covered.
+- Tests: the replay (19, none expected to fail; the widening ones fail on 0.290.0 for end date,
+  channel and data), MultiEdit, a declared prototype (free to edit and create, still gated on release),
+  and an edit where discovery has not started (untouched).
+
 ## v0.290.0 - the release gate closes three holes, and the safety gates refuse when they cannot read
 
 **2026-09-30. Adds blocks.** Stage 0b-1 of the phase migration (dogfood design page Part 3, ruled

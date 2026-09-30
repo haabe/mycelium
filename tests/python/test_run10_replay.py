@@ -72,10 +72,36 @@ def test_building_a_new_product_file_is_stopped(run10):
     assert _hook("discovery-gate.sh", run10, _write(run10, "app/cadence/web.py")) == 2
 
 
-@pytest.mark.xfail(strict=True, reason=f"Edit and MultiEdit exit the build gate early; {OPEN_UNTIL_0B}")
 def test_editing_product_code_without_a_decision_to_build_is_stopped(run10):
     edit = _edit(run10, "app/cadence/sms.py", "raise NotImplementedError", "return None")
     assert _hook("discovery-gate.sh", run10, edit) == 2
+
+
+def test_a_multiedit_of_product_code_is_stopped_too(run10):
+    multi = {"tool_name": "MultiEdit", "tool_input": {
+        "file_path": str(run10 / "app/cadence/sms.py"),
+        "edits": [{"old_string": "raise NotImplementedError", "new_string": "return None"}]}}
+    assert _hook("discovery-gate.sh", run10, multi) == 2
+
+
+def test_control_a_declared_prototype_is_free_to_edit_and_create(run10):
+    """Throwaway discovery code under `prototype_paths` needs no decision to build (ruled
+    2026-09-30); releasing it does, and the release gate holds that."""
+    active = run10 / ".claude/diamonds/active.yml"
+    declared = "dogfood: false\nprototype_paths: [app/]\n"
+    active.write_text(active.read_text().replace("dogfood: false\n", declared))
+    assert _hook("discovery-gate.sh", run10,
+                 _edit(run10, "app/cadence/sms.py", "raise NotImplementedError", "return None")) == 0
+    assert _hook("discovery-gate.sh", run10, _write(run10, "app/cadence/web.py")) == 0
+    assert _hook("exposure-gate.sh", run10, _shell(RELEASE)) == 2  # its release is still gated
+
+
+def test_control_an_edit_where_discovery_has_not_started_is_untouched(tmp_path):
+    """Brownfield work in a project with no diamonds and no purpose: the brownfield gate's case."""
+    (tmp_path / ".claude" / "diamonds").mkdir(parents=True)
+    (tmp_path / ".claude" / "diamonds" / "active.yml").write_text("active_diamonds: []\n")
+    (tmp_path / "app.py").write_text("x = 1\n")
+    assert _hook("discovery-gate.sh", tmp_path, _edit(tmp_path, "app.py", "x = 1", "x = 2")) == 0
 
 
 # --- Step 2: releasing it to the first site ------------------------------------------------------
@@ -136,10 +162,47 @@ def test_control_an_ordinary_push_with_no_live_host_is_not_stopped(run10):
 
 # --- Step 3: widening to the second site ---------------------------------------------------------
 
-@pytest.mark.xfail(strict=True, reason=f"widening is only compared for an L3 already in deliver; {OPEN_UNTIL_0B}")
-def test_widening_the_audience_while_gates_are_pending_is_stopped(run10):
-    anchor = '    notes: "2026-09-24: build started'
-    widened = ('    learning_delivery:\n      audience: "Harbour staff, and the second site onboarding now"\n'
-               '      until: "2026-11-01"\n      means: "the app, by text link"\n' + anchor)
-    edit = _edit(run10, ".claude/diamonds/active.yml", anchor, widened)
-    assert _hook("scale-lock-gate.sh", run10, edit) == 2
+# Re-modelled 2026-09-30 on the founder's ruling ("So as recommended"). The first version refused a
+# recorded audience on an L3 still in define, which would block planning and is not ruling (b). A
+# widening the user performs inside the running app, with nothing recorded, is out of every hook's
+# reach; the frozen bet says so rather than counting it as covered.
+
+def test_a_release_toward_the_second_site_is_stopped(run10):
+    assert _hook("exposure-gate.sh", run10, _shell("rsync -av app/ harbour2:/srv/cadence")) == 2
+
+
+EXPOSED = {"id": "l3-001", "scale": "L3", "phase": "deliver", "learning_delivery": {
+    "audience": "Harbour staff, opted in", "until": "2026-11-01",
+    "means": "moderated session, the founder at the laptop", "data": "staff first names"}}
+
+
+def _widened(**changes) -> dict:
+    after = json.loads(json.dumps(EXPOSED))
+    after["learning_delivery"].update(changes)
+    return after
+
+
+def _change_missing(tmp_path, after: dict) -> str | None:
+    sys.path.insert(0, str(HOOKS.parent / "scripts"))
+    import scale_locks as sl  # the gate's own reading, in process
+    return sl.State(str(tmp_path)).audience_change_missing(EXPOSED, after)
+
+
+@pytest.mark.parametrize(("field", "value"), [
+    ("audience", "Harbour staff, and the second site"),
+    ("until", "2027-02-01"),
+    ("means", "a link texted to every phone"),
+    ("data", "staff first names and phone numbers"),
+])
+def test_an_exposed_record_that_widens_without_the_gates_is_refused(tmp_path, field, value):
+    assert _change_missing(tmp_path, _widened(**{field: value}))
+
+
+def test_control_ending_sooner_is_not_a_widening(tmp_path):
+    assert _change_missing(tmp_path, _widened(until="2026-10-20")) is None
+
+
+def test_control_a_widening_with_its_gates_re_run_is_allowed(tmp_path):
+    entry = {"on": "2026-10-10", "until_was": "2026-11-01", "kind": "widened", "why": "slow uptake",
+             "reassessed": ["security", "privacy", "service_quality"]}
+    assert _change_missing(tmp_path, _widened(until="2027-02-01", changes=[entry])) is None

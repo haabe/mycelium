@@ -915,3 +915,9 @@ reviewed:
     case for a project with no workflows, not a failure; and skips a workflow file it cannot read. The
     second can miss a deploy-on-push workflow only on a permissions error, and the host config files
     (vercel.json, netlify.toml, render.yaml) are checked before it. Reviewed 2026-09-30, v0.290.0.
+- id: _hook_input.py@4ebcb34355
+  verdict: accepted
+  reason: >-
+    `prototype_paths` returns [] when the diamonds file cannot be read or parsed. With no prototype
+    paths, nothing is exempt from the build gate, so the failure errs toward gating, never toward
+    letting product code through. Reviewed 2026-09-30, v0.291.0.

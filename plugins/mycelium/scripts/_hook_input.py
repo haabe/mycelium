@@ -493,8 +493,25 @@ def in_product_paths(project_dir: str, rel: str) -> bool:
     under pilot/ with only an L0 in discover, and the delivery gate, which knew only code
     extensions and skipped every .md, never fired. A course's lessons and a publication's
     chapters are the same case."""
+    return _in_declared(rel, product_paths(project_dir) or [])
+
+
+def prototype_paths(project_dir: str) -> list[str]:
+    """The project's declared `prototype_paths` (v0.291.0): throwaway discovery code, free to
+    write and edit without a decision to build. Releasing it is still gated, by the release gate."""
+    p = Path(project_dir) / ".claude" / "diamonds" / "active.yml"
+    try:
+        doc = _yaml().safe_load(p.read_text(encoding="utf-8")) or {}
+    except Exception:  # noqa: BLE001 - errs toward gating: with none declared, nothing is exempt
+        return []
+    paths = doc.get("prototype_paths") if isinstance(doc, dict) else None
+    return [str(x) for x in paths if str(x).strip()] if isinstance(paths, list) else []
+
+
+def _in_declared(rel: str, patterns: list[str]) -> bool:
+    """A repo-relative path lies under a declared folder (`pilot/`) or matches a glob."""
     rel = rel.removeprefix("./")
-    for raw in product_paths(project_dir) or []:
+    for raw in patterns:
         pat = raw.strip().removeprefix("./")
         if pat.endswith("/"):
             if rel.startswith(pat):
@@ -502,6 +519,20 @@ def in_product_paths(project_dir: str, rel: str) -> bool:
         elif fnmatch(rel, pat) or rel.startswith(pat + "/"):
             return True
     return False
+
+
+def _path_query(args) -> int | None:
+    """--product-file and --not-prototype: print the first path that answers, exit 0; else 1."""
+    if args.product_file is not None:
+        hit = next((t for t in args.product_file if in_product_paths(args.project_dir, t)), None)
+    elif args.not_prototype is not None:
+        protos = prototype_paths(args.project_dir)
+        hit = next((t for t in args.not_prototype if not _in_declared(t, protos)), None)
+    else:
+        return None
+    if hit:
+        print(hit)
+    return 0 if hit else 1
 
 
 def _yaml():
@@ -532,6 +563,9 @@ def cli() -> int:
                     help="exit 0 if discovery has been engaged, 1 if not; reads no stdin")
     ap.add_argument("--purpose-state", action="store_true",
                     help="exit 0 if purpose.yml has a purpose statement, 1 if not; reads no stdin")
+    ap.add_argument("--not-prototype", nargs="*", default=None, metavar="REL",
+                    help="print the first REL NOT under the declared `prototype_paths`, exit 0; "
+                         "exit 1 if every one is a prototype; reads no stdin")
     ap.add_argument("--product-file", nargs="*", default=None, metavar="REL",
                     help="print the first of these repo-relative paths that lies in the project's "
                          "`product_paths`, exit 0; exit 1 if none does; reads no stdin")
@@ -542,11 +576,9 @@ def cli() -> int:
         return _guard_state_hook(args.guard_state, args.project_dir)
     if args.purpose_state:
         return 0 if has_purpose(args.project_dir) else 1
-    if args.product_file is not None:
-        hit = next((t for t in args.product_file if in_product_paths(args.project_dir, t)), None)
-        if hit:
-            print(hit)
-        return 0 if hit else 1
+    answered = _path_query(args)
+    if answered is not None:
+        return answered
     if args.discovery_state:
         return discovery_state_code(args.project_dir)
     data = read_input()

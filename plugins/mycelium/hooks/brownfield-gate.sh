@@ -6,7 +6,8 @@
 #
 # WHY THIS EXISTS, measured rather than assumed (2026-07-28):
 #   - discovery-gate.sh fires on Write only and exempts Edit/MultiEdit by
-#     design. On a project that already has code, most work is EDIT-shaped, so
+#     design (since v0.291.0 it gates edits too, but only once discovery is
+#     engaged, so the brownfield case below still stands). On a project that already has code, most work is EDIT-shaped, so
 #     that gate covers the minority of brownfield work. Two auto-dogfood runs:
 #     a file-creating request on a TS extension gated cleanly (blocking:1,
 #     agent stopped); an edit-shaped request on a Python library sailed through
