@@ -10,8 +10,9 @@ symptom: "it looks like how I never could get past L1 whilst the product already
 The register row diamond-spawning-is-reachable-only-from-a-parent-progressing proposed a
 one-line diagnostic that would have surfaced this in May. This is it.
 
-WHAT IT COUNTS. Records: L2 = opportunities in opportunities.yml; L3 = solution leaves under
-them (a leaf whose status is terminal is excluded, since it is done, not waiting). Cycles:
+WHAT IT COUNTS (since v0.302.0, DL-1367). Records: L2 = the desired outcomes an L2 opens on;
+L3 = the targets live L2s have chosen, which an L3 opens on. Until then it counted every
+opportunity and every live solution leaf, one cycle per record, which ruling C reversed. Cycles:
 diamonds in diamonds/active.yml by `scale`, active or parked, plus the count that ever
 existed when a `completed_diamonds` or `archived_diamonds` list is present. The number is
 "N records, M active cycles", and the finding fires when records exist at a scale with no
@@ -34,6 +35,7 @@ _TERMINAL = re.compile(
     r"^(shipped|launched|launch-validated|discarded|killed|archived|validated|rejected|not-built)",
     re.IGNORECASE)
 _SCALE = re.compile(r"^L[0-5]$")
+_CLOSED_STATES = {"complete", "completed", "killed", "parked", "archived", "retargeted"}
 
 
 def _load(path: Path):
@@ -58,18 +60,30 @@ def major_launches(canvas_dir: Path) -> list[dict]:
 
 
 def records(canvas_dir: Path) -> dict[str, int]:
-    """L2 and L3 record counts from opportunities.yml (terminal solutions excluded)."""
+    """WHAT AN L2 AND AN L3 OPEN ON (v0.302.0, DL-1367; ruling C). L2: the desired outcomes (each
+    outcome is mapped by one L2). L3: the distinct targets live L2 diamonds have chosen (each
+    target is worked by one L3). Until v0.302.0 this counted every opportunity and every live
+    solution leaf, one cycle per record, which ruling C reversed: many opportunities under one
+    L2 and many ideas under one L3 are the model, not a backlog."""
     data = _load(canvas_dir / "opportunities.yml")
-    opps = data.get("opportunities") if isinstance(data, dict) else None
-    l2 = l3 = 0
-    for opp in opps or []:
-        if not isinstance(opp, dict):
+    data = data if isinstance(data, dict) else {}
+    outcomes = [r for r in data.get("desired_outcomes") or [] if isinstance(r, dict)]
+    l2 = len(outcomes) + (1 if isinstance(data.get("desired_outcome"), (dict, str)) else 0)
+    opp_ids = {str(o.get("id")) for o in data.get("opportunities") or [] if isinstance(o, dict)}
+    active = _load(canvas_dir.parent / "diamonds" / "active.yml")
+    targets = set()
+    for d in (active.get("active_diamonds") if isinstance(active, dict) else None) or []:
+        if not isinstance(d, dict) or str(d.get("scale", "")).upper() != "L2":
             continue
-        l2 += 1
-        for sol in opp.get("solutions") or []:
-            if isinstance(sol, dict) and not _TERMINAL.match(str(sol.get("status") or "")):
-                l3 += 1
-    return {"L2": l2, "L3": l3}
+        if str(d.get("state") or d.get("phase") or "").lower() in _CLOSED_STATES:
+            continue
+        t = d.get("target")
+        t = t.get("opportunity") if isinstance(t, dict) else t
+        if not t and str(d.get("object_ref") or "") in opp_ids:
+            t = d.get("object_ref")  # the old shape, one opportunity per L2 (read until stage 5)
+        if t:
+            targets.add(str(t))
+    return {"L2": l2, "L3": len(targets)}
 
 
 def cycles(canvas_dir: Path) -> dict[str, dict[str, int]]:
@@ -110,25 +124,26 @@ def findings(canvas_dir: Path) -> list[str]:
                    f"an L5 exists, so name which launch it answers or open one")
     for scale, n in rec.items():
         row = cyc.get(scale, {"active": 0, "ever": 0})
+        what = "desired outcome(s)" if scale == "L2" else "target(s) chosen"
         if n and row["ever"] == 0:
-            out.append(f"{scale}: {n} record(s) and no {scale} diamond has ever been opened; the "
-                       f"catalogue has an intake and no outlet at this scale")
+            out.append(f"{scale}: {n} {what} and no {scale} diamond has ever been opened on one; "
+                       "the door is /mycelium:ost-builder")
         elif n and row["active"] == 0:
-            out.append(f"{scale}: {n} record(s), 0 active {scale} diamond(s) ({row['ever']} ever)")
+            out.append(f"{scale}: {n} {what}, 0 active {scale} diamond(s) ({row['ever']} ever)")
     return out
 
 
 def report(canvas_dir: Path) -> int:
     rec, cyc = records(canvas_dir), cycles(canvas_dir)
     if not rec["L2"] and not cyc:
-        print("NOT A PASS: no opportunities and no diamonds; nothing to count.")
+        print("NOT A PASS: no desired outcome and no diamonds; nothing to count.")
         return 1
     print("Scale occupancy (records in the catalogue against cycles of work)")
     print("=" * 70)
     for scale in ("L0", "L1", "L2", "L3", "L4", "L5"):
         row = cyc.get(scale, {"active": 0, "ever": 0})
         if scale in rec:
-            recs = f"{rec[scale]} record(s)"
+            recs = f"{rec[scale]} {'outcome(s)' if scale == 'L2' else 'target(s)'}"
         elif scale == "L5":
             n_ml = len(major_launches(canvas_dir))
             recs = f"{n_ml} major launch(es) recorded" if n_ml else "no major launch recorded"
@@ -141,9 +156,8 @@ def report(canvas_dir: Path) -> int:
         print(f"  FINDING {h}")
     if not hits:
         print("  Every scale with records has had a cycle opened at it.")
-    print("\nA record and a cycle are different objects (engine/diamond-rules.md). A scale with")
-    print("records and no cycle has an intake and no outlet; ost-builder and ice-score offer the")
-    print("exit, and nothing is opened here.")
+    print("\nAn L2 opens on an outcome and an L3 on its L2's target (v0.302.0, DL-1367);")
+    print("/mycelium:ost-builder offers both doors, and nothing is opened here.")
     return 0
 
 

@@ -77,7 +77,10 @@ except ImportError:  # SPEAKS: every entry point returns exit 3 with the reason,
 
 SCALES = ("L0", "L1", "L2", "L3", "L4", "L5")
 DELIVERY_SCALES = ("L3", "L4", "L5")
-CLOSED = {"complete", "completed", "killed", "parked", "archived"}
+CLOSED = {"complete", "completed", "killed", "parked", "archived", "retargeted"}
+#: States that end an L3 without completing it (v0.302.0): its learning delivery must
+#: still say how it ended. Parked is a pause, not an end.
+ENDS_BY_STATE = {"killed", "archived", "retargeted"}
 DEAD = {"killed", "archived"}
 MEDIUM_OR_BETTER = {"data-supported", "test-validated", "launch-validated"}
 EVIDENCE_RANK = ["none", "speculation", "anecdotal", "data-supported", "test-validated",
@@ -535,7 +538,9 @@ class State:
         check = {
             "L0": lambda *_: [],
             "L1": lambda *_: self.l0_missing(),
-            "L2": lambda *_: self.l0_missing() + self.strategy_missing() + self.outcome_missing(),
+            "L2": lambda d, entry, _s: (self.l0_missing() + self.strategy_missing()
+                                        + self.outcome_missing()
+                                        + (self._l2_unique_missing(d) if entry else [])),
             "L3": self._l3_missing, "L4": self._l4_missing, "L5": self._l5_missing,
         }.get(scale)
         if check is None:
@@ -555,6 +560,8 @@ class State:
             return miss
         oid = opp.get("id", opp.get("name", "?"))
         miss += self._evidence_missing(opp, oid) + self._l2_missing(d, opp, oid)
+        if entry:
+            miss += self._l3_unique_missing(d, str(oid))
         status = str(opp.get("status", "")).lower()
         if entry and status in CLOSED_OPPORTUNITY:
             miss.append(f"{oid}: an open opportunity (it is `{status}`)")
@@ -632,6 +639,41 @@ class State:
             return _ref_key(l3.get("front_runner"))
         key = _ref_key(l3.get("object_ref"))
         return key if any(str(s.get("id", "")) == key for s in self.build_solutions(l3)) else ""
+
+    def l3_target(self, l3: dict) -> str:
+        """The opportunity an L3 works (v0.302.0): the one its `object_ref` names or holds (an old
+        L3 on one solution works that solution's opportunity), else its L2 parent's target."""
+        opp = self.find_opportunity(l3.get("object_ref"))
+        if opp is None:
+            opp = self.find_opportunity(self.l2_target(self._parent_at(l3, "L2")))
+        return str(opp.get("id", "")) if opp else ""
+
+    def _l2_unique_missing(self, d: dict) -> list[str]:
+        """ONE L2 PER OUTCOME (v0.302.0, DL-1367 R3; ruling C: one outcome, one target). Checked
+        when an L2 opens, so diamonds already open in the old shape are not re-judged."""
+        out = self.l2_outcome(d)
+        if not out:
+            return []
+        others = [str(p.get("id")) for p in self.by_id.values()
+                  if _scale(p) == "L2" and self.is_open(p) and p.get("id") != d.get("id")
+                  and self.l2_outcome(p) == out]
+        if not others:
+            return []
+        return [(f"{d.get('id', '?')}: one L2 per outcome (DL-1367): {others[0]} already maps "
+                 f"{out}. Work its map there, and re-target it if another opportunity should be "
+                 "worked now")]
+
+    def _l3_unique_missing(self, d: dict, target: str) -> list[str]:
+        """ONE L3 PER TARGET (v0.302.0, DL-1367 R3): its ideas are compared inside the one L3.
+        About three ideas is advice (Torres p118), and no count is enforced."""
+        others = [str(p.get("id")) for p in self.by_id.values()
+                  if _scale(p) == "L3" and self.is_open(p) and p.get("id") != d.get("id")
+                  and self.l3_target(p) == target]
+        if not others:
+            return []
+        return [(f"{d.get('id', '?')}: one L3 per target (DL-1367): {others[0]} already works "
+                 f"{target}. Add the idea to its set; a second L3 on the same target splits the "
+                 "comparison the L3 exists to make")]
 
     def delivered_solutions(self, l4: dict, l3: dict) -> list[dict]:
         """WHAT AN L4 DELIVERS, out of its L3's set (v0.300.0, DL-1367): the solution its
@@ -1550,6 +1592,49 @@ def _closing_violations(st: State, new_doc: dict, old_active: dict) -> list[str]
     return out
 
 
+def _retarget_violations(st: State, old_active: dict) -> list[str]:
+    """AN L2 THAT RE-TARGETS CLOSES THE L3 ON ITS OLD TARGET (v0.302.0, DL-1367 R2). An L3 is a
+    target and its ideas, so a new target is a new L3; one L3 across two targets would blur which
+    exposure belonged to which. The old L3 closes in the same write, `state: retargeted`."""
+    out = []
+    for d in st.active:
+        prev = old_active.get(str(d.get("id")))
+        if _scale(d) != "L2" or prev is None:
+            continue
+        was, now = st.l2_target(prev), st.l2_target(d)
+        if not was or not now or was == now:
+            continue
+        out.extend(f"{l3.get('id')} (L3) works {was}, which {d.get('id')} no longer "
+                   f"targets (now {now}): close it in the same write as `state: "
+                   "retargeted`, recording how its learning delivery ended if it reached "
+                   "anyone. A new target is a new L3 (DL-1367)"
+                   for l3 in st.by_id.values()
+                   if _scale(l3) == "L3" and st.is_open(l3) and st.l3_target(l3) == was)
+    return out
+
+
+def _state_end_violations(st: State, new_doc: dict, old_active: dict) -> list[str]:
+    """AN L3 ENDED BY ITS STATE SAYS HOW ITS LEARNING DELIVERY ENDED (v0.302.0). A completion was
+    judged (v0.267.0), but setting `state: killed`, `archived` or `retargeted`, or moving the L3
+    to the archived list, was not, so a learning build could outlive its L3 unseen: the
+    teardown rule's own case. Parked is a pause and is not judged."""
+    out = []
+    archived = {str(d.get("id")) for d in _as_list(new_doc.get("archived_diamonds"))
+                if isinstance(d, dict)}
+    for d in st.by_id.values():
+        prev = old_active.get(str(d.get("id")))
+        if _scale(d) != "L3" or prev is None or not st.is_open(prev):
+            continue
+        state = str(d.get("state") or "").lower()
+        if state not in ENDS_BY_STATE and str(d.get("id")) not in archived:
+            continue
+        why = st.learning_delivery_end_missing(d)
+        if why:
+            out.append(f"{d.get('id')} (L3) ends as `{state or 'archived'}` with its learning "
+                       f"delivery still recorded as reaching people: {why}")
+    return out
+
+
 def violations_between(project_dir: str, before: str, after: str) -> list[str]:
     """The lock verdict on one change to diamonds/active.yml, given its text before and after.
     Shared by the write hook (before = on disk, after = the proposed write) and, since v0.253.2,
@@ -1565,7 +1650,8 @@ def violations_between(project_dir: str, before: str, after: str) -> list[str]:
                   if isinstance(d, dict)}
     was_open = {i: (_scale(d), _phase(d)) for i, d in old_active.items()}
     st = State(project_dir, diamonds_doc=new_doc)
-    out = _closing_violations(st, new_doc, old_active)
+    out = (_closing_violations(st, new_doc, old_active) + _retarget_violations(st, old_active)
+           + _state_end_violations(st, new_doc, old_active))
     for d in st.active:
         before_scale, before_phase = was_open.get(str(d.get("id")), (None, None))
         if before_scale == _scale(d) and _scale(d):

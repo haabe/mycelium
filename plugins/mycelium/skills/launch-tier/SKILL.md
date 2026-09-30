@@ -294,7 +294,7 @@ If `/mycelium:bias-check` reveals significant biases, address them before finali
 
 4. **Feed back into discovery**:
    - If signals confirm: update confidence scores, mark scenarios as `validated`, celebrate validated learning
-   - If signals reveal NEW opportunities: **spawn a new L2 Opportunity diamond** with market evidence as the starting data. Create new scenarios from real user stories.
+   - If signals reveal NEW opportunities: **add them to the map of the L2 that owns the outcome they bear on** (v0.302.0, DL-1367: one L2 per outcome), with the market evidence as their data, and put the target choice to the founder if one of them should be worked now. Create new scenarios from real user stories. Only an outcome no L2 maps gets a new L2 (/mycelium:ost-builder).
    - If signals contradict: flag for diamond regression, mark scenarios as `invalidated`, update corrections.md
 
 This closes the full Mycelium loop: Purpose -> Strategy -> Discovery -> Solution -> Delivery -> **Market -> Discovery**.

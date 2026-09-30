@@ -4,6 +4,34 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-30.
 
+## v0.302.0 - one L2 per outcome, one L3 per target, and re-targeting closes the old L3
+
+**2026-09-30.** Phase migration stage 4c, founder rulings DL-1367 R2 and R3. **Adds blocks.**
+Stage 4 is complete with this release.
+
+- **One live L2 per outcome, one open L3 per target**, checked when a diamond opens (R3). Diamonds
+  already open are not re-judged, so a project in the old shape with several L2s under one outcome
+  keeps them; a new one is refused and told to work the existing map. "About three ideas" per L3
+  stays advice (Torres p118). The advisory L2 and L3 ceilings (5, working 2) are replaced.
+- **Re-targeting closes the L3 on the old target** (R2): a write that changes an L2's target while
+  an open L3 still works the old one is refused until that L3 closes in the same write, as `state:
+  retargeted` (a new state). A new target is a new L3.
+- **An L3 ended by its state says how its learning delivery ended.** A completion was judged
+  (v0.267.0), but `state: killed`, `archived` or `retargeted`, or a move to the archived list, was
+  not, so a learning build could outlive its L3 unseen: the teardown rule's own case, found while
+  building the re-target. Parked is a pause and is not judged.
+- **L5 results join the existing L2's map** under the outcome they bear on (/launch-tier,
+  diamond-rules), and the L2 may re-target; a new L2 only for an outcome no L2 maps.
+- **`check_scale_occupancy.py` counts what the doors open on**: desired outcomes against L2s, chosen
+  targets against L3s. It counted every opportunity and every live leaf, one cycle per record.
+- **Alternatives considered** (DL-1367): all limits advisory, as before (ruling C's "one outcome, one
+  target" is exactly this, and it is structural); re-pointing the L3 to the new target (one L3 across
+  two targets blurs which exposure belonged to which). Also rejected here: judging the state-close
+  only for `retargeted` (it would leave killed and archived as the way round the teardown rule);
+  re-judging diamonds already open (it would refuse every edit in a project mid-cycle, against R4).
+- Tests: `test_stage4c_limits.py`, 4 tests; `test_check_scale_occupancy.py` rewritten to the new
+  counting (and an old-shape L2 counts its opportunity as its target).
+
 ## v0.301.0 - an L2 opens on an outcome and an L3 on its L2's target
 
 **2026-09-30.** Phase migration stage 4b, founder ruling DL-1367 and ruling C (2026-09-30). No
