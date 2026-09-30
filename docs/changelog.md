@@ -4,6 +4,34 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-30.
 
+## v0.294.0 - exposure records: who the work reaches, recorded on its diamond
+
+**2026-09-30.** Phase migration stage 1 (dogfood design page Part 3; founder rulings a, b, g, h, i).
+The release gate still reads the phase; stage 2 moves it onto these records. This stage adds the
+record and the code that reads it, and reports only, as the plan revised after the gap hunt says:
+the first plan would have required the new record before anything wrote it and blocked every release.
+
+- **`exposures[]` on a diamond** (schema): `recorded_at`, `audience`, `channel`, `data_class`
+  (`none`, `synthetic`, `personal`, `sensitive`), `until`, `consent`, the `gates` passed for this
+  exposure, and `reconstructed` for one recorded after the fact.
+- **`scale_locks.py --exposures`** reports each diamond whose work reaches people (an L3 whose
+  learning delivery started or that delivers; an L4 or L5 delivering) with no record, a record with
+  fields missing, gates not passed for it (with the explainability gate when the product records AI
+  components), or an end date passed with no `ended`. Archived or parked diamonds are skipped. It
+  exits 0 always in this stage.
+- **A write that adds an exposure with personal or sensitive data asks the person** in the
+  permission dialog, and is refused where nobody would be asked (ruling g), through the same check as
+  the L5 launch approval.
+- **/diamond-progress and /preflight** say to record the exposure when the first person takes part
+  or before a release.
+- On the dogfood repo the report reads "nothing to report": no work there reaches people now, so
+  ruling h (live exposures recorded as reconstructed facts) has nothing to backfill.
+- **Alternatives considered:** extending `learning_delivery` in place (rejected: it is L3-only, and
+  L4 and L5 expose too; stage 2 folds it into the record rather than keeping two); enforcing at once
+  (rejected: nothing writes the record yet, so every release would block, the gap hunt's finding).
+- Tests: `test_exposure_records.py` (9), including the personal-data ask, its refusal with nobody to
+  ask, and a synthetic-data control. The run-10 replay is unchanged (19).
+
 ## v0.293.0 - the delivery skip-ack is a dated, scoped record
 
 **2026-09-30.** Phase migration stage 0b-3b, on founder ruling DL-1364 (ruling d, scoped). This

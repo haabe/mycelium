@@ -1373,6 +1373,74 @@ Only if the USER explicitly says this work is not to be tracked, they record it 
 Do not write that file on your own judgement."""
 
 
+# ---------------------------------------------------------------- exposure records (v0.294.0)
+#
+# THE PHASE MIGRATION, STAGE 1 (dogfood design page Part 3, rulings a-j). An exposure is recorded on
+# the diamond whose work reaches people: `exposures[]`, one entry per audience and channel. Stage 1
+# adds the record and REPORTS against it (`--exposures`); stage 2 moves the release gate onto it.
+
+EXPOSURE_FIELDS = ("recorded_at", "audience", "channel", "data_class", "until", "consent")
+EXPOSURE_GATES = ("security", "privacy", "service_quality", "regulatory")
+#: Data classes whose exposure the person confirms (ruling g): the permission dialog asks.
+PERSON_DATA = ("personal", "sensitive")
+
+
+def _reaches_people(d: dict) -> str:
+    """Why this diamond's work reaches people now, or "" when it does not (yet)."""
+    ld = _as_dict(d.get("learning_delivery"))
+    if _scale(d) == "L3" and (ld.get("started") or _phase(d) in ("deliver", "complete")):
+        return "its learning delivery has started" if ld.get("started") else "it is in deliver"
+    if _scale(d) in ("L4", "L5") and _phase(d) in ("deliver", "complete"):
+        return f"it is in {_phase(d)}"
+    return ""
+
+
+def exposure_report(project_dir: str) -> list[str]:
+    """One line per gap between the work that reaches people and its exposure records. Report only
+    in stage 1: nothing here blocks."""
+    st = State(project_dir)
+    today = _today()
+    gates = EXPOSURE_GATES + (("explainability",) if st.ai else ())
+    out = []
+    for d in st.active:
+        if not st.is_open(d):
+            continue  # archived, parked or killed in place: nothing reaches people from it
+        why = _reaches_people(d)
+        records = [e for e in _as_list(d.get("exposures")) if isinstance(e, dict)]
+        did = d.get("id")
+        if why and not records:
+            out.append(f"{did} ({_scale(d)}): {why}, and no exposure record says who it reaches, "
+                       "through what, with which data, until when and with what consent")
+        for e in records:
+            label = f"{did} exposure `{str(e.get('audience') or '?')[:40]}`"
+            gaps = [f for f in EXPOSURE_FIELDS if not _filled(e.get(f))]
+            if gaps:
+                out.append(f"{label}: missing {', '.join(gaps)}")
+            passed = _as_dict(e.get("gates"))
+            unpassed = [g for g in gates if str(passed.get(g) or "").lower() not in PASSED]
+            if unpassed:
+                out.append(f"{label}: gates not passed for this exposure: {', '.join(unpassed)}")
+            until = str(e.get("until") or "")[:10]
+            if until and until < today and not e.get("ended"):
+                out.append(f"{label}: ran past its end date ({until}) with no `ended`")
+    return out
+
+
+def new_person_exposures(before_text: str, after_text: str) -> list[str]:
+    """Exposure records a write ADDS whose data class is personal or sensitive (ruling g)."""
+    def keys(text: str) -> set:
+        try:
+            doc = _as_dict(_parse(text, "diamonds/active.yml")) if text.strip() else {}
+        except UnreadableError:
+            return set()
+        return {(str(d.get("id")), str(e.get("recorded_at")), str(e.get("audience")))
+                for key in ("active_diamonds", "completed_diamonds")
+                for d in _as_list(doc.get(key)) if isinstance(d, dict)
+                for e in _as_list(d.get("exposures"))
+                if isinstance(e, dict) and str(e.get("data_class") or "").lower() in PERSON_DATA}
+    return [f"{i} ({a})" for i, _, a in sorted(keys(after_text) - keys(before_text))]
+
+
 #: Permission modes in which an `ask` reaches a person, and runtimes whose hooks cannot ask: the
 #: same lists `_hook_input.guard_state_check` uses (v0.281.0, v0.286.0).
 _ASKS_A_HUMAN = ("default", "acceptEdits", "plan")
@@ -1420,26 +1488,30 @@ def _launch_approval(project_dir: str, payload: dict) -> None:
     except EditNotAppliedError:
         return
     moved = launch_moves(before, after) if after is not None else []
-    if not moved:
+    personal = new_person_exposures(before, after) if after is not None else []
+    if not moved and not personal:
         return
     mode = str(payload.get("permission_mode") or "")
     runtime = os.environ.get("MYCELIUM_RUNTIME", "")
-    what = ", ".join(moved)
+    parts = []
+    if moved:
+        parts.append(f"moves {', '.join(moved)} (L5) into delivery or completion, where the work "
+                     "reaches people who did not build it (L5 human-approval floor)")
+    if personal:
+        # Ruling g (2026-09-30): the agent drafts an exposure record, the person confirms any
+        # exposure that involves real personal data; the record states consent (ruling i).
+        parts.append(f"records an exposure with personal or sensitive data: {', '.join(personal)}")
+    what = "; and it ".join(parts)
     if runtime in _CANNOT_ASK or (mode and mode not in _ASKS_A_HUMAN):
         why = (f"this runtime ({runtime}) cannot ask a person" if runtime in _CANNOT_ASK
                else f"in this permission mode ({mode}) nobody is asked")
         decision, reason = "deny", (
-            f"Mycelium launch approval: this write moves {what} (L5) into delivery or "
-            f"completion, where the work reaches people who did not build it. A person "
-            f"approves that, and {why}. "
-            "Ask the user to make this move themselves, or to run the session where they "
-            "are asked.")
+            f"Mycelium: this write {what}. A person approves that, and {why}. Ask the user to "
+            "make this change themselves, or to run the session where they are asked.")
     else:
         decision, reason = "ask", (
-            f"Mycelium launch approval: this write moves {what} (L5) into delivery or "
-            "completion, where the work reaches people who did not build it. Approve only if "
-            "you, the person, want this launch to go ahead now (L5 human-approval floor, no "
-            "project type lowers it).")
+            f"Mycelium: this write {what}. Approve only if you, the person, want it to go ahead "
+            "now; no project type lowers this.")
     print(json.dumps({"hookSpecificOutput": {"hookEventName": "PreToolUse",
                                              "permissionDecision": decision,
                                              "permissionDecisionReason": reason}}))
@@ -1526,8 +1598,17 @@ def _run_state(fn, project_dir: str) -> int:
     return EXIT_HOLDS if ok else EXIT_LOCKED
 
 
+def _run_exposures(project_dir: str) -> int:
+    """Stage 1 of the phase migration: report only, so it always exits 0."""
+    lines = exposure_report(project_dir)
+    print("exposure records: nothing to report" if not lines
+          else "exposure records (report only until stage 2):\n  - " + "\n  - ".join(lines))
+    return EXIT_HOLDS
+
+
 def _run(args) -> int:
     runners = [(args.hook, _run_hook), (args.exposure_hook, _run_exposure_hook),
+               (args.exposures, _run_exposures),
                (args.exposure_line, _run_exposure_line),
                (args.exposure_change, _run_exposure_change),
                (args.exposure_state, lambda p: _run_state(exposure_state, p)),
@@ -1554,6 +1635,9 @@ def main(argv=None) -> int:
                       help="exit 0 if the work may be put in front of real people")
     mode.add_argument("--exposure-line", action="store_true",
                       help="UserPromptSubmit payload on stdin; print the not-ready line if due")
+    mode.add_argument("--exposures", action="store_true",
+                      help="report exposure records against the work that reaches people "
+                           "(v0.294.0)")
     mode.add_argument("--exposure-hook", action="store_true",
                       help="PreToolUse Bash payload on stdin; exit 2 blocks a deploy or publish")
     mode.add_argument("--exposure-change", action="store_true",
