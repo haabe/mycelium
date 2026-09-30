@@ -548,7 +548,7 @@ class State:
         opp = self.find_opportunity(d.get("object_ref"))
         if opp is None:
             l2 = self._parent_at(d, "L2")
-            opp = self.find_opportunity(l2.get("object_ref")) if l2 else None
+            opp = self.find_opportunity(self.l2_target(l2)) if l2 else None
         if opp is None:
             miss.append(f"{did}: a chosen target opportunity, named as `object_ref` (the "
                         "opportunity or solution id in canvas/opportunities.yml)")
@@ -567,7 +567,7 @@ class State:
     def _l2_missing(self, d: dict, opp: dict, oid) -> list[str]:
         """The opportunity cycle this solution comes out of (v0.247.0, a parent diamond at every
         rung): the L3's live L2 parent, or a live L2 whose object_ref is the same opportunity."""
-        if self._parent_at(d, "L2") or any(self.find_opportunity(p.get("object_ref")) is opp
+        if self._parent_at(d, "L2") or any(self.find_opportunity(self.l2_target(p)) is opp
                                            for p in self.live("L2")):
             return []
         return [(f"{d.get('id', '?')}: a live L2 diamond on {oid} (`object_ref`), the opportunity "
@@ -590,6 +590,63 @@ class State:
                      "naming where it came from (a conversation, a note, a record)")]
         return []
 
+    def l2_target(self, l2: dict | None) -> str:
+        """THE OPPORTUNITY AN L2 IS TARGETING (v0.300.0, phase migration stage 4a; DL-1367 R1). An
+        L2 is the opportunity space under one outcome, with one current target chosen by comparing
+        siblings (Torres p103-108): `target` on the L2 (an id, or `{opportunity: id, ...}`), else
+        the last entry of `targets`. An L2 in the old shape, its `object_ref` an opportunity (one
+        opportunity per L2, v0.217.0), is read as targeting it until stage 5 (R4)."""
+        if not l2:
+            return ""
+        t = l2.get("target")
+        if isinstance(t, dict):
+            t = t.get("opportunity")
+        if not t:
+            hist = [x for x in _as_list(l2.get("targets"))
+                    if isinstance(x, dict) and x.get("opportunity")]
+            t = hist[-1]["opportunity"] if hist else ""
+        if t:
+            return _ref_key(t)
+        opp = self.find_opportunity(l2.get("object_ref"))
+        return str(opp.get("id", "")) if opp else ""
+
+    def l2_outcome(self, l2: dict | None) -> str:
+        """THE OUTCOME AN L2 MAPS (v0.300.0, DL-1367): its `object_ref` when that names a
+        `desired_outcomes` id; an L2 in the old shape is read as mapping the outcome its
+        opportunity rolls up to (R4)."""
+        if not l2:
+            return ""
+        ref = _ref_key(l2.get("object_ref"))
+        if ref and ref in {str(r.get("id")) for r in self.roots() if r.get("id")}:
+            return ref
+        opp = self.find_opportunity(self.l2_target(l2))
+        return _ref_key(opp.get("rolls_up_to")) if opp else ""
+
+    def front_runner(self, l3: dict | None) -> str:
+        """THE SOLUTION AN L3 COMMITS TO BUILD (v0.300.0, DL-1367): `front_runner` on the L3, a
+        solution in its set, named at `commit_to_build`. An L3 in the old shape, its `object_ref`
+        one solution, is read as that solution being its front runner (R4)."""
+        if not l3:
+            return ""
+        if l3.get("front_runner"):
+            return _ref_key(l3.get("front_runner"))
+        key = _ref_key(l3.get("object_ref"))
+        return key if any(str(s.get("id", "")) == key for s in self.build_solutions(l3)) else ""
+
+    def delivered_solutions(self, l4: dict, l3: dict) -> list[dict]:
+        """WHAT AN L4 DELIVERS, out of its L3's set (v0.300.0, DL-1367): the solution its
+        `object_ref` names, else the L3's front runner, else the whole set (an L3 that has named
+        neither, read as before). The L4 lock reads the evidence and the failed assumptions of
+        these alone: until 0.299.0 it took the best evidence and the first failure across the
+        set, so a validated idea A could open an L4 delivering idea B, and a failed idea C
+        blocked both (Torres p139: assumptions are tested across the set, and ideas fail alone)."""
+        sols = self.build_solutions(l3)
+        for key in (_ref_key(l4.get("object_ref")), self.front_runner(l3)):
+            named = [s for s in sols if key and str(s.get("id", "")) == key]
+            if named:
+                return named
+        return sols
+
     def build_solutions(self, d: dict) -> list[dict]:
         """The solution(s) an L3 builds: the one its `object_ref` names, or the live solutions of
         the opportunity it names."""
@@ -604,7 +661,7 @@ class State:
         return [s for s in sols if str(s.get("status", "")).lower() not in
                 {"killed", "archived", "discarded", "dropped", "parked"}]
 
-    def l3_evidence(self, d: dict) -> str:
+    def l3_evidence(self, d: dict, sols: list[dict] | None = None) -> str:
         """How well-evidenced the thing an L3 builds is (v0.253.0): the best of the diamond's own
         `evidence_type` and the evidence on the solution it builds, where a validated riskiest
         assumption counts as test-validated.
@@ -614,7 +671,7 @@ class State:
         ever updates it: /log-evidence grades canvas entries, /assumption-test updates confidence,
         /diamond-progress touches neither. The lock now reads the canvas, where the evidence is."""
         grades = [str(d.get("evidence_type") or "none")]
-        for s in self.build_solutions(d):
+        for s in self.build_solutions(d) if sols is None else sols:
             grades.append(str(_as_dict(s.get("provenance")).get("evidence_type") or "none"))
             ras = [_as_dict(s.get("riskiest_assumption"))] + [
                 a for a in _as_list(s.get("assumptions")) if isinstance(a, dict)]
@@ -623,9 +680,10 @@ class State:
         known = [g for g in grades if g in EVIDENCE_RANK]
         return max(known, key=EVIDENCE_RANK.index) if known else grades[0]
 
-    def failed_assumption(self, d: dict) -> str | None:
-        """The statement of a riskiest assumption the L3 builds on that its test failed."""
-        for s in self.build_solutions(d):
+    def failed_assumption(self, d: dict, sols: list[dict] | None = None) -> str | None:
+        """The statement of a riskiest assumption the L3 builds on that its test failed; with
+        `sols`, only among those solutions (v0.300.0)."""
+        for s in self.build_solutions(d) if sols is None else sols:
             for a in [_as_dict(s.get("riskiest_assumption"))] + [
                     x for x in _as_list(s.get("assumptions")) if isinstance(x, dict)]:
                 if str(a.get("verdict", "")).lower() in ASSUMPTION_FAILED:
@@ -670,7 +728,8 @@ class State:
                             "waive the L3 and its evidence, never what is being delivered")
             return miss
         miss = self.missing(l3, entry, seen)
-        ev = self.l3_evidence(l3)
+        sols = self.delivered_solutions(d, l3)
+        ev = self.l3_evidence(l3, sols)
         if ev not in MEDIUM_OR_BETTER:
             miss.append(f"{l3.get('id')}: evidence at medium confidence or higher before "
                         f"delivery (now `{ev}`; needs data-supported, test-validated or "
@@ -682,7 +741,7 @@ class State:
         delivered = self.learning_delivery_recorded(l3)
         if delivered:
             miss.append(f"{l3.get('id')}: {delivered}")
-        failed = self.failed_assumption(l3)
+        failed = self.failed_assumption(l3, sols)
         if failed:
             miss.append(f"{l3.get('id')}: a riskiest assumption that has not failed its test "
                         f"(`{failed}` is recorded as failed: pivot or stop in the L3, do not "
