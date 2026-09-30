@@ -4,6 +4,26 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-30.
 
+## v0.293.0 - the delivery skip-ack is a dated, scoped record
+
+**2026-09-30.** Phase migration stage 0b-3b, on founder ruling DL-1364 (ruling d, scoped). This
+closes stage 0b: every hole the 2026-09-30 checks found open in today's safety net is closed.
+
+- **What the ack is now**: a small record the user writes in `.claude/state/delivery-skip-ack`:
+  `recorded_at`, `expires` (30 days after `recorded_at` by default, renewable), `covers` (the paths
+  it covers), `releases: true` only if releases are meant, and the user's words in `why`.
+- **What it lifts**: the build gate only for writes under the paths it `covers`; the release gate only
+  when it says `releases: true`, because a release command does not say which paths it releases.
+  Every use is logged in `.claude/state/skip-ack-uses.jsonl`, and setup now keeps the ack in git.
+- **An old bare file** (no date or scope) is honoured for 14 days from the day this version first sees
+  it, with a message to the user at each use naming how to re-record it, then ignored.
+- **Alternatives considered:** any ack covering releases (rejected: that is the "everything" the ruling
+  ruled out); expiring old bare acks at once (rejected: it would break every project that recorded one
+  in good faith, without notice); keeping it gitignored (rejected: a decision that switches gates off
+  belongs in the history, as the other acks already are).
+- Tests: `test_skip_ack_scope.py` (9): scope by path, releases only by name, 30-day expiry, the use
+  log, the legacy grace and its end, and three runs through the real gates on E2E run 10's state.
+
 ## v0.292.0 - an L5 launch asks a person; the gate table carries XAI and L5's privacy and service quality
 
 **2026-09-30. Adds blocks.** Phase migration stage 0b-3a, on founder rulings DL-1364 and (f).

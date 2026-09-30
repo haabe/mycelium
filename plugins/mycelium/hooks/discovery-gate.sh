@@ -99,7 +99,7 @@ if [ "$EDITING" = "1" ] && [ "$HI_ENGAGED" -eq 1 ]; then
 fi
 if [ "$HI_ENGAGED" -eq 3 ]; then
   # Diamonds exist but cannot be read without PyYAML (v0.290.0): refuse with the real reason.
-  [ -f "$PROJECT_DIR/.claude/state/delivery-skip-ack" ] && exit 0
+  mycelium_skip_ack build "$GATED_FILE" && exit 0  # dated, scoped, logged (v0.293.0)
   printf 'Mycelium delivery gate: you are about to %s (%s). %s\n' "$ACT" "$BASENAME" "$MYCELIUM_NO_YAML_FIX" >&2
   . "${CLAUDE_PLUGIN_ROOT:-$(dirname "${BASH_SOURCE[0]}")/..}/scripts/_hook_fire_log.sh" 2>/dev/null || true
   mycelium_log_fire ".claude/state/discovery-gate-fires.jsonl" "blocked-cannot-check" 2>/dev/null || true
@@ -112,7 +112,7 @@ if [ "$HI_ENGAGED" -eq 0 ]; then
   # open L3 was not enough: /mycelium:start leaves a purpose and nothing else, so an L3 opened
   # straight after it builds on a guess, the "wrong thing right away" the scale locks exist to
   # stop. An end-to-end dogfood run shipped a release over 31 commits under an L0 in discover.
-  [ -f "$PROJECT_DIR/.claude/state/delivery-skip-ack" ] && exit 0
+  mycelium_skip_ack build "$GATED_FILE" && exit 0  # dated, scoped, logged (v0.293.0)
   hi_delivery_state
   case $? in
     0) exit 0 ;;
@@ -141,9 +141,10 @@ the opportunity or solution, progress it to Develop with
   python3 \${CLAUDE_PLUGIN_ROOT}/scripts/scale_locks.py --can-open L3
 says what is still missing.
 
-Only if the USER explicitly says this work should not be tracked, write
-.claude/state/delivery-skip-ack with the date and their own words. Do not
-write the ack file on your own judgement.
+Only if the USER explicitly says this work should not be tracked, they record
+.claude/state/delivery-skip-ack: `recorded_at`, `expires` (30 days by default),
+`covers` (the paths it covers), `releases: true` only if releases are meant,
+and their own words in `why`. Do not write the ack file on your own judgement.
 EOF
   . "${CLAUDE_PLUGIN_ROOT:-$(dirname "${BASH_SOURCE[0]}")/..}/scripts/_hook_fire_log.sh" 2>/dev/null || true
   mycelium_log_fire ".claude/state/discovery-gate-fires.jsonl" "blocked-delivery" 2>/dev/null || true

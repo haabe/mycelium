@@ -928,3 +928,10 @@ reviewed:
     delivery or completion after it then counts as a move, which errs toward asking the person. For the
     file AFTER the write, this code is never reached: `_run_hook` refuses an unparseable write in
     `new_diamond_violations` before the launch approval runs. Reviewed 2026-09-30, v0.292.0.
+- id: _hook_input.py@f34d9f9eb7
+  verdict: accepted
+  reason: >-
+    `_as_date` returns None for a date that does not parse. A malformed `recorded_at` then reads the
+    skip-ack as an old bare file: honoured for 14 days only, with a systemMessage to the user at every
+    use naming how to re-record it. A malformed `expires` falls back to the 30-day default. Both are
+    bounded and spoken, never an open-ended lift. Reviewed 2026-09-30, v0.293.0.

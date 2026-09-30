@@ -97,11 +97,12 @@ mkdir -p <project_root>/.claude/state
 # project, and a fresh clone should not be asked again.
 !discovery-skip-ack
 !brownfield-ack
+!delivery-skip-ack
 !upstream.json
 EOF
 ```
 
-Tell the user in one line that you did it and why ("runtime logs stay out of git; your two recorded gate decisions stay in"). If the project already tracks files under `.claude/state/`, do NOT untrack them yourself; say which are tracked (`git ls-files .claude/state`) and let the user decide.
+Tell the user in one line that you did it and why ("runtime logs stay out of git; your recorded gate decisions stay in"). The delivery skip-ack joined the kept files in v0.293.0: it is dated, scoped and expiring, and a decision that switches gates off belongs in the history. If the project already tracks files under `.claude/state/`, do NOT untrack them yourself; say which are tracked (`git ls-files .claude/state`) and let the user decide.
 
 **Important — empty dirs and git**: directories that don't get a starter file in Step 3 (`canvas/`, `evals/`, `jit-tooling/`) are empty after Step 2 and would not survive a git commit. Drop a `.gitkeep` stub in each so they remain in the user's repo:
 
