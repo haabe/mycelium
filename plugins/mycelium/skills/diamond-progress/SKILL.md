@@ -128,6 +128,13 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
    its verdict may call for a new test; that is the opportunity solution tree working, not a gap in
    this one. E2E service world run 3 grew 8,500 words of client documents for a two-month, hand-run
    pilot with three existing clients, and the pilot never started.
+   **Record the exposure too** (v0.294.0, phase migration stage 1). When the first person takes part,
+   add an entry to the diamond's `exposures`: `recorded_at`, `audience`, `channel` (a moderated
+   session, a link, a device), `data_class` (`none`, `synthetic`, `personal`, `sensitive`), `until`,
+   `consent` (how consent was given) and the `gates` passed for this exposure. Draft it; if the data
+   is personal or sensitive the write asks the person, who confirms it (founder ruling g). An exposure
+   already live before this was recorded gets `reconstructed: true` (ruling h). `scale_locks.py
+   --exposures` reports what is missing; in stage 1 it blocks nothing.
    **The test starts, on the record** (v0.274.0). Record `learning_delivery.started` with the day
    the first person in the audience took part. An L3 in Deliver with no start date is offered the
    start at every session; once that is overdue, stop extending the build, name only what blocks
