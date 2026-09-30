@@ -62,6 +62,7 @@ bad input; 3 cannot check (PyYAML missing: printed, and repeated each prompt by 
 from __future__ import annotations
 
 import argparse
+import contextlib
 import datetime as _dt
 import json
 import os
@@ -970,31 +971,125 @@ def delivery_state(project_dir: str) -> tuple[bool, str]:
 
 
 def exposure_state(project_dir: str) -> tuple[bool, str]:
-    """May it be put in front of real people? Under an open L3/L4/L5 whose chain holds, in Deliver,
-    with Security, Privacy and Service Quality passed."""
-    return _work_state(State(project_dir), "expose")
+    """May it be put in front of real people? Since v0.295.0 (phase migration stage 2): when the
+    project records exposures, under at least one CURRENT exposure record (DL-1365); until it
+    records any, under an open L3/L4/L5 whose chain holds, in Deliver, with Security, Privacy and
+    Service Quality passed (the phase fallback, removed with the phase in stage 5)."""
+    st = State(project_dir)
+    any_records, current, reasons = current_exposures(st)
+    if not any_records:
+        return _work_state(st, "expose")
+    if current:
+        return True, "current exposure: " + ", ".join(_exposure_label(d, e) for d, e in current)
+    return False, "no exposure record is current:\n  " + "\n  ".join(reasons)
+
+
+def _exposure_label(d: dict, e: dict) -> str:
+    return f"{d.get('id')} `{str(e.get('audience') or '?')[:40]}`"
+
+
+def _record_problems(st: State, d: dict, e: dict, today: str) -> list[str]:
+    """Why one exposure record does not cover a release now; empty when it is current."""
+    gates = EXPOSURE_GATES + (("explainability",) if st.ai else ())
+    miss = [f"its {f}" for f in EXPOSURE_FIELDS if not _filled(e.get(f))]
+    passed = _as_dict(e.get("gates"))
+    for g in gates:
+        if not _gate_counts(g, passed.get(g)):
+            miss.append(f"the {g} gate passed for this exposure")
+        elif g in SAFETY_RECORD and not st.records[g]:
+            miss.append(f"a record behind its {g} pass: {SAFETY_RECORD[g]}")
+    until = str(e.get("until") or "")[:10]
+    if until and until < today:
+        miss.append(f"to be in date (it ran until {until})")
+    if e.get("ended"):
+        miss.append("to be running (it has `ended`)")
+    chain_ok, chain_miss = st.verdict(d)
+    return miss + ([] if chain_ok else chain_miss)
+
+
+def current_exposures(st: State) -> tuple[bool, list[tuple[dict, dict]], list[str]]:
+    """(any records at all, the current ones as (diamond, record), why each other one is not)."""
+    today = _today()
+    any_records, current, reasons = False, [], []
+    for d in st.active:
+        if _scale(d) not in DELIVERY_SCALES or not st.is_open(d):
+            continue
+        for e in _as_list(d.get("exposures")):
+            if not isinstance(e, dict):
+                continue
+            any_records = True
+            miss = _record_problems(st, d, e, today)
+            if miss:
+                reasons.append(f"{_exposure_label(d, e)} needs {'; '.join(miss)}")
+            else:
+                current.append((d, e))
+    return any_records, current, reasons
+
+
+def _release_in(project_dir: str, payload: dict) -> str:
+    """The release a Bash command makes, as text, or "" when it makes none."""
+    command = _executed_text(str(_as_dict(payload.get("tool_input")).get("command") or ""))
+    m = _DEPLOY.search(command)
+    if m:
+        return m.group(0).strip()
+    p = _GIT_PUSH.search(command)
+    if p and _goes_live_on_push(project_dir):
+        return p.group(0).strip() + " (this project deploys on push)"
+    return ""
 
 
 def exposure_violation(project_dir: str, payload: dict) -> str | None:
-    """A Bash command that deploys or publishes, in a project whose delivering cycle is not in
-    Deliver with its gates passed. Projects with no diamonds at all are not this gate's business."""
-    command = _executed_text(str(_as_dict(payload.get("tool_input")).get("command") or ""))
-    m = _DEPLOY.search(command)
-    what = m.group(0).strip() if m else ""
-    if not m:
-        p = _GIT_PUSH.search(command)
-        if p and _goes_live_on_push(project_dir):
-            what = p.group(0).strip() + " (this project deploys on push)"
+    """Why a Bash command that releases is refused, or None. Projects with no diamonds at all are
+    not this gate's business. The hook itself uses `_release_decision`, which can also ask."""
+    what = _release_in(project_dir, payload)
     if not what:
         return None
+    decision = _release_decision(project_dir, what)
+    return decision[1] if decision and decision[0] == "deny" else None
+
+
+#: Where each release the gate allowed or put to the person is logged (v0.295.0).
+EXPOSURE_USES = os.path.join(".claude", "state", "exposure-uses.jsonl")
+
+
+def _release_decision(project_dir: str, what: str) -> tuple[str, str] | None:
+    """For a command that releases: None (allowed silently), ("allow", message), ("ask", reason)
+    or ("deny", reason). DL-1365, option B: exactly one current exposure record allows it; with
+    several the person is asked which (the dialog is yes or no, so what is logged is the set it was
+    approved among, not the one meant); with none it is refused, naming why each record is not
+    current. A project with no exposure records keeps the phase check, and is told to record one."""
     st = State(project_dir)
     if not st.active:
         return None
-    ok, why = _work_state(st, "expose")
-    if ok:
+    any_records, current, reasons = current_exposures(st)
+    if not any_records:
+        ok, why = _work_state(st, "expose")
+        if not ok:
+            return "deny", (f"`{what[:80]}` puts the work in front of real people, and no "
+                            f"delivery cycle is ready for that:\n  {why}")
+        _log_release(project_dir, what, [], "allowed-by-phase")
+        return "allow", ("Mycelium: this release was allowed on the phase check. Record who it "
+                         "reaches as an exposure on its diamond (`exposures`: audience, channel, "
+                         "data class, until, consent, gates); the phase check goes in stage 5.")
+    if not current:
+        return "deny", (f"`{what[:80]}` puts the work in front of real people, and no exposure "
+                        "record covers it now:\n  " + "\n  ".join(reasons))
+    labels = [_exposure_label(d, e) for d, e in current]
+    if len(current) == 1:
+        _log_release(project_dir, what, labels, "allowed")
         return None
-    return (f"`{what[:80]}` puts the work in front of real people, and no delivery "
-            f"cycle is ready for that:\n  {why}")
+    _log_release(project_dir, what, labels, "asked")
+    return "ask", (f"Mycelium: `{what[:80]}` puts the work in front of real people, and "
+                   f"{len(current)} exposures are current: {'; '.join(labels)}. Approve only if "
+                   "this release is for one of them (DL-1365).")
+
+
+def _log_release(project_dir: str, what: str, labels: list[str], outcome: str) -> None:
+    row = {"ts": _dt.datetime.now(tz=_dt.UTC).isoformat(timespec="seconds"),
+           "release": what[:80], "exposures": labels, "outcome": outcome}
+    with contextlib.suppress(OSError), open(os.path.join(project_dir, EXPOSURE_USES), "a",
+                                            encoding="utf-8") as fh:
+        fh.write(json.dumps(row) + "\n")
 
 
 def _goes_live_on_push(project_dir: str) -> bool:
@@ -1395,6 +1490,13 @@ def _reaches_people(d: dict) -> str:
     return ""
 
 
+def _gate_counts(gate: str, value) -> bool:
+    """A gate value counts as passed: a pass, or `n/a` for any gate but Security and Privacy (the
+    same rule `State.gate_missing` applies to a diamond's gates)."""
+    v = str(value or "").lower()
+    return v in PASSED or (v in NOT_APPLICABLE and gate not in SAFETY_RECORD)
+
+
 def exposure_report(project_dir: str) -> list[str]:
     """One line per gap between the work that reaches people and its exposure records. Report only
     in stage 1: nothing here blocks."""
@@ -1417,7 +1519,7 @@ def exposure_report(project_dir: str) -> list[str]:
             if gaps:
                 out.append(f"{label}: missing {', '.join(gaps)}")
             passed = _as_dict(e.get("gates"))
-            unpassed = [g for g in gates if str(passed.get(g) or "").lower() not in PASSED]
+            unpassed = [g for g in gates if not _gate_counts(g, passed.get(g))]
             if unpassed:
                 out.append(f"{label}: gates not passed for this exposure: {', '.join(unpassed)}")
             until = str(e.get("until") or "")[:10]
@@ -1564,13 +1666,31 @@ def _run_check(project_dir: str) -> int:
 
 def _run_exposure_hook(project_dir: str) -> int:
     try:
-        found = exposure_violation(project_dir, json.loads(sys.stdin.read() or "{}"))
+        payload = json.loads(sys.stdin.read() or "{}")
     except json.JSONDecodeError:
         return EXIT_HOLDS  # SPEAKS: the runtime refuses a malformed payload before any command runs
-    if not found:
+    what = _release_in(project_dir, payload)
+    decision = _release_decision(project_dir, what) if what else None
+    if decision is None:
         return EXIT_HOLDS
-    print("Mycelium exposure gate: " + found + "\n" + _EXPOSE_TAIL, file=sys.stderr)
-    return 2
+    kind, text = decision
+    if kind == "deny":
+        print("Mycelium exposure gate: " + text + "\n" + _EXPOSE_TAIL, file=sys.stderr)
+        return 2
+    if kind == "allow":
+        print(json.dumps({"systemMessage": text}))
+        return EXIT_HOLDS
+    mode = str(payload.get("permission_mode") or "")
+    runtime = os.environ.get("MYCELIUM_RUNTIME", "")
+    if runtime in _CANNOT_ASK or (mode and mode not in _ASKS_A_HUMAN):
+        print("Mycelium exposure gate: " + text + " Nobody can be asked here, so it is refused; "
+              "end the exposures that are over, or run the session where the person is asked.",
+              file=sys.stderr)
+        return 2
+    print(json.dumps({"hookSpecificOutput": {"hookEventName": "PreToolUse",
+                                             "permissionDecision": "ask",
+                                             "permissionDecisionReason": text}}))
+    return EXIT_HOLDS
 
 
 def _run_exposure_line(project_dir: str) -> int:

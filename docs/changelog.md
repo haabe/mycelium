@@ -4,6 +4,35 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-30.
 
+## v0.295.0 - the release gate reads exposure records
+
+**2026-09-30.** Phase migration stage 2, founder ruling DL-1365 (option B). Not breaking: a project
+with no exposure records behaves as before, and is told to record one.
+
+- **A release is covered by a current exposure record**: on an open L3, L4 or L5 whose chain holds,
+  every field filled, in date, not ended, and Security, Privacy and Service Quality (Regulatory and,
+  with AI components, explainability) passed for this exposure; Security and Privacy count only with a
+  threat model and a privacy assessment on the canvas, as before. **One current record** allows the
+  release and logs it against the record (`.claude/state/exposure-uses.jsonl`). **Several** ask the
+  person which one the release is for, and refuse where nobody would be asked. **None** refuses,
+  naming why each record is not current.
+- **The phase check is the fallback** for a project with no exposure records (every project until it
+  records one): a release it allows carries a message saying to record the exposure. It goes with the
+  phase in stage 5.
+- **A limit, stated:** the permission dialog is yes or no, so with several current records what is
+  logged is the set the release was approved among, not the one the person meant.
+- `scale_locks.py --exposure-state` reads the same predicate; contract rule 14, /preflight and the
+  system card say so.
+- **Alternatives considered** (DL-1365): any current record allows any release (one ready record
+  unlocks every release, the a-f finding); the command names its record (self-attestation by the
+  agent, and fragile). Also rejected here: dropping the phase check at once, which would block every
+  project that has not yet recorded an exposure.
+- A gate value `n/a` now counts for an exposure's non-safety gates (Regulatory, Service Quality), as it
+  already did for a diamond's; Security and Privacy never take `n/a`.
+- Tests: `test_exposure_gate.sh` +4 scenarios (one record releases and is logged; a record without its
+  gates blocks and names the gate; two records ask, and refuse with nobody to ask; no records falls
+  back and says so); the new ones fail on 0.294.0. The run-10 replay still stops every step.
+
 ## v0.294.0 - exposure records: who the work reaches, recorded on its diamond
 
 **2026-09-30.** Phase migration stage 1 (dogfood design page Part 3; founder rulings a, b, g, h, i).

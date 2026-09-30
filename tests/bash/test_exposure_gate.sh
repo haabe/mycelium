@@ -88,11 +88,57 @@ test_delivery_skip_overrides() {
     rm -rf "$p"
 }
 
+# --- v0.295.0, phase migration stage 2: the release gate reads exposure records (DL-1365) ----------
+EXPOSURE='    exposures:\n      - recorded_at: "2026-09-24"\n        audience: "Harbour staff, opted in"\n        channel: "moderated session"\n        data_class: personal\n        until: "2026-10-25"\n        consent: "signed pilot note"\n        gates: {security: pass, privacy: pass, service_quality: pass, regulatory: n/a}\n'
+SECOND='      - recorded_at: "2026-09-24"\n        audience: "Quay staff, opted in"\n        channel: "a link"\n        data_class: personal\n        until: "2026-10-25"\n        consent: "signed pilot note"\n        gates: {security: pass, privacy: pass, service_quality: pass, regulatory: n/a}\n'
+
+run_gate_mode() {  # <project_dir> <command> <permission_mode>
+    python3 -c 'import json,sys; print(json.dumps({"tool_name":"Bash","permission_mode":sys.argv[2],"tool_input":{"command":sys.argv[1]}}))' "$2" "$3" \
+      | CLAUDE_PROJECT_DIR="$1" bash "$GATE" 2>"$ERR" >"$OUT"
+    echo $?
+}
+
+test_one_current_exposure_releases() {
+    local p; p=$(make_project deliver "$READY" "$LEARNING$EXPOSURE")
+    assert_eq "$(run_gate "$p" "fly deploy")" "0" "one current exposure record -> the release runs"
+    assert_not_contains "$(cat "$OUT")" "phase check" "decided on the record, not the phase fallback"
+    assert_contains "$(cat "$p/.claude/state/exposure-uses.jsonl" 2>/dev/null)" "Harbour staff" "the release is logged against its record"
+    rm -rf "$p"
+}
+
+test_an_exposure_without_its_gates_blocks() {
+    local rec; rec=$(printf '%s' "$EXPOSURE" | sed 's/gates: {security: pass, privacy: pass, service_quality: pass, regulatory: n\/a}/gates: {security: pass}/')
+    local p; p=$(make_project deliver "$READY" "$LEARNING$rec")
+    assert_eq "$(run_gate "$p" "fly deploy")" "2" "a record whose gates are not passed for it -> blocked"
+    assert_contains "$(cat "$ERR")" "no exposure record covers it" "says the records are why"
+    assert_contains "$(cat "$ERR")" "privacy gate passed for this exposure" "names the missing gate"
+    rm -rf "$p"
+}
+
+test_two_current_exposures_ask_the_person() {
+    local p; p=$(make_project deliver "$READY" "$LEARNING$EXPOSURE$SECOND")
+    assert_eq "$(run_gate_mode "$p" "fly deploy" default)" "0" "two current exposures -> the hook answers"
+    assert_contains "$(cat "$OUT")" '"permissionDecision": "ask"' "and asks the person which one (DL-1365)"
+    assert_eq "$(run_gate_mode "$p" "fly deploy" bypassPermissions)" "2" "with nobody to ask -> refused"
+    rm -rf "$p"
+}
+
+test_a_project_with_no_records_releases_on_the_phase_and_is_told() {
+    local p; p=$(make_project deliver "$READY" "$LEARNING")
+    assert_eq "$(run_gate "$p" "fly deploy")" "0" "no exposure records yet -> the phase fallback"
+    assert_contains "$(cat "$OUT")" "allowed on the phase check" "and the user is told to record the exposure"
+    rm -rf "$p"
+}
+
 run_test test_deploy_under_define_blocks
 run_test test_ready_cycle_deploys
 run_test test_l3_without_a_learning_delivery_blocks
 run_test test_ordinary_commands_pass
 run_test test_unengaged_project_not_judged
 run_test test_delivery_skip_overrides
+run_test test_one_current_exposure_releases
+run_test test_an_exposure_without_its_gates_blocks
+run_test test_two_current_exposures_ask_the_person
+run_test test_a_project_with_no_records_releases_on_the_phase_and_is_told
 
 report
