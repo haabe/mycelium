@@ -185,6 +185,16 @@ def transition_decisions(transition: str) -> tuple[str, ...]:
     return TRANSITION_DECISIONS.get(transition, ())
 
 
+def phases_after(decision: str) -> tuple[str, ...]:
+    """The phases a diamond is in once `decision` is made (v0.299.0): every phase from the one the
+    move that makes it arrives in. Until the phase is retired, this is how a rule keyed to a
+    decision reads a diamond's state; stage 5 replaces it with the decision record itself."""
+    for t, decisions in TRANSITION_DECISIONS.items():
+        if decision in decisions:
+            return PHASE_ORDER[PHASE_ORDER.index(t.split("->")[1]):]
+    return ()
+
+
 def ai_detected(project_dir: str) -> bool:
     """Whether the project records AI components (`ai_components.detected: true`)."""
     try:

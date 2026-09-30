@@ -182,7 +182,16 @@ def _iter_solutions(opportunities: dict):
                 yield opp.get("id", "<no id>"), sol
 
 
-BLOCKING_PHASES = ("develop", "deliver")
+#: A diamond's stance blocks once it has DECIDED TO BUILD (founder ruling e, 2026-09-30: purpose
+#: stance fires at the decision to build a solution), read from the gate table's decisions since
+#: v0.299.0 (`scale_locks.phases_after("commit_to_build")`). A completed diamond is closed, not
+#: live.
+try:
+    import scale_locks as _sl
+
+    BLOCKING_PHASES = tuple(p for p in _sl.phases_after("commit_to_build") if p != "complete")
+except ImportError:  # a partial install: the phases that decision reaches today
+    BLOCKING_PHASES = ("develop", "deliver")
 
 
 def _iter_diamonds(diamonds: dict):

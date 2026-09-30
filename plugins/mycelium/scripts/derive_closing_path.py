@@ -69,15 +69,48 @@ def _unrecorded_gates(d: dict, ai: bool = True) -> dict:
     (v0.278.0). E2E rung L4-define on 0.276.0: an L4 with an empty `theory_gates_status` printed
     "every gate reads pass; nothing to store", the builder read that as nothing to do, and the L4
     stayed in discover for three sessions. A gate never evaluated is pending, not passed."""
-    phase = str(d.get("phase") or "discover").lower()
-    order = list(sl.PHASE_ORDER)
-    if phase not in order or order.index(phase) + 1 >= len(order):
+    t = _next_transition(d)
+    if t is None:
         return {}
     have = d.get("theory_gates_status") or {}
-    t = f"{phase}->{order[order.index(phase) + 1]}"
     return {g: NOT_RECORDED for g in sl.transition_gates(str(d.get("scale") or "").upper(), t,
                                                           ai=ai)
             if g not in have}
+
+
+def _next_transition(d: dict) -> str | None:
+    """The phase move this diamond makes next, or None once it is complete."""
+    phase = str(d.get("phase") or "discover").lower()
+    order = list(sl.PHASE_ORDER)
+    if phase not in order or order.index(phase) + 1 >= len(order):
+        return None
+    return f"{phase}->{order[order.index(phase) + 1]}"
+
+
+#: Safety gates: the release gate also reads them per exposure record (v0.295.0).
+_SAFETY = frozenset(sl.EXPOSURE_GATES) | {"explainability"}
+
+
+def _gate_groups(r: dict) -> list[tuple[str, list[str]]]:
+    """THE PENDING GATES BY WHAT THEY ARE OWED BEFORE (v0.299.0, phase migration stage 3b-2). An
+    evidence gate is owed before the decision it guards; a safety gate before anyone outside the
+    team meets the work, and the release gate reads it per exposure record as well. One flat list
+    showed a gate a later move needs beside the ones the next move waits on."""
+    d = r["diamond"]
+    t = _next_transition(d)
+    need = set(sl.transition_gates(str(d.get("scale") or "").upper(), t)) if t else set()
+    made = " and ".join(x.replace("_", " ") for x in sl.transition_decisions(t or ""))
+    risk = [g for g in r["gates"] if str(r["gates"][g]).lower() in sl.PASSED]
+    owed = [g for g in r["gates"] if g not in risk]
+    groups = [
+        (f"owed before the next move ({t}), which decides: {made}",
+         [g for g in owed if g in need and g not in _SAFETY]),
+        ((f"safety gates the next move ({t}) needs; the release gate also reads them per "
+          "exposure record"), [g for g in owed if g in need and g in _SAFETY]),
+        ("not passed, and not needed for the next move", [g for g in owed if g not in need]),
+        ("passed with a risk recorded (counts as passed; not owed)", risk),
+    ]
+    return [(h, gs) for h, gs in groups if gs]
 
 
 def load_yaml(p: Path):
@@ -344,6 +377,17 @@ def derive(root: Path, did: str, today: str | None = None) -> dict | None:
             (t["id"], r) for t in tasks for r in t.get("reads") or [] if r["state"] == "DUE"
         ],
     }
+
+
+def _print_gates(r: dict) -> None:
+    """The gate table, grouped by what each gate is owed before (v0.299.0)."""
+    print("gate | what would flip it | owner | date")
+    if not r["gates"]:
+        print("(none pending) | every gate the next transition needs reads pass | - | -")
+    for heading, gs in _gate_groups(r):
+        print(f"{heading}:")
+        for g in gs:
+            print(_gate_row(g, r["gates"][g], r))
 
 
 def _gate_row(g: str, v, r: dict) -> str:
@@ -977,11 +1021,7 @@ def main(argv=None) -> int:
             f"no open opportunity links to this diamond {via}; the leaf rows below are the tree "
             "unread, not the tree empty"
         )
-    print("gate | what would flip it | owner | date")
-    if not r["gates"]:
-        print("(none pending) | every gate the next transition needs reads pass | - | -")
-    for g, v in r["gates"].items():
-        print(_gate_row(g, v, r))
+    _print_gates(r)
     _print_inputs(r)
     return 0
 
