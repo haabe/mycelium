@@ -1368,7 +1368,9 @@ scale: anything user-facing that holds data can let strangers in or leak it out.
 cycle to Deliver with /mycelium:diamond-progress, which runs Security (/mycelium:threat-model,
 /mycelium:security-review), Privacy (/mycelium:privacy-check) and Service Quality, then retry.
 Only if the USER explicitly says this work is not to be tracked, they record it in
-.claude/state/delivery-skip-ack. Do not write that file on your own judgement."""
+.claude/state/delivery-skip-ack with `recorded_at`, `expires` (30 days by default), the paths it
+`covers`, `releases: true` (a release is lifted only when it says so) and their words in `why`.
+Do not write that file on your own judgement."""
 
 
 #: Permission modes in which an `ask` reaches a person, and runtimes whose hooks cannot ask: the

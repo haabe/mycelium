@@ -32,6 +32,8 @@ harness process (not in an agent's Bash) skips the ask for a person running setu
 from __future__ import annotations
 
 import argparse
+import contextlib
+import datetime as _dt
 import json
 import os
 import re
@@ -521,8 +523,106 @@ def _in_declared(rel: str, patterns: list[str]) -> bool:
     return False
 
 
+# ---------------------------------------------------------------- the delivery skip-ack (v0.293.0)
+
+SKIP_ACK_REL = ".claude/state/delivery-skip-ack"
+SKIP_ACK_USES_REL = ".claude/state/skip-ack-uses.jsonl"
+SKIP_ACK_LEGACY_REL = ".claude/state/skip-ack-legacy-since"
+SKIP_ACK_DAYS = 30
+SKIP_ACK_LEGACY_DAYS = 14
+
+
+def _today_date() -> _dt.date:
+    """Mycelium's today: MYCELIUM_TODAY when set (a stated date, or a simulated world), else UTC,
+    as scale_locks reads it."""
+    raw = os.environ.get("MYCELIUM_TODAY", "").strip()
+    utc_today = _dt.datetime.now(tz=_dt.UTC).date()
+    try:
+        return _dt.date.fromisoformat(raw[:10]) if raw else utc_today
+    except ValueError:
+        return utc_today
+
+
+def _as_date(v) -> _dt.date | None:
+    try:
+        return _dt.date.fromisoformat(str(v)[:10]) if v else None
+    except ValueError:
+        return None
+
+
+def skip_ack_verdict(project_dir: str, kind: str, targets: list[str]) -> tuple[bool, str]:
+    """Does the user's delivery skip-ack lift this gate (founder ruling DL-1364)? Returns
+    (lifted, warning). The ack is scoped to the paths it names (`covers`), lifts a release only when
+    it says `releases: true`, lasts SKIP_ACK_DAYS unless `expires` says otherwise, and every use is
+    logged. Until v0.293.0 the mere existence of the file lifted the build and release gates for all
+    future work, forever, and it was gitignored. An old bare file is honoured for
+    SKIP_ACK_LEGACY_DAYS from the day this version first sees it, with a warning at each use."""
+    path = Path(project_dir) / SKIP_ACK_REL
+    if not path.exists():
+        return False, ""
+    text = path.read_text(encoding="utf-8", errors="replace")
+    try:
+        doc = _yaml().safe_load(text) if text.strip() else None
+    except Exception:  # noqa: BLE001 - an unparseable ack is read as an old bare one, below
+        doc = None
+    today = _today_date()
+    recorded = _as_date(doc.get("recorded_at")) if isinstance(doc, dict) else None
+    if not isinstance(doc, dict) or recorded is None:
+        return _legacy_ack(project_dir, kind, targets, today)
+    expires = _as_date(doc.get("expires")) or recorded + _dt.timedelta(days=SKIP_ACK_DAYS)
+    if today > expires:
+        return False, (f"the delivery skip-ack expired on {expires}; ask the user whether to renew "
+                       "it (they write it, not the agent)")
+    if kind == "release":
+        lifted = doc.get("releases") is True
+    else:
+        covers = [str(c) for c in (doc.get("covers") or []) if str(c).strip()]
+        lifted = bool(targets) and all(_in_declared(t, covers) for t in targets)
+    if lifted:
+        _log_skip_ack(project_dir, kind, targets, legacy=False)
+    return lifted, ""
+
+
+def _legacy_ack(project_dir: str, kind: str, targets: list[str],
+                today: _dt.date) -> tuple[bool, str]:
+    since_path = Path(project_dir) / SKIP_ACK_LEGACY_REL
+    since = _as_date(since_path.read_text().strip()) if since_path.exists() else None
+    if since is None:
+        since = today
+        with contextlib.suppress(OSError):
+            since_path.write_text(today.isoformat() + "\n")
+    until = since + _dt.timedelta(days=SKIP_ACK_LEGACY_DAYS)
+    how = ("re-record it as `recorded_at`, `expires`, `covers` (the paths it covers) and, only if "
+           "releases are meant, `releases: true`, with the user's words in `why`")
+    if today > until:
+        return False, (f"the delivery skip-ack has no date or scope and its grace ended on "
+                       f"{until}; "
+                       f"it no longer lifts any gate. The user can {how}")
+    _log_skip_ack(project_dir, kind, targets, legacy=True)
+    return True, (f"the delivery skip-ack has no date or scope; it is honoured until {until} only. "
+                  f"The user should {how}")
+
+
+def _log_skip_ack(project_dir: str, kind: str, targets: list[str], *, legacy: bool) -> None:
+    row = {"ts": _dt.datetime.now(tz=_dt.UTC).isoformat(timespec="seconds"), "gate": kind,
+           "targets": targets[:10], "legacy": legacy}
+    with contextlib.suppress(OSError), (Path(project_dir) / SKIP_ACK_USES_REL).open("a") as fh:
+        fh.write(json.dumps(row) + "\n")
+
+
+def _skip_ack_cli(project_dir: str, spec: list[str]) -> int:
+    """--skip-ack KIND [REL...]: exit 0 and print any warning if the ack lifts this gate; else 1."""
+    kind, targets = (spec[0] if spec else "build"), spec[1:]
+    lifted, warning = skip_ack_verdict(project_dir, kind, targets)
+    if warning:
+        print(warning)
+    return 0 if lifted else 1
+
+
 def _path_query(args) -> int | None:
-    """--product-file and --not-prototype: print the first path that answers, exit 0; else 1."""
+    """--product-file, --not-prototype and --skip-ack: answer and exit; None when none was asked."""
+    if args.skip_ack is not None:
+        return _skip_ack_cli(args.project_dir, args.skip_ack)
     if args.product_file is not None:
         hit = next((t for t in args.product_file if in_product_paths(args.project_dir, t)), None)
     elif args.not_prototype is not None:
@@ -559,6 +659,9 @@ def cli() -> int:
     OPAQUE:label, tab, exists, tab, size); a `---CONTENT---` line; then the written content."""
     ap = argparse.ArgumentParser()
     ap.add_argument("--project-dir", default=os.environ.get("CLAUDE_PROJECT_DIR", "."))
+    ap.add_argument("--skip-ack", nargs="+", default=None, metavar="KIND",
+                    help="build|release [REL...]: does the delivery skip-ack lift this gate? "
+                         "exit 0 (lifted) or 1; prints any warning; reads no stdin")
     ap.add_argument("--discovery-state", action="store_true",
                     help="exit 0 if discovery has been engaged, 1 if not; reads no stdin")
     ap.add_argument("--purpose-state", action="store_true",

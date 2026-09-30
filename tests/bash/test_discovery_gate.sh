@@ -17,10 +17,11 @@ GATE="$REPO_ROOT/plugins/mycelium/hooks/discovery-gate.sh"
 # $GATE_ERR_FILE (a file, not a variable — run_gate is called inside $(),
 # so variable assignments would die with the subshell).
 GATE_ERR_FILE="$(mktemp)"
-trap 'rm -f "$GATE_ERR_FILE"' EXIT
-run_gate() {
+trap 'rm -f "$GATE_ERR_FILE" "${GATE_OUT_FILE:-}"' EXIT
+GATE_OUT_FILE="$(mktemp)"
+run_gate() {  # stdout lands in $GATE_OUT_FILE (v0.293.0: an old skip-ack is honoured with a message)
     local pdir="$1" json="$2"
-    printf '%s' "$json" | CLAUDE_PROJECT_DIR="$pdir" bash "$GATE" 2>"$GATE_ERR_FILE"
+    printf '%s' "$json" | CLAUDE_PROJECT_DIR="$pdir" bash "$GATE" 2>"$GATE_ERR_FILE" >"$GATE_OUT_FILE"
     echo $?
 }
 gate_err() { cat "$GATE_ERR_FILE"; }
@@ -180,7 +181,8 @@ test_delivery_ack_allows() {
     printf '2026-09-24 user: "just a throwaway script, do not track it"\n' \
         > "$p/.claude/state/delivery-skip-ack"
     local code; code=$(run_gate "$p" "$(write_json "$p/scratch.py")")
-    assert_eq "$code" "0" "user-recorded delivery ack -> allowed"
+    assert_eq "$code" "0" "user-recorded old bare delivery ack -> allowed, for now"
+    assert_contains "$(cat "$GATE_OUT_FILE")" "honoured until" "and the user is told it has no date or scope"
     rm -rf "$p"
 }
 

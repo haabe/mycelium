@@ -34,11 +34,13 @@ case "$INPUT" in
   *) exit 0 ;;
 esac
 shopt -u nocasematch
-[ -f "$PROJECT_DIR/.claude/state/delivery-skip-ack" ] && exit 0
 LOCKS="$(dirname "${BASH_SOURCE[0]}")/../scripts/scale_locks.py"
 [ -f "$LOCKS" ] || LOCKS="${CLAUDE_PLUGIN_ROOT:-}/scripts/scale_locks.py"
 # shellcheck source=../scripts/_python.sh
-. "$(dirname "$LOCKS")/_python.sh"  # mycelium_python and the fix line (v0.290.0)
+. "$(dirname "$LOCKS")/_python.sh"  # mycelium_python, mycelium_skip_ack and the fix line
+# The user's skip-ack lifts a release only when it says `releases: true`, and only while it is in
+# date (v0.293.0). Until then the file's mere existence lifted every release, forever.
+mycelium_skip_ack release && exit 0
 printf '%s' "$INPUT" | "$(mycelium_python)" "$LOCKS" --project-dir "$PROJECT_DIR" --exposure-hook
 rc=${PIPESTATUS[1]}
 # 0 = allowed. 3 = PyYAML missing: since 0.290.0 that REFUSES too, with the fix, because this

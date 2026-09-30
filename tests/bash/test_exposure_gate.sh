@@ -14,11 +14,13 @@ source "$SCRIPT_DIR/_ladder.sh"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 GATE="$REPO_ROOT/plugins/mycelium/hooks/exposure-gate.sh"
 ERR="$(mktemp)"
-trap 'rm -f "$ERR"' EXIT
+trap 'rm -f "$ERR" "${OUT:-}"' EXIT
 
 bash_json() { python3 -c 'import json,sys; print(json.dumps({"tool_name":"Bash","tool_input":{"command":sys.argv[1]}}))' "$1"; }
-run_gate() {  # <project_dir> <command> -> exit code; stderr in $ERR
-    printf '%s' "$(bash_json "$2")" | CLAUDE_PROJECT_DIR="$1" bash "$GATE" 2>"$ERR"
+OUT="$(mktemp)"
+run_gate() {  # <project_dir> <command> -> exit code; stderr in $ERR, stdout in $OUT (v0.293.0:
+    # the gate now speaks on stdout, a systemMessage, when it honours an old skip-ack)
+    printf '%s' "$(bash_json "$2")" | CLAUDE_PROJECT_DIR="$1" bash "$GATE" 2>"$ERR" >"$OUT"
     echo $?
 }
 
@@ -81,7 +83,8 @@ test_unengaged_project_not_judged() {
 test_delivery_skip_overrides() {
     local p; p=$(make_project define '{evidence: pending}')
     printf '2026-09-24 user: this is my own test box, not tracked\n' > "$p/.claude/state/delivery-skip-ack"
-    assert_eq "$(run_gate "$p" "fly deploy")" "0" "the user's delivery skip -> allowed"
+    assert_eq "$(run_gate "$p" "fly deploy")" "0" "the user's old bare delivery skip -> allowed, for now"
+    assert_contains "$(cat "$OUT")" "honoured until" "and the user is told it has no date or scope (v0.293.0)"
     rm -rf "$p"
 }
 

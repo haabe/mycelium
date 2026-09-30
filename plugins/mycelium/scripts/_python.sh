@@ -24,6 +24,21 @@ mycelium_python() {
   printf 'python3'
 }
 
+# Does the user's delivery skip-ack lift this gate (v0.293.0, founder ruling DL-1364)? KIND is
+# `build` (with the repo-relative paths being written) or `release`. The ack is a dated, scoped,
+# expiring record the user writes; the helper logs each use and prints any warning, which goes to
+# the user as a systemMessage. Exit 0 = lifted.
+mycelium_skip_ack() {
+  [ -f "${PROJECT_DIR:-.}/.claude/state/delivery-skip-ack" ] || return 1
+  local helper out rc
+  helper="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_hook_input.py"
+  out="$("$(mycelium_python)" "$helper" --project-dir "${PROJECT_DIR:-.}" --skip-ack "$@" 2>/dev/null)"; rc=$?
+  if [ -n "$out" ]; then
+    python3 -c 'import json,sys; print(json.dumps({"systemMessage": "Mycelium: " + sys.argv[1]}))' "$out"
+  fi
+  return $rc
+}
+
 # The line a gate prints when it refuses because it cannot read the locks.
 # shellcheck disable=SC2034  # read by the gates that source this file
 MYCELIUM_NO_YAML_FIX="PyYAML is not available to Mycelium, so readiness cannot be checked and this is refused rather than let through. Run /mycelium:setup (it installs PyYAML for Mycelium only, in the plugin's own data directory), or install it for your python3 (pip3 install pyyaml), then retry."
