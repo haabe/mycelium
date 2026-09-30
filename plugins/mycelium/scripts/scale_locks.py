@@ -163,7 +163,20 @@ _DEPLOY = re.compile(
     r"|(?:serverless|sls)\s+deploy|npm\s+publish|twine\s+upload|cargo\s+publish"
     r"|ssh\b[^\n]*\b(?:git\s+pull|systemctl\s+(?:re)?start|docker\s+compose\s+up"
     r"|pm2\s+(?:re)?start|service\s+\S+\s+restart)"
-    r"|(?:scp|rsync)\b[^|;&]*\s[\w.@-]+:\S*)", re.IGNORECASE)
+    r"|(?:scp|rsync)\b[^|;&]*\s[\w.@-]+:\S*"
+    # A tunnel puts the running app in front of anyone with the link (v0.290.0; E2E run 10 replay).
+    r"|ngrok\s+(?:http|tcp|tls|start)\b|cloudflared\b[^|;&]*\btunnel\b|\blocaltunnel\b|\blt\s+--port\b"
+    r"|tailscale\s+(?:funnel|serve)\b|\bssh\b[^|;&\n]*\s-R\s)", re.IGNORECASE)
+#: A plain `git push` is a release when the project deploys on push (v0.290.0): Vercel and Netlify
+#: publish every pushed branch (a preview URL is public), and a workflow that deploys on push does
+#: the same from CI. Checked only when the command pushes; the files are the host's own config.
+_GIT_PUSH = re.compile(r"\bgit\s+push\b", re.IGNORECASE)
+_LIVE_ON_PUSH_FILES = ("vercel.json", "netlify.toml", "render.yaml", ".vercel/project.json")
+_LIVE_ON_PUSH_WORKFLOW = re.compile(
+    r"deploy-pages|actions-gh-pages|amondnet/vercel-action|nwtgck/actions-netlify|superfly/flyctl-actions"
+    r"|flyctl\s+deploy|fly\s+deploy|wrangler\s+(?:pages\s+)?(?:deploy|publish)|firebase\s+deploy"
+    r"|heroku\s+|akhileshns/heroku-deploy|vercel\s+(?:deploy|--prod)|netlify\s+deploy",
+    re.IGNORECASE)
 CLOSED_OPPORTUNITY = {"closed", "discarded", "resolved", "addressed"}
 SHIPPED_PHASES = {"deliver", "complete", "completed"}
 ACK_REL = os.path.join(".claude", "state", "scale-lock-ack")
@@ -901,9 +914,14 @@ def exposure_state(project_dir: str) -> tuple[bool, str]:
 def exposure_violation(project_dir: str, payload: dict) -> str | None:
     """A Bash command that deploys or publishes, in a project whose delivering cycle is not in
     Deliver with its gates passed. Projects with no diamonds at all are not this gate's business."""
-    command = str(_as_dict(payload.get("tool_input")).get("command") or "")
+    command = _executed_text(str(_as_dict(payload.get("tool_input")).get("command") or ""))
     m = _DEPLOY.search(command)
+    what = m.group(0).strip() if m else ""
     if not m:
+        p = _GIT_PUSH.search(command)
+        if p and _goes_live_on_push(project_dir):
+            what = p.group(0).strip() + " (this project deploys on push)"
+    if not what:
         return None
     st = State(project_dir)
     if not st.active:
@@ -911,8 +929,64 @@ def exposure_violation(project_dir: str, payload: dict) -> str | None:
     ok, why = _work_state(st, "expose")
     if ok:
         return None
-    return (f"`{m.group(0).strip()[:80]}` puts the work in front of real people, and no delivery "
+    return (f"`{what[:80]}` puts the work in front of real people, and no delivery "
             f"cycle is ready for that:\n  {why}")
+
+
+def _goes_live_on_push(project_dir: str) -> bool:
+    """The project's host publishes what is pushed: its config file, or a workflow that deploys."""
+    if any(os.path.exists(os.path.join(project_dir, f)) for f in _LIVE_ON_PUSH_FILES):
+        return True
+    wf = os.path.join(project_dir, ".github", "workflows")
+    try:
+        names = [n for n in os.listdir(wf) if n.endswith((".yml", ".yaml"))]
+    except OSError:
+        return False
+    for n in names:
+        try:
+            with open(os.path.join(wf, n), encoding="utf-8") as fh:
+                text = fh.read()
+        except OSError:
+            continue
+        on_push = re.search(r"^\s*(?:on:|push:)", text, re.MULTILINE)
+        if on_push and _LIVE_ON_PUSH_WORKFLOW.search(text):
+            return True
+    return False
+
+
+#: Commands whose quoted argument is itself run, so its text is not prose.
+_RUNS_ITS_ARGUMENT = re.compile(r"\b(?:ssh|bash|sh|zsh|eval|sudo|xargs|env)\b[^'\"]*$")
+
+
+def _executed_text(command: str) -> str:
+    """The parts of a shell command that run, not the prose it carries (v0.290.0).
+
+    The detector matched the whole command text, so a heredoc body or a commit message that merely
+    mentioned a release verb was refused as one: twice on 2026-09-30 while writing this migration's
+    own documentation. Heredoc bodies are dropped, and so are quoted strings, except where the
+    quoted string is itself executed (the argument of ssh, bash -c, sh -c, eval and the like)."""
+    lines = command.split("\n")
+    kept, i = [], 0
+    while i < len(lines):
+        line = lines[i]
+        kept.append(line)
+        m = re.search(r"<<-?\s*(['\"]?)(\w+)\1", line)
+        i += 1
+        if m:
+            end = m.group(2)
+            while i < len(lines) and lines[i].strip() != end:
+                i += 1
+            i += 1  # the terminator itself
+    text = "\n".join(kept)
+    out, pos = [], 0
+    for q in re.finditer(r"'[^']*'|\"(?:[^\"\\]|\\.)*\"", text):
+        before = text[pos:q.start()]
+        out.append(before)
+        runs = _RUNS_ITS_ARGUMENT.search(text[:q.start()].split("\n")[-1])
+        out.append(q.group(0) if runs else "''")
+        pos = q.end()
+    out.append(text[pos:])
+    return "".join(out)
 
 
 # ACTS of exposure, not topic words (v0.252.1). 0.252.0 matched "pilot", "staff", "launch" and

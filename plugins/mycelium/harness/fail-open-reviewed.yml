@@ -908,3 +908,10 @@ reviewed:
     CHECK 1's "an open L4 is building or delivering" falls back to the old substring test when PyYAML
     cannot be imported. The fallback errs toward the G-S2 and G-V2 warnings (it matches more, not
     less), and the hook is advisory: it never blocks. Reviewed 2026-09-30, v0.289.0.
+- id: scale_locks.py@9c772bd1aa
+  verdict: accepted
+  reason: >-
+    `_goes_live_on_push` returns False when `.github/workflows` cannot be listed, which is the normal
+    case for a project with no workflows, not a failure; and skips a workflow file it cannot read. The
+    second can miss a deploy-on-push workflow only on a permissions error, and the host config files
+    (vercel.json, netlify.toml, render.yaml) are checked before it. Reviewed 2026-09-30, v0.290.0.

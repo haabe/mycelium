@@ -30,17 +30,25 @@ INPUT=$(cat)
 shopt -s nocasematch
 case "$INPUT" in
   *deploy*|*publish*|*push*|*apply*|*helm*|*rollout*|*image*|*ssh*|*scp*|*rsync*|*upload*|*pulumi*|*sync*|*function-code*) ;;
+  *ngrok*|*cloudflared*|*localtunnel*|*tailscale*|*"lt --port"*) ;;  # tunnels (v0.290.0)
   *) exit 0 ;;
 esac
 shopt -u nocasematch
 [ -f "$PROJECT_DIR/.claude/state/delivery-skip-ack" ] && exit 0
 LOCKS="$(dirname "${BASH_SOURCE[0]}")/../scripts/scale_locks.py"
 [ -f "$LOCKS" ] || LOCKS="${CLAUDE_PLUGIN_ROOT:-}/scripts/scale_locks.py"
-printf '%s' "$INPUT" | python3 "$LOCKS" --project-dir "$PROJECT_DIR" --exposure-hook
-rc=$?
-# 0 = allowed, 3 = PyYAML missing (hooks/preflight.sh says the locks are unchecked, every prompt).
+# shellcheck source=../scripts/_python.sh
+. "$(dirname "$LOCKS")/_python.sh"  # mycelium_python and the fix line (v0.290.0)
+printf '%s' "$INPUT" | "$(mycelium_python)" "$LOCKS" --project-dir "$PROJECT_DIR" --exposure-hook
+rc=${PIPESTATUS[1]}
+# 0 = allowed. 3 = PyYAML missing: since 0.290.0 that REFUSES too, with the fix, because this
+# command matched a release and nothing could check that the work is ready for real people.
 # Anything else refuses, including a crash, whose traceback is on stderr.
-if [ "$rc" -ne 0 ] && [ "$rc" -ne 3 ]; then
+if [ "$rc" -eq 3 ]; then
+  printf 'Mycelium exposure gate: this command looks like a release. %s\n' "$MYCELIUM_NO_YAML_FIX" >&2
+  rc=2
+fi
+if [ "$rc" -ne 0 ]; then
   . "${CLAUDE_PLUGIN_ROOT:-$(dirname "${BASH_SOURCE[0]}")/..}/scripts/_hook_fire_log.sh" 2>/dev/null || true
   mycelium_log_fire ".claude/state/exposure-gate-fires.jsonl" "blocked" 2>/dev/null || true
   exit 2

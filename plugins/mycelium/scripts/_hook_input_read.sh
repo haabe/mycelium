@@ -10,6 +10,8 @@
 #   HI_BAD       non-empty when the input is not the documented shape (callers deny)
 # Requires INPUT (the raw stdin JSON), PROJECT_DIR and CLAUDE_PLUGIN_ROOT (or a legacy tree).
 # shellcheck disable=SC2034  # the HI_* variables are read by the sourcing gate, not here
+# shellcheck source=_python.sh
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_python.sh"  # mycelium_python (v0.290.0)
 hi_read_input() {
   # The helper is this library's sibling; resolve it by this file's own location first. CI has
   # no CLAUDE_PLUGIN_ROOT (0.196.0 went red there on every gate suite while green locally).
@@ -56,12 +58,12 @@ hi_ask() {  # $1 reason
 
 hi_delivery_state() {  # exit 0 if new code may be written under an open L3/L4/L5 whose chain holds
   # (v0.245.0, scripts/scale_locks.py). Exit 1 = locked, with the reasons in HI_DELIVERY_WHY;
-  # exit 3 = cannot check (PyYAML missing), which hooks/preflight.sh says on every prompt.
+  # exit 3 = cannot check (PyYAML missing): since 0.290.0 the gate refuses, with the fix.
   local here locks
   here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   locks="$here/scale_locks.py"
   [ -f "$locks" ] || locks="${CLAUDE_PLUGIN_ROOT:-}/scripts/scale_locks.py"
-  HI_DELIVERY_WHY="$(python3 "$locks" --project-dir "$PROJECT_DIR" --delivery-state 2>&1)"
+  HI_DELIVERY_WHY="$("$(mycelium_python)" "$locks" --project-dir "$PROJECT_DIR" --delivery-state 2>&1)"
 }
 
 hi_discovery_engaged() {  # exit 0 if a real purpose or an active diamond exists
@@ -70,5 +72,5 @@ hi_discovery_engaged() {  # exit 0 if a real purpose or an active diamond exists
   helper="$here/_hook_input.py"
   [ -f "$helper" ] || helper="${CLAUDE_PLUGIN_ROOT:-}/scripts/_hook_input.py"
   [ -f "$helper" ] || helper="$PROJECT_DIR/.claude/scripts/_hook_input.py"
-  python3 "$helper" --project-dir "$PROJECT_DIR" --discovery-state 2>/dev/null
+  "$(mycelium_python)" "$helper" --project-dir "$PROJECT_DIR" --discovery-state 2>/dev/null
 }

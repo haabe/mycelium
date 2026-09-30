@@ -172,10 +172,13 @@ elif [ "$_PF_LOOKS_ENGAGED" -eq 1 ] && [ ! -f "$PROJECT_DIR/.claude/state/delive
   # means silence, and the gate parses strictly.
   echo "MYCELIUM DELIVERY STATE: no diamond that delivers (L3, L4 or L5) is open. If this prompt asks you to build or change code, the chain comes first, because each scale opens on its parent: a desired outcome (/mycelium:ost-builder), a target opportunity with evidence, then an L3 whose object_ref names it. The discovery gate refuses new source files until then; scripts/scale_locks.py --can-open L3 says what is missing. If the prompt is not a build request, ignore this line and answer it."
 fi
-# The scale locks read YAML. Without PyYAML they cannot be checked, and both gates then allow every
-# write; this line is what makes that fail-open speak (fail-open-reviewed.yml, scale_locks.py).
-if [ "$_PF_LOOKS_ENGAGED" -eq 1 ] && ! python3 -c 'import yaml' 2>/dev/null; then
-  echo "MYCELIUM: the scale locks are NOT being checked on this machine (PyYAML is not installed: pip install pyyaml). Until it is, nothing stops a diamond opening before its parent is ready or code being written outside a delivery cycle."
+# The scale locks read YAML. Without PyYAML they cannot be checked (v0.290.0: the build and release
+# gates then REFUSE, with the fix; the scale-lock gate on the diamonds file still allows, and this
+# line says so). The python is the one the gates use: the PATH python3, else Mycelium's own.
+# shellcheck source=../scripts/_python.sh
+. "${CLAUDE_PLUGIN_ROOT:-$(dirname "${BASH_SOURCE[0]}")/..}/scripts/_python.sh" 2>/dev/null || mycelium_python() { printf 'python3'; }
+if [ "$_PF_LOOKS_ENGAGED" -eq 1 ] && ! "$(mycelium_python)" -c 'import yaml' 2>/dev/null; then
+  echo "MYCELIUM: PyYAML is not available to Mycelium on this machine, so the scale locks are NOT being checked: new source files and releases are refused until it is, and a diamond can be opened before its parent is ready. Run /mycelium:setup to install it for Mycelium only, or pip3 install pyyaml."
 fi
 
 # The next-item ladder (v0.250.0): once an item has gone unanswered for ESCALATE_AT sessions, the
