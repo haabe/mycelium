@@ -4,6 +4,21 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-30.
 
+## v0.291.1 - an override citing a recent decision is no longer read as dangling
+
+**2026-09-30.** The founder overrode a pp-016 contradiction and the override cited DL-1363, a decision
+written minutes earlier. `check_purpose_stance.py` reported it as dangling. Its heading pattern
+accepted `### [DL-0974]` and `### DL-1116 -`, and the dogfood log had moved to date-first headings
+(`## 2026-09-24 — DL-1361: ...`) around DL-1286: it found 236 IDs and missed the newest 77.
+
+- The pattern now also accepts a leading date and dash (em dash, en dash or hyphen).
+- **Alternatives considered:** rewriting the dogfood log's headings to the old form (rejected: 77
+  entries rewritten to fit a checker, and the next project would hit the same wall); requiring IDs at
+  the start in the style guide (rejected: the date-first form is what people write when they log by
+  day). Changing the reader is the fix that serves every log.
+- Tests: all three heading forms are found, and a heading with a date and no ID yields nothing
+  (control).
+
 ## v0.291.0 - editing product code counts as building; an exposed pilot cannot widen unseen
 
 **2026-09-30. Adds blocks.** Stage 0b-2 of the phase migration. The run-10 replay now carries no
