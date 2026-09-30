@@ -215,10 +215,18 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
        unblocked_by: <the skill or evidence that would clear it>
    progression_history:                 # APPEND one entry per transition, when progressed (v0.248.0)
      - transition: "define -> develop"  # one entry for EACH transition crossed; two for a two-step move
+       decisions: [start_experiment, commit_to_build]   # what this move decides (v0.298.0)
        date: <YYYY-MM-DD>
        ruling: progressed
        gates: {evidence: pass, privacy: pass-with-risk, ...}   # the statuses this move relied on
    ```
+
+   **Name the decisions the move makes (v0.298.0).** Each level runs a learning loop, and a phase
+   move is a set of its decisions: discover -> define sets the target (`set_target`); define ->
+   develop starts an experiment and commits to build (`start_experiment`, `commit_to_build`);
+   develop -> deliver releases (`release`); deliver -> complete closes (`close`). Each gate belongs
+   to the decision it guards, and the move needs the gates of every decision it makes, the same set
+   as before. The phase is retired later in the migration; the decisions stay.
 
    **Move the phase, record the gates and append the history IN THE SAME WRITE (v0.248.0).** The
    scale-lock gate refuses a write that moves a diamond forward unless, for every transition it
