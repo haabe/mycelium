@@ -327,7 +327,7 @@ def _fired_proposals(root: Path) -> tuple[list[dict], str]:
     return sorted(out, key=lambda r: r["since"]), ""
 
 
-_CLOSED = {"complete", "completed", "killed", "parked", "archived"}
+_CLOSED = {"complete", "completed", "killed", "parked", "archived", "retargeted"}
 
 
 def _state_closed(d: dict) -> bool:

@@ -151,7 +151,7 @@ Diamonds spawn child diamonds, each through its lock above:
 - L3 spawns L4 when an increment is ready to build and the L3 is at medium confidence (the event offer: `/preflight`; since v0.254.0 the next item proposes it as soon as the L4 lock holds, because under test-first the L3 enters develop before its test raises the evidence). Since v0.257.0 that evidence comes from the L3's own learning delivery, which the next item proposes first
 - L4 can spawn sub-L4 diamonds for complex features requiring their own discovery
 - **L4 spawns L5 when a release is categorised as a MAJOR LAUNCH on the project's own release scale** and launch data exists (v0.232.0, written by `/launch-tier`). **A product's first release to its market counts as the top band** (founder, 2026-09-25): with no release history there is no scale to categorise against, and the first launch would otherwise never reach L5. Since v0.254.0 the next item proposes `/launch-tier` when an L4 ships
-- L5 spawns L2 when market feedback reveals new opportunities (feedback loop)
+- L5 feeds the existing L2 when market feedback reveals new opportunities: they join the map of the outcome they bear on, and the L2 may re-target (v0.302.0, DL-1367; until then L5 spawned a new L2)
 
 **The L4→L5 edge was missing until v0.232.0, and its absence is why L5 never opened by itself.** Every
 other rung had a spawn; the top one had only an exit (L5→L2) and no entry, so an L5 could be created
@@ -175,7 +175,7 @@ splits one market question across two records. Add the release to the open one.
 **Constraints:**
 - Parent diamond remains active while children execute (smooth flow)
 - Child diamond outcomes feed back into parent diamond evidence
-- L5 Market feedback can trigger new L2 Opportunity diamonds (the learning loop)
+- L5 Market feedback returns to the L2 that maps the outcome it bears on (the learning loop)
 
 ## WIP Limits (single source of truth)
 
@@ -189,8 +189,8 @@ Two limits apply: a hard ceiling per scale and a working WIP limit per scale.
 |---|---|---|
 | L0 Purpose | 1 | A product has one purpose |
 | L1 Strategy | 3 | Multiple strategic experiments are valid (e.g., Wardley + Team Topologies + Market) |
-| L2 Opportunity | 5 | OST exploration benefits from breadth |
-| L3 Solution | 5 | Multiple solution candidates per opportunity is valid |
+| L2 Opportunity | one per outcome | **Enforced when an L2 opens** (v0.302.0, DL-1367 R3): an L2 maps the whole opportunity space under one outcome |
+| L3 Solution | one per target | **Enforced when an L3 opens** (v0.302.0, DL-1367 R3): its ideas are compared inside it, about three (Torres p118; advice, not enforced) |
 | L4 Delivery | 10 | Hard ceiling — never exceed even briefly |
 | L5 Market | 3 | Multiple launch tiers can run in parallel |
 
@@ -200,8 +200,8 @@ Two limits apply: a hard ceiling per scale and a working WIP limit per scale.
 |---|---|---|
 | L0 Purpose | 1 | Always 1 |
 | L1 Strategy | 1 | Focus one strategic bet at a time |
-| L2 Opportunity | 2 | Explore at most 2 opportunities concurrently |
-| L3 Solution | 2 | Compare at most 2 solution candidates concurrently |
+| L2 Opportunity | one per outcome | As above: the breadth is in its map, not in parallel L2s |
+| L3 Solution | one per target | As above; compare about three ideas inside it |
 | L4 Delivery | 2 | Maximum 2 active L4 delivery diamonds. If both are blocked, resolve blockers before starting a third. Prevents context-switching overhead. |
 | L5 Market | 1 | One launch at a time |
 
@@ -212,9 +212,9 @@ Two limits apply: a hard ceiling per scale and a working WIP limit per scale.
 When evidence invalidates a higher-level assumption, regress:
 
 - If L4 Delivery reveals the L3 Solution is wrong -> regress to L3 Develop
-- If L3 prototyping reveals the L2 Opportunity is misframed -> regress to L2 Define
+- If an L3's ideas all fail, or its testing shows the target is misframed -> revise the L2's map and re-target; the L3 closes as `retargeted` in the same write (v0.302.0, DL-1367 R2; Torres p34-35, p164)
 - If L2 research reveals the L1 Strategy is flawed -> regress to L1 Define
-- If L5 Market feedback reveals the L2 Opportunity was wrong -> spawn new L2 diamond with market evidence
+- If L5 Market feedback reveals the L2's target was wrong -> the L2 revises its map and re-targets (v0.302.0; until then a new L2 was spawned)
 
 **Regression triggers** (what signals the need to go back):
 - User testing contradicts value assumption (Cagan four risks)
