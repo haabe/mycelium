@@ -54,7 +54,7 @@ def test_the_muted_advisory_line_names_this_plugins_own_script():
 def test_the_answer_prompts_say_which_ruling_fits_which_answer(tmp_path):
     state = tmp_path / ni.STATE_REL
     state.parent.mkdir(parents=True)
-    state.write_text(json.dumps({"id": "deliver-l3:d-004", "shown": 5, "session": "s1",
+    state.write_text(json.dumps({"plugin_version": ni._plugin_version(), "id": "deliver-l3:d-004", "shown": 5, "session": "s1",
                                  "first_shown": "2026-09-30", "emitted_at": "2026-09-30",
                                  "text_human": "d-004 (L3) has built what its test needs"}))
     answer = ni.answer_line(tmp_path, "not now, ask me again after Wednesday's check")

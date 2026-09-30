@@ -46,7 +46,7 @@ def test_the_prompt_beside_the_request_says_do_it_for_an_agents_item(tmp_path):
     def line(item_id: str) -> str:
         state = tmp_path / item_id.replace(":", "-") / ni.STATE_REL
         state.parent.mkdir(parents=True)
-        state.write_text(json.dumps({"id": item_id, "session": "s3", "shown": 3,
+        state.write_text(json.dumps({"plugin_version": ni._plugin_version(), "id": item_id, "session": "s3", "shown": 3,
                                      "first_shown": "2026-11-18", "emitted_at": "2026-11-25",
                                      "text": "YOURS TO DO NOW: record it.",
                                      "text_human": "MYCELIUM IS RECORDING: it."}))
@@ -64,7 +64,7 @@ def test_an_agents_item_comes_beside_the_first_request_at_once(tmp_path):
     def line(item_id: str) -> str:
         state = tmp_path / item_id.replace(":", "-") / ni.STATE_REL
         state.parent.mkdir(parents=True)
-        state.write_text(json.dumps({"id": item_id, "session": "s1", "shown": 1,
+        state.write_text(json.dumps({"plugin_version": ni._plugin_version(), "id": item_id, "session": "s1", "shown": 1,
                                      "first_shown": "2026-11-18", "emitted_at": "2026-11-18",
                                      "text": "YOURS TO DO NOW: record it."}))
         return ni.prompt_line(state.parents[2])
