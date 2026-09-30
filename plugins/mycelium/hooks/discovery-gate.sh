@@ -1,5 +1,5 @@
 #!/bin/bash
-# Mycelium discovery gate (PreToolUse, Write only)
+# Mycelium discovery gate (PreToolUse; Write, and since v0.291.0 Edit/MultiEdit once discovery is engaged)
 #
 # Blocks scaffolding NEW source files in a project where discovery has never
 # been engaged — no active diamond, no populated purpose.yml — and the user
@@ -13,8 +13,9 @@
 # Router-discipline prose alone did not hold; this gate is the teeth.
 #
 # Scope is deliberately NARROW (the friction-wall risk is real):
-#   - Fires ONLY on the Write tool (Edit/MultiEdit never blocked — brownfield
-#     work on existing code is untouched).
+#   - New files on Write; since v0.291.0 also edits to product code (Edit, MultiEdit,
+#     the MCP edit tool) ONCE DISCOVERY IS ENGAGED, outside declared `prototype_paths`.
+#     Where discovery has not started, edits stay untouched (the brownfield gate's case).
 #   - Fires ONLY when the target file does not exist yet (new-file scaffolds).
 #   - Fires ONLY for source/infra-shaped files (extension + basename lists).
 #   - Fires ONLY when discovery has never been engaged: no diamond entry in
@@ -36,9 +37,15 @@ hi_read_input
 if [ -n "$HI_BAD" ]; then
   hi_deny "Mycelium discovery gate: refused, tool input is not the documented shape ($HI_BAD)."
 fi
+# EDITS COUNT AS BUILDING ONCE DISCOVERY IS ENGAGED (v0.291.0, phase migration stage 0b-2). Until
+# then Edit and MultiEdit exited here, so a prototype could be edited into the product with no gate
+# firing (dogfood decision log 2026-09-30, the run-10 replay). In a project where discovery has not
+# started, edits stay untouched: the brownfield gate asks there, once.
+EDITING=0
 case "$HI_TOOL" in
   Write|NotebookEdit|Bash|mcp__filesystem__write_file) ;;
-  *) exit 0 ;;   # Edit/MultiEdit need an existing file; the brownfield gate covers those
+  Edit|MultiEdit|mcp__filesystem__edit_file) EDITING=1 ;;
+  *) exit 0 ;;
 esac
 
 # A NEW gated source file: absent, or present and empty (2026-09-11: `touch` then Write passed
@@ -46,7 +53,7 @@ esac
 GATED_FILE=""
 while IFS=$'\t' read -r target exists size; do
   case "$target" in ""|OUTSIDE:*|GUARD:*|OPAQUE:*|.claude/*|*/.claude/*) continue;; esac
-  if [ "$exists" = "1" ] && [ "${size:-0}" -gt 0 ]; then continue; fi
+  if [ "$EDITING" = "0" ] && [ "$exists" = "1" ] && [ "${size:-0}" -gt 0 ]; then continue; fi
   base="${target##*/}"
   case "$base" in
     Dockerfile*|docker-compose*|Makefile|CMakeLists.txt|requirements.txt|pyproject.toml|package.json|Cargo.toml|go.mod|Gemfile|Rakefile|build.gradle|pom.xml|Pipfile|tsconfig.json) GATED_FILE="$target"; break;;
@@ -63,7 +70,7 @@ if [ -z "$GATED_FILE" ]; then
   CANDIDATES=()
   while IFS=$'\t' read -r target exists size; do
     case "$target" in ""|OUTSIDE:*|GUARD:*|OPAQUE:*|.claude/*|*/.claude/*) continue;; esac
-    if [ "$exists" = "1" ] && [ "${size:-0}" -gt 0 ]; then continue; fi
+    if [ "$EDITING" = "0" ] && [ "$exists" = "1" ] && [ "${size:-0}" -gt 0 ]; then continue; fi
     CANDIDATES+=("$target")
   done <<< "$HI_TARGETS"
   if [ "${#CANDIDATES[@]}" -gt 0 ]; then
@@ -73,15 +80,27 @@ if [ -z "$GATED_FILE" ]; then
   fi
 fi
 [ -n "$GATED_FILE" ] || exit 0
+# Declared prototypes are free (v0.291.0): throwaway discovery code under `prototype_paths`.
+# Releasing it is the decision to build, and the release gate holds that.
+NP_HELPER="$(dirname "${BASH_SOURCE[0]}")/../scripts/_hook_input.py"
+[ -f "$NP_HELPER" ] || NP_HELPER="${CLAUDE_PLUGIN_ROOT:-}/scripts/_hook_input.py"
+if ! "$(mycelium_python)" "$NP_HELPER" --project-dir "$PROJECT_DIR" --not-prototype "$GATED_FILE" >/dev/null 2>&1; then
+  exit 0
+fi
 BASENAME="${GATED_FILE##*/}"
+ACT="create a new source file"
+[ "$EDITING" = "1" ] && ACT="change product code"
 
 [ -f "$PROJECT_DIR/.claude/state/discovery-skip-ack" ] && exit 0
 
 hi_discovery_engaged; HI_ENGAGED=$?
+if [ "$EDITING" = "1" ] && [ "$HI_ENGAGED" -eq 1 ]; then
+  exit 0  # an edit in a project where discovery has not started: the brownfield gate's case
+fi
 if [ "$HI_ENGAGED" -eq 3 ]; then
   # Diamonds exist but cannot be read without PyYAML (v0.290.0): refuse with the real reason.
   [ -f "$PROJECT_DIR/.claude/state/delivery-skip-ack" ] && exit 0
-  printf 'Mycelium delivery gate: you are about to create a new source file (%s). %s\n' "$BASENAME" "$MYCELIUM_NO_YAML_FIX" >&2
+  printf 'Mycelium delivery gate: you are about to %s (%s). %s\n' "$ACT" "$BASENAME" "$MYCELIUM_NO_YAML_FIX" >&2
   . "${CLAUDE_PLUGIN_ROOT:-$(dirname "${BASH_SOURCE[0]}")/..}/scripts/_hook_fire_log.sh" 2>/dev/null || true
   mycelium_log_fire ".claude/state/discovery-gate-fires.jsonl" "blocked-cannot-check" 2>/dev/null || true
   exit 2
@@ -98,13 +117,13 @@ if [ "$HI_ENGAGED" -eq 0 ]; then
   case $? in
     0) exit 0 ;;
     3)  # PyYAML missing: refuse and say how to fix it (v0.290.0; it allowed until then)
-      printf 'Mycelium delivery gate: you are about to create a new source file (%s). %s\n' "$BASENAME" "$MYCELIUM_NO_YAML_FIX" >&2
+      printf 'Mycelium delivery gate: you are about to %s (%s). %s\n' "$ACT" "$BASENAME" "$MYCELIUM_NO_YAML_FIX" >&2
       . "${CLAUDE_PLUGIN_ROOT:-$(dirname "${BASH_SOURCE[0]}")/..}/scripts/_hook_fire_log.sh" 2>/dev/null || true
       mycelium_log_fire ".claude/state/discovery-gate-fires.jsonl" "blocked-cannot-check" 2>/dev/null || true
       exit 2 ;;
   esac
   cat >&2 <<EOF
-Mycelium delivery gate: you are about to create a new source file ($BASENAME),
+Mycelium delivery gate: you are about to $ACT ($BASENAME),
 and no delivery cycle is ready to carry code. Code is written under an L3
 (build to learn), L4 or L5 diamond whose parents have established what it
 builds on, and which is in Develop with Four Risks and Privacy passed (phase

@@ -1340,7 +1340,8 @@ fi
 # CHECK 11: Existing code, no discovery state (brownfield entry)
 # ============================================================
 # Why SessionStart and not a PreToolUse gate: discovery-gate.sh fires on Write
-# only and exempts Edit/MultiEdit by design. On a project that already has code,
+# only and exempts Edit/MultiEdit by design (since v0.291.0 edits are gated once
+# discovery is engaged; before that, the brownfield case, they still are not). On a project that already has code,
 # most work is EDIT-shaped — bug fixes, tweaks, behaviour changes — so a
 # tool-gated check covers the minority of brownfield work and misses the rest.
 # Measured, not assumed: two auto-dogfood runs 2026-07-28. A file-creating

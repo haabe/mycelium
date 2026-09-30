@@ -22,6 +22,11 @@
         "service_offering"
       ]
     },
+    "prototype_paths": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Throwaway discovery code, repo-relative folders or patterns (v0.291.0). Writing and editing there needs no decision to build; releasing it does, and the release gate holds that (founder ruling 2026-09-30)."
+    },
     "product_paths": {
       "type": "array",
       "items": {"type": "string"},

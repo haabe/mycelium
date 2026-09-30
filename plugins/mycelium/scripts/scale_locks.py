@@ -788,6 +788,9 @@ class State:
         page public under the L3 on reviews scoped to five testers."""
         if _scale(after) != "L3" or _phase(before) not in ("deliver", "complete"):
             return None
+        widened = self._reach_change_missing(before, after)
+        if widened:
+            return widened
         old = str(_as_dict(before.get("learning_delivery")).get("audience") or "").strip()
         new = str(_as_dict(after.get("learning_delivery")).get("audience") or "").strip()
         if not old or new == old:
@@ -804,6 +807,38 @@ class State:
                     "identifiable, opted-in audience: name the re-run gates in `reassessed`) or "
                     "`everyone` (the L4's: open an L4 on this L3 first)")
         return self._change_kind_missing(after, entry)
+
+    #: Widening is any increase in audience, data, channel or duration (founder ruling (b),
+    #: 2026-09-30). The audience has its own check below; these three are compared here.
+    _REACH_FIELDS = (("until", "end date"), ("means", "channel"), ("data", "data"))
+
+    def _reach_change_missing(self, before: dict, after: dict) -> str | None:
+        """An exposed L3's learning delivery changes its end date, channel or data (v0.291.0).
+        Before, only the audience text was compared, so a pilot could run longer, move from a
+        moderated session to an unattended link, or start taking new data with no gate re-run
+        (dogfood a-f check, 2026-09-30). An earlier end date narrows and passes."""
+        was = _as_dict(before.get("learning_delivery"))
+        now = _as_dict(after.get("learning_delivery"))
+        for field, label in self._REACH_FIELDS:
+            old = str(was.get(field) or "").strip()
+            new = str(now.get(field) or "").strip()
+            if not old or new == old:
+                continue
+            if field == "until" and new and new[:10] < old[:10]:
+                continue  # ends sooner: narrower, nothing to re-run
+            entry = next((c for c in reversed(_as_list(now.get("changes")))
+                          if isinstance(c, dict)
+                          and str(c.get(f"{field}_was") or "").strip() == old), None)
+            if entry is None:
+                return (f"{after.get('id')} (L3): its learning delivery's {label} changes from "
+                        f"`{old}`, and `learning_delivery.changes` has no entry for it. Add "
+                        f"`{{on, {field}_was, kind, why}}`, with `kind` `narrowed`, `reworded` or "
+                        "`widened` (name the re-run gates in `reassessed`: security, privacy, "
+                        "service_quality)")
+            missing = self._change_kind_missing(after, entry)
+            if missing:
+                return missing
+        return None
 
     def _change_kind_missing(self, after: dict, entry: dict) -> str | None:
         """What one recorded audience change still needs, by its kind."""
