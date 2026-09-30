@@ -289,3 +289,54 @@ def test_a_conditional_snooze_reaches_the_agent_once_per_sitting(tmp_path):
     assert ni.conditions_line(root, "s2", "2026-09-24")  # a new sitting says it again
     assert ni._session_of(json.dumps({"session_id": "s9"})) == "s9"
     assert ni._session_of("x") == ""
+
+
+def _stored(root: Path, **st) -> None:
+    (root / ".claude" / "state").mkdir(parents=True, exist_ok=True)
+    base = {"id": "unassessed", "text_human": "NEXT ITEM: x", "session": "s1",
+            "emitted_at": "2026-09-24", "shown": 5, "first_shown": "2026-09-20"}
+    (root / ni.STATE_REL).write_text(json.dumps({**base, **st}))
+
+
+def test_a_state_written_by_another_release_is_not_served(tmp_path):
+    """v0.288.1: the dogfood state was written by 0.254.1 on 2026-09-24 and never rewritten; the
+    prompt hook offered its item on 2026-09-30 to messages that were not answers."""
+    root = _project(tmp_path)
+    _stored(root, plugin_version="0.254.1")
+    assert ni.answer_line(root, "snooze it") == ""
+    assert ni.prompt_line(root) == ""
+    assert ni.claim_human(root) == ""
+    _stored(root)  # no version at all: written before the stamp existed
+    assert ni.answer_line(root, "snooze it") == ""
+
+
+def test_control_a_state_from_this_release_is_still_served(tmp_path):
+    root = _project(tmp_path)
+    _stored(root, plugin_version=ni._plugin_version())
+    assert ni._plugin_version()  # the manifest is readable from the tree
+    assert ni.answer_line(root, "snooze it").startswith("MYCELIUM: this prompt looks like")
+
+
+def test_a_fired_proposal_ruled_in_the_record_is_not_served(tmp_path):
+    """The live picker skips a fired proposal carrying `ruling:` (0.287.1); the stored-item readers
+    did not, so a ruled proposal kept coming back from next-item.json."""
+    root = _project(tmp_path)
+    fired = ("    closes_on:\n      fired:\n        - id: ht-046\n          noticed_at: '2026-09-03'\n"
+             "          proposal: ht-046 closed; read its findings\n")
+    (root / ".claude" / "diamonds" / "active.yml").write_text(
+        L0 + fired + "          ruling: keep the gate open\n          ruled_at: '2026-09-16'\n")
+    _stored(root, id="fired:ht-046", plugin_version=ni._plugin_version())
+    assert ni.answer_line(root, "snooze it") == ""
+    # control: the same proposal, unruled, is still served
+    (root / ".claude" / "diamonds" / "active.yml").write_text(L0 + fired)
+    assert ni.answer_line(root, "snooze it").startswith("MYCELIUM: this prompt looks like")
+
+
+def test_the_settled_flag_speaks_for_the_stop_hook(tmp_path, monkeypatch, capsys):
+    root = _project(tmp_path)
+    _stored(root, plugin_version="0.1.0")
+    ni.main(["--project-dir", str(root), "--settled"])
+    assert capsys.readouterr().out.strip() == "settled"
+    _stored(root, plugin_version=ni._plugin_version())
+    ni.main(["--project-dir", str(root), "--settled"])
+    assert capsys.readouterr().out.strip() == "open"

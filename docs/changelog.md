@@ -2,7 +2,27 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-09-29.
+**Last updated**: 2026-09-30.
+
+## v0.288.1 - a stored next item that is stale or settled is not offered again
+
+**2026-09-30.** The dogfood repo's prompt hook offered `fired:ht-046` as the open item twice on one
+day, both times to messages that were not answers. The live picker had skipped it since 0.287.1,
+because the proposal carries `ruling:` in active.yml. But `.claude/state/next-item.json` was written
+on 2026-09-24 by 0.254.1 and never rewritten: session start writes it, and a compact or a plugin
+update does not. Its four readers (the prompt line, the answer line, the resume line and the Stop
+repeat) checked only ledger rulings.
+
+- One check, `_settled`, now serves every reader. The stored item is settled when it was written by
+  another release (the state now carries `plugin_version`; a state without one predates the stamp),
+  when the ledger holds a ruling on it since it was emitted, or, for a `fired:` item, when the record
+  no longer offers it as an open proposal.
+- The Stop repeat asks the same check (`next_item.py --settled`) instead of keeping its own copy.
+- This matters for the coming phase migration too: ids renamed by a release are never served from a
+  state the old release wrote.
+- Tests: a state from another release, or with no version, is silent (fails on 0.288.0); a state from
+  this release is still served (control); a fired proposal ruled in the record is silent and the same
+  proposal unruled is served (fails on 0.288.0, with control); `--settled` speaks for the Stop hook.
 
 ## v0.288.0 - an override never waives what an L4 delivers
 

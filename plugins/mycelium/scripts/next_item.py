@@ -156,6 +156,38 @@ SNOOZE_ASKED = "asked"  # the open-ended snooze: until the human rules again
 ESCALATE_AT = 3
 
 
+def _plugin_version() -> str:
+    """This release's version, from the manifest beside this script ("" if unreadable)."""
+    try:
+        man = Path(__file__).resolve().parents[1] / ".claude-plugin" / "plugin.json"
+        return str(json.loads(man.read_text(encoding="utf-8")).get("version") or "")
+    except (OSError, ValueError):
+        return ""
+
+
+def _settled(root: Path, st: dict) -> bool:
+    """True when the stored item must not be offered again (v0.288.1). Every reader of the stored
+    state goes through this, so the live picker's rules and the stored item's cannot drift.
+
+    The dogfood repo's state was written on 2026-09-24 by 0.254.1 and never rewritten (session start
+    writes it; a compact or a plugin update does not). Its item, fired:ht-046, was ruled in
+    active.yml, which 0.287.1 taught the picker to honour; the readers checked only the ledger, so
+    the prompt hook offered it twice on 2026-09-30 to messages that were not answers."""
+    item_id = str(st.get("id") or "")
+    if not item_id:
+        return True
+    current = _plugin_version()
+    if current and st.get("plugin_version") != current:
+        return True  # written by another release: its ids and rules may not exist in this one
+    if _ruled_since(root, item_id, str(st.get("emitted_at") or "")):
+        return True
+    if item_id.startswith("fired:"):
+        live, note = _fired_proposals(root)
+        if not note and item_id not in {p["id"] for p in live}:
+            return True  # ruled on the record, or gone from it
+    return False
+
+
 def _ruled_since(root: Path, item_id: str, since: str) -> bool:
     """True if the ledger holds a ruling on this id on or after `since` (an acknowledgement)."""
     try:
@@ -209,7 +241,8 @@ def claim_human(root: Path) -> str:
     """The human line, if the human has not been shown this item in this sitting; marks it shown.
     Used by session-start on resume and fork, so the Stop repeat does not say it a second time."""
     st = _read_state(root)
-    if not st.get("id") or st.get("_unreadable") or st.get("repeated_at_stop"):
+    if (not st.get("id") or st.get("_unreadable") or st.get("repeated_at_stop")
+            or _settled(root, st)):
         return ""
     st["repeated_at_stop"] = True
     # An unwritable state still returns the line; at worst the Stop repeat says it once more.
@@ -1219,7 +1252,7 @@ def answer_line(root: Path, prompt: str) -> str:
     st = _read_state(root)
     if not st.get("id") or st.get("_unreadable") or not _ANSWER.search(prompt or ""):
         return ""
-    if _ruled_since(root, str(st["id"]), str(st.get("emitted_at") or "")):
+    if _settled(root, st):
         return ""
     return (f"MYCELIUM: this prompt looks like the user's answer to the open next item "
             f"`{st['id']}` ({' '.join(str(st.get('text_human') or '').split())[:160]}). If it is, "
@@ -1244,7 +1277,7 @@ def prompt_line(root: Path) -> str:
         return ""
     if st.get("prompt_line_session") == st.get("session"):
         return ""
-    if _ruled_since(root, str(st["id"]), str(st.get("emitted_at") or "")):
+    if _settled(root, st):
         return ""
     st["prompt_line_session"] = st.get("session")
     try:
@@ -1357,8 +1390,16 @@ def main(argv=None) -> int:
         "--prompt-line", action="store_true",
         help="print the escalated item for the agent once per session (UserPromptSubmit), and exit",
     )
+    ap.add_argument(
+        "--settled", action="store_true",
+        help="print 'settled' or 'open' for the stored item (the Stop repeat's check), and exit",
+    )
     args = ap.parse_args(argv)
     root = args.project_dir.resolve()
+    if args.settled:
+        st = _read_state(root)
+        print("open" if st.get("_unreadable") else ("settled" if _settled(root, st) else "open"))
+        return 0
     if args.claim_human or args.prompt_line:
         return _one_line(root, claim=args.claim_human)
     reminders = sys.stdin.read() if not sys.stdin.isatty() else ""
@@ -1394,6 +1435,7 @@ def main(argv=None) -> int:
                     "text_human": render_human(item),
                     "session": args.session,
                     "emitted_at": args.today,
+                    "plugin_version": _plugin_version(),
                     "first_shown": item["first_shown"],
                     "first_shown_at": item["first_shown_at"],
                     "shown": item["shown"],

@@ -19,6 +19,13 @@ if [ "${MYCELIUM_NEXT_ITEM:-on}" = "off" ] || [ ! -f "$STATE" ]; then
   exit 0
 fi
 
+# One rule for every reader of the stored item (v0.288.1): a state written by another release, or
+# an item ruled since (in the ledger, or a fired proposal ruled in active.yml), is not repeated.
+NI="${CLAUDE_PLUGIN_ROOT:-$(dirname "$0")/..}/scripts/next_item.py"
+if [ -f "$NI" ] && [ "$(python3 "$NI" --project-dir "$PROJECT_DIR" --settled 2>/dev/null)" = "settled" ]; then
+  exit 0
+fi
+
 python3 - "$STATE" "$LEDGER" <<'PY'
 import json, sys
 state_path, ledger_path = sys.argv[1], sys.argv[2]
