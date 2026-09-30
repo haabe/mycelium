@@ -213,7 +213,17 @@
             "description": "True when recorded after the fact (ruling h)."
           },
           "ended": {
-            "type": "string"
+            "type": ["string", "object"],
+            "description": "When and how this exposure ended. On an L3 that records its learning delivery here (v0.296.0), the object form its end rule reads: how (withdrawn | handed_to_l4), on (the date, not in the future), l4 (the L4's id when handed on), note (free text, never read by a check)."
+          },
+          "started": {
+            "type": "string",
+            "description": "The day the first person in the audience took part (v0.296.0). Recording the exposure is not a start: it is recorded before it runs."
+          },
+          "changes": {
+            "type": "array",
+            "items": {"type": "object"},
+            "description": "Each change once it reaches people (v0.296.0, as `learning_delivery.changes`): on, <field>_was (audience_was, until_was, means_was for the channel, data_was for the data class), kind (narrowed | reworded | widened | everyone), why; `reassessed` names the gates re-run for a widening."
           }
         },
         "additionalProperties": true

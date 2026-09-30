@@ -55,6 +55,15 @@ try:
     import scale_locks as sl
 except ImportError:  # a partial install: no door is proposed, and the ladder item still is
     sl = None
+def _ld(d: dict) -> dict:
+    """The L3's learning delivery, wherever recorded (v0.296.0): scale_locks.delivery_of, else the
+    field itself when scale_locks is not installed."""
+    if sl is not None:
+        return sl.delivery_of(d)
+    ld = d.get("learning_delivery")
+    return ld if isinstance(ld, dict) else {}
+
+
 try:
     import diamond_rulings as dr
 except ImportError:  # a partial install: _unassessed falls back to the typed ruling date
@@ -637,7 +646,7 @@ def _l3_item(root: Path, today: str, st: dict, d: dict, phase: str) -> dict | No
         return None
     # The door names the audience it is the only way past (v0.267.0): right after a pass is when
     # a founder wants to launch, and E2E rung L4-open went public under the L3 at that moment.
-    ld = d.get("learning_delivery") if isinstance(d.get("learning_delivery"), dict) else {}
+    ld = _ld(d)
     who = str(ld.get("audience") or "").strip()
     beyond = (f" Its learning delivery reaches {who}. A release to everyone goes through the L4, "
               "which passes Security, Privacy and Service Quality for them: open it before the "
@@ -657,7 +666,7 @@ def _start_item(today: str, st: dict, d: dict) -> dict | None:
     scoped to a pilot with three existing clients, then grew its client pack from about 4,100 to
     7,100 words over seven sessions while nobody was served; 0.273.0 caught a growing build only in
     develop. Starting is the founder's decision: it puts the test in front of people."""
-    ld = d.get("learning_delivery") if isinstance(d.get("learning_delivery"), dict) else {}
+    ld = _ld(d)
     if not ld.get("audience") or str(ld.get("started") or "").strip():
         return None
     did = str(d["id"])
@@ -748,7 +757,7 @@ def _delivery_ended_item(iid: str, today: str, d: dict, sol: dict) -> dict | Non
     """The delivery has run its course and no verdict is in (v0.268.0), wherever the result was
     kept: a gradebook, a CRM, a device-return sheet, not only a test file in Mycelium's folder.
     Until then the verdict item fired only on a scored file there (overfit audit, 2026-09-26)."""
-    ld = d.get("learning_delivery") if isinstance(d.get("learning_delivery"), dict) else {}
+    ld = _ld(d)
     until = str(ld.get("until") or "")[:10]
     if not (re.fullmatch(r"\d{4}-\d{2}-\d{2}", until) and until < today):
         return None
@@ -768,7 +777,7 @@ def _delivery_over_item(root: Path, today: str, st: dict, d: dict) -> dict | Non
     cohort's close is scored", no stranger ever joined, and the delivery ran past its last day with
     nothing asking; the builder wrote its own `closed:` block, which no lock reads, while the three
     clients carried on paying with no L4. Ending or carrying on is the founder's decision."""
-    ld = d.get("learning_delivery") if isinstance(d.get("learning_delivery"), dict) else {}
+    ld = _ld(d)
     until = str(ld.get("until") or "")[:10]
     if not (re.fullmatch(r"\d{4}-\d{2}-\d{2}", until) and until < today):
         return None

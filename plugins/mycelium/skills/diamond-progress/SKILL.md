@@ -135,6 +135,11 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
    is personal or sensitive the write asks the person, who confirms it (founder ruling g). An exposure
    already live before this was recorded gets `reconstructed: true` (ruling h). `scale_locks.py
    --exposures` reports what is missing; in stage 1 it blocks nothing.
+   **The exposure record can be the learning delivery** (v0.296.0, stage 2b). An L3 with no
+   `learning_delivery` is read from its exposure record by every rule below: `channel` is the means,
+   `data_class` the data, and `started`, `changes` and `ended: {how, on, l4, note}` go on the
+   exposure. Recording it is not the start; `started` is. Do not add `learning_delivery` to such a
+   diamond: it is read first and hides the exposure from every rule.
    **The test starts, on the record** (v0.274.0). Record `learning_delivery.started` with the day
    the first person in the audience took part. An L3 in Deliver with no start date is offered the
    start at every session; once that is overdue, stop extending the build, name only what blocks
