@@ -401,7 +401,7 @@ def _product_files(root: Path) -> list[Path]:
 #: changes after it (v0.285.0). E2E relay L3-open and service run 10 on 0.283.0: the product was
 #: being built outside the ladder, the founder snoozed the door "until asked", and Mycelium said
 #: nothing for the rest of the run while the work went on.
-WAKES_ON_WORK = ("door-", "unassessed")
+WAKES_ON_WORK = ("door-", "unassessed", "target-l2:")
 
 
 def _woken(root: Path, st: dict) -> dict[str, int]:
@@ -717,15 +717,24 @@ def _pivot_item(root: Path, today: str, st: dict, d: dict) -> dict | None:
     iid = f"pivot-l3:{did}"
     if _blocked(st.get(iid, {}), today):
         return None
-    failed = sl.State(str(root)).failed_assumption(d)
+    state = sl.State(str(root))
+    failed = state.l3_failed(d)
     if not failed:
         return None
+    fr = state.front_runner(d)
+    if fr:
+        text = (f'{did} (L3): its front runner {fr} failed its test ("{failed}"), so it does not '
+                "go on to an L4. Choose the way on: take another idea from its set as the front "
+                "runner, revise this one and name a new test (the L3 goes back to define), or, "
+                "if none of its ideas can work, revise the L2's map and re-target (the L3 then "
+                "closes as retargeted).")
+    else:
+        text = (f'{did} (L3): every idea in its set failed its test (first: "{failed}"): none '
+                "works. Revise the L2's map with what the tests taught and re-target "
+                "(/mycelium:ost-builder; the L3 closes as retargeted), or add a new idea to the "
+                "set and test it.")
     return {"id": iid, "diamond": did, "since": today,
-            "command": f"/mycelium:diamond-progress {did}",
-            "text": (f'{did} (L3): its riskiest assumption failed its test ("{failed}"), so '
-                     "it does not go on to an L4. Choose the way on: revise the solution and "
-                     "name a new test (the L3 goes back to define), take the next solution from "
-                     "its L2 (/mycelium:ice-score), or stop the L3 and record why."),
+            "command": f"/mycelium:diamond-progress {did}", "text": text,
             "why": "a failed assumption is an outcome, and the L3 needs a way on from it"}
 
 
@@ -809,7 +818,7 @@ def _verdict_item(root: Path, today: str, st: dict, d: dict) -> dict | None:
     if _blocked(st.get(iid, {}), today):
         return None
     state = sl.State(str(root))
-    if state.l3_evidence(d) in sl.MEDIUM_OR_BETTER or state.failed_assumption(d):
+    if state.l3_evidence(d) in sl.MEDIUM_OR_BETTER or state.l3_failed(d):
         return None
     for sol in state.build_solutions(d):
         ra = sol.get("riskiest_assumption")
@@ -907,7 +916,7 @@ def _learning_delivery_item(root: Path, today: str, st: dict, d: dict) -> dict |
     if _blocked(st.get(iid, {}), today):
         return None
     state = sl.State(str(root))
-    if state.test_design_missing(d) or state.failed_assumption(d):
+    if state.test_design_missing(d) or state.l3_failed(d):
         return None
     # v0.258.0: a pass from a test run outside the L3's Deliver no longer opens the L4, so
     # this item stays up after it, or nothing would be offered at all (E2E run 41).
@@ -943,13 +952,17 @@ def _learning_delivery_item(root: Path, today: str, st: dict, d: dict) -> dict |
 
 # The way into each scale below L4, deepest first (v0.255.0): the scale, the parent scale, the
 # skill whose offer is that scale's entrance, and what the door says.
+#: Since v0.301.0 (DL-1367; ruling C) an L2 opens on an outcome its L1 has set and an L3 on the
+#: target its L2 has chosen, one per outcome and one per target; until then each opened on a record
+#: (the opportunity that served the outcome best, the highest-ranked leaf) and only while nothing at
+#: its scale was open.
 _ENTRY_DOORS = (
-    ("L3", "L2", "/mycelium:ice-score",
-     ("{pid} (L2) has evidence behind its opportunity and no L3 is open: score its solutions "
-      "and open an L3 on the highest-ranked one.")),
+    ("L3", "L2", "/mycelium:ost-builder",
+     ("{pid} (L2) targets {ref} and no L3 works it: open an L3 on {ref} (`parent: {pid}`) "
+      "with about three ideas for it, compared by testing their assumptions.")),
     ("L2", "L1", "/mycelium:ost-builder",
-     ("{pid} (L1) has a strategy, a North Star and a desired outcome, and no L2 is open: open "
-      "an L2 on the opportunity that serves the outcome best.")),
+     ("{pid} (L1) has set the outcome {ref} and no L2 maps it: open an L2 on it "
+      "(`object_ref: {ref}`), map its opportunities, and choose a target by comparing them.")),
     ("L1", "L0", "/mycelium:wardley-map",
      ("{pid} (L0) has its purpose stated and no L1 is open: open an L1 Strategy diamond on "
       "the first strategic decision, or record that none is open.")),
@@ -964,6 +977,65 @@ def _had_child(parent: dict, scale: str, diamonds: list[dict]) -> bool:
                     or (ref and str(d.get("object_ref") or "") == ref)) for d in diamonds)
 
 
+def _door_refs(state, scale: str, parent: dict) -> list[str]:
+    """What a door at `scale` would open ON under this parent, and is not yet worked (v0.301.0):
+    an L2 on each outcome with no live L2 mapping it; an L3 on the L2's target when no live L3
+    works it; an L1 once, when none is open."""
+    if scale == "L2":
+        mapped = {state.l2_outcome(d) for d in state.live("L2")}
+        ids = [str(r["id"]) for r in state.roots() if r.get("id")]
+        if not ids:  # one outcome with no id: one L2 maps it
+            return [] if state.live("L2") else ["the desired outcome"]
+        return [i for i in ids if i not in mapped]
+    if scale == "L3":
+        target = state.l2_target(parent)
+        return [target] if target and state.l3_works(parent) is None else []
+    return [] if state.live(scale) else [""]
+
+
+def _target_item(state, today: str, st: dict, l2: dict) -> dict | None:
+    """An L2 with no target (v0.301.0, DL-1367): the choice is the L2's decision (`set_target`),
+    by comparing sibling opportunities, never by a score (Torres p103-108)."""
+    pid = str(l2["id"])
+    iid = f"target-l2:{pid}"
+    if state.l2_target(l2) or _blocked(st.get(iid, {}), today):
+        return None
+    outcome = state.l2_outcome(l2) or "its outcome"
+    return {"id": iid, "diamond": pid, "since": today, "command": "/mycelium:ost-builder",
+            "text": (f"{pid} (L2) maps {outcome} and has no target: compare its opportunities "
+                     "(importance, how well served today, by judgment) and record the choice "
+                     "on the L2 as `target: {opportunity, chosen_on, compared, why}`. It can "
+                     "be re-chosen as the tests come in."),
+            "why": "an L3 opens on the L2's target, and choosing it is the L2's decision"}
+
+
+def _reshape_item(state, today: str, st: dict, d: dict) -> dict | None:
+    """A diamond in the old shape (DL-1367 R4): read through a translation until stage 5, and asked
+    once to record the new fields. Mycelium's own bookkeeping, so the agent's."""
+    did, scale = str(d["id"]), str(d.get("scale", "")).upper()
+    iid = f"reshape-{scale.lower()}:{did}"
+    if _blocked(st.get(iid, {}), today):
+        return None
+    if scale == "L2" and not d.get("target") and state.find_opportunity(d.get("object_ref")):
+        outcome = state.l2_outcome(d)
+        fields = (f"`object_ref: {outcome}` (the outcome it maps) and " if outcome else
+                  "`object_ref` naming the outcome it maps (its opportunity has no `rolls_up_to`) "
+                  "and ")
+        text = (f"{did} (L2) is in the old shape, on one opportunity. Record {fields}"
+                f"`target: {{opportunity: {state.l2_target(d)}, ...}}`; until then it is read "
+                "that way.")
+    elif scale == "L3" and not d.get("front_runner") and state.front_runner(d):
+        opp = state.find_opportunity(d.get("object_ref"))
+        text = (f"{did} (L3) is in the old shape, on one solution. Record `object_ref: "
+                f"{opp.get('id') if opp else 'its target opportunity'}` and `front_runner: "
+                f"{state.front_runner(d)}`; until then it is read that way.")
+    else:
+        return None
+    return {"id": iid, "diamond": did, "since": today, "owner": "agent",
+            "command": f"/mycelium:diamond-progress {did}", "text": text,
+            "why": "the old one-object shape is read through a translation until stage 5"}
+
+
 def _entry_door(root: Path, today: str, st: dict, active: list[dict],
                 past: list[dict] | tuple = ()) -> dict | None:
     """The L1, L2 and L3 doors (v0.255.0). Each scale's entrance was an offer inside one skill
@@ -975,8 +1047,13 @@ def _entry_door(root: Path, today: str, st: dict, active: list[dict],
     def live(scale: str) -> list[dict]:
         return [d for d in active if str(d.get("scale", "")).upper() == scale
                 and str(d.get("phase") or "discover").lower() not in _CLOSED]
+    state = sl.State(str(root))
+    for d in live("L2"):
+        item = _target_item(state, today, st, d)
+        if item:
+            return item
     for scale, parent_scale, command, text in _ENTRY_DOORS:
-        if live(scale):
+        if scale == "L1" and live(scale):
             continue
         # A parent that never had a child at this scale comes first (v0.283.0). E2E service run 9:
         # two L2s could open an L3; the first in file order was the one whose opportunity was
@@ -987,11 +1064,18 @@ def _entry_door(root: Path, today: str, st: dict, active: list[dict],
         for p in sorted(live(parent_scale), key=lambda x: _had_child(x, scale, history)):
             pid = str(p["id"])
             iid = f"door-{scale.lower()}:{pid}"
-            if _blocked(st.get(iid, {}), today) or sl.can_open(str(root), scale, parent=pid):
+            refs = _door_refs(state, scale, p)
+            if (not refs or _blocked(st.get(iid, {}), today)
+                    or sl.can_open(str(root), scale, parent=pid)):
                 continue
             return {"id": iid, "diamond": pid, "since": today, "command": command,
-                    "text": text.format(pid=pid),
-                    "why": f"the {scale} lock holds and nothing at {scale} is open"}
+                    "text": text.format(pid=pid, ref=refs[0]),
+                    "why": f"the {scale} lock holds and nothing works {refs[0] or scale} yet"}
+    # After the doors: a door that can open now outranks recording the new shape.
+    for d in live("L2") + live("L3"):
+        item = _reshape_item(state, today, st, d)
+        if item:
+            return item
     return None
 
 
