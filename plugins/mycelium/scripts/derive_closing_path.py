@@ -64,7 +64,7 @@ _RULING = re.compile(r"\b(ruling|founder|human|decide|decision)\b", re.IGNORECAS
 NOT_RECORDED = "not recorded"
 
 
-def _unrecorded_gates(d: dict) -> dict:
+def _unrecorded_gates(d: dict, ai: bool = True) -> dict:
     """Gates the matrix requires for this diamond's next transition that have no status at all
     (v0.278.0). E2E rung L4-define on 0.276.0: an L4 with an empty `theory_gates_status` printed
     "every gate reads pass; nothing to store", the builder read that as nothing to do, and the L4
@@ -75,7 +75,8 @@ def _unrecorded_gates(d: dict) -> dict:
         return {}
     have = d.get("theory_gates_status") or {}
     t = f"{phase}->{order[order.index(phase) + 1]}"
-    return {g: NOT_RECORDED for g in sl.transition_gates(str(d.get("scale") or "").upper(), t)
+    return {g: NOT_RECORDED for g in sl.transition_gates(str(d.get("scale") or "").upper(), t,
+                                                          ai=ai)
             if g not in have}
 
 
@@ -322,7 +323,7 @@ def derive(root: Path, did: str, today: str | None = None) -> dict | None:
     gates = {
         k: v for k, v in (d.get("theory_gates_status") or {}).items() if str(v).lower() != "pass"
     }
-    gates.update(_unrecorded_gates(d))
+    gates.update(_unrecorded_gates(d, ai=sl.ai_detected(str(root))))
     total, reviewed = _leaf_totals(opps)
     stale = [g for g in gates if g == "four_risks" and total and reviewed == total and not dod]
     today_s = today or _dt.datetime.now(tz=_dt.UTC).date().isoformat()

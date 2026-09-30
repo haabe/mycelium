@@ -180,3 +180,17 @@ def test_main_prints_the_advisory_and_logs_in_process(tmp_path, monkeypatch, cap
     monkeypatch.setattr("sys.stdin", io.StringIO(json.dumps(
         _payload_dict(tmp_path / ".claude/canvas/purpose.yml", "plain: 1\n"))))
     assert m.main() == 0 and capsys.readouterr().out == ""
+
+
+def test_a_key_that_is_an_id_is_a_map_key_not_a_smuggled_id():
+    """v0.292.0: the purpose stance is keyed by property id (`pp-016:`), as the schema says, and the
+    guard fired on every one of the 32 stances the 2026-09-30 re-derivation wrote."""
+    g = _mod()
+    assert g.findings("    pp-016:\n      verdict: preserves\n") == []
+    assert g.findings("  sol-082a:\n    note: x\n") == []
+
+
+def test_control_an_id_or_date_inside_a_field_name_still_fires():
+    g = _mod()
+    assert g.findings("  ht_010_status: done\n")
+    assert g.findings("  rederived_2026_09_30: x\n")

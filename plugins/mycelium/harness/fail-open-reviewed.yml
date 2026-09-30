@@ -921,3 +921,10 @@ reviewed:
     `prototype_paths` returns [] when the diamonds file cannot be read or parsed. With no prototype
     paths, nothing is exempt from the build gate, so the failure errs toward gating, never toward
     letting product code through. Reviewed 2026-09-30, v0.291.0.
+- id: scale_locks.py@ccab5654c4
+  verdict: accepted
+  reason: >-
+    `launch_moves` reads an unparseable side as no diamonds. For the file BEFORE the write, every L5 in
+    delivery or completion after it then counts as a move, which errs toward asking the person. For the
+    file AFTER the write, this code is never reached: `_run_hook` refuses an unparseable write in
+    `new_diamond_violations` before the launch approval runs. Reviewed 2026-09-30, v0.292.0.

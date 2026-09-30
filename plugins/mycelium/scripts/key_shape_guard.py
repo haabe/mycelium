@@ -50,7 +50,7 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from absence_claim_guard import _log, _payload_text
-from check_key_shape import DATE_IN_KEY, ENTITY_IN_KEY, stem_of
+from check_key_shape import carries_date_or_id, stem_of
 
 _WATCHED_PATH = re.compile(r"/\.claude/(canvas|diamonds)/")
 
@@ -145,7 +145,7 @@ def findings(text: str, spellings: dict[str, set[str]] | None = None) -> list[st
         if key in seen or _BARE_DATE.match(key):
             continue
         seen.add(key)
-        if DATE_IN_KEY.search(key) or ENTITY_IN_KEY.search(key):
+        if carries_date_or_id(key):
             plain = stem_of(key) or "<plain key>"
             out.append(f"`{key}:` carries a date or an entity id; the plain key is `{plain}`")
             continue

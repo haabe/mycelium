@@ -4,6 +4,40 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-30.
 
+## v0.292.0 - an L5 launch asks a person; the gate table carries XAI and L5's privacy and service quality
+
+**2026-09-30. Adds blocks.** Phase migration stage 0b-3a, on founder rulings DL-1364 and (f).
+
+- **The L5 human-approval floor is enforced for the first time.** It was a comment in
+  `confidence-thresholds.yml` (`NO_REDUCTION` on L5 develop->deliver and deliver->complete) that no
+  code read. A write that moves an L5 into deliver or complete, once it passes the scale lock, now asks
+  the person in the permission dialog, and is refused where nobody would be asked (bypassed
+  permissions; Codex, where an ask is an allow). No project type lowers it.
+  **Alternatives considered:** an `approved_by: human` field (rejected: the agent can write it); the
+  git author (rejected: the agent commits under the founder's name); a standing environment override
+  like the guard-state one (rejected: it would approve every future launch at once). **Consequence
+  accepted by the founder:** E2E L5 rungs, which run with permissions bypassed, stop at the launch and
+  record it as a finding; a simulated founder is not a human approval.
+- **The explainability (XAI) gate is in the table the phase gates read**, at L3 to L5 develop->deliver
+  and deliver->complete, and applies only when `.claude/jit-tooling/active-stack.yml` records
+  `ai_components.detected: true`. It was Gate 13 in theory-gates.md and in no table the code read, so a
+  table-driven migration would have dropped it silently. The closing path leaves it out for products
+  with no AI. **Alternative considered:** a separate AI-only matrix (rejected: two tables to keep in
+  step, the failure the drift check below exists for).
+- **L5 needs Privacy and Service Quality before it delivers** (founder ruling f): a sign-up form,
+  analytics or a campaign collects data from people who did not build it.
+- **The drift check compares the per-transition matrix** in theory-gates.md with the code's, both ways
+  (a missing row, a changed cell). It compared only per-scale copies before. In a partial tree it says
+  "not compared" rather than passing.
+- **An id used as a map key no longer trips the key-shape guard**: a purpose stance is keyed by
+  property id (`pp-016:`), and the guard fired on all 32 stances of the 2026-09-30 re-derivation. An id
+  or date inside a field name (`ht_010_status`) still fires, in the guard and the sweep alike.
+- **Known and left for stage 3:** the per-scale gate list a diamond is born with and the per-transition
+  matrix were never kept in step (L5's list also lacks `delivery_metrics`, which the matrix requires).
+  Reconciling them is part of re-keying the evidence gates to decisions.
+- Tests: launch approval (7: ask, refused when bypassed and on Codex, controls), gate-table additions
+  (6), matrix drift (3 plus cell parsing), key shape (2; the id-key test fails on 0.291.1).
+
 ## v0.291.1 - an override citing a recent decision is no longer read as dangling
 
 **2026-09-30.** The founder overrode a pp-016 contradiction and the override cited DL-1363, a decision
