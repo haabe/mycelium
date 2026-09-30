@@ -4,6 +4,32 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-30.
 
+## v0.298.0 - the gates are keyed to the decisions they guard
+
+**2026-09-30.** Phase migration stage 3b-1, founder ruling DL-1366 (a translation layer now; the
+decisions bind to the new L2 and L3 objects in stage 4). No gate changes for any move.
+
+- **Five decisions.** Every level runs a learning loop: set the target, start an experiment toward
+  it, commit to build what worked, release it, close the cycle. `scale_locks.DECISIONS` gives each
+  decision its gates, each where it guards: Cynefin to choosing the method (start experiment); Four
+  Risks, JTBD's solution design, Privacy by design and the regulatory classification to committing
+  to build; BVSSH and Delivery Metrics to closing; Evidence, Bias and Corrections to every decision.
+- **A phase move is a set of decisions** (`TRANSITION_DECISIONS`): discover -> define sets the
+  target; define -> develop starts an experiment and commits to build; develop -> deliver
+  releases; deliver -> complete closes. The per-transition table the phase gates read is now
+  derived from the decisions, and a test pins it to the 0.297.0 table cell by cell and in order.
+- **A move's history entry names its decisions** (`decisions: [start_experiment,
+  commit_to_build]`); the scale lock's message for a missing entry says which. /diamond-progress
+  and theory-gates.md describe the decisions.
+- **Alternatives considered** (DL-1366): swap stages 3b and 4, keying the gates straight onto
+  decisions about the new objects (the breaking object change comes sooner and the gates stay
+  phase-keyed through it); both in one release (breaks the one-change-per-stage practice, and a
+  regression could not be pinned to one cause). Also rejected here: one decision per phase move
+  (define -> develop would carry Cynefin's method choice and Four Risks' build commitment as one
+  decision, which is the conflation the ruling removes).
+- Tests: `test_decision_table.py`, 7 tests (the frozen 0.297.0 table; each move needs the union of
+  its decisions' gates, with and without AI components). The existing suite passes unchanged.
+
 ## v0.297.0 - the gates a diamond is born with agree with the gates its moves require
 
 **2026-09-30.** Phase migration stage 3a: reconcile the per-scale lists with the per-transition

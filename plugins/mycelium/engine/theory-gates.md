@@ -462,6 +462,24 @@ This gate is **operational** — it asks "have you actually run `/xai-check`?" a
 
 **Why NUDGE.** Same reason. **Evidence required**: the `team-shape.yml` block the assessment read. **Suggested skill**: `/team-shape`
 
+## The decisions the gates guard (v0.298.0)
+
+Every level runs a learning loop: **set the target**, **start an experiment** toward it, **commit to
+build** what worked, **release** it, **close** the cycle. Each gate belongs to the decision it guards:
+Cynefin to choosing the method (start experiment); Four Risks, JTBD's solution design, Privacy by
+design and the regulatory classification to committing to build; BVSSH and Delivery Metrics to
+closing; Evidence, Bias and Corrections to every decision. The safety gates are also read per
+exposure record (v0.294.0-v0.296.0). Until the phase is retired, each phase move makes a fixed set
+of these decisions, and the table below is derived from them (`scale_locks.DECISIONS`,
+`TRANSITION_DECISIONS`):
+
+| Phase move | Decisions it makes |
+|---|---|
+| Discover -> Define | set target |
+| Define -> Develop | start experiment, commit to build |
+| Develop -> Deliver | release |
+| Deliver -> Complete | close |
+
 ## Transition Matrix
 
 Summary of which gates apply to which transitions:

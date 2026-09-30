@@ -96,34 +96,65 @@ NOT_APPLICABLE = {"n/a", "not-applicable"}
 #: (0.248.0), so the three can never disagree about what a transition needs.
 PHASE_ORDER = ("discover", "define", "develop", "deliver", "complete")
 _ALL = ("L0", "L1", "L2", "L3", "L4", "L5")
-_MATRIX = {
-    "evidence": {"discover->define": _ALL, "define->develop": _ALL, "develop->deliver": _ALL,
-                 "deliver->complete": _ALL},
-    "four_risks": {"define->develop": ("L1", "L2", "L3", "L4"),
-                   "develop->deliver": ("L1", "L2", "L3", "L4")},
-    "jtbd": {"discover->define": ("L1", "L2", "L3"), "define->develop": ("L1", "L2", "L3")},
-    "cynefin": {"define->develop": _ALL},
-    "bias": {"discover->define": _ALL, "define->develop": _ALL, "develop->deliver": _ALL,
-             "deliver->complete": _ALL},
-    "security": {"develop->deliver": ("L3", "L4", "L5"), "deliver->complete": ("L3", "L4", "L5")},
+_L1_4, _L1_3 = ("L1", "L2", "L3", "L4"), ("L1", "L2", "L3")
+_L2_4, _L2_5 = ("L2", "L3", "L4"), ("L2", "L3", "L4", "L5")
+_L3_5 = ("L3", "L4", "L5")
+#: THE DECISIONS THE GATES GUARD (v0.298.0, phase migration stage 3b-1; founder ruling DL-1366).
+#: Every level runs a learning loop (Rother's kata): set the next target, start an experiment toward
+#: it, commit what worked to be built, release it, close the cycle. A gate belongs to the decision
+#: it guards (the inventory, `2026-09-30-phase-inventory.md`, cell by cell): Cynefin to choosing the
+#: method, Four Risks and the regulatory classification to committing to build, BVSSH to closing,
+#: Bias and Corrections to every decision. The safety gates also sit under the exposure records
+#: (stages 1-2); here they stay where the phase moves read them until the phase is retired.
+#: `_MATRIX` below is DERIVED from this table, and a test pins it to the 0.297.0 table cell by cell.
+DECISIONS: dict[str, dict[str, tuple[str, ...]]] = {
+    "set_target": {"evidence": _ALL, "jtbd": _L1_3, "bias": _ALL, "corrections": _ALL},
+    "start_experiment": {"evidence": _ALL, "cynefin": _ALL, "bias": _ALL, "corrections": _ALL},
+    "commit_to_build": {"four_risks": _L1_4, "jtbd": _L1_3, "bias": _ALL, "privacy": _L2_4,
+                        "corrections": _ALL, "regulatory": _L3_5},
     # L5 gains Privacy and Service Quality before it reaches people (founder ruling f, 2026-09-30):
     # a sign-up form, analytics or a campaign collects data from people who did not build it.
-    "privacy": {"define->develop": ("L2", "L3", "L4"),
-                "develop->deliver": ("L2", "L3", "L4", "L5")},
-    "bvssh": {"deliver->complete": _ALL},
-    "service_quality": {"develop->deliver": ("L2", "L3", "L4", "L5"),
-                        "deliver->complete": ("L2", "L3", "L4", "L5")},
-    # L3-L4 only (v0.297.0): the gate's own definition and the 0.235.0 correction ("a market
-    # diamond has no deploys of its own"); 0.248.0 copied a stale summary row that said L3-5.
-    "delivery_metrics": {"deliver->complete": ("L3", "L4")},
-    "corrections": {"discover->define": _ALL, "define->develop": _ALL, "develop->deliver": _ALL,
-                    "deliver->complete": _ALL},
-    "regulatory": {"define->develop": ("L3", "L4", "L5"), "develop->deliver": ("L3", "L4", "L5")},
-    # XAI, only when the product has AI components (`_AI_ONLY`; v0.292.0). It was in theory-gates.md
-    # as Gate 13 and in no table the code read, so a table-driven migration would drop it silently.
-    "explainability": {"develop->deliver": ("L3", "L4", "L5"),
-                       "deliver->complete": ("L3", "L4", "L5")},
+    "release": {"evidence": _ALL, "four_risks": _L1_4, "bias": _ALL, "security": _L3_5,
+                "privacy": _L2_5, "service_quality": _L2_5, "corrections": _ALL,
+                "regulatory": _L3_5, "explainability": _L3_5},
+    # Delivery Metrics at L3-L4 only (v0.297.0): the gate's own definition and the 0.235.0
+    # correction ("a market diamond has no deploys of its own"). Security and Service Quality at
+    # close are the record after exposure (founder ruling b), not its gate.
+    "close": {"evidence": _ALL, "bias": _ALL, "security": _L3_5, "bvssh": _ALL,
+              "service_quality": _L2_5, "delivery_metrics": ("L3", "L4"), "corrections": _ALL,
+              "explainability": _L3_5},
 }
+#: Which decisions each phase move makes, until the phase is retired (stage 5). A move needs the
+#: gates of every decision it makes, and its `progression_history` entry names them.
+TRANSITION_DECISIONS: dict[str, tuple[str, ...]] = {
+    "discover->define": ("set_target",),
+    "define->develop": ("start_experiment", "commit_to_build"),
+    "develop->deliver": ("release",),
+    "deliver->complete": ("close",),
+}
+#: The order gates are reported in (the order of theory-gates.md's summary table).
+_GATE_ORDER = ("evidence", "four_risks", "jtbd", "cynefin", "bias", "security", "privacy",
+               "bvssh", "service_quality", "delivery_metrics", "corrections", "regulatory",
+               "explainability")
+
+
+def _derive_matrix() -> dict[str, dict[str, tuple[str, ...]]]:
+    """gate -> {transition: scales}, the union over the decisions each transition makes."""
+    out: dict[str, dict[str, tuple[str, ...]]] = {}
+    for g in _GATE_ORDER:
+        rows = {}
+        for t, decisions in TRANSITION_DECISIONS.items():
+            scales = {s for dec in decisions for s in DECISIONS[dec].get(g, ())}
+            if scales:
+                rows[t] = tuple(s for s in _ALL if s in scales)
+        if rows:
+            out[g] = rows
+    return out
+
+
+#: THE PER-TRANSITION TABLE (v0.248.0; derived from DECISIONS since v0.298.0). One table serves
+#: the code and exposure checks and the phase-move check, so they can never disagree.
+_MATRIX = _derive_matrix()
 #: Gates that apply only when the product has AI components (`ai_components.detected` in
 #: `.claude/jit-tooling/active-stack.yml`, written by /mycelium:delivery-bootstrap).
 _AI_ONLY = frozenset({"explainability"})
@@ -139,6 +170,19 @@ def transition_gates(scale: str, transition: str, *, ai: bool = True) -> tuple[s
     `ai=False` the AI-only gates are left out (a product with no AI components)."""
     return tuple(g for g, rows in _MATRIX.items() if scale in rows.get(transition, ())
                  and (ai or g not in _AI_ONLY))
+
+
+def decision_gates(scale: str, decision: str, *, ai: bool = True) -> tuple[str, ...]:
+    """The gates one decision needs at one scale, in report order (v0.298.0)."""
+    rows = DECISIONS[decision]
+    return tuple(g for g in _GATE_ORDER if scale in rows.get(g, ())
+                 and (ai or g not in _AI_ONLY))
+
+
+def transition_decisions(transition: str) -> tuple[str, ...]:
+    """The decisions a phase move makes (v0.298.0), e.g. define->develop starts an experiment and
+    commits to build."""
+    return TRANSITION_DECISIONS.get(transition, ())
 
 
 def ai_detected(project_dir: str) -> bool:
@@ -925,8 +969,10 @@ class State:
             if why:
                 miss.append(f"{t}: {why}")
             if not _history_has(d, t):
+                made = ", ".join(transition_decisions(t))
                 miss.append(f"{t}: a `progression_history` entry for it (`transition: "
-                            f"\"{t.replace('->', ' -> ')}\"`, with the date and the ruling)")
+                            f"\"{t.replace('->', ' -> ')}\"`, with the date and the ruling, and "
+                            f"`decisions: [{made}]`)")
         return miss
 
     def _l3_transition_missing(self, d: dict, t: str) -> str | None:
