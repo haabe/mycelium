@@ -4,6 +4,38 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-30.
 
+## v0.301.0 - an L2 opens on an outcome and an L3 on its L2's target
+
+**2026-09-30.** Phase migration stage 4b, founder ruling DL-1367 and ruling C (2026-09-30). No
+level has a catalogue door any more.
+
+- **The L2 door opens on an outcome** its L1 has set and no live L2 maps, one per outcome; **the
+  L3 door on the target** its L2 has chosen and no open L3 works, one per target. Until now each
+  opened on a record from a pile (the opportunity that served the outcome best; the highest-ranked
+  leaf), and only while nothing at its scale was open. `/ost-builder` holds both doors;
+  `/ice-score` compares the ideas inside an L3 as hints and opens nothing.
+- **An L2 with no target is asked to choose one** (`target-l2:`, the founder's item): compare the
+  opportunities by judgment and record `target: {opportunity, chosen_on, compared, why}` (Torres
+  p103-108). It wakes on work like a door.
+- **An L3 stops on its front runner failing, or on none of its ideas working** (`State.l3_failed`),
+  never on one sibling failing: that is the comparison working (Torres p139). The pivot item says
+  which, and "none works" sends the learning back to the L2's map and a new target.
+- **A diamond in the old shape is asked to record the new fields** (`reshape-l2:`, `reshape-l3:`,
+  the agent's), after any door that can open now. It is read through the translation meanwhile.
+- /preflight names the L4's `object_ref` as the L3's front runner; /fan-out's bakeoff winner is the
+  candidate front runner; diamond-rules, the discovery gate, preflight.sh and the scale-lock gate
+  say the same.
+- **Tests that pinned the old model now state the ruling:** no scale has a catalogue door, the L3
+  door is in /ost-builder, /ice-score is never a door. The untried-door tests passed only because
+  they ran against the upstream repo's own canvas, which happens to hold `opp-001` and `opp-002`;
+  they build their own project now and pass from any directory.
+- **Alternatives considered:** keep /ice-score as the L3 door, opening on the L2's target (the
+  skill would open a cycle on a target it does not choose, and the target choice sits with the
+  map in /ost-builder); one door item per outcome with its own id (a snooze of `door-l2:<l1>`
+  would no longer silence the L1's doors, which the ledger's wake-on-work already bounds); offer
+  the reshape before the doors (it preempted an L3 door that could open now, in the ladder test).
+- Tests: `test_stage4b_doors.py`, 7 tests, all failing on 0.300.0; suite 2407.
+
 ## v0.300.0 - an L2 targets, an L3 commits a front runner, and the L4 reads what it delivers
 
 **2026-09-30.** Phase migration stage 4a, founder rulings DL-1367 (R1 the target on the L2, R4 the

@@ -690,6 +690,29 @@ class State:
                     return str(a.get("statement") or a.get("id") or "an assumption")[:80]
         return None
 
+    def l3_failed(self, d: dict) -> str | None:
+        """WHAT STOPS AN L3 AS IT STANDS (v0.301.0, DL-1367): its front runner's failed assumption,
+        or, with none named, every idea in its set failed ("none works"). One idea failing among
+        several is the comparison working (Torres p139), not a stop; until 0.300.0 any failure in
+        the set stopped the whole L3."""
+        fr = self.front_runner(d)
+        sols = self.build_solutions(d)
+        if fr:
+            return self.failed_assumption(d, [s for s in sols if str(s.get("id", "")) == fr])
+        failed = [self.failed_assumption(d, [s]) for s in sols]
+        return failed[0] if failed and all(failed) else None
+
+    def l3_works(self, l2: dict) -> dict | None:
+        """The open L3 working this L2's current target (v0.301.0): by `parent`, or by naming the
+        target as its `object_ref`. A completed L3 works nothing any more."""
+        target, pid = self.l2_target(l2), str(l2.get("id"))
+        for d in [x for x in self.by_id.values() if _scale(x) == "L3" and self.is_open(x)]:
+            if str(d.get("parent") or d.get("parent_id") or "") == pid:
+                return d
+            if target and _ref_key(d.get("object_ref")) == target:
+                return d
+        return None
+
     def test_design_missing(self, d: dict) -> str | None:
         """Before an L3 builds, the lightest test that answers its riskiest assumption is named
         (v0.253.0). E2E runs 19 to 23 each went straight to a real pilot (a server, an SMS

@@ -113,8 +113,9 @@ stage 2 of the phase migration moves the release gate onto these records.
 A passing preflight means **an increment is ready to build, which is L4's event**. L4 recurs per
 increment, not on a pile, so it has no catalogue door; **this offer is its entrance**
 (`engine/leaf-lifecycle.md` Phase 8: "Delivery diamond spawned (L3 spawns L4)"). If no L4 diamond is
-open on this increment, ask whether to open an L4 Delivery diamond on it (`object_ref`: the solution
-id and the increment, e.g. "sol-003, swap request + single approval"), or record in one line why not:
+open on this increment, ask whether to open an L4 Delivery diamond on it (`object_ref`: the L3's
+front runner and the increment, e.g. "sol-003, swap request + single approval"; since v0.300.0 the L4 lock
+reads that solution's verdicts alone), or record in one line why not:
 "increment not opened". **Every product has some kind of delivery**, and its shape follows the
 product type: tested code for software, reviewed and accessible content, passing evals for an AI
 tool, a documented and repeatable step for a service. Offer it only when the L4 entry lock holds

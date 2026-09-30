@@ -60,7 +60,8 @@ def test_l1_and_l4_offers_are_where_their_events_happen():
 
 
 #: The door for each scale above L0, and the lock call it must make before offering (v0.245.0).
-DOORS = {"L1": "wardley-map", "L2": "ost-builder", "L3": "ice-score", "L4": "preflight",
+#: L3 moved from ice-score to ost-builder in v0.301.0: an L3 opens on its L2's target (DL-1367).
+DOORS = {"L1": "wardley-map", "L2": "ost-builder", "L3": "ost-builder", "L4": "preflight",
          "L5": "launch-tier"}
 
 

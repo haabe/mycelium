@@ -29,8 +29,10 @@ RULES = (Path(__file__).resolve().parents[2]
 
 SCALES = ("L0", "L1", "L2", "L3", "L4", "L5")
 
-#: Scales whose recurrence is a PILE, and which may therefore carry a catalogue door.
-PILE_SCALES = {"L2", "L3"}
+#: Scales whose recurrence is a PILE, and which may therefore carry a catalogue door. Empty since
+#: v0.301.0 (DL-1367; ruling C): L2 recurs on its L1's outcomes and L3 on its L2's targets, both
+#: parent decisions; from v0.217.0 to v0.300.0 both were drawn from a pile of records.
+PILE_SCALES: set[str] = set()
 
 
 def _recurrence_table() -> dict[str, str]:
@@ -68,11 +70,11 @@ def test_the_doors_match_the_pile_scales():
     """THE LOAD-BEARING ASSERTION. The catalogue sentence names the scales with doors;
     they must be exactly the scales whose recurrence is a pile."""
     text = RULES.read_text(encoding="utf-8")
-    m = re.search(r"A cycle is opened by a spawn from the parent \(below\) OR from the "
-                  r"catalogue:(.+?)\n", text, re.DOTALL)
-    assert m, "could not find the catalogue sentence in diamond-rules.md"
-    sentence = m.group(1)
-    with_doors = {s for s in SCALES if re.search(rf"\b(an )?{s}\b", sentence)}
+    assert "OR from the catalogue" not in text, "a catalogue door is declared again"
+    m = re.search(r"A cycle is opened by a spawn from the parent \(below\), never from a "
+                  r"catalogue", text)
+    assert m, "could not find the no-catalogue sentence in diamond-rules.md"
+    with_doors: set[str] = set()
     assert with_doors == PILE_SCALES, (
         f"catalogue doors are declared for {sorted(with_doors)} but the pile-shaped "
         f"scales are {sorted(PILE_SCALES)}. A door needs a pile to open on: if a scale "

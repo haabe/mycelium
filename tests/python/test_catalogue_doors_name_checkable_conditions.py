@@ -102,13 +102,16 @@ def test_the_l3_door_no_longer_names_the_phantom_state():
 
 
 def test_both_doors_state_the_decline_form():
-    """The L2 door's shape includes recording a NO in one line. The L3 door now matches:
-    an offer with no way to decline on the record is an offer that gets silently skipped."""
-    assert "stays a record" in OST.read_text(encoding="utf-8")
-    assert "stays a record" in ICE.read_text(encoding="utf-8")
+    """Each door's shape includes recording a NO in one line: an offer with no way to decline on
+    the record is an offer that gets silently skipped. Since v0.301.0 (DL-1367, ruling C) both
+    doors are in /ost-builder (an L2 on an outcome, an L3 on the L2's target), and /ice-score is a
+    comparison inside an L3, never a door."""
+    ost = OST.read_text(encoding="utf-8")
+    assert ost.count("stays a record") >= 2, "the L2 and the L3 door each record a NO"
+    assert "never a door" in ICE.read_text(encoding="utf-8")
 
 
-@pytest.mark.parametrize("path", [ICE, OST], ids=lambda p: p.name)
+@pytest.mark.parametrize("path", [OST], ids=lambda p: p.name)
 def test_both_doors_ask_the_lock_and_not_the_parents_phase(path):
     """TWO REGRESSIONS, in opposite directions, and this pins the line between them.
 

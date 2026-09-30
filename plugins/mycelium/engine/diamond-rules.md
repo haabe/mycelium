@@ -48,17 +48,12 @@ The shape is uniform; the trigger is not, and the trigger is what decides whethe
 |---|---|---|---|
 | L0 | a WHY (once), and Just Causes (plural) | drift | founding; there is one purpose |
 | L1 | triggers | **a decision** | an event offer when a strategic decision arises: `/wardley-map` after gameplay, or `/diamond-progress` when an L0 enters define (v0.243.0) |
-| L2 | a validated or killed opportunity | **continuously** | parent spawn **or the catalogue** |
-| L3 | a build-or-kill verdict | **per candidate** | parent spawn **or the catalogue** |
+| L2 | a map of the opportunities under one outcome, and a target re-chosen as it learns | **an outcome** set by its L1 | the L1→L2 spawn: `/ost-builder` offers an L2 on an outcome no L2 maps (v0.301.0) |
+| L3 | a front runner, or "none works" | **a target** chosen by its L2 | the L2→L3 spawn: `/ost-builder` offers an L3 on a target no L3 works (v0.301.0) |
 | L4 | an increment; a closed session | **per increment** | an event offer when an increment is ready to build: `/preflight` passing on a solution (v0.243.0) |
 | L5 | a launch | **a release categorised as a major launch** | the L4→L5 spawn (v0.232.0) |
 
-**THE RULE THAT FALLS OUT OF IT: a catalogue door is possible only where a level recurs on a PILE.**
-L2 recurs continuously and L3 per candidate — both are drawn from an enumerable set of project
-records, so `/ost-builder` and `/ice-score` can offer the door. L1, L4 and L5 recur on **events** —
-a decision, an increment, a categorisation. An event has no queue to select from, so there is
-nothing for a door to open ON, and building one would mean inventing a record type the level does
-not produce.
+**NO LEVEL RECURS ON A PILE, SO NONE HAS A CATALOGUE DOOR (v0.301.0, DL-1367; ruling C).** L1, L4 and L5 recur on events (a decision, an increment, a categorisation). L2 and L3 recur on their parent's decisions: an L2 on each outcome its L1 sets, an L3 on each target its L2 chooses. From v0.217.0 to v0.300.0 both were drawn from a pile of records (an L2 per scored opportunity, an L3 per top-ranked leaf), which ruling C reversed: the opportunities are one map under the outcome, and the solutions one set under the target.
 
 **BUT EVERY SCALE MUST BE ENTERABLE, AND THAT IS THE HIGHER RULE (v0.243.0).** The founder's
 principle, stated when this page was found to leave L1 and L4 unreachable: *"If there's no way to
@@ -104,7 +99,7 @@ the books, three adversarial rounds and founder correction.*
 
 ## Spawning Rules
 
-**A record and a cycle are different objects (v0.217.0).** An opportunity in `opportunities.yml` is a record; an L2 diamond is a cycle of work on it. Scoring, evidence and a resolving `rolls_up_to` make a good record and open nothing. A cycle is opened by a spawn from the parent (below) OR from the catalogue: `/ost-builder` offers an L2 on a scored, evidence-backed opportunity and `/ice-score` offers an L3 on the highest-ranked scored leaf. Both doors open only when the scale's entry lock holds.
+**A record and a cycle are different objects (v0.217.0).** An opportunity in `opportunities.yml` is a record; an L2 diamond is a cycle of work on it. Scoring, evidence and a resolving `rolls_up_to` make a good record and open nothing. A cycle is opened by a spawn from the parent (below), never from a catalogue (v0.301.0): `/ost-builder` offers an L2 on an outcome its L1 has set and an L3 on the target its L2 has chosen. Both doors open only when the scale's entry lock holds.
 
 ### Entry locks: each scale opens on what its parent has established (v0.245.0)
 
@@ -150,8 +145,8 @@ the books, three adversarial rounds and founder correction.*
 Diamonds spawn child diamonds, each through its lock above:
 
 - L0 spawns L1 when purpose is stated and a strategic question arises (the event offer: `/wardley-map`, `/diamond-progress`)
-- L1 spawns L2 when the desired outcome is set and opportunities need exploration (`/ost-builder`)
-- L2 spawns L3 when a target opportunity has evidence for solution design (`/ice-score`)
+- L1 spawns L2 when it sets a desired outcome that no L2 maps (`/ost-builder`, v0.301.0)
+- L2 spawns L3 when it chooses a target that no L3 works, with evidence behind it (`/ost-builder`, v0.301.0)
 - **Each of these three is also proposed as the next item** (v0.255.0) once its lock holds and nothing at that scale is open (`door-l1:<l0>`, `door-l2:<l1>`, `door-l3:<l2>`). The skill offers above fire only when the agent runs that skill; the next item fires on the state. A door counts as wired only when a test asserts it is proposed in the state where it can open, and not before or after (`tests/python/test_ladder_walkthrough_l0_to_l5.py`).
 - L3 spawns L4 when an increment is ready to build and the L3 is at medium confidence (the event offer: `/preflight`; since v0.254.0 the next item proposes it as soon as the L4 lock holds, because under test-first the L3 enters develop before its test raises the evidence). Since v0.257.0 that evidence comes from the L3's own learning delivery, which the next item proposes first
 - L4 can spawn sub-L4 diamonds for complex features requiring their own discovery

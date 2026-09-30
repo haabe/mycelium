@@ -8,6 +8,8 @@ import importlib.util
 import sys
 from pathlib import Path
 
+import yaml
+
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = ROOT / "plugins" / "mycelium" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
@@ -25,23 +27,38 @@ DONE_L3 = {"id": "l3-pilot", "scale": "L3", "phase": "complete", "parent": "l2-c
            "object_ref": "opp-001"}
 
 
-def _door(monkeypatch, past):
+def _root(tmp_path: Path, past=()) -> Path:
+    """The project the doors read (v0.301.0: an L3 door opens on its L2's target, read from the
+    canvas). Until then these tests passed `Path(".")` and leaned on whatever canvas sat in the
+    working directory: they passed in the upstream repo, whose canvas has opp-001 and opp-002,
+    and failed from anywhere else."""
+    (tmp_path / ".claude" / "canvas").mkdir(parents=True)
+    (tmp_path / ".claude" / "diamonds").mkdir(parents=True)
+    (tmp_path / ".claude" / "canvas" / "opportunities.yml").write_text(
+        "opportunities:\n- id: opp-001\n  status: open\n- id: opp-002\n  status: open\n")
+    (tmp_path / ".claude" / "diamonds" / "active.yml").write_text(yaml.safe_dump(
+        {"active_diamonds": [L1, SERVED, UNTRIED], "completed_diamonds": list(past)}))
+    return tmp_path
+
+
+def _door(monkeypatch, tmp_path, past):
     monkeypatch.setattr(ni.sl, "can_open", lambda *a, **k: [])  # every lock holds
-    return ni._entry_door(Path("."), TODAY, {}, [L1, SERVED, UNTRIED], past)
+    return ni._entry_door(_root(tmp_path, past), TODAY, {}, [L1, SERVED, UNTRIED], past)
 
 
-def test_the_untried_l2_is_offered_first(monkeypatch):
-    item = _door(monkeypatch, [DONE_L3])
+def test_the_untried_l2_is_offered_first(monkeypatch, tmp_path):
+    item = _door(monkeypatch, tmp_path, [DONE_L3])
     assert item["id"] == "door-l3:l2-members", item["id"]
 
 
-def test_control_with_no_history_file_order_holds(monkeypatch):
-    item = _door(monkeypatch, [])
+def test_control_with_no_history_file_order_holds(monkeypatch, tmp_path):
+    item = _door(monkeypatch, tmp_path, [])
     assert item["id"] == "door-l3:l2-clients", "no history: nothing to prefer, file order"
 
 
-def test_the_served_door_still_comes_once_the_untried_one_is_ruled_away(monkeypatch):
+def test_the_served_door_still_comes_once_the_untried_one_is_ruled_away(monkeypatch, tmp_path):
     monkeypatch.setattr(ni.sl, "can_open", lambda *a, **k: [])
     st = {"door-l3:l2-members": {"ruling": "drop"}}
-    item = ni._entry_door(Path("."), TODAY, st, [L1, SERVED, UNTRIED], [DONE_L3])
+    item = ni._entry_door(_root(tmp_path, [DONE_L3]), TODAY, st, [L1, SERVED, UNTRIED],
+                          [DONE_L3])
     assert item["id"] == "door-l3:l2-clients", "the served L2 is not hidden, only second"

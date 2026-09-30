@@ -170,7 +170,7 @@ elif [ "$_PF_LOOKS_ENGAGED" -eq 1 ] && [ ! -f "$PROJECT_DIR/.claude/state/delive
   # chain holds is open (scripts/scale_locks.py). Said once per prompt, cheaply, so the agent builds
   # the chain before drafting code rather than after a refusal. A grep, like the check above: fooled
   # means silence, and the gate parses strictly.
-  echo "MYCELIUM DELIVERY STATE: no diamond that delivers (L3, L4 or L5) is open. If this prompt asks you to build or change code, the chain comes first, because each scale opens on its parent: a desired outcome (/mycelium:ost-builder), a target opportunity with evidence, then an L3 whose object_ref names it. The discovery gate refuses new source files until then; scripts/scale_locks.py --can-open L3 says what is missing. If the prompt is not a build request, ignore this line and answer it."
+  echo "MYCELIUM DELIVERY STATE: no diamond that delivers (L3, L4 or L5) is open. If this prompt asks you to build or change code, the chain comes first, because each scale opens on its parent: a desired outcome (/mycelium:ost-builder), an L2 on that outcome with a target opportunity that has evidence, then an L3 on that target. The discovery gate refuses new source files until then; scripts/scale_locks.py --can-open L3 says what is missing. If the prompt is not a build request, ignore this line and answer it."
 fi
 # The scale locks read YAML. Without PyYAML they cannot be checked (v0.290.0: the build and release
 # gates then REFUSE, with the fix; the scale-lock gate on the diamonds file still allows, and this

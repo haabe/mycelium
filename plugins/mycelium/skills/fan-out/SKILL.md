@@ -49,5 +49,6 @@ See `${CLAUDE_PLUGIN_ROOT}/orchestration/leaf-bakeoff.md` for the complete bakeo
 - Lead agent ALWAYS runs bias check on combined results
 - Minimum 2 workers for meaningful comparison
 - Maximum 3 leaves per bakeoff (respects L3 WIP ceiling)
+- Inside an L3 (v0.301.0), the leaves are its set under the L2's target, and a clear winner is the candidate for its `front_runner`; recording it is the human's choice
 
 See `${CLAUDE_PLUGIN_ROOT}/orchestration/agent-teams.md` for full orchestration patterns.
