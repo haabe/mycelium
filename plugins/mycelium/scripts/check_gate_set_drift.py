@@ -189,7 +189,8 @@ def main(argv=None) -> int:
 
     required = machinery(root)
     found, undeclared = scan(root)
-    return _report(found, undeclared, required, matrix_drift(root))
+    drift = matrix_drift(root) + born_drift(root, required)
+    return _report(found, undeclared, required, drift)
 
 
 def _print_illustrative(found: Findings) -> None:
@@ -288,6 +289,38 @@ def matrix_drift(root: Path) -> list[str]:
             continue
         out.extend(f"    `{g}` at {t}: code {sorted(want[t])}, theory-gates.md {sorted(have[t])}"
                    for t in _COLUMNS if want[t] != have[t])
+    return out
+
+
+#: Gates a diamond is born with that no transition requires: the NUDGE gates (theory-gates.md,
+#: gates 14 and 15), carried so their outcome has somewhere to be written.
+NUDGE_GATES = frozenset({"landscape", "capacity"})
+
+
+def born_drift(root: Path, required: dict[str, set[str]]) -> list[str]:
+    """THE LIST A DIAMOND IS BORN WITH, compared with the per-transition matrix (v0.297.0). The
+    copies were compared with confidence-thresholds.yml and the matrix with theory-gates.md, and
+    nothing compared the two sources: an L5 was born without the Privacy and Service Quality its
+    own moves require (ruling f, v0.292.0), and the matrix required Delivery Metrics at L5 after
+    0.235.0 had removed it from the list. A gate a transition requires is on its scale's list
+    (explainability aside: it applies only with AI components); a gate on the list is required
+    at some transition of that scale, or is a NUDGE gate."""
+    sl_py = root / "plugins" / "mycelium" / "scripts" / "scale_locks.py"
+    if not sl_py.exists():
+        MATRIX_NOT_COMPARED.append("scale_locks.py is absent in this tree (born lists)")
+        return []
+    sys.path.insert(0, str(sl_py.parent))
+    import scale_locks  # noqa: PLC0415 - the table the phase gates read
+    out = []
+    for scale, born in sorted(required.items()):
+        need = {g for t in _COLUMNS for g in scale_locks.transition_gates(scale, t, ai=False)}
+        missing, extra = need - born, born - need - NUDGE_GATES
+        if missing:
+            out.append(f"    confidence-thresholds.yml [{scale}] is born without "
+                       f"{sorted(missing)}, which a {scale} transition requires")
+        if extra:
+            out.append(f"    confidence-thresholds.yml [{scale}] is born with {sorted(extra)}, "
+                       f"which no {scale} transition requires and which is not a NUDGE gate")
     return out
 
 

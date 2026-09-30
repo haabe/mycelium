@@ -4,6 +4,32 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-30.
 
+## v0.297.0 - the gates a diamond is born with agree with the gates its moves require
+
+**2026-09-30.** Phase migration stage 3a: reconcile the per-scale lists with the per-transition
+table before the evidence gates are re-keyed to decisions (3b).
+
+- **An L5 is born with Privacy and Service Quality.** Its moves have required both since 0.292.0
+  (founder ruling f), but the list a diamond is initialised from (`confidence-thresholds.yml`, the
+  theory-gates.md Quick Reference, the /interview table) still had seven gates, so a new L5 had no
+  entry for either and was refused on a gate it could not see.
+- **Delivery Metrics is not an L5 gate.** The gate's own definition says Deliver->Complete, L3-L4,
+  and 0.235.0 removed it from the L5 list ("a market diamond has no deploys of its own"); the
+  summary row and the L5 table still said L3-5, and 0.248.0 built the machine table from them, so an
+  L5 could not close without delivery metrics it has no deploys to produce. This removes one
+  evidence gate at one cell; no safety gate changes.
+- **`check_gate_set_drift.py` compares every born list with the per-transition table**: a gate a
+  transition requires must be on its scale's list (explainability aside, which applies only with
+  AI components), and a gate on the list must be required at some transition of that scale or be a
+  NUDGE gate (Landscape, Capacity). Until now the copies were compared with the list and the table
+  with theory-gates.md, and nothing compared the two sources. Run against 0.296.0 it fails on L5.
+- **Alternatives considered:** keep Delivery Metrics at L5 and add it to the list (contradicts the
+  gate's definition and the recorded 0.235.0 correction; the table's L3-5 was copied, never
+  decided); fix the L5 list alone without the check (the drift would recur with the next gate, as
+  it has four times since v0.240.0); fold this into 3b (it is a correctness fix that 3b depends on,
+  and smaller alone).
+- Tests: `test_born_gate_lists.py`, 5 tests.
+
 ## v0.296.0 - an L3's learning delivery can be its exposure record
 
 **2026-09-30.** Phase migration stage 2b. Not breaking: a diamond that records `learning_delivery`

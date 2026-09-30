@@ -253,7 +253,9 @@ scales:
       - cynefin
       - bias
       - security              # scoped to what the product holds and does (theory-gates.md, v0.271.0)
+      - privacy               # ruling f, 2026-09-30 (v0.292.0 in the matrix, v0.297.0 here)
       - bvssh
+      - service_quality       # ruling f, as privacy
       # delivery_metrics REMOVED in 0.235.0 with the L5 Task->Market correction. Deployment
       # frequency, lead time and change failure rate are questions about how a team delivers, and
       # they are asked at L4, where this gate remains. A market diamond has no deploys of its own.

@@ -113,7 +113,9 @@ _MATRIX = {
     "bvssh": {"deliver->complete": _ALL},
     "service_quality": {"develop->deliver": ("L2", "L3", "L4", "L5"),
                         "deliver->complete": ("L2", "L3", "L4", "L5")},
-    "delivery_metrics": {"deliver->complete": ("L3", "L4", "L5")},
+    # L3-L4 only (v0.297.0): the gate's own definition and the 0.235.0 correction ("a market
+    # diamond has no deploys of its own"); 0.248.0 copied a stale summary row that said L3-5.
+    "delivery_metrics": {"deliver->complete": ("L3", "L4")},
     "corrections": {"discover->define": _ALL, "define->develop": _ALL, "develop->deliver": _ALL,
                     "deliver->complete": _ALL},
     "regulatory": {"define->develop": ("L3", "L4", "L5"), "develop->deliver": ("L3", "L4", "L5")},

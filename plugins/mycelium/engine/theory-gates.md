@@ -477,7 +477,7 @@ Summary of which gates apply to which transitions:
 | Privacy | -- | Required (L2-4) | Required (L2-5) | -- |
 | BVSSH | -- | -- | -- | Required |
 | Service Quality | -- | -- | Required (L2-5) | Required (L2-5) |
-| Delivery Metrics | -- | -- | -- | Required (L3-5) |
+| Delivery Metrics | -- | -- | -- | Required (L3-4) |
 | Corrections | Required | Required | Required | Required |
 | Regulatory | -- | Required (L3-5) | Required (L3-5) | -- |
 | XAI | -- | -- | Required (L3-5, when AI detected) | Required (L3-5, when AI detected) |
@@ -627,18 +627,20 @@ Use this matrix to determine exactly which gates to evaluate for a given scale a
 | Privacy | -- | -- | R | -- |
 | BVSSH | -- | -- | -- | R |
 | Service Quality | -- | -- | R | R |
-| Delivery Metrics | -- | -- | -- | R |
+| Delivery Metrics | -- | -- | -- | -- |
 | Corrections | R | R | R | R |
 | Regulatory | -- | R | R | -- |
 | XAI (when AI detected) | -- | -- | R | R |
 
-**Applicable gates**: Evidence, Cynefin, Bias, Security, BVSSH, Corrections, Regulatory (7 gates)
+**Applicable gates**: Evidence, Cynefin, Bias, Security, Privacy, BVSSH, Service Quality, Corrections, Regulatory (9 gates)
 
 **Since v0.292.0** Privacy and Service Quality are required before an L5 delivers (founder ruling f,
 2026-09-30: a sign-up form, analytics or a campaign collects data from people who did not build it),
-and the explainability gate when the product records AI components. The phase gates read the
-per-transition matrix above; the per-scale list a diamond is born with is reconciled with it in the
-migration's stage 3.
+and the explainability gate when the product records AI components. **Since v0.297.0** the list an
+L5 is born with carries them (explainability only with AI components), and Delivery Metrics is not
+an L5 gate: the gate's own definition says L3-L4 and 0.235.0 removed it ("a market diamond has no
+deploys of its own"), while this table and the summary still said R until then.
+`check_gate_set_drift.py` now compares every born list with the per-transition matrix.
 
 **Trio guidance for L5**:
 - **Product**: Is the positioning aligned with validated user needs? Does the GTM motion match the buyer journey? (Strong)
@@ -669,4 +671,4 @@ migration's stage 3.
 | L2 | 9 | Evidence, Four Risks, JTBD, Cynefin, Bias, Privacy, BVSSH, Service Quality, Corrections |
 | L3 | 12 | Evidence, Four Risks, JTBD, Cynefin, Bias, Security, Privacy, BVSSH, Service Quality, Delivery Metrics, Corrections, Regulatory |
 | L4 | 11 | Evidence, Four Risks, Cynefin, Bias, Security, Privacy, BVSSH, Service Quality, Delivery Metrics, Corrections, Regulatory |
-| L5 | 7 | Evidence, Cynefin, Bias, Security, BVSSH, Corrections, Regulatory |
+| L5 | 9 | Evidence, Cynefin, Bias, Security, Privacy, BVSSH, Service Quality, Corrections, Regulatory |
