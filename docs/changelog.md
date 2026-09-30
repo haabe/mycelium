@@ -4,6 +4,34 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-30.
 
+## v0.289.0 - the safety net pinned before the phase migration
+
+**2026-09-30.** The founder ruled to replace the four-phase diamond at every level with a learning
+loop, and to re-key every phase-keyed rule: safety rules to exposure, evidence gates to the decision
+they guard (dogfood decision log 2026-09-30; design page `evals/design/2026-09-30-what-each-level-is.md`).
+Every merge is a live release, so the migration runs in stages, and this one adds no blocks.
+
+- **E2E run 10, replayed on every release** (`tests/python/test_run10_replay.py`, fixture
+  `tests/fixtures/run10`: its recorded diamond state, verbatim). Stopped today, and asserted: a new
+  product file, and a remote release. **Open today, and marked as strict expected failures that stage
+  0b must flip:** editing product code (Edit and MultiEdit exit the build gate early), a tunnel to the
+  running app, a push to a host that goes live on push, widening the audience while gates are pending,
+  and a release when the python3 on PATH has no PyYAML (the release gate exits 0; the build gate
+  already fails closed). The last was found writing this test: macOS's own python3 has no PyYAML, and
+  neither the README nor /setup asks for it.
+- **stop-check reads the YAML.** "An L4 is building or delivering" came from the substrings "L4" and
+  "deliver" anywhere in active.yml, so a note mentioning them fired the G-S2 threat-model warning; an
+  L4 archived in place fired it too. Without PyYAML it falls back to the old test, toward the warning.
+- **The outcome check sees completed_diamonds.** session-start CHECK 10 read only active_diamonds with
+  `phase: complete`; projects that move shipped diamonds to `completed_diamonds` were never checked.
+  It may now nudge where it was silent; it blocks nothing.
+- **exposure-change also runs after MCP filesystem writes**, in its own PostToolUse group so the hooks
+  that parse `file_path` are not fed MCP input.
+- **version-discipline, before 1.0.0:** a backwards-incompatible change ships as a MINOR bump with a
+  BREAKING section in the changelog (founder, 2026-09-30: "We're not at 1.0.0 yet").
+- Tests: the replay (4 asserted, 5 strict expected failures), `test_stage0a_reads.sh` (5; three fail on
+  0.288.1), `test_exposure_change_mcp.py` (3).
+
 ## v0.288.1 - a stored next item that is stale or settled is not offered again
 
 **2026-09-30.** The dogfood repo's prompt hook offered `fired:ht-046` as the open item twice on one

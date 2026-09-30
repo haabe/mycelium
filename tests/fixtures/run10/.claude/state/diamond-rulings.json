@@ -1,0 +1,16 @@
+{
+ "l0-001": {
+  "evidence_n": 0,
+  "scale": "L0",
+  "session": "1a3202b3-2319-44ef-9b14-23c87c0b165a",
+  "sig": "discover||0",
+  "ts": null
+ },
+ "l3-001": {
+  "evidence_n": 0,
+  "scale": "L3",
+  "session": "1a3202b3-2319-44ef-9b14-23c87c0b165a",
+  "sig": "define||0",
+  "ts": null
+ }
+}

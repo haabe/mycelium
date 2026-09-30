@@ -242,6 +242,17 @@
         ]
       },
       {
+        "matcher": "mcp__filesystem__(write_file|edit_file|move_file)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/exposure-change.sh",
+            "timeout": 10,
+            "statusMessage": "Mycelium exposure change (MCP filesystem write to the diamonds file)"
+          }
+        ]
+      },
+      {
         "matcher": "Read|Bash",
         "hooks": [
           {
