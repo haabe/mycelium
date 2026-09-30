@@ -732,6 +732,15 @@ reviewed:
     into what session-start prints. So an unreadable file is reported once, where the human reads
     it, and is never mistaken for "no diamond needs assessing". Pinned by the existing next-item
     tests and tests/python/test_next_item_moves_the_ladder.py. Reviewed 2026-09-24, v0.249.0.
+- id: next_item.py@f9df8a7a36
+  verdict: accepted
+  reason: >-
+    `_migrate_item` returns None when diamonds/active.yml cannot be read (UnreadableError,
+    CannotCheckError). Silent at the site and correct, the same pattern as `_unassessed`: `pick()`
+    reads the same file first through `_fired_proposals`, whose note reaches what session-start
+    prints, so an unreadable file is reported once where the human reads it. The offer it skips is
+    the last item, bookkeeping (the move to the decision log), never a gate. Pinned by
+    tests/python/test_stage5a_decision_log.py. Reviewed 2026-09-30, v0.303.0.
 
 - id: canvas_write_check.py@3c770fccdd
   verdict: accepted

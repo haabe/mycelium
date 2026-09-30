@@ -127,6 +127,13 @@ DECISIONS: dict[str, dict[str, tuple[str, ...]]] = {
               "service_quality": _L2_5, "delivery_metrics": ("L3", "L4"), "corrections": _ALL,
               "explainability": _L3_5},
 }
+#: L0 IS NOT A LOOP (v0.303.0, DL-1368 S2; Part 2: purpose is found, not targeted). It records its
+#: purpose once and reviews it when it drifts, with the L0 gates; it has no target, experiment,
+#: build or release.
+_L0_GATES = dict.fromkeys(("evidence", "cynefin", "bias", "bvssh", "corrections"), ("L0",))
+DECISIONS["state_purpose"] = dict(_L0_GATES)
+DECISIONS["review"] = dict(_L0_GATES)
+L0_DECISIONS = ("state_purpose", "review")
 #: Which decisions each phase move makes, until the phase is retired (stage 5). A move needs the
 #: gates of every decision it makes, and its `progression_history` entry names them.
 TRANSITION_DECISIONS: dict[str, tuple[str, ...]] = {
@@ -364,14 +371,43 @@ def _scale(d: dict) -> str:
     return str(d.get("scale") or "").strip().upper()
 
 
+def decisions_of(d: dict) -> list[dict]:
+    """The decisions a diamond has recorded (v0.303.0, DL-1368 S1): `decisions: [{decision, on,
+    gates, ruling, note}]`."""
+    return [x for x in _as_list(d.get("decisions")) if isinstance(x, dict) and x.get("decision")]
+
+
+def phase_of(d: dict) -> str:
+    """WHERE A DIAMOND IS (v0.303.0, DL-1368 S1): read from its decision log, the furthest phase
+    whose moves' decisions are all recorded (define -> develop needs both `start_experiment` and
+    `commit_to_build`); an L0 that has stated its purpose is in deliver. The recorded `phase` is
+    read only for a diamond with no decisions, until the phase is retired (S4)."""
+    made = {str(x["decision"]) for x in decisions_of(d)}
+    if not made:
+        p = str(d.get("phase") or "discover").strip().lower()
+        return "complete" if p == "completed" else p
+    if _scale(d) == "L0":
+        return "deliver" if "state_purpose" in made else "discover"
+    phase = "discover"
+    for t, decs in TRANSITION_DECISIONS.items():
+        if not all(x in made for x in decs):
+            break
+        phase = t.split("->")[1]
+    return phase
+
+
 def _phase(d: dict) -> str:
-    p = str(d.get("phase") or "discover").strip().lower()
-    return "complete" if p == "completed" else p
+    return phase_of(d)
 
 
 def _history_has(d: dict, transition: str) -> bool:
     """A progression_history entry for `transition`: `transition: "define -> develop"` (any arrow or
     spacing), or `from:`/`to:` keys."""
+    made = {str(x["decision"]) for x in decisions_of(d)}
+    if _scale(d) == "L0" and "state_purpose" in made:
+        return True  # the purpose statement is L0's record of its moves (DL-1368 S2)
+    if made and all(x in made for x in TRANSITION_DECISIONS.get(transition, ("?",))):
+        return True  # the decision entries are the move's record (v0.303.0)
     want = transition.replace("->", " ").split()
     for raw in _as_list(d.get("progression_history")):
         h = _as_dict(raw)
@@ -520,12 +556,12 @@ class State:
 
     def is_open(self, d: dict) -> bool:
         return (str(d.get("id")) not in self.completed_ids | self.archived_ids
-                and str(d.get("phase", "")).lower() not in CLOSED
+                and phase_of(d) not in CLOSED
                 and str(d.get("state", "")).lower() not in CLOSED)
 
     def _alive(self, d: dict) -> bool:
         return (str(d.get("id")) not in self.archived_ids
-                and str(d.get("phase", "")).lower() not in DEAD
+                and phase_of(d) not in DEAD
                 and str(d.get("state", "")).lower() not in DEAD)
 
     def missing(self, d: dict, entry: bool = False, _seen: frozenset = frozenset()) -> list[str]:
@@ -819,7 +855,7 @@ class State:
             return [f"{d.get('id')}: the L4 whose release this is, named as `parent`"]
         miss = self.missing(l4, entry, seen)
         shipped = (l4.get("completed_at") or str(l4.get("id")) in self.completed_ids
-                   or str(l4.get("phase", "")).lower() in SHIPPED_PHASES)
+                   or phase_of(l4) in SHIPPED_PHASES)
         if not shipped:
             miss.append(f"{l4.get('id')}: shipped (phase deliver or complete) before its "
                         "launch opens an L5")
@@ -872,7 +908,7 @@ class State:
         absent counts as not passed: an L3 born with the L0 gate set (E2E run 10) has no Security
         or Privacy entry to pass, and nothing else would ever say so."""
         phases, gates, why = STAGES[stage]
-        did, phase = str(d.get("id", "?")), str(d.get("phase") or "").lower()
+        did, phase = str(d.get("id", "?")), phase_of(d)
         miss = []
         if phase not in phases:
             where = "Develop or Deliver" if stage == "build" else "Deliver"
@@ -897,7 +933,7 @@ class State:
         the verdict back for exactly that reason, and the lock is now what holds it.
         Founder, 2026-09-25: "for L4 to open there must be some sort of delivery involved."
         Any means counts, a concierge or hand-run test included (Gilad's Tests stage)."""
-        phase = str(d.get("phase", "")).lower()
+        phase = phase_of(d)
         ld = delivery_of(d)
         gaps = [k for k in ("audience", "until", "means") if not _filled(ld.get(k))]
         if (phase in SHIPPED_PHASES or d.get("completed_at")) and not gaps:
@@ -1442,7 +1478,7 @@ def exposure_line(project_dir: str, payload: dict, today: str | None = None) -> 
              "the team and run with the founder (a usability session with the prototype, a dry "
              "run of the service, a walkthrough of the lesson), is Develop's own evidence, not a "
              "release. Help run it and record it as that trial."
-             if any(_scale(d) == "L3" and str(d.get("phase", "")).lower() == "develop"
+             if any(_scale(d) == "L3" and phase_of(d) == "develop"
                     for d in delivering) else "")
     return ("MYCELIUM EXPOSURE STATE: nothing built here may meet real people yet, and that "
             "includes a pilot, a link sent to staff or users, and a deploy someone else does. "
@@ -1662,7 +1698,7 @@ def violations_between(project_dir: str, before: str, after: str) -> list[str]:
             continue
         ok, miss = st.verdict(d, entry=True)
         miss = [] if ok else miss
-        phase = str(d.get("phase") or "discover").lower()
+        phase = phase_of(d)
         if phase != "discover":
             # v0.247.0: E2E run 11 wrote a new L3 straight into develop, so no transition ran.
             miss.append(f"{d.get('id')}: born in discover (it is written as `{phase}`); later "
@@ -1728,7 +1764,8 @@ def delivery_of(d: dict) -> dict:
     # reversed: on a tie in recorded_at, the record listed last wins
     e = max(reversed(running or recs), key=lambda x: str(x.get("recorded_at") or ""))
     view = {"audience": e.get("audience"), "until": e.get("until"), "means": e.get("channel"),
-            "data": e.get("data_class"), "started": e.get("started"), "ended": e.get("ended"),
+            "data": e.get("data_class") or e.get("data"), "started": e.get("started"),
+            "ended": e.get("ended"),
             "changes": e.get("changes")}
     return {k: v for k, v in view.items() if v}
 

@@ -1009,6 +1009,33 @@ def _target_item(state, today: str, st: dict, l2: dict) -> dict | None:
             "why": "an L3 opens on the L2's target, and choosing it is the L2's decision"}
 
 
+MIGRATE = f'python3 "{Path(__file__).resolve().parent / "migrate_phase.py"}"'
+
+
+def _migrate_item(root: Path, today: str, st: dict) -> dict | None:
+    """Diamonds that still record only their phase (v0.303.0, DL-1368 S3): the migration to the
+    decision log, shown first and written on the user's yes. Offered last, when nothing else is
+    waiting: it is bookkeeping, and the phase is read as a fallback until it has run."""
+    iid = "migrate-phase:project"
+    if sl is None or _blocked(st.get(iid, {}), today):
+        return None
+    try:
+        state = sl.State(str(root))
+    except (sl.UnreadableError, sl.CannotCheckError):
+        return None  # SPEAKS: _fired_proposals and the ladder item report an unreadable file
+    pending = [str(d["id"]) for d in state.by_id.values()
+               if state.is_open(d) and not sl.decisions_of(d)
+               and str(d.get("phase") or "discover").lower() != "discover"]
+    if not pending:
+        return None
+    return {"id": iid, "diamond": pending[0], "since": today, "owner": "agent",
+            "command": f"{MIGRATE} --project-dir .",
+            "text": (f"{len(pending)} diamond(s) ({', '.join(pending[:4])}) still record only "
+                     "their phase, which is being retired. Run the migration's dry run, show what "
+                     "it would change, and write it with `--write` on the user's yes."),
+            "why": "where a diamond is will be read from its decisions, not its phase"}
+
+
 def _reshape_item(state, today: str, st: dict, d: dict) -> dict | None:
     """A diamond in the old shape (DL-1367 R4): read through a translation until stage 5, and asked
     once to record the new fields. Mycelium's own bookkeeping, so the agent's."""
@@ -1207,7 +1234,8 @@ def _pick_from(root: Path, reminders: str, today: str, st: dict,
             "command": cmd,
             "why": "the oldest advisory with a command",
         }, note
-    return None, note
+    # 5. last, when nothing else waits: the move to the decision log (v0.303.0)
+    return _migrate_item(root, today, st), note
 
 
 _UT_OPEN, _UT_CLOSE = "<untrusted_user_content>", "</untrusted_user_content>"

@@ -177,14 +177,10 @@
       "description": "Who this diamond's work reaches, one entry per audience and channel (v0.294.0, phase migration stage 1; founder rulings a, b, g, h, i). Reach and data decide it: can someone outside the team use the running thing or receive its output, and does real personal data go into it. A write that adds an entry with personal or sensitive data asks the person. Stage 1 reports against these records (`scale_locks.py --exposures`); stage 2 moves the release gate onto them.",
       "items": {
         "type": "object",
-        "required": [
-          "recorded_at",
-          "audience",
-          "channel",
-          "data_class",
-          "until",
-          "consent"
-        ],
+        "if": {"properties": {"reconstructed": {"const": true}}, "required": ["reconstructed"]},
+        "then": {"required": ["recorded_at", "audience", "channel", "until"]},
+        "else": {"required": ["recorded_at", "audience", "channel", "data_class", "until", "consent"]},
+        "$comment": "A reconstructed record (v0.303.0: moved from learning_delivery by migrate_phase.py, or recorded after the fact per ruling h) may leave data_class and consent empty, since nothing recorded them; the release gate refuses it until they are filled.",
         "properties": {
           "recorded_at": {
             "type": "string"
@@ -363,6 +359,23 @@
                 "description": "The skill or evidence that would clear it."
               }
             }
+          }
+        },
+        "decisions": {
+          "type": "array",
+          "description": "The decisions this diamond has made (v0.303.0, DL-1368 S1): where it is, and its mode, are read from this log. Each is recorded only with its gates passed (scale_locks.DECISIONS). `reconstructed: true` marks one written by migrate_phase.py from the phase history: the move happened, and its date is the history entry's, or null when there was none.",
+          "items": {
+            "type": "object",
+            "required": ["decision"],
+            "properties": {
+              "decision": {"type": "string", "enum": ["set_target", "start_experiment", "commit_to_build", "release", "close", "state_purpose", "review"]},
+              "on": {"type": ["string", "null"]},
+              "ruling": {"type": ["string", "null"]},
+              "gates": {"type": "object"},
+              "reconstructed": {"type": "boolean"},
+              "note": {"type": "string"}
+            },
+            "additionalProperties": true
           }
         },
         "progression_history": {
