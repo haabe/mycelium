@@ -203,7 +203,10 @@ It reads the diamond's `theory_gates_status`, the leaves under the opportunities
 diamond (assumptions with no verdict, and whether a test is named for each), the open human tasks
 whose `diamond_ref` names it (with horizons), a gate whose status is stale against the leaves under it,
 and rulings already asked in `what_would_move_it`. It prints one row per pending gate: what would
-flip it, who owns that, and the date if the record holds one.
+flip it, who owns that, and the date if the record holds one. Since v0.299.0 the rows are grouped
+by what each gate is owed before: the next move's decisions (named), the safety gates that move
+needs (the release gate also reads them per exposure record), gates only a later move needs, and
+gates passed with a risk recorded, which count as passed and are not owed.
 
 **Three lines added in v0.197.0, each from a dogfood day.** (1) `READ DUE on N task(s)`: a task's
 `read_dates` entry whose date has passed with no activity recorded on the task since. Run that read

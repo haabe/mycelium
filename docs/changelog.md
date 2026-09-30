@@ -4,6 +4,30 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-30.
 
+## v0.299.0 - the closing path says what each gate is owed before
+
+**2026-09-30.** Phase migration stage 3b-2: the readers of the gate table read decisions. No gate
+changes, and the purpose-stance check blocks in the same phases as before.
+
+- **The closing path groups its gate rows** by what each is owed before: the next move's decisions,
+  named ("owed before the next move (define->develop), which decides: start experiment and commit to
+  build"); the safety gates that move needs, which the release gate also reads per exposure record;
+  gates only a later move needs; and gates passed with a risk recorded. A `pass-with-risk` gate counts
+  as passed everywhere else and was listed among the pending ones; on the dogfood L1 it was the only
+  row under the next move.
+- **The purpose-stance check blocks once a diamond has decided to build** (founder ruling e), read
+  from the decision table (`scale_locks.phases_after("commit_to_build")`) rather than a phase list
+  of its own: develop and deliver today, and still right when the phase is retired.
+- **Kept on transition names until stage 5, on purpose:** `confidence-thresholds.yml`'s
+  `evidence_by_transition`, `threshold_applies_at` and `human_approval`, and the Landscape gate's
+  `last_progressed`. The skills read them by the transition they name, the transitions exist until
+  the phase is retired, and renaming them now would change every reader twice.
+- **Alternatives considered:** a column for the decision on every row (the same decision repeated on
+  every line, and a wider table that the one test parsing it reads by its first cell); leaving
+  `BLOCKING_PHASES` as its own list (true today, and a second copy of the decision that would drift
+  when the phase goes, the born-list failure 0.297.0 closed).
+- Tests: `test_decision_readers.py`, 3 tests.
+
 ## v0.298.0 - the gates are keyed to the decisions they guard
 
 **2026-09-30.** Phase migration stage 3b-1, founder ruling DL-1366 (a translation layer now; the
