@@ -60,7 +60,19 @@ If the file exists, print:
 
 > "Mycelium project state is already initialized. Existing canvas, diamonds, and memory are preserved. Run `/mycelium:diamond-assess` to see current state."
 
-Then exit. Do NOT touch existing files.
+**Then offer the move to the decision log, if any diamond still records only its phase** (v0.303.0,
+DL-1368 S3). Run the dry run and show what it prints:
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/migrate_phase.py" --project-dir "${CLAUDE_PROJECT_DIR:-.}"
+```
+
+If it lists diamonds to migrate, ask whether to write it, and run it again with `--write` only on a
+yes. It rewrites each diamond's phase history as reconstructed decisions, a learning delivery as a
+reconstructed exposure record, and the old L2/L3 shape as the new fields, and it refuses anything
+the scale locks read as a change. If it prints "nothing to migrate", say nothing about it.
+
+Then exit. Do NOT touch existing files except through that script, on the user's yes.
 
 If the file does NOT exist, continue to Step 2.
 

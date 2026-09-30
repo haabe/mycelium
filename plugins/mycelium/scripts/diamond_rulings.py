@@ -34,11 +34,20 @@ STATE = Path(".claude") / "state" / "diamond-rulings.json"
 
 
 def signature(d: dict) -> str:
-    """What changes when a diamond is assessed: its phase, its ruling date, its history length."""
+    """What changes when a diamond is assessed: where it is, its ruling date, its history length,
+    and since v0.303.0 how many decisions it has recorded. The first field is read positionally by
+    `scale_locks._last_good`, so it stays the phase, derived from the decision log when there is
+    one (`scale_locks.phase_of`, DL-1368); the two change together."""
     hist = d.get("progression_history")
-    return "|".join((str(d.get("phase") or "discover").lower(),
-                     str(d.get("progression_ruled_at") or "")[:10],
-                     str(len(hist) if isinstance(hist, list) else 0)))
+    decs = d.get("decisions")
+    try:
+        import scale_locks  # noqa: PLC0415 - optional: a partial install reads the field
+        phase = scale_locks.phase_of(d)
+    except ImportError:
+        phase = str(d.get("phase") or "discover").lower()
+    return "|".join((phase, str(d.get("progression_ruled_at") or "")[:10],
+                     str(len(hist) if isinstance(hist, list) else 0),
+                     str(len(decs) if isinstance(decs, list) else 0)))
 
 
 def _sources(node, depth: int = 0) -> int:

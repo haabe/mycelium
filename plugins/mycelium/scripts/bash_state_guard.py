@@ -39,7 +39,8 @@ import _hook_input as hi  # noqa: E402
 
 ACTIVE_REL = ".claude/diamonds/active.yml"
 STATE_REL = Path(".claude") / "state" / "bash-guard"
-ALLOWED_WRITERS = ("derive_closing_path.py",)  # Mycelium's own writers of diamond state
+# Mycelium's own writers of diamond state; migrate_phase.py since v0.303.0 (DL-1368 S3).
+ALLOWED_WRITERS = ("derive_closing_path.py", "migrate_phase.py")
 
 
 def _load(name: str):

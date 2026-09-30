@@ -4,6 +4,45 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-30.
 
+## v0.303.0 - a diamond records its decisions, and a migration moves the phase into them
+
+**2026-09-30.** Phase migration stage 5a, founder ruling DL-1368 (S1 a decision log, S2 L0's own
+decisions, S3 a migration script, S4 the phase read as a fallback until this repo and the E2E
+fixtures are migrated). No new refusals.
+
+- **`decisions` on a diamond**: `[{decision, on, gates, ruling}]`, the loop's five decisions and,
+  for an L0, `state_purpose` and `review` (Part 2: purpose is found, not targeted; it is stated,
+  then revisited when it drifts). `scale_locks.phase_of` reads where a diamond is from them: the
+  furthest phase whose moves' decisions are all recorded, so develop needs both
+  `start_experiment` and `commit_to_build`. A diamond with no decisions is read from its `phase`.
+  Every reader of the phase in the locks goes through it.
+- **A decision is judged as the move it makes**, with that move's gates, and the decision entry is
+  the move's record (no `progression_history` entry needed beside it). A new diamond still may not
+  carry any: born with no decisions.
+- **`scripts/migrate_phase.py`** (DL-1368 S3), dry run by default, `--write` to write:
+  - each diamond's phase becomes the decisions its moves made, dated from its history where an entry
+    exists, marked `reconstructed` (the moves happened; recording them is a fact, not a decision
+    made now); a diamond whose decisions would read differently from its phase is left alone;
+  - a `learning_delivery` becomes a reconstructed exposure record; its data class and consent were
+    never recorded, so they stay empty and the release gate asks for them (the schema accepts the
+    gap only on a record marked `reconstructed`);
+  - the old L2 and L3 shape gets `target`, `front_runner` and the new `object_ref`;
+  - it writes nothing the scale locks read as a change, keeps the file's leading comment block, and
+    refuses when other comments would be lost (PyYAML drops them). The shell guard lets it write
+    the diamonds file, as it does derive_closing_path.
+- **Offered where S3 said**: `/mycelium:setup` on a project already initialised runs the dry run and
+  writes on a yes; the next item offers it (`migrate-phase:project`, the agent's) last, when
+  nothing else waits.
+- `diamond_rulings.signature` reads the derived phase and counts decisions; `_last_good` reads its
+  first field as before, and the two changed together.
+- **Alternatives considered** (DL-1368): a single `status` field (the phase renamed); the five
+  loop decisions at L0; rewriting by hand; removing the phase in this release. Also rejected here:
+  mapping `start_experiment` alone to develop (an L3 that only experiments would pass the build
+  gate, which is Four Risks' `commit_to_build`); a comment-preserving YAML library (a new runtime
+  dependency, where the dogfood file has one comment block).
+- Tests: `test_stage5a_decision_log.py`, 9 tests. A dry run on the dogfood repo migrates four
+  diamonds with the locks reading no change.
+
 ## v0.302.0 - one L2 per outcome, one L3 per target, and re-targeting closes the old L3
 
 **2026-09-30.** Phase migration stage 4c, founder rulings DL-1367 R2 and R3. **Adds blocks.**
