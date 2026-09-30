@@ -443,7 +443,7 @@ When creating the L0 diamond in `active.yml`, initialize `theory_gates_status` w
 | L2 | evidence, four_risks, jtbd, cynefin, bias, privacy, bvssh, service_quality, corrections |
 | L3 | evidence, four_risks, jtbd, cynefin, bias, security, privacy, bvssh, service_quality, delivery_metrics, corrections, regulatory |
 | L4 | evidence, four_risks, cynefin, bias, security, privacy, bvssh, service_quality, delivery_metrics, corrections, regulatory |
-| L5 | evidence, cynefin, bias, security, bvssh, corrections, regulatory |
+| L5 | evidence, cynefin, bias, security, privacy, bvssh, service_quality, corrections, regulatory |
 
 Set each to `pending`. Example for L0:
 ```yaml
