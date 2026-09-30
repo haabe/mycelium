@@ -142,7 +142,20 @@
             "string",
             "null"
           ],
-          "description": "What this cycle works on, by id: the opportunity (L2), the opportunity or solution (L3), the solution and increment (L4). The L3 entry lock resolves it against canvas/opportunities.yml (v0.245.0); written by the /ost-builder, /ice-score and /preflight offers since v0.217.0/0.243.0 and undeclared until now."
+          "description": "What this cycle works on, by id. Since v0.300.0 (DL-1367): the desired outcome (L2, a `desired_outcomes` id), the target opportunity (L3), the solution and increment (L4). The old shape, an L2 on one opportunity and an L3 on one solution, is read through a translation until the phase migration's stage 5. The L3 entry lock resolves it against canvas/opportunities.yml (v0.245.0)."
+        },
+        "target": {
+          "type": ["string", "object", "null"],
+          "description": "An L2's current target opportunity (v0.300.0, DL-1367 R1): an id, or `{opportunity, chosen_on, compared, why}`. Chosen by comparing siblings and re-chosen when learning says so (Torres p103-108); a re-choice appends the old one to `targets`."
+        },
+        "targets": {
+          "type": "array",
+          "items": {"type": "object"},
+          "description": "An L2's earlier targets, oldest first, each `{opportunity, chosen_on, compared, why, ended_on}` (v0.300.0)."
+        },
+        "front_runner": {
+          "type": ["string", "null"],
+          "description": "The solution an L3 commits to build, out of the set under its target (v0.300.0, DL-1367), named at `commit_to_build`. The L4 delivers it, and the L4 lock reads its evidence and its failed assumptions alone."
         },
         "launch_data": {
           "type": "object",

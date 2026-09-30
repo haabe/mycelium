@@ -4,6 +4,37 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-30.
 
+## v0.300.0 - an L2 targets, an L3 commits a front runner, and the L4 reads what it delivers
+
+**2026-09-30.** Phase migration stage 4a, founder rulings DL-1367 (R1 the target on the L2, R4 the
+old shape translated until stage 5) and ruling C (2026-09-30: an L2 is the opportunity space under
+one outcome, an L3 its current target and that target's solutions).
+
+- **New fields.** An L2's `object_ref` names a `desired_outcomes` id and its `target` the
+  opportunity it is working (`{opportunity, chosen_on, compared, why}`; a re-choice appends to
+  `targets`). An L3 names the target, its set is the live solutions under it, and it names
+  `front_runner` when it commits to build. `scale_locks.State.l2_target`, `l2_outcome`,
+  `front_runner` and `delivered_solutions` read them.
+- **The old shape still works.** An L2 on one opportunity is read as targeting it, under the outcome
+  it rolls up to; an L3 on one solution is read as having it as its front runner. Nothing needs
+  rewriting in this release.
+- **The L4 reads what it delivers.** It delivers the solution its `object_ref` names, else the L3's
+  front runner, else (neither named) the whole set as before. Its lock reads that solution's
+  evidence and failed assumptions alone. Until now it took the best evidence in the set and the
+  first failure in it, so a validated idea A could open an L4 delivering an untested idea B, and a
+  failed idea C blocked both (Torres p139: ideas are tested across the set and fail alone). **One new
+  refusal** (borrowing a sibling's verdict) **and one lifted** (a sibling's failure); both follow
+  from ruling C.
+- **Not yet:** the doors (4b: /ost-builder offers the target choice, /ice-score compares inside an
+  L3, the next item's L2 and L3 doors) and the limits and the re-target (4c).
+- **Alternatives considered** (DL-1367): the target in opportunities.yml
+  (`desired_outcomes[].current_target`), the decision apart from the cycle that made it; refusing the
+  old shape at once, which blocks every project mid-cycle. Also rejected here: reading the whole set
+  for the L4 until a front runner exists (keeps the borrowed-verdict hole open for every L4 that
+  names its solution, which since 0.288.0 every L4 must).
+- Tests: `test_stage4a_objects.py`, 7 tests, 6 failing on 0.299.0; the lock, replay and ladder
+  suites pass unchanged.
+
 ## v0.299.0 - the closing path says what each gate is owed before
 
 **2026-09-30.** Phase migration stage 3b-2: the readers of the gate table read decisions. No gate
