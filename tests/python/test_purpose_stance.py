@@ -666,6 +666,21 @@ def test_decision_ids_reads_both_heading_forms(tmp_path):
     assert ps.decision_ids(log) == {"DL-0974", "DL-1116"}
 
 
+def test_decision_ids_reads_the_date_first_form(tmp_path):
+    """v0.291.1: the dogfood log wrote `## 2026-09-24 — DL-1361: Title` from about DL-1286 on, and
+    the check missed every one of them, so a founder override citing DL-1363 read as dangling."""
+    ps = _mod()
+    log = tmp_path / "decision-log.md"
+    log.write_text(
+        "## 2026-09-24 — DL-1361: phase follows the work\n"
+        "## 2026-09-30 \u2013 DL-1363: an en dash\n"
+        "### 2026-09-30 - DL-1364: a hyphen\n"
+        "## 2026-09-30 — no id here, only a date\n",
+        encoding="utf-8",
+    )
+    assert ps.decision_ids(log) == {"DL-1361", "DL-1363", "DL-1364"}
+
+
 def test_decision_ids_on_a_missing_log_is_empty_not_an_error(tmp_path):
     """An absent log must degrade to 'cannot verify', never to 'everything is wrong'."""
     ps = _mod()

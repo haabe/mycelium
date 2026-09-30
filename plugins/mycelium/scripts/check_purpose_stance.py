@@ -271,14 +271,19 @@ def _diamond_stance_findings(diamonds_path: Path, binding: list[dict],
 
 
 DECISION_REF_RE = re.compile(r"^DL-\d{4}$")
-_DECISION_HEADING_RE = re.compile(r"^#{2,4}\s*\[?(DL-\d{4})\]?", re.MULTILINE)
+#: A date may lead the heading (v0.291.1): the dogfood log switched to date-first headings
+#: (`## 2026-09-24 <dash> DL-1361: Title`) around DL-1286, and every override citing a later
+#: decision read as dangling. The dashes are written as escapes: em, en, and a hyphen.
+_DECISION_HEADING_RE = re.compile(
+    r"^#{2,4}\s*(?:\d{4}-\d{2}-\d{2}\s*[\u2014\u2013-]+\s*)?\[?(DL-\d{4})\]?", re.MULTILINE)
 
 
 def decision_ids(log_path) -> set:
     """Every decision-log entry ID. Empty set if the log is absent or unreadable.
 
-    Tolerant of both heading forms this convention has worn -- `### [DL-0974] Title`
-    as originally specified, and the `### DL-1116 - Title` form later entries use.
+    Tolerant of the three heading forms this convention has worn -- `### [DL-0974] Title`
+    as originally specified, the `### DL-1116 - Title` form later entries use, and the
+    date-first `## 2026-09-24 — DL-1361: Title` form (v0.291.1).
     A validator that only accepted the documented spelling would report every real
     entry as missing, which is a worse failure than the one it is checking for.
     """
