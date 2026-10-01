@@ -103,7 +103,7 @@ When this check feeds a diamond's `bias` gate, apply the pass criteria in
 documented**: a named action and the test, owner or later transition that will carry it out. A
 disconfirming source that is cited and weighed has been sought, even though it is not yet resolved.
 "A citation is not a resolution" is true, and it is not this gate's test: resolution is demanded by
-the Cynefin gate (Define->Develop, complex domain) and the Four Risks gate. Record `not-passed` for
+the Cynefin gate (`start_experiment`, complex domain) and the Four Risks gate. Record `not-passed` for
 what the fail column names, or for a named bias with no mitigation at all.
 
 ## Decision Log (MANDATORY per G-P4)

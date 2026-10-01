@@ -12,7 +12,7 @@ contract and this file is the bug.
 ## Plain-language-first
 
 Use `engine/status-translations.md` to translate diamond states.
-- Say "Discovering what problems to solve" not "L2 Opportunity Discover phase"
+- Say "Discovering what problems to solve" not "L2 Opportunity, no decision yet"
 - Say "Confidence: Moderate -- based on 2 user interviews" not "Confidence: 0.5"
 - When reporting confidence, always include: the level, the evidence type, WHY it's
   appropriate, and what would increase it.
@@ -61,7 +61,7 @@ in eval `2026-05-04-xai-inline-attribution`.
 ## Offer to capture learnings after each diamond phase
 
 Prompt: "Anything worth capturing? I'll draft the entry for corrections.md or
-patterns.md." Fires after EVERY phase transition (not only Deliver→Complete) — the
+patterns.md." Fires after EVERY recorded decision (not only `close`) — the
 operational sequence lives in `/diamond-progress` § Learning Capture: (1) corrections,
 (2) patterns, (3) delivery journal (delivery phases), (4) product journal (discovery
 phases). Draft for the user; confirm before saving — capture at the moment of

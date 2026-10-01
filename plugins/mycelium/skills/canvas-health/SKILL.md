@@ -13,7 +13,7 @@ Audit the canvas knowledge base for quality, consistency, and completeness. The 
 
 ## When to Use
 
-- Before any diamond phase transition (called automatically by `/mycelium:diamond-assess`)
+- Before any diamond records a decision (called automatically by `/mycelium:diamond-assess`)
 - After a period of inactivity (>7 days since last canvas update)
 - When agent output quality seems to degrade
 - After onboarding a new team member (ensures canvas is self-explanatory)
@@ -140,7 +140,7 @@ Audit the canvas knowledge base for quality, consistency, and completeness. The 
 python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_cynefin_freshness.py" --project-dir .
 ```
 
-   The Cynefin gate is Required at exactly ONE transition — Define→Develop — so a domain is
+   The Cynefin gate is Required at exactly ONE decision — `start_experiment` — so a domain is
    classified once per diamond and nothing re-runs it. **That matters because the domain drives
    METHOD selection**: Complicated routes to expert analysis, Complex to probe-sense-respond. A
    node classified on three interviews and never revisited after twenty more is routed by the
@@ -364,7 +364,7 @@ The failure this catches: the canvas carries open learning needs (ON HOLD / RE-G
 The failure this catches: a diamond reaches Deliver (or sits in any phase) with no explicit outcome bar, so "done" defaults implicitly to the harshest, least-controllable outcome — wrong for validating purpose and a demotivation engine (see `docs/design/definition-of-done.md`).
 
    - Read `.claude/diamonds/active.yml`. For each diamond in `active_diamonds` whose state is not terminal (NOT `archived`/`killed`), check for a `definition_of_done` block with non-empty `outcome` and `signal`.
-   - If missing or stub-empty: flag (NUDGE) — "Diamond [id] ([scale], [phase]) has no outcome Definition of Done. Run `/mycelium:define-done` to pin what behaviour-change marks it done. The Deliver→Complete gate will block without it." Do NOT auto-fill — the question is what produces a real bar, not the field.
+   - If missing or stub-empty: flag (NUDGE) — "Diamond [id] ([scale], [position]) has no outcome Definition of Done. Run `/mycelium:define-done` to pin what behaviour-change marks it done. Recording `close` will block without it." Do NOT auto-fill — the question is what produces a real bar, not the field.
    - For child diamonds (non-null `parent`) that DO have a DoD: flag if `rolls_up_to` is absent — "Diamond [id] is a child but its DoD names no parent outcome it rolls up to (contribution-not-summation)."
    - NUDGE-tier; names the specific diamond id and the specific action.
 

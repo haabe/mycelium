@@ -42,10 +42,10 @@ Evaluate current diamond state and recommend next action.
 
    **Autonomous mode** (per `${CLAUDE_PLUGIN_ROOT}/engine/autonomous-mode.md`): in a declared autonomous run, substitute at rung (b) — record the declared persona's unprimed judgment BEFORE reading any canvas or gate state (the ordering is the load-bearing part, not the human authorship), tag it `source_class: internal_simulated`, and ledger the substitution. The post-assessment comparison still runs: persona judgment vs gate verdict.
 
-1. **Identify the diamond**: Which diamond (ID, scale, phase) is being assessed?
+1. **Identify the diamond**: Which diamond (ID, scale, position) is being assessed?
 
 2. **Gather current state**:
-   - Current phase (Discover/Define/Develop/Deliver)
+   - Where it is (`scale_locks.position`: no decision yet, target set, committed to build, released; the mode with it)
    - Evidence collected so far
    - Confidence score with breakdown
    - Blockers or risks
@@ -123,7 +123,7 @@ Report the line for each scale with records. Since v0.302.0 (DL-1367) it counts 
    - Any relevant past mistakes to avoid?
 
 7b. **Check trio perspective coverage** (Torres Product Trio):
-   - For the current diamond phase, verify all three perspectives (product/design/engineering) have been applied.
+   - For the diamond's next decision, verify all three perspectives (product/design/engineering) have been applied.
    - Reference `${CLAUDE_PLUGIN_ROOT}/engine/theory-gates.md` §Trio Perspective Requirement for the per-scale coverage matrix.
    - Flag any missing perspectives as a gap: "Design perspective not yet applied at L[X]. Consider running `/mycelium:usability-check` or `/mycelium:service-check`."
    - If perspectives are in conflict, recommend `${CLAUDE_PLUGIN_ROOT}/engine/perspective-resolution.md`.
@@ -171,11 +171,11 @@ Report the line for each scale with records. Since v0.302.0 (DL-1367) it counts 
    - This log entry is essential for auditability — every assessment should be documented
 
 10. **Recommend next action**:
-   - If all gates pass and confidence meets threshold: recommend transition to next phase
+   - If all gates pass and confidence meets threshold: recommend recording the next decision (`/mycelium:diamond-progress`)
    - If gates fail: recommend specific actions to address failures
    - If confidence is low: recommend evidence-gathering activities
    - If anti-patterns detected: recommend corrective actions
-   - If regression needed: recommend which phase to return to and why
+   - If the loop must iterate: recommend the decision to append (another `start_experiment`, a re-chosen front runner with another `commit_to_build`, DL-1373) and why; a recorded decision is never removed (DL-1374)
 
 11. **Play devil's advocate**: Before recommending progression, ask:
     - What are we most likely wrong about?

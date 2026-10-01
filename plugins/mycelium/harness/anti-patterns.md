@@ -9,7 +9,7 @@ Known failure modes organized by category. Check regularly, especially when thin
 ### 1. Solution-First Discovery
 - **Description**: Jumping to solutions before understanding the problem. Running "discovery" to validate a predetermined answer.
 - **Detection rule**: Solution language ("we should build...", "the feature needs...") appears before problem framing is complete.
-- **What to do instead**: Return to Discover phase. Conduct user research. Build OST from findings, not from brainstorming.
+- **What to do instead**: Go back to discovery work (another experiment, by appending a decision; nothing recorded is removed). Conduct user research. Build OST from findings, not from brainstorming.
 - **Source**: Torres (Continuous Discovery Habits)
 
 ### 2. Tourist Interviews
@@ -114,7 +114,7 @@ Known failure modes organized by category. Check regularly, especially when thin
 
 ### 1. Security as Afterthought
 - **Description**: Addressing security only after development is "complete." Treating security review as a gate rather than a practice.
-- **Detection rule**: No security considerations in Discover/Define phases. STRIDE only applied at Deliver.
+- **Detection rule**: No security considerations before `commit_to_build`. STRIDE only applied at `release`.
 - **What to do instead**: Integrate security from L0 onward. See security-trust.md for per-stage requirements.
 - **Source**: OWASP (Security by Design)
 
@@ -281,7 +281,7 @@ These are systemic organizational traps from Senge's "The Fifth Discipline." The
 ### 4. Implicit Handoff
 - **Description**: Transition between leaf lifecycle phases without an explicit artifact and gate check. The leaf "jumped" from OST to delivery without the intermediate steps.
 - **Detection rule**: GIST idea has no `source_leaf_id`. Service entry has no `gist_id`. Threat model has no `solution_id`. Any missing link in the cross-reference chain.
-- **What to do instead**: Every lifecycle phase transition produces an artifact and checks a gate. See `${CLAUDE_PLUGIN_ROOT}/engine/leaf-lifecycle.md` for the complete chain.
+- **What to do instead**: Every lifecycle step produces an artifact and checks a gate. See `${CLAUDE_PLUGIN_ROOT}/engine/leaf-lifecycle.md` for the complete chain.
 - **Source**: Mycelium leaf lifecycle
 
 ### 5. Score-Only Discard

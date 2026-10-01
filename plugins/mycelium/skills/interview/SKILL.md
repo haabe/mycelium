@@ -418,7 +418,7 @@ If the user prefers to defer this: skip, note in the interview summary, and sugg
 
 ## After the Interview: What Happens Next
 
-The interview creates an **L0 Purpose diamond** in Discover phase. Here's the bridge to ongoing work:
+The interview creates an **L0 Purpose diamond** with no decision recorded yet (it records `state_purpose` once its purpose is stated). Here's the bridge to ongoing work:
 
 ### Decision Log Entry (v0.11.1)
 

@@ -198,7 +198,7 @@ scales:
     # RENAMED Task -> Market in v0.235.0. See engine/diamond-rules.md:35: "Atomic tasks within
     # delivery do NOT need their own diamond". A Task never becomes a diamond, so a per-scale
     # DIAMOND gate named Task was gating a unit that cannot exist at this scale. Task granularity
-    # lives inside L4's Deliver phase and in nested sub-L4 diamonds, not on the ladder.
+    # lives inside an L4 that has committed to build, and in nested sub-L4 diamonds, not on the ladder.
     confidence_threshold: 0.8
     # DERIVED 2026-09-21 (founder ruling: "apply the best practices for its purpose and set the
     # value to the correct value"). Was 0.6, inherited verbatim from the Task row.
@@ -436,11 +436,11 @@ project_type_adaptations:
 # you need, but not WHERE it comes from.
 #
 # What the Evidence Gate actually enforces (theory-gates.md):
-# - At L0/L2 Develop->Deliver: REVIEW if zero external_human sources (blocks progression)
+# - At an L0's `state_purpose`/`review` and an L2's `release`: REVIEW if zero external_human sources (blocks progression)
 # - At L5 ANY transition: REVIEW if the market claim rests only on `internal_*` sources
 #   (added 0.235.0; this list did not learn it until 0.237.0 — the same
 #   fix-one-surface-leave-another shape that release was itself correcting, in the file it edited)
-# - At L0-L2 Define->Develop: NUDGE if zero external_human sources (warns only)
+# - At an L1/L2's `start_experiment` and `commit_to_build`: NUDGE if zero external_human sources (warns only)
 # - Dogfood projects: mocked personas (internal_simulated) supplement but don't replace
 #   external_human -- still need at least one real conversation for REVIEW gates.
 #

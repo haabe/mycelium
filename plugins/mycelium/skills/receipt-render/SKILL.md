@@ -21,7 +21,7 @@ A silent adopter is invisible to a solo maintainer. This skill does not generate
 ## When NOT to use
 
 - To render a diamond's *state* as a diagram → `/mycelium:diamond-render`. This skill renders *completed work as prose*, not a state machine.
-- For an in-progress diamond → this skill refuses (a receipt summarizes finished work; see Rules). Run it after Deliver→Complete.
+- For an in-progress diamond → this skill refuses (a receipt summarizes finished work; see Rules). Run it after the diamond records `close`.
 - For internal retrospective capture → `/mycelium:retrospective`. The receipt is an outward-facing artifact, not a learning log.
 
 ## Identifier exposure

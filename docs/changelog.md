@@ -4,6 +4,33 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-01.
 
+## v0.309.3 - every skill and rule says decisions (stage 5d-3c)
+
+**2026-10-01.** Phase migration stage 5d-3c, the last of stage 5d (founder ruling DL-1372 V1). What
+the agent and the person read now says decisions and the two modes everywhere outside dated
+history; internal names (`phase_of`, persisted next-item ids) keep the old words (V3). **No
+verdict changes** (the stage's differential: 22 states, 327 verdicts, none changed).
+
+- **Skills:** diamond-assess (identify a diamond by its position; recommend the next decision or
+  the decision to append), canvas-health, define-done, regulatory-review, xai-check,
+  service-check, receipt-render, interview, bias-check, ice-score and the skills index.
+- **xai-check named the wrong steps.** It listed the XAI gate at an L3's Define->Develop; the code
+  has required it at `release` and `close` (L3-L5, with AI components) since it shipped. The skill
+  now names those.
+- **The journey map** (`engine/wayfinding.md`) shows each scale's steps, `set target -> commit to
+  build -> release -> close`, recorded steps ticked and the next marked; an L0 shows whether its
+  purpose is stated. A loop that iterates stays where it is on the map.
+- **status-translations:** the phase translations are position translations ("target set",
+  "committed to build", ...), and the combined examples are keyed by the decision each works toward.
+- **Engine and harness:** feedback-loops, surfaces, the engine and harness READMEs, guardrails (and
+  its discovery, delivery and index files), communication-rules, anti-patterns ("return to
+  Discover" is another experiment, appended), and the source-ratio comments in
+  confidence-thresholds.yml.
+- **The stop-check hook's message** says /diamond-progress is the path for recording decisions.
+- **Alternatives considered:** rewriting dated history too (it records what happened in the words
+  of its time; changing it would rewrite the record DL-1374 protects); renaming internal names
+  (V3: they are read by nobody outside the code, and persisted ids would lose users' snoozes).
+
 ## v0.309.2 - the gates and the diamond rules say decisions (stage 5d-3b)
 
 **2026-10-01.** Phase migration stage 5d-3b, founder ruling DL-1372 (V1 the words, V2 the

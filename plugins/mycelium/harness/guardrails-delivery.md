@@ -1,6 +1,6 @@
 # Mycelium Guardrails — Delivery Phase
 
-Loaded when operating within delivery domains (L3-L4 Develop/Deliver phases). Supplements guardrails-core.md.
+Loaded when operating within delivery domains (L3-L4 in delivery mode: committed to build or released). Supplements guardrails-core.md.
 
 ## Security & Trust
 

@@ -43,10 +43,10 @@ Agent attempts an action
   → Hooks (computational enforcement) check BLOCK-tier guardrails
   → If allowed, action proceeds
   → Post-action hooks inject NUDGE-tier reminders
-  → At phase transitions, REVIEW-tier guardrails gate progression
+  → At each decision, REVIEW-tier guardrails gate progression
   → Anti-pattern detector watches for failure modes
   → Bias checklist runs before research and decisions
   → Everything is logged in decision-log.md
 ```
 
-The harness works with the [hooks](../hooks/) system for computational enforcement and the [engine](../engine/) for inferential checks during phase transitions.
+The harness works with the [hooks](../hooks/) system for computational enforcement and the [engine](../engine/) for inferential checks at each decision.

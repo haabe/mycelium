@@ -15,9 +15,9 @@ This skill is **functionally-grounded** in Doshi-Velez & Kim's (2017) sense: it 
 
 ## When to Use
 
-- L3 Define→Develop or Develop→Deliver, **only when `active-stack.yml :: ai_components.detected: true`**
-- L4 Develop→Deliver — required when AI components reach user-affecting decisions (deny, recommend, rank, generate user-shown content)
-- L5 Develop→Deliver — required for any user-facing AI feature at launch
+- An L3's `release` or `close`, **only when `active-stack.yml :: ai_components.detected: true`**
+- An L4's `release` — required when AI components reach user-affecting decisions (deny, recommend, rank, generate user-shown content)
+- An L5's `release` — required for any user-facing AI feature at launch
 - After any change to AI components, prompts, or surfaces that affect user-facing decisions
 - When Gate 13 is checked during `/mycelium:diamond-progress`
 
