@@ -20,12 +20,17 @@
   revisited (a re-derived property list, a changed `why`, the bar's review date) it records
   `review` (DL-1368 S2).
 - **/diamond-render** draws a diamond's state from its decisions.
+- **Two L0 gaps, found migrating the E2E scenarios.** An L0 that records decisions reads as
+  deliver, and the next item's move table would have offered it `complete`; it is never offered a
+  move now (S2: an L0 records `review`). And `migrate_phase.py` refused an L0 recorded as
+  `complete`, which no L0 decision expresses; it now migrates it to `state_purpose` and says so,
+  so retiring the phase does not drop it back to discover.
 - **Alternatives considered:** leaving the readers on the field until 5c removes it (a diamond
   recorded by decisions alone, which the migration and /diamond-progress now produce, would read as
   discover everywhere but the locks); a single shared reader module for every script (the
   fallbacks differ: next_item and the hooks must run without scale_locks).
-- Tests: `test_stage5b_readers.py`, 4 tests, all failing on 0.304.0 (a stale phase beside a log
-  that says develop or deliver).
+- Tests: `test_stage5b_readers.py`, 6 tests; the four reader tests fail on 0.304.0 (a stale phase
+  beside a log that says develop or deliver).
 
 ## v0.304.0 - an L2 opens under the L1 that set its outcome
 

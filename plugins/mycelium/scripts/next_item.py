@@ -339,6 +339,14 @@ def _state_closed(d: dict) -> bool:
 _NEXT = {"discover": "define", "define": "develop", "develop": "deliver", "deliver": "complete"}
 
 
+def _can_move(d: dict, phase: str) -> bool:
+    """Whether a diamond has a next move at all: open, not at its last phase, and not an L0 that
+    records decisions, which does not move but records `review` (DL-1368 S2, v0.305.0)."""
+    if phase in _CLOSED or phase not in _NEXT or _state_closed(d):
+        return False
+    return not (sl is not None and str(d.get("scale", "")).upper() == "L0" and sl.decisions_of(d))
+
+
 _EVIDENCE = (".claude/canvas/*.yml", "research/**/*")
 
 
@@ -449,7 +457,7 @@ def _unassessed(root: Path, today: str) -> list[dict]:
         if not isinstance(d, dict) or not d.get("id"):
             continue
         phase = _where(d)
-        if phase in _CLOSED or phase not in _NEXT or _state_closed(d):
+        if not _can_move(d, phase):
             continue
         ruled = str(d.get("progression_ruled_at") or "")[:10]
         rec = rulings.get(str(d["id"])) or {}

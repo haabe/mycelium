@@ -63,3 +63,22 @@ def test_the_stop_hook_sees_an_l4_delivering_by_its_decisions(tmp_path):
     out = subprocess.run(["bash", str(ROOT / "plugins/mycelium/hooks/stop-check.sh")], env=env,
                          input="{}", capture_output=True, text=True, timeout=60, check=False)
     assert "G-S2" in out.stdout + out.stderr, "the L4 is delivering by its decisions"
+
+
+def test_an_l0_that_records_decisions_is_never_offered_a_move():
+    """DL-1368 S2: an L0 does not move; it records `review`. With decisions it reads as deliver,
+    and the move table would have offered it `complete`."""
+    l0 = {"id": "l0", "scale": "L0", "phase": "deliver",
+          "decisions": [{"decision": "state_purpose", "on": "2026-05-01"}]}
+    assert not ni._can_move(l0, ni._where(l0))
+    assert ni._can_move({k: v for k, v in l0.items() if k != "decisions"}, "deliver"), "control"
+
+
+def test_an_l0_recorded_complete_migrates_and_says_why(tmp_path):
+    import migrate_phase as mp  # the migration's own entry point
+    import scale_locks as sl
+    root = _project(tmp_path, [])
+    doc = {"active_diamonds": [{"id": "l0", "scale": "L0", "phase": "complete"}]}
+    out, changes, problems = mp.migrate(doc, sl.State(str(root)), "2026-10-01")
+    assert problems == [] and "does not close" in changes[0]
+    assert [x["decision"] for x in out["active_diamonds"][0]["decisions"]] == ["state_purpose"]
