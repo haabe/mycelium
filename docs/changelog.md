@@ -4,6 +4,26 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-30.
 
+## v0.304.0 - an L2 opens under the L1 that set its outcome
+
+**2026-10-01.** A fix to 0.301.0's L2 door, found by /diamond-progress on the dogfood repo.
+
+- **The defect.** The door paired any outcome with no live L2 with the first L1 whose lock held.
+  With one L1 that is right; with two it guesses. On the dogfood repo it proposed the L2 on the
+  outcome `adoption` under `l1-enforcement-substrate`, whose decision is a runtime choice and set
+  no outcome. Ruling C has L1 propose the outcome and L2 map it, and nothing recorded which L1 did.
+- **`desired_outcomes[].set_by`** names the L1 that set an outcome. The L2 door opens only under
+  that L1; with no `set_by`, only a lone live L1 is unambiguous, and with several the next item
+  asks which (`outcome-setter:<outcome>`, the founder's) before any door.
+- **The L2 lock** refuses a new L2 whose parent is not the outcome's `set_by`. An outcome with no
+  `set_by` is not refused; the next item asks instead. Diamonds already open are not re-judged.
+- **Alternatives considered:** the L1 naming its outcomes (`outcomes: [ids]` on the L1): the
+  outcome is the record an L2 opens on, so it carries its origin, as an opportunity carries
+  `rolls_up_to`; inferring the L1 from the outcome's text or the L1's Definition of Done (a guess
+  wearing a rule's clothes, the defect again); refusing an L2 whose outcome names no L1 (would block
+  every project with one outcome and one L1, where nothing is ambiguous).
+- Tests: `test_outcome_setter.py`, 4 tests, 3 failing on 0.303.0.
+
 ## v0.303.0 - a diamond records its decisions, and a migration moves the phase into them
 
 **2026-09-30.** Phase migration stage 5a, founder ruling DL-1368 (S1 a decision log, S2 L0's own

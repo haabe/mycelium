@@ -30,6 +30,10 @@
           "metric"
         ],
         "properties": {
+          "set_by": {
+            "type": "string",
+            "description": "The L1 diamond that set this outcome (v0.304.0): its L2 opens under that L1. Ruling C: L1 proposes the outcome, L2 maps it."
+          },
           "id": {
             "type": "string",
             "description": "Stable root id, referenced by `rolls_up_to`."
