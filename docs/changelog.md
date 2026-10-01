@@ -4,6 +4,32 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-01.
 
+## v0.307.4 - shell and file-move paths to the diamonds file (control audit, batch 1b)
+
+**2026-10-01.** Second safety-hardening batch (DL-1370). Each gap was reproduced on 0.307.3, and
+each test here fails there. **Upgrade.**
+
+- **A shell write that launches an L5, or records personal data, is reported** (P6). The L5
+  human-approval floor and the personal-data confirmation (ruling g) ran only on the edit tools,
+  where the person is asked; a `python3 -c` write moved an L5 into delivery and the post-check said
+  nothing. A shell write cannot ask after the fact, so it is now blocked with the reason: put it
+  back and make the change with Edit or Write, where the person is asked.
+- **Naming Mycelium's own writer does not excuse another write** (P7). The allowed-writer check was a
+  substring of the whole command, so `cp new.yml .claude/diamonds/active.yml  # then run
+  migrate_phase.py` passed. Only `migrate_phase.py` or `derive_closing_path.py` run on its own
+  passes now (no chaining, redirects or substitutions), and shell comments outside quotes are
+  dropped before the command is scanned (a trailing comment was read as `cp`'s destination).
+- **Moving the diamonds file away is refused, as removing it is** (P8): shell `mv` and `git mv` of
+  `.claude/diamonds/active.yml`, and MCP `move_file` with it as the source.
+- **The scale-lock refusal header** said "this write opens a diamond before its parent is ready" for
+  every refusal the hook makes, a move, a completion, a teardown or a widening included; it now says
+  the write breaks the diamond rules listed below it.
+- **Alternatives considered:** refusing every shell command that names the diamonds file (it would
+  refuse `cp active.yml backup.yml` and reads that need the path); making the post-check revert the
+  write itself (a hook that rewrites the user's file after the fact can lose a change the person
+  meant; the agent is told and the person decides); asking in the post-check (PostToolUse cannot
+  ask; the write already happened).
+
 ## v0.307.3 - the release gate's inputs (control audit, batch 1a)
 
 **2026-10-01.** First of the safety-hardening batches ruled in DL-1370, from the control audit of

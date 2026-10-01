@@ -1620,6 +1620,13 @@ def new_diamond_violations(project_dir: str, payload: dict) -> list[str]:
             before = fh.read()
     except OSError:
         before = ""  # no file yet: every diamond the write adds is new
+    src = str(_as_dict(payload.get("tool_input")).get("source") or "")
+    if src and _same_file(src, target, project_dir):
+        # v0.307.4 (control audit P8): a move with the diamonds file as its source left nothing
+        # to judge, and removes every record at once, as `rm` does (refused for shell commands).
+        return [("moving diamonds/active.yml away removes every diamond's record at once, which "
+                 "no gate can judge. Change it with Edit or Write; to close a diamond, record its "
+                 "`close` decision or move it into `archived_diamonds`")]
     after = _proposed_text(payload, target, before, project_dir)
     if after is None:
         return []
@@ -2041,7 +2048,9 @@ def _run_hook(project_dir: str) -> int:
     if not violations:
         _launch_approval(project_dir, payload)
         return EXIT_HOLDS
-    print("Mycelium scale lock: this write opens a diamond before its parent is ready.\n\n"
+    # v0.307.4: the header named only an opening, and every refusal of this hook printed it: a
+    # move, a completion, a teardown, a re-target, a widening, a file moved away.
+    print("Mycelium scale lock: refused. This write breaks the diamond rules below.\n\n"
           + "\n".join(violations) + "\n" + _GATE_TAIL, file=sys.stderr)
     return 2
 
