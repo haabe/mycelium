@@ -550,6 +550,9 @@ def _as_date(v) -> _dt.date | None:
         return None
 
 
+_SKIP_ACK_KEYS = ("recorded_at", "expires", "covers", "releases", "why")
+
+
 def skip_ack_verdict(project_dir: str, kind: str, targets: list[str]) -> tuple[bool, str]:
     """Does the user's delivery skip-ack lift this gate (founder ruling DL-1364)? Returns
     (lifted, warning). The ack is scoped to the paths it names (`covers`), lifts a release only when
@@ -567,6 +570,13 @@ def skip_ack_verdict(project_dir: str, kind: str, targets: list[str]) -> tuple[b
         doc = None
     today = _today_date()
     recorded = _as_date(doc.get("recorded_at")) if isinstance(doc, dict) else None
+    structured = isinstance(doc, dict) and any(k in doc for k in _SKIP_ACK_KEYS)
+    if structured and recorded is None:
+        # v0.307.3 (control audit P4): a structured ack with no ISO `recorded_at` fell to the
+        # legacy path, which lifts every gate, releases included; it lifts nothing until dated.
+        return False, ("the delivery skip-ack has no `recorded_at` as YYYY-MM-DD, so it lifts "
+                       "nothing; the user can add the date they wrote it (they write it, not the "
+                       "agent)")
     if not isinstance(doc, dict) or recorded is None:
         return _legacy_ack(project_dir, kind, targets, today)
     expires = _as_date(doc.get("expires")) or recorded + _dt.timedelta(days=SKIP_ACK_DAYS)

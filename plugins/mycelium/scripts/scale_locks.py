@@ -260,7 +260,23 @@ _DEPLOY = re.compile(
     r"|(?:scp|rsync)\b[^|;&]*\s[\w.@-]+:\S*"
     # A tunnel puts the running app in front of anyone with the link (v0.290.0; E2E run 10 replay).
     r"|ngrok\s+(?:http|tcp|tls|start)\b|cloudflared\b[^|;&]*\btunnel\b|\blocaltunnel\b|\blt\s+--port\b"
-    r"|tailscale\s+(?:funnel|serve)\b|\bssh\b[^|;&\n]*\s-R\s)", re.IGNORECASE)
+    r"|tailscale\s+(?:funnel|serve)\b|\bssh\b[^|;&\n]*\s-R\s"
+    # v0.307.3 (control audit P2, DL-1370): hosts the list above did not name.
+    r"|railway\s+up\b|\bgh-pages\s|(?:^|[;&|(]\s*|\bnpx\s+)surge\b"
+    r"|aws\b[^|;&]*\bs3\s+(?:cp|mv)\s+(?!s3://)\S+\s+s3://"
+    r"|docker\s+(?:buildx\s+)?build\b[^|;&]*\s--push\b)", re.IGNORECASE | re.MULTILINE)
+#: A command named for a release (DL-1370: "List + 'deploy' rule"): a tool's `deploy`/`publish`
+#: subcommand (`wrangler deploy`, `firebase deploy`, `supabase functions deploy`), a package script
+#: (`npm run deploy`, `yarn deploy`, `make deploy`), or a script named for it (`./deploy.sh`), at a
+#: command's start. It over-matches some local scripts on purpose: they get the gate's ask or
+#: refusal, and a release-scoped ack covers them. Commands that only mention the word are not it.
+_DEPLOY_NAMED = re.compile(
+    r"(?:^|[;&|(]\s*|\b(?:npx|bunx|dlx)\s+)"
+    r"(?!(?:echo|printf|grep|rg|ag|git|cat|less|more|head|tail|vim?|nano|code|ls|cd|man|pytest)\b)"
+    r"[A-Za-z][\w.-]*(?:\s+(?!-)[\w.:-]+)?\s+(?:deploy|publish)(?::[\w-]+)?(?=\s|$|[;&|)])"
+    r"|(?:^|[;&|(]\s*|\b(?:bash|sh|zsh|python3?|node|ruby)\s+)(?:\./|\.\./|/)?(?:[\w.-]+/)*"
+    r"[\w.-]*(?:deploy|publish)[\w.-]*\.(?:sh|bash|py|js|mjs|ts|rb)\b",
+    re.IGNORECASE | re.MULTILINE)
 #: A plain `git push` is a release when the project deploys on push (v0.290.0): Vercel and Netlify
 #: publish every pushed branch (a preview URL is public), and a workflow that deploys on push does
 #: the same from CI. Checked only when the command pushes; the files are the host's own config.
@@ -997,9 +1013,13 @@ class State:
                    "service, or a concierge test of any product: by hand). Production for "
                    "everyone is an L4")
             return [msg]
-        until = str(ld.get("until"))[:10]
+        until = str(ld.get("until") or "").strip()
         today = os.environ.get("MYCELIUM_TODAY") or _dt.datetime.now(_dt.UTC).date().isoformat()
-        if re.fullmatch(r"\d{4}-\d{2}-\d{2}", until) and until < today:
+        if until and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", until[:10]):  # v0.307.3 (P3)
+            return [(f"{did}: an end date for its learning delivery as YYYY-MM-DD "
+                     f"(`{delivery_key(d, 'until')}` is `{until[:30]}`, which cannot run out)")]
+        until = until[:10]
+        if until and until < today:
             msg = (f"{did}: a learning delivery still running (`{delivery_key(d, 'until')}` "
                    f"is {until}): record the verdict, extend it with the "
                    "audience's agreement, or deliver through an L4")
@@ -1099,7 +1119,8 @@ class State:
             new = str(now.get(field) or "").strip()
             if not old or new == old:
                 continue
-            if field == "until" and new and new[:10] < old[:10]:
+            if (field == "until" and _ISO_DATE.fullmatch(new[:10]) and _ISO_DATE.fullmatch(old[:10])
+                    and new[:10] < old[:10]):  # v0.307.3 (P3): as text, "1 Nov" read as sooner
                 continue  # ends sooner: narrower, nothing to re-run
             entry = next((c for c in reversed(_as_list(now.get("changes")))
                           if isinstance(c, dict)
@@ -1258,9 +1279,15 @@ def _record_problems(st: State, d: dict, e: dict, today: str) -> list[str]:
             miss.append(f"the {g} gate passed for this exposure")
         elif g in SAFETY_RECORD and not st.records[g]:
             miss.append(f"a record behind its {g} pass: {SAFETY_RECORD[g]}")
-    until = str(e.get("until") or "")[:10]
-    if until and until < today:
-        miss.append(f"to be in date (it ran until {until})")
+    data = str(e.get("data_class") or "").strip().lower()
+    if data and data not in DATA_CLASSES:  # v0.307.3 (P5): the class decides who confirms it
+        miss.append(f"its data_class as one of {', '.join(DATA_CLASSES)} (it says `{data[:40]}`)")
+    until = str(e.get("until") or "").strip()
+    if until and not _ISO_DATE.fullmatch(until[:10]):  # v0.307.3 (P3): text never compared past
+        miss.append(f"its `until` as a date, YYYY-MM-DD (`{until[:30]}` cannot be compared with "
+                    "today, so it would never run out)")
+    elif until and until[:10] < today:
+        miss.append(f"to be in date (it ran until {until[:10]})")
     if e.get("ended"):
         miss.append("to be running (it has `ended`)")
     chain_ok, chain_miss = st.verdict(d)
@@ -1289,7 +1316,7 @@ def current_exposures(st: State) -> tuple[bool, list[tuple[dict, dict]], list[st
 def _release_in(project_dir: str, payload: dict) -> str:
     """The release a Bash command makes, as text, or "" when it makes none."""
     command = _executed_text(str(_as_dict(payload.get("tool_input")).get("command") or ""))
-    m = _DEPLOY.search(command)
+    m = _DEPLOY.search(command) or _DEPLOY_NAMED.search(command)
     if m:
         return m.group(0).strip()
     p = _GIT_PUSH.search(command)
@@ -1319,8 +1346,10 @@ def _release_decision(project_dir: str, what: str) -> tuple[str, str] | None:
     approved among, not the one meant); with none it is refused, naming why each record is not
     current. Since v0.306.0 a project with no exposure records is refused and told to record one."""
     st = State(project_dir)
-    if not st.active:
-        return None
+    if not st.active and not (st.completed_ids or st.archived_ids):
+        return None  # no diamonds at all: Mycelium is not in use here
+    # v0.307.3 (control audit P1): "no open diamond" was read as "no diamonds at all", so once
+    # every diamond had completed any deploy passed (0.288.1 did the same).
     any_records, current, reasons = current_exposures(st)
     if not any_records:
         return "deny", f"`{what[:80]}` puts the work in front of real people. {NO_EXPOSURE_RECORD}"
@@ -1804,9 +1833,12 @@ Do not write that file on your own judgement."""
 # adds the record and REPORTS against it (`--exposures`); stage 2 moves the release gate onto it.
 
 EXPOSURE_FIELDS = ("recorded_at", "audience", "channel", "data_class", "until", "consent")
+DATA_CLASSES = ("none", "synthetic", "personal", "sensitive")
+_ISO_DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
 EXPOSURE_GATES = ("security", "privacy", "service_quality", "regulatory")
 #: Data classes whose exposure the person confirms (ruling g): the permission dialog asks.
 PERSON_DATA = ("personal", "sensitive")
+NO_PERSON_DATA = ("none", "synthetic")
 
 
 def delivery_of(d: dict) -> dict:
@@ -1901,7 +1933,9 @@ def exposure_report(project_dir: str) -> list[str]:
 
 
 def new_person_exposures(before_text: str, after_text: str) -> list[str]:
-    """Exposure records a write ADDS whose data class is personal or sensitive (ruling g)."""
+    """Exposure records a write ADDS whose data class is not `none` or `synthetic` (ruling g).
+    v0.307.3 (control audit P5): it asked only for the exact words `personal` and `sensitive`, so
+    `Personal data` or `sensitive (health)` reached people unconfirmed; any other class asks."""
     def keys(text: str) -> set:
         try:
             doc = _as_dict(_parse(text, "diamonds/active.yml")) if text.strip() else {}
@@ -1911,7 +1945,8 @@ def new_person_exposures(before_text: str, after_text: str) -> list[str]:
                 for key in ("active_diamonds", "completed_diamonds")
                 for d in _as_list(doc.get(key)) if isinstance(d, dict)
                 for e in _as_list(d.get("exposures"))
-                if isinstance(e, dict) and str(e.get("data_class") or "").lower() in PERSON_DATA}
+                if isinstance(e, dict)
+                and str(e.get("data_class") or "").strip().lower() not in NO_PERSON_DATA}
     return [f"{i} ({a})" for i, _, a in sorted(keys(after_text) - keys(before_text))]
 
 

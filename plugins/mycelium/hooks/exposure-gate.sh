@@ -31,6 +31,7 @@ shopt -s nocasematch
 case "$INPUT" in
   *deploy*|*publish*|*push*|*apply*|*helm*|*rollout*|*image*|*ssh*|*scp*|*rsync*|*upload*|*pulumi*|*sync*|*function-code*) ;;
   *ngrok*|*cloudflared*|*localtunnel*|*tailscale*|*"lt --port"*) ;;  # tunnels (v0.290.0)
+  *railway*|*gh-pages*|*surge*|*s3*) ;;  # hosts with no deploy/publish word (v0.307.3, audit P2)
   *) exit 0 ;;
 esac
 shopt -u nocasematch
