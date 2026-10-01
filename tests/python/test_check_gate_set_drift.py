@@ -202,3 +202,53 @@ def test_a_missing_row_is_caught(tmp_path):
 ])
 def test_cells_are_read_as_scales(cell, scales):
     assert mod._scales_in(cell) == scales
+
+
+def test_the_per_scale_tables_agree_with_the_code_cell_by_cell():
+    """v0.309.2 (stage 5d-3b): the per-scale tables have one column per decision and are compared
+    with scale_locks.decision_gates; until then only their summary lines were compared."""
+    assert mod.scale_table_drift(REAL_ROOT) == []
+
+
+def test_a_changed_per_scale_cell_is_caught(tmp_path):
+    root = _copy_with_table(tmp_path, "| BVSSH | R | R |", "| BVSSH | R | -- |")
+    found = mod.scale_table_drift(root)
+    assert any("L0 `bvssh` at review" in f and "requires" in f for f in found), found
+
+
+def test_a_per_scale_table_still_keyed_by_phase_move_is_caught(tmp_path):
+    root = _copy_with_table(
+        tmp_path, "| Gate | state purpose | review |",
+        "| Gate | Disc->Def | Def->Dev |")
+    found = mod.scale_table_drift(root)
+    assert any("L0 table columns" in f for f in found), found
+
+
+def test_each_gates_applies_to_line_agrees_with_the_code():
+    """v0.309.2: the Applies-to lines were compared with nothing, and Privacy and Service Quality
+    said L2-L4 while the code required both before an L5 released (v0.292.0)."""
+    assert mod.applies_to_drift(REAL_ROOT) == []
+    text = (REAL_ROOT / "plugins/mycelium/engine/theory-gates.md").read_text(encoding="utf-8")
+    scoped = [line for line in text.splitlines() if line.startswith("**Applies to**:")]
+    assert len(scoped) == 15, "fifteen gates, each with its scope"  # 13 compared, 2 NUDGE
+
+
+def test_the_stale_privacy_scope_is_caught(tmp_path):
+    root = _copy_with_table(tmp_path, "**Applies to**: `commit_to_build` (L2-L4) and `release` (L2-L5).",
+                            "**Applies to**: `commit_to_build` (L2-L4) and `release` (L2-L4).")
+    found = mod.applies_to_drift(root)
+    assert len(found) == 1 and "`privacy`" in found[0], found
+
+
+def test_a_decision_missing_from_a_scope_is_caught(tmp_path):
+    root = _copy_with_table(tmp_path,
+                            "**Applies to**: `set_target`, `start_experiment`, `release` and `close`",
+                            "**Applies to**: `set_target`, `release` and `close`")
+    found = mod.applies_to_drift(root)
+    assert len(found) == 1 and "`evidence`" in found[0], found
+
+
+def test_the_nudge_gates_scopes_are_not_compared(tmp_path):
+    root = _copy_with_table(tmp_path, "**Applies to**: `release` (L1, L3-L4). **Tier",
+                            "**Applies to**: `close` (L5). **Tier")
+    assert mod.applies_to_drift(root) == [], "capacity is a NUDGE gate, not in DECISIONS"

@@ -189,7 +189,8 @@ def main(argv=None) -> int:
 
     required = machinery(root)
     found, undeclared = scan(root)
-    drift = matrix_drift(root) + born_drift(root, required)
+    drift = (matrix_drift(root) + scale_table_drift(root) + applies_to_drift(root)
+             + born_drift(root, required))
     return _report(found, undeclared, required, drift)
 
 
@@ -225,7 +226,7 @@ def _print_undeclared(undeclared: list) -> list:
     return out
 
 
-#: The columns of the theory-gates.md Transition Matrix, in order: one per decision since v0.308.1
+#: The columns of the theory-gates.md Decision Matrix, in order: one per decision since v0.308.1
 #: (DL-1372 V2), compared with `scale_locks.DECISIONS` itself. Until then one per phase move,
 #: compared with the per-transition table derived from it.
 _COLUMNS = ("set_target", "start_experiment", "commit_to_build", "release", "close")
@@ -262,9 +263,9 @@ def matrix_drift(root: Path) -> list[str]:
         # A partial tree (a test fixture): say it was not compared, never a silent pass.
         MATRIX_NOT_COMPARED.append("theory-gates.md or scale_locks.py is absent in this tree")
         return []
-    section = tg.read_text(encoding="utf-8").split("## Transition Matrix", 1)
+    section = tg.read_text(encoding="utf-8").split("## Decision Matrix", 1)
     if len(section) == 1:
-        MATRIX_NOT_COMPARED.append("theory-gates.md has no `## Transition Matrix` section")
+        MATRIX_NOT_COMPARED.append("theory-gates.md has no `## Decision Matrix` section")
         return []
     documented: dict[str, dict[str, set[str]]] = {}
     for line in section[1].split("\n## ", 1)[0].splitlines():
@@ -283,7 +284,7 @@ def matrix_drift(root: Path) -> list[str]:
     for g in sorted(set(code) | {k for k, v in documented.items() if any(v.values())}):
         want, have = code.get(g), documented.get(g)
         if have is None:
-            out.append(f"    theory-gates.md Transition Matrix has no row for `{g}`, which the "
+            out.append(f"    theory-gates.md Decision Matrix has no row for `{g}`, which the "
                        "code requires")
             continue
         if want is None:
@@ -293,6 +294,110 @@ def matrix_drift(root: Path) -> list[str]:
         out.extend(f"    `{g}` at {t}: code {sorted(want[t])}, theory-gates.md {sorted(have[t])}"
                    for t in _COLUMNS if want[t] != have[t])
     return out
+
+
+#: The per-scale tables (v0.309.2, stage 5d-3b): one column per decision, an L0's own two.
+_PER_SCALE = "## Gates per Scale and Decision"
+
+
+def _per_scale_tables(text: str) -> dict[str, list[list[str]]]:
+    """Each `### L<n>` table under the per-scale section, as rows of cells (header first)."""
+    section = text.split(_PER_SCALE, 1)
+    if len(section) == 1:
+        return {}
+    tables: dict[str, list[list[str]]] = {}
+    scale = None
+    for line in section[1].split("\n## ", 1)[0].splitlines():
+        m = re.match(r"^### (L[0-5]) ", line)
+        if m:
+            scale = m.group(1)
+            continue
+        if scale and line.startswith("|"):
+            cells = [c.strip() for c in line.strip().strip("|").split("|")]
+            if not set("".join(cells)) <= {"-"}:
+                tables.setdefault(scale, []).append(cells)
+    return tables
+
+
+def scale_table_drift(root: Path) -> list[str]:
+    """THE PER-SCALE TABLES, cell by cell (v0.309.2, stage 5d-3b). Until then only their
+    `Applicable gates` summary lines were compared, so a cell could say a gate applies at a step
+    where the code never asks for it, and nothing noticed. Each table now has one column per
+    decision and is compared with `scale_locks.decision_gates`."""
+    tg = root / "plugins" / "mycelium" / "engine" / "theory-gates.md"
+    if not tg.exists():
+        return []  # a partial tree; matrix_drift already says it was not compared
+    tables = _per_scale_tables(tg.read_text(encoding="utf-8"))
+    if not tables:
+        MATRIX_NOT_COMPARED.append(f"theory-gates.md has no `{_PER_SCALE}` tables")
+        return []
+    sys.path.insert(0, str(root / "plugins" / "mycelium" / "scripts"))
+    import scale_locks  # noqa: PLC0415 - the table the phase gates read
+    out = []
+    for scale in _ALL_SCALES:
+        rows = tables.get(scale)
+        if not rows:
+            out.append(f"    theory-gates.md has no per-scale table for {scale}")
+            continue
+        decisions = [c.replace(" ", "_") for c in rows[0][1:]]
+        want_cols = list(scale_locks.L0_DECISIONS if scale == "L0" else _COLUMNS)
+        if decisions != want_cols:
+            out.append(f"    {scale} table columns {decisions}, the code's decisions {want_cols}")
+            continue
+        for cells in rows[1:]:
+            gate = _normalise(re.sub(r"\s*\(.*\)\s*$", "", cells[0]))
+            for dec, cell in zip(decisions, cells[1:], strict=False):
+                want = gate in scale_locks.decision_gates(scale, dec, ai=True)
+                if want != (cell.strip().upper() == "R"):
+                    out.append(f"    {scale} `{gate}` at {dec}: theory-gates.md says "
+                               f"{cell.strip()!r}, the code {'requires' if want else 'does not'}")
+    return out
+
+
+_APPLIES = re.compile(r"^\*\*Applies to\*\*:\s*(.*)$")
+_SCOPED = re.compile(r"`([a-z_]+)`(?:\s*\(([^)]*)\))?")
+
+
+def _scope(line: str) -> dict[str, set[str]]:
+    """`commit_to_build` (L2-L4) and `release` (L2-L5) -> {decision: scales}. Only the scope is
+    read, up to the first full stop: what follows is the gate's history."""
+    scope = re.split(r"\.\s|\.$|,\s*\*\*", line, maxsplit=1)[0]
+    out = {}
+    for dec, scales in _SCOPED.findall(scope):
+        out[dec] = set(_scales_in(f"Required ({scales})") if scales else _ALL_SCALES)
+    return out
+
+
+def applies_to_drift(root: Path) -> list[str]:
+    """EACH GATE'S `Applies to` LINE, compared with the code (v0.309.2, stage 5d-3b). Written per
+    decision; until then per phase move, and compared with nothing: Privacy and Service Quality
+    said L2-L4 for a year in which the code required both before an L5 released (v0.292.0)."""
+    tg = root / "plugins" / "mycelium" / "engine" / "theory-gates.md"
+    if not tg.exists():
+        return []
+    sys.path.insert(0, str(root / "plugins" / "mycelium" / "scripts"))
+    import scale_locks  # noqa: PLC0415 - the table the phase gates read
+    out, gate = [], None
+    for line in tg.read_text(encoding="utf-8").splitlines():
+        m = re.match(r"^### \d+\.\s+(.*?)(?:\s+Gate)?(?:\s*\(.*\))?\s*$", line)
+        if m:
+            gate = _normalise(re.sub(r"\s+Gate$", "", re.sub(r"\s*\(.*\)", "", m.group(1))))
+            continue
+        a = _APPLIES.match(line)
+        if not (a and gate) or gate in NUDGE_GATES:
+            continue
+        documented = _scope(a.group(1))
+        code = {dec: set(scale_locks.DECISIONS[dec].get(gate, ())) for dec in _COLUMNS}
+        code = {d: sc for d, sc in code.items() if sc}
+        if documented != code:
+            out.append(f"    theory-gates.md `{gate}` Applies to {_show(documented)}, the code "
+                       f"{_show(code)}")
+        gate = None
+    return out
+
+
+def _show(scope: dict[str, set[str]]) -> str:
+    return ", ".join(f"{d} {sorted(sc)}" for d, sc in scope.items()) or "nothing"
 
 
 #: Gates a diamond is born with that no transition requires: the NUDGE gates (theory-gates.md,

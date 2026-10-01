@@ -1,23 +1,30 @@
 # Diamond Rules
 
-Diamonds are the core workflow unit in Mycelium. Each diamond represents a cycle of divergent and convergent thinking applied to a problem at a specific scale.
+Diamonds are the core workflow unit in Mycelium. Each diamond is one learning loop at one scale, and each decision in it fans out to options, then narrows to one by comparing them.
 
-## The Four Phases
+## The Loop: Decisions and Two Modes
 
-Every diamond passes through four phases, based on the **Double Diamond** model (Design Council, 2004). The Design Council evolved this into a broader "Framework for Innovation" (2019) adding Design Principles, Methods Bank, and Culture layers. For Complex-domain problems (Cynefin), consider the Design Council's Systemic Design Framework:
+Every level below purpose runs a learning loop (founder rulings D and E, 2026-09-30; DL-1366,
+DL-1368). It moves by the decisions it records, never by a phase name:
 
-```
-    DISCOVER          DEFINE           DEVELOP          DELIVER
-   /        \        /      \         /       \        /       \
-  /  Diverge  \    / Converge \     / Diverge  \    / Converge  \
- /   explore   \  /  synthesize\   /   ideate   \  /  implement  \
-/    research   \/   prioritize \/ prototype    \/   validate    \
-```
+1. **`set_target`**: the target is chosen, from options compared.
+2. **`start_experiment`**: the lightest test toward it is named and started.
+3. **`commit_to_build`**: what the experiments showed is committed to be built (recorded together
+   with `start_experiment` the first time).
+4. **`release`**: what was built reaches people, through its exposure records.
+5. **`close`**: the cycle ends, with its Definition of Done met or its kill criterion fired.
 
-1. **Discover** (Divergent): Explore the problem space. Research, interview, observe. Expand understanding. No solutions yet.
-2. **Define** (Convergent): Synthesize findings. Frame the problem. Identify opportunities. Select focus.
-3. **Develop** (Divergent): Generate solutions for the defined problem. Prototype. Experiment. Multiple options.
-4. **Deliver** (Convergent): Build, test, ship. Validate with real users. Measure outcomes.
+**Two modes, read off the decisions** (DL-1368 S1): **discovery** until `commit_to_build`,
+**delivery** after. Where a diamond is, is said by what it has decided: "no decision yet", "target
+set", "committed to build", "released", "closed" (`scale_locks.position`). **A loop iterates by
+appending** (DL-1373): a new experiment is another `start_experiment`, a re-chosen front runner
+another `commit_to_build`; **a recorded decision stays recorded** (DL-1374; the scale-lock gate
+refuses a write that removes or rewrites one). **An L0 is not a loop** (DL-1368 S2): it records
+`state_purpose` once, and `review` when its purpose drifts.
+
+Until v0.306.0 a diamond recorded one of four phases (Discover, Define, Develop, Deliver); since then
+the decisions are the record, and since v0.309.2 this file says them. The internal name `phase_of`
+and the persisted next-item ids keep the old words (DL-1372 V3).
 
 ## The Six Scales (L0-L5)
 
@@ -47,7 +54,7 @@ The shape is uniform; the trigger is not, and the trigger is what decides whethe
 | scale | the inquiry emits | recurs on | entered by |
 |---|---|---|---|
 | L0 | a WHY (once), and Just Causes (plural) | drift | founding; there is one purpose |
-| L1 | triggers | **a decision** | an event offer when a strategic decision arises: `/wardley-map` after gameplay, or `/diamond-progress` when an L0 enters define (v0.243.0) |
+| L1 | triggers | **a decision** | an event offer when a strategic decision arises: `/wardley-map` after gameplay, or `/diamond-progress` when an L0 records `state_purpose` (v0.243.0) |
 | L2 | a map of the opportunities under one outcome, and a target re-chosen as it learns | **an outcome** set by its L1 | the L1→L2 spawn: `/ost-builder` offers an L2 on an outcome no L2 maps (v0.301.0) |
 | L3 | a front runner, or "none works" | **a target** chosen by its L2 | the L2→L3 spawn: `/ost-builder` offers an L3 on a target no L3 works (v0.301.0) |
 | L4 | an increment; a closed session | **per increment** | an event offer when an increment is ready to build: `/preflight` passing on a solution (v0.243.0) |
@@ -61,7 +68,7 @@ progress into and out of all or any of the diamonds, the model is wrong."* No pi
 catalogue door; it does not mean no entrance. **A scale that recurs on an event is entered by an
 EVENT OFFER**: the skill that is running when the event happens offers to open the cycle, names
 what the cycle is on, and records one line if it is declined. L1's event is a strategic decision
-(`/wardley-map`, and `/diamond-progress` when an L0 enters define); L4's is an increment ready to
+(`/wardley-map`, and `/diamond-progress` when an L0 records `state_purpose`); L4's is an increment ready to
 build (`/preflight`); L5's is a release categorised as a major launch (`/launch-tier`). Until
 v0.243.0 L1 and L4 had only a sentence saying they would be spawned, and no skill that did it:
 in dogfood full-ladder runs 6 to 20 neither was ever created, including three runs in which L0
@@ -119,23 +126,23 @@ the books, three adversarial rounds and founder correction.*
 
 **The locks are mechanical.** `scripts/scale_locks.py` is the one place they are defined. `hooks/scale-lock-gate.sh` refuses a write to `diamonds/active.yml` that OPENS a diamond (a new id, a rescaled one, or one moved back into the active list) whose lock does not hold, naming what is missing; the discovery gate refuses new source files outside a held chain; `scale_locks.py --check` reports every open diamond (canvas-health reads it); `--can-open <scale>` answers the doors. **Override:** only the user can open a diamond past its lock, with one line per diamond in `.claude/state/scale-lock-ack`: `<id> <scale> <YYYY-MM-DD> <their own words>`, valid for that id at that scale only (guarded state: the agent writing it gets an ASK).
 
-**Once open, a diamond moves at its own speed.** A child moves through its own transitions on its own gates and may be ahead of its parent; the parent stays active while children execute. **Findings flow upward**: a child may revise its parent (Torres p35, Wardley p32), and a parent revised under an open child marks the child for a re-check at its next `/diamond-assess`, it does not close it. **What entry means once a diamond is open:** the open-opportunity check applies at entry only, so an opportunity marked `addressed` after shipping re-locks nothing. What an open delivery cycle must still have to carry NEW source files is its chain: a purpose, an outcome, a target with evidence. **Diamonds opened before v0.245.0** are never blocked on edit, and `--check` lists any whose chain does not hold; such a diamond cannot carry new source files until the missing artefact exists or the user acks it.
+**Once open, a diamond moves at its own speed.** A child records its own decisions on its own gates and may be ahead of its parent; the parent stays active while children execute. **Findings flow upward**: a child may revise its parent (Torres p35, Wardley p32), and a parent revised under an open child marks the child for a re-check at its next `/diamond-assess`, it does not close it. **What entry means once a diamond is open:** the open-opportunity check applies at entry only, so an opportunity marked `addressed` after shipping re-locks nothing. What an open delivery cycle must still have to carry NEW source files is its chain: a purpose, an outcome, a target with evidence. **Diamonds opened before v0.245.0** are never blocked on edit, and `--check` lists any whose chain does not hold; such a diamond cannot carry new source files until the missing artefact exists or the user acks it.
 
 **A parent diamond at every rung, and no scale is skipped (v0.247.0).** L1 opens under a live L0, L2 under a live L1 with its artefacts, L3 under a live L2 on its opportunity, L4 under its L3, L5 under its L4. Founder, 2026-09-24: *"How can a product exist without a strategy? It makes no sense."* Until then the desired outcome, which lives in L2's own file, stood in for the whole of L1, so no E2E run ever opened an L1, and `solo_hobby` projects skipped it by rule. **A small strategy is still a strategy**: for a hobby it may be one North Star line, one landscape component and one decision, but it is written down before opportunities are.
 
-### Phase follows the work (v0.246.0)
+### The decisions on record say what work a diamond may carry (v0.246.0)
 
-**The entry lock says a cycle may exist; the phase says what work it may carry.** Code is built in **Develop**, after Define->Develop has passed Four Risks and Privacy (privacy by design). Real people meet it in **Deliver**, after Develop->Deliver has passed Security, Privacy and Service Quality. These are the matrix's own L3 and L4 gates (L5: Security at Develop->Deliver); nothing new is required, only that the work cannot walk around them. E2E dogfood run 10 on 0.245.0 had an SMS app holding staff phone numbers and private link tokens built, put live at one site and rolled out to a second, under an L3 still in define with every gate pending and no threat model or privacy assessment: the gates existed and were never reached because the phase never moved. **Build to learn is an evidence bar, not a safety bar** (founder, 2026-09-24: "Even a prototype should follow best practices, even if it is only a pilot").
+**The entry lock says a cycle may exist; its decisions say what work it may carry.** Code is built once a diamond has recorded **`commit_to_build`**, through Four Risks and Privacy (privacy by design). Real people meet it in **Deliver**, after Develop->Deliver has passed Security, Privacy and Service Quality. These are the matrix's own L3 and L4 gates (L5: Security at Develop->Deliver); nothing new is required, only that the work cannot walk around them. E2E dogfood run 10 on 0.245.0 had an SMS app holding staff phone numbers and private link tokens built, put live at one site and rolled out to a second, under an L3 still in define with every gate pending and no threat model or privacy assessment: the gates existed and were never reached because the phase never moved. **Build to learn is an evidence bar, not a safety bar** (founder, 2026-09-24: "Even a prototype should follow best practices, even if it is only a pilot").
 
-**An L3 delivers to LEARN; an L4 delivers to EARN** (v0.257.0). When the L3's riskiest assumption can only be answered by real use (an alpha, early adopters, a live trial at a pilot site), the L3 takes its learning build to its own Deliver and runs the test there: Cagan's live-data prototype, Gilad's early adopters and alpha, Patton's build to learn. It is bounded: the L3 reaches real people only with an exposure record (`exposures[]`: audience, until, channel; v0.296.0, and since v0.307.0 the only record of it: the old `learning_delivery` field is not read, and `scripts/migrate_phase.py` moves it), a named and opted-in audience, an end date, and the means of reaching them, and only through Security, Privacy and Service Quality. The means follows the product type: for web software, infrastructure as code for an environment that can be torn down (founder, 2026-09-25: the infrastructure a learning delivery needs belongs in the L3); for courseware, a pilot cohort on an existing platform; for a service, by hand; for an AI tool, its evals and a few opted-in users. These are examples, not a rule per type: a concierge or hand-run test is a means for any product (Gilad places the concierge test in the same Tests stage as early adopters and alpha; Cagan lists it among discovery techniques). Past `until`, the build stops counting as exposed: record the verdict, extend with the audience's agreement, or deliver through an L4. The verdict of the learning delivery is the medium-confidence evidence the L4 opens on. **Only the verdict of a learning delivery counts (v0.258.0):** the L4 lock also requires the L3 in Deliver (or complete) with its exposure record. A pass from a test run before the L3's Deliver is evidence, and it does not open an L4: the people it reached never went through Security, Privacy and Service Quality. E2E run 41 scored a hand-run trial at a real site with its L3 in develop and the backup approver timed without being told; one recorded verdict would have opened the L4, and only the builder's own judgement held it back. After such a pass the next item keeps proposing the L3's Deliver. **The L3's bars rise with its phases (v0.259.0):** it defines on a real problem, develops once its lightest test is named, delivers once the prototype has met users, and its confidence threshold is its exit bar (`confidence-thresholds.yml#L3`). Applied at entry, that threshold held E2E runs 42-43 in discover through four no-code tests and three in-world months. The L4's threshold is its exit bar too (v0.261.0): its lock admits it on the L3's verdict, and E2E run 47's first L4 sat at 0.15 against 0.7 because the threshold was read again at its first transition. The next item proposes the L3's Deliver (`deliver-l3:<l3>`) while its named test waits on real use. In 21 E2E runs only one L3 ever reached Deliver; 0.256.0 moved the test into the L4 on a misdiagnosis and is reverted.
+**An L3 delivers to LEARN; an L4 delivers to EARN** (v0.257.0). When the L3's riskiest assumption can only be answered by real use (an alpha, early adopters, a live trial at a pilot site), the L3 records its own `release` for its learning build and runs the test there: Cagan's live-data prototype, Gilad's early adopters and alpha, Patton's build to learn. It is bounded: the L3 reaches real people only with an exposure record (`exposures[]`: audience, until, channel; v0.296.0, and since v0.307.0 the only record of it: the old `learning_delivery` field is not read, and `scripts/migrate_phase.py` moves it), a named and opted-in audience, an end date, and the means of reaching them, and only through Security, Privacy and Service Quality. The means follows the product type: for web software, infrastructure as code for an environment that can be torn down (founder, 2026-09-25: the infrastructure a learning delivery needs belongs in the L3); for courseware, a pilot cohort on an existing platform; for a service, by hand; for an AI tool, its evals and a few opted-in users. These are examples, not a rule per type: a concierge or hand-run test is a means for any product (Gilad places the concierge test in the same Tests stage as early adopters and alpha; Cagan lists it among discovery techniques). Past `until`, the build stops counting as exposed: record the verdict, extend with the audience's agreement, or deliver through an L4. The verdict of the learning delivery is the medium-confidence evidence the L4 opens on. **Only the verdict of a learning delivery counts (v0.258.0):** the L4 lock also requires the L3 released (or closed) with its exposure record. A pass from a test run before the L3's `release` is evidence, and it does not open an L4: the people it reached never went through Security, Privacy and Service Quality. E2E run 41 scored a hand-run trial at a real site with its L3 in develop and the backup approver timed without being told; one recorded verdict would have opened the L4, and only the builder's own judgement held it back. After such a pass the next item keeps proposing the L3's `release`. **The L3's bars rise with its decisions (v0.259.0):** it sets its target on a real problem, commits to build once its lightest test is named, releases once the prototype has met users, and its confidence threshold is its exit bar (`confidence-thresholds.yml#L3`). Applied at entry, that threshold held E2E runs 42-43 in discover through four no-code tests and three in-world months. The L4's threshold is its exit bar too (v0.261.0): its lock admits it on the L3's verdict, and E2E run 47's first L4 sat at 0.15 against 0.7 because the threshold was read again at its first transition. The next item proposes the L3's `release` (`deliver-l3:<l3>`; persisted ids keep their old word, DL-1372 V3) while its named test waits on real use. In 21 E2E runs only one L3 ever reached Deliver; 0.256.0 moved the test into the L4 on a misdiagnosis and is reverted.
 
-- **Mechanical:** the discovery gate's second stage refuses new source files unless an L3/L4/L5 whose chain holds is in Develop or Deliver with Four Risks and Privacy passed; `hooks/exposure-gate.sh` refuses a deploy, publish or remote pull-and-restart the agent runs unless one is in Deliver with Security, Privacy and Service Quality passed. Gate outcomes are read from `theory_gates_status`; a gate the diamond never recorded is not passed.
+- **Mechanical:** the discovery gate's second stage refuses new source files unless an L3/L4/L5 whose chain holds has recorded `commit_to_build` (committed to build or released) with Four Risks and Privacy passed; `hooks/exposure-gate.sh` refuses a deploy, publish or remote pull-and-restart the agent runs unless one is in Deliver with Security, Privacy and Service Quality passed. Gate outcomes are read from `theory_gates_status`; a gate the diamond never recorded is not passed.
 - **Rule, where no hook can see:** a deploy the USER runs. Operating contract rule 14 and `/mycelium:preflight` carry it.
-- **The full gate set, not a sample (v0.247.0).** Reaching Develop needs every gate the matrix requires on Discover->Define and Define->Develop for that scale; reaching Deliver adds Develop->Deliver. 0.246.0 read two, and E2E run 11 wrote a new L3 straight into develop with exactly those two marked passed and four others pending. `n/a` counts for a gate that genuinely does not apply, never for Security or Privacy.
+- **The full gate set, not a sample (v0.247.0).** Committing to build needs every gate the matrix requires on `set_target`, `start_experiment` and `commit_to_build` for that scale; releasing adds `release`'s. 0.246.0 read two, and E2E run 11 wrote a new L3 straight into develop with exactly those two marked passed and four others pending. `n/a` counts for a gate that genuinely does not apply, never for Security or Privacy.
 - **Security and Privacy need their record, not a status word (v0.247.0).** Security counts as passed only with a threat model on the canvas (`threat-model.yml` `threats`; the L3 criterion is "STRIDE threat model completed"), Privacy only with a privacy assessment (`privacy-assessment.yml` `last_assessed` and `data_inventory`).
-- **A phase move leaves a record and passes its gates (v0.248.0).** The scale-lock gate refuses a write that moves a diamond forward unless each transition it crosses has the matrix's required gates passed; since v0.306.0 the move is the decisions it records, so those entries are its record (`progression_history` is kept for readers and no longer required, v0.307.8); `scripts/scale_locks.py` holds the matrix as one table that the code, exposure and phase-move checks all read. Parking and killing are free. **A recorded decision stays recorded (v0.309.1, DL-1374):** a diamond does not move back; the gate refuses a write that removes a recorded decision or changes its name or date, and a loop iterates by appending (DL-1373).
-- **A diamond is born in discover (v0.247.0).** The scale-lock gate refuses a new diamond written at any later phase; later phases are reached through `/mycelium:diamond-progress` and their gates.
-- **The scale-lock override waives the chain, never the phase.** Only `delivery-skip-ack` (the user declares the work untracked) lifts both, and since v0.293.0 only for the paths it `covers`, for releases only when it says `releases: true`, until it `expires` (30 days by default), with every use logged (founder ruling DL-1364).
+- **A decision leaves a record and passes its gates (v0.248.0).** The scale-lock gate refuses a write that records a decision unless the matrix's required gates for it are passed; since v0.306.0 the move is the decisions it records, so those entries are its record (`progression_history` is kept for readers and no longer required, v0.307.8); `scripts/scale_locks.py` holds the matrix as one table that the code, exposure and phase-move checks all read. Parking and killing are free. **A recorded decision stays recorded (v0.309.1, DL-1374):** a diamond does not move back; the gate refuses a write that removes a recorded decision or changes its name or date, and a loop iterates by appending (DL-1373).
+- **A diamond is born with no decision recorded (v0.247.0).** The scale-lock gate refuses a new diamond written with decisions; they are recorded through `/mycelium:diamond-progress` and their gates.
+- **The scale-lock override waives the chain, never a decision's gates.** Only `delivery-skip-ack` (the user declares the work untracked) lifts both, and since v0.293.0 only for the paths it `covers`, for releases only when it says `releases: true`, until it `expires` (30 days by default), with every use logged (founder ruling DL-1364).
 - **The override never waives WHAT an L4 delivers (v0.288.0).** An L4 with no L3 behind it must still name the solution it delivers in `object_ref`, even an untested one. The override may waive the L3 and its evidence, which is the user's call to ship an untested bet; it cannot waive the bet. The dogfood L4 shipped five months of releases on an override with no L3 and nothing named; founder, 2026-09-29: *"We can't create a delivery of something we don't know what is."*
 - **An L2 maps one outcome and targets one opportunity; an L3 is that target and its solutions (v0.300.0, DL-1367).** The L2's `object_ref` names a `desired_outcomes` id and its `target` the opportunity chosen by comparing siblings (a re-choice appends to `targets`). The L3 names the target; its set is the live solutions under it, and at `commit_to_build` it names `front_runner`. The L4 delivers a named solution from the set, and its lock reads that solution's evidence and failed assumptions alone: a sibling's verdict neither opens nor blocks it. An L2 on one opportunity, or an L3 on one solution, was read through a translation until v0.307.0 (the opportunity as the target, its `rolls_up_to` as the outcome, the solution as the front runner); since then it is not read, and the next item offers `scripts/migrate_phase.py`, which records the new shape, before any door that would ask again for a choice the old record holds.
 - **A diamond records the decisions it makes (v0.303.0, DL-1368).** `decisions: [{decision, on, gates, ruling}]`: set_target, start_experiment, commit_to_build, release, close (an L0: state_purpose, review). Where a diamond is, is read from them (define -> develop needs both start_experiment and commit_to_build). **Since v0.306.0 the recorded `phase` is not read at all**: a diamond with no decisions is in discover, and a release needs an exposure record (no fallback to Deliver). Adding a decision is judged as the move it makes, and the decision entry is that move's record. `scripts/migrate_phase.py` rewrites a project's phase history as reconstructed decisions, shown first and written on request.
@@ -212,12 +219,12 @@ Two limits apply: a hard ceiling per scale and a working WIP limit per scale.
 
 When evidence invalidates a higher-level assumption, regress:
 
-- If L4 Delivery reveals the L3 Solution is wrong -> regress to L3 Develop
+- If L4 Delivery reveals the L3 Solution is wrong -> the L3 iterates: another `start_experiment`, or a re-chosen front runner with another `commit_to_build` (DL-1373)
 - If an L3's ideas all fail, or its testing shows the target is misframed -> revise the L2's map and re-target; the L3 closes as `retargeted` in the same write (v0.302.0, DL-1367 R2; Torres p34-35, p164)
-- If L2 research reveals the L1 Strategy is flawed -> regress to L1 Define
+- If L2 research reveals the L1 Strategy is flawed -> the L1 re-targets, recorded by appending; the decisions it has on record stay (DL-1373, DL-1374)
 - If L5 Market feedback reveals the L2's target was wrong -> the L2 revises its map and re-targets (v0.302.0; until then a new L2 was spawned)
 
-**Regression triggers** (what signals the need to go back):
+**Regression triggers** (what signals that the parent must iterate):
 - User testing contradicts value assumption (Cagan four risks)
 - Metrics don't move after delivery (North Star input metrics flat)
 - Market feedback contradicts positioning (Lauchengco win/loss)
@@ -228,7 +235,7 @@ When evidence invalidates a higher-level assumption, regress:
 1. Document what was learned in `.claude/memory/product-journal.md`
 2. Archive, do not delete, the invalidated diamond's artifacts in canvas
 3. Mark the diamond's confidence as decreased with evidence citation
-4. Re-enter the parent diamond at the appropriate phase (usually Define or Develop)
+4. Return to the parent diamond, which iterates by appending (a new experiment, a re-chosen front runner, a new target); it does not move back, and no recorded decision is removed (DL-1374)
 5. Update all affected canvas files with the new evidence
 6. Log the regression decision in `.claude/harness/decision-log.md`
 7. Never treat regression as failure -- it is the system working correctly
@@ -243,19 +250,24 @@ Optimize for flow across diamonds:
 - **Pull, don't push**: Start new diamonds only when capacity allows.
 - **Small batches**: Prefer many small diamonds over few large ones.
 - **Unblock first**: If a diamond is blocked, resolve the blocker before starting new work.
-- **Minimize handoffs**: Same agent/team should own a diamond from Discover through Deliver when possible.
+- **Minimize handoffs**: Same agent/team should own a diamond from its first decision to its `close` when possible.
 - **Scope flexing with MoSCoW (DSDM)**: When a delivery timebox is exceeded, flex scope — cut Could/Won't items before compromising Must/Should. Never cut quality to meet a deadline; cut scope instead. See `/gist-plan` for MoSCoW tagging of steps.
 
-## Phase Transitions Require Theory Gates
+## Decisions Require Theory Gates
 
-Moving from one phase to the next is not automatic. Each transition must pass the relevant theory gates:
+Recording a decision is not automatic. Each decision must pass its theory gates. **Which gates, at
+which scale, is in one place: `theory-gates.md`'s Decision Matrix**, written out from
+`scale_locks.DECISIONS` and compared with it on every push (`check_gate_set_drift.py`). It is not
+copied here: every gate-set drift this project has had began in a copy.
 
-| Transition | Key Gates |
+| Decision | What its gates ask, in short |
 |------------|-----------|
-| Discover -> Define | Evidence sufficiency, bias check, triangulation |
-| Define -> Develop | Problem framing validated, JTBD mapped, Cynefin classified |
-| Develop -> Deliver | Solution validated, four risks assessed, security reviewed |
-| Deliver -> Complete | DoD met, BVSSH check, DORA metrics, retrospective |
+| `set_target` | the target is real, chosen from options, on evidence from outside the team |
+| `start_experiment` | the domain is classified and the lightest test is named |
+| `commit_to_build` | the risks are assessed and the design protects privacy |
+| `release` | what reaches people is secure, private and of service quality, on an exposure record |
+| `close` | the Definition of Done is met (or the kill criterion fired), with a BVSSH check |
+| an L0's `state_purpose`, `review` | the purpose is grounded and its biases examined |
 
 See `theory-gates.md` for detailed gate criteria per scale.
 
@@ -298,7 +310,7 @@ definition_of_done:
   provenance: { source_class, validated, captured_at }
 ```
 
-The **Deliver→Complete** gate passes only when the diamond's DoD `signal` is met **OR** its `kill_criterion` (the *invalidation criterion*: state+date; the key is named for its worst reading, and each kill on the dogfood canvas states what to RETHINK, not what to abandon) fired with evidence (done-by-invalidation, routed through `dogfood-mode` + decision-log). A child is done only when its outcome **rolls up** to move the parent — contribution, not summation. Full design + evidence grades: `docs/design/definition-of-done.md`; per-scale defaults + the question sequence: `${CLAUDE_PLUGIN_ROOT}/skills/define-done/SKILL.md`.
+**`close`** passes only when the diamond's DoD `signal` is met **OR** its `kill_criterion` (the *invalidation criterion*: state+date; the key is named for its worst reading, and each kill on the dogfood canvas states what to RETHINK, not what to abandon) fired with evidence (done-by-invalidation, routed through `dogfood-mode` + decision-log). A child is done only when its outcome **rolls up** to move the parent — contribution, not summation. Full design + evidence grades: `docs/design/definition-of-done.md`; per-scale defaults + the question sequence: `${CLAUDE_PLUGIN_ROOT}/skills/define-done/SKILL.md`.
 
 ## Diamond Lifecycle Management
 
@@ -314,7 +326,7 @@ The **Deliver→Complete** gate passes only when the diamond's DoD `signal` is m
 ### Stale Diamond Detection
 A diamond is stale when:
 - No progress for 30+ days without a documented blocker
-- Phase hasn't changed in 2+ weeks without documented reason
+- No decision recorded in 2+ weeks without documented reason
 - Its children are all complete but the parent hasn't progressed
 
 ### Cleanup Process
@@ -327,27 +339,27 @@ A diamond is stale when:
 
 See `../orchestration/operations.md` for full maintenance schedules.
 
-## Human Actions at Phase Transitions
+## Human Actions at Each Decision
 
-Each diamond transition involves both agent and human actions. The agent executes skills and checks gates. The human participates through these actions (from AI Interaction Atlas's 23 human action primitives):
+Each decision involves both agent and human actions. The agent executes skills and checks gates. The human participates through these actions (from AI Interaction Atlas's 23 human action primitives):
 
-| Transition | Human Actions | Agent Actions |
+| Decision | Human Actions | Agent Actions |
 |------------|--------------|---------------|
-| → Discover | **Provide-evidence**: share context, domain knowledge, existing research | Run /interview, /user-interview, /bias-check |
-| Discover → Define | **Validate**: confirm findings match reality. **Correct**: fix misinterpretations | Run /diamond-progress, /ost-builder |
-| Define → Develop | **Approve**: accept problem framing. **Prioritize**: select which opportunities to pursue | Run /ice-score, /gist-plan |
-| Develop → Deliver | **Delegate**: hand off implementation decisions. **Review**: check solution design | Run /preflight, /delivery-bootstrap |
-| Deliver → Complete | **Accept**: confirm deliverable meets standards. **Escalate**: flag issues for re-work | Run /diamond-progress, /definition-of-done |
-| Regression (any) | **Override**: force regression with evidence. **Provide-evidence**: explain what changed | Run /diamond-progress (backward) |
+| (before the first) | **Provide-evidence**: share context, domain knowledge, existing research | Run /interview, /user-interview, /bias-check |
+| `set_target` | **Validate**: confirm findings match reality. **Correct**: fix misinterpretations | Run /diamond-progress, /ost-builder |
+| `start_experiment`, `commit_to_build` | **Approve**: accept problem framing. **Prioritize**: select which opportunities to pursue | Run /ice-score, /gist-plan |
+| `release` | **Delegate**: hand off implementation decisions. **Review**: check solution design | Run /preflight, /delivery-bootstrap |
+| `close` | **Accept**: confirm deliverable meets standards. **Escalate**: flag issues for re-work | Run /diamond-progress, /definition-of-done |
+| Iteration (any) | **Override**: call for another experiment or a new target, with evidence. **Provide-evidence**: explain what changed | Run /diamond-progress to append the decision (DL-1373) |
 
 **Key principle**: The human actions column defines what the framework EXPECTS from the human at each point. If the human is not performing these actions, the Cognitive Offloading Loop anti-pattern may be emerging.
 
-**What is delegable at Develop → Deliver** (the **Delegate**/**Review** seam above): not "hand off everything." Implementation decisions are delegated to the agent *up to the consequence line* — reversible, contained work is the agent's; the deploy decision, destructive/shared-state ops, and any no-standing tradeoff stay the human's. The authority map and the consequence rule (effective-reversibility × aggregate-blast-radius) live in `${CLAUDE_PLUGIN_ROOT}/harness/delegation-authority.md`. A human who delegates *past* that line is in the Cognitive Offloading Loop; an agent that acts *past* it violates behavioral-contract N9/N10.
+**What is delegable at `release`** (the **Delegate**/**Review** seam above): not "hand off everything." Implementation decisions are delegated to the agent *up to the consequence line* — reversible, contained work is the agent's; the deploy decision, destructive/shared-state ops, and any no-standing tradeoff stay the human's. The authority map and the consequence rule (effective-reversibility × aggregate-blast-radius) live in `${CLAUDE_PLUGIN_ROOT}/harness/delegation-authority.md`. A human who delegates *past* that line is in the Cognitive Offloading Loop; an agent that acts *past* it violates behavioral-contract N9/N10.
 
 *Source: AI Interaction Atlas (23 human actions), adapted for Mycelium's diamond model*
 
 ## Relationship to Other Methodologies
 
 - **Disciplined Agile (DA)**: Mycelium's Cynefin-based domain routing + canvas-guidance project type classification IS DA's "Choose Your WoW" implemented for agentic development. The diamond engine adapts method to context, which is the core DA principle.
-- **Feature-Driven Development (FDD)**: FDD's five processes (develop model, build feature list, plan by feature, design by feature, build by feature) map directly to diamond phases. Already covered by the diamond engine.
+- **Feature-Driven Development (FDD)**: FDD's five processes (develop model, build feature list, plan by feature, design by feature, build by feature) map to the loop's decisions. Already covered by the diamond engine.
 - **Kanban WIP Limits**: See the WIP Limits section above for the canonical table. The L4 working limit (2) is the most-cited example because L4 delivery work has the highest context-switching cost.

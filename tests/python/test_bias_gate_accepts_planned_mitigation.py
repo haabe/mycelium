@@ -41,7 +41,8 @@ def test_gate_definition_says_cited_disconfirming_evidence_is_sought():
 
 def test_gate_definition_names_where_the_experiment_is_required():
     section = _bias_section()
-    assert "Cynefin gate at Define->Develop" in section
+    # v0.309.2 (stage 5d-3b): said as the decision the Cynefin gate guards.
+    assert "Cynefin gate at `start_experiment`" in section
     assert "Four Risks" in section
 
 

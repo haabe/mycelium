@@ -60,7 +60,7 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
 
    **Autonomous mode** (per `${CLAUDE_PLUGIN_ROOT}/engine/autonomous-mode.md`): rung (b) — record the declared persona's gut call BEFORE running gates, tag `internal_simulated`, ledger it. The compare-after step still runs.
 
-2. **Run all required theory gates** (per ${CLAUDE_PLUGIN_ROOT}/engine/theory-gates.md Transition Matrix, one column per decision; a move needs the gates of every decision it records):
+2. **Run all required theory gates** (per ${CLAUDE_PLUGIN_ROOT}/engine/theory-gates.md Decision Matrix, one column per decision; a move needs the gates of every decision it records):
    - For each gate:
      a. State the gate name and source theory.
      b. **Surface the suggested skill**: "Run `/skill-name` to satisfy this gate."

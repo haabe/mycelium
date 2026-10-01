@@ -2,21 +2,21 @@
 
 > **`agent_contract` file (engine/audience-register.md): the wording is the mechanism where hooks do not fire. Do not trim it for concision, and do not rewrite it in a doc-tightening pass.** On 2026-08-18 a hook-less run asked to "tighten these docs by about 20%" cut this file by 81% and a sibling by 85% while the register saying not to sat open; with the runtime hooks installed (`install-runtime-hooks.sh <runtime>`) the same model left both untouched. The rule is restated here because a rule behind a link did not reach the edit.
 
-Decision gates that must pass before a diamond transitions between phases. Gates vary by scale level. Each gate has specific pass/fail criteria.
+Gates that must pass before a diamond records a decision (`set_target`, `start_experiment`, `commit_to_build`, `release`, `close`; an L0's `state_purpose` and `review`, which need Evidence, Cynefin, Bias, BVSSH and Corrections). Gates vary by scale level. Each gate has specific pass/fail criteria.
 
 ## Gate Structure
 
 ```
 Gate Name
   Source: [theory/author]
-  Applies to: [which transitions and scales]
+  Applies to: [which decisions, at which scales]
   Pass criteria: [specific, measurable]
   Fail criteria: [what constitutes failure]
   Evidence required: [what artifacts demonstrate pass]
   Suggested skill: [skill to run to satisfy this gate]
 ```
 
-**IMPORTANT**: When checking gates during `/diamond-progress`, always surface the suggested skill for each gate. Say: "This transition requires a security check. Run `/security-review` to satisfy the Security Gate."
+**IMPORTANT**: When checking gates during `/diamond-progress`, always surface the suggested skill for each gate. Say: "Recording `release` requires a security check. Run `/security-review` to satisfy the Security Gate."
 
 ---
 
@@ -54,14 +54,14 @@ For solo developers: apply perspectives sequentially as distinct evaluation pass
 
 **Source**: Torres (Continuous Discovery Habits), Gilad (Evidence-Guided)
 
-**Applies to**: All transitions, all scales
+**Applies to**: `set_target`, `start_experiment`, `release` and `close`, at every scale
 
 | Scale | Pass Criteria | Fail Criteria |
 |-------|--------------|---------------|
 | L0 | Market research, competitive analysis, stakeholder interviews documented | Assumptions stated without supporting data |
 | L1 | Strategic evidence from multiple sources; quantified opportunity size | Strategy based on opinion or single data point |
 | L2 | 5+ user interviews with triangulated findings; behavioral data | Fewer than 3 evidence sources; no triangulation |
-| L3 | **By transition (v0.259.0).** Discover->Define: the target problem is real, on evidence from outside the team (the L2's evidence on its opportunity carries over). Define->Develop: the lightest test of the riskiest assumption is named, with success and failure bars (Lean UX hypothesis, Gothelf). Develop->Deliver: what the delivery puts in front of people has had one trial outside the team, in the form the product takes (a usability session with a prototype; a dry run of a service; a walkthrough of a pilot lesson or protocol), with measurable feedback collected (v0.269.0). That trial is itself an exposure (ruling a, 2026-09-30; v0.307.5): it is recorded in the L3's `exposures` before it runs, with its gates sized to the named people in it; a mock with only made-up data is recorded as `data_class: synthetic`. Deliver->Complete: the learning delivery's verdict on the riskiest assumption. If multi-domain: bounded contexts identified (DDD/Evans). If significant architecture decisions: tradeoffs documented in ADRs (Nygard format: Context/Decision/Consequences). | For the transition at hand: a target with no outside evidence (Discover->Define); no named test (Define->Develop); nothing tried outside the team (Develop->Deliver); no verdict (Deliver->Complete). Architecture choices made without documented rationale |
+| L3 | **By decision (v0.259.0; said by decision since v0.309.2).** `set_target`: the target problem is real, on evidence from outside the team (the L2's evidence on its opportunity carries over). `start_experiment`: the lightest test of the riskiest assumption is named, with success and failure bars (Lean UX hypothesis, Gothelf). `release`: what the delivery puts in front of people has had one trial outside the team, in the form the product takes (a usability session with a prototype; a dry run of a service; a walkthrough of a pilot lesson or protocol), with measurable feedback collected (v0.269.0). That trial is itself an exposure (ruling a, 2026-09-30; v0.307.5): it is recorded in the L3's `exposures` before it runs, with its gates sized to the named people in it; a mock with only made-up data is recorded as `data_class: synthetic`. `close`: the learning delivery's verdict on the riskiest assumption. If multi-domain: bounded contexts identified (DDD/Evans). If significant architecture decisions: tradeoffs documented in ADRs (Nygard format: Context/Decision/Consequences). | For the decision at hand: a target with no outside evidence (`set_target`); no named test (`start_experiment`); nothing tried outside the team (`release`); no verdict (`close`). Architecture choices made without documented rationale |
 | L4 | Acceptance criteria defined with measurable outcomes | Vague or missing acceptance criteria |
 | L4 (software) | Test cases written before or alongside implementation | No tests; untested code |
 | L4 (content) | Content reviewed against objectives; accessibility verified | Unreviewed content; missing captions/alt text |
@@ -71,13 +71,13 @@ For solo developers: apply perspectives sequentially as distinct evaluation pass
 
 **Evidence required**: Interview transcripts, analytics screenshots, research synthesis documents, test results.
 
-**The L3 row is phased because the L3 is where the learning happens** (v0.259.0). Read as one bar
-at every transition, "prototype tested with users" asked the L3 for what it exists to produce
+**The L3 row is read by decision because the L3 is where the learning happens** (v0.259.0). Read as one bar
+at every decision, "prototype tested with users" asked the L3 for what it exists to produce
 before it could define. E2E runs 42-43 spent three in-world months on four no-code tests to reach
 Define, and never built. The L3's confidence threshold is likewise its exit bar
 (`confidence-thresholds.yml#L3.threshold_applies_at`). **So is the L4's** (v0.261.0): its lock
-admits it on the L3's verdict, and its rows above are read transition by transition,
-acceptance criteria to define, tests to develop, security and accessibility to deliver.
+admits it on the L3's verdict, and its rows above are read decision by decision:
+acceptance criteria to set the target, tests to commit to build, security and accessibility to release.
 
 **External metric snapshots count as `external_data`** (v0.14): snapshots produced by `/metrics-pull` (`.claude/evals/metrics/<source>/*.json`) satisfy the `external_data` source_class at L0/L1/L2/L5. They do NOT substitute for `external_human` conversations where the L2 source-ratio gate requires them, but they satisfy the Evidence gate's "behavioral data" criterion and freshen traction evidence at L0/L5. Adapter `provenance.snapshot` path must be included in the canvas evidence entry.
 
@@ -104,14 +104,17 @@ Evidence sources in canvas provenance objects carry an optional `source_classes`
 
 **Enforcement levels**:
 
-| Transition | Scales | Level | Behavior |
+Said by decision since v0.309.2. An L0 records only `state_purpose` (and later `review`), which
+places it where the old Develop->Deliver row did, so its REVIEW applies there.
+
+| Decision | Scales | Level | Behavior |
 |-----------|--------|-------|----------|
-| Discover->Define | L0-L2 | -- | No check (discovery is exploratory) |
-| Define->Develop | L0-L2 | NUDGE | If zero `external_human` or `external_data` sources across all canvas provenance for this diamond: warn. "All evidence is desk-derived. Consider `/handoff` to plan an external conversation or `/user-interview` to conduct one." |
-| Develop->Deliver | L0, L2 | REVIEW | Blocks progression. Purpose (L0) is foundational -- shipping it without any external voice means the entire product is built on unvalidated assumptions. Opportunity (L2) without external validation is the core Goodhart trap. |
-| Develop->Deliver | L1 | NUDGE | Warn but don't block. Strategy can sometimes proceed on desk research (competitive analysis, Wardley mapping) if the project type warrants it. |
-| All other transitions | L3-L4 | -- | No source ratio check (delivery-level evidence is validation results, not user research) |
-| Any transition | L5 | REVIEW | Blocks progression. **L5 is Market, and market evidence is external by definition** -- a PMF reading, a positioning claim or a launch-size call sourced only from `internal_*` is the L2 Goodhart trap one scale further along, where it is most expensive to be wrong. The honest escape is not an internal source: it is `band: not-yet-measurable` with the reason, which clears this gate. (Until 0.235.0 L5 sat inside the L3-L5 exemption above, on the premise that it was the task scale. It is not -- see `engine/diamond-rules.md`.) |
+| `set_target` | L1-L2 | -- | No check (discovery is exploratory) |
+| `start_experiment` and `commit_to_build` | L1-L2 | NUDGE | If zero `external_human` or `external_data` sources across all canvas provenance for this diamond: warn. "All evidence is desk-derived. Consider `/handoff` to plan an external conversation or `/user-interview` to conduct one." |
+| `state_purpose` and `review` (L0); `release` (L2) | L0, L2 | REVIEW | Blocks progression. Purpose (L0) is foundational -- shipping it without any external voice means the entire product is built on unvalidated assumptions. Opportunity (L2) without external validation is the core Goodhart trap. |
+| `release` | L1 | NUDGE | Warn but don't block. Strategy can sometimes proceed on desk research (competitive analysis, Wardley mapping) if the project type warrants it. |
+| Every decision | L3-L4 | -- | No source ratio check (delivery-level evidence is validation results, not user research) |
+| Every decision | L5 | REVIEW | Blocks progression. **L5 is Market, and market evidence is external by definition** -- a PMF reading, a positioning claim or a launch-size call sourced only from `internal_*` is the L2 Goodhart trap one scale further along, where it is most expensive to be wrong. The honest escape is not an internal source: it is `band: not-yet-measurable` with the reason, which clears this gate. (Until 0.235.0 L5 sat inside the L3-L5 exemption above, on the premise that it was the task scale. It is not -- see `engine/diamond-rules.md`.) |
 
 **Dogfood modifier**: When `dogfood: true` in `diamonds/active.yml`, the L0/L2 REVIEW gate accepts `internal_simulated` (mocked persona) as ONE of the required external sources -- but still requires at least one source classified as `external_human` or `external_data` before clearing the REVIEW. This means dogfood projects can use mocked personas to supplement real evidence, but cannot replace it entirely. The dogfood report's #1 finding was that the system under-pushes for external evidence; weakening this gate would make that problem worse.
 
@@ -123,7 +126,7 @@ Evidence sources in canvas provenance objects carry an optional `source_classes`
 
 **Source**: Cagan (Inspired, Empowered), Torres (Product Trio perspective requirement)
 
-**Applies to**: Define->Develop and Develop->Deliver transitions, L1-L4
+**Applies to**: `commit_to_build` (L1-L4) and `release` (L1-L4)
 
 All four risks must be assessed, and the assessment must demonstrate that **three distinct perspectives** were applied (Torres's Product Trio). Each risk maps to a primary perspective — a single-lens assessment does not pass.
 
@@ -146,16 +149,16 @@ All four risks must be assessed, and the assessment must demonstrate that **thre
 
 **Source**: Christensen (Competing Against Luck)
 
-**Applies to**: Discover->Define and Define->Develop, L1-L3
+**Applies to**: `set_target` (L1-L3) and `commit_to_build` (L1-L3)
 
 | Scale | Pass Criteria | Fail Criteria |
 |-------|--------------|---------------|
 | L1 | Strategic jobs identified with all 3 dimensions | Jobs described only functionally |
 | L2 | Opportunity-level jobs mapped from research data | Jobs assumed without research |
-| L3 | **By transition (v0.262.0).** Discover->Define: the functional, emotional and social dimensions of the job are stated, from the L2's research or as hypotheses the learning delivery will test. Define->Develop: the solution's design says how it serves each dimension. Evidence from use is the learning delivery's, not this gate's. | Discover->Define: only the functional job stated. Define->Develop: a design that serves only the functional job |
+| L3 | **By decision (v0.262.0).** `set_target`: the functional, emotional and social dimensions of the job are stated, from the L2's research or as hypotheses the learning delivery will test. `commit_to_build`: the solution's design says how it serves each dimension. Evidence from use is the learning delivery's, not this gate's. | `set_target`: only the functional job stated. `commit_to_build`: a design that serves only the functional job |
 
 **Evidence required**: JTBD statements with all three dimensions (functional, emotional, social), linked to interview data.
-At L3 the dimensions may be hypotheses at Discover->Define (v0.262.0): E2E run 50 held an L3 in discover
+At L3 the dimensions may be hypotheses at `set_target` (v0.262.0): E2E run 50 held an L3 in discover
 on `fail` because "the emotional and social sides are unknown" until testers answered, which is what
 its learning delivery exists to find out.
 
@@ -165,7 +168,7 @@ its learning delivery exists to find out.
 
 **Source**: Snowden (Cynefin framework)
 
-**Applies to**: Define->Develop, all scales
+**Applies to**: `start_experiment`, at every scale
 
 | Pass Criteria | Fail Criteria |
 |--------------|---------------|
@@ -173,7 +176,7 @@ its learning delivery exists to find out.
 | Method chosen matches the domain (see cynefin-routing.md) | Complex problem treated as Clear (best practice applied to emergent situation) |
 | If Complex, **probe-sense-respond experiment / assumption-test evidence is present** (not classification alone) | Complex problem advancing on classification alone, OR attempting to plan/predict outcomes in a complex domain |
 
-**Evidence required**: a populated `cynefin_domain` classification with rationale + method-selection justification. **For a Complex classification, experiment / assumption-test evidence is required before Define→Develop** — this is how Cynefin scales rigor (more depth for complexity via the experiment requirement), NOT by adding or skipping diamond scales. A Clear/Complicated classification does **not** reduce rigor below the scale baseline (skipping evidence gates on a mis-classified "Clear" is the failure mode this guards against).
+**Evidence required**: a populated `cynefin_domain` classification with rationale + method-selection justification. **For a Complex classification, experiment / assumption-test evidence is required before the move that records `start_experiment` and `commit_to_build`** — this is how Cynefin scales rigor (more depth for complexity via the experiment requirement), NOT by adding or skipping diamond scales. A Clear/Complicated classification does **not** reduce rigor below the scale baseline (skipping evidence gates on a mis-classified "Clear" is the failure mode this guards against).
 
 **Suggested skill**: `/cynefin-classify`
 
@@ -181,7 +184,7 @@ its learning delivery exists to find out.
 
 **Source**: Shotton (The Choice Factory), Kahneman (Thinking, Fast and Slow)
 
-**Applies to**: All transitions, all scales
+**Applies to**: `set_target`, `start_experiment`, `commit_to_build`, `release` and `close`, at every scale
 
 | Pass Criteria | Fail Criteria |
 |--------------|---------------|
@@ -192,14 +195,14 @@ its learning delivery exists to find out.
 
 **Evidence required**: Completed bias checklist, documented mitigation actions.
 
-**"Mitigation documented" and "sought" mean what they say, most of all at Discover->Define
+**"Mitigation documented" and "sought" mean what they say, most of all at `set_target`
 (v0.242.6).** A documented mitigation may be PLANNED: a named action and the test, owner or later
-transition that will carry it out. This gate does not require that the mitigation has already
+decision that will carry it out. This gate does not require that the mitigation has already
 run, or that the disconfirming evidence has been resolved. A disconfirming source that is cited
 and weighed has been *sought*; it is not *unacknowledged*. Running the experiment is required
-where the experiment belongs: the Cynefin gate at Define->Develop for a complex domain, and the
-Four Risks gate. Demanding it here gates every diamond's first transition on work that its own
-later transitions exist to do. Record `not-passed` for what the fail column names: no review, a
+where the experiment belongs: the Cynefin gate at `start_experiment` for a complex domain, and the
+Four Risks gate. Demanding it here gates every diamond's first decision on work that its own
+later decisions exist to do. Record `not-passed` for what the fail column names: no review, a
 bias present and unacknowledged, only confirming evidence collected, the agent's own biases
 unexamined, or a named bias with no mitigation at all.
 
@@ -214,7 +217,7 @@ and JTBD had passed. The criteria never asked for a resolution; the reading adde
 
 **Source**: OWASP Top 10:2025, STRIDE (Shostack)
 
-**Applies to**: Develop->Deliver and Deliver->Complete, L3-L5
+**Applies to**: `release` (L3-L5) and `close` (L3-L5)
 
 **Scoped to what the product holds and does** (v0.271.0; product type conditioning since v0.11.0). `/mycelium:security-review` Step 0 records `security_scope` (runs code, accounts, personal data, money, reach) in threat-model.yml, and only the matching checks apply; the rest are recorded `n/a` with a reason. Product type is a hint, not the test: most projects never set it, and a service can run code while a web page can hold no data.
 - **software, ai_tool**: OWASP + STRIDE where the product runs code; authentication checks only where it has accounts
@@ -236,12 +239,12 @@ and JTBD had passed. The criteria never asked for a resolution; the reading adde
 
 **Source**: GDPR, Privacy by Design (Cavoukian)
 
-**Applies to**: Define->Develop and Develop->Deliver, L2-L4
+**Applies to**: `commit_to_build` (L2-L4) and `release` (L2-L5). Until v0.309.2 this line said L2-L4: an L5 has needed Privacy before it releases since v0.292.0 (founder ruling f), and the line was never compared with the code
 
 | Scale | Pass Criteria | Fail Criteria |
 |-------|--------------|---------------|
 | L2 | Data subjects identified; purpose limitation defined | Collecting data without defined purpose |
-| L3 | **By transition (v0.262.0).** Define->Develop: privacy by design on the design: a data inventory, data minimisation, and a DPIA where the processing is high-risk. Nothing built is needed. Develop->Deliver: the built thing checked against that design (what it collects, sends and keeps matches the inventory). | Define->Develop: processing personal data with no inventory or impact assessment. Develop->Deliver: a build that collects or sends more than the design says |
+| L3 | **By decision (v0.262.0).** `commit_to_build`: privacy by design on the design: a data inventory, data minimisation, and a DPIA where the processing is high-risk. Nothing built is needed. `release`: the built thing checked against that design (what it collects, sends and keeps matches the inventory). | `commit_to_build`: processing personal data with no inventory or impact assessment. `release`: a build that collects or sends more than the design says |
 | L4 | Consent mechanisms implemented; data retention defined; right to deletion supported | No consent flow; unlimited retention |
 
 **Evidence required**: Data flow diagram, DPIA document, consent mechanism design, retention policy.
@@ -252,7 +255,7 @@ and JTBD had passed. The criteria never asked for a resolution; the reading adde
 
 **Source**: Smart (Sooner Safer Happier)
 
-**Applies to**: Deliver->Complete, all scales. **REVIEW** -- diamond-progress requires a BVSSH quick-check (even brief) before allowing delivery completion. This ensures holistic health is assessed for every delivery, not just on a monthly cadence.
+**Applies to**: `close`, at every scale. **REVIEW** -- diamond-progress requires a BVSSH quick-check (even brief) before recording `close`. This ensures holistic health is assessed for every delivery, not just on a monthly cadence.
 
 All five dimensions must be assessed (even a one-sentence answer per dimension is sufficient for a quick-check):
 
@@ -272,11 +275,11 @@ All five dimensions must be assessed (even a one-sentence answer per dimension i
 
 **Source**: Downe (Good Services), Nielsen (10 Usability Heuristics)
 
-**Applies to**: Develop->Deliver and Deliver->Complete, L2-L4
+**Applies to**: `release` (L2-L5) and `close` (L2-L5). Until v0.309.2 this line said L2-L4: an L5 has needed Service Quality before it releases since v0.292.0 (founder ruling f), and the line was never compared with the code
 
 **Product type note** (v0.11.0): Downe's 15 principles apply to ALL product types, not just software. For content products, "service" means the learning/reading/viewing experience. For service offerings, it means the client delivery experience. Nielsen's heuristics apply only to digital interfaces.
 
-**Core Model nudge** (v0.11.1): For `content_course`, `content_publication`, `content_media`, and `service_offering` product types, this gate includes a NUDGE at the **Develop->Deliver** transition: "Content-heavy product detected. Consider mapping core pages (inward paths, core content, forward paths) in `services.yml#core_pages` per Halland's Core Model. This helps ensure no dead ends (Downe P10) and that users find what they need through natural pathways." This is advisory, not blocking — skip it if the product has no web presence or page-based content architecture.
+**Core Model nudge** (v0.11.1): For `content_course`, `content_publication`, `content_media`, and `service_offering` product types, this gate includes a NUDGE at **`release`**: "Content-heavy product detected. Consider mapping core pages (inward paths, core content, forward paths) in `services.yml#core_pages` per Halland's Core Model. This helps ensure no dead ends (Downe P10) and that users find what they need through natural pathways." This is advisory, not blocking — skip it if the product has no web presence or page-based content architecture.
 
 Two quality layers for user-facing work:
 
@@ -306,7 +309,7 @@ Two quality layers for user-facing work:
 
 **Source**: Forsgren (Accelerate)
 
-**Applies to**: Deliver->Complete, L3-L4
+**Applies to**: `close` (L3-L4)
 
 **Product type routing** (v0.11.0): This gate measures delivery health using the metrics canvas appropriate for the product type. The principle is the same (are you delivering at a sustainable cadence with acceptable quality?) but the specific metrics differ.
 
@@ -329,13 +332,13 @@ Two quality layers for user-facing work:
 
 **Suggested skill**: `/dora-check` (auto-routes to product-type-appropriate assessment)
 
-**Note — deploy authority is not a gate.** This gate measures delivery *health* (cadence, quality), not the per-deploy *decision* of whether the agent may ship to real users on its own. That decision is governed by consequence (effective-reversibility × aggregate-blast-radius), not by a phase transition — a production deploy is high-consequence whether or not it coincides with a Deliver→Complete gate. The authority rule and the **risk-envelope** mechanism (human sets thresholds once; agent acts within them) live in `${CLAUDE_PLUGIN_ROOT}/harness/delegation-authority.md`. Do not add a "deploy gate" here; the consequence rule already covers it.
+**Note — deploy authority is not a gate.** This gate measures delivery *health* (cadence, quality), not the per-deploy *decision* of whether the agent may ship to real users on its own. That decision is governed by consequence (effective-reversibility × aggregate-blast-radius), not by a decision a diamond records — a production deploy is high-consequence whether or not it coincides with a Deliver→Complete gate. The authority rule and the **risk-envelope** mechanism (human sets thresholds once; agent acts within them) live in `${CLAUDE_PLUGIN_ROOT}/harness/delegation-authority.md`. Do not add a "deploy gate" here; the consequence rule already covers it.
 
 ### 11. Corrections Gate
 
 **Source**: Mycelium (internal learning loop)
 
-**Applies to**: All transitions, all scales
+**Applies to**: `set_target`, `start_experiment`, `commit_to_build`, `release` and `close`, at every scale
 
 | Pass Criteria | Fail Criteria |
 |--------------|---------------|
@@ -359,7 +362,7 @@ The goal is not to read every correction every time, but to surface the correcti
 
 **Source**: EU AI Act (Regulation 2024/1689), other applicable AI regulation
 
-**Applies to**: Define->Develop and Develop->Deliver, L3-L5
+**Applies to**: `commit_to_build` (L3-L5) and `release` (L3-L5)
 
 This gate checks whether the product being built falls under AI regulation. Mycelium itself is not regulated (it's configuration files, not an AI system), but products built WITH Mycelium may be.
 
@@ -396,7 +399,7 @@ This gate checks whether the product being built falls under AI regulation. Myce
 
 **Source**: Doshi-Velez & Kim (2017) "Towards a Rigorous Science of Interpretable ML"; Liao, Gruen, Miller (2020) "Questioning the AI"; Mitchell et al. (2019) "Model Cards"; Lanham et al. (2023) chain-of-thought faithfulness; Selbst & Barocas (2018) recourse-as-substance; EU AI Act Art. 13 + 50; NIST AI Risk Management Framework.
 
-**Applies to**: Develop->Deliver and Deliver->Complete, L3-L5, **only when `active-stack.yml :: ai_components.detected` is true**.
+**Applies to**: `release` (L3-L5) and `close` (L3-L5), **only when `active-stack.yml :: ai_components.detected` is true**.
 
 This gate is **operational** — it asks "have you actually run `/xai-check`?" and consumed its findings. It composes with the upstream **intent guardrails** G-S7 (always disclose AI nature) and G-S8 (always assess EU AI Act risk classification), and with **Gate 12 Regulatory** (which establishes the AI Act tier classification). XAI Gate consumes that classification rather than re-deriving it; the canonical tier source is `/regulatory-review`'s output landed in `privacy-assessment.yml`.
 
@@ -425,7 +428,7 @@ This gate is **operational** — it asks "have you actually run `/xai-check`?" a
 
 **Source**: Wardley (Wardley Mapping); the LANDSCAPE justifier
 
-**Applies to**: Define->Develop and Develop->Deliver at L1; Define->Develop at L2 and L3. **Tier: NUDGE, never a block.**
+**Applies to**: `commit_to_build` (L1-L3) and `release` (L1). **Tier: NUDGE, never a block.**
 
 | Pass Criteria | Fail Criteria |
 |--------------|---------------|
@@ -451,14 +454,14 @@ This gate is **operational** — it asks "have you actually run `/xai-check`?" a
 
 **Source**: Skelton & Pais (Team Topologies); the CAPACITY justifier
 
-**Applies to**: Develop->Deliver at L1, L3 and L4. **Tier: NUDGE, never a block.**
+**Applies to**: `release` (L1, L3-L4). **Tier: NUDGE, never a block.**
 
 | Pass Criteria | Fail Criteria |
 |--------------|---------------|
 | `team-shape.yml` states who absorbs what this diamond produces (review, operation, support) and their current cognitive load | Nothing names the reader, reviewer or operator of the output; the output is planned as if absorption were free |
 | At L4: the delivery's review throughput is stated beside its production rate | Production rate stated with no absorption rate, the shape of the review-throughput gap (Cherny: engineers -> reviews -> judgment) |
 
-**Why a gate at all.** `diamond-rules.md` names Team Topologies as PRIMARY for L1 and no L1 gate asked whether anyone could hold what a strategy produces. The only capacity question in the set was the BVSSH gate's `Happier` row, at Deliver->Complete, retrospective, one sentence sufficient. Same register row as the Landscape gate.
+**Why a gate at all.** `diamond-rules.md` names Team Topologies as PRIMARY for L1 and no L1 gate asked whether anyone could hold what a strategy produces. The only capacity question in the set was the BVSSH gate's `Happier` row, at `close`, retrospective, one sentence sufficient. Same register row as the Landscape gate.
 
 **Why NUDGE.** Same reason. **Evidence required**: the `team-shape.yml` block the assessment read. **Suggested skill**: `/team-shape`
 
@@ -469,18 +472,21 @@ build** what worked, **release** it, **close** the cycle. Each gate belongs to t
 Cynefin to choosing the method (start experiment); Four Risks, JTBD's solution design, Privacy by
 design and the regulatory classification to committing to build; BVSSH and Delivery Metrics to
 closing; Evidence, Bias and Corrections to every decision. The safety gates are also read per
-exposure record (v0.294.0-v0.296.0). The phase is not recorded since v0.306.0; where a diamond is
-is read from its decisions, and each move between those positions makes a fixed set of them, and the table below is derived from them (`scale_locks.DECISIONS`,
-`TRANSITION_DECISIONS`):
+exposure record (v0.294.0-v0.296.0). The phase is not recorded since v0.306.0: where a diamond is,
+is read from its decisions (`scale_locks.position`), and the mode with it (discovery until
+`commit_to_build`, delivery after; DL-1368 S1). A loop iterates by appending (DL-1373), and a
+recorded decision stays recorded (DL-1374):
 
-| Phase move | Decisions it makes |
-|---|---|
-| Discover -> Define | set target |
-| Define -> Develop | start experiment, commit to build |
-| Develop -> Deliver | release |
-| Deliver -> Complete | close |
+| Decisions on record | Where the diamond is | Mode |
+|---|---|---|
+| none | no decision yet | discovery |
+| `set_target` | target set | discovery |
+| `start_experiment` and `commit_to_build` (recorded together) | committed to build | delivery |
+| `release` | released | delivery |
+| `close` | closed | (done) |
+| an L0's `state_purpose` (then `review`) | purpose stated | outside the loop |
 
-## Transition Matrix
+## Decision Matrix
 
 Which gates each decision needs (keyed by decision since v0.308.1, DL-1372 V2). It is `scale_locks.DECISIONS` written out, and `check_gate_set_drift.py` compares the two both ways. A move needs the gates of every decision it records: the move to committed to build records `start_experiment` and `commit_to_build`.
 
@@ -508,26 +514,27 @@ Which gates each decision needs (keyed by decision since v0.308.1, DL-1372 V2). 
 
 ---
 
-## Scale × Transition Applicability Matrix (v0.11.1)
+## Gates per Scale and Decision (v0.11.1; one column per decision since v0.309.2)
 
-Use this matrix to determine exactly which gates to evaluate for a given scale and transition. "R" = Required, "--" = Not applicable. When initializing `theory_gates_status` in `active.yml`, include all gates marked "R" for the diamond's scale at any transition.
+Use this matrix to determine exactly which gates to evaluate for a given scale and decision; a move needs the gates of every decision it records. "R" = Required, "--" = Not applicable. When initializing `theory_gates_status` in `active.yml`, include all gates marked "R" for the diamond's scale at any transition.
 
 ### L0 Purpose
 
-| Gate | Disc->Def | Def->Dev | Dev->Del | Del->Comp |
-|------|-----------|----------|----------|-----------|
-| Evidence | R | R | R | R |
-| Four Risks | -- | -- | -- | -- |
-| JTBD | -- | -- | -- | -- |
-| Cynefin | -- | R | -- | -- |
-| Bias | R | R | R | R |
-| Security | -- | -- | -- | -- |
-| Privacy | -- | -- | -- | -- |
-| BVSSH | -- | -- | -- | R |
-| Service Quality | -- | -- | -- | -- |
-| Delivery Metrics | -- | -- | -- | -- |
-| Corrections | R | R | R | R |
-| Regulatory | -- | -- | -- | -- |
+| Gate | state purpose | review |
+|------|---------------|--------|
+| Evidence | R | R |
+| Four Risks | -- | -- |
+| JTBD | -- | -- |
+| Cynefin | R | R |
+| Bias | R | R |
+| Security | -- | -- |
+| Privacy | -- | -- |
+| BVSSH | R | R |
+| Service Quality | -- | -- |
+| Delivery Metrics | -- | -- |
+| Corrections | R | R |
+| Regulatory | -- | -- |
+| XAI (when AI detected) | -- | -- |
 
 **Applicable gates**: Evidence, Cynefin, Bias, BVSSH, Corrections (5 gates)
 
@@ -538,20 +545,21 @@ Use this matrix to determine exactly which gates to evaluate for a given scale a
 
 ### L1 Strategy
 
-| Gate | Disc->Def | Def->Dev | Dev->Del | Del->Comp |
-|------|-----------|----------|----------|-----------|
-| Evidence | R | R | R | R |
-| Four Risks | -- | R | R | -- |
-| JTBD | R | R | -- | -- |
-| Cynefin | -- | R | -- | -- |
-| Bias | R | R | R | R |
-| Security | -- | -- | -- | -- |
-| Privacy | -- | -- | -- | -- |
-| BVSSH | -- | -- | -- | R |
-| Service Quality | -- | -- | -- | -- |
-| Delivery Metrics | -- | -- | -- | -- |
-| Corrections | R | R | R | R |
-| Regulatory | -- | -- | -- | -- |
+| Gate | set target | start experiment | commit to build | release | close |
+|------|------------|------------------|-----------------|---------|-------|
+| Evidence | R | R | -- | R | R |
+| Four Risks | -- | -- | R | R | -- |
+| JTBD | R | -- | R | -- | -- |
+| Cynefin | -- | R | -- | -- | -- |
+| Bias | R | R | R | R | R |
+| Security | -- | -- | -- | -- | -- |
+| Privacy | -- | -- | -- | -- | -- |
+| BVSSH | -- | -- | -- | -- | R |
+| Service Quality | -- | -- | -- | -- | -- |
+| Delivery Metrics | -- | -- | -- | -- | -- |
+| Corrections | R | R | R | R | R |
+| Regulatory | -- | -- | -- | -- | -- |
+| XAI (when AI detected) | -- | -- | -- | -- | -- |
 
 **Applicable gates**: Evidence, Four Risks, JTBD, Cynefin, Bias, BVSSH, Corrections (7 gates)
 
@@ -562,20 +570,21 @@ Use this matrix to determine exactly which gates to evaluate for a given scale a
 
 ### L2 Opportunity
 
-| Gate | Disc->Def | Def->Dev | Dev->Del | Del->Comp |
-|------|-----------|----------|----------|-----------|
-| Evidence | R | R | R | R |
-| Four Risks | -- | R | R | -- |
-| JTBD | R | R | -- | -- |
-| Cynefin | -- | R | -- | -- |
-| Bias | R | R | R | R |
-| Security | -- | -- | -- | -- |
-| Privacy | -- | R | R | -- |
-| BVSSH | -- | -- | -- | R |
-| Service Quality | -- | -- | R | R |
-| Delivery Metrics | -- | -- | -- | -- |
-| Corrections | R | R | R | R |
-| Regulatory | -- | -- | -- | -- |
+| Gate | set target | start experiment | commit to build | release | close |
+|------|------------|------------------|-----------------|---------|-------|
+| Evidence | R | R | -- | R | R |
+| Four Risks | -- | -- | R | R | -- |
+| JTBD | R | -- | R | -- | -- |
+| Cynefin | -- | R | -- | -- | -- |
+| Bias | R | R | R | R | R |
+| Security | -- | -- | -- | -- | -- |
+| Privacy | -- | -- | R | R | -- |
+| BVSSH | -- | -- | -- | -- | R |
+| Service Quality | -- | -- | -- | R | R |
+| Delivery Metrics | -- | -- | -- | -- | -- |
+| Corrections | R | R | R | R | R |
+| Regulatory | -- | -- | -- | -- | -- |
+| XAI (when AI detected) | -- | -- | -- | -- | -- |
 
 **Applicable gates**: Evidence, Four Risks, JTBD, Cynefin, Bias, Privacy, BVSSH, Service Quality, Corrections (9 gates)
 
@@ -586,20 +595,21 @@ Use this matrix to determine exactly which gates to evaluate for a given scale a
 
 ### L3 Solution
 
-| Gate | Disc->Def | Def->Dev | Dev->Del | Del->Comp |
-|------|-----------|----------|----------|-----------|
-| Evidence | R | R | R | R |
-| Four Risks | -- | R | R | -- |
-| JTBD | R | R | -- | -- |
-| Cynefin | -- | R | -- | -- |
-| Bias | R | R | R | R |
-| Security | -- | -- | R | R |
-| Privacy | -- | R | R | -- |
-| BVSSH | -- | -- | -- | R |
-| Service Quality | -- | -- | R | R |
-| Delivery Metrics | -- | -- | -- | R |
-| Corrections | R | R | R | R |
-| Regulatory | -- | R | R | -- |
+| Gate | set target | start experiment | commit to build | release | close |
+|------|------------|------------------|-----------------|---------|-------|
+| Evidence | R | R | -- | R | R |
+| Four Risks | -- | -- | R | R | -- |
+| JTBD | R | -- | R | -- | -- |
+| Cynefin | -- | R | -- | -- | -- |
+| Bias | R | R | R | R | R |
+| Security | -- | -- | -- | R | R |
+| Privacy | -- | -- | R | R | -- |
+| BVSSH | -- | -- | -- | -- | R |
+| Service Quality | -- | -- | -- | R | R |
+| Delivery Metrics | -- | -- | -- | -- | R |
+| Corrections | R | R | R | R | R |
+| Regulatory | -- | -- | R | R | -- |
+| XAI (when AI detected) | -- | -- | -- | R | R |
 
 **Applicable gates**: evidence, four_risks, jtbd, cynefin, bias, security, privacy, bvssh, service_quality, delivery_metrics, corrections, regulatory (12 of the 15 defined; Explainability is conditional on AI components, Landscape and Capacity apply at L1)
 
@@ -610,20 +620,21 @@ Use this matrix to determine exactly which gates to evaluate for a given scale a
 
 ### L4 Delivery
 
-| Gate | Disc->Def | Def->Dev | Dev->Del | Del->Comp |
-|------|-----------|----------|----------|-----------|
-| Evidence | R | R | R | R |
-| Four Risks | -- | R | R | -- |
-| JTBD | -- | -- | -- | -- |
-| Cynefin | -- | R | -- | -- |
-| Bias | R | R | R | R |
-| Security | -- | -- | R | R |
-| Privacy | -- | R | R | -- |
-| BVSSH | -- | -- | -- | R |
-| Service Quality | -- | -- | R | R |
-| Delivery Metrics | -- | -- | -- | R |
-| Corrections | R | R | R | R |
-| Regulatory | -- | R | R | -- |
+| Gate | set target | start experiment | commit to build | release | close |
+|------|------------|------------------|-----------------|---------|-------|
+| Evidence | R | R | -- | R | R |
+| Four Risks | -- | -- | R | R | -- |
+| JTBD | -- | -- | -- | -- | -- |
+| Cynefin | -- | R | -- | -- | -- |
+| Bias | R | R | R | R | R |
+| Security | -- | -- | -- | R | R |
+| Privacy | -- | -- | R | R | -- |
+| BVSSH | -- | -- | -- | -- | R |
+| Service Quality | -- | -- | -- | R | R |
+| Delivery Metrics | -- | -- | -- | -- | R |
+| Corrections | R | R | R | R | R |
+| Regulatory | -- | -- | R | R | -- |
+| XAI (when AI detected) | -- | -- | -- | R | R |
 
 **Applicable gates**: Evidence, Four Risks, Cynefin, Bias, Security, Privacy, BVSSH, Service Quality, Delivery Metrics, Corrections, Regulatory (11 gates — all except JTBD)
 
@@ -634,21 +645,21 @@ Use this matrix to determine exactly which gates to evaluate for a given scale a
 
 ### L5 Market
 
-| Gate | Disc->Def | Def->Dev | Dev->Del | Del->Comp |
-|------|-----------|----------|----------|-----------|
-| Evidence | R | R | R | R |
-| Four Risks | -- | -- | -- | -- |
-| JTBD | -- | -- | -- | -- |
-| Cynefin | -- | R | -- | -- |
-| Bias | R | R | R | R |
-| Security | -- | -- | R | R |
-| Privacy | -- | -- | R | -- |
-| BVSSH | -- | -- | -- | R |
-| Service Quality | -- | -- | R | R |
-| Delivery Metrics | -- | -- | -- | -- |
-| Corrections | R | R | R | R |
-| Regulatory | -- | R | R | -- |
-| XAI (when AI detected) | -- | -- | R | R |
+| Gate | set target | start experiment | commit to build | release | close |
+|------|------------|------------------|-----------------|---------|-------|
+| Evidence | R | R | -- | R | R |
+| Four Risks | -- | -- | -- | -- | -- |
+| JTBD | -- | -- | -- | -- | -- |
+| Cynefin | -- | R | -- | -- | -- |
+| Bias | R | R | R | R | R |
+| Security | -- | -- | -- | R | R |
+| Privacy | -- | -- | -- | R | -- |
+| BVSSH | -- | -- | -- | -- | R |
+| Service Quality | -- | -- | -- | R | R |
+| Delivery Metrics | -- | -- | -- | -- | -- |
+| Corrections | R | R | R | R | R |
+| Regulatory | -- | -- | R | R | -- |
+| XAI (when AI detected) | -- | -- | -- | R | R |
 
 **Applicable gates**: Evidence, Cynefin, Bias, Security, Privacy, BVSSH, Service Quality, Corrections, Regulatory (9 gates)
 
@@ -658,7 +669,7 @@ and the explainability gate when the product records AI components. **Since v0.2
 L5 is born with carries them (explainability only with AI components), and Delivery Metrics is not
 an L5 gate: the gate's own definition says L3-L4 and 0.235.0 removed it ("a market diamond has no
 deploys of its own"), while this table and the summary still said R until then.
-`check_gate_set_drift.py` now compares every born list with the per-transition matrix.
+`check_gate_set_drift.py` now compares every born list with the decision matrix, and since v0.309.2 these tables and each gate's Applies-to line too.
 
 **Trio guidance for L5**:
 - **Product**: Is the positioning aligned with validated user needs? Does the GTM motion match the buyer journey? (Strong)
