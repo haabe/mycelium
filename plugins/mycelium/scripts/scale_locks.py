@@ -872,6 +872,14 @@ class State:
             return miss
         miss = self.missing(l3, entry, seen)
         sols = self.delivered_solutions(d, l3)
+        named = {_ref_key(d.get("object_ref")), self.front_runner(l3)} - {""}
+        if len(sols) > 1 and not any(str(s.get("id", "")) in named for s in sols):
+            # v0.307.6 (control audit P12): naming nothing read the whole set's evidence, so one
+            # idea's verdict opened another's delivery, and the user's ack then waived the rest.
+            miss.append(f"{UNWAIVABLE}{d.get('id')}: name the solution this L4 delivers in "
+                        f"`object_ref`, or the L3's `front_runner`: {l3.get('id')} holds "
+                        f"{len(sols)} ({', '.join(str(s.get('id')) for s in sols[:4])}), and the "
+                        "L4 is judged on the evidence of what it delivers")
         ev = self.l3_evidence(l3, sols)
         if ev not in MEDIUM_OR_BETTER:
             miss.append(f"{l3.get('id')}: evidence at medium confidence or higher before "
@@ -960,6 +968,13 @@ class State:
             why = self.gate_missing(d, g)
             if why:
                 miss.append(f"{did}: {why}")
+        stamped = str(d.get("completed_at") or "").strip()
+        if stamped and "close" not in {str(x["decision"]) for x in decisions_of(d)}:
+            # v0.307.6 (control audit P13): /diamond-progress calls `completed_at` the true ship
+            # timestamp, and a diamond stamped with it but left open kept carrying work.
+            miss.append(f"{did}: it records `completed_at: {stamped[:10]}` without a `close` "
+                        "decision: record `close` with /mycelium:diamond-progress (it then "
+                        "carries nothing), or remove `completed_at` if the work goes on")
         if stage == "expose" and _scale(d) == "L3":
             miss += self.learning_delivery_missing(d)
         return miss
