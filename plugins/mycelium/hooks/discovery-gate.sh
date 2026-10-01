@@ -51,19 +51,22 @@ esac
 # A NEW gated source file: absent, or present and empty (2026-09-11: `touch` then Write passed
 # the old existence test). Real path inside the project, not under .claude, not prose.
 GATED_FILE=""
+GATED_ALL=()  # every gated target the write makes (v0.307.6, control audit P11): an ack's scope
+              # and the declared-prototype exemption were judged on the first one only
 while IFS=$'\t' read -r target exists size; do
   case "$target" in ""|OUTSIDE:*|GUARD:*|OPAQUE:*|.claude/*|*/.claude/*) continue;; esac
   if [ "$EDITING" = "0" ] && [ "$exists" = "1" ] && [ "${size:-0}" -gt 0 ]; then continue; fi
   base="${target##*/}"
   case "$base" in
-    Dockerfile*|docker-compose*|Makefile|CMakeLists.txt|requirements.txt|pyproject.toml|package.json|Cargo.toml|go.mod|Gemfile|Rakefile|build.gradle|pom.xml|Pipfile|tsconfig.json) GATED_FILE="$target"; break;;
+    Dockerfile*|docker-compose*|Makefile|CMakeLists.txt|requirements.txt|pyproject.toml|package.json|Cargo.toml|go.mod|Gemfile|Rakefile|build.gradle|pom.xml|Pipfile|tsconfig.json) GATED_ALL+=("$target"); continue;;
     *.md|*.txt|*.rst) continue;;
   esac
   lower="$(printf '%s' "$base" | tr '[:upper:]' '[:lower:]')"
   case "$lower" in
-    *.py|*.pyw|*.js|*.mjs|*.cjs|*.ts|*.mts|*.cts|*.tsx|*.jsx|*.vue|*.svelte|*.html|*.htm|*.css|*.scss|*.go|*.rs|*.java|*.kt|*.kts|*.scala|*.rb|*.php|*.c|*.cc|*.cpp|*.h|*.hpp|*.cs|*.swift|*.m|*.mm|*.sql|*.sh|*.bash|*.zsh|*.ps1|*.lua|*.dart|*.ex|*.exs|*.erl|*.hs|*.clj|*.zig|*.nim|*.jl|*.r|*.pl|*.tf|*.ipynb) GATED_FILE="$target"; break;;
+    *.py|*.pyw|*.js|*.mjs|*.cjs|*.ts|*.mts|*.cts|*.tsx|*.jsx|*.vue|*.svelte|*.html|*.htm|*.css|*.scss|*.go|*.rs|*.java|*.kt|*.kts|*.scala|*.rb|*.php|*.c|*.cc|*.cpp|*.h|*.hpp|*.cs|*.swift|*.m|*.mm|*.sql|*.sh|*.bash|*.zsh|*.ps1|*.lua|*.dart|*.ex|*.exs|*.erl|*.hs|*.clj|*.zig|*.nim|*.jl|*.r|*.pl|*.tf|*.ipynb) GATED_ALL+=("$target");;
   esac
 done <<< "$HI_TARGETS"
+[ "${#GATED_ALL[@]}" -gt 0 ] && GATED_FILE="${GATED_ALL[0]}"
 if [ -z "$GATED_FILE" ]; then
   # THE PRODUCT IS NOT ALWAYS CODE (v0.270.0): a new file in the project's declared
   # `product_paths` (a service's documents, a course's lessons) is building, whatever its kind.
@@ -76,7 +79,11 @@ if [ -z "$GATED_FILE" ]; then
   if [ "${#CANDIDATES[@]}" -gt 0 ]; then
     PF_HELPER="$(dirname "${BASH_SOURCE[0]}")/../scripts/_hook_input.py"
     [ -f "$PF_HELPER" ] || PF_HELPER="${CLAUDE_PLUGIN_ROOT:-}/scripts/_hook_input.py"
-    GATED_FILE="$(python3 "$PF_HELPER" --project-dir "$PROJECT_DIR" --product-file "${CANDIDATES[@]}" 2>/dev/null)" || GATED_FILE=""
+    for c in "${CANDIDATES[@]}"; do
+      hit="$(python3 "$PF_HELPER" --project-dir "$PROJECT_DIR" --product-file "$c" 2>/dev/null)" \
+        && GATED_ALL+=("$hit")
+    done
+    [ "${#GATED_ALL[@]}" -gt 0 ] && GATED_FILE="${GATED_ALL[0]}"
   fi
 fi
 [ -n "$GATED_FILE" ] || exit 0
@@ -84,22 +91,26 @@ fi
 # Releasing it is the decision to build, and the release gate holds that.
 NP_HELPER="$(dirname "${BASH_SOURCE[0]}")/../scripts/_hook_input.py"
 [ -f "$NP_HELPER" ] || NP_HELPER="${CLAUDE_PLUGIN_ROOT:-}/scripts/_hook_input.py"
-if ! "$(mycelium_python)" "$NP_HELPER" --project-dir "$PROJECT_DIR" --not-prototype "$GATED_FILE" >/dev/null 2>&1; then
+if ! "$(mycelium_python)" "$NP_HELPER" --project-dir "$PROJECT_DIR" --not-prototype "${GATED_ALL[@]}" >/dev/null 2>&1; then
   exit 0
 fi
 BASENAME="${GATED_FILE##*/}"
 ACT="create a new source file"
 [ "$EDITING" = "1" ] && ACT="change product code"
 
-[ -f "$PROJECT_DIR/.claude/state/discovery-skip-ack" ] && exit 0
-
 hi_discovery_engaged; HI_ENGAGED=$?
+# The user's discovery-skip-ack lifts the COLD-project gate only (v0.307.6, control audit P10).
+# Until then it was read first and lifted the delivery stage too, for good, once the project
+# started discovery; DL-1364 took that same "every future build, forever" out of the delivery ack.
+if [ "$HI_ENGAGED" -eq 1 ] && [ -f "$PROJECT_DIR/.claude/state/discovery-skip-ack" ]; then
+  exit 0
+fi
 if [ "$EDITING" = "1" ] && [ "$HI_ENGAGED" -eq 1 ]; then
   exit 0  # an edit in a project where discovery has not started: the brownfield gate's case
 fi
 if [ "$HI_ENGAGED" -eq 3 ]; then
   # Diamonds exist but cannot be read without PyYAML (v0.290.0): refuse with the real reason.
-  mycelium_skip_ack build "$GATED_FILE" && exit 0  # dated, scoped, logged (v0.293.0)
+  mycelium_skip_ack build "${GATED_ALL[@]}" && exit 0  # dated, scoped, logged (v0.293.0)
   printf 'Mycelium delivery gate: you are about to %s (%s). %s\n' "$ACT" "$BASENAME" "$MYCELIUM_NO_YAML_FIX" >&2
   . "${CLAUDE_PLUGIN_ROOT:-$(dirname "${BASH_SOURCE[0]}")/..}/scripts/_hook_fire_log.sh" 2>/dev/null || true
   mycelium_log_fire ".claude/state/discovery-gate-fires.jsonl" "blocked-cannot-check" 2>/dev/null || true
@@ -112,7 +123,7 @@ if [ "$HI_ENGAGED" -eq 0 ]; then
   # open L3 was not enough: /mycelium:start leaves a purpose and nothing else, so an L3 opened
   # straight after it builds on a guess, the "wrong thing right away" the scale locks exist to
   # stop. An end-to-end dogfood run shipped a release over 31 commits under an L0 in discover.
-  mycelium_skip_ack build "$GATED_FILE" && exit 0  # dated, scoped, logged (v0.293.0)
+  mycelium_skip_ack build "${GATED_ALL[@]}" && exit 0  # dated, scoped, logged (v0.293.0)
   hi_delivery_state
   case $? in
     0) exit 0 ;;
@@ -122,6 +133,8 @@ if [ "$HI_ENGAGED" -eq 0 ]; then
       mycelium_log_fire ".claude/state/discovery-gate-fires.jsonl" "blocked-cannot-check" 2>/dev/null || true
       exit 2 ;;
   esac
+  # v0.307.6 (control audit P14): unquoted, so its backticks ran as commands and blanked the
+  # remedy; they are escaped, the variables still expand.
   cat >&2 <<EOF
 Mycelium delivery gate: you are about to $ACT ($BASENAME),
 and no delivery cycle is ready to carry code. Code is written under an L3
@@ -142,9 +155,9 @@ what is missing with the skill named above, open the L3 on its L2's target
 says what is still missing.
 
 Only if the USER explicitly says this work should not be tracked, they record
-.claude/state/delivery-skip-ack: `recorded_at`, `expires` (30 days by default),
-`covers` (the paths it covers), `releases: true` only if releases are meant,
-and their own words in `why`. Do not write the ack file on your own judgement.
+.claude/state/delivery-skip-ack: \`recorded_at\`, \`expires\` (30 days by default),
+\`covers\` (the paths it covers), \`releases: true\` only if releases are meant,
+and their own words in \`why\`. Do not write the ack file on your own judgement.
 EOF
   . "${CLAUDE_PLUGIN_ROOT:-$(dirname "${BASH_SOURCE[0]}")/..}/scripts/_hook_fire_log.sh" 2>/dev/null || true
   mycelium_log_fire ".claude/state/discovery-gate-fires.jsonl" "blocked-delivery" 2>/dev/null || true
@@ -163,8 +176,9 @@ Instead:
    assumption — THEN building starts on the same footing).
 2. If the user EXPLICITLY declines and wants to build without discovery,
    record that choice: write .claude/state/discovery-skip-ack containing
-   the date and the user's own words, then retry. The gate stays silent
-   for this project afterwards.
+   the date and the user's own words, then retry. This gate stays silent
+   for the project afterwards; once discovery starts (a diamond or a
+   purpose), the delivery gate applies to code as in any other project.
 
 Do not write the ack file on your own judgment — it records the USER's
 decision, not yours.

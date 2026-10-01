@@ -4,6 +4,34 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-01.
 
+## v0.307.6 - the build gate (control audit, batch 2)
+
+**2026-10-01.** Batch 2 of the safety-hardening series (DL-1370). Each gap was reproduced on
+0.307.5, and each new test fails there. **Upgrade.**
+
+- **A discovery-skip-ack lifts the cold-project gate only** (P10). The ack a user writes when they
+  decline discovery on a project with no discovery state was read before anything else, so it lifted
+  the delivery stage too, for good, once the project started discovery. DL-1364 took that same
+  "every future build, forever" out of the delivery ack. The cold-gate text now says so.
+- **An ack's scope and the declared prototypes are judged against every file a command writes**
+  (P11). Both were judged on the first gated file, so `printf x > prototypes/a.py; printf y >
+  app/b.py` passed under an ack covering `prototypes/`, or under `prototype_paths: [prototypes/]`.
+- **An L4 on an L3 holding a set must name what it delivers, and no ack waives that** (P12). An L4
+  naming no solution, on an L3 with no `front_runner`, was judged on the whole set's evidence (one
+  idea's verdict could open another's delivery), and the user's scale-lock ack then waived the
+  rest. Now `object_ref` or the L3's `front_runner` is required, as an unwaivable line.
+- **A diamond stamped `completed_at` without `close` carries nothing** (P13). /diamond-progress
+  calls `completed_at` the true ship timestamp; an L3 stamped with it and left open kept carrying
+  code and releases. It now has to record `close`, or drop the stamp if the work goes on.
+- **The build refusal prints its remedy** (P14). Its heredoc was unquoted, so the backticks in it
+  ran as shell commands: the agent saw `recorded_at: command not found` and a remedy with every field
+  name blanked. They are escaped; the variables still expand.
+- Tested under macOS's bash 3.2 as well as a current bash.
+- **Alternatives considered:** expiring the discovery ack after a fixed time (it would still lift the
+  delivery stage until then, and the cold gate it was written for never re-arms); refusing every
+  multi-file shell command (most write one product file and a note); reading `completed_at` as
+  `close` (it would complete a diamond without its completion gates, the 0.307.2 regression).
+
 ## v0.307.5 - the release path's judgement (control audit, batch 1c)
 
 **2026-10-01.** Third safety-hardening batch (DL-1370); with it, batch 1 (the release path) is done.
