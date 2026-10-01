@@ -576,7 +576,8 @@ class State:
             "L1": lambda *_: self.l0_missing(),
             "L2": lambda d, entry, _s: (self.l0_missing() + self.strategy_missing()
                                         + self.outcome_missing()
-                                        + (self._l2_unique_missing(d) if entry else [])),
+                                        + (self._l2_unique_missing(d)
+                                           + self._l2_setter_missing(d) if entry else [])),
             "L3": self._l3_missing, "L4": self._l4_missing, "L5": self._l5_missing,
         }.get(scale)
         if check is None:
@@ -683,6 +684,28 @@ class State:
         if opp is None:
             opp = self.find_opportunity(self.l2_target(self._parent_at(l3, "L2")))
         return str(opp.get("id", "")) if opp else ""
+
+    def outcome_setter(self, outcome: str) -> str:
+        """The L1 that set this outcome (`desired_outcomes[].set_by`, v0.304.0), or ""."""
+        for r in self.roots():
+            if str(r.get("id")) == outcome:
+                return _ref_key(r.get("set_by"))
+        return ""
+
+    def _l2_setter_missing(self, d: dict) -> list[str]:
+        """AN L2 OPENS UNDER THE L1 THAT SET ITS OUTCOME (v0.304.0). Ruling C: L1 proposes the
+        outcome, L2 maps it. Checked when an L2 opens, only where the outcome names its L1: an
+        outcome with no `set_by` is not refused, the next item asks which L1 set it."""
+        out = self.l2_outcome(d)
+        setter = self.outcome_setter(out) if out else ""
+        if not setter:
+            return []
+        parent = self._parent_at(d, "L1")
+        if parent is not None and str(parent.get("id")) == setter:
+            return []
+        return [(f"{d.get('id', '?')}: `parent` naming {setter}, the L1 that set {out} "
+                 f"(`desired_outcomes[].set_by`); it names "
+                 f"{parent.get('id') if parent else 'no live L1'}")]
 
     def _l2_unique_missing(self, d: dict) -> list[str]:
         """ONE L2 PER OUTCOME (v0.302.0, DL-1367 R3; ruling C: one outcome, one target). Checked

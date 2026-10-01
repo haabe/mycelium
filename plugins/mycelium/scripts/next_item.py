@@ -986,11 +986,38 @@ def _door_refs(state, scale: str, parent: dict) -> list[str]:
         ids = [str(r["id"]) for r in state.roots() if r.get("id")]
         if not ids:  # one outcome with no id: one L2 maps it
             return [] if state.live("L2") else ["the desired outcome"]
-        return [i for i in ids if i not in mapped]
+        # v0.304.0: under the L1 that set it. With no `set_by`, only a lone live L1 is
+        # unambiguous; with several, _setter_item asks which (0.301.0 paired it with the first L1
+        # whose lock held).
+        pid, lone = str(parent.get("id")), len(state.live("L1")) == 1
+        return [i for i in ids if i not in mapped
+                and (state.outcome_setter(i) == pid or (not state.outcome_setter(i) and lone))]
     if scale == "L3":
         target = state.l2_target(parent)
         return [target] if target and state.l3_works(parent) is None else []
     return [] if state.live(scale) else [""]
+
+
+def _setter_item(state, today: str, st: dict) -> dict | None:
+    """AN OUTCOME NO L1 IS NAMED AS SETTING, WITH SEVERAL L1s LIVE (v0.304.0): which L1 set it
+    is the founder's to say, and the L2 door waits on it rather than guessing a parent."""
+    if len(state.live("L1")) <= 1:
+        return None
+    mapped = {state.l2_outcome(d) for d in state.live("L2")}
+    for r in state.roots():
+        oid = str(r.get("id") or "")
+        if not oid or oid in mapped or state.outcome_setter(oid):
+            continue
+        iid = f"outcome-setter:{oid}"
+        if _blocked(st.get(iid, {}), today):
+            continue
+        l1s = ", ".join(str(d.get("id")) for d in state.live("L1"))
+        return {"id": iid, "diamond": oid, "since": today, "command": "/mycelium:ost-builder",
+                "text": (f"The outcome {oid} has no L2 and does not say which L1 set it, and "
+                         f"several are live ({l1s}). Say which, and record it as "
+                         f"`desired_outcomes[].set_by`; its L2 then opens under that L1."),
+                "why": "an L2 opens under the L1 that set its outcome"}
+    return None
 
 
 def _target_item(state, today: str, st: dict, l2: dict) -> dict | None:
@@ -1098,8 +1125,16 @@ def _entry_door(root: Path, today: str, st: dict, active: list[dict],
             return {"id": iid, "diamond": pid, "since": today, "command": command,
                     "text": text.format(pid=pid, ref=refs[0]),
                     "why": f"the {scale} lock holds and nothing works {refs[0] or scale} yet"}
-    # After the doors: a door that can open now outranks recording the new shape.
-    for d in live("L2") + live("L3"):
+    return _after_doors(state, today, st, live("L2") + live("L3"))
+
+
+def _after_doors(state, today: str, st: dict, l2_l3: list[dict]) -> dict | None:
+    """What waits until no door can open now: which L1 set an outcome (v0.304.0), then recording
+    the new shape on an old-shape diamond (v0.301.0)."""
+    item = _setter_item(state, today, st)
+    if item:
+        return item
+    for d in l2_l3:
         item = _reshape_item(state, today, st, d)
         if item:
             return item
