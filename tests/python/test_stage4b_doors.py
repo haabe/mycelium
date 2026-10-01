@@ -76,14 +76,17 @@ def test_the_l3_door_opens_on_the_target_and_only_once(monkeypatch, tmp_path):
     assert item["id"] == "door-l3:l2b", "l2a's target is worked; l2b's is not"
 
 
-def test_an_l2_in_the_old_shape_is_asked_to_record_the_new_after_the_doors(monkeypatch,
-                                                                          tmp_path):
+def test_an_l2_in_the_old_shape_is_migrated_before_any_door(monkeypatch, tmp_path):
+    """v0.307.0: the old shape is not read, so the target door would ask for a choice the old
+    record already holds. The migration records it, and comes first."""
     old = {"id": "l2", "scale": "L2", "parent": "l1", "object_ref": "opp-1"}
     both = {"desired_outcomes": [{"id": "out-a", "metric": "a"}],
             "opportunities": OPPS["opportunities"]}
     worked = [L1, old, {"id": "l3", "scale": "L3", "parent": "l2", "object_ref": "opp-1"}]
-    item = _door(monkeypatch, tmp_path, worked, opps=both)
-    assert item["id"] == "reshape-l2:l2" and "object_ref: out-a" in item["text"]
+    assert _door(monkeypatch, tmp_path / "a", worked, opps=both)["id"] == "target-l2:l2", \
+        "the door alone would ask for the target again"
+    item, _ = ni._pick_from(_root(tmp_path / "b", worked, both), "", TODAY, {}, "")
+    assert item["id"] == "migrate-phase:project" and "l2" in item["text"], item
     assert ni.agent_owned(item), "recording the shape is Mycelium's bookkeeping"
 
 

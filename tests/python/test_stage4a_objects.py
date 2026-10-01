@@ -2,7 +2,8 @@
 
 An L2 maps the opportunity space under one outcome and targets one opportunity at a time; an L3 is
 that target and its set of solutions, and commits a front runner to build. The old shape (an L2 on
-one opportunity, an L3 on one solution) is read through a translation until stage 5. The L4 reads
+one opportunity, an L3 on one solution) was read through a translation until v0.307.0, which ended
+it: migrate_phase.py records the new shape. The L4 reads
 the verdicts of the solution it delivers, not the best or the worst of the set.
 """
 
@@ -65,10 +66,12 @@ def test_an_l2_names_its_outcome_and_targets_an_opportunity(tmp_path):
                          "targets": [{"opportunity": "opp-001"}]}) == "opp-001"
 
 
-def test_an_l2_in_the_old_shape_is_read_as_the_new(tmp_path):
+def test_an_l2_in_the_old_shape_is_no_longer_read_as_the_new(tmp_path):
+    """v0.307.0: the translation ended; an L2 on one opportunity targets nothing until migrated."""
     st = sl.State(_project(tmp_path, [L2_OLD], _opps(_sol("sol-a"))))
-    assert st.l2_target(L2_OLD) == "opp-001"
-    assert st.l2_outcome(L2_OLD) == "out-swaps"
+    assert st.l2_target(L2_OLD) == ""
+    assert st.l2_outcome(L2_OLD) == ""
+    assert st.l2_target(L2_NEW) == "opp-001", "control: the new shape"
 
 
 def test_an_l3_opens_on_its_l2s_target(tmp_path):
@@ -79,17 +82,17 @@ def test_an_l3_opens_on_its_l2s_target(tmp_path):
     assert len(st.build_solutions({**l3, "object_ref": "opp-001"})) == 2
 
 
-def test_the_front_runner_is_named_or_read_from_the_old_shape(tmp_path):
+def test_the_front_runner_is_only_the_named_one(tmp_path):
     st = sl.State(_project(tmp_path, [L2_NEW], _opps(_sol("sol-a"), _sol("sol-b"))))
     assert st.front_runner({"object_ref": "opp-001", "front_runner": "sol-b"}) == "sol-b"
-    assert st.front_runner({"object_ref": "sol-a"}) == "sol-a", "old shape: its one solution"
+    assert st.front_runner({"object_ref": "sol-a"}) == "", "old shape: not read since v0.307.0"
     assert st.front_runner({"object_ref": "opp-001"}) == "", "a set with none chosen yet"
 
 
 def _l4_missing(tmp_path, sols, l3_extra=None, l4_ref="sol-a"):
     l3 = {"id": "l3", "scale": "L3", "phase": "deliver", "parent": "l2", "object_ref": "opp-001",
-          "learning_delivery": {"audience": "two shift leads", "until": "2026-11-01",
-                                "means": "by hand"}, **(l3_extra or {})}
+          "exposures": [{"recorded_at": "2026-10-01", "audience": "two shift leads",
+                         "until": "2026-11-01", "channel": "by hand"}], **(l3_extra or {})}
     l4 = {"id": "l4", "scale": "L4", "phase": "discover", "parent": "l3", "object_ref": l4_ref}
     st = sl.State(_project(tmp_path, [L2_NEW, l3, l4], _opps(*sols)))
     return " ".join(st.missing(l4))

@@ -1,8 +1,9 @@
 """An L3's learning delivery can be recorded as an exposure (v0.296.0, phase migration stage 2b).
 
 One record, not two: every rule on an L3's learning delivery (its fields, its end date, how it
-ended, a change to its audience, end date, channel or data) reads `learning_delivery` when the
-diamond carries it and the exposure record otherwise. Recording an exposure is not a start.
+ended, a change to its audience, end date, channel or data) reads the exposure record. Until
+v0.307.0 a `learning_delivery` field was read first; since then it is not read at all, and
+migrate_phase.py moves it into an exposure record. Recording an exposure is not a start.
 """
 
 from __future__ import annotations
@@ -32,7 +33,7 @@ def test_an_exposure_record_is_the_learning_delivery(tmp_path, monkeypatch):
     assert state.learning_delivery_missing(_l3(exposures=[EXPOSURE])) == []
     assert state.learning_delivery_recorded(_l3(exposures=[EXPOSURE])) is None
     out = state.learning_delivery_missing(_l3())
-    assert out and "audience, until, means" in out[0], "control: nothing recorded"
+    assert out and "audience, until, channel" in out[0], "control: nothing recorded"
 
 
 def test_an_exposure_past_its_end_date_is_still_running(tmp_path, monkeypatch):
@@ -72,12 +73,15 @@ def test_a_change_to_an_exposure_is_on_the_record(tmp_path):
     assert why and "data" in why and "data_was" in why, "more data is a widening"
 
 
-def test_learning_delivery_wins_when_both_are_recorded():
+def test_learning_delivery_is_not_read_since_v0307():
+    """Until v0.307.0 `learning_delivery` was read first and hid the exposure record."""
     ld = {"audience": "five testers", "until": "2026-11-01", "means": "by hand"}
-    view = sl.delivery_of(_l3(learning_delivery=ld, exposures=[EXPOSURE]))
-    assert view == ld
-    assert sl.delivery_key(_l3(learning_delivery=ld, exposures=[EXPOSURE]), "until") \
-        == "learning_delivery.until"
+    both = _l3(learning_delivery=ld, exposures=[EXPOSURE])
+    assert sl.delivery_of(both)["audience"] == EXPOSURE["audience"]
+    assert sl.delivery_key(both, "until") == "exposures[].until"
+    only = _l3(learning_delivery=ld)
+    assert sl.delivery_of(only) == {}, "the old field alone is no delivery"
+    assert "migrate_phase.py" in sl.delivery_key(only, "until"), "and the key says how to move it"
 
 
 def test_the_running_exposure_is_read_before_an_ended_one():
@@ -89,5 +93,5 @@ def test_the_running_exposure_is_read_before_an_ended_one():
 def test_next_item_reads_the_same_record(monkeypatch):
     assert next_item._ld(_l3(exposures=[EXPOSURE]))["means"] == "moderated session"
     monkeypatch.setattr(next_item, "sl", None)
-    ld = {"audience": "five testers"}
-    assert next_item._ld(_l3(learning_delivery=ld)) == ld, "without scale_locks: the field"
+    assert next_item._ld(_l3(learning_delivery={"audience": "five testers"})) == {}, \
+        "without scale_locks: no delivery read, the old field included"

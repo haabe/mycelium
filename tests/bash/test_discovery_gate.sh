@@ -164,7 +164,7 @@ test_open_l4_allows() {
     # The L3 has completed its learning delivery; its L4 carries the build. Parent is named, as
     # /preflight writes it. v0.258.0: the L4 opens only on the verdict of a recorded delivery.
     { printf 'active_diamonds:\n'; ladder_diamonds opp-001
-      printf '  - id: d-003\n    scale: L3\n    phase: complete\n    object_ref: sol-001\n    evidence_type: data-supported\n    learning_delivery:\n      audience: nine staff at one site, opted in\n      until: "2026-10-25"\n      means: by hand\n  - id: d-004\n    scale: L4\n    phase: develop\n    parent: d-003\n    theory_gates_status: %s\n' "$BUILD_GATES"
+      printf '  - id: d-003\n    scale: L3\n    phase: complete\n    object_ref: sol-001\n    evidence_type: data-supported\n    exposures:\n    - recorded_at: "2026-10-01"\n      audience: nine staff at one site, opted in\n      until: "2026-10-25"\n      channel: by hand\n  - id: d-004\n    scale: L4\n    phase: develop\n    parent: d-003\n    theory_gates_status: %s\n' "$BUILD_GATES"
     } > "$p/.claude/diamonds/active.yml"
     decide_file "$p/.claude/diamonds/active.yml"
     local code; code=$(run_gate "$p" "$(write_json "$p/app/rollout.py")")

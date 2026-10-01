@@ -133,7 +133,9 @@ def test_the_ladder_opens_rung_by_rung_from_l0_to_l5(tmp_path, monkeypatch):
     assert _proposed(tmp_path) != "door-l1:l0", "and not again once the L1 is open"
 
     # L2 opens on a strategy (the L1, a North Star, the landscape) and a desired outcome.
-    l2 = {"id": "l2", "scale": "L2", "phase": "discover", "object_ref": "opp-001"}
+    # v0.307.0: the L2 records its target; its one opportunity is no longer read as one
+    l2 = {"id": "l2", "scale": "L2", "phase": "discover", "object_ref": "opp-001",
+          "target": "opp-001"}
     p.refused(p.add(l2), "north-star")
     assert _proposed(tmp_path) != "door-l2:l1", "no L2 door before the strategy is on record"
     p.canvas_file("north-star.yml", {"metric": {"name": "swaps settled in the app per week"}})
@@ -149,7 +151,9 @@ def test_the_ladder_opens_rung_by_rung_from_l0_to_l5(tmp_path, monkeypatch):
     assert _proposed(tmp_path) != "door-l2:l1", "and not again once the L2 is open"
 
     # L3 opens on a target opportunity with evidence and a source.
-    l3 = {"id": "l3", "scale": "L3", "phase": "discover", "object_ref": "sol-001", "parent": "l2"}
+    # an L3 is its L2's target and that target's solutions, and names its front runner
+    l3 = {"id": "l3", "scale": "L3", "phase": "discover", "object_ref": "opp-001", "parent": "l2",
+          "front_runner": "sol-001"}
     p.refused(p.add(l3), "evidence behind the opportunity")
     assert _proposed(tmp_path) != "door-l3:l2", "no L3 door before the opportunity has evidence"
     opps["opportunities"][0]["provenance"] = {

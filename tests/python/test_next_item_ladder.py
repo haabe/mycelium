@@ -20,6 +20,7 @@ sys.path.insert(0, str(SCRIPTS))
 _spec = importlib.util.spec_from_file_location("next_item", SCRIPTS / "next_item.py")
 ni = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(ni)
+from decided import decided_text  # noqa: E402
 
 # product_paths declared, so the where-the-product-lives item (v0.270.0) is answered here.
 L0 = "product_paths: []\nactive_diamonds:\n  - id: l0-x\n    scale: L0\n    phase: discover\n"
@@ -166,7 +167,8 @@ def test_doing_what_the_item_asks_resets_the_ladder(tmp_path, monkeypatch):
 # E2E run 21: one item per diamond fired on every canvas edit, rotated through all four diamonds,
 # and the human snoozed each in turn, burying the L3 move go-live needed.
 
-FOUR = """\
+# by their decisions (v0.307.0: a phase-only record is offered the migration first)
+FOUR = decided_text("""\
 product_paths: []
 active_diamonds:
   - id: l0-x
@@ -175,7 +177,7 @@ active_diamonds:
   - id: l3-x
     scale: L3
     phase: develop
-"""
+""")
 
 
 def test_one_item_covers_every_diamond_and_the_delivering_one_leads(tmp_path, monkeypatch):

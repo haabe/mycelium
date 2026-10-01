@@ -149,6 +149,17 @@ def test_the_next_item_offers_the_migration_until_it_has_run(tmp_path):
     assert ni._migrate_item(root, "2026-10-01", {}) is None, "migrated: nothing to offer"
 
 
+def test_a_partial_install_offers_no_migration_and_the_refusal_still_names_it(tmp_path,
+                                                                             monkeypatch):
+    import next_item as ni  # the fail-open review of _would_migrate cites this test
+    root = _project(tmp_path)
+    monkeypatch.setitem(sys.modules, "migrate_phase", None)  # import fails: a partial install
+    assert ni._migrate_item(root, "2026-10-01", {}) is None
+    d = {"id": "l3", "scale": "L3", "phase": "develop"}
+    assert "migrate_phase.py" in sl._phase_only_hint(d), "the refusal names the migration"
+    assert "migrate_phase.py" in sl.delivery_key({**d, "learning_delivery": {"audience": "a"}})
+
+
 def test_an_unreadable_file_offers_nothing_and_the_picker_says_why(tmp_path):
     import next_item as ni  # the fail-open review of _migrate_item cites this test
     root = _project(tmp_path)

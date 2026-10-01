@@ -56,12 +56,9 @@ try:
 except ImportError:  # a partial install: no door is proposed, and the ladder item still is
     sl = None
 def _ld(d: dict) -> dict:
-    """The L3's learning delivery, wherever recorded (v0.296.0): scale_locks.delivery_of, else the
-    field itself when scale_locks is not installed."""
-    if sl is not None:
-        return sl.delivery_of(d)
-    ld = d.get("learning_delivery")
-    return ld if isinstance(ld, dict) else {}
+    """The L3's learning delivery (v0.296.0): scale_locks.delivery_of, which reads the exposure
+    record; nothing when scale_locks is not installed (since v0.307.0 the old field is not read)."""
+    return sl.delivery_of(d) if sl is not None else {}
 
 
 try:
@@ -669,7 +666,7 @@ def _l3_item(root: Path, today: str, st: dict, d: dict, phase: str) -> dict | No
 
 
 def _start_item(today: str, st: dict, d: dict) -> dict | None:
-    """An L3 in Deliver whose test has not started (v0.274.0). `learning_delivery.started` is the
+    """An L3 in Deliver whose test has not started (v0.274.0). `exposures[].started` is the
     day the first person in the audience took part. E2E service world run 4: the L3 reached Deliver
     scoped to a pilot with three existing clients, then grew its client pack from about 4,100 to
     7,100 words over seven sessions while nobody was served; 0.273.0 caught a growing build only in
@@ -684,7 +681,7 @@ def _start_item(today: str, st: dict, d: dict) -> dict | None:
     return {"id": iid, "diamond": did, "since": today,
             "command": f"/mycelium:diamond-progress {did}",
             "text": (f"{did} (L3) is in Deliver and its test has not started: nobody in its "
-                     "audience has taken part. Start it, and record `learning_delivery.started` "
+                     "audience has taken part. Start it, and record `exposures[].started` "
                      "with the date the first person took part, or say what blocks the start. "
                      "Build only what the start needs; anything else is the next test on the "
                      "tree or L4 work."),
@@ -807,7 +804,7 @@ def _delivery_over_item(root: Path, today: str, st: dict, d: dict) -> dict | Non
             "command": f"/mycelium:diamond-progress {did}",
             "text": (f"{did} (L3): its learning delivery ran until {until} and how it ended is "
                      "not recorded. If it no longer reaches its audience, record "
-                     "`learning_delivery.ended: {how: withdrawn, on}`. If it carries on for "
+                     "`exposures[].ended: {how: withdrawn, on}`. If it carries on for "
                      "them, that is production: open an L4 on it and record `how: handed_to_l4`. "
                      "Or extend `until`, with the reason."),
             "why": "a learning delivery past its last day is production or over, and says which"}
@@ -932,7 +929,7 @@ def _learning_delivery_item(root: Path, today: str, st: dict, d: dict) -> dict |
     need = [g.replace("_", " ").title() for g in ("security", "privacy", "service_quality")
             if state.gate_missing(d, g)]
     if state.learning_delivery_missing({**d, "phase": "deliver"}):
-        need.append("its learning delivery (audience, until, means)")
+        need.append("its learning delivery as an exposure record (audience, until, channel)")
     text = (f"{did} (L3) has evidence from a test run before its Deliver, and that does not "
             "open the L4: the people it reached never went through Security, Privacy and "
             "Service Quality. Take the L3 to Deliver and run its learning delivery with a named "
@@ -1056,9 +1053,11 @@ def _where(d: dict) -> str:
 
 
 def _migrate_item(root: Path, today: str, st: dict) -> dict | None:
-    """Diamonds that still record only their phase (v0.303.0, DL-1368 S3): the migration to the
-    decision log, shown first and written on the user's yes. Offered last, when nothing else is
-    waiting: it is bookkeeping, and the phase is read as a fallback until it has run."""
+    """Diamonds recorded in a shape no longer read (v0.303.0, DL-1368 S3): the migration to the
+    decision log, shown first and written on the user's yes. Offered last until v0.307.0, while
+    the old shape was read as a fallback; since then it comes right after fired proposals, because
+    every door and the ladder read only the new records and would ask again for a decision the
+    old record already holds (an L2's target, an L3's front runner)."""
     iid = "migrate-phase:project"
     if sl is None or _blocked(st.get(iid, {}), today):
         return None
@@ -1066,44 +1065,32 @@ def _migrate_item(root: Path, today: str, st: dict) -> dict | None:
         state = sl.State(str(root))
     except (sl.UnreadableError, sl.CannotCheckError):
         return None  # SPEAKS: _fired_proposals and the ladder item report an unreadable file
-    pending = [str(d["id"]) for d in state.by_id.values()
-               if state.is_open(d) and not sl.decisions_of(d)
-               and str(d.get("phase") or "discover").lower() != "discover"]
+    pending = _would_migrate(state)
     if not pending:
         return None
     return {"id": iid, "diamond": pending[0], "since": today, "owner": "agent",
             "command": f"{MIGRATE} --project-dir .",
-            "text": (f"{len(pending)} diamond(s) ({', '.join(pending[:4])}) still record only "
-                     "their phase, which is being retired. Run the migration's dry run, show what "
-                     "it would change, and write it with `--write` on the user's yes."),
-            "why": "where a diamond is will be read from its decisions, not its phase"}
+            "text": (f"{len(pending)} diamond(s) ({', '.join(pending[:4])}) are recorded in a "
+                     "shape Mycelium no longer reads (a phase, a `learning_delivery`, or an L2 or "
+                     "L3 on one object). Run the migration's dry run, show what it would change, "
+                     "and write it with `--write` on the user's yes."),
+            "why": "since v0.306.0-0.307.0 those records are not read"}
 
 
-def _reshape_item(state, today: str, st: dict, d: dict) -> dict | None:
-    """A diamond in the old shape (DL-1367 R4): read through a translation until stage 5, and asked
-    once to record the new fields. Mycelium's own bookkeeping, so the agent's."""
-    did, scale = str(d["id"]), str(d.get("scale", "")).upper()
-    iid = f"reshape-{scale.lower()}:{did}"
-    if _blocked(st.get(iid, {}), today):
-        return None
-    if scale == "L2" and not d.get("target") and state.find_opportunity(d.get("object_ref")):
-        outcome = state.l2_outcome(d)
-        fields = (f"`object_ref: {outcome}` (the outcome it maps) and " if outcome else
-                  "`object_ref` naming the outcome it maps (its opportunity has no `rolls_up_to`) "
-                  "and ")
-        text = (f"{did} (L2) is in the old shape, on one opportunity. Record {fields}"
-                f"`target: {{opportunity: {state.l2_target(d)}, ...}}`; until then it is read "
-                "that way.")
-    elif scale == "L3" and not d.get("front_runner") and state.front_runner(d):
-        opp = state.find_opportunity(d.get("object_ref"))
-        text = (f"{did} (L3) is in the old shape, on one solution. Record `object_ref: "
-                f"{opp.get('id') if opp else 'its target opportunity'}` and `front_runner: "
-                f"{state.front_runner(d)}`; until then it is read that way.")
-    else:
-        return None
-    return {"id": iid, "diamond": did, "since": today, "owner": "agent",
-            "command": f"/mycelium:diamond-progress {did}", "text": text,
-            "why": "the old one-object shape is read through a translation until stage 5"}
+def _would_migrate(state) -> list[str]:
+    """The open diamonds the migration would change (v0.307.0): a recorded phase, a
+    `learning_delivery`, or the old one-object L2/L3 shape, asked of the migration itself so the
+    offer and the script cannot disagree about what is left."""
+    try:
+        import copy  # noqa: PLC0415 - only when the offer is computed
+
+        import migrate_phase as mp  # noqa: PLC0415 - the migration's own reading
+    except ImportError:
+        return []
+    doc = copy.deepcopy({"active_diamonds": [d for d in state.by_id.values() if state.is_open(d)]})
+    before = {str(d.get("id")): copy.deepcopy(d) for d in doc["active_diamonds"]}
+    mp.migrate(doc, state, "1970-01-01")
+    return [i for i, d in ((str(x.get("id")), x) for x in doc["active_diamonds"]) if d != before[i]]
 
 
 def _entry_door(root: Path, today: str, st: dict, active: list[dict],
@@ -1141,20 +1128,7 @@ def _entry_door(root: Path, today: str, st: dict, active: list[dict],
             return {"id": iid, "diamond": pid, "since": today, "command": command,
                     "text": text.format(pid=pid, ref=refs[0]),
                     "why": f"the {scale} lock holds and nothing works {refs[0] or scale} yet"}
-    return _after_doors(state, today, st, live("L2") + live("L3"))
-
-
-def _after_doors(state, today: str, st: dict, l2_l3: list[dict]) -> dict | None:
-    """What waits until no door can open now: which L1 set an outcome (v0.304.0), then recording
-    the new shape on an old-shape diamond (v0.301.0)."""
-    item = _setter_item(state, today, st)
-    if item:
-        return item
-    for d in l2_l3:
-        item = _reshape_item(state, today, st, d)
-        if item:
-            return item
-    return None
+    return _setter_item(state, today, st)
 
 
 def _ladder_item(root: Path, today: str, st: dict) -> dict | None:
@@ -1235,9 +1209,11 @@ def _pick_from(root: Path, reminders: str, today: str, st: dict,
     for f in fired:
         if not _blocked(st.get(f["id"], {}), today):
             return {**f, "why": "a named input on a closing path landed; the ruling is yours"}, note
-    # 2. where the product's own files live, while nobody has said (v0.270.0); then a door that
+    # 2. records in a shape no longer read, before anything that reads the new one (v0.307.0);
+    #    where the product's own files live, while nobody has said (v0.270.0); then a door that
     #    now holds: an L4 on an L3 whose lock holds, an L5 on a shipped L4 (v0.254.0)
-    door = _product_paths_item(root, today, st) or _door_item(root, today, st)
+    door = (_migrate_item(root, today, st) or _product_paths_item(root, today, st)
+            or _door_item(root, today, st))
     if door:
         return door, note
     # 3. diamonds whose phase nobody has assessed since the evidence changed (v0.249.0), as ONE
@@ -1285,8 +1261,7 @@ def _pick_from(root: Path, reminders: str, today: str, st: dict,
             "command": cmd,
             "why": "the oldest advisory with a command",
         }, note
-    # 5. last, when nothing else waits: the move to the decision log (v0.303.0)
-    return _migrate_item(root, today, st), note
+    return None, note
 
 
 _UT_OPEN, _UT_CLOSE = "<untrusted_user_content>", "</untrusted_user_content>"

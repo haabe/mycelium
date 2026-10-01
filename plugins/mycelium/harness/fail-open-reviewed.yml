@@ -732,15 +732,26 @@ reviewed:
     into what session-start prints. So an unreadable file is reported once, where the human reads
     it, and is never mistaken for "no diamond needs assessing". Pinned by the existing next-item
     tests and tests/python/test_next_item_moves_the_ladder.py. Reviewed 2026-09-24, v0.249.0.
-- id: next_item.py@f9df8a7a36
+- id: next_item.py@de0d3e9e5a
   verdict: accepted
   reason: >-
     `_migrate_item` returns None when diamonds/active.yml cannot be read (UnreadableError,
     CannotCheckError). Silent at the site and correct, the same pattern as `_unassessed`: `pick()`
     reads the same file first through `_fired_proposals`, whose note reaches what session-start
     prints, so an unreadable file is reported once where the human reads it. The offer it skips is
-    the last item, bookkeeping (the move to the decision log), never a gate. Pinned by
-    tests/python/test_stage5a_decision_log.py. Reviewed 2026-09-30, v0.303.0.
+    bookkeeping (the move to the decision log), never a gate. Pinned by
+    tests/python/test_stage5a_decision_log.py. Reviewed 2026-09-30, v0.303.0; re-reviewed
+    2026-10-01, v0.307.0, when the offer moved ahead of the doors (was @f9df8a7a36).
+- id: next_item.py@4d19e16016
+  verdict: accepted
+  reason: >-
+    `_would_migrate` returns [] when migrate_phase cannot be imported, so no migration is offered.
+    migrate_phase.py ships beside next_item.py, so this is a partial install only. Silent at the
+    site and accepted because the human still hears it: every lock refusal on a phase-only diamond,
+    and every delivery message on a diamond carrying only `learning_delivery`, names
+    scripts/migrate_phase.py. The offer is bookkeeping, never a gate; nothing is allowed by its
+    absence. Pinned by test_a_partial_install_offers_no_migration_and_the_refusal_still_names_it
+    in tests/python/test_stage5a_decision_log.py. Reviewed 2026-10-01, v0.307.0.
 
 - id: canvas_write_check.py@3c770fccdd
   verdict: accepted

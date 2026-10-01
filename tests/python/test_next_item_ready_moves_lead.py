@@ -26,7 +26,8 @@ TODAY = "2026-11-20"
 L3_PILOT = """  - id: l3-a
     scale: L3
     phase: deliver
-    learning_delivery:
+    exposures:
+    - recorded_at: '2026-11-01'
       audience: five invited testers
       started: '2026-11-02'
 """
@@ -109,7 +110,8 @@ OVER = """  - id: l3-a
     scale: L3
     phase: deliver
     riskiest_assumption: {verdict: inconclusive}
-    learning_delivery:
+    exposures:
+    - recorded_at: '2026-10-16'
       audience: three paying clients who opted in
       started: '2026-10-17'
       until: '2027-06-03'
@@ -124,7 +126,7 @@ def test_a_delivery_past_its_last_day_asks_how_it_ended(tmp_path):
     snoozed = {"rerun-l3:l3-a": {"until": "asked"}}
     item = ni._door_item(root, "2027-07-08", snoozed)
     assert item["id"] == "delivery-over-l3:l3-a:2027-06-03", item
-    assert "`learning_delivery.ended: {how: withdrawn, on}`" in item["text"]
+    assert "`exposures[].ended: {how: withdrawn, on}`" in item["text"]
     assert "that is production: open an L4" in item["text"]
     assert not ni.agent_owned(item), "ending or carrying on is the founder's decision"
 

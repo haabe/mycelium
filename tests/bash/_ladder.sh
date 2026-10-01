@@ -42,5 +42,6 @@ PY
 ladder_diamonds() {
     printf '  - id: l0\n    scale: L0\n    phase: define\n'
     printf '  - id: l1\n    scale: L1\n    phase: develop\n    object_ref: "lead with multi-site cafes"\n'
-    printf '  - id: l2\n    scale: L2\n    phase: define\n    object_ref: %s\n' "$1"
+    # v0.307.0: the L2 records its target; its one opportunity is no longer read as one
+    printf '  - id: l2\n    scale: L2\n    phase: define\n    object_ref: %s\n    target: %s\n' "$1" "$1"
 }
