@@ -4,6 +4,41 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-01.
 
+## v0.307.3 - the release gate's inputs (control audit, batch 1a)
+
+**2026-10-01.** First of the safety-hardening batches ruled in DL-1370, from the control audit of
+2026-10-01. Each gap was reproduced on 0.307.2, and each test here fails there. **Upgrade.**
+
+- **A project whose diamonds have all completed is judged** (P1). The gate read "no open diamond" as
+  "no diamonds at all", so once everything had completed any deploy passed (0.288.1 did the same).
+  A project with no diamonds at all is still not judged.
+- **More releases are recognised** (P2; founder ruling: "List + 'deploy' rule"). Added: `railway
+  up`, `gh-pages`, `surge`, `aws s3 cp|mv` to a bucket, `docker buildx build --push`; and any
+  command named for a release, at a command's start: a tool's `deploy`/`publish` subcommand
+  (`wrangler deploy`, `firebase deploy`, `supabase functions deploy`, `netlify-cli deploy`), a
+  package script (`npm run deploy`, `pnpm run deploy:prod`, `yarn deploy`, `make deploy`) or a
+  script named for it (`./scripts/deploy.sh`, `bash publish.sh`). Commands that only mention the
+  word (`grep deploy`, `git log --grep deploy`, `cat deploy.sh`) are not. The hook's keyword
+  pre-filter is widened to match: the first version of this fix passed its function test while the
+  hook still skipped four of the commands, so each is also tested through the hook itself.
+- **An end date that is not YYYY-MM-DD no longer keeps a record current** (P3): `25.10.2026` or
+  `end of October` was compared as text and never ran out. The same holds for a learning delivery's
+  own end date, and a change of end date counts as ending sooner only between two ISO dates (as
+  text, `1 Nov 2026` read as earlier than `2026-10-25`).
+- **A structured skip-ack without an ISO `recorded_at` lifts nothing** (P4). It fell to the legacy
+  path, which lifts every gate, releases included, for 14 days. A bare old ack keeps its grace.
+- **Personal data however written asks the person** (P5, ruling g). The ask matched only the exact
+  words `personal` and `sensitive`; any class other than `none` or `synthetic` now asks, and a
+  record is not current until its `data_class` is one of the four.
+- hooks/README's exposure-gate entry described the pre-0.295 rule (Deliver plus gates); it now
+  describes the exposure record.
+- **Alternatives considered:** recognising releases by an exact list only (the next tool passes
+  silently; the founder ruled for the list plus a named-release rule); treating any command that
+  contains "deploy" as a release (refuses `grep deploy` and `git log --grep deploy`); parsing free
+  date text in `until` (guesses at `03.04.2026`, which is two different days); keeping the legacy
+  grace for a structured ack with a bad date (the grace exists for old bare files, and a structured
+  one says what it means to lift, which a bad date makes unknowable).
+
 ## v0.307.2 - a completion with no `close` is judged again
 
 **2026-10-01.** A safety regression, found by the stage-5d phase-word inventory. **Upgrade.**
