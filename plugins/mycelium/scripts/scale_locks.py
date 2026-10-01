@@ -1713,7 +1713,13 @@ def _last_good(project_dir: str) -> dict:
         rec = {}  # SPEAKS: fails closed: with no commit either, the repair is judged whole
     # The record is written on every good write; the commit only as often as the user commits.
     # The record wins where it has the diamond, the commit fills in the rest (v0.268.0).
+    whole = set(rows)  # rows read whole, from the commit or the snapshot: exposures included
     for did, r in (rec.items() if isinstance(rec, dict) else []):
+        if (isinstance(r, dict) and did not in whole and "exposures" not in r
+                and str(r.get("scale") or "").upper() in DELIVERY_SCALES):
+            # v0.307.9 (DL-1371): a record from before 0.307.7 kept no exposures, so this
+            # diamond's are unknown; violations_between refuses a repair that would hide them.
+            rows.setdefault(did, {})["_exposures_unknown"] = True
         if isinstance(r, dict) and r.get("scale"):
             rows[did] = {**rows.get(did, {}), "id": did, "scale": r["scale"],
                          "phase": str(r.get("sig") or "discover").split("|")[0],
@@ -1842,6 +1848,30 @@ def _state_end_violations(st: State, new_doc: dict, old_active: dict) -> list[st
     return out
 
 
+def _unknown_exposure_violations(st: State, old_active: dict) -> list[str]:
+    """A REPAIR THAT CANNOT SEE A DIAMOND'S EXPOSURES IS REFUSED FOR IT (v0.307.9, DL-1371). Its
+    last good state came from a rulings record written before 0.307.7, which kept no exposures,
+    so a widening or an ending in the repair would pass unseen: the residual 0.307.7 shipped with,
+    which met the hardening bet's kill criterion. Refused only where the repair writes exposures
+    for that diamond or removes it; repairing without them, then adding them back in a second
+    write (where personal data asks the person), always passes."""
+    out = []
+    for did, prev in old_active.items():
+        if not prev.get("_exposures_unknown"):
+            continue
+        d = st.by_id.get(did)
+        if d is not None and not _as_list(d.get("exposures")):
+            continue
+        what = "removes it" if d is None else "writes its `exposures`"
+        out.append(f"{did} ({prev.get('scale')}): this repair {what}, and it cannot be checked "
+                   f"for who {did} reaches: the last good state of the diamonds file was "
+                   "recorded before v0.307.7 and does not show its exposures, so a widening or an "
+                   f"ending would pass unseen. Repair the file with {did} in it and without its "
+                   "`exposures` first, then add them back in a second write, where the person "
+                   "confirms any personal data; or restore the file from a backup")
+    return out
+
+
 def _was_running(prev: dict) -> bool:
     """Open before the write, as the old row itself says: not completed or closed by its state,
     parked counting as open (a pause, its delivery may still run) (v0.307.7)."""
@@ -1853,10 +1883,12 @@ def violations_between(project_dir: str, before: str, after: str) -> list[str]:
     """The lock verdict on one change to diamonds/active.yml, given its text before and after.
     Shared by the write hook (before = on disk, after = the proposed write) and, since v0.253.2,
     by the shell guard (before = a snapshot taken before the command, after = on disk)."""
+    repair = False
     try:
         old_doc = _as_dict(_parse(before, "diamonds/active.yml")) if before else {}
     except UnreadableError:
         old_doc = _last_good(project_dir)  # a repair is judged against what was last known open
+        repair = True
     new_doc = _parse(after, "the proposed diamonds/active.yml")  # raises: refused, see _run_hook
     if not isinstance(new_doc, dict):
         new_doc = {}
@@ -1866,6 +1898,8 @@ def violations_between(project_dir: str, before: str, after: str) -> list[str]:
     st = State(project_dir, diamonds_doc=new_doc)
     out = (_closing_violations(st, new_doc, old_active) + _retarget_violations(st, old_active)
            + _state_end_violations(st, new_doc, old_active))
+    if repair:
+        out += _unknown_exposure_violations(st, old_active)
     for d in st.active:
         before_scale, before_phase = was_open.get(str(d.get("id")), (None, None))
         if before_scale == _scale(d) and _scale(d):

@@ -173,3 +173,46 @@ def test_the_record_keeps_exposures_json_safe(tmp_path):
     rec = dr.record(Path(p), "s1")
     json.dumps(rec)  # dates from YAML must not break the record
     assert rec["l3-a"]["exposures"][0]["audience"] == RUNNING["audience"]
+
+
+# P16, closed fail-closed (v0.307.9, DL-1371) --------------------------------------------------
+
+def _old_record_and_break(p: str) -> dict:
+    """A rulings record from before 0.307.7 (no exposures), no snapshot, no commit, and the file
+    broken outside any shell command: the residual 0.307.7 left."""
+    good = _disk(p)
+    (Path(p) / ".claude" / "state" / "diamond-rulings.json").write_text(json.dumps(
+        {d["id"]: {"sig": dr.signature(d), "scale": d["scale"]} for d in good["active_diamonds"]}))
+    (Path(p) / AF).write_text("active_diamonds: [broken\n")
+    return good
+
+
+def test_a_repair_that_cannot_see_an_l3s_exposures_is_refused_for_it(tmp_path):
+    p = _project(tmp_path, [_l3()])
+    good = _old_record_and_break(p)
+    wider = copy.deepcopy(good)
+    wider["active_diamonds"] = [{**d, "exposures": [{**d["exposures"][0],
+                                                     "audience": "everyone with the link"}]}
+                                if d["id"] == "l3-a" else d for d in wider["active_diamonds"]]
+    for doc in (wider, good, _without(good, "l3-a")):  # widened, unchanged, removed
+        out = _write(p, doc)
+        assert any("cannot be checked" in v and "l3-a" in v for v in out), out
+
+
+def test_control_the_remedy_repairs_without_the_exposures_first(tmp_path):
+    p = _project(tmp_path, [_l3()])
+    good = _old_record_and_break(p)
+    bare = copy.deepcopy(good)
+    bare["active_diamonds"] = [{k: v for k, v in d.items() if k != "exposures"}
+                               for d in bare["active_diamonds"]]
+    assert not any("cannot be checked" in v for v in _write(p, bare)), "the repair alone passes"
+
+
+def test_control_a_new_record_knows_an_l3_with_no_exposures(tmp_path):
+    l3 = {k: v for k, v in _l3().items() if k != "exposures"}
+    p = _project(tmp_path, [l3])
+    rec = dr.record(Path(p), "s1")
+    assert rec["l3-a"]["exposures"] == [], "an empty list says it has none; absence is unknown"
+    good = _disk(p)
+    (Path(p) / AF).write_text("active_diamonds: [broken\n")
+    assert not any("cannot be checked" in v for v in _write(p, good))

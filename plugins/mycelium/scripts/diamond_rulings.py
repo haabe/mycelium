@@ -120,8 +120,10 @@ def record(root: Path, session: str, now: str | None = None) -> dict:
         new[did]["scale"] = str(d.get("scale") or "").upper()
         # And its exposures (v0.307.7, control audit P16): the last good state a repair is judged
         # against, so a repair cannot widen a running delivery unseen. JSON-safe: YAML dates.
-        if d.get("exposures"):
-            new[did]["exposures"] = json.loads(json.dumps(d["exposures"], default=str))
+        # Since v0.307.9 (DL-1371) a delivering diamond always carries the key, `[]` for none,
+        # so a record without it is known to predate this and its exposures are unknown.
+        if str(d.get("scale") or "").upper() in ("L3", "L4", "L5"):
+            new[did]["exposures"] = json.loads(json.dumps(d.get("exposures") or [], default=str))
         else:
             new[did].pop("exposures", None)
     try:
