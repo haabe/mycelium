@@ -213,6 +213,11 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
      - gate: <which gate or threshold>  # omit entirely when progressed
        reason: <why it did not clear, in your own words>
        unblocked_by: <the skill or evidence that would clear it>
+   decisions:                           # APPEND the move's decisions, when progressed (v0.305.0)
+     - decision: start_experiment       # one entry per decision the move makes (see below)
+       on: <YYYY-MM-DD>
+       gates: {evidence: pass, cynefin: pass, ...}   # this decision's gates (scale_locks.DECISIONS)
+       ruling: progressed
    progression_history:                 # APPEND one entry per transition, when progressed (v0.248.0)
      - transition: "define -> develop"  # one entry for EACH transition crossed; two for a two-step move
        decisions: [start_experiment, commit_to_build]   # what this move decides (v0.298.0)
@@ -227,6 +232,15 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
    develop -> deliver releases (`release`); deliver -> complete closes (`close`). Each gate belongs
    to the decision it guards, and the move needs the gates of every decision it makes, the same set
    as before. The phase is retired later in the migration; the decisions stay.
+
+   **Record the decisions; they are where the diamond is (v0.305.0, phase migration stage 5b;
+   DL-1368).** Append one `decisions` entry for each decision the move makes, with its gates and the
+   date. Where a diamond is, is read from them (`scale_locks.phase_of`): develop needs both
+   `start_experiment` and `commit_to_build`. Until stage 5c retires the phase, set `phase` to match
+   in the same write; after it, the decisions are the only record. **An L0 does not move** (DL-1368
+   S2): when its purpose has been revisited (a re-derived `purpose_properties`, a changed `why`, the
+   bar's own review date), record `review` with the L0 gates, and the ruling. A project whose
+   diamonds still carry only a phase is offered `scripts/migrate_phase.py` by the next item.
 
    **Move the phase, record the gates and append the history IN THE SAME WRITE (v0.248.0).** The
    scale-lock gate refuses a write that moves a diamond forward unless, for every transition it

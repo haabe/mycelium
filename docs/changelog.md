@@ -4,6 +4,29 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-30.
 
+## v0.305.0 - every reader of where a diamond is reads its decisions
+
+**2026-10-01.** Phase migration stage 5b, founder ruling DL-1368. No new refusals.
+
+- **The readers.** `next_item` (the move item, the L3 and L4 items, the children and doors),
+  `derive_closing_path` (the next move), `check_purpose_stance` (whether a diamond has decided to
+  build), `stop-check.sh` (an L4 building or delivering) and `session-start.sh` (completed
+  diamonds for the outcome check) read where a diamond is through `scale_locks.phase_of`: its
+  decision log, and the recorded `phase` only when it has none. Each falls back to the field when
+  scale_locks cannot be imported. 0.303.0 made the locks read the log; until now these read the
+  field, so a diamond whose log and phase disagreed was in two places.
+- **/diamond-progress records the decisions.** Each move appends its decisions with their gates and
+  date; `phase` is set to match until stage 5c retires it. An L0 does not move: when its purpose is
+  revisited (a re-derived property list, a changed `why`, the bar's review date) it records
+  `review` (DL-1368 S2).
+- **/diamond-render** draws a diamond's state from its decisions.
+- **Alternatives considered:** leaving the readers on the field until 5c removes it (a diamond
+  recorded by decisions alone, which the migration and /diamond-progress now produce, would read as
+  discover everywhere but the locks); a single shared reader module for every script (the
+  fallbacks differ: next_item and the hooks must run without scale_locks).
+- Tests: `test_stage5b_readers.py`, 4 tests, all failing on 0.304.0 (a stale phase beside a log
+  that says develop or deliver).
+
 ## v0.304.0 - an L2 opens under the L1 that set its outcome
 
 **2026-10-01.** A fix to 0.301.0's L2 door, found by /diamond-progress on the dogfood repo.
