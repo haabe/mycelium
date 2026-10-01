@@ -15,6 +15,7 @@ import time
 from pathlib import Path
 
 import yaml
+from decided import decided, decided_text
 
 ROOT = Path(__file__).resolve().parents[2]
 _spec = importlib.util.spec_from_file_location(
@@ -27,7 +28,7 @@ def _project(tmp_path: Path, diamonds: list[dict]) -> Path:
     (tmp_path / ".claude" / "diamonds").mkdir(parents=True)
     (tmp_path / ".claude" / "canvas").mkdir(parents=True)
     (tmp_path / ".claude" / "diamonds" / "active.yml").write_text(
-        yaml.safe_dump({"product_paths": [], "active_diamonds": diamonds}))
+        yaml.safe_dump(decided({"product_paths": [], "active_diamonds": diamonds})))
     note = tmp_path / ".claude" / "canvas" / "purpose.yml"
     note.write_text("why: a purpose\n")
     stamp = time.mktime((2026, 9, 24, 12, 0, 0, 0, 0, -1))

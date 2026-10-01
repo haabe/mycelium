@@ -12,6 +12,8 @@ set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/_assert.sh"
 
+source "$SCRIPT_DIR/_ladder.sh"
+
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 PLUGIN_ROOT="$REPO_ROOT/plugins/mycelium"
 STOP="$PLUGIN_ROOT/hooks/stop-check.sh"
@@ -23,6 +25,7 @@ stop_project() {  # <name> <active.yml body>
     local p="$TMP/$1"
     mkdir -p "$p/.claude/diamonds" "$p/.claude/canvas" "$p/.claude/state"
     printf '%s' "$2" > "$p/.claude/diamonds/active.yml"
+    decide_file "$p/.claude/diamonds/active.yml"
     printf 'components: []\n' > "$p/.claude/canvas/threat-model.yml"
     echo "$p"
 }
@@ -56,6 +59,7 @@ test_a_completed_diamond_in_completed_diamonds_is_outcome_checked() {
     mkdir -p "$p/.claude/diamonds" "$p/.claude/canvas"
     printf 'active_diamonds: []\ncompleted_diamonds:\n  - id: l2-done\n    scale: L2\n    definition_of_done:\n      signal: "a verdict on the riskiest assumption"\n' \
         > "$p/.claude/diamonds/active.yml"
+        decide_file "$p/.claude/diamonds/active.yml"
     assert_contains "$(run_start "$p")" "signal but no measure (l2-done)" \
         "a diamond kept in completed_diamonds reaches the outcome check (fails on 0.288.1)"
 }
@@ -65,6 +69,7 @@ test_control_the_active_list_form_still_works() {
     mkdir -p "$p/.claude/diamonds" "$p/.claude/canvas"
     printf 'active_diamonds:\n  - id: l3-done\n    scale: L3\n    phase: complete\n    definition_of_done:\n      signal: "pilot validated"\n' \
         > "$p/.claude/diamonds/active.yml"
+        decide_file "$p/.claude/diamonds/active.yml"
     assert_contains "$(run_start "$p")" "signal but no measure (l3-done)" "phase: complete in active_diamonds still counts"
 }
 

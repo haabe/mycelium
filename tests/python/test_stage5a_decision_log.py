@@ -32,7 +32,8 @@ def test_where_a_diamond_is_is_read_from_its_decisions():
     both = _dec("set_target", "start_experiment", "commit_to_build")
     assert sl.phase_of({**l3, "decisions": both}) == "develop"
     assert sl.phase_of({**l3, "decisions": [*both, *_dec("release", "close")]}) == "complete"
-    assert sl.phase_of({**l3, "phase": "deliver"}) == "deliver", "no log: the recorded phase"
+    assert sl.phase_of({**l3, "phase": "deliver"}) == "discover", \
+        "no log: since v0.306.0 the recorded phase is not read"
     assert sl.phase_of({"scale": "L0", "decisions": _dec("state_purpose")}) == "deliver"
 
 
@@ -98,7 +99,7 @@ def test_a_dry_run_writes_nothing(tmp_path, capsys):
 
 def test_the_migration_keeps_every_diamond_where_it_is(tmp_path, capsys):
     root = _project(tmp_path)
-    before = {d["id"]: sl.phase_of(d) for k in ("active_diamonds",) for d in DIAMONDS[k]}
+    before = {d["id"]: mp.recorded_phase(d) for d in DIAMONDS["active_diamonds"]}
     assert mp.main(["--project-dir", str(root), "--write", "--today", "2026-10-01"]) == 0
     doc = _load(root)
     after = {d["id"]: sl.phase_of(d) for d in doc["active_diamonds"]}

@@ -401,7 +401,6 @@
       "required": [
         "id",
         "scale",
-        "phase",
         "confidence"
       ],
       "additionalProperties": true

@@ -4,6 +4,54 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-09-30.
 
+## v0.306.0 - the phase is no longer read
+
+**2026-10-01.** Phase migration stage 5c-1, founder ruling DL-1368 S4: the phase is retired once
+the dogfood project and the E2E fixtures are migrated, which they were on 2026-09-30 and
+2026-10-01.
+
+### BREAKING
+
+- **A diamond with no decisions is in discover**, whatever its `phase` says. A project that has not
+  migrated reads every diamond as not started: the build gate refuses code, and the lock refusals
+  say "It records only `phase: X`, which is not read since v0.306.0: run scripts/migrate_phase.py".
+  The next item offers the migration, and /mycelium:setup offers it on an initialised project.
+- **A release needs an exposure record.** Stage 2's fallback (a project with no records released on
+  an L3, L4 or L5 in Deliver) is gone: no record, no release, with the reason named. Projects with no
+  diamonds at all are not judged, as before.
+- `phase` is no longer required by the diamond schema.
+
+### Changed
+
+- **A move is the decisions it records**, and the decision entries are its record: a write that
+  changes only `phase` moves nothing. "Born in discover" reads "born in discover, with no decisions".
+- **The migration reads the recorded field.** Through `phase_of`, which no longer reads it, every
+  unmigrated diamond would be in discover and the migration would do nothing; and it judged its
+  result against the file as read, which made itself look like a set of forward moves and refused
+  itself. It now reads `recorded_phase`, judges against `_as_recorded` (the file with each recorded
+  phase as its decisions), and **carries a phase that closed a diamond (killed, archived, parked)
+  into `state`**: until now that phase crashed the migration, and retiring it would have reopened
+  the diamond.
+- **A repair of a broken diamonds file** rebuilds the last good state with the decisions each
+  recorded phase stood for (`decisions_for`); without it every rebuilt diamond read as discover and a
+  correct repair was refused as a move.
+- Docs that described the fallback (contract rule 14, /preflight, diamond-rules, /diamond-progress,
+  theory-gates, the system card) say there is none.
+
+### Tests
+
+- The fixtures still say where each diamond is with a `phase`, and are converted through the
+  migration's own function (`tests/python/decided.py`, `decide_file` in `tests/bash/_ladder.sh`), so
+  the suites exercise the conversion a project gets. Tests that asserted the fallback, a history
+  entry beside a phase move, or a move made by editing `phase` now assert the decision model; the
+  launch approval fires on the `release` decision; the ladder walkthrough records the L3's learning
+  delivery and the shipped L4 as exposure records. The run-10 fixture is migrated with the script,
+  and the replay still stops every step (19).
+- **Alternatives considered** (DL-1368 S4): a dated window; removing the phase in the migration's
+  release. Also rejected here: rewriting every fixture by hand to decisions (several hundred
+  diamonds in tests, and a hand conversion would not exercise the real one); keeping a field
+  fallback in `phase_of` behind a flag (a fallback nobody turns off is the phase kept).
+
 ## v0.305.0 - every reader of where a diamond is reads its decisions
 
 **2026-10-01.** Phase migration stage 5b, founder ruling DL-1368. No new refusals.

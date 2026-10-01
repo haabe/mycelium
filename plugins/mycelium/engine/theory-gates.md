@@ -469,8 +469,8 @@ build** what worked, **release** it, **close** the cycle. Each gate belongs to t
 Cynefin to choosing the method (start experiment); Four Risks, JTBD's solution design, Privacy by
 design and the regulatory classification to committing to build; BVSSH and Delivery Metrics to
 closing; Evidence, Bias and Corrections to every decision. The safety gates are also read per
-exposure record (v0.294.0-v0.296.0). Until the phase is retired, each phase move makes a fixed set
-of these decisions, and the table below is derived from them (`scale_locks.DECISIONS`,
+exposure record (v0.294.0-v0.296.0). The phase is not recorded since v0.306.0; where a diamond is
+is read from its decisions, and each move between those positions makes a fixed set of them, and the table below is derived from them (`scale_locks.DECISIONS`,
 `TRANSITION_DECISIONS`):
 
 | Phase move | Decisions it makes |

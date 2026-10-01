@@ -14,6 +14,7 @@ SCRIPTS = Path(__file__).resolve().parents[2] / "plugins" / "mycelium" / "script
 sys.path.insert(0, str(SCRIPTS))
 import next_item  # noqa: E402
 import scale_locks as sl  # noqa: E402
+from decided import decided_one  # noqa: E402
 
 EXPOSURE = {"recorded_at": "2026-10-01", "audience": "Harbour staff, opted in",
             "channel": "moderated session", "data_class": "none", "until": "2026-10-25",
@@ -21,7 +22,8 @@ EXPOSURE = {"recorded_at": "2026-10-01", "audience": "Harbour staff, opted in",
 
 
 def _l3(phase: str = "deliver", **extra) -> dict:
-    return {"id": "l3-a", "scale": "L3", "phase": phase, **extra}
+    """At `phase` by its decisions (v0.306.0: the phase field alone is not read)."""
+    return decided_one({"id": "l3-a", "scale": "L3", "phase": phase, **extra})
 
 
 def test_an_exposure_record_is_the_learning_delivery(tmp_path, monkeypatch):

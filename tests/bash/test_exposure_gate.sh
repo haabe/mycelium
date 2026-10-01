@@ -40,6 +40,7 @@ make_project() {  # <phase> <gates yaml flow map> [extra L3 yaml lines]
       printf '  - id: l3-a\n    scale: L3\n    phase: %s\n    object_ref: sol-001\n    theory_gates_status: %s\n' "$1" "$2"
       printf "${3:-}"
     } > "$p/.claude/diamonds/active.yml"
+    decide_file "$p/.claude/diamonds/active.yml"
     echo "$p"
 }
 
@@ -49,15 +50,15 @@ test_deploy_under_define_blocks() {
     local p; p=$(make_project define '{evidence: pending}')
     local code; code=$(run_gate "$p" "ssh app@host 'cd app && git pull && systemctl restart cadence'")
     assert_eq "$code" "2" "a remote pull-and-restart under an L3 in define -> blocked"
-    assert_contains "$(cat "$ERR")" "in Deliver" "names the phase the work belongs in"
-    assert_contains "$(cat "$ERR")" "security gate passed" "names the missing Security gate"
+    assert_contains "$(cat "$ERR")" "No exposure record covers it" "says what would cover it (v0.306.0)"
+    assert_contains "$(cat "$ERR")" "audience, channel" "names what the record holds"
     assert_contains "$(cat "$p/.claude/state/exposure-gate-fires.jsonl" 2>/dev/null)" "blocked" "the block is logged"
     rm -rf "$p"
 }
 
 test_ready_cycle_deploys() {
-    local p; p=$(make_project deliver "$READY" "$LEARNING")
-    assert_eq "$(run_gate "$p" "fly deploy")" "0" "Deliver with its gates passed -> the deploy runs"
+    local p; p=$(make_project deliver "$READY" "$LEARNING$EXPOSURE")
+    assert_eq "$(run_gate "$p" "fly deploy")" "0" "a current exposure record, its gates passed -> the deploy runs"
     rm -rf "$p"
 }
 
@@ -123,10 +124,11 @@ test_two_current_exposures_ask_the_person() {
     rm -rf "$p"
 }
 
-test_a_project_with_no_records_releases_on_the_phase_and_is_told() {
+test_a_project_with_no_records_cannot_release() {
+    # v0.306.0: the phase fallback is retired, so no record means no release.
     local p; p=$(make_project deliver "$READY" "$LEARNING")
-    assert_eq "$(run_gate "$p" "fly deploy")" "0" "no exposure records yet -> the phase fallback"
-    assert_contains "$(cat "$OUT")" "allowed on the phase check" "and the user is told to record the exposure"
+    assert_eq "$(run_gate "$p" "fly deploy")" "2" "no exposure records -> refused, no phase fallback"
+    assert_contains "$(cat "$ERR")" "No exposure record covers it" "and told to record the exposure"
     rm -rf "$p"
 }
 
@@ -139,6 +141,6 @@ run_test test_delivery_skip_overrides
 run_test test_one_current_exposure_releases
 run_test test_an_exposure_without_its_gates_blocks
 run_test test_two_current_exposures_ask_the_person
-run_test test_a_project_with_no_records_releases_on_the_phase_and_is_told
+run_test test_a_project_with_no_records_cannot_release
 
 report

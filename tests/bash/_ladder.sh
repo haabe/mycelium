@@ -25,6 +25,20 @@ write_ladder() {
     printf 'last_assessed: "2026-09-24"\ndata_inventory:\n  - data_type: "phone number"\n' > "$c/privacy-assessment.yml"
 }
 
+# decide_file <diamonds_file>: since v0.306.0 the phase is not read; a fixture written with a
+# `phase` gets the decisions that phase stands for, through the migration's own function (the
+# python tests' tests/python/decided.py), so the gates judge it where it says it is.
+decide_file() {
+    python3 - "$1" "$(cd "$(dirname "${BASH_SOURCE[0]}")/../python" && pwd)" <<'PY'
+import sys
+from pathlib import Path
+sys.path.insert(0, sys.argv[2])
+from decided import decided_text
+p = Path(sys.argv[1])
+p.write_text(decided_text(p.read_text()))
+PY
+}
+
 ladder_diamonds() {
     printf '  - id: l0\n    scale: L0\n    phase: define\n'
     printf '  - id: l1\n    scale: L1\n    phase: develop\n    object_ref: "lead with multi-site cafes"\n'

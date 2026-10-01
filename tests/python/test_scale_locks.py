@@ -19,6 +19,7 @@ from pathlib import Path
 
 import pytest
 import yaml
+from decided import decided, decided_text
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "plugins" / "mycelium" / "scripts" / "scale_locks.py"
@@ -66,7 +67,8 @@ def _project(tmp_path: Path, purpose=None, opps=None, diamonds=None, ack=None, *
     given = diamonds or []
     ids = {str(d.get("id")) for d in given}
     top = [d for d in (BASE if base is None else base) if d["id"] not in ids] if ladder else []
-    (c / "diamonds" / "active.yml").write_text(yaml.safe_dump({"active_diamonds": top + given}))
+    (c / "diamonds" / "active.yml").write_text(
+        yaml.safe_dump(decided({"active_diamonds": top + given})))
     if ack is not None:
         (c / "state" / "scale-lock-ack").write_text(ack)
     return str(tmp_path)
@@ -159,6 +161,11 @@ EXPOSE_PASSED = {**BUILD_PASSED, "security": "pass", "service_quality": "pass"}
 LEARNING = {"audience": "Harbour's nine staff, opted in by the site lead",
             "until": "2026-10-25",
             "means": "infrastructure as code: one environment, torn down after the trial"}
+#: The learning delivery as an exposure record (v0.306.0: a release needs one; no phase fallback).
+RECORD = {"recorded_at": "2026-09-25", "audience": LEARNING["audience"], "channel": LEARNING["means"],
+          "data_class": "personal", "until": LEARNING["until"], "consent": "opt-in note signed",
+          "gates": {"security": "pass", "privacy": "pass", "service_quality": "pass",
+                    "regulatory": "pass"}}
 
 
 @pytest.fixture(autouse=True)
@@ -166,12 +173,14 @@ def _today(monkeypatch):
     monkeypatch.setenv("MYCELIUM_TODAY", "2026-09-25")
 
 
-def _l3(evidence="anecdotal", phase="develop", gates=None, learning=None):
+def _l3(evidence="anecdotal", phase="develop", gates=None, learning=None, record=None):
     d = {"id": "l3-a", "scale": "L3", "phase": phase, "object_ref": "sol-001",
          "evidence_type": evidence,
          "theory_gates_status": dict(BUILD_PASSED if gates is None else gates)}
     if learning is not None:
         d["learning_delivery"] = learning
+    if record is not None:
+        d["exposures"] = [record]
     return d
 
 
@@ -300,7 +309,9 @@ def test_control_an_override_waives_the_l3_once_the_delivered_thing_is_named(tmp
 
 
 def _write(content: str, path=".claude/diamonds/active.yml"):
-    return {"tool_name": "Write", "tool_input": {"file_path": path, "content": content}}
+    """A proposed write; its diamonds get the decisions their phase stands for (v0.306.0)."""
+    return {"tool_name": "Write", "tool_input": {"file_path": path,
+                                                 "content": decided_text(content)}}
 
 
 def test_hook_blocks_adding_a_locked_diamond(tmp_path):
@@ -329,7 +340,7 @@ def test_a_forward_phase_move_needs_its_gates_and_a_history_entry(tmp_path):
         *BASE, {**l3, "phase": "develop"}]})))
     assert len(out) == 1 and "cannot move to develop" in out[0]
     assert "define->develop: the evidence gate passed" in out[0]
-    assert "define->develop: a `progression_history` entry" in out[0]
+    assert "progression_history" not in out[0], "the decision entries are the move's record"
     ok = {**l3, "phase": "develop", "theory_gates_status": BUILD_PASSED,
           "progression_history": [{"transition": "define -> develop", "date": "2026-09-24",
                                    "ruling": "progressed"}],
@@ -340,13 +351,13 @@ def test_a_forward_phase_move_needs_its_gates_and_a_history_entry(tmp_path):
 
 
 def test_a_two_phase_jump_needs_both_transitions(tmp_path):
+    """Since v0.306.0 a jump is recorded as the decisions of both moves, and is judged on both."""
     l3 = {"id": "l3-a", "scale": "L3", "phase": "discover", "object_ref": "sol-001"}
     p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), diamonds=[l3])
-    jump = {**l3, "phase": "develop", "theory_gates_status": BUILD_PASSED,
-            "progression_history": [{"from": "define", "to": "develop"}]}
+    jump = {**l3, "phase": "develop", "theory_gates_status": {**BUILD_PASSED, "bias": "pending"}}
     out = sl.new_diamond_violations(p, _write(yaml.safe_dump({"active_diamonds": [*BASE, jump]})))
-    assert len(out) == 1 and "discover->define: a `progression_history` entry" in out[0]
-    assert "define->develop: a `progression_history`" not in out[0]
+    assert len(out) == 1 and "discover->define: the bias gate" in out[0]
+    assert "define->develop: the bias gate" in out[0]
 
 
 def test_hook_applies_an_edit_before_judging(tmp_path):
@@ -541,8 +552,10 @@ def test_a_repair_is_judged_against_the_last_good_state(tmp_path):
     out = sl.new_diamond_violations(p, _write(yaml.safe_dump(doc)))
     assert out and all("l3-y" in v for v in out), "a diamond the repair adds is judged as new"
     doc = yaml.safe_load(good)
-    next(d for d in doc["active_diamonds"] if d["id"] == "l3-x")["phase"] = "complete"
-    assert sl.new_diamond_violations(p, _write(yaml.safe_dump(doc))), "a phase moved is judged"
+    moved = next(d for d in doc["active_diamonds"] if d["id"] == "l3-x")
+    moved["decisions"] += [{"decision": "release", "on": "2026-10-01"},
+                           {"decision": "close", "on": "2026-10-01"}]
+    assert sl.new_diamond_violations(p, _write(yaml.safe_dump(doc))), "a move recorded is judged"
 
 
 def test_with_no_git_a_repair_reads_the_recorded_scale_and_phase(tmp_path):
@@ -601,10 +614,15 @@ def test_exposure_needs_deliver_and_security(tmp_path):
     p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), diamonds=[_l3()])
     assert sl.delivery_state(p)[0], "Develop with Four Risks and Privacy carries code"
     ok, why = sl.exposure_state(p)
-    assert not ok and "in Deliver" in why and "security gate passed" in why
+    assert not ok and "No exposure record covers it" in why, "no phase fallback since v0.306.0"
     p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(),
-                 diamonds=[_l3(phase="deliver", gates=EXPOSE_PASSED, learning=LEARNING)])
+                 diamonds=[_l3(phase="deliver", gates=EXPOSE_PASSED, record=RECORD)])
     assert sl.exposure_state(p)[0]
+    p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), diamonds=[
+        _l3(phase="deliver", gates=EXPOSE_PASSED,
+            record={**RECORD, "gates": {**RECORD["gates"], "security": "pending"}})])
+    ok, why = sl.exposure_state(p)
+    assert not ok and "the security gate passed for this exposure" in why
 
 
 def test_a_write_that_ends_exposure_is_said_at_once(tmp_path):
@@ -641,23 +659,19 @@ def test_the_prompt_line_sets_the_baseline_a_write_is_judged_against(tmp_path):
 def test_an_l3_reaches_real_people_only_through_a_bounded_learning_delivery(tmp_path):
     """v0.257.0: the L3 delivers to LEARN, to a named audience until a date, by recorded means;
     production for everyone is an L4. E2E run 10 had an SMS app live at two sites under an L3."""
+    thin = {k: v for k, v in RECORD.items() if k not in ("channel", "until")}
     p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(),
-                 diamonds=[_l3(phase="deliver", gates=EXPOSE_PASSED)])
+                 diamonds=[_l3(phase="deliver", gates=EXPOSE_PASSED, record=thin)])
     ok, why = sl.exposure_state(p)
-    assert not ok and "learning_delivery" in why and "audience, until, means" in why
-    thin = {k: v for k, v in LEARNING.items() if k != "means"}
-    p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(),
-                 diamonds=[_l3(phase="deliver", gates=EXPOSE_PASSED, learning=thin)])
-    ok, why = sl.exposure_state(p)
-    assert not ok and "(means missing)" in why and "infrastructure as code" in why
+    assert not ok and "its channel" in why and "its until" in why, "bounded, on the record"
 
 
 def test_a_learning_delivery_past_its_end_date_stops_exposing(tmp_path, monkeypatch):
     monkeypatch.setenv("MYCELIUM_TODAY", "2026-10-26")
     p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(),
-                 diamonds=[_l3(phase="deliver", gates=EXPOSE_PASSED, learning=LEARNING)])
+                 diamonds=[_l3(phase="deliver", gates=EXPOSE_PASSED, record=RECORD)])
     ok, why = sl.exposure_state(p)
-    assert not ok and "still running" in why and "through an L4" in why
+    assert not ok and f"to be in date (it ran until {RECORD['until']})" in why
 
 
 def test_the_scale_lock_ack_waives_the_chain_never_the_phase(tmp_path):
@@ -694,7 +708,7 @@ def test_ordinary_commands_are_not_deploys(tmp_path, cmd):
 
 def test_a_ready_cycle_deploys_and_an_unengaged_project_is_not_judged(tmp_path):
     p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(),
-                 diamonds=[_l3(phase="deliver", gates=EXPOSE_PASSED, learning=LEARNING)])
+                 diamonds=[_l3(phase="deliver", gates=EXPOSE_PASSED, record=RECORD)])
     assert sl.exposure_violation(p, _bash("fly deploy")) is None
     bare = _project(tmp_path / "bare", ladder=False, records=False)
     assert sl.exposure_violation(bare, _bash("fly deploy")) is None
@@ -746,7 +760,7 @@ def test_a_safety_gate_needs_its_record(tmp_path):
     ok, why = sl.delivery_state(p)
     assert not ok and "privacy gate says `pass-with-risk` with no record behind it" in why
     p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), records=False,
-                 diamonds=[_l3(phase="deliver", gates=EXPOSE_PASSED)])
+                 diamonds=[_l3(phase="deliver", gates=EXPOSE_PASSED, record=RECORD)])
     assert "canvas/threat-model.yml" in sl.exposure_state(p)[1]
 
 
@@ -767,10 +781,12 @@ def test_a_diamond_is_born_in_discover(tmp_path):
     edit = {"tool_name": "Edit", "tool_input": {
         "file_path": str(tmp_path / ".claude/diamonds/active.yml"),
         "old_string": before, "new_string": before + born}}
+    assert sl.new_diamond_violations(p, edit) == [], "since v0.306.0 a phase alone is not read"
+    decided_born = born + ("  decisions:\n  - {decision: set_target}\n"
+                           "  - {decision: start_experiment}\n  - {decision: commit_to_build}\n")
+    edit["tool_input"]["new_string"] = before + decided_born
     out = sl.new_diamond_violations(p, edit)
-    assert len(out) == 1 and "born in discover" in out[0]
-    edit["tool_input"]["new_string"] = before + born.replace("develop", "discover")
-    assert sl.new_diamond_violations(p, edit) == []
+    assert len(out) == 1 and "born in discover, with no decisions" in out[0]
 
 
 # ---------------------------------------------------------------- the exposure line (v0.252.0)
@@ -960,8 +976,9 @@ def test_a_completion_written_into_the_completed_list_is_judged(tmp_path):
     the active list, so the move passed no gate. It is now judged like any move to complete."""
     ok = _completed(WITHDRAWN)
     assert _closing(tmp_path / "a", ok) == []
-    bare = {**ok, "progression_history": []}
-    assert any("progression_history" in v for v in _closing(tmp_path / "b", bare))
+    bare = {**ok, "theory_gates_status": {**COMPLETE_PASSED, "bvssh": "pending"}}
+    assert any("the bvssh gate passed" in v for v in _closing(tmp_path / "b", bare)), \
+        "judged like any move to complete: its gates (v0.306.0: the decisions are its record)"
     gates = {**ok, "theory_gates_status": {**COMPLETE_PASSED, "security": "pending"}}
     assert any("security" in v for v in _closing(tmp_path / "c", gates))
 
@@ -1060,7 +1077,7 @@ def test_a_repair_reads_the_record_before_a_stale_commit(tmp_path):
     open_l3 = {"id": "l3-x", "scale": "L3", "phase": "develop", "theory_gates_status": BUILD_PASSED}
     doc = yaml.safe_load((tmp_path / ".claude/diamonds/active.yml").read_text())
     doc["active_diamonds"].append(open_l3)
-    good = yaml.safe_dump(doc)
+    good = yaml.safe_dump(decided(doc))  # in develop by its decisions (v0.306.0)
     (tmp_path / ".claude/diamonds/active.yml").write_text(good)
     dr.record(tmp_path, "s1")
     dr.record(tmp_path, "s1")

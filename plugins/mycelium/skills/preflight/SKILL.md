@@ -101,7 +101,7 @@ Success criteria:
 
 ## Before anything meets real people (v0.246.0)
 
-A pilot is real people. Before the increment is deployed, published or sent to anyone, an exposure record on the diamond carrying it covers it, with **Security, Privacy and Service Quality passed** for that exposure (until the project records any exposure: the diamond is in **Deliver** with those gates passed): `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/scale_locks.py" --exposure-state`. If it prints what is missing, that is the next step, before any "pull and restart" instruction to the user. The exposure gate blocks the deploys the agent runs; this line is the guard on the ones the user runs.
+A pilot is real people. Before the increment is deployed, published or sent to anyone, an exposure record on the diamond carrying it covers it, with **Security, Privacy and Service Quality passed** for that exposure (since v0.306.0 there is no fallback to the diamond's phase): `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/scale_locks.py" --exposure-state`. If it prints what is missing, that is the next step, before any "pull and restart" instruction to the user. The exposure gate blocks the deploys the agent runs; this line is the guard on the ones the user runs.
 
 **And record who it reaches** (v0.294.0): an entry in the carrying diamond's `exposures`, with the
 audience, channel, data class, end date, consent and the gates passed for it. `python3

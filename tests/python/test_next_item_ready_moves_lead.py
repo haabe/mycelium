@@ -13,6 +13,8 @@ import importlib.util
 import sys
 from pathlib import Path
 
+from decided import decided_text
+
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = ROOT / "plugins" / "mycelium" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
@@ -42,7 +44,7 @@ L4 = """  - id: l4-a
 def _project(tmp_path: Path, diamonds: str) -> Path:
     d = tmp_path / ".claude" / "diamonds"
     d.mkdir(parents=True)
-    (d / "active.yml").write_text("product_paths: []\nactive_diamonds:\n" + diamonds)
+    (d / "active.yml").write_text(decided_text("product_paths: []\nactive_diamonds:\n" + diamonds))
     return tmp_path
 
 
