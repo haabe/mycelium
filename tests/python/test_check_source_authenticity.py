@@ -416,3 +416,48 @@ def test_the_text_report_counts_bare_markers(scripts_path, tmp_path, monkeypatch
     assert c.main() == 0
     out = capsys.readouterr().out
     assert "names no handle" in out and "1 record" in out
+
+
+def test_the_projects_own_handles_are_read_once_per_scan(scripts_path, tmp_path, monkeypatch, capsys):
+    """v0.308.2. `_self_handles` runs three git subprocesses; read per record it ran 11,298 of
+    them on the dogfood repo, 88 of the background session-start tier's 150 s. Once per scan,
+    and still applied: the project's own handle is never reported."""
+    c = _import(scripts_path)
+    calls = []
+
+    def mine():
+        calls.append(1)
+        return {"haabe"}
+
+    monkeypatch.setattr(c, "_self_handles", mine)
+    d = tmp_path / ".claude" / "canvas"
+    d.mkdir(parents=True)
+    rec = ("  - id: ht-{n}\n    source_class: external_human\n"
+           "    note: u/haabe and u/stranger{n} both said it.\n")
+    (d / "h.yml").write_text("pending_tasks:\n" + "".join(rec.format(n=n) for n in range(5)))
+    monkeypatch.setattr(sys, "argv", ["x", "--root", str(tmp_path), "--json"])
+    assert c.main() == 0
+    out = capsys.readouterr().out
+    assert len(calls) == 1, f"_self_handles ran {len(calls)} times"
+    assert "stranger0" in out and "haabe" not in out, out
+
+
+def test_copies_of_other_projects_under_claude_are_not_scanned(scripts_path, tmp_path, monkeypatch, capsys):
+    """v0.308.2: E2E snapshots of simulated projects under `.claude/` are not this project's
+    evidence; the same text in the project's own canvas is (control)."""
+    import json as _json
+
+    c = _import(scripts_path)
+    snap = tmp_path / ".claude" / "auto-dogfood" / "results" / "run1" / "canvas"
+    snap.mkdir(parents=True)
+    (snap / "evidence.yml").write_text(FIXTURE_CANVAS)
+    (tmp_path / ".claude" / "canvas").mkdir()
+    (tmp_path / ".claude" / "canvas" / "clean.yml").write_text("pending_tasks: []\n")
+    monkeypatch.setattr(sys, "argv", ["x", "--root", str(tmp_path), "--json"])
+    assert c.main() == 0
+    payload = _json.loads(capsys.readouterr().out)
+    assert payload["files_scanned"] == 1 and payload["status"] == "ok", payload
+
+    (tmp_path / ".claude" / "canvas" / "evidence.yml").write_text(FIXTURE_CANVAS)
+    assert c.main() == 0
+    assert _json.loads(capsys.readouterr().out)["status"] == "violations"

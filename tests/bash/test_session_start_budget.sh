@@ -77,4 +77,22 @@ else
     assert_eq "inside" "outside(${ELAPSED}s)" "fixture run must finish inside the manifest timeout (${MANIFEST_TIMEOUT}s)"
 fi
 
+# --- background tier: no manifest timeout applies, so the line must not cite one -----------
+# v0.308.2: the async tier's line read "127s against an in-hook budget of 600s and a manifest
+# timeout of 60s", which reads as output about to be lost; async hooks have no timeout.
+printf '{"hook_event_name":"SessionStart","source":"startup","session_id":"b-async"}' \
+  | MYCELIUM_SESSION_START_BUDGET=0 MYCELIUM_CROSS_REPO_WATCH="" MYCELIUM_ADVISORY_LEDGER=off \
+    CLAUDE_PLUGIN_ROOT="$PLUGIN_ROOT" CLAUDE_PROJECT_DIR="$P" HOME="$TMP/home" \
+    bash "$HOOK" --async >/dev/null 2>&1
+OUTA=$(python3 -c "
+import json, sys
+try:
+    print(json.load(open(sys.argv[1]))['reminders'])
+except Exception:
+    print('')
+" "$P/.claude/state/session-checks.json")
+assert_contains "$OUTA" "SESSION-START BUDGET: the background checks took" "the background tier reports itself as background"
+assert_contains "$OUTA" "No timeout applies to them" "and says no timeout applies"
+assert_not_contains "$OUTA" "manifest timeout" "the background tier does not cite the foreground's manifest timeout"
+
 report

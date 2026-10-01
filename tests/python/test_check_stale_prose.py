@@ -180,3 +180,35 @@ def test_stale_prose_reviewed_marker_silences_the_record(scripts_path):
         "    stale_prose_reviewed: '2026-09-10 the phrase is a bug description, not a date'\n"
     )
     assert c.scan_text(marked) == [], "a reviewed record was re-flagged"
+
+
+def test_copies_of_other_projects_under_claude_are_not_this_projects_records(
+    scripts_path, tmp_path, monkeypatch, capsys
+):
+    """v0.308.2. The dogfood E2E harness keeps every run's project snapshot under
+    `.claude/auto-dogfood/results/` (untracked, not ignored), as `<run>/claude/canvas/` and
+    `<run>/checkpoints/<s>/repo/.claude/canvas/`. 48 of the 50 findings the session banner
+    reported came from those simulated projects. The same record in the project's OWN
+    canvas still fires, so the fixture text is live and only its location is excluded."""
+    import json as _json
+
+    c = _import(scripts_path)
+    record = "pending_tasks:\n" + HT060_PREFIX
+    res = tmp_path / ".claude" / "auto-dogfood" / "results" / "run1"
+    for snap in (res / "claude" / "canvas", res / "checkpoints" / "S1" / "repo" / ".claude" / "canvas"):
+        snap.mkdir(parents=True)
+        (snap / "human-tasks.yml").write_text(record)
+    own = tmp_path / ".claude" / "canvas"
+    own.mkdir(parents=True)
+    (own / "human-tasks.yml").write_text("pending_tasks: []\n")
+    monkeypatch.setattr(sys, "argv", ["x", "--root", str(tmp_path), "--json"])
+    assert c.main() == 0
+    payload = _json.loads(capsys.readouterr().out)
+    assert payload["files_scanned"] == 1, payload
+    assert payload["status"] == "ok", payload
+
+    (own / "human-tasks.yml").write_text(record)  # control: the record fires where it is ours
+    assert c.main() == 0
+    payload = _json.loads(capsys.readouterr().out)
+    assert payload["status"] == "violations"
+    assert {v["file"] for v in payload["violations"]} == {".claude/canvas/human-tasks.yml"}

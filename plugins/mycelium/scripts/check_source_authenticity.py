@@ -72,6 +72,14 @@ import sys
 import unicodedata
 from pathlib import Path
 
+# The sibling import, as check_wiring_contract.py does it: run as a script, imported as a
+# package, or loaded by file path from tests.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+try:
+    from . import _scan_lib
+except ImportError:  # invoked as a script, or loaded by file path
+    import _scan_lib
+
 # A claim that the evidence came from outside. These are the tiers whose whole meaning
 # is "someone external said this", so they are the ones authenticity bears on.
 # `internal_simulated` and `speculation` are deliberately absent: nobody is claimed.
@@ -276,7 +284,7 @@ def _self_handles() -> set[str]:
     return out
 
 
-def distinct_handles(text: str) -> list[str]:
+def distinct_handles(text: str, mine: set[str] | None = None) -> list[str]:
     """Handles present, deduplicated, with subreddit names removed.
 
     Deduplication is the point, not a tidiness measure. The 2026-08-07 failure was one
@@ -285,7 +293,8 @@ def distinct_handles(text: str) -> list[str]:
     catch.
     """
     subs = {m.group(0).lstrip("/").lower() for m in _SUBREDDIT.finditer(text)}
-    mine = _self_handles()
+    if mine is None:
+        mine = _self_handles()
     out: list[str] = []
     for m in _HANDLE.finditer(text):
         raw = m.group(0)
@@ -333,21 +342,24 @@ def _say(note: str) -> None:
 def _scan(root: Path, targets: list[Path]) -> tuple[list[tuple[str, str, str, str]], list[str]]:
     findings: list[tuple[str, str, str, str]] = []
     bare: list[str] = []
+    # Once per scan (v0.308.2). Read per record, it ran three git subprocesses for each of
+    # 3,766 records on the dogfood repo: 88 of the background session-start tier's 150 s.
+    mine = _self_handles()
     for f in targets:
         rel = f.relative_to(root)
         for rec_id, text in iter_records(f):
-            for rule, evidence in scan_text(text):
+            for rule, evidence in scan_text(text, mine):
                 findings.append((str(rel), rec_id, rule, evidence))
             if bare_marker(text):
                 bare.append(f"{rel} [{rec_id}]")
     return findings, bare
 
 
-def scan_text(text: str) -> list[tuple[str, str]]:
+def scan_text(text: str, mine: set[str] | None = None) -> list[tuple[str, str]]:
     """Return (rule, evidence) findings for one record's text."""
     if not _EXTERNAL_TIER.search(text):
         return []
-    handles = distinct_handles(text)
+    handles = distinct_handles(text, mine)
     if not handles:
         # An external claim with no handle is a named person, an org, or a metric.
         # Authenticity of a public account is not the question there.
@@ -406,7 +418,7 @@ def main() -> int:
     args = ap.parse_args()
 
     root = Path(args.project_dir or args.root)
-    targets = sorted((root / ".claude").rglob("*.yml"))
+    targets = _scan_lib.own_yml(root)  # not the copies of other projects (v0.308.2)
     findings, bare = _scan(root, targets)
 
     # EMPTY-INPUT HONESTY. check_empty_input_honesty.py caught check_stale_prose.py

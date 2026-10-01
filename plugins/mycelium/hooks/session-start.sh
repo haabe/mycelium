@@ -1442,7 +1442,15 @@ if [ "$_SS_MODE" = "fast" ]; then
   fi
 fi
 if [ -n "$SKIPPED_FOR_TIME" ] || [ "$_SS_ELAPSED" -ge $(( _SS_MANIFEST_TIMEOUT / 2 )) ]; then
-  REMINDERS="${REMINDERS}SESSION-START BUDGET: this hook took ${_SS_ELAPSED}s against an in-hook budget of ${_SS_BUDGET}s and a manifest timeout of ${_SS_MANIFEST_TIMEOUT}s."
+  if [ "$_SS_MODE" = "async" ]; then
+    # The background tier has no manifest timeout (async hooks are exempt), so citing the
+    # foreground's 60 s read as a cancellation risk that does not exist (v0.308.2: the dogfood
+    # banner reported "127s against ... a manifest timeout of 60s" and the founder took it for
+    # a hook about to lose its output). What a slow background run does cost is latency.
+    REMINDERS="${REMINDERS}SESSION-START BUDGET: the background checks took ${_SS_ELAPSED}s (budget ${_SS_BUDGET}s). No timeout applies to them, so nothing was lost; their results arrived that much later."
+  else
+    REMINDERS="${REMINDERS}SESSION-START BUDGET: this hook took ${_SS_ELAPSED}s against an in-hook budget of ${_SS_BUDGET}s and a manifest timeout of ${_SS_MANIFEST_TIMEOUT}s."
+  fi
   if [ -n "$SKIPPED_FOR_TIME" ]; then
     REMINDERS="${REMINDERS} Skipped for time, so they ran NOWHERE this session: ${SKIPPED_FOR_TIME}— run /mycelium:canvas-health for them, or raise MYCELIUM_SESSION_START_BUDGET."
   fi
