@@ -2,7 +2,7 @@
 
 **Audience**: contributors and integrators who need the whole picture in one place.
 **Time to read**: 10 min.
-**Last updated**: 2026-07-30.
+**Last updated**: 2026-10-01.
 
 Until now the architecture lived in five places (`CLAUDE.md`, the engine/harness READMEs, `context-surface.md`, `README.md`, `install-paths.md`). This file is the single map; each section points at the canonical detail rather than restating it.
 
@@ -40,7 +40,7 @@ A **harness**, in Birgitta Böckeler's sense (`plugins/mycelium/harness/README.m
 | **Hooks** | Event-fired scripts; computational enforcement of BLOCK-tier guardrails + feedback loops | `plugins/mycelium/hooks/` (`hooks.json`) | computational |
 | **Skills** | 63 skills, invocable as `/mycelium:<name>`, auto-discovered from SKILL.md frontmatter | `plugins/mycelium/skills/` | inferential |
 | **Canvas** | Source-of-truth product **state** (YAML), committed to git | the user's `.claude/canvas/` | — |
-| **Domains** | Per-phase context overlays (discovery / delivery / quality) | `plugins/mycelium/domains/*/CLAUDE.md` | inferential |
+| **Domains** | Context overlays by the kind of work at hand (discovery / delivery / quality) | `plugins/mycelium/domains/*/CLAUDE.md` | inferential |
 | **Schemas** | Validation contracts for canvas YAML | `plugins/mycelium/schemas/` | computational |
 | **Orchestration / JiT tooling / integrations / templates** | Multi-agent modes, stack auto-detection, cross-agent shims, starters | respective `plugins/mycelium/` dirs | — |
 
@@ -63,7 +63,7 @@ This is the part most worth understanding, and the part a migration can silently
 - Skill names + one-line descriptions (auto-discovered), and the user's project `CLAUDE.md` + auto-memory.
 
 **Just-in-time (loaded when relevant):**
-- Domain context (`domains/{discovery|delivery|quality}/CLAUDE.md`) per active phase.
+- Domain context (`domains/{discovery|delivery|quality}/CLAUDE.md`) for the work at hand, loaded only once the canvas has content (operating contract, pre-task step 2).
 - Engine / harness reference docs, canvas files, and each skill's full SKILL.md — read on demand, not front-loaded.
 
 The design intent: the always-on surface stays **lean** (the turn-1-and-turn-30 behavioral contract); heavy reference is JiT. Computational enforcement (hooks) fires regardless of the model or session state; inferential guidance must be *delivered* to bind — which is why the contract is injected rather than assumed.

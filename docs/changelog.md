@@ -4,6 +4,29 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-01.
 
+## v0.309.5 - the reference docs and the README say what the code does (stage 6)
+
+**2026-10-01.** Stage 6 (DL-1369), the reference pages, on the founder's go-ahead for each scope.
+
+- **README.** "The rest of the shape" said most projects never touch more than two or three layers
+  in a weekend and that `/mycelium:start` tells you which are worth your afternoon. Since v0.247.0
+  every layer opens under the one above it and none is skipped; `/start` asks how deep to go. The
+  paragraph now says that, in lines the founder approved. The footer link to `docs/mental-model.md`
+  is named for what the page now is ("What discovery gives you").
+- **glossary.md.** New entries for Decision, Mode, Position and Exposure record. Diamond, Gate and
+  Scale say what the code does; Phase is kept as the retired term it is. The scale and decision at
+  which Four Risks, BVSSH, DORA, JTBD and OWASP/STRIDE apply now match `scale_locks.DECISIONS`.
+- **theories.md.** Four Risks and Cynefin are placed at their decisions. Rother's improvement kata
+  is credited as the start of the loop every scale runs (a target condition, then experiments), and
+  dual-track discovery and delivery (Patton, Cagan) as the two modes, with what is Mycelium's own
+  said as such (the switch at `commit_to_build`, recording by appending). The build-to-learn row
+  separates the DoD gate (by scale) from the mode (by where a diamond is in its loop).
+  `check_theory_fidelity.py` is clean.
+- **architecture.md.** Domain context loads by the work at hand, not "per active phase".
+- **Alternatives considered:** rewriting these three pages in the founder's voice (they are reference
+  pages, read for accuracy; the founder chose a factual update); leaving Phase out of the glossary
+  (readers of older notes and of internal names still meet it).
+
 ## v0.309.4 - what discovery before the build gives you (stage 6, first page)
 
 **2026-10-01.** Phase migration stage 6 (DL-1369), the first narrative doc. `docs/mental-model.md`

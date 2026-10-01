@@ -119,7 +119,7 @@ For a team that needs a stable interface this is early. For your own project thi
 
 ## The rest of the shape
 
-Six layers, one diagram, and most projects never touch more than two or three of them in a weekend. Purpose sits at the top and mostly doesn't move. Everything below it does, which problem, which solution, the build, and what the market says back. Vibe-rant's L0 is fixed: a quiet failure becomes something you take to peers. Which problem that actually means, and which solution, is still live.
+Six layers, one diagram. Purpose sits at the top and mostly doesn't move. Everything below it does, which problem, which solution, the build, and what the market says back. Vibe-rant's L0 is fixed: a quiet failure becomes something you take to peers. Which problem that actually means, and which solution, is still live.
 
 ```mermaid
 graph TD
@@ -136,7 +136,7 @@ graph TD
 
 The dotted line is what the market says back. It lands on opportunity rather than at the top, because what the market tells you usually changes which problem is worth solving next, not what you are for.
 
-You do not run all of them. A weekend project skips most. `/mycelium:start` reads what you have and tells you which ones are worth your afternoon.
+Each layer opens under the one above it, so nothing gets built without a reason written down above it. On a weekend project those reasons are a few lines each, not a week of work. `/mycelium:start` asks how deep you want to go.
 
 ## The name
 
@@ -156,4 +156,4 @@ The thing you got built, or the point where it got in the way and you stopped. T
 
 If there's a business case underneath all this, it's still worth giving away for free. I have not found the case yet, and I am not looking very hard. I'd rather have the ten of you who actually run it than the argument about the hundred who might.
 
-[Mental model](docs/mental-model.md) · [why it's opinionated](docs/philosophy.md) · [evaluate it](docs/evaluate.md) · [the skills](docs/skills/README.md) · [theory](docs/theories.md) · [other agents](docs/install-paths.md) · [everything](docs/README.md) · [credits](CONTRIBUTORS.md) · MIT
+[What discovery gives you](docs/mental-model.md) · [why it's opinionated](docs/philosophy.md) · [evaluate it](docs/evaluate.md) · [the skills](docs/skills/README.md) · [theory](docs/theories.md) · [other agents](docs/install-paths.md) · [everything](docs/README.md) · [credits](CONTRIBUTORS.md) · MIT
