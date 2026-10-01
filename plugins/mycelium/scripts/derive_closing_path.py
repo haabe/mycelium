@@ -80,7 +80,7 @@ def _unrecorded_gates(d: dict, ai: bool = True) -> dict:
 
 def _next_transition(d: dict) -> str | None:
     """The phase move this diamond makes next, or None once it is complete."""
-    phase = str(d.get("phase") or "discover").lower()
+    phase = sl.phase_of(d)  # from the decision log, the phase only without one (v0.305.0)
     order = list(sl.PHASE_ORDER)
     if phase not in order or order.index(phase) + 1 >= len(order):
         return None

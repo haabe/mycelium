@@ -85,7 +85,10 @@ Not applicable. Check 43 forbids redaction fixtures on NONE-declared specialists
 
 For each diamond to render:
 - States = the four canonical phases (Discover, Define, Develop, Deliver). Canonicalize on emit: if canvas uses lowercase, render as canonical case. Surface lowercase-canvas as a `canvas-health` follow-up note.
-- Current state = `phase` from active.yml (case-insensitive match).
+- Current state = where the diamond is, read from its `decisions` (v0.305.0: `python3
+  "${CLAUDE_PLUGIN_ROOT}/scripts/scale_locks.py"`'s `phase_of`; develop needs both
+  `start_experiment` and `commit_to_build`), and `phase` from active.yml only for a diamond with no
+  decisions (case-insensitive match).
 - Completed states = phases before current per linear order.
 - Future states = phases after current.
 - **Transition labels (phase-transition gates)** if `--show-gates=true`:

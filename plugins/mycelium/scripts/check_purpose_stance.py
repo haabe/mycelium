@@ -191,7 +191,15 @@ try:
 
     BLOCKING_PHASES = tuple(p for p in _sl.phases_after("commit_to_build") if p != "complete")
 except ImportError:  # a partial install: the phases that decision reaches today
+    _sl = None
     BLOCKING_PHASES = ("develop", "deliver")
+
+
+def _phase_of(d: dict) -> str:
+    """Where a diamond is (v0.305.0): its decision log through scale_locks, else its phase."""
+    if _sl is not None:
+        return _sl.phase_of(d)
+    return str(d.get("phase") or "").strip().lower()
 
 
 def _iter_diamonds(diamonds: dict):
@@ -254,7 +262,7 @@ def _diamond_stance_findings(diamonds_path: Path, binding: list[dict],
         did = dm.get("id", "<no id>")
         if did in grandfathered:
             continue
-        phase = str(dm.get("phase") or "").strip().lower()
+        phase = _phase_of(dm)
         parked = str(dm.get("state") or "").strip().lower() == "parked"
         is_blocking = (
             phase in BLOCKING_PHASES

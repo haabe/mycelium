@@ -94,16 +94,21 @@ def migrate(doc: dict, st: sl.State, today: str) -> tuple[dict, list[str], list[
             phase = "complete" if key == "completed_diamonds" and not d.get("phase") \
                 else sl.phase_of(d)
             decs = _decisions(d, phase)
+            # An L0 does not close (DL-1368 S2): one recorded `complete` reads as its purpose in
+            # force, `deliver`, once it records `state_purpose` (v0.305.0).
+            l0_done = sl._scale(d) == "L0" and phase == "complete"  # noqa: SLF001
             if decs:
                 trial = {**d, "decisions": decs}
-                if sl.phase_of(trial) != phase:
+                if sl.phase_of(trial) != ("deliver" if l0_done else phase):
                     problems.append(f"{did}: its decisions would read as `{sl.phase_of(trial)}`, "
                                     f"its phase says `{phase}`; left as it is")
                     continue
                 d["decisions"] = decs
                 dated = sum(1 for x in decs if x["on"])
                 said.append(f"{len(decs)} decision(s) from its phase `{phase}` ({dated} dated "
-                            "from its history, all marked reconstructed)")
+                            "from its history, all marked reconstructed)"
+                            + ("; an L0 does not close, so it now reads as its purpose in force"
+                               if l0_done else ""))
             rec = _exposure(d, today)
             if rec:
                 d["exposures"] = [rec]

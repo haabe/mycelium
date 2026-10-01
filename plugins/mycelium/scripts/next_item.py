@@ -339,6 +339,14 @@ def _state_closed(d: dict) -> bool:
 _NEXT = {"discover": "define", "define": "develop", "develop": "deliver", "deliver": "complete"}
 
 
+def _can_move(d: dict, phase: str) -> bool:
+    """Whether a diamond has a next move at all: open, not at its last phase, and not an L0 that
+    records decisions, which does not move but records `review` (DL-1368 S2, v0.305.0)."""
+    if phase in _CLOSED or phase not in _NEXT or _state_closed(d):
+        return False
+    return not (sl is not None and str(d.get("scale", "")).upper() == "L0" and sl.decisions_of(d))
+
+
 _EVIDENCE = (".claude/canvas/*.yml", "research/**/*")
 
 
@@ -448,8 +456,8 @@ def _unassessed(root: Path, today: str) -> list[dict]:
     for d in doc.get("active_diamonds") or []:
         if not isinstance(d, dict) or not d.get("id"):
             continue
-        phase = str(d.get("phase") or "discover").lower()
-        if phase in _CLOSED or phase not in _NEXT or _state_closed(d):
+        phase = _where(d)
+        if not _can_move(d, phase):
             continue
         ruled = str(d.get("progression_ruled_at") or "")[:10]
         rec = rulings.get(str(d["id"])) or {}
@@ -533,7 +541,7 @@ def _children(active: list[dict], parent: dict, scale: str) -> list[dict]:
     """Open diamonds at `scale` that name `parent` (by `parent`, or by the same `object_ref`)."""
     pid, ref = str(parent.get("id")), str(parent.get("object_ref") or "")
     return [d for d in active if str(d.get("scale", "")).upper() == scale
-            and str(d.get("phase") or "discover").lower() not in _CLOSED
+            and _where(d) not in _CLOSED
             and (str(d.get("parent") or d.get("parent_id") or "") == pid
                  or (ref and str(d.get("object_ref") or "") == ref))]
 
@@ -614,7 +622,7 @@ def _door_item(root: Path, today: str, st: dict) -> dict | None:
         return None  # SPEAKS: _fired_proposals reads the same file and reports it unreadable
     for d in active:
         scale = str(d.get("scale", "")).upper()
-        phase = str(d.get("phase") or "discover").lower()
+        phase = _where(d)
         did = str(d["id"])
         if scale == "L3" and phase in ("develop", "deliver") and not _children(active, d, "L4"):
             item = _l3_item(root, today, st, d, phase)
@@ -1039,6 +1047,14 @@ def _target_item(state, today: str, st: dict, l2: dict) -> dict | None:
 MIGRATE = f'python3 "{Path(__file__).resolve().parent / "migrate_phase.py"}"'
 
 
+def _where(d: dict) -> str:
+    """Where a diamond is (v0.305.0, stage 5b): read from its decision log by scale_locks.phase_of,
+    the recorded phase when scale_locks is not installed."""
+    if sl is not None:
+        return sl.phase_of(d)
+    return str(d.get("phase") or "discover").lower()
+
+
 def _migrate_item(root: Path, today: str, st: dict) -> dict | None:
     """Diamonds that still record only their phase (v0.303.0, DL-1368 S3): the migration to the
     decision log, shown first and written on the user's yes. Offered last, when nothing else is
@@ -1100,7 +1116,7 @@ def _entry_door(root: Path, today: str, st: dict, active: list[dict],
     into strategy, opportunity and solution work, where L4 and L5 are one per increment."""
     def live(scale: str) -> list[dict]:
         return [d for d in active if str(d.get("scale", "")).upper() == scale
-                and str(d.get("phase") or "discover").lower() not in _CLOSED]
+                and _where(d) not in _CLOSED]
     state = sl.State(str(root))
     for d in live("L2"):
         item = _target_item(state, today, st, d)

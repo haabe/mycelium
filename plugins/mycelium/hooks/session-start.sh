@@ -1296,7 +1296,13 @@ try:
   overdue, no_measure, no_ts = [], [], []
   # Completed diamonds live in active_diamonds with phase: complete, or in completed_diamonds
   # (v0.289.0: the dogfood project keeps them there, and this check never saw them).
-  done = [d for d in (data.get('active_diamonds') or []) if isinstance(d, dict) and d.get('phase') == 'complete']
+  import os
+  sys.path.insert(0, os.path.join(os.environ.get('CLAUDE_PLUGIN_ROOT', ''), 'scripts'))
+  try:
+    from scale_locks import phase_of  # where a diamond is, from its decisions (v0.305.0)
+  except ImportError:
+    phase_of = lambda d: str(d.get('phase') or '')
+  done = [d for d in (data.get('active_diamonds') or []) if isinstance(d, dict) and phase_of(d) == 'complete']
   done += [d for d in (data.get('completed_diamonds') or []) if isinstance(d, dict)]
   for d in done:
     dod = d.get('definition_of_done') or {}

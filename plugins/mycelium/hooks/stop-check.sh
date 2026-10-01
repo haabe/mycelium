@@ -50,7 +50,13 @@ except ImportError:
     sys.exit(0)
 doc = yaml.safe_load(open(path)) or {}
 live = [d for d in (doc.get('active_diamonds') or []) if isinstance(d, dict)]
-has_l4 = any(str(d.get('scale')) == 'L4' and str(d.get('phase')) in ('develop', 'deliver')
+import os
+sys.path.insert(0, os.path.join(os.environ.get('CLAUDE_PLUGIN_ROOT', ''), 'scripts'))
+try:
+    from scale_locks import phase_of  # where a diamond is, from its decisions (v0.305.0)
+except ImportError:
+    phase_of = lambda d: str(d.get('phase'))  # noqa: E731
+has_l4 = any(str(d.get('scale')) == 'L4' and phase_of(d) in ('develop', 'deliver')
              and str(d.get('state') or '') not in ('archived', 'parked', 'killed') for d in live)
 print('yes' if has_l4 else 'no')
 " "$ACTIVE_FILE" 2>/dev/null || echo "no")
