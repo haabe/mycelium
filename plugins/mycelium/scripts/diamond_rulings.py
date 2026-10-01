@@ -118,6 +118,12 @@ def record(root: Path, session: str, now: str | None = None) -> dict:
         # The scale too (v0.266.0): with the phase in `sig`, it is the last good state the scale
         # lock judges a repair against when the diamonds file does not parse and git has none.
         new[did]["scale"] = str(d.get("scale") or "").upper()
+        # And its exposures (v0.307.7, control audit P16): the last good state a repair is judged
+        # against, so a repair cannot widen a running delivery unseen. JSON-safe: YAML dates.
+        if d.get("exposures"):
+            new[did]["exposures"] = json.loads(json.dumps(d["exposures"], default=str))
+        else:
+            new[did].pop("exposures", None)
     try:
         (root / STATE).parent.mkdir(parents=True, exist_ok=True)
         (root / STATE).write_text(json.dumps(new, indent=1, sort_keys=True))
