@@ -124,7 +124,7 @@ medium confidence or higher (`data-supported`, `test-validated` or `launch-valid
 *Evidence-Guided* p158-159: most ideas reach medium-high before delivery, bigger or riskier ones go
 further). Run `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/scale_locks.py" --can-open L4 --parent <l3-id>`. A passing checklist on an L3 still at `anecdotal` is an
 increment ready to build TO LEARN, which stays in the L3: when its test needs real use, the L3 takes
-it to its own Deliver with `learning_delivery: {audience, until, means}` recorded (v0.257.0,
+it to its own Deliver with an exposure record (`exposures[]`: audience, until, channel) recorded (v0.257.0,
 `engine/diamond-rules.md`), and the verdict is what opens the L4. Before v0.243.0 nothing opened an L4: the Four Risks verdict was described as its
 "entry permit" and no skill consumed it.
 

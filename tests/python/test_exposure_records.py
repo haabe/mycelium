@@ -44,6 +44,8 @@ def test_work_that_reaches_people_with_no_record_is_reported(tmp_path, monkeypat
     monkeypatch.setenv("MYCELIUM_TODAY", "2026-10-05")
     lines = sl.exposure_report(str(_project(tmp_path, [_l3()])))
     assert any("no exposure record" in x for x in lines)
+    assert any("migrate_phase.py" in x for x in lines), \
+        "v0.307.0: the old field is not read as a delivery, and still keeps the exposure reported"
 
 
 def test_a_complete_record_with_its_gates_passed_reports_nothing(tmp_path, monkeypatch):

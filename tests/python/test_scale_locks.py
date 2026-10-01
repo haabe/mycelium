@@ -35,7 +35,8 @@ OUTCOME = {"desired_outcome": {"metric": "share of swaps approved without a phon
 #: The ladder above an L3, present by default so each test states only what it is about (v0.247.0).
 BASE = [{"id": "l0", "scale": "L0", "phase": "define"},
         {"id": "l1", "scale": "L1", "phase": "develop", "object_ref": "lead with multi-site cafes"},
-        {"id": "l2", "scale": "L2", "phase": "define", "object_ref": "opp-001"}]
+        {"id": "l2", "scale": "L2", "phase": "define", "object_ref": "opp-001",
+         "target": "opp-001"}]  # v0.307.0: the target is recorded, not read from object_ref
 OPP = {"id": "opp-001", "name": "Approver is off", "status": "open",
        "provenance": {"evidence_type": "anecdotal",
                       "evidence_sources": ["founder story: Tom off, three swaps relayed by phone"]},
@@ -130,9 +131,13 @@ def test_l3_on_a_closed_opportunity_is_locked(tmp_path):
 
 
 def test_l3_reads_its_l2_parents_target(tmp_path):
-    l2 = {"id": "l2-a", "scale": "L2", "phase": "develop", "object_ref": "opp-001"}
-    p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), diamonds=[l2])
+    l2 = {"id": "l2-a", "scale": "L2", "phase": "develop", "target": "opp-001"}
+    p = _project(tmp_path / "a", purpose=PURPOSE, opps=_full_opps(), diamonds=[l2])
     assert sl.can_open(p, "L3", parent="l2-a") == []
+    old = {"id": "l2-a", "scale": "L2", "phase": "develop", "object_ref": "opp-001"}
+    p = _project(tmp_path / "b", purpose=PURPOSE, opps=_full_opps(), diamonds=[old])
+    assert any("chosen target" in m for m in sl.can_open(p, "L3", parent="l2-a")), \
+        "v0.307.0: an L2 on one opportunity is no longer read as targeting it"
 
 
 def test_l3_with_several_roots_must_name_its_root(tmp_path):
@@ -173,14 +178,22 @@ def _today(monkeypatch):
     monkeypatch.setenv("MYCELIUM_TODAY", "2026-09-25")
 
 
+def _ex(learning: dict) -> dict:
+    """A learning delivery as the exposure record it is since v0.307.0: `means` is its channel."""
+    out = {"recorded_at": "2026-09-25", **{k: v for k, v in learning.items() if k != "means"}}
+    if "means" in learning:
+        out["channel"] = learning["means"]
+    return out
+
+
 def _l3(evidence="anecdotal", phase="develop", gates=None, learning=None, record=None):
     d = {"id": "l3-a", "scale": "L3", "phase": phase, "object_ref": "sol-001",
          "evidence_type": evidence,
          "theory_gates_status": dict(BUILD_PASSED if gates is None else gates)}
     if learning is not None:
-        d["learning_delivery"] = learning
+        d["exposures"] = [_ex(learning)]
     if record is not None:
-        d["exposures"] = [record]
+        d["exposures"] = [{**(d.get("exposures") or [{}])[0], **record}]
     return d
 
 
@@ -893,7 +906,7 @@ def test_a_pass_from_a_test_run_before_the_l3s_deliver_does_not_open_l4(tmp_path
     for l3, gap in ((_l3("anecdotal"), "phase `develop`"),
                     (_l3("anecdotal", phase="deliver", gates=EXPOSE_PASSED), "audience"),
                     (_l3("anecdotal", phase="deliver", gates=EXPOSE_PASSED,
-                         learning={**LEARNING, "means": ""}), "means missing")):
+                         learning={**LEARNING, "means": ""}), "channel missing")):
         p = _project(tmp_path, purpose=PURPOSE, opps=opps, diamonds=[l3])
         miss = sl.can_open(p, "L4", parent="l3-a")
         assert len(miss) == 1 and "its learning delivery" in miss[0] and gap in miss[0], miss
@@ -1000,7 +1013,7 @@ def test_any_honest_ending_in_any_words_completes_the_l3(tmp_path, note):
 def test_an_l3_completes_by_saying_how_its_learning_delivery_ended(tmp_path):
     """E2E rung L4-open completed its L3 with the page public and its record still naming five
     testers. How it ended is recorded: withdrawn, or handed to its L4 by id; never in the future."""
-    assert any("learning_delivery.ended" in v for v in _closing(tmp_path / "a", _completed()))
+    assert any("exposures[].ended" in v for v in _closing(tmp_path / "a", _completed()))
     words = "handed to l4-a, not taken down"  # 0.267.0 accepted this for its words
     assert any("`how`" in v for v in _closing(tmp_path / "b", _completed(words), L4_CHILD))
     handed = {"how": "handed_to_l4", "on": "2026-09-20", "l4": "l4-a"}
@@ -1017,12 +1030,12 @@ def test_an_end_date_typed_by_hand_is_read(tmp_path, monkeypatch):
     test before 0.276.0 wrote the record with yaml.safe_dump, which quotes it. Found replaying E2E
     service world run 5."""
     monkeypatch.setenv("MYCELIUM_TODAY", "2027-07-08")
-    typed = yaml.safe_load("learning_delivery:\n  audience: three paying clients\n"
+    typed = yaml.safe_load("exposures:\n- audience: three paying clients\n"
                            "  ended:\n    how: withdrawn\n    on: 2027-06-04\n")
-    assert True in typed["learning_delivery"]["ended"], "the trap is real"
+    assert True in typed["exposures"][0]["ended"], "the trap is real"
     state = sl.State(str(tmp_path))
     assert state.learning_delivery_end_missing({"id": "l3-a", **typed}) is None
-    no_date = yaml.safe_load("learning_delivery:\n  audience: three paying clients\n"
+    no_date = yaml.safe_load("exposures:\n- audience: three paying clients\n"
                              "  ended:\n    how: withdrawn\n")
     assert "`on`" in state.learning_delivery_end_missing({"id": "l3-a", **no_date}), "control"
 
@@ -1032,10 +1045,10 @@ def _audience_write(tmp_path, audience: str, change=None, extra=()):
     p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(),
                  diamonds=[_delivered("data-supported")])
     doc = yaml.safe_load((tmp_path / ".claude/diamonds/active.yml").read_text())
-    ld = {**LEARNING, "audience": audience}
+    ld = {**_ex(LEARNING), "audience": audience}
     if change is not None:
         ld["changes"] = [{"on": "2026-10-20", "audience_was": LEARNING["audience"], **change}]
-    doc["active_diamonds"] = [{**d, "learning_delivery": ld} if d["id"] == "l3-a" else d
+    doc["active_diamonds"] = [{**d, "exposures": [ld]} if d["id"] == "l3-a" else d
                               for d in doc["active_diamonds"]] + list(extra)
     return sl.new_diamond_violations(p, _write(yaml.safe_dump(doc)))
 
@@ -1058,10 +1071,10 @@ def test_an_audience_change_is_recorded_and_judged_by_its_kind(tmp_path):
     assert any("L4" in v for v in out), "a release to everyone is the L4's"
     assert not any("L4's" in v for v in _audience_write(tmp_path / "g", "everyone",
                                                         {"kind": "everyone"}, [L4_CHILD]))
-    early = {**_l3("data-supported", phase="develop"), "learning_delivery": LEARNING}
+    early = {**_l3("data-supported", phase="develop"), "exposures": [_ex(LEARNING)]}
     p = _project(tmp_path / "h", purpose=PURPOSE, opps=_full_opps(), diamonds=[early])
     doc = yaml.safe_load((tmp_path / "h/.claude/diamonds/active.yml").read_text())
-    doc["active_diamonds"] = [{**early, "learning_delivery": {**LEARNING, "audience": wave}}
+    doc["active_diamonds"] = [{**early, "exposures": [{**_ex(LEARNING), "audience": wave}]}
                               if d["id"] == "l3-a" else d for d in doc["active_diamonds"]]
     assert sl.new_diamond_violations(p, _write(yaml.safe_dump(doc))) == [], "before Deliver: free"
 

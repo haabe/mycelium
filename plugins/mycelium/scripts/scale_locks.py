@@ -649,8 +649,9 @@ class State:
         """THE OPPORTUNITY AN L2 IS TARGETING (v0.300.0, phase migration stage 4a; DL-1367 R1). An
         L2 is the opportunity space under one outcome, with one current target chosen by comparing
         siblings (Torres p103-108): `target` on the L2 (an id, or `{opportunity: id, ...}`), else
-        the last entry of `targets`. An L2 in the old shape, its `object_ref` an opportunity (one
-        opportunity per L2, v0.217.0), is read as targeting it until stage 5 (R4)."""
+        the last entry of `targets`. Since v0.307.0 an L2 in the old shape (its `object_ref` one
+        opportunity, v0.217.0) is no longer read as targeting it: migrate_phase.py records the
+        target (R4's translation ended with the phase, stage 5c-2)."""
         if not l2:
             return ""
         t = l2.get("target")
@@ -660,33 +661,23 @@ class State:
             hist = [x for x in _as_list(l2.get("targets"))
                     if isinstance(x, dict) and x.get("opportunity")]
             t = hist[-1]["opportunity"] if hist else ""
-        if t:
-            return _ref_key(t)
-        opp = self.find_opportunity(l2.get("object_ref"))
-        return str(opp.get("id", "")) if opp else ""
+        return _ref_key(t) if t else ""
 
     def l2_outcome(self, l2: dict | None) -> str:
         """THE OUTCOME AN L2 MAPS (v0.300.0, DL-1367): its `object_ref` when that names a
-        `desired_outcomes` id; an L2 in the old shape is read as mapping the outcome its
-        opportunity rolls up to (R4)."""
+        `desired_outcomes` id (since v0.307.0 only that; the old shape's reading ended)."""
         if not l2:
             return ""
         ref = _ref_key(l2.get("object_ref"))
-        if ref and ref in {str(r.get("id")) for r in self.roots() if r.get("id")}:
-            return ref
-        opp = self.find_opportunity(self.l2_target(l2))
-        return _ref_key(opp.get("rolls_up_to")) if opp else ""
+        return ref if ref and ref in {str(r.get("id")) for r in self.roots() if r.get("id")} else ""
 
     def front_runner(self, l3: dict | None) -> str:
         """THE SOLUTION AN L3 COMMITS TO BUILD (v0.300.0, DL-1367): `front_runner` on the L3, a
-        solution in its set, named at `commit_to_build`. An L3 in the old shape, its `object_ref`
-        one solution, is read as that solution being its front runner (R4)."""
+        solution in its set, named at `commit_to_build` (since v0.307.0 only that: an L3 on one
+        solution is no longer read as having it as front runner; migrate_phase.py records it)."""
         if not l3:
             return ""
-        if l3.get("front_runner"):
-            return _ref_key(l3.get("front_runner"))
-        key = _ref_key(l3.get("object_ref"))
-        return key if any(str(s.get("id", "")) == key for s in self.build_solutions(l3)) else ""
+        return _ref_key(l3.get("front_runner")) if l3.get("front_runner") else ""
 
     def l3_target(self, l3: dict) -> str:
         """The opportunity an L3 works (v0.302.0): the one its `object_ref` names or holds (an old
@@ -870,7 +861,7 @@ class State:
                         f"delivery (now `{ev}`; needs data-supported, test-validated or "
                         "launch-validated, Gilad Evidence-Guided p158-159). The L3's learning "
                         "delivery produces it: take the L3 to Deliver, run its test with the "
-                        "audience in `learning_delivery`, and record the verdict on the riskiest "
+                        "audience in its exposure record, and record the verdict on the riskiest "
                         "assumption (`validated` when the bet the solution needs held, however "
                         "the statement is worded)")
         delivered = self.learning_delivery_recorded(l3)
@@ -972,8 +963,9 @@ class State:
         gaps = [k for k in ("audience", "until", "means") if not _filled(ld.get(k))]
         if (phase in SHIPPED_PHASES or d.get("completed_at")) and not gaps:
             return None
+        gaps = [{"means": "channel"}.get(g, g) for g in gaps]
         return ("its learning delivery: the L3 in Deliver with its delivery recorded "
-                "(`learning_delivery`, or an exposure record) "
+                f"as an exposure record (`{delivery_key(d)}`) "
                 f"(now phase `{phase or 'discover'}`"
                 + (f", {', '.join(gaps)} missing" if gaps else "") + "). The L4 opens on "
                 "evidence from real use by an identifiable, opted-in audience (a named list, "
@@ -995,6 +987,7 @@ class State:
         did = str(d.get("id", "?"))
         gaps = [k for k in ("audience", "until", "means") if not _filled(ld.get(k))]
         if gaps:
+            gaps = [{"means": "channel"}.get(g, g) for g in gaps]
             msg = (f"{did}: its learning delivery recorded in `{delivery_key(d)}` "
                    f"({', '.join(gaps)} missing): who the learning build reaches (identifiable and "
                    "opted in: a named list, a cohort, a pre-release channel), until when, and "
@@ -1020,7 +1013,7 @@ class State:
 
     def learning_delivery_end_missing(self, d: dict) -> str | None:
         """AN L3'S LEARNING DELIVERY ENDS WHEN IT COMPLETES, AND SAYS HOW (v0.267.0, recorded as
-        fields in v0.268.0). `learning_delivery.ended: {how, on, l4, note}`: `how` is `withdrawn`
+        fields in v0.268.0). `exposures[].ended: {how, on, l4, note}`: `how` is `withdrawn`
         (it no longer reaches its audience: taken down, devices collected back, the cohort ended,
         the engagement closed, the pre-release yanked) or `handed_to_l4` (an L4 now carries it,
         named in `l4`); `on` is the date, not in the future; `note` is free text in any language
@@ -1058,7 +1051,7 @@ class State:
     def audience_change_missing(self, before: dict, after: dict) -> str | None:
         """AN L3'S AUDIENCE CHANGES ON THE RECORD ONCE IT DELIVERS (v0.267.0, recorded in
         v0.268.0). Its Security, Privacy and Service Quality were passed for that audience. A
-        change carries an entry in `learning_delivery.changes`: `{on, audience_was, kind, why}`,
+        change carries an entry in `exposures[].changes`: `{on, audience_was, kind, why}`,
         where `kind` is `narrowed` or `reworded` (allowed: a learner left, a typo, a translation),
         `widened` (still an identifiable, opted-in audience, a bigger cohort or a second beta
         wave: allowed with `reassessed` naming security, privacy and service_quality, re-run for
@@ -1802,16 +1795,12 @@ PERSON_DATA = ("personal", "sensitive")
 
 
 def delivery_of(d: dict) -> dict:
-    """AN L3'S LEARNING DELIVERY, WHEREVER IT IS RECORDED (v0.296.0, phase migration stage 2b).
-    `learning_delivery` when the diamond carries it; otherwise read from its exposure record (the
-    running one, else the latest), with `channel` as the means and `data_class` as the data (the
-    words in `data` are not compared). It has started when it says `started`: an exposure is
-    recorded before it runs, so recording one is not a start. One record, not two: the rules on
-    the start, a widening, the end and the teardown apply to either. `learning_delivery` retires
-    with the phase (stage 5)."""
-    ld = d.get("learning_delivery")
-    if isinstance(ld, dict) and ld:
-        return ld
+    """AN L3'S LEARNING DELIVERY: ITS EXPOSURE RECORD (v0.296.0; since v0.307.0 the only place).
+    Read from its exposure record, the running one, else the latest, with `channel` as the means
+    and `data_class` as the data (the words in `data` are not compared). It has started when it
+    says `started`: an exposure is recorded before it runs, so recording one is not a start. The
+    rules on the start, a widening, the end and the teardown read it. `learning_delivery` is no
+    longer read (v0.307.0, stage 5c-2); migrate_phase.py moves it into an exposure record."""
     recs = [e for e in _as_list(d.get("exposures")) if isinstance(e, dict)]
     if not recs:
         return {}
@@ -1827,20 +1816,30 @@ def delivery_of(d: dict) -> dict:
 
 def delivery_key(d: dict, field: str = "") -> str:
     """The path of an L3's learning delivery (or one field of it), for the messages that tell the
-    agent what to add: an entry added to `learning_delivery` on a diamond that records its
-    delivery as an exposure would hide the exposure record from every rule (`delivery_of` reads
-    the field first)."""
+    agent what to add: always the exposure record since v0.307.0, with a hint to migrate when the
+    diamond still carries only the old `learning_delivery`."""
+    base = "exposures[]"  # since v0.307.0 the only record of an L3's learning delivery
+    return (f"{base}.{field}" if field else base) + _delivery_only_hint(d)
+
+
+def _delivery_only_hint(d: dict) -> str:
+    """For a diamond that still carries `learning_delivery` and no exposure record (v0.307.0)."""
     ld = d.get("learning_delivery")
-    base = "learning_delivery"
-    if (not (isinstance(ld, dict) and ld)
-            and any(isinstance(e, dict) for e in _as_list(d.get("exposures")))):
-        base = "exposures[]"
-    return f"{base}.{field}" if field else base
+    if not (isinstance(ld, dict) and ld) or _as_list(d.get("exposures")):
+        return ""
+    return (" (it carries `learning_delivery`, which is not read since v0.307.0: run "
+            "scripts/migrate_phase.py, which moves it into an exposure record)")
 
 
 def _reaches_people(d: dict) -> str:
     """Why this diamond's work reaches people now, or "" when it does not (yet)."""
     ld = delivery_of(d)
+    old = d.get("learning_delivery")
+    if (_scale(d) == "L3" and not ld and isinstance(old, dict) and old.get("started")):
+        # Not read as a delivery since v0.307.0, but reaching people is still reported: a record
+        # nobody migrated must not take its exposure out of the report (fails closed).
+        return ("its `learning_delivery` says it started (not read since v0.307.0: run "
+                "scripts/migrate_phase.py, which moves it into an exposure record)")
     if _scale(d) == "L3" and (ld.get("started") or _phase(d) in ("deliver", "complete")):
         return "its learning delivery has started" if ld.get("started") else "it is in deliver"
     if _scale(d) in ("L4", "L5") and _phase(d) in ("deliver", "complete"):

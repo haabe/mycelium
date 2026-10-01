@@ -2,7 +2,55 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-09-30.
+**Last updated**: 2026-10-01.
+
+## v0.307.0 - the old object and delivery shapes are no longer read
+
+**2026-10-01.** Phase migration stage 5c-2, founder rulings DL-1367 R4 and DL-1368 S4: the two
+translations that ran "until stage 5" end with the phase.
+
+### BREAKING
+
+- **An L2's target is its recorded `target`.** An L2 in the old shape, its `object_ref` one
+  opportunity, is no longer read as targeting it or as mapping the outcome that opportunity rolls up
+  to, so no L3 opens under it until it records a target. **An L3's front runner is its recorded
+  `front_runner`**: an L3 on one solution is no longer read as having it as front runner.
+- **An L3's learning delivery is its exposure record.** `learning_delivery` is no longer read by any
+  rule (the start, a widening, the end date, how it ended, the L4 lock). Every message names
+  `exposures[].<field>`, and on a diamond that still carries only the old field it adds how to move
+  it (`scripts/migrate_phase.py`). The schema keeps the field, marked unread, so an unmigrated file
+  still validates and reaches the migration offer.
+
+### Changed
+
+- **The migration offer comes first, after fired proposals.** Until now it came last, as
+  bookkeeping, while the old shape was read as a fallback. Without the fallback, every door and the
+  ladder read only the new records, and the target door would ask the user again for a choice the
+  old record already holds. The offer now lists every open diamond the migration would change (a
+  phase, a `learning_delivery`, an L2 or L3 on one object), computed by running the migration on a
+  copy, so the offer and the script cannot disagree. The reshape nudge (`reshape-l2`) is gone: the
+  migration records the shape.
+- **A started delivery nobody migrated is still reported.** The exposure report lists an L3 whose
+  old `learning_delivery` says it started as reaching people with no exposure record, with the
+  migrate hint. Not reading the field must not take an exposure out of the report.
+- Messages and item texts: the start, the end and a change are written to `exposures[].started`,
+  `.ended` and `.changes`; "means" reads "channel".
+- Docs: /diamond-progress 2d, /preflight, diamond-rules and the diamond schema describe the exposure
+  record as the only record of a learning delivery, and the old shapes as unread.
+
+### Tests
+
+- Fixtures are in the new shape: L2s record `target`, L3s `front_runner`, deliveries are exposure
+  records (`channel`, `data_class`). The tests that asserted a translation now assert there is none,
+  with the new shape as the control; the reshape-door test asserts the migration comes before the
+  door; the delivery-record test asserts the old field is not read even beside an exposure.
+- **Alternatives considered:** keeping the translations behind a dated window or a flag (rejected
+  in S4: a fallback nobody turns off is the old shape kept); migrating on every write (rewrites a
+  user's file unasked; S3 shows the migration first and writes it on the user's yes); dropping
+  `learning_delivery` from the schema (an unmigrated file would fail validation before the offer
+  reached its owner); keeping the migration offer last (the target door would re-ask a recorded
+  choice); dropping an unmigrated started delivery from the exposure report (it would hide work
+  that reaches people, which is the one thing the report exists to show).
 
 ## v0.306.0 - the phase is no longer read
 

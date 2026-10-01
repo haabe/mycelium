@@ -75,13 +75,14 @@ def test_retargeting_closes_the_l3_on_the_old_target(tmp_path):
 
 def test_an_l3_ended_by_its_state_says_how_its_delivery_ended(tmp_path, monkeypatch):
     monkeypatch.setenv("MYCELIUM_TODAY", "2026-10-05")
-    delivering = {**L3, "phase": "deliver", "learning_delivery": {
-        "audience": "two shift leads", "until": "2026-11-01", "means": "by hand"}}
+    delivering = {**L3, "phase": "deliver", "exposures": [{
+        "recorded_at": "2026-10-01", "audience": "two shift leads", "until": "2026-11-01",
+        "channel": "by hand"}]}
     root = _root(tmp_path, [L2, delivering])
     out = _write(root, [L2, {**delivering, "state": "killed"}])
     assert any("ends as `killed`" in x for x in out), out
-    ended = {**delivering, "state": "killed", "learning_delivery": {
-        **delivering["learning_delivery"], "ended": {"how": "withdrawn", "on": "2026-10-02"}}}
+    ended = {**delivering, "state": "killed", "exposures": [{
+        **delivering["exposures"][0], "ended": {"how": "withdrawn", "on": "2026-10-02"}}]}
     assert not any("ends as" in x for x in _write(root, [L2, ended]))
     assert not any("ends as" in x for x in _write(root, [L2, {**delivering, "state": "parked"}])), \
         "parked is a pause"

@@ -20,9 +20,9 @@ _spec.loader.exec_module(ni)
 TODAY = "2027-02-10"
 L1 = {"id": "l1", "scale": "L1", "phase": "discover"}
 SERVED = {"id": "l2-clients", "scale": "L2", "phase": "discover", "parent": "l1",
-          "object_ref": "opp-001"}
+          "object_ref": "opp-001", "target": "opp-001"}  # v0.307.0: the target is recorded
 UNTRIED = {"id": "l2-members", "scale": "L2", "phase": "discover", "parent": "l1",
-           "object_ref": "opp-002"}
+           "object_ref": "opp-002", "target": "opp-002"}
 DONE_L3 = {"id": "l3-pilot", "scale": "L3", "phase": "complete", "parent": "l2-clients",
            "object_ref": "opp-001"}
 

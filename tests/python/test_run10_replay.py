@@ -171,9 +171,10 @@ def test_a_release_toward_the_second_site_is_stopped(run10):
     assert _hook("exposure-gate.sh", run10, _shell("rsync -av app/ harbour2:/srv/cadence")) == 2
 
 
-EXPOSED = {"id": "l3-001", "scale": "L3", "phase": "deliver", "learning_delivery": {
-    "audience": "Harbour staff, opted in", "until": "2026-11-01",
-    "means": "moderated session, the founder at the laptop", "data": "staff first names"},
+EXPOSED = {"id": "l3-001", "scale": "L3", "phase": "deliver", "exposures": [{
+    "recorded_at": "2026-10-01", "audience": "Harbour staff, opted in", "until": "2026-11-01",
+    "channel": "moderated session, the founder at the laptop", "data_class": "personal"}],
+    # v0.307.0: the delivery is its exposure record; `learning_delivery` is not read
     # in deliver by its decisions (v0.306.0): the phase field alone is not read, and a record
     # that is not exposed is not judged for widening, so without these the test would test nothing
     "decisions": [{"decision": d} for d in ("set_target", "start_experiment", "commit_to_build",
@@ -182,7 +183,7 @@ EXPOSED = {"id": "l3-001", "scale": "L3", "phase": "deliver", "learning_delivery
 
 def _widened(**changes) -> dict:
     after = json.loads(json.dumps(EXPOSED))
-    after["learning_delivery"].update(changes)
+    after["exposures"][0].update(changes)
     return after
 
 
@@ -195,8 +196,8 @@ def _change_missing(tmp_path, after: dict) -> str | None:
 @pytest.mark.parametrize(("field", "value"), [
     ("audience", "Harbour staff, and the second site"),
     ("until", "2027-02-01"),
-    ("means", "a link texted to every phone"),
-    ("data", "staff first names and phone numbers"),
+    ("channel", "a link texted to every phone"),
+    ("data_class", "sensitive"),
 ])
 def test_an_exposed_record_that_widens_without_the_gates_is_refused(tmp_path, field, value):
     assert _change_missing(tmp_path, _widened(**{field: value}))
