@@ -928,7 +928,7 @@ def _learning_delivery_item(root: Path, today: str, st: dict, d: dict) -> dict |
     early = state.l3_evidence(d) in sl.MEDIUM_OR_BETTER
     need = [g.replace("_", " ").title() for g in ("security", "privacy", "service_quality")
             if state.gate_missing(d, g)]
-    if state.learning_delivery_missing({**d, "phase": "deliver"}):
+    if state.learning_delivery_missing(d):
         need.append("its learning delivery as an exposure record (audience, until, channel)")
     text = (f"{did} (L3) has evidence from a test run before its Deliver, and that does not "
             "open the L4: the people it reached never went through Security, Privacy and "
