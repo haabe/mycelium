@@ -29,7 +29,7 @@ The framework's value concentrates upstream. If your problem statement is settle
 If your idea is rough — you're not sure who it's for, or whether it's a real problem, or what "done" looks like — Mycelium's discovery scales (L0–L2) earn their cost. The clearer the idea, the less you need; the rougher the idea, the more you do.
 
 
-The same heuristic stated as a rule of thumb: [the rougher the idea, the more scales earn their cost](mental-model.md).
+The same heuristic stated as a rule of thumb: the rougher the idea, the more the early questions earn their cost. [What finding out first buys you](mental-model.md) has the measured case.
 
 ### Will this work with OpenAI Codex / Cursor / Aider / Copilot?
 

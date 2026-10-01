@@ -13,7 +13,7 @@ This file (`docs/README.md`) is the metadocumentation: it sets the rules every o
 Three common entry paths, each anchored on a specific user task. Pick the one that matches what you arrived here to do.
 
 - **Install and try it on a real project.** [Step-by-step first-run walkthrough](get-started.md), or [install variants and migration paths](install-paths.md) if you're already running an older form.
-- **Understand how it thinks before adopting it.** [Mental model: scales, diamonds, gates, taught through one worked example](mental-model.md), then [why opinionated discipline, theory-grounded, in-loop preventive](philosophy.md).
+- **Understand what it gives you before adopting it.** [What discovery before the build gives you: the measured case and the stories behind it](mental-model.md), then [why opinionated discipline, theory-grounded, in-loop preventive](philosophy.md).
 - **Evaluate fit for your team or your project.** [Evaluate Mycelium for your team in ~1 hour, anti-promotional](evaluate.md), with the [30+ theory frameworks Mycelium integrates](theories.md) and the [case files of how Mycelium got smarter](receipts/) for evidence.
 
 ## Contents
@@ -21,7 +21,7 @@ Three common entry paths, each anchored on a specific user task. Pick the one th
 - `get-started.md` — install (plugin or legacy) + first-run for a new or existing project
 - `nobody-used-it.md` — for the builder who shipped and nothing happened; what the four questions are for, in their situation, and what this does not do
 - `architecture.md` — how Mycelium is built and connected: engine / harness / hooks / skills / canvas, the context surface (always-on vs JiT), packaging + release + install
-- `mental-model.md` — how to think in Mycelium: scales, diamonds, gates, taught through one worked example
+- `mental-model.md` — what discovery before the build gives you, for readers who have read the README and are not convinced yet
 - `philosophy.md` — why opinionated discipline, why theory-grounded, why in-loop preventive
 - `glossary.md` — Mycelium-specific vocabulary (diamond, scale, canvas, gate, ...)
 - `faq.md` — frequently asked questions, including the six that surfaced at the 2026-05-07 Juniors.dev presentation
