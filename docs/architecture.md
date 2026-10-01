@@ -2,7 +2,7 @@
 
 **Audience**: contributors and integrators who need the whole picture in one place.
 **Time to read**: 10 min.
-**Last updated**: 2026-10-01.
+**Last updated**: 2026-10-02.
 
 Until now the architecture lived in five places (`CLAUDE.md`, the engine/harness READMEs, `context-surface.md`, `README.md`, `install-paths.md`). This file is the single map; each section points at the canonical detail rather than restating it.
 
@@ -53,6 +53,31 @@ Two axes, defined in `engine/diamond-rules.md` (terms in `docs/glossary.md`):
 - **Scales (L0–L5)**: Purpose → Strategy → Opportunity → Solution → Delivery → Market. L0–L3 are product-agnostic; L4–L5 adapt to `product_type`.
 - **Diamonds**: every scale below purpose runs the same loop of recorded decisions — `set_target`, `start_experiment`, `commit_to_build`, `release`, `close` — in discovery mode until `commit_to_build` and delivery mode after, with **theory gates** before each decision (since v0.306.0; an L0 states its purpose and reviews it). You cannot record a decision by asserting confidence; you must show evidence that satisfies its gates, and a recorded decision cannot be removed (`engine/theory-gates.md`, `engine/diamond-rules.md`).
 
+## How the framework rewrites its own rules
+
+The mechanics behind the "it learns from its own mistakes" claim in [philosophy](philosophy.md).
+
+- **The framework loop.** Completed and discarded cycles are written to cycle history. `engine/pattern-detector.md` reads it for recurring patterns, and `engine/adaptive-thresholds.md` moves thresholds on what it finds. A failure that recurs is logged in `.claude/memory/corrections.md` and grouped by shape in `.claude/memory/cluster-instances.md`. A cluster that crosses its instance threshold (three) graduates into a guardrail, an anti-pattern or a gate. Anti-pattern #7 (Consistency-as-Evidence) graduated this way. The promotion bar asks for lived friction, not constructed instances (`engine/consistency-check-spec.md`).
+- **The loops are alike, not identical.** A leaf runs assumption, test, outcome, with back edges. A decision loop has five decisions and grows only by appending. The framework loop runs pattern emergence and graduation.
+- **Dogfood.** The `meta_dogfood` project type is for a project whose purpose is improving the framework: its canvas writes target the framework's own scales.
+- **Build mode.** `/mycelium:define-done` rejects an earn-shaped outcome (ship, deploy, production) on a build-to-learn diamond. Shipping is the delivery outcome, earned after discovery validates.
+- **Faithful citation.** A cited source has to be the actual reason for a move (Lanham et al., 2023). On every push, `scripts/check_theory_fidelity.py` checks that each gate names its source and that the theory map's references resolve. Whether a mechanism is faithful to its theory is a judgement, made by the `/mycelium:theory-fidelity` audit.
+
+## Single-team scope
+
+The data model and the orchestration model assume one author, one team, one flow at a time. Team Topologies is present as described content (`/mycelium:team-shape`, the L1 strategy table, `canvas/team-shape.yml`), and nothing else reads what `team-shape.yml` produces.
+
+A dogfood run on 2026-05-09 had parallel subagents play stream-aligned and platform team members on a shared canvas. Two agents independently found four absences:
+
+- **No team owner on any entry.** No canvas schema carries an `owned_by_team` field.
+- **No route from a stream team to a platform team.** `human-tasks.yml` is the only inbox-shaped artifact, and its types are research verbs (interview, observation, survey).
+- **No statement of what a platform exposes.** `metrics-adapters/TEMPLATE.md` is a build-it-yourself template, so the default answer to a stream team is always to build it.
+- **Silent overwrite on concurrent canvas writes.** Provenance fields are single-valued, so two people adjusting the same confidence merge cleanly in git and the last writer wins with no signal.
+
+There is also a tension to reconcile: detect-and-generate tooling (JiT), in a multi-team world, becomes every stream building its own adapter, which removes a platform team's reason to exist.
+
+None of it is fixed, because one simulation is not adoption evidence. Subagents surface mechanism gaps honestly and invent the social ones (cognitive load, handoffs, Conway pressure), which are what Team Topologies cares about. The trigger to revisit: a real two-team setup runs Mycelium for two to three weeks and reports the same absences as lived friction.
+
 ## The context surface — what reaches a session, and when
 
 This is the part most worth understanding, and the part a migration can silently break (it did — see the v0.58.0 changelog entry). Full map: `docs/context-surface.md`.
@@ -84,7 +109,7 @@ The design intent: the always-on surface stays **lean** (the turn-1-and-turn-30 
 
 - The case for discovery before the build, for readers not yet convinced → `docs/mental-model.md`
 - Exact context/load map → `docs/context-surface.md`
-- Why it's opinionated → `docs/philosophy.md`
+- Why it's opinionated → `docs/philosophy.md` (its mechanics are in the two sections above)
 - Install forms + migration → `docs/install-paths.md`, `docs/migration.md`
 - Engine internals → `plugins/mycelium/engine/README.md`
 - Harness internals + guardrail tiers → `plugins/mycelium/harness/README.md`
