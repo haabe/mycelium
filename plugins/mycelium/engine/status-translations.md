@@ -27,29 +27,34 @@ Verbosity is a presentation knob, never a discipline knob: strictness and gate e
 | L4: Delivery | "Building and shipping the solution" |
 | L5: Market | "Getting the product to users" |
 
-## Phase Translations
+## Position Translations
+
+Where a diamond is, by the decisions it has recorded (`scale_locks.position`; DL-1372 V1). The mode
+is read off them: discovery until `commit_to_build`, delivery after.
 
 | Technical | Plain Language | What's Happening |
 |-----------|---------------|-----------------|
-| Discover | "Exploring broadly" | Gathering evidence, challenging assumptions, diverging |
-| Define | "Narrowing focus" | Synthesizing discoveries, framing the problem |
-| Develop | "Generating solutions" | Ideating, prototyping, comparing options |
-| Deliver | "Building and validating" | Implementing, testing, shipping, measuring |
+| no decision yet (discovery) | "Exploring broadly" | Gathering evidence, challenging assumptions, comparing options for a target |
+| target set (discovery) | "Testing toward the target" | Naming and running the lightest test, comparing solutions |
+| committed to build (delivery) | "Building what the tests showed" | Implementing and testing the chosen solution |
+| released (delivery) | "In people's hands, measuring" | Reaching the people on the exposure record, measuring |
+| closed | "Done" | Met its bar with evidence, or stopped on its kill criterion |
+| an L0, purpose stated | "The purpose is set" | Reviewed when it drifts (`review`) |
 
 ## Combined Status Examples
 
 | Technical State | Plain Language |
 |----------------|---------------|
-| L0 Purpose - Discover | "Understanding why this product needs to exist. Interviewing stakeholders, exploring the problem space." |
-| L0 Purpose - Define | "Crystallizing the product's purpose. Defining mission, vision, values, and ethical boundaries." |
-| L2 Opportunity - Discover | "Mapping what users actually need. Conducting interviews, analyzing data, building the opportunity tree." |
-| L2 Opportunity - Define | "Prioritizing which problems to solve first. Scoring opportunities by impact, confidence, and strategic fit." |
-| L3 Solution - Develop | "Designing solutions for [opportunity name]. Comparing [N] approaches, testing assumptions." |
-| L4 Delivery - Deliver (software) | "Building [feature name]. Writing code, tests, and documentation. Validating against acceptance criteria." |
-| L4 Delivery - Deliver (content) | "Producing [content name]. Writing, reviewing, and publishing. Validating against learning objectives or editorial standards." |
-| L4 Delivery - Deliver (ai_tool) | "Building [tool name]. Writing prompts, running evaluations, and testing safety. Validating against quality criteria." |
-| L4 Delivery - Deliver (service) | "Delivering [service name]. Executing the service blueprint, documenting the workflow, and gathering client feedback." |
-| L5 Market - Discover | "Understanding how to reach users. Analyzing channels, competitors, and positioning options." |
+| L0 Purpose, before `state_purpose` (exploring) | "Understanding why this product needs to exist. Interviewing stakeholders, exploring the problem space." |
+| L0 Purpose, before `state_purpose` (framing) | "Crystallizing the product's purpose. Defining mission, vision, values, and ethical boundaries." |
+| L2 Opportunity, before `set_target` (mapping) | "Mapping what users actually need. Conducting interviews, analyzing data, building the opportunity tree." |
+| L2 Opportunity, before `set_target` (choosing) | "Prioritizing which problems to solve first. Scoring opportunities by impact, confidence, and strategic fit." |
+| L3 Solution, target set, before `commit_to_build` | "Designing solutions for [opportunity name]. Comparing [N] approaches, testing assumptions." |
+| L4 Delivery, committed to build (software) | "Building [feature name]. Writing code, tests, and documentation. Validating against acceptance criteria." |
+| L4 Delivery, committed to build (content) | "Producing [content name]. Writing, reviewing, and publishing. Validating against learning objectives or editorial standards." |
+| L4 Delivery, committed to build (ai_tool) | "Building [tool name]. Writing prompts, running evaluations, and testing safety. Validating against quality criteria." |
+| L4 Delivery, committed to build (service) | "Delivering [service name]. Executing the service blueprint, documenting the workflow, and gathering client feedback." |
+| L5 Market, before `set_target` | "Understanding how to reach users. Analyzing channels, competitors, and positioning options." |
 
 ## Confidence Translations
 
@@ -95,9 +100,9 @@ When a diamond is skipped, always explain in plain language:
 
 Example: "Strategy mapping skipped -- for a solo hobby project, strategic portfolio management would be gold-plating. Would become relevant if this grows into a product with multiple user segments."
 
-## Delivery-Phase Quality Expectations
+## Delivery-Mode Quality Expectations
 
-When reporting status during delivery phases, include what quality checks apply RIGHT NOW based on what the developer is working on:
+When reporting status in delivery mode (committed to build or released), include what quality checks apply RIGHT NOW based on what the developer is working on:
 
 | Working On | What's Expected |
 |-----------|----------------|
@@ -111,7 +116,7 @@ This makes current expectations visible without the developer needing to remembe
 
 ## Completion Readiness Summary
 
-When a developer asks "am I done?" or when approaching Deliver->Complete:
+When a developer asks "am I done?" or when approaching `close`:
 
 ```
 Ready to mark this delivery complete?

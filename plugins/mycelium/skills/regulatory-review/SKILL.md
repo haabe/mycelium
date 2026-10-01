@@ -35,9 +35,9 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
 
 ## When to Use
 
-- At L3 Define->Develop and Develop->Deliver transitions (Regulatory Gate)
-- At L4 Develop->Deliver when product_type is `ai_tool`
-- At L5 Develop->Deliver for any product with user-facing AI features
+- At an L3's `commit_to_build` and `release` (Regulatory Gate)
+- At an L4's `release` when product_type is `ai_tool`
+- At an L5's `release` for any product with user-facing AI features
 - When guardrails G-S7 or G-S8 are triggered
 
 ## Workflow

@@ -18,18 +18,18 @@ After `/interview` creates the first diamond, users need a mental model of the f
 |---------|---------|
 | After `/interview` completes | "Here's the journey you just started" |
 | At session start (before `/diamond-assess` output) | "Here's where you left off" |
-| After `/diamond-progress` transitions | "Here's where you moved to" |
+| After `/diamond-progress` records a decision | "Here's where you are now" |
 | On user request | Any time — the map is always available |
 
 ## How to Render
 
-**STRICT — reproduce the template literally.** Render the template below verbatim; substitute only the dynamic values (symbol per scale, phase markers, confidence text, next-action text). Do not redesign the layout. Do not add box-drawing characters or vertical connectors. Do not change the title text. Do not omit scales. Do not paraphrase the scale descriptions.
+**STRICT — reproduce the template literally.** Render the template below verbatim; substitute only the dynamic values (symbol per scale, decision markers, confidence text, next-action text). Do not redesign the layout. Do not add box-drawing characters or vertical connectors. Do not change the title text. Do not omit scales. Do not paraphrase the scale descriptions.
 
 Common deviations seen in the wild — all wrong:
 - ❌ Title `You Are Here — Wayfinding Map` → use `YOUR JOURNEY` (caps, no subtitle).
 - ❌ Symbol `●` → use `◆` (active), `✦` (completed), `○` (not started), `–` (skipped).
-- ❌ Vertical tree with `┐ │ ┘` connectors → use one line per scale, horizontal phase progression with `→`.
-- ❌ Inline confidence on the active line (e.g., `← YOU ARE HERE (Discover, confidence 0.3)`) → confidence belongs in the footer, after the closing horizontal rule.
+- ❌ Vertical tree with `┐ │ ┘` connectors → use one line per scale, its decisions left to right with `→`.
+- ❌ Inline confidence on the active line (e.g., `← YOU ARE HERE (target set, confidence 0.3)`) → confidence belongs in the footer, after the closing horizontal rule.
 - ❌ Skipping the plain-language description line under each scale → always include it.
 
 Read `diamonds/active.yml` and render the map. Rules:
@@ -43,16 +43,23 @@ Read `diamonds/active.yml` and render the map. Rules:
 | Not yet started | `○` | No diamond spawned for this scale yet |
 | Skipped | `–` | Not used since v0.247.0: no scale is skipped (every rung needs its parent diamond) |
 
-### Phase indicators (for active/completed diamonds)
+### Decision indicators (for active/completed diamonds)
 
-Show all four phases on the same line as the scale. Mark each:
+Show the loop's four steps on the same line as the scale: `set target → commit to build → release
+→ close` (`commit to build` stands for `start_experiment` and `commit_to_build`, recorded together).
+They are read from the diamond's `decisions` (DL-1372 V1; since v0.309.2 the map says them, not the
+four phases). An L0 is not a loop: its line is `purpose stated ✓` once it records `state_purpose`,
+else `purpose not stated yet ←`. Mark each step:
 
 | State | Rendering |
 |-------|-----------|
-| Completed phase | `✓` after the phase name |
-| Current phase | `←` pointer + phase name in context |
-| Future phase | Phase name only (dimmed — no marker) |
-| Not applicable | `·` placeholder |
+| Recorded | `✓` after the step |
+| The next decision | `← next` after the step |
+| Still to come | The step only (no marker) |
+| No diamond at this scale | `·` placeholder |
+
+A loop that iterates (another `start_experiment` after `commit_to_build`, DL-1373) stays where it
+is on the map: the experiment is a step inside it, not a step back.
 
 ### Plain-language descriptions
 
@@ -79,7 +86,7 @@ Always include:
 YOUR JOURNEY
 ─────────────────────────────────────────────────────
 
-L0  Purpose         ◆  Discover ✓ → Define ✓ → Develop ← → Deliver
+L0  Purpose         ◆  purpose not stated yet ←
     Why this product exists
 
 L1  Strategy         ○  · · · ·
@@ -104,19 +111,19 @@ Next: Test purpose framing with real builders
 
 ### Multiple active diamonds
 
-When the tree has branched (e.g., L0 complete, L1 in Define, L2 in Discover):
+When the tree has branched (e.g., L0's purpose stated, L1 with its target set, L2 with no decision yet):
 
 ```
 YOUR JOURNEY
 ─────────────────────────────────────────────────────
 
-L0  Purpose         ✦  Discover ✓ → Define ✓ → Develop ✓ → Deliver ✓
+L0  Purpose         ◆  purpose stated ✓
     Why this product exists
 
-L1  Strategy         ◆  Discover ✓ → Define ← → Develop → Deliver
+L1  Strategy         ◆  set target ✓ → commit to build ← next → release → close
     Where to play
 
-L2  Opportunity      ◆  Discover ← → Define → Develop → Deliver
+L2  Opportunity      ◆  set target ← next → commit to build → release → close
     What problems to solve
 
 L3  Solution         ○  · · · ·

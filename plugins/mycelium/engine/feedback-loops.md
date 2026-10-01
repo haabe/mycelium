@@ -46,7 +46,7 @@ The four loop speeds implement Kim's Three Ways:
 
 **Health signal**: If confidence isn't increasing after 3+ incremental loops on the same diamond, escalate to Loop 3 (the assumptions may be wrong). If the same correction category appears 3+ times, run `/corrections-audit` to check for guardrail graduation.
 
-**Cadence**: After every diamond phase transition and every delivery increment.
+**Cadence**: After every decision a diamond records and every delivery increment.
 
 ### Loop 3: Strategic (Double-Loop -- "Question the Assumptions")
 **Speed**: Weekly to monthly. Fires on schedule.

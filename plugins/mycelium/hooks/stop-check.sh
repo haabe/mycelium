@@ -191,7 +191,7 @@ if [ -f "$AUDIT_LOG" ]; then
 fi
 
 if [ "$DIAMOND_DIRECT_EDITS" -gt 0 ]; then
-  WARNINGS="${WARNINGS}OBSERVABILITY: ${DIAMOND_DIRECT_EDITS} direct diamond state edit(s) this session (outside /diamond-progress). Verify these were intentional -- /diamond-progress is the idiomatic path for gate evaluation and phase transitions. See .claude/state/diamond-state-audit.jsonl for details.@@W@@"
+  WARNINGS="${WARNINGS}OBSERVABILITY: ${DIAMOND_DIRECT_EDITS} direct diamond state edit(s) this session (outside /diamond-progress). Verify these were intentional -- /diamond-progress is the idiomatic path for gate evaluation and recording decisions. See .claude/state/diamond-state-audit.jsonl for details.@@W@@"
 fi
 
 # ============================================================

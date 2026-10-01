@@ -34,14 +34,14 @@ The action cannot happen. gate.sh returns exit 2 (deny). The agent cannot procee
 *Used for: security violations that must never reach disk (secrets, credentials).*
 
 ### `REVIEW` — Diamond progression blocked
-The agent can write code, but `/diamond-progress` will refuse to advance Deliver->Complete if this guardrail is unsatisfied. The stop-check hook also escalates these as warnings.
+The agent can write code, but `/diamond-progress` will refuse to record `close` if this guardrail is unsatisfied. The stop-check hook also escalates these as warnings.
 *Used for: quality requirements that must be met before shipping (tests, a11y, services, threat modeling for applicable work).*
 
 ### `NUDGE` — Nudged, not blocked
 The agent should follow this, and post-write-nudge reminds about it, but violation doesn't prevent progression. Logged for awareness.
 *Used for: engineering best practices, bias awareness, stylistic preferences.*
 
-The distinction matters: BLOCK prevents the action via mechanical hook. REVIEW depends on agent judgment during phase transitions (it is not mechanically enforced). NUDGE guides but doesn't prevent.
+The distinction matters: BLOCK prevents the action via mechanical hook. REVIEW depends on agent judgment when a decision is recorded (it is not mechanically enforced). NUDGE guides but doesn't prevent.
 
 **Honesty about enforcement** (per [Birgitta Böckeler's harness engineering article](https://martinfowler.com/articles/harness-engineering.html)): only BLOCK is computationally deterministic. REVIEW and NUDGE are *inferentially enforced* — they depend on the agent running the appropriate skill or responding to the nudge. If the agent bypasses a REVIEW check (e.g., by hand-editing diamond state instead of using `/diamond-progress`), the audit hooks (PostToolUse on diamond state) create traceability via `.claude/state/diamond-state-audit.jsonl`. The `stop-check.sh` hook surfaces direct edit counts at session end. This is observability, not enforcement.
 

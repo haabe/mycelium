@@ -1,6 +1,6 @@
 # Mycelium Guardrails — Discovery Phase
 
-Loaded when operating within discovery domains (L0-L2 Discover/Define phases). Supplements guardrails-core.md.
+Loaded when operating within discovery domains (L0-L2 in discovery mode: before `commit_to_build`). Supplements guardrails-core.md.
 
 ## Discovery
 

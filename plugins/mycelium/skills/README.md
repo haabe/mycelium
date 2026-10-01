@@ -88,4 +88,4 @@ Every `SKILL.md` follows this structure:
 3. **Output** — what gets written and where
 4. **Theory Citations** — which frameworks inform the skill
 
-Skills are suggested contextually by `/diamond-assess` and `/diamond-progress` at phase transitions, and by hooks when relevant conditions are detected.
+Skills are suggested contextually by `/diamond-assess` and `/diamond-progress` at each decision, and by hooks when relevant conditions are detected.

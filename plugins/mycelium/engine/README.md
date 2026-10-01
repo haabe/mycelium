@@ -43,7 +43,7 @@ User starts work
   → Engine identifies current diamond (diamonds/active.yml)
   → Cynefin classifies the problem domain
   → Diamond rules determine current phase
-  → Theory gates check if phase transition is allowed
+  → Theory gates check whether a decision may be recorded
   → Confidence thresholds set the evidence bar
   → Feedback loops capture learning
   → Cycle learning calibrates future thresholds
