@@ -34,9 +34,10 @@ def test_the_l3_jtbd_and_privacy_rows_are_phased_too():
     """v0.262.0, E2E run 50: JTBD `fail` until testers answered and Privacy `pending` until the
     page was built, two design-time gates read as needing evidence from use."""
     (jtbd,) = _l3_rows("### 3. JTBD Gate")
-    assert "Discover->Define" in jtbd and "Define->Develop" in jtbd and "hypotheses" in jtbd
+    # v0.309.2 (stage 5d-3b): said by decision; the two steps are `set_target` and `commit_to_build`.
+    assert "`set_target`:" in jtbd and "`commit_to_build`:" in jtbd and "hypotheses" in jtbd
     (privacy,) = _l3_rows("### 7. Privacy Gate")
-    assert "Define->Develop" in privacy and "Develop->Deliver" in privacy
+    assert "`commit_to_build`:" in privacy and "`release`:" in privacy
     assert "Nothing built is needed" in privacy
 
 
@@ -66,7 +67,8 @@ def test_each_l3_transition_names_its_own_evidence():
 def test_the_evidence_gate_row_is_phased_and_the_skills_read_the_key():
     row = next(line for line in (ROOT / "engine" / "theory-gates.md").read_text().splitlines()
                if line.startswith("| L3 | "))
-    for step in ("Discover->Define", "Define->Develop", "Develop->Deliver", "Deliver->Complete"):
+    # v0.309.2 (stage 5d-3b): each step said as the decision it guards.
+    for step in ("`set_target`:", "`start_experiment`:", "`release`:", "`close`:"):
         assert step in row, step
     for skill in ("diamond-progress", "diamond-assess"):
         assert "threshold_applies_at" in (ROOT / "skills" / skill / "SKILL.md").read_text(), skill

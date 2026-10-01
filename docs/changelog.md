@@ -4,6 +4,36 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-01.
 
+## v0.309.2 - the gates and the diamond rules say decisions (stage 5d-3b)
+
+**2026-10-01.** Phase migration stage 5d-3b, founder ruling DL-1372 (V1 the words, V2 the
+matrices the agent reads). The two engine files the agent reads at every decision now say them.
+**No verdict changes** (the stage's differential: 22 states, 327 verdicts, none changed).
+
+- **theory-gates.md.** The "Transition Matrix" is the **Decision Matrix**. The per-scale tables
+  ("Gates per Scale and Decision") have one column per decision, an L0's own two
+  (`state_purpose`, `review`), written out from `scale_locks.DECISIONS`. Each gate's
+  **Applies to** line names its decisions and scales (`commit_to_build` (L2-L4) and `release`
+  (L2-L5)). The L3 rows of the Evidence, JTBD and Privacy gates, the Bias note, the source-ratio
+  table and the moves table are said by decision.
+- **Two Applies-to lines were wrong, and nothing could see it.** Privacy and Service Quality said
+  L2-L4; since v0.292.0 (founder ruling f) the code requires both before an L5 releases. **The
+  drift check now compares** every per-scale table cell by cell, and every gate's Applies-to line,
+  with the code. Until now only the summary matrix and each scale's "Applicable gates" line were
+  compared. Planted changes are caught in its tests.
+- **diamond-rules.md.** "The Four Phases" is **the loop**: five decisions, two modes read off them,
+  iteration by appending (DL-1373), a recorded decision staying recorded (DL-1374), an L0 that
+  states and reviews its purpose. Regression no longer moves a diamond back: the parent iterates.
+  The human actions are listed per decision. The gate list is no longer copied here (the drift check
+  refused it as an undeclared copy; the Decision Matrix is the one place). The theory attribution of
+  the old phases is left to stage 6's narrative pass.
+- Pinned texts changed with tests that say what the new text must contain (test_l3_bars,
+  test_bias_gate_accepts_planned_mitigation), none deleted.
+- **Alternatives considered:** keeping the per-scale tables keyed by phase move and translating
+  (the agent would read the model rulings D and E dropped); deriving the Applies-to lines at read
+  time instead of comparing them (prose the agent reads must be on the page); keeping a gate list in
+  diamond-rules.md and declaring it (a second copy is how every gate-set drift here began).
+
 ## v0.309.1 - a recorded decision stays recorded
 
 **2026-10-01.** Founder ruling DL-1374, enforcing DL-1373 ("a loop iterates by appending decisions,
