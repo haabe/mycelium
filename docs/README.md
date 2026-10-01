@@ -22,7 +22,7 @@ Three common entry paths, each anchored on a specific user task. Pick the one th
 - `nobody-used-it.md` — for the builder who shipped and nothing happened; what the four questions are for, in their situation, and what this does not do
 - `architecture.md` — how Mycelium is built and connected: engine / harness / hooks / skills / canvas, the context surface (always-on vs JiT), packaging + release + install
 - `mental-model.md` — what discovery before the build gives you, for readers who have read the README and are not convinced yet
-- `philosophy.md` — why opinionated discipline, why theory-grounded, why in-loop preventive
+- `philosophy.md` — why it is strict, where its rules come from, and whether it is for you
 - `glossary.md` — Mycelium-specific vocabulary (diamond, scale, canvas, gate, ...)
 - `faq.md` — frequently asked questions, including the six that surfaced at the 2026-05-07 Juniors.dev presentation
 - `evaluate.md` — how to evaluate Mycelium for your team in ~1h, anti-promotional

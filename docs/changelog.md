@@ -2,7 +2,31 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-10-01.
+**Last updated**: 2026-10-02.
+
+## v0.309.6 - why Mycelium is opinionated, for the reader deciding (stage 6)
+
+**2026-10-02.** Stage 6 (DL-1369), the second narrative page, on the founder's brief.
+
+- **philosophy.md.** Rewritten for the evaluator who arrives from the README or the discovery page
+  asking why it is so strict and whether it can be switched off. The outcome the founder set: the
+  reader sees that the language elsewhere rests on named theories combined into rules that are
+  honest and auditable, and can conclude whether it fits them and their team. Five reasons (why it
+  cannot be optional, why every rule points at a theory, why the gate sits before the work, why it
+  learns from its own mistakes, why it runs on itself), each with one receipt in plain words, plus
+  build to learn and build to earn. The multi-team section is four sentences: not yet, why, what
+  would change it. It ends with next steps. About 2,400 words and 22 code spans became about 1,700
+  and 3. The founder edited the first draft, the agent rewrote it through the voice gate (receipt,
+  blind discriminator, lint), and the founder approved the result.
+- **architecture.md.** Two new sections take the mechanics the page carried: how the framework
+  rewrites its own rules (cycle history, pattern detection, cluster graduation, build mode, faithful
+  citation and what `check_theory_fidelity.py` does and does not check), and the single-team scope
+  with the four absences the 2026-05-09 simulation found and the trigger to revisit.
+- **evaluate.md, docs/README.md.** The reading time and the one-line description of the page.
+- **Alternatives considered:** a lighter edit of the founder's draft (it kept the internal names and
+  the 500-word multi-team section the brief cut); a separate contributor page for the mechanics
+  (architecture.md already is the contributors' single map); dropping the mechanics altogether
+  (the multi-team findings are the honest answer for a team evaluating it, and belong somewhere).
 
 ## v0.309.5 - the reference docs and the README say what the code does (stage 6)
 

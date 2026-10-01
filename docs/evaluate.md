@@ -47,7 +47,7 @@ Install the plugin (`/plugin marketplace add haabe/mycelium`, then `/plugin inst
 
 Look for: does the agent ask questions that surface things you had not considered? Or does it feel like form-filling? The first is the framework working. The second is the framework over-fitting.
 
-### 3. Read [philosophy.md](philosophy.md) (10 min)
+### 3. Read [philosophy.md](philosophy.md) (6 min)
 
 The why-opinionated rationale. If you disagree with the load-bearing claims (in-loop preventive > post-run evaluative; theory-grounded > ad-hoc; dogfood is required), the rest of the framework will feel like ceremony. If you nod along, the rest will feel like infrastructure.
 
