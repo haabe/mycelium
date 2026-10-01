@@ -33,11 +33,9 @@ A force-added file that matches an ignore rule is still ours and stays in scope.
 
 from __future__ import annotations
 
+import os
 import subprocess
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:  # `Path` appears only in annotations, which `from __future__
-    from pathlib import Path  # import annotations` defers to strings at runtime
+from pathlib import Path
 
 
 def ignored_paths(root: Path) -> set[Path]:
@@ -80,3 +78,32 @@ def is_ignored(path: Path, ignored: set[Path]) -> bool:
     except OSError:
         return False
     return any(p == resolved or p in resolved.parents for p in ignored)
+
+
+def is_nested_project(directory: Path, own: Path) -> bool:
+    """True when `directory`, below the project's own `.claude/` (`own`), holds another
+    project's tree: a `canvas/` or a `.claude/` of its own.
+
+    A copy of a project is not this project's record. Added v0.308.2: on the dogfood repo the
+    E2E harness keeps every run's snapshot under `.claude/auto-dogfood/results/`, untracked
+    and NOT ignored, so `ignored_paths` keeps them. `check_stale_prose` and
+    `check_source_authenticity` walked `.claude/**/*.yml`, 6,984 files of which 6,829 were
+    snapshots of simulated projects: 48 of the 50 stale-prose findings the session banner
+    reported were in them, and the background session-start tier took 150 s.
+    """
+    if directory == own:
+        return False
+    return (directory / "canvas").is_dir() or (directory / ".claude").is_dir()
+
+
+def own_yml(root: Path) -> list[Path]:
+    """`root/.claude/**/*.yml`, sorted, without nested projects (`is_nested_project`)."""
+    own = Path(root) / ".claude"
+    out: list[Path] = []
+    for dirpath, dirnames, filenames in os.walk(own):
+        here = Path(dirpath)
+        if is_nested_project(here, own):
+            dirnames[:] = []
+            continue
+        out.extend(here / f for f in filenames if f.endswith(".yml"))
+    return sorted(out)

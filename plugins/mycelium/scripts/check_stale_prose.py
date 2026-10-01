@@ -51,6 +51,14 @@ import re
 import sys
 from pathlib import Path
 
+# The sibling import, as check_wiring_contract.py does it: run as a script, imported as a
+# package, or loaded by file path from tests.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+try:
+    from . import _scan_lib
+except ImportError:  # invoked as a script, or loaded by file path
+    import _scan_lib
+
 # Rule A — temporal deixis with no anchoring date. "OWED TODAY" is wrong tomorrow;
 # "as of today (2026-08-07)" is not, because the reader can see when "today" was.
 _DEIXIS = re.compile(
@@ -245,7 +253,7 @@ def main() -> int:
     args = ap.parse_args()
 
     root = Path(args.project_dir or args.root)
-    targets = sorted((root / ".claude").rglob("*.yml"))
+    targets = _scan_lib.own_yml(root)  # not the copies of other projects (v0.308.2)
     findings: list[tuple[str, str, str, str]] = []
 
     for f in targets:

@@ -4,6 +4,33 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-01.
 
+## v0.308.2 - session-start checks read this project, not copies of others
+
+**2026-10-01.** Found on the dogfood repo, whose session banner reported "this hook took 127s
+against an in-hook budget of 600s and a manifest timeout of 60s". Timed section by section, the
+background tier took 150 s, and two checks were reading files that are not the project's records.
+
+- **Copies of other projects are skipped.** `check_stale_prose.py` and
+  `check_source_authenticity.py` walked every `.yml` under `.claude/`. The dogfood E2E harness keeps
+  each run's project snapshot there (untracked and not ignored, so the git-ignore filter in
+  `_scan_lib` keeps them): 6,829 of 6,984 files, and **48 of the 50 stale-prose findings the banner
+  reported were in simulated projects**. A directory below `.claude/` that holds its own `canvas/` or
+  `.claude/` is another project's tree; `_scan_lib.own_yml` skips it, and both checks use it. On the
+  dogfood repo: 147 files, 2 stale-prose findings, the same 6 source-authenticity findings.
+- **The project's own handles are read once per scan.** `_self_handles` runs three git
+  subprocesses; it ran once per record, 11,298 processes and 88 s.
+- **The background tier's budget line says what is true for it.** Async hooks have no manifest
+  timeout, so the line no longer cites the foreground's 60 s, which read as output about to be
+  lost. It says how long the background checks took and that their results arrived that much later.
+- Result on the dogfood repo: the background tier takes 45 s instead of 150 s. The foreground tier
+  was not affected. **Still slow, and not changed here**: `derive_closing_path` (14 s) and
+  `check_instrument_contract` (11 s, two `git log --follow` per instrument plus parsing the canvas);
+  their cost grows with the project rather than coming from a defect.
+- **Alternatives considered:** a name list of harness directories to skip (`auto-dogfood/results`;
+  `_scan_lib` records why name lists do not hold); scanning only `.claude/canvas` (drops state,
+  harness and memory files the checks cover today); caching `_self_handles` with `lru_cache` (hides
+  a changed git config from tests that vary it, where computing it once per scan does not).
+
 ## v0.308.1 - what the agent reads is keyed by decision (stage 5d-2)
 
 **2026-10-01.** Phase migration stage 5d-2, founder ruling DL-1372 V2. The thresholds and the gate
