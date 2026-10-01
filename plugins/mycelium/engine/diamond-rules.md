@@ -277,11 +277,8 @@ last_updated: [timestamp]
 evidence: [list of evidence references]
 blockers: [list of current blockers]
 definition_of_done: [outcome-based done-criterion, set at birth — see below]
-theory_gates:
-  discover_to_define: [pass | fail | pending]
-  define_to_develop: [pass | fail | pending]
-  develop_to_deliver: [pass | fail | pending]
-  deliver_to_complete: [pass | fail | pending]
+theory_gates_status:  # by gate (theory-gates.md); each decision needs the gates the matrix names
+  <gate>: [pass | pass-with-risk | fail | pending | n/a]
 ```
 
 Update state on every significant action. State is the source of truth for what the agent should do next.

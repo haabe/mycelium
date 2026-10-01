@@ -13,11 +13,14 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[2] / "plugins" / "mycelium"
 THRESHOLDS = yaml.safe_load((ROOT / "engine" / "confidence-thresholds.yml").read_text())["scales"]
-TRANSITIONS = ("discover_to_define", "define_to_develop", "develop_to_deliver", "deliver_to_complete")
+#: Keyed by decision since v0.308.1 (DL-1372 V2). The move to committed to build records two
+#: decisions; each scale names its evidence under the one it belongs to.
+L3_KEYS = ("set_target", "start_experiment", "release", "close")
+L4_KEYS = ("set_target", "commit_to_build", "release", "close")
 
 
 def test_the_l3_threshold_is_compared_only_at_its_exit():
-    assert THRESHOLDS["L3"]["threshold_applies_at"] == ["deliver_to_complete"]
+    assert THRESHOLDS["L3"]["threshold_applies_at"] == ["close"]
 
 
 def _l3_rows(heading: str) -> list[str]:
@@ -41,8 +44,8 @@ def test_the_l4_threshold_is_its_exit_bar_too():
     """v0.261.0, E2E run 47: the first L4 any run opened sat at 0.15 against 0.7 in discover,
     after its lock had admitted it on a test-validated verdict."""
     l4 = THRESHOLDS["L4"]
-    assert l4["threshold_applies_at"] == ["deliver_to_complete"]
-    assert tuple(l4["evidence_by_transition"]) == TRANSITIONS
+    assert l4["threshold_applies_at"] == ["close"]
+    assert tuple(l4["evidence_by_decision"]) == L4_KEYS
 
 
 def test_other_scales_keep_their_threshold_at_every_transition():
@@ -52,12 +55,12 @@ def test_other_scales_keep_their_threshold_at_every_transition():
 
 
 def test_each_l3_transition_names_its_own_evidence():
-    by = THRESHOLDS["L3"]["evidence_by_transition"]
-    assert tuple(by) == TRANSITIONS
-    entry = set(by["discover_to_define"]) | set(by["define_to_develop"])
+    by = THRESHOLDS["L3"]["evidence_by_decision"]
+    assert tuple(by) == L3_KEYS
+    entry = set(by["set_target"]) | set(by["start_experiment"])
     assert not entry & {"prototype_feedback", "usability_test_results"}, (
         "a prototype tested with users is what the L3 builds toward, not what it enters on")
-    assert "learning_delivery_verdict_on_the_riskiest_assumption" in by["deliver_to_complete"]
+    assert "learning_delivery_verdict_on_the_riskiest_assumption" in by["close"]
 
 
 def test_the_evidence_gate_row_is_phased_and_the_skills_read_the_key():
@@ -73,13 +76,13 @@ def test_the_evidence_per_transition_fits_the_product_type():
     """v0.269.0, overfit audit: every product type was asked for code tests at the L4's define ->
     develop, and the L3's develop -> deliver asked for a software prototype, so a course pilot, a
     concierge service or an AI tool had nothing that counted."""
-    l4 = THRESHOLDS["L4"]["evidence_by_transition"]
-    for t in ("define_to_develop", "develop_to_deliver"):
+    l4 = THRESHOLDS["L4"]["evidence_by_decision"]
+    for t in ("commit_to_build", "release"):
         assert set(l4[t]) >= {"software", "content", "ai_tool", "service_offering"}, t
         assert set(l4[t]) <= set(THRESHOLDS["L4"]["required_evidence"]), "same keys as required"
         for kind in ("content", "ai_tool", "service_offering"):
             assert not any("code" in e for e in l4[t][kind]), (t, kind)
-    l3 = THRESHOLDS["L3"]["evidence_by_transition"]["develop_to_deliver"]
+    l3 = THRESHOLDS["L3"]["evidence_by_decision"]["release"]
     assert not {"prototype_feedback", "technical_feasibility_spike"} & set(l3)
     assert any("outside_the_team" in e for e in l3)
     row = next(line for line in (ROOT / "engine" / "theory-gates.md").read_text().splitlines()

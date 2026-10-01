@@ -225,8 +225,10 @@ def _print_undeclared(undeclared: list) -> list:
     return out
 
 
-#: The transition columns of the theory-gates.md Transition Matrix, in order.
-_COLUMNS = ("discover->define", "define->develop", "develop->deliver", "deliver->complete")
+#: The columns of the theory-gates.md Transition Matrix, in order: one per decision since v0.308.1
+#: (DL-1372 V2), compared with `scale_locks.DECISIONS` itself. Until then one per phase move,
+#: compared with the per-transition table derived from it.
+_COLUMNS = ("set_target", "start_experiment", "commit_to_build", "release", "close")
 _ALL_SCALES = ("L0", "L1", "L2", "L3", "L4", "L5")
 
 
@@ -274,8 +276,9 @@ def matrix_drift(root: Path) -> list[str]:
         documented[key] = {t: set(_scales_in(c)) for t, c in zip(_COLUMNS, cells[1:], strict=True)}
     sys.path.insert(0, str(root / "plugins" / "mycelium" / "scripts"))
     import scale_locks  # noqa: PLC0415 - the table the phase gates read
-    code = {g: {t: set(rows.get(t, ())) for t in _COLUMNS}
-            for g, rows in scale_locks.gate_matrix().items()}
+    gates = {g for dec in _COLUMNS for g in scale_locks.DECISIONS[dec]}
+    code = {g: {dec: set(scale_locks.DECISIONS[dec].get(g, ())) for dec in _COLUMNS}
+            for g in gates}
     out = []
     for g in sorted(set(code) | {k for k, v in documented.items() if any(v.values())}):
         want, have = code.get(g), documented.get(g)
@@ -313,7 +316,7 @@ def born_drift(root: Path, required: dict[str, set[str]]) -> list[str]:
     import scale_locks  # noqa: PLC0415 - the table the phase gates read
     out = []
     for scale, born in sorted(required.items()):
-        need = {g for t in _COLUMNS for g in scale_locks.transition_gates(scale, t, ai=False)}
+        need = {g for dec in _COLUMNS for g in scale_locks.decision_gates(scale, dec, ai=False)}
         missing, extra = need - born, born - need - NUDGE_GATES
         if missing:
             out.append(f"    confidence-thresholds.yml [{scale}] is born without "

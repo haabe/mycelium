@@ -482,25 +482,25 @@ is read from its decisions, and each move between those positions makes a fixed 
 
 ## Transition Matrix
 
-Summary of which gates apply to which transitions:
+Which gates each decision needs (keyed by decision since v0.308.1, DL-1372 V2). It is `scale_locks.DECISIONS` written out, and `check_gate_set_drift.py` compares the two both ways. A move needs the gates of every decision it records: the move to committed to build records `start_experiment` and `commit_to_build`.
 
-| Gate | Disc->Def | Def->Dev | Dev->Del | Del->Comp |
-|------|-----------|----------|----------|-----------|
-| Evidence | Required | Required | Required | Required |
-| Four Risks | -- | Required (L1-4) | Required (L1-4) | -- |
-| JTBD | Required (L1-3) | Required (L1-3) | -- | -- |
-| Cynefin | -- | Required | -- | -- |
-| Bias | Required | Required | Required | Required |
-| Security | -- | -- | Required (L3-5) | Required (L3-5) |
-| Privacy | -- | Required (L2-4) | Required (L2-5) | -- |
-| BVSSH | -- | -- | -- | Required |
-| Service Quality | -- | -- | Required (L2-5) | Required (L2-5) |
-| Delivery Metrics | -- | -- | -- | Required (L3-4) |
-| Corrections | Required | Required | Required | Required |
-| Regulatory | -- | Required (L3-5) | Required (L3-5) | -- |
-| XAI | -- | -- | Required (L3-5, when AI detected) | Required (L3-5, when AI detected) |
-| Landscape | -- | NUDGE (L1-3) | NUDGE (L1) | -- |
-| Capacity | -- | -- | NUDGE (L1, L3-4) | -- |
+| Gate | set target | start experiment | commit to build | release | close |
+|------|------------|------------------|-----------------|---------|-------|
+| Evidence | Required | Required | -- | Required | Required |
+| Four Risks | -- | -- | Required (L1-4) | Required (L1-4) | -- |
+| JTBD | Required (L1-3) | -- | Required (L1-3) | -- | -- |
+| Cynefin | -- | Required | -- | -- | -- |
+| Bias | Required | Required | Required | Required | Required |
+| Security | -- | -- | -- | Required (L3-5) | Required (L3-5) |
+| Privacy | -- | -- | Required (L2-4) | Required (L2-5) | -- |
+| BVSSH | -- | -- | -- | -- | Required |
+| Service Quality | -- | -- | -- | Required (L2-5) | Required (L2-5) |
+| Delivery Metrics | -- | -- | -- | -- | Required (L3-4) |
+| Corrections | Required | Required | Required | Required | Required |
+| Regulatory | -- | -- | Required (L3-5) | Required (L3-5) | -- |
+| XAI | -- | -- | -- | Required (L3-5, when AI detected) | Required (L3-5, when AI detected) |
+| Landscape | -- | -- | NUDGE (L1-3) | NUDGE (L1) | -- |
+| Capacity | -- | -- | -- | NUDGE (L1, L3-4) | -- |
 
 **Product type conditioning** (v0.11.0): Gates marked with product_type conditions (Security, DORA/Delivery Metrics, Service Quality) use the delivery profile from `canvas-guidance.yml#product_types`. The `product_type` is set during `/interview` Phase 6 and stored in `diamonds/active.yml`. When checking these gates, always verify which product_type applies before evaluating pass criteria.
 

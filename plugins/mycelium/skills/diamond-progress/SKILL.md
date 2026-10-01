@@ -164,9 +164,11 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
      - `effective_threshold = base_threshold * threshold_multiplier`
      - If `dogfood: true`: `effective_threshold *= dogfood_modifier.additional_threshold_multiplier`
      - `effective_min_sources = ceil(base_min_sources * min_sources_multiplier)`
-   - Compare confidence to the **effective** threshold (not the base), **on the transitions where it
-     applies**: if the scale lists `threshold_applies_at`, only on those. On the others, report the
-     confidence, check the evidence that transition names in `evidence_by_transition` (keyed by `product_type` where the evidence differs, `software` the fallback: v0.269.0), and do not
+   - Compare confidence to the **effective** threshold (not the base), **at the decisions where it
+     applies**: if the scale lists `threshold_applies_at` (decision names since v0.308.1), only at
+     those. At the others, report the confidence, check the evidence each decision the move records
+     names in `evidence_by_decision` (keyed by `product_type` where the evidence differs, `software`
+     the fallback: v0.269.0), and do not
      hold the move on the number (v0.259.0). The L3's threshold is its exit bar: an L3 defines on a
      real problem, develops once its lightest test is named, and delivers once the prototype has
      met users. E2E runs 42-43 held an L3 in discover for three in-world months, 0.6 against 0.64,
@@ -175,7 +177,7 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
 
 4. **Check human approval requirement**:
    - Per ${CLAUDE_PLUGIN_ROOT}/engine/confidence-thresholds.yml, is human approval required/recommended/optional?
-   - **Apply `human_approval_override` from the project_type — EXCEPT at L5 `develop_to_deliver` and `deliver_to_complete`, which are NO_REDUCTION and stay `required` whatever the override says** (added 0.237.0). These are the two transitions that reach people outside the team, and an override cannot make a launch self-approvable. A solo hobbyist launching to the public still reaches the public. If an override would have lowered one of these, say so out loud rather than silently applying the floor: *"project_type <x> would set this to optional; L5 outward-facing transitions are NO_REDUCTION, so approval is still required."*
+   - `human_approval` is keyed by decision (since v0.308.1): a move needs the approval its strictest decision asks. **Apply `human_approval_override` from the project_type — EXCEPT at L5 `release` and `close`, which are NO_REDUCTION and stay `required` whatever the override says** (added 0.237.0). These are the two decisions that reach people outside the team, and an override cannot make a launch self-approvable. A solo hobbyist launching to the public still reaches the public. If an override would have lowered one of these, say so out loud rather than silently applying the floor: *"project_type <x> would set this to optional; L5 `release` and `close` are NO_REDUCTION, so approval is still required."*
    - If required: present assessment and wait for approval.
    - **When asking for approval, include the interaction convention explicitly in the prompt** — do not leave it implicit. Use this template (or paraphrase faithfully):
      > "Reply **yes** to advance, **no** to stay. Re-invoking `/mycelium:diamond-progress` is also treated as approval (shortcut). Type **evaluate again** to re-run gates from scratch."
