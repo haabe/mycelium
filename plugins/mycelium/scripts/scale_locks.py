@@ -1215,11 +1215,9 @@ class State:
             why = self._l3_transition_missing(d, t)
             if why:
                 miss.append(f"{t}: {why}")
-            if not _history_has(d, t):
-                made = ", ".join(transition_decisions(t))
-                miss.append(f"{t}: a `progression_history` entry for it (`transition: "
-                            f"\"{t.replace('->', ' -> ')}\"`, with the date and the ruling, and "
-                            f"`decisions: [{made}]`)")
+        # v0.307.8 (control audit): the `progression_history` requirement could not fire since
+        # v0.306.0. A diamond only moves when it records the decisions of each move, and those
+        # entries are the move's record (`_history_has` accepted them), so it was removed.
         return miss
 
     def _l3_transition_missing(self, d: dict, t: str) -> str | None:

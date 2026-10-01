@@ -150,11 +150,22 @@ test_undeclared_product_paths_leave_documents_ungated() {
 }
 
 test_completed_l3_only_blocks() {
-    local p; p=$(make_cold_project)
-    printf 'active_diamonds:\n  - id: d-003\n    scale: L3\n    phase: complete\n' \
-        > "$p/.claude/diamonds/active.yml"
-        decide_file "$p/.claude/diamonds/active.yml"
+    # v0.307.8 (control audit C2): this ran on a cold project, refused for having no purpose, so
+    # it showed nothing about completion. Now: the chained project, the same L3 with its gates,
+    # open (allowed) and then with its `close` decision (refused).
+    local p; p=$(make_chained_project)
+    local dec='[{decision: set_target}, {decision: start_experiment}, {decision: commit_to_build}, {decision: release}'
+    { printf 'active_diamonds:\n'; ladder_diamonds opp-001
+      printf '  - id: d-003\n    scale: L3\n    object_ref: sol-001\n    decisions: %s]\n    theory_gates_status: %s\n' "$dec" "$BUILD_GATES"
+    } > "$p/.claude/diamonds/active.yml"
+    decide_file "$p/.claude/diamonds/active.yml"
     local code; code=$(run_gate "$p" "$(write_json "$p/app/next.py")")
+    assert_eq "$code" "0" "control: the open L3 carries code"
+    { printf 'active_diamonds:\n'; ladder_diamonds opp-001
+      printf '  - id: d-003\n    scale: L3\n    object_ref: sol-001\n    decisions: %s, {decision: close}]\n    theory_gates_status: %s\n' "$dec" "$BUILD_GATES"
+    } > "$p/.claude/diamonds/active.yml"
+    decide_file "$p/.claude/diamonds/active.yml"
+    code=$(run_gate "$p" "$(write_json "$p/app/next.py")")
     assert_eq "$code" "2" "a completed L3 is not an open delivery cycle -> blocked"
     rm -rf "$p"
 }
