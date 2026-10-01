@@ -358,11 +358,16 @@ def test_hook_blocks_adding_a_locked_diamond(tmp_path):
 
 def test_hook_never_rejudges_an_existing_diamonds_entry(tmp_path):
     """Opened under older rules: its entry lock is never re-judged on edit (--check reports it). An
-    edit that leaves the phase alone, or moves it back, passes."""
+    edit that leaves its decisions alone passes, and so does parking it. Moving it back passed
+    until v0.309.1; it removes a recorded decision, which DL-1374 refuses."""
     old = {"id": "l4-old", "scale": "L4", "phase": "develop", "parent": "l1"}
     p = _project(tmp_path, purpose=PURPOSE, diamonds=[old])
-    for changed in ({**old, "notes": "renamed"}, {**old, "phase": "define"}, {**old, "phase": "parked"}):
+    recorded = decided_one(old)
+    for changed in ({**old, "notes": "renamed"}, {**recorded, "state": "parked"}):
         assert sl.new_diamond_violations(p, _write(yaml.safe_dump({"active_diamonds": [changed]}))) == []
+    back = sl.new_diamond_violations(p, _write(yaml.safe_dump({"active_diamonds": [
+        {**old, "phase": "define"}]})))
+    assert len(back) == 1 and "rewrites its recorded decisions" in back[0], back
 
 
 def test_a_forward_phase_move_needs_its_gates_and_a_history_entry(tmp_path):

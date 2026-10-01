@@ -4,6 +4,41 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-01.
 
+## v0.309.1 - a recorded decision stays recorded
+
+**2026-10-01.** Founder ruling DL-1374, enforcing DL-1373 ("a loop iterates by appending decisions,
+never by editing them"), which shipped as an instruction. Tested on 0.308.2 through every Write/Edit
+hook: removing `commit_to_build` from an L3 passed, and the diamond moved back to "target set".
+Nothing unsafe opened (moving back narrows what is allowed, and a release still goes through the
+exposure records); what was lost was a record of what had been decided.
+
+- **The scale-lock gate refuses a write that removes a recorded decision, renames it, re-dates it
+  or reorders it**, comparing each diamond that was open before the write with where it now sits
+  (active, completed, archived or killed): its earlier decisions must still open its list. The
+  refusal names what changed and the way on (append another `start_experiment` or
+  `commit_to_build`). The shell guard uses the same check, so a shell write is judged alike.
+- **What stays editable:** a decision's note, gates and ruling; a date never recorded may be filled
+  in (a reconstructed decision). Appending passes, as DL-1373 requires.
+- **A repair of a broken diamonds file is held only to decisions that were recorded.** Where its
+  last good state comes from a phase alone (the rulings record, an unmigrated commit), the decisions
+  read off that phase were never recorded, and the check does not compare against them; a last good
+  state read whole (the commit, the shell guard's snapshot) is compared. Found by the existing repair
+  test: the two phase-to-decision conversions disagree on an L0 at `define`, so the repair read as
+  removing a `state_purpose` nobody recorded.
+- Two existing tests changed with the rule, both replaced rather than deleted: moving a diamond
+  back by rewriting its phase passed until now and is refused (test_scale_locks), and the bash
+  gate test now writes an edit that keeps the decisions on file, with a new assertion that the same
+  edit without them is refused at the hook.
+- /diamond-progress and diamond-rules say so; diamond-rules no longer calls moving back free.
+- **Tested:** removal, rename, re-date and reorder refused; a killed diamond that loses its record
+  refused; appending, note edits and a filled-in date pass; and the real hook, not only the
+  function. Against 0.309.0 the four refusal tests fail and the two pass cases pass. The stage 5d
+  differential shows 0 of 327 verdicts changed: its fixed writes advance diamonds and never remove
+  a decision, so this rule is outside its reach and the new tests are its check.
+- **Alternatives considered:** leaving it to the skill (the rule would hold only while an agent
+  reads it); a recorded human override to remove a decision recorded by mistake (not chosen; a
+  mistaken entry is corrected by appending, or the diamond is closed and a new one opened).
+
 ## v0.309.0 - a diamond moves by recording decisions, and is drawn as them (stage 5d-3a)
 
 **2026-10-01.** Phase migration stage 5d-3a: founder rulings DL-1372 V1 and V4 (the words, the

@@ -76,8 +76,14 @@ test_existing_diamond_edit_never_blocks() {
     local p; p=$(make_project)
     printf "$L0"'  - id: l4-old\n    scale: L4\n    phase: develop\n' > "$p/.claude/diamonds/active.yml"
     decide_file "$p/.claude/diamonds/active.yml"
-    local code; code=$(run_gate "$p" "$(write_active "$p" "$(printf "$L0"'  - id: l4-old\n    scale: L4\n    phase: develop\n    notes: renamed\n')")")
+    # The edit keeps what the file records (its decisions, v0.306.0) and changes a note.
+    local edited; edited=$(python3 -c 'import sys,yaml; d=yaml.safe_load(open(sys.argv[1])); [x.update(notes="renamed") for x in d["active_diamonds"] if x["id"]=="l4-old"]; print(yaml.safe_dump(d, sort_keys=False))' "$p/.claude/diamonds/active.yml")
+    local code; code=$(run_gate "$p" "$(write_active "$p" "$edited")")
     assert_eq "$code" "0" "editing an existing (pre-lock) L4 without moving it -> allowed; --check reports it"
+    # v0.309.1 (DL-1374): the same edit written without its decisions removes them -> refused.
+    code=$(run_gate "$p" "$(write_active "$p" "$(printf "$L0"'  - id: l4-old\n    scale: L4\n    phase: develop\n    notes: renamed\n')")")
+    assert_eq "$code" "2" "an edit that drops a diamond's recorded decisions -> blocked (DL-1374)"
+    assert_contains "$(cat "$ERR")" "rewrites its recorded decisions" "names the rewrite"
     rm -rf "$p"
 }
 

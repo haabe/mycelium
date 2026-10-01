@@ -1763,6 +1763,8 @@ def _last_good(project_dir: str) -> dict:
     for row in rows.values():
         if not decisions_of(row):
             row["decisions"] = decisions_for(_scale(row), str(row.get("phase") or "discover"))
+            # Read off a phase, never recorded: a repair is not held to them (v0.309.1, DL-1374).
+            row["_decisions_derived"] = True
     return {"active_diamonds": list(rows.values())} if rows else {}
 
 
@@ -1903,6 +1905,57 @@ def _unknown_exposure_violations(st: State, old_active: dict) -> list[str]:
     return out
 
 
+def _decision_key(e: dict) -> tuple[str, str]:
+    on = e.get("on")
+    return str(e["decision"]), (str(on)[:10] if on else "")
+
+
+def _rewrites(had: list[dict], has: list[dict]) -> list[str]:
+    """How a later decision list departs from an earlier one, entry by entry, said to a person."""
+    changed = []
+    for i, e in enumerate(had):
+        name, on = _decision_key(e)
+        if i >= len(has):
+            changed.append(f"`{name}` ({on or 'no date'}) is gone")
+            continue
+        n_name, n_on = _decision_key(has[i])
+        if n_name != name:
+            changed.append(f"`{name}` ({on or 'no date'}) became `{n_name}`")
+        elif on and n_on != on:
+            changed.append(f"`{name}` moved from {on} to {n_on or 'no date'}")
+    return changed
+
+
+def _rewritten_decision_violations(new_doc: dict, old_active: dict) -> list[str]:
+    """A RECORDED DECISION STAYS RECORDED (v0.309.1, DL-1374, enforcing DL-1373). A diamond's
+    decisions only grow: what it had recorded before a write must still open its list after it,
+    each with the same name and date. A note, the gates or the ruling may change, and a date never
+    recorded may be filled in. Tested on 0.308.2: a write that removed `commit_to_build` passed
+    every hook and moved the diamond back to "target set", rewriting what had been decided.
+    Wherever the diamond now sits (active, completed, archived, killed), its record is compared; a
+    diamond the write removes from the file is judged by the closing rules, not here."""
+    now: dict[str, dict] = {}
+    for key, rows in new_doc.items():
+        if isinstance(rows, list) and key.endswith("_diamonds"):
+            for d in rows:
+                if isinstance(d, dict) and d.get("id") is not None:
+                    now.setdefault(str(d["id"]), d)
+    out = []
+    for did, prev in old_active.items():
+        if prev.get("_decisions_derived"):
+            continue  # a repair's last good state read off a phase: nothing recorded to compare
+        changed = _rewrites(decisions_of(prev), decisions_of(now[did])) if did in now else []
+        if changed:
+            out.append(f"{did} ({prev.get('scale')}): this write rewrites its recorded decisions: "
+                       + "; ".join(changed) + ". A decision stays recorded (DL-1373, DL-1374): a "
+                       "loop iterates by appending, so a new experiment is another "
+                       "`start_experiment` and a re-chosen front runner another "
+                       "`commit_to_build`, after the ones already there. To correct a note, the "
+                       "gates or the ruling, change only those; to stop, park, kill or archive "
+                       "the diamond")
+    return out
+
+
 def _was_running(prev: dict) -> bool:
     """Open before the write, as the old row itself says: not completed or closed by its state,
     parked counting as open (a pause, its delivery may still run) (v0.307.7)."""
@@ -1928,7 +1981,8 @@ def violations_between(project_dir: str, before: str, after: str) -> list[str]:
     was_open = {i: (_scale(d), _phase(d)) for i, d in old_active.items()}
     st = State(project_dir, diamonds_doc=new_doc)
     out = (_closing_violations(st, new_doc, old_active) + _retarget_violations(st, old_active)
-           + _state_end_violations(st, new_doc, old_active))
+           + _state_end_violations(st, new_doc, old_active)
+           + _rewritten_decision_violations(new_doc, old_active))
     if repair:
         out += _unknown_exposure_violations(st, old_active)
     for d in st.active:
