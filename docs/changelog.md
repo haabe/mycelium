@@ -4,6 +4,27 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-01.
 
+## v0.307.1 - what 0.307.0 still read in the old shape
+
+**2026-10-01.** Found while scoping stage 6 (docs). No new refusals.
+
+- **The scale-occupancy report reads an L2's target as the lock does.** It still counted an L2 on one
+  opportunity as targeting it, so on an unmigrated project it reported "1 target chosen and no L3"
+  for an L3 the lock then refused. It also judged an L2 closed by its `phase` label; it now reads its
+  `state` or its `close` decision.
+- **The build gate's message says where a diamond is from its decisions.** It printed the `phase`
+  label: stale on a migrated file, `None` on one that records no label.
+- **Agent instructions that still read the label:** /diamond-render picked "active" diamonds by a
+  non-null `phase` (a new diamond with no label would not render) and said the phase is read for a
+  diamond with no decisions; /metrics-pull found completed work by `phase: complete`; the state
+  block in diamond-rules listed `phase` as the record and no `decisions`. Each now names the decision
+  record. Docstrings and comments that said the phase "is retired later" or read "until stage 5" say
+  what is true since v0.306.0.
+- **Alternatives considered:** folding these into stage 6's doc release (the report is code and
+  told users the wrong next step, so it ships as its own patch); removing the partial-install
+  fallbacks that read the label when `scale_locks` cannot be imported (they run only on a broken
+  install, where every other check is down too, and each is reviewed as such).
+
 ## v0.307.0 - the old object and delivery shapes are no longer read
 
 **2026-10-01.** Phase migration stage 5c-2, founder rulings DL-1367 R4 and DL-1368 S4: the two

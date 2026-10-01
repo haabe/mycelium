@@ -266,7 +266,9 @@ Every diamond maintains:
 ```yaml
 id: [unique identifier]
 scale: [L0-L5]
-phase: [discover | define | develop | deliver | complete]
+decisions: [the record of where it is, one entry per decision: {decision, on, gates, ruling}]
+phase: [optional label for people reading the file; not read since v0.306.0]
+state: [killed | parked | archived | retargeted, when closed without completing]
 confidence: [0.0 - 1.0]
 parent: [parent diamond ID or null]
 children: [list of child diamond IDs]

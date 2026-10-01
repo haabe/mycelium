@@ -230,7 +230,7 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
    develop starts an experiment and commits to build (`start_experiment`, `commit_to_build`);
    develop -> deliver releases (`release`); deliver -> complete closes (`close`). Each gate belongs
    to the decision it guards, and the move needs the gates of every decision it makes, the same set
-   as before. The phase is retired later in the migration; the decisions stay.
+   as before. Since v0.306.0 the decisions are the record and the phase name is read off them.
 
    **Record the decisions; they are where the diamond is (v0.305.0, phase migration stage 5b;
    DL-1368).** Append one `decisions` entry for each decision the move makes, with its gates and the

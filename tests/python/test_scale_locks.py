@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pytest
 import yaml
-from decided import decided, decided_text
+from decided import decided, decided_one, decided_text
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "plugins" / "mycelium" / "scripts" / "scale_locks.py"
@@ -277,6 +277,14 @@ def test_code_needs_an_l3_whose_chain_holds(tmp_path):
     assert not ok and "desired outcome" in why
     p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), diamonds=[_l3()])
     assert sl.delivery_state(p)[0]
+
+
+def test_the_build_message_says_where_the_l3_is_from_its_decisions(tmp_path):
+    """v0.307.1: it printed the `phase` label, which is `None` on a diamond that records none."""
+    l3 = {k: v for k, v in decided_one(_l3()).items() if k != "phase"}
+    p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), diamonds=[l3])
+    ok, why = sl.delivery_state(p)
+    assert ok and why.endswith("is in develop") and "None" not in why, why
 
 
 def test_code_with_no_delivery_diamond_is_refused(tmp_path):

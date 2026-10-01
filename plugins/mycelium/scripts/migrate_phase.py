@@ -2,8 +2,8 @@
 """Move a project's diamonds from the phase to the decision log (v0.303.0, migration stage 5a).
 
 Founder ruling DL-1368 S3: a migration script, offered by the next item and by /mycelium:setup, run
-on request, the change shown before anything is written. It rewrites three things the phase
-migration keeps reading through a translation until stage 5 removes it:
+on request, the change shown before anything is written. It rewrites three things Mycelium read
+through a translation until stage 5c, and no longer reads (v0.306.0, v0.307.0):
 
   1. THE PHASE, into dated decisions. Each move a diamond made becomes the decisions that move makes
      (`scale_locks.TRANSITION_DECISIONS`; an L0 that stated its purpose records `state_purpose`),

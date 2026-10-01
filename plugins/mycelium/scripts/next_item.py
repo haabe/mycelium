@@ -1045,8 +1045,8 @@ MIGRATE = f'python3 "{Path(__file__).resolve().parent / "migrate_phase.py"}"'
 
 
 def _where(d: dict) -> str:
-    """Where a diamond is (v0.305.0, stage 5b): read from its decision log by scale_locks.phase_of,
-    the recorded phase when scale_locks is not installed."""
+    """Where a diamond is (v0.305.0, stage 5b): read from its decision log by scale_locks.phase_of.
+    Only a partial install with no scale_locks falls back to the recorded label."""
     if sl is not None:
         return sl.phase_of(d)
     return str(d.get("phase") or "discover").lower()

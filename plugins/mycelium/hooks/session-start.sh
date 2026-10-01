@@ -1294,7 +1294,7 @@ try:
   with open(sys.argv[1]) as f:
     data = yaml.safe_load(f) or {}
   overdue, no_measure, no_ts = [], [], []
-  # Completed diamonds live in active_diamonds with phase: complete, or in completed_diamonds
+  # Completed diamonds live in active_diamonds with a close decision, or in completed_diamonds
   # (v0.289.0: the dogfood project keeps them there, and this check never saw them).
   import os
   sys.path.insert(0, os.path.join(os.environ.get('CLAUDE_PLUGIN_ROOT', ''), 'scripts'))
