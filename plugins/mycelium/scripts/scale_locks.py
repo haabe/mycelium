@@ -1664,7 +1664,21 @@ def _closing_violations(st: State, new_doc: dict, old_active: dict) -> list[str]
         prev = old_active.get(str(d.get("id")))
         if prev is None:
             continue
-        moved = st.move_missing({**d, "phase": "complete"}, _phase(prev))
+        # Judged as a move to complete, whatever it records (v0.307.2). Until then this forced
+        # `phase: complete`, which is not read since v0.306.0 (nor, for a diamond with decisions,
+        # since v0.303.0): a diamond moved here without `close` read as not having moved and
+        # passed no gate. The decisions it lacks are supplied only so its gates are judged up to
+        # `complete`; the move still fails until they are recorded, and the message names them.
+        made = {str(x["decision"]) for x in decisions_of(d)}
+        lacking = [x for t in _crossed(_phase(prev), "complete") for x in TRANSITION_DECISIONS[t]
+                   if x not in made] if _scale(d) != "L0" and _phase(prev) in PHASE_ORDER else []
+        moved = st.move_missing(
+            {**d, "decisions": [*decisions_of(d), *({"decision": x} for x in lacking)]},
+            _phase(prev)) if lacking else st.move_missing(d, _phase(prev))
+        if lacking:
+            moved.append(f"the decisions its move to complete makes, recorded in `decisions` with "
+                         f"their gates: {', '.join(f'`{x}`' for x in lacking)} (it was written "
+                         "into completed_diamonds without them)")
         if moved:
             out.append(f"{d.get('id')} ({d.get('scale')}) cannot move to complete yet:\n    - "
                        + "\n    - ".join(moved))

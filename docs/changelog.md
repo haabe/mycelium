@@ -4,6 +4,29 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-01.
 
+## v0.307.2 - a completion with no `close` is judged again
+
+**2026-10-01.** A safety regression, found by the stage-5d phase-word inventory. **Upgrade.**
+
+- **A diamond written into `completed_diamonds` is judged as a move to complete, whatever it
+  records.** The check (v0.267.0) forced `phase: complete` on the moved diamond and asked whether it
+  had moved. Since v0.303.0 a diamond with decisions was placed by its decisions, and since v0.306.0
+  every diamond is, so the forced phase was never read: a diamond moved there without recording
+  `close` read as not having moved, and passed no completion gate. An L3 could complete with its
+  learning delivery never ended (the teardown rule, v0.267.0), and any diamond with its
+  Definition of Done, BVSSH or Delivery Metrics gates pending. The check now judges every gate up to
+  `complete` and names the decisions the diamond did not record (`close`, and any before it). A
+  diamond that records `close` is judged as before.
+- **Why the suites missed it:** every fixture that completed a diamond was written with
+  `phase: complete` and converted to decisions that include `close`. The new test removes it; it
+  fails on 0.307.1 with no violation at all.
+- A dead `phase` override in the next item's L3 Deliver item is removed (the rule it fed never read
+  the phase).
+- **Alternatives considered:** adding `close` to the moved diamond and judging that (the decision
+  entries satisfy the move's history check, so the missing decision would pass unremarked);
+  refusing any write into `completed_diamonds` without `close` and skipping the gates (the user
+  would record `close` and only then learn which gates are pending, one refusal later).
+
 ## v0.307.1 - what 0.307.0 still read in the old shape
 
 **2026-10-01.** Found while scoping stage 6 (docs). No new refusals.

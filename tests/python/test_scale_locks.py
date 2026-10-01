@@ -1004,6 +1004,25 @@ def test_a_completion_written_into_the_completed_list_is_judged(tmp_path):
     assert any("security" in v for v in _closing(tmp_path / "c", gates))
 
 
+def _no_close(d: dict) -> dict:
+    out = decided_one(d)
+    out["decisions"] = [x for x in out["decisions"] if x["decision"] != "close"]
+    return out
+
+
+def test_a_completion_with_no_close_decision_is_still_judged(tmp_path):
+    """v0.307.2: the completed-list check judged the move by forcing `phase: complete`, which is
+    not read since v0.306.0 (and was not read for a diamond with decisions since v0.303.0). A
+    diamond moved into completed_diamonds without recording `close` read as not having moved, and
+    passed no completion gate: an L3 could complete with its learning delivery never ended."""
+    unended = _closing(tmp_path / "a", _no_close(_completed()))
+    assert any("how its learning delivery ended" in v or "`ended`" in v for v in unended), unended
+    assert any("`close`" in v for v in unended), "and the missing decision is named"
+    ok = _closing(tmp_path / "b", _no_close(_completed(WITHDRAWN)))
+    assert ok and all("`close`" in v for v in ok), ok
+    assert _closing(tmp_path / "c", _completed(WITHDRAWN)) == [], "control: `close` recorded"
+
+
 @pytest.mark.parametrize("note", [
     "all 10 devices collected back from the households",   # hardware loan
     "cohort finished; module unpublished on the LMS",       # course pilot
