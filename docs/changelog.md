@@ -4,6 +4,40 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-01.
 
+## v0.308.0 - Mycelium says where a diamond is by its decisions (stage 5d-1)
+
+**2026-10-01.** Phase migration stage 5d-1, founder ruling DL-1372 (V1, V3). Rulings D and E dropped
+Discover / Define / Develop / Deliver as the phases of a level; since 0.306.0 the decisions are the
+record, but the messages still spoke in the four names. They now speak in decisions and the two
+modes. **No verdict changes**: every allow/refuse verdict on the stage's frozen corpus (22 project
+states, 327 verdicts) is the one 0.307.9 gave.
+
+- **Where a diamond is**, in every message that says it: "no decision yet" and "target set"
+  (discovery), "committed to build" and "released" (delivery), "closed"; an L0 "purpose stated".
+  The build gate says "committed to build (now: target set (discovery))" where it said "in Develop
+  or Deliver (now `define`)".
+- **A move is said as the decisions it records**: "cannot record `start_experiment`,
+  `commit_to_build` yet", with each missing gate under the decision it guards
+  (`` `start_experiment` and `commit_to_build`: the bias gate ``); an L0's under `state_purpose`, its
+  own decision (the first version of this listed an L0's gates under L1-L5 decisions; caught by a
+  test before release). The next item says "Its next decision is `set_target`"; the closing path
+  groups gates as "owed before the next decision (release)".
+- **The texts that told the agent to move a phase** now tell it to record a decision: "record the
+  L3's `release`", "record its `start_experiment` and `commit_to_build`". The two that said "go back
+  to define" now say what to do (revise, and name the new test before building on it) without
+  naming a mechanism: how a loop iterates in the decision model is not yet defined, and is put to
+  the founder rather than invented in a wording change.
+- Also: the build refusal, the shell guard's refusal, the session-start Definition-of-Done line, the
+  exposure gate's status line ("a deploy waits for a current exposure record"), the purpose-stance
+  report and the closing path's header line.
+- **Kept, by ruling V3:** internal names nobody reads (`phase_of`, `PHASE_ORDER`, the next item's
+  persisted ids such as `deliver-l3:<id>`, the rulings signature, the schema's optional `phase`
+  label), so no user loses a snooze or a ruling.
+- **Alternatives considered:** the two modes only (most safety messages turn on whether an L3 has
+  released); keeping the four words as labels (the vocabulary D and E dropped); renaming the
+  persisted ids (users lose snoozes and rulings); a mechanism for "going back" invented here (a model
+  decision inside a wording change).
+
 ## v0.307.9 - a repair that cannot see a diamond's exposures is refused for it
 
 **2026-10-01.** Closes the residual 0.307.7 shipped with (DL-1371, founder: "Close it fail-closed").

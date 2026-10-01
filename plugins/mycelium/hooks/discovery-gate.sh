@@ -139,8 +139,9 @@ if [ "$HI_ENGAGED" -eq 0 ]; then
 Mycelium delivery gate: you are about to $ACT ($BASENAME),
 and no delivery cycle is ready to carry code. Code is written under an L3
 (build to learn), L4 or L5 diamond whose parents have established what it
-builds on, and which is in Develop with Four Risks and Privacy passed (phase
-follows the work, v0.246.0; a pilot is not exempt). What is missing:
+builds on, and which has committed to build (\`start_experiment\` and
+\`commit_to_build\` recorded) with Four Risks and Privacy passed (a pilot is not
+exempt). What is missing:
 
   ${HI_DELIVERY_WHY}
 
@@ -149,8 +150,8 @@ a purpose (who and why), L2 on a strategy (an L1 diamond, a North Star, the
 landscape) and a desired outcome, L3 on a target opportunity with evidence in
 an L2 diamond, L4 on an L3 at medium confidence, L5 on launch data. Produce
 what is missing with the skill named above, open the L3 on its L2's target
-(object_ref naming the opportunity, parent the L2), progress it to Develop with
-/mycelium:diamond-progress, then retry.
+(object_ref naming the opportunity, parent the L2), record its
+\`start_experiment\` and \`commit_to_build\` with /mycelium:diamond-progress, then retry.
   python3 \${CLAUDE_PLUGIN_ROOT}/scripts/scale_locks.py --can-open L3
 says what is still missing.
 

@@ -107,7 +107,7 @@
           {
             "type": "command",
             "timeout": 10,
-            "statusMessage": "Mycelium exposure gate (a deploy waits for Deliver with Security and Privacy passed)",
+            "statusMessage": "Mycelium exposure gate (a deploy waits for a current exposure record)",
             "command": "MYCELIUM_RUNTIME=codex bash __MYCELIUM_PLUGIN_ROOT__/hooks/exposure-gate.sh"
           },
           {

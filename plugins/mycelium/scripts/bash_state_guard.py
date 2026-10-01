@@ -105,9 +105,10 @@ def pre(payload: dict, project: Path) -> int:
     cmd = ti.get("command") if isinstance(ti.get("command"), str) else ""
     if writes_active(cmd, str(project)):
         print("Mycelium: refused. This shell command writes .claude/diamonds/active.yml, where "
-              "the scale-lock gate cannot judge it: entry locks, phase-move gates and the ruling "
+              "the scale-lock gate cannot judge it: entry locks, decision gates and the ruling "
               "record only run on the Edit and Write tools. Make the change with Edit or Write "
-              "(/mycelium:diamond-progress for a phase move). Reading the file is never refused.",
+              "(/mycelium:diamond-progress to record a decision). Reading the file is never "
+              "refused.",
               file=sys.stderr)
         return 2
     state = project / STATE_REL

@@ -41,7 +41,7 @@ def test_a_never_assessed_delivering_diamond_is_the_next_item(tmp_path):
                                {"id": "l3", "scale": "L3", "phase": "discover"}])
     item, _ = ni.pick(root, "", "2026-09-24")
     assert item["command"] == "/mycelium:diamond-progress l3"
-    assert "never been assessed" in item["text"] and "discover -> define" in item["text"]
+    assert "never been assessed" in item["text"] and "next decision is `set_target`" in item["text"]
 
 
 def test_a_ruling_older_than_the_evidence_is_proposed_again(tmp_path):

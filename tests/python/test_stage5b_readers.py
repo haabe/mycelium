@@ -45,7 +45,7 @@ def test_the_closing_path_names_the_move_after_the_decisions(tmp_path, capsys):
     d = {"id": "l3", "scale": "L3", "phase": "discover", "confidence": 0.5,
          "decisions": DEVELOP, "theory_gates_status": {"four_risks": "pending"}}
     assert cp.main(["--project-dir", str(_project(tmp_path, [d])), "--diamond-id", "l3"]) == 0
-    assert "owed before the next move (develop->deliver)" in capsys.readouterr().out
+    assert "owed before the next decision (release)" in capsys.readouterr().out
 
 
 def test_purpose_stance_reads_where_the_diamond_is():

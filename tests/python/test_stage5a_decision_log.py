@@ -45,7 +45,9 @@ def test_a_decision_is_judged_as_the_move_it_makes(tmp_path):
     bare = {**before, "decisions": _dec("state_purpose")}
     out = sl.violations_between(str(tmp_path), yaml.safe_dump({"active_diamonds": [before]}),
                                 yaml.safe_dump({"active_diamonds": [bare]}))
-    assert any("cannot move to deliver" in x and "evidence" in x for x in out), out
+    # the L0 here moves by stating its purpose; its gates are said under that decision
+    assert any("cannot record `state_purpose` yet" in x and "`state_purpose`: the evidence gate"
+               in x for x in out), out
     passed = {**bare, "theory_gates_status": dict.fromkeys(
         ("evidence", "cynefin", "bias", "bvssh", "corrections"), "pass")}
     out = sl.violations_between(str(tmp_path), yaml.safe_dump({"active_diamonds": [before]}),
