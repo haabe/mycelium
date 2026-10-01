@@ -59,9 +59,23 @@ def _decision(tmp_path, payload, capsys) -> str | None:
 
 @pytest.mark.parametrize("to", ["deliver", "complete"])
 def test_moving_an_l5_to_launch_asks_the_person(tmp_path, capsys, monkeypatch, to):
+    """v0.307.8 (control audit): `complete` moved develop -> complete in one write, so the ask came
+    from the deliver crossing and an L5 already delivering was never shown to ask when closed
+    (K2, fixed in 0.307.5). Each crossing is its own write here."""
     monkeypatch.delenv("MYCELIUM_RUNTIME", raising=False)
-    p = _project(tmp_path)
-    assert _decision(p, _move(p, "l5-a", to), capsys) == "ask"
+    if to == "deliver":
+        p = _project(tmp_path)
+        assert _decision(p, _move(p, "l5-a", to), capsys) == "ask"
+        return
+    released = BEFORE.split("  - id: l5-a\n")
+    p = _project(tmp_path, released[0] + "  - id: l5-a\n"
+                 + released[1].replace("phase: develop", "phase: deliver").replace(DEV, RELEASED))
+    target = p / ".claude" / "diamonds/active.yml"
+    old = target.read_text().split("  - id: l5-a\n", 1)[1]
+    payload = {"tool_name": "Edit", "permission_mode": "default", "tool_input": {
+        "file_path": str(target), "old_string": old,
+        "new_string": old.replace(RELEASED, RELEASED[:-1] + ", {decision: close}]")}}
+    assert _decision(p, payload, capsys) == "ask", "deliver -> complete asks on its own"
 
 
 def test_with_permissions_bypassed_it_is_refused(tmp_path, capsys, monkeypatch):

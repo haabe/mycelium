@@ -4,6 +4,34 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-01.
 
+## v0.307.8 - controls that test their rule (control audit, batch 4)
+
+**2026-10-01.** Batch 4 of the safety-hardening series (DL-1370), upstream half: the controls the
+audit found passing for the wrong reason, rewritten so each fails when its rule is broken. No
+behaviour change except removing one requirement that could not fire.
+
+- **Rewritten controls**, each now with an explicit record and a control case beside the negative:
+  - a killed or archived L3 is no parent: the L4 now holds its lock under the live L3, so only the
+    kill takes it away (it had no gates and its L3 no delivery, and was refused for those);
+  - a completed L3 carries no code: by its `close` decision, and by being in `completed_diamonds`
+    without one (`close` came from the phase conversion);
+  - an ack counts only as a well-formed line for that id and scale: the L3 is in develop with its
+    gates passed, so the ack is what decides (it was in discover and carried nothing either way);
+  - the L5 floor at deliver -> complete is its own write (the old case crossed deliver too, so the
+    ask came from that crossing);
+  - bash: a completed L3 blocks on a project whose chain holds, beside the same L3 open (it ran on
+    a cold project, refused for having no purpose).
+  Each was checked against a planted defect in the rule it guards; all catch it. A completed L3 is
+  kept from carrying code by two rules (its closed state, and the build stage admitting only
+  develop and deliver), so its control catches the defect only when both are broken, which is the
+  property it states.
+- **The `progression_history` requirement on a move is removed.** It could not fire since v0.306.0:
+  a diamond moves only by recording the decisions of each move, and those entries are the move's
+  record. diamond-rules says so.
+- **Alternatives considered:** deleting the vacuous controls (they name real rules, and their
+  rewrites now guard them); keeping the dead requirement as defence in depth (a check that cannot
+  fire reads as coverage it does not give).
+
 ## v0.307.7 - lifecycle (control audit, batch 3)
 
 **2026-10-01.** Batch 3 of the safety-hardening series (DL-1370). Each gap was reproduced on

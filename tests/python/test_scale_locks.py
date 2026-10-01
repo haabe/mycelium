@@ -294,9 +294,22 @@ def test_code_with_no_delivery_diamond_is_refused(tmp_path):
 
 
 def test_a_completed_l3_does_not_carry_code(tmp_path):
-    done = {**_l3(), "phase": "complete"}
-    p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), diamonds=[done])
-    assert not sl.delivery_state(p)[0]
+    """v0.307.8 (control audit C3): `close` came from the phase conversion, so the control never
+    showed which record closes the L3. Decisions are written here; each way of being completed is
+    shown against a delivering L3 that does carry code."""
+    released = {"id": "l3-a", "scale": "L3", "object_ref": "sol-001", "evidence_type": "anecdotal",
+                "theory_gates_status": dict(EXPOSE_PASSED), "decisions": [{"decision": x} for x in ("set_target", "start_experiment", "commit_to_build", "release")]}
+    assert sl.delivery_state(_project(tmp_path / "a", purpose=PURPOSE, opps=_full_opps(),
+                                      diamonds=[released]))[0], "control: it carries code"
+    closed = {**released, "decisions": [*released["decisions"], {"decision": "close"}]}
+    assert not sl.delivery_state(_project(tmp_path / "b", purpose=PURPOSE, opps=_full_opps(),
+                                          diamonds=[closed]))[0], "its `close` decision"
+    p = _project(tmp_path / "c", purpose=PURPOSE, opps=_full_opps(), diamonds=[])
+    active = Path(p) / ".claude" / "diamonds/active.yml"
+    doc = yaml.safe_load(active.read_text())
+    doc["completed_diamonds"] = [released]
+    active.write_text(yaml.safe_dump(doc))
+    assert not sl.delivery_state(p)[0], "in completed_diamonds, even without `close`"
 
 
 def test_the_users_ack_overrides_one_diamond(tmp_path):
@@ -494,20 +507,41 @@ def test_a_closed_opportunity_relocks_nothing_already_open(tmp_path):
 
 
 def test_a_killed_or_archived_l3_is_no_parent(tmp_path):
-    dead = {**_l3("data-supported"), "phase": "killed"}
-    l4 = {"id": "l4-a", "scale": "L4", "phase": "develop", "parent": "l3-a"}
-    p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), diamonds=[dead, l4])
-    assert not sl.delivery_state(p)[0]
+    """v0.307.8 (control audit C1): the L4 had no gates and its L3 no delivery, so the control was
+    refused for those and showed nothing about the kill. The L4 here holds its lock under a live
+    L3, and the kill alone takes it away."""
+    l3 = {"id": "l3-a", "scale": "L3", "object_ref": "sol-001", "evidence_type": "data-supported",
+          "theory_gates_status": dict(EXPOSE_PASSED), "decisions": [{"decision": x} for x in ("set_target", "start_experiment", "commit_to_build", "release")],
+          "exposures": [dict(RECORD)]}
+    l4 = {"id": "l4-a", "scale": "L4", "parent": "l3-a", "theory_gates_status": dict(BUILD_PASSED),
+          "decisions": [{"decision": x} for x in ("set_target", "start_experiment",
+                                                   "commit_to_build")]}
+    st = sl.State(_project(tmp_path / "alive", purpose=PURPOSE, opps=_full_opps(),
+                           diamonds=[l3, l4]))
+    assert st.verdict(st.by_id["l4-a"])[0], "control: under a live L3 the L4 holds its lock"
+    for state in ("killed", "archived"):
+        st = sl.State(_project(tmp_path / state, purpose=PURPOSE, opps=_full_opps(),
+                               diamonds=[{**l3, "state": state}, l4]))
+        ok, miss = st.verdict(st.by_id["l4-a"])
+        assert not ok and any("the L3 it delivers" in m for m in miss), (state, miss)
 
 
 def test_ack_counts_only_a_well_formed_line_for_that_id_and_scale(tmp_path):
-    bare = {"id": "anyway", "scale": "L3", "phase": "discover"}
+    """v0.307.8 (control audit C4): the L3 was in discover, so it carried nothing with or without
+    an ack and the negatives showed nothing. Here it is in develop with its gates passed, and only
+    its chain is missing, which a well-formed ack for it lifts."""
+    dev = [{"decision": x} for x in ("set_target", "start_experiment", "commit_to_build")]
+    bare = {"id": "anyway", "scale": "L3", "decisions": dev, "theory_gates_status": BUILD_PASSED}
     loose = '2026-09-24 d7: the user said "open it anyway"\n'
-    p = _project(tmp_path, purpose=PURPOSE, diamonds=[bare], ack=loose)
+    p = _project(tmp_path / "a", purpose=PURPOSE, diamonds=[bare], ack=loose)
     assert not sl.delivery_state(p)[0]
     assert sl.report(p)[1], "an ignored ack line is reported, not silently dropped"
-    p = _project(tmp_path, purpose=PURPOSE, diamonds=[bare], ack="anyway L2 2026-09-24 user: ok\n")
+    p = _project(tmp_path / "b", purpose=PURPOSE, diamonds=[bare],
+                 ack="anyway L2 2026-09-24 user: ok\n")
     assert not sl.delivery_state(p)[0], "an ack for another scale does not carry over"
+    p = _project(tmp_path / "c", purpose=PURPOSE, diamonds=[bare],
+                 ack="anyway L3 2026-09-24 user: ok\n")
+    assert sl.delivery_state(p)[0], "control: the well-formed ack for it lifts the chain"
 
 
 def test_odd_references_and_shapes_do_not_crash(tmp_path):
