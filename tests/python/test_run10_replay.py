@@ -152,7 +152,7 @@ def test_the_release_gate_uses_myceliums_own_environment_when_path_python_lacks_
     code, err = _hook_err("exposure-gate.sh", run10, _shell(RELEASE), no_pyyaml=shim,
                           extra={"CLAUDE_PLUGIN_DATA": str(data)})
     assert code == 2 and "PyYAML is not available" not in err  # refused on the locks, not on PyYAML
-    assert "no delivery" in err or "missing" in err
+    assert "No exposure record covers it" in err  # v0.306.0: no phase fallback
 
 
 def test_control_an_ordinary_push_with_no_live_host_is_not_stopped(run10):
@@ -173,7 +173,11 @@ def test_a_release_toward_the_second_site_is_stopped(run10):
 
 EXPOSED = {"id": "l3-001", "scale": "L3", "phase": "deliver", "learning_delivery": {
     "audience": "Harbour staff, opted in", "until": "2026-11-01",
-    "means": "moderated session, the founder at the laptop", "data": "staff first names"}}
+    "means": "moderated session, the founder at the laptop", "data": "staff first names"},
+    # in deliver by its decisions (v0.306.0): the phase field alone is not read, and a record
+    # that is not exposed is not judged for widening, so without these the test would test nothing
+    "decisions": [{"decision": d} for d in ("set_target", "start_experiment", "commit_to_build",
+                                             "release")]}
 
 
 def _widened(**changes) -> dict:

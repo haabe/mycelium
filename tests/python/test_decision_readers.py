@@ -15,6 +15,7 @@ sys.path.insert(0, str(SCRIPTS))
 import check_purpose_stance as ps  # noqa: E402
 import derive_closing_path as cp  # noqa: E402
 import scale_locks as sl  # noqa: E402
+from decided import decided, decided_text  # noqa: E402
 
 L3 = """active_diamonds:
 - id: l3
@@ -31,7 +32,7 @@ L3 = """active_diamonds:
 def _out(tmp_path, capsys, active=L3):
     (tmp_path / ".claude" / "diamonds").mkdir(parents=True)
     (tmp_path / ".claude" / "canvas").mkdir(parents=True)
-    (tmp_path / ".claude" / "diamonds" / "active.yml").write_text(active)
+    (tmp_path / ".claude" / "diamonds" / "active.yml").write_text(decided_text(active))
     (tmp_path / ".claude" / "canvas" / "opportunities.yml").write_text("opportunities: []\n")
     assert cp.main(["--project-dir", str(tmp_path), "--diamond-id", "l3"]) == 0
     return capsys.readouterr().out

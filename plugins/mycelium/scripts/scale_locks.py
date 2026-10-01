@@ -108,7 +108,7 @@ _L3_5 = ("L3", "L4", "L5")
 #: it guards (the inventory, `2026-09-30-phase-inventory.md`, cell by cell): Cynefin to choosing the
 #: method, Four Risks and the regulatory classification to committing to build, BVSSH to closing,
 #: Bias and Corrections to every decision. The safety gates also sit under the exposure records
-#: (stages 1-2); here they stay where the phase moves read them until the phase is retired.
+#: (stages 1-2); here they stay on the moves between positions, which are read from decisions.
 #: `_MATRIX` below is DERIVED from this table, and a test pins it to the 0.297.0 table cell by cell.
 DECISIONS: dict[str, dict[str, tuple[str, ...]]] = {
     "set_target": {"evidence": _ALL, "jtbd": _L1_3, "bias": _ALL, "corrections": _ALL},
@@ -380,12 +380,13 @@ def decisions_of(d: dict) -> list[dict]:
 def phase_of(d: dict) -> str:
     """WHERE A DIAMOND IS (v0.303.0, DL-1368 S1): read from its decision log, the furthest phase
     whose moves' decisions are all recorded (define -> develop needs both `start_experiment` and
-    `commit_to_build`); an L0 that has stated its purpose is in deliver. The recorded `phase` is
-    read only for a diamond with no decisions, until the phase is retired (S4)."""
+    `commit_to_build`); an L0 that has stated its purpose is in deliver. SINCE v0.306.0 THE
+    RECORDED `phase` IS NOT READ (stage 5c, DL-1368 S4: retired once this repo's dogfood and the
+    E2E fixtures were migrated): a diamond with no decisions has made none, and is in discover.
+    `migrate_phase.py` turns a recorded phase into the decisions it stood for."""
     made = {str(x["decision"]) for x in decisions_of(d)}
     if not made:
-        p = str(d.get("phase") or "discover").strip().lower()
-        return "complete" if p == "completed" else p
+        return "discover"
     if _scale(d) == "L0":
         return "deliver" if "state_purpose" in made else "discover"
     phase = "discover"
@@ -398,6 +399,16 @@ def phase_of(d: dict) -> str:
 
 def _phase(d: dict) -> str:
     return phase_of(d)
+
+
+def _phase_only_hint(d: dict) -> str:
+    """For a diamond that still records only a phase (v0.306.0): it reads as discover now, and the
+    migration says what it stood for."""
+    recorded = str(d.get("phase") or "discover").strip().lower()
+    if decisions_of(d) or recorded == "discover":
+        return ""
+    return (f". It records only `phase: {recorded}`, which is not read since v0.306.0: run "
+            "scripts/migrate_phase.py, which turns it into the decisions it stood for")
 
 
 def _history_has(d: dict, transition: str) -> bool:
@@ -936,7 +947,7 @@ class State:
         if phase not in phases:
             where = "Develop or Deliver" if stage == "build" else "Deliver"
             miss.append(f"{did}: in {where} (now `{phase or 'no phase'}`): {why}. Run "
-                        f"/mycelium:diamond-progress {did}")
+                        f"/mycelium:diamond-progress {did}" + _phase_only_hint(d))
         for g in gates.get(_scale(d), ()):
             why = self.gate_missing(d, g)
             if why:
@@ -1219,14 +1230,24 @@ def exposure_state(project_dir: str) -> tuple[bool, str]:
     """May it be put in front of real people? Since v0.295.0 (phase migration stage 2): when the
     project records exposures, under at least one CURRENT exposure record (DL-1365); until it
     records any, under an open L3/L4/L5 whose chain holds, in Deliver, with Security, Privacy and
-    Service Quality passed (the phase fallback, removed with the phase in stage 5)."""
+    Service Quality passed (the phase fallback, removed in v0.306.0: no record, no release)."""
     st = State(project_dir)
     any_records, current, reasons = current_exposures(st)
     if not any_records:
-        return _work_state(st, "expose")
+        if not st.active:
+            return _work_state(st, "expose")  # nothing engaged: says so, as before
+        return False, NO_EXPOSURE_RECORD
     if current:
         return True, "current exposure: " + ", ".join(_exposure_label(d, e) for d, e in current)
     return False, "no exposure record is current:\n  " + "\n  ".join(reasons)
+
+
+#: SINCE v0.306.0 A RELEASE NEEDS AN EXPOSURE RECORD (stage 5c, DL-1368 S4). Until then a project
+#: with none was judged on its phase (stage 2's fallback), which is no longer read.
+NO_EXPOSURE_RECORD = (
+    "No exposure record covers it: record who it reaches on the diamond carrying the work "
+    "(`exposures`: audience, channel, data class, until, consent, and the gates passed for it). "
+    "Since v0.306.0 the phase is not read, so there is no fallback to Deliver.")
 
 
 def _exposure_label(d: dict, e: dict) -> str:
@@ -1302,20 +1323,13 @@ def _release_decision(project_dir: str, what: str) -> tuple[str, str] | None:
     or ("deny", reason). DL-1365, option B: exactly one current exposure record allows it; with
     several the person is asked which (the dialog is yes or no, so what is logged is the set it was
     approved among, not the one meant); with none it is refused, naming why each record is not
-    current. A project with no exposure records keeps the phase check, and is told to record one."""
+    current. Since v0.306.0 a project with no exposure records is refused and told to record one."""
     st = State(project_dir)
     if not st.active:
         return None
     any_records, current, reasons = current_exposures(st)
     if not any_records:
-        ok, why = _work_state(st, "expose")
-        if not ok:
-            return "deny", (f"`{what[:80]}` puts the work in front of real people, and no "
-                            f"delivery cycle is ready for that:\n  {why}")
-        _log_release(project_dir, what, [], "allowed-by-phase")
-        return "allow", ("Mycelium: this release was allowed on the phase check. Record who it "
-                         "reaches as an exposure on its diamond (`exposures`: audience, channel, "
-                         "data class, until, consent, gates); the phase check goes in stage 5.")
+        return "deny", f"`{what[:80]}` puts the work in front of real people. {NO_EXPOSURE_RECORD}"
     if not current:
         return "deny", (f"`{what[:80]}` puts the work in front of real people, and no exposure "
                         "record covers it now:\n  " + "\n  ".join(reasons))
@@ -1625,7 +1639,24 @@ def _last_good(project_dir: str) -> dict:
         if isinstance(r, dict) and r.get("scale"):
             rows[did] = {**rows.get(did, {}), "id": did, "scale": r["scale"],
                          "phase": str(r.get("sig") or "discover").split("|")[0]}
+    # A row known only by its phase (the record's signature, or an unmigrated commit) gets the
+    # decisions that phase stands for: since v0.306.0 the phase is not read, and without this a
+    # repair of a broken file reads every diamond as discover and is refused as a move.
+    for row in rows.values():
+        if not decisions_of(row):
+            row["decisions"] = decisions_for(_scale(row), str(row.get("phase") or "discover"))
     return {"active_diamonds": list(rows.values())} if rows else {}
+
+
+def decisions_for(scale: str, phase: str) -> list[dict]:
+    """The decisions a diamond at `phase` has made (v0.306.0), undated: an L0 past discover has
+    stated its purpose; every other scale has made each move's decisions up to `phase`."""
+    p = "complete" if str(phase).strip().lower() == "completed" else str(phase).strip().lower()
+    if p not in PHASE_ORDER or p == "discover":
+        return []
+    if scale == "L0":
+        return [{"decision": "state_purpose"}]
+    return [{"decision": dec} for t in _crossed("discover", p) for dec in TRANSITION_DECISIONS[t]]
 
 
 def _closing_violations(st: State, new_doc: dict, old_active: dict) -> list[str]:
@@ -1724,8 +1755,9 @@ def violations_between(project_dir: str, before: str, after: str) -> list[str]:
         phase = phase_of(d)
         if phase != "discover":
             # v0.247.0: E2E run 11 wrote a new L3 straight into develop, so no transition ran.
-            miss.append(f"{d.get('id')}: born in discover (it is written as `{phase}`); later "
-                        "phases are reached through /mycelium:diamond-progress and their gates")
+            miss.append(f"{d.get('id')}: born in discover, with no decisions (it carries "
+                        f"decisions that put it in `{phase}`); decisions are recorded through "
+                        "/mycelium:diamond-progress and their gates")
         if miss:
             out.append(f"{d.get('id')} ({d.get('scale')}) cannot open yet:\n    - "
                        + "\n    - ".join(miss))

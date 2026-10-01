@@ -81,8 +81,18 @@ def test_every_decision_gate_is_a_defined_gate():
         assert set(rows) <= drift.GATE_KEYS
 
 
-def test_a_move_without_its_record_is_told_which_decisions_to_name(tmp_path):
-    d = {"id": "l0-a", "scale": "L0", "phase": "define",
-         "theory_gates_status": dict.fromkeys(sl.transition_gates("L0", "define->develop"), "pass")}
-    out = sl.State(str(tmp_path)).move_missing({**d, "phase": "develop"}, "define")
-    assert any("decisions: [start_experiment, commit_to_build]" in x for x in out)
+def test_a_move_recorded_as_decisions_is_its_own_record(tmp_path):
+    """Since v0.306.0 a move is the decisions it makes, and they are its record: with its gates
+    passed it needs no progression_history entry; with one missing it names the gate. Editing the
+    phase field alone is no move at all."""
+    gates = dict.fromkeys(sl.transition_gates("L3", "define->develop"), "pass")
+    d = {"id": "l3-a", "scale": "L3", "decisions": [{"decision": "set_target"}],
+         "theory_gates_status": gates}
+    moved = {**d, "decisions": [*d["decisions"], {"decision": "start_experiment"},
+                                {"decision": "commit_to_build"}]}
+    st = sl.State(str(tmp_path))
+    out = st.move_missing(moved, "define")
+    assert not any("progression_history" in x for x in out), out
+    gap = {**moved, "theory_gates_status": {**gates, "cynefin": "pending"}}
+    assert any("define->develop: the cynefin gate" in x for x in st.move_missing(gap, "define"))
+    assert st.move_missing({**d, "phase": "develop"}, "define") == [], "a phase edit moves nothing"

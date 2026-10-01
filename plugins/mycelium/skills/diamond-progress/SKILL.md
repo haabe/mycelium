@@ -236,8 +236,8 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
    **Record the decisions; they are where the diamond is (v0.305.0, phase migration stage 5b;
    DL-1368).** Append one `decisions` entry for each decision the move makes, with its gates and the
    date. Where a diamond is, is read from them (`scale_locks.phase_of`): develop needs both
-   `start_experiment` and `commit_to_build`. Until stage 5c retires the phase, set `phase` to match
-   in the same write; after it, the decisions are the only record. **An L0 does not move** (DL-1368
+   `start_experiment` and `commit_to_build`. Since v0.306.0 the decisions are the only record:
+   `phase` is not read, and may be kept as a label for people reading the file. **An L0 does not move** (DL-1368
    S2): when its purpose has been revisited (a re-derived `purpose_properties`, a changed `why`, the
    bar's own review date), record `review` with the L0 gates, and the ruling. A project whose
    diamonds still carry only a phase is offered `scripts/migrate_phase.py` by the next item.

@@ -32,6 +32,7 @@ make_cold_project() {
     mkdir -p "$tmp/.claude/diamonds" "$tmp/.claude/canvas" "$tmp/.claude/state"
     printf 'project_type: ""\ndogfood: false\nactive_diamonds: []\nlast_updated: null\n' \
         > "$tmp/.claude/diamonds/active.yml"
+        decide_file "$tmp/.claude/diamonds/active.yml"
     echo "$tmp"
 }
 
@@ -68,6 +69,7 @@ test_happy_path_chained_l3_allows() {
     { printf 'active_diamonds:\n'; ladder_diamonds opp-001
       printf '  - id: d-001\n    scale: L3\n    phase: develop\n    object_ref: sol-001\n    theory_gates_status: %s\n' "$BUILD_GATES"
     } > "$p/.claude/diamonds/active.yml"
+    decide_file "$p/.claude/diamonds/active.yml"
     local code; code=$(run_gate "$p" "$(write_json "$p/app/export.py")")
     assert_eq "$code" "0" "an open L3 whose chain holds -> new source allowed"
     rm -rf "$p"
@@ -81,6 +83,7 @@ test_bare_l3_after_start_blocks() {
         > "$p/.claude/canvas/purpose.yml"
     printf 'active_diamonds:\n  - id: d-001\n    scale: L3\n    phase: discover\n' \
         > "$p/.claude/diamonds/active.yml"
+        decide_file "$p/.claude/diamonds/active.yml"
     local code; code=$(run_gate "$p" "$(write_json "$p/app/export.py")")
     assert_eq "$code" "2" "an L3 with nothing above it but a purpose -> blocked"
     assert_contains "$(gate_err)" "desired outcome" "the block names the missing artefact"
@@ -106,6 +109,7 @@ test_only_l0_open_blocks_new_source() {
     local p; p=$(make_cold_project)
     printf 'active_diamonds:\n  - id: dia-001\n    scale: L0\n    phase: discover\n' \
         > "$p/.claude/diamonds/active.yml"
+        decide_file "$p/.claude/diamonds/active.yml"
     local code; code=$(run_gate "$p" "$(write_json "$p/app/cadence/approval.py")")
     assert_eq "$code" "2" "only L0 open (E2E run 9's state) -> blocked"
     assert_contains "$(gate_err)" "delivery-skip-ack" "the block names its escape hatch"
@@ -119,6 +123,7 @@ test_product_paths_gate_a_product_that_is_not_code() {
     local p; p=$(make_cold_project)
     printf 'product_paths: [pilot/, "course/**/*.docx"]\nactive_diamonds:\n  - id: dia-001\n    scale: L0\n    phase: discover\n' \
         > "$p/.claude/diamonds/active.yml"
+        decide_file "$p/.claude/diamonds/active.yml"
     local code
     code=$(run_gate "$p" "$(write_json "$p/pilot/03-client-agreement.md")")
     assert_eq "$code" "2" "a service document in product_paths, only L0 open -> blocked"
@@ -138,6 +143,7 @@ test_undeclared_product_paths_leave_documents_ungated() {
     local p; p=$(make_cold_project)
     printf 'active_diamonds:\n  - id: dia-001\n    scale: L0\n    phase: discover\n' \
         > "$p/.claude/diamonds/active.yml"
+        decide_file "$p/.claude/diamonds/active.yml"
     local code; code=$(run_gate "$p" "$(write_json "$p/pilot/03-client-agreement.md")")
     assert_eq "$code" "0" "undeclared -> a document is not gated"
     rm -rf "$p"
@@ -147,6 +153,7 @@ test_completed_l3_only_blocks() {
     local p; p=$(make_cold_project)
     printf 'active_diamonds:\n  - id: d-003\n    scale: L3\n    phase: complete\n' \
         > "$p/.claude/diamonds/active.yml"
+        decide_file "$p/.claude/diamonds/active.yml"
     local code; code=$(run_gate "$p" "$(write_json "$p/app/next.py")")
     assert_eq "$code" "2" "a completed L3 is not an open delivery cycle -> blocked"
     rm -rf "$p"
@@ -159,6 +166,7 @@ test_open_l4_allows() {
     { printf 'active_diamonds:\n'; ladder_diamonds opp-001
       printf '  - id: d-003\n    scale: L3\n    phase: complete\n    object_ref: sol-001\n    evidence_type: data-supported\n    learning_delivery:\n      audience: nine staff at one site, opted in\n      until: "2026-10-25"\n      means: by hand\n  - id: d-004\n    scale: L4\n    phase: develop\n    parent: d-003\n    theory_gates_status: %s\n' "$BUILD_GATES"
     } > "$p/.claude/diamonds/active.yml"
+    decide_file "$p/.claude/diamonds/active.yml"
     local code; code=$(run_gate "$p" "$(write_json "$p/app/rollout.py")")
     assert_eq "$code" "0" "an open L4 on an L3 at medium confidence -> allowed"
     rm -rf "$p"
@@ -168,6 +176,7 @@ test_l4_on_an_anecdotal_l3_blocks() {
     local p; p=$(make_chained_project)
     printf 'active_diamonds:\n  - id: d-003\n    scale: L3\n    phase: complete\n    object_ref: sol-001\n    evidence_type: anecdotal\n  - id: d-004\n    scale: L4\n    phase: develop\n    parent: d-003\n' \
         > "$p/.claude/diamonds/active.yml"
+        decide_file "$p/.claude/diamonds/active.yml"
     local code; code=$(run_gate "$p" "$(write_json "$p/app/rollout.py")")
     assert_eq "$code" "2" "an L4 whose L3 is only anecdotal -> blocked"
     assert_contains "$(gate_err)" "medium confidence" "the block names the confidence band"
@@ -178,6 +187,7 @@ test_delivery_ack_allows() {
     local p; p=$(make_cold_project)
     printf 'active_diamonds:\n  - id: dia-001\n    scale: L0\n    phase: discover\n' \
         > "$p/.claude/diamonds/active.yml"
+        decide_file "$p/.claude/diamonds/active.yml"
     printf '2026-09-24 user: "just a throwaway script, do not track it"\n' \
         > "$p/.claude/state/delivery-skip-ack"
     local code; code=$(run_gate "$p" "$(write_json "$p/scratch.py")")
@@ -243,6 +253,7 @@ test_project_under_a_dot_claude_ancestor_still_blocks() {
     local p="$base/.claude/jobs/probe/work"
     mkdir -p "$p/.claude/diamonds" "$p/.claude/canvas"
     : > "$p/.claude/diamonds/active.yml"
+    decide_file "$p/.claude/diamonds/active.yml"
     : > "$p/.claude/canvas/purpose.yml"
 
     local code

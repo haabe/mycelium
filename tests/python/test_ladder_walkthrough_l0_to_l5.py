@@ -19,6 +19,7 @@ import sys
 from pathlib import Path
 
 import yaml
+from decided import decided, decided_text
 
 ROOT = Path(__file__).resolve().parents[2]
 PLUGIN = ROOT / "plugins" / "mycelium"
@@ -60,7 +61,7 @@ class Project:
     def gate(self, diamonds: list[dict]) -> tuple[int, str]:
         payload = {"tool_name": "Write", "tool_input": {
             "file_path": str(self.active),
-            "content": yaml.safe_dump({**self.top, "active_diamonds": diamonds},
+            "content": yaml.safe_dump(decided({**self.top, "active_diamonds": diamonds}),
                                       sort_keys=False)}}
         env = {**os.environ, "CLAUDE_PROJECT_DIR": str(self.root),
                "CLAUDE_PLUGIN_ROOT": str(PLUGIN)}
@@ -73,7 +74,7 @@ class Project:
         rc, err = self.gate(diamonds)
         assert rc == 0, f"the gate refused a write the ladder allows:\n{err}"
         self.diamonds = diamonds
-        self.active.write_text(yaml.safe_dump({**self.top, "active_diamonds": diamonds},
+        self.active.write_text(yaml.safe_dump(decided({**self.top, "active_diamonds": diamonds}),
                                               sort_keys=False))
 
     def refused(self, diamonds: list[dict], because: str) -> None:
@@ -202,17 +203,21 @@ def _deliver_to_learn_then_open_l4(p: Project, root: Path, opps: dict) -> None:
     p.write(p.moved("l3", "deliver"))
     assert _proposed(root) != "deliver-l3:l3", "and not again once the L3 is in Deliver"
     ok, why = sl.exposure_state(str(root))
-    assert not ok and "learning_delivery" in why, "no audience recorded, nobody meets it"
-    p.write([{**d, "learning_delivery": {
-        "audience": "Harbour's nine staff, opted in by the site lead",
-        "until": "2026-10-25",
-        "means": "infrastructure as code: one environment, torn down after the trial"}}
+    assert not ok and "No exposure record covers it" in why, "no audience recorded, nobody meets it"
+    # v0.306.0: the learning delivery is recorded as an exposure (the phase is not read, and a
+    # release needs a current record: who, by what channel, what data, until when, consent, gates).
+    p.write([{**d, "exposures": [{
+        "recorded_at": DAY, "audience": "Harbour's nine staff, opted in by the site lead",
+        "channel": "infrastructure as code: one environment, torn down after the trial",
+        "data_class": "personal", "until": "2026-10-25", "consent": "opt-in note signed",
+        "gates": {"security": "pass", "privacy": "pass", "service_quality": "pass",
+                  "regulatory": "pass"}}]}
         if d["id"] == "l3" else d for d in p.diamonds])
     assert sl.exposure_state(str(root))[0], "the learning build may meet its audience"
     assert _proposed(root) != "door-l4:l3", "no L4 door while the trial has not read out"
     # v0.274.0 (E2E service world run 4): a delivery that has not started is offered its start.
     assert _proposed(root) == "start-l3:l3", "the test's start is proposed"
-    p.write([{**d, "learning_delivery": {**d["learning_delivery"], "started": "2026-09-26"}}
+    p.write([{**d, "exposures": [{**d["exposures"][0], "started": "2026-09-26"}]}
              if d["id"] == "l3" else d for d in p.diamonds])
     assert _proposed(root) != "start-l3:l3", "and not once it has started"
     # v0.268.0: once the delivery has run its course, the verdict is asked for wherever the result
@@ -266,7 +271,7 @@ def _audience_changes_then_the_l3_ends(p: Project, root: Path, l4: dict) -> None
 
     def audience(who: str, **change) -> list[dict]:
         ld = {"audience": who, "changes": [{"on": DAY, "audience_was": was, **change}]}
-        return [{**d, "learning_delivery": {**d["learning_delivery"], **ld}}
+        return [{**d, "exposures": [{**d["exposures"][0], **ld}]}
                 if d["id"] == "l3" else d for d in p.diamonds]
     p.refused(audience("every Harbour customer", kind="everyone"), "L4's")
     p.write(audience("Harbour's and Quay's staff, opted in", kind="widened",
@@ -275,9 +280,9 @@ def _audience_changes_then_the_l3_ends(p: Project, root: Path, l4: dict) -> None
     assert _proposed(root) != "door-l4:l3", "and not again once the L4 is open"
 
     # The L3 completes by saying how its learning delivery ended: here, handed to the L4.
-    p.refused(p.moved("l3", "complete"), "learning_delivery.ended")
+    p.refused(p.moved("l3", "complete"), "exposures[].ended")
     ended = {"how": "handed_to_l4", "on": DAY, "l4": "l4"}
-    p.write([{**d, "learning_delivery": {**d["learning_delivery"], "ended": ended}}
+    p.write([{**d, "exposures": [{**d["exposures"][0], "ended": ended}]}
              if d["id"] == "l3" else d for d in p.moved("l3", "complete")])
 
 
@@ -286,7 +291,14 @@ def _ship_and_open_l5(p: Project, root: Path) -> None:
     # L4 ships: through define and develop into deliver, gates passed at every step.
     for phase in ("define", "develop", "deliver"):
         p.write(p.moved("l4", phase))
-    assert sl.exposure_state(str(root))[0], "a shipped L4 may meet real people"
+    assert not sl.exposure_state(str(root))[0], "v0.306.0: in Deliver is not enough; who it reaches"
+    p.write([{**d, "exposures": [{
+        "recorded_at": DAY, "audience": "every Harbour customer", "channel": "the production app",
+        "data_class": "personal", "until": "2027-12-31", "consent": "terms of service",
+        "gates": {"security": "pass", "privacy": "pass", "service_quality": "pass",
+                  "regulatory": "pass"}}]}
+        if d["id"] == "l4" else d for d in p.diamonds])
+    assert sl.exposure_state(str(root))[0], "a shipped L4 with its exposure recorded may meet people"
 
     # L5 opens on the shipped L4 plus launch data; the shipped L4 is the L5 door's event (v0.254.0).
     # v0.282.0 (E2E relay on 0.280.0): Deliver is not released. Until a release is recorded the

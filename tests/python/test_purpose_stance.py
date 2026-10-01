@@ -22,6 +22,7 @@ from pathlib import Path
 
 import pytest
 import yaml
+from decided import decided, decided_text
 
 SCRIPT = Path(__file__).resolve().parents[2] / "plugins/mycelium/scripts/check_purpose_stance.py"
 
@@ -327,7 +328,8 @@ def _diamonds(canvas, *diamonds):
     d = canvas.parent / "diamonds"
     d.mkdir(exist_ok=True)
     (d / "active.yml").write_text(
-        yaml.safe_dump({"active_diamonds": list(diamonds)}, allow_unicode=True, sort_keys=False)
+        yaml.safe_dump(decided({"active_diamonds": list(diamonds)}), allow_unicode=True,
+                       sort_keys=False)
     )
     return d / "active.yml"
 

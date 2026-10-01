@@ -18,14 +18,19 @@ SCRIPTS = Path(__file__).resolve().parents[2] / "plugins" / "mycelium" / "script
 sys.path.insert(0, str(SCRIPTS))
 import scale_locks as sl  # noqa: E402
 
-BEFORE = """active_diamonds:
+#: In develop by their decisions (v0.306.0: the phase is not read). A move adds the next decision.
+DEV = "decisions: [{decision: set_target}, {decision: start_experiment}, {decision: commit_to_build}]"
+BEFORE = f"""active_diamonds:
   - id: l4-a
     scale: L4
     phase: develop
+    {DEV}
   - id: l5-a
     scale: L5
     phase: develop
+    {DEV}
 """
+RELEASED = DEV[:-1] + ", {decision: release}]"
 
 
 def _project(tmp_path: Path, text: str = BEFORE) -> Path:
@@ -37,7 +42,8 @@ def _project(tmp_path: Path, text: str = BEFORE) -> Path:
 def _move(tmp_path: Path, diamond: str, to: str, mode: str | None = "default") -> dict:
     target = tmp_path / ".claude" / "diamonds" / "active.yml"
     old = f"  - id: {diamond}\n" + target.read_text().split(f"  - id: {diamond}\n", 1)[1].split("  - id:")[0]
-    new = old.replace("phase: develop", f"phase: {to}")
+    new = old.replace("phase: develop", f"phase: {to}").replace(
+        DEV, RELEASED[:-1] + (", {decision: close}]" if to == "complete" else "]"))
     payload = {"tool_name": "Edit", "tool_input": {"file_path": str(target), "old_string": old,
                                                    "new_string": new}}
     if mode is not None:
@@ -73,8 +79,9 @@ def test_on_codex_it_is_refused(tmp_path, capsys, monkeypatch):
 
 def test_control_an_l5_already_delivering_is_not_asked_again(tmp_path, capsys, monkeypatch):
     monkeypatch.delenv("MYCELIUM_RUNTIME", raising=False)
-    p = _project(tmp_path, BEFORE.replace("  - id: l5-a\n    scale: L5\n    phase: develop",
-                                          "  - id: l5-a\n    scale: L5\n    phase: deliver"))
+    released = BEFORE.split("  - id: l5-a\n")
+    p = _project(tmp_path, released[0] + "  - id: l5-a\n"
+                 + released[1].replace("phase: develop", "phase: deliver").replace(DEV, RELEASED))
     target = p / ".claude" / "diamonds" / "active.yml"
     payload = {"tool_name": "Edit", "permission_mode": "default", "tool_input": {
         "file_path": str(target), "old_string": "    phase: deliver\n",

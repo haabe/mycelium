@@ -10,6 +10,8 @@ set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/_assert.sh"
 
+source "$SCRIPT_DIR/_ladder.sh"
+
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 GATE="$REPO_ROOT/plugins/mycelium/hooks/scale-lock-gate.sh"
 ERR="$(mktemp)"
@@ -26,6 +28,7 @@ make_project() {  # purpose stated, nothing below it: the state /mycelium:start 
     printf 'why: "Swaps are approved in one place so nobody relays them"\nwho:\n  description: "Shift leads"\n' \
         > "$p/.claude/canvas/purpose.yml"
     printf 'active_diamonds:\n  - id: l0\n    scale: L0\n    phase: discover\n' > "$p/.claude/diamonds/active.yml"
+    decide_file "$p/.claude/diamonds/active.yml"
     echo "$p"
 }
 
@@ -72,6 +75,7 @@ test_existing_diamond_edit_never_blocks() {
     # Its entry lock is never re-judged on edit; an edit that leaves the phase alone passes.
     local p; p=$(make_project)
     printf "$L0"'  - id: l4-old\n    scale: L4\n    phase: develop\n' > "$p/.claude/diamonds/active.yml"
+    decide_file "$p/.claude/diamonds/active.yml"
     local code; code=$(run_gate "$p" "$(write_active "$p" "$(printf "$L0"'  - id: l4-old\n    scale: L4\n    phase: develop\n    notes: renamed\n')")")
     assert_eq "$code" "0" "editing an existing (pre-lock) L4 without moving it -> allowed; --check reports it"
     rm -rf "$p"
@@ -81,9 +85,12 @@ test_forward_move_without_record_blocks() {
     # v0.248.0: a forward phase move needs its transition gates and a progression_history entry.
     local p; p=$(make_project)
     printf "$L0"'  - id: l4-old\n    scale: L4\n    phase: develop\n' > "$p/.claude/diamonds/active.yml"
-    local code; code=$(run_gate "$p" "$(write_active "$p" "$(printf "$L0"'  - id: l4-old\n    scale: L4\n    phase: deliver\n')")")
-    assert_eq "$code" "2" "moving an L4 to deliver with no gates and no history -> blocked"
-    assert_contains "$(cat "$ERR")" "progression_history" "names the missing record"
+    decide_file "$p/.claude/diamonds/active.yml"
+    # v0.306.0: the move is the decisions it records (the phase is not read), judged on its gates.
+    local moved='    decisions: [{decision: set_target}, {decision: start_experiment}, {decision: commit_to_build}, {decision: release}]\n'
+    local code; code=$(run_gate "$p" "$(write_active "$p" "$(printf "$L0"'  - id: l4-old\n    scale: L4\n    phase: deliver\n'"$moved")")")
+    assert_eq "$code" "2" "moving an L4 to deliver with no gates -> blocked"
+    assert_contains "$(cat "$ERR")" "gate passed" "names the missing gates"
     rm -rf "$p"
 }
 

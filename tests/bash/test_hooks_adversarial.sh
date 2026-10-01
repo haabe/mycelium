@@ -111,6 +111,7 @@ printf 'why: We help hikers decide with real trail conditions.\n' > "$D/.claude/
 # open delivery-scale diamond (the process-cliff gate). It passes once an L3 is open.
 assert_eq "$(run discovery-gate.sh "$D" "$(w "$D/src/app2.py" x)")" BLOCK "disc: a real purpose with no L3/L4/L5 blocks (delivery gate)"
 printf 'active_diamonds:\n  - id: d-003\n    scale: L3\n    phase: discover\n' > "$D/.claude/diamonds/active.yml"
+decide_file "$D/.claude/diamonds/active.yml"
 # CHANGED again in v0.245.0 (entry locks): an L3 with only a purpose above it is not a delivery
 # cycle; the chain needs who, a desired outcome and a target opportunity with evidence.
 assert_eq "$(run discovery-gate.sh "$D" "$(w "$D/src/app2.py" x)")" BLOCK "disc: a purpose and a bare L3 still blocks (entry locks)"
@@ -118,9 +119,11 @@ printf 'why: We help hikers decide with real trail conditions.\nwho:\n  descript
 write_ladder "$D"
 printf 'desired_outcome:\n  metric: hikes planned on current conditions\n%s\nopportunities:\n  - id: opp-1\n    name: stale reports\n    provenance:\n      evidence_type: anecdotal\n      evidence_sources: [a hiker interview]\n' "$OUTCOME_LINK" > "$D/.claude/canvas/opportunities.yml"
 { printf 'active_diamonds:\n'; ladder_diamonds opp-1; printf '  - id: d-003\n    scale: L3\n    phase: discover\n    object_ref: opp-1\n'; } > "$D/.claude/diamonds/active.yml"
+decide_file "$D/.claude/diamonds/active.yml"
 # v0.246.0: the chain holds, but code is built in Develop, behind Four Risks and Privacy.
 assert_eq "$(run discovery-gate.sh "$D" "$(w "$D/src/app2.py" x)")" BLOCK "disc: a chained L3 still in discover blocks (phase follows the work)"
 { printf 'active_diamonds:\n'; ladder_diamonds opp-1; printf '  - id: d-003\n    scale: L3\n    phase: develop\n    object_ref: opp-1\n    theory_gates_status: %s\n' "$BUILD_GATES"; } > "$D/.claude/diamonds/active.yml"
+decide_file "$D/.claude/diamonds/active.yml"
 assert_eq "$(run discovery-gate.sh "$D" "$(w "$D/src/app2.py" x)")" "ALLOW(rc=0)" "disc: a chained L3 in develop with its gates passed allows"
 assert_eq "$(run gate.sh "$D" "$(w "$D/.claude/state/scale-lock-ack" "d-009 agent wrote this")")" ASK "D10c agent writing the scale-lock ack asks the human"
 assert_eq "$(run gate.sh "$D" "$(w "$D/.claude/state/delivery-skip-ack" "agent wrote this")")" ASK "D10b agent writing the delivery ack asks the human"
@@ -137,6 +140,7 @@ assert_eq "$(run gate.sh "$B" "$(w "$B/.claude/state/brownfield-ack" "user said 
 
 # ================================================================ autonomous-evidence-guard
 A="$TMP/auto"; mkdir -p "$A/.claude/diamonds" "$A/.claude/canvas"; printf 'autonomous: true\n' > "$A/.claude/diamonds/active.yml"
+decide_file "$A/.claude/diamonds/active.yml"
 C="$A/.claude/canvas/opportunities.yml"
 assert_eq "$(run autonomous-evidence-guard.sh "$A" "$(w "$C" '- id: o1\n  source_class: external_human')")" BLOCK "auto control"
 for v in '- source_class: external_human\n  id: o1' '- {id: o1, source_class: external_human}' '- id: o1\n  \"source_class\": external_human' '- id: o1\n  source_class: |\n    external_human' '- &a external_human\n- id: o1\n  source_class: *a' '- id: o1\n  source_class : external_human' '[{\"id\":\"o1\",\"source_class\":\"external_human\"}]' '- id: o1\n  source_class: !!str external_human' '- id: o1\n  ? evidence_type\n  : anecdotal' '- id: o1\n  validated: True' '- id: o1\n  validated: yes' '- id: o1\n  evidence_type: Anecdotal'; do
