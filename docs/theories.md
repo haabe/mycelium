@@ -2,7 +2,7 @@
 
 **Audience**: practitioner peers (PMs, senior engineers, designers, researchers) who want to know which frameworks Mycelium uses and how each one is wired in.
 **Time to read**: 15 min for full read; 2 min if you only want the table.
-**Last updated**: 2026-06-18.
+**Last updated**: 2026-10-01.
 
 The differentiator vs other framework lists: every theory is **mechanism-mapped** — the column "Implemented as" answers "which Mycelium artifact actually applies this?" Citations without mechanism-mapping are theatre.
 
@@ -24,7 +24,7 @@ The OST is the bridge from L2 Opportunity to L3 Solution: opportunities are deco
 
 ### Cagan — Inspired / Empowered (four risks)
 
-Value, Usability, Feasibility, Viability. Every leaf must show evidence on each; **gate 2 fires at Define→Develop and Develop→Deliver across L1-L4** (previously stated here as "before advancing out of L3", which understates its range). The gate's evidence source is the **solution leaf's `four_risks` block** in `canvas/opportunities.yml` — per-leaf, not per-opportunity. Mycelium's "canvas IS the spec" is an *analogical extension* of Cagan's "prototype IS the spec" (his claim is about high-fidelity discovery prototypes, not a YAML canvas — plausible, but Mycelium's framing, not a verbatim Cagan mechanism). Implemented as: gate 2 (Four Risks), `/assumption-test`, leaf-lifecycle.md phase 2.
+Value, Usability, Feasibility, Viability. Every leaf must show evidence on each; **gate 2 is required before `commit_to_build` and `release` across L1-L4** (said until v0.309.5 as the phase moves Define→Develop and Develop→Deliver, and before that as "before advancing out of L3", which understated its range). The gate's evidence source is the **solution leaf's `four_risks` block** in `canvas/opportunities.yml` — per-leaf, not per-opportunity. Mycelium's "canvas IS the spec" is an *analogical extension* of Cagan's "prototype IS the spec" (his claim is about high-fidelity discovery prototypes, not a YAML canvas — plausible, but Mycelium's framing, not a verbatim Cagan mechanism). Implemented as: gate 2 (Four Risks), `/assumption-test`, leaf-lifecycle.md phase 2.
 
 ### Wardley — Mapping
 
@@ -32,7 +32,7 @@ Strategic landscape with evolution stages (Genesis → Custom → Product → Co
 
 ### Cynefin (Snowden) — Domain classification
 
-Clear / Complicated / Complex / Chaotic / Confused. Determines which methods apply (best-practice vs good-practice vs probe-sense-respond). Cynefin drives **method-appropriateness**, not diamond count: **Gate 4 (Cynefin)** requires a populated classification, fails a Complex problem treated as Clear or any attempt to plan/predict outcomes in a complex domain, and requires probe-sense-respond **experiment / assumption-test evidence** for a Complex classification before Define→Develop (a Complex problem may not pass on classification alone). Design routing follows at `leaf-lifecycle.md` Phase 6 (Clear/Complicated → standard patterns; Complex → experiment, not full solution; Chaotic → stabilize first). (Corrected v0.55.2: previously claimed "complex domains get more diamond depth, clear domains skip scales" — Mycelium does NOT add or skip diamond scales by domain, and skipping evidence gates on a "Clear" classification would be dangerous under mis-classification; rigor scales by *method + the Complex experiment requirement*, not by scale count.) Implemented as: `/cynefin-classify`, gate 4 (Cynefin) at Define→Develop, routing at `leaf-lifecycle.md` Phase 6.
+Clear / Complicated / Complex / Chaotic / Confused. Determines which methods apply (best-practice vs good-practice vs probe-sense-respond). Cynefin drives **method-appropriateness**, not diamond count: **Gate 4 (Cynefin)** requires a populated classification, fails a Complex problem treated as Clear or any attempt to plan/predict outcomes in a complex domain, and requires probe-sense-respond **experiment / assumption-test evidence** for a Complex classification before the move that records `start_experiment` and `commit_to_build` (a Complex problem may not pass on classification alone). Design routing follows at `leaf-lifecycle.md` Phase 6 (Clear/Complicated → standard patterns; Complex → experiment, not full solution; Chaotic → stabilize first). (Corrected v0.55.2: previously claimed "complex domains get more diamond depth, clear domains skip scales" — Mycelium does NOT add or skip diamond scales by domain, and skipping evidence gates on a "Clear" classification would be dangerous under mis-classification; rigor scales by *method + the Complex experiment requirement*, not by scale count.) Implemented as: `/cynefin-classify`, gate 4 (Cynefin) at `start_experiment`, routing at `leaf-lifecycle.md` Phase 6.
 
 ### Forsgren / Humble / Kim — DORA
 
@@ -90,7 +90,8 @@ Each one shapes a specific surface; removable in isolation, but the surface goes
 | Privacy by Design | Cavoukian | `canvas/privacy-assessment.yml`, `/privacy-check` (gate 7) |
 | Loved | Lauchengco | `canvas/go-to-market.yml`, `/launch-tier` (L5) |
 | BVSSH | Smart | `canvas/bvssh-health.yml`, `/bvssh-check` (gate 8 Outcomes) |
-| Build to Learn vs Build to Earn | Patton, Cagan | Discovery diamonds (L0–L3) = build-to-learn; delivery diamonds (L4–L5) = build-to-earn. **Enforced by the `/define-done` build-mode gate (v0.55.0, agent-adjudicated at diamond birth) + a `/canvas-health` step-8c earn-verb lint backstop that fires unconditionally: a build-to-learn diamond's DoD `outcome` may not be earn-shaped (the ship IS the done-bar, or scope is all-users/production) — the "earn the right to start" refusal from `philosophy.md`. The discriminator is the done-bar, not the word "ship" (fake-door / opt-in prototypes are ship-to-learn and pass).** G-M2 separately guards experiment audience-scope. (Corrected 2026-07-01: previously said "enforced via G-M2 + define-done/DoD", but G-M2 is an off-target NUDGE and define-done had no mode-awareness — it was prose-only.) |
+| Build to Learn vs Build to Earn | Patton, Cagan | Discovery diamonds (L0–L3) = build-to-learn; delivery diamonds (L4–L5) = build-to-earn. **Enforced by the `/define-done` build-mode gate (v0.55.0, agent-adjudicated at diamond birth) + a `/canvas-health` step-8c earn-verb lint backstop that fires unconditionally: a build-to-learn diamond's DoD `outcome` may not be earn-shaped (the ship IS the done-bar, or scope is all-users/production) — the "earn the right to start" refusal from `philosophy.md`. The discriminator is the done-bar, not the word "ship" (fake-door / opt-in prototypes are ship-to-learn and pass).** G-M2 separately guards experiment audience-scope. **Within any diamond the mode is read off its decisions** (DL-1368, v0.306.0): discovery, build to learn, until it records `commit_to_build`; delivery, build to earn, after. The DoD gate above keys to the diamond's scale; the mode keys to where the diamond is in its loop. (Corrected 2026-07-01: previously said "enforced via G-M2 + define-done/DoD", but G-M2 is an off-target NUDGE and define-done had no mode-awareness — it was prose-only.) |
+| Dual-track discovery and delivery | Patton, Cagan | The two modes, discovery and delivery, run in parallel across a project: one diamond can be in discovery while another delivers. A diamond's mode is read off its recorded decisions (`scripts/scale_locks.py`), never declared, and `/diamond-render` draws each diamond's decisions grouped by mode. The switch at `commit_to_build` is Mycelium's rule (DL-1368 S1), not Patton's or Cagan's |
 | Cognitive Forcing Functions | Buçinca, Malaya, Gajos | `/diamond-assess` step 0 + `/diamond-progress` — human articulates unprimed judgment before the agent shows gate verdicts |
 | Theory of Constraints | Goldratt | `value-stream.yml`, bottleneck identification at L4 |
 | Three Ways / Five Ideals | Kim | Three Ways map the four feedback-loop speeds (`engine/feedback-loops.md`); Five Ideals = L4 prose checklist in `domains/delivery/CLAUDE.md` (principle-text, not a gate) |
@@ -98,7 +99,7 @@ Each one shapes a specific surface; removable in isolation, but the surface goes
 | Double-loop learning | Argyris | The named ground for the fractal double-loop architecture (philosophy.md) and the corrections→cluster→mechanism graduation cycle; sourced in guardrail G-P7 (`guardrails-core.md`) |
 | Domain-Driven Design | Evans | `canvas/bounded-contexts.yml` (L3→L4 boundary) |
 | Lean UX | Gothelf, Seiden | Hypothesis-driven design feeds `/assumption-test` |
-| Toyota Kata | Rother | Coaching-question shape in `/diamond-assess` |
+| Toyota Kata | Rother | The loop every scale below purpose runs starts from his improvement kata: a target condition, then experiments toward it (`set_target`, `start_experiment`; DL-1366). Committing to build, releasing and closing are Mycelium's additions, as is recording each experiment by appending and never editing (DL-1373). Also the coaching-question shape in `/diamond-assess` |
 | Architecture Decision Records | Nygard | `decision-log.md` shape (with contrastive `why_not_alternatives`, Liao et al. extension) |
 
 ## Tier 3 — Background theories (citation-only)
