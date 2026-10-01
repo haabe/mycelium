@@ -4,6 +4,38 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-01.
 
+## v0.307.5 - the release path's judgement (control audit, batch 1c)
+
+**2026-10-01.** Third safety-hardening batch (DL-1370); with it, batch 1 (the release path) is done.
+Each gap was reproduced on 0.307.4, and each new test fails there. **Upgrade.**
+
+- **Closing an L5 that already delivers asks the person** (K2). 0.292.0 claimed the L5
+  human-approval floor asks for a move "into deliver or complete"; an L5 already in deliver read as
+  already launched, so closing it, in place or into `completed_diamonds`, asked no one. Both
+  crossings ask now. Its control had moved develop -> complete in one write, so the ask came from
+  the deliver crossing and the gap never showed.
+- **A widening is judged once the L3 reaches people, or may** (F1, ruling b: "every widening"). The
+  audience, end date, channel and data checks ran only after the L3 recorded `release`, while an
+  exposure record that is current already lets the work be released. They now run when the L3 has
+  released, its delivery has `started`, or a running exposure record of it is current. A record
+  that is neither is a plan, and changing a plan is still not a widening.
+- **The Develop trial is an exposure** (F2, ruling a, 2026-09-30). 0.284.0 carved the trial the L3's
+  Develop -> Deliver gate asks for out as "Develop's own evidence, not a release"; the prompt line,
+  the next item and theory-gates now say it is an exposure, recorded first, with its gates sized to
+  the named people in it (a mock with only made-up data is recorded as `data_class: synthetic`).
+- **The prompt line and the change line read readiness as the release gate does** (P9): a current
+  exposure record. They kept the pre-0.295 diamond rule, so they stayed silent in states the gate
+  refuses (a record without consent or data class; an L4 delivering with no record), and they are
+  the only guard when someone else deploys. Four existing tests used a "ready" fixture whose record
+  the gate already refused; their fixture now carries a complete record.
+- **The exposure report counts an L4 or L5 that records `released_on`** with no `release` decision
+  (release-family G9 of the audit, omitted from the addendum's list by mistake).
+- **Alternatives considered:** judging a widening of any recorded exposure, current or not (it would
+  refuse changes to a plan, the model 0b-2 rejected); keeping the trial carve-out and recording the
+  trial optionally (ruling a decided it is an exposure; optional records are the records that are
+  missing); giving the prompt line its own readiness rule (two readings of one question disagreed for
+  six releases; it now calls the gate's).
+
 ## v0.307.4 - shell and file-move paths to the diamonds file (control audit, batch 1b)
 
 **2026-10-01.** Second safety-hardening batch (DL-1370). Each gap was reproduced on 0.307.3, and

@@ -650,7 +650,9 @@ def test_a_write_that_ends_exposure_is_said_at_once(tmp_path):
     """v0.279.0, E2E rung L4-open on 0.278.0: one turn completed the L3 as handed to a new L4 in
     discover, and the builder then called the founder's public launch post "ready to post". The
     exposure line speaks only at a prompt; the state flipped inside the turn."""
-    live = _l3(phase="deliver", gates=EXPOSE_PASSED, learning=LEARNING)
+    # v0.307.5: "ready" is a current exposure record, as the release gate reads it (audit P9);
+    # the record here used to lack consent, data class and its gates, so the gate already refused.
+    live = _l3(phase="deliver", gates=EXPOSE_PASSED, learning=LEARNING, record=RECORD)
     p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), diamonds=[live])
     assert sl.exposure_change_line(p) == "", "the first reading only sets the baseline"
     assert sl.exposure_change_line(p) == "", "control: still ready, nothing to say"
@@ -671,7 +673,7 @@ def test_the_prompt_line_sets_the_baseline_a_write_is_judged_against(tmp_path):
     """Control: with no prompt-time or earlier reading, a not-ready state claims no change."""
     p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), diamonds=[_l3()])
     assert sl.exposure_change_line(p) == ""
-    live = _l3(phase="deliver", gates=EXPOSE_PASSED, learning=LEARNING)
+    live = _l3(phase="deliver", gates=EXPOSE_PASSED, learning=LEARNING, record=RECORD)  # a current record (v0.307.5)
     q = _project(tmp_path / "q", purpose=PURPOSE, opps=_full_opps(), diamonds=[live])
     assert sl.exposure_line(q, {"session_id": "s1", "prompt": "hi"}) == ""
     assert (Path(q) / sl.EXPOSURE_LAST).read_text().strip() == "ready"
@@ -817,7 +819,10 @@ def test_a_diamond_is_born_in_discover(tmp_path):
 
 
 def test_the_agent_is_told_at_the_prompt_when_the_work_may_not_meet_people(tmp_path):
-    p = _project(tmp_path, PURPOSE, _full_opps(), [_l3(phase="develop", gates=BUILD_PASSED)])
+    # v0.307.5: what is missing is read off the exposure record, as the release gate reads it
+    pending = {**RECORD, "gates": {**RECORD["gates"], "security": "pending"}}
+    p = _project(tmp_path, PURPOSE, _full_opps(),
+                 [_l3(phase="develop", gates=BUILD_PASSED, record=pending)])
     line = sl.exposure_line(p, {"session_id": "s1", "prompt": "morning"}, today="2026-10-28")
     assert line.startswith("MYCELIUM EXPOSURE STATE")
     assert "a deploy someone else does" in line and "security" in line
@@ -845,24 +850,25 @@ def test_go_live_means_an_act_of_exposure_not_a_topic_word():
         assert not sl._GO_LIVE.search(prompt), prompt
 
 
-def test_in_develop_the_outside_trial_its_gate_asks_for_is_not_exposure(tmp_path):
+def test_in_develop_the_outside_trial_its_gate_asks_for_is_an_exposure_to_record(tmp_path):
     """v0.284.0, E2E relay on 0.283.0: the Develop -> Deliver gate asked for one trial outside the
     team, this line said nothing built may meet anyone, and the builder refused to let one tester
-    paste a recipe into the page. The gate could only pass by the founder going around Mycelium."""
+    paste a recipe into the page; 0.284.0 carved the trial out as "not a release". Ruling (a),
+    2026-09-30 (v0.307.5): the trial IS an exposure, allowed by recording it first."""
     dev = _project(tmp_path / "a", PURPOSE, _full_opps(),
                    [_l3(phase="develop", gates=BUILD_PASSED)])
     line = sl.exposure_line(dev, {"session_id": "s1", "prompt": "morning"}, today="2026-10-28")
-    assert "Develop's own evidence, not a release" in line
-    # Control: in Deliver the trial is past; what is missing there is the delivery's own gates.
+    assert "is an exposure: record it" in line and "not a release" not in line
+    # Control: in Deliver the trial is past; what is missing there is the delivery's own record.
     dlv = _project(tmp_path / "b", PURPOSE, _full_opps(),
                    [_l3(phase="deliver", gates=BUILD_PASSED)])
     line = sl.exposure_line(dlv, {"session_id": "s1", "prompt": "morning"}, today="2026-10-28")
-    assert line.startswith("MYCELIUM EXPOSURE STATE") and "Develop's own evidence" not in line
+    assert line.startswith("MYCELIUM EXPOSURE STATE") and "is an exposure: record it" not in line
 
 
 def test_silent_when_ready_or_when_nothing_delivers(tmp_path):
     ready = _project(tmp_path / "a", PURPOSE, _full_opps(),
-                     [_l3(phase="deliver", gates=EXPOSE_PASSED, learning=LEARNING)])
+                     [_l3(phase="deliver", gates=EXPOSE_PASSED, learning=LEARNING, record=RECORD)])  # current record (v0.307.5)
     assert sl.exposure_line(ready, {"prompt": "deploy it"}) == ""
     none = _project(tmp_path / "b", PURPOSE, _full_opps())
     assert sl.exposure_line(none, {"prompt": "deploy it"}) == ""
