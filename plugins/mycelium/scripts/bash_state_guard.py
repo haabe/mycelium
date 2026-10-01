@@ -28,6 +28,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import os
+import re
 import shutil
 import sys
 import time
@@ -41,6 +42,14 @@ ACTIVE_REL = ".claude/diamonds/active.yml"
 STATE_REL = Path(".claude") / "state" / "bash-guard"
 # Mycelium's own writers of diamond state; migrate_phase.py since v0.303.0 (DL-1368 S3).
 ALLOWED_WRITERS = ("derive_closing_path.py", "migrate_phase.py")
+# v0.307.4 (control audit P7, DL-1370): one of them, run on its own. Until then the check was a
+# substring of the whole command, so `cp new.yml active.yml  # then run migrate_phase.py` passed.
+_OWN_WRITER = re.compile(
+    r"\s*(?:\S*python3?(?:\.\d+)?\s+)?\"?[^\s;&|<>`$()\"]*?(?:"
+    + "|".join(re.escape(w) for w in ALLOWED_WRITERS)
+    + r")\"?(?:\s+[^;&|<>`$()\n]*)?\s*")
+# v0.307.4 (P8): moving the file away removes every diamond's record, as `rm` does (refused).
+_MOVES_ACTIVE = re.compile(r"\b(?:git\s+)?mv\b[^;&|\n]*diamonds/active\.yml")
 
 
 def _load(name: str):
@@ -53,9 +62,36 @@ def _load(name: str):
     return mod
 
 
+def _without_comments(cmd: str) -> str:
+    """The command with its shell comments removed, quotes respected (v0.307.4): a trailing
+    `# ... migrate_phase.py` was read as `cp`'s destination, hiding the real one."""
+    out, quote, prev = [], "", " "
+    for line in cmd.splitlines(keepends=True):
+        skipping = False
+        for ch in line:
+            if skipping:
+                if ch == "\n":
+                    out.append(ch)
+                continue
+            if quote:
+                quote = "" if ch == quote else quote
+            elif ch in "'\"":
+                quote = ch
+            elif ch == "#" and prev.isspace():
+                skipping = True
+                continue
+            out.append(ch)
+            prev = ch
+        prev = " "
+    return "".join(out)
+
+
 def writes_active(cmd: str, project: str) -> bool:
     """Does this command visibly write diamonds/active.yml?"""
-    if any(w in cmd for w in ALLOWED_WRITERS):
+    cmd = _without_comments(cmd)
+    if _MOVES_ACTIVE.search(cmd):
+        return True
+    if _OWN_WRITER.fullmatch(cmd):
         return False
     scan = hi.bash_write_targets(cmd, project)
     if any(t.inside and t.rel == ACTIVE_REL for t in scan.targets):
@@ -116,9 +152,23 @@ def _diamond_problems(project: Path, state: Path, session: str) -> list[str]:
     if sl is None:
         return ["diamonds/active.yml changed and the scale locks could not be loaded"]
     try:
-        return sl.violations_between(str(project), before, active.read_text(encoding="utf-8"))
+        after = active.read_text(encoding="utf-8")
+        out = sl.violations_between(str(project), before, after)
     except sl.UnreadableError as exc:
         return [f"diamonds/active.yml does not parse after the command: {exc}"]
+    # v0.307.4 (control audit P6): the L5 floor and the personal-data confirmation ran only on the
+    # edit tools, where the person is asked. A shell write cannot ask after the fact; it is told.
+    moved, personal = sl.launch_moves(before, after), sl.new_person_exposures(before, after)
+    if moved:
+        out.append(f"it moved {', '.join(moved)} (L5) into delivery or completion, which the "
+                   "L5 human-approval floor leaves to the person: put it back, and make the move "
+                   "with Edit or Write, where the person is asked")
+    if personal:
+        out.append(f"it recorded an exposure with personal or sensitive data "
+                   f"({', '.join(personal)}), which the person confirms (ruling g): take it out, "
+                   "and record it with Edit or "
+                   "Write, where the person is asked")
+    return out
 
 
 def post(payload: dict, project: Path) -> int:
