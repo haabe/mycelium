@@ -176,17 +176,19 @@ def test_the_documented_matrix_agrees_with_the_code():
 
 
 def test_a_changed_cell_is_caught(tmp_path):
-    root = _copy_with_table(tmp_path, "| Regulatory | -- | Required (L3-5) | Required (L3-5) | -- |",
-                            "| Regulatory | -- | Required (L3-4) | Required (L3-5) | -- |")
+    root = _copy_with_table(
+        tmp_path, "| Regulatory | -- | -- | Required (L3-5) | Required (L3-5) | -- |",
+        "| Regulatory | -- | -- | Required (L3-4) | Required (L3-5) | -- |")
     found = mod.matrix_drift(root)
-    assert any("regulatory" in f and "define->develop" in f for f in found)
+    assert any("regulatory" in f and "commit_to_build" in f for f in found)  # keyed by decision
 
 
 def test_a_missing_row_is_caught(tmp_path):
     """XAI was Gate 13 in the prose and in no table the code read, until 0.292.0."""
     root = _copy_with_table(
         tmp_path,
-        "| XAI | -- | -- | Required (L3-5, when AI detected) | Required (L3-5, when AI detected) |\n", "")
+        "| XAI | -- | -- | -- | Required (L3-5, when AI detected) | Required (L3-5, when AI detected) |\n",
+        "")
     assert any("no row for `explainability`" in f for f in mod.matrix_drift(root))
 
 

@@ -22,11 +22,9 @@ scales:
       - bias
       - bvssh
       - corrections
-    human_approval:
-      discover_to_define: required
-      define_to_develop: required
-      develop_to_deliver: required
-      deliver_to_complete: required
+    human_approval:  # keyed by decision since v0.308.1 (DL-1372 V2); an L0 decides only these two
+      state_purpose: required
+      review: required
     notes: "Purpose-level decisions are foundational. Highest bar for evidence and approval. Gates must match theory-gates.md L0 matrix."
 
   L1:
@@ -48,10 +46,11 @@ scales:
       - landscape   # NUDGE tier, v0.217.0: does it already exist? (Wardley, primary at L1)
       - capacity    # NUDGE tier, v0.217.0: can the people hold it? (Skelton, primary at L1)
     human_approval:
-      discover_to_define: required
-      define_to_develop: required
-      develop_to_deliver: required
-      deliver_to_complete: recommended
+      set_target: required
+      start_experiment: required
+      commit_to_build: required
+      release: required
+      close: recommended
     notes: "Strategic bets require strong evidence and multi-dimensional risk assessment."
 
   L2:
@@ -73,10 +72,11 @@ scales:
       - service_quality
       - corrections
     human_approval:
-      discover_to_define: required
-      define_to_develop: recommended
-      develop_to_deliver: recommended
-      deliver_to_complete: optional
+      set_target: required
+      start_experiment: recommended
+      commit_to_build: recommended
+      release: recommended
+      close: optional
     notes: "Opportunity validation requires rich qualitative evidence. Gates must match theory-gates.md L2 matrix."
 
   L3:
@@ -89,19 +89,19 @@ scales:
     # is a higher entry bar than the L4 (0.7) builds to earn on. E2E runs 42-43: three hand-run
     # concierge rounds and a forum poll over three in-world months, confidence 0.5 -> 0.6
     # against 0.64, and no line of code. Other scales keep the threshold at every transition.
-    threshold_applies_at: [deliver_to_complete]
-    evidence_by_transition:
-      discover_to_define: [problem_evidence_from_outside_the_team]
-      define_to_develop: [lightest_test_named_with_success_and_failure_bars]
+    threshold_applies_at: [close]
+    evidence_by_decision:  # keyed by decision since v0.308.1 (DL-1372 V2)
+      set_target: [problem_evidence_from_outside_the_team]
+      start_experiment: [lightest_test_named_with_success_and_failure_bars]
       # What the delivery puts in front of people has had one trial outside the team, in the
       # form the product takes (v0.269.0): a usability session with a prototype (software, AI
       # tool), a dry run of the service or its script (service), a walkthrough of the pilot
       # lesson or protocol (course, content). Until then this read "prototype feedback, usability
       # test results, technical feasibility spike": a concierge test or a pilot cohort, whose
       # delivery IS the first contact, had nothing to show (overfit audit, 2026-09-26).
-      develop_to_deliver: [one_trial_outside_the_team_of_what_the_delivery_puts_in_front_of_people,
-                           security_threat_model]
-      deliver_to_complete: [learning_delivery_verdict_on_the_riskiest_assumption]
+      release: [one_trial_outside_the_team_of_what_the_delivery_puts_in_front_of_people,
+                security_threat_model]
+      close: [learning_delivery_verdict_on_the_riskiest_assumption]
     required_evidence:
       - prototype_feedback
       - usability_test_results
@@ -121,10 +121,11 @@ scales:
       - corrections
       - regulatory
     human_approval:
-      discover_to_define: recommended
-      define_to_develop: recommended
-      develop_to_deliver: optional
-      deliver_to_complete: optional
+      set_target: recommended
+      start_experiment: recommended
+      commit_to_build: recommended
+      release: optional
+      close: optional
     notes: "Solutions must be validated against all four Cagan risks. L3 is the only scale requiring all 12 gates."
 
   L4:
@@ -135,24 +136,24 @@ scales:
     # discover -> define duplicated the lock with a number nothing had set: E2E run 47 held the
     # first L4 any run opened at 0.15 against 0.7. Here the threshold reads the release's own
     # launch evidence, when the L4 closes.
-    threshold_applies_at: [deliver_to_complete]
-    evidence_by_transition:
+    threshold_applies_at: [close]
+    evidence_by_decision:  # keyed by decision since v0.308.1 (DL-1372 V2)
       # By product type where the evidence differs (v0.269.0), the same keys as
       # `required_evidence` below; `software` is the fallback for a type not listed. Until then
       # every product type was asked for code tests at define -> develop (overfit audit,
       # 2026-09-26): a company-wide course, a scaled service or an AI tool has none.
-      discover_to_define: [acceptance_criteria_with_measurable_outcomes]
-      define_to_develop:
+      set_target: [acceptance_criteria_with_measurable_outcomes]
+      commit_to_build:
         software: [test_cases_written_before_or_alongside_the_code]
         content: [quality_review_checklist_written_before_the_content]
         ai_tool: [eval_cases_written_before_the_prompts_or_model_changes]
         service_offering: [service_blueprint_and_onboarding_steps]
-      develop_to_deliver:
+      release:
         software: [security_review, privacy_review, accessibility_check]
         content: [quality_review, accessibility_check, privacy_review]
         ai_tool: [eval_results, safety_review, privacy_review, regulatory_classification]
         service_offering: [client_onboarding_test, privacy_review]
-      deliver_to_complete: [launch_data_from_the_release]
+      close: [launch_data_from_the_release]
     required_evidence:
       software:
         - acceptance_criteria
@@ -185,10 +186,11 @@ scales:
       - corrections
       - regulatory
     human_approval:
-      discover_to_define: optional
-      define_to_develop: optional
-      develop_to_deliver: optional
-      deliver_to_complete: optional
+      set_target: optional
+      start_experiment: optional
+      commit_to_build: optional
+      release: optional
+      close: optional
     notes: "Delivery work should flow quickly. Approval needed mainly for novel or risky items. Required evidence varies by product_type. All gates except JTBD apply at L4. RENAMED Feature -> Delivery in v0.235.0 to match engine/diamond-rules.md, docs/architecture.md, glossary.md and the README, which have all said Delivery since the rename that stopped halfway. The evidence list and thresholds are unchanged: they were already delivery-shaped."
 
   L5:
@@ -269,10 +271,11 @@ scales:
       # (skills/launch-tier/SKILL.md) that "L5 work is the highest-risk context for bias because the
       # framing pressure is explicit". The two transitions that reach the outside world are the two
       # that now require a human.
-      discover_to_define: recommended
-      define_to_develop: recommended
-      develop_to_deliver: required
-      deliver_to_complete: required
+      set_target: recommended
+      start_experiment: recommended
+      commit_to_build: recommended
+      release: required
+      close: required
     notes: "Market work reaches people outside the project, and it is the scale this framework's own
       launch skill calls the highest-risk context for bias. Progression is not autonomous. Required
       evidence is market evidence -- a release categorised on the project's own scale, a PMF reading
@@ -362,10 +365,13 @@ project_type_adaptations:
     threshold_multiplier: 0.7    # e.g., L0: 0.9 * 0.7 = 0.63
     min_sources_multiplier: 0.5  # e.g., L0: ceil(5 * 0.5) = 3
     human_approval_override:
-      discover_to_define: optional
-      define_to_develop: optional
-      develop_to_deliver: optional
-      deliver_to_complete: optional
+      set_target: optional
+      start_experiment: optional
+      commit_to_build: optional
+      release: optional
+      close: optional
+      state_purpose: optional
+      review: optional
     external_evidence_min: NO_REDUCTION
     notes: "Solo hobby lowers the bar for evidence quantity but not quality. External evidence requirements are maintained."
 
@@ -373,10 +379,13 @@ project_type_adaptations:
     threshold_multiplier: 0.85   # e.g., L0: 0.9 * 0.85 = 0.765
     min_sources_multiplier: 0.75 # e.g., L0: ceil(5 * 0.75) = 4
     human_approval_override:
-      discover_to_define: recommended
-      define_to_develop: recommended
-      develop_to_deliver: optional
-      deliver_to_complete: optional
+      set_target: recommended
+      start_experiment: recommended
+      commit_to_build: recommended
+      release: optional
+      close: optional
+      state_purpose: recommended
+      review: optional
     external_evidence_min: NO_REDUCTION
     notes: "Solo products need real evidence but the bar is slightly lower than team projects."
 
@@ -408,10 +417,10 @@ project_type_adaptations:
     transferability_warning: "Confidence levels achieved in dogfood mode reflect reduced thresholds. If this project transitions from dogfood to production, all diamond confidence levels must be re-evaluated against production thresholds (without the dogfood modifier). A diamond that passes at 0.612 in dogfood mode would need 0.9 in production."
 
 # L5 HUMAN-APPROVAL FLOOR (added 0.237.0). `human_approval_override` lets a project_type relax
-# approval to `optional` on every transition. For solo_hobby that re-opened, for the commonest
+# approval to `optional` on every decision. For solo_hobby that re-opened, for the commonest
 # consumer shape, the exact hole 0.235.0 closed: AN AGENT AUTONOMOUSLY DECLARING A LAUNCH COMPLETE.
 # A solo hobbyist launching to the public still reaches the public; blast radius is a property of
-# the audience, not of the team's size. So L5 `develop_to_deliver` and `deliver_to_complete` are
+# the audience, not of the team's size. So L5 `release` and `close` are
 # NO_REDUCTION: an override may not lower them below `required`. This is the same principle as
 # external_evidence_min below — you may lower HOW MUCH, never WHO IS ACCOUNTABLE at the boundary
 # where the work reaches people who did not build it.

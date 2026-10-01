@@ -76,9 +76,11 @@ Report the line for each scale with records. Since v0.302.0 (DL-1367) it counts 
 4. **Check confidence threshold**:
    - Reference ${CLAUDE_PLUGIN_ROOT}/engine/confidence-thresholds.yml for the current scale
    - Apply `project_type_adaptations` to compute effective threshold (see ${CLAUDE_PLUGIN_ROOT}/engine/confidence-thresholds.yml)
-   - Compare current confidence to the **effective** threshold, only on the transitions the scale's
-     `threshold_applies_at` lists when it has one (the L3's is its exit, v0.259.0); otherwise
-     name the evidence the next transition needs from `evidence_by_transition` (keyed by `product_type` where the evidence differs, `software` the fallback: v0.269.0)
+   - Compare current confidence to the **effective** threshold, only at the decisions the scale's
+     `threshold_applies_at` lists when it has one (the L3's is `close`, its exit, v0.259.0);
+     otherwise name the evidence the next decision needs from `evidence_by_decision` (keyed by
+     decision since v0.308.1; by `product_type` where the evidence differs, `software` the
+     fallback: v0.269.0)
    - Identify what would increase confidence
 
 5. **Check for anti-patterns**:

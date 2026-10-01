@@ -4,6 +4,38 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-01.
 
+## v0.308.1 - what the agent reads is keyed by decision (stage 5d-2)
+
+**2026-10-01.** Phase migration stage 5d-2, founder ruling DL-1372 V2. The thresholds and the gate
+matrix the agent reads on every move were keyed by phase move; they are now keyed by the decisions
+a move records. **No verdict changes**: these are read by the agent through the skills, and the code
+reads the gates from `scale_locks.DECISIONS`; the stage's differential (22 states, 327 verdicts)
+shows none changed.
+
+- **`confidence-thresholds.yml`**: `human_approval`, `human_approval_override` and
+  `threshold_applies_at` are keyed by decision (`set_target`, `start_experiment`,
+  `commit_to_build`, `release`, `close`; an L0's `state_purpose` and `review`), and
+  `evidence_by_transition` is `evidence_by_decision`. The move to committed to build records two
+  decisions: approvals carry to both, and each scale's evidence sits under the one it belongs to
+  (an L3's "lightest test named" under `start_experiment`, an L4's "tests before the code" under
+  `commit_to_build`), so a move still asks for exactly what it asked before. The overrides keep
+  lowering an L0's two decisions as they lowered its moves. The L5 floor names `release` and
+  `close`.
+- **theory-gates' Transition Matrix** has one column per decision, written out from
+  `scale_locks.DECISIONS`, and `check_gate_set_drift.py` compares it with `DECISIONS` directly
+  (until now with the per-move table derived from it). Its planted-change test still catches a
+  changed cell.
+- /diamond-progress, /diamond-assess, autonomous-mode and diamond-rules read the new keys; the
+  state block in diamond-rules shows `theory_gates_status` by gate, as the file records it.
+- **Found while doing it:** the dogfood E2E harness read `evidence_by_transition` and would have
+  silently dropped every per-decision need from its coverage map; it now reads either key (a
+  harness change, in the dogfood repo).
+- **Alternatives considered:** keeping the transition keys and translating in the skills (ruled out
+  in V2: the skills would carry the model D and E dropped); one combined key for the two decisions
+  of the build move (a key named after a pair is a transition under another name); assigning the
+  build move's approval to one of its two decisions only (a repeated `start_experiment`, now how a
+  loop iterates per DL-1373, would then carry no approval level).
+
 ## v0.308.0 - Mycelium says where a diamond is by its decisions (stage 5d-1)
 
 **2026-10-01.** Phase migration stage 5d-1, founder ruling DL-1372 (V1, V3). Rulings D and E dropped

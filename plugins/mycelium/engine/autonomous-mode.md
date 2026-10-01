@@ -77,7 +77,7 @@ Per `harness/delegation-authority.md` (no-standing list and BLOCK-equivalent row
 | Accept a security / privacy / regulatory / ethics tradeoff | delegation-authority no-standing #2 |
 | Modify the authority map, guardrails, or this doc's rules mid-run | delegation-authority no-standing #3 |
 | `/mycelium:diamond-progress kill` confirmation | destructive; kill stays human-confirmed |
-| Phase-advance approval where `confidence-thresholds.yml#human_approval` says `required` | approval is the human's act; an agent approving itself is abdication-by-proxy |
+| A decision's approval where `confidence-thresholds.yml#human_approval` (keyed by decision) says `required` | approval is the human's act; an agent approving itself is abdication-by-proxy |
 | `/mycelium:migrate-from-legacy` "wait for explicit yes" | destructive migration of project state |
 | `/mycelium:eval-runner` scenario retirement | destructive to eval history |
 | `/mycelium:delivery-bootstrap` per-tool install consent | JIT tooling is nudge-not-push; consent to install is the user's |
