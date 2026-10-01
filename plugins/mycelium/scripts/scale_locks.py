@@ -1695,6 +1695,18 @@ def _last_good(project_dir: str) -> dict:
                     if isinstance(d, dict)}
     except (OSError, subprocess.SubprocessError, UnreadableError):
         pass  # SPEAKS: no git, or a committed file that is broken too: the record below, else none
+    # The shell guard's snapshot of the file taken just before the shell command that broke it
+    # (v0.307.7, control audit P16): fresher than the commit, and whole, exposures included. A
+    # record written before 0.307.7 kept no exposures, so without it a repair could widen a
+    # running delivery unseen.
+    try:
+        with open(os.path.join(project_dir, ".claude", "state", "bash-guard", "active.yml.before"),
+                  encoding="utf-8") as fh:
+            snap = _as_dict(_parse(fh.read(), "the shell guard's snapshot"))
+        rows.update({str(d.get("id")): d for d in _as_list(snap.get("active_diamonds"))
+                     if isinstance(d, dict)})
+    except (OSError, UnreadableError):
+        pass  # SPEAKS: no snapshot (the file broke outside a shell command): the record below
     try:
         with open(os.path.join(project_dir, ".claude", "state", "diamond-rulings.json"),
                   encoding="utf-8") as fh:
@@ -1706,7 +1718,10 @@ def _last_good(project_dir: str) -> dict:
     for did, r in (rec.items() if isinstance(rec, dict) else []):
         if isinstance(r, dict) and r.get("scale"):
             rows[did] = {**rows.get(did, {}), "id": did, "scale": r["scale"],
-                         "phase": str(r.get("sig") or "discover").split("|")[0]}
+                         "phase": str(r.get("sig") or "discover").split("|")[0],
+                         # v0.307.7 (control audit P16): with no commit, the last good state
+                         # had no exposures, so a repair that widened one was unjudged
+                         **({"exposures": r["exposures"]} if r.get("exposures") else {})}
     # A row known only by its phase (the record's signature, or an unmigrated commit) gets the
     # decisions that phase stands for: since v0.306.0 the phase is not read, and without this a
     # repair of a broken file reads every diamond as discover and is refused as a move.
@@ -1781,8 +1796,17 @@ def _retarget_violations(st: State, old_active: dict) -> list[str]:
                    "retargeted`, recording how its learning delivery ended if it reached "
                    "anyone. A new target is a new L3 (DL-1367)"
                    for l3 in st.by_id.values()
-                   if _scale(l3) == "L3" and st.is_open(l3) and st.l3_target(l3) == was)
+                   if _scale(l3) == "L3" and st.is_open(l3)
+                   and (st.l3_target(l3) == was or _inherits_from(l3, d)))
     return out
+
+
+def _inherits_from(l3: dict, l2: dict) -> bool:
+    """An L3 that names no target of its own reads its L2's (v0.307.7, control audit P15): judged
+    in the new file it had already followed the L2 to the new target, and stayed open, with a
+    running exposure, on a target it never chose."""
+    return (not str(l3.get("object_ref") or "").strip() and not l3.get("target")
+            and str(l3.get("parent") or l3.get("parent_id") or "") == str(l2.get("id")))
 
 
 def _state_end_violations(st: State, new_doc: dict, old_active: dict) -> list[str]:
@@ -1795,7 +1819,10 @@ def _state_end_violations(st: State, new_doc: dict, old_active: dict) -> list[st
                 if isinstance(d, dict)}
     for d in st.by_id.values():
         prev = old_active.get(str(d.get("id")))
-        if _scale(d) != "L3" or prev is None or not st.is_open(prev):
+        # v0.307.7 (control audit K3): judged on the OLD row, not against the new file, where an
+        # L3 moved to the archived list already read as closed; and a parked L3 is a pause, so
+        # killing it later still ends its delivery.
+        if _scale(d) != "L3" or prev is None or not _was_running(prev):
             continue
         state = str(d.get("state") or "").lower()
         if state not in ENDS_BY_STATE and str(d.get("id")) not in archived:
@@ -1804,7 +1831,24 @@ def _state_end_violations(st: State, new_doc: dict, old_active: dict) -> list[st
         if why:
             out.append(f"{d.get('id')} (L3) ends as `{state or 'archived'}` with its learning "
                        f"delivery still recorded as reaching people: {why}")
+    # v0.307.7 (K3): an L3 removed from the file was in no list this read; removing it, then
+    # adding it back as completed in a later write, passed both writes.
+    for did, prev in old_active.items():
+        if did in st.by_id or _scale(prev) != "L3" or not _was_running(prev):
+            continue
+        why = st.learning_delivery_end_missing(prev)
+        if why:
+            out.append(f"{did} (L3) is removed from the file with its learning delivery still "
+                       f"recorded as reaching people: {why}. Close it in place, as `killed`, "
+                       "`archived` or with its `close` decision, saying how it ended")
     return out
+
+
+def _was_running(prev: dict) -> bool:
+    """Open before the write, as the old row itself says: not completed or closed by its state,
+    parked counting as open (a pause, its delivery may still run) (v0.307.7)."""
+    state = str(prev.get("state") or "").lower()
+    return phase_of(prev) not in CLOSED and (state == "parked" or state not in CLOSED)
 
 
 def violations_between(project_dir: str, before: str, after: str) -> list[str]:

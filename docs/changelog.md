@@ -4,6 +4,33 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-01.
 
+## v0.307.7 - lifecycle (control audit, batch 3)
+
+**2026-10-01.** Batch 3 of the safety-hardening series (DL-1370). Each gap was reproduced on
+0.307.6, and each new test fails there. **Upgrade.**
+
+- **An L3 ended any way says how its learning delivery ended** (K3, a closure 4c (0.302.0) claimed).
+  The rule fired on a `state` set in the active list. It now also fires when the L3 is moved into
+  `archived_diamonds` (its own docstring's case: it was judged against the new file, where the L3
+  already read as closed), when a parked L3 is killed or archived later (parking is a pause, and was
+  read as already closed), and when the L3 is removed from the file (it was in no list the rule read,
+  so deleting it and adding it back as completed in a later write passed both writes).
+- **An L3 that inherits its L2's target closes when the L2 re-targets** (P15). With no `object_ref`
+  of its own, it was judged in the new file, where it had already followed the L2 to the new target,
+  and stayed open with a running exposure on a target it never chose.
+- **A repair of a broken diamonds file is judged with the running exposures** (P16). With no commit,
+  the last good state came from the rulings record, which kept no exposures, so a repair could widen
+  a running delivery unseen. The record now keeps each diamond's exposures, and a repair is first
+  judged against the shell guard's snapshot from just before the command that broke the file.
+  Bounded residual, stated rather than hidden: a file broken outside any shell command (an external
+  editor), in a project with no commit, before the first good write after upgrading, still has no
+  exposures to compare; the next good write records them.
+- **Alternatives considered:** refusing any repair when the last good state lacks exposures (it
+  brings back the stuck broken file 0.266.0 fixed); refreshing the record at session start (it would
+  mark changes made outside the hooks as assessed); judging a deletion as a completion (it would
+  demand completion gates of an L3 the user is abandoning; the rule asks only how its delivery
+  ended).
+
 ## v0.307.6 - the build gate (control audit, batch 2)
 
 **2026-10-01.** Batch 2 of the safety-hardening series (DL-1370). Each gap was reproduced on
