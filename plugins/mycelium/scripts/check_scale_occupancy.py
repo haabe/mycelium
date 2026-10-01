@@ -69,18 +69,18 @@ def records(canvas_dir: Path) -> dict[str, int]:
     data = data if isinstance(data, dict) else {}
     outcomes = [r for r in data.get("desired_outcomes") or [] if isinstance(r, dict)]
     l2 = len(outcomes) + (1 if isinstance(data.get("desired_outcome"), (dict, str)) else 0)
-    opp_ids = {str(o.get("id")) for o in data.get("opportunities") or [] if isinstance(o, dict)}
     active = _load(canvas_dir.parent / "diamonds" / "active.yml")
     targets = set()
     for d in (active.get("active_diamonds") if isinstance(active, dict) else None) or []:
         if not isinstance(d, dict) or str(d.get("scale", "")).upper() != "L2":
             continue
-        if str(d.get("state") or d.get("phase") or "").lower() in _CLOSED_STATES:
+        # Closed by its state or its `close` decision; the `phase` label is not read (v0.306.0)
+        if str(d.get("state") or "").lower() in _CLOSED_STATES or any(
+                isinstance(x, dict) and x.get("decision") == "close"
+                for x in d.get("decisions") or []):
             continue
-        t = d.get("target")
+        t = d.get("target")  # v0.307.1: the recorded target only, as the L3 lock reads it
         t = t.get("opportunity") if isinstance(t, dict) else t
-        if not t and str(d.get("object_ref") or "") in opp_ids:
-            t = d.get("object_ref")  # the old shape, one opportunity per L2 (read until stage 5)
         if t:
             targets.add(str(t))
     return {"L2": l2, "L3": len(targets)}

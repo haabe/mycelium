@@ -134,7 +134,8 @@ _L0_GATES = dict.fromkeys(("evidence", "cynefin", "bias", "bvssh", "corrections"
 DECISIONS["state_purpose"] = dict(_L0_GATES)
 DECISIONS["review"] = dict(_L0_GATES)
 L0_DECISIONS = ("state_purpose", "review")
-#: Which decisions each phase move makes, until the phase is retired (stage 5). A move needs the
+#: Which decisions each phase move makes (the phase names are read off the decisions since
+#: v0.306.0, by `phase_of`). A move needs the
 #: gates of every decision it makes, and its `progression_history` entry names them.
 TRANSITION_DECISIONS: dict[str, tuple[str, ...]] = {
     "discover->define": ("set_target",),
@@ -197,8 +198,8 @@ def transition_decisions(transition: str) -> tuple[str, ...]:
 
 def phases_after(decision: str) -> tuple[str, ...]:
     """The phases a diamond is in once `decision` is made (v0.299.0): every phase from the one the
-    move that makes it arrives in. Until the phase is retired, this is how a rule keyed to a
-    decision reads a diamond's state; stage 5 replaces it with the decision record itself."""
+    move that makes it arrives in. A rule keyed to a decision reads a diamond's state this way,
+    the phase coming from `phase_of`, which reads the decision record (v0.306.0)."""
     for t, decisions in TRANSITION_DECISIONS.items():
         if decision in decisions:
             return PHASE_ORDER[PHASE_ORDER.index(t.split("->")[1]):]
@@ -1207,7 +1208,7 @@ def _work_state(st: State, stage: str) -> tuple[bool, str]:
         miss = ([] if chain_ok else chain_miss) + st.stage_missing(d, stage)
         if not miss:
             return True, (f"{d.get('id')} ({d.get('scale')}) holds its lock and is in "
-                          f"{d.get('phase')}")
+                          f"{phase_of(d)}")  # v0.307.1: the label could be stale or absent
         reasons.append(f"{d.get('id')} ({d.get('scale')}) is missing:\n    - "
                        + "\n    - ".join(miss))
     return False, "\n  ".join(reasons)

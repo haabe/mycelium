@@ -42,11 +42,28 @@ def test_records_are_outcomes_and_chosen_targets(tmp_path):
     assert len(out) == 1 and out[0].startswith("L3: 1 target(s) chosen and no L3 diamond")
 
 
-def test_an_old_shape_l2_counts_its_opportunity_as_its_target(tmp_path):
+def test_an_old_shape_l2_has_no_target_as_the_lock_reads_it(tmp_path):
+    """v0.307.1: 0.307.0 stopped reading an L2 on one opportunity as targeting it, and this report
+    kept counting it, so it told the user to open an L3 the lock then refused."""
     m = _mod()
     canvas = _project(tmp_path, [{"id": "opp-1"}],
                       {"active_diamonds": [{"id": "l2", "scale": "L2", "object_ref": "opp-1"}]})
-    assert m.records(canvas)["L3"] == 1
+    assert m.records(canvas)["L3"] == 0
+    new = _project(tmp_path / "n", [{"id": "opp-1"}],
+                   {"active_diamonds": [{"id": "l2", "scale": "L2", "target": "opp-1"}]})
+    assert m.records(new)["L3"] == 1, "control: the recorded target"
+
+
+def test_a_closed_l2_is_read_from_its_state_or_close_decision_not_its_phase(tmp_path):
+    m = _mod()
+    closed = {"id": "l2", "scale": "L2", "target": "opp-1", "phase": "deliver",
+              "decisions": [{"decision": "close"}]}
+    labelled = {"id": "l2", "scale": "L2", "target": "opp-1", "phase": "complete"}
+    assert m.records(_project(tmp_path / "a", [{"id": "opp-1"}],
+                              {"active_diamonds": [closed]}))["L3"] == 0
+    assert m.records(_project(tmp_path / "b", [{"id": "opp-1"}],
+                              {"active_diamonds": [labelled]}))["L3"] == 1, \
+        "a `phase` label alone closes nothing, as in the locks"
 
 
 def test_active_zero_but_ever_nonzero_is_the_softer_finding(tmp_path):

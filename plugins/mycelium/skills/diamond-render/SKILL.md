@@ -66,7 +66,7 @@ Not applicable. Check 43 forbids redaction fixtures on NONE-declared specialists
 | Arg | Default | Values | Effect |
 |---|---|---|---|
 | `--format` | `mermaid` | `mermaid` \| `ascii` \| `json` | Output format. `markdown-table` and `markdown-list` are NOT supported (state diagrams don't map cleanly); fail loud per `engine/render-conventions.md#format-support-negotiation-global-rule`. |
-| `--scale` | `active` | `L0` \| `L1` \| `L2` \| `L3` \| `L4` \| `L5` \| `active` \| `all` | Which diamond(s) to render. `active` = all diamonds with non-null `phase`. |
+| `--scale` | `active` | `L0` \| `L1` \| `L2` \| `L3` \| `L4` \| `L5` \| `active` \| `all` | Which diamond(s) to render. `active` = the open diamonds: those in `active_diamonds` whose `state` is not closed (killed, parked, archived, retargeted) and that have not recorded `close`. |
 | `--theme` | `base` | `base` \| `dark` | Theme. `dark` is the WCAG-by-construction opt-in per `engine/render-conventions.md#wcag-aa-theme-convention`. |
 | `--show-gates` | `true` | bool | Annotate transitions with phase-transition gate names + theory-gate status block. |
 | `--show-confidence` | `true` | bool | Annotate phases with confidence values. |
@@ -77,7 +77,7 @@ Not applicable. Check 43 forbids redaction fixtures on NONE-declared specialists
 
 ### Step 1: Resolve scale
 
-- `--scale active` → enumerate diamonds with non-null `phase`. If empty, emit `No active diamond — run /mycelium:start` placeholder + canonical disclaimer + early return.
+- `--scale active` → enumerate the open diamonds: those in `active_diamonds` whose `state` is not closed (killed, parked, archived, retargeted) and that have not recorded `close` (v0.307.1: a diamond with no `phase` label is still open). If empty, emit `No active diamond — run /mycelium:start` placeholder + canonical disclaimer + early return.
 - `--scale L<N>` → render only that scale; fail loud if scale not present.
 - `--scale all` → render every diamond regardless of phase.
 
@@ -87,8 +87,8 @@ For each diamond to render:
 - States = the four canonical phases (Discover, Define, Develop, Deliver). Canonicalize on emit: if canvas uses lowercase, render as canonical case. Surface lowercase-canvas as a `canvas-health` follow-up note.
 - Current state = where the diamond is, read from its `decisions` (v0.305.0: `python3
   "${CLAUDE_PLUGIN_ROOT}/scripts/scale_locks.py"`'s `phase_of`; develop needs both
-  `start_experiment` and `commit_to_build`), and `phase` from active.yml only for a diamond with no
-  decisions (case-insensitive match).
+  `start_experiment` and `commit_to_build`); a diamond with no decisions is in Discover, whatever
+  its `phase` label says (v0.306.0).
 - Completed states = phases before current per linear order.
 - Future states = phases after current.
 - **Transition labels (phase-transition gates)** if `--show-gates=true`:
@@ -215,7 +215,7 @@ Per `engine/render-conventions.md`:
 
 1. **Read-only.** Never modify active.yml, decision-log, or any state.
 2. **Phase name spellings** must match `engine/diamond-rules.md`. Do not abbreviate, paraphrase, or invent variants.
-3. **Empty-case behavior**: if active.yml is null/empty or has no diamonds with `phase` set, emit `No active diamond — run /mycelium:start` placeholder + canonical disclaimer. Do NOT error.
+3. **Empty-case behavior**: if active.yml is null/empty or has no open diamonds, emit `No active diamond — run /mycelium:start` placeholder + canonical disclaimer. Do NOT error.
 4. **Format-unsupported behavior**: if `--format markdown-table` or `--format markdown-list` requested, fail loud per `engine/render-conventions.md#format-support-negotiation-global-rule`. Do NOT silently downgrade.
 5. **`--as-of` historical mode**: if the date precedes the first decision-log entry mentioning the diamond, fail loud with `no recorded state at that date`. Do NOT extrapolate.
 6. **Never invent** gates, phases, or confidence values not in the canvas or `engine/diamond-rules.md`.
@@ -225,7 +225,7 @@ Per `engine/render-conventions.md`:
 Before emitting:
 
 1. *"Is this render's current-phase marker the truth, or has the canvas been edited since the last `/mycelium:diamond-progress` walk?"* The staleness check (Step 3) is the mechanical answer.
-2. *"Am I rendering a single diamond when the project is in fractal-of-diamonds mode and all six are load-bearing?"* If `--scale active` and only one diamond has a phase set BUT decision-log mentions phase progression on others, surface: `Other diamonds present in active.yml (<list>) without recorded phase — consider --scale all to render the full state.`
+2. *"Am I rendering a single diamond when the project is in fractal-of-diamonds mode and all six are load-bearing?"* If `--scale active` and only one diamond is open BUT the decision log mentions moves on others, surface: `Other diamonds present in active.yml (<list>) are closed or not open — consider --scale all to render the full state.`
 3. *"Are all state IDs referenced in transitions and class lines actually defined?"* Walk every `<src> --> <dst>` arrow and `class <X> <name>` line; verify both sides are either a defined `state ... as <ID>` OR a Mermaid built-in (`[*]`). Mismatch = parse error at render time.
 4. *"Is `classDef current` defined if any `class ... current` line is emitted?"* Without `classDef`, the class line is a silent no-op. Emit `classDef current fill:#fff9c4,stroke:#3e2723,color:#3e2723,stroke-width:3px` once at the top when any `class ... current` follows.
 

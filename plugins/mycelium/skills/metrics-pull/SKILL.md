@@ -142,7 +142,7 @@ External metric data (referrer names, top paths, review text, support tickets) f
 
 ### Step 8b: DoD outcome-check — close the outcome→discovery loop (added v0.53.0)
 
-This is the back half of the loop (Kim's Second Way): checking whether shipped work achieved the outcome its `/define-done` defined, and routing the result back to discovery. Read `.claude/diamonds/active.yml`; for each diamond with `phase: complete` that carries a `definition_of_done.measure`:
+This is the back half of the loop (Kim's Second Way): checking whether shipped work achieved the outcome its `/define-done` defined, and routing the result back to discovery. Read `.claude/diamonds/active.yml`; for each diamond that has closed (a `close` decision, which `scale_locks.phase_of` reads as complete; v0.306.0: the `phase` label is not read), in `active_diamonds` or `completed_diamonds`, that carries a `definition_of_done.measure`:
 
 1. **Lag gate FIRST.** Has `completed_at + measure.check_after` elapsed? (parse `check_after` as `Nd`/`Nw`; default 14d.) If NOT, report "outcome not yet due (check after ~<date>)" and SKIP this diamond — do NOT compute met/partial/missed. Marking a not-yet-landed outcome "missed" would false-reopen discovery.
 2. **Get the actual.**
