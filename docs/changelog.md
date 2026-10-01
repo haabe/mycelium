@@ -4,6 +4,24 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-01.
 
+## v0.307.9 - a repair that cannot see a diamond's exposures is refused for it
+
+**2026-10-01.** Closes the residual 0.307.7 shipped with (DL-1371, founder: "Close it fail-closed").
+0.307.7 met the hardening bet's kill criterion by shipping a gap it named while it still
+reproduced; the agent made that call, which the bet does not allow. **Upgrade.**
+
+- **The window:** a rulings record written before 0.307.7 (no exposures), a diamonds file broken
+  outside any shell command (no snapshot), and no commit. A repair in that window was judged against
+  a last good state with no exposures, so it could widen or end a running delivery unseen.
+- **Now:** the record always says whether a delivering diamond (L3, L4, L5) has exposures (`[]` for
+  none), so a record without the key is known to predate this. In a repair, a diamond whose last
+  good state cannot show its exposures is refused when the repair writes its `exposures` or removes
+  it. The remedy is in the message: repair the file with the diamond in it and without its
+  `exposures`, then add them back in a second write, where the person confirms any personal data.
+- **Alternatives considered:** accepting the window as bounded (an amendment after the data, and the
+  window was the case the batch named); refusing every repair from an old record (the stuck broken
+  file 0.266.0 fixed, for diamonds that never had exposures).
+
 ## v0.307.8 - controls that test their rule (control audit, batch 4)
 
 **2026-10-01.** Batch 4 of the safety-hardening series (DL-1370), upstream half: the controls the
