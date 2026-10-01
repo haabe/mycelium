@@ -48,10 +48,10 @@ The relationship in one line (`plugins/mycelium/engine/README.md`): *"The engine
 
 ## The runtime model
 
-Two axes, taught by example in `docs/mental-model.md`:
+Two axes, defined in `engine/diamond-rules.md` (terms in `docs/glossary.md`):
 
 - **Scales (L0–L5)**: Purpose → Strategy → Opportunity → Solution → Delivery → Market. L0–L3 are product-agnostic; L4–L5 adapt to `product_type`.
-- **Diamonds**: every scale runs the same four phases — **Discover → Define → Develop → Deliver** — with **theory gates** between phases. You cannot progress a diamond by asserting confidence; you must show evidence that satisfies each gate (`engine/theory-gates.md`, `engine/diamond-rules.md`).
+- **Diamonds**: every scale below purpose runs the same loop of recorded decisions — `set_target`, `start_experiment`, `commit_to_build`, `release`, `close` — in discovery mode until `commit_to_build` and delivery mode after, with **theory gates** before each decision (since v0.306.0; an L0 states its purpose and reviews it). You cannot record a decision by asserting confidence; you must show evidence that satisfies its gates, and a recorded decision cannot be removed (`engine/theory-gates.md`, `engine/diamond-rules.md`).
 
 ## The context surface — what reaches a session, and when
 
@@ -82,7 +82,7 @@ The design intent: the always-on surface stays **lean** (the turn-1-and-turn-30 
 
 ## Where the canonical detail lives
 
-- Runtime model taught by example → `docs/mental-model.md`
+- The case for discovery before the build, for readers not yet convinced → `docs/mental-model.md`
 - Exact context/load map → `docs/context-surface.md`
 - Why it's opinionated → `docs/philosophy.md`
 - Install forms + migration → `docs/install-paths.md`, `docs/migration.md`

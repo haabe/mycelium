@@ -143,10 +143,9 @@ Confidence: L1 0.6, L2 0.3
 
 ### Skipped scales
 
-```
-L1  Strategy         –  (skipped — solo hobby, no portfolio strategy needed)
-    Where to play
-```
+None since v0.247.0: every scale opens under the one above it, so no line is ever rendered as
+skipped (the `–` symbol above is kept only so an old map can still be read). Until v0.309.4 this
+section showed an example skipped L1, which contradicted that rule.
 
 ### Post-interview first render
 

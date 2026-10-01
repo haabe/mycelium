@@ -4,6 +4,36 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-01.
 
+## v0.309.4 - what discovery before the build gives you (stage 6, first page)
+
+**2026-10-01.** Phase migration stage 6 (DL-1369), the first narrative doc. `docs/mental-model.md`
+taught the four phases to people who had already installed; its links (the README footer, the docs
+index's "before adopting it") send the reader who has read the README and is not convinced yet. The
+founder set the page's reader and outcome, and the page is rewritten for them.
+
+- **What it says now.** What finding out before the build gives you that building first does not:
+  randomised trials in which founders who wrote down and tested their assumptions stopped the wrong
+  project weeks sooner, not more often, without discarding good ones (Coali, Gambardella and Novelli,
+  *Research Policy* 2024); Iridium, New Coke, the Fire Phone and Quibi, failures where research was
+  done and the question was not kept alive; QuickBooks done the other way round; and two honest
+  limits, including that the famous 100x cost-of-defect curve has no data under it. Sources listed
+  at the foot of the page.
+- **How it was made.** Three research sweeps, every number read at its primary source and checked
+  against a do-not-cite register; an agent draft; the founder's rewrite. Ries's *Incorruptible*
+  was read in full and does not supply discovery failures (its cases are governance failures).
+- **A test the founder asked for**: whether the model vocabulary belongs on this page. Eight blind
+  simulated readers scored it INCONCLUSIVE by a bar frozen before drafting (4.83 without, 4.75
+  with); the vocabulary added no understanding and confused all four readers who saw it. It is left
+  out; the terms stay in `glossary.md` and `engine/diamond-rules.md`.
+- **Corrected with it:** the docs index and `architecture.md` described the page as teaching
+  "scales, diamonds, gates"; `architecture.md` still described a diamond as four phases (false since
+  v0.306.0); the FAQ linked a heuristic the page no longer states; the "who it is not for" link
+  pointed at a README heading that does not exist; wayfinding's example of a skipped scale
+  contradicted its own rule that no scale is skipped (since v0.247.0).
+- **Alternatives considered:** keeping the page as a post-install teaching page (its links send the
+  pre-adoption reader); one project's story start to finish (the founder: not that interesting);
+  a cost-multiplier argument by analogy with shift-left security (no data under it).
+
 ## v0.309.3 - every skill and rule says decisions (stage 5d-3c)
 
 **2026-10-01.** Phase migration stage 5d-3c, the last of stage 5d (founder ruling DL-1372 V1). What
