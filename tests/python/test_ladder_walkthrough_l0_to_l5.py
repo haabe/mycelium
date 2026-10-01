@@ -245,6 +245,8 @@ def _deliver_to_learn_then_open_l4(p: Project, root: Path, opps: dict) -> None:
     ra["verdict"] = "invalidated"
     p.canvas_file("opportunities.yml", opps)
     assert _proposed(root) == "pivot-l3:l3", "a failed assumption offers the pivot, not silence"
+    # v0.309.0 (DL-1373): the way on is said as the decision it appends, never as a way back.
+    assert "another `start_experiment`" in (t := ni.pick(root, "", DAY)[0]["text"]) and "appending" in t, t
     p.refused(p.add(l4), "recorded as failed")
 
     # v0.268.0: an inconclusive test is an outcome with a way on too (an underpowered beta, a noisy
@@ -252,6 +254,7 @@ def _deliver_to_learn_then_open_l4(p: Project, root: Path, opps: dict) -> None:
     ra["verdict"] = "inconclusive"
     p.canvas_file("opportunities.yml", opps)
     assert _proposed(root) == "rerun-l3:l3", "an inconclusive test offers a re-run, not silence"
+    assert "another `start_experiment`" in (t := ni.pick(root, "", DAY)[0]["text"]) and "the result it expects" in t, t
 
     # v0.265.0: a verdict written as prose never reaches the lock, so it is asked for again.
     ra["verdict"] = "met on 2026-11-18: 4 of 5 came back against a bar of 3"

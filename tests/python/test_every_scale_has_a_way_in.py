@@ -98,5 +98,8 @@ def test_no_page_says_a_parent_bounds_a_child():
 
 def test_every_scale_has_a_way_out():
     text = (SKILLS / "diamond-progress" / "SKILL.md").read_text(encoding="utf-8")
-    assert "Deliver->Complete" in text, "no completion exit in /diamond-progress"
+    # v0.309.0 (stage 5d-3): the completion exit is said as the decision it records, `close`,
+    # which runs the Definition of Done and moves the diamond into `completed_diamonds`.
+    assert "When recording `close`, run this checklist" in text, "no completion exit"
+    assert "At `close`: MOVE the diamond into `completed_diamonds`" in text, "no completion exit"
     assert "killed_diamonds" in text, "no killed exit in /diamond-progress"

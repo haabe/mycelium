@@ -4,6 +4,44 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-01.
 
+## v0.309.0 - a diamond moves by recording decisions, and is drawn as them (stage 5d-3a)
+
+**2026-10-01.** Phase migration stage 5d-3a: founder rulings DL-1372 V1 and V4 (the words, the
+render) and DL-1373 (a loop iterates by appending). **No verdict changes**: the stage's differential
+(22 states, 327 verdicts) shows none changed.
+
+- **/diamond-progress speaks in decisions.** It records the next decision (`set_target`;
+  `start_experiment` and `commit_to_build` together; `release`; `close`; an L0's `state_purpose` or
+  `review`), runs the gates each needs, and runs the Definition of Done at `close`. Dated history
+  in the skill keeps its own words.
+- **It no longer asks for `progression_history`.** The skill still told the agent the gate refuses
+  a move without one; 0.307.8 removed that requirement (the decisions are the record), and the skill
+  had not followed.
+- **How a loop iterates is written down (DL-1373).** A new experiment appends another
+  `start_experiment`, its note naming the test and the result it expects; a re-chosen front runner
+  sets `front_runner` and appends another `commit_to_build`. The position does not move back. The
+  next items for an inconclusive test and a failed front runner say so, and a test pins it. A
+  pivot no longer "regresses the phase".
+- **Tested before writing it, on 0.308.2, through every Write/Edit hook:** a repeated
+  `start_experiment` or `commit_to_build` passes and the position stays (and a `release` with no
+  gates is refused, the control). **Two things no hook checks, stated in the skill rather than
+  implied:** that a repeated `start_experiment` names its test, and that a decision is never
+  removed: a write that removes `commit_to_build` passes and moves the diamond back.
+- **/diamond-render draws decisions, by code (V4).** New `scripts/render_diamonds.py` draws each
+  diamond as the decisions it recorded, in order with their dates, under the mode it was in
+  (discovery until `commit_to_build`, delivery after), then what is still to come; a repeated
+  decision appears where it happened; an L0 states and reviews. Mermaid (checked by
+  `validate_mermaid.py` and parsed with the Mermaid CLI), ascii and json. Until now the agent drew
+  four phases by hand, and the skill listed seven test fixtures that did not exist; it now has
+  `tests/python/test_render_diamonds.py`. Mermaid does not draw gates (it places notes on nested
+  states across the page); ascii and json carry them. `--as-of` is no longer offered: it was
+  specified and never built.
+- **Alternatives considered:** keeping the render a spec the agent draws (two renders of one record
+  could differ, and nothing tested it); drawing modes only (V4 (b): loses whether an L3 has
+  released); grouping by decision type rather than by when each was taken (a second experiment
+  after the build would be drawn before it); making the hooks refuse a removed decision (a rule
+  change, put to the founder rather than shipped here).
+
 ## v0.308.2 - session-start checks read this project, not copies of others
 
 **2026-10-01.** Found on the dogfood repo, whose session banner reported "this hook took 127s

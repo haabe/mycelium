@@ -1,6 +1,6 @@
 ---
 name: diamond-progress
-description: "Progress a diamond from one phase to the next. Runs all required theory gate checks, validates evidence, and at Deliver->Complete runs the executable Definition of Done checklist."
+description: "Record a diamond's next decision (set_target; start_experiment and commit_to_build; release; close; an L0's state_purpose or review). Runs the theory gates each decision needs, validates evidence, and at close runs the executable Definition of Done checklist."
 metadata:
   instruction_budget: "205"
   framework_dependency: "mycelium"
@@ -9,7 +9,7 @@ metadata:
 
 # Diamond Progress Skill
 
-Progress a diamond through phases with full theory gate validation. At delivery completion, runs an executable checklist that GATES progression.
+Record a diamond's decisions, each through the theory gates it needs. Where a diamond is, is read from its decisions ("target set", "committed to build", "released", "closed"; discovery until `commit_to_build`, delivery after; DL-1368, DL-1372). At `close`, runs an executable checklist that GATES it.
 
 ## Preflight: Read target canvas file(s) before any Write/Edit
 
@@ -39,13 +39,16 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
 
 ## Workflow
 
-1. **Identify transition**: From [current phase] to [next phase] at [scale].
+1. **Identify the decision**: where the diamond is (`scale_locks.position`, e.g. "target set
+   (discovery)") and the decision to record next at [scale]: `set_target`; `start_experiment` and
+   `commit_to_build`, recorded together to commit to build; `release`; `close`. An L0 records
+   `state_purpose`, then `review`. To iterate, append (DL-1373, step 8).
 
 1b. **Cognitive Forcing (before gate evaluation)**:
 
    Before running gates, ask the human for their unprimed judgment:
 
-   > "Before I check the gates — do you think we're ready to move from [current] to [next]? What's your gut say?"
+   > "Before I check the gates — do you think we're ready to record [decision]? What's your gut say?"
 
    Wait for the response. Record it. Then run the gates. After presenting results, compare:
 
@@ -57,7 +60,7 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
 
    **Autonomous mode** (per `${CLAUDE_PLUGIN_ROOT}/engine/autonomous-mode.md`): rung (b) — record the declared persona's gut call BEFORE running gates, tag `internal_simulated`, ledger it. The compare-after step still runs.
 
-2. **Run all required theory gates** (per ${CLAUDE_PLUGIN_ROOT}/engine/theory-gates.md transition matrix):
+2. **Run all required theory gates** (per ${CLAUDE_PLUGIN_ROOT}/engine/theory-gates.md Transition Matrix, one column per decision; a move needs the gates of every decision it records):
    - For each gate:
      a. State the gate name and source theory.
      b. **Surface the suggested skill**: "Run `/skill-name` to satisfy this gate."
@@ -97,14 +100,14 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
 
    The perspective resolution framework (`${CLAUDE_PLUGIN_ROOT}/engine/perspective-resolution.md`) is the authoritative reference. The anti-pattern to avoid is Perspective Suppression — resolving a conflict by ignoring one perspective.
 
-2c. **Build-to-learn awareness NUDGE** (Define → Develop transitions only):
-   At the point of entering Develop, surface this prompt to the human:
+2c. **Build-to-learn awareness NUDGE** (at `commit_to_build` only):
+   When the diamond commits to build, surface this prompt to the human:
    > "Are you building to learn or building to earn right now? Discovery work (prototypes, spikes, experiments) can use lighter gates. Delivery work (shipping to users) must meet full DoD."
    This is awareness only — it does not change gate requirements or routing. The human's answer is informational context, not a gate input.
    *Source: Cagan (SVPG), Patton (build to learn vs build to earn). Added as NUDGE per risk analysis — conceptual awareness, not process gate.*
 
-2d. **L3 Define → Develop: the lightest test is named first** (v0.253.0, enforced by the scale-lock
-   gate). Before an L3 builds, run `/mycelium:assumption-test` on the riskiest assumption of the
+2d. **L3 `start_experiment`: the lightest test is named first** (v0.253.0, enforced by the
+   scale-lock gate). Before an L3 builds, run `/mycelium:assumption-test` on the riskiest assumption of the
    solution it builds and record, on that solution in `opportunities.yml`,
    `riskiest_assumption: {statement, cheapest_test}` (or `test_design`), a sentence, not a label.
    Offer the light options first: concierge (a person does by hand what the product would do),
@@ -113,11 +116,11 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
    name it here as the test, so building infrastructure is a choice and not the default. E2E runs
    19 to 23 each built a server, an SMS provider, a domain and a security review inside the L3, and
    each stalled there.
-   **A test that needs real use runs in the L3's own Deliver** (v0.257.0). Record on the L3 an
+   **A test that needs real use runs after the L3's own `release`** (v0.257.0). Record on the L3 an
    exposure record (`exposures[]`: `audience`, `until`, `channel`): a named, opted-in audience, an
    end date, and the channel that fits the product type (web software: infrastructure as code for an environment that
-   can be torn down; courseware: a pilot cohort on an existing platform; service: by hand). Move
-   the L3 to Deliver through Security, Privacy and Service Quality, run the test, and record the
+   can be torn down; courseware: a pilot cohort on an existing platform; service: by hand). Record
+   the L3's `release` through Security, Privacy and Service Quality, run the test, and record the
    verdict on the riskiest assumption; that verdict is the medium-confidence evidence the L4 opens
    on. The L4 then builds to earn, for everyone. Production for everyone is never an L3's.
    **The L3 builds only what its test needs to run** (v0.273.0). Not a finished product: the
@@ -140,18 +143,18 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
    carries the old `learning_delivery` field is not read by any rule since v0.307.0: the next item
    offers `scripts/migrate_phase.py`, which moves it into an exposure record. Do not write it.
    **The test starts, on the record** (v0.274.0). Record `exposures[].started` with the day
-   the first person in the audience took part. An L3 in Deliver with no start date is offered the
+   the first person in the audience took part. An L3 that has released with no start date is offered the
    start at every session; once that is overdue, stop extending the build, name only what blocks
    the start, and send the rest to the tree or to L4. E2E service world run 4 grew its client pack
    from 4,100 to 7,100 words in Deliver while nobody was served.
-   **Once the L3 delivers, its audience changes on the record, and the delivery ends when the L3
-   completes** (v0.267.0, v0.268.0). The audience is identifiable and opted in: a named list, a
+   **Once the L3 has released, its audience changes on the record, and the delivery ends when the
+   L3 closes** (v0.267.0, v0.268.0). The audience is identifiable and opted in: a named list, a
    cohort, a pre-release channel. Record each change in `exposures[].changes` as `{on,
    audience_was, kind, why}`: `narrowed` or `reworded` (a learner left, a typo, a translation);
    `widened`, a bigger test audience that is still identifiable and opted in (a second beta wave, a
    larger cohort), with `reassessed: [security, privacy, service_quality]` re-run for it; or
    `everyone`, a release to all, which is the L4's: open the L4 on this L3 first and deliver
-   through it. When the L3 completes, record `exposures[].ended: {how, on, l4, note}`: `how`
+   through it. When the L3 records `close`, record `exposures[].ended: {how, on, l4, note}`: `how`
    is `withdrawn` (taken down, devices collected back, the cohort or engagement over) or
    `handed_to_l4` with the L4's id in `l4`; `note` is free text in any language. E2E rung L4-open
    made a web page public under its L3 on reviews scoped to five testers; the same rules hold a
@@ -169,9 +172,9 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
      those. At the others, report the confidence, check the evidence each decision the move records
      names in `evidence_by_decision` (keyed by `product_type` where the evidence differs, `software`
      the fallback: v0.269.0), and do not
-     hold the move on the number (v0.259.0). The L3's threshold is its exit bar: an L3 defines on a
-     real problem, develops once its lightest test is named, and delivers once the prototype has
-     met users. E2E runs 42-43 held an L3 in discover for three in-world months, 0.6 against 0.64,
+     hold the move on the number (v0.259.0). The L3's threshold is its exit bar: an L3 sets its
+     target on a real problem, commits to build once its lightest test is named, and releases once
+     the prototype has met users. E2E runs 42-43 held an L3 in discover for three in-world months, 0.6 against 0.64,
      asking for the evidence its own build and learning delivery exist to produce.
    - Report both: "Confidence: 0.55. Effective threshold: 0.57 (base 0.85, adapted for solo_product). Needs: one more evidence source to cross."
 
@@ -195,7 +198,7 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
    - See `${CLAUDE_PLUGIN_ROOT}/engine/theory-gates.md` §Trio Perspective Requirement for per-scale guidance.
    - Note: Perspective CONFLICTS (2+ HIGH risk dimensions) are caught in step 2b, not here. This step checks for missing perspectives, not conflicting ones.
 
-7. **If transition is Deliver -> Complete: RUN EXECUTABLE DoD CHECKLIST** (see below)
+7. **If the decision is `close`: RUN EXECUTABLE DoD CHECKLIST** (see below)
 
 8. **Decision**:
    - All gates pass + confidence met + approval (if needed) + DoD pass (if delivery) = **PROGRESS**
@@ -214,42 +217,46 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
      - gate: <which gate or threshold>  # omit entirely when progressed
        reason: <why it did not clear, in your own words>
        unblocked_by: <the skill or evidence that would clear it>
-   decisions:                           # APPEND the move's decisions, when progressed (v0.305.0)
-     - decision: start_experiment       # one entry per decision the move makes (see below)
+   decisions:                           # APPEND the decisions, when progressed (v0.305.0)
+     - decision: start_experiment       # one entry per decision recorded (see below)
        on: <YYYY-MM-DD>
        gates: {evidence: pass, cynefin: pass, ...}   # this decision's gates (scale_locks.DECISIONS)
        ruling: progressed
-   progression_history:                 # APPEND one entry per transition, when progressed (v0.248.0)
-     - transition: "define -> develop"  # one entry for EACH transition crossed; two for a two-step move
-       decisions: [start_experiment, commit_to_build]   # what this move decides (v0.298.0)
-       date: <YYYY-MM-DD>
-       ruling: progressed
-       gates: {evidence: pass, privacy: pass-with-risk, ...}   # the statuses this move relied on
+       note: <for a repeated start_experiment: the test and the result it expects (DL-1373)>
    ```
 
-   **Name the decisions the move makes (v0.298.0).** Each level runs a learning loop, and a phase
-   move is a set of its decisions: discover -> define sets the target (`set_target`); define ->
-   develop starts an experiment and commits to build (`start_experiment`, `commit_to_build`);
-   develop -> deliver releases (`release`); deliver -> complete closes (`close`). Each gate belongs
-   to the decision it guards, and the move needs the gates of every decision it makes, the same set
-   as before. Since v0.306.0 the decisions are the record and the phase name is read off them.
+   **Name the decisions (v0.298.0).** Each level runs a learning loop: set the target
+   (`set_target`); start an experiment and commit to build (`start_experiment` and
+   `commit_to_build`, recorded together); release (`release`); close (`close`). Each gate belongs to
+   the decision it guards, and a move needs the gates of every decision it records.
 
-   **Record the decisions; they are where the diamond is (v0.305.0, phase migration stage 5b;
-   DL-1368).** Append one `decisions` entry for each decision the move makes, with its gates and the
-   date. Where a diamond is, is read from them (`scale_locks.phase_of`): develop needs both
-   `start_experiment` and `commit_to_build`. Since v0.306.0 the decisions are the only record:
-   `phase` is not read, and may be kept as a label for people reading the file. **An L0 does not move** (DL-1368
-   S2): when its purpose has been revisited (a re-derived `purpose_properties`, a changed `why`, the
-   bar's own review date), record `review` with the L0 gates, and the ruling. A project whose
-   diamonds still carry only a phase is offered `scripts/migrate_phase.py` by the next item.
+   **The decisions are the record, and where a diamond is, is read from them (v0.305.0, v0.306.0;
+   DL-1368).** Append one `decisions` entry for each decision, with its gates and the date.
+   `scale_locks.position` reads them: "committed to build" needs both `start_experiment` and
+   `commit_to_build`. `phase` is not read, and may stay as a label for people reading the file.
+   **An L0 does not move** (DL-1368 S2): when its purpose has been revisited (a re-derived
+   `purpose_properties`, a changed `why`, the bar's own review date), record `review` with the L0
+   gates, and the ruling. A project whose diamonds still carry only a phase is offered
+   `scripts/migrate_phase.py` by the next item.
 
-   **Move the phase, record the gates and append the history IN THE SAME WRITE (v0.248.0).** The
-   scale-lock gate refuses a write that moves a diamond forward unless, for every transition it
-   crosses, the matrix's required gates are passed in `theory_gates_status` (Security and Privacy
-   backed by a threat model and a privacy assessment on the canvas) and `progression_history` has an
-   entry for that transition. E2E runs 12, 14 and 16 moved diamonds forward leaving the history
-   empty, so the record showed where a diamond ended up and never how; run 14 moved one to develop
-   with its evidence gate still pending. Moving back, parking and killing are not judged.
+   **A loop iterates by appending, never by editing (DL-1373).** When a test reads inconclusive or
+   the front runner fails, append the decision the iteration makes: a new experiment is another
+   `start_experiment`, its `note` naming the test and the result it expects (and the test recorded
+   on the solution, as in step 2d); a re-chosen front runner is another `commit_to_build`, with
+   `front_runner` set to it. The
+   position stays where it is, and the earlier experiment and its verdict stay on the record. Never
+   remove or rewrite a recorded decision to move a diamond back. **Neither half is checked by a
+   hook** (tested on 0.308.2): a repeated decision is not judged, so nothing checks that the new
+   experiment names its test, and a write that removes a decision passes and moves the position
+   back. This step is the check.
+
+   **Record the decisions and their gates IN THE SAME WRITE (v0.248.0).** The scale-lock gate
+   refuses a write that records a decision unless its gates are passed in `theory_gates_status`
+   (Security and Privacy backed by a threat model and a privacy assessment on the canvas). E2E runs
+   12, 14 and 16 moved diamonds forward leaving no record of how; run 14 moved one to develop with
+   its evidence gate still pending. `progression_history` is not required since v0.307.8: the
+   decisions are the record of the move, and entries already there stay as history. Parking,
+   killing and archiving are not judged.
 
    **`last_progressed` HAS NO OTHER WRITER, AND A THEORY GATE READS IT (added 2026-09-20).** Set it
    whenever the ruling is `progressed`. Until now nothing in the plugin wrote this field — it
@@ -285,11 +292,11 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
    its value records which way it went.
 
 9. **If progressing**:
-   - **At Define→Develop with a product-leaf solution chosen**: open a cycle record in `.claude/canvas/cycle-history.yml` with `cycle_class: product-leaf` and **copy the solution's `ice_score` from `opportunities.yml` into `predicted.ice_score`**. If the solution has no ICE score, STOP — return "Cannot open product-leaf cycle without ICE. Run `/mycelium:ice-score` on the chosen solution first." This is the gate that prevents permanent dark cells in calibration. See `${CLAUDE_PLUGIN_ROOT}/engine/cycle-learning.md#cycle-class`.
-   - **Framework-self-development or observation transitions** (no OST solution leaf chosen — e.g., L2 strategy adjustment, cohort-log capture, validator-check ship): open the cycle record with `cycle_class: meta-dogfood` or `cycle_class: observation` as appropriate. `ice_score` may be zero with a `notes:` line stating why. These cycles are excluded from ICE-calibration aggregates by design.
+   - **At `commit_to_build` with a product-leaf solution chosen**: open a cycle record in `.claude/canvas/cycle-history.yml` with `cycle_class: product-leaf` and **copy the solution's `ice_score` from `opportunities.yml` into `predicted.ice_score`**. If the solution has no ICE score, STOP — return "Cannot open product-leaf cycle without ICE. Run `/mycelium:ice-score` on the chosen solution first." This is the gate that prevents permanent dark cells in calibration. See `${CLAUDE_PLUGIN_ROOT}/engine/cycle-learning.md#cycle-class`.
+   - **Framework-self-development or observation decisions** (no OST solution leaf chosen — e.g., L2 strategy adjustment, cohort-log capture, validator-check ship): open the cycle record with `cycle_class: meta-dogfood` or `cycle_class: observation` as appropriate. `ice_score` may be zero with a `notes:` line stating why. These cycles are excluded from ICE-calibration aggregates by design.
    - Update diamond state in `.claude/diamonds/active.yml`.
-   - **At Deliver→Complete: stamp `completed_at`** on the diamond (ISO-8601 — the true ship timestamp; no other diamond field records completion). This times the outcome→discovery loop: `/metrics-pull` Step 8b (DoD outcome-check) and the `session-start` overdue nudge both read `completed_at` to know when a shipped diamond's outcome is due for verification. Without it, the back half of the loop can't fire.
-   - **At Deliver→Complete: MOVE the diamond into `completed_diamonds` and write its `dod_verdict`** (v0.230.0). Not `archived_diamonds` — see 9b.
+   - **At `close`: stamp `completed_at`** on the diamond (ISO-8601 — the true ship timestamp; no other diamond field records completion). This times the outcome→discovery loop: `/metrics-pull` Step 8b (DoD outcome-check) and the `session-start` overdue nudge both read `completed_at` to know when a shipped diamond's outcome is due for verification. Without it, the back half of the loop can't fire.
+   - **At `close`: MOVE the diamond into `completed_diamonds` and write its `dod_verdict`** (v0.230.0). Not `archived_diamonds` — see 9b.
 
 9b. **Completing a diamond — the state that had a reader and no writer.**
 
@@ -329,17 +336,17 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
    retired by finishing anything. See `progression_ruling` (fixed 2026-08-05), `last_progressed`
    (fixed 2026-09-20, above) and the competitive gate in `docs/errata.md`.
    **A gate may not read a field that nothing writes — and a state nothing can enter is not a state.**
-   - **Render the updated journey map**: Follow `${CLAUDE_PLUGIN_ROOT}/engine/wayfinding.md` to show the user where they've moved to. This makes the transition visible — the user sees their position shift on the map.
-   - Log transition in `.claude/harness/decision-log.md`. If threshold was adapted, include: "Threshold adapted from [base] to [effective] because project_type=[type]. Would increase with [action]."
+   - **Render the updated journey map**: Follow `${CLAUDE_PLUGIN_ROOT}/engine/wayfinding.md` to show the user where the diamond now is. This makes the decision visible — the user sees the position change on the map.
+   - Log the decision in `.claude/harness/decision-log.md`. If threshold was adapted, include: "Threshold adapted from [base] to [effective] because project_type=[type]. Would increase with [action]."
    - Update `.claude/memory/product-journal.md`.
-   - **Offer the child cycle this transition makes possible** (v0.243.0; replaces "identify if child diamonds should be spawned", which fired in no run). When an **L0 enters define**, its purpose is stated and strategic questions follow: ask whether to open an L1 Strategy diamond on the first strategic decision, or record "no strategic decision open". When an **L3 enters develop** (Four Risks cleared), direct to `/mycelium:preflight`, which offers the L4 on the increment. When an **L4 enters deliver** (it has shipped), direct to `/mycelium:launch-tier`: record its launch data and categorise the release; a first release to the market opens an L5 (v0.254.0). Every scale must be enterable, and each opens only on what its parent has established (`engine/diamond-rules.md`, Entry locks, v0.245.0): run `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/scale_locks.py" --can-open <scale>` before the offer, and if the lock does not hold, offer the step that produces what is missing instead. The parent's phase is not the lock; its artefact is. **For each child diamond spawned, run `/mycelium:define-done` before it goes live** — pin its outcome `definition_of_done` and set `rolls_up_to` naming which parent outcome it serves (contribution-not-summation). A child born without a done-bar inherits the implicit-harshest-bar problem.
+   - **Offer the child cycle this decision makes possible** (v0.243.0; replaces "identify if child diamonds should be spawned", which fired in no run). When an **L0 records `state_purpose`**, strategic questions follow: ask whether to open an L1 Strategy diamond on the first strategic decision, or record "no strategic decision open". When an **L3 records `commit_to_build`** (Four Risks cleared), direct to `/mycelium:preflight`, which offers the L4 on the increment. When an **L4 records `release`** (it has shipped), direct to `/mycelium:launch-tier`: record its launch data and categorise the release; a first release to the market opens an L5 (v0.254.0). Every scale must be enterable, and each opens only on what its parent has established (`engine/diamond-rules.md`, Entry locks, v0.245.0): run `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/scale_locks.py" --can-open <scale>` before the offer, and if the lock does not hold, offer the step that produces what is missing instead. Where the parent is, is not the lock; its artefact is. **For each child diamond spawned, run `/mycelium:define-done` before it goes live** — pin its outcome `definition_of_done` and set `rolls_up_to` naming which parent outcome it serves (contribution-not-summation). A child born without a done-bar inherits the implicit-harshest-bar problem.
    - **Capture learnings** (see Learning Capture section below)
 
 10. **If blocked or needs evidence**:
     - Report in plain language: "Can't mark this done yet because [reason]."
     - List each failed item with its suggested skill
-    - Do not progress. Stay in current phase.
-    - At **L0 / L1 / L2 / L5** diamonds, if the Evidence gate is "Insufficient Evidence" and `.claude/jit-tooling/active-metrics.yml` is configured, suggest `/mycelium:metrics-pull` as one route to strengthen external signal. If `.claude/jit-tooling/active-metrics.yml` is missing, suggest `/mycelium:metrics-detect` first. (v0.14: `external_data` from snapshots satisfies the Evidence gate's behavioral-data criterion but does NOT replace `external_human` requirements at L2 Develop->Deliver.)
+    - Record no decision; the diamond stays where it is.
+    - At **L0 / L1 / L2 / L5** diamonds, if the Evidence gate is "Insufficient Evidence" and `.claude/jit-tooling/active-metrics.yml` is configured, suggest `/mycelium:metrics-pull` as one route to strengthen external signal. If `.claude/jit-tooling/active-metrics.yml` is missing, suggest `/mycelium:metrics-detect` first. (v0.14: `external_data` from snapshots satisfies the Evidence gate's behavioral-data criterion but does NOT replace `external_human` requirements at an L2's `release`.)
 
     **Technical-discovery shape detection (sol-007a, v0.39.6)**: when Evidence/Bias/Feasibility gates are blocking AND the agent observes any of the following technical-shape signals in canvas state, **name the dimension explicitly as "technical discovery" in the verdict and recommend `/mycelium:assumption-test` with read-docs / pull-real-payload framing — NOT `/mycelium:user-interview`** (interviewing a domain user does not validate an unread API contract):
     - Any `constraints.*` entry with `validated: false` that names an external API, contract, schema, data model, or third-party integration
@@ -357,9 +364,9 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
 
 ---
 
-## Executable Definition of Done (Deliver -> Complete ONLY)
+## Executable Definition of Done (at `close` ONLY)
 
-When transitioning from Deliver to Complete, run this checklist. Items marked `REVIEW` block progression. Items marked `PROMPTED` are asked but don't block.
+When recording `close`, run this checklist. Items marked `REVIEW` block progression. Items marked `PROMPTED` are asked but don't block.
 
 **Two rules before any item (v0.210.0, dogfood `l2-framework-reliability` 2026-09-02, where both fired on one transition).**
 - **WAIVED is a verdict.** A required field that is legitimately empty carries a sibling `<field>_absent_reason` or `<field>_applicability` with a substantive reason (the contract `check_instrument_contract.py` already reads). An item whose field is waived reports **WAIVED — not a pass and not a defect**, printed in the checklist output so the exemption is seen, and does not fail the gate. The dogfood canvas carried `accuracy_score_applicability: n/a-until-n10` beside a null score for nine days while this checklist read GATE FAILED against it; the checklist and a recorded founder decision disagreed, and the skill had no third verdict.
@@ -522,7 +529,7 @@ Use when evidence invalidates the current framing but the underlying need is sti
    - Theory: which framework informed the pivot (Torres "evidence-guided", Cagan "value risk", etc.)
    - Confidence delta (the pivot should REDUCE confidence initially — you have less evidence for the new framing)
 4. Update `.claude/diamonds/active.yml`:
-   - Phase often regresses (e.g., Define → Discover) to gather evidence on the new framing
+   - No decision is removed to move the diamond back (DL-1373): the new framing is recorded by appending. An L2's re-chosen target appends to `targets` (DL-1367); a new experiment toward it is another `start_experiment`
    - Confidence resets to match the new framing's evidence level
    - Add `pivot_history` entry listing old and new framings
 5. Update relevant canvas files (purpose.yml, jobs-to-be-done.yml, opportunities.yml)
@@ -573,51 +580,51 @@ When the project has `dogfood: true` set, stop conditions become Mycelium learni
 
 ---
 
-## Purpose-stance gate (Define -> Develop, and Develop -> Deliver)
+## Purpose-stance gate (at `commit_to_build` and `release`)
 
-**Run before either transition:**
+**Run before recording either:**
 
 ```bash
 python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_purpose_stance.py" --strict --diamond-id <this-diamond-id>
 ```
 
-**Pass `--diamond-id`.** Without it every Develop/Deliver diamond in the canvas is blocking-eligible,
-so this transition can fail on a DIFFERENT diamond's missing stance — a stop for a reason that has
+**Pass `--diamond-id`.** Without it every diamond committed to build or released is blocking-eligible,
+so this decision can fail on a DIFFERENT diamond's missing stance — a stop for a reason that has
 nothing to do with the step just taken. With it, the block is scoped to the diamond being moved and
 every other one still reports at the never-fail tier.
 
-Non-zero exit **blocks the transition**. It fires when a solution carries no stance against a binding
+Non-zero exit **blocks the decision**. It fires when a solution carries no stance against a binding
 property, when a verdict has no note, when a declared contradiction has no human override, or when the
 property list was derived from a superseded why/how/what.
 
 **AND NOW ON THE DIAMOND ITSELF, which is what this gate was always specified to do.** A diamond
-entering Develop or Deliver must carry its own `purpose_stance`, exactly as a solution does. Until
+recording `commit_to_build` or `release` must carry its own `purpose_stance`, exactly as a solution does. Until
 plugin 0.123.0 the script this gate calls read only `opportunities.yml` — so the gate ran, found the
 solutions clean and returned green **while never opening `active.yml`**. It could not see the artifact
-whose transition it was guarding. Diamonds in other phases, and parked diamonds, report at the
+whose decision it was guarding. Diamonds elsewhere in their loop, and parked diamonds, report at the
 never-fail tier and never block.
 
-**These two transitions and not the earlier ones**, deliberately: they are where a thing becomes real.
-Blocking at Discover or Define turns exploration into paperwork, which is the friction this framework
+**These two decisions and not the earlier ones**, deliberately: they are where a thing becomes real.
+Blocking at `set_target` or `start_experiment` turns exploration into paperwork, which is the friction this framework
 is already criticised for.
 
 **Exit 0 with "OK (or not in use)" means the project never adopted `purpose_properties`.** That is a
-pass, not a gap — do not prompt for adoption from inside a transition.
+pass, not a gap — do not prompt for adoption from inside a decision.
 
-## Learning Capture (After Every Phase Transition)
+## Learning Capture (After Every Decision)
 
-After EVERY successful transition (not just Deliver->Complete):
+After EVERY recorded decision (not just `close`):
 
-1. **Corrections**: "Were any mistakes made during this phase? I'll draft a corrections.md entry."
+1. **Corrections**: "Were any mistakes made since the last decision? I'll draft a corrections.md entry."
 2. **Patterns**: "Did anything work particularly well that's worth reusing?"
-3. **Delivery journal** (delivery phases only): "What implementation decisions and learnings should be recorded?"
-4. **Product journal** (discovery phases only): "What insights changed our understanding?"
+3. **Delivery journal** (delivery mode): "What implementation decisions and learnings should be recorded?"
+4. **Product journal** (discovery mode): "What insights changed our understanding?"
 
 Draft entries for the user. Present for confirmation before saving. This captures learning at the moment of discovery, not retrospectively.
 
-## Post-Build Next-Steps Nudge (Develop → Deliver, and after any build/POC produces working code)
+## Post-Build Next-Steps Nudge (at `release`, and after any build or POC produces working code)
 
-After any transition that produces working code (Develop→Deliver, or the moment the agent finishes a build/POC inside Develop), emit an explicit next-steps nudge. Closes the **post-build silence** friction surfaced by cohort-tester-2 (mycelium-roadmap decision-log 2026-05-26): framework completed POC and "just stopped and didn't prompt for more info or advise me what to do next."
+After any decision that follows working code (`release`, or the moment the agent finishes a build or POC after `commit_to_build`), emit an explicit next-steps nudge. Closes the **post-build silence** friction surfaced by cohort-tester-2 (mycelium-roadmap decision-log 2026-05-26): framework completed POC and "just stopped and didn't prompt for more info or advise me what to do next."
 
 Format:
 
@@ -651,8 +658,8 @@ Cite the risk shapes that fired during bootstrap (per CLAUDE.md attribution rule
 
 ## Counter-Argument Check (Bias Mitigation)
 
-Before progressing the diamond OR signing off on a phase transition, draft a one-line counter-argument: *"What's the strongest case AGAINST this transition — what gate is borderline, what evidence is weakest, what regression risk is being underweighted?"* If you can't articulate one, run `/mycelium:devils-advocate` before proceeding.
+Before recording a decision, draft a one-line counter-argument: *"What's the strongest case AGAINST this decision — what gate is borderline, what evidence is weakest, what regression risk is being underweighted?"* If you can't articulate one, run `/mycelium:devils-advocate` before proceeding.
 
-This addresses the bias cluster documented in corrections.md (L5 sycophancy 2026-04-20, eval overfitting 2026-04-30, sharper-framing-isn't-righter 2026-05-03). Common shape: agent prefers what feels right over what evidence supports under competing pressure (be helpful vs. be honest, advance vs. regress). Phase-transition reviews are the canonical context — the agent is incentivized to move forward and may underweight the case for staying or regressing.
+This addresses the bias cluster documented in corrections.md (L5 sycophancy 2026-04-20, eval overfitting 2026-04-30, sharper-framing-isn't-righter 2026-05-03). Common shape: agent prefers what feels right over what evidence supports under competing pressure (be helpful vs. be honest, advance vs. regress). Decision reviews are the canonical context — the agent is incentivized to move forward and may underweight the case for staying where it is or running another experiment.
 
-Especially important at L4→complete (DoD signoff) and L5 transitions (where the L5-sycophancy correction explicitly named promotional-language drift).
+Especially important at an L4's `close` (DoD signoff) and an L5's `release` and `close` (where the L5-sycophancy correction explicitly named promotional-language drift).
