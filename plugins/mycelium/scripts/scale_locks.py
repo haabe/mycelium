@@ -1069,6 +1069,19 @@ class State:
                 "`handed_to_l4` when an L4 carries it on. A learning build that outlives its L3 "
                 "with no L4 is production")
 
+    def _exposed(self, d: dict) -> bool:
+        """An L3 whose learning delivery reaches people, or may (v0.307.5, control audit F1;
+        ruling b, "every widening"): it has recorded `release`, its delivery has `started`, or an
+        exposure record of it is current, which already lets the work be released. Until then
+        only `release` counted, so a current or running trial widened unjudged. A record that is
+        neither current nor started is a plan, and changing a plan is not a widening."""
+        if _phase(d) in ("deliver", "complete") or delivery_of(d).get("started"):
+            return True
+        today = _today()
+        return any(isinstance(e, dict) and not e.get("ended")
+                   and not _record_problems(self, d, e, today)
+                   for e in _as_list(d.get("exposures")))
+
     def audience_change_missing(self, before: dict, after: dict) -> str | None:
         """AN L3'S AUDIENCE CHANGES ON THE RECORD ONCE IT DELIVERS (v0.267.0, recorded in
         v0.268.0). Its Security, Privacy and Service Quality were passed for that audience. A
@@ -1080,7 +1093,7 @@ class State:
         0.267.0 refused any change to the text, narrowing and typos included, and treated a
         second beta wave as production (overfit audit, 2026-09-26). E2E rung L4-open made the
         page public under the L3 on reviews scoped to five testers."""
-        if _scale(after) != "L3" or _phase(before) not in ("deliver", "complete"):
+        if _scale(after) != "L3" or not self._exposed(before):
             return None
         widened = self._reach_change_missing(before, after)
         if widened:
@@ -1448,10 +1461,18 @@ EXPOSURE_LAST = os.path.join(".claude", "state", "exposure-last")
 
 
 def _exposure_now(st: State) -> tuple[bool, str]:
-    """Whether real people may meet the work now; not ready when nothing is delivering."""
+    """Whether real people may meet the work now; not ready when nothing is delivering. Read as
+    the release gate reads it (v0.307.5, control audit P9): a current exposure record. Until then
+    this kept the pre-0.295 diamond rule, so the prompt and change lines stayed silent in states
+    the gate refuses, and they are the only guard when someone else deploys."""
     if not [d for d in st.active if _scale(d) in DELIVERY_SCALES and st.is_open(d)]:
         return False, ""
-    return _work_state(st, "expose")
+    any_records, current, reasons = current_exposures(st)
+    if current:
+        return True, "current exposure: " + ", ".join(_exposure_label(d, e) for d, e in current)
+    if not any_records:
+        return False, NO_EXPOSURE_RECORD
+    return False, "no exposure record is current:\n  " + "\n  ".join(reasons)
 
 
 def _swap_exposure_last(project_dir: str, ok: bool) -> str:
@@ -1529,15 +1550,17 @@ def exposure_line(project_dir: str, payload: dict, today: str | None = None) -> 
     except OSError:
         pass  # SPEAKS: the line is still returned; at worst it is said again next prompt
     missing = "\n".join(why.splitlines()[:6])
-    # v0.284.0: the L3's Develop -> Deliver gate asks for one trial outside the team of what the
-    # delivery puts in front of people, and this line forbade exactly that. E2E relay on 0.283.0:
-    # the builder read both correctly and refused to let one tester paste a recipe into the page,
-    # so the gate could only be passed by the founder doing the trial behind Mycelium's back.
-    trial = ("\nOne exception, which the L3's Develop -> Deliver gate asks for: one trial of what "
-             "the delivery will put in front of people, with one or a few named people outside "
-             "the team and run with the founder (a usability session with the prototype, a dry "
-             "run of the service, a walkthrough of the lesson), is Develop's own evidence, not a "
-             "release. Help run it and record it as that trial."
+    # v0.284.0 carved the L3's Develop -> Deliver trial out as "not a release", so the gate that
+    # asks for it could be passed (E2E relay on 0.283.0). Ruling (a), 2026-09-30, reverses that:
+    # a moderated trial with named outsiders IS an exposure, gated to its bounded audience
+    # (v0.307.5, control audit F2). It is still allowed: by recording it first.
+    trial = ("\nThe trial the L3's Develop -> Deliver gate asks for (one or a few named people "
+             "outside the team, run with the founder: a usability session with the prototype, a "
+             "dry run of the service, a walkthrough of the lesson) is an exposure: record it "
+             "first in the diamond's `exposures` (audience: those named people, channel: the "
+             "moderated session, data_class, until, consent), with its gates sized to that "
+             "audience, then run it. A mock with only made-up data, talked through, is recorded "
+             "with `data_class: synthetic`."
              if any(_scale(d) == "L3" and phase_of(d) == "develop"
                     for d in delivering) else "")
     return ("MYCELIUM EXPOSURE STATE: nothing built here may meet real people yet, and that "
@@ -1898,6 +1921,9 @@ def _reaches_people(d: dict) -> str:
         return "its learning delivery has started" if ld.get("started") else "it is in deliver"
     if _scale(d) in ("L4", "L5") and _phase(d) in ("deliver", "complete"):
         return f"it is in {_phase(d)}"
+    if _scale(d) in ("L4", "L5") and str(d.get("released_on") or "").strip():
+        # v0.307.5 (control audit, release G9): a release date with no `release` decision
+        return f"it records `released_on: {str(d.get('released_on'))[:10]}`"
     return ""
 
 
@@ -1966,9 +1992,10 @@ _LAUNCH_PHASES = ("deliver", "complete", "completed")
 
 
 def launch_moves(before_text: str, after_text: str) -> list[str]:
-    """The L5 diamonds a write moves into deliver or complete (v0.292.0). A diamond already there
-    before the write is not a move. An unreadable `before` counts every such L5 as a move, which
-    errs toward asking."""
+    """The L5 diamonds a write moves into deliver or complete (v0.292.0). A diamond already at that
+    point before the write is not a move. An unreadable `before` counts every such L5 as a move,
+    which errs toward asking. v0.307.5 (control audit K2): an L5 already in deliver read as
+    already launched, so closing it asked no one; both crossings ask now."""
     def rows(text: str) -> dict:
         try:
             doc = _as_dict(_parse(text, "diamonds/active.yml")) if text.strip() else {}
@@ -1982,9 +2009,13 @@ def launch_moves(before_text: str, after_text: str) -> list[str]:
                     out[str(d["id"])] = (_scale(d), phase)
         return out
     was, now = rows(before_text), rows(after_text)
+
+    def rank(phase: str) -> int:
+        phase = "complete" if phase == "completed" else phase
+        return PHASE_ORDER.index(phase) if phase in PHASE_ORDER else -1
     return [did for did, (scale, phase) in now.items()
             if scale == "L5" and phase in _LAUNCH_PHASES
-            and was.get(did, ("", ""))[1] not in _LAUNCH_PHASES]
+            and rank(phase) > rank(was.get(did, ("", ""))[1])]
 
 
 def _launch_approval(project_dir: str, payload: dict) -> None:

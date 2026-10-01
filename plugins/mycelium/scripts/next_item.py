@@ -942,7 +942,8 @@ def _learning_delivery_item(root: Path, today: str, st: dict, d: dict) -> dict |
             "is what opens the L4. Before Deliver, its gate asks for one trial outside the team of "
             "what the delivery puts in front of people (a usability session with the prototype, a "
             "dry run of the service, a walkthrough of the lesson), with a named person and run "
-            "with you; that trial is part of Develop, not a release.")
+            "with you; that trial is an exposure (ruling a): record it in the L3's `exposures` "
+            "first, with its gates sized to the people in it.")
     if need:
         text += " Still needed: " + ", ".join(need) + "."
     # v0.273.0: the L3 builds only what its test needs to run. E2E service world run 3: this item
