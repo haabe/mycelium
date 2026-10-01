@@ -710,8 +710,10 @@ def _inconclusive_item(root: Path, today: str, st: dict, d: dict) -> dict | None
                              f"assumption read out `{said}`. Choose one: run it again with a "
                              "changed sample or audience (a wider one is recorded on the learning "
                              "delivery, with its gates re-run); revise the assumption or the test "
-                             "and name the new test before building on it; or stop the L3 with "
-                             "the reason."),
+                             "and record the new test as another `start_experiment`, its note "
+                             "naming the test and the result it expects, before building on it "
+                             "(DL-1373: a loop iterates by appending); or stop the L3 with the "
+                             "reason."),
                     "why": "an inconclusive test is an outcome with a way on, not a dead end"}
     return None
 
@@ -734,7 +736,9 @@ def _pivot_item(root: Path, today: str, st: dict, d: dict) -> dict | None:
     if fr:
         text = (f'{did} (L3): its front runner {fr} failed its test ("{failed}"), so it does not '
                 "go on to an L4. Choose the way on: take another idea from its set as the front "
-                "runner, revise this one and name a new test before building on it, or, "
+                "runner (set `front_runner` and append another `commit_to_build`), revise this "
+                "one and record a new test as another `start_experiment` before building on it "
+                "(DL-1373: a loop iterates by appending, never by editing), or, "
                 "if none of its ideas can work, revise the L2's map and re-target (the L3 then "
                 "closes as retargeted).")
     else:
