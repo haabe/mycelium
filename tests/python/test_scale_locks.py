@@ -256,7 +256,7 @@ def test_l5_needs_a_shipped_l4_and_launch_data(tmp_path):
 def test_l5_from_an_unshipped_l4_is_locked(tmp_path):
     l4 = {"id": "l4-a", "scale": "L4", "phase": "develop", "parent": "l3-a"}
     p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), diamonds=[_l3("data-supported"), l4])
-    assert any("shipped" in m for m in sl.can_open(p, "L5", parent="l4-a"))
+    assert any("released (its `release`" in m for m in sl.can_open(p, "L5", parent="l4-a"))
 
 
 def test_a_parent_loop_is_reported_not_recursed(tmp_path):
@@ -284,7 +284,8 @@ def test_the_build_message_says_where_the_l3_is_from_its_decisions(tmp_path):
     l3 = {k: v for k, v in decided_one(_l3()).items() if k != "phase"}
     p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), diamonds=[l3])
     ok, why = sl.delivery_state(p)
-    assert ok and why.endswith("is in develop") and "None" not in why, why
+    assert ok and why.endswith("holds its lock: committed to build (delivery)") \
+        and "None" not in why, why
 
 
 def test_code_with_no_delivery_diamond_is_refused(tmp_path):
@@ -372,8 +373,8 @@ def test_a_forward_phase_move_needs_its_gates_and_a_history_entry(tmp_path):
     p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), diamonds=[l3])
     out = sl.new_diamond_violations(p, _write(yaml.safe_dump({"active_diamonds": [
         *BASE, {**l3, "phase": "develop"}]})))
-    assert len(out) == 1 and "cannot move to develop" in out[0]
-    assert "define->develop: the evidence gate passed" in out[0]
+    assert len(out) == 1 and "cannot record `start_experiment`, `commit_to_build` yet" in out[0]
+    assert "`start_experiment` and `commit_to_build`: the evidence gate passed" in out[0]
     assert "progression_history" not in out[0], "the decision entries are the move's record"
     ok = {**l3, "phase": "develop", "theory_gates_status": BUILD_PASSED,
           "progression_history": [{"transition": "define -> develop", "date": "2026-09-24",
@@ -390,8 +391,8 @@ def test_a_two_phase_jump_needs_both_transitions(tmp_path):
     p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), diamonds=[l3])
     jump = {**l3, "phase": "develop", "theory_gates_status": {**BUILD_PASSED, "bias": "pending"}}
     out = sl.new_diamond_violations(p, _write(yaml.safe_dump({"active_diamonds": [*BASE, jump]})))
-    assert len(out) == 1 and "discover->define: the bias gate" in out[0]
-    assert "define->develop: the bias gate" in out[0]
+    assert len(out) == 1 and "`set_target`: the bias gate" in out[0]
+    assert "`start_experiment` and `commit_to_build`: the bias gate" in out[0]
 
 
 def test_hook_applies_an_edit_before_judging(tmp_path):
@@ -650,7 +651,7 @@ def test_code_waits_for_develop_and_its_gates(tmp_path):
     and Privacy."""
     p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(), diamonds=[_l3(phase="define")])
     ok, why = sl.delivery_state(p)
-    assert not ok and "in Develop or Deliver (now `define`)" in why
+    assert not ok and "committed to build (now: target set (discovery))" in why
     p = _project(tmp_path, purpose=PURPOSE, opps=_full_opps(),
                  diamonds=[_l3(gates={"four_risks": "pass", "privacy": "pending"})])
     ok, why = sl.delivery_state(p)
@@ -737,7 +738,7 @@ def test_the_scale_lock_ack_waives_the_chain_never_the_phase(tmp_path):
     p = _project(tmp_path, purpose=PURPOSE, diamonds=[bare],
                  ack="l3-x L3 2026-09-24 user: prototype now\n")
     ok, why = sl.delivery_state(p)
-    assert not ok and "desired outcome" not in why and "Develop or Deliver" in why
+    assert not ok and "desired outcome" not in why and "committed to build (now:" in why
 
 
 def _bash(cmd):
@@ -843,7 +844,7 @@ def test_a_diamond_is_born_in_discover(tmp_path):
                            "  - {decision: start_experiment}\n  - {decision: commit_to_build}\n")
     edit["tool_input"]["new_string"] = before + decided_born
     out = sl.new_diamond_violations(p, edit)
-    assert len(out) == 1 and "born in discover, with no decisions" in out[0]
+    assert len(out) == 1 and "born with no decision recorded" in out[0]
 
 
 # ---------------------------------------------------------------- the exposure line (v0.252.0)
@@ -951,7 +952,7 @@ def test_a_pass_from_a_test_run_before_the_l3s_deliver_does_not_open_l4(tmp_path
     opps = _sol_opps(riskiest_assumption={"statement": "a backup approves",
                                           "cheapest_test": "hand-run for two weeks at Harbour",
                                           "verdict": "validated"})
-    for l3, gap in ((_l3("anecdotal"), "phase `develop`"),
+    for l3, gap in ((_l3("anecdotal"), "now: committed to build (delivery)"),
                     (_l3("anecdotal", phase="deliver", gates=EXPOSE_PASSED), "audience"),
                     (_l3("anecdotal", phase="deliver", gates=EXPOSE_PASSED,
                          learning={**LEARNING, "means": ""}), "channel missing")):

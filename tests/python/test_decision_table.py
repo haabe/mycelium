@@ -94,5 +94,6 @@ def test_a_move_recorded_as_decisions_is_its_own_record(tmp_path):
     out = st.move_missing(moved, "define")
     assert not any("progression_history" in x for x in out), out
     gap = {**moved, "theory_gates_status": {**gates, "cynefin": "pending"}}
-    assert any("define->develop: the cynefin gate" in x for x in st.move_missing(gap, "define"))
+    assert any("`start_experiment` and `commit_to_build`: the cynefin gate" in x
+               for x in st.move_missing(gap, "define"))  # 5d-1: a move said as its decisions
     assert st.move_missing({**d, "phase": "develop"}, "define") == [], "a phase edit moves nothing"

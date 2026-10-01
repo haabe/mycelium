@@ -105,7 +105,7 @@
           {
             "type": "command",
             "timeout": 10,
-            "statusMessage": "Mycelium exposure gate (a deploy waits for Deliver with Security and Privacy passed)",
+            "statusMessage": "Mycelium exposure gate (a deploy waits for a current exposure record)",
             "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/exposure-gate.sh"
           },
           {

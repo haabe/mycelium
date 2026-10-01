@@ -103,11 +103,11 @@ def _gate_groups(r: dict) -> list[tuple[str, list[str]]]:
     risk = [g for g in r["gates"] if str(r["gates"][g]).lower() in sl.PASSED]
     owed = [g for g in r["gates"] if g not in risk]
     groups = [
-        (f"owed before the next move ({t}), which decides: {made}",
+        (f"owed before the next decision ({made})",
          [g for g in owed if g in need and g not in _SAFETY]),
-        ((f"safety gates the next move ({t}) needs; the release gate also reads them per "
+        ((f"safety gates the next decision ({made}) needs; the release gate also reads them per "
           "exposure record"), [g for g in owed if g in need and g in _SAFETY]),
-        ("not passed, and not needed for the next move", [g for g in owed if g not in need]),
+        ("not passed, and not needed for the next decision", [g for g in owed if g not in need]),
         ("passed with a risk recorded (counts as passed; not owed)", risk),
     ]
     return [(h, gs) for h, gs in groups if gs]
@@ -383,7 +383,7 @@ def _print_gates(r: dict) -> None:
     """The gate table, grouped by what each gate is owed before (v0.299.0)."""
     print("gate | what would flip it | owner | date")
     if not r["gates"]:
-        print("(none pending) | every gate the next transition needs reads pass | - | -")
+        print("(none pending) | every gate the next decision needs reads pass | - | -")
     for heading, gs in _gate_groups(r):
         print(f"{heading}:")
         for g in gs:
@@ -894,7 +894,7 @@ def stamp_readers(root: Path, did: str, entry: dict) -> list[str]:
                 rf"^\s*- id: {re.escape(inp['id'])}\s*$",
                 "reader",
                 f"Named on diamonds/active.yml#{did}.closes_on (derived {entry['stored_at']}). "
-                f"A verdict here is an input to closing {did}'s current phase; the session that "
+                f"A verdict here is an input to {did}'s next decision; the session that "
                 f"scores it re-runs derive_closing_path.py --diamond-id {did} --write and acts on "
                 "the proposal it prints.",
             )
@@ -904,7 +904,7 @@ def stamp_readers(root: Path, did: str, entry: dict) -> list[str]:
                 rf"^\s*- id: {re.escape(inp['id'])}\s*$",
                 "on_close",
                 f"Named on diamonds/active.yml#{did}.closes_on (derived {entry['stored_at']}). "
-                f"Closing this task is an input to closing {did}'s current phase; the session that "
+                f"Closing this task is an input to {did}'s next decision; the session that "
                 f"closes it re-runs derive_closing_path.py --diamond-id {did} --write and acts on "
                 "the proposal it prints.",
             )
@@ -1001,7 +1001,7 @@ def main(argv=None) -> int:
     d = r["diamond"]
     plural = "y" if r["n_opps"] == 1 else "ies"
     print(
-        f"closing-path: {args.diamond_id} ({d.get('scale', '?')} {d.get('phase', '?')}, "
+        f"closing-path: {args.diamond_id} ({d.get('scale', '?')}, {sl.position(d)}, "
         f"confidence {d.get('confidence', '?')}); {r['n_opps']} open opportunit{plural} cite it"
     )
     # A diamond that closes on its bar is not waiting on the tree: an unlinked tree is no finding.

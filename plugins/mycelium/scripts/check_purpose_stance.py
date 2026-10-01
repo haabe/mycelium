@@ -274,7 +274,8 @@ def _diamond_stance_findings(diamonds_path: Path, binding: list[dict],
         if not isinstance(stance, dict):
             if not is_blocking and not dm.get("definition_of_done"):
                 continue  # nothing to drift yet: no bar written, not in a real phase
-            where = f"phase {phase or '<unset>'}{', parked' if parked else ''}"
+            here = _sl.position(dm) if _sl is not None else f"phase {phase or '<unset>'}"
+            where = f"{here}{', parked' if parked else ''}"
             out.append(
                 f"{did} (diamond, {where}): no purpose_stance against {len(ids)} binding "
                 f"propert{'y' if len(ids) == 1 else 'ies'} "
@@ -631,7 +632,8 @@ def main() -> int:
         default=None,
         help="the diamond being transitioned. Scopes the BLOCK tier to it, so a "
         "transition is never failed by a different diamond's missing stance. Omit for a "
-        "whole-canvas sweep, where every Develop/Deliver diamond is blocking-eligible.",
+        "whole-canvas sweep, where every diamond that has committed to build is "
+        "blocking-eligible.",
     )
     ap.add_argument(
         "--strict",

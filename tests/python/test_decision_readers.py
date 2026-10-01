@@ -51,18 +51,18 @@ def _group(out: str, heading: str) -> list[str]:
 
 def test_the_closing_path_says_what_each_gate_is_owed_before(tmp_path, capsys):
     out = _out(tmp_path, capsys)
-    assert "owed before the next move (develop->deliver), which decides: release:" in out
-    owed = _group(out, "owed before the next move")
+    assert "owed before the next decision (release):" in out  # 5d-1: said as the decision
+    owed = _group(out, "owed before the next decision")
     assert "four_risks" in owed and "evidence" in owed
-    safety = _group(out, "safety gates the next move")
+    safety = _group(out, "safety gates the next decision")
     assert {"security", "privacy", "service_quality", "regulatory"} <= set(safety)
-    assert _group(out, "not passed, and not needed for the next move") == ["bvssh"]
+    assert _group(out, "not passed, and not needed for the next decision") == ["bvssh"]
     assert _group(out, "passed with a risk recorded") == ["bias"]
 
 
 def test_define_to_develop_names_both_its_decisions(tmp_path, capsys):
     out = _out(tmp_path, capsys, L3.replace("phase: develop", "phase: define"))
-    assert "which decides: start experiment and commit to build" in out
+    assert "owed before the next decision (start experiment and commit to build)" in out
 
 
 def test_purpose_stance_blocks_once_the_diamond_decides_to_build():

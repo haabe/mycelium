@@ -233,11 +233,11 @@ def _reach(phase: str) -> dict[str, tuple[str, ...]]:
 #: two marked passed and four others pending.
 STAGES = {
     "build": ({"develop", "deliver"}, _reach("develop"),
-              ("code is built in Develop, after Discover->Define and Define->Develop have passed "
-               "their gates (Four Risks and Privacy among them)")),
+              ("code is built once it has committed to build (`start_experiment` and "
+               "`commit_to_build`, each with its gates, Four Risks and Privacy among them)")),
     "expose": ({"deliver"}, _reach("deliver"),
-               ("real people meet it in Deliver, after Develop->Deliver has passed its gates "
-                "(Security, Privacy and Service Quality among them)")),
+               ("real people meet it once it has released (`release`, with its gates: "
+                "Security, Privacy and Service Quality among them)")),
 }
 #: The two safety gates count as passed only with their record on the canvas (v0.247.0): a status
 #: word can be written without the work, and a threat model or a privacy assessment cannot.
@@ -416,6 +416,34 @@ def phase_of(d: dict) -> str:
 
 def _phase(d: dict) -> str:
     return phase_of(d)
+
+
+#: How Mycelium says where a diamond is (v0.308.0, stage 5d-1, DL-1372 V1): by the decisions it has
+#: recorded and the mode they put it in (DL-1368 S1: discovery until `commit_to_build`, delivery
+#: after). `phase_of` and the internal names stay (V3); people and the agent are told these.
+_POSITION = {"discover": "no decision yet (discovery)", "define": "target set (discovery)",
+             "develop": "committed to build (delivery)", "deliver": "released (delivery)",
+             "complete": "closed"}
+
+
+def position(d: dict) -> str:
+    """Where a diamond is, as Mycelium says it."""
+    if _scale(d) == "L0":
+        return "purpose stated" if phase_of(d) == "deliver" else "no purpose stated yet"
+    return _POSITION.get(phase_of(d), phase_of(d))
+
+
+def decided_by(transition: str) -> str:
+    """A move, said as the decisions it records: `start_experiment` and `commit_to_build`."""
+    return " and ".join(f"`{x}`" for x in TRANSITION_DECISIONS.get(transition, ())) or transition
+
+
+def _decisions_added(prev: dict | None, d: dict) -> str:
+    """The decisions a write adds to a diamond, as recorded (an L0's are its own: `state_purpose`,
+    `review`), in the order they appear."""
+    had = {str(x["decision"]) for x in decisions_of(prev or {})}
+    added = [str(x["decision"]) for x in decisions_of(d) if str(x["decision"]) not in had]
+    return ", ".join(f"`{x}`" for x in dict.fromkeys(added)) or "its decisions"
 
 
 def _phase_only_hint(d: dict) -> str:
@@ -885,7 +913,7 @@ class State:
             miss.append(f"{l3.get('id')}: evidence at medium confidence or higher before "
                         f"delivery (now `{ev}`; needs data-supported, test-validated or "
                         "launch-validated, Gilad Evidence-Guided p158-159). The L3's learning "
-                        "delivery produces it: take the L3 to Deliver, run its test with the "
+                        "delivery produces it: record the L3's `release`, run its test with the "
                         "audience in its exposure record, and record the verdict on the riskiest "
                         "assumption (`validated` when the bet the solution needs held, however "
                         "the statement is worded)")
@@ -907,8 +935,8 @@ class State:
         shipped = (l4.get("completed_at") or str(l4.get("id")) in self.completed_ids
                    or phase_of(l4) in SHIPPED_PHASES)
         if not shipped:
-            miss.append(f"{l4.get('id')}: shipped (phase deliver or complete) before its "
-                        "launch opens an L5")
+            miss.append(f"{l4.get('id')}: released (its `release`, or `close`, recorded) "
+                        "before its launch opens an L5")
         data = {**_as_dict(l4.get("launch_data")), **_as_dict(d.get("launch_data"))}
         if not any(_filled(data.get(k)) for k in ("usage", "feedback", "metric_movement")):
             miss.append(f"{l4.get('id')}: launch data from its release in `launch_data` (usage, "
@@ -961,8 +989,8 @@ class State:
         did, phase = str(d.get("id", "?")), phase_of(d)
         miss = []
         if phase not in phases:
-            where = "Develop or Deliver" if stage == "build" else "Deliver"
-            miss.append(f"{did}: in {where} (now `{phase or 'no phase'}`): {why}. Run "
+            need = "committed to build" if stage == "build" else "released"
+            miss.append(f"{did}: {need} (now: {position(d)}): {why}. Record it with "
                         f"/mycelium:diamond-progress {did}" + _phase_only_hint(d))
         for g in gates.get(_scale(d), ()):
             why = self.gate_missing(d, g)
@@ -996,13 +1024,13 @@ class State:
         if (phase in SHIPPED_PHASES or d.get("completed_at")) and not gaps:
             return None
         gaps = [{"means": "channel"}.get(g, g) for g in gaps]
-        return ("its learning delivery: the L3 in Deliver with its delivery recorded "
+        return ("its learning delivery: the L3 released, with its delivery recorded "
                 f"as an exposure record (`{delivery_key(d)}`) "
-                f"(now phase `{phase or 'discover'}`"
+                f"(now: {position(d)}"
                 + (f", {', '.join(gaps)} missing" if gaps else "") + "). The L4 opens on "
                 "evidence from real use by an identifiable, opted-in audience (a named list, "
                 "a cohort, a pre-release channel), through Security, Privacy and Service "
-                "Quality; a test run before the L3's Deliver does not count. Any means "
+                "Quality; a test run before the L3's `release` does not count. Any means "
                 "counts, a concierge or hand-run test included")
 
     def learning_delivery_missing(self, d: dict) -> list[str]:
@@ -1208,13 +1236,16 @@ class State:
             return []
         miss = []
         for t in _crossed(before, after):
+            # An L0 moves only by stating its purpose (DL-1368 S2); every other scale by the
+            # decisions of each move (v0.308.0: the move said as its decisions, DL-1372).
+            said = "`state_purpose`" if _scale(d) == "L0" else decided_by(t)
             for g in transition_gates(_scale(d), t):
                 why = self.gate_missing(d, g)
                 if why:
-                    miss.append(f"{t}: {why}")
+                    miss.append(f"{said}: {why}")
             why = self._l3_transition_missing(d, t)
             if why:
-                miss.append(f"{t}: {why}")
+                miss.append(f"{said}: {why}")
         # v0.307.8 (control audit): the `progression_history` requirement could not fire since
         # v0.306.0. A diamond only moves when it records the decisions of each move, and those
         # entries are the move's record (`_history_has` accepted them), so it was removed.
@@ -1254,8 +1285,8 @@ def _work_state(st: State, stage: str) -> tuple[bool, str]:
         chain_ok, chain_miss = st.verdict(d)
         miss = ([] if chain_ok else chain_miss) + st.stage_missing(d, stage)
         if not miss:
-            return True, (f"{d.get('id')} ({d.get('scale')}) holds its lock and is in "
-                          f"{phase_of(d)}")  # v0.307.1: the label could be stale or absent
+            return True, (f"{d.get('id')} ({d.get('scale')}) holds its lock: "
+                          f"{position(d)}")  # v0.307.1: from its decisions, not the label
         reasons.append(f"{d.get('id')} ({d.get('scale')}) is missing:\n    - "
                        + "\n    - ".join(miss))
     return False, "\n  ".join(reasons)
@@ -1288,7 +1319,7 @@ def exposure_state(project_dir: str) -> tuple[bool, str]:
 NO_EXPOSURE_RECORD = (
     "No exposure record covers it: record who it reaches on the diamond carrying the work "
     "(`exposures`: audience, channel, data class, until, consent, and the gates passed for it). "
-    "Since v0.306.0 the phase is not read, so there is no fallback to Deliver.")
+    "A recorded `release` is not enough on its own (since v0.306.0).")
 
 
 def _exposure_label(d: dict, e: dict) -> str:
@@ -1567,7 +1598,7 @@ def exposure_line(project_dir: str, payload: dict, today: str | None = None) -> 
     # asks for it could be passed (E2E relay on 0.283.0). Ruling (a), 2026-09-30, reverses that:
     # a moderated trial with named outsiders IS an exposure, gated to its bounded audience
     # (v0.307.5, control audit F2). It is still allowed: by recording it first.
-    trial = ("\nThe trial the L3's Develop -> Deliver gate asks for (one or a few named people "
+    trial = ("\nThe trial the gate before the L3's `release` asks for (one or a few named people "
              "outside the team, run with the founder: a usability session with the prototype, a "
              "dry run of the service, a walkthrough of the lesson) is an exposure: record it "
              "first in the diamond's `exposures` (audience: those named people, channel: the "
@@ -1773,7 +1804,7 @@ def _closing_violations(st: State, new_doc: dict, old_active: dict) -> list[str]
                          f"their gates: {', '.join(f'`{x}`' for x in lacking)} (it was written "
                          "into completed_diamonds without them)")
         if moved:
-            out.append(f"{d.get('id')} ({d.get('scale')}) cannot move to complete yet:\n    - "
+            out.append(f"{d.get('id')} ({d.get('scale')}) cannot be closed yet:\n    - "
                        + "\n    - ".join(moved))
     for d in [*st.active, *completed]:
         prev = old_active.get(str(d.get("id")))
@@ -1905,17 +1936,18 @@ def violations_between(project_dir: str, before: str, after: str) -> list[str]:
         if before_scale == _scale(d) and _scale(d):
             moved = st.move_missing(d, before_phase)
             if moved:
-                out.append(f"{d.get('id')} ({d.get('scale')}) cannot move to "
-                           f"{_phase(d)} yet:\n    - " + "\n    - ".join(moved))
+                out.append(f"{d.get('id')} ({d.get('scale')}) cannot record "
+                           f"{_decisions_added(old_active.get(str(d.get('id'))), d)} yet:\n    - "
+                           + "\n    - ".join(moved))
             continue
         ok, miss = st.verdict(d, entry=True)
         miss = [] if ok else miss
         phase = phase_of(d)
         if phase != "discover":
             # v0.247.0: E2E run 11 wrote a new L3 straight into develop, so no transition ran.
-            miss.append(f"{d.get('id')}: born in discover, with no decisions (it carries "
-                        f"decisions that put it in `{phase}`); decisions are recorded through "
-                        "/mycelium:diamond-progress and their gates")
+            made = ", ".join(f"`{x['decision']}`" for x in decisions_of(d))
+            miss.append(f"{d.get('id')}: born with no decision recorded (it carries {made}); "
+                        "decisions are recorded through /mycelium:diamond-progress and their gates")
         if miss:
             out.append(f"{d.get('id')} ({d.get('scale')}) cannot open yet:\n    - "
                        + "\n    - ".join(miss))
@@ -1928,7 +1960,8 @@ _GATE_TAIL = """
 Each scale opens on what its parent has established (engine/diamond-rules.md, Entry locks):
 L1 on a purpose, L2 on a strategy (an L1 diamond, a North Star, the landscape) and a desired
 outcome, L3 on a target opportunity with evidence in an L2 diamond, L4 on an L3 at medium
-confidence, L5 on launch data. Every diamond is born in discover. Produce what is missing, then
+confidence, L5 on launch data. Every diamond starts with no decision recorded. Produce what is
+missing, then
 retry; the lines above say which skill does it. Once open, a diamond moves at its own speed.
 
 Only if the USER explicitly wants this diamond opened anyway, they record it, one line per diamond
@@ -1938,9 +1971,10 @@ file on your own judgement."""
 
 _EXPOSE_TAIL = """
 A pilot or prototype that meets real people follows security and privacy practice whatever its
-scale: anything user-facing that holds data can let strangers in or leak it out. Progress the
-cycle to Deliver with /mycelium:diamond-progress, which runs Security (/mycelium:threat-model,
-/mycelium:security-review), Privacy (/mycelium:privacy-check) and Service Quality, then retry.
+scale: anything user-facing that holds data can let strangers in or leak it out. Record its
+`release` with /mycelium:diamond-progress, which runs Security (/mycelium:threat-model,
+/mycelium:security-review), Privacy (/mycelium:privacy-check) and Service Quality, and record who
+it reaches as an exposure record; then retry.
 Only if the USER explicitly says this work is not to be tracked, they record it in
 .claude/state/delivery-skip-ack with `recorded_at`, `expires` (30 days by default), the paths it
 `covers`, `releases: true` (a release is lifted only when it says so) and their words in `why`.
@@ -2009,9 +2043,9 @@ def _reaches_people(d: dict) -> str:
         return ("its `learning_delivery` says it started (not read since v0.307.0: run "
                 "scripts/migrate_phase.py, which moves it into an exposure record)")
     if _scale(d) == "L3" and (ld.get("started") or _phase(d) in ("deliver", "complete")):
-        return "its learning delivery has started" if ld.get("started") else "it is in deliver"
+        return "its learning delivery has started" if ld.get("started") else "it has released"
     if _scale(d) in ("L4", "L5") and _phase(d) in ("deliver", "complete"):
-        return f"it is in {_phase(d)}"
+        return "it has released" if _phase(d) == "deliver" else "it has closed"
     if _scale(d) in ("L4", "L5") and str(d.get("released_on") or "").strip():
         # v0.307.5 (control audit, release G9): a release date with no `release` decision
         return f"it records `released_on: {str(d.get('released_on'))[:10]}`"

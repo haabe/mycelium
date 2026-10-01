@@ -1264,7 +1264,7 @@ try:
     if not (isinstance(dod, dict) and dod.get('outcome') and dod.get('signal')):
       missing.append('{} ({})'.format(d.get('id', '?'), d.get('scale', '?')))
   if missing:
-    print('{} diamond(s) have no outcome Definition of Done: {}. Run /mycelium:define-done to pin what behaviour-change marks each done — the Deliver->Complete gate blocks without it.'.format(len(missing), ', '.join(missing[:4]) + ('...' if len(missing) > 4 else '')))
+    print('{} diamond(s) have no outcome Definition of Done: {}. Run /mycelium:define-done to pin what behaviour-change marks each done — the gate before close blocks without it.'.format(len(missing), ', '.join(missing[:4]) + ('...' if len(missing) > 4 else '')))
 except Exception:
   pass
 " "$PROJECT_DIR/.claude/diamonds/active.yml" 2>/dev/null || echo "")

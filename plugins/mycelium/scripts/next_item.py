@@ -475,7 +475,8 @@ def _unassessed(root: Path, today: str) -> list[dict]:
         elif ruled and ruled >= newest:
             continue  # typed date, no machine record: ruled on since the newest evidence
         else:
-            why = (f"has never been assessed, so it has never moved from {phase}" if not ruled
+            here = sl.position(d) if sl is not None else phase
+            why = (f"has never been assessed (it stands at: {here})" if not ruled
                    else f"was last ruled on {ruled}, and evidence has landed since")
         scale = str(d.get("scale") or "").upper()
         text, hint, waits = _move_text(state, d, phase, why)
@@ -501,7 +502,9 @@ def _move_text(state, d: dict, phase: str, why: str) -> tuple[str, str, bool]:
     """A ladder row's text, the hint that follows the list, and whether the move waits."""
     scale = str(d.get("scale") or "").upper()
     waits = _waits_on(state, d, f"{phase}->{_NEXT[phase]}")
-    text = f"{d['id']} ({scale}) {why}. Its next transition is {phase} -> {_NEXT[phase]}."
+    nxt = (sl.decided_by(f"{phase}->{_NEXT[phase]}") if sl is not None
+           else f"{phase} -> {_NEXT[phase]}")
+    text = f"{d['id']} ({scale}) {why}. Its next decision is {nxt}."
     if waits:
         # Only the move waits (v0.276.1): E2E rung L4-open on 0.276.0 read "It waits on" as the
         # whole L3 waiting, snoozed it, and left a scorable test unscored for four sessions.
@@ -564,7 +567,7 @@ def _l4_launch_item(root: Path, today: str, st: dict, d: dict, did: str) -> dict
                 "diamond on it.")
     elif not re.fullmatch(r"\d{4}-\d{2}-\d{2}", released):
         iid, command = f"release-l4:{did}", "/mycelium:launch-tier"
-        text = (f"{did} (L4) is in Deliver and nothing records it reaching its users. When it "
+        text = (f"{did} (L4) has released and nothing records it reaching its users. When it "
                 "does, the day the first person outside the team has it, say so, and it is "
                 "recorded as `released_on`. The launch data, and then an L5, follow from there.")
     elif recorded:
@@ -680,7 +683,7 @@ def _start_item(today: str, st: dict, d: dict) -> dict | None:
         return None
     return {"id": iid, "diamond": did, "since": today,
             "command": f"/mycelium:diamond-progress {did}",
-            "text": (f"{did} (L3) is in Deliver and its test has not started: nobody in its "
+            "text": (f"{did} (L3) has released and its test has not started: nobody in its "
                      "audience has taken part. Start it, and record `exposures[].started` "
                      "with the date the first person took part, or say what blocks the start. "
                      "Build only what the start needs; anything else is the next test on the "
@@ -707,7 +710,8 @@ def _inconclusive_item(root: Path, today: str, st: dict, d: dict) -> dict | None
                              f"assumption read out `{said}`. Choose one: run it again with a "
                              "changed sample or audience (a wider one is recorded on the learning "
                              "delivery, with its gates re-run); revise the assumption or the test "
-                             "and go back to define; or stop the L3 with the reason."),
+                             "and name the new test before building on it; or stop the L3 with "
+                             "the reason."),
                     "why": "an inconclusive test is an outcome with a way on, not a dead end"}
     return None
 
@@ -730,7 +734,7 @@ def _pivot_item(root: Path, today: str, st: dict, d: dict) -> dict | None:
     if fr:
         text = (f'{did} (L3): its front runner {fr} failed its test ("{failed}"), so it does not '
                 "go on to an L4. Choose the way on: take another idea from its set as the front "
-                "runner, revise this one and name a new test (the L3 goes back to define), or, "
+                "runner, revise this one and name a new test before building on it, or, "
                 "if none of its ideas can work, revise the L2's map and re-target (the L3 then "
                 "closes as retargeted).")
     else:
@@ -930,16 +934,17 @@ def _learning_delivery_item(root: Path, today: str, st: dict, d: dict) -> dict |
             if state.gate_missing(d, g)]
     if state.learning_delivery_missing(d):
         need.append("its learning delivery as an exposure record (audience, until, channel)")
-    text = (f"{did} (L3) has evidence from a test run before its Deliver, and that does not "
+    text = (f"{did} (L3) has evidence from a test run before its `release`, and that does not "
             "open the L4: the people it reached never went through Security, Privacy and "
-            "Service Quality. Take the L3 to Deliver and run its learning delivery with a named "
+            "Service Quality. Record the L3's `release` and run its learning delivery with a named "
             "audience who knows they are in it, until a date; a concierge or hand-run test "
             "counts. Its verdict is what opens the L4." if early else
-            f"{did} (L3) has built what its test needs and the test has not run. Take the L3 to "
-            "Deliver to run it with its audience: a named, opted-in group, until a date, by means "
-            "that fit the product (for web software, infrastructure as code for an environment "
-            "that can be torn down; for any product, a concierge or hand-run test). The verdict "
-            "is what opens the L4. Before Deliver, its gate asks for one trial outside the team of "
+            f"{did} (L3) has built what its test needs and the test has not run. Record the "
+            "L3's `release` to run it with its audience: a named, opted-in group, until a date, "
+            "by means that fit the product (for web software, infrastructure as code for an "
+            "environment that can be torn down; for any product, a concierge or hand-run test). "
+            "The verdict is what opens the L4. Before `release`, its gate asks for one trial "
+            "outside the team of "
             "what the delivery puts in front of people (a usability session with the prototype, a "
             "dry run of the service, a walkthrough of the lesson), with a named person and run "
             "with you; that trial is an exposure (ruling a): record it in the L3's `exposures` "
@@ -1359,7 +1364,7 @@ def render(item: dict) -> str:
         head += (" THE BUILD IS GROWING WHILE THE TEST WAITS: stop extending it. Name only what "
                  "the test still needs to run with its audience; record every other open question "
                  "as a next assumption on the solution (`assumptions:` in opportunities.yml) or as "
-                 "L4 work; then propose the move to Deliver")
+                 "L4 work; then propose recording its `release`")
     # An item only its doing can answer is snoozed to a date, never until asked (v0.280.0): the
     # ledger refuses the latter, so the item must not offer it.
     dated = str(item.get("id", "")).startswith(getattr(al, "DONE_TO_BE_ANSWERED", ()) or ())
