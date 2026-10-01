@@ -245,10 +245,10 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
    on the solution, as in step 2d); a re-chosen front runner is another `commit_to_build`, with
    `front_runner` set to it. The
    position stays where it is, and the earlier experiment and its verdict stay on the record. Never
-   remove or rewrite a recorded decision to move a diamond back. **Neither half is checked by a
-   hook** (tested on 0.308.2): a repeated decision is not judged, so nothing checks that the new
-   experiment names its test, and a write that removes a decision passes and moves the position
-   back. This step is the check.
+   remove or rewrite a recorded decision to move a diamond back: since v0.309.1 the scale-lock gate
+   refuses a write that removes a recorded decision or changes its name or date (DL-1374; a note,
+   the gates and the ruling stay editable). A repeated decision is not judged, so nothing checks
+   that the new experiment names its test: this step is that check.
 
    **Record the decisions and their gates IN THE SAME WRITE (v0.248.0).** The scale-lock gate
    refuses a write that records a decision unless its gates are passed in `theory_gates_status`
