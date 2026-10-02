@@ -4,6 +4,25 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-02.
 
+## v0.310.2 - reference pages say decisions, and two orphan pages get a way in
+
+**2026-10-02.** Reference cleanup under the docs north star (roadmap DL-1386), the part that needs no
+ruling: retired vocabulary and orphan pages.
+
+- **The retired phase, in five places.** `docs/context-surface.md` described a diamond by "phase
+  (Discover/Define/Develop/Deliver)", called the guardrails "phase-scoped" and said a gate blocks
+  "until the phase's evidence"; `docs/skills/README.md` said `/diamond-render` shows the "current
+  phase" and told readers to find "the phase section" for their scale; the agent operating contract,
+  injected into every session, said "Load phase-scoped guardrails ... per phase". Each now says what
+  the code does: position is read from the decisions a diamond has recorded, and guardrails load by
+  scale.
+- **Two orphans linked.** `docs/purpose-stance.md` and `docs/threat-model.md` had no inbound link from
+  any page. The glossary gains a purpose-stance entry; the system card links the threat model, with
+  the date it was last reviewed (2026-05-11).
+- **Not taken:** the removals and merges the roadmap audit proposes (the FAQ, the receipts archive
+  placeholder, the duplicate indexes, moving `docs/design/` out of the reader tree). Those wait for
+  the founder's ruling.
+
 ## v0.310.1 - get started leads to running it on a project
 
 **2026-10-02.** The first page rebuilt under the docs north star (the Core Model, Halland; roadmap

@@ -40,7 +40,7 @@ Before ANY implementation task **OR non-trivial product question on a project wi
 1. Identify which diamond you're in (`.claude/diamonds/active.yml`).
 2. Load domain context (`domains/{discovery|delivery|quality}/CLAUDE.md`, resolved per the path convention above) — **skip if canvas is empty**.
 3. Read `.claude/memory/corrections.md` for relevant past mistakes — **skip on first `/interview` round**.
-4. Load phase-scoped guardrails — always `harness/guardrails-core.md` + `harness/design-principles.md`, plus `harness/guardrails-discovery.md` (L0-L2), `harness/guardrails-delivery.md` (L3-L4), or `harness/guardrails-market.md` (L5) per phase.
+4. Load scale-scoped guardrails — always `harness/guardrails-core.md` + `harness/design-principles.md`, plus `harness/guardrails-discovery.md` (L0-L2), `harness/guardrails-delivery.md` (L3-L4), or `harness/guardrails-market.md` (L5), by the diamond's scale.
 
 ## Mandatory Pre-Ship Protocol (G-P-pre)
 
