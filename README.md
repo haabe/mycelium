@@ -1,6 +1,6 @@
 # Mycelium
 
-A harness that asks who this is for before the agent writes code.
+Mycelium won't make your idea good. It keeps you and your agent honest about whether it is, from first idea to market.
 
 Built on Claude Code, where the gates are structural. The files and skills port to [opencode](docs/integrations/opencode.md), [Codex](docs/integrations/codex.md) and [Cursor](docs/integrations/cursor.md).
 
@@ -109,7 +109,7 @@ Leaving is `/plugin uninstall`. Your canvas stays behind as plain YAML and reads
 /mycelium:start
 ```
 
-Claude Code, signed in. Other agents in [install paths](docs/install-paths.md), and one of those is how the stranger below ran it.
+Claude Code, signed in. Other agents in [install paths](docs/install-paths.md), and one of those is how the stranger below ran it. What happens after the four questions, step by step: [get started](docs/get-started.md).
 
 ## Where it is
 
