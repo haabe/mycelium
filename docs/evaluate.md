@@ -16,7 +16,7 @@ Mycelium imposes structure before the agent is allowed to start coding. That str
 
 What you get for the tax:
 
-- **Wrong-build risk drops.** Two of three Mycelium dogfood projects shipped; one was killed in L0 with evidence. The kill produced 10 framework features. See [macos-fileviewer case](receipts/cases/2026-04-macos-fileviewer.md).
+- **It stops a build before code.** Two of three Mycelium dogfood projects shipped; one was stopped in L0 on six simulated users, before any real user was asked. The kill produced 10 framework features. See [macos-fileviewer case](receipts/cases/2026-04-macos-fileviewer.md).
 - **Onboarding cost on inherited projects drops.** The canvas IS the spec. A new team member reads the canvas, runs `/diamond-assess`, and has product context without a meeting.
 - **Decision audit improves.** Every theory gate fires with a citation. The decision log is contrastive (per-alternative `why_not`), so a future reader can see which paths were rejected and why.
 - **Agent drift gets caught.** The reflexion loop, the pre-task protocol, the gates — these catch the agent jumping ahead. The discipline is mostly invisible until the moment the agent would have committed to the wrong scope.
