@@ -14,7 +14,7 @@ This page operationalizes the rules in [docs/README.md](../README.md) (the metad
   - "Across three small dogfood projects, the corrections log accumulated..." — small-N pattern.
   - Avoid: "Mycelium reduces wrong-build risk."
 - **Specifics over abstractions.** Name the project, the commit hash, the date. Anonymous "users have reported" fails the hedged-confidence rule.
-- **Anti-promotional on evaluation surfaces.** `docs/evaluate.md`, `docs/faq.md`, the README's "Who it's not for" — disclose tradeoffs before benefits. Per L5 sycophancy correction (`.claude/memory/corrections.md` 2026-04-20).
+- **Anti-promotional on evaluation surfaces.** `docs/evaluate.md`, the README's "Who it's not for" — disclose tradeoffs before benefits. Per L5 sycophancy correction (`.claude/memory/corrections.md` 2026-04-20).
 - **No marketing words.** Drop "powerful", "comprehensive", "robust", "seamless", "best-in-class". Show the receipt.
 - **No emojis outside diagrams.** Mermaid blocks may use them; prose may not.
 

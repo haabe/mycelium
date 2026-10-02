@@ -49,7 +49,7 @@ build_and_run() {
                     > plugins/mycelium/skills/diamond-assess/SKILL.md
                 printf '*Version 0.5.0 -- fixture\n\nShips 2 skills.\n' > CLAUDE.md
                 for f in README.md docs/README.md docs/skills/README.md \
-                         docs/skills/by-category.md docs/context-surface.md \
+                         docs/context-surface.md \
                          docs/architecture.md docs/integrations/opencode.md \
                          docs/integrations/codex.md docs/integrations/cursor.md; do
                     printf 'Ships 2 skills.\n' > "$f"
@@ -96,7 +96,7 @@ build_and_run() {
                     > plugins/mycelium/skills/diamond-assess/SKILL.md
                 printf '*Version 0.5.0 -- fixture\n\nShips 2 skills.\n' > CLAUDE.md
                 for f in README.md docs/README.md docs/skills/README.md \
-                         docs/skills/by-category.md docs/context-surface.md \
+                         docs/context-surface.md \
                          docs/architecture.md docs/integrations/opencode.md \
                          docs/integrations/codex.md docs/integrations/cursor.md; do
                     printf 'Ships 2 skills.\n' > "$f"
