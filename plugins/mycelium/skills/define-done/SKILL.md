@@ -165,7 +165,7 @@ one more thing to satisfy first.
 
 ## Provisional wording
 
-The exact prompt phrasing above is **provisional** — only the why → who → how-should-behaviour-change → what scaffold (Impact Mapping) survived research verification; the specific wording did not. Validate it with `/mycelium:prompt-optimizer` A/B rather than treating the phrasing as settled. Design + evidence grades: `docs/design/definition-of-done.md`.
+The exact prompt phrasing above is **provisional** — only the why → who → how-should-behaviour-change → what scaffold (Impact Mapping) survived research verification; the specific wording did not. Validate it with `/mycelium:prompt-optimizer` A/B rather than treating the phrasing as settled. Design + evidence grades: `docs/definition-of-done.md`.
 
 ## Theory Citations
 - Seiden (*Outcomes over Output*): done = a behaviour-change that creates value, not a feature shipped.

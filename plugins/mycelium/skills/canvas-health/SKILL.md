@@ -361,7 +361,7 @@ The failure this catches: the canvas carries open learning needs (ON HOLD / RE-G
 
 8e. **Diamond Definition-of-Done presence** (added with `/mycelium:define-done` — retrofit detector):
 
-The failure this catches: a diamond reaches Deliver (or sits in any phase) with no explicit outcome bar, so "done" defaults implicitly to the harshest, least-controllable outcome — wrong for validating purpose and a demotivation engine (see `docs/design/definition-of-done.md`).
+The failure this catches: a diamond reaches delivery (or sits at any decision) with no explicit outcome bar, so "done" defaults implicitly to the harshest, least-controllable outcome — wrong for validating purpose and a demotivation engine (see `docs/definition-of-done.md`).
 
    - Read `.claude/diamonds/active.yml`. For each diamond in `active_diamonds` whose state is not terminal (NOT `archived`/`killed`), check for a `definition_of_done` block with non-empty `outcome` and `signal`.
    - If missing or stub-empty: flag (NUDGE) — "Diamond [id] ([scale], [position]) has no outcome Definition of Done. Run `/mycelium:define-done` to pin what behaviour-change marks it done. Recording `close` will block without it." Do NOT auto-fill — the question is what produces a real bar, not the field.

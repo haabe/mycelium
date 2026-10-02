@@ -1255,7 +1255,7 @@ fi
 # ============================================================
 # A diamond with no explicit definition_of_done defaults its "done" to the
 # implicit-harshest, least-controllable outcome — wrong for validating purpose
-# and a demotivation engine (docs/design/definition-of-done.md). Retrofit
+# and a demotivation engine (docs/definition-of-done.md). Retrofit
 # detector for /mycelium:define-done. NUDGE tier, observability only.
 if [ -f "$PROJECT_DIR/.claude/diamonds/active.yml" ]; then
   DOD_WARNING=$(python3 -c "
