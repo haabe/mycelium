@@ -4,6 +4,21 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-02.
 
+## v0.310.5 - the README opens with what Mycelium won't do
+
+**2026-10-02.** Two edits the roadmap's Core Model evaluation of the README called live problems
+(roadmap worksheets 4.4a), ahead of the full README rebuild.
+
+- **The first line.** Was "A harness that asks who this is for before the agent writes code." The
+  founder's line replaces it: "Mycelium won't make your idea good. It keeps you and your agent honest
+  about whether it is, from first idea to market." The old line described only the first question,
+  while the GitHub About text, changed the same day, promises the whole span from idea to market; the
+  landing page now meets the promise of the path that sends people to it.
+- **Start links get-started.** `docs/get-started.md`, rebuilt in 0.310.1 for running Mycelium on a real
+  project and the page the About text links to, had no link from the README.
+- **Not in this release:** shortening and reordering the README. That is the rebuild, after the
+  pre-registered reads on 2026-10-06 and 2026-10-09.
+
 ## v0.310.4 - the Definition of Done rationale is a page, not a design file
 
 **2026-10-02.** On the founder's ruling after 0.310.3: `docs/design/definition-of-done.md` is cited by
