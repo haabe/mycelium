@@ -2,7 +2,7 @@
 
 **Audience**: you have read the README, and you are not convinced yet.
 **Time to read**: 8 min.
-**Last updated**: 2026-10-01.
+**Last updated**: 2026-10-03.
 
 The README says what Mycelium does. This page is about the question underneath it. What do you get from finding out before you build that you do not get from building first and finding out after?
 
@@ -16,9 +16,9 @@ The easy reading is that nobody asked. But that is not what happened. Before lau
 
 ## What finding out first actually buys you
 
-Two randomised trials in Milan and Turin followed 382 founders for five years (Coali, Gambardella and Novelli, *Research Policy*, 2024). One group was trained to write down what they assumed and test it before committing. The trained founders made their first three in ten stop decisions within about 12 weeks. The others took about 18 weeks to get as far. Note that stopping sooner is the good result here, because every week in between was spent building something that would be stopped anyway. By year five the untrained founders had stopped more of their projects, not fewer, 82 percent against 76. And independent experts who rated the abandoned projects found the trained founders had not thrown away good ones.
+Two randomised trials in Milan and Turin followed 382 founders for five years (Coali, Gambardella and Novelli, *Research Policy*, 2024). One group was trained to write down what they assumed and test it before committing. Early on, the trained founders were about six weeks ahead. The untrained founders needed until about week 18 to stop as many of their projects as the trained founders had stopped by week 12. Note that stopping sooner is the good result here, because every week in between was spent building something that would be stopped anyway. Training did not make founders stop more in the end. By year five the untrained founders had stopped slightly more of their projects, 82 percent against 76. What training changed was when they stopped. And independent experts who rated the abandoned projects found the trained founders had not thrown away good ones.
 
-So skipping discovery does not save you the kill. It moves it later, after you have paid for more of the build. That is the whole economic case, and it is a case about time and spend, not about some multiplier.
+So skipping discovery does not spare you from stopping. It moves it later, after you have paid for more of the build. That is the whole economic case, and it is a case about time and spend, not about some multiplier.
 
 A second finding sharpens it. A 2025 working paper pooling eight more trials and 1,556 founders found that experimenting without first stating what you believed gave no significant short-term benefit (Camuffo, Gambardella and Jannace). The test only helped when the assumption was written down before it.
 
@@ -30,24 +30,28 @@ If it were, Iridium would have survived. Three other well-recorded failures went
 - **Amazon's Fire Phone, 2014.** Amazon's doctrine is to start with the customer and work backwards. Staff who worked on the phone told *Fast Company* that "we were not building the phone for the customer". As one put it, "we were building it for Jeff." It ended in a $170 million charge in Amazon's own filing.
 - **Quibi, 2020.** It raised $1.75 billion for short mobile shows and closed within the year. Jeffrey Katzenberg, its founder, told CNBC that "we asked people to pay for it before they actually understood what it was." He also blamed the pandemic, and was honest that he would never know the split.
 
-None of these teams lacked research or smart people. What failed was keeping the question alive. Which assumption are we betting on? Has anyone outside the room tested it? And is the answer still true now that we are about to commit more?
+None of these teams lacked research or smart people. What failed was that nobody kept asking the question. Which assumption are we betting on? Has anyone outside the room tested it? And is the answer still true now that we are about to commit more?
 
-## Doing it by hand is a slippery slope
+## Done by hand, the checks fade
 
-You probably know all the much-repeated best practices already. Maybe you have tried to do them by hand. A list of assumptions in a doc, a rule to talk to five users before building, or a review before each release. It is like a unicorn sighting. Then there is a deadline. Or the speedy agent. And let's not forget the doc that went stale. And nobody is wrong for skipping it, because there was always a good reason.
+You probably know all the much-repeated best practices already. Maybe you have tried to do them by hand. A list of assumptions in a doc, a rule to talk to five users before building, or a review before each release. Seeing them kept up for long is like a unicorn sighting. Then there is a deadline. Or the speedy agent. And let's not forget the doc that went stale. And nobody is wrong for skipping it, because there was always a good reason.
 
 The checks are not hard. Keeping them in front of you at the moment you are about to commit is hard. That is the part Mycelium takes over.
 
-## What Mycelium keeps in step with you
+## Where Mycelium holds you to the checks
 
 Mycelium does not do your discovery. Talking to the people with the problem is still yours. What it does is put the checks inside your agent, at the moments you would otherwise skip them.
 
-- **Before any code.** Four questions, about ten minutes. What is the problem, who has it, what are you assuming, what would show you wrong. The answers go into your repo, where the agent can be held to them.
-- **At the first source file.** The agent stops and asks for that evidence before it writes one, and goes quiet once it exists.
-- **Before the agent builds on an idea.** The riskiest assumption under it has to have a named test, a sentence on how you would find out, not a label.
-- **Before anything reaches real people.** There has to be a record of who will see it, how, and until when, and of the security and privacy checks done for them.
-- **On the record.** Every decision is kept, with the evidence it rested on, so later you can see what you tested, what it showed, and what you decided because of it. You can correct a note on a decision. What you cannot do is make an old decision disappear, and Mycelium refuses the write that tries.
+- **Before any code.** Four questions, about ten minutes. What is the problem, who has it, what are you assuming, what would show you wrong. The answers are saved in your repo, and the checks below hold the agent to them.
+- **At the first source file.** If those four answers are missing, the agent stops before it writes one. Once you have them, it stops asking.
+- **Before the agent builds on an idea.** The riskiest assumption behind the idea has to have a named test: a sentence on how you would find out, not just a word like "interviews".
+- **Before anything reaches real people.** There has to be a record of who will see it and how it reaches them, and the security and privacy checks for those people have to be done. A test build also needs a date when it is taken down, so a test cannot drift into being the product.
+- **On the record.** Every decision is kept, with the evidence it rested on, so later you can see what you tested, what it showed, and what you decided because of it. You can correct a note on a decision. What you cannot do is make an old decision disappear, and Mycelium blocks any edit that tries.
 - **At the start of each session.** It proposes the one thing most worth doing next, instead of leaving you to remember.
+
+**What a stop looks like.** Say you ask the agent to start building and nothing about the idea is written down yet. It does not write the file. It tells you there is no record of who this is for, and offers the four questions first. Ten minutes. If you would rather just build, say so. Your choice goes into the repo as a file, dated, in your own words, so it holds for everyone who works there and shows in the history. Saying no switches off the stop before the first file. If you later answer the four questions after all, every check applies again, that one included. The agent is not allowed to make that call for you.
+
+**On a team.** The answers and the decision record are files in the repo, so they travel with the code. Everyone who has Mycelium installed meets the same checks, and anyone can read why a call was made.
 
 That is Iridium's missing piece, put where your agent works. The question gets asked again before each commitment, not once at the start.
 
@@ -63,7 +67,7 @@ An assumption, named. Tested on real people, overturned, and the product changed
 
 I'll give you two honest limits.
 
-The famous rule that a bug costs 100 times more to fix in production than in design has no data under it. It goes back to 1981 training notes, and in 2024 the US government's own security advisory committee filed the claim under "Fact or Myth?". Shifting security left is a sound practice resting on practitioner consensus, not on that number. Nothing here gives you a multiplier for discovery either, and you should be suspicious of anyone who does.
+The famous rule that a bug costs 100 times more to fix in production than in design has no data under it. It goes back to 1981 training notes, and in 2024 the US government's own security advisory committee filed the claim under "Fact or Myth?". Moving security checks earlier ("shifting left") is a sound practice resting on practitioner consensus, not on that number. Nothing here gives you a multiplier for discovery either, and you should be suspicious of anyone who does.
 
 And if you can run hundreds of experiments on real traffic, testing after you ship is a real alternative. At Microsoft about a third of the ideas teams believed in enough to build improved the metric they were meant to improve (Kohavi and colleagues). At that volume you can afford to be wrong two out of three times. With a weekend and no users yet, you cannot, so the cheap test has to come before the build.
 

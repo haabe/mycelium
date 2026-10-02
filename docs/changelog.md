@@ -4,6 +4,32 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-02.
 
+## v0.310.7 - the discovery page reworded where readers tripped, and it now shows a stop
+
+**2026-10-03.** `docs/mental-model.md`, the page for someone who has read the README and is not
+convinced yet. Six rounds of simulated readers (four personas, 44 readers in all, each asked what
+they had to reread) found the same few sentences stopping everyone, and none of them could picture
+what a stop looks like.
+
+- **Reworded where readers tripped**: the Milan/Turin timing sentence, the year-five figure, "save
+  you the kill", "keeping the question alive", two headings, the unicorn line, the checkpoint
+  bullets (what the first-file stop waits for, what "a named test" means, what a release record
+  holds, including a take-down date for test builds), "refuses the write", and "shifting left".
+- **Two new paragraphs**: "What a stop looks like" (the discovery gate as it behaves in 0.310.6: the
+  write is blocked, the four questions are offered, declining is recorded in the repo in your own
+  words and switches off that one stop, and the agent may not decline for you), and "On a team".
+- **Measured, simulated only**: agreement (three 1-7 items) went from 4.58 on the page as shipped to
+  5.04; readers who would install now from 0 of 4 to 3 of 8; what-it-does comprehension stayed at
+  or near the ceiling. Simulated readers are one model family and tolerate jargon better than
+  people; the real-reader check is the Reddit comprehension post.
+- **Alternatives considered**: re-adding the vocabulary section (rejected: the page uses none of its
+  terms); rewording until no reader trips on any changed sentence (stopped after six rounds: each
+  rewording of the last two sentences traded one trip for another, and untouched sentences draw
+  notes every round); voice-recomposing the lines a blind discriminator flagged (left to the
+  founder, since it would rewrite reader-tested sentences).
+- **Still open, not wording**: team leads ask about teammates without Mycelium installed; engineers
+  want a real stop in a session transcript.
+
 ## v0.310.6 - the file-viewer story says what actually happened
 
 **2026-10-02.** A warm reader named Mycelium's founding receipt as a hypothesis used to kill a product.
