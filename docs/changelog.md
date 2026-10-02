@@ -4,6 +4,29 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-02.
 
+## v0.310.1 - get started leads to running it on a project
+
+**2026-10-02.** The first page rebuilt under the docs north star (the Core Model, Halland; roadmap
+DL-1386), on the founder's rulings: the target reader is someone who hit a blocker traceable to
+skipped discovery, and the goal is running Mycelium on a real project, with the four questions as a
+milestone on the way.
+
+- **docs/get-started.md.** It now says, for a reader who arrives here first: what Mycelium is in one
+  line, what the four questions write and where (`purpose.yml`, `jobs-to-be-done.yml`), what the
+  menu after them offers and that building is open whichever is picked, how to come back
+  (`/mycelium:diamond-assess`, and the one next step each session shows), how to judge it (three real
+  projects), what it costs (linking the README's list of the four hooks), and how to remove it
+  (`uninstall.md`, which nothing linked). Its forward paths drop the FAQ and the evaluate page, both
+  unchanged since May, and point at the glossary, the mental model and usage modes.
+- **Three skills stop writing or naming the retired phase.** `interview` told the agent to create the
+  first L0 with `phase: discover`, and `launch-tier` did the same for a new L5; `ost-builder` said
+  "still in discover". The scripts that read the field default to `discover` when it is absent, so a
+  new diamond behaves exactly as before.
+- **Not taken:** linking get-started from the README now. The README is built last under the north
+  star, after the pages it points to; the missing link is recorded in the roadmap's audit. Rewriting
+  `nobody-used-it.md` and `mental-model.md`: both are under pre-registered tests until 2026-10-06 and
+  2026-10-09.
+
 ## v0.310.0 - the work-recording check reads the releases it counts
 
 **2026-10-02.** From the dogfood repo's `/framework-health` run (DL-1375), where

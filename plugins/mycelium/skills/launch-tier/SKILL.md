@@ -145,7 +145,6 @@ Add to `.claude/diamonds/active.yml#active_diamonds`:
 ```yaml
 - id: l5-<slug>
   scale: L5
-  phase: discover
   confidence: <0.0-1.0>
   parent: <the L4 diamond this release came from>
   spawned_by: launch-tier
