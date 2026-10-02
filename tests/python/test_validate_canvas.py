@@ -2237,6 +2237,33 @@ def test_calibration_due_is_silent_without_thresholds_or_below_every_minimum(tmp
     assert m.calibration_due_findings(canvas) == []
 
 
+def test_the_release_arc_is_never_reported_as_due_for_calibration(tmp_path, scripts_path):
+    """0.310.0. No calibration rule exists for cycle_recording_arc, so asking for one is noise.
+
+    Dogfood DL-1375: 12 cycles with effort_accuracy against minimum_n 5 read "calibration is
+    due", and engine/adaptive-thresholds.md had nothing to apply.
+    """
+    m = _ccr(scripts_path)
+    cycles = [{"cycle_class": "meta-dogfood", "calibration": {"effort_accuracy": "x"}}] * 12
+    canvas = _cycle_canvas(tmp_path, cycles, thresholds={
+        "cycle_recording_arc": {"based_on_n": 0, "minimum_n": 5, "default": 5}})
+    assert m.calibration_due_findings(canvas) == []
+
+
+def test_calibration_due_names_a_thresholds_file_that_lost_its_table(tmp_path, scripts_path):
+    """0.310.0. The file exists and the table does not: that is broken, not quiet.
+
+    Dogfood 2026-09-15: a range edit deleted `thresholds:` and nested every entry under
+    `_meta`; this returned [] for 17 days, the same answer as a project with nothing due.
+    """
+    m = _ccr(scripts_path)
+    canvas = _cycle_canvas(tmp_path, [{"cycle_class": "meta-dogfood"}])
+    (canvas / "thresholds.yml").write_text(
+        "_meta:\n  version: 1\n  ice_advance:\n    based_on_n: 0\n    minimum_n: 1\n")
+    out = m.calibration_due_findings(canvas)
+    assert len(out) == 1 and "no `thresholds` table" in out[0]
+
+
 def test_a_terminal_leaf_without_a_cycle_is_reported(tmp_path, scripts_path):
     m = _ccr(scripts_path)
     canvas = _cycle_canvas(tmp_path, [{"leaf_id": "sol-001", "cycle_class": "product-leaf"}],

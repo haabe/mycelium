@@ -4,6 +4,43 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-02.
 
+## v0.310.0 - the work-recording check reads the releases it counts
+
+**2026-10-02.** From the dogfood repo's `/framework-health` run (DL-1375), where
+`check_cycle_recording.py` read "OK, 1 minor release since cycle-024" while 111 had shipped.
+
+- **Unprefixed release subjects count.** Release subjects dropped the `v` at 0.228.0
+  ("0.228.0: ..."), and the pattern required it. Pointed at this repo the check read 26 and
+  stopped at v0.227.0. The pattern now takes `v0.97.0` anywhere in a subject, as before, and an
+  unprefixed `0.97.0` at the start of one, so a version a patch merely names ("what 0.307.0 still
+  read") is not a release. Each version counts once.
+- **The release repo can be set in the canvas.** `--release-repo` existed for a consumer whose
+  releases ship elsewhere, and nothing passed it: session-start runs the check with
+  `--project-dir` only, so the dogfood repo counted its own commit subjects. The check now reads
+  `thresholds.yml#thresholds.cycle_recording_arc.release_repo` (absolute, or relative to the
+  project), with `--release-repo` still first. The output names which one it used.
+- **A configured path that is not there is said, not swallowed.** The path is machine-specific.
+  With `--json` the check prints status `release-repo-missing` and exits 2; session-start, which
+  discards stderr, relays it as "could not look". Before, an error went to stderr only and the
+  session heard nothing.
+- **A thresholds.yml without its table is a WARN.** `calibration_due_findings` returned nothing
+  when the file existed and the `thresholds` key did not, the same answer as a project with
+  nothing due. On the dogfood canvas a range edit deleted the key and the 0.216.0 ratchet stayed
+  silent for 17 days while `validate_canvas` passed. The threshold fallback label now names that
+  cause too. No thresholds.yml at all stays silent.
+- **Alternatives not taken.** Requiring `thresholds` in `thresholds.schema.json`: it would turn a
+  consumer's build red over a file nothing in the framework writes, against the WARN-tier rule the
+  0.216.0 findings follow. Passing `--release-repo` from session-start: the hook cannot know the
+  path, and the canvas key reaches every caller. Counting tags instead of subjects: a consumer's
+  ledger repo has none, and subjects are what the existing tests and threshold were set against.
+- **The release arc is no longer reported as due for calibration.** `cycle_recording_arc` was
+  mapped to `effort_accuracy` as its calibration input, and `engine/adaptive-thresholds.md` has no
+  rule for it: on the dogfood canvas the ratchet read "calibration is due" on 12 rows with nothing
+  to apply. The mapping is removed (founder ruling, 2026-10-02) and the threshold keeps its declared
+  default. Not taken: writing a rule now, with recorded arcs as the input; it comes back with one.
+- Tests: 8 new in `test_check_cycle_recording.py`, 2 in `test_validate_canvas.py`. Nine fail on
+  0.309.6; the tenth guards the new pattern against counting a mid-subject mention.
+
 ## v0.309.6 - why Mycelium is opinionated, for the reader deciding (stage 6)
 
 **2026-10-02.** Stage 6 (DL-1369), the second narrative page, on the founder's brief.
