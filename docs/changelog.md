@@ -4,6 +4,28 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-02.
 
+## v0.310.6 - the file-viewer story says what actually happened
+
+**2026-10-02.** A warm reader named Mycelium's founding receipt as a hypothesis used to kill a product.
+Checked against the project's own decision log (`macos-fileviewer`, 2026-04-09), he was right, and the
+founder confirmed it: the file viewer was stopped on a mocked-persona exercise run instead of real
+interviews (4 of 6 would not switch, including the modal user). That log graded the result as
+speculation, called it "stop and reconsider" rather than abandonment, and listed real user interviews
+among the next moves. They were never run.
+
+- **README.** "When I went and investigated whether anyone other than me wanted it, that got debunked,
+  including for the one person I had been picturing the whole time." is replaced by what happened: six
+  made-up users, four would not switch, Mycelium logged it as speculation and put real users next, and
+  the founder never asked them. Voice-gated (register one, the 2026-07-31 origin sample).
+- **The receipt** (`docs/receipts/cases/2026-04-macos-fileviewer.md`) no longer says "killed ... with
+  evidence" or that it "saved the founder from building an unwanted product". Whether it was unwanted is
+  not known: no real person was asked.
+- **docs/evaluate.md** no longer says "killed in L0 with evidence", and its heading claims what one stop
+  shows ("It stops a build before code"), not that wrong-build risk drops.
+- **Not changed:** `docs/philosophy.md`, which already said "four of six simulated users". **Still to
+  fix:** `docs/nobody-used-it.md` line 21 ("when I went and asked"), frozen for a pre-registered search
+  read until 2026-10-06.
+
 ## v0.310.5 - the README opens with what Mycelium won't do
 
 **2026-10-02.** Two edits the roadmap's Core Model evaluation of the README called live problems

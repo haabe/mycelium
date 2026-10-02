@@ -87,7 +87,7 @@ Run it on three real projects. Not one, because writing anything down always fee
 
 Here is the weakness I already know about. The discovery gate fires once per repo and then goes quiet for good. Nothing in this brings you back in November to check whether the thing you assumed in August held up. You have to want that, and if you do not, this buys you one good Thursday and no more.
 
-I have got it wrong myself, which is where this started. The first thing Mycelium ever did was stop a macOS file viewer I wanted to build. It never got a line of code. When I went and investigated whether anyone other than me wanted it, that got debunked, including for the one person I had been picturing the whole time.
+I have got it wrong myself, which is where this started. The first thing Mycelium ever did was stop a macOS file viewer I wanted to build. It never got a line of code. I had it run six made-up users past the idea instead of asking real ones, and four of them would not switch, the typical user among them. Mycelium logged that as speculation and put talking to real users on the list of next moves. I never did. If even made-up people didn't want it, I figured real people wouldn't either.
 
 I do not know what finishing it would have cost me. Nobody does, which is the honest shape of evidence about a thing that did not happen. What I can count is the other side: that kill produced ten of the mechanisms this framework now runs on, and [they are listed in the write-up](docs/receipts/cases/2026-04-macos-fileviewer.md), badly-judged idea and all.
 
