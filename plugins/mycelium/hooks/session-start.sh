@@ -290,6 +290,8 @@ elif status == 'never-recorded':
   print('baseline:%s' % d.get('releases', '?'))
 elif status == 'no-releases-matched':
   print('cannotmeasure:%s' % (d.get('detail') or ''))
+elif status == 'release-repo-missing':
+  print('norepo:%s' % (d.get('detail') or ''))
 " 2>/dev/null || echo "")
   case "$CYCLE_STATE" in
     owed:*)
@@ -301,7 +303,13 @@ elif status == 'no-releases-matched':
       # means "not covering you". Worded without framework vocabulary on purpose:
       # a reader who has never recorded a cycle should still understand what the
       # check could not do, and is not being asked to do anything.
-      REMINDERS="${REMINDERS}Work-recording check could not measure here: it looks for release commits (vX.Y.0) in THIS repo's history and found none. If this project's releases ship from a different repo, the check is not covering you — point it with --release-pattern or record progress another way. "
+      REMINDERS="${REMINDERS}Work-recording check could not measure here: it looks for release commits (vX.Y.0) in THIS repo's history and found none. If this project's releases ship from a different repo, the check is not covering you — set release_repo under cycle_recording_arc in .claude/canvas/thresholds.yml, or record progress another way. "
+      ;;
+    norepo:*)
+      # 0.310.0. A configured release_repo is a path on one machine; on another it
+      # is missing, and the script exits 2. That used to reach nobody (stderr is
+      # discarded above), so "could not look" read the same as "nothing owed".
+      REMINDERS="${REMINDERS}Work-recording check could not look: ${CYCLE_STATE#norepo:}. Nothing was measured, so no cycle is known to be owed or not. "
       ;;
     baseline:*)
       REMINDERS="${REMINDERS}No cycle has ever been recorded here while ${CYCLE_STATE#baseline:} minor releases shipped — record ONE baseline cycle (/mycelium:retrospective) and later runs measure from it. "

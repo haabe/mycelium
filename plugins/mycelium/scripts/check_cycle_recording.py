@@ -60,8 +60,14 @@ ABSENT-INPUT DISCIPLINE (anti-pattern #9 — fail loud, but only on real gaps)
     - Arc at or over threshold                 -> exit 1.
 
 Usage:
-    check_cycle_recording.py [--project-dir DIR] [--threshold N]
+    check_cycle_recording.py [--project-dir DIR] [--release-repo DIR] [--threshold N]
                              [--release-pattern REGEX] [--json]
+
+    Where releases are counted: --release-repo, else
+    `thresholds.yml#thresholds.cycle_recording_arc.release_repo` (0.310.0; a path,
+    relative to the project), else the project itself. A dogfood consumer whose
+    releases ship from another repo sets the canvas key, because session-start passes
+    --project-dir only.
 
 Exit codes:
     0 — no cycle owed (or nothing to assess)
@@ -93,11 +99,20 @@ DEFAULT_THRESHOLD = 5
 MAX_RELEASES_SHOWN = 12
 MAX_GATE_ROWS_SHOWN = 6
 
-# Matches a minor release token anywhere in a commit subject, e.g. "v0.97.0".
-# Anchored on a non-word boundary rather than start-of-string because one
-# commit can announce two releases — "v0.95.0 + v0.95.1: ..." is real history,
-# and upstream v0.95.2 exists BECAUSE an earlier step read only the first.
-MINOR_RELEASE_RE = re.compile(r"\bv(\d+)\.(\d+)\.0\b")
+# Matches a minor release token in a commit subject: "v0.97.0" anywhere, or an
+# unprefixed "0.310.0" at the start of the subject. A `v` token is matched
+# anywhere because one commit can announce two releases — "v0.95.0 + v0.95.1:
+# ..." is real history, and upstream v0.95.2 exists BECAUSE an earlier step read
+# only the first.
+#
+# THE UNPREFIXED FORM WAS ADDED IN 0.310.0. Upstream release subjects dropped
+# the `v` at 0.228.0 ("0.228.0: ..."), and the `v`-only pattern matched none of
+# them: pointed at upstream, the dogfood run of 2026-10-02 read 26 releases and
+# stopped at v0.227.0 while about 80 had shipped. A pattern matching a shrinking
+# share of its input gives a plausible number, not an error. It is anchored to
+# the subject start so a version merely MENTIONED mid-subject ("what 0.307.0
+# still read") is not counted as a release.
+MINOR_RELEASE_RE = re.compile(r"(?:^|\bv)(\d+)\.(\d+)\.0\b")
 
 
 def _git(project_dir: Path, *args: str) -> str:
@@ -168,10 +183,45 @@ def minor_releases_since(project_dir: Path, since_iso, pattern: re.Pattern):
         args.append(f"--since={since_iso}")
     subjects = [line for line in _git(project_dir, *args).splitlines() if line.strip()]
 
-    releases = []
+    # Count each release ONCE. A release commit can be followed by others that
+    # name the same version ("v0.95.0 + v0.95.1" and later "fixes v0.95.0"), and
+    # counting mentions would inflate the arc. Keyed on the captured numbers when
+    # the pattern has them, so "v0.97.0" and "0.97.0" are one release.
+    releases, seen = [], set()
     for subject in subjects:
-        releases.extend(match.group(0) for match in pattern.finditer(subject))
+        for match in pattern.finditer(subject):
+            key = match.groups() or (match.group(0),)
+            if key not in seen:
+                seen.add(key)
+                releases.append(match.group(0))
     return releases, len(subjects)
+
+
+def _arc_entry(project_dir: Path):
+    """Return (cycle_recording_arc entry or None, why it is None).
+
+    The reason is returned rather than swallowed because each absence means a
+    different thing to the reader of the fallback label, and one of them is a
+    broken file: a thresholds.yml with no `thresholds` table (dogfood
+    2026-09-15 to 2026-10-02, a range edit deleted the key and every reader
+    fell back with the label "unset" for 17 days).
+    """
+    path = project_dir / ".claude" / "canvas" / "thresholds.yml"
+    if not path.is_file():
+        return None, "no thresholds.yml"
+    try:
+        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    except (OSError, yaml.YAMLError):
+        # A malformed thresholds file is a real problem, but it belongs to
+        # validate_canvas.py. Fall back visibly rather than crashing here.
+        return None, "thresholds.yml unreadable"
+    table = data.get("thresholds") if isinstance(data, dict) else None
+    if not isinstance(table, dict):
+        return None, "thresholds.yml has no `thresholds` table"
+    entry = table.get("cycle_recording_arc")
+    if not isinstance(entry, dict):
+        return None, "cycle_recording_arc unset"
+    return entry, ""
 
 
 def load_threshold(project_dir: Path, override):
@@ -179,23 +229,47 @@ def load_threshold(project_dir: Path, override):
     if override is not None:
         return override, "--threshold"
 
-    path = project_dir / ".claude" / "canvas" / "thresholds.yml"
-    if not path.is_file():
-        return DEFAULT_THRESHOLD, "default (no thresholds.yml)"
-    try:
-        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-    except (OSError, yaml.YAMLError):
-        # A malformed thresholds file is a real problem, but it belongs to
-        # validate_canvas.py. Fall back visibly rather than crashing here.
-        return DEFAULT_THRESHOLD, "default (thresholds.yml unreadable)"
-
-    entry = (data.get("thresholds") or {}).get("cycle_recording_arc")
-    if isinstance(entry, dict):
+    entry, why = _arc_entry(project_dir)
+    if entry is not None:
         for key, label in (("calibrated", "calibrated"), ("default", "declared default")):
             value = entry.get(key)
             if isinstance(value, int) and value > 0:
                 return value, f"thresholds.yml#cycle_recording_arc.{key} ({label})"
-    return DEFAULT_THRESHOLD, "default (cycle_recording_arc unset)"
+        why = "cycle_recording_arc unset"
+    return DEFAULT_THRESHOLD, f"default ({why})"
+
+
+def load_release_repo(project_dir: Path):
+    """Return the configured release repo as a Path, or None when none is configured.
+
+    `thresholds.yml#thresholds.cycle_recording_arc.release_repo` (added 0.310.0).
+    `--release-repo` existed for the consumer case from the start, and nothing
+    passed it: session-start runs this with `--project-dir` only, so a dogfood
+    consumer counted its OWN commit subjects and read "OK, 1 minor release"
+    while about 111 had shipped upstream (dogfood 2026-10-02). Configuring it in
+    the project's own canvas reaches every caller, the hook included, without
+    each one having to know. A relative path resolves against the project.
+    """
+    entry, _ = _arc_entry(project_dir)
+    value = entry.get("release_repo") if entry is not None else None
+    if not isinstance(value, str) or not value.strip():
+        return None
+    path = Path(value.strip()).expanduser()
+    return path if path.is_absolute() else project_dir / path
+
+
+def resolve_release_repo(project_dir: Path, cli_value):
+    """Return (release repo, where it came from). Precedence: CLI > canvas > the project.
+
+    The source is None only when the project itself is the release repo, which is the
+    one case the disclosure in the output may omit.
+    """
+    if cli_value:
+        return Path(cli_value).resolve(), "--release-repo"
+    configured = load_release_repo(project_dir)
+    if configured is not None:
+        return configured.resolve(), "thresholds.yml#cycle_recording_arc.release_repo"
+    return project_dir, None
 
 
 def _report_no_matches(as_json, commits_scanned, since_label, pattern) -> int:
@@ -576,7 +650,11 @@ _CALIBRATION_INPUT = {
     "ice_advance": ("product-leaf", "ice_accuracy"),
     "confidence_calibration": ("product-leaf", "risk_accuracy"),
     "bakeoff_delta": ("product-leaf", "ice_accuracy"),
-    "cycle_recording_arc": (None, "effort_accuracy"),
+    # cycle_recording_arc was mapped to effort_accuracy from 0.216.0 to 0.309.6 and REMOVED in
+    # 0.310.0. engine/adaptive-thresholds.md has no calibration rule for it, and estimate error
+    # does not measure how many releases may pass between cycles, so the finding asked for a
+    # step nobody could perform (dogfood DL-1375: "calibration is due" on 12 rows, no rule to
+    # apply). Add it back with a rule, not before; the threshold keeps its declared default.
 }
 #: A solution status that is a terminal state in engine/cycle-learning.md's sense
 #: (launched, archived, killed), in the spellings canvases actually use.
@@ -628,7 +706,21 @@ def calibration_due_findings(canvas_dir):
     thresholds = _load_yaml(canvas / "thresholds.yml")
     table = thresholds.get("thresholds") if isinstance(thresholds, dict) else None
     cycle_file = canvas / "cycle-history.yml"
-    if not isinstance(table, dict) or not cycle_file.exists():
+    if not cycle_file.exists():
+        return []
+    if not isinstance(table, dict):
+        # 0.310.0. A thresholds.yml that EXISTS without a `thresholds` table used to
+        # return [] here, the same as a project with nothing to calibrate. On the
+        # dogfood canvas a range edit deleted the key (2026-09-15) and this ratchet,
+        # built so the calibration step "cannot be skipped silently", went silent for
+        # 17 days while validate_canvas passed. No file at all is still silent: that
+        # is a project that has not set thresholds, not a broken one.
+        if (canvas / "thresholds.yml").exists():
+            return [(
+                "thresholds.yml has no `thresholds` table, so no threshold can be checked "
+                "for calibration and every reader falls back to its default. A deleted or "
+                "mis-indented `thresholds:` key reads exactly like this"
+            )]
         return []
     counts = calibration_input_counts(cycle_file)
     total = len(_load_yaml(cycle_file).get("cycles") or [])
@@ -723,12 +815,15 @@ def main() -> int:
         print(f"check_cycle_recording: not a directory: {project_dir}", file=sys.stderr)
         return 2
 
-    release_repo = Path(args.release_repo).resolve() if args.release_repo else project_dir
+    release_repo, repo_source = resolve_release_repo(project_dir, args.release_repo)
     if not release_repo.is_dir():
-        print(
-            f"check_cycle_recording: --release-repo is not a directory: {release_repo}",
-            file=sys.stderr,
-        )
+        detail = f"{repo_source} is not a directory: {release_repo}"
+        if args.json:
+            # A configured path is machine-specific and will be missing on other
+            # machines. session-start reads this with stderr discarded, so an
+            # error on stderr alone would reach nobody: say it as a status.
+            print(json.dumps({"status": "release-repo-missing", "detail": detail}))
+        print(f"check_cycle_recording: {detail}", file=sys.stderr)
         return 2
 
     pattern = MINOR_RELEASE_RE
@@ -784,7 +879,7 @@ def main() -> int:
     # 10 upstream versions in its own commit subjects while 29 actually shipped —
     # so the count must never appear without saying where it came from.
     if release_repo != project_dir:
-        since_label += f" [releases counted in {release_repo}]"
+        since_label += f" [releases counted in {release_repo}, from {repo_source}]"
 
     return report(
         {

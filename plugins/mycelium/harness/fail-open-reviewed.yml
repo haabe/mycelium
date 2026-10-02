@@ -440,6 +440,15 @@ reviewed:
     terminal_leaf_without_cycle_findings report nothing for that file. Both are WARN-tier
     advisories inside the validator; a malformed canvas file is the schema tier's finding,
     and the release-cadence half of this script still exits 2 on its own preconditions.
+- id: check_cycle_recording.py@ce81127a21
+  verdict: accepted
+  reason: >-
+    _arc_entry, unparseable thresholds.yml (0.310.0, moved out of load_threshold): returns
+    (None, "thresholds.yml unreadable"), and the reason is not dropped. load_threshold puts it in
+    the threshold label every output line carries ("default (thresholds.yml unreadable)"),
+    asserted by test_unreadable_thresholds_falls_back_visibly. load_release_repo falls back to the
+    project for the same file, and the same output line says why. A malformed canvas file is the
+    schema tier's finding.
 - id: check_retirement_candidates.py@2eb6be8b21
   verdict: accepted
   reason: >-

@@ -285,3 +285,105 @@ def test_json_output_is_machine_readable(scripts_path, tmp_path, capsys):
     payload = json.loads(capsys.readouterr().out)
     assert payload["status"] == "cycle-owed"
     assert payload["releases"] == 10
+
+
+# --- 0.310.0: what the check reads (dogfood 2026-10-02, DL-1375) -------------
+# The check read "OK, 1 minor release" while about 111 had shipped. Two causes,
+# either sufficient: upstream subjects dropped the `v` at 0.228.0, and nothing
+# passed --release-repo for a consumer. Each test below fails on 0.309.6.
+
+def test_unprefixed_release_subjects_are_counted(scripts_path, tmp_path):
+    mod = _import(scripts_path)
+    project = _repo(tmp_path / "proj", [f"0.{n}.0: r (#{n})" for n in range(228, 233)])
+    _cycles(project, "2000-01-01T00:00:00Z")
+
+    assert _run(mod, "--project-dir", str(project)) == 1
+
+
+def test_an_unprefixed_version_mentioned_mid_subject_is_not_a_release(scripts_path, tmp_path, capsys):
+    """'0.307.1: what 0.307.0 still read' is a patch that NAMES a minor release."""
+    import json as _json
+    mod = _import(scripts_path)
+    project = _repo(tmp_path / "proj", ["0.307.1: what 0.307.0 still read in the old shape"])
+    _cycles(project, "2000-01-01T00:00:00Z")
+
+    _run(mod, "--project-dir", str(project), "--json")
+    assert _json.loads(capsys.readouterr().out)["status"] == "no-releases-matched"
+
+
+def test_one_release_named_twice_counts_once(scripts_path, tmp_path, capsys):
+    import json as _json
+    mod = _import(scripts_path)
+    project = _repo(tmp_path / "proj", ["v0.95.0: ship", "fix: the v0.95.0 regression", "v0.96.0: next"])
+    _cycles(project, "2000-01-01T00:00:00Z")
+
+    _run(mod, "--project-dir", str(project), "--json")
+    payload = _json.loads(capsys.readouterr().out)
+    assert payload["releases"] == 2
+
+
+def _arc_config(project, body):
+    path = project / ".claude" / "canvas" / "thresholds.yml"
+    path.write_text("thresholds:\n  cycle_recording_arc:\n    default: 5\n" + body)
+
+
+def test_release_repo_is_read_from_the_canvas_and_disclosed(scripts_path, tmp_path, capsys):
+    """The hook passes --project-dir only; the canvas setting must reach it anyway."""
+    mod = _import(scripts_path)
+    ledger = _repo(tmp_path / "ledger", ["chore: local work, mentions v0.198.0"])
+    upstream = _repo(tmp_path / "upstream", [f"0.{n}.0: r" for n in range(228, 238)])
+    _cycles(ledger, "2000-01-01T00:00:00Z")
+    _arc_config(ledger, f"    release_repo: {upstream}\n")
+
+    assert _run(mod, "--project-dir", str(ledger)) == 1
+    out = capsys.readouterr().out
+    assert str(upstream) in out
+    assert "thresholds.yml#cycle_recording_arc.release_repo" in out
+
+
+def test_a_relative_release_repo_resolves_against_the_project(scripts_path, tmp_path):
+    mod = _import(scripts_path)
+    ledger = _repo(tmp_path / "ledger", ["chore: local work only"])
+    _repo(tmp_path / "upstream", [f"v0.{n}.0: r" for n in range(10, 20)])
+    _cycles(ledger, "2000-01-01T00:00:00Z")
+    _arc_config(ledger, "    release_repo: ../upstream\n")
+
+    assert _run(mod, "--project-dir", str(ledger)) == 1
+
+
+def test_a_missing_configured_release_repo_is_a_status_not_silence(scripts_path, tmp_path, capsys):
+    """session-start discards stderr, so 'could not look' must arrive as JSON."""
+    import json as _json
+    mod = _import(scripts_path)
+    ledger = _repo(tmp_path / "ledger", ["v0.90.0: a"])
+    _cycles(ledger, "2000-01-01T00:00:00Z")
+    _arc_config(ledger, f"    release_repo: {tmp_path / 'not-on-this-machine'}\n")
+
+    assert _run(mod, "--project-dir", str(ledger), "--json") == 2
+    payload = _json.loads(capsys.readouterr().out)
+    assert payload["status"] == "release-repo-missing"
+    assert "not-on-this-machine" in payload["detail"]
+
+
+def test_the_cli_release_repo_wins_over_the_canvas(scripts_path, tmp_path, capsys):
+    mod = _import(scripts_path)
+    ledger = _repo(tmp_path / "ledger", ["chore: local"])
+    upstream = _repo(tmp_path / "upstream", ["v0.90.0: a"])
+    _cycles(ledger, "2000-01-01T00:00:00Z")
+    _arc_config(ledger, f"    release_repo: {tmp_path / 'missing'}\n")
+
+    assert _run(mod, "--project-dir", str(ledger), "--release-repo", str(upstream)) == 0
+    assert "from --release-repo" in capsys.readouterr().out
+
+
+def test_a_thresholds_file_without_its_table_says_so(scripts_path, tmp_path, capsys):
+    """The dogfood shape: every threshold nested under _meta after a deleted key."""
+    mod = _import(scripts_path)
+    project = _repo(tmp_path / "proj", ["v0.90.0: a"])
+    _cycles(project, "2000-01-01T00:00:00Z")
+    (project / ".claude/canvas/thresholds.yml").write_text(
+        "_meta:\n  version: 1\n  cycle_recording_arc:\n    default: 2\n"
+    )
+
+    assert _run(mod, "--project-dir", str(project)) == 0
+    assert "no `thresholds` table" in capsys.readouterr().out
