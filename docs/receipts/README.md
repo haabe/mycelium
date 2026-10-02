@@ -85,9 +85,9 @@ Cases that produced evidence, overturned a prior claim, or closed an investigati
 
 ## Other indexes
 
-- [By date](by-date.md) — chronological
-- [By contributor](by-contributor.md) — per-person (links into CONTRIBUTORS.md)
-- [By mechanism](by-mechanism.md) — per-graduated-thing
+- [Receipts index](index.md) — the same cases by date, by the mechanism each produced, and by contributor
+
+**Checking a claim.** Case files name, in their frontmatter, the commits they produced. Follow them on GitHub to see the change itself.
 
 ## How to add a case
 

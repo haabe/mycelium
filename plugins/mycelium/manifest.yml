@@ -107,6 +107,7 @@ evals:
     - .claude/evals/dogfood-reports/
     - .claude/evals/results/
     - .claude/evals/metrics/          # v0.14: per-project metric snapshots
+    - .claude/evals/design/           # v0.310.3: maintainer design plans, moved out of docs/
 
 # Metrics adapters (v0.14) — mixed.
 # Framework ships TEMPLATE.md, GENERATING.md, and github.md as the reference

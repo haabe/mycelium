@@ -24,7 +24,6 @@ Three common entry paths, each anchored on a specific user task. Pick the one th
 - `mental-model.md` — what discovery before the build gives you, for readers who have read the README and are not convinced yet
 - `philosophy.md` — why it is strict, where its rules come from, and whether it is for you
 - `glossary.md` — Mycelium-specific vocabulary (diamond, scale, canvas, gate, ...)
-- `faq.md` — frequently asked questions, including the six that surfaced at the 2026-05-07 Juniors.dev presentation
 - `evaluate.md` — how to evaluate Mycelium for your team in ~1h, anti-promotional
 - `theories.md` — the 30+ frameworks Mycelium integrates, mechanism-mapped
 - `usage-modes.md` — solo, team, agent orchestration, JIT tooling
@@ -64,7 +63,7 @@ Internal docs (`.claude/memory/cluster-instances.md`, `.claude/harness/decision-
 2. **Hedged confidence.** State evidence type behind any claim of effectiveness. "In one outside-user session..." beats "Mycelium reduces wrong-build risk."
 3. **Specifics over abstractions.** Name the project, the commit, the date. Anonymous "users have reported" fails.
 4. **No emojis** outside diagrams. README mermaid diagrams use them as visual hooks; prose does not.
-5. **Anti-promotional on evaluation surfaces.** `evaluate.md`, `faq.md`, the README's "Who it's not for": disclose tradeoffs before benefits.
+5. **Anti-promotional on evaluation surfaces.** `evaluate.md`, the README's "Who it's not for": disclose tradeoffs before benefits.
 6. **No marketing voice.** No "powerful", "comprehensive", "robust". Show the receipt; let the reader judge.
 7. **Cite the trigger.** When recommending a move, link to the source (decision-log entry, corrections.md row, theory gate, evidence in canvas) — same discipline as agent-side `(per: <source>)` citations in CLAUDE.md.
 

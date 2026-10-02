@@ -73,7 +73,7 @@ once changed what you built, it did not work for you.
 
 ## What it changes, and what it costs
 
-- **Adds**: `/mycelium:<skill>` commands, and a `.claude/` folder the agent reads and writes as it works.
+- **Adds**: `/mycelium:<skill>` commands (namespaced, so they never clash with your own), and a `.claude/` folder the agent reads and writes as it works.
 - **Leaves alone**: your source files, your build config, and every file at the project root.
 - **Costs**: about six thousand tokens of context a session, and four hooks that can hold work back.
   [What it costs](../README.md#what-it-costs) lists all four.

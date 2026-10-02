@@ -4,7 +4,7 @@
 **Time to read**: 5 min for the table; depth lives in each `SKILL.md`.
 **Last updated**: 2026-06-12.
 
-This index lists all 63 skills. Each skill's full behaviour lives in its `SKILL.md` — `plugins/mycelium/skills/<name>/SKILL.md` in plugin form (recommended), or `.claude/skills/<name>/SKILL.md` in legacy form (supported during transition). Loaded JIT by Claude Code. This page is an orientation map by phase; [by-category.md](by-category.md) is the alternate index by category of work.
+This index lists all 63 skills. Each skill's full behaviour lives in its `SKILL.md` — `plugins/mycelium/skills/<name>/SKILL.md` in plugin form (recommended), or `.claude/skills/<name>/SKILL.md` in legacy form (supported during transition). Loaded JIT by Claude Code. This page is the one skills index, grouped by the scale each skill mostly serves.
 
 ## Onboarding & navigation
 
@@ -132,6 +132,5 @@ Skills are auto-discovered from `.claude/skills/*/SKILL.md` frontmatter — Clau
 
 ## See also
 
-- [by-category.md](by-category.md) — alternate index ordered by type of work
 - [glossary.md](../glossary.md) — vocabulary used in skill descriptions
 - `plugins/mycelium/engine/theory-gates.md` — canonical gate definitions

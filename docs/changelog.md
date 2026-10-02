@@ -4,6 +4,30 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-02.
 
+## v0.310.3 - fewer pages, each with a reason to exist
+
+**2026-10-02.** The prune the roadmap's docs audit proposed, on the founder's ruling (DL-1386).
+
+- **Removed: `docs/faq.md`.** Unchanged since May and mixing all four kinds of page. Each answer already
+  had a home (cost: the README's "What it costs"; other agents: install paths; licence; contributing;
+  the EU AI Act: regulatory; team conflicts: usage modes; dogfooding: the glossary; small versus
+  complex: the menu after the four questions) or gains one line: get-started now says the commands are
+  namespaced so they never clash with your own, and the receipts README says how to check a case's
+  claim (follow the commits its frontmatter names). The FAQ's answer on command clashes was out of
+  date: it described skill discovery from `.claude/skills/`, which plugin installs do not use.
+- **Removed: `docs/receipts/archive.md`**, a placeholder for an archive first due in 2027-04 that
+  nothing linked to.
+- **Merged: the three receipts indexes** (by date, by mechanism, by contributor) into
+  `docs/receipts/index.md`, one page in three views. Its stale "all 26 cases" (there are 27) now reads
+  "the complete index".
+- **Merged: `docs/skills/by-category.md`** into `docs/skills/README.md`, which already lists the same
+  63 skills by category. `sync_derived.py` stops templating the removed page and validate-template's
+  Check 6b, which counted skills on it, goes with it; Check 6 still counts the index.
+- **Moved: two maintainer design plans** (`check-architecture-refactor.md`,
+  `critic-claim-checkability.md`) from `docs/design/` to `.claude/evals/design/`, added to the
+  manifest's preserved paths. Nothing linked to them. **Not moved:** `docs/design/definition-of-done.md`,
+  which four framework files cite; where it belongs is the founder's call.
+
 ## v0.310.2 - reference pages say decisions, and two orphan pages get a way in
 
 **2026-10-02.** Reference cleanup under the docs north star (roadmap DL-1386), the part that needs no

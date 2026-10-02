@@ -86,8 +86,6 @@ SKILL_COUNT_FILES = [
     "CLAUDE.md",
     "README.md",
     "docs/skills/README.md",
-    # added v0.40.4: by-category.md had a hardcoded skill count that drifted
-    "docs/skills/by-category.md",
     PLUGIN,
     CODEX_PLUGIN,
     ".claude-plugin/marketplace.json",
