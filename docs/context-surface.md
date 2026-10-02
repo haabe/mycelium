@@ -12,10 +12,10 @@ This document answers a question the audit (`/xai-check` on `svc-mycelium`, 2026
 
 In plugin form the always-on rules arrive by hook, not by file: `hooks/session-start.sh --fast` injects `engine/agent-operating-contract.md` at every session start (startup, resume, clear, fork), followed by the cheap checks; a second `--async` tier runs the heavy checks in the background and delivers them at the next prompt. The hook also emits the ONE item the framework wants acted on (`next_item.py`, see "Hooks" below), and on resume and fork that item reaches the human as a `systemMessage`. Then, when the agent starts any non-trivial task, it loads context in this order (per the contract's Pre-Task Protocol):
 
-1. **`.claude/diamonds/active.yml`** — which diamond is active. Determines scale (L0/L1/L2/L3/L4/L5) and phase (Discover/Define/Develop/Deliver).
+1. **`.claude/diamonds/active.yml`** — which diamond is active. Determines scale (L0/L1/L2/L3/L4/L5) and where each diamond is, read from the decisions it has recorded (discovery until `commit_to_build`, delivery after).
 2. **`${CLAUDE_PLUGIN_ROOT}/domains/{discovery|delivery|quality}/CLAUDE.md`** — the appropriate domain context for the active scale.
 3. **`.claude/memory/corrections.md`** — past mistakes. Read in full. Recurring patterns inform present behavior.
-4. **`../plugins/mycelium/harness/guardrails-core.md`** — always loaded — plus phase-scoped: `guardrails-discovery.md` (L0-L2), `guardrails-delivery.md` (L3-L4), `guardrails-market.md` (L5).
+4. **`../plugins/mycelium/harness/guardrails-core.md`** — always loaded — plus scale-scoped: `guardrails-discovery.md` (L0-L2), `guardrails-delivery.md` (L3-L4), `guardrails-market.md` (L5).
 
 After loading: the agent reads any task-specific files the user references, then invokes the relevant skill (which may itself read further canvas state).
 
@@ -95,7 +95,7 @@ The full table, per runtime, is `plugins/mycelium/hooks/README.md`. The ones tha
 
 | Hook | Triggers on | Effect |
 |---|---|---|
-| `gate.sh`, `discovery-gate.sh`, `brownfield-gate.sh` | Write/Edit/Bash | Block until the phase's evidence or the brownfield entry is on record |
+| `gate.sh`, `discovery-gate.sh`, `brownfield-gate.sh` | Write/Edit/Bash | Block until the evidence the next decision needs, or the brownfield entry, is on record |
 | `framework-guard.sh` | Edit/Write/Bash on framework files in dogfood instances | Blocks; redirects to upstream-then-sync flow; denies on a broken state file |
 | `scope-gate.sh` | Edit/Write outside in_scope_paths during L4 | Blocks; allows .claude/** unconditionally |
 | `autonomous-evidence-guard.sh` | Canvas writes during a declared autonomous run | Blocks fabricated or elevated evidence; no-op with a human present |

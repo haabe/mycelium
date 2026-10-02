@@ -95,7 +95,7 @@ Read-only rendering of canvas + state surfaces. All five skills share `engine/re
 
 | Skill | When to use | Gates it satisfies |
 |---|---|---|
-| `/diamond-render` | Emit `diamonds/active.yml` as Mermaid stateDiagram-v2 / ascii / json (current phase, gates, confidence). Recommend at end of `/diamond-assess`. | — |
+| `/diamond-render` | Emit `diamonds/active.yml` as Mermaid stateDiagram-v2 / ascii / json (the decisions each diamond has recorded, grouped by mode). Recommend at end of `/diamond-assess`. | — |
 | `/ost-render` | Emit `opportunities.yml` as Mermaid mindmap / ascii / markdown-list / json. Consent-gate via attribution registry. | — |
 | `/cycle-render` | Emit `cycle-history.yml` as Mermaid gantt + pie / ascii / json. Honest small-N + class-distribution disclosure. | — |
 | `/render` | Dispatcher: routes intent to a specialist (recommends, never auto-invokes); lists what's renderable. Cross-cutting `--view traceability` research-gated to Phase 4a–4d. | — |
@@ -126,7 +126,7 @@ Read-only rendering of canvas + state surfaces. All five skills share `engine/re
 
 ## How to use this index
 
-If you are mid-diamond and want a skill: look at the phase section that matches your scale. If you are auditing: look at audit & governance. If you are doing framework-level work: look at self-improvement.
+If you are mid-diamond and want a skill: look at the section that matches your scale. If you are auditing: look at audit & governance. If you are doing framework-level work: look at self-improvement.
 
 Skills are auto-discovered from `.claude/skills/*/SKILL.md` frontmatter — Claude Code reads them at session start. Adding a skill is creating a new directory + SKILL.md; this index then needs updating per the [version-discipline](../../plugins/mycelium/engine/version-discipline.md) rule on material framework changes.
 
