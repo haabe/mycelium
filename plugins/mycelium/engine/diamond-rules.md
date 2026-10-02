@@ -310,7 +310,7 @@ definition_of_done:
   provenance: { source_class, validated, captured_at }
 ```
 
-**`close`** passes only when the diamond's DoD `signal` is met **OR** its `kill_criterion` (the *invalidation criterion*: state+date; the key is named for its worst reading, and each kill on the dogfood canvas states what to RETHINK, not what to abandon) fired with evidence (done-by-invalidation, routed through `dogfood-mode` + decision-log). A child is done only when its outcome **rolls up** to move the parent — contribution, not summation. Full design + evidence grades: `docs/design/definition-of-done.md`; per-scale defaults + the question sequence: `${CLAUDE_PLUGIN_ROOT}/skills/define-done/SKILL.md`.
+**`close`** passes only when the diamond's DoD `signal` is met **OR** its `kill_criterion` (the *invalidation criterion*: state+date; the key is named for its worst reading, and each kill on the dogfood canvas states what to RETHINK, not what to abandon) fired with evidence (done-by-invalidation, routed through `dogfood-mode` + decision-log). A child is done only when its outcome **rolls up** to move the parent — contribution, not summation. Full design + evidence grades: `docs/definition-of-done.md`; per-scale defaults + the question sequence: `${CLAUDE_PLUGIN_ROOT}/skills/define-done/SKILL.md`.
 
 ## Diamond Lifecycle Management
 

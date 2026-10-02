@@ -4,6 +4,19 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-02.
 
+## v0.310.4 - the Definition of Done rationale is a page, not a design file
+
+**2026-10-02.** On the founder's ruling after 0.310.3: `docs/design/definition-of-done.md` is cited by
+four framework files, so it is the "why" behind `/mycelium:define-done`, an explanation page, not an
+internal plan.
+
+- **Moved** to `docs/definition-of-done.md`, content unchanged, with the audience marker every docs
+  page carries. `docs/design/` is now empty and removed.
+- **Citations updated** in `engine/diamond-rules.md`, `skills/define-done`, `skills/canvas-health` and a
+  comment in `hooks/session-start.sh` (the system card's hook review re-stamped; a comment-only path
+  change). `canvas-health` also stops saying a diamond "reaches Deliver (or sits in any phase)": it
+  now reads "reaches delivery (or sits at any decision)".
+
 ## v0.310.3 - fewer pages, each with a reason to exist
 
 **2026-10-02.** The prune the roadmap's docs audit proposed, on the founder's ruling (DL-1386).
