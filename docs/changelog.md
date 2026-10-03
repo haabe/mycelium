@@ -4,6 +4,24 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-02.
 
+## v0.310.18 - hook hygiene from the plugins-reference review
+
+**2026-10-03.** Should-fix items from the review against the Claude Code plugin reference.
+
+- **A warning that never ran now does.** Since v0.64.0 the block that reports reflexions left
+  unreconciled by an earlier session sat after `session-start.sh`'s final `exit 0`, so it never ran,
+  and it printed plain text that would have broken the hook's JSON. It now joins the reminders.
+  `tests/bash/test_session_start_reflexion_debt.sh` holds it there.
+- **Explicit timeouts** on the nine handlers that had none and so ran under Claude Code's 600-second
+  default: absence-claim, key-shape, correction-attribution and read-before-research guards and
+  discovery-trigger-guard at 10 s, `ci-signal` (Stop and SessionStart) at 15 s (it times out its own
+  call at 8 s).
+- **`shell-safety-guard`** showed framework-guard's status line; it has its own.
+- **`/mycelium:ping`** carries `disable-model-invocation: true`: it is a smoke test, not something
+  the model should reach for.
+- **Not changed, on purpose**: `MultiEdit` stays in the matchers (harmless on runtimes that lack it);
+  exec-form hook commands and `if` filters are deferred.
+
 ## v0.310.17 - the tests follow the contract to its new home
 
 **2026-10-03.** CI on 0.310.16 failed where tests still assumed `session-start.sh` carried the
