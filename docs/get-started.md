@@ -75,17 +75,20 @@ once changed what you built, it did not work for you.
 
 - **Adds**: `/mycelium:<skill>` commands (namespaced, so they never clash with your own), and a `.claude/` folder the agent reads and writes as it works.
 - **Leaves alone**: your source files, your build config, and every file at the project root.
-- **Costs**: about six thousand tokens of context a session, and four hooks that can hold work back.
-  [What it costs](../README.md#what-it-costs) lists all four.
+- **Costs**: about six thousand tokens of context a session, and some hooks that can hold work back.
+  [What it costs](../README.md#what-it-costs) says what each one holds.
 
 ## Keeping it current, or removing it
 
-Plugin auto-update is on by default. To update by hand:
+Auto-update is off by default for this marketplace: Claude Code turns it on only for Anthropic's
+own marketplaces. To turn it on, open `/plugin`, go to **Marketplaces**, pick `haabe-mycelium` and
+choose **Enable auto-update**. To update by hand, in your shell:
 
 ```
-/plugin marketplace update haabe-mycelium
-/reload-plugins
+claude plugin update mycelium@haabe-mycelium
 ```
+
+Then run `/reload-plugins` in a running session, or start a new one.
 
 To take it out again, see [uninstall](uninstall.md).
 

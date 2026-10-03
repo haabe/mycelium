@@ -53,10 +53,16 @@ Mycelium is not a software library; it's instructions that reshape agent behavio
 **Plugin form** (recommended, post-v0.20.0):
 
 ```
-/plugin update mycelium@haabe-mycelium
+claude plugin update mycelium@haabe-mycelium
 ```
 
-Plugin auto-update is on by default for the official-style marketplace. Manual update: `/plugin marketplace update haabe-mycelium` followed by `/reload-plugins`.
+Run that in your shell, then `/reload-plugins` in a running session (or start a new one). In a
+session you can also open `/plugin`, find Mycelium under **Installed**, and choose Update.
+
+Auto-update is off by default for this marketplace: Claude Code turns it on only for Anthropic's own
+marketplaces. To turn it on, open `/plugin`, go to **Marketplaces**, pick `haabe-mycelium` and
+choose **Enable auto-update**. New versions then install in the background and ask you to run
+`/reload-plugins`.
 
 **Legacy form**:
 

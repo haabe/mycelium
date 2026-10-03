@@ -47,7 +47,6 @@ import collections
 import concurrent.futures
 import datetime
 import json
-import os
 import pathlib
 import re
 import sys
@@ -317,10 +316,9 @@ def github_api_confirms(url: str, timeout: int) -> bool | None:
         api = f"https://api.github.com/repos/{owner}/{repo}"   # repo-level existence
     else:
         return None
+    # Unauthenticated on purpose (0.310.13): the plugin reads no credential from the user's machine.
+    # GitHub's anonymous rate limit answers 403/429, which the except below reads as UNKNOWN.
     req = _request(api, {"User-Agent": UA, "Accept": "application/vnd.github+json"})
-    tok = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
-    if tok:
-        req.add_header("Authorization", f"Bearer {tok}")
     try:
         with _urlopen(req, timeout):
             return True

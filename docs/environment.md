@@ -2,9 +2,9 @@
 
 **Audience**: operators configuring Mycelium beyond defaults; contributors writing hooks/scripts.
 **Time to read**: 5 min.
-**Last updated**: 2026-06-12
+**Last updated**: 2026-10-03
 
-Every `MYCELIUM_*` environment variable in one place. All are **opt-in** — unset means default behavior; nothing here is required for normal use. Until this page (2026-06-12 gap analysis), these were documented only in the individual skill/hook files that read them.
+Every `MYCELIUM_*` environment variable in one place. Unset means the default behavior, and nothing here is required for normal use. Most turn something on; two (`MYCELIUM_CI_SIGNAL`, `MYCELIUM_CLOSING_PATH_WRITE`) turn a default off. Until this page (2026-06-12 gap analysis), these were documented only in the individual skill/hook files that read them.
 
 | Variable | What it does | Read by | Default when unset |
 |---|---|---|---|
@@ -12,6 +12,9 @@ Every `MYCELIUM_*` environment variable in one place. All are **opt-in** — uns
 | `MYCELIUM_ATTRIBUTION_REGISTRY` | Path to a consent/attribution registry kept OUTSIDE the public repo (e.g. in a private companion repo). Used to check that personal identifiers in publicly-shipped files have naming consent, and by render skills' consent gate. | validate-template.sh Check 33; render-fleet skills; `/canvas-health` 8c(c) | Checks fail-open (skip with a note) |
 | `MYCELIUM_CROSS_REPO_WATCH` | Colon-separated list of sibling repo paths. SessionStart scans their last-24h commit messages for canvas IDs (`opp-XXX`, `sol-XXX`, …) and surfaces matches — the cross-repo stale-state nudge (anti-pattern #8). | `hooks/session-start.sh` CHECK 8 | No cross-repo scanning |
 | `MYCELIUM_BVSSH_CANVAS` | Overrides the path to `bvssh-health.yml` for the SessionStart cadence reminder — for setups where the assessment canvas lives in a sibling repo (framework self-hosting). | `hooks/session-start.sh` CHECK 1 | `$PROJECT/.claude/canvas/bvssh-health.yml` |
+| `MYCELIUM_CI_SIGNAL` | Set to `off` to stop the one automatic network call: asking GitHub, through your own `gh` login, for the latest CI result on the current branch. See [PRIVACY.md](../PRIVACY.md). | `scripts/ci_signal.py` (Stop, SessionStart) | On when the project has `.github/workflows/` and `gh` is logged in |
+| `MYCELIUM_CLOSING_PATH_WRITE` | Set to `off` to stop session start from writing the next steps it derives for open diamonds into `.claude/diamonds/` and the canvas. | `hooks/session-start.sh` (`derive_closing_path.py --write`) | Writes them |
+| `MYCELIUM_LEDGER_TRIGGER` | Set to `on` to have the guard logs keep the first 200 characters of a command that tripped a rule, with obvious secrets masked. | `scripts/shell_safety_guard.py` | Logs record the rule only, never the command |
 | `MYCELIUM_MIGRATE_AUTO` | Set to `cancel` to make the legacy-migration script abort instead of proceeding when it runs without a TTY (Claude Code's Bash tool has no TTY, so the script's interactive confirmation can't fire). | `migrate-from-legacy` migration script | Non-interactive runs proceed (the skill confirms with you first) |
 
 Internal (not operator-facing): `MYCELIUM_PLUGIN_LOAD_OK` — deterministic marker emitted by `/mycelium:ping` for plugin-shape smoke tests.

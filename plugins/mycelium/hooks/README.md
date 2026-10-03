@@ -243,32 +243,30 @@ Different hooks have different failure semantics. The choice is deliberate.
 
 ---
 
-## Dependency Philosophy (v0.9.0)
+## Dependencies
 
-**All Mycelium hooks use Python stdlib only.** No PyYAML, no jsonschema, no Ruby, no jq. The `python3` binary is the only runtime dependency, and it's already a Mycelium baseline.
+The hooks need `bash` and `python3`. Most use only the Python standard library and read JSON state.
+The gates that read the diamonds and the canvas (`discovery-gate.sh`, `scale-lock-gate.sh`,
+`exposure-gate.sh`) need PyYAML, through `scripts/_python.sh`, which uses the `python3` on `PATH` or
+the environment `/mycelium:setup` offers to create in `${CLAUDE_PLUGIN_DATA}/pyenv` (PyYAML from
+PyPI, installed only if the user says yes). Without PyYAML those gates refuse with the reason rather
+than allow. `git` and `gh` are optional: the hooks that use them carry on without them. Nothing in
+the hooks installs software or reaches the network except `ci-signal` (Stop, SessionStart), which
+asks GitHub for the latest CI result through the user's own `gh` login; `MYCELIUM_CI_SIGNAL=off`
+turns it off. What Mycelium reads, writes and connects to is stated in full in
+[`PRIVACY.md`](../../../PRIVACY.md).
 
-Why: hooks fire on every code edit. Requiring users to `pip install` would create a silent-failure footgun on fresh clones. Stdlib-only means zero setup after `npx degit haabe/mycelium`.
-
-**Runtime state files are JSON** (not YAML), specifically so hooks can parse them with `json.load()` from stdlib. Canvas files (which hooks don't read at runtime) stay YAML for human editing. CI validation handles canvas YAML with PyYAML (via `requirements-ci.txt`).
-
-See `../state/README.md` for the full data format philosophy.
+**Runtime state files are JSON** (not YAML), so most hooks parse them with the standard library.
+See `../state/README.md` for the data format.
 
 ---
 
-## Hook Inventory Summary (v0.9.0)
+## Every registered hook
 
-| Hook | Event | Tier | Fail policy |
-|---|---|---|---|
-| `gate.sh` | PreToolUse Edit/Write/MultiEdit | BLOCK | **Fail-closed** |
-| `scope-gate.sh` | PreToolUse Edit/Write/MultiEdit | BLOCK (when active) | **Fail-closed** |
-| `post-write-nudge.sh` | PostToolUse Edit/Write/MultiEdit | NUDGE | Fail-open |
-| `change-log.sh` | PostToolUse Edit/Write/MultiEdit | Observability | Fail-open |
-| `diamond-state-audit.sh` | PostToolUse Edit/Write/MultiEdit | Observability | Fail-open |
-| `canvas-schema-check.sh` | PostToolUse Edit/Write/MultiEdit | Feedback | Fail-open, spoken |
-| `reflexion-gate.sh` | PostToolUseFailure Bash | NUDGE (filtered) | Fail-open |
-| `stop-check.sh` | Stop | NUDGE + warning | Fail-open |
-| `session-start.sh` | SessionStart startup/resume | NUDGE | Fail-open |
-| `preflight.sh` | UserPromptSubmit (also called by gate.sh) | Advisory | N/A |
+`hooks.json` is the source of truth, and the sections above describe each hook with its tier
+(BLOCK, NUDGE, observability) and its fail policy. Read the manifest for the current list rather
+than a table here: the table that stood in this place listed the hooks of v0.9.0 and went stale as
+hooks were added.
 
 ---
 
@@ -281,7 +279,7 @@ See `../state/README.md` for the full data format philosophy.
 
 ## One reading of the tool call (0.196.0)
 
-The six blocking hooks (`gate.sh`, `discovery-gate.sh`, `brownfield-gate.sh`, `scope-gate.sh`,
+The blocking hooks of 0.196.0 (`gate.sh`, `discovery-gate.sh`, `brownfield-gate.sh`, `scope-gate.sh`,
 `framework-guard.sh`, `autonomous-evidence-guard.sh`) read the tool call through
 `scripts/_hook_input.py` (Python helpers import it; shell gates source
 `scripts/_hook_input_read.sh`, which calls it). It resolves every path key to its real location
