@@ -4,6 +4,38 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-02.
 
+## v0.310.13 - what Mycelium runs and connects to, stated truthfully
+
+**2026-10-03.** The Claude plugin directory held a submission with "Couldn't confirm what the plugin
+runs or connects to" and flagged a credential read. An inventory of the code against the docs
+found the docs understating it.
+
+- **No credential is read from your machine.** `scripts/check_evidence_links.py` (run by
+  `/mycelium:canvas-health`) sent `GITHUB_TOKEN` or `GH_TOKEN`, when set, to the GitHub API. It now
+  asks GitHub anonymously; a rate-limited answer was already read as "unknown".
+- **`PRIVACY.md` says what runs and connects.** A new "What runs on your machine" section; "Where
+  your data lives" now names what is written or read outside `.claude/` (two stamp files in the
+  temp folder, setup's optional `AGENTS.md` and PyYAML venv, the Cursor/Codex manifests the runtime
+  installer writes, a read of Claude Code's own transcripts for this project, and another repo's
+  commit subjects when you configure one); "Network activity" lists every user-started network use
+  (setup's PyPI install, metrics-pull including Hacker News search, canvas-health's link check,
+  theory-fidelity's web tools, canvas-sync's `git pull`), not only metrics-pull.
+- **System card §2 and §7**: skills load from the installed plugin, not `.claude/skills/`; the
+  blocking hooks include `bash-state-guard.sh`, with the right timeouts; §7 no longer says nothing is
+  transmitted and states the automatic CI check and its opt-out.
+- **`hooks/README.md`**: the "stdlib only, no PyYAML" section was false (the discovery, scale-lock and
+  exposure gates need PyYAML and refuse without it) and pointed at the retired `npx degit` install;
+  the v0.9.0 hook table listed 10 of the registered hooks and is replaced by a pointer to
+  `hooks.json`.
+- **`docs/environment.md`** gains `MYCELIUM_CI_SIGNAL` (the network opt-out),
+  `MYCELIUM_CLOSING_PATH_WRITE` and `MYCELIUM_LEDGER_TRIGGER`.
+- **The plugin README** described the plugin of v0.20.0 (bootstrapping, agents coming); it now says
+  what the plugin adds and links PRIVACY.md.
+- **The plugin description** (Claude, Codex and marketplace manifests) no longer says it adds
+  agents (there are none) or carries counts that drift, and says where its state goes.
+- **Left for the reviewer, per the directory's own guidance**: "download-and-run" matches on the word
+  "eval" in three docs, and two text files read as image or font.
+
 ## v0.310.12 - hook commands quote the plugin path
 
 **2026-10-03.** `claude plugin validate` passed with warnings: every hook command in
