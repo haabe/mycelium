@@ -76,7 +76,7 @@ It has a cost. More state to keep, and a thicker layer around the agent. And it 
 
 Simon Wardley puts the same idea from the practitioner's side. Asking the question is a different skill from answering it, and the time for questions gets crowded out by the time for answers unless something protects it. The three loops are where it is protected.
 
-Until v0.306.0 the middle loop was four phases (Discover, Define, Develop, Deliver), the same at every level. I reopened that on 2026-09-30. "The double diamond approach for each scale was my hypothesis... It might be wrong. In that case I want a better solution." A review of the sources found none that prescribes the same four phases at every level, so the loop replaced it.
+> **History.** Until v0.306.0 the middle loop was four phases (Discover, Define, Develop, Deliver), the same at every level. I reopened that on 2026-09-30. "The double diamond approach for each scale was my hypothesis... It might be wrong. In that case I want a better solution." A review of the sources found none that prescribes the same four phases at every level, so the loop replaced it.
 
 ## Why it has to run on itself
 

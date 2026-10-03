@@ -4,6 +4,19 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-02.
 
+## v0.310.8 - history of the retired phase loop no longer reads as the current model
+
+**2026-10-03.** A warm reader read two history notes about the four-phase loop retired in v0.306.0
+as the current model. History in the middle of an explanation reads as the explanation.
+
+- **docs/philosophy.md**: the paragraph on the retired four-phase loop is marked as a history aside.
+  Its wording is unchanged.
+- **docs/glossary.md**: the Diamond entry drops "Until v0.306.0 a diamond moved through four phases".
+  The **Phase** entry already says the term is retired, which is where a reader looking for it lands.
+- **Alternatives considered**: deleting the philosophy paragraph (rejected: it records why the model
+  changed, in the founder's words, and the changelog alone is not where a philosophy reader looks);
+  moving it to the changelog (same reason).
+
 ## v0.310.7 - the discovery page reworded where readers tripped, and it now shows a stop
 
 **2026-10-03.** `docs/mental-model.md`, the page for someone who has read the README and is not
