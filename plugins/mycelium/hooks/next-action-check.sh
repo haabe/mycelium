@@ -13,9 +13,16 @@
 # one next action. It says nothing on turns where no framework skill ran: an
 # ordinary answer is not a framework state and needs no "Next:" line.
 #
-# LIMITS, stated rather than implied. (1) Scope is SKILL runs, detected from the
-# transcript as a tool_use named "Skill" whose skill starts with "mycelium:".
-# Gate blocks (PreToolUse denies) are not detected in this version; their own
+# THE NEXT LINE CITES ITS TRIGGER (0.311.0). Contract rule 4 asks for the trigger
+# of a non-trivial move as "(per: <source>)". As prose it appeared in 3 of 12
+# sessions on the dogfood project, twice measured (xai-check 2026-09-14 and
+# 2026-10-03). The Next: line is the turn's one recommended move, so the hook now
+# also blocks a Next: line with no "(per ...)" on it, once, like the missing line.
+#
+# LIMITS, stated rather than implied. (1) Scope is SKILL runs: a tool_use named
+# "Skill" whose skill starts with "mycelium:", or (since 0.311.0) a slash command
+# the person typed, "<command-name>/mycelium:...". Meta entries in the transcript
+# (a command's skill body, injected reminders) do not start a new turn. Gate blocks (PreToolUse denies) are not detected in this version; their own
 # reason strings are the surface for a next action and are a separate change.
 # (2) Fail-open on any read failure: no transcript, unparseable JSON, a runtime
 # that does not pass transcript_path (Cursor, Codex). A fail-open check is a
@@ -61,6 +68,12 @@ except Exception:
     print(json.dumps({"systemMessage": "Mycelium next-action check did not run this turn: transcript at transcript_path could not be read."}))
     sys.exit(0)
 
+# A skill the PERSON invoked arrives as a slash command in their message, not as a Skill
+# tool_use; until 0.311.0 those turns were never checked (found in dogfood 2026-10-03, where
+# /mycelium:diamond-progress and /mycelium:xai-check both closed with no Next: line).
+CMD = re.compile(r"<command-name>/(mycelium:[\w-]+)</command-name>")
+cmd_skill = None
+
 # Walk the transcript to the last HUMAN turn (a user entry whose content is
 # prose, not a tool_result), then look at what the assistant did after it.
 turn = []
@@ -71,6 +84,10 @@ for raw in lines:
         continue
     t = e.get("type")
     if t == "user":
+        # A meta entry (a slash command's skill body, an injected reminder) is not the person
+        # speaking; treating it as a new human turn hid the command that started the turn (0.311.0).
+        if e.get("isMeta"):
+            continue
         msg = e.get("message", {})
         c = msg.get("content")
         human = False
@@ -81,6 +98,10 @@ for raw in lines:
                 isinstance(b, dict) and b.get("type") == "tool_result" for b in c)
         if human:
             turn = []
+            text = c if isinstance(c, str) else " ".join(
+                b.get("text", "") for b in c if isinstance(b, dict) and b.get("type") == "text")
+            m = CMD.search(text)
+            cmd_skill = m.group(1) if m else None
         continue
     if t == "assistant":
         turn.append(e)
@@ -98,6 +119,7 @@ for e in turn:
         if b.get("type") == "text" and b.get("text", "").strip():
             last_text = b["text"]
 
+ran_skill = ran_skill or cmd_skill
 if not ran_skill:
     sys.exit(0)
 
@@ -110,15 +132,32 @@ lam = d.get("last_assistant_message")
 if isinstance(lam, str) and lam.strip():
     last_text = lam
 
-if last_text and re.search(r"(?im)^\s*(\*\*)?next:", last_text):
-    sys.exit(0)
+NEXT = re.compile(r"(?im)^\s*(\*\*)?next:.*$")
+PER = re.compile(r"\(per[:\s][^)]+\)", re.I)
+outcome = "blocked"
+next_line = NEXT.search(last_text or "")
+if next_line:
+    # Contract rule 4 asks for the trigger of a non-trivial move as (per: <source>). Measured on
+    # the dogfood project at 3 sessions in 12 on 2026-09-14 and again on 2026-10-03 while the rule
+    # was prose only (xai-check, Stage 3). The Next: line IS the turn's one recommended move, so the
+    # citation is required there and nowhere else (0.311.0).
+    if PER.search(next_line.group(0)):
+        sys.exit(0)
+    outcome = "blocked-no-per"
+    reason = (
+        "Mycelium next-action check (contract rule 4, hooks/next-action-check.sh): this turn ran "
+        "/%s and its Next: line does not say what it rests on. Add the trigger on that line as "
+        "'(per: <source>)': a canvas field, a decision-log entry, a gate, a corrections entry or "
+        "what the person said. One line, then stop." % ran_skill
+    )
 
-reason = (
-    "Mycelium next-action check (Downe P10, hooks/next-action-check.sh): this turn ran /%s "
-    "and the last message names no next action. End the turn with exactly one line, "
-    "'Next: <one action>' (a skill to run, a question to answer, or 'Next: nothing until <event>'). "
-    "One line, then stop." % ran_skill
-)
+if outcome == "blocked":
+    reason = (
+        "Mycelium next-action check (Downe P10, hooks/next-action-check.sh): this turn ran /%s "
+        "and the last message names no next action. End the turn with exactly one line, "
+        "'Next: <one action> (per: <source>)' (a skill to run, a question to answer, or "
+        "'Next: nothing until <event>'), with what it rests on. One line, then stop." % ran_skill
+    )
 # One line per block to .claude/state/next-action-check-fires.jsonl (v0.234.0). A Stop hook
 # that can refuse to end a turn and keeps no record cannot be measured, so it can never be
 # retired and never defended. Records the skill that triggered it, never the turn text.
@@ -130,7 +169,7 @@ try:
     _ts = datetime.datetime.now(datetime.UTC).isoformat().replace("+00:00", "Z")
     with open(os.path.join(_d, "next-action-check-fires.jsonl"), "a", encoding="utf-8") as _fh:
         _fh.write(json.dumps({"ts": _ts, "hook": "next-action-check.sh",
-                              "outcome": "blocked", "detail": ran_skill}) + "\n")
+                              "outcome": outcome, "detail": ran_skill}) + "\n")
 except OSError:
     pass
 print(json.dumps({"decision": "block", "reason": reason}))
