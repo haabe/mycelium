@@ -4,6 +4,19 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-02.
 
+## v0.310.12 - hook commands quote the plugin path
+
+**2026-10-03.** `claude plugin validate` passed with warnings: every hook command in
+`hooks/hooks.json` and `hooks/hooks.codex-plugin.json` used `${CLAUDE_PLUGIN_ROOT}` unquoted
+(`bash ${CLAUDE_PLUGIN_ROOT}/hooks/gate.sh`). On an install path containing a space the shell splits
+the command and the hook fails, which for a blocking hook means the stop silently does not run. All
+100 commands are now quoted (`bash "${CLAUDE_PLUGIN_ROOT}/hooks/gate.sh"`); validate passes with no
+warnings. The quoting is made where the commands are born: the Codex and Cursor templates
+(`hooks.codex.json`, `hooks.cursor.json`) now quote their `__MYCELIUM_PLUGIN_ROOT__` paths, so the
+generated `hooks.codex-plugin.json` and the absolute paths `install-runtime-hooks.sh` writes for a
+local install are quoted too (an earlier pass quoted the derived file by hand and `sync_derived.py`
+put it back). Two tests that read command text learned to ignore the quotes. Done before a resubmission to the Claude directory, whose review runs the same validation.
+
 ## v0.310.11 - leaf-lifecycle.md names its steps by decision, not by retired phase
 
 **2026-10-03.** `engine/leaf-lifecycle.md` still labelled its ten steps with the four phases retired

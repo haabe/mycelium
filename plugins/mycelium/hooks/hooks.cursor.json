@@ -5,110 +5,110 @@
     "preToolUse": [
       {
         "matcher": "Write|Edit|MultiEdit|NotebookEdit|edit|write|Bash|shell|mcp__filesystem__(write_file|edit_file|move_file)",
-        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/gate.sh",
+        "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/gate.sh\"",
         "type": "command",
         "timeout": 30,
         "failClosed": true
       },
       {
         "matcher": "Write|Edit|MultiEdit|NotebookEdit|edit|write|Bash|shell|mcp__filesystem__(write_file|edit_file|move_file)",
-        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/discovery-gate.sh",
+        "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/discovery-gate.sh\"",
         "type": "command",
         "timeout": 30
       },
       {
         "matcher": "Write|Edit|MultiEdit|edit|write|mcp__filesystem__(write_file|edit_file|move_file)",
-        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/scale-lock-gate.sh",
+        "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/scale-lock-gate.sh\"",
         "type": "command",
         "timeout": 10
       },
       {
         "matcher": "Write|Edit|MultiEdit|edit|write|mcp__filesystem__(write_file|edit_file|move_file)",
-        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/guard-state-gate.sh",
+        "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/guard-state-gate.sh\"",
         "type": "command",
         "timeout": 10
       },
       {
         "matcher": "Bash|shell",
-        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/exposure-gate.sh",
+        "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/exposure-gate.sh\"",
         "type": "command",
         "timeout": 10
       },
       {
         "matcher": "Write|Edit|MultiEdit|NotebookEdit|edit|write|Bash|shell|mcp__filesystem__(write_file|edit_file|move_file)",
-        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/brownfield-gate.sh",
+        "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/brownfield-gate.sh\"",
         "type": "command",
         "timeout": 30
       },
       {
         "matcher": "Write|Edit|MultiEdit|NotebookEdit|edit|write|Bash|shell|mcp__filesystem__(write_file|edit_file|move_file)",
-        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/scope-gate.sh",
+        "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/scope-gate.sh\"",
         "type": "command",
         "timeout": 30
       },
       {
         "matcher": "Write|Edit|MultiEdit|NotebookEdit|edit|write|Bash|shell|mcp__filesystem__(write_file|edit_file|move_file)",
-        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/framework-guard.sh",
+        "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/framework-guard.sh\"",
         "type": "command",
         "timeout": 30
       },
       {
         "matcher": "Write|Edit|MultiEdit|NotebookEdit|edit|write|Bash|shell|mcp__filesystem__(write_file|edit_file|move_file)",
-        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/autonomous-evidence-guard.sh",
+        "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/autonomous-evidence-guard.sh\"",
         "type": "command",
         "timeout": 30
       },
       {
         "matcher": "Write|Edit|MultiEdit|edit|write",
-        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/absence-claim-guard.sh",
+        "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/absence-claim-guard.sh\"",
         "type": "command",
         "timeout": 5
       },
       {
         "matcher": "Write|Edit|MultiEdit|edit|write",
-        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/key-shape-guard.sh",
+        "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/key-shape-guard.sh\"",
         "type": "command",
         "timeout": 5
       },
       {
         "matcher": "Write|Edit|MultiEdit|edit|write",
-        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/correction-attribution-guard.sh",
+        "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/correction-attribution-guard.sh\"",
         "type": "command",
         "timeout": 5
       },
       {
         "matcher": "Shell",
-        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/shell-safety-guard.sh",
+        "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/shell-safety-guard.sh\"",
         "type": "command",
         "timeout": 5
       },
       {
         "matcher": "Shell",
-        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/absence-claim-guard.sh",
+        "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/absence-claim-guard.sh\"",
         "type": "command",
         "timeout": 5
       },
       {
         "matcher": "Shell",
-        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/correction-attribution-guard.sh",
+        "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/correction-attribution-guard.sh\"",
         "type": "command",
         "timeout": 5
       },
       {
         "matcher": "WebSearch|WebFetch|mcp__brave-search__.*|mcp__fetch__fetch|web_search|fetch",
-        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/read-before-research-guard.sh",
+        "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/read-before-research-guard.sh\"",
         "type": "command",
         "timeout": 5
       },
       {
         "matcher": "Bash|shell|Shell",
-        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/bash-state-guard.sh pre",
+        "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/bash-state-guard.sh\" pre",
         "type": "command",
         "timeout": 10
       },
       {
         "matcher": "Bash|shell|Shell",
-        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/guard-state-gate.sh",
+        "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/guard-state-gate.sh\"",
         "type": "command",
         "timeout": 10
       }
@@ -116,43 +116,43 @@
     "postToolUse": [
       {
         "matcher": "Write|Edit|MultiEdit|edit|write",
-        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/post-write-nudge.sh",
+        "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/post-write-nudge.sh\"",
         "type": "command",
         "timeout": 3
       },
       {
         "matcher": "Write|Edit|MultiEdit|edit|write",
-        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/change-log.sh",
+        "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/change-log.sh\"",
         "type": "command",
         "timeout": 3
       },
       {
         "matcher": "Write|Edit|MultiEdit|edit|write",
-        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/diamond-state-audit.sh",
+        "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/diamond-state-audit.sh\"",
         "type": "command",
         "timeout": 3
       },
       {
         "matcher": "Write|Edit|MultiEdit|edit|write",
-        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/canvas-schema-check.sh",
+        "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/canvas-schema-check.sh\"",
         "type": "command",
         "timeout": 10
       },
       {
         "matcher": "Write|Edit|MultiEdit|edit|write",
-        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/exposure-change.sh",
+        "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/exposure-change.sh\"",
         "type": "command",
         "timeout": 10
       },
       {
         "matcher": "Read|read",
-        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/read-log.sh",
+        "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/read-log.sh\"",
         "type": "command",
         "timeout": 3
       },
       {
         "matcher": "Bash|shell|Shell",
-        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/bash-state-guard.sh post",
+        "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/bash-state-guard.sh\" post",
         "type": "command",
         "timeout": 15
       }
@@ -160,53 +160,53 @@
     "postToolUseFailure": [
       {
         "matcher": "Bash|shell",
-        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/reflexion-gate.sh",
+        "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/reflexion-gate.sh\"",
         "type": "command",
         "timeout": 10
       }
     ],
     "stop": [
       {
-        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/stop-check.sh",
+        "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/stop-check.sh\"",
         "type": "command",
         "timeout": 5
       },
       {
-        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/next-action-check.sh",
+        "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/next-action-check.sh\"",
         "type": "command",
         "timeout": 5
       },
       {
-        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/ci-signal.sh",
+        "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/ci-signal.sh\"",
         "type": "command",
         "timeout": 10
       },
       {
-        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/next-item-repeat.sh",
+        "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/next-item-repeat.sh\"",
         "type": "command",
         "timeout": 5
       }
     ],
     "sessionStart": [
       {
-        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/session-start.sh",
+        "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/session-start.sh\"",
         "type": "command",
         "timeout": 60
       },
       {
-        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/ci-signal.sh --session-start",
+        "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/ci-signal.sh\" --session-start",
         "type": "command",
         "timeout": 10
       }
     ],
     "beforeSubmitPrompt": [
       {
-        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/preflight.sh",
+        "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/preflight.sh\"",
         "type": "command",
         "timeout": 5
       },
       {
-        "command": "bash __MYCELIUM_PLUGIN_ROOT__/hooks/discovery-trigger-guard.sh",
+        "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/discovery-trigger-guard.sh\"",
         "type": "command"
       }
     ],

@@ -62,7 +62,7 @@ def test_the_derived_hooks_hold_nothing_codex_drops_or_cannot_resolve():
     assert "PostToolUseFailure" not in doc["hooks"], "not a Codex event"
     assert cph.PLACEHOLDER not in DERIVED.read_text()
     for cmd in _commands(doc):
-        assert cmd.startswith("MYCELIUM_RUNTIME=codex bash ${CLAUDE_PLUGIN_ROOT}/"), cmd
+        assert cmd.startswith('MYCELIUM_RUNTIME=codex bash "${CLAUDE_PLUGIN_ROOT}/'), cmd
         script = re.search(r"\$\{CLAUDE_PLUGIN_ROOT\}/(\S+\.sh)", cmd).group(1)
         assert (PLUGIN / script).is_file(), script
 
@@ -167,7 +167,7 @@ def _registrations(doc: dict) -> dict:
             tools = {t for t in (g.get("matcher") or "").split("|") if t}
             for h in g["hooks"]:
                 m = re.search(r"hooks/([\w.-]+\.sh)(.*?)\"?$", h["command"])
-                out.setdefault((event, (m.group(1) + m.group(2)).strip()), set()).update(tools)
+                out.setdefault((event, (m.group(1) + m.group(2).replace('"', "")).strip()), set()).update(tools)
     return out
 
 
