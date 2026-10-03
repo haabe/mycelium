@@ -10,7 +10,7 @@ This document answers a question the audit (`/xai-check` on `svc-mycelium`, 2026
 
 ## Per-task read order
 
-In plugin form the always-on rules arrive by hook, not by file: `hooks/session-start.sh --fast` injects `engine/agent-operating-contract.md` at every session start (startup, resume, clear, fork), followed by the cheap checks; a second `--async` tier runs the heavy checks in the background and delivers them at the next prompt. The hook also emits the ONE item the framework wants acted on (`next_item.py`, see "Hooks" below), and on resume and fork that item reaches the human as a `systemMessage`. Then, when the agent starts any non-trivial task, it loads context in this order (per the contract's Pre-Task Protocol):
+In plugin form the always-on rules arrive by hook, not by file: `hooks/contract-part.sh` injects `engine/agent-operating-contract.md` at every session start (startup, resume, clear, fork), in up to four parts with one handler each, because Claude Code caps a single hook's `additionalContext` at 10,000 characters and shows only a short preview of anything longer (`scripts/contract_parts.py` does the split and fails CI when the contract outgrows the handlers). `hooks/session-start.sh --fast` then runs the cheap checks; a second `--async` tier runs the heavy checks in the background and delivers them at the next prompt. The hook also emits the ONE item the framework wants acted on (`next_item.py`, see "Hooks" below), and on resume and fork that item reaches the human as a `systemMessage`. Then, when the agent starts any non-trivial task, it loads context in this order (per the contract's Pre-Task Protocol):
 
 1. **`.claude/diamonds/active.yml`** — which diamond is active. Determines scale (L0/L1/L2/L3/L4/L5) and where each diamond is, read from the decisions it has recorded (discovery until `commit_to_build`, delivery after).
 2. **`${CLAUDE_PLUGIN_ROOT}/domains/{discovery|delivery|quality}/CLAUDE.md`** — the appropriate domain context for the active scale.
@@ -100,7 +100,8 @@ The full table, per runtime, is `plugins/mycelium/hooks/README.md`. The ones tha
 | `scope-gate.sh` | Edit/Write outside in_scope_paths during L4 | Blocks; allows .claude/** unconditionally |
 | `autonomous-evidence-guard.sh` | Canvas writes during a declared autonomous run | Blocks fabricated or elevated evidence; no-op with a human present |
 | `absence-claim-guard.sh`, `key-shape-guard.sh`, `shell-safety-guard.sh`, `correction-attribution-guard.sh`, `discovery-trigger-guard.sh`, `read-before-research-guard.sh` | Write/Bash/prompt/research calls | Advise, never block; each names the measurement it fired on |
-| `session-start.sh` | Session start | Injects the operating contract; wraps quoted canvas text as `<untrusted_user_content>`; emits one NEXT ITEM |
+| `contract-part.sh` (four handlers) | Session start | Injects the operating contract, one part per handler, each under the 10,000-character hook cap |
+| `session-start.sh` | Session start | Wraps quoted canvas text as `<untrusted_user_content>`; emits one NEXT ITEM |
 | `next-action-check.sh` | Stop | Blocks the end of a framework turn that has no `Next:` line |
 | `next-item-repeat.sh` | Stop | Repeats the NEXT ITEM once if nothing followed it |
 | `reflexion-gate.sh` | Bash/tool failures | Prompts the agent to diagnose before retrying |
