@@ -73,7 +73,10 @@ ledger_lines() { [ -f "$LEDGER" ] && grep -c '"kind"' "$LEDGER" || echo 0; }
 
 # --- fast, no cache ---------------------------------------------------------
 OUT=$(start --fast s1)
-assert_contains "$OUT" "Communication Rules" "fast tier delivers the contract"
+# v0.310.16: the contract moved to contract-part.sh (in parts under the 10,000-character hook
+# cap), so the fast tier carries reminders only and must stay under the cap.
+assert_not_contains "$OUT" "Communication Rules" "fast tier no longer carries the contract (contract-part.sh does)"
+[ "${#OUT}" -le 10000 ] && assert_eq "under" "under" "fast tier output fits the hook cap" || assert_eq "under" "over(${#OUT})" "fast tier output fits the hook cap"
 assert_contains "$OUT" "OPEN human task" "fast tier runs the cheap checks"
 assert_contains "$OUT" "BACKGROUND CHECKS" "fast tier announces the heavy tier"
 assert_contains "$OUT" "evidence-landing" "the announcement names a heavy check"
@@ -111,7 +114,7 @@ assert_contains "$OUT" "BACKGROUND CHECKS" "a changed canvas invalidates the cac
 
 # --- no flag: full run -----------------------------------------------------------
 OUT=$(start "" s4)
-assert_contains "$OUT" "Communication Rules" "full mode delivers the contract"
+assert_not_contains "$OUT" "Communication Rules" "full mode no longer carries the contract (contract-part.sh does)"
 assert_not_contains "$OUT" "BACKGROUND CHECKS" "full mode announces nothing"
 assert_not_contains "$OUT" "from a background run" "full mode serves no cache"
 

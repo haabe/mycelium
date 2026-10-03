@@ -4,6 +4,15 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-02.
 
+## v0.310.17 - the tests follow the contract to its new home
+
+**2026-10-03.** CI on 0.310.16 failed where tests still assumed `session-start.sh` carried the
+contract: Check 47's fixtures, the consumer-delivery test, the fast/full tier test and the `/clear`
+test. They now run the `contract-part.sh` handlers and assert each part fits the 10,000-character
+cap; the `/clear` test checks that the contract handlers' matcher includes `clear`. In-process tests
+bring `contract_parts.py` from 58% to 97% coverage. Shipped as its own patch because the version
+check counts tests as framework files and the 0.310.16 bump was already pushed.
+
 ## v0.310.16 - the operating contract reaches the model whole
 
 **2026-10-03.** A review against the Claude Code plugin reference found, and this session's own

@@ -21,24 +21,29 @@ source "$SCRIPT_DIR/_assert.sh"
 
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 PLUGIN_ROOT="$REPO_ROOT/plugins/mycelium"
-HOOK="$PLUGIN_ROOT/hooks/session-start.sh"
+# v0.310.16: the contract is delivered by contract-part.sh 1..4, each part under Claude Code's
+# 10,000-character hook cap (session-start.sh used to carry it whole and was shown as a 2KB preview).
+HOOK="$PLUGIN_ROOT/hooks/contract-part.sh"
 
-# Run the real hook as a consumer would see it, return the injected additionalContext.
+# Run the real part handlers as a consumer would see them; return the injected contexts joined.
 run_hook_as_consumer() {
-    local proj
+    local proj all="" k part
     proj="$(mktemp -d)"
     mkdir -p "$proj/.claude"          # a consumer project: empty .claude/, no CLAUDE.md anywhere
-    local out
-    out=$(CLAUDE_PLUGIN_ROOT="$PLUGIN_ROOT" CLAUDE_PROJECT_DIR="$proj" bash "$HOOK" 2>/dev/null)
-    rm -rf "$proj"
-    printf '%s' "$out" | python3 -c "
+    for k in 1 2 3 4; do
+        part=$(CLAUDE_PLUGIN_ROOT="$PLUGIN_ROOT" CLAUDE_PROJECT_DIR="$proj" bash "$HOOK" "$k" 2>/dev/null \
+          | python3 -c "
 import json, sys
 try:
-    d = json.load(sys.stdin)
-    print(d['hookSpecificOutput']['additionalContext'])
+    c = json.load(sys.stdin)['hookSpecificOutput']['additionalContext']
+    print('OVER-CAP' if len(c) > 10000 else c)
 except Exception:
     print('')
-"
+")
+        all="$all$part"
+    done
+    rm -rf "$proj"
+    printf '%s' "$all"
 }
 
 test_contract_reaches_a_consumer_session() {
@@ -48,6 +53,7 @@ test_contract_reaches_a_consumer_session() {
     assert_contains "$ctx" "Communication Rules" "Communication Rules delivered"
     assert_contains "$ctx" "Mandatory Pre-Ship Protocol" "Pre-Ship protocol delivered"
     assert_contains "$ctx" "Read before Write" "canvas Read-before-Write rule delivered"
+    assert_not_contains "$ctx" "OVER-CAP" "every part fits the 10,000-character hook cap"
 }
 
 test_hook_resolves_contract_via_plugin_root() {

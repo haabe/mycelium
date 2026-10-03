@@ -93,11 +93,16 @@ rm -rf "$D"
 # --- happy: reminders are read-only and fire on every source ---------------
 # The whole point of widening the matcher. After a /clear the agent has nothing,
 # so the orientation output must still be produced even though the write is skipped.
-D="$(mk_project)"
-OUT="$(run_with_payload "$D" '{"source":"clear"}')"
-if [ -n "$OUT" ]; then ok "clear still produces orientation output"
-else bad "clear produced no output — the widening bought nothing"; fi
-rm -rf "$D"
+# v0.310.16: the orientation that matters after a /clear is the contract, now delivered by
+# contract-part.sh, whose matcher includes clear (and compact); session-start.sh may have no
+# reminders to send in a fresh project.
+CLEARM=$(python3 -c "
+import json
+d = json.load(open('$REPO/plugins/mycelium/hooks/hooks.json'))
+print([g['matcher'] for g in d['hooks']['SessionStart'] if any('contract-part.sh' in h['command'] for h in g['hooks'])][0])")
+PART1="$(bash "$REPO/plugins/mycelium/hooks/contract-part.sh" 1)"
+if [[ "$CLEARM" == *clear* ]] && [ -n "$PART1" ]; then ok "clear still produces orientation output (the contract parts fire on clear)"
+else bad "clear produced no orientation: contract-part matcher '$CLEARM', part 1 empty=$([ -z "$PART1" ] && echo yes || echo no)"; fi
 
 echo "  $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

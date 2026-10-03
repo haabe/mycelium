@@ -79,3 +79,31 @@ def test_every_manifest_registers_one_handler_per_part():
         text = (hooks / name).read_text(encoding="utf-8").replace('\\"', "")
         for k in range(1, cp.MAX_PARTS + 1):
             assert f"contract-part.sh {k}" in text, (name, k)
+
+
+# In-process runs of main(), so coverage sees the branches the subprocess tests exercise.
+def test_main_check_passes_on_the_shipped_contract(capsys):
+    assert cp.main(["--check"]) == 0
+    assert "part(s)" in capsys.readouterr().out
+
+
+def test_main_check_fails_on_a_contract_that_does_not_fit(tmp_path, capsys):
+    f = tmp_path / "c.md"
+    f.write_text("\n\n".join(f"## S{i}\n" + "x" * 8_000 for i in range(cp.MAX_PARTS + 1)),
+                 encoding="utf-8")
+    assert cp.main(["--check", "--contract", str(f)]) == 1
+    assert "no longer fits" in capsys.readouterr().out
+
+
+def test_main_check_reports_a_missing_contract(tmp_path, capsys):
+    assert cp.main(["--check", "--contract", str(tmp_path / "absent.md")]) == 1
+    assert "FAIL" in capsys.readouterr().out
+
+
+def test_main_part_emits_json_and_a_missing_contract_emits_nothing(tmp_path, capsys):
+    assert cp.main(["--part", "2"]) == 0
+    assert json.loads(capsys.readouterr().out)["hookSpecificOutput"]["additionalContext"]
+    assert cp.main(["--part", "1", "--contract", str(tmp_path / "absent.md")]) == 0
+    assert capsys.readouterr().out == ""
+    assert cp.main(["--part", "99"]) == 0
+    assert capsys.readouterr().out == ""
