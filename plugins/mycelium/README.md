@@ -2,7 +2,7 @@
 
 This folder is the plugin form of [Mycelium](https://github.com/haabe/mycelium): the skills, hooks,
 engine, schemas and scripts Claude Code loads when you install it. It also runs on Codex, Cursor and
-opencode; see [install paths](../../docs/install-paths.md).
+opencode; see [install paths](https://github.com/haabe/mycelium/blob/main/docs/install-paths.md).
 
 ## Install
 
@@ -11,7 +11,7 @@ opencode; see [install paths](../../docs/install-paths.md).
 /plugin install mycelium@haabe-mycelium
 ```
 
-Then run `/mycelium:start` in your project. [Get started](../../docs/get-started.md) walks through it.
+Then run `/mycelium:start` in your project. [Get started](https://github.com/haabe/mycelium/blob/main/docs/get-started.md) walks through it.
 
 ## What it adds
 
@@ -23,7 +23,7 @@ Then run `/mycelium:start` in your project. [Get started](../../docs/get-started
 It does not edit your project's own files (CLAUDE.md, README.md, LICENSE). Its state goes in a
 `.claude/` folder in your project, which the hooks create on first use. `/mycelium:setup` offers an
 `AGENTS.md` at your project root. Everything it runs, reads, writes and connects to is stated in
-[`PRIVACY.md`](../../PRIVACY.md).
+[`PRIVACY.md`](https://github.com/haabe/mycelium/blob/main/PRIVACY.md).
 
 ## Architecture cut
 

@@ -4,6 +4,22 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-02.
 
+## v0.310.14 - update instructions that work
+
+**2026-10-03.** A review against the Claude Code plugin reference found the update instructions
+wrong in two places. `docs/get-started.md` and `docs/install-paths.md` said plugin auto-update is
+on by default; the reference (plugins/loading, "Which marketplaces and plugins auto-update") has it
+on only for Anthropic's own marketplaces and "off for every other marketplace", which includes
+`haabe-mycelium`. The manual step they gave, `/plugin marketplace update`, refreshes the catalog and
+does not update the installed plugin. Both pages now give `claude plugin update
+mycelium@haabe-mycelium` (or Update in `/plugin`) then `/reload-plugins`, and say how to turn
+auto-update on. A user who followed the old text has likely stayed on the version they installed.
+
+- `get-started.md` also said "four hooks that can hold work back"; the README stopped counting them
+  in 0.310.10, so it now says "some hooks".
+- The plugin README's links to the repo's docs were relative paths above the plugin folder, which the
+  installed copy does not contain; they are absolute links now.
+
 ## v0.310.13 - what Mycelium runs and connects to, stated truthfully
 
 **2026-10-03.** The Claude plugin directory held a submission with "Couldn't confirm what the plugin
