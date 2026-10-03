@@ -4,6 +4,42 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-02.
 
+## v0.310.17 - the tests follow the contract to its new home
+
+**2026-10-03.** CI on 0.310.16 failed where tests still assumed `session-start.sh` carried the
+contract: Check 47's fixtures, the consumer-delivery test, the fast/full tier test and the `/clear`
+test. They now run the `contract-part.sh` handlers and assert each part fits the 10,000-character
+cap; the `/clear` test checks that the contract handlers' matcher includes `clear`. In-process tests
+bring `contract_parts.py` from 58% to 97% coverage. Shipped as its own patch because the version
+check counts tests as framework files and the 0.310.16 bump was already pushed.
+
+## v0.310.16 - the operating contract reaches the model whole
+
+**2026-10-03.** A review against the Claude Code plugin reference found, and this session's own
+transcript confirmed, that the always-on operating contract mostly never reached the model. Claude
+Code caps a hook's `additionalContext` at 10,000 characters; over the cap it saves the output to a
+file, puts a 2,000-character preview in context, and does not ask the model to read the file.
+`session-start.sh` sent the whole contract (about 22,000 characters) plus the reminders as one
+string, so the model saw the contract's opening and nothing after it, in sessions back to at least
+mid-September, while Check 47 and every test reported the contract as injected. They checked that
+the hook referenced the contract, not that the contract arrived.
+
+- **The contract arrives in parts.** `scripts/contract_parts.py` splits it between its sections into
+  parts of at most 9,400 characters; `hooks/contract-part.sh 1` to `4` each emit one, registered in
+  the Claude Code, Codex and Cursor manifests. The parts are numbered because the handlers run in
+  parallel. Their matcher adds `compact`, so the contract also comes back after compaction.
+- **The plugin path is real.** `${CLAUDE_PLUGIN_ROOT}` is substituted in hook commands and skill
+  bodies, not in text Claude reads or in its shell, so the commands the contract and engine docs name
+  pointed nowhere for anyone whose own shell did not export it (the maintainer's did, which hid it).
+  The parts carry the real path, and part 1 states it once for docs read later.
+- **`session-start.sh` sends only the reminders**, capped under 10,000 with a visible note when cut.
+- **The guard measures delivery, not wiring.** `contract_parts.py --check` runs in Check 47 and
+  `tests/python/test_contract_parts.py`, and fails when the contract would need more parts than there
+  are handlers; `test_session_start_budget.sh` asserts every part fits the cap.
+- **Alternatives considered**: trimming the contract under 10,000 characters (rejected for now: it
+  would cut rules to fit a transport limit, a content decision for the founder); delivering it through
+  a Claude Code mod's system-prompt hook (Claude Code only, and opp-083 is a nice-to-have).
+
 ## v0.310.15 - Mycelium has an icon
 
 **2026-10-03.** The Claude plugin directory flagged the plugin for having no icon. It now ships

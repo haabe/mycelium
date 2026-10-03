@@ -189,6 +189,26 @@
     ],
     "sessionStart": [
       {
+        "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/contract-part.sh\" 1",
+        "type": "command",
+        "timeout": 10
+      },
+      {
+        "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/contract-part.sh\" 2",
+        "type": "command",
+        "timeout": 10
+      },
+      {
+        "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/contract-part.sh\" 3",
+        "type": "command",
+        "timeout": 10
+      },
+      {
+        "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/contract-part.sh\" 4",
+        "type": "command",
+        "timeout": 10
+      },
+      {
         "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/session-start.sh\"",
         "type": "command",
         "timeout": 60

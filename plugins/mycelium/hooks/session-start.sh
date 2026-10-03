@@ -1572,16 +1572,19 @@ corrections_phrase = (
     if corrections in ('0', '0.', '')
     else f'{corrections} corrections logged'
 )
+# The contract is NOT sent here (v0.310.16): contract-part.sh delivers it in parts, because
+# Claude Code caps one hook's additionalContext at 10,000 characters and this string carried the
+# whole contract plus the reminders, so the model saw a 2,000-character preview. contract_file is
+# still resolved above only to confirm the contract exists. The reminders get the same cap, and a
+# cut says so instead of disappearing into a file the model is never told to read.
+CAP = 9800
 parts = []
-if contract_file:
-    try:
-        with open(contract_file) as f:
-            parts.append(f.read().strip())
-    except OSError:
-        pass
 if reminders:
     parts.append(f'MYCELIUM FEEDBACK LOOPS: {reminders}Memory state: {corrections_phrase}.')
 context = '\n\n'.join(p for p in parts if p)
+if len(context) > CAP:
+    note = f' [cut: about {len(context) - CAP + 100} more characters of reminders; Claude Code caps hook output at 10,000]'
+    context = context[:CAP - len(note)] + note
 human_line = sys.argv[4] if len(sys.argv) > 4 else ''
 if context:
     output = {
