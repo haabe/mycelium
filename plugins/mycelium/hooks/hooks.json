@@ -7,63 +7,63 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/gate.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/gate.sh\"",
             "timeout": 30,
             "statusMessage": "Mycelium preflight gate + secret scan"
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/discovery-gate.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/discovery-gate.sh\"",
             "timeout": 30,
             "statusMessage": "Mycelium discovery gate (new source files in discovery-untouched projects)"
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/scale-lock-gate.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/scale-lock-gate.sh\"",
             "timeout": 10,
             "statusMessage": "Mycelium scale-lock gate (a new diamond opens only on what its parent established)"
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/guard-state-gate.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/guard-state-gate.sh\"",
             "timeout": 10,
             "statusMessage": "Mycelium guard-state gate (the files that switch a gate off are the user's to write)"
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/brownfield-gate.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/brownfield-gate.sh\"",
             "timeout": 30,
             "statusMessage": "Mycelium brownfield gate (one-shot: existing code, no discovery state)"
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/scope-gate.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/scope-gate.sh\"",
             "timeout": 30,
             "statusMessage": "Mycelium scope enforcement"
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/framework-guard.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/framework-guard.sh\"",
             "timeout": 30,
             "statusMessage": "Mycelium framework-guard (dogfood-mode only)"
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/autonomous-evidence-guard.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/autonomous-evidence-guard.sh\"",
             "timeout": 30,
             "statusMessage": "Mycelium autonomous-evidence-guard (autonomous-mode only)"
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/absence-claim-guard.sh"
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/absence-claim-guard.sh\""
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/key-shape-guard.sh"
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/key-shape-guard.sh\""
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/correction-attribution-guard.sh"
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/correction-attribution-guard.sh\""
           }
         ]
       },
@@ -72,33 +72,33 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/framework-guard.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/framework-guard.sh\"",
             "timeout": 30,
             "statusMessage": "Mycelium framework-guard (Bash — dogfood-mode only)"
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/shell-safety-guard.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/shell-safety-guard.sh\"",
             "timeout": 5,
             "statusMessage": "Mycelium framework-guard (Bash — dogfood-mode only)"
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/absence-claim-guard.sh"
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/absence-claim-guard.sh\""
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/correction-attribution-guard.sh"
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/correction-attribution-guard.sh\""
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/gate.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/gate.sh\"",
             "timeout": 30,
             "statusMessage": "Mycelium preflight gate + secret scan"
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/discovery-gate.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/discovery-gate.sh\"",
             "timeout": 30,
             "statusMessage": "Mycelium discovery gate (new source files in discovery-untouched projects)"
           },
@@ -106,35 +106,35 @@
             "type": "command",
             "timeout": 10,
             "statusMessage": "Mycelium exposure gate (a deploy waits for a current exposure record)",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/exposure-gate.sh"
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/exposure-gate.sh\""
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/brownfield-gate.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/brownfield-gate.sh\"",
             "timeout": 30,
             "statusMessage": "Mycelium brownfield gate (one-shot: existing code, no discovery state)"
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/scope-gate.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/scope-gate.sh\"",
             "timeout": 30,
             "statusMessage": "Mycelium scope enforcement"
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/autonomous-evidence-guard.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/autonomous-evidence-guard.sh\"",
             "timeout": 30,
             "statusMessage": "Mycelium autonomous-evidence-guard (autonomous-mode only)"
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/bash-state-guard.sh pre",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/bash-state-guard.sh\" pre",
             "timeout": 10,
             "statusMessage": "Mycelium shell-state guard"
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/guard-state-gate.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/guard-state-gate.sh\"",
             "timeout": 10,
             "statusMessage": "Mycelium guard-state gate (the files that switch a gate off are the user's to write)"
           }
@@ -145,49 +145,49 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/framework-guard.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/framework-guard.sh\"",
             "timeout": 30,
             "statusMessage": "Mycelium framework-guard (MCP filesystem — dogfood-mode only)"
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/autonomous-evidence-guard.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/autonomous-evidence-guard.sh\"",
             "timeout": 30,
             "statusMessage": "Mycelium autonomous-evidence-guard (MCP filesystem — autonomous-mode only)"
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/gate.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/gate.sh\"",
             "timeout": 30,
             "statusMessage": "Mycelium preflight gate + secret scan"
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/discovery-gate.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/discovery-gate.sh\"",
             "timeout": 30,
             "statusMessage": "Mycelium discovery gate (new source files in discovery-untouched projects)"
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/scale-lock-gate.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/scale-lock-gate.sh\"",
             "timeout": 10,
             "statusMessage": "Mycelium scale-lock gate (a new diamond opens only on what its parent established)"
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/guard-state-gate.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/guard-state-gate.sh\"",
             "timeout": 10,
             "statusMessage": "Mycelium guard-state gate (the files that switch a gate off are the user's to write)"
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/brownfield-gate.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/brownfield-gate.sh\"",
             "timeout": 30,
             "statusMessage": "Mycelium brownfield gate (one-shot: existing code, no discovery state)"
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/scope-gate.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/scope-gate.sh\"",
             "timeout": 30,
             "statusMessage": "Mycelium scope enforcement"
           }
@@ -198,7 +198,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/read-before-research-guard.sh"
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/read-before-research-guard.sh\""
           }
         ]
       }
@@ -209,33 +209,33 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/post-write-nudge.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/post-write-nudge.sh\"",
             "timeout": 3,
             "statusMessage": "Mycelium post-write check"
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/change-log.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/change-log.sh\"",
             "timeout": 3,
             "statusMessage": "Mycelium change log",
             "async": true
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/diamond-state-audit.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/diamond-state-audit.sh\"",
             "timeout": 3,
             "statusMessage": "Mycelium diamond state audit",
             "async": true
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/canvas-schema-check.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/canvas-schema-check.sh\"",
             "timeout": 10,
             "statusMessage": "Mycelium canvas schema check"
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/exposure-change.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/exposure-change.sh\"",
             "timeout": 10,
             "statusMessage": "Mycelium exposure change (a write that makes the work not ready for real people)"
           }
@@ -246,7 +246,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/exposure-change.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/exposure-change.sh\"",
             "timeout": 10,
             "statusMessage": "Mycelium exposure change (MCP filesystem write to the diamonds file)"
           }
@@ -257,7 +257,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/read-log.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/read-log.sh\"",
             "timeout": 3,
             "statusMessage": "Mycelium read log",
             "async": true
@@ -269,7 +269,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/bash-state-guard.sh post",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/bash-state-guard.sh\" post",
             "timeout": 15,
             "statusMessage": "Mycelium shell-state check"
           }
@@ -282,7 +282,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/reflexion-gate.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/reflexion-gate.sh\"",
             "timeout": 10,
             "statusMessage": "Reflexion: checking failure relevance..."
           }
@@ -295,23 +295,23 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/stop-check.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/stop-check.sh\"",
             "timeout": 5,
             "statusMessage": "Mycelium guardrail + feedback loop check"
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/next-action-check.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/next-action-check.sh\"",
             "timeout": 5,
             "statusMessage": "Mycelium next-action check"
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/ci-signal.sh"
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/ci-signal.sh\""
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/next-item-repeat.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/next-item-repeat.sh\"",
             "timeout": 5,
             "statusMessage": "Mycelium next-item repeat"
           }
@@ -324,17 +324,17 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/session-start.sh --fast",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start.sh\" --fast",
             "timeout": 60,
             "statusMessage": "Mycelium feedback loop check (fast tier)"
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/ci-signal.sh --session-start"
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/ci-signal.sh\" --session-start"
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/session-start.sh --async",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start.sh\" --async",
             "async": true,
             "statusMessage": "Mycelium feedback loop check (background tier)"
           }
@@ -347,13 +347,13 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/preflight.sh",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/preflight.sh\"",
             "timeout": 5,
             "statusMessage": "Mycelium preflight stamp"
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/discovery-trigger-guard.sh"
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/discovery-trigger-guard.sh\""
           }
         ]
       }

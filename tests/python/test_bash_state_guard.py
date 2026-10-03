@@ -115,5 +115,5 @@ def test_main_reads_the_hook_payload(tmp_path, monkeypatch, capsys):
 
 def test_the_guard_is_registered_before_and_after_shell_commands():
     for name in ("hooks.json", "hooks.codex.json", "hooks.cursor.json"):
-        text = (PLUGIN / "hooks" / name).read_text()
+        text = (PLUGIN / "hooks" / name).read_text().replace('\\"', "")  # commands quote their paths
         assert "bash-state-guard.sh pre" in text and "bash-state-guard.sh post" in text, name
