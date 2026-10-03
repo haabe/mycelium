@@ -62,14 +62,33 @@ OUT0=$(run_hook 0)
 assert_contains "$OUT0" "SESSION-START BUDGET" "a zero budget reports itself"
 assert_contains "$OUT0" "Skipped for time" "the skipped checks are named"
 assert_contains "$OUT0" "evidence-landing" "evidence landing is among the skipped optional checks"
-assert_contains "$OUT0" "Communication Rules" "the operating contract is still delivered under a zero budget"
+# v0.310.16: the contract no longer rides in this hook's output (contract-part.sh delivers it in
+# parts under the 10,000-character cap), so no budget can cut it. Prove that instead.
+PARTS=""
+for k in 1 2 3 4; do
+    PART=$(MYCELIUM_SESSION_START_BUDGET=0 bash "$PLUGIN_ROOT/hooks/contract-part.sh" "$k" | python3 -c "
+import json, sys
+t = sys.stdin.read()
+c = json.loads(t)['hookSpecificOutput']['additionalContext'] if t.strip() else ''
+print('OVER-CAP' if len(c) > 10000 else c)
+")
+    assert_not_contains "$PART" "OVER-CAP" "contract part $k fits the 10,000-character hook cap"
+    PARTS="$PARTS$PART"
+done
+assert_contains "$PARTS" "Communication Rules" "the operating contract is delivered by its parts under a zero budget"
+assert_contains "$PARTS" "Guard state is human-owned" "the contract's last section arrives too"
 
 # --- happy: default budget on a small fixture -> no skip, inside timeout --
 T0=$(date +%s)
 OUT1=$(run_hook)
 T1=$(date +%s)
 assert_not_contains "$OUT1" "Skipped for time" "a small fixture skips nothing at the default budget"
-assert_contains "$OUT1" "Communication Rules" "the contract is delivered on the happy path"
+LEN1=${#OUT1}
+if [ "$LEN1" -le 10000 ]; then
+    assert_eq "under" "under" "session-start's own output (${LEN1} chars) fits the 10,000-character hook cap"
+else
+    assert_eq "under" "over(${LEN1})" "session-start's own output must fit the 10,000-character hook cap"
+fi
 ELAPSED=$(( T1 - T0 ))
 if [ "$ELAPSED" -lt "$MANIFEST_TIMEOUT" ]; then
     assert_eq "inside" "inside" "fixture run (${ELAPSED}s) is inside the manifest timeout (${MANIFEST_TIMEOUT}s)"

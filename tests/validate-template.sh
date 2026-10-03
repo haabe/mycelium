@@ -2364,15 +2364,24 @@ check_operating_contract_wiring() {
     section "Check 47: plugin-form operating contract is wired (present + injected + referenced + plugin-path-clean)"
 
     local contract="plugins/mycelium/engine/agent-operating-contract.md"
-    local hook="plugins/mycelium/hooks/session-start.sh"
+    # v0.310.16: the contract is delivered by contract-part.sh handlers in parts under Claude
+    # Code's 10,000-character hook cap, no longer inside session-start.sh's one string.
+    local hook="plugins/mycelium/hooks/contract-part.sh"
+    local parts="plugins/mycelium/scripts/contract_parts.py"
     local claudemd="CLAUDE.md"
 
     if [ ! -f "$contract" ]; then
         fail "Check 47: operating contract missing at $contract — plugin-form sessions get no always-on rules (regression of the v0.20.0 migration gap)."
         return
     fi
-    if [ ! -f "$hook" ] || ! grep -q "agent-operating-contract" "$hook"; then
-        fail "Check 47: SessionStart hook ($hook) does not inject agent-operating-contract — the contract is packaged but never reaches a session."
+    if [ ! -f "$hook" ] || [ ! -f "$parts" ] || ! grep -q "contract_parts.py" "$hook" \
+       || ! grep -q "agent-operating-contract" "$parts" \
+       || ! grep -q "contract-part.sh" plugins/mycelium/hooks/hooks.json; then
+        fail "Check 47: the contract-part SessionStart handlers ($hook via $parts, registered in hooks.json) do not deliver agent-operating-contract — the contract is packaged but never reaches a session."
+        return
+    fi
+    if ! python3 "$parts" --check >/dev/null 2>&1; then
+        fail "Check 47: the operating contract no longer fits its handlers under the hook cap: $(python3 "$parts" --check 2>&1 | tail -1)"
         return
     fi
     if [ ! -f "$claudemd" ] || ! grep -q "agent-operating-contract" "$claudemd"; then
@@ -2390,7 +2399,7 @@ check_operating_contract_wiring() {
         return
     fi
 
-    pass "Check 47: operating contract present, injected by SessionStart, referenced by CLAUDE.md, and free of legacy framework paths"
+    pass "Check 47: operating contract present, delivered in parts under the hook cap, referenced by CLAUDE.md, and free of legacy framework paths"
 }
 
 # ============================================================

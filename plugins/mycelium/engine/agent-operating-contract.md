@@ -1,6 +1,6 @@
 # Mycelium Agent Operating Contract
 
-**This file is the single canonical source of the always-on rules every Mycelium session runs under.** It is injected into context at the start of every session by the SessionStart hook (`hooks/session-start.sh`) so the rules bind even in plugin form, where no operating-manual `CLAUDE.md` is templated into the project. The repo-root `CLAUDE.md` references this file rather than restating the rules — this file wins, and CI Check 47 keeps the wiring intact.
+**This file is the single canonical source of the always-on rules every Mycelium session runs under.** It is injected into context at the start of every session, in parts that each fit the hook output cap, by the SessionStart handlers `hooks/contract-part.sh 1..4` (`scripts/contract_parts.py`), so the rules bind even in plugin form, where no operating-manual `CLAUDE.md` is templated into the project. The repo-root `CLAUDE.md` references this file rather than restating the rules — this file wins, and CI Check 47 keeps the wiring intact.
 
 Heavy reference (diamond scales, theory-gate catalogue, learning-metabolism, guardrail detail) is NOT here — it loads just-in-time. This file carries only the behavioral contract that must hold on turn 1 and turn 30, on a strong model and a weak one.
 

@@ -83,7 +83,7 @@ None of it is fixed, because one simulation is not adoption evidence. Subagents 
 This is the part most worth understanding, and the part a migration can silently break (it did — see the v0.58.0 changelog entry). Full map: `docs/context-surface.md`.
 
 **Always-on (every session):**
-- The **agent operating contract** — `plugins/mycelium/engine/agent-operating-contract.md`, injected by the `SessionStart` hook (`hooks/session-start.sh`). This carries the always-on inferential rules (Communication Rules + the Mandatory Pre-Task / Pre-Ship / Post-Task Protocols). It is the plugin-form delivery path for rules that legacy `degit` installs used to template into each project's `.claude/CLAUDE.md`. Guarded by CI Check 47 and `tests/bash/test_session_start_contract_delivery.sh`.
+- The **agent operating contract** — `plugins/mycelium/engine/agent-operating-contract.md`, injected at `SessionStart` in parts by `hooks/contract-part.sh` (`scripts/contract_parts.py` splits it so each part fits Claude Code's 10,000-character hook output cap). This carries the always-on inferential rules (Communication Rules + the Mandatory Pre-Task / Pre-Ship / Post-Task Protocols). It is the plugin-form delivery path for rules that legacy `degit` installs used to template into each project's `.claude/CLAUDE.md`. Guarded by CI Check 47 and `tests/bash/test_session_start_contract_delivery.sh`.
 - Dynamic feedback-loop reminders + corrections count (same hook), when overdue loops exist.
 - Skill names + one-line descriptions (auto-discovered), and the user's project `CLAUDE.md` + auto-memory.
 

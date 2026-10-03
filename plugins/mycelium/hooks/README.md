@@ -112,16 +112,22 @@ Returns warnings via `additionalContext` (does not block). This is the "hybrid" 
 **Type**: `command` (5s timeout)
 **Check**: if a `mycelium:*` skill ran in this turn (a `Skill` tool_use in the transcript) and the closing message (`last_assistant_message`, transcript fallback) has no line beginning `Next:`, returns `{"decision":"block","reason":...}` so the agent ends on exactly one next action. Silent on turns with no framework skill run. Honours `stop_hook_active`; reports via `systemMessage` when it cannot read its input or the transcript (Cursor, Codex) rather than failing silently. Person override `MYCELIUM_NEXT_ACTION_CHECK=off`. Downe P10; operating-contract rule 12; dogfood opp-006/sol-006b. Gate blocks (PreToolUse denies) are not yet in scope.
 
-### Layer 5: SessionStart (`session-start.sh`)
-**Triggers**: When a session starts or resumes
-**Matcher**: `startup|resume`
-**Type**: `command` (5s timeout)
-**Checks**:
-- If BVSSH health check is overdue (>30 days or never done) -> Reminder to run `/bvssh-check`
-- If DORA metrics are overdue (>30 days since last measurement) -> Reminder to run `/dora-check`
-- Reports corrections count for awareness
+### Layer 5: SessionStart (`contract-part.sh`, `session-start.sh`)
+**Triggers**: When a session starts, resumes, clears or forks; the contract parts also after compaction
+**Matchers**: `startup|resume|clear|compact|fork` (contract parts), `startup|resume|clear|fork` (the rest)
 
-Returns `additionalContext` so the agent knows about overdue strategic feedback loops from the start of the session. Part of the four-speed feedback loop system (see `../engine/feedback-loops.md`).
+- **`contract-part.sh 1` to `4`** (10 s each, v0.310.16) deliver `engine/agent-operating-contract.md`
+  in parts. Claude Code caps one hook's `additionalContext` at 10,000 characters and shows only a
+  2,000-character preview of anything longer, so `scripts/contract_parts.py` splits the contract
+  between its sections into parts that each fit, numbers them (the handlers run in parallel), and
+  replaces the literal `${CLAUDE_PLUGIN_ROOT}` with the real plugin path, which part 1 also states.
+  `contract_parts.py --check` (validator Check 47, `tests/python/test_contract_parts.py`) fails when
+  the contract would need more parts than there are handlers.
+- **`session-start.sh --fast`** (60 s) returns the feedback-loop reminders as `additionalContext`,
+  capped under 10,000 characters with a visible note when cut; **`--async`** runs the heavier checks
+  in the background and their result is delivered at the next prompt. Part of the four-speed feedback
+  loop system (see `../engine/feedback-loops.md`).
+- **`ci-signal.sh --session-start`** reports a failed CI run on the current branch (see PRIVACY.md).
 
 ### Layer 6: Skill-Level Gates (not hooks)
 **Triggers**: When `/diamond-progress` is explicitly invoked
