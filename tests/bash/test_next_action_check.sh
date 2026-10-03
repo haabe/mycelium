@@ -32,7 +32,7 @@ test_blocks_when_skill_ran_and_no_next_line() {
 }
 
 test_passes_when_next_line_present() {
-    local tr; tr=$(_transcript "mycelium:start" $'Here is your brief.\n\nNext: run /mycelium:assumption-test on the riskiest one.')
+    local tr; tr=$(_transcript "mycelium:start" $'Here is your brief.\n\nNext: run /mycelium:assumption-test on the riskiest one (per: the brief, section 3).')
     local out; out=$(_run "$tr" false); rm -f "$tr"
     assert_eq "" "$out" "a Next: line satisfies the check; hook is silent"
 }
@@ -69,7 +69,7 @@ test_person_override() {
 
 test_last_assistant_message_wins_over_lagging_transcript() {
     local tr; tr=$(_transcript "mycelium:start" "Here is your brief.")
-    local out; out=$(printf '{"hook_event_name":"Stop","stop_hook_active":false,"transcript_path":"%s","last_assistant_message":"Brief above.\\n\\nNext: nothing until the tester replies."}' "$tr" | bash "$HOOK"); rm -f "$tr"
+    local out; out=$(printf '{"hook_event_name":"Stop","stop_hook_active":false,"transcript_path":"%s","last_assistant_message":"Brief above.\\n\\nNext: nothing until the tester replies (per: ht-121)."}' "$tr" | bash "$HOOK"); rm -f "$tr"
     assert_eq "" "$out" "last_assistant_message is read in preference to a lagging transcript"
 }
 
@@ -88,4 +88,57 @@ run_test test_silent_for_non_mycelium_skill
 run_test test_honours_stop_hook_active
 run_test test_fails_open_without_transcript
 run_test test_person_override
+_cmd_transcript() {
+    # A slash command the PERSON typed: the command line, then a meta skill body, then the reply.
+    local tmp; tmp=$(mktemp)
+    printf '%s\n' '{"type":"user","message":{"role":"user","content":"<command-message>mycelium:xai-check</command-message>\n<command-name>/mycelium:xai-check</command-name>"}}' > "$tmp"
+    printf '%s\n' '{"type":"user","isMeta":true,"message":{"role":"user","content":[{"type":"text","text":"Base directory for this skill: ..."}]}}' >> "$tmp"
+    python3 - "$tmp" "$1" <<'PY'
+import json,sys
+open(sys.argv[1],'a').write(json.dumps({"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":sys.argv[2]}]}})+"\n")
+PY
+    echo "$tmp"
+}
+
+test_blocks_next_line_without_per() {
+    local tr; tr=$(_transcript "mycelium:start" $'Brief above.\n\nNext: run /mycelium:assumption-test.')
+    local out; out=$(_run "$tr" false); rm -f "$tr"
+    assert_contains "$out" '"decision": "block"' "a Next: line with no (per ...) is blocked"
+    assert_contains "$out" "per: <source>" "the reason shows the form to add"
+}
+
+test_per_elsewhere_in_message_does_not_count() {
+    local tr; tr=$(_transcript "mycelium:start" $'Gates pass (per: active.yml).\n\nNext: run /mycelium:assumption-test.')
+    local out; out=$(_run "$tr" false); rm -f "$tr"
+    assert_contains "$out" '"decision": "block"' "the citation must be on the Next: line itself"
+}
+
+test_slash_command_turn_is_checked() {
+    local tr; tr=$(_cmd_transcript "Audit written. Commit?")
+    local out; out=$(_run "$tr" false); rm -f "$tr"
+    assert_contains "$out" '"decision": "block"' "a turn started by a typed /mycelium: command is a framework turn"
+    assert_contains "$out" "mycelium:xai-check" "the reason names the typed command"
+}
+
+test_slash_command_turn_passes_with_cited_next() {
+    local tr; tr=$(_cmd_transcript $'Audit written.\n\nNext: commit DL-1411 (per: the person asked to commit).')
+    local out; out=$(_run "$tr" false); rm -f "$tr"
+    assert_eq "" "$out" "a cited Next: line ends a typed-command turn"
+}
+
+test_meta_entry_does_not_reset_the_turn() {
+    local tr; tr=$(_transcript "mycelium:start" "placeholder")
+    local tmp; tmp=$(mktemp)
+    head -3 "$tr" > "$tmp"
+    printf '%s\n' '{"type":"user","isMeta":true,"message":{"role":"user","content":[{"type":"text","text":"<system-reminder>x</system-reminder>"}]}}' >> "$tmp"
+    printf '%s\n' '{"type":"assistant","message":{"role":"assistant","content":[{"type":"text","text":"Done."}]}}' >> "$tmp"
+    local out; out=$(_run "$tmp" false); rm -f "$tr" "$tmp"
+    assert_contains "$out" '"decision": "block"' "an injected meta entry does not hide the skill that ran earlier in the turn"
+}
+
+run_test test_blocks_next_line_without_per
+run_test test_per_elsewhere_in_message_does_not_count
+run_test test_slash_command_turn_is_checked
+run_test test_slash_command_turn_passes_with_cited_next
+run_test test_meta_entry_does_not_reset_the_turn
 report

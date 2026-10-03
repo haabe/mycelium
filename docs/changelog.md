@@ -4,6 +4,30 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-03.
 
+## v0.311.0 - a framework turn's Next: line cites its trigger
+
+**2026-10-03.** Contract rule 4 gets a mechanism; found by the dogfood project's seventh `/xai-check`.
+
+- **The `Next:` line must carry `(per: <source>)`.** Rule 4 asks for the trigger of a non-trivial
+  move. As prose it appeared in 3 of the 12 most recent dogfood sessions, measured on 2026-09-14
+  and again on 2026-10-03, and the system card said so. `next-action-check.sh` now blocks, once, a
+  framework turn whose `Next:` line has no `(per ...)`, the same way it blocks a missing line; the
+  first block message already shows the full form. Fires are logged as `blocked-no-per`, so the
+  next audit can read whether it changed anything.
+- **Typed slash commands count as framework turns.** The check found skill runs only as a `Skill`
+  tool_use, and treated the skill body that follows a typed `/mycelium:` command as a new human
+  turn. So every skill the person ran by hand closed unchecked: in the dogfood session that found
+  this, `/mycelium:diamond-progress` and `/mycelium:xai-check` both ended with no `Next:` line.
+  Meta transcript entries no longer start a turn, and `<command-name>/mycelium:...` marks one.
+- Contract rules 4 and 12, card §5, `context-surface.md` and `hooks/README.md` say so; both
+  documents were re-stamped after the 0.310.20 check flagged the hook change.
+- **Alternatives considered.** (a) Retire the inline-citation claim and name the decision log as the
+  only rationale surface: honest, but the founder's 2026-09-14 ruling on this rule was "if it
+  exists and is still broken, it isn't strict enough". (b) An advisory, not a block: the framework
+  measures its advisory tier as skipped, and this rule was already advisory in effect. (c) Require
+  the citation on every recommendation in a message: not checkable without reading intent; the
+  `Next:` line is the one recommendation every framework turn already makes.
+
 ## v0.310.20 - context-surface.md is stamped against the hooks too
 
 **2026-10-03.** The follow-up 0.310.19 held for its own release.
