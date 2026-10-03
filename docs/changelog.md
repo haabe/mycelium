@@ -4,6 +4,43 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-02.
 
+## v0.310.10 - the README's hooks paragraph shows what holds work back today
+
+**2026-10-03.** Founder: "rewrite it to show the true state, or preferably in a way that doesn't
+mention numbers - as they will vary as Mycelium develops".
+
+- "Four hooks can hold work back" undercounted the blocking hooks (`hooks/README.md`), and "once
+  your purpose file says something real it stops firing at all, so a bug fix on a Tuesday never meets
+  it" stopped being true in v0.291.0, when edits to product code joined the delivery stage. The
+  paragraph now says what each kind of stop holds, with no counts, and the next one names the
+  delivery skip file beside the discovery one. Voice-gated (receipt, lint).
+
+## v0.310.9 - the evaluator pages say what Mycelium does today
+
+**2026-10-03.** `docs/evaluate.md` and `docs/usage-modes.md` had not been touched since May. Every
+claim on both was checked against the code (18 claims; the table is in the roadmap's worksheets),
+and the ones that no longer held are corrected.
+
+- **evaluate.md**: the entry point is `/mycelium:start`, not `/interview`; four links to README
+  sections that no longer exist now point at the sections that replaced them; "touches no
+  project-root files" now says it adds `.claude/` and offers an `AGENTS.md`; the decision-audit
+  bullet says gate citations and `why_not_alternatives` are instructions the agent follows, not
+  checks a script runs; step 5 pointed at an empty template and now reads what your own brief wrote;
+  "Claude Code is incompatible with your tooling" is now "your coding agent cannot run hooks", since
+  Codex, Cursor and opencode are supported; "one full diamond cycle (1-2 weeks)" is now "until your
+  first diamond reaches close". Step 2 now says how to see a stop and links uninstall.
+- **usage-modes.md**: the merge rules for `_meta` and `last_validated` described a mechanism that does
+  not exist (git merges canvas YAML as text; the framework's rule is "more evidence wins", decided by
+  hand); `/mycelium:canvas-sync` is described as the checklist it is; the UX/dev handover uses the
+  current model (the L2 records `set_target`, `/mycelium:ost-builder` offers an L3, the L2 stays open)
+  instead of "leaf-lifecycle phase 5" and "L2 closed"; worker read-only access is described as an
+  instruction, not a lock; stack detection is `/mycelium:delivery-bootstrap`, offered, not automatic;
+  skill names carry the `/mycelium:` prefix.
+- **Fix**: `/mycelium:canvas-sync`'s commit step (skill and `orchestration/canvas-sync.md`) now
+  stages `.claude/diamonds/`. It left diamond state out of the team sync.
+- **Found, not changed here**: `engine/leaf-lifecycle.md` still uses retired phase names (reference
+  cleanup).
+
 ## v0.310.8 - history of the retired phase loop no longer reads as the current model
 
 **2026-10-03.** A warm reader read two history notes about the four-phase loop retired in v0.306.0
