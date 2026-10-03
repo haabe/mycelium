@@ -4,6 +4,29 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-03.
 
+## v0.310.20 - context-surface.md is stamped against the hooks too
+
+**2026-10-03.** The follow-up 0.310.19 held for its own release.
+
+- **`check_system_card_hooks.py` holds a list of documents, not one.** `docs/context-surface.md`
+  describes the same hook layer as the system card and was not stamped, so when 0.310.16 moved the
+  contract to `contract-part.sh` the card was re-read and context-surface.md was not. Each document
+  in `DOCS` now carries its own `Hook surface reviewed` line against the same digest; a drift
+  message names the documents to re-read; a listed document that is missing is a precondition
+  failure, not a pass; `--write` checks every anchor before it writes anything. CLI and callers
+  unchanged. Five new tests fail on the old script.
+- **What the first read found.** context-surface.md's table of hooks that "change what the agent may
+  do or what the human sees" left out four that block or ask: `scale-lock-gate.sh` with
+  `bash-state-guard.sh`, `exposure-gate.sh`, `guard-state-gate.sh`, plus the exposure line from
+  `exposure-change.sh` and `preflight.sh`. `hooks/README.md`, which context-surface.md calls the full
+  table, left out four registered hooks: `correction-attribution-guard.sh`,
+  `discovery-trigger-guard.sh`, `next-item-repeat.sh`, `read-log.sh`. All added.
+- **Alternatives considered.** (a) A separate script per document: two copies of the digest and the
+  stamping logic to keep in step; lost to one list. (b) Derive the tables from `hooks.json`: removes
+  the drift for names but not for what each hook does, which is the part a reader needs; not now.
+  (c) Add hooks/README.md to `DOCS`: it changes in nearly every hook release already, so a stamp
+  there would mostly add a step; held until it drifts again.
+
 ## v0.310.19 - the docs name the contract's real injector and drop a stopped pilot
 
 **2026-10-03.** Found by the seventh `/xai-check` audit on the dogfood project. Docs only.
