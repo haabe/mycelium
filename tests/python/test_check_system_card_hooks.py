@@ -18,12 +18,14 @@ sys.path.insert(0, str(SCRIPT.parent))
 import check_system_card_hooks as csch  # noqa: E402
 
 CARD = "# AI System Card\n\n## 1. Identity\n\n- **Version:** 0.1.0\n- **Last updated:** 2026-01-01\n- **Maintained by:** x\n"
+SURFACE = "# Context Surface\n\n**Audience**: x.\n**Last updated**: 2026-01-01.\n\nBody naming session-start.sh.\n"
 
 
 def _tree(tmp_path, hooks=("a.sh",), manifest=True):
     root = tmp_path / "repo"
     (root / "docs").mkdir(parents=True)
     (root / "docs" / "ai-system-card.md").write_text(CARD)
+    (root / "docs" / "context-surface.md").write_text(SURFACE)
     hd = root / "plugins" / "mycelium" / "hooks"
     hd.mkdir(parents=True)
     for h in hooks:
@@ -99,3 +101,57 @@ def test_digest_is_stable_across_runs_and_sensitive_to_path(tmp_path):
     assert d1 == csch.surface_digest(root)
     (root / "plugins/mycelium/hooks/b.sh").rename(root / "plugins/mycelium/hooks/c.sh")
     assert csch.surface_digest(root) != d1
+
+
+# v0.310.20: docs/context-surface.md is a second reader of the same surface. 0.310.16 moved the
+# contract out of session-start.sh, the card was re-read, and context-surface.md was not.
+
+
+def test_a_stale_context_surface_is_found_on_its_own_and_named(tmp_path, capsys):
+    root = _tree(tmp_path)
+    csch.main(["--root", str(root), "--write"])
+    surface = root / "docs/context-surface.md"
+    text = surface.read_text()
+    old = csch.recorded_review(text)[1]
+    surface.write_text(text.replace(old, "000000000000"))
+    capsys.readouterr()
+    assert csch.main(["--root", str(root)]) == 1
+    out = capsys.readouterr().out
+    assert "docs/context-surface.md" in out
+    assert "docs/ai-system-card.md" not in out
+
+
+def test_a_hook_change_names_both_documents(tmp_path, capsys):
+    root = _tree(tmp_path)
+    csch.main(["--root", str(root), "--write"])
+    (root / "plugins/mycelium/hooks/a.sh").write_text("#!/bin/bash\necho moved\n")
+    capsys.readouterr()
+    assert csch.main(["--root", str(root)]) == 1
+    out = capsys.readouterr().out
+    assert "docs/ai-system-card.md" in out and "docs/context-surface.md" in out
+
+
+def test_write_stamps_context_surface_in_its_own_style(tmp_path):
+    root = _tree(tmp_path)
+    csch.write_review(root, today=datetime.date(2026, 10, 3))
+    text = (root / "docs/context-surface.md").read_text()
+    assert "\n**Hook surface reviewed:** 2026-10-03 (digest " in text
+    assert "- **Hook surface reviewed:**" not in text
+    assert text.index("**Last updated**:") < text.index("Hook surface reviewed")
+
+
+def test_a_missing_context_surface_is_a_precondition(tmp_path, capsys):
+    root = _tree(tmp_path)
+    csch.main(["--root", str(root), "--write"])
+    (root / "docs/context-surface.md").unlink()
+    capsys.readouterr()
+    assert csch.main(["--root", str(root)]) == 2
+    assert "no docs/context-surface.md" in capsys.readouterr().err
+
+
+def test_write_stamps_nothing_when_one_document_has_no_anchor(tmp_path, capsys):
+    root = _tree(tmp_path)
+    (root / "docs/context-surface.md").write_text("# no header block\n")
+    assert csch.main(["--root", str(root), "--write"]) == 2
+    assert "no '**Last updated**:'" in capsys.readouterr().err
+    assert "Hook surface reviewed" not in (root / "docs/ai-system-card.md").read_text()
