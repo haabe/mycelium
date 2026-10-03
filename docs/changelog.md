@@ -27,9 +27,13 @@ and the ones that no longer held are corrected.
   skill names carry the `/mycelium:` prefix.
 - **Fix**: `/mycelium:canvas-sync`'s commit step (skill and `orchestration/canvas-sync.md`) now
   stages `.claude/diamonds/`. It left diamond state out of the team sync.
-- **Found, not changed here**: README says "four hooks can hold work back"; `hooks/README.md` lists
-  more blocking hooks. The README is the founder's to rewrite. `engine/leaf-lifecycle.md` still uses
-  retired phase names (reference cleanup).
+- **README, the hooks paragraph** (founder: "rewrite it to show the true state ... in a way that doesn't
+  mention numbers"): "four hooks can hold work back" undercounted the blocking hooks, and "once your
+  purpose file says something real it stops firing" stopped being true in v0.291.0, when edits to
+  product code joined the delivery stage. It now says what each kind of stop holds, without counts,
+  and names the delivery skip file beside the discovery one. Voice-gated.
+- **Found, not changed here**: `engine/leaf-lifecycle.md` still uses retired phase names (reference
+  cleanup).
 
 ## v0.310.8 - history of the retired phase loop no longer reads as the current model
 
