@@ -4,6 +4,18 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-02.
 
+## v0.310.11 - leaf-lifecycle.md names its steps by decision, not by retired phase
+
+**2026-10-03.** `engine/leaf-lifecycle.md` still labelled its ten steps with the four phases retired
+in v0.306.0 ("GIST Entry (L3 Define)", "Preflight Check (L4 Define)", and an L4 note listing
+"Discover, Define, Develop, Deliver"). An agent reading it was routed by words the diamond record no
+longer carries. Each heading now names the decision it sits beside (`set_target`,
+`start_experiment`, `commit_to_build`, `release`), as `engine/diamond-rules.md` defines them. The
+ten leaf steps themselves are unchanged. The same retired labels go from `harness/guardrails.md` (its
+scale table), `skills/service-check/SKILL.md` ("L3 Define") `engine/cycle-learning.md` ("L5 Deliver
+complete") and `engine/diamond-rules.md` ("the L4 Deliver phase"). Other mentions of the old phases in the engine and skills
+are history ("from v0.246.0 its cycle had to be in Deliver") and stay.
+
 ## v0.310.10 - the README's hooks paragraph shows what holds work back today
 
 **2026-10-03.** Founder: "rewrite it to show the true state, or preferably in a way that doesn't

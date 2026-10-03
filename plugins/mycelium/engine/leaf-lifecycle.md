@@ -12,7 +12,7 @@ OST Leaf → Four Risks → ICE Score → Assumption Test → GIST Entry
 
 ## The 10 Phases
 
-### Phase 1: OST Leaf Creation (L2 Discover/Define)
+### Phase 1: OST Leaf Creation (L2, before `set_target`)
 
 **Input**: Research evidence (interviews, behavioral data, analytics)
 **Gate**: Opportunity must cite ≥2 evidence sources (Torres CDH rule)
@@ -22,7 +22,7 @@ OST Leaf → Four Risks → ICE Score → Assumption Test → GIST Entry
 
 The leaf is a hypothesis: "This solution might address this opportunity." It is NOT validated yet.
 
-### Phase 2: Four Risks Assessment (L2 Define / L3 Discover)
+### Phase 2: Four Risks Assessment (L2 choosing its target / L3 before `start_experiment`)
 
 **Input**: OST solution leaf
 **Gate**: All four risk dimensions assessed from trio perspectives (see theory-gates.md §2)
@@ -35,7 +35,7 @@ Each risk dimension must have:
 
 **Skill**: `/ost-builder` (step 6), `/usability-check`, `/devils-advocate`
 
-### Phase 3: ICE Scoring (L2 Define / L3 Discover)
+### Phase 3: ICE Scoring (L2 choosing its target / L3 before `start_experiment`)
 
 **Input**: Four Risks assessment
 **Gate**: Four Risks must exist before scoring (ICE without risks is ungrounded)
@@ -48,7 +48,7 @@ ICE is derived FROM the Four Risks, not scored independently:
 
 **Skill**: `/ice-score`
 
-### Phase 4: Assumption Testing (L3 Discover/Define)
+### Phase 4: Assumption Testing (L3, `start_experiment`)
 
 **Input**: Riskiest assumptions identified from Four Risks + ICE (step 4 of `/ice-score`)
 **Gate**: At least the #1 riskiest assumption must be tested before advancing
@@ -64,7 +64,7 @@ Test the assumption with the cheapest viable method:
 
 **Skill**: `/assumption-test`
 
-### Phase 5: GIST Entry (L3 Define)
+### Phase 5: GIST Entry (L3, after `start_experiment`, before `commit_to_build`)
 
 **Input**: leaf with a recorded assumption-test verdict on its #1 riskiest assumption (from Phase 4); ICE score present for sequencing + calibration
 **Gate**: **the riskiest assumption has a recorded test verdict of `validated`** — this is Torres's selection mechanism (solutions are compared via assumption tests, not scoring). ICE is **advisory only** here: it sequences which *validated* leaves to pursue first and feeds calibration (`cycle-history.yml`); it is **NOT a pass/kill threshold**. *(Corrected 2026-07-01: Phase 5 previously required `ICE ≥ 100`, a scoring-for-selection gate Torres explicitly cautions against.)*
@@ -78,7 +78,7 @@ The leaf graduates from the OST (opportunity space) into GIST (solution space). 
 
 **Skill**: `/gist-plan`
 
-### Phase 6: Bounded Context / Service Design (L3 Develop)
+### Phase 6: Bounded Context / Service Design (L3, before `commit_to_build`)
 
 **Input**: GIST idea entry
 **Gate**: If feasibility risk was medium or high, spike results must be documented. Cynefin domain classified.
@@ -91,7 +91,7 @@ Cynefin routing applies here:
 
 **Skill**: `/service-check`, `/cynefin-classify`
 
-### Phase 7: Threat Model + Architecture Review (L3 Develop / L4 Discover)
+### Phase 7: Threat Model + Architecture Review (L3 before `commit_to_build` / L4 as it opens)
 
 **Input**: Bounded context / service design
 **Gate**: If solution handles user data or requires permissions → STRIDE threat model required (G-S2). Architecture principles checked.
@@ -99,7 +99,7 @@ Cynefin routing applies here:
 
 **Skill**: `/threat-model`, `/security-review`
 
-### Phase 8: Preflight Check (L4 Define)
+### Phase 8: Preflight Check (L4, before `commit_to_build`)
 
 **Input**: All artifacts from phases 1-7
 **Gate**: Corrections.md reviewed (G-P5). Definition of Done drafted. Acceptance criteria defined.
@@ -118,13 +118,13 @@ The preflight verifies:
 
 **Skill**: `/preflight`, `/delivery-bootstrap`
 
-### Phase 9: Delivery Diamond (L4 Develop/Deliver)
+### Phase 9: Delivery Diamond (L4, `commit_to_build` through `release`)
 
 **Input**: L4 diamond with all upstream artifacts
 **Gate**: Standard L4 theory gates (see theory-gates.md L4 matrix)
 **Output**: Shipped deliverable. DORA metrics recorded. Retrospective completed.
 
-This is the standard L4 diamond lifecycle — Discover, Define, Develop, Deliver — with all applicable gates. The upstream leaf artifacts provide context, not shortcuts — L4 still runs its own gates.
+This is the standard L4 loop, `set_target` through `release` (`engine/diamond-rules.md`), with all applicable gates. The upstream leaf artifacts provide context, not shortcuts — L4 still runs its own gates.
 
 **Skill**: `/definition-of-done`, `/dora-check`, `/retrospective`
 

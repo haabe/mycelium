@@ -79,7 +79,7 @@ For each principle, assess: Pass / Partial / Fail / N/A
 
 ## When to Run
 
-- **L3 Define** (solution design): Run a lightweight check focusing on principles 1-4, 8, 10, 11. These inform the Four Risks viability dimension — a solution that violates core service principles has viability risk. Feed results into `/mycelium:ice-score`.
+- **An L3, before `commit_to_build`** (solution design): Run a lightweight check focusing on principles 1-4, 8, 10, 11. These inform the Four Risks viability dimension — a solution that violates core service principles has viability risk. Feed results into `/mycelium:ice-score`.
 - **An L4's `release`**: Run the full 15-principle check. Required REVIEW gate (G-V2).
 - **An L4's `close`**: Final validation. Required REVIEW gate.
 

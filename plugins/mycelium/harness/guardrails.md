@@ -9,8 +9,8 @@ Guardrails are split into scoped files to manage instruction budget (Horthy: mod
 | Current phase | Load |
 |---|---|
 | Any task | `guardrails-core.md` (always) |
-| L0-L2 Discovery/Define | + `guardrails-discovery.md` |
-| L3-L4 Develop/Deliver | + `guardrails-delivery.md` |
+| L0-L2 | + `guardrails-discovery.md` |
+| L3-L4 | + `guardrails-delivery.md` |
 | L5 Market | + `guardrails-market.md` |
 
 This file (`guardrails.md`) is the **full reference** — read it when you need the complete list. For task execution, load the scoped files above instead.
