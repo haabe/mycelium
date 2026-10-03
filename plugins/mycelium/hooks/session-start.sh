@@ -1416,12 +1416,24 @@ fi
 # ============================================================
 # Build output
 # ============================================================
-# ALWAYS inject the agent operating contract (the always-on rules) so it binds
-# even in plugin form, where no operating-manual CLAUDE.md is templated into the
-# project (the plugin-form replacement for the removed legacy templating path;
-# see engine/agent-operating-contract.md + CI Check 47). Feedback-loop reminders
-# are appended when present. Resolve the packaged contract file: plugin form via
-# CLAUDE_PLUGIN_ROOT, else legacy .claude/, else in-repo relative to this hook.
+# Carried-over reflexion debt (v0.64.0, reachable since v0.310.18). Outstanding
+# reflexions survive the session that created them; surfacing them here is what
+# makes the debt accumulate visibly instead of evaporating at Stop. Until 0.310.18
+# this block sat after the final `exit 0` and never ran, and it printed plain text
+# that would have broken the JSON below; it now joins the reminders.
+RECONCILE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)/scripts/reconcile_reflexions.py"
+if [ -f "$RECONCILE" ]; then
+  RX=$(python3 "$RECONCILE" --project-dir "$PROJECT_DIR" --json 2>/dev/null \
+    | python3 -c "import json,sys;print(json.load(sys.stdin).get('outstanding',0))" 2>/dev/null || echo 0)
+  case "${RX:-0}" in ''|*[!0-9]*) RX=0 ;; esac
+  if [ "$RX" -gt 0 ]; then
+    REMINDERS="${REMINDERS}UNRECONCILED REFLEXIONS: ${RX} command failure(s) prompted a reflexion in an earlier session and produced no recorded decision. Run reconcile_reflexions.py to see which, then either log a correction or dismiss with a reason. "
+  fi
+fi
+
+# The operating contract is delivered by contract-part.sh in parts (v0.310.16); this
+# hook sends only the reminders. The contract file is still resolved here (plugin form
+# via CLAUDE_PLUGIN_ROOT, else legacy .claude/, else in-repo relative to this hook).
 CONTRACT_FILE=""
 for candidate in \
   "${CLAUDE_PLUGIN_ROOT:-}/engine/agent-operating-contract.md" \
@@ -1599,18 +1611,3 @@ if context:
 " "$CONTRACT_FILE" "$REMINDERS" "$CORRECTIONS_COUNT" "$NEXT_ITEM_HUMAN"
 
 exit 0
-
-# ============================================================
-# Carried-over reflexion debt
-# ============================================================
-# Outstanding reflexions survive the session that created them. Surfacing them
-# here is what makes the debt accumulate visibly instead of evaporating at Stop
-# — the same shape as the stale-human-task and overdue-loop reminders.
-RECONCILE="${CLAUDE_PLUGIN_ROOT}/scripts/reconcile_reflexions.py"
-if [ -f "$RECONCILE" ]; then
-  RX=$(python3 "$RECONCILE" --project-dir "$PROJECT_DIR" --json 2>/dev/null \
-    | python3 -c "import json,sys;print(json.load(sys.stdin).get('outstanding',0))" 2>/dev/null || echo 0)
-  if [ "${RX:-0}" -gt 0 ]; then
-    printf '\nUNRECONCILED REFLEXIONS: %s command failure(s) prompted a reflexion in an earlier session and produced no recorded decision. Run reconcile_reflexions.py to see which, then either log a correction or dismiss with a reason.\n' "$RX"
-  fi
-fi

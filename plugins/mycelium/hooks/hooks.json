@@ -55,15 +55,18 @@
           },
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/absence-claim-guard.sh\""
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/absence-claim-guard.sh\"",
+            "timeout": 10
           },
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/key-shape-guard.sh\""
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/key-shape-guard.sh\"",
+            "timeout": 10
           },
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/correction-attribution-guard.sh\""
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/correction-attribution-guard.sh\"",
+            "timeout": 10
           }
         ]
       },
@@ -80,15 +83,17 @@
             "type": "command",
             "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/shell-safety-guard.sh\"",
             "timeout": 5,
-            "statusMessage": "Mycelium framework-guard (Bash — dogfood-mode only)"
+            "statusMessage": "Mycelium shell-safety guard (Bash: warns on known shell traps, never blocks)"
           },
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/absence-claim-guard.sh\""
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/absence-claim-guard.sh\"",
+            "timeout": 10
           },
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/correction-attribution-guard.sh\""
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/correction-attribution-guard.sh\"",
+            "timeout": 10
           },
           {
             "type": "command",
@@ -198,7 +203,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/read-before-research-guard.sh\""
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/read-before-research-guard.sh\"",
+            "timeout": 10
           }
         ]
       }
@@ -307,7 +313,8 @@
           },
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/ci-signal.sh\""
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/ci-signal.sh\"",
+            "timeout": 15
           },
           {
             "type": "command",
@@ -355,7 +362,8 @@
           },
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/ci-signal.sh\" --session-start"
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/ci-signal.sh\" --session-start",
+            "timeout": 15
           },
           {
             "type": "command",
@@ -378,7 +386,8 @@
           },
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/discovery-trigger-guard.sh\""
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/discovery-trigger-guard.sh\"",
+            "timeout": 10
           }
         ]
       }
