@@ -4,6 +4,14 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-02.
 
+## v0.310.15 - Mycelium has an icon
+
+**2026-10-03.** The Claude plugin directory flagged the plugin for having no icon. It now ships
+`.claude-plugin/icon.png` (1024 x 1024 PNG, cream mycelium threads branching from a gold centre on
+dark green, with faint 0s and 1s drifting in the gaps), named by `plugin.json`'s `icon` field, which
+the directory reads and Claude Code ignores. Chosen by the founder from three drafts. Not added to
+the Codex manifest or the marketplace entry, where the reference treats it as an unknown field.
+
 ## v0.310.14 - update instructions that work
 
 **2026-10-03.** A review against the Claude Code plugin reference found the update instructions
