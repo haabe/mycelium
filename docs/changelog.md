@@ -4,6 +4,17 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-02.
 
+## v0.310.10 - the README's hooks paragraph shows what holds work back today
+
+**2026-10-03.** Founder: "rewrite it to show the true state, or preferably in a way that doesn't
+mention numbers - as they will vary as Mycelium develops".
+
+- "Four hooks can hold work back" undercounted the blocking hooks (`hooks/README.md`), and "once
+  your purpose file says something real it stops firing at all, so a bug fix on a Tuesday never meets
+  it" stopped being true in v0.291.0, when edits to product code joined the delivery stage. The
+  paragraph now says what each kind of stop holds, with no counts, and the next one names the
+  delivery skip file beside the discovery one. Voice-gated (receipt, lint).
+
 ## v0.310.9 - the evaluator pages say what Mycelium does today
 
 **2026-10-03.** `docs/evaluate.md` and `docs/usage-modes.md` had not been touched since May. Every
@@ -27,11 +38,6 @@ and the ones that no longer held are corrected.
   skill names carry the `/mycelium:` prefix.
 - **Fix**: `/mycelium:canvas-sync`'s commit step (skill and `orchestration/canvas-sync.md`) now
   stages `.claude/diamonds/`. It left diamond state out of the team sync.
-- **README, the hooks paragraph** (founder: "rewrite it to show the true state ... in a way that doesn't
-  mention numbers"): "four hooks can hold work back" undercounted the blocking hooks, and "once your
-  purpose file says something real it stops firing" stopped being true in v0.291.0, when edits to
-  product code joined the delivery stage. It now says what each kind of stop holds, without counts,
-  and names the delivery skip file beside the discovery one. Voice-gated.
 - **Found, not changed here**: `engine/leaf-lifecycle.md` still uses retired phase names (reference
   cleanup).
 
