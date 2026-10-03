@@ -21,7 +21,7 @@ Canvas files are YAML files committed to git. This means:
 - Your changes are local until committed
 
 ### Ending a Session
-1. Commit canvas changes: `git add .claude/canvas/ .claude/harness/decision-log.md .claude/memory/`
+1. Commit canvas changes: `git add .claude/canvas/ .claude/diamonds/ .claude/harness/decision-log.md .claude/memory/`
 2. Push or create PR
 3. Canvas + decision log + memory = complete session record
 

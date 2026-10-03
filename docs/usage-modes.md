@@ -2,7 +2,7 @@
 
 **Audience**: solo developers, teams, and agent integrators choosing how to apply Mycelium.
 **Time to read**: 10 min.
-**Last updated**: 2026-05-08.
+**Last updated**: 2026-10-03.
 
 Four modes. Pick the one your work shape matches.
 
@@ -22,10 +22,10 @@ graph LR
     AGENT <-->|"reads & writes"| CANVAS
     AGENT <-->|"logs"| DECISIONS
     AGENT <-->|"learns from"| CORRECTIONS
-    YOU -->|"resumes with /diamond-assess"| AGENT
+    YOU -->|"resumes with /mycelium:diamond-assess"| AGENT
 ```
 
-Resume a session with `/diamond-assess`. The agent reads the canvas state and tells you where you are.
+Resume a session with `/mycelium:diamond-assess`. The agent reads the canvas state and tells you where you are.
 
 This is the mode the founder dogfoods Mycelium in. It is the most-tested mode, and the least-load-bearing claim — the framework demonstrably works for one person.
 
@@ -57,37 +57,29 @@ graph TD
     C_AGENT <-->|"L2 Opportunity"| GIT
 ```
 
-Canvas updates are PR-reviewed like code changes. Everyone sees the same product state.
+Canvas updates can be reviewed in pull requests like code. Everyone sees the same product state.
 
-### Canvas-sync conflict resolution
+### When two people edit the same canvas file
 
-Asked at the 2026-05-07 Juniors.dev presentation Q&A: "When two team members edit the same canvas file, how does Mycelium handle the conflict?"
+Canvas files are YAML committed to git, so git merges them as text, the same as code. Mycelium adds no merge logic of its own.
 
-Mechanics:
+- **Different entries** (two opportunities in `opportunities.yml`, or `who` on one branch and `why` on the other): git merges them cleanly.
+- **The same field on both branches**: git shows a conflict. Decide it by hand. The framework's rule is that the version with more evidence behind it wins.
+- **`/mycelium:canvas-sync`** is a short checklist for the routine: pull, run `/mycelium:diamond-assess`, commit the canvas, the diamonds, the decision log and memory. It does not merge anything.
 
-1. **Canvas files are YAML committed to git.** Conflicts resolve through git's normal merge — same as code.
-2. **`_meta` blocks are the source-of-truth markers.** Every canvas section can carry `_meta.version`, `_meta.last_validated`, `_meta.evidence_type`, `_meta.structural_level`. The merge respects these.
-3. **Field-level merges are mechanical.** If branch A edits `purpose.who.primary` and branch B edits `purpose.why`, the merge is clean.
-4. **Same-field conflicts use the higher `_meta.last_validated` date by convention.** More-recent evidence supersedes older. If dates tie, escalate to the team — git's conflict markers will show both versions.
-5. **`/canvas-sync` packages canvas state for cross-session sync.** It does not auto-merge — git does that. The skill is a courtesy wrapper for "here is the canvas delta since you last pulled".
-
-Common patterns:
-
-- **Two branches edit different opportunities in `opportunities.yml`**: clean merge.
-- **Two branches edit the same opportunity's evidence array**: append-only by convention — both arrays merge if no field-level overlap.
-- **Two branches edit the same evidence entry's `confidence`**: keep the later `last_validated`; the earlier becomes a corrections.md entry ("this confidence was superseded; investigate").
+Several people editing one canvas at the same moment is not something Mycelium is built for yet.
 
 The team's discipline matters more than the framework's: if your team's branches diverge widely on canvas content, the merge cost is high. The fix is upstream — better diamond ownership (one diamond, one owner, like product practice).
 
-### UX/dev handover (Juniors.dev shape)
+### UX/dev handover
 
-Juniors.dev's structure is a UX-research-heavy front handing off to a dev-heavy back. Mycelium's diamond model fits this directly: UX owns L0–L2 (purpose, opportunities, scenarios); dev owns L3–L4 (solution, delivery). The canvas is the shared boundary. The handover becomes "read the canvas" rather than "schedule a meeting".
+A common team shape is a UX-research-heavy front handing off to a dev-heavy back. Mycelium's diamond model fits this directly: UX owns L0–L2 (purpose, opportunities, scenarios); dev owns L3–L4 (solution, delivery). The canvas is the shared boundary. The handover becomes "read the canvas" rather than "schedule a meeting".
 
 Concrete pattern:
 
-- UX runs `/interview`, `/jtbd-map`, `/ost-builder` — populates `purpose.yml`, `jobs-to-be-done.yml`, `opportunities.yml`, `scenarios.yml`.
-- UX commits the L2 OST winner. The leaf-lifecycle.md phase 5 hands off to L3.
-- Dev pulls, runs `/diamond-assess`, sees "L2 closed, L3 ready". Runs `/gist-plan`, `/preflight`, `/delivery-bootstrap`.
+- UX runs `/mycelium:start`, `/mycelium:jtbd-map`, `/mycelium:ost-builder`, which populate `purpose.yml`, `jobs-to-be-done.yml`, `opportunities.yml`, `scenarios.yml`.
+- UX records the L2's target (`set_target`), and `/mycelium:ost-builder` offers an L3 on that target. The L2 stays open above it.
+- Dev pulls, runs `/mycelium:diamond-assess`, sees the L3 open. Runs `/mycelium:gist-plan`, `/mycelium:preflight`, `/mycelium:delivery-bootstrap`.
 - Both can write to the canvas at any time; conflicts merge per the rules above.
 
 ## Agent orchestration
@@ -109,15 +101,15 @@ graph TD
     FANIN -->|"winner merged"| LEAD
 ```
 
-Workers get read-only canvas access and worktree isolation. Only the lead agent updates canvas and progresses diamonds. Use `/fan-out` to start parallel exploration.
+Workers are told to treat the canvas as read-only and run in git worktrees the lead creates. Only the lead updates the canvas and progresses diamonds. That is an instruction to the agents, not a lock. Use `/mycelium:fan-out` to start parallel exploration.
 
 The bakeoff protocol structures the comparison: see `plugins/mycelium/orchestration/leaf-bakeoff.md`.
 
 ## JIT tooling mode (any of the above)
 
-Mycelium is language-agnostic and product-type-agnostic. When a delivery diamond begins, the framework auto-detects the tech stack (or product type) and generates appropriate validation. Universal principles (DRY, KISS, OWASP) apply to all stacks.
+Mycelium is language-agnostic and product-type-agnostic. `/mycelium:delivery-bootstrap` detects the tech stack (or product type) and sets up matching validation. The agent offers it when delivery starts, and you can run it any time. Universal principles (DRY, KISS, OWASP) apply to all stacks.
 
-The same pattern applies to metric sources. `/metrics-detect` scans for signals and asks about channels the repo cannot reveal; `/metrics-pull` then turns "I checked the dashboard" into timestamped, sourced, diffable evidence.
+The same pattern applies to metric sources. `/mycelium:metrics-detect` scans for signals and asks about channels the repo cannot reveal; `/mycelium:metrics-pull` then turns "I checked the dashboard" into timestamped, sourced, diffable evidence.
 
 See [jit-tooling.md](jit-tooling.md) for depth.
 
@@ -132,7 +124,7 @@ See [jit-tooling.md](jit-tooling.md) for depth.
 
 ## See also
 
-- [README](../README.md#how-it-works) — diamond model overview
-- [jit-tooling.md](jit-tooling.md) — detection and adapter generation
-- [skills/README.md](skills/README.md) — full skill index
-- `plugins/mycelium/orchestration/modes.md` — full operations reference
+- [README](../README.md#the-rest-of-the-shape): diamond model overview
+- [jit-tooling.md](jit-tooling.md): detection and adapter generation
+- [skills/README.md](skills/README.md): full skill index
+- `plugins/mycelium/orchestration/modes.md`: full operations reference

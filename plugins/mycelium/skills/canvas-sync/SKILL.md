@@ -25,7 +25,7 @@ Then run `/mycelium:diamond-assess` to see what changed.
 
 ### Commit Changes
 ```
-git add .claude/canvas/ .claude/harness/decision-log.md .claude/memory/
+git add .claude/canvas/ .claude/diamonds/ .claude/harness/decision-log.md .claude/memory/
 git commit -m "canvas: [brief description of what changed and why]"
 ```
 

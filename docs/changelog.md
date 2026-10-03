@@ -4,6 +4,33 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-02.
 
+## v0.310.9 - the evaluator pages say what Mycelium does today
+
+**2026-10-03.** `docs/evaluate.md` and `docs/usage-modes.md` had not been touched since May. Every
+claim on both was checked against the code (18 claims; the table is in the roadmap's worksheets),
+and the ones that no longer held are corrected.
+
+- **evaluate.md**: the entry point is `/mycelium:start`, not `/interview`; four links to README
+  sections that no longer exist now point at the sections that replaced them; "touches no
+  project-root files" now says it adds `.claude/` and offers an `AGENTS.md`; the decision-audit
+  bullet says gate citations and `why_not_alternatives` are instructions the agent follows, not
+  checks a script runs; step 5 pointed at an empty template and now reads what your own brief wrote;
+  "Claude Code is incompatible with your tooling" is now "your coding agent cannot run hooks", since
+  Codex, Cursor and opencode are supported; "one full diamond cycle (1-2 weeks)" is now "until your
+  first diamond reaches close". Step 2 now says how to see a stop and links uninstall.
+- **usage-modes.md**: the merge rules for `_meta` and `last_validated` described a mechanism that does
+  not exist (git merges canvas YAML as text; the framework's rule is "more evidence wins", decided by
+  hand); `/mycelium:canvas-sync` is described as the checklist it is; the UX/dev handover uses the
+  current model (the L2 records `set_target`, `/mycelium:ost-builder` offers an L3, the L2 stays open)
+  instead of "leaf-lifecycle phase 5" and "L2 closed"; worker read-only access is described as an
+  instruction, not a lock; stack detection is `/mycelium:delivery-bootstrap`, offered, not automatic;
+  skill names carry the `/mycelium:` prefix.
+- **Fix**: `/mycelium:canvas-sync`'s commit step (skill and `orchestration/canvas-sync.md`) now
+  stages `.claude/diamonds/`. It left diamond state out of the team sync.
+- **Found, not changed here**: README says "four hooks can hold work back"; `hooks/README.md` lists
+  more blocking hooks. The README is the founder's to rewrite. `engine/leaf-lifecycle.md` still uses
+  retired phase names (reference cleanup).
+
 ## v0.310.8 - history of the retired phase loop no longer reads as the current model
 
 **2026-10-03.** A warm reader read two history notes about the four-phase loop retired in v0.306.0
