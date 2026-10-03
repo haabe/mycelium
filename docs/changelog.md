@@ -2,7 +2,27 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-10-02.
+**Last updated**: 2026-10-03.
+
+## v0.310.19 - the docs name the contract's real injector and drop a stopped pilot
+
+**2026-10-03.** Found by the seventh `/xai-check` audit on the dogfood project. Docs only.
+
+- **`docs/context-surface.md`** said `session-start.sh --fast` injects the operating contract. Since
+  0.310.16 `contract-part.sh` does, in up to four parts under Claude Code's 10,000-character hook cap.
+  The prose and the hooks table now say so, and the table gives `contract-part.sh` its own row.
+- **`docs/ai-system-card.md`** §4 and §9 named the Juniors.dev pilot as the next test. It was stopped
+  on 2026-08-14; both now say no external cohort exists today. §9's last-audit line named the fifth
+  audit (2026-06-11) when the seventh has run; it now names the seventh and no longer points at a
+  file in the maintainer's private dogfood repo, which a public reader cannot open. §1's "Last
+  updated" line loses the same pointer.
+- **Alternatives considered.** (a) Extend the 0.200.0 hook-digest stamp from the card to
+  `context-surface.md`, which also describes the hook layer and would then have failed CI when
+  0.310.16 moved the contract. It is the right shape for finding (1) but is code with tests, so it
+  is held for its own release rather than folded into a doc patch. (b) A mechanism for prose that
+  goes stale because the world changed (a stopped pilot): two instances so far, and no upstream
+  source knows a pilot's status, so nothing to check against; the audit stays the catch. (c) Keep
+  the card pointing at the dogfood record for audit history: lost because that repo is private.
 
 ## v0.310.18 - hook hygiene from the plugins-reference review
 
