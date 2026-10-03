@@ -107,7 +107,7 @@ Every cycle record carries a `cycle_class` field. The class determines which cal
 | Event | Trigger | What to Record |
 |-------|---------|----------------|
 | Leaf archived | `/ice-score` discard, `/assumption-test` failure | Predicted ICE, discard reason, discard phase, learnings |
-| Leaf launched | L5 Deliver complete | Full predicted vs actual comparison |
+| Leaf launched | The L5 records `release` | Full predicted vs actual comparison |
 | Post-launch review | 30 days after launch | User metrics, actual outcome, calibration delta |
 | Rework follow-up | 14 days after completion | Post-delivery corrections, regressions, days to first regression |
 | **Framework work shipped** | **A release arc closes — see below** | **`meta-dogfood` record: effort accuracy, learnings, gates fired. ICE/DORA/user-metrics exempt.** |
