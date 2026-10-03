@@ -24,7 +24,7 @@ Two-to-four sentences per entry. No theory teaching here — entries link out to
 
 **Decision** — What a diamond records to move: `set_target`, `start_experiment`, `commit_to_build` (recorded with `start_experiment` the first time), `release`, `close`; an L0 records `state_purpose` and later `review`. Each entry carries its date, the gates it passed and the ruling. Decisions are only ever added: a loop iterates by appending (another `start_experiment` for a new test), and since v0.309.1 a write that removes or rewrites a recorded decision is refused.
 
-**Diamond** — One learning loop at one scale. Every scale below purpose (L1–L5) runs the same loop of five **decisions**, each of which must pass its theory gates; L0 Purpose is not a loop (it states its purpose and reviews it). Until v0.306.0 a diamond moved through four phases (see **Phase**). Defined in `plugins/mycelium/engine/diamond-rules.md`.
+**Diamond** — One learning loop at one scale. Every scale below purpose (L1–L5) runs the same loop of five **decisions**, each of which must pass its theory gates; L0 Purpose is not a loop (it states its purpose and reviews it). Defined in `plugins/mycelium/engine/diamond-rules.md`.
 
 **Dogfood** — Using a tool on its own development. Mycelium's framework is dogfooded on Mycelium itself — the friction the founder hits while building Mycelium becomes corrections that shape Mycelium. The `meta_dogfood` project type formalizes this. See [philosophy.md](philosophy.md) for why it's required.
 
