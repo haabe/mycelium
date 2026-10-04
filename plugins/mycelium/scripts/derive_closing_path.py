@@ -949,6 +949,26 @@ def controller_line(
     return "; ".join(parts) + "."
 
 
+def _not_derived_line(did: str, d: dict) -> str:
+    """The line for a diamond whose `state` says nothing will close its phase; empty otherwise."""
+    state = str(d.get("state") or "").lower()
+    if state == "parked":
+        # A PARK IS A RULING THAT NOTHING MOVES IT FOR NOW (v0.312.1). Dogfood 2026-10-04: an L1
+        # parked with four resume conditions still printed "NOTHING ON RECORD moves a pending
+        # gate", so session start kept flagging a deliberate pause as an unnoticed one.
+        conds = d.get("resume_conditions") or []
+        n = len(conds) if isinstance(conds, list) else 1
+        return (f"closing-path {did}: parked since {d.get('parked_at') or '?'}; resumes on "
+                f"{n} condition(s); not derived while parked.")
+    if state in sl.CLOSED:
+        # A CLOSED DIAMOND HAS NO PHASE TO CLOSE (v0.312.2). 0.312.1 handled parked and not the rest
+        # of the set scale_locks and next_item already treat as closed. Dogfood 2026-10-04: an L4
+        # archived in place kept a stored closing path, and an assumption verdict fired on it as
+        # "run /mycelium:diamond-progress" for a diamond the founder had stopped five days earlier.
+        return f"closing-path {did}: closed ({state}); not derived."
+    return ""
+
+
 def run_controller(root: Path, ids: list[str], write: bool, today: str) -> None:
     """One line per diamond: store (when asked and something is pending), stamp, report."""
     if not ids:
@@ -959,15 +979,9 @@ def run_controller(root: Path, ids: list[str], write: bool, today: str) -> None:
         return
     doc = load_yaml(root / ".claude" / "diamonds" / "active.yml")
     for did in ids:
-        d = _find_diamond(doc, did) or {}
-        if str(d.get("state") or "").lower() == "parked":
-            # A PARK IS A RULING THAT NOTHING MOVES IT FOR NOW (v0.312.1). Dogfood 2026-10-04: an L1
-            # parked with four resume conditions still printed "NOTHING ON RECORD moves a pending
-            # gate", so session start kept flagging a deliberate pause as an unnoticed one.
-            conds = d.get("resume_conditions") or []
-            n = len(conds) if isinstance(conds, list) else 1
-            print(f"closing-path {did}: parked since {d.get('parked_at') or '?'}; resumes on "
-                  f"{n} condition(s); not derived while parked.")
+        skip = _not_derived_line(did, _find_diamond(doc, did) or {})
+        if skip:
+            print(skip)
             continue
         entry, prev = build_closes_on(root, did, today)
         if entry is None:
