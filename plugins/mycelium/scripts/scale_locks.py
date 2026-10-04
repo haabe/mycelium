@@ -718,8 +718,10 @@ class State:
 
     def front_runner(self, l3: dict | None) -> str:
         """THE SOLUTION AN L3 COMMITS TO BUILD (v0.300.0, DL-1367): `front_runner` on the L3, a
-        solution in its set, named at `commit_to_build` (since v0.307.0 only that: an L3 on one
-        solution is no longer read as having it as front runner; migrate_phase.py records it)."""
+        solution in its set, written when it is chosen; `commit_to_build` is the decision that
+        records it passed its gates (v0.313.0: the choice is not withheld while the decision waits).
+        Since v0.307.0 only that: an L3 on one solution is no longer read as having it as front
+        runner; migrate_phase.py records it."""
         if not l3:
             return ""
         return _ref_key(l3.get("front_runner")) if l3.get("front_runner") else ""

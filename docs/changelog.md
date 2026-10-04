@@ -2,7 +2,34 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-10-04.
+**Last updated**: 2026-10-05.
+
+## v0.313.0 - a choice is written when it is made
+
+**2026-10-05.** Found on the dogfood project's first L2, the day it opened.
+
+- **The gap.** Two fields hold a choice that a gated decision later records: an L2's `target`
+  (decision `set_target`) and an L3's `front_runner` (decision `commit_to_build`). ost-builder
+  called choosing the target "the L2's decision (`set_target`)", so the choice and the decision read
+  as one act. On the dogfood L2 the founder chose opp-080 from a four-way comparison, `set_target`
+  was ruled needs-evidence (the L2 bar asks for story interviews), and the agent withheld `target`
+  as if writing it would record the decision. The next item then asked for the comparison at every
+  session, and the L3 door, which opens on the target and its evidence, could not see the choice.
+- **The fix.** ost-builder and diamond-progress state the rule for both pairs: the choice is written
+  when the person makes it, whatever the run rules; the decision entry is recorded only when its
+  gates pass. The next item, for an L2 that carries a ruling and no target, says the judged choice
+  was never written instead of asking for a new comparison; for an unruled L2 it says to write the
+  target even before `set_target` passes. The audit of every scale found the same latent loss at L3
+  (`front_runner`), covered by the same rule; L0's purpose fields, every `object_ref` and an L1's
+  `desired_outcomes[].set_by` are written when chosen and wait on no decision.
+- **Alternatives considered.** (a) Make the L3 entry lock require its L2's `set_target`: rejected,
+  because the entry locks deliberately read the parent's artefacts and not its decisions (ENTRY and
+  SPEED are separate questions, engine/diamond-rules.md), so a parent waiting on evidence would close
+  every door below it, the failure 0.217.0 fixed. (b) Leave `target` unwritten and have the next item
+  read the ruling's blocker prose: the choice stays unreadable prose and the L3 door stays shut.
+  (c) A schema rule that a `set_target` entry needs a `target`: true, but it catches the opposite
+  error, not this one.
+- Two tests; both fail on the old next item.
 
 ## v0.312.3 - the icon's corners are transparent
 
