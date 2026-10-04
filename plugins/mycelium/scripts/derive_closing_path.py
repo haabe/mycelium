@@ -957,7 +957,18 @@ def run_controller(root: Path, ids: list[str], write: bool, today: str) -> None:
             "nothing to store"
         )
         return
+    doc = load_yaml(root / ".claude" / "diamonds" / "active.yml")
     for did in ids:
+        d = _find_diamond(doc, did) or {}
+        if str(d.get("state") or "").lower() == "parked":
+            # A PARK IS A RULING THAT NOTHING MOVES IT FOR NOW (v0.312.1). Dogfood 2026-10-04: an L1
+            # parked with four resume conditions still printed "NOTHING ON RECORD moves a pending
+            # gate", so session start kept flagging a deliberate pause as an unnoticed one.
+            conds = d.get("resume_conditions") or []
+            n = len(conds) if isinstance(conds, list) else 1
+            print(f"closing-path {did}: parked since {d.get('parked_at') or '?'}; resumes on "
+                  f"{n} condition(s); not derived while parked.")
+            continue
         entry, prev = build_closes_on(root, did, today)
         if entry is None:
             print(f"closing-path: N/A — no diamond {did}")
