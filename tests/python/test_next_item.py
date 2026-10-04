@@ -200,3 +200,21 @@ def test_muted_unclearable_advisory_is_not_offered_as_awaiting_a_ruling(tmp_path
     rc, out = _run(tmp_path, capsys, monkeypatch, METRICS)
     assert "decided-leaves-no-four-risks" not in out and "awaits a ruling" not in out
     assert out.startswith("NEXT ITEM: AI-tool metrics are stale.")
+
+
+def test_a_fired_proposal_on_a_closed_diamond_is_not_offered(tmp_path, capsys, monkeypatch):
+    """v0.312.2: the dogfood L4, archived in place on 2026-09-29, offered a fired verdict as the
+    session's next item ("run /mycelium:diamond-progress") on a diamond already stopped."""
+    (tmp_path / ".claude" / "diamonds").mkdir(parents=True)
+    (tmp_path / ".claude" / "diamonds" / "active.yml").write_text(
+        "active_diamonds:\n- id: l4\n  state: archived\n  closes_on:\n    fired:\n"
+        "    - id: a-1\n      noticed_at: '2026-09-09'\n"
+        "      proposal: a-1 has a verdict; run diamond-progress or rule otherwise.\n"
+        "- id: l1\n  closes_on:\n    fired:\n"
+        "    - id: ht-071\n      noticed_at: '2026-09-18'\n"
+        "      proposal: ht-071 closed; read it against the gate.\n"
+    )
+    _seen(tmp_path, "2026-09-01", {"bvssh-overdue": None})
+    rc, out = _run(tmp_path, capsys, monkeypatch, BVSSH, "--json")
+    item = json.loads(out)
+    assert item["id"] == "fired:ht-071", "the archived diamond's proposal is skipped; the open one comes"

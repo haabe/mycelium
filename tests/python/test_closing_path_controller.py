@@ -11,6 +11,7 @@ re-derivation. In-process for the coverage floor.
 import sys
 from pathlib import Path
 
+import pytest
 import yaml
 
 SCRIPTS = Path(__file__).resolve().parents[2] / "plugins" / "mycelium" / "scripts"
@@ -432,3 +433,23 @@ def test_parked_diamond_is_reported_as_parked_and_not_derived(tmp_path, capsys):
     assert "l1x: parked since 2026-10-04; resumes on 2 condition(s)" in out
     d = next(x for x in _active(tmp_path)["active_diamonds"] if x["id"] == "l1x")
     assert "closes_on" not in d  # nothing stored for a parked diamond
+
+
+# v0.312.2: every closed state is not derived, not only parked. The dogfood L4 was archived in place
+# (`state: archived` left in active_diamonds) and kept a stored closing path that fired proposals.
+@pytest.mark.parametrize("state", ["archived", "completed", "killed", "retargeted"])
+def test_a_closed_diamond_is_reported_closed_and_not_derived(tmp_path, capsys, state):
+    closed = _BLOCKED.replace("  scale: L1\n", f"  scale: L1\n  state: {state}\n")
+    _project(tmp_path, active=closed, opps=_EMPTY_OPPS, tasks=_EMPTY_TASKS)
+    rc, out = _run(tmp_path, capsys, "--all", "--write")
+    assert "NOTHING ON RECORD" not in out
+    assert f"l1x: closed ({state}); not derived." in out
+    d = next(x for x in _active(tmp_path)["active_diamonds"] if x["id"] == "l1x")
+    assert "closes_on" not in d
+
+
+def test_an_active_or_blocked_state_is_still_derived(tmp_path, capsys):
+    open_ = _BLOCKED.replace("  scale: L1\n", "  scale: L1\n  state: blocked\n")
+    _project(tmp_path, active=open_, opps=_EMPTY_OPPS, tasks=_EMPTY_TASKS)
+    rc, out = _run(tmp_path, capsys, "--all", "--write")
+    assert "not derived" not in out and "NOTHING ON RECORD" in out

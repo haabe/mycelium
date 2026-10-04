@@ -313,7 +313,10 @@ def _fired_proposals(root: Path) -> tuple[list[dict], str]:
         }
         for key in ("active_diamonds", "diamonds")
         for d in (doc.get(key) or [])
-        if isinstance(d, dict)
+        # A closed diamond has no path to choose (v0.312.2): its proposal says "run
+        # /mycelium:diamond-progress" on a diamond already stopped. Dogfood 2026-10-04, the L4
+        # archived in place on 2026-09-29, offered a fired verdict as the session's next item.
+        if isinstance(d, dict) and not _state_closed(d)
         for f in ((d.get("closes_on") or {}).get("fired") or [])
         # A proposal ruled on the record is settled (v0.287.1). diamond-assess tells the agent to
         # write `ruling:` and `ruled_at:` under a fired entry that does not choose a path, and

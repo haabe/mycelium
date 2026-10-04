@@ -4,6 +4,31 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-04.
 
+## v0.312.2 - a closed diamond is not derived either
+
+**2026-10-04.** Found by the dogfood project the same day 0.312.1 shipped, from the session-start next
+item it produced.
+
+- **The gap.** 0.312.1 made `derive_closing_path.py` skip `state: parked` and left the rest of the
+  schema's closed states alone. The dogfood L4 had been archived in place on 2026-09-29 (`state:
+  archived`, still in `active_diamonds`, the shape `next_item.py` has recognised as closed since
+  0.287.2). The controller kept storing its closing path, an assumption verdict fired on it, and
+  `next_item.py` offered "run /mycelium:diamond-progress l4-framework-delivery" as the session's next
+  item. The verdict had already been ruled on the diamond its reader named.
+- **The fix.** The controller prints `closed (<state>); not derived.` for any state in
+  `scale_locks.CLOSED` (archived, completed, killed, retargeted; parked keeps its own line), and the
+  next-item picker skips fired proposals on a closed diamond. Both now read the closed set the rest of
+  the framework already uses, instead of one value of it.
+- **Alternatives considered.** (a) A validator warning on a closed state inside `active_diamonds`:
+  rejected, because the framework sanctions that shape (`scale_locks` tells an L2 that re-targets to
+  close its L3 "in the same write as `state: retargeted`", and `next_item` and `check_scale_occupancy`
+  read in-place closures), so the warning would fire on entries the framework told the builder to
+  write. (b) Skip only `archived`, the state that was seen: the same one-value fix 0.312.1 made, which
+  is how this release became necessary. (c) A fourth copy of the closed set in the controller: it
+  already imports `scale_locks`, so it reads that one.
+- Six tests; on the old code the four closed-state cases and the picker case fail, and the
+  blocked-state case passes, as it should.
+
 ## v0.312.1 - a parked diamond is not an unnoticed gap
 
 **2026-10-04.** Found the moment the dogfood project parked a diamond.
