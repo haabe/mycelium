@@ -2,7 +2,26 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-10-03.
+**Last updated**: 2026-10-04.
+
+## v0.311.1 - a private way to report a vulnerability
+
+**2026-10-04.** Until now the only route to the maintainer was public GitHub issues, which is the wrong
+place for a vulnerability. Found by the dogfood project's threat-model refresh: the L5 security gate
+asks for a disclosure path named before launch.
+
+- **`SECURITY.md`** (new): what counts (the plugin's hooks and scripts, the supply chain, prompt
+  injection through files read into context, leaks), what does not (the runtimes themselves, model
+  behaviour), how to report (GitHub private vulnerability reporting, switched on for the repository
+  the same day), and what a solo maintainer can promise: acknowledgement within 7 days, serious issues
+  fixed or mitigated within 30, latest release only, credit on request, and a no-details "security
+  report pending" issue if 14 days pass in silence. No bug bounty.
+- **System card §10** names the route ahead of the public issue tracker.
+- **Alternatives considered.** (a) A security email address in the file: it publishes an inbox and
+  loses GitHub's private advisory and private-fork workflow. (b) A stricter promise (48-hour
+  acknowledgement): not one a single maintainer can keep, and a policy that is broken on first use is
+  worse than a slower honest one. (c) No policy until there are users who need one: the plugin is
+  already public and listed, so the route has to exist before the report does.
 
 ## v0.311.0 - a framework turn's Next: line cites its trigger
 

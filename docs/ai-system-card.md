@@ -11,7 +11,7 @@ This is not a marketing document, a technical whitepaper, or a compliance certif
 ## 1. Identity
 
 - **System name:** Mycelium — Theory-Guided Agentic Product Development Framework
-- **Version:** 0.311.0 (canonical source: the `*Version X.Y.Z` line in `CLAUDE.md`; mechanical tokens here — version, skill count — are kept in sync by `plugins/mycelium/scripts/sync_derived.py`, not hand-edited)
+- **Version:** 0.311.1 (canonical source: the `*Version X.Y.Z` line in `CLAUDE.md`; mechanical tokens here — version, skill count — are kept in sync by `plugins/mycelium/scripts/sync_derived.py`, not hand-edited)
 - **Last updated:** 2026-10-03 (seventh `/xai-check` audit: §4 and §9 no longer name the stopped Juniors.dev pilot as the next test, and §9's last-audit line is current. The hook-surface review line below still makes the release gate fail when the hooks move and the card does not; prose that goes stale for other reasons is caught only by the audit.)
 - **Hook surface reviewed:** 2026-10-03 (digest dbaec1122933)
 - **Maintained by:** Håvard Bartnes (haabe). Issues + correspondence: [github.com/haabe/mycelium/issues](https://github.com/haabe/mycelium/issues)
@@ -126,6 +126,7 @@ The runtime model is therefore **the actual decision-maker** — except in a dec
 
 ## 10. Contact and feedback
 
+- **Security vulnerabilities:** privately, through "Report a vulnerability" on the [Security tab](https://github.com/haabe/mycelium/security), never a public issue. What to expect, from a solo maintainer, is in [SECURITY.md](../SECURITY.md): acknowledgement within 7 days, serious issues fixed or mitigated within 30.
 - **Issues or concerns:** [github.com/haabe/mycelium/issues](https://github.com/haabe/mycelium/issues)
 - **Reporting harm:** Same channel; mark with `[harm]` prefix in the title for visibility.
 - **Press / regulator inquiries:** Same channel until a separate route is established.
