@@ -4,6 +4,23 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-04.
 
+## v0.312.1 - a parked diamond is not an unnoticed gap
+
+**2026-10-04.** Found the moment the dogfood project parked a diamond.
+
+- **The gap.** `derive_closing_path.py --all`, run at every session start, walked every diamond in
+  `active_diamonds` without reading `state`. The dogfood project parked an L1 with four resume
+  conditions precisely because nothing on record moved its gates, and the controller went on printing
+  "NOTHING ON RECORD moves a pending gate; that is the finding", which session start turns into a
+  warning. A park is the ruling that nothing moves it for now.
+- **The fix.** A diamond with `state: parked` prints one line, when it was parked and how many
+  resume conditions it carries, and nothing is derived or stored for it until it is unparked.
+- **Alternatives considered.** (a) Keep deriving and only drop the warning: stores a closing path
+  nobody acts on and stamps readers on inputs a parked diamond does not wait for. (b) Read parked
+  diamonds from a separate `parked_diamonds` list: the schema and the park workflow keep them in
+  `active_diamonds` with a state, so the controller has to read the state.
+- Two tests; the parked one fails on the old script.
+
 ## v0.312.0 - a quieted advisory speaks again when its count rises
 
 **2026-10-04.** Found by the dogfood project while ruling a muted advisory, and confirmed by

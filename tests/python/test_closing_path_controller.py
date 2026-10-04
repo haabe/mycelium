@@ -403,3 +403,32 @@ def test_routes_under_a_superseded_condition_are_no_longer_watched(tmp_path, cap
     _project(tmp_path, active=active, opps=opps)
     _run(tmp_path, capsys, "--diamond-id", "l1", "--write")
     assert "a-9a-1" not in _input_ids(tmp_path)
+
+
+# v0.312.1: a parked diamond is a ruling that nothing moves it for now, not an unnoticed gap.
+_EMPTY_OPPS = "opportunities: []\n"
+_EMPTY_TASKS = "schema_version: 1\npending_tasks: []\n"
+_BLOCKED = """active_diamonds:
+- id: l1x
+  scale: L1
+  theory_gates_status:
+    evidence: pending
+    bias: pending
+"""
+
+
+def test_unparked_diamond_with_no_inputs_is_the_finding(tmp_path, capsys):
+    _project(tmp_path, active=_BLOCKED, opps=_EMPTY_OPPS, tasks=_EMPTY_TASKS)
+    rc, out = _run(tmp_path, capsys, "--all")
+    assert "NOTHING ON RECORD" in out
+
+
+def test_parked_diamond_is_reported_as_parked_and_not_derived(tmp_path, capsys):
+    parked = _BLOCKED.replace("  scale: L1\n", "  scale: L1\n  state: parked\n  parked_at: '2026-10-04'\n"
+                              "  resume_conditions:\n  - a runtime drops hooks\n  - review 2027-01-03\n")
+    _project(tmp_path, active=parked, opps=_EMPTY_OPPS, tasks=_EMPTY_TASKS)
+    rc, out = _run(tmp_path, capsys, "--all", "--write")
+    assert "NOTHING ON RECORD" not in out
+    assert "l1x: parked since 2026-10-04; resumes on 2 condition(s)" in out
+    d = next(x for x in _active(tmp_path)["active_diamonds"] if x["id"] == "l1x")
+    assert "closes_on" not in d  # nothing stored for a parked diamond
