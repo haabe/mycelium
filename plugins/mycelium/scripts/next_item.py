@@ -1231,11 +1231,13 @@ def _pick_from(root: Path, reminders: str, today: str, st: dict,
     ladder = _ladder_item(root, today, st)
     if ladder:
         return ladder, note
-    # 3. muted advisories awaiting a ruling
+    # 3. muted advisories awaiting a ruling. An unclearable one awaits none (v0.312.0): its own
+    #    check forbids clearing it, and the ledger now says it speaks again when its count rises.
+    unclearable = getattr(al, "UNCLEARABLE", frozenset()) if al else frozenset()
     muted = [
         (x.get("muted_since") or "", aid)
         for aid, x in st.items()
-        if x.get("muted_since") and not _blocked(x, today)
+        if x.get("muted_since") and not _blocked(x, today) and aid not in unclearable
     ]
     for since, aid in sorted(muted):
         text, cmd = COMMANDS.get(

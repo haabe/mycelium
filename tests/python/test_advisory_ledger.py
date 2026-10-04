@@ -349,3 +349,65 @@ def test_ruling_snooze_silences_until_date_then_returns(tmp_path, capsys, monkey
     assert "days overdue" in out
     m.main(["report", "--project-dir", str(tmp_path)])
     assert "snoozed until 2026-09-05" in capsys.readouterr().out
+
+
+# ---- v0.312.0: a muted or ruled advisory speaks again when its count rises ----------------------
+# Dogfood 2026-10-03: decided-leaves-no-four-risks was dropped at 12 as unclearable, and a 13th leaf
+# decided with no risk evaluation would have been announced to nobody.
+
+
+def _tasks(n):
+    return f"You have {n} OPEN human task(s) (0 closed/parked, not counted). If you completed offline work, run /log-evidence. "
+
+
+def _rule(tmp_path, capsys, aid, ruling, today="2026-09-20"):
+    rc = _mod().main(["rule", "--project-dir", str(tmp_path), "--id", aid, "--ruling", ruling,
+                      "--note", "test", "--today", today])
+    capsys.readouterr()
+    return rc
+
+
+def test_muted_advisory_speaks_once_when_its_count_rises(tmp_path, capsys, monkeypatch):
+    (tmp_path / ".claude").mkdir()
+    _mute(tmp_path, capsys, monkeypatch, text=_tasks(10))
+    rc, out = _settle(tmp_path, capsys, _tasks(11), "s-rise", "2026-09-20", monkeypatch)
+    assert "ADVISORY open-human-tasks ROSE from 10 to 11 since it was muted" in out
+    assert "You have 11 OPEN human task" in out  # the advisory's own text is shown, not a stub
+    assert any(e["kind"] == "rebaselined" and e["count"] == 11 for e in _events(tmp_path))
+    rc, out = _settle(tmp_path, capsys, _tasks(11), "s-same", "2026-09-21", monkeypatch)
+    assert "ROSE" not in out and "MUTED ADVISORY open-human-tasks" in out
+
+
+def test_dropped_advisory_speaks_when_its_count_rises_and_not_before(tmp_path, capsys, monkeypatch):
+    (tmp_path / ".claude").mkdir()
+    _mute(tmp_path, capsys, monkeypatch, text=_tasks(10))
+    assert _rule(tmp_path, capsys, "open-human-tasks", "drop") == 0
+    rc, out = _settle(tmp_path, capsys, _tasks(10), "s-a", "2026-09-21", monkeypatch)
+    assert "OPEN human task" not in out and "ROSE" not in out
+    rc, out = _settle(tmp_path, capsys, _tasks(12), "s-b", "2026-09-22", monkeypatch)
+    assert "ROSE from 10 to 12 since it was ruled drop on 2026-09-20" in out
+
+
+def test_a_fall_lowers_the_baseline_so_a_later_rise_is_seen(tmp_path, capsys, monkeypatch):
+    (tmp_path / ".claude").mkdir()
+    _mute(tmp_path, capsys, monkeypatch, text=_tasks(10))
+    _rule(tmp_path, capsys, "open-human-tasks", "drop")
+    _settle(tmp_path, capsys, _tasks(6), "s-fall", "2026-09-21", monkeypatch)
+    rc, out = _settle(tmp_path, capsys, _tasks(8), "s-up", "2026-09-22", monkeypatch)
+    assert "ROSE from 6 to 8" in out
+
+
+def test_ruling_keep_clears_the_baseline(tmp_path, capsys, monkeypatch):
+    (tmp_path / ".claude").mkdir()
+    _mute(tmp_path, capsys, monkeypatch, text=_tasks(10))
+    _rule(tmp_path, capsys, "open-human-tasks", "keep")
+    rc, out = _settle(tmp_path, capsys, _tasks(12), "s-k", "2026-09-21", monkeypatch)
+    assert "ROSE" not in out and "You have 12 OPEN human task" in out
+
+
+def test_unclearable_advisory_mutes_without_asking_for_a_ruling(tmp_path, capsys, monkeypatch):
+    (tmp_path / ".claude").mkdir()
+    _mute(tmp_path, capsys, monkeypatch, text=FOURRISKS)
+    rc, out = _settle(tmp_path, capsys, FOURRISKS, "s-u", "2026-09-20", monkeypatch)
+    assert "MUTED ADVISORY decided-leaves-no-four-risks" in out
+    assert "needs no ruling" in out and "--ruling" not in out
