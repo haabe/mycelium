@@ -185,3 +185,18 @@ def test_human_form_is_plain_and_bounded(tmp_path, capsys, monkeypatch):
     _run(tmp_path, capsys, monkeypatch, BVSSH, "--write-state", "--session", "s")
     st = json.loads((tmp_path / ".claude" / "state" / "next-item.json").read_text())
     assert st["text_human"].startswith("NEXT ITEM: The BVSSH health check is overdue.")
+
+
+def test_muted_unclearable_advisory_is_not_offered_as_awaiting_a_ruling(tmp_path, capsys, monkeypatch):
+    # v0.312.0: the ledger says an unclearable advisory needs no ruling; the next item must agree.
+    (tmp_path / ".claude").mkdir()
+    _, al = _mods()
+    _seen(tmp_path, "2026-09-01", {"ai-tool-metrics-stale": None, "decided-leaves-no-four-risks": 12})
+    al.append_events(
+        al.ledger_path(tmp_path),
+        [{"kind": "muted", "id": "decided-leaves-no-four-risks", "date": "2026-09-08",
+          "streak_days": 7, "since": "2026-09-02"}],
+    )
+    rc, out = _run(tmp_path, capsys, monkeypatch, METRICS)
+    assert "decided-leaves-no-four-risks" not in out and "awaits a ruling" not in out
+    assert out.startswith("NEXT ITEM: AI-tool metrics are stale.")

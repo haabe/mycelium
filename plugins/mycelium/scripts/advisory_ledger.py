@@ -245,6 +245,10 @@ def state(events: list[dict]) -> dict[str, dict]:  # noqa: C901, PLR0912 — one
                 "first_seen": None,
                 "last_seen": None,
                 "last_count": None,
+                # The count when it was muted or ruled (v0.312.0). A count above it is something new
+                # that happened while nobody was being told; see settle().
+                "baseline": None,
+                "baseline_how": None,
             },
         )
 
@@ -257,6 +261,8 @@ def state(events: list[dict]) -> dict[str, dict]:  # noqa: C901, PLR0912 — one
                 x["first_seen"] = x["first_seen"] or ev.get("date")
                 x["last_seen"] = ev.get("date")
                 x["last_count"] = c
+                if c is not None and x["baseline"] is not None and c < x["baseline"]:
+                    x["baseline"] = c  # items cleared: a later rise from here is new, not old
                 d = ev.get("date")
                 if d and (not x["streak_days"] or x["streak_days"][-1] != d):
                     x["streak_days"].append(d)
@@ -274,10 +280,17 @@ def state(events: list[dict]) -> dict[str, dict]:  # noqa: C901, PLR0912 — one
         elif k == "muted":
             x = s(ev.get("id"))
             x["muted_since"] = ev.get("since") or ev.get("date")
+            if x["baseline"] is None:
+                x["baseline"], x["baseline_how"] = x["last_count"], f"muted on {ev.get('date')}"
+        elif k == "rebaselined":
+            x = s(ev.get("id"))
+            x["baseline"] = ev.get("count")
         elif k == "ruled":
             x = s(ev.get("id"))
             r = ev.get("ruling")
             x["ruling"] = r
+            if r in ("drop", "fix", "snooze"):
+                x["baseline"], x["baseline_how"] = x["last_count"], f"ruled {r} on {ev.get('date')}"
             if r == "snooze":
                 x["snoozed_until"] = ev.get("until")
                 x["snooze_note"] = str(ev.get("note") or "")  # its condition, when "asked"
@@ -288,6 +301,7 @@ def state(events: list[dict]) -> dict[str, dict]:  # noqa: C901, PLR0912 — one
                 x["muted_since"] = None
                 x["streak_days"] = []
                 x["ruling"] = None
+                x["baseline"], x["baseline_how"] = None, None
     return st
 
 
@@ -299,6 +313,18 @@ def last_seen_event(events: list[dict]) -> dict | None:
 
 
 # ---------------------------------------------------------------- verbs
+
+
+def _muted_line(aid: str, x: dict) -> str:
+    """The one line a muted advisory shows in place of its text."""
+    n = len(x["streak_days"])
+    if aid in UNCLEARABLE:
+        return (f"MUTED ADVISORY {aid}: fired on {n} day(s) since {x['muted_since']}. It is a "
+                "permanent record its own check forbids backfilling, so it needs no ruling; it "
+                "speaks again when its count rises.")
+    return (f"MUTED ADVISORY {aid}: fired on {n} day(s) since {x['muted_since']}, nothing "
+            f'followed; muted until you rule (python3 "{Path(__file__).resolve()}" rule '
+            f"--id {aid} --ruling keep|fix|drop).")
 
 
 def settle(root: Path, session: str, text: str, today: str) -> tuple[str, list[dict], list[str]]:  # noqa: C901 — one pass over present ids
@@ -331,8 +357,22 @@ def settle(root: Path, session: str, text: str, today: str) -> tuple[str, list[d
 
     st = state(events + new_events)
     replacements: dict[str, str] = {}
+    spans = _spans(text)
+    segs = {a: text[st0:(spans[i + 1][1] if i + 1 < len(spans) else len(text))].strip()
+            for i, (a, st0) in enumerate(spans)}
     for aid in present:
         x = st[aid]
+        c, base = present[aid], x.get("baseline")
+        if c is not None and base is not None and c > base:
+            # A RULING OR A MUTE IS A DECISION ABOUT THE COUNT IT WAS MADE AT (v0.312.0). Dogfood
+            # 2026-10-03: decided-leaves-no-four-risks was dropped at 12 as unclearable by design,
+            # and a 13th leaf decided with no risk evaluation would then have been announced to
+            # nobody; while merely muted, a rise from 12 to 13 still printed "nothing followed".
+            # Show it once with what it says, then move the baseline so it speaks on the next rise.
+            replacements[aid] = (f"ADVISORY {aid} ROSE from {base} to {c} since it was "
+                                 f"{x.get('baseline_how') or 'quieted'}: {segs.get(aid, '')}")
+            new_events.append({"kind": "rebaselined", "id": aid, "date": today, "count": c})
+            continue
         if x["ruling"] == "drop":
             replacements[aid] = ""
             continue
@@ -354,12 +394,7 @@ def settle(root: Path, session: str, text: str, today: str) -> tuple[str, list[d
             )
             x["muted_since"] = since
         if x["muted_since"] is not None:
-            n = len(x["streak_days"])
-            replacements[aid] = (
-                f"MUTED ADVISORY {aid}: fired on {n} day(s) since {x['muted_since']}, nothing "
-                f'followed; muted until you rule (python3 "{Path(__file__).resolve()}" rule '
-                f"--id {aid} --ruling keep|fix|drop)."
-            )
+            replacements[aid] = _muted_line(aid, x)
 
     append_events(path, new_events)
     out = replace_segments(text, replacements) if replacements else text

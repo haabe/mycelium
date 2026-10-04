@@ -4,6 +4,30 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-04.
 
+## v0.312.0 - a quieted advisory speaks again when its count rises
+
+**2026-10-04.** Found by the dogfood project while ruling a muted advisory, and confirmed by
+simulating it before changing anything.
+
+- **The gap.** A muted advisory kept printing "fired on N days, nothing followed" while its count
+  rose, and a dropped or snoozed one went fully silent. The dogfood project dropped
+  `decided-leaves-no-four-risks` at 12, correctly, as a permanent record that cannot clear; a 13th
+  leaf decided with no risk evaluation would then have been announced to nobody.
+- **The fix.** The ledger records the count when an advisory is muted or ruled (drop, fix, snooze).
+  When the count rises past it, the advisory shows once with its own text, prefixed "ROSE from N to
+  M since it was ...", and the baseline moves up so it speaks on the next rise, not every session. A
+  fall lowers the baseline, so items cleared and then replaced are still seen. `keep` clears it.
+- **Unclearable advisories mute without asking for a ruling.** `decided-leaves-no-four-risks` is a
+  record its own check forbids backfilling; its muted line now says it needs no ruling and speaks
+  again on a rise, instead of asking for keep, fix or drop.
+- System card §2 says so. Five ledger tests; four fail on the old script.
+- **Alternatives considered.** (a) Never mute an advisory a ruling accepted: the alarm fatigue the
+  ledger exists to stop. (b) Show a rise every session until ruled again: the same fatigue one step
+  later. (c) Wake on any change, falls included: a fall is the condition improving, not news.
+- **`next_item.py` agrees.** It offered every muted advisory as "awaits a ruling", including the
+  unclearable one the ledger now says needs none; it skips unclearable advisories there. One test,
+  which fails on the old script.
+
 ## v0.311.1 - a private way to report a vulnerability
 
 **2026-10-04.** Until now the only route to the maintainer was public GitHub issues, which is the wrong
