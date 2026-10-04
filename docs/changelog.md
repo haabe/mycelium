@@ -4,6 +4,21 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-04.
 
+## v0.312.3 - the icon's corners are transparent
+
+**2026-10-04.** Seen by the founder in the directory submission portal.
+
+- **The gap.** `plugins/mycelium/.claude-plugin/icon.png` (added in 0.310.15 for the directory listing)
+  carried opaque white outside its rounded square, so it showed white corners on every dark surface.
+- **The fix.** The four corner regions are transparent. Each pixel of the anti-aliased edge keeps
+  the fill colour with the alpha recovered from how much fill it held, so the curve stays smooth
+  with no white fringe. Only the 31,588 corner pixels changed; the artwork is untouched. Still a
+  1024x1024 PNG, within the directory's icon rules.
+- **Alternatives considered.** (a) Re-export from the source artwork: no source file is in the
+  repo. (b) Make every near-white pixel transparent by threshold: it leaves a jagged edge or a
+  white halo on the curve, and would hit the cream artwork too, which is why the change is a flood
+  fill from the corners that stops at the fill colour.
+
 ## v0.312.2 - a closed diamond is not derived either
 
 **2026-10-04.** Found by the dogfood project the same day 0.312.1 shipped, from the session-start next
