@@ -239,6 +239,19 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
    gates, and the ruling. A project whose diamonds still carry only a phase is offered
    `scripts/migrate_phase.py` by the next item.
 
+   **A choice is written when it is made; its decision when its gates pass (v0.313.0).** Two
+   fields hold a choice that a decision later records, and the choice is written when the person
+   makes it, whatever this run rules: an L2's `target` (`{opportunity, chosen_on, compared, why}`),
+   whose decision is `set_target`, and an L3's `front_runner`, whose decision is `commit_to_build`.
+   On `needs-evidence` or `blocked`, write the choice and record no decision entry. The entry locks
+   read the choice and its evidence, never the parent's decisions (ENTRY and SPEED are separate
+   questions; `engine/diamond-rules.md`, Entry locks), so a withheld choice closes the door below
+   it and makes the next item ask for a choice already made. Found on the dogfood L2 2026-10-04:
+   the founder chose a target, `set_target` was ruled needs-evidence, `target` was withheld as if
+   it were the decision, and the next item asked for the comparison every session. Every scale's
+   `object_ref`, the outcome an L1 sets (`desired_outcomes[].set_by`) and an L0's purpose fields
+   are choices of the same kind, written when made; none of them waits on a decision.
+
    **A loop iterates by appending, never by editing (DL-1373).** When a test reads inconclusive or
    the front runner fails, append the decision the iteration makes: a new experiment is another
    `start_experiment`, its `note` naming the test and the result it expects (and the test recorded

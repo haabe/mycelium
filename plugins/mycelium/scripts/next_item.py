@@ -1046,11 +1046,25 @@ def _target_item(state, today: str, st: dict, l2: dict) -> dict | None:
     if state.l2_target(l2) or _blocked(st.get(iid, {}), today):
         return None
     outcome = state.l2_outcome(l2) or "its outcome"
+    ruling = str(l2.get("progression_ruling") or "").strip()
+    if ruling:
+        # A CHOICE IS WRITTEN WHEN IT IS MADE (v0.313.0). A ruling on an L2 with no target judged a
+        # choice that was never written: dogfood 2026-10-04, the founder chose a target, set_target
+        # was ruled needs-evidence, the agent withheld `target` as if it were the decision, and
+        # this item asked every session for a comparison already made.
+        when = str(l2.get("progression_ruled_at") or "?")
+        return {"id": iid, "diamond": pid, "since": today, "command": "/mycelium:ost-builder",
+                "text": (f"{pid} (L2) has a ruling ({ruling}, {when}) but no target: the choice "
+                         "that ruling judged was never written. Write it on the L2 as `target: "
+                         "{opportunity, chosen_on, compared, why}`; the target is the choice, "
+                         "and `set_target` is recorded separately once its gates pass."),
+                "why": "a choice is written when it is made; its decision when its gates pass"}
     return {"id": iid, "diamond": pid, "since": today, "command": "/mycelium:ost-builder",
             "text": (f"{pid} (L2) maps {outcome} and has no target: compare its opportunities "
                      "(importance, how well served today, by judgment) and record the choice "
-                     "on the L2 as `target: {opportunity, chosen_on, compared, why}`. It can "
-                     "be re-chosen as the tests come in."),
+                     "on the L2 as `target: {opportunity, chosen_on, compared, why}`, even "
+                     "before `set_target` passes its gates. It can be re-chosen as the tests "
+                     "come in."),
             "why": "an L3 opens on the L2's target, and choosing it is the L2's decision"}
 
 

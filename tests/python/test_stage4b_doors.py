@@ -118,3 +118,22 @@ def test_the_front_runner_failing_stops_it_and_names_the_way_on(tmp_path):
     assert "front runner s1" in item["text"] and "another idea" in item["text"]
     st, d = _l3(tmp_path / "b", [_sol("s1"), _sol("s2", "invalidated")], front_runner="s1")
     assert st.l3_failed(d) is None, "a sibling of the front runner failed: not a stop"
+
+
+# v0.313.0: a choice is written when it is made; its decision when its gates pass. Dogfood
+# 2026-10-04: set_target was ruled needs-evidence, `target` was withheld as if it were the
+# decision, and this item asked every session for a comparison the founder had already made.
+def test_a_ruled_l2_with_no_target_is_told_the_choice_was_never_written(monkeypatch, tmp_path):
+    l2 = {k: v for k, v in L2A.items() if k != "target"}
+    l2.update(progression_ruling="needs-evidence", progression_ruled_at="2026-10-04")
+    item = _door(monkeypatch, tmp_path, [L1, l2])
+    assert item["id"] == "target-l2:l2a"
+    assert "never written" in item["text"] and "needs-evidence, 2026-10-04" in item["text"]
+    assert "compare its opportunities" not in item["text"], "the comparison was already made"
+
+
+def test_an_unruled_l2_with_no_target_is_told_to_write_it_before_the_gates(monkeypatch, tmp_path):
+    l2 = {k: v for k, v in L2A.items() if k != "target"}
+    item = _door(monkeypatch, tmp_path, [L1, l2])
+    assert "compare its opportunities" in item["text"]
+    assert "even before `set_target` passes its gates" in item["text"]
