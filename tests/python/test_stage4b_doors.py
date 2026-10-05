@@ -137,3 +137,34 @@ def test_an_unruled_l2_with_no_target_is_told_to_write_it_before_the_gates(monke
     item = _door(monkeypatch, tmp_path, [L1, l2])
     assert "compare its opportunities" in item["text"]
     assert "even before `set_target` passes its gates" in item["text"]
+
+
+# v0.313.1: a parked diamond still holds its slot. Dogfood 2026-10-05: an L3 parked with resume
+# conditions read as "no L3 works it", and the next item offered a new L3 on the same target.
+L3P = {"id": "l3p", "scale": "L3", "parent": "l2a", "object_ref": "opp-1", "state": "parked",
+       "parked_at": "2026-10-05", "resume_conditions": ["three stories"]}
+
+
+def test_a_parked_l3_still_works_its_target_so_no_door_opens(monkeypatch, tmp_path):
+    item = _door(monkeypatch, tmp_path, [L1, L2A, L3P])
+    assert item is None or item["id"] != "door-l3:l2a", item
+
+
+def test_a_second_l3_on_a_parked_ones_target_is_refused(tmp_path):
+    st = sl.State(str(_root(tmp_path, [L1, L2A, L3P])))
+    new = {"id": "l3new", "scale": "L3", "parent": "l2a", "object_ref": "opp-1"}
+    assert any("one L3 per target" in m for m in st._l3_unique_missing(new, "opp-1"))
+
+
+def test_a_second_l2_on_a_parked_ones_outcome_is_refused(tmp_path):
+    parked = {**L2A, "state": "parked", "parked_at": "2026-10-05"}
+    st = sl.State(str(_root(tmp_path, [L1, parked])))
+    new = {"id": "l2new", "scale": "L2", "parent": "l1", "object_ref": "out-a"}
+    assert any("one L2 per outcome" in m for m in st._l2_unique_missing(new))
+
+
+def test_a_retarget_closes_a_parked_l3_on_the_old_target(tmp_path):
+    moved = {**L2A, "target": {"opportunity": "opp-2", "chosen_on": "2026-10-06"}}
+    st = sl.State(str(_root(tmp_path, [L1, moved, L3P])))
+    out = sl._retarget_violations(st, {"l2a": L2A})
+    assert any("l3p (L3) works opp-1" in m for m in out), out

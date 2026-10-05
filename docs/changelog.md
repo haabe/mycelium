@@ -4,6 +4,24 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-05.
 
+## v0.313.1 - a parked diamond still holds its slot
+
+**2026-10-05.** Found by the dogfood project minutes after parking its first L3.
+
+- **The gap.** Four checks ask whether a slot is already taken, and all four used `is_open`, which
+  treats a parked diamond as closed: the L3 door (`l3_works`), one L3 per target, one L2 per
+  outcome, and the rule that a re-targeting L2 closes the L3 on its old target. The dogfood L3,
+  parked with three resume conditions, read as "no L3 works it", and the next item offered to open
+  a second L3 on the same target. The L2 door already counted a parked L2 (it reads `live`), so
+  the two halves disagreed. 0.312.1 fixed the same blind spot in the closing path only.
+- **The fix.** `State.holds_slot`: open, or parked, and not completed or archived. The four checks
+  read it; every other `is_open` caller asks about active delivery work, where leaving a park out is
+  right, and is unchanged.
+- **Alternatives considered.** (a) Add `parked` to `is_open`: it would count paused work as active
+  delivery in the exposure and code-writing checks. (b) Snooze the door item in the dogfood: treats
+  the symptom, and the locks would still let a second L2 or L3 open beside a parked one.
+- Four tests; all fail on the old checks.
+
 ## v0.313.0 - a choice is written when it is made
 
 **2026-10-05.** Found on the dogfood project's first L2, the day it opened.
