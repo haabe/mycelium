@@ -1334,6 +1334,7 @@ def print_advisory_warnings(canvas_dir):
         ("provenance dating", provenance_dating_findings(canvas_dir)),
         ("do-not-cite", citation_register_findings(canvas_dir)),
         ("sub-opportunity", sub_opportunity_findings(canvas_dir)),
+        ("scenario link", scenario_link_findings(canvas_dir)),
         ("affects entries", affects_entries_findings(canvas_dir)),
         ("opportunity mover", opportunity_mover_findings(canvas_dir)),
         ("unscanned source", unscanned_source_findings(canvas_dir)),
@@ -1381,6 +1382,69 @@ def sub_opportunity_findings(canvas_dir):
         for child in o.get("sub_opportunities") or []
         if isinstance(child, str) and child not in ids
     ]
+
+
+#: How many opportunity ids the scenario-coverage line names before summarising.
+_SCENARIO_COVERAGE_NAMED = 5
+
+
+def _scenario_link_inputs(canvas_dir):
+    """(scenarios, opportunities, problem). Absent files mean nothing to check and no problem;
+    a file that exists and cannot be read is a problem the check reports rather than a silent pass
+    (anti-pattern #9, fail-open)."""
+    found = {}
+    for name in ("scenarios.yml", "opportunities.yml"):
+        path = Path(canvas_dir) / name
+        if not path.exists():
+            return [], [], ""
+        try:
+            found[name] = yaml.safe_load(path.read_text()) or {}
+        except (yaml.YAMLError, OSError) as exc:
+            return [], [], (f"{name} could not be read ({type(exc).__name__}); "
+                            "scenario links not checked")
+
+    def records(name, key):
+        doc = found[name]
+        items = doc.get(key) if isinstance(doc, dict) else None
+        return [x for x in items or [] if isinstance(x, dict)]
+    return records("scenarios.yml", "scenarios"), records("opportunities.yml", "opportunities"), ""
+
+
+def scenario_link_findings(canvas_dir):
+    """WARN-tier: the link from a scenario to the opportunities it illustrates (v0.314.0).
+
+    ost-builder step 5 asks whether every leaf opportunity has a scenario, and step 6 told each
+    solution to name its scenarios, but no schema declared either link and nothing read one, so
+    the check was a sentence and the dogfood minted an undeclared `scenario:` key on two leaves.
+    The scenario side carries the link (`addresses_opportunities`); a solution's scenarios are
+    derived from its opportunity, never stored. Two findings: a scenario naming an opportunity
+    that does not exist, and one line counting open opportunities with solutions that no
+    scenario addresses. Only for a project that keeps scenarios at all.
+    """
+    scenarios, opps, problem = _scenario_link_inputs(canvas_dir)
+    if problem:
+        return [problem]
+    if not scenarios:
+        return []
+    ids = {o.get("id") for o in opps if o.get("id")}
+    out = [f"scenarios.yml: {s.get('id', '?')} addresses '{ref}' and no opportunity with that id "
+           "exists in opportunities.yml; a scenario linked to nothing illustrates nothing"
+           for s in scenarios for ref in s.get("addresses_opportunities") or []
+           if isinstance(ref, str) and ref not in ids]
+    covered = {ref for s in scenarios for ref in s.get("addresses_opportunities") or []}
+    closed = {"closed", "discarded", "resolved", "addressed"}
+    bare = [str(o["id"]) for o in opps
+            if o.get("id") and str(o.get("status", "open")).lower() not in closed
+            and o.get("solutions") and o["id"] not in covered]
+    if bare:
+        more = " ..." if len(bare) > _SCENARIO_COVERAGE_NAMED else ""
+        named = ", ".join(bare[:_SCENARIO_COVERAGE_NAMED]) + more
+        one = len(bare) == 1
+        out.append(f"{len(bare)} open opportunit{'y has' if one else 'ies have'} solutions and "
+                   f"no scenario naming {'it' if one else 'them'} in `addresses_opportunities` "
+                   f"({named}); ost-builder step 5 extracts one from the research, or flags the "
+                   "evidence gap")
+    return out
 
 
 def affects_entries_findings(canvas_dir):
