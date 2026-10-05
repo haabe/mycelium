@@ -964,3 +964,12 @@ reviewed:
     skip-ack as an old bare file: honoured for 14 days only, with a systemMessage to the user at every
     use naming how to re-record it. A malformed `expires` falls back to the 30-day default. Both are
     bounded and spoken, never an open-ended lift. Reviewed 2026-09-30, v0.293.0.
+- id: validate_canvas.py@86d730898d
+  verdict: accepted
+  reason: >-
+    `_scenario_link_inputs` (v0.314.0) catches a YAML or read error on scenarios.yml or
+    opportunities.yml and returns a problem string, which `scenario_link_findings` returns as its
+    only finding and print_advisory_warnings prints as `WARN (scenario link): <file> could not be
+    read ...; scenario links not checked`. The check says it could not look; it never reports a
+    clean pass over an unreadable file. Asserted by
+    test_an_unreadable_scenarios_file_is_reported_not_passed. Reviewed 2026-10-05, v0.314.0.

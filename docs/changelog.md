@@ -4,6 +4,28 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-05.
 
+## v0.314.0 - a scenario names the opportunities it illustrates
+
+**2026-10-05.** Found by the dogfood project while minting the first leaves of an L3.
+
+- **The gap.** ost-builder step 5 asks whether every leaf opportunity has a scenario, and step 6
+  told each solution to "reference which scenarios it addresses". No schema declared either link
+  and no script read one, so step 5 was a sentence nothing could check, and the dogfood had minted
+  an undeclared `scenario:` key on two leaves to follow step 6.
+- **The fix.** The scenarios schema declares `addresses_opportunities` (the opportunity ids a
+  scenario illustrates), the name the dogfood already used. A solution's scenarios are derived from
+  its opportunity and not stored; step 6 now says so, with `traces_to` for a solution that serves
+  only some of them. `validate_canvas.scenario_link_findings` (WARN tier) reports a scenario naming
+  an opportunity that does not exist, and one line counting open opportunities with solutions that
+  no scenario names. It stays silent for a project with no scenarios.
+- **Alternatives considered.** (a) Declare a `scenarios` field on solutions: it stores a value
+  derivable from the scenario side, a second source of truth that drifts (the new-field rule, step
+  a). (b) Declare the dogfood's `scenario:` key: same objection, and a synonym. (c) Leave step 5 as
+  guidance: the instruction stays uncheckable.
+- On the dogfood canvas: one WARN line (28 open opportunities with solutions and no scenario named),
+  validation PASS. Four tests; the coverage and dangling-id ones fail on the old validator, and one
+  asserts an unreadable scenarios file is reported, never passed (fail-open guard).
+
 ## v0.313.1 - a parked diamond still holds its slot
 
 **2026-10-05.** Found by the dogfood project minutes after parking its first L3.

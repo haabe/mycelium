@@ -53,7 +53,12 @@
             "type": "object",
             "description": "Legacy field (pre-2026-07-01 4-block model) \u2014 'Means' is NOT a Hoskins element; fold this into the simulation. Kept so historical instances validate."
           },
-          "lifecycle": {
+          "addresses_opportunities": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "The opportunity ids this scenario illustrates (v0.314.0). The one place the scenario-to-opportunity link is recorded: a solution's scenarios are derived from its opportunity, never stored on the solution. Read by validate_canvas.scenario_link_findings: an id that resolves to no opportunity is reported, and so is an open opportunity with solutions that no scenario names."
+        },
+        "lifecycle": {
             "type": "object"
           },
           "provenance": {

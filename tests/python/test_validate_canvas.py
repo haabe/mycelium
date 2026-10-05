@@ -2003,6 +2003,66 @@ def test_a_sub_opportunity_id_that_does_not_resolve_is_reported(tmp_path, script
     assert len(out) == 1 and "opp-999" in out[0]
 
 
+def _scenario_canvas(tmp_path, scenarios: str):
+    (tmp_path / "opportunities.yml").write_text(textwrap.dedent("""\
+        opportunities:
+          - id: opp-001
+            status: open
+            solutions: [{id: sol-001a}]
+          - id: opp-002
+            status: open
+            solutions: [{id: sol-002a}]
+          - id: opp-003
+            status: discarded
+            solutions: [{id: sol-003a}]
+          - id: opp-004
+            status: open
+    """))
+    (tmp_path / "scenarios.yml").write_text(textwrap.dedent(scenarios))
+
+
+def test_a_scenario_naming_a_missing_opportunity_is_reported(tmp_path, scripts_path):
+    # v0.314.0: the scenario side carries the link; an id nothing can resolve links to nothing.
+    validator = _import_validator(scripts_path)
+    _scenario_canvas(tmp_path, """\
+        scenarios:
+          - id: scn-001
+            addresses_opportunities: [opp-001, opp-999]
+          - id: scn-002
+            addresses_opportunities: [opp-002]
+    """)
+    out = validator.scenario_link_findings(tmp_path)
+    assert len(out) == 1 and "opp-999" in out[0] and "scn-001" in out[0]
+
+
+def test_an_open_opportunity_with_solutions_and_no_scenario_is_counted_once(tmp_path, scripts_path):
+    # opp-002 is open with a solution and no scenario; opp-003 is discarded and opp-004 has no
+    # solutions, so neither is counted.
+    validator = _import_validator(scripts_path)
+    _scenario_canvas(tmp_path, """\
+        scenarios:
+          - id: scn-001
+            addresses_opportunities: [opp-001]
+    """)
+    out = validator.scenario_link_findings(tmp_path)
+    assert len(out) == 1 and out[0].startswith("1 open opportunity has solutions")
+    assert "opp-002" in out[0] and "opp-003" not in out[0] and "opp-004" not in out[0]
+
+
+def test_an_unreadable_scenarios_file_is_reported_not_passed(tmp_path, scripts_path):
+    # Fail-open guard (anti-pattern #9): a file that exists and cannot be parsed must speak.
+    validator = _import_validator(scripts_path)
+    _scenario_canvas(tmp_path, "scenarios: [unclosed\n")
+    out = validator.scenario_link_findings(tmp_path)
+    assert len(out) == 1 and "scenarios.yml could not be read" in out[0]
+
+
+def test_a_project_without_scenarios_is_not_asked_for_coverage(tmp_path, scripts_path):
+    validator = _import_validator(scripts_path)
+    _scenario_canvas(tmp_path, "scenarios: []\n")
+    assert validator.scenario_link_findings(tmp_path) == []
+
+
 def test_affects_entries_resolve_and_a_bare_non_action_needs_a_note(tmp_path, scripts_path):
     validator = _import_validator(scripts_path)
     (tmp_path / "landscape.yml").write_text(textwrap.dedent("""\

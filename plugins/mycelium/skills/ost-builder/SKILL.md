@@ -67,7 +67,7 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
    - Classify each opportunity's **Cynefin domain** (clear/complicated/complex). Complex-domain opportunities must produce probes (experiments), not fully-designed solutions. See `${CLAUDE_PLUGIN_ROOT}/engine/cynefin-routing.md`.
 
 5. **For each leaf opportunity**, check scenario coverage:
-   - Does `.claude/canvas/scenarios.yml` have at least one scenario illustrating this opportunity?
+   - Does `.claude/canvas/scenarios.yml` have at least one scenario illustrating this opportunity? A scenario names the opportunities it illustrates in `addresses_opportunities`; `validate_canvas` reports an open opportunity with solutions that no scenario names (v0.314.0).
    - If not: extract one from the research evidence. Use Hoskins' **three** elements: **Motivation** (why — link to JTBD), **Persona** (who), **Simulation** (the full narrative, including how they interact, plus a falsifiable `success_criteria`: an observable signal with a threshold, not just a felt outcome). *There is no fourth "Means" element — that was a fabricated in-repo addition, corrected 2026-07-01; how they interact folds into the Simulation. `schemas/canvas/scenarios.schema.json` is authoritative and keeps `means` only so historical instances still validate.*
    - Scenarios should emerge from interview stories, not be invented. If no interview data exists for this opportunity, flag it as an evidence gap and leave the scenario `status: draft` (`source_class: internal_simulated` is envision-only — it cannot drive a leaf's design or confidence until a real source grounds it). See `/user-interview` for the full two-discipline rule.
 
@@ -75,7 +75,7 @@ See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
    - Multiple solutions per opportunity.
    - Solutions can be simple experiments, not just features.
    - Include "do nothing" as an option when appropriate.
-   - Each solution should reference which scenarios it addresses.
+   - A solution's scenarios are the ones whose `addresses_opportunities` names its opportunity: derived, not stored on the solution (v0.314.0). Where a solution serves only some of them, say which in its `traces_to`.
 
 7. **For each solution leaf**, assess the Four Risks (Torres Product Trio):
    - **Value** (product lens): Is there evidence users want/need this?
