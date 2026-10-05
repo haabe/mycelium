@@ -615,6 +615,17 @@ class State:
                 and phase_of(d) not in CLOSED
                 and str(d.get("state", "")).lower() not in CLOSED)
 
+    def holds_slot(self, d: dict) -> bool:
+        """WHETHER A DIAMOND STILL HOLDS ITS SLOT (v0.313.1): open, or parked. A park is a pause on
+        the same outcome or target, not an absence, so it keeps "one L2 per outcome" and "one L3 per
+        target", keeps the door from offering a second one, and closes with its L2 on a re-target.
+        Dogfood 2026-10-05: an L3 parked with three resume conditions read as "no L3 works it", and
+        the next item offered to open a new L3 on the same target. 0.312.1 taught the closing path
+        about parks; these checks used is_open, which leaves parked out."""
+        if str(d.get("id")) in self.completed_ids | self.archived_ids:
+            return False
+        return self.is_open(d) or str(d.get("state", "")).lower() == "parked"
+
     def _alive(self, d: dict) -> bool:
         return (str(d.get("id")) not in self.archived_ids
                 and phase_of(d) not in DEAD
@@ -763,7 +774,7 @@ class State:
         if not out:
             return []
         others = [str(p.get("id")) for p in self.by_id.values()
-                  if _scale(p) == "L2" and self.is_open(p) and p.get("id") != d.get("id")
+                  if _scale(p) == "L2" and self.holds_slot(p) and p.get("id") != d.get("id")
                   and self.l2_outcome(p) == out]
         if not others:
             return []
@@ -775,7 +786,7 @@ class State:
         """ONE L3 PER TARGET (v0.302.0, DL-1367 R3): its ideas are compared inside the one L3.
         About three ideas is advice (Torres p118), and no count is enforced."""
         others = [str(p.get("id")) for p in self.by_id.values()
-                  if _scale(p) == "L3" and self.is_open(p) and p.get("id") != d.get("id")
+                  if _scale(p) == "L3" and self.holds_slot(p) and p.get("id") != d.get("id")
                   and self.l3_target(p) == target]
         if not others:
             return []
@@ -853,10 +864,11 @@ class State:
         return failed[0] if failed and all(failed) else None
 
     def l3_works(self, l2: dict) -> dict | None:
-        """The open L3 working this L2's current target (v0.301.0): by `parent`, or by naming the
-        target as its `object_ref`. A completed L3 works nothing any more."""
+        """The L3 working this L2's current target (v0.301.0): by `parent`, or by naming the target
+        as its `object_ref`. Open or parked (v0.313.1, holds_slot): a parked L3 still works its
+        target, paused. A completed L3 works nothing any more."""
         target, pid = self.l2_target(l2), str(l2.get("id"))
-        for d in [x for x in self.by_id.values() if _scale(x) == "L3" and self.is_open(x)]:
+        for d in [x for x in self.by_id.values() if _scale(x) == "L3" and self.holds_slot(x)]:
             if str(d.get("parent") or d.get("parent_id") or "") == pid:
                 return d
             if target and _ref_key(d.get("object_ref")) == target:
@@ -1835,7 +1847,7 @@ def _retarget_violations(st: State, old_active: dict) -> list[str]:
                    "retargeted`, recording how its learning delivery ended if it reached "
                    "anyone. A new target is a new L3 (DL-1367)"
                    for l3 in st.by_id.values()
-                   if _scale(l3) == "L3" and st.is_open(l3)
+                   if _scale(l3) == "L3" and st.holds_slot(l3)
                    and (st.l3_target(l3) == was or _inherits_from(l3, d)))
     return out
 
