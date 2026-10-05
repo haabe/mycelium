@@ -11,7 +11,7 @@ This is not a marketing document, a technical whitepaper, or a compliance certif
 ## 1. Identity
 
 - **System name:** Mycelium — Theory-Guided Agentic Product Development Framework
-- **Version:** 0.314.0 (canonical source: the `*Version X.Y.Z` line in `CLAUDE.md`; mechanical tokens here — version, skill count — are kept in sync by `plugins/mycelium/scripts/sync_derived.py`, not hand-edited)
+- **Version:** 0.314.1 (canonical source: the `*Version X.Y.Z` line in `CLAUDE.md`; mechanical tokens here — version, skill count — are kept in sync by `plugins/mycelium/scripts/sync_derived.py`, not hand-edited)
 - **Last updated:** 2026-10-03 (seventh `/xai-check` audit: §4 and §9 no longer name the stopped Juniors.dev pilot as the next test, and §9's last-audit line is current. The hook-surface review line below still makes the release gate fail when the hooks move and the card does not; prose that goes stale for other reasons is caught only by the audit.)
 - **Hook surface reviewed:** 2026-10-03 (digest dbaec1122933)
 - **Maintained by:** Håvard Bartnes (haabe). Issues + correspondence: [github.com/haabe/mycelium/issues](https://github.com/haabe/mycelium/issues)

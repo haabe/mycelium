@@ -1415,7 +1415,7 @@ def scenario_link_findings(canvas_dir):
 
     ost-builder step 5 asks whether every leaf opportunity has a scenario, and step 6 told each
     solution to name its scenarios, but no schema declared either link and nothing read one, so
-    the check was a sentence and the dogfood minted an undeclared `scenario:` key on two leaves.
+    the check was a sentence nothing could run.
     The scenario side carries the link (`addresses_opportunities`); a solution's scenarios are
     derived from its opportunity, never stored. Two findings: a scenario naming an opportunity
     that does not exist, and one line counting open opportunities with solutions that no
