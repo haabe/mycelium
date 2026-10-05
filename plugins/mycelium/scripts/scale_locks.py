@@ -1691,6 +1691,11 @@ def _proposed_text(payload: dict, target: str, before: str, project_dir: str) ->
 
 
 def new_diamond_violations(project_dir: str, payload: dict) -> list[str]:
+    """`tagged_new_diamond_violations` without the kinds; see there."""
+    return [text for _, text in tagged_new_diamond_violations(project_dir, payload)]
+
+
+def tagged_new_diamond_violations(project_dir: str, payload: dict) -> list[tuple[frozenset, str]]:
     """For a write to diamonds/active.yml: each diamond the write OPENS whose entry lock does not
     hold. Opening means: a new id in the active list, an id rescaled, or an id moved back into the
     active list from completed or archived. A diamond already open at its scale is never re-judged
@@ -1705,13 +1710,14 @@ def new_diamond_violations(project_dir: str, payload: dict) -> list[str]:
     if src and _same_file(src, target, project_dir):
         # v0.307.4 (control audit P8): a move with the diamonds file as its source left nothing
         # to judge, and removes every record at once, as `rm` does (refused for shell commands).
-        return [("moving diamonds/active.yml away removes every diamond's record at once, which "
-                 "no gate can judge. Change it with Edit or Write; to close a diamond, record its "
-                 "`close` decision or move it into `archived_diamonds`")]
+        return [(frozenset(("file_moved",)),
+                 ("moving diamonds/active.yml away removes every diamond's record at once, which "
+                  "no gate can judge. Change it with Edit or Write; to close a diamond, record its "
+                  "`close` decision or move it into `archived_diamonds`"))]
     after = _proposed_text(payload, target, before, project_dir)
     if after is None:
         return []
-    return violations_between(project_dir, before, after)
+    return tagged_violations_between(project_dir, before, after)
 
 
 def _last_good(project_dir: str) -> dict:
@@ -1977,10 +1983,34 @@ def _was_running(prev: dict) -> bool:
     return phase_of(prev) not in CLOSED and (state == "parked" or state not in CLOSED)
 
 
+#: What kind of rule a refusal enforces (v0.315.0), written to the block log so a refusal for a
+#: missing UPSTREAM record (the entry lock) can be told from one for a diamond's own decision gates.
+#: E2E runs logged 110 scale-lock blocks across 62 runs and not one said which, so the measurement
+#: the founder's direction needs (DL-1433, "lead with the thinking it inspires and enforces rather
+#: than blocking users with gates") could not be taken: where are builders stopped, and by what?
+BLOCK_KINDS = ("entry_lock", "decision_gates", "born_with_decisions", "closing", "retarget",
+               "state_end", "rewritten_decision", "exposure", "file_moved", "unreadable")
+#: The hook prints one stdout line on a refusal, `<marker> <kind,kind>`; hooks/scale-lock-gate.sh
+#: passes the kinds to the block log as its detail. stdout is free on a refusal: Claude Code feeds a
+#: blocked call's stderr to the agent, and the approval JSON on stdout belongs to the allow path.
+BLOCK_KINDS_MARKER = "MYCELIUM_BLOCK_KINDS"
+
+
+def block_kinds(tagged: list) -> str:
+    """The kinds behind a list of tagged refusals, sorted and comma-joined, for the block log."""
+    return ",".join(sorted({k for kinds, _ in tagged for k in kinds})) or "unknown"
+
+
 def violations_between(project_dir: str, before: str, after: str) -> list[str]:
     """The lock verdict on one change to diamonds/active.yml, given its text before and after.
     Shared by the write hook (before = on disk, after = the proposed write) and, since v0.253.2,
     by the shell guard (before = a snapshot taken before the command, after = on disk)."""
+    return [text for _, text in tagged_violations_between(project_dir, before, after)]
+
+
+def tagged_violations_between(project_dir: str, before: str,
+                              after: str) -> list[tuple[frozenset, str]]:
+    """`violations_between`, each refusal with the kinds of rule it enforces (BLOCK_KINDS)."""
     repair = False
     try:
         old_doc = _as_dict(_parse(before, "diamonds/active.yml")) if before else {}
@@ -1994,31 +2024,40 @@ def violations_between(project_dir: str, before: str, after: str) -> list[str]:
                   if isinstance(d, dict)}
     was_open = {i: (_scale(d), _phase(d)) for i, d in old_active.items()}
     st = State(project_dir, diamonds_doc=new_doc)
-    out = (_closing_violations(st, new_doc, old_active) + _retarget_violations(st, old_active)
-           + _state_end_violations(st, new_doc, old_active)
-           + _rewritten_decision_violations(new_doc, old_active))
+
+    def kind(k: str, texts: list[str]) -> list[tuple[frozenset, str]]:
+        return [(frozenset((k,)), t) for t in texts]
+
+    out = (kind("closing", _closing_violations(st, new_doc, old_active))
+           + kind("retarget", _retarget_violations(st, old_active))
+           + kind("state_end", _state_end_violations(st, new_doc, old_active))
+           + kind("rewritten_decision", _rewritten_decision_violations(new_doc, old_active)))
     if repair:
-        out += _unknown_exposure_violations(st, old_active)
+        out += kind("exposure", _unknown_exposure_violations(st, old_active))
     for d in st.active:
         before_scale, before_phase = was_open.get(str(d.get("id")), (None, None))
         if before_scale == _scale(d) and _scale(d):
             moved = st.move_missing(d, before_phase)
             if moved:
-                out.append(f"{d.get('id')} ({d.get('scale')}) cannot record "
-                           f"{_decisions_added(old_active.get(str(d.get('id'))), d)} yet:\n    - "
-                           + "\n    - ".join(moved))
+                out.append((frozenset(("decision_gates",)),
+                            f"{d.get('id')} ({d.get('scale')}) cannot record "
+                            f"{_decisions_added(old_active.get(str(d.get('id'))), d)} yet:\n    - "
+                            + "\n    - ".join(moved)))
             continue
         ok, miss = st.verdict(d, entry=True)
         miss = [] if ok else miss
+        kinds = {"entry_lock"} if miss else set()
         phase = phase_of(d)
         if phase != "discover":
             # v0.247.0: E2E run 11 wrote a new L3 straight into develop, so no transition ran.
             made = ", ".join(f"`{x['decision']}`" for x in decisions_of(d))
             miss.append(f"{d.get('id')}: born with no decision recorded (it carries {made}); "
                         "decisions are recorded through /mycelium:diamond-progress and their gates")
+            kinds.add("born_with_decisions")
         if miss:
-            out.append(f"{d.get('id')} ({d.get('scale')}) cannot open yet:\n    - "
-                       + "\n    - ".join(miss))
+            out.append((frozenset(kinds),
+                        f"{d.get('id')} ({d.get('scale')}) cannot open yet:\n    - "
+                        + "\n    - ".join(miss)))
     return out
 
 
@@ -2260,7 +2299,7 @@ def _launch_approval(project_dir: str, payload: dict) -> None:
 def _run_hook(project_dir: str) -> int:
     try:
         payload = json.loads(sys.stdin.read() or "{}")
-        violations = new_diamond_violations(project_dir, payload)
+        tagged = tagged_new_diamond_violations(project_dir, payload)
     except (EditNotAppliedError, json.JSONDecodeError):
         return EXIT_HOLDS  # SPEAKS: a malformed payload or a non-applying edit is refused by the
         # tool itself, with its own message; this hook has nothing to judge
@@ -2268,7 +2307,9 @@ def _run_hook(project_dir: str) -> int:
         print(f"Mycelium scale lock: refused. {exc}. A diamonds file that does not parse cannot "
               "be checked, and every gate that reads it fails closed; write it whole.",
               file=sys.stderr)
+        print(f"{BLOCK_KINDS_MARKER} unreadable")
         return 2
+    violations = [text for _, text in tagged]
     if not violations:
         _launch_approval(project_dir, payload)
         return EXIT_HOLDS
@@ -2276,6 +2317,7 @@ def _run_hook(project_dir: str) -> int:
     # move, a completion, a teardown, a re-target, a widening, a file moved away.
     print("Mycelium scale lock: refused. This write breaks the diamond rules below.\n\n"
           + "\n".join(violations) + "\n" + _GATE_TAIL, file=sys.stderr)
+    print(f"{BLOCK_KINDS_MARKER} {block_kinds(tagged)}")
     return 2
 
 

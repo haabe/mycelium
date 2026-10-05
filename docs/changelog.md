@@ -4,6 +4,39 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-05.
 
+## v0.315.0 - a scale-lock block says what was missing
+
+**2026-10-05.** From a dogfood question: where do builders actually get stopped, and by what? The
+founder's direction (dogfood DL-1433) is that Mycelium "leads with the thinking it inspires (and
+enforces) rather than blocking users with gates", and a proposal to size each gate's strength to the
+consequence of the action (dogfood sol-072a) rests on one untested assumption: most blocks fall at
+reversible moments, on a missing upstream record. Testing it needs to know which rule refused.
+
+- **What was missing.** `hooks/scale-lock-gate.sh` logged every refusal to
+  `.claude/state/scale-lock-fires.jsonl` as `{"outcome": "blocked"}` and nothing else. The dogfood E2E
+  results hold 110 such rows across 62 runs, and none can say whether the entry lock (a parent's
+  record missing), a diamond's own decision gates, or a rule-integrity check (a rewritten decision, a
+  re-target, a closing) stopped the builder.
+- **What changed.** `scale_locks.py` tags each refusal with its kinds (`BLOCK_KINDS`: `entry_lock`,
+  `decision_gates`, `born_with_decisions`, `closing`, `retarget`, `state_end`, `rewritten_decision`,
+  `exposure`, `file_moved`, `unreadable`) at the sub-check that produces it
+  (`tagged_violations_between`, `tagged_new_diamond_violations`; the untagged functions keep their
+  signatures for the shell guard and `migrate_phase.py`). On a refusal the hook mode prints one
+  `MYCELIUM_BLOCK_KINDS <kinds>` line to stdout; the gate passes it to `mycelium_log_fire` as the
+  row's `detail`, and `crashed` when the checker fell over before printing one. The refusal message,
+  the exit code (2) and the allow path are unchanged; on an allowed write the gate passes the
+  checker's stdout (the launch-approval JSON) through as before.
+- **Tests.** `tests/bash/test_scale_lock_gate.sh` asserts the kind on three refusals (`entry_lock`,
+  `rewritten_decision`, `decision_gates`); all three fail on 0.314.1 and pass here.
+- **Alternatives rejected.** A distinct exit code per kind: four tests and any harness reading the
+  hook's status expect 2, and a status carries one kind where a write can break several rules. One
+  shared block log for every hook: `_hook_fire_log.sh` rejects it on purpose, since the retirement
+  check reads a file's newest row and one file would report every hook as firing. Classifying the
+  refusal text after the fact: it couples the log to wording that changes release to release.
+- **Not in this release.** The shell guard's post-hoc refusals (`bash_state_guard.py`, the same
+  verdict on a shell write) still log `blocked` alone, and the exposure gate has one kind of refusal
+  only. Asks (a person confirms) are not blocks; this release does not touch them.
+
 ## v0.314.1 - correction to the v0.314.0 notes
 
 **2026-10-05.** Self-caught the same day, while moving the dogfood's links to the new field.

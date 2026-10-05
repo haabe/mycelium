@@ -45,6 +45,9 @@ test_l3_straight_after_start_blocks() {
     assert_contains "$(cat "$ERR")" "desired outcome" "names the missing desired outcome"
     assert_contains "$(cat "$ERR")" "scale-lock-ack" "names the user-only override"
     assert_contains "$(cat "$p/.claude/state/scale-lock-fires.jsonl" 2>/dev/null)" "blocked" "the block is logged"
+    # v0.315.0: the log says WHAT was missing, so a missing upstream record (the entry lock) can be
+    # told from a decision's own gates when measuring where builders are stopped (DL-1433).
+    assert_contains "$(cat "$p/.claude/state/scale-lock-fires.jsonl" 2>/dev/null)" "\"detail\": \"entry_lock\"" "the log names the kind: entry_lock"
     rm -rf "$p"
 }
 
@@ -84,6 +87,7 @@ test_existing_diamond_edit_never_blocks() {
     code=$(run_gate "$p" "$(write_active "$p" "$(printf "$L0"'  - id: l4-old\n    scale: L4\n    phase: develop\n    notes: renamed\n')")")
     assert_eq "$code" "2" "an edit that drops a diamond's recorded decisions -> blocked (DL-1374)"
     assert_contains "$(cat "$ERR")" "rewrites its recorded decisions" "names the rewrite"
+    assert_contains "$(cat "$p/.claude/state/scale-lock-fires.jsonl" 2>/dev/null)" "rewritten_decision" "the log names the kind: rewritten_decision"
     rm -rf "$p"
 }
 
@@ -97,6 +101,7 @@ test_forward_move_without_record_blocks() {
     local code; code=$(run_gate "$p" "$(write_active "$p" "$(printf "$L0"'  - id: l4-old\n    scale: L4\n    phase: deliver\n'"$moved")")")
     assert_eq "$code" "2" "moving an L4 to deliver with no gates -> blocked"
     assert_contains "$(cat "$ERR")" "gate passed" "names the missing gates"
+    assert_contains "$(cat "$p/.claude/state/scale-lock-fires.jsonl" 2>/dev/null)" "decision_gates" "the log names the kind: decision_gates"
     rm -rf "$p"
 }
 
