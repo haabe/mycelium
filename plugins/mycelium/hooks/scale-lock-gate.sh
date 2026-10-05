@@ -39,14 +39,20 @@ LOCKS="$(dirname "${BASH_SOURCE[0]}")/../scripts/scale_locks.py"
 [ -f "$LOCKS" ] || LOCKS="${CLAUDE_PLUGIN_ROOT:-}/scripts/scale_locks.py"
 # shellcheck source=../scripts/_python.sh
 . "$(dirname "$LOCKS")/_python.sh"  # mycelium_python (v0.292.0)
-printf '%s' "$INPUT" | "$(mycelium_python)" "$LOCKS" --project-dir "$PROJECT_DIR" --hook
-rc=${PIPESTATUS[1]}
+# stdout is captured (v0.315.0): on an allowed write it may carry the launch-approval JSON and is
+# passed through unchanged; on a refusal it carries one `MYCELIUM_BLOCK_KINDS <kinds>` line, which
+# goes to the block log so a refusal for a missing upstream record (entry_lock) can be told from one
+# for a diamond's own decision gates. A here-string, not a pipe, so $? is the checker's own status.
+OUT=$("$(mycelium_python)" "$LOCKS" --project-dir "$PROJECT_DIR" --hook <<<"$INPUT")
+rc=$?
 # 0 = allowed, 3 = PyYAML missing (hooks/preflight.sh says the locks are unchecked, every prompt).
 # Anything else is a refusal, including a crash: its traceback is on stderr, and a lock checker that
 # fell over must not read as a lock that held.
 if [ "$rc" -ne 0 ] && [ "$rc" -ne 3 ]; then
+  KINDS=$(printf '%s\n' "$OUT" | sed -n 's/^MYCELIUM_BLOCK_KINDS //p' | head -n 1)
   . "${CLAUDE_PLUGIN_ROOT:-$(dirname "${BASH_SOURCE[0]}")/..}/scripts/_hook_fire_log.sh" 2>/dev/null || true
-  mycelium_log_fire ".claude/state/scale-lock-fires.jsonl" "blocked" 2>/dev/null || true
+  mycelium_log_fire ".claude/state/scale-lock-fires.jsonl" "blocked" "${KINDS:-crashed}" 2>/dev/null || true
   exit 2
 fi
+[ -n "$OUT" ] && printf '%s\n' "$OUT"
 exit 0
