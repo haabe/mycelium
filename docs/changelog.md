@@ -4,6 +4,34 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-07.
 
+## v0.316.3 - preflight no longer waits forever when an agent runs it
+
+**2026-10-07.** From the dogfood project, where it was an open upstream candidate
+(`preflight-run-by-an-agent-waits-forever-on-stdin`) whose cause was unknown. `gate.sh` refuses
+source writes until preflight has run since `corrections.md` last changed, so an agent re-runs
+`hooks/preflight.sh` through its own shell tool. On 2026-10-02 it hung twice; on 2026-10-07 it hung
+for 35 minutes.
+
+- **Cause, now reproduced.** In Claude Code, a shell-tool command that contains a heredoc gets a
+  stdin that is a socket and never reaches EOF (`stat -f %HT /dev/stdin` reads `Socket`; a plain
+  `cat` there hangs too). Without a heredoc, stdin is `/dev/null` and returns at once, which is why
+  the stdin hypothesis was refuted on 2026-10-02: every test command then had no heredoc. Preflight
+  read its payload with `[ -t 0 ] || _PF_INPUT="$(cat)"`; under the socket the `cat` never returned.
+  The 2026-10-07 hang's process tree matches the reproduction: preflight in `read_comsub`, its forked
+  subshell, and a `cat` under it.
+- **Fix.** `IFS= read -r -d '' -t 3 _PF_INPUT`: reads to EOF, keeps newlines, gives up after 3 s.
+  The runtime writes the hook payload and closes stdin at once, so the hook path is unchanged; the
+  agent path becomes a 3 s wait instead of a hang. Same behaviour in bash 3.2 and 5.3.
+- **Tests.** `tests/bash/test_preflight_stdin.sh`: the payload reaches `next_item.py` byte for byte
+  (a stub records it); preflight finishes with a stdin held open and empty, the socket's behaviour
+  (about 4 s); the source has no unbounded `$(cat)` on stdin. Against 0.316.2: 4 of 5 fail.
+- **Alternatives rejected.** Reading only when stdin is a pipe or file (`[ -p /dev/stdin ]`): it
+  depends on how the runtime delivers the payload, which is not documented and could be a socket
+  too. A `timeout` around `cat`: not installed on stock macOS. Telling agents to add `< /dev/null`:
+  a rule an agent must remember, which is the failure this framework replaces with mechanisms.
+- **Not in this release.** Other hooks read stdin with `$(cat)`, but they run only from the
+  runtime, which closes stdin; preflight is the one a gate tells the agent to run by hand.
+
 ## v0.316.2 - the plugin's own README says what it connects to
 
 **2026-10-07.** From a dogfood read of the Claude plugin directory's pre-submission checklist ("the
