@@ -25,8 +25,15 @@ CORRECTIONS_FILE="$PROJECT_DIR/.claude/memory/corrections.md"
 [ -d "$PROJECT_DIR/.claude/state" ] && touch "$PROJECT_DIR/.claude/state/hooks-alive" 2>/dev/null || true
 # The UserPromptSubmit payload (prompt, session_id), read once. Never from a terminal: run by hand
 # with no pipe, `cat` would wait for input.
+# BOUNDED (0.316.3). An agent told to "re-run preflight" runs it through its own shell tool, and in
+# Claude Code a tool command that contains a heredoc gets a stdin socket that never reaches EOF
+# (stat: Socket; a plain `cat` there hangs too). `$(cat)` then waited forever, observed for 35
+# minutes on 2026-10-07 and twice on 2026-10-02, while gate.sh refused other edits until preflight
+# ran. The runtime writes the payload and closes stdin at once, so a 3 s bound on the whole read
+# changes nothing for the hook and turns the hang into a 3 s wait. `read -d ''` reads to EOF, keeps
+# newlines, and works the same in bash 3.2 and 5.
 _PF_INPUT=""
-[ -t 0 ] || _PF_INPUT="$(cat 2>/dev/null)"
+if [ ! -t 0 ]; then IFS= read -r -d '' -t 3 _PF_INPUT || true; fi
 
 # Stamp path: per-user + per-project under $TMPDIR — must match gate.sh exactly.
 # See gate.sh for rationale (world-predictable shared /tmp path was the bug).
