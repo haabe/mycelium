@@ -4,6 +4,27 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-07.
 
+## v0.316.2 - the plugin's own README says what it connects to
+
+**2026-10-07.** From a dogfood read of the Claude plugin directory's pre-submission checklist ("the
+README describes everything the plugin runs, sends or fetches"). The plugin README linked to
+`PRIVACY.md`, which sits at the repository root and is not part of what a user installs, and itself
+named neither the automatic `gh` CI call nor the user-started network actions.
+
+- **`plugins/mycelium/README.md`** gains a *Network activity* section: the one automatic call
+  (`ci-signal.sh` to GitHub through `gh`'s own login, repository and branch name only, off with
+  `MYCELIUM_CI_SIGNAL=off`) and every network action that runs only when the user starts it
+  (`setup`, `metrics-pull`, `canvas-health`, `theory-fidelity`, `canvas-sync`, `a11y-check`).
+- **`PRIVACY.md`** said Mycelium "reads no credential from your machine" and, a few lines later, that
+  `/mycelium:metrics-pull` fetches "with your own credentials". The first sentence now names
+  `metrics-pull` as the one place credentials are used, when the user runs it.
+- **Alternatives rejected.** Moving `PRIVACY.md` into the plugin folder: the repository root is where
+  people look for it, and two copies drift; the README section is short and links to the full text.
+- **Not in this release.** The checklist also holds plugins whose instructions read a credential from
+  the user's environment (`jit-tooling/metrics-detector.md` names `PLAUSIBLE_API_KEY` and others).
+  Moving those to `userConfig` would prompt every installer for a dozen optional keys at install, for
+  a feature few run; the route is a maintainer decision and is open.
+
 ## v0.316.1 - skills stop pointing at things an installed plugin does not have
 
 **2026-10-07.** From a `/doctor prompt-audit` run on the dogfood project (Claude Code 2.1.283's audit
