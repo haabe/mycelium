@@ -22,7 +22,7 @@ Evaluate current diamond state and recommend next action.
 
 ## Preflight: Read-before-Recommend (gate-narration discipline)
 
-**Hard rule** (per CLAUDE.md Communication Rules, anti-pattern #7 graduation v0.39.16). Every gate-status narration, blocker statement, hold claim, or "what's missing" verdict this skill emits MUST cite the canvas file + field path of the source evidence (e.g., `per purpose.yml#why`, `per opportunities.yml#opp-005#status`, `per landscape.yml:1520`). Adjacent-surface inference (different opportunity, different ht, different topic) MUST be tagged as inference, not asserted as gate state. This skill ran an un-mechanized version of its own diagnosis in cluster-instances.md instance #17 (2026-06-02) — confabulated an "L0 unclear" blocker from comms-friction evidence while the L0 purpose was clear and canvas-documented; collapsed only after the founder articulated the underlying model and grep verified the canvas already had it. The preamble exists so this skill stops being the recursive case.
+**Hard rule** (per the operating contract's Communication Rules, anti-pattern #7 graduation v0.39.16). Every gate-status narration, blocker statement, hold claim, or "what's missing" verdict this skill emits MUST cite the canvas file + field path of the source evidence (e.g., `per purpose.yml#why`, `per opportunities.yml#opp-005#status`, `per landscape.yml:1520`). Adjacent-surface inference (different opportunity, different ht, different topic) MUST be tagged as inference, not asserted as gate state. This skill ran an un-mechanized version of its own diagnosis in cluster-instances.md instance #17 (2026-06-02) — confabulated an "L0 unclear" blocker from comms-friction evidence while the L0 purpose was clear and canvas-documented; collapsed only after the founder articulated the underlying model and grep verified the canvas already had it. The preamble exists so this skill stops being the recursive case.
 
 ## Workflow
 
@@ -184,7 +184,7 @@ Report the line for each scale with records. Since v0.302.0 (DL-1367) it counts 
 
 12. **Report harness thickness** (informational):
     - Count: total skills, active guardrails, mandatory reads, hooks, theory gates
-    - Current: 63 skills, 38 guardrails, 4 mandatory reads, 5 hook layers, 13 gates
+    - Count from the tree at run time, never from a previous run or this file: skills are `skills/*/SKILL.md`, theory gates are the numbered headings under *Gate Definitions* in `engine/theory-gates.md`, hooks are the commands registered in `hooks/hooks.json`. (A hardcoded line here said 13 gates while the engine defined 15.)
     - If thickness has increased since last assess, note it
     - This is observability, not a gate — purely informational
     - *Source: Trivedy (Anatomy of an Agent Harness, LangChain blog — "scaffolding should decrease as models improve," but harnesses remain valuable as they engineer systems around model intelligence)*

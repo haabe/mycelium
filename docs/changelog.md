@@ -4,6 +4,43 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-07.
 
+## v0.316.1 - skills stop pointing at things an installed plugin does not have
+
+**2026-10-07.** From a `/doctor prompt-audit` run on the dogfood project (Claude Code 2.1.283's audit
+of instruction files and skills for patterns written for older models), which reported the plugin's
+skills as out of its edit scope. Its findings were checked here against the source, one by one; every
+fix below is a stale fact or a dead reference, not a style change.
+
+- **38 pointers to `CLAUDE.md` sections that live in the operating contract.** In plugin form
+  `CLAUDE.md` is the user's own project file and holds none of them. 23 skills said "See `CLAUDE.md`
+  *Canvas writes — Read before Write*"; 13 said "per CLAUDE.md Communication Rules"; 2 said "per
+  CLAUDE.md attribution rule". All now name `engine/agent-operating-contract.md`, its Communication
+  Rules, or Communication Rule 4. Other `CLAUDE.md` mentions (setup does not touch it; the prompt
+  optimizer edits it; `domains/quality/CLAUDE.md`) are correct and unchanged.
+- **One preflight line in 22 skills** cited `validate_canvas.py` "lines 230-239" for the duplicate-ID
+  check (it is near line 306) and a `corrections.md` in the maintainer's dogfood repository, which no
+  plugin user has. It now names the check by the message it prints (`duplicate id '<id>'`) and states
+  the 2026-05-15 incident inline.
+- **`diamond-assess`** hardcoded "13 gates" (and 63 skills, 38 guardrails) as current; the engine
+  defines 15. The line now says to count from the tree at run time and where each count comes from.
+- **`interview`** recommended `npx degit haabe/mycelium` for a fresh project (the retired install), told
+  the agent to "advance L0 through its phases" and asked for the last diamond's "phase" (phases were
+  retired in 0.306.0). It now says to start the project in its own directory with `/mycelium:start`,
+  to record the L0's `state_purpose` (and `review` if the purpose drifts), and to report the last
+  recorded decision.
+- **Three links that left the plugin folder** (`purpose-properties` to `docs/purpose-stance.md`,
+  `setup` to a receipts case, `harness/theory-tensions.md` to `docs/theories.md`) resolved only in a
+  clone of the repository. They are now absolute GitHub URLs.
+- **Alternatives rejected.** Copying `docs/purpose-stance.md` and `docs/theories.md` into the plugin:
+  two copies of one document drift, which is the defect class this release removes. Deleting the
+  hardcoded counts outright: the line exists so the assessment reports harness thickness, and the
+  instruction to count keeps that.
+- **Not in this release, deliberately.** The audit also counted incident history in 47 of 63 skills
+  and 346 version stamps, and proposed removing them. Skills are agent-contract files, and the
+  operating contract forbids trimming them for concision: the history is often the only record of
+  why a rule exists, and in a runtime where hooks never fire the prose is the rule. Stale history,
+  where it states something now false, is fixed case by case as above.
+
 ## v0.316.0 - a refusal another extension overrules is said
 
 **2026-10-07.** From the dogfood landscape sweep (upstream candidate

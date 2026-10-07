@@ -34,13 +34,13 @@ Progressive onboarding through structured discovery conversation.
 grep -o "<prefix>-[0-9][0-9]*" .claude/canvas/<file>.yml | sort -u -t- -k2 -n | tail -3
 ```
 
-Replace `<prefix>` with the canvas's ID prefix (`comp` for landscape, `opp` for opportunities, `sol` for solutions, `ht` for human-tasks, etc.). Then pick the next free integer, **matching the zero-padding already used in that file**. The sort is NUMERIC (`-t- -k2 -n`) rather than lexical, and that is not pedantry: a plain `sort -u` orders `ht-1` after `ht-080`, so on a canvas with inconsistent padding it reports the wrong maximum and the next ID collides. Verified on the dogfood repo 2026-08-13, where lexical sort returned `ht-1` as the highest human-task ID against an actual `ht-080`. `grep -o` is also deliberate: it matches IDs wherever they appear, including cross-references and prose, so an ID that was promised somewhere but not yet defined is not handed out twice. `validate_canvas.py` has a duplicate-ID check (lines 230-239) that catches the failure on CI, but a duplicate can persist in the working tree for days if CI isn't run between edit and discovery — see roadmap-repo `corrections.md` 2026-05-15 "Duplicate canvas ID created in landscape.yml" for the worked example.
+Replace `<prefix>` with the canvas's ID prefix (`comp` for landscape, `opp` for opportunities, `sol` for solutions, `ht` for human-tasks, etc.). Then pick the next free integer, **matching the zero-padding already used in that file**. The sort is NUMERIC (`-t- -k2 -n`) rather than lexical, and that is not pedantry: a plain `sort -u` orders `ht-1` after `ht-080`, so on a canvas with inconsistent padding it reports the wrong maximum and the next ID collides. Verified on the dogfood repo 2026-08-13, where lexical sort returned `ht-1` as the highest human-task ID against an actual `ht-080`. `grep -o` is also deliberate: it matches IDs wherever they appear, including cross-references and prose, so an ID that was promised somewhere but not yet defined is not handed out twice. `validate_canvas.py` has a per-file duplicate-ID check (it reports `duplicate id '<id>'`) that catches the failure on CI, but a duplicate can persist in the working tree for days if CI isn't run between edit and discovery; that happened on 2026-05-15, when a duplicate ID was created in `landscape.yml`.
 
 Original failure mode: anti-pattern #7 instance #5, 2026-05-09 — agent conflated Bash `head` with the Read tool, lost ~14k tokens to a Write-fail → remedial-full-Read → re-Write loop. The `limit:1` discipline (graduated 2026-05-14, v0.23.18) prevents the second-order cost where the agent *correctly* follows the rule but full-Reads every time. The ID-scan discipline (graduated 2026-05-15, v0.23.19) prevents the related class where the agent reads enough of the file to satisfy the Edit check but not enough to see existing ID assignments — kin to anti-pattern #8 (Stale State Read).
 
 If this skill writes to multiple canvas files, register each one first (limit:1 for Edit-only paths; full Read for Write paths) AND ID-scan any prefix you intend to assign.
 
-See `CLAUDE.md` *Canvas writes — Read before Write* for the canonical rule.
+See `${CLAUDE_PLUGIN_ROOT}/engine/agent-operating-contract.md` *Canvas writes — Read before Write* for the canonical rule.
 
 ## When to Use
 
@@ -211,13 +211,13 @@ Run only the recommended phases unless user asks for more. Use Phase 1-6 content
 
 When `/mycelium:interview` is invoked on a canvas with content, do not run the brief flow. Instead:
 
-> "This project's canvas has content from [date of last write]. Last diamond touched: [scale, phase, confidence]. What's happening?"
+> "This project's canvas has content from [date of last write]. Last diamond touched: [scale, its last recorded decision, confidence]. What's happening?"
 
 Options:
 
 - **Continue work** → Invoke `/mycelium:diamond-assess` (current state + recommended next).
 - **New idea on this product** → Run Universal Brief Flow, append result as a new diamond rather than overwriting the existing L0.
-- **Wrong directory / fresh project intended** → "Recommend `npx degit haabe/mycelium new-dir` to a fresh directory; this canvas tracks the existing project."
+- **Wrong directory / fresh project intended** → "Start the new project in its own directory: create it, open Claude Code there, and run `/mycelium:start`; this canvas tracks the existing project."
 - **Joining the team / new to this project** → Invoke `/mycelium:diamond-assess` with onboarding framing (canvas as orientation doc).
 
 **Edge case**: if last brief-write was within 24h on this canvas with the same Q1 idea name (the user is iterating on their own brief), offer: "Update the brief with new answers, or start fresh?"
@@ -459,7 +459,7 @@ theory_gates_status:
 2. **Render the journey map**: Follow `${CLAUDE_PLUGIN_ROOT}/engine/wayfinding.md` to render the "You Are Here" map. Use the post-interview intro: "Welcome to your product journey. Here's the map:" This is the user's first view of the full L0→L5 structure — it builds the mental model they'll carry forward.
 3. **Suggest next step**: "Run `/mycelium:diamond-assess` to see your starting state and what to work on next."
 4. **The typical flow from here**:
-   - `/mycelium:diamond-progress` to advance L0 through its phases
+   - `/mycelium:diamond-progress` to record the L0's decision: `state_purpose` once its purpose is grounded, and `review` later if the purpose drifts (phases were retired in 0.306.0)
    - Each scale opens on what its parent has established (`engine/diamond-rules.md`, Entry locks): L1 on the purpose this interview states, L2 on a strategy (an L1 diamond, a North Star, the landscape) and a desired outcome derived from it, L3 on a target opportunity with evidence worked in an L2 diamond, L4 on an L3 at medium confidence. No scale is skipped, solo_hobby included: a small strategy is still a strategy (v0.247.0)
    - L1 spawns L2 (Opportunity) when the desired outcome is set
    - Each progression runs theory gates automatically
