@@ -30,7 +30,7 @@ None of it leaves your machine unless you commit or share it yourself.
 
 ## Network activity
 
-Mycelium sends nothing to its author or to any service the author runs, and it reads no credential from your machine.
+Mycelium sends nothing to its author or to any service the author runs. It reads no credential on its own; the one place credentials are used is `/mycelium:metrics-pull`, which, when you run it, uses the credentials you set up for each source you confirmed (below).
 
 There is one automatic network call, and it goes to GitHub on your behalf. If your project has a `.github/workflows/` directory and you have the GitHub CLI (`gh`) installed and logged in, a hook asks GitHub for the result of the latest CI run on your current branch, at the start of a session and occasionally when a response ends, so that a failed build is reported in the session that caused it. It uses `gh`'s own login, sends only your repository and branch name, is rate-limited, and does nothing at all when there are no workflows, no `gh`, or no login. To turn it off, set `MYCELIUM_CI_SIGNAL=off` in your environment.
 
