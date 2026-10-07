@@ -157,6 +157,7 @@ BY_DESIGN = {
     ("SessionStart", "session-start.sh --async"),   # Codex drops async hooks; one sync tier
     ("SessionStart", "session-start.sh --fast"),
     ("SessionStart", "session-start.sh"),
+    ("PostToolUse", "gate-override-check.sh"),      # Claude Code only: Codex runs no mods (0.316.0)
 }
 
 

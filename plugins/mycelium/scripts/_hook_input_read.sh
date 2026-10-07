@@ -47,6 +47,9 @@ hi_read_input() {
 }
 
 hi_deny() {  # $1 reason
+  # The refusal goes to the denial ledger, so a call that runs anyway can be seen (0.316.0).
+  # shellcheck source=_hook_fire_log.sh
+  . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_hook_fire_log.sh" 2>/dev/null && mycelium_record_denial
   python3 -c 'import json,sys; print(json.dumps({"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":sys.argv[1]}}))' "$1"
   exit 0
 }

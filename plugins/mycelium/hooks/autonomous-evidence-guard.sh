@@ -44,10 +44,17 @@ elif [ -f "$PROJECT_DIR/.claude/scripts/autonomous_evidence_guard.py" ]; then
 fi
 
 INPUT=$(cat)
+# The verdict below is captured so a refusal reaches the denial ledger (0.316.0), then passed
+# through unchanged: same stdout, same exit status.
+# shellcheck source=/dev/null
+. "$(dirname "${BASH_SOURCE[0]}")/../scripts/_hook_fire_log.sh" 2>/dev/null || {
+  mycelium_note_refusal() { :; }; mycelium_record_denial() { :; }; }
 
 if [ -n "$HELPER" ]; then
-  printf '%s' "$INPUT" | python3 "$HELPER" "$PROJECT_DIR"
-  exit $?
+  OUT=$(printf '%s' "$INPUT" | python3 "$HELPER" "$PROJECT_DIR"); RC=$?
+  mycelium_note_refusal "$OUT" "$RC"
+  [ -n "$OUT" ] && printf '%s\n' "$OUT"
+  exit $RC
 fi
 
 # Helper missing in both plugin and legacy paths -> fail-open (allow).

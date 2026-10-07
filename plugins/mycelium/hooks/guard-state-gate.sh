@@ -13,6 +13,11 @@
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-.}"
 INPUT=$(cat)
+# The verdict below is captured so a refusal reaches the denial ledger (0.316.0), then passed
+# through unchanged: same stdout, same exit status.
+# shellcheck source=/dev/null
+. "$(dirname "${BASH_SOURCE[0]}")/../scripts/_hook_fire_log.sh" 2>/dev/null || {
+  mycelium_note_refusal() { :; }; mycelium_record_denial() { :; }; }
 # Cheap exit: only a call that names a guard-state file needs python.
 case "$INPUT" in
   *-ack*|*upstream.json*|*manifest.yml*|*active-execution.json*) ;;
@@ -20,5 +25,7 @@ case "$INPUT" in
 esac
 HELPER="$(dirname "${BASH_SOURCE[0]}")/../scripts/_hook_input.py"
 [ -f "$HELPER" ] || HELPER="${CLAUDE_PLUGIN_ROOT:-}/scripts/_hook_input.py"
-printf '%s' "$INPUT" | python3 "$HELPER" --project-dir "$PROJECT_DIR" --guard-state guard-state-gate
+OUT=$(printf '%s' "$INPUT" | python3 "$HELPER" --project-dir "$PROJECT_DIR" --guard-state guard-state-gate)
+mycelium_note_refusal "$OUT" 0
+[ -n "$OUT" ] && printf '%s\n' "$OUT"
 exit 0

@@ -973,3 +973,20 @@ reviewed:
     read ...; scenario links not checked`. The check says it could not look; it never reports a
     clean pass over an unreadable file. Asserted by
     test_an_unreadable_scenarios_file_is_reported_not_passed. Reviewed 2026-10-05, v0.314.0.
+- id: _hook_fire_log.sh@37c0ea5871
+  verdict: accepted
+  reason: >-
+    `mycelium_record_denial` (v0.316.0) exits without a ledger row when the hook's stdin is not JSON.
+    The refusal itself is unaffected and still reaches the agent and the person through the gate that
+    issued it (for unreadable input that is hi_deny's "tool input is not the documented shape"); what
+    is lost is only the later override check, and a payload that does not parse has no tool_use_id to
+    record in the first place. The ledger is best effort by contract, like every fire log in this
+    file: a row that cannot be written never changes a verdict. Reviewed 2026-10-07, v0.316.0.
+- id: gate-override-check.sh@f26c7b961c
+  verdict: accepted
+  reason: >-
+    Was SILENT on first write (v0.316.0, before release): a PostToolUse input that names a refused
+    tool_use_id but does not parse would have exited with nothing said, so an override could go
+    unreported. It now prints a sentinel that the hook turns into an `unreadable` fire row and an
+    additionalContext line telling the agent that whether the refusal held is unknown. Asserted by
+    test_an_unreadable_input_naming_a_refused_id_says_it_could_not_check. Reviewed 2026-10-07, v0.316.0.
