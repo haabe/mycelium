@@ -19,7 +19,7 @@ inside `/mycelium:start` Step 3b.** Use this skill when:
   it is superseded** (the drift case — this is the one that matters most and the easiest to skip).
 - A property list exists but the user wants to revisit which properties are `binding`.
 
-Full contract: `${CLAUDE_PLUGIN_ROOT}/../../docs/purpose-stance.md`.
+Full contract: https://github.com/haabe/mycelium/blob/main/docs/purpose-stance.md (it lives in the repository, not in the installed plugin).
 
 ## Step 1: Read the current state and say which case this is
 

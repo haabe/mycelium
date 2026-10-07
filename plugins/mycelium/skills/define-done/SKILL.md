@@ -21,7 +21,7 @@ This is distinct from `/mycelium:definition-of-done` (the per-feature agile *qua
 
 ## Preflight: Read target file before any Write/Edit
 
-**Hard rule.** The `definition_of_done` field lives on the diamond in `.claude/diamonds/active.yml`. Before `Write`/`Edit` on it, use the **Read tool** on that file this session (`cat`/`head`/`grep` via Bash do NOT satisfy Claude Code's check). `Edit` with `limit:1` suffices for a partial update; full Read before a `Write`. See `CLAUDE.md` *Canvas writes — Read before Write*.
+**Hard rule.** The `definition_of_done` field lives on the diamond in `.claude/diamonds/active.yml`. Before `Write`/`Edit` on it, use the **Read tool** on that file this session (`cat`/`head`/`grep` via Bash do NOT satisfy Claude Code's check). `Edit` with `limit:1` suffices for a partial update; full Read before a `Write`. See `${CLAUDE_PLUGIN_ROOT}/engine/agent-operating-contract.md` *Canvas writes — Read before Write*.
 
 ## The sequence (Socratic, problem-first)
 

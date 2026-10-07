@@ -127,7 +127,7 @@ than dating the whole file.
 
 ## Postflight: Verify-After-Write (write-narration-verification discipline)
 
-**Hard rule** (per CLAUDE.md Communication Rules, anti-pattern #7 Stage 2 graduation). Before any
+**Hard rule** (per the operating contract's Communication Rules, anti-pattern #7 Stage 2 graduation). Before any
 user-facing summary claims the assessment was recorded, use the **Read tool** on the canvas file and
 confirm the VALUE fields above actually changed — not just `_meta.last_validated`. A stamp moving
 while the assessed fields stay at their defaults is the exact failure this skill shipped with: the

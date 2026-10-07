@@ -396,7 +396,7 @@ The output has two parts: a short welcome (closes the install→setup void for u
 
 ## Source
 
-Receipts case: [docs/receipts/cases/2026-05-08-bentes-install-model.md](../../../../docs/receipts/cases/2026-05-08-bentes-install-model.md). Daniel Bentes (BDSK author, Produktleder.no) surfaced the install-model architectural debt 2026-05-08; this setup skill is part of the plugin-form fix.
+Receipts case: [docs/receipts/cases/2026-05-08-bentes-install-model.md](https://github.com/haabe/mycelium/blob/main/docs/receipts/cases/2026-05-08-bentes-install-model.md). Daniel Bentes (BDSK author, Produktleder.no) surfaced the install-model architectural debt 2026-05-08; this setup skill is part of the plugin-form fix.
 
 ## Handling User-Supplied Content
 
