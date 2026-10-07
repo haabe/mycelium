@@ -3,7 +3,7 @@
 **Audience**: practitioners + evaluators wanting to understand what the agent has access to mid-session, and operators auditing Mycelium against transparency expectations.
 **Time to read**: 8 min.
 **Last updated**: 2026-10-03.
-**Hook surface reviewed:** 2026-10-05 (digest 5004b2ca0820)
+**Hook surface reviewed:** 2026-10-07 (digest 2087abda1ca7)
 
 This document answers a question the audit (`/xai-check` on `svc-mycelium`, 2026-05-04) flagged as a Stage 2 partial: **"What data does the agent see when it makes a recommendation under Mycelium?"** Today the answer is distributed across many files. This is the consolidated map.
 
@@ -104,6 +104,7 @@ The full table, per runtime, is `plugins/mycelium/hooks/README.md`. The ones tha
 | `exposure-gate.sh` | Bash commands that put the work in front of real people (deploy, publish, remote sync) | Blocks while no delivery cycle is ready for that exposure (`scripts/scale_locks.py --exposure-hook` decides) |
 | `guard-state-gate.sh` | Writes to the files that switch a blocking hook off (ack files, `upstream.json`, `manifest.yml`, `active-execution.json`) | Asks the human; refuses where nobody would be asked (permissions bypassed, automated mode) |
 | `exposure-change.sh`, `preflight.sh` | A write that changes exposure state; each prompt | Tell the agent when nothing built may meet real people, right after the write and again at the prompt |
+| `gate-override-check.sh` | After a write, shell command or MCP filesystem write | Says, to the person and the agent, when a call a Mycelium gate refused ran anyway because another extension (a Claude Code mod) approved it |
 | `absence-claim-guard.sh`, `key-shape-guard.sh`, `shell-safety-guard.sh`, `correction-attribution-guard.sh`, `discovery-trigger-guard.sh`, `read-before-research-guard.sh` | Write/Bash/prompt/research calls | Advise, never block; each names the measurement it fired on |
 | `contract-part.sh` (four handlers) | Session start | Injects the operating contract, one part per handler, each under the 10,000-character hook cap |
 | `session-start.sh` | Session start | Wraps quoted canvas text as `<untrusted_user_content>`; emits one NEXT ITEM |

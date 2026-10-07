@@ -2182,8 +2182,10 @@ hooks_dir = Path(sys.argv[1])
 SURFACES = ["hooks.json", "hooks.codex.json", "hooks.cursor.json"]
 # Divergences that are documented runtime differences, not drift.
 ALLOW_MISSING = {
-    "hooks.codex.json": {"reflexion-gate.sh"},   # no native PostToolUseFailure; shim wraps it
-    "hooks.cursor.json": set(),
+    # gate-override-check.sh (0.316.0) answers Claude Code Mods overruling a refusal; Codex and
+    # Cursor run no mods, so there is nothing for it to catch there.
+    "hooks.codex.json": {"reflexion-gate.sh", "gate-override-check.sh"},  # reflexion: no native PostToolUseFailure; shim wraps it
+    "hooks.cursor.json": {"gate-override-check.sh"},
 }
 ALLOW_EXTRA = {
     "hooks.codex.json": {"codex-postfailure-shim.sh"},  # the divergence mechanism itself

@@ -69,14 +69,22 @@ fi
 
 # Read input JSON from stdin
 INPUT=$(cat)
+# The verdict below is captured so a refusal reaches the denial ledger (0.316.0), then passed
+# through unchanged: same stdout, same exit status.
+# shellcheck source=/dev/null
+. "$(dirname "${BASH_SOURCE[0]}")/../scripts/_hook_fire_log.sh" 2>/dev/null || {
+  mycelium_note_refusal() { :; }; mycelium_record_denial() { :; }; }
 
 # Delegate to Python stdlib helper
 if [ -n "$HELPER" ]; then
-  printf '%s' "$INPUT" | python3 "$HELPER" "$STATE_FILE" "$PROJECT_DIR"
-  exit $?
+  OUT=$(printf '%s' "$INPUT" | python3 "$HELPER" "$STATE_FILE" "$PROJECT_DIR"); RC=$?
+  mycelium_note_refusal "$OUT" "$RC"
+  [ -n "$OUT" ] && printf '%s\n' "$OUT"
+  exit $RC
 fi
 
 # Helper missing in BOTH plugin and legacy paths → fail-closed.
+mycelium_record_denial 2>/dev/null || true
 # Updated bypass instruction names both paths so the user can diagnose.
 python3 -c "
 import json, os

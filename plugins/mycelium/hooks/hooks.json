@@ -280,6 +280,17 @@
             "statusMessage": "Mycelium shell-state check"
           }
         ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit|Bash|mcp__filesystem__(write_file|edit_file|move_file)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/gate-override-check.sh\"",
+            "timeout": 5,
+            "statusMessage": "Mycelium gate override check (did a refusal hold?)"
+          }
+        ]
       }
     ],
     "PostToolUseFailure": [

@@ -2,7 +2,52 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-10-05.
+**Last updated**: 2026-10-07.
+
+## v0.316.0 - a refusal another extension overrules is said
+
+**2026-10-07.** From the dogfood landscape sweep (upstream candidate
+`gate-denial-overruled-by-a-mod-goes-unrecorded`). Claude Code 2.1.287 (2026-10-01) shipped Mods,
+in-process plugin hooks, and its docs say a mod's `tool.check` handler "can also approve a call that a
+`PreToolUse` hook outside managed settings blocked". Every Mycelium gate is such a hook. A gate could
+refuse, a mod could approve, the call could run, and every Mycelium record still said the gate held.
+Two outside benchmarks the same week (a TDD-enforcing gate, and a boundary-guard pack measured by its
+own author) found that the value a gate on an agent can defend is the independent record of what
+happened; an overruled refusal made that record false.
+
+- **What changed.** Each refusal now writes the refused call's `tool_use_id` to a denial ledger,
+  `.claude/state/denied-calls.jsonl` (time, id, refusing hook, session; no tool input), through
+  `scripts/_hook_fire_log.sh`. The gates refuse three ways and all three record: a `blocked*` outcome
+  passed to `mycelium_log_fire`; `hi_deny` in `_hook_input_read.sh`; and, for the gates that pass a
+  Python helper's verdict through (`framework-guard`, `scope-gate`, `autonomous-evidence-guard`,
+  `guard-state-gate`, and `scale-lock-gate`'s launch approval), `mycelium_note_refusal` on the
+  captured stdout and exit status, which are then passed through unchanged. `gate.sh` records from
+  its own block log and its secret-scan deny. A new PostToolUse hook, `hooks/gate-override-check.sh`,
+  runs after every tool the gates cover: a call that RAN with a refused id was overridden, so it logs
+  `overridden` to `gate-override-fires.jsonl` and tells the person (`systemMessage`) and the agent
+  (`additionalContext`, "do not report the refusal as having held"). An `ask` the person answered is
+  not an override; asks never reach the ledger. The common path spawns no interpreter.
+- **Proof on a real mod.** In a fresh repo with the working tree loaded by `--plugin-dir`,
+  `claude -p` (2.1.292) asked to write `src/app.py`. Without a mod: refused by the discovery gate, file
+  absent, one ledger row, no override. With a test mod whose `tool.check` returns `allow`: the file was
+  written, the ledger row and an `overridden` row for `discovery-gate.sh` landed 0.2 s apart, and the
+  agent told the user the gate had been overruled and asked whether to keep the file.
+- **Tests.** `tests/python/test_gate_override_check.py` (15): a refusal lands with its id; an allowed
+  call and a payload with no id leave nothing; `hi_deny` records; `mycelium_note_refusal` records a
+  deny and an exit 2 and never an ask; a pass-through gate's verdict is byte-identical; the override
+  hook flags a refused id that ran, stays silent on any other id, on no ledger, and on a refused id
+  that only appears inside written content, and says it could not check (an `unreadable` row and a line to the agent) when an input naming a refused id does not parse. A structural test holds every refusal site in a
+  registered PreToolUse hook (`exit 2`, inline deny JSON, or a pass-through of a helper that can deny)
+  to one of the recorders, with a positive control that plants each shape unrecorded.
+- **Alternatives rejected.** A wrapper around every gate command in `hooks.json`: one point of change,
+  but it rewrites the command strings a dozen tests and scripts parse, in three runtime manifests.
+  Shipping the gates as a mod first in the chain: under `allowManagedModsOnly` a mod from a remote
+  marketplace does not load, so the gates would vanish in exactly the organisations that care, and
+  Codex and Cursor run no mods. Telling users not to install approving mods: a rule nothing checks.
+  Reading the transcript after the fact for a refusal: it couples the check to transcript format.
+- **Not in this release.** The hook cannot undo the call (it already ran) or name the mod (PostToolUse
+  input does not say who approved). It is registered for Claude Code only. The ledger is not pruned;
+  lookups read its last 2,000 rows, since a call runs within seconds of its refusal.
 
 ## v0.315.0 - a scale-lock block says what was missing
 

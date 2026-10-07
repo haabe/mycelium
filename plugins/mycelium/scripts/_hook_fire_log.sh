@@ -62,6 +62,9 @@ mycelium_log_fire() {  # $1 relative path, $2 outcome, $3 optional detail
     return 0
   fi
 
+  # A blocked outcome is a refusal, so it also goes to the denial ledger (0.316.0, below).
+  case "$outcome" in blocked*) mycelium_record_denial ;; esac
+
   MYC_HOOK="$(basename "${BASH_SOURCE[1]:-unknown}")" \
   MYC_OUTCOME="$outcome" MYC_DETAIL="$detail" MYC_SID="${MYCELIUM_SESSION_ID:-}" \
   "$py" - >> "$target" 2>/dev/null <<'PY' || true
@@ -79,4 +82,95 @@ if s:
 print(json.dumps(row))
 PY
   return 0
+}
+
+# ---------------------------------------------------------------------------------------------
+# THE DENIAL LEDGER (0.316.0): which tool calls a Mycelium gate refused, by tool_use_id.
+#
+# WHY. Claude Code 2.1.287 shipped Mods, in-process plugin hooks, and a mod's `tool.check`
+# handler "can also approve a call that a `PreToolUse` hook outside managed settings blocked"
+# (code.claude.com/docs/en/plugins/mods/events). Mycelium's gates are exactly such hooks. A gate
+# refuses, a mod approves, the call runs, and every fire log above still says "blocked": the
+# record says the gate held when it did not. The fire logs answer "how often does this gate
+# refuse"; nothing answered "did the refusal hold". gate-override-check.sh (PostToolUse) asks
+# that question of every call that ran, against this ledger: a call that RAN with a tool_use_id
+# a gate REFUSED was approved by something other than Mycelium.
+#
+# WHY ONE LEDGER AND NOT THE PER-HOOK FIRE LOGS. The question is per call, not per hook, and it
+# is asked on every tool call that runs, so it must be one cheap lookup. The path is a literal
+# here, in a sourced .sh library, on purpose: check_retirement_candidates.py follows only
+# scripts/*.py helpers, so this ledger is not mistaken for any one hook's fire log.
+#
+# A ROW holds the time, the tool_use_id, the refusing hook's file name and the session id. No
+# tool input, no content: the same rule as the fire logs (DL-1262).
+#
+# HOW A GATE RECORDS. Three ways, matching the three ways the gates refuse:
+#   - mycelium_log_fire with an outcome starting "blocked" records it (above);
+#   - hi_deny in _hook_input_read.sh records it;
+#   - a gate that passes a Python helper's verdict through calls mycelium_note_refusal with the
+#     helper's stdout and exit status.
+# tests/python/test_gate_override_check.py holds every refusing hook to one of the three.
+#
+# BEST EFFORT, like the fire log: a ledger that cannot be written never changes a verdict.
+_MYC_DENIAL_LEDGER=".claude/state/denied-calls.jsonl"
+
+mycelium_record_denial() {  # reads $INPUT, the hook's raw stdin JSON
+  [ -n "${INPUT:-}" ] || return 0
+  local root="${PROJECT_DIR:-${CLAUDE_PROJECT_DIR:-.}}" py=""
+  for c in python3 python; do command -v "$c" >/dev/null 2>&1 && { py="$c"; break; }; done
+  [ -n "$py" ] || return 0
+  mkdir -p "$root/.claude/state" 2>/dev/null || return 0
+  # $0, not BASH_SOURCE: hi_deny calls this from a library, and the refusing hook is the script
+  # bash was started with. The input goes on stdin: a Write's content can exceed an env var.
+  local row
+  row=$(printf '%s' "$INPUT" | MYC_HOOK="$(basename "$0")" MYC_SID="${MYCELIUM_SESSION_ID:-}" \
+    "$py" -c '
+import datetime, json, os, sys
+try:
+    data = json.load(sys.stdin)
+except Exception:
+    sys.exit(0)
+tid = data.get("tool_use_id") if isinstance(data, dict) else None
+if not isinstance(tid, str) or not tid or len(tid) > 128:
+    sys.exit(0)
+row = {"ts": datetime.datetime.now(datetime.UTC).isoformat().replace("+00:00", "Z"),
+       "tool_use_id": tid, "hook": os.environ.get("MYC_HOOK", "")}
+sid = os.environ.get("MYC_SID") or data.get("session_id") or ""
+if isinstance(sid, str) and sid:
+    row["session_id"] = sid
+print(json.dumps(row))
+' 2>/dev/null) || return 0
+  # Appended only when there is a row, so a call with no id never creates an empty ledger.
+  [ -n "$row" ] && printf '%s\n' "$row" >> "$root/$_MYC_DENIAL_LEDGER" 2>/dev/null
+  return 0
+}
+
+mycelium_note_refusal() {  # $1 a gate helper's stdout, $2 its exit status; records a refusal
+  if [ "${2:-0}" = "2" ] || printf '%s' "${1:-}" | grep -Eq '"permissionDecision"[[:space:]]*:[[:space:]]*"deny"'; then
+    mycelium_record_denial
+  fi
+  return 0
+}
+
+mycelium_denied_by() {  # $1 tool_use_id; prints the hooks that refused that call, space-separated
+  local root="${PROJECT_DIR:-${CLAUDE_PROJECT_DIR:-.}}" id="${1:-}"
+  local ledger="$root/$_MYC_DENIAL_LEDGER"
+  [ -n "$id" ] && [ -f "$ledger" ] || return 0
+  # The tail is enough: a call runs within seconds of its refusal, and the ledger only grows.
+  tail -n 2000 "$ledger" 2>/dev/null | grep -F "\"$id\"" | MYC_ID="$id" python3 -c '
+import json, os, sys
+want, hooks = os.environ["MYC_ID"], []
+for line in sys.stdin:
+    try:
+        row = json.loads(line)
+    except Exception:
+        continue
+    if row.get("tool_use_id") == want and row.get("hook") and row["hook"] not in hooks:
+        hooks.append(row["hook"])
+print(" ".join(hooks))
+' 2>/dev/null || true
+}
+
+mycelium_denial_ledger() {  # prints the ledger's absolute path (callers keep the literal out of their source)
+  printf '%s/%s\n' "${PROJECT_DIR:-${CLAUDE_PROJECT_DIR:-.}}" "$_MYC_DENIAL_LEDGER"
 }

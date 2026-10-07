@@ -89,7 +89,9 @@ if [ -n "$CONTENT" ]; then
 
   for PATTERN in "${SECRET_PATTERNS[@]}"; do
     if echo "$CONTENT" | grep -qE "$PATTERN" 2>/dev/null; then
-      # Output JSON for Claude with deny decision
+      # Output JSON for Claude with deny decision; the refusal goes to the denial ledger (0.316.0)
+      # shellcheck source=/dev/null
+      . "$(dirname "${BASH_SOURCE[0]}")/../scripts/_hook_fire_log.sh" 2>/dev/null && mycelium_record_denial
       cat << 'DENY_EOF'
 {
   "hookSpecificOutput": {
@@ -139,6 +141,9 @@ except Exception:
 ts = datetime.datetime.now(datetime.timezone.utc).isoformat().replace("+00:00", "Z")
 print(json.dumps({"ts": ts, "hook": "gate.sh", "reason": reason, "session_id": sid}))
 ' "$1" >> "$dir/gate-block-log.jsonl" 2>/dev/null || true
+  # Every caller exits 2 next, so this is a refusal: it goes to the denial ledger (0.316.0).
+  # shellcheck source=/dev/null
+  . "$(dirname "${BASH_SOURCE[0]}")/../scripts/_hook_fire_log.sh" 2>/dev/null && mycelium_record_denial
 }
 
 if [ "$NEEDS_RENEWAL" -eq 1 ]; then

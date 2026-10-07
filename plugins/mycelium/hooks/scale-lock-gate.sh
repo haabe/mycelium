@@ -54,5 +54,13 @@ if [ "$rc" -ne 0 ] && [ "$rc" -ne 3 ]; then
   mycelium_log_fire ".claude/state/scale-lock-fires.jsonl" "blocked" "${KINDS:-crashed}" 2>/dev/null || true
   exit 2
 fi
+# An allowed write can still carry a JSON deny: the launch approval in a runtime or permission mode
+# that cannot ask a person (scale_locks.py _launch_approval). It goes to the denial ledger (0.316.0).
+case "$OUT" in
+  *permissionDecision*)
+    # shellcheck source=/dev/null
+    . "${CLAUDE_PLUGIN_ROOT:-$(dirname "${BASH_SOURCE[0]}")/..}/scripts/_hook_fire_log.sh" 2>/dev/null \
+      && mycelium_note_refusal "$OUT" 0 ;;
+esac
 [ -n "$OUT" ] && printf '%s\n' "$OUT"
 exit 0
