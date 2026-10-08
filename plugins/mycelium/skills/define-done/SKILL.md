@@ -32,6 +32,12 @@ Ask these in order. The teaching is in the **sequencing** (problem → signal �
    - ✗ *"the onboarding flow ships."* (a build-list — reject it)
    - ✓ *"non-fluent users get through the brief without hitting the vocabulary wall."*
 
+   **At the learning scales (L0 to L3) what changes is a decision, not yet a behaviour (v0.317.2).** Those diamonds exist to find something out (see the build-mode gate below), so what is different when one is done is what its owner can now decide: what gets built, resumed, rewritten or dropped. Write the outcome as what they will know plus the decision the answer unlocks, and make the "for whom" whoever takes that decision. A behaviour change in the users comes later, from what gets built once the answer is in.
+   - ✗ *"builders who shipped and heard nothing are shown to be stuck the way opp-080 says."* (a description of the need: nothing in it changes, and the problem appears only as an id)
+   - ✓ *"you know, from builders' own stories, whether 'shipped something, nobody came, and cannot tell whether people passed or never arrived' is real and repeated. That decides what gets built next: the parked ideas resume against it, or the problem is rewritten or dropped before anything is built for it."*
+
+   **Name the problem in words, never by an id alone.** The owner reads the bar weeks later without the canvas open, and an id carries nothing they can check against. Dogfood 2026-10-08: the owner could not interpret an L2 outcome that cited only its opportunity's id ("I cannot interpret the 'what changes', because I don't know what opp-080 says"), and once it was rewritten in words: "this kind of clarity must be a given in the way that these definitions are developed."
+
 **2. "What's the ONE thing you'd SEE them DO that proves it?"** → `signal` (One Metric That Matters — one, not many).
    - ✗ *"it feels better."*
    - ✓ *"they came back for a second session."*

@@ -4,6 +4,27 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-08.
 
+## v0.317.2 - define-done: at the learning scales, "what changes" names the decision
+
+**2026-10-08, founder-caught in the dogfood repo while defining an L2 bar.** Step 1 asks "When this
+is done, what's different, and for WHOM?" and teaches it with a behaviour example. At L0 to L3 the
+skill's own build-mode gate says the outcome is a learning result, but step 1 never said what
+"different" then means, so the agent's L2 draft described the need instead of a change, and named
+the problem only by its id. The founder: "The 'what changes' doesn't say anything about change", and
+"I cannot interpret the 'what changes', because I don't know what opp-080 says."
+
+- **Step 1 gains a learning-scale branch:** at L0 to L3 the change is what the owner can now decide
+  (what gets built, resumed, rewritten or dropped), so the outcome states what they will know and the
+  decision the answer unlocks, and "for whom" is whoever takes it. The rejected and accepted lines
+  from the dogfood case are the worked example.
+- **A problem is named in words, never by an id alone,** because the owner reads the bar weeks later
+  without the canvas open. Communication rule 1 already says this for conversation; a bar is a durable
+  artifact.
+- **Alternatives rejected.** A check that flags ids in `definition_of_done.outcome`: whether a line
+  states its problem in words is a reading judgement, and the step-5 blind reader already catches an
+  outcome nobody outside can interpret. A separate learning-scale skill: the sequence is the same, only
+  step 1's meaning differs, so it is one branch in one skill.
+
 ## v0.317.1 - `jtbd-map` uses Ulwick's opportunity score
 
 **2026-10-08.** The 2026-09-20 correction of the opportunity score (errata A2) fixed `user-needs-map`
