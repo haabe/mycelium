@@ -39,7 +39,7 @@ See `${CLAUDE_PLUGIN_ROOT}/engine/agent-operating-contract.md` *Canvas writes â€
 
 Before mapping anything, read `.claude/canvas/climatic_predictions` in `landscape.yml` and settle
 every entry whose `due` date has passed. Set `status` to `held`, `refuted` or `unscoreable`, stamp
-`scored_on`, and write what actually happened in `outcome`.
+`scored_on`, and write what actually happened in `outcome`. Score by what happened, not by which words appear: a capability can ship under a name the prediction did not use, so a search for the predicted term finding nothing is not `refuted`; read the release notes or docs by meaning (`${CLAUDE_PLUGIN_ROOT}/engine/reading-for-meaning.md`). When writing a new prediction, make its check name the observable capability or behaviour, and a phrase only when the vocabulary itself is the subject (genericisation, below).
 
 **This step is first on purpose.** A prediction nobody settles is a wish, and the natural failure
 is not dishonesty â€” it is that scoring is boring and mapping is fun, so the unscored pile grows

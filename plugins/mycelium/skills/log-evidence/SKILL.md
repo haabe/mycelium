@@ -70,13 +70,13 @@ See `${CLAUDE_PLUGIN_ROOT}/engine/agent-operating-contract.md` *Canvas writes �
 
 4. **Classify the evidence** on Gilad's ladder:
    - Single conversation -> `anecdotal` (0.3)
-   - 2 conversations with consistent signals -> `anecdotal` (0.3), note convergence
+   - 2 conversations with consistent signals -> `anecdotal` (0.3), note convergence. "Consistent" means the same need or behaviour read by meaning, each shown by a quote, not the same words (`${CLAUDE_PLUGIN_ROOT}/engine/reading-for-meaning.md`)
    - 3+ triangulated conversations -> `data-supported` (0.5-0.6)
    - Explain the classification: "One conversation is anecdotal evidence. We'd need 2-3 more to call it data-supported."
 
 5. **Update canvas provenance**:
    - Identify the relevant canvas file and section (from the task's `canvas_refs`)
-   - **Close the learning-target loop** (per `engine/canvas-guidance.yml#learning_target_coupling`): if any answered question carried a `[target → <file>#<anchor>]` tag, route the captured evidence to that exact entry, then prompt whether the open gap can now move — ON HOLD → OPEN, RE-GATED → met, or a confidence bump. Logging the evidence and retiring the gap are separate steps; the tag makes the second one explicit. If the awaited answer did NOT arrive, say so — the absence is itself a finding (the gap stays open with a note).
+   - **Close the learning-target loop** (per `engine/canvas-guidance.yml#learning_target_coupling`): if any answered question carried a `[target → <file>#<anchor>]` tag, route the captured evidence to that exact entry, then prompt whether the open gap can now move — ON HOLD → OPEN, RE-GATED → met, or a confidence bump. Logging the evidence and retiring the gap are separate steps; the tag makes the second one explicit. If the awaited answer did NOT arrive, say so — the absence is itself a finding (the gap stays open with a note). Say how you established it: no answer came at all, or one came, was read in full by meaning, and does not address the question. A search for the expected words finding nothing is neither.
    - If the canvas entry has NO provenance object yet (early project), create one:
      ```yaml
      provenance:

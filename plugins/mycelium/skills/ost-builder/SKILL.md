@@ -59,7 +59,7 @@ See `${CLAUDE_PLUGIN_ROOT}/engine/agent-operating-contract.md` *Canvas writes â€
    - Each opportunity must cite at least 2 evidence sources.
    - Each opportunity minted on or after 2026-09-15 carries `what_would_move_it`: a task id, a leaf id with a named test, a sweep the landing check runs, or a dated review (v0.209.0). Two voices earn a node its existence; this field earns it a future. Measured on the dogfood tree 2026-09-09: 33 open opportunities with no leaf and no task, twelve unmoved for a month, several minted with a description, a provenance block and nothing else. `validate_canvas` warns on a new node without it; `check_idle_opportunities` lists the older ones.
    - Phrase as user needs, not solutions: "Users need to know their payment succeeded" not "Users need a confirmation email."
-   - Look for frequency across interviews, not just intensity in one.
+   - Look for frequency across interviews, not just intensity in one. Two statements voice the SAME opportunity when they describe the same need or problem, whatever words they use, and not when they merely share a term: state the need before counting (`${CLAUDE_PLUGIN_ROOT}/engine/reading-for-meaning.md`). The two-source minimum above is counted the same way.
 
 4. **Structure hierarchically**: Group related opportunities. Identify parent-child relationships.
    Record children in the parent's `sub_opportunities` (declared field since v0.207.0): a string is the id of a sibling opportunity and must resolve (`validate_canvas` warns when it does not); an object is an inline sub-case that is not a node of its own and carries `id` and `name`. Honest limit: `ost-render` does not walk this field yet, so the structure is read by the validator and by humans, not drawn.

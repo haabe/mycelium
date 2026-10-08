@@ -172,6 +172,8 @@ See `${CLAUDE_PLUGIN_ROOT}/engine/agent-operating-contract.md` *Canvas writes â€
    - Any screenshots or artifacts
    - Your overall impression in a sentence or two"
 
+   The quotes are read back by meaning in `/mycelium:log-evidence` (`${CLAUDE_PLUGIN_ROOT}/engine/reading-for-meaning.md`), so write the questions to collect moments and stories, which carry meaning, rather than self-descriptions or yes/no reactions.
+
 ## Async drip brief (added v0.219.0)
 
 When the brief is for an async exchange rather than a meeting, write it as pairs: a permission

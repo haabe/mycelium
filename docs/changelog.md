@@ -2,7 +2,47 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-10-07.
+**Last updated**: 2026-10-08.
+
+## v0.317.0 - other people's language is read for meaning, not for words
+
+**2026-10-08.** From a consumer project (i-productified, on 0.316.2), caught by its founder: in a
+personal-brand exercise the agent compared outside descriptions of him against his own words and wrote
+that no one mirrored "against the grain", when three of the words given (verdistyrt, selvstendig,
+selvoppofrende) described exactly that trait. A need, problem or trait is said in many ways, so a word match
+under-counts by construction, and an absence concluded from one is a broken instrument, not a null result.
+**Measured in the dogfood repo the same day:** a Reddit search filtered by no-users phrases ("nobody uses",
+"no users", "zero signups") had fed a demand projection; the 200 newest posts in two subreddits, read by
+meaning with no keyword filter, held 25 posts at that moment, and the phrase filter caught 2.
+
+- **New engine doc, `engine/reading-for-meaning.md`.** Six rules for any skill that reads other people's
+  language as evidence: state the meaning sought before reading; map each quote (kept verbatim) to the facet it
+  shows; guard the other side, since a word that fits every meaning supports none and over-mapping onto the
+  hoped-for meaning is the same error reversed; prefer stories and moments to adjectives; a keyword search is a
+  finder, never a counter, so its count is a rate only after its recall is measured on a keyword-free sample
+  read by meaning; never conclude absence from a word match. Words are the object only for vocabulary
+  (genericisation), proper names and exact quotes.
+- **Ten skills point to it at the step where they read language**, with the exposed wording fixed:
+  `jtbd-map` and `user-interview` (hiring and firing as moments, the cue phrases kept as examples, not the
+  test); `assumption-test` (the model success criterion was ">60% of survey respondents say X"; now "describe a
+  recent time they did X", counted by meaning); `ost-builder` (what counts as the SAME opportunity for frequency
+  and the two-source minimum); `log-evidence` ("consistent signals" defined, and how an absence was established);
+  `user-needs-map`; `wardley-map` (predictions scored by what happened, not by whether the predicted term
+  appears: a capability can ship under another name); `handoff`; `metrics-pull` (review and ticket text
+  classified by meaning, the quote kept verbatim, which its security rule requires); `devils-advocate`.
+- **Check 56** (validator): the doc exists and still states its two load-bearing rules, and every listed
+  skill cites it. It reads the framework's own files, never anyone's language. `tests/bash/test_check_56.sh`
+  (7 assertions) fails on a skill that lost its pointer, a doc that lost its rules, and a missing doc.
+- **Alternatives rejected.** A hook that flags word-matching in the agent's output: it would itself match words
+  to stop word-matching, and lexical hooks in this framework are measured to fire often and catch little. A
+  schema field such as `reading: meaning|word` on evidence: a field nothing reads, and filling it for existing
+  evidence would invent history. Rewriting each skill's method in full: the rule is one rule, so it lives once
+  and the skills point to it.
+- **Not in this release.** `jtbd-map`'s opportunity score still reads "importance - satisfaction", while
+  `user-needs-map` corrected the formula to Ulwick's on 2026-09-20; that is a separate fix.
+- **Known limits.** Check 56's skill list is kept by hand: a new skill that reads other people's language is
+  covered only once it is added. Whether the new wording changes how an agent reads is not measured here; the
+  check proves the rule is wired, not that it is followed.
 
 ## v0.316.3 - preflight no longer waits forever when an agent runs it
 

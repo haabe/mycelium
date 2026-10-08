@@ -77,6 +77,8 @@ Each adapter defines what "unexplained" means for its source. Typically this is:
 - **reviews class**: sudden rating changes, new-language reviews.
 - **support class**: ticket category shifts, volume spikes.
 
+Review and ticket text is classified by meaning (the problem or need the person describes), with the quote kept verbatim: a change of wording is not a change of problem, and the same problem in new words is not new (`${CLAUDE_PLUGIN_ROOT}/engine/reading-for-meaning.md`).
+
 For unexplained signals, attempt the investigation hooks defined in each adapter (e.g., GitHub's HN search) before presenting to the user.
 
 ### Step 7: Generate combined report
