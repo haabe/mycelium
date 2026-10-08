@@ -373,6 +373,12 @@ def _expiry(name: str, fm: dict[str, str], today: _dt.date, res: dict, root: Pat
             res["due"].append((name, str(due), (today - due).days))
         return
 
+    # A VOID instrument will never be scored: that is what void records (v0.317.4). Reporting
+    # it under NO EXPIRY asked for a date on a test that was withdrawn; on the dogfood corpus
+    # 2026-10-08 it was two of the three remaining "problems", both voided weeks before.
+    if status == "void":
+        return
+
     # No scoring date. For a live instrument that is only legitimate with a REVIEW date,
     # which is a promise about a decision rather than about data.
     if status != "live":
@@ -457,6 +463,9 @@ def _proportion(name: str, fm: dict[str, str], res: dict) -> None:
     """Whether the test is sized to its decision (v0.264.0). An unknown class or weight is
     reported; a heavier test than its decision is OVERSIZED unless the founder overrode it with a
     written reason, which is then printed beside the report, never hidden."""
+    if str(fm.get("status", "") or "").strip().lower() == "void":
+        # Never run, never will be: its size against the decision cannot matter (v0.317.4).
+        return
     cls = str(fm.get("decision_class", "") or "").strip().lower()
     weight = str(fm.get("test_weight", "") or "").strip().lower()
     if not cls or not weight:

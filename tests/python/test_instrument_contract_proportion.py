@@ -53,6 +53,18 @@ def test_a_light_test_for_a_heavier_decision_is_undersized(scripts_path):
     assert res["undersized"] == [] and res["costly_override"][0][2] == "product lead"
 
 
+def test_a_void_test_is_never_sized(scripts_path):
+    """v0.317.4: a test that will never run cannot be too light for its decision."""
+    mod = _import(scripts_path)
+    text = ("---\ntype: assumption-test\nstatus: void\nfrozen_at: 2026-10-01\nfrozen_before: x\n"
+            "score_by: 2026-12-01\ndecision_class: standard\ntest_weight: light\n---\nbody\n")
+    fm = mod._frontmatter(text)
+    res = {"oversized": [], "costly_override": [], "bad_proportion": [], "undersized": [],
+           "misclassed": []}
+    mod._proportion("t.md", fm, res)
+    assert res["undersized"] == []
+
+
 def test_the_class_comes_from_the_recorded_axes(scripts_path):
     """v0.269.0, overfit audit: one class carried reversibility, reach and harm, so three paying
     clients (opted in, money) or ten households lent a hardware prototype (opted in, safety) fitted

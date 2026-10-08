@@ -4,6 +4,23 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-08.
 
+## v0.317.4 - a void instrument is not a problem
+
+**2026-10-08, found by the dogfood repo's canvas-health pass.** `check_instrument_contract.py`
+reported three problems on the dogfood corpus, and two were instruments already marked
+`status: void` with a `void_reason`, one of them voided on a founder ruling six days before. The
+expiry step sent every non-live instrument without a `score_by` to NO EXPIRY, and the sizing step
+judged void tests against their decisions, so a withdrawn test kept asking for a date and a heavier
+design. The founder was asked to rule on both again.
+
+- **Expiry:** a void instrument is skipped. A live one without a date is still reported as missing
+  its review date, exactly as before.
+- **Sizing:** a void test is never reported as undersized or oversized.
+- **Tests:** a void instrument with no `score_by` is not undated; a live one beside it still is
+  reported; a void light test is not undersized. All three fail on 0.317.3.
+- **Alternative rejected:** asking projects to fill `score_by` on void files. That would invent
+  dates for tests that will never run, the backfill the contract refuses elsewhere.
+
 ## v0.317.3 - a review marker under `what` no longer supersedes the purpose
 
 **2026-10-08, found by the dogfood repo's canvas-health pass.** `check_purpose_stance.py` warned that
