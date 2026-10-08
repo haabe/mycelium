@@ -23,7 +23,7 @@ For each key assumption:
 - State the assumption explicitly
 - Ask: "What if the OPPOSITE is true?"
 - What evidence would support the opposite?
-- Is there any evidence we've dismissed?
+- Is there any evidence we've dismissed? Include language read by its words: a quote that never used our term may still describe the thing, and one that used it may not (`${CLAUDE_PLUGIN_ROOT}/engine/reading-for-meaning.md`).
 
 ## Technique 3: Red Team
 Attack your own position:

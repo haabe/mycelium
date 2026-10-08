@@ -24,6 +24,7 @@ The engine is the brain of Mycelium. It defines how diamonds work, what gates mu
 - **[cycle-learning.md](cycle-learning.md)** — Every completed or discarded leaf generates calibration data. Predicted vs actual ICE, effort accuracy, risk dimension accuracy.
 - **[pattern-detector.md](pattern-detector.md)** — Statistical patterns across cycle history surface as correlation rules and anti-pattern signals.
 - **[evidence-decay.md](evidence-decay.md)** — Evidence ages. Confidence degrades over time unless refreshed.
+- **[reading-for-meaning.md](reading-for-meaning.md)** — How to read other people's language as evidence: by meaning, not by words. A keyword search is a finder, never a counter, and an absence is never concluded from a word match.
 
 ### Communication
 - **[status-translations.md](status-translations.md)** — Plain-language translations for every diamond state. "L2 Opportunity Discover" becomes "Discovering what problems to solve."

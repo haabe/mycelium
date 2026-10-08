@@ -174,7 +174,7 @@ Before running the test, write:
   The fourth clause ("we will know when") is critical — it defines success criteria upfront.
   *Source: Gothelf & Seiden, Lean UX (2013, 3rd ed. 2021). The 4-part format evolved across editions.*
 - **Method**: Which test type and how
-- **Success looks like**: Specific, measurable outcome (e.g., ">60% of survey respondents say X")
+- **Success looks like**: Specific, measurable outcome (e.g., ">60% of respondents describe a recent time they did X", counted by meaning, not by whether they used your words; `${CLAUDE_PLUGIN_ROOT}/engine/reading-for-meaning.md`)
 - **Failure looks like**: What would make us abandon this assumption
 - **Sample size**: How many data points needed for confidence
 

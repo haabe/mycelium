@@ -66,7 +66,7 @@ See `${CLAUDE_PLUGIN_ROOT}/engine/agent-operating-contract.md` *Canvas writes â€
 **Master the pause**: Wait 3-5 seconds after each response before your next question. Silence often prompts the real insight.
 
 ### Listening
-- Listen for hiring/firing language (JTBD)
+- Listen for hiring and firing moments (JTBD): when they started, switched, worked around or gave up on something, however they word it (`${CLAUDE_PLUGIN_ROOT}/engine/reading-for-meaning.md`)
 - Note emotional reactions (tone, hesitation, enthusiasm)
 - Follow up on surprises -- "That's interesting, tell me more about..."
 - Don't pitch or defend -- you're here to learn, not sell

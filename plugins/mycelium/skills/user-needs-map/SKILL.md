@@ -48,7 +48,7 @@ Who interacts with or is affected by this product/service?
 - Internal users (staff, support, ops)
 
 ### 2. Extract Needs from Research
-From interviews, observations, support tickets, and behavioral data, extract discrete need statements:
+From interviews, observations, support tickets, and behavioral data, extract discrete need statements. Read for the need, not the term: the same need is said many ways, and some are never said at all (see Unrecognized below). Method: `${CLAUDE_PLUGIN_ROOT}/engine/reading-for-meaning.md`.
 
 **Format**: "As a [user type], I need to [action/capability], so that [outcome/benefit]"
 

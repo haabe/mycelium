@@ -2643,6 +2643,53 @@ check_next_action_wiring() {
     pass "Check 55: next-action rule in the contract, blocking Stop hook present, registered in hooks.json, hooks.codex.json and hooks.cursor.json"
 }
 
+# ============================================================
+# Check 56: skills that read other people's language cite the reading-for-meaning rule
+# ============================================================
+# Consumer finding 2026-10-08 (dogfood upstream candidate
+# skills-read-other-peoples-language-by-word-not-meaning): skills that read
+# interviews, posts, reviews or tickets as evidence matched on WORDS where they
+# should match on MEANING, so they under-counted by construction and read a
+# search's silence as an absence. Measured in the dogfood repo: a phrase filter
+# caught 2 of 25 posts that a reading by meaning found. The rule lives in
+# engine/reading-for-meaning.md. The judgement is semantic, so no hook polices
+# the language itself (a lexical detector would repeat the defect); what can be
+# checked is the wiring: the doc exists with its two load-bearing rules, and each
+# skill that classifies, counts or searches other people's language points to it.
+check_reading_for_meaning_wiring() {
+    section "Check 56: skills that read other people's language cite engine/reading-for-meaning.md"
+
+    local doc="plugins/mycelium/engine/reading-for-meaning.md"
+    local skills_root="plugins/mycelium/skills"
+    local skills=(jtbd-map user-interview assumption-test user-needs-map ost-builder log-evidence wardley-map handoff metrics-pull devils-advocate)
+
+    if [ ! -d "$skills_root" ] && [ ! -f "$doc" ]; then
+        info "Check 56: no plugin tree in cwd — N/A"
+        return
+    fi
+    if [ ! -f "$doc" ]; then
+        fail "Check 56: $doc missing — the skills that read other people's language have no shared rule to point to"
+        return
+    fi
+    if ! grep -q "finder, never a counter" "$doc" || ! grep -q "Never conclude absence from a word match" "$doc"; then
+        fail "Check 56: $doc no longer states its two load-bearing rules (a keyword search is a finder, never a counter; never conclude absence from a word match)"
+        return
+    fi
+    local missing=() s
+    for s in "${skills[@]}"; do
+        if [ ! -f "$skills_root/$s/SKILL.md" ]; then
+            missing+=("$s (skill not found: update the Check 56 list if it was renamed or retired)")
+        elif ! grep -q "engine/reading-for-meaning.md" "$skills_root/$s/SKILL.md"; then
+            missing+=("$s")
+        fi
+    done
+    if [ ${#missing[@]} -gt 0 ]; then
+        fail "Check 56: skills that read other people's language without citing the rule: ${missing[*]}"
+        return
+    fi
+    pass "Check 56: reading-for-meaning rule present; all ${#skills[@]} language-reading skills cite it"
+}
+
 check_scenario_legacy_model() {
     section "Check 53: scenarios migrated off the pre-2026-07-01 4-block model"
 
@@ -3198,6 +3245,7 @@ check_canonical_field_location
 check_scenario_legacy_model
 check_promise_registry_swept
 check_next_action_wiring
+check_reading_for_meaning_wiring
 
 # ============================================================
 # SUMMARY
