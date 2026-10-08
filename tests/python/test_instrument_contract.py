@@ -219,6 +219,17 @@ def test_void_without_score_by_is_not_reported_as_no_expiry(tmp_path):
     assert not r["undated"] and not r["due"]
 
 
+def test_scored_without_score_by_is_not_reported_as_no_expiry(tmp_path):
+    """v0.317.5: an event-gated test scored when its event came has nothing left to expire."""
+    root = _repo(tmp_path)
+    _write(root, "a.md", HEADER.format(score_by="", status="scored",
+                                       prediction="I expect 3 of 5. Result: held."))
+    _commit(root)
+    r = cic.analyse(root, TODAY)
+    assert r["scored"] == ["a.md"]
+    assert not r["undated"]
+
+
 def test_live_without_score_by_is_still_reported_beside_a_void_one(tmp_path):
     """The void skip must not cost the check its live case."""
     root = _repo(tmp_path)

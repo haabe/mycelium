@@ -4,6 +4,18 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-08.
 
+## v0.317.5 - a scored instrument is not "no expiry" either
+
+**2026-10-08, the same dogfood pass, one status over from v0.317.4.** An event-gated pre-registration
+with no `score_by` was re-run and scored the same day, and the checker moved it from one problem
+list to another: still NO EXPIRY, now as a scored file. A finished test has nothing left to expire,
+and the only way to clear the line would have been to write a date after the fact.
+
+- **Expiry** skips `scored` as well as `void`. A live instrument with no date is still reported.
+- **Test:** a scored instrument with no `score_by` is not undated (fails on 0.317.4).
+- **Alternative rejected:** writing the scoring date into `score_by` on the dogfood file. A `score_by`
+  is a deadline set before the data; one written afterwards reads as a pre-commitment that never was.
+
 ## v0.317.4 - a void instrument is not a problem
 
 **2026-10-08, found by the dogfood repo's canvas-health pass.** `check_instrument_contract.py`
