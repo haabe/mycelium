@@ -40,6 +40,9 @@ re-check decisions that turned on them.**
 - **Also newly documented:** Ulwick's inputs are **population percentages**, not one person's rating
   — *"the percentage of people rating that attribute a 4 or a 5 on a scale of 1 to 5"*. The skill now
   says the instrument needs a sample and that the bands are meaningless without one.
+- **A second copy survived the fix.** `jtbd-map` step 5 still stated `importance − satisfaction` until
+  0.317.1 (found 2026-10-08 by a skill survey for the reading-for-meaning release). It now points to
+  `user-needs-map` for the formula rather than carrying its own copy.
 
 ### A3 · `cynefin-classify` offered a liminal transition out of Clear
 - **Framework said:** a `Clear → Complicated` liminal row.
