@@ -88,11 +88,32 @@ HASH_ALGORITHM = "intent-v1"
 EVIDENCE_KEY_SUFFIXES = ("_evidence", "_candidates", "_signals")
 EVIDENCE_KEYS_EXACT = ("provenance",)
 
+#: The framework's own REVIEWED MARKERS (v0.317.3). Each records that someone checked
+#: something and when (check_source_authenticity.py reads `handles_checked`,
+#: check_merge_markers.py reads `checked_skills` / `checked_against`), so each is a fact
+#: ABOUT the purpose, never part of it. Measured on the dogfood canvas 2026-10-08: one
+#: `handles_checked` line added under `what` on 2026-10-03 superseded all sixteen
+#: founder-confirmed properties, while why/how/what were otherwise byte-identical. The
+#: v0.141.0 suffix rule could not see it, because a marker's name declares a review, not
+#: evidence.
+REVIEW_MARKER_KEYS = (
+    "handles_checked",
+    "reply_not_owed",
+    "stale_prose_reviewed",
+    "checked_skills",
+    "checked_against",
+)
 
-def _is_evidence_key(key) -> bool:
-    """True for a key that carries evidence ABOUT the purpose rather than the purpose."""
+
+def _is_evidence_key(key, markers: bool = True) -> bool:
+    """True for a key that carries evidence ABOUT the purpose rather than the purpose.
+
+    `markers=False` is the v0.141.0 rule, kept only to accept hashes stamped under it.
+    """
     if not isinstance(key, str):
         return False
+    if markers and key in REVIEW_MARKER_KEYS:
+        return True
     return key in EVIDENCE_KEYS_EXACT or key.endswith(EVIDENCE_KEY_SUFFIXES)
 
 
@@ -103,10 +124,14 @@ def strip_evidence(node):
     else. It does not guess from value size or shape, because a long `description` is
     still intent and a short `positioning_evidence` is still evidence.
     """
+    return _strip(node, markers=True)
+
+
+def _strip(node, markers: bool):
     if isinstance(node, dict):
-        return {k: strip_evidence(v) for k, v in node.items() if not _is_evidence_key(k)}
+        return {k: _strip(v, markers) for k, v in node.items() if not _is_evidence_key(k, markers)}
     if isinstance(node, list):
-        return [strip_evidence(v) for v in node]
+        return [_strip(v, markers) for v in node]
     return node
 
 
@@ -134,12 +159,12 @@ def _governing_absent(purpose: dict) -> bool:
     return True
 
 
-def _hash_fields(purpose: dict, strip: bool) -> str:
+def _hash_fields(purpose: dict, strip: bool, markers: bool = True) -> str:
     parts = []
     for key in GOVERNING_FIELDS:
         value = purpose.get(key)
         if strip:
-            value = strip_evidence(value)
+            value = _strip(value, markers)
         parts.append(json.dumps(value, sort_keys=True, ensure_ascii=False, default=str))
     return hashlib.sha256("\x1f".join(parts).encode("utf-8")).hexdigest()
 
@@ -152,6 +177,17 @@ def purpose_hash(purpose: dict) -> str:
     first — see EVIDENCE_KEY_SUFFIXES for the measurement that forced it.
     """
     return _hash_fields(purpose, strip=True)
+
+
+def v0141_purpose_hash(purpose: dict) -> str:
+    """The v0.141.0 to v0.317.2 hash: evidence stripped, review markers kept.
+
+    Accepted for the same reason as the legacy hash. A recorded hash matching it proves the
+    intent AND the markers are unchanged, which is strictly stronger than proving the intent
+    is unchanged, so accepting it weakens nothing and spares every project stamped before
+    v0.317.3 a false staleness warning on upgrade.
+    """
+    return _hash_fields(purpose, strip=True, markers=False)
 
 
 def legacy_purpose_hash(purpose: dict) -> str:
@@ -375,7 +411,7 @@ def _list_findings(pp: dict, purpose: dict) -> list[str]:
             "re-derive with /mycelium:purpose-properties."
         )
     recorded = pp.get("derived_from_hash")
-    known = (purpose_hash(purpose), legacy_purpose_hash(purpose))
+    known = (purpose_hash(purpose), v0141_purpose_hash(purpose), legacy_purpose_hash(purpose))
     if recorded and not governing_absent and recorded not in known:
         if pp.get("hash_algorithm") == HASH_ALGORITHM:
             out.append(

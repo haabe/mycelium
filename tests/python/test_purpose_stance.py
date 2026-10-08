@@ -523,6 +523,41 @@ def test_editing_intent_inside_what_still_changes_the_hash():
     assert m.purpose_hash(a) != m.purpose_hash(b)
 
 
+def test_adding_a_review_marker_does_not_change_the_intent_hash():
+    """The 2026-10-08 defect: a `handles_checked` line under `what` superseded every property."""
+    m = _ps()
+    a = _intent_purpose()
+    b = _intent_purpose()
+    b["what"][0]["handles_checked"] = "2026-10-03. Two accounts read; persona continuity held."
+    b["what"][0]["checked_against"] = "landscape.yml, 2026-10-03"
+    assert m.purpose_hash(a) == m.purpose_hash(b)
+
+
+def test_a_hash_stamped_before_the_marker_rule_is_still_accepted():
+    """Upgrade path: a hash stamped by v0.141.0-v0.317.2 over a canvas that already carried a
+    marker must not read as drift on the version that starts excluding markers."""
+    m = _ps()
+    doc = _intent_purpose()
+    doc["what"][0]["handles_checked"] = "2026-09-01. One account read."
+    old_stamp = m.v0141_purpose_hash(doc)
+    assert old_stamp != m.purpose_hash(doc)
+    doc["purpose_properties"] = {"derived_from_hash": old_stamp, "hash_algorithm": m.HASH_ALGORITHM,
+                                 "properties": []}
+    known = (m.purpose_hash(doc), m.v0141_purpose_hash(doc), m.legacy_purpose_hash(doc))
+    assert old_stamp in known
+
+
+def test_a_marker_name_does_not_exempt_intent_beside_it():
+    """Only the marker key is dropped; editing the entry's own words still changes the hash."""
+    m = _ps()
+    a = _intent_purpose()
+    a["what"][0]["handles_checked"] = "2026-10-03."
+    b = _intent_purpose()
+    b["what"][0]["handles_checked"] = "2026-10-03."
+    b["what"][0]["description"] = "Something else entirely."
+    assert m.purpose_hash(a) != m.purpose_hash(b)
+
+
 def test_legacy_hash_still_covers_evidence():
     """Kept so an upgrade does not hand every project a false staleness warning."""
     m = _ps()

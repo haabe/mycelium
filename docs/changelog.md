@@ -4,6 +4,28 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-08.
 
+## v0.317.3 - a review marker under `what` no longer supersedes the purpose
+
+**2026-10-08, found by the dogfood repo's canvas-health pass.** `check_purpose_stance.py` warned that
+the purpose had moved and every stance below it was superseded. It had not: the only change to
+why/how/what since the last derivation was one `handles_checked` line, added under `what` on
+2026-10-03 to record which Reddit accounts had been read. Removing that line reproduced the stored
+hash byte for byte. The v0.141.0 rule strips evidence by key suffix (`_evidence`, `_candidates`,
+`_signals`) and could not see the framework's own reviewed markers, whose names declare a review.
+
+- **The intent hash now also drops the review markers** the framework defines and reads:
+  `handles_checked`, `reply_not_owed`, `stale_prose_reviewed`, `checked_skills`, `checked_against`.
+- **Upgrade path:** a hash stamped under the v0.141.0 rule is still accepted
+  (`v0141_purpose_hash`), as the legacy pre-v0.141.0 hash already is. Either match proves more than
+  an unchanged intent, so accepting it weakens nothing.
+- **Tests:** a marker added under `what` leaves the hash unchanged (fails on 0.317.2, passes now); a
+  v0.141.0 stamp is accepted; editing the words beside a marker still changes the hash.
+- **Alternatives rejected.** Renaming the dogfood key to an `_evidence` suffix: `handles_checked` is
+  read by name by `check_source_authenticity.py`. Re-stamping the dogfood hash: it would hide this
+  once and fire again on the next marker. Hashing an allowlist of intent fields instead of stripping
+  a denylist: the better long-run shape, but it changes what every project's hash covers and needs
+  its own migration; recorded, not done here.
+
 ## v0.317.2 - define-done: at the learning scales, "what changes" names the decision
 
 **2026-10-08, founder-caught in the dogfood repo while defining an L2 bar.** Step 1 asks "When this
