@@ -4,6 +4,16 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-08.
 
+## v0.317.1 - `jtbd-map` uses Ulwick's opportunity score
+
+**2026-10-08.** The 2026-09-20 correction of the opportunity score (errata A2) fixed `user-needs-map`
+and missed a second copy: `jtbd-map` step 5 still said `importance - satisfaction = opportunity
+score`, the formula that can rank a trivial need above a critical one. Found by the skill survey for
+0.317.0. Step 5 now names Ulwick's `importance + max(importance − satisfaction, 0)` and points to
+`user-needs-map` for the definition, so the formula has one home. Errata A2 records the missed copy.
+**Alternative rejected:** a check that greps the framework for the old formula. It would pin one
+string for one past error; the single source does the same job without a check to maintain.
+
 ## v0.317.0 - other people's language is read for meaning, not for words
 
 **2026-10-08.** From a consumer project (i-productified, on 0.316.2), caught by its founder: in a

@@ -49,7 +49,7 @@ See `${CLAUDE_PLUGIN_ROOT}/engine/agent-operating-contract.md` *Canvas writes �
 2. Listen for "hiring" moments: when they started using something, switched, or added a workaround. "I started using X when...", "I switched because..." are examples, not the test; the same moment is often told with none of these words.
 3. Listen for "firing" moments: when they stopped, gave up or were let down. "I stopped using X when...", "I was frustrated by..." are examples, not the test. Read for the moment, not the phrase: `${CLAUDE_PLUGIN_ROOT}/engine/reading-for-meaning.md`.
 4. Map: situation -> motivation -> outcome for each job
-5. Identify underserved outcomes: importance - satisfaction = opportunity score
+5. Identify underserved outcomes with Ulwick's opportunity score, `importance + max(importance − satisfaction, 0)`, as defined in `/mycelium:user-needs-map` (which also says why plain `importance − satisfaction` inverts rankings, and why the inputs need a sample, not one rating)
 6. Look for non-consumption: people who have the job but use NO solution
 
 ## Output
