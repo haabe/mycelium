@@ -209,6 +209,26 @@ def test_live_and_past_due_is_reported_with_age(tmp_path):
     assert due and due[0][0] == "a.md" and due[0][2] == 102  # the real one was 102 days
 
 
+def test_void_without_score_by_is_not_reported_as_no_expiry(tmp_path):
+    """v0.317.4: a withdrawn instrument will never be scored, so asking it for a date is noise."""
+    root = _repo(tmp_path)
+    _write(root, "a.md", HEADER.format(score_by="", status="void", prediction="I expect 3 of 5."))
+    _commit(root)
+    r = cic.analyse(root, TODAY)
+    assert r["contracted"] == ["a.md"]
+    assert not r["undated"] and not r["due"]
+
+
+def test_live_without_score_by_is_still_reported_beside_a_void_one(tmp_path):
+    """The void skip must not cost the check its live case."""
+    root = _repo(tmp_path)
+    _write(root, "a.md", HEADER.format(score_by="", status="void", prediction="I expect 3 of 5."))
+    _write(root, "b.md", HEADER.format(score_by="", status="live", prediction="I expect 3 of 5."))
+    _commit(root)
+    r = cic.analyse(root, TODAY)
+    assert r["no_review"] == ["b.md"] and not r["undated"]
+
+
 def test_status_outside_the_enum_is_reported(tmp_path):
     root = _repo(tmp_path)
     _write(root, "a.md", HEADER.format(score_by="2026-08-30", status="in_progress",
