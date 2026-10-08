@@ -376,7 +376,9 @@ def _expiry(name: str, fm: dict[str, str], today: _dt.date, res: dict, root: Pat
     # A VOID instrument will never be scored: that is what void records (v0.317.4). Reporting
     # it under NO EXPIRY asked for a date on a test that was withdrawn; on the dogfood corpus
     # 2026-10-08 it was two of the three remaining "problems", both voided weeks before.
-    if status == "void":
+    # A SCORED one is finished (v0.317.5): an event-gated test scored when its event came has
+    # nothing left to expire, and asking it for a date would only invent one after the fact.
+    if status in ("void", "scored"):
         return
 
     # No scoring date. For a live instrument that is only legitimate with a REVIEW date,
