@@ -22,9 +22,15 @@ source "$SCRIPT_DIR/_assert.sh"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 PLUGIN_ROOT="$REPO_ROOT/plugins/mycelium"
 
+# A throwaway project that uses Mycelium. 0.318.0: every hook does nothing outside a Mycelium
+# project (founder ruling 2026-10-10), so the fixture carries the marker /mycelium:setup creates.
+# An EMPTY .claude/canvas/ is the realistic state right after setup. CLAUDE_PROJECT_DIR is set
+# alongside PROJECT_DIR because the hook prelude reads CLAUDE_PROJECT_DIR, as Claude Code sets it.
+mkproj() { local d; d=$(mktemp -d); mkdir -p "$d/.claude/canvas"; echo "$d"; }
+
 # Run one hook against one stdin payload in a throwaway project; echo the row count.
 run_hook() {  # $1 hook file, $2 project dir, $3 payload, $4 state file basename
-    CLAUDE_PLUGIN_ROOT="$PLUGIN_ROOT" PROJECT_DIR="$2" \
+    CLAUDE_PLUGIN_ROOT="$PLUGIN_ROOT" PROJECT_DIR="$2" CLAUDE_PROJECT_DIR="$2" \
         bash "$PLUGIN_ROOT/hooks/$1" >/dev/null 2>&1 <<<"$3"
 }
 
@@ -34,7 +40,7 @@ rows() {  # $1 project dir, $2 state basename
 }
 
 test_shell_safety_guard_logs_only_when_it_warns() {
-    local tmp; tmp=$(mktemp -d)
+    local tmp; tmp=$(mkproj)
     # `$?` after a pipeline is one of the constructs this guard documents.
     run_hook "shell-safety-guard.sh" "$tmp" \
         '{"tool_name":"Bash","tool_input":{"command":"ls | grep foo; echo $?"}}'
@@ -48,7 +54,7 @@ test_shell_safety_guard_logs_only_when_it_warns() {
 }
 
 test_row_names_the_advisory_hook_not_the_helper() {
-    local tmp; tmp=$(mktemp -d)
+    local tmp; tmp=$(mkproj)
     run_hook "shell-safety-guard.sh" "$tmp" \
         '{"tool_name":"Bash","tool_input":{"command":"ls | grep foo; echo $?"}}'
     local row; row=$(cat "$tmp/.claude/state/shell-safety-guard-fires.jsonl" 2>/dev/null)
@@ -61,8 +67,8 @@ test_warning_text_still_reaches_the_caller() {
     # Instrumenting meant capturing the helper's stdout and re-emitting it. If that
     # re-emit regressed, the guard would log perfectly and advise nobody -- a silent
     # downgrade that the row-count assertions above would not catch.
-    local tmp out; tmp=$(mktemp -d)
-    out=$(CLAUDE_PLUGIN_ROOT="$PLUGIN_ROOT" PROJECT_DIR="$tmp" \
+    local tmp out; tmp=$(mkproj)
+    out=$(CLAUDE_PLUGIN_ROOT="$PLUGIN_ROOT" PROJECT_DIR="$tmp" CLAUDE_PROJECT_DIR="$tmp" \
         bash "$PLUGIN_ROOT/hooks/shell-safety-guard.sh" 2>/dev/null \
         <<<'{"tool_name":"Bash","tool_input":{"command":"ls | grep foo; echo $?"}}')
     assert_contains "$out" "additionalContext" "hook JSON still emitted to the caller"

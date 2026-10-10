@@ -31,7 +31,7 @@ Output a short welcome before doing anything. Do NOT skip this — the install-t
 Run exactly this check, and only this check:
 
 ```bash
-test -f "${CLAUDE_PROJECT_DIR:-.}/.claude/diamonds/active.yml"; echo "state=$?"; find .claude/state/hooks-alive -mmin -60 2>/dev/null
+test -f "${CLAUDE_PROJECT_DIR:-.}/.claude/diamonds/active.yml"; echo "state=$?"; find .claude/state/hooks-alive "${TMPDIR:-/tmp}/mycelium-hooks-alive-$(id -u)" -mmin -60 2>/dev/null
 ```
 
 (`${CLAUDE_PROJECT_DIR:-.}` since v0.286.0: Codex CLI does not set the variable, and the bare form
@@ -42,7 +42,7 @@ tested `/.claude/...`, so an initialized project read as new and setup ran over 
   will say so. Tell the user in one line before going on: "Mycelium's hooks are not running in
   this session, so its gates are off. On Codex CLI, open `/hooks`, trust Mycelium's hooks and
   start a new session; on Claude Code, check the plugin is enabled in `/plugin`." Then continue
-  with the state result below. If it printed the path, say nothing about it.
+  with the state result below. If it printed a path, say nothing about it. (Since v0.318.0 the hooks do nothing in a project with no `.claude/canvas/` or `.claude/diamonds/`; there they only stamp the temp-folder marker, which is why the `find` names both.)
 
 - **If `state=0`** (file EXISTS): the project already has Mycelium state. Skip directly to Step 4 routing output. **Do NOT run setup. Do NOT run mkdir. Do NOT touch `.gitkeep` stubs.** Setup-style operations on an already-initialized project waste tokens and trigger Read-before-Write tool errors when the agent then tries to write to existing files. Detected during 2026-05-09 plugin-form dogfood — the agent ran `mkdir -p .claude/...` before honoring this gate, then hit a Write error on `active.yml` and only then realized the project was initialized. The fix is structural: the gate is the first action.
 

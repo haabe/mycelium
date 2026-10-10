@@ -37,8 +37,10 @@ ok()   { PASS=$((PASS+1)); echo "    ✓ : $1"; }
 bad()  { FAIL=$((FAIL+1)); echo "    ✗ : $1"; }
 
 mk_project() {
+  # .claude/canvas/ makes it a Mycelium project: 0.318.0 hooks do nothing outside one (founder
+  # ruling 2026-10-10), and the "must not inflate N" cases would then pass for that reason alone.
   local d; d="$(mktemp -d)"
-  mkdir -p "$d/.claude/evals/assumption-tests"
+  mkdir -p "$d/.claude/evals/assumption-tests" "$d/.claude/canvas"
   cat > "$d/.claude/evals/assumption-tests/t.count.json" <<'JSON'
 {"test":"t","started":"2026-08-07","target":10,"sessions":3,"closed":false,"doc":"d.md"}
 JSON
@@ -100,7 +102,9 @@ CLEARM=$(python3 -c "
 import json
 d = json.load(open('$REPO/plugins/mycelium/hooks/hooks.json'))
 print([g['matcher'] for g in d['hooks']['SessionStart'] if any('contract-part.sh' in h['command'] for h in g['hooks'])][0])")
-PART1="$(bash "$REPO/plugins/mycelium/hooks/contract-part.sh" 1)"
+D="$(mk_project)"
+PART1="$(CLAUDE_PROJECT_DIR="$D" bash "$REPO/plugins/mycelium/hooks/contract-part.sh" 1)"
+rm -rf "$D"
 if [[ "$CLEARM" == *clear* ]] && [ -n "$PART1" ]; then ok "clear still produces orientation output (the contract parts fire on clear)"
 else bad "clear produced no orientation: contract-part matcher '$CLEARM', part 1 empty=$([ -z "$PART1" ] && echo yes || echo no)"; fi
 

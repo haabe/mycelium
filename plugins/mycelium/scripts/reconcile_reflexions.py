@@ -99,14 +99,17 @@ def _read_jsonl(path: Path) -> list[dict]:
 
 def _load_ledger(path: Path) -> dict:
     if not path.is_file():
-        return {"credited": 0, "corrections_baseline": None}
+        return {"credited": 0, "corrections_baseline": None, "pruned_fired": 0}
     try:
         d = json.loads(path.read_text())
     except (OSError, ValueError):
-        return {"credited": 0, "corrections_baseline": None}
+        return {"credited": 0, "corrections_baseline": None, "pruned_fired": 0}
     return {
         "credited": int(d.get("credited", 0)),
         "corrections_baseline": d.get("corrections_baseline"),
+        # Lines prune_state_logs.py removed for age (v0.318.0) still count as fired, or trimming
+        # old answered failures would hide new unanswered ones.
+        "pruned_fired": int(d.get("pruned_fired", 0)),
     }
 
 
@@ -148,7 +151,7 @@ def status(project_dir: Path) -> dict:
     # correctly, and that is how a guard dies.
     suppressed_records = [r for r in fired_records if r.get("suppressed")]
     fired_records = [r for r in fired_records if not r.get("suppressed")]
-    fired = len(fired_records)
+    fired = len(fired_records) + ledger["pruned_fired"]
     credited = ledger["credited"] + corrections_since + len(dismissals)
     outstanding = max(0, fired - credited)
 
@@ -164,6 +167,7 @@ def status(project_dir: Path) -> dict:
         ),
         "corrections_now": corrections_now,
         "corrections_baseline": int(baseline),
+        "pruned_fired": ledger["pruned_fired"],
         "_baseline_is_fresh": fresh_baseline,
     }
 
@@ -211,6 +215,7 @@ def rebaseline(project_dir: Path) -> int:
     path.write_text(json.dumps({
         "credited": st["fired"],
         "corrections_baseline": st["corrections_now"],
+        "pruned_fired": st["pruned_fired"],
         "rebaselined_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
     }, indent=2) + "\n")
     print(f"Ledger rebaselined: {st['fired']} reflexion(s) credited, "

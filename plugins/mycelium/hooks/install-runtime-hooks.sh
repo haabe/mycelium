@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-. "$(dirname "${BASH_SOURCE[0]}")/../scripts/_state_ignore.sh" 2>/dev/null || true  # .claude/state never lacks its ignore file (v0.318.0)
+export MYCELIUM_PRELUDE_ANY_PROJECT=1  # a setup script run by the user, not a hook; read by _hook_prelude.sh
+. "$(dirname "${BASH_SOURCE[0]}")/../scripts/_hook_prelude.sh" 2>/dev/null || true  # no-op outside a Mycelium project; state ignore file (v0.318.0)
 # Generate a runtime's hook manifest with this plugin's REAL path baked in.
 #
 # WHY THIS EXISTS. A plugin cannot know where it is installed, so it must not

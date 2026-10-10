@@ -150,6 +150,7 @@ def _run_hook(project_dir: Path) -> str:
 def project_with_fixture(tmp_path):
     memory = tmp_path / ".claude" / "memory"
     memory.mkdir(parents=True)
+    (tmp_path / ".claude" / "canvas").mkdir()  # a Mycelium project (v0.318.0 prelude)
     (tmp_path / "tmp").mkdir()
     (memory / "corrections.md").write_text(
         FIXTURE.read_text(encoding="utf-8"), encoding="utf-8"
@@ -180,6 +181,7 @@ def test_preflight_still_distinguishes_absent_from_empty(tmp_path):
     (tmp_path / "tmp").mkdir()
     memory = tmp_path / ".claude" / "memory"
     memory.mkdir(parents=True)
+    (tmp_path / ".claude" / "canvas").mkdir()  # a Mycelium project (v0.318.0 prelude)
 
     assert "Memory not yet initialized" in _run_hook(tmp_path)
 

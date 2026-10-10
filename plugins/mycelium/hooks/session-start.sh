@@ -1,5 +1,5 @@
 #!/bin/bash
-. "$(dirname "${BASH_SOURCE[0]}")/../scripts/_state_ignore.sh" 2>/dev/null || true  # .claude/state never lacks its ignore file (v0.318.0)
+. "$(dirname "${BASH_SOURCE[0]}")/../scripts/_hook_prelude.sh" 2>/dev/null || true  # no-op outside a Mycelium project; state ignore file (v0.318.0)
 # Mycelium SessionStart hook
 # Checks for overdue strategic feedback loops and reminds the agent.
 # Returns additionalContext with overdue loop warnings.
@@ -1423,6 +1423,10 @@ fi
 # this block sat after the final `exit 0` and never ran, and it printed plain text
 # that would have broken the JSON below; it now joins the reminders.
 RECONCILE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)/scripts/reconcile_reflexions.py"
+# v0.318.0: activity logs keep 90 days by default (MYCELIUM_LOG_RETENTION_DAYS; 0 keeps all),
+# trimmed at most once a day; decision records are never trimmed (prune_state_logs.py).
+python3 "$(dirname "$RECONCILE")/prune_state_logs.py" --state-dir "$PROJECT_DIR/.claude/state" \
+  >/dev/null 2>&1 || true
 # v0.318.0: rows written before this version kept the failed command and its error output,
 # unmasked; strip those two fields once, before anything reads the log (reflexion_record.py).
 if [ -f "$PROJECT_DIR/.claude/state/reflexion-log.jsonl" ]; then

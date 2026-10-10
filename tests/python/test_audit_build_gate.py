@@ -72,6 +72,7 @@ def test_a_discovery_ack_does_not_lift_the_delivery_gate_once_discovery_is_under
 
 def test_control_a_discovery_ack_still_lifts_the_cold_project_gate(tmp_path):
     (tmp_path / ".claude" / "state").mkdir(parents=True)
+    (tmp_path / ".claude" / "canvas").mkdir()  # setup ran, discovery did not (v0.318.0 prelude)
     assert _gate(tmp_path, _write(tmp_path, "app/main.py")).returncode == 2
     (tmp_path / ".claude" / "state" / "discovery-skip-ack").write_text("2026-07-02: just build\n")
     assert _gate(tmp_path, _write(tmp_path, "app/main.py")).returncode == 0

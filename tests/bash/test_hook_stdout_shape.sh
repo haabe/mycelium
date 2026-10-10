@@ -24,7 +24,10 @@ PLUGIN_ROOT="$REPO_ROOT/plugins/mycelium"
 test_every_registered_hook_emits_json_or_text() {
     local tmp; tmp=$(mktemp -d)
     local outdir; outdir=$(mktemp -d)
-    mkdir -p "$tmp/.claude/state" "$tmp/src"
+    # .claude/canvas/ makes it a Mycelium project: 0.318.0 hooks do nothing outside one (founder
+    # ruling 2026-10-10), and every hook's stdout would then be empty, which passes this shape
+    # check without exercising it. Empty, as right after /mycelium:setup.
+    mkdir -p "$tmp/.claude/state" "$tmp/.claude/canvas" "$tmp/src"
     # The driver runs each registration with a hard timeout and writes one stdout
     # file per run. Judging the shape stays in the shared bash assertion.
     python3 - "$PLUGIN_ROOT" "$tmp" "$outdir" <<'PYEOF'

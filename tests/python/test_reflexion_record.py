@@ -125,6 +125,7 @@ def test_the_hook_writes_the_new_row_shape(tmp_path):
     reaches the log."""
     payload = _payload(f"mysql -p{SECRET} -e 'select 1'")
     payload["cwd"] = str(tmp_path)
+    (tmp_path / ".claude" / "canvas").mkdir(parents=True)  # a Mycelium project (v0.318.0 prelude)
     env = {k: v for k, v in os.environ.items() if k != "MYCELIUM_LEDGER_TRIGGER"}
     env.update(CLAUDE_PROJECT_DIR=str(tmp_path), CLAUDE_PLUGIN_ROOT=str(SCRIPTS.parent))
     subprocess.run(["bash", str(HOOK)], input=json.dumps(payload), capture_output=True, text=True,

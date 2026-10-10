@@ -3,7 +3,7 @@
 **Audience**: practitioners + evaluators wanting to understand what the agent has access to mid-session, and operators auditing Mycelium against transparency expectations.
 **Time to read**: 8 min.
 **Last updated**: 2026-10-03.
-**Hook surface reviewed:** 2026-10-10 (digest 5c5cda1612ca)
+**Hook surface reviewed:** 2026-10-10 (digest e104bf0dd578)
 
 This document answers a question the audit (`/xai-check` on `svc-mycelium`, 2026-05-04) flagged as a Stage 2 partial: **"What data does the agent see when it makes a recommendation under Mycelium?"** Today the answer is distributed across many files. This is the consolidated map.
 
@@ -78,7 +78,7 @@ Every significant decision: context, alternatives, theory, evidence, confidence.
 | `*-guard-log.jsonl` | One line per advisory-guard fire: a timestamp, the hook, a count and a signature (a hash of the rules that fired). The discovery-trigger log keeps a digest of the matching sentence, not the sentence; the shell-safety log the rule's own message, not the command; the absence-claim and key-shape logs up to 120 characters of the text they matched in what the agent was writing. Gitignored. |
 | `reflexion-log.jsonl` | One line per project-relevant command failure: time, exit code, program name, and why a documented non-failure is not a learning (since 0.318.0; never the command or its output unless `MYCELIUM_LEDGER_TRIGGER=on`, then masked). Gitignored. |
 
-Since 0.318.0 every hook writes this folder's ignore file on exit when it is missing, so "Gitignored" holds in a project where `/mycelium:setup` never ran. Every log the hooks keep, with what one line holds, is listed in `PRIVACY.md`.
+Since 0.318.0 these exist only in a Mycelium project (one with `.claude/canvas/` or `.claude/diamonds/`; elsewhere every hook exits at once), activity logs keep 90 days (`MYCELIUM_LOG_RETENTION_DAYS`), and every hook writes this folder's ignore file on exit when it is missing. Every log the hooks keep, with what one line holds, is listed in `PRIVACY.md`.
 
 ### JiT detection (`.claude/jit-tooling/`)
 

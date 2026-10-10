@@ -47,6 +47,7 @@ def _write_call(project: Path, tool_use_id: str, event: str = "PreToolUse",
 
 def _fresh(tmp_path: Path) -> Path:
     (tmp_path / "src").mkdir()
+    (tmp_path / ".claude" / "canvas").mkdir(parents=True)  # setup ran (v0.318.0 prelude)
     subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
     return tmp_path
 
@@ -125,6 +126,7 @@ def test_a_pass_through_gate_keeps_its_verdict_byte_for_byte(tmp_path):
 def _ledger(project: Path, *ids: str) -> None:
     path = project / LEDGER
     path.parent.mkdir(parents=True, exist_ok=True)
+    (project / ".claude" / "canvas").mkdir(parents=True, exist_ok=True)  # refusals happen in a Mycelium project (v0.318.0 prelude)
     path.write_text("".join(json.dumps({"ts": "2026-10-07T10:00:00Z", "tool_use_id": i,
                                         "hook": "discovery-gate.sh"}) + "\n" for i in ids))
 

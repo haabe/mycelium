@@ -1,5 +1,5 @@
 #!/bin/bash
-. "$(dirname "${BASH_SOURCE[0]}")/../scripts/_state_ignore.sh" 2>/dev/null || true  # .claude/state never lacks its ignore file (v0.318.0)
+. "$(dirname "${BASH_SOURCE[0]}")/../scripts/_hook_prelude.sh" 2>/dev/null || true  # no-op outside a Mycelium project; state ignore file (v0.318.0)
 # Mycelium preflight validation
 # Creates a stamp file that the gate.sh checks before allowing code edits.
 # This ensures corrections.md has been read and basic system health verified.

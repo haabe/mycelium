@@ -349,12 +349,52 @@ ASKS_A_HUMAN = ("default", "acceptEdits", "plan")
 CANNOT_ASK = ("codex",)
 
 
+#: Since v0.318.0 a project with neither `.claude/canvas/` nor `.claude/diamonds/` is not a
+#: Mycelium project and every hook exits at once (_hook_prelude.sh). Removing those folders is
+#: therefore the widest off-switch there is, and is guard state too. Only REMOVAL counts: writing
+#: or copying into them is ordinary work.
+MARKER_DIRS_REL = (".claude", ".claude/canvas", ".claude/diamonds")
+_REMOVES_MARKER = re.compile(
+    rf"{_CMD}(?:rm|rmdir|mv)\b[^;&|\n]*?(?<![\w.-])(?:\./)?\.claude(?:/(?:canvas|diamonds))?/?(?=[\s'\"]|$)")
+
+
+def _removed_marker(tool_name: str, tool_input, project_dir: str) -> str | None:
+    """The marker folder a call removes, or None (v0.318.0)."""
+    ti = tool_input if isinstance(tool_input, dict) else {}
+    if tool_name == "Bash":
+        m = _REMOVES_MARKER.search(str(ti.get("command") or ""))
+        return m.group(0).split()[-1].strip("'\"") if m else None
+    if tool_name.endswith("move_file") and ti.get("source"):
+        r = resolve(str(ti["source"]), project_dir)
+        rel = (r.rel or "").rstrip("/")
+        return rel if r.inside and _fold(rel) in {_fold(m) for m in MARKER_DIRS_REL} else None
+    return None
+
+
+def _decide_guarded(name: str, what: str, permission_mode: str | None) -> None:
+    """Ask the person, or refuse where nobody would be asked. `what` ends in "it" ("... it")."""
+    mode = str(permission_mode or "")
+    runtime = os.environ.get("MYCELIUM_RUNTIME", "")
+    if runtime in CANNOT_ASK or (mode and mode not in ASKS_A_HUMAN):
+        why = (f"This runtime ({runtime}) cannot ask a person" if runtime in CANNOT_ASK
+               else f"In this permission mode ({mode}) nobody is asked")
+        decision("deny", f"Mycelium {name}: {what} is a person's decision. {why}, so the agent "
+                         "cannot do it. If you want it, do it yourself in your own terminal, or "
+                         "set MYCELIUM_GUARD_STATE_EDIT=1 in your own shell.")
+    decision("ask", f"Mycelium {name}: {what} is a person's decision, not the agent's. Approve if "
+                    "you asked for it (for example, to remove Mycelium from this project).")
+
+
 def guard_state_check(name: str, tool_name: str, tool_input, project_dir: str,
                       permission_mode: str | None = None) -> None:
     """Shared step: a write to guard state asks the human, or is refused where nobody would be
     asked. Returns when there is nothing to say."""
     if human_override():
         return
+    marker = _removed_marker(tool_name, tool_input, project_dir)
+    if marker:
+        _decide_guarded(name, f"removing {marker} makes this project read as not using Mycelium, "
+                              "which switches every Mycelium hook off; it", permission_mode)
     for r in _targets_of(tool_name, tool_input, project_dir):
         g = is_guard_state(r.rel)
         if not g:

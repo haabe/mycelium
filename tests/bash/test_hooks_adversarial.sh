@@ -31,8 +31,12 @@ e()  { printf '{"tool_name":"Edit","tool_input":{"file_path":"%s","old_string":"
 b()  { printf '{"tool_name":"Bash","tool_input":{"command":%s}}' "$(python3 -c 'import json,sys;print(json.dumps(sys.argv[1]))' "$1")"; }
 case_insensitive() { [ -e "$(printf '%s' "$1" | tr '[:lower:]' '[:upper:]')" ] && [ "$1" != "$(printf '%s' "$1" | tr '[:lower:]' '[:upper:]')" ]; }
 
+# Every project below uses Mycelium, so each is created with the .claude/canvas/ marker that
+# /mycelium:setup creates: 0.318.0 hooks do nothing outside a Mycelium project (founder ruling
+# 2026-10-10). An EMPTY canvas is the realistic state right after setup, before any discovery.
+
 # ================================================================ scope-gate
-P="$TMP/scope"; mkdir -p "$P/.claude/state" "$P/src/xyz" "$P/src/other" "$P/src/xyz/legacy"
+P="$TMP/scope"; mkdir -p "$P/.claude/state" "$P/.claude/canvas" "$P/src/xyz" "$P/src/other" "$P/src/xyz/legacy"
 printf '{"schema_version":1,"diamond_id":"L4-x","phase":"deliver","in_scope_paths":["src/xyz/**"],"out_of_scope_paths":["src/xyz/legacy/**"]}' > "$P/.claude/state/active-execution.json"
 assert_eq "$(run scope-gate.sh "$P" "$(w "$P/src/other/a.py" x)")" BLOCK "scope control: out of scope blocks"
 assert_eq "$(run scope-gate.sh "$P" "$(w "$P/src/xyz/b.py" x)")" "ALLOW(rc=0)" "scope control: in scope allows"
@@ -49,7 +53,7 @@ assert_eq "$(run scope-gate.sh "$P" "$(w "$P/.claude/state/active-execution.json
 assert_eq "$(run scope-gate.sh "$P" "$(b "rm .claude/state/active-execution.json")")" ASK "S8 rm the plan via Bash asks the human"
 
 # ================================================================ framework-guard
-F="$TMP/fw"; mkdir -p "$F/.claude/state" "$F/.claude/engine" "$F/src"
+F="$TMP/fw"; mkdir -p "$F/.claude/state" "$F/.claude/canvas" "$F/.claude/engine" "$F/src"
 printf '{"upstream_repo":"/up","active":true}' > "$F/.claude/state/upstream.json"
 cp "$PLUG/manifest.yml" "$F/.claude/manifest.yml"
 printf 'x\n' > "$F/CLAUDE.md"; printf 'x\n' > "$F/.claude/engine/foo.md"
@@ -82,14 +86,14 @@ assert_eq "$(run framework-guard.sh "$F" "$(b "rsync /tmp/x CLAUDE.md")")" BLOCK
 assert_eq "$(run framework-guard.sh "$F" "$(w "$F/.claude/state/upstream.json" '{\"active\":false}')")" ASK "G15 off-switch write asks"
 assert_eq "$(run framework-guard.sh "$F" "$(b "rm .claude/state/upstream.json")")" ASK "G15 rm off-switch asks"
 assert_eq "$(run framework-guard.sh "$F" "$(b "echo '# empty' > ./.claude/manifest.yml")")" ASK "G16 neutralising the manifest asks"
-F2="$TMP/fw_wiped"; mkdir -p "$F2/.claude/state"; printf '{"active":true}' > "$F2/.claude/state/upstream.json"; printf '# empty\n' > "$F2/.claude/manifest.yml"; printf 'x' > "$F2/CLAUDE.md"
+F2="$TMP/fw_wiped"; mkdir -p "$F2/.claude/state" "$F2/.claude/canvas"; printf '{"active":true}' > "$F2/.claude/state/upstream.json"; printf '# empty\n' > "$F2/.claude/manifest.yml"; printf 'x' > "$F2/CLAUDE.md"
 assert_eq "$(run framework-guard.sh "$F2" "$(w "$F2/CLAUDE.md" x)")" BLOCK "G16 comment-only manifest denies"
-F3="$TMP/fw_nomanifest"; mkdir -p "$F3/.claude/state"; printf '{"active":true}' > "$F3/.claude/state/upstream.json"; printf 'x' > "$F3/CLAUDE.md"
+F3="$TMP/fw_nomanifest"; mkdir -p "$F3/.claude/state" "$F3/.claude/canvas"; printf '{"active":true}' > "$F3/.claude/state/upstream.json"; printf 'x' > "$F3/CLAUDE.md"
 assert_eq "$(run framework-guard.sh "$F3" "$(w "$F3/CLAUDE.md" x)")" BLOCK "G0 active with no manifest denies"
 assert_eq "$(run framework-guard.sh "$F" "$(b "cat CLAUDE.md | grep x; git status")")" "ALLOW(rc=0)" "fw: reads still allowed"
 
 # ================================================================ discovery-gate
-D="$TMP/disc"; mkdir -p "$D/.claude/state" "$D/src"
+D="$TMP/disc"; mkdir -p "$D/.claude/state" "$D/.claude/canvas" "$D/src"
 assert_eq "$(run discovery-gate.sh "$D" "$(w "$D/src/app.py" x)")" BLOCK "disc control: new .py blocks"
 for f in index.html App.vue main.dart app.svelte a.lua x.ps1 y.zig; do
   assert_eq "$(run discovery-gate.sh "$D" "$(w "$D/src/$f" x)")" BLOCK "D1 new $f blocks"
@@ -129,7 +133,7 @@ assert_eq "$(run gate.sh "$D" "$(w "$D/.claude/state/scale-lock-ack" "d-009 agen
 assert_eq "$(run gate.sh "$D" "$(w "$D/.claude/state/delivery-skip-ack" "agent wrote this")")" ASK "D10b agent writing the delivery ack asks the human"
 
 # ================================================================ brownfield-gate
-B="$TMP/brown"; mkdir -p "$B/.claude/state" "$B/src"; for i in $(seq 1 15); do echo "int f$i;" > "$B/src/f$i.c"; done
+B="$TMP/brown"; mkdir -p "$B/.claude/state" "$B/.claude/canvas" "$B/src"; for i in $(seq 1 15); do echo "int f$i;" > "$B/src/f$i.c"; done
 assert_eq "$(run brownfield-gate.sh "$B" "$(e "$B/src/f1.c" x y)")" BLOCK "B3 C sources count as code"
 assert_eq "$(run brownfield-gate.sh "$B" "$(b "sed -i '' s/x/y/ src/f1.c")")" BLOCK "B1 Bash edit is gated"
 assert_eq "$(run brownfield-gate.sh "$B" '{"tool_name":"mcp__filesystem__edit_file","tool_input":{"path":"'"$B"'/src/f1.c","edits":[{"oldText":"x","newText":"y"}]}}')" BLOCK "B2 mcp edit"
@@ -160,7 +164,7 @@ assert_eq "$(run autonomous-evidence-guard.sh "$A" '{"tool_name":"Write","tool_i
 assert_eq "$(run autonomous-evidence-guard.sh "$A" "$(w "$C" '- id: o1\n  source_class: internal_simulated')")" "ALLOW(rc=0)" "auto: permitted evidence allows"
 
 # ================================================================ gate.sh (secrets)
-K="$TMP/gate"; mkdir -p "$K/.claude/memory" "$K/src"; printf '# c\n' > "$K/.claude/memory/corrections.md"
+K="$TMP/gate"; mkdir -p "$K/.claude/memory" "$K/.claude/canvas" "$K/src"; printf '# c\n' > "$K/.claude/memory/corrections.md"
 assert_eq "$(run gate.sh "$K" "$(w "$K/src/a.py" 'API_KEY = \"abcdefghijklmnopqrstuvwxyz0123\"')")" BLOCK "gate control: secret in src blocks"
 assert_eq "$(run gate.sh "$K" "$(w "$K/config.py" 'API_KEY = \"abcdefghijklmnopqrstuvwxyz0123\"')")" BLOCK "K1 secret outside the old directory list"
 assert_eq "$(run gate.sh "$K" "$(w "$K/Src/a.py" 'AKIAABCDEFGHIJKLMNOP')")" BLOCK "K1 Src/ capitalised"

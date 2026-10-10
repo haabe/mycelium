@@ -9,10 +9,10 @@ file, so `git add -A` committed it. Found by Anthropic's plugin directory review
 
 Two halves, one rule set (`state-gitignore.txt`, next to this file):
   * `ensure(state_dir)` for Python writers: create the folder and its ignore file together.
-  * `scripts/_state_ignore.sh`, sourced by every hook, writes the same file when the hook
+  * `scripts/_hook_prelude.sh`, sourced by every hook, writes the same file when the hook
     exits and finds the folder without it, whoever created it (a Python script the hook
-    called, an older version, another tool). It never creates the folder itself, so a
-    hook that wrote nothing leaves no trace in a project that does not use Mycelium.
+    called, an older version, another tool). It never creates the folder itself, and in a
+    project with no `.claude/canvas/` or `.claude/diamonds/` the hook does nothing at all.
 
 An ignore file that already exists is never rewritten: a user's own edits to it stand.
 

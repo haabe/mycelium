@@ -27,7 +27,9 @@ HOOK="$REPO_ROOT/plugins/mycelium/hooks/read-log.sh"
 
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
-mkdir -p "$TMP/.claude/state" "$TMP/canvas"
+# .claude/canvas/ makes it a Mycelium project: 0.318.0 hooks do nothing outside one (founder ruling
+# 2026-10-10). Empty, as right after /mycelium:setup; the files read below live in canvas/.
+mkdir -p "$TMP/.claude/state" "$TMP/.claude/canvas" "$TMP/canvas"
 printf 'a: 1\n' > "$TMP/canvas/one.yml"
 printf 'b: 2\n' > "$TMP/canvas/two.yml"
 LOG="$TMP/.claude/state/read-log.jsonl"

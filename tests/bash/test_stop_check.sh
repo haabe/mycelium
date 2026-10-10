@@ -14,8 +14,12 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 HOOK="$REPO_ROOT/plugins/mycelium/hooks/stop-check.sh"
 STOP_JSON='{"hook_event_name":"Stop"}'
 
+# Every case runs in a project that uses Mycelium: 0.318.0 hooks do nothing outside one (founder
+# ruling 2026-10-10). An EMPTY .claude/canvas/ is the realistic state right after /mycelium:setup.
+mkproj() { local d; d=$(mktemp -d); mkdir -p "$d/.claude/canvas"; echo "$d"; }
+
 test_warnings_message_is_plugin_form() {
-    local tmp; tmp=$(mktemp -d)
+    local tmp; tmp=$(mkproj)
     mkdir -p "$tmp/.claude/state"
     # Non-empty audit log → CHECK 5 sets a warning → the emit branch fires.
     printf '{"event":"direct_edit"}\n' > "$tmp/.claude/state/diamond-state-audit.jsonl"
@@ -29,7 +33,7 @@ test_warnings_message_is_plugin_form() {
 }
 
 test_clean_session_no_error() {
-    local tmp; tmp=$(mktemp -d)
+    local tmp; tmp=$(mkproj)
     local out; out=$(printf '%s' "$STOP_JSON" | CLAUDE_PROJECT_DIR="$tmp" bash "$HOOK"); local rc=$?
     rm -rf "$tmp"
     assert_eq "0" "$rc" "clean session (no warnings) exits 0 without error"
@@ -45,7 +49,7 @@ test_clean_session_no_error() {
 # surface-independent laws; see auto-memory reference-laws-of-ux.
 
 test_output_is_grouped_and_counted() {
-    local tmp; tmp=$(mktemp -d)
+    local tmp; tmp=$(mkproj)
     mkdir -p "$tmp/.claude/state"
     printf '{"event":"direct_edit"}\n' > "$tmp/.claude/state/diamond-state-audit.jsonl"
     local out; out=$(printf '%s' "$STOP_JSON" | CLAUDE_PROJECT_DIR="$tmp" bash "$HOOK")
@@ -59,7 +63,7 @@ test_output_is_grouped_and_counted() {
 test_nothing_is_dropped_by_grouping() {
     # The point is CHUNKING, not shortening. Tesler: shortening moves the complexity into the
     # user's head rather than removing it. Every warning must still appear in full.
-    local tmp; tmp=$(mktemp -d)
+    local tmp; tmp=$(mkproj)
     mkdir -p "$tmp/.claude/state"
     printf '{"event":"direct_edit"}\n' > "$tmp/.claude/state/diamond-state-audit.jsonl"
     local out; out=$(printf '%s' "$STOP_JSON" | CLAUDE_PROJECT_DIR="$tmp" bash "$HOOK")
@@ -71,7 +75,7 @@ test_nothing_is_dropped_by_grouping() {
 test_standing_question_is_last_not_first() {
     # Serial position: first and last are what survive. The in-flight question is a standing
     # prompt rather than a finding, so it must not take the first slot from something actionable.
-    local tmp; tmp=$(mktemp -d)
+    local tmp; tmp=$(mkproj)
     mkdir -p "$tmp/.claude/state"
     printf '{"event":"direct_edit"}\n' > "$tmp/.claude/state/diamond-state-audit.jsonl"
     local out; out=$(printf '%s' "$STOP_JSON" | CLAUDE_PROJECT_DIR="$tmp" bash "$HOOK")
@@ -98,7 +102,7 @@ test_counts_only_branch_emits_valid_json() {
     # The counts-only branch was the one hand-interpolated JSON object in the hook
     # tree until 0.221.0. One ### heading in corrections.md makes the count non-zero without
     # setting a warning.
-    local tmp; tmp=$(mktemp -d)
+    local tmp; tmp=$(mkproj)
     mkdir -p "$tmp/.claude/memory"
     printf '### a correction\n\nbody\n' > "$tmp/.claude/memory/corrections.md"
     local out; out=$(printf '%s' "$STOP_JSON" | CLAUDE_PROJECT_DIR="$tmp" bash "$HOOK")
@@ -110,7 +114,7 @@ test_counts_only_branch_emits_valid_json() {
 test_counts_are_said_once_per_change() {
     # v0.250.1: Stop fires after every response, and the count line reached the human every turn
     # (E2E run 20). Said again only when a count changes.
-    local tmp; tmp=$(mktemp -d)
+    local tmp; tmp=$(mkproj)
     mkdir -p "$tmp/.claude/memory"
     printf '### a correction\n\nbody\n' > "$tmp/.claude/memory/corrections.md"
     local first second third
