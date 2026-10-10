@@ -28,7 +28,9 @@ _fixture() {  # $1 tmp dir
 import os, sys
 open(os.environ["STUB_OUT"], "w").write(sys.stdin.read())
 PY
-    mkdir -p "$1/proj/.claude/state"
+    # .claude/canvas/ makes it a Mycelium project: 0.318.0 hooks do nothing outside one (founder
+    # ruling 2026-10-10). Empty, as right after /mycelium:setup.
+    mkdir -p "$1/proj/.claude/state" "$1/proj/.claude/canvas"
     printf '{}' > "$1/proj/.claude/state/next-item.json"
 }
 

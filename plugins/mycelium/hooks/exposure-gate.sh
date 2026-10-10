@@ -1,4 +1,5 @@
 #!/bin/bash
+. "$(dirname "${BASH_SOURCE[0]}")/../scripts/_hook_prelude.sh" 2>/dev/null || true  # no-op outside a Mycelium project; state ignore file (v0.318.0)
 # Mycelium exposure gate (PreToolUse on Bash)
 #
 # Blocks a command that puts the work in front of real people (a deploy CLI's deploy verb, a

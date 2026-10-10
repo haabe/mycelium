@@ -54,6 +54,28 @@ def test_a_shell_write_is_judged_the_same(tmp_path, monkeypatch):
     assert _decide(tmp_path, monkeypatch, cmd, "bypassPermissions", tool="Bash") == "deny"
 
 
+# v0.318.0: with neither .claude/canvas nor .claude/diamonds every hook exits at once, so removing
+# them is the widest off-switch. Found by the subagent that updated the shell tests for the prelude.
+
+@pytest.mark.parametrize("cmd", ["rm -rf .claude/canvas", "git rm -r .claude/diamonds",
+                                 "mv .claude/canvas /tmp/x", "rmdir .claude/diamonds",
+                                 "rm -rf .claude", "cd app && rm -rf '../.claude/canvas'"])
+def test_removing_what_makes_it_a_mycelium_project_is_a_persons_call(tmp_path, monkeypatch, cmd):
+    assert _decide(tmp_path, monkeypatch, {"command": cmd}, "default", tool="Bash") == "ask"
+    assert _decide(tmp_path, monkeypatch, {"command": cmd}, "bypassPermissions", tool="Bash") == "deny"
+
+
+def test_an_mcp_move_of_the_canvas_is_judged_the_same(tmp_path, monkeypatch):
+    move = {"source": ".claude/canvas", "destination": "/tmp/canvas"}
+    assert _decide(tmp_path, monkeypatch, move, "default", tool="mcp__filesystem__move_file") == "ask"
+
+
+@pytest.mark.parametrize("cmd", ["rm .claude/canvas/old.yml", "ls .claude/canvas",
+                                 "cp x.yml .claude/canvas/", "rm -rf .claude/state"])
+def test_control_ordinary_work_in_those_folders_is_not_asked(tmp_path, monkeypatch, cmd):
+    assert _decide(tmp_path, monkeypatch, {"command": cmd}, "bypassPermissions", tool="Bash") == "allow"
+
+
 def test_control_any_other_file_is_not_this_gates_business(tmp_path, monkeypatch):
     assert _decide(tmp_path, monkeypatch, {"file_path": "src/app.py", "content": "x"},
                    "bypassPermissions") == "allow"
@@ -62,6 +84,7 @@ def test_control_any_other_file_is_not_this_gates_business(tmp_path, monkeypatch
 def test_the_gate_runs_in_an_ordinary_project(tmp_path):
     """No autonomous run, no scope, no framework repo: the gate still decides."""
     (tmp_path / ".claude" / "state").mkdir(parents=True)
+    (tmp_path / ".claude" / "canvas").mkdir()  # a Mycelium project (v0.318.0 prelude)
     payload = json.dumps({"tool_name": "Write", "permission_mode": "bypassPermissions",
                           "tool_input": {"file_path": ACK, "content": "x"}})
     env = {"CLAUDE_PROJECT_DIR": str(tmp_path), "PATH": "/usr/bin:/bin:" + str(Path(sys.executable).parent)}

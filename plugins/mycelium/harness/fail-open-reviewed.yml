@@ -990,3 +990,24 @@ reviewed:
     unreported. It now prints a sentinel that the hook turns into an `unreadable` fire row and an
     additionalContext line telling the agent that whether the refusal held is unknown. Asserted by
     test_an_unreadable_input_naming_a_refused_id_says_it_could_not_check. Reviewed 2026-10-07, v0.316.0.
+- id: _state_dir.py@62f9a5a95c
+  verdict: accepted
+  reason: >-
+    write_ignore's O_EXCL open fails in two cases. FileExistsError: another hook won the race and the
+    file exists, which is the outcome wanted. Any other OSError: the state folder cannot be written,
+    so no log can land there either and nothing is exposed; the shell half (_hook_prelude.sh) tries
+    again at every hook exit. Asserted by test_an_existing_ignore_file_is_never_rewritten and
+    test_write_ignore_does_not_create_the_folder. Reviewed 2026-10-10, v0.318.0.
+- id: prune_state_logs.py@b471eb751c
+  verdict: accepted
+  reason: >-
+    A `ts`/`at` that does not parse leaves the line's age unknown, and the line is KEPT, not
+    dropped. That fails toward keeping data, and PRIVACY.md says so ("A line with no readable date
+    stays"). Asserted by test_old_activity_lines_go_and_recent_and_undated_ones_stay. Reviewed
+    2026-10-10, v0.318.0.
+- id: prune_state_logs.py@626212ff45
+  verdict: accepted
+  reason: >-
+    A missing or unreadable once-a-day stamp means the trim is due, so it runs: the failure leads
+    to the job being done, not skipped. Asserted by test_it_runs_at_most_once_a_day_unless_forced.
+    Reviewed 2026-10-10, v0.318.0.

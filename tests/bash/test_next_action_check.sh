@@ -7,6 +7,12 @@ source "$SCRIPT_DIR/_assert.sh"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 HOOK="$REPO_ROOT/plugins/mycelium/hooks/next-action-check.sh"
 
+# Every case runs in a project that uses Mycelium: 0.318.0 hooks do nothing outside one (founder
+# ruling 2026-10-10). An EMPTY .claude/canvas/ is the realistic state right after /mycelium:setup.
+PROJ="$(mktemp -d)"; mkdir -p "$PROJ/.claude/canvas"
+trap 'rm -rf "$PROJ"' EXIT
+export CLAUDE_PROJECT_DIR="$PROJ"
+
 _transcript() {
     # $1 = skill name or "" ; $2 = last assistant text
     local tmp; tmp=$(mktemp)

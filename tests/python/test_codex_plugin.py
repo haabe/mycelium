@@ -114,6 +114,7 @@ def _preflight(project: Path) -> None:
 
 def test_a_prompt_refreshes_the_marker_the_entry_skills_read(tmp_path):
     (tmp_path / ".claude" / "state").mkdir(parents=True)
+    (tmp_path / ".claude" / "canvas").mkdir()  # a Mycelium project (v0.318.0 prelude)
     _preflight(tmp_path)
     assert (tmp_path / ".claude" / "state" / "hooks-alive").is_file()
 
@@ -121,6 +122,20 @@ def test_a_prompt_refreshes_the_marker_the_entry_skills_read(tmp_path):
 def test_control_a_prompt_outside_a_mycelium_project_creates_nothing(tmp_path):
     _preflight(tmp_path)
     assert not (tmp_path / ".claude").exists()
+
+
+def test_outside_a_mycelium_project_the_marker_is_stamped_in_the_temp_folder(tmp_path):
+    """v0.318.0: the hooks do nothing in a project with no .claude/canvas or .claude/diamonds, so
+    the entry skills' check reads a temp-folder stamp instead, or a first /mycelium:start would
+    always say the hooks are off."""
+    project, tmp = tmp_path / "plain", tmp_path / "tmp"
+    project.mkdir()
+    tmp.mkdir()
+    env = {**os.environ, "CLAUDE_PROJECT_DIR": str(project), "TMPDIR": str(tmp)}
+    subprocess.run(["bash", str(PLUGIN / "hooks" / "preflight.sh")], input="{}", text=True,
+                   capture_output=True, env=env, timeout=60, check=False)
+    assert list(project.iterdir()) == []
+    assert (tmp / f"mycelium-hooks-alive-{os.getuid()}").is_file()
 
 
 def test_session_start_writes_the_marker_before_any_check_can_time_out():
@@ -132,7 +147,7 @@ def test_session_start_writes_the_marker_before_any_check_can_time_out():
 def test_every_entry_skill_checks_the_marker_and_says_what_to_do():
     for s in ENTRY_SKILLS:
         text = (PLUGIN / "skills" / s / "SKILL.md").read_text()
-        assert "find .claude/state/hooks-alive -mmin -60" in text, s
+        assert 'find .claude/state/hooks-alive "${TMPDIR:-/tmp}/mycelium-hooks-alive-$(id -u)" -mmin -60' in text, s
         assert "open `/hooks`" in text, s
 
 

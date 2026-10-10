@@ -49,6 +49,9 @@ from pathlib import Path
 
 import yaml
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import _state_dir
+
 #: A date anywhere in a key name: 2026_08_27, 2026-08-27, 20260827, or a bare _2026 suffix.
 DATE_IN_KEY = re.compile(r"(19|20)\d{2}[_-]?\d{2}[_-]?\d{2}|_(19|20)\d{2}(_|$)")
 #: A canvas entity id in a key name: ht_010, comp-107, opp_038.
@@ -240,7 +243,7 @@ def main() -> int:
     base_path = Path(args.baseline) if args.baseline else canvas_dir.parent / BASELINE_REL
 
     if args.write_baseline:
-        base_path.parent.mkdir(parents=True, exist_ok=True)
+        _state_dir.prepare(base_path)
         base_path.write_text(yaml.safe_dump(
             {"note": "Keys carrying a date or entity id in their NAME, as of seeding. "
                      "Content in key position; the remedy is to move it into values. "

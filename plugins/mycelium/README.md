@@ -25,6 +25,18 @@ It does not edit your project's own files (CLAUDE.md, README.md, LICENSE). Its s
 `AGENTS.md` at your project root. Everything it runs, reads, writes and connects to is stated in
 [`PRIVACY.md`](https://github.com/haabe/mycelium/blob/main/PRIVACY.md).
 
+## Logs in your project
+
+In a project that uses Mycelium (one with `.claude/canvas/` or `.claude/diamonds/`, which
+`/mycelium:start` creates), the hooks keep logs in `.claude/state/`. They hold the paths of files the
+agent opened and changed, names from its web searches, which guard rules fired, and that a command
+failed. Its exit code and program name, never the command or its output. A command is kept only if
+you set `MYCELIUM_LEDGER_TRIGGER=on`, and then with obvious secrets masked. Activity logs keep 90 days
+(`MYCELIUM_LOG_RETENTION_DAYS` changes it, `0` keeps all). Any hook that finds the folder without an
+ignore file writes one. In a project without Mycelium the hooks do nothing at all. Every log, and what
+one line holds, is listed in
+[`PRIVACY.md`](https://github.com/haabe/mycelium/blob/main/PRIVACY.md#the-logs-the-hooks-keep).
+
 ## Network activity
 
 Mycelium sends nothing to its author or to any service the author runs. The same list, in more

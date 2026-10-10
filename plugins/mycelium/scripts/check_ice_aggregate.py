@@ -38,6 +38,9 @@ from pathlib import Path
 
 import yaml
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import _state_dir
+
 #: Canvas files that carry ICE. Not every project has all of them.
 CANVAS = ("opportunities.yml", "gist.yml", "archived-solutions.yml")
 
@@ -148,7 +151,7 @@ def main(argv=None) -> int:
     product_ids = sorted(p[0] for p in products)
 
     if args.write_baseline:
-        baseline_path.parent.mkdir(parents=True, exist_ok=True)
+        _state_dir.prepare(baseline_path)
         baseline_path.write_text(json.dumps(
             {"_comment": "ICE aggregates that were product-shaped when check_ice_aggregate was "
                          "adopted. Errata A1: Ellis averages. These are NOT to be rewritten — a "

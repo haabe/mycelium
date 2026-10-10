@@ -70,6 +70,9 @@ import re
 import subprocess
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import _secret_mask
+
 try:
     import yaml
 except ImportError:  # SPEAKS: every entry point returns exit 3 with the reason, see _require_yaml
@@ -1438,8 +1441,10 @@ def _release_decision(project_dir: str, what: str) -> tuple[str, str] | None:
 
 
 def _log_release(project_dir: str, what: str, labels: list[str], outcome: str) -> None:
+    # v0.318.0: masked. `what` is the matched release, which for some hosts spans the arguments
+    # between the program and the deploy flag (`vercel --token ... --prod`).
     row = {"ts": _dt.datetime.now(tz=_dt.UTC).isoformat(timespec="seconds"),
-           "release": what[:80], "exposures": labels, "outcome": outcome}
+           "release": _secret_mask.mask(what, 80), "exposures": labels, "outcome": outcome}
     with contextlib.suppress(OSError), open(os.path.join(project_dir, EXPOSURE_USES), "a",
                                             encoding="utf-8") as fh:
         fh.write(json.dumps(row) + "\n")
@@ -2350,7 +2355,14 @@ def _run_exposure_hook(project_dir: str) -> int:
     try:
         payload = json.loads(sys.stdin.read() or "{}")
     except json.JSONDecodeError:
-        return EXIT_HOLDS  # SPEAKS: the runtime refuses a malformed payload before any command runs
+        payload = None  # SPEAKS: the runtime refuses a malformed payload before any command runs
+    # v0.318.0 (Anthropic directory review of v0.317.4): no diamonds file is "no diamonds at all",
+    # which _release_decision already allows. Answering it here, before anything parses YAML,
+    # stops a machine without PyYAML refusing every deploy and publish in a project that never
+    # used Mycelium.
+    if payload is None or not os.path.isfile(
+            os.path.join(project_dir, ".claude", "diamonds", "active.yml")):
+        return EXIT_HOLDS
     what = _release_in(project_dir, payload)
     decision = _release_decision(project_dir, what) if what else None
     if decision is None:

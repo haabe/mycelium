@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+. "$(dirname "${BASH_SOURCE[0]}")/../scripts/_hook_prelude.sh" 2>/dev/null || true  # no-op outside a Mycelium project; state ignore file (v0.318.0)
 # Mycelium reflexion hook gate
 #
 # Filters PostToolUseFailure events to only trigger the reflexion prompt when
@@ -49,16 +50,6 @@ import json, sys
 try:
     r = json.load(sys.stdin).get('tool_response') or {}
     print(r.get('exit_code') if isinstance(r, dict) and r.get('exit_code') is not None else '')
-except Exception:
-    print('')
-" 2>/dev/null || echo "")
-
-STDERR_HEAD=$(printf '%s' "$INPUT" | python3 -c "
-import json, sys
-try:
-    r = json.load(sys.stdin).get('tool_response') or {}
-    s = (r.get('stderr') or '') if isinstance(r, dict) else ''
-    print(' '.join(s.split())[:200])
 except Exception:
     print('')
 " 2>/dev/null || echo "")
@@ -148,29 +139,13 @@ fi
 # recorded decision rather than silence.
 #
 # One line per firing. reconcile_reflexions.py computes fired − reconciled.
+# v0.318.0: the row no longer carries the command or its error output (Anthropic directory
+# review of v0.317.4: a password typed into a failing command was kept in plain text). It
+# holds the time, exit code and program name; the masked command only with
+# MYCELIUM_LEDGER_TRIGGER=on. The payload goes on stdin, never as an argument `ps` would show.
 STATE_DIR="$PROJECT_DIR/.claude/state"
-mkdir -p "$STATE_DIR" 2>/dev/null
-python3 -c "
-import json, sys, os, time
-rec = {
-    'ts': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
-    'tool': 'Bash',
-    'command_head': sys.argv[2][:160],
-    'exit_code': sys.argv[3] or None,
-    'stderr_head': sys.argv[4] or None,
-}
-# A suppressed row stays in the log WITH its reason. Silent dropping would make
-# the classifier unauditable — and an unauditable filter on a learning loop is
-# the same defect the loop exists to catch.
-if sys.argv[5]:
-    rec['suppressed'] = sys.argv[5]
-path = os.path.join(sys.argv[1], 'reflexion-log.jsonl')
-try:
-    with open(path, 'a', encoding='utf-8') as fh:
-        fh.write(json.dumps(rec) + '\n')
-except OSError:
-    pass
-" "$STATE_DIR" "$COMMAND" "$EXIT_CODE" "$STDERR_HEAD" "$NON_EVENT" 2>/dev/null || true
+printf '%s' "$INPUT" | python3 "$(dirname "${BASH_SOURCE[0]}")/../scripts/reflexion_record.py" \
+  record --state-dir "$STATE_DIR" --suppressed "$NON_EVENT" >/dev/null 2>&1 || true
 
 # A documented non-failure is recorded and then dropped: no prompt, no learning debt.
 if [ -n "$NON_EVENT" ]; then

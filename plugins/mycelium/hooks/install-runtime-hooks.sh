@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+export MYCELIUM_PRELUDE_ANY_PROJECT=1  # a setup script run by the user, not a hook; read by _hook_prelude.sh
+. "$(dirname "${BASH_SOURCE[0]}")/../scripts/_hook_prelude.sh" 2>/dev/null || true  # no-op outside a Mycelium project; state ignore file (v0.318.0)
 # Generate a runtime's hook manifest with this plugin's REAL path baked in.
 #
 # WHY THIS EXISTS. A plugin cannot know where it is installed, so it must not
@@ -78,7 +80,7 @@ fi
 
 mkdir -p "$PROJECT_ROOT/$TARGET_DIR"
 TMP="$(mktemp)"
-trap 'rm -f "$TMP"' EXIT
+trap 'rm -f "$TMP"; mycelium_state_ignore 2>/dev/null || true' EXIT  # keeps _state_ignore.sh's exit check
 
 # The substitution. `|` as the sed delimiter because the path contains `/`.
 sed "s|$PLACEHOLDER|$PLUGIN_ROOT|g" "$SOURCE" > "$TMP"
@@ -102,7 +104,7 @@ if [ -n "$missing" ]; then
 fi
 
 mv "$TMP" "$TARGET"
-trap - EXIT
+trap 'mycelium_state_ignore 2>/dev/null || true' EXIT
 
 count="$(grep -c "$PLUGIN_ROOT/hooks/" "$TARGET" || true)"
 echo "Wrote $TARGET"

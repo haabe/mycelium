@@ -2,7 +2,79 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-10-08.
+**Last updated**: 2026-10-10.
+
+## v0.318.0 - nothing outside a Mycelium project; inside one, logs listed, trimmed, kept out of git, and holding no commands
+
+**2026-10-10, from Anthropic's plugin directory review of v0.317.4.** The review asked for four
+changes, and each still held on 0.317.5 when checked: the reflexion hook kept 160 characters of each
+failed command and 200 of its error output, unmasked, in `.claude/state/reflexion-log.jsonl`; only
+`/mycelium:setup` wrote that folder's ignore file, and one Read in a bare git repo left
+`read-log.jsonl` there with none; PRIVACY.md said commands are kept only when the user opts in; and
+without PyYAML the release gate refused `npm publish` in a repo that never used Mycelium.
+
+- **Reflexion log.** A line holds the time, exit code and program name (`git`, `npm`), and for a
+  documented non-failure why. Never the command or its error output, unless the user sets
+  `MYCELIUM_LEDGER_TRIGGER=on`, and then masked. Written by `scripts/reflexion_record.py` from the
+  payload on stdin, so the command is no longer an argument `ps` shows. The first session on 0.318.0
+  strips the two fields from older lines (`reflexion_record.py scrub`, run by `session-start.sh`).
+- **Masking** moves to `scripts/_secret_mask.py`, shared by the shell-safety log, the reflexion log
+  and the release log `exposure-uses.jsonl`. That last one kept up to 80 characters of the matched
+  release unmasked, which for `vercel ... --prod` is everything in between. Found while listing the
+  logs; not in the review.
+- **Nothing outside a Mycelium project** (founder ruling 2026-10-10). Every hook sources
+  `scripts/_hook_prelude.sh`, which exits 0 at once in a project with neither `.claude/canvas/` nor
+  `.claude/diamonds/`: no gate, no output, no log. `.claude/state/` alone does not count; earlier
+  versions created it everywhere. The one write is a timestamp in the temp folder, which the entry
+  skills read beside `.claude/state/hooks-alive`. **What this changes for a user:** a fresh repo where
+  `/mycelium:start` or setup never ran is no longer gated at all, the discovery gate's cold-project
+  stage included, which 0.56.0 added after "build me X" on an empty canvas produced code. Ruled with
+  that cost on the table.
+- **Removing the marker folders is a person's call.** With the prelude, deleting `.claude/canvas/`
+  and `.claude/diamonds/` would switch every gate off, where before it left a cold project the
+  discovery gate still held. `guard-state-gate.sh` now asks (refuses where nobody is asked) on `rm`,
+  `rmdir`, `mv` or `git rm` of `.claude`, `.claude/canvas` or `.claude/diamonds`, and on an MCP move of
+  them. Residual, stated: a script that deletes them some other way (`shutil.rmtree`, `find -delete`)
+  is not parsed. Found by the subagent that updated the shell tests, with two more: a hook that
+  leaves before reading its input made a piping caller see 141 under `pipefail`, so the prelude reads
+  it first (bounded at 3 s, as preflight does); and with no `CLAUDE_PROJECT_DIR` (Codex) the prelude
+  now walks up from the working folder to the project and exports it, so a session started in a
+  subfolder is still a Mycelium project and every hook agrees on the root.
+- **Logs keep 90 days.** `scripts/prune_state_logs.py`, run by `session-start.sh` at most once a day,
+  drops activity-log lines older than `MYCELIUM_LOG_RETENTION_DAYS` (default 90; `0` keeps all).
+  Decision records are never trimmed. Trimmed reflexion lines go into the ledger's `pruned_fired`, so
+  the outstanding count stays what it was.
+- **Ignore file.** In a Mycelium project, on exit, a `.claude/state/` with no
+  `.gitignore` gets one from `scripts/state-gitignore.txt`. It never creates the folder or rewrites an
+  existing file. Python scripts create folders through `scripts/_state_dir.py`, which does the same;
+  `/mycelium:setup` calls it, so the rules exist once.
+- **Release gate.** A project with no `diamonds/active.yml` is allowed before anything needs PyYAML,
+  the answer the gate already gave once PyYAML was present. Where Mycelium is in use, a release that
+  cannot be checked is still refused.
+- **PRIVACY.md** lists every log the hooks keep, what one line holds, and how long it is kept (until
+  you delete it: nothing trims them). The plugin README says the same briefly; `hooks/README.md`
+  and the system card are corrected, the card where it said the advisory hooks keep nothing of a
+  command.
+- **Tests.** `test_state_ignore.py` runs every hook registered in `hooks.json` twice: in a plain
+  repo, where it must exit 0, print nothing and leave nothing, and in a Mycelium project, where the
+  state folder it leaves must have its ignore file; `test_prune_state_logs.py` holds retention; on 0.317.5, 7 of 55 registered entries left it without the file
+  (`read-log`, `change-log`, `diamond-state-audit`, `reflexion-gate`, `stop-check`,
+  `session-start`), on 0.318.0 none. It also fails on a raw `mkdir` in a script and on a hook that
+  does not source the exit check. `test_reflexion_record.py` holds the row shape, the opt-in, the
+  scrub and the hook wiring; `test_scale_locks.py` gains the no-PyYAML case both ways and the masked
+  release log.
+- **Alternatives considered.** Masking the reflexion command by default instead of dropping it:
+  masking misses a secret in no known shape (`mysql -pHunter2`), the case the review named, and
+  nothing reads the text except a display list. Writing the ignore file only at session start: a
+  hook can run with no session start before it (a runtime where that hook is not registered or not
+  trusted, a plugin enabled mid-session), and the exit check covers every writer, whoever created
+  the folder. Editing each write site in the 28 shell hooks: the next new writer would skip it
+  unnoticed. Logging in every project but keeping it out of git (the first build of this release): the
+  founder ruled no Mycelium action and no log outside a Mycelium project. `.claude/state/` as the
+  project marker: older versions made it in every repo. Keeping logs until deleted: ruled 90 days by
+  default instead, with a flag. A temp-folder liveness stamp versus none: without it `/mycelium:start`
+  in a fresh repo would always report the hooks as off. Checking for the diamonds file in the shell hook before Python starts: the
+  Python early return keeps one implementation and in-process test coverage.
 
 ## v0.317.5 - a scored instrument is not "no expiry" either
 

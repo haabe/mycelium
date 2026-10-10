@@ -50,6 +50,9 @@ import sys
 import time
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import _state_dir
+
 LOG_REL = ".claude/state/reflexion-log.jsonl"
 DISMISS_REL = ".claude/state/reflexion-dismissed.jsonl"
 LEDGER_REL = ".claude/state/reflexion-ledger.json"
@@ -96,15 +99,28 @@ def _read_jsonl(path: Path) -> list[dict]:
 
 def _load_ledger(path: Path) -> dict:
     if not path.is_file():
-        return {"credited": 0, "corrections_baseline": None}
+        return {"credited": 0, "corrections_baseline": None, "pruned_fired": 0}
     try:
         d = json.loads(path.read_text())
     except (OSError, ValueError):
-        return {"credited": 0, "corrections_baseline": None}
+        return {"credited": 0, "corrections_baseline": None, "pruned_fired": 0}
     return {
         "credited": int(d.get("credited", 0)),
         "corrections_baseline": d.get("corrections_baseline"),
+        # Lines prune_state_logs.py removed for age (v0.318.0) still count as fired, or trimming
+        # old answered failures would hide new unanswered ones.
+        "pruned_fired": int(d.get("pruned_fired", 0)),
     }
+
+
+def _describe(row: dict) -> str:
+    """One line for a firing. Since v0.318.0 rows carry no command text unless the user opted in
+    (MYCELIUM_LEDGER_TRIGGER=on, masked), so the line names the time, program and exit code."""
+    if row.get("command_head"):
+        return str(row["command_head"])
+    code = row.get("exit_code")
+    return f"{row.get('ts', '?')}  {row.get('program') or 'a command'}" + (
+        f" (exit {code})" if code not in (None, "") else "")
 
 
 def status(project_dir: Path) -> dict:
@@ -135,7 +151,7 @@ def status(project_dir: Path) -> dict:
     # correctly, and that is how a guard dies.
     suppressed_records = [r for r in fired_records if r.get("suppressed")]
     fired_records = [r for r in fired_records if not r.get("suppressed")]
-    fired = len(fired_records)
+    fired = len(fired_records) + ledger["pruned_fired"]
     credited = ledger["credited"] + corrections_since + len(dismissals)
     outstanding = max(0, fired - credited)
 
@@ -146,11 +162,12 @@ def status(project_dir: Path) -> dict:
         "dismissed": len(dismissals),
         "outstanding": outstanding,
         "recent": (
-            [r.get("command_head", "") for r in fired_records[-outstanding:]]
+            [_describe(r) for r in fired_records[-outstanding:]]
             if outstanding else []
         ),
         "corrections_now": corrections_now,
         "corrections_baseline": int(baseline),
+        "pruned_fired": ledger["pruned_fired"],
         "_baseline_is_fresh": fresh_baseline,
     }
 
@@ -164,7 +181,7 @@ def persist_baseline_if_new(project_dir: Path, st: dict) -> None:
     if not st.get("_baseline_is_fresh"):
         return
     path = project_dir / LEDGER_REL
-    path.parent.mkdir(parents=True, exist_ok=True)
+    _state_dir.prepare(path)
     path.write_text(json.dumps({
         "credited": 0,
         "corrections_baseline": st["corrections_now"],
@@ -180,7 +197,7 @@ def dismiss(project_dir: Path, reason: str) -> int:
               file=sys.stderr)
         return 2
     path = project_dir / DISMISS_REL
-    path.parent.mkdir(parents=True, exist_ok=True)
+    _state_dir.prepare(path)
     with path.open("a", encoding="utf-8") as fh:
         fh.write(json.dumps({
             "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
@@ -194,10 +211,11 @@ def rebaseline(project_dir: Path) -> int:
     """Fold the current balance into the ledger so counting starts clean."""
     st = status(project_dir)
     path = project_dir / LEDGER_REL
-    path.parent.mkdir(parents=True, exist_ok=True)
+    _state_dir.prepare(path)
     path.write_text(json.dumps({
         "credited": st["fired"],
         "corrections_baseline": st["corrections_now"],
+        "pruned_fired": st["pruned_fired"],
         "rebaselined_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
     }, indent=2) + "\n")
     print(f"Ledger rebaselined: {st['fired']} reflexion(s) credited, "

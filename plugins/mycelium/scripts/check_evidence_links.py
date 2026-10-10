@@ -47,11 +47,15 @@ import collections
 import concurrent.futures
 import datetime
 import json
+import os
 import pathlib
 import re
 import sys
 import urllib.error
 import urllib.request
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import _state_dir
 
 HTTP_GONE = (404, 410)          # the page is claimed absent
 HTTP_BOT_WALL = (401, 403)      # the SITE refuses robots; says nothing about the page
@@ -139,7 +143,7 @@ def mark_verified(url: str, verdict: str, note: str, today: datetime.date) -> No
     data[url] = {"verdict": verdict, "checked_at": str(today), "note": note,
                  "method": "browser"}
     vf = verified_file()
-    vf.parent.mkdir(parents=True, exist_ok=True)
+    _state_dir.prepare(vf)
     vf.write_text(json.dumps(data, indent=1, sort_keys=True))
 
 
@@ -618,7 +622,7 @@ def main(argv: list[str] | None = None) -> int:
     prev_status = {u: v.get("status") for u, v in (prev.get("urls") or {}).items()}
     results = classify(urls, cited, prev_status, args, today)
 
-    snap_dir().mkdir(parents=True, exist_ok=True)
+    _state_dir.prepare_dir(snap_dir())
     counts = dict(collections.Counter(v["status"] for v in results.values()))
     (snap_dir() / f"{today}.json").write_text(json.dumps(
         {"checked_at": str(today), "counts": counts, "urls": results}, indent=1))

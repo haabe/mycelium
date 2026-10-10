@@ -66,7 +66,9 @@ assert_contains "$OUT0" "evidence-landing" "evidence landing is among the skippe
 # parts under the 10,000-character cap), so no budget can cut it. Prove that instead.
 PARTS=""
 for k in 1 2 3 4; do
-    PART=$(MYCELIUM_SESSION_START_BUDGET=0 bash "$PLUGIN_ROOT/hooks/contract-part.sh" "$k" | python3 -c "
+    # CLAUDE_PROJECT_DIR="$P": a Mycelium project (it has .claude/canvas/). 0.318.0 hooks do nothing
+    # outside one (founder ruling 2026-10-10); unset, the project was this test's working directory.
+    PART=$(MYCELIUM_SESSION_START_BUDGET=0 CLAUDE_PROJECT_DIR="$P" bash "$PLUGIN_ROOT/hooks/contract-part.sh" "$k" | python3 -c "
 import json, sys
 t = sys.stdin.read()
 c = json.loads(t)['hookSpecificOutput']['additionalContext'] if t.strip() else ''

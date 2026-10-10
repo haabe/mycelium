@@ -1,4 +1,5 @@
 #!/bin/bash
+. "$(dirname "${BASH_SOURCE[0]}")/../scripts/_hook_prelude.sh" 2>/dev/null || true  # no-op outside a Mycelium project; state ignore file (v0.318.0)
 # Mycelium shell-state guard (v0.253.2). PreToolUse Bash: refuse a command that visibly writes
 # .claude/diamonds/active.yml (the scale-lock gate only judges the Edit and Write tools), and
 # snapshot that file. PostToolUse Bash: schema-check any canvas or diamonds file the command

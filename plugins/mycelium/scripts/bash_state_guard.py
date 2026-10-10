@@ -37,6 +37,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import _hook_input as hi  # noqa: E402
+import _state_dir  # noqa: E402
 
 ACTIVE_REL = ".claude/diamonds/active.yml"
 STATE_REL = Path(".claude") / "state" / "bash-guard"
@@ -115,7 +116,7 @@ def pre(payload: dict, project: Path) -> int:
     active = project / ACTIVE_REL
     if (project / ".claude").is_dir():
         try:
-            state.mkdir(parents=True, exist_ok=True)
+            _state_dir.prepare_dir(state)
             if active.exists():
                 shutil.copyfile(active, state / "active.yml.before")
             else:

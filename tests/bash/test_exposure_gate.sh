@@ -20,7 +20,10 @@ bash_json() { python3 -c 'import json,sys; print(json.dumps({"tool_name":"Bash",
 OUT="$(mktemp)"
 run_gate() {  # <project_dir> <command> -> exit code; stderr in $ERR, stdout in $OUT (v0.293.0:
     # the gate now speaks on stdout, a systemMessage, when it honours an old skip-ack)
-    printf '%s' "$(bash_json "$2")" | CLAUDE_PROJECT_DIR="$1" bash "$GATE" 2>"$ERR" >"$OUT"
+    # Fed by process substitution, not a pipe: since 0.318.0 the gate exits before reading stdin
+    # outside a Mycelium project, and under pipefail the writer's SIGPIPE (141) would be reported
+    # as the gate's exit status.
+    CLAUDE_PROJECT_DIR="$1" bash "$GATE" < <(printf '%s' "$(bash_json "$2")") 2>"$ERR" >"$OUT"
     echo $?
 }
 
@@ -75,8 +78,21 @@ test_ordinary_commands_pass() {
     rm -rf "$p"
 }
 
-test_unengaged_project_not_judged() {
+test_non_mycelium_project_left_alone() {
+    # 0.318.0: no Mycelium action outside a Mycelium project (founder ruling 2026-10-10).
+    # No .claude/canvas or .claude/diamonds: the gate does nothing at all.
     local p; p=$(mktemp -d)
+    assert_eq "$(run_gate "$p" "fly deploy")" "0" "no Mycelium state at all -> allowed"
+    assert_eq "" "$(cat "$OUT")" "no Mycelium state at all -> nothing on stdout"
+    assert_eq "" "$(cat "$ERR")" "no Mycelium state at all -> nothing on stderr"
+    assert_eq "" "$(find "$p" -mindepth 1)" "no Mycelium state at all -> nothing created in the project"
+    rm -rf "$p"
+}
+
+test_unengaged_project_not_judged() {
+    # The original intent, kept: setup ran (an EMPTY .claude/canvas/) but there are no diamonds.
+    local p; p=$(mktemp -d)
+    mkdir -p "$p/.claude/canvas"
     assert_eq "$(run_gate "$p" "fly deploy")" "0" "no diamonds at all -> not this gate's business"
     rm -rf "$p"
 }
@@ -136,6 +152,7 @@ run_test test_deploy_under_define_blocks
 run_test test_ready_cycle_deploys
 run_test test_l3_without_a_learning_delivery_blocks
 run_test test_ordinary_commands_pass
+run_test test_non_mycelium_project_left_alone
 run_test test_unengaged_project_not_judged
 run_test test_delivery_skip_overrides
 run_test test_one_current_exposure_releases

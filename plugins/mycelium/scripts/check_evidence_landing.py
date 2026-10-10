@@ -49,6 +49,9 @@ from pathlib import Path
 
 import yaml
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import _state_dir
+
 READER_FILES = ("opportunities.yml", "purpose.yml", "scenarios.yml", "user-needs.yml",
                 "jobs-to-be-done.yml", "go-to-market.yml", "landscape.yml", "north-star.yml")
 DEFAULT_SOURCE_DIRS = (".claude/evals/assumption-tests", ".claude/evals/dogfood-reports")
@@ -227,7 +230,7 @@ def main(argv=None) -> int:
     claimed = sorted(r["source"] for r in rows if r["class"] == "CLAIMED_NOT_LANDED")
 
     if args.write_baseline:
-        landing.baseline_path.parent.mkdir(parents=True, exist_ok=True)
+        _state_dir.prepare(landing.baseline_path)
         landing.baseline_path.write_text(json.dumps({
             "orphan": orphans, "claimed_not_landed": claimed,
             "note": "Baseline of sources known uncited at adoption. "

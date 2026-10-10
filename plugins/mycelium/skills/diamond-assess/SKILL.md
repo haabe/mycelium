@@ -11,7 +11,7 @@ metadata:
 
 ## First: are Mycelium's hooks running here? (v0.286.0)
 
-Run `find .claude/state/hooks-alive -mmin -60 2>/dev/null`. If it prints the path, say nothing
+Run `find .claude/state/hooks-alive "${TMPDIR:-/tmp}/mycelium-hooks-alive-$(id -u)" -mmin -60 2>/dev/null`. If it prints a path (since v0.318.0 the hooks also stamp the temp folder in a project with no Mycelium state yet, where they do nothing else), say nothing
 about it and go on. If it prints nothing, Mycelium's hooks did not run in this session: its gates
 and the rules it gives the agent at session start are off, and nothing else will say so. Tell the
 user in one line before anything else: "Mycelium's hooks are not running in this session, so its

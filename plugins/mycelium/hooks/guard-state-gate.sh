@@ -1,4 +1,5 @@
 #!/bin/bash
+. "$(dirname "${BASH_SOURCE[0]}")/../scripts/_hook_prelude.sh" 2>/dev/null || true  # no-op outside a Mycelium project; state ignore file (v0.318.0)
 # Mycelium guard-state gate (PreToolUse on Write|Edit|MultiEdit|NotebookEdit, Bash and the
 # filesystem MCP writes), v0.281.0
 #

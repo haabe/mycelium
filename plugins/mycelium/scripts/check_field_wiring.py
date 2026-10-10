@@ -45,6 +45,9 @@ from pathlib import Path
 
 import yaml
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import _state_dir
+
 #: A field whose NAME asserts something the machine could check: a date, a bar, a gate, a
 #: state. Deliberately name-based — this runs over schemas, which carry no semantics.
 PROMISE = re.compile(
@@ -270,7 +273,7 @@ def _run_live(root: Path, canvas_dir: Path, write_baseline: bool, strict: bool) 
     rows = live_canvas_fields(canvas_dir, root)
     base_path = canvas_dir.parent / LIVE_BASELINE_REL
     if write_baseline:
-        base_path.parent.mkdir(parents=True, exist_ok=True)
+        _state_dir.prepare(base_path)
         base_path.write_text(yaml.safe_dump(
             {"note": "Promise-shaped canvas keys that no schema declares and nothing consumes, "
                      "as of seeding. Present so the rule costs NEW writing rather than a "

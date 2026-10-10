@@ -92,7 +92,11 @@ fi
 # find its helper. Before v0.88.0 this produced empty output and exit 0 — the
 # silent no-op that reads identically to "nothing to warn about".
 payload='{"tool_name":"Write","tool_input":{"file_path":"/Users/x/proj/.claude/canvas/user-needs.yml","content":"So his signal has nowhere to go, and that is the finding."}}'
-got="$(printf '%s' "$payload" | env -i PATH="$PATH" bash "$HOOKS/absence-claim-guard.sh" 2>&1)"
+# Run from inside a project that uses Mycelium: 0.318.0 hooks do nothing outside one (founder
+# ruling 2026-10-10), and with no CLAUDE_PROJECT_DIR the project is the working directory, as under
+# Codex. The marker is an EMPTY .claude/canvas/, the state right after /mycelium:setup.
+mkdir -p "$tmp/myc/.claude/canvas"
+got="$(cd "$tmp/myc" && printf '%s' "$payload" | env -i PATH="$PATH" bash "$HOOKS/absence-claim-guard.sh" 2>&1)"
 case "$got" in *"ABSENCE-CLAIM WARNING"*) ok "guard fires with zero env vars set" ;;
                *) bad "guard silent with no env vars — the fail-open is back" ;; esac
 

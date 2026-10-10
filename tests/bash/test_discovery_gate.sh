@@ -21,7 +21,10 @@ trap 'rm -f "$GATE_ERR_FILE" "${GATE_OUT_FILE:-}"' EXIT
 GATE_OUT_FILE="$(mktemp)"
 run_gate() {  # stdout lands in $GATE_OUT_FILE (v0.293.0: an old skip-ack is honoured with a message)
     local pdir="$1" json="$2"
-    printf '%s' "$json" | CLAUDE_PROJECT_DIR="$pdir" bash "$GATE" 2>"$GATE_ERR_FILE" >"$GATE_OUT_FILE"
+    # Fed by process substitution, not a pipe: since 0.318.0 the gate exits before reading stdin
+    # outside a Mycelium project, and under pipefail the writer's SIGPIPE (141) would be reported
+    # as the gate's exit status.
+    CLAUDE_PROJECT_DIR="$pdir" bash "$GATE" < <(printf '%s' "$json") 2>"$GATE_ERR_FILE" >"$GATE_OUT_FILE"
     echo $?
 }
 gate_err() { cat "$GATE_ERR_FILE"; }
@@ -244,11 +247,27 @@ test_non_source_files_allowed() {
     rm -rf "$p"
 }
 
-test_missing_active_yml_still_blocks() {
-    # Plugin installed but /setup never ran: the coldest workspace.
+test_no_mycelium_project_is_left_alone() {
+    # 0.318.0: no Mycelium action outside a Mycelium project (founder ruling 2026-10-10).
+    # Plugin installed, /setup never ran, no .claude state at all: this used to block as the
+    # coldest workspace. It is now not a Mycelium project, so the gate does nothing.
     local tmp; tmp=$(mktemp -d)
     local code; code=$(run_gate "$tmp" "$(write_json "$tmp/server.js")")
-    assert_eq "$code" "2" "no .claude state at all -> still blocked"
+    assert_eq "$code" "0" "no .claude state at all -> not blocked"
+    assert_eq "" "$(cat "$GATE_OUT_FILE")" "no .claude state at all -> nothing on stdout"
+    assert_eq "" "$(gate_err)" "no .claude state at all -> nothing on stderr"
+    assert_eq "" "$(find "$tmp" -mindepth 1)" "no .claude state at all -> nothing created in the project"
+    rm -rf "$tmp"
+}
+
+test_missing_active_yml_still_blocks() {
+    # The original intent, kept: setup ran (an EMPTY .claude/canvas/, the state right after
+    # /mycelium:setup) but there is no active.yml and no discovery. Still the coldest Mycelium
+    # workspace, so a new source file is still blocked.
+    local tmp; tmp=$(mktemp -d)
+    mkdir -p "$tmp/.claude/canvas"
+    local code; code=$(run_gate "$tmp" "$(write_json "$tmp/server.js")")
+    assert_eq "$code" "2" "empty canvas, no active.yml -> still blocked"
     rm -rf "$tmp"
 }
 
@@ -336,6 +355,7 @@ run_test test_ack_file_allows
 run_test test_edit_tool_never_blocked
 run_test test_existing_file_write_allowed
 run_test test_non_source_files_allowed
+run_test test_no_mycelium_project_is_left_alone
 run_test test_missing_active_yml_still_blocks
 run_test test_project_under_a_dot_claude_ancestor_still_blocks
 

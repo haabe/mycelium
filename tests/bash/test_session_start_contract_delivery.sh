@@ -26,10 +26,17 @@ PLUGIN_ROOT="$REPO_ROOT/plugins/mycelium"
 HOOK="$PLUGIN_ROOT/hooks/contract-part.sh"
 
 # Run the real part handlers as a consumer would see them; return the injected contexts joined.
-run_hook_as_consumer() {
+run_hook_as_consumer() {  # $1 "bare" = a .claude/ with no Mycelium state (not a Mycelium project)
     local proj all="" k part
     proj="$(mktemp -d)"
-    mkdir -p "$proj/.claude"          # a consumer project: empty .claude/, no CLAUDE.md anywhere
+    if [ "${1:-}" = "bare" ]; then
+        mkdir -p "$proj/.claude"      # empty .claude/, no canvas, no diamonds, no CLAUDE.md
+    else
+        # a consumer project: setup ran (an EMPTY .claude/canvas/), no CLAUDE.md anywhere.
+        # 0.318.0: hooks do nothing outside a Mycelium project (founder ruling 2026-10-10), and
+        # .claude/canvas/ is what makes one; an empty .claude/ used to stand in for the consumer.
+        mkdir -p "$proj/.claude/canvas"
+    fi
     for k in 1 2 3 4; do
         part=$(CLAUDE_PLUGIN_ROOT="$PLUGIN_ROOT" CLAUDE_PROJECT_DIR="$proj" bash "$HOOK" "$k" 2>/dev/null \
           | python3 -c "
@@ -56,6 +63,23 @@ test_contract_reaches_a_consumer_session() {
     assert_not_contains "$ctx" "OVER-CAP" "every part fits the 10,000-character hook cap"
 }
 
+test_no_contract_outside_a_mycelium_project() {
+    # 0.318.0: no Mycelium action outside a Mycelium project (founder ruling 2026-10-10).
+    # A project whose .claude/ holds no canvas and no diamonds gets no contract injected.
+    local ctx
+    ctx=$(run_hook_as_consumer bare)
+    assert_eq "" "$ctx" "an empty .claude/ with no Mycelium state: nothing injected"
+    # The raw hook, not its parsed context: exit 0 and no stdout at all (an unparseable or
+    # crashed output would also parse to an empty context above).
+    local proj out rc; proj="$(mktemp -d)"; mkdir -p "$proj/.claude"
+    out=$(CLAUDE_PLUGIN_ROOT="$PLUGIN_ROOT" CLAUDE_PROJECT_DIR="$proj" bash "$HOOK" 1 2>/dev/null); rc=$?
+    local left; left=$(find "$proj/.claude" -mindepth 1)
+    rm -rf "$proj"
+    assert_eq "0" "$rc" "an empty .claude/: the part hook exits 0"
+    assert_eq "" "$out" "an empty .claude/: the part hook writes nothing to stdout"
+    assert_eq "" "$left" "an empty .claude/: nothing created in the project"
+}
+
 test_hook_resolves_contract_via_plugin_root() {
     # The hook must find the contract under CLAUDE_PLUGIN_ROOT (plugin form),
     # not only via an in-repo relative fallback.
@@ -65,5 +89,6 @@ test_hook_resolves_contract_via_plugin_root() {
 
 echo "=== test_session_start_contract_delivery: a consumer session receives the operating contract ==="
 run_test test_contract_reaches_a_consumer_session
+run_test test_no_contract_outside_a_mycelium_project
 run_test test_hook_resolves_contract_via_plugin_root
 report

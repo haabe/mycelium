@@ -22,7 +22,9 @@ unset MYCELIUM_GUARD_STATE_EDIT
 FAKE="$TMP/fakeplug"; mkdir -p "$FAKE/hooks"
 printf '#!/usr/bin/env bash\nexit 1\n' > "$FAKE/hooks/preflight.sh"
 
-P="$TMP/proj"; mkdir -p "$P/src" "$P/.claude/memory" "$P/.claude/state"
+# Both projects use Mycelium: 0.318.0 hooks do nothing outside a Mycelium project (founder ruling
+# 2026-10-10), so each carries the .claude/canvas/ marker that /mycelium:setup creates.
+P="$TMP/proj"; mkdir -p "$P/src" "$P/.claude/memory" "$P/.claude/state" "$P/.claude/canvas"
 echo "# corrections" > "$P/.claude/memory/corrections.md"
 export TMPDIR="$TMP/stampdir"; mkdir -p "$TMPDIR"   # no stamp exists here, so renewal is needed
 
@@ -40,7 +42,7 @@ assert_eq "$rc" "0" "happy: a clean write with a fresh stamp allows"
 assert_eq "$(wc -l < "$P/.claude/state/gate-block-log.jsonl")" "$before" "happy: an allow writes no log line"
 
 # bad: a log file the hook cannot append to must not change the verdict.
-Q="$TMP/proj2"; mkdir -p "$Q/src" "$Q/.claude/memory" "$Q/.claude/state"; echo "# c" > "$Q/.claude/memory/corrections.md"
+Q="$TMP/proj2"; mkdir -p "$Q/src" "$Q/.claude/memory" "$Q/.claude/state" "$Q/.claude/canvas"; echo "# c" > "$Q/.claude/memory/corrections.md"
 printf '' > "$Q/.claude/state/gate-block-log.jsonl"; chmod 444 "$Q/.claude/state/gate-block-log.jsonl"
 trap 'chmod -R u+w "$TMP" 2>/dev/null; rm -rf "$TMP"' EXIT
 export TMPDIR="$TMP/stampdir2"; mkdir -p "$TMPDIR"

@@ -26,11 +26,29 @@ PROMPT_JSON='{"hook_event_name":"UserPromptSubmit","prompt":"hello","session_id"
 MARK="MYCELIUM DISCOVERY STATE"
 
 _run() {  # $1 project dir
-    printf '%s' "$PROMPT_JSON" | CLAUDE_PROJECT_DIR="$1" CLAUDE_PLUGIN_ROOT="$PLUGIN_ROOT" bash "$HOOK" 2>/dev/null
+    # Fed by process substitution, not a pipe: since 0.318.0 the hook exits before reading stdin
+    # outside a Mycelium project, and under pipefail the writer's SIGPIPE (141) would be reported
+    # as the hook's exit status.
+    CLAUDE_PROJECT_DIR="$1" CLAUDE_PLUGIN_ROOT="$PLUGIN_ROOT" bash "$HOOK" < <(printf '%s' "$PROMPT_JSON") 2>/dev/null
+}
+
+test_uninitialized_project_is_left_alone() {
+    # 0.318.0: no Mycelium action outside a Mycelium project (founder ruling 2026-10-10).
+    # A project with no .claude/canvas or .claude/diamonds used to get the pre-warning; it is now
+    # not a Mycelium project, so the hook says nothing and writes nothing there.
+    local tmp; tmp=$(mktemp -d)
+    local out rc; out=$(_run "$tmp"); rc=$?
+    local left; left=$(find "$tmp" -mindepth 1)
+    rm -rf "$tmp"
+    assert_eq "0" "$rc" "no Mycelium state at all: exits 0"
+    assert_eq "" "$out" "no Mycelium state at all: nothing on stdout, no pre-warning"
+    assert_eq "" "$left" "no Mycelium state at all: nothing created in the project"
 }
 
 test_empty_project_is_warned() {
+    # The original intent, kept: setup ran (an EMPTY .claude/canvas/), discovery did not.
     local tmp; tmp=$(mktemp -d)
+    mkdir -p "$tmp/.claude/canvas"
     local out; out=$(_run "$tmp")
     rm -rf "$tmp"
     assert_contains "$out" "$MARK" "no discovery state: the pre-warning is emitted"
@@ -42,7 +60,8 @@ test_empty_project_is_warned() {
 
 test_skip_ack_silences_it() {
     local tmp; tmp=$(mktemp -d)
-    mkdir -p "$tmp/.claude/state"
+    # .claude/canvas/: a Mycelium project (0.318.0: .claude/state/ alone does not make one).
+    mkdir -p "$tmp/.claude/state" "$tmp/.claude/canvas"
     printf '2026-09-17 user: "skip discovery, just build"\n' > "$tmp/.claude/state/discovery-skip-ack"
     local out; out=$(_run "$tmp")
     rm -rf "$tmp"
@@ -133,6 +152,7 @@ test_not_ready_l3_is_said_once_per_sitting_and_on_go_live_prompts() {
 }
 
 run_test test_not_ready_l3_is_said_once_per_sitting_and_on_go_live_prompts
+run_test test_uninitialized_project_is_left_alone
 run_test test_empty_project_is_warned
 run_test test_skip_ack_silences_it
 run_test test_populated_purpose_silences_it

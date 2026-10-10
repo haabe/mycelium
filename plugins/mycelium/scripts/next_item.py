@@ -47,6 +47,8 @@ except ImportError:  # spoken by _fired_proposals: fired proposals are then repo
     yaml = None
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import _state_dir
+
 try:
     import advisory_ledger as al
 except ImportError:  # spoken by _ledger_state: streaks and rulings are then reported as unread
@@ -1517,7 +1519,7 @@ def conditions_line(root: Path, session: str, today: str) -> str:
     except OSError:
         pass  # never said this sitting: say it now
     with contextlib.suppress(OSError):
-        path.parent.mkdir(parents=True, exist_ok=True)
+        _state_dir.prepare(path)
         path.write_text(sitting + "\n")
     rows = "; ".join(f"`{aid}`: {' '.join(str(n).split())[:160]}" for aid, n in held[:5])
     return ("MYCELIUM: items the user snoozed until a condition is met. When one is met, put the "
@@ -1602,7 +1604,7 @@ def main(argv=None) -> int:
                     or same_sitting(prev, item["id"], args.session, args.today) else "")
         item["first_shown_at"] = first_at or _dt.datetime.now(tz=_dt.UTC).isoformat()
         p = root / STATE_REL
-        p.parent.mkdir(parents=True, exist_ok=True)
+        _state_dir.prepare(p)
         p.write_text(
             json.dumps(
                 {
