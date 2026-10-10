@@ -242,6 +242,11 @@ def _norm_token(tok: str, cwd_rel: str) -> str:
     t = _unquote(tok)
     t = re.sub(r"^(?:\$\{?PWD\}?|\$\(pwd\))/", "", t)
     t = t.removeprefix("./")
+    if _OPAQUE.search(t):
+        # v0.318.1: a path holding a variable stays opaque. Joined and normalised, `$D/../x.py`
+        # after `cd docs` became `docs/x.py`: the variable cancelled out, and the delivery gate
+        # refused a file the command never writes (dogfood 2026-10-09, a scratchpad helper).
+        return t
     if not os.path.isabs(t) and cwd_rel:
         t = os.path.normpath(os.path.join(cwd_rel, t))
     return t

@@ -4,6 +4,40 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-10.
 
+## v0.318.1 - four false readings from one dogfood session
+
+**2026-10-10, filed from the dogfood repo's 2026-10-09 handoff and ruled on by the founder one at a
+time.** Four places where Mycelium read something that was not there; each is reproduced in a test
+that fails on 0.318.0.
+
+- **A premortem is history, not an input.** `derive_closing_path.py` searched the whole definition of
+  done for task ids, so an L1 premortem ("as one was removed on 2026-10-06 (ht-130)") made another
+  diamond's task an L1 closing input. `kill_criterion.premortem` is now left out of the search; the
+  signal, branches and kill state are still read.
+- **A pointer is not a definition.** `closes_on.inputs` entries carry `{id: ht-130, ref:
+  "human-tasks.yml#ht-130"}`, and `validate_canvas.py` counted every `id`, so one task feeding two
+  diamonds failed as "duplicate id". A node whose `ref` fragment equals its `id` now defines nothing;
+  a real duplicate, and a pointer to a different id, still count.
+- **A variable before `..` stays unknown.** The shell-write parser joined `$D/../h2t.py` onto the
+  `cd` folder and normalised it to a project path, so the delivery gate refused a scratchpad helper
+  as a new source file. A path holding a variable is now left opaque. Known gap, not fixed here:
+  `$(cmd)/x` is still cut at `(` by the tokenizer.
+- **A read beside a variable-path write is not refused.** `bash_state_guard.py` refused any command
+  that named the diamonds file and wrote to any variable path, so a `grep` of it redirected to a
+  file under `$TMPDIR` was refused as a write while the message said reads never are. An opaque
+  write now counts only when it could land on `active.yml` (no visible target, a variable last
+  component, or a last component that is `active.yml`). Measured on the dogfood transcripts
+  2026-09-25..10-10: 68 refusals, 52 on this rule alone, 13 released by the new one, none of them an
+  unseen write. The same session was refused six times on this rule, the last two while writing
+  this fix.
+- **Alternatives considered.** Premortem: requiring the `human-tasks.yml#ht-N` form for inputs
+  (changes how builders write a bar) and a whitelist of input keys (a new key silently drops out).
+  Pointer: storing it under `task:` instead of `id:` (migrates every project's diamonds file).
+  Parser: skipping normalisation for every `..` (loses the literal `cd docs && > ../x.py` case,
+  which still resolves). Guard: leaving it, since splitting a command costs one turn (the refusal
+  message is false, and the workaround it trains, moving the command into a script, is a path the
+  guard cannot see).
+
 ## v0.318.0 - nothing outside a Mycelium project; inside one, logs listed, trimmed, kept out of git, and holding no commands
 
 **2026-10-10, from Anthropic's plugin directory review of v0.317.4.** The review asked for four

@@ -14,6 +14,8 @@ import os
 import time
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[2]
 PLUGIN = ROOT / "plugins" / "mycelium"
 _spec = importlib.util.spec_from_file_location("bash_state_guard",
@@ -117,3 +119,32 @@ def test_the_guard_is_registered_before_and_after_shell_commands():
     for name in ("hooks.json", "hooks.codex.json", "hooks.cursor.json"):
         text = (PLUGIN / "hooks" / name).read_text().replace('\\"', "")  # commands quote their paths
         assert "bash-state-guard.sh pre" in text and "bash-state-guard.sh post" in text, name
+
+
+# ---------------------------------------------------------------- v0.318.1: reads are not refused
+
+_F = ".claude/diamonds/active.yml"
+
+
+@pytest.mark.parametrize("cmd", [
+    f"grep -n ht-130 {_F} > $TMPDIR/hits.txt",
+    f"grep -n ht-130 {_F}; echo done > $TMPDIR/log.txt",
+    f"git diff --quiet {_F} && bash battery.sh > $TMPDIR/out.txt 2>&1",
+    f"grep -n ht-130 {_F} > hits.txt",
+])
+def test_a_read_beside_a_variable_path_write_is_not_refused(tmp_path, cmd):
+    """Dogfood 2026-10-09/10: four read-only commands refused in one session, the message saying
+    "Reading the file is never refused". A last component that is a literal name other than
+    active.yml cannot be the diamonds file."""
+    assert bsg.writes_active(cmd, str(_project(tmp_path))) is False
+
+
+@pytest.mark.parametrize("cmd", [
+    f"f={_F}; cat new.yml > $f",
+    f"cat new.yml > {_F}",
+    f"grep x {_F} > $DIR/active.yml",
+    f"grep x {_F} > $OUT",
+    f"python3 -c 'p=f(\"{_F}\"); p.write_text(\"x\")'",
+])
+def test_control_a_write_that_could_land_on_it_is_still_refused(tmp_path, cmd):
+    assert bsg.writes_active(cmd, str(_project(tmp_path))) is True
