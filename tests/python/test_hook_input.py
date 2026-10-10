@@ -119,6 +119,20 @@ def test_control_a_write_text_with_no_literal_path_stays_unknown(tmp_path):
     assert not scan.targets and "python write_text" in scan.opaque
 
 
+@pytest.mark.parametrize("cmd", ["cd docs && cat > $D/../h2t.py <<'EOF'",
+                                 "cd ~/proj && cat > ${OUT}/../report.py"])
+def test_a_variable_before_dotdot_stays_unknown_after_a_cd(tmp_path, cmd):
+    """v0.318.1, dogfood 2026-10-09: `$D/../h2t.py` after a cd normalised to a project path, and the
+    delivery gate refused a scratchpad helper as a new source file."""
+    scan = _m().bash_write_targets(cmd, str(tmp_path))
+    assert not scan.targets and scan.opaque, scan
+
+
+def test_control_a_literal_dotdot_after_a_cd_still_resolves(tmp_path):
+    scan = _m().bash_write_targets("cd docs && cat > ../x.py", str(tmp_path))
+    assert [t.rel for t in scan.targets] == ["x.py"]
+
+
 def test_bash_absolute_path_and_cd_are_followed(tmp_path):
     m = _m()
     (tmp_path / ".claude" / "engine").mkdir(parents=True)

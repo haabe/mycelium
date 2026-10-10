@@ -628,6 +628,35 @@ def test_collect_trace_graph_passes_when_ids_unique(tmp_path, scripts_path, monk
     assert duplicate_errors == [], f"False positive on unique IDs: {duplicate_errors}"
 
 
+def test_a_pointer_to_an_id_in_another_file_is_not_a_duplicate(tmp_path, scripts_path, monkeypatch):
+    """v0.318.1, dogfood 2026-10-09: one task listed as a closing input of two diamonds failed
+    validation as "duplicate id 'ht-130'"; each entry only points at human-tasks.yml. A real
+    duplicate, and a pointer whose id differs from its target, still count."""
+    canvas_dir = tmp_path / ".claude" / "canvas"
+    canvas_dir.mkdir(parents=True)
+    (canvas_dir / "active.yml").write_text(textwrap.dedent("""\
+        active_diamonds:
+          - id: l1
+            closes_on:
+              inputs:
+                - {kind: task, id: ht-130, ref: "human-tasks.yml#ht-130"}
+          - id: l5
+            closes_on:
+              inputs:
+                - {kind: task, id: ht-130, ref: "human-tasks.yml#ht-130"}
+          - id: l5
+          - id: a-1
+            ref: "opportunities.yml#opp-1.sol-1a"
+          - id: a-1
+            ref: "opportunities.yml#opp-1.sol-1b"
+    """))
+    validator = _import_validator(scripts_path)
+    monkeypatch.setattr(validator, "CANVAS_DIR", canvas_dir)
+    _graph, _ids, errors = validator.collect_trace_graph()
+    dups = sorted(e.split("'")[1] for e in errors if "duplicate id" in e)
+    assert dups == ["a-1", "l5"], errors
+
+
 def test_resolve_trace_references_flags_missing_target(tmp_path, scripts_path, monkeypatch):
     """Known-bad: trace edge points to a target_id that doesn't exist in any canvas."""
     canvas_dir = tmp_path / ".claude" / "canvas"

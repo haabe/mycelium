@@ -221,6 +221,12 @@ def _walk_canvas(node, path_prefix, ctx):  # noqa: C901
     """
     if isinstance(node, dict):
         node_id = node.get("id")
+        # v0.318.1: `{id: ht-130, ref: "human-tasks.yml#ht-130"}` POINTS at an id defined in another
+        # file (derive_closing_path writes closes_on.inputs that way); it defines nothing here.
+        # Counting it made one task feeding two diamonds a "duplicate id" in active.yml.
+        ref = node.get("ref")
+        if isinstance(ref, str) and "#" in ref and ref.rsplit("#", 1)[1] == node_id:
+            node_id = None
         if node_id and isinstance(node_id, str):
             ctx["all_ids"].add(f"{ctx['stem']}#{node_id}")
             ctx["file_ids"].append(node_id)

@@ -98,7 +98,23 @@ def writes_active(cmd: str, project: str) -> bool:
     if any(t.inside and t.rel == ACTIVE_REL for t in scan.targets):
         return True
     names_it = "diamonds/active.yml" in cmd
-    return names_it and bool(scan.opaque)
+    return names_it and any(_could_be_active(o) for o in scan.opaque)
+
+
+_VARIABLE = re.compile(r"[$`()]")
+
+
+def _could_be_active(opaque: str) -> bool:
+    """Could this opaque write (`"redirect on $TMPDIR/hits.txt"`, or a writer with no visible
+    target) land on active.yml? v0.318.1: any opaque write anywhere in a command that NAMED the file
+    refused it, so `grep ... active.yml > $TMPDIR/hits.txt` was refused as a write (68 refusals in
+    the dogfood transcripts, 2026-09-25..10-10; 13 of them released by this rule, none of those an
+    unseen write). A last component that is a literal name other than active.yml cannot be it."""
+    if " on " not in opaque:
+        return True  # a writer with no visible target: unknown, keep refusing
+    target = opaque.split(" on ", 1)[1].strip().strip("'\"").rstrip("/")
+    base = target.rsplit("/", 1)[-1]
+    return bool(_VARIABLE.search(base)) or base == "active.yml"
 
 
 def pre(payload: dict, project: Path) -> int:

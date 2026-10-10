@@ -333,6 +333,27 @@ def test_an_l1_diamond_with_a_bar_watches_what_the_bar_reads_not_leaves(tmp_path
     assert "ht-77" not in ids, "a task mentioned only in the bar's LOG is history, not an input"
 
 
+DOD_PREMORTEM = """  definition_of_done:
+    signal: three counts, read from human-tasks.yml#ht-9
+    kill_criterion:
+      state: two kills, counted on ht-1
+      date: '2026-10-28'
+      premortem: >-
+        It is 2026-12-10 and the bar failed: moderators removed the replies, as one was removed
+        on 2026-10-06 (ht-77).
+"""
+
+
+def test_a_task_the_premortem_mentions_is_history_not_an_input(tmp_path, capsys):
+    """Dogfood 2026-10-09 (v0.318.1): an L1 premortem named another diamond's task and the check
+    made it a closing input; the duplicate it wrote then failed validate_canvas."""
+    _project(tmp_path, active=ACTIVE + DOD_PREMORTEM, tasks=TASKS_DOD)
+    _run(tmp_path, capsys, "--diamond-id", "l1", "--write")
+    ids = _input_ids(tmp_path)
+    assert "ht-77" not in ids, "a premortem is a story told in the past tense"
+    assert {"ht-9", "ht-1"} <= ids, "the bar's signal and its kill state are still read"
+
+
 def test_the_printed_path_names_the_bar_its_date_and_its_tasks(tmp_path, capsys):
     _project(tmp_path, active=ACTIVE + DOD, tasks=TASKS_DOD)
     rc, out = _run(tmp_path, capsys, "--diamond-id", "l1")
