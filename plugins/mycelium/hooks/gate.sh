@@ -1,4 +1,5 @@
 #!/bin/bash
+. "$(dirname "${BASH_SOURCE[0]}")/../scripts/_state_ignore.sh" 2>/dev/null || true  # .claude/state never lacks its ignore file (v0.318.0)
 # Mycelium PreToolUse gate
 # Lightweight check before code changes. Exit 0 = allow, Exit 2 = block.
 #

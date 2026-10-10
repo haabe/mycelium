@@ -57,6 +57,9 @@ import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import _state_dir
+
 #: Only durable evidence surfaces. Framework source, tests and scratch files are
 #: full of legitimate absence prose ("no matches", "does not exist") and warning
 #: on those would train the reader to ignore this.
@@ -519,7 +522,7 @@ def _log(hook: str, fires: int, first_match: str, signature: str,
     """
     try:
         root = Path(os.environ.get("CLAUDE_PROJECT_DIR", ".")) / ".claude" / "state"
-        root.mkdir(parents=True, exist_ok=True)
+        _state_dir.prepare_dir(root)
         # PROMPTED A RE-READ THAT CHANGED THE TEXT (v0.213.0). Two consumers measured this
         # guard at zero catches over ~30 fires; what it does when it works is prompt a re-read.
         # So the instrument is that, not the fire count: when this session fired on this file

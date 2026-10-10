@@ -62,6 +62,10 @@ from datetime import UTC, datetime
 from itertools import pairwise
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import _secret_mask
+import _state_dir
+
 #: (id, compiled test, message). Each returns True when the trap is PRESENT.
 _BACKTICK = re.compile(r"`")
 #: A QUOTED heredoc (<<'EOF' / <<"EOF") disables expansion, so backticks inside
@@ -329,33 +333,17 @@ def findings(command: str) -> list[str]:
 
 # Opt-in trigger recording (v0.224.0). OFF unless MYCELIUM_LEDGER_TRIGGER=on.
 _TRIGGER_CHARS = 200
-_SECRET_SHAPES = (
-    # provider-shaped tokens
-    re.compile(r"\b(?:gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|sk-[A-Za-z0-9_-]{16,}"
-               r"|xox[abprs]-[A-Za-z0-9-]{10,}|AKIA[0-9A-Z]{16}|eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9._-]{10,})"),
-    # Authorization headers
-    re.compile(r"(?i)\b((?:bearer|basic|token)\s+)[A-Za-z0-9._~+/=-]{8,}"),
-    # NAME=value where the name says it is a secret
-    re.compile(r"(?i)\b([A-Z0-9_]*(?:TOKEN|SECRET|PASSWORD|PASSWD|API_?KEY|CREDENTIALS?)[A-Z0-9_]*=)\S+"),
-    # --password x / --token=x style flags
-    re.compile(r"(?i)(--?(?:password|passwd|token|secret|api-?key)[= ])\S+"),
-    # credentials inside a URL
-    re.compile(r"(?i)\b([a-z][a-z0-9+.-]*://)[^\s/:@]+:[^\s/@]+@"),
-)
 
 
 def _masked_trigger(command: str) -> str:
     """First _TRIGGER_CHARS of the command with obvious secret shapes replaced.
 
-    Masking is BEST EFFORT and says so: it knows token prefixes, auth headers, secret-named
-    assignments and flags, and URL credentials. A secret in none of those shapes is recorded
-    as typed. That is why this is opt-in and off by default; it is for a maintainer scoring
-    their own guard. The ledger lives under .claude/state/, which setup does not git-ignore.
+    Masking is BEST EFFORT and says so (the rules live in _secret_mask.py since v0.318.0, shared
+    with the reflexion log). A secret in none of its shapes is recorded as typed. That is why this
+    is opt-in and off by default; it is for a maintainer scoring their own guard. The ledger lives
+    under .claude/state/, whose ignore file every hook writes on exit since v0.318.0.
     """
-    text = command
-    for pat in _SECRET_SHAPES:
-        text = pat.sub(lambda m: (m.group(1) if m.lastindex else "") + "<masked>", text)
-    return " ".join(text.split())[:_TRIGGER_CHARS]
+    return _secret_mask.mask(command, _TRIGGER_CHARS)
 
 
 def _log(hook: str, fires: int, first_match: str, signature: str, command: str = "") -> None:
@@ -385,7 +373,7 @@ def _log(hook: str, fires: int, first_match: str, signature: str, command: str =
     """
     try:
         root = Path(os.environ.get("CLAUDE_PROJECT_DIR", ".")) / ".claude" / "state"
-        root.mkdir(parents=True, exist_ok=True)
+        _state_dir.prepare_dir(root)
         row = {
             "at": datetime.now(UTC).isoformat(timespec="seconds"),
             "hook": hook,

@@ -24,6 +24,9 @@ import os
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import _state_dir
+
 HERE = Path(__file__).resolve().parent
 MIN_PARTS = 3      # .claude/<canvas|diamonds>/<file>
 MAX_SHOWN = 8      # errors listed in full before "... and N more"
@@ -83,7 +86,7 @@ def _said_once(project: Path, session: str) -> bool:
     try:
         if ledger.exists() and session in ledger.read_text().split():
             return True
-        ledger.parent.mkdir(parents=True, exist_ok=True)
+        _state_dir.prepare(ledger)
         with ledger.open("a") as f:
             f.write(session + "\n")
     except OSError:

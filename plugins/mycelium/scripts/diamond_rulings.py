@@ -25,6 +25,9 @@ import json
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import _state_dir
+
 try:
     import yaml
 except ImportError:  # SPEAKS: next_item falls back to the typed date, which is today's behaviour
@@ -127,7 +130,7 @@ def record(root: Path, session: str, now: str | None = None) -> dict:
         else:
             new[did].pop("exposures", None)
     try:
-        (root / STATE).parent.mkdir(parents=True, exist_ok=True)
+        _state_dir.prepare(root / STATE)
         (root / STATE).write_text(json.dumps(new, indent=1, sort_keys=True))
     except OSError:
         return new  # an unwritable state dir: next_item falls back to the typed date

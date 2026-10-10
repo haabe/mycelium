@@ -785,6 +785,34 @@ def test_exposure_hook_blocks_with_the_remedy(tmp_path, monkeypatch, capsys):
     assert "Even" not in err and "/mycelium:threat-model" in err and "delivery-skip-ack" in err
 
 
+def test_without_pyyaml_a_project_with_no_diamonds_file_may_still_release(tmp_path, monkeypatch):
+    """Anthropic directory review of v0.317.4: without PyYAML the gate refused every deploy and
+    publish, in projects that never used Mycelium, because it needed PyYAML before it looked for
+    Mycelium state. 0.317.5 exits 3 here (refused by the hook); 0.318.0 answers "not in use"
+    first."""
+    monkeypatch.setattr(sl, "yaml", None)
+    monkeypatch.setattr(sys, "stdin", __import__("io").StringIO(json.dumps(_bash("npm publish"))))
+    assert sl.main(["--project-dir", str(tmp_path), "--exposure-hook"]) == 0
+
+
+def test_the_release_log_masks_a_token_in_the_matched_release(tmp_path):
+    """`vercel ... --prod` spans the arguments in between; a token there is not kept (v0.318.0)."""
+    p = _project(tmp_path, ladder=False, records=False)
+    sl._log_release(p, "vercel --token abcd1234efgh5678 --prod", ["l3 testers"], "allowed")
+    row = json.loads((tmp_path / sl.EXPOSURE_USES).read_text().splitlines()[-1])
+    assert "abcd1234efgh5678" not in row["release"] and "<masked>" in row["release"]
+
+
+def test_without_pyyaml_a_project_with_diamonds_still_cannot_be_checked(tmp_path, monkeypatch):
+    """The early answer is only for "no diamonds file": where Mycelium is in use, a release that
+    cannot be checked is still refused (exit 3, which the hook turns into a refusal with the fix)."""
+    (tmp_path / ".claude" / "diamonds").mkdir(parents=True)
+    (tmp_path / ".claude" / "diamonds" / "active.yml").write_text("active_diamonds: []\n")
+    monkeypatch.setattr(sl, "yaml", None)
+    monkeypatch.setattr(sys, "stdin", __import__("io").StringIO(json.dumps(_bash("npm publish"))))
+    assert sl.main(["--project-dir", str(tmp_path), "--exposure-hook"]) == 3
+
+
 # ---------------------------------------------------------------- a parent at every rung (0.247.0)
 
 

@@ -55,6 +55,9 @@ import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import _state_dir
+
 # --- Who the claim is about -------------------------------------------------
 # Third parties only. Deliberately excludes first person: an author's report of
 # his own experience is internal_stakeholder evidence, which this framework
@@ -160,7 +163,7 @@ def _log(hits: list[str]) -> None:
     """
     try:
         root = Path(os.environ.get("CLAUDE_PROJECT_DIR", ".")) / ".claude" / "state"
-        root.mkdir(parents=True, exist_ok=True)
+        _state_dir.prepare_dir(root)
         row = {
             "at": datetime.now(UTC).isoformat(timespec="seconds"),
             "hook": "discovery-trigger-guard",

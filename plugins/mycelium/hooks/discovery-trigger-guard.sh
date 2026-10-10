@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+. "$(dirname "${BASH_SOURCE[0]}")/../scripts/_state_ignore.sh" 2>/dev/null || true  # .claude/state never lacks its ignore file (v0.318.0)
 # Mycelium discovery-trigger guard (UserPromptSubmit)
 #
 # Advises when the AUTHOR states something whose truth depends on other people's

@@ -2,7 +2,54 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-10-08.
+**Last updated**: 2026-10-10.
+
+## v0.318.0 - the logs in your project, listed, kept out of git, and holding no commands
+
+**2026-10-10, from Anthropic's plugin directory review of v0.317.4.** The review asked for four
+changes, and each still held on 0.317.5 when checked: the reflexion hook kept 160 characters of each
+failed command and 200 of its error output, unmasked, in `.claude/state/reflexion-log.jsonl`; only
+`/mycelium:setup` wrote that folder's ignore file, and one Read in a bare git repo left
+`read-log.jsonl` there with none; PRIVACY.md said commands are kept only when the user opts in; and
+without PyYAML the release gate refused `npm publish` in a repo that never used Mycelium.
+
+- **Reflexion log.** A line holds the time, exit code and program name (`git`, `npm`), and for a
+  documented non-failure why. Never the command or its error output, unless the user sets
+  `MYCELIUM_LEDGER_TRIGGER=on`, and then masked. Written by `scripts/reflexion_record.py` from the
+  payload on stdin, so the command is no longer an argument `ps` shows. The first session on 0.318.0
+  strips the two fields from older lines (`reflexion_record.py scrub`, run by `session-start.sh`).
+- **Masking** moves to `scripts/_secret_mask.py`, shared by the shell-safety log, the reflexion log
+  and the release log `exposure-uses.jsonl`. That last one kept up to 80 characters of the matched
+  release unmasked, which for `vercel ... --prod` is everything in between. Found while listing the
+  logs; not in the review.
+- **Ignore file.** Every hook sources `scripts/_state_ignore.sh`: on exit, a `.claude/state/` with no
+  `.gitignore` gets one from `scripts/state-gitignore.txt`. It never creates the folder or rewrites an
+  existing file. Python scripts create folders through `scripts/_state_dir.py`, which does the same;
+  `/mycelium:setup` calls it, so the rules exist once.
+- **Release gate.** A project with no `diamonds/active.yml` is allowed before anything needs PyYAML,
+  the answer the gate already gave once PyYAML was present. Where Mycelium is in use, a release that
+  cannot be checked is still refused.
+- **PRIVACY.md** lists every log the hooks keep, what one line holds, and how long it is kept (until
+  you delete it: nothing trims them). The plugin README says the same briefly; `hooks/README.md`
+  and the system card are corrected, the card where it said the advisory hooks keep nothing of a
+  command.
+- **Tests.** `test_state_ignore.py` runs every hook registered in `hooks.json` in an empty project
+  and checks the folder it leaves; on 0.317.5, 7 of 55 registered entries left it without the file
+  (`read-log`, `change-log`, `diamond-state-audit`, `reflexion-gate`, `stop-check`,
+  `session-start`), on 0.318.0 none. It also fails on a raw `mkdir` in a script and on a hook that
+  does not source the exit check. `test_reflexion_record.py` holds the row shape, the opt-in, the
+  scrub and the hook wiring; `test_scale_locks.py` gains the no-PyYAML case both ways and the masked
+  release log.
+- **Alternatives considered.** Masking the reflexion command by default instead of dropping it:
+  masking misses a secret in no known shape (`mysql -pHunter2`), the case the review named, and
+  nothing reads the text except a display list. Writing the ignore file only at session start: a
+  hook can run with no session start before it (a runtime where that hook is not registered or not
+  trusted, a plugin enabled mid-session), and the exit check covers every writer, whoever created
+  the folder. Editing each write site in the 28 shell hooks: the next new writer would skip it
+  unnoticed. Not keeping logs at all in a project with no Mycelium state, and a retention cap such as
+  90 days: both change what the guards can measure, and are left for a ruling; this release states
+  the retention as it is. Checking for the diamonds file in the shell hook before Python starts: the
+  Python early return keeps one implementation and in-process test coverage.
 
 ## v0.317.5 - a scored instrument is not "no expiry" either
 

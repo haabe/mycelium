@@ -63,6 +63,9 @@ import sys
 from datetime import UTC, date, datetime
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import _state_dir
+
 LEDGER_REL = Path(".claude") / "state" / "advisory-ledger.jsonl"
 MUTE_DAYS = 7
 RULINGS = ("keep", "fix", "drop", "snooze")
@@ -218,7 +221,7 @@ def read_events(path: Path) -> tuple[list[dict], list[str]]:
 
 
 def append_events(path: Path, events: list[dict]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
+    _state_dir.prepare(path)
     with path.open("a", encoding="utf-8") as f:
         for ev in events:
             f.write(json.dumps(ev, ensure_ascii=False) + "\n")

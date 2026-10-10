@@ -38,6 +38,9 @@ from pathlib import Path
 
 import yaml
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import _state_dir
+
 #: Canvas files that carry `cynefin_domain` per the shipped schemas.
 CANVAS = ("opportunities.yml", "services.yml")
 
@@ -164,7 +167,7 @@ def _bucket(found: list) -> Buckets:
 
 
 def _write_baseline(path: Path, undated_ids: list) -> int:
-    path.parent.mkdir(parents=True, exist_ok=True)
+    _state_dir.prepare(path)
     path.write_text(json.dumps({
         "_comment": "Cynefin classifications carrying no date when this check was adopted. "
                     "NOT to be backfilled — inventing a classification date is fabrication. "

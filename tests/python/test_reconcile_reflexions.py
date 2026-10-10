@@ -63,6 +63,13 @@ def test_outstanding_lists_the_actual_commands(tmp_path):
     assert st["recent"] == ["cmd-0", "cmd-1"]
 
 
+def test_a_row_without_command_text_is_described_by_program_and_exit(tmp_path):
+    """Since v0.318.0 a row keeps no command unless the user opted in; the list still says which."""
+    assert rr._describe({"ts": "2026-10-10T09:00:00Z", "program": "git", "exit_code": 128}) == (
+        "2026-10-10T09:00:00Z  git (exit 128)")
+    assert rr._describe({"ts": "t", "program": None, "exit_code": None}) == "t  a command"
+
+
 # ------------------------------------------------------- decisions reconcile
 
 def test_adding_a_correction_credits_the_balance(tmp_path):

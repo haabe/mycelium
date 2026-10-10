@@ -1,4 +1,5 @@
 #!/bin/bash
+. "$(dirname "${BASH_SOURCE[0]}")/../scripts/_state_ignore.sh" 2>/dev/null || true  # .claude/state never lacks its ignore file (v0.318.0)
 # Mycelium PostToolUse: check a written canvas or diamonds file against its schema (v0.250.0).
 #
 # A reminder to run the validator is not the validator. The E2E happy path wrote an invalid

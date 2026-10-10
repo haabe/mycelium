@@ -1,0 +1,12 @@
+# Mycelium runtime state: logs, ledgers and session stamps the hooks write during sessions.
+# Not committed. Canonical project state lives in .claude/canvas/ and .claude/diamonds/.
+# Written by any Mycelium hook that finds this folder without it (v0.318.0), and by /mycelium:setup.
+*
+!.gitignore
+!README.md
+# Kept under version control on purpose: these record a DECISION the user made, once per
+# project, and a fresh clone should not be asked again.
+!discovery-skip-ack
+!brownfield-ack
+!delivery-skip-ack
+!upstream.json

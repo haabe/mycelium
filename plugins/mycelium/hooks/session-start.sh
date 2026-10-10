@@ -1,4 +1,5 @@
 #!/bin/bash
+. "$(dirname "${BASH_SOURCE[0]}")/../scripts/_state_ignore.sh" 2>/dev/null || true  # .claude/state never lacks its ignore file (v0.318.0)
 # Mycelium SessionStart hook
 # Checks for overdue strategic feedback loops and reminds the agent.
 # Returns additionalContext with overdue loop warnings.
@@ -1422,6 +1423,12 @@ fi
 # this block sat after the final `exit 0` and never ran, and it printed plain text
 # that would have broken the JSON below; it now joins the reminders.
 RECONCILE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)/scripts/reconcile_reflexions.py"
+# v0.318.0: rows written before this version kept the failed command and its error output,
+# unmasked; strip those two fields once, before anything reads the log (reflexion_record.py).
+if [ -f "$PROJECT_DIR/.claude/state/reflexion-log.jsonl" ]; then
+  python3 "$(dirname "$RECONCILE")/reflexion_record.py" scrub \
+    --state-dir "$PROJECT_DIR/.claude/state" >/dev/null 2>&1 || true
+fi
 if [ -f "$RECONCILE" ]; then
   RX=$(python3 "$RECONCILE" --project-dir "$PROJECT_DIR" --json 2>/dev/null \
     | python3 -c "import json,sys;print(json.load(sys.stdin).get('outstanding',0))" 2>/dev/null || echo 0)

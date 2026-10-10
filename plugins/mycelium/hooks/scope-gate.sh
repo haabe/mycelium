@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+. "$(dirname "${BASH_SOURCE[0]}")/../scripts/_state_ignore.sh" 2>/dev/null || true  # .claude/state never lacks its ignore file (v0.318.0)
 # Mycelium scope enforcement hook (PreToolUse on Edit|Write|MultiEdit)
 #
 # When an L4 Delivery diamond has an active execution with declared in_scope_paths,

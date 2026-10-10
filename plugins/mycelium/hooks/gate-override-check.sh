@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+. "$(dirname "${BASH_SOURCE[0]}")/../scripts/_state_ignore.sh" 2>/dev/null || true  # .claude/state never lacks its ignore file (v0.318.0)
 # gate-override-check.sh — PostToolUse (v0.316.0). Did a Mycelium refusal hold?
 #
 # WHY THIS EXISTS. Claude Code 2.1.287 shipped Mods, in-process plugin hooks, and the docs say a

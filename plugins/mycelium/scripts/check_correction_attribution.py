@@ -46,6 +46,8 @@ from pathlib import Path
 # this directory on sys.path, so put it there explicitly before the sibling
 # import. See check_wiring_contract.py for the same idiom and why.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import _state_dir
+
 try:
     from . import _corrections_lib
 except ImportError:  # invoked as a script, or loaded by file path
@@ -162,7 +164,7 @@ def write_snapshot(root: Path, st: dict, snapshot_dir: Path | None = None) -> Pa
     if not st.get("applicable") or not st.get("attributed"):
         return None
     target = snapshot_dir or (root / SNAPSHOT_REL)
-    target.mkdir(parents=True, exist_ok=True)
+    _state_dir.prepare_dir(target)
     now = datetime.now(UTC)
     path = target / f"{now:%Y-%m-%d}.json"
     path.write_text(json.dumps({

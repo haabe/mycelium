@@ -1,4 +1,5 @@
 #!/bin/bash
+. "$(dirname "${BASH_SOURCE[0]}")/../scripts/_state_ignore.sh" 2>/dev/null || true  # .claude/state never lacks its ignore file (v0.318.0)
 # Mycelium discovery gate (PreToolUse; Write, and since v0.291.0 Edit/MultiEdit once discovery is engaged)
 #
 # Blocks scaffolding NEW source files in a project where discovery has never

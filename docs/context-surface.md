@@ -3,7 +3,7 @@
 **Audience**: practitioners + evaluators wanting to understand what the agent has access to mid-session, and operators auditing Mycelium against transparency expectations.
 **Time to read**: 8 min.
 **Last updated**: 2026-10-03.
-**Hook surface reviewed:** 2026-10-07 (digest 360fcc0af2c8)
+**Hook surface reviewed:** 2026-10-10 (digest 5c5cda1612ca)
 
 This document answers a question the audit (`/xai-check` on `svc-mycelium`, 2026-05-04) flagged as a Stage 2 partial: **"What data does the agent see when it makes a recommendation under Mycelium?"** Today the answer is distributed across many files. This is the consolidated map.
 
@@ -75,7 +75,10 @@ Every significant decision: context, alternatives, theory, evidence, confidence.
 | `advisory-ledger.jsonl` | Per session start: which advisories fired, which cleared, which are muted, and human rulings (snooze/drop). Gitignored. |
 | `next-item.json` | The one item last put in front of the human, and whether the Stop hook repeated it. Gitignored. |
 | `read-log.jsonl` | Every Read (and inferred Bash read) the agent made, for citation auditing. Gitignored. |
-| `*-guard-log.jsonl` | One line per advisory-guard fire (a timestamp, the hook, a count, a digest of the matching sentence; not the sentence). Gitignored. |
+| `*-guard-log.jsonl` | One line per advisory-guard fire: a timestamp, the hook, a count and a signature (a hash of the rules that fired). The discovery-trigger log keeps a digest of the matching sentence, not the sentence; the shell-safety log the rule's own message, not the command; the absence-claim and key-shape logs up to 120 characters of the text they matched in what the agent was writing. Gitignored. |
+| `reflexion-log.jsonl` | One line per project-relevant command failure: time, exit code, program name, and why a documented non-failure is not a learning (since 0.318.0; never the command or its output unless `MYCELIUM_LEDGER_TRIGGER=on`, then masked). Gitignored. |
+
+Since 0.318.0 every hook writes this folder's ignore file on exit when it is missing, so "Gitignored" holds in a project where `/mycelium:setup` never ran. Every log the hooks keep, with what one line holds, is listed in `PRIVACY.md`.
 
 ### JiT detection (`.claude/jit-tooling/`)
 
@@ -110,7 +113,7 @@ The full table, per runtime, is `plugins/mycelium/hooks/README.md`. The ones tha
 | `session-start.sh` | Session start | Wraps quoted canvas text as `<untrusted_user_content>`; emits one NEXT ITEM |
 | `next-action-check.sh` | Stop | Blocks the end of a framework turn (a skill the agent ran or the person typed) until it ends on one `Next:` line that cites its trigger as `(per: <source>)` |
 | `next-item-repeat.sh` | Stop | Repeats the NEXT ITEM once if nothing followed it |
-| `reflexion-gate.sh` | Bash/tool failures | Prompts the agent to diagnose before retrying |
+| `reflexion-gate.sh` | Bash/tool failures | Prompts the agent to diagnose before retrying; logs the time, exit code and program name, never the command (0.318.0) |
 
 ## What the agent does NOT have access to
 

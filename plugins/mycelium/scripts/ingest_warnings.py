@@ -29,6 +29,9 @@ import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import _state_dir
+
 # Path resolution — supports plugin form AND legacy form.
 # Plugin form: $CLAUDE_PROJECT_DIR/.claude/memory/warnings-log.md (project state) +
 #              $CLAUDE_PLUGIN_ROOT/engine/warning-handbook.md (plugin reference).
@@ -277,7 +280,7 @@ def main():
         print(rendered)
         return
 
-    args.log_path.parent.mkdir(parents=True, exist_ok=True)
+    _state_dir.prepare(args.log_path)
     args.log_path.write_text(rendered)
     print(
         f"ingest_warnings: wrote {args.log_path} ({len(merged)} classes)",

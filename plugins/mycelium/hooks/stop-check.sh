@@ -1,4 +1,5 @@
 #!/bin/bash
+. "$(dirname "${BASH_SOURCE[0]}")/../scripts/_state_ignore.sh" 2>/dev/null || true  # .claude/state never lacks its ignore file (v0.318.0)
 # Mycelium Stop guardrail check
 # Layer 4: Verify guardrail compliance when Claude finishes responding.
 # Returns warnings via additionalContext (does NOT block by default).

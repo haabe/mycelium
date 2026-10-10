@@ -95,23 +95,10 @@ These directories hold project-specific state that the user's project owns and c
 
 **`.claude/state/` is Mycelium's runtime state, and it must not be committed by accident (v0.226.0).** Until this version the paragraph here said the directory was "created and owned by Claude Code itself" and that "Mycelium does not write to it". That was false: the plugin's hooks and scripts write there on almost every tool call: `read-log.jsonl` (every path the agent opened), `change-log.jsonl`, the guard ledgers, session stamps, the advisory ledger. Nothing git-ignored it in plugin form, so a new user's first commit carried all of it, and a public push published a log of what their agent read. (The dogfood repo never noticed: it inherited a `.gitignore` inside that directory from the legacy templated install.)
 
-Create the directory and its ignore file now, **only if the ignore file does not already exist: never overwrite one**:
+Create the directory and its ignore file now. The helper writes the ignore file **only if one does not already exist: it never overwrites one**. Since v0.318.0 every hook does the same when it exits and finds the folder without it, so a project where setup never ran is covered too; the rules live once, in `scripts/state-gitignore.txt`:
 
 ```bash
-mkdir -p <project_root>/.claude/state
-[ -f <project_root>/.claude/state/.gitignore ] || cat > <project_root>/.claude/state/.gitignore <<'EOF'
-# Mycelium runtime state: logs, ledgers and session stamps the hooks write during sessions.
-# Not committed. Canonical project state lives in .claude/canvas/ and .claude/diamonds/.
-*
-!.gitignore
-!README.md
-# Kept under version control on purpose: these record a DECISION the user made, once per
-# project, and a fresh clone should not be asked again.
-!discovery-skip-ack
-!brownfield-ack
-!delivery-skip-ack
-!upstream.json
-EOF
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/_state_dir.py" --project-dir <project_root>
 ```
 
 Tell the user in one line that you did it and why ("runtime logs stay out of git; your recorded gate decisions stay in"). The delivery skip-ack joined the kept files in v0.293.0: it is dated, scoped and expiring, and a decision that switches gates off belongs in the history. If the project already tracks files under `.claude/state/`, do NOT untrack them yourself; say which are tracked (`git ls-files .claude/state`) and let the user decide.

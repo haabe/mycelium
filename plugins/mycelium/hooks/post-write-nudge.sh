@@ -1,4 +1,5 @@
 #!/bin/bash
+. "$(dirname "${BASH_SOURCE[0]}")/../scripts/_state_ignore.sh" 2>/dev/null || true  # .claude/state never lacks its ignore file (v0.318.0)
 # Mycelium PostToolUse nudge
 # Layer 2: Context-aware reminders after code changes.
 # Fires on every Write/Edit/MultiEdit success.

@@ -59,6 +59,9 @@ import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import _state_dir
+
 # Proper-noun-ish tokens and quoted phrases from the QUERY, not from the user turn.
 # The query is what the agent is about to do: short, already distilled, and available
 # at the exact moment of failure. The user turn is noisy and can be many turns back —
@@ -149,7 +152,7 @@ def _log(project_dir: Path, tool: str, terms, hits):
     """Every firing, so the tier is set by a measured action rate rather than taste."""
     try:
         state = project_dir / ".claude" / "state"
-        state.mkdir(parents=True, exist_ok=True)
+        _state_dir.prepare_dir(state)
         rec = {
             "at": datetime.now(UTC).isoformat(timespec="seconds"),
             "hook": "read-before-research-guard",

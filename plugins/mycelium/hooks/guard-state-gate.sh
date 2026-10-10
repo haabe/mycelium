@@ -1,4 +1,5 @@
 #!/bin/bash
+. "$(dirname "${BASH_SOURCE[0]}")/../scripts/_state_ignore.sh" 2>/dev/null || true  # .claude/state never lacks its ignore file (v0.318.0)
 # Mycelium guard-state gate (PreToolUse on Write|Edit|MultiEdit|NotebookEdit, Bash and the
 # filesystem MCP writes), v0.281.0
 #

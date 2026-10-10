@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+. "$(dirname "${BASH_SOURCE[0]}")/../scripts/_state_ignore.sh" 2>/dev/null || true  # .claude/state never lacks its ignore file (v0.318.0)
 # Mycelium correction-attribution-guard hook (PreToolUse on Write|Edit|MultiEdit|Bash)
 #
 # Warns when a NEW entry is written to `.claude/memory/corrections.md` without
