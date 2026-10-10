@@ -294,6 +294,12 @@ def _dod_inputs(d: dict) -> dict | None:
         # nothing in it says what closes the diamond, so the leaf derivation still applies.
         return None
     kc = dod.get("kill_criterion") if isinstance(dod.get("kill_criterion"), dict) else {}
+    if kc and "premortem" in kc:
+        # v0.318.1: a premortem is "the failure it was generated from" (define-done), a story told
+        # in the past tense; a task it mentions is history, not an input. Dogfood 2026-10-09: an
+        # L1's premortem named another diamond's task "(ht-130)" and the check made it a closing
+        # input of the L1.
+        live["kill_criterion"] = {k: v for k, v in kc.items() if k != "premortem"}
     return {
         "date": str(kc.get("date") or ""),
         "tasks": sorted(set(_TASK_REF.findall(yaml.safe_dump(live, allow_unicode=True)))),
