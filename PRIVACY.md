@@ -1,6 +1,6 @@
 # Privacy Policy
 
-**Last updated: 2026-10-10**
+**Last updated: 2026-10-11**
 
 Mycelium is a local plugin for AI coding agents (Claude Code, and also Codex, Cursor and opencode). It runs entirely inside your own agent, on your own machine. It has no servers, no accounts, and no data-processing backend.
 
@@ -54,6 +54,7 @@ A few things are written or read outside `.claude/`:
 - `install-runtime-hooks.sh`, if you run it for Cursor or Codex, writes `.cursor/hooks.json` or `.codex/hooks.json` in your project.
 - At session start a check reads Claude Code's own transcripts for this project (under `~/.claude/projects/`) to see whether its hooks were delivered. It only reads them, and only on your machine.
 - If you set `release_repo` (or `MYCELIUM_CROSS_REPO_WATCH`), a check reads the commit subjects of that other repository. Unset, the default, it reads only this project.
+- At session start a check looks in your project for the files that show it deploys: whether a host's config file exists (`vercel.json`, `fly.toml`, a `Procfile` and the like, or a `Dockerfile` beside a compose file), and the text of the workflows in `.github/workflows/`, searched for a deploy command. It does this to ask you whether something is already live. It keeps the name of the file it found, in the question it shows you, and nothing of any file's contents. The release gate already reads some of the same files when the agent runs `git push`.
 
 None of it leaves your machine unless you commit or share it yourself.
 

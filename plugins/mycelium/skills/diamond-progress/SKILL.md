@@ -140,6 +140,19 @@ See `${CLAUDE_PLUGIN_ROOT}/engine/agent-operating-contract.md` *Canvas writes â€
    person, who confirms it (founder ruling g). An exposure already live before this was recorded
    gets `reconstructed: true` (ruling h). `scale_locks.py --exposures` reports what is missing, and
    the release gate refuses a release no current exposure record covers.
+   **Something already live with no record** (v0.322.0). When the repository shows the project
+   deploys and no diamond carries an exposure record, the next item `already-live` asks the
+   person whether something from it is already in front of real people, and names this skill
+   for a yes. That run records no decision and needs no gate passed: write the exposure record
+   on the diamond that carries the live work, with `reconstructed: true`, `data_class` and
+   `consent` only as the person states them, and no gate marked passed. Then run Security and
+   Privacy for it; until they pass, `--exposures` lists it, which is the point of recording
+   it. If no open diamond carries that work, say so and do not put the record on a diamond it
+   does not belong to: it waits on one being opened, `/mycelium:security-review` and
+   `/mycelium:privacy-check` can look at what is live now, and their yes is kept meanwhile with
+   `advisory_ledger.py rule --id already-live --ruling snooze --until asked --note "yes: <who it
+   reaches>; record it when its diamond opens"`. A no is the person's answer, recorded with
+   `--ruling drop`. The question never blocks.
    **The harms check is a step here, and it never blocks** (v0.321.0). When you draft or change
    an exposure record, ask the two things no record carries: does this work have sign-up,
    retention, cancellation, consent or pricing flows, and does it reach people who are vulnerable

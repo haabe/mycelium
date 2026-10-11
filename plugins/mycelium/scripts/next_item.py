@@ -1216,6 +1216,85 @@ def _product_paths_item(root: Path, today: str, st: dict) -> dict | None:
             "why": "the delivery gate cannot see a product it does not know the place of"}
 
 
+#: The id the question about a product already live is asked and answered under (v0.322.0).
+ALREADY_LIVE = "already-live"
+
+
+def _unrecorded_deploy_sign(root: Path) -> tuple[str, str]:
+    """(the file that shows this project deploys, when no diamond records who it reaches, else "";
+    a note when either half could not be read). The note is printed by main() beside whatever
+    item leads: a place nobody could look must not read as "this project does not deploy", nor an
+    unreadable diamonds file as "nothing is recorded"."""
+    if sl is None:
+        return "", ("scale_locks unavailable; whether something from this project is already "
+                    "live was not asked")
+    sign, unread = sl.deploy_sign(str(root))
+    note = ""
+    if unread and not sign:
+        note = (f"{', '.join(unread)} could not be read, so whether this project deploys is "
+                "unknown and whether something is already live was not asked")
+    elif sign:
+        try:
+            if sl.any_exposure_record(str(root)):
+                sign = ""  # someone has recorded who this project reaches: nothing to ask
+        except (sl.UnreadableError, sl.CannotCheckError) as exc:
+            note = (f"the repository has {sign}, and whether an exposure is recorded could not "
+                    f"be read ({exc}), so whether something is already live was not asked")
+            sign = ""
+    return sign, note
+
+
+def _already_live_item(root: Path, today: str, st: dict) -> tuple[dict | None, str]:
+    """Ask once whether something from this project is already in front of real people
+    (v0.322.0), and a note when the question could not be worked out.
+
+    The release gate judges a deploy the AGENT runs, against exposure records. A product somebody
+    put live by hand has no record and runs no command here. E2E run of 2026-09-26: a product was
+    live at two sites with real people's data and was being offered to eight more owners; no
+    diamond covered it, it sat outside Security and Privacy for six sessions, and the builder found
+    it by hand. Founder ruling, 2026-10-11: ask and offer to record it; never block.
+
+    Asked when the project uses Mycelium, the repository shows it deploys
+    (`scale_locks.deploy_sign`) and no diamond carries an exposure record
+    (`scale_locks.any_exposure_record`). The sign says the project CAN deploy, not that it is
+    live, so this is a question, it claims no more than "can deploy", and it names the file.
+
+    It stops in one of two ways, both existing: a record is written (the condition is gone), or
+    the person's answer is ruled in the advisory ledger under `already-live`: a no as `drop`, a
+    not-yet as a snooze to a date, and a yes that no open diamond can carry yet as a snooze until
+    asked with their words in the note, which `conditions_line` then puts before the agent each
+    sitting. Nothing here is read by any gate."""
+    # Not a Mycelium project (neither folder): the hooks do nothing there either (v0.318.0).
+    uses_mycelium = any((root / ".claude" / f).is_dir() for f in ("canvas", "diamonds"))
+    if _blocked(st.get(ALREADY_LIVE, {}), today) or not uses_mycelium:
+        return None, ""
+    sign, note = _unrecorded_deploy_sign(root)
+    if not sign:
+        return None, note
+    return {
+        "id": ALREADY_LIVE, "since": today, "command": "/mycelium:diamond-progress",
+        # The person reads this, cut at 240 characters (render_human): the longest sign leaves
+        # it whole, and a test holds that.
+        "text": (f"This project can deploy ({sign}). Is something from it already in front of "
+                 "real people? If yes, say who it reaches, so its security and privacy get "
+                 "checked. If no, say so once and this stops."),
+        # For the agent only (render): how each answer is recorded. The skill the item names
+        # carries the rest (skills/diamond-progress, "Something already live with no record").
+        "agent_note": (
+            "FOR YOU, NOT THE USER: ask it as a question. The file shows this project can "
+            "deploy, not that anything is live. IF YES: record who it reaches as an exposure "
+            "record on the diamond that carries that work (`exposures[]`: recorded_at, audience, "
+            "channel, until; `reconstructed: true`; `data_class` and `consent` only as they "
+            "state them; no gate marked passed), then run Security and Privacy for it. If no "
+            "open diamond carries it, say so, offer /mycelium:security-review and "
+            "/mycelium:privacy-check on what is live now, and keep their yes: `--ruling snooze "
+            '--until asked --note "yes: <who it reaches>; record it when its diamond opens"`. '
+            'IF NO: `--ruling drop` with their words; "not yet" is a snooze to a date. It asks '
+            "and blocks nothing."),
+        "why": "something put live by hand is outside every check until someone records it",
+    }, ""
+
+
 def pick(root: Path, reminders: str, today: str) -> tuple[dict | None, str]:
     """The one item, and a note when something could not be read."""
     st, note = _ledger_state(root)
@@ -1233,15 +1312,22 @@ def _pick_from(root: Path, reminders: str, today: str, st: dict,
                note: str) -> tuple[dict | None, str]:
     ids = set(al.scan(reminders)) if al is not None else set()
     fired, fnote = _fired_proposals(root)
-    note = "; ".join(x for x in (note, fnote) if x)
+    # Worked out before anything is returned (v0.322.0), so "could not look" is said even in a
+    # session where another item leads.
+    live, lnote = _already_live_item(root, today, st)
+    note = "; ".join(x for x in (note, fnote, lnote) if x)
     # 1. fired proposals
     for f in fired:
         if not _blocked(st.get(f["id"], {}), today):
             return {**f, "why": "a named input on a closing path landed; the ruling is yours"}, note
     # 2. records in a shape no longer read, before anything that reads the new one (v0.307.0);
+    #    whether something is already in front of real people, while the repository shows the
+    #    project deploys and nothing records who it reaches (v0.322.0: after the migration, which
+    #    is what turns an old learning delivery into such a record; before the rest, because real
+    #    people's data outside every check outranks where a file lives);
     #    where the product's own files live, while nobody has said (v0.270.0); then a door that
     #    now holds: an L4 on an L3 whose lock holds, an L5 on a shipped L4 (v0.254.0)
-    door = (_migrate_item(root, today, st) or _product_paths_item(root, today, st)
+    door = (_migrate_item(root, today, st) or live or _product_paths_item(root, today, st)
             or _door_item(root, today, st))
     if door:
         return door, note
@@ -1393,6 +1479,10 @@ def render(item: dict) -> str:
     # An item only its doing can answer is snoozed to a date, never until asked (v0.280.0): the
     # ledger refuses the latter, so the item must not offer it.
     dated = str(item.get("id", "")).startswith(getattr(al, "DONE_TO_BE_ANSWERED", ()) or ())
+    if item.get("agent_note"):
+        # What only the agent needs (v0.322.0): how to record each answer. Kept out of `text`,
+        # which is also the line the person reads, bounded to 240 characters.
+        text = f"{text} {item['agent_note']}"
     until, label = ("DATE", "snooze-until DATE") if dated else ("DATE|asked",
                                                                  "snooze-until DATE or asked")
     return (

@@ -108,7 +108,7 @@ Read-only rendering of canvas + state surfaces. All five skills share `engine/re
 | `/start` | First command after installing the plugin: composes `/setup` + `/interview` into one flow — the recommended entry point | — |
 | `/setup` | Initialize project-state directories + starter files only (idempotent); use standalone when you want state without the interview | — |
 | `/migrate-from-legacy` | Move a legacy (npx-degit) install to plugin form; idempotent, verifies project state survived | — |
-| `/adopt` | Two-phase on-ramp for an existing codebase: populates what the code can establish, then patches the holes it cannot with the same discipline as greenfield | — |
+| `/adopt` | Two-phase on-ramp for an existing codebase: populates what the code can establish, then patches the holes it cannot with the same discipline as greenfield. Since 0.322.0 it asks whether something is already in front of real people when the repository shows the project deploys, and drafts the record of who it reaches | — |
 | `/ping` | Smoke-test that the plugin loaded correctly (deterministic marker); not for normal end-user use | — |
 
 ## Self-improvement (framework-level)
