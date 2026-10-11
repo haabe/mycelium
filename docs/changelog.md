@@ -2,7 +2,40 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-10-10.
+**Last updated**: 2026-10-11.
+
+## v0.318.2 - two notes and a welcome say what the code does
+
+**2026-10-11, from the dogfood repo's theory audit and harms check of the same day, on the founder's
+rulings ("do best practice"; "match the behaviour").** No behaviour changes. Three places told the
+reader something the code does not do.
+
+- **ICE: the note said a penalty was preserved, and nothing preserved it.** Since 0.229.0
+  `/ice-score` averages its three dimensions, which is Ellis's operation. The note beside the formula
+  still said Gilad's non-linear confidence penalty "is preserved through evidence-class weighting".
+  No weighting is computed anywhere, and under an average an untested idea at (10, 1, 10) ties a
+  tested one at (7, 7, 7). The note in `skills/ice-score/SKILL.md` and the comment in
+  `engine/confidence-thresholds.yml` now say so, name what stands in the penalty's place (the
+  Confidence bands, a score that ranks and never unlocks, the L4 entry lock reading the kind of
+  evidence), and tell the agent to report Confidence beside every score and to say which of two tied
+  leaves is untested.
+- **GIST: the planning step was still on the old scale.** `skills/gist-plan/SKILL.md` scored
+  Confidence 0.1-0.9 and said "Mycelium uses 0.0-1.0", the wording `/ice-score` already records as
+  wrong, and credited Gilad with adding the confidence dimension (it is Ellis's C; Gilad's addition
+  is the meter). Now 1-10 with the same bands as `/ice-score`.
+- **Start: the welcome did not say what answering turns on.** After the four questions the second
+  stage of the build hold applies: the product is built only once a delivery diamond is open, new
+  files and edits alike. The welcome said nothing of it. It now says so before the first question,
+  with the two ways to lift it, and that uninstalling is one command.
+- **Not in this release.** `engine/adaptive-thresholds.md` still gives the ICE sequencing default as
+  "100 (I×C×E)" with bounds 50-300, which an averaged 1-10 score cannot reach; re-basing or retiring
+  it changes a consumer's `thresholds.yml` and needs its own ruling. The README lines that tell the
+  same story as the old welcome are in the founder's voice and wait for his wording.
+- **Alternatives considered.** ICE: capping the averaged score by evidence band (new arithmetic that
+  neither cited author uses, the class 0.229.0 removed); going back to multiplication (undoes a
+  primary-source correction); deleting the sentence without saying what replaced it (leaves the
+  reader to assume the penalty exists). Start: changing the gate to match the README's "nothing is
+  blocked" (the founder ruled that the words follow the behaviour).
 
 ## v0.318.1 - four false readings from one dogfood session
 

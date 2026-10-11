@@ -3,9 +3,11 @@
 #
 # Scale adaptation: Mycelium uses 0.0-1.0 (adapted from Gilad's Confidence Meter).
 # Gilad's original is 0-10 non-linear: 0.01=opinion, 1=anecdotal, 5=market data,
-# 8=A/B test, 10=launch data. The non-linear penalty (opinions worth ~0.01 in ICE
-# multiplication) is preserved through evidence-class weighting and source-class
-# requirements, not through the raw scale.
+# 8=A/B test, 10=launch data, and he multiplies it into ICE, so an opinion counts for
+# almost nothing. Nothing in Mycelium reproduces that arithmetic: until 0.318.2 this comment
+# said the penalty was "preserved through evidence-class weighting", and no weighting is
+# computed anywhere. What does the work instead is the evidence each decision requires
+# (`evidence_by_decision` below), which the entry locks read.
 
 scales:
   L0:

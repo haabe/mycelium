@@ -22,6 +22,8 @@ Output a short welcome before doing anything. Do NOT skip this — the install-t
 >   1. Set up Mycelium's files in `.claude/` — about 10 seconds. Your existing files (CLAUDE.md, README, etc.) aren't touched; only a new `.claude/` directory is added.
 >   2. A 10-minute discovery brief: 4 questions about your idea, then a one-page brief covering who it's for, the biggest assumption, the biggest risk, and your next concrete move.
 >
+> One thing to know before you answer: once the brief exists, the agent builds the product itself only after a delivery diamond is open with its reasons written down, new files and edits to existing code alike. Code in a folder listed under `prototype_paths` in `.claude/diamonds/active.yml` stays free, and you can lift the hold yourself with `.claude/state/delivery-skip-ack`. Uninstalling is one command.
+>
 > Let's begin."
 
 ## Step 2: Detect existing state — HARD GATE

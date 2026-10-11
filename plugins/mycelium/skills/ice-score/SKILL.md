@@ -65,8 +65,14 @@ submitter should rate each idea on a ten-point scale, across each of the followi
 > *Scale note: **Confidence is scored 1-10 here, like the other two dimensions** — the bands below
 > are 1-3 / 4-6 / 7-10. (Before 2026-09-20 this note said "Mycelium uses 0.0-1.0", which contradicted
 > both the step above and the bands below.) Gilad's original Confidence Meter uses 0-10 non-linear
-> (0.01=opinion, 1=anecdotal, 5=market data, 8=A/B test, 10=launch data); the non-linear penalty is
-> preserved through evidence-class weighting.*
+> (0.01=opinion, 1=anecdotal, 5=market data, 8=A/B test, 10=launch data), and he MULTIPLIES the three,
+> so an idea backed only by opinion scores near zero. **The average used here carries no such
+> penalty**: (10, 1, 10) and (7, 7, 7) both come out at 7.0. (Until 0.318.2 this note said the penalty
+> was "preserved through evidence-class weighting"; nothing computes a weighting.) What stands in its
+> place: a Confidence of 7 or more requires test-validated evidence (the bands below); the score ranks
+> and never unlocks; and the L4 entry lock reads the kind of evidence behind the solution, not this
+> number (`engine/diamond-rules.md`, the entry locks). **So never report an ICE score without its
+> Confidence, and when two leaves tie, say which one is untested.***
 - 1-3: Risk assessments based on gut feel or desk research
 - 4-6: Some direct evidence (interviews, analogues, small tests)
 - 7-10: Strong evidence (user tests, prototypes, data). Requires test-validated evidence.
