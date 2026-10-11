@@ -46,7 +46,7 @@ hi_read_input() {
   done <<< "$out"
 }
 
-# A REFUSAL THAT CANNOT BE PRINTED IS STILL A REFUSAL (0.321.2). Both functions below print their
+# A REFUSAL THAT CANNOT BE PRINTED IS STILL A REFUSAL (0.322.1). Both functions below print their
 # decision as JSON through python3 and leave with status 0, which is how Claude Code reads a JSON
 # decision. When python3 could not run, nothing was printed and the status was still 0: an allow.
 # So with no working python3, gate.sh, discovery-gate.sh and brownfield-gate.sh let the call

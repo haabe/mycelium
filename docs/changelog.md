@@ -4,6 +4,258 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-11.
 
+## v0.322.0 - a project that deploys is asked whether something is already live
+
+**2026-10-11, on the maintainer's ruling of the same day ("Ask and offer to record it").**
+Mycelium's release gate judges a deploy the agent runs, in a project with diamonds, against
+exposure records. A product somebody put live by hand has no record and runs no command Mycelium
+sees. In an end-to-end run of 2026-09-26 a builder's product was live at two sites, with real
+people's data, and was being offered to eight more owners. No diamond covered it. It sat outside
+the Security and Privacy gates for six sessions and nothing named it; the builder found it by
+hand. The ruling: when Mycelium is brought into an existing project, and at session start when
+the repository shows it deploys and no exposure record exists, one line asks whether something is
+already live and offers to record who it reaches. It never blocks.
+
+- **The sign is read from the repository** (`scale_locks.py`, `deploy_sign`). It reads what the
+  release gate already reads to tell that a plain push publishes: a host's config file
+  (`vercel.json`, `netlify.toml`, `render.yaml`, `.vercel/project.json`) or a workflow that
+  deploys. Three things are added for the question only: the config files of the other hosts whose
+  deploy command the gate already counts (`Procfile`, `fly.toml`, `serverless.yml`,
+  `wrangler.toml`, `firebase.json`, `railway.json` and their variants); a `Dockerfile` beside a
+  compose file; and a workflow that runs one of the gate's own release commands whatever starts
+  it, so a deploy on manual dispatch or a package publish on release counts. A `Dockerfile` alone,
+  a `Makefile` or a bundler config do not: they say the project builds.
+- **At session start one line asks.** It is the session's next item (`next_item.py`), so it is one
+  proposal, shown to the agent at every start and to the person on resume and fork, and repeated
+  once at the first stop. The person reads: "This project can deploy (vercel.json). Is something
+  from it already in front of real people? If yes, say who it reaches, so its security and privacy
+  get checked. If no, say so once and this stops." It comes after a fired closing-path proposal
+  and after the migration of old records, which is what turns an old learning delivery into a
+  record of who the work reaches, and before the other items.
+- **A yes is recorded as an exposure record** on the diamond that carries that work, marked
+  `reconstructed: true`, with `data_class` and `consent` only as the person states them and no
+  gate marked passed. Security and Privacy are then run for it; until they pass,
+  `scale_locks.py --exposures` lists it and the release gate refuses a release under it. When no
+  open diamond carries that work, the agent says so, offers `/mycelium:security-review` and
+  `/mycelium:privacy-check` on what is live now, and keeps the yes in the advisory ledger in the
+  person's words (a snooze until asked), where it is put before the agent each session.
+- **A no is said once.** It is a `drop` on `already-live` in the advisory ledger, the same ruling
+  every next item takes, and the line stops. "Not yet" is a snooze to a date.
+- **`/mycelium:adopt` asks the same question.** It runs `scale_locks.py --deploy-sign` when it
+  reads the repository, puts the question in the open list, drafts the record on a yes, and
+  records a no so session start does not ask again. It also asks when there is no sign and the
+  README or changelog speaks of users. `/mycelium:diamond-progress` says what it is run for when
+  the question names it.
+- **It never decides.** No function that allows or refuses reads the sign, the added files, or the
+  answer. A `Procfile` does not make `git push` a release. A no does not buy a release and does not
+  cost one. The record a yes produces has no gate passed, so recording what is live is the start
+  of the checks and not a way past them.
+- **Could not look is said.** A workflow that cannot be read, a diamonds file that does not parse,
+  or a missing PyYAML with a diamonds file present each print a line beside the session's item
+  saying the question was not asked and why. None of them reads as "this project does not deploy"
+  or "nothing is recorded".
+- **A workflow's file name is repeated only when it is a plain, short one.** The name comes from
+  the repository and reaches the agent inside an instruction.
+- **Docs.** The system card lists it as the seventh session-boundary behaviour, with what the sign
+  cannot show. The privacy policy says session start looks for these files and keeps only the
+  name of the one it found. The skills table says `/adopt` asks the question.
+- **Tests** (`tests/python/test_a_live_product_is_asked_about.py`, 135): the sign and its
+  controls; the question at the picker, at the hook's own entry point and through
+  `session-start.sh` on startup and resume; quiet after a no, after a record on any diamond in any
+  list, and after a kept yes; the could-not-look cases; and the cases that pin "it never decides"
+  from both directions. 74 fail on 0.321.0. The 61 that pass on both are the ones that guard "it
+  never decides" (59), which is what they are for, and two that check it stays quiet once answered.
+
+**What changes for an existing project.** A project whose repository shows it deploys, and which
+has no exposure record on any diamond, is asked once. Answer no and it stops. A project with any
+exposure record, on an open, completed or archived diamond, is not asked. A project with nothing
+that deploys from the repository sees nothing. Nothing that was allowed is refused and nothing
+that was refused is allowed. `MYCELIUM_NEXT_ITEM=off` turns this off with every other next item.
+
+**What this does not show.** The one case behind it is a builder agent on a synthetic product in
+an end-to-end run. No run yet shows the question being asked of a person, answered, and a record
+written; that is measurable from the next end-to-end runs. The sign is a file, and a file shows
+that a project can deploy, not that it is live: a scaffold with a `vercel.json` and nothing
+published is asked the same question as a product with customers, and only the person can tell
+them apart. A `Dockerfile` beside a compose file is the weakest sign, since many projects run that
+way locally. How often the question is asked of a project with nothing live has not been measured.
+
+**Not in this release.**
+
+- **A project that deploys nothing from the repository is invisible to this.** A service run by
+  hand, a document product, a host set up only in its own dashboard, a deploy config kept in
+  another repository: none leaves a file here, and none is asked at session start. Adoption asks
+  anyway when the README or changelog speaks of users. Nothing else does.
+- **Only the repository root and `.github/workflows/` are read.** A `vercel.json` in `apps/web/`
+  of a monorepo, GitLab or other CI, Kubernetes manifests, Terraform and Helm charts are not signs.
+- **A no is final until the person says otherwise.** If the work goes live later by hand, nothing
+  asks again. The prompt-time exposure line still speaks when a delivering diamond is open and not
+  ready, and the release gate still judges a deploy the agent runs.
+- **One question per project, not per product.** Any exposure record on any diamond stops it. A
+  project with one recorded pilot and a second product live by hand is not asked.
+- **The question is not asked while old records wait to be migrated**, and not in a session where
+  a fired closing-path proposal leads. It is asked at the next session start where it leads.
+- **The release gate's own reading of workflows is unchanged**, including that a workflow it
+  cannot read counts as not deploying on push, and that one it cannot decode raises and so
+  refuses the push. Left as found; changing either would change a release decision.
+
+**Alternatives considered.**
+
+- *Refuse work, or a release, until the question is answered.* Refused by the ruling. A file in
+  the repository is not evidence that anything is live, and a block on that would be paid by every
+  project with a scaffolded host config.
+- *Assert it: report "a live product has no exposure record".* Refused: the sign cannot show it.
+  The line would be wrong for every project that has a deploy config and nothing published.
+- *An advisory in the session-start block instead of the next item.* It would reach the agent
+  only, be muted after seven days without a ruling, and be one of many lines. The next item is
+  the one line a person is shown, and it already has the verbs that settle it.
+- *A new state file or a canvas field for the answer.* Not needed. A yes is the exposure record
+  itself, and a no is a ruling, which the advisory ledger has kept for every next item since
+  0.188.0. A new field would have been a second place to say what the record says.
+- *Count exposure records the way a release does (open L3 to L5 diamonds only).* Refused: a
+  project whose live product is recorded on a completed L4 would be asked at every session
+  whether something is live.
+- *Call the gate's `_goes_live_on_push` directly.* It answers a narrower question (does a plain
+  push publish), and it raises on a workflow it cannot decode, which the gate turns into a
+  refusal. The question reads the same lists and patterns, and a test holds that whatever makes a
+  push a release is a sign here too.
+- *Add the new host files to the gate's own list.* Refused: that would make `git push` a release
+  in every project with a `Procfile`, which changes what is refused.
+- *Ask the same question again every session after a yes that no diamond can carry.* Refused: the
+  person has answered. Their yes is kept in the ledger in their words and shown to the agent each
+  session, and the record is still owed.
+- *Leave out `Dockerfile` beside a compose file as too weak.* Kept: a product put on a server by
+  hand is exactly what runs this way, and that is the case no hook can see. The cost of a wrong
+  ask is one no.
+
+## v0.321.1 - two stops that could be walked around
+
+**2026-10-11. Both were found by a blind read of 0.321.0**: three readers, each alone, comparing what
+the plugin does with what its README, privacy page, get-started page and system card say. The read
+was looking for words that do not match behaviour. It also found behaviour that does not match the
+safeguard.
+
+### A shell write through a variable switched a stop off, and nobody was asked
+
+A handful of files switch one of Mycelium's stops off: the skip and lock files under
+`.claude/state/`, `.claude/manifest.yml`, `upstream.json`, `active-execution.json`
+(`_hook_input.GUARD_STATE_REL`). They are the person's to write. `guard-state-gate.sh` asks the
+person before a tool call writes one, and refuses where nobody would be asked. It can only ask about
+a write target it can read. `f=<the file>; echo ... > "$f"` gave it nothing to read, and the write
+went through with no question. Replayed through the released hook in a scratch project: a direct
+redirect is asked about; an assigned variable, a variable folder, a command substitution and `tee`
+through a variable were each allowed in silence. README said the agent cannot write these files, and
+the operating contract told the agent "the hooks read those too".
+
+No reading of a command closes this, because a path can be built any number of ways. So the fix
+does not read the command. It compares.
+
+- **Before and after every shell command, those files are compared.** `bash-state-guard.sh`, which
+  already does this for the diamonds file, now copies each of those files that exists before the
+  command and notes which do not. After the command, a file that was created, changed or removed,
+  and that the person was not asked about, is put back as it was.
+- **The person and the agent are told**, in the same turn: which file, that it was put back, and
+  how to change it properly (write it yourself, or have the agent use a plain command that names
+  the file, so that you are asked). The agent is told not to try another way.
+- **A write the person was asked about stands.** The hook notes which of those files the command
+  writes visibly; for those `guard-state-gate.sh` has asked, and a command that then runs was
+  approved. A command that writes one visibly and another through a variable has only the second
+  put back.
+- **A command that fails is compared too.** The after half ran on `PostToolUse` only, so a command
+  that wrote the file and then exited non-zero was never looked at, for this and for the diamonds
+  file. It is now also registered on `PostToolUseFailure` (Claude Code and Cursor; Codex reports
+  failures on its one post event).
+- **Each tool call has its own "before"**, keyed by the call's id, so two shell commands running
+  at once do not read each other's.
+- **This is the one thing the hook undoes**, on the maintainer's ruling ("Put it back and tell
+  me"): left as written, the stop is off until someone notices. It touches those files only. It
+  never restores code, canvas or diamonds, where its rule stays "it never undoes a change".
+- **Left alone:** a change you make in your own terminal (no hook sees it), a change made with
+  `MYCELIUM_GUARD_STATE_EDIT=1` in your own shell, and Mycelium's `upgrade.sh` run on its own
+  (naming it in a comment or beside another command does not count).
+- **Tests** (`tests/python/test_guard_state_put_back.py`, 13, through the real hook around a write
+  the test performs): created, changed and removed files put back; all seven files covered from
+  the one list; the failure registration; two calls at once; and five controls for what is left
+  alone, including that nothing else is ever undone. Eight fail on 0.321.0.
+
+### The build gate did not see every edit
+
+Since 0.291.0 editing product code counts as building once discovery is engaged, and the README and
+get-started page say "new files and edits alike". `discovery-gate.sh` set its editing flag for
+Edit, MultiEdit and the MCP edit tool only, and skipped every other write to an existing, non-empty
+file. A whole-file Write over a product file, a notebook edit and a shell edit (`sed -i`, a
+redirect, `cp` over it) changed product code with no gate firing, in the project where the same
+change made with the Edit tool was refused.
+
+- **A write to an existing product file is an edit, whatever tool makes it.** When a write creates
+  no gated new file, it is judged again as an edit, and this time existing files count. A shell
+  command that also writes a new note does not carry the edit through.
+- **Nothing changes** where discovery has not started (the brownfield stop's case), under declared
+  `prototype_paths`, for prose files, for reads, or for a write an open delivery cycle covers. The
+  new-file refusal and its wording are untouched.
+- **Tests** (`tests/python/test_an_edit_is_an_edit_whatever_tool.py`, 19): the Edit-tool control,
+  a whole-file write, a notebook edit, five shell forms, the mixed command, and ten controls.
+  Eight fail on 0.321.0.
+
+### Three README sentences now say what the code does
+
+All three readers named each of these. The wording is the maintainer's: two sentences are his own,
+three are drafts he approved.
+
+- **Nothing is held before `/mycelium:start`.** The README said the gate "fires the moment the
+  agent reaches for a new source file", and the plugin description that "the build stays shut until
+  the answers are there". Since 0.318.0 no hook acts in a project without Mycelium's folders, which
+  `/mycelium:start` or setup creates. README: "Nothing is held until you type `/mycelium:start` in
+  a repo. After that the gate fires ...". The description (both `plugin.json` files and
+  `marketplace.json`): "... so once you have started it in a repo the build stays shut until the
+  answers are there."
+- **The agent can write the files that switch a stop off, if you agree.** The README said it
+  "cannot" and "is not allowed to". You are asked, and on a yes it writes them; where nobody can be
+  asked it is refused. README: "... cannot write the files that switch a stop off without asking
+  you first" and "The agent can write either one only if you agree, and where there is nobody to
+  ask it is refused." `docs/get-started.md` says the same.
+- **Not everything else is a warning.** "Everything else prints a warning and lets you past" left
+  out the secret scan and several other stops. The paragraph now names the secret scan, says there
+  are a handful more, and links the system card for the full list.
+
+**Docs.** The operating contract's sentence "the hooks read those too" now says what was not true
+until this release and what holds since. `hooks/README.md`, the system card (sections 3 and 6), the
+context page's hooks table and `PRIVACY.md` (the copies kept while a command runs) are updated, and
+the hook-surface review is re-stamped.
+
+**What this costs.** Every shell command now stats seven paths and copies the few that exist,
+before it runs. An agent that edits product code through the shell, in a project with discovery
+under way and no delivery cycle open, is refused where it used to pass; the Edit tool was already
+refused there.
+
+**Not in this release.**
+
+- **A write that lands after the command has returned** (a background job, a scheduled command) is
+  not caught by a comparison around the command. A check at the next prompt that tells the person
+  when one of these files has changed outside an approved call would see it; it could tell and not
+  put back, since a change in the person's own terminal looks the same.
+- **A shell edit of product code through a path the hook cannot read** (a variable) is still not
+  seen by the build gate. Unlike the files above, product code is not put back: the hook never
+  undoes a change to code.
+- **The other findings of the read**: five behaviours no newcomer text mentions and eleven smaller
+  contradictions in the privacy page, the system card and the get-started page.
+
+**Alternatives considered.**
+
+- *Teach the hook to read more shapes of command* (assignments, `tee`, substitutions). Refused as
+  the fix: it is the approach that failed. A path can be base64, a here-document, a script on disk.
+  One cheap shape was not added either, so that the comparison is the single thing relied on.
+- *Compare with git* (`git status` before and after). The maintainer's suggestion, and the same
+  idea: look at what changed, not at what the command said. Not used as written because these
+  files sit in a git-ignored folder and not every project is a git repository; the comparison is
+  of the files themselves.
+- *Only tell the person, and leave the file.* Consistent with "it never undoes a change", and it
+  leaves the stop off until someone acts. The maintainer chose the put-back.
+- *Refuse every shell command whose write target cannot be read.* Would stop ordinary scripted
+  work (any loop over files) to close a case the comparison already closes.
+- *Put back product code a shell command edited outside a delivery cycle.* Refused: the hook does
+  not undo work on the person's code, whatever made it.
+
 ## v0.321.0 - the harms check is named at release, as advice that never blocks
 
 **2026-10-11, on the maintainer's ruling after an assumption test of the same day.**

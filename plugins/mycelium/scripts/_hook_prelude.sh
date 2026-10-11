@@ -20,7 +20,7 @@
 #
 # Pure bash on purpose: this runs on every hook call.
 
-# THE SAME TEST STANDS IN FRONT OF EVERY BLOCKING PreToolUse COMMAND (0.321.2): the `prefix` line
+# THE SAME TEST STANDS IN FRONT OF EVERY BLOCKING PreToolUse COMMAND (0.322.1): the `prefix` line
 # of hooks/pretooluse-on-failure.txt, which hooks.json carries before `bash` is started, so that a
 # hook that cannot start refuses a call only in a Mycelium project. That prefix must never be
 # narrower than this file. Add a marker folder here, or a new way of finding the project, and add

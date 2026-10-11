@@ -62,7 +62,7 @@ INPUT=$(cat)
 
 # Delegate to Python stdlib helper (json module, fnmatch module — all stdlib)
 # Helper returns either empty (allow) or a deny JSON on stdout
-# A here-string, not a pipe (0.321.2). The helper answers a corrupt state file before it reads
+# A here-string, not a pipe (0.322.1). The helper answers a corrupt state file before it reads
 # the tool call. Under `set -eo pipefail` a `printf | python3` pipe then died on any call larger
 # than the pipe holds (printf: Broken pipe), and the hook left with printf's status before it
 # passed the helper's deny on: a hook error that let the write through. With

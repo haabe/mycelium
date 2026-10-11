@@ -1,4 +1,4 @@
-"""A refusal that cannot be printed is still a refusal (v0.321.2).
+"""A refusal that cannot be printed is still a refusal (v0.322.1).
 
 `hi_deny` and `hi_ask` (scripts/_hook_input_read.sh) print a gate's decision as JSON through
 python3 and leave with status 0. When python3 could not run, nothing was printed and the status
@@ -37,7 +37,7 @@ def _no_python(tmp_path: Path) -> str:
 
 @pytest.mark.parametrize("script", GATES)
 def test_with_no_python3_the_gate_refuses_and_says_why_on_stderr(tmp_path, script):
-    """RED BEFORE 0.321.2: exit 0, nothing on stdout, nothing on stderr."""
+    """RED BEFORE 0.322.1: exit 0, nothing on stdout, nothing on stderr."""
     project = pf._mycelium_project(tmp_path)
     done = pf._run(script, project, pf._write("print('hi')\n", "app/main.py"),
                    PATH=_no_python(tmp_path))
@@ -48,7 +48,7 @@ def test_with_no_python3_the_gate_refuses_and_says_why_on_stderr(tmp_path, scrip
 
 @pytest.mark.parametrize("script", GATES)
 def test_control_with_a_working_python3_the_refusal_is_json_and_status_0(tmp_path, script):
-    """GREEN BEFORE 0.321.2 TOO. A call whose fields are not the documented shape is refused
+    """GREEN BEFORE 0.322.1 TOO. A call whose fields are not the documented shape is refused
     through `hi_deny`; with python3 working that is a JSON deny and exit 0, as it was."""
     project = pf._mycelium_project(tmp_path)
     done = pf._run(script, project, pf.CALLS["not a tool call"])
@@ -69,7 +69,7 @@ def _call(function: str, path: str | None, tmp_path: Path) -> subprocess.Complet
 
 @pytest.mark.parametrize(("function", "decision"), [("hi_deny", "deny"), ("hi_ask", "ask")])
 def test_control_each_function_prints_its_decision_when_python3_works(tmp_path, function, decision):
-    """GREEN BEFORE 0.321.2 TOO."""
+    """GREEN BEFORE 0.322.1 TOO."""
     done = _call(function, None, tmp_path)
     said = json.loads(done.stdout)["hookSpecificOutput"]
     assert (done.returncode, said["permissionDecision"]) == (0, decision)
@@ -78,7 +78,7 @@ def test_control_each_function_prints_its_decision_when_python3_works(tmp_path, 
 
 @pytest.mark.parametrize("function", ["hi_deny", "hi_ask"])
 def test_each_function_refuses_on_stderr_when_python3_cannot_run(tmp_path, function):
-    """RED BEFORE 0.321.2 (exit 0). A question that cannot be put to a person is a refusal."""
+    """RED BEFORE 0.322.1 (exit 0). A question that cannot be put to a person is a refusal."""
     done = _call(function, _no_python(tmp_path), tmp_path)
     assert (done.returncode, done.stdout) == (BLOCKED, "")
     assert done.stderr.startswith("the reason")

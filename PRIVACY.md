@@ -1,6 +1,6 @@
 # Privacy Policy
 
-**Last updated: 2026-10-10**
+**Last updated: 2026-10-11**
 
 Mycelium is a local plugin for AI coding agents (Claude Code, and also Codex, Cursor and opencode). It runs entirely inside your own agent, on your own machine. It has no servers, no accounts, and no data-processing backend.
 
@@ -39,7 +39,7 @@ In a project that uses Mycelium, the hooks keep logs in `.claude/state/`. That i
 | `advisory-ledger.jsonl` | Your rulings on Mycelium's advisories, with the note given. |
 | the other `*-fires.jsonl`, `gate-block-log.jsonl`, `denied-calls.jsonl` | Which hook fired, what it decided, and the tool call's id. |
 
-`.claude/state/bash-guard/` holds a copy of `.claude/diamonds/active.yml` from before the last shell command, replaced each time, so that a shell edit to it can be judged.
+`.claude/state/bash-guard/` holds a copy of `.claude/diamonds/active.yml` from before the last shell command, replaced each time, so that a shell edit to it can be judged. Since 0.321.1 it also holds, while a shell command runs, a copy of each file that switches one of Mycelium's stops off (the skip and lock files under `.claude/state/`, `.claude/manifest.yml`), so that a change you were not asked about can be put back; the copies are removed when the command ends.
 
 **Commands.** No log keeps a command or its output unless you ask it to. Set `MYCELIUM_LEDGER_TRIGGER=on` and the reflexion log also keeps the first 160 characters of each failed command and 200 of its error output, and the shell-safety log the first 200 characters of each command it warned about. All of it with obvious secrets masked. Masking knows token prefixes, auth headers, secret-named variables and flags, and passwords in URLs. A secret in any other shape is kept as typed, which is why it is off. Before 0.318.0 the reflexion log kept failed commands and their error output, unmasked, by default. The first session on 0.318.0 or later removes that text.
 
@@ -54,6 +54,7 @@ A few things are written or read outside `.claude/`:
 - `install-runtime-hooks.sh`, if you run it for Cursor or Codex, writes `.cursor/hooks.json` or `.codex/hooks.json` in your project.
 - At session start a check reads Claude Code's own transcripts for this project (under `~/.claude/projects/`) to see whether its hooks were delivered. It only reads them, and only on your machine.
 - If you set `release_repo` (or `MYCELIUM_CROSS_REPO_WATCH`), a check reads the commit subjects of that other repository. Unset, the default, it reads only this project.
+- At session start a check looks in your project for the files that show it deploys: whether a host's config file exists (`vercel.json`, `fly.toml`, a `Procfile` and the like, or a `Dockerfile` beside a compose file), and the text of the workflows in `.github/workflows/`, searched for a deploy command. It does this to ask you whether something is already live. It keeps the name of the file it found, in the question it shows you, and nothing of any file's contents. The release gate already reads some of the same files when the agent runs `git push`.
 
 None of it leaves your machine unless you commit or share it yourself.
 

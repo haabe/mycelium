@@ -1,10 +1,10 @@
-# WHAT HAPPENS WHEN A PreToolUse HOOK CANNOT RUN (0.321.2): the one list.
+# WHAT HAPPENS WHEN A PreToolUse HOOK CANNOT RUN (0.322.1): the one list.
 #
 # WHY THIS FILE EXISTS
 # --------------------
 # Claude Code lets a tool call through when a hook fails: the process cannot start, it reaches
 # its timeout, it exits with a status other than 0 or 2, or it prints JSON Claude Code cannot
-# read. Until 0.321.2 that was true of every Mycelium gate, whatever its own script said about
+# read. Until 0.322.1 that was true of every Mycelium gate, whatever its own script said about
 # failing closed, because the script's own fail-closed branch only runs when the script does.
 # Claude Code 2.1.295 added `"onFailure": "block"` on a command hook: a failed hook then blocks
 # the call (code.claude.com/docs/en/hooks, "Block the action when a hook fails"). Maintainer
@@ -30,7 +30,7 @@
 # Codex CLI documents no such key and Cursor's is a different one (`failClosed`), so neither of
 # those manifests carries this one, and the same test holds them to that.
 #
-# ONLY IN A PROJECT THAT USES MYCELIUM (0.321.2). Since 0.318.0 Mycelium does nothing in a project
+# ONLY IN A PROJECT THAT USES MYCELIUM (0.322.1). Since 0.318.0 Mycelium does nothing in a project
 # with neither `.claude/canvas/` nor `.claude/diamonds/`. That exit is on line 2 of each script,
 # so it needs the script to start: with the setting alone, a machine where the hooks cannot start
 # would have had every write refused in every project the plugin is enabled in, Mycelium or not.

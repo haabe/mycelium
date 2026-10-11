@@ -3,7 +3,7 @@
 **Audience**: practitioners + evaluators wanting to understand what the agent has access to mid-session, and operators auditing Mycelium against transparency expectations.
 **Time to read**: 8 min.
 **Last updated**: 2026-10-03.
-**Hook surface reviewed:** 2026-10-11 (digest 4c15efca6057)
+**Hook surface reviewed:** 2026-10-11 (digest b5cf60063975)
 
 This document answers a question the audit (`/xai-check` on `svc-mycelium`, 2026-05-04) flagged as a Stage 2 partial: **"What data does the agent see when it makes a recommendation under Mycelium?"** Today the answer is distributed across many files. This is the consolidated map.
 
@@ -103,7 +103,7 @@ The full table, per runtime, is `plugins/mycelium/hooks/README.md`. The ones tha
 | `framework-guard.sh` | Edit/Write/Bash on framework files in dogfood instances | Blocks; redirects to upstream-then-sync flow; denies on a broken state file |
 | `scope-gate.sh` | Edit/Write outside in_scope_paths during L4 | Blocks; allows .claude/** unconditionally |
 | `autonomous-evidence-guard.sh` | Canvas writes during a declared autonomous run | Blocks fabricated or elevated evidence; no-op with a human present |
-| `scale-lock-gate.sh`, `bash-state-guard.sh` | Writes to `.claude/diamonds/active.yml` (Edit/Write; shell commands) | Block a new diamond whose parent has not established what it builds on; refuse a shell command that writes the file, and schema-check what a shell command changed |
+| `scale-lock-gate.sh`, `bash-state-guard.sh` | Writes to `.claude/diamonds/active.yml` (Edit/Write; shell commands); since 0.321.1 also every shell command, before and after, for the files that switch a stop off | Block a new diamond whose parent has not established what it builds on; refuse a shell command that writes the file, and schema-check what a shell command changed; put back an off-switch file a shell command changed without the person being asked, and tell them |
 | `exposure-gate.sh` | Bash commands that put the work in front of real people (deploy, publish, remote sync) | Blocks while no delivery cycle is ready for that exposure (`scripts/scale_locks.py --exposure-hook` decides) |
 | `guard-state-gate.sh` | Writes to the files that switch a blocking hook off (ack files, `upstream.json`, `manifest.yml`, `active-execution.json`), and removing `.claude`, `.claude/canvas` or `.claude/diamonds`, which switches every hook off (judged by the hook itself since 0.318.3) | Asks the human; refuses where nobody would be asked (permissions bypassed, automated mode) |
 | `exposure-change.sh`, `preflight.sh` | A write that changes exposure state; each prompt | Tell the agent when nothing built may meet real people, right after the write and again at the prompt |
@@ -115,7 +115,7 @@ The full table, per runtime, is `plugins/mycelium/hooks/README.md`. The ones tha
 | `next-item-repeat.sh` | Stop | Repeats the NEXT ITEM once if nothing followed it |
 | `reflexion-gate.sh` | Bash/tool failures | Prompts the agent to diagnose before retrying; logs the time, exit code and program name, never the command (0.318.0) |
 
-**When a blocking hook cannot run (since 0.321.2).** In Claude Code 2.1.295 or later, the hooks in the first seven rows except `bash-state-guard.sh` refuse the call when their own process cannot start, reaches its timeout or crashes (`"onFailure": "block"` in `hooks.json`; the one list is `plugins/mycelium/hooks/pretooluse-on-failure.txt`). On a machine where a gate reaches its timeout, writes and shell commands stop until that is fixed. This holds only in a project that has `.claude/canvas/` or `.claude/diamonds/`: each of these commands tests for the two folders before it starts the hook, because Mycelium does nothing elsewhere (0.318.0). The exception is Windows without Git Bash, where Claude Code hands the command to PowerShell, which cannot read it, and the call is refused in every project. Older Claude Code versions, Codex CLI and Cursor let the call through as before.
+**When a blocking hook cannot run (since 0.322.1).** In Claude Code 2.1.295 or later, the hooks in the first seven rows except `bash-state-guard.sh` refuse the call when their own process cannot start, reaches its timeout or crashes (`"onFailure": "block"` in `hooks.json`; the one list is `plugins/mycelium/hooks/pretooluse-on-failure.txt`). On a machine where a gate reaches its timeout, writes and shell commands stop until that is fixed. This holds only in a project that has `.claude/canvas/` or `.claude/diamonds/`: each of these commands tests for the two folders before it starts the hook, because Mycelium does nothing elsewhere (0.318.0). The exception is Windows without Git Bash, where Claude Code hands the command to PowerShell, which cannot read it, and the call is refused in every project. Older Claude Code versions, Codex CLI and Cursor let the call through as before.
 
 ## What the agent does NOT have access to
 

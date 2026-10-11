@@ -70,7 +70,7 @@ for event, groups in reg.items():
             if '--async' in cmd:
                 continue
             n += 1
-            # The script and its arguments, wherever they sit in the command: since 0.321.2 a
+            # The script and its arguments, wherever they sit in the command: since 0.322.1 a
             # blocking PreToolUse command begins with a shell test, not with `bash`.
             m = re.search(r'/hooks/([A-Za-z0-9._-]+\.sh)"?(.*)$', cmd)
             name = '%02d__%s__%s' % (n, event, m.group(1) + ''.join(m.group(2).split()))

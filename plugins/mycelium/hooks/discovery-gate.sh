@@ -51,6 +51,7 @@ esac
 
 # A NEW gated source file: absent, or present and empty (2026-09-11: `touch` then Write passed
 # the old existence test). Real path inside the project, not under .claude, not prose.
+hi_gather_gated() {  # reads EDITING and HI_TARGETS; sets GATED_FILE and GATED_ALL (v0.321.1)
 GATED_FILE=""
 GATED_ALL=()  # every gated target the write makes (v0.307.6, control audit P11): an ack's scope
               # and the declared-prototype exemption were judged on the first one only
@@ -86,6 +87,23 @@ if [ -z "$GATED_FILE" ]; then
     done
     [ "${#GATED_ALL[@]}" -gt 0 ] && GATED_FILE="${GATED_ALL[0]}"
   fi
+fi
+return 0
+}
+hi_gather_gated
+# AN EDIT IS AN EDIT WHATEVER TOOL MAKES IT (v0.321.1). Until then only Edit, MultiEdit and the MCP
+# edit tool counted as editing, and every other write to an existing, non-empty file was skipped
+# above. So a whole-file Write over a product file, a notebook edit, and a shell edit the hook can
+# read (`sed -i`, a redirect, `cp` over it) changed product code with no gate firing, in the same
+# project where the same change made with the Edit tool was refused. README and get-started said
+# "new files and edits alike"; a blind read of 0.321.0 found it was true of three tools.
+# When the write creates no gated file, it is judged again as an edit: this time existing files
+# count. Nothing changes for a project where discovery has not started (the brownfield gate's
+# case, below), or for a write that an open delivery cycle covers. A shell edit whose target the
+# hook cannot read (a path in a variable) is still not seen here.
+if [ -z "$GATED_FILE" ] && [ "$EDITING" = "0" ]; then
+  EDITING=1
+  hi_gather_gated
 fi
 [ -n "$GATED_FILE" ] || exit 0
 # Declared prototypes are free (v0.291.0): throwaway discovery code under `prototype_paths`.

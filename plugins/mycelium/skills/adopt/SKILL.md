@@ -93,6 +93,9 @@ Cheapest signal first; stop when you have enough rather than reading everything.
 4. Top-level source tree — feature surface and module boundaries
 5. `CONTRIBUTING`, CI config — delivery posture
 6. Tests — what the team considers worth protecting
+7. Deploy config: run `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/scale_locks.py" --project-dir . --deploy-sign`.
+   It prints the file that shows this project deploys (a host's config, a workflow that
+   deploys, a `Procfile`), or says there is none, or that it could not look
 
 **Do not read the whole codebase.** You are establishing shape, not
 comprehension. If the repo is large, breadth beats depth.
@@ -100,6 +103,36 @@ comprehension. If the repo is large, breadth beats depth.
 **Issue tracker**: if the host is reachable and the user consents, open issues
 are the only real L2 signal available. Without them, say L2 is un-evidenced
 rather than inferring it from code.
+
+**Is something already live?** (v0.322.0) Item 7 shows the project CAN deploy, not that
+anything is live, and only the user knows which. So it is a question for Step 4, asked in
+plain words and never stated as a finding: *"Is something from this project already in
+front of real people?"* Ask it too when there is no sign and the README or changelog
+speaks of users: a service run by hand or a document product deploys nothing from the
+repository and shows none. Why it is asked: a product put live by hand runs no command
+Mycelium sees, so nothing checks it until someone records who it reaches. An end-to-end
+run had one live at two sites, with real people's data, for six sessions.
+
+- **Yes.** Draft the record of who it reaches from what they tell you, and show the
+  draft with the open list in Step 4. It is an exposure record (`exposures[]` on a
+  diamond): `recorded_at`, `audience`, `channel`, `until`, and `reconstructed: true`
+  because it was live before it was recorded (`/mycelium:diamond-progress`). Write
+  `data_class` and `consent` only as they state them, and mark no gate passed: nothing
+  has checked it yet, and saying so is what the record is for. It is backlog, not a
+  finding about the code. It is written on the diamond that carries that work once the
+  user opens one (Step 5), and Security and Privacy are run for it then;
+  `/mycelium:security-review` and `/mycelium:privacy-check` can look at what is live
+  before that. Keep their answer until the record is written, so session start does not ask
+  what they have already answered: `python3
+  "${CLAUDE_PLUGIN_ROOT}/scripts/advisory_ledger.py" rule --project-dir . --id already-live
+  --ruling snooze --until asked --note "yes: <who it reaches>; record it when its diamond
+  opens"`.
+- **No.** Say so in the starting position and record their answer, so session start does
+  not ask again: `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/advisory_ledger.py" rule
+  --project-dir . --id already-live --ruling drop --note "<their words>"`. "Not yet" is
+  `--ruling snooze --until YYYY-MM-DD`.
+
+Neither answer blocks anything.
 
 ### Step 3: Draft, with the evidence class the material actually has
 
@@ -150,6 +183,8 @@ artifact-derived.
 
 **Open** — and these are the next questions, not a report:
 
+- Is something from this project already in front of real people? (Step 2, item 7.
+  If yes, the draft record of who it reaches goes here.)
 - Who is this for, specifically?
 - What evidence exists that the problem is real?
 - What would prove the idea wrong?
@@ -192,6 +227,8 @@ has chosen a scale, exactly as it would otherwise.
   capabilities, it does not touch the project's own files.
 - Never claim the drift finding is a problem. Surface it; the maintainer decides
   whether it is intentional.
+- Never record that something is live because a deploy config exists. The file shows
+  the project can deploy; the user says whether it is live, and who it reaches.
 
 ## Theory Citations
 

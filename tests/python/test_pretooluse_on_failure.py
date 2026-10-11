@@ -1,4 +1,4 @@
-"""A blocking gate that cannot run refuses (v0.321.2; maintainer ruling "Block the write").
+"""A blocking gate that cannot run refuses (v0.322.1; maintainer ruling "Block the write").
 
 WHY. Claude Code lets a tool call through when a hook fails: it cannot start, it reaches its
 timeout, it exits with a status other than 0 or 2, or it prints JSON Claude Code cannot read. So

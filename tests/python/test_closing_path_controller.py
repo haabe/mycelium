@@ -479,7 +479,7 @@ def test_an_active_or_blocked_state_is_still_derived(tmp_path, capsys):
     assert "not derived" not in out and "NOTHING ON RECORD" in out
 
 
-# ----------------------- hand-written content inside the derived keys is not overwritten (v0.321.2)
+# ----------------------- hand-written content inside the derived keys is not overwritten (v0.322.1)
 # Session start runs `--all --write` on every start and replaced `gates`, `inputs` and `fired`
 # whole. A `note:` someone wrote on a gate row, an input of their own, any other key under
 # `closes_on`: gone after the next start, with nothing said. The script now leaves such a block
