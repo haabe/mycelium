@@ -42,9 +42,14 @@ LOCKS="$(dirname "${BASH_SOURCE[0]}")/../scripts/scale_locks.py"
 . "$(dirname "$LOCKS")/_python.sh"  # mycelium_python, mycelium_skip_ack and the fix line
 # The user's skip-ack lifts a release only when it says `releases: true`, and only while it is in
 # date (v0.293.0). Until then the file's mere existence lifted every release, forever.
-mycelium_skip_ack release && exit 0
-printf '%s' "$INPUT" | "$(mycelium_python)" "$LOCKS" --project-dir "$PROJECT_DIR" --exposure-hook
-rc=${PIPESTATUS[1]}
+# ONE JSON OBJECT ON STDOUT (0.321.1). An ack that does not lift the release can still print a
+# warning (expired, undated), as JSON, and the checker below prints its own JSON when it allows
+# with advice or asks the person. Two objects are output Claude Code cannot parse: a hook error
+# that let the release through and lost the question, and with `"onFailure": "block"` in
+# hooks.json a refusal of a release this gate allowed. So both are captured and leave as one.
+ACK_SAID=$(mycelium_skip_ack release) && { [ -n "$ACK_SAID" ] && printf '%s\n' "$ACK_SAID"; exit 0; }
+OUT=$(printf '%s' "$INPUT" | "$(mycelium_python)" "$LOCKS" --project-dir "$PROJECT_DIR" --exposure-hook)
+rc=$?  # the checker's own status: no pipefail here, and it reads all of stdin before it answers
 # 0 = allowed. 3 = PyYAML missing: since 0.290.0 that REFUSES too, with the fix, because this
 # command matched a release and nothing could check that the work is ready for real people.
 # Anything else refuses, including a crash, whose traceback is on stderr.
@@ -53,8 +58,23 @@ if [ "$rc" -eq 3 ]; then
   rc=2
 fi
 if [ "$rc" -ne 0 ]; then
+  [ -n "$ACK_SAID" ] && printf '%s\n' "$ACK_SAID"  # the ack's warning still reaches the person
   . "${CLAUDE_PLUGIN_ROOT:-$(dirname "${BASH_SOURCE[0]}")/..}/scripts/_hook_fire_log.sh" 2>/dev/null || true
   mycelium_log_fire ".claude/state/exposure-gate-fires.jsonl" "blocked" 2>/dev/null || true
   exit 2
+fi
+if [ -n "$ACK_SAID" ] && [ -n "$OUT" ]; then
+  # Both spoke: the ack's warning joins the checker's object as its systemMessage. If that
+  # cannot be done the checker's own answer goes out alone, so an `ask` is never lost.
+  python3 -c '
+import json, sys
+ack, out = json.loads(sys.argv[1]), json.loads(sys.argv[2])
+said = [m for m in (ack.get("systemMessage"), out.get("systemMessage")) if m]
+if said:
+    out["systemMessage"] = " ".join(said)
+print(json.dumps(out))
+' "$ACK_SAID" "$OUT" 2>/dev/null || printf '%s\n' "$OUT"
+elif [ -n "$ACK_SAID$OUT" ]; then
+  printf '%s\n' "$ACK_SAID$OUT"
 fi
 exit 0
