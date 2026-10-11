@@ -10,6 +10,7 @@ re-derivation. In-process for the coverage floor.
 
 import json
 import os
+import site
 import subprocess
 import sys
 from pathlib import Path
@@ -669,6 +670,10 @@ def _session_start(root, *mode):
     env = {"CLAUDE_PROJECT_DIR": str(root), "CLAUDE_PLUGIN_ROOT": str(plugin),
            "MYCELIUM_CROSS_REPO_WATCH": "", "MYCELIUM_SESSION_START_BUDGET": "600",
            "TMPDIR": str(root), "HOME": str(root),
+           # HOME is redirected, so say where this interpreter's user packages are: on a machine
+           # whose PyYAML is a user install, the hook's python3 otherwise cannot import it and
+           # session start reports "PyYAML unavailable" where this test expects the warning.
+           "PYTHONUSERBASE": site.getuserbase(),
            "PATH": str(Path(sys.executable).parent) + os.pathsep + "/usr/bin:/bin"}
     done = subprocess.run(["bash", str(plugin / "hooks" / "session-start.sh"), *mode],
                           input="", capture_output=True, text=True, env=env, check=False)
