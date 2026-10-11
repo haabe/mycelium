@@ -185,7 +185,7 @@ Every metric in Mycelium must have a **counter-metric** to prevent gaming:
 | Prompt optimization | Loop 4 | No change needed |
 | Cycle history | Loop 2 | Records every completed/discarded leaf for calibration |
 | Pattern detector | Loop 3 | Surfaces systemic patterns from cycle data |
-| Adaptive thresholds | Loop 3-4 | Calibrates the confidence factor and the bakeoff delta from historical data (the ICE threshold listed here until 0.319.0 is retired) |
+| Adaptive thresholds | Loop 3-4 | Calibrates the confidence factor from historical data (the ICE threshold listed here until 0.319.0 and the bakeoff delta listed here until 0.320.0 are retired) |
 | Framework reflexion | Loop 4 | Quarterly self-assessment of process effectiveness |
 | Evidence decay | Loop 2-3 | Degrades confidence on stale evidence, triggers refresh |
 | /retrospective | Loop 2-3 | No change needed |

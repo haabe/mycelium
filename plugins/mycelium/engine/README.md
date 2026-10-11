@@ -11,7 +11,7 @@ The engine is the brain of Mycelium. It defines how diamonds work, what gates mu
 ### Decision Gates
 - **[theory-gates.md](theory-gates.md)** — The 15 gates that must pass before a diamond transitions: Evidence, Four Risks, JTBD, Cynefin, Bias, Security, Privacy, BVSSH, Service Quality, Delivery Metrics, Corrections, Regulatory, Explainability, Landscape, Capacity (Explainability is conditional — L3–L5, AI products only; Landscape and Capacity are NUDGE-tier, added v0.217.0, and apply at L1). Each gate has pass/fail criteria and a suggested skill.
 - **[confidence-thresholds.yml](confidence-thresholds.yml)** — How much evidence is enough? Thresholds per scale, adapted by project type and dogfood mode.
-- **[adaptive-thresholds.md](adaptive-thresholds.md)** — Thresholds that improve from historical data. Confidence calibration, evidence staleness, the bakeoff delta — all adjust as cycle history accumulates. (The ICE advance threshold listed here until 0.319.0 is retired: no source gives an ICE total a threshold.)
+- **[adaptive-thresholds.md](adaptive-thresholds.md)** — Thresholds that improve from historical data. Confidence calibration and evidence staleness adjust as cycle history accumulates. (The ICE advance threshold listed here until 0.319.0 and the bakeoff delta listed here until 0.320.0 are retired: no source gives an ICE total a threshold, or lets an ICE gap pick a winner.)
 
 ### Routing and Classification
 - **[cynefin-routing.md](cynefin-routing.md)** — Snowden's Cynefin framework applied: how to classify problems as Clear, Complicated, Complex, or Chaotic, and what that means for which approach to use.

@@ -332,7 +332,7 @@ Confidence, per solution: [solution]: [each kind of evidence counted and what it
 
 The total is never shown without the three factors beside it, and each Confidence is shown with the evidence it was summed from, so a reader can check it against the meter. The four risk columns are Mycelium's addition (Step 1).
 
-If the top two scores are within noise of each other (see Noise Check below), say so instead of manufacturing a false leader — "too close to call on current evidence; [X] would separate them" is a legitimate recommendation.
+If the top two scores are within noise of each other (see Noise Check below), say so instead of manufacturing a false leader — "too close to call on current evidence; [X] would separate them" is a legitimate recommendation. There is no number for "within noise": it is a judgement you state with its reason (Noise Check below).
 
 ## Rules
 - Every ICE score must trace back to a Four Risks assessment — no scoring without risk evaluation first. (This is Mycelium's lifecycle rule, `engine/leaf-lifecycle.md` Phase 2 before Phase 3. It is not Ellis's or Gilad's.)
@@ -372,8 +372,15 @@ Update `.claude/canvas/gist.yml` with idea ICE scores and confidence levels.
 
 ICE scores are susceptible to **noise** — unwanted variability where different sessions or assessors produce different scores for the same evidence. Unlike bias (systematic skew in one direction), noise is random scatter.
 
-**Detection**: Re-score the same evidence independently (different session or assessor) and compare. If scores diverge by >1 point on any dimension, investigate why before proceeding.
+**Detection**: Re-score the same evidence independently (different session or assessor) and compare the three factors, then the total. Each factor is 0-10 and the total is their product, so a difference in one factor is multiplied by the other two. **No number says how far apart two scorings must be before the gap matters. Whether it matters is a judgement you state with its reason.** Read each factor for what it is:
+
+- **Confidence** is summed from the Confidence Meter (Step 2), so two scorings of the same evidence should give the same number. When they differ, compare the two lists of evidence counted, row by row. The difference is a piece counted under a different kind, a piece one scorer missed, or a part-weight one scorer applied and the other did not. Find it and correct the count before proceeding.
+- **Impact** and **Ease** are estimates on the project's own scales (Step 2). When they differ, say whether the difference changes what you are about to decide (the order of the leaves, or which assumption is tested first). If it does, ask what each estimate rests on before proceeding.
+
+**"Too close to call" is a judgement, stated with its reason.** Mycelium has no sourced number that separates a real lead from noise, so it does not give one. When you say two leaves are too close to call, say what makes the order unreliable (for example: the two scorings put the leaves in a different order, or the lead rests on a Confidence with no test behind it, and *"the ICE scores are quite unreliable as long as confidence levels are low"*, *Evidence-Guided*, ch. 3) and say what evidence would separate them.
+
+*(Changed 0.320.0. Until then the Detection paragraph above and the audit procedure below read "If scores diverge by >1 point on any dimension". The number was Mycelium's own and carried no citation; the book is cited here for what noise is and for auditing it by scoring the same case independently, not for a number. It was written when each dimension was a 1-10 rating. On the meter most Confidence values are under 1, so two scorings of 0.16 and 0.96 are less than "1 point" apart while, with the same Impact and Ease, one total is six times the other. No sourced number replaces it.)*
 
 **Mitigation**: Use structured assessment criteria (the Four Risks inputs above), apply scores independently before discussion, and anchor to evidence types rather than gut feel.
 
-**Noise audit procedure**: Score the same evidence independently twice (different session or different assessor). If ICE scores diverge by >1 point on any dimension, the gap is noise — investigate the scoring criteria before proceeding. For solo developers: re-score after a 24h break to detect temporal noise.
+**Noise audit procedure**: Score the same evidence independently twice (different session or different assessor). Compare the two scorings factor by factor as under Detection. A difference between two scorings of the same evidence is noise: where it matters (Detection), investigate the scoring criteria and the evidence counted before proceeding. For solo developers: re-score after a 24h break to detect temporal noise.

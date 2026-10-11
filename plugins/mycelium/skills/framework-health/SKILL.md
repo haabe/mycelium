@@ -143,7 +143,8 @@ unfed. Neither computes a value: calibrating a product threshold on meta-dogfood
 error, and the output is the prompt with the numbers in it. Since 0.319.0 the same function also
 prints one line when `thresholds.yml` still carries `ice_advance`, the threshold on the ICE total
 that release retired: the line says the key is read by nothing and can be removed. It is not a
-calibration that is due.
+calibration that is due. Since 0.320.0 it prints the same kind of line for `bakeoff_delta`, the ICE
+gap that decided a leaf bakeoff until that release retired it.
 
 ### 4. Check Goodhart Counter-Metrics
 
@@ -282,10 +283,11 @@ Period: [date range]
 
 *(The "ICE advance | 100" row that stood here until 0.319.0 is gone: the threshold is retired, see `engine/adaptive-thresholds.md`. If the project's `thresholds.yml` still has `ice_advance`, report it as retired and removable, not as a threshold awaiting calibration.)*
 
+*(The "Bakeoff delta | 20%" row that stood here until 0.320.0 is gone too: no ICE gap decides a leaf bakeoff, see `engine/adaptive-thresholds.md` and `orchestration/leaf-bakeoff.md`. If the project's `thresholds.yml` still has `bakeoff_delta`, report it as retired and removable, not as a threshold awaiting calibration.)*
+
 | Threshold | Default | Calibrated | Based On | Change |
 |-----------|---------|-----------|----------|--------|
 | Confidence factor | 1.0 | [value or "insufficient data"] | N cycles | [+/-] |
-| Bakeoff delta | 20% | [value or "insufficient data"] | N bakeoffs | [+/-] |
 
 ### Pattern Signals Active
 

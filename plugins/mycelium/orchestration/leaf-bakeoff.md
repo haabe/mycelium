@@ -6,10 +6,14 @@ Structured A/B testing of competing OST solution leaves. When multiple leaves ta
 
 A bakeoff is warranted when:
 - 2+ solution leaves target the **same opportunity** in `canvas/opportunities.yml`
-- Their ICE scores are **within 20%** of each other (no clear winner)
+- Each of those leaves has a riskiest assumption that is **untested** (no test verdict recorded for it). No ICE gap is consulted.
 - Both have completed Four Risks assessment (Phase 2 of leaf lifecycle)
 
-If one leaf has an ICE score >20% higher than all others AND its riskiest assumption has been tested, it wins outright — no bakeoff needed.
+If only one leaf has an untested riskiest assumption, test that one with `/assumption-test`: there is nothing to run in parallel. If the test verdicts are already recorded, apply the winner selection rules in section 4 to them without running a bakeoff. No leaf wins on its ICE score, whatever the gap to the others.
+
+**What the ICE total is for here.** It orders which leaf's assumption is tested first when they cannot all be tested at once. It does not decide whether leaves are compared and it does not pick the winner. Gilad: *"The one number you should be most suspicious of is the ICE score."* (*Evidence-Guided*, ch. 3). Torres compares a small set of ideas by testing their assumptions and does not score them to choose (*Continuous Discovery Habits*; `engine/leaf-lifecycle.md`, Phase 5).
+
+*(Changed 0.320.0. Until then a bakeoff was warranted when the ICE scores were "within 20%" of each other, and a leaf with an ICE score more than 20% higher than all others won outright once its riskiest assumption had been tested. The 20% was Mycelium's own number and no source has it. The threshold that held it, `bakeoff_delta`, is retired: `engine/adaptive-thresholds.md`.)*
 
 ## Bakeoff Workflow
 
@@ -81,19 +85,21 @@ segment_fit:
 
 ### 4. Fan-In (Winner Selection)
 
-The lead agent collects all scorecards and applies winner selection rules.
+The lead agent collects all scorecards and applies winner selection rules. **The assumption-test verdicts decide.** A leaf whose riskiest assumption failed is archived. The ICE totals on the scorecards are not compared to pick a winner.
 
 #### Rule 1: Clear Winner
-**Condition**: ICE delta > 20% AND assumption test passed
-**Action**: Advance winner to GIST (Phase 5). Archive loser.
+**Condition**: One leaf's assumption test passed AND every other leaf's assumption test failed
+**Action**: Advance winner to GIST (Phase 5). Archive loser. Rule 5 says what to note about a failing leaf that served a different segment.
 
-#### Rule 2: Close Race, Same Segment
-**Condition**: ICE delta ≤ 20% AND both serve the same segment
+#### Rule 2: Several Pass, Same Segment
+**Condition**: More than one leaf's assumption test passed AND they serve the same segment
 **Action**: Run the cheaper assumption test to break the tie. If both assumptions pass, advance the one with lower feasibility risk (faster to ship). If both assumptions fail, archive both — return to opportunity.
 
-#### Rule 3: Close Race, Different Segments
-**Condition**: ICE delta ≤ 20% AND leaves serve different user segments
+#### Rule 3: Several Pass, Different Segments
+**Condition**: More than one leaf's assumption test passed AND the leaves serve different user segments
 **Action**: Both advance as separate GIST entries tagged with their target segment. This is a segment split, not a tie.
+
+*(Changed 0.320.0. Until then Rules 1 to 3 each carried an ICE condition: "ICE delta > 20%" in Rule 1 and "ICE delta ≤ 20%" in Rules 2 and 3, which were named "Close Race". Under the old Rule 1 a leaf whose assumption test passed could be archived because another leaf scored more than 20% higher. The conditions now read the test verdicts and the segments, and nothing else.)*
 
 #### Rule 4: Both Fail
 **Condition**: Both assumption tests fail
@@ -121,7 +127,7 @@ When running `/fan-out` for a leaf bakeoff, specify `bakeoff: true` and the lead
 
 ## Anti-Patterns
 
-**Bakeoff Theater**: Running a bakeoff when one leaf is clearly superior (ICE >20% higher). Just advance the winner.
+**Bakeoff Theater**: Running a bakeoff when only one leaf has an untested riskiest assumption, or when the test verdicts are already recorded. Test the one assumption, or apply the winner selection rules to the verdicts you have. *(Until 0.320.0 this read "Running a bakeoff when one leaf is clearly superior (ICE >20% higher). Just advance the winner.", which advanced a leaf on its score.)*
 
 **Endless Bakeoff**: Running more than 2 rounds of bakeoff for the same opportunity. If 2 rounds haven't produced a winner, the opportunity itself may need re-evaluation.
 
@@ -129,7 +135,7 @@ When running `/fan-out` for a leaf bakeoff, specify `bakeoff: true` and the lead
 
 ## Theory Citations
 
-- Torres: Continuous Discovery Habits (parallel solution exploration)
-- Ellis: ICE scoring. Gilad: Evidence-Guided (ICE-based comparison with Confidence Meter)
+- Torres: Continuous Discovery Habits (parallel solution exploration; ideas are compared by testing their assumptions, not by scoring them)
+- Ellis: ICE scoring. Gilad: Evidence-Guided (ICE with the Confidence Meter; the total is a hint for ordering: *"The one number you should be most suspicious of is the ICE score."*, ch. 3)
 - Cagan: Inspired (Four Risks as evaluation framework)
 - Ries: Lean Startup (cheapest viable test for assumptions)
