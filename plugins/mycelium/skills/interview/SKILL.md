@@ -139,23 +139,30 @@ Lines 2 + 3 together are opp-004 candidate #3 and opp-005 candidate #1: surface 
 
 #### Step 3 — Render the depth menu (informed by brief content)
 
-If Q3's risk type is unambiguous, prefix the menu with one line of informed recommendation. Cite the specific Q3/Q4 phrase that drove it (Lanham contrastive XAI — "based on X, recommend Y, because Z"). Skip the recommendation if Q3 is ambiguous; default to "Several options worth considering — pick what matches your bandwidth."
+**The menu follows `harness/design-principles.md` ("the chat is a UI"), refactored in 0.318.4.** Until then it listed up to six equally weighted options, recommended one only when Q3 was unambiguous, had no option for what most people came to do (build something), named the friction log without its skill, and did not say that the brief just written switches on a hold over building the product (dogfood harms check 2026-10-11). Three rules hold now, and each is the framework's own:
+
+- **The hold is said first, on its own line.** A blocker must visibly pop (Von Restorff), in the `ON HOLD (pending X)` form the design principles give.
+- **One option is always recommended** (Hick's Law: recommend one and keep the set small). If Q3's risk type is unambiguous, cite the specific Q3/Q4 phrase that drove the recommendation (Lanham contrastive XAI — "based on X, recommend Y, because Z"). If it is ambiguous, recommend option 1 and give the plain reason: testing the biggest assumption is the cheapest way to find out whether the brief is wrong. Never render the menu with no recommendation.
+- **At most three options are listed.** Stopping and the friction log are lines under the list, not options in it.
 
 Then render the menu:
 
 ```
-Where to next? Pick one:
+ON HOLD (pending a delivery diamond): building the product itself, new files and edits alike.
+A prototype is free: name a folder and I list it under prototype_paths.
 
-1. Test the biggest assumption  (~10 min)  — /mycelium:assumption-test on what you flagged as risky. Smallest-viable-test design.
-2. Go deeper into discovery     (~10–45 min) — north star, landscape, constraints, classification. You choose how deep.
-3. [Contextual options — see table below, max 2]
-4. Stop for now                  (~0 min)   — your brief is saved. Run /mycelium:diamond-assess when you come back.
-5. Friction log                  (~5 min)   — what felt off about the last 10 minutes? See CONTRIBUTORS.md.
+Where to next? I recommend [N], because [the Q3/Q4 phrase, or the default reason].
 
-Other? Tell me what.
+1. Test the biggest assumption  (~10 min)     — /mycelium:assumption-test on what you flagged as risky. The smallest test that could prove the brief wrong.
+2. Build a prototype to learn   (your pace)   — throwaway code in a folder you name. Nothing is released from it.
+3. Go deeper into discovery     (~10–45 min)  — north star, landscape, constraints, classification. You choose how deep.
+
+Or stop here: your brief is saved, and /mycelium:diamond-assess picks it up when you come back.
+If anything in the last ten minutes felt off, /mycelium:friction-log takes five. Nothing is sent without your yes.
+Something else? Tell me what.
 ```
 
-**Contextual options** (insert at position 3, max 2 surfaced):
+**Contextual options** (at most ONE, and it REPLACES option 3 so the list stays at three; say in one line that "Go deeper into discovery" is still there if they ask):
 
 | Trigger keyword/shape in brief | Option to surface | Time |
 |---|---|---|
@@ -165,15 +172,16 @@ Other? Tell me what.
 
 Do NOT surface a contextual option if the trigger is weak or inferred — false positives waste user time. Default to tighter detection.
 
-If 3+ contextual triggers fire, surface the strongest 2 and add a one-liner: "Other depth options based on your brief — ask if you want to see them."
+If 2+ contextual triggers fire, surface the strongest one and add a one-liner: "Other depth options based on your brief — ask if you want to see them."
 
 #### Step 4 — Route based on user choice
 
 - **Test the biggest assumption** → Invoke `/mycelium:assumption-test` with Q3's biggest assumption pre-loaded as the target. Confidence will refine when the test designs.
+- **Build a prototype to learn** → Ask which folder (one line). Add it to `prototype_paths` at the top of `.claude/diamonds/active.yml` (repo-relative, for example `prototype/`), then say back, in plain words, what that means: code in that folder is free to write and change; nothing is released from it, because putting anything in front of real people still waits for an exposure record; and building the product itself stays on hold until a delivery diamond is open. If they say they want to build the product now, not a prototype, tell them the two ways: open the chain that leads to a delivery diamond (`/mycelium:diamond-progress` says what is missing), or write `.claude/state/delivery-skip-ack` themselves, which the agent cannot write for them.
 - **Go deeper into discovery** → Proceed to **Go Deeper Sub-Routing** below.
 - **Contextual option** → Invoke the named skill.
-- **Stop for now** → "Your brief is saved. Run `/mycelium:diamond-assess` whenever you want to come back. Bye."
-- **Friction log** → "What felt off? Where did the framework get in your way? By default this stays in our conversation — say so if you want me to write it to a file (e.g. `.claude/evals/dogfood-reports/YYYY-MM-DD-friction.md`) so it survives the session. If you'd like the friction to become a public receipts-case under your name (CV-citable contribution to Mycelium, see CONTRIBUTORS.md for how that works), I'll ask before publishing anything outside this repo."
+- **Stop here** → "Your brief is saved. Run `/mycelium:diamond-assess` whenever you want to come back. Bye."
+- **Friction log** → Invoke `/mycelium:friction-log`. Where a log would go, said plainly as that skill asks: an issue or a discussion at github.com/haabe/mycelium, which the README invites, and only on the person's yes. If they would like the friction to become a public receipts case under their name (see CONTRIBUTORS.md for how that works), ask before anything leaves this repo. (Until 0.318.4 this route improvised its own questions; the skill that drafts the log, asks before anything is sent and saves it under `.claude/evals/friction-logs/` was named by nothing that runs.)
 - **Other** → Surface a brief skill index ("Here's what Mycelium can do — pick one or describe what you want") then route based on response.
 
 ### Go Deeper Sub-Routing

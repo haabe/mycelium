@@ -43,9 +43,9 @@ It puts the questions where your agent works, and it makes the agent earn its fi
 
 Four questions, before there is anything to build on. What is the problem, who has it, what are you assuming, what would show you wrong. Ten minutes, and the answers go into your repo as your spec. From there the agent has something to be held to, and so do you.
 
-The gate itself fires the moment the agent reaches for a new source file in a repo where none of that exists yet. Once it does, it is quiet.
+This gate fires the moment the agent reaches for a new source file in a repo where none of that exists yet. Once you have answered, it goes quiet. From then on the agent builds the product only when the reasons for building it are written down.
 
-The gate is on the agent. The ten minutes are yours. That is the trade, your time up front against the agent's freedom to start without you.
+So the gate is on the agent, the ten minutes are yours. That is the trade, your time up front against the agent's freedom to start without you.
 
 This morning I ran it on a new idea: vibe-rant, a place for people whose AI-built projects have just fallen over to say so to each other. Four questions.
 
@@ -79,13 +79,13 @@ evidence:
 
 I am in the cohort I am building for, and I do the opposite of what the product needs. I said so out loud answering question two, and again on question three: the thing most likely to sink this is that everyone else *"stays quiet, like me"*. Instead of nodding along, it wrote that down as the most important line in the file and marked the whole brief `speculation`.
 
-Confidence on that idea came out at 0.15. Nothing is blocked, I can still build it this afternoon. But I cannot now pretend I did not notice.
+Confidence on that idea came out at 0.15, which is low. I can still build it this afternoon. The agent will want my reasons written down before it builds the product, or my word that this one is a prototype. Either way I cannot now pretend I did not notice.
 
 ## When I would be wrong
 
-Run it on three real projects. Not one, because writing anything down always feels clarifying the first time and that proves nothing. Three. If across all three the brief never once changed what you actually built, then it did not work for you, and you should say so out loud and uninstall it. That is a result I can be given and cannot argue with.
+Run it on at least three real projects. Not one, because writing anything down always feels clarifying the first time and that proves nothing. Three. If across all of them the brief never once changed what you actually built, then it did not work for you, and you should say so out loud and uninstall it. That is a result I can be given and cannot argue with.
 
-Here is the weakness I already know about. The discovery gate fires once per repo and then goes quiet for good. Nothing in this brings you back in November to check whether the thing you assumed in August held up. You have to want that, and if you do not, this buys you one good Thursday and no more.
+Here is the weakness I already know about. The four questions are asked once per repo, and only once. Never again. Nothing in this brings you back in November to check whether the thing you assumed in August held up. You have to want that, and if you do not, this buys you one good Thursday and no more.
 
 I have got it wrong myself, which is where this started. The first thing Mycelium ever did was stop a macOS file viewer I wanted to build. It never got a line of code. I had it run six made-up users past the idea instead of asking real ones, and four of them would not switch, the typical user among them. Mycelium logged that as speculation and put talking to real users on the list of next moves. I never did. If even made-up people didn't want it, I figured real people wouldn't either.
 

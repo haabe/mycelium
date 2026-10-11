@@ -47,18 +47,25 @@ sink it. That is the milestone.
 
 ## Step 4: run it on the project
 
-The four questions end with a menu. Most people should take the first option.
+The four questions end with a short menu, and the agent recommends one of its options. Most people
+should take the first.
 
 - **Test the biggest assumption.** It designs the smallest test that could prove you wrong, which is
   usually a conversation with someone who has the problem. Go and have it, then come back and say what
   you heard.
+- **Build a prototype to learn.** Throwaway code in a folder you name. It is free to write and to
+  change, and nothing is released from it.
 - **Go deeper.** More discovery: what you are aiming at, who else is in the space, what limits you.
   You choose how deep.
-- **Stop for now.** Everything is saved in the repo.
 
-Building is open whichever you pick. The agent works as it always does, and the brief is what it is
-held to. The discovery gate only fires in a project where nothing has been written down, so after the
-four questions it stays quiet.
+You can also stop there. Everything is saved in the repo.
+
+Building the product itself is on hold from here. The first stop, the one on a new source file in an
+empty project, is done once you have answered. What the brief switches on is the second: the agent
+builds the product, new files and edits alike, only when a delivery diamond is open with its reasons
+written down. A prototype folder is free. For work you do not want tracked, write
+`.claude/state/delivery-skip-ack` yourself; the agent cannot write it for you. (Until 0.318.4 this
+page said building was open whichever option you picked. It was not.)
 
 When you come back to the project, each new session puts one next step in front of you. To see where
 the project stands at any time:
