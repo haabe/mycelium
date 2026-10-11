@@ -19,10 +19,18 @@ INPUT=$(cat)
 # shellcheck source=/dev/null
 . "$(dirname "${BASH_SOURCE[0]}")/../scripts/_hook_fire_log.sh" 2>/dev/null || {
   mycelium_note_refusal() { :; }; mycelium_record_denial() { :; }; }
-# Cheap exit: only a call that names a guard-state file needs python.
+# Cheap exit: only a call that names a guard-state file, or could remove a marker folder, needs
+# python. UNTIL 0.318.3 THIS LISTED THE FILES ONLY, so `rm -rf .claude/canvas .claude/diamonds`
+# left here with exit 0 and never reached the helper that asks about it: the removal 0.318.0
+# called "the widest off-switch there is" was judged in Python and unreachable from the hook, in
+# every permission mode (dogfood harms check 2026-10-11; the tests fed the helper, not this file).
+# The second arm is a deliberately loose superset of `_hook_input._REMOVES_MARKER`: a removal verb
+# followed by a non-word character, anywhere, in a call that mentions `.claude`. Being loose costs
+# one python start on a command like `confirm .claude/x`; being tight is how the first arm missed.
 case "$INPUT" in
-  *-ack*|*upstream.json*|*manifest.yml*|*active-execution.json*) ;;
-  *) exit 0 ;;
+  *-ack*|*upstream.json*|*manifest.yml*|*active-execution.json*|*move_file*) ;;
+  *)
+    if [[ "$INPUT" == *.claude* && "$INPUT" =~ (rm|rmdir|mv)[^A-Za-z0-9_] ]]; then :; else exit 0; fi ;;
 esac
 HELPER="$(dirname "${BASH_SOURCE[0]}")/../scripts/_hook_input.py"
 [ -f "$HELPER" ] || HELPER="${CLAUDE_PLUGIN_ROOT:-}/scripts/_hook_input.py"

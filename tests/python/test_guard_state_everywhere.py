@@ -93,3 +93,40 @@ def test_the_gate_runs_in_an_ordinary_project(tmp_path):
     assert json.loads(out)["hookSpecificOutput"]["permissionDecision"] == "deny"
     for manifest in ("hooks.json", "hooks.codex.json", "hooks.cursor.json"):
         assert "guard-state-gate.sh" in (HOOK.parent / manifest).read_text(), manifest
+
+
+# v0.318.3: every removal test above feeds the PYTHON helper. The shell hook in front of it left
+# with exit 0 on any call that named no guard-state FILE, so a marker-folder removal never reached
+# the helper: asked about in Python, unreachable from the hook, in every permission mode (dogfood
+# harms check 2026-10-11, replayed in a scratch project). These run the HOOK.
+
+def _hook(tmp_path, tool, tool_input, mode):
+    (tmp_path / ".claude" / "state").mkdir(parents=True, exist_ok=True)
+    (tmp_path / ".claude" / "canvas").mkdir(exist_ok=True)
+    (tmp_path / ".claude" / "diamonds").mkdir(exist_ok=True)
+    payload = json.dumps({"tool_name": tool, "permission_mode": mode, "tool_input": tool_input,
+                          "transcript_path": "/home/someone/.claude/projects/p/t.jsonl"})
+    env = {"CLAUDE_PROJECT_DIR": str(tmp_path), "PATH": "/usr/bin:/bin:" + str(Path(sys.executable).parent)}
+    out = subprocess.run(["bash", str(HOOK)], input=payload, capture_output=True, text=True,
+                         env=env, check=True).stdout.strip()
+    return json.loads(out)["hookSpecificOutput"]["permissionDecision"] if out else "allow"
+
+
+@pytest.mark.parametrize("cmd", ["rm -rf .claude/canvas .claude/diamonds", "git rm -r .claude/diamonds",
+                                 "mv .claude/canvas /tmp/x", "rmdir .claude/diamonds",
+                                 "rm -rf .claude", "cd app && rm -rf '../.claude/canvas'"])
+def test_the_hook_itself_judges_a_marker_folder_removal(tmp_path, cmd):
+    assert _hook(tmp_path, "Bash", {"command": cmd}, "default") == "ask"
+    assert _hook(tmp_path, "Bash", {"command": cmd}, "bypassPermissions") == "deny"
+
+
+def test_the_hook_itself_judges_an_mcp_move_of_the_canvas(tmp_path):
+    move = {"source": ".claude/canvas", "destination": "/tmp/canvas"}
+    assert _hook(tmp_path, "mcp__filesystem__move_file", move, "default") == "ask"
+
+
+@pytest.mark.parametrize("cmd", ["rm .claude/canvas/old.yml", "ls .claude/canvas", "git status",
+                                 "confirm .claude/canvas/x.yml", "rm -rf build && ls .claude/canvas"])
+def test_control_the_hook_lets_ordinary_commands_through(tmp_path, cmd):
+    """Including the ones its loose first look sends to the helper: the helper still says no."""
+    assert _hook(tmp_path, "Bash", {"command": cmd}, "bypassPermissions") == "allow"
