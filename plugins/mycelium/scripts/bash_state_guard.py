@@ -20,11 +20,33 @@ Two halves, one script:
         recorded. What is found goes to the agent in the same turn. This catches the writes the
         first half cannot see, such as a path built in a variable.
 
-It never undoes a change. Stdlib plus the sibling scripts; without PyYAML the post half says once
-that it could not judge (canvas_write_check handles the schema side the same way).
+It never undoes a change to the canvas or the diamonds file. Stdlib plus the sibling scripts;
+without PyYAML the post half says once that it could not judge (canvas_write_check handles the
+schema side the same way).
+
+THE FILES THAT SWITCH A STOP OFF ARE PUT BACK (v0.321.1). `guard-state-gate.sh` asks the person
+before a tool call writes one of them (`_hook_input.GUARD_STATE_REL`), and it can only ask about a
+write target it can read. A shell write through a variable or a command substitution was allowed in
+silence: a blind read of 0.321.0 found it by reading, and a replay through the released hook
+confirmed it (`f=<the file>; echo ... > "$f"`: no question, exit 0). No reading of a command closes
+that, because a path can be built any number of ways. So this script compares before and after
+instead, as it already does for the diamonds file:
+
+  pre   copies each of those files that exists and notes which do not, and notes which of them the
+        command writes VISIBLY, because for those the person is asked (or the call is refused) by
+        `guard-state-gate.sh` and a command that then runs was approved.
+  post  compares. A file that was created, changed or removed by the command, and was not one the
+        person was asked about, is put back as it was, and the person and the agent are told.
+
+This is the one place the script undoes anything, on the maintainer's ruling of 2026-10-11 ("Put it
+back and tell me"): left as written, the stop is off until someone notices. It touches only those
+seven files, never code, canvas or diamonds. Not put back: a change the person makes in their own
+terminal (no hook sees it), a change made with `MYCELIUM_GUARD_STATE_EDIT=1` in the person's own
+shell, and Mycelium's own upgrade script run on its own.
 """
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 import json
 import os
@@ -49,6 +71,13 @@ _OWN_WRITER = re.compile(
     r"\s*(?:\S*python3?(?:\.\d+)?\s+)?\"?[^\s;&|<>`$()\"]*?(?:"
     + "|".join(re.escape(w) for w in ALLOWED_WRITERS)
     + r")\"?(?:\s+[^;&|<>`$()\n]*)?\s*")
+#: Mycelium's own writer of guard state (v0.321.1): the legacy upgrade copies the manifest.
+GUARD_WRITERS = ("upgrade.sh",)
+_OWN_GUARD_WRITER = re.compile(
+    r"\s*(?:bash\s+|sh\s+)?\"?[^\s;&|<>`$()\"]*?(?:"
+    + "|".join(re.escape(w) for w in GUARD_WRITERS)
+    + r")\"?(?:\s+[^;&|<>`$()\n]*)?\s*")
+GUARD_SNAP = "guard-state"
 # v0.307.4 (P8): moving the file away removes every diamond's record, as `rm` does (refused).
 _MOVES_ACTIVE = re.compile(r"\b(?:git\s+)?mv\b[^;&|\n]*diamonds/active\.yml")
 
@@ -137,10 +166,100 @@ def pre(payload: dict, project: Path) -> int:
                 shutil.copyfile(active, state / "active.yml.before")
             else:
                 (state / "active.yml.before").unlink(missing_ok=True)
+            _drop_old_snapshots(state)
+            _snapshot_guard_state(project, state, cmd, _call_id(payload))
             (state / "stamp").write_text(repr(time.time()))
         except OSError:
             return 0  # SPEAKS in post: with no stamp, post says it could not tell what changed
     return 0
+
+
+# ---------------------------------------------------------------- guard state, before and after
+
+def _call_id(payload: dict) -> str:
+    """A name for this tool call's snapshot. Claude Code gives each call an id, so two shell
+    commands running at once do not read each other's "before"; a runtime that gives none shares
+    one snapshot, as the diamonds half always has."""
+    raw = str(payload.get("tool_use_id") or "")
+    return re.sub(r"[^A-Za-z0-9_-]", "", raw)[:80] or "shared"
+
+
+def _drop_old_snapshots(state: Path, older_than: float = 86400.0) -> None:
+    """A snapshot whose post half never ran (the session ended mid-command) is removed after a
+    day, so the folder does not grow. Nothing is put back from it: a day later it says nothing
+    about who wrote what."""
+    root = state / GUARD_SNAP
+    if not root.is_dir():
+        return
+    now = time.time()
+    for d in root.iterdir():
+        try:
+            if d.is_dir() and now - d.stat().st_mtime > older_than:
+                shutil.rmtree(d, ignore_errors=True)
+        except OSError:
+            continue  # SPEAKS: nothing to say; an old snapshot that cannot be read is not used
+
+
+def _digest(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _snapshot_guard_state(project: Path, state: Path, cmd: str, call: str) -> None:
+    snap = state / GUARD_SNAP / call
+    shutil.rmtree(snap, ignore_errors=True)
+    _state_dir.prepare_dir(snap)
+    files = {}
+    for i, rel in enumerate(hi.GUARD_STATE_REL):
+        f = project / rel
+        if f.is_file():
+            shutil.copyfile(f, snap / f"{i}.before")
+            files[rel] = {"existed": True, "sha": _digest(f), "copy": f"{i}.before"}
+        else:
+            files[rel] = {"existed": False}
+    # The writes guard-state-gate.sh can read, and so asks the person about (or refuses).
+    asked = sorted({g for r in hi.bash_write_targets(cmd, str(project)).targets
+                    if (g := hi.is_guard_state(r.rel))})
+    own = bool(_OWN_GUARD_WRITER.fullmatch(_without_comments(cmd)))
+    (snap / "index.json").write_text(json.dumps({"files": files, "asked": asked, "own": own}))
+
+
+def _put_back_guard_state(project: Path, state: Path, call: str) -> list[str]:
+    """Undo what the command did to a file that switches a stop off, unless the person was asked.
+    Returns one line per file put back; a file it could not put back is named as such."""
+    snap = state / GUARD_SNAP / call
+    if not (snap / "index.json").is_file():
+        return []  # no snapshot for this call: its before half did not run, so nothing to compare
+    try:
+        index = json.loads((snap / "index.json").read_text())
+    except (OSError, ValueError) as exc:
+        shutil.rmtree(snap, ignore_errors=True)
+        return [("(WARNING: the record of how those files looked before the command could not be "
+                 f"read, {type(exc).__name__}, so nothing was compared and nothing was put back)")]
+    out = []
+    try:
+        if index.get("own") or hi.human_override():
+            return []
+        for rel, was in index.get("files", {}).items():
+            if rel in index.get("asked", []):
+                continue
+            f = project / rel
+            now = f.is_file()
+            if was.get("existed") == now and (not now or _digest(f) == was.get("sha")):
+                continue
+            try:
+                if was.get("existed"):
+                    _state_dir.prepare_dir(f.parent)
+                    shutil.copyfile(snap / was["copy"], f)
+                    out.append(f"{rel} (restored to what it held before the command)")
+                else:
+                    f.unlink()
+                    out.append(f"{rel} (the command created it; removed)")
+            except OSError as exc:
+                out.append(f"{rel} (COULD NOT BE PUT BACK: {type(exc).__name__}; it is as the "
+                           "command left it)")
+    finally:
+        shutil.rmtree(snap, ignore_errors=True)
+    return out
 
 
 def _changed(project: Path, since: float) -> list[Path]:
@@ -195,18 +314,29 @@ def post(payload: dict, project: Path) -> int:
         since = float((state / "stamp").read_text())
     except (OSError, ValueError):
         return 0  # no stamp: pre did not run (not a Mycelium project, or an unwritable state dir)
+    put_back = _put_back_guard_state(project, state, _call_id(payload))
     changed = _changed(project, since)
-    if not changed:
-        return 0
-    problems = _schema_problems(changed)
-    if project / ACTIVE_REL in changed:
+    problems = _schema_problems(changed) if changed else []
+    if changed and project / ACTIVE_REL in changed:
         problems += _diamond_problems(project, state, str(payload.get("session_id") or ""))
+    reasons, out = [], {}
+    if put_back:
+        told = ("A shell command changed a file that switches one of Mycelium's stops off, and "
+                "you were not asked first: " + "; ".join(put_back) + ". Mycelium put it back, so "
+                "the stop is as it was. If you want that file changed, write it yourself in your "
+                "own terminal, or have the agent write it with a plain command that names the "
+                "file, so that you are asked.")
+        out["systemMessage"] = "Mycelium: " + told
+        reasons.append(told + " Do not try another way of writing it: tell the person what "
+                       "happened and let them decide.")
     if problems:
         names = ", ".join(str(f.relative_to(project)) for f in changed)
-        print(json.dumps({"decision": "block", "reason": (
+        reasons.append(
             f"A shell command changed {names}, and the change breaks Mycelium's rules:\n"
             + "\n".join(f"  - {p}" for p in problems[:10])
-            + "\nFix it now with the Edit or Write tool, where the gates run.")}))
+            + "\nFix it now with the Edit or Write tool, where the gates run.")
+    if reasons:
+        print(json.dumps({"decision": "block", "reason": "\n\n".join(reasons), **out}))
     return 0
 
 

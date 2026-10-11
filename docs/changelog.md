@@ -4,6 +4,134 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-11.
 
+## v0.321.1 - two stops that could be walked around
+
+**2026-10-11. Both were found by a blind read of 0.321.0**: three readers, each alone, comparing what
+the plugin does with what its README, privacy page, get-started page and system card say. The read
+was looking for words that do not match behaviour. It also found behaviour that does not match the
+safeguard.
+
+### A shell write through a variable switched a stop off, and nobody was asked
+
+A handful of files switch one of Mycelium's stops off: the skip and lock files under
+`.claude/state/`, `.claude/manifest.yml`, `upstream.json`, `active-execution.json`
+(`_hook_input.GUARD_STATE_REL`). They are the person's to write. `guard-state-gate.sh` asks the
+person before a tool call writes one, and refuses where nobody would be asked. It can only ask about
+a write target it can read. `f=<the file>; echo ... > "$f"` gave it nothing to read, and the write
+went through with no question. Replayed through the released hook in a scratch project: a direct
+redirect is asked about; an assigned variable, a variable folder, a command substitution and `tee`
+through a variable were each allowed in silence. README said the agent cannot write these files, and
+the operating contract told the agent "the hooks read those too".
+
+No reading of a command closes this, because a path can be built any number of ways. So the fix
+does not read the command. It compares.
+
+- **Before and after every shell command, those files are compared.** `bash-state-guard.sh`, which
+  already does this for the diamonds file, now copies each of those files that exists before the
+  command and notes which do not. After the command, a file that was created, changed or removed,
+  and that the person was not asked about, is put back as it was.
+- **The person and the agent are told**, in the same turn: which file, that it was put back, and
+  how to change it properly (write it yourself, or have the agent use a plain command that names
+  the file, so that you are asked). The agent is told not to try another way.
+- **A write the person was asked about stands.** The hook notes which of those files the command
+  writes visibly; for those `guard-state-gate.sh` has asked, and a command that then runs was
+  approved. A command that writes one visibly and another through a variable has only the second
+  put back.
+- **A command that fails is compared too.** The after half ran on `PostToolUse` only, so a command
+  that wrote the file and then exited non-zero was never looked at, for this and for the diamonds
+  file. It is now also registered on `PostToolUseFailure` (Claude Code and Cursor; Codex reports
+  failures on its one post event).
+- **Each tool call has its own "before"**, keyed by the call's id, so two shell commands running
+  at once do not read each other's.
+- **This is the one thing the hook undoes**, on the maintainer's ruling ("Put it back and tell
+  me"): left as written, the stop is off until someone notices. It touches those files only. It
+  never restores code, canvas or diamonds, where its rule stays "it never undoes a change".
+- **Left alone:** a change you make in your own terminal (no hook sees it), a change made with
+  `MYCELIUM_GUARD_STATE_EDIT=1` in your own shell, and Mycelium's `upgrade.sh` run on its own
+  (naming it in a comment or beside another command does not count).
+- **Tests** (`tests/python/test_guard_state_put_back.py`, 13, through the real hook around a write
+  the test performs): created, changed and removed files put back; all seven files covered from
+  the one list; the failure registration; two calls at once; and five controls for what is left
+  alone, including that nothing else is ever undone. Eight fail on 0.321.0.
+
+### The build gate did not see every edit
+
+Since 0.291.0 editing product code counts as building once discovery is engaged, and the README and
+get-started page say "new files and edits alike". `discovery-gate.sh` set its editing flag for
+Edit, MultiEdit and the MCP edit tool only, and skipped every other write to an existing, non-empty
+file. A whole-file Write over a product file, a notebook edit and a shell edit (`sed -i`, a
+redirect, `cp` over it) changed product code with no gate firing, in the project where the same
+change made with the Edit tool was refused.
+
+- **A write to an existing product file is an edit, whatever tool makes it.** When a write creates
+  no gated new file, it is judged again as an edit, and this time existing files count. A shell
+  command that also writes a new note does not carry the edit through.
+- **Nothing changes** where discovery has not started (the brownfield stop's case), under declared
+  `prototype_paths`, for prose files, for reads, or for a write an open delivery cycle covers. The
+  new-file refusal and its wording are untouched.
+- **Tests** (`tests/python/test_an_edit_is_an_edit_whatever_tool.py`, 19): the Edit-tool control,
+  a whole-file write, a notebook edit, five shell forms, the mixed command, and ten controls.
+  Eight fail on 0.321.0.
+
+### Three README sentences now say what the code does
+
+All three readers named each of these. The wording is the maintainer's: two sentences are his own,
+three are drafts he approved.
+
+- **Nothing is held before `/mycelium:start`.** The README said the gate "fires the moment the
+  agent reaches for a new source file", and the plugin description that "the build stays shut until
+  the answers are there". Since 0.318.0 no hook acts in a project without Mycelium's folders, which
+  `/mycelium:start` or setup creates. README: "Nothing is held until you type `/mycelium:start` in
+  a repo. After that the gate fires ...". The description (both `plugin.json` files and
+  `marketplace.json`): "... so once you have started it in a repo the build stays shut until the
+  answers are there."
+- **The agent can write the files that switch a stop off, if you agree.** The README said it
+  "cannot" and "is not allowed to". You are asked, and on a yes it writes them; where nobody can be
+  asked it is refused. README: "... cannot write the files that switch a stop off without asking
+  you first" and "The agent can write either one only if you agree, and where there is nobody to
+  ask it is refused." `docs/get-started.md` says the same.
+- **Not everything else is a warning.** "Everything else prints a warning and lets you past" left
+  out the secret scan and several other stops. The paragraph now names the secret scan, says there
+  are a handful more, and links the system card for the full list.
+
+**Docs.** The operating contract's sentence "the hooks read those too" now says what was not true
+until this release and what holds since. `hooks/README.md`, the system card (sections 3 and 6), the
+context page's hooks table and `PRIVACY.md` (the copies kept while a command runs) are updated, and
+the hook-surface review is re-stamped.
+
+**What this costs.** Every shell command now stats seven paths and copies the few that exist,
+before it runs. An agent that edits product code through the shell, in a project with discovery
+under way and no delivery cycle open, is refused where it used to pass; the Edit tool was already
+refused there.
+
+**Not in this release.**
+
+- **A write that lands after the command has returned** (a background job, a scheduled command) is
+  not caught by a comparison around the command. A check at the next prompt that tells the person
+  when one of these files has changed outside an approved call would see it; it could tell and not
+  put back, since a change in the person's own terminal looks the same.
+- **A shell edit of product code through a path the hook cannot read** (a variable) is still not
+  seen by the build gate. Unlike the files above, product code is not put back: the hook never
+  undoes a change to code.
+- **The other findings of the read**: five behaviours no newcomer text mentions and eleven smaller
+  contradictions in the privacy page, the system card and the get-started page.
+
+**Alternatives considered.**
+
+- *Teach the hook to read more shapes of command* (assignments, `tee`, substitutions). Refused as
+  the fix: it is the approach that failed. A path can be base64, a here-document, a script on disk.
+  One cheap shape was not added either, so that the comparison is the single thing relied on.
+- *Compare with git* (`git status` before and after). The maintainer's suggestion, and the same
+  idea: look at what changed, not at what the command said. Not used as written because these
+  files sit in a git-ignored folder and not every project is a git repository; the comparison is
+  of the files themselves.
+- *Only tell the person, and leave the file.* Consistent with "it never undoes a change", and it
+  leaves the stop off until someone acts. The maintainer chose the put-back.
+- *Refuse every shell command whose write target cannot be read.* Would stop ordinary scripted
+  work (any loop over files) to close a case the comparison already closes.
+- *Put back product code a shell command edited outside a delivery cycle.* Refused: the hook does
+  not undo work on the person's code, whatever made it.
+
 ## v0.321.0 - the harms check is named at release, as advice that never blocks
 
 **2026-10-11, on the maintainer's ruling after an assumption test of the same day.**

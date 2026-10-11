@@ -3,7 +3,7 @@
 **Audience**: practitioners + evaluators wanting to understand what the agent has access to mid-session, and operators auditing Mycelium against transparency expectations.
 **Time to read**: 8 min.
 **Last updated**: 2026-10-03.
-**Hook surface reviewed:** 2026-10-11 (digest 57fc18cea0e7)
+**Hook surface reviewed:** 2026-10-11 (digest 1672ecf8036e)
 
 This document answers a question the audit (`/xai-check` on `svc-mycelium`, 2026-05-04) flagged as a Stage 2 partial: **"What data does the agent see when it makes a recommendation under Mycelium?"** Today the answer is distributed across many files. This is the consolidated map.
 
@@ -103,7 +103,7 @@ The full table, per runtime, is `plugins/mycelium/hooks/README.md`. The ones tha
 | `framework-guard.sh` | Edit/Write/Bash on framework files in dogfood instances | Blocks; redirects to upstream-then-sync flow; denies on a broken state file |
 | `scope-gate.sh` | Edit/Write outside in_scope_paths during L4 | Blocks; allows .claude/** unconditionally |
 | `autonomous-evidence-guard.sh` | Canvas writes during a declared autonomous run | Blocks fabricated or elevated evidence; no-op with a human present |
-| `scale-lock-gate.sh`, `bash-state-guard.sh` | Writes to `.claude/diamonds/active.yml` (Edit/Write; shell commands) | Block a new diamond whose parent has not established what it builds on; refuse a shell command that writes the file, and schema-check what a shell command changed |
+| `scale-lock-gate.sh`, `bash-state-guard.sh` | Writes to `.claude/diamonds/active.yml` (Edit/Write; shell commands); since 0.321.1 also every shell command, before and after, for the files that switch a stop off | Block a new diamond whose parent has not established what it builds on; refuse a shell command that writes the file, and schema-check what a shell command changed; put back an off-switch file a shell command changed without the person being asked, and tell them |
 | `exposure-gate.sh` | Bash commands that put the work in front of real people (deploy, publish, remote sync) | Blocks while no delivery cycle is ready for that exposure (`scripts/scale_locks.py --exposure-hook` decides) |
 | `guard-state-gate.sh` | Writes to the files that switch a blocking hook off (ack files, `upstream.json`, `manifest.yml`, `active-execution.json`), and removing `.claude`, `.claude/canvas` or `.claude/diamonds`, which switches every hook off (judged by the hook itself since 0.318.3) | Asks the human; refuses where nobody would be asked (permissions bypassed, automated mode) |
 | `exposure-change.sh`, `preflight.sh` | A write that changes exposure state; each prompt | Tell the agent when nothing built may meet real people, right after the write and again at the prompt |

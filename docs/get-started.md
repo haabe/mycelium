@@ -64,7 +64,7 @@ Building the product itself is on hold from here. The first stop, the one on a n
 empty project, is done once you have answered. What the brief switches on is the second: the agent
 builds the product, new files and edits alike, only when a delivery diamond is open with its reasons
 written down. A prototype folder is free. For work you do not want tracked, write
-`.claude/state/delivery-skip-ack` yourself; the agent cannot write it for you. (Until 0.318.4 this
+`.claude/state/delivery-skip-ack` yourself. The agent cannot write it without asking you. (Until 0.318.4 this
 page said building was open whichever option you picked. It was not.)
 
 When you come back to the project, each new session puts one next step in front of you. To see where

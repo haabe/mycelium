@@ -302,6 +302,11 @@
             "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/reflexion-gate.sh\"",
             "timeout": 10,
             "statusMessage": "Reflexion: checking failure relevance..."
+          },
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/bash-state-guard.sh\" post",
+            "timeout": 15
           }
         ]
       }
