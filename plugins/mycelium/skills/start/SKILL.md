@@ -70,7 +70,7 @@ code by its extension and everything else only by this: a bookkeeping service in
 world wrote its whole client pack under an L0 in discover and nothing noticed. If the user does not
 know yet, leave it; the next session start asks again.
 
-After the brief is rendered and the user picks a depth-menu option, the start skill is done. Hand off to whatever the user chose (`/mycelium:assumption-test` for "Test the biggest assumption", continued discovery for "Go deeper", graceful exit for "Stop for now", etc.).
+After the brief is rendered and the user picks a depth-menu option, the start skill is done. Hand off to whatever the user chose (`/mycelium:assumption-test` for "Test the biggest assumption", a prototype folder for "Build a prototype to learn", continued discovery for "Go deeper", a graceful exit for stopping, etc.).
 
 ## Step 3b: Derive purpose properties (immediately after why/how/what land)
 

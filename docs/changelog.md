@@ -4,6 +4,41 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-11.
 
+## v0.318.4 - the README, the get-started page and the menu say what the brief switches on
+
+**2026-10-11, the second half of what the dogfood repo's harms check found under "words and
+behaviour", on the founder's ruling that the words follow the behaviour.** No behaviour changes.
+0.318.2 fixed the start welcome; this fixes the three other places a new user reads.
+
+- **README.** Three passages said or implied that nothing is held after the four questions ("Once it
+  does, it is quiet", "Nothing is blocked, I can still build it this afternoon", "fires once per repo
+  and then goes quiet for good"), while "What it costs" on the same page said the product waits for a
+  delivery diamond. The passages are rewritten by the founder, in his words; an agent's two drafts
+  were not used.
+- **Get started.** Step 4 said "Building is open whichever you pick." It now says what the brief
+  switches on (the product is built only once a delivery diamond is open, new files and edits alike),
+  that a prototype folder is free, and that `delivery-skip-ack` is the person's own way past.
+- **The menu after the brief** (`skills/interview/SKILL.md`, steps 3 and 4) follows the framework's
+  own rules for choices in `harness/design-principles.md`. It listed up to six equally weighted
+  options, recommended one only when the brief's risk was unambiguous, had no option to build
+  anything, and did not mention the hold. Now: the hold is said first on its own line in the
+  `ON HOLD (pending X)` form; one option is always recommended, with its reason; three options are
+  listed (test the biggest assumption, build a prototype to learn, go deeper), a contextual option
+  replacing the third instead of adding to it; stopping and the friction log are lines under the
+  list. "Build a prototype" has a route: the folder goes into `prototype_paths` and the agent says
+  what that does and does not free.
+- **The friction log is reachable.** The menu's friction line improvised its own questions and
+  pointed at CONTRIBUTORS.md; `/mycelium:friction-log`, shipped in 0.229.0, was named by nothing that
+  runs. The line now invokes the skill and says where a log goes (an issue or a discussion, on the
+  person's yes). The offer of a named receipts case is kept.
+- **Not in this release.** The refusals themselves still do not list every way past them. The
+  warning that tells every project a trap "has produced a wrong answer in this project before" is
+  unchanged. `PRIVACY.md`'s first sentence still sits above a table of local logs.
+- **Alternatives considered.** Changing the gate to match the old README (the founder ruled the
+  other way). Keeping six options and adding a seventh for building (the count was the defect).
+  Putting the hold in a footnote under the menu (a blocker that does not stand out is the failure the
+  design principles name).
+
 ## v0.318.3 - two safeguards that did not hold
 
 **2026-10-11, from the dogfood repo's harms check of the same day, on the founder's "Fix them".**
