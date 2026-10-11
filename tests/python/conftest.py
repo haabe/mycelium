@@ -2,7 +2,17 @@
 import json
 from pathlib import Path
 
+import _scratch_git
 import pytest
+
+# THE SUITE DOES NOT INHERIT A REPOSITORY FROM WHOEVER STARTED IT (0.319.1).
+# git exports GIT_DIR to a hook when the push or commit comes from a worktree, and a `git init`
+# in a temp folder then re-initialises the CALLER'S repository, `git config` writes its config and
+# `git commit` lands on its branch. Until 0.319.1 nothing here cleared it: on 2026-10-11 a push
+# from a worktree left fourteen fixture commits on a feature branch and `core.bare = true` in the
+# shared config. Cleared at import, which is before collection and once per xdist worker; the
+# full account and the second layer are in _scratch_git.py.
+_scratch_git.clear_inherited_git_env()
 
 
 def pytest_configure(config):

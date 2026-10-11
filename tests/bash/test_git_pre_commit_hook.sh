@@ -76,7 +76,7 @@ build_and_run() {
                 # The hook validates the INDEX, so these fixtures need one. Index and
                 # working tree agree here; the two scenarios below are the ones that
                 # pull them apart deliberately.
-                git init --quiet
+                scratch_git_init "$PWD"
                 git config user.email "fixture@test.local"
                 git config user.name "Fixture"
                 git add -A
@@ -105,7 +105,7 @@ build_and_run() {
                 printf '{\n  "description": "2 skills"\n}\n' > .claude-plugin/marketplace.json
                 printf '{\n  "version": "0.5.0",\n  "description": "2 skills"\n}\n' \
                     > plugins/mycelium/.claude-plugin/plugin.json
-                git init --quiet
+                scratch_git_init "$PWD"
                 git config user.email "fixture@test.local"
                 git config user.name "Fixture"
                 git add -A
@@ -135,7 +135,7 @@ build_and_run() {
                 mkdir -p plugins/mycelium/skills/alpha
                 printf '# SKILL alpha\n' > plugins/mycelium/skills/alpha/SKILL.md
                 printf '*Version 0.5.0 -- base\n' > CLAUDE.md
-                git init --quiet
+                scratch_git_init "$PWD"
                 git config user.email "fixture@test.local"
                 git config user.name "Fixture"
                 git add -A

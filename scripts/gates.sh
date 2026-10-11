@@ -34,6 +34,18 @@ set -uo pipefail
 
 cd "$(dirname "${BASH_SOURCE[0]}")/.." || exit 1
 
+# THE GATES DO NOT INHERIT A REPOSITORY FROM WHOEVER STARTED THEM (0.319.1). Started from a git
+# hook in a worktree, this script inherits GIT_DIR=<main>/.git/worktrees/<name>, and a gate or a
+# test that runs `git init` in a temp folder then re-initialises the CALLER'S repository, writes
+# its config and commits onto its branch (2026-10-11: fourteen fixture commits on a feature
+# branch, `core.bare = true` in the shared config; the account is in
+# plugins/mycelium/scripts/git-pre-push-example.sh). Cleared here, after the `cd`, so git finds
+# the repository from this tree's own folder. Until 0.319.1 nothing was cleared.
+unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_COMMON_DIR GIT_PREFIX \
+      GIT_OBJECT_DIRECTORY GIT_ALTERNATE_OBJECT_DIRECTORIES GIT_NAMESPACE
+# shellcheck disable=SC2046  # a list of variable NAMES, split on purpose
+unset $(git rev-parse --local-env-vars 2>/dev/null || true)
+
 QUIET=0
 [ "${1:-}" = "--quiet" ] && QUIET=1
 

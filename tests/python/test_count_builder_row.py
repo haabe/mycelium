@@ -7,6 +7,8 @@ import sys
 from datetime import date
 from pathlib import Path
 
+import _scratch_git
+
 SCRIPT = Path(__file__).resolve().parents[2] / "plugins/mycelium/scripts/count_builder_row.py"
 
 
@@ -42,7 +44,7 @@ def _project(tmp_path):
     (p / ".claude" / "state" / "read-log.jsonl").write_text(
         '{"session_id": "a"}\n{"session_id": "b"}\nbad\n')
     (p / ".claude" / "state" / "change-log.jsonl").write_text('{"session_id": "a"}\n')
-    _git(p, "init", "-q")
+    _scratch_git.init(p)
     (p / "README.md").write_text("x")
     _git(p, "add", ".")
     _git(p, "commit", "-q", "-m", "docs", when="2026-05-01T12:00:00")

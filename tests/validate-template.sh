@@ -18,6 +18,18 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
 
+# THE VALIDATOR DOES NOT INHERIT A REPOSITORY FROM WHOEVER STARTED IT (0.319.1). Started from a
+# git hook in a worktree it inherits GIT_DIR=<main>/.git/worktrees/<name>, and the suites it
+# runs then build their throwaway repositories INSIDE THE CALLER'S: `git init` re-initialises
+# it, `git config` writes its config, `git commit` lands on its branch (2026-10-11; the account
+# is in plugins/mycelium/scripts/git-pre-push-example.sh). Cleared after the `cd`, so the git
+# calls below (Check 26 reads history) find this tree's repository from its own folder. Until
+# 0.319.1 nothing was cleared.
+unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_COMMON_DIR GIT_PREFIX \
+      GIT_OBJECT_DIRECTORY GIT_ALTERNATE_OBJECT_DIRECTORIES GIT_NAMESPACE
+# shellcheck disable=SC2046  # a list of variable NAMES, split on purpose
+unset $(git rev-parse --local-env-vars 2>/dev/null || true)
+
 # --- Skills tree detection (plugin form vs legacy) ---
 # As of v0.20.x, skills live at plugins/mycelium/skills/ (plugin canonical).
 # Legacy .claude/skills/ is preserved during transition until the canonical

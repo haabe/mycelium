@@ -14,6 +14,8 @@ import time
 from datetime import UTC, datetime
 from pathlib import Path
 
+import _scratch_git
+
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPTS = ROOT / "plugins" / "mycelium" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
@@ -27,7 +29,7 @@ PAST = "2026-01-01T00:00:00+00:00"
 
 
 def _repo(tmp_path: Path) -> Path:
-    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
+    _scratch_git.init(tmp_path)
     (tmp_path / "app").mkdir()
     (tmp_path / "research").mkdir()
     (tmp_path / ".claude" / "state").mkdir(parents=True)

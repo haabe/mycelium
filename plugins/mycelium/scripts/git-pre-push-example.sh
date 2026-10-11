@@ -17,6 +17,36 @@
 
 set -euo pipefail
 
+# NOTHING THIS HOOK RUNS INHERITS THE PUSH'S REPOSITORY FROM THE ENVIRONMENT (0.319.1).
+#
+# WHAT HAPPENED. git runs a hook with its own view of the repository exported. In an ordinary
+# checkout that is nothing that matters here (GIT_PREFIX, GIT_EXEC_PATH, GIT_EDITOR). In a git
+# WORKTREE it also exports GIT_DIR=<main>/.git/worktrees/<name>, an absolute path, and every
+# child of this hook inherits it. With GIT_DIR set git does not look at the folder it is run
+# in, so a test or a gate that builds a throwaway repository in a temp folder acted on the
+# repository being pushed instead:
+#   - `git init` re-initialised it and wrote `core.bare = true` into the shared .git/config;
+#   - `git config user.name t` wrote into that same config;
+#   - `git add -A` replaced the worktree's index with the temp folder's files;
+#   - `git commit` put the fixture commits on the checked-out branch.
+# On 2026-10-11 a push from a worktree of this repository left fourteen commits by "t <t@t>" on
+# a feature branch that way. Until 0.319.1 this hook cleared nothing. Twelve pytest files, three
+# bash suites and one gate in the declared set (check_empty_input_honesty.py) each did it.
+#
+# WHAT IS CLEARED. The variables that point a child git at a repository, an index or an object
+# store: the eight named here, then whatever git itself lists as repository-local (the same
+# names today; a later git may add one). After this, git finds the repository the ordinary way,
+# from the folder the hook runs in, which is the top of the tree being pushed, so every check
+# below still reads the caller's repository. One setup reads differently from before: a push
+# made with an explicit `--git-dir`/`--work-tree` pair has no `.git` in that folder, so checks
+# that ask git now find no repository there, as they would outside one.
+#
+# NOT CLEARED: GIT_EXEC_PATH and GIT_EDITOR, which redirect nothing.
+unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_COMMON_DIR GIT_PREFIX \
+      GIT_OBJECT_DIRECTORY GIT_ALTERNATE_OBJECT_DIRECTORIES GIT_NAMESPACE
+# shellcheck disable=SC2046  # a list of variable NAMES, split on purpose
+unset $(git rev-parse --local-env-vars 2>/dev/null || true)
+
 # Resolve validate_canvas.py — prefer plugin cache (current install model);
 # fall back to legacy in-tree locations for older installs.
 VALIDATOR=""

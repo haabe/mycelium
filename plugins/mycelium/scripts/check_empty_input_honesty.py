@@ -34,6 +34,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
@@ -147,6 +148,41 @@ def _mentions_root(script: Path) -> bool:
     return '"--root"' in src or "'--root'" in src
 
 
+#: What points a child git at a repository other than the folder it runs in. The named ones are
+#: what git exports to a hook; `git rev-parse --local-env-vars` is git's own list, unioned in.
+_GIT_REDIRECTS = (
+    "GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_COMMON_DIR", "GIT_PREFIX",
+    "GIT_OBJECT_DIRECTORY", "GIT_ALTERNATE_OBJECT_DIRECTORIES", "GIT_NAMESPACE",
+)
+
+
+def _env_for_the_empty_tree() -> dict:
+    """This process's environment without the variables that redirect git (0.319.1).
+
+    THIS GATE RUNS FROM THE PRE-PUSH HOOK, and when the push comes from a git worktree git
+    exports `GIT_DIR=<main>/.git/worktrees/<name>` to the hook. Until 0.319.1 the `git init`
+    below inherited it: it re-initialised the CALLER'S repository and wrote `core.bare = true`
+    into its shared config (traced 2026-10-11), and every check then run against the "empty"
+    tree asked git about the caller's history instead, so the verdict here was not about an
+    empty tree at all."""
+    env = {k: v for k, v in os.environ.items() if k not in _GIT_REDIRECTS}
+    try:
+        listed = subprocess.run(["git", "rev-parse", "--local-env-vars"], env=env,
+                                capture_output=True, text=True, check=False).stdout.split()
+    except OSError:
+        listed = []
+    return {k: v for k, v in env.items() if k not in listed}
+
+
+def _is_its_own_repository(empty: Path, env: dict) -> bool:
+    """git, run in `empty`, resolves the repository inside `empty` and nowhere else."""
+    asked = subprocess.run(["git", "rev-parse", "--absolute-git-dir"], cwd=empty, env=env,
+                           capture_output=True, text=True, check=False)
+    where = os.path.realpath(asked.stdout.strip()) if asked.stdout.strip() else ""
+    inside = os.path.realpath(empty)
+    return asked.returncode == 0 and where.startswith(inside + os.sep)
+
+
 def scan(root: Path) -> dict:
     scripts_dir = root / SCRIPTS_REL
     findings: list[dict] = []
@@ -165,8 +201,23 @@ def scan(root: Path) -> dict:
         # population-empty are different states and this is where they diverge.
         (empty / SCRIPTS_REL).mkdir(parents=True)
         (empty / "plugins" / "mycelium" / "hooks").mkdir(parents=True)
-        subprocess.run(["git", "init", "-q"], cwd=empty, check=False,
+        env = _env_for_the_empty_tree()
+        subprocess.run(["git", "init", "-q"], cwd=empty, env=env, check=False,
                        capture_output=True)
+        if not _is_its_own_repository(empty, env):
+            # Loud, and before any check runs: a fixture that is not its own repository
+            # means every answer below would be about some other repository.
+            findings.append({
+                "script": "(the empty fixture)",
+                "detail": (
+                    "THE EMPTY TREE IS NOT ITS OWN GIT REPOSITORY. `git init` ran in a new "
+                    "temp folder and git does not resolve the repository inside it, so the "
+                    "checks would have been run against whatever repository git does "
+                    "resolve. Nothing was run. Is git installed, and is something in the "
+                    "environment redirecting it?"
+                ),
+            })
+            return {"findings": findings, "checked": checked, "skipped": skipped}
 
         for script in _candidates(scripts_dir):
             name = script.name
@@ -212,7 +263,7 @@ def scan(root: Path) -> dict:
                 argv = extra(empty) if extra else ["--root", "."]
                 proc = subprocess.run(
                     [sys.executable, str(script), *argv],
-                    cwd=empty, capture_output=True, text=True, timeout=60,
+                    cwd=empty, env=env, capture_output=True, text=True, timeout=60,
                     check=False,   # a non-zero exit is the PASS condition here
                 )
             except subprocess.SubprocessError as exc:

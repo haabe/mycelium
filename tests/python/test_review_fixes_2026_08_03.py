@@ -31,6 +31,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+import _scratch_git
 import pytest
 
 # Scripts whose plain and --json paths must agree. The bug was that they did not.
@@ -53,8 +54,7 @@ def _empty_repo(tmp_path: Path) -> Path:
     (tmp_path / ".claude" / "canvas").mkdir(parents=True)
     (tmp_path / "plugins" / "mycelium" / "scripts").mkdir(parents=True)
     (tmp_path / "plugins" / "mycelium" / "hooks").mkdir(parents=True)
-    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=False,
-                   capture_output=True)
+    _scratch_git.init(tmp_path)
     return tmp_path
 
 
@@ -161,8 +161,7 @@ def test_ignored_tree_names_do_not_count_as_production_reach(scripts_path, tmp_p
     string matching a file inside a git-ignored tree was NOT flagged, and WAS
     flagged once that tree was removed. The filter suppressed real findings.
     """
-    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True,
-                   capture_output=True)
+    _scratch_git.init(tmp_path)
     (tmp_path / ".gitignore").write_text("vendored/\n")
     (tmp_path / "vendored").mkdir()
     (tmp_path / "vendored" / "uniquevendorname.py").write_text("x = 1\n")

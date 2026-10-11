@@ -17,6 +17,8 @@ the loud failure when git cannot be reached at all.
 import subprocess
 import sys
 
+import _scratch_git
+
 
 def _import(scripts_path):
     sys.path.insert(0, str(scripts_path))
@@ -32,7 +34,7 @@ def _git(repo, *args):
 def _repo(path, subjects=()):
     """Build a real git repo whose commit subjects are `subjects`."""
     path.mkdir(parents=True, exist_ok=True)
-    _git(path, "init", "-q")
+    _scratch_git.init(path)
     _git(path, "config", "user.email", "t@example.com")
     _git(path, "config", "user.name", "T")
     for i, subject in enumerate(subjects):
