@@ -46,16 +46,25 @@ hi_read_input() {
   done <<< "$out"
 }
 
+# A REFUSAL THAT CANNOT BE PRINTED IS STILL A REFUSAL (0.322.1). Both functions below print their
+# decision as JSON through python3 and leave with status 0, which is how Claude Code reads a JSON
+# decision. When python3 could not run, nothing was printed and the status was still 0: an allow.
+# So with no working python3, gate.sh, discovery-gate.sh and brownfield-gate.sh let the call
+# through in silence at the very point they had decided to refuse it (found 2026-10-11 by running
+# each gate with a python3 that exits 127). Now the reason goes to stderr and the status is 2,
+# the block form that needs no JSON. An `ask` that cannot be asked is a refusal too.
 hi_deny() {  # $1 reason
   # The refusal goes to the denial ledger, so a call that runs anyway can be seen (0.316.0).
   # shellcheck source=_hook_fire_log.sh
   . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_hook_fire_log.sh" 2>/dev/null && mycelium_record_denial
-  python3 -c 'import json,sys; print(json.dumps({"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":sys.argv[1]}}))' "$1"
+  python3 -c 'import json,sys; print(json.dumps({"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":sys.argv[1]}}))' "$1" \
+    || { printf '%s\n' "$1" >&2; exit 2; }
   exit 0
 }
 
 hi_ask() {  # $1 reason
-  python3 -c 'import json,sys; print(json.dumps({"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":sys.argv[1]}}))' "$1"
+  python3 -c 'import json,sys; print(json.dumps({"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"ask","permissionDecisionReason":sys.argv[1]}}))' "$1" \
+    || { printf '%s\n' "$1 (python3 could not run, so the question could not be put to a person and the call is refused.)" >&2; exit 2; }
   exit 0
 }
 

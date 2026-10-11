@@ -7,51 +7,59 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/gate.sh\"",
+            "command": "d=\"${CLAUDE_PROJECT_DIR:-}\"; [ -z \"$d\" ] || [ -d \"$d/.claude/canvas\" ] || [ -d \"$d/.claude/diamonds\" ] || [ \"${MYCELIUM_PRELUDE_ANY_PROJECT:-}\" = 1 ] || exit 0; bash \"${CLAUDE_PLUGIN_ROOT}/hooks/gate.sh\"",
             "timeout": 30,
-            "statusMessage": "Mycelium preflight gate + secret scan"
+            "statusMessage": "Mycelium preflight gate + secret scan",
+            "onFailure": "block"
           },
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/discovery-gate.sh\"",
+            "command": "d=\"${CLAUDE_PROJECT_DIR:-}\"; [ -z \"$d\" ] || [ -d \"$d/.claude/canvas\" ] || [ -d \"$d/.claude/diamonds\" ] || [ \"${MYCELIUM_PRELUDE_ANY_PROJECT:-}\" = 1 ] || exit 0; bash \"${CLAUDE_PLUGIN_ROOT}/hooks/discovery-gate.sh\"",
             "timeout": 30,
-            "statusMessage": "Mycelium discovery gate (new source files in discovery-untouched projects)"
+            "statusMessage": "Mycelium discovery gate (new source files in discovery-untouched projects)",
+            "onFailure": "block"
           },
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/scale-lock-gate.sh\"",
+            "command": "d=\"${CLAUDE_PROJECT_DIR:-}\"; [ -z \"$d\" ] || [ -d \"$d/.claude/canvas\" ] || [ -d \"$d/.claude/diamonds\" ] || [ \"${MYCELIUM_PRELUDE_ANY_PROJECT:-}\" = 1 ] || exit 0; bash \"${CLAUDE_PLUGIN_ROOT}/hooks/scale-lock-gate.sh\"",
             "timeout": 10,
-            "statusMessage": "Mycelium scale-lock gate (a new diamond opens only on what its parent established)"
+            "statusMessage": "Mycelium scale-lock gate (a new diamond opens only on what its parent established)",
+            "onFailure": "block"
           },
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/guard-state-gate.sh\"",
+            "command": "d=\"${CLAUDE_PROJECT_DIR:-}\"; [ -z \"$d\" ] || [ -d \"$d/.claude/canvas\" ] || [ -d \"$d/.claude/diamonds\" ] || [ \"${MYCELIUM_PRELUDE_ANY_PROJECT:-}\" = 1 ] || exit 0; bash \"${CLAUDE_PLUGIN_ROOT}/hooks/guard-state-gate.sh\"",
             "timeout": 10,
-            "statusMessage": "Mycelium guard-state gate (the files that switch a gate off are the user's to write)"
+            "statusMessage": "Mycelium guard-state gate (the files that switch a gate off are the user's to write)",
+            "onFailure": "block"
           },
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/brownfield-gate.sh\"",
+            "command": "d=\"${CLAUDE_PROJECT_DIR:-}\"; [ -z \"$d\" ] || [ -d \"$d/.claude/canvas\" ] || [ -d \"$d/.claude/diamonds\" ] || [ \"${MYCELIUM_PRELUDE_ANY_PROJECT:-}\" = 1 ] || exit 0; bash \"${CLAUDE_PLUGIN_ROOT}/hooks/brownfield-gate.sh\"",
             "timeout": 30,
-            "statusMessage": "Mycelium brownfield gate (one-shot: existing code, no discovery state)"
+            "statusMessage": "Mycelium brownfield gate (one-shot: existing code, no discovery state)",
+            "onFailure": "block"
           },
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/scope-gate.sh\"",
+            "command": "d=\"${CLAUDE_PROJECT_DIR:-}\"; [ -z \"$d\" ] || [ -d \"$d/.claude/canvas\" ] || [ -d \"$d/.claude/diamonds\" ] || [ \"${MYCELIUM_PRELUDE_ANY_PROJECT:-}\" = 1 ] || exit 0; bash \"${CLAUDE_PLUGIN_ROOT}/hooks/scope-gate.sh\"",
             "timeout": 30,
-            "statusMessage": "Mycelium scope enforcement"
+            "statusMessage": "Mycelium scope enforcement",
+            "onFailure": "block"
           },
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/framework-guard.sh\"",
+            "command": "d=\"${CLAUDE_PROJECT_DIR:-}\"; [ -z \"$d\" ] || [ -d \"$d/.claude/canvas\" ] || [ -d \"$d/.claude/diamonds\" ] || [ \"${MYCELIUM_PRELUDE_ANY_PROJECT:-}\" = 1 ] || exit 0; bash \"${CLAUDE_PLUGIN_ROOT}/hooks/framework-guard.sh\"",
             "timeout": 30,
-            "statusMessage": "Mycelium framework-guard (dogfood-mode only)"
+            "statusMessage": "Mycelium framework-guard (dogfood-mode only)",
+            "onFailure": "block"
           },
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/autonomous-evidence-guard.sh\"",
+            "command": "d=\"${CLAUDE_PROJECT_DIR:-}\"; [ -z \"$d\" ] || [ -d \"$d/.claude/canvas\" ] || [ -d \"$d/.claude/diamonds\" ] || [ \"${MYCELIUM_PRELUDE_ANY_PROJECT:-}\" = 1 ] || exit 0; bash \"${CLAUDE_PLUGIN_ROOT}/hooks/autonomous-evidence-guard.sh\"",
             "timeout": 30,
-            "statusMessage": "Mycelium autonomous-evidence-guard (autonomous-mode only)"
+            "statusMessage": "Mycelium autonomous-evidence-guard (autonomous-mode only)",
+            "onFailure": "block"
           },
           {
             "type": "command",
@@ -75,9 +83,10 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/framework-guard.sh\"",
+            "command": "d=\"${CLAUDE_PROJECT_DIR:-}\"; [ -z \"$d\" ] || [ -d \"$d/.claude/canvas\" ] || [ -d \"$d/.claude/diamonds\" ] || [ \"${MYCELIUM_PRELUDE_ANY_PROJECT:-}\" = 1 ] || exit 0; bash \"${CLAUDE_PLUGIN_ROOT}/hooks/framework-guard.sh\"",
             "timeout": 30,
-            "statusMessage": "Mycelium framework-guard (Bash — dogfood-mode only)"
+            "statusMessage": "Mycelium framework-guard (Bash — dogfood-mode only)",
+            "onFailure": "block"
           },
           {
             "type": "command",
@@ -97,39 +106,45 @@
           },
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/gate.sh\"",
+            "command": "d=\"${CLAUDE_PROJECT_DIR:-}\"; [ -z \"$d\" ] || [ -d \"$d/.claude/canvas\" ] || [ -d \"$d/.claude/diamonds\" ] || [ \"${MYCELIUM_PRELUDE_ANY_PROJECT:-}\" = 1 ] || exit 0; bash \"${CLAUDE_PLUGIN_ROOT}/hooks/gate.sh\"",
             "timeout": 30,
-            "statusMessage": "Mycelium preflight gate + secret scan"
+            "statusMessage": "Mycelium preflight gate + secret scan",
+            "onFailure": "block"
           },
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/discovery-gate.sh\"",
+            "command": "d=\"${CLAUDE_PROJECT_DIR:-}\"; [ -z \"$d\" ] || [ -d \"$d/.claude/canvas\" ] || [ -d \"$d/.claude/diamonds\" ] || [ \"${MYCELIUM_PRELUDE_ANY_PROJECT:-}\" = 1 ] || exit 0; bash \"${CLAUDE_PLUGIN_ROOT}/hooks/discovery-gate.sh\"",
             "timeout": 30,
-            "statusMessage": "Mycelium discovery gate (new source files in discovery-untouched projects)"
+            "statusMessage": "Mycelium discovery gate (new source files in discovery-untouched projects)",
+            "onFailure": "block"
           },
           {
             "type": "command",
             "timeout": 10,
             "statusMessage": "Mycelium exposure gate (a deploy waits for a current exposure record)",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/exposure-gate.sh\""
+            "command": "d=\"${CLAUDE_PROJECT_DIR:-}\"; [ -z \"$d\" ] || [ -d \"$d/.claude/canvas\" ] || [ -d \"$d/.claude/diamonds\" ] || [ \"${MYCELIUM_PRELUDE_ANY_PROJECT:-}\" = 1 ] || exit 0; bash \"${CLAUDE_PLUGIN_ROOT}/hooks/exposure-gate.sh\"",
+            "onFailure": "block"
           },
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/brownfield-gate.sh\"",
+            "command": "d=\"${CLAUDE_PROJECT_DIR:-}\"; [ -z \"$d\" ] || [ -d \"$d/.claude/canvas\" ] || [ -d \"$d/.claude/diamonds\" ] || [ \"${MYCELIUM_PRELUDE_ANY_PROJECT:-}\" = 1 ] || exit 0; bash \"${CLAUDE_PLUGIN_ROOT}/hooks/brownfield-gate.sh\"",
             "timeout": 30,
-            "statusMessage": "Mycelium brownfield gate (one-shot: existing code, no discovery state)"
+            "statusMessage": "Mycelium brownfield gate (one-shot: existing code, no discovery state)",
+            "onFailure": "block"
           },
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/scope-gate.sh\"",
+            "command": "d=\"${CLAUDE_PROJECT_DIR:-}\"; [ -z \"$d\" ] || [ -d \"$d/.claude/canvas\" ] || [ -d \"$d/.claude/diamonds\" ] || [ \"${MYCELIUM_PRELUDE_ANY_PROJECT:-}\" = 1 ] || exit 0; bash \"${CLAUDE_PLUGIN_ROOT}/hooks/scope-gate.sh\"",
             "timeout": 30,
-            "statusMessage": "Mycelium scope enforcement"
+            "statusMessage": "Mycelium scope enforcement",
+            "onFailure": "block"
           },
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/autonomous-evidence-guard.sh\"",
+            "command": "d=\"${CLAUDE_PROJECT_DIR:-}\"; [ -z \"$d\" ] || [ -d \"$d/.claude/canvas\" ] || [ -d \"$d/.claude/diamonds\" ] || [ \"${MYCELIUM_PRELUDE_ANY_PROJECT:-}\" = 1 ] || exit 0; bash \"${CLAUDE_PLUGIN_ROOT}/hooks/autonomous-evidence-guard.sh\"",
             "timeout": 30,
-            "statusMessage": "Mycelium autonomous-evidence-guard (autonomous-mode only)"
+            "statusMessage": "Mycelium autonomous-evidence-guard (autonomous-mode only)",
+            "onFailure": "block"
           },
           {
             "type": "command",
@@ -139,9 +154,10 @@
           },
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/guard-state-gate.sh\"",
+            "command": "d=\"${CLAUDE_PROJECT_DIR:-}\"; [ -z \"$d\" ] || [ -d \"$d/.claude/canvas\" ] || [ -d \"$d/.claude/diamonds\" ] || [ \"${MYCELIUM_PRELUDE_ANY_PROJECT:-}\" = 1 ] || exit 0; bash \"${CLAUDE_PLUGIN_ROOT}/hooks/guard-state-gate.sh\"",
             "timeout": 10,
-            "statusMessage": "Mycelium guard-state gate (the files that switch a gate off are the user's to write)"
+            "statusMessage": "Mycelium guard-state gate (the files that switch a gate off are the user's to write)",
+            "onFailure": "block"
           }
         ]
       },
@@ -150,51 +166,59 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/framework-guard.sh\"",
+            "command": "d=\"${CLAUDE_PROJECT_DIR:-}\"; [ -z \"$d\" ] || [ -d \"$d/.claude/canvas\" ] || [ -d \"$d/.claude/diamonds\" ] || [ \"${MYCELIUM_PRELUDE_ANY_PROJECT:-}\" = 1 ] || exit 0; bash \"${CLAUDE_PLUGIN_ROOT}/hooks/framework-guard.sh\"",
             "timeout": 30,
-            "statusMessage": "Mycelium framework-guard (MCP filesystem — dogfood-mode only)"
+            "statusMessage": "Mycelium framework-guard (MCP filesystem — dogfood-mode only)",
+            "onFailure": "block"
           },
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/autonomous-evidence-guard.sh\"",
+            "command": "d=\"${CLAUDE_PROJECT_DIR:-}\"; [ -z \"$d\" ] || [ -d \"$d/.claude/canvas\" ] || [ -d \"$d/.claude/diamonds\" ] || [ \"${MYCELIUM_PRELUDE_ANY_PROJECT:-}\" = 1 ] || exit 0; bash \"${CLAUDE_PLUGIN_ROOT}/hooks/autonomous-evidence-guard.sh\"",
             "timeout": 30,
-            "statusMessage": "Mycelium autonomous-evidence-guard (MCP filesystem — autonomous-mode only)"
+            "statusMessage": "Mycelium autonomous-evidence-guard (MCP filesystem — autonomous-mode only)",
+            "onFailure": "block"
           },
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/gate.sh\"",
+            "command": "d=\"${CLAUDE_PROJECT_DIR:-}\"; [ -z \"$d\" ] || [ -d \"$d/.claude/canvas\" ] || [ -d \"$d/.claude/diamonds\" ] || [ \"${MYCELIUM_PRELUDE_ANY_PROJECT:-}\" = 1 ] || exit 0; bash \"${CLAUDE_PLUGIN_ROOT}/hooks/gate.sh\"",
             "timeout": 30,
-            "statusMessage": "Mycelium preflight gate + secret scan"
+            "statusMessage": "Mycelium preflight gate + secret scan",
+            "onFailure": "block"
           },
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/discovery-gate.sh\"",
+            "command": "d=\"${CLAUDE_PROJECT_DIR:-}\"; [ -z \"$d\" ] || [ -d \"$d/.claude/canvas\" ] || [ -d \"$d/.claude/diamonds\" ] || [ \"${MYCELIUM_PRELUDE_ANY_PROJECT:-}\" = 1 ] || exit 0; bash \"${CLAUDE_PLUGIN_ROOT}/hooks/discovery-gate.sh\"",
             "timeout": 30,
-            "statusMessage": "Mycelium discovery gate (new source files in discovery-untouched projects)"
+            "statusMessage": "Mycelium discovery gate (new source files in discovery-untouched projects)",
+            "onFailure": "block"
           },
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/scale-lock-gate.sh\"",
+            "command": "d=\"${CLAUDE_PROJECT_DIR:-}\"; [ -z \"$d\" ] || [ -d \"$d/.claude/canvas\" ] || [ -d \"$d/.claude/diamonds\" ] || [ \"${MYCELIUM_PRELUDE_ANY_PROJECT:-}\" = 1 ] || exit 0; bash \"${CLAUDE_PLUGIN_ROOT}/hooks/scale-lock-gate.sh\"",
             "timeout": 10,
-            "statusMessage": "Mycelium scale-lock gate (a new diamond opens only on what its parent established)"
+            "statusMessage": "Mycelium scale-lock gate (a new diamond opens only on what its parent established)",
+            "onFailure": "block"
           },
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/guard-state-gate.sh\"",
+            "command": "d=\"${CLAUDE_PROJECT_DIR:-}\"; [ -z \"$d\" ] || [ -d \"$d/.claude/canvas\" ] || [ -d \"$d/.claude/diamonds\" ] || [ \"${MYCELIUM_PRELUDE_ANY_PROJECT:-}\" = 1 ] || exit 0; bash \"${CLAUDE_PLUGIN_ROOT}/hooks/guard-state-gate.sh\"",
             "timeout": 10,
-            "statusMessage": "Mycelium guard-state gate (the files that switch a gate off are the user's to write)"
+            "statusMessage": "Mycelium guard-state gate (the files that switch a gate off are the user's to write)",
+            "onFailure": "block"
           },
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/brownfield-gate.sh\"",
+            "command": "d=\"${CLAUDE_PROJECT_DIR:-}\"; [ -z \"$d\" ] || [ -d \"$d/.claude/canvas\" ] || [ -d \"$d/.claude/diamonds\" ] || [ \"${MYCELIUM_PRELUDE_ANY_PROJECT:-}\" = 1 ] || exit 0; bash \"${CLAUDE_PLUGIN_ROOT}/hooks/brownfield-gate.sh\"",
             "timeout": 30,
-            "statusMessage": "Mycelium brownfield gate (one-shot: existing code, no discovery state)"
+            "statusMessage": "Mycelium brownfield gate (one-shot: existing code, no discovery state)",
+            "onFailure": "block"
           },
           {
             "type": "command",
-            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/scope-gate.sh\"",
+            "command": "d=\"${CLAUDE_PROJECT_DIR:-}\"; [ -z \"$d\" ] || [ -d \"$d/.claude/canvas\" ] || [ -d \"$d/.claude/diamonds\" ] || [ \"${MYCELIUM_PRELUDE_ANY_PROJECT:-}\" = 1 ] || exit 0; bash \"${CLAUDE_PLUGIN_ROOT}/hooks/scope-gate.sh\"",
             "timeout": 30,
-            "statusMessage": "Mycelium scope enforcement"
+            "statusMessage": "Mycelium scope enforcement",
+            "onFailure": "block"
           }
         ]
       },

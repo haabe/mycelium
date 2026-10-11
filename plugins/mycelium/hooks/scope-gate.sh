@@ -62,8 +62,13 @@ INPUT=$(cat)
 
 # Delegate to Python stdlib helper (json module, fnmatch module — all stdlib)
 # Helper returns either empty (allow) or a deny JSON on stdout
+# A here-string, not a pipe (0.322.1). The helper answers a corrupt state file before it reads
+# the tool call. Under `set -eo pipefail` a `printf | python3` pipe then died on any call larger
+# than the pipe holds (printf: Broken pipe), and the hook left with printf's status before it
+# passed the helper's deny on: a hook error that let the write through. With
+# `"onFailure": "block"` in hooks.json that status would refuse the call and give no reason.
 if [ -f "$HELPER" ]; then
-  OUT=$(printf '%s' "$INPUT" | python3 "$HELPER" "$STATE_FILE" "$PROJECT_DIR"); RC=$?
+  OUT=$(python3 "$HELPER" "$STATE_FILE" "$PROJECT_DIR" <<<"$INPUT"); RC=$?
   mycelium_note_refusal "$OUT" "$RC"
   [ -n "$OUT" ] && printf '%s\n' "$OUT"
   exit $RC

@@ -4,6 +4,229 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-11.
 
+## v0.322.1 - a gate that cannot run refuses the call, in a project that uses Mycelium; session start keeps what a person wrote
+
+Two fixes from a read of the older backlog, each its own commits and tests, plus one found while building the first.
+
+### A gate that cannot run refuses the call, in a project that uses Mycelium
+
+**2026-10-11, on two rulings by the maintainer the same day.** Claude Code lets a tool call
+through when a hook fails: the process cannot start, it reaches its timeout, it exits with a status
+other than 0 or 2, or it prints JSON Claude Code cannot read. A gate's own fail-closed branch only
+runs when the gate does, so every Mycelium gate let the write through in those cases, whatever its
+script said about failing closed. Claude Code 2.1.295 added `"onFailure": "block"` on a command
+hook, which turns such a failure into a refusal (code.claude.com/docs/en/hooks, "Block the action
+when a hook fails"). No entry in `hooks.json` set it. The first ruling: "Block the write."
+
+The setting alone had a consequence nobody had asked for. Since 0.318.0 Mycelium does nothing in a
+project with neither `.claude/canvas/` nor `.claude/diamonds/`, but that exit is on line 2 of each
+hook script, so it needs the script to start. On a machine where the hooks cannot start, every
+write would have been refused in every project the plugin is enabled in, Mycelium or not. Shown
+that, the maintainer ruled again: "Block only in Mycelium projects."
+
+- **Every PreToolUse hook that can refuse now carries `"onFailure": "block"`.** Nine gates, 24
+  entries across the three matchers: `gate.sh`, `discovery-gate.sh`, `scale-lock-gate.sh`,
+  `guard-state-gate.sh`, `brownfield-gate.sh`, `scope-gate.sh`, `framework-guard.sh`,
+  `autonomous-evidence-guard.sh`, `exposure-gate.sh`. When one of them cannot start, times out or
+  crashes, Claude Code refuses the call and names the hook.
+- **Only in a project that uses Mycelium.** The command of each of those 24 entries begins with
+  one shell test that leaves with status 0, before `bash` is started, when the project has neither
+  marker folder:
+  `d="${CLAUDE_PROJECT_DIR:-}"; [ -z "$d" ] || [ -d "$d/.claude/canvas" ] || [ -d "$d/.claude/diamonds" ] || [ "${MYCELIUM_PRELUDE_ANY_PROJECT:-}" = 1 ] || exit 0;`
+  In a project that does not use Mycelium these nine hooks are no longer started at all. In one
+  that does, the command's status and output are the script's, to the byte.
+- **The test in the command is never narrower than the script's own** (`scripts/_hook_prelude.sh`).
+  It leaves only when `CLAUDE_PROJECT_DIR` is set and names a folder with neither marker, which is
+  exactly where the script leaves too. When the variable is not set, the script walks up from the
+  working directory to find the project; the command does not repeat that walk, it starts the
+  script and lets it decide. A test in the command that left where the script would have gone on
+  would switch every gate off in that project with nothing said, so the two are run over one
+  matrix of 21 cases, through each POSIX shell on the machine.
+- **Which hooks carry the setting, and the exact text of the test, are one list**,
+  `hooks/pretooluse-on-failure.txt`: a `prefix` line and three classes, `block` (the nine),
+  `continue` (`bash-state-guard.sh`, which can refuse and is left to let the call through when it
+  cannot run, because it runs before every shell command and says so when it fails) and
+  `advisory` (the five hooks that only warn, which carry neither the setting nor the prefix). The
+  hooks README and the system card name that file instead of keeping a list of their own.
+- **Three paths where a gate meant to allow, or to refuse with a reason, and left with a status
+  that now blocks, were fixed first.** With the setting on, "any status other than 0 or 2" and
+  "stdout that is two JSON objects" are failures.
+  - `framework-guard.sh` with the guard switched off (`"active": false` in `upstream.json`): the
+    helper answers before it reads the tool call, the wrapper fed the call through a pipe under
+    `set -eo pipefail`, and on a call larger than the pipe holds the hook left with `printf`'s
+    broken-pipe status. Until now a hook error that let the write through; with the setting on, a
+    refusal of every large write in a project that had switched the guard off.
+  - `scope-gate.sh` over a corrupt `active-execution.json`: the same pipe. The helper printed its
+    deny and the wrapper left before passing it on, so until now the write went through, and with
+    the setting on it would be refused with no reason given. Both wrappers now feed the helper
+    with a here-string, as `scale-lock-gate.sh` already did.
+  - `exposure-gate.sh` with a skip-ack that does not lift the release but warns (expired, or with
+    no date): the warning and the gate's own answer were two JSON objects. Until now a hook error
+    that let the release through and lost the gate's advice or its question to the person; with
+    the setting on, a refusal of a release the gate allowed. They now leave as one object.
+- **A refusal that cannot be printed is still a refusal.** `hi_deny` and `hi_ask`
+  (`scripts/_hook_input_read.sh`) print a decision as JSON through `python3` and leave with status
+  0. When `python3` could not run they printed nothing and still left with 0, so `gate.sh`,
+  `discovery-gate.sh` and `brownfield-gate.sh` allowed in silence at the point where they had
+  decided to refuse. Found while checking this release, by running each gate with a `python3` that
+  exits 127. They now write the reason to stderr and exit 2. A question that cannot be put to a
+  person is a refusal too.
+- **Docs.** `hooks/README.md` (the fail-closed section and the 0.318.0 section),
+  `docs/ai-system-card.md` (§3 and §6) and `docs/context-surface.md` say what happens when a gate
+  cannot run, that it happens only in a Mycelium project, from which Claude Code version, what it
+  costs, and the limit that is left.
+- **Tests.** `tests/python/test_pretooluse_on_failure.py` (157 cases on a machine with `sh`, `bash` and
+  `dash`; the matrix runs once per shell): the manifest against the one
+  list, each blocking command against the exact prefix, with controls for a gate lacking the
+  setting, a command one character off the prefix, a non-blocking hook that carries it, a hook
+  nobody classified and a malformed list; the prefix against the prelude over the matrix, and
+  against the marker folders the prelude's own function names; a broken install and a machine with
+  no `bash`, each refused only in a Mycelium project; the registered command against the script
+  run directly, byte for byte; the three fixed paths; every blocking gate over six kinds of call.
+  `tests/python/test_refusal_without_python.py` (10 cases): the three gates and the two functions
+  with a `python3` that cannot run, and the same with one that can. Against 0.321.0's code, with
+  the list file left in place so the test module loads, 25 of these 167 fail. Against the first
+  version of this fix (the setting with no test in the command), 46 fail. The rest are controls.
+
+**What changes for an existing project.** In a project that does not use Mycelium: nothing, and
+nine fewer hooks are started per write. In a Mycelium project on Claude Code 2.1.295 or later, on a
+healthy machine: nothing you can see. On a slow or busy machine where a gate takes longer than its
+timeout (10 s or 30 s), every write that gate covers is refused until that is fixed, and shell
+commands too, because eight of the nine gates also run on Bash. The same holds where the hook
+cannot start (no `bash`, a broken plugin path). The maintainer accepted this cost. The refusal
+names the hook and says whether it failed or timed out; the way past is to fix the cause, or to
+turn the plugin off while it is fixed.
+
+**The limit that is left.** Claude Code passes a hook command to `sh -c` on macOS and Linux and to
+Git Bash on Windows. On Windows without Git Bash it passes it to PowerShell, which cannot read the
+command, so it fails before the test for the two folders is made, and with the setting on the call
+is refused in every project the plugin is enabled in. The maintainer accepted that limit. The way
+out there is to install Git Bash, which the hooks need in any case, or to turn the plugin off.
+
+**What this does not show.** The setting's behaviour and the way a command is run were read from
+Claude Code's documentation and not exercised in a live session: no test here starts Claude Code,
+kills a hook and watches the call be refused, and none ran on Windows. That an older Claude Code
+ignores the key and loads the rest of the manifest is assumed from the documentation's "Requires
+Claude Code v2.1.295 or later" and was not run on an older version. The command leaving early does
+not read the hook's input; two gates already left before reading it on every write
+(`scope-gate.sh` and `framework-guard.sh`, with no state file), so this is not new, but it was not
+measured in Claude Code with a large write.
+
+**Not in this release.**
+
+- **A script that runs, exits 0 and prints nothing is still an allow.** The setting changes what
+  happens when a script fails, not what a script decides. `scale-lock-gate.sh` without PyYAML
+  still allows, by its own design, and `preflight.sh` says so on every prompt.
+  `guard-state-gate.sh` prints nothing and exits 0 if its helper cannot start.
+- **Codex CLI and Cursor are unchanged.** Codex documents no such setting
+  (developers.openai.com/codex/hooks). Cursor's is `failClosed` (cursor.com/docs/hooks), with
+  different rules: there "no output" is listed among the failures that block, and every Mycelium
+  gate prints nothing when it allows. `hooks.cursor.json` has carried it on `gate.sh` alone since
+  0.30.0, and `docs/integrations/cursor.md` names three hooks. Extending or removing it needs a
+  run in Cursor, which this release did not have.
+- **`bash-state-guard.sh` stays open when it cannot run**, by its own header. It is the one hook
+  that can refuse and carries neither the setting nor the prefix.
+- **Other events.** `preflight.sh` on UserPromptSubmit and the Stop hooks are untouched; the
+  setting has no effect on Stop.
+- **A shorter or longer timeout for any gate.** The timeouts are as they were.
+- **A PowerShell form of the commands.** That would close the limit above and was not attempted.
+
+**Alternatives considered.**
+
+- *Block everywhere: the setting with no test in the command.* This was the first version, built
+  on the first ruling. Dropped on the second: a machine where the hooks cannot start would refuse
+  writes in projects that never used Mycelium, against the 0.318.0 rule that Mycelium does nothing
+  there.
+- *Repeat the script's whole test in the command, the walk up from the working directory
+  included.* Not taken: it is a loop in a JSON string, 24 times, and Claude Code always sets
+  `CLAUDE_PROJECT_DIR`. Going on when the variable is missing is the safe direction: the script
+  then decides, as it did before.
+- *Read the hook's input in the command before leaving early (`cat >/dev/null`) so the caller never writes to
+  a closed pipe, as the prelude does.* Not taken: an unbounded read can wait for ever on an input
+  that is never closed, and two gates already leave without reading their input.
+- *Leave the manifest alone and harden each script's own failure branch.* Refused: a script cannot
+  handle its own failure to start or its own timeout, which are two of the four cases.
+- *Carry the setting on every PreToolUse hook, the advisory ones included.* Refused: an advisory
+  hook that blocked on its own crash would refuse work it has no opinion about.
+- *Carry it on the Write matchers and not on Bash, so the shell stays usable for diagnosis when a
+  gate breaks.* Not taken: a shell command can write a file, which is why those gates are on Bash
+  at all, and the ruling was that a gate that cannot run blocks. The cost is stated above.
+- *Derive "can refuse" from the scripts' text instead of keeping a list.* Refused as the only
+  source: `bash-state-guard.sh` can refuse and is deliberately left open, and that is a decision,
+  not a property of its text. The test does check each class against the script's text.
+- *Keep the list in `hooks/README.md` and have the test parse the prose.* Refused: a list inside
+  prose breaks on the next rewording. A data file is read by the test and named by the docs.
+- *Fix the two pipes by having the helpers read the tool call first.* Not taken: a malformed
+  payload would then be refused in a project whose guard is switched off, which is a change in
+  what is decided. The here-string changes only the exit status.
+
+### Session start no longer deletes what a person wrote inside a stored closing path
+
+**2026-10-11.** `session-start.sh` runs `derive_closing_path.py --all --write` at every start. The
+script keeps five hand-written keys of a diamond's stored `closes_on` block (`routes_on_record`,
+`then_do`, `caveat`, `why_a_field`, `does_not_close`, and `ruling` and `ruled_at` under a fired
+entry) and replaces `gates`, `inputs` and `fired` whole. Anything else a person had written in
+the block (a `note:` on a gate row, an input of their own, another key beside the derived ones)
+was gone after the next session start, and nothing said so.
+
+- **The script refuses instead of overwriting.** Before it stores, it reads the stored block for
+  anything it never writes: a key under `closes_on` outside the four derived and five kept ones;
+  under `gates[]`, a key other than `gate`, `status`, `what_would_flip_it`, `owner`, `date`; under
+  `inputs[]`, a key other than `kind`, `id`, `ref`, `state` and, on a task, `date`, or a `kind`
+  that is neither `assumption` nor `task`; under `fired[]`, a key other than `id`, `kind`,
+  `landed_as`, `noticed_at`, `proposal`, `ruling`, `ruled_at`, or an entry missing one of the
+  first five; an item that is not a mapping, or one of the three that is not a list. If it finds
+  any, that diamond's block is left exactly as it is, no `reader` or `on_close` is stamped for
+  it, and the other diamonds are handled as before.
+- **It says so in one line**, `CLOSING PATH NOT STORED for <diamond>: ...`, naming the places
+  (the first four, then a count), and the keys such content can live under.
+- **The line reaches the agent.** `session-start.sh` discards the script's stderr and relayed
+  only `CLOSING PATH FIRED` lines and a count, so the line is printed on stdout and the hook
+  relays up to three of them with the other reminders: in the full tier directly, in Claude
+  Code's background tier through the cache `preflight.sh` delivers at the next prompt.
+  `/mycelium:diamond-assess` prints the script's output verbatim, so it shows there too.
+- **A landing is not lost by the refusal.** The stored block still says the input was open, so a
+  verdict or a closed task fires on the first run that can store.
+- **Tests** (`tests/python/test_closing_path_controller.py`, 17 new cases): seven kinds of
+  hand-written content survive a `--write` run byte for byte and are named; the line is one line
+  and starts with the words the hook greps; a landing waits and then fires; the shape check
+  against everything the script and a person may legitimately write; two runs of the hook itself,
+  full tier and background tier. Thirteen fail on 0.321.0. Four are controls that pass on both: a
+  block the script wrote is rewritten exactly as before, the five kept keys and a ruling survive,
+  a diamond with nothing to store is not warned about, and session start says nothing about a
+  block the script wrote.
+
+**What changes for an existing project.** Nothing, unless someone has written inside a stored
+`closes_on` since the last session start. Then the next start leaves the block alone and says
+where the content is, every start, until it is moved to a kept key. Content written there before
+this release is already gone; nothing here brings it back.
+
+**Not in this release.**
+
+- **A hand edit to the value of a key the script writes is still replaced.** A reworded
+  `what_would_flip_it` cannot be told from a stale derivation.
+- **A YAML comment inside the block is still dropped.** The check reads the parsed block, and a
+  comment is not in it.
+- **The script still does not carry unknown content across.** It refuses and asks a person to
+  move it.
+- **Session start still writes to `active.yml` on every start.** `MYCELIUM_CLOSING_PATH_WRITE=off`
+  turns that off, as before.
+
+**Alternatives considered.**
+
+- *Carry unknown keys across the rewrite.* The widest of the three options. Refused for this
+  release: the renderer would have to re-emit shapes it does not know, and an item a person added
+  to `inputs` cannot be told from a derived input that is no longer watched and should go.
+- *Stop writing at session start and store only when `/mycelium:diamond-assess` runs.* Refused:
+  the store exists so a condition is never older than the last start (0.187.0), and a landed input
+  would wait for someone to run the skill.
+- *Warn and overwrite anyway.* Refused: the content is gone by the time the warning is read.
+- *Send the warning to stderr, where warnings usually go.* Refused: the hook that runs the script
+  throws its stderr away, which is how the loss stayed silent.
+- *Refuse whenever the stored block holds hand-written content, pending gates or not.* Not taken:
+  a diamond with no pending gate is not written to, so the line would claim a deletion that was
+  not about to happen.
+
 ## v0.322.0 - a project that deploys is asked whether something is already live
 
 **2026-10-11, on the maintainer's ruling of the same day ("Ask and offer to record it").**

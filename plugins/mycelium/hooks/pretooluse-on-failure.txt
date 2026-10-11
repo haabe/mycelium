@@ -1,0 +1,76 @@
+# WHAT HAPPENS WHEN A PreToolUse HOOK CANNOT RUN (0.322.1): the one list.
+#
+# WHY THIS FILE EXISTS
+# --------------------
+# Claude Code lets a tool call through when a hook fails: the process cannot start, it reaches
+# its timeout, it exits with a status other than 0 or 2, or it prints JSON Claude Code cannot
+# read. Until 0.322.1 that was true of every Mycelium gate, whatever its own script said about
+# failing closed, because the script's own fail-closed branch only runs when the script does.
+# Claude Code 2.1.295 added `"onFailure": "block"` on a command hook: a failed hook then blocks
+# the call (code.claude.com/docs/en/hooks, "Block the action when a hook fails"). Maintainer
+# ruling 2026-10-11: "Block the write."
+#
+# Which hooks carry it is a decision per hook, so it is written down once, here.
+# `tests/python/test_pretooluse_on_failure.py` reads this file and fails when hooks.json
+# disagrees with it, when a hook registered on PreToolUse is not listed, or when a script's own
+# text contradicts its class. `hooks/README.md` and `docs/ai-system-card.md` name this file
+# instead of keeping a list of their own.
+#
+# FORMAT, one hook per line; `#` starts a comment
+#   block     <script>            it can refuse or ask, so every PreToolUse entry of it in
+#                                 hooks.json carries "onFailure": "block"
+#   continue  <script> <reason>   it can refuse, and is still left to let the call through when
+#                                 it cannot run. The reason is required.
+#   advisory  <script>            it only warns or logs. No entry of it carries the setting: an
+#                                 advisory hook that blocked on its own crash would refuse work
+#                                 it has no opinion about.
+#
+# WHAT THE SETTING DOES NOT COVER. A script that runs, exits 0 and prints nothing is an allow,
+# with or without the setting. Claude Code before 2.1.295 does not have the setting at all.
+# Codex CLI documents no such key and Cursor's is a different one (`failClosed`), so neither of
+# those manifests carries this one, and the same test holds them to that.
+#
+# ONLY IN A PROJECT THAT USES MYCELIUM (0.322.1). Since 0.318.0 Mycelium does nothing in a project
+# with neither `.claude/canvas/` nor `.claude/diamonds/`. That exit is on line 2 of each script,
+# so it needs the script to start: with the setting alone, a machine where the hooks cannot start
+# would have had every write refused in every project the plugin is enabled in, Mycelium or not.
+# Maintainer ruling 2026-10-11, shown that consequence: "Block only in Mycelium projects." So the
+# command of every `block` hook begins with the `prefix` line below, which leaves with status 0
+# before bash is started when this is not a Mycelium project. It is plain POSIX sh, because
+# Claude Code passes a command to `sh -c` on macOS and Linux and to Git Bash on Windows.
+#
+# THE PREFIX IS NEVER NARROWER THAN THE SCRIPT'S OWN TEST (scripts/_hook_prelude.sh). It leaves
+# only when CLAUDE_PROJECT_DIR is set, names a folder with neither marker, and
+# MYCELIUM_PRELUDE_ANY_PROJECT is not 1: exactly where the prelude leaves too. When
+# CLAUDE_PROJECT_DIR is not set the prelude walks up from the working directory; the prefix does
+# not repeat that walk, it goes on and lets the script decide. A prefix that left where the
+# script would have gone on would switch every gate off in that project, in silence.
+# `tests/python/test_pretooluse_on_failure.py` runs both over one matrix of cases.
+#
+# WHAT IS LEFT. Where no POSIX shell runs the command at all (Windows without Git Bash, where
+# Claude Code hands it to PowerShell), the command fails before the prefix is read, and with the
+# setting on the call is refused in every project. The maintainer accepted that limit.
+#
+#   prefix    <text>              the exact text every `block` command starts with, followed by
+#                                 one space and `bash "${CLAUDE_PLUGIN_ROOT}/hooks/<script>"`.
+#                                 No other PreToolUse command carries it.
+
+prefix    d="${CLAUDE_PROJECT_DIR:-}"; [ -z "$d" ] || [ -d "$d/.claude/canvas" ] || [ -d "$d/.claude/diamonds" ] || [ "${MYCELIUM_PRELUDE_ANY_PROJECT:-}" = 1 ] || exit 0;
+
+block     gate.sh
+block     discovery-gate.sh
+block     scale-lock-gate.sh
+block     guard-state-gate.sh
+block     brownfield-gate.sh
+block     scope-gate.sh
+block     framework-guard.sh
+block     autonomous-evidence-guard.sh
+block     exposure-gate.sh
+
+continue  bash-state-guard.sh  it runs before every shell command and says so when it cannot run (its own header): failing closed on a broken script would lock the agent out of the shell
+
+advisory  shell-safety-guard.sh
+advisory  key-shape-guard.sh
+advisory  correction-attribution-guard.sh
+advisory  absence-claim-guard.sh
+advisory  read-before-research-guard.sh

@@ -719,8 +719,14 @@ if [ -n "$CTLCHK" ] && [ -f "$PROJECT_DIR/.claude/diamonds/active.yml" ] && [ "$
   CTL_OUT=$(python3 "$CTLCHK" --project-dir "$PROJECT_DIR" --all --write 2>/dev/null || true)
   CTL_FIRED=$(printf '%s\n' "$CTL_OUT" | grep '^CLOSING PATH FIRED' | head -3 | tr '\n' ' ')
   CTL_NOTHING=$(printf '%s\n' "$CTL_OUT" | grep -c 'NOTHING ON RECORD' || true)
+  # A stored path the controller refused to overwrite, because it holds hand-written content the
+  # script never writes (v0.322.1). The script says it on stdout: this hook discards its stderr.
+  CTL_KEPT=$(printf '%s\n' "$CTL_OUT" | grep '^CLOSING PATH NOT STORED' | head -3 | tr '\n' ' ')
   if [ -n "$CTL_FIRED" ]; then
     REMINDERS="${REMINDERS}${CTL_FIRED}"
+  fi
+  if [ -n "$CTL_KEPT" ]; then
+    REMINDERS="${REMINDERS}${CTL_KEPT}"
   fi
   if [ "${CTL_NOTHING:-0}" != "0" ]; then
     REMINDERS="${REMINDERS}CLOSING PATH: ${CTL_NOTHING} diamond(s) have a pending gate that nothing on record moves (no live assumption, no open task, no declared reader); that is the finding, not a quiet state. "

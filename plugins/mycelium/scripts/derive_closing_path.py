@@ -504,6 +504,75 @@ _INLINE_MAX = 80
 _ROW_OWNER, _ROW_DATE = 2, 3
 PRESERVED_KEYS = ("routes_on_record", "then_do", "caveat", "why_a_field", "does_not_close")
 
+# WHAT THIS SCRIPT WRITES INSIDE THE DERIVED KEYS, AND NOTHING ELSE (v0.322.1).
+# Session start re-derives every diamond and replaces `gates`, `inputs` and `fired` whole. Whatever
+# a person had written inside them (a `note:` on a gate row, an input of their own, any other key
+# under `closes_on`) was gone after the next start, and nothing said so. The script cannot carry
+# what it does not understand, so it refuses instead: a stored block that holds anything outside
+# the shapes below is left untouched, and one `CLOSING PATH NOT STORED` line names the diamond,
+# the place and what to do. A hand edit to the VALUE of a key listed here is still replaced: it
+# cannot be told from a stale derivation. A YAML comment inside the block is not seen either.
+_ITEM_KEYS = {
+    "gates": frozenset({"gate", "status", "what_would_flip_it", "owner", "date"}),
+    "inputs": frozenset({"kind", "id", "ref", "state", "date"}),
+    "fired": frozenset({"id", "kind", "landed_as", "noticed_at", "proposal", "ruling", "ruled_at"}),
+}
+#: An input is an assumption or a task; only a task carries a `date` (its horizon).
+_INPUT_KINDS = ("assumption", "task")
+#: What the renderer reads from every fired entry; one without them was not written here.
+_FIRED_NEEDS = ("id", "kind", "landed_as", "noticed_at", "proposal")
+_PLACES_SHOWN = 4
+NOT_STORED = "CLOSING PATH NOT STORED"
+
+
+def _hand_written_in(key: str, n: int, item) -> list[str]:
+    """What one stored item of `gates`, `inputs` or `fired` holds that this script never writes."""
+    if not isinstance(item, dict):
+        return [f"{key}[{n}] (not a mapping)"]
+    found = [f"{key}[{n}].{k}" for k in item if k not in _ITEM_KEYS[key]]
+    if key == "inputs":
+        kind = item.get("kind")
+        if kind not in _INPUT_KINDS:
+            found.append(f"inputs[{n}].kind ({kind})")
+        elif kind == "assumption" and "date" in item:
+            found.append(f"inputs[{n}].date")
+    if key == "fired":
+        found += [f"fired[{n}] (no {k})" for k in _FIRED_NEEDS if k not in item]
+    return found
+
+
+def hand_written(stored) -> list[str]:
+    """Every place in a stored `closes_on` block that holds something this script never writes,
+    so a rewrite would delete it. Empty for a block the script wrote itself, with or without the
+    preserved keys and a ruling on a fired entry."""
+    if not isinstance(stored, dict):
+        return []
+    found = [str(k) for k in stored if k not in DERIVED_KEYS and k not in PRESERVED_KEYS]
+    for key in _ITEM_KEYS:
+        items = stored.get(key)
+        if items is None:
+            continue
+        if not isinstance(items, list):
+            found.append(f"{key} (not a list)")
+            continue
+        for n, item in enumerate(items):
+            found += _hand_written_in(key, n, item)
+    return found
+
+
+def not_stored_line(did: str, places: list[str]) -> str:
+    """One line, because session-start.sh relays it by its first words."""
+    shown = ", ".join(places[:_PLACES_SHOWN])
+    if len(places) > _PLACES_SHOWN:
+        shown += f" and {len(places) - _PLACES_SHOWN} more"
+    return (
+        f"{NOT_STORED} for {did}: its stored closes_on holds hand-written content this script "
+        f"never writes ({shown}), and storing today's derivation would delete it, so nothing was "
+        f"written to this diamond. Move that content to a key that is kept across derivations "
+        f"({', '.join(PRESERVED_KEYS)}; under a fired entry, ruling and ruled_at); the next "
+        f"session start then stores the path again."
+    )
+
 
 def _indent_of(line: str) -> int:
     return len(line) - len(line.lstrip(" "))
@@ -985,9 +1054,17 @@ def run_controller(root: Path, ids: list[str], write: bool, today: str) -> None:
         return
     doc = load_yaml(root / ".claude" / "diamonds" / "active.yml")
     for did in ids:
-        skip = _not_derived_line(did, _find_diamond(doc, did) or {})
+        stored_diamond = _find_diamond(doc, did) or {}
+        skip = _not_derived_line(did, stored_diamond)
         if skip:
             print(skip)
+            continue
+        # Hand-written content inside the derived keys is never overwritten (v0.322.1). Asked
+        # before anything reads the stored block, and only when this run would store: a diamond
+        # with no pending gate is not written to, so nothing of it is at risk.
+        kept = hand_written(stored_diamond.get("closes_on")) if write else []
+        if kept and (derive(root, did) or {}).get("gates"):
+            print(not_stored_line(did, kept))
             continue
         entry, prev = build_closes_on(root, did, today)
         if entry is None:

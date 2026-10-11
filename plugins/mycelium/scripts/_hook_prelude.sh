@@ -20,6 +20,13 @@
 #
 # Pure bash on purpose: this runs on every hook call.
 
+# THE SAME TEST STANDS IN FRONT OF EVERY BLOCKING PreToolUse COMMAND (0.322.1): the `prefix` line
+# of hooks/pretooluse-on-failure.txt, which hooks.json carries before `bash` is started, so that a
+# hook that cannot start refuses a call only in a Mycelium project. That prefix must never be
+# narrower than this file. Add a marker folder here, or a new way of finding the project, and add
+# it there too, or the projects it brings in lose every gate in silence.
+# tests/python/test_pretooluse_on_failure.py runs both over one matrix; add the new case to it.
+
 _mycelium_is_project() { [ -d "$1/.claude/canvas" ] || [ -d "$1/.claude/diamonds" ]; }
 
 # Which project. Claude Code sets CLAUDE_PROJECT_DIR; Codex CLI does not, and a session may start in

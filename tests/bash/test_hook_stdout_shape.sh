@@ -31,7 +31,7 @@ test_every_registered_hook_emits_json_or_text() {
     # The driver runs each registration with a hard timeout and writes one stdout
     # file per run. Judging the shape stays in the shared bash assertion.
     python3 - "$PLUGIN_ROOT" "$tmp" "$outdir" <<'PYEOF'
-import json, os, subprocess, sys
+import json, os, re, subprocess, sys
 plugin_root, proj, outdir = sys.argv[1:4]
 reg = json.load(open(os.path.join(plugin_root, 'hooks', 'hooks.json')))['hooks']
 
@@ -70,7 +70,10 @@ for event, groups in reg.items():
             if '--async' in cmd:
                 continue
             n += 1
-            name = '%02d__%s__%s' % (n, event, os.path.basename(cmd.split()[1]) + ''.join(cmd.split()[2:]))
+            # The script and its arguments, wherever they sit in the command: since 0.322.1 a
+            # blocking PreToolUse command begins with a shell test, not with `bash`.
+            m = re.search(r'/hooks/([A-Za-z0-9._-]+\.sh)"?(.*)$', cmd)
+            name = '%02d__%s__%s' % (n, event, m.group(1) + ''.join(m.group(2).split()))
             try:
                 r = subprocess.run(cmd.replace('${CLAUDE_PLUGIN_ROOT}', plugin_root), shell=True,
                                    input=payload(event, g.get('matcher')), capture_output=True,

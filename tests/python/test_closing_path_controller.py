@@ -8,6 +8,10 @@ empty file; a diamond with every gate passing stores nothing; preserved sub-keys
 re-derivation. In-process for the coverage floor.
 """
 
+import json
+import os
+import site
+import subprocess
 import sys
 from pathlib import Path
 
@@ -474,3 +478,237 @@ def test_an_active_or_blocked_state_is_still_derived(tmp_path, capsys):
     _project(tmp_path, active=open_, opps=_EMPTY_OPPS, tasks=_EMPTY_TASKS)
     rc, out = _run(tmp_path, capsys, "--all", "--write")
     assert "not derived" not in out and "NOTHING ON RECORD" in out
+
+
+# ----------------------- hand-written content inside the derived keys is not overwritten (v0.322.1)
+# Session start runs `--all --write` on every start and replaced `gates`, `inputs` and `fired`
+# whole. A `note:` someone wrote on a gate row, an input of their own, any other key under
+# `closes_on`: gone after the next start, with nothing said. The script now leaves such a block
+# as it is and says which diamond, which place and where the content can live.
+
+HAND_WRITTEN = [
+    # (text the script wrote, the same text with a person's addition, the place the line names)
+    ("    - gate: four_risks\n",
+     "    - gate: four_risks\n      note: hand-written, keep me\n", "gates[0].note"),
+    ("      id: a-1a-1\n",
+     "      id: a-1a-1\n      note: ask Kari before scoring this\n", "inputs[0].note"),
+    ("      id: a-1a-1\n",
+     "      id: a-1a-1\n      date: '2026-09-20'\n", "inputs[0].date"),
+    ("    inputs:\n",
+     "    inputs:\n    - kind: question\n      id: q-1\n      text: who owns the pricing page\n",
+     "inputs[0].kind (question)"),
+    ("    inputs:\n", "    inputs:\n    - a line someone typed here\n", "inputs[0] (not a mapping)"),
+    ("    fired: []\n", "    fired: []\n    note: hand-written beside the derived keys\n", "(note)"),
+    ("    fired: []\n",
+     "    fired:\n    - id: a-9\n      kind: assumption\n      note: typed by hand\n",
+     "fired[0].note"),
+]
+
+
+def _yml(root):
+    return {p: p.read_text() for p in (root / ".claude").rglob("*.yml")}
+
+
+def _hand_edit(root, old, new):
+    active = root / ".claude" / "diamonds" / "active.yml"
+    text = active.read_text()
+    assert text.count(old) == 1, old
+    active.write_text(text.replace(old, new))
+
+
+@pytest.mark.parametrize(("old", "new", "place"), HAND_WRITTEN)
+def test_hand_written_content_in_a_derived_key_is_not_overwritten(tmp_path, capsys, old, new, place):
+    """RED ON 0.321.0: the next `--write` dropped the addition and printed the usual receipt."""
+    _project(tmp_path)
+    _run(tmp_path, capsys, "--diamond-id", "l1", "--write")
+    _hand_edit(tmp_path, old, new)
+    before = _yml(tmp_path)
+    rc, out = _run(tmp_path, capsys, "--all", "--write", "--today", "2026-09-11")
+    assert rc == 0
+    assert "CLOSING PATH NOT STORED for l1:" in out          # which diamond
+    assert place in out                                        # which place
+    assert "caveat" in out and "then_do" in out                # where it can live
+    assert "closing-path l1:" not in out                       # no receipt for a store that did not happen
+    assert _yml(tmp_path) == before                            # the block, and every other file, untouched
+    assert _l1(tmp_path)["closes_on"]["stored_at"] == "2026-09-10"
+
+
+def test_the_warning_is_one_line_and_starts_with_the_words_session_start_greps(tmp_path, capsys):
+    _project(tmp_path)
+    _run(tmp_path, capsys, "--diamond-id", "l1", "--write")
+    _hand_edit(tmp_path, *HAND_WRITTEN[0][:2])
+    _, out = _run(tmp_path, capsys, "--all", "--write", "--today", "2026-09-11")
+    lines = [ln for ln in out.splitlines() if "NOT STORED" in ln]
+    assert len(lines) == 1 and lines[0].startswith("CLOSING PATH NOT STORED for l1: ")
+    hook = (SCRIPTS.parent / "hooks" / "session-start.sh").read_text()
+    assert "grep '^CLOSING PATH NOT STORED'" in hook
+
+
+def test_many_places_are_counted_not_listed(tmp_path):
+    stored = {"gates": [{"gate": "g", "a": 1, "b": 2, "c": 3, "d": 4, "e": 5, "f": 6}]}
+    line = _mod().not_stored_line("l1", _mod().hand_written(stored))
+    assert "gates[0].a, gates[0].b, gates[0].c, gates[0].d and 2 more" in line
+
+
+def test_a_landing_waits_until_the_content_is_moved_and_then_fires(tmp_path, capsys):
+    """Nothing is lost by refusing: the stored block still says the input was open, so the
+    landing fires on the first run that can store it."""
+    _project(tmp_path)
+    _run(tmp_path, capsys, "--diamond-id", "l1", "--write")
+    _hand_edit(tmp_path, *HAND_WRITTEN[0][:2])
+    opps = tmp_path / ".claude" / "canvas" / "opportunities.yml"
+    opps.write_text(opps.read_text().replace(
+        "statement: first leaf assumption\n      verdict: null",
+        "statement: first leaf assumption\n      verdict: SUPPORTS"))
+    _, out = _run(tmp_path, capsys, "--all", "--write", "--today", "2026-09-11")
+    assert "CLOSING PATH NOT STORED for l1:" in out and "CLOSING PATH FIRED" not in out
+    assert _l1(tmp_path)["closes_on"]["fired"] == []
+    # the person moves the note to a key that is kept
+    _hand_edit(tmp_path, "      note: hand-written, keep me\n", "")
+    _hand_edit(tmp_path, "    fired: []\n", "    fired: []\n    caveat: hand-written, keep me\n")
+    _, out = _run(tmp_path, capsys, "--all", "--write", "--today", "2026-09-12")
+    assert "CLOSING PATH FIRED for l1: a-1a-1 has a verdict (SUPPORTS)" in out
+    assert "NOT STORED" not in out
+    stored = _l1(tmp_path)["closes_on"]
+    assert stored["caveat"] == "hand-written, keep me" and stored["stored_at"] == "2026-09-12"
+
+
+def test_a_diamond_with_nothing_to_store_is_not_warned_about(tmp_path, capsys):
+    """No pending gate means no write, so nothing hand-written is at risk and nothing is said."""
+    passed = ACTIVE.replace("four_risks: pending", "four_risks: pass").replace(
+        "  notes: keep me\n",
+        "  closes_on:\n    stored_at: '2026-09-01'\n    gates: []\n    inputs: []\n    fired: []\n"
+        "    note: hand-written beside the derived keys\n  notes: keep me\n")
+    _project(tmp_path, active=passed)
+    before = _yml(tmp_path)
+    _, out = _run(tmp_path, capsys, "--all", "--write")
+    assert "closing-path l1: every gate reads pass; nothing to store" in out
+    assert "NOT STORED" not in out and _yml(tmp_path) == before
+
+
+def test_control_a_block_the_script_wrote_is_rewritten_exactly_as_before(tmp_path, capsys):
+    """GREEN ON 0.321.0 TOO. Nothing hand-written, so the next derivation replaces the block."""
+    _project(tmp_path)
+    _run(tmp_path, capsys, "--diamond-id", "l1", "--write")
+    first = (tmp_path / ".claude" / "diamonds" / "active.yml").read_text()
+    _, out = _run(tmp_path, capsys, "--all", "--write", "--today", "2026-09-11")
+    assert "NOT STORED" not in out
+    assert "closing-path l1: 1 gate(s) pending, 3 input(s) watched; stored." in out
+    second = (tmp_path / ".claude" / "diamonds" / "active.yml").read_text()
+    assert second == first.replace("stored_at: '2026-09-10'", "stored_at: '2026-09-11'")
+    assert set(_l1(tmp_path)["closes_on"]) == {"stored_at", "gates", "inputs", "fired"}
+
+
+KEPT = """  closes_on:
+    stored_at: '2026-09-01'
+    gates: []
+    inputs: []
+    fired: []
+    routes_on_record:
+    - assumption: opportunities.yml#opp-1.sol-1a.assumptions[a-1a-1]
+      fires_when: the first leaf gets a verdict
+    then_do:
+    - flip four_risks against the chosen leaf
+    caveat: hand-written, keep me
+    why_a_field: the log is not read when the condition is met
+    does_not_close:
+    - a verdict on a leaf that is not the front runner
+"""
+
+
+def test_control_the_five_kept_keys_and_a_ruling_survive_with_no_warning(tmp_path, capsys):
+    """GREEN ON 0.321.0 TOO. The keys a person may write are still carried across."""
+    _project(tmp_path, active=ACTIVE + KEPT)
+    was = _l1(tmp_path)["closes_on"]
+    _, out = _run(tmp_path, capsys, "--all", "--write")
+    now = _l1(tmp_path)["closes_on"]
+    assert "NOT STORED" not in out and now["stored_at"] == "2026-09-10"
+    for key in _mod().PRESERVED_KEYS:
+        assert now[key] == was[key], key
+    # a verdict lands, the person rules on it under the fired entry, and that survives too
+    opps = tmp_path / ".claude" / "canvas" / "opportunities.yml"
+    opps.write_text(opps.read_text().replace("      verdict: null\n", "      verdict: validated\n", 1))
+    _run(tmp_path, capsys, "--all", "--write")
+    _hand_edit(tmp_path, "      noticed_at: '2026-09-10'\n",
+               "      noticed_at: '2026-09-10'\n      ruling: does not choose a path\n"
+               "      ruled_at: '2026-09-11'\n")
+    _, out = _run(tmp_path, capsys, "--all", "--write", "--today", "2026-09-12")
+    again = _l1(tmp_path)["closes_on"]
+    assert "NOT STORED" not in out and again["stored_at"] == "2026-09-12"
+    assert again["fired"][0]["ruling"] == "does not choose a path"
+    for key in _mod().PRESERVED_KEYS:
+        assert again[key] == was[key], key
+
+
+def test_what_the_script_writes_and_what_a_person_may_write_is_not_hand_written():
+    """The shapes the refusal must never fire on: every key the renderer emits, the five kept
+    keys, and a ruling on a fired entry."""
+    wrote = {
+        "stored_at": "2026-09-10",
+        "gates": [{"gate": "four_risks", "status": "pending", "what_would_flip_it": "x",
+                   "owner": "human", "date": "-"}],
+        "inputs": [{"kind": "assumption", "id": "a-1", "ref": "r", "state": "no verdict"},
+                   {"kind": "task", "id": "ht-1", "ref": "r", "state": "waiting",
+                    "date": "2026-09-13"}],
+        "fired": [{"id": "a-2", "kind": "assumption", "landed_as": "verdict x",
+                   "noticed_at": "2026-09-10", "proposal": "p", "ruling": "no",
+                   "ruled_at": "2026-09-11"}],
+        **dict.fromkeys(_mod().PRESERVED_KEYS, "kept"),
+    }
+    assert _mod().hand_written(wrote) == []
+    assert _mod().hand_written({"gates": None, "inputs": [], "fired": []}) == []
+    assert _mod().hand_written(None) == [] and _mod().hand_written("a string") == []
+    odd = {"gates": "see the notes", "inputs": [{"kind": "task", "id": "t"}, 7],
+           "fired": [{"id": "a-3"}]}
+    assert _mod().hand_written(odd) == [
+        "gates (not a list)", "inputs[1] (not a mapping)", "fired[0] (no kind)",
+        "fired[0] (no landed_as)", "fired[0] (no noticed_at)", "fired[0] (no proposal)"]
+
+
+def _session_start(root, *mode):
+    plugin = SCRIPTS.parent
+    env = {"CLAUDE_PROJECT_DIR": str(root), "CLAUDE_PLUGIN_ROOT": str(plugin),
+           "MYCELIUM_CROSS_REPO_WATCH": "", "MYCELIUM_SESSION_START_BUDGET": "600",
+           "TMPDIR": str(root), "HOME": str(root),
+           # HOME is redirected, so say where this interpreter's user packages are: on a machine
+           # whose PyYAML is a user install, the hook's python3 otherwise cannot import it and
+           # session start reports "PyYAML unavailable" where this test expects the warning.
+           "PYTHONUSERBASE": site.getuserbase(),
+           "PATH": str(Path(sys.executable).parent) + os.pathsep + "/usr/bin:/bin"}
+    done = subprocess.run(["bash", str(plugin / "hooks" / "session-start.sh"), *mode],
+                          input="", capture_output=True, text=True, env=env, check=False)
+    assert done.returncode == 0, done.stderr[-400:]
+    return json.loads(done.stdout) if done.stdout.strip() else {}
+
+
+def test_the_warning_reaches_the_agent_through_session_start(tmp_path, capsys):
+    """RED ON 0.321.0: the hook relayed only FIRED lines and a NOTHING ON RECORD count, threw the
+    script's stderr away, and the note was gone when the hook returned. This runs the HOOK."""
+    _project(tmp_path)
+    _run(tmp_path, capsys, "--diamond-id", "l1", "--write")
+    _hand_edit(tmp_path, *HAND_WRITTEN[0][:2])
+    said = _session_start(tmp_path)["hookSpecificOutput"]["additionalContext"]
+    assert "CLOSING PATH NOT STORED for l1:" in said and "gates[0].note" in said
+    assert "caveat" in said
+    assert _l1(tmp_path)["closes_on"]["gates"][0]["note"] == "hand-written, keep me"
+
+
+def test_the_background_tier_stores_the_warning_for_the_next_prompt(tmp_path, capsys):
+    """Claude Code runs the heavy tier with --async; what it relays is the cache preflight.sh
+    delivers at the next prompt. RED ON 0.321.0 for the same reason as the test above."""
+    _project(tmp_path)
+    _run(tmp_path, capsys, "--diamond-id", "l1", "--write")
+    _hand_edit(tmp_path, *HAND_WRITTEN[0][:2])
+    assert _session_start(tmp_path, "--async") == {}
+    cache = json.loads((tmp_path / ".claude" / "state" / "session-checks.json").read_text())
+    assert "CLOSING PATH NOT STORED for l1:" in cache["reminders"]
+    assert _l1(tmp_path)["closes_on"]["gates"][0]["note"] == "hand-written, keep me"
+
+
+def test_control_session_start_says_nothing_about_a_block_the_script_wrote(tmp_path, capsys):
+    """GREEN ON 0.321.0 TOO."""
+    _project(tmp_path)
+    _run(tmp_path, capsys, "--diamond-id", "l1", "--write")
+    said = _session_start(tmp_path).get("hookSpecificOutput", {}).get("additionalContext", "")
+    assert "NOT STORED" not in said
+    assert _l1(tmp_path)["closes_on"]["stored_at"] != "2026-09-10"  # re-derived, as before
