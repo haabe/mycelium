@@ -290,6 +290,20 @@ _LIVE_ON_PUSH_WORKFLOW = re.compile(
     r"|flyctl\s+deploy|fly\s+deploy|wrangler\s+(?:pages\s+)?(?:deploy|publish)|firebase\s+deploy"
     r"|heroku\s+|akhileshns/heroku-deploy|vercel\s+(?:deploy|--prod)|netlify\s+deploy",
     re.IGNORECASE)
+#: Files that show a project DEPLOYS, beyond the hosts that publish every push (v0.322.0, read by
+#: `deploy_sign` only, never by the release gate: a `Procfile` does not make `git push` a release).
+#: Each is the config file of a host whose deploy COMMAND the gate already counts in `_DEPLOY` or
+#: `_LIVE_ON_PUSH_WORKFLOW` (Heroku and its like, Fly, the Serverless Framework, Cloudflare,
+#: Firebase, Railway), and it is there to run the project on that host. Build files are not
+#: here: a `Dockerfile` alone, a `Makefile` or a bundler config say the project builds. Only the
+#: repository root is read, as for `_LIVE_ON_PUSH_FILES`.
+_DEPLOYS_FILES = ("Procfile", "fly.toml", "serverless.yml", "serverless.yaml", "wrangler.toml",
+                  "wrangler.jsonc", "wrangler.json", "firebase.json", "railway.json",
+                  "railway.toml")
+#: A `Dockerfile` beside a compose file: the project is set up to run as a service, which is how a
+#: product put on a server by hand is run. It is also how many projects run locally, so this sign
+#: is the weakest of them; it only ever leads to a question.
+_COMPOSE_FILES = ("docker-compose.yml", "docker-compose.yaml", "compose.yml", "compose.yaml")
 CLOSED_OPPORTUNITY = {"closed", "discarded", "resolved", "addressed"}
 SHIPPED_PHASES = {"deliver", "complete", "completed"}
 ACK_REL = os.path.join(".claude", "state", "scale-lock-ack")
@@ -1550,6 +1564,98 @@ def _goes_live_on_push(project_dir: str) -> bool:
     return False
 
 
+# ---------------------------------------------------------------- a product already live
+# (v0.322.0)
+#
+# A QUESTION, NEVER A FINDING AND NEVER A REASON TO REFUSE. Everything above judges a deploy the
+# AGENT runs, against exposure records. A product somebody put live by hand, before Mycelium came
+# into the project or beside it, has no record and runs no command here, so nothing names it. E2E
+# run of 2026-09-26: a product was live at two sites with real people's data and was being offered
+# to eight more owners; no diamond covered it, it sat outside Security and Privacy for six
+# sessions, and the builder found it by hand. Founder ruling, 2026-10-11: when the repository
+# shows the project deploys and no exposure record exists, ask whether something is already live
+# and offer to record who it reaches; never block.
+#
+# The two functions below are the two halves of that condition. They are read by
+# next_item.py (the one line at session start) and by `--deploy-sign` (the adoption skill), and by
+# nothing that decides: not `_record_problems`, not `current_exposures`, not `_release_decision`,
+# not any exit status. A sign says the project CAN deploy. Whether it is live only a person knows.
+_PLAIN_FILE_NAME = re.compile(r"[\w.-]{1,32}")
+
+
+def deploy_sign(project_dir: str) -> tuple[str, list[str]]:
+    """(the first file that shows this project deploys, or ""; the places that could not be read).
+
+    It reads what the release gate reads to tell that a push publishes (`_LIVE_ON_PUSH_FILES`,
+    `_LIVE_ON_PUSH_WORKFLOW`), so whatever makes a plain push a release is a sign here too, and
+    adds three things the question needs and the gate does not: the host config files in
+    `_DEPLOYS_FILES`, a `Dockerfile` beside a compose file, and a workflow that runs one of the
+    gate's own release commands (`_DEPLOY`) whatever starts it. `_goes_live_on_push` itself is not
+    called: it answers the narrower question, and it raises on a workflow it cannot decode, which
+    the gate turns into a refusal and a session-start question must not die on.
+
+    A workflow that could not be read is returned, never dropped: "no sign" must not be said about
+    a place nobody looked. A project that deploys nothing from the repository (a service run by
+    hand, a document product, a host configured only in its own dashboard) has no sign at all."""
+    def has(name: str) -> bool:
+        return os.path.exists(os.path.join(project_dir, name))
+
+    named = next((n for n in _LIVE_ON_PUSH_FILES + _DEPLOYS_FILES if has(n)), "")
+    if not named and has("Dockerfile"):
+        named = next((f"Dockerfile with {n}" for n in _COMPOSE_FILES if has(n)), "")
+    return (named, []) if named else _deploy_workflow(project_dir)
+
+
+def _deploy_workflow(project_dir: str) -> tuple[str, list[str]]:
+    """(the first workflow that deploys, or ""; the workflows that could not be read)."""
+    wf = os.path.join(project_dir, ".github", "workflows")
+    sign, unread = "", []
+    if not os.path.isdir(wf):
+        return sign, unread
+    try:
+        names = sorted(n for n in os.listdir(wf) if n.endswith((".yml", ".yaml")))
+    except OSError:
+        names = []
+        unread.append(".github/workflows")  # said by the caller: this place was not read
+    for n in names:
+        # A file name comes from the repository and reaches the agent inside an instruction, so
+        # only a plain, short one is repeated (short: the person's line is cut at 240 characters).
+        shown = (f".github/workflows/{n}" if _PLAIN_FILE_NAME.fullmatch(n)
+                 else "a workflow in .github/workflows")
+        try:
+            with open(os.path.join(wf, n), encoding="utf-8", errors="replace") as fh:
+                text = fh.read()
+        except OSError:
+            unread.append(shown)  # said by the caller: this workflow was not read
+            continue
+        if _LIVE_ON_PUSH_WORKFLOW.search(text) or _DEPLOY.search(text):
+            sign, unread = shown, []
+            break
+    return sign, unread
+
+
+def any_exposure_record(project_dir: str) -> bool:
+    """Whether any diamond carries an exposure record: in any list (active, completed, archived),
+    at any scale, running or ended.
+
+    Wider on purpose than what a release counts (`current_exposures`: open L3 to L5 only). That
+    count answers "does a record cover a release now". This answers "has anyone recorded who this
+    project reaches", and a project whose live product is recorded on a completed L4 has. Read the
+    narrow way, that project would be asked whether something is live at every session.
+
+    No diamonds file means no record. A file that exists and cannot be read raises
+    (`UnreadableError`, or `CannotCheckError` without PyYAML): the caller says so and does not
+    ask."""
+    doc = _load(project_dir, "diamonds", "active.yml")
+    if doc is None:
+        return False
+    if not isinstance(doc, dict):
+        raise UnreadableError("diamonds/active.yml is not a mapping")
+    return any(isinstance(e, dict)
+               for key in _LISTS for d in _as_list(doc.get(key)) if isinstance(d, dict)
+               for e in _as_list(d.get("exposures")))
+
+
 #: Commands whose quoted argument is itself run, so its text is not prose.
 _RUNS_ITS_ARGUMENT = re.compile(r"\b(?:ssh|bash|sh|zsh|eval|sudo|xargs|env)\b[^'\"]*$")
 
@@ -2515,9 +2621,28 @@ def _run_exposures(project_dir: str) -> int:
     return EXIT_HOLDS
 
 
+def _run_deploy_sign(project_dir: str) -> int:
+    """What the repository shows about deploying (v0.322.0), for the adoption skill. One line,
+    always exit 0: it is a sign to ask about, and each of its three answers says what it is not."""
+    sign, unread = deploy_sign(project_dir)
+    if sign:
+        print(f"deploy sign: {sign}. This shows the project can deploy, not that anything is "
+              "live: ask the person whether something from it is already in front of real "
+              "people.")
+    elif unread:
+        print(f"deploy sign: could not look ({', '.join(unread)} could not be read). This is not "
+              "'no sign': ask the person whether something from this project is already in "
+              "front of real people.")
+    else:
+        print("deploy sign: none in the repository. A project that deploys nothing from the "
+              "repository (a service run by hand, a document product, a host set up only in "
+              "its own dashboard) shows none, so this is not 'nothing is live'.")
+    return EXIT_HOLDS
+
+
 def _run(args) -> int:
     runners = [(args.hook, _run_hook), (args.exposure_hook, _run_exposure_hook),
-               (args.exposures, _run_exposures),
+               (args.exposures, _run_exposures), (args.deploy_sign, _run_deploy_sign),
                (args.exposure_line, _run_exposure_line),
                (args.exposure_change, _run_exposure_change),
                (args.exposure_state, lambda p: _run_state(exposure_state, p)),
@@ -2551,6 +2676,9 @@ def main(argv=None) -> int:
                       help="PreToolUse Bash payload on stdin; exit 2 blocks a deploy or publish")
     mode.add_argument("--exposure-change", action="store_true",
                       help="PostToolUse: tell the agent when a write made the work not ready")
+    mode.add_argument("--deploy-sign", action="store_true",
+                      help="print what in the repository shows this project deploys; always "
+                           "exit 0 (v0.322.0)")
     ap.add_argument("--object-ref")
     ap.add_argument("--parent")
     args = ap.parse_args(argv)
