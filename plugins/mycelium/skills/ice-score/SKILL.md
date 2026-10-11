@@ -173,6 +173,14 @@ The Confidence Meter is Itamar Gilad's (published by him under CC BY-SA 4.0). Th
 and the examples in brackets below are those of his spreadsheet version; the sentence about launch
 data is from *Evidence-Guided*, ch. 3.
 
+> **Licence of this table.** It is adapted from "Confidence Meter" by Itamar Gilad, which he
+> licenses under Creative Commons Attribution-ShareAlike 4.0 International
+> (http://creativecommons.org/licenses/by-sa/4.0/; the statement is in his spreadsheet). Changes
+> made here: his rows are laid out as one table with the group caps beside them, and a launch-data
+> row is added from the dial in *Evidence-Guided*. The table and the "How to work it out" paragraph
+> under it are offered under the same CC BY-SA 4.0 licence, not under this repository's MIT
+> licence. The rest of this file is the repository's own.
+
 | Group | Evidence you hold for this idea's estimate | Each piece adds | The group adds at most |
 |---|---|---|---|
 | 1 | Self conviction | 0.01 | 0.1 for the three together |
