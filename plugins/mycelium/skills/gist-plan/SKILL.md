@@ -49,11 +49,11 @@ See `${CLAUDE_PLUGIN_ROOT}/engine/agent-operating-contract.md` *Canvas writes â€
 - Never commit to an idea until evidence supports it
 
 ### 3. Score with ICE + Confidence Meter
-Use `/mycelium:ice-score` to prioritize. ICE scoring (Ellis; confidence dimension added by Gilad):
+Use `/mycelium:ice-score` to prioritize. ICE scoring (the three dimensions are Ellis's; Gilad's Confidence Meter ties the Confidence score to evidence):
 - Confidence is NOT gut feel -- it maps to evidence levels
-- 0.1 = opinion only | 0.5 = data supports | 0.7 = tested | 0.9 = launched
+- Score it 1-10, as `/mycelium:ice-score` does: 1-3 = gut feel or desk research | 4-6 = some direct evidence | 7-10 = test-validated
 - Rescore after every experiment
-> *Mycelium uses 0.0-1.0 (adapted from Gilad's 0-10 non-linear Confidence Meter). See `/mycelium:ice-score` for details.*
+> *Confidence is 1-10 here, like Impact and Ease. (Until 0.318.2 this step said "Mycelium uses 0.0-1.0" and gave a 0.1-0.9 scale, which `/mycelium:ice-score` records as the wrong one.) The score is an average and carries no penalty for an untested idea, so read the Confidence beside it. See `/mycelium:ice-score` for details.*
 
 ### 4. Design Steps (per top idea)
 - Steps are small, time-boxed activities that build evidence
