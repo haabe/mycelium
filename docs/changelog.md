@@ -39,6 +39,13 @@ against) wrote into the caller's repository. None does now.
 - **The empty-input gate builds its empty repository in a clean environment** and runs the checks
   under it. Before this, from a worktree hook, it also judged every check against the caller's
   history instead of an empty one, so its verdict was not about an empty tree.
+- **`scripts/gates.sh` no longer empties its own log on Linux.** Its verdict lines went to both
+  streams through `tee /dev/stderr`. On Linux that opens the file stderr points at, with
+  truncation, so run as the script says to be run (`gates.sh > log 2>&1`) each verdict line
+  emptied the log and the gate lines came back as NUL bytes ahead of the last one. macOS does not
+  truncate there, so no maintainer machine showed it; CI did, on the first test that reads the
+  redirected output on Linux. The verdict is now two plain writes. The exit status was never
+  affected.
 - **`provision-skills.sh` accepts a `.git` file as a git root.** In a worktree and in a submodule
   `.git` is a one-line file. The guard tested `-d`, so a worktree was refused as "not a git root"
   and told to run `git init` inside it.

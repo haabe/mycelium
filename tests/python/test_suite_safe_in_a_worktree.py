@@ -295,6 +295,12 @@ def test_gates_sh_clears_it_for_every_gate(caller):
     (sb / "tests" / "validate-template.sh").write_text(f"sh {shlex.quote(str(probe))}\n")
     _, out, before, after = _run_and_compare(caller, ["bash", str(sb / "scripts" / "gates.sh")], env)
     assert Path(env["PROBE_RAN"]).exists(), out
+    # The hook writes this output to a file (`> out 2>&1`), which is how gates.sh says to be run.
+    # RED ON LINUX BEFORE 0.319.1: each verdict line went through `tee /dev/stderr`, which there
+    # re-opens the log with truncation, so the gate lines came back as NUL bytes and only the
+    # last verdict line survived. macOS does not truncate, so this was green on a Mac.
+    assert "\x00" not in out, "the redirected log was truncated under its own writer"
+    assert "GATES: INCOMPLETE" in out, out
     assert "PASS  validate-template" in out, out
     _assert_untouched(before, after, out)
 

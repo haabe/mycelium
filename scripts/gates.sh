@@ -225,19 +225,29 @@ if [ -f requirements-ci.txt ]; then
   fi
 fi
 
+# THE VERDICT GOES TO BOTH STREAMS BY TWO PLAIN WRITES, NOT THROUGH `tee /dev/stderr` (0.319.1).
+# On Linux /dev/stderr is a link to the file descriptor's target, and `tee` OPENS it, with
+# truncation. When this script is run the way it tells you to run it (`gates.sh > log 2>&1`,
+# never through a pipe), stderr is that log, so each verdict line emptied the log and wrote
+# itself at the start, and the lines already written by the gates came back as a run of NUL
+# bytes ahead of the last one. On macOS the same open is a duplicate of the descriptor and
+# truncates nothing, which is why it was never seen on a maintainer's machine. Found on CI by
+# the first test that reads this script's redirected output on Linux.
+say_both() { printf '%s\n' "$1"; printf '%s\n' "$1" >&2; }
+
 echo ""
 if [ "${#MISSING[@]}" -gt 0 ]; then
   # An absent gate is not a passing gate. Say which, and fail.
-  echo "GATES: INCOMPLETE — ${#MISSING[@]} gate(s) not found: ${MISSING[*]}" | tee /dev/stderr
-  echo "Nothing was verified for those. This is not a clean result." | tee /dev/stderr
+  say_both "GATES: INCOMPLETE — ${#MISSING[@]} gate(s) not found: ${MISSING[*]}"
+  say_both "Nothing was verified for those. This is not a clean result."
   exit 3
 fi
 
 if [ "${#FAILED[@]}" -gt 0 ]; then
-  echo "GATES: FAILED — ${#FAILED[@]} of $(( ${#PASSED[@]} + ${#FAILED[@]} )): ${FAILED[*]}" | tee /dev/stderr
-  echo "DO NOT COMMIT. If you reached this through a pipe, the pipe's exit status is NOT this one." | tee /dev/stderr
+  say_both "GATES: FAILED — ${#FAILED[@]} of $(( ${#PASSED[@]} + ${#FAILED[@]} )): ${FAILED[*]}"
+  say_both "DO NOT COMMIT. If you reached this through a pipe, the pipe's exit status is NOT this one."
   exit 1
 fi
 
-echo "GATES: ALL PASSED (${#PASSED[@]}/${#PASSED[@]}) — ${PASSED[*]}" | tee /dev/stderr
+say_both "GATES: ALL PASSED (${#PASSED[@]}/${#PASSED[@]}) — ${PASSED[*]}"
 exit 0
