@@ -379,12 +379,10 @@ def _registered_for(tool: str) -> list[str]:
 
 @pytest.mark.parametrize(("tool", "call"), [("Write", "a new source file"), ("Bash", "a shell command")])
 def test_with_a_python3_that_cannot_run_the_call_is_refused(tmp_path, tool, call):
-    """The hooks need python3 (hooks/README.md, Dependencies). When it cannot run, the gates that
-    print their refusal THROUGH it (`hi_deny`) print nothing and exit 0, which is an allow. The
-    call is still refused, because at least one gate registered for the tool leaves with python's
-    own status, and with the setting on that blocks. This test holds the outcome, not which gate
-    produces it: if it fails, a gate was changed to exit 0 without python and `hi_deny` needs a
-    way to refuse that does not go through python3."""
+    """The hooks need python3 (hooks/README.md, Dependencies). When it cannot run, the call is
+    refused: at least one gate registered for the tool leaves with a status other than 0. This
+    test holds the outcome, not which gate produces it. Which gates refuse by their own decision
+    in that state, and how, is tests/python/test_refusal_without_python.py."""
     project = _mycelium_project(tmp_path)
     fake = tmp_path / "fakebin"
     fake.mkdir()
