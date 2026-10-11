@@ -9,7 +9,8 @@
 # Checks:
 # 1. Preflight stamp freshness (corrections.md read recently)
 # 2. Corrections.md not stale since last preflight
-# 3. Secret detection in content being written (G-S1 ENFORCED)
+# 3. Secret detection in content being written (G-S1 ENFORCED). Since 0.319.1 a scan that
+#    cannot run refuses the write.
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-.}"
 CORRECTIONS_FILE="$PROJECT_DIR/.claude/memory/corrections.md"
@@ -102,8 +103,29 @@ if [ -n "$CONTENT" ]; then
     "${DB}://${NQ}*[?&]password="
   )
 
+  # A SCAN THAT CANNOT RUN IS A REFUSAL, NOT A PASS (0.319.1).
+  # grep has three answers: 0 a line matched, 1 none did, 2 or more "I could not run this" (a
+  # pattern this grep rejects, no grep on PATH). Until 0.319.1 each pattern ran as
+  # `printf ... | grep -qE "$PATTERN" 2>/dev/null` inside an `if`, which reads the last two as
+  # one and threw grep's own complaint away. A scan that never ran therefore passed every write,
+  # credentials included, and said nothing. That is the 0.318.3 defect one step on: there the
+  # system grep read the patterns differently, here it does not read them at all.
+  # Now each pattern's status is read on its own: PIPESTATUS[1] is grep's, whatever printf did
+  # and whether or not pipefail is ever set here. `-c` so grep reads the whole content (no closed
+  # pipe) and what it prints is a count, or with 2>&1 its own words when it fails.
+  # The refusal says the scan failed and how. It is NOT the "potential secret" refusal: nothing
+  # was detected, and telling the agent to hunt for a credential that may not be there would
+  # send it the wrong way.
+  SCAN_N=0
   for PATTERN in "${SECRET_PATTERNS[@]}"; do
-    if printf '%s\n' "$CONTENT" | grep -qE "$PATTERN" 2>/dev/null; then
+    SCAN_N=$((SCAN_N + 1))
+    SCAN_SAID=$(printf '%s\n' "$CONTENT" | grep -cE -- "$PATTERN" 2>&1; exit "${PIPESTATUS[1]}")
+    SCAN_RC=$?
+    if [ "$SCAN_RC" -ge 2 ]; then
+      SCAN_SAID=${SCAN_SAID%%$'\n'*}
+      hi_deny "GUARDRAIL G-S1: the secret scan could not run, so this write is refused. Nothing was detected in the content; the scan itself failed: grep exited $SCAN_RC on pattern $SCAN_N of ${#SECRET_PATTERNS[@]} (${SCAN_SAID:-it said nothing}). A scan that cannot read the content cannot say it holds no credential, and until 0.319.1 a failed scan passed every write. This is a fault in the machine's grep or in Mycelium's patterns, not in what is being written: the person can check that grep -E works on the PATH the hooks run with; if it does, the fault is in Mycelium's patterns and belongs at github.com/haabe/mycelium/issues."
+    fi
+    if [ "$SCAN_RC" -eq 0 ]; then
       # Output JSON for Claude with deny decision; the refusal goes to the denial ledger (0.316.0)
       # shellcheck source=/dev/null
       . "$(dirname "${BASH_SOURCE[0]}")/../scripts/_hook_fire_log.sh" 2>/dev/null && mycelium_record_denial

@@ -18,6 +18,8 @@ import re
 import subprocess
 from pathlib import Path
 
+import _scratch_git
+
 ROOT = Path(__file__).resolve().parents[2]
 PLUGIN = ROOT / "plugins" / "mycelium"
 HOOKS = PLUGIN / "hooks"
@@ -48,7 +50,7 @@ def _write_call(project: Path, tool_use_id: str, event: str = "PreToolUse",
 def _fresh(tmp_path: Path) -> Path:
     (tmp_path / "src").mkdir()
     (tmp_path / ".claude" / "canvas").mkdir(parents=True)  # setup ran (v0.318.0 prelude)
-    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
+    _scratch_git.init(tmp_path)
     return tmp_path
 
 

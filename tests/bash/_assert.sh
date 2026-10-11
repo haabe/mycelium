@@ -6,6 +6,49 @@ _ASSERT_PASSED=0
 _ASSERT_FAILED=0
 _ASSERT_CURRENT=""
 
+# A TEST FILE DOES NOT INHERIT A REPOSITORY FROM WHOEVER STARTED IT (0.319.1).
+# From a git hook in a worktree the environment carries GIT_DIR=<main>/.git/worktrees/<name>.
+# With it set git ignores the folder it runs in: `git init` in a temp folder re-initialises the
+# CALLER'S repository and writes `core.bare = true` into its config, `git config` writes that
+# config, `git add -A` replaces the caller's index and `git commit` lands on its branch. That
+# happened on 2026-10-11 (the account is in plugins/mycelium/scripts/git-pre-push-example.sh).
+# run.sh clears these for the whole suite; clearing them here too covers a test file run alone.
+unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_COMMON_DIR GIT_PREFIX \
+      GIT_OBJECT_DIRECTORY GIT_ALTERNATE_OBJECT_DIRECTORIES GIT_NAMESPACE
+# shellcheck disable=SC2046  # a list of variable NAMES, split on purpose
+unset $(git rev-parse --local-env-vars 2>/dev/null || true)
+
+# scratch_git_init DIR [git-init arguments...]
+# How a test makes a throwaway repository (0.319.1). `git init` in DIR, then ask git, in the
+# environment the test's next commands will run in, where the repository is. If the answer is
+# not DIR's own .git, say so and stop with status 97 before any `config`, `add` or `commit`:
+# those would act on some other repository. Called inside a `( ... )` block the stop ends that
+# block; the test's own assertions then fail on what is missing, with this message above them.
+# tests/python/test_suite_safe_in_a_worktree.py refuses a `git init` in a test that is not this.
+scratch_git_init() {
+    local dir="$1"; shift
+    mkdir -p "$dir" || exit 97
+    ( unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_COMMON_DIR GIT_PREFIX \
+            GIT_OBJECT_DIRECTORY GIT_ALTERNATE_OBJECT_DIRECTORIES GIT_NAMESPACE
+      cd "$dir" && git init --quiet "$@" ) || {
+        echo "    ✗ scratch_git_init: git init failed in $dir" >&2
+        exit 97
+    }
+    local want got
+    want="$(cd "$dir" && pwd -P)/.git"
+    got="$(cd "$dir" && git rev-parse --absolute-git-dir 2>/dev/null)"
+    [ -n "$got" ] && got="$(cd "$got" 2>/dev/null && pwd -P)"
+    if [ "$got" != "$want" ]; then
+        echo "    ✗ scratch_git_init: THE THROWAWAY REPOSITORY IS NOT WHERE GIT LOOKS." >&2
+        echo "        made:         $want" >&2
+        echo "        git resolves: ${got:-nothing}" >&2
+        echo "        Every later git command in this test would act on THAT repository." >&2
+        echo "        GIT_DIR=${GIT_DIR:-unset} GIT_WORK_TREE=${GIT_WORK_TREE:-unset}" >&2
+        echo "        Nothing was configured or committed." >&2
+        exit 97
+    fi
+}
+
 assert_eq() {
     local actual="$1"
     local expected="$2"

@@ -17,6 +17,8 @@ import sys
 import textwrap
 from pathlib import Path
 
+import _scratch_git
+
 
 def _import(scripts_path):
     sys.path.insert(0, str(scripts_path))
@@ -131,7 +133,7 @@ def test_multi_bump_push_yields_every_version(tmp_path, scripts_path, monkeypatc
     rg = _import(scripts_path)
     repo = tmp_path / "r"
     repo.mkdir()
-    _git(repo, "init", "-q")
+    _scratch_git.init(repo)
     _git(repo, "config", "user.email", "t@t.t")
     _git(repo, "config", "user.name", "t")
     before = _commit_version(repo, "0.65.0")
@@ -153,7 +155,7 @@ def test_zeroish_before_degrades_to_head_only(tmp_path, scripts_path, monkeypatc
     rg = _import(scripts_path)
     repo = tmp_path / "r2"
     repo.mkdir()
-    _git(repo, "init", "-q")
+    _scratch_git.init(repo)
     _git(repo, "config", "user.email", "t@t.t")
     _git(repo, "config", "user.name", "t")
     _commit_version(repo, "0.70.0")
@@ -169,7 +171,7 @@ def test_unchanged_version_introduces_nothing(tmp_path, scripts_path, monkeypatc
     rg = _import(scripts_path)
     repo = tmp_path / "r3"
     repo.mkdir()
-    _git(repo, "init", "-q")
+    _scratch_git.init(repo)
     _git(repo, "config", "user.email", "t@t.t")
     _git(repo, "config", "user.name", "t")
     before = _commit_version(repo, "0.80.0")
@@ -314,7 +316,7 @@ def _commit_versions(repo, plugin_version, changelog_versions, msg=None):
 def _repo(tmp_path, name):
     repo = tmp_path / name
     repo.mkdir()
-    _git(repo, "init", "-q")
+    _scratch_git.init(repo)
     _git(repo, "config", "user.email", "t@t.t")
     _git(repo, "config", "user.name", "t")
     return repo
@@ -408,7 +410,7 @@ def test_repair_finds_versions_a_dispatch_range_cannot_see(
     rg = _import(scripts_path)
     repo = tmp_path / "r"
     repo.mkdir()
-    _git(repo, "init", "-q")
+    _scratch_git.init(repo)
     _git(repo, "config", "user.email", "t@t.t")
     _git(repo, "config", "user.name", "t")
     sha_100 = _commit_version(repo, "0.100.0")
@@ -435,7 +437,7 @@ def test_repair_anchors_a_squashed_version_via_the_changelog(
     rg = _import(scripts_path)
     repo = tmp_path / "r"
     repo.mkdir()
-    _git(repo, "init", "-q")
+    _scratch_git.init(repo)
     _git(repo, "config", "user.email", "t@t.t")
     _git(repo, "config", "user.name", "t")
     _commit_version(repo, "0.94.0")
@@ -463,7 +465,7 @@ def test_repair_reports_a_version_it_cannot_locate_rather_than_dropping_it(
     rg = _import(scripts_path)
     repo = tmp_path / "r"
     repo.mkdir()
-    _git(repo, "init", "-q")
+    _scratch_git.init(repo)
     _git(repo, "config", "user.email", "t@t.t")
     _git(repo, "config", "user.name", "t")
     _commit_version(repo, "0.100.0")
@@ -482,7 +484,7 @@ def test_repair_with_no_gaps_returns_empty_rather_than_everything(
     rg = _import(scripts_path)
     repo = tmp_path / "r"
     repo.mkdir()
-    _git(repo, "init", "-q")
+    _scratch_git.init(repo)
     _git(repo, "config", "user.email", "t@t.t")
     _git(repo, "config", "user.name", "t")
     _commit_version(repo, "0.100.0")

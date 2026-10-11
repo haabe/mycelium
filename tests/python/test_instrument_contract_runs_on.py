@@ -9,6 +9,8 @@ import importlib.util
 import subprocess
 from pathlib import Path
 
+import _scratch_git
+
 _MOD = Path(__file__).resolve().parents[2] / "plugins" / "mycelium" / "scripts" / "check_instrument_contract.py"
 _spec = importlib.util.spec_from_file_location("check_instrument_contract_runs_on", _MOD)
 cic = importlib.util.module_from_spec(_spec)
@@ -34,7 +36,7 @@ runs_on: {runs_on}
 
 def _repo(tmp_path: Path) -> Path:
     (tmp_path / ".claude" / "evals" / "assumption-tests").mkdir(parents=True)
-    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    _scratch_git.init(tmp_path)
     subprocess.run(["git", "config", "user.email", "t@t"], cwd=tmp_path, check=True)
     subprocess.run(["git", "config", "user.name", "t"], cwd=tmp_path, check=True)
     return tmp_path

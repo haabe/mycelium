@@ -34,6 +34,18 @@ set -uo pipefail
 
 cd "$(dirname "${BASH_SOURCE[0]}")/.." || exit 1
 
+# THE GATES DO NOT INHERIT A REPOSITORY FROM WHOEVER STARTED THEM (0.319.1). Started from a git
+# hook in a worktree, this script inherits GIT_DIR=<main>/.git/worktrees/<name>, and a gate or a
+# test that runs `git init` in a temp folder then re-initialises the CALLER'S repository, writes
+# its config and commits onto its branch (2026-10-11: fourteen fixture commits on a feature
+# branch, `core.bare = true` in the shared config; the account is in
+# plugins/mycelium/scripts/git-pre-push-example.sh). Cleared here, after the `cd`, so git finds
+# the repository from this tree's own folder. Until 0.319.1 nothing was cleared.
+unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_COMMON_DIR GIT_PREFIX \
+      GIT_OBJECT_DIRECTORY GIT_ALTERNATE_OBJECT_DIRECTORIES GIT_NAMESPACE
+# shellcheck disable=SC2046  # a list of variable NAMES, split on purpose
+unset $(git rev-parse --local-env-vars 2>/dev/null || true)
+
 QUIET=0
 [ "${1:-}" = "--quiet" ] && QUIET=1
 
@@ -213,19 +225,29 @@ if [ -f requirements-ci.txt ]; then
   fi
 fi
 
+# THE VERDICT GOES TO BOTH STREAMS BY TWO PLAIN WRITES, NOT THROUGH `tee /dev/stderr` (0.319.1).
+# On Linux /dev/stderr is a link to the file descriptor's target, and `tee` OPENS it, with
+# truncation. When this script is run the way it tells you to run it (`gates.sh > log 2>&1`,
+# never through a pipe), stderr is that log, so each verdict line emptied the log and wrote
+# itself at the start, and the lines already written by the gates came back as a run of NUL
+# bytes ahead of the last one. On macOS the same open is a duplicate of the descriptor and
+# truncates nothing, which is why it was never seen on a maintainer's machine. Found on CI by
+# the first test that reads this script's redirected output on Linux.
+say_both() { printf '%s\n' "$1"; printf '%s\n' "$1" >&2; }
+
 echo ""
 if [ "${#MISSING[@]}" -gt 0 ]; then
   # An absent gate is not a passing gate. Say which, and fail.
-  echo "GATES: INCOMPLETE — ${#MISSING[@]} gate(s) not found: ${MISSING[*]}" | tee /dev/stderr
-  echo "Nothing was verified for those. This is not a clean result." | tee /dev/stderr
+  say_both "GATES: INCOMPLETE — ${#MISSING[@]} gate(s) not found: ${MISSING[*]}"
+  say_both "Nothing was verified for those. This is not a clean result."
   exit 3
 fi
 
 if [ "${#FAILED[@]}" -gt 0 ]; then
-  echo "GATES: FAILED — ${#FAILED[@]} of $(( ${#PASSED[@]} + ${#FAILED[@]} )): ${FAILED[*]}" | tee /dev/stderr
-  echo "DO NOT COMMIT. If you reached this through a pipe, the pipe's exit status is NOT this one." | tee /dev/stderr
+  say_both "GATES: FAILED — ${#FAILED[@]} of $(( ${#PASSED[@]} + ${#FAILED[@]} )): ${FAILED[*]}"
+  say_both "DO NOT COMMIT. If you reached this through a pipe, the pipe's exit status is NOT this one."
   exit 1
 fi
 
-echo "GATES: ALL PASSED (${#PASSED[@]}/${#PASSED[@]}) — ${PASSED[*]}" | tee /dev/stderr
+say_both "GATES: ALL PASSED (${#PASSED[@]}/${#PASSED[@]}) — ${PASSED[*]}"
 exit 0

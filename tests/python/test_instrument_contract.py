@@ -35,6 +35,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+import _scratch_git
 import pytest
 
 _MOD = (Path(__file__).resolve().parents[2]
@@ -65,7 +66,7 @@ status: {status}
 def _repo(tmp_path: Path) -> Path:
     d = tmp_path / ".claude" / "evals" / "assumption-tests"
     d.mkdir(parents=True)
-    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    _scratch_git.init(tmp_path)
     subprocess.run(["git", "config", "user.email", "t@t"], cwd=tmp_path, check=True)
     subprocess.run(["git", "config", "user.name", "t"], cwd=tmp_path, check=True)
     return tmp_path

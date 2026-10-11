@@ -35,6 +35,8 @@ Scenario-per-guardpost:
 import subprocess
 import sys
 
+import _scratch_git
+
 
 def _import(scripts_path):
     sys.path.insert(0, str(scripts_path))
@@ -48,7 +50,7 @@ SCRIPTS = "plugins/mycelium/scripts"
 
 def _repo(tmp_path, gitignore=None):
     """A real git repo. The predicate is git's, so the fixture must be too."""
-    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    _scratch_git.init(tmp_path)
     subprocess.run(["git", "config", "user.email", "t@t.local"], cwd=tmp_path, check=True)
     subprocess.run(["git", "config", "user.name", "t"], cwd=tmp_path, check=True)
     if gitignore is not None:

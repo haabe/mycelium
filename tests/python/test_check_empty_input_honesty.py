@@ -228,3 +228,43 @@ def test_exit_codes_follow_findings_or_nothing_checked(scripts_path, tmp_path, c
     capsys.readouterr()
     _fake_check(tmp_path, "check_vacuous.py", HONEST_REFUSAL)
     assert mod.main(["--root", str(tmp_path)]) == 0
+
+
+# ------------------------------------------------------------------ the empty tree is its own repository (0.319.1)
+#
+# This gate is in the declared set, so the pre-push hook runs it. From a git worktree the hook's
+# environment carries GIT_DIR=<main>/.git/worktrees/<name>; until 0.319.1 the `git init` for the
+# empty fixture inherited it, re-initialised the caller's repository and wrote `core.bare = true`
+# into its config (traced 2026-10-11). The end-to-end proof, run as a real git hook, is
+# test_suite_safe_in_a_worktree.py; these hold the two pieces it is made of.
+
+def test_the_empty_tree_is_built_without_the_callers_git_variables(scripts_path, monkeypatch):
+    mod = _import(scripts_path)
+    monkeypatch.setenv("GIT_DIR", "/somewhere/.git/worktrees/x")
+    monkeypatch.setenv("GIT_INDEX_FILE", "/somewhere/.git/worktrees/x/index")
+    monkeypatch.setenv("MYCELIUM_UNRELATED", "kept")
+    env = mod._env_for_the_empty_tree()
+    assert "GIT_DIR" not in env
+    assert "GIT_INDEX_FILE" not in env
+    assert env["MYCELIUM_UNRELATED"] == "kept"
+
+
+def test_a_fixture_that_is_not_its_own_repository_stops_the_gate(scripts_path, tmp_path,
+                                                               monkeypatch):
+    """Nothing is run against a tree git resolves elsewhere, and the gate does not pass."""
+    mod = _import(scripts_path)
+    _fake_check(tmp_path, "check_honest.py", HONEST_REFUSAL)
+    monkeypatch.setattr(mod, "_is_its_own_repository", lambda _empty, _env: False)
+    result = mod.scan(tmp_path)
+    assert result["checked"] == []
+    assert len(result["findings"]) == 1
+    assert "NOT ITS OWN GIT REPOSITORY" in result["findings"][0]["detail"]
+    assert mod.main(["--root", str(tmp_path)]) == 1
+
+
+def test_control_an_ordinary_temp_folder_is_its_own_repository(scripts_path, tmp_path):
+    mod = _import(scripts_path)
+    _fake_check(tmp_path, "check_honest.py", HONEST_REFUSAL)
+    result = mod.scan(tmp_path)
+    assert result["findings"] == []
+    assert result["checked"] == ["check_honest.py"]

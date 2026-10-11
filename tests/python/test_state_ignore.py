@@ -20,6 +20,7 @@ import re
 import subprocess
 from pathlib import Path
 
+import _scratch_git
 import pytest
 
 PLUGIN = Path(__file__).resolve().parents[2] / "plugins" / "mycelium"
@@ -214,7 +215,7 @@ def test_the_payload_table_covers_every_registered_event():
 
 
 def _run_hook(project: Path, event: str, command: str) -> subprocess.CompletedProcess:
-    subprocess.run(["git", "init", "-q", str(project)], check=True)
+    _scratch_git.init(project)
     (project / "README.md").write_text("hello\n")
     payload = dict(_PAYLOADS[event], session_id="t", cwd=str(project), hook_event_name=event)
     env = dict(os.environ, CLAUDE_PROJECT_DIR=str(project), CLAUDE_PLUGIN_ROOT=str(PLUGIN),

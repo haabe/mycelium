@@ -79,9 +79,16 @@ fi
 # ESCAPE HATCH: MYCELIUM_ALLOW_NONGIT_ROOT=1 for the deliberate case (a project
 # tracked by another VCS, or a sandbox the user genuinely wants). It is opt-in
 # and named, so bypassing is a decision rather than an accident.
+#
+# A `.git` FILE IS A GIT ROOT TOO (0.319.1). In a git worktree, and in a
+# submodule, `.git` is a one-line file naming the real directory, and it is the
+# same marker opencode stops at. Until 0.319.1 this tested `-d`, so a worktree
+# was refused as "not a git root" with the advice to run `git init` in it, and
+# pointing this script at a worktree of the Mycelium checkout tripped this guard
+# before GUARD 2 could say what it actually was.
 # ---------------------------------------------------------------------------
-if [ ! -d "$PROJECT_ROOT/.git" ] && [ "${MYCELIUM_ALLOW_NONGIT_ROOT:-0}" != "1" ]; then
-  echo "ERROR: '$PROJECT_ROOT' is not a git root (no .git directory)." >&2
+if [ ! -e "$PROJECT_ROOT/.git" ] && [ "${MYCELIUM_ALLOW_NONGIT_ROOT:-0}" != "1" ]; then
+  echo "ERROR: '$PROJECT_ROOT' is not a git root (no .git there)." >&2
   echo "" >&2
   echo "  opencode finds its project directory by walking UP from the working" >&2
   echo "  directory. Without a marker here, it adopts an ancestor repository" >&2

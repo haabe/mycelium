@@ -49,13 +49,34 @@ test_guard1_names_an_escape_hatch() {
 test_guard1_passes_on_a_real_git_root() {
     local tmp out rc
     tmp="$(mktemp -d)"
-    (cd "$tmp" && git init -q 2>/dev/null)
+    scratch_git_init "$tmp"
     out="$(bash "$PROVISION" "$tmp" 2>&1)"; rc=$?
     rm -rf "$tmp"
 
     assert_not_contains "$out" "not a git root" "does not fire on a genuine git root"
     # NOTE argument order: assert_eq is (actual, expected).
     assert_eq "$rc" "0" "provisioning succeeds into a git-rooted project"
+}
+
+# A WORKTREE IS A GIT ROOT (0.319.1). There `.git` is a one-line FILE naming the
+# real directory, and it is the same marker opencode stops at. Until 0.319.1 the
+# guard tested `-d`, so a worktree was refused as "not a git root" and told to
+# run `git init` inside it. Found 2026-10-11 by running this suite from a
+# worktree of this repository: guard 1 fired where guard 2 was the one expected.
+test_guard1_accepts_a_worktree_where_git_is_a_file() {
+    local tmp out rc kind
+    tmp="$(mktemp -d)"
+    scratch_git_init "$tmp/main"
+    git -C "$tmp/main" -c user.name=Fixture -c user.email=fixture@test.local \
+        commit --quiet --allow-empty -m "base"
+    git -C "$tmp/main" worktree add --quiet "$tmp/wt" -b wt >/dev/null 2>&1
+    kind="dir"; [ -f "$tmp/wt/.git" ] && kind="file"
+    out="$(bash "$PROVISION" "$tmp/wt" 2>&1)"; rc=$?
+    rm -rf "$tmp"
+
+    assert_eq "$kind" "file" "the fixture is a worktree: its .git is a file"
+    assert_not_contains "$out" "not a git root" "a .git file counts as a git root"
+    assert_eq "$rc" "0" "provisioning succeeds into a worktree"
 }
 
 # REGRESSION — the success path was the failure path.
@@ -73,7 +94,7 @@ test_guard1_passes_on_a_real_git_root() {
 test_clean_provisioning_exits_zero_and_reports_done() {
     local tmp out rc
     tmp="$(mktemp -d)"
-    (cd "$tmp" && git init -q 2>/dev/null)
+    scratch_git_init "$tmp"
     out="$(bash "$PROVISION" "$tmp" 2>&1)"; rc=$?
     rm -rf "$tmp"
 
@@ -96,6 +117,7 @@ echo "=== test_provision_skills_guards: opencode consumer-path fail-closed guard
 run_test test_guard1_refuses_non_git_project_root
 run_test test_guard1_names_an_escape_hatch
 run_test test_guard1_passes_on_a_real_git_root
+run_test test_guard1_accepts_a_worktree_where_git_is_a_file
 run_test test_clean_provisioning_exits_zero_and_reports_done
 run_test test_guard2_refuses_the_mycelium_checkout_itself
 report

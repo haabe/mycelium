@@ -17,6 +17,7 @@ import json
 import sys
 from pathlib import Path
 
+import _scratch_git
 import pytest
 import yaml
 from decided import decided, decided_one, decided_text
@@ -592,7 +593,7 @@ def test_hook_refuses_an_unparseable_proposal_and_judges_a_repair(tmp_path, monk
 def _commit(tmp_path: Path) -> None:
     import subprocess
     git = ["git", "-c", "user.name=t", "-c", "user.email=t@t.invalid"]
-    subprocess.run([*git, "init", "-q"], cwd=tmp_path, check=True)
+    _scratch_git.init(tmp_path)
     subprocess.run([*git, "add", "-A"], cwd=tmp_path, check=True)
     subprocess.run([*git, "commit", "-qm", "good"], cwd=tmp_path, check=True)
 

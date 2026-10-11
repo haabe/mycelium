@@ -26,7 +26,7 @@ build_and_run() {
     tmpdir=$(mktemp -d)
     (
         cd "$tmpdir"
-        git init --quiet
+        scratch_git_init "$PWD"
         git config user.email "fixture@test.local"
         git config user.name "Fixture"
 
