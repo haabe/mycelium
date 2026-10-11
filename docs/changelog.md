@@ -4,6 +4,63 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-11.
 
+## v0.319.2 - the work-recording check counts releases from version tags
+
+**2026-10-11, after a maintainer question: is release counting following best practice?** The
+releasing was: a version tag and a published release per version, cut automatically. The counting
+was not. `check_cycle_recording.py`, which says when enough minor releases have shipped that a
+cycle record is owed, parsed commit subjects and never read a tag. Its subject pattern had already
+been widened once (0.310.0) to follow this repository's own change of subject style, and it counts
+any subject that opens with a minor version, released or not.
+
+- **Tags first.** When the release repository has version tags (the whole tag name is a three-part
+  version, `v1.4.0` or `1.4.0`), a minor release is a new major.minor line among the tags, dated by
+  that line's first tag, and the count is the lines first tagged since the newest completed cycle.
+  Annotated and lightweight tags both count; `v1.4.0` and `1.4.0` on one repository are one line;
+  `v1.4.0-rc1` and `nightly` are not version tags; a later patch on an older line is not a release.
+- **A line first released as a patch counts.** The first draft of this change counted tags ending
+  in `.0`. Run against this repository's own history it read three releases fewer than shipped:
+  0.192, 0.194 and 0.196 were each first tagged as `.1`, and no `.0` tag exists for them.
+- **Commit subjects are the fallback**, used only when the repository has no version tags at all,
+  exactly as before. "Has tags" is asked of the whole repository and never of the window: a
+  repository that tags its releases and has tagged none since the last cycle has released nothing.
+- **The output says which record it read**: `[read from 483 version tag(s)]`, or
+  `[read from commit subjects: the release repository has no version tags]`. The JSON gains
+  `release_source` (`tags` or `commit-subjects`) and `tags_scanned`.
+- **A measured zero is `ok`.** With tags present and no new minor tag, the status is `ok` with
+  `releases: 0`. `no-releases-matched` ("the pattern may never have matched") is now reached only
+  on the subject scan, where it is still true.
+- **`--release-pattern` forces the subject scan**, since a pattern is a statement about subjects.
+- **Wording.** The session-start reminder for the could-not-measure case, `engine/cycle-learning.md`
+  and the system card's line on reading another local repository say tags are read.
+- **Tests** (`tests/python/test_check_cycle_recording.py`, ten added): tags counted where no
+  subject names a version; a version in a subject not counted when tags exist; tags before the
+  last cycle, patch tags on an older line and non-version tags not counted; a line first tagged as
+  a patch counted once; the measured zero; the fallback and its disclosure; the forced subject
+  scan; one release under two tag spellings; the never-recorded state. Eight of the ten fail on
+  0.319.1.
+
+**What changes for a project.** A project whose release repository has version tags gets its count
+from them from this release on. Where subjects named versions that were never tagged, the count
+goes down; where releases were tagged under subjects the pattern did not match, it goes up.
+Measured on this repository for the window since 2026-09-01: 163 minor lines by tags against 145
+by subjects. The 18 the subject scan missed are 0.158 to 0.175, tagged on commits whose subjects
+name no version. No line was in the subjects and missing from the tags.
+
+**Not in this release.** A date-only `completed_at` (`2026-10-11`, no time) is read by git as that
+date at the current time of day, on both paths, so the count for the day a cycle closed can differ
+between a morning run and an evening run. Recent records carry a full timestamp. A shallow clone
+fetched without tags has no tags to read and falls back to subjects, and says so.
+
+**Alternatives considered.** (1) Read published releases from the host (`gh release list`).
+Rejected: it needs a network call and a logged-in tool inside a check that runs at session start,
+and the tag is the same record offline. (2) Count both and report a disagreement. Rejected for
+now: subjects mention versions that were never released, so a disagreement is the normal case and
+would be noise; the disclosure of the source lets anyone compare by hand. (3) A canvas key to
+choose the source. Rejected: nothing has asked for it, and `--release-pattern` already forces
+subjects. (4) Fall back to subjects when no minor tag is found in the window. Rejected: that turns
+a true zero into a count of mentions.
+
 ## v0.319.1 - the suite cannot write into the repository of whoever runs it; the secret scan refuses when it cannot run
 
 Two safety fixes, each its own commit and its own tests.
