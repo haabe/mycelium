@@ -4,6 +4,145 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-11.
 
+## v0.320.0 - a leaf bakeoff is decided by its tests, not by a gap in ICE scores
+
+**2026-10-11, on the maintainer's ruling, closing the item 0.319.0 left open ("The 20% 'bakeoff
+delta' ... is Mycelium's own rule and no source has it ... it needs its own ruling").** When
+several ideas compete for one opportunity, Mycelium compares them in a leaf bakeoff. Until now a
+20% gap in ICE totals decided two things there: whether the ideas were compared in parallel at all
+(only when their scores were within 20% of each other), and which one won (a leaf more than 20%
+ahead won, and the other was archived, even if its own assumption test had passed). No source has
+that rule. Gilad calls the ICE score *"the one number you should be most suspicious of"*
+(*Evidence-Guided*, ch. 3), and Torres compares a small set of ideas by testing their assumptions
+and does not score them to choose. Mycelium already said the same everywhere else: a score is a
+hint and never a door, and a leaf is archived only on a test verdict. 0.319.0 retired the threshold
+on the ICE total for that reason; this release retires the gap. **This changes which leaves an
+agent compares and which one it advances.**
+
+- **When leaves are compared.** Whenever two or more leaves on one opportunity each have an
+  untested riskiest assumption. No score gap is consulted. If only one leaf has an untested
+  riskiest assumption, that one is tested and nothing runs in parallel; if the verdicts are already
+  recorded, the selection rules are applied to them without a bakeoff
+  (`orchestration/leaf-bakeoff.md`, "When to Trigger a Bakeoff").
+- **Which leaf wins.** The assumption-test verdicts. A leaf whose riskiest assumption failed is
+  archived. If one passes and the others fail, it advances. If several pass, the existing paths
+  apply with their ICE condition removed: a tiebreak when they serve the same segment, a segment
+  split when they do not. If all fail, all are archived and the opportunity is re-evaluated. The
+  five fan-in rules keep their numbers; Rules 2 and 3 are renamed from "Close Race" to "Several
+  Pass", because closeness of scores is no longer what puts a pair of leaves there.
+- **What the ICE total is for in a bakeoff.** It orders which assumption is tested first. It never
+  decides. The protocol, `/mycelium:fan-out`, `orchestration/agent-teams.md` and
+  `orchestration/fan-out-fan-in.md` now say so; the last of these told the lead to "Compare
+  solutions using updated scores" and select winners from that.
+- **`bakeoff_delta` is retired.** Its section in `engine/adaptive-thresholds.md` is replaced by a
+  note saying what it was, why it went and what does the work instead, in the shape of the
+  `ice_advance` note beside it. Its calibration rule, its bounds and its block in the
+  `thresholds.yml` format are gone. `check_cycle_recording.py` no longer maps it to
+  `calibration.ice_accuracy`, so it is never reported as due for calibration, and
+  `/mycelium:framework-health` no longer has a "Bakeoff delta | 20%" row to fill in. The prose that
+  listed it among the calibrated thresholds is corrected in the engine README, `feedback-loops.md`,
+  `leaf-lifecycle.md`, `docs/context-surface.md` and `docs/glossary.md`.
+- **The "Bakeoff Theater" anti-pattern is restated.** It said not to run a bakeoff when one leaf's
+  ICE is more than 20% higher, and to "just advance the winner". The waste it now names is
+  comparing in parallel when only one leaf has an untested riskiest assumption, or when the
+  verdicts already exist.
+- **The Noise Check gives no number it has no source for.** `/mycelium:ice-score` told the scorer
+  to investigate when two scorings of the same evidence "diverge by >1 point on any dimension". The
+  number carried no citation and was written when each dimension was a 1-10 rating. On Gilad's
+  Confidence Meter most values are under 1: two scorings of 0.16 and 0.96 are less than "1 point"
+  apart, and with the same Impact and Ease one total is six times the other. The check now
+  compares the three factors and then the total, says that no number marks how far apart two
+  scorings must be, and treats each factor for what it is: a Confidence that differs is traced to
+  the evidence counted, row by row, because the meter is arithmetic; an Impact or Ease that differs
+  is looked into when it changes what is about to be decided. **"Too close to call" is a judgement
+  the scorer states with its reason.** The attribution to Kahneman, Sibony and Sunstein, the
+  mitigation and the audit procedure stay. No new number replaces the old one.
+- **This repository's own canvas.** `.claude/canvas/thresholds.yml` loses its `bakeoff_delta` block
+  and keeps a comment saying what stood there. It was never calibrated (`based_on_n: 0`), so no
+  measured value was lost.
+- **Tests.** In `tests/python/test_validate_canvas.py`: the retired key validates in any shape,
+  the schema marks it deprecated, it gets one retired line and never "calibration is due" or
+  "uncalibrated because", and the validator carries that line; a control shows a live threshold is
+  still policed. The tests that used `bakeoff_delta` as their example of a live threshold now use
+  `confidence_calibration`; none was deleted. Two new files read the shipped text:
+  `test_bakeoff_decided_by_tests.py` (no fan-in condition reads a score, the trigger is untested
+  assumptions, the skill and the two orchestration files state the same rule, the format block and
+  the framework-health table carry no retired threshold, and `bakeoff_delta` is named only in the
+  five files that explain it) and `test_noise_check_gives_no_unsourced_number.py`.
+  Seventeen of these tests fail on 0.319.2 (run at landing: 6 in `test_validate_canvas.py`, all 8
+  in the bakeoff file and 3 of 4 in the Noise Check file).
+
+**What changes for an existing project.**
+
+- **A bakeoff you have not run yet follows the new rule.** Leaves that the old rule would not have
+  compared, because one was more than 20% ahead, are compared if each still has an untested
+  riskiest assumption. A leaf is no longer archived for scoring lower than one that passed.
+- **Closed decisions are left as they are.** A leaf archived under the old Rule 1 stays in
+  `archived-solutions.yml` as the record of how that call was made. Nothing rewrites it. If such a
+  leaf passed its own assumption test and was archived only on the score gap, it is a candidate to
+  bring back; that is a decision for the person, and nothing in this release finds those leaves
+  for you.
+- **`thresholds.yml` may still carry `bakeoff_delta`.** The file still validates, whatever the key
+  holds. `validate_canvas.py` prints one WARN line saying the key is retired, read by nothing, and
+  can be removed. No calibration is owed for it.
+- **`calibration.ice_accuracy` is still recorded** in `cycle-history.yml`
+  (`engine/cycle-learning.md`). Since this release no threshold is calibrated from it.
+- **If a session is open when you upgrade,** the skill and protocol text it loaded is the old one.
+  Start a new session before running a bakeoff or a noise check.
+
+**Alternatives considered.**
+
+- *Re-base the 20% for multiplied scores* (0.319.0 noted that 20% is a much smaller gap between
+  products than between averages). Refused: no source gives an ICE gap any width, so a new width
+  would be a second invented number, and calibrating it from outcomes would tune a rule no author
+  describes.
+- *Keep the gap for the first question only (whether to compare) and let the tests pick the
+  winner.* Refused: it would skip testing a leaf because of its score, and an untested leaf is the
+  one whose score is least reliable (*"the ICE scores are quite unreliable as long as confidence
+  levels are low"*, *Evidence-Guided*, ch. 3). It would also keep the threshold, its calibration
+  and its reader alive for half a rule.
+- *Delete `bakeoff_delta` from the schema.* The file would still validate, because the thresholds
+  table accepts keys it does not declare. Refused for the reason 0.319.0 kept `ice_advance`
+  declared: a reader of the schema who meets the key in an old file should learn there what it was
+  and that it is retired.
+- *Keep the schema entry typed, so the shape of an old record is still checked.* Refused: nothing
+  reads the value, and a project should not go red on upgrade over the shape of a record that is
+  retired.
+- *Fail validation on the retired key, or remove it from the canvas automatically.* Refused, as in
+  0.319.0: the upgrade must not turn an existing file red, and a check never rewrites canvas data.
+- *Merge fan-in Rule 1 and Rule 5.* With the ICE condition gone they have the same condition (one
+  passes, the others fail). Not done: the rules are referred to by number and name from the skill
+  and from decision logs, so Rule 1 keeps its place and points at Rule 5 for what to note about the
+  failing leaf.
+- *Give the Noise Check new numbers for the current scale* (for example one point on Impact and
+  Ease and a smaller step on Confidence, or a percentage of the total). Refused: none has a source,
+  which is the fault the old number had.
+- *Remove the Noise Check.* Refused: what it describes (two scorings of the same evidence can
+  differ, and scoring twice shows it) stands. Only its number had nothing behind it.
+
+**Not in this release.**
+
+- **Nothing enforces the bakeoff rule when an agent runs one.** It is text the agent reads, in the
+  protocol and in `/mycelium:fan-out`. The new tests guard the text, not the behaviour.
+- **Rule 2's tiebreak is kept as written**: "Run the cheaper assumption test to break the tie. If
+  both assumptions pass, advance the one with lower feasibility risk". Which assumption that further
+  test is on (both riskiest assumptions have passed by then) is not spelled out, and was not before.
+- **`engine/feedback-loops.md` still logs "significant deviations (>2 points on ICE ease scale)".**
+  Ease is still a 0-10 estimate, so the number is not broken the way the Noise Check's was on
+  Confidence, but it has no source either. Unchanged.
+- **`engine/leaf-lifecycle.md` Phase 5 still says ICE "sequences which validated leaves to pursue
+  first".** That is ordering among leaves that have passed, not choosing between them, and it is
+  unchanged. Only the sentence that said several validated leaves are compared "not by ICE alone"
+  now reads "not by ICE".
+- **Whether to keep recording `calibration.ice_accuracy`,** now that no threshold reads it, is not
+  decided here.
+- **`docs/errata.md` has no entry for this.** The 20% was never attributed to an author, so it is
+  not a misquotation; the protocol's citation line did read "Gilad: Evidence-Guided (ICE-based
+  comparison with Confidence Meter)", which is corrected in place.
+- **Torres is cited by book, without a page.** The sentence that she compares ideas by testing
+  their assumptions repeats what `engine/leaf-lifecycle.md` and `harness/guardrails.md` already
+  say; her text was not re-read for this change.
+
 ## v0.319.2 - the work-recording check counts releases from version tags
 
 **2026-10-11, after a maintainer question: is release counting following best practice?** The

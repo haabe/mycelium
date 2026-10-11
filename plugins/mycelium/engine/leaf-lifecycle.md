@@ -185,7 +185,7 @@ When a leaf is killed at any phase, it is archived — never deleted.
 | 9 (Delivery) | Implementation reveals bad assumption | Regress to appropriate phase with evidence. |
 | 10 (Launch) | Market rejects | Spawn new L2 diamond with rejection evidence. |
 
-**ICE never discards a leaf** (removed v0.54.0). Three assumption-verdict outcomes at the OST→GIST boundary: `validated` → graduates (a validated leaf that ranks low on ICE is *parked* — kept, sequenced later / scoped smaller — not archived); `invalidated` → discarded at Phase 4; **`partial`/ambiguous → graduates neither** — re-test with a sharper method or scope the assumption down. When several validated leaves compete for the same opportunity, pick the front-runner via a comparison (`orchestration/leaf-bakeoff.md`), not by ICE alone.
+**ICE never discards a leaf** (removed v0.54.0). Three assumption-verdict outcomes at the OST→GIST boundary: `validated` → graduates (a validated leaf that ranks low on ICE is *parked* — kept, sequenced later / scoped smaller — not archived); `invalidated` → discarded at Phase 4; **`partial`/ambiguous → graduates neither** — re-test with a sharper method or scope the assumption down. When several validated leaves compete for the same opportunity, pick the front-runner via a comparison (`orchestration/leaf-bakeoff.md`), not by ICE: no ICE gap picks a winner (until 0.320.0 this read "not by ICE alone").
 
 **Anti-pattern: Score-Only Discard** — Never discard (or graduate) a leaf on ICE (or any score) alone. Selection is by assumption-test verdict (Torres). A solution that scores poorly for power users might validate for new users — check segments before archiving on an invalidated assumption.
 
@@ -212,7 +212,7 @@ Every leaf that reaches a terminal state (shipped, discarded, or market-rejected
 ### Why This Matters
 
 Without cycle records, the following systems have no data:
-- **Adaptive thresholds** (`${CLAUDE_PLUGIN_ROOT}/engine/adaptive-thresholds.md`) — cannot calibrate the bakeoff delta or the confidence factor (the ICE threshold named here until 0.319.0 is retired)
+- **Adaptive thresholds** (`${CLAUDE_PLUGIN_ROOT}/engine/adaptive-thresholds.md`) — cannot calibrate the confidence factor (the ICE threshold named here until 0.319.0 and the bakeoff delta named here until 0.320.0 are retired)
 - **Pattern detector** (`${CLAUDE_PLUGIN_ROOT}/engine/pattern-detector.md`) — cannot identify correlations
 - **Framework reflexion** (`${CLAUDE_PLUGIN_ROOT}/engine/framework-reflexion.md`) — cannot measure cycle velocity or confidence calibration
 - **Evidence decay** (`${CLAUDE_PLUGIN_ROOT}/engine/evidence-decay.md`) — cannot calibrate staleness thresholds

@@ -42,7 +42,7 @@ Collect results from all workers
 For each solution:
   - Update ICE score in canvas/opportunities.yml
   - Record evidence in experiment log
-Compare solutions using updated scores
+Compare solutions by their assumption-test verdicts (the updated scores are hints, not the decision)
 Select winner(s) for progression
 Log decision in decision-log.md
 ```

@@ -94,7 +94,7 @@ graph TD
     LEAD -->|"fan-out"| W2["Worker 2 (worktree: feature/B)"]
     LEAD -->|"fan-out"| W3["Worker 3 (worktree: feature/C)"]
 
-    W1 -->|"results"| FANIN["Fan-in (compare ICE, select winner)"]
+    W1 -->|"results"| FANIN["Fan-in (compare test verdicts, select winner)"]
     W2 -->|"results"| FANIN
     W3 -->|"results"| FANIN
 

@@ -23,6 +23,6 @@ Orchestration defines how Mycelium works in different team configurations, how p
 |-----------|-----|
 | Starting a new session | [operations.md](operations.md) — session resumption |
 | Exploring 3 possible solutions | [fan-out-fan-in.md](fan-out-fan-in.md) — parallel worktrees |
-| Two solutions look equally good | [leaf-bakeoff.md](leaf-bakeoff.md) — structured comparison |
+| Two or more solutions for one opportunity, each with an untested riskiest assumption | [leaf-bakeoff.md](leaf-bakeoff.md) — structured comparison, decided by the test verdicts |
 | Need to skip a gate in an emergency | [escape-hatch.md](escape-hatch.md) — documented bypass |
 | Setting up for a team | [modes.md](modes.md) — team mode patterns |

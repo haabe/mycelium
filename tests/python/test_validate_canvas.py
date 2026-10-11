@@ -1537,6 +1537,38 @@ def test_the_schema_says_ice_advance_is_retired(tmp_path):
     assert "RETIRED in 0.319.0" in prop["description"]
 
 
+def test_a_retired_bakeoff_delta_still_validates_whatever_it_holds(tmp_path):
+    """0.320.0 retired `bakeoff_delta` (the ICE gap that decided when leaves were compared and
+    which one won; no source has it). A project's thresholds.yml may still carry it and must not
+    turn red on upgrade, so the key is accepted in any shape, as `ice_advance` is. The first two
+    shapes are what 0.319.x wrote and accepted; the last three it rejected, and they are here
+    because a retired record is not policed."""
+    for entry in (
+        {"default": 0.20, "calibrated": None, "calibrated_at": None, "based_on_n": 0,
+         "minimum_n": 5, "bounds": {"min": 0.10, "max": 0.40}},
+        {"default": 0.20, "calibrated": 0.25, "calibrated_at": "2026-09-30", "based_on_n": 6},
+        {"based_on_n": -1},
+        {"calibrated_at": "soon"},
+        0.2,
+    ):
+        assert _thresholds_errors({"thresholds": {"bakeoff_delta": entry}}) == [], entry
+
+
+def test_the_schema_says_bakeoff_delta_is_retired(tmp_path):
+    import json
+    with open(_real_schema_dir() / "thresholds.schema.json") as fh:
+        prop = json.load(fh)["properties"]["thresholds"]["properties"]["bakeoff_delta"]
+    assert prop.get("deprecated") is True
+    assert "RETIRED in 0.320.0" in prop["description"]
+    assert "properties" not in prop and "type" not in prop, "a retired record has no shape"
+
+
+def test_a_live_threshold_is_still_policed_after_the_retirements(tmp_path):
+    """Control for the two tests above: retiring a key loosens that key only."""
+    assert _thresholds_errors({"thresholds": {"confidence_calibration": {"based_on_n": -1}}})
+    assert _thresholds_errors({"thresholds": {"confidence_calibration": 0.2}})
+
+
 def test_the_live_thresholds_canvas_validates(tmp_path):
     import yaml
     live = Path("/Users/bartnes/Repos/mycelium-roadmap/.claude/canvas/thresholds.yml")
@@ -2367,24 +2399,64 @@ def _cycle_canvas(tmp_path, cycles, thresholds=None, solutions=None):
 
 
 def test_calibration_due_fires_when_the_input_count_reaches_the_minimum(tmp_path, scripts_path):
+    """Both ratchets, on the one threshold still calibrated from cycle data.
+
+    Until 0.320.0 the "due" half of this test used `bakeoff_delta` (fed by `ice_accuracy`) and
+    the "uncalibrated because" half used `confidence_calibration`, on one canvas. `bakeoff_delta`
+    is retired, so both halves now read `confidence_calibration` (fed by `risk_accuracy`), on
+    two canvases that differ only in which calibration field their cycles carry."""
     m = _ccr(scripts_path)
-    cycles = [{"cycle_class": "product-leaf", "calibration": {"ice_accuracy": 0.8}} for _ in range(3)]
-    cycles.append({"cycle_class": "product-leaf", "reconstructed_post_hoc": True,
-                   "calibration": {"ice_accuracy": 0.9}})
-    cycles += [{"cycle_class": "meta-dogfood", "calibration": {"ice_accuracy": None,
-                                                                 "effort_accuracy": "x"}}] * 5
-    canvas = _cycle_canvas(tmp_path, cycles, thresholds={
-        "bakeoff_delta": {"based_on_n": 0, "minimum_n": 3},
+
+    def cycles_carrying(field):
+        rows = [{"cycle_class": "product-leaf", "calibration": {field: 0.8}} for _ in range(3)]
+        rows.append({"cycle_class": "product-leaf", "reconstructed_post_hoc": True,
+                     "calibration": {field: 0.9}})
+        rows += [{"cycle_class": "meta-dogfood", "calibration": {field: None,
+                                                                  "effort_accuracy": "x"}}] * 5
+        return rows
+
+    thresholds = {
         "confidence_calibration": {"based_on_n": 0, "minimum_n": 3},
         "cycle_recording_arc": {"based_on_n": 2, "minimum_n": 5},
         "evidence_staleness": {"user_needs": {}},
-    })
-    assert m.calibration_input_counts(canvas / "cycle-history.yml")["bakeoff_delta"] == 3
+    }
+    # Three eligible cycles carry the input (the reconstructed row and the meta rows do not count).
+    canvas = _cycle_canvas(tmp_path / "due", cycles_carrying("risk_accuracy"), thresholds=thresholds)
+    counts = m.calibration_input_counts(canvas / "cycle-history.yml")
+    assert counts == {"confidence_calibration": 3}, "one threshold is calibrated from cycles"
     out = m.calibration_due_findings(canvas)
-    assert len(out) == 2
-    assert any("bakeoff_delta: calibration is due" in w and "3 product-leaf cycles" in w
-               for w in out)
-    assert any("confidence_calibration: uncalibrated because 0 of 9" in w for w in out)
+    assert len(out) == 1
+    assert "confidence_calibration: calibration is due" in out[0]
+    assert "3 product-leaf cycles" in out[0]
+    # The same nine cycles carrying a field nothing calibrates from: not due, and not "too few".
+    canvas = _cycle_canvas(tmp_path / "unfed", cycles_carrying("ice_accuracy"), thresholds=thresholds)
+    out = m.calibration_due_findings(canvas)
+    assert len(out) == 1
+    assert "confidence_calibration: uncalibrated because 0 of 9" in out[0]
+
+
+def test_a_retired_bakeoff_delta_is_named_in_one_line_and_never_due_for_calibration(
+        tmp_path, scripts_path):
+    """0.320.0. `bakeoff_delta` was the ICE gap that decided when leaves were compared and which
+    one won, calibrated from `ice_accuracy`. Retired: three eligible cycles against minimum_n 3
+    used to read "calibration is due", which asked a project to tune a gap no source has. Now
+    the key gets ONE line saying it is retired and can be removed, and is counted for nothing,
+    whether the eligible count is at the minimum or under it."""
+    m = _ccr(scripts_path)
+    cycles = [{"cycle_class": "product-leaf", "calibration": {"ice_accuracy": 0.8}}
+              for _ in range(3)]
+    for minimum in (3, 10):  # 3: was "calibration is due". 10 against 12 rows: was "uncalibrated".
+        rows = cycles + [{"cycle_class": "meta-dogfood"}] * 9
+        canvas = _cycle_canvas(tmp_path / f"min{minimum}", rows, thresholds={
+            "bakeoff_delta": {"default": 0.20, "based_on_n": 0, "minimum_n": minimum,
+                              "bounds": {"min": 0.10, "max": 0.40}}})
+        assert "bakeoff_delta" not in m.calibration_input_counts(canvas / "cycle-history.yml")
+        out = m.calibration_due_findings(canvas)
+        assert len(out) == 1, out
+        assert out[0].startswith("thresholds.yml#bakeoff_delta: retired in 0.320.0")
+        assert "can be removed" in out[0]
+        assert "assumption-test verdicts" in out[0], "the line says what decides instead"
+        assert "calibration is due" not in out[0] and "uncalibrated because" not in out[0]
 
 
 def test_a_retired_threshold_is_named_in_one_line_and_never_due_for_calibration(
@@ -2408,20 +2480,26 @@ def test_a_retired_threshold_is_named_in_one_line_and_never_due_for_calibration(
 
 
 def test_a_retired_threshold_is_named_even_without_a_cycle_ledger(tmp_path, scripts_path):
-    """The notice is about thresholds.yml alone, so it must not wait for a cycle-history.yml."""
+    """The notice is about thresholds.yml alone, so it must not wait for a cycle-history.yml.
+
+    0.320.0: a file carrying both retired keys gets one line for each, and none for a live key."""
     m = _ccr(scripts_path)
     canvas = tmp_path / ".claude" / "canvas"
     canvas.mkdir(parents=True)
     (canvas / "thresholds.yml").write_text(
-        "thresholds:\n  ice_advance:\n    default: 100\n  bakeoff_delta:\n    default: 0.2\n")
+        "thresholds:\n  ice_advance:\n    default: 100\n  bakeoff_delta:\n    default: 0.2\n"
+        "  confidence_calibration:\n    default: 1.0\n")
     out = m.calibration_due_findings(canvas)
-    assert len(out) == 1 and "ice_advance: retired in 0.319.0" in out[0]
+    assert len(out) == 2, out
+    assert sum("ice_advance: retired in 0.319.0" in w for w in out) == 1
+    assert sum("bakeoff_delta: retired in 0.320.0" in w for w in out) == 1
 
 
 def test_a_project_without_the_retired_key_hears_nothing_about_it(tmp_path, scripts_path):
     m = _ccr(scripts_path)
     canvas = _cycle_canvas(tmp_path, [{"cycle_class": "meta-dogfood"}],
-                           thresholds={"bakeoff_delta": {"based_on_n": 0, "minimum_n": 10}})
+                           thresholds={"confidence_calibration": {"based_on_n": 0,
+                                                                  "minimum_n": 10}})
     assert m.calibration_due_findings(canvas) == []
 
 
@@ -2457,7 +2535,7 @@ def test_calibration_due_names_a_thresholds_file_that_lost_its_table(tmp_path, s
     m = _ccr(scripts_path)
     canvas = _cycle_canvas(tmp_path, [{"cycle_class": "meta-dogfood"}])
     (canvas / "thresholds.yml").write_text(
-        "_meta:\n  version: 1\n  bakeoff_delta:\n    based_on_n: 0\n    minimum_n: 1\n")
+        "_meta:\n  version: 1\n  confidence_calibration:\n    based_on_n: 0\n    minimum_n: 1\n")
     out = m.calibration_due_findings(canvas)
     assert len(out) == 1 and "no `thresholds` table" in out[0]
 
@@ -2476,15 +2554,22 @@ def test_a_terminal_leaf_without_a_cycle_is_reported(tmp_path, scripts_path):
 def test_the_validator_carries_both_cycle_findings(tmp_path, scripts_path):
     validator = _import_validator(scripts_path)
     canvas = _cycle_canvas(tmp_path, [{"leaf_id": "x", "cycle_class": "product-leaf",
-                                       "calibration": {"ice_accuracy": 0.5}}],
-                           thresholds={"bakeoff_delta": {"based_on_n": 0, "minimum_n": 1},
+                                       "calibration": {"ice_accuracy": 0.5,
+                                                       "risk_accuracy": 0.5}}],
+                           thresholds={"confidence_calibration": {"based_on_n": 0,
+                                                                  "minimum_n": 1},
+                                       "bakeoff_delta": {"based_on_n": 0, "minimum_n": 1},
                                        "ice_advance": {"default": 100, "based_on_n": 0}},
                            solutions=[{"id": "sol-009", "status": "discarded"}])
     out = validator.cycle_record_findings(canvas)
-    assert any("bakeoff_delta: calibration is due" in w for w in out)
+    assert any("confidence_calibration: calibration is due" in w for w in out)
     assert any("sol-009" in w for w in out)
     # 0.319.0: the retired key reaches the validator's WARN tier as its one line.
     assert sum("ice_advance: retired in 0.319.0" in w for w in out) == 1
+    # 0.320.0: so does `bakeoff_delta`, and it is no longer reported as due for calibration
+    # (until then this canvas, one eligible cycle against minimum_n 1, read "calibration is due").
+    assert sum("bakeoff_delta: retired in 0.320.0" in w for w in out) == 1
+    assert not any("bakeoff_delta: calibration is due" in w for w in out)
 
 
 # --- v0.217.0: an off-outcome root carries a review date and a condition --------------------

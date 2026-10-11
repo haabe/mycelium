@@ -66,8 +66,9 @@ All configurable thresholds live in `canvas/thresholds.yml`. Each threshold has:
 **If your `thresholds.yml` still has `ice_advance`:** nothing reads it and it can be removed. The
 file still validates with the key in it (`thresholds.schema.json` accepts it in any shape), and
 `validate_canvas.py` prints one WARN line saying it is retired, from
-`check_cycle_recording.py`. `calibration.ice_accuracy` in `cycle-history.yml` is still recorded,
-and the bakeoff delta below still reads it.
+`check_cycle_recording.py`. `calibration.ice_accuracy` in `cycle-history.yml` is still recorded.
+Until 0.320.0 the bakeoff delta read it; that threshold is retired too (below), and since then no
+threshold in this file is calibrated from it.
 
 ### Confidence Calibration
 
@@ -112,16 +113,47 @@ and the bakeoff delta below still reads it.
 | Minimum N | 10 refresh events per category |
 | Adjustment bounds | 50%-200% of default (never less than half, never more than double) |
 
-### Bakeoff ICE Delta
+### Bakeoff ICE Delta (RETIRED in 0.320.0)
 
-**What it controls**: The ICE score difference that constitutes a "clear winner" in leaf bakeoff (from leaf-bakeoff.md).
+> **Why this note exists.** Until 0.320.0 this section defined `bakeoff_delta` in
+> `canvas/thresholds.yml`: the ICE score difference that made a "clear winner" in a leaf bakeoff,
+> default 20%, to be adjusted from bakeoff outcomes, bounds 10%-40%. **It is retired. No ICE gap
+> decides anything in a leaf bakeoff.** The note stays so a reader who meets the key in an older
+> `thresholds.yml`, canvas or decision log knows what it was and why it went.
 
-| Parameter | Value |
-|-----------|-------|
-| Default | 20% delta |
-| Calibration rule | Track bakeoff outcomes. If leaves within 20% delta frequently produce the same outcome (both succeed or both fail), the delta is too narrow — widen it. If leaves just above 20% delta frequently diverge in outcome, the delta is well-calibrated. |
-| Minimum N | 5 completed bakeoffs |
-| Adjustment bounds | 10%-40% |
+**What it decided.** Two things, both in `orchestration/leaf-bakeoff.md`: competing leaves were
+compared in parallel only when their ICE scores were within 20% of each other, and a leaf more
+than 20% ahead won while the others were archived.
+
+**Why it was retired.**
+
+- **No source has the number, or any ICE gap that picks a winner.** The 20% was Mycelium's own;
+  the 0.319.0 release notes say so and left it for a ruling. Gilad: *"The one number you should be
+  most suspicious of is the ICE score."* (*Evidence-Guided*, ch. 3). Torres compares a small set
+  of ideas by testing their assumptions and does not score them to choose (*Continuous Discovery
+  Habits*).
+- **It contradicted the archive rule.** A leaf is archived only when its riskiest assumption is
+  invalidated by a test, never by ICE (`leaf-lifecycle.md`, Phase 5). Under the bakeoff's old
+  Rule 1 a leaf whose assumption test passed was archived when another leaf scored more than 20%
+  higher.
+- **The number did not fit the arithmetic.** Since 0.319.0 a total is the product of three
+  factors, so one step in one factor is the whole gap or more: Impact 5 to 6 moves the total by
+  20%, and a second piece of anecdotal evidence that takes a Confidence of 0.5 to 1.0 doubles it.
+
+**What does the work instead.**
+
+- **When leaves are compared**: whenever two or more leaves on one opportunity each have an
+  untested riskiest assumption. No score gap is consulted.
+- **Which leaf wins**: the assumption-test verdicts. A leaf whose riskiest assumption failed is
+  archived. If one passes and the others fail, it advances. If several pass, the tiebreak and
+  segment-split rules apply. If all fail, all are archived and the opportunity is re-evaluated
+  (`orchestration/leaf-bakeoff.md`, section 4).
+- **What the ICE total is for**: ordering which assumption is tested first. It never decides.
+
+**If your `thresholds.yml` still has `bakeoff_delta`:** nothing reads it and it can be removed. The
+file still validates with the key in it (`thresholds.schema.json` accepts it in any shape), and
+`validate_canvas.py` prints one WARN line saying it is retired, from
+`check_cycle_recording.py`. No calibration is owed for it.
 
 ## `canvas/thresholds.yml` Format
 
@@ -146,13 +178,8 @@ thresholds:
     feasibility: {default_days: 120, calibrated_days: null, based_on_n: 0, minimum_n: 10}
     delivery_metrics: {default_days: 30, calibrated_days: null, based_on_n: 0, minimum_n: 10}
     
-  bakeoff_delta:
-    default: 0.20
-    calibrated: null
-    calibrated_at: null
-    based_on_n: 0
-    minimum_n: 5
-    bounds: {min: 0.10, max: 0.40}
+  # bakeoff_delta (default 0.20, bounds 0.10-0.40) was here until 0.320.0. Retired: see
+  # "Bakeoff ICE Delta (RETIRED in 0.320.0)" above. A file that still has it validates.
 
 last_calibrated: null
 ```
@@ -168,12 +195,13 @@ Calibration runs as part of `/framework-health` (quarterly or every 20 cycles):
    - Log calibration change in decision-log.md
 3. For thresholds with insufficient data: report "N more cycles needed for [threshold]"
 
-**Safety**: Calibrated values have bounds. The system cannot set the bakeoff delta to 0 or confidence deflation to 0.1. Bounds prevent runaway calibration.
+**Safety**: Calibrated values have bounds. The system cannot set confidence deflation to 0.1, or an evidence staleness threshold to less than half its default. Bounds prevent runaway calibration.
 
 ## Theory Citations
 
 - Gilad: *Evidence-Guided* (confidence comes from evidence; the Confidence Meter, ch. 3; a team metric he proposes, *"Percent of ideas launched at least with a medium Confidence level (per the Confidence Meter)"*, ch. 9). Until 0.319.0 this line read "confidence calibration from actual outcomes"; the parts of the book read on 2026-10-11 describe no procedure for deflating confidence by a factor computed from outcomes, so that procedure is Mycelium's own.
 - Gilad: *ICE Done Right*; Ellis & Brown: *Hacking Growth*, ch. 4 (no threshold on an ICE total; why `ice_advance` was retired)
+- Gilad: *Evidence-Guided*, ch. 3; Torres: *Continuous Discovery Habits* (the ICE score is the number to be most suspicious of; ideas are compared by testing their assumptions; why `bakeoff_delta` was retired)
 - Deming: Statistical process control (thresholds adjusted from data, not opinion)
 - Meadows: Thinking in Systems (parameters as the lowest-leverage but easiest intervention point)
 - Kahneman: Thinking, Fast and Slow (systematic miscalibration of predictions)

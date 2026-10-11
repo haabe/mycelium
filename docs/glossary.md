@@ -48,7 +48,7 @@ Two-to-four sentences per entry. No theory teaching here — entries link out to
 
 **Leaf (OST leaf)** — A single solution node in the Opportunity Solution Tree. Every leaf moves through a 10-step lifecycle (creation → four risks → ICE → assumption test → GIST → bounded context → threat model → preflight → delivery diamond → launch + feedback). See `plugins/mycelium/engine/leaf-lifecycle.md`.
 
-**Leaf bakeoff** — A protocol for parallel A/B testing of competing leaves. When multiple leaves compete for the same opportunity, the bakeoff structure compares them. See `plugins/mycelium/orchestration/leaf-bakeoff.md`.
+**Leaf bakeoff** — A protocol for parallel A/B testing of competing leaves. When two or more leaves on the same opportunity each have an untested riskiest assumption, the bakeoff tests them in parallel and the test verdicts decide which advances. No ICE gap is consulted. See `plugins/mycelium/orchestration/leaf-bakeoff.md`.
 
 **Mode** — Discovery or delivery, read off a diamond's decisions: discovery until it records `commit_to_build`, delivery after. The two run in parallel across a project (one diamond can be in discovery while another delivers). The mode is never declared, only read.
 

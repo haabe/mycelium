@@ -52,7 +52,7 @@ The product's source of truth. Each file is committed to git; any session can re
 | `trust-signals.yml` | L5 Market — digital trust architecture |
 | `human-tasks.yml` | All scales — pending offline human tasks |
 | `cycle-history.yml` | All scales — completed leaf lifecycles for calibration |
-| `thresholds.yml` | All scales — adaptive thresholds (confidence, evidence-decay, bakeoff delta; the ICE threshold was retired in v0.319.0) |
+| `thresholds.yml` | All scales — adaptive thresholds (confidence, evidence-decay; the ICE threshold was retired in v0.319.0 and the bakeoff delta in v0.320.0) |
 
 ### Memory (`.claude/memory/`)
 
