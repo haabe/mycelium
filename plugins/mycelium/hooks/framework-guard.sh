@@ -77,7 +77,7 @@ INPUT=$(cat)
   mycelium_note_refusal() { :; }; mycelium_record_denial() { :; }; }
 
 # Delegate to Python stdlib helper
-# A here-string, not a pipe (0.321.1). The helper answers `"active": false` (the guard switched
+# A here-string, not a pipe (0.321.2). The helper answers `"active": false` (the guard switched
 # off on purpose) and a broken state file before it reads the tool call. Under
 # `set -eo pipefail` a `printf | python3` pipe then died on any call larger than the pipe holds
 # (printf: Broken pipe), and the hook left with printf's status, not the helper's 0. With

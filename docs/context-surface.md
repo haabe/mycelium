@@ -3,7 +3,7 @@
 **Audience**: practitioners + evaluators wanting to understand what the agent has access to mid-session, and operators auditing Mycelium against transparency expectations.
 **Time to read**: 8 min.
 **Last updated**: 2026-10-03.
-**Hook surface reviewed:** 2026-10-11 (digest 5089e5b79698)
+**Hook surface reviewed:** 2026-10-11 (digest 4c15efca6057)
 
 This document answers a question the audit (`/xai-check` on `svc-mycelium`, 2026-05-04) flagged as a Stage 2 partial: **"What data does the agent see when it makes a recommendation under Mycelium?"** Today the answer is distributed across many files. This is the consolidated map.
 
@@ -115,7 +115,7 @@ The full table, per runtime, is `plugins/mycelium/hooks/README.md`. The ones tha
 | `next-item-repeat.sh` | Stop | Repeats the NEXT ITEM once if nothing followed it |
 | `reflexion-gate.sh` | Bash/tool failures | Prompts the agent to diagnose before retrying; logs the time, exit code and program name, never the command (0.318.0) |
 
-**When a blocking hook cannot run (since 0.321.1).** In Claude Code 2.1.295 or later, the hooks in the first seven rows except `bash-state-guard.sh` refuse the call when their own process cannot start, reaches its timeout or crashes (`"onFailure": "block"` in `hooks.json`; the one list is `plugins/mycelium/hooks/pretooluse-on-failure.txt`). On a machine where a gate reaches its timeout, writes and shell commands stop until that is fixed. Older Claude Code versions, Codex CLI and Cursor let the call through as before.
+**When a blocking hook cannot run (since 0.321.2).** In Claude Code 2.1.295 or later, the hooks in the first seven rows except `bash-state-guard.sh` refuse the call when their own process cannot start, reaches its timeout or crashes (`"onFailure": "block"` in `hooks.json`; the one list is `plugins/mycelium/hooks/pretooluse-on-failure.txt`). On a machine where a gate reaches its timeout, writes and shell commands stop until that is fixed. This holds only in a project that has `.claude/canvas/` or `.claude/diamonds/`: each of these commands tests for the two folders before it starts the hook, because Mycelium does nothing elsewhere (0.318.0). The exception is Windows without Git Bash, where Claude Code hands the command to PowerShell, which cannot read it, and the call is refused in every project. Older Claude Code versions, Codex CLI and Cursor let the call through as before.
 
 ## What the agent does NOT have access to
 

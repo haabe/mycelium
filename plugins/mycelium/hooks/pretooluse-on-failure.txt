@@ -1,10 +1,10 @@
-# WHAT HAPPENS WHEN A PreToolUse HOOK CANNOT RUN (0.321.1): the one list.
+# WHAT HAPPENS WHEN A PreToolUse HOOK CANNOT RUN (0.321.2): the one list.
 #
 # WHY THIS FILE EXISTS
 # --------------------
 # Claude Code lets a tool call through when a hook fails: the process cannot start, it reaches
 # its timeout, it exits with a status other than 0 or 2, or it prints JSON Claude Code cannot
-# read. Until 0.321.1 that was true of every Mycelium gate, whatever its own script said about
+# read. Until 0.321.2 that was true of every Mycelium gate, whatever its own script said about
 # failing closed, because the script's own fail-closed branch only runs when the script does.
 # Claude Code 2.1.295 added `"onFailure": "block"` on a command hook: a failed hook then blocks
 # the call (code.claude.com/docs/en/hooks, "Block the action when a hook fails"). Maintainer
@@ -29,6 +29,33 @@
 # with or without the setting. Claude Code before 2.1.295 does not have the setting at all.
 # Codex CLI documents no such key and Cursor's is a different one (`failClosed`), so neither of
 # those manifests carries this one, and the same test holds them to that.
+#
+# ONLY IN A PROJECT THAT USES MYCELIUM (0.321.2). Since 0.318.0 Mycelium does nothing in a project
+# with neither `.claude/canvas/` nor `.claude/diamonds/`. That exit is on line 2 of each script,
+# so it needs the script to start: with the setting alone, a machine where the hooks cannot start
+# would have had every write refused in every project the plugin is enabled in, Mycelium or not.
+# Maintainer ruling 2026-10-11, shown that consequence: "Block only in Mycelium projects." So the
+# command of every `block` hook begins with the `prefix` line below, which leaves with status 0
+# before bash is started when this is not a Mycelium project. It is plain POSIX sh, because
+# Claude Code passes a command to `sh -c` on macOS and Linux and to Git Bash on Windows.
+#
+# THE PREFIX IS NEVER NARROWER THAN THE SCRIPT'S OWN TEST (scripts/_hook_prelude.sh). It leaves
+# only when CLAUDE_PROJECT_DIR is set, names a folder with neither marker, and
+# MYCELIUM_PRELUDE_ANY_PROJECT is not 1: exactly where the prelude leaves too. When
+# CLAUDE_PROJECT_DIR is not set the prelude walks up from the working directory; the prefix does
+# not repeat that walk, it goes on and lets the script decide. A prefix that left where the
+# script would have gone on would switch every gate off in that project, in silence.
+# `tests/python/test_pretooluse_on_failure.py` runs both over one matrix of cases.
+#
+# WHAT IS LEFT. Where no POSIX shell runs the command at all (Windows without Git Bash, where
+# Claude Code hands it to PowerShell), the command fails before the prefix is read, and with the
+# setting on the call is refused in every project. The maintainer accepted that limit.
+#
+#   prefix    <text>              the exact text every `block` command starts with, followed by
+#                                 one space and `bash "${CLAUDE_PLUGIN_ROOT}/hooks/<script>"`.
+#                                 No other PreToolUse command carries it.
+
+prefix    d="${CLAUDE_PROJECT_DIR:-}"; [ -z "$d" ] || [ -d "$d/.claude/canvas" ] || [ -d "$d/.claude/diamonds" ] || [ "${MYCELIUM_PRELUDE_ANY_PROJECT:-}" = 1 ] || exit 0;
 
 block     gate.sh
 block     discovery-gate.sh

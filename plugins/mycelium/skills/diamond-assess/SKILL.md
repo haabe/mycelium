@@ -201,7 +201,7 @@ python3 "${CLAUDE_PLUGIN_ROOT}/scripts/derive_closing_path.py" --project-dir . -
 `--write` (v0.187.0) also STORES the derivation on the diamond as `closes_on`, stamps `reader` on the
 assumptions and `on_close` on the tasks it names, and reports when a named input has landed since the
 last store as a `CLOSING PATH FIRED` proposal; act on that proposal before the coaching check.
-Since v0.321.1 it does not store over hand-written content: when the stored `closes_on` holds a key
+Since v0.321.2 it does not store over hand-written content: when the stored `closes_on` holds a key
 or an item the script never writes, the block is left as it is and a `CLOSING PATH NOT STORED` line
 names the diamond, the place and the keys such content can live under.
 It reads the diamond's `theory_gates_status`, the leaves under the opportunities that cite the

@@ -1,4 +1,4 @@
-"""A blocking gate that cannot run refuses (v0.321.1; maintainer ruling "Block the write").
+"""A blocking gate that cannot run refuses (v0.321.2; maintainer ruling "Block the write").
 
 WHY. Claude Code lets a tool call through when a hook fails: it cannot start, it reaches its
 timeout, it exits with a status other than 0 or 2, or it prints JSON Claude Code cannot read. So
@@ -6,18 +6,26 @@ every Mycelium gate let the write through when its process failed, whatever its 
 about failing closed. `"onFailure": "block"` on a command hook (Claude Code 2.1.295 and later)
 turns such a failure into a refusal.
 
-TWO HALVES, and the second is the one that would bite a user.
+THREE PARTS, and the last two are the ones that would bite a user.
   1. hooks.json carries the setting on every PreToolUse hook that can refuse, and on no hook that
      only advises. Which is which is read from ONE list, hooks/pretooluse-on-failure.txt.
   2. With the setting on, an exit status other than 0 or 2 blocks, and so does stdout that is two
      JSON objects. Any path where a gate MEANT to allow and left that way now refuses work. Three
      were found by reading the scripts (below); each ran red on 0.321.0.
+  3. ONLY IN A PROJECT THAT USES MYCELIUM (second ruling, same day: "Block only in Mycelium
+     projects"). The script's own "not a Mycelium project" exit needs the script to start, so
+     with the setting alone a machine where the hooks cannot start refused every write in every
+     project. Each blocking command now begins with one prefix, kept in the same list, that
+     leaves with status 0 before bash starts when the project has neither `.claude/canvas/` nor
+     `.claude/diamonds/`. A prefix that left where the script would have gone on would switch
+     every gate off in that project, so the two are run over one matrix of cases (below).
 """
 
 from __future__ import annotations
 
 import json
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -52,6 +60,8 @@ def read_policy(text: str) -> tuple[dict[str, tuple[str, str]], list[str]]:
         if not line:
             continue
         parts = line.split(None, 2)
+        if parts[0] == "prefix":
+            continue  # read_prefix reads it
         kind, script = parts[0], (parts[1] if len(parts) > 1 else "")
         reason = parts[2] if len(parts) > 2 else ""
         if kind not in CLASSES or not script.endswith(".sh"):
@@ -65,6 +75,19 @@ def read_policy(text: str) -> tuple[dict[str, tuple[str, str]], list[str]]:
     return policy, wrong
 
 
+def read_prefix(text: str) -> str:
+    """The one `prefix` line: the text every blocking command starts with. Empty when the list
+    has none or more than one, which the manifest test then reports on every blocking entry."""
+    found = [raw.split(None, 1)[1].strip() for raw in text.splitlines()
+             if raw.split(None, 1)[:1] == ["prefix"] and len(raw.split(None, 1)) > 1]
+    return found[0] if len(found) == 1 else ""
+
+
+def composed(prefix: str, script: str) -> str:
+    """What a blocking entry's command must be, to the character."""
+    return f'{prefix} bash "${{CLAUDE_PLUGIN_ROOT}}/hooks/{script}"'
+
+
 def pretooluse_entries(doc: dict) -> list[tuple[str, str, dict]]:
     """(matcher, script, the hook entry) for every command hook registered on PreToolUse."""
     out = []
@@ -75,9 +98,9 @@ def pretooluse_entries(doc: dict) -> list[tuple[str, str, dict]]:
     return out
 
 
-def gaps(doc: dict, policy: dict[str, tuple[str, str]]) -> list[str]:
+def gaps(doc: dict, policy: dict[str, tuple[str, str]], prefix: str) -> list[str]:
     """Where the manifest and the list disagree. Empty means they agree."""
-    found = []
+    found = [] if prefix else ["the list has no single `prefix` line"]
     seen = set()
     for matcher, script, hook in pretooluse_entries(doc):
         seen.add(script)
@@ -90,6 +113,11 @@ def gaps(doc: dict, policy: dict[str, tuple[str, str]]) -> list[str]:
             found.append(f"{script} ({matcher}) can refuse and does not block when it cannot run")
         if kind != "block" and has is not None:
             found.append(f"{script} ({matcher}) is {kind} and carries onFailure: {has}")
+        command = hook.get("command", "")
+        if kind == "block" and command != composed(prefix, script):
+            found.append(f"{script} ({matcher}) is not the prefix followed by its script")
+        if kind != "block" and ("exit 0" in command or (prefix and prefix in command)):
+            found.append(f"{script} ({matcher}) is {kind} and leaves before its script starts")
     found += [f"{s} is in the list and not registered on PreToolUse" for s in policy if s not in seen]
     return found
 
@@ -104,9 +132,14 @@ def _policy() -> dict[str, tuple[str, str]]:
     return policy
 
 
+PREFIX = read_prefix(POLICY.read_text(encoding="utf-8"))
+
+
 def test_the_manifest_agrees_with_the_one_list():
-    """RED ON 0.321.0: no entry in hooks.json carried the setting, and there was no list."""
-    assert gaps(_manifest(), _policy()) == []
+    """RED ON 0.321.0: no entry in hooks.json carried the setting, and there was no list. RED
+    BEFORE THE PREFIX: every blocking command was the bare `bash "<script>"`."""
+    assert PREFIX
+    assert gaps(_manifest(), _policy(), PREFIX) == []
 
 
 def test_every_class_is_in_use_so_the_test_is_not_vacuous():
@@ -114,37 +147,70 @@ def test_every_class_is_in_use_so_the_test_is_not_vacuous():
     assert {k: kinds.count(k) for k in CLASSES} == {"block": 9, "continue": 1, "advisory": 5}
     blocking = [h for _, s, h in pretooluse_entries(_manifest()) if h.get("onFailure") == "block"]
     assert len(blocking) == 24
+    assert len([h for h in blocking if h["command"].startswith(PREFIX + " bash ")]) == 24
+    assert len({h["command"][:len(PREFIX)] for h in blocking}) == 1  # one prefix, not 24 near-copies
 
 
 def _doc(*hooks: dict) -> dict:
     return {"hooks": {"PreToolUse": [{"matcher": "Write", "hooks": list(hooks)}]}}
 
 
-def _hook(script: str, **extra) -> dict:
-    return {"type": "command", "command": f'bash "${{CLAUDE_PLUGIN_ROOT}}/hooks/{script}"', **extra}
+P = '[ -d "$CLAUDE_PROJECT_DIR/.claude/canvas" ] || exit 0;'  # a stand-in prefix for the controls
+
+
+def _hook(script: str, prefix: str = "", **extra) -> dict:
+    bare = f'bash "${{CLAUDE_PLUGIN_ROOT}}/hooks/{script}"'
+    return {"type": "command", "command": f"{prefix} {bare}" if prefix else bare, **extra}
 
 
 def test_control_a_gate_without_the_setting_is_caught():
-    found = gaps(_doc(_hook("gate.sh")), {"gate.sh": ("block", "")})
+    found = gaps(_doc(_hook("gate.sh", P)), {"gate.sh": ("block", "")}, P)
     assert found == ["gate.sh (Write) can refuse and does not block when it cannot run"]
-    wrong_value = gaps(_doc(_hook("gate.sh", onFailure="continue")), {"gate.sh": ("block", "")})
+    wrong_value = gaps(_doc(_hook("gate.sh", P, onFailure="continue")), {"gate.sh": ("block", "")}, P)
     assert wrong_value == found
 
 
 def test_control_an_advisory_hook_carrying_the_setting_is_caught():
     doc = _doc(_hook("key-shape-guard.sh", onFailure="block"))
-    assert gaps(doc, {"key-shape-guard.sh": ("advisory", "")}) == [
+    assert gaps(doc, {"key-shape-guard.sh": ("advisory", "")}, P) == [
         "key-shape-guard.sh (Write) is advisory and carries onFailure: block"]
     left_open = _doc(_hook("bash-state-guard.sh", onFailure="block"))
-    assert gaps(left_open, {"bash-state-guard.sh": ("continue", "why")}) == [
+    assert gaps(left_open, {"bash-state-guard.sh": ("continue", "why")}, P) == [
         "bash-state-guard.sh (Write) is continue and carries onFailure: block"]
 
 
 def test_control_a_hook_nobody_classified_is_caught_both_ways():
-    assert gaps(_doc(_hook("new-gate.sh")), {}) == [
+    assert gaps(_doc(_hook("new-gate.sh")), {}, P) == [
         "new-gate.sh (Write) is registered on PreToolUse and not in the list"]
-    assert gaps(_doc(), {"gone.sh": ("block", "")}) == [
+    assert gaps(_doc(), {"gone.sh": ("block", "")}, P) == [
         "gone.sh is in the list and not registered on PreToolUse"]
+
+
+def test_control_a_blocking_command_that_is_not_exactly_the_prefix_is_caught():
+    """The setting with no prefix, a prefix one character off, and something after the script."""
+    policy = {"gate.sh": ("block", "")}
+    wrong = "gate.sh (Write) is not the prefix followed by its script"
+    assert gaps(_doc(_hook("gate.sh", onFailure="block")), policy, P) == [wrong]
+    assert gaps(_doc(_hook("gate.sh", P.replace("canvas", "Canvas"), onFailure="block")), policy, P) == [wrong]
+    trailing = _hook("gate.sh", P, onFailure="block")
+    trailing["command"] += " || true"
+    assert gaps(_doc(trailing), policy, P) == [wrong]
+    assert gaps(_doc(_hook("gate.sh", P, onFailure="block")), policy, P) == []
+
+
+def test_control_a_hook_that_is_not_blocking_and_leaves_early_is_caught():
+    doc = _doc(_hook("key-shape-guard.sh", P), _hook("bash-state-guard.sh", P))
+    policy = {"key-shape-guard.sh": ("advisory", ""), "bash-state-guard.sh": ("continue", "why")}
+    assert gaps(doc, policy, P) == [
+        "key-shape-guard.sh (Write) is advisory and leaves before its script starts",
+        "bash-state-guard.sh (Write) is continue and leaves before its script starts"]
+
+
+def test_control_a_list_with_no_prefix_or_two_is_caught():
+    assert read_prefix("block gate.sh\n") == ""
+    assert read_prefix("prefix a;\nprefix b;\n") == ""
+    assert read_prefix("# prefix in a comment\nprefix   a b;  \n") == "a b;"
+    assert gaps(_doc(), {}, "") == ["the list has no single `prefix` line"]
 
 
 def test_control_a_malformed_list_is_caught():
@@ -177,6 +243,9 @@ def test_the_docs_name_the_list_instead_of_keeping_their_own():
     assert POLICY_REL in readme and POLICY_REL in card
     for doc in (readme, card):
         assert '"onFailure": "block"' in doc and "2.1.295" in doc
+        # where it bites, and the limit that is left (no POSIX shell to read the command)
+        assert ".claude/canvas/" in doc and ".claude/diamonds/" in doc
+        assert "Git Bash" in doc and "PowerShell" in doc
 
 
 @pytest.mark.parametrize("name", ["hooks.codex.json", "hooks.codex-plugin.json", "hooks.cursor.json"])
@@ -394,3 +463,206 @@ def test_with_a_python3_that_cannot_run_the_call_is_refused(tmp_path, tool, call
         statuses[script] = done.returncode
     assert len(statuses) >= 7, statuses
     assert any(code != 0 for code in statuses.values()), statuses
+
+
+# ---------------------------------------------------------------- the prefix and the prelude
+#
+# The prefix in front of every blocking command decides, in the shell Claude Code hands the
+# command to, whether to start the hook at all. scripts/_hook_prelude.sh decides the same thing
+# on line 2 of every hook. If the prefix said "not a Mycelium project" where the prelude says "it
+# is", that project would lose every gate and nothing would say so. So: the prefix may go on
+# where the prelude leaves (the script then leaves by itself), never the other way round.
+
+PRELUDE = SCRIPTS / "_hook_prelude.sh"
+SHELLS = [s for s in ("sh", "bash", "dash") if shutil.which(s)]
+#: name: (what `.claude/` holds, the folder's name, CLAUDE_PROJECT_DIR, the working directory,
+#:        extra environment, does the prefix go on, does the prelude go on)
+#: CLAUDE_PROJECT_DIR: "project", "project/", "elsewhere", "." , "" (set and empty) or None (unset).
+#: Working directory: "project", "inside" (two folders down in it) or "elsewhere".
+MATRIX = {
+    "both folders": (("canvas", "diamonds"), "p", "project", "elsewhere", {}, True, True),
+    "only .claude/canvas": (("canvas",), "p", "project", "elsewhere", {}, True, True),
+    "only .claude/diamonds": (("diamonds",), "p", "project", "elsewhere", {}, True, True),
+    "neither folder": ((), "p", "project", "elsewhere", {}, False, False),
+    "only .claude/state": (("state",), "p", "project", "elsewhere", {}, False, False),
+    "canvas is a file, not a folder": (("canvas-file",), "p", "project", "elsewhere", {}, False, False),
+    "a path with a space, a project": (("canvas",), "my project", "project", "elsewhere", {}, True, True),
+    "a path with a space, not a project": ((), "my project", "project", "elsewhere", {}, False, False),
+    "a path with a quote, a dollar and a semicolon, a project":
+        (("diamonds",), 'od"d $HOME;x', "project", "elsewhere", {}, True, True),
+    "a path with a quote, a dollar and a semicolon, not a project":
+        ((), 'od"d $HOME;x', "project", "elsewhere", {}, False, False),
+    "a trailing slash on CLAUDE_PROJECT_DIR": (("canvas",), "p", "project/", "elsewhere", {}, True, True),
+    "CLAUDE_PROJECT_DIR is `.`, in the project": (("canvas",), "p", ".", "project", {}, True, True),
+    "CLAUDE_PROJECT_DIR is `.`, not in a project": ((), "p", ".", "project", {}, False, False),
+    "CLAUDE_PROJECT_DIR elsewhere, working directory inside a project":
+        (("canvas",), "p", "elsewhere", "inside", {}, False, False),
+    "CLAUDE_PROJECT_DIR unset, working directory is the project":
+        (("canvas",), "p", None, "project", {}, True, True),
+    "CLAUDE_PROJECT_DIR unset, working directory two folders inside a project":
+        (("diamonds",), "p", None, "inside", {}, True, True),
+    "CLAUDE_PROJECT_DIR unset, no project above the working directory":
+        ((), "p", None, "inside", {}, True, False),
+    "CLAUDE_PROJECT_DIR empty, working directory inside a project":
+        (("canvas",), "p", "", "inside", {}, True, True),
+    "CLAUDE_PROJECT_DIR empty, no project above the working directory":
+        ((), "p", "", "inside", {}, True, False),
+    "MYCELIUM_PRELUDE_ANY_PROJECT=1, neither folder":
+        ((), "p", "project", "elsewhere", {"MYCELIUM_PRELUDE_ANY_PROJECT": "1"}, True, True),
+    "MYCELIUM_PRELUDE_ANY_PROJECT=0, neither folder":
+        ((), "p", "project", "elsewhere", {"MYCELIUM_PRELUDE_ANY_PROJECT": "0"}, False, False),
+}
+
+
+def _matrix_case(tmp_path: Path, name: str) -> tuple[Path, dict]:
+    holds, folder, project_dir, where, extra, _, _ = MATRIX[name]
+    project = tmp_path / folder
+    (project / "src" / "deep").mkdir(parents=True)
+    elsewhere = tmp_path / "elsewhere"
+    elsewhere.mkdir()
+    for item in holds:
+        if item.endswith("-file"):
+            (project / ".claude").mkdir(exist_ok=True)
+            (project / ".claude" / item[:-5]).write_text("not a folder\n")
+        else:
+            (project / ".claude" / item).mkdir(parents=True)
+    env = {"PATH": "/usr/bin:/bin", "TMPDIR": str(tmp_path), "HOME": str(tmp_path), **extra}
+    if project_dir is not None:
+        env["CLAUDE_PROJECT_DIR"] = {"project": str(project), "project/": str(project) + "/",
+                                     "elsewhere": str(elsewhere)}.get(project_dir, project_dir)
+    cwd = {"project": project, "inside": project / "src" / "deep", "elsewhere": elsewhere}[where]
+    return cwd, env
+
+
+def _went_on(argv: list[str], cwd: Path, env: dict) -> bool:
+    done = subprocess.run(argv, input="", cwd=cwd, env=env, capture_output=True, text=True,
+                          check=False, timeout=30)
+    assert (done.returncode, done.stderr) == (0, ""), done
+    assert done.stdout in ("", "WENT-ON\n"), done.stdout
+    return done.stdout == "WENT-ON\n"
+
+
+@pytest.mark.parametrize("shell", SHELLS)
+@pytest.mark.parametrize("case", sorted(MATRIX))
+def test_the_prefix_never_leaves_where_the_prelude_goes_on(tmp_path, shell, case):
+    """The prefix through each POSIX shell on this machine, the prelude through bash as every
+    hook sources it, same folder, same environment. RED BEFORE THE PREFIX (there was none)."""
+    cwd, env = _matrix_case(tmp_path, case)
+    prefix_on = _went_on([shell, "-c", PREFIX + " echo WENT-ON"], cwd, env)
+    prelude_on = _went_on(["bash", "-c", '. "$1"; echo WENT-ON', "prelude", str(PRELUDE)], cwd, env)
+    assert not (prelude_on and not prefix_on), "the prefix would switch the gates off here"
+    assert (prefix_on, prelude_on) == MATRIX[case][5:]
+    if env.get("CLAUDE_PROJECT_DIR"):
+        assert prefix_on == prelude_on  # wherever the variable is set, it is the same rule
+
+
+def test_the_matrix_says_where_the_prefix_is_wider_and_only_there():
+    """Wider in exactly one situation: CLAUDE_PROJECT_DIR not set and no project above the
+    working directory. The prefix does not repeat the prelude's walk up; it starts the script,
+    which walks and leaves. Claude Code always sets the variable."""
+    wider = sorted(n for n, row in MATRIX.items() if row[5] and not row[6])
+    assert wider == ["CLAUDE_PROJECT_DIR empty, no project above the working directory",
+                     "CLAUDE_PROJECT_DIR unset, no project above the working directory"]
+    assert not [n for n, row in MATRIX.items() if row[6] and not row[5]]
+    assert "sh" in SHELLS and "bash" in SHELLS
+
+
+def test_the_prefix_is_plain_posix_sh():
+    """Claude Code hands a command to `sh -c` on macOS and Linux and to Git Bash on Windows
+    (hooks reference, "Exec form and shell form"). No bash-only syntax, and nothing Claude Code
+    could mistake for a `${CLAUDE_PROJECT_DIR}` path placeholder to substitute as text."""
+    assert "[[" not in PREFIX and "==" not in PREFIX and "function" not in PREFIX
+    assert "${CLAUDE_PROJECT_DIR}" not in PREFIX and "${CLAUDE_PLUGIN_ROOT}" not in PREFIX
+    assert PREFIX.endswith("|| exit 0;") and "hooks/" not in PREFIX
+
+
+def test_the_prefix_tests_every_folder_the_prelude_tests():
+    """A marker folder added to the prelude and not to the prefix would make the prefix narrower
+    for exactly the projects the new marker brings in. Read from the prelude's own function."""
+    body = re.search(r"^_mycelium_is_project\(\) \{(.*)\}$", PRELUDE.read_text(encoding="utf-8"),
+                     re.MULTILINE).group(1)
+    markers = re.findall(r'\[ -d "\$1/\.claude/([\w-]+)" \]', body)
+    assert markers == ["canvas", "diamonds"]
+    assert body.count("[") == len(markers)  # nothing in the function this test does not read
+    for marker in markers:
+        assert f'[ -d "$d/.claude/{marker}" ]' in PREFIX
+    assert "MYCELIUM_PRELUDE_ANY_PROJECT" in PREFIX
+
+
+def _blocking_commands() -> list[str]:
+    return sorted({h["command"] for _, _, h in pretooluse_entries(_manifest())
+                   if h.get("onFailure") == "block"})
+
+
+def _shell_run(argv: list[str], cwd: Path, payload: dict, **env) -> subprocess.CompletedProcess:
+    return subprocess.run(argv, input=json.dumps(payload), cwd=cwd, env=env, capture_output=True,
+                          text=True, check=False, timeout=60)
+
+
+NOT_FOUND = 127  # what a shell returns for a command or a script file that is not there
+
+
+@pytest.mark.parametrize("shell", ["sh", "bash"])
+def test_with_the_hook_script_missing_only_a_mycelium_project_is_refused(tmp_path, shell):
+    """A broken install: CLAUDE_PLUGIN_ROOT names a folder with no hooks in it. In a Mycelium
+    project the registered command fails (a status that is neither 0 nor 2, which the setting
+    turns into a refusal). In any other project it leaves with 0 and says nothing. RED BEFORE
+    THE PREFIX: 127 in both."""
+    broken = tmp_path / "plugin with no hooks"
+    plain = tmp_path / "plain"
+    project = _mycelium_project(tmp_path / "project")
+    broken.mkdir()
+    plain.mkdir()
+    commands = _blocking_commands()
+    assert len(commands) == 9
+    for command in commands:
+        for where, refused in ((plain, False), (project, True)):
+            done = _shell_run([shell, "-c", command], where, _write("short"), PATH="/usr/bin:/bin",
+                              CLAUDE_PROJECT_DIR=str(where), CLAUDE_PLUGIN_ROOT=str(broken),
+                              TMPDIR=str(tmp_path))
+            if refused:
+                assert done.returncode == NOT_FOUND and "No such file" in done.stderr, command
+            else:
+                assert (done.returncode, done.stdout, done.stderr) == (0, "", ""), command
+
+
+def test_with_no_bash_on_the_path_only_a_mycelium_project_is_refused(tmp_path):
+    """Outside a Mycelium project bash is never started, so its absence costs nothing there.
+    RED BEFORE THE PREFIX: 127 in both."""
+    empty = tmp_path / "bin"
+    plain = tmp_path / "plain"
+    project = _mycelium_project(tmp_path / "project")
+    empty.mkdir()
+    plain.mkdir()
+    sh = shutil.which("sh")
+    commands = _blocking_commands()
+    assert len(commands) == 9  # an empty list would pass every assertion it never made
+    for command in commands:
+        for where, refused in ((plain, False), (project, True)):
+            done = _shell_run([sh, "-c", command], where, _write("short"), PATH=str(empty),
+                              CLAUDE_PROJECT_DIR=str(where), CLAUDE_PLUGIN_ROOT=str(PLUGIN))
+            if refused:
+                assert done.returncode == NOT_FOUND and "bash" in done.stderr, command
+            else:
+                assert (done.returncode, done.stdout, done.stderr) == (0, "", ""), command
+
+
+@pytest.mark.parametrize("script", ["gate.sh", "discovery-gate.sh", "exposure-gate.sh"])
+@pytest.mark.parametrize("call", ["a small write", "a new source file", "a release"])
+def test_control_in_a_mycelium_project_the_prefix_changes_nothing(tmp_path, script, call):
+    """The registered command through `sh -c`, and the script run directly as before the prefix,
+    each in its own copy of one project: same status, same stdout, same stderr, to the byte."""
+    command = composed(PREFIX, script)
+    assert command in _blocking_commands()
+    seen = []
+    for name, argv in (("direct", ["bash", str(HOOKS / script)]), ("composed", ["sh", "-c", command])):
+        project = _released(tmp_path / name, EXPIRED_ACK)
+        (project / "tmp").mkdir()
+        done = _shell_run(argv, project, CALLS[call], CLAUDE_PROJECT_DIR=str(project),
+                          CLAUDE_PLUGIN_ROOT=str(PLUGIN), TMPDIR=str(project / "tmp"),
+                          MYCELIUM_TODAY="2026-09-25",
+                          PATH=str(Path(sys.executable).parent) + ":/usr/bin:/bin")
+        seen.append((done.returncode, done.stdout.replace(str(project), "<project>"),
+                     done.stderr.replace(str(project), "<project>")))
+    assert seen[0] == seen[1]
+    assert seen[0][0] in (0, 2)

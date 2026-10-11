@@ -504,7 +504,7 @@ _INLINE_MAX = 80
 _ROW_OWNER, _ROW_DATE = 2, 3
 PRESERVED_KEYS = ("routes_on_record", "then_do", "caveat", "why_a_field", "does_not_close")
 
-# WHAT THIS SCRIPT WRITES INSIDE THE DERIVED KEYS, AND NOTHING ELSE (v0.321.1).
+# WHAT THIS SCRIPT WRITES INSIDE THE DERIVED KEYS, AND NOTHING ELSE (v0.321.2).
 # Session start re-derives every diamond and replaces `gates`, `inputs` and `fired` whole. Whatever
 # a person had written inside them (a `note:` on a gate row, an input of their own, any other key
 # under `closes_on`) was gone after the next start, and nothing said so. The script cannot carry
@@ -1059,7 +1059,7 @@ def run_controller(root: Path, ids: list[str], write: bool, today: str) -> None:
         if skip:
             print(skip)
             continue
-        # Hand-written content inside the derived keys is never overwritten (v0.321.1). Asked
+        # Hand-written content inside the derived keys is never overwritten (v0.321.2). Asked
         # before anything reads the stored block, and only when this run would store: a diamond
         # with no pending gate is not written to, so nothing of it is at risk.
         kept = hand_written(stored_diamond.get("closes_on")) if write else []

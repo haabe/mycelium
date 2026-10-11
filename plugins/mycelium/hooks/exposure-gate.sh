@@ -42,7 +42,7 @@ LOCKS="$(dirname "${BASH_SOURCE[0]}")/../scripts/scale_locks.py"
 . "$(dirname "$LOCKS")/_python.sh"  # mycelium_python, mycelium_skip_ack and the fix line
 # The user's skip-ack lifts a release only when it says `releases: true`, and only while it is in
 # date (v0.293.0). Until then the file's mere existence lifted every release, forever.
-# ONE JSON OBJECT ON STDOUT (0.321.1). An ack that does not lift the release can still print a
+# ONE JSON OBJECT ON STDOUT (0.321.2). An ack that does not lift the release can still print a
 # warning (expired, undated), as JSON, and the checker below prints its own JSON when it allows
 # with advice or asks the person. Two objects are output Claude Code cannot parse: a hook error
 # that let the release through and lost the question, and with `"onFailure": "block"` in
