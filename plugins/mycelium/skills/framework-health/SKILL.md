@@ -49,6 +49,7 @@ For each dimension, compute the metric and compare against trend (if prior asses
 
 **Confidence Calibration**:
 - **Cycle-class scope (per `engine/cycle-learning.md#cycle-class`)**: ONLY `product-leaf` cycles feed calibration. `meta-dogfood` (framework-self-development) and `observation` (strategic-process reflection) cycles carry no ICE *by design* — they are EXCLUDED, not missing. This matches `cycle-history.yml#calibration_summary`, which already excludes them from aggregates; the dimension was previously computed over all cycles, which is the bug this fixes.
+- **Which confidence (note added 0.319.0)**: the bands below are on a 0.0-1.0 scale read as a chance of success. An ICE Confidence scored since 0.319.0 is a value of Gilad's Confidence Meter on 0-10 (`/mycelium:ice-score` Step 2), a sum of evidence weights and not a probability. Do NOT divide it by ten or place it in these bands. For a cycle whose `predicted.ice_score` carries a meter value, report that the calibration factor was not computed for it and say why. How to compare a meter-scored prediction with its outcome is not designed yet, and no source read describes it.
 - For `product-leaf` cycles with predicted confidence/ICE and actual outcome:
   - Compute: actual success rate per confidence band (0.3-0.5, 0.5-0.7, 0.7-0.9)
   - Compare with expected rate (confidence 0.7 should succeed ~70%)
@@ -139,7 +140,10 @@ gets wrong (the dogfood canvas carried that note for three months against 17 cyc
 10; the real reason was zero product-leaf cycles with a non-null `ice_accuracy`). A third finding
 names every solution leaf in a terminal state with no cycle row, because that is how the loop goes
 unfed. Neither computes a value: calibrating a product threshold on meta-dogfood cycles is a category
-error, and the output is the prompt with the numbers in it.
+error, and the output is the prompt with the numbers in it. Since 0.319.0 the same function also
+prints one line when `thresholds.yml` still carries `ice_advance`, the threshold on the ICE total
+that release retired: the line says the key is read by nothing and can be removed. It is not a
+calibration that is due.
 
 ### 4. Check Goodhart Counter-Metrics
 
@@ -276,9 +280,10 @@ Period: [date range]
 
 ### Threshold Calibration
 
+*(The "ICE advance | 100" row that stood here until 0.319.0 is gone: the threshold is retired, see `engine/adaptive-thresholds.md`. If the project's `thresholds.yml` still has `ice_advance`, report it as retired and removable, not as a threshold awaiting calibration.)*
+
 | Threshold | Default | Calibrated | Based On | Change |
 |-----------|---------|-----------|----------|--------|
-| ICE advance | 100 | [value or "insufficient data"] | N cycles | [+/-] |
 | Confidence factor | 1.0 | [value or "insufficient data"] | N cycles | [+/-] |
 | Bakeoff delta | 20% | [value or "insufficient data"] | N bakeoffs | [+/-] |
 

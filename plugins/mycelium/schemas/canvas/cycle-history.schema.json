@@ -333,7 +333,7 @@
       },
       "allOf": [
         {
-          "description": "MECHANIZES AN EXISTING PROSE GATE. /mycelium:retrospective already says a product-leaf cycle must not be written with a zero ICE total, and offers an honest reconstruction (flagged reconstructed_post_hoc) as the remedy. That rule lived only in skill prose and nothing enforced it. It cannot break existing records that honour it, and it fires exactly where calibration would silently ingest a zero. v0.207.0: the exemption the description names is now wired. A row flagged reconstructed_post_hoc: true is exempt, because the honest value for a leaf whose estimate was never set is no value; the gate keeps firing on every row opened live (dogfood 2026-09-03: cycle-020 could not be recorded because the flag was declared and not read by this conditional).",
+          "description": "MECHANIZES AN EXISTING PROSE GATE. /mycelium:retrospective already says a product-leaf cycle must not be written with a zero ICE total, and offers an honest reconstruction (flagged reconstructed_post_hoc) as the remedy. That rule lived only in skill prose and nothing enforced it. It cannot break existing records that honour it, and it fires exactly where calibration would silently ingest a zero. v0.207.0: the exemption the description names is now wired. A row flagged reconstructed_post_hoc: true is exempt, because the honest value for a leaf whose estimate was never set is no value; the gate keeps firing on every row opened live (dogfood 2026-09-03: cycle-020 could not be recorded because the flag was declared and not read by this conditional). 0.319.0: a zero total is accepted when the block carries its three factors and one of them is not zero (see the nested description); the all-zero block still fails.",
           "if": {
             "properties": {
               "cycle_class": {
@@ -368,8 +368,86 @@
                     "properties": {
                       "total": {
                         "type": "number",
-                        "exclusiveMinimum": 0
+                        "minimum": 0
                       }
+                    },
+                    "if": {
+                      "properties": {
+                        "total": {
+                          "const": 0
+                        }
+                      }
+                    },
+                    "then": {
+                      "description": "A ZERO TOTAL NEEDS ITS FACTORS (0.319.0). ICE is Impact x Confidence x Ease as Gilad defines it, and 0 is a legal Impact in his 0-10 range, so an honestly scored leaf can total 0. What tells that apart from the nothing-was-scored shape {i:0, c:0, e:0, total:0} is the factors: a zero total passes only when all three are recorded and at least one of them is above zero. Until 0.318.x the rule was total > 0, which this keeps for every other case (a total under 1, ordinary with his Confidence Meter, was already accepted here).",
+                      "anyOf": [
+                        {
+                          "required": [
+                            "i",
+                            "c",
+                            "e"
+                          ],
+                          "anyOf": [
+                            {
+                              "properties": {
+                                "i": {
+                                  "type": "number",
+                                  "exclusiveMinimum": 0
+                                }
+                              }
+                            },
+                            {
+                              "properties": {
+                                "c": {
+                                  "type": "number",
+                                  "exclusiveMinimum": 0
+                                }
+                              }
+                            },
+                            {
+                              "properties": {
+                                "e": {
+                                  "type": "number",
+                                  "exclusiveMinimum": 0
+                                }
+                              }
+                            }
+                          ]
+                        },
+                        {
+                          "required": [
+                            "impact",
+                            "confidence",
+                            "ease"
+                          ],
+                          "anyOf": [
+                            {
+                              "properties": {
+                                "impact": {
+                                  "type": "number",
+                                  "exclusiveMinimum": 0
+                                }
+                              }
+                            },
+                            {
+                              "properties": {
+                                "confidence": {
+                                  "type": "number",
+                                  "exclusiveMinimum": 0
+                                }
+                              }
+                            },
+                            {
+                              "properties": {
+                                "ease": {
+                                  "type": "number",
+                                  "exclusiveMinimum": 0
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      ]
                     }
                   }
                 }

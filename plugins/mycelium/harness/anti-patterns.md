@@ -27,7 +27,7 @@ Known failure modes organized by category. Check regularly, especially when thin
 ### 4. HiPPO-Driven Discovery
 - **Description**: Highest Paid Person's Opinion overrides research findings. Stakeholder requests treated as validated user needs.
 - **Detection rule**: Priority decisions reference authority ("the CEO wants...") rather than evidence.
-- **What to do instead**: Require evidence for all priority decisions. Use ICE scoring with evidence-backed confidence. Present data, not opinions.
+- **What to do instead**: Require evidence for all priority decisions. Use ICE scoring with Confidence taken from Gilad's Confidence Meter, where an opinion adds 0.1 whoever holds it, and opinions and estimates together add 0.5 at most (`/mycelium:ice-score` Step 2). Present data, not opinions.
 - **Source**: Gilad (Evidence-Guided), Cagan (Empowered)
 
 ### 5. Single-Source Validation
@@ -264,7 +264,7 @@ These are systemic organizational traps from Senge's "The Fifth Discipline." The
 - **Description**: A solution leaf has Four Risks assessment but no ICE score (or vice versa). The pipeline was started but not completed.
 - **Detection rule**: `canvas/opportunities.yml` contains a solution with `four_risks` populated but `ice_score` empty, or `ice_score` populated but `four_risks` empty.
 - **What to do instead**: Complete the pipeline. Four Risks → ICE → assumptions. Never score without risk assessment; never assess without scoring.
-- **Source**: Torres (CDH), Gilad (Evidence Guided), Mycelium leaf lifecycle
+- **Source**: Mycelium leaf lifecycle (the pairing of a risk assessment with a score is Mycelium's own; neither Gilad's nor Ellis's ICE is computed from a risk assessment), Torres (CDH), Gilad (Evidence Guided)
 
 ### 2. Perspective Skip
 - **Description**: A theory gate was passed without all three trio perspectives (product/design/engineering) documented. One or more perspectives were silently omitted.
@@ -285,7 +285,7 @@ These are systemic organizational traps from Senge's "The Fifth Discipline." The
 - **Source**: Mycelium leaf lifecycle
 
 ### 5. Score-Only Discard
-- **Description**: A leaf discarded (or graduated) on its ICE score rather than an assumption-test verdict. As of v0.54.0 the mechanism itself prevents this — OST→GIST selection is the riskiest-assumption test verdict (leaf-lifecycle Phase 5); ICE never discards or gates selection, only sequences validated leaves. This anti-pattern now guards against **re-introducing** an ICE threshold, and against the analogous move of archiving on an invalidated assumption without a segment check.
+- **Description**: A leaf discarded (or graduated) on its ICE score rather than an assumption-test verdict. As of v0.54.0 the mechanism itself prevents this — OST→GIST selection is the riskiest-assumption test verdict (leaf-lifecycle Phase 5); ICE never discards or gates selection, only sequences validated leaves. As of 0.319.0 no ICE threshold of any kind remains (the "sequencing reference" `ice_advance` is retired; a leaf that ranks low is parked). This anti-pattern now guards against **re-introducing** an ICE threshold, and against the analogous move of archiving on an invalidated assumption without a segment check.
 - **Detection rule**: any `canvas/archived-solutions.yml` entry with `reason: low-ice-score` (should no longer be produced post-v0.54.0); or an archived-on-invalidated-assumption entry with `segments_checked` naming only one segment.
 - **What to do instead**: Discard only on an invalidated assumption test; before archiving, evaluate whether the assumption holds for a different segment (Torres — solutions serve different user needs). See `${CLAUDE_PLUGIN_ROOT}/engine/leaf-lifecycle.md`.
 - **Source**: Torres (CDH — assumption tests, not scoring, for solution selection; solutions serve different user needs), Mycelium leaf lifecycle

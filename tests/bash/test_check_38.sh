@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # tests/bash/test_check_38.sh
-# G-V12 coverage proof for Check 38: cycle_class discipline — product-leaf cycles must carry non-zero ICE.
+# G-V12 coverage proof for Check 38: cycle_class discipline — product-leaf cycles must carry a recorded ICE.
 
 set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -37,6 +37,25 @@ test_check_38_passes_when_product_leaf_carries_ice() {
     assert_not_contains "$output" "FAIL" "does not flag meta-dogfood cycles with zero ICE"
 }
 
+test_check_38_reads_a_total_under_one_and_a_zero_impact_total_as_recorded() {
+    # 0.319.0. With ICE as Gilad's product and his Confidence Meter, 3 x 0.1 x 2 = 0.6 is an
+    # ordinary early score, and an Impact of 0 totals 0. Until 0.318.x both were truncated or
+    # read as "zero ICE" and failed.
+    local output
+    output=$(capture "scored_low")
+    assert_contains "$output" "PASS: Check 38" "a total under 1 and a zero-Impact total are scores"
+    assert_not_contains "$output" "FAIL" "neither is reported as an unscored cycle"
+}
+
+test_check_38_still_fails_factors_without_a_total() {
+    # The 0.319.0 definition is narrow on purpose: a block with no `total` key was
+    # not a recorded score before it and is not one after it.
+    local output
+    output=$(capture "no_total")
+    assert_contains "$output" "FAIL: Check 38" "factors with no total are not a recorded score"
+    assert_contains "$output" "cycle-001" "names the offending cycle"
+}
+
 test_check_38_warns_on_unclassed_cycles() {
     local output
     output=$(capture "unclassed")
@@ -55,6 +74,8 @@ test_check_38_passes_on_meta_only_history() {
 echo "=== test_check_38: Check 38 (cycle_class ICE discipline) ==="
 run_test test_check_38_fails_on_product_leaf_zero_ice
 run_test test_check_38_passes_when_product_leaf_carries_ice
+run_test test_check_38_reads_a_total_under_one_and_a_zero_impact_total_as_recorded
+run_test test_check_38_still_fails_factors_without_a_total
 run_test test_check_38_warns_on_unclassed_cycles
 run_test test_check_38_passes_on_meta_only_history
 report

@@ -12,18 +12,20 @@ goals: []
 #   okr_connection: ""  # Which OKR this supports
 
 # Ideas: Hypothetical ways to achieve goals (most will fail — this is expected)
-# Each idea should trace back to an OST solution leaf that passed ICE threshold.
+# Each idea should trace back to an OST solution leaf whose riskiest assumption has a recorded
+# test verdict of `validated`. There is no ICE threshold (this line said "passed ICE threshold"
+# until 0.319.0; the gate has been the assumption-test verdict since v0.54.0).
 # See: .claude/engine/leaf-lifecycle.md Phase 5 (GIST Entry)
 ideas: []
 # - name: ""
 #   source_leaf_id: ""   # OST leaf this idea originated from (e.g., "opp-001-sol-A")
 #   goal_connection: ""  # Which goal this idea serves
-#   ice_score:
-#     impact: 0
-#     confidence: 0
-#     ease: 0
+#   ice_score:           # Gilad's ICE (0.319.0): each factor 0-10, total = impact x confidence x ease
+#     impact: 0          # against the goal's metric; 0 is a legal Impact
+#     confidence: 0      # summed from evidence with his Confidence Meter (/mycelium:ice-score Step 2)
+#     ease: 0            # the effort to build the idea in full
 #     total: 0
-#   confidence_level: 0.1  # 0.1-0.9 (adapted from Gilad's Confidence Meter)
+#   confidence_level: 0.1  # 0.1-0.9, the idea's own canvas confidence (adapted from Gilad's Confidence Meter; NOT the ICE confidence above, which is on his 0-10 meter)
 #   evidence_log: []
 #     # - date: ""
 #     #   evidence_type: "anecdotal|market_data|user_evidence|experiment|launch_data"

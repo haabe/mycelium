@@ -1,13 +1,20 @@
 # Confidence Thresholds
 # Per-scale confidence requirements for diamond progression
 #
-# Scale adaptation: Mycelium uses 0.0-1.0 (adapted from Gilad's Confidence Meter).
-# Gilad's original is 0-10 non-linear: 0.01=opinion, 1=anecdotal, 5=market data,
-# 8=A/B test, 10=launch data, and he multiplies it into ICE, so an opinion counts for
-# almost nothing. Nothing in Mycelium reproduces that arithmetic: until 0.318.2 this comment
-# said the penalty was "preserved through evidence-class weighting", and no weighting is
-# computed anywhere. What does the work instead is the evidence each decision requires
+# Scale adaptation: a DIAMOND's confidence is 0.0-1.0. The scale is Mycelium's (adapted from
+# Gilad's Confidence Meter). It is not his meter and it is not the ICE Confidence.
+# Gilad's meter is 0-10 and sums evidence weights: 0.01 for a conviction, 0.1 for others'
+# opinion, 0.3 for estimates and plans, 0.5 for anecdotal evidence, 1.0 for market data,
+# 2.0 for user/customer evidence, 3.0 for test results, 10 at launch data (the spreadsheet
+# version, with its caps, is in skills/ice-score/SKILL.md Step 2). He multiplies it into
+# ICE, so an opinion counts for almost nothing. Since 0.319.0 /mycelium:ice-score does that
+# arithmetic for the ICE score of a solution leaf. Nothing does it for the thresholds in
+# THIS file: what does the work here is the evidence each decision requires
 # (`evidence_by_decision` below), which the entry locks read.
+# History of this comment: until 0.318.2 it said the meter's penalty was "preserved through
+# evidence-class weighting" (no weighting was computed anywhere); until 0.319.0 it gave the
+# meter as "0.01=opinion, 1=anecdotal, 5=market data, 8=A/B test, 10=launch data", values
+# that are in no version of his meter (market data is 1.0; no version has an 8).
 
 scales:
   L0:
@@ -218,6 +225,13 @@ scales:
     # — a monotone descent was only ever an artifact of reading the ladder as atomicity.
     # 0.8 is also the file header's own Gilad anchor for A/B-test-grade evidence (8/10). Reaching
     # the market should require experiment-grade confidence, not the 0.5 "market data" anchor.
+    # CORRECTED 0.319.0, AND THE SENTENCE ABOVE IS KEPT SO THE CORRECTION HAS SOMETHING TO POINT AT.
+    # Those two anchors came from the meter values the file header gave until 0.319.0 ("5=market
+    # data, 8=A/B test"), which are in no version of Gilad's Confidence Meter: in his spreadsheet
+    # test results weigh 3.0 (capped at 5.0) and market data 1.0, on a 0-10 scale that is not a
+    # tenth of this file's 0.0-1.0. So 0.8 does NOT rest on his meter. It rests on the consequence
+    # argument in the paragraph above. The value is unchanged in 0.319.0; whether it should move
+    # is a separate ruling.
     #
     # THE not-yet-measurable OBJECTION, ANSWERED. The 0.235.0 comment argued a high bar would block
     # an honest early L5. It would not: `confidence` and `pmf.band` are different axes. "band:

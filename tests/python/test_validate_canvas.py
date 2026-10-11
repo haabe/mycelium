@@ -1435,6 +1435,51 @@ def test_the_live_dogfood_canvas_validates(tmp_path):
     assert _archived_errors(yaml.safe_load(live.read_text())) == []
 
 
+# --- cycle-history schema: what counts as a recorded ICE on a product-leaf cycle (0.319.0) ----
+# The conditional has required a total above zero since it was added. With ICE as Gilad's product
+# (Impact 0-10, 0 legal) a scored leaf can total 0, so a zero total is accepted when the factors
+# show it was scored. The all-zero block stays the "nothing was scored" shape.
+
+
+def _cycle_errors(ice_score, **extra):
+    """Errors from the product-leaf ICE conditional alone (the first `allOf` of a cycle), so a
+    fixture need not carry every other field a full cycle record requires."""
+    import json
+
+    import jsonschema
+    with open(_real_schema_dir() / "cycle-history.schema.json") as fh:
+        conditional = json.load(fh)["$defs"]["cycle"]["allOf"][0]
+    assert "ice_score" in json.dumps(conditional), "the ICE conditional moved; re-aim this helper"
+    cycle = {"cycle_id": "cycle-001", "cycle_class": "product-leaf",
+             "predicted": {"ice_score": ice_score}, **extra}
+    return list(jsonschema.Draft202012Validator(conditional).iter_errors(cycle))
+
+
+def test_a_product_leaf_cycle_with_the_all_zero_block_is_still_rejected(tmp_path):
+    """The negative control for the two tests below: the gate must keep biting on the shape it
+    was built for."""
+    assert _cycle_errors({"i": 0, "c": 0, "e": 0, "total": 0})
+    assert _cycle_errors({"total": 0})
+    assert _cycle_errors({"total": -3})
+
+
+def test_a_product_leaf_cycle_scored_at_zero_impact_is_a_recorded_score(tmp_path):
+    for block in ({"i": 0, "c": 3.5, "e": 6, "total": 0},
+                  {"impact": 0, "confidence": 3.5, "ease": 6, "total": 0}):
+        assert _cycle_errors(block) == [], block
+
+
+def test_a_product_leaf_cycle_with_a_total_under_one_is_a_recorded_score(tmp_path):
+    """Meter values are small, so 3 x 0.1 x 2 = 0.6 is an ordinary early score."""
+    assert _cycle_errors({"i": 3, "c": 0.1, "e": 2, "total": 0.6}) == []
+    assert _cycle_errors({"i": 8, "c": 3.5, "e": 7, "total": 196}) == []
+
+
+def test_a_reconstructed_product_leaf_cycle_is_still_exempt(tmp_path):
+    assert _cycle_errors({"i": 0, "c": 0, "e": 0, "total": 0},
+                         reconstructed_post_hoc=True) == []
+
+
 # --- thresholds schema (added 2026-09-01) ------------------------------------
 # Second of the seven "parse-checked only" canvases. Field set from
 # engine/adaptive-thresholds.md's Threshold Registry, not from the entries present.
@@ -1452,20 +1497,44 @@ def test_an_uncalibrated_threshold_is_valid_because_null_is_an_honest_state(tmp_
     """Every `calibrated` on the dogfood canvas is null with based_on_n 0. That is correct
     until the sample reaches minimum_n, and a schema that rejected it would push people to
     invent a number — the exact failure calibration exists to avoid."""
-    assert _thresholds_errors({"thresholds": {"ice_advance": {
-        "default": 100, "calibrated": None, "calibrated_at": None,
+    assert _thresholds_errors({"thresholds": {"confidence_calibration": {
+        "default": 1.0, "calibrated": None, "calibrated_at": None,
         "based_on_n": 0, "minimum_n": 10}}}) == []
 
 
 def test_a_negative_sample_size_is_rejected(tmp_path):
-    assert _thresholds_errors({"thresholds": {"ice_advance": {"based_on_n": -1}}})
+    assert _thresholds_errors({"thresholds": {"confidence_calibration": {"based_on_n": -1}}})
 
 
 def test_a_calibrated_at_that_is_not_a_date_is_rejected(tmp_path):
     """`last_calibrated` and `calibrated_at` answer "when", and prose there cannot be compared
     against anything."""
-    assert _thresholds_errors({"thresholds": {"ice_advance": {"calibrated_at": "soon"}}})
+    assert _thresholds_errors(
+        {"thresholds": {"confidence_calibration": {"calibrated_at": "soon"}}})
     assert _thresholds_errors({"last_calibrated": "recently"})
+
+
+def test_a_retired_ice_advance_still_validates_whatever_it_holds(tmp_path):
+    """0.319.0 retired `ice_advance` (a number on the ICE total, which no source has). A project's
+    existing thresholds.yml may still carry it, and the upgrade must not turn that file red: the
+    key is accepted in any shape, because nothing reads it and a retired record is not policed.
+    The shapes below are what 0.318.x wrote, and one it would have rejected."""
+    for entry in (
+        {"default": 100, "calibrated": None, "calibrated_at": None, "based_on_n": 0,
+         "minimum_n": 10, "bounds": {"min": 50, "max": 300}},
+        {"default": 100, "calibrated": 120, "calibrated_at": "2026-09-30", "based_on_n": 15},
+        {"based_on_n": -1},
+        None,
+    ):
+        assert _thresholds_errors({"thresholds": {"ice_advance": entry}}) == [], entry
+
+
+def test_the_schema_says_ice_advance_is_retired(tmp_path):
+    import json
+    with open(_real_schema_dir() / "thresholds.schema.json") as fh:
+        prop = json.load(fh)["properties"]["thresholds"]["properties"]["ice_advance"]
+    assert prop.get("deprecated") is True
+    assert "RETIRED in 0.319.0" in prop["description"]
 
 
 def test_the_live_thresholds_canvas_validates(tmp_path):
@@ -2305,16 +2374,55 @@ def test_calibration_due_fires_when_the_input_count_reaches_the_minimum(tmp_path
     cycles += [{"cycle_class": "meta-dogfood", "calibration": {"ice_accuracy": None,
                                                                  "effort_accuracy": "x"}}] * 5
     canvas = _cycle_canvas(tmp_path, cycles, thresholds={
-        "ice_advance": {"based_on_n": 0, "minimum_n": 3},
+        "bakeoff_delta": {"based_on_n": 0, "minimum_n": 3},
         "confidence_calibration": {"based_on_n": 0, "minimum_n": 3},
         "cycle_recording_arc": {"based_on_n": 2, "minimum_n": 5},
         "evidence_staleness": {"user_needs": {}},
     })
-    assert m.calibration_input_counts(canvas / "cycle-history.yml")["ice_advance"] == 3
+    assert m.calibration_input_counts(canvas / "cycle-history.yml")["bakeoff_delta"] == 3
     out = m.calibration_due_findings(canvas)
     assert len(out) == 2
-    assert any("ice_advance: calibration is due" in w and "3 product-leaf cycles" in w for w in out)
+    assert any("bakeoff_delta: calibration is due" in w and "3 product-leaf cycles" in w
+               for w in out)
     assert any("confidence_calibration: uncalibrated because 0 of 9" in w for w in out)
+
+
+def test_a_retired_threshold_is_named_in_one_line_and_never_due_for_calibration(
+        tmp_path, scripts_path):
+    """0.319.0. `ice_advance` put a number on the ICE total and was calibrated from
+    `ice_accuracy`. Retired: three eligible cycles against minimum_n 3 used to read "calibration
+    is due", which asked a project to tune a cutoff no source has. Now the key gets ONE line
+    saying it is retired and can be removed, and is counted for nothing."""
+    m = _ccr(scripts_path)
+    cycles = [{"cycle_class": "product-leaf", "calibration": {"ice_accuracy": 0.8}}
+              for _ in range(3)]
+    canvas = _cycle_canvas(tmp_path, cycles, thresholds={
+        "ice_advance": {"default": 100, "based_on_n": 0, "minimum_n": 3,
+                        "bounds": {"min": 50, "max": 300}}})
+    assert "ice_advance" not in m.calibration_input_counts(canvas / "cycle-history.yml")
+    out = m.calibration_due_findings(canvas)
+    assert len(out) == 1
+    assert out[0].startswith("thresholds.yml#ice_advance: retired in 0.319.0")
+    assert "can be removed" in out[0]
+    assert "calibration is due" not in out[0]
+
+
+def test_a_retired_threshold_is_named_even_without_a_cycle_ledger(tmp_path, scripts_path):
+    """The notice is about thresholds.yml alone, so it must not wait for a cycle-history.yml."""
+    m = _ccr(scripts_path)
+    canvas = tmp_path / ".claude" / "canvas"
+    canvas.mkdir(parents=True)
+    (canvas / "thresholds.yml").write_text(
+        "thresholds:\n  ice_advance:\n    default: 100\n  bakeoff_delta:\n    default: 0.2\n")
+    out = m.calibration_due_findings(canvas)
+    assert len(out) == 1 and "ice_advance: retired in 0.319.0" in out[0]
+
+
+def test_a_project_without_the_retired_key_hears_nothing_about_it(tmp_path, scripts_path):
+    m = _ccr(scripts_path)
+    canvas = _cycle_canvas(tmp_path, [{"cycle_class": "meta-dogfood"}],
+                           thresholds={"bakeoff_delta": {"based_on_n": 0, "minimum_n": 10}})
+    assert m.calibration_due_findings(canvas) == []
 
 
 def test_calibration_due_is_silent_without_thresholds_or_below_every_minimum(tmp_path, scripts_path):
@@ -2322,7 +2430,8 @@ def test_calibration_due_is_silent_without_thresholds_or_below_every_minimum(tmp
     canvas = _cycle_canvas(tmp_path, [{"cycle_class": "meta-dogfood"}])
     assert m.calibration_due_findings(canvas) == []
     canvas = _cycle_canvas(tmp_path, [{"cycle_class": "meta-dogfood"}],
-                           thresholds={"ice_advance": {"based_on_n": 0, "minimum_n": 10}})
+                           thresholds={"confidence_calibration": {"based_on_n": 0,
+                                                                  "minimum_n": 10}})
     assert m.calibration_due_findings(canvas) == []
 
 
@@ -2348,7 +2457,7 @@ def test_calibration_due_names_a_thresholds_file_that_lost_its_table(tmp_path, s
     m = _ccr(scripts_path)
     canvas = _cycle_canvas(tmp_path, [{"cycle_class": "meta-dogfood"}])
     (canvas / "thresholds.yml").write_text(
-        "_meta:\n  version: 1\n  ice_advance:\n    based_on_n: 0\n    minimum_n: 1\n")
+        "_meta:\n  version: 1\n  bakeoff_delta:\n    based_on_n: 0\n    minimum_n: 1\n")
     out = m.calibration_due_findings(canvas)
     assert len(out) == 1 and "no `thresholds` table" in out[0]
 
@@ -2368,11 +2477,14 @@ def test_the_validator_carries_both_cycle_findings(tmp_path, scripts_path):
     validator = _import_validator(scripts_path)
     canvas = _cycle_canvas(tmp_path, [{"leaf_id": "x", "cycle_class": "product-leaf",
                                        "calibration": {"ice_accuracy": 0.5}}],
-                           thresholds={"ice_advance": {"based_on_n": 0, "minimum_n": 1}},
+                           thresholds={"bakeoff_delta": {"based_on_n": 0, "minimum_n": 1},
+                                       "ice_advance": {"default": 100, "based_on_n": 0}},
                            solutions=[{"id": "sol-009", "status": "discarded"}])
     out = validator.cycle_record_findings(canvas)
-    assert any("calibration is due" in w for w in out)
+    assert any("bakeoff_delta: calibration is due" in w for w in out)
     assert any("sol-009" in w for w in out)
+    # 0.319.0: the retired key reaches the validator's WARN tier as its one line.
+    assert sum("ice_advance: retired in 0.319.0" in w for w in out) == 1
 
 
 # --- v0.217.0: an off-outcome root carries a review date and a condition --------------------

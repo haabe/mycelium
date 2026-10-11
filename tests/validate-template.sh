@@ -1745,7 +1745,7 @@ check_gv12_test_coverage() {
 }
 
 # ------------------------------------------------------------
-# Check 38: cycle_class discipline — product-leaf cycles must carry non-zero ICE.
+# Check 38: cycle_class discipline — product-leaf cycles must carry a recorded ICE.
 #
 # Closes the dark-cell leak surfaced by /mycelium:framework-health on the
 # roadmap dogfood repo 2026-06-02: all 6 cycles in cycle-history.yml carried
@@ -1759,11 +1759,21 @@ check_gv12_test_coverage() {
 # pre-shipment prediction whose calibration is the whole point.
 #
 # Detection: walk cycle-history.yml, find entries with cycle_class: product-leaf
-# and predicted.ice_score.total == 0. Either the cycle is mis-classed
+# and no recorded ICE. Either the cycle is mis-classed
 # (should be meta-dogfood/observation) or /mycelium:ice-score was skipped
 # at opp-selection — see skills/ice-score/SKILL.md gate.
+#
+# WHAT COUNTS AS RECORDED (changed 0.319.0, with ICE = Impact x Confidence x Ease
+# and Gilad's Confidence Meter). Until 0.318.x this was `int(total) != 0`, which
+# reads two honest scores as absent: a total under 1 (meter values are small, so
+# 3 x 0.1 x 2 = 0.6 is an ordinary early score and int(0.6) is 0), and a total of
+# exactly 0 from an Impact of 0, a legal Impact in his 0-10 range. Now: the total
+# is not zero, OR it is zero and the three factors are there with one of them not
+# zero. {i:0, c:0, e:0, total:0} is still the nothing-was-scored shape and still
+# fails. Same definition as scripts/check_leaf_lifecycle.py and the cycle-history
+# schema; three copies because a bash check, a script and a JSON Schema share no code.
 check_cycle_class_ice_required() {
-    section "Check 38: product-leaf cycles must carry non-zero ICE"
+    section "Check 38: product-leaf cycles must carry a recorded ICE"
 
     local cycle_file=".claude/canvas/cycle-history.yml"
     if [ ! -f "$cycle_file" ]; then
@@ -1792,6 +1802,12 @@ with open(sys.argv[1]) as f:
         print(f"PARSE_ERROR: {e}")
         sys.exit(0)
 
+def num(value):
+    try:
+        return float(value or 0)
+    except (TypeError, ValueError):
+        return 0.0
+
 cycles = doc.get("cycles") or []
 violations = []
 unclassed = []
@@ -1806,12 +1822,13 @@ for c in cycles:
     if klass != "product-leaf":
         continue
     ice = (c.get("predicted") or {}).get("ice_score") or {}
-    total = ice.get("total", 0) or 0
-    try:
-        total_i = int(total)
-    except (TypeError, ValueError):
-        total_i = 0
-    if total_i == 0:
+    if not isinstance(ice, dict):
+        ice = {}
+    scored = "total" in ice and (num(ice["total"]) != 0 or any(
+        all(k in ice for k in keys) and any(num(ice[k]) != 0 for k in keys)
+        for keys in (("i", "c", "e"), ("impact", "confidence", "ease"))
+    ))
+    if not scored:
         violations.append(cid)
 
 if violations:
@@ -1825,7 +1842,7 @@ PY
 
     case "$result" in
         OK)
-            pass "Check 38: all product-leaf cycles carry non-zero ICE"
+            pass "Check 38: all product-leaf cycles carry a recorded ICE"
             ;;
         SKIP:*)
             warn "Check 38: ${result#SKIP: }"
@@ -1837,7 +1854,7 @@ PY
             warn "Check 38: cycles missing cycle_class (treat as legacy; add classification): ${result#WARN: }. See engine/cycle-learning.md#cycle-class."
             ;;
         FAIL:*)
-            fail "Check 38: product-leaf cycles with zero ICE: ${result#FAIL: }. Either re-class as meta-dogfood/observation (no tradeoff was scored) OR backfill ICE via /mycelium:ice-score with reconstructed_post_hoc: true. See engine/cycle-learning.md#cycle-class."
+            fail "Check 38: product-leaf cycles with no recorded ICE (a zero total and no non-zero factor): ${result#FAIL: }. Either re-class as meta-dogfood/observation (no tradeoff was scored) OR backfill ICE via /mycelium:ice-score with reconstructed_post_hoc: true. See engine/cycle-learning.md#cycle-class."
             ;;
         *)
             warn "Check 38: unexpected result: $result"

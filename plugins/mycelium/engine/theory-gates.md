@@ -139,11 +139,11 @@ All four risks must be assessed, and the assessment must demonstrate that **thre
 
 **Perspective rule**: Each of the three perspectives (product, design, engineering) must produce at least one distinct piece of evidence or assessment. A single combined statement like "this is valuable, usable, and feasible" fails — it indicates one perspective was applied and the others were assumed. For solo developers, the three perspectives must still be applied sequentially as distinct evaluation passes, not collapsed into one.
 
-**Evidence source**: The primary evidence for this gate comes from **OST solution leaves** in `canvas/opportunities.yml`. Each solution leaf should have a `four_risks` block with separate assessments per dimension. The `/ice-score` skill derives ICE scores from these risk assessments — ICE without Four Risks is ungrounded estimation.
+**Evidence source**: The primary evidence for this gate comes from **OST solution leaves** in `canvas/opportunities.yml`. Each solution leaf should have a `four_risks` block with separate assessments per dimension. The `/ice-score` skill reads these risk assessments while it scores (Mycelium's own ordering: the risks are assessed before the leaf is scored). ICE itself is Gilad's Impact x Confidence x Ease and is not computed from the risks; until 0.319.0 this line said the skill "derives ICE scores from these risk assessments".
 
 **Evidence required**: User research findings (product lens), usability test results or heuristic evaluation (design lens), technical spike outcomes or dependency analysis (engineering lens), business model canvas or viability assessment (cross-cutting).
 
-**Suggested skill**: `/ost-builder` (produces Four Risks per leaf), `/ice-score` (derives scores from risks), `/assumption-test` (tests riskiest unknowns), `/usability-check` (design lens), `/devils-advocate` (challenge single-lens thinking)
+**Suggested skill**: `/ost-builder` (produces Four Risks per leaf), `/ice-score` (scores the leaf, reading the risks), `/assumption-test` (tests riskiest unknowns), `/usability-check` (design lens), `/devils-advocate` (challenge single-lens thinking)
 
 ### 3. JTBD Gate
 

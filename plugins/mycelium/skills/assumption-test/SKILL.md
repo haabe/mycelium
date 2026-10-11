@@ -271,8 +271,8 @@ superficial veneer of rigor. **The contract makes an edit visible. It does not m
 - Run the test
 - Compare results to your prediction from Step 5 — note where reality differed
 - Record raw results
-- Update confidence level (0.1 -> 0.9, adapted from Gilad's Confidence Meter)
-- Update ICE score for the solution
+- Update confidence level (0.1 -> 0.9, adapted from Gilad's Confidence Meter). This is the canvas entry's own 0.0-1.0 confidence. It is not the ICE Confidence, which is a separate number on Gilad's 0-10 meter.
+- Rescore ICE for the solution with `/mycelium:ice-score` (Step 6): all three factors, not only Confidence. A test result that supports the estimate adds 3.0 on the meter; a result that contradicts it adds confidence only if the Impact or Ease estimate is changed to match.
 - If assumption validated: move to next riskiest assumption. **Update confidence** in the relevant canvas entry (opportunities.yml, .claude/diamonds/active.yml) to reflect the validated assumption — typically +0.1 to +0.15. **If the validated assumption originated from a stakeholder interview** (`source_class: internal_stakeholder` with `validated: false`): set `validated: true` in the provenance block. This resolves the organizational mythology flag (Brown) — the stakeholder belief is now confirmed by external evidence.
 - **A result that calls for a new test is the tree working** (v0.273.0): record the next assumption on the solution and test it in turn, rather than widening this test or its build.
 - If assumption invalidated: pivot the solution or explore alternatives. **Decrease confidence** by 0.1-0.2 to reflect the failed assumption. **If the invalidated assumption was a stakeholder belief**: update the canvas entry to reflect reality, not the stakeholder's original claim. Note the divergence in the decision log — the gap between belief and reality is a learning.

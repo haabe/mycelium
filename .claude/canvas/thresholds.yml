@@ -6,14 +6,9 @@
 schema_version: 1
 
 thresholds:
-  ice_advance:
-    default: 100
-    calibrated: null
-    calibrated_at: null
-    based_on_n: 0
-    minimum_n: 10
-    bounds: {min: 50, max: 300}
-
+  # ice_advance (default 100, bounds 50-300) stood here until 0.319.0. It was a threshold on the
+  # ICE total, which no source has; retired, see plugins/mycelium/engine/adaptive-thresholds.md.
+  # It was never calibrated here (based_on_n 0), so no measured value was lost by removing it.
   confidence_calibration:
     default: 1.0  # No deflation (1.0 = no adjustment)
     calibrated: null

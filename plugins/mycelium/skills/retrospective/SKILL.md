@@ -54,7 +54,7 @@ Find the leaf_id and opportunity_id for the delivered solution (from `.claude/ca
   outcome: shipped | partial | failed | discarded
   cycle_class: product-leaf | meta-dogfood | observation  # REQUIRED — see engine/cycle-learning.md#cycle-class
   predicted:
-    ice_score: {i: X, c: X, e: X, total: XXX}  # REQUIRED non-zero when cycle_class=product-leaf; permitted zero for meta-dogfood/observation (state why in notes)
+    ice_score: {i: X, c: X.XX, e: X, total: X}  # total = i x c x e (Gilad's ICE; c from his Confidence Meter). REQUIRED recorded when cycle_class=product-leaf; permitted all-zero for meta-dogfood/observation (state why in notes)
     feasibility_risk: low | medium | high        # From four_risks
     effort_estimate: "X days/weeks"              # Original estimate
   actual:
@@ -95,7 +95,7 @@ was incomplete is not a post-delivery regression, it is the reason the cycle exi
 
 Update `calibration_summary.total_cycles` count. If total_cycles reaches a multiple of 5, prompt: "5 cycles since last review. Run `/mycelium:framework-health` to check calibration?"
 
-**Hard gate on `cycle_class: product-leaf`**: if the cycle being closed shipped an OST solution leaf, `predicted.ice_score.total` must be non-zero. If it is zero, do NOT write the record yet — stop and ask: "This cycle shipped a product leaf but has no recorded ICE prediction. Was `/mycelium:ice-score` run before the cycle opened? If yes, copy the score from `opportunities.yml`. If no, this is a Check 38 violation — class the cycle as `meta-dogfood` if no design tradeoff was actually scored, or backfill the ICE score with an honest reconstruction noted as `reconstructed_post_hoc: true`." Reconstructed scores are excluded from calibration aggregates but preserved for the audit trail.
+**Hard gate on `cycle_class: product-leaf`**: if the cycle being closed shipped an OST solution leaf, `predicted.ice_score` must be a recorded score. Recorded means: `total` is not zero, or `total` is zero and the three factors are there with at least one of them above zero (an Impact of 0 is legal in Gilad's ICE and totals 0; changed 0.319.0, until then the rule was "`total` must be non-zero"). `{i: 0, c: 0, e: 0, total: 0}` is not a score. Copy the score as it stood when the cycle opened, whichever arithmetic it was written under; do not recompute an older average or product into the current form. If no score is recorded, do NOT write the record yet — stop and ask: "This cycle shipped a product leaf but has no recorded ICE prediction. Was `/mycelium:ice-score` run before the cycle opened? If yes, copy the score from `opportunities.yml`. If no, this is a Check 38 violation — class the cycle as `meta-dogfood` if no design tradeoff was actually scored, or backfill the ICE score with an honest reconstruction noted as `reconstructed_post_hoc: true`." Reconstructed scores are excluded from calibration aggregates but preserved for the audit trail.
 
 #### Step 5b. Log cycle calibration summary in .claude/harness/decision-log.md
 

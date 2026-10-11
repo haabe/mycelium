@@ -4,6 +4,139 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-11.
 
+## v0.319.0 - ICE as Gilad defines it: multiplied, with his Confidence Meter, and no threshold on the total
+
+**2026-10-11, on the founder's ruling ("This must follow best practices of ICE. ICE is properly
+explained in the litterature."), after both authors were read in their own texts: Ellis & Brown,
+*Hacking Growth*, ch. 4; Gilad, *Evidence-Guided*, ch. 3 and ch. 4; Gilad's ebook *ICE Done Right*
+in full; his Confidence Meter spreadsheet.** The literature has two versions of ICE. Ellis's is for
+a growth team's experiment backlog: three ratings, averaged. Gilad's is for product ideas: Impact x
+Confidence x Ease, each 0-10, with Confidence summed from evidence. Since 0.229.0 Mycelium had
+matched neither: it averaged, as Ellis does, while describing Gilad's meter with values that are in
+no version of it, and it kept a threshold of 100 on the total that no source has. The founder chose
+Gilad's version. **This changes what `/mycelium:ice-score` computes, so rankings change.**
+
+- **The arithmetic.** `ICE = Impact x Confidence x Ease`, each 0-10 (*Evidence-Guided*, ch. 3: the
+  score *"is simply the three values multiplied together"*). The skill says that Gilad's ebook also
+  allows the average (*ICE Done Right*, p. 4), that Ellis, who invented ICE, averages, and why
+  Mycelium multiplies: it scores product ideas on evidence, and under an average the meter's small
+  values would hardly move a rank. That last reason is labelled as Mycelium's own.
+- **The three factors, as Gilad defines them.** Impact is the estimated improvement in a named
+  target metric, and 0 is a legal Impact. Ease is the effort to build the idea in full. Confidence
+  is summed with the Confidence Meter. Until now the skill derived Impact from the value, usability
+  and viability risks and Ease from the feasibility risk; neither author does that. The Four Risks
+  assessment is still read before scoring, and the skill, `engine/leaf-lifecycle.md`,
+  `engine/theory-gates.md`, the two guardrail files and the Orphaned Leaf anti-pattern now say that
+  this ordering is Mycelium's addition.
+- **The Confidence Meter, exactly.** The spreadsheet's weights and caps: self conviction 0.01,
+  pitch deck 0.02, thematic support 0.05 (0.1 at most together); other's opinion 0.1, estimates and
+  plans 0.3 (0.5 at most); anecdotal evidence 0.5 (1.0 at most); market data 1.0, user/customer
+  evidence 2.0 (3.0 at most); test results 3.0 (5.0 at most); launch data 10, from his dial.
+  Confidence is the sum of the capped groups. The skill says his published versions differ from
+  each other (the dial in the book marks 5 where the ebook's marks 7) and that this is the
+  spreadsheet one. Removed everywhere: the invented values "0.01=opinion, 1=anecdotal, 5=market
+  data, 8=A/B test, 10=launch data" (`skills/ice-score/SKILL.md`, the header of
+  `engine/confidence-thresholds.yml`) and the 1-3 / 4-6 / 7-10 Confidence bands (`ice-score`,
+  `gist-plan`).
+- **What the score is for.** A hint for comparing ideas under one metric: *"The scores themselves
+  are meaningless — they’re just a way to compare ideas"* (*ICE Done Right*, p. 4). The skill now
+  requires the three factors beside every total and the evidence behind every Confidence, tells the
+  agent to rescore whenever something is learned (p. 15), and parks a leaf that ranks low instead of
+  killing it (p. 9). `/gist-plan`'s "Kill ideas below threshold" is now "park".
+- **No threshold on the total.** `ice_advance` (default 100, bounds 50-300, its calibration rule
+  and its example) is retired from `engine/adaptive-thresholds.md`, from the calibration mapping in
+  `check_cycle_recording.py` and from `thresholds.schema.json`, and the prose that spoke of an ICE
+  threshold is corrected in `framework-reflexion.md`, `pattern-detector.md`, `feedback-loops.md`,
+  `leaf-lifecycle.md`, `cycle-learning.md`, the engine README, `/framework-health` and the docs. The
+  one cutoff the literature has is on Confidence before delivery (*Evidence-Guided*, ch. 4; *ICE
+  Done Right*, p. 14). Mycelium already held it, as the L4 entry lock (`scripts/scale_locks.py`,
+  `engine/diamond-rules.md`); those are unchanged and the skill points at them.
+- **The aggregate check turned with the rule.** `check_ice_aggregate.py` made sure a stored
+  aggregate was the average. It now makes sure a new or changed one is the product of its factors.
+  It still never rewrites canvas data, still reads every block shape it read before, still reports
+  an aggregate without factors as unverifiable, and still labels an advisory re-derivation. New: the
+  baseline holds each aggregate's value, so a baselined leaf that is re-scored and averaged again
+  is caught; a total is compared at the precision it was written with (16, 15.7 and 15.68 all match
+  4 x 1.96 x 2); a baseline that grows on rewrite says so.
+- **A recorded score may be zero or under 1.** With the meter, 3 x 0.1 x 2 = 0.6 is an ordinary
+  early score, and an Impact of 0 totals 0. `check_leaf_lifecycle.py` and validator Check 38
+  truncated the total to an integer and read both as "no ICE"; the cycle-history schema rejected a
+  zero total on a product-leaf cycle. All three now accept a zero total whose three factors are
+  recorded with one of them above zero. `{i: 0, c: 0, e: 0, total: 0}` still means nothing was
+  scored.
+- **The history is written down.** `docs/errata.md` has a new entry, A7; A1 is left as written with
+  one line pointing at it. A1 called multiplying "arithmetic the cited author does not use", which is
+  true of Ellis and not of Gilad. `docs/glossary.md`, `docs/theories.md` and `docs/skills/README.md`
+  follow. The note 0.318.2 added to the skill ("he MULTIPLIES the three") is replaced by the two
+  quotations: multiplied in the book, "multiply (or average)" in the ebook.
+- **The meter's licence is stated where the meter is.** Gilad publishes the Confidence Meter under
+  CC BY-SA 4.0. The table in `skills/ice-score/SKILL.md` carries the attribution, the link, what was
+  changed, and says that the table is offered under the same licence and not under the repository's
+  MIT licence.
+- **Tests.** 29 Python tests and one bash test fail on the code before this change and pass here: the aggregate check
+  (20), the retired threshold (5), the zero-Impact score in the cycle-history schema (1), and the
+  leaf check's two new readings (3); Check 38 has a fixture for a total under 1 and a zero-Impact
+  total. The tests that used `ice_advance` as their example threshold now use
+  `confidence_calibration` or `bakeoff_delta`; none was deleted.
+
+**What changes for an existing project.**
+
+- **Scores come out different, and rankings can change.** A leaf scored now gets the product of an
+  Impact, an Ease and a Confidence summed from evidence. Most untested ideas land below 1 on
+  Confidence, so their totals are small, and an idea with test results behind it moves up.
+- **Old scores are left exactly as they are.** Nothing rewrites them and you should not. A score on
+  a shipped, discarded or archived leaf is the record of how that call was made, whether it is a
+  product from before 0.229.0 or an average from 0.229.0 to 0.318.x.
+- **An old score and a new one cannot be ranked against each other.** When a leaf scored before
+  0.319.0 is still a live candidate in a comparison you are making, rescore it from its evidence
+  first. That is the rescoring Gilad asks for whenever ideas are chosen, not a conversion.
+- **Run `check_ice_aggregate.py --write-baseline` once, and commit the file.** On its first run
+  after the upgrade the check exits 2 with `CANNOT ASSESS`: the averages on your canvas cannot be
+  told from new ones, because a baseline written before 0.319.0 lists the old products and not the
+  averages. It reports nothing as a failure. After the baseline is written (the earlier list is
+  carried over in the file as a record) it fails only on a new or changed total that is not the
+  product of its factors.
+- **`thresholds.yml` may still carry `ice_advance`.** The file still validates. `validate_canvas.py`
+  prints one WARN line saying the key is retired, read by nothing, and can be removed.
+- **If a session is open when you upgrade,** the skill text it loaded is the old one. Start a new
+  session before scoring.
+
+**Alternatives considered.**
+
+- *Keep the average (Ellis's version).* It is the inventor's arithmetic and Gilad's ebook allows
+  it. Refused by the founder's choice, and for a reason the texts support: Ellis's ICE is for
+  experiments, with Ease as the cost of the test and Confidence as a plain rating. Mycelium scores
+  product ideas and uses Gilad's meter, whose values under an average barely move a rank.
+- *Average, with the meter.* Allowed by one sentence of the ebook. Refused: every worked example of
+  his that was read multiplies, and it would be a third arithmetic change for less effect than the
+  second.
+- *Keep the 1-10 Confidence bands and multiply.* That is Mycelium before 0.229.0. Refused: the
+  bands are in no version of the meter, and they put evidence short of a test at 7-10 where his
+  caps hold it to 4.6.
+- *Use the dial's ring marks instead of the spreadsheet's weights.* Refused: the dial does not
+  print one number per kind of evidence, and its marks differ between the book (5) and the ebook
+  (7). The spreadsheet states weights and caps, and the book's text agrees with its weights.
+- *Re-base the threshold instead of retiring it* (0.318.2 left this open). Refused: no source gives
+  an ICE total a threshold at any value, and both authors say the score is relative.
+- *Convert old aggregates to products.* Refused, as in 0.238.0: a score on a closed decision is a
+  record. Multiplying three old 1-10 ratings would also not give a Gilad score, because the old
+  Confidence did not come from the meter.
+- *Fail old averages until they are baselined*, which is what the check did to old products when it
+  was adopted in 0.238.0. Refused: an average was the documented rule when it was written. The
+  check says it cannot assess (exit 2) and names the one command that adopts the rule.
+- *Have the check write its own baseline on the first run after the upgrade.* Refused: a check that
+  writes state when asked to read would adopt silently, and on CI it would re-adopt on every run.
+
+**Not in this release.** The 20% "bakeoff delta" (`engine/adaptive-thresholds.md`,
+`orchestration/leaf-bakeoff.md`, `/fan-out`) is Mycelium's own rule and no source has it; it now
+compares products, where 20% is a much smaller gap than it was between averages, and it needs its
+own ruling. The Noise Check's "more than 1 point on any dimension" was written for 1-10 ratings and
+is a large gap on the meter's Confidence. The 0.0-1.0 confidence calibration in
+`adaptive-thresholds.md` and `/framework-health` does not apply to a meter value; both now say so
+and say that comparing a meter-scored prediction with its outcome is not designed yet.
+`confidence-thresholds.yml` justified the L5 threshold of 0.8 partly by the invented "8=A/B test"
+anchor; the comment is corrected and the value is unchanged.
+
 ## v0.318.4 - the README, the get-started page and the menu say what the brief switches on
 
 **2026-10-11, the second half of what the dogfood repo's harms check found under "words and

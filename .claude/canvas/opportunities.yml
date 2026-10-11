@@ -1190,12 +1190,12 @@ opportunities:
 #     #       assessment: ""
 #     #       evidence: ""
 #     #       risk_level: low|medium|high
-#     #   ice_score:  # Derived FROM the four risks, not independent of them
-#     #     impact: 0  # 1-10, informed by value + usability + viability risk assessments
-#     #     confidence: 0  # 1-10, Gilad's evidence levels — how tested are the risk assessments?
-#     #     ease: 0  # 1-10, informed by feasibility risk assessment
+#     #   ice_score:  # Gilad's ICE (0.319.0), scored after the four risks are assessed (that ordering is Mycelium's own)
+#     #     impact: 0  # 0-10, how much the idea will improve the target metric; 0 is legal. Read the value + usability + viability assessments while estimating
+#     #     confidence: 0  # 0-10, summed from the evidence held with Gilad's Confidence Meter (/mycelium:ice-score Step 2); not a rating
+#     #     ease: 0  # 0-10, the effort to build the idea in full. Read the feasibility assessment while estimating
 #     #     total: 0  # I*C*E
-#     #     rationale: ""  # How the four risks informed these scores
+#     #     rationale: ""  # The metric Impact is measured against, and the evidence the Confidence was summed from
 #     #   assumptions: []  # Riskiest unknowns from the four risks — what to test first
 #     #     # - statement: ""
 #     #     #   risk_dimension: value|usability|feasibility|viability|ethical

@@ -39,7 +39,7 @@ The four loop speeds implement Kim's Three Ways:
 |--------|--------|--------|-----------|
 | Diamond phase complete | Phase transition | Capture learnings, update patterns | diamond-progress learning capture |
 | Delivery increment done | DoD satisfied | DORA metrics, delivery journal, retrospective | /retrospective skill |
-| Assumption test result | Experiment outcome | Update ICE scores, confidence levels | /ice-score, /canvas-update |
+| Assumption test result | Experiment outcome | Rescore ICE: all three factors and their product, Confidence from the meter | /ice-score, /canvas-update |
 | User interview complete | Research session | Update OST, user needs, JTBD | Interview snapshot -> canvas |
 | Code review findings | Peer review | Update patterns or corrections | Manual -> corrections.md |
 | Corrections accumulating | 3+ corrections logged | Trend analysis, graduation candidates | /corrections-audit |
@@ -185,7 +185,7 @@ Every metric in Mycelium must have a **counter-metric** to prevent gaming:
 | Prompt optimization | Loop 4 | No change needed |
 | Cycle history | Loop 2 | Records every completed/discarded leaf for calibration |
 | Pattern detector | Loop 3 | Surfaces systemic patterns from cycle data |
-| Adaptive thresholds | Loop 3-4 | Calibrates ICE threshold, confidence factor from historical data |
+| Adaptive thresholds | Loop 3-4 | Calibrates the confidence factor and the bakeoff delta from historical data (the ICE threshold listed here until 0.319.0 is retired) |
 | Framework reflexion | Loop 4 | Quarterly self-assessment of process effectiveness |
 | Evidence decay | Loop 2-3 | Degrades confidence on stale evidence, triggers refresh |
 | /retrospective | Loop 2-3 | No change needed |

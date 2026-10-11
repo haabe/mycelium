@@ -37,14 +37,18 @@ Each risk dimension must have:
 
 ### Phase 3: ICE Scoring (L2 choosing its target / L3 before `start_experiment`)
 
-**Input**: Four Risks assessment
-**Gate**: Four Risks must exist before scoring (ICE without risks is ungrounded)
-**Output**: `ice_score` block on the solution leaf in `canvas/opportunities.yml`
+**Input**: Four Risks assessment, and the metric the leaf's opportunity is meant to move
+**Gate**: Four Risks must exist before scoring. This ordering is Mycelium's own lifecycle rule; it is not part of Ellis's or Gilad's ICE.
+**Output**: `ice_score` block on the solution leaf in `canvas/opportunities.yml`: the three factors and their product
 
-ICE is derived FROM the Four Risks, not scored independently:
-- **Impact** ← value + usability + viability risk assessments
-- **Confidence** ← evidence quality across all risk dimensions (adapted from Gilad's Confidence Meter)
-- **Ease** ← feasibility risk assessment
+ICE is scored as Gilad defines it, **Impact x Confidence x Ease**, each 0-10 (*Evidence-Guided*, ch. 3):
+- **Impact**: how much the idea will improve the target metric. 0 is a legal Impact.
+- **Confidence**: how strong the evidence is that the Impact and Ease are right, summed from the evidence held with Gilad's Confidence Meter (weights and caps in `/ice-score` Step 2). It is not a rating the scorer picks.
+- **Ease**: the effort to build the idea in full.
+
+The Four Risks assessment is read while scoring: value, usability and viability bear on the Impact estimate, feasibility on the Ease estimate. *(Changed 0.319.0. Until then this phase read "ICE is derived FROM the Four Risks, not scored independently", with Impact ← value + usability + viability, Confidence ← "evidence quality across all risk dimensions", Ease ← feasibility. That derivation was Mycelium's and is in neither author's text; the factors are now the authors' own definitions and the assessment is an input the scorer reads. The score was also an average from 0.229.0 to 0.318.x; see `docs/errata.md` A7.)*
+
+The total is a hint for comparing the leaves under one metric. It has no threshold, and it is always reported with its three factors.
 
 **Skill**: `/ice-score`
 
@@ -71,9 +75,9 @@ Test the assumption with the cheapest viable method:
 **Output**: Idea entry in `canvas/gist.yml` with `source_leaf_id` backreference
 **Scenario link**: The GIST idea must reference which scenarios it addresses. Update `canvas/scenarios.yml` — add the solution to `lifecycle.designed_against[]` for each relevant scenario. If the solution only partially fits a scenario, document the gaps. A solution that doesn't address any scenario is a solution without a user — challenge it.
 
-The leaf graduates from the OST (opportunity space) into GIST (solution space). The GIST idea inherits the leaf's ICE score and confidence level.
+The leaf graduates from the OST (opportunity space) into GIST (solution space). The GIST idea inherits the leaf's ICE score (its three factors and their product). Rescore it whenever something is learned about it, and at the latest when it is next compared (Gilad, *ICE Done Right*, pp. 8 and 15).
 
-**Discard criteria**: a leaf is archived only when its riskiest assumption is **invalidated** by a test (Phase 4), never by ICE alone. A validated leaf with a low ICE is **deprioritized** (sequenced later / scoped smaller), not archived.
+**Discard criteria**: a leaf is archived only when its riskiest assumption is **invalidated** by a test (Phase 4), never by ICE alone. A validated leaf that ranks low on ICE is **parked** (kept with its score, sequenced later or scoped smaller), not archived: there is no ICE total a leaf must reach, and Gilad keeps such ideas in a Parked bank that can *"hold ideas indefinitely"* (*ICE Done Right*, p. 9).
 **Segment check**: Before archiving on an invalidated assumption, verify the assumption doesn't hold for a different user segment — if it might, re-test for that segment rather than discard.
 
 **Skill**: `/gist-plan`
@@ -181,7 +185,7 @@ When a leaf is killed at any phase, it is archived — never deleted.
 | 9 (Delivery) | Implementation reveals bad assumption | Regress to appropriate phase with evidence. |
 | 10 (Launch) | Market rejects | Spawn new L2 diamond with rejection evidence. |
 
-**ICE never discards a leaf** (removed v0.54.0). Three assumption-verdict outcomes at the OST→GIST boundary: `validated` → graduates (a low-ICE validated leaf is *deprioritized* — sequenced later / scoped smaller — not archived); `invalidated` → discarded at Phase 4; **`partial`/ambiguous → graduates neither** — re-test with a sharper method or scope the assumption down. When several validated leaves compete for the same opportunity, pick the front-runner via a comparison (`orchestration/leaf-bakeoff.md`), not by ICE alone.
+**ICE never discards a leaf** (removed v0.54.0). Three assumption-verdict outcomes at the OST→GIST boundary: `validated` → graduates (a validated leaf that ranks low on ICE is *parked* — kept, sequenced later / scoped smaller — not archived); `invalidated` → discarded at Phase 4; **`partial`/ambiguous → graduates neither** — re-test with a sharper method or scope the assumption down. When several validated leaves compete for the same opportunity, pick the front-runner via a comparison (`orchestration/leaf-bakeoff.md`), not by ICE alone.
 
 **Anti-pattern: Score-Only Discard** — Never discard (or graduate) a leaf on ICE (or any score) alone. Selection is by assumption-test verdict (Torres). A solution that scores poorly for power users might validate for new users — check segments before archiving on an invalidated assumption.
 
@@ -208,7 +212,7 @@ Every leaf that reaches a terminal state (shipped, discarded, or market-rejected
 ### Why This Matters
 
 Without cycle records, the following systems have no data:
-- **Adaptive thresholds** (`${CLAUDE_PLUGIN_ROOT}/engine/adaptive-thresholds.md`) — cannot calibrate ICE threshold
+- **Adaptive thresholds** (`${CLAUDE_PLUGIN_ROOT}/engine/adaptive-thresholds.md`) — cannot calibrate the bakeoff delta or the confidence factor (the ICE threshold named here until 0.319.0 is retired)
 - **Pattern detector** (`${CLAUDE_PLUGIN_ROOT}/engine/pattern-detector.md`) — cannot identify correlations
 - **Framework reflexion** (`${CLAUDE_PLUGIN_ROOT}/engine/framework-reflexion.md`) — cannot measure cycle velocity or confidence calibration
 - **Evidence decay** (`${CLAUDE_PLUGIN_ROOT}/engine/evidence-decay.md`) — cannot calibrate staleness thresholds
@@ -252,7 +256,7 @@ If any link in this chain is missing, `/canvas-health` should flag it as an orph
 
 - Torres: Continuous Discovery Habits (OST, assumption testing, trio perspectives)
 - Cagan: Inspired (Four Risks framework)
-- Ellis: ICE scoring (Impact, Confidence, Ease — averaged, not multiplied; `docs/errata.md` §A). Gilad: Evidence-Guided (Confidence Meter — evidence-grading layer on Ellis's ICE)
+- Gilad: *Evidence-Guided*, ch. 3 (ICE as Impact x Confidence x Ease, each 0-10, with the Confidence Meter: the version Mycelium uses since 0.319.0) and *ICE Done Right* (what the score is for; parked ideas). Ellis & Brown: *Hacking Growth*, ch. 4 (the inventor of ICE; he averages the three ratings, which Mycelium did from 0.229.0 to 0.318.x; `docs/errata.md` A1 and A7)
 - Gothelf: Lean UX (hypothesis-driven solution framing)
 - Snowden: Cynefin (domain-appropriate methods at Phase 6)
 - Downe: Good Services (service design at Phase 6)

@@ -64,6 +64,18 @@ DELIBERATELY NARROW
     protect. `sol-008a` sat wrong for two months and this check would not have caught
     it. Named here so the gap is out of scope rather than silently unhandled.
 
+WHAT COUNTS AS SCORED (changed 0.319.0)
+    Until 0.318.x: `ice_score.total`, truncated to an integer, is not zero. That read two honest
+    scores as absent once ICE became Gilad's product with his Confidence Meter (0.319.0):
+      - a total under 1. Meter values are small (0.01 for a conviction, 0.5 for an anecdote),
+        so 3 x 0.1 x 2 = 0.6 is an ordinary early score, and `int(0.6)` is 0;
+      - a total of exactly 0 from an Impact of 0, which is a legal Impact in his 0-10 range
+        (*Evidence-Guided*, ch. 3: "don't forget None for Impact").
+    Now: the total is a number other than zero, OR the total is zero and the block carries its
+    three factors with at least one of them not zero. `{i: 0, c: 0, e: 0, total: 0}` is still
+    the "nothing was scored" shape and still counts as unscored. A block with no `total` key is
+    read as before (unscored): this change is about zero and near-zero totals, nothing wider.
+
 ESCAPE HATCH
     An `ice_exempt:` field with a reason satisfies the check. A leaf can legitimately
     ship unscored — emergent, trivial, or forced by circumstance. What it cannot do is
@@ -213,13 +225,31 @@ def _classify(leaf):
         return None
     if leaf.get("ice_exempt"):
         return "exempt"
-    ice = leaf.get("ice_score")
-    total = ice.get("total", 0) if isinstance(ice, dict) else 0
+    return "scored" if _is_scored(leaf.get("ice_score")) else "unscored"
+
+
+#: The factor keys an ICE block is written with, abbreviated and long form.
+_FACTOR_KEYS = (("i", "c", "e"), ("impact", "confidence", "ease"))
+
+
+def _number(value) -> float:
+    """A recorded number as a float; 0.0 for anything that is not one."""
     try:
-        total_i = int(total or 0)
+        return float(value or 0)
     except (TypeError, ValueError):
-        total_i = 0
-    return "scored" if total_i else "unscored"
+        return 0.0
+
+
+def _is_scored(ice) -> bool:
+    """See WHAT COUNTS AS SCORED in the module docstring."""
+    if not isinstance(ice, dict) or "total" not in ice:
+        return False
+    if _number(ice["total"]) != 0:
+        return True
+    return any(
+        all(k in ice for k in keys) and any(_number(ice[k]) != 0 for k in keys)
+        for keys in _FACTOR_KEYS
+    )
 
 
 def _report_ice(violations, checked, exempted):

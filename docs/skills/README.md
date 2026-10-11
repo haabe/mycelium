@@ -27,7 +27,7 @@ This index lists all 63 skills. Each skill's full behaviour lives in its `SKILL.
 | `/wardley-map` | Strategic landscape mapping (L1) | Evidence (L1) |
 | `/ost-builder` | Build Opportunity Solution Tree from research (L2) | Evidence, Four Risks (per leaf) |
 | `/assumption-test` | Design smallest viable test for an assumption (Torres + Gilad AFTER) | Four Risks |
-| `/ice-score` | Prioritization by the average of Impact, Confidence and Ease (Ellis) | — |
+| `/ice-score` | Prioritization by Impact x Confidence x Ease, with Gilad's Confidence Meter (the average, Ellis's arithmetic, until v0.318.x) | — |
 | `/handoff` | Structured handoff for offline human tasks (interviews, observations, outreach) | — |
 | `/log-evidence` | Record findings from completed offline conversations back into canvas | Evidence |
 
