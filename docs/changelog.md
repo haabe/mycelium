@@ -4,6 +4,126 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-11.
 
+## v0.319.1 - the suite cannot write into the repository of whoever runs it; the secret scan refuses when it cannot run
+
+Two safety fixes, each its own commit and its own tests.
+
+### The suite cannot write into the repository of whoever runs it
+
+**2026-10-11, after a `git push` from a git worktree of this repository left fourteen commits by
+"t <t@t>" on the checked-out feature branch and `core.bare = true`, `user.name = t` in the shared
+`.git/config`.** The pre-push hook runs the suite. In a worktree git exports
+`GIT_DIR=<main>/.git/worktrees/<name>` to its hooks; in an ordinary checkout it exports no
+`GIT_DIR`, which is why the same suite had always been harmless there. With `GIT_DIR` set git
+ignores the folder it is run in, so a fixture's `git init`, `git config`, `git add -A` and
+`git commit` in a temp folder all acted on the repository being pushed. Traced file by file from a
+worktree of a scratch clone: twelve pytest files, three bash suites and one gate in the declared
+set (`check_empty_input_honesty.py`, which builds an empty repository to run the other checks
+against) wrote into the caller's repository. None does now.
+
+- **The places that run the suite clear what redirects git.** `git-pre-push-example.sh`,
+  `scripts/gates.sh`, `tests/validate-template.sh`, `tests/bash/run.sh`, `tests/bash/_assert.sh`
+  (for a bash test run on its own) and `tests/python/conftest.py` (at import, so once per xdist
+  worker) remove `GIT_DIR`, `GIT_WORK_TREE`, `GIT_INDEX_FILE`, `GIT_COMMON_DIR`, `GIT_PREFIX`,
+  `GIT_OBJECT_DIRECTORY`, `GIT_ALTERNATE_OBJECT_DIRECTORIES`, `GIT_NAMESPACE`, and whatever
+  `git rev-parse --local-env-vars` lists. Each then finds the repository the ordinary way, from the
+  folder it runs in. **If you installed the pre-push hook, copy it again**; `.git/hooks/` is not
+  version-controlled and the installed copy keeps the old behaviour until you do:
+  `cp plugins/mycelium/scripts/git-pre-push-example.sh .git/hooks/pre-push`.
+- **A fixture repository is checked before it is used.** Tests make one through
+  `tests/python/_scratch_git.py` (`init`) or `scratch_git_init` in `tests/bash/_assert.sh`. Both
+  run `git init` without the redirecting variables, then ask git where the repository is in the
+  environment the test's next commands will run in, and stop before any `config`, `add` or
+  `commit` if the answer is not the folder the test made. Eleven pytest files and three bash suites
+  moved to them; a test fails when a test file runs a bare `git init`.
+- **The empty-input gate builds its empty repository in a clean environment** and runs the checks
+  under it. Before this, from a worktree hook, it also judged every check against the caller's
+  history instead of an empty one, so its verdict was not about an empty tree.
+- **`provision-skills.sh` accepts a `.git` file as a git root.** In a worktree and in a submodule
+  `.git` is a one-line file. The guard tested `-d`, so a worktree was refused as "not a git root"
+  and told to run `git init` inside it.
+- **Proof.** `tests/python/test_suite_safe_in_a_worktree.py` builds a scratch repository with a
+  worktree and has git itself run each thing as a hook of that worktree, then compares the scratch
+  repository's config, refs, HEADs, status and `.git` file list before and after: three pytest
+  files, three bash suites, the gate, the pre-push hook end to end, `run.sh`, `_assert.sh`,
+  `gates.sh` and the validator's opening lines. Fourteen of its tests fail on 0.319.0, twelve of
+  them with "the caller's repository changed (config)".
+
+**What a reader of the hook should know.** A push made with an explicit `--git-dir`/`--work-tree`
+pair has no `.git` in the folder the hook runs in. The hook used to inherit the pair from git; it
+now clears it, so checks that ask git find no repository there. Nothing in this repository pushes
+that way.
+
+**Not changed, and worth knowing.** The pre-push hook still prefers `CLAUDE_PLUGIN_ROOT` when
+choosing which validator and gate scripts to run. With that variable pointing at another checkout
+(a main checkout while pushing from its worktree, or the plugin cache), the gate scripts that run
+are that other tree's. `scripts/gates.sh` unsets it; the hook does not. `session-start.sh`'s
+cross-repo watch (`MYCELIUM_CROSS_REPO_WATCH`) tests `os.path.isdir(<repo>/.git)` and so skips a
+sibling that is a worktree.
+
+**Alternatives considered.** (1) Have the pre-push hook refuse to run from a worktree. Rejected:
+after the fix the full gate set passes from a worktree with the repository's config and refs
+byte-identical before and after, so there is no remaining reason to refuse, and a refusal would
+have left `gates.sh`, the validator and a bare `pytest` run from any other hook exactly as they
+were. (2) Clear the variables only in the hook. Rejected: the hook is a per-clone copy that goes
+stale, and five other entry points run the same suite. (3) Fix only the tests. Rejected as the
+only layer: a new test with a bare `git init` would bring it back, and the gate that builds an
+empty repository is not a test. (4) Set `GIT_CEILING_DIRECTORIES` instead of clearing. It stops
+discovery walking up, which was never the mechanism here: `GIT_DIR` is not discovery. (5) Give
+every fixture `git --git-dir=<tmp>/.git --work-tree=<tmp>` explicitly. More invasive across
+fourteen files, and it would not have covered `git init` inside shipped scripts.
+
+### The secret scan refuses when the scan itself cannot run
+
+**2026-10-11.** `hooks/gate.sh` ran each of its fourteen patterns as
+`printf ... | grep -qE "$PATTERN" 2>/dev/null` inside an `if`. grep has three answers: 0, a line
+matched; 1, none did; 2 or more, "I could not run this" (a pattern this grep rejects, no grep on
+`PATH`). The `if` read the last two as one and sent grep's own complaint to `/dev/null`, so a scan
+that never ran passed every write, credentials included, and said nothing. 0.318.3 fixed a grep
+that read the patterns differently from the one they were written for; this is the grep that does
+not read them at all.
+
+- **A scan error is a refusal.** Each pattern's exit status is now read on its own
+  (`PIPESTATUS[1]`, so it is grep's whatever `printf` did; `grep -cE`, so grep reads all of the
+  content). A status of 2 or more refuses the write.
+- **The refusal says what failed.** "The secret scan could not run", grep's exit status, which
+  pattern of the fourteen, and grep's own first line of complaint. It says that nothing was
+  detected in the content, and that the fault is in the machine's grep or in Mycelium's patterns
+  and not in what is being written. It is a different message from the "potential
+  secret/credential detected" refusal on purpose: telling the agent to remove a credential that may
+  not be there would send it the wrong way.
+- **It reaches the denial ledger** like every other refusal, so a call that runs anyway is seen
+  by `gate-override-check.sh`.
+- **Unchanged:** which content is called a secret, the refusal for one, and that a write the scan
+  refuses has no override. **That is the design, not a gap.** The 0.318.3 notes listed "no way for a
+  person to let one write through" under "Not in this release", which read as work owed; the
+  maintainer does not want an override for the secret scan. Content that is empty is still not scanned.
+- **Docs.** `hooks/README.md` (Layer 1 and the fail-closed list) and the Recourse section of
+  `docs/ai-system-card.md` say that a scan that cannot run refuses too. The hook-surface review in
+  the card and in `docs/context-surface.md` is re-stamped after re-reading the sections it names.
+- **Tests, through the hook** (`tests/python/test_gate_secret_scan.py`): a `PATH` whose `grep`
+  always exits 2, and a `PATH` holding every system tool except `grep`. Under the first a
+  credential is refused; under both a clean write is refused as a scan error and not as a secret;
+  the refusal reaches the ledger. Controls through the same substituted `PATH`: with a grep that
+  works a clean write is not refused and a credential is still called a secret, and empty content
+  is not scanned, so a broken grep refuses nothing there. On 0.319.0 the four scan-error tests
+  fail: the hook prints nothing and the write goes through.
+
+**What this costs.** On a machine whose grep cannot run these patterns, every write of non-empty
+content outside `.claude/` is refused until the grep is fixed. That is the intended direction:
+before, the same machine had no secret scan and no way to know it.
+
+**Alternatives considered.** (1) Keep passing on a scan error and print a warning. Rejected: a
+warning on the path where the scan is broken is read by the agent that is about to write, and the
+write has happened by the time a person reads it.
+(2) Refuse only when every pattern errors. Rejected: one unreadable pattern is one class of
+credential nobody is looking for, and which class is not something the hook can weigh.
+(3) Check the patterns once at session start instead of on each write. It would cost nothing per
+write, and it would miss a `PATH` that differs between one hook and another, and a grep that
+changes during a session. (4) Fall back to a second matcher (Python's `re`) when grep fails.
+Rejected: the patterns use POSIX classes `re` does not read, so it would be a second pattern table
+to keep in step with the first.
+
 ## v0.319.0 - ICE as Gilad defines it: multiplied, with his Confidence Meter, and no threshold on the total
 
 **2026-10-11, on the founder's ruling ("This must follow best practices of ICE. ICE is properly
