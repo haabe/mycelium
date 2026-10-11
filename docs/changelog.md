@@ -4,6 +4,41 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-11.
 
+## v0.318.3 - two safeguards that did not hold
+
+**2026-10-11, from the dogfood repo's harms check of the same day, on the founder's "Fix them".**
+Both were found by replaying the installed hooks in a scratch project, and both had tests that
+exercised something other than the hook a user's session runs.
+
+- **Removing the marker folders is now judged by the hook, as 0.318.0 said it was.** With neither
+  `.claude/canvas` nor `.claude/diamonds` every hook exits at once, so 0.318.0 made their removal a
+  person's decision: asked in the ordinary modes, refused where nobody is asked. The helper did that.
+  `hooks/guard-state-gate.sh` never called it for this case: its cheap exit passed any call that named
+  none of the guard-state files, so `rm -rf .claude/canvas .claude/diamonds` left with exit 0 and no
+  output in every permission mode. The cheap exit now also lets through a call that mentions `.claude`
+  and holds a removal verb, or an MCP move, and the helper decides. Twelve new tests run the hook
+  itself; the seven that expect a question or a refusal fail on 0.318.2, and five are controls. The six existing removal tests fed the Python helper.
+- **The secret scan reads its patterns the same way under every grep.** Nine of the patterns in
+  `hooks/gate.sh` put `\s` and `\x27` inside bracket expressions. GNU grep reads those as whitespace
+  and a quote; the BSD grep that is `/usr/bin/grep` on macOS reads a backslash in a bracket as a
+  literal, so the class meant for whitespace matched the letter s and the class meant for a single
+  quote matched x, 2 and 7. Whether a credential was caught depended on which letters it held: a
+  quoted password containing a 2 was passed, a value in single quotes was not seen as quoted, and one
+  token class held no hyphen. The patterns now use POSIX classes. The scan had no test; it has 23,
+  22 of them run through the hook with the machine's own grep, and 9 fail on 0.318.2 on a Mac.
+- **A database address with no password is no longer called a secret.** The three database patterns
+  refused any URL of ten characters, and this refusal has no override. They now ask for what makes a
+  connection string a secret: a password in the user part (`scheme://user:password@host`) or a
+  `password=` parameter. `postgresql://`, `mongodb://` and `rediss://` are covered as well.
+- **Not in this release.** The refusal still has no way for a person to let one write through. The
+  scan still treats a grep error as no match.
+- **Alternatives considered.** Guard: removing the cheap exit, so every write and command starts
+  python (the cost the exit exists to avoid, paid on every call to fix one case); matching the
+  helper's pattern exactly in shell (two copies of one rule, which is how the first arm fell behind).
+  Scan: `grep -P` (not in BSD grep); moving the scan to Python (a second interpreter start on the
+  write path, and a larger change than the defect); keeping the any-URL rule (refuses harmless lines
+  with no way past, which the harms check counted as a harm).
+
 ## v0.318.2 - two notes and a welcome say what the code does
 
 **2026-10-11, from the dogfood repo's theory audit and harms check of the same day, on the founder's

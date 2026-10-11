@@ -67,29 +67,43 @@ done <<< "$HI_TARGETS"
 CONTENT="$HI_CONTENT"
 
 if [ -n "$CONTENT" ]; then
-  # Check for common secret patterns
-  # API keys, tokens, passwords, connection strings
+  # Check for common secret patterns: API keys, tokens, passwords, connection strings.
+  #
+  # POSIX CLASSES ONLY (0.318.3). These run under `grep -E`. Until 0.318.3 nine of them put `\s`
+  # and `\x27` INSIDE bracket expressions. GNU grep reads those as whitespace and a quote. The BSD
+  # grep that /usr/bin/grep is on macOS reads a backslash in a bracket as a literal character, so
+  # the class meant for whitespace matched the letter s and the class meant for a single quote
+  # matched x, 2 and 7. Whether a credential was caught depended on which letters it contained, a
+  # value in single quotes was not seen as quoted, and `[A-Za-z0-9_\-\.]` held no hyphen at all
+  # (dogfood harms check 2026-10-11). Inside a bracket: [:space:], a literal quote, a hyphen LAST.
+  # tests/python/test_gate_secret_scan.py runs every pattern under the system grep, both ways.
+  WS='[[:space:]]'
+  Q="[\"']"              # an opening double or single quote
+  NQ="[^[:space:]\"']"   # anything but whitespace and quotes
+  # A connection string is a secret when it carries a password: scheme://user:password@host, or a
+  # password= parameter. Until 0.318.3 any database URL of ten characters was refused, password or
+  # not, and this refusal has no override.
+  UI="[^[:space:]\"'/@:]*:[^[:space:]\"'/@]+@"
+  DB='(postgres|postgresql|mysql|mongodb|mongodb\+srv|rediss?)'
   SECRET_PATTERNS=(
-    '[Aa][Pp][Ii]_?[Kk][Ee][Yy]\s*[=:]\s*["\x27][A-Za-z0-9_\-]{20,}'
-    '[Ss][Ee][Cc][Rr][Ee][Tt]_?[Kk][Ee][Yy]\s*[=:]\s*["\x27][A-Za-z0-9_\-]{20,}'
-    '[Pp][Aa][Ss][Ss][Ww][Oo][Rr][Dd]\s*[=:]\s*["\x27][^\s"\x27]{8,}'
-    'Bearer\s+[A-Za-z0-9_\-\.]{20,}'
+    "[Aa][Pp][Ii]_?[Kk][Ee][Yy]${WS}*[=:]${WS}*${Q}[A-Za-z0-9_-]{20,}"
+    "[Ss][Ee][Cc][Rr][Ee][Tt]_?[Kk][Ee][Yy]${WS}*[=:]${WS}*${Q}[A-Za-z0-9_-]{20,}"
+    "[Pp][Aa][Ss][Ss][Ww][Oo][Rr][Dd]${WS}*[=:]${WS}*${Q}${NQ}{8,}"
+    "Bearer${WS}+[A-Za-z0-9_.-]{20,}"
     'sk-[A-Za-z0-9]{20,}'
     'ghp_[A-Za-z0-9]{36}'
     'gho_[A-Za-z0-9]{36}'
-    'glpat-[A-Za-z0-9\-]{20,}'
-    'xox[bpas]-[A-Za-z0-9\-]{10,}'
+    'glpat-[A-Za-z0-9-]{20,}'
+    'xox[bpas]-[A-Za-z0-9-]{10,}'
     'AKIA[0-9A-Z]{16}'
-    'eyJ[A-Za-z0-9_\-]{20,}\.[A-Za-z0-9_\-]{20,}\.'
-    '[Pp][Rr][Ii][Vv][Aa][Tt][Ee]_?[Kk][Ee][Yy]\s*[=:]\s*["\x27]'
-    'mongodb\+srv://[^"\x27\s]{10,}'
-    'postgres://[^"\x27\s]{10,}'
-    'mysql://[^"\x27\s]{10,}'
-    'redis://[^"\x27\s]*:[^"\x27\s]*@'
+    'eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.'
+    "[Pp][Rr][Ii][Vv][Aa][Tt][Ee]_?[Kk][Ee][Yy]${WS}*[=:]${WS}*${Q}"
+    "${DB}://${UI}"
+    "${DB}://${NQ}*[?&]password="
   )
 
   for PATTERN in "${SECRET_PATTERNS[@]}"; do
-    if echo "$CONTENT" | grep -qE "$PATTERN" 2>/dev/null; then
+    if printf '%s\n' "$CONTENT" | grep -qE "$PATTERN" 2>/dev/null; then
       # Output JSON for Claude with deny decision; the refusal goes to the denial ledger (0.316.0)
       # shellcheck source=/dev/null
       . "$(dirname "${BASH_SOURCE[0]}")/../scripts/_hook_fire_log.sh" 2>/dev/null && mycelium_record_denial
