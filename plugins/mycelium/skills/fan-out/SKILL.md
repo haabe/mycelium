@@ -36,9 +36,10 @@ For each solution:
 
 ### Leaf Bakeoff Mode
 
-When comparing competing OST leaves for the same opportunity:
+When comparing competing OST leaves for the same opportunity (two or more leaves that each have an untested riskiest assumption; no ICE gap is consulted):
 - Each worker returns a structured **scorecard** (Four Risks + ICE + assumption test result + segment fit)
-- Lead agent applies **winner selection rules**: clear winner (>20% ICE delta), close race (tiebreaker), segment split (both advance), both fail (archive and re-evaluate)
+- Lead agent applies **winner selection rules**, which read the assumption-test verdicts: clear winner (one passes, the others fail), several pass in the same segment (tiebreaker), several pass in different segments (segment split, both advance), both fail (archive and re-evaluate). A leaf whose riskiest assumption failed is archived.
+- The ICE total only orders which assumption is tested first. It never decides when to compare or which leaf wins (until 0.320.0 a "clear winner" was a leaf more than 20% ahead on ICE).
 - Losers are archived to `.claude/canvas/archived-solutions.yml` with full evidence snapshot
 
 See `${CLAUDE_PLUGIN_ROOT}/orchestration/leaf-bakeoff.md` for the complete bakeoff protocol.

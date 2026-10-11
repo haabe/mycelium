@@ -648,7 +648,11 @@ def _contradictory_gate_rows(cycles):
 #: calibrating a PRODUCT threshold on framework-maintenance cycles a category error.
 _CALIBRATION_INPUT = {
     "confidence_calibration": ("product-leaf", "risk_accuracy"),
-    "bakeoff_delta": ("product-leaf", "ice_accuracy"),
+    # bakeoff_delta was mapped to ice_accuracy from 0.216.0 to 0.319.x and REMOVED in 0.320.0,
+    # with the threshold itself (see _RETIRED_THRESHOLDS below). It asked for the ICE gap that
+    # "makes a clear winner" to be tuned against outcomes, and no source read lets an ICE gap
+    # pick a winner at any width. Since 0.320.0 nothing here is calibrated from ice_accuracy;
+    # the field is still recorded (engine/cycle-learning.md).
     # ice_advance was mapped to ice_accuracy from 0.216.0 to 0.318.x and REMOVED in 0.319.0,
     # with the threshold itself (see _RETIRED_THRESHOLDS below). It asked for a cutoff on the
     # ICE total to be tuned against outcomes, and no source read gives the total a cutoff.
@@ -668,6 +672,13 @@ _RETIRED_THRESHOLDS = {
         '"meaningless" except for comparing ideas (ICE Done Right p. 4), and his only cutoff is '
         "on Confidence before delivery, which the L4 entry lock already reads "
         "(engine/diamond-rules.md)"
+    ),
+    "bakeoff_delta": (
+        "retired in 0.320.0 and read by nothing; the key can be removed. It was the ICE gap "
+        "(default 20%) that decided when competing leaves were compared and which one won, and "
+        "no source has it: a leaf bakeoff is decided by the assumption-test verdicts, and the "
+        "ICE total only orders which assumption is tested first "
+        "(orchestration/leaf-bakeoff.md)"
     ),
 }
 #: A solution status that is a terminal state in engine/cycle-learning.md's sense
@@ -719,6 +730,10 @@ def calibration_due_findings(canvas_dir):
     0.319.0: a third finding, one line for a threshold that was retired and is still in the
     file (`_RETIRED_THRESHOLDS`). It does not depend on the cycle ledger, so it is reported
     before the ledger is looked for.
+
+    0.320.0: `bakeoff_delta` joins the retired thresholds. It was the last threshold calibrated
+    from `ice_accuracy`, so a canvas carrying it gets the retired line and never "calibration
+    is due" or "uncalibrated because" for it.
     """
     canvas = Path(canvas_dir)
     thresholds = _load_yaml(canvas / "thresholds.yml")

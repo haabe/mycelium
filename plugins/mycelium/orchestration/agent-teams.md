@@ -49,7 +49,7 @@ Lead Agent (main session)
 
 When multiple OST leaves compete for the same opportunity, use the **leaf bakeoff protocol** for structured comparison. Each worker returns a scorecard; the lead agent applies winner selection rules.
 
-See `leaf-bakeoff.md` for: scorecard format, winner selection rules (clear winner, close race, segment split, both fail), loser archival, and anti-patterns.
+See `leaf-bakeoff.md` for: scorecard format, winner selection rules, which read the assumption-test verdicts and never an ICE gap (clear winner, several pass in one segment, segment split, both fail), loser archival, and anti-patterns.
 
 ## Pattern 2: Parallel Delivery (Feature Implementation)
 

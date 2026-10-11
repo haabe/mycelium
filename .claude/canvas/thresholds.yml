@@ -24,12 +24,9 @@ thresholds:
     feasibility: {default_days: 120, calibrated_days: null, based_on_n: 0, minimum_n: 10}
     delivery_metrics: {default_days: 30, calibrated_days: null, based_on_n: 0, minimum_n: 10}
 
-  bakeoff_delta:
-    default: 0.20
-    calibrated: null
-    calibrated_at: null
-    based_on_n: 0
-    minimum_n: 5
-    bounds: {min: 0.10, max: 0.40}
+  # bakeoff_delta (default 0.20, bounds 0.10-0.40) stood here until 0.320.0. It was the ICE
+  # gap that decided a leaf bakeoff, which no source has; retired, see
+  # plugins/mycelium/engine/adaptive-thresholds.md. It was never calibrated here
+  # (based_on_n 0), so no measured value was lost by removing it.
 
 last_calibrated: null

@@ -128,62 +128,8 @@
           }
         },
         "bakeoff_delta": {
-          "type": [
-            "object",
-            "null"
-          ],
-          "description": "The ICE gap below which two leaves are treated as too close to separate on score alone.",
-          "additionalProperties": true,
-          "properties": {
-            "default": {
-              "type": [
-                "number",
-                "string",
-                "null"
-              ],
-              "description": "Used until calibration kicks in. A sensible starting point, not evidence."
-            },
-            "calibrated": {
-              "type": [
-                "number",
-                "string",
-                "null"
-              ],
-              "description": "Adjusted from cycle data. null means NOT YET CALIBRATED — which is an honest state, not a gap, until based_on_n reaches minimum_n."
-            },
-            "calibrated_at": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "pattern": "^\\d{4}-\\d{2}-\\d{2}",
-              "description": "When the calibrated value was set. null while calibrated is null."
-            },
-            "based_on_n": {
-              "type": [
-                "integer",
-                "null"
-              ],
-              "minimum": 0,
-              "description": "How many cycles informed the calibration. 0 with a non-null `calibrated` is a contradiction: a value adjusted from nothing."
-            },
-            "minimum_n": {
-              "type": [
-                "integer",
-                "null"
-              ],
-              "minimum": 1,
-              "description": "Cycles required before the calibrated value overrides the default."
-            },
-            "bounds": {
-              "type": [
-                "object",
-                "null"
-              ],
-              "additionalProperties": true,
-              "description": "Hard limits the calibrated value may never exceed, per engine/adaptive-thresholds.md. They exist so a small sample cannot move a threshold somewhere unreasonable."
-            }
-          }
+          "deprecated": true,
+          "description": "RETIRED in 0.320.0. Declared here only so a thresholds.yml that still carries the key keeps validating and a reader of this schema learns why it is gone; nothing reads the value, and the key can be removed (check_cycle_recording.py says so in one WARN line). WHAT IT WAS: the ICE gap (default 0.20, bounds 0.10-0.40, to be calibrated from bakeoff outcomes) that decided two things in a leaf bakeoff: whether competing leaves were compared in parallel (scores within the gap) and which one won (a score above the gap). WHY IT WENT: no source read has the number or lets an ICE gap pick a winner. Gilad: 'The one number you should be most suspicious of is the ICE score' (Evidence-Guided, ch. 3); Torres compares a small set of ideas by testing their assumptions, not by scoring them. WHAT DOES THE WORK INSTEAD: leaves are compared whenever two or more on one opportunity each have an untested riskiest assumption, the assumption-test verdicts decide which advances, and the ICE total only orders which assumption is tested first (orchestration/leaf-bakeoff.md). Any value is accepted, so the shape of a retired record is not checked."
         }
       }
     },
