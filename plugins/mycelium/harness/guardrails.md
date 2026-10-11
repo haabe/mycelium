@@ -166,7 +166,7 @@ Before starting delivery, declare 1-3 measurable success criteria and how each w
 
 **G-L1: Every solution leaf must have Four Risks → ICE → assumption identification before entering L4** `REVIEW` `quality`
 The leaf lifecycle pipeline must be complete before spawning a delivery diamond. A leaf without risk assessment and scoring is an unvalidated guess entering production.
-*Source: Torres (CDH), Cagan (Four Risks), Ellis (ICE) / Gilad (Confidence Meter), Mycelium leaf lifecycle*
+*Source: Torres (CDH), Cagan (Four Risks), Gilad (ICE as Impact x Confidence x Ease, with the Confidence Meter; Ellis invented ICE), Mycelium leaf lifecycle. The ordering Four Risks → ICE is Mycelium's own. "Scoring" here means a recorded score: no ICE total has to be reached, and the cutoff before L4 is on evidence (the L4 entry lock, `engine/diamond-rules.md`).*
 
 **G-L2: Every GIST entry must trace back to a scored OST leaf** `REVIEW` `quality`
 GIST ideas don't appear from thin air. Every idea must have a `source_leaf_id` referencing an OST leaf whose #1 riskiest assumption has a recorded test verdict of `validated` (Torres's selection mechanism — assumption tests, not ICE scoring). Ideas without a tested-assumption provenance bypass the evidence pipeline. *(Corrected 2026-07-01, v0.54.0: was "passed ICE threshold" — a scoring-for-selection gate Torres cautions against.)*

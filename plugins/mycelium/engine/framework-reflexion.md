@@ -56,7 +56,7 @@ See `../skills/framework-health/SKILL.md` for the skill definition that generate
 | Finding | Action |
 |---------|--------|
 | Velocity degrading | Audit: are gates adding overhead? Are skills too complex? Consider simplifying. |
-| Late discards increasing | Tighten earlier gates (ICE threshold, assumption testing requirements). |
+| Late discards increasing | Tighten the earlier gate: the assumption-testing requirements (test the riskiest assumption sooner and with a sharper method). There is no ICE threshold to tighten; the one named here until 0.319.0 is retired (`adaptive-thresholds.md`). |
 | Confidence miscalibrated | Apply calibration factor from adaptive-thresholds.md. Review evidence standards. |
 | Gate always passes | Consider demoting from REVIEW to NUDGE, or removing if truly useless. |
 | Gate always fails | Consider if the criteria are too strict, or if the problem is systemic (not gate-fixable). |

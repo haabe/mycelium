@@ -647,14 +647,28 @@ def _contradictory_gate_rows(cycles):
 #: register (2026-09-01) measured 15 meta-dogfood cycles against 0 product-leaf and named
 #: calibrating a PRODUCT threshold on framework-maintenance cycles a category error.
 _CALIBRATION_INPUT = {
-    "ice_advance": ("product-leaf", "ice_accuracy"),
     "confidence_calibration": ("product-leaf", "risk_accuracy"),
     "bakeoff_delta": ("product-leaf", "ice_accuracy"),
+    # ice_advance was mapped to ice_accuracy from 0.216.0 to 0.318.x and REMOVED in 0.319.0,
+    # with the threshold itself (see _RETIRED_THRESHOLDS below). It asked for a cutoff on the
+    # ICE total to be tuned against outcomes, and no source read gives the total a cutoff.
     # cycle_recording_arc was mapped to effort_accuracy from 0.216.0 to 0.309.6 and REMOVED in
     # 0.310.0. engine/adaptive-thresholds.md has no calibration rule for it, and estimate error
     # does not measure how many releases may pass between cycles, so the finding asked for a
     # step nobody could perform (dogfood DL-1375: "calibration is due" on 12 rows, no rule to
     # apply). Add it back with a rule, not before; the threshold keeps its declared default.
+}
+#: Thresholds that were retired, and the one line a project still carrying the key is told.
+#: The key is never an error: thresholds.schema.json accepts it, so an existing thresholds.yml
+#: keeps validating, and nothing reads the value.
+_RETIRED_THRESHOLDS = {
+    "ice_advance": (
+        "retired in 0.319.0 and read by nothing; the key can be removed. It put a number "
+        "(default 100) on the ICE total, and no source does: Gilad calls the scores "
+        '"meaningless" except for comparing ideas (ICE Done Right p. 4), and his only cutoff is '
+        "on Confidence before delivery, which the L4 entry lock already reads "
+        "(engine/diamond-rules.md)"
+    ),
 }
 #: A solution status that is a terminal state in engine/cycle-learning.md's sense
 #: (launched, archived, killed), in the spellings canvases actually use.
@@ -701,13 +715,20 @@ def calibration_due_findings(canvas_dir):
     total cycle count, so the honest reason is "no eligible cycles carry the input", not
     "too few cycles". Never calibrates anything: the output is a prompt with the numbers in
     it, and calibrating a product threshold on meta cycles is a category error.
+
+    0.319.0: a third finding, one line for a threshold that was retired and is still in the
+    file (`_RETIRED_THRESHOLDS`). It does not depend on the cycle ledger, so it is reported
+    before the ledger is looked for.
     """
     canvas = Path(canvas_dir)
     thresholds = _load_yaml(canvas / "thresholds.yml")
     table = thresholds.get("thresholds") if isinstance(thresholds, dict) else None
+    retired = [f"thresholds.yml#{name}: {_RETIRED_THRESHOLDS[name]}"
+               for name in (table if isinstance(table, dict) else {})
+               if name in _RETIRED_THRESHOLDS]
     cycle_file = canvas / "cycle-history.yml"
     if not cycle_file.exists():
-        return []
+        return retired
     if not isinstance(table, dict):
         # 0.310.0. A thresholds.yml that EXISTS without a `thresholds` table used to
         # return [] here, the same as a project with nothing to calibrate. On the
@@ -724,7 +745,7 @@ def calibration_due_findings(canvas_dir):
         return []
     counts = calibration_input_counts(cycle_file)
     total = len(_load_yaml(cycle_file).get("cycles") or [])
-    out = []
+    out = retired
     for name, entry in table.items():
         if not isinstance(entry, dict) or name not in _CALIBRATION_INPUT:
             continue
@@ -753,7 +774,8 @@ def terminal_leaf_without_cycle_findings(canvas_dir):
     engine/cycle-learning.md line 7: every leaf that reaches a terminal state generates a
     cycle record. The dogfood canvas (2026-09-01) had three `sol-` leaves at VALIDATED or
     DISCARDED and no cycle for any, which is why `calibration.ice_accuracy` had no input and
-    `ice_advance` sat at based_on_n 0 with the precondition long met: the loop was never fed.
+    `ice_advance` (a threshold retired in 0.319.0) sat at based_on_n 0 with the precondition
+    long met: the loop was never fed.
     Measured before shipping: 22 terminal solutions without a cycle on that canvas, 4 with.
     The finding names the leaf and its status; recording the cycle is the remedy, and a
     reconstructed record with null calibration fields is the honest shape for old ones.

@@ -49,11 +49,13 @@ See `${CLAUDE_PLUGIN_ROOT}/engine/agent-operating-contract.md` *Canvas writes �
 - Never commit to an idea until evidence supports it
 
 ### 3. Score with ICE + Confidence Meter
-Use `/mycelium:ice-score` to prioritize. ICE scoring (the three dimensions are Ellis's; Gilad's Confidence Meter ties the Confidence score to evidence):
-- Confidence is NOT gut feel -- it maps to evidence levels
-- Score it 1-10, as `/mycelium:ice-score` does: 1-3 = gut feel or desk research | 4-6 = some direct evidence | 7-10 = test-validated
-- Rescore after every experiment
-> *Confidence is 1-10 here, like Impact and Ease. (Until 0.318.2 this step said "Mycelium uses 0.0-1.0" and gave a 0.1-0.9 scale, which `/mycelium:ice-score` records as the wrong one.) The score is an average and carries no penalty for an untested idea, so read the Confidence beside it. See `/mycelium:ice-score` for details.*
+Use `/mycelium:ice-score` to prioritize. GIST is Gilad's framework, and the ICE it uses is his: **ICE = Impact x Confidence x Ease**, each 0-10 (*Evidence-Guided*, ch. 3: the ICE score *"is simply the three values multiplied together"*). The three dimensions are Ellis's; the scale from 0, Ease as the effort to build the idea in full, and the Confidence Meter are Gilad's.
+- Impact is the estimated improvement in the goal's metric (step 1). 0 is a legal Impact.
+- Ease is the effort to build the whole idea, not to run the next step.
+- Confidence is NOT gut feel. It is summed from the evidence you hold, with Gilad's Confidence Meter: the weights and caps are in `/mycelium:ice-score` Step 2, and this skill does not carry a second copy of them. An idea backed only by opinion scores near zero (0.01 for a conviction, 0.1 for others' agreement); only test results take it above 4.6; only launch data makes it 10.
+- Rescore after every experiment, and whenever something is learned (Gilad, *ICE Done Right*, p. 15: *"every time you learn something new that changes your perspective on an idea [...] you should rescore it"*). Replace the three factors and the total together.
+- The total is a hint for comparing ideas, never a pass mark: *"The scores themselves are meaningless — they’re just a way to compare ideas"* (*ICE Done Right*, p. 4). Always show it with its Impact, Confidence and Ease.
+> *What this step said before, kept so a reader of an older canvas can place its numbers. Until 0.318.2: "Mycelium uses 0.0-1.0", with a 0.1-0.9 scale. In 0.318.2: Confidence 1-10 in bands (1-3 gut feel or desk research, 4-6 some direct evidence, 7-10 test-validated), and "The score is an average". Since 0.319.0: the product, with the meter. The bands were Mycelium's and are in no version of Gilad's meter; the average is Ellis's arithmetic (and one Gilad's ebook allows), not the one GIST's own materials use. A score written before 0.319.0 cannot be ranked against one written now: see `/mycelium:ice-score`, "Which ICE this is".*
 
 ### 4. Design Steps (per top idea)
 - Steps are small, time-boxed activities that build evidence
@@ -78,7 +80,7 @@ Use `/mycelium:ice-score` to prioritize. ICE scoring (the three dimensions are E
 After each step completes:
 - Update ICE scores based on new evidence
 - Re-rank ideas
-- Kill ideas below threshold
+- Park the ideas that no longer make the cut: keep them in the idea bank with their score and what was learned, out of the working set. Gilad's Parked bank *"can be as long as needed and hold ideas indefinitely"*, and a test result is what sends an idea there: the test lets you *"decide whether to keep pursuing the idea (keep it in the working set) or drop it (move it to Parked)"* (*ICE Done Right*, pp. 9 and 11). **There is no ICE threshold.** Until 0.319.0 this line read "Kill ideas below threshold"; no source gives the total a threshold, and Mycelium's own was retired in the same release (`engine/adaptive-thresholds.md`).
 - Surface new ideas from discovery work
 
 ### Shape Up: Appetite Over Estimates

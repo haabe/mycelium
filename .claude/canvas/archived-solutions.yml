@@ -10,7 +10,7 @@ archived: []
 #   opportunity_id: opp-001
 #   archived_at: "2026-04-12T10:00:00Z"
 #   archived_at_phase: 5        # Lifecycle phase number (1-10)
-#   reason: low-ice-score        # low-ice-score|failed-assumption|feasibility-block|viability-block|superseded|market-rejection
+#   reason: failed-assumption    # failed-assumption|feasibility-block|viability-block|superseded|market-rejection (low-ice-score is accepted for old records only: ICE has not discarded a leaf since v0.54.0)
 #   ice_score_at_archive:
 #     impact: 3
 #     confidence: 4

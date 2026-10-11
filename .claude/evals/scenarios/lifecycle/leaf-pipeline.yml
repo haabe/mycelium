@@ -65,7 +65,7 @@ success_criteria:
         - feasibility
         - viability
 
-  # Phase 3: ICE score derived from Four Risks
+  # Phase 3: ICE score (Impact x Confidence x Ease), scored after the Four Risks are assessed
   - ice_score_present:
       file: .claude/canvas/opportunities.yml
       solution_has_ice:

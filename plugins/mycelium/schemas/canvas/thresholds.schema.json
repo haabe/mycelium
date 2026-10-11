@@ -28,62 +28,8 @@
       "additionalProperties": true,
       "properties": {
         "ice_advance": {
-          "type": [
-            "object",
-            "null"
-          ],
-          "description": "ICE SEQUENCING REFERENCE, AND IT IS NOT AN ADVANCEMENT GATE. The name is historical. engine/adaptive-thresholds.md states it plainly: the advancement gate was REMOVED in v0.54.0 because scoring-for-selection is what Torres cautions against, and leaf-lifecycle.md Phase 5 carries the real gate — the riskiest assumption has a recorded verdict of `validated`. A validated leaf with a low ICE is DEPRIORITISED, never archived. This threshold orders what to do first; it never decides whether to do it at all. CALIBRATION INPUT: the ICE scores of leaves that were LAUNCHED AND SUCCEEDED versus those that FAILED, read from cycle-history.yml. That input was empty until 2026-09-01, when the first product-leaf cycles were recorded.",
-          "additionalProperties": true,
-          "properties": {
-            "default": {
-              "type": [
-                "number",
-                "string",
-                "null"
-              ],
-              "description": "Used until calibration kicks in. A sensible starting point, not evidence."
-            },
-            "calibrated": {
-              "type": [
-                "number",
-                "string",
-                "null"
-              ],
-              "description": "Adjusted from cycle data. null means NOT YET CALIBRATED — which is an honest state, not a gap, until based_on_n reaches minimum_n."
-            },
-            "calibrated_at": {
-              "type": [
-                "string",
-                "null"
-              ],
-              "pattern": "^\\d{4}-\\d{2}-\\d{2}",
-              "description": "When the calibrated value was set. null while calibrated is null."
-            },
-            "based_on_n": {
-              "type": [
-                "integer",
-                "null"
-              ],
-              "minimum": 0,
-              "description": "How many cycles informed the calibration. 0 with a non-null `calibrated` is a contradiction: a value adjusted from nothing."
-            },
-            "minimum_n": {
-              "type": [
-                "integer",
-                "null"
-              ],
-              "minimum": 1,
-              "description": "Cycles required before the calibrated value overrides the default."
-            },
-            "bounds": {
-              "type": [
-                "object",
-                "null"
-              ],
-              "additionalProperties": true,
-              "description": "Hard limits the calibrated value may never exceed, per engine/adaptive-thresholds.md. They exist so a small sample cannot move a threshold somewhere unreasonable."
-            }
-          }
+          "deprecated": true,
+          "description": "RETIRED in 0.319.0. Declared here only so a thresholds.yml that still carries the key keeps validating and a reader of this schema learns why it is gone; nothing reads the value, and the key can be removed (check_cycle_recording.py says so in one WARN line). WHAT IT WAS: a number on the ICE total (default 100, bounds 50-300), first as an advancement gate (removed v0.54.0), then as a 'sequencing reference' to be calibrated against outcomes. WHY IT WENT: no source read gives an ICE total a threshold. Gilad: 'The scores themselves are meaningless — they’re just a way to compare ideas' (ICE Done Right, p. 4); Ellis: 'The score is to be used for relative prioritization' (Hacking Growth, ch. 4). The one cutoff in the literature is on CONFIDENCE before delivery, and the L4 entry lock reads it (scripts/scale_locks.py, engine/diamond-rules.md). Any value is accepted, so the shape of a retired record is not checked."
         },
         "confidence_calibration": {
           "type": [

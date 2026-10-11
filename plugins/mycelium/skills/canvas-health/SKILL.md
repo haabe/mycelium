@@ -163,19 +163,37 @@ python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_cynefin_freshness.py" --project-dir
 python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_ice_aggregate.py" --project-dir .
 ```
 
-   `ice-score` and `docs/errata.md` A1 both say ICE is the **average** of Impact, Confidence and
-   Ease (Ellis, *Hacking Growth*: *"those ratings are averaged"*). A1 also tells consumers to
-   *"re-check decisions that turned on them"*, and until v0.238.0 nothing checked whether anyone
-   did. Measured on the dogfood canvas the day this step was written: **14 of 14 verifiable
-   aggregates were products, zero were averages**, three releases after the erratum shipped.
+   **The rule since 0.319.0: a stored aggregate is the PRODUCT of its factors.** `ice-score` and
+   `docs/errata.md` A7 say ICE is Impact x Confidence x Ease, as Gilad defines it (*Evidence-Guided*,
+   ch. 3: *"simply the three values multiplied together"*). From v0.238.0 to 0.318.x this step
+   checked the opposite, that an aggregate was the **average** (Ellis, *Hacking Growth*: *"those
+   ratings are averaged"*; errata A1), because that was the documented rule then.
 
-   **It is baseline-gated on purpose, and the baseline is not a snooze.** The corpus present at
-   adoption is recorded and the check fails only on aggregates written or changed afterwards. A
-   product-shaped aggregate on a shipped or discarded leaf is the honest record of how that call was
-   actually made; re-scoring it now would only make a closed decision look compliant, which is the
-   backfill `check_leaf_lifecycle` refuses in plain words. Run `--write-baseline` ONCE at adoption.
-   **Adding a new failure to the baseline is the one use of that flag that is wrong** — it records a
-   fresh mistake as history.
+   Why the check exists at all, unchanged: A1 told consumers to *"re-check decisions that turned on
+   them"*, and until v0.238.0 nothing checked whether anyone did. Measured on the dogfood canvas the
+   day this step was written: **14 of 14 verifiable aggregates were products, zero were averages**,
+   three releases after the erratum shipped.
+
+   **It is baseline-gated on purpose, and the baseline is not a snooze.** The aggregates that are
+   not the product when the baseline is taken are recorded, each with its value, and the check fails
+   only on one written or changed afterwards. An average on a shipped or discarded leaf (written
+   from 0.229.0 to 0.318.x) is the honest record of how that call was actually made; re-scoring it
+   now would only make a closed decision look compliant, which is the backfill
+   `check_leaf_lifecycle` refuses in plain words. **The check never rewrites canvas data, and you
+   must not either.**
+
+   **Read the exit and the first word of the verdict:**
+   - `OK` (exit 0): nothing that is not the product has appeared or changed since the baseline.
+   - `FAIL` (exit 1): a new or changed aggregate is not the product of its factors. Fix that score
+     with `/mycelium:ice-score`. **Adding a new failure to the baseline is the one use of
+     `--write-baseline` that is wrong** — it records a fresh mistake as history.
+   - `CANNOT ASSESS` (exit 2): aggregates that are not the product exist, and no baseline taken
+     under the 0.319.0 rule says which were already there. This is what a project sees on its
+     first run after upgrading, because a baseline written before 0.319.0 lists the old products
+     and not the averages. It is not a failure of those scores and it is not a pass. If they were
+     written before the project took 0.319.0, run `--write-baseline` ONCE (the earlier list is
+     carried over in the file as a record) and commit the baseline. If any was written after, fix
+     that score first.
 
    **Read the UNVERIFIABLE bucket, it is not a pass.** An aggregate stored without its factors
    cannot be recomputed at all; the check says so rather than counting it clean.

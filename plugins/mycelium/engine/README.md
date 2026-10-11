@@ -11,7 +11,7 @@ The engine is the brain of Mycelium. It defines how diamonds work, what gates mu
 ### Decision Gates
 - **[theory-gates.md](theory-gates.md)** — The 15 gates that must pass before a diamond transitions: Evidence, Four Risks, JTBD, Cynefin, Bias, Security, Privacy, BVSSH, Service Quality, Delivery Metrics, Corrections, Regulatory, Explainability, Landscape, Capacity (Explainability is conditional — L3–L5, AI products only; Landscape and Capacity are NUDGE-tier, added v0.217.0, and apply at L1). Each gate has pass/fail criteria and a suggested skill.
 - **[confidence-thresholds.yml](confidence-thresholds.yml)** — How much evidence is enough? Thresholds per scale, adapted by project type and dogfood mode.
-- **[adaptive-thresholds.md](adaptive-thresholds.md)** — Thresholds that improve from historical data. ICE advance threshold, confidence calibration, evidence staleness — all adjust as cycle history accumulates.
+- **[adaptive-thresholds.md](adaptive-thresholds.md)** — Thresholds that improve from historical data. Confidence calibration, evidence staleness, the bakeoff delta — all adjust as cycle history accumulates. (The ICE advance threshold listed here until 0.319.0 is retired: no source gives an ICE total a threshold.)
 
 ### Routing and Classification
 - **[cynefin-routing.md](cynefin-routing.md)** — Snowden's Cynefin framework applied: how to classify problems as Clear, Complicated, Complex, or Chaotic, and what that means for which approach to use.
@@ -21,7 +21,7 @@ The engine is the brain of Mycelium. It defines how diamonds work, what gates mu
 ### Self-Improvement
 - **[feedback-loops.md](feedback-loops.md)** — Four-speed learning system: immediate (reflexion), incremental (diamond phases), strategic (BVSSH/DORA/Wardley), transformative (eval benchmarks).
 - **[framework-reflexion.md](framework-reflexion.md)** — Quarterly self-assessment: cycle velocity, discard trends, confidence calibration, gate effectiveness.
-- **[cycle-learning.md](cycle-learning.md)** — Every completed or discarded leaf generates calibration data. Predicted vs actual ICE, effort accuracy, risk dimension accuracy.
+- **[cycle-learning.md](cycle-learning.md)** — Every completed or discarded leaf generates calibration data. Predicted ICE (its three factors and their product) vs actual outcome, effort accuracy, risk dimension accuracy.
 - **[pattern-detector.md](pattern-detector.md)** — Statistical patterns across cycle history surface as correlation rules and anti-pattern signals.
 - **[evidence-decay.md](evidence-decay.md)** — Evidence ages. Confidence degrades over time unless refreshed.
 - **[reading-for-meaning.md](reading-for-meaning.md)** — How to read other people's language as evidence: by meaning, not by words. A keyword search is a finder, never a counter, and an absence is never concluded from a word match.

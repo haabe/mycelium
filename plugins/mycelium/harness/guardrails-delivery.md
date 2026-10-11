@@ -120,7 +120,7 @@ A change that adds or modifies a runnable artifact (script, plugin, hook, config
 
 **G-L1: Every solution leaf must have Four Risks -> ICE -> assumption identification before entering L4** `REVIEW` `quality`
 The leaf lifecycle pipeline must be complete before spawning a delivery diamond.
-*Source: Torres (CDH), Cagan (Four Risks), Ellis (ICE) / Gilad (Confidence Meter)*
+*Source: Torres (CDH), Cagan (Four Risks), Gilad (ICE as Impact x Confidence x Ease, with the Confidence Meter; Ellis invented ICE). The ordering Four Risks -> ICE is Mycelium's own. A recorded score is what is required: no ICE total has to be reached.*
 
 **G-L2: Every GIST entry must trace back to a scored OST leaf** `REVIEW` `quality`
 Every idea must have a `source_leaf_id` referencing an OST leaf whose riskiest assumption has a recorded `validated` test verdict (Torres selection, not ICE scoring; corrected 2026-07-01, v0.54.0).

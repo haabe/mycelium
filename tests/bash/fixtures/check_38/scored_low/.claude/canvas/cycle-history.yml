@@ -1,0 +1,24 @@
+schema_version: 1
+cycles:
+  # 0.319.0: ICE is Impact x Confidence x Ease with Gilad's Confidence Meter, so a real
+  # score can be under 1, and an Impact of 0 gives a total of 0. Both are recorded scores.
+  - cycle_id: cycle-001
+    leaf_id: opp-001-sol-a
+    opportunity_id: opp-001
+    cycle_class: product-leaf
+    predicted:
+      ice_score: {i: 3, c: 0.1, e: 2, total: 0.6}
+      feasibility_risk: medium
+      estimated_effort: "2 sprints"
+    actual:
+      outcome: partial
+  - cycle_id: cycle-002
+    leaf_id: opp-001-sol-b
+    opportunity_id: opp-001
+    cycle_class: product-leaf
+    predicted:
+      ice_score: {i: 0, c: 3.5, e: 6, total: 0}
+      feasibility_risk: low
+      estimated_effort: "1 sprint"
+    actual:
+      outcome: failure

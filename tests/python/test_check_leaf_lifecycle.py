@@ -15,6 +15,8 @@ failure. `test_na_is_not_a_pass` locks in the distinction that caught it.
 import json
 import sys
 
+import pytest
+
 
 def _import(scripts_path):
     sys.path.insert(0, str(scripts_path))
@@ -91,6 +93,59 @@ opportunities:
       - id: sol-001a
         status: shipped
         ice_score: {i: 0, c: 0, e: 0, total: 0}
+""")
+    assert _run(mod, "--project-dir", str(tmp_path)) == 1
+
+
+def test_a_total_under_one_is_a_score(scripts_path, tmp_path):
+    """0.319.0. ICE is Impact x Confidence x Ease with Gilad's Confidence Meter, whose values
+    are small: 3 x 0.1 x 2 = 0.6. Until 0.318.x the total was truncated to an integer, so this
+    leaf read as carrying no ICE at all."""
+    mod = _import(scripts_path)
+    _canvas(tmp_path, """
+opportunities:
+  - id: opp-001
+    solutions:
+      - id: sol-001a
+        status: shipped
+        four_risks: {value: "assessed"}
+        ice_score: {i: 3, c: 0.1, e: 2, total: 0.6}
+""")
+    assert _run(mod, "--project-dir", str(tmp_path)) == 0
+
+
+@pytest.mark.parametrize("block", [
+    "{i: 0, c: 3.5, e: 6, total: 0}",
+    "{impact: 0, confidence: 3.5, ease: 6, total: 0}",
+])
+def test_a_zero_total_with_recorded_factors_is_a_score(scripts_path, tmp_path, block):
+    """0 is a legal Impact in Gilad's 0-10 range, and the product is then 0. The factors are
+    what tell it apart from the nothing-was-scored shape in the test above."""
+    mod = _import(scripts_path)
+    _canvas(tmp_path, f"""
+opportunities:
+  - id: opp-001
+    solutions:
+      - id: sol-001a
+        status: shipped
+        four_risks: {{value: "assessed"}}
+        ice_score: {block}
+""")
+    assert _run(mod, "--project-dir", str(tmp_path)) == 0
+
+
+def test_a_block_without_a_total_is_read_as_before(scripts_path, tmp_path):
+    """The 0.319.0 change is about zero and near-zero totals. Factors with no `total` key were
+    unscored before it and still are; widening that is a separate decision."""
+    mod = _import(scripts_path)
+    _canvas(tmp_path, """
+opportunities:
+  - id: opp-001
+    solutions:
+      - id: sol-001a
+        status: shipped
+        four_risks: {value: "assessed"}
+        ice_score: {i: 8, c: 3.5, e: 7}
 """)
     assert _run(mod, "--project-dir", str(tmp_path)) == 1
 

@@ -19,7 +19,7 @@ Every leaf that reaches a terminal state (launched, archived, or killed) generat
 
   # Predicted vs actual — the calibration data
   predicted:
-    ice_score: {i: 8, c: 6, e: 7, total: 336}  # REQUIRED non-zero when cycle_class=product-leaf
+    ice_score: {i: 8, c: 6, e: 7, total: 336}  # REQUIRED when cycle_class=product-leaf: the three factors and their product (i x c x e, Gilad's ICE; 0.319.0)
     feasibility_risk: medium
     estimated_effort: "2 sprints"
   actual:
@@ -84,7 +84,7 @@ Every leaf that reaches a terminal state (launched, archived, or killed) generat
     days_to_first_regression: null  # null = no regression observed
   
   # Discard-specific (if archived/killed)
-  discard_reason: ""  # low-ice-score | failed-assumption | feasibility-block | etc.
+  discard_reason: ""  # failed-assumption | feasibility-block | etc. (low-ice-score is no longer written: ICE has not discarded a leaf since v0.54.0, and has had no threshold at all since 0.319.0)
   discard_phase: null  # Which lifecycle phase the leaf died at
 ```
 
@@ -94,11 +94,13 @@ Every cycle record carries a `cycle_class` field. The class determines which cal
 
 | Class | Definition | ICE required? | Calibration dimensions that apply |
 |---|---|---|---|
-| `product-leaf` | OST solution leaf shipped or discarded — the canonical cycle shape | **yes**, non-zero `predicted.ice_score` | ICE accuracy, effort accuracy, risk accuracy, rework rate, discard timing |
+| `product-leaf` | OST solution leaf shipped or discarded — the canonical cycle shape | **yes**, a recorded `predicted.ice_score` (see the rule below) | ICE accuracy, effort accuracy, risk accuracy, rework rate, discard timing |
 | `meta-dogfood` | Framework-self-development (validator check shipped, anti-pattern graduated, harness layer added) — no impact/confidence/ease tradeoff was scored | no — `ice_score: {i:0, c:0, e:0, total:0}` permitted with `notes:` line stating why | Effort accuracy only |
 | `observation` | First-week observation, cohort log capture, evidence harvesting — no design decision was made | no | None (record for audit trail only; excluded from calibration_summary aggregates) |
 
-**Rule**: A `product-leaf` cycle with `predicted.ice_score.total == 0` is a validator failure (Check 38). Either the cycle is mis-classed, or the ICE step was skipped at opp-selection — see `skills/ice-score/SKILL.md` for the gate.
+**Rule**: A `product-leaf` cycle with no recorded `predicted.ice_score` is a validator failure (Check 38, and the cycle-history schema). Either the cycle is mis-classed, or the ICE step was skipped at opp-selection — see `skills/ice-score/SKILL.md` for the gate.
+
+**What "recorded" means (changed 0.319.0).** Until 0.318.x the rule was `predicted.ice_score.total` not equal to 0, and Check 38 truncated the total to an integer first. ICE is now Gilad's product, Impact x Confidence x Ease with his Confidence Meter, and that makes two honest scores look like zero: a total under 1 (meter values are small: 3 x 0.1 x 2 = 0.6), and a total of exactly 0 from an Impact of 0, which is a legal Impact in his 0-10 range. So: the total is a number other than zero, OR the total is zero and the three factors are recorded with at least one of them above zero. `{i:0, c:0, e:0, total:0}` is still the nothing-was-scored shape, permitted on `meta-dogfood` and `observation` records and a failure on a `product-leaf` one. `scripts/check_leaf_lifecycle.py` reads a shipped leaf's `ice_score` the same way.
 
 **Why this matters**: without `cycle_class`, framework-meta cycles (no ICE possible) and product-leaf cycles (ICE required) end up in the same bucket. `calibration_summary` then says "0/N cycles carry ICE" forever — a permanently dark dimension. Classing makes the dark dimension narrow correctly: "0/0 product-leaf cycles" is honest and actionable; "0/N total cycles" is theater.
 
@@ -106,7 +108,7 @@ Every cycle record carries a `cycle_class` field. The class determines which cal
 
 | Event | Trigger | What to Record |
 |-------|---------|----------------|
-| Leaf archived | `/ice-score` discard, `/assumption-test` failure | Predicted ICE, discard reason, discard phase, learnings |
+| Leaf archived | `/assumption-test` failure (an invalidated riskiest assumption). `/ice-score` never archives a leaf: a low rank parks it | Predicted ICE, discard reason, discard phase, learnings |
 | Leaf launched | The L5 records `release` | Full predicted vs actual comparison |
 | Post-launch review | 30 days after launch | User metrics, actual outcome, calibration delta |
 | Rework follow-up | 14 days after completion | Post-delivery corrections, regressions, days to first regression |
@@ -135,7 +137,9 @@ The cycle history enables these calibration questions:
 ### ICE Accuracy
 Compare predicted ICE scores with actual outcomes. Over time:
 - Are high-ICE items actually succeeding? (If not: ICE methodology needs tuning)
-- Are low-ICE discards actually low-value? (If revivals succeed: threshold may be too aggressive)
+- Are the leaves that ranked low and were built anyway doing worse than the ones that ranked high? *(Until 0.319.0 this line asked whether "low-ICE discards" were low-value and whether the "threshold may be too aggressive". ICE has not discarded a leaf since v0.54.0 and has had no threshold since 0.319.0, see `adaptive-thresholds.md`, so there is neither to audit.)*
+- Read the three factors, not only the total: Gilad found them *"far more helpful than the total ICE score"* (*Evidence-Guided*, ch. 4).
+- Compare only scores computed the same way. A score written before 0.319.0 is an average or a product of 1-10 ratings and is not on the same scale as one written since (`/ice-score`, "Which ICE this is").
 
 ### Effort Accuracy
 Compare estimated effort (from feasibility risk) with actual effort:
@@ -228,5 +232,5 @@ measurement. The test suite pins both halves.
 
 - Argyris: Single-loop and double-loop learning (cycle learning is single-loop; pattern emergence from cycles is double-loop)
 - Forsgren: Accelerate (measuring and improving delivery capabilities)
-- Gilad: Evidence Guided (confidence calibration from actual outcomes)
+- Gilad: *Evidence-Guided* (confidence comes from evidence, the Confidence Meter, ch. 3; recalculating ICE at the end of each step, ch. 4). Until 0.319.0 this line read "confidence calibration from actual outcomes"; the parts of the book read on 2026-10-11 describe no procedure for calibrating confidence against outcomes, so the calibration in this file is Mycelium's own.
 - Kahneman: Thinking, Fast and Slow (calibration of prediction accuracy)
