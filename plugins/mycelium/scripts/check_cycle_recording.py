@@ -31,6 +31,19 @@ WHAT IT CHECKS
     Minor, not patch, deliberately. A patch is maintenance, and the 2026-06-18
     ruling that steady-state ops earns no cycle still stands.
 
+WHERE A RELEASE IS READ FROM (0.319.2)
+    From the release repository's VERSION TAGS when it has any (`v1.4.0` or
+    `1.4.0`), and from commit subjects only when it has none. A minor release
+    is a new major.minor line among the tags, dated by that line's first tag,
+    whether or not that first tag ends in `.0`. A tag is the
+    release record: one per release, made by the act of releasing, in a form
+    that does not depend on how anyone words a commit. Commit subjects are the
+    weaker record and were the only one read until 0.319.2: the pattern below
+    had to follow this project's own subject style twice (0.310.0) and counts a
+    version that a subject merely opens with. The output always says which
+    record was read. `--release-pattern` still forces the subject scan, since a
+    pattern is a statement about subjects.
+
 WHAT IT DELIBERATELY DOES NOT DO
     It does not write the record, and it does not guess where the arc begins
     or ends. Both are judgements. A script that guessed would have to invent
@@ -55,7 +68,10 @@ ABSENT-INPUT DISCIPLINE (anti-pattern #9 — fail loud, but only on real gaps)
       `no-releases-matched` token. This is the branch most likely to be a
       broken pattern rather than a true absence, so it prints the pattern it
       used and the number of commits it scanned. Silence here would reproduce
-      the exact defect the check is named for.
+      the exact defect the check is named for. Reached only on the subject
+      scan: when the repository has version tags and no new minor line was
+      tagged in the window, that is a measured zero and is reported as `ok`
+      with the number of tags read.
     - Cycles exist, releases exist, arc short  -> exit 0 with the count.
     - Arc at or over threshold                 -> exit 1.
 
@@ -113,6 +129,12 @@ MAX_GATE_ROWS_SHOWN = 6
 # the subject start so a version merely MENTIONED mid-subject ("what 0.307.0
 # still read") is not counted as a release.
 MINOR_RELEASE_RE = re.compile(r"(?:^|\bv)(\d+)\.(\d+)\.0\b")
+
+# A version tag: the whole tag name is a three-part version, with or without `v`.
+# Anchored at both ends so `v1.4.0-rc1`, `release-1.4.0` and `docs-v2` are not
+# releases. A repository that tags some other way has no version tags as far as
+# this check can tell, and is counted from its commit subjects as before.
+VERSION_TAG_RE = re.compile(r"^v?(\d+)\.(\d+)\.(\d+)$")
 
 
 def _git(project_dir: Path, *args: str) -> str:
@@ -195,6 +217,86 @@ def minor_releases_since(project_dir: Path, since_iso, pattern: re.Pattern):
                 seen.add(key)
                 releases.append(match.group(0))
     return releases, len(subjects)
+
+
+def version_tags(repo: Path):
+    """Return [(tag name, (major, minor, patch), created unix time)] for each version tag.
+
+    `creatordate` is the tag's own date for an annotated tag and the commit's date
+    for a lightweight one, so both kinds are placed in time without a second call.
+    """
+    out = _git(repo, "for-each-ref", "--format=%(refname:short)%09%(creatordate:unix)", "refs/tags")
+    tags = []
+    for line in out.splitlines():
+        name, _, stamp = line.partition("\t")
+        match = VERSION_TAG_RE.match(name.strip())
+        if match and stamp.strip().isdigit():
+            tags.append((name.strip(), tuple(int(g) for g in match.groups()), int(stamp)))
+    return tags
+
+
+def _since_unix(repo: Path, since_iso: str) -> int:
+    """The moment `git log --since=<stamp>` would cut at, as unix time.
+
+    Asked of git itself so the tag count and the subject scan read one stamp the
+    same way, whatever form `completed_at` was written in.
+    """
+    out = _git(repo, "rev-parse", f"--since={since_iso}").strip()
+    prefix = "--max-age="
+    if not out.startswith(prefix) or not out[len(prefix):].isdigit():
+        raise RuntimeError(f"git could not read {since_iso!r} as a date (got {out!r})")
+    return int(out[len(prefix):])
+
+
+def minor_releases_from_tags(repo: Path, since_iso, tags):
+    """Return one tag per minor line FIRST tagged at or after `since_iso`, newest first.
+
+    A minor release is a new (major, minor) line appearing among the tags, read
+    from that line's earliest tag. NOT "a tag ending in .0": a line can be first
+    released as a patch. Measured on this framework's own history while writing
+    this (2026-10-11): 0.192, 0.194 and 0.196 were each first tagged as `.1`, with
+    no `.0` tag, and a count of `.0` tags alone read three releases fewer than
+    shipped. A later patch on a line first tagged before the window is not a
+    release here, and `v1.4.0` and `1.4.0` on one repository are one line.
+    `since_iso` None means whole history.
+    """
+    cutoff = _since_unix(repo, since_iso) if since_iso else None
+    first = {}
+    for name, (major, minor, patch), created in tags:
+        line = (major, minor)
+        if line not in first or (created, patch) < first[line][:2]:
+            first[line] = (created, patch, name)
+    return [
+        name for created, _patch, name in sorted(first.values(), reverse=True)
+        if cutoff is None or created >= cutoff
+    ]
+
+
+def scan_releases(repo: Path, since_iso, pattern: re.Pattern, *, subjects_forced: bool) -> dict:
+    """Count minor releases since `since_iso`, from tags when the repository has them.
+
+    TAGS FIRST, SUBJECTS AS THE FALLBACK (0.319.2). "Has version tags" is asked of the
+    whole repository, never of the window: a repository that tags its releases and has
+    tagged none since the last cycle has released nothing, and falling back to subjects
+    there would count versions that commits merely mention.
+    """
+    tags = [] if subjects_forced else version_tags(repo)
+    if tags:
+        return {"releases": minor_releases_from_tags(repo, since_iso, tags), "commits_scanned": 0,
+                "release_source": "tags", "tags_scanned": len(tags)}
+    releases, commits_scanned = minor_releases_since(repo, since_iso, pattern)
+    return {"releases": releases, "commits_scanned": commits_scanned,
+            "release_source": "commit-subjects", "tags_scanned": 0}
+
+
+def _source_label(found: dict, *, subjects_forced: bool) -> str:
+    """Which RECORD supplied the count. The two can disagree, and a count that does
+    not say which it read cannot be checked against either."""
+    if found["release_source"] == "tags":
+        return f" [read from {found['tags_scanned']} version tag(s)]"
+    if subjects_forced:
+        return " [read from commit subjects: --release-pattern given]"
+    return " [read from commit subjects: the release repository has no version tags]"
 
 
 def _arc_entry(project_dir: Path):
@@ -296,6 +398,34 @@ def _report_no_matches(as_json, commits_scanned, since_label, pattern) -> int:
     return 0
 
 
+def _report_none_tagged(scan: dict, as_json: bool) -> int:
+    """Version tags exist and none is a minor release in the window: a measured zero.
+
+    NOT the `no-releases-matched` state. That one means "the pattern may never have
+    matched, I cannot tell"; here the repository's own release record was read and
+    holds nothing new, which is the ordinary pass.
+    """
+    tags_scanned = scan["tags_scanned"]
+    if as_json:
+        print(json.dumps({
+            "status": "ok",
+            "releases": 0,
+            "threshold": scan["threshold"],
+            "threshold_source": scan["threshold_source"],
+            "since": scan["since_label"],
+            "release_source": "tags",
+            "release_tokens": [],
+            "tags_scanned": tags_scanned,
+            "commits_scanned": 0,
+        }, indent=2))
+    else:
+        print(
+            f"check_cycle_recording: OK — 0 minor release(s) since {scan['since_label']}, "
+            f"under threshold {scan['threshold']} ({scan['threshold_source']})."
+        )
+    return 0
+
+
 def _report_never_recorded(as_json, releases, commits_scanned, threshold, threshold_source) -> int:
     """NEVER-RECORDED is its own state, not a very wide arc.
 
@@ -344,7 +474,10 @@ def report(scan: dict, *, as_json: bool) -> int:
     threshold = scan["threshold"]
     threshold_source = scan["threshold_source"]
 
+    release_source = scan.get("release_source", "commit-subjects")
     if not releases:
+        if release_source == "tags":
+            return _report_none_tagged(scan, as_json)
         return _report_no_matches(as_json, commits_scanned, since_label, pattern)
     if newest is None:
         return _report_never_recorded(
@@ -361,7 +494,9 @@ def report(scan: dict, *, as_json: bool) -> int:
             "threshold": threshold,
             "threshold_source": threshold_source,
             "since": since_label,
+            "release_source": release_source,
             "release_tokens": distinct,
+            "tags_scanned": scan.get("tags_scanned", 0),
             "commits_scanned": commits_scanned,
         }, indent=2))
     elif owed:
@@ -843,7 +978,13 @@ def main() -> int:
         "--threshold", type=int, default=None,
         help="minor releases before a cycle is owed",
     )
-    parser.add_argument("--release-pattern", default=None, help="override the minor-release regex")
+    parser.add_argument(
+        "--release-pattern", default=None,
+        help=(
+            "override the minor-release regex for commit subjects. Giving one also forces "
+            "the subject scan in a repository that has version tags."
+        ),
+    )
     parser.add_argument("--json", action="store_true", help="emit machine-readable output")
     args = parser.parse_args()
 
@@ -899,8 +1040,9 @@ def main() -> int:
 
     try:
         newest = newest_cycle_completion(cycle_file)
-        releases, commits_scanned = minor_releases_since(
-            release_repo, newest[0] if newest else None, pattern
+        found = scan_releases(
+            release_repo, newest[0] if newest else None, pattern,
+            subjects_forced=bool(args.release_pattern),
         )
     except (RuntimeError, TypeError) as exc:
         # LOUD. "I could not look" must never be reported as "nothing found".
@@ -917,11 +1059,11 @@ def main() -> int:
     # so the count must never appear without saying where it came from.
     if release_repo != project_dir:
         since_label += f" [releases counted in {release_repo}, from {repo_source}]"
+    since_label += _source_label(found, subjects_forced=bool(args.release_pattern))
 
     return report(
         {
-            "releases": releases,
-            "commits_scanned": commits_scanned,
+            **found,
             "newest": newest,
             "since_label": since_label,
             "pattern": pattern,

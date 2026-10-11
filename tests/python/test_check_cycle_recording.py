@@ -389,3 +389,188 @@ def test_a_thresholds_file_without_its_table_says_so(scripts_path, tmp_path, cap
 
     assert _run(mod, "--project-dir", str(project)) == 0
     assert "no `thresholds` table" in capsys.readouterr().out
+
+
+# --- 0.319.2: the release record is the tags, when the repository has them ---
+#
+# Until 0.319.2 this check read commit subjects only, in a repository that carried
+# a version tag per release. Each test below builds a real repository; the tags are
+# made with explicit dates so "since the last cycle" does not depend on the clock.
+
+def _tag(repo, name, when, annotated=False):
+    """Tag HEAD as `name`, dated `when` (ISO). Lightweight tags take the commit's date.
+
+    `tag.gpgSign=false` on the command line: a machine whose git signs every tag turns a
+    plain `git tag <name>` into a signed one, which fails here with "no tag message?".
+    """
+    import os
+    env = dict(os.environ, GIT_COMMITTER_DATE=when, GIT_AUTHOR_DATE=when)
+    (repo / f"t-{name}.txt").write_text(name)
+    subprocess.run(["git", "-C", str(repo), "add", "-A"], check=True, capture_output=True, env=env)
+    subprocess.run(["git", "-C", str(repo), "commit", "-q", "-m", f"work for {name}"],
+                   check=True, capture_output=True, env=env)
+    args = ["tag", "-a", name, "-m", name] if annotated else ["tag", name]
+    subprocess.run(["git", "-C", str(repo), "-c", "tag.gpgSign=false", *args],
+                   check=True, capture_output=True, env=env)
+
+
+def _json_run(mod, capsys, *argv):
+    import json as _json
+    code = _run(mod, *argv, "--json")
+    return code, _json.loads(capsys.readouterr().out)
+
+
+def test_tags_are_counted_when_the_repository_has_them(scripts_path, tmp_path, capsys):
+    """RED BEFORE 0.319.2: no subject names a version, so the subject scan read
+    `no-releases-matched` while two minor releases were tagged."""
+    mod = _import(scripts_path)
+    project = _repo(tmp_path / "proj", ["chore: start"])
+    _cycles(project, "2026-01-01T00:00:00Z")
+    _tag(project, "v1.1.0", "2026-02-01T12:00:00Z")
+    _tag(project, "v1.2.0", "2026-03-01T12:00:00Z", annotated=True)
+
+    code, payload = _json_run(mod, capsys, "--project-dir", str(project), "--threshold", "2")
+    assert code == 1
+    assert payload["status"] == "cycle-owed"
+    assert payload["releases"] == 2
+    assert payload["release_source"] == "tags"
+    assert sorted(payload["release_tokens"]) == ["v1.1.0", "v1.2.0"]
+
+
+def test_a_version_in_a_subject_is_not_a_release_when_tags_exist(scripts_path, tmp_path, capsys):
+    """RED BEFORE 0.319.2: three subjects open with a minor version and were counted as
+    three releases. The repository tagged one. The tag is the record."""
+    mod = _import(scripts_path)
+    project = _repo(tmp_path / "proj", ["chore: start"])
+    _cycles(project, "2026-01-01T00:00:00Z")
+    _tag(project, "v1.1.0", "2026-02-01T12:00:00Z")
+    for i, subject in enumerate(["1.2.0: planned", "1.3.0: drafted", "1.4.0: notes"]):
+        (project / f"s{i}.txt").write_text(str(i))
+        _git(project, "add", "-A")
+        _git(project, "commit", "-q", "-m", subject)
+
+    code, payload = _json_run(mod, capsys, "--project-dir", str(project), "--threshold", "3")
+    assert code == 0
+    assert payload["releases"] == 1
+    assert payload["release_tokens"] == ["v1.1.0"]
+
+
+def test_tags_before_the_last_cycle_and_patch_tags_are_not_counted(scripts_path, tmp_path, capsys):
+    mod = _import(scripts_path)
+    project = _repo(tmp_path / "proj", ["chore: start"])
+    _tag(project, "v1.0.0", "2025-06-01T12:00:00Z")      # before the cycle
+    _cycles(project, "2026-01-01T00:00:00Z")
+    _tag(project, "v1.0.1", "2026-02-01T12:00:00Z")      # a patch
+    _tag(project, "v1.1.0-rc1", "2026-02-02T12:00:00Z")  # not a version tag
+    _tag(project, "v1.1.0", "2026-02-03T12:00:00Z")
+
+    code, payload = _json_run(mod, capsys, "--project-dir", str(project), "--threshold", "5")
+    assert code == 0
+    assert payload["release_tokens"] == ["v1.1.0"]
+    assert payload["tags_scanned"] == 3                   # the rc is not a version tag
+
+
+def test_no_minor_tag_since_the_cycle_is_a_measured_zero(scripts_path, tmp_path, capsys):
+    """Tags exist and none is new: `ok`, NOT `no-releases-matched`. The second means
+    "my pattern may never have matched"; here the release record was read and is empty.
+    Falling back to subjects in this case would count the mention below."""
+    mod = _import(scripts_path)
+    project = _repo(tmp_path / "proj", ["chore: start"])
+    _tag(project, "v1.0.0", "2025-06-01T12:00:00Z")
+    _cycles(project, "2026-01-01T00:00:00Z")
+    (project / "later.txt").write_text("x")
+    _git(project, "add", "-A")
+    _git(project, "commit", "-q", "-m", "1.1.0: not released yet")
+
+    code, payload = _json_run(mod, capsys, "--project-dir", str(project))
+    assert code == 0
+    assert payload["status"] == "ok"
+    assert payload["releases"] == 0
+    assert payload["release_source"] == "tags"
+    assert payload["tags_scanned"] == 1
+
+
+def test_without_version_tags_subjects_are_read_and_the_output_says_so(scripts_path, tmp_path, capsys):
+    """The fallback, and the disclosure. A non-version tag does not switch the source."""
+    mod = _import(scripts_path)
+    project = _repo(tmp_path / "proj", ["v0.1.0: one", "v0.2.0: two"])
+    _git(project, "-c", "tag.gpgSign=false", "tag", "nightly")
+    _cycles(project, "2000-01-01T00:00:00Z")
+
+    assert _run(mod, "--project-dir", str(project), "--threshold", "5") == 0
+    out = capsys.readouterr().out
+    assert "2 minor release(s)" in out
+    assert "read from commit subjects: the release repository has no version tags" in out
+
+    code, payload = _json_run(mod, capsys, "--project-dir", str(project), "--threshold", "5")
+    assert payload["release_source"] == "commit-subjects"
+    assert payload["tags_scanned"] == 0
+
+
+def test_the_text_output_names_the_tag_count_it_read(scripts_path, tmp_path, capsys):
+    mod = _import(scripts_path)
+    project = _repo(tmp_path / "proj", ["chore: start"])
+    _cycles(project, "2026-01-01T00:00:00Z")
+    _tag(project, "1.1.0", "2026-02-01T12:00:00Z")        # no `v`: still a version tag
+
+    assert _run(mod, "--project-dir", str(project), "--threshold", "5") == 0
+    out = capsys.readouterr().out
+    assert "1 minor release(s)" in out
+    assert "read from 1 version tag(s)" in out
+
+
+def test_a_release_pattern_forces_the_subject_scan(scripts_path, tmp_path, capsys):
+    """A pattern is a statement about subjects; giving one must not be silently ignored
+    in a repository that happens to have tags."""
+    mod = _import(scripts_path)
+    project = _repo(tmp_path / "proj", ["release 7.1", "release 7.2"])
+    _cycles(project, "2000-01-01T00:00:00Z")
+    _tag(project, "v1.1.0", "2026-02-01T12:00:00Z")
+
+    code, payload = _json_run(mod, capsys, "--project-dir", str(project),
+                              "--release-pattern", r"release (\d+)\.(\d+)", "--threshold", "5")
+    assert payload["release_source"] == "commit-subjects"
+    assert payload["releases"] == 2
+
+
+def test_the_same_minor_tagged_with_and_without_v_is_one_release(scripts_path, tmp_path, capsys):
+    mod = _import(scripts_path)
+    project = _repo(tmp_path / "proj", ["chore: start"])
+    _cycles(project, "2026-01-01T00:00:00Z")
+    _tag(project, "v1.1.0", "2026-02-01T12:00:00Z")
+    _tag(project, "1.1.0", "2026-02-02T12:00:00Z")
+
+    code, payload = _json_run(mod, capsys, "--project-dir", str(project), "--threshold", "5")
+    assert payload["releases"] == 1
+
+
+def test_a_minor_line_first_tagged_as_a_patch_is_one_release(scripts_path, tmp_path, capsys):
+    """A line can be first released as `.1`. Upstream's own history has three (0.192, 0.194,
+    0.196: no `.0` tag exists); counting only tags that end in `.0` read three releases fewer
+    than shipped. The later patch on the same line is not a second release, and a patch on a
+    line first tagged BEFORE the cycle is not a release at all."""
+    mod = _import(scripts_path)
+    project = _repo(tmp_path / "proj", ["chore: start"])
+    _tag(project, "v1.0.0", "2025-06-01T12:00:00Z")
+    _cycles(project, "2026-01-01T00:00:00Z")
+    _tag(project, "v1.0.1", "2026-02-01T12:00:00Z")      # old line, new patch: not a release
+    _tag(project, "v1.1.1", "2026-02-02T12:00:00Z")      # new line, first tagged as a patch
+    _tag(project, "v1.1.2", "2026-02-03T12:00:00Z")      # same line again
+
+    code, payload = _json_run(mod, capsys, "--project-dir", str(project), "--threshold", "5")
+    assert code == 0
+    assert payload["releases"] == 1
+    assert payload["release_tokens"] == ["v1.1.1"]
+
+
+def test_never_recorded_counts_tags_too(scripts_path, tmp_path, capsys):
+    mod = _import(scripts_path)
+    project = _repo(tmp_path / "proj", ["chore: start"])
+    _cycles(project)
+    _tag(project, "v1.1.0", "2026-02-01T12:00:00Z")
+    _tag(project, "v1.2.0", "2026-03-01T12:00:00Z")
+
+    code, payload = _json_run(mod, capsys, "--project-dir", str(project))
+    assert code == 1
+    assert payload["status"] == "never-recorded"
+    assert payload["releases"] == 2
