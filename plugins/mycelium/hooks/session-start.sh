@@ -299,12 +299,13 @@ elif status == 'release-repo-missing':
       REMINDERS="${REMINDERS}${CYCLE_STATE#owed:} minor releases have shipped since the last recorded cycle — a meta-dogfood cycle is owed (/mycelium:retrospective). Effort accuracy is its one required calibration field. "
       ;;
     cannotmeasure:*)
-      # NOT a demand and NOT a pass. The check looks for release commits in THIS
-      # repo; a project whose releases ship from elsewhere gets a true zero that
+      # NOT a demand and NOT a pass. The check looks for version tags and, when the
+      # repo has none, for release commits in THIS repo (tags first since 0.319.2);
+      # a project whose releases ship from elsewhere gets a true zero that
       # means "not covering you". Worded without framework vocabulary on purpose:
       # a reader who has never recorded a cycle should still understand what the
       # check could not do, and is not being asked to do anything.
-      REMINDERS="${REMINDERS}Work-recording check could not measure here: it looks for release commits (vX.Y.0) in THIS repo's history and found none. If this project's releases ship from a different repo, the check is not covering you — set release_repo under cycle_recording_arc in .claude/canvas/thresholds.yml, or record progress another way. "
+      REMINDERS="${REMINDERS}Work-recording check could not measure here: it found no version tags in THIS repo and no release commits (vX.Y.0) in its history. If this project's releases ship from a different repo, the check is not covering you — set release_repo under cycle_recording_arc in .claude/canvas/thresholds.yml, or record progress another way. "
       ;;
     norepo:*)
       # 0.310.0. A configured release_repo is a path on one machine; on another it
