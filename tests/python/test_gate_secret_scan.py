@@ -95,3 +95,113 @@ def test_the_patterns_use_no_backslash_escape_inside_a_bracket():
     assert block.count("\n") >= 10, "the pattern table was not found whole"
     for escape in ("\\s", "\\x", "\\-"):
         assert escape not in block, f"{escape} is back in the pattern table"
+
+
+# ---------------------------------------------------------------- a scan that cannot run (0.319.1)
+#
+# Until 0.319.1 each pattern ran as `printf ... | grep -qE "$PATTERN" 2>/dev/null` inside an `if`.
+# grep has three answers: 0 a match, 1 no match, 2 or more "I could not run this" (a pattern this
+# grep rejects, no grep on PATH). The `if` read the last two as one, with grep's own complaint
+# sent to /dev/null, so a scan that never ran passed every write, credentials included. The 0.318.3
+# defect above was a grep that read the patterns differently; this is a grep that does not read
+# them at all, and the hook said nothing either way.
+
+def _path_with(tmp_path, grep_script: str | None) -> str:
+    """A PATH in front of the system one whose `grep` is `grep_script`; with None, a PATH holding
+    every system tool EXCEPT grep, so the name resolves to nothing. This interpreter's folder
+    comes before the system folders: the ledger writer needs Python 3.11 (`datetime.UTC`), and
+    /usr/bin/python3 on a Mac is 3.9, under which it writes no row and says nothing."""
+    fake = tmp_path / "fakebin"
+    fake.mkdir(exist_ok=True)
+    python_dir = str(Path(sys.executable).parent)
+    if grep_script is not None:
+        (fake / "grep").write_text(grep_script)
+        (fake / "grep").chmod(0o755)
+        return f"{fake}:{python_dir}:/usr/bin:/bin"
+    for folder in ("/usr/bin", "/bin"):
+        for tool in Path(folder).iterdir():
+            if tool.name not in ("grep", "egrep", "fgrep") and not (fake / tool.name).exists():
+                (fake / tool.name).symlink_to(tool)
+    (fake / "python3").unlink(missing_ok=True)
+    (fake / "python3").write_text(f'#!/bin/sh\nexec "{sys.executable}" "$@"\n')
+    (fake / "python3").chmod(0o755)
+    return str(fake)
+
+
+def _run_with_path(tmp_path, content: str, path: str) -> str:
+    (tmp_path / ".claude" / "canvas").mkdir(parents=True, exist_ok=True)
+    payload = json.dumps({"tool_name": "Write", "permission_mode": "default",
+                          "tool_use_id": "toolu_scanerror0001",
+                          "tool_input": {"file_path": "src/config.py", "content": content}})
+    env = {"CLAUDE_PROJECT_DIR": str(tmp_path), "HOME": str(tmp_path), "TMPDIR": str(tmp_path),
+           "PATH": path}
+    done = subprocess.run(["/bin/bash", str(HOOK)], input=payload, capture_output=True, text=True,
+                          env=env, cwd=tmp_path, check=False)
+    return done.stdout
+
+
+GREP_EXITS_2 = "#!/bin/sh\necho 'grep: simulated: cannot compile this pattern' >&2\nexit 2\n"
+GREP_WORKS = '#!/bin/sh\nexec /usr/bin/grep "$@"\n'
+CLEAN = "# settings\nretries = 3\n"
+SCAN_ERROR = "secret scan could not run"
+
+
+def _decision(out: str) -> str:
+    return json.loads(out)["hookSpecificOutput"]["permissionDecision"] if out.strip() else "allow"
+
+
+def test_a_credential_is_refused_when_grep_cannot_run_the_scan(tmp_path):
+    """The case that mattered: before 0.319.1 this write went through, silently."""
+    out = _run_with_path(tmp_path, f'# settings\n{MUST_REFUSE["api key"]}\n',
+                         _path_with(tmp_path, GREP_EXITS_2))
+    assert _decision(out) == "deny", "a scan that could not run let a credential through"
+    assert SCAN_ERROR in out
+
+
+def test_a_scan_error_is_a_refusal_that_says_the_scan_did_not_run(tmp_path):
+    """Fail closed, and say which failure: nothing was detected, the scan itself failed."""
+    out = _run_with_path(tmp_path, CLEAN, _path_with(tmp_path, GREP_EXITS_2))
+    assert _decision(out) == "deny"
+    reason = json.loads(out)["hookSpecificOutput"]["permissionDecisionReason"]
+    assert SCAN_ERROR in reason
+    assert "exited 2" in reason, "the refusal does not say how grep failed"
+    assert "simulated: cannot compile this pattern" in reason, "grep's own words are not passed on"
+    assert "Potential secret" not in reason, "a scan error reads as a detected secret"
+    assert "VIOLATION" not in reason
+
+
+def test_a_missing_grep_is_a_scan_error_too(tmp_path):
+    out = _run_with_path(tmp_path, CLEAN, _path_with(tmp_path, None))
+    assert _decision(out) == "deny"
+    reason = json.loads(out)["hookSpecificOutput"]["permissionDecisionReason"]
+    assert SCAN_ERROR in reason
+    assert "127" in reason
+    assert "Potential secret" not in reason
+
+
+def test_a_scan_error_reaches_the_denial_ledger(tmp_path):
+    _run_with_path(tmp_path, CLEAN, _path_with(tmp_path, GREP_EXITS_2))
+    ledger = tmp_path / ".claude" / "state" / "denied-calls.jsonl"
+    rows = [json.loads(x) for x in ledger.read_text().splitlines()]
+    assert [r["tool_use_id"] for r in rows] == ["toolu_scanerror0001"]
+    assert rows[0]["hook"] == "gate.sh"
+
+
+def test_control_an_ordinary_clean_write_is_still_not_refused(tmp_path):
+    """The other direction, through the same substituted PATH: a grep that works refuses nothing
+    here, so the refusals above come from the failing grep and not from the harness."""
+    out = _run_with_path(tmp_path, CLEAN, _path_with(tmp_path, GREP_WORKS))
+    assert _decision(out) == "allow", out
+
+
+def test_control_a_credential_is_still_called_a_secret_not_a_scan_error(tmp_path):
+    out = _run_with_path(tmp_path, f'# settings\n{MUST_REFUSE["api key"]}\n',
+                         _path_with(tmp_path, GREP_WORKS))
+    assert _decision(out) == "deny"
+    assert "G-S1 VIOLATION" in out
+    assert SCAN_ERROR not in out
+
+
+def test_control_empty_content_is_not_scanned_so_a_broken_grep_refuses_nothing(tmp_path):
+    out = _run_with_path(tmp_path, "", _path_with(tmp_path, GREP_EXITS_2))
+    assert _decision(out) == "allow", out

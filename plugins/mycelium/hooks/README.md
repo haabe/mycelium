@@ -32,6 +32,8 @@ Total hook overhead: ~6,000 tokens/session (negligible vs typical 50K-200K sessi
 - Validation suite tools catch what regex misses BEFORE commit
 - CI/CD pipeline is the final safety net
 
+**A scan that cannot run refuses the write (v0.319.1)**: each pattern is one `grep -E`, and grep has three answers: a line matched, none did, or it could not run the pattern at all (exit status 2 or more: a pattern this grep rejects, no `grep` on `PATH`). Until 0.319.1 the last two were read as one, with grep's own complaint discarded, so a scan that never ran passed every write, credentials included, and said nothing. Now a scan error is a refusal of its own, worded apart from the "potential secret" one: it says the secret scan could not run, grep's exit status, which pattern, and grep's own first line, and that nothing was detected in the content. It goes to the denial ledger like any refusal. On a machine whose grep cannot run these patterns, every write of non-empty content outside `.claude/` is therefore refused until the grep is fixed; before, that machine had no secret scan and no way to know it. Tests, through the hook with a substituted `PATH`: `tests/python/test_gate_secret_scan.py`.
+
 **Excludes**: `.claude/` directory edits (always allowed)
 **Gates every real path inside the project that is not under `.claude/`** (until 0.196.0 a directory list; `config.py`, `source/` and `Src/` all fell outside it, adversarial pass 2026-09-11). Reads the tool call through `scripts/_hook_input.py`: every path key, resolved to its real location, MultiEdit edits included, Bash write targets scanned; a write to guard state (`upstream.json`, `manifest.yml`, `active-execution.json`, the discovery, delivery, brownfield and scale-lock ack files) returns `ask` so the person decides, with `MYCELIUM_GUARD_STATE_EDIT=1` in the human's own shell as the setup-time override.
 
@@ -255,7 +257,7 @@ Every script in this folder sources `scripts/_hook_prelude.sh` on line 2. **In a
 Different hooks have different failure semantics. The choice is deliberate.
 
 **Fail-closed** (block on failure) — used for **security and scope enforcement**:
-- `gate.sh` — exit 2 on preflight stamp corruption
+- `gate.sh` — exit 2 on preflight stamp corruption; since v0.319.1 a deny when the secret scan itself cannot run (until then a grep error read as "no secret" and the write passed)
 - `scope-gate.sh` — deny via JSON when state file is corrupt; exit 2 on script failure
 
 **Rationale**: a silently disabled enforcement hook is worse than no hook. If `gate.sh` crashes, secret detection is gone. If `scope-gate.sh` cannot read state, scope enforcement is gone. These hooks must announce their failure by blocking the operation.
