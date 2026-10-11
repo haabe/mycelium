@@ -152,8 +152,8 @@ See `${CLAUDE_PLUGIN_ROOT}/engine/agent-operating-contract.md` *Canvas writes â€
    what was found and let them decide whether the work goes out as it is. Until a verdict is on
    the record, `scale_locks.py --exposure-state`, `--exposures` and the release gate each say so
    in one advisory line. Why this is a step and not a suggestion in a list: in 175 end-to-end runs
-   the harms check was mentioned in 1, against 33 for the privacy check, which the release gate's
-   refusal names. A diamond that still
+   the harms check was mentioned in 1, against 33 for the privacy check, whose record the release
+   gate requires. A diamond that still
    carries the old `learning_delivery` field is not read by any rule since v0.307.0: the next item
    offers `scripts/migrate_phase.py`, which moves it into an exposure record. Do not write it.
    **The test starts, on the record** (v0.274.0). Record `exposures[].started` with the day

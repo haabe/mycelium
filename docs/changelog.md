@@ -4,6 +4,113 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-11.
 
+## v0.321.0 - the harms check is named at release, as advice that never blocks
+
+**2026-10-11, on the maintainer's ruling after an assumption test of the same day.**
+`/mycelium:harms-check` asks who a product could harm when it works exactly as designed: deceptive
+patterns, unintended consequences, foreseeable misuse. Security and Privacy do not ask that. The
+skill shipped in the list of skills and was named by nothing that runs. The test asked whether that
+is enough. It is not: in 175 end-to-end runs of the installed plugin the harms check was mentioned
+in 1, against 33 for the privacy check and 139 for the threat model, the two whose record the
+release gate requires (and 8 for `/mycelium:security-review`, which the same refusal has named
+since 0.246.0 and which nothing requires a record from). The second half of the test
+asked whether the check is worth naming: six blind readers, each given one design and the shipped
+skill, flagged three harmful designs of three and none of three honest ones. The ruling: name it at
+release, keyed to the exposure record, and keep it advice.
+
+- **The release path says when no harms check is recorded.** For each current exposure record
+  with no `harms_check`, one advisory line names the exposure, says what the check asks, names
+  `/mycelium:harms-check`, and says how to record that it does not apply. It appears in four
+  places: as context to the agent when the release gate allows a release (the command runs; there
+  is no permission decision); inside the question when the gate asks the person which of several
+  exposures a release is for; in `scale_locks.py --exposure-state`, the readiness report the
+  always-on rule tells the agent to read before a release the user runs; and in
+  `scale_locks.py --exposures`, printed apart from the gaps so "nothing to report" still means no
+  gap in the records.
+- **The gate's refusal names it beside the required checks**, marked as not required.
+- **The verdict is recorded on the exposure**: `harms_check: {on, verdict, note}`, with `verdict`
+  one of `net-positive`, `happier-negative`, `not-applicable`. The field is declared in the
+  diamonds schema with no enum and nothing required, so a typo in a verdict never makes the file
+  invalid; an unreadable record (no date, an unknown verdict, a bare string) is treated as no
+  check and the advice continues. `not-applicable` with a reason is a full answer and quiets the
+  line. An ended exposure is not advised about.
+- **It never decides.** Nothing about the check feeds whether an exposure record is current,
+  whether a release is allowed, or any exit status. A missing check does not refuse a release. A
+  recorded one does not buy a release the gates refuse. **A `happier-negative` verdict does not
+  stop a release**: it is repeated to the agent at release, with the instruction to tell the
+  person before the work goes out as it is, and the person decides.
+- **The two skills that write the field say how.** `/mycelium:diamond-progress` gains the step
+  where the exposure record is drafted: ask whether the work has sign-up, retention, cancellation,
+  consent or pricing flows, and whether it reaches people who are vulnerable; run the check if
+  either is yes; write `not-applicable` with the reason if both are no, and not without asking.
+  `/mycelium:harms-check` gains a section on recording the verdict.
+- **Docs.** The system card says the release path now gives advice it never enforces; the skills
+  table says the release path names the skill.
+- **When the advice cannot be worked out, that is said.** It is computed after the gate has
+  allowed the release. An error there neither refuses the release nor passes in silence, which
+  would read as "a harms check is on record": the agent gets a warning that the records could not
+  be read for it. The repository's own fail-open check refused the first version of this handler,
+  which returned nothing.
+- **Tests** (`tests/python/test_harms_check_at_release.py`, 24): the advice in each of the four
+  places and in the refusal; quiet once answered; unreadable records; the could-not-compute case;
+  and eleven cases that pin "it never decides" from both directions. Thirteen fail on 0.320.0. The
+  eleven that guard "it never decides" pass on both, which is what they are for.
+
+**What changes for an existing project.** A project with exposure records sees one advisory line
+per current exposure at its next release and in its readiness report, until a verdict is recorded
+on each. For developer tooling, a library or a build script the answer is `not-applicable` with a
+sentence of why, once per exposure. Nothing that was allowed is refused and nothing that was
+refused is allowed.
+
+**What this does not show.** The 175 runs are a builder agent on synthetic products, and the gate
+side of the comparison is a proxy from skills a refusal already names. The six designs in the
+second half were written by the session that designed the test, and the harmful ones are plain.
+No run yet shows this line being followed; that is measurable from the next end-to-end runs by the
+same count. **Being named is probably not enough on its own.** The same record shows it: the
+security review is named in the refusal and is in 8 runs, while the two checks in 33 and 139 runs
+are the ones the gate requires a record from. This release asks for a record and repeats the ask
+until there is one, and does not require it, so it sits between those two cases. The first reading
+of the test ("a skill gets run when the refusal names it") was wrong on this point and was
+corrected while these notes were written.
+
+**Not in this release.**
+
+- **The two things that make a harms check matter most are still recorded nowhere**: whether the
+  work has persuasion, retention or pricing flows, and whether it reaches vulnerable people. The
+  step asks them as questions. A project can answer `not-applicable` without having thought about
+  it, and nothing detects that.
+- **The always-on rule about releases (contract rule 14) is unchanged.** It names the three
+  required checks and `--exposure-state`, which now carries the advice. The contract is injected
+  in parts under a size cap and the line was not added there.
+- **A verdict is per exposure record, not per change to the product.** A design that changes
+  after its check keeps the old verdict until someone runs the check again. Widening an exposure
+  re-runs the gates; it does not ask for a new harms check.
+- **No harms check is asked for before there is an exposure record.** Work that never records an
+  exposure is refused at release for that reason, and the refusal names the check.
+
+**Alternatives considered.**
+
+- *Make it a gate: refuse a release until a harms check is recorded.* Refused by the ruling and by
+  the skill's own design: the check educates a builder who did not see the harm and cannot stop
+  one who wants it, so a block would be paid by the first and routed around by the second. The
+  test showed the check discriminates on plain cases, which is a reason to name it, not to
+  enforce it.
+- *Leave it a listed skill and reword it as an optional lens.* Refused on the test's first half:
+  1 run in 175.
+- *Name it in a rule or a refusal and ask for no record.* Refused on the same record:
+  `/mycelium:security-review` is named by the rule and by the refusal and is in 8 runs, where the
+  two checks the gate requires a record from are in 33 and 139. Hence the field.
+- *Read the decision log for a `### Harms Check` entry instead of adding a field.* No new field,
+  and it cannot say which exposure a check was for or go quiet for one release and not another;
+  one entry anywhere, ever, would silence the line for every later release.
+- *Put the verdict under the exposure's `gates`.* Refused: everything else under `gates` decides
+  whether a release is covered. A key there that never decides would be one refactor away from
+  deciding.
+- *Refuse a write whose verdict is not one of the three.* Refused: an advisory field that can
+  make the diamonds file invalid is a block by another name.
+- *Say nothing once a `happier-negative` verdict is recorded.* Refused: that is the one case
+  where silence at release is the worst outcome, and one line costs less than the harm it names.
+
 ## v0.320.0 - a leaf bakeoff is decided by its tests, not by a gap in ICE scores
 
 **2026-10-11, on the maintainer's ruling, closing the item 0.319.0 left open ("The 20% 'bakeoff

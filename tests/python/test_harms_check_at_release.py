@@ -2,8 +2,8 @@
 
 WHY. /mycelium:harms-check asks who a product could harm when it works as designed, which neither
 Security nor Privacy asks. Until 0.321.0 nothing that runs named it: in 175 end-to-end runs of the
-installed plugin it was mentioned in 1, against 33 for the privacy check, which the release gate's
-refusal names. Six blind readers running the shipped skill flagged three harmful designs of three
+installed plugin it was mentioned in 1, against 33 for the privacy check, whose record the release
+gate requires. Six blind readers running the shipped skill flagged three harmful designs of three
 and none of three honest ones. The maintainer's ruling on that test: name it at release, keyed to
 the exposure record, and never let it block.
 
@@ -81,7 +81,8 @@ def test_the_release_hook_allows_and_hands_the_agent_the_advice(tmp_path, monkey
 
 
 def test_a_refused_release_names_the_check_beside_the_required_ones(tmp_path, monkeypatch, capsys):
-    """The record shows a skill gets run when the gate's own refusal names it. RED BEFORE 0.321.0."""
+    """The refusal lists what a release needs; the check is named there as not required. RED
+    BEFORE 0.321.0."""
     bare = dict(tsl.RECORD, gates={})           # no gate passed for this exposure: refused
     code, _, err = _hook(_project(tmp_path, [_l3(bare)]), "fly deploy", monkeypatch, capsys)
     assert code == 2
@@ -166,6 +167,24 @@ def test_no_harms_record_changes_whether_an_exposure_is_current(tmp_path, harms)
     any_records, current, reasons = sl.current_exposures(sl.State(project))
     assert (any_records, len(current), reasons) == (True, 1, [])
     assert sl.exposure_violation(project, tsl._bash("fly deploy")) is None
+
+
+def test_advice_that_cannot_be_computed_says_so_and_refuses_nothing(tmp_path, monkeypatch, capsys):
+    """The advice is computed after the gate has allowed the release. If that computation fails,
+    the release still runs (exit 0, no decision) and the agent is told the check could not look:
+    silence there would read as "a harms check is on record"."""
+    project = _project(tmp_path, [_l3()])
+
+    def broken(_pairs):
+        raise TypeError("a record of a shape nobody expected")
+
+    monkeypatch.setattr(sl, "harms_check_advice", broken)
+    code, out, err = _hook(project, "fly deploy", monkeypatch, capsys)
+    assert code == 0 and err == ""
+    spoken = json.loads(out)["hookSpecificOutput"]
+    assert "could not read the exposure records" in spoken["additionalContext"]
+    assert "nothing is blocked" in spoken["additionalContext"]
+    assert "permissionDecision" not in spoken
 
 
 def test_no_harms_record_makes_a_refused_release_allowed(tmp_path, monkeypatch, capsys):

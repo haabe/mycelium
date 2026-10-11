@@ -1351,7 +1351,10 @@ def _exposure_label(d: dict, e: dict) -> str:
 # ADVICE, NEVER A REASON TO REFUSE. Security and Privacy ask how the work can be attacked and what
 # data it holds. /mycelium:harms-check asks who it could harm when it works as designed, and until
 # 0.321.0 nothing that runs named it: in 175 end-to-end runs of the installed plugin it was
-# mentioned in 1, against 33 for the privacy check, which the release gate's refusal names. Six
+# mentioned in 1, against 33 for the privacy check, whose record the release gate requires
+# (SAFETY_RECORD). Being named in the refusal is not what does it: /mycelium:security-review has
+# been named there since 0.246.0 and is in 8 of the same runs. So this asks for a record too, on
+# the exposure, and keeps saying so until there is one; it does not require it. Six
 # blind readers running the skill flagged three harmful designs of three and none of three honest
 # ones, so the check is worth having at the moment it can still change the design.
 #
@@ -1403,12 +1406,20 @@ def _open_exposures(st: State) -> list[tuple[dict, dict]]:
 
 
 def release_harms_advice(project_dir: str) -> str:
-    """The advice at a release the gate allows: for the current exposure records only."""
+    """The advice at a release the gate allows: for the current exposure records only.
+
+    If the records cannot be read for it, that is said, as a warning in the same place the advice
+    would have gone. An error here must not refuse a release the gate has just allowed (a raise
+    would leave the hook with a failing status), and must not pass for "a harms check is on
+    record" either, which is what returning nothing would say."""
     try:
         _, current, _ = current_exposures(State(project_dir))
         return harms_check_advice(current)
-    except (OSError, ValueError, TypeError, AttributeError, KeyError):
-        return ""  # SPEAKS: advice that cannot be computed is not given; the decision stands
+    except (OSError, ValueError, TypeError, AttributeError, KeyError) as exc:
+        return ("warning, nothing is blocked: Mycelium could not read the exposure records to "
+                f"say whether a harms check is recorded ({type(exc).__name__}). "
+                "/mycelium:harms-check asks who the work could harm when it works as designed; "
+                "`scale_locks.py --exposures` shows what the records hold.")
 
 
 def _record_problems(st: State, d: dict, e: dict, today: str) -> list[str]:
