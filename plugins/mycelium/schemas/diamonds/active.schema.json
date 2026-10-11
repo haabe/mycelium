@@ -218,6 +218,15 @@
             "type": "object",
             "description": "security, privacy, service_quality, regulatory (and explainability with AI components), passed for THIS exposure."
           },
+          "harms_check": {
+            "type": "object",
+            "description": "The harms check for THIS exposure (v0.321.0): `on` (the date), `verdict` (net-positive | happier-negative | not-applicable) and `note` (what was found, or why it does not apply). ADVISORY: it is never one of the gates, no verdict stops a release, and a missing or unreadable one only makes the release path say so (`scripts/scale_locks.py`, `harms_check_advice`). Written by /mycelium:harms-check and at the release step of /mycelium:diamond-progress.",
+            "properties": {
+              "on": {"type": "string"},
+              "verdict": {"type": "string"},
+              "note": {"type": "string"}
+            }
+          },
           "reconstructed": {
             "type": "boolean",
             "description": "True when recorded after the fact (ruling h)."

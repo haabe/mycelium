@@ -139,7 +139,21 @@ See `${CLAUDE_PLUGIN_ROOT}/engine/agent-operating-contract.md` *Canvas writes â€
    not the start; `started` is. Draft it; if the data is personal or sensitive the write asks the
    person, who confirms it (founder ruling g). An exposure already live before this was recorded
    gets `reconstructed: true` (ruling h). `scale_locks.py --exposures` reports what is missing, and
-   the release gate refuses a release no current exposure record covers. A diamond that still
+   the release gate refuses a release no current exposure record covers.
+   **The harms check is a step here, and it never blocks** (v0.321.0). When you draft or change
+   an exposure record, ask the two things no record carries: does this work have sign-up,
+   retention, cancellation, consent or pricing flows, and does it reach people who are vulnerable
+   (children, patients, people at financial or other risk)? If either is yes, run
+   /mycelium:harms-check before the release is recorded, while the design can still change, and
+   write its result on the exposure: `harms_check: {on, verdict, note}`, with `verdict` one of
+   `net-positive`, `happier-negative`, `not-applicable`. If both are no, write `not-applicable`
+   and the reason in `note`; do not write it without asking the two questions. It is not one of
+   the exposure's `gates`. A `happier-negative` verdict does not stop the release: tell the person
+   what was found and let them decide whether the work goes out as it is. Until a verdict is on
+   the record, `scale_locks.py --exposure-state`, `--exposures` and the release gate each say so
+   in one advisory line. Why this is a step and not a suggestion in a list: in 175 end-to-end runs
+   the harms check was mentioned in 1, against 33 for the privacy check, whose record the release
+   gate requires. A diamond that still
    carries the old `learning_delivery` field is not read by any rule since v0.307.0: the next item
    offers `scripts/migrate_phase.py`, which moves it into an exposure record. Do not write it.
    **The test starts, on the record** (v0.274.0). Record `exposures[].started` with the day

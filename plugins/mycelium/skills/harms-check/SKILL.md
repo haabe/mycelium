@@ -22,6 +22,8 @@ Fires only when the product-shape warrants it:
 
 If none apply (internal dev tooling, a library, a build script), **SKIP — say so and move on.** This is a NUDGE, never a hard block.
 
+**At release, the framework asks for it (v0.321.0).** When work that reaches real people has an exposure record on its diamond and no harms check recorded there, the release path says so in one advisory line: in the release gate's refusal, in `scale_locks.py --exposure-state`, and as context when a release is allowed. That line is the prompt to run this skill, or to record that it does not apply. It never refuses anything, and a Happier-negative verdict does not stop a release.
+
 ## Workflow
 
 ### 1. Dark / deceptive patterns (Brignull) — does the design manipulate the user?
@@ -73,6 +75,23 @@ Scope trigger: [user-facing | persuasion/retention flow | vulnerable users | N/A
 ### Recommendations (NUDGE — advice, not a block)
 1. ...
 ```
+
+## Record the verdict on the exposure (v0.321.0)
+
+When the diamond carrying this work has an exposure record (`exposures[]` in `.claude/diamonds/active.yml`), write the result on the record this check was run for:
+
+```yaml
+harms_check:
+  on: 2026-10-11                 # the date the check was run
+  verdict: net-positive          # net-positive | happier-negative | not-applicable
+  note: "what was found, or why it does not apply"
+```
+
+- `not-applicable` is the SKIP above, written down: use it when none of the scope triggers apply, and put the reason in `note`.
+- `happier-negative` is recorded as it is. It does not stop a release. The person decides whether the work goes out as designed, and the release path reminds them of the verdict when it does.
+- It is not one of the exposure's `gates`, and nothing reads it to allow or refuse anything. Without it, the release path keeps saying that no harms check is recorded for that exposure.
+- Use the Read tool on `.claude/diamonds/active.yml` before editing it, and change only this key.
+- No exposure record yet (the work has not been put in front of anyone): the decision-log entry below is the whole record.
 
 ## Honest limits (scope guard)
 

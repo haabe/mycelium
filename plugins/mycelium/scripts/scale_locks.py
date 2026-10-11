@@ -1327,7 +1327,9 @@ def exposure_state(project_dir: str) -> tuple[bool, str]:
             return _work_state(st, "expose")  # nothing engaged: says so, as before
         return False, NO_EXPOSURE_RECORD
     if current:
-        return True, "current exposure: " + ", ".join(_exposure_label(d, e) for d, e in current)
+        advice = harms_check_advice(current)
+        return True, ("current exposure: " + ", ".join(_exposure_label(d, e) for d, e in current)
+                      + ("\n" + advice if advice else ""))
     return False, "no exposure record is current:\n  " + "\n  ".join(reasons)
 
 
@@ -1341,6 +1343,83 @@ NO_EXPOSURE_RECORD = (
 
 def _exposure_label(d: dict, e: dict) -> str:
     return f"{d.get('id')} `{str(e.get('audience') or '?')[:40]}`"
+
+
+# ---------------------------------------------------------------- the harms check at release
+# (v0.321.0)
+#
+# ADVICE, NEVER A REASON TO REFUSE. Security and Privacy ask how the work can be attacked and what
+# data it holds. /mycelium:harms-check asks who it could harm when it works as designed, and until
+# 0.321.0 nothing that runs named it: in 175 end-to-end runs of the installed plugin it was
+# mentioned in 1, against 33 for the privacy check, whose record the release gate requires
+# (SAFETY_RECORD). Being named in the refusal is not what does it: /mycelium:security-review has
+# been named there since 0.246.0 and is in 8 of the same runs. So this asks for a record too, on
+# the exposure, and keeps saying so until there is one; it does not require it. Six
+# blind readers running the skill flagged three harmful designs of three and none of three honest
+# ones, so the check is worth having at the moment it can still change the design.
+#
+# It is keyed to the exposure record because that is the one place "this reaches real people" is
+# recorded state. The two things that make a harms check matter most, persuasion flows and
+# vulnerable people, are recorded nowhere, so the advice asks them as a question and the answer is
+# written on the record (`harms_check: {on, verdict, note}`), `not-applicable` included. Nothing
+# below feeds `_record_problems`, `current_exposures` or any exit status: a missing check, an
+# unreadable verdict and a `happier-negative` one all leave the release exactly as allowed or
+# refused as it was. The person decides what to do with the advice.
+HARMS_VERDICTS = ("net-positive", "happier-negative", "not-applicable")
+
+
+def _harms_verdict(e: dict) -> str:
+    """The recorded verdict in lower case, or "" when none is recorded (no date, or a verdict
+    that is not one of HARMS_VERDICTS, counts as none: an unreadable record is not a check)."""
+    h = _as_dict(e.get("harms_check"))
+    verdict = str(h.get("verdict") or "").strip().lower()
+    return verdict if verdict in HARMS_VERDICTS and _filled(h.get("on")) else ""
+
+
+def harms_check_advice(pairs: list[tuple[dict, dict]]) -> str:
+    """The advice for these (diamond, exposure record) pairs, or "" when there is none to give."""
+    unrecorded = [_exposure_label(d, e) for d, e in pairs if not _harms_verdict(e)]
+    negative = [f"{_exposure_label(d, e)} (on {str(_as_dict(e.get('harms_check')).get('on'))[:10]})"
+                for d, e in pairs if _harms_verdict(e) == "happier-negative"]
+    out = []
+    if unrecorded:
+        out.append(
+            "Advisory, never blocks: no harms check is recorded for " + "; ".join(unrecorded) + ". "
+            "Security and Privacy ask how the work can be attacked and what data it holds; neither "
+            "asks who it could harm when it works as designed. If it has sign-up, retention, "
+            "cancellation, consent or pricing flows, or reaches people who are vulnerable, run "
+            "/mycelium:harms-check and record the result on the exposure as `harms_check: {on, "
+            "verdict, note}` (verdict: " + " | ".join(HARMS_VERDICTS) + "). If none of that "
+            "applies, record `not-applicable` with the reason in `note`.")
+    if negative:
+        out.append(
+            "Advisory, never blocks: the harms check recorded for " + "; ".join(negative) + " came "
+            "back Happier-negative. That does not stop a release. Say so to the person before the "
+            "work goes out as it is; whether it does is theirs to decide.")
+    return "\n".join(out)
+
+
+def _open_exposures(st: State) -> list[tuple[dict, dict]]:
+    """Every exposure record on an open diamond that has not ended, as (diamond, record)."""
+    return [(d, e) for d in st.active if st.is_open(d)
+            for e in _as_list(d.get("exposures")) if isinstance(e, dict) and not e.get("ended")]
+
+
+def release_harms_advice(project_dir: str) -> str:
+    """The advice at a release the gate allows: for the current exposure records only.
+
+    If the records cannot be read for it, that is said, as a warning in the same place the advice
+    would have gone. An error here must not refuse a release the gate has just allowed (a raise
+    would leave the hook with a failing status), and must not pass for "a harms check is on
+    record" either, which is what returning nothing would say."""
+    try:
+        _, current, _ = current_exposures(State(project_dir))
+        return harms_check_advice(current)
+    except (OSError, ValueError, TypeError, AttributeError, KeyError) as exc:
+        return ("warning, nothing is blocked: Mycelium could not read the exposure records to "
+                f"say whether a harms check is recorded ({type(exc).__name__}). "
+                "/mycelium:harms-check asks who the work could harm when it works as designed; "
+                "`scale_locks.py --exposures` shows what the records hold.")
 
 
 def _record_problems(st: State, d: dict, e: dict, today: str) -> list[str]:
@@ -2087,6 +2166,9 @@ scale: anything user-facing that holds data can let strangers in or leak it out.
 `release` with /mycelium:diamond-progress, which runs Security (/mycelium:threat-model,
 /mycelium:security-review), Privacy (/mycelium:privacy-check) and Service Quality, and record who
 it reaches as an exposure record; then retry.
+Not required, and worth doing before it goes out: if the work has sign-up, retention, cancellation,
+consent or pricing flows, or reaches people who are vulnerable, run /mycelium:harms-check, which
+asks who it could harm when it works as designed. It advises and never blocks.
 Only if the USER explicitly says this work is not to be tracked, they record it in
 .claude/state/delivery-skip-ack with `recorded_at`, `expires` (30 days by default), the paths it
 `covers`, `releases: true` (a release is lifted only when it says so) and their words in `why`.
@@ -2365,9 +2447,18 @@ def _run_exposure_hook(project_dir: str) -> int:
         return EXIT_HOLDS
     what = _release_in(project_dir, payload)
     decision = _release_decision(project_dir, what) if what else None
+    # v0.321.0: a release the gate allows or asks about carries the harms-check advice. To the
+    # agent as context when it is allowed; inside the question when the person is asked.
+    denied = decision is not None and decision[0] == "deny"
+    advice = release_harms_advice(project_dir) if what and not denied else ""
     if decision is None:
+        if advice:
+            print(json.dumps({"hookSpecificOutput": {"hookEventName": "PreToolUse",
+                                                     "additionalContext": "Mycelium: " + advice}}))
         return EXIT_HOLDS
     kind, text = decision
+    if kind == "ask" and advice:
+        text += "\n" + advice
     if kind == "deny":
         print("Mycelium exposure gate: " + text + "\n" + _EXPOSE_TAIL, file=sys.stderr)
         return 2
@@ -2417,6 +2508,10 @@ def _run_exposures(project_dir: str) -> int:
     lines = exposure_report(project_dir)
     print("exposure records: nothing to report" if not lines
           else "exposure records (report only until stage 2):\n  - " + "\n  - ".join(lines))
+    # v0.321.0: printed apart from the gaps, so "nothing to report" still means no gap.
+    advice = harms_check_advice(_open_exposures(State(project_dir)))
+    if advice:
+        print(advice)
     return EXIT_HOLDS
 
 
