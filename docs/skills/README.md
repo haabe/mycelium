@@ -59,7 +59,7 @@ This index lists all 63 skills. Each skill's full behaviour lives in its `SKILL.
 | `/threat-model` | STRIDE threat modeling | Security |
 | `/privacy-check` | Privacy by Design / GDPR (Cavoukian) | Privacy |
 | `/security-review` | OWASP Top 10:2025 secure-design review | Security |
-| `/harms-check` | Design-level harm to users: dark/deceptive patterns + foreseeable misuse (safety-by-design; NUDGE) | Harms (BVSSH Happier) |
+| `/harms-check` | Design-level harm to users: dark/deceptive patterns + foreseeable misuse (safety-by-design; NUDGE). Named by the release path since 0.321.0, as advice: its verdict is recorded on the exposure record and never blocks | Harms (BVSSH Happier) |
 | `/usability-check` | Nielsen's 10 usability heuristics | Service Quality |
 | `/a11y-check` | Accessibility audit (WCAG 2.1 AA) | Service Quality |
 | `/regulatory-review` | EU AI Act risk classification (Annex III, Art 13/50) | Regulatory |
