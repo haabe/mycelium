@@ -168,6 +168,9 @@ NOT_ON_CODEX = {"NotebookEdit"}
 #: Registrations that differ by design, each named in hooks.codex.json's description or the doc.
 BY_DESIGN = {
     ("PostToolUseFailure", "reflexion-gate.sh"),    # no such event; codex-postfailure-shim.sh
+    # v0.321.1: no such event on Codex, whose PostToolUse fires for a failed command too, and
+    # `bash-state-guard.sh post` is registered there.
+    ("PostToolUseFailure", "bash-state-guard.sh post"),
     ("PostToolUse", "codex-postfailure-shim.sh"),   # the shim itself
     ("SessionStart", "session-start.sh --async"),   # Codex drops async hooks; one sync tier
     ("SessionStart", "session-start.sh --fast"),

@@ -136,5 +136,8 @@ put in front of the person by the hook (`permissionDecision: ask`), and an auton
 un-declare itself. When a gate tells you to write an ack file after the user has answered, write
 it; the ask is the user confirming their own answer, and it costs one keypress. Do not work around
 the ask with Bash, a variable, or a different path: the hooks read those too (0.196.0, after the
-2026-09-11 adversarial pass found every off-switch inside the agent's write set).
+2026-09-11 adversarial pass found every off-switch inside the agent's write set). Until 0.321.1
+that last clause was not true of a shell write through a variable, which no hook could read and
+which went through unasked. Since 0.321.1 those files are compared before and after every shell
+command: a change the person was not asked about is put back, and the person is told.
 

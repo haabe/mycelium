@@ -39,7 +39,7 @@ In a project that uses Mycelium, the hooks keep logs in `.claude/state/`. That i
 | `advisory-ledger.jsonl` | Your rulings on Mycelium's advisories, with the note given. |
 | the other `*-fires.jsonl`, `gate-block-log.jsonl`, `denied-calls.jsonl` | Which hook fired, what it decided, and the tool call's id. |
 
-`.claude/state/bash-guard/` holds a copy of `.claude/diamonds/active.yml` from before the last shell command, replaced each time, so that a shell edit to it can be judged.
+`.claude/state/bash-guard/` holds a copy of `.claude/diamonds/active.yml` from before the last shell command, replaced each time, so that a shell edit to it can be judged. Since 0.321.1 it also holds, while a shell command runs, a copy of each file that switches one of Mycelium's stops off (the skip and lock files under `.claude/state/`, `.claude/manifest.yml`), so that a change you were not asked about can be put back; the copies are removed when the command ends.
 
 **Commands.** No log keeps a command or its output unless you ask it to. Set `MYCELIUM_LEDGER_TRIGGER=on` and the reflexion log also keeps the first 160 characters of each failed command and 200 of its error output, and the shell-safety log the first 200 characters of each command it warned about. All of it with obvious secrets masked. Masking knows token prefixes, auth headers, secret-named variables and flags, and passwords in URLs. A secret in any other shape is kept as typed, which is why it is off. Before 0.318.0 the reflexion log kept failed commands and their error output, unmasked, by default. The first session on 0.318.0 or later removes that text.
 
