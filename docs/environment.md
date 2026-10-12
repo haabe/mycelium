@@ -2,9 +2,9 @@
 
 **Audience**: operators configuring Mycelium beyond defaults; contributors writing hooks/scripts.
 **Time to read**: 5 min.
-**Last updated**: 2026-10-03
+**Last updated**: 2026-10-12
 
-Every `MYCELIUM_*` environment variable in one place. Unset means the default behavior, and nothing here is required for normal use. Most turn something on; two (`MYCELIUM_CI_SIGNAL`, `MYCELIUM_CLOSING_PATH_WRITE`) turn a default off. Until this page (2026-06-12 gap analysis), these were documented only in the individual skill/hook files that read them.
+Every `MYCELIUM_*` environment variable in one place. Unset means the default behavior, and nothing here is required for normal use. Some turn something on and some turn a default off. **Three loosen a stop**: `MYCELIUM_GUARD_STATE_EDIT`, `MYCELIUM_NEXT_ACTION_CHECK` and `MYCELIUM_TODAY`. Until 0.322.2 this page did not name those three. Until this page (2026-06-12 gap analysis), these were documented only in the individual skill/hook files that read them.
 
 | Variable | What it does | Read by | Default when unset |
 |---|---|---|---|
@@ -15,9 +15,21 @@ Every `MYCELIUM_*` environment variable in one place. Unset means the default be
 | `MYCELIUM_CI_SIGNAL` | Set to `off` to stop the one automatic network call: asking GitHub, through your own `gh` login, for the latest CI result on the current branch. See [PRIVACY.md](../PRIVACY.md). | `scripts/ci_signal.py` (Stop, SessionStart) | On when the project has `.github/workflows/` and `gh` is logged in |
 | `MYCELIUM_CLOSING_PATH_WRITE` | Set to `off` to stop session start from writing the next steps it derives for open diamonds into `.claude/diamonds/` and the canvas. | `hooks/session-start.sh` (`derive_closing_path.py --write`) | Writes them |
 | `MYCELIUM_LEDGER_TRIGGER` | Set to `on` to have the guard logs keep the first 200 characters of a command that tripped a rule, with obvious secrets masked. | `scripts/shell_safety_guard.py` | Logs record the rule only, never the command |
+| `MYCELIUM_GUARD_STATE_EDIT` | **Loosens a stop.** Set to `1` and a write to one of the files that switch a stop off (the ack files under `.claude/state/`, `.claude/state/upstream.json`, `.claude/state/active-execution.json`, `.claude/manifest.yml`) is no longer put to you first, and a shell command that changes one is no longer undone. For setting those files up yourself. A hook cannot tell who set a variable. | `hooks/gate.sh`, `scripts/_hook_input.py`, `scripts/bash_state_guard.py` | Every such write is asked about |
+| `MYCELIUM_NEXT_ACTION_CHECK` | **Loosens a stop.** Set to `off` to stop the end-of-turn check that a turn in which a Mycelium skill ran ends on one `Next:` line. | `hooks/next-action-check.sh` | On |
+| `MYCELIUM_TODAY` | **Can loosen a stop.** A `YYYY-MM-DD` date Mycelium treats as today, for a stated date or a simulated world. Skip-acks, scale locks, snoozes and streaks are dated against it, so a date in the past makes an expired skip-ack count as current. | `scripts/_hook_input.py`, `scripts/scale_locks.py`, `scripts/advisory_ledger.py`, `scripts/next_item.py` | Today in UTC |
+| `MYCELIUM_NEXT_ITEM` | Set to `off` to stop session start from picking one next item and the hooks from repeating it. | `hooks/session-start.sh`, `hooks/preflight.sh`, `hooks/next-item-repeat.sh` | On |
+| `MYCELIUM_ADVISORY_LEDGER` | Set to `off` to stop the advisory ledger: no record of which reminders cleared, and no muting of one that fires for seven days. | `hooks/session-start.sh`, `hooks/preflight.sh` | On |
+| `MYCELIUM_LOG_RETENTION_DAYS` | How many days of activity logs to keep under `.claude/state/`. `0` keeps everything. See [PRIVACY.md](../PRIVACY.md). | `scripts/prune_state_logs.py` | 90 |
+| `MYCELIUM_SESSION_START_BUDGET` | Seconds after which session start stops starting optional checks. | `hooks/session-start.sh` | 25 |
+| `MYCELIUM_SESSION_CACHE_TTL` | Seconds the results of the slower session-start checks are reused, while the canvas has not changed, before they run again. | `hooks/session-start.sh` | 43200 (12 hours) |
+| `MYCELIUM_PRELUDE_ANY_PROJECT` | Set to `1` to make the hooks run in a project that has no `.claude/canvas/` or `.claude/diamonds/` folder, where they otherwise do nothing. Mycelium's own setup script sets it for itself. | `scripts/_hook_prelude.sh`, the gate entries in `hooks/hooks.json` | Hooks do nothing outside a Mycelium project |
+| `MYCELIUM_PREFLIGHT` | opencode only. Set to `off` to stop Mycelium's opencode plugin from adding its reminders when you send a message. | `integrations/opencode/plugin/mycelium.ts`, `integrations/opencode/plugins-v2/mycelium/index.ts` | On |
+| `MYCELIUM_TRACE` | opencode 2.x only. Set to anything to have the plugin print a line to the error stream when a tool call fails: the tool's name and its error message. | `integrations/opencode/plugins-v2/mycelium/index.ts` | Prints nothing |
+| `MYCELIUM_ALLOW_NONGIT_ROOT` | Set to `1` to let the opencode skills script copy into a folder that is not a git root, which it otherwise refuses. | `integrations/opencode/provision-skills.sh` | Refuses a folder with no `.git` |
 | `MYCELIUM_MIGRATE_AUTO` | Set to `cancel` to make the legacy-migration script abort instead of proceeding when it runs without a TTY (Claude Code's Bash tool has no TTY, so the script's interactive confirmation can't fire). | `migrate-from-legacy` migration script | Non-interactive runs proceed (the skill confirms with you first) |
 
-Internal (not operator-facing): `MYCELIUM_PLUGIN_LOAD_OK` — deterministic marker emitted by `/mycelium:ping` for plugin-shape smoke tests.
+Internal (not operator-facing): `MYCELIUM_PLUGIN_LOAD_OK` — deterministic marker emitted by `/mycelium:ping` for plugin-shape smoke tests. `MYCELIUM_RUNTIME` is set by the Codex hook manifest so a hook knows which runtime called it. `MYCELIUM_SESSION_ID` lets a script pass a session id to the fire log. `MYCELIUM_VALIDATOR_SUITES` is set by the example pre-push script for the validator it runs. Three more names carry the prefix and are not variables you can set: `__MYCELIUM_PLUGIN_ROOT__` is a placeholder the Cursor and Codex installers replace with a path, `MYCELIUM_BLOCK_KINDS` is a line one script prints for the hook that called it, and `MYCELIUM_NO_YAML_FIX` and `_MYCELIUM_STATE_IGNORE_TEMPLATE` are values a hook script holds in a shell variable of its own.
 
 ## Conventions
 
