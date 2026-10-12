@@ -1011,3 +1011,33 @@ reviewed:
     A missing or unreadable once-a-day stamp means the trim is due, so it runs: the failure leads
     to the job being done, not skipped. Asserted by test_it_runs_at_most_once_a_day_unless_forced.
     Reviewed 2026-10-10, v0.318.0.
+- id: _hook_input.py@2451391087
+  verdict: accepted
+  reason: >-
+    `_yaml_or_none` returns None when PyYAML is not installed. For purpose.yml the caller falls back
+    to a regex over the text (`_purpose_has_words`). For the diamonds file `discovery_state_code`
+    answers 3 ("cannot check") through `_diamonds_unread`, and the build gate refuses with the
+    PyYAML remedy. Neither reads a missing parser as an empty project. Reviewed 2026-10-12, v0.322.5.
+- id: _hook_input.py@49ca779a55
+  verdict: accepted
+  reason: >-
+    `_yaml_or_none` returns None for text that is not valid YAML. Until 0.322.5 this error escaped
+    and crashed the check, which read as "not engaged". Now: purpose.yml falls back to the regex,
+    and a diamonds file that does not parse is caught BEFORE this is reached, by
+    `diamonds_unreadable_why`, on which `discovery_state_code` answers 4 and both gates refuse with
+    the reason. Asserted by test_an_unreadable_diamonds_file_does_not_open_the_gates.py. Reviewed
+    2026-10-12, v0.322.5.
+- id: _hook_input.py@8a58d05f52
+  verdict: accepted
+  reason: >-
+    `diamonds_unreadable_why` returns "" when the diamonds file does not exist. A project with no
+    diamonds file is not a project with an unreadable one: nothing has been declared yet, and the
+    first-file stop and the brownfield question are what apply. Any other failure to open the file
+    returns a reason and is refused. Reviewed 2026-10-12, v0.322.5.
+- id: _hook_input.py@28a2318952
+  verdict: accepted
+  reason: >-
+    `_diamonds_text_problem` returns "" when PyYAML is not installed, because that case has its own
+    answer: `discovery_state_code` returns 3 through `_diamonds_unread` and the gate refuses with
+    the remedy for a missing parser. Reporting it here as "unreadable" would tell the builder to
+    repair a file that is fine. Reviewed 2026-10-12, v0.322.5.
