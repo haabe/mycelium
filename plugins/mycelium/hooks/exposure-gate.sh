@@ -33,6 +33,7 @@ case "$INPUT" in
   *deploy*|*publish*|*push*|*apply*|*helm*|*rollout*|*image*|*ssh*|*scp*|*rsync*|*upload*|*pulumi*|*sync*|*function-code*) ;;
   *ngrok*|*cloudflared*|*localtunnel*|*tailscale*|*"lt --port"*) ;;  # tunnels (v0.290.0)
   *railway*|*gh-pages*|*surge*|*s3*) ;;  # hosts with no deploy/publish word (v0.307.3, audit P2)
+  *vercel*) ;;  # `vercel --prod` carries none of the words above and never reached the checker (v0.322.5)
   *) exit 0 ;;
 esac
 shopt -u nocasematch
@@ -48,6 +49,16 @@ LOCKS="$(dirname "${BASH_SOURCE[0]}")/../scripts/scale_locks.py"
 # that let the release through and lost the question, and with `"onFailure": "block"` in
 # hooks.json a refusal of a release this gate allowed. So both are captured and leave as one.
 ACK_SAID=$(mycelium_skip_ack release) && { [ -n "$ACK_SAID" ] && printf '%s\n' "$ACK_SAID"; exit 0; }
+# A diamonds file that cannot be read is a refusal with its own reason (v0.322.5). The checker
+# below already refuses one that does not parse; an EMPTIED file in a project that had diamonds
+# read to it as "nothing to judge" and the release was allowed.
+EX_WHY="$("$(mycelium_python)" "$(dirname "$LOCKS")/_hook_input.py" --project-dir "$PROJECT_DIR" --diamonds-unreadable-why 2>/dev/null)"
+if [ -n "$EX_WHY" ]; then
+  printf 'Mycelium exposure gate: this command looks like a release, and .claude/diamonds/active.yml cannot be read: %s. That file holds the record of who a release reaches, so until it is repaired this is refused. Tell the user. `git diff -- .claude/diamonds/active.yml` shows what changed and `git checkout -- .claude/diamonds/active.yml` brings back the last committed version.\n' "$EX_WHY" >&2
+  . "$(dirname "$LOCKS")/_hook_fire_log.sh" 2>/dev/null || true
+  mycelium_log_fire ".claude/state/exposure-gate-fires.jsonl" "blocked-cannot-read" 2>/dev/null || true
+  exit 2
+fi
 OUT=$(printf '%s' "$INPUT" | "$(mycelium_python)" "$LOCKS" --project-dir "$PROJECT_DIR" --exposure-hook)
 rc=$?  # the checker's own status: no pipefail here, and it reads all of stdin before it answers
 # 0 = allowed. 3 = PyYAML missing: since 0.290.0 that REFUSES too, with the fix, because this
