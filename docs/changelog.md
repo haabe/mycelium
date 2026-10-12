@@ -47,8 +47,9 @@ project was loaded in its place.
 `tests/python/test_hooks_import_nothing_from_the_project.py` plants seventeen module files in a
 scratch project and runs every hook registered in `hooks.json` there, the way Claude Code starts
 it. It does not need to know which hooks run Python, so a new hook is covered. It also tests each
-half alone (the launcher with `PYTHONSAFEPATH` unset; the shell function with it unset). 72 cases;
-26 fail on the 0.322.3 code.
+half alone (the launcher with `PYTHONSAFEPATH` unset; the shell function with it unset). 76 cases;
+26 fail on the 0.322.3 hooks. The launcher is a new file, so its own tests pass beside the old
+hooks too.
 
 ### Alternatives considered
 
