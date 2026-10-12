@@ -18,7 +18,7 @@ The term "harness" comes from [Birgitta Böckeler's harness engineering concept]
 
 | Tier | Count | Effect | Example |
 |------|-------|--------|---------|
-| **BLOCK** | 2 | Mechanically prevented by hooks | No plaintext secrets in code (G-S1) |
+| **BLOCK** | 2 | Mechanically prevented by hooks | No plaintext secret committed, pushed or typed into a command (G-S1) |
 | **REVIEW** | 18 | Gates diamond progression | Tests must exist before delivery complete (G-V7) |
 | **NUDGE** | 17 | Advised but not blocking | Evidence quality checks, BVSSH reminders, test ideas responsibly |
 

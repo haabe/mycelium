@@ -13,7 +13,7 @@ Only BLOCK is computationally deterministic. REVIEW and NUDGE are inferentially 
 ## Security (universal)
 
 **G-S1: Never store, log, or transmit user secrets in plaintext** `BLOCK` `safety`
-Credentials, tokens, API keys, passwords must be encrypted at rest and in transit. Never commit them to version control. Never include them in error messages or logs.
+Credentials, tokens, API keys, passwords must be encrypted at rest and in transit. Never commit them to version control. Never include them in error messages or logs, and never type one into a shell command. Since 0.323.0 the hooks enforce this at the commit, the push and the command, not at the write: a key may sit in an ignored env file, which is where it belongs.
 *Source: OWASP Secure by Design*
 
 ## Process (universal)

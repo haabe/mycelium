@@ -33,7 +33,7 @@ Scope note: this is the *agent self-governance* contract. The *product* behavior
 
 | # | Constraint | Canonical source |
 |---|------------|------------------|
-| N1 | Never write plaintext secrets/tokens/keys (`G-S1`, BLOCK) | `guardrails-index.md`; `harness/security-trust.md` |
+| N1 | Never commit, push or log plaintext secrets/tokens/keys, and never type one into a shell command (`G-S1`, BLOCK at the commit, the push and the command since 0.323.0). A key belongs in an ignored env file or a secrets manager | `guardrails-index.md`; `harness/security-trust.md` |
 | N2 | Never start implementation without reading `corrections.md` (`G-P5`, BLOCK) | `guardrails-index.md`; `guardrails-core.md` |
 | N3 | Never bypass a diamond/gate to progress on self-asserted confidence | `engine/diamond-rules.md`; `engine/theory-gates.md` |
 | N4 | Never treat consistency as evidence, or propagate a tool/subagent/dialog claim unverified (Consistency-as-Evidence) | `anti-patterns.md` § Confidence #7 |
