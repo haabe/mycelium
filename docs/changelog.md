@@ -4,6 +4,68 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-12.
 
+## v0.322.5 - a diamonds file that cannot be read does not open the gates
+
+**2026-10-12.** `.claude/diamonds/active.yml` is the file that says what may be built and who a
+release reaches. If that file could not be read, the build gate could end up treating the project
+as one with nothing to protect.
+
+### What was wrong
+
+- **Shown by running it on 0.322.4**, in a project with diamonds and no written purpose: an edit
+  of product code was refused while the diamonds file was readable. Once the file held git
+  conflict markers, was invalid YAML, was a list at the top, or was empty, the same edit was
+  allowed and nothing was said.
+- **Why:** the check that decides whether discovery is engaged caught one kind of error and a
+  YAML error is another kind. The check crashed, and its crash read as "not engaged".
+- **How you get there without meaning to:** git writes conflict markers into the file when a
+  merge conflicts.
+- **With a purpose written** the edit was still refused in every state, but with the message for
+  a missing delivery cycle, which sends you looking in the wrong place.
+
+### What changed
+
+- **The build gate and the release gate refuse when the diamonds file cannot be read, and say
+  why**: conflict markers, invalid YAML (with the line), the wrong shape. The message says how to
+  see what changed and how to get the last committed version back.
+- **The agent is told at the prompt** when the file holds conflict markers.
+- **An emptied file** is treated as unreadable only where Mycelium's own record shows the project
+  had diamonds. Without that record an empty file is a fresh project, as before.
+- A `purpose.yml` that does not parse no longer crashes the same check.
+
+### Found on the way: one deploy command the release gate never judged
+
+`vercel --prod` is on the release checker's own list. It never got there. The hook has a cheap
+word filter in front of the checker, and that command carries none of its words, so the hook
+left before the checker started. Shown by running it; the thirteen other release commands tried
+in the same replay were all refused. The filter has the word now, and a test holds one sample of every
+kind of release the checker lists.
+
+### How it came up
+
+An unsolicited one-line email named a line in `_hook_input.py`. The line is real: it is a
+catch-all in the code that reads the diamonds file. The email's description of it, a hidden
+"connection drop", is not: that file has no network code. Testing what surrounds the line is
+what found the fault above.
+
+### Alternatives considered
+
+- **Treat every unreadable diamonds file as "not a Mycelium project".** That is what happened by
+  accident, and it is the fault.
+- **Refuse on any empty diamonds file.** A fresh project can have one; without a record of
+  earlier diamonds there is nothing to tell the two apart, so that case stays open.
+- **Repair the file automatically from git.** Not Mycelium's to do: the conflict is the builder's
+  to resolve, and the scale lock already judges a repair against the last good state.
+
+### Not in this release
+
+- **Whether the agent can make the diamonds file unreadable with its own tools** was not
+  replayed. Shell writes to it are refused; edits go through the scale lock.
+- The release gate's word filter still runs over the whole hook input, the project's path
+  included, so a command can pass the filter because of a folder's name. That errs toward
+  checking more, not less.
+- Not run on Cursor or Codex.
+
 ## v0.322.4 - a hook's Python imports nothing from the project
 
 **2026-10-12. A hole that has been in every released version.** It was found the same day

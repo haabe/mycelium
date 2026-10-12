@@ -166,10 +166,20 @@ if grep -qE '^[[:space:]]*why:[[:space:]]*["'"'"'>|]?[[:space:]]*[[:alnum:]]' "$
    || grep -qE '^[[:space:]]*-[[:space:]]+id:[[:space:]]*[[:alnum:]]' "$PROJECT_DIR/.claude/diamonds/active.yml" 2>/dev/null; then
   _PF_LOOKS_ENGAGED=1
 fi
+# Git conflict markers in the diamonds file (v0.322.5): the commonest way it stops being readable,
+# and one more grep finds it even when the ids above still match. Any other unreadable shape is
+# caught below only when the file no longer looks engaged; the gate itself always parses strictly.
+if grep -qE '^(<{7}|={7}|>{7})( |$)' "$PROJECT_DIR/.claude/diamonds/active.yml" 2>/dev/null; then
+  _PF_LOOKS_ENGAGED=2
+  echo "MYCELIUM DIAMONDS FILE UNREADABLE: .claude/diamonds/active.yml holds git conflict markers, so it cannot be read. The build gate refuses new files and edits to product code, and the release gate refuses releases, until it is repaired. Tell the user before anything else; \`git diff -- .claude/diamonds/active.yml\` shows the conflict."
+fi
 if [ "$_PF_LOOKS_ENGAGED" -eq 0 ] && [ -f "$_PF_HI_LIB" ] && [ ! -f "$PROJECT_DIR/.claude/state/discovery-skip-ack" ]; then
   # shellcheck source=/dev/null
   . "$_PF_HI_LIB"
-  if ! hi_discovery_engaged; then
+  hi_discovery_engaged; _PF_ENGAGED=$?
+  if [ "$_PF_ENGAGED" -eq 4 ]; then
+    echo "MYCELIUM DIAMONDS FILE UNREADABLE: .claude/diamonds/active.yml cannot be read (git conflict markers, invalid YAML, or not the shape Mycelium writes). The build gate refuses new files and edits to product code until it is repaired. Tell the user before anything else; \`git diff -- .claude/diamonds/active.yml\` shows what changed."
+  elif [ "$_PF_ENGAGED" -ne 0 ]; then
     echo "MYCELIUM DISCOVERY STATE: none in this project (no purpose, no active diamond). If this prompt asks you to design or build something, new source files WILL BE REFUSED by the discovery gate, so do not draft the design first: ask who it is for, what problem it solves and what evidence there is, or offer /mycelium:start. If the prompt is not a build request, ignore this line and answer it."
   fi
 elif [ "$_PF_LOOKS_ENGAGED" -eq 1 ] && [ ! -f "$PROJECT_DIR/.claude/state/delivery-skip-ack" ] \

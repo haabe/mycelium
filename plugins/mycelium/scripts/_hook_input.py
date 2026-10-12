@@ -440,21 +440,13 @@ def has_purpose(project_dir: str) -> bool:
     """purpose.yml carries a purpose statement with words in it. Separate from has_discovery_state,
     which a diamond alone satisfies: an end-to-end dogfood run (v0.244.0) had diamonds and no
     purpose, because /mycelium:start was interrupted, and nothing noticed."""
-    try:
-        import yaml  # noqa: PLC0415 — optional; _purpose_has_words has a regex fallback
-    except ImportError:
-        yaml = None
     path = os.path.join(project_dir, ".claude", "canvas", "purpose.yml")
     try:
         with open(path, encoding="utf-8") as fh:
             text = fh.read()
     except OSError:
         return False
-    try:
-        doc = yaml.safe_load(text) if yaml else None
-    except ValueError:
-        doc = None
-    return _purpose_has_words(doc, text)
+    return _purpose_has_words(_yaml_or_none(text), text)
 
 
 def has_discovery_state(project_dir: str) -> bool:
@@ -471,15 +463,14 @@ def has_discovery_state(project_dir: str) -> bool:
     try:
         with open(purpose, encoding="utf-8") as fh:
             text = fh.read()
-        doc = yaml.safe_load(text) if yaml else None
-        if _purpose_has_words(doc, text):
+        if _purpose_has_words(_yaml_or_none(text), text):
             return True
     except (OSError, ValueError, AttributeError):
         pass
     if yaml is not None:
         try:
             with open(active, encoding="utf-8") as fh:
-                doc = yaml.safe_load(fh.read())
+                doc = _yaml_or_none(fh.read())
             diamonds = (doc or {}).get("active_diamonds") if isinstance(doc, dict) else None
             if isinstance(diamonds, list) and any(
                 isinstance(d, dict) and d.get("id") for d in diamonds
@@ -490,10 +481,98 @@ def has_discovery_state(project_dir: str) -> bool:
     return False
 
 
+def _yaml_or_none(text: str):
+    """The parsed document, or None when PyYAML is missing or the text is not valid YAML.
+
+    Until 0.322.5 the callers caught `ValueError`, and a YAML error is not one: a `purpose.yml` or
+    a diamonds file that did not parse CRASHED the engagement check, the crash's exit status read
+    as "not engaged", and the build gate stood open."""
+    try:
+        import yaml  # noqa: PLC0415 - optional
+    except ImportError:
+        return None
+    try:
+        return yaml.safe_load(text)
+    except yaml.YAMLError:
+        # SPEAKS: purpose.yml falls back to a regex over the text (_purpose_has_words), and a
+        # diamonds file that does not parse is reported by diamonds_unreadable_why().
+        return None
+
+
+#: `discovery_state_code` when the diamonds file is there and cannot be read (v0.322.5).
+UNREADABLE = 4
+_CONFLICT_MARKER = re.compile(r"^(?:<{7}|={7}|>{7})(?: |$)", re.MULTILINE)
+
+
+def _had_diamonds(project_dir: str) -> bool:
+    """Mycelium's own record of the diamonds it last saw (`diamond-rulings.json`) names one."""
+    path = os.path.join(project_dir, ".claude", "state", "diamond-rulings.json")
+    try:
+        with open(path, encoding="utf-8") as fh:
+            seen = json.load(fh)
+    except (OSError, ValueError):
+        return False  # SPEAKS: no record means an empty diamonds file is read as a fresh project
+    return isinstance(seen, dict) and bool(seen)
+
+
+def diamonds_unreadable_why(project_dir: str) -> str:
+    """Why `.claude/diamonds/active.yml` cannot be read as what Mycelium writes; "" when it can,
+    when it is not there, and when PyYAML is missing (that case has its own answer, 3).
+
+    WHY THIS EXISTS (v0.322.5). The diamonds file says what may be built. Read behind catch-alls,
+    a file that did not parse looked like a project with nothing to protect: replayed on 0.322.4
+    in a project with diamonds and no written purpose, an edit of product code was refused while
+    the file was readable and ALLOWED, with nothing said, once it held git conflict markers, was
+    invalid YAML, was the wrong shape or was empty. A merge conflict is enough to get there. A
+    gate that cannot read the file now refuses and says why."""
+    active = os.path.join(project_dir, ".claude", "diamonds", "active.yml")
+    try:
+        with open(active, encoding="utf-8") as fh:
+            text = fh.read()
+    except FileNotFoundError:
+        return ""
+    except (OSError, UnicodeDecodeError) as exc:
+        return f"it cannot be opened ({type(exc).__name__})"
+    if _CONFLICT_MARKER.search(text):
+        return "it holds git conflict markers (<<<<<<<, =======, >>>>>>>)"
+    why = _diamonds_text_problem(text)
+    if why == _EMPTY:
+        return ("it is empty, and Mycelium's own record shows this project had diamonds"
+                if _had_diamonds(project_dir) else "")
+    return why
+
+
+_EMPTY = "empty"
+
+
+def _diamonds_text_problem(text: str) -> str:
+    """What is wrong with the diamonds file's text as YAML of the shape Mycelium writes: "" for
+    nothing (or PyYAML missing, which has its own answer), `_EMPTY` for no content."""
+    try:
+        import yaml  # noqa: PLC0415 - optional
+    except ImportError:
+        return ""
+    try:
+        doc = yaml.safe_load(text)
+    except yaml.YAMLError as exc:
+        mark = getattr(exc, "problem_mark", None)
+        return "it is not valid YAML" + (f" (line {mark.line + 1})" if mark is not None else "")
+    if doc is None:
+        return _EMPTY
+    if not isinstance(doc, dict):
+        return "its top level is not the mapping Mycelium writes"
+    if doc.get("active_diamonds") is not None and not isinstance(doc.get("active_diamonds"), list):
+        return "`active_diamonds` in it is not a list"
+    return ""
+
+
 def discovery_state_code(project_dir: str) -> int:
     """0 engaged, 1 not engaged, 3 cannot check (v0.290.0): without PyYAML the diamonds file is
     not read, so a project with diamonds read as one with none, and the gate refused for a reason
-    that was false."""
+    that was false. 4 (v0.322.5): the diamonds file is there and cannot be read; the answer does
+    not depend on whether a purpose is written, so the gate can give the real reason either way."""
+    if diamonds_unreadable_why(project_dir):
+        return UNREADABLE
     if has_discovery_state(project_dir):
         return 0
     return 3 if _diamonds_unread(project_dir) else 1
@@ -675,9 +754,13 @@ def _skip_ack_cli(project_dir: str, spec: list[str]) -> int:
 
 
 def _path_query(args) -> int | None:
-    """--product-file, --not-prototype and --skip-ack: answer and exit; None when none was asked."""
+    """--product-file, --not-prototype, --skip-ack and --diamonds-unreadable-why: answer and
+    exit; None when none was asked."""
     if args.skip_ack is not None:
         return _skip_ack_cli(args.project_dir, args.skip_ack)
+    if args.diamonds_unreadable_why:
+        print(diamonds_unreadable_why(args.project_dir))
+        return 0
     if args.product_file is not None:
         hit = next((t for t in args.product_file if in_product_paths(args.project_dir, t)), None)
     elif args.not_prototype is not None:
@@ -718,7 +801,11 @@ def cli() -> int:
                     help="build|release [REL...]: does the delivery skip-ack lift this gate? "
                          "exit 0 (lifted) or 1; prints any warning; reads no stdin")
     ap.add_argument("--discovery-state", action="store_true",
-                    help="exit 0 if discovery has been engaged, 1 if not; reads no stdin")
+                    help="exit 0 if discovery has been engaged, 1 if not, 3 if PyYAML is missing, "
+                         "4 if the diamonds file cannot be read; reads no stdin")
+    ap.add_argument("--diamonds-unreadable-why", action="store_true",
+                    help="print why the diamonds file cannot be read, or nothing; exit 0; "
+                         "reads no stdin")
     ap.add_argument("--purpose-state", action="store_true",
                     help="exit 0 if purpose.yml has a purpose statement, 1 if not; reads no stdin")
     ap.add_argument("--not-prototype", nargs="*", default=None, metavar="REL",

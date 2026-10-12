@@ -127,6 +127,17 @@ fi
 if [ "$EDITING" = "1" ] && [ "$HI_ENGAGED" -eq 1 ]; then
   exit 0  # an edit in a project where discovery has not started: the brownfield gate's case
 fi
+if [ "$HI_ENGAGED" -eq 4 ]; then
+  # The diamonds file is there and cannot be read (v0.322.5): conflict markers, invalid YAML, the
+  # wrong shape, or emptied. Until 0.322.5 that read as "discovery not engaged" in a project with
+  # no written purpose, and this gate let the write through in silence.
+  mycelium_skip_ack build "${GATED_ALL[@]}" && exit 0  # dated, scoped, logged (v0.293.0)
+  HI_WHY="$("$(mycelium_python)" "$NP_HELPER" --project-dir "$PROJECT_DIR" --diamonds-unreadable-why 2>/dev/null)"
+  printf 'Mycelium delivery gate: you are about to %s (%s), and .claude/diamonds/active.yml cannot be read: %s. That file says what may be built, so until it is repaired this is refused. Tell the user. If git left conflict markers in it, resolve them; `git diff -- .claude/diamonds/active.yml` shows what changed and `git checkout -- .claude/diamonds/active.yml` brings back the last committed version. Repair it with Edit or Write, where the scale lock judges the repair against the last good state. Nothing else in the project is affected.\n' "$ACT" "$BASENAME" "${HI_WHY:-it does not parse}" >&2
+  . "${CLAUDE_PLUGIN_ROOT:-$(dirname "${BASH_SOURCE[0]}")/..}/scripts/_hook_fire_log.sh" 2>/dev/null || true
+  mycelium_log_fire ".claude/state/discovery-gate-fires.jsonl" "blocked-cannot-read" 2>/dev/null || true
+  exit 2
+fi
 if [ "$HI_ENGAGED" -eq 3 ]; then
   # Diamonds exist but cannot be read without PyYAML (v0.290.0): refuse with the real reason.
   mycelium_skip_ack build "${GATED_ALL[@]}" && exit 0  # dated, scoped, logged (v0.293.0)

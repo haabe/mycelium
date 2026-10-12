@@ -61,7 +61,11 @@ while IFS=$'\t' read -r target _exists _size; do
 done <<< "$HI_TARGETS"
 [ "$TOUCHES_SOURCE" = "1" ] || exit 0
 
-hi_discovery_engaged && exit 0
+hi_discovery_engaged
+case $? in
+  0) exit 0 ;;
+  4) exit 0 ;;  # the diamonds file cannot be read: the build gate refuses and says why (v0.322.5)
+esac
 
 SRC_COUNT=$(find "$PROJECT_DIR" \
     \( -path "$PROJECT_DIR/.git" -o -path "$PROJECT_DIR/.claude" \
