@@ -491,6 +491,39 @@ def test_commits_made_are_read_from_the_reflog(project):
     assert cs.made_commits(repo, "", None)[0] == amended
 
 
+# ---------------------------------------------------------------- the git hook setup offers
+
+
+def test_the_git_hook_is_written_once_and_never_over_someone_elses(project, tmp_path, capsys):
+    import install_git_secret_hook as ig
+    hook = project / ".git" / "hooks" / "pre-commit"
+    assert ig.main(["--project-dir", str(project), "--check"]) == 0 and not hook.exists()
+    assert ig.main(["--project-dir", str(project)]) == 0
+    assert "gitleaks git --pre-commit --staged" in hook.read_text() and os.access(hook, os.X_OK)
+    assert ig.main(["--project-dir", str(project)]) == 0, "a second run is a no-op"
+    assert "already runs gitleaks" in capsys.readouterr().out
+    hook.write_text("#!/bin/sh\nnpm test\n")
+    assert ig.main(["--project-dir", str(project)]) == 1
+    assert hook.read_text() == "#!/bin/sh\nnpm test\n", "the person's own hook was changed"
+    assert "add this line" in capsys.readouterr().out
+    assert ig.main(["--project-dir", str(tmp_path / "nowhere")]) == 2
+
+
+def test_the_installed_hook_runs_and_does_not_block_without_a_scanner(project):
+    import install_git_secret_hook as ig
+    assert ig.main(["--project-dir", str(project)]) == 0
+    done = subprocess.run(["sh", str(project / ".git" / "hooks" / "pre-commit")], cwd=project,
+                          text=True, capture_output=True, env={"PATH": "/usr/bin:/bin"},
+                          check=False)
+    assert done.returncode == 0 and "not scanned" in done.stderr
+
+
+def test_setup_offers_the_hook_and_never_installs_it_unasked():
+    skill = (PLUGIN / "skills" / "setup" / "SKILL.md").read_text()
+    assert "install_git_secret_hook.py" in skill
+    assert "Never install it unasked" in skill
+
+
 def test_the_entry_point_refuses_when_the_scan_itself_breaks(project, monkeypatch, capsys):
     def boom(*_args, **_kw):
         raise RuntimeError("simulated")
