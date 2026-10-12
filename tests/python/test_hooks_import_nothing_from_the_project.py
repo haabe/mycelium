@@ -263,3 +263,53 @@ def test_a_snippet_can_still_add_myceliums_own_folder_and_import_from_it():
     done = _safe(f"import sys; sys.path.insert(0, {str(PLUGIN / 'scripts')!r}); "
                  "import _state_dir; print(_state_dir.TEMPLATE.name)")
     assert done.stdout.strip() == "state-gitignore.txt"
+
+
+# ---------------------------------------------------------------- the launcher, in this process
+#
+# The tests above start the launcher the way a hook does, as its own process, which the coverage
+# floor cannot see into. These call the same code here, so a line of it that no test reaches shows.
+
+
+def _load_safe():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("_safe_c", SAFE)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _call_main(monkeypatch, argv: list[str], stdin: str = "") -> None:
+    import io
+    safe = _load_safe()
+    monkeypatch.setattr(sys, "argv", ["_safe_c.py", *argv])
+    monkeypatch.setattr(sys, "path", list(sys.path))
+    monkeypatch.setattr(sys, "stdin", io.StringIO(stdin))
+    safe.main()
+
+
+def test_in_process_dash_c_mode_runs_the_code_with_its_arguments(monkeypatch, capsys):
+    _call_main(monkeypatch, ["import sys; print(sys.argv, __name__)", "a"])
+    assert capsys.readouterr().out.strip() == "['-c', 'a'] __main__"
+
+
+def test_in_process_stdin_mode_reads_the_code_from_stdin(monkeypatch, capsys):
+    _call_main(monkeypatch, ["--stdin", "x"], stdin="import sys\nprint(sys.argv)\n")
+    assert capsys.readouterr().out.strip() == "['-', 'x']"
+
+
+def test_in_process_no_code_is_a_usage_error(monkeypatch, capsys):
+    with pytest.raises(SystemExit) as stop:
+        _call_main(monkeypatch, [])
+    assert stop.value.code == 2 and "no code given" in capsys.readouterr().err
+
+
+def test_in_process_the_working_directory_and_the_launchers_folder_leave_the_path(
+        monkeypatch, tmp_path):
+    safe = _load_safe()
+    monkeypatch.chdir(tmp_path)
+    kept = str(tmp_path / "kept")
+    monkeypatch.setattr(sys, "path", ["", ".", str(tmp_path), str(SAFE.parent), kept])
+    safe._clean_path()
+    assert sys.path == [kept]
+
