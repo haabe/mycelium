@@ -52,7 +52,13 @@ GUARD_STATE_REL = (
     ".claude/state/delivery-skip-ack",
     ".claude/state/scale-lock-ack",
     ".claude/state/brownfield-ack",
+    # The secret scanner's own ways past a finding (v0.323.0; maintainer's ruling 2026-10-12,
+    # "Agent must ask you first"): its ignore list and its config, at the project's top level.
+    ".gitleaksignore",
+    ".gitleaks.toml",
 )
+#: The scanner's third way past a finding: a comment on the line itself.
+INLINE_ALLOW = "gitleaks:allow"
 _QUOTED_MIN = 2
 
 
@@ -420,6 +426,10 @@ def guard_state_check(name: str, tool_name: str, tool_input, project_dir: str,
                         f"MYCELIUM_GUARD_STATE_EDIT=1 in your own shell for setup work.")
     if tool_name != "Bash":
         _settings_check(name, tool_input, project_dir, permission_mode)
+        if INLINE_ALLOW in written_content(tool_input):
+            _decide_guarded(name, f"this write adds a `{INLINE_ALLOW}` comment, which tells the "
+                                  "secret scanner to pass the line it sits on; waving a finding "
+                                  "through", permission_mode)
 
 
 def _sibling(module: str):

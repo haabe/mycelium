@@ -227,7 +227,37 @@ def _snapshot_guard_state(project: Path, state: Path, cmd: str, call: str) -> No
     settings = {name: _switches_in(path) for name, path in _settings_files(project).items()}
     (snap / "index.json").write_text(json.dumps({
         "files": files, "asked": asked, "own": own, "settings": settings,
-        "override": hi.human_override()}))
+        "override": hi.human_override(), "git": _git_before(project)}))
+
+
+def _git_before(project: Path) -> dict:
+    """Where the repository's commit pointer is before the command (v0.323.0), so that commits
+    the command makes can be scanned afterwards. Empty where there is no repository."""
+    cs = _load("commit_scan")
+    repo = cs.repo_of(str(project)) if cs else None
+    if not repo:
+        return {}
+    return {"repo": repo, "head": cs.head_of(repo), "reflog": cs.reflog_length(repo)}
+
+
+def _secrets_committed(git_before: dict) -> list[str]:
+    """What the secret scan finds in commits the command itself made (commit_scan.py). Mycelium
+    does not rewrite a commit: it says what it found, and the push is where it is refused."""
+    cs = _load("commit_scan")
+    repo = git_before.get("repo") if isinstance(git_before, dict) else None
+    if not cs or not repo:
+        return []
+    shas = cs.made_commits(repo, git_before.get("head") or "", git_before.get("reflog"))
+    if not shas:
+        return []
+    status, lines = cs.scan_commits(repo, shas[:50])
+    short = ", ".join(s[:8] for s in shas[:5]) + (" and more" if len(shas) > 5 else "")  # noqa: PLR2004
+    if status == "found":
+        return [f"in {short}: " + "; ".join(lines[:8])]
+    if status == "error":
+        return [(f"the scan of {short} could not run ({'; '.join(lines)}), so nothing is known "
+                 "about them")]
+    return []
 
 
 def _settings_files(project: Path) -> dict[str, Path]:
@@ -300,10 +330,11 @@ def _put_back_settings(project: Path, index: dict) -> tuple[list[str], list[str]
 
 
 def _put_back_guard_state(project: Path, state: Path, call: str,
-                          settings: list | None = None) -> list[str]:
+                          extras: dict | None = None) -> list[str]:
     """Undo what the command did to a file that switches a stop off, unless the person was asked.
-    Returns one line per file put back; a file it could not put back is named as such. `settings`,
-    when given, is filled with the two lists `_put_back_settings` returns."""
+    Returns one line per file put back; a file it could not put back is named as such. `extras`,
+    when given, receives what else the snapshot held: `settings`, the two lists
+    `_put_back_settings` returns, and `git`, where the commit pointer was before the command."""
     snap = state / GUARD_SNAP / call
     if not (snap / "index.json").is_file():
         return []  # no snapshot for this call: its before half did not run, so nothing to compare
@@ -315,8 +346,9 @@ def _put_back_guard_state(project: Path, state: Path, call: str,
                  f"read, {type(exc).__name__}, so nothing was compared and nothing was put back)")]
     out = []
     try:
-        if settings is not None and isinstance(index, dict):
-            settings.extend(_put_back_settings(project, index))
+        if extras is not None and isinstance(index, dict):
+            extras["settings"] = _put_back_settings(project, index)
+            extras["git"] = index.get("git") if isinstance(index.get("git"), dict) else {}
         # The override as it was BEFORE the command (v0.322.6); a snapshot from an older version
         # has no such note and falls back to the environment now.
         if index.get("own") or index.get("override", hi.human_override()):
@@ -396,9 +428,10 @@ def post(payload: dict, project: Path) -> int:
         since = float((state / "stamp").read_text())
     except (OSError, ValueError):
         return 0  # no stamp: pre did not run (not a Mycelium project, or an unwritable state dir)
-    in_settings: list = []
-    put_back = _put_back_guard_state(project, state, _call_id(payload), in_settings)
-    undone, reported = in_settings or ([], [])
+    extras: dict = {}
+    put_back = _put_back_guard_state(project, state, _call_id(payload), extras)
+    undone, reported = extras.get("settings") or ([], [])
+    committed = _secrets_committed(extras.get("git") or {})
     changed = _changed(project, since)
     problems = _schema_problems(changed) if changed else []
     if changed and project / ACTIVE_REL in changed:
@@ -431,6 +464,15 @@ def post(payload: dict, project: Path) -> int:
             x for x in (out.get("systemMessage"), "Mycelium: " + " ".join(told)) if x)
         reasons.append(" ".join(told) + " Do not try another way of setting it: tell the person "
                        "what happened and let them decide.")
+    if committed:
+        told = ("A commit this command made holds something that looks like a secret: "
+                + "; ".join(committed) + ". Mycelium has not changed the commit, and will refuse "
+                "to push it. A new commit on top does not take the value out of history: the "
+                "commit has to be amended or redone. If the value was ever real it should be "
+                "replaced. A false alarm is yours to wave through.")
+        out["systemMessage"] = " ".join(
+            x for x in (out.get("systemMessage"), "Mycelium: " + told) if x)
+        reasons.append(told + " Do not push. Tell the person what happened and let them decide.")
     if problems:
         names = ", ".join(str(f.relative_to(project)) for f in changed)
         reasons.append(

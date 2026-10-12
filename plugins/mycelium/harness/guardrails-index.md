@@ -4,7 +4,7 @@ Compact reference for lazy loading. Load full rule from `guardrails.md` only whe
 
 | ID | Level | Trigger condition | One-line rule |
 |---|---|---|---|
-| G-S1 | BLOCK | Writing/logging credentials, tokens, keys | No plaintext secrets ever |
+| G-S1 | BLOCK | Committing, pushing or logging credentials, tokens, keys; typing one into a shell command | No plaintext secret in the repository or a log |
 | G-S2 | REVIEW | Solution handles user data or needs system permissions | Run STRIDE threat model first |
 | G-S3 | REVIEW | Adding any new data collection point | Privacy by Design assessment required |
 | G-S4 | REVIEW | Processing external input (user, API, file, URL) | Validate, sanitize, escape all inputs |

@@ -352,6 +352,31 @@ SNAPSHOT — **re-run `/mycelium:setup` after any framework upgrade to refresh t
 skeleton (two clean hooks; gate/scope/secret-scan + Stop-relocation are TODO) and
 reflexion (#27900) needs the upstream opencode fix.
 
+## Before the confirmation: offer the secret scan for commits made by hand (v0.323.0)
+
+Mycelium's hooks scan a commit or a push that the AGENT makes for secrets
+(`scripts/commit_scan.py`). They never see a commit the person makes in their own terminal. Git
+can run the same scan itself, from a pre-commit hook, in this clone.
+
+Offer it once, as one question, with what it costs:
+
+> "Mycelium checks what I commit and push for passwords and keys. Commits you make yourself in a
+> terminal are not checked. I can install a git hook in this clone that checks those too. It uses
+> gitleaks, which has to be installed; without it the hook only reminds you. Git hooks are not
+> cloned, so a fresh clone needs this again. Install it?"
+
+- **On yes**: run `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/install_git_secret_hook.py" --project-dir <project_root>`
+  and relay what it prints. Exit 1 means the person already has a pre-commit hook of their own:
+  it was not changed, and the script printed the line to add. Show them that line. Do not edit
+  their hook yourself.
+- **On no, on no answer, and in a non-interactive run**: do nothing, and say nothing more about
+  it. Never install it unasked.
+- **Not a git repository**: skip the offer.
+- **If gitleaks is not installed** (`command -v gitleaks` finds nothing): say so in the same
+  message, with where to get it (https://github.com/gitleaks/gitleaks). Until then Mycelium's
+  own check at the agent's commit and push falls back to a short list of its own, and says so
+  once a session.
+
 ## Step 6: Confirmation message
 
 After all writes succeed, build the confirmation by checking what was actually created. Use `test -f <project_root>/AGENTS.md` to determine whether the AGENTS.md line should appear.

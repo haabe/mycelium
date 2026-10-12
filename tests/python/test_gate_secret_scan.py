@@ -1,5 +1,10 @@
 """The secret scan in hooks/gate.sh, run through the hook under the system grep (v0.318.3).
 
+SINCE 0.323.0 THIS SCAN READS A SHELL COMMAND'S TEXT, NOT A FILE WRITE. What is written to a file
+is no longer scanned; what is committed and pushed is (test_secrets_are_stopped_at_the_commit.py).
+The same patterns, now in scripts/_secret_patterns.sh, still run over every command the agent
+types, so each case below is sent as a command.
+
 Until 0.318.3 the scan had no test. Nine of its patterns put `\\s` and `\\x27` inside bracket
 expressions; the BSD grep that /usr/bin/grep is on macOS reads a backslash in a bracket as a literal
 character, so the class meant for whitespace matched the letter s and the class meant for a single
@@ -63,8 +68,8 @@ MUST_PASS = {
 
 def _run(tmp_path, content: str) -> str:
     (tmp_path / ".claude" / "canvas").mkdir(parents=True, exist_ok=True)  # a Mycelium project
-    payload = json.dumps({"tool_name": "Write", "permission_mode": "default",
-                          "tool_input": {"file_path": "src/config.py", "content": content}})
+    payload = json.dumps({"tool_name": "Bash", "permission_mode": "default",
+                          "tool_input": {"command": content}})
     env = {"CLAUDE_PROJECT_DIR": str(tmp_path), "HOME": str(tmp_path), "TMPDIR": str(tmp_path),
            "PATH": "/usr/bin:/bin:" + str(Path(sys.executable).parent)}
     done = subprocess.run(["bash", str(HOOK)], input=payload, capture_output=True, text=True,
@@ -89,9 +94,9 @@ def test_the_patterns_use_no_backslash_escape_inside_a_bracket():
     """The defect itself, as a property of the file. The three escapes that BSD grep reads as
     letters inside a bracket (`\\s`, `\\x27`, `\\-`) appear nowhere in the pattern table: whitespace
     and quotes come from the named classes above it, and a hyphen sits last in its bracket."""
-    text = HOOK.read_text(encoding="utf-8")
+    text = (HOOK.parent.parent / "scripts" / "_secret_patterns.sh").read_text(encoding="utf-8")
     start = text.index("SECRET_PATTERNS=(")
-    block = text[start:text.index("\n  )", start)]
+    block = text[start:text.index("\n)", start)]
     assert block.count("\n") >= 10, "the pattern table was not found whole"
     for escape in ("\\s", "\\x", "\\-"):
         assert escape not in block, f"{escape} is back in the pattern table"
@@ -130,9 +135,9 @@ def _path_with(tmp_path, grep_script: str | None) -> str:
 
 def _run_with_path(tmp_path, content: str, path: str) -> str:
     (tmp_path / ".claude" / "canvas").mkdir(parents=True, exist_ok=True)
-    payload = json.dumps({"tool_name": "Write", "permission_mode": "default",
+    payload = json.dumps({"tool_name": "Bash", "permission_mode": "default",
                           "tool_use_id": "toolu_scanerror0001",
-                          "tool_input": {"file_path": "src/config.py", "content": content}})
+                          "tool_input": {"command": content}})
     env = {"CLAUDE_PROJECT_DIR": str(tmp_path), "HOME": str(tmp_path), "TMPDIR": str(tmp_path),
            "PATH": path}
     done = subprocess.run(["/bin/bash", str(HOOK)], input=payload, capture_output=True, text=True,

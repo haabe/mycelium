@@ -450,7 +450,7 @@ Check `product_type` from `.claude/diamonds/active.yml` to determine which auto-
 **For all product types:**
 
 **Secrets (G-S1 BLOCK)**:
-- Check: Scan all project files for secret patterns (same as gate.sh)
+- Check: no secret in what git tracks. Where gitleaks is installed, run `gitleaks git --redact --no-banner` over the repository; otherwise run Mycelium's own short list over tracked files (`git grep -nE` with each pattern in `scripts/_secret_patterns.sh`). An ignored env file is not a finding (since 0.323.0 the hooks stop a secret at the commit and the push, not at the write)
 - If secrets found: **GATE FAILED**
 
 ### Delivery-Type Dependent (from ${CLAUDE_PLUGIN_ROOT}/engine/canvas-guidance.yml)

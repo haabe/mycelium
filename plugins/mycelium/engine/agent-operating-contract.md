@@ -151,3 +151,7 @@ anything else in those files is ordinary work and is not asked about. If the per
 switch set, say which line to add and let them add it, or make the edit with Edit or Write so
 that they are asked.
 
+And for the secret scanner's own ways past a finding (0.323.0): `.gitleaksignore`,
+`.gitleaks.toml` and a `gitleaks:allow` comment are the person's to write. A commit or push the
+scan refuses is fixed by taking the value out, never by adding one of these.
+

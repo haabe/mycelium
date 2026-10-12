@@ -31,7 +31,7 @@ Each guardrail has one of three enforcement levels:
 
 ### `BLOCK` — Mechanically prevented
 The action cannot happen. gate.sh returns exit 2 (deny). The agent cannot proceed regardless of intent.
-*Used for: security violations that must never reach disk (secrets, credentials).*
+*Used for: security violations that must never reach the repository or a log (secrets, credentials).*
 
 ### `REVIEW` — Diamond progression blocked
 The agent can write code, but `/diamond-progress` will refuse to record `close` if this guardrail is unsatisfied. The stop-check hook also escalates these as warnings.
@@ -85,7 +85,7 @@ When the user surfaces a feature or idea mid-build, route it into the existing O
 ## Security & Trust Guardrails
 
 **G-S1: Never store, log, or transmit user secrets in plaintext** `BLOCK` `safety`
-Credentials, tokens, API keys, passwords must be encrypted at rest and in transit. Never commit them to version control. Never include them in error messages or logs.
+Credentials, tokens, API keys, passwords must be encrypted at rest and in transit. Never commit them to version control. Never include them in error messages or logs, and never type one into a shell command. Since 0.323.0 the hooks enforce this at the commit, the push and the command, not at the write: a key may sit in an ignored env file, which is where it belongs.
 *Source: OWASP Secure by Design*
 
 **G-S2: Never skip threat modeling when a solution handles user data or requires system permissions** `REVIEW` `safety`

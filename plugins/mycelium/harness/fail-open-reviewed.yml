@@ -1055,3 +1055,31 @@ reviewed:
     `bash_state_guard._put_back_settings`, then reports the switch as COULD NOT BE TAKEN OUT to the
     person and the agent and leaves the file alone. Asserted by
     test_a_file_that_is_not_json_is_said_and_not_rewritten. Reviewed 2026-10-12, v0.322.6.
+- id: commit_scan.py@934d2e5e5d
+  verdict: accepted
+  reason: >-
+    `repo_of` returns None when git cannot be run or the folder is in no repository. With no
+    repository nothing can be committed or pushed from there, so there is nothing for the scan to
+    look at; `pre` returns without a decision and the command runs as it would with no Mycelium.
+    Reviewed 2026-10-12, v0.323.0.
+- id: commit_scan.py@a83f4e489a
+  verdict: accepted
+  reason: >-
+    `reflog_length` returns None when the reflog cannot be read. `made_commits` then falls back to
+    comparing the commit pointer: every commit on HEAD that is on no remote and was not under the
+    old pointer is scanned, which is more than the reflog would have named, not less. Asserted by
+    test_commits_made_are_read_from_the_reflog. Reviewed 2026-10-12, v0.323.0.
+- id: commit_scan.py@f3eabcf048
+  verdict: accepted
+  reason: >-
+    `head_of` returns "" when the commit pointer cannot be read, which `made_commits` reads as "no
+    commit to scan". After a command that leaves git unable to answer, the after-command scan is
+    therefore skipped. It is a second look, not the gate: the scan before `git push` reads every
+    commit that is on no remote for itself, and a scan there that cannot run refuses. Reviewed
+    2026-10-12, v0.323.0.
+- id: install_git_secret_hook.py@678da7808b
+  verdict: accepted
+  reason: >-
+    `hook_path` returns None when git cannot be run; `main` then prints "Not a git repository" and
+    exits 2, and writes nothing. Asserted by
+    test_the_git_hook_is_written_once_and_never_over_someone_elses. Reviewed 2026-10-12, v0.323.0.

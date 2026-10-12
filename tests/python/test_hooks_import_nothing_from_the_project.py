@@ -158,8 +158,9 @@ def test_control_a_project_file_named_like_a_module_does_not_change_the_gates_re
     for name in ("types", "enum", "json", "re", "yaml"):
         (project / f"{name}.py").write_text("raise RuntimeError('this is the project\\'s file')\n")
     secret = "API" + '_KEY="' + "ab12" * 6 + '"'
-    payload = {"tool_name": "Write", "permission_mode": "default",
-               "tool_input": {"file_path": "src/config.py", "content": secret}}
+    # Since 0.323.0 the gate reads a shell command's text for a key, not a file write.
+    payload = {"tool_name": "Bash", "permission_mode": "default",
+               "tool_input": {"command": "deploy --header '" + secret + "'"}}
     done = subprocess.run(["bash", str(PLUGIN / "hooks" / "gate.sh")], input=json.dumps(payload),
                           cwd=project, env=_env(project, CLAUDE_PLUGIN_ROOT=str(PLUGIN)),
                           capture_output=True, text=True, timeout=60, check=False)
