@@ -4,9 +4,9 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-12.
 
-## v0.322.2 - the pages a newcomer reads say what the plugin does
+## v0.322.2 - the pages a newcomer reads say what the plugin does; a scale-lock override is kept in git
 
-**2026-10-12. Text only: no hook or script changes behaviour.** On 2026-10-11 three readers with
+**2026-10-12. Text corrections, and one fix found while writing them** (the last section; nothing else changes what a hook or script does). On 2026-10-11 three readers with
 no knowledge of Mycelium each compared what `README.md`, `PRIVACY.md`, `docs/get-started.md` and
 `docs/ai-system-card.md` say with what the code of 0.321.0 does. 0.321.1 answered the two
 safeguard findings and three README sentences. This release answers the remaining nineteen. Each
@@ -50,8 +50,7 @@ was checked again against the code of 0.322.1 before any text changed, and all n
   dependencies and whether certain environment variables are set.
 - **Twelve files under `.claude/state/` had no line in `PRIVACY.md`**, among them
   `session-checks.json`, which holds the full text of a session's reminders. All are listed now,
-  with what each holds. Two of them, `scale-lock-ack` and `active-execution.json`, are decisions
-  of yours that are not committed, and the page says so.
+  with what each holds.
 - **`docs/environment.md` said "every variable in one place" and named 9 of the 28 `MYCELIUM_*`
   names the plugin tree uses.** It names all 28 now. Three of the missing ones loosen a stop:
   `MYCELIUM_GUARD_STATE_EDIT=1` (off-switch files are written without you being asked),
@@ -65,8 +64,38 @@ in the plugin has no line in `docs/environment.md`, or a `.claude/state/` file n
 script has no line in `PRIVACY.md`. Three of its four tests fail on the pages of 0.322.1. It
 checks that a name is present. It cannot check that what the page says about it is true.
 
+### A scale-lock override is kept in git
+
+Listing the state files showed one that did not fit. The ignore file Mycelium writes into
+`.claude/state/` keeps a few files in git because each records a decision you made, "and a fresh
+clone should not be asked again". `scale-lock-ack`, your own one-line override of a scale lock
+(0.245.0), was not among them. It was ignored, so a fresh clone or a second machine had the lock
+closed again with no record that you had opened it. The maintainer, shown this: "The scale lock
+ack is not intentional to my knowledge. Apply best practices."
+
+- **The rules keep it now** (`scripts/state-gitignore.txt`), so a project set up from 0.322.2 on
+  has five decision files in git, not four.
+- **A project that already has an ignore file is told, and its file is left alone.** Mycelium
+  never rewrites an ignore file that exists, because your own edits to it stand. So at session
+  start it asks git whether a decision file that exists is ignored by that folder's own ignore
+  file, and if so says `DECISION FILE NOT IN GIT` with the one line to add. This covers any of the
+  five, since an ignore file written by an early setup keeps none of the acks.
+- **Committing it stays your choice.** The file holds your own words. The message says what to
+  add and nothing is added for you.
+- **A rule from anywhere else is not reported.** If your root `.gitignore` leaves all of
+  `.claude/` out of git, that is your decision about your repository.
+
+Thirteen tests in `tests/python/test_decision_files_stay_in_git.py`. The first version of the check
+read git's answer wrongly and reported files that a `!keep` rule already kept; two control tests
+caught it before it was committed.
+
 ### Alternatives considered
 
+- **Add the missing line to an existing ignore file automatically.** Not done: it breaks a rule
+  this project tests for (an existing ignore file is never rewritten), and it would start
+  offering your own words for commit without you having been told.
+- **Fix only the rules and say nothing.** Not done: every project that already uses Mycelium has
+  an ignore file, so the fix would have reached none of them.
 - **Change the behaviours instead of describing them** (stop counting sessions in committed
   files, stop reading the git identity). Not done: each does a job, and what the readers objected
   to was that nobody had said so. A behaviour someone objects to once it is described is a
@@ -82,8 +111,10 @@ checks that a name is present. It cannot check that what the page says about it 
   Claude Code can take environment variables from a project's settings file, and no Mycelium hook
   asks about a write to that file. Whether one should is open, and whether Claude Code itself asks
   about such a write was not checked here.
-- **`scale-lock-ack` is still not committed**, unlike the other files that record a decision of
-  yours. Described, not changed.
+- **`active-execution.json` is still not committed.** It lists the paths of one delivery cycle,
+  which is working state, not a standing decision.
+- **The new session-start message has not been seen in a live session**, only through tests and
+  one run of the check against a real project.
 - **No second read has been run.** Whether three new readers find these pages complete is the
   next test, and it has not happened.
 - Nothing here was read by anyone outside the session that wrote it.

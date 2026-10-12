@@ -3,7 +3,7 @@
 **Audience**: practitioners + evaluators wanting to understand what the agent has access to mid-session, and operators auditing Mycelium against transparency expectations.
 **Time to read**: 8 min.
 **Last updated**: 2026-10-03.
-**Hook surface reviewed:** 2026-10-11 (digest b5cf60063975)
+**Hook surface reviewed:** 2026-10-12 (digest eb03a7dad26b)
 
 This document answers a question the audit (`/xai-check` on `svc-mycelium`, 2026-05-04) flagged as a Stage 2 partial: **"What data does the agent see when it makes a recommendation under Mycelium?"** Today the answer is distributed across many files. This is the consolidated map.
 
@@ -110,7 +110,7 @@ The full table, per runtime, is `plugins/mycelium/hooks/README.md`. The ones tha
 | `gate-override-check.sh` | After a write, shell command or MCP filesystem write | Says, to the person and the agent, when a call a Mycelium gate refused ran anyway because another extension (a Claude Code mod) approved it |
 | `absence-claim-guard.sh`, `key-shape-guard.sh`, `shell-safety-guard.sh`, `correction-attribution-guard.sh`, `discovery-trigger-guard.sh`, `read-before-research-guard.sh` | Write/Bash/prompt/research calls | Advise, never block; each names the measurement it fired on |
 | `contract-part.sh` (four handlers) | Session start | Injects the operating contract, one part per handler, each under the 10,000-character hook cap |
-| `session-start.sh` | Session start | Wraps quoted canvas text as `<untrusted_user_content>`; emits one NEXT ITEM |
+| `session-start.sh` | Session start | Wraps quoted canvas text as `<untrusted_user_content>`; emits one NEXT ITEM; since 0.322.2 one `DECISION FILE NOT IN GIT` line when a decision file under `.claude/state/` is ignored by that folder's ignore file |
 | `next-action-check.sh` | Stop | Blocks the end of a framework turn (a skill the agent ran or the person typed) until it ends on one `Next:` line that cites its trigger as `(per: <source>)` |
 | `next-item-repeat.sh` | Stop | Repeats the NEXT ITEM once if nothing followed it |
 | `reflexion-gate.sh` | Bash/tool failures | Prompts the agent to diagnose before retrying; logs the time, exit code and program name, never the command (0.318.0) |
