@@ -181,9 +181,19 @@ def test_the_agent_is_told_at_the_prompt(run10):
 # ---------------------------------------------------------------- the release gate
 
 
+#: The words the hook's cheap filter looks for, in the WHOLE hook input, the project's path
+#: included. A test whose own temp folder is named after one of them proves nothing: the first
+#: version of the test below was called "...production_deploy..." and passed on the old code.
+_FILTER_WORDS = ("deploy", "publish", "push", "apply", "helm", "rollout", "image", "ssh", "scp",
+                 "rsync", "upload", "pulumi", "sync", "function-code", "ngrok", "cloudflared",
+                 "localtunnel", "tailscale", "railway", "gh-pages", "surge", "s3", "vercel")
+
+
 @pytest.mark.parametrize("command", ["vercel --prod", "vercel --prod --yes", "npx vercel --prod"])
-def test_a_production_deploy_by_this_host_reaches_the_checker(run10, command):
+def test_one_hosts_live_release_reaches_the_checker(run10, command):
     """RED BEFORE 0.322.5: the hook's word filter exited before the checker that lists it."""
+    here = str(run10).lower()
+    assert not [w for w in _FILTER_WORDS if w in here], "the temp path would pass the filter"
     assert _hook("exposure-gate.sh", run10, _shell(command))[0] == 2
 
 
