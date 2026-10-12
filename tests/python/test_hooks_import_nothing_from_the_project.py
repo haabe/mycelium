@@ -6,9 +6,13 @@ both. So `import json` in a hook loaded `./json.py` when the project had one. Re
 on 0.322.3 with the plugin root set, as Claude Code runs the hooks: preflight and the gate
 imported a planted `yaml.py`, the turn-end hook `json.py` too, session start `re.py` as well.
 A repository could have its own code run on every prompt and every write, with nothing in its
-settings to show for it. And an honest project with its own `types.py` could crash a gate, which
-since 0.322.1 refuses the write. In every released version; not found by three rounds of readers,
-found by listing every place a hook starts an interpreter.
+settings to show for it. In every released version; not found by three rounds of readers, found by
+listing every place a hook starts an interpreter.
+
+NOT SHOWN, and first claimed by the author: that an honest project's own `types.py` or `json.py`
+changes what a gate decides. A replay on eight gates and on the build gate's two decisions found
+every decision unchanged on 0.322.3, so the test below for that case is a control that passes on
+the old code too. It is kept so the new launcher is held to the same behaviour.
 
 A second site of an older shape rode along: two hooks built an import path from
 `CLAUDE_PLUGIN_ROOT` joined with `scripts`, which is the PROJECT's `scripts` folder when the
@@ -146,9 +150,9 @@ def test_with_no_plugin_root_a_hook_imports_nothing_from_a_scripts_folder(tmp_pa
     assert _ran(project) == []
 
 
-def test_an_honest_project_with_a_file_named_like_a_module_does_not_break_the_gate(tmp_path):
-    """The other half of the harm: `types.py` at a repository's root is ordinary. Before 0.322.4
-    a module like this one, which is not Python's, crashed the hook's inline Python."""
+def test_control_a_project_file_named_like_a_module_does_not_change_the_gates_refusal(tmp_path):
+    """A CONTROL, green on 0.322.3 as well: `types.py` at a repository's root is ordinary, and a
+    file by that name that fails on import must not stop the secret scan from refusing."""
     project = tmp_path / "project"
     (project / ".claude" / "canvas").mkdir(parents=True)
     for name in ("types", "enum", "json", "re", "yaml"):

@@ -4,12 +4,14 @@ WHY THIS EXISTS. `python3 -c CODE` and `python3 - <<EOF` put the current directo
 `sys.path`. A hook runs with the project as its current directory, so `import json` inside a
 hook's inline Python loaded `./json.py` when the project had one. Replayed 2026-10-12 on 0.322.3
 with the plugin root set, as Claude Code runs the hooks: four hooks imported planted `json.py`,
-`yaml.py` and `re.py` from a scratch project. Two consequences, one cause:
+`yaml.py` and `re.py` from a scratch project. So a repository could have its own code run by
+Mycelium's hooks, on every prompt and every write, with nothing in its settings to show for it.
 
-  * a repository could have its own code run by Mycelium's hooks, on every prompt and every write,
-    with nothing in its settings to show for it;
-  * an honest project with a file named like a standard module (`types.py`, `random.py`) could
-    crash a hook, and since 0.322.1 a gate that cannot run refuses the write.
+What was NOT shown: that an honest project's own `types.py` or `json.py` changes what a gate
+decides. Replayed the same day on eight gates and on the build gate's two decisions with eight
+such files: every decision was the same with and without them (the gates' deciding work runs as
+script files, which never had the working directory on the path). What such a file does to the
+hooks' smaller inline snippets (a log row, a reminder) was not tested.
 
 A Python FILE gets its own folder on the path in place of the current directory, on every Python
 version. So the hooks hand their inline code to this file. `_hook_prelude.sh` defines a `python3`

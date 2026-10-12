@@ -42,8 +42,8 @@ export _MYCELIUM_ROOT
 # put the current directory first on the import path, and a hook's current directory is the
 # project. So `import json` in a hook's inline Python loaded `./json.py` when the project had one:
 # replayed 2026-10-12 on 0.322.3, four hooks imported planted `json.py`, `yaml.py` and `re.py`.
-# A repository could have its code run by the hooks, and an honest project with its own
-# `types.py` could crash a gate.
+# So a repository could have its code run by the hooks. (That an honest project's own `types.py`
+# changes a gate's decision was tested the same day and NOT found: see scripts/_safe_c.py.)
 #   - PYTHONSAFEPATH=1 turns that off for every Python 3.11 or later this hook starts, children
 #     included.
 #   - For the Pythons before it (macOS ships 3.9), the function below hands inline code to
