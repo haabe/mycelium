@@ -41,6 +41,9 @@ import sys
 import tempfile
 from pathlib import Path
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import _state_dir
+
 FOUND = 42          # gitleaks' exit code for "found", set by --exit-code so an error stays distinct
 TIMEOUT = 45        # seconds for one scan; past it the scan "could not run"
 MAX_FALLBACK = 2_000_000   # characters of added lines the fallback list reads
@@ -76,6 +79,28 @@ def repo_of(folder: str) -> str | None:
     except (OSError, subprocess.SubprocessError):
         return None  # SPEAKS: no git, or no repository, means nothing can be committed from here
     return done.stdout.strip() if done.returncode == 0 and done.stdout.strip() else None
+
+
+_CD = re.compile(r"(?:^|[;&|(\n])\s*cd\s+(\"[^\"]+\"|'[^']+'|[^\s;&|)]+)")
+_DASH_C = re.compile(r"\s-C\s+(\"[^\"]+\"|'[^']+'|\S+)")
+
+
+def where_it_runs(command: str, cwd: str) -> list[str]:
+    """The folders the command's commits and pushes happen in: for each `git commit` or
+    `git push`, every `cd` before it in order and a `git -C <folder>`, resolved against `cwd`. A
+    folder the text does not spell out (a variable, a subshell's own `cd`) is not followed; the
+    commit is then still scanned afterwards if it lands in the project's repository, and at its
+    push."""
+    out: list[str] = []
+    for m in _GIT.finditer(command):
+        folder = cwd
+        for raw in _CD.findall(command[:m.start() + 1]) + _DASH_C.findall(m.group(1) or ""):
+            path = os.path.expanduser(raw.strip("\"'"))
+            folder = path if os.path.isabs(path) else os.path.join(folder, path)
+        folder = os.path.normpath(folder)
+        if folder not in out:
+            out.append(folder)
+    return out
 
 
 def what_it_runs(command: str) -> dict:
@@ -162,10 +187,10 @@ def _own_list(repo: str, git_args: list[str]) -> tuple[str, list[str]]:
         return "error", [f"git exited {done.returncode}: {done.stderr.strip()[:200]}"]
     added = "\n".join(ln[1:] for ln in done.stdout.splitlines()
                       if ln.startswith("+") and not ln.startswith("+++"))[:MAX_FALLBACK]
-    grep = Path(__file__).with_name("_secret_grep.sh")
     try:
-        ran = subprocess.run(["bash", str(grep)], input=added, text=True, capture_output=True,
-                             timeout=TIMEOUT, check=False)
+        ran = subprocess.run(["bash", str(Path(__file__).with_name("_secret_grep.sh"))],
+                             input=added, text=True, capture_output=True, timeout=TIMEOUT,
+                             check=False)
     except (OSError, subprocess.SubprocessError) as exc:
         return "error", [f"Mycelium's own list could not be run ({type(exc).__name__})"]
     if ran.returncode == 1:
@@ -284,7 +309,7 @@ def _weak_note(project_dir: str, session: str) -> None:
     except OSError:
         pass  # SPEAKS: no marker means it has not been said this session, so it is said now
     try:
-        marker.parent.mkdir(parents=True, exist_ok=True)
+        _state_dir.prepare_dir(marker.parent)  # the state folder, with its ignore file
         marker.write_text((session or "-") + "\n", encoding="utf-8")
     except OSError:
         pass  # SPEAKS: it is said again next time, which errs toward saying it
@@ -296,23 +321,37 @@ def _weak_note(project_dir: str, session: str) -> None:
         ensure_ascii=False))
 
 
+def _repos(command: str, cwd: str) -> list[str]:
+    out: list[str] = []
+    for folder in where_it_runs(command, cwd):
+        repo = repo_of(folder)
+        if repo and repo not in out:
+            out.append(repo)
+    return out
+
+
+def _checks(does: dict, repos: list[str]) -> list[tuple[str, str, tuple[str, list[str]]]]:
+    checks = []
+    for repo in repos:
+        if does["commit"] and not (_own_hook_scans(repo) and not does["no_verify"]):
+            checks.append(("commit", f"what this commit would take ({repo})",
+                           scan_staged(repo, does["wider"])))
+        if does["push"]:
+            checks.append(("push", f"commits that are on no remote yet ({repo})",
+                           scan_unpushed(repo)))
+    return checks
+
+
 def pre(payload: dict, project_dir: str) -> int:
     """PreToolUse on a shell command. Prints a deny, a once-a-session note, or nothing."""
     ti = payload.get("tool_input") if isinstance(payload.get("tool_input"), dict) else {}
     command = ti.get("command") if isinstance(ti.get("command"), str) else ""
     does = what_it_runs(command)
-    if not (does["commit"] or does["push"]):
-        return 0
-    repo = repo_of(str(payload.get("cwd") or project_dir)) or repo_of(project_dir)
-    if not repo:
+    repos = _repos(command, str(payload.get("cwd") or project_dir))
+    if not (does["commit"] or does["push"]) or not repos:
         return 0
     which = "gitleaks" if scanner() else "Mycelium's own short list (no scanner is installed)"
-    checks = []
-    if does["commit"] and not (_own_hook_scans(repo) and not does["no_verify"]):
-        checks.append(("commit", "what this commit would take", scan_staged(repo, does["wider"])))
-    if does["push"]:
-        checks.append(("push", "commits that are on no remote yet", scan_unpushed(repo)))
-    for verb, what, (status, lines) in checks:
+    for verb, what, (status, lines) in _checks(does, repos):
         if status == "error":
             _deny(f"Mycelium commit scan: the secret scan could not run, so this {verb} is "
                   f"refused. Nothing was found; the scan itself failed: {'; '.join(lines)}. A scan "

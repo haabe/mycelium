@@ -66,7 +66,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"No pre-commit hook yet. This would write {path}.")
         return 0
     try:
-        path.parent.mkdir(parents=True, exist_ok=True)
+        os.makedirs(path.parent, exist_ok=True)  # git's own hooks folder, not Mycelium's state
         path.write_text(HOOK, encoding="utf-8")
         path.chmod(0o755)
     except OSError as exc:

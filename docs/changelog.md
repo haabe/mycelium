@@ -4,6 +4,72 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-12.
 
+## v0.323.0 - secrets are stopped at the commit and the push
+
+**2026-10-12.** Mycelium no longer refuses a write that looks like it holds a key. It refuses the
+commit and the push instead, and an established scanner does the looking.
+
+### What was wrong
+
+- The secret check ran when the agent **wrote** a file, with a short list of Mycelium's own.
+- **Shown by running it:** an unquoted `KEY=value` passed. An env file, which is where a key
+  belongs, was treated like source code. Nothing ever looked at what was staged or committed.
+- So a key could reach the repository by a route the check did not see, while a key in the right
+  place was refused.
+
+### What changed
+
+- **At the agent's commit:** what the commit would take is scanned first. A finding refuses the
+  commit and names the file and line, never the value.
+- **After any shell command of the agent's:** commits the command made some other way (inside a
+  script, say) are scanned. Mycelium does not rewrite a commit; it tells you what it found.
+- **At the agent's push:** every commit that is on no remote yet is scanned. A finding refuses
+  the push. This is the line a key does not cross, whichever way it was committed.
+- **The scanner is gitleaks**, when it is installed. When it is not, Mycelium's own short list
+  runs in its place, and you are told once a session that it is the weaker check and how to get
+  the real one.
+- **A scan that cannot run refuses.** It never reads as "clean".
+- **The scanner's own ways past a finding are yours.** `.gitleaksignore`, `.gitleaks.toml` and a
+  `gitleaks:allow` comment: the agent cannot add one without you being asked.
+- **`/mycelium:setup` offers a git hook** that runs the same scan on commits you make by hand.
+  It is never installed unasked and never overwrites a hook you already have. Git hooks are not
+  cloned, so each clone needs it once.
+
+### What was removed
+
+- **The refusal when the agent writes something key-shaped into a file.** It went in this
+  release, together with the commit scan that replaces it, and not before. The agent can now
+  write a key into an env file. It cannot commit or push one.
+- Still refused: a key typed into a shell command, because that ends up in logs.
+
+### Alternatives considered
+
+- **Keep both, the write-time refusal and the commit scan.** The write-time list misses much and
+  refuses a key in the one place it belongs; kept, it would go on teaching that an env file is
+  wrong.
+- **Mycelium's own list as the scanner.** The maintainer: "I cannot keep up with the latest
+  advancements in security. So it is better left to someone who knows it better."
+- **Refuse when no scanner is installed.** It would stop every commit for anyone who has not
+  installed one. The short list runs and says it is weak.
+- **Scan only at the commit, not at the push.** A commit made inside a script is not a command
+  Mycelium can read ahead of time; the push is where every route meets.
+- **Undo a commit that holds a key.** Rewriting history is not Mycelium's to do. It says what it
+  found and refuses the push.
+
+### Not in this release
+
+- **Not run on Linux or Windows**, and not in a live session: the hooks were driven by tests and
+  by hand on one Mac.
+- A commit or push you make in your own terminal is not seen unless you install the git hook.
+- `git commit` and `git push` are recognised where a command starts. A commit made some other
+  way is caught afterwards and at the push, not before.
+- The scan follows the folder a command names (`cd other && git commit`, `git -C other`). A
+  folder held in a shell variable is not followed.
+- A `gitleaks:allow` comment added by a shell command, and a scanner configuration set through an
+  environment variable, are not watched.
+- CI does not have gitleaks installed, so the tests that need it run on a developer's machine;
+  the wrapper around it is tested everywhere against a stand-in.
+
 ## v0.322.7 - the pages say what the build gate does not see
 
 **2026-10-12.** A wording release. No gate changes.

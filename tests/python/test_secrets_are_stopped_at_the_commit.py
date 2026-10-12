@@ -41,6 +41,9 @@ SHELL_GUARD = PLUGIN / "hooks" / "bash-state-guard.sh"
 sys.path.insert(0, str(PLUGIN / "scripts"))
 import commit_scan as cs  # noqa: E402
 
+sys.path.insert(0, str(Path(__file__).parent))
+import _scratch_git  # noqa: E402
+
 KEY = "Zx9Qv7Lm" + "2Rt8Kp4W" + "n6Yb3Hd5"            # 24 characters, mixed, not a real key
 LINE = "API" + "_KEY" + ' = "' + KEY + '"'
 PYTHON_DIR = str(Path(sys.executable).parent)
@@ -67,7 +70,7 @@ def project(tmp_path: Path) -> Path:
     (proj / ".claude" / "state").mkdir()
     (proj / ".gitignore").write_text(".claude/state/\n")
     (proj / "app.py").write_text("x = 1\n")
-    git(proj, "init", "-q", "-b", "main", ".")
+    _scratch_git.init(proj, "-b", "main")
     git(proj, "add", "-A")
     git(proj, "commit", "-q", "-m", "seed")
     return proj
@@ -163,6 +166,21 @@ def test_control_a_command_that_only_mentions_the_words_is_not_scanned(project):
     git(project, "add", "config.py")
     assert decision(commit(project, "echo 'remember to git commit later'")) == "allow"
     assert decision(commit(project, "git log --grep=commit")) == "allow"
+
+
+def test_a_commit_in_another_repository_is_scanned_there(project, tmp_path):
+    """The agent often works in one repository and commits in another: `cd other && git commit`,
+    or `git -C other commit`. The scan follows the folder the command names."""
+    other = tmp_path / "other"
+    other.mkdir()
+    _scratch_git.init(other, "-b", "main")
+    (other / "config.py").write_text(LINE + "\n")
+    git(other, "add", "config.py")
+    for command in (f"cd {other} && git commit -m work", f"git -C {other} commit -m work",
+                    f"cd {tmp_path} && cd other && git commit -m work"):
+        out = commit(project, command)
+        assert decision(out) == "deny" and str(other.resolve()) in reason(out), command
+    assert decision(commit(project)) == "allow", "the project's own index is clean"
 
 
 # ---------------------------------------------------------------- the agent's push
@@ -445,6 +463,20 @@ def test_the_hooks_answer_with_a_scanner(project, stand_in, capsys):
     assert "push is refused" in capsys.readouterr().out
 
 
+@pytest.mark.parametrize(("command", "expect"), [
+    ("git commit -m x", ["/w"]),
+    ("cd sub && git commit -m x", ["/w/sub"]),
+    ("cd /abs/one; git push", ["/abs/one"]),
+    ("git -C ../two commit -m x", ["/two"]),
+    ("cd /abs && cd deeper && git commit -m x", ["/abs/deeper"]),
+    ("cd a && git commit -m x && cd /b && git push", ["/w/a", "/b"]),
+    ("cd 'with space' && git push", ["/w/with space"]),
+    ("ls", []),
+])
+def test_where_a_command_commits_and_pushes(command, expect):
+    assert cs.where_it_runs(command, "/w") == expect
+
+
 def test_the_hook_says_nothing_outside_a_repository_or_for_other_commands(tmp_path, capsys):
     assert cs.pre({"tool_input": {"command": "git commit -m x"}, "cwd": str(tmp_path)},
                   str(tmp_path)) == 0
@@ -516,6 +548,16 @@ def test_the_installed_hook_runs_and_does_not_block_without_a_scanner(project):
                           text=True, capture_output=True, env={"PATH": "/usr/bin:/bin"},
                           check=False)
     assert done.returncode == 0 and "not scanned" in done.stderr
+
+
+def test_the_readme_says_where_a_key_is_stopped():
+    """The maintainer's wording, chosen 2026-10-12. The sentence it replaces said a key going
+    into a file is refused, which stopped being true in this release."""
+    readme = (ROOT / "README.md").read_text()
+    assert ("A key the agent has written into a file cannot be committed or pushed, and there is "
+            "no switch for that one. What you commit yourself is not checked, unless you let "
+            "setup add the check to git.") in readme
+    assert "going into a file is refused outright" not in readme
 
 
 def test_setup_offers_the_hook_and_never_installs_it_unasked():
