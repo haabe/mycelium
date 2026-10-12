@@ -69,7 +69,7 @@ def _ran(planted: Path) -> bool:
 
 
 def test_no_hook_resolves_a_script_from_the_project():
-    """RED BEFORE 0.322.3."""
+    """RED BEFORE 0.322.3: 41 such lines in 12 files (counted by this test on the 0.322.2 tree)."""
     found = []
     for f in [*sorted(HOOKS.glob("*.sh")), PLUGIN / "scripts" / "_hook_input_read.sh",
               PLUGIN / "scripts" / "_hook_prelude.sh", PLUGIN / "scripts" / "_hook_fire_log.sh"]:
@@ -125,7 +125,10 @@ def test_the_gate_does_not_run_a_preflight_script_the_project_carries(tmp_path):
                                            "content": "why: x\n"}}),
 ])
 def test_a_hook_does_not_run_a_helper_the_project_carries(tmp_path, hook, helper, payload):
-    """RED BEFORE 0.322.3 for each hook whose helper lookup reaches its fallback."""
+    """A GUARD, NOT A RED TEST. On 0.322.2 all eight of these passed: each hook found its own
+    helper before it reached the project path, so the planted file did not run. The fallback
+    line was there all the same and is gone; this keeps it gone. The two tests either side of
+    this one are the ones that failed on 0.322.2."""
     project = _project(tmp_path)
     planted = _plant(project, f".claude/scripts/{helper}")
     # What switches two of these hooks on at all; harmless for the rest.
