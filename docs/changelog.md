@@ -4,6 +4,55 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-12.
 
+## v0.322.7 - the pages say what the build gate does not see
+
+**2026-10-12.** A wording release. No gate changes.
+
+### What was wrong
+
+- The README said "the agent cannot create a brand new source file", and that building the
+  product waits "new files and edits alike".
+- The build gate judges a write it can read: what the agent writes with its edit tools, and
+  plain shell writes. **A command the agent runs that writes the files for it gives the gate
+  nothing to read.**
+- **Shown by running it**, on 0.322.3 by a blind read and again on 0.322.6, in a project where a
+  plain redirect to a new source file is refused. Each of these passed with nothing said: a
+  scaffolder, `npm init`, `cargo new`, `git clone`, `curl -o`, a script that writes a source
+  file, `patch`, `git apply`.
+
+### What changed
+
+- **The README says the limit, right beside the claim:** "That covers the files the agent writes
+  itself. A command it runs that writes them for it, a scaffolder or a clone, still gets
+  through."
+- **The system card lists it under known limitations**, with the eight commands named.
+- **A test holds the pages and the gate together, both ways.** It fails if a page stops saying
+  the limit while the gate still has it, and it fails if the gate starts refusing one of the
+  eight while the pages still say it gets through.
+
+### Why the gap is not closed in this release
+
+A fix exists on paper: compare the project's files, through git, before and after each shell
+command the agent runs, and tell you what appeared. It held in three desk tests and in a
+benchmark up to 400,000 files, all on one Mac. Nothing was measured on Linux or Windows, and no
+real hook has run it. It is parked until real users say which platforms they are on.
+
+### Alternatives considered
+
+- **Leave the README as it was until the fix ships.** The sentence was untrue today, and the fix
+  has no date.
+- **Have the gate refuse commands known to generate files.** Kept as a real alternative and set
+  aside for now: any such list is open-ended, and two lists of that kind missed a case in this
+  project on one day.
+- **Say it only in the system card.** A newcomer reads the README; the claim is made there, so
+  the limit is said there.
+
+### Not in this release
+
+- `docs/get-started.md` and the plugin description carry the same claim in softer words. They are
+  unchanged, by the maintainer's choice.
+- Writes through other tool servers were reported by a reader and have not been checked.
+
 ## v0.322.6 - a Mycelium switch in a settings file is yours to set
 
 **2026-10-12.** Mycelium has a few switches that loosen a stop. They are there for you. This
