@@ -1319,7 +1319,9 @@ try:
   # Completed diamonds live in active_diamonds with a close decision, or in completed_diamonds
   # (v0.289.0: the dogfood project keeps them there, and this check never saw them).
   import os
-  sys.path.insert(0, os.path.join(os.environ.get('CLAUDE_PLUGIN_ROOT', ''), 'scripts'))
+  # Beside this hook, never a relative folder: with CLAUDE_PLUGIN_ROOT unset the old line put
+  # `scripts` in the PROJECT on the path and imported `scale_locks` from it (v0.322.4).
+  sys.path.insert(0, os.path.join(os.environ.get('_MYCELIUM_ROOT') or '/nonexistent', 'scripts'))
   try:
     from scale_locks import phase_of  # where a diamond is, from its decisions (v0.305.0)
   except ImportError:

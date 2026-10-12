@@ -44,6 +44,22 @@
 # a gate that starts failing because a disk is full would be a far worse defect than a
 # missing row. Every failure path returns 0.
 
+# The interpreter is started through `_mycelium_py`, which keeps the project off Python's import
+# path (v0.322.4; see _hook_prelude.sh). Every hook has it from the prelude. A caller that sourced
+# this file alone gets the same thing here, from the launcher beside this file.
+if ! type _mycelium_py >/dev/null 2>&1; then
+  _mycelium_py() {
+    local _bin="$1" _safe
+    _safe="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_safe_c.py"
+    shift
+    case "${1:-}" in
+      -c) local _code="$2"; shift 2; command "$_bin" "$_safe" "$_code" "$@";;
+      -)  shift; command "$_bin" "$_safe" --stdin "$@";;
+      *)  command "$_bin" "$@";;
+    esac
+  }
+fi
+
 mycelium_log_fire() {  # $1 relative path, $2 outcome, $3 optional detail
   [ -n "${1:-}" ] || return 0
   local rel="$1" outcome="${2:-fired}" detail="${3:-}"
@@ -67,7 +83,7 @@ mycelium_log_fire() {  # $1 relative path, $2 outcome, $3 optional detail
 
   MYC_HOOK="$(basename "${BASH_SOURCE[1]:-unknown}")" \
   MYC_OUTCOME="$outcome" MYC_DETAIL="$detail" MYC_SID="${MYCELIUM_SESSION_ID:-}" \
-  "$py" - >> "$target" 2>/dev/null <<'PY' || true
+  _mycelium_py "$py" - >> "$target" 2>/dev/null <<'PY' || true
 import datetime, json, os
 ts = datetime.datetime.now(datetime.UTC).isoformat().replace("+00:00", "Z")
 row = {"ts": ts, "hook": os.environ.get("MYC_HOOK", ""),
@@ -124,7 +140,7 @@ mycelium_record_denial() {  # reads $INPUT, the hook's raw stdin JSON
   # bash was started with. The input goes on stdin: a Write's content can exceed an env var.
   local row
   row=$(printf '%s' "$INPUT" | MYC_HOOK="$(basename "$0")" MYC_SID="${MYCELIUM_SESSION_ID:-}" \
-    "$py" -c '
+    _mycelium_py "$py" -c '
 import datetime, json, os, sys
 try:
     data = json.load(sys.stdin)
