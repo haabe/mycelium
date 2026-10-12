@@ -4,9 +4,12 @@
 *
 !.gitignore
 !README.md
-# Kept under version control on purpose: these record a DECISION the user made, once per
-# project, and a fresh clone should not be asked again.
+# Kept under version control on purpose: these record a DECISION the user made, and a fresh
+# clone should not be asked again. An ignore file written before a name was added here does not
+# have it, and Mycelium never rewrites one that exists: session start says so instead
+# (_state_dir.py --ignored-decisions, v0.322.2).
 !discovery-skip-ack
 !brownfield-ack
 !delivery-skip-ack
+!scale-lock-ack
 !upstream.json

@@ -1422,6 +1422,24 @@ Before other work, offer in one line to finish the interview where it stopped: /
 fi
 
 # ============================================================
+# A decision file git is ignoring (v0.322.2)
+# ============================================================
+# The state ignore file keeps the person's decisions in git (the skip and lock acks,
+# upstream.json) and is never rewritten once it exists. So an ignore file written before a name
+# joined the rules ignores that decision: a fresh clone is asked again, with no record that the
+# answer was ever given. scale-lock-ack was missing from the rules themselves until 0.322.2.
+# Says so, with the line to add; touches nothing. A handful of local git calls, only for files
+# that exist. ADVISORY.
+_SD_PY="${CLAUDE_PLUGIN_ROOT:-$(dirname "${BASH_SOURCE[0]}")/..}/scripts/_state_dir.py"
+if [ -d "$PROJECT_DIR/.claude/state" ] && [ -f "$_SD_PY" ]; then
+  _SD_LINE="$(python3 "$_SD_PY" --project-dir "$PROJECT_DIR" --ignored-decisions 2>&1)"
+  if [ -n "$_SD_LINE" ]; then
+    REMINDERS="${REMINDERS}
+${_SD_LINE}"
+  fi
+fi
+
+# ============================================================
 # Build output
 # ============================================================
 # Carried-over reflexion debt (v0.64.0, reachable since v0.310.18). Outstanding

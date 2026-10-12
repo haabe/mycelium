@@ -136,6 +136,7 @@ SIGNATURES: list[tuple[str, str]] = [
     ("external-evidence-thin", r"External evidence is thin \((?P<count>\d+)/\d+"),
     ("open-human-tasks", r"You have (?P<count>\d+) OPEN human task"),
     ("assumption-test-counter", r"Assumption-test '[^']+' is on session"),
+    ("decision-file-not-in-git", r"DECISION FILE NOT IN GIT"),
     ("memory-poisoning-watch", r"POISONING WATCH"),
     ("cross-repo-activity", r"\[canvas IDs: "),
     ("diamonds-no-dod", r"(?P<count>\d+) diamond\(s\) have no outcome Definition of Done"),
