@@ -169,7 +169,7 @@ Do NOT retry blindly. Diagnose first.
 
 After fixing: if this is a PROJECT-relevant mistake, draft a corrections.md entry with the mistake, correction, and prevention rule. Ask: 'Could this be generalized as a pattern in patterns.md?'
 
-If this is an AGENT-USER learning (preference, communication style, tooling quirk), it belongs in your auto-memory, not project corrections.md. See CLAUDE.md two-memory-system section.
+If this is an AGENT-USER learning (preference, communication style, tooling quirk), it belongs in your own memory if your runtime gives you one, not in project corrections.md.
 
 If this is an ENVIRONMENT failure (hardware, network, missing tools), it is not a learning — just fix and move on.'''
 

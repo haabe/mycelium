@@ -4,6 +4,119 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-12.
 
+## v0.322.3 - what the second blind read found
+
+**2026-10-12.** Three new readers, with no knowledge of Mycelium and the same brief as before,
+compared what the pages of 0.322.2 say with what its code does. None of the three reads was clean.
+After each finding was checked against the code they had 15, 9 and 10 counted findings. Six are
+defects in what the plugin does. Five are sentences that the two correction releases before this
+one (0.321.1, 0.322.2) had themselves got wrong.
+
+### The secret scan covers `.claude/`
+
+`gate.sh` skipped every file under `.claude/`. A key written into a canvas file, the decision log
+or a memory file was never looked at, and those files are committed. README said anything that
+looks like a key going into a file is refused. All three readers found it. The maintainer's ruling:
+"Scan .claude/ too".
+
+- Every file inside the project is scanned now, except `.claude/state/`, which holds Mycelium's
+  own logs and is ignored by git.
+- **A cost that comes with it:** a canvas note or a decision-log entry that quotes something
+  key-shaped is refused, and this scan has no override. The way past is to reword the text.
+- A file outside the project is still not scanned, and the scan knows a fixed set of shapes. Both
+  are said in README and PRIVACY now.
+
+### A hook never runs a script from the project
+
+On a runtime that sets no `CLAUDE_PLUGIN_ROOT`, which the installer's own notes say is the case on
+Cursor and Codex, a hook that needed a helper looked for it in the project:
+`.claude/scripts/<name>.py` or `.claude/hooks/preflight.sh`. That was the layout of the old
+install, where Mycelium's files were copied into the project. In a plugin install it meant a
+repository that carried a file by the right name had it run by the hook. There were 41 such lines
+in 12 files.
+
+- Helpers are now found beside the running hook and nowhere else.
+- **Shown by running it, on this machine:** a test plants a script in a scratch project and starts
+  the real hook with no plugin root. On 0.322.2 the gate ran the planted `preflight.sh`, and
+  session start ran two planted checks. On 0.322.3 neither runs.
+- **Not run on Cursor or Codex.** Whether those runtimes really leave the variable unset rests on
+  the installer's notes.
+- An old copied-in install keeps working: there the hooks live in the project, so "beside the
+  hook" is the project's own folder.
+- A side effect on those runtimes, by the code and not observed there: the session-start checks
+  that had this fallback found no helper in a plugin install and were skipped. They now find
+  their own and run, so session start does more there than it did.
+
+### One session start counts once
+
+Claude Code runs the session-start hook twice per start, a fast pass and a background pass, and
+both added one to each open assumption-test counter. A test set to review after ten sessions
+reported done after five. A reader of the first blind read flagged this as a maybe and it was left
+unchecked. A replay showed 0, 1, 2; it now shows 0, 1, 1.
+
+### The opencode scaffold leaves alone what is not its own
+
+`provision-skills.sh` copied Mycelium's skills over an existing `.claude/skills/` and then rewrote
+paths in every markdown and YAML file under it. A skill of yours with the same name as one of
+Mycelium's was replaced, and your other skills had text edited. The maintainer's ruling: "Never
+overwrite, never unasked".
+
+- Each folder the script copies carries a marker file. Only a marked folder is replaced on a
+  re-run. A folder without one is skipped, nothing in it is edited, and it is named in the report.
+- **If you provisioned before 0.322.3,** those copies have no marker and are skipped too. Delete
+  the folder and re-run to refresh one.
+- The starter `opencode.json` allowed every skill without asking. It now asks, except for
+  Mycelium's own skills, which are listed by name.
+- `/mycelium:setup` no longer writes the scaffold in a non-interactive run because it saw a sign
+  of opencode. It writes it only when opencode support was asked for by name.
+
+### Text
+
+- **Sentences 0.322.2 got wrong, corrected.** opencode's plugin does three things, not "two things
+  only". "Nothing leaves your machine" stood above a paragraph describing an automatic call to
+  GitHub. `diamond-rulings.json` also stores a delivering diamond's exposure records. The counter
+  sentence said "adds one" when it added two.
+- **A sentence 0.321.1 got wrong**, now in the maintainer's wording: a repo is held once Mycelium
+  is set up in it, by `/mycelium:start` or because the repo you cloned already has it.
+- **Two more in the maintainer's wording:** what the secret scan covers, and what setup may add
+  at the project root.
+- **The README sentence about the scope hold is removed.** Nothing the plugin ships switches that
+  hold on. The maintainer's ruling is "Make it real", as work of its own; the sentence returns
+  when it is.
+- PRIVACY now also names: `conditional-snoozes-said`; the shell guard's index; that
+  `nudge-seen.jsonl` is never trimmed; that `install-runtime-hooks.sh` leaves a state folder;
+  that session start lists your files when a reminder is snoozed "until asked"; and that
+  `/mycelium:migrate-from-legacy` can download from GitHub.
+- The system card lists what the release gate reads as a release (`scp` or `rsync` to a host,
+  `docker push`, `terraform apply`, any command named `deploy` or `publish`, and more), and no
+  longer describes a `.claude/.gitignore` the plugin never wrote.
+- The end-of-turn warning said "this session" for a count of every row its log holds. The
+  failed-command prompt cited a `CLAUDE.md` section the plugin does not ship.
+
+### Alternatives considered
+
+- **Keep the scan's scope and correct the sentence.** Put to the maintainer with the cost of each;
+  he chose the wider scan.
+- **Scan files outside the project too.** Offered and not chosen: the most chances of a wrong
+  refusal with no way past.
+- **Keep the project fallback for old installs behind a check.** Not needed: resolving beside the
+  hook serves the old install without naming the project.
+- **Namespace the copied skills for opencode** so they cannot clash. Not done: the skills refer to
+  each other by plain name and opencode loads them by folder name; a marker file changes nothing
+  for a clean project.
+
+### Not in this release
+
+- **The scope hold is not wired.** It stays in the code, switched on by a file nothing writes.
+- **Nothing was run on Cursor, Codex or opencode.** The opencode changes are tested through the
+  script; the config's meaning rests on opencode's documentation (opencode.ai/docs/skills).
+- **How often the wider secret scan refuses ordinary canvas text is not known.** The tests show
+  plain prose passes. No real project has run with it yet.
+- **Reported by the readers and not checked:** shell write shapes the build hold cannot see; that
+  the corrections stop passes on a retry with no re-read; an ack you write by hand while a shell
+  command runs being put back; what Cursor and Codex leave out of session start.
+- **A third read has not been run.**
+
 ## v0.322.2 - the pages a newcomer reads say what the plugin does; a scale-lock override is kept in git
 
 **2026-10-12. Text corrections, and one fix found while writing them** (the last section; nothing else changes what a hook or script does). On 2026-10-11 three readers with
