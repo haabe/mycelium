@@ -1041,3 +1041,17 @@ reviewed:
     answer: `discovery_state_code` returns 3 through `_diamonds_unread` and the gate refuses with
     the remedy for a missing parser. Reporting it here as "unreadable" would tell the builder to
     repair a file that is fine. Reviewed 2026-10-12, v0.322.5.
+- id: bash_state_guard.py@9aa13c0877
+  verdict: accepted
+  reason: >-
+    `_switches_in` returns no switches for a settings file that is not there or cannot be opened.
+    Before a command, that makes every switch found afterwards count as new, so the failure errs
+    toward taking a switch out and telling the person. A file that is missing afterwards sets
+    nothing Claude Code can read. Reviewed 2026-10-12, v0.322.6.
+- id: settings_switches.py@10e6458e8b
+  verdict: accepted
+  reason: >-
+    `without` returns None when the settings text is not JSON, and its one caller,
+    `bash_state_guard._put_back_settings`, then reports the switch as COULD NOT BE TAKEN OUT to the
+    person and the agent and leaves the file alone. Asserted by
+    test_a_file_that_is_not_json_is_said_and_not_rewritten. Reviewed 2026-10-12, v0.322.6.

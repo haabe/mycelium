@@ -118,6 +118,13 @@ def test_where_nobody_is_asked_it_is_refused(project, mode):
     assert said.get("permissionDecision") == "deny", said
 
 
+def test_a_runtime_that_cannot_ask_is_refused_too(project):
+    """Codex treats a hook's ask as an allow (v0.286.0), so there the answer is no."""
+    said = _gate(project, "Write", _write(project, LOCAL, _with(env={OVERRIDE: "1"})),
+                 MYCELIUM_RUNTIME="codex")
+    assert said.get("permissionDecision") == "deny", said
+
+
 def test_an_edit_is_judged_by_what_it_leaves_not_by_its_own_words(project):
     """RED BEFORE 0.322.6. The new text alone names no switch: `true` replaces `false`."""
     (project / LOCAL).write_text(json.dumps(_with(disableAllHooks=False), indent=2))
