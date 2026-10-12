@@ -141,3 +141,13 @@ that last clause was not true of a shell write through a variable, which no hook
 which went through unasked. Since 0.321.1 those files are compared before and after every shell
 command: a change the person was not asked about is put back, and the person is told.
 
+The same holds for a Mycelium switch in a Claude Code settings file (0.322.6):
+`.claude/settings.json`, `.claude/settings.local.json` and `~/.claude/settings.json`. A
+`MYCELIUM_*` variable, `CLAUDE_PROJECT_DIR` or `CLAUDE_PLUGIN_ROOT` in the `env` block,
+`disableAllHooks: true`, and the plugin set to `false` in `enabledPlugins` are the person's to
+set. An edit that would leave a new one there asks the person, or is refused where nobody is
+asked; a shell command that sets one has it taken out again and the person is told. Editing
+anything else in those files is ordinary work and is not asked about. If the person wants a
+switch set, say which line to add and let them add it, or make the edit with Edit or Write so
+that they are asked.
+

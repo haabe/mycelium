@@ -4,6 +4,74 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-12.
 
+## v0.322.6 - a Mycelium switch in a settings file is yours to set
+
+**2026-10-12.** Mycelium has a few switches that loosen a stop. They are there for you. This
+release stops the agent from setting one for itself through Claude Code's settings files.
+
+### What was wrong
+
+- Three environment variables loosen a stop: one lets the files that switch a stop off be
+  written unasked, one stops the check that a turn ends by saying what comes next, one sets the
+  date Mycelium treats as today.
+- Claude Code takes variables from the `env` block of its settings files, and re-reads those
+  files while a session runs. Two more keys there end every hook at once: `disableAllHooks`, and
+  the plugin set to `false` in `enabledPlugins`.
+- No Mycelium gate looked at a write to those files. **Shown by running it on 0.322.1:** a tool
+  call that put the first variable into `.claude/settings.local.json` drew no decision from any
+  gate. In the same run, a write to one of the files Mycelium already guards was asked about.
+- Claude Code has its own protection for the `.claude` folder. It asks in its manual modes, lets
+  a second model decide in auto mode, and does not check with permissions bypassed. That is from
+  its documentation; none of it was tested here.
+
+### What changed
+
+- **An edit that would leave a new Mycelium switch in a settings file asks you first.** In a
+  mode where nobody is asked (auto mode, bypassed permissions) and on Codex it is refused. The
+  question says which switch and which file.
+- **A shell command that sets one has it taken out again, and you are told.** The rest of the
+  file is kept as the command left it.
+- **Three files are covered:** `.claude/settings.json` and `.claude/settings.local.json` in the
+  project, and `~/.claude/settings.json` in your home folder. For the last one Mycelium now reads
+  a file outside your project, and may take one entry out of it. The privacy page says so.
+- **What counts as a switch:** any `MYCELIUM_*` variable, `CLAUDE_PROJECT_DIR` and
+  `CLAUDE_PLUGIN_ROOT` in `env`; `disableAllHooks: true`; the plugin set to `false`.
+- **An ordinary settings edit is not asked about.** The check looks at what the write leaves in
+  the file, not at which file it is. Taking a switch out is not asked about either.
+- **The plugin switched off by a shell command is reported and left alone.** Claude Code's own
+  plugin commands write that key, and you may have run one.
+
+### What it costs you
+
+- Setting any `MYCELIUM_*` variable through the agent now costs one answer, also for the ones
+  that loosen nothing. A hook cannot know which name a later release will read.
+- If you add a switch to a settings file by hand while a shell command of the agent's is running,
+  it is taken out with the rest, and you are told. Add it again once the command has ended, or
+  set it in your shell.
+
+### Alternatives considered
+
+- **Ask about every write to a settings file.** Simple, and it would ask about each permission
+  rule an agent adds. A question asked that often is answered without reading.
+- **Watch only the three variables that loosen a stop today.** A fourth would then be unwatched
+  until someone remembered this list.
+- **Restore the whole file after a shell command**, as is done for Mycelium's own files. A
+  settings file holds other things the command may rightly have changed, and it can hold keys of
+  yours, so no copy is made and only the switch is taken out.
+- **Tell you about the home-folder file and change nothing outside the project.** The switch
+  would stay live until you acted, and in an unattended run nobody would. The maintainer chose
+  the undo.
+
+### Not in this release
+
+- **Not shown in a live session**, in any permission mode. That hook commands receive the `env`
+  block, and that it is re-read mid-session, is Claude Code's documentation.
+- Variables that change how a shell itself starts (`BASH_ENV`, `PATH`) are not watched.
+- An edit made through a symlink whose name does not say `settings.json` is not seen.
+- Cursor's and Codex's own settings files, and managed or command-line settings, are not looked
+  at.
+- Nothing lists, at session start, the switches a settings file already carries.
+
 ## v0.322.5 - a diamonds file that cannot be read does not open the gates
 
 **2026-10-12.** `.claude/diamonds/active.yml` is the file that says what may be built and who a
