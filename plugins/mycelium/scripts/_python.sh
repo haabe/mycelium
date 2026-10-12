@@ -17,7 +17,10 @@ mycelium_python() {
     return 0
   fi
   local own="${CLAUDE_PLUGIN_DATA:-}/pyenv/bin/python"
-  if [ -n "${CLAUDE_PLUGIN_DATA:-}" ] && [ -x "$own" ] && "$own" -c 'import yaml' >/dev/null 2>&1; then
+  # By explicit path, so the prelude's `python3` function does not apply: name the launcher, or
+  # this probe imports `yaml.py` from the project (v0.322.4).
+  local safe; safe="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_safe_c.py"
+  if [ -n "${CLAUDE_PLUGIN_DATA:-}" ] && [ -x "$own" ] && "$own" "$safe" 'import yaml' >/dev/null 2>&1; then
     printf '%s' "$own"
     return 0
   fi

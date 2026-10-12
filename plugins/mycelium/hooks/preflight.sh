@@ -185,7 +185,7 @@ fi
 # line says so). The python is the one the gates use: the PATH python3, else Mycelium's own.
 # shellcheck source=../scripts/_python.sh
 . "${CLAUDE_PLUGIN_ROOT:-$(dirname "${BASH_SOURCE[0]}")/..}/scripts/_python.sh" 2>/dev/null || mycelium_python() { printf 'python3'; }
-if [ "$_PF_LOOKS_ENGAGED" -eq 1 ] && ! "$(mycelium_python)" -c 'import yaml' 2>/dev/null; then
+if [ "$_PF_LOOKS_ENGAGED" -eq 1 ] && ! "$(mycelium_python)" "$_MYCELIUM_ROOT/scripts/_safe_c.py" 'import yaml' 2>/dev/null; then
   echo "MYCELIUM: PyYAML is not available to Mycelium on this machine, so the scale locks are NOT being checked: new source files and releases are refused until it is, and a diamond can be opened before its parent is ready. Run /mycelium:setup to install it for Mycelium only, or pip3 install pyyaml."
 fi
 

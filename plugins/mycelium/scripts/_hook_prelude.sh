@@ -36,6 +36,39 @@
 # hook resolves a script from the project by name any more;
 # tests/python/test_hooks_run_only_their_own_scripts.py holds that.
 _MYCELIUM_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)"
+export _MYCELIUM_ROOT
+
+# A HOOK'S PYTHON NEVER LOOKS IN THE WORKING DIRECTORY (v0.322.4). `python3 -c` and `python3 -`
+# put the current directory first on the import path, and a hook's current directory is the
+# project. So `import json` in a hook's inline Python loaded `./json.py` when the project had one:
+# replayed 2026-10-12 on 0.322.3, four hooks imported planted `json.py`, `yaml.py` and `re.py`.
+# So a repository could have its code run by the hooks. (That an honest project's own `types.py`
+# changes a gate's decision was tested the same day and NOT found: see scripts/_safe_c.py.)
+#   - PYTHONSAFEPATH=1 turns that off for every Python 3.11 or later this hook starts, children
+#     included.
+#   - For the Pythons before it (macOS ships 3.9), the function below hands inline code to
+#     scripts/_safe_c.py: a FILE gets its own folder on the path in place of the current one.
+# Every hook sources this file on line 2, so no call site changes. A hook that starts an
+# interpreter by an explicit path (`"$own" -c ...`) is not covered by the function and must name
+# _safe_c.py itself; tests/python/test_hooks_import_nothing_from_the_project.py plants canaries
+# for every registered hook and holds both halves.
+export PYTHONSAFEPATH=1
+_mycelium_py() {  # $1 = the interpreter (a name or a path); the rest = its arguments
+  local _bin="$1" _safe="$_MYCELIUM_ROOT/scripts/_safe_c.py"
+  shift
+  if [ -f "$_safe" ]; then
+    case "${1:-}" in
+      -c) if [ "$#" -ge 2 ]; then
+            local _code="$2"; shift 2
+            command "$_bin" "$_safe" "$_code" "$@"; return
+          fi;;
+      -)  shift; command "$_bin" "$_safe" --stdin "$@"; return;;
+    esac
+  fi
+  command "$_bin" "$@"
+}
+python3() { _mycelium_py python3 "$@"; }
+python() { _mycelium_py python "$@"; }
 
 _mycelium_is_project() { [ -d "$1/.claude/canvas" ] || [ -d "$1/.claude/diamonds" ]; }
 

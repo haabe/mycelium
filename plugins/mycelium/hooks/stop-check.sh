@@ -52,7 +52,9 @@ except ImportError:
 doc = yaml.safe_load(open(path)) or {}
 live = [d for d in (doc.get('active_diamonds') or []) if isinstance(d, dict)]
 import os
-sys.path.insert(0, os.path.join(os.environ.get('CLAUDE_PLUGIN_ROOT', ''), 'scripts'))
+# Beside this hook, never a relative folder: with CLAUDE_PLUGIN_ROOT unset the old line put
+# `scripts` in the PROJECT on the path and imported `scale_locks` from it (v0.322.4).
+sys.path.insert(0, os.path.join(os.environ.get('_MYCELIUM_ROOT') or '/nonexistent', 'scripts'))
 try:
     from scale_locks import phase_of  # where a diamond is, from its decisions (v0.305.0)
 except ImportError:

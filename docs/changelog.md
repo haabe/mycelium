@@ -4,6 +4,77 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-12.
 
+## v0.322.4 - a hook's Python imports nothing from the project
+
+**2026-10-12. A hole that has been in every released version.** It was found the same day
+0.322.3 shipped, by listing every place a hook starts an interpreter, after a blind reader showed
+that 0.322.3's sentence "a hook never runs a script from the project" was false at one site.
+
+### What was wrong
+
+Mycelium's hooks run small pieces of Python inline (`python3 -c ...`). They run with your project
+as the working directory, and for inline code Python looks in the working directory first when it
+imports a module. So when a hook said `import json`, a file called `json.py` at the root of the
+project was loaded in its place.
+
+- **Shown by running it on 0.322.3**, with the plugin root set, as Claude Code runs the hooks: 19
+  of the 56 registered hook entries imported a planted `json.py`, `yaml.py` or `re.py`. That
+  includes the hook that runs on every prompt, the gate on every write, the turn-end hook and
+  session start.
+- **What it meant:** a repository could have its own code run by Mycelium's hooks, on your
+  machine, with nothing in the repository's settings to show for it. It needed a file with the
+  right name and a `.claude/canvas/` folder, and a cloned repository can carry both.
+- **What limits it:** Claude Code asks whether you trust a folder before it runs anything there,
+  and a repository you trust could already run code through its own hook settings. This path was
+  worse because a look at those settings showed nothing.
+
+### What changed
+
+- Every hook's inline Python now goes through a small launcher, `scripts/_safe_c.py`. A Python
+  file gets its own folder on the import path in place of the working directory, on every Python
+  version, so the project is never looked in.
+- `PYTHONSAFEPATH=1` is set for everything a hook starts. That does the same job on Python 3.11
+  and later; the launcher is what covers older ones, such as the 3.9 that macOS ships.
+- Both are set up in the one file every hook loads first, so the seventy or so call sites did not
+  change. Four that start the interpreter by a path or a variable go through the launcher by name.
+- **Two older sites of a related shape are fixed too.** Session start and the turn-end hook built
+  an import path from the plugin-root variable, which pointed into the project's own `scripts`
+  folder when that variable was unset. On 0.322.3 a planted `scripts/scale_locks.py` ran at
+  session start. 0.322.3 had said this could not happen; its test searched for one spelling.
+
+### How it is held
+
+`tests/python/test_hooks_import_nothing_from_the_project.py` plants seventeen module files in a
+scratch project and runs every hook registered in `hooks.json` there, the way Claude Code starts
+it. It does not need to know which hooks run Python, so a new hook is covered. It also tests each
+half alone (the launcher with `PYTHONSAFEPATH` unset; the shell function with it unset). 76 cases;
+26 fail on the 0.322.3 hooks. The launcher is a new file, so its own tests pass beside the old
+hooks too.
+
+### Alternatives considered
+
+- **`PYTHONSAFEPATH` alone.** One line, but it does nothing before Python 3.11.
+- **Python's isolated mode (`-I`).** It also hides packages installed for the user, which is
+  where PyYAML lives on many machines, and the gates need PyYAML.
+- **Change the working directory at the top of every hook.** Some hooks and the `git` commands
+  they run rely on being in the project.
+- **Rewrite each call site.** About seventy edits where one wrapper does it, and the next inline
+  call written the ordinary way would have reopened the hole.
+
+### Not in this release
+
+- **A claim withdrawn.** While building this the author told the maintainer that a project with
+  its own `types.py` or `random.py` could crash a gate and so have every write refused. Tested the
+  same day on eight gates, and on the build gate's two decisions with eight such files: every
+  decision was unchanged on 0.322.3. What such a file does to the hooks' smaller inline snippets
+  (a log row, a reminder) was not tested.
+- **Not run on Cursor or Codex**, nor on a Python older than the ones on the build machine and in
+  CI.
+- **Python the agent runs itself**, from a skill's instructions, in your project, still sees the
+  project first. That is how Python works in any repository and is not a hook.
+- The other findings of the third blind read (the build gate being passed by scaffolders, a
+  prototype folder declared without asking, and more) are not in this release.
+
 ## v0.322.3 - what the second blind read found
 
 **2026-10-12.** Three new readers, with no knowledge of Mycelium and the same brief as before,
