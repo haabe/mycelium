@@ -418,6 +418,73 @@ def guard_state_check(name: str, tool_name: str, tool_input, project_dir: str,
                         f"call writes it. A person decides that, not the agent (adversarial "
                         f"pass 2026-09-11). Approve if you asked for it; set "
                         f"MYCELIUM_GUARD_STATE_EDIT=1 in your own shell for setup work.")
+    if tool_name != "Bash":
+        _settings_check(name, tool_input, project_dir, permission_mode)
+
+
+def _sibling(module: str):
+    """A module beside this one. Hooks run with PYTHONSAFEPATH=1 (v0.322.4), which keeps a
+    script's own folder off the import path, so it is put there by name."""
+    here = os.path.dirname(os.path.abspath(__file__))
+    if here not in sys.path:
+        sys.path.insert(0, here)
+    return __import__(module)
+
+
+def settings_file_name(r: Resolved) -> str | None:
+    """The Claude Code settings file this target is, as a person would name it, or None."""
+    ss = _sibling("settings_switches")
+    if r.rel is not None:
+        hit = next((s for s in ss.SETTINGS_REL if _fold(r.rel) == _fold(s)), None)
+        if hit:
+            return hit
+    user = os.path.realpath(ss.user_settings_path())
+    return ss.USER_SETTINGS_NAME if _fold(r.real) == _fold(user) else None
+
+
+def _settings_check(name: str, tool_input, project_dir: str,
+                    permission_mode: str | None) -> None:
+    """A file tool that would leave a NEW Mycelium switch in a Claude Code settings file asks the
+    person, or is refused where nobody would be asked (v0.322.6; settings_switches.py says why).
+    Judged by what the write leaves in the file: an edit that sets no such switch, or takes one
+    out, is not asked about. A shell command is judged after it ran, by bash_state_guard.py."""
+    ss = _sibling("settings_switches")
+    ti = tool_input if isinstance(tool_input, dict) else {}
+    for key, path in target_paths(tool_input):
+        r = resolve(path, project_dir, key=key)
+        which = settings_file_name(r)
+        if not which or key == "source":
+            continue
+        try:
+            with open(r.real, encoding="utf-8", errors="replace") as fh:
+                before_text = fh.read()
+        except OSError:
+            before_text = ""  # SPEAKS: no file yet, so every switch the write sets is new
+        before = ss.switches(before_text)
+
+        def read_source(src: str) -> str:
+            with open(resolve(src, project_dir).real, encoding="utf-8", errors="replace") as fh:
+                return fh.read()
+
+        try:
+            after = ss.switches(ss.proposed_text(ti, before_text, key, read_source))
+        except ss.CannotTellError:
+            what = "a change Mycelium cannot work out from this call"
+        else:
+            new = ss.newly_set(before, after)
+            if not new:
+                continue
+            what = ss.describe(new, after)
+        lead = (f"Mycelium {name}: this write would leave {what} in {which}. That switches a "
+                "Mycelium stop off or changes how its hooks decide, which is a person's decision")
+        mode = str(permission_mode or "")
+        runtime = os.environ.get("MYCELIUM_RUNTIME", "")
+        if runtime in CANNOT_ASK or (mode and mode not in ASKS_A_HUMAN):
+            why = (f"This runtime ({runtime}) cannot ask a person" if runtime in CANNOT_ASK
+                   else f"In this permission mode ({mode}) nobody is asked")
+            decision("deny", f"{lead}. {why}, so the agent cannot write it. If you want it, "
+                             "write it yourself in your own editor.")
+        decision("ask", f"{lead}, not the agent's. Approve if you asked for it.")
 
 
 _MIN_PURPOSE_WORDS = 3

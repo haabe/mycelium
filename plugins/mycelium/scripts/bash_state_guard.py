@@ -60,6 +60,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 import _hook_input as hi  # noqa: E402
 import _state_dir  # noqa: E402
+import settings_switches as ss  # noqa: E402
 
 ACTIVE_REL = ".claude/diamonds/active.yml"
 STATE_REL = Path(".claude") / "state" / "bash-guard"
@@ -220,12 +221,89 @@ def _snapshot_guard_state(project: Path, state: Path, cmd: str, call: str) -> No
     asked = sorted({g for r in hi.bash_write_targets(cmd, str(project)).targets
                     if (g := hi.is_guard_state(r.rel))})
     own = bool(_OWN_GUARD_WRITER.fullmatch(_without_comments(cmd)))
-    (snap / "index.json").write_text(json.dumps({"files": files, "asked": asked, "own": own}))
+    # v0.322.6: which Mycelium switches each Claude Code settings file carries now (their keys and
+    # values, not the files), and whether the person's override was on BEFORE the command. Read
+    # afterwards it could have been set by the command itself, through the settings file.
+    settings = {name: _switches_in(path) for name, path in _settings_files(project).items()}
+    (snap / "index.json").write_text(json.dumps({
+        "files": files, "asked": asked, "own": own, "settings": settings,
+        "override": hi.human_override()}))
 
 
-def _put_back_guard_state(project: Path, state: Path, call: str) -> list[str]:
+def _settings_files(project: Path) -> dict[str, Path]:
+    """The settings files Claude Code reads for this project, by the name a person knows."""
+    out = {rel: project / rel for rel in ss.SETTINGS_REL}
+    user = Path(ss.user_settings_path())
+    if user.resolve() not in {p.resolve() for p in out.values()}:
+        out[ss.USER_SETTINGS_NAME] = user
+    return out
+
+
+def _switches_in(path: Path) -> dict:
+    try:
+        return ss.switches(path.read_text(encoding="utf-8", errors="replace"))
+    except OSError:
+        return {}  # SPEAKS: a settings file that is not there, or cannot be read, sets no switch
+
+
+def _replace_text(path: Path, text: str) -> None:
+    """Write `text` over `path` in one step, keeping the file's permissions."""
+    tmp = path.with_name(path.name + ".mycelium-tmp")
+    tmp.write_text(text, encoding="utf-8")
+    try:
+        shutil.copymode(path, tmp)
+        os.replace(tmp, path)
+    except OSError:
+        tmp.unlink(missing_ok=True)
+        raise
+
+
+def _put_back_settings(project: Path, index: dict) -> tuple[list[str], list[str]]:
+    """What the command did to the Mycelium switches in a Claude Code settings file (v0.322.6).
+
+    Returns (undone, reported). A switch the command set that was not set before is taken out
+    again and everything else in the file is kept; the maintainer's ruling for the file in the
+    home folder, 2026-10-12: "Undo that line, tell me". The plugin switched off in
+    `enabledPlugins` is reported and left alone, because Claude Code's own plugin commands write
+    that key and the person may have run one while the command was going."""
+    undone, reported = [], []
+    was = index.get("settings")
+    if not isinstance(was, dict) or index.get("override", hi.human_override()):
+        return undone, reported
+    for name, path in _settings_files(project).items():
+        before = was.get(name)
+        if not isinstance(before, dict):
+            continue
+        try:
+            text = path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue  # SPEAKS: no file after the command means no switch is set in it
+        now = ss.switches(text)
+        new = ss.newly_set(before, now)
+        theirs = [k for k in new if k.startswith(ss.WRITTEN_BY_THE_RUNTIME)]
+        mine = [k for k in new if k not in theirs]
+        if theirs:
+            reported.append(f"{name} now carries {ss.describe(theirs, now)}")
+        if not mine:
+            continue
+        fixed = ss.without(text, before, mine)
+        failed = "the file is not a JSON object" if fixed is None else ""
+        if fixed is not None:
+            try:
+                _replace_text(path, fixed)
+            except OSError as exc:
+                failed = type(exc).__name__
+        undone.append(f"{ss.describe(mine, now)} in {name} " + (
+            f"(COULD NOT BE TAKEN OUT: {failed}; the file is as the command left it)" if failed
+            else "(taken out again; the rest of the file is as the command left it)"))
+    return undone, reported
+
+
+def _put_back_guard_state(project: Path, state: Path, call: str,
+                          settings: list | None = None) -> list[str]:
     """Undo what the command did to a file that switches a stop off, unless the person was asked.
-    Returns one line per file put back; a file it could not put back is named as such."""
+    Returns one line per file put back; a file it could not put back is named as such. `settings`,
+    when given, is filled with the two lists `_put_back_settings` returns."""
     snap = state / GUARD_SNAP / call
     if not (snap / "index.json").is_file():
         return []  # no snapshot for this call: its before half did not run, so nothing to compare
@@ -237,7 +315,11 @@ def _put_back_guard_state(project: Path, state: Path, call: str) -> list[str]:
                  f"read, {type(exc).__name__}, so nothing was compared and nothing was put back)")]
     out = []
     try:
-        if index.get("own") or hi.human_override():
+        if settings is not None and isinstance(index, dict):
+            settings.extend(_put_back_settings(project, index))
+        # The override as it was BEFORE the command (v0.322.6); a snapshot from an older version
+        # has no such note and falls back to the environment now.
+        if index.get("own") or index.get("override", hi.human_override()):
             return []
         for rel, was in index.get("files", {}).items():
             if rel in index.get("asked", []):
@@ -314,7 +396,9 @@ def post(payload: dict, project: Path) -> int:
         since = float((state / "stamp").read_text())
     except (OSError, ValueError):
         return 0  # no stamp: pre did not run (not a Mycelium project, or an unwritable state dir)
-    put_back = _put_back_guard_state(project, state, _call_id(payload))
+    in_settings: list = []
+    put_back = _put_back_guard_state(project, state, _call_id(payload), in_settings)
+    undone, reported = in_settings or ([], [])
     changed = _changed(project, since)
     problems = _schema_problems(changed) if changed else []
     if changed and project / ACTIVE_REL in changed:
@@ -329,6 +413,24 @@ def post(payload: dict, project: Path) -> int:
         out["systemMessage"] = "Mycelium: " + told
         reasons.append(told + " Do not try another way of writing it: tell the person what "
                        "happened and let them decide.")
+    if undone or reported:
+        told = []
+        if undone:
+            told.append(
+                "A shell command set a Mycelium switch in a Claude Code settings file, and you "
+                "were not asked first: " + "; ".join(undone) + ". Such a switch turns a stop off "
+                "or changes how the hooks decide. If you want it set, write it yourself, or have "
+                "the agent make the change with its edit tool, where you are asked.")
+        if reported:
+            told.append(
+                "While a shell command ran, " + "; ".join(reported) + ", which switches the "
+                "Mycelium plugin off. Mycelium has not changed it: Claude Code's own plugin "
+                "commands write that key, and you may have run one. If you did not, set it back "
+                "to true.")
+        out["systemMessage"] = " ".join(
+            x for x in (out.get("systemMessage"), "Mycelium: " + " ".join(told)) if x)
+        reasons.append(" ".join(told) + " Do not try another way of setting it: tell the person "
+                       "what happened and let them decide.")
     if problems:
         names = ", ".join(str(f.relative_to(project)) for f in changed)
         reasons.append(

@@ -27,8 +27,11 @@ INPUT=$(cat)
 # The second arm is a deliberately loose superset of `_hook_input._REMOVES_MARKER`: a removal verb
 # followed by a non-word character, anywhere, in a call that mentions `.claude`. Being loose costs
 # one python start on a command like `confirm .claude/x`; being tight is how the first arm missed.
+# Third arm (v0.322.6): a Claude Code settings file, where a Mycelium switch can be set
+# (scripts/settings_switches.py). Matched by the file's name, in the project or in the home folder.
 case "$INPUT" in
   *-ack*|*upstream.json*|*manifest.yml*|*active-execution.json*|*move_file*) ;;
+  *settings.json*|*settings.local.json*) ;;
   *)
     if [[ "$INPUT" == *.claude* && "$INPUT" =~ (rm|rmdir|mv)[^A-Za-z0-9_] ]]; then :; else exit 0; fi ;;
 esac
