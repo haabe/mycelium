@@ -49,13 +49,21 @@ if [ "${MYCELIUM_GUARD_STATE_EDIT:-}" != "1" ]; then
   done <<< "$HI_TARGETS"
 fi
 
-# Which targets does the secret scan apply to? Every real path inside the project that is not
-# under .claude/ (2026-09-11: config.py, source/, Src/ were all outside the old directory list).
+# Which targets does the secret scan apply to? Every real path inside the project, `.claude/`
+# included, except Mycelium's own state folder (2026-09-11: config.py, source/, Src/ were all
+# outside the old directory list).
+# `.claude/` IS SCANNED SINCE 0.322.3 (maintainer's ruling 2026-10-12, "Scan .claude/ too"). Until
+# then every target under it was skipped, so a key written into a canvas file, the decision log or
+# memory, all of which are committed, was never looked at, while README.md said anything that
+# looks like a key going into a file is refused (blind read round 2, all three readers). Only
+# `.claude/state/` stays out: logs and stamps the hooks write, ignored by git. The cost, shown to
+# the maintainer and accepted: a note that quotes something key-shaped is refused too, and this
+# scan has no override, so the text has to be reworded.
 SCAN=0
 while IFS=$'\t' read -r target _exists _size; do
   case "$target" in
     ""|OUTSIDE:*|GUARD:*|OPAQUE:*) ;;
-    .claude/*) ;;
+    .claude/state/*) ;;
     *) SCAN=1;;
   esac
 done <<< "$HI_TARGETS"
@@ -191,11 +199,15 @@ if [ "$NEEDS_RENEWAL" -eq 1 ]; then
   PREFLIGHT=""
   if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/hooks/preflight.sh" ]; then
     PREFLIGHT="${CLAUDE_PLUGIN_ROOT}/hooks/preflight.sh"
-  elif [ -f "$PROJECT_DIR/.claude/hooks/preflight.sh" ]; then
-    PREFLIGHT="$PROJECT_DIR/.claude/hooks/preflight.sh"
+  elif [ -f "$_MYCELIUM_ROOT/hooks/preflight.sh" ]; then
+    PREFLIGHT="$_MYCELIUM_ROOT/hooks/preflight.sh"
   fi
   if [ -n "$PREFLIGHT" ]; then
-    bash "$PREFLIGHT" 2>/dev/null || {
+    # Preflight's own lines stay off this hook's stdout (v0.322.3): a PreToolUse hook answers in
+    # JSON or not at all, and a runtime that parses stdout must not be handed a sentence. It was
+    # harmless while this branch only ran where CLAUDE_PLUGIN_ROOT is set; since 0.322.3 the gate
+    # finds its own preflight on every runtime. What the gate needs from it is the stamp.
+    bash "$PREFLIGHT" >/dev/null 2>&1 || {
       _gate_block_log "stale-stamp"
       echo '{"message": "Mycelium preflight required. Read corrections.md and run validation before code changes."}' >&2
       exit 2

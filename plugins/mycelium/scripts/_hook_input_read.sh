@@ -21,12 +21,10 @@ hi_read_input() {
     helper="$here/_hook_input.py"
   elif [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/_hook_input.py" ]; then
     helper="${CLAUDE_PLUGIN_ROOT}/scripts/_hook_input.py"
-  elif [ -f "$PROJECT_DIR/.claude/scripts/_hook_input.py" ]; then
-    helper="$PROJECT_DIR/.claude/scripts/_hook_input.py"
-  fi
+  fi  # never the project's own `.claude/scripts/`: a repository must not supply the parser (v0.322.3)
   HI_TOOL=""; HI_TARGETS=""; HI_CONTENT=""; HI_BAD=""
   if [ -z "$helper" ]; then
-    HI_BAD="_hook_input.py not found under CLAUDE_PLUGIN_ROOT or .claude/scripts"
+    HI_BAD="_hook_input.py not found beside this hook or under CLAUDE_PLUGIN_ROOT"
     return 0
   fi
   local out rc
@@ -83,6 +81,5 @@ hi_discovery_engaged() {  # exit 0 if a real purpose or an active diamond exists
   here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   helper="$here/_hook_input.py"
   [ -f "$helper" ] || helper="${CLAUDE_PLUGIN_ROOT:-}/scripts/_hook_input.py"
-  [ -f "$helper" ] || helper="$PROJECT_DIR/.claude/scripts/_hook_input.py"
   "$(mycelium_python)" "$helper" --project-dir "$PROJECT_DIR" --discovery-state 2>/dev/null
 }

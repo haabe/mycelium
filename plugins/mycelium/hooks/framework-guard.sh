@@ -64,8 +64,8 @@ STATE_FILE="$PROJECT_DIR/.claude/state/upstream.json"
 HELPER=""
 if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/framework_guard.py" ]; then
   HELPER="${CLAUDE_PLUGIN_ROOT}/scripts/framework_guard.py"
-elif [ -f "$PROJECT_DIR/.claude/scripts/framework_guard.py" ]; then
-  HELPER="$PROJECT_DIR/.claude/scripts/framework_guard.py"
+elif [ -f "$_MYCELIUM_ROOT/scripts/framework_guard.py" ]; then
+  HELPER="$_MYCELIUM_ROOT/scripts/framework_guard.py"
 fi
 
 # Read input JSON from stdin

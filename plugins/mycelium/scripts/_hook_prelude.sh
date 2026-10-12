@@ -27,6 +27,16 @@
 # it there too, or the projects it brings in lose every gate in silence.
 # tests/python/test_pretooluse_on_failure.py runs both over one matrix; add the new case to it.
 
+# WHERE MYCELIUM'S OWN FILES ARE (v0.322.3): the folder above this file. That is the plugin's root
+# in a plugin install, and the project's `.claude/` only in a legacy install, where the hooks
+# themselves were copied into the project. A hook that needs a helper and has no CLAUDE_PLUGIN_ROOT
+# (Cursor and Codex do not set it) looks HERE, beside itself. Until 0.322.3 it looked in
+# `$PROJECT_DIR/.claude/scripts/` and `.claude/hooks/`, so on those runtimes a repository that
+# carried a file by the right name had it run by the hook (blind read round 2, 2026-10-12). No
+# hook resolves a script from the project by name any more;
+# tests/python/test_hooks_run_only_their_own_scripts.py holds that.
+_MYCELIUM_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)"
+
 _mycelium_is_project() { [ -d "$1/.claude/canvas" ] || [ -d "$1/.claude/diamonds" ]; }
 
 # Which project. Claude Code sets CLAUDE_PROJECT_DIR; Codex CLI does not, and a session may start in

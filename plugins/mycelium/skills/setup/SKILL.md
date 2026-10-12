@@ -304,9 +304,14 @@ command -v opencode >/dev/null 2>&1                                          # o
 >
 > Say no/skip if you're on Claude Code — this adds nothing there."
 
-**Auto-mode default** (no interactive user): default to **skip** unless an opencode
-signal is present, in which case provision the scaffold and print the caveats. Never
-overwrite an existing `opencode.json` or `.opencode/` file without explicit consent.
+**Auto-mode default** (no interactive user): **skip. Write nothing.** A sign of opencode is
+a reason to OFFER the scaffold to a person, never a reason to write it unasked (v0.322.3,
+maintainer's ruling 2026-10-12: "Never overwrite, never unasked"; until then a non-interactive
+run with a signal present provisioned it). Provision without an interactive yes only when the
+request itself asked for opencode support by name ("set up opencode support"). Never
+overwrite an existing `opencode.json` or `.opencode/` file without explicit consent, and
+never a skill folder under `.claude/skills/` that this scaffold did not put there:
+`provision-skills.sh` skips those and lists them, and you pass that list on to the user.
 
 ### 5c: Provision (on yes)
 

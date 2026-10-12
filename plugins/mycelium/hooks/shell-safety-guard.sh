@@ -38,7 +38,7 @@ HELPER="${CLAUDE_PLUGIN_ROOT}/scripts/shell_safety_guard.py"
 if [ ! -f "$HELPER" ]; then
   # Legacy layout fallback, then silent no-op. Fail OPEN: unlike framework-guard
   # this hook only advises, so a missing helper must not block or nag.
-  HELPER=".claude/scripts/shell_safety_guard.py"
+  HELPER="$_MYCELIUM_ROOT/scripts/shell_safety_guard.py"  # beside this hook, never the project's folder (v0.322.3)
   [ -f "$HELPER" ] || exit 0
 fi
 

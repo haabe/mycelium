@@ -19,7 +19,7 @@ Output a short welcome before doing anything. Do NOT skip this — the install-t
 > Mycelium makes the agent think before it builds — it can't skip the hard questions; each step has to clear an evidence check first. Grounded in 30+ established product-thinking frameworks; you'll meet the relevant ones as they come up.
 >
 > Two quick steps:
->   1. Set up Mycelium's files in `.claude/` — about 10 seconds. Your existing files (CLAUDE.md, README, etc.) aren't touched; only a new `.claude/` directory is added.
+>   1. Set up Mycelium's files in `.claude/` — about 10 seconds. Your existing files (CLAUDE.md, README, etc.) aren't changed. A new `.claude/` directory is added, and setup may add an `AGENTS.md` at the project root (it asks first when you are there to answer).
 >   2. A 10-minute discovery brief: 4 questions about your idea, then a one-page brief covering who it's for, the biggest assumption, the biggest risk, and your next concrete move.
 >
 > One thing to know before you answer: once the brief exists, the agent builds the product itself only after a delivery diamond is open with its reasons written down, new files and edits to existing code alike. Code in a folder listed under `prototype_paths` in `.claude/diamonds/active.yml` stays free, and you can lift the hold yourself with `.claude/state/delivery-skip-ack`. Uninstalling is one command.

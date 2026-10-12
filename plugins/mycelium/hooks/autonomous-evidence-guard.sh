@@ -40,8 +40,8 @@ PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
 HELPER=""
 if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/autonomous_evidence_guard.py" ]; then
   HELPER="${CLAUDE_PLUGIN_ROOT}/scripts/autonomous_evidence_guard.py"
-elif [ -f "$PROJECT_DIR/.claude/scripts/autonomous_evidence_guard.py" ]; then
-  HELPER="$PROJECT_DIR/.claude/scripts/autonomous_evidence_guard.py"
+elif [ -f "$_MYCELIUM_ROOT/scripts/autonomous_evidence_guard.py" ]; then
+  HELPER="$_MYCELIUM_ROOT/scripts/autonomous_evidence_guard.py"
 fi
 
 INPUT=$(cat)

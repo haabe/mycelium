@@ -48,8 +48,8 @@ STATE_FILE="$PROJECT_DIR/.claude/state/active-execution.json"
 HELPER=""
 if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/scope_check.py" ]; then
   HELPER="${CLAUDE_PLUGIN_ROOT}/scripts/scope_check.py"
-elif [ -f "$PROJECT_DIR/.claude/scripts/scope_check.py" ]; then
-  HELPER="$PROJECT_DIR/.claude/scripts/scope_check.py"
+elif [ -f "$_MYCELIUM_ROOT/scripts/scope_check.py" ]; then
+  HELPER="$_MYCELIUM_ROOT/scripts/scope_check.py"
 fi
 
 # Read input JSON from stdin

@@ -31,7 +31,7 @@ INPUT=$(cat)
 
 HELPER="${CLAUDE_PLUGIN_ROOT}/scripts/read_before_research_guard.py"
 if [ ! -f "$HELPER" ]; then
-  HELPER=".claude/scripts/read_before_research_guard.py"
+  HELPER="$_MYCELIUM_ROOT/scripts/read_before_research_guard.py"  # beside this hook, never the project's folder (v0.322.3)
   [ -f "$HELPER" ] || exit 0
 fi
 

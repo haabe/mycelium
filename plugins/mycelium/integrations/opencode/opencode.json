@@ -4,14 +4,86 @@
   "provider": {
     "ollama": {
       "npm": "@ai-sdk/openai-compatible",
-      "options": { "baseURL": "http://localhost:11434/v1" },
+      "options": {
+        "baseURL": "http://localhost:11434/v1"
+      },
       "models": {
-        "llama3.1:8b": { "name": "Llama 3.1 8B (Ollama)", "tool_call": true }
+        "llama3.1:8b": {
+          "name": "Llama 3.1 8B (Ollama)",
+          "tool_call": true
+        }
       }
     }
   },
-  "instructions": ["AGENTS.md"],
+  "instructions": [
+    "AGENTS.md"
+  ],
   "permission": {
-    "skill": { "*": "allow" }
+    "skill": {
+      "*": "ask",
+      "a11y-check": "allow",
+      "adopt": "allow",
+      "assumption-test": "allow",
+      "bias-check": "allow",
+      "bvssh-check": "allow",
+      "canvas-health": "allow",
+      "canvas-sync": "allow",
+      "canvas-update": "allow",
+      "corrections-audit": "allow",
+      "count": "allow",
+      "cycle-render": "allow",
+      "cynefin-classify": "allow",
+      "define-done": "allow",
+      "definition-of-done": "allow",
+      "delivery-bootstrap": "allow",
+      "devils-advocate": "allow",
+      "diamond-assess": "allow",
+      "diamond-progress": "allow",
+      "diamond-render": "allow",
+      "dora-check": "allow",
+      "eval-runner": "allow",
+      "fan-out": "allow",
+      "feedback-review": "allow",
+      "framework-health": "allow",
+      "friction-log": "allow",
+      "gist-plan": "allow",
+      "handoff": "allow",
+      "harms-check": "allow",
+      "ice-score": "allow",
+      "interview": "allow",
+      "jtbd-map": "allow",
+      "launch-tier": "allow",
+      "log-evidence": "allow",
+      "metrics-detect": "allow",
+      "metrics-pull": "allow",
+      "migrate-from-legacy": "allow",
+      "mocked-persona-interview": "allow",
+      "ost-builder": "allow",
+      "ost-render": "allow",
+      "ping": "allow",
+      "preflight": "allow",
+      "privacy-check": "allow",
+      "prompt-optimizer": "allow",
+      "purpose-properties": "allow",
+      "receipt-render": "allow",
+      "reflexion": "allow",
+      "regulatory-review": "allow",
+      "render": "allow",
+      "retrospective": "allow",
+      "scaffold-cost-check": "allow",
+      "security-review": "allow",
+      "service-check": "allow",
+      "setup": "allow",
+      "start": "allow",
+      "team-shape": "allow",
+      "theory-fidelity": "allow",
+      "threat-model": "allow",
+      "usability-check": "allow",
+      "user-interview": "allow",
+      "user-needs-map": "allow",
+      "wardley-map": "allow",
+      "wiring-contract": "allow",
+      "xai-check": "allow"
+    }
   }
 }

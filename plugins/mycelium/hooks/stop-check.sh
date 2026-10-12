@@ -183,7 +183,8 @@ fi
 # ============================================================
 # CHECK 5: Direct diamond state edits (observability from diamond-state-audit.sh)
 # ============================================================
-# Count entries in the audit log for this session. If > 0, surface a reminder
+# Count entries in the audit log: every row it still holds, NOT only this session's (until 0.322.3
+# the message said "this session" for that count; blind read round 2). If > 0, surface a reminder
 # that /diamond-progress is the idiomatic path for diamond state transitions.
 DIAMOND_DIRECT_EDITS=0
 AUDIT_LOG="$PROJECT_DIR/.claude/state/diamond-state-audit.jsonl"
@@ -192,7 +193,7 @@ if [ -f "$AUDIT_LOG" ]; then
 fi
 
 if [ "$DIAMOND_DIRECT_EDITS" -gt 0 ]; then
-  WARNINGS="${WARNINGS}OBSERVABILITY: ${DIAMOND_DIRECT_EDITS} direct diamond state edit(s) this session (outside /diamond-progress). Verify these were intentional -- /diamond-progress is the idiomatic path for gate evaluation and recording decisions. See .claude/state/diamond-state-audit.jsonl for details.@@W@@"
+  WARNINGS="${WARNINGS}OBSERVABILITY: ${DIAMOND_DIRECT_EDITS} direct diamond state edit(s) in the audit log (outside /diamond-progress; the log keeps 90 days by default, so this is not only this session). Verify these were intentional -- /diamond-progress is the idiomatic path for gate evaluation and recording decisions. See .claude/state/diamond-state-audit.jsonl for details.@@W@@"
 fi
 
 # ============================================================

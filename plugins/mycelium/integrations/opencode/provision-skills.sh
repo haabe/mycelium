@@ -126,9 +126,39 @@ echo "Mycelium → opencode provisioning"
 echo "  plugin:  $PLUGIN_ROOT"
 echo "  project: $PROJECT_ROOT"
 
-# 1. Skills → .claude/skills/ (opencode discovers these natively). Copy fresh.
+# 1. Skills → .claude/skills/ (opencode discovers these natively).
+#
+#    A SKILL FOLDER THAT IS NOT OURS IS LEFT ALONE (v0.322.3; maintainer's ruling 2026-10-12, "Never
+#    overwrite, never unasked"). Until 0.322.3 this was one `cp -R` over the whole folder, followed
+#    by a path rewrite of EVERY markdown and YAML file under `.claude/skills/`, the person's own
+#    skills included. Mycelium's skill folders are not namespaced here (opencode needs the plain
+#    name), so a person's own `interview` or `setup` skill was overwritten, and their other skills
+#    had text edited in place (blind read round 2, all three readers).
+#    Now each folder this script copies carries a marker file. A folder with the marker is ours and
+#    a re-run replaces it. A folder without it is the person's: skipped, and named in the report.
+#    A copy made before 0.322.3 has no marker, so it is skipped too; the report says how to
+#    refresh it. Only folders copied in this run have their paths rewritten.
+MARK=".mycelium-vendored"
 mkdir -p "$DEST/skills"
-cp -R "$PLUGIN_ROOT/skills/." "$DEST/skills/"
+COPIED=()
+SKIPPED=()
+for src in "$PLUGIN_ROOT"/skills/*; do
+  name="$(basename "$src")"
+  dst="$DEST/skills/$name"
+  if [ ! -d "$src" ]; then
+    [ -e "$dst" ] || cp "$src" "$dst"     # a loose file beside the skills: only if not there yet
+    continue
+  fi
+  if [ -e "$dst" ] && [ ! -f "$dst/$MARK" ]; then
+    SKIPPED+=("$name")
+    continue
+  fi
+  rm -rf "${dst:?}"
+  mkdir -p "$dst"
+  cp -R "$src/." "$dst/"
+  printf 'Copied here by Mycelium (integrations/opencode/provision-skills.sh). A re-run replaces this whole folder.\nTo keep your own version of this skill, delete this file: the folder is then left alone.\n' > "$dst/$MARK"
+  COPIED+=("$dst")
+done
 
 # 2. Referenced framework dirs → .claude/mycelium/<dir>/. Copy fresh.
 mkdir -p "$VENDOR"
@@ -155,7 +185,11 @@ rewrite() {
         rm -f "$f.bak"
       done
 }
-rewrite "$DEST/skills"
+# Only what this run copied (see step 1). `${A[@]+...}`: an empty array is "unset" to bash 3.2
+# under `set -u`, which is the bash macOS ships.
+for copied in ${COPIED[@]+"${COPIED[@]}"}; do
+  rewrite "$copied"
+done
 rewrite "$VENDOR"
 
 # 4. Report. Only flag PATH-shaped residuals (a `/` after the var) — those are genuine
@@ -178,5 +212,10 @@ echo "  rewrote \${CLAUDE_PLUGIN_ROOT} → .claude/mycelium (and /skills/ → .c
 if [ "$RESIDUAL" != "0" ]; then
   echo "  WARNING: $RESIDUAL file(s) still contain an unrewritten \${CLAUDE_PLUGIN_ROOT}/… path — inspect:" >&2
   grep -rlE "$RESIDUAL_RE" "$DEST/skills" "$VENDOR" 2>/dev/null | sed 's/^/    /' >&2
+fi
+if [ "${#SKIPPED[@]}" -gt 0 ]; then
+  echo "  LEFT ALONE: ${#SKIPPED[@]} skill folder(s) in .claude/skills/ already existed and were not made by this script, so they were not replaced and nothing in them was edited:" >&2
+  printf '    %s\n' "${SKIPPED[@]}" >&2
+  echo "  Mycelium's own skill of the same name is therefore NOT installed for opencode. If one of these is an older copy Mycelium made (before 0.322.3 it left no marker), delete that folder and re-run to refresh it." >&2
 fi
 echo "Done. Re-run after a framework upgrade to refresh the vendored snapshot."
