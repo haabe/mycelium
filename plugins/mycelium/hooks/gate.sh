@@ -4,13 +4,14 @@
 # Lightweight check before code changes. Exit 0 = allow, Exit 2 = block.
 #
 # Layer 1 of Mycelium's 6-layer enforcement architecture.
-# Fires on every Write/Edit/MultiEdit to source code.
+# Fires on every Write/Edit/MultiEdit to source code, and on every shell command.
 #
 # Checks:
 # 1. Preflight stamp freshness (corrections.md read recently)
 # 2. Corrections.md not stale since last preflight
-# 3. Secret detection in content being written (G-S1 ENFORCED). Since 0.319.1 a scan that
-#    cannot run refuses the write.
+# 3. A secret typed into a shell command (G-S1 ENFORCED), and since 0.323.0 a scan of what a
+#    `git commit` or `git push` would take. A write is no longer scanned. A scan that cannot
+#    run refuses (0.319.1).
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-.}"
 CORRECTIONS_FILE="$PROJECT_DIR/.claude/memory/corrections.md"
@@ -49,16 +50,8 @@ if [ "${MYCELIUM_GUARD_STATE_EDIT:-}" != "1" ]; then
   done <<< "$HI_TARGETS"
 fi
 
-# Which targets does the secret scan apply to? Every real path inside the project, `.claude/`
-# included, except Mycelium's own state folder (2026-09-11: config.py, source/, Src/ were all
-# outside the old directory list).
-# `.claude/` IS SCANNED SINCE 0.322.3 (maintainer's ruling 2026-10-12, "Scan .claude/ too"). Until
-# then every target under it was skipped, so a key written into a canvas file, the decision log or
-# memory, all of which are committed, was never looked at, while README.md said anything that
-# looks like a key going into a file is refused (blind read round 2, all three readers). Only
-# `.claude/state/` stays out: logs and stamps the hooks write, ignored by git. The cost, shown to
-# the maintainer and accepted: a note that quotes something key-shaped is refused too, and this
-# scan has no override, so the text has to be reworded.
+# Which targets do the checks below apply to? Every real path inside the project, `.claude/`
+# included, except Mycelium's own state folder; and every shell command.
 SCAN=0
 while IFS=$'\t' read -r target _exists _size; do
   case "$target" in
@@ -67,57 +60,37 @@ while IFS=$'\t' read -r target _exists _size; do
     *) SCAN=1;;
   esac
 done <<< "$HI_TARGETS"
-[ "$HI_TOOL" = "Bash" ] && SCAN=1   # the command text itself can carry the secret
+[ "$HI_TOOL" = "Bash" ] && SCAN=1
 [ "$SCAN" = "1" ] || exit 0
 
 # ============================================================
-# CHECK 1: Secret detection in content being written (G-S1)
+# CHECK 1: a secret typed into a shell command (G-S1)
 # ============================================================
-CONTENT="$HI_CONTENT"
+# SINCE 0.323.0 A WRITE IS NOT SCANNED. Until then this check ran on the content of every file
+# write, with the short list in scripts/_secret_patterns.sh. Replayed 2026-10-12: an unquoted
+# KEY=value passed, an env file was treated like source code, and nothing looked at what was
+# staged. The maintainer's direction: "Don't let passwords into the repo", at the commit, with an
+# established scanner. So the agent may now write a key into a file, an env file being where one
+# belongs, and may not commit or push one (CHECK 1b below, scripts/commit_scan.py). The write-time
+# scan was removed in the same release that added the commit scan, never before it.
+# What stays here is the text of a shell command: a key typed on a command line ends up in logs
+# and transcripts whatever happens to the repository.
+CONTENT=""
+[ "$HI_TOOL" = "Bash" ] && CONTENT="$HI_CONTENT"
 
 if [ -n "$CONTENT" ]; then
-  # Check for common secret patterns: API keys, tokens, passwords, connection strings.
-  #
-  # POSIX CLASSES ONLY (0.318.3). These run under `grep -E`. Until 0.318.3 nine of them put `\s`
-  # and `\x27` INSIDE bracket expressions. GNU grep reads those as whitespace and a quote. The BSD
-  # grep that /usr/bin/grep is on macOS reads a backslash in a bracket as a literal character, so
-  # the class meant for whitespace matched the letter s and the class meant for a single quote
-  # matched x, 2 and 7. Whether a credential was caught depended on which letters it contained, a
-  # value in single quotes was not seen as quoted, and `[A-Za-z0-9_\-\.]` held no hyphen at all
-  # (dogfood harms check 2026-10-11). Inside a bracket: [:space:], a literal quote, a hyphen LAST.
-  # tests/python/test_gate_secret_scan.py runs every pattern under the system grep, both ways.
-  WS='[[:space:]]'
-  Q="[\"']"              # an opening double or single quote
-  NQ="[^[:space:]\"']"   # anything but whitespace and quotes
-  # A connection string is a secret when it carries a password: scheme://user:password@host, or a
-  # password= parameter. Until 0.318.3 any database URL of ten characters was refused, password or
-  # not, and this refusal has no override.
-  UI="[^[:space:]\"'/@:]*:[^[:space:]\"'/@]+@"
-  DB='(postgres|postgresql|mysql|mongodb|mongodb\+srv|rediss?)'
-  SECRET_PATTERNS=(
-    "[Aa][Pp][Ii]_?[Kk][Ee][Yy]${WS}*[=:]${WS}*${Q}[A-Za-z0-9_-]{20,}"
-    "[Ss][Ee][Cc][Rr][Ee][Tt]_?[Kk][Ee][Yy]${WS}*[=:]${WS}*${Q}[A-Za-z0-9_-]{20,}"
-    "[Pp][Aa][Ss][Ss][Ww][Oo][Rr][Dd]${WS}*[=:]${WS}*${Q}${NQ}{8,}"
-    "Bearer${WS}+[A-Za-z0-9_.-]{20,}"
-    'sk-[A-Za-z0-9]{20,}'
-    'ghp_[A-Za-z0-9]{36}'
-    'gho_[A-Za-z0-9]{36}'
-    'glpat-[A-Za-z0-9-]{20,}'
-    'xox[bpas]-[A-Za-z0-9-]{10,}'
-    'AKIA[0-9A-Z]{16}'
-    'eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.'
-    "[Pp][Rr][Ii][Vv][Aa][Tt][Ee]_?[Kk][Ee][Yy]${WS}*[=:]${WS}*${Q}"
-    "${DB}://${UI}"
-    "${DB}://${NQ}*[?&]password="
-  )
+  # shellcheck source=/dev/null
+  . "$(dirname "${BASH_SOURCE[0]}")/../scripts/_secret_patterns.sh" 2>/dev/null || SECRET_PATTERNS=()
+  if [ "${#SECRET_PATTERNS[@]}" -eq 0 ]; then
+    hi_deny "GUARDRAIL G-S1: the secret scan could not run, so this command is refused. Nothing was detected; Mycelium's own list of patterns could not be read (scripts/_secret_patterns.sh). A scan that cannot look cannot say the command holds no credential. This is a fault in the install, not in the command: it belongs at github.com/haabe/mycelium/issues."
+  fi
 
   # A SCAN THAT CANNOT RUN IS A REFUSAL, NOT A PASS (0.319.1).
   # grep has three answers: 0 a line matched, 1 none did, 2 or more "I could not run this" (a
   # pattern this grep rejects, no grep on PATH). Until 0.319.1 each pattern ran as
   # `printf ... | grep -qE "$PATTERN" 2>/dev/null` inside an `if`, which reads the last two as
-  # one and threw grep's own complaint away. A scan that never ran therefore passed every write,
-  # credentials included, and said nothing. That is the 0.318.3 defect one step on: there the
-  # system grep read the patterns differently, here it does not read them at all.
+  # one and threw grep's own complaint away. A scan that never ran therefore passed everything,
+  # credentials included, and said nothing.
   # Now each pattern's status is read on its own: PIPESTATUS[1] is grep's, whatever printf did
   # and whether or not pipefail is ever set here. `-c` so grep reads the whole content (no closed
   # pipe) and what it prints is a count, or with 2>&1 its own words when it fails.
@@ -131,7 +104,7 @@ if [ -n "$CONTENT" ]; then
     SCAN_RC=$?
     if [ "$SCAN_RC" -ge 2 ]; then
       SCAN_SAID=${SCAN_SAID%%$'\n'*}
-      hi_deny "GUARDRAIL G-S1: the secret scan could not run, so this write is refused. Nothing was detected in the content; the scan itself failed: grep exited $SCAN_RC on pattern $SCAN_N of ${#SECRET_PATTERNS[@]} (${SCAN_SAID:-it said nothing}). A scan that cannot read the content cannot say it holds no credential, and until 0.319.1 a failed scan passed every write. This is a fault in the machine's grep or in Mycelium's patterns, not in what is being written: the person can check that grep -E works on the PATH the hooks run with; if it does, the fault is in Mycelium's patterns and belongs at github.com/haabe/mycelium/issues."
+      hi_deny "GUARDRAIL G-S1: the secret scan could not run, so this command is refused. Nothing was detected in it; the scan itself failed: grep exited $SCAN_RC on pattern $SCAN_N of ${#SECRET_PATTERNS[@]} (${SCAN_SAID:-it said nothing}). A scan that cannot read the command cannot say it holds no credential, and until 0.319.1 a failed scan passed everything. This is a fault in the machine's grep or in Mycelium's patterns, not in the command: the person can check that grep -E works on the PATH the hooks run with; if it does, the fault is in Mycelium's patterns and belongs at github.com/haabe/mycelium/issues."
     fi
     if [ "$SCAN_RC" -eq 0 ]; then
       # Output JSON for Claude with deny decision; the refusal goes to the denial ledger (0.316.0)
@@ -142,7 +115,7 @@ if [ -n "$CONTENT" ]; then
   "hookSpecificOutput": {
     "hookEventName": "PreToolUse",
     "permissionDecision": "deny",
-    "permissionDecisionReason": "GUARDRAIL G-S1 VIOLATION: Potential secret/credential detected in code being written. Secrets must never be hardcoded. Use environment variables or a secrets manager instead. Review the content and remove any API keys, tokens, passwords, or connection strings."
+    "permissionDecisionReason": "GUARDRAIL G-S1 VIOLATION: Potential secret/credential detected in this shell command. A value typed on a command line ends up in logs and transcripts. Read it from an environment variable or a file the command names instead, and if the value is real, tell the person it should be replaced."
   }
 }
 DENY_EOF
@@ -150,6 +123,30 @@ DENY_EOF
     fi
   done
 fi
+
+# ============================================================
+# CHECK 1b: what is committed and what is pushed (v0.323.0)
+# ============================================================
+# scripts/commit_scan.py says why and how. It answers with a deny, with a once-a-session note that
+# no scanner is installed, or with nothing. A helper that cannot run is a refusal, like a scan
+# that cannot run. The note is printed at the very end, after the checks below have passed.
+SCAN_NOTE=""
+case "$CONTENT" in
+  *git*commit*|*git*push*)
+    CS_OUT=$(printf '%s' "$INPUT" | python3 "$(dirname "${BASH_SOURCE[0]}")/../scripts/commit_scan.py" --pre --project-dir "$PROJECT_DIR" 2>/dev/null)
+    CS_RC=$?
+    case "$CS_OUT" in
+      *'"permissionDecision": "deny"'*)
+        # shellcheck source=/dev/null
+        . "$(dirname "${BASH_SOURCE[0]}")/../scripts/_hook_fire_log.sh" 2>/dev/null && mycelium_record_denial
+        printf '%s\n' "$CS_OUT"
+        exit 0;;
+    esac
+    if [ "$CS_RC" -ne 0 ]; then
+      hi_deny "Mycelium commit scan: the secret scan could not run, so this command is refused. Nothing was found; the helper that scans what is committed and pushed exited $CS_RC. A scan that cannot look cannot say there is no secret. Tell the person: they can commit or push from their own terminal."
+    fi
+    SCAN_NOTE="$CS_OUT";;
+esac
 
 # ============================================================
 # CHECK 2: Preflight stamp freshness
@@ -237,4 +234,5 @@ if [ -f "$CORRECTIONS_FILE" ] && [ -f "$STAMP_FILE" ]; then
   fi
 fi
 
+[ -n "$SCAN_NOTE" ] && printf '%s\n' "$SCAN_NOTE"
 exit 0

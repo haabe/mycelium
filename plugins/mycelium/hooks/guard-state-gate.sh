@@ -32,6 +32,7 @@ INPUT=$(cat)
 case "$INPUT" in
   *-ack*|*upstream.json*|*manifest.yml*|*active-execution.json*|*move_file*) ;;
   *settings.json*|*settings.local.json*) ;;
+  *gitleaks*) ;;  # the scanner's ignore list, its config, an inline allow comment (v0.323.0)
   *)
     if [[ "$INPUT" == *.claude* && "$INPUT" =~ (rm|rmdir|mv)[^A-Za-z0-9_] ]]; then :; else exit 0; fi ;;
 esac
