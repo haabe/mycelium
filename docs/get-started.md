@@ -39,8 +39,10 @@ Open the project you want to use it on, then:
 
 It sets up a `.claude/` folder and asks four questions: what the problem is, who has it, what you are
 assuming, and what would show you wrong. From your answers it writes a short brief into the project,
-in `.claude/canvas/purpose.yml` and `.claude/canvas/jobs-to-be-done.yml`. It also asks where the
-product's own files will live, and which of the things you said must never be contradicted.
+in `.claude/canvas/purpose.yml` and `.claude/canvas/jobs-to-be-done.yml`. It starts two more files
+that it keeps from then on, a log of your decisions in `.claude/harness/decision-log.md` and the
+list of what is open in `.claude/diamonds/active.yml`. It also asks where the product's own files
+will live, and which of the things you said must never be contradicted.
 
 You now have, in your repo, a written answer to "who is this for", and the assumption most likely to
 sink it. That is the milestone.

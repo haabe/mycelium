@@ -2,7 +2,91 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-10-11.
+**Last updated**: 2026-10-12.
+
+## v0.322.2 - the pages a newcomer reads say what the plugin does
+
+**2026-10-12. Text only: no hook or script changes behaviour.** On 2026-10-11 three readers with
+no knowledge of Mycelium each compared what `README.md`, `PRIVACY.md`, `docs/get-started.md` and
+`docs/ai-system-card.md` say with what the code of 0.321.0 does. 0.321.1 answered the two
+safeguard findings and three README sentences. This release answers the remaining nineteen. Each
+was checked again against the code of 0.322.1 before any text changed, and all nineteen held.
+
+### Sentences that said something the code does not do
+
+- **opencode does not run the hooks.** `PRIVACY.md` said it did. It runs a small plugin with two
+  checks; the build and release gates, the scope check and the secret scan do not run there.
+- **"Mycelium does not collect, store ..."** now says what is true: nothing leaves your machine,
+  and the hooks keep logs on your own disk.
+- **"No log keeps a command"** now names the one that does by default: `exposure-uses.jsonl` keeps
+  up to 80 characters of a release command, masked.
+- **`MYCELIUM_CROSS_REPO_WATCH`** reads full commit messages, subject and body, not only subjects.
+- **`advisory-ledger.jsonl`** is mostly per-session records of which reminders were present, not
+  only your rulings.
+- **The system card** said the agent reads `CLAUDE.md` first on every task. The plugin has none for
+  the runtime to load; the rules arrive through the session-start hook. It said advisories mute
+  after seven sessions (it is seven days), that `gate.sh` logs each block it issues (its own log
+  has two of its five refusals; the denial ledger has all five), and that the denial ledger is not
+  pruned (it is, with the other activity logs).
+- **`README.md`**, in the maintainer's wording: a repo with existing code is asked about it only
+  from a dozen source files, where the sentence said any repo with code.
+- **`docs/get-started.md`**, in the maintainer's wording: the first run writes four files, where
+  the page named two.
+
+### Things the plugin does that no page said
+
+- A hook reads the session's transcript at the end of **every turn**, to see whether a Mycelium
+  skill ran and whether the reply says what comes next. Only the read at session start was named.
+- The secret scan reads the whole text of **every shell command**, not only what is written to a
+  file, and refuses on a match.
+- Session start adds one to `sessions` in each open `.claude/evals/assumption-tests/*.count.json`.
+  Those are committed files, so a session start can leave a change in `git status`.
+- A session-start check reads git `user.name`, `user.email` and the origin address, in memory, to
+  tell your own account from an outside source.
+- `/mycelium:setup` looks for signs of opencode, among them a folder in your home directory, and
+  can write `opencode.json` and `.opencode/` at the project root. In a non-interactive run with a
+  sign present it does so without asking.
+- `/mycelium:metrics-detect` and the longer interview have the agent look at the git remote, your
+  dependencies and whether certain environment variables are set.
+- **Twelve files under `.claude/state/` had no line in `PRIVACY.md`**, among them
+  `session-checks.json`, which holds the full text of a session's reminders. All are listed now,
+  with what each holds. Two of them, `scale-lock-ack` and `active-execution.json`, are decisions
+  of yours that are not committed, and the page says so.
+- **`docs/environment.md` said "every variable in one place" and named 9 of the 28 `MYCELIUM_*`
+  names the plugin tree uses.** It names all 28 now. Three of the missing ones loosen a stop:
+  `MYCELIUM_GUARD_STATE_EDIT=1` (off-switch files are written without you being asked),
+  `MYCELIUM_NEXT_ACTION_CHECK=off` (no end-of-turn check) and `MYCELIUM_TODAY` (a date in the past
+  makes an expired skip-ack count as current). `PRIVACY.md` names the three and links the page.
+
+### What keeps it true
+
+`tests/python/test_newcomer_pages_name_what_runs.py` fails when a `MYCELIUM_*` name used anywhere
+in the plugin has no line in `docs/environment.md`, or a `.claude/state/` file named in a hook or
+script has no line in `PRIVACY.md`. Three of its four tests fail on the pages of 0.322.1. It
+checks that a name is present. It cannot check that what the page says about it is true.
+
+### Alternatives considered
+
+- **Change the behaviours instead of describing them** (stop counting sessions in committed
+  files, stop reading the git identity). Not done: each does a job, and what the readers objected
+  to was that nobody had said so. A behaviour someone objects to once it is described is a
+  separate decision.
+- **Soften "every variable in one place" instead of making it true.** Made true, and tested, since
+  the sentence is the reason a reader trusts the page.
+- **List the state files in the system card.** The card already sends the reader to `PRIVACY.md`
+  for the full list, so the list has one home.
+
+### Not in this release
+
+- **Nothing about the three loosening switches changed.** A hook cannot tell who set a variable.
+  Claude Code can take environment variables from a project's settings file, and no Mycelium hook
+  asks about a write to that file. Whether one should is open, and whether Claude Code itself asks
+  about such a write was not checked here.
+- **`scale-lock-ack` is still not committed**, unlike the other files that record a decision of
+  yours. Described, not changed.
+- **No second read has been run.** Whether three new readers find these pages complete is the
+  next test, and it has not happened.
+- Nothing here was read by anyone outside the session that wrote it.
 
 ## v0.322.1 - a gate that cannot run refuses the call, in a project that uses Mycelium; session start keeps what a person wrote
 

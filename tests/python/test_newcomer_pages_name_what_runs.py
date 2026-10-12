@@ -1,8 +1,8 @@
 """The pages a newcomer reads name every switch and every state file the plugin has (v0.322.2).
 
 WHAT WAS WRONG. `docs/environment.md` opened with "Every `MYCELIUM_*` environment variable in one
-place" and listed eight, while the hooks and scripts read a dozen more, three of which loosen a
-stop (`MYCELIUM_GUARD_STATE_EDIT`, `MYCELIUM_NEXT_ACTION_CHECK`, `MYCELIUM_TODAY`). `PRIVACY.md`
+place" and named 9 of the 28 `MYCELIUM_*` names the plugin tree uses. Three of the missing ones
+loosen a stop (`MYCELIUM_GUARD_STATE_EDIT`, `MYCELIUM_NEXT_ACTION_CHECK`, `MYCELIUM_TODAY`). `PRIVACY.md`
 lists what the hooks keep under `.claude/state/` and left out the files that are not logs, among
 them `session-checks.json`, which holds the full text of a session's reminders. Both were found by
 a blind read of 0.321.0: three readers compared what the pages say with what the code does.
@@ -77,7 +77,7 @@ def test_the_switches_that_loosen_a_stop_are_said_to():
 
 
 def test_every_state_file_the_hooks_name_is_on_the_privacy_page():
-    """RED BEFORE 0.322.2: `session-checks.json`, `next-item.json` and nine more had no line."""
+    """RED BEFORE 0.322.2: `session-checks.json`, `next-item.json` and ten more had no line."""
     page = PRIVACY.read_text()
     missing = {n: where for n, where in _state_files().items()
                if n not in page and not n.endswith(FIRE_LOG)}
