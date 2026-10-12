@@ -236,8 +236,8 @@ except Exception: print(999)
   RECONCILE=""
   if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check_bvssh_reconcile.py" ]; then
     RECONCILE="${CLAUDE_PLUGIN_ROOT}/scripts/check_bvssh_reconcile.py"
-  elif [ -f "$PROJECT_DIR/.claude/scripts/check_bvssh_reconcile.py" ]; then
-    RECONCILE="$PROJECT_DIR/.claude/scripts/check_bvssh_reconcile.py"
+  elif [ -f "$_MYCELIUM_ROOT/scripts/check_bvssh_reconcile.py" ]; then
+    RECONCILE="$_MYCELIUM_ROOT/scripts/check_bvssh_reconcile.py"
   fi
   if [ -n "$RECONCILE" ]; then
     ORPHANS=$(python3 "$RECONCILE" --project-dir "$PROJECT_DIR" --json 2>/dev/null \
@@ -272,8 +272,8 @@ fi
 CYCLECHK=""
 if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check_cycle_recording.py" ]; then
   CYCLECHK="${CLAUDE_PLUGIN_ROOT}/scripts/check_cycle_recording.py"
-elif [ -f "$PROJECT_DIR/.claude/scripts/check_cycle_recording.py" ]; then
-  CYCLECHK="$PROJECT_DIR/.claude/scripts/check_cycle_recording.py"
+elif [ -f "$_MYCELIUM_ROOT/scripts/check_cycle_recording.py" ]; then
+  CYCLECHK="$_MYCELIUM_ROOT/scripts/check_cycle_recording.py"
 fi
 { over_budget || [ "$_SS_HEAVY" = skip ]; } && { SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}cycle-recording "; CYCLECHK=""; }
 if [ -n "$CYCLECHK" ]; then
@@ -334,8 +334,8 @@ fi
 CLUSTERCHK=""
 if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check_cluster_reconcile.py" ]; then
   CLUSTERCHK="${CLAUDE_PLUGIN_ROOT}/scripts/check_cluster_reconcile.py"
-elif [ -f "$PROJECT_DIR/.claude/scripts/check_cluster_reconcile.py" ]; then
-  CLUSTERCHK="$PROJECT_DIR/.claude/scripts/check_cluster_reconcile.py"
+elif [ -f "$_MYCELIUM_ROOT/scripts/check_cluster_reconcile.py" ]; then
+  CLUSTERCHK="$_MYCELIUM_ROOT/scripts/check_cluster_reconcile.py"
 fi
 { over_budget || [ "$_SS_HEAVY" = skip ]; } && { SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}corrections-to-cluster "; CLUSTERCHK=""; }
 if [ -n "$CLUSTERCHK" ]; then
@@ -369,8 +369,8 @@ fi
 LEAFCHK=""
 if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check_leaf_lifecycle.py" ]; then
   LEAFCHK="${CLAUDE_PLUGIN_ROOT}/scripts/check_leaf_lifecycle.py"
-elif [ -f "$PROJECT_DIR/.claude/scripts/check_leaf_lifecycle.py" ]; then
-  LEAFCHK="$PROJECT_DIR/.claude/scripts/check_leaf_lifecycle.py"
+elif [ -f "$_MYCELIUM_ROOT/scripts/check_leaf_lifecycle.py" ]; then
+  LEAFCHK="$_MYCELIUM_ROOT/scripts/check_leaf_lifecycle.py"
 fi
 if [ -n "$LEAFCHK" ]; then
   UNSCORED=$(python3 "$LEAFCHK" --project-dir "$PROJECT_DIR" --json 2>/dev/null \
@@ -412,8 +412,8 @@ fi
 PUBCHK=""
 if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check_published_records.py" ]; then
   PUBCHK="${CLAUDE_PLUGIN_ROOT}/scripts/check_published_records.py"
-elif [ -f "$PROJECT_DIR/.claude/scripts/check_published_records.py" ]; then
-  PUBCHK="$PROJECT_DIR/.claude/scripts/check_published_records.py"
+elif [ -f "$_MYCELIUM_ROOT/scripts/check_published_records.py" ]; then
+  PUBCHK="$_MYCELIUM_ROOT/scripts/check_published_records.py"
 fi
 { over_budget || [ "$_SS_HEAVY" = skip ]; } && { SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}published-records "; PUBCHK=""; }
 if [ -n "$PUBCHK" ]; then
@@ -460,8 +460,8 @@ fi
 PROSECHK=""
 if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check_stale_prose.py" ]; then
   PROSECHK="${CLAUDE_PLUGIN_ROOT}/scripts/check_stale_prose.py"
-elif [ -f "$PROJECT_DIR/.claude/scripts/check_stale_prose.py" ]; then
-  PROSECHK="$PROJECT_DIR/.claude/scripts/check_stale_prose.py"
+elif [ -f "$_MYCELIUM_ROOT/scripts/check_stale_prose.py" ]; then
+  PROSECHK="$_MYCELIUM_ROOT/scripts/check_stale_prose.py"
 fi
 { over_budget || [ "$_SS_HEAVY" = skip ]; } && { SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}stale-prose "; PROSECHK=""; }
 if [ -n "$PROSECHK" ]; then
@@ -502,8 +502,8 @@ fi
 AUTHCHK=""
 if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check_source_authenticity.py" ]; then
   AUTHCHK="${CLAUDE_PLUGIN_ROOT}/scripts/check_source_authenticity.py"
-elif [ -f "$PROJECT_DIR/.claude/scripts/check_source_authenticity.py" ]; then
-  AUTHCHK="$PROJECT_DIR/.claude/scripts/check_source_authenticity.py"
+elif [ -f "$_MYCELIUM_ROOT/scripts/check_source_authenticity.py" ]; then
+  AUTHCHK="$_MYCELIUM_ROOT/scripts/check_source_authenticity.py"
 fi
 { over_budget || [ "$_SS_HEAVY" = skip ]; } && { SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}source-authenticity "; AUTHCHK=""; }
 if [ -n "$AUTHCHK" ]; then
@@ -537,8 +537,8 @@ fi
 FIDCHK=""
 if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check_source_class_fidelity.py" ]; then
   FIDCHK="${CLAUDE_PLUGIN_ROOT}/scripts/check_source_class_fidelity.py"
-elif [ -f "$PROJECT_DIR/.claude/scripts/check_source_class_fidelity.py" ]; then
-  FIDCHK="$PROJECT_DIR/.claude/scripts/check_source_class_fidelity.py"
+elif [ -f "$_MYCELIUM_ROOT/scripts/check_source_class_fidelity.py" ]; then
+  FIDCHK="$_MYCELIUM_ROOT/scripts/check_source_class_fidelity.py"
 fi
 { over_budget || [ "$_SS_HEAVY" = skip ]; } && { SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}source-class-fidelity "; FIDCHK=""; }
 if [ -n "$FIDCHK" ]; then
@@ -573,8 +573,8 @@ fi
 REPLYCHK=""
 if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check_reply_owed.py" ]; then
   REPLYCHK="${CLAUDE_PLUGIN_ROOT}/scripts/check_reply_owed.py"
-elif [ -f "$PROJECT_DIR/.claude/scripts/check_reply_owed.py" ]; then
-  REPLYCHK="$PROJECT_DIR/.claude/scripts/check_reply_owed.py"
+elif [ -f "$_MYCELIUM_ROOT/scripts/check_reply_owed.py" ]; then
+  REPLYCHK="$_MYCELIUM_ROOT/scripts/check_reply_owed.py"
 fi
 { over_budget || [ "$_SS_HEAVY" = skip ]; } && { SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}reply-owed "; REPLYCHK=""; }
 if [ -n "$REPLYCHK" ]; then
@@ -591,8 +591,8 @@ fi
 READSCHK=""
 if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check_reads_due.py" ]; then
   READSCHK="${CLAUDE_PLUGIN_ROOT}/scripts/check_reads_due.py"
-elif [ -f "$PROJECT_DIR/.claude/scripts/check_reads_due.py" ]; then
-  READSCHK="$PROJECT_DIR/.claude/scripts/check_reads_due.py"
+elif [ -f "$_MYCELIUM_ROOT/scripts/check_reads_due.py" ]; then
+  READSCHK="$_MYCELIUM_ROOT/scripts/check_reads_due.py"
 fi
 { over_budget || [ "$_SS_HEAVY" = skip ]; } && { SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}reads-due "; READSCHK=""; }
 if [ -n "$READSCHK" ]; then
@@ -611,8 +611,8 @@ fi
 DOCCHK=""
 if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check_doctrine_due.py" ]; then
   DOCCHK="${CLAUDE_PLUGIN_ROOT}/scripts/check_doctrine_due.py"
-elif [ -f "$PROJECT_DIR/.claude/scripts/check_doctrine_due.py" ]; then
-  DOCCHK="$PROJECT_DIR/.claude/scripts/check_doctrine_due.py"
+elif [ -f "$_MYCELIUM_ROOT/scripts/check_doctrine_due.py" ]; then
+  DOCCHK="$_MYCELIUM_ROOT/scripts/check_doctrine_due.py"
 fi
 { over_budget || [ "$_SS_HEAVY" = skip ]; } && { SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}doctrine-due "; DOCCHK=""; }
 if [ -n "$DOCCHK" ]; then
@@ -645,8 +645,8 @@ fi
 LANDEDCHK=""
 if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/check_evidence_landed.py" ]; then
   LANDEDCHK="${CLAUDE_PLUGIN_ROOT}/scripts/check_evidence_landed.py"
-elif [ -f "$PROJECT_DIR/.claude/scripts/check_evidence_landed.py" ]; then
-  LANDEDCHK="$PROJECT_DIR/.claude/scripts/check_evidence_landed.py"
+elif [ -f "$_MYCELIUM_ROOT/scripts/check_evidence_landed.py" ]; then
+  LANDEDCHK="$_MYCELIUM_ROOT/scripts/check_evidence_landed.py"
 fi
 if [ -n "$LANDEDCHK" ]; then
   STRANDED=$(python3 "$LANDEDCHK" --project-dir "$PROJECT_DIR" --json 2>/dev/null \
@@ -1055,6 +1055,11 @@ COUNTER_REMINDER=$(python3 -c "
 import json, glob, os, sys
 project_dir = sys.argv[1]
 source = (sys.argv[2] if len(sys.argv) > 2 else '').strip().lower()
+# ONE SESSION START COUNTS ONCE (v0.322.3). Claude Code runs this hook twice per start, --fast and
+# then --async, and until 0.322.3 both passes added one, so a test waiting for ten sessions
+# reported done after five (blind read round 2; replayed 0 -> 1 -> 2). The background pass reads
+# the counter and does not write it. Codex and Cursor run one pass with no flag, which counts.
+counts = (sys.argv[3] if len(sys.argv) > 3 else '') != 'async'
 if source in ('resume', 'clear', 'compact', 'fork'):
     print('')
     raise SystemExit(0)
@@ -1066,10 +1071,11 @@ for f in glob.glob(pattern):
             data = json.load(fh)
         if data.get('closed'):
             continue
-        data['sessions'] = data.get('sessions', 0) + 1
-        with open(f, 'w') as fh:
-            json.dump(data, fh, indent=2)
-        n = data['sessions']
+        if counts:
+            data['sessions'] = data.get('sessions', 0) + 1
+            with open(f, 'w') as fh:
+                json.dump(data, fh, indent=2)
+        n = data.get('sessions', 0)
         target = data.get('target', 10)
         test = data.get('test', os.path.basename(f))
         doc = data.get('doc', '')
@@ -1078,7 +1084,7 @@ for f in glob.glob(pattern):
     except Exception:
         pass
 print(' '.join(msgs))
-" "$PROJECT_DIR" "$SESSION_SOURCE" 2>/dev/null || echo "")
+" "$PROJECT_DIR" "$SESSION_SOURCE" "$_SS_MODE" 2>/dev/null || echo "")
 
 if [ -n "$COUNTER_REMINDER" ]; then
   REMINDERS="${REMINDERS}${COUNTER_REMINDER} "
@@ -1469,11 +1475,10 @@ fi
 
 # The operating contract is delivered by contract-part.sh in parts (v0.310.16); this
 # hook sends only the reminders. The contract file is still resolved here (plugin form
-# via CLAUDE_PLUGIN_ROOT, else legacy .claude/, else in-repo relative to this hook).
+# via CLAUDE_PLUGIN_ROOT, else relative to this hook; never from the project, v0.322.3).
 CONTRACT_FILE=""
 for candidate in \
   "${CLAUDE_PLUGIN_ROOT:-}/engine/agent-operating-contract.md" \
-  "$PROJECT_DIR/.claude/engine/agent-operating-contract.md" \
   "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)/engine/agent-operating-contract.md"; do
   if [ -n "$candidate" ] && [ -f "$candidate" ]; then CONTRACT_FILE="$candidate"; break; fi
 done

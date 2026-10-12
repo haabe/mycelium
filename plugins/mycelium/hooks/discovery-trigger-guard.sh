@@ -41,7 +41,7 @@ HELPER="${CLAUDE_PLUGIN_ROOT}/scripts/discovery_trigger_guard.py"
 if [ ! -f "$HELPER" ]; then
   # Legacy layout fallback, then silent no-op. Fail OPEN: this hook only
   # advises, so a missing helper must not block or nag.
-  HELPER=".claude/scripts/discovery_trigger_guard.py"
+  HELPER="$_MYCELIUM_ROOT/scripts/discovery_trigger_guard.py"  # beside this hook, never the project's folder (v0.322.3)
   [ -f "$HELPER" ] || exit 0
 fi
 

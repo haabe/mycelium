@@ -42,7 +42,7 @@ HELPER="${CLAUDE_PLUGIN_ROOT}/scripts/absence_claim_guard.py"
 if [ ! -f "$HELPER" ]; then
   # Legacy layout fallback, then silent no-op. Fail OPEN: this hook only
   # advises, so a missing helper must not block or nag.
-  HELPER=".claude/scripts/absence_claim_guard.py"
+  HELPER="$_MYCELIUM_ROOT/scripts/absence_claim_guard.py"  # beside this hook, never the project's folder (v0.322.3)
   [ -f "$HELPER" ] || exit 0
 fi
 

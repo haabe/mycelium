@@ -36,7 +36,7 @@ INPUT=$(cat)
 
 HELPER="${CLAUDE_PLUGIN_ROOT}/scripts/ci_signal.py"
 if [ ! -f "$HELPER" ]; then
-  HELPER=".claude/scripts/ci_signal.py"
+  HELPER="$_MYCELIUM_ROOT/scripts/ci_signal.py"  # beside this hook, never the project's folder (v0.322.3)
   [ -f "$HELPER" ] || exit 0
 fi
 
