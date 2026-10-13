@@ -24,7 +24,7 @@ This keeps hooks dependency-free (no PyYAML at runtime) while preserving canvas 
 
 | File | Format | Written by | Read by | Purpose |
 |---|---|---|---|---|
-| `active-execution.json` | JSON | `/diamond-progress` (L4 only) | `scope-gate.sh` (PreToolUse) | Declares `in_scope_paths` for the current L4 delivery work |
+| `active-execution.json` | JSON | nothing Mycelium ships (by hand only) | `scope-gate.sh` (PreToolUse) | Declares `in_scope_paths` for the scope check |
 | `change-log.jsonl` | JSONL | `change-log.sh` (PostToolUse) | Manual review + `stop-check.sh` | Append-only audit trail of code modifications |
 | `diamond-state-audit.jsonl` | JSONL | `diamond-state-audit.sh` (PostToolUse) | `stop-check.sh` | Append-only log of direct edits to diamond state files |
 | `preflight-stamp` | Text | `preflight.sh` | `gate.sh` | Tracks corrections.md read freshness (TTL 4 hours) |
@@ -37,7 +37,7 @@ Exceptions: observability-only hooks (change-log, diamond-state-audit) may fail 
 
 ## When State Gets Cleared
 
-- `active-execution.yml` is overwritten by each `/diamond-progress` call when entering L4
+- `active-execution.json` is written by nothing Mycelium ships. Until 0.323.2 this line said `/diamond-progress` overwrites it when entering L4, which no version of that skill did
 - `change-log.jsonl` and `diamond-state-audit.jsonl` are append-only; rotate manually at 100MB or drop at session boundaries
 - `preflight-stamp` is regenerated every 4 hours when corrections.md is re-read
 

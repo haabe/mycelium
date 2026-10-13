@@ -2,7 +2,7 @@
 
 **Audience**: builders who shipped something the agent built, and nothing happened. Practitioners.
 **Time to read**: 5 min.
-**Last updated**: 2026-09-06.
+**Last updated**: 2026-10-13.
 
 It has been three weeks. The launch post got eleven upvotes and two comments, one of them yours. You have rewritten the landing page four times and you still cannot say in one sentence what it is for. The thing works. That was never the problem.
 
@@ -14,7 +14,7 @@ I do not think anyone in those posts believed asking was optional. I have been o
 
 I put four questions in the agent's way. What is the problem. Who has it. What are you assuming. What would show you wrong. They come up the first time the agent reaches for a new source file in a repo where nothing has been written down, and your answers go into the repo as a file the agent is then held to. Ten minutes, once per project. After that it is quiet.
 
-That is the whole mechanism, and it is worth being plain about what it is not. It will not stop a running agent from rewriting your service. There is a scope check that holds writes outside the paths a cycle said it would touch, and that is as far as it goes. People on the same forums have built better leashes than that, and if a leash is what you came for, go and find theirs.
+That is the whole mechanism, and it is worth being plain about what it is not. It will not stop a running agent from rewriting your service. People on the same forums have built better leashes than that, and if a leash is what you came for, go and find theirs.
 
 ## The one time I know it worked
 

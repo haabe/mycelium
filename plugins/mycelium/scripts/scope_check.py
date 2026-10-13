@@ -114,13 +114,13 @@ def _load_state_or_exit(state_file: str) -> dict:
         emit_allow()  # no active execution
     except json.JSONDecodeError as exc:
         emit_deny(f"Mycelium scope-gate: active-execution.json is corrupt: {exc}. "
-                  "Delete the file or run /diamond-progress to recreate it.")
+                  "Repair or delete the file; nothing Mycelium ships writes it.")
     except OSError as exc:
         emit_deny(f"Mycelium scope-gate: unexpected error reading state: {exc}. "
                   "Delete .claude/state/active-execution.json to disable scope enforcement.")
     if not isinstance(state, dict):
         emit_deny("Mycelium scope-gate: active-execution.json has wrong shape "
-                  "(expected object). Run /diamond-progress to recreate.")
+                  "(expected object). Repair or delete the file.")
     return state
 
 
@@ -141,15 +141,14 @@ def _judge(rel: str, in_scope: list, out_of_scope: list, diamond_id: str, via: s
         if _glob_match(rel, pattern):
             emit_deny(f"GUARDRAIL SCOPE VIOLATION: File path '{rel}' ({via}) matches "
                       f"out_of_scope_paths in active execution plan for diamond {diamond_id} "
-                      f"(pattern: {pattern}). Review .claude/state/active-execution.json "
-                      "or run /diamond-progress.")
+                      f"(pattern: {pattern}). Review .claude/state/active-execution.json.")
     if not in_scope:
         return
     if any(_glob_match(rel, pattern) for pattern in in_scope):
         return
     emit_deny(f"GUARDRAIL SCOPE VIOLATION: File path '{rel}' ({via}) is not in in_scope_paths "
               f"for active execution plan (diamond {diamond_id}). Review "
-              ".claude/state/active-execution.json or run /diamond-progress.")
+              ".claude/state/active-execution.json.")
 
 
 @hi.fail_closed("scope-gate")

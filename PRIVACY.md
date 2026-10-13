@@ -1,6 +1,6 @@
 # Privacy Policy
 
-**Last updated: 2026-10-12**
+**Last updated: 2026-10-13**
 
 Mycelium is a local plugin for AI coding agents (Claude Code, and also Codex, Cursor and opencode). It runs entirely inside your own agent, on your own machine. It has no servers, no accounts, and no data-processing backend.
 
@@ -53,7 +53,7 @@ The same folder holds a few small files that are not logs. They are how a hook r
 | `nudge-seen.jsonl`, `canvas-check-skipped`, `exposure-line-said`, `conditional-snoozes-said`, `stop-check-counts-shown`, `exposure-last` | Markers that keep a reminder to once per session: a session id with a date, a file name or a count. `exposure-last` is one word, `ready` or `not-ready`. |
 | `hooks-alive`, `log-prune-last`, `skip-ack-legacy-since` | Empty, or one date. What is read is how old the file is. |
 | `scale-lock-ack` | One line for each scale lock you chose to open past, in your own words. A decision of yours, so it is kept in git with the four named below (from 0.322.2; until then it was ignored, which was an oversight). |
-| `active-execution.json` | The paths a delivery cycle said it would touch, which the scope check holds writes to. Working state for that one cycle, and not committed. |
+| `active-execution.json` | Paths the scope check would hold the agent's writes to. Nothing Mycelium ships writes this file, so it is there only if you put it there yourself. Not committed. |
 
 `.claude/state/bash-guard/` holds a copy of `.claude/diamonds/active.yml` from before the last shell command, replaced each time, so that a shell edit to it can be judged. Since 0.321.1 it also holds, while a shell command runs, a copy of each file that switches one of Mycelium's stops off (the skip and lock files under `.claude/state/`, `.claude/manifest.yml`, and since 0.323.0 the secret scanner's `.gitleaksignore` and `.gitleaks.toml`), so that a change you were not asked about can be put back; the copies are removed when the command ends. Beside the copies it keeps a time stamp, and for each running command a small index: which of those files existed, and which the command was seen to write. Since 0.323.0 the index also notes where the repository's commit pointer was, so that commits the command makes can be scanned afterwards. Since 0.322.6 the index also notes which Mycelium switches Claude Code's settings files carried before the command (the two in the project, `.claude/settings.json` and `.claude/settings.local.json`, and the one in your home folder): the names and values of those switches only. A settings file can hold keys of yours, and no copy of one is made.
 
