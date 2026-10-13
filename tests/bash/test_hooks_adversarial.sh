@@ -166,13 +166,17 @@ assert_eq "$(run autonomous-evidence-guard.sh "$A" "$(w "$C" '- id: o1\n  source
 # ================================================================ gate.sh (secrets)
 # Since 0.323.0 gate.sh reads a shell command's text for a key and scans what a commit or push
 # would take (tests/python/test_secrets_are_stopped_at_the_commit.py); a file write is not scanned.
+# A made-up key in the shape of an AWS one, put together here so that no secret scanner sees a
+# credential in this file. Until 0.323.1 it stood here whole, and the commit scan 0.323.0
+# added refused any commit that touched these lines.
+FAKE_KEY="AKIA""ABCDEFGHIJKLMNOP"
 K="$TMP/gate"; mkdir -p "$K/.claude/memory" "$K/.claude/canvas" "$K/src"; printf '# c\n' > "$K/.claude/memory/corrections.md"
 assert_eq "$(run gate.sh "$K" "$(w "$K/src/a.py" 'API_KEY = \"abcdefghijklmnopqrstuvwxyz0123\"')")" "ALLOW(rc=0)" "gate control: a key-shaped write is not scanned since 0.323.0 (the commit is)"
 assert_eq "$(run gate.sh "$K" "$(w "$K/config.py" 'API_KEY = \"abcdefghijklmnopqrstuvwxyz0123\"')")" "ALLOW(rc=0)" "K1 a key-shaped write outside src is not scanned either"
-assert_eq "$(run gate.sh "$K" "$(w "$K/Src/a.py" 'AKIAABCDEFGHIJKLMNOP')")" "ALLOW(rc=0)" "K1 Src/ capitalised: not scanned"
-assert_eq "$(run gate.sh "$K" '{"tool_name":"MultiEdit","tool_input":{"file_path":"'"$K"'/src/a.py","edits":[{"old_string":"x","new_string":"AKIAABCDEFGHIJKLMNOP"}]}}')" "ALLOW(rc=0)" "K3 MultiEdit edits are not scanned"
-assert_eq "$(run gate.sh "$K" "$(b "echo AKIAABCDEFGHIJKLMNOP > src/a.py")")" BLOCK "K4 secret via Bash"
-assert_eq "$(run gate.sh "$K" '{"tool_name":"Write","tool_input":{"file_path":"'"$K"'/src/a.py","content":"AKIAABCDEFGHIJKLMNOP \ud800"}}')" BLOCK "K6 lone surrogate does not empty the scan"
+assert_eq "$(run gate.sh "$K" "$(w "$K/Src/a.py" "$FAKE_KEY")")" "ALLOW(rc=0)" "K1 Src/ capitalised: not scanned"
+assert_eq "$(run gate.sh "$K" '{"tool_name":"MultiEdit","tool_input":{"file_path":"'"$K"'/src/a.py","edits":[{"old_string":"x","new_string":"'"$FAKE_KEY"'"}]}}')" "ALLOW(rc=0)" "K3 MultiEdit edits are not scanned"
+assert_eq "$(run gate.sh "$K" "$(b "echo $FAKE_KEY > src/a.py")")" BLOCK "K4 secret via Bash"
+assert_eq "$(run gate.sh "$K" '{"tool_name":"Write","tool_input":{"file_path":"'"$K"'/src/a.py","content":"hello \ud800"}}')" BLOCK "K6 a write the gate cannot read (a lone surrogate) is refused"
 assert_eq "$(run gate.sh "$K" "$(w "$K/src/a.py" 'x = 1')")" "ALLOW(rc=0)" "gate: clean write allows"
 
 report

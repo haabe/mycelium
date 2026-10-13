@@ -20,18 +20,23 @@ import os
 import subprocess
 from pathlib import Path
 
+# ONE BLOCK, USED BOTH WAYS (0.323.1): it is the body of the hook this script writes, and it is
+# what the script prints for a hook that is already there. Until 0.323.1 the printed text was a
+# different line, `command -v gitleaks ... && gitleaks ... || exit 1`, which exits 1 when
+# gitleaks is NOT installed. Pasted into a team's hook it refused every commit on a machine
+# without the scanner, where the written hook says the commit was not scanned and lets it
+# through. It had never been run with no scanner on the path.
+SCAN = """if command -v gitleaks >/dev/null 2>&1; then
+  gitleaks git --pre-commit --staged --redact --no-banner || exit 1
+else
+  echo "Mycelium: gitleaks is not installed, so this commit was not scanned for secrets." >&2
+  echo "Install it: https://github.com/gitleaks/gitleaks" >&2
+fi
+"""
 HOOK = """#!/bin/sh
 # Installed by Mycelium (/mycelium:setup). Scans what is staged for secrets before a commit.
 # Git hooks are not cloned: run /mycelium:setup again in a fresh clone to install it there.
-if command -v gitleaks >/dev/null 2>&1; then
-  exec gitleaks git --pre-commit --staged --redact --no-banner
-fi
-echo "Mycelium: gitleaks is not installed, so this commit was not scanned for secrets." >&2
-echo "Install it: https://github.com/gitleaks/gitleaks" >&2
-exit 0
-"""
-TO_ADD = ("  command -v gitleaks >/dev/null 2>&1 && "
-          "gitleaks git --pre-commit --staged --redact --no-banner || exit 1")
+""" + SCAN
 
 
 def hook_path(project_dir: str) -> Path | None:
@@ -59,8 +64,8 @@ def main(argv: list[str] | None = None) -> int:
         if "gitleaks" in path.read_text(encoding="utf-8", errors="replace"):
             print(f"{path} already runs gitleaks. Nothing to do.")
             return 0
-        print(f"{path} exists and is yours; it was not changed. To scan for secrets, add this "
-              f"line to it before its own checks:\n{TO_ADD}")
+        print(f"{path} exists and is yours; it was not changed. To scan for secrets, add these "
+              f"lines to it before its own checks:\n{SCAN}")
         return 1
     if args.check:
         print(f"No pre-commit hook yet. This would write {path}.")

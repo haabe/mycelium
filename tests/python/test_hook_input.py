@@ -208,13 +208,13 @@ def test_guard_state_write_asks_the_human(tmp_path, capsys, monkeypatch):
 def test_cli_prints_targets_then_content(tmp_path, monkeypatch, capsys):
     m = _m()
     payload = {"tool_name": "MultiEdit", "tool_input": {"file_path": str(tmp_path / "a.py"),
-               "edits": [{"old_string": "x", "new_string": "AKIAABCDEFGHIJKLMNOP"}]}}
+               "edits": [{"old_string": "x", "new_string": "the new text of the edit"}]}}
     monkeypatch.setattr(sys, "stdin", io.StringIO(json.dumps(payload)))
     monkeypatch.setattr(sys, "argv", ["_hook_input.py", "--project-dir", str(tmp_path)])
     assert m.cli() == 0
     out = capsys.readouterr().out.split("\n")
     assert out[0] == "MultiEdit" and out[1].startswith("a.py\t0\t0")
-    assert "AKIAABCDEFGHIJKLMNOP" in "\n".join(out)
+    assert "the new text of the edit" in "\n".join(out)
 
 
 # --- discovery state -------------------------------------------------------

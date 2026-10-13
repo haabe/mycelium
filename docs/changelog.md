@@ -2,7 +2,65 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-10-12.
+**Last updated**: 2026-10-13.
+
+## v0.323.1 - Mycelium's own tests pass its own commit scan
+
+**2026-10-13.** Two faults in the day-old commit scan, both found by running it on Mycelium
+itself.
+
+### What was wrong
+
+- **0.323.0 was never run over Mycelium's own tree.** Four test files held made-up values in the
+  shape of real credentials. gitleaks flags eight such lines, so a commit that touched one was
+  refused: for the agent, and with the git hook for a person. The 0.323.0 release commit added
+  two of those lines and passed only because the session that made it still ran the older hooks.
+- **The line setup prints for a clone that already has a pre-commit hook locked people out.**
+  It exited 1 when gitleaks was not installed. **Shown by running it** with no scanner on the
+  path: every commit refused. The hook setup writes itself does the opposite there: it says the
+  commit was not scanned and lets it through.
+
+### What changed
+
+- **One block, written and printed.** The hook `install_git_secret_hook.py` writes and the
+  lines it prints for an existing hook are now the same text. With gitleaks it scans and stops
+  on a finding; without it, it says so and the commit goes on.
+- **The test values no longer look like credentials in the source.** Where a test is about a
+  secret, the value is put together from two halves when the test runs. Where the value was
+  incidental, it is plain text. One case is renamed for what it checks: a write the gate cannot
+  read is refused.
+- **A test asks Mycelium's own commit scan about every tracked file.** It stages them all in a
+  throwaway repository and expects the scan to pass.
+
+### How it was checked
+
+- The new scanner test was red on the eight lines before the fix and is green after.
+- Each edited test still goes red when the behaviour it checks is switched off, tried in a
+  scratch copy, one behaviour at a time.
+- The printed lines are run three ways: no scanner, a scanner that finds nothing, a scanner
+  that finds something.
+
+### Considered and not done
+
+- **An ignore file for the test values.** It is a way past the scan, and the next real finding
+  in those files would hide behind it.
+- **Retiring the flagged tests.** Each one was shown to still check a behaviour that exists.
+
+### Not shown
+
+- CI has no gitleaks, so the scanner test is skipped there and runs on a developer's machine.
+- Linux and Windows.
+
+### Left as it is
+
+- Without gitleaks, Mycelium's own short list does the scanning. Run by hand over the tracked
+  files, it matches one line: the key a holdout eval scenario hands the agent on purpose
+  (`.claude/evals/scenarios/delivery/security-awareness.yml`). A commit that changes that line
+  on a machine without gitleaks is refused. The scenario was not changed.
+
+### If you pasted the 0.323.0 line into your own hook
+
+Replace it. Run `install_git_secret_hook.py` again and it prints the new lines.
 
 ## v0.323.0 - secrets are stopped at the commit and the push
 

@@ -537,7 +537,7 @@ def test_the_git_hook_is_written_once_and_never_over_someone_elses(project, tmp_
     hook.write_text("#!/bin/sh\nnpm test\n")
     assert ig.main(["--project-dir", str(project)]) == 1
     assert hook.read_text() == "#!/bin/sh\nnpm test\n", "the person's own hook was changed"
-    assert "add this line" in capsys.readouterr().out
+    assert "add these lines" in capsys.readouterr().out
     assert ig.main(["--project-dir", str(tmp_path / "nowhere")]) == 2
 
 
@@ -548,6 +548,40 @@ def test_the_installed_hook_runs_and_does_not_block_without_a_scanner(project):
                           text=True, capture_output=True, env={"PATH": "/usr/bin:/bin"},
                           check=False)
     assert done.returncode == 0 and "not scanned" in done.stderr
+
+
+def _their_hook_with_the_printed_lines(tmp_path, path_env):
+    """The printed lines pasted at the top of a person's own hook, then that hook's own work."""
+    import install_git_secret_hook as ig
+    hook = tmp_path / "their-hook.sh"
+    hook.write_text("#!/bin/sh\n" + ig.SCAN + "echo their own checks ran\n")
+    return subprocess.run(["sh", str(hook)], cwd=tmp_path, text=True, capture_output=True,
+                          env={"PATH": path_env}, check=False)
+
+
+def test_the_printed_lines_do_not_refuse_a_commit_without_a_scanner(tmp_path):
+    """Until 0.323.1 the printed line exited 1 when gitleaks was not installed, so a hook that
+    carried it refused every commit on a machine without the scanner (dogfood 2026-10-13)."""
+    done = _their_hook_with_the_printed_lines(tmp_path, "/usr/bin:/bin")
+    assert done.returncode == 0, done.stderr
+    assert "not scanned" in done.stderr and "their own checks ran" in done.stdout
+
+
+@pytest.mark.parametrize(("scanner_exit", "goes_on"), [(0, True), (1, False)])
+def test_the_printed_lines_stop_on_a_finding_and_go_on_without_one(tmp_path, scanner_exit, goes_on):
+    bindir = tmp_path / "bin"
+    bindir.mkdir()
+    scanner = bindir / "gitleaks"
+    scanner.write_text(f"#!/bin/sh\nexit {scanner_exit}\n")
+    scanner.chmod(0o755)
+    done = _their_hook_with_the_printed_lines(tmp_path, f"{bindir}:/usr/bin:/bin")
+    assert (done.returncode == 0) is goes_on
+    assert ("their own checks ran" in done.stdout) is goes_on
+
+
+def test_the_written_hook_and_the_printed_lines_are_one_block():
+    import install_git_secret_hook as ig
+    assert ig.HOOK.endswith(ig.SCAN)
 
 
 def test_the_readme_says_where_a_key_is_stopped():
