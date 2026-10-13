@@ -4,6 +4,108 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-13.
 
+## v0.324.0 - the scope hold is switched on by the delivery cycle that needs it
+
+**2026-10-13.** The hold on where the agent may write during delivery now has a switch: the
+delivery cycle names its folders on its own record, and the person is asked. Until this release
+nothing Mycelium shipped switched it on.
+
+### What was wrong
+
+- **The hold was never on in a plugin install.** `hooks/scope-gate.sh` read its folders from
+  `.claude/state/active-execution.json`, and no skill, script or hook wrote that file. A blind
+  reader of the installed plugin found it; 0.323.2 made the pages say so.
+
+### What changed
+
+- **A delivery cycle names its folders when it commits to build.** `in_scope_paths` on the L4 in
+  `.claude/diamonds/active.yml`: folders, files or globs. The agent proposes them; the write is
+  put to the person. An empty list means "no hold for this one", and is asked about the same way.
+- **A commitment to build with nothing said is refused.**
+- **While the cycle is open, a write outside its folders is put to the person**, with the file
+  named. A yes lets that one write through. Where nobody can be asked (a permission mode that
+  asks no one, or Codex) it is refused, and the refusal says the two ways a person can allow it.
+  Until now an outside write was refused outright.
+- **A write that changes, empties or removes the folders is put to the person too.**
+- **The hold ends when the cycle's close is recorded.** Nothing has to be taken away. A close
+  that moves the cycle to the completed list with its folders intact is not asked about.
+- **A shell command that changes the folders is undone, and the person is told.** A script whose
+  command line names no file could delete the record or take the folders off it, and nothing was
+  said. Found while building this, by trying it. `bash-state-guard.sh` now keeps a copy of the
+  diamonds file per command, and puts the whole file back if the command changed what a delivery
+  cycle names (maintainer's ruling: "Put it back, tell me"). Anything else that command changed
+  in the file is undone with it. A change that came through the edit tools while the command ran
+  is kept.
+- **Session start names a delivery cycle that committed with nothing said**, and an old state
+  file. Both are in the advisory ledger.
+- **`skills/diamond-progress`, the diamonds schema, the rules page and the operating contract**
+  carry the field and whose it is.
+- **The pages describe the hold again**, with its limits: the system card, the context surface,
+  the privacy page, the hooks reference, both state READMEs.
+- **Three things a reader of the release candidate found by reading.** The hooks reference
+  gave the scope hook three of its triggers (it also runs on notebook edits, shell commands
+  and the filesystem tools) and a 5 second timeout (it is 30). And the hook's refusal for a
+  missing helper said to delete the old state file "to disable scope enforcement", which
+  from this release would disable nothing. All three corrected; the message has a test.
+
+### What was removed
+
+- **`.claude/state/active-execution.json` is no longer read.** If you wrote one by hand, the
+  agent's product writes are refused while it exists, and the refusal says what to do: move its
+  folders to the delivery cycle's `in_scope_paths` and delete the file. It was the maintainer's
+  choice to refuse loudly, so that a hold someone set by hand is not dropped in silence.
+- **`out_of_scope_paths`**, the old file's list of exceptions inside the allowed paths, has no
+  counterpart. The record carries one list of where a cycle may write.
+- **The list nested under `spec`** in the old file is gone with the file.
+- **The `diamond_id` label in `change-log.jsonl` and `read-log.jsonl`**, which was read from the
+  old file. No row ever carried it, because nothing wrote the file.
+
+### What did not change
+
+- **A write under `.claude/` is never held.**
+- **A cycle that had committed to build before this release is not held.** It names nothing;
+  session start says so and offers the two choices. Nothing is added to it unasked.
+- **`docs/nobody-used-it.md` still does not mention the hold.** That page is the maintainer's
+  and the wording is his.
+
+### Considered and not done
+
+- **Refusing an outside write, as the old gate did.** The maintainer chose asking. Where
+  nobody can be asked it is still refused.
+- **A file beside the record that says the hold is on.** That is the design that failed: a
+  second place to keep in step, written by nothing.
+- **Reading the old state file for one more release.** It would keep two sources of the same
+  list alive.
+- **Telling the person about a shell change to the folders and leaving the record.** The hold
+  would stay off until someone acted, and in a session nobody watches that is a long time.
+
+### Not shown
+
+- **Whether any builder wants the hold.** Nobody outside the project has asked for it.
+- **An independent attempt to break it.** One was started before release and did not run;
+  the maintainer chose to release without it.
+- **A real delivery cycle run under it.** What is shown is a replay: fourteen writes that
+  follow one cycle from the write that names its folders to the write after its close, through
+  the shipped hook, plus the cases beside them. The same sheet was first read against a scratch
+  copy by someone who did not write it.
+- **A command that writes files itself** (a scaffolder, a clone) names no target the hold can
+  read. Unchanged, and stated on the pages.
+- **The put-back is a check on drift, not a sandbox.** A process the command leaves running, or
+  a script written to rewrite Mycelium's own copy too, gets past it.
+- **Time.** About 25 ms where no folder is named, 80 ms with a hold on in a small project, 280
+  ms on a 6,000-line diamonds file; one Mac, medians of 20.
+
+### Tests
+
+- `tests/python/test_the_scope_hold_through_its_hook.py` (37): the fourteen steps and the cases
+  beside them through the hook, session start, the ledger, and the pages held to the plugin both
+  ways. It replaces the 0.323.2 test that held the pages to "not switched on", which was built
+  to fail on this change.
+- `tests/python/test_scope_check.py` (59): rewritten for the record. Each earlier case was
+  settled from the decision behind the change; the file's header says what became of each.
+- `tests/python/test_the_scope_hold_survives_a_shell_command.py` (27): the put-back.
+- `tests/bash/test_hooks_adversarial.sh`: each bypass of 2026-09-11 replayed against the record.
+
 ## v0.323.2 - the pages stop describing a scope check nothing switches on
 
 **2026-10-13.** Words only. Several pages described a hold on the agent's writes that has never

@@ -131,11 +131,15 @@ def test_a_hook_does_not_run_a_helper_the_project_carries(tmp_path, hook, helper
     this one are the ones that failed on 0.322.2."""
     project = _project(tmp_path)
     planted = _plant(project, f".claude/scripts/{helper}")
-    # What switches two of these hooks on at all; harmless for the rest.
-    (project / ".claude" / "state" / "active-execution.json").write_text(
-        json.dumps({"in_scope_paths": ["src/"]}))
+    # What switches two of these hooks on at all; harmless for the rest. Since 0.324.0 the
+    # scope hold reads the delivery cycle's record, and that read is where its helper imports
+    # scale_locks, settings_switches and PyYAML, so the record names a folder here.
     (project / ".claude" / "diamonds" / "active.yml").write_text(
-        "autonomous: true\nactive_diamonds: []\n")
+        "autonomous: true\nactive_diamonds:\n- id: l4-x\n  scale: L4\n  decisions:\n"
+        "  - {decision: set_target, on: '2026-10-01'}\n"
+        "  - {decision: start_experiment, on: '2026-10-02'}\n"
+        "  - {decision: commit_to_build, on: '2026-10-02'}\n"
+        "  in_scope_paths: [lib/]\n")
     _run(project, hook, {**payload, "cwd": str(project), "session_id": "s1"})
     assert not _ran(planted), f"{hook} ran {helper} from the project's own folder"
 

@@ -36,21 +36,45 @@ case_insensitive() { [ -e "$(printf '%s' "$1" | tr '[:lower:]' '[:upper:]')" ] &
 # 2026-10-10). An EMPTY canvas is the realistic state right after setup, before any discovery.
 
 # ================================================================ scope-gate
-P="$TMP/scope"; mkdir -p "$P/.claude/state" "$P/.claude/canvas" "$P/src/xyz" "$P/src/other" "$P/src/xyz/legacy"
-printf '{"schema_version":1,"diamond_id":"L4-x","phase":"deliver","in_scope_paths":["src/xyz/**"],"out_of_scope_paths":["src/xyz/legacy/**"]}' > "$P/.claude/state/active-execution.json"
-assert_eq "$(run scope-gate.sh "$P" "$(w "$P/src/other/a.py" x)")" BLOCK "scope control: out of scope blocks"
-assert_eq "$(run scope-gate.sh "$P" "$(w "$P/src/xyz/b.py" x)")" "ALLOW(rc=0)" "scope control: in scope allows"
-assert_eq "$(run scope-gate.sh "$P" "$(w "$P/src/xyz/../other/a.py" x)")" BLOCK "S1 dotdot out of scope"
-assert_eq "$(run scope-gate.sh "$P" "$(w "src/xyz/foo/../legacy/z.py" x)")" BLOCK "S1 dotdot into out_of_scope"
+# Since 0.324.0 the folders are read from the delivery cycle's own record, and a write outside
+# them is put to the person (ASK) where it used to be refused. Each bypass of 2026-09-11 is
+# replayed against the record. Settled case by case from that decision:
+#   - S1 to S3 and S5 to S7 now expect ASK: the same write, reached the same way, must still be
+#     caught, and "caught" now means asked.
+#   - S4 stays BLOCK: a call the gate cannot read is refused, whatever the hold says.
+#   - "S1 dotdot into out_of_scope" is retired with `out_of_scope_paths`: the record carries one
+#     list of where a cycle may write, and has no list of exceptions inside it.
+#   - S8 stays: the old state file is still one of the files that are the person's to write.
+#   - S9 to S12 are new: where nobody can be asked the write is refused; an old state file
+#     refuses product writes; naming the folders asks; committing with nothing said is refused.
+P="$TMP/scope"; mkdir -p "$P/.claude/state" "$P/.claude/canvas" "$P/.claude/diamonds" "$P/src/xyz" "$P/src/other"
+scope_record() {  # $1 project, $2 the in_scope_paths line or empty
+  printf 'active_diamonds:\n- id: l4-x\n  scale: L4\n  decisions:\n  - {decision: set_target, on: 2026-10-01}\n  - {decision: start_experiment, on: 2026-10-02}\n  - {decision: commit_to_build, on: 2026-10-02}\n%s' "$2" > "$1/.claude/diamonds/active.yml"
+}
+scope_record "$P" '  in_scope_paths: [src/xyz/**]
+'
+assert_eq "$(run scope-gate.sh "$P" "$(w "$P/src/other/a.py" x)")" ASK "scope control: outside the named folders asks"
+assert_eq "$(run scope-gate.sh "$P" "$(w "$P/src/xyz/b.py" x)")" "ALLOW(rc=0)" "scope control: inside allows"
+assert_eq "$(run scope-gate.sh "$P" "$(w "$P/src/xyz/../other/a.py" x)")" ASK "S1 dotdot out of the named folders"
 ln -s "$P/src/other" "$P/src/xyz/link"
-assert_eq "$(run scope-gate.sh "$P" "$(w "$P/src/xyz/link/a.py" x)")" BLOCK "S2 symlink out of scope"
-assert_eq "$(run scope-gate.sh "$P" '{"tool_name":"Write","tool_input":{"file":"'"$P"'/src/other/a.py","content":"x"}}')" BLOCK "S3 file key"
+assert_eq "$(run scope-gate.sh "$P" "$(w "$P/src/xyz/link/a.py" x)")" ASK "S2 symlink out of the named folders"
+assert_eq "$(run scope-gate.sh "$P" '{"tool_name":"Write","tool_input":{"file":"'"$P"'/src/other/a.py","content":"x"}}')" ASK "S3 file key"
 assert_eq "$(run scope-gate.sh "$P" '{"tool_name":"Write","tool_input":{"file_path":["'"$P"'/src/other/a.py"],"content":"x"}}')" BLOCK "S4 list path denies, no crash-allow"
-assert_eq "$(run scope-gate.sh "$P" "$(b "echo x > $P/src/other/a.py")")" BLOCK "S5 Bash redirect out of scope"
-assert_eq "$(run scope-gate.sh "$P" '{"tool_name":"mcp__filesystem__write_file","tool_input":{"path":"'"$P"'/src/other/a.py","content":"x"}}')" BLOCK "S6 mcp write_file"
-assert_eq "$(run scope-gate.sh "$P" '{"tool_name":"NotebookEdit","tool_input":{"notebook_path":"'"$P"'/src/other/a.ipynb","new_source":"x"}}')" BLOCK "S7 NotebookEdit"
-assert_eq "$(run scope-gate.sh "$P" "$(w "$P/.claude/state/active-execution.json" "{}")")" ASK "S8 blanking the plan asks the human"
-assert_eq "$(run scope-gate.sh "$P" "$(b "rm .claude/state/active-execution.json")")" ASK "S8 rm the plan via Bash asks the human"
+assert_eq "$(run scope-gate.sh "$P" "$(b "echo x > $P/src/other/a.py")")" ASK "S5 Bash redirect out of the named folders"
+assert_eq "$(run scope-gate.sh "$P" '{"tool_name":"mcp__filesystem__write_file","tool_input":{"path":"'"$P"'/src/other/a.py","content":"x"}}')" ASK "S6 mcp write_file"
+assert_eq "$(run scope-gate.sh "$P" '{"tool_name":"NotebookEdit","tool_input":{"notebook_path":"'"$P"'/src/other/a.ipynb","new_source":"x"}}')" ASK "S7 NotebookEdit"
+assert_eq "$(run scope-gate.sh "$P" "$(w "$P/.claude/state/active-execution.json" "{}")")" ASK "S8 writing the old state file asks the human"
+assert_eq "$(run scope-gate.sh "$P" "$(b "rm .claude/state/active-execution.json")")" ASK "S8 rm the old state file via Bash asks the human"
+assert_eq "$(run scope-gate.sh "$P" "$(w "$P/src/other/a.py" x)" MYCELIUM_RUNTIME=codex)" BLOCK "S9 a runtime that cannot ask refuses the outside write"
+assert_eq "$(run scope-gate.sh "$P" "$(e "$P/.claude/diamonds/active.yml" "in_scope_paths: [src/xyz/**]" "in_scope_paths: [src/**]")")" ASK "S11 widening the named folders asks the human"
+O="$TMP/scope-old"; mkdir -p "$O/.claude/state" "$O/.claude/canvas" "$O/src"
+printf '{"in_scope_paths":["src/**"]}' > "$O/.claude/state/active-execution.json"
+assert_eq "$(run scope-gate.sh "$O" "$(w "$O/src/a.py" x)")" BLOCK "S10 an old state file refuses product writes until it is moved"
+assert_eq "$(run scope-gate.sh "$O" "$(w "$O/.claude/canvas/purpose.yml" x)")" "ALLOW(rc=0)" "S10 an old state file does not hold .claude/"
+N="$TMP/scope-new"; mkdir -p "$N/.claude/canvas" "$N/.claude/diamonds" "$N/src"
+printf 'active_diamonds:\n- id: l4-x\n  scale: L4\n  decisions:\n  - {decision: set_target, on: 2026-10-01}\n' > "$N/.claude/diamonds/active.yml"
+assert_eq "$(run scope-gate.sh "$N" "$(e "$N/.claude/diamonds/active.yml" "  - {decision: set_target, on: 2026-10-01}" "  - {decision: set_target, on: 2026-10-01}\n  - {decision: start_experiment, on: 2026-10-02}\n  - {decision: commit_to_build, on: 2026-10-02}")")" BLOCK "S12 committing to build with nothing said about folders is refused"
+assert_eq "$(run scope-gate.sh "$N" "$(w "$N/src/a.py" x)")" "ALLOW(rc=0)" "scope control: no cycle has committed, nothing is held"
 
 # ================================================================ framework-guard
 F="$TMP/fw"; mkdir -p "$F/.claude/state" "$F/.claude/canvas" "$F/.claude/engine" "$F/src"

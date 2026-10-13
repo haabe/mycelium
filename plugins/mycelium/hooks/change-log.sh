@@ -8,7 +8,10 @@
 # during diamond X."
 #
 # Based on BDSK's change-log pattern (Daniel Bentes feedback). Kept minimal:
-# timestamp, tool, file_path, session_id, active_diamond_id (if any).
+# timestamp, tool, file_path, session_id.
+# Until 0.324.0 a row could also carry `diamond_id`, read from
+# .claude/state/active-execution.json. Nothing Mycelium ships ever wrote that file, so no row
+# carried it, and since 0.324.0 the file is read by nothing.
 # No hash computation (keeps append fast, stays under POSIX atomic limit).
 #
 # Fail-open: audit logging failures never block code changes. A silent log
@@ -18,7 +21,6 @@ set -uo pipefail
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
 LOG_FILE="$PROJECT_DIR/.claude/state/change-log.jsonl"
-STATE_FILE="$PROJECT_DIR/.claude/state/active-execution.json"
 
 # Ensure state directory exists
 mkdir -p "$(dirname "$LOG_FILE")" 2>/dev/null || exit 0
@@ -34,7 +36,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 LOG_FILE = '$LOG_FILE'
-STATE_FILE = '$STATE_FILE'
 
 # Parse hook input
 try:
@@ -53,25 +54,12 @@ session_id = data.get('session_id', '')
 if not file_path:
     sys.exit(0)
 
-# Look up active diamond_id if state file exists (best-effort)
-diamond_id = None
-try:
-    if Path(STATE_FILE).exists():
-        with open(STATE_FILE) as f:
-            state = json.load(f)
-        if isinstance(state, dict):
-            diamond_id = state.get('diamond_id')
-except Exception:
-    pass  # fail-open: don't block logging on state file issues
-
 entry = {
     'ts': datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z'),
     'tool': tool_name,
     'file_path': file_path,
     'session_id': session_id,
 }
-if diamond_id:
-    entry['diamond_id'] = diamond_id
 
 # Append as JSONL (one line, newline-terminated)
 try:

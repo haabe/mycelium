@@ -1083,3 +1083,42 @@ reviewed:
     `hook_path` returns None when git cannot be run; `main` then prints "Not a git repository" and
     exits 2, and writes nothing. Asserted by
     test_the_git_hook_is_written_once_and_never_over_someone_elses. Reviewed 2026-10-12, v0.323.0.
+- id: scope_check.py@0290ec6f58
+  verdict: accepted
+  reason: >-
+    `_record` raises `RecordUnreadableError` when the diamonds file is not YAML; nothing is
+    defaulted. The `return {}` the scan sees two lines on is the empty document, which is a record
+    with no cycles. Its callers turn the error into a refusal with the reason (`_held`). Asserted by
+    test_a_record_that_cannot_be_read_refuses_and_says_so. Reviewed 2026-10-13, v0.324.0.
+- id: scope_check.py@4253992533
+  verdict: accepted
+  reason: >-
+    `changed_between` returns no lines when either text of the record cannot be read, so the shell
+    guard puts nothing back for it. The hold is not off in that state: `_held` refuses every product
+    write over a record it cannot read, and `bash_state_guard._diamond_problems` tells the agent the
+    file does not parse after the command. Asserted by test_changed_between_says_one_line_per_cycle
+    (the two unreadable rows) and test_a_record_that_cannot_be_read_refuses_product_writes_only.
+    Reviewed 2026-10-13, v0.324.0.
+- id: scope_check.py@ff43072c3f
+  verdict: accepted
+  reason: >-
+    `_held` returns no holds when there is no diamonds file: a project with no record has no
+    delivery cycle. Taking the record away to shed a hold is covered where it happens: a shell
+    command that visibly removes or moves the file is refused (`bash_state_guard.pre`), one that
+    does it unseen has the file put back and the person told (v0.324.0,
+    test_a_command_that_changes_the_folders_is_undone_and_said, the deleted row), and an edit-tool
+    write that drops a cycle and its folders asks (test_removing_a_cycle_and_its_folders_asks).
+    Reviewed 2026-10-13, v0.324.0.
+- id: scope_check.py@23fcc6834e
+  verdict: accepted
+  reason: >-
+    The handler calls `emit_deny`, which prints the refusal with the reason and exits; the
+    `return []` the scan sees after it is not reached. Asserted by
+    test_a_record_that_cannot_be_read_refuses_and_says_so. Reviewed 2026-10-13, v0.324.0.
+- id: bash_state_guard.py@47229885d6
+  verdict: accepted
+  reason: >-
+    `_put_back_the_hold` cannot compare the folders (the diamonds file or its copy cannot be read,
+    or the scope hold's script cannot be loaded). It returns a line saying so and "nothing was put
+    back", which `post` gives to the person (`systemMessage`) and to the agent. Asserted by
+    test_when_the_hold_s_own_script_cannot_be_loaded_that_is_said. Reviewed 2026-10-13, v0.324.0.

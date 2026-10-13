@@ -81,4 +81,9 @@ sys.exit(0)
 # can tell whether evidence landed after the assessment (scripts/diamond_rulings.py).
 printf '%s' "$INPUT" | python3 "${CLAUDE_PLUGIN_ROOT:-$(dirname "$0")/..}/scripts/diamond_rulings.py" 2>/dev/null || true
 
+# v0.324.0: a shell command that is still running keeps a copy of the diamonds file from before
+# it started, and is undone if it changed where a delivery cycle may write. This write went
+# through the edit tools, where the person is asked, so that copy takes it (bash_state_guard.py).
+printf '%s' "$INPUT" | python3 "${CLAUDE_PLUGIN_ROOT:-$(dirname "$0")/..}/scripts/bash_state_guard.py" edited 2>/dev/null || true
+
 exit 0

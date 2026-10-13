@@ -1297,6 +1297,22 @@ except Exception:
 fi
 
 # ============================================================
+# CHECK 9b: The scope hold (added v0.324.0)
+# ============================================================
+# The hold keeps the agent's writes inside the folders a delivery cycle named, and it only
+# speaks on a write. Two states are worth saying before any write is made: a delivery cycle that
+# committed to build with nothing said about its folders (every cycle that was already open when
+# 0.324.0 arrived), which is not held at all; and an old state file, which is no longer read and
+# refuses product writes while it exists. scope_check.py --notices prints both, or nothing.
+SCOPE_CHECK="${CLAUDE_PLUGIN_ROOT:-}/scripts/scope_check.py"
+if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "$SCOPE_CHECK" ]; then
+  SCOPE_NOTE="$(python3 "$SCOPE_CHECK" --notices "$PROJECT_DIR" 2>/dev/null || true)"
+  if [ -n "$SCOPE_NOTE" ]; then
+    REMINDERS="${REMINDERS}${SCOPE_NOTE} "
+  fi
+fi
+
+# ============================================================
 # CHECK 10: Shipped diamonds with an overdue outcome-check (added v0.53.0)
 # ============================================================
 # Move-1 outcome loop: a completed diamond whose DoD carries a `measure` but

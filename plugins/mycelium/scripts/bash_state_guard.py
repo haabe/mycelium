@@ -20,7 +20,8 @@ Two halves, one script:
         recorded. What is found goes to the agent in the same turn. This catches the writes the
         first half cannot see, such as a path built in a variable.
 
-It never undoes a change to the canvas or the diamonds file. Stdlib plus the sibling scripts;
+It never undoes a change to the canvas, and undoes one to the diamonds file in one case only
+(v0.324.0, below). Stdlib plus the sibling scripts;
 without PyYAML the post half says once that it could not judge (canvas_write_check handles the
 schema side the same way).
 
@@ -38,11 +39,32 @@ instead, as it already does for the diamonds file:
   post  compares. A file that was created, changed or removed by the command, and was not one the
         person was asked about, is put back as it was, and the person and the agent are told.
 
-This is the one place the script undoes anything, on the maintainer's ruling of 2026-10-11 ("Put it
-back and tell me"): left as written, the stop is off until someone notices. It touches only those
-seven files, never code, canvas or diamonds. Not put back: a change the person makes in their own
-terminal (no hook sees it), a change made with `MYCELIUM_GUARD_STATE_EDIT=1` in the person's own
-shell, and Mycelium's own upgrade script run on its own.
+Until 0.324.0 this was the one place the script undid anything, on the maintainer's ruling of
+2026-10-11 ("Put it back and tell me"): left as written, the stop is off until someone notices. It
+touches only those seven files, never code or canvas. Not put back: a change the person makes in
+their own terminal (no hook sees it), a change made with `MYCELIUM_GUARD_STATE_EDIT=1` in the
+person's own shell, and Mycelium's own upgrade script run on its own.
+
+THE FOLDERS A DELIVERY CYCLE MAY WRITE TO ARE PUT BACK TOO (v0.324.0). The scope hold reads
+`in_scope_paths` from the diamonds file, and a write that names, changes or removes it is put to
+the person by `scope-gate.sh`, which like every gate can only ask about a write it can read. A
+script whose command line names no file (`python3 tool.py`) could delete the record or take the
+folders off it; afterwards nothing was said and the hold was gone. Found while building the hold,
+by trying it in a scratch project; the bar the idea had been held to did not cover it.
+
+  pre     keeps a copy of the diamonds file with the call's own snapshot.
+  edited  (PostToolUse on the edit tools, from `diamond-state-audit.sh`) refreshes that copy in
+          every snapshot still open, so a change the person said yes to while a command was
+          running is not taken for the command's.
+  post    compares what each delivery cycle names. If the command changed it, the WHOLE diamonds
+          file is put back as that copy, and the person and the agent are told.
+
+Maintainer's ruling 2026-10-13 ("Put it back, tell me"), with the cost said to him: anything else
+the command changed in that file is undone with it. A shell command is not meant to write that
+file at all (the first half refuses the ones it can read). Not put back: a record the command
+created where there was none (it is said, and left), and the three cases above. What this does
+not catch: a process the command leaves running that writes after the command has returned, and a
+script written to rewrite the snapshot as well. It is a check on drift, not a sandbox.
 """
 from __future__ import annotations
 
@@ -79,6 +101,8 @@ _OWN_GUARD_WRITER = re.compile(
     + "|".join(re.escape(w) for w in GUARD_WRITERS)
     + r")\"?(?:\s+[^;&|<>`$()\n]*)?\s*")
 GUARD_SNAP = "guard-state"
+#: The copy of the diamonds file kept with each call's snapshot (v0.324.0).
+RECORD_SNAP = "record.before"
 # v0.307.4 (P8): moving the file away removes every diamond's record, as `rm` does (refused).
 _MOVES_ACTIVE = re.compile(r"\b(?:git\s+)?mv\b[^;&|\n]*diamonds/active\.yml")
 
@@ -225,9 +249,13 @@ def _snapshot_guard_state(project: Path, state: Path, cmd: str, call: str) -> No
     # values, not the files), and whether the person's override was on BEFORE the command. Read
     # afterwards it could have been set by the command itself, through the settings file.
     settings = {name: _switches_in(path) for name, path in _settings_files(project).items()}
+    # v0.324.0: the diamonds file as it is now, for the folders a delivery cycle may write to.
+    record = (project / ACTIVE_REL).is_file()
+    if record:
+        shutil.copyfile(project / ACTIVE_REL, snap / RECORD_SNAP)
     (snap / "index.json").write_text(json.dumps({
         "files": files, "asked": asked, "own": own, "settings": settings,
-        "override": hi.human_override(), "git": _git_before(project)}))
+        "override": hi.human_override(), "git": _git_before(project), "record": record}))
 
 
 def _git_before(project: Path) -> dict:
@@ -349,6 +377,7 @@ def _put_back_guard_state(project: Path, state: Path, call: str,
         if extras is not None and isinstance(index, dict):
             extras["settings"] = _put_back_settings(project, index)
             extras["git"] = index.get("git") if isinstance(index.get("git"), dict) else {}
+            extras["hold"] = _put_back_the_hold(project, snap, index)
         # The override as it was BEFORE the command (v0.322.6); a snapshot from an older version
         # has no such note and falls back to the environment now.
         if index.get("own") or index.get("override", hi.human_override()):
@@ -374,6 +403,112 @@ def _put_back_guard_state(project: Path, state: Path, call: str,
     finally:
         shutil.rmtree(snap, ignore_errors=True)
     return out
+
+
+def _hold_changed(active: Path, copy: Path, had_record: bool) -> tuple[list[str], str | None]:
+    """(what the command changed in where delivery cycles may write, one line per cycle; the
+    diamonds file as it was, or None when there was none). OSError when it cannot be compared."""
+    before = copy.read_text(encoding="utf-8", errors="replace") if had_record else None
+    after = active.read_text(encoding="utf-8", errors="replace") if active.is_file() else None
+    if before == after:
+        return [], before
+    sc = _load("scope_check")
+    if sc is None:
+        raise OSError("the scope hold's own script could not be loaded")
+    return sc.changed_between(before, after), before
+
+
+def _put_back_the_hold(project: Path, snap: Path, index: dict) -> dict:
+    """What the command did to the folders a delivery cycle may write to (v0.324.0).
+
+    Returns {} when it did nothing to them, else `lines` (one per cycle) and `outcome`: "put
+    back", or why not. The whole diamonds file is put back as the copy kept before the
+    command, or as an edit tool last left it while the command ran. Nothing is compared for a
+    snapshot written by an earlier version (it keeps no copy), for Mycelium's own upgrade script,
+    or when the person's override was on before the command."""
+    if "record" not in index or index.get("own") or index.get("override", hi.human_override()):
+        return {}
+    active, copy = project / ACTIVE_REL, snap / RECORD_SNAP
+    try:
+        lines, before = _hold_changed(active, copy, bool(index.get("record")))
+    except OSError as exc:
+        why = str(exc) if not exc.filename else type(exc).__name__
+        return {"lines": [f"(WARNING: the folders could not be compared: {why})"],
+                "outcome": "nothing was put back"}
+    if not lines:
+        return {}
+    outcome = "put back"
+    if before is None:
+        outcome = "there was no diamonds file before the command, so nothing was put back"
+    else:
+        try:
+            if active.is_file():
+                _replace_text(active, before)
+            else:
+                _state_dir.prepare_dir(active.parent)
+                shutil.copyfile(copy, active)
+        except OSError as exc:
+            outcome = (f"COULD NOT BE PUT BACK ({type(exc).__name__}); the diamonds file is as "
+                       "the command left it")
+    return {"lines": lines, "outcome": outcome}
+
+
+def _hold_told(hold: dict) -> str:
+    told = ("A shell command changed where a delivery cycle may write, and you were not asked "
+            "first: " + "; ".join(hold["lines"]) + ". ")
+    if hold["outcome"] == "put back":
+        told += (f"Mycelium put {ACTIVE_REL} back as it was before the command, so the hold is "
+                 "as it was; anything else that command changed in that file is undone with it. ")
+    else:
+        told += f"Mycelium has not changed that file: {hold['outcome']}. "
+    return told + ("Where the agent may write is yours to say. If you want the folders changed, "
+                   "have the agent make the change with its edit tool, where you are asked.")
+
+
+def _settings_told(undone: list[str], reported: list[str]) -> str:
+    told = []
+    if undone:
+        told.append(
+            "A shell command set a Mycelium switch in a Claude Code settings file, and you "
+            "were not asked first: " + "; ".join(undone) + ". Such a switch turns a stop off "
+            "or changes how the hooks decide. If you want it set, write it yourself, or have "
+            "the agent make the change with its edit tool, where you are asked.")
+    if reported:
+        told.append(
+            "While a shell command ran, " + "; ".join(reported) + ", which switches the "
+            "Mycelium plugin off. Mycelium has not changed it: Claude Code's own plugin "
+            "commands write that key, and you may have run one. If you did not, set it back "
+            "to true.")
+    return " ".join(told)
+
+
+def edited(payload: dict, project: Path) -> int:
+    """An edit tool wrote the diamonds file (PostToolUse, from diamond-state-audit.sh). Every
+    snapshot still open takes the file as it is now for its "before": that write went through
+    the gates, and the person was asked where they are asked, so a shell command that is
+    still running must not be held to have made it."""
+    try:
+        targets = hi.target_paths(payload.get("tool_input"))
+    except hi.BadInputError:
+        return 0  # SPEAKS: the gates refuse a call they cannot read before it runs
+    if not any(hi.resolve(path, str(project), key=key).rel == ACTIVE_REL
+               for key, path in targets):
+        return 0
+    root, active = project / STATE_REL / GUARD_SNAP, project / ACTIVE_REL
+    if not root.is_dir() or not active.is_file():
+        return 0
+    for snap in root.iterdir():
+        try:
+            index = json.loads((snap / "index.json").read_text())
+            if not isinstance(index, dict) or "record" not in index:
+                continue
+            shutil.copyfile(active, snap / RECORD_SNAP)
+            if not index["record"]:
+                index["record"] = True
+                (snap / "index.json").write_text(json.dumps(index))
+        except (OSError, ValueError):
+            continue  # SPEAKS: that snapshot's own post half says when it cannot be read
+    return 0
 
 
 def _changed(project: Path, since: float) -> list[Path]:
@@ -432,7 +567,12 @@ def post(payload: dict, project: Path) -> int:
     put_back = _put_back_guard_state(project, state, _call_id(payload), extras)
     undone, reported = extras.get("settings") or ([], [])
     committed = _secrets_committed(extras.get("git") or {})
+    hold = extras.get("hold") or {}
     changed = _changed(project, since)
+    if hold.get("outcome") == "put back":
+        # The file is as it was, written by this script just now: nothing of the command's
+        # is left in it to judge.
+        changed = [f for f in changed if f != project / ACTIVE_REL]
     problems = _schema_problems(changed) if changed else []
     if changed and project / ACTIVE_REL in changed:
         problems += _diamond_problems(project, state, str(payload.get("session_id") or ""))
@@ -446,23 +586,17 @@ def post(payload: dict, project: Path) -> int:
         out["systemMessage"] = "Mycelium: " + told
         reasons.append(told + " Do not try another way of writing it: tell the person what "
                        "happened and let them decide.")
-    if undone or reported:
-        told = []
-        if undone:
-            told.append(
-                "A shell command set a Mycelium switch in a Claude Code settings file, and you "
-                "were not asked first: " + "; ".join(undone) + ". Such a switch turns a stop off "
-                "or changes how the hooks decide. If you want it set, write it yourself, or have "
-                "the agent make the change with its edit tool, where you are asked.")
-        if reported:
-            told.append(
-                "While a shell command ran, " + "; ".join(reported) + ", which switches the "
-                "Mycelium plugin off. Mycelium has not changed it: Claude Code's own plugin "
-                "commands write that key, and you may have run one. If you did not, set it back "
-                "to true.")
+    if hold:
+        told = _hold_told(hold)
         out["systemMessage"] = " ".join(
-            x for x in (out.get("systemMessage"), "Mycelium: " + " ".join(told)) if x)
-        reasons.append(" ".join(told) + " Do not try another way of setting it: tell the person "
+            x for x in (out.get("systemMessage"), "Mycelium: " + told) if x)
+        reasons.append(told + " Do not try another way of writing it: tell the person what "
+                       "happened and let them decide.")
+    if undone or reported:
+        told = _settings_told(undone, reported)
+        out["systemMessage"] = " ".join(
+            x for x in (out.get("systemMessage"), "Mycelium: " + told) if x)
+        reasons.append(told + " Do not try another way of setting it: tell the person "
                        "what happened and let them decide.")
     if committed:
         told = ("A commit this command made holds something that looks like a secret: "
@@ -490,10 +624,10 @@ def main(argv: list[str] | None = None) -> int:
         payload = json.loads(sys.stdin.read() or "{}")
     except ValueError:
         return 0  # the runtime refuses a malformed payload before any command runs
-    if not isinstance(payload, dict) or mode not in ("pre", "post"):
+    if not isinstance(payload, dict) or mode not in ("pre", "post", "edited"):
         return 0
     project = Path(os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()).resolve()
-    return pre(payload, project) if mode == "pre" else post(payload, project)
+    return {"pre": pre, "post": post, "edited": edited}[mode](payload, project)
 
 
 if __name__ == "__main__":

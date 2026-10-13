@@ -106,6 +106,48 @@ See `${CLAUDE_PLUGIN_ROOT}/engine/agent-operating-contract.md` *Canvas writes �
    This is awareness only — it does not change gate requirements or routing. The human's answer is informational context, not a gate input.
    *Source: Cagan (SVPG), Patton (build to learn vs build to earn). Added as NUDGE per risk analysis — conceptual awareness, not process gate.*
 
+2c-2. **An L4's `commit_to_build` says where the work may write** (v0.324.0, enforced by
+   `hooks/scope-gate.sh`). In the same edit that records `commit_to_build` on a delivery cycle
+   (an L4), write `in_scope_paths` on that cycle: the folders, files or globs the work will
+   touch, project-relative.
+
+   ```yaml
+   in_scope_paths: [app/billing/, tests/billing/**]   # the agent is held to these
+   in_scope_paths: []                                  # no hold for this one, said on purpose
+   ```
+
+   **Propose the list from the plan; the person decides it.** Say which folders you propose and
+   why, in one line, before the edit. The edit is put to the person by the gate (an ask), because
+   where the agent may write is theirs to say; where nobody can be asked it is refused, and the
+   person makes the change themselves. An empty list is a real answer ("no hold for this one")
+   and is asked about the same way. Do not write an empty list to get past the question: propose
+   the folders, and let the person say "no hold" if that is what they want.
+
+   **A commitment to build with nothing said is refused.** The gate reads the edit, and an L4
+   that would end up committed with no `in_scope_paths` at all does not land.
+
+   **While the cycle is open the agent is held to the list.** A write under `.claude/` is never
+   held. A write outside the list is put to the person with the file named; a yes lets that one
+   write through. If the work turns out to need another folder, propose adding it to the list
+   (that edit is asked about too) instead of asking write by write. The hold ends when the
+   cycle's `close` is recorded: nothing has to be taken away.
+
+   **What the hold cannot see:** a command that writes files itself (a scaffolder, a clone). Say
+   so if you run one during delivery, and name what it wrote. A shell command that changes
+   `in_scope_paths` itself is undone afterwards (the whole diamonds file is put back) and the
+   person is told: change the folders with Edit or Write, never from the shell.
+
+   **A cycle that committed before 0.324.0** carries no list and is not held; session start names
+   it. Offer the person the two choices above for it once, and do not add either unasked.
+
+   **An old `.claude/state/active-execution.json`** is no longer read. While it exists, product
+   writes are refused: tell the person to move its folders to the cycle as above and to delete the
+   file themselves (it is one of the files that are theirs to write).
+
+   Why this is a step here and not a file the agent is told to write: until 0.324.0 the folders
+   lived in that state file, no skill wrote it, and the hold was never on in a plugin install
+   (a blind reader of the installed plugin, dogfood 2026-10-11).
+
 2d. **L3 `start_experiment`: the lightest test is named first** (v0.253.0, enforced by the
    scale-lock gate). Before an L3 builds, run `/mycelium:assumption-test` on the riskiest assumption of the
    solution it builds and record, on that solution in `opportunities.yml`,

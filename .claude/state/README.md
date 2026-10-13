@@ -24,7 +24,7 @@ This keeps hooks dependency-free (no PyYAML at runtime) while preserving canvas 
 
 | File | Format | Written by | Read by | Purpose |
 |---|---|---|---|---|
-| `active-execution.json` | JSON | nothing Mycelium ships (by hand only) | `scope-gate.sh` (PreToolUse) | Declares `in_scope_paths` for the scope check |
+| `active-execution.json` | JSON | nothing (retired 0.324.0) | nothing | No longer read. Until 0.324.0 it named the scope check's folders; they now live on the delivery cycle (`in_scope_paths` in `.claude/diamonds/active.yml`). While one exists, product writes are refused |
 | `change-log.jsonl` | JSONL | `change-log.sh` (PostToolUse) | Manual review + `stop-check.sh` | Append-only audit trail of code modifications |
 | `diamond-state-audit.jsonl` | JSONL | `diamond-state-audit.sh` (PostToolUse) | `stop-check.sh` | Append-only log of direct edits to diamond state files |
 | `preflight-stamp` | Text | `preflight.sh` | `gate.sh` | Tracks corrections.md read freshness (TTL 4 hours) |
@@ -37,7 +37,7 @@ Exceptions: observability-only hooks (change-log, diamond-state-audit) may fail 
 
 ## When State Gets Cleared
 
-- `active-execution.json` is written by nothing Mycelium ships. Until 0.323.2 this line said `/diamond-progress` overwrites it when entering L4, which no version of that skill did
+- `active-execution.json` is retired (0.324.0): nothing writes it and nothing reads it; the scope hold reads the delivery cycle's record
 - `change-log.jsonl` and `diamond-state-audit.jsonl` are append-only; rotate manually at 100MB or drop at session boundaries
 - `preflight-stamp` is regenerated every 4 hours when corrections.md is re-read
 
