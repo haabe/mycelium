@@ -4,6 +4,46 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-13.
 
+## v0.323.2 - the pages stop describing a scope check nothing switches on
+
+**2026-10-13.** Words only. Several pages described a hold on the agent's writes that has never
+been on in a plugin install.
+
+### What was wrong
+
+- **The scope check has no switch.** `hooks/scope-gate.sh` holds the agent's writes to the paths
+  named in `.claude/state/active-execution.json`, and leaves at once when that file is absent.
+  No skill, script or hook writes the file. A blind reader of the installed plugin found it.
+- **The README stopped claiming the hold in 0.322.3. Five other pages did not:** the system card,
+  the context surface, `docs/nobody-used-it.md`, the privacy page and the hooks reference.
+- **This repository's own state README named a skill as the file's writer.** It never was.
+- **Two refusals of the helper sent the reader to that skill** "to recreate" the file.
+
+### What changed
+
+- **Each page says it:** the check is off unless you write the file yourself. The system card
+  lists it under known limitations.
+- **`docs/nobody-used-it.md` no longer mentions the scope check.** The maintainer chose the
+  wording.
+- **The helper's messages** say to repair or delete the file.
+- **A test holds pages and plugin together, both ways.** It fails if a page drops the admission
+  while nothing shipped writes the file, and it fails the other way the day something does.
+
+### What did not change
+
+- **The gate.** If you wrote the state file by hand, your writes are held to it exactly as before.
+
+### Considered and not done
+
+- **Switching the check on in this release.** A design that keeps the folders on the delivery
+  cycle's own record has passed a replay in a scratch copy. It is its own piece of delivery work.
+  The maintainer chose to make the pages true first and change them again when it ships.
+- **Leaving the pages until then.** They would have stayed untrue in between.
+
+### Not shown
+
+- Whether any builder wants the hold. Nobody outside the project has asked for it.
+
 ## v0.323.1 - Mycelium's own tests pass its own commit scan
 
 **2026-10-13.** Two faults in the day-old commit scan, both found by running it on Mycelium
