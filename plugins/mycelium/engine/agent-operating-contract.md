@@ -155,3 +155,10 @@ And for the secret scanner's own ways past a finding (0.323.0): `.gitleaksignore
 `.gitleaks.toml` and a `gitleaks:allow` comment are the person's to write. A commit or push the
 scan refuses is fixed by taking the value out, never by adding one of these.
 
+And for where a delivery cycle may write (0.324.0): `in_scope_paths` on an L4 in
+`.claude/diamonds/active.yml` is the person's to say. Propose the folders when the cycle commits
+to build and make the edit with Edit or Write, so that they are asked; an empty list ("no hold")
+is their answer to give, never yours to write so that the question goes away. A write outside
+the folders is put to them too: propose widening the list, or let them answer write by write.
+A shell command that changes the list is undone afterwards and the person is told.
+

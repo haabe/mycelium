@@ -289,6 +289,7 @@ last_updated: [timestamp]
 evidence: [list of evidence references]
 blockers: [list of current blockers]
 definition_of_done: [outcome-based done-criterion, set at birth — see below]
+in_scope_paths: [L4 only: the folders the work may write to; [] is "no hold"; written with `commit_to_build`, put to the person, read by hooks/scope-gate.sh (v0.324.0)]
 theory_gates_status:  # by gate (theory-gates.md); each decision needs the gates the matrix names
   <gate>: [pass | pass-with-risk | fail | pending | n/a]
 ```

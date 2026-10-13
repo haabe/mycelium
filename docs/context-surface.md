@@ -3,7 +3,7 @@
 **Audience**: practitioners + evaluators wanting to understand what the agent has access to mid-session, and operators auditing Mycelium against transparency expectations.
 **Time to read**: 8 min.
 **Last updated**: 2026-10-13.
-**Hook surface reviewed:** 2026-10-13 (digest 555f5a17390a)
+**Hook surface reviewed:** 2026-10-13 (digest 69da27c40ec8)
 
 This document answers a question the audit (`/xai-check` on `svc-mycelium`, 2026-05-04) flagged as a Stage 2 partial: **"What data does the agent see when it makes a recommendation under Mycelium?"** Today the answer is distributed across many files. This is the consolidated map.
 
@@ -71,7 +71,7 @@ Every significant decision: context, alternatives, theory, evidence, confidence.
 | File | Holds |
 |---|---|
 | `upstream.json` | Dogfood instances: pointer to upstream framework repo (activates framework-guard) |
-| `active-execution.json` | In-scope and out-of-scope path lists, read by `scope-gate.sh` when the file is there. Nothing Mycelium ships writes it. |
+| `active-execution.json` | No longer read (0.324.0). While it exists, product writes are refused: move its folders to the delivery cycle's `in_scope_paths` in `diamonds/active.yml` and delete it. |
 | `advisory-ledger.jsonl` | Per session start: which advisories fired, which cleared, which are muted, and human rulings (snooze/drop). Gitignored. |
 | `next-item.json` | The one item last put in front of the human, and whether the Stop hook repeated it. Gitignored. |
 | `read-log.jsonl` | Every Read (and inferred Bash read) the agent made, for citation auditing. Gitignored. |
@@ -101,9 +101,9 @@ The full table, per runtime, is `plugins/mycelium/hooks/README.md`. The ones tha
 |---|---|---|
 | `gate.sh`, `discovery-gate.sh`, `brownfield-gate.sh` | Write/Edit/Bash | Block until the evidence the next decision needs, or the brownfield entry, is on record |
 | `framework-guard.sh` | Edit/Write/Bash on framework files in dogfood instances | Blocks; redirects to upstream-then-sync flow; denies on a broken state file |
-| `scope-gate.sh` | Edit/Write outside in_scope_paths, only when `.claude/state/active-execution.json` exists; nothing Mycelium ships writes that file | Blocks; allows .claude/** unconditionally |
+| `scope-gate.sh` | A write outside the folders an open delivery cycle named (`in_scope_paths` on the L4 in `diamonds/active.yml`); a write that names or changes those folders | Asks the person; refuses where nobody is asked; allows .claude/** unconditionally |
 | `autonomous-evidence-guard.sh` | Canvas writes during a declared autonomous run | Blocks fabricated or elevated evidence; no-op with a human present |
-| `scale-lock-gate.sh`, `bash-state-guard.sh` | Writes to `.claude/diamonds/active.yml` (Edit/Write; shell commands); since 0.321.1 also every shell command, before and after, for the files that switch a stop off | Block a new diamond whose parent has not established what it builds on; refuse a shell command that writes the file, and schema-check what a shell command changed; put back an off-switch file a shell command changed without the person being asked, and tell them |
+| `scale-lock-gate.sh`, `bash-state-guard.sh` | Writes to `.claude/diamonds/active.yml` (Edit/Write; shell commands); since 0.321.1 also every shell command, before and after, for the files that switch a stop off | Block a new diamond whose parent has not established what it builds on; refuse a shell command that writes the file, and schema-check what a shell command changed; put back an off-switch file a shell command changed without the person being asked, and tell them; since 0.324.0 put the diamonds file back when a shell command changed where a delivery cycle may write, and tell them |
 | `exposure-gate.sh` | Bash commands that put the work in front of real people (deploy, publish, remote sync) | Blocks while no delivery cycle is ready for that exposure (`scripts/scale_locks.py --exposure-hook` decides) |
 | `guard-state-gate.sh` | Writes to the files that switch a blocking hook off (ack files, `upstream.json`, `manifest.yml`, `active-execution.json`), and removing `.claude`, `.claude/canvas` or `.claude/diamonds`, which switches every hook off (judged by the hook itself since 0.318.3) | Asks the human; refuses where nobody would be asked (permissions bypassed, automated mode) |
 | `exposure-change.sh`, `preflight.sh` | A write that changes exposure state; each prompt | Tell the agent when nothing built may meet real people, right after the write and again at the prompt |

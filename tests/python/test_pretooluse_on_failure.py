@@ -318,21 +318,32 @@ def test_control_framework_guard_switched_off_allows_a_small_write(tmp_path):
     assert (done.returncode, done.stdout) == (0, "")
 
 
+#: A diamonds file that names a folder and does not parse: the broken state the scope hold can
+#: meet since 0.324.0, when it began reading the delivery cycle's record. Until then these two
+#: cases used a corrupt active-execution.json, which is no longer read at all.
+BROKEN_RECORD = "active_diamonds:\n- id: l4-x\n  scale: L4\n  in_scope_paths: [src/\n  this: [is not closed\n"
+
+
 def test_scope_gate_says_why_it_refuses_a_large_write_over_broken_state(tmp_path):
-    """RED ON 0.321.0 (exit 1, no stdout). The same pipe: the helper printed its deny for a
-    corrupt active-execution.json, the wrapper left before passing it on, and the write went
-    through. With the setting on it would be refused with no reason given."""
+    """RED ON 0.321.0 (exit 1, no stdout). The wrapper fed the call through a pipe under
+    `set -eo pipefail`; when the helper answered before it had read a large call, the writer
+    failed, the wrapper left before passing the refusal on, and the write went through. With
+    the setting on it would be refused with no reason given. What is checked is unchanged: a
+    large write over state the gate cannot read is refused AND the reason arrives."""
     project = _mycelium_project(tmp_path)
-    (project / ".claude" / "state" / "active-execution.json").write_text("{not json")
+    (project / ".claude" / "diamonds").mkdir(parents=True, exist_ok=True)
+    (project / ".claude" / "diamonds" / "active.yml").write_text(BROKEN_RECORD)
     done = _run("scope-gate.sh", project, _write(BIG))
     assert done.returncode == 0, done.stderr[:300]
     said = json.loads(done.stdout)["hookSpecificOutput"]
-    assert said["permissionDecision"] == "deny" and "corrupt" in said["permissionDecisionReason"]
+    assert said["permissionDecision"] == "deny"
+    assert "cannot be read" in said["permissionDecisionReason"]
 
 
 def test_control_scope_gate_refuses_a_small_write_over_broken_state(tmp_path):
     project = _mycelium_project(tmp_path)
-    (project / ".claude" / "state" / "active-execution.json").write_text("{not json")
+    (project / ".claude" / "diamonds").mkdir(parents=True, exist_ok=True)
+    (project / ".claude" / "diamonds" / "active.yml").write_text(BROKEN_RECORD)
     done = _run("scope-gate.sh", project, _write("short"))
     assert done.returncode == 0
     assert json.loads(done.stdout)["hookSpecificOutput"]["permissionDecision"] == "deny"

@@ -158,6 +158,11 @@
           "type": ["string", "null"],
           "description": "The solution an L3 commits to build, out of the set under its target (v0.300.0, DL-1367), named at `commit_to_build`. The L4 delivers it, and the L4 lock reads its evidence and its failed assumptions alone."
         },
+        "in_scope_paths": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "The folders a delivery cycle (L4) may write to, project-relative: a folder (`app/billing/`), a file, or a glob (`tests/billing/**`), v0.324.0. READ BY `scripts/scope_check.py` (hooks/scope-gate.sh) on every write: while the cycle has committed to build and has not closed, a write outside every listed entry is put to the person. An EMPTY list is 'no hold for this one', said on purpose. ABSENT is 'nobody has decided': the gate refuses a commitment to build that leaves it absent, and session start names a cycle that committed before 0.324.0 without it. A write that adds, changes, empties or removes it is put to the person: where the agent may write is theirs to say. Not `product_paths` (where the whole product lives) and not `prototype_paths`: this is the part one piece of delivery work touches. Until 0.324.0 the same list was read from `.claude/state/active-execution.json`, which nothing wrote."
+        },
         "launch_data": {
           "type": "object",
           "description": "L5 entry lock (v0.245.0): launch data from the shipped L4, at any n (Gilad, Evidence-Guided p123). At least one of the three must say something.",

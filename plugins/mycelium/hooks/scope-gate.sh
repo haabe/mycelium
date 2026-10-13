@@ -1,21 +1,28 @@
 #!/usr/bin/env bash
 . "$(dirname "${BASH_SOURCE[0]}")/../scripts/_hook_prelude.sh" 2>/dev/null || true  # no-op outside a Mycelium project; state ignore file (v0.318.0)
-# Mycelium scope enforcement hook (PreToolUse on Edit|Write|MultiEdit)
+# Mycelium scope hold (PreToolUse on writes, shell commands and the filesystem MCP writes)
 #
-# When an L4 Delivery diamond has an active execution with declared in_scope_paths,
-# block edits to files outside scope. Addresses the BDSK comparison feedback
-# (Daniel Bentes) about computational scope enforcement.
+# Keeps the agent's writes inside the folders a delivery cycle named. Addresses the BDSK
+# comparison feedback (Daniel Bentes) about computational scope enforcement.
 #
-# Design principles:
-# - Runtime state lives in .claude/state/active-execution.json (JSON, not YAML)
-# - Hook uses Python stdlib only (no PyYAML, no Ruby, no jq)
-# - Zero runtime dependencies beyond Python 3.x (already a Mycelium baseline)
-# - Fail-closed on state corruption; fail-open when state file is absent
+# Since 0.324.0 the folders are read from the delivery cycle's own record: an L4 in
+# .claude/diamonds/active.yml carries `in_scope_paths`. The hold is on for a cycle that has
+# committed to build and has not closed. A write outside the folders is put to the person; a
+# write that names or changes the folders is put to the person too. scripts/scope_check.py says
+# why it moved and what each answer is.
+#
+# Until 0.324.0 the folders were read from .claude/state/active-execution.json, which nothing
+# Mycelium ships ever wrote, so this hook did nothing in a plugin install. That file is no longer
+# read; while one exists, product writes are refused and the refusal says what to do.
+#
+# - The helper needs PyYAML to read the record. Without it the helper fails and the write is
+#   refused with the reason (fail-closed), as for a record that does not parse.
+# - No record, or a record that names no folder: the hook leaves before starting Python.
 #
 # Exit/output convention (modern Claude Code):
 # - exit 0 silent → allow
-# - exit 0 + JSON hookSpecificOutput.permissionDecision="deny" → block with UI message
-# - exit 2 → reserved for fail-closed on state corruption (rare)
+# - exit 0 + JSON hookSpecificOutput.permissionDecision="ask" → the person is asked
+# - exit 0 + JSON hookSpecificOutput.permissionDecision="deny" → refused, with the reason
 
 set -euo pipefail
 # SELF-LOCATION, added v0.88.0. This script lives at <plugin_root>/hooks/, so
@@ -38,8 +45,33 @@ fi
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
 STATE_FILE="$PROJECT_DIR/.claude/state/active-execution.json"
 
-# Fast path: no state file → no active execution → allow everything
-[ ! -f "$STATE_FILE" ] && exit 0
+# Fast path (v0.324.0). The folders a delivery cycle may write to are read from the cycle's own
+# record, .claude/diamonds/active.yml (`in_scope_paths` on an L4). Leave before starting Python
+# unless one of these is true:
+#   - an old state file exists (it is no longer read, and product writes are refused until it is
+#     moved and deleted: scope_check.py says how);
+#   - this call names the field or a commitment to build, so it may be a write to the record that
+#     says where a cycle may write;
+#   - the record names at least one folder. `in_scope_paths: []` alone is "no hold", and costs
+#     nothing here.
+# Until 0.324.0 the fast path was "no state file", and nothing Mycelium ships wrote that file, so
+# in a plugin install this hook always left here.
+RECORD="$PROJECT_DIR/.claude/diamonds/active.yml"
+INPUT=$(cat)
+if [ ! -f "$STATE_FILE" ]; then
+  case "$INPUT" in
+    *in_scope_paths*|*commit_to_build*) ;;
+    *)
+      # Lines where the field is a KEY (prose that mentions it inside a note does not count),
+      # minus the ones whose value is the empty list. Anything left may name a folder, in
+      # whatever way YAML allows a list to be written, and Python reads it properly.
+      SQ="'"
+      KEY="^[[:space:]-]*[\"${SQ}]?in_scope_paths[\"${SQ}]?[[:space:]]*:"
+      EMPTY=":[[:space:]]*\[[[:space:]]*\][[:space:]]*(#.*)?\$"
+      grep -E "$KEY" "$RECORD" 2>/dev/null | grep -Evq "$EMPTY" || exit 0
+      ;;
+  esac
+fi
 
 # Helper resolution — prefer plugin path (post-0.20.x), fall back to legacy.
 # Mirrors framework-guard.sh: plugin installs removed the legacy helper from git,
@@ -52,8 +84,7 @@ elif [ -f "$_MYCELIUM_ROOT/scripts/scope_check.py" ]; then
   HELPER="$_MYCELIUM_ROOT/scripts/scope_check.py"
 fi
 
-# Read input JSON from stdin
-INPUT=$(cat)
+# (The input was read above, before the fast path.)
 # The verdict below is captured so a refusal reaches the denial ledger (0.316.0), then passed
 # through unchanged: same stdout, same exit status.
 # shellcheck source=/dev/null
@@ -83,7 +114,7 @@ print(json.dumps({
     'hookSpecificOutput': {
         'hookEventName': 'PreToolUse',
         'permissionDecision': 'deny',
-        'permissionDecisionReason': f'Mycelium scope-gate: scope_check.py not found at {plugin_root}/scripts/scope_check.py NOR at .claude/scripts/scope_check.py. Reinstall the plugin (/plugin update mycelium) OR delete .claude/state/active-execution.json to disable scope enforcement.'
+        'permissionDecisionReason': f'Mycelium scope-gate: scope_check.py not found at {plugin_root}/scripts/scope_check.py NOR at .claude/scripts/scope_check.py. Reinstall the plugin (/plugin update mycelium). Until then this write is refused, because without that script Mycelium cannot tell whether a delivery cycle holds it.'
     }
 }))
 "
