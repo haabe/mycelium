@@ -367,8 +367,8 @@ Offer it once, as one question, with what it costs:
 
 - **On yes**: run `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/install_git_secret_hook.py" --project-dir <project_root>`
   and relay what it prints. Exit 1 means the person already has a pre-commit hook of their own:
-  it was not changed, and the script printed the line to add. Show them that line. Do not edit
-  their hook yourself.
+  it was not changed, and the script printed the lines to add. Show them those lines. Do not
+  edit their hook yourself.
 - **On no, on no answer, and in a non-interactive run**: do nothing, and say nothing more about
   it. Never install it unasked.
 - **Not a git repository**: skip the offer.

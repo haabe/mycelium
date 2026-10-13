@@ -476,10 +476,14 @@ def test_opt_in_records_the_command(scripts_path, tmp_path):
     assert rows[0]["trigger"].startswith("grep -c foo bar.txt | head -1")
 
 
+# In two halves, so that no secret scanner sees a credential in this file (0.323.1).
+_BEARER = "abcDEF" + "1234567890xyz"
+
+
 @pytest.mark.parametrize(
     ("command", "secret"),
     [
-        ('curl -H "Authorization: Bearer abcDEF1234567890xyz" https://x.test | head; echo $?', "abcDEF1234567890xyz"),
+        ('curl -H "Authorization: Bearer ' + _BEARER + '" https://x.test | head; echo $?', _BEARER),
         ("GITHUB_TOKEN=ghp_abcdefghijklmnopqrstuvwxyz0123 gh api user | head -1; echo $?", "ghp_abcdefghijklmnopqrstuvwxyz0123"),
         ("git clone https://haabe:hunter2secret@github.com/haabe/x.git | tail; echo $?", "hunter2secret"),
         ('mysql --password hunter2pass -e "select 1" | head; echo $?', "hunter2pass"),

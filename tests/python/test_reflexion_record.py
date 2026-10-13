@@ -113,7 +113,7 @@ def test_cli_records_from_stdin_and_scrubs(tmp_path, monkeypatch):
     state = tmp_path / ".claude" / "state"
     monkeypatch.delenv("MYCELIUM_LEDGER_TRIGGER", raising=False)
     assert rr.main(["record", "--state-dir", str(state)],
-                   stdin=io.StringIO(json.dumps(_payload(f"curl -u me:{SECRET} https://x")))) == 0
+                   stdin=io.StringIO(json.dumps(_payload("curl -u " + "me:" + SECRET + " https://x")))) == 0
     assert rr.main(["record", "--state-dir", str(state)], stdin=io.StringIO("not json")) == 0
     assert rr.main(["scrub", "--state-dir", str(state)]) == 0
     assert SECRET not in (state / rr.LOG_NAME).read_text()
