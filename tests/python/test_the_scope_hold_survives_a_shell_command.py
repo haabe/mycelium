@@ -131,14 +131,16 @@ def test_what_else_the_command_changed_in_the_record_goes_with_it(project, capsy
     assert rec.read_text() == RECORD and "undone with it" in said["reason"]
 
 
-def test_a_command_that_leaves_the_folders_alone_is_not_undone(project, capsys):
-    """Control. The record is not meant to be written from the shell, and what a command does to
-    the rest of it is judged by the scale locks; this check only speaks about the folders."""
+def test_a_command_that_leaves_the_folders_alone_is_undone_without_naming_them(project, capsys):
+    """Until 0.325.0 this was left: the check spoke only about the folders. Now any change a shell
+    command makes to the record is put back (test_bash_state_guard.py has the 2026-10-14 case);
+    the folders are named only when they changed."""
     rec = project / REC
     changed = RECORD.replace("last_updated: '2026-10-02'", "last_updated: '2026-10-13'")
     said = _around(project, lambda: rec.write_text(changed), capsys)
-    assert rec.read_text() == changed
+    assert rec.read_text() == RECORD
     assert "where a delivery cycle may write" not in json.dumps(said)
+    assert "changed .claude/diamonds/active.yml (l4-billing)" in said["reason"]
 
 
 def test_a_command_that_touches_nothing_says_nothing(project, capsys):
@@ -147,11 +149,13 @@ def test_a_command_that_touches_nothing_says_nothing(project, capsys):
 
 
 def test_a_cycle_moved_to_the_completed_list_with_its_folders_is_not_a_change(project, capsys):
-    """How a close is recorded. Mycelium's own writers touch the record from the shell too."""
+    """How a close is recorded. Mycelium's own writers touch the record from the shell too, and
+    run on their own they are not put back (v0.325.0)."""
     rec = project / REC
     cycle = RECORD.split("active_diamonds:\n")[1].split("completed_diamonds")[0]
     moved = "active_diamonds: []\ncompleted_diamonds:\n" + cycle
-    said = _around(project, lambda: rec.write_text(moved), capsys)
+    said = _around(project, lambda: rec.write_text(moved), capsys,
+                   command=f"python3 {PLUGIN}/scripts/migrate_phase.py --project-dir .")
     assert rec.read_text() == moved
     assert "where a delivery cycle may write" not in json.dumps(said)
 

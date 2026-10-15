@@ -45,7 +45,7 @@ def test_shell_writes_to_the_diamond_file_are_refused(tmp_path, capsys):
     root = _project(tmp_path)
     for cmd in ("sed -i '' 's/discover/develop/' .claude/diamonds/active.yml",
                 "echo 'active_diamonds: []' > .claude/diamonds/active.yml",
-                PY_WRITE):
+                PY_WRITE):  # a literal path in a one-liner is read as its target
         assert _pre(root, cmd) == 2, cmd
     assert "Edit or Write" in capsys.readouterr().err
 
@@ -86,7 +86,8 @@ def test_an_invalid_canvas_file_written_by_the_shell_is_named(tmp_path, capsys):
     assert out["decision"] == "block" and "'open_blockers' was unexpected" in out["reason"]
 
 
-def test_a_diamond_opened_past_its_lock_by_the_shell_is_named(tmp_path, capsys):
+def test_a_diamond_opened_past_its_lock_by_the_shell_is_put_back_and_named(tmp_path, capsys):
+    """Since 0.325.0 the change is put back; what the locks would have said is still told."""
     root = _project(tmp_path)
     _pre(root, "ls")
     active = root / ".claude" / "diamonds" / "active.yml"
@@ -94,6 +95,7 @@ def test_a_diamond_opened_past_its_lock_by_the_shell_is_named(tmp_path, capsys):
     _age(active, 5)
     out = json.loads(_post(root, capsys))
     assert "l1-x (L1) cannot open yet" in out["reason"]
+    assert active.read_text() == "active_diamonds: []\n"
 
 
 def test_nothing_changed_or_no_stamp_is_silent(tmp_path, capsys):
@@ -140,11 +142,50 @@ def test_a_read_beside_a_variable_path_write_is_not_refused(tmp_path, cmd):
 
 
 @pytest.mark.parametrize("cmd", [
-    f"f={_F}; cat new.yml > $f",
     f"cat new.yml > {_F}",
+    f"sed -i '' 's/a/b/' {_F}",
+    f"mv x.yml {_F}",
+])
+def test_control_a_write_whose_target_is_the_file_is_still_refused(tmp_path, cmd):
+    assert bsg.writes_active(cmd, str(_project(tmp_path))) is True
+
+
+# ---------------------------------------------------------------- v0.325.0: the file, not the text
+
+@pytest.mark.parametrize("cmd", [
+    f"f={_F}; cat new.yml > $f",
     f"grep x {_F} > $DIR/active.yml",
     f"grep x {_F} > $OUT",
     f"python3 -c 'p=f(\"{_F}\"); p.write_text(\"x\")'",
+    "python3 newbar.py values.yml",
+    # Dogfood 2026-10-14: appending to another file, the path only mentioned in the text.
+    ("cat >> .claude/harness/upstream-candidates.yml <<'EOF'\n- id: x\n  surfaced_by: the agent "
+     f"ran python3 newbar.py, a script that opens {_F} and writes it. The next command, `sed -i "
+     f"...\n  {_F}`, was refused.\nEOF"),
 ])
-def test_control_a_write_that_could_land_on_it_is_still_refused(tmp_path, cmd):
-    assert bsg.writes_active(cmd, str(_project(tmp_path))) is True
+def test_a_write_the_text_does_not_show_is_left_to_the_comparison(tmp_path, cmd):
+    """Until 0.325.0 a command that named the file and wrote somewhere unseen was refused: the
+    heredoc above was, while `python3 newbar.py`, which wrote the file from inside the script, was
+    not. Neither is refused now; what a command actually did to the file is judged afterwards."""
+    assert bsg.writes_active(cmd, str(_project(tmp_path))) is False
+
+
+def test_a_script_that_names_the_file_only_inside_itself_is_put_back(tmp_path, capsys):
+    """RED ON 0.324.0: the 2026-10-14 shape. A script replaced a diamond's definition of done; the
+    scale locks found nothing to object to and the change stood, unsaid."""
+    root = _project(tmp_path)
+    active = root / _F
+    was = ("active_diamonds:\n- id: l1-x\n  scale: L1\n  definition_of_done:\n    outcome: old\n"
+           "- id: l2-y\n  scale: L2\n")
+    active.write_text(was)
+    payload = {"tool_use_id": "c1", "session_id": "s1",
+               "tool_input": {"command": "python3 newbar.py values.yml"}}
+    assert bsg.pre(payload, root) == 0
+    active.write_text(was.replace("outcome: old", "outcome: new"))
+    assert bsg.post(payload, root) == 0
+    said = json.loads(capsys.readouterr().out)
+    assert active.read_text() == was
+    assert "(l1-x)" in said["reason"] and "you were not asked first" in said["systemMessage"]
+    kept = said["reason"].split("kept at ")[1].split(". ")[0]
+    assert (root / kept).read_text() == was.replace("outcome: old", "outcome: new")
+    assert "Edit or Write" in said["reason"]
