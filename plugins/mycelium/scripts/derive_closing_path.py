@@ -49,7 +49,7 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import scale_locks as sl  # the transition matrix the gates are read against (0.278.0)
-from safe_replace import write_checked  # parse-before-write for every canvas text edit (0.220.0)
+from safe_replace import check_parses, write_checked  # parse-before-write (0.220.0)
 
 TERMINAL_TASK = {"completed", "closed", "cancelled", "abandoned", "done", "scored", "withdrawn"}
 LIVE_LEAF = ("candidate", "proposed", "open")
@@ -870,16 +870,44 @@ def build_closes_on(  # noqa: C901, PLR0912, PLR0915 — one derivation, three i
     return entry, prev
 
 
-def write_closes_on(root: Path, did: str, entry: dict) -> bool:  # noqa: C901 — replace-or-insert
+def write_closes_on(root: Path, did: str, entry: dict) -> bool:
     """Replace or insert the `closes_on:` block inside the diamond's entry in active.yml, touching
-    no other line. Returns True when the file changed. Bounds are indent-aware: a nested `- id:`
-    (a fired entry, an input) must not end the diamond or the block; only a sibling item does."""
+    no other line. Returns True when the file changed.
+
+    The shell guard is told first (v0.325.1). Session start runs this script in the background,
+    while the agent's first shell command may be running; the guard compares the diamonds file
+    around that command and, until 0.325.1, put this write back as the command's and told the
+    person the agent had changed the file (dogfood 2026-10-15, on a `git log`). So the same block
+    is written into the guard's copies from before the command, and only this script's change is
+    taken out of the comparison: anything else the command changed is still put back."""
     path = root / ".claude" / "diamonds" / "active.yml"
-    lines = path.read_text(encoding="utf-8").split("\n")
+    old = path.read_text(encoding="utf-8")
+    text = with_closes_on(old, did, entry)
+    if text == old:
+        return False
+    check_parses(path, text)
+    _tell_the_shell_guard(root, lambda t: with_closes_on(t, did, entry))
+    path.write_text(text, encoding="utf-8")
+    return True
+
+
+def _tell_the_shell_guard(root: Path, change) -> None:
+    try:
+        import bash_state_guard  # noqa: PLC0415 - loaded only when a write happens
+    except ImportError:
+        return  # SPEAKS: the guard puts this write back and tells the person, as on 0.325.0
+    bash_state_guard.own_writer_writes(root, change)
+
+
+def with_closes_on(text: str, did: str, entry: dict) -> str:  # noqa: C901 — replace-or-insert
+    """`text` with the diamond's `closes_on:` block replaced or inserted; `text` itself when the
+    diamond is not in it. Bounds are indent-aware: a nested `- id:` (a fired entry, an input) must
+    not end the diamond or the block; only a sibling item does."""
+    lines = text.split("\n")
     id_re = re.compile(rf"^(\s*)- id: {re.escape(did)}\s*$")
     start = next((n for n, ln in enumerate(lines) if id_re.match(ln)), None)
     if start is None:
-        return False
+        return text
     item_indent = _indent_of(lines[start])
     field_indent = item_indent + 2
 
@@ -925,11 +953,7 @@ def write_closes_on(root: Path, did: str, entry: dict) -> bool:  # noqa: C901 �
         while at > start + 1 and not lines[at - 1].strip():
             at -= 1
         new = lines[:at] + rendered + lines[at:]
-    text = "\n".join(new)
-    if text == "\n".join(lines):
-        return False
-    write_checked(path, text)
-    return True
+    return "\n".join(new)
 
 
 def _stamp_after_id(path: Path, id_line_re: str, key: str, text: str) -> bool:

@@ -4,6 +4,65 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-15.
 
+## v0.325.1 - Mycelium's own write while a command runs is not the command's
+
+**2026-10-15.** Found in the first live session on 0.325.0, which its own notes listed as not shown.
+
+### What was wrong
+
+- **The agent was blamed for the start-up check's write.** Session start runs
+  `derive_closing_path.py --all --write` in the background; on the dogfood project it took 66 s.
+  The agent's first command, a read-only `git log`, ran meanwhile. `bash-state-guard.sh` compares
+  the diamonds file around every shell command, saw a change, and found no own writer in the
+  command, so it put the file back and told the person and the agent that the command had changed
+  it without asking, ending "Do not try another way of writing it".
+- **The put-back left the file as neither version.** The script writes one diamond at a time and
+  went on after the put-back: of the six closing-path stamps it moved that morning, five stood
+  and one was rolled back.
+
+### What changed
+
+- **The writer tells the guard first.** Before writing, `derive_closing_path.py` applies the same
+  `closes_on` edit to the guard's copy in every snapshot still open, and to the copy the scale
+  locks judge against (`bash_state_guard.own_writer_writes`). The comparison after the command
+  then sees the script's change on both sides and judges only what the command did.
+- **What the command did is still put back**, as before, to a version that keeps the script's
+  change, whichever of the two wrote first.
+- **The edit is applied, not the file copied.** A command that changed the file and then ran the
+  script would otherwise have its own change taken for the script's.
+- **The pages say so**: the hooks reference and the guard's own header.
+
+### Considered and not done
+
+- **A marker held while the start-up checks run**, with nothing put back meanwhile. It covers
+  only session start, and a command of the agent's own in that minute would go unjudged.
+- **A digest of what the writer wrote, kept where the guard reads it**, with no put-back of a file
+  that matches it. Proposed first. It does not settle a command that changed the file too: the
+  only copy to put back is the one from before both, which undoes the script's write.
+- **Moving the write out of the background tier.** It would add the derivation's time to every
+  session's first prompt, and leave the race for any other writer.
+- **`migrate_phase.py`.** Nothing runs it in the background; run on its own it is not put back,
+  as before.
+
+### Not covered, and what that costs
+
+- **A command that changes what a diamond's closing path is derived from, before the script reads
+  it**: the `closes_on` block the script writes is derived from the command's version, and that
+  block stands. The rest of the command's change is still put back.
+- **A comparison that falls between the copies being updated and the file being written** puts
+  the file back as a version that already holds the script's change, and wrongly tells the person
+  the command changed the file. The file still ends as the script left it. The window is the time
+  between two writes of one file.
+
+### Tests
+
+- `tests/python/test_mycelium_s_own_write_while_a_command_runs_is_not_put_back.py` (new): a
+  background write during a read-only command stands and nothing is said; with the call taken out
+  it is put back (the control, the dogfood race); a write between two running commands is kept out
+  of both; a command's own change before or after the write is put back with the write kept; a
+  command that runs the script after its own change is put back; the writer with no command
+  running, and an absent diamond.
+
 ## v0.325.0 - a shell command's change to the diamonds file is put back
 
 **2026-10-15.** The entry locks, the decision gates and the questions put to the person run when
