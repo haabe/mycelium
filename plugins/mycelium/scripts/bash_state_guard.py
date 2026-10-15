@@ -89,6 +89,15 @@ made a commit that changed the file. Those are history the person keeps, not a
 write. What is put back although the person may want it: `git stash pop` of their own changes
 (the popped version is the one kept, and named). What this does not catch, besides the two above:
 a file committed by one command and restored from HEAD by the next.
+
+MYCELIUM'S OWN WRITE WHILE A COMMAND RUNS IS NOT THE COMMAND'S (v0.325.1). Session start runs
+`derive_closing_path.py --all --write` in the background, and the agent's first command can run
+at the same time. On 0.325.0 that write was put back as the command's, and the person was told
+the agent had changed the file without asking (dogfood 2026-10-15, on a read-only `git log`); the
+script went on writing after the put-back, so the file matched neither version. Now the writer
+applies its own edit to the copies taken before each running command, before it writes
+(`own_writer_writes`), so the comparison sees only what the command did. A command that also
+changed the file is put back as before, to a version that keeps the writer's change.
 """
 from __future__ import annotations
 
@@ -678,6 +687,33 @@ def edited(payload: dict, project: Path) -> int:
         except (OSError, ValueError):
             continue  # SPEAKS: that snapshot's own post half says when it cannot be read
     return 0
+
+
+def own_writer_writes(project: Path, change) -> None:
+    """Mycelium's own writer is about to write the diamonds file (v0.325.1). `change` is its edit
+    as a function of the file's text; it is applied to every copy taken before a command still
+    running, so the comparison after that command sees this write in both versions and judges
+    only what the command did. Called by `derive_closing_path.py`, which session start runs in the
+    background while the agent's first command may be running (dogfood 2026-10-15: a `git log`
+    was told it had changed the file, and the write was put back mid-run, leaving the file as
+    neither version). The edit is applied, not the file copied: a command that changed the file
+    and then ran the writer would otherwise have its own change taken as the writer's. Called
+    BEFORE the write, so a comparison that falls between the two puts back a file that already
+    holds this change."""
+    state = project / STATE_REL
+    copies = [state / "active.yml.before"]
+    if (state / GUARD_SNAP).is_dir():
+        copies += [snap / RECORD_SNAP for snap in (state / GUARD_SNAP).iterdir()]
+    for copy in copies:
+        try:
+            if not copy.is_file():
+                continue
+            text = copy.read_text(encoding="utf-8")
+            new = change(text)
+            if new != text:
+                _replace_text(copy, new)
+        except (OSError, ValueError):
+            continue  # SPEAKS: that command's post half puts this write back and says so
 
 
 def _changed(project: Path, since: float) -> list[Path]:
