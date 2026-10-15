@@ -357,8 +357,13 @@ def first_commit_for_versions(
 
 
 def _released_from_gh() -> list[str]:
+    # Every release, page by page. Until 0.325.2 this was `gh release list --limit 500`,
+    # newest first: v0.325.1 was the 501st release, the oldest one the check counts
+    # (v0.49.19) fell off the end, and the backstop reported a published release missing.
+    # A larger limit only moves that cliff; the releases endpoint paged has none.
     r = subprocess.run(
-        ["gh", "release", "list", "--limit", "500", "--json", "tagName"],
+        ["gh", "api", "--paginate", "repos/{owner}/{repo}/releases?per_page=100",
+         "--jq", ".[].tag_name"],
         capture_output=True,
         text=True,
         check=False,
@@ -368,7 +373,7 @@ def _released_from_gh() -> list[str]:
         # that is the exact fail-open this script exists to close.
         print(f"::error::could not list releases: {r.stderr.strip()[:300]}", file=sys.stderr)
         raise SystemExit(2)
-    return [x["tagName"].lstrip("v") for x in json.loads(r.stdout or "[]")]
+    return [tag.lstrip("v") for tag in r.stdout.split()]
 
 
 def _cmd_repair(args) -> int:

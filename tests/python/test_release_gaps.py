@@ -216,7 +216,7 @@ def test_released_from_gh_strips_the_v_prefix(scripts_path, monkeypatch):
 
     class OK:
         returncode = 0
-        stdout = '[{"tagName": "v0.86.0"}, {"tagName": "v0.85.0"}]'
+        stdout = "v0.86.0\nv0.85.0\n"  # `gh api --jq .[].tag_name`: one tag a line (0.325.2)
         stderr = ""
 
     monkeypatch.setattr(rg.subprocess, "run", lambda *a, **k: OK())
