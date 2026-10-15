@@ -4,6 +4,44 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-15.
 
+## v0.325.2 - The release backstop reads every release
+
+**2026-10-15.** Found by the auto-release run for v0.325.1, which published the release and then failed.
+
+### What was wrong
+
+- **A published release read as missing.** `release_gaps.py` listed releases with
+  `gh release list --limit 500`, newest first. v0.325.1 was the 501st release, so the list stopped
+  one short of v0.49.19, the oldest release at or above the check's floor (v0.49.0), and
+  `release_gaps.py --check` failed with "1 documented version(s) have no GitHub Release: v0.49.19".
+  v0.49.19 was published on 2026-06-19. v0.325.1 itself was published and marked Latest; only the
+  backstop step after it failed.
+- **Every later run would have failed the same way**: each release run, the scheduled release
+  audit, and a manual repair dispatch, which would have tried to create v0.49.19 again.
+
+### What changed
+
+- **Every release is listed.** `_released_from_gh` pages through the releases endpoint with
+  `gh api --paginate`, 100 at a time, with no cap. An unreadable list still fails with exit 2.
+
+### Considered and not done
+
+- **A larger `--limit`.** It moves the cliff to the next round number rather than removing it.
+
+### Not covered, and what that costs
+
+- **That `gh api` resolves the repository inside the workflow as `gh release list` did** is shown
+  only by the release run after this merge. Locally, `release_gaps.py --check` passes against the
+  live releases page (677 documented versions, all released).
+
+### Tests
+
+- `tests/python/test_release_gaps_reads_every_release.py` (new): a fake `gh` holding 501 releases
+  answers both the old call and the new; the oldest release is listed and a documented version past
+  the old limit is not a gap (both red on 0.325.1); an unreadable list still exits 2.
+- `tests/python/test_release_gaps.py`: the v-prefix test's fake output is now the new call's, one tag a
+  line; what it asserts is unchanged.
+
 ## v0.325.1 - Mycelium's own write while a command runs is not the command's
 
 **2026-10-15.** Found in the first live session on 0.325.0, which its own notes listed as not shown.
