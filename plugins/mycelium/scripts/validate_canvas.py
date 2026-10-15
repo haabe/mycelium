@@ -211,6 +211,17 @@ def _collect_derived_from_edges(node: dict, path_prefix: str, ctx: dict) -> None
             ctx["graph"][source].add(candidate.strip())
 
 
+def _inside_closes_on(path_prefix: str) -> bool:
+    """True under a diamond's `closes_on` block, which derive_closing_path.py writes and in which
+    every id points at one defined elsewhere (v0.325.3). The v0.318.1 exemption above covers a
+    pointer whose ref ends in its id, the shape of a task input; an assumption input points at its
+    solution (`{id: a-006a-2, ref: "opportunities.yml#opp-006.sol-006a"}`), so two diamonds whose
+    paths share an assumption failed validation with the script's own output (dogfood 2026-10-15,
+    seven "duplicate id"s after one diamond was linked to its outcome). Outside the block, such a
+    pointer still counts."""
+    return any(seg.split("[", 1)[0] == "closes_on" for seg in path_prefix.split("."))
+
+
 def _walk_canvas(node, path_prefix, ctx):  # noqa: C901
     """Recursive descent over a canvas tree; collects ids, trace edges, file_ids.
 
@@ -227,7 +238,7 @@ def _walk_canvas(node, path_prefix, ctx):  # noqa: C901
         ref = node.get("ref")
         if isinstance(ref, str) and "#" in ref and ref.rsplit("#", 1)[1] == node_id:
             node_id = None
-        if node_id and isinstance(node_id, str):
+        if node_id and isinstance(node_id, str) and not _inside_closes_on(path_prefix):
             ctx["all_ids"].add(f"{ctx['stem']}#{node_id}")
             ctx["file_ids"].append(node_id)
 
@@ -839,7 +850,9 @@ def _collect_id_prefixes(node, section, seen):
 
     Only entries carrying an `id` count. A cross-reference to an id inside prose or a
     field is not a definition and must not register, or every canvas that cites its
-    own entries would look misfiled.
+    own entries would look misfiled. Nor does an id inside a `closes_on` block, which points
+    (v0.325.3, `_inside_closes_on`): an archived and an active diamond naming one assumption on
+    their closing paths read as that prefix defined under two sections.
     """
     if isinstance(node, dict):
         ident = node.get("id")
@@ -847,8 +860,9 @@ def _collect_id_prefixes(node, section, seen):
             match = ID_PREFIX_RE.match(ident)
             if match:
                 seen.setdefault(match.group(1), set()).add(section)
-        for value in node.values():
-            _collect_id_prefixes(value, section, seen)
+        for key, value in node.items():
+            if key != "closes_on":
+                _collect_id_prefixes(value, section, seen)
     elif isinstance(node, list):
         for value in node:
             _collect_id_prefixes(value, section, seen)

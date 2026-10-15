@@ -4,6 +4,51 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-15.
 
+## v0.325.3 - A closing path's pointers are not ids
+
+**2026-10-15.** Found in the dogfood project the same day, when one diamond was linked to its outcome.
+
+### What was wrong
+
+- **The validator failed on the closing-path script's own output.** `derive_closing_path.py
+  --write` stores each leaf assumption a diamond waits on under `closes_on.inputs`, as
+  `{kind: assumption, id: a-006a-2, ref: "opportunities.yml#opp-006.sol-006a"}`. That points at an
+  assumption defined in `opportunities.yml`; it defines nothing in `active.yml`. The v0.318.1
+  exemption skips a pointer only when its `ref` ends in its own id, the shape of a task input, and
+  an assumption input's `ref` ends in its solution. So when two diamonds' paths named one
+  assumption, each counted as a duplicate id. In the dogfood project, linking an L2 to its outcome
+  put seven of an L4's assumptions on the L2's path too, and validation failed on all seven, in a
+  block nobody writes by hand.
+- **The prefix check warned of a misfiling for the same reason**: an archived and an active
+  diamond naming one assumption read as `a-030a-NNN` defined under two sections.
+
+### What changed
+
+- **Nothing inside a `closes_on` block counts as defining an id**, for the duplicate count
+  (`_inside_closes_on`) and for the prefix check. Its `fired` entries, which carry a task id with
+  no `ref`, are covered the same way. A pointer outside `closes_on` still counts, as the v0.318.1
+  test requires.
+
+### Considered and not done
+
+- **Widening the v0.318.1 rule to any `ref` into another file.** It would also exempt a real entry
+  outside `closes_on` that happens to carry a `ref`, which that release's test keeps counted.
+- **Writing the assumption's id at the end of its `ref`.** It changes what `ref` means for every
+  reader of the block, to satisfy one check.
+
+### Not covered, and what that costs
+
+- **An id somebody hand-writes inside `closes_on`** is not counted either. The block is the
+  script's store; the keys it keeps from a hand edit (`routes_on_record` and the others in
+  `PRESERVED_KEYS`) name tasks and do not define ids.
+
+### Tests
+
+- `tests/python/test_validate_canvas.py`: an assumption on two diamonds' closing paths, and a task
+  in both their `fired` lists, is not a duplicate while a real duplicate diamond id still is; an
+  assumption on an archived and an active closing path is not a misfiling while a prefix really
+  defined under two sections still warns. Both red on 0.325.2.
+
 ## v0.325.2 - The release backstop reads every release
 
 **2026-10-15.** Found by the auto-release run for v0.325.1, which published the release and then failed.

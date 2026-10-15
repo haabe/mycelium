@@ -657,6 +657,62 @@ def test_a_pointer_to_an_id_in_another_file_is_not_a_duplicate(tmp_path, scripts
     assert dups == ["a-1", "l5"], errors
 
 
+def test_an_assumption_on_two_closing_paths_is_not_a_duplicate(tmp_path, scripts_path, monkeypatch):
+    """v0.325.3, dogfood 2026-10-15: linking an L2 to its outcome put seven of an L4's assumption
+    inputs on the L2's closing path too, and validation failed on all seven. An assumption input
+    points at its solution, not at itself, so the v0.318.1 exemption missed it. Nothing inside
+    `closes_on` defines an id; a real duplicate outside it still counts (the control)."""
+    canvas_dir = tmp_path / ".claude" / "canvas"
+    canvas_dir.mkdir(parents=True)
+    (canvas_dir / "active.yml").write_text(textwrap.dedent("""\
+        active_diamonds:
+          - id: l2-adoption
+            closes_on:
+              inputs:
+                - {kind: assumption, id: a-006a-2, ref: "opportunities.yml#opp-006.sol-006a"}
+              fired:
+                - {id: ht-127, kind: task, landed_as: status completed}
+          - id: l4-delivery
+            closes_on:
+              inputs:
+                - {kind: assumption, id: a-006a-2, ref: "opportunities.yml#opp-006.sol-006a"}
+              fired:
+                - {id: ht-127, kind: task, landed_as: status completed}
+          - id: l4-delivery
+    """))
+    validator = _import_validator(scripts_path)
+    monkeypatch.setattr(validator, "CANVAS_DIR", canvas_dir)
+    _graph, _ids, errors = validator.collect_trace_graph()
+    dups = sorted(e.split("'")[1] for e in errors if "duplicate id" in e)
+    assert dups == ["l4-delivery"], errors
+
+
+def test_an_assumption_on_an_archived_and_an_active_closing_path_is_not_misfiled(tmp_path,
+                                                                                scripts_path):
+    """v0.325.3, same dogfood run: the prefix check read `a-030a-NNN` as defined under
+    active_diamonds and archived_diamonds, from two closing paths that only point at it. A prefix
+    really defined under two sections still warns (the control)."""
+    canvas_dir = tmp_path / ".claude" / "canvas"
+    canvas_dir.mkdir(parents=True)
+    (canvas_dir / "active.yml").write_text(textwrap.dedent("""\
+        active_diamonds:
+          - id: l2-adoption
+            closes_on:
+              inputs:
+                - {kind: assumption, id: a-030a-0, ref: "opportunities.yml#opp-030.sol-030a"}
+          - id: comp-001
+        archived_diamonds:
+          - id: l4-old
+            closes_on:
+              inputs:
+                - {kind: assumption, id: a-030a-0, ref: "opportunities.yml#opp-030.sol-030a"}
+          - id: comp-002
+    """))
+    validator = _import_validator(scripts_path)
+    warns = validator.id_prefix_section_warnings(canvas_dir)
+    assert len(warns) == 1 and "'comp-NNN'" in warns[0], warns
+
+
 def test_resolve_trace_references_flags_missing_target(tmp_path, scripts_path, monkeypatch):
     """Known-bad: trace edge points to a target_id that doesn't exist in any canvas."""
     canvas_dir = tmp_path / ".claude" / "canvas"
