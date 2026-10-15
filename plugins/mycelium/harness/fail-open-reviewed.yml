@@ -1115,10 +1115,18 @@ reviewed:
     The handler calls `emit_deny`, which prints the refusal with the reason and exits; the
     `return []` the scan sees after it is not reached. Asserted by
     test_a_record_that_cannot_be_read_refuses_and_says_so. Reviewed 2026-10-13, v0.324.0.
-- id: bash_state_guard.py@47229885d6
+- id: bash_state_guard.py@aefe89ecbf
   verdict: accepted
   reason: >-
-    `_put_back_the_hold` cannot compare the folders (the diamonds file or its copy cannot be read,
-    or the scope hold's script cannot be loaded). It returns a line saying so and "nothing was put
-    back", which `post` gives to the person (`systemMessage`) and to the agent. Asserted by
-    test_when_the_hold_s_own_script_cannot_be_loaded_that_is_said. Reviewed 2026-10-13, v0.324.0.
+    `_put_back_the_record` cannot read the diamonds file or its copy from before the command. It
+    returns `unread`, which `post` gives to the person (`systemMessage`) and to the agent: whether
+    the command changed the file is not known and nothing was put back. Asserted by
+    test_when_the_file_cannot_be_read_that_is_said_and_nothing_is_put_back. Reviewed 2026-10-15,
+    v0.325.0 (replaces bash_state_guard.py@47229885d6, the same handler in `_put_back_the_hold`).
+- id: bash_state_guard.py@2b73adeaa5
+  verdict: accepted
+  reason: >-
+    `_put_back_the_record` cannot load the scope hold's script to name the folders. The file is
+    still put back, and the warning line goes into what `post` tells the person and the agent.
+    Asserted by test_when_the_hold_s_own_script_cannot_be_loaded_that_is_said. Reviewed
+    2026-10-15, v0.325.0.

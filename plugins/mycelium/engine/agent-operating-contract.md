@@ -161,4 +161,7 @@ to build and make the edit with Edit or Write, so that they are asked; an empty 
 is their answer to give, never yours to write so that the question goes away. A write outside
 the folders is put to them too: propose widening the list, or let them answer write by write.
 A shell command that changes the list is undone afterwards and the person is told.
+Since 0.325.0 that holds for any change a shell command makes to the diamonds file: it is put
+back, the command's version is kept and named, and the person is told. Write that file with Edit
+or Write.
 

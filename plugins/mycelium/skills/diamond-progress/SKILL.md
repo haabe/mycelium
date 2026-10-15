@@ -134,8 +134,9 @@ See `${CLAUDE_PLUGIN_ROOT}/engine/agent-operating-contract.md` *Canvas writes â€
 
    **What the hold cannot see:** a command that writes files itself (a scaffolder, a clone). Say
    so if you run one during delivery, and name what it wrote. A shell command that changes
-   `in_scope_paths` itself is undone afterwards (the whole diamonds file is put back) and the
-   person is told: change the folders with Edit or Write, never from the shell.
+   `in_scope_paths`, or since 0.325.0 anything else in the diamonds file, is undone afterwards
+   (the whole file is put back) and the person is told: change it with Edit or Write, never
+   from the shell.
 
    **A cycle that committed before 0.324.0** carries no list and is not held; session start names
    it. Offer the person the two choices above for it once, and do not add either unasked.

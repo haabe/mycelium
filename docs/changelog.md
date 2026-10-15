@@ -2,7 +2,92 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-10-13.
+**Last updated**: 2026-10-15.
+
+## v0.325.0 - a shell command's change to the diamonds file is put back
+
+**2026-10-15.** The entry locks, the decision gates and the questions put to the person run when
+the agent writes `.claude/diamonds/active.yml` with its edit tools. A shell command that wrote the
+file stepped around all of them, and unless its text showed the write, nothing was said.
+
+### What was wrong
+
+- **A script that names the file only inside itself wrote it unseen.** Dogfood 2026-10-14:
+  `python3 newbar.py values.yml` opened the diamonds file and replaced a whole definition of done.
+  `bash-state-guard.sh` read the command, saw no write to the file, and let it run; afterwards the
+  scale locks found nothing to object to, because a changed bar breaks no lock. The change stood,
+  unsaid. The before-and-after comparison added in 0.321.1 and 0.324.0 covered the files that
+  switch a stop off and the folders a delivery cycle may write to, and nothing else in the file.
+- **A command that only mentioned the path was refused.** Minutes later a heredoc appending an
+  entry to another file was refused, because its text named the diamonds file and the guard
+  guessed that an unseen write might land there.
+
+### What changed
+
+- **The file is judged, not the command.** It is compared around every shell command. If the
+  command changed it, it is put back as it was before the command, the command's version is kept
+  under `.claude/state/bash-guard/put-back/` and named, and the person (`systemMessage`) and the
+  agent are told which diamonds the command touched and what the scale locks would have said.
+  Nothing is lost: the kept version is there to make the change properly, with Edit or Write.
+- **Only a command whose write target is the file is refused before it runs**: a redirect,
+  `sed -i`, `tee` or `mv` naming it. The guess that refused any command naming the file beside an
+  unseen write is gone, with its false refusals.
+- **Mycelium's own writers are recognised by where the script is, not by its name.**
+  `derive_closing_path.py --write` and `migrate_phase.py`, run on their own, are not put back when
+  the script run is the plugin's own copy (`${CLAUDE_PLUGIN_ROOT}` is read as the plugin's
+  folder). Until now a script of the agent's own, given one of those names, would have passed the
+  first half.
+- **Git is not a write.** A command that leaves the file as it is committed at HEAD (a pull, a
+  checkout, a reset, a stash), or that stops mid-merge, mid-rebase, mid-cherry-pick or mid-revert,
+  is not put back, unless the command itself made a commit that changed the file.
+- **The pages say so**: the hooks reference, the context surface, the system card, the
+  environment page, `skills/diamond-progress` and the operating contract.
+
+### Considered and not done
+
+- **Telling and not putting back.** The change would stand until someone acted; the maintainer
+  ruled twice on the same shape, for the switches (2026-10-11, "Put it back and tell me") and for
+  the folders (2026-10-13, "Put it back, tell me").
+- **Dropping the refusal before the command altogether**, as the candidate proposed. A write whose
+  target is the file costs nothing to refuse and refuses nothing else, and it saves a command that
+  would only be put back.
+- **Keeping the guess as well.** It refused text that only mentioned the path, and still missed a
+  script that named the file only inside itself.
+- **Putting back only some fields**, such as the bar or the decisions. Which fields matter is the
+  same guess in another place; the edit tools are where any change is judged.
+- **The same comparison for the canvas files.** The candidate names it. Not in this release: the
+  canvas files are schema-checked after a shell command already, and putting them back is a
+  separate decision.
+
+### Not put back, and what that costs
+
+- **The person's override** (`MYCELIUM_GUARD_STATE_EDIT=1`, set before the command).
+- **`git stash pop` of the person's own changes is put back**, like any other write; the popped
+  version is the one kept, and named.
+- **A file committed by one command and restored from HEAD by the next** gets past it, as does a
+  process the command leaves running, or a script written to rewrite Mycelium's own copy too. It is
+  a check on drift, not a sandbox.
+- **A file the command created where there was none** is left, and said only if it names folders.
+
+### Not shown
+
+- **A replay in a real session.** What is shown is tests that drive both halves around each case.
+- **Time.** Naming the diamonds touched takes about 10 ms on a 6,260-line diamonds file (one Mac,
+  medians of 5); a command that changes nothing costs one more read of the file.
+
+### Tests
+
+- `tests/python/test_a_shell_write_to_the_diamonds_file_is_put_back.py` (new): the 2026-10-14
+  shape, the diamonds named, a deleted file, an unreadable copy, a file that no longer parses,
+  Mycelium's own writers and anything else called by their names, the override, and git: a
+  checkout, a reset, a commit made by the command, a stash pop, a merge stopped on a conflict.
+  Run against 0.324.0, the put-back tests fail and the controls pass.
+- `tests/python/test_bash_state_guard.py`: the refusal holds for a target that is the file; the
+  2026-10-14 heredoc and script are no longer refused; a lock broken from the shell is put back
+  and still named.
+- `tests/python/test_the_scope_hold_survives_a_shell_command.py`: a command that leaves the
+  folders alone is now put back too, without naming them; a close is recorded by Mycelium's own
+  writer.
 
 ## v0.324.0 - the scope hold is switched on by the delivery cycle that needs it
 

@@ -9,11 +9,13 @@ would run.
 
 Two halves, one script:
 
-  pre   (PreToolUse Bash) refuses a command that visibly writes diamonds/active.yml: a redirect,
-        `sed -i`, `tee`, or a script that names the file and writes. The remedy is the Edit or
-        Write tool, where the scale-lock gate judges the change. Reads are never refused. Mycelium's
-        own writer (`derive_closing_path.py`, which sets `closes_on`) is allowed. It also snapshots
-        diamonds/active.yml and stamps the time, for the second half.
+  pre   (PreToolUse Bash) refuses a command whose write target is diamonds/active.yml itself: a
+        redirect, `sed -i`, `tee` or `mv` naming the file. The remedy is the Edit or Write tool,
+        where the scale-lock gate judges the change. Reads are never refused. Mycelium's own
+        writers (`derive_closing_path.py`, which sets `closes_on`, and `migrate_phase.py`) are
+        allowed. It also snapshots diamonds/active.yml and stamps the time, for the second half.
+        Since v0.325.0 it no longer guesses at writes it cannot see (a script, a variable path):
+        those are the comparison's, below.
   post  (PostToolUse Bash) looks at canvas and diamonds files changed since the stamp: each is
         checked against its schema, and a changed diamonds file is judged against the snapshot by
         the same verdict the write hook uses (`scale_locks.violations_between`), and its rulings
@@ -65,15 +67,39 @@ file at all (the first half refuses the ones it can read). Not put back: a recor
 created where there was none (it is said, and left), and the three cases above. What this does
 not catch: a process the command leaves running that writes after the command has returned, and a
 script written to rewrite the snapshot as well. It is a check on drift, not a sandbox.
+
+ANY CHANGE A SHELL COMMAND MAKES TO THE DIAMONDS FILE IS PUT BACK (v0.325.0). Until then the
+comparison above spoke only about the folders, and the first half judged the rest of the file by
+the command's text, which failed both ways in one session (dogfood 2026-10-14). `python3
+newbar.py values.yml`, a script that opened the diamonds file itself, replaced a whole definition
+of done, and nothing was said or undone; the scale locks found nothing to object to, because a
+changed bar breaks no lock. Minutes later a heredoc appending to another file was refused because
+its text mentioned the path. So the file is judged, not the command:
+
+  post    if the command changed the diamonds file at all, the file is put back as the copy, the
+          command's version is kept under .claude/state/bash-guard/put-back/ and named, and the
+          person and the agent are told which diamonds the command touched and what the scale
+          locks would have said about it.
+
+Not put back, besides the cases above: Mycelium's own writers run on their own, when the script
+run is this plugin's own copy (by name alone, a script the agent wrote would pass), and a git
+command that leaves the file as it is committed at HEAD (a pull, a checkout, a reset, a stash),
+or that stops mid-merge, mid-rebase, mid-cherry-pick or mid-revert, unless the command itself
+made a commit that changed the file. Those are history the person keeps, not a
+write. What is put back although the person may want it: `git stash pop` of their own changes
+(the popped version is the one kept, and named). What this does not catch, besides the two above:
+a file committed by one command and restored from HEAD by the next.
 """
 from __future__ import annotations
 
+import difflib
 import hashlib
 import importlib.util
 import json
 import os
 import re
 import shutil
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -142,33 +168,20 @@ def _without_comments(cmd: str) -> str:
 
 
 def writes_active(cmd: str, project: str) -> bool:
-    """Does this command visibly write diamonds/active.yml?"""
+    """Is diamonds/active.yml itself the target of a write in this command?
+
+    v0.325.0: only a target that IS the file. Until then a command that named the file anywhere
+    and also wrote somewhere unseen (a script, a variable path) was refused, which refused a heredoc
+    that only mentioned the path while appending to another file, and still let through a script
+    that named the file only inside itself. A write this cannot see is put back after the command
+    (`_put_back_the_record`), so guessing here bought nothing but false refusals."""
     cmd = _without_comments(cmd)
     if _MOVES_ACTIVE.search(cmd):
         return True
     if _OWN_WRITER.fullmatch(cmd):
         return False
     scan = hi.bash_write_targets(cmd, project)
-    if any(t.inside and t.rel == ACTIVE_REL for t in scan.targets):
-        return True
-    names_it = "diamonds/active.yml" in cmd
-    return names_it and any(_could_be_active(o) for o in scan.opaque)
-
-
-_VARIABLE = re.compile(r"[$`()]")
-
-
-def _could_be_active(opaque: str) -> bool:
-    """Could this opaque write (`"redirect on $TMPDIR/hits.txt"`, or a writer with no visible
-    target) land on active.yml? v0.318.1: any opaque write anywhere in a command that NAMED the file
-    refused it, so `grep ... active.yml > $TMPDIR/hits.txt` was refused as a write (68 refusals in
-    the dogfood transcripts, 2026-09-25..10-10; 13 of them released by this rule, none of those an
-    unseen write). A last component that is a literal name other than active.yml cannot be it."""
-    if " on " not in opaque:
-        return True  # a writer with no visible target: unknown, keep refusing
-    target = opaque.split(" on ", 1)[1].strip().strip("'\"").rstrip("/")
-    base = target.rsplit("/", 1)[-1]
-    return bool(_VARIABLE.search(base)) or base == "active.yml"
+    return any(t.inside and t.rel == ACTIVE_REL for t in scan.targets)
 
 
 def pre(payload: dict, project: Path) -> int:
@@ -192,7 +205,9 @@ def pre(payload: dict, project: Path) -> int:
             else:
                 (state / "active.yml.before").unlink(missing_ok=True)
             _drop_old_snapshots(state)
-            _snapshot_guard_state(project, state, cmd, _call_id(payload))
+            cwd = payload.get("cwd") if isinstance(payload.get("cwd"), str) else ""
+            _snapshot_guard_state(project, state, cmd, _call_id(payload),
+                                  Path(cwd) if cwd else project)
             (state / "stamp").write_text(repr(time.time()))
         except OSError:
             return 0  # SPEAKS in post: with no stamp, post says it could not tell what changed
@@ -229,7 +244,32 @@ def _digest(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def _snapshot_guard_state(project: Path, state: Path, cmd: str, call: str) -> None:
+_ROOT_VARS = ("${CLAUDE_PLUGIN_ROOT}", "$CLAUDE_PLUGIN_ROOT")
+_OWN_SCRIPT = re.compile(r"\"?([^\s;&|<>`$()\"]*?(?:"
+                         + "|".join(re.escape(w) for w in ALLOWED_WRITERS) + r"))\"?")
+
+
+def _runs_own_writer(cmd: str, base: Path) -> bool:
+    """Is this command one of Mycelium's own writers of the diamonds file, run on its own, AND is
+    the script it runs this plugin's own copy (v0.325.0)? By name alone, a script the agent wrote
+    and called `derive_closing_path.py` would have been let through. `${CLAUDE_PLUGIN_ROOT}` is
+    read as this plugin's folder, since some runtimes leave it in the command."""
+    text = _without_comments(cmd)
+    for var in _ROOT_VARS:
+        text = text.replace(var, str(HERE.parent))
+    m = _OWN_SCRIPT.search(text) if _OWN_WRITER.fullmatch(text) else None
+    if m is None:
+        return False
+    script = Path(m.group(1)).expanduser()
+    try:
+        return (script if script.is_absolute() else base / script).resolve().parent == HERE
+    except OSError:
+        return False  # SPEAKS: not shown to be Mycelium's own, so its change is put back and told
+
+
+def _snapshot_guard_state(project: Path, state: Path, cmd: str, call: str,
+                          base: Path | None = None) -> None:
+    base = base or project
     snap = state / GUARD_SNAP / call
     shutil.rmtree(snap, ignore_errors=True)
     _state_dir.prepare_dir(snap)
@@ -245,6 +285,8 @@ def _snapshot_guard_state(project: Path, state: Path, cmd: str, call: str) -> No
     asked = sorted({g for r in hi.bash_write_targets(cmd, str(project)).targets
                     if (g := hi.is_guard_state(r.rel))})
     own = bool(_OWN_GUARD_WRITER.fullmatch(_without_comments(cmd)))
+    # v0.325.0: Mycelium's own writer of the diamonds file, run on its own, is not put back.
+    own_writer = _runs_own_writer(cmd, base)
     # v0.322.6: which Mycelium switches each Claude Code settings file carries now (their keys and
     # values, not the files), and whether the person's override was on BEFORE the command. Read
     # afterwards it could have been set by the command itself, through the settings file.
@@ -254,7 +296,7 @@ def _snapshot_guard_state(project: Path, state: Path, cmd: str, call: str) -> No
     if record:
         shutil.copyfile(project / ACTIVE_REL, snap / RECORD_SNAP)
     (snap / "index.json").write_text(json.dumps({
-        "files": files, "asked": asked, "own": own, "settings": settings,
+        "files": files, "asked": asked, "own": own, "own_writer": own_writer, "settings": settings,
         "override": hi.human_override(), "git": _git_before(project), "record": record}))
 
 
@@ -362,7 +404,8 @@ def _put_back_guard_state(project: Path, state: Path, call: str,
     """Undo what the command did to a file that switches a stop off, unless the person was asked.
     Returns one line per file put back; a file it could not put back is named as such. `extras`,
     when given, receives what else the snapshot held: `settings`, the two lists
-    `_put_back_settings` returns, and `git`, where the commit pointer was before the command."""
+    `_put_back_settings` returns, `git`, where the commit pointer was before the command, and
+    `record`, what `_put_back_the_record` did to the diamonds file."""
     snap = state / GUARD_SNAP / call
     if not (snap / "index.json").is_file():
         return []  # no snapshot for this call: its before half did not run, so nothing to compare
@@ -377,7 +420,7 @@ def _put_back_guard_state(project: Path, state: Path, call: str,
         if extras is not None and isinstance(index, dict):
             extras["settings"] = _put_back_settings(project, index)
             extras["git"] = index.get("git") if isinstance(index.get("git"), dict) else {}
-            extras["hold"] = _put_back_the_hold(project, snap, index)
+            extras["record"] = _put_back_the_record(project, state, call, index)
         # The override as it was BEFORE the command (v0.322.6); a snapshot from an older version
         # has no such note and falls back to the environment now.
         if index.get("own") or index.get("override", hi.human_override()):
@@ -405,64 +448,190 @@ def _put_back_guard_state(project: Path, state: Path, call: str,
     return out
 
 
-def _hold_changed(active: Path, copy: Path, had_record: bool) -> tuple[list[str], str | None]:
-    """(what the command changed in where delivery cycles may write, one line per cycle; the
-    diamonds file as it was, or None when there was none). OSError when it cannot be compared."""
-    before = copy.read_text(encoding="utf-8", errors="replace") if had_record else None
-    after = active.read_text(encoding="utf-8", errors="replace") if active.is_file() else None
-    if before == after:
-        return [], before
+def _hold_lines(before: str | None, after: str | None) -> list[str]:
+    """What the command changed in where delivery cycles may write, one line per cycle (v0.324.0).
+    OSError when the scope hold's own script cannot be loaded."""
     sc = _load("scope_check")
     if sc is None:
         raise OSError("the scope hold's own script could not be loaded")
-    return sc.changed_between(before, after), before
+    return sc.changed_between(before, after)
 
 
-def _put_back_the_hold(project: Path, snap: Path, index: dict) -> dict:
-    """What the command did to the folders a delivery cycle may write to (v0.324.0).
+_ID_LINE = re.compile(r"^(\s*)-\s+id:\s*['\"]?([^'\"\s#]+)")
 
-    Returns {} when it did nothing to them, else `lines` (one per cycle) and `outcome`: "put
-    back", or why not. The whole diamonds file is put back as the copy kept before the
-    command, or as an edit tool last left it while the command ran. Nothing is compared for a
-    snapshot written by an earlier version (it keeps no copy), for Mycelium's own upgrade script,
-    or when the person's override was on before the command."""
-    if "record" not in index or index.get("own") or index.get("override", hi.human_override()):
-        return {}
-    active, copy = project / ACTIVE_REL, snap / RECORD_SNAP
+
+def _owners(lines: list[str]) -> list[str]:
+    """For each line, the id of the diamond entry it sits in: the `- id:` lines at the shallowest
+    indentation in the file are the diamonds; a line above the first is the file's own."""
+    found = [(len(m.group(1)), i, m.group(2)) for i, ln in enumerate(lines)
+             if (m := _ID_LINE.match(ln))]
+    top = min((d for d, _, _ in found), default=0)
+    starts = {i: name for d, i, name in found if d == top}
+    out, cur = [], "the top of the file"
+    for i in range(len(lines)):
+        cur = starts.get(i, cur)
+        out.append(cur)
+    return out
+
+
+def _diamonds_touched(before: str, after: str) -> list[str]:
+    """Which diamonds the command changed, in the order they appear, by the entry each changed
+    line falls in. Read from the lines, not parsed, so it also answers for a file that no longer
+    parses."""
+    a, b = before.splitlines(), after.splitlines()
+    oa, ob = _owners(a), _owners(b)
+    out: list[str] = []
+    for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(None, a, b, autojunk=False).get_opcodes():
+        if tag == "equal":
+            continue
+        names = oa[i1:i2] + ob[j1:j2] or ([ob[j1]] if j1 < len(ob) else [oa[i1]] if i1 < len(oa)
+                                          else ["the end of the file"])
+        for n in names:
+            if n not in out:
+                out.append(n)
+    return out
+
+
+def _git_left_it(project: Path, index: dict, after: str | None) -> bool:
+    """Did git, and not a write, leave the file as it is? True when the file now reads as it is
+    committed at HEAD, or the repository is stopped mid-merge, mid-rebase, mid-cherry-pick or
+    mid-revert; never when the command itself made a commit that changed the file."""
+    git = index.get("git") if isinstance(index.get("git"), dict) else {}
+    repo = git.get("repo")
+    cs = _load("commit_scan") if repo and after is not None else None
+    if cs is None:
+        return False
+    rel = Path(os.path.relpath(project / ACTIVE_REL, repo)).as_posix()
     try:
-        lines, before = _hold_changed(active, copy, bool(index.get("record")))
-    except OSError as exc:
-        why = str(exc) if not exc.filename else type(exc).__name__
-        return {"lines": [f"(WARNING: the folders could not be compared: {why})"],
-                "outcome": "nothing was put back"}
-    if not lines:
+        for sha in cs.made_commits(repo, git.get("head") or "", git.get("reflog")):
+            # sibling module in this plugin; its runner is the one place git is called from
+            done = cs._git(repo, "diff-tree", "--no-commit-id", "--name-only", "-r", "--root",  # noqa: SLF001
+                           sha, "--", rel)
+            if done.returncode != 0 or done.stdout.strip():
+                return False
+        for name in ("MERGE_HEAD", "REBASE_HEAD", "CHERRY_PICK_HEAD", "REVERT_HEAD"):
+            where = cs._git(repo, "rev-parse", "--git-path", name)  # noqa: SLF001
+            if where.returncode == 0 and Path(repo, where.stdout.strip()).exists():
+                return True
+        shown = cs._git(repo, "show", f"HEAD:{rel}")  # noqa: SLF001
+    except (OSError, subprocess.SubprocessError):
+        return False  # SPEAKS: an unreadable repository is no proof of git; the change is put back
+    return shown.returncode == 0 and shown.stdout == after
+
+
+def _would_have(project: Path, before: str | None, after: str | None) -> list[str]:
+    """What the scale locks say about the command's version, for the agent to know what the change
+    would also have broken. Nothing when either side is missing or cannot be read."""
+    sl = _load("scale_locks")
+    if sl is None or before is None or after is None:
+        return []
+    try:
+        return list(sl.violations_between(str(project), before, after))[:5]
+    except sl.UnreadableError as exc:
+        return [f"the file does not parse as the command left it: {exc}"]
+
+
+def _keep(state: Path, call: str, text: str) -> str:
+    """Keep the command's version of the file, so that putting it back loses nothing."""
+    keep = state / "put-back"
+    _state_dir.prepare_dir(keep)
+    path = keep / f"{time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())}-{call}-active.yml"
+    path.write_text(text, encoding="utf-8")
+    return (STATE_REL / "put-back" / path.name).as_posix()
+
+
+def _put_back_the_record(project: Path, state: Path, call: str, index: dict) -> dict:
+    """What the command did to the diamonds file (v0.324.0 for the folders, v0.325.0 for all of it).
+
+    Returns {} when it changed nothing that is put back, else `hold` (one line per delivery cycle
+    whose folders changed), `touched` (the diamonds whose lines changed), `would` (what the scale
+    locks say about the command's version), `kept` (where that version is kept), `removed` and
+    `outcome`: "put back", or why not. The whole file is put back as the copy kept before the
+    command, or as an edit tool last left it while the command ran. Nothing is compared for a
+    snapshot written by an earlier version (it keeps no copy), for Mycelium's own writers run on
+    their own, or when the person's override was on before the command; nothing is put back when
+    git left the file as it is (`_git_left_it`). A file the command created where there was none
+    is said only when it names folders, and left."""
+    if ("record" not in index or index.get("own") or index.get("own_writer")
+            or index.get("override", hi.human_override())):
         return {}
-    outcome = "put back"
+    active, copy = project / ACTIVE_REL, state / GUARD_SNAP / call / RECORD_SNAP
+    try:
+        before = (copy.read_text(encoding="utf-8", errors="replace") if index.get("record")
+                  else None)
+        after = active.read_text(encoding="utf-8", errors="replace") if active.is_file() else None
+    except OSError as exc:  # SPEAKS: post tells the person and the agent it could not compare
+        return {"unread": f"{ACTIVE_REL} or its copy from before the command could not be read "
+                          f"({type(exc).__name__}), so whether the command changed it is not "
+                          "known and nothing was put back"}
+    if before == after or _git_left_it(project, index, after):
+        return {}
+    try:
+        hold = _hold_lines(before, after)
+    except OSError as exc:
+        hold = [f"(WARNING: the folders could not be compared: {exc})"]
     if before is None:
-        outcome = "there was no diamonds file before the command, so nothing was put back"
-    else:
+        if not hold:
+            return {}
+        return {"hold": hold, "touched": [], "would": [], "kept": "", "removed": False,
+                "outcome": "there was no diamonds file before the command, so nothing was put back"}
+    rec = {"hold": hold, "touched": _diamonds_touched(before, after or ""),
+           "would": _would_have(project, before, after), "kept": "", "removed": after is None,
+           "outcome": "put back"}
+    if after is not None:
         try:
-            if active.is_file():
-                _replace_text(active, before)
-            else:
-                _state_dir.prepare_dir(active.parent)
-                shutil.copyfile(copy, active)
-        except OSError as exc:
-            outcome = (f"COULD NOT BE PUT BACK ({type(exc).__name__}); the diamonds file is as "
-                       "the command left it")
-    return {"lines": lines, "outcome": outcome}
+            rec["kept"] = _keep(state, call, after)
+        except OSError:
+            rec["kept"] = ""  # SPEAKS: the told text says the command's version was not kept
+    rec["outcome"] = _restore(active, copy, before)
+    return rec
 
 
-def _hold_told(hold: dict) -> str:
-    told = ("A shell command changed where a delivery cycle may write, and you were not asked "
-            "first: " + "; ".join(hold["lines"]) + ". ")
-    if hold["outcome"] == "put back":
-        told += (f"Mycelium put {ACTIVE_REL} back as it was before the command, so the hold is "
-                 "as it was; anything else that command changed in that file is undone with it. ")
+def _restore(active: Path, copy: Path, before: str) -> str:
+    """Put the diamonds file back as it was; "put back", or why not."""
+    try:
+        if active.is_file():
+            _replace_text(active, before)
+        else:
+            _state_dir.prepare_dir(active.parent)
+            shutil.copyfile(copy, active)
+    except OSError as exc:
+        return (f"COULD NOT BE PUT BACK ({type(exc).__name__}); the diamonds file is as the "
+                "command left it")
+    return "put back"
+
+
+def _record_told(rec: dict) -> str:
+    if rec.get("unread"):
+        return (f"After a shell command, {rec['unread']}. Look at the file before going on; it is "
+                "written with the Edit or Write tool.")
+    hold = rec.get("hold") or []
+    if hold:
+        told = ("A shell command changed where a delivery cycle may write, and you were not asked "
+                "first: " + "; ".join(hold) + ". ")
     else:
-        told += f"Mycelium has not changed that file: {hold['outcome']}. "
-    return told + ("Where the agent may write is yours to say. If you want the folders changed, "
-                   "have the agent make the change with its edit tool, where you are asked.")
+        what = ", ".join(rec.get("touched") or []) or "its contents"
+        told = f"A shell command changed {ACTIVE_REL} ({what}), and you were not asked first. "
+    if rec["outcome"] == "put back":
+        told += (f"Mycelium put {ACTIVE_REL} back as it was before the command"
+                 + (", so the hold is as it was" if hold else "")
+                 + "; anything else that command changed in that file is undone with it. ")
+        if rec.get("kept"):
+            told += f"The command's version is kept at {rec['kept']}. "
+        elif not rec.get("removed"):
+            told += "The command's version could not be kept. "
+    else:
+        told += f"Mycelium has not changed that file: {rec['outcome']}. "
+    if rec.get("would"):
+        told += "The scale locks would also have objected: " + "; ".join(rec["would"]) + ". "
+    if hold:
+        return told + ("Where the agent may write is yours to say. If you want the folders "
+                       "changed, have the agent make the change with its edit tool, where you are "
+                       "asked.")
+    return told + ("The diamonds file is written with the Edit or Write tool, where the entry "
+                   "locks, the decision gates and the questions put to you run. If the change is "
+                   "wanted, have the agent make it that way (/mycelium:diamond-progress records a "
+                   "decision).")
 
 
 def _settings_told(undone: list[str], reported: list[str]) -> str:
@@ -567,9 +736,9 @@ def post(payload: dict, project: Path) -> int:
     put_back = _put_back_guard_state(project, state, _call_id(payload), extras)
     undone, reported = extras.get("settings") or ([], [])
     committed = _secrets_committed(extras.get("git") or {})
-    hold = extras.get("hold") or {}
+    record = extras.get("record") or {}
     changed = _changed(project, since)
-    if hold.get("outcome") == "put back":
+    if record.get("outcome") == "put back":
         # The file is as it was, written by this script just now: nothing of the command's
         # is left in it to judge.
         changed = [f for f in changed if f != project / ACTIVE_REL]
@@ -586,8 +755,8 @@ def post(payload: dict, project: Path) -> int:
         out["systemMessage"] = "Mycelium: " + told
         reasons.append(told + " Do not try another way of writing it: tell the person what "
                        "happened and let them decide.")
-    if hold:
-        told = _hold_told(hold)
+    if record:
+        told = _record_told(record)
         out["systemMessage"] = " ".join(
             x for x in (out.get("systemMessage"), "Mycelium: " + told) if x)
         reasons.append(told + " Do not try another way of writing it: tell the person what "
