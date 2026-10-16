@@ -1,5 +1,7 @@
 # Mycelium
 
+[![Mentioned in Awesome Claude Code](https://awesome.re/mentioned-badge.svg)](https://github.com/hesreallyhim/awesome-claude-code)
+
 Mycelium won't make your idea good. It keeps you and your agent honest about whether it is, from first idea to market.
 
 Built on Claude Code, where the gates are structural. The files and skills port to [opencode](docs/integrations/opencode.md), [Codex](docs/integrations/codex.md) and [Cursor](docs/integrations/cursor.md).
