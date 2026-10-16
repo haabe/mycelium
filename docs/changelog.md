@@ -2,7 +2,80 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-10-15.
+**Last updated**: 2026-10-16.
+
+## v0.326.0 - The shell guard refuses two shapes its warning did not stop
+
+**2026-10-16.** From a sweep of the dogfood project's learning loop, which read every correction
+logged since 2026-09-15 against what was already on record.
+
+### What was wrong
+
+- **A pipeline's status gating a commit or push went through.** `check | tail -1 && git commit`
+  takes `tail`'s exit status, so a failing check cannot stop the commit. In the dogfood record
+  this shape let two commits and a push out on red checks, and once it was the battery that had
+  been built to stop exactly this. The guard had no rule for it; it was proposed on 2026-09-15.
+- **A multi-file edit that can half-apply was warned and ran anyway.** Rule 5 (v0.223.0) named
+  the shape; three version bumps after that wrote several files with checks between the writes,
+  each time in a session that had used `safe_replace.py` correctly earlier. Only luck kept the
+  tree whole.
+- **A warning did not change what came next.** After a shell-safety warning, the same rule fired
+  again later in the same session 83 to 93% of the time.
+
+### What changed
+
+- **Rule 6, new, refuses** a pipeline ending in a filter (`tail`, `head`, `grep`, `sed`, `tee`
+  and others) joined by `&&` to `git commit` or `git push`, and a piped `git commit` or
+  `git push` joined by `&&` to anything after it. The refusal names the rewrite: redirect
+  (`check > /tmp/out.log 2>&1 && git commit ...`), or `set -o pipefail;`, or `;` when the
+  piped command is not meant as a check. It stays silent when the command sets `pipefail`,
+  reads a pipestatus array, or pipes a command that only displays something (`git status`,
+  `git log`, `ls`, `cat` and the like).
+- **Rule 5 refuses** instead of warning. Checking every anchor before the first write still
+  passes, as before.
+- **Rules 1 to 4 still only warn.** A refusal carries any warnings for the same command, and the
+  guard log marks a refusal with `refused: true`.
+- **A refusal is recorded in the denial ledger** (`.claude/state/denied-calls.jsonl`), like every
+  other refusing hook, so `gate-override-check.sh` says so when a refused command ran anyway.
+- **The hook's class** in `hooks/pretooluse-on-failure.txt` is now `continue`, like
+  `bash-state-guard.sh`: it can refuse, and it still lets a command through when the hook
+  itself cannot run, because it runs before every shell command.
+
+- **The system card no longer says corrections are read at the next task.** §6 said a correction
+  "is read on every subsequent task" with "same-day effect". Nothing enforces that read; in the
+  maintainer's project the file had outgrown the Read tool and was opened in 12 of 71 sessions,
+  and 86 of 96 recent corrections repeated a lesson on record. §6 now says so.
+
+### Measured before it shipped
+
+- Replayed over 16,302 unique Bash commands from dogfood session transcripts. Rule 6 would have
+  refused 130 before the display exemption: 104 involved a real check (the battery, a validator,
+  pytest, a push) and 26 only piped a display. With the exemption it refuses 105, every one with
+  a real check. Rule 5 refuses 118.
+
+### Considered and not done
+
+- **Making every rule refuse.** The three noisiest warnings were right in 3, 4 and 6 of 20
+  sampled fires; refusing on those would block real work and get the guard switched off.
+  Narrowing them is a separate release.
+- **A full battery run at every push.** The push-time check that the battery ran is a separate
+  item, and its form is the maintainer's to choose.
+
+### Not covered, and what that costs
+
+- **A check piped into a filter and joined by `;`** (`check | tail -1; git commit`) is not
+  refused: nothing gates the commit there, and rule 4 already warns when a durable write comes
+  first.
+- **A pipe into a filter this rule does not list** (`jq`, `python3 -c`) is not refused.
+
+### Tests
+
+- `tests/python/test_shell_safety_guard.py`: five verbatim shapes from the dogfood corrections
+  are refused; nine shapes that are not a masked gate are not (the rewrite itself, `pipefail`,
+  a pipestatus read, a pipe that feeds `git commit`, `;` joins, a quoted pipe, no commit, and two
+  display-only pipes); rule 5 refuses; a refusal carries the other warnings and is logged as
+  refused; rules 1 to 4 never refuse. `tests/python/test_pretooluse_on_failure.py`: two
+  `continue` hooks, four `advisory`.
 
 ## v0.325.3 - A closing path's pointers are not ids
 

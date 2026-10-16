@@ -46,7 +46,16 @@ def _warnings(scripts_path, command):
     assert r.returncode == 0, r.stderr
     if not r.stdout.strip():
         return ""
-    return json.loads(r.stdout)["hookSpecificOutput"]["additionalContext"]
+    out = json.loads(r.stdout)["hookSpecificOutput"]
+    return out.get("additionalContext") or out.get("permissionDecisionReason", "")
+
+
+def _decision(scripts_path, command):
+    r = _run(scripts_path, _cmd(command))
+    assert r.returncode == 0, r.stderr
+    if not r.stdout.strip():
+        return None
+    return json.loads(r.stdout)["hookSpecificOutput"].get("permissionDecision")
 
 
 # ---------------------------------------------------------------- happy
@@ -155,10 +164,18 @@ def test_malformed_payloads_fail_open(scripts_path, payload):
     assert r.stdout.strip() == ""
 
 
-def test_never_emits_a_permission_decision(scripts_path):
-    """This hook advises. If it ever gained the power to deny, a false positive
-    would block real work and the guard would be removed rather than fixed."""
-    r = _run(scripts_path, _cmd("foo | head; echo $?"))
+@pytest.mark.parametrize("command", [
+    "foo | head; echo $?",                       # rule 1
+    "git commit -m `date`",                      # rule 2
+    "grep -q x f && echo found",                 # rule 3
+    "echo x >> .claude/memory/a.md\ngit commit -m m",  # rule 4
+])
+def test_the_warning_rules_never_refuse(scripts_path, command):
+    """Rules 1 to 4 advise. A false positive that denied would block real work, and the
+    guard would be removed rather than fixed. Only rules 5 and 6 refuse (v0.326.0), on the
+    founder's ruling of 2026-10-16, because the warning was measured not to stop them."""
+    r = _run(scripts_path, _cmd(command))
+    assert r.stdout.strip(), "the rule should still warn"
     assert "permissionDecision" not in r.stdout
 
 
@@ -578,3 +595,72 @@ def test_masked_trigger_in_process(scripts_path):
     assert "ghp_abcdefghijklmnopqrstuvwxyz0123" not in out
     assert "<masked>" in out
     assert len(out) <= 200
+
+
+# ------------------------------------------------------------------ refusals (v0.326.0)
+# Rules 5 and 6 refuse instead of warning. The dogfood sweep of 2026-10-16 read every
+# correction since 2026-09-15: rule 5's shape was warned and ran three times; rule 6's shape
+# escaped six times (two commits and a push on red checks, once the battery built for it).
+
+
+def test_rule_five_now_refuses(scripts_path):
+    cmd = (
+        "python3 -c \"open('a','w').write(open('a').read().replace('x','y')); "
+        "open('b','w').write(open('b').read().replace('x','y'))\""
+    )
+    assert _decision(scripts_path, cmd) == "deny"
+    assert "safe_replace.py" in _warnings(scripts_path, cmd)
+
+
+@pytest.mark.parametrize("command", [
+    # verbatim shapes from the dogfood corrections, 2026-09-12 to 2026-10-08
+    "python3 check.py | tail -1 && git commit -m 'x'",
+    "ruff check . | tail -1 && pytest -q && git commit -am fix",
+    "bash .claude/auto-dogfood/scripts/battery.sh | tail -1 && git commit -m m && git push",
+    "git push origin b 2>&1 | tail -1 && gh pr create --fill",
+    "validate.py | grep -c FAIL && git push",
+])
+def test_a_pipeline_gating_a_commit_or_push_is_refused(scripts_path, command):
+    assert _decision(scripts_path, command) == "deny"
+    reason = _warnings(scripts_path, command)
+    assert "pipefail" in reason and "> /tmp/out.log" in reason
+
+
+@pytest.mark.parametrize("command", [
+    "bash battery.sh > /tmp/b.log 2>&1 && git commit -m m",       # the rewrite it asks for
+    "set -o pipefail; check.py | tail -1 && git commit -m m",     # status restored
+    'check.py | tail -1; echo "${pipestatus[1]}"',                 # no commit at all
+    "echo msg | git commit -F - && git push",                      # the pipe feeds git itself
+    "git log --oneline | head -3; git push",                       # joined with ;, not &&
+    "git commit -m 'a | tail && git push'",                        # the pipe is quoted text
+    "check.py | tail -1 || true",                                  # no commit
+    "git status --short | head -20 && git add -A && git commit -m m",  # display only
+    "git log -1 --format=%h | cut -c1-12 && git push",               # display only
+])
+def test_shapes_that_are_not_a_masked_gate_are_not_refused(scripts_path, command):
+    """NEGATIVE CONTROLS. Each is one the rule must let through, so a refusal here is a
+    false positive that would get the guard switched off."""
+    assert _decision(scripts_path, command) != "deny"
+
+
+def test_a_refusal_carries_the_warnings_too_and_is_logged_as_refused(scripts_path, tmp_path):
+    env = {"CLAUDE_PROJECT_DIR": str(tmp_path), "PATH": "/usr/bin:/bin"}
+    cmd = "foo | head; echo $?\ncheck.py | tail -1 && git commit -m m"
+    r = subprocess.run([sys.executable, str(scripts_path / SCRIPT)], input=_cmd(cmd),
+                       capture_output=True, text=True, check=False, env=env)
+    out = json.loads(r.stdout)["hookSpecificOutput"]
+    assert out["permissionDecision"] == "deny"
+    assert "Also (warning only)" in out["permissionDecisionReason"]
+    row = json.loads((tmp_path / ".claude/state/shell-safety-guard-log.jsonl").read_text())
+    assert row["refused"] is True
+
+
+def test_classify_in_process(scripts_path):
+    mod = _import(scripts_path)
+    assert mod.classify("git status") == ([], [])
+    refuse, warn = mod.classify("check.py | tail -1 && git push")
+    assert len(refuse) == 1 and warn == []
+    refuse, warn = mod.classify("foo | head; echo $?")
+    assert refuse == [] and len(warn) == 1
+    assert mod._piped_gate_lands("git push | tail -1 && gh pr create")
+    assert not mod._piped_gate_lands("git push | tail -1")

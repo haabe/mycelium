@@ -33,7 +33,7 @@ In a project that uses Mycelium, the hooks keep logs in `.claude/state/`. That i
 | `diamond-state-audit.jsonl` | That `.claude/diamonds/active.yml` was edited directly, and by which tool. |
 | `read-before-research-log.jsonl` | Up to six names or quoted phrases from a web search the agent ran, and whether your canvas already mentioned them. |
 | `reflexion-log.jsonl` | That a command failed: its exit code and the program's name (`git`, `npm`). Never the command or its output. |
-| `shell-safety-guard-log.jsonl` | Which shell-safety rule fired. Never the command. |
+| `shell-safety-guard-log.jsonl` | Which shell-safety rule fired, and whether it refused the command. Never the command. |
 | `absence-claim-guard-log.jsonl`, `key-shape-guard-log.jsonl` | Which rule fired, the file name, and up to 120 characters of the text it matched in what the agent was writing. |
 | `discovery-trigger-log.jsonl` | That a prompt matched a discovery phrase, as a hash and a length. Never the words. |
 | `exposure-uses.jsonl` | A release the gate allowed or asked you about: up to 80 characters of the release command, obvious secrets masked, and the exposure it was approved under. |
