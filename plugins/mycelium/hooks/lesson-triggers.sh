@@ -37,12 +37,18 @@ fi
 
 # FIRE RECORD: logged only when the helper produced output. A refusal goes in the denial
 # ledger, so gate-override-check can say when a refused call ran anyway.
+# The helper's first line is the hook output; its second (v0.327.1) is the fire log's detail:
+# the tool and the ids of the lessons shown or refused, so a later repeat can be checked against
+# whether its lesson had been put in front of the agent. Never the call or the rule line.
 . "${CLAUDE_PLUGIN_ROOT:-$(dirname "${BASH_SOURCE[0]}")/..}/scripts/_hook_fire_log.sh" 2>/dev/null || {
   mycelium_log_fire() { :; }; mycelium_note_refusal() { :; }; }
-_myc_out=$(printf '%s' "$INPUT" | python3 "$HELPER")
+_myc_both=$(printf '%s' "$INPUT" | python3 "$HELPER" --with-detail)
+_myc_out=${_myc_both%%$'\n'*}
+_myc_detail=""
+[ "$_myc_out" != "$_myc_both" ] && _myc_detail=${_myc_both#*$'\n'}
 mycelium_note_refusal "$_myc_out" 0 2>/dev/null || true
 if [ -n "$_myc_out" ]; then
-  mycelium_log_fire ".claude/state/lesson-triggers-fires.jsonl" "fired" 2>/dev/null || true
+  mycelium_log_fire ".claude/state/lesson-triggers-fires.jsonl" "fired" "$_myc_detail" 2>/dev/null || true
   printf '%s\n' "$_myc_out"
 fi
 exit 0

@@ -26,6 +26,9 @@ PRIVACY. Only the rule line is shown; it reaches the runtime vendor as part of t
 session. `--check FILE` reports any rule line that carries a handle or an address, so a
 line naming a person can be found before it is shown.
 
+FIRE LOG. Called with `--with-detail`, a second line follows the JSON: the tool and the ids
+of the lessons shown or refused, which the hook writes to its fire log (v0.327.1).
+
 FAILS OPEN. Any error means no output: this runs before every matching call, and a
 broken hook must not stop the agent's work. Listed `continue` in
 hooks/pretooluse-on-failure.txt.
@@ -146,18 +149,36 @@ _SHOWN = ("MYCELIUM LESSON ON RECORD (the call still runs). This call matches a 
           "recorded in this project:\n")
 
 
+def put_forward(refused: list[dict], shown: list[dict]) -> tuple[list[dict], list[dict]]:
+    """The lessons the agent is actually shown: at most MAX_SHOWN, refusals first."""
+    refused = refused[:MAX_SHOWN]
+    return refused, shown[:MAX_SHOWN - len(refused)]
+
+
 def output(refused: list[dict], shown: list[dict]) -> dict | None:
+    refused, shown = put_forward(refused, shown)
     if refused:
-        lines = [f"  - {x['rule']}" for x in refused[:MAX_SHOWN]]
-        room = max(0, MAX_SHOWN - len(refused))
-        lines += [f"  Also on record: {x['rule']}" for x in shown[:room]]
+        lines = [f"  - {x['rule']}" for x in refused]
+        lines += [f"  Also on record: {x['rule']}" for x in shown]
         return {"hookSpecificOutput": {"hookEventName": "PreToolUse",
                                        "permissionDecision": "deny",
                                        "permissionDecisionReason": _REFUSED + "\n".join(lines)}}
     if shown:
-        body = _SHOWN + "\n".join(f"  - {x['rule']}" for x in shown[:MAX_SHOWN])
+        body = _SHOWN + "\n".join(f"  - {x['rule']}" for x in shown)
         return {"hookSpecificOutput": {"hookEventName": "PreToolUse", "additionalContext": body}}
     return None
+
+
+def fire_detail(tool: str, refused: list[dict], shown: list[dict]) -> str:
+    """The fire log's detail (v0.327.1): the tool and the ids of the lessons put in front of the
+    agent, never the call or the rule line. Without the ids a fire log can say a lesson was shown
+    but not which, so nobody can tell whether the lesson behind a later repeat had been shown."""
+    refused, shown = put_forward(refused, shown)
+    parts = [f"tool={tool}"]
+    for label, found in (("refused", refused), ("shown", shown)):
+        if found:
+            parts.append(f"{label}=" + ",".join(str(x.get("id") or "?") for x in found))
+    return " ".join(parts)
 
 
 def unreadable(problem: str) -> dict:
@@ -196,11 +217,17 @@ def main(argv: list[str]) -> int:
         if not isinstance(tool, str) or not isinstance(tool_input, dict):
             return 0
         lessons, problem = read_lessons(project_dir(payload) / TRIGGERS)
-        result = (unreadable(problem) if problem else output(*decide(lessons, tool, tool_input)))
+        if problem:
+            result, detail = unreadable(problem), f"tool={tool} unreadable"
+        else:
+            found = decide(lessons, tool, tool_input)
+            result, detail = output(*found), fire_detail(tool, *found)
     except Exception:  # noqa: BLE001 -- fails open
         return 0
     if result:
         print(json.dumps(result))
+        if "--with-detail" in argv:  # the hook's second line: what goes in the fire log
+            print(detail)
     return 0
 
 

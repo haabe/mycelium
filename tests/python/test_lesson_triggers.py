@@ -174,3 +174,46 @@ def test_a_broken_payload_fails_open(project):
     r = subprocess.run(["bash", str(PLUGIN / "hooks" / "lesson-triggers.sh")], input="not json",
                        capture_output=True, text=True, env=env, cwd=project, timeout=30, check=False)
     assert r.returncode == 0 and r.stdout == ""
+
+
+def _fires(project):
+    log = project / ".claude" / "state" / "lesson-triggers-fires.jsonl"
+    return [json.loads(line) for line in log.read_text().splitlines()]
+
+
+def test_the_fire_log_names_the_lessons_shown_and_refused(project):
+    """0.327.1 (threat-016 on the dogfood threat model): a row with only a time cannot say which
+    lesson was in front of the agent before a repeat, which is what the real-use test reads."""
+    _hook(project, {"tool_name": "Bash", "tool_input": {"command": "claude -p go"}}, on=True)
+    _hook(project, {"tool_name": "Bash", "tool_input": {"command": "curl https://reddit.com/r/x && claude -p go"}},
+          on=True)
+    rows = _fires(project)
+    assert [r["detail"] for r in rows] == [
+        "tool=Bash shown=child-agents",
+        "tool=Bash refused=reddit-through-the-connector shown=child-agents",
+    ]
+
+
+def test_the_fire_log_names_only_what_was_put_in_front_of_the_agent(project):
+    """Past MAX_SHOWN a lesson matched and was not shown, so it is not logged as shown."""
+    many = "schema_version: 1\nlessons:\n" + "".join(
+        f"- id: l{n}\n  rule: \"Rule {n}.\"\n  match: {{tools: [Bash], command: 'go'}}\n" for n in range(5))
+    (project / lt.TRIGGERS).write_text(many)
+    _hook(project, {"tool_name": "Bash", "tool_input": {"command": "go"}}, on=True)
+    assert [r["detail"] for r in _fires(project)] == ["tool=Bash shown=l0,l1,l2"]
+
+
+def test_the_fire_log_says_when_the_triggers_file_could_not_be_read(project):
+    (project / lt.TRIGGERS).write_text("lessons: [unclosed\n")
+    out = _hook(project, {"tool_name": "Bash", "tool_input": {"command": "go"}}, on=True)
+    assert "could not be read" in json.loads(out.stdout)["hookSpecificOutput"]["additionalContext"]
+    assert [r["detail"] for r in _fires(project)] == ["tool=Bash unreadable"]
+
+
+def test_the_helper_without_the_flag_prints_only_the_json(project, monkeypatch, capsys):
+    monkeypatch.setenv(lt.ENV, "on")
+    monkeypatch.setenv("CLAUDE_PROJECT_DIR", str(project))
+    monkeypatch.setattr(sys, "stdin", __import__("io").StringIO(
+        json.dumps({"tool_name": "Bash", "tool_input": {"command": "claude -p go"}})))
+    assert lt.main([]) == 0
+    json.loads(capsys.readouterr().out)
