@@ -4,6 +4,43 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-16.
 
+## v0.327.1 - The lesson-triggers fire log names the lessons
+
+**2026-10-16.** The fire log 0.327.0 wrote held a time and the hook's name. That says a lesson was shown,
+not which one, so the real-use test the hook ships for could not tell whether the lesson behind a later
+repeat had been put in front of the agent. The maintainer's threat model for the hook listed this as the
+one thing to fix before it is switched on.
+
+### What changed
+
+- **Each row of `.claude/state/lesson-triggers-fires.jsonl` now carries a `detail`**: the tool, and the ids
+  of the lessons refused and shown, for example `tool=Bash refused=a shown=b,c`. Only the ids the agent was
+  actually shown are named: past the three-line cap a lesson that matched is left out. A triggers file that
+  could not be read is logged as `tool=<tool> unreadable`.
+- **How it gets there.** `lesson_triggers.py --with-detail` prints that line after the hook output; the hook
+  splits the two and passes the line to the shared fire log. Called without the flag, the helper prints the
+  hook output alone, as before.
+- **PRIVACY.md** says the row now holds the tool and the lesson ids. Still never the call or the rule line.
+- **Tests:** 4 more in `tests/python/test_lesson_triggers.py`, written before the change and seen failing.
+
+### Considered and not done
+
+- **Logging the rule line, or the matched part of the call.** Either would make the log easier to read, and
+  either puts the project's or the user's words in a state file, which the fire logs never hold (DL-1262).
+  An id is a label the project wrote, which is what the logs allow.
+- **Having the helper write the row itself.** The retirement check finds a hook's log by its path in the
+  hook's source, and every other hook writes through the shared `mycelium_log_fire`; one more logger of
+  its own would be one more place for the row's shape to drift.
+- **A separate field per list (`shown: [...]`).** The shared fire log takes one `detail` string, and
+  changing its row shape is a change to every hook's log.
+
+### Not covered, and what that costs
+
+- **The detail is cut at 200 characters** by the shared fire log. Three ids of the lengths in use now come
+  to about 140; a project with very long ids would lose the end of the last one.
+- **Which lesson was shown is recorded; whether the agent then acted on it is not.** That is what the
+  real-use test reads from the corrections that follow.
+
 ## v0.327.0 - A lesson on record can be shown at the call it is about
 
 **2026-10-16.** On the dogfood project, 86 of 96 corrections over a month repeated a lesson already
