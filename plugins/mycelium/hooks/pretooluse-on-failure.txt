@@ -68,8 +68,8 @@ block     autonomous-evidence-guard.sh
 block     exposure-gate.sh
 
 continue  bash-state-guard.sh  it runs before every shell command and says so when it cannot run (its own header): failing closed on a broken script would lock the agent out of the shell
+continue  shell-safety-guard.sh  it runs before every shell command and refuses only two shapes (v0.326.0); failing closed on a broken script would lock the agent out of the shell
 
-advisory  shell-safety-guard.sh
 advisory  key-shape-guard.sh
 advisory  correction-attribution-guard.sh
 advisory  absence-claim-guard.sh

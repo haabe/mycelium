@@ -12,9 +12,20 @@ fix one layer up" — a correction that recurs against an existing note needs a
 mechanism, not a better note. A note is read once at session start and decays. A
 PreToolUse hook fires on the exact command, every time.
 
-IT WARNS, IT DOES NOT BLOCK. Every pattern here has legitimate uses, and a guard
-that blocks real work gets disabled — which is how a guard dies. `additionalContext`
+IT WARNS, EXCEPT ON TWO SHAPES (v0.326.0). Most patterns here have legitimate uses, and
+a guard that blocks real work gets disabled — which is how a guard dies. `additionalContext`
 puts the warning in front of the agent at the moment of use and lets it proceed.
+
+Two shapes are REFUSED instead, because the warning was measured not to work on them and
+each has a rewrite that costs one line: rule 5 (a multi-file edit that can half-apply) and
+rule 6 (a pipeline's status gating a commit or push). The dogfood sweep of 2026-10-16
+(mycelium-roadmap handoffs/2026-10-16-learning-loop-sweep.md) read every correction since
+2026-09-15: rule 5's shape was warned and ran three times, with `safe_replace` used correctly
+earlier in the same session each time; rule 6's shape escaped six times, two commits and a
+push going out on red checks, one of them the dogfood battery that was built for exactly
+that failure. After a warning, the same rule fired again later in the same session 83 to
+93% of the time. A warning tells the agent; on these two shapes it did not change what the
+agent did. The other rules stay warnings.
 
 WHAT IT CHECKS, each anchored to a documented contract rather than a preference:
 
@@ -47,8 +58,10 @@ next call assumes. Catching it needs cross-invocation state, which is a differen
 mechanism and is not pretended at.
 
 Contract: exit 0 silent = nothing to say. exit 0 + JSON additionalContext = warn.
-Never denies. Fails open on unparseable input — a guard that breaks the Bash tool
-is worse than the traps it catches.
+exit 0 + JSON permissionDecision "deny" = refused (rules 5 and 6 only; the reason carries
+the rewrite and any warnings). Fails open on unparseable input — a guard that breaks the
+Bash tool is worse than the traps it catches — and is listed `continue` in
+hooks/pretooluse-on-failure.txt for the same reason: it runs before every shell command.
 """
 
 from __future__ import annotations
@@ -179,6 +192,48 @@ def _half_applying_edit(command: str) -> bool:
     return not checks or max(checks) > first_write
 
 
+#: Rule 6 (v0.326.0). A pipe into one of these is a filter: its exit status is the filter's,
+#: almost always 0, so whatever ran before it cannot stop an `&&`.
+_PIPE_FILTER = re.compile(
+    r"(?<!\|)\|(?!\|)\s*(?:head|tail|tee|grep|egrep|fgrep|rg|sed|awk|cut|sort|uniq|wc|tr|cat|"
+    r"column|less|more)\b"
+)
+_PIPEFAIL = re.compile(r"\bpipefail\b")
+#: A pipeline that only DISPLAYS something has no status worth gating on, so piping it is
+#: not a masked check: `git status --short | head && git commit` loses nothing. Replayed over
+#: 16,302 unique Bash commands from dogfood transcripts (2026-10-16): 130 had the shape, 26 of
+#: them display-only, 104 a real check (the battery, a validator, pytest, a push). Exempting
+#: these keeps every one of the 104.
+_DISPLAY_ONLY = re.compile(
+    r"^\s*(?:git\s+(?:status|log|diff|show|branch|rev-parse|remote)\b|ls|cat|echo|printf|head|"
+    r"tail|wc|find|date|pwd)\b|^\s*sed\s+-n\b"
+)
+
+
+def _piped_gate_lands(command: str) -> bool:
+    """True when a pipeline ending in a filter is `&&`-joined to a `git commit` or `git push`.
+
+    Two forms, both from the dogfood record: `check | tail -1 && git commit` (the check's
+    failure cannot stop the commit), and `git push | tail -1 && gh pr create` (a refused push
+    reads as success to what follows). Silent when the command sets `pipefail` or reads a
+    pipestatus array, because then the author has restored the status the pipe hides, and
+    when the piped command only displays something (`_DISPLAY_ONLY`).
+    """
+    if _PIPEFAIL.search(command) or _PIPESTATUS.search(command):
+        return False
+    for step in _raw_steps(command):
+        links = _blank_quoted(_strip_quoted_heredoc_bodies(step)).split("&&")
+        piped_before = False
+        for i, link in enumerate(links):
+            if piped_before and _GIT_LANDS.search(link):
+                return True
+            if _PIPE_FILTER.search(link) and not _DISPLAY_ONLY.search(link):
+                if _GIT_LANDS.search(link) and i < len(links) - 1:
+                    return True
+                piped_before = True
+    return False
+
+
 def _raw_steps(command: str) -> list[str]:
     """Split a command into steps at `;` and newlines OUTSIDE quotes and quoted-heredoc bodies.
 
@@ -250,8 +305,15 @@ def _status_reads_a_pipeline(base: str, scan: str) -> bool:
 
 
 def findings(command: str) -> list[str]:
-    """Return a warning per trap present. Empty list means nothing to say."""
+    """Return a message per trap present, refusals first. Empty list means nothing to say."""
+    refuse, warn = classify(command)
+    return refuse + warn
+
+
+def classify(command: str) -> tuple[list[str], list[str]]:
+    """Return (refusals, warnings). Only rules 5 and 6 refuse; see the module docstring."""
     out: list[str] = []
+    refuse: list[str] = []
 
     # 1. $? after a pipeline, without PIPESTATUS.
     #
@@ -314,9 +376,9 @@ def findings(command: str) -> list[str]:
         )
 
     # 5. A multi-file scripted edit that can half-apply. See _half_applying_edit for the
-    # measurement that set its scope.
+    # measurement that set its scope. REFUSED since v0.326.0 (module docstring).
     if _half_applying_edit(command):
-        out.append(
+        refuse.append(
             "This script replaces text and writes two or more files without "
             "`safe_replace.py`, and an anchor check runs after the first write or not at "
             "all. If a later anchor fails, the earlier files are already written and the "
@@ -324,10 +386,24 @@ def findings(command: str) -> list[str]:
             "multi-file edits, HARD RULE). Pass the edits to "
             '`python3 "${CLAUDE_PLUGIN_ROOT}/scripts/safe_replace.py" --spec edits.json` '
             "(try `--dry-run` first), or import `apply_edits`: every anchor is validated "
-            "before any file is touched."
+            "before any file is touched. Checking every anchor before the first write also "
+            "passes."
         )
 
-    return out
+    # 6. A pipeline's status gating a commit or push. REFUSED (module docstring).
+    if _GIT_LANDS.search(command) and _piped_gate_lands(command):
+        refuse.append(
+            "A pipeline ending in a filter (`| tail`, `| head`, `| grep`, ...) is joined by "
+            "`&&` to `git commit` or `git push`. A pipeline's exit status is its LAST "
+            "command's, so a failing check before the pipe reads as success and the commit "
+            "or push runs anyway (six times in the dogfood record, the battery once). "
+            "Redirect instead and read the output separately: "
+            "`check > /tmp/out.log 2>&1 && git commit ...`, or start the command with "
+            "`set -o pipefail;`. If the piped command is not meant as a check, join it with "
+            "`;` instead of `&&`."
+        )
+
+    return refuse, out
 
 
 
@@ -346,7 +422,8 @@ def _masked_trigger(command: str) -> str:
     return _secret_mask.mask(command, _TRIGGER_CHARS)
 
 
-def _log(hook: str, fires: int, first_match: str, signature: str, command: str = "") -> None:
+def _log(hook: str, fires: int, first_match: str, signature: str, command: str = "",  # noqa: PLR0913, PLR0917 -- one row, six facts about it
+         refused: bool = False) -> None:
     """Append one line per fire so the action rate and the OVERRIDE rate are computable.
 
     Two rules make this part of the ship rather than a nice-to-have.
@@ -381,6 +458,8 @@ def _log(hook: str, fires: int, first_match: str, signature: str, command: str =
             "signature": signature,
             "first_match": first_match[:120],
         }
+        if refused:  # v0.326.0: a refusal, not a warning; the rate of each is read apart
+            row["refused"] = True
         if command and os.environ.get("MYCELIUM_LEDGER_TRIGGER", "").lower() == "on":
             row["trigger"] = _masked_trigger(command)
         with (root / f"{hook}-log.jsonl").open("a", encoding="utf-8") as fh:
@@ -402,8 +481,25 @@ def main() -> int:
     if not isinstance(command, str) or not command.strip():
         return 0
 
-    warnings = findings(command)
+    refuse, warn = classify(command)
+    warnings = refuse + warn
     if not warnings:
+        return 0
+
+    signature = hashlib.sha256("|".join(sorted(warnings)).encode()).hexdigest()[:10]
+    _log("shell-safety-guard", len(warnings), warnings[0], signature, command,
+         refused=bool(refuse))
+    if refuse:
+        reason = "MYCELIUM SHELL-SAFETY: REFUSED. Rewrite the command and run it again:\n" + (
+            "\n".join(f"  - {r}" for r in refuse)
+        ) + ("".join(f"\n  Also (warning only): {w}" for w in warn))
+        print(json.dumps({
+            "hookSpecificOutput": {
+                "hookEventName": "PreToolUse",
+                "permissionDecision": "deny",
+                "permissionDecisionReason": reason,
+            }
+        }))
         return 0
 
     body = "MYCELIUM SHELL-SAFETY WARNING (the command still runs):\n" + "\n".join(
@@ -413,8 +509,6 @@ def main() -> int:
         "wrong answer in this project before — see corrections.md, "
         "verification-hygiene class."
     )
-    signature = hashlib.sha256("|".join(sorted(warnings)).encode()).hexdigest()[:10]
-    _log("shell-safety-guard", len(warnings), warnings[0], signature, command)
     print(json.dumps({
         "hookSpecificOutput": {
             "hookEventName": "PreToolUse",

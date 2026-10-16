@@ -144,7 +144,7 @@ def test_the_manifest_agrees_with_the_one_list():
 
 def test_every_class_is_in_use_so_the_test_is_not_vacuous():
     kinds = [k for k, _ in _policy().values()]
-    assert {k: kinds.count(k) for k in CLASSES} == {"block": 9, "continue": 1, "advisory": 5}
+    assert {k: kinds.count(k) for k in CLASSES} == {"block": 9, "continue": 2, "advisory": 4}
     blocking = [h for _, s, h in pretooluse_entries(_manifest()) if h.get("onFailure") == "block"]
     assert len(blocking) == 24
     assert len([h for h in blocking if h["command"].startswith(PREFIX + " bash ")]) == 24

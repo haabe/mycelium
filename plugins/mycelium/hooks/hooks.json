@@ -92,7 +92,7 @@
             "type": "command",
             "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/shell-safety-guard.sh\"",
             "timeout": 5,
-            "statusMessage": "Mycelium shell-safety guard (Bash: warns on known shell traps, never blocks)"
+            "statusMessage": "Mycelium shell-safety guard (Bash: warns on known shell traps; refuses two that warnings did not stop)"
           },
           {
             "type": "command",
