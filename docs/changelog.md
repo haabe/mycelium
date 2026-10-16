@@ -4,6 +4,26 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-16.
 
+## v0.326.1 - The README carries the Awesome Claude Code badge
+
+**2026-10-16.** Mycelium was listed on hesreallyhim/awesome-claude-code on 2026-10-15 (PR #3180), and
+the list's maintainer offered the badge in issue #281.
+
+### What changed
+
+- **README.md** shows the "Mentioned in Awesome Claude Code" badge under the title, linking to the
+  list. The maintainer's chosen description and category are the list's; nothing else in the README
+  changes.
+
+### Considered and not done
+
+- **A second badge for the plugin directory.** The directory submission is still in review.
+
+### Not covered, and what that costs
+
+- **Nothing about the plugin changes.** The badge links out, so it sends no readers to the repo, and
+  it is not part of any check.
+
 ## v0.326.0 - The shell guard refuses two shapes its warning did not stop
 
 **2026-10-16.** From a sweep of the dogfood project's learning loop, which read every correction
