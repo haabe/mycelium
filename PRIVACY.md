@@ -1,6 +1,6 @@
 # Privacy Policy
 
-**Last updated: 2026-10-13**
+**Last updated: 2026-10-16**
 
 Mycelium is a local plugin for AI coding agents (Claude Code, and also Codex, Cursor and opencode). It runs entirely inside your own agent, on your own machine. It has no servers, no accounts, and no data-processing backend.
 
@@ -34,6 +34,7 @@ In a project that uses Mycelium, the hooks keep logs in `.claude/state/`. That i
 | `read-before-research-log.jsonl` | Up to six names or quoted phrases from a web search the agent ran, and whether your canvas already mentioned them. |
 | `reflexion-log.jsonl` | That a command failed: its exit code and the program's name (`git`, `npm`). Never the command or its output. |
 | `shell-safety-guard-log.jsonl` | Which shell-safety rule fired, and whether it refused the command. Never the command. |
+| `lesson-triggers-fires.jsonl` | That a lesson on record was shown or refused at a call: a time and the hook's name. Never the call or the lesson. Written only when `MYCELIUM_LESSON_TRIGGERS=on`. |
 | `absence-claim-guard-log.jsonl`, `key-shape-guard-log.jsonl` | Which rule fired, the file name, and up to 120 characters of the text it matched in what the agent was writing. |
 | `discovery-trigger-log.jsonl` | That a prompt matched a discovery phrase, as a hash and a length. Never the words. |
 | `exposure-uses.jsonl` | A release the gate allowed or asked you about: up to 80 characters of the release command, obvious secrets masked, and the exposure it was approved under. |
@@ -102,6 +103,8 @@ Everything else that touches the network runs only when you start it:
 ## Third parties
 
 Mycelium shares no data with anyone. When a skill above contacts a service (GitHub, PyPI, a metrics service you configured, Hacker News search, or the sites your canvas cites), you are interacting directly with that service, under its own privacy policy, not under Mycelium's.
+
+**Your agent's vendor.** Everything the agent reads or is shown in a session goes to the company that runs the model, under that company's policy; Mycelium adds nothing to that channel by itself, with one switch-on exception. Set `MYCELIUM_LESSON_TRIGGERS=on` and a rule line from your project's `.claude/memory/lesson-triggers.yml` is put in front of the agent at a call that matches it, so it reaches the vendor without the agent choosing to read that file. Write rule lines without names, handles or addresses (what to do instead, not who was involved): `python3 plugins/mycelium/scripts/lesson_triggers.py --check .claude/memory/lesson-triggers.yml` lists any line that carries a handle or an address.
 
 ## Children
 

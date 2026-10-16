@@ -1130,3 +1130,13 @@ reviewed:
     still put back, and the warning line goes into what `post` tells the person and the agent.
     Asserted by test_when_the_hold_s_own_script_cannot_be_loaded_that_is_said. Reviewed
     2026-10-15, v0.325.0.
+
+- id: lesson_triggers.py@1f4e59a3a9
+  verdict: accepted
+  reason: >-
+    `read_lessons` cannot parse the project's lesson-triggers.yml. It returns the error as a problem
+    instead of raising, and main() turns that into a line the agent is shown at every call
+    ("could not be read ..., so no lesson is shown until it is fixed"), and `--check` exits 2 naming
+    it. A missing file is silent on purpose: nothing is switched on to read. Asserted by
+    test_a_triggers_file_that_cannot_be_parsed_is_said_out_loud and its control. Reviewed 2026-10-16,
+    v0.327.0.

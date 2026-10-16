@@ -4,6 +4,58 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-16.
 
+## v0.327.0 - A lesson on record can be shown at the call it is about
+
+**2026-10-16.** On the dogfood project, 86 of 96 corrections over a month repeated a lesson already
+written down, and the corrections file was opened in 12 of 71 sessions. Four builders outside the project
+describe the same thing in their own posts. A replay of the 86 repeats, against rules frozen before it
+read them, found that showing the matching lesson at the moment of the call reached the most of them: 31,
+against 14 for the checks that already existed. This release ships that, off by default, so the
+maintainer can test it in his own sessions first.
+
+### What changed
+
+- **`hooks/lesson-triggers.sh` and `scripts/lesson_triggers.py`** are wired on Bash, Write/Edit/MultiEdit
+  and the web tools.
+  - **Off unless `MYCELIUM_LESSON_TRIGGERS=on`.** The person sets it; the agent cannot, since a `MYCELIUM_*`
+    switch in a settings file is the person's to write.
+  - When on, it reads `.claude/memory/lesson-triggers.yml` in the project. Each entry is a lesson as one rule
+    line with a `match` on the call: `command` for Bash, `path` and `content` for file writes, and `url` for
+    web calls (the query for WebSearch). These are regular expressions; every key that applies to the tool
+    must match.
+  - It shows the matching rule lines, at most three, and the call runs. An entry with `refuse: true` refuses
+    the call with its rule line as the reason.
+  - It fails open and is listed `continue`; refusals go in the denial ledger. A triggers file that exists and cannot
+    be parsed is said out loud at every call, since silence would read as nothing matching, and `--check` exits 2
+    naming the error.
+- **Privacy.** Only the rule line is shown, and it reaches the runtime's vendor without the agent choosing to
+  read the file, which PRIVACY.md now says. `lesson_triggers.py --check FILE` lists any rule line that
+  carries a handle or an address.
+- **Measured on the maintainer's own project before release** (the success criteria were declared before any
+  code):
+  - 15 of the 15 replay reaches it covers fire as the replay said.
+  - Over 16,994 recorded Bash calls it shows a line on 2.9% and refuses 4. Over 2,206 file and web calls it
+    shows on 3.0% and refuses 18, each of them a real instance by hand count.
+  - p95 is 63 ms per call for the real hook.
+- **`tests/python/test_lesson_triggers.py`**: 16 tests, each test that it fires paired with one that it stays
+  quiet.
+
+### Considered and not done
+
+- **Ten triggers that did not survive the noise replay.** Four were shapes the shell guard already refuses or
+  warns on. One fired on every push, because a hook cannot see that the battery ran in an earlier command.
+  One keyed on output that does not exist before the call. One relied on the shell guard's rule-4 detector,
+  which was wrong in 9 of 20 sampled refusals. Making that detector precise is cycle-074's work.
+- **Writing a trigger when a lesson is logged, and triggers for every lesson.** They come after the real-use
+  test shows whether a lesson shown at the call stops anything.
+- **On by default.** That is for every adopter, and it waits on the maintainer's 31-day test.
+
+### Not covered, and what that costs
+
+- **The agent can edit the triggers file** and drop a refusal it meets. Named, not mitigated in this release.
+- **It reads Claude Code's tool names only**, so on Codex and Cursor it is registered and stays silent.
+- **MCP tool calls are not read.**
+
 ## v0.326.2 - A decision's date reads however it was typed
 
 **2026-10-16.** Found on the dogfood project the same day: a script raised KeyError 'on' on two decisions

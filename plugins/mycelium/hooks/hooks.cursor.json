@@ -72,6 +72,12 @@
       },
       {
         "matcher": "Write|Edit|MultiEdit|edit|write",
+        "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/lesson-triggers.sh\"",
+        "type": "command",
+        "timeout": 5
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit|edit|write",
         "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/correction-attribution-guard.sh\"",
         "type": "command",
         "timeout": 5
@@ -79,6 +85,12 @@
       {
         "matcher": "Shell",
         "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/shell-safety-guard.sh\"",
+        "type": "command",
+        "timeout": 5
+      },
+      {
+        "matcher": "Shell",
+        "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/lesson-triggers.sh\"",
         "type": "command",
         "timeout": 5
       },
@@ -97,6 +109,12 @@
       {
         "matcher": "WebSearch|WebFetch|mcp__brave-search__.*|mcp__fetch__fetch|web_search|fetch",
         "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/read-before-research-guard.sh\"",
+        "type": "command",
+        "timeout": 5
+      },
+      {
+        "matcher": "WebSearch|WebFetch|mcp__brave-search__.*|mcp__fetch__fetch|web_search|fetch",
+        "command": "bash \"__MYCELIUM_PLUGIN_ROOT__/hooks/lesson-triggers.sh\"",
         "type": "command",
         "timeout": 5
       },
