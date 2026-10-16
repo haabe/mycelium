@@ -376,6 +376,19 @@ def _as_dict(value) -> dict:
     return value if isinstance(value, dict) else {}
 
 
+def record_date(record) -> object:
+    """A record's `on` date, wherever YAML put it. `on` is a YAML 1.1 boolean, so a bare `on:` key
+    (the way a person, or an agent copying a skill's example, types it) loads as the key True. Read
+    both, so a decision, an ending or a harms check written either way has its date (v0.326.2).
+    An unquoted date (`on: 2026-10-11`) loads as a date object; it comes back as its ISO text, so
+    every reader that slices or checks for words gets the same thing a quoted date gives."""
+    rec = _as_dict(record)
+    value = rec.get("on")
+    if value in (None, ""):
+        value = rec.get(True)
+    return value.isoformat() if isinstance(value, _dt.date) else value
+
+
 def _words(value) -> int:
     return len(value.split()) if isinstance(value, str) else 0
 
@@ -1125,7 +1138,7 @@ class State:
         # `on` is a YAML 1.1 boolean: a hand-written `on: 2027-06-04` loads as the key True
         # (v0.276.0). Every test wrote the record through yaml.safe_dump, which quotes it, so an
         # agent typing the field as the schema names it was refused as having no date.
-        on = str(ended.get("on") or ended.get(True) or "")[:10]
+        on = str(record_date(ended) or "")[:10]
         ids = [str(x.get("id")) for x in self.l4_children(d)]
         problem = None
         if how not in ("withdrawn", "handed_to_l4"):
@@ -1387,13 +1400,13 @@ def _harms_verdict(e: dict) -> str:
     that is not one of HARMS_VERDICTS, counts as none: an unreadable record is not a check)."""
     h = _as_dict(e.get("harms_check"))
     verdict = str(h.get("verdict") or "").strip().lower()
-    return verdict if verdict in HARMS_VERDICTS and _filled(h.get("on")) else ""
+    return verdict if verdict in HARMS_VERDICTS and _filled(record_date(h)) else ""
 
 
 def harms_check_advice(pairs: list[tuple[dict, dict]]) -> str:
     """The advice for these (diamond, exposure record) pairs, or "" when there is none to give."""
     unrecorded = [_exposure_label(d, e) for d, e in pairs if not _harms_verdict(e)]
-    negative = [f"{_exposure_label(d, e)} (on {str(_as_dict(e.get('harms_check')).get('on'))[:10]})"
+    negative = [f"{_exposure_label(d, e)} (on {str(record_date(e.get('harms_check')))[:10]})"
                 for d, e in pairs if _harms_verdict(e) == "happier-negative"]
     out = []
     if unrecorded:
@@ -2116,7 +2129,7 @@ def _unknown_exposure_violations(st: State, old_active: dict) -> list[str]:
 
 
 def _decision_key(e: dict) -> tuple[str, str]:
-    on = e.get("on")
+    on = record_date(e)
     return str(e["decision"]), (str(on)[:10] if on else "")
 
 

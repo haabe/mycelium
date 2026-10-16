@@ -289,7 +289,7 @@ See `${CLAUDE_PLUGIN_ROOT}/engine/agent-operating-contract.md` *Canvas writes â€
        unblocked_by: <the skill or evidence that would clear it>
    decisions:                           # APPEND the decisions, when progressed (v0.305.0)
      - decision: start_experiment       # one entry per decision recorded (see below)
-       on: <YYYY-MM-DD>
+       'on': <YYYY-MM-DD>               # quoted: a bare `on` is a YAML 1.1 boolean
        gates: {evidence: pass, cynefin: pass, ...}   # this decision's gates (scale_locks.DECISIONS)
        ruling: progressed
        note: <for a repeated start_experiment: the test and the result it expects (DL-1373)>
