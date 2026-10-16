@@ -82,7 +82,7 @@ When the diamond carrying this work has an exposure record (`exposures[]` in `.c
 
 ```yaml
 harms_check:
-  on: 2026-10-11                 # the date the check was run
+  'on': '2026-10-11'             # the date the check was run; quote both (a bare `on` is a YAML 1.1 boolean)
   verdict: net-positive          # net-positive | happier-negative | not-applicable
   note: "what was found, or why it does not apply"
 ```

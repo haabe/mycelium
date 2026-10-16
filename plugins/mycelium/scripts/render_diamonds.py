@@ -85,7 +85,8 @@ def diamond_view(d: dict, ai: bool) -> dict:
         mode = _mode(made if dec == "close" else [*made, dec], scale)
         made.append(dec)
         relied = {str(k): str(v) for k, v in _mapping(e.get("gates")).items()}
-        recorded.append({"decision": dec, "on": str(e["on"])[:10] if e.get("on") else None,
+        on = sl.record_date(e)
+        recorded.append({"decision": dec, "on": str(on)[:10] if on else None,
                          "reconstructed": bool(e.get("reconstructed")), "mode": mode,
                          "gates": _gates(scale, dec, {**status, **relied}, ai)})
     if scale == "L0":

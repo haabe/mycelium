@@ -4,6 +4,38 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-16.
 
+## v0.326.2 - A decision's date reads however it was typed
+
+**2026-10-16.** Found on the dogfood project the same day: a script raised KeyError 'on' on two decisions
+written from the diamond-progress template.
+
+### What changed
+
+- **`on` is a YAML 1.1 boolean.** A bare `on:` key loads as the key True, and an unquoted date loads as
+  a date object. The diamond-progress template showed a decision as `on: <YYYY-MM-DD>`, and the
+  harms-check template showed `on: 2026-10-11`. Copied as shown:
+  - every decision rendered as "date not recorded";
+  - the rule that refuses a changed decision date (DL-1374) could not see the date;
+  - a recorded harms check read as no check at all, so the release advice kept asking for one.
+- **`scale_locks.record_date()`** reads `on`, or the key True, and returns a date object as its ISO text.
+  The decision key, the rewrite check, the learning-delivery ending, the harms verdict and its advice,
+  and `render_diamonds.py` all read through it. The ending already had a fallback (v0.276.0); decisions
+  and harms checks did not.
+- **Both templates quote the key**, and a test refuses a bare `on:` in either.
+- **`tests/python/test_bare_on_date_key.py`**: six tests, all red on 0.326.1.
+
+### Considered and not done
+
+- **Renaming the field** (`date:`, `recorded_on:`). Every recorded decision and exposure in every project
+  uses `on`; a rename means a migration, for a problem that reading both forms solves.
+- **validate_canvas reporting a boolean key.** Not needed once every reader accepts both forms, and it
+  would flag the dogfood project's two entries that are already fixed by hand.
+
+### Not covered, and what that costs
+
+- **A reader outside these scripts** that does its own `yaml.safe_load` and asks for `"on"` still gets
+  nothing. A grep of the plugin's scripts found no other reader of a decision, ending or harms date.
+
 ## v0.326.1 - The README carries the Awesome Claude Code badge
 
 **2026-10-16.** Mycelium was listed on hesreallyhim/awesome-claude-code on 2026-10-15 (PR #3180), and
