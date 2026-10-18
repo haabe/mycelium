@@ -76,6 +76,7 @@ Report the line for each scale with records. Since v0.302.0 (DL-1367) it counts 
 4. **Check confidence threshold**:
    - Reference ${CLAUDE_PLUGIN_ROOT}/engine/confidence-thresholds.yml for the current scale
    - Apply `project_type_adaptations` to compute effective threshold (see ${CLAUDE_PLUGIN_ROOT}/engine/confidence-thresholds.yml)
+   - If `project_type` in `.claude/diamonds/active.yml` is empty or absent, ask "is this a solo hobby, a solo product, or a team product?" before comparing, write the answer as `/mycelium:diamond-progress` step 3 says, and never apply the base threshold silently (v0.328.0). If the person declines, compare against the base and say the bar is unadapted because the scope is unknown.
    - Compare current confidence to the **effective** threshold, only at the decisions the scale's
      `threshold_applies_at` lists when it has one (the L3's is `close`, its exit, v0.259.0);
      otherwise name the evidence the next decision needs from `evidence_by_decision` (keyed by

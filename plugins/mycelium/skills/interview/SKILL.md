@@ -58,15 +58,17 @@ Read `.claude/canvas/purpose.yml` and `.claude/diamonds/active.yml` at session s
 - **Canvas empty** (template-only fields, no diamonds in `active_diamonds`): proceed to **Universal Brief Flow** below.
 - **Canvas populated** (purpose statement set OR diamonds present): proceed to **Continuing-Project Routing** below.
 
-This replaces the prior intent check (`(a) try for 10 min / (b) onboard real project`) and the prior time-budget routing (`<8h / 8-48h / 48+h`). Both were predict-the-future questions asked before any value was delivered. The brief is now universal for empty-canvas entry; depth and time-cost are chosen post-brief, when the user has the data to choose.
+This replaces the prior intent check (`(a) try for 10 min / (b) onboard real project`) and the prior time-budget routing (`<8h / 8-48h / 48+h`). Both were predict-the-future questions asked before any value was delivered. The brief is now universal for empty-canvas entry; depth and time-cost are chosen post-brief, when the user has the data to choose. Scope (solo or team, hobby or product) is not one of those questions: the user already knows it, and every confidence bar the gates apply is sized by it, so it is asked first, in one line (v0.328.0).
 
 ### Universal Brief Flow (canvas empty)
 
 Goal: the user walks away in ~10 minutes with a one-page brief on their idea that they can paste into a notes app and feel was worth the time. Then they choose what comes next, with each option declaring its time cost.
 
-**State the deal in one line, then ask the four questions** (one at a time, follow the energy):
+**State the deal in one line, ask the scope line, then ask the four questions** (one at a time, follow the energy):
 
-> "I'll ask 4 short questions about your idea, then give you a one-page brief. ~10 minutes. Nothing leaves your machine. I won't ask how much time you have for the whole project right now — depth and time-cost are chosen after the brief, when you have data to choose."
+> "I'll ask one line about the project and 4 short questions about your idea, then give you a one-page brief. ~10 minutes. Nothing leaves your machine. I won't ask how much time you have for the whole project right now — depth and time-cost are chosen after the brief, when you have data to choose."
+
+0. **Scope, before question 1 (v0.328.0).** "First, so the bars fit the project: is this a solo hobby, a solo product, or a team product?" Map the answer: a solo hobby or learning project → `solo_hobby`; one person, a real product with users → `solo_product`; a team of 2 to 10 → `team_startup`; a larger team, or regulatory or compliance needs → `team_enterprise` (one follow-up only if a team answer leaves those two open). Write it to `project_type` in `.claude/diamonds/active.yml` the same turn, and append it to `.claude/state/interview-in-progress.md` like the answers below. Say back in one line what it changes, read from `project_type_adaptations` in `${CLAUDE_PLUGIN_ROOT}/engine/confidence-thresholds.yml`; for `solo_hobby`: "Noted, a solo hobby project: the confidence bars are 30% lower, half as many sources are needed, and most sign-offs become optional. What is not lowered: evidence from real people other than you." If they do not know or skip it, leave it empty and go on; the gates ask again before they rule. *Why first:* until 0.328.0 this was asked only inside "Go deeper", so a builder who picked the test or a prototype was never asked, and the first gate held a weekend project to the bar for a team shipping to strangers (founder's own hobby project, 2026-10-18).
 
 1. **(one sentence, hard limit)** "What are you trying to change, and for whom?"
 2. "Tell me about the last time someone in that group hit the problem you're trying to solve. What did they actually do?" (Torres past-behavior — not "would they want X")
@@ -359,6 +361,9 @@ Store as `runtime_llm` on the L0 diamond entry in `.claude/diamonds/active.yml`.
 If unclear, ask: "Would a user, when they use this product, ever trigger a paid call to an LLM API? If yes — `runtime_llm: true`." Default to `false` if no clear answer; the flag is honest-default-conservative.
 
 **Project scope**:
+
+If `project_type` is already set (the brief flow asks it before question 1, since 0.328.0), say what it is and ask only whether it still holds; do not ask the questions below again. Ask them when it is empty.
+
 - Is this a solo or team project?
 - Is this a hobby/learning project, a real product, or enterprise?
 - Will it have external users?

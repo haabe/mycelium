@@ -2,7 +2,44 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-10-16.
+**Last updated**: 2026-10-18.
+
+## v0.328.0 - A project's scope is asked before the brief
+
+**2026-10-18.** The brief flow asked its four questions and then offered a test, a prototype or "Go deeper".
+Whether the project is a solo hobby, a solo product or a team product was asked only inside Go deeper, so a
+builder who picked the test or a prototype was never asked. `project_type` stayed empty and every confidence
+bar ran at the base meant for a team shipping to strangers. On the maintainer's own hobby project (plugin
+0.317.5, 2026-10-09 to 10-18) the first L0 gate noted "project_type unset, so no adaptation" and held it to
+0.9 instead of solo_hobby's 0.63, until he raised it himself: "this question should come in pretty early to
+prevent a hobby project to be demanded scores almost impossible for a weekend project". The README promises a
+weekend project "a few lines each, not a week of work".
+
+### What changed
+
+- **`/mycelium:interview`'s brief flow asks the scope in one line before question 1** ("is this a solo hobby,
+  a solo product, or a team product?"), writes `project_type` the same turn, and says back in one line what
+  the answer changes. Not knowing is allowed: it stays empty and the gates ask again.
+- **Go deeper's classification** confirms a scope already set instead of asking it again.
+- **`/mycelium:diamond-progress` and `/mycelium:diamond-assess` ask the same line before ruling** when
+  `project_type` is empty, and never apply the base threshold silently. If the person declines, the ruling
+  says the bar is unadapted because the scope is unknown.
+- **`/mycelium:start` and `/mycelium:setup`** announce the extra line.
+- **Tests:** `tests/python/test_scope_is_asked_before_the_brief.py`, 5 tests, written first and seen failing.
+
+### Considered and not done
+
+- **Ask it after question 4, or in the "Where to next?" menu.** It would keep the four questions first, but
+  a builder who leaves before the menu is never asked, and the maintainer ruled for early.
+- **Only the gate backstop.** The first gate can come days after the brief, and the builder plans the next
+  move from the brief without knowing the bar it will be held to. Kept as the backstop for projects that
+  started before this release.
+- **Infer the scope from the brief's answers.** The maintainer's case had hints (his son, no agents wanted)
+  and none said hobby; a guessed classification written as fact is the filler the canvas rules out.
+- **Default an empty scope to solo_hobby.** It would lower the bar for teams without anyone saying so.
+- **A script that flags an empty `project_type`.** No script reads it today; the gates that apply it are
+  skill instructions, so the ask lives there. Whether solo_hobby's own bar is right for a weekend project is
+  a separate question and is not changed here.
 
 ## v0.327.1 - The lesson-triggers fire log names the lessons
 
