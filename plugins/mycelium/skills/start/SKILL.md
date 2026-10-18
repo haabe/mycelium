@@ -20,7 +20,7 @@ Output a short welcome before doing anything. Do NOT skip this — the install-t
 >
 > Two quick steps:
 >   1. Set up Mycelium's files in `.claude/` — about 10 seconds. Your existing files (CLAUDE.md, README, etc.) aren't changed. A new `.claude/` directory is added, and setup may add an `AGENTS.md` at the project root (it asks first when you are there to answer).
->   2. A 10-minute discovery brief: 4 questions about your idea, then a one-page brief covering who it's for, the biggest assumption, the biggest risk, and your next concrete move.
+>   2. A 10-minute discovery brief: one line about the project, 4 questions about your idea, then a one-page brief covering who it's for, the biggest assumption, the biggest risk, and your next concrete move.
 >
 > One thing to know before you answer: once the brief exists, the agent builds the product itself only after a delivery diamond is open with its reasons written down, new files and edits to existing code alike. Code in a folder listed under `prototype_paths` in `.claude/diamonds/active.yml` stays free, and you can lift the hold yourself with `.claude/state/delivery-skip-ack`. Uninstalling is one command.
 >
@@ -54,7 +54,7 @@ tested `/.claude/...`, so an initialized project read as new and setup ran over 
 
 After setup completes, do NOT print setup's "Next:" line — this skill is the next step. Print:
 
-> "Setup done. Now: 4 questions about your idea, ~10 minutes."
+> "Setup done. Now: one line about the project, then 4 questions about your idea, ~10 minutes."
 
 ## Step 3: Run interview (universal-flow shape)
 

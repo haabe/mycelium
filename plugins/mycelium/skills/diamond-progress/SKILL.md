@@ -233,6 +233,13 @@ See `${CLAUDE_PLUGIN_ROOT}/engine/agent-operating-contract.md` *Canvas writes â€
 3. **Calculate confidence**:
    - Apply scoring rules from `${CLAUDE_PLUGIN_ROOT}/engine/confidence-thresholds.yml`.
    - Look up `project_type` and `dogfood` from `.claude/diamonds/active.yml`.
+   - **If `project_type` is empty or absent, ask before ruling (v0.328.0):**
+     "Before I rule: is this a solo hobby, a solo product, or a team product?"
+     Map and write the answer as the interview's scope step does (`solo_hobby`, `solo_product`,
+     `team_startup`, `team_enterprise`), then compute. Never apply the base threshold silently because
+     nobody asked. If the person declines, rule at the base and say in the ruling that the bar is unadapted because the scope is unknown. Until 0.328.0 an
+     L0 gate on a hobby project noted "project_type unset, so no adaptation" and held it to 0.9 instead
+     of 0.63, nine days after a brief that never asked.
    - Apply `project_type_adaptations` from ${CLAUDE_PLUGIN_ROOT}/engine/confidence-thresholds.yml:
      - `effective_threshold = base_threshold * threshold_multiplier`
      - If `dogfood: true`: `effective_threshold *= dogfood_modifier.additional_threshold_multiplier`

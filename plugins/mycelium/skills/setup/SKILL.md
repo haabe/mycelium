@@ -396,7 +396,7 @@ The output has two parts: a short welcome (closes the install→setup void for u
 > - `AGENTS.md` at project root  ← include this line ONLY if AGENTS.md was actually written this session
 > - `opencode.json` + `.opencode/` starter scaffold  ← include this line ONLY if the opencode scaffold was provisioned this session (Step 5); add: "see docs/integrations/opencode.md to finish + verify"
 >
-> Next: run `/mycelium:interview` to start a 10-minute discovery session — 4 questions about your idea, then a one-page brief covering who it's for, the biggest assumption, the biggest risk, and your next concrete move. Or `/mycelium:diamond-assess` if you want to add Mycelium to a project that's already partway through discovery."
+> Next: run `/mycelium:interview` to start a 10-minute discovery session — one line about the project, 4 questions about your idea, then a one-page brief covering who it's for, the biggest assumption, the biggest risk, and your next concrete move. Or `/mycelium:diamond-assess` if you want to add Mycelium to a project that's already partway through discovery."
 
 ## What this skill does NOT do
 
