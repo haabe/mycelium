@@ -4,6 +4,29 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-20.
 
+## v0.328.2 - The README no longer says the building was never the hard part
+
+**2026-10-20.** A devil's advocate pass on the README's thesis, with two readers given only the claim and three
+results from a literature sweep, found one sentence that does not survive them: "The building was never the hard
+part." Chen and Stratton (working paper, 2026) found code review to be the one measured bottleneck in firms
+adopting coding agents, and review is the work of checking what was built. The readers did not dispute the rest of
+the paragraph, and the paper does not show that deciding what to build is easy. It shows that building is sometimes
+the hard part.
+
+### What changed
+
+- **README.md:** "The building was never the hard part." is now "The building wasn't the hard part.", the
+  maintainer's wording. In the past tense it speaks about the weekend in the paragraph above it, where it is true,
+  instead of about all building.
+
+### Considered and not done
+
+- **Keep "never" and add a footnote on review.** Rejected: the claim would stay as wide and the footnote would only
+  move the caveat somewhere fewer people read.
+- **"Building is no longer the hard part."** Rejected: still a claim about all building, and the same study
+  contradicts it.
+- **Rewrite the paragraph around review.** Not done: the readers found one word too wide, not the paragraph wrong.
+
 ## v0.328.1 - The opencode 2.x plugin guards `write` as well as `edit`
 
 **2026-10-20.** A smoke test of the opencode scaffold on opencode 2.1.1 (released the same day with breaking
