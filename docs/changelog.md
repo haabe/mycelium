@@ -2,7 +2,35 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-10-18.
+**Last updated**: 2026-10-20.
+
+## v0.328.1 - The opencode 2.x plugin guards `write` as well as `edit`
+
+**2026-10-20.** A smoke test of the opencode scaffold on opencode 2.1.1 (released the same day with breaking
+changes to plugin contracts; headless, `llama3.1:8b`, request bodies captured by a logging proxy) found the 2.x
+plugin loading, injecting its preflight and refusing an unread `edit`, and one gap: a `write` to an existing
+file that had never been read replaced it. The plugin guarded `event.tool === "edit"` on the comment
+"`write` and `patch` are now `edit`", but 2.0.5 and 2.1.1 both list a separate `write` tool and no `patch`, so the
+gap dates from the 2.x plugin, not from 2.1.
+
+### What changed
+
+- **`plugins-v2/mycelium/index.ts` guards `write` when the file exists.** Creating a new file needs no read and is
+  allowed. Paths are resolved against the session directory before comparing, so a relative `read` and an absolute
+  `edit` of the same file match (the raw-string comparison would have refused it).
+- **The README's opencode 2.x section** records what was observed on 2.1.1, corrects "does nothing on 2.x,
+  silently" (the 1.x file logs a load error), and notes that 2.1.1 accepts the 1.x-shaped `opencode.json`.
+- **Tests:** `tests/python/test_opencode_v2_guard_covers_write.py`, 5 tests, written first and seen failing (3 of 5).
+  It runs the plugin's TypeScript under Node's type stripping with a stub `@opencode/plugin`; without Node 22.6+ it
+  skips and says so, and CI installs only Python, so on CI it may be a skip rather than a pass.
+
+### Considered and not done
+
+- **Guard every `write`, new files included.** Rejected: a new file has nothing to read, so the guard would only
+  block file creation and teach the model to route around it.
+- **Leave paths as raw strings.** Rejected: the same file written two ways would be refused after a real read.
+- **A test that only greps the source for `"write"`.** Rejected as the primary test: it would pass on a guard that
+  names the tool and never fires. Kept one source assertion, for the corrected comment only.
 
 ## v0.328.0 - A project's scope is asked before the brief
 

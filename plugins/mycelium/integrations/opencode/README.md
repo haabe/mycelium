@@ -24,7 +24,9 @@ surface.
 
 opencode 2.0 went stable on npm (`@opencode/cli`) on 2026-09-11. Its migration page:
 "V1 plugin implementations do not run in V2. Moving a file or renaming its config entry
-is not enough." So `plugin/mycelium.ts` does nothing on 2.x, silently. The 2.x form is
+is not enough." So `plugin/mycelium.ts` does not run on 2.x. On 2.1.1 it is not silent: it logs
+`Plugin must export a default definition with an id and an effect or setup function` and the 2.x
+plugin runs beside it unaffected. The 2.x form is
 `plugins-v2/mycelium/index.ts`, installed to `.opencode/plugins/mycelium/index.ts`
 (auto-discovered, no config entry). `/mycelium:setup` provisions both.
 
@@ -35,12 +37,20 @@ is not enough." So `plugin/mycelium.ts` does nothing on 2.x, silently. The 2.x f
 - `execute.before` guard: an `edit` with no prior `read` was refused, the thrown message reached the model (`llama3.1:8b`), and the file was unchanged.
 - `execute.after` with `status: "error"`: a failed `read` fired the hook, and the reflexion prompt appended to the error message reached the model, which then reasoned about the failure. **This is the #27900 gap, closed by 2.x.** The 1.x gap stands; the upstream issue was closed by a stale bot and never answered.
 
+**Observed on opencode 2.1.1, 2026-10-20, headless `opencode run --standalone` with `llama3.1:8b` at a 32K context, request bodies captured by a logging proxy:**
+
+- The shipped 1.x-shaped `opencode.json` is accepted, and the plugin loads.
+- `context` hook: the preflight text is in the system prompt of every model request; `MYCELIUM_PREFLIGHT=off` removes it.
+- `execute.before` guard: an `edit` with no prior `read` was refused, and `read` then `edit` was allowed (the allow path, first seen here).
+- **`write` was not guarded before 0.328.1.** 2.0.5 and 2.1.1 both have a separate `write` tool, and a `write` to an existing file that was never read replaced it. Since 0.328.1 the guard refuses `write` to an existing unread file and allows `write` that creates a new one, and paths are resolved before comparing. `tests/python/test_opencode_v2_guard_covers_write.py` runs the plugin under Node's type stripping (Node 22.6+, skipped without it).
+- The renames 2.1.0 lists (`providerState`/`resultState` to `native`) touch none of the hooks this plugin uses.
+
 **Not observed, so do not rely on it:**
 
-- The allow path of the guard (read, then edit). The one attempt was routed by the 8B model through 2.x's `execute` code-mode tool and fumbled.
+- The guard's allow path on 2.0.5 (it was seen on 2.1.1, above). The one 2.0.5 attempt was routed by the 8B model through 2.x's `execute` code-mode tool and fumbled.
 - **`read`/`edit` calls made INSIDE the `execute` code-mode tool.** Read in source, not observed: at v2.0.5, `packages/core/src/tool.ts` builds the code-mode tool with a callback that runs every inner call through `beforeExecute(name, input, context)` and then `executeTool`, the same two functions a direct call uses, so inner calls reach both hooks by design and the guard has no bypass there. The one attempt to observe it (2026-09-17) logged a single `execute` event carrying the code string and no inner event, but the inner call never resolved: the 8B model guessed a wrong API path. A model that can drive code mode is needed to see it.
 - Only `Tool.Error` failures take the `execute.after` error path in the 2.0.5 source; thrown defects and provider errors were not exercised.
-- The shipped `opencode.json` is 1.x-shaped (`provider`, `permission`, `instructions`). The 2.x runs above used a bare config: 2.x discovers a local Ollama on its own, and its permission config is a single ordered `permissions` array with renamed tools (`bash` is `shell`; `write` and `patch` are `edit`). Whether 2.x accepts the 1.x file was not tested.
+- The shipped `opencode.json` is 1.x-shaped (`provider`, `permission`, `instructions`). The 2.x runs above used a bare config: 2.x discovers a local Ollama on its own, and its permission config is a single ordered `permissions` array with renamed tools (`bash` is `shell`; `write` and `patch` are `edit`). 2.1.1 accepted the 1.x file (2026-10-20); 2.0.5 was not tried with it.
 - **2.x reads `AGENTS.md` only.** "It does not use CLAUDE.md as a fallback." Create one (see `docs/integrations/opencode.md`).
 
 ## Config notes (runtime-verified on 1.17.7)
