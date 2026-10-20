@@ -10,7 +10,7 @@ Built on Claude Code, where the gates are structural. The files and skills port 
 
 You know how this goes. The idea turns up on a Thursday and it is a good one. The agent is quick and generous and by Sunday there is a working thing on your screen. It runs. You are pleased with it, and you have every right to be.
 
-The building was never the hard part.
+The building wasn't the hard part.
 
 The hard part might've happened on Thursday, in about four minutes, mostly in your head. Who this is for. Whether any of them has actually said so. What would have to be true for it to matter to them. Which of those you were betting the weekend on.
 
