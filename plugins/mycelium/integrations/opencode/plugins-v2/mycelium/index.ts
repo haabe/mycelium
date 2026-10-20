@@ -24,13 +24,17 @@
  * only read in source. Do not extend this comment with claims; put them there, dated.
  *
  * V2 DIFFERENCES THAT BITE:
- *   - Tool names: `write` and `patch` are now `edit`; `bash` is `shell`.
+ *   - Tool names: `edit` changes part of a file and `write` replaces or creates one
+ *     (both in 2.0.5 and 2.1.1; there is no `patch`); `bash` is `shell`. The guard
+ *     covers `write` only when the file exists, since creating one needs no read.
  *   - Instructions: V2 reads AGENTS.md only. "It does not use CLAUDE.md as a fallback."
  *   - A blocked call is a thrown Error from `execute.before`; the message is what the
  *     model sees, so it says what to do next.
  */
 
 import { Plugin } from "@opencode/plugin"
+import { existsSync } from "node:fs"
+import { resolve } from "node:path"
 
 // Per-session set of file paths that have been read this session.
 const readPaths = new Map<string, Set<string>>()
@@ -62,14 +66,18 @@ export default Plugin.define({
     })
 
     // ---- Read-before-edit guard ----
+    // Paths are resolved against the session's directory before comparing, so a
+    // relative read and an absolute edit of the same file match.
+    const base = (ctx as any).location?.directory ?? process.cwd()
     await ctx.tool.hook("execute.before", (event) => {
-      const p = argPath(event.input)
+      const raw = argPath(event.input)
+      const p = raw ? resolve(base, raw) : undefined
       if (event.tool === "read" && p) {
         if (!readPaths.has(event.sessionID)) readPaths.set(event.sessionID, new Set())
         readPaths.get(event.sessionID)!.add(p)
         return
       }
-      if (event.tool === "edit" && p) {
+      if (p && (event.tool === "edit" || (event.tool === "write" && existsSync(p)))) {
         const seen = readPaths.get(event.sessionID)
         if (!seen || !seen.has(p)) {
           throw new Error(
