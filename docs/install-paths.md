@@ -77,4 +77,4 @@ After upgrading, run `/mycelium:diamond-assess` (plugin form) or `/diamond-asses
 
 Mycelium runs on [opencode](https://github.com/anomalyco/opencode) with local models (Ollama, LM Studio) for users who want to escape Claude Code's pricing model. The substrate ports verbatim; three runtime safety mechanisms degrade to model-following-instructions rather than structural enforcement. Honest support matrix and setup steps: [integrations/opencode.md](integrations/opencode.md).
 
-Other integrations: [Codex](integrations/codex.md), [Cursor](integrations/cursor.md).
+Other integrations: [Codex](integrations/codex.md), [Cursor](integrations/cursor.md), [Mistral Vibe](integrations/vibe.md) (partial: no session-start hook and no gates; the page names the workaround for the contract).

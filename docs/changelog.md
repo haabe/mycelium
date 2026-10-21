@@ -2,7 +2,25 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-10-20.
+**Last updated**: 2026-10-21.
+
+## v0.328.3 - A page for Mistral Vibe says what does not work and how to get the contract there
+
+**2026-10-21.** Mycelium had pages for Codex, opencode and Cursor, and none for Mistral Vibe, though the README
+points at a Vibe run. Measured on Vibe 3.0.0 with a local model: installed the way Vibe's docs describe, Mycelium
+loads nothing, because the plugin folder carries both a Claude Code and a Codex manifest and Vibe drops a plugin
+with two. The new `docs/integrations/vibe.md` says so, and gives the steps that were measured: remove the Codex
+manifest from your copy and every skill but `ping`, a smoke test, loads. It states the limits plainly. Vibe has no session-start
+hook, so the operating contract is not loaded at the start of a session. Vibe 3.0 runs no hook a plugin ships, so
+the gates do not run. Plugin knowledge did not reach the model. It names the workaround for the contract, the
+AGENTS.md contract copy: the contract file appended to the project's `AGENTS.md` with its plugin-path placeholders
+filled in. With the full contract, the whole text reached the model's input and the model answered from its last
+section. `docs/install-paths.md` links the page.
+
+**Alternatives not taken.** Shipping a native Vibe manifest and a hooks translator in this release: both put new
+code in the plugin, and the native manifest needs checking against Codex first, which also reads that format.
+Telling readers to use the user-level `~/.vibe/AGENTS.md`: it was measured to work, but it puts Mycelium's rules
+into every project, so the page prefers the project file and says why.
 
 ## v0.328.2 - The README no longer says the building was never the hard part
 
