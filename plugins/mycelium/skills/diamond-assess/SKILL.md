@@ -36,6 +36,8 @@ Evaluate current diamond state and recommend next action.
 
    > "You said [X]. The gates say [Y]. Where do we differ?"
 
+   **The turn that asks this question ends with a `Next:` line, like every turn in which a skill ran** (contract rule 12). The question is the next action: `Next: say where you think this diamond stands, what feels solid and what feels shaky (per: diamond-assess step 0)`. Without that line the Stop hook `hooks/next-action-check.sh` blocks the turn, and Claude Code shows the block to the person as "Stop hook error" under a question they have not answered yet. On the dogfood project, 3 of that hook's first 5 blocks were this pause (2026-10-05 to 2026-10-22).
+
    This prevents the agent's analysis from anchoring the human's judgment. The human's pre-assessment often catches things the gates miss (Hoskins consistently outperformed the agent on product judgment calls).
 
    *Source: Buçinca, Malaya & Gajos (Cognitive Forcing Functions, Harvard CHI/CSCW 2021) — forcing initial human judgment before AI output significantly reduces automation bias and over-reliance on incorrect AI recommendations.*
