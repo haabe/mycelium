@@ -54,6 +54,8 @@ See `${CLAUDE_PLUGIN_ROOT}/engine/agent-operating-contract.md` *Canvas writes �
 
    > "You said [X]. The gates say [Y]. Where do we differ?"
 
+   **The turn that asks this question ends with a `Next:` line, like every turn in which a skill ran** (contract rule 12). The question is the next action: `Next: say whether you think we're ready to record [decision] (per: diamond-progress step 1b)`. Without that line the Stop hook `hooks/next-action-check.sh` blocks the turn, and Claude Code shows the block to the person as "Stop hook error" under a question they have not answered yet. The same pause in diamond-assess step 0 caused 3 of that hook's first 5 blocks on the dogfood project.
+
    The human's instinct often catches risks the gates miss. If the human says "not ready" but gates pass, investigate — the human may be sensing something the evidence hasn't captured yet.
 
    *Source: Buçinca, Malaya & Gajos (Cognitive Forcing Functions, Harvard CHI/CSCW 2021). Applied after Hoskins transcript analysis — Drew's product judgment consistently outperformed the agent's gate-based assessment.*

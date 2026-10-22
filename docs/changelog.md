@@ -2,7 +2,25 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-10-21.
+**Last updated**: 2026-10-22.
+
+## v0.328.4 - A skill that stops to ask says how the turn ends
+
+**2026-10-22.** Two skills stop partway to ask for the person's own judgment before the agent shows its analysis:
+`diamond-assess` (step 0, where do you think this diamond stands) and `diamond-progress` (step 1b, are we ready to
+record this decision). Both said "wait for the response" and neither said how that turn ends. The contract's rule 12
+asks every turn in which a skill ran to end with one `Next:` line, and a question for the person is allowed as that
+action, but the agent reads the skill at that moment, not the rule. So it ended on the question, the next-action Stop
+hook blocked the turn, and Claude Code showed the person "Stop hook error" under a question they had not yet answered.
+On the dogfood project this was 3 of the hook's first 5 blocks, all at diamond-assess step 0, from 2026-10-05 to
+2026-10-22. A fourth block was the same pause in `purpose-properties`, so the contract's rule 12 now says it for
+every skill: a turn that stops partway through a skill to ask the person something ends with the question as its
+`Next:` action. The two skills also name their closing line at the pause: the question as the action, the step as
+what it rests on.
+
+**Alternatives not taken.** Letting the hook pass a turn that ends on a question: it would also pass a turn that
+ends on a rhetorical one, and the line is what tells the person the skill is waiting on them. Leaving it to the
+contract: rule 12 already said it, and the measured blocks happened with the contract loaded.
 
 ## v0.328.3 - A page for Mistral Vibe says what does not work and how to get the contract there
 
