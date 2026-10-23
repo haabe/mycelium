@@ -626,6 +626,30 @@ if [ -n "$DOCCHK" ]; then
 fi
 
 # ============================================================
+# CHECK 1e-iii: Scheduled reviews past their cadence (v0.329.0)
+# ============================================================
+# engine/feedback-loops.md set a schedule in prose and listed "SessionStart: remind about overdue
+# strategic reviews" as needed work. Only bvssh (CHECK 1) and delivery metrics (CHECK 2) became
+# checks, and on the dogfood project the rest lapsed unseen: theory-fidelity 111 days on a quarterly
+# cadence, wardley-map 63 and 41 on a monthly one. The schedule is now data
+# (engine/review-schedule.yml), read by one script; this hook only carries its line, and the reviews
+# CHECK 1 and CHECK 2 already report are listed there and not reported twice.
+SCHEDCHK=""
+if [ -n "${CLAUDE_PLUGIN_ROOT:-}" ] && [ -f "${CLAUDE_PLUGIN_ROOT}/scripts/review_schedule.py" ]; then
+  SCHEDCHK="${CLAUDE_PLUGIN_ROOT}/scripts/review_schedule.py"
+elif [ -f "$_MYCELIUM_ROOT/scripts/review_schedule.py" ]; then
+  SCHEDCHK="$_MYCELIUM_ROOT/scripts/review_schedule.py"
+fi
+{ over_budget || [ "$_SS_HEAVY" = skip ]; } && { SKIPPED_FOR_TIME="${SKIPPED_FOR_TIME}review-schedule "; SCHEDCHK=""; }
+if [ -n "$SCHEDCHK" ]; then
+  SCHED_LINE=$(python3 "$SCHEDCHK" --project-dir "$PROJECT_DIR" --check 2>/dev/null \
+    | grep -E '^(SCHEDULED REVIEWS DUE|UNREADABLE)' || echo "")
+  if [ -n "$SCHED_LINE" ]; then
+    REMINDERS="${REMINDERS}${SCHED_LINE} "
+  fi
+fi
+
+# ============================================================
 # CHECK 1f: Evidence that never landed (advisory, v0.107.0)
 # ============================================================
 # The empty quadrant. canvas-health flags an OPEN task whose evidence exists

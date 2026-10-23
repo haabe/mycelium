@@ -4,6 +4,45 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-23.
 
+## v0.329.0 - A scheduled review that lapses is named at session start
+
+**2026-10-23.** `engine/feedback-loops.md` sets a schedule for the reviews that keep the strategic loops turning:
+metrics-pull weekly, bvssh-check and wardley-map monthly, framework-health, theory-fidelity and the eval benchmark
+quarterly, corrections-audit after every 3 new corrections. Its own table listed "SessionStart: remind about overdue
+strategic reviews" as work still to do. Only two rows ever became checks: bvssh (session-start CHECK 1) and the
+delivery metrics (CHECK 2). The rest lapsed with nothing said. On the dogfood project, measured from each review's own
+output and from git, theory-fidelity went 111 days on a quarterly cadence and wardley-map went 63 and 41 days on a
+monthly one, while the two checked reviews stayed within two days of theirs. The founder had noticed it over months:
+"Nothing automatically picks up that they weren't run in time."
+
+- **The schedule is data.** `engine/review-schedule.yml` lists each review, its cadence (a number of days, or a number
+  of corrections for corrections-audit) and where its last run is read from. feedback-loops.md and feedback-review now
+  point at it. feedback-review had called the Wardley map stale after three months while feedback-loops said monthly;
+  the schedule takes the monthly cadence that feedback-loops declares.
+- **A last run is read from what the review writes.** metrics-pull, eval-runner and corrections-audit already write
+  dated files, and the newest date in a matching file name is the run. wardley-map, framework-health and
+  theory-fidelity write only the decision log, whose headings were measured to undercount (the first measurement
+  behind this release called two reviews 114 and 143 days late, and their own files said 12 and 64), so each skill
+  now ends with `review_schedule.py --record <id>`, which appends to `.claude/harness/review-runs.jsonl` (declared
+  project state in the manifest).
+- **One line at session start.** `SCHEDULED REVIEWS DUE — N review(s) past their cadence: ...` names each review with
+  its cadence and last run. The advisory ledger counts it as `reviews-overdue`, and the NEXT ITEM routes it to
+  `/mycelium:feedback-review`, which lists the whole schedule (`--list`). It goes through the existing mute and ruling
+  flow, so a lapse you choose to accept gets a recorded snooze, not silence. A review never run is due once the
+  project's oldest diamond is older than its cadence; a project with no diamonds has nothing due. BVSSH and the
+  delivery metrics stay with their own checks and are listed, not reported twice. An unreadable schedule or run
+  record is said, never read as nothing due.
+
+**What it does not see.** A review done by hand outside its skill is not counted until the skill records it. A project
+that adopts 0.329.0 sees wardley-map, framework-health and theory-fidelity as never run until each runs once, even if
+they ran before; the run record starts now.
+
+**Alternatives not taken.** Reading last runs from decision-log headings: free text, and measured to undercount, which
+would have made the reminder wrong in the direction that teaches people to ignore it. A separate check per review,
+like CHECK 1 and CHECK 2: that is how the schedule came to be enforced in two rows out of eight; one reader of one file
+cannot drift from the file. Running the reviews on a timer: they need a person's judgment, and a run nobody reads is
+the failure this project measures for.
+
 ## v0.328.6 - A parked diamond is not asked for its Definition of Done
 
 **2026-10-23.** The session-start hook raises "N diamond(s) have no outcome Definition of Done" (CHECK 9), which also

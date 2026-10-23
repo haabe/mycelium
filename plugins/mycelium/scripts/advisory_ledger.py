@@ -142,6 +142,7 @@ SIGNATURES: list[tuple[str, str]] = [
     ("memory-poisoning-watch", r"POISONING WATCH"),
     ("cross-repo-activity", r"\[canvas IDs: "),
     ("diamonds-no-dod", r"(?P<count>\d+) diamond\(s\) have no outcome Definition of Done"),
+    ("reviews-overdue", r"SCHEDULED REVIEWS DUE — (?P<count>\d+) review\(s\) past their cadence"),
     ("outcome-check-due", r"(?P<count>\d+) shipped diamond\(s\) due an outcome-check"),
     (
         "outcome-signal-no-measure",

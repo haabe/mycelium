@@ -121,6 +121,16 @@ It reads the scale table in `engine/diamond-rules.md` and each scale's `required
    activities. A finding like "encode the climatic patterns" is agent-executable engineering
    work, and filing it as an `interview` would be a finding wearing a human-task's clothes.
 
+**Record the run (added v0.329.0).** This audit is on the review schedule
+(`engine/review-schedule.yml`, every 90 days), and the schedule does not read decision-log headings,
+which were measured to undercount. When the report is written, run:
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/review_schedule.py" --record theory-fidelity --project-dir .
+```
+
+Without it, session start keeps reporting the audit as past its cadence.
+
 ## Output Format
 
 ```

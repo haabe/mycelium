@@ -103,6 +103,10 @@ COMMANDS: dict[str, tuple[str, str]] = {
         "/mycelium:assumption-test",
     ),
     "diamonds-no-dod": ("A diamond has no outcome Definition of Done.", "/mycelium:define-done"),
+    "reviews-overdue": (
+        "A scheduled review is past its cadence.",
+        "/mycelium:feedback-review",
+    ),
     "outcome-check-due": ("A shipped diamond is due its outcome check.", "/mycelium:metrics-pull"),
     "outcome-signal-no-measure": (
         "A shipped diamond has a signal but no measure.",

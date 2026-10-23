@@ -67,7 +67,9 @@ The four loop speeds implement Kim's Three Ways:
 
 **Health signal**: If strategic corrections don't improve the trajectory after 2+ cycles, escalate to Loop 4 (the framework itself may need adjustment).
 
-**Cadence**:
+**Cadence** (the reviews below that run on a calendar or a count are data in `engine/review-schedule.yml`
+since v0.329.0, read by `scripts/review_schedule.py` and reported at session start when past due; change a
+cadence there, not here, and this list describes it):
 - Weekly: /diamond-assess + corrections review + /metrics-pull (L0/L1/L2/L5 diamonds)
 - Monthly: /bvssh-check + /wardley-map + stale diamond cleanup
 - Per-delivery: /dora-check + /retrospective
@@ -180,7 +182,7 @@ Every metric in Mycelium must have a **counter-metric** to prevent gaming:
 | PostToolUseFailure hook | Loop 1 | No change needed |
 | PostToolUse nudge | Loop 1 | No change needed |
 | Stop check | Loop 2-3 | **Enhanced**: check for overdue strategic loops |
-| SessionStart | Loop 3 | **New**: remind about overdue strategic reviews |
+| SessionStart | Loop 3 | **Built in v0.329.0**: reminds about overdue scheduled reviews (`engine/review-schedule.yml`, `scripts/review_schedule.py`; before that only BVSSH and delivery metrics were checked) |
 | Eval benchmarks | Loop 4 | Add trend comparison (current vs last baseline) |
 | Prompt optimization | Loop 4 | No change needed |
 | Cycle history | Loop 2 | Records every completed/discarded leaf for calibration |

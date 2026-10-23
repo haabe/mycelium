@@ -211,7 +211,7 @@ On each quarterly run:
 
 `/theory-fidelity` is the *semantic* audit (is each theory faithfully operationalized vs distorted/over-claimed?) — it needs source-grounding and an LLM, so it runs on cadence, not every push. The `check_theory_fidelity.py` CI guard covers only the *structural* subset (references resolve, gates grounded, no name-only theory). This step is the trigger for the semantic half.
 
-- **Recommend `/theory-fidelity` when the theory surface moved OR quarterly.** Check whether `docs/theories.md`, `engine/theory-gates.md`, or any skill's `Source:`/`## Theory Citations` line changed since the last `/theory-fidelity` decision-log entry (git-log the paths against that date). If yes, or if >90 days since the last run, surface in the dashboard: "Theory surface changed since last fidelity audit — run `/theory-fidelity`."
+- **Recommend `/theory-fidelity` when the theory surface moved OR quarterly.** Check whether `docs/theories.md`, `engine/theory-gates.md`, or any skill's `Source:`/`## Theory Citations` line changed since the last `/theory-fidelity` run (git-log the paths against that date). If yes, surface in the dashboard: "Theory surface changed since last fidelity audit — run `/theory-fidelity`." **The quarterly half is on the review schedule since v0.329.0** (`engine/review-schedule.yml`, reported at session start by `scripts/review_schedule.py`): read the last run with `review_schedule.py --list` rather than from the decision log, whose headings were measured to undercount. This step keeps only the surface-moved trigger, which no calendar can see.
 - **Confirm the structural guard is green**: run `check_theory_fidelity.py` inline and report. A guard failure is a structural-drift finding (phantom skill/gate ref, name-only theory) for the dashboard; it does NOT substitute for the semantic audit.
 - Temporal-independence (4e) applies.
 
@@ -256,6 +256,17 @@ checks gained their callers (`/canvas-sync`, last named 2026-06-14; `check_gated
 self-declared draft stub; one guard whose log file the installed plugin did not yet write), and 10
 hooks with no record. Retirement happens by release with the row's evidence in the changelog. The
 script removes nothing.
+
+### 4j. Record the run (added v0.329.0)
+
+This review is on the schedule (`engine/review-schedule.yml`, every 90 days), and the schedule does
+not read decision-log headings, which were measured to undercount. When the dashboard is written, run:
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/review_schedule.py" --record framework-health --project-dir .
+```
+
+Without it, session start keeps reporting framework-health as past its cadence.
 
 ### 5. Generate Dashboard
 
