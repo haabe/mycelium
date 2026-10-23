@@ -4,6 +4,23 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-23.
 
+## v0.328.6 - A parked diamond is not asked for its Definition of Done
+
+**2026-10-23.** The session-start hook raises "N diamond(s) have no outcome Definition of Done" (CHECK 9), which also
+becomes the `diamonds-no-dod` NEXT ITEM. It skipped only `archived` and `killed` diamonds, a two-state copy of the
+closed set that `scripts/scale_locks.py` names as `CLOSED` (complete, completed, killed, parked, archived,
+retargeted). So a diamond parked to wait for evidence was reported on every session start. On the dogfood project
+the agent then put the missing bar to the founder as a decision, though his ruling on that parked diamond already
+said its bar is written when it resumes; he spent a turn on a question parking had settled. CHECK 9 now imports
+`scale_locks.CLOSED` (with the same set as a fallback if the import fails), and canvas-health step 8e names the same
+set and says why a parked diamond is skipped. `derive_closing_path` fixed the same shape for parked diamonds in
+v0.312.1; this check had kept its own copy. A new test runs the real hook with one open and one parked diamond and
+with every closed state, and fails without the fix.
+
+**Alternatives not taken.** Adding `parked` to the hook's own set: a third copy of one rule, the shape that caused
+this. Flagging a parked diamond only when it has no `resume_conditions`: that is a different finding (no way back
+in), and putting it under "no Definition of Done" would name the wrong remedy.
+
 ## v0.328.5 - canvas-health runs the checks its NEXT ITEMs send people to
 
 **2026-10-23.** The session-start hook picks one advisory as the NEXT ITEM and names the command that deals with it.

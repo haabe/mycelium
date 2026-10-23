@@ -1273,14 +1273,23 @@ fi
 # detector for /mycelium:define-done. NUDGE tier, observability only.
 if [ -f "$PROJECT_DIR/.claude/diamonds/active.yml" ]; then
   DOD_WARNING=$(python3 -c "
-import yaml, sys
+import yaml, sys, os
 try:
   with open(sys.argv[1]) as f:
     data = yaml.safe_load(f) or {}
-  TERMINAL = {'archived', 'killed'}
+  # A PARKED DIAMOND IS NOT MISSING ITS BAR (v0.328.6). This check kept its own two-state copy
+  # ({archived, killed}) of the closed set scale_locks.CLOSED names, so a diamond parked to wait for
+  # evidence was reported on every session start, and the agent put the founder a question he had
+  # settled by parking it (dogfood 2026-10-23, l3-opp-080). derive_closing_path fixed the same shape
+  # in v0.312.1. Its resume_conditions are its way back in; the bar is written when it resumes.
+  sys.path.insert(0, os.path.join(os.environ.get('_MYCELIUM_ROOT') or '/nonexistent', 'scripts'))
+  try:
+    from scale_locks import CLOSED
+  except ImportError:
+    CLOSED = {'complete', 'completed', 'killed', 'parked', 'archived', 'retargeted'}
   missing = []
   for d in data.get('active_diamonds', []) or []:
-    if d.get('state') in TERMINAL:
+    if str(d.get('state') or '').strip().lower() in CLOSED:
       continue
     dod = d.get('definition_of_done') or {}
     if not (isinstance(dod, dict) and dod.get('outcome') and dod.get('signal')):
