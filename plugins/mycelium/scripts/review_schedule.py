@@ -27,6 +27,10 @@ VERBS
 NEVER RUN. A review with no run on record is due once the project's oldest diamond is older than its
 cadence, or, for a corrections cadence, once that many corrections exist. A project with no diamonds
 has nothing due.
+
+CORRECTIONS (v0.329.1). Counted with _corrections_lib, never a regex of this file's own. A count
+cadence is fixed (`corrections: 3`) or adaptive: due once the corrections since the last run reach
+the median weekly count of the last `window_weeks` weeks, at least `floor`.
 """
 
 from __future__ import annotations
@@ -41,13 +45,13 @@ from pathlib import Path
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import _corrections_lib
 import _state_dir
 
 SCHEDULE = Path(__file__).resolve().parent.parent / "engine" / "review-schedule.yml"
 RUNS_REL = ".claude/harness/review-runs.jsonl"
 CORRECTIONS_REL = ".claude/memory/corrections.md"
 _DATE = re.compile(r"(\d{4}-\d{2}-\d{2})")
-_CORRECTION_HEAD = re.compile(r"^## (\d{4}-\d{2}-\d{2})", re.MULTILINE)
 
 
 def _date(text) -> _dt.date | None:
@@ -108,13 +112,25 @@ def last_run(root: Path, review: dict, stamped: dict[str, _dt.date]) -> _dt.date
     return max(found) if found else None
 
 
-def corrections_since(root: Path, since: _dt.date | None) -> int:
+def correction_dates(root: Path) -> list[_dt.date]:
+    """Every dated entry in corrections.md, counted by _corrections_lib, the one definition of an
+    entry. 0.329.0 used its own `## DATE` regex and counted 151 of the dogfood file's 419 entries:
+    the `### DATE - title` and bullet forms were invisible to it."""
     path = root / CORRECTIONS_REL
     if not path.is_file():
-        return 0
+        return []
     text = path.read_text(encoding="utf-8")
-    dates = [d for h in _CORRECTION_HEAD.findall(text) if (d := _date(h))]
-    return sum(1 for d in dates if since is None or d > since)
+    return [d for s in _corrections_lib.entry_dates(text) if (d := _date(s))]
+
+
+def adaptive_threshold(dates: list[_dt.date], today: _dt.date, weeks: int, floor: int) -> int:
+    """The median number of corrections logged per week over the last `weeks` weeks, at least
+    `floor`. The median, so one burst week does not set the bar for the rest."""
+    counts = sorted(sum(1 for d in dates if today - _dt.timedelta(days=7 * (i + 1)) < d
+                        <= today - _dt.timedelta(days=7 * i)) for i in range(weeks))
+    mid = len(counts) // 2
+    median = counts[mid] if len(counts) % 2 else (counts[mid - 1] + counts[mid]) / 2
+    return max(floor, round(median))
 
 
 def oldest_diamond(root: Path) -> tuple[_dt.date | None, str | None]:
@@ -138,9 +154,28 @@ def oldest_diamond(root: Path) -> tuple[_dt.date | None, str | None]:
 
 
 def _cadence_text(cad: dict) -> str:
+    if cad.get("corrections") == "adaptive":
+        return "a typical week of corrections"
     if cad.get("corrections"):
         return f"every {cad['corrections']} corrections"
     return f"every {cad.get('days')} days"
+
+
+def _judge_corrections(root: Path, cad: dict, last: _dt.date | None,
+                       today: _dt.date) -> tuple[str, str]:
+    """A count cadence: fixed (`corrections: 3`) or adaptive, which follows the project's own flow
+    (founder, 2026-10-23: "the corrections audit needs to adopt to whatever float there is")."""
+    dates = correction_dates(root)
+    n = sum(1 for d in dates if last is None or d > last)
+    since = f"since {last}" if last else "with no run on record"
+    if cad["corrections"] == "adaptive":
+        weeks, floor = int(cad.get("window_weeks", 8)), int(cad.get("floor", 3))
+        bar = adaptive_threshold(dates, today, weeks, floor)
+        how = f"due at {bar}, the median week of the last {weeks}, at least {floor}"
+    else:
+        bar = int(cad["corrections"])
+        how = f"due at {bar}"
+    return ("due" if n >= bar else "ok"), f"{n} correction(s) logged {since}; {how}"
 
 
 def _judge(root: Path, review: dict, last: _dt.date | None, today: _dt.date,
@@ -148,11 +183,7 @@ def _judge(root: Path, review: dict, last: _dt.date | None, today: _dt.date,
     """(state, detail) for one review that applies and is not checked elsewhere."""
     cad = review.get("cadence") or {}
     if cad.get("corrections"):
-        n = corrections_since(root, last)
-        since = f"since {last}" if last else "with no run on record"
-        if n >= int(cad["corrections"]):
-            return "due", f"{n} correction(s) logged {since}"
-        return "ok", f"{n} correction(s) logged {since}"
+        return _judge_corrections(root, cad, last, today)
     days = int(cad.get("days") or 0)
     if last:
         age = (today - last).days

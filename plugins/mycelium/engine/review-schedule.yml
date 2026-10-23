@@ -15,7 +15,10 @@
 #   id          the review, named as its skill
 #   skill       the command that runs it
 #   cadence     {days: N} — due N days after its last run; or {corrections: N} — due once N corrections
-#               have been logged in .claude/memory/corrections.md since its last run
+#               have been logged in .claude/memory/corrections.md since its last run; or
+#               {corrections: adaptive, window_weeks: W, floor: F} — due once the corrections since the last
+#               run reach the median weekly count of the last W weeks, at least F. Entries are counted by
+#               scripts/_corrections_lib.py, the one definition of a correction entry.
 #   last_run    where its last run is read from, in order of preference:
 #                 files: a glob under the project; the newest YYYY-MM-DD in a matching file NAME is the run
 #                        date (what the review writes anyway, so nothing new has to be remembered)
@@ -73,7 +76,11 @@ reviews:
 
   - id: corrections-audit
     skill: /mycelium:corrections-audit
-    cadence: {corrections: 3}
+    # Adaptive since v0.329.1 (founder, 2026-10-23: "the corrections audit needs to adopt to whatever
+    # float there is"). A fixed 3 was due almost every session on a project logging ~20 a week, and would
+    # mute. Due when the corrections since the last run reach the median weekly count of the last
+    # window_weeks weeks, never fewer than floor; a quiet project keeps the skill's own 3.
+    cadence: {corrections: adaptive, window_weeks: 8, floor: 3}
     last_run: {files: ".claude/evals/metrics/corrections/*.json"}
 
 # Not scheduled, and why, so the absence is a decision and not an oversight:
