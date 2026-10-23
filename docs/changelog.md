@@ -4,6 +4,25 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-23.
 
+## v0.329.1 - corrections-audit follows the project's own flow of corrections
+
+**2026-10-23.** 0.329.0 put corrections-audit on the review schedule at a fixed count, every 3 new corrections, its
+skill's own wording. On the dogfood project, which logs a median of about 20 corrections a week (the last 8 weeks
+ran from 5 to 60), that made it due at almost every session start, and an advisory that fires every session mutes
+within a week. The founder: "the corrections audit needs to adopt to whatever float there is." The cadence is now
+adaptive: due once the corrections logged since the last run reach the median weekly count of the last 8 weeks,
+never fewer than 3. A busy project is prompted about weekly; a quiet one keeps the skill's 3. The median, so one
+burst week does not set the bar.
+
+The same look found the count was wrong. 0.329.0 read corrections.md with its own `## DATE` regex, and the file also
+holds `### DATE - title` and bullet entries: it counted 151 of the dogfood file's 419. It now counts through
+`scripts/_corrections_lib.py`, the module written so that every counter of corrections agrees after three of them
+returned 100, 103 and 141 for one file; 0.329.0 had added a fourth.
+
+**Alternatives not taken.** A calendar cadence (monthly): it ignores the flow the founder asked it to follow, and a
+month of 60 corrections is not a month of 5. The mean week: one burst week would set the bar for the next eight. A
+fixed larger count: right for one project's rate and wrong for the next.
+
 ## v0.329.0 - A scheduled review that lapses is named at session start
 
 **2026-10-23.** `engine/feedback-loops.md` sets a schedule for the reviews that keep the strategic loops turning:

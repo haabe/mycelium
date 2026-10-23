@@ -124,15 +124,50 @@ def test_a_review_another_check_reports_is_listed_and_never_reported_twice(tmp_p
 def test_a_corrections_cadence_counts_corrections_since_the_last_run(tmp_path):
     root = _project(tmp_path)
     (root / ".claude/memory").mkdir(parents=True)
-    heads = ["## 2026-10-01: old", "## 2026-10-21: a", "## 2026-10-22: b", "### 2026-10-22: not a head"]
+    heads = ["## 2026-10-01: old", "## 2026-10-21: a", "## Format", "### [DATE] - [TITLE]"]
     (root / ".claude/memory/corrections.md").write_text("\n".join(heads), encoding="utf-8")
     (root / ".claude/evals/metrics/corrections").mkdir(parents=True)
     (root / ".claude/evals/metrics/corrections/2026-10-20.json").write_text("{}", encoding="utf-8")
-    assert "2 correction(s) logged since 2026-10-20" in _rows(root)["count"]
+    assert "1 correction(s) logged since 2026-10-20; due at 3" in _rows(root)["count"]
     assert " ok " in _rows(root)["count"]
-    (root / ".claude/memory/corrections.md").write_text("\n".join([*heads, "## 2026-10-23: c"]),
-                                                        encoding="utf-8")
-    assert "count (every 3 corrections; 3 correction(s) logged since 2026-10-20)" in _run(root)[1]
+    (root / ".claude/memory/corrections.md").write_text(
+        "\n".join([*heads, "### 2026-10-22 - b", "- **c (2026-10-23, class)**: text"]), encoding="utf-8")
+    assert "count (every 3 corrections; 3 correction(s) logged since 2026-10-20; due at 3)" in _run(root)[1]
+
+
+def test_every_entry_form_is_counted_through_the_shared_parser(tmp_path):
+    """0.329.0 read only `## DATE` headings and counted 151 of the dogfood file's 419 entries."""
+    root = _project(tmp_path)
+    (root / ".claude/memory").mkdir(parents=True)
+    text = "## 2026-10-21: a\n\n### 2026-10-21 - b\n\n- **c (2026-10-22, class)**: text\n\n## Format\n"
+    (root / ".claude/memory/corrections.md").write_text(text, encoding="utf-8")
+    import _corrections_lib
+
+    assert len(_mod().correction_dates(root)) == _corrections_lib.count(text) == 3
+
+
+def test_an_adaptive_cadence_follows_the_median_week_with_a_floor(tmp_path):
+    mod = _mod()
+    today = mod._dt.date(2026, 10, 23)
+    week = [today - mod._dt.timedelta(days=d) for d in range(1, 7)]
+    busy = week * 4 + [today - mod._dt.timedelta(days=9)] * 20
+    assert mod.adaptive_threshold(busy, today, 2, 3) == 22, "median of 24 and 20"
+    assert mod.adaptive_threshold([], today, 8, 3) == 3, "a quiet project keeps the floor"
+    burst = [today - mod._dt.timedelta(days=1)] * 60
+    assert mod.adaptive_threshold(burst, today, 8, 3) == 3, "one burst week does not set the bar"
+
+
+def test_the_shipped_corrections_cadence_is_adaptive_and_says_its_bar(tmp_path):
+    root = _project(tmp_path)
+    (root / ".claude/memory").mkdir(parents=True)
+    (root / ".claude/memory/corrections.md").write_text("## 2026-10-21: a\n", encoding="utf-8")
+    import yaml as _yaml
+
+    shipped = _yaml.safe_load((PLUGIN / "engine" / "review-schedule.yml").read_text(encoding="utf-8"))
+    row = next(r for r in shipped["reviews"] if r["id"] == "corrections-audit")
+    assert row["cadence"]["corrections"] == "adaptive"
+    (root / "schedule.yml").write_text(_yaml.safe_dump({"reviews": [row]}), encoding="utf-8")
+    assert "due at 3, the median week of the last 8, at least 3" in _rows(root)["corrections-audit"]
 
 
 def test_an_unreadable_schedule_or_run_record_is_said_not_passed(tmp_path):
