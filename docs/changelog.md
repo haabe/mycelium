@@ -2,7 +2,40 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-10-22.
+**Last updated**: 2026-10-23.
+
+## v0.328.5 - canvas-health runs the checks its NEXT ITEMs send people to
+
+**2026-10-23.** The session-start hook picks one advisory as the NEXT ITEM and names the command that deals with it.
+Four of them named `/mycelium:canvas-health`: `stale-prose`, `unchecked-handle`, `source-class-fidelity` and
+`published-source-dead`. The skill named none of the scripts that raise them (`check_stale_prose.py`,
+`check_source_authenticity.py`, `check_source_class_fidelity.py`, `check_published_records.py`), so a person who did
+what the item said got a full health report that never mentioned the thing it was about, and the item came back. On
+the dogfood project `unchecked-handle` was the NEXT ITEM for three sessions. canvas-health now runs all four, reports
+each under its advisory id, and says how to read and act on each. A new test,
+`test_next_item_routes_to_canvas_health.py`, maps every advisory routed to canvas-health to the script that raises it
+and fails if the skill does not name that script, so a new route cannot again point at a skill that does not run its
+check.
+
+The same canvas-health run printed three lines that were wrong or misleading, each fixed with a test that fails
+without the fix:
+
+- `validate_canvas.py` warned that `cycle-history.yml#cycle-069` and two other cycle pointers named nothing. The rows
+  were there: cycle-history's schema names a row by `cycle_id`, which the cross-reference resolver did not read. It
+  does now.
+- `check_log_reconcile.py` reported a recorded DORA measurement as never written. A commented-out template row at
+  column 0 inside `measurement_history` ended the block, so every row below it was invisible. The script's other
+  block parser has skipped comments since 2026-09-01; this one now does too.
+- `check_assessment_landed.py` printed "threat-model.yml: 1 of 1 assessed" for a model holding 16 threats, because it
+  counted the list as one item. It now counts threats, and a threat counts as assessed when it has a description,
+  which is the test the Security gate uses. A stamped model of title-only stubs is now a finding; under the old count
+  it passed.
+
+**Alternatives not taken.** Routing each advisory straight to its script instead of to canvas-health: the item is
+read by a builder who may not know what a stale-prose finding asks of them, and the script prints findings without
+the remedy the skill gives. Parsing the history block as YAML in `check_log_reconcile.py`: the script is stdlib-only
+so it runs in any consumer, and its sibling parser's comment skip already works. Counting a threat as assessed when it
+has a mitigation: the Security gate counts a description, and two tests for one word would disagree.
 
 ## v0.328.4 - A skill that stops to ask says how the turn ends
 

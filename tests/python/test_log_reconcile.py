@@ -58,6 +58,24 @@ def test_dated_log_event_without_a_canvas_row_is_orphaned(tmp_path):
     assert orphans and orphans[0][2] == ["2026-08-09"]
 
 
+def test_a_row_below_a_column_zero_comment_in_the_history_is_found(tmp_path):
+    """v0.328.5, the dogfood canvas on 2026-10-23: a commented-out template row at column 0 inside
+    measurement_history ended the block, so the measurement recorded below it read as orphaned."""
+    history = ('measurement_history:\n  - date: 2026-07-17\n# - date: "YYYY-MM-DD"\n'
+               '#   overall: ""\n\n# a note at column 0\n  - date: 2026-08-09\nsre: {}\n')
+    root = _repo(tmp_path, DORA_LOG, history)
+    assert not clr.analyse(root)["orphans"]
+
+
+def test_a_sibling_key_after_a_comment_still_ends_the_history(tmp_path):
+    """Control for the comment skip: a top-level key after the comment ends the block, so a date
+    under it is not counted as a history row."""
+    history = "measurement_history:\n  - date: 2026-07-17\n# note\nsre:\n  last: 2026-08-09\n"
+    root = _repo(tmp_path, DORA_LOG, history)
+    orphans = clr.analyse(root)["orphans"]
+    assert orphans and orphans[0][2] == ["2026-08-09"]
+
+
 def test_missing_canvas_history_with_log_events_is_orphaned(tmp_path):
     """The original BVSSH shape: log events exist and the canvas side does not."""
     root = _repo(tmp_path, DORA_LOG, None)

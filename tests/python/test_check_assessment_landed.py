@@ -179,3 +179,40 @@ def test_assessed_file_with_a_stamp_reads_ok(scripts_path, tmp_path, capsys):
     canvas = _canvas(tmp_path, {"services.yml": SERVICES_ASSESSED})
     assert _run(mod, canvas, "--strict") == 0
     assert "ok" in capsys.readouterr().out
+
+
+# --------------------------------------------------------------- threats are counted one by one (v0.328.5)
+
+THREATS_TWO_DESCRIBED_ONE_STUB = """_meta:
+  last_validated: "2026-10-16"
+threats:
+  - {id: threat-001, description: "an outside text rewrites the agent's instructions"}
+  - {id: threat-002, description: "a hook path resolves to a stale cache"}
+  - {id: threat-003, title: "stub with no description"}
+"""
+
+THREATS_ALL_STUBS_STAMPED = """_meta:
+  last_validated: "2026-10-16"
+threats:
+  - {id: threat-001, title: "a title and nothing else"}
+  - {id: threat-002, description: "  "}
+"""
+
+
+def test_threats_are_counted_per_threat_not_as_one_list(scripts_path, tmp_path, capsys):
+    """Until v0.328.5 a 16-threat model printed "1 of 1 assessed"; now each threat with a description
+    counts, and a stub does not."""
+    mod = _import(scripts_path)
+    c = _canvas(tmp_path, {"threat-model.yml": THREATS_TWO_DESCRIBED_ONE_STUB})
+    assert _run(mod, c, "--strict") == 0
+    assert "threat-model.yml: 2 of 3 assessed" in capsys.readouterr().out
+
+
+def test_a_stamped_model_of_stubs_is_a_finding(scripts_path, tmp_path, capsys):
+    """Under the old count any non-empty list passed; title-only threats are not an assessment."""
+    mod = _import(scripts_path)
+    c = _canvas(tmp_path, {"threat-model.yml": THREATS_ALL_STUBS_STAMPED})
+    assert _run(mod, c, "--strict") == 1
+    out = capsys.readouterr().out
+    assert "CLAIMS FRESH, HOLDS NOTHING  threat-model.yml" in out
+    assert "0 of 2 assessed" in out
