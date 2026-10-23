@@ -1,0 +1,83 @@
+# The scheduled reviews, as data (v0.329.0).
+#
+# WHY THIS FILE EXISTS. engine/feedback-loops.md set the schedule in prose (weekly metrics-pull, monthly
+# bvssh-check and wardley-map, quarterly framework-health and theory-fidelity, eval benchmarks,
+# corrections-audit after every 3+ corrections) and listed "SessionStart: remind about overdue strategic
+# reviews" as needed work. Two rows became checks (bvssh, delivery metrics); the rest lapsed unseen. On the
+# dogfood project, measured from each review's own output and git: theory-fidelity went 111 days on a
+# quarterly cadence, wardley-map 63 and 41 days on a monthly one. A schedule in prose is read when someone
+# opens the prose.
+#
+# READ BY: scripts/review_schedule.py (--check at session start, --list from /mycelium:feedback-review,
+# --record from the skills below). Edit this file, not the prose, to change a cadence.
+#
+# FIELDS
+#   id          the review, named as its skill
+#   skill       the command that runs it
+#   cadence     {days: N} — due N days after its last run; or {corrections: N} — due once N corrections
+#               have been logged in .claude/memory/corrections.md since its last run
+#   last_run    where its last run is read from, in order of preference:
+#                 files: a glob under the project; the newest YYYY-MM-DD in a matching file NAME is the run
+#                        date (what the review writes anyway, so nothing new has to be remembered)
+#                 stamp: true — the review writes only the decision log, whose headings are free text and
+#                        were measured to undercount; its skill ends with
+#                        `review_schedule.py --record <id>`, which appends to .claude/harness/review-runs.jsonl
+#               Both may be given; the newer date wins.
+#   applies_if  a path under the project that must exist for the review to apply (optional)
+#   checked_by  set when another check already reports this review late; review_schedule.py lists it and
+#               does not report it twice
+#
+# NEVER RUN: a review with no run on record is due once the project's oldest diamond is older than its
+# cadence (or, for a corrections cadence, once that many corrections exist). A project with no diamonds
+# has nothing due.
+
+schema_version: 1
+
+reviews:
+  - id: bvssh-check
+    skill: /mycelium:bvssh-check
+    cadence: {days: 30}
+    checked_by: "hooks/session-start.sh CHECK 1 (bvssh-health.yml last_assessed)"
+
+  - id: dora-check
+    skill: /mycelium:dora-check
+    cadence: {days: 30}
+    checked_by: "hooks/session-start.sh CHECK 2 (delivery metrics age)"
+
+  - id: metrics-pull
+    skill: /mycelium:metrics-pull
+    cadence: {days: 7}
+    last_run: {files: ".claude/evals/metrics/*.md"}
+    applies_if: .claude/jit-tooling/active-metrics.yml
+
+  - id: wardley-map
+    skill: /mycelium:wardley-map
+    cadence: {days: 30}
+    last_run: {stamp: true}
+
+  - id: framework-health
+    skill: /mycelium:framework-health
+    cadence: {days: 90}
+    last_run: {stamp: true}
+
+  - id: theory-fidelity
+    skill: /mycelium:theory-fidelity
+    cadence: {days: 90}
+    last_run: {stamp: true}
+
+  - id: eval-runner
+    skill: /mycelium:eval-runner
+    cadence: {days: 90}
+    last_run: {files: ".claude/evals/results/*.json"}
+    applies_if: .claude/evals/scenarios
+
+  - id: corrections-audit
+    skill: /mycelium:corrections-audit
+    cadence: {corrections: 3}
+    last_run: {files: ".claude/evals/metrics/corrections/*.json"}
+
+# Not scheduled, and why, so the absence is a decision and not an oversight:
+#   canvas-health   — its skill says "periodically" and names triggers (before a decision, after inactivity),
+#                     not a cadence; the NEXT ITEM routes several advisories to it.
+#   feedback-review — it is where this schedule is read, not a review on it.
+#   diamond-assess  — weekly per feedback-loops.md, but it runs per diamond; no single run covers the project.

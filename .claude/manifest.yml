@@ -88,6 +88,7 @@ preserved_dir_readmes:
 # ingest_warnings.py) lives there alongside corrections.md and patterns.md.
 project_state:
   - .claude/harness/decision-log.md
+  - .claude/harness/review-runs.jsonl   # v0.329.0: dated runs of the scheduled reviews that write only the decision log
   - .claude/diamonds/active.yml
   - .claude/memory/
   - .claude/state/

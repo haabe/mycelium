@@ -3,7 +3,7 @@
 **Audience**: practitioners + evaluators wanting to understand what the agent has access to mid-session, and operators auditing Mycelium against transparency expectations.
 **Time to read**: 8 min.
 **Last updated**: 2026-10-13.
-**Hook surface reviewed:** 2026-10-23 (digest 69477709f814)
+**Hook surface reviewed:** 2026-10-23 (digest 691cd8bfe4c7)
 
 This document answers a question the audit (`/xai-check` on `svc-mycelium`, 2026-05-04) flagged as a Stage 2 partial: **"What data does the agent see when it makes a recommendation under Mycelium?"** Today the answer is distributed across many files. This is the consolidated map.
 
@@ -112,7 +112,7 @@ The full table, per runtime, is `plugins/mycelium/hooks/README.md`. The ones tha
 | `lesson-triggers.sh` | Every shell command, file write and web call, when `MYCELIUM_LESSON_TRIGGERS=on` | Off by default. Shows the rule line of a lesson already on record at the call it matches (at most three), and refuses the call where the lesson's entry marks the match as the mistake itself. The lessons are the project's `.claude/memory/lesson-triggers.yml`; only rule lines are shown (0.327.0) |
 | `shell-safety-guard.sh` | Every shell command | Warns on shell traps that mislead about exit status or quoting; since 0.326.0 refuses two shapes the warning did not stop (a multi-file edit that can half-apply, a pipeline gating a commit or push), each with a one-line rewrite |
 | `contract-part.sh` (four handlers) | Session start | Injects the operating contract, one part per handler, each under the 10,000-character hook cap |
-| `session-start.sh` | Session start | Wraps quoted canvas text as `<untrusted_user_content>`; emits one NEXT ITEM; since 0.322.2 one `DECISION FILE NOT IN GIT` line when a decision file under `.claude/state/` is ignored by that folder's ignore file |
+| `session-start.sh` | Session start | Wraps quoted canvas text as `<untrusted_user_content>`; emits one NEXT ITEM; since 0.322.2 one `DECISION FILE NOT IN GIT` line when a decision file under `.claude/state/` is ignored by that folder's ignore file; since 0.329.0 one `SCHEDULED REVIEWS DUE` line naming each review past its cadence in `engine/review-schedule.yml` |
 | `next-action-check.sh` | Stop | Blocks the end of a framework turn (a skill the agent ran or the person typed) until it ends on one `Next:` line that cites its trigger as `(per: <source>)` |
 | `next-item-repeat.sh` | Stop | Repeats the NEXT ITEM once if nothing followed it |
 | `reflexion-gate.sh` | Bash/tool failures | Prompts the agent to diagnose before retrying; logs the time, exit code and program name, never the command (0.318.0) |

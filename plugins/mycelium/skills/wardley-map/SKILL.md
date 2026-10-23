@@ -185,6 +185,14 @@ Update .claude/canvas/landscape.yml with components, evolution stages, movements
 ## Decision Log (MANDATORY per G-P4)
 **APPEND** a `### Wardley Map Assessment` entry to `.claude/harness/decision-log.md` with: components mapped, evolution stages, strategic gameplay identified, recommendations.
 
+**Then record the run (v0.329.0).** The map is on the review schedule (`engine/review-schedule.yml`, every 30 days), and the schedule does not read decision-log headings, which were measured to undercount. Run:
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/review_schedule.py" --record wardley-map --project-dir .
+```
+
+Without it, session start keeps reporting the map as past its cadence.
+
 ## Connection to Other Frameworks
 - Evolution stage maps to Cynefin domain (use `/mycelium:cynefin-classify`)
 - User needs at top map to OST outcomes (use `/mycelium:ost-builder`)

@@ -62,15 +62,23 @@ Read `.claude/diamonds/active.yml` for diamonds with `state: parked` (or a `park
 This implements the surface promised in `/mycelium:diamond-progress` § Park ("feedback-review and diamond-assess surface parked diamonds with their resume conditions") — a promise that stood unimplemented until the 2026-06-12 gap analysis found no skill read `resume_conditions`. Abandonment is a non-event; nothing else surfaces this.
 
 ### 3. Check Loop 3 (Strategic) Health
-Read canvas trend data and check cadence:
-- **BVSSH**: Last assessed when? Any dimension declining? (Check `bvssh-health.yml` trend fields)
+**First, the schedule (v0.329.0).** The cadence of every scheduled review is data in `engine/review-schedule.yml`, and one script reads each review's last run from what the review itself writes:
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/review_schedule.py" --list --project-dir .
+```
+
+Report every row whose state is `due`, with its cadence and last run, and recommend running it. This is the command the session-start NEXT ITEM `reviews-overdue` sends people to, so a person who came from it must find the overdue reviews named here. A row `elsewhere` is reported by its own session-start check (bvssh, delivery metrics); `n/a` does not apply to this project. Do not judge cadence from the decision log: its headings were measured to undercount runs.
+
+Then read canvas trend data:
+- **BVSSH**: Any dimension declining? (Check `bvssh-health.yml` trend fields)
 - **North Star**: Are input metrics moving? Flat for 2+ months = strategic concern.
 - **Delivery metrics**: Any metric degrading? Check the product-type-appropriate canvas: `dora-metrics.yml` (software), `content-metrics.yml` (content), `ai-tool-metrics.yml` (ai_tool), `service-metrics.yml` (service).
-- **Wardley Map**: Last refreshed when? Stale > 3 months = risk of strategic blind spot.
+- **Wardley Map**: its cadence is the schedule's (every 30 days, as engine/feedback-loops.md sets it; this line said "stale > 3 months" until v0.329.0, which disagreed with that file).
 - **Corrections themes**: Are the same types of mistakes recurring? (Pattern = graduate to guardrail)
 
 ### 4. Check Loop 4 (Transformative) Health
-- When was the last eval benchmark run?
+- When was the last eval benchmark run? (The schedule's `eval-runner` row, from step 3.)
 - Are eval pass rates improving, stable, or declining?
 - Are any skills consistently underutilized? (Check .claude/harness/decision-log.md for skill invocation patterns)
 - Has the escape hatch been used? How often? (Frequent = process too heavy for context)

@@ -1140,3 +1140,29 @@ reviewed:
     it. A missing file is silent on purpose: nothing is switched on to read. Asserted by
     test_a_triggers_file_that_cannot_be_parsed_is_said_out_loud and its control. Reviewed 2026-10-16,
     v0.327.0.
+
+- id: review_schedule.py@f34d9f9eb7
+  verdict: ACCEPTED 2026-10-23
+  reason: >-
+    `_date` returns None for text with no valid YYYY-MM-DD. Silent, and correct where it is used
+    silently: a file name with no valid date is not a run of the review, so it is not counted. Where
+    a missing date would hide something, the caller speaks: a run-record line with no valid date
+    makes `stamps` return an error and the check prints UNREADABLE (asserted by
+    test_a_run_record_line_without_a_valid_date_is_said_not_skipped). Reviewed 2026-10-23, v0.329.0.
+
+- id: review_schedule.py@9e269dca8a
+  verdict: ACCEPTED 2026-10-23
+  reason: >-
+    `load_schedule` catches an unreadable schedule and RETURNS the error; main() prints
+    "UNREADABLE (review schedule did NOT run): ..." and session start relays that line. Never read as
+    nothing due (asserted by test_an_unreadable_schedule_or_run_record_is_said_not_passed).
+    Reviewed 2026-10-23, v0.329.0.
+
+- id: review_schedule.py@951478cfa3
+  verdict: ACCEPTED 2026-10-23
+  reason: >-
+    `oldest_diamond` catches an unreadable diamonds file and RETURNS the error; main() prints
+    UNREADABLE. Before this review it returned None, which read as "no diamonds yet, nothing due"
+    while the check could not look; the scan caught that and it was changed. A missing file is
+    silent on purpose: a project with no diamonds has nothing due (asserted, with that control, by
+    test_an_unreadable_diamonds_file_is_said_not_read_as_no_diamonds). Reviewed 2026-10-23, v0.329.0.
