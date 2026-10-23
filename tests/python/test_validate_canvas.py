@@ -2415,6 +2415,27 @@ def test_entries_a_restructure_moved_keep_their_old_address(tmp_path, scripts_pa
     assert "kill_criterion.never_existed" in out[0], "control: a pointer to nothing still dangles"
 
 
+def test_cross_reference_resolves_a_cycle_by_its_cycle_id(tmp_path, scripts_path):
+    """cycle-history.yml rows are named by `cycle_id` (the schema's required identifier); until
+    v0.328.5 a pointer to one was reported dangling while the row was there."""
+    validator = _import_validator(scripts_path)
+    canvas = tmp_path / ".claude" / "canvas"
+    canvas.mkdir(parents=True)
+    (canvas / "cycle-history.yml").write_text(textwrap.dedent("""\
+        cycles:
+        - cycle_id: cycle-081
+          leaf_id: some-leaf
+    """))
+    (canvas / "human-tasks.yml").write_text(textwrap.dedent("""\
+        tasks:
+          - id: ht-900
+            note: cycle-history.yml#cycle-081 cycle-history.yml#cycle-999
+    """))
+    out = validator.cross_reference_findings(canvas)
+    assert len(out) == 1, out
+    assert "cycle-999" in out[0], "control: a cycle that does not exist still dangles"
+
+
 def test_opportunity_shape_summary_is_a_coverage_line(tmp_path, scripts_path):
     validator = _import_validator(scripts_path)
     canvas = tmp_path / ".claude" / "canvas"

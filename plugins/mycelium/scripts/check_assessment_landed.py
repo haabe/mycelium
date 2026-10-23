@@ -55,17 +55,24 @@ def _list_assessments(doc, key, field="assessment", default="not-assessed"):
     return done, total
 
 
-def _nonempty_list(doc, key):
-    v = doc.get(key)
+def _threats(doc):
+    """Per threat, assessed when it carries a description: the same test scale_locks.py uses for the
+    Security gate. Until v0.328.5 this counted the list as one item, so a 16-threat model printed
+    "1 of 1 assessed" and a model of title-only stubs passed. An empty list stays (0, 1), a finding
+    when the file claims freshness, because (0, 0) would read as clean."""
+    v = doc.get("threats")
     if not isinstance(v, list):
         return None
-    return (1 if v else 0), 1
+    if not v:
+        return 0, 1
+    done = sum(1 for t in v if isinstance(t, dict) and str(t.get("description") or "").strip())
+    return done, len(v)
 
 
 REGISTRY = {
     "services.yml": ("Downe service quality", lambda d: _list_assessments(d, "principles")),
     "privacy-assessment.yml": ("Privacy by Design", lambda d: _list_assessments(d, "principles")),
-    "threat-model.yml": ("STRIDE / OWASP threats", lambda d: _nonempty_list(d, "threats")),
+    "threat-model.yml": ("STRIDE / OWASP threats", _threats),
 }
 
 #: A file whose `_meta.applicability` starts with one of these, or says it is not in use,

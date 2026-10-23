@@ -225,6 +225,12 @@ def _history_dates(canvas: Path, key: str) -> set[str] | None:
             indent = len(line) - len(line.lstrip())
             block = []
             for nxt in lines[i + 1:]:
+                # A COMMENT INSIDE A HISTORY BLOCK DOES NOT END IT (v0.328.5). The parser above
+                # learned this on 2026-09-01 and this one did not: a commented-out template row
+                # at column 0 inside measurement_history hid the three rows below it, and a
+                # recorded DORA measurement was reported as orphaned on the dogfood canvas.
+                if nxt.lstrip().startswith("#"):
+                    continue
                 if nxt.strip() and (len(nxt) - len(nxt.lstrip())) <= indent:
                     break
                 block.append(nxt)

@@ -1990,9 +1990,11 @@ def _xref_strings(node, out, depth=0):
         out.append(node)
 
 
-#: Fields an entry is addressed by (v0.287.0 adds the last two): archived-solutions keys its
-#: entries by `leaf_id`, the upstream surface registry by `artifact_class`.
-_XREF_ID_FIELDS = ("id", "type", "leaf_id", "artifact_class")
+#: Fields an entry is addressed by (v0.287.0 adds `leaf_id` and `artifact_class`): archived
+#: solutions key their entries by `leaf_id`, the upstream surface registry by `artifact_class`.
+#: v0.328.5 adds `cycle_id`, the identifier cycle-history.yml's schema requires: without it
+#: every `cycle-history.yml#cycle-NNN` pointer was reported dangling while its row was there.
+_XREF_ID_FIELDS = ("id", "type", "leaf_id", "artifact_class", "cycle_id")
 
 
 def _entry_named(node: dict, seg: str) -> bool:

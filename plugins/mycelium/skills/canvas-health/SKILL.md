@@ -537,6 +537,50 @@ It cannot see a field it was not registered for: the file/field map is explicit 
 because a wrong guess about which field carries "the assessment" manufactures a finding. Report-only
 unless `--strict`; exit 2 (UNKNOWN, never a pass) on a missing directory or unparseable canvas.
 
+## The checks the session-start NEXT ITEM sends here (added v0.328.5)
+
+The session-start hook raises four advisories whose NEXT ITEM command is `/mycelium:canvas-health`
+(`scripts/next_item.py`, `COMMANDS`): `stale-prose`, `unchecked-handle`, `source-class-fidelity` and
+`published-source-dead`. Run all four on every pass, and report each one's result under its advisory
+id, so a person who came here from the NEXT ITEM finds the line they came for.
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_stale_prose.py" --project-dir .
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_source_authenticity.py" --project-dir .
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_source_class_fidelity.py" --project-dir .
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_published_records.py" --project-dir .
+```
+
+**Why this section exists.** Until v0.328.5 this skill named none of these scripts. On the dogfood
+project `unchecked-handle` was the NEXT ITEM for three sessions: the person ran this skill as told,
+got a full report that never mentioned handles, and the item came back. A route to a skill that does
+not run the check is a dead end, and `tests/python/test_next_item_routes_to_canvas_health.py` now
+fails when an advisory is routed here without its script named in this file.
+
+How to read each one:
+
+- **`stale-prose`** (`check_stale_prose.py`): a record whose sentence says one thing while the field
+  beside it says another, typically an objective still saying a reply is owed after the touch_log
+  records it sent. Read the record; if the sentence is still true, leave it; if a field moved, rewrite
+  the sentence to the current state. Advisory, exit 0; exit 2 means nothing was scanned, not clean.
+- **`unchecked-handle`** (`check_source_authenticity.py`): an entry classed `external_human` or
+  `external_data` cites a public-channel handle with no note that anyone checked the account is a
+  person (rule A), or also claims convergence or independent arrival on it (rule B, the costlier one:
+  one account under several names reads as several strangers agreeing). The remedy is the check
+  itself, recorded on the entry: does the account reply to people, its age or karma, whether its
+  history is continuous. Cheapest first: does the poster reply. Withdraw or discount the source if
+  it fails. Exit 0 when it ran, exit 2 when there was nothing to scan.
+- **`source-class-fidelity`** (`check_source_class_fidelity.py`): a source is classed
+  `external_human` while its own text says it is the founder, the project's own run, a subagent or a
+  file. Fix the class to what the text says (usually `internal_stakeholder` or `internal_desk`); the
+  mislabel always points toward more outside evidence than exists. A length mismatch between
+  `evidence_sources` and `source_classes` is reported first, because no pairing after it means
+  anything. Exit 1 on a finding.
+- **`published-source-dead`** (`check_published_records.py`): a `published:` record is missing its
+  address, its date, or a source file that still exists on disk. Restore or re-point the source, or
+  record that the page can now only be replaced. Exit 1 on a finding; exit 2 on a broken tree. A green
+  covers only publishes that wrote a record at all.
+
 ## Upstream candidate registry — is surfaced friction already fixed?
 
 ```bash
