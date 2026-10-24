@@ -767,7 +767,7 @@ if [ -n "$RUNCHK" ] && [ -d "$PROJECT_DIR/.claude/evals/assumption-tests" ]; the
   RUN_OLDEST=$(printf '%s\n' "$RUN_OUT" | sed -n '/^RUNNABLE NOW, NEVER RUN/,/^$/p' | grep -E '^  ' | head -1 | sed 's/^  //')
   RUN_N=$(printf '%s\n' "$RUN_OUT" | sed -n '/^RUNNABLE NOW, NEVER RUN/,/^$/p' | grep -cE '^  ' || true)
   if [ -n "$RUN_OLDEST" ]; then
-    REMINDERS="${REMINDERS}RUNNABLE, NEVER RUN — ${RUN_N} live instrument(s) an agent can run from disk or network; oldest: ${RUN_OLDEST}. Run it this session or give it a dated score_by and say why not now (runs_on, assumption-test skill). "
+    REMINDERS="${REMINDERS}RUNNABLE, NEVER RUN — ${RUN_N} live instrument(s) an agent can run from disk or network; oldest: ${RUN_OLDEST}. Run it this session, or, if the data it reads does not exist yet, name what it waits for in waits_for and set score_by to the day it will (runs_on, assumption-test skill). "
   fi
 fi
 

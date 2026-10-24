@@ -4,6 +4,34 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-10-24.
 
+## v0.330.1 - A test waiting on its data is not called runnable
+
+**2026-10-24.** Found on the dogfood project when the session-start advisory RUNNABLE, NEVER RUN had fired on seven
+days for one test and the advisory ledger had muted it. The test reads a 14-day traffic window that had not closed,
+so there was nothing to run.
+
+- **`waits_for` names the data a test's read waits on.** `check_instrument_contract.py` listed every live test whose
+  `runs_on` is disk or network as RUNNABLE NOW, NEVER RUN, and said such a test needs "no new data". A read of a
+  window that has not closed (the signups in the 30 days after a launch, the traffic in the fortnight after a
+  listing) does need new data. `/mycelium:assumption-test` has said since 0.183.0 that such a test gets "a dated
+  `score_by` ... and one line saying why not now", and the check printed the same advice, but no field held the line
+  and nothing read one. Now a live disk-or-network test with a non-empty `waits_for` and a `score_by` not yet passed
+  is listed in its own WAITING ON DATA section, with the line and the date, and the session start does not count it.
+  From the day after `score_by` it is runnable again and DUE.
+  **What changes for a user:** a test that is waiting for its data can say so, and stops being reported as work an
+  agent could do now. A test without the field is reported exactly as before.
+- **Alternatives considered.** Skipping any test whose `score_by` is in the future: every instrument carries one, and
+  the check's own tests use far-off dates on tests that can run today, so it would hide the 89-day case the list was
+  built for. Reusing `check_after` from a Definition of Done's `measure`: it is a lag counted from a ship date, so one
+  name would carry two anchors. Capping the wait at 14 days, as the skill's sentence on `runs_on` did for
+  `score_by`: a 30-day retention window is the same shape as a 14-day traffic window, and a capped one would be
+  flagged every day again. The line is printed on every run instead, so a wait that is not true stays in view. That
+  sentence now names `waits_for` and keeps its old wording beside it.
+
+Tests: `tests/python/test_instrument_contract_runs_on.py`, 5 new cases; 4 fail on 0.330.0 (the fifth checks that an
+empty `waits_for`, or one with no `score_by`, stays runnable). One case runs the session-start hook's own `sed`
+range over the check's real output.
+
 ## v0.330.0 - A subagent does not write the canvas, and a bakeoff does not decide on a simulated test
 
 **2026-10-24.** The founder asked for Mycelium's use of subagents to be read against Anthropic's article "Building
