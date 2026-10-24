@@ -24,33 +24,52 @@ The lead agent (main session) orchestrates the bakeoff:
 ```
 1. Read canvas/opportunities.yml — identify competing leaves
 2. For each leaf: identify the riskiest assumption (from /ice-score step 4)
-3. Design the cheapest test for each leaf's riskiest assumption
-4. Confirm with user: "Running bakeoff for [opportunity]. Leaves: A, B. Tests: [describe]. Proceed?"
+3. Design the cheapest test for each leaf's riskiest assumption, and write its `runs_on`
+   (disk | network | human, as in /mycelium:assumption-test)
+4. For each `human` test (a survey, a fake door, interviews, a paid pilot): register it through
+   /mycelium:handoff. No subagent runs it; its verdict arrives through /mycelium:log-evidence.
+5. Confirm with user: "Running bakeoff for [opportunity]. Leaves: A, B. Tests: [describe, with who
+   runs each]. Proceed?"
 ```
+
+**Why a worker never runs a `human` test (0.330.0).** Until then each worker was told to run its leaf's
+riskiest assumption test, and the scorecard example was a fake-door test. A subagent cannot put a fake
+door in front of customers or survey anyone; it can only report what such a test might show. Since
+0.320.0 the test verdict is what picks the winner, so a simulated verdict could archive a leaf on a
+result no customer produced. A bakeoff with a `human` test waits for that verdict before section 4.
 
 ### 2. Fan-Out (Spawn Workers)
 
-For each leaf, spawn a sub-agent in worktree isolation:
+For each leaf whose test runs on disk or network, spawn a sub-agent in worktree isolation. A leaf whose
+test is `human` gets no worker: its scorecard is filled by the lead from the logged verdict.
 
 ```
 Lead Agent
   |
   ├─ Worker 1 (worktree): Leaf A
-  |    Task: Run Four Risks → ICE → riskiest assumption test
+  |    Task: Run Leaf A's disk or network test; fill the scorecard from the Four Risks
+  |          and ICE already recorded for the leaf (the prerequisites above)
   |    Context: Read-only canvas, leaf details
-  |    Deliverable: Completed scorecard
+  |    Deliverable: Completed scorecard, with the test's evidence and source
   |
   └─ Worker 2 (worktree): Leaf B
-       Task: Run Four Risks → ICE → riskiest assumption test
-       Context: Read-only canvas, leaf details
-       Deliverable: Completed scorecard
+       (same pattern)
 ```
+
+*(Changed 0.330.0. The worker task read "Run Four Risks → ICE → riskiest assumption test", which re-ran
+the Four Risks the prerequisites require to be done already, and asked a subagent for test verdicts only
+people can give.)*
 
 **Rules**:
 - Maximum 3 leaves per bakeoff (WIP ceiling from diamond-rules.md)
 - Workers get READ-ONLY access to canvas files
 - Workers NEVER update canvas or progress diamonds
+- Workers NEVER run a `human` test
 - Each worker runs independently with no inter-worker communication
+
+On Claude Code the guard-state gate refuses a subagent's write to `.claude/canvas/` or `.claude/diamonds/`
+(0.330.0). The other rules here are the lead's discipline; no hook checks them, and the 3-leaf ceiling is
+advisory (`engine/diamond-rules.md`).
 
 ### 3. Scorecard Format
 
@@ -69,7 +88,8 @@ assumption_test:
   assumption: "Users will switch from manual tracking"
   risk_dimension: value
   method: fake-door
-  result: passed|failed
+  runs_on: human          # disk | network | human; a human test is run through /mycelium:handoff
+  result: passed|failed   # from the logged verdict; a bakeoff with a human test unlogged waits
   details: "..."
   confidence_delta: +0.15
 estimated_effort: "2 sprints"

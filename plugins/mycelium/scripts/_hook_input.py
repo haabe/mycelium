@@ -856,15 +856,66 @@ def _yaml():
     return yaml
 
 
+#: Where only the lead agent writes (v0.330.0): the canvas and the diamonds file.
+#: orchestration/agent-teams.md and fan-out-fan-in.md have said since May that workers "NEVER
+#: update canvas files" and "NEVER progress diamonds", and until 0.330.0 no hook read who was
+#: writing, so the rule was prose (dogfood review 2026-10-24: none of the seven worker rules had
+#: code behind it). Claude Code puts `agent_id` on a PreToolUse payload when the call comes from a
+#: subagent or an in-process teammate (hooks reference, "Common input fields"); the main session
+#: has none, `--agent` included, which sets `agent_type` only. Other runtimes send no agent_id,
+#: so there the orchestration text stays the only carrier of the rule.
+LEAD_ONLY_REL = (".claude/canvas", ".claude/diamonds")
+_LEAD_ONLY_MENTION = re.compile(r"(?:canvas|diamonds)(?:/|\b)")
+
+
+def _lead_only(rel: str | None) -> bool:
+    if not rel:
+        return False
+    r = _fold(rel.replace(os.sep, "/"))
+    return any(r == _fold(d) or r.startswith(_fold(d) + "/") for d in LEAD_ONLY_REL)
+
+
+def _subagent_hits(tool_name: str, tool_input, project_dir: str) -> list[str]:
+    """The lead-only paths a call writes. A shell write the scan cannot read counts when the
+    command names a canvas or diamonds folder: a subagent has no reason to be there at all."""
+    if tool_name != "Bash":
+        return [r.rel or "" for r in _targets_of(tool_name, tool_input, project_dir)
+                if r.inside and _lead_only(r.rel)]
+    cmd = str((tool_input or {}).get("command", "") or "")
+    scan = bash_write_targets(cmd, project_dir)
+    hits = [r.rel or "" for r in scan.targets if r.inside and _lead_only(r.rel)]
+    if not hits and scan.opaque and _LEAD_ONLY_MENTION.search(cmd):
+        hits = [f"a write the guard cannot read ({scan.opaque[0]})"]
+    return hits
+
+
+def subagent_write_check(name: str, data: dict, project_dir: str) -> None:
+    """Refuse a subagent's write to the canvas or the diamonds file (v0.330.0). Returns when the
+    call is the main session's, or writes neither."""
+    if not data.get("agent_id"):
+        return
+    tool_name = str(data.get("tool_name") or "")
+    hits = _subagent_hits(tool_name, data.get("tool_input") or {}, project_dir)
+    if not hits:
+        return
+    who = str(data.get("agent_type") or "a subagent")
+    decision("deny", f"Mycelium {name}: {who} tried to write {hits[0]}. Only the lead agent "
+                     "writes the canvas and the diamonds file (orchestration/agent-teams.md). "
+                     "Return the finding, with its source, in your report; the lead reviews "
+                     "it and writes it.")
+
+
 def _guard_state_hook(name: str, project_dir: str) -> int:
     """The guard-state gate for every project (v0.281.0). The three guards that asked were each
     conditional (autonomous runs, a scope, the framework's own repo), so in an ordinary project
-    nothing guarded the ack files, though scale_locks' docstring said the agent "gets an ASK"."""
+    nothing guarded the ack files, though scale_locks' docstring said the agent "gets an ASK".
+    Since v0.330.0 it also refuses a subagent's write to the canvas or the diamonds file."""
     @fail_closed(name)
     def run() -> int:
         data = read_input()
         guard_state_check(name, str(data.get("tool_name") or ""), data.get("tool_input") or {},
                           project_dir, data.get("permission_mode"))
+        subagent_write_check(name, data, project_dir)
         return 0
     return run()
 

@@ -2,11 +2,28 @@
 
 ## When to Use Multi-Agent Orchestration
 
-Single-agent is sufficient for most work. Use multi-agent when:
-- The OST has multiple solution branches that need parallel exploration
-- A delivery diamond has independent work items that can be parallelized
-- Research needs to cover multiple domains simultaneously
-- Time pressure requires parallel rather than sequential progress
+Single-agent is sufficient for most work, and the default. Split work off to another agent only when
+one of these holds:
+- **The pieces need little from each other and return something compact**: independent research
+  questions, delivery slices that touch different files behind a clean interface, solution branches whose
+  tests run on disk or network (see `fan-out-fan-in.md` for why a `human` test never goes to a worker).
+- **The check must not inherit the reasoning it checks**: a blind reader, judge or adversarial pass
+  (`harness/context-management.md`, the blind subagent pattern).
+- **The session itself shows it is degrading**: it loses track of earlier results, contradicts its own
+  instructions, or picks the wrong tool, and a fresh context would fix it. Name what you saw.
+
+Do not split work because the team is large, because the work belongs to different teams or domains,
+or to go faster. Every handback is a summary the lead did not see being made, and details are lost at
+each one; work that needs coordination is the work least suited to splitting. When unsure, run it in
+the one session first and split only the part that the session demonstrably handles worse.
+
+*(Changed 0.330.0. The list read "Research needs to cover multiple domains simultaneously" and "Time
+pressure requires parallel rather than sequential progress". Anthropic's 2026-10-22 article "Building
+agents: When to fold subagents into your main agent loop" reports single-loop agents beating subagent
+designs on quality, cost and latency in several enterprise deployments, splits by context rather than
+by team or problem type, and keeps a subagent only where folding it in scores worse. Its evidence is
+enterprise customer-facing agents; it does not cover solo discovery work, where much of the work is
+human-time that no agent design runs. The criteria above are the ones that hold in both.)*
 
 ## Pattern 1: Fan-Out / Fan-In (OST Exploration)
 
@@ -43,7 +60,16 @@ Lead Agent (main session)
 - Workers get their own worktree (isolated branch)
 - Workers report results back to lead agent
 - ONLY the lead agent updates canvas and diamond state
-- Each worker gets clear deliverables and time bounds
+- Each worker gets clear deliverables, and a turn cap where the runtime has one (`maxTurns` in a Claude
+  Code agent definition; there is no time or cost cap, so a time bound is advice)
+
+**What enforces these.** On Claude Code, the guard-state gate refuses a subagent's or in-process
+teammate's write to `.claude/canvas/` or `.claude/diamonds/` (0.330.0), which covers "ONLY the lead agent
+updates canvas and diamond state" for writes made inside the session. Claude Code documents `agent_id` for
+subagents and in-process teammates; a teammate run as a separate process may carry none, and is then not
+refused. The other rules, here and in the patterns
+below, are the lead's discipline: no hook checks worktree isolation, file overlap, deliverables or
+caps.
 
 ### Leaf Bakeoff (Structured A/B Testing)
 
@@ -141,4 +167,4 @@ To enable Agent Teams (experimental feature):
 
 Agent Teams vs Subagents:
 - **Subagents**: Quick, focused, report back to main agent. Good for research, bounded tasks.
-- **Agent Teams**: Full sessions that can communicate with each other. Good for complex parallel delivery where coordination is needed.
+- **Agent Teams**: Full sessions that can communicate with each other. For parallel delivery whose slices are independent but large enough to need a session each. Work that needs a lot of coordination between slices is a reason to keep it in one session, not to give each slice a session and pass messages (0.330.0; the line read "Good for complex parallel delivery where coordination is needed").

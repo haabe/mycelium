@@ -10,7 +10,7 @@ Orchestration defines how Mycelium works in different team configurations, how p
 ### Parallel Exploration
 - **[fan-out-fan-in.md](fan-out-fan-in.md)** — How to explore multiple solution branches in parallel using worktree-isolated agents. Diverge, explore independently, converge with structured comparison.
 - **[leaf-bakeoff.md](leaf-bakeoff.md)** — When multiple solution leaves compete for the same opportunity, this protocol runs a structured A/B comparison.
-- **[agent-teams.md](agent-teams.md)** — Patterns for coordinating multiple agents: scout/builder split, specialist delegation, consensus protocols.
+- **[agent-teams.md](agent-teams.md)** — When to split work off to another agent and when not to, then three patterns: fan-out for solution branches, parallel delivery, parallel research. Says which worker rules anything enforces. *(Until 0.330.0 this line promised a scout/builder split, specialist delegation and consensus protocols, none of which the file contains.)*
 
 ### Operations
 - **[operations.md](operations.md)** — Day-to-day patterns: session resumption, canvas maintenance, diamond lifecycle management, memory pruning.

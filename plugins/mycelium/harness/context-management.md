@@ -43,13 +43,14 @@ Chroma's empirical finding that Claude is "especially sensitive to irrelevant su
 
 ## The blind subagent pattern
 
-Sub-agent dispatch with read-only canvas snapshot (used by `/mycelium:fan-out` and the assumption-test workflow) is structurally a context-rot defense even when not framed as such:
+Sub-agent dispatch with read-only canvas snapshot is structurally a context-rot defense even when not framed as such. The shipped skills that call for one are `/mycelium:devils-advocate` (Technique 7, the blind adversarial pass) and `/mycelium:define-done` (step 5, a reader who has not seen the conversation, a blind subagent or a person, tests the bar). `/mycelium:fan-out` sends workers out too, but they are not blind: the lead designs and frames each worker's test.
 
 - Each sub-agent gets a **clean attention budget** — fresh context window, only the task description + canvas snapshot it needs.
-- Parent receives **compressed result** — sub-agent's full reasoning trace stays in its window, not the parent's.
+- Parent receives **compressed result** — sub-agent's full reasoning trace stays in its window, not the parent's. The compression is also a loss: the parent sees a summary it did not watch being made, so it reads the evidence the sub-agent cites before it relies on the conclusion (communication rule 6, name the verification surface).
 - Drift-prevention: sub-agent doesn't see the conversation history that may already be context-rot-degraded.
+- **It does not write project state.** Its findings come back in its report and the parent writes them; on Claude Code the guard-state gate refuses a sub-agent's write to `.claude/canvas/` or `.claude/diamonds/` (0.330.0).
 
-This is the canonical Anthropic-recommended pattern for long-running agent loops. Mycelium's `feedback_assumption_test_method.md` (in user auto-memory) and `orchestration/fan-out-fan-in.md` document the *practice* of this pattern; this document names the *theory*.
+This is the canonical Anthropic-recommended pattern for long-running agent loops. `skills/devils-advocate/SKILL.md` (Technique 7, with its measured results and limits) documents the *practice* of this pattern; this document names the *theory*. *(Until 0.330.0 this section named `/mycelium:fan-out` and "the assumption-test workflow" as users of the pattern, which neither is, and pointed to a file in one user's private auto-memory.)*
 
 **When to dispatch a blind subagent:**
 - The current conversation has been running for many turns and you need a fresh attention budget.
@@ -100,4 +101,4 @@ Honest caveats: lost-in-the-middle and Chroma's NIAH-extension findings are well
 - `${CLAUDE_PLUGIN_ROOT}/harness/anti-patterns.md` — Knowledge Reconstruction Tax (the structural failure mode when context-rot defense fails); Cognitive Offloading Loop (the human-side complement)
 - `${CLAUDE_PLUGIN_ROOT}/jit-tooling/detector.md` — JiT philosophy (Tesler's Law applied: complexity moves to agent at moment-of-need, reducing pre-loaded context bloat)
 - `${CLAUDE_PLUGIN_ROOT}/engine/version-discipline.md` — per-graduation attribution discipline (Hyrum / Leaky Abstractions context for why the discipline exists)
-- `${CLAUDE_PLUGIN_ROOT}/skills/fan-out/SKILL.md` — blind subagent dispatch implementation
+- `${CLAUDE_PLUGIN_ROOT}/skills/devils-advocate/SKILL.md` — Technique 7, the blind subagent pass as shipped; `${CLAUDE_PLUGIN_ROOT}/skills/fan-out/SKILL.md` — parallel workers (framed by the lead, so not blind)

@@ -29,10 +29,14 @@ INPUT=$(cat)
 # one python start on a command like `confirm .claude/x`; being tight is how the first arm missed.
 # Third arm (v0.322.6): a Claude Code settings file, where a Mycelium switch can be set
 # (scripts/settings_switches.py). Matched by the file's name, in the project or in the home folder.
+# Fourth arm (v0.330.0): a subagent's call that names the canvas or the diamonds folder, which only
+# the lead agent writes (_hook_input.subagent_write_check). Claude Code puts `agent_id` on the
+# payload only for a subagent or in-process teammate, so the main session never takes this arm.
 case "$INPUT" in
   *-ack*|*upstream.json*|*manifest.yml*|*active-execution.json*|*move_file*) ;;
   *settings.json*|*settings.local.json*) ;;
   *gitleaks*) ;;  # the scanner's ignore list, its config, an inline allow comment (v0.323.0)
+  *'"agent_id"'*canvas*|*'"agent_id"'*diamonds*|*canvas*'"agent_id"'*|*diamonds*'"agent_id"'*) ;;
   *)
     if [[ "$INPUT" == *.claude* && "$INPUT" =~ (rm|rmdir|mv)[^A-Za-z0-9_] ]]; then :; else exit 0; fi ;;
 esac

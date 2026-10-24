@@ -123,7 +123,7 @@ Skelton's "Infrastructure for Agency" framing describes how organizations should
 | Skelton concept | Mycelium mechanism |
 |---|---|
 | Boundaries that enable | Guardrails (BLOCK/REVIEW/NUDGE — constrain without micromanaging) |
-| Shared state | Canvas (single source of truth all agents read/write) |
+| Shared state | Canvas (single source of truth every agent reads; only the lead agent writes it, and on Claude Code a subagent's write is refused) |
 | Stable interfaces | Theory gates (predictable checkpoints with explicit pass/fail) |
 | Aligned domains | Diamonds (scoped units of work with clear ownership) |
 | Bounded workers | Fan-out agents (isolated worktrees, scoped mandate, report back) |

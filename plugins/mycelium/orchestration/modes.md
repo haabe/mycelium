@@ -90,8 +90,14 @@ For teams considering enterprise scaling frameworks: SAFe's Continuous Delivery 
 |-----------|--------------|-------------------|---------------|
 | 1 (solo) | Sequential diamonds, subagents for research | Direct edits | Single session |
 | 2-4 (small) | Parallel diamonds per person | PR-reviewed canvas changes | Independent sessions |
-| 5-10 (medium) | Lead coordinates, parallel delivery | PR-reviewed, diamond ownership | Agent Teams for shared delivery |
-| 10+ (large) | Multiple leads per domain, platform team | Domain-owned canvas sections | Full agent orchestration |
+| 5-10 (medium) | Lead coordinates, parallel delivery | PR-reviewed, diamond ownership | One session per person; more agents only on the criteria in agent-teams.md |
+| 10+ (large) | Multiple leads per domain, platform team | Domain-owned canvas sections | One session per person; more agents only on the criteria in agent-teams.md |
+
+The Agent Pattern column does not grow with headcount. How many agents a piece of work needs depends on
+the work: whether its parts need little from each other, whether a check must be blind, whether a session
+shows it is degrading (`agent-teams.md`, "When to Use Multi-Agent Orchestration"). Splitting agents by
+team or domain makes the agent structure copy the org chart. *(Changed 0.330.0: the column read "Agent
+Teams for shared delivery" at 5-10 people and "Full agent orchestration" at 10+.)*
 
 ## Ceremony Adaptation
 

@@ -2,7 +2,52 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-10-23.
+**Last updated**: 2026-10-24.
+
+## v0.330.0 - A subagent does not write the canvas, and a bakeoff does not decide on a simulated test
+
+**2026-10-24.** The founder asked for Mycelium's use of subagents to be read against Anthropic's article "Building
+agents: When to fold subagents into your main agent loop" (2026-10-22). The dogfood review, checked line by line
+against a blind reviewer's, found the orchestration guidance promising rules nothing enforced and asking subagents
+for work only people can do.
+
+- **A subagent's write to the canvas or the diamonds file is refused** (Claude Code). `orchestration/agent-teams.md`
+  and `fan-out-fan-in.md` have said since May that workers never update canvas files and never progress diamonds.
+  No hook read who was writing. Claude Code puts `agent_id` on a PreToolUse payload when a subagent or in-process
+  teammate makes the call, and `guard-state-gate.sh` now refuses such a call that writes under `.claude/canvas/` or
+  `.claude/diamonds/`, in every permission mode, and tells the subagent to return the finding to the lead. The main
+  session, `--agent` included, is not affected. Other runtimes send no `agent_id`, so there nothing changes.
+  **What changes for a user:** a subagent, a fork or an in-process teammate that used to edit the canvas is now
+  refused, and its report has to carry the entry for the main session to write.
+- **A leaf bakeoff no longer asks a subagent for a verdict only people can give.** `fan-out-fan-in.md` told workers to
+  run "their assumption test (survey, prototype, data analysis, etc.)" in "max N minutes", and the bakeoff's scorecard
+  example was a fake-door test; since 0.320.0 that verdict picks the winner, so a subagent's simulated result could
+  archive a leaf. Each test now carries `runs_on` (disk | network | human, as in `/mycelium:assumption-test`);
+  workers run only disk and network tests; a human test goes out through `/mycelium:handoff` and the bakeoff waits
+  for its logged verdict. The worker no longer re-runs the Four Risks the bakeoff's prerequisites require done.
+- **Text that claimed enforcement or implementations that do not exist is corrected.** "Time bounds are enforced --
+  workers that exceed time are stopped": nothing did, and Claude Code has a turn cap (`maxTurns`) and no time limit.
+  `harness/context-management.md` named fan-out and the assumption-test workflow as blind-subagent users (neither
+  dispatches one; devils-advocate Technique 7 and define-done step 5 call for one) and pointed every adopter to a
+  file in one user's private auto-memory. `assumption-test` said hooks do not fire in a subagent; the Claude Code
+  docs say plugin hooks apply there, and the refusal above relies on it. `team-shape` called the canvas what "all
+  agents read/write".
+- **When to split work off is about the work, not the team.** `agent-teams.md` listed "time pressure" and
+  "multiple domains" as reasons to go multi-agent, and `modes.md` scaled the agent pattern with headcount up to
+  "Full agent orchestration". Both now name the conditions that hold: parts that need little from each other, a
+  check that must be blind, a session that shows it is degrading. The article's evidence is enterprise
+  customer-facing agents, and the text says so.
+
+Usage, for weight: `/mycelium:fan-out` had 0 calls in 464 local transcripts over six projects (2026-09-14 to
+10-24), and the dogfood project has no bakeoff with an outcome. Nothing was harmed yet; nothing would have shown it.
+
+**Alternatives not taken.** Remove `/mycelium:fan-out` and fold the bakeoff rules into assumption-test: it picks
+between alternatives on a skill with no usage, so it gets its own decision, not a fix release. A new hook for the
+subagent refusal: eight registries and three runtime manifests for a check only Claude Code can make; the
+guard-state gate already runs on every write tool and Bash and decides what is the agent's to write. Ask rather
+than refuse: an ask reaches a person in the main session's modes only, and the rule has no case where a subagent
+should write the canvas. Ship plugin agent definitions with `maxTurns` for fan-out workers: nobody runs fan-out yet,
+so a turn cap with no user is the built-not-wired shape this release removes.
 
 ## v0.329.1 - corrections-audit follows the project's own flow of corrections
 
