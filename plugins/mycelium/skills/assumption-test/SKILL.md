@@ -213,7 +213,7 @@ frozen_before: "any comment is fetched"   # THE EVENT it precedes
 score_by: 2026-08-30               # the date by which it must be scored
 status: live                       # live | scored | void | not-an-instrument
 runs_on: disk                      # disk | network | human — WHO OR WHAT CAN RUN IT (v0.183.0)
-does_not_reproduce: "the enforcement layer: no preflight, no hooks fire in the subagent"   # what this run CANNOT show (v0.209.0)
+does_not_reproduce: "the enforcement layer: the run is `claude -p` in a scratch folder without the plugin, so no hook fires"   # what this run CANNOT show (v0.209.0)
 decision_class: light              # light | standard | heavy — what the decision costs to get wrong (v0.264.0)
 test_weight: light                 # light | standard | heavy — what the test costs; no heavier than the decision
 # costly_test_reason: "..."        # only when test_weight > decision_class: the founder's reason
@@ -222,7 +222,9 @@ test_weight: light                 # light | standard | heavy — what the test 
 ```
 
 **`does_not_reproduce` is the line that says what this test cannot show.** One sentence naming
-the conditions the run does not reproduce: the hook layer absent in a subagent, a logged-in
+the conditions the run does not reproduce: the hook layer absent in a run outside the plugin (a
+subagent inside a Claude Code session does get the plugin's hooks; the docs say so, and 0.330.0's
+subagent write refusal relies on it), a logged-in
 browser the probe does not have, the founder's tone in a message an agent sent. Required on
 instruments frozen on or after 2026-09-15 (`check_instrument_contract.py` reports it INCOMPLETE
 without one; `does_not_reproduce_absent_reason` waives it with a reason). It does not prevent
