@@ -213,6 +213,7 @@ frozen_before: "any comment is fetched"   # THE EVENT it precedes
 score_by: 2026-08-30               # the date by which it must be scored
 status: live                       # live | scored | void | not-an-instrument
 runs_on: disk                      # disk | network | human — WHO OR WHAT CAN RUN IT (v0.183.0)
+# waits_for: "the 14 days of signups after launch, closing 2026-08-29"   # only when the data it reads does not exist yet (v0.330.1)
 does_not_reproduce: "the enforcement layer: the run is `claude -p` in a scratch folder without the plugin, so no hook fires"   # what this run CANNOT show (v0.209.0)
 decision_class: light              # light | standard | heavy — what the decision costs to get wrong (v0.264.0)
 test_weight: light                 # light | standard | heavy — what the test costs; no heavier than the decision
@@ -240,12 +241,26 @@ DATA; naming the contaminating event does — "before posting", "before launchin
 **`runs_on` is the field that stops a test waiting for no one.** `disk` means the data is already in
 the repo or the plugin tree and an agent can run it now; `network` means public data an agent can
 fetch; `human` means a send, a call or a ruling. **A test that runs on disk or network is run in the
-session that designs it, or given a dated `score_by` within 14 days and one line saying why not
-now.** Measured on the dogfood record 2026-09-09: a zero-build retrodiction designed 2026-06-12 ran
+session that designs it, or, when the data it reads does not exist yet, given `waits_for` naming
+that data and a `score_by` on the day it will exist (below).** Until 0.330.1 this sentence read
+"given a dated `score_by` within 14 days and one line saying why not now"; no field held the line,
+and the 14 days fitted a two-week window and no longer one. Measured on the dogfood record 2026-09-09: a zero-build retrodiction designed 2026-06-12 ran
 89 days later, in an hour, once the founder asked "why wait?"; a second designed test ran the same
 evening. `check_instrument_contract.py` lists every live disk-or-network instrument as RUNNABLE NOW,
 NEVER RUN, oldest first, WARN past 14 days, and the session-start hook repeats the oldest. The reading
 stays pre-registered; only the running is meant to be automatic.
+
+**`waits_for` is the line for a test whose data does not exist yet (v0.330.1).** A read of a window
+that has not closed (the signups in the 30 days after a launch, a fortnight of traffic after a
+listing) runs on network but cannot run today. Name the data it waits on in `waits_for`, the way
+`frozen_before` names an event, and set `score_by` to the day that data exists. Until `score_by`
+passes, the check lists the test under WAITING ON DATA with that line, and the session start does
+not count it as runnable; from the day after, it is runnable again and DUE. There is no cap on the
+wait, because a long window is the same shape as a short one. The line is printed every run, so a
+wait that is not true is in plain view. Use it only for data that does not exist yet: a test that
+could run today and has not is what the RUNNABLE list is for. Until 0.330.1 no field held this line
+and the check read nothing that could, so a test reading an open window was listed as runnable every
+day, and the advisory ledger muted the warning after a week (dogfood 2026-10-24).
 
 **`score_by` is the field that prevents the failure above.** A prediction with no expiry can never
 be overdue, so it can never be scored, so it is free to be right forever.

@@ -156,6 +156,14 @@ _VALID_STATUS = {"live", "scored", "void", "not-an-instrument"}
 _RUNNABLE = {"disk", "network"}
 #: A runnable instrument older than this, still live, is a WARN in the report.
 _RUNNABLE_WARN_DAYS = 14
+#: The header field that says why a disk-or-network test cannot run yet (v0.330.1): its value
+#: names the data the read waits on, the way `frozen_before` names an event. assumption-test has
+#: said since v0.183.0 that such a test is "given a dated score_by ... and one line saying why not
+#: now", and this check printed the same advice, but no field held the line and nothing read it,
+#: so a test reading a window that had not closed was listed as runnable every day until the
+#: advisory ledger muted it (dogfood 2026-10-24: a 14-day traffic window, listed from day 2). A
+#: future score_by alone is not the signal: every instrument carries one.
+_WAITS_FOR = "waits_for"
 
 
 def _parse_date(value: str | None) -> _dt.date | None:
@@ -509,6 +517,21 @@ def _derived_class(fm: dict[str, str], name: str, res: dict) -> str | None:
     return {n: k for k, n in _WEIGHTS.items()}[max(levels)]
 
 
+def _runnable(name: str, fm: dict[str, str], today: _dt.date, res: dict) -> None:
+    """A live disk-or-network instrument: RUNNABLE, or WAITING ON DATA when `waits_for` names
+    data that does not exist yet (v0.330.1). A stated wait holds until score_by and no longer:
+    from the day after, the test is runnable again, and DUE."""
+    frozen = _parse_date(fm.get("frozen_at"))
+    age = (today - frozen).days if frozen else None
+    how = fm["runs_on"].strip().lower()
+    waits = (fm.get(_WAITS_FOR) or "").strip().strip("\"'")
+    due = _parse_date(fm.get("score_by"))
+    if waits and due and today <= due:
+        res["waiting"].append((name, how, due.isoformat(), waits))
+    else:
+        res["runnable"].append((name, how, age))
+
+
 def _classify(path: Path, root: Path, today: _dt.date, res: dict) -> None:
     """Route one file into the report buckets."""
     text = path.read_text(encoding="utf-8", errors="replace")
@@ -553,9 +576,7 @@ def _classify(path: Path, root: Path, today: _dt.date, res: dict) -> None:
     # an hour, once someone asked "why wait?". Reported beside the problems, never counted
     # as one: the run is what should be automatic, the reading stays pre-registered.
     if status == "live" and fm.get("runs_on", "").strip().lower() in _RUNNABLE:
-        frozen = _parse_date(fm.get("frozen_at"))
-        age = (today - frozen).days if frozen else None
-        res["runnable"].append((path.name, fm["runs_on"].strip().lower(), age))
+        _runnable(path.name, fm, today, res)
 
     if status == "scored":
         res["scored"].append(path.name)
@@ -571,7 +592,7 @@ def analyse(root: Path, today: _dt.date) -> dict:
         "uncontracted": [], "undated": [], "due": [], "drifted": [],
         "untracked": [], "bad_status": [], "contracted": [], "scored": [],
         "refuted": [], "incomplete": [], "waived": [], "no_review": [], "review_due": [],
-        "bad_anchor": [], "runnable": [], "oversized": [], "costly_override": [],
+        "bad_anchor": [], "runnable": [], "waiting": [], "oversized": [], "costly_override": [],
         "bad_proportion": [], "undersized": [], "misclassed": [],
     }
     for path in sorted(d.glob("*.md")):
@@ -611,17 +632,25 @@ def _emit_proportion(r: dict, emit) -> None:
 def _emit_runnable(r: dict) -> None:
     """RUNNABLE NOW, NEVER RUN: a to-do, not a defect. Printed among the advisories and never
     counted, because it names work an agent can do in this session without asking anyone."""
-    if not r["runnable"]:
-        return
-    print("\nRUNNABLE NOW, NEVER RUN — live, and `runs_on` says disk or network: no human "
-          "and no new data needed. Run the oldest in this session, or give it a dated "
-          "score_by and say why not now. Oldest first.")
-    undated = 10**6
-    for name, how, age in sorted(r["runnable"], key=lambda t: -(t[2] if t[2] is not None else
-    undated)):
-        flag = "  WARN" if age is not None and age > _RUNNABLE_WARN_DAYS else ""
-        shown = age if age is not None else "?"
-        print(f"  {name} (runs_on {how}, {shown} days live){flag}")
+    if r["runnable"]:
+        print("\nRUNNABLE NOW, NEVER RUN — live, and `runs_on` says disk or network: no human "
+              "needed. Run the oldest in this session, or, if the data it reads does not exist "
+              "yet, say what it waits for in `waits_for` and set score_by to the day it will. "
+              "Oldest first.")
+        undated = 10**6
+        for name, how, age in sorted(r["runnable"], key=lambda t: -(t[2] if t[2] is not None
+                                                                     else undated)):
+            flag = "  WARN" if age is not None and age > _RUNNABLE_WARN_DAYS else ""
+            shown = age if age is not None else "?"
+            print(f"  {name} (runs_on {how}, {shown} days live){flag}")
+    # A separate section, after a blank line: session-start.sh counts the RUNNABLE section's lines
+    # up to the first blank one, so a waiting test is never counted as runnable there.
+    if r["waiting"]:
+        print("\nWAITING ON DATA — live, runs on disk or network, and `waits_for` says the data "
+              "it reads does not exist yet. Listed as runnable again, and DUE, once score_by "
+              "passes. Read each line: a wait that is no longer true is invisible from here.")
+        for name, how, due, waits in sorted(r["waiting"], key=lambda t: t[2]):
+            print(f"  {name} (runs_on {how}, score_by {due}): {waits}")
 
 
 CANVAS_DIR = Path(".claude") / "canvas"

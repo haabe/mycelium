@@ -81,6 +81,103 @@ def test_no_runnable_prints_no_section(tmp_path, capsys):
     assert rc == 0 and "RUNNABLE NOW" not in out
 
 
+WAITING = """---
+type: assumption-test
+frozen_at: 2026-10-16
+frozen_before: "any traffic read after the event"
+score_by: {score_by}
+status: live
+runs_on: network
+waits_for: {waits_for}
+does_not_reproduce: "whether anyone who arrives uses it"
+decision_class: light
+test_weight: light
+---
+
+# Test
+
+## Frozen prediction
+
+- P1: holds.
+"""
+
+
+def _write_waiting(root, name, score_by, waits_for):
+    p = root / ".claude" / "evals" / "assumption-tests" / name
+    p.write_text(WAITING.format(score_by=score_by, waits_for=waits_for))
+
+
+def _section(out, head):
+    return out.split(head)[1].split("\n\n")[0] if head in out else ""
+
+
+def test_waits_for_before_score_by_is_waiting_not_runnable(tmp_path, capsys):
+    """v0.330.1: a test whose data window has not closed says so in `waits_for` and is listed
+    apart, with its line and date, so the session-start count does not include it."""
+    root = _repo(tmp_path)
+    _write_waiting(root, "w.md", "2026-10-30", '"the 14-day window after the event, closing 2026-10-29"')
+    _write(root, "a-old.md", "2026-06-12")
+    _commit(root)
+    rc = cic.main(["--root", str(root), "--today", "2026-10-24"])
+    out = capsys.readouterr().out
+    assert rc == 0 and "problems: 0" in out
+    assert "w.md" not in _section(out, "RUNNABLE NOW, NEVER RUN")
+    assert "a-old.md" in _section(out, "RUNNABLE NOW, NEVER RUN")
+    assert ("w.md (runs_on network, score_by 2026-10-30): the 14-day window after the event, "
+            "closing 2026-10-29") in _section(out, "WAITING ON DATA")
+
+
+def test_wait_holds_through_score_by_day_and_ends_after(tmp_path, capsys):
+    root = _repo(tmp_path)
+    _write_waiting(root, "w.md", "2026-10-30", "the window closing 2026-10-29")
+    _commit(root)
+    cic.main(["--root", str(root), "--today", "2026-10-30"])
+    on_day = capsys.readouterr().out
+    assert "w.md" in _section(on_day, "WAITING ON DATA") and "RUNNABLE NOW" not in on_day
+    cic.main(["--root", str(root), "--today", "2026-10-31"])
+    after = capsys.readouterr().out
+    assert "WAITING ON DATA" not in after
+    assert "w.md (runs_on network, 15 days live)" in _section(after, "RUNNABLE NOW, NEVER RUN")
+    assert "w.md (due 2026-10-30, 1 days ago)" in after
+
+
+def test_no_cap_on_the_wait(tmp_path, capsys):
+    """A 30-day retention window is the same shape as a 14-day traffic window."""
+    root = _repo(tmp_path)
+    _write_waiting(root, "w.md", "2026-12-20", "30-day retention of the November cohort")
+    _commit(root)
+    cic.main(["--root", str(root), "--today", "2026-10-24"])
+    out = capsys.readouterr().out
+    assert "w.md" in _section(out, "WAITING ON DATA") and "RUNNABLE NOW" not in out
+
+
+def test_empty_waits_for_or_no_score_by_stays_runnable(tmp_path, capsys):
+    root = _repo(tmp_path)
+    _write_waiting(root, "empty.md", "2026-10-30", '""')
+    p = root / ".claude" / "evals" / "assumption-tests" / "undated.md"
+    p.write_text(WAITING.format(score_by="", waits_for="the window"))
+    _commit(root)
+    cic.main(["--root", str(root), "--today", "2026-10-24"])
+    out = capsys.readouterr().out
+    runnable = _section(out, "RUNNABLE NOW, NEVER RUN")
+    assert "empty.md" in runnable and "undated.md" in runnable
+    assert "WAITING ON DATA" not in out
+
+
+def test_session_start_counts_only_the_runnable_section(tmp_path):
+    """The hook's own sed range over the check's real output: the waiting test is not counted."""
+    root = _repo(tmp_path)
+    _write_waiting(root, "w.md", "2026-10-30", "the window")
+    _write(root, "a-old.md", "2026-06-12")
+    _commit(root)
+    out = subprocess.run(["python3", str(_MOD), "--root", str(root), "--today", "2026-10-24"],
+                         capture_output=True, text=True, check=True).stdout
+    counted = subprocess.run(["sed", "-n", "/^RUNNABLE NOW, NEVER RUN/,/^$/p"], input=out,
+                             capture_output=True, text=True, check=True).stdout
+    lines = [ln for ln in counted.splitlines() if ln.startswith("  ")]
+    assert lines == ["  a-old.md (runs_on disk, 134 days live)  WARN"]
+
+
 def test_runs_on_without_frozen_date_reports_unknown_age(tmp_path, capsys):
     root = _repo(tmp_path)
     p = root / ".claude" / "evals" / "assumption-tests" / "e.md"
