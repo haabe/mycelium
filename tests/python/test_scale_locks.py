@@ -44,6 +44,20 @@ OPP = {"id": "opp-001", "name": "Approver is off", "status": "open",
        "solutions": [{"id": "sol-001", "name": "Backup approver"}]}
 
 
+#: The records the safety skills write, complete (v0.331.0): privacy-check judges seven principles
+#: with evidence, service-check judges all fifteen. Until 0.330.1 this fixture wrote a date and an
+#: inventory only, the bar the gate then held a privacy pass to.
+PRIVACY_RECORD = {
+    "last_assessed": "2026-09-24", "data_inventory": [{"data_type": "phone number"}],
+    "principles": {k: {"assessment": "pass", "evidence": "the swap form asks for a phone number only"}
+                   for k in ("proactive_not_reactive", "privacy_as_default", "privacy_embedded",
+                             "full_functionality", "end_to_end_security",
+                             "visibility_transparency", "respect_for_users")}}
+SERVICES_RECORD = {"principles": [{"id": i, "assessment": "pass",
+                                   "evidence": "a shift lead approved a swap end to end"}
+                                  for i in range(1, 16)]}
+
+
 def _project(tmp_path: Path, purpose=None, opps=None, diamonds=None, ack=None, *,
              ladder=True, base=None, records=True) -> str:
     """`ladder` writes the strategy artefacts and the L0/L1/L2 diamonds above an L3 (`base`
@@ -64,8 +78,8 @@ def _project(tmp_path: Path, purpose=None, opps=None, diamonds=None, ack=None, *
     if records:
         (c / "canvas" / "threat-model.yml").write_text(yaml.safe_dump(
             {"threats": [{"id": "t1", "description": "a guessed link token approves a swap"}]}))
-        (c / "canvas" / "privacy-assessment.yml").write_text(yaml.safe_dump(
-            {"last_assessed": "2026-09-24", "data_inventory": [{"data_type": "phone number"}]}))
+        (c / "canvas" / "privacy-assessment.yml").write_text(yaml.safe_dump(PRIVACY_RECORD))
+        (c / "canvas" / "services.yml").write_text(yaml.safe_dump(SERVICES_RECORD))
     given = diamonds or []
     ids = {str(d.get("id")) for d in given}
     top = [d for d in (BASE if base is None else base) if d["id"] not in ids] if ladder else []

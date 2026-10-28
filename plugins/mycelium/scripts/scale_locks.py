@@ -71,6 +71,7 @@ import subprocess
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import _assessment_lib as _assess
 import _secret_mask
 
 try:
@@ -246,8 +247,20 @@ STAGES = {
 #: word can be written without the work, and a threat model or a privacy assessment cannot.
 SAFETY_RECORD = {
     "security": "a threat model: canvas/threat-model.yml `threats` (/mycelium:threat-model)",
-    "privacy": ("a privacy assessment: canvas/privacy-assessment.yml `last_assessed` and "
-                "`data_inventory` (/mycelium:privacy-check)"),
+    "privacy": ("a privacy assessment: canvas/privacy-assessment.yml `last_assessed`, "
+                "`data_inventory` and all seven `principles` judged with `evidence` "
+                "(/mycelium:privacy-check)"),
+}
+#: A PASS on these needs the record its skill writes behind it too (v0.331.0), but unlike the two
+#: above `n/a` stays a legal answer: a headless product has no service to judge, and a product with
+#: no AI component has nothing to explain. Until 0.331.0 both passed on the status word alone while
+#: service-check and xai-check each write a full record; the bar is each skill's own text
+#: (`_assessment_lib.py`).
+PASS_RECORD = {
+    "service_quality": ("a service check: canvas/services.yml `principles`, all 15 judged with "
+                        "`evidence` (`n/a` with a reason counts) (/mycelium:service-check)"),
+    "explainability": ("an explainability audit: canvas/services.yml `services[].xai` (an L3: the "
+                       "tier; an L4 or L5: a verdict for each stage) (/mycelium:xai-check)"),
 }
 _NORTH_STAR_LINKS = ("north_star_input_ref", "north_star_ref", "north_star", "serves")
 #: Commands that put something in front of real people. Narrow on purpose: a deploy CLI's deploy
@@ -538,12 +551,16 @@ class State:
         self.has_north_star = _filled(north.get("metric"))
         self.has_landscape = any(_filled(_as_dict(c).get("name"))
                                  for c in _as_list(land.get("components")))
+        self.services = _as_dict(_load(project_dir, "canvas", "services.yml"))
+        #: The privacy principles not judged with evidence, named in what the gate reports.
+        self.privacy_unjudged = _assess.missing(priv, _assess.PRIVACY_PRINCIPLES)
         self.records = {
             "security": any(_filled(_as_dict(t).get("description"))
                             for t in _as_list(threats.get("threats"))),
             "privacy": _filled(priv.get("last_assessed")) and (
                 _filled(priv.get("data_inventory"))
-                or _filled(priv.get("data_minimization_check"))),
+                or _filled(priv.get("data_minimization_check")))
+            and not self.privacy_unjudged,
         }
         if diamonds_doc is None:
             diamonds_doc = _load(project_dir, "diamonds", "active.yml") or {}
@@ -1264,8 +1281,36 @@ class State:
         if not (v in PASSED or (v in NOT_APPLICABLE and gate not in SAFETY_RECORD)):
             return f"the {gate} gate passed (theory_gates_status.{gate} is `{v}`)"
         if gate in SAFETY_RECORD and not self.records[gate]:
-            return f"the {gate} gate says `{v}` with no record behind it: {SAFETY_RECORD[gate]}"
+            return f"the {gate} gate says `{v}` with no record behind it: {self.record_text(gate)}"
+        gap = self.pass_record_gap(gate, _scale(d), v)
+        if gap:
+            return f"the {gate} gate says `{v}` with no record behind it: {gap}"
         return None
+
+    def record_text(self, gate: str) -> str:
+        """SAFETY_RECORD's line for the gate, naming the privacy principles still unjudged."""
+        text = SAFETY_RECORD[gate]
+        if gate == "privacy" and self.privacy_unjudged:
+            text += f"; not judged with evidence: {', '.join(self.privacy_unjudged)}"
+        return text
+
+    def pass_record_gap(self, gate: str, scale: str, value) -> str | None:
+        """For a PASS_RECORD gate marked passed, what its record still lacks; None when it holds,
+        when the gate is `n/a`, or when the gate is not one of them (v0.331.0)."""
+        if gate not in PASS_RECORD or str(value or "").lower() not in PASSED:
+            return None
+        if gate == "service_quality":
+            lacking = _assess.missing(self.services, _assess.SERVICE_PRINCIPLES_ALL)
+            return (f"{PASS_RECORD[gate]}; not judged with evidence: principle(s) "
+                    f"{', '.join(lacking)}") if lacking else None
+        blocks = [_as_dict(s).get("xai") for s in _as_list(self.services.get("services"))]
+        gaps = [_assess.xai_stages_missing(b, scale) for b in blocks if b]
+        if not gaps:
+            return f"{PASS_RECORD[gate]}; no service carries one"
+        lacking = next((g for g in gaps if g), None)
+        if not lacking:
+            return None
+        return f"{PASS_RECORD[gate]}; it has no verdict for {', '.join(lacking)}"
 
     def move_missing(self, d: dict, before: str | None) -> list[str]:
         """PHASE MOVES LEAVE A RECORD AND PASS THEIR GATES (v0.248.0). A forward move must carry,
@@ -1458,7 +1503,9 @@ def _record_problems(st: State, d: dict, e: dict, today: str) -> list[str]:
         if not _gate_counts(g, passed.get(g)):
             miss.append(f"the {g} gate passed for this exposure")
         elif g in SAFETY_RECORD and not st.records[g]:
-            miss.append(f"a record behind its {g} pass: {SAFETY_RECORD[g]}")
+            miss.append(f"a record behind its {g} pass: {st.record_text(g)}")
+        elif gap := st.pass_record_gap(g, _scale(d), passed.get(g)):
+            miss.append(f"a record behind its {g} pass: {gap}")
     data = str(e.get("data_class") or "").strip().lower()
     if data and data not in DATA_CLASSES:  # v0.307.3 (P5): the class decides who confirms it
         miss.append(f"its data_class as one of {', '.join(DATA_CLASSES)} (it says `{data[:40]}`)")

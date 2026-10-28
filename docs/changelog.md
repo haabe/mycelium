@@ -2,7 +2,45 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-10-24.
+**Last updated**: 2026-10-28.
+
+## v0.331.0 - The release gate reads the record each safety skill writes
+
+**2026-10-28.** Found on the dogfood project by asking what the Privacy, Service Quality and Explainability gates
+actually read. `/mycelium:privacy-check` says never to stamp `last_assessed` without filling the seven principles,
+because a date over unjudged principles reads as an assessment; the Privacy gate passed on exactly that record. Service
+Quality and Explainability passed on the status word, while `/mycelium:service-check` and `/mycelium:xai-check` each
+write a full record that nothing read.
+
+- **Privacy needs its seven principles judged with evidence.** Besides `last_assessed` and a `data_inventory` (or
+  `data_minimization_check`), every principle in `privacy-assessment.yml` must carry an assessment other than
+  `not-assessed` and an `evidence` line. The scale-lock gate and the release gate name the principles that do not.
+  At an L3's `commit_to_build` they are judged on the design, as the gate's L3 criterion already says.
+- **A Service Quality pass needs all 15 principles judged with evidence.** The bar is the gate's own pass criterion
+  in `engine/theory-gates.md`, "Service evaluated against all 15 Downe principles", at every scale it applies to. A
+  principle judged `n/a` with a line saying why counts. A gate marked `n/a` still needs no record.
+  `/mycelium:service-check` now lists an L3's `release` among the runs that need all 15, since a learning delivery
+  releases through this gate; a principle the test's audience never meets is judged `n/a`.
+- **An Explainability pass needs a verdict for each stage `/mycelium:xai-check` runs, and only where AI components
+  are detected.** An L3 needs the tier (stage 1); an L4 or L5 every stage, with `recourse` asked from the `limited`
+  tier up, as gate 13 sets out. A stage that does not apply takes a verdict saying so.
+- **One definition, two readers.** `scripts/_assessment_lib.py` holds what counts as a judged principle, and both
+  `scale_locks.py` and `check_assessment_landed.py` read it, so the question "did an assessment land" and the
+  question "is the record complete" cannot drift apart again.
+  **What changes for a user:** a project whose diamonds mark these gates passed over an empty or partial record
+  sees the next decision or release refused, with the missing principles or stage named. Running the named skill to
+  the end clears it. Security, and a Service Quality or Explainability gate marked `n/a`, are unchanged.
+- **Alternatives considered.** Holding an L3 to the lighter set service-check names for it (principles 1-4, 8, 10,
+  11): that set feeds the Four Risks before the L3 builds, and two bars for one gate would let an L3 release on seven
+  of fifteen. Counting a principle judged without evidence: each skill asks for evidence, and a verdict with nothing
+  observed behind it is the status word one level down. Requiring a recent `last_assessed`: evidence decay has its
+  own check, and refusing a release on age is a separate decision. A warning instead of a refusal: the Security and
+  Privacy record checks have refused since 0.247.0, and a warning on the same gate would be a second rule for it.
+
+Tests: `tests/python/test_gate_reads_the_skills_records.py`, 16 cases; 10 fail on 0.330.1, and the 6 controls (a
+complete record, `n/a`, a principle judged `n/a` with a reason, the minimal tier without recourse, a product with no
+AI) pass on both. The fixtures in `test_scale_locks.py`, the L0-L5 walkthrough and `tests/bash/_ladder.sh` now
+write the principles and `services.yml` a passing project holds.
 
 ## v0.330.1 - A test waiting on its data is not called runnable
 

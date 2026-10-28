@@ -167,8 +167,17 @@ def test_the_ladder_opens_rung_by_rung_from_l0_to_l5(tmp_path, monkeypatch):
     # The L3 builds only after naming the lightest test of its riskiest assumption (v0.253.0), and
     # the safety gates need their records.
     p.canvas_file("threat-model.yml", {"threats": [{"id": "t1", "description": "guessed link"}]})
-    p.canvas_file("privacy-assessment.yml", {"last_assessed": DAY,
-                                             "data_inventory": [{"data_type": "phone number"}]})
+    # The records as the skills write them (v0.331.0): seven privacy principles judged with
+    # evidence, and the fifteen service principles the L4's release reads later on.
+    p.canvas_file("privacy-assessment.yml", {
+        "last_assessed": DAY, "data_inventory": [{"data_type": "phone number"}],
+        "principles": {k: {"assessment": "pass", "evidence": "only a phone number is kept"}
+                       for k in ("proactive_not_reactive", "privacy_as_default", "privacy_embedded",
+                                 "full_functionality", "end_to_end_security",
+                                 "visibility_transparency", "respect_for_users")}})
+    p.canvas_file("services.yml", {"principles": [
+        {"id": i, "assessment": "pass", "evidence": "a shift lead approved a swap end to end"}
+        for i in range(1, 16)]})
     p.write(p.moved("l3", "define"))
     p.refused(p.moved("l3", "develop"), "the lightest test that answers it")
     sol = opps["opportunities"][0]["solutions"][0]

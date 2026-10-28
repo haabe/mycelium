@@ -1,6 +1,6 @@
 # Mycelium: Theory-Guided Agentic Product Development
 
-*Version 0.330.1 -- **A test waiting on its data is not called runnable** (PATCH; 2026-10-24). check_instrument_contract listed every live disk-or-network test as RUNNABLE NOW, NEVER RUN, though assumption-test told a test whose data does not exist yet to say why not now, and no field held that line; a new `waits_for` field names the data the read waits on, and until score_by passes such a test is listed under WAITING ON DATA and not counted at session start.*
+*Version 0.331.0 -- **The release gate reads the record each safety skill writes** (MINOR; 2026-10-28). Privacy passed on a date and an inventory with every principle unjudged, and Service Quality and Explainability on the status word; each now needs the record its skill writes, with the missing principles or stage named. Prior: 0.330.1 A test waiting on its data is not called runnable.**A test waiting on its data is not called runnable** (PATCH; 2026-10-24). check_instrument_contract listed every live disk-or-network test as RUNNABLE NOW, NEVER RUN, though assumption-test told a test whose data does not exist yet to say why not now, and no field held that line; a new `waits_for` field names the data the read waits on, and until score_by passes such a test is listed under WAITING ON DATA and not counted at session start.*
 
 *Full version history: [`docs/changelog.md`](docs/changelog.md).*
 

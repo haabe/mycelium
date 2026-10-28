@@ -101,6 +101,13 @@ an assessment that never landed is worse than an empty file**: a reader checking
 assessed record, and the `Privacy` theory gate — Required at L2-L4 — reads it. Never stamp
 `last_assessed` in a run that does not also fill the principles.
 
+**Since v0.331.0 the gate checks this itself.** The scale-lock gate and the release gate count Privacy
+as passed only when `last_assessed`, a `data_inventory` (or `data_minimization_check`) and all seven
+principles judged with `evidence` are on the record (`scripts/_assessment_lib.py`). A principle left
+at `not-assessed`, or judged with no `evidence`, holds the gate and is named in what it reports. At an
+L3's `commit_to_build` the principles are judged on the design; nothing built is needed. Until
+0.331.0 the gate read the date and the inventory only, so the record this section warns about passed.
+
 **UPDATE each of the seven keys in `principles`** (`proactive_not_reactive`, `privacy_as_default`,
 `privacy_embedded`, `full_functionality`, `end_to_end_security`, `visibility_transparency`,
 `respect_for_users`):

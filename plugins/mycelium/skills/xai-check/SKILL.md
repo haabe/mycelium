@@ -13,6 +13,8 @@ Operational gate for the Explainability Theory Gate (Gate 13). Audits whether a 
 
 This skill is **functionally-grounded** in Doshi-Velez & Kim's (2017) sense: it operates on artifacts and configuration, not on real users with real tasks. Output explicitly distinguishes `validated_functionally` from `needs_user_testing`. The honest tag is what passes Gate 13; user-grounded validation is recommended but not blocking.
 
+**The gate reads this skill's record (v0.331.0).** On a product with AI components detected, an Explainability pass counts only when a `services[].xai` block holds a verdict for each stage the scale asks: at an L3 the tier (Stage 1); at an L4 or L5 every stage, with `recourse.verdict` asked from the `limited` tier up. A stage that does not apply takes a verdict saying so (`not_applicable`). The scale-lock gate and the release gate name the stage that is missing. Until 0.331.0 the gate passed on the status word.
+
 ## When to Use
 
 - An L3's `release` or `close`, **only when `active-stack.yml :: ai_components.detected: true`**

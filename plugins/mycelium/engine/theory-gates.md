@@ -249,6 +249,8 @@ and JTBD had passed. The criteria never asked for a resolution; the reading adde
 
 **Evidence required**: Data flow diagram, DPIA document, consent mechanism design, retention policy.
 
+**What the gate reads (v0.331.0)**: a pass counts only with `privacy-assessment.yml` `last_assessed`, a `data_inventory` and all seven principles judged with `evidence` (`diamond-rules.md`, "Security and Privacy need their record").
+
 **Suggested skill**: `/privacy-check`
 
 ### 8. BVSSH Gate
@@ -302,6 +304,8 @@ Two quality layers for user-facing work:
 | Consistency maintained (internal + platform conventions) | Inconsistent patterns across screens |
 
 **Evidence required**: Completed service-check output, usability-check output, user journey map, accessibility audit.
+
+**What the gate reads (v0.331.0)**: a Service Quality pass counts only with all 15 `principles` in `services.yml` judged with `evidence` (`n/a` with a reason counts); `n/a` on the gate itself needs no record. Usability and accessibility are not read by the gate.
 
 **Suggested skill**: `/service-check` (Downe's 15 principles), `/usability-check` (Nielsen's 10 heuristics), `/a11y-check` (WCAG 2.1 AA accessibility)
 
@@ -412,6 +416,8 @@ This gate is **operational** — it asks "have you actually run `/xai-check`?" a
 **What this gate does NOT require**: Application-grounded user testing of explanations. `/xai-check` produces `validated_functionally` and `needs_user_testing` lists; user-grounded validation is recommended but not blocking at this gate. The honest tagging is what passes the gate, not the proof of user comprehension.
 
 **Tier scaling** (item caps): minimal ≤5, limited ≤15, high ≤25. The gate's strictness scales with the AI Act risk tier — minimal-risk AI features don't carry the full ceremony.
+
+**What the gate reads (v0.331.0)**: with AI components detected, a pass counts only with a `services[].xai` block holding the tier at an L3 and a verdict for each stage at an L4 or L5 (`recourse` from the `limited` tier up). Freshness is not read.
 
 **Evidence required**: `services.yml :: <service>.xai.last_assessed_at` recent (within evidence-decay threshold); per-stage verdicts populated; fidelity sample under `.claude/evals/xai-fidelity/<service>/YYYY-MM-DD.json` if applicable.
 
