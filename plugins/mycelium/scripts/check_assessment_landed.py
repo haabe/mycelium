@@ -39,20 +39,23 @@ from pathlib import Path
 
 import yaml
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import _assessment_lib as _assess
+
 
 #: (filename, human label, extractor) — extractor returns (assessed, total) over the
 #: fields that carry the assessment. Registered explicitly rather than inferred: a wrong
 #: guess about which field is "the assessment" would manufacture a finding, and this
 #: project has logged two wrong-construction results that read as clean findings.
-def _list_assessments(doc, key, field="assessment", default="not-assessed"):
-    items = doc.get(key) or []
-    if isinstance(items, dict):
-        items = list(items.values())
-    if not isinstance(items, list):
+#: "Assessed" is `_assessment_lib.judged`, the definition scale_locks.py's gates read too
+#: (v0.331.0); this check asks whether anything landed, the gate whether the record is complete.
+def _list_assessments(doc, key):
+    if doc.get(key) is None:
+        return 0, 0
+    entries = _assess.items(doc, key)
+    if entries is None:
         return None
-    total = len(items)
-    done = sum(1 for x in items if isinstance(x, dict) and x.get(field) not in (None, "", default))
-    return done, total
+    return sum(1 for _, x in entries if _assess.judged(x)), len(entries)
 
 
 def _threats(doc):

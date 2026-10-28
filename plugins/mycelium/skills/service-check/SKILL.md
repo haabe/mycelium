@@ -80,6 +80,7 @@ For each principle, assess: Pass / Partial / Fail / N/A
 ## When to Run
 
 - **An L3, before `commit_to_build`** (solution design): Run a lightweight check focusing on principles 1-4, 8, 10, 11. These inform the Four Risks viability dimension — a solution that violates core service principles has viability risk. Feed results into `/mycelium:ice-score`.
+- **An L3's `release`** (its learning delivery to a named audience, v0.331.0): Run the full 15-principle check, because the Service Quality gate reads all 15 for any release. A principle the test's audience never meets is judged `n/a` with a line saying why, which keeps a small pilot's check small.
 - **An L4's `release`**: Run the full 15-principle check. Required REVIEW gate (G-V2).
 - **An L4's `close`**: Final validation. Required REVIEW gate.
 
@@ -111,6 +112,14 @@ decision log, and `services.yml` held every principle at `assessment: not-assess
 `overall_score: null` for **103 days**. The scores existed the whole time and no reader of the canvas
 could see them. The `Service Quality` theory gate reads this file, so a Required gate at L4 had no
 data to read while the data sat in a log nothing gates on.
+
+**Since v0.331.0 the gate checks this itself.** A Service Quality pass counts only when all 15
+principles in `principles[]` are judged with `evidence`, at every scale the gate applies to
+(`engine/theory-gates.md`, gate 9: "Service evaluated against all 15 Downe principles"); the scale-lock
+gate and the release gate both name the principles that are not. A principle that does not apply is
+judged `n/a` with a line of `evidence` saying why, and counts. The lighter L3 check under "When to
+Run" feeds the Four Risks before the L3 builds; it is not this gate's bar. A gate marked `n/a` (a
+product with no service to judge) needs no record. Until 0.331.0 the gate passed on the status word.
 
 **UPDATE, per principle, in `principles[]`:**
 

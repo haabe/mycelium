@@ -7,7 +7,8 @@
 # and, for the safety gates, a threat model and a privacy assessment on record. Each gate test used
 # to build its chain inline; three copies of this would drift, so it lives here once.
 #
-#   write_ladder <project_dir>          North Star, landscape, threat model, privacy assessment
+#   write_ladder <project_dir>          North Star, landscape, threat model, privacy assessment,
+#                                       services.yml principles (v0.331.0)
 #   ladder_diamonds <opportunity_id>    the L0/L1/L2 entries to put under `active_diamonds:`
 #   OUTCOME_LINK                        the line to add under a `desired_outcome:` mapping
 #   BUILD_GATES / EXPOSE_GATES          theory_gates_status flow maps passing the matrix's full sets
@@ -23,6 +24,20 @@ write_ladder() {
     printf 'components:\n  - id: comp-1\n    name: "group chat swaps"\n' > "$c/landscape.yml"
     printf 'threats:\n  - id: t1\n    description: "a guessed link token approves a swap"\n' > "$c/threat-model.yml"
     printf 'last_assessed: "2026-09-24"\ndata_inventory:\n  - data_type: "phone number"\n' > "$c/privacy-assessment.yml"
+    # v0.331.0: a Privacy pass needs the seven principles judged with evidence, and a Service
+    # Quality pass all 15 Downe principles; the gate reads the record the skills write.
+    local k
+    printf 'principles:\n' >> "$c/privacy-assessment.yml"
+    for k in proactive_not_reactive privacy_as_default privacy_embedded full_functionality \
+             end_to_end_security visibility_transparency respect_for_users; do
+        printf '  %s:\n    assessment: pass\n    evidence: "read the swap flow"\n' "$k" \
+            >> "$c/privacy-assessment.yml"
+    done
+    printf 'principles:\n' > "$c/services.yml"
+    for k in $(seq 1 15); do
+        printf '  - id: %s\n    assessment: partial\n    evidence: "walked the swap flow"\n' "$k" \
+            >> "$c/services.yml"
+    done
 }
 
 # decide_file <diamonds_file>: since v0.306.0 the phase is not read; a fixture written with a
