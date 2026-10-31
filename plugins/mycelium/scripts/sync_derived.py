@@ -59,7 +59,11 @@ PLUGIN = "plugins/mycelium/.claude-plugin/plugin.json"
 # The Codex manifest (v0.286.0) carries the same version and description: Codex reads it for a
 # marketplace install, so a stale copy would be what Codex users see.
 CODEX_PLUGIN = "plugins/mycelium/.codex-plugin/plugin.json"
-OPTIONAL_TARGETS = frozenset({CODEX_PLUGIN})
+# The Agent Plugins 1.0 manifest at the plugin root (v0.332.0): Vibe reads it in place of both
+# others, and Codex reads it with .codex-plugin as an overlay for hooks. Same version and
+# description.
+NATIVE_PLUGIN = "plugins/mycelium/plugin.json"
+OPTIONAL_TARGETS = frozenset({CODEX_PLUGIN, NATIVE_PLUGIN})
 CARD = "docs/ai-system-card.md"
 
 VERSION_RE = re.compile(r"^\*Version (\d+\.\d+\.\d+)", re.MULTILINE)
@@ -78,6 +82,7 @@ LITERAL_MARKER = "skills-literal"
 VERSION_TARGETS = [
     (PLUGIN, PLUGIN_VERSION_RE, r"\g<1>{v}\g<2>"),
     (CODEX_PLUGIN, PLUGIN_VERSION_RE, r"\g<1>{v}\g<2>"),
+    (NATIVE_PLUGIN, PLUGIN_VERSION_RE, r"\g<1>{v}\g<2>"),
     (CARD, CARD_VERSION_RE, r"\g<1>{v}"),
 ]
 
@@ -88,6 +93,7 @@ SKILL_COUNT_FILES = [
     "docs/skills/README.md",
     PLUGIN,
     CODEX_PLUGIN,
+    NATIVE_PLUGIN,
     ".claude-plugin/marketplace.json",
     CARD,
     # SKILL.md files whose lone "<N> skills" token is the total count. Without

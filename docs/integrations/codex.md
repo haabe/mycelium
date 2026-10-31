@@ -50,6 +50,12 @@ hooks as `hooks.codex.json`, generated from it, with the plugin root taken from
 the Claude Code file `hooks/hooks.json` and drops its four `async` hooks at load (change-log,
 read-log, diamond-state-audit and the background session-start checks).
 
+Since 0.332.0 the plugin folder also carries a root `plugin.json` in the Agent Plugins 1.0 format,
+for Mistral Vibe. Codex reads a root manifest of that format first, and takes its hooks from the
+manifest's `com.openai` extension or, when there is none, from `.codex-plugin/plugin.json`. The
+root manifest has no such extension, so the hooks above are still the ones Codex runs (read in
+Codex's source at 0.166.0; a test in `tests/python/test_vibe.py` fails if the extension is added).
+
 Skills are invoked with `$name` on Codex (`$start`), not `/mycelium:start`; the skill text still
 names the Claude Code form.
 
