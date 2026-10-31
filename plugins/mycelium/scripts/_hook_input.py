@@ -357,7 +357,9 @@ ASKS_A_HUMAN = ("default", "acceptEdits", "plan")
 #: Runtimes whose hooks cannot ask (v0.286.0). Codex parses `permissionDecision: "ask"`, marks the
 #: hook run failed and lets the tool call through, so an ask there is an allow. Its hook commands
 #: carry MYCELIUM_RUNTIME=codex (hooks.codex.json and the plugin file derived from it).
-CANNOT_ASK = ("codex",)
+#: Mistral Vibe (v0.332.0): a hook can allow or deny and has no way to put a question to the person.
+#: integrations/vibe/vibe_hook.py runs the hooks with MYCELIUM_RUNTIME=vibe.
+CANNOT_ASK = ("codex", "vibe")
 
 
 #: Since v0.318.0 a project with neither `.claude/canvas/` nor `.claude/diamonds/` is not a

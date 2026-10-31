@@ -2,54 +2,73 @@
 
 **Audience**: developers who use [Mistral Vibe](https://github.com/mistralai/mistral-vibe) as their coding agent and want Mycelium's product-thinking discipline there.
 **Time to read**: 5 min.
-**Last updated**: 2026-10-21.
-**Status**: Partly works, with setup by hand. Mycelium does not yet ship anything for Vibe. Installed the way Vibe's docs describe, it loads nothing at all. With the steps below, the skills load and the operating contract reaches the model. The gates, which block risky actions in Claude Code, do not run unless you wire them yourself. Everything here was measured on Vibe 3.0.0 on 2026-10-21. Details and limits are below.
-
-## What happens if you just install it
-
-Vibe has no plugin installer. A plugin is a folder under `~/.vibe/plugins/<name>/` (every project) or `<project>/.vibe/plugins/<name>/` (one project, trusted folders only).
-
-Mycelium's plugin folder carries two manifests: one for Claude Code (`.claude-plugin/`) and one for Codex (`.codex-plugin/`). Vibe 3.0 can adapt either one, but when it finds both it reports the plugin as `format_ambiguous`, a fatal issue, and **drops the whole plugin**. You get no skills, no hooks and no contract. In a headless run the warning appears in the run's export; we did not check what the interactive screen shows.
-
-## What works on Vibe 3.0
-
-| Capability | Status | Notes |
-|---|---|---|
-| Canvas YAML, memory, decision-log, corrections, patterns | ✅ Portable | Plain files. |
-| Validators (`validate_canvas.py` and the rest) | ✅ Run unchanged | Python and Bash, nothing runtime-specific. |
-| Skills | ⚠️ After setup step 2 | With the Codex manifest removed from your copy, Vibe adapts Mycelium as a Claude Code plugin and loads every skill but one. The one left out is `ping`, a smoke test marked not for the model to call (`disable-model-invocation`); that is the likely reason, not a confirmed one. Whether Vibe resolves the `${CLAUDE_PLUGIN_ROOT}` paths inside skill bodies was not measured. |
-| Operating contract (the always-on rules) | ⚠️ By the workaround below | Claude Code delivers it with a session-start hook. Vibe has none, so it goes in an `AGENTS.md`. |
-| Gates (secret check, read-before-edit, scope and the rest) | ⛔ Not shipped | Vibe 3.0 runs no hook a plugin ships. One of Mycelium's gates was made to block on Vibe by declaring it in the project's `.vibe/hooks.toml` behind a small format translator. Mycelium does not ship that translator yet. |
-| Per-prompt context, stop check, reflexion on tool failure | ⛔ No route found | Vibe's hook types are `pre_tool`, `post_tool` and `post_agent`. There is no prompt-submit or tool-failure event. |
-
-**Net**: on Vibe, Mycelium's discipline runs as instructions the model follows, not as checks that stop it. How well that holds depends on the model.
-
-## Limitations, in plain terms
-
-- **There is no session-start hook.** In Claude Code, Mycelium's rules are injected at the start of every session. Vibe has no event for that, so nothing loads them unless you put them in an `AGENTS.md` (below).
-- **Hooks shipped inside a plugin do not run.** This holds for a Claude Code plugin's hooks and for Vibe's own native plugin format. Vibe 3.0.1's source says hook bindings are withheld until an execution adapter exists. Only hooks declared in a project or user `hooks.toml` run.
-- **Plugin "knowledge" did not reach the model.** A knowledge entry in a native plugin was not in the model's context, and the model could not recall it. Why was not established.
-- **Rules that name a hook are only rules here.** The contract was written for Claude Code. Where it says a hook blocks something, nothing on Vibe blocks it; the model has to follow the rule itself.
+**Last updated**: 2026-10-31.
+**Status**: Works, with two setup steps. Since 0.332.0 the plugin folder loads in Vibe as it ships, and one command declares Mycelium's gates in your project, so they block risky calls on Vibe too. The operating contract reaches the model through an `AGENTS.md` copy. What Vibe has no event for (session start, each prompt, the end of a turn) does not run. Details and limits below.
 
 ## Setup
 
-These are the steps that were measured: project scope, a trusted folder.
+Vibe has no plugin installer. A plugin is a folder under `<project>/.vibe/plugins/<name>/` (one project, trusted folders only) or `~/.vibe/plugins/<name>/` (every project).
 
 ```bash
 # 1. Get Mycelium somewhere outside your project; it is the source, not your project.
 git clone https://github.com/haabe/mycelium ~/src/mycelium
 
-# 2. Copy the plugin into your project's Vibe plugins folder and remove the Codex
-#    manifest from YOUR COPY, so Vibe sees one manifest and loads the skills.
+# 2. Copy the plugin into your project's Vibe plugins folder.
 cd ~/my-project
 mkdir -p .vibe/plugins
 cp -R ~/src/mycelium/plugins/mycelium .vibe/plugins/mycelium
-rm -rf .vibe/plugins/mycelium/.codex-plugin
 
-# 3. The AGENTS.md contract copy (next section).
+# 3. Declare Mycelium's gates in the project's .vibe/hooks.toml.
+python3 .vibe/plugins/mycelium/integrations/vibe/install_hooks.py
+
+# 4. The AGENTS.md contract copy (section below).
 ```
 
-Run `vibe` from the project and trust the folder when asked; with `vibe -p`, pass `--trust`. Vibe reads a project's plugins and its `AGENTS.md` only in a trusted folder.
+Run `vibe` from the project and trust the folder when asked; with `vibe -p`, pass `--trust`. Vibe reads a project's plugins, its `hooks.toml` and its `AGENTS.md` only in a trusted folder.
+
+**After updating Mycelium**, copy the folder again and re-run steps 3 and 4. Step 3 replaces its own two entries and leaves the rest of your `hooks.toml` alone.
+
+Before 0.332.0 step 2 also deleted the copy's `.codex-plugin` folder. That is no longer needed: the plugin now carries a manifest in Vibe's native format, and Vibe reads it in place of the other two.
+
+## What works on Vibe
+
+| Capability | Status | Notes |
+|---|---|---|
+| Canvas YAML, memory, decision-log, corrections, patterns | ✅ Portable | Plain files. |
+| Validators (`validate_canvas.py` and the rest) | ✅ Run unchanged | Python and Bash, nothing runtime-specific. |
+| Skills | ✅ As shipped | The root `plugin.json` is an [Agent Plugins](https://agent-plugins.org) 1.0 manifest, which Vibe reads before the Claude Code and Codex ones, so the folder loads as it is. Whether Vibe resolves the `${CLAUDE_PLUGIN_ROOT}` paths inside skill bodies was not measured. |
+| Gates before a tool call (secret check, discovery, scale lock, scope, guard state and the rest) | ✅ After setup step 3 | Mycelium's own Claude Code hooks, run through a translator Vibe calls before each tool call. A refusal reaches the model as the call's error. |
+| Checks after a tool call (canvas schema check, nudges, logs) | ✅ After setup step 3 | Their notes reach the model with the call's result. |
+| Operating contract (the always-on rules) | ⚠️ By setup step 4 | Claude Code delivers it with a session-start hook. Vibe has none, so it goes in an `AGENTS.md`. |
+| Per-prompt context, end-of-turn checks, reflexion on tool failure | ⛔ No route | Vibe's hook types are `pre_tool`, `post_tool` and `post_agent`. There is no session-start or prompt event, and the end-of-turn checks are not translated. |
+
+## How the gates run on Vibe
+
+Vibe 3.0 runs no hook a plugin ships: hooks declared inside a plugin are withheld ("neither has an execution adapter yet", in Vibe's source at 3.0.1 to 3.0.3). It runs the hooks declared in a project's `.vibe/hooks.toml` or in `~/.vibe/hooks.toml`. So `install_hooks.py` writes two entries into the project's file, and each runs `integrations/vibe/vibe_hook.py` from your copy of the plugin by its absolute path:
+
+- `mycelium-pre-tool`, before every tool call, with `strict = true`. If the translator itself cannot run, Vibe refuses the call. That is what Mycelium's blocking hooks do in Claude Code when they cannot run.
+- `mycelium-post-tool`, after every tool call that ran.
+
+The translator maps Vibe's call to the call Mycelium's hooks were written for, runs the hooks listed for it in the plugin's `hooks/hooks.json`, and maps their answer back:
+
+| Vibe tool | Read as | |
+|---|---|---|
+| `file_system.bash`, `process.start` | `Bash` | the command |
+| `file_system.write_file` | `Write` | `path` as the file, and the content |
+| `file_system.edit` | `Edit` | the file, the old and the new text |
+| `file_system.read_file` | `Read` | `path` as the file |
+
+Other tools (search, web fetch, subagents) run no Mycelium hook. A relative path is resolved against the folder the call runs in.
+
+Your own entries in `hooks.toml` stay as they are. The project file, not `~/.vibe/hooks.toml`: the user file would start the translator on every tool call in every project you open with Vibe. Mycelium's hooks do nothing in a project without `.claude/canvas/` or `.claude/diamonds/`, but the translator would still start each time.
+
+## Limitations, in plain terms
+
+- **Where Claude Code would ask you, Vibe refuses.** A few of Mycelium's checks put a question to you rather than to the agent, for example before the agent writes a file that switches a hook off. A Vibe hook can only allow or refuse, so on Vibe the call is refused and the message tells the agent to ask you, and that you make the change yourself.
+- **Advice before a call arrives after it.** Some checks warn without refusing, such as the shell-safety warnings. In Claude Code the agent sees the warning as it makes the call. On Vibe, the only text a hook can show the model before a call is a refusal, so the warning is kept and handed to the model with the call's result.
+- **There is no session-start hook.** In Claude Code, Mycelium's rules are injected at the start of every session. Vibe has no event for that, so nothing loads them unless you put them in an `AGENTS.md` (below).
+- **Rules that name a hook Vibe does not run are only rules here.** The contract was written for Claude Code. The end-of-turn checks (for example, that a turn ends on one next action) do not run on Vibe. The model has to follow those rules itself.
+- **Plugin "knowledge" did not reach the model.** A knowledge entry in a native plugin was not in the model's context in the 2026-10-21 runs, and the model could not recall it. Why was not established.
 
 ## The workaround for the missing session-start hook: the AGENTS.md contract copy
 
@@ -69,6 +88,30 @@ The command appends, so an existing `AGENTS.md` keeps your own text above the co
 
 ## How this was measured
 
-Vibe 3.0.0 from Homebrew (source read at 3.0.1), a local `llama3.1:8b` through Ollama with a 32k context, one machine, one prompt per test, 2026-10-21. The gate test used Mycelium's secret check: declared in the project's `.vibe/hooks.toml` behind the translator, it refused a command that wrote a key to a file. The model then read the key from an environment variable instead, which the check allows. A stronger model may follow the contract better than an 8B one; that was not tested.
+**2026-10-21**, Vibe 3.0.0 from Homebrew (source read at 3.0.1), a local `llama3.1:8b` through Ollama with a 32k context, one machine, one prompt per test:
+- As shipped, with both a Claude Code and a Codex manifest, Vibe dropped the plugin as ambiguous.
+- With a root Agent Plugins manifest added beside both, it loaded the plugin with no warning.
+- A plugin's own hooks never ran, native or adapted.
+- Mycelium's secret check, declared in the project's `.vibe/hooks.toml` behind an earlier, smaller translator, refused a command that wrote a key to a file, and its message reached the model. The model then read the key from an environment variable instead, which the check allows.
+- The `AGENTS.md` measurements are from the same day.
+
+**2026-10-31**, for 0.332.0, on Vibe 3.0.3, without a model:
+- **Vibe's source:** it still prefers a root Agent Plugins manifest, and still withholds plugin hooks.
+- **Vibe's own plugin inspector:** it reads the shipped folder as a valid Agent Plugins 1.0 plugin, 63 skills, no diagnostics.
+- **Vibe's own `hooks.toml` loader:** it reads the file `install_hooks.py` writes, beside a project's own hook, with no issue.
+- **The translator,** given Vibe-shaped calls, against the plugin's real hooks in a test project:
+  - it refused a shell command carrying a key;
+  - it refused a write to a guard file, with the "cannot ask" message;
+  - it refused a new source file in a project with no discovery state yet;
+  - it passed `ls`;
+  - it handed a shell-safety warning to the model with the call's result.
+  These cases are `tests/python/test_vibe.py`.
+- **Live sessions, inconclusive on the gates:** five one-prompt runs on the shipped folder with hooks installed by `install_hooks.py`, through four local Ollama models (llama3.1:8b, qwen3.5:9b, qwen2.5-coder:14b, mistral-nemo). In every run the plugin loaded, with Mycelium's skills in the model's prompt and no format warning. In none did the model make a tool call: it wrote the call as text, refused the request itself, or said it had done the work. So no call reached the translator, and the gates in a live 0.332.0 session are not yet shown. The 2026-10-21 live run used the earlier translator, with one gate.
+
+A stronger model may follow the contract better than an 8B one; that was not tested.
+
+**Codex and Claude Code read the new root manifest too.**
+- **Codex** (0.150 and later, source read at 0.166.0) reads a root Agent Plugins `plugin.json` first. It takes hooks from that manifest's `com.openai` extension or, when there is none, from `.codex-plugin/plugin.json`. Mycelium's root manifest carries no `com.openai` extension, so Codex keeps its hooks. Installed from a test marketplace with and without the file, Codex 0.166.0 listed the same 63 skills. Whether Codex then runs the hooks was not run: that needs the hooks trusted, which this check did not do.
+- **Claude Code** reads `.claude-plugin/plugin.json`, and `claude plugin validate` passes with the root file present.
 
 Other runtimes: [Claude Code](../install-paths.md), [Codex](codex.md), [opencode](opencode.md), [Cursor](cursor.md).

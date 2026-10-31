@@ -1,6 +1,6 @@
 ---
 name: setup
-description: First-run setup for the Mycelium plugin. Creates project-state directories (.claude/canvas, .claude/diamonds, .claude/memory, .claude/harness) and minimal starter files in the user's project. Optionally provisions opencode runtime support (a starter scaffold) when opencode is detected or requested. Idempotent — re-running on an initialized project is a no-op. Run this once after installing the Mycelium plugin and before invoking other skills.
+description: First-run setup for the Mycelium plugin. Creates project-state directories (.claude/canvas, .claude/diamonds, .claude/memory, .claude/harness) and minimal starter files in the user's project. Optionally provisions opencode runtime support (a starter scaffold) when opencode is detected or requested, and declares the gates in .vibe/hooks.toml when Mistral Vibe is. Idempotent — re-running on an initialized project is a no-op. Run this once after installing the Mycelium plugin and before invoking other skills.
 metadata:
   framework_dependency: "mycelium"
   framework_dependency_note: "This skill is designed to run within the Mycelium framework (https://github.com/haabe/mycelium). Standalone use will skip the canvas state, theory gates, and harness behavior the skill assumes. Install: /plugin install mycelium@haabe-mycelium."
@@ -351,6 +351,41 @@ SNAPSHOT — **re-run `/mycelium:setup` after any framework upgrade to refresh t
 (3) read `docs/integrations/opencode.md`; (4) the enforcement plugin is a starter
 skeleton (two clean hooks; gate/scope/secret-scan + Stop-relocation are TODO) and
 reflexion (#27900) needs the upstream opencode fix.
+
+## Step 5v: Optionally declare the gates for Mistral Vibe (v0.332.0)
+
+Vibe 3.0 runs no hook a plugin ships. It runs the hooks a project declares in
+`.vibe/hooks.toml`, so on Vibe Mycelium's gates run only once that file names them.
+Offer this only when there is a signal that Vibe is in play, or when the user asks:
+
+```bash
+test -d "$project_root/.vibe" || test -f "$project_root/.vibe/hooks.toml"   # the project already uses Vibe
+test -d "$HOME/.vibe"                                                          # the user has Vibe configured
+command -v vibe >/dev/null 2>&1                                                # vibe on PATH
+```
+
+With no signal and no request, skip it silently, as for opencode.
+
+Offer it with what it does, so the user can decide:
+
+> "Vibe looks like your runtime. Mycelium's gates (the secret check, the discovery and
+> scale-lock gates and the rest) run on Vibe only when the project's `.vibe/hooks.toml`
+> names them. I can add two entries there that run them through a small translator in the
+> plugin. Your own entries stay as they are. Where Claude Code would ask you before a call,
+> Vibe refuses it instead, because a Vibe hook cannot ask. Add them?"
+
+On yes, run the installer from the copy of the plugin the project uses. On Vibe that is
+`.vibe/plugins/mycelium` (project) or `~/.vibe/plugins/mycelium` (user), not the Claude Code
+plugin cache:
+
+```bash
+python3 "<plugin root>/integrations/vibe/install_hooks.py" "$project_root"
+```
+
+It prints the file it wrote, or why it left the file alone (an existing `hooks.toml` that is
+not valid TOML is never rewritten; the message holds the two entries to add by hand). Tell the
+user to re-run it after updating Mycelium, and point them at `docs/integrations/vibe.md`, which
+also gives the `AGENTS.md` contract copy that stands in for Vibe's missing session-start hook.
 
 ## Before the confirmation: offer the secret scan for commits made by hand (v0.323.0)
 

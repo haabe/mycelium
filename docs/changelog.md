@@ -2,7 +2,64 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-10-28.
+**Last updated**: 2026-10-31.
+
+## v0.332.0 - Mycelium loads and gates on Mistral Vibe
+
+**2026-10-31.** On Vibe 3.0, Mycelium as shipped loaded nothing. Its folder carries a Claude Code and a Codex
+manifest, and Vibe drops a plugin with two. The workaround in 0.328.3 (delete the Codex manifest from your copy)
+loaded the skills, and no gate ran. Vibe binds no hook a plugin ships, so the secret check, the discovery and
+scale-lock gates and the rest never ran on Vibe. Measured 2026-10-21 on Vibe 3.0.0 with a local model.
+
+- **A native manifest: the folder loads as it ships.** `plugins/mycelium/plugin.json` is an Agent Plugins 1.0
+  manifest. Vibe reads it before the other two, and its own plugin inspector reads the shipped folder as valid, with
+  63 skills and no diagnostics (Vibe 3.0.3). Same name, version and description as the Claude Code manifest;
+  `sync_derived.py` keeps the version in step.
+  **What it does on Codex:** Codex (0.150 and later, source read at 0.166.0) also reads a root Agent Plugins
+  manifest first. It takes hooks from its `com.openai` extension or, when there is none, from
+  `.codex-plugin/plugin.json`. This manifest has no such extension, so Codex keeps its hooks; a test fails if one is
+  added. Installed with and without it, Codex 0.166.0 listed the same 63 skills. **On Claude Code** nothing changes:
+  it reads `.claude-plugin/plugin.json`, and `claude plugin validate` passes.
+- **The gates run on Vibe, through a translator.** Vibe runs the hooks a project declares in `.vibe/hooks.toml`.
+  `integrations/vibe/install_hooks.py` writes two entries there. Before each tool call and after it, they run
+  `integrations/vibe/vibe_hook.py`, which runs the plugin's own Claude Code hooks from `hooks/hooks.json`.
+  - **The call is translated in.** Vibe's `file_system.bash` (and `process.start`), `write_file`, `edit` and
+    `read_file` are read as Bash, Write, Edit and Read, with Vibe's `path` read as the file.
+  - **The answer is translated out.** A refusal reaches the model as the call's error. A blocking hook that cannot
+    run refuses the call, as in Claude Code since 0.322.1, and the translator's own entry is `strict` for the same
+    reason.
+  - **Where Claude Code would ask, Vibe refuses.** A Vibe hook cannot ask, so the hooks treat `vibe` like `codex`
+    (`CANNOT_ASK`), and the message tells the agent to ask the person.
+  - **Advice reaches the model after the call.** A warning given before a call cannot reach the model before it,
+    so it is handed over with the call's result.
+- **The installer leaves your own hooks alone.** It replaces its own two entries and keeps everything else in
+  `.vibe/hooks.toml`. A file that is not valid TOML is never rewritten. `/mycelium:setup` offers it when Vibe is
+  detected (Step 5v).
+- **`docs/integrations/vibe.md`** is rewritten for the new setup, which is now four steps with no deletion. It says
+  what still does not run: there is no session-start or prompt event, and the end-of-turn checks are not translated.
+  The `AGENTS.md` contract copy stays the route for the operating contract.
+
+**Not yet shown:** a live Vibe session in which a call reaches this translator. Five live runs on four local models
+loaded the plugin each time, and in none did the model make a tool call, so no gate was exercised. The translator's
+cases run against the plugin's real hooks with Vibe-shaped calls, and Vibe's own loader reads the file the installer
+writes. The live run of 2026-10-21 used an earlier, smaller translator with one gate.
+
+**Alternatives not taken.**
+- *Reimplement a slice of the gates for Vibe, as the opencode plugin does.* Two copies of each rule drift apart.
+  The opencode skeleton still lists the secret, scope and gate checks as to do. The translator runs the same
+  scripts Claude Code runs.
+- *Ship the hooks inside the plugin's native manifest* (`extensions."ai.mistral.vibe"`). Vibe 3.0.3 still withholds
+  hook bindings from plugins, so they would not run.
+- *Write the entries into `~/.vibe/hooks.toml`.* The translator would then start on every tool call in every
+  project opened with Vibe.
+- *Turn an `ask` into an allow, and leave it to Vibe's own permission prompt.* That prompt can be approved
+  automatically, and on Codex an ask that nobody saw let the call through (0.286.0).
+- *Wait for portable hooks in the Agent Plugins standard.* That is agent-plugins-spec PR #89, approved 2026-10-30
+  and not merged. As approved it has no portable ask, no exit-status decision and no way for a plugin to require a
+  refusal when a hook fails. Vibe has not said it will implement it.
+
+Tests: `tests/python/test_vibe.py`, 34 cases. Among them, the "cannot ask" case fails without the `CANNOT_ASK`
+change, and every case fails on 0.331.0, where the files do not exist.
 
 ## v0.331.0 - The release gate reads the record each safety skill writes
 
