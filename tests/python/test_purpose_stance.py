@@ -843,3 +843,80 @@ def test_coverage_counts_agent_written_unconfirmed_stances(canvas):
         allow_unicode=True, sort_keys=False))
     line = m.purpose_stance_coverage(canvas)
     assert "1 stance block(s) written by the agent and not confirmed by a human" in line
+
+
+def test_folding_a_dated_key_into_notes_leaves_the_intent_hash_alone():
+    """Regression, dogfood 2026-11-06: the key-shape guard moves `added_2026_08_28: <why>` into
+    `notes: [{date, kind, note}]`, and before v0.333.0 the move superseded every stance."""
+    m = _ps()
+    before = _intent_purpose()
+    before["what"][0]["added_2026_08_28"] = "The second sentence is new."
+    after = _intent_purpose()
+    after["what"][0]["notes"] = [{"date": "2026-08-28", "kind": "added",
+                                  "note": "The second sentence is new."}]
+    assert m.purpose_hash(before) == m.purpose_hash(after) == m.purpose_hash(_intent_purpose())
+
+
+def test_a_word_of_the_purpose_still_moves_the_hash_beside_dated_notes():
+    m = _ps()
+    a = _intent_purpose()
+    a["what"][0]["notes"] = [{"date": "2026-08-28", "kind": "added", "note": "x"}]
+    b = _intent_purpose()
+    b["what"][0]["notes"] = [{"date": "2026-08-28", "kind": "added", "note": "x"}]
+    b["what"][0]["positioning"] = "The agent writes code when it likes."
+    assert m.purpose_hash(a) != m.purpose_hash(b)
+
+
+def test_undated_notes_are_still_intent():
+    m = _ps()
+    a = _intent_purpose()
+    a["what"][0]["notes"] = ["keep the gate shut"]
+    b = _intent_purpose()
+    b["what"][0]["notes"] = ["open the gate"]
+    assert m.purpose_hash(a) != m.purpose_hash(b)
+
+
+def test_a_hash_stamped_before_v0_333_0_is_still_accepted():
+    m = _ps()
+    doc = _intent_purpose()
+    doc["what"][0]["added_2026_08_28"] = "The second sentence is new."
+    old_stamp = m.v0317_purpose_hash(doc)
+    assert old_stamp != m.purpose_hash(doc)
+    doc["purpose_properties"] = {"derived_from_hash": old_stamp, "hash_algorithm": m.HASH_ALGORITHM,
+                                 "confirmed_by": "human", "properties": []}
+    known = (m.purpose_hash(doc), m.v0317_purpose_hash(doc), m.v0141_purpose_hash(doc),
+             m.legacy_purpose_hash(doc))
+    assert old_stamp in known
+
+
+def test_current_hash_translates_an_old_stamp_and_survives_the_fold(tmp_path, monkeypatch, capsys):
+    """v0.333.0: a v0.317.3 stamp is translated before a fold, and the fold then leaves it valid."""
+    m = _ps()
+    doc = _intent_purpose()
+    doc["what"][0]["added_2026_08_28"] = "The second sentence is new."
+    doc["purpose_properties"] = {"derived_from_hash": m.v0317_purpose_hash(doc),
+                                 "hash_algorithm": m.HASH_ALGORITHM, "properties": []}
+    canvas = tmp_path / "canvas"
+    canvas.mkdir()
+    (canvas / "purpose.yml").write_text(yaml.safe_dump(doc))
+    monkeypatch.setattr(sys, "argv", ["x", "--canvas-dir", str(canvas), "--current-hash"])
+    assert m.main() == 0
+    new = capsys.readouterr().out.strip()
+    folded = _intent_purpose()
+    folded["what"][0]["notes"] = [{"date": "2026-08-28", "kind": "added",
+                                   "note": "The second sentence is new."}]
+    assert new == m.purpose_hash(folded)
+
+
+def test_current_hash_refuses_when_the_intent_moved(tmp_path, monkeypatch, capsys):
+    m = _ps()
+    doc = _intent_purpose()
+    doc["purpose_properties"] = {"derived_from_hash": m.purpose_hash(doc), "properties": []}
+    doc["why"] = "So that people build whatever."
+    canvas = tmp_path / "canvas"
+    canvas.mkdir()
+    (canvas / "purpose.yml").write_text(yaml.safe_dump(doc))
+    monkeypatch.setattr(sys, "argv", ["x", "--canvas-dir", str(canvas), "--current-hash"])
+    assert m.main() == 1
+    assert "cannot be translated" in capsys.readouterr().out
+    assert m.current_hash_if_unmoved({"why": "x"}) is None

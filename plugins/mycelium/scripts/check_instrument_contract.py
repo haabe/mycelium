@@ -668,11 +668,21 @@ def _has_score(node: dict) -> bool:
     already scored, under `scored_at_horizon`, `scored_2026_08_18`, `outcome_scored`,
     `SCORED_2026_08_25_...`. The prefix is `scored` and never `score` or `outcome`: the dangerous
     direction is hiding an unscored prediction, and `score_by` is a date, `outcome_classes` a plan.
+
+    v0.333.0: also a dated note whose `kind` starts with `scored`. The key-shape guard tells agents
+    to move `scored_2026_08_18: <text>` into `notes: [{date, kind: scored, note}]`; before this, the
+    move made every such prediction read as closed and never scored (dogfood 2026-11-06, 15 keys
+    left unfolded for that reason). The same prefix rule applies to the kind as to a key.
     """
     for k in node:
         low = str(k).lower()
         if low in SCORED_KEYS or low == "outcome_scored" or low.startswith("scored"):
             return True
+    notes = node.get("notes")
+    if isinstance(notes, list):
+        for note in notes:
+            if isinstance(note, dict) and str(note.get("kind") or "").lower().startswith("scored"):
+                return True
     return False
 
 

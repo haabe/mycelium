@@ -55,6 +55,10 @@ try:
     from check_opportunity_shape import summarise as _shape_summarise
 except ImportError:                        # a partial install keeps the validator whole
     _shape_summarise = None
+try:
+    from check_key_shape import stem_of as _stem_of
+except ImportError:                        # same: without it, a folded key resolves as before
+    _stem_of = None
 
 # Try imports — fail gracefully with clear message
 try:
@@ -2007,7 +2011,21 @@ def _entry_named(node: dict, seg: str) -> bool:
     if kind is None:
         return False
     date = str(node.get("date") or "").replace("-", "_")
-    return seg in (str(kind), f"{kind}_{date}") if date else seg == str(kind)
+    if seg in ((str(kind), f"{kind}_{date}") if date else (str(kind),)):
+        return True
+    # v0.333.0: the OLD key spelled any way the canvas wrote it. The fold names `kind` with
+    # check_key_shape.stem_of, which casefolds and drops a date wherever it sits, so
+    # `disclosure_posture_RULED_2026_09_13` and `CORRECTION_2026_09_04_THE_VERDICT_...` fold
+    # correctly and their pointers still dangled (dogfood 2026-11-06: 25 respelled by hand).
+    # The date in the segment must equal the note's, so a same-named note of another day
+    # does not answer for it.
+    m = _SEG_DATE.search(seg)
+    if _stem_of is None or not (date and m and m.group(0).replace("-", "_") == date):
+        return False
+    return _stem_of(seg) == str(kind)
+
+
+_SEG_DATE = re.compile(r"\d{4}[-_]\d{2}[-_]\d{2}")
 
 
 def _moved_here(node, segs, i, depth=0) -> bool:

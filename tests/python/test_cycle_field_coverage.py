@@ -98,6 +98,18 @@ def test_an_old_cycle_missing_rework_is_reported(tmp_path):
     assert len(out) == 1 and "rework" in out[0]
 
 
+def test_an_old_cycle_with_null_rework_is_reported_as_missing(tmp_path):
+    """v0.333.0. `rework: null` records "not captured", which is not a measurement; the key test
+    counted it as covered (dogfood 2026-11-06: 19 null rows missing from "35 of 51")."""
+    measured = _cycle(cycle_id="cycle-001", completed_at="2026-07-01", gates_fired=[],
+                      regressions={"in_cycle_count": 0}, demand_type="value",
+                      rework={"post_delivery_corrections": 0})
+    null = _cycle(cycle_id="cycle-002", completed_at="2026-07-01", gates_fired=[],
+                  regressions={"in_cycle_count": 0}, demand_type="value", rework=None)
+    out = _mod().cycle_field_coverage(_write(tmp_path, [measured, null]), today=TODAY)
+    assert len(out) == 1 and "1 of 2" in out[0] and "null" in out[0]
+
+
 def test_in_flight_cycles_are_not_counted(tmp_path):
     """An open cycle has not had the chance to record an outcome."""
     c = _cycle(terminal_state="in_flight", completed_at=None)

@@ -2,7 +2,53 @@
 
 **Audience**: operators upgrading + practitioners tracking what changed.
 **Time to read**: 10 min.
-**Last updated**: 2026-10-31.
+**Last updated**: 2026-11-06.
+
+## v0.333.0 - Six checks stop misreading what the canvas records
+
+**2026-11-06.** The key-shape guard asks for a key like `scored_2026_08_18: held` to be moved into a dated note,
+`notes: [{date, kind, note}]`. On the dogfood canvas that move, done for some 700 keys in one day, ran into three
+checks that could not read the result, and three more that warned on states their own schemas call fine.
+
+- **A score kept in a dated note counts.** The instrument check read a prediction as scored only by a key name, so
+  a folded `scored_*` key made a finished prediction read as closed and never scored. A note whose `kind` starts with
+  `scored` now counts, by the same prefix rule as a key.
+- **Folding a dated note no longer moves the purpose hash.** The hash over why/how/what counted a dated annotation as
+  intent, so folding one superseded every purpose stance while no word of the purpose changed. Dated keys and dated
+  notes entries (those with `date` and `kind`) are now left out of the hash, in both forms, so the fold leaves it where
+  it was. Hashes stamped by 0.332.0 and earlier are still accepted. Before folding dated keys inside why/how/what,
+  translate the stamp with `check_purpose_stance.py --current-hash`. It prints the new hash only when the recorded one
+  still matches the purpose under an accepted algorithm, and refuses when the intent moved, so it cannot stand in for a
+  re-derivation.
+- **Links to a folded key resolve however the key was spelled.** The resolver matched a note only as `kind` or
+  `kind_date`. A key in capitals, or with its date mid-name, folds to a note whose kind is its stem, and every pointer
+  to it dangled: 25 were respelled by hand on the dogfood canvas. A pointer now resolves when its stem equals the
+  note's kind and its date equals the note's date; a same-named note of another day does not answer for it.
+- **`rework: null` counts as not measured.** The coverage line tested for the key, so a null, which records "not
+  captured", read as covered. The schema's own rule for regressions is "Zero recorded is a measurement; absent is
+  not".
+- **Completed and retargeted diamonds are not judged for confidence.** The check skipped archived, parked, killed and
+  discarded, and still warned on a diamond completed two months earlier, with seven scored tests that cite it as
+  history.
+- **canvas-health step 3 reads the schema before flagging a missing `_meta`.** doctrine.yml's schema declares no
+  `_meta` and keeps freshness in an event-based `last_reviewed`; the step flagged it on every pass, a warning a correct
+  file cannot clear.
+
+**Not done, measured:** the candidate also asked to narrow the confidence check to scored tests whose header or title
+names the diamond. Measured on the dogfood repo before writing, that would drop real evidence: for l1-strategy, 24 of
+29 matching tests, among them its own sweeps, and for l2-trust-on-install, the trust bet's own blind read. Hiding
+evidence about live work is the dangerous direction, so the matcher is unchanged.
+
+- **Alternatives considered.**
+  - *Declare `scored_at` on human tasks and solutions* instead of reading notes: that is a new field, and this release
+    declares none. The note rule also covers every project already folded.
+  - *A new `hash_algorithm` marker* for the purpose hash: projects stamped `intent-v1` would then read any mismatch as
+    the uninterpretable pre-v0.141.0 case. The marker stays, and the older hash is accepted.
+  - *Re-stamping the hash from inside validate_canvas*: a validator that rewrites the record it judges. The translation
+    is an explicit command that refuses when the intent moved.
+  - *Accepting `rework: null` with a `rework_note`*: an undeclared field; left for a release that declares one.
+  - *Keeping the canvas-health exemption to `doctrine.yml` by name*: the rule is about a schema with no `_meta`, so
+    the step reads the schema; the test pins doctrine as the case it covers today.
 
 ## v0.332.0 - Mycelium loads and gates on Mistral Vibe
 

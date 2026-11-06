@@ -33,6 +33,16 @@ Audit the canvas knowledge base for quality, consistency, and completeness. The 
 3. **Check `_meta` blocks**:
    - For each existing canvas file, check for `_meta:` block
    - Flag missing `_meta` blocks
+   - **SKIP a file whose schema declares no `_meta` and names its own freshness field**,
+     and judge that field by its own rule instead. Today that is `doctrine.yml`:
+     `schemas/canvas/doctrine.schema.json` declares `schema_version`, `last_reviewed`,
+     `doctrine` and `climate`, and no `_meta`. Its `last_reviewed` is event-based ("a
+     retrospective is DUE when a diamond has entered completed_diamonds with a
+     completed_at later than this date"), not a calendar, and `check_doctrine_due.py`
+     reads exactly that. Asking that file for `_meta` asks for a field the schema left
+     out on purpose, so the warning cannot be cleared by a correct file. Before flagging a
+     missing `_meta`, read the file's schema: if it has no `_meta` property, do not flag
+     it. Added v0.333.0, found on the dogfood repo 2026-11-06.
    - Flag `last_validated` past **the horizon for that file's category**, per the
      "Which threshold applies to which canvas file" table in
      `${CLAUDE_PLUGIN_ROOT}/engine/evidence-decay.md` (strategic 180d, technical
