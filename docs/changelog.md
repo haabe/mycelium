@@ -4,6 +4,28 @@
 **Time to read**: 10 min.
 **Last updated**: 2026-11-06.
 
+## v0.334.1 - The system card reports the first faithfulness audit
+
+**2026-11-06.** Text only, in `docs/ai-system-card.md`. The eighth `/mycelium:xai-check` on the maintainer's dogfood
+project measured what 0.311.0 changed. 0.311.0 holds a framework turn until its `Next:` line cites a source.
+
+- **What was measured.** Every `Next:` line in the twelve most recent sessions cites a source (284 of 284, in ten
+  sessions of twelve; three of twelve before 0.311.0). No turn was held for a missing citation. The first
+  blind-prediction faithfulness audit ran: ten lines, one fresh reviewer given only the situation and the cited
+  source. The reviewer predicted the proposed action in 8 of 10, and partly in the other 2. Citations elsewhere did
+  not move: about four per twelve sessions, as in September and October.
+- **§4, Evaluation methodology.** The Self-eval bullet said no faithfulness audit had run and named the Juniors.dev
+  pilot, stopped on 2026-08-14, as the source for one. The 0.310.19 fix corrected the bullet below it and missed this
+  one. It now states the audit and its limits.
+- **§5, Per-decision rationale.** It said the rule's effect "is measured at the next audit"; it now gives the result.
+- **§1 and §9** name the eighth audit.
+
+- **Alternatives considered.**
+  - *Reporting 284 of 284 alone*: the hook demands that number, so it says nothing about whether the cited source
+    explains the action. The blind prediction is what does.
+  - *Calling the rationale surface faithful in general*: the audit covers the `Next:` line in the maintainer's own
+    sessions. The card says that, and names a larger sample and an outside builder's sessions as the next step.
+
 ## v0.334.0 - Three fields for what the canvas already records
 
 **2026-11-06.** Three things the dogfood canvas held in prose or in undeclared keys, each now declared with a reader.
